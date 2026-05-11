@@ -40,10 +40,16 @@ import { D11001 } from './ct-d11/D11001.js';
 import { D11002 } from './ct-d11/D11002.js';
 import { D11003 } from './ct-d11/D11003.js';
 import { D11004 } from './ct-d11/D11004.js';
+import { D11005 } from './ct-d11/D11005.js';
+import { D11006 } from './ct-d11/D11006.js';
+import { D11007 } from './ct-d11/D11007.js';
+import { D11008 } from './ct-d11/D11008.js';
 import { D11009 } from './ct-d11/D11009.js';
 import { D11010 } from './ct-d11/D11010.js';
 import { D11011 } from './ct-d11/D11011.js';
+import { D11012 } from './ct-d11/D11012.js';
 import { D11013 } from './ct-d11/D11013.js';
+import { D11014 } from './ct-d11/D11014.js';
 import { D11015 } from './ct-d11/D11015.js';
 import { D11016 } from './ct-d11/D11016.js';
 import { D11017 } from './ct-d11/D11017.js';
@@ -59,8 +65,8 @@ export {
   D08024, D08025, D08026,
 };
 export {
-  D11001, D11002, D11003, D11004,
-  D11009, D11010, D11011, D11013,
+  D11001, D11002, D11003, D11004, D11005, D11006, D11007, D11008,
+  D11009, D11010, D11011, D11012, D11013, D11014,
   D11015, D11016, D11017, D11018,
   D11019, D11020, D11021,
 };
@@ -75,8 +81,8 @@ export const ALL_CARDS: CardDef[] = [
   D08009, D08010, D08011, D08012, D08013, D08014, D08015, D08016,
   D08017, D08018, D08019, D08020, D08021, D08022, D08023,
   D08024, D08025, D08026,
-  D11001, D11002, D11003, D11004,
-  D11009, D11010, D11011, D11013,
+  D11001, D11002, D11003, D11004, D11005, D11006, D11007, D11008,
+  D11009, D11010, D11011, D11012, D11013, D11014,
   D11015, D11016, D11017, D11018,
   D11019, D11020, D11021,
 ];

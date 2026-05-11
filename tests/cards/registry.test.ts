@@ -6,19 +6,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
 import { registerAll, ALL_CARDS } from '@/cards';
 
-describe('cards/registerAll (Phase 5 Group C + D: 41 cards)', () => {
+describe('cards/registerAll (Phase 5 Group C + D + E: 47 cards)', () => {
   beforeEach(() => {
     engine.cards._resetRegistry();
   });
 
-  it('ALL_CARDS contains exactly 41 cards (Group C: 10 + Group D: 21)', () => {
-    expect(ALL_CARDS.length).toBe(41);
+  it('ALL_CARDS contains exactly 47 cards (Group C: 10 + Group D: 21 + Group E: 16)', () => {
+    expect(ALL_CARDS.length).toBe(47);
   });
 
-  it('registerAll() registers all 41 CardDefs to engine.cards', () => {
+  it('registerAll() registers all 47 CardDefs to engine.cards', () => {
     expect(engine.cards.all().length).toBe(0);
     registerAll();
-    expect(engine.cards.all().length).toBe(41);
+    expect(engine.cards.all().length).toBe(47);
   });
 
   it('engine.cards.get returns each card by id (CT-D08 + CT-D11)', () => {
@@ -70,6 +70,14 @@ describe('cards/registerAll (Phase 5 Group C + D: 41 cards)', () => {
     expect(ids).toContain('D11019');
     expect(ids).toContain('D11020');
     expect(ids).toContain('D11021');
+    // Group E characters
+    expect(ids).toContain('D11003');
+    expect(ids).toContain('D11007');
+    expect(ids).toContain('D11013');
+    expect(ids).toContain('D11017');
+    expect(ids).toContain('D11018');
+    // 21 CT-D11 cards total: 5 (Group C) + 16 (Group E)
+    expect(yellowCards.length).toBe(21);
   });
 
   it('partners (D08001/D08002/D11001/D11002) have empty abilities', () => {
@@ -93,10 +101,10 @@ describe('cards/registerAll (Phase 5 Group C + D: 41 cards)', () => {
     }
   });
 
-  it('registerAll() is idempotent (re-register overwrites, count stays 41)', () => {
+  it('registerAll() is idempotent (re-register overwrites, count stays 47)', () => {
     registerAll();
-    expect(engine.cards.all().length).toBe(41);
+    expect(engine.cards.all().length).toBe(47);
     registerAll();
-    expect(engine.cards.all().length).toBe(41);
+    expect(engine.cards.all().length).toBe(47);
   });
 });
