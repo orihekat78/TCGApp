@@ -6,19 +6,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
 import { registerAll, ALL_CARDS } from '@/cards';
 
-describe('cards/registerAll (Phase 5 Group C + D: 31 cards)', () => {
+describe('cards/registerAll (Phase 5 Group C + D: 37 cards)', () => {
   beforeEach(() => {
     engine.cards._resetRegistry();
   });
 
-  it('ALL_CARDS contains exactly 31 cards (Group C: 10 + Group D: 21)', () => {
-    expect(ALL_CARDS.length).toBe(31);
+  it('ALL_CARDS contains exactly 37 cards (Group C: 10 + Group D: 21)', () => {
+    expect(ALL_CARDS.length).toBe(37);
   });
 
-  it('registerAll() registers all 31 CardDefs to engine.cards', () => {
+  it('registerAll() registers all 37 CardDefs to engine.cards', () => {
     expect(engine.cards.all().length).toBe(0);
     registerAll();
-    expect(engine.cards.all().length).toBe(31);
+    expect(engine.cards.all().length).toBe(37);
   });
 
   it('engine.cards.get returns each card by id (CT-D08 + CT-D11)', () => {
@@ -93,10 +93,10 @@ describe('cards/registerAll (Phase 5 Group C + D: 31 cards)', () => {
     }
   });
 
-  it('registerAll() is idempotent (re-register overwrites, count stays 31)', () => {
+  it('registerAll() is idempotent (re-register overwrites, count stays 37)', () => {
     registerAll();
-    expect(engine.cards.all().length).toBe(31);
+    expect(engine.cards.all().length).toBe(37);
     registerAll();
-    expect(engine.cards.all().length).toBe(31);
+    expect(engine.cards.all().length).toBe(37);
   });
 });

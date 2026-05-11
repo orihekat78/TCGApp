@@ -38,6 +38,12 @@ import { D08026 } from './ct-d08/D08026.js';
 
 import { D11001 } from './ct-d11/D11001.js';
 import { D11002 } from './ct-d11/D11002.js';
+import { D11009 } from './ct-d11/D11009.js';
+import { D11010 } from './ct-d11/D11010.js';
+import { D11011 } from './ct-d11/D11011.js';
+import { D11013 } from './ct-d11/D11013.js';
+import { D11017 } from './ct-d11/D11017.js';
+import { D11018 } from './ct-d11/D11018.js';
 import { D11019 } from './ct-d11/D11019.js';
 import { D11020 } from './ct-d11/D11020.js';
 import { D11021 } from './ct-d11/D11021.js';
@@ -48,7 +54,11 @@ export {
   D08017, D08018, D08019, D08020, D08021, D08022, D08023,
   D08024, D08025, D08026,
 };
-export { D11001, D11002, D11019, D11020, D11021 };
+export {
+  D11001, D11002,
+  D11009, D11010, D11011, D11013, D11017, D11018,
+  D11019, D11020, D11021,
+};
 
 /**
  * Phase 5 Group C + D で実装済みの全 CardDef 配列。
@@ -60,7 +70,9 @@ export const ALL_CARDS: CardDef[] = [
   D08009, D08010, D08011, D08012, D08013, D08014, D08015, D08016,
   D08017, D08018, D08019, D08020, D08021, D08022, D08023,
   D08024, D08025, D08026,
-  D11001, D11002, D11019, D11020, D11021,
+  D11001, D11002,
+  D11009, D11010, D11011, D11013, D11017, D11018,
+  D11019, D11020, D11021,
 ];
 
 /**
