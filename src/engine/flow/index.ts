@@ -23,12 +23,14 @@ export {
 } from './main/index.js';
 export { action } from './action/state-machine.js';
 export { guard } from './guard.js';
+export { contact } from './contact.js';
 
 import { setup } from './setup.js';
 import { runAutoPhase } from './auto-phase.js';
 import { main } from './main/index.js';
 import { action } from './action/state-machine.js';
 import { guard } from './guard.js';
+import { contact } from './contact.js';
 
 export const flow = {
   setup,
@@ -36,4 +38,5 @@ export const flow = {
   ...main,
   action,
   guard,
+  contact,
 };

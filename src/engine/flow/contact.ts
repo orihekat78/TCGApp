@@ -1,0 +1,257 @@
+// engine.flow.contact — コンタクト中の行動 / AP判定 (Phase 4 Group B Task 4.5)
+// spec: .claude/specs/engine-api-flow-contact.md
+// rules: 08-contact.md, 09-cutin-disguise.md, 22-qa-action-contact.md, 23-qa-disguise-cutin.md
+//
+// 提供 API:
+//   - canCutIn / cutIn         (1コンタクト1枚, 色制限なし)
+//   - canDisguise / disguise   (元キャラをデッキ下、新カードへ入替)
+//   - pass                     (no-op + log)
+//   - judge                    (AP判定。同値もリムーブ。攻撃側はリムーブされない)
+//   - computeOrder             (低AP先、同値→防御側先)
+
+import type { GameState, ActionContext, JudgeResult, CardDef } from '../types/index.js';
+import { mutate } from '../mutate/index.js';
+import { event } from '../event/index.js';
+import { def as readDef } from '../read/def.js';
+import { char as readChar } from '../read/char.js';
+
+type Player = 'self' | 'opp';
+
+/**
+ * CardDef.abilities から指定 type を持つ ability があるか判定
+ * (Phase 5 で AbilityDef 型が定まる予定。現状 unknown[] のため narrow して判定)
+ */
+function hasAbilityType(def: CardDef | undefined, type: string): boolean {
+  if (!def) return false;
+  return def.abilities.some(a => {
+    if (a && typeof a === 'object') {
+      const rec = a as Record<string, unknown>;
+      return rec.type === type;
+    }
+    return false;
+  });
+}
+
+/**
+ * cutIn 持ちか
+ */
+function isCutInCard(cardId: string): boolean {
+  return hasAbilityType(readDef.card(cardId), 'icon-cutin');
+}
+
+/**
+ * 変装 持ちか
+ */
+function isDisguiseCard(cardId: string): boolean {
+  return hasAbilityType(readDef.card(cardId), 'icon-disguise');
+}
+
+/**
+ * ax からプレイヤー p のコンタクト中のキャラ uid を取得
+ * - p === ax.byPlayer なら byUid
+ * - else: guardUid (存在すれば) または target.uid
+ */
+function contactCharUidOf(ax: ActionContext, p: Player): string | undefined {
+  if (p === ax.byPlayer) return ax.byUid;
+  // 防御側
+  if (ax.guardUid) return ax.guardUid;
+  if (ax.target.kind === 'char') return ax.target.uid;
+  return undefined;
+}
+
+/**
+ * canCutIn — カットイン可否
+ *
+ * - cardId が p の手札にある
+ * - CardDef に カットイン 持ち
+ * - 1 コンタクト 1 枚 (ax.cutInUsed[p] !== true)
+ * - 色制限なし (rules/09)
+ */
+export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId: string): boolean {
+  if (!state.players[p].hand.includes(cardId)) return false;
+  if (!isCutInCard(cardId)) return false;
+  if (ax.cutInUsed?.[p]) return false;
+  return true;
+}
+
+/**
+ * cutIn — カットイン実行
+ *
+ * - validate
+ * - 手札 → リムーブエリアへ
+ * - ax.cutInUsed[p] = true
+ * - effect:declared (Phase 5 で listener が pendingEffects に積む)
+ */
+export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: string): void {
+  if (!canCutIn(state, ax, p, cardId)) {
+    throw new Error(`flow.contact.cutIn: cannot cut in cardId=${cardId} for ${p}`);
+  }
+  mutate.hand.discardToRemove(state, p, [cardId]);
+  if (!ax.cutInUsed) ax.cutInUsed = {};
+  ax.cutInUsed[p] = true;
+
+  // Phase 5 で listener が処理する想定 — effect:declared emit
+  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, { player: p, cardId });
+
+  mutate.log.append(state, {
+    ts: Date.now(),
+    player: p,
+    turn: state.turn.number,
+    action: 'contact-cutin',
+    target: cardId,
+  });
+}
+
+/**
+ * canDisguise — 変装可否
+ *
+ * - cardId が p の手札にある
+ * - CardDef に 変装 持ち
+ * - p 側のコンタクト中キャラが存在
+ */
+export function canDisguise(state: GameState, ax: ActionContext, p: Player, cardId: string): boolean {
+  if (!state.players[p].hand.includes(cardId)) return false;
+  if (!isDisguiseCard(cardId)) return false;
+  const targetUid = contactCharUidOf(ax, p);
+  if (!targetUid) return false;
+  // 対象キャラが存在するか
+  return state.players[p].scene.some(c => c.uid === targetUid);
+}
+
+/**
+ * disguise — 変装実行
+ *
+ * - validate
+ * - 元 cardId をデッキ下へ (toDeckBottom 内部処理: scene から取り出し → deck.push)
+ *   ⚠ rules/09: 元キャラはデッキの下へ、リムーブではない
+ *   ⚠ rules/23: 元キャラの「現場リムーブ時」は発動しない
+ *   実装: 元の cardId を退避 → char.disguiseInto で uid 維持・cardId 差替え →
+ *       退避した cardId を デッキ下へ追加
+ * - mutate.char.disguiseInto(uid, newCardId)
+ * - 手札から disguise cardId を削除
+ * - disguise:into emit (spec: { uid, fromCardId, newCardId })
+ */
+export function disguise(state: GameState, ax: ActionContext, p: Player, cardId: string): void {
+  if (!canDisguise(state, ax, p, cardId)) {
+    throw new Error(`flow.contact.disguise: cannot disguise cardId=${cardId} for ${p}`);
+  }
+  const targetUid = contactCharUidOf(ax, p)!;
+  const targetChar = state.players[p].scene.find(c => c.uid === targetUid);
+  if (!targetChar) {
+    throw new Error(`flow.contact.disguise: target char not found uid=${targetUid}`);
+  }
+  const fromCardId = targetChar.cardId;
+
+  // 元 cardId を デッキ下へ
+  state.players[p].deck.push(fromCardId);
+  // uid 維持で cardId 入替
+  mutate.char.disguiseInto(state, targetUid, cardId);
+  // 手札から disguise カードを削除
+  mutate.hand.remove(state, p, [cardId]);
+
+  // disguise:into emit (spec: { uid, fromCardId, newCardId })
+  event.emit(
+    state,
+    'disguise:into',
+    { uid: targetUid, fromCardId, newCardId: cardId },
+    { player: p, uid: targetUid },
+  );
+  // rules/23: 元キャラのデッキ下移動は「リムーブ扱いではない」→ leave:to-deck Hook を発火
+  event.emit(state, 'leave:to-deck', { cardId: fromCardId }, { player: p });
+
+  mutate.log.append(state, {
+    ts: Date.now(),
+    player: p,
+    turn: state.turn.number,
+    action: 'contact-disguise',
+    target: targetUid,
+    result: `${fromCardId} → ${cardId}`,
+  });
+}
+
+/**
+ * pass — コンタクト行動でパス
+ *
+ * 副作用なし。ログのみ。caller が firstActed/secondActed を false に維持する。
+ */
+export function pass(state: GameState, _ax: ActionContext, p: Player): void {
+  mutate.log.append(state, {
+    ts: Date.now(),
+    player: p,
+    turn: state.turn.number,
+    action: 'contact-pass',
+  });
+}
+
+/**
+ * judge — AP 判定 (rules/08)
+ *
+ * - ax.apSnapshot を参照 (caller が snapshotAP 済み前提)
+ * - attackerAP >= defenderAP AND defender NOT contactImmune → defender リムーブ
+ * - attacker は決してリムーブされない
+ * - contact:judge emit (spec: { winner, loser })
+ */
+export function judge(state: GameState, ax: ActionContext): JudgeResult {
+  if (!ax.apSnapshot) {
+    throw new Error('flow.contact.judge: apSnapshot is missing — call snapshotAP first');
+  }
+  const { aUid, aAP, bUid, bAP } = ax.apSnapshot;
+
+  let defenderRemoved = false;
+  if (aAP >= bAP && !ax.contactImmune) {
+    mutate.scene.removeToRemove(state, bUid, 'contact-ap');
+    defenderRemoved = true;
+  }
+
+  const result: JudgeResult = {
+    attackerAP: aAP,
+    defenderAP: bAP,
+    defenderRemoved,
+    attackerRemoved: false,
+  };
+
+  // contact:judge emit
+  const winner = defenderRemoved ? aUid : (aAP < bAP ? bUid : aUid /* tie 以上は攻撃側勝ち */);
+  const loser = defenderRemoved ? bUid : (aAP < bAP ? aUid : bUid);
+  event.emit(
+    state,
+    'contact:judge',
+    { winner, loser },
+    { player: ax.byPlayer, uid: ax.byUid },
+  );
+
+  return result;
+}
+
+/**
+ * computeOrder — コンタクト行動順 (rules/08 と同じロジック)
+ *
+ * AP 低い側が 1 番目。同値の場合は **アクションされた側 (= 非ターンプレイヤー)** が 1 番目。
+ * state-machine.computeOrder と同じ実装だが、ここでも公開する (caller 利便性のため)。
+ */
+export function computeOrder(
+  aAP: number,
+  bAP: number,
+  attackerSide: { aUid: string; bUid: string },
+): { firstUid: string; secondUid: string } {
+  if (aAP < bAP) {
+    return { firstUid: attackerSide.aUid, secondUid: attackerSide.bUid };
+  }
+  if (aAP > bAP) {
+    return { firstUid: attackerSide.bUid, secondUid: attackerSide.aUid };
+  }
+  return { firstUid: attackerSide.bUid, secondUid: attackerSide.aUid };
+}
+
+// readChar は将来用 (Phase 5)
+void readChar;
+
+export const contact = {
+  canCutIn,
+  cutIn,
+  canDisguise,
+  disguise,
+  pass,
+  judge,
+  computeOrder,
+};
