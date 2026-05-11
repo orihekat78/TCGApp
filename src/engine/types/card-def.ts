@@ -1,20 +1,101 @@
 // CardDef 型定義
-// rules: 02-deck-construction.md, 06-card-types.md, 13-keywords.md
+// rules: 02-deck-construction.md, 06-card-types.md, 13-keywords.md, 19-special-rules.md
+// spec: .claude/specs/engine-api-card-shape.md, engine-api-card-abilities.md
+
+import type { GameState, SceneCharacter } from './game-state.js';
+import type { Effect, Condition, Cost } from './effect.js';
+import type { HookName } from './hooks.js';
+
+// ---------- AbilityType ----------
+// rules: 15-abilities-effects.md, 21-declared-ability-cost.md, 25-qa-effects-resolution.md
+
+export type AbilityType =
+  | 'continuous'      // 「〜の場合 〜限り、AP+X」 常時有効 (rules/24, 25)
+  | 'triggered'       // 「〜したとき」 条件発動
+  | 'declared'        // 【宣言】 宣言能力 (rules/21)
+  | 'icon-cutin'      // カットイン (rules/09)
+  | 'icon-flash'      // ヒラメキ (rules/10)
+  | 'icon-disguise';  // 変装 (rules/09)
+
+// ---------- AbilityScope ----------
+
+export type AbilityScope =
+  | 'on-scene'           // 現場にいる間 (デフォルト)
+  | 'on-partner-area'    // パートナーエリアでも (MR系 rules/18)
+  | 'on-hand'            // 手札時 (例: 一部カットイン)
+  | 'on-evidence'        // 証拠時 (ヒラメキ rules/10)
+  | 'always';            // どこでも (デバッグ用)
+
+// ---------- AbilityLimit ----------
+// rules: 17-icons.md §【ターン①/②】, 24-qa-naming-stun.md
+
+export type AbilityLimit =
+  | { kind: 'turn'; n: 1 | 2 }
+  | { kind: 'game'; n: number }
+  | null;
+
+// ---------- TriggerDef ----------
+// rules: 15-abilities-effects.md, 22-qa-action-contact.md
+
+export type TriggerDef = {
+  hook: HookName;
+  matcher?: (payload: unknown, state: GameState) => boolean;
+  selfOnly?: boolean;                      // 自分のキャラに対する発火のみ
+  ignoreCostInduced?: boolean;             // viaCost: true を無視 (rules/21, 25)
+};
+
+// ---------- ContinuousModifier ----------
+// G23: 常時有効型の selector 計算
+// engine.read.char.ap/lp/keywords 等が selector 経由で動的に合算する
+
+export type ContinuousModifier = {
+  apDelta?: (s: GameState, ctx: { uid: string }) => number;
+  lpDelta?: (s: GameState, ctx: { uid: string }) => number;
+  grantKeywords?: (s: GameState, ctx: { uid: string }) => string[];
+  customSelectorPatch?: (s: GameState, uid: string, base: SceneCharacter) => Partial<SceneCharacter>;
+};
+
+// ---------- AbilityDef ----------
+// spec: engine-api-card-abilities.md
+
+export type AbilityDef = {
+  id: string;                              // カード内一意 ("a1", "a2")
+  name?: string;                           // 表示名
+  type: AbilityType;                       // 6種
+  condition?: Condition;                   // 条件アイコン (rules/17)
+  cost?: Cost;                             // 宣言能力時のみ (rules/21)
+  trigger?: TriggerDef;                    // type='triggered' 時
+  scope?: AbilityScope;                    // 「いつ有効か」
+  limit?: AbilityLimit;                    // 【ターン①】等
+  effect?: Effect;                         // Descriptor (DSL) — continuous 以外
+  continuousModifier?: ContinuousModifier; // type='continuous' 時のみ (G23)
+  description: string;                     // 公式テキスト (エラッタ後)
+  ruleRefs?: string[];
+};
+
+// ---------- CardDef ----------
+// 単一型として保持 (kind 判別子で識別)。
+// kind 別の必須フィールド整合は engine.cards.validate で検証する。
 
 export type CardDef = {
-  id: string;
-  no: string;
+  id: string;                              // 例: "B08004" / "D08003"
+  no: string;                              // 例: "0001/B08004"
   kind: 'character' | 'event' | 'partner' | 'case';
-  names: string[];        // 複数名カード対応 (rules: 19-special-rules.md)
-  colors: string[];
-  level?: number;
-  ap?: number;
-  lp?: number;
-  traits: string[];
-  rarity: string;
-  isMR?: boolean;         // rules: 18-mr.md
+  names: string[];                         // 複数名カードは複数 (rules/19)
+  colors: string[];                        // 1〜2色 (rules/20)
+  level?: number;                          // event/character (パートナー除く)
+  ap?: number;                             // character のみ
+  lp?: number;                             // character/partner
+  traits: string[];                        // 特徴 (例: [警察], [少年探偵団])
+  rarity: string;                          // R/SR/MR/PR ...
+  isMR?: boolean;                          // MR フラグ (rules/18)
   flavor?: string;
-  imageUrl: string;
-  abilities: unknown[];   // AbilityDef は Phase 5 で詳細化
-  ruleRefs: string[];
+  imageUrl: string;                        // ローカル運用 (rules: 法務スタンス)
+  abilities: AbilityDef[];                 // 能力定義 (Phase 5 で TSV+merge)
+  ruleRefs: string[];                      // 例: ["rules/11-reasoning.md §LP≤0"]
+
+  // kind-specific optional fields
+  caseLevel?: number;                      // kind:'case' — 事件レベル (rules/01)
+  caseTraits?: string[];                   // kind:'case' — 例: ["古城", "婚活"]
+  keywords?: string[];                     // kind:'character' — 迅速/突撃[X]等 (rules/13)
 };

@@ -60,4 +60,12 @@ export type {
 
 export type { HookName } from './hooks.js';
 
-export type { CardDef } from './card-def.js';
+export type {
+  CardDef,
+  AbilityDef,
+  AbilityType,
+  AbilityScope,
+  AbilityLimit,
+  TriggerDef,
+  ContinuousModifier,
+} from './card-def.js';
