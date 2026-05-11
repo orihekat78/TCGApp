@@ -287,6 +287,12 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.deck.toBottom(s, p, ids);
       return;
     }
+    case 'deckShuffle': {
+      // rules/04, 14, 26 — デッキ基本シャッフル (D11019 等で使用)
+      const p = a.player as Player;
+      mutate.deck.shuffle(s, p, ctx.rng);
+      return;
+    }
 
     // --- メタ ---
     case 'log': {

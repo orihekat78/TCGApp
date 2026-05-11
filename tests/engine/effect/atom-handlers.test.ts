@@ -530,6 +530,29 @@ describe('engine.effect.runAtom', () => {
     });
   });
 
+  describe('deckShuffle', () => {
+    it('デッキを RNG でシャッフル (要素は保持)', () => {
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'C', 'D', 'E'] } } };
+      const ctx = makeCtx({ rng: () => 0.5 });
+      const result = produce(s, draft => {
+        runAtom(draft, 'deckShuffle', { player: 'self' }, ctx);
+      });
+      expect(result.players.self.deck).toHaveLength(5);
+      expect([...result.players.self.deck].sort()).toEqual(['A', 'B', 'C', 'D', 'E']);
+    });
+
+    it('相手プレイヤーの deck shuffle も可', () => {
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, opp: { ...s.players.opp, deck: ['X', 'Y'] } } };
+      const ctx = makeCtx({ rng: () => 0.5 });
+      const result = produce(s, draft => {
+        runAtom(draft, 'deckShuffle', { player: 'opp' }, ctx);
+      });
+      expect(result.players.opp.deck).toHaveLength(2);
+    });
+  });
+
   // --- メタ ---
   describe('log', () => {
     it('ログにエントリ追加', () => {

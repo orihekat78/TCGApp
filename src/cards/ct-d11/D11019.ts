@@ -8,10 +8,8 @@
 //   自分のリムーブエリアに【黄】のカードが20枚以上ある場合、ターン終了時までそのキャラに〚突撃［事件］〛を持たせる。
 //   【カットイン】AP＋1000
 //
-// a1: 個別実装 sequence (deckRevealUntil → conditional sceneEnter → deckToBottomBound → conditional charGrantKeyword)
+// a1: 個別実装 sequence (deckRevealUntil → conditional sceneEnter → deckToBottomBound → deckShuffle → conditional charGrantKeyword)
 // a2: cutinFixedAP({ delta:1000 })
-//
-// 注: D11019 の deckShuffle 部分は engine 未実装 (Group F 対応予定)。本ファイルは公式分析どおりの形を保つ。
 
 import type { AbilityDef, CardDef, GameState } from '@/engine/types';
 import { cutinFixedAP } from '@/cards/_shared/cutinFixedAP';
@@ -57,6 +55,11 @@ const a1: AbilityDef = {
         kind: 'atom',
         verb: 'deckToBottomBound',
         args: { player: 'self', bindKey: '$revealed' },
+      },
+      {
+        kind: 'atom',
+        verb: 'deckShuffle',
+        args: { player: 'self' },
       },
       {
         kind: 'conditional',
