@@ -17,8 +17,10 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       if (!uid) return false;
       const c = findChar(state, uid);
       if (!c) return false;
-      // active or sleep allowed (NOT stun — stun cannot be made to sleep via cost)
-      return c.state === 'active' || c.state === 'sleep';
+      // Only active is payable: rules/21 sleep-icon cost means "sleep this character".
+      // A character already sleeping has no state change → no real cost.
+      // A stun character cannot be made to sleep via a cost action.
+      return c.state === 'active';
     }
     case 'sleepChar': {
       const cands = candidates(state, cost.target, ctx);

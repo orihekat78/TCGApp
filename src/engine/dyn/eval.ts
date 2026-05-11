@@ -110,8 +110,29 @@ function tokenize(state: GameState, expr: string, ctx: EffectCtx): Token[] {
 }
 
 function evaluateExpression(state: GameState, expr: string, ctx: EffectCtx): DynValue {
-  const tokens = tokenize(state, expr, ctx);
-  if (tokens.length === 0) return undefined;
+  const raw = tokenize(state, expr, ctx);
+  if (raw.length === 0) return undefined;
+
+  // Fold unary minus: a leading '-' token or a '-' immediately after a binary operator
+  // combined with the following number token becomes a negative number literal.
+  // This allows '-3 * $dyn.x' and '$dyn.x + -1' to work correctly.
+  const tokens: Token[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const t = raw[i];
+    if (
+      t.type === 'op' &&
+      t.value === '-' &&
+      (i === 0 || raw[i - 1]?.type === 'op')
+    ) {
+      const next = raw[i + 1];
+      if (next?.type === 'num') {
+        tokens.push({ type: 'num', value: -next.value });
+        i++; // consume the number token
+        continue;
+      }
+    }
+    tokens.push(t);
+  }
 
   // Single token: return raw value
   if (tokens.length === 1) {

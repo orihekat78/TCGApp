@@ -204,6 +204,20 @@ describe('engine.dyn.eval', () => {
       const ctx = makeCtx({ dyn: { a: 4 } });
       expect(evalDyn(s, '$dyn.a  *  10', ctx)).toBe(40);
     });
+
+    it('leading negative literal: -3 * $dyn.x', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ dyn: { x: 4 } });
+      // -3 * 4 = -12 (left-to-right)
+      expect(evalDyn(s, '-3 * $dyn.x', ctx)).toBe(-12);
+    });
+
+    it('inline negative literal: $dyn.x + -1', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ dyn: { x: 10 } });
+      // 10 + (-1) = 9
+      expect(evalDyn(s, '$dyn.x + -1', ctx)).toBe(9);
+    });
   });
 
   describe('$pick', () => {

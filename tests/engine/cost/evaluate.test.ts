@@ -79,6 +79,12 @@ describe('engine.cost.canPay', () => {
       expect(canPay(s, { kind: 'sleepSelf' }, ctx)).toBe(true);
     });
 
+    it('false when source is already sleep (no-op cost not payable)', () => {
+      const s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'u', state: 'sleep' })]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u' } });
+      expect(canPay(s, { kind: 'sleepSelf' }, ctx)).toBe(false);
+    });
+
     it('false when source is stun', () => {
       const s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'u', state: 'stun' })]);
       const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u' } });

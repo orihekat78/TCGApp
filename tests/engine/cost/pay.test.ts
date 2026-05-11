@@ -154,7 +154,7 @@ describe('engine.cost.pay', () => {
   });
 
   describe('choice (OR)', () => {
-    it('chooses first payable branch by default', () => {
+    it('chooses first payable branch by default (fallback)', () => {
       let s = createEmptyGameState();
       s = withScene(s, 'self', [makeChar({ uid: 'u', state: 'active' })]);
       s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: [] } } };
@@ -162,17 +162,20 @@ describe('engine.cost.pay', () => {
       const cost: Cost = {
         kind: 'choice',
         items: [
-          { kind: 'removeDeckTop', player: 'self', n: 1 },  // unpayable
+          { kind: 'removeDeckTop', player: 'self', n: 1 },  // unpayable (deck empty)
           { kind: 'sleepSelf' },                              // payable
         ],
       };
       const result = produce(s, draft => {
         pay(draft, cost, ctx);
       });
+      // Second branch (sleepSelf) is first canPay-able → char becomes sleep
       expect(result.players.self.scene[0].state).toBe('sleep');
+      // Deck unchanged (removeDeckTop was NOT paid)
+      expect(result.players.self.deck).toHaveLength(0);
     });
 
-    it('uses ctx.dyn.costChoice when present', () => {
+    it('uses ctx.dyn.costChoice = 0 to select first branch explicitly', () => {
       let s = createEmptyGameState();
       s = withScene(s, 'self', [makeChar({ uid: 'u', state: 'active' })]);
       s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B'] } } };
@@ -190,8 +193,32 @@ describe('engine.cost.pay', () => {
       const result = produce(s, draft => {
         pay(draft, cost, ctx);
       });
+      // Branch 0 (removeDeckTop) is paid: char stays active, deck shrinks by 1
       expect(result.players.self.scene[0].state).toBe('active');
       expect(result.players.self.deck).toEqual(['B']);
+    });
+
+    it('uses ctx.dyn.costChoice = 1 to select second branch explicitly', () => {
+      let s = createEmptyGameState();
+      s = withScene(s, 'self', [makeChar({ uid: 'u', state: 'active' })]);
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B'] } } };
+      const ctx = makeCtx({
+        source: { player: 'self', area: 'scene', uid: 'u' },
+        dyn: { costChoice: 1 },
+      });
+      const cost: Cost = {
+        kind: 'choice',
+        items: [
+          { kind: 'removeDeckTop', player: 'self', n: 1 },
+          { kind: 'sleepSelf' },
+        ],
+      };
+      const result = produce(s, draft => {
+        pay(draft, cost, ctx);
+      });
+      // Branch 1 (sleepSelf) is paid: char becomes sleep, deck unchanged
+      expect(result.players.self.scene[0].state).toBe('sleep');
+      expect(result.players.self.deck).toEqual(['A', 'B']);
     });
   });
 

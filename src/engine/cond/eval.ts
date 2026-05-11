@@ -5,11 +5,16 @@
 //
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
-import type { GameState, Condition, EffectCtx } from '@/engine/types';
+import type { GameState, Condition, EffectCtx, Candidate } from '@/engine/types';
 import { candidates } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
+
+/** Type predicate: narrows a Candidate to the 'char' variant. */
+function isCharCandidate(c: Candidate): c is { kind: 'char'; uid: string; cardId: string; player: 'self' | 'opp' } {
+  return c.kind === 'char';
+}
 
 /**
  * Evaluate a Condition to boolean using current state + ctx.
@@ -39,7 +44,8 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'caseColor': {
       const owner = ctx.source.player;
       const caseInfo = state.players[owner].case;
-      // case.colors stored in PlayerState OR via CardDef — prefer CardDef
+      // CardDef is primary source of colors; caseInfo.colors is a runtime fallback
+      // (used when CardDef is not yet registered, e.g. during tests or lazy loading).
       const d = lookupCardDef(caseInfo.cardId);
       const have = d?.colors ?? caseInfo.colors ?? [];
       const want = Array.isArray(cond.color) ? cond.color : [cond.color];
@@ -181,10 +187,10 @@ function resolveCharsForRef(state: GameState, ref: import('@/engine/types').Targ
   try {
     if (ref.kind === 'pick') {
       const picked = ctx.picked ?? candidates(state, ref, ctx);
-      return picked.filter(c => c.kind === 'char').map(c => (c as { uid: string }).uid);
+      return picked.filter(isCharCandidate).map(c => c.uid);
     }
     const resolved = resolveTarget(state, ref, ctx);
-    return resolved.filter(c => c.kind === 'char').map(c => (c as { uid: string }).uid);
+    return resolved.filter(isCharCandidate).map(c => c.uid);
   } catch {
     return [];
   }
