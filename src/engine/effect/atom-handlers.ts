@@ -6,14 +6,32 @@
 //   - 各 Atom Verb は engine.mutate.* プリミティブの薄いラッパー
 //   - 引数は AtomArgs (verb 毎に異なる shape) → unknown 受け取り内部で narrow
 //   - 全ての mutate 呼び出しは Immer draft 前提 (produce 内で呼ぶこと)
-//   - charSetAP / charSetLP は暫定的に setOverride にマップ
-//     TODO Phase 5: 「APを X にする」vs「元のAPを X にする」の差を明確化
+//   - charSetAP / charSetLP は Phase 5 まで未サポート (throw)。
+//     charOverrideAP/LP (rules/19: 「元のAPを X にする」) のみ setOverrideAP/LP にマップ。
 //   - startContact / endActionEarly は Phase 3 では log のみ。Phase 4 フローで本実装
+//   - deckRevealUntil の binding shape: Candidate { kind: 'card', cardId, area: 'deck', player }
 
 import type { GameState, AtomVerb, EffectCtx, LogEntry, FileCard, Candidate } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 
 type Player = 'self' | 'opp';
+
+/**
+ * 必須スカラーフィールドの実行時検証。
+ * 呼び出し元が typo などで undefined を渡した場合に mutate 層へ伝搬する前に検知する。
+ * optional フィールド・nullable フィールドはここでは検証しない。
+ */
+function requireField<T>(args: Record<string, unknown>, key: string, kind: 'string' | 'number' | 'boolean' | 'object'): T {
+  const v = args[key];
+  if (kind === 'object') {
+    if (v === null || typeof v !== 'object') {
+      throw new Error(`atom args missing ${kind} field "${key}"`);
+    }
+  } else if (typeof v !== kind) {
+    throw new Error(`atom args missing ${kind} field "${key}" (got ${typeof v})`);
+  }
+  return v as T;
+}
 
 /**
  * Atom Verb → engine.mutate.* ディスパッチャ
@@ -25,7 +43,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     // --- ドロー / FILE / 証拠 ---
     case 'draw': {
       // deck.draw が手札への push まで内部で行う
-      mutate.deck.draw(s, a.player as Player, a.n as number);
+      mutate.deck.draw(s, requireField<Player>(a, 'player', 'string'), requireField<number>(a, 'n', 'number'));
       return;
     }
     case 'discard': {
@@ -97,7 +115,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- 現場 ---
     case 'sceneEnter': {
-      mutate.scene.enter(s, a.player as Player, a.cardId as string, {
+      mutate.scene.enter(s, requireField<Player>(a, 'player', 'string'), requireField<string>(a, 'cardId', 'string'), {
         named: (a.named as boolean | undefined) ?? false,
         viaEffect: (a.viaEffect as boolean | undefined) ?? false,
       });
@@ -133,16 +151,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.char.modifyLP(s, a.uid as string, a.delta as number, a.scope as 'turn' | 'contact' | 'permanent');
       return;
     }
-    // TODO Phase 5: charSetAP / charSetLP は「APをXにする」(修正は上乗せ) 仕様。
-    // 現状 setOverrideAP/LP にマップしているが、charOverrideAP との挙動差を明確化要。
-    case 'charSetAP': {
-      mutate.char.setOverrideAP(s, a.uid as string, a.val as number | null);
-      return;
-    }
-    case 'charSetLP': {
-      mutate.char.setOverrideLP(s, a.uid as string, a.val as number | null);
-      return;
-    }
+    // charSetAP / charSetLP: 「APをXにする」(修正は上乗せ) — rules/19
+    // Phase 5 で mutate.char.setExact を定義するまでは未サポート。
+    // charOverrideAP / charOverrideLP (「元のAPをXにする」) とは意味が異なるため
+    // 誤用を即座に検知できるよう明示的にエラーを投げる。
+    case 'charSetAP':
+      throw new Error('charSetAP: not yet supported — Phase 5 must define mutate.char.setExact (distinct from setOverride)');
+    case 'charSetLP':
+      throw new Error('charSetLP: not yet supported — Phase 5 must define mutate.char.setExact');
     case 'charOverrideAP': {
       mutate.char.setOverrideAP(s, a.uid as string, a.val as number | null);
       return;
@@ -234,6 +250,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         }
       }
       // bindings に Candidate[] として保存
+      // { kind: 'card', cardId, area: 'deck', player } は Candidate の card バリアントに適合する
       if (bindKey) {
         const restIds = matched ? revealed.slice(0, -1) : revealed;
         ctx.bindings[bindKey] = restIds.map<Candidate>(id => ({
@@ -241,11 +258,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
           cardId: id,
           area: 'deck',
           player: p,
-        } as unknown as Candidate));
+        }));
       }
       if (bindMatchKey) {
         ctx.bindings[bindMatchKey] = matched
-          ? [{ kind: 'card', cardId: matched, area: 'deck', player: p } as unknown as Candidate]
+          ? [{ kind: 'card', cardId: matched, area: 'deck', player: p }]
           : [];
       }
       return;

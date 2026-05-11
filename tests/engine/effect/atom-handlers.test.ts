@@ -7,7 +7,7 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import type { EffectCtx } from '@/engine/types';
-import type { GameState, SceneCharacter } from '@/engine/types';
+import type { GameState, SceneCharacter, Candidate } from '@/engine/types';
 
 function makeCtx(overrides: Partial<EffectCtx> = {}): EffectCtx {
   return {
@@ -109,8 +109,8 @@ describe('engine.effect.runAtom', () => {
         runAtom(draft, 'filePopToHand', { player: 'self' }, makeCtx());
       });
       expect(result.players.self.file).toHaveLength(1);
-      // card-back の場合は cardId が無いため少なくとも 1 枚増えていること
-      expect(result.players.self.hand).toHaveLength(1);
+      // card-back カードは手札に 'card-back' 文字列として加えられる
+      expect(result.players.self.hand[0]).toBe('card-back');
     });
   });
 
@@ -286,24 +286,26 @@ describe('engine.effect.runAtom', () => {
   });
 
   describe('charSetAP', () => {
-    it('apOverride を指定値に設定 (TODO: charSetAP vs charOverrideAP Phase 5 で明確化)', () => {
+    it('Phase 5 未実装のため Error を投げる', () => {
       const c = makeChar({ uid: 'sap-uid' });
       const s = withScene(createEmptyGameState(), 'self', [c]);
-      const result = produce(s, draft => {
-        runAtom(draft, 'charSetAP', { uid: 'sap-uid', val: 3000 }, makeCtx());
-      });
-      expect(result.players.self.scene[0].apOverride).toBe(3000);
+      expect(() => {
+        produce(s, draft => {
+          runAtom(draft, 'charSetAP', { uid: 'sap-uid', val: 3000 }, makeCtx());
+        });
+      }).toThrow(/charSetAP: not yet supported/);
     });
   });
 
   describe('charSetLP', () => {
-    it('lpOverride を指定値に設定', () => {
+    it('Phase 5 未実装のため Error を投げる', () => {
       const c = makeChar({ uid: 'slp-uid' });
       const s = withScene(createEmptyGameState(), 'self', [c]);
-      const result = produce(s, draft => {
-        runAtom(draft, 'charSetLP', { uid: 'slp-uid', val: 2 }, makeCtx());
-      });
-      expect(result.players.self.scene[0].lpOverride).toBe(2);
+      expect(() => {
+        produce(s, draft => {
+          runAtom(draft, 'charSetLP', { uid: 'slp-uid', val: 2 }, makeCtx());
+        });
+      }).toThrow(/charSetLP: not yet supported/);
     });
   });
 
@@ -473,7 +475,7 @@ describe('engine.effect.runAtom', () => {
 
   // --- デッキ操作 (新規 G18/G22) ---
   describe('deckRevealUntil', () => {
-    it('filter にマッチするカードを bindings[bindMatch] に、残りを bindings[bind].rest に', () => {
+    it('filter にマッチするカードを bindings[bindMatch] に、その手前を bindings[bind] に格納', () => {
       let s = createEmptyGameState();
       s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'TARGET', 'C'] } } };
       const ctx = makeCtx();
@@ -490,9 +492,24 @@ describe('engine.effect.runAtom', () => {
           ctx,
         );
       });
-      // bindings は ctx 直接編集の前提
-      expect(ctx.bindings['matched']).toBeDefined();
-      expect(ctx.bindings['revealed']).toBeDefined();
+      // bindMatch には TARGET のみ (kind:'card', cardId:'TARGET')
+      expect(ctx.bindings['matched']).toHaveLength(1);
+      expect((ctx.bindings['matched'][0] as { cardId: string }).cardId).toBe('TARGET');
+      // bind には TARGET 手前の A, B
+      expect(ctx.bindings['revealed']).toHaveLength(2);
+      const revealedIds = (ctx.bindings['revealed'] as Array<{ cardId: string }>).map(c => c.cardId);
+      expect(revealedIds).toEqual(['A', 'B']);
+    });
+
+    it('filter にマッチしない場合: bindMatch は空、bind は全公開カード', () => {
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B'] } } };
+      const ctx = makeCtx();
+      produce(s, draft => {
+        runAtom(draft, 'deckRevealUntil', { player: 'self', filter: () => false, bind: 'all', bindMatch: 'hit' }, ctx);
+      });
+      expect(ctx.bindings['hit']).toHaveLength(0);
+      expect(ctx.bindings['all']).toHaveLength(2);
     });
   });
 
@@ -500,7 +517,12 @@ describe('engine.effect.runAtom', () => {
     it('ctx.bindings[bindKey] の cardId 群をデッキ下に移動', () => {
       let s = createEmptyGameState();
       s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['BASE'] } } };
-      const ctx = makeCtx({ bindings: { rest: [{ kind: 'card', cardId: 'A', area: 'deck', player: 'self' }, { kind: 'card', cardId: 'B', area: 'deck', player: 'self' }] as unknown as never } });
+      // Candidate の card バリアントに適合する shape — 型キャスト不要
+      const cards: Candidate[] = [
+        { kind: 'card', cardId: 'A', area: 'deck', player: 'self' },
+        { kind: 'card', cardId: 'B', area: 'deck', player: 'self' },
+      ];
+      const ctx = makeCtx({ bindings: { rest: cards } });
       const result = produce(s, draft => {
         runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: 'rest' }, ctx);
       });
@@ -530,7 +552,27 @@ describe('engine.effect.runAtom', () => {
     });
   });
 
-  // --- defensive ---
+  // --- defensive / arg validation ---
+  describe('requireField — missing required args', () => {
+    it('draw に player が無ければ明確なエラーを投げる', () => {
+      const s = createEmptyGameState();
+      expect(() => {
+        produce(s, draft => {
+          runAtom(draft, 'draw', { n: 1 }, makeCtx()); // player 欠落
+        });
+      }).toThrow(/atom args missing string field "player"/);
+    });
+
+    it('sceneEnter に cardId が無ければ明確なエラーを投げる', () => {
+      const s = createEmptyGameState();
+      expect(() => {
+        produce(s, draft => {
+          runAtom(draft, 'sceneEnter', { player: 'self' }, makeCtx()); // cardId 欠落
+        });
+      }).toThrow(/atom args missing string field "cardId"/);
+    });
+  });
+
   describe('unknown verb', () => {
     it('未知の verb はエラーを投げる', () => {
       const s = createEmptyGameState();
