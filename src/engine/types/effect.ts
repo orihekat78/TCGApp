@@ -1,0 +1,136 @@
+// Effect DSL 型定義
+// rules: 15-abilities-effects.md, 07-action-flow.md, 08-contact.md, 09-cutin-disguise.md
+// rules: 11-reasoning.md, 13-keywords.md, 14-refresh.md, 21-declared-ability-cost.md
+
+import type { GameState, TurnScopedFlags } from './game-state.js';
+import type { EffectCtx } from './effect-ctx.js';
+
+// ---------- Condition ----------
+
+export type Condition =
+  | { kind: 'true' }
+  | { kind: 'false' }
+  | { kind: 'not'; c: Condition }
+  | { kind: 'and'; cs: Condition[] }
+  | { kind: 'or'; cs: Condition[] }
+  | { kind: 'turn'; player: 'self' | 'opp' }
+  | { kind: 'partnerColor'; color: string | string[] }
+  | { kind: 'caseColor'; color: string | string[]; combine?: 'or' | 'and' }
+  | { kind: 'caseTrait'; trait: string }
+  | { kind: 'fileAtLeast'; n: number }
+  | { kind: 'caseStatus'; status: '事件編' | '解決編' }
+  | { kind: 'bond'; cardName: string | string[] }
+  | { kind: 'sceneHas'; query: TargetQuery; nMin?: number }
+  | { kind: 'apAtLeast'; ref: TargetingRef; n: number }
+  | { kind: 'lpAtLeast'; ref: TargetingRef; n: number }
+  | { kind: 'evidenceAtLeast'; player: 'self' | 'opp'; n: number }
+  | { kind: 'fileTopType'; type: 'card-back' | 'assisted-partner' }
+  | { kind: 'scratchTrace'; player: 'self' | 'opp'; v: '発見済' | '未発見' }
+  | { kind: 'flag'; player: 'self' | 'opp'; key: keyof TurnScopedFlags; v: boolean }
+  | { kind: 'declaredUseUnder'; uid: string; abilityId: string; max: number }
+  | { kind: 'bound'; key: string; presence?: 'exists' | 'matched' }
+  | { kind: 'removeColorAtLeast'; player: 'self' | 'opp'; color: string | string[]; n: number }
+  | { kind: 'removeTraitAtLeast'; player: 'self' | 'opp'; trait: string | string[]; n: number }
+  | { kind: 'removeNameAtLeast'; player: 'self' | 'opp'; cardName: string | string[]; n: number }
+  | { kind: 'stackedCountAtLeast'; ref: TargetingRef; n: number }
+  | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean };
+
+// ---------- TargetFilter / TargetQuery / TargetingRef ----------
+
+import type { Candidate } from './candidate.js';
+
+export type TargetFilter = {
+  cardId?: string | string[];
+  cardName?: string | string[];
+  trait?: string | string[];
+  color?: string | string[];
+  keyword?: string | string[];
+  apMin?: number;
+  apMax?: number;
+  lpMin?: number;
+  lpMax?: number;
+  levelMin?: number;
+  levelMax?: number;
+  hasSetCards?: boolean;
+  custom?: (s: GameState, candidate: Candidate) => boolean;
+};
+
+export type TargetQuery = {
+  area?: 'scene' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case';
+  side?: 'self' | 'opp' | 'either' | 'owner' | 'opp-of-owner';
+  filter?: TargetFilter;
+  filterAny?: TargetFilter[];
+  excludeSelf?: boolean;
+  state?: ('active' | 'sleep' | 'stun')[];
+  named?: boolean;
+  distinctNames?: boolean;
+};
+
+export type TargetingRef =
+  | { kind: 'self' }
+  | { kind: 'pick'; query: TargetQuery; n: { min: number; max: number }; chooser: 'owner' | 'opp' | 'self' | 'opp-of-owner' }
+  | { kind: 'all'; query: TargetQuery }
+  | { kind: 'fromBound'; bindKey: string };
+
+// ---------- TriggerRef ----------
+
+export type TriggerRef =
+  | { on: 'reasoning'; by?: TargetingRef }
+  | { on: 'action'; by?: TargetingRef; against?: TargetingRef }
+  | { on: 'contact-ap-judge' }
+  | { on: 'evidence-remove' }
+  | { on: 'enter'; who: TargetingRef }
+  | { on: 'leave'; who: TargetingRef }
+  | { on: 'refresh'; player: 'self' | 'opp' }
+  | { on: 'effect-resolution'; matcher: object };
+
+// ---------- Scope ----------
+
+export type Scope = 'contact' | 'action' | 'turn' | 'opp-turn' | 'permanent' | 'until-leave';
+
+// ---------- AtomVerb ----------
+
+export type AtomVerb =
+  | 'draw' | 'discard' | 'mill' | 'fileAdd' | 'filePopToHand'
+  | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip'
+  | 'evidenceToHand' | 'handAddFromRemove'
+  | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise'
+  | 'charModifyAP' | 'charModifyLP' | 'charSetAP' | 'charSetLP'
+  | 'charOverrideAP' | 'charOverrideLP'
+  | 'charGrantKeyword' | 'charRevokeKeyword' | 'charDisableOriginal'
+  | 'charSetTurnEffect' | 'charSetCard' | 'charStackCard'
+  | 'partnerAssist' | 'partnerSetState' | 'partnerSolveCase'
+  | 'caseToResolved'
+  | 'startContact' | 'endActionEarly'
+  | 'deckRevealUntil' | 'deckToBottomBound'
+  | 'log' | 'noop';
+
+// ---------- Cost ----------
+
+export type Cost =
+  | { kind: 'sleepSelf' }
+  | { kind: 'sleepChar'; target: TargetingRef }
+  | { kind: 'removeFromHand'; target: TargetingRef; n: number }
+  | { kind: 'removeFromScene'; target: TargetingRef; n: number }
+  | { kind: 'removeDeckTop'; player: 'self'; n: number }
+  | { kind: 'discardEvidence'; n: number }
+  | { kind: 'selfToDeckBottom' }
+  | { kind: 'pay'; items: Cost[] }
+  | { kind: 'choice'; items: Cost[] }
+  | { kind: 'fileFrom'; n: number }
+  | { kind: 'flipFaceUpEvidence'; n: { min: number; max: number } }
+  | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean; pay: (s: GameState, ctx: EffectCtx) => void };
+
+// ---------- Effect ----------
+
+export type Effect =
+  | { kind: 'sequence'; steps: Effect[] }
+  | { kind: 'parallel'; steps: Effect[] }
+  | { kind: 'choice'; options: Effect[]; chooser: 'self' | 'opp' | 'owner' }
+  | { kind: 'optional'; effect: Effect }
+  | { kind: 'conditional'; if: Condition; then: Effect; else?: Effect }
+  | { kind: 'forEach'; over: TargetingRef; do: Effect }
+  | { kind: 'replace'; trigger: TriggerRef; with: Effect }
+  | { kind: 'negate'; trigger: TriggerRef }
+  | { kind: 'atom'; verb: AtomVerb; args: unknown }
+  | { kind: 'custom'; fn: (s: GameState, ctx: EffectCtx) => void };
