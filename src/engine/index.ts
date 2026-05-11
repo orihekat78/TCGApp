@@ -9,10 +9,11 @@ import { dyn } from './dyn/index.js';
 import { target } from './target/index.js';
 import { cost } from './cost/index.js';
 import { cond } from './cond/index.js';
+import { resolve } from './resolve/index.js';
 
 const effect = { runAtom, run: effectRun };
 
-export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond };
+export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve };
 
 // re-export namespace components for direct import
 export { read } from './read/index.js';
@@ -24,3 +25,4 @@ export { dyn } from './dyn/index.js';
 export { target } from './target/index.js';
 export { cost } from './cost/index.js';
 export { cond } from './cond/index.js';
+export { resolve } from './resolve/index.js';
