@@ -87,31 +87,17 @@ function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKin
  * canActionAgainstChar — 相手キャラへのアクション可否。
  *
  * - 主体が canAction (target='char')
- * - 対象が **相手** プレイヤーの現場にいる
- * - 対象が targetExpander.candidates() に含まれる (拡張候補優先)
+ * - 対象が targetExpander.candidates() に含まれる
  *   - 通常 (rules/07): sleep or stun
  *   - 拡張 (G29 例: D11007): level≥7 active も拡張で許可
+ *
+ * Note: findActor guard in _canAction already ensures byUid is a valid actor
+ * before candidates() is called, so candidates() returning [] is unreachable here.
  */
 export function canActionAgainstChar(state: GameState, byUid: string, targetUid: string): boolean {
-  const actor = findActor(state, byUid);
-  if (!actor) return false;
   if (!_canAction(state, byUid, 'char')) return false;
-
-  // 対象を探す → 相手側にいる必要あり
-  const oppPlayer: Player = actor.player === 'self' ? 'opp' : 'self';
-  const target = state.players[oppPlayer].scene.find(c => c.uid === targetUid);
-  if (!target) return false;
-
-  // G29: candidates() に含まれる場合は許可 (base sleep/stun + expander の合算)
-  const allowed = targetCandidates(state, byUid);
-  if (allowed.some(c => c.uid === targetUid)) return true;
-
-  // フォールバック (互換性のための既存ロジック): sleep/stun
-  // candidates() は actor が見つからない場合に [] を返す可能性があるので
-  // この既存ロジックは safety net として残す。
-  if (target.state === 'sleep' || target.state === 'stun') return true;
-
-  return false;
+  const cands = targetCandidates(state, byUid);
+  return cands.some(c => c.uid === targetUid);
 }
 
 /**

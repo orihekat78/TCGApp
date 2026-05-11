@@ -77,21 +77,22 @@ function makeDecks(): DeckPair {
 
 /**
  * 全 invariant をチェック (両プレイヤー).
- * caseMonotonic / scratchTraceMonotonic は prev 比較なので
- * 「現状態 → 同状態」で呼んで「状態が悪い方向に進んでないか」を担保する。
+ * caseMonotonic / scratchTraceMonotonic は prev→current を比較する。
+ * prev には初期状態(post-setup)のスナップショットを渡すことで、
+ * 「解決編→事件編」「発見済→未発見」への逆行が検出される。
  * stunSemantics は uid + 試行履歴が必要 — 整合チェックなしのプレースホルダなので呼ばない。
  */
-function checkAllInvariants(s: GameState): void {
+function checkAllInvariants(s: GameState, prev: GameState): void {
   invariant.sceneAtMost5(s, 'self');
   invariant.sceneAtMost5(s, 'opp');
   invariant.partnerExists(s, 'self');
   invariant.partnerExists(s, 'opp');
   invariant.caseExists(s, 'self');
   invariant.caseExists(s, 'opp');
-  invariant.caseMonotonic(s, 'self', s.players.self.case.status);
-  invariant.caseMonotonic(s, 'opp', s.players.opp.case.status);
-  invariant.scratchTraceMonotonic(s, 'self', s.scratchTrace.self);
-  invariant.scratchTraceMonotonic(s, 'opp', s.scratchTrace.opp);
+  invariant.caseMonotonic(s, 'self', prev.players.self.case.status);
+  invariant.caseMonotonic(s, 'opp', prev.players.opp.case.status);
+  invariant.scratchTraceMonotonic(s, 'self', prev.scratchTrace.self);
+  invariant.scratchTraceMonotonic(s, 'opp', prev.scratchTrace.opp);
 }
 
 /**
@@ -201,8 +202,8 @@ describe('integration: 1-turn round-trip', () => {
       expect(bIdx).toBeGreaterThan(dIdx);
       expect(eIdx).toBeGreaterThan(bIdx);
 
-      // 不変条件
-      expect(() => checkAllInvariants(s2)).not.toThrow();
+      // 不変条件 — base は post-setup スナップショット (prev として渡す)
+      expect(() => checkAllInvariants(s2, base)).not.toThrow();
     });
   });
 
@@ -317,8 +318,8 @@ describe('integration: 1-turn round-trip', () => {
       expect(idxOf('contact:end')).toBeGreaterThan(idxOf('contact:judge'));
       expect(idxOf('action:end')).toBeGreaterThan(idxOf('contact:end'));
 
-      // 不変条件
-      expect(() => checkAllInvariants(s8)).not.toThrow();
+      // 不変条件 — base は post-setup スナップショット (prev として渡す)
+      expect(() => checkAllInvariants(s8, base)).not.toThrow();
     });
   });
 });
