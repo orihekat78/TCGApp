@@ -1,0 +1,102 @@
+// cards/ct-d08/D08024 「あら…頼もしいじゃない…」 (イベント)
+// rules: 10-action-event.md, 14-refresh.md, 15-abilities-effects.md, 20-color-and-switch.md
+// spec: .claude/specs/cards-analysis/D08024.md
+//
+// 公式テキスト:
+//   自分のリムーブエリアにあるレベル5以下の〚カード名［阿笠博士］〛か
+//   レベル5以下の〚特徴［少年探偵団］〛のキャラを1枚まで選び、登場させる。
+//   〚特徴［少年探偵団］〛のキャラを1枚まで選び、ターン終了時までAP＋2000する。
+//   【ヒラメキ】カードを1枚引く。
+//
+// a1: 個別実装 (sequence: choice→sceneEnter + choice→charModifyAP)
+// a2: hiramekiDraw 共通クラス
+
+import type { AbilityDef, CardDef, GameState } from '@/engine/types';
+import { hiramekiDraw } from '@/cards/_shared/hiramekiDraw';
+
+const a1: AbilityDef = {
+  id: 'a1',
+  type: 'triggered',
+  scope: 'on-hand',
+  trigger: {
+    hook: 'effect:declared',
+    matcher: (p: unknown, _s: GameState) => {
+      if (!p || typeof p !== 'object') return false;
+      return (p as { kind?: unknown }).kind === 'event-use';
+    },
+  },
+  effect: {
+    kind: 'sequence',
+    steps: [
+      {
+        kind: 'choice',
+        chooser: 'self',
+        options: [
+          {
+            kind: 'atom',
+            verb: 'sceneEnter',
+            args: {
+              player: 'self',
+              cardId: '$pick',
+              viaEffect: true,
+              target: {
+                kind: 'pick',
+                query: {
+                  area: 'remove',
+                  side: 'self',
+                  filterAny: [
+                    { cardName: '阿笠博士', levelMax: 5 },
+                    { trait: '少年探偵団', levelMax: 5 },
+                  ],
+                },
+                n: { min: 0, max: 1 },
+                chooser: 'self',
+              },
+            },
+          },
+        ],
+      },
+      {
+        kind: 'choice',
+        chooser: 'self',
+        options: [
+          {
+            kind: 'atom',
+            verb: 'charModifyAP',
+            args: {
+              uid: '$pick',
+              delta: 2000,
+              scope: 'turn',
+              target: {
+                kind: 'pick',
+                query: { area: 'scene', side: 'either', filter: { trait: '少年探偵団' } },
+                n: { min: 0, max: 1 },
+                chooser: 'self',
+              },
+            },
+          },
+        ],
+      },
+    ],
+  },
+  description: 'リムーブから[阿衣博士]/[少年探偵団] Lv5以下を1枚まで登場し、[少年探偵団]を1枚まで AP+2000/ターン。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/20-color-and-switch.md'],
+};
+
+export const D08024: CardDef = {
+  id: 'D08024',
+  no: '0498/D08024',
+  kind: 'event',
+  names: ['「あら…頼もしいじゃない…」'],
+  colors: ['青'],
+  level: 6,
+  traits: [],
+  rarity: 'D',
+  imageUrl: '1743743100630487.jpg',
+  abilities: [a1, hiramekiDraw({ n: 1, abilityId: 'a2' })],
+  ruleRefs: [
+    'rules/10-action-event.md',
+    'rules/15-abilities-effects.md',
+    'rules/20-color-and-switch.md',
+  ],
+};
