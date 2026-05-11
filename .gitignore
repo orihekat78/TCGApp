@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.local
+*.log
+.DS_Store
+.vite/
+.vitest/
+
+# 一時ファイル (動画解析・画像クロップ等)
+.tmp/
+*.mp4
+*.png
+
+# IDE
+.vscode/
+.idea/
+
+# ローカル設定
+.claude/settings.local.json
