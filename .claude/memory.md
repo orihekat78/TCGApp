@@ -2,26 +2,24 @@
 
 ## 現在地
 
-**フェーズ**: MVP 実装中 (Phase 0-2 完了 = engine 基礎 + read/mutate/invariant 構築済)
-**最新コミット**: `e63c5c5 feat(engine): invariants + integration round-trip test`
-**テスト状況**: 308 PASS / 30 Test Files / typecheck 通過
+**フェーズ**: MVP 実装中 (Phase 0-3 完了 = engine 完成: read/mutate/invariant + event/effect/dyn/target/cost/cond/resolve)
+**最新コミット**: `fafaeab fix(engine): resolve stack + resolver quality fixes`
+**テスト状況**: 529 PASS / 42 Test Files / typecheck 通過
 
 ## 次セッション開始時の最優先タスク
 
-⭐ **Phase 3 (Effect Resolver + Hooks + Cost + Target + Cond + Dyn)** から再開
+⭐ **Phase 4 (Flow Control: turn/phase/action/contact 9段階状態機械)** から再開
 
-**🔑 次セッションプロンプト**: [.claude/NEXT-SESSION-PROMPT.md](.claude/NEXT-SESSION-PROMPT.md) (そのままコピペで再開)
+詳細プラン: [research/plans/2026-05-11-mvp-implementation/phase-4-flow.md](.claude/research/plans/2026-05-11-mvp-implementation/phase-4-flow.md)
 
-詳細プラン: [research/plans/2026-05-11-mvp-implementation/phase-3-effect-resolver.md](.claude/research/plans/2026-05-11-mvp-implementation/phase-3-effect-resolver.md)
-
-引き続き **subagent-driven** で実行 (ユーザー選択 mode 維持)。
+引き続き **subagent-driven** で実行 (前セッション同様)。
 
 ## 進捗トラッカー
 
 - [x] Phase 0: ブートストラップ (6 commits)
 - [x] Phase 1: 型/RNG/factory/Immer (4 commits)
 - [x] Phase 2: read/mutate/invariant (4 commits, 308 tests)
-- [ ] Phase 3: Effect Resolver + Hooks + Cost + Target + Cond
+- [x] Phase 3: Effect Resolver + Hooks + Cost + Target + Cond + Dyn (13 commits, 529 tests)
 - [ ] Phase 4: Flow Control (turn/action/contact)
 - [ ] Phase 5: cards/_shared/ 9 + 47 cards
 - [ ] Phase 6: AI (Random/Heuristic)
@@ -36,6 +34,7 @@
 - [2026-05-11-2 (午後1)](.claude/sessions/2026-05-11-2.md) — カード分析 47枚 + TSV 集約
 - [2026-05-11-3 (午後2)](.claude/sessions/2026-05-11-3.md) — G23-G30 + 共通クラス + Q&A + MVPプラン
 - [2026-05-11-4 (午後3)](.claude/sessions/2026-05-11-4.md) — subagent-driven 実装 Phase 0-2
+- [2026-05-11-5 (午後4-5)](.claude/sessions/2026-05-11-5.md) — subagent-driven 実装 Phase 3 完了
 
 ## 主要参照
 
