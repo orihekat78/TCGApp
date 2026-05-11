@@ -4,12 +4,17 @@
   "description": "ローカルで「人間 vs CPU」「CPU vs CPU」が遊べる、 名探偵コナントレーディングカードゲーム（タカラトミー公式）の **個人利用限定** Webアプリ。",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@types/node": "^25.6.2",
     "@types/react": "^19.2.14",
