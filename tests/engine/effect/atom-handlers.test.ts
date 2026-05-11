@@ -2,10 +2,11 @@
 // spec: .claude/specs/engine-api-effect-descriptor.md
 // rules: 15-abilities-effects.md and others (see each verb)
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom } from '@/engine/effect/atom-handlers';
+import { event } from '@/engine/event/index';
 import type { EffectCtx } from '@/engine/types';
 import type { GameState, SceneCharacter, Candidate } from '@/engine/types';
 
@@ -205,6 +206,10 @@ describe('engine.effect.runAtom', () => {
 
   // --- 現場 ---
   describe('sceneEnter', () => {
+    beforeEach(() => {
+      event._resetRegistry();
+    });
+
     it('現場にキャラを登場させる', () => {
       const s = createEmptyGameState();
       const result = produce(s, draft => {
@@ -213,9 +218,37 @@ describe('engine.effect.runAtom', () => {
       expect(result.players.self.scene).toHaveLength(1);
       expect(result.players.self.scene[0].cardId).toBe('C100');
     });
+
+    it('enter Hook を emit する (viaEffect デフォルト true)', () => {
+      const listener = vi.fn();
+      event.on('enter', listener);
+      const s = createEmptyGameState();
+      produce(s, draft => {
+        runAtom(draft, 'sceneEnter', { player: 'self', cardId: 'X1' }, makeCtx());
+      });
+      expect(listener).toHaveBeenCalledOnce();
+      const payload = listener.mock.calls[0][1] as { uid: string; viaEffect: boolean; enterOrder: number };
+      expect(payload).toMatchObject({ viaEffect: true, enterOrder: 1 });
+      expect(payload.uid).toMatch(/^X1#\d+$/);
+    });
+
+    it('args.viaEffect=false が emit に反映される', () => {
+      const listener = vi.fn();
+      event.on('enter', listener);
+      const s = createEmptyGameState();
+      produce(s, draft => {
+        runAtom(draft, 'sceneEnter', { player: 'self', cardId: 'X2', viaEffect: false }, makeCtx());
+      });
+      const payload = listener.mock.calls[0][1] as { viaEffect: boolean };
+      expect(payload.viaEffect).toBe(false);
+    });
   });
 
   describe('sceneSwitch', () => {
+    beforeEach(() => {
+      event._resetRegistry();
+    });
+
     it('既存キャラをリムーブして新キャラ登場 (スイッチ)', () => {
       const c = makeChar({ uid: 'old-uid', cardId: 'OLD' });
       const s = withScene(createEmptyGameState(), 'self', [c]);
@@ -225,6 +258,20 @@ describe('engine.effect.runAtom', () => {
       expect(result.players.self.scene).toHaveLength(1);
       expect(result.players.self.scene[0].cardId).toBe('NEW');
       expect(result.players.self.remove).toContain('OLD');
+    });
+
+    it('スイッチ登場でも enter Hook を emit する (rules/17)', () => {
+      const listener = vi.fn();
+      event.on('enter', listener);
+      const c = makeChar({ uid: 'old-uid', cardId: 'OLD' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      produce(s, draft => {
+        runAtom(draft, 'sceneSwitch', { player: 'self', cardId: 'NEW', removeUid: 'old-uid' }, makeCtx());
+      });
+      expect(listener).toHaveBeenCalledOnce();
+      const payload = listener.mock.calls[0][1] as { uid: string; viaEffect: boolean };
+      expect(payload).toMatchObject({ viaEffect: true });
+      expect(payload.uid).toMatch(/^NEW#\d+$/);
     });
   });
 

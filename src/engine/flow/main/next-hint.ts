@@ -99,6 +99,24 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
       { kind: 'nextHintCardUse', cardId: optionalCardId },
       { player: p, cardId: optionalCardId },
     );
+    // キャラの場合: 現場へ登場 (rules/12 §3 — アクティブ・名乗り状態で登場)。
+    // 手札の使用とは異なり、ネクストヒントによる登場は **手動プレイ** = viaEffect:false。
+    // rules/17 — enter Hook を emit して 【登場時】 listener を起動する。
+    if (d && d.kind === 'character') {
+      // 手札から除去
+      const handIdx = state.players[p].hand.indexOf(optionalCardId);
+      if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+      // 現場登場 (名乗り状態 = rules/12 同ターン登場)
+      const newChar = mutate.scene.enter(state, p, optionalCardId, {
+        named: true,
+        viaEffect: false,
+      });
+      event.emit(state, 'enter', {
+        uid: newChar.uid,
+        viaEffect: false,
+        enterOrder: newChar.enterOrder,
+      }, { player: p, cardId: optionalCardId, uid: newChar.uid });
+    }
   }
 
   // 3. フラグセット

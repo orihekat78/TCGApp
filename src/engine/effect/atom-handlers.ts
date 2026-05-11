@@ -14,6 +14,7 @@
 import type { GameState, AtomVerb, EffectCtx, LogEntry, FileCard, Candidate } from '../types/index.js';
 import { FILE_CARD_BACK_PLACEHOLDER } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
+import { event } from '../event/index.js';
 
 type Player = 'self' | 'opp';
 
@@ -116,17 +117,33 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- 現場 ---
     case 'sceneEnter': {
-      mutate.scene.enter(s, requireField<Player>(a, 'player', 'string'), requireField<string>(a, 'cardId', 'string'), {
+      // 効果による登場 (atom verb 駆動) は viaEffect=true がデフォルト。
+      // ただし args に明示があれば尊重する (テスト・特殊呼出用)。
+      const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
+      const newChar = mutate.scene.enter(s, requireField<Player>(a, 'player', 'string'), requireField<string>(a, 'cardId', 'string'), {
         named: (a.named as boolean | undefined) ?? false,
-        viaEffect: (a.viaEffect as boolean | undefined) ?? false,
+        viaEffect,
       });
+      // rules/17 — 現場登場時 Hook (【登場時】・【疾風 N】判定)
+      event.emit(s, 'enter', {
+        uid: newChar.uid,
+        viaEffect,
+        enterOrder: newChar.enterOrder,
+      }, ctx.source);
       return;
     }
     case 'sceneSwitch': {
-      mutate.scene.switchEnter(s, a.player as Player, a.cardId as string, a.removeUid as string, {
+      const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
+      const newChar = mutate.scene.switchEnter(s, a.player as Player, a.cardId as string, a.removeUid as string, {
         named: (a.named as boolean | undefined) ?? false,
-        viaEffect: (a.viaEffect as boolean | undefined) ?? false,
+        viaEffect,
       });
+      // スイッチ登場も rules/17 上「登場」として enter Hook が発火する
+      event.emit(s, 'enter', {
+        uid: newChar.uid,
+        viaEffect,
+        enterOrder: newChar.enterOrder,
+      }, ctx.source);
       return;
     }
     case 'sceneRemove': {

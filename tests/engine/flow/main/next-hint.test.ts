@@ -88,6 +88,38 @@ describe('engine.flow.main.runNextHint', () => {
     expect(after.turnState.self.nextHintUsed).toBe(true);
   });
 
+  it('キャラを optionalCardId で使用すると 現場に登場 + enter Hook 発火 (viaEffect:false, named)', () => {
+    // rules/12: ネクストヒントで登場するキャラは アクティブ状態 + 同ターン登場 (名乗り)
+    registerCardDef(makeCard('CH1', { kind: 'character', colors: ['赤'], level: 1 }));
+    let entered: { uid: string; viaEffect: boolean; enterOrder: number } | undefined;
+    event.on('enter', (_s, payload) => {
+      entered = payload as typeof entered;
+    });
+    const s = makeStateWithFile(2, { hand: ['CH1'] });
+    const after = produce(s, draft => {
+      runNextHint(draft, 'self', 'CH1');
+    });
+    expect(after.players.self.scene).toHaveLength(1);
+    expect(after.players.self.scene[0].cardId).toBe('CH1');
+    expect(after.players.self.scene[0].isNamed).toBe(true);
+    expect(after.players.self.scene[0].state).toBe('active');
+    expect(after.players.self.hand).not.toContain('CH1');
+    expect(entered).toBeDefined();
+    expect(entered!.viaEffect).toBe(false);
+    expect(entered!.uid).toMatch(/^CH1#\d+$/);
+  });
+
+  it('イベントを optionalCardId で使用しても enter Hook は emit しない', () => {
+    registerCardDef(makeCard('EV1', { kind: 'event', colors: ['赤'], level: 1 }));
+    let entered = false;
+    event.on('enter', () => { entered = true; });
+    const s = makeStateWithFile(2, { hand: ['EV1'] });
+    produce(s, draft => {
+      runNextHint(draft, 'self', 'EV1');
+    });
+    expect(entered).toBe(false);
+  });
+
   it('optionalCardId が手札にない → throw', () => {
     const s = makeStateWithFile(2);
     expect(() =>
