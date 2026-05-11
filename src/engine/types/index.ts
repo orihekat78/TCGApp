@@ -29,6 +29,14 @@ export type {
 
 export type { Candidate } from './candidate.js';
 
+export type {
+  EffectStackEntry,
+  EffectStackEntrySource,
+  EffectStackEntryTrigger,
+  EffectStackEntryTimestamp,
+  EffectStackEntryState,
+} from './effect-stack.js';
+
 export type { EffectCtx, ContactCtx } from './effect-ctx.js';
 
 export type {

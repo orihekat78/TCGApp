@@ -76,9 +76,10 @@ export type LogEntry = {
   result?: string;
 };
 
-// Effect は effect.ts で定義されるが、GameState が pendingEffects: Effect[] を持つため
-// 前方参照を避けるために import を使用する
-import type { Effect } from './effect.js';
+// pendingEffects は EffectStackEntry[] として保持する。
+// 単なる Effect ではなく、発火元・発火タイミング・解決状態を含むラッパー。
+// spec: .claude/specs/engine-api-resolver.md
+import type { EffectStackEntry } from './effect-stack.js';
 
 export type GameState = {
   turn: {
@@ -88,7 +89,7 @@ export type GameState = {
     isFirstPlayerFirstTurn: boolean;
   };
   players: { self: PlayerState; opp: PlayerState };
-  pendingEffects: Effect[];
+  pendingEffects: EffectStackEntry[];
   scratchTrace: { self: '未発見' | '発見済'; opp: '未発見' | '発見済' };
   turnState: { self: TurnScopedFlags; opp: TurnScopedFlags };
   refreshCount: { self: number; opp: number };

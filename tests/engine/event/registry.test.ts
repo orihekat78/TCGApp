@@ -57,10 +57,15 @@ describe('engine.event.registry', () => {
       event.on('turn:start', () => eff);
       const s = createEmptyGameState();
       const result = produce(s, draft => {
-        event.emit(draft, 'turn:start', {});
+        event.emit(draft, 'turn:start', { player: 'self', turnNo: 1 });
       });
       expect(result.pendingEffects).toHaveLength(1);
-      expect(result.pendingEffects[0]).toEqual(eff);
+      // pendingEffects は EffectStackEntry にラップされる
+      expect(result.pendingEffects[0].effect).toEqual(eff);
+      expect(result.pendingEffects[0].state).toBe('pending');
+      expect(result.pendingEffects[0].triggeredBy.hook).toBe('turn:start');
+      expect(result.pendingEffects[0].triggeredBy.payload).toEqual({ player: 'self', turnNo: 1 });
+      expect(typeof result.pendingEffects[0].id).toBe('string');
     });
 
     it('listener が void (undefined) を返したら pendingEffects に何も積まれない', () => {
@@ -83,8 +88,8 @@ describe('engine.event.registry', () => {
         event.emit(draft, 'turn:start', {});
       });
       expect(result.pendingEffects).toHaveLength(2);
-      expect(result.pendingEffects[0]).toEqual(e1);
-      expect(result.pendingEffects[1]).toEqual(e2);
+      expect(result.pendingEffects[0].effect).toEqual(e1);
+      expect(result.pendingEffects[1].effect).toEqual(e2);
     });
 
     it('emit は source を listener に渡す', () => {
@@ -146,7 +151,8 @@ describe('engine.event.registry', () => {
         event.queue(draft, eff);
       });
       expect(result.pendingEffects).toHaveLength(1);
-      expect(result.pendingEffects[0]).toEqual(eff);
+      expect(result.pendingEffects[0].effect).toEqual(eff);
+      expect(result.pendingEffects[0].state).toBe('pending');
     });
 
     it('queue で複数回呼ぶと順番に積まれる', () => {
@@ -158,8 +164,8 @@ describe('engine.event.registry', () => {
         event.queue(draft, e2);
       });
       expect(result.pendingEffects).toHaveLength(2);
-      expect(result.pendingEffects[0]).toEqual(e1);
-      expect(result.pendingEffects[1]).toEqual(e2);
+      expect(result.pendingEffects[0].effect).toEqual(e1);
+      expect(result.pendingEffects[1].effect).toEqual(e2);
     });
   });
 
