@@ -10,11 +10,12 @@ import { target } from './target/index.js';
 import { cost } from './cost/index.js';
 import { cond } from './cond/index.js';
 import { resolve } from './resolve/index.js';
+import { flow } from './flow/index.js';
 
 const effect = { runAtom, run: effectRun, validate: effectValidate };
 const cards = { validate: validateCards };
 
-export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve, cards };
+export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve, flow, cards };
 
 // re-export namespace components for direct import
 export { read } from './read/index.js';
@@ -27,3 +28,4 @@ export { target } from './target/index.js';
 export { cost } from './cost/index.js';
 export { cond } from './cond/index.js';
 export { resolve } from './resolve/index.js';
+export { flow } from './flow/index.js';

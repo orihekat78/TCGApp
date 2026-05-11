@@ -10,6 +10,17 @@ type PartnerState = 'active' | 'sleep' | 'stun';
 type PartnerLocation = 'partner-area' | 'file-area' | 'mr-removed';
 
 /**
+ * パートナーを初期配置する (Phase 4 setup, rules/04)
+ * - cardId を設定
+ * - state='active', location='partner-area'
+ */
+function init(s: GameState, p: Player, cardId: string): void {
+  s.players[p].partner.cardId = cardId;
+  s.players[p].partner.state = 'active';
+  s.players[p].partner.location = 'partner-area';
+}
+
+/**
  * パートナーの状態を設定する (rules/03)
  */
 function setState(s: GameState, p: Player, st: PartnerState): void {
@@ -87,6 +98,7 @@ function toPartnerAreaFromScene(s: GameState, uid: string): void {
 }
 
 export const partner = {
+  init,
   setState,
   setLocation,
   assist,

@@ -31,6 +31,7 @@ function createEmptyPlayerState(requiredEvidence: number): PlayerState {
     evidence: [],
     remove: [],
     file: [],
+    mulliganUsed: false,
   };
 }
 

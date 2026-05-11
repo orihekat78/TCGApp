@@ -12,6 +12,8 @@ export type PlayerState = {
   evidence: EvidenceCard[];
   remove: CardId[];
   file: FileCard[];
+  // Phase 4: setup flag — マリガンは1ゲーム1回 (rules/04)
+  mulliganUsed: boolean;
 };
 
 export type SetCardEntry = {
