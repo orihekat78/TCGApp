@@ -48,3 +48,5 @@ export type {
 } from './results.js';
 
 export type { HookName } from './hooks.js';
+
+export type { CardDef } from './card-def.js';
