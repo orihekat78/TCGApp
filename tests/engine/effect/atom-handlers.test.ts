@@ -490,12 +490,27 @@ describe('engine.effect.runAtom', () => {
   });
 
   describe('caseToResolved', () => {
+    beforeEach(() => {
+      event._resetRegistry();
+    });
+
     it('事件編→解決編に移行', () => {
       const s = createEmptyGameState();
       const result = produce(s, draft => {
         runAtom(draft, 'caseToResolved', { player: 'self' }, makeCtx());
       });
       expect(result.players.self.case.status).toBe('解決編');
+    });
+
+    it('case:to-resolved Hook を emit する (rules/01)', () => {
+      const listener = vi.fn();
+      event.on('case:to-resolved', listener);
+      const s = createEmptyGameState();
+      produce(s, draft => {
+        runAtom(draft, 'caseToResolved', { player: 'self' }, makeCtx());
+      });
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener.mock.calls[0][1]).toEqual({ player: 'self' });
     });
   });
 

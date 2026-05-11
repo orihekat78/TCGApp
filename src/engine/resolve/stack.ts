@@ -23,7 +23,7 @@ import type {
 } from '../types/index.js';
 import { run as runEffect } from '../effect/resolver.js';
 import { evalCond } from '../cond/eval.js';
-import { _getResolutionLock, _setResolutionLock } from '../event/registry.js';
+import { _getResolutionLock, _setResolutionLock, event } from '../event/registry.js';
 
 const SAFETY_CAP = 1000;
 
@@ -83,15 +83,21 @@ export function next(state: GameState): EffectStackEntry | null {
 
 /**
  * Resolve one entry:
- *   1. state -> 'resolving'
+ *   1. state -> 'resolving' + emit effect:resolve:start
  *   2. resolveGuard が false なら 'cancelled' して return
+ *      (cancel した場合は effect:resolve:end は emit しない)
  *   3. ctx を作って engine.effect.run を呼ぶ
- *   4. state -> 'resolved'
+ *   4. state -> 'resolved' + emit effect:resolve:end
  *
  * 効果が対象0で実質何も起きなくても "fired" 扱い (rules/24)。
+ *
+ * Hook 仕様 (spec: engine-api-events.md):
+ *   - effect:resolve:start { effectId } — 解決開始時
+ *   - effect:resolve:end   { effectId } — 解決終了時 (resolved 状態に遷移後)
  */
 export function runOne(state: GameState, entry: EffectStackEntry): void {
   entry.state = 'resolving';
+  event.emit(state, 'effect:resolve:start', { effectId: entry.id }, entry.source);
   const ctx = entryToCtx(entry);
   if (entry.resolveGuard !== undefined) {
     const ok = evalCond(state, entry.resolveGuard, ctx);
@@ -102,6 +108,7 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
   }
   runEffect(state, entry.effect, ctx);
   entry.state = 'resolved';
+  event.emit(state, 'effect:resolve:end', { effectId: entry.id }, entry.source);
 }
 
 /**

@@ -224,7 +224,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'caseToResolved': {
-      mutate.case.toResolved(s, a.player as Player);
+      const p = a.player as Player;
+      mutate.case.toResolved(s, p);
+      // rules/01 — 事件編→解決編 移行 Hook (一方通行)。
+      // caseResolvedHandRemove 等の事件カード共通能力がここで反応する。
+      event.emit(s, 'case:to-resolved', { player: p }, ctx.source);
       return;
     }
 

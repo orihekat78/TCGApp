@@ -4,13 +4,10 @@
 //
 // 事件カード共通: 解決編に移行したとき 手札を N 枚リムーブ。
 //
-// === Phase 5 契約 ===
-// trigger.matcher は payload shape `{ kind: 'case-resolved', player: 'self' }` を
-// 期待する。これは engine.mutate.case.toResolved が effect:resolve:end Hook に
-// emit する契約として本ファイルで定義する。Phase 6 (resolver wiring) で
-// 実装側を整合させる。
-//
-// 一方通行: 解決編→事件編なし (rules/01) → 再発動の心配なし。
+// === Hook 契約 ===
+// case:to-resolved Hook (rules/01) を購読する。payload: { player: 'self' | 'opp' }。
+// caseToResolved atom verb から emit される。一方通行 (rules/01: 解決編→事件編なし)
+// のためゲーム中 1 回しか発火しない。
 
 import type { AbilityDef, GameState } from '@/engine/types';
 
@@ -24,11 +21,11 @@ export function caseResolvedHandRemove(opts?: {
     type: 'triggered',
     scope: 'on-scene',
     trigger: {
-      hook: 'effect:resolve:end',
+      hook: 'case:to-resolved',
       matcher: (p: unknown, _s: GameState) => {
         if (!p || typeof p !== 'object') return false;
-        const o = p as { kind?: unknown; player?: unknown };
-        return o.kind === 'case-resolved' && o.player === 'self';
+        const o = p as { player?: unknown };
+        return o.player === 'self';
       },
     },
     effect: {

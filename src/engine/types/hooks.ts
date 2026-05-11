@@ -42,6 +42,9 @@ export type HookName =
   | 'effect:declared'
   | 'effect:resolve:start'
   | 'effect:resolve:end'
+  // 事件編→解決編 移行 (rules: 01-victory-conditions.md)
+  // 一方通行 (rules/01: 解決編→事件編なし) なのでゲーム中1回しか発火しない
+  | 'case:to-resolved'
   // 状態変更関連 (rules: 03-field-areas.md)
   | 'state:change'
   | 'state:tryActivate'

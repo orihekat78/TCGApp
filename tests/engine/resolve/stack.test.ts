@@ -281,4 +281,55 @@ describe('engine.resolve.stack', () => {
       expect(resolve.isLocked(s)).toBe(false);
     });
   });
+
+  describe('effect:resolve:start/end Hook emit (spec: engine-api-events.md)', () => {
+    it('runOne は effect:resolve:start → effect:resolve:end の順に Hook を emit する', () => {
+      const fired: { name: string; effectId: unknown }[] = [];
+      event.on('effect:resolve:start', (_s, payload) => {
+        fired.push({ name: 'start', effectId: (payload as { effectId: string }).effectId });
+      });
+      event.on('effect:resolve:end', (_s, payload) => {
+        fired.push({ name: 'end', effectId: (payload as { effectId: string }).effectId });
+      });
+      const s = newStateWithChar();
+      const entry = makeEntry(s, {
+        kind: 'atom',
+        verb: 'charModifyAP',
+        args: { uid: 'A#1', delta: 100, scope: 'turn' },
+      }, { id: 'resolve-id-1' });
+      produce(s, draft => {
+        resolve.queue(draft, entry);
+        const got = resolve.next(draft);
+        if (got) resolve.runOne(draft, got);
+      });
+      expect(fired).toEqual([
+        { name: 'start', effectId: 'resolve-id-1' },
+        { name: 'end', effectId: 'resolve-id-1' },
+      ]);
+    });
+
+    it('resolveGuard false で cancelled になった場合は effect:resolve:end を emit しない', () => {
+      let endFired = false;
+      let startFired = false;
+      event.on('effect:resolve:start', () => { startFired = true; });
+      event.on('effect:resolve:end', () => { endFired = true; });
+      const s = newStateWithChar();
+      const entry = makeEntry(s, {
+        kind: 'atom',
+        verb: 'noop',
+        args: {},
+      }, {
+        id: 'cancelled-id',
+        resolveGuard: { kind: 'false' },
+      });
+      const result = produce(s, draft => {
+        resolve.queue(draft, entry);
+        const got = resolve.next(draft);
+        if (got) resolve.runOne(draft, got);
+      });
+      expect(startFired).toBe(true);
+      expect(endFired).toBe(false);
+      expect(result.pendingEffects[0].state).toBe('cancelled');
+    });
+  });
 });

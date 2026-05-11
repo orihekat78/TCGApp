@@ -24,13 +24,13 @@ describe('caseResolvedHandRemove', () => {
     expect(choice.options[0].args.target.n).toEqual({ min: 2, max: 2 });
   });
 
-  it('trigger.hook is effect:resolve:end and matcher detects case-resolved/self', () => {
+  it('trigger.hook is case:to-resolved and matcher detects self player', () => {
     const d = caseResolvedHandRemove();
-    expect(d.trigger?.hook).toBe('effect:resolve:end');
+    expect(d.trigger?.hook).toBe('case:to-resolved');
     const fakeState = {} as GameState;
-    expect(d.trigger?.matcher?.({ kind: 'case-resolved', player: 'self' }, fakeState)).toBe(true);
-    expect(d.trigger?.matcher?.({ kind: 'case-resolved', player: 'opp' }, fakeState)).toBe(false);
-    expect(d.trigger?.matcher?.({ kind: 'other' }, fakeState)).toBe(false);
+    expect(d.trigger?.matcher?.({ player: 'self' }, fakeState)).toBe(true);
+    expect(d.trigger?.matcher?.({ player: 'opp' }, fakeState)).toBe(false);
+    expect(d.trigger?.matcher?.({}, fakeState)).toBe(false);
     expect(d.trigger?.matcher?.(null, fakeState)).toBe(false);
   });
 
