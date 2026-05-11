@@ -20,7 +20,7 @@
 | 2 | engine.read / engine.mutate / invariant | ✅ 完了 |
 | 3 | Effect Resolver + Hooks + Cost + Target + Cond + Dyn | ✅ 完了 |
 | 4 | Flow Control (setup/auto/main/action-SM/contact/actionCase/guard) | ✅ 完了 |
-| 5 | cards/_shared/ 9 + 47カード (CT-D08 + CT-D11) | ⏳ 次 |
+| 5 | cards/_shared/ 8 + 47カード (CT-D08 + CT-D11) | 🔄 進行中 (8共通+10カード完了/37残) |
 | 6 | AI (Random / Heuristic) | ⏳ |
 | 7 | UI Shell + プレイマット | ⏳ |
 | 8 | UI 相互作用 + 動的モーダル | ⏳ |
@@ -28,7 +28,7 @@
 
 ### テスト状況
 
-- **696 PASS / 56 Test Files** (Phase 4 終了時点)
+- **816 PASS / 60+ Test Files** (Phase 5 部分完了時点)
 - `npx tsc --noEmit` 通過
 - 骨格凍結原則遵守: `src/engine/mutate/` 編集なし
 
