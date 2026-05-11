@@ -6,10 +6,11 @@ import { invariant } from './invariant/index.js';
 import { event } from './event/index.js';
 import { runAtom } from './effect/index.js';
 import { dyn } from './dyn/index.js';
+import { target } from './target/index.js';
 
 const effect = { runAtom };
 
-export const engine = { read, mutate, invariant, event, effect, dyn };
+export const engine = { read, mutate, invariant, event, effect, dyn, target };
 
 // re-export namespace components for direct import
 export { read } from './read/index.js';
@@ -18,3 +19,4 @@ export { invariant } from './invariant/index.js';
 export { event } from './event/index.js';
 export { runAtom } from './effect/index.js';
 export { dyn } from './dyn/index.js';
+export { target } from './target/index.js';
