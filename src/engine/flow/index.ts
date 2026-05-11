@@ -24,6 +24,7 @@ export {
 export { action } from './action/state-machine.js';
 export { guard } from './guard.js';
 export { contact } from './contact.js';
+export { actionCase } from './action-case.js';
 
 import { setup } from './setup.js';
 import { runAutoPhase } from './auto-phase.js';
@@ -31,6 +32,7 @@ import { main } from './main/index.js';
 import { action } from './action/state-machine.js';
 import { guard } from './guard.js';
 import { contact } from './contact.js';
+import { actionCase } from './action-case.js';
 
 export const flow = {
   setup,
@@ -39,4 +41,5 @@ export const flow = {
   action,
   guard,
   contact,
+  actionCase,
 };
