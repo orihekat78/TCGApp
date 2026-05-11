@@ -81,14 +81,16 @@
 - Phase 1: [types-state](.claude/research/plans/2026-05-11-mvp-implementation/phase-1-types-state.md)
 - Phase 2: [read-mutate](.claude/research/plans/2026-05-11-mvp-implementation/phase-2-read-mutate.md)
 - Phase 3: [effect-resolver](.claude/research/plans/2026-05-11-mvp-implementation/phase-3-effect-resolver.md) ✅
-- Phase 4: [flow](.claude/research/plans/2026-05-11-mvp-implementation/phase-4-flow.md) ← 現在
-- Phase 5–9: [cards](.claude/research/plans/2026-05-11-mvp-implementation/phase-5-cards.md) ｜ [ai](.claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md) ｜ [ui-shell](.claude/research/plans/2026-05-11-mvp-implementation/phase-7-ui-shell.md) ｜ [ui-interactions](.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md) ｜ [polish](.claude/research/plans/2026-05-11-mvp-implementation/phase-9-polish.md)
+- Phase 4: [flow](.claude/research/plans/2026-05-11-mvp-implementation/phase-4-flow.md) ✅
+- Phase 5: [cards](.claude/research/plans/2026-05-11-mvp-implementation/phase-5-cards.md) ← 現在
+- Phase 6–9: [ai](.claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md) ｜ [ui-shell](.claude/research/plans/2026-05-11-mvp-implementation/phase-7-ui-shell.md) ｜ [ui-interactions](.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md) ｜ [polish](.claude/research/plans/2026-05-11-mvp-implementation/phase-9-polish.md)
 
 ## 📓 セッション履歴
 
 - **[sessions/README](.claude/sessions/README.md)** — セッションログ運用ルール
 - [2026-05-10](.claude/sessions/2026-05-10.md) — 法務調査・ルール抽出
 - [2026-05-11](.claude/sessions/2026-05-11.md) ｜ [-2](.claude/sessions/2026-05-11-2.md) ｜ [-3](.claude/sessions/2026-05-11-3.md) ｜ [-4](.claude/sessions/2026-05-11-4.md) ｜ [-5](.claude/sessions/2026-05-11-5.md)
+- [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了
 
 ---
 

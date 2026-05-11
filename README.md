@@ -7,9 +7,9 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-11）
+## 現在の状況（2026-05-12）
 
-**実装フェーズ進行中**。Engine 骨格 (Phase 0-3) 完了。
+**実装フェーズ進行中**。Engine 完全構築 (Phase 0-4) 完了。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -19,8 +19,8 @@
 | 1 | 型・GameState・RNG・Immer | ✅ 完了 |
 | 2 | engine.read / engine.mutate / invariant | ✅ 完了 |
 | 3 | Effect Resolver + Hooks + Cost + Target + Cond + Dyn | ✅ 完了 |
-| 4 | Flow Control (turn/phase/action/contact) | ⏳ 次 |
-| 5 | cards/_shared/ 9 + 47カード (CT-D08 + CT-D11) | ⏳ |
+| 4 | Flow Control (setup/auto/main/action-SM/contact/actionCase/guard) | ✅ 完了 |
+| 5 | cards/_shared/ 9 + 47カード (CT-D08 + CT-D11) | ⏳ 次 |
 | 6 | AI (Random / Heuristic) | ⏳ |
 | 7 | UI Shell + プレイマット | ⏳ |
 | 8 | UI 相互作用 + 動的モーダル | ⏳ |
@@ -28,7 +28,7 @@
 
 ### テスト状況
 
-- **529 PASS / 42 Test Files** (Phase 3 終了時点)
+- **696 PASS / 56 Test Files** (Phase 4 終了時点)
 - `npx tsc --noEmit` 通過
 - 骨格凍結原則遵守: `src/engine/mutate/` 編集なし
 
@@ -75,6 +75,13 @@
 | `engine.cost` | canPay / pay (viaCost フラグ管理) |
 | `engine.cond` | 26 Condition variants 評価 |
 | `engine.resolve` | Effect Stack (queue/next/runOne/runAllUntilEmpty + cancel/replace/lock) |
+| `engine.flow.setup` | init / decideFirstPlayer / dealOpeningHand / mulligan / reveal / startGame |
+| `engine.flow.runAutoPhase` | 3-step auto (activate/draw/FILE) + first-turn FILE=1 + stun→sleep |
+| `engine.flow.main` | 6 actions: handUseCard / nextHint / partner / declared / reasoning / action (canX/doX) |
+| `engine.flow.action` | 9-phase state machine + target-expander (G29) + mustBeTargeted (G28) |
+| `engine.flow.contact` | cutIn / disguise / pass / judge / computeOrder |
+| `engine.flow.actionCase` | evidence remove → ヒラメキ window → gain |
+| `engine.flow.guard` | candidates + canGuard (ブレット exception) |
 
 ## 法務スタンス（重要）
 
