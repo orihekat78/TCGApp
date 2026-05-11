@@ -13,6 +13,7 @@
 
 import type { GameState } from '../../types/index.js';
 import { char as readChar } from '../../read/char.js';
+import { candidates as targetCandidates } from '../action/target-expander.js';
 
 type Player = 'self' | 'opp';
 
@@ -87,7 +88,9 @@ function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKin
  *
  * - 主体が canAction (target='char')
  * - 対象が **相手** プレイヤーの現場にいる
- * - 対象の state が sleep or stun (rules/07)
+ * - 対象が targetExpander.candidates() に含まれる (拡張候補優先)
+ *   - 通常 (rules/07): sleep or stun
+ *   - 拡張 (G29 例: D11007): level≥7 active も拡張で許可
  */
 export function canActionAgainstChar(state: GameState, byUid: string, targetUid: string): boolean {
   const actor = findActor(state, byUid);
@@ -98,9 +101,17 @@ export function canActionAgainstChar(state: GameState, byUid: string, targetUid:
   const oppPlayer: Player = actor.player === 'self' ? 'opp' : 'self';
   const target = state.players[oppPlayer].scene.find(c => c.uid === targetUid);
   if (!target) return false;
-  // state は sleep または stun のみ可
-  if (target.state !== 'sleep' && target.state !== 'stun') return false;
-  return true;
+
+  // G29: candidates() に含まれる場合は許可 (base sleep/stun + expander の合算)
+  const allowed = targetCandidates(state, byUid);
+  if (allowed.some(c => c.uid === targetUid)) return true;
+
+  // フォールバック (互換性のための既存ロジック): sleep/stun
+  // candidates() は actor が見つからない場合に [] を返す可能性があるので
+  // この既存ロジックは safety net として残す。
+  if (target.state === 'sleep' || target.state === 'stun') return true;
+
+  return false;
 }
 
 /**

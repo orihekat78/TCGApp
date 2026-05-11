@@ -22,6 +22,13 @@ export {
   canActionAgainstCase,
 } from './main/index.js';
 export { action } from './action/state-machine.js';
+export {
+  candidates as actionCandidates,
+  mustTargetCandidates,
+  registerTargetExpander,
+  _resetTargetExpanders,
+} from './action/target-expander.js';
+export type { TargetExpander, TargetCandidate } from './action/target-expander.js';
 export { guard } from './guard.js';
 export { contact } from './contact.js';
 export { actionCase } from './action-case.js';

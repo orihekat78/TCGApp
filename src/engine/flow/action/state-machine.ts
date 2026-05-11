@@ -22,6 +22,12 @@ import { def as readDef } from '../../read/def.js';
 import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
 import { canGuard } from '../guard.js';
 import { computeOrder } from './order.js';
+import {
+  candidates as targetCandidates,
+  mustTargetCandidates,
+  registerTargetExpander,
+  _resetTargetExpanders,
+} from './target-expander.js';
 // Re-export computeOrder for callers that import from state-machine directly
 export { computeOrder };
 
@@ -115,6 +121,17 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   if (target.kind === 'char') {
     if (!canActionAgainstChar(state, byUid, target.uid)) {
       throw new Error(`flow.action.declare: cannot action by ${byUid} against char ${target.uid}`);
+    }
+    // G28: mustBeTargeted 強制指定モード (rules: cards-analysis/D11005)
+    // 相手の scene に turnEffects.mustBeTargeted=true のキャラがいる場合、
+    // char target はそのリストから選ばなければならない。
+    // 注: case target はこの制約を受けない (rules: 公式テキスト「相手の現場にいるキャラがアクションするとき」)。
+    const mustList = mustTargetCandidates(state, byUid);
+    if (mustList.length > 0 && !mustList.some(c => c.uid === target.uid)) {
+      const uids = mustList.map(c => c.uid).join(', ');
+      throw new Error(
+        `flow.action.declare: must target one of [${uids}] (mustBeTargeted enforced)`,
+      );
     }
   } else {
     if (!canActionAgainstCase(state, byUid, target.player)) {
@@ -381,7 +398,11 @@ export const action = {
   abortIfMissing,
   snapshotAP,
   computeOrder,
+  candidates: targetCandidates,
+  mustTargetCandidates,
+  registerTargetExpander,
   _resetActionContexts,
+  _resetTargetExpanders,
   _getContext,
   _deleteContext,
 };
