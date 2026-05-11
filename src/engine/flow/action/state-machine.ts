@@ -1,4 +1,4 @@
-// engine.flow.action — アクション状態機械 (Phase 4 Group B Task 4.4)
+﻿// engine.flow.action — アクション状態機械 (Phase 4 Group B Task 4.4)
 // spec: .claude/specs/engine-api-flow-control.md
 // rules: 07-action-flow.md, 08-contact.md, 22-qa-action-contact.md
 //
@@ -18,11 +18,35 @@ import type { GameState, ActionContext, ActionPhase } from '../../types/index.js
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { char as readChar } from '../../read/char.js';
+import { def as readDef } from '../../read/def.js';
 import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
 import { canGuard } from '../guard.js';
+import { computeOrder } from './order.js';
+// Re-export computeOrder for callers that import from state-machine directly
+export { computeOrder };
 
 type Player = 'self' | 'opp';
 type Target = ActionContext['target'];
+/**
+ * readEffectiveAp — partner uid を考慮した AP 読み出し
+ *
+ * read.char.ap は scene[] しかスキャンしないため、partner uid
+ * ('partner:self' / 'partner:opp') には対応していない。
+ * rules/07: パートナーもアクション可能なので、この関数で分岐する。
+ *
+ * Phase 4 scope: turnEffects による AP 修正はパートナーには未適用。
+ * TODO(phase5): パートナーへの AP 修正効果が実装されたら apOverride/turnEffects を参照する。
+ */
+function readEffectiveAp(s: GameState, uid: string): number {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
+    const partner = s.players[p].partner;
+    if (!partner) return 0;
+    const d = readDef.card(partner.cardId);
+    return d?.ap ?? 0;
+  }
+  return readChar.ap(s, uid);
+}
 
 // ActionContext モジュールレベル保持
 const _contexts: Map<string, ActionContext> = new Map();
@@ -40,6 +64,17 @@ export function _resetActionContexts(): void {
 
 export function _getContext(id: string): ActionContext | undefined {
   return _contexts.get(id);
+}
+
+/**
+ * _deleteContext — ActionContext をレジストリから削除
+ *
+ * advance が 'action-end' に遷移したとき呼ぶ。
+ * 長いゲームでの Map の無限成長を防ぐためのメモリ管理。
+ * (GameState に積まないのは Immer の produce 境界を越えないため — 上部コメント参照)
+ */
+export function _deleteContext(id: string): void {
+  _contexts.delete(id);
 }
 
 /**
@@ -168,29 +203,7 @@ export function passGuard(state: GameState, ax: ActionContext): void {
   }
 }
 
-/**
- * computeOrder — コンタクト行動順 (rules/08)
- *
- * AP 低い側が 1 番目。同値の場合は **アクションされた側 (= 非ターンプレイヤー)** が 1 番目。
- *
- * @param aAP 攻撃側 AP
- * @param bAP 防御側 AP
- * @param attackerSide 攻撃側プレイヤー
- */
-export function computeOrder(
-  aAP: number,
-  bAP: number,
-  attackerSide: { aUid: string; bUid: string },
-): { firstUid: string; secondUid: string } {
-  if (aAP < bAP) {
-    return { firstUid: attackerSide.aUid, secondUid: attackerSide.bUid };
-  }
-  if (aAP > bAP) {
-    return { firstUid: attackerSide.bUid, secondUid: attackerSide.aUid };
-  }
-  // 同値: 防御側 (アクションされた側 = 非ターンプレイヤー) が 1 番目
-  return { firstUid: attackerSide.bUid, secondUid: attackerSide.aUid };
-}
+
 
 /**
  * snapshotAP — AP スナップショット
@@ -211,8 +224,8 @@ export function snapshotAP(state: GameState, ax: ActionContext): void {
     bUid = aUid;
   }
 
-  const aAP = readChar.ap(state, aUid);
-  const bAP = readChar.ap(state, bUid);
+  const aAP = readEffectiveAp(state, aUid);
+  const bAP = readEffectiveAp(state, bUid);
 
   ax.apSnapshot = { aUid, aAP, bUid, bAP };
 
@@ -256,6 +269,8 @@ export function abortIfMissing(state: GameState, ax: ActionContext): void {
       { byUid: ax.byUid, result: 'aborted' },
       { player: ax.byPlayer, uid: ax.byUid },
     );
+    // メモリ管理: 中断時も Context を削除
+    _deleteContext(ax.id);
   }
 }
 
@@ -297,8 +312,8 @@ export function advance(state: GameState, ax: ActionContext): void {
 
     // 行動順 (AP は snapshot 後だが、ここでは未スナップショットでも先に order を計算)
     // -> snapshotAP は judge 直前。ここでは即時 AP 参照で十分
-    const aAP = readChar.ap(state, aUid);
-    const bAP = readChar.ap(state, bUid);
+    const aAP = readEffectiveAp(state, aUid);
+    const bAP = readEffectiveAp(state, bUid);
     const order = computeOrder(aAP, bAP, { aUid, bUid });
     ax.firstUid = order.firstUid;
     ax.secondUid = order.secondUid;
@@ -321,6 +336,7 @@ export function advance(state: GameState, ax: ActionContext): void {
 
   if (phase === 'action-2') {
     // redo 判定: 1番目 pass (firstActed=false) かつ 2番目 acted (secondActed=true)
+    // action-1-redo: undefined の firstActed は「未行動」を意味する — 明示的 false のみが「パス」
     if (ax.firstActed === false && ax.secondActed === true) {
       ax.phase = 'action-1-redo';
     } else {
@@ -348,6 +364,8 @@ export function advance(state: GameState, ax: ActionContext): void {
       { byUid: ax.byUid, result: 'completed' },
       { player: ax.byPlayer, uid: ax.byUid },
     );
+    // メモリ管理: action-end に到達した Context は不要なので削除 (長いゲーム対策)
+    _deleteContext(ax.id);
     return;
   }
 
@@ -365,6 +383,7 @@ export const action = {
   computeOrder,
   _resetActionContexts,
   _getContext,
+  _deleteContext,
 };
 
 // ActionPhase 型の re-export 用 (consumer 側で `type` import するため)

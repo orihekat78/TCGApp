@@ -1,4 +1,4 @@
-// engine.flow.contact — コンタクト中の行動 / AP判定 (Phase 4 Group B Task 4.5)
+﻿// engine.flow.contact — コンタクト中の行動 / AP判定 (Phase 4 Group B Task 4.5)
 // spec: .claude/specs/engine-api-flow-contact.md
 // rules: 08-contact.md, 09-cutin-disguise.md, 22-qa-action-contact.md, 23-qa-disguise-cutin.md
 //
@@ -14,6 +14,7 @@ import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
+import { computeOrder as _computeOrder } from './action/order.js';
 
 type Player = 'self' | 'opp';
 
@@ -81,6 +82,13 @@ export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId:
  * - 手札 → リムーブエリアへ
  * - ax.cutInUsed[p] = true
  * - effect:declared (Phase 5 で listener が pendingEffects に積む)
+ *
+ * @remarks
+ * Phase 4 scope: cutInUsed フラグのセットと \effect:declared\ emit のみ行う。
+ * カットイン効果 (AP+ 等) はここではキューに積まれない。
+ * Caller は \effect:declared\ に Phase 5 listener を登録し、
+ * その中で cutin Effect を pendingEffects に push した後、
+ * engine.resolve.runAllUntilEmpty() を駆動すること。
  */
 export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: string): void {
   if (!canCutIn(state, ax, p, cardId)) {
@@ -224,23 +232,17 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
 }
 
 /**
- * computeOrder — コンタクト行動順 (rules/08 と同じロジック)
+ * computeOrder — コンタクト行動順 (rules/08)
  *
  * AP 低い側が 1 番目。同値の場合は **アクションされた側 (= 非ターンプレイヤー)** が 1 番目。
- * state-machine.computeOrder と同じ実装だが、ここでも公開する (caller 利便性のため)。
+ * 実装は action/order.ts に集約し、ここでは caller 利便性のために re-export する。
  */
 export function computeOrder(
   aAP: number,
   bAP: number,
   attackerSide: { aUid: string; bUid: string },
 ): { firstUid: string; secondUid: string } {
-  if (aAP < bAP) {
-    return { firstUid: attackerSide.aUid, secondUid: attackerSide.bUid };
-  }
-  if (aAP > bAP) {
-    return { firstUid: attackerSide.bUid, secondUid: attackerSide.aUid };
-  }
-  return { firstUid: attackerSide.bUid, secondUid: attackerSide.aUid };
+  return _computeOrder(aAP, bAP, attackerSide);
 }
 
 // readChar は将来用 (Phase 5)

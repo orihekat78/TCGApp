@@ -1,4 +1,4 @@
-// engine.flow.actionCase — アクション[事件] 処理 (Phase 4 Group B Task 4.6)
+﻿// engine.flow.actionCase — アクション[事件] 処理 (Phase 4 Group B Task 4.6)
 // spec: .claude/specs/engine-api-flow-contact.md
 // rules: 07-action-flow.md, 10-action-event.md
 //
@@ -60,6 +60,8 @@ export function flashWindow(
   ev: EvidenceCard,
   owner: Player,
 ): void {
+  // TODO(phase5): ヒラメキ targeting — ev が icon-flash 持ちか確認し、owner に発動/パスを選択させ、
+  //               効果解決後にリムーブエリアへ移動する flow を実装する。
   mutate.log.append(state, {
     ts: Date.now(),
     player: owner,

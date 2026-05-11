@@ -1,4 +1,4 @@
-// Phase 4 Group B Task 4.4 — flow.action state machine
+﻿// Phase 4 Group B Task 4.4 — flow.action state machine
 // rules: 07-action-flow.md, 08-contact.md, 22-qa-action-contact.md
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -16,6 +16,7 @@ import {
 } from '@/engine/flow/action/state-machine';
 import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
+import { judge } from '@/engine/flow/contact';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import type { CardDef, GameState, ActionContext } from '@/engine/types';
@@ -393,5 +394,63 @@ describe('engine.flow.action — contact:start / contact:order-set hooks', () =>
     // attacker AP > defender AP → defender first
     expect(captured[0].firstUid).toBe(oppUid);
     expect(captured[0].secondUid).toBe(selfUid);
+  });
+});
+
+describe('engine.flow.action — partner attacker AP fix (rules/07)', () => {
+  beforeEach(() => {
+    event._resetRegistry();
+    _resetActionContexts();
+    _resetUidCounter();
+    resetDefRegistry();
+  });
+
+  function makePartnerScene(opts: { partnerAP?: number; defAP?: number } = {}): {
+    s: GameState;
+    defUid: string;
+  } {
+    _resetUidCounter();
+    resetDefRegistry();
+    registerCardDef(makeCard('PartnerCard', { kind: 'partner', ap: opts.partnerAP ?? 3000, lp: 2 }));
+    registerCardDef(makeCard('Def', { ap: opts.defAP ?? 1000 }));
+    const initial = createEmptyGameState();
+    let defUid = '';
+    const s = produce(initial, draft => {
+      draft.players.self.partner.cardId = 'PartnerCard';
+      draft.players.self.partner.state = 'active';
+      draft.players.self.partner.location = 'partner-area';
+      const d = mutate.scene.enter(draft, 'opp', 'Def', {});
+      defUid = d.uid;
+      mutate.scene.setState(draft, d.uid, 'sleep');
+    });
+    return { s, defUid };
+  }
+
+  it('snapshotAP correctly reads partner AP (not 0) when partner is attacker', () => {
+    const { s, defUid } = makePartnerScene({ partnerAP: 3000, defAP: 1000 });
+    let ax: ActionContext | undefined;
+    produce(s, draft => {
+      ax = declare(draft, 'partner:self', { kind: 'char', uid: defUid });
+      passGuard(draft, ax);
+      snapshotAP(draft, ax);
+    });
+    // Before fix: readChar.ap returned 0 for partner uid → aAP was 0
+    expect(ax?.apSnapshot?.aAP).toBe(3000);
+    expect(ax?.apSnapshot?.bAP).toBe(1000);
+  });
+
+  it('partner attacker with AP >= defender AP removes defender via judge', () => {
+    const { s, defUid } = makePartnerScene({ partnerAP: 3000, defAP: 1000 });
+    let defenderRemoved = false;
+    const out = produce(s, draft => {
+      const ax = declare(draft, 'partner:self', { kind: 'char', uid: defUid });
+      passGuard(draft, ax);
+      snapshotAP(draft, ax);
+      const r = judge(draft, ax);
+      defenderRemoved = r.defenderRemoved;
+    });
+    expect(defenderRemoved).toBe(true);
+    // Defender is gone from scene
+    expect(out.players.opp.scene.find(c => c.uid === defUid)).toBeUndefined();
   });
 });
