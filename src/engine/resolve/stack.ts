@@ -115,8 +115,13 @@ export function runAllUntilEmpty(state: GameState): void {
     if (e === null) return;
     runOne(state, e);
   }
+  // Provide the last-seen entry's details for debuggability (Phase 4+ scenarios).
+  const last = next(state);
+  const lastId = last?.id ?? 'n/a';
+  const lastCardId = last?.source.cardId ?? 'n/a';
+  const lastHook = last?.triggeredBy.hook ?? 'n/a';
   throw new Error(
-    `engine.resolve.runAllUntilEmpty: safety cap ${SAFETY_CAP} exceeded; possible infinite loop`,
+    `engine.resolve.runAllUntilEmpty: 1000-iter safety cap exceeded — possible infinite loop. Last entry: id=${lastId} cardId=${lastCardId} hook=${lastHook}`,
   );
 }
 
@@ -135,6 +140,11 @@ export function cancel(state: GameState, entryId: string): void {
 /**
  * Replace the Effect on a pending entry (id-keyed).
  * Used by "代わりに〜" effects (rules/15 即時例外).
+ *
+ * @see Effect.kind='replace' — the user-facing DSL "代わりに" form (Effect Descriptor)
+ *   which is an *immediate-resolution* effect; it is forbidden to pass a `replace`
+ *   Effect directly to `engine.effect.run`. The two concepts are distinct:
+ *   Effect.kind='replace' describes *what* to do, engine.resolve.replace *does it*.
  */
 export function replace(state: GameState, entryId: string, newEffect: Effect): void {
   const entry = state.pendingEffects.find(e => e.id === entryId);

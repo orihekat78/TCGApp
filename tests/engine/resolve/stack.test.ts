@@ -2,7 +2,7 @@
 // spec: .claude/specs/engine-api-resolver.md
 // rules: 15-abilities-effects.md, 25-qa-effects-resolution.md
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { resolve } from '@/engine/resolve/index';
@@ -166,7 +166,7 @@ describe('engine.resolve.stack', () => {
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(7);
     });
 
-    it('safety cap throws after 1000 iterations', () => {
+    it('safety cap throws after 1000 iterations with entry context in message', () => {
       const s = createEmptyGameState();
       // Self-replicating: each entry queues another pending entry.
       const recursive: Effect = {
@@ -174,7 +174,7 @@ describe('engine.resolve.stack', () => {
         fn: (st, _ctx) => {
           st.pendingEffects.push({
             id: `r_${st.pendingEffects.length}`,
-            source: { player: 'self' },
+            source: { player: 'self', cardId: 'D08001' },
             triggeredBy: { hook: 'manual' },
             triggeredAt: { turn: 0, phase: 'main', nano: 0 },
             effect: recursive,
@@ -188,7 +188,39 @@ describe('engine.resolve.stack', () => {
           resolve.queue(draft, e0);
           resolve.runAllUntilEmpty(draft);
         });
-      }).toThrow(/safety cap/);
+      }).toThrow(/1000-iter safety cap exceeded/);
+    });
+
+    it('safety cap error message includes id, cardId, and hook', () => {
+      const s = createEmptyGameState();
+      const recursive: Effect = {
+        kind: 'custom',
+        fn: (st, _ctx) => {
+          st.pendingEffects.push({
+            id: `loop_${st.pendingEffects.length}`,
+            source: { player: 'self', cardId: 'LOOPCARD' },
+            triggeredBy: { hook: 'onSceneEnter' },
+            triggeredAt: { turn: 0, phase: 'main', nano: 0 },
+            effect: recursive,
+            state: 'pending',
+          });
+        },
+      };
+      const e0 = makeEntry(s, recursive, { id: 'root' });
+      let caught: Error | null = null;
+      try {
+        produce(s, draft => {
+          resolve.queue(draft, e0);
+          resolve.runAllUntilEmpty(draft);
+        });
+      } catch (err) {
+        caught = err as Error;
+      }
+      expect(caught).not.toBeNull();
+      expect(caught?.message).toMatch(/1000-iter safety cap exceeded/);
+      expect(caught?.message).toMatch(/id=/);
+      expect(caught?.message).toMatch(/cardId=/);
+      expect(caught?.message).toMatch(/hook=/);
     });
   });
 
@@ -234,6 +266,12 @@ describe('engine.resolve.stack', () => {
   });
 
   describe('lock / unlock / isLocked', () => {
+    afterEach(() => {
+      // Defensive: ensure lock is always cleared after each test in this block.
+      const s = createEmptyGameState();
+      resolve.unlock(s);
+    });
+
     it('lock sets, unlock clears, isLocked reports', () => {
       const s = createEmptyGameState();
       expect(resolve.isLocked(s)).toBe(false);
