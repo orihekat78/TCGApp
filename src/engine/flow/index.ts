@@ -4,9 +4,12 @@
 
 export { setup } from './setup.js';
 export type { Deck, DeckPair } from './setup.js';
+export { runAutoPhase } from './auto-phase.js';
 
 import { setup } from './setup.js';
+import { runAutoPhase } from './auto-phase.js';
 
 export const flow = {
   setup,
+  runAutoPhase,
 };
