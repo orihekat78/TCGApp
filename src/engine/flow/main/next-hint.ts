@@ -1,0 +1,112 @@
+// engine.flow.main.runNextHint — ネクストヒント (rules/05 02., rules/12)
+//
+// 概要:
+//   1. FILE 最上部のカード (アシスト中パートナーを除く) を手札に加える
+//   2. その直後、FILE 枚数以下のレベル のキャラ / イベントを 1 枚使用可能
+//      - 1 で加えたカードも使用候補
+//      - 1 で加えたカードは 2 の FILE 枚数判定に数えない (rules/12)
+//      - 使用しない選択肢もあり
+//   3. キャラはアクティブ状態で登場 (同ターン登場扱い = isNamed:true)
+//   4. イベントは通常通り効果発動
+//   5. turnFlags.nextHintUsed=true をセット
+//
+// 色制限 (rules/20) は使用するカードに適用 (効果による登場・カットイン・ヒラメキは除く)。
+
+import type { GameState } from '../../types/index.js';
+import { mutate } from '../../mutate/index.js';
+import { event } from '../../event/index.js';
+import { def as readDef } from '../../read/def.js';
+
+type Player = 'self' | 'opp';
+
+/**
+ * canStartNextHint — ネクストヒントを開始可能か判定する。
+ *
+ * - FILE 最上部 (アシストパートナー以外) が 1 枚以上必要 (= 実質 FILE ≥ 1 + 非アシスト)
+ */
+export function canStartNextHint(state: GameState, p: Player): boolean {
+  const file = state.players[p].file;
+  if (file.length === 0) return false;
+  // アシストパートナー以外のカードが 1 枚以上あれば OK
+  return file.some(f => f.type !== 'assisted-partner');
+}
+
+/**
+ * 色制限 (rules/20): カードの全色が事件の色に含まれているか
+ */
+function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
+  const d = readDef.card(cardId);
+  if (!d) return true;
+  const caseColors = state.players[p].case.colors;
+  if (d.colors.length === 0) return true;
+  for (const c of d.colors) {
+    if (!caseColors.includes(c)) return false;
+  }
+  return true;
+}
+
+/**
+ * runNextHint — ネクストヒントを実行する。
+ *
+ * @param optionalCardId — 2. の段で使用するカード (省略時は FILE→手札のみ)
+ *
+ * - rules/12: 1 で加えたカードは FILE 枚数判定に数えない
+ *   → 判定はカード使用の **時点** の FILE 枚数を見るが、手札に加わったカードは
+ *     FILE から既に取り除かれているので自然に正しくなる
+ */
+export function runNextHint(state: GameState, p: Player, optionalCardId?: string): void {
+  if (!canStartNextHint(state, p)) {
+    throw new Error(`runNextHint: not startable for ${p}`);
+  }
+  // 1. FILE 最上部を手札へ (アシストパートナーは除く)
+  const popped = mutate.file.popTop(state, p);
+  if (popped && popped.type === 'card-back') {
+    // 裏向きカードを手札に: cardId は記録されていないため、暫定 ID で push
+    // (Phase 5 で FILE エントリに cardId を保持する設計に移行可能)
+    // ここでは「裏向きカード」を識別する placeholder を入れない方針: 手札枚数のみ増やす
+    // ⚠ 実装注意: FileCard.card-back は cardId を持たないため、現状 hand への push は
+    //   plaehoder 'card-back' とする。Phase 5 で FILE 内 cardId 保持に拡張予定。
+    mutate.hand.add(state, p, ['card-back']);
+  } else if (popped && popped.type === 'assisted-partner') {
+    // ここには到達しない (popTop でフィルタ済)
+    mutate.hand.add(state, p, [popped.cardId]);
+  }
+
+  event.emit(state, 'file:pop', { player: p, popped }, { player: p });
+
+  // 2. (任意) 1 枚使用
+  if (optionalCardId !== undefined) {
+    // 手札にあるか確認
+    if (!state.players[p].hand.includes(optionalCardId)) {
+      throw new Error(`runNextHint: ${optionalCardId} not in ${p} hand`);
+    }
+    // 色 (rules/20)
+    if (!colorAllowed(state, p, optionalCardId)) {
+      throw new Error(`runNextHint: ${optionalCardId} color violates case`);
+    }
+    // レベル ≤ 現在 FILE 枚数 (rules/12 — 1 で取った分は既に減算済)
+    const d = readDef.card(optionalCardId);
+    if (d && d.level !== undefined) {
+      if (d.level > state.players[p].file.length) {
+        throw new Error(`runNextHint: ${optionalCardId} level ${d.level} > FILE ${state.players[p].file.length}`);
+      }
+    }
+    // 効果発動 hook (Phase 5 で listener が pendingEffects に積む)
+    event.emit(
+      state,
+      'effect:declared',
+      { kind: 'nextHintCardUse', cardId: optionalCardId },
+      { player: p, cardId: optionalCardId },
+    );
+  }
+
+  // 3. フラグセット
+  mutate.flag.setNextHintUsed(state, p, true);
+  mutate.log.append(state, {
+    ts: Date.now(),
+    player: p,
+    turn: state.turn.number,
+    action: 'nextHint',
+    target: optionalCardId,
+  });
+}
