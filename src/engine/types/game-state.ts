@@ -14,13 +14,18 @@ export type PlayerState = {
   file: FileCard[];
 };
 
+export type SetCardEntry = {
+  cardId: string;
+  faceUp: boolean;
+};
+
 export type SceneCharacter = {
   cardId: string;
   uid: string;
   state: 'active' | 'sleep' | 'stun';
   isNamed: boolean;
   enterOrder: number;
-  setCards: CardId[];
+  setCards: SetCardEntry[];   // rules: 16-card-set.md (裏向きセット対応)
   stackedCards: number;
   keywordOverrides: { granted: string[]; disabledOriginal: boolean };
   apOverride: number | null;

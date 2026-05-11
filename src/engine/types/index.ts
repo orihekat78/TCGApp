@@ -6,6 +6,7 @@ export type {
   GameState,
   PlayerState,
   SceneCharacter,
+  SetCardEntry,
   PartnerOnBoard,
   EvidenceCard,
   EvidenceOrigin,

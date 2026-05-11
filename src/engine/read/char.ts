@@ -1,7 +1,7 @@
 // engine.read.char — キャラ単位派生情報セレクタ (純粋関数)
 // rules: 03-field-areas.md (状態), 11-reasoning.md (LP≤0), 13-keywords.md, 19-special-rules.md
 
-import type { GameState, CardId } from '@/engine/types';
+import type { GameState, CardId, SetCardEntry } from '@/engine/types';
 import { scene } from './scene.js';
 import { def } from './def.js';
 
@@ -88,7 +88,15 @@ function isNamed(s: GameState, uid: string): boolean {
   return char?.isNamed ?? false;
 }
 
+// setCards: 互換性のため CardId[] を返す (cardId のみ)
+// 詳細情報が必要な場合は setCardsDetailed を使用 (rules: 16-card-set.md)
 function setCards(s: GameState, uid: string): CardId[] {
+  const char = scene.byUid(s, uid);
+  return (char?.setCards ?? []).map(e => e.cardId);
+}
+
+// setCardsDetailed: {cardId, faceUp}[] を返す (rules: 16-card-set.md 裏向き情報付き)
+function setCardsDetailed(s: GameState, uid: string): SetCardEntry[] {
   const char = scene.byUid(s, uid);
   return char?.setCards ?? [];
 }
@@ -123,6 +131,7 @@ export const char = {
   state,
   isNamed,
   setCards,
+  setCardsDetailed,
   stackedCount,
   turnEffect,
   declaredUseCount,

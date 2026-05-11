@@ -230,8 +230,13 @@ describe('engine.read.char', () => {
   });
 
   describe('setCards', () => {
-    it('セットされたカードを返す', () => {
-      const s = withChar(makeChar({ setCards: ['EV001', 'EV002'] }));
+    it('セットされたカードを返す (cardId[] 互換)', () => {
+      const s = withChar(makeChar({
+        setCards: [
+          { cardId: 'EV001', faceUp: true },
+          { cardId: 'EV002', faceUp: false },
+        ],
+      }));
       expect(char.setCards(s, 'uid-1')).toEqual(['EV001', 'EV002']);
     });
 
