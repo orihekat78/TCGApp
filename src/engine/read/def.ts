@@ -17,6 +17,11 @@ export function _resetRegistry(): void {
   _registry.clear();
 }
 
+// engine.cards.all() 用: 全登録カードを取得
+export function _allRegistered(): CardDef[] {
+  return Array.from(_registry.values());
+}
+
 function card(cardId: string): CardDef | undefined {
   return _registry.get(cardId);
 }
