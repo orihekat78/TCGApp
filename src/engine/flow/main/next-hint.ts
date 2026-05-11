@@ -13,6 +13,7 @@
 // 色制限 (rules/20) は使用するカードに適用 (効果による登場・カットイン・ヒラメキは除く)。
 
 import type { GameState } from '../../types/index.js';
+import { FILE_CARD_BACK_PLACEHOLDER } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
@@ -65,8 +66,8 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     // (Phase 5 で FILE エントリに cardId を保持する設計に移行可能)
     // ここでは「裏向きカード」を識別する placeholder を入れない方針: 手札枚数のみ増やす
     // ⚠ 実装注意: FileCard.card-back は cardId を持たないため、現状 hand への push は
-    //   plaehoder 'card-back' とする。Phase 5 で FILE 内 cardId 保持に拡張予定。
-    mutate.hand.add(state, p, ['card-back']);
+    //   FILE_CARD_BACK_PLACEHOLDER とする。Phase 5 で FILE 内 cardId 保持に拡張予定。
+    mutate.hand.add(state, p, [FILE_CARD_BACK_PLACEHOLDER]);
   } else if (popped && popped.type === 'assisted-partner') {
     // ここには到達しない (popTop でフィルタ済)
     mutate.hand.add(state, p, [popped.cardId]);

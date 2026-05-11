@@ -12,6 +12,7 @@
 //   - deckRevealUntil の binding shape: Candidate { kind: 'card', cardId, area: 'deck', player }
 
 import type { GameState, AtomVerb, EffectCtx, LogEntry, FileCard, Candidate } from '../types/index.js';
+import { FILE_CARD_BACK_PLACEHOLDER } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 
 type Player = 'self' | 'opp';
@@ -65,7 +66,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 裏向き card-back は手札に戻すとき "card-back" として加える (リバース不能なシリアライズ)
       // assisted-partner は popTop が除外するためここでは card-back のみ
       if (popped) {
-        const cardId = popped.type === 'assisted-partner' ? popped.cardId : 'card-back';
+        const cardId = popped.type === 'assisted-partner' ? popped.cardId : FILE_CARD_BACK_PLACEHOLDER;
         mutate.hand.add(s, p, [cardId]);
       }
       return;

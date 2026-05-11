@@ -153,6 +153,47 @@ describe('engine.flow.main.doReasoning', () => {
     expect(fired).toEqual(['declare', 'before-add', 'end']);
   });
 
+  it('reasoning:declare payload: { uid, byPlayer } (spec)', () => {
+    const { s, uid } = makeStateWithChar({ lp: 2 });
+    let declarePayload: unknown;
+    event.on('reasoning:declare', (_state, payload) => {
+      declarePayload = payload;
+    });
+    produce(s, draft => { doReasoning(draft, uid); });
+    expect(declarePayload).toMatchObject({ uid, byPlayer: 'self' });
+  });
+
+  it('reasoning:before-add payload: { uid, lpUsed } (spec, pre-clamp raw LP)', () => {
+    const { s, uid } = makeStateWithChar({ lp: 3 });
+    let beforeAddPayload: unknown;
+    event.on('reasoning:before-add', (_state, payload) => {
+      beforeAddPayload = payload;
+    });
+    produce(s, draft => { doReasoning(draft, uid); });
+    expect(beforeAddPayload).toMatchObject({ uid, lpUsed: 3 });
+  });
+
+  it('reasoning:before-add lpUsed carries negative LP (pre-clamp, for mislead)', () => {
+    _resetUidCounter();
+    resetDefRegistry();
+    registerCardDef(makeCard('C1', { lp: 1 }));
+    const initial = createEmptyGameState();
+    let uid2 = '';
+    const s2 = produce(initial, draft => {
+      const c = mutate.scene.enter(draft, 'self', 'C1', {});
+      uid2 = c.uid;
+      const target = draft.players.self.scene.find(c => c.uid === uid2)!;
+      target.lpOverride = -2;
+      draft.players.self.deck = Array.from({ length: 10 }, (_, i) => `d-${i}`);
+    });
+    let beforeAddPayload: unknown;
+    event.on('reasoning:before-add', (_state, payload) => {
+      beforeAddPayload = payload;
+    });
+    produce(s2, draft => { doReasoning(draft, uid2); });
+    expect(beforeAddPayload).toMatchObject({ uid: uid2, lpUsed: -2 });
+  });
+
   it('canReason=false 状態で doReasoning は throw', () => {
     const { s, uid } = makeStateWithChar({ state: 'sleep' });
     expect(() =>

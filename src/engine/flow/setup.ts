@@ -117,10 +117,11 @@ export function decideFirstPlayer(
   state: GameState,
   method: 'random' | 'manual',
   chosen?: Player,
+  rng: () => number = Math.random,
 ): Player {
   let first: Player;
   if (method === 'random') {
-    first = Math.random() < 0.5 ? 'self' : 'opp';
+    first = rng() < 0.5 ? 'self' : 'opp';
   } else {
     if (!chosen) {
       throw new Error('setup.decideFirstPlayer: chosen required when method=manual');
@@ -169,6 +170,8 @@ export function canMulligan(state: GameState, p: Player): boolean {
  * 戻り値: 引き直したカード ID
  */
 export function mulligan(state: GameState, p: Player, idsToReturn: CardId[]): CardId[] {
+  // Design: calling mulligan with [] consumes the mulligan right (UI "skip mulligan" path).
+  // Rules/04 doesn't explicitly forbid an empty mulligan; this engine treats it as "exercised".
   if (!canMulligan(state, p)) {
     throw new Error(`setup.mulligan: already used by ${p}`);
   }
@@ -194,6 +197,7 @@ export function mulligan(state: GameState, p: Player, idsToReturn: CardId[]): Ca
  * 物理的な向きは UI 側で扱う前提。Phase 4 では no-op + ログのみ。
  * 必要になった時点で GameState に faceUp フィールドを追加する。
  */
+// TODO: PlayerState.faceUp when UI requires reveal()
 export function reveal(state: GameState): void {
   mutate.log.append(state, {
     ts: Date.now(),

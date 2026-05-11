@@ -15,6 +15,8 @@ export type {
   LogEntry,
 } from './game-state.js';
 
+export { FILE_CARD_BACK_PLACEHOLDER } from './game-state.js';
+
 export type {
   Effect,
   AtomVerb,

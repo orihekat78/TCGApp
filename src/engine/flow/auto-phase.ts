@@ -65,9 +65,9 @@ export function runAutoPhase(state: GameState, p: Player): void {
   event.emit(state, 'phase:auto:before-draw', { player: p });
 
   // 3. 1 枚ドロー (デッキ 0 枚なら mutate.deck.draw が自動リフレッシュ試行 / 失敗時は 0 枚返す)
-  mutate.deck.draw(state, p, 1);
+  const drawn = mutate.deck.draw(state, p, 1);
 
-  event.emit(state, 'phase:auto:after-draw', { player: p });
+  event.emit(state, 'phase:auto:after-draw', { player: p, drawn });
 
   // 4. FILE 追加 (先攻初手のみ 1 枚)
   const isFPFT = state.turn.isFirstPlayerFirstTurn && p === state.turn.player;

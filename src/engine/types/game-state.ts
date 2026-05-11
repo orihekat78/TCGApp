@@ -62,6 +62,13 @@ export type FileCard =
   | { type: 'card-back' }
   | { type: 'assisted-partner'; cardId: string };
 
+/**
+ * Placeholder CardId for FILE cards that have no revealed identity yet.
+ * Matches the FileCard { type: 'card-back' } convention in mutate/file.ts.
+ * Use this constant instead of the string literal 'card-back' in flow/effect code.
+ */
+export const FILE_CARD_BACK_PLACEHOLDER = 'card-back' as const;
+
 export type TurnScopedFlags = {
   handUseUsed: boolean;
   nextHintUsed: boolean;

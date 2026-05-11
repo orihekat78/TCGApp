@@ -149,6 +149,22 @@ describe('engine.flow.setup', () => {
       });
       expect(['self', 'opp']).toContain(first);
     });
+
+    it("rng=()=>0.1 (< 0.5) → 'self' (seeded determinism)", () => {
+      let first: 'self' | 'opp' = 'opp';
+      produce(createEmptyGameState(), draft => {
+        first = setup.decideFirstPlayer(draft, 'random', undefined, () => 0.1);
+      });
+      expect(first).toBe('self');
+    });
+
+    it("rng=()=>0.9 (>= 0.5) → 'opp' (seeded determinism)", () => {
+      let first: 'self' | 'opp' = 'self';
+      produce(createEmptyGameState(), draft => {
+        first = setup.decideFirstPlayer(draft, 'random', undefined, () => 0.9);
+      });
+      expect(first).toBe('opp');
+    });
   });
 
   describe('dealOpeningHand', () => {

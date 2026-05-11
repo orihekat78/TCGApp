@@ -170,6 +170,18 @@ describe('engine.flow.runAutoPhase', () => {
     ]);
   });
 
+  it('phase:auto:after-draw payload includes drawn card ids (spec compliance)', () => {
+    const initial = makeStateWithDeck(40);
+    let afterDrawPayload: unknown;
+    event.on('phase:auto:after-draw', (_state, payload) => {
+      afterDrawPayload = payload;
+    });
+    produce(initial, draft => {
+      runAutoPhase(draft, 'self');
+    });
+    expect(afterDrawPayload).toMatchObject({ player: 'self', drawn: ['s-0'] });
+  });
+
   it('phase が auto に設定される', () => {
     const initial = makeStateWithDeck(40);
     const s1 = produce(initial, draft => {

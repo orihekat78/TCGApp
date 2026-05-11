@@ -96,8 +96,8 @@ export function doReasoning(state: GameState, uid: string): void {
   const t = findTarget(state, uid)!;
   const player = t.player;
 
-  // reasoning:declare
-  event.emit(state, 'reasoning:declare', { uid, player }, { player, uid });
+  // reasoning:declare — spec: { uid, byPlayer }
+  event.emit(state, 'reasoning:declare', { uid, byPlayer: player }, { player, uid });
 
   // スリープ化
   if (t.kind === 'char') {
@@ -106,12 +106,12 @@ export function doReasoning(state: GameState, uid: string): void {
     mutate.partner.setState(state, player, 'sleep');
   }
 
-  // reasoning:before-add (mislead 等が ここで listener として LP を下げる)
-  event.emit(state, 'reasoning:before-add', { uid, player }, { player, uid });
+  // reasoning:before-add — spec: { uid, lpUsed } (lpUsed は pre-clamp 生値 — mislead listener が参照)
+  const lpRaw = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
+  event.emit(state, 'reasoning:before-add', { uid, lpUsed: lpRaw }, { player, uid });
 
-  // LP 取得 → max(0, LP) 枚を証拠に追加
-  const lp = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
-  const lpToUse = Math.max(0, lp);
+  // LP クランプ → max(0, lpRaw) 枚を証拠に追加 (rules/11)
+  const lpToUse = Math.max(0, lpRaw);
   if (lpToUse > 0) {
     mutate.evidence.addFromDeck(state, player, lpToUse, false, {
       turn: state.turn.number,
