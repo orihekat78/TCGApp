@@ -46,10 +46,23 @@ export type ActionPhase =
 export type ActionContext = {
   id: string;
   byUid: string;
+  byPlayer: 'self' | 'opp';
   target: { kind: 'char'; uid: string } | { kind: 'case'; player: 'self' | 'opp' };
   phase: ActionPhase;
+  /** @deprecated 互換性のため残置。新コードは guardUid を参照すること */
   guarded?: { guardUid: string };
+  guardUid?: string;
   apSnapshot?: { aUid: string; aAP: number; bUid: string; bAP: number };
+  /** コンタクトの行動順 (apSnapshot から computeOrder で算出) */
+  firstUid?: string;
+  secondUid?: string;
+  /** 1番目/2番目が cutIn/disguise したか (pass=false, action=true) */
+  firstActed?: boolean;
+  secondActed?: boolean;
+  /** 1コンタクト1枚 (rules/09): プレイヤー単位で cutIn 使用済みフラグ */
+  cutInUsed?: { self?: boolean; opp?: boolean };
+  /** 防御側のコンタクト免疫 (turnEffects から snapshot) */
+  contactImmune?: boolean;
   startedAt: { turn: number; nano: number };
 };
 
