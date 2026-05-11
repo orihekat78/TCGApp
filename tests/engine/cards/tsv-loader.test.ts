@@ -30,6 +30,19 @@ describe('parseTsv — unescape rules', () => {
     expect(defs[0].names[0]).toBe('Alpha\tBeta');
   });
 
+  it('preserves literal backslash+n via \\\\n escape', () => {
+    // TSV cell contains the raw bytes "\", "\", "n" → unescape を1回経由して "\", "n" (= "\n" as 2-char literal) になる
+    // 期待: actual newline ではない
+    const tsv = [
+      'cardNum\tcardId\ttitle\tcolor\tlp\trarity\tfeatures\timagePath\teffect\tillustrator\tqAndA',
+      'X1\tx1\tA\\\\nB\t青\t1\tD\t\timg.jpg\t\t\t',
+    ].join('\n');
+    const defs = parseTsv(tsv, 'partner');
+    // title フィールドは "A\nB" (2-char literal: backslash + n), not "A<newline>B"
+    expect(defs[0].names[0]).toBe('A\\nB');
+    expect(defs[0].names[0]).not.toBe('A\nB');
+  });
+
   it('handles empty cells gracefully', () => {
     const tsv = [
       'cardNum\tcardId\ttitle\tcolor\tlevel\tap\tlp\trarity\tfeatures\timagePath\teffect\tcutIn\thirameki\thenso\tillustrator\tflavor\tqAndA',
