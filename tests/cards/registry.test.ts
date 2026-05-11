@@ -6,19 +6,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
 import { registerAll, ALL_CARDS } from '@/cards';
 
-describe('cards/registerAll (Phase 5 Group C: 10 cards)', () => {
+describe('cards/registerAll (Phase 5 Group C + D: 31 cards)', () => {
   beforeEach(() => {
     engine.cards._resetRegistry();
   });
 
-  it('ALL_CARDS contains exactly 10 cards', () => {
-    expect(ALL_CARDS.length).toBe(10);
+  it('ALL_CARDS contains exactly 31 cards (Group C: 10 + Group D: 21)', () => {
+    expect(ALL_CARDS.length).toBe(31);
   });
 
-  it('registerAll() registers all 10 CardDefs to engine.cards', () => {
+  it('registerAll() registers all 31 CardDefs to engine.cards', () => {
     expect(engine.cards.all().length).toBe(0);
     registerAll();
-    expect(engine.cards.all().length).toBe(10);
+    expect(engine.cards.all().length).toBe(31);
   });
 
   it('engine.cards.get returns each card by id (CT-D08 + CT-D11)', () => {
@@ -43,7 +43,7 @@ describe('cards/registerAll (Phase 5 Group C: 10 cards)', () => {
     expect(d!.caseTraits).toEqual(['古城']);
   });
 
-  it('byColor("青") returns CT-D08 cards (partners + events + case)', () => {
+  it('byColor("青") returns CT-D08 cards (partners + characters + events + case)', () => {
     registerAll();
     const blueCards = engine.cards.byColor('青');
     const ids = blueCards.map(c => c.id);
@@ -52,6 +52,13 @@ describe('cards/registerAll (Phase 5 Group C: 10 cards)', () => {
     expect(ids).toContain('D08024');
     expect(ids).toContain('D08025');
     expect(ids).toContain('D08026');
+    // Group D characters
+    expect(ids).toContain('D08003');
+    expect(ids).toContain('D08017');
+    expect(ids).toContain('D08021');
+    expect(ids).toContain('D08023');
+    // All CT-D08 cards are blue
+    expect(blueCards.length).toBe(26);
   });
 
   it('byColor("黄") returns CT-D11 cards', () => {
@@ -86,10 +93,10 @@ describe('cards/registerAll (Phase 5 Group C: 10 cards)', () => {
     }
   });
 
-  it('registerAll() is idempotent (re-register overwrites, count stays 10)', () => {
+  it('registerAll() is idempotent (re-register overwrites, count stays 31)', () => {
     registerAll();
-    expect(engine.cards.all().length).toBe(10);
+    expect(engine.cards.all().length).toBe(31);
     registerAll();
-    expect(engine.cards.all().length).toBe(10);
+    expect(engine.cards.all().length).toBe(31);
   });
 });

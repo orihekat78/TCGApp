@@ -11,6 +11,27 @@ import type { CardDef } from '@/engine/types';
 
 import { D08001 } from './ct-d08/D08001.js';
 import { D08002 } from './ct-d08/D08002.js';
+import { D08003 } from './ct-d08/D08003.js';
+import { D08004 } from './ct-d08/D08004.js';
+import { D08005 } from './ct-d08/D08005.js';
+import { D08006 } from './ct-d08/D08006.js';
+import { D08007 } from './ct-d08/D08007.js';
+import { D08008 } from './ct-d08/D08008.js';
+import { D08009 } from './ct-d08/D08009.js';
+import { D08010 } from './ct-d08/D08010.js';
+import { D08011 } from './ct-d08/D08011.js';
+import { D08012 } from './ct-d08/D08012.js';
+import { D08013 } from './ct-d08/D08013.js';
+import { D08014 } from './ct-d08/D08014.js';
+import { D08015 } from './ct-d08/D08015.js';
+import { D08016 } from './ct-d08/D08016.js';
+import { D08017 } from './ct-d08/D08017.js';
+import { D08018 } from './ct-d08/D08018.js';
+import { D08019 } from './ct-d08/D08019.js';
+import { D08020 } from './ct-d08/D08020.js';
+import { D08021 } from './ct-d08/D08021.js';
+import { D08022 } from './ct-d08/D08022.js';
+import { D08023 } from './ct-d08/D08023.js';
 import { D08024 } from './ct-d08/D08024.js';
 import { D08025 } from './ct-d08/D08025.js';
 import { D08026 } from './ct-d08/D08026.js';
@@ -21,24 +42,25 @@ import { D11019 } from './ct-d11/D11019.js';
 import { D11020 } from './ct-d11/D11020.js';
 import { D11021 } from './ct-d11/D11021.js';
 
-export { D08001, D08002, D08024, D08025, D08026 };
+export {
+  D08001, D08002, D08003, D08004, D08005, D08006, D08007, D08008,
+  D08009, D08010, D08011, D08012, D08013, D08014, D08015, D08016,
+  D08017, D08018, D08019, D08020, D08021, D08022, D08023,
+  D08024, D08025, D08026,
+};
 export { D11001, D11002, D11019, D11020, D11021 };
 
 /**
- * Phase 5 Group C で実装済みの全 CardDef 配列。
- * Group D/E で追加されたら拡張する。
+ * Phase 5 Group C + D で実装済みの全 CardDef 配列。
+ * Group E で追加されたら拡張する。
  */
 export const ALL_CARDS: CardDef[] = [
-  D08001,
-  D08002,
-  D08024,
-  D08025,
-  D08026,
-  D11001,
-  D11002,
-  D11019,
-  D11020,
-  D11021,
+  D08001, D08002,
+  D08003, D08004, D08005, D08006, D08007, D08008,
+  D08009, D08010, D08011, D08012, D08013, D08014, D08015, D08016,
+  D08017, D08018, D08019, D08020, D08021, D08022, D08023,
+  D08024, D08025, D08026,
+  D11001, D11002, D11019, D11020, D11021,
 ];
 
 /**
