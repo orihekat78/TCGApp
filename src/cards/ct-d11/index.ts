@@ -3,10 +3,14 @@
 
 export { D11001 } from './D11001.js';
 export { D11002 } from './D11002.js';
+export { D11003 } from './D11003.js';
+export { D11004 } from './D11004.js';
 export { D11009 } from './D11009.js';
 export { D11010 } from './D11010.js';
 export { D11011 } from './D11011.js';
 export { D11013 } from './D11013.js';
+export { D11015 } from './D11015.js';
+export { D11016 } from './D11016.js';
 export { D11017 } from './D11017.js';
 export { D11018 } from './D11018.js';
 export { D11019 } from './D11019.js';
