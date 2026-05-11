@@ -1,71 +1,96 @@
 # 🔍 名探偵コナンTCG プロジェクト — ナビゲーションハブ
 
-このファイルは Obsidian で `Cmd/Ctrl + O` から開ける**プロジェクト俯瞰の出発点**。
-すべての主要ドキュメントへのリンクが集約されている。
+このファイルは Obsidian の `Cmd/Ctrl + O` から開ける**プロジェクト中央の出発点**。
+ルール / 研究 / 設計 / 実装計画 / セッションログ全てへ1ホップで届くように再構成。
 
-## 📌 まず最初に読む
+## 🚀 まず最初に読む
 
 - [README.md](README.md) — プロジェクト全体像 + 進捗
 - [.claude/CLAUDE.md](.claude/CLAUDE.md) — 開発規約（Claude Code 必読）
 - [.claude/memory.md](.claude/memory.md) — 現セッション作業ログ
+- [.claude/research/obsidian-setup.md](.claude/research/obsidian-setup.md) — Obsidian 操作ガイド
 
-## 📚 公式ルール（30ファイル）
+## 📜 公式ルール (32ファイル)
 
-- [INDEX](.claude/rules/INDEX.md) — 全ルールへの目次
-- [出典](.claude/rules/sources.md)
+- **[rules/INDEX](.claude/rules/INDEX.md)** — ルール総目次
+- [rules/sources](.claude/rules/sources.md) — 公式PDFと一次/二次情報源
 
-### 基本ルール
-- [01 勝利条件](.claude/rules/01-victory-conditions.md) ｜ [02 デッキ構築](.claude/rules/02-deck-construction.md) ｜ [03 場のエリア](.claude/rules/03-field-areas.md)
-- [04 ゲーム準備](.claude/rules/04-game-setup.md) ｜ [05 ターン進行](.claude/rules/05-turn-phases.md) ｜ [06 カード種別](.claude/rules/06-card-types.md)
+### 基本ルール (01–21)
+
+- [01 勝利条件](.claude/rules/01-victory-conditions.md) ｜ [02 デッキ構築](.claude/rules/02-deck-construction.md) ｜ [03 エリア/状態](.claude/rules/03-field-areas.md)
+- [04 ゲーム開始](.claude/rules/04-game-setup.md) ｜ [05 ターン進行](.claude/rules/05-turn-phases.md) ｜ [06 カード種別](.claude/rules/06-card-types.md)
 - [07 アクション](.claude/rules/07-action-flow.md) ｜ [08 コンタクト](.claude/rules/08-contact.md) ｜ [09 カットイン/変装](.claude/rules/09-cutin-disguise.md)
-- [10 アクション事件](.claude/rules/10-action-event.md) ｜ [11 推理](.claude/rules/11-reasoning.md) ｜ [12 ネクストヒント](.claude/rules/12-next-hint.md)
+- [10 アクション[事件]](.claude/rules/10-action-event.md) ｜ [11 推理](.claude/rules/11-reasoning.md) ｜ [12 ネクストヒント](.claude/rules/12-next-hint.md)
 - [13 キーワード](.claude/rules/13-keywords.md) ｜ [14 リフレッシュ](.claude/rules/14-refresh.md) ｜ [15 能力と効果](.claude/rules/15-abilities-effects.md)
-- [16 セット/重ね](.claude/rules/16-card-set.md) ｜ [17 アイコン](.claude/rules/17-icons.md) ｜ [18 MR](.claude/rules/18-mr.md)
-- [19 特殊効果](.claude/rules/19-special-rules.md) ｜ [20 色/スイッチ](.claude/rules/20-color-and-switch.md) ｜ [21 宣言能力](.claude/rules/21-declared-ability-cost.md)
+- [16 セット/重ねる](.claude/rules/16-card-set.md) ｜ [17 アイコン](.claude/rules/17-icons.md) ｜ [18 MR](.claude/rules/18-mr.md)
+- [19 特殊ルール](.claude/rules/19-special-rules.md) ｜ [20 色/スイッチ](.claude/rules/20-color-and-switch.md) ｜ [21 宣言能力](.claude/rules/21-declared-ability-cost.md)
 
-### エッジケース Q&A
+### エッジケース Q&A (22–26)
+
 - [22 アクション/コンタクト](.claude/rules/22-qa-action-contact.md) ｜ [23 変装/カットイン](.claude/rules/23-qa-disguise-cutin.md)
 - [24 名乗り/スタン](.claude/rules/24-qa-naming-stun.md) ｜ [25 効果解決](.claude/rules/25-qa-effects-resolution.md) ｜ [26 リフレッシュ](.claude/rules/26-qa-deck-refresh.md)
 
-### 競技規定
+### 競技規定 (27–30)
+
 - [27 カード制限](.claude/rules/27-card-restrictions.md) ｜ [28 エラッタ](.claude/rules/28-errata.md)
 - [29 フロアルール時間](.claude/rules/29-floor-rule-timing.md) ｜ [30 不適切プレイ](.claude/rules/30-floor-rule-misplay.md)
 
-## 🔬 調査・設計
+## 🧠 研究 — 設計判断のための調査
 
-### 法務
-- [legal/04-recommendation](.claude/research/legal/04-recommendation.md) — 推奨スタンス確定
+- [research/legal/INDEX](.claude/research/legal/INDEX.md) — 法務・著作権スタンス確定
+- [research/data/INDEX](.claude/research/data/INDEX.md) — カードデータ取得・スキーマ・画像
+- [research/arch/INDEX](.claude/research/arch/INDEX.md) — アーキテクチャ全般 (10ファイル)
+- [research/ux/INDEX](.claude/research/ux/INDEX.md) — 対戦UX/UI設計 (動画解析含む)
+- [research/ui/INDEX](.claude/research/ui/INDEX.md) — プレイマット由来UIレイアウト
+- [research/tutorial/INDEX](.claude/research/tutorial/INDEX.md) — チュートリアル学習設計
+- [research/decisions/INDEX](.claude/research/decisions/INDEX.md) — UIブレインストーミング決定事項
+- [research/rules/commmune-wiki-map](.claude/research/rules/commmune-wiki-map.md) — コミュニティWiki構造
 
-### データ層
-- [data/01 取得方法](.claude/research/data/01-card-data-source.md) ｜ [02 スキーマ](.claude/research/data/02-card-schema-design.md)
-- [03 画像](.claude/research/data/03-image-handling.md) ｜ [04 フォルダ構成](.claude/research/data/04-folder-structure.md)
+★ **UX準拠ソース**: [ux/14 公式UIモックアップ観察](.claude/research/ux/14-official-ui-mockup.md)
 
-### アーキテクチャ（10ファイル）
-- [01 フレームワーク調査](.claude/research/arch/01-frameworks-survey.md) ｜ [02 効果スタック](.claude/research/arch/02-effect-stack-patterns.md)
-- [03 状態管理](.claude/research/arch/03-state-management.md) ｜ [04 カードDSL](.claude/research/arch/04-card-dsl-patterns.md)
-- [05 CPU AI](.claude/research/arch/05-cpu-ai-patterns.md) ｜ [06 テスト](.claude/research/arch/06-test-strategy.md)
-- [07 シリアライズ](.claude/research/arch/07-serialization-replay.md) ｜ [08 割り込み](.claude/research/arch/08-interrupt-priority-windows.md)
-- [09 運用](.claude/research/arch/09-maintenance-operations.md) ｜ [10 AI可視化](.claude/research/arch/10-ai-playback-visualization.md)
+## 🏗️ 設計仕様 (specs)
 
-### UX/UI 設計
-- [ux/14 公式UIモックアップ観察](.claude/research/ux/14-official-ui-mockup.md) — **★準拠ソース**
-- [ux/10 対戦テンポ](.claude/research/ux/10-match-rhythm.md) ｜ [ux/11 物理→デジタル](.claude/research/ux/11-physical-to-digital.md)
-- [ux/12 確認動作](.claude/research/ux/12-confirmation-points.md) ｜ [ux/13 用語](.claude/research/ux/13-action-vocabulary.md)
-- [ui/playsheet-layout](.claude/research/ui/playsheet-layout.md) ｜ [ui/02 業界慣例](.claude/research/ui/02-industry-conventions.md)
+- **[specs/INDEX](.claude/specs/INDEX.md)** — UI + Engine API 全仕様目次
 
-### チュートリアル
-- [tutorial/01 カリキュラム](.claude/research/tutorial/01-curriculum-design.md) ｜ [tutorial/02 ステップ](.claude/research/tutorial/02-step-by-step-flow.md)
-- [tutorial/03 視覚慣例](.claude/research/tutorial/03-visual-conventions.md)
+### UI 設計 (16ファイル、2026-05-11)
 
-### コミュニティWiki
-- [rules/commmune-wiki-map](.claude/research/rules/commmune-wiki-map.md)
+- [全体構造](.claude/specs/2026-05-11-ui-overall.md) ｜ [state-map](.claude/specs/2026-05-11-ui-state-map.md) ｜ [state-mapping](.claude/specs/2026-05-11-ui-state-mapping.md)
+- [効果スタック](.claude/specs/2026-05-11-ui-effect-stack.md) ｜ [ターンフラグ](.claude/specs/2026-05-11-ui-turn-flags.md) ｜ [MR/特殊](.claude/specs/2026-05-11-ui-mr-and-special.md)
+- [アクションフロー](.claude/specs/2026-05-11-ui-action-flows.md) ｜ [ゲーム開始](.claude/specs/2026-05-11-ui-game-setup-flows.md)
+- [モーダル/コンタクト](.claude/specs/2026-05-11-ui-modal-flows-contact.md) ｜ [モーダル/他](.claude/specs/2026-05-11-ui-modal-flows-other.md)
+- [エッジケース](.claude/specs/2026-05-11-ui-edge-cases.md) ｜ [スタイルトークン](.claude/specs/2026-05-11-ui-style-tokens.md) ｜ [アニメ仕様](.claude/specs/2026-05-11-ui-animation-specs.md)
 
-## 🗂️ Obsidian 使い方
-- [obsidian-setup](.claude/research/obsidian-setup.md) — プラグイン推奨・運用ヒント
+### Engine API 設計
 
-## 📅 過去セッション
-- [sessions/](.claude/sessions/) — 過去セッションアーカイブ
+- **[engine-api](.claude/specs/engine-api.md)** — API 設計総括 + 設計原則
+- [read](.claude/specs/engine-api-state-read.md) ｜ [mutate](.claude/specs/engine-api-state-mutate.md) ｜ [events](.claude/specs/engine-api-events.md)
+- [resolver](.claude/specs/engine-api-resolver.md) ｜ [card-shape](.claude/specs/engine-api-card-shape.md) ｜ [edge-cases](.claude/specs/engine-api-edge-cases.md)
+- [invariants](.claude/specs/engine-api-invariants.md) ｜ [flow-setup](.claude/specs/engine-api-flow-setup.md) ｜ [flow-contact](.claude/specs/engine-api-flow-contact.md)
+- [mutate-meta](.claude/specs/engine-api-state-mutate-meta.md)
+
+### カード分析・共通クラス
+
+- [cards-analysis/INDEX](.claude/specs/cards-analysis/INDEX.md) — CT-D08+CT-D11 全47枚分析
+- [cards-analysis/SHARED-PATTERNS](.claude/specs/cards-analysis/SHARED-PATTERNS.md) — 共通パターン抽出
+- [shared-classes/INDEX](.claude/specs/shared-classes/INDEX.md) — 共通クラス8件設計
+
+## 🛠️ 実装計画
+
+- **[plans/INDEX](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md)** — MVP 実装フェーズ 0–9
+- Phase 0: [bootstrap](.claude/research/plans/2026-05-11-mvp-implementation/phase-0-bootstrap.md)
+- Phase 1: [types-state](.claude/research/plans/2026-05-11-mvp-implementation/phase-1-types-state.md)
+- Phase 2: [read-mutate](.claude/research/plans/2026-05-11-mvp-implementation/phase-2-read-mutate.md)
+- Phase 3: [effect-resolver](.claude/research/plans/2026-05-11-mvp-implementation/phase-3-effect-resolver.md) ✅
+- Phase 4: [flow](.claude/research/plans/2026-05-11-mvp-implementation/phase-4-flow.md) ← 現在
+- Phase 5–9: [cards](.claude/research/plans/2026-05-11-mvp-implementation/phase-5-cards.md) ｜ [ai](.claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md) ｜ [ui-shell](.claude/research/plans/2026-05-11-mvp-implementation/phase-7-ui-shell.md) ｜ [ui-interactions](.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md) ｜ [polish](.claude/research/plans/2026-05-11-mvp-implementation/phase-9-polish.md)
+
+## 📓 セッション履歴
+
+- **[sessions/README](.claude/sessions/README.md)** — セッションログ運用ルール
+- [2026-05-10](.claude/sessions/2026-05-10.md) — 法務調査・ルール抽出
+- [2026-05-11](.claude/sessions/2026-05-11.md) ｜ [-2](.claude/sessions/2026-05-11-2.md) ｜ [-3](.claude/sessions/2026-05-11-3.md) ｜ [-4](.claude/sessions/2026-05-11-4.md) ｜ [-5](.claude/sessions/2026-05-11-5.md)
 
 ---
 
-**Tips**: Obsidian で `Ctrl/Cmd + G` を押すとグラフビュー、`Ctrl/Cmd + O` でファイル即時検索、各ファイル右上のリンクアイコンでバックリンクを確認できます。
+**Tips**: Obsidian で `Ctrl/Cmd + G` でグラフビュー、`Ctrl/Cmd + O` でファイル検索、各ファイル右上の「リンク」アイコンでバックリンク確認。
+**INDEX 経由でフォルダ内のファイル同士の関係も追えるよう、各サブディレクトリに INDEX.md を整備済み。**
