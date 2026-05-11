@@ -6,6 +6,7 @@
 export { setup } from './setup.js';
 export type { Deck, DeckPair } from './setup.js';
 export { runAutoPhase } from './auto-phase.js';
+export { startTurn, endTurn, startMainPhase } from './turn.js';
 export {
   canHandUseCard,
   handUseCard,
@@ -36,6 +37,7 @@ export { actionCase } from './action-case.js';
 
 import { setup } from './setup.js';
 import { runAutoPhase } from './auto-phase.js';
+import { startTurn, endTurn, startMainPhase } from './turn.js';
 import { main } from './main/index.js';
 import { action } from './action/state-machine.js';
 import { guard } from './guard.js';
@@ -45,6 +47,9 @@ import { actionCase } from './action-case.js';
 export const flow = {
   setup,
   runAutoPhase,
+  startTurn,
+  endTurn,
+  startMainPhase,
   ...main,
   action,
   guard,

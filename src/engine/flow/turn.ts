@@ -1,0 +1,65 @@
+// engine.flow.turn — Turn-level wrappers (Phase 4 補完)
+// spec: .claude/specs/engine-api-flow-control.md
+// rules: 05-turn-phases.md, 15-abilities-effects.md
+//
+// 設計メモ:
+//   - startTurn  / endTurn / startMainPhase の薄いラッパー
+//   - エンドフェイズの「ターン終了時能力」(rules/05) を発火させる窓として
+//     phase:end:start → phase:end:cleanup → turn:end の順で emit する
+//   - phase:end:cleanup は D08003 「ターン終了時手札に戻る」等の listener が
+//     反応する清掃窓 (turnEffects.removeOnTurnEnd 等のクリーンアップ前)
+//   - 呼出元 (UI / CPU driver) が phase:end:start emit 後に
+//     engine.resolve.runAllUntilEmpty を回してターン終了時 trigger を解決する責務を持つ。
+//     ここでは "Hook を順序通り emit する" だけに留める。
+//   - turn.number の繰上げと turn.player の入替は endTurn 内で行う。
+
+import type { GameState } from '../types/index.js';
+import { event } from '../event/index.js';
+import { runAutoPhase } from './auto-phase.js';
+
+type Player = 'self' | 'opp';
+
+/**
+ * ターン開始: turn:start を emit → オートフェイズ実行 → phase:main:start を emit。
+ *
+ * rules/05:
+ *   - オートフェイズ (パートナー active / キャラ active / ドロー / FILE)
+ *   - メインフェイズ突入
+ */
+export function startTurn(state: GameState, p: Player): void {
+  event.emit(state, 'turn:start', { player: p, turnNo: state.turn.number }, undefined);
+  runAutoPhase(state, p);
+  state.turn.phase = 'main';
+  event.emit(state, 'phase:main:start', { player: p }, undefined);
+}
+
+/**
+ * メインフェイズ開始 (再エントリ用): startTurn から自動的に呼ばれるが、
+ * 単独で呼出して phase:main:start のみ emit したい場合に使用する。
+ */
+export function startMainPhase(state: GameState, p: Player): void {
+  state.turn.phase = 'main';
+  event.emit(state, 'phase:main:start', { player: p }, undefined);
+}
+
+/**
+ * ターン終了処理 (rules/05 エンドフェイズ):
+ *   1. phase:main:end (メインフェイズ終了)
+ *   2. phase:end:start (エンドフェイズ開始 — ターン終了時能力発火窓)
+ *   3. [呼出元の責務] resolve.runAllUntilEmpty でターン終了時 trigger 解決
+ *   4. phase:end:cleanup (turnEffects 等クリーンアップ窓)
+ *   5. turn:end (ターン完全終了直前)
+ *   6. turn.number++ & turn.player を入替 (次ターンへ)
+ */
+export function endTurn(state: GameState, p: Player): void {
+  state.turn.phase = 'end';
+  event.emit(state, 'phase:main:end', { player: p }, undefined);
+  event.emit(state, 'phase:end:start', { player: p }, undefined);
+  // 呼出元はここで engine.resolve.runAllUntilEmpty を回す責務を持つ
+  // (Phase 5 で「ターン終了時」trigger が積まれる)
+  event.emit(state, 'phase:end:cleanup', { player: p }, undefined);
+  event.emit(state, 'turn:end', { player: p }, undefined);
+  // ターン情報の繰上げ
+  state.turn.number += 1;
+  state.turn.player = p === 'self' ? 'opp' : 'self';
+}
