@@ -1,0 +1,360 @@
+<h2>追加設計: 証拠展開UI + 対戦ログ配置</h2>
+<p class="subtitle">①証拠スタックをクリックした時の展開挙動 / ②対戦ログ表示場所</p>
+
+<style>
+.demo {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 14px 8px 8px;
+  margin: 14px 0;
+  position: relative;
+}
+.demo-label {
+  position: absolute; top: -10px; left: 12px;
+  background: #ffd700; color: #000; padding: 1px 8px; font-weight: bold;
+  border-radius: 3px; font-size: 11px;
+}
+.real img { display:block; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.6); }
+.card-back {
+  background: radial-gradient(circle at center, rgba(255,215,0,0.15) 0%, transparent 50%),
+              linear-gradient(135deg, #0d1f3a 0%, #1a3a5c 50%, #0d1f3a 100%);
+  border: 1px solid #3a6ea5;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.card-back::before {
+  content: 'DC'; font-family: serif; font-size: 14px; font-weight: 800;
+  font-style: italic; color: #ffd700;
+  text-shadow: 0 0 6px rgba(255,215,0,0.5);
+}
+
+/* ============ Evidence expansion ============ */
+.evid-demo {
+  display: grid; grid-template-columns: 200px 1fr; gap: 16px;
+}
+.evid-before {
+  background: rgba(0,0,0,0.3); border: 1px dashed #3a6ea5;
+  border-radius: 3px; padding: 12px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px;
+}
+.evid-stack-mini { position: relative; width: 70px; height: 90px; }
+.evid-stack-mini .card-back {
+  position: absolute; top: 0; left: 0;
+  width: 50px; height: 70px;
+}
+.evid-stack-mini .card-back:nth-child(1) { transform: translate(0,0); z-index:5; }
+.evid-stack-mini .card-back:nth-child(2) { transform: translate(2px,3px); z-index:4; }
+.evid-stack-mini .card-back:nth-child(3) { transform: translate(4px,6px); z-index:3; }
+.evid-stack-mini .card-back:nth-child(4) { transform: translate(6px,9px); z-index:2; }
+.evid-stack-mini .card-back:nth-child(5) { transform: translate(8px,12px); z-index:1; }
+.arrow-right {
+  font-size: 30px; color: #ffd700; align-self: center;
+}
+
+.evid-expanded {
+  background: rgba(0,0,0,0.6); border: 2px solid #ffd700;
+  border-radius: 6px; padding: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+.evid-expanded-header {
+  display:flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.evid-expanded-header h4 { margin: 0; color: #ffd700; font-size: 13px; }
+.evid-stack-vertical {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 360px; overflow-y: auto;
+  padding: 4px;
+}
+.evid-stack-vertical .row {
+  display: flex; gap: 10px; align-items: center;
+  padding: 6px; background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+}
+.evid-stack-vertical .pos {
+  width: 50px; text-align: center; font-size: 11px; color: #ffd700; font-weight: 700;
+}
+.evid-stack-vertical .real img { width: 60px; height: 84px; }
+.evid-stack-vertical .desc {
+  flex: 1; font-size: 10px; color: #b8d4f0;
+}
+.evid-stack-vertical .desc strong { color: #ffd700; }
+.evid-stack-vertical .desc .hirameki-tag {
+  display: inline-block; background: #ee99ff; color: #000;
+  padding: 1px 5px; border-radius: 2px; font-size: 9px; font-weight: 700;
+}
+.evid-stack-vertical .topmost { border-left: 3px solid #ffd700; }
+
+.note {
+  background: rgba(255,215,0,0.1);
+  border-left: 3px solid #ffd700;
+  padding: 8px 10px;
+  font-size: 10px; color: #b8d4f0;
+  margin-top: 10px;
+  border-radius: 0 3px 3px 0;
+}
+.note strong { color: #ffd700; }
+
+/* ============ Log placement options ============ */
+.log-options {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-top: 10px;
+}
+.log-mock {
+  background: #0d1b2a; border: 2px solid #3a6ea5;
+  border-radius: 4px; padding: 6px;
+  aspect-ratio: 16/9; position: relative;
+  font-size: 9px;
+}
+.log-mock .title-corner {
+  position: absolute; top: 4px; left: 6px;
+  background: #ffd700; color: #000; padding: 1px 6px; font-weight: 700;
+  border-radius: 2px; font-size: 9px; z-index: 10;
+}
+.log-mock .field {
+  position: absolute; left: 4px; right: 4px;
+  top: 30px; bottom: 50px;
+  border: 1px dashed #3a6ea5; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  color: #5a7090;
+}
+.log-mock .hand-area {
+  position: absolute; left: 4px; right: 60px; bottom: 4px;
+  height: 40px;
+  background: rgba(80,60,20,0.3); border-radius: 2px;
+  display:flex; align-items:center; justify-content:center;
+  color: #ffd700; font-size: 9px;
+}
+.log-mock .endbtn {
+  position: absolute; right: 6px; bottom: 6px;
+  background: #ffd700; color: #000; padding: 4px 8px;
+  font-size: 8px; font-weight: 700; border-radius: 2px;
+}
+
+/* variant A: right slide panel */
+.log-mock.opt-a .log-panel {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 35%;
+  background: rgba(0,0,0,0.85); border-left: 1px solid #ffd700;
+  padding: 4px;
+  color: #b8d4f0;
+  overflow-y: auto;
+  font-size: 8px;
+}
+.log-mock.opt-a .field { right: 35%; }
+.log-mock.opt-a .log-panel-title { color: #ffd700; font-weight: 700; border-bottom: 1px solid #444; padding-bottom: 2px; margin-bottom: 3px; }
+.log-mock.opt-a .log-entry { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+/* variant B: bottom collapsible */
+.log-mock.opt-b .log-bar {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 30%;
+  background: rgba(0,0,0,0.85); border-top: 1px solid #ffd700;
+  padding: 4px;
+  color: #b8d4f0;
+  font-size: 8px;
+}
+.log-mock.opt-b .field { bottom: 35%; }
+.log-mock.opt-b .hand-area, .log-mock.opt-b .endbtn { display: none; }
+.log-mock.opt-b .log-handle {
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  background: #ffd700; color: #000; padding: 1px 8px; font-size: 9px;
+  font-weight: 700; border-radius: 2px 2px 0 0;
+}
+
+/* variant C: top right icon, popup */
+.log-mock.opt-c .log-icon {
+  position: absolute; top: 4px; right: 6px;
+  background: #1b3a5c; color: #ffd700; padding: 2px 6px;
+  font-size: 9px; font-weight: 700;
+  border: 1px solid #ffd700; border-radius: 2px;
+  cursor: pointer; z-index: 10;
+}
+.log-mock.opt-c .log-popup {
+  position: absolute; top: 30px; right: 6px;
+  width: 35%; height: 60%;
+  background: rgba(0,0,0,0.95); border: 1px solid #ffd700;
+  border-radius: 3px; padding: 4px;
+  color: #b8d4f0; font-size: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+}
+.log-mock.opt-c .log-popup-title { color: #ffd700; font-weight: 700; border-bottom: 1px solid #444; padding-bottom: 2px; margin-bottom: 3px; }
+.log-mock.opt-c .log-entry { padding: 2px 0; }
+
+/* variant D: bottom side-by-side with hand */
+.log-mock.opt-d .log-side {
+  position: absolute; left: 4px; bottom: 4px; width: 30%;
+  height: 40px;
+  background: rgba(0,0,0,0.7); border-radius: 2px;
+  padding: 2px; color: #b8d4f0; font-size: 7px;
+  overflow-y: auto;
+}
+.log-mock.opt-d .hand-area { left: calc(30% + 8px); }
+</style>
+
+<!-- ============ Evidence stack expansion ============ -->
+<div class="demo">
+<div class="demo-label">① 証拠スタッククリック → 展開UI</div>
+
+<div class="evid-demo">
+  <div class="evid-before">
+    <div class="evid-stack-mini">
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+    </div>
+    <span style="color:#7090b5; font-size:10px;">クリック前<br>(裏向き 5枚)</span>
+    <span class="arrow-right">→</span>
+  </div>
+
+  <div class="evid-expanded">
+    <div class="evid-expanded-header">
+      <h4>📋 自分の証拠エリア (3/7枚)</h4>
+      <button style="background:#3a6ea5; color:#fff; border:none; padding:3px 8px; border-radius:2px; font-size:10px;">✕ 閉じる</button>
+    </div>
+    <div class="evid-stack-vertical">
+      <div class="row topmost">
+        <div class="pos">1番上<br>(最新)</div>
+        <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093474254.jpg"></div>
+        <div class="desc">
+          <strong>円谷光彦 (Lv6)</strong> <span class="hirameki-tag">ヒラメキ</span><br>
+          <span style="color:#7090b5; font-size:9px">置かれたターン: 先攻3T / 推理@阿笠博士</span>
+          <p style="color:#ddffcc; font-size:9px; margin:2px 0">→ アクション[事件]リムーブ時にヒラメキ発動可</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="pos">2番目</div>
+        <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093465803.jpg"></div>
+        <div class="desc">
+          <strong>小嶋元太 (Lv5)</strong> <br>
+          <span style="color:#7090b5; font-size:9px">置かれたターン: 先攻2T / 推理@毛利蘭</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="pos">3番目<br>(最古)</div>
+        <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093455670.jpg"></div>
+        <div class="desc">
+          <strong>吉田歩美 (Lv2)</strong><br>
+          <span style="color:#7090b5; font-size:9px">置かれたターン: 先攻1T / 推理@P江戸川コナン</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+<strong>動作仕様(案):</strong>
+<ul style="margin:4px 0 0; padding-left:18px; line-height: 1.6;">
+  <li><strong>自分の証拠</strong>: クリックで全件展開・表向き表示。ヒラメキ持ち・置かれた経緯も併記</li>
+  <li><strong>相手の証拠</strong>: クリックで「枚数のみ」表示。中身は不可視 (リムーブされる瞬間に1枚ずつ表向き化してヒラメキ確認)</li>
+  <li><strong>標準ルールでの選択肢</strong>: 通常は最上部1枚のみ操作対象。<strong>「好きな1枚を選ぶ」</strong>はカード効果次第（該当効果発動時のみ選択ダイアログ）</li>
+  <li><strong>ヒラメキ発動チェック</strong>: アクション[事件]がガードされなかった時、リムーブ対象(最上部)のカードが表向き化 → ヒラメキ持ちなら相手に発動可否を問う</li>
+</ul>
+</div>
+</div>
+
+<!-- ============ Action log placement ============ -->
+<div class="demo">
+<div class="demo-label">② 対戦ログの配置場所 (4案)</div>
+<p style="font-size:11px; color:#7090b5; margin-bottom:8px">既存ux/13-action-vocabulary.md で「カテゴリ + サブ情報」ログ形式は決定済み。画面上の配置のみ未定。</p>
+
+<div class="log-options">
+
+<div class="log-mock opt-a">
+  <span class="title-corner">A. 右サイド常時表示</span>
+  <div class="field">プレイマット</div>
+  <div class="hand-area">手札</div>
+  <div class="endbtn">End Turn</div>
+  <div class="log-panel">
+    <div class="log-panel-title">対戦ログ</div>
+    <div class="log-entry">[相手 T3] 推理 @千速</div>
+    <div class="log-entry">  → 証拠 +1 (4→5)</div>
+    <div class="log-entry">[相手 T3] アシスト宣言</div>
+    <div class="log-entry">  → FILE 5→6, 解決編移行</div>
+    <div class="log-entry">[自分 T3 メイン]</div>
+    <div class="log-entry">手札の使用『毛利蘭』</div>
+    <div class="log-entry">  → 現場登場, 名乗り</div>
+    <div class="log-entry">推理 @阿笠博士</div>
+    <div class="log-entry">  → 証拠 +1 (2→3)</div>
+    <div class="log-entry">  (ヒラメキ:円谷光彦)</div>
+  </div>
+</div>
+
+<div class="log-mock opt-b">
+  <span class="title-corner">B. 下端折りたたみ</span>
+  <div class="field">プレイマット (高め)</div>
+  <div class="log-bar">
+    <div class="log-handle">▼ ログ</div>
+    <div style="margin-top:8px;">
+      <div>[自分 T3] 推理 @阿笠博士 → 証拠+1</div>
+      <div>[自分 T3] 手札使用『毛利蘭』→ 名乗り登場</div>
+      <div>[相手 T3] アシスト → 解決編移行</div>
+      <div>[相手 T3] 推理 @千速 → 証拠+1</div>
+    </div>
+  </div>
+</div>
+
+<div class="log-mock opt-c">
+  <span class="title-corner">C. アイコン押下でポップアップ</span>
+  <div class="field">プレイマット (フル)</div>
+  <div class="hand-area">手札</div>
+  <div class="endbtn">End Turn</div>
+  <span class="log-icon">📜 ログ</span>
+  <div class="log-popup">
+    <div class="log-popup-title">対戦ログ (押下開閉)</div>
+    <div class="log-entry">[自分 T3] 推理 @阿笠博士</div>
+    <div class="log-entry">[自分 T3] 手札使用『毛利蘭』</div>
+    <div class="log-entry">[相手 T3] アシスト</div>
+    <div class="log-entry">[相手 T3] 推理 @千速</div>
+  </div>
+</div>
+
+<div class="log-mock opt-d">
+  <span class="title-corner">D. 手札と並列・常時表示(細)</span>
+  <div class="field">プレイマット (高め)</div>
+  <div class="log-side">
+    <div style="color:#ffd700; font-size:7px; font-weight:700">ログ</div>
+    <div>[自分 T3] 推理</div>
+    <div>[自分 T3] 手札使用</div>
+    <div>[相手 T3] アシスト</div>
+    <div>[相手 T3] 推理</div>
+  </div>
+  <div class="hand-area">手札 (横幅短縮)</div>
+  <div class="endbtn">End Turn</div>
+</div>
+
+</div>
+
+<div class="note">
+<strong>各案のトレードオフ:</strong>
+<ul style="margin:4px 0 0; padding-left:18px; line-height:1.6;">
+  <li><strong>A. 右サイド常時</strong>: 完全可視・離脱なし。プレイマット幅が35%圧迫される。MTGA慣例。</li>
+  <li><strong>B. 下端折りたたみ</strong>: 普段は閉じてプレイマット拡張、必要時に開く。手札の真上で操作干渉あり。</li>
+  <li><strong>C. アイコン押下</strong>: 通常は完全に消える、押下で開く。最もクリーン。HS慣例。</li>
+  <li><strong>D. 手札と並列</strong>: 直近4-5件常時可視、詳細は別途。手札スペース圧迫。</li>
+</ul>
+</div>
+</div>
+
+<div class="options" style="margin-top:16px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>右サイド常時 (MTGA型)</h3><p>常時可視。プレイマット幅35%犠牲。</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>下端折りたたみ</h3><p>普段閉じてマット広く、開けば直近4-5件可視。</p></div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>アイコン押下 (HS型)</h3><p>通常は完全に消える、最もクリーン。</p></div>
+  </div>
+  <div class="option" data-choice="d" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content"><h3>手札と並列(細)</h3><p>常時数件見える、詳細別途。</p></div>
+  </div>
+</div>

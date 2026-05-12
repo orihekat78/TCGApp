@@ -1,0 +1,411 @@
+<h2>Q8: 対象選択UI (実カードで再提示)</h2>
+<p class="subtitle">シナリオ: 自分の阿笠博士(AP5000, アクティブ) でアクション宣言中。<br>
+有効ターゲット = 相手のスリープ/スタン状態のキャラ + 証拠1+の事件 / 無効 = アクティブキャラ・パートナー</p>
+
+<style>
+.real img { display:block; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.6); }
+.card-back {
+  background: radial-gradient(circle at center, rgba(255,215,0,0.15) 0%, transparent 50%),
+              linear-gradient(135deg, #0d1f3a 0%, #1a3a5c 50%, #0d1f3a 100%);
+  border: 1px solid #3a6ea5;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.card-back::before {
+  content: 'DC'; font-family: serif; font-size: 14px; font-weight: 800;
+  font-style: italic; color: #ffd700;
+  text-shadow: 0 0 6px rgba(255,215,0,0.5);
+}
+
+.demo {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 14px 8px 8px;
+  margin: 14px 0;
+  position: relative;
+}
+.demo-label {
+  position: absolute; top: -10px; left: 12px;
+  background: #ffd700; color: #000; padding: 1px 8px; font-weight: bold;
+  border-radius: 3px; font-size: 11px;
+}
+
+.mat-mini {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px;
+  gap: 5px; padding: 6px;
+  border-radius: 3px;
+  position: relative;
+}
+.mat-mini.opp { background: linear-gradient(0deg, #0d2640, #2a1b3c); border: 2px solid #aa66dd; transform: rotate(180deg); }
+.mat-mini.self { background: linear-gradient(180deg, #0d2640, #1b3a5c); border: 2px solid #44dd99; }
+.cell-m {
+  background: rgba(0,0,0,0.3);
+  border: 1px dashed #3a6ea5;
+  border-radius: 2px;
+  padding: 4px;
+}
+.cell-m .l-mini { font-size: 9px; color: #7090b5; text-transform: uppercase; }
+.case-mini { grid-column: 1; }
+.scene-mini { grid-column: 2; }
+.partner-mini { grid-column: 3; }
+.case-stamp-mini {
+  position: absolute; top: 4px; right: 4px;
+  background: #ee2255; color: #fff;
+  padding: 1px 6px; border-radius: 2px;
+  font-size: 9px; font-weight: 700;
+  border: 1px solid #fff;
+  transform: rotate(-8deg);
+  z-index: 6;
+}
+.case-stamp-mini.editing { background: #3366ff; }
+.case-evid-mini {
+  position: absolute; bottom: 4px; left: 4px;
+  background: rgba(0,0,0,0.7); color: #ffd700;
+  padding: 1px 4px; border-radius: 2px;
+  font-size: 9px; font-weight: 700;
+  border: 1px solid #ffd700;
+}
+
+.cards-row-m { display: flex; gap: 4px; flex-wrap: wrap; }
+.real-m { position: relative; display: inline-block; }
+.real-m img { width: 56px; height: 78px; }
+.real-m.case-card img { max-width: 100px; max-height: 70px; width: auto; height: auto; }
+.real-m.sleep img { transform: rotate(-90deg); margin: 8px 0; }
+.real-m.stun img  { transform: rotate(180deg); }
+.real-m.partner-card img { width: 50px; height: 70px; }
+
+.real-m .state-badge {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85); color: #fff;
+  padding: 1px 5px; border-radius: 8px;
+  font-size: 8px; font-weight: 700;
+  z-index: 5; pointer-events: none; white-space: nowrap;
+  border: 1px solid #ffd700;
+}
+.real-m.sleep .state-badge { transform: translate(-50%, -50%) rotate(90deg); background: rgba(40,80,200,0.95); }
+.real-m.stun .state-badge { background: rgba(220,50,50,0.95); }
+
+/* Selection markings */
+.real-m.selected img { outline: 3px solid #ffd700; outline-offset: 1px; }
+.real-m.selected::after {
+  content: '⚡選択中'; position: absolute;
+  top: -8px; left: 50%; transform: translateX(-50%);
+  background: #ffd700; color: #000; padding: 1px 4px;
+  border-radius: 2px; font-size: 8px; font-weight: 700; z-index: 10;
+}
+
+.real-m.valid img { outline: 3px solid #44dd99; outline-offset: 1px; animation: pulse-green 1.2s infinite; }
+.real-m.valid.case-card img { outline-offset: 0; }
+@keyframes pulse-green {
+  0%,100% { box-shadow: 0 0 8px #44dd99; }
+  50% { box-shadow: 0 0 16px #44dd99; }
+}
+
+.real-m.invalid img { opacity: 0.35; filter: grayscale(60%); }
+.real-m.invalid::after {
+  content: '✕'; position: absolute; top:50%; left:50%;
+  transform: translate(-50%, -50%);
+  color: #ee2255; font-size: 28px; font-weight: 900;
+  text-shadow: 0 0 4px #000;
+}
+
+/* Drag arrow overlay */
+.arrow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100;
+}
+.arrow svg {
+  filter: drop-shadow(0 0 6px #ffd700);
+}
+.tooltip-attack {
+  position: absolute;
+  background: rgba(0,0,0,0.95); color: #ffd700;
+  padding: 6px 10px; border-radius: 3px;
+  font-size: 11px; font-weight: 600;
+  border: 1px solid #ffd700;
+  z-index: 101;
+  pointer-events: none;
+}
+
+/* Action menu for click variant */
+.action-menu {
+  position: absolute;
+  background: rgba(0,0,0,0.95); border: 2px solid #ffd700;
+  border-radius: 4px; padding: 4px;
+  display: flex; flex-direction: column; gap: 2px;
+  z-index: 50;
+}
+.action-menu .item {
+  padding: 4px 12px; font-size: 10px; color: #ffd700; cursor: pointer;
+  white-space: nowrap;
+}
+.action-menu .item:hover { background: rgba(255,215,0,0.2); }
+.action-menu .item.disabled { color: #5a7090; cursor: not-allowed; }
+.action-menu .item.active { background: #ffd700; color: #000; font-weight: 700; }
+
+.flow-bar {
+  display: flex; gap: 4px; padding: 6px;
+  background: rgba(0,0,0,0.4); border-radius: 3px;
+  font-size: 10px;
+  margin: 6px 0 8px;
+}
+.flow-bar .stp { padding: 3px 8px; background: #1b3a5c; border-radius: 2px; color: #7090b5; }
+.flow-bar .stp.now { background: #ffd700; color: #000; font-weight: 700; }
+.flow-bar .stp.done { background: #44aa66; color: #fff; }
+
+.note-line {
+  background: rgba(255,215,0,0.1);
+  border-left: 3px solid #ffd700;
+  padding: 6px 10px;
+  font-size: 10px; color: #b8d4f0;
+  margin-top: 8px;
+  border-radius: 0 3px 3px 0;
+}
+.note-line strong { color: #ffd700; }
+
+.legend {
+  display: flex; gap: 14px; align-items: center;
+  font-size: 10px; color: #b8d4f0;
+  padding: 4px; margin-top: 6px;
+}
+.legend .sw { display: inline-block; width: 14px; height: 14px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+</style>
+
+<!-- Legend -->
+<div class="legend">
+  <span><span class="sw" style="background:#ffd700"></span>選択中(アタッカー)</span>
+  <span><span class="sw" style="background:#44dd99; animation:pulse-green 1.2s infinite"></span>有効ターゲット</span>
+  <span><span class="sw" style="background:#444; opacity:0.4"></span>無効(✕表示)</span>
+</div>
+
+<!-- ============ Option A: Drag ============ -->
+<div class="demo">
+<div class="demo-label">A. ドラッグ&ドロップ (Hearthstone型)</div>
+<div class="flow-bar">
+  <span class="stp done">①阿笠博士を長押し</span>
+  <span class="stp now">②ドラッグ中・矢印描画 ← 今ここ</span>
+  <span class="stp">③有効ターゲット上で離す → 自動確定</span>
+</div>
+
+<div style="position:relative">
+
+<!-- 相手 -->
+<div class="mat-mini opp">
+  <div class="cell-m case-mini" style="position:relative">
+    <span class="l-mini">事件</span>
+    <div class="real-m case-card valid">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977412418.jpg" alt="千速と重悟の婚活パーティー">
+    </div>
+    <span class="case-stamp-mini">解決編</span>
+    <span class="case-evid-mini">証拠 5/6</span>
+  </div>
+  <div class="cell-m scene-mini">
+    <span class="l-mini">現場 (3/5)</span>
+    <div class="cards-row-m">
+      <div class="real-m invalid">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977377076.jpg" alt="高木渉">
+      </div>
+      <div class="real-m sleep valid">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977385875.jpg" alt="佐藤美和子">
+        <span class="state-badge">スリープ</span>
+      </div>
+      <div class="real-m stun valid">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977356431.jpg" alt="目暮十三">
+        <span class="state-badge">スタン</span>
+      </div>
+    </div>
+  </div>
+  <div class="cell-m partner-mini">
+    <span class="l-mini">パートナー</span>
+    <div class="real-m partner-card invalid">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608962412925.jpg" alt="萩原千速">
+    </div>
+  </div>
+</div>
+
+<!-- 自分 -->
+<div class="mat-mini self" style="margin-top: 4px;">
+  <div class="cell-m case-mini" style="position:relative">
+    <span class="l-mini">事件</span>
+    <div class="real-m case-card">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100639068.jpg" alt="青の古城探索事件">
+    </div>
+    <span class="case-stamp-mini editing">事件編</span>
+    <span class="case-evid-mini">証拠 3/7</span>
+  </div>
+  <div class="cell-m scene-mini">
+    <span class="l-mini">現場 (2/5)</span>
+    <div class="cards-row-m">
+      <div class="real-m">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100625132.jpg" alt="毛利蘭">
+      </div>
+      <div class="real-m selected">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093512121.jpg" alt="阿笠博士">
+      </div>
+    </div>
+  </div>
+  <div class="cell-m partner-mini">
+    <span class="l-mini">パートナー</span>
+    <div class="real-m partner-card">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093420786.jpg" alt="江戸川コナン">
+    </div>
+  </div>
+</div>
+
+<!-- arrow overlay -->
+<div class="arrow" style="left:50%; top:35%; width:160px; height: 60px; transform: translate(-50%, -50%) rotate(-160deg);">
+  <svg width="160" height="60" viewBox="0 0 160 60">
+    <defs>
+      <marker id="arrowhead-a" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto">
+        <polygon points="0 0, 10 3, 0 6" fill="#ffd700"/>
+      </marker>
+    </defs>
+    <path d="M 5 30 Q 80 0 150 30" stroke="#ffd700" stroke-width="5" fill="none" marker-end="url(#arrowhead-a)" stroke-dasharray="0"/>
+  </svg>
+</div>
+<div class="tooltip-attack" style="left: 55%; top: 47%;">
+  阿笠博士 → 目暮十三<br>AP 5000 vs 5000 → リムーブ
+</div>
+
+</div>
+
+<div class="note-line">
+<strong>挙動:</strong> 阿笠博士を長押し、相手キャラ/事件へドラッグ → 有効ターゲット(緑枠) で離すと即発射。ドラッグ中のホバーで AP比較や予測結果のツールチップを表示。<strong>誤操作対策:</strong> 解決編に攻撃直前など重要場面ではドロップ時に確認モーダルを挿入可。
+</div>
+</div>
+
+<!-- ============ Option B: Click-confirm ============ -->
+<div class="demo">
+<div class="demo-label">B. クリック+確認 (MTGA型)</div>
+<div class="flow-bar">
+  <span class="stp done">①阿笠博士クリック</span>
+  <span class="stp done">②メニューから「アクション」選択</span>
+  <span class="stp now">③有効ターゲット選択待ち ← 今ここ</span>
+  <span class="stp">④確認ダイアログ→OK</span>
+</div>
+
+<div style="position:relative">
+
+<div class="mat-mini opp">
+  <div class="cell-m case-mini" style="position:relative">
+    <span class="l-mini">事件</span>
+    <div class="real-m case-card valid">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977412418.jpg">
+    </div>
+    <span class="case-stamp-mini">解決編</span>
+    <span class="case-evid-mini">証拠 5/6</span>
+  </div>
+  <div class="cell-m scene-mini">
+    <span class="l-mini">現場 (3/5)</span>
+    <div class="cards-row-m">
+      <div class="real-m invalid">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977377076.jpg">
+      </div>
+      <div class="real-m sleep valid">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977385875.jpg">
+        <span class="state-badge">スリープ</span>
+      </div>
+      <div class="real-m stun valid">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977356431.jpg">
+        <span class="state-badge">スタン</span>
+      </div>
+    </div>
+  </div>
+  <div class="cell-m partner-mini">
+    <span class="l-mini">パートナー</span>
+    <div class="real-m partner-card invalid">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608962412925.jpg">
+    </div>
+  </div>
+</div>
+
+<div class="mat-mini self" style="margin-top:4px;">
+  <div class="cell-m case-mini" style="position:relative">
+    <span class="l-mini">事件</span>
+    <div class="real-m case-card">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100639068.jpg">
+    </div>
+    <span class="case-stamp-mini editing">事件編</span>
+    <span class="case-evid-mini">証拠 3/7</span>
+  </div>
+  <div class="cell-m scene-mini">
+    <span class="l-mini">現場 (2/5)</span>
+    <div class="cards-row-m">
+      <div class="real-m">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100625132.jpg">
+      </div>
+      <div class="real-m selected" style="position:relative">
+        <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093512121.jpg">
+        <!-- action menu sticky -->
+        <div class="action-menu" style="bottom: -90px; left: 60px;">
+          <div class="item">推理 (LP1)</div>
+          <div class="item active">⚡アクション 実行中</div>
+          <div class="item disabled">【宣言】能力 (なし)</div>
+          <div class="item" style="border-top:1px solid #444; color:#ee5050;">✕ キャンセル</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cell-m partner-mini">
+    <span class="l-mini">パートナー</span>
+    <div class="real-m partner-card">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093420786.jpg">
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="margin-top:90px;"></div>
+
+<div class="note-line">
+<strong>挙動:</strong> ①アタッカーをクリック → 行動メニュー出現 / ②「アクション」を選択 → 対象候補ハイライト / ③対象クリック → 確認ダイアログ「阿笠博士で目暮十三にアクション (AP 5000 vs 5000 → リムーブ)。実行しますか？」 / ④OKで発射。
+<strong>誤操作リスクが最も低い。</strong> ステップは多いがチュートリアル中もガイドしやすい。
+</div>
+</div>
+
+<!-- ============ Option C: Hybrid ============ -->
+<div class="demo">
+<div class="demo-label">C. ハイブリッド (両方サポート)</div>
+<div class="flow-bar">
+  <span class="stp now">短くクリック → B方式 / 長押しドラッグ → A方式 ＝ ユーザーが選べる</span>
+</div>
+
+<p style="font-size: 10px; color:#7090b5; padding: 0 8px;">
+プレイヤーの操作開始イベント(mousedown後の時間)で分岐。150ms以内のリリース＝クリック→メニュー(B方式)、それ以上保持されたらドラッグ開始(A方式)。
+</p>
+
+<div class="note-line" style="background:rgba(238,80,80,0.1); border-color:#ee5050; color:#ee8888;">
+<strong>実装観点で危険:</strong> イベント分岐のテストケースが2倍以上、誤判定リスク (150msの感度調整が難しい)、初心者は混乱しやすい。推奨度低。
+</div>
+</div>
+
+<div class="note-line" style="background:rgba(40,180,80,0.1); border-color:#44dd99; color:#88ee88;">
+<strong>推奨は B (クリック+確認):</strong>
+<ul style="margin:4px 0 0; padding-left:18px; line-height:1.5;">
+  <li>コナンTCGの「アクション」は不可逆な操作 (一度宣言したらガード判定が走る)</li>
+  <li>「アシスト」「事件解決」など同様に不可逆な操作も多い → 全て確認モーダル統一できる</li>
+  <li>名乗り状態の例外(突撃)など、ルール上の制限をメニューでフィードバックしやすい (使えない場合はグレーアウト+理由表示)</li>
+  <li>チュートリアル中も操作ステップが明示的 (publisher CG動画と相性が良い)</li>
+</ul>
+</div>
+
+<div class="options" style="margin-top:16px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>ドラッグ&ドロップ</h3><p>Hearthstone型、速い、慣れた人向け</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>クリック+確認 (推奨)</h3><p>MTGA型、不可逆操作に安全、チュートリアル整合</p></div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>ハイブリッド</h3><p>柔軟だが実装コストとリスク大</p></div>
+  </div>
+</div>

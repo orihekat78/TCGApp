@@ -1,0 +1,261 @@
+<h2>公式プレイマット準拠レイアウト</h2>
+<p class="subtitle">物理プレイシートの実配置を忠実に再現します。1人分のマット構造は以下:</p>
+
+<style>
+.section { margin-bottom: 20px; }
+.ref-img { width: 100%; max-width: 900px; border: 2px solid #3a6ea5; border-radius: 4px; }
+.label-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; color: #7090b5; }
+
+.fullmat {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 8px;
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
+  color: #b8d4f0;
+  margin-top: 16px;
+}
+
+/* Single player mat 3x3 grid */
+.player-mat {
+  display: grid;
+  grid-template-columns: 90px 1fr 90px;
+  grid-template-rows: 70px 70px 60px;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 4px;
+  position: relative;
+}
+
+.player-mat.self  { background: linear-gradient(180deg, #0d2640 0%, #1b3a5c 100%); border: 2px solid #44dd99; }
+.player-mat.opp   { background: linear-gradient(0deg, #0d2640 0%, #2a1b3c 100%); border: 2px solid #aa66dd; transform: rotate(180deg); }
+.player-mat.opp .cell-inner { transform: rotate(180deg); } /* counter-rotate inner contents so text stays readable */
+
+.cell {
+  background: rgba(0,0,0,0.3);
+  border: 1px dashed #3a6ea5;
+  border-radius: 3px;
+  padding: 4px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.cell .cell-inner { display: flex; flex-direction: column; height:100%; gap:2px; }
+.cell-label { font-size: 9px; color: #7090b5; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.case   { grid-column: 1; grid-row: 1; background: rgba(60,40,80,0.4); }
+.scene  { grid-column: 2; grid-row: 1; background: rgba(80,40,40,0.4); }
+.deck   { grid-column: 3; grid-row: 1; background: rgba(40,60,80,0.4); }
+.evid   { grid-column: 1; grid-row: 2 / span 2; background: rgba(80,60,40,0.4); }
+.partner{ grid-column: 2; grid-row: 2; background: rgba(40,80,60,0.4); }
+.remove { grid-column: 3; grid-row: 2 / span 2; background: rgba(80,40,40,0.4); }
+.file   { grid-column: 2; grid-row: 3; background: rgba(40,40,60,0.4); }
+
+.card-mini {
+  background: #ffd700; color: #000; border-radius: 2px;
+  padding: 2px 4px; font-size: 9px; font-weight: 600;
+  min-width: 26px; text-align: center; line-height: 1.1;
+}
+.card-mini.sleep { background: #cc9933; transform: rotate(-90deg); display: inline-block; }
+.card-mini.stun { background: #ee6644; transform: rotate(180deg); color: #fff; display: inline-block; }
+.card-mini.case-mark { background: #3366ff; color: #fff; }
+.card-mini.case-resolved { background: #ee2255; color: #fff; }
+.card-mini.partner-mark { background: #44dd99; color: #000; border: 1px solid #fff; }
+.card-mini.back { background: #555; color: #aaa; }
+.card-mini.evidence { background: #5a3a3a; color: #fff; }
+.cards-row { display: flex; gap: 3px; flex-wrap: wrap; }
+
+.center-line {
+  height: 12px; background: repeating-linear-gradient(90deg, #ffd700 0 16px, #000 16px 32px);
+  margin: 4px 0; position: relative;
+}
+.center-line::after {
+  content: "── KEEP OUT ── KEEP OUT ── KEEP OUT ──";
+  position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
+  background: #ffd700; color: #000; padding: 1px 12px; font-size: 9px; font-weight: 700;
+}
+
+.hand-row {
+  background:rgba(80,60,20,0.5); padding: 8px; border-radius: 3px;
+  display: flex; gap: 4px; justify-content: center; align-items: center;
+}
+.hand-card {
+  background: #ffe170; color: #000; padding: 6px 8px; border-radius: 3px;
+  font-size: 10px; font-weight: 600; min-width: 50px; text-align: center;
+}
+.hand-card:nth-child(odd)  { transform: translateY(-4px) rotate(-2deg); }
+.hand-card:nth-child(even) { transform: translateY(0px)  rotate(2deg); }
+
+.minimal-chrome {
+  background: #0a1420; padding: 4px 8px; font-size: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-radius: 3px; margin-bottom: 6px;
+}
+.chapter { color: #ffd700; font-weight: bold; }
+.phase-strip { display: flex; gap: 4px; }
+.phase-item { padding: 2px 8px; border-radius: 2px; background: #1b3a5c; font-size: 9px; }
+.phase-item.active { background: #44dd99; color: #000; font-weight: 700; }
+</style>
+
+<!-- ====================== 公式実物プレイシート (reference) ====================== -->
+<div class="section">
+  <span class="label">📜 公式プレイシート（1人分・実物リファレンス）</span>
+  <img src="playsheet-reference.png" class="ref-img" alt="official playsheet">
+  <div class="label-row">
+    <span>左列: 事件 + 証拠</span>
+    <span>中央: 現場 → パートナー → FILE</span>
+    <span>右列: デッキ + リムーブ</span>
+  </div>
+</div>
+
+<!-- ====================== Digital mat reconstruction ====================== -->
+<div class="section">
+  <h3>2人対戦UI（公式プレイマット忠実再現）</h3>
+  <p class="subtitle">上半分=相手のマット（180°回転=物理的に向かい合わせの状態）/ 下半分=自分のマット / 中央=KEEP OUT 仕切り / 下端=手札</p>
+
+<div class="fullmat">
+
+<!-- 上端: 章タグ + フェイズ + EndTurn （最小限のクローム） -->
+<div class="minimal-chrome">
+  <span class="chapter">▼ 先攻3ターン目</span>
+  <div class="phase-strip">
+    <span class="phase-item">オート</span>
+    <span class="phase-item active">● メイン</span>
+    <span class="phase-item">エンド</span>
+  </div>
+  <span>© 青山剛昌／小学館 © TOMY</span>
+</div>
+
+<!-- 相手マット（180°回転） -->
+<div class="player-mat opp">
+  <div class="cell case"><div class="cell-inner">
+    <span class="cell-label">事件</span>
+    <span class="card-mini case-resolved">解決編 Lv7</span>
+  </div></div>
+  <div class="cell scene"><div class="cell-inner">
+    <span class="cell-label">現場 (3/5)</span>
+    <div class="cards-row">
+      <span class="card-mini">古城#1<br>2/2</span>
+      <span class="card-mini sleep">古城#2<br>4/1</span>
+      <span class="card-mini stun">侵入者<br>3/3</span>
+    </div>
+  </div></div>
+  <div class="cell deck"><div class="cell-inner">
+    <span class="cell-label">デッキ</span>
+    <span class="card-mini back">▢25</span>
+  </div></div>
+  <div class="cell evid"><div class="cell-inner">
+    <span class="cell-label">証拠 5/6</span>
+    <span class="card-mini evidence">▢</span>
+    <span class="card-mini evidence">▢</span>
+    <span class="card-mini evidence">▢</span>
+    <span class="card-mini evidence">▢</span>
+    <span class="card-mini evidence">▢</span>
+  </div></div>
+  <div class="cell partner"><div class="cell-inner">
+    <span class="cell-label">パートナー</span>
+    <span class="card-mini partner-mark">怪盗キッド<br>LP4</span>
+  </div></div>
+  <div class="cell remove"><div class="cell-inner">
+    <span class="cell-label">リムーブ</span>
+    <span class="card-mini">▢1</span>
+  </div></div>
+  <div class="cell file"><div class="cell-inner">
+    <span class="cell-label">FILE (6)</span>
+    <div class="cards-row">
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+    </div>
+  </div></div>
+</div>
+
+<!-- 中央 KEEP OUT ライン -->
+<div class="center-line"></div>
+
+<!-- 自分マット -->
+<div class="player-mat self">
+  <div class="cell case"><div class="cell-inner">
+    <span class="cell-label">事件</span>
+    <span class="card-mini case-mark">事件編 Lv7</span>
+  </div></div>
+  <div class="cell scene"><div class="cell-inner">
+    <span class="cell-label">現場 (2/5)</span>
+    <div class="cards-row">
+      <span class="card-mini">毛利蘭<br>5/3</span>
+      <span class="card-mini">小五郎<br>4/2</span>
+    </div>
+  </div></div>
+  <div class="cell deck"><div class="cell-inner">
+    <span class="cell-label">デッキ</span>
+    <span class="card-mini back">▢30</span>
+  </div></div>
+  <div class="cell evid"><div class="cell-inner">
+    <span class="cell-label">証拠 3/7</span>
+    <span class="card-mini evidence">▢</span>
+    <span class="card-mini evidence">▢</span>
+    <span class="card-mini evidence">▢</span>
+  </div></div>
+  <div class="cell partner"><div class="cell-inner">
+    <span class="cell-label">パートナー</span>
+    <span class="card-mini partner-mark">江戸川コナン<br>LP3</span>
+  </div></div>
+  <div class="cell remove"><div class="cell-inner">
+    <span class="cell-label">リムーブ</span>
+    <span class="card-mini">▢2</span>
+  </div></div>
+  <div class="cell file"><div class="cell-inner">
+    <span class="cell-label">FILE (5/7)</span>
+    <div class="cards-row">
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+      <span class="card-mini back">▢</span>
+    </div>
+  </div></div>
+</div>
+
+<!-- 手札 + EndTurn -->
+<div style="margin-top: 8px;">
+  <span class="label">🃏 手札 6枚 (ホバーで拡大プレビュー、ドラッグで配置)</span>
+  <div class="hand-row">
+    <span class="hand-card">推理Lv3</span>
+    <span class="hand-card">少年探偵団</span>
+    <span class="hand-card">毛利蘭</span>
+    <span class="hand-card">Lv5キャラ</span>
+    <span class="hand-card">カットイン</span>
+    <span class="hand-card">変装</span>
+    <button style="margin-left: 12px; background:#ffd700; color:#000; border:none; padding: 8px 16px; border-radius: 3px; font-weight: 700; cursor: pointer;">End Turn</button>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div class="section">
+  <h3>このレイアウトの特徴</h3>
+  <ul style="line-height: 1.8;">
+    <li><strong>左列: 事件 + 証拠</strong> — 物理マットそのまま。事件カードを左上、証拠は左側に縦に積む</li>
+    <li><strong>中央列: 現場 → パートナー → FILE</strong> — 上下方向に階層配置。物理通り</li>
+    <li><strong>右列: デッキ + リムーブ</strong> — デッキ右上、リムーブは右側</li>
+    <li><strong>2人対戦は対称配置</strong> — 相手マットは180°回転（物理的に向かい合わせ）</li>
+    <li><strong>中央に「KEEP OUT」ライン</strong> — コナンらしいテーマ装飾 兼 領域仕切り</li>
+    <li><strong>サイドバー無し</strong> — 上端のミニチュアクロームのみ（章タグ・フェイズ・End Turn）</li>
+    <li><strong>手札は下端</strong> — 扇形展開・ホバー拡大は業界慣例</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>追加で決めたいこと</h3>
+  <ol style="line-height: 1.8;">
+    <li>このプレイマット配置で問題なし？それとも何か違う？</li>
+    <li>フェイズ表示は上端ストリップで十分？それとも公式CGモックアップのように左サイドバーに大きく？</li>
+    <li>メインフェイズ6行動メニューは必要？（公式CGには右サイドバー常時表示があった）</li>
+    <li>相手マットを180°回転して見せる？それともL/Rを揃えて視認性優先？</li>
+  </ol>
+</div>

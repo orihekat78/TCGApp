@@ -1,0 +1,340 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - paragraph [ref=e4]:
+        - link "ロゴ：タカラトミー" [ref=e5] [cursor=pointer]:
+          - /url: https://www.takaratomy.co.jp/
+          - img "ロゴ：タカラトミー" [ref=e6]
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - button "検索" [ref=e11] [cursor=pointer]:
+            - generic [ref=e13]: 検索
+        - listitem [ref=e14]:
+          - link "English" [ref=e15] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/english/
+            - generic [ref=e17]: English
+        - listitem [ref=e18]:
+          - link "公式ショッピング サイト" [ref=e19] [cursor=pointer]:
+            - /url: https://takaratomymall.jp/shop/?from=t2hed
+            - generic [ref=e21]: 公式ショッピング サイト
+      - list [ref=e24]:
+        - listitem [ref=e25]:
+          - link "トップ" [ref=e26] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/
+            - generic [ref=e28]: トップ
+        - listitem [ref=e29]:
+          - link "商品情報" [ref=e30] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/products/
+            - generic [ref=e32]: 商品情報
+        - listitem [ref=e33]:
+          - link "イベント・キャンペーン" [ref=e34] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/event/
+            - generic [ref=e36]: イベント・キャンペーン
+        - listitem [ref=e37]:
+          - link "会社情報" [ref=e38] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/company/
+            - generic [ref=e40]: 会社情報
+        - listitem [ref=e41]:
+          - link "投資家情報" [ref=e42] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/ir/
+            - generic [ref=e44]: 投資家情報
+        - listitem [ref=e45]:
+          - link "サステナビリティ" [ref=e46] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/company/csr/
+            - generic [ref=e48]: サステナビリティ
+        - listitem [ref=e49]:
+          - link "お客様相談室" [ref=e50] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/support/
+            - generic [ref=e52]: お客様相談室
+  - heading "名探偵コナントレーディングカードゲーム公式サイト 真実へ先にたどり着けーー" [level=1] [ref=e53]:
+    - text: 名探偵コナントレーディングカードゲーム公式サイト 真実へ先にたどり着け
+    - emphasis [ref=e54]: ーー
+  - generic [ref=e55]:
+    - generic [ref=e56]:
+      - link "DETECTIVE CONAN CARD GAME『名探偵コナン』カードゲーム" [ref=e58] [cursor=pointer]:
+        - /url: https://www.takaratomy.co.jp/products/conan-cardgame
+        - img "DETECTIVE CONAN CARD GAME『名探偵コナン』カードゲーム" [ref=e59]
+      - navigation [ref=e60]:
+        - list [ref=e61]:
+          - listitem [ref=e62]:
+            - link "初めての方へ" [ref=e63] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/conan-cardgame/beginner/
+          - listitem [ref=e64]:
+            - link "ルール" [ref=e65] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/conan-cardgame/rule/
+          - listitem [ref=e66]:
+            - link "Q&Aコミュニティ" [ref=e67] [cursor=pointer]:
+              - /url: https://conan-tcg.commmune.com//
+          - listitem [ref=e68]:
+            - link "商品情報" [ref=e69] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/conan-cardgame/products/
+          - listitem [ref=e70]:
+            - link "イベント" [ref=e71] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/conan-cardgame/event/
+          - listitem [ref=e72]:
+            - link "カード検索" [ref=e73] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/?package=CT-P09
+          - listitem [ref=e74]:
+            - link "デッキ作成" [ref=e75] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/conan-cardgame/deckrecipe/
+          - listitem [ref=e76]:
+            - link "NEWS" [ref=e77] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/conan-cardgame/news/
+    - main [ref=e78]:
+      - heading "カード検索" [level=2] [ref=e79]:
+        - generic [ref=e80]: カード検索
+      - article [ref=e81]:
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - textbox "フリーワード" [ref=e87]
+              - combobox [ref=e91] [cursor=pointer]:
+                - option "ALL"
+                - option "CT-P01 Case-Booster 01 探偵たちの切札（ジョーカー）"
+                - option "CT-P02 Case-Booster 02 西と東の大決戦（コンタクト）"
+                - option "CT-P03 Case-Booster 03 黒影の襲来（カットイン）"
+                - option "CT-P04 Case-Booster 04 信義の絆（パートナー）"
+                - option "CT-P05 Case-Booster 05 新たなる謎"
+                - option "CT-P06 Case-Booster 06 交錯する刃"
+                - option "CT-P07 Case-Booster 07 魅惑のマジック"
+                - option "CT-P08 Case-Booster 08 哀色の宿命"
+                - option "CT-P09 Case-Booster 09 疾風の煌めき"
+                - option "CT-D01 Case-StartDeck 01 江戸川コナン"
+                - option "CT-D02 Case-StartDeck 02 服部平次"
+                - option "CT-D03 Case-StartDeck 03 怪盗キッド"
+                - option "CT-D04 Case-StartDeck 04 赤井秀一"
+                - option "CT-D05 Case-StartDeck 05 安室透"
+                - option "CT-D06 Case-ThemeDeck 01 服部平次VS怪盗キッド"
+                - option "CT-D07 Case-ThemeDeck 02 黒ずくめの組織"
+                - option "CT-D08 Case-ThemeDeck 03 青の古城探索事件"
+                - option "CT-D09 Case-ThemeDeck 04 死亡の館、赤い壁"
+                - option "CT-D10 Case-ThemeDeck 05 シャッフルロマンス"
+                - option "CT-D11 Case-ThemeDeck 06 千速と重悟の婚活パーティー" [selected]
+                - option "PRカード"
+            - navigation [ref=e92]:
+              - list [ref=e93]:
+                - listitem [ref=e94]:
+                  - strong [ref=e95]: 色
+                  - list [ref=e96]:
+                    - listitem [ref=e97] [cursor=pointer]: 全選択
+                    - listitem [ref=e98] [cursor=pointer]: 青
+                    - listitem [ref=e99] [cursor=pointer]: 緑
+                    - listitem [ref=e100] [cursor=pointer]: 白
+                    - listitem [ref=e101] [cursor=pointer]: 赤
+                    - listitem [ref=e102] [cursor=pointer]: 黄
+                    - listitem [ref=e103] [cursor=pointer]: 黒
+                - listitem [ref=e104]:
+                  - strong [ref=e105]: 種類
+                  - list [ref=e106]:
+                    - listitem [ref=e107] [cursor=pointer]: 全選択
+                    - listitem [ref=e108] [cursor=pointer]: パートナー
+                    - listitem [ref=e109] [cursor=pointer]: キャラ
+                    - listitem [ref=e110] [cursor=pointer]: イベント
+                    - listitem [ref=e111] [cursor=pointer]: 事件
+              - list [ref=e112]:
+                - listitem [ref=e113]:
+                  - strong [ref=e114]: レアリティ
+                  - list [ref=e115]:
+                    - listitem [ref=e116] [cursor=pointer]: 全選択
+                    - listitem [ref=e117] [cursor=pointer]: C
+                    - listitem [ref=e118] [cursor=pointer]: CP
+                    - listitem [ref=e119] [cursor=pointer]: CP2
+                    - listitem [ref=e120] [cursor=pointer]: R
+                    - listitem [ref=e121] [cursor=pointer]: RP
+                    - listitem [ref=e122] [cursor=pointer]: SR
+                    - listitem [ref=e123] [cursor=pointer]: SRP
+                    - listitem [ref=e124] [cursor=pointer]: SEC
+                    - listitem [ref=e125] [cursor=pointer]: D
+                    - listitem [ref=e126] [cursor=pointer]: PR
+                    - listitem [ref=e127] [cursor=pointer]: SRCP
+                    - listitem [ref=e128] [cursor=pointer]: MR
+                    - listitem [ref=e129] [cursor=pointer]: MRP
+                    - listitem [ref=e130] [cursor=pointer]: MRCP
+                - listitem [ref=e131]:
+                  - strong [ref=e132]: レベル
+                  - list [ref=e133]:
+                    - listitem [ref=e134] [cursor=pointer]: 全選択
+                    - listitem [ref=e135] [cursor=pointer]: "1"
+                    - listitem [ref=e136] [cursor=pointer]: "2"
+                    - listitem [ref=e137] [cursor=pointer]: "3"
+                    - listitem [ref=e138] [cursor=pointer]: "4"
+                    - listitem [ref=e139] [cursor=pointer]: "5"
+                    - listitem [ref=e140] [cursor=pointer]: "6"
+                    - listitem [ref=e141] [cursor=pointer]: "7"
+                    - listitem [ref=e142] [cursor=pointer]: "8"
+                    - listitem [ref=e143] [cursor=pointer]: "9"
+              - list [ref=e144]:
+                - listitem [ref=e145]:
+                  - strong [ref=e146]: AP
+                  - list [ref=e147]:
+                    - listitem [ref=e148] [cursor=pointer]: 全選択
+                    - listitem [ref=e149] [cursor=pointer]: "0"
+                    - listitem [ref=e150] [cursor=pointer]: "1000"
+                    - listitem [ref=e151] [cursor=pointer]: "2000"
+                    - listitem [ref=e152] [cursor=pointer]: "3000"
+                    - listitem [ref=e153] [cursor=pointer]: "4000"
+                    - listitem [ref=e154] [cursor=pointer]: "5000"
+                    - listitem [ref=e155] [cursor=pointer]: "6000"
+                    - listitem [ref=e156] [cursor=pointer]: "7000"
+                    - listitem [ref=e157] [cursor=pointer]: "8000"
+                    - listitem [ref=e158] [cursor=pointer]: "9000"
+                - listitem [ref=e159]:
+                  - strong [ref=e160]: LP
+                  - list [ref=e161]:
+                    - listitem [ref=e162] [cursor=pointer]: 全選択
+                    - listitem [ref=e163] [cursor=pointer]: "0"
+                    - listitem [ref=e164] [cursor=pointer]: "1"
+                    - listitem [ref=e165] [cursor=pointer]: "2"
+                    - listitem [ref=e166] [cursor=pointer]: "3"
+              - list [ref=e167]:
+                - listitem [ref=e168]:
+                  - strong [ref=e169]: 特徴
+                  - list
+          - button "この条件で検索する" [ref=e170] [cursor=pointer]
+        - generic [ref=e171]:
+          - link "×検索条件を解除" [ref=e173] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/
+          - generic [ref=e174]:
+            - strong [ref=e175]: "21"
+            - text: 件
+        - list [ref=e176]:
+          - listitem [ref=e177]
+          - listitem [ref=e179]
+          - listitem [ref=e181]
+          - listitem [ref=e183]
+          - listitem [ref=e185]
+          - listitem [ref=e187]
+          - listitem [ref=e189]
+          - listitem [ref=e191]
+          - listitem [ref=e193]
+          - listitem [ref=e195]
+          - listitem [ref=e197]
+          - listitem [ref=e199]
+          - listitem [ref=e201]
+          - listitem [ref=e203]
+          - listitem [ref=e205]
+          - listitem [ref=e207]
+          - listitem [ref=e209]
+          - listitem [ref=e211]
+          - listitem [ref=e213]
+          - listitem [ref=e215]
+          - listitem [ref=e217]
+    - list [ref=e219]:
+      - listitem [ref=e220]:
+        - link "公式X(twitter)" [ref=e221] [cursor=pointer]:
+          - /url: https://twitter.com/CONAN_tcg
+          - img "公式X(twitter)" [ref=e222]
+      - listitem [ref=e223]:
+        - link "公式Youtubeチャンネル" [ref=e224] [cursor=pointer]:
+          - /url: http://www.youtube.com/@conan_tcg
+          - img "公式Youtubeチャンネル" [ref=e225]
+    - generic [ref=e227]:
+      - generic [ref=e228]:
+        - img "DETECTIVE CONAN CARD GAME『名探偵コナン』カードゲーム ©青山剛昌／小学館 © TOMY" [ref=e229]
+        - generic [ref=e230]: ©青山剛昌／小学館 © ＴＯＭＹ
+      - generic [ref=e231]: ※本サイトに掲載されている、全ての画像及びテキストなどデータの無断転載はお断りします。掲載の画像は全て開発中のものです。実際の商品とは異なる場合がございます。
+  - contentinfo [ref=e232]:
+    - generic [ref=e233]:
+      - generic [ref=e234]:
+        - generic [ref=e236]:
+          - paragraph [ref=e237]: FOLLOW US !
+          - list [ref=e238]:
+            - listitem [ref=e239]:
+              - link "タカラトミー公式YouTube" [ref=e240] [cursor=pointer]:
+                - /url: https://www.youtube.com/takaratomychannel
+                - img "タカラトミー公式YouTube" [ref=e241]
+            - listitem [ref=e242]:
+              - link "タカラトミー公式LINE" [ref=e243] [cursor=pointer]:
+                - /url: https://lin.ee/WgYiT5a
+                - img "タカラトミー公式LINE" [ref=e244]
+            - listitem [ref=e245]:
+              - link "タカラトミー公式X" [ref=e246] [cursor=pointer]:
+                - /url: https://x.com/takaratomytoys
+                - img "タカラトミー公式X" [ref=e247]
+            - listitem [ref=e248]:
+              - link "タカラトミー公式Instagram" [ref=e249] [cursor=pointer]:
+                - /url: https://www.instagram.com/takaratomytoys/
+                - img "タカラトミー公式Instagram" [ref=e250]
+            - listitem [ref=e251]:
+              - link "タカラトミー公式Facebook" [ref=e252] [cursor=pointer]:
+                - /url: https://www.facebook.com/takaratomytoys
+                - img "タカラトミー公式Facebook" [ref=e253]
+            - listitem [ref=e254]:
+              - link "タカラトミー公式TikTok" [ref=e255] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@takaratomytoys
+                - img "タカラトミー公式TikTok" [ref=e256]
+            - listitem [ref=e257]:
+              - link "タカラトミー公式LinkedIn" [ref=e258] [cursor=pointer]:
+                - /url: https://jp.linkedin.com/company/takaratomy
+                - img "タカラトミー公式LinkedIn" [ref=e259]
+          - link "タカラトミー公式SNS一覧" [ref=e260] [cursor=pointer]:
+            - /url: https://www.takaratomy.co.jp/sns/accounts/
+        - link "夢中がわきだす、いつまでも。 タカラトミーモール 公式ショッピングサイト" [ref=e262] [cursor=pointer]:
+          - /url: https://takaratomymall.jp/shop/
+          - img "夢中がわきだす、いつまでも。 タカラトミーモール 公式ショッピングサイト"
+      - generic [ref=e264]:
+        - list [ref=e265]:
+          - listitem [ref=e266]:
+            - link "トップページ" [ref=e267] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/
+          - listitem [ref=e268]:
+            - button "商品情報" [ref=e269] [cursor=pointer]
+          - listitem [ref=e270]:
+            - button "シーズンサイト" [ref=e271] [cursor=pointer]
+          - listitem [ref=e272]:
+            - button "ブランドからさがす" [ref=e273] [cursor=pointer]
+          - listitem [ref=e274]:
+            - link "「好き」をさがす" [ref=e275] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/products/favorite/
+        - list [ref=e276]:
+          - listitem [ref=e277]:
+            - button "ジャンルからさがす" [ref=e278] [cursor=pointer]
+          - listitem [ref=e279]:
+            - button "対象年齢からさがす" [ref=e280] [cursor=pointer]
+          - listitem [ref=e281]:
+            - button "50音順からさがす" [ref=e282] [cursor=pointer]
+          - listitem [ref=e283]:
+            - button "会社情報" [ref=e284] [cursor=pointer]
+          - listitem [ref=e285]:
+            - button "投資家情報" [ref=e286] [cursor=pointer]
+        - list [ref=e287]:
+          - listitem [ref=e288]:
+            - button "お客様相談室" [ref=e289] [cursor=pointer]
+          - listitem [ref=e290]:
+            - link "サステナビリティ" [ref=e291] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/company/csr/
+          - listitem [ref=e292]:
+            - link "お客様アンケート" [ref=e293] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/questionnaire/
+          - listitem [ref=e294]:
+            - link "イベント・キャンペーン" [ref=e295] [cursor=pointer]:
+              - /url: https://www.takaratomy.co.jp/event/
+    - list [ref=e297]:
+      - listitem [ref=e298]:
+        - link "このサイトについて" [ref=e299] [cursor=pointer]:
+          - /url: https://www.takaratomy.co.jp/utility/sitepolicy/
+        - text: "|"
+      - listitem [ref=e300]:
+        - link "個人情報保護方針" [ref=e301] [cursor=pointer]:
+          - /url: https://www.takaratomy.co.jp/utility/privacypolicy/
+        - text: "|"
+      - listitem [ref=e302]:
+        - link "ブラウザ・OSの推奨環境" [ref=e303] [cursor=pointer]:
+          - /url: https://www.takaratomy.co.jp/utility/environment/
+        - text: "|"
+      - listitem [ref=e304]:
+        - link "お問い合わせ" [ref=e305] [cursor=pointer]:
+          - /url: https://www.takaratomy.co.jp/inquiry/
+        - text: "|"
+      - listitem [ref=e306]:
+        - link "ソーシャルメディアポリシー" [ref=e307] [cursor=pointer]:
+          - /url: https://www.takaratomy.co.jp/utility/socialpolicy/
+        - text: "|"
+      - listitem [ref=e308]:
+        - link "サイトマップ" [ref=e309] [cursor=pointer]:
+          - /url: https://www.takaratomy.co.jp/sitemap/
+    - generic [ref=e310]:
+      - link "株式会社タカラトミー" [ref=e312] [cursor=pointer]:
+        - /url: https://www.takaratomy.co.jp/
+        - img "株式会社タカラトミー" [ref=e313]
+      - generic [ref=e314]: © TOMY

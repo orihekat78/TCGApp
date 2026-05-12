@@ -1,0 +1,257 @@
+<h2>Q2: 全体レイアウト方針（カード配置イメージ）</h2>
+<p class="subtitle">仮想の中盤の盤面（自分: パートナー+現場2体, FILE 5枚, 証拠 3 / 相手: パートナー+現場3体, FILE 6枚, 証拠 5, 解決編移行済 / 手札 6枚）</p>
+
+<style>
+.mockup {
+  background: #0d1b2a;
+  border: 2px solid #3a6ea5;
+  border-radius: 6px;
+  padding: 8px;
+  margin: 16px 0;
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
+  color: #b8d4f0;
+  position: relative;
+}
+.mockup-label { position: absolute; top: -10px; left: 12px; background:#ffd700; color:#000; padding: 1px 8px; font-weight: bold; border-radius: 3px; font-size: 11px; }
+.row { display: flex; gap: 6px; align-items: stretch; }
+.zone { background: #1b3a5c; border: 1px dashed #3a6ea5; padding: 6px; border-radius: 3px; display:flex; flex-direction: column; gap:3px; }
+.label-mini { font-size:9px; color: #7090b5; text-transform: uppercase; letter-spacing: 0.5px; }
+.card-mini { background: #ffd700; color: #000; border-radius: 2px; padding: 2px 4px; font-size: 9px; font-weight: 600; min-width: 26px; text-align: center; line-height: 1.1; }
+.card-mini.sleep { background: #cc9933; transform: rotate(-90deg) translateX(2px); }
+.card-mini.stun { background: #ee6644; transform: rotate(180deg); color: #fff; }
+.card-mini.case { background: #3366ff; color: #fff; }
+.card-mini.case-resolved { background: #ee2255; color: #fff; }
+.card-mini.partner { background: #44dd99; color: #000; border:1px solid #fff; }
+.card-mini.back { background: #555; color: #aaa; }
+.card-mini.evidence { background: #5a3a3a; color: #fff; }
+.cards-row { display:flex; gap: 3px; flex-wrap: wrap; }
+.area-opp { background: #2a1b3c; border-color: #6a3a8c; }
+.area-self { background: #1b3c2a; border-color: #3a8c6a; }
+.center-zone { display: flex; flex-direction: column; flex: 1; gap: 4px; }
+.sidebar { background:#0a1420; border-radius:3px; padding: 4px; display: flex; flex-direction: column; gap:3px; }
+.phase-item { padding: 2px 4px; font-size: 9px; border-radius: 2px; background:#1b3a5c; }
+.phase-item.active { background: #3a6ea5; color: #fff; font-weight: bold; }
+.action-item { padding: 3px 4px; font-size: 9px; border-radius: 2px; background:#1b3a5c; color: #b8d4f0; }
+.action-item.current { background: #44dd99; color: #000; font-weight: bold; }
+.action-item.disabled { color: #4a5a70; }
+.icon-zone { padding: 4px; text-align:center; background: #1b3a5c; border-radius: 3px; font-size: 14px; cursor:pointer; }
+.icon-zone .count { font-size: 9px; display:block; color: #ffd700; }
+.hand-row { background:#4a3c1b; padding: 4px; border-radius: 3px; display: flex; gap: 2px; justify-content: center; }
+.hand-card { background: #ffe170; color: #000; padding: 4px 6px; border-radius: 2px; font-size: 9px; font-weight: 600; transform: translateY(0px); }
+.hand-card:nth-child(odd) { transform: translateY(-3px) rotate(-2deg); }
+.hand-card:nth-child(even) { transform: translateY(0px) rotate(2deg); }
+.top-bar { display:flex; justify-content:space-between; background:#0a1420; padding: 4px 8px; border-radius: 3px; font-size: 10px; color:#7090b5; margin-bottom:6px; }
+.chapter { color: #ffd700; font-weight: bold; }
+</style>
+
+<!-- ===================== Option A: 公式CG忠実 ===================== -->
+<div class="mockup">
+<div class="mockup-label">A. 公式CG忠実（左=3フェイズ常時 / 右=6行動常時）</div>
+<div class="top-bar"><span class="chapter">▼ 先攻3ターン目</span><span>© 青山剛昌／小学館 © TOMY</span></div>
+<div class="row">
+  <!-- Left sidebar: phase -->
+  <div class="sidebar" style="width:78px">
+    <div class="label-mini">フェイズ</div>
+    <div class="phase-item">オート</div>
+    <div class="phase-item active">● メイン</div>
+    <div class="phase-item">エンド</div>
+  </div>
+  <!-- Center: playmat -->
+  <div class="center-zone">
+    <!-- opponent -->
+    <div class="zone area-opp">
+      <div class="label-mini">相手</div>
+      <div class="row" style="gap:4px">
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">事件</span><span class="card-mini case-resolved">解決編 Lv7</span></div>
+        <div class="zone" style="background:#3a2a4c; flex:1"><span class="label-mini">現場 (3/5)</span>
+          <div class="cards-row"><span class="card-mini">古城#1<br>2/2</span><span class="card-mini sleep">古城#2<br>4/1</span><span class="card-mini stun">侵入者<br>3/3</span></div>
+        </div>
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">P</span><span class="card-mini partner">怪盗キッド</span></div>
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">FILE(6)</span><span class="card-mini back">▢▢▢▢▢▢</span></div>
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">証拠 5/6</span><span class="card-mini evidence">▢▢▢▢▢</span></div>
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">デッキ</span><span class="card-mini back">▢25</span></div>
+      </div>
+    </div>
+    <!-- self -->
+    <div class="zone area-self">
+      <div class="label-mini">自分</div>
+      <div class="row" style="gap:4px">
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">事件</span><span class="card-mini case">事件編 Lv7</span></div>
+        <div class="zone" style="background:#2a3c2a; flex:1"><span class="label-mini">現場 (2/5)</span>
+          <div class="cards-row"><span class="card-mini">毛利蘭<br>5/3</span><span class="card-mini">小五郎<br>4/2</span></div>
+        </div>
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">P</span><span class="card-mini partner">江戸川コナン</span></div>
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">FILE(5)</span><span class="card-mini back">▢▢▢▢▢</span></div>
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">証拠 3/7</span><span class="card-mini evidence">▢▢▢</span></div>
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">デッキ</span><span class="card-mini back">▢30</span></div>
+      </div>
+    </div>
+    <!-- hand -->
+    <div class="hand-row">
+      <span class="hand-card">手札</span>
+      <span class="hand-card">推理Lv3</span>
+      <span class="hand-card">少年探偵団</span>
+      <span class="hand-card">毛利蘭</span>
+      <span class="hand-card">Lv5</span>
+      <span class="hand-card">カットイン</span>
+      <button style="margin-left:auto; background:#ffd700; color:#000; border:none; padding:2px 8px; border-radius:2px; font-weight:600">End Turn</button>
+    </div>
+  </div>
+  <!-- Right sidebar: 6-action menu -->
+  <div class="sidebar" style="width:120px">
+    <div class="label-mini">メインフェイズ行動</div>
+    <div class="action-item">①手札の使用</div>
+    <div class="action-item">②ネクストヒント</div>
+    <div class="action-item">③P能力</div>
+    <div class="action-item">④【宣言】能力</div>
+    <div class="action-item current">⑤推理 (実行中)</div>
+    <div class="action-item">⑥アクション</div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== Option B: 業界標準 ===================== -->
+<div class="mockup">
+<div class="mockup-label">B. 業界標準（クリーン・コンテキスト主導）</div>
+<div class="top-bar"><span class="chapter">▼ 先攻3ターン目 ─ メインフェイズ ─ 推理を実行中</span><span>残り 22:34</span></div>
+<div class="row">
+  <!-- Center: playmat (wider) -->
+  <div class="center-zone">
+    <!-- opponent -->
+    <div class="zone area-opp">
+      <div class="label-mini">相手 ▼ 怪盗キッド</div>
+      <div class="row" style="gap:4px">
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">事件</span><span class="card-mini case-resolved">解決編 Lv7</span></div>
+        <div class="zone" style="background:#3a2a4c; flex:1"><span class="label-mini">現場 (3/5)</span>
+          <div class="cards-row"><span class="card-mini">古城#1<br>2/2</span><span class="card-mini sleep">古城#2<br>4/1</span><span class="card-mini stun">侵入者<br>3/3</span></div>
+        </div>
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">P</span><span class="card-mini partner">怪盗キッド</span></div>
+      </div>
+    </div>
+    <!-- self (now bigger b/c no sidebars) -->
+    <div class="zone area-self">
+      <div class="label-mini">自分 ▼ 江戸川コナン</div>
+      <div class="row" style="gap:4px">
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">事件</span><span class="card-mini case">事件編 Lv7</span></div>
+        <div class="zone" style="background:#2a3c2a; flex:1"><span class="label-mini">現場 (2/5)</span>
+          <div class="cards-row"><span class="card-mini">毛利蘭<br>5/3</span><span class="card-mini">小五郎<br>4/2</span></div>
+        </div>
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">P</span><span class="card-mini partner">江戸川コナン</span></div>
+      </div>
+    </div>
+    <!-- hand with phase dots overlay -->
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div style="display:flex; gap:3px; padding:4px;">
+        <span class="phase-item">●</span><span class="phase-item active" style="border-radius:50%; width:8px; height:8px"></span><span class="phase-item">●</span>
+      </div>
+      <div class="hand-row" style="flex:1">
+        <span class="hand-card">手札</span>
+        <span class="hand-card">推理Lv3</span>
+        <span class="hand-card">少年探偵団</span>
+        <span class="hand-card">毛利蘭</span>
+        <span class="hand-card">Lv5</span>
+        <span class="hand-card">カットイン</span>
+      </div>
+      <button style="background:#ffd700; color:#000; border:none; padding:6px 12px; border-radius:3px; font-weight:600">End Turn</button>
+    </div>
+  </div>
+  <!-- Right: zone icons collapsed -->
+  <div class="sidebar" style="width:80px">
+    <div class="label-mini">領域</div>
+    <div class="icon-zone">📁<span class="count">FILE 5</span></div>
+    <div class="icon-zone">🏆<span class="count">証拠 3</span></div>
+    <div class="icon-zone">🗑️<span class="count">リムーブ 1</span></div>
+    <div class="icon-zone">🃏<span class="count">デッキ 30</span></div>
+    <div class="icon-zone" style="background:#3a2a4c; margin-top:4px">📁<span class="count">相手 6</span></div>
+    <div class="icon-zone" style="background:#3a2a4c">🏆<span class="count">相手 5</span></div>
+    <div class="icon-zone" style="background:#3a2a4c">🗑️<span class="count">相手 1</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== Option C: ハイブリッド ===================== -->
+<div class="mockup">
+<div class="mockup-label">C. ハイブリッド（推奨）</div>
+<div class="top-bar"><span class="chapter">▼ 先攻3ターン目</span><span>© 青山剛昌／小学館 © TOMY</span></div>
+<div class="row">
+  <!-- Left: phase indicator slim -->
+  <div class="sidebar" style="width:60px">
+    <div class="label-mini">PH</div>
+    <div class="phase-item">オート</div>
+    <div class="phase-item active">● メイン</div>
+    <div class="phase-item">エンド</div>
+  </div>
+  <!-- Center -->
+  <div class="center-zone">
+    <div class="zone area-opp">
+      <div class="label-mini">相手 ▼ 怪盗キッド</div>
+      <div class="row" style="gap:4px">
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">事件</span><span class="card-mini case-resolved">解決編 Lv7</span></div>
+        <div class="zone" style="background:#3a2a4c; flex:1"><span class="label-mini">現場 (3/5)</span>
+          <div class="cards-row"><span class="card-mini">古城#1<br>2/2</span><span class="card-mini sleep">古城#2<br>4/1</span><span class="card-mini stun">侵入者<br>3/3</span></div>
+        </div>
+        <div class="zone" style="background:#3a2a4c"><span class="label-mini">P</span><span class="card-mini partner">怪盗キッド</span></div>
+      </div>
+    </div>
+    <div class="zone area-self">
+      <div class="label-mini">自分 ▼ 江戸川コナン</div>
+      <div class="row" style="gap:4px">
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">事件</span><span class="card-mini case">事件編 Lv7</span></div>
+        <div class="zone" style="background:#2a3c2a; flex:1"><span class="label-mini">現場 (2/5)</span>
+          <div class="cards-row"><span class="card-mini">毛利蘭<br>5/3</span><span class="card-mini">小五郎<br>4/2</span></div>
+        </div>
+        <div class="zone" style="background:#2a3c2a"><span class="label-mini">P</span><span class="card-mini partner">江戸川コナン</span></div>
+      </div>
+    </div>
+    <div class="hand-row">
+      <span class="hand-card">手札</span>
+      <span class="hand-card">推理Lv3</span>
+      <span class="hand-card">少年探偵団</span>
+      <span class="hand-card">毛利蘭</span>
+      <span class="hand-card">Lv5</span>
+      <span class="hand-card">カットイン</span>
+      <button style="margin-left:auto; background:#ffd700; color:#000; border:none; padding:2px 8px; border-radius:2px; font-weight:600">End Turn</button>
+    </div>
+  </div>
+  <!-- Right: zone icons + key actions stacked -->
+  <div class="sidebar" style="width:90px">
+    <div class="label-mini">領域</div>
+    <div class="icon-zone">📁<span class="count">FILE 5/7</span></div>
+    <div class="icon-zone">🏆<span class="count">証拠 3/7</span></div>
+    <div class="icon-zone">🗑️<span class="count">リムーブ 1</span></div>
+    <div class="icon-zone">🃏<span class="count">デッキ 30</span></div>
+    <div class="label-mini" style="margin-top:4px">行動</div>
+    <div class="action-item">①手札使用</div>
+    <div class="action-item">②NH</div>
+    <div class="action-item current">⑤推理</div>
+    <div class="action-item">⑥アクション</div>
+  </div>
+</div>
+</div>
+
+<p class="subtitle">違いが分かりやすくなったと思います。実際は手札ホバーで拡大、カードクリックで詳細モーダル、対象選択時はハイライト等のインタラクションが入ります。</p>
+
+<div class="options" style="margin-top:20px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>公式CG忠実</h3>
+      <p>左に3フェイズ・右に6行動メニュー常時。情報量多。チュートリアル動画と完全一致。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>業界標準</h3>
+      <p>プレイマット最大化、領域は右アイコン、フェイズは小ドット、行動はドラッグ主導。クリーン。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>ハイブリッド（推奨）</h3>
+      <p>左に細フェイズ・右に領域アイコン+主要行動。プレイマットも広く確保。識別性+遊びやすさ両立。</p>
+    </div>
+  </div>
+</div>

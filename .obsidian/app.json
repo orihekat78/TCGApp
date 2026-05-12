@@ -1,0 +1,23 @@
+{
+  "alwaysUpdateLinks": true,
+  "newLinkFormat": "relative",
+  "useMarkdownLinks": true,
+  "userIgnoreFilters": [
+    ".tmp/",
+    ".superpowers/",
+    ".playwright-mcp/",
+    ".cache/",
+    "node_modules/",
+    ".git/",
+    "dist/",
+    "build/",
+    ".vscode/"
+  ],
+  "attachmentFolderPath": ".attachments",
+  "promptDelete": true,
+  "showInlineTitle": true,
+  "showLineNumber": true,
+  "showFrontmatter": true,
+  "readableLineLength": false,
+  "vimMode": false
+}

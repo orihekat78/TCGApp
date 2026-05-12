@@ -1,0 +1,196 @@
+<h2>修正: 証拠エリアの展開UI（自分も裏向き）</h2>
+<p class="subtitle">ルール確認結果: 証拠は自分のデッキトップから直接裏向きで置かれる → 自分も中身を知らない。表向きはカード効果による特例のみ。</p>
+
+<style>
+.card-back {
+  background: radial-gradient(circle at center, rgba(255,215,0,0.15) 0%, transparent 50%),
+              linear-gradient(135deg, #0d1f3a 0%, #1a3a5c 50%, #0d1f3a 100%);
+  border: 1px solid #3a6ea5;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.card-back::before {
+  content: 'DC'; font-family: serif; font-size: 14px; font-weight: 800;
+  font-style: italic; color: #ffd700;
+  text-shadow: 0 0 6px rgba(255,215,0,0.5);
+}
+.real img { display:block; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.6); }
+
+.demo {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 14px 8px 8px;
+  margin: 14px 0;
+  position: relative;
+}
+.demo-label {
+  position: absolute; top: -10px; left: 12px;
+  background: #ffd700; color: #000; padding: 1px 8px; font-weight: bold;
+  border-radius: 3px; font-size: 11px;
+}
+
+.expanded {
+  background: rgba(0,0,0,0.6); border: 2px solid #ffd700;
+  border-radius: 6px; padding: 12px;
+}
+.expanded-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.expanded-header h4 { margin: 0; color: #ffd700; font-size: 13px; }
+.stack-list {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 360px; overflow-y: auto;
+  padding: 4px;
+}
+.stack-list .row {
+  display: flex; gap: 10px; align-items: center;
+  padding: 6px; background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+}
+.stack-list .pos {
+  width: 60px; text-align: center; font-size: 10px; color: #ffd700; font-weight: 700;
+}
+.stack-list .face-back, .stack-list .face-up { flex-shrink: 0; }
+.stack-list .face-back .card-back { width: 50px; height: 70px; }
+.stack-list .face-up img { width: 50px; height: 70px; }
+.stack-list .desc {
+  flex: 1; font-size: 10px; color: #b8d4f0;
+}
+.stack-list .desc strong { color: #ffd700; }
+.stack-list .topmost { border-left: 3px solid #ffd700; }
+
+.face-up-tag {
+  display: inline-block; background: #ee99ff; color: #000;
+  padding: 1px 5px; border-radius: 2px; font-size: 9px; font-weight: 700;
+}
+.face-down-tag {
+  display: inline-block; background: #3a6ea5; color: #fff;
+  padding: 1px 5px; border-radius: 2px; font-size: 9px; font-weight: 700;
+}
+
+.note {
+  background: rgba(255,215,0,0.1);
+  border-left: 3px solid #ffd700;
+  padding: 8px 10px;
+  font-size: 10px; color: #b8d4f0;
+  margin-top: 10px;
+  border-radius: 0 3px 3px 0;
+}
+.note strong { color: #ffd700; }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+</style>
+
+<div class="demo">
+<div class="demo-label">修正版: 自分の証拠も基本は裏向きで内容不明</div>
+
+<div class="cols">
+
+<!-- 自分の証拠 (most cards face-down) -->
+<div>
+<div class="expanded">
+  <div class="expanded-header">
+    <h4>📋 自分の証拠エリア (3/7枚)</h4>
+    <button style="background:#3a6ea5; color:#fff; border:none; padding:3px 8px; border-radius:2px; font-size:10px;">✕ 閉じる</button>
+  </div>
+  <div class="stack-list">
+
+    <div class="row topmost">
+      <div class="pos">1番上<br>(最新)</div>
+      <div class="face-back"><div class="card-back"></div></div>
+      <div class="desc">
+        <strong>?</strong> <span class="face-down-tag">裏向き</span><br>
+        <span style="color:#7090b5; font-size:9px">置かれたターン: 先攻3T<br>由来: 推理@阿笠博士(LP1)</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="pos">2番目</div>
+      <div class="face-back"><div class="card-back"></div></div>
+      <div class="desc">
+        <strong>?</strong> <span class="face-down-tag">裏向き</span><br>
+        <span style="color:#7090b5; font-size:9px">置かれたターン: 先攻2T<br>由来: 推理@毛利蘭(LP1)</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="pos">3番目<br>(最古)</div>
+      <div class="face-up"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093455670.jpg" alt="吉田歩美"></div>
+      <div class="desc">
+        <strong>吉田歩美</strong> <span class="face-up-tag">表向き</span><br>
+        <span style="color:#7090b5; font-size:9px">置かれたターン: 先攻1T<br>由来: 推理@P江戸川コナン</span>
+        <p style="color:#ee99ff; font-size:9px; margin:3px 0 0;">→ 効果「証拠を1枚表向きにする」が発動済</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+<p style="font-size:10px; color:#7090b5; margin-top:6px; text-align:center;">自分の証拠: 基本裏向き / カード効果による特例で表向き化</p>
+</div>
+
+<!-- 相手の証拠 (count only) -->
+<div>
+<div class="expanded">
+  <div class="expanded-header">
+    <h4>📋 相手の証拠エリア (5/6枚)</h4>
+    <button style="background:#3a6ea5; color:#fff; border:none; padding:3px 8px; border-radius:2px; font-size:10px;">✕ 閉じる</button>
+  </div>
+  <div class="stack-list">
+
+    <div class="row topmost">
+      <div class="pos">1番上<br>(最新)</div>
+      <div class="face-back"><div class="card-back"></div></div>
+      <div class="desc">
+        <strong>?</strong> <span class="face-down-tag">裏向き</span><br>
+        <span style="color:#7090b5; font-size:9px">置かれたターン: 相手T3<br>由来: 推理@千速(LP1)</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="pos">2番目</div>
+      <div class="face-back"><div class="card-back"></div></div>
+      <div class="desc">
+        <strong>?</strong> <span class="face-down-tag">裏向き</span><br>
+        <span style="color:#7090b5; font-size:9px">由来: 推理@P萩原千速</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="pos">3-5番目</div>
+      <div class="face-back" style="position:relative;width:50px;height:70px">
+        <div class="card-back" style="position:absolute; width:50px; height:70px"></div>
+        <div class="card-back" style="position:absolute; top:3px; left:3px; width:50px; height:70px; z-index:-1"></div>
+        <div class="card-back" style="position:absolute; top:6px; left:6px; width:50px; height:70px; z-index:-2"></div>
+      </div>
+      <div class="desc">
+        <strong>?</strong> <span class="face-down-tag">裏向き</span><br>
+        <span style="color:#7090b5; font-size:9px">由来: 推理3回（履歴のみ）</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+<p style="font-size:10px; color:#7090b5; margin-top:6px; text-align:center;">相手の証拠: 中身は常に不可視 / リムーブ時に1枚だけ表向き化（ヒラメキ確認）</p>
+</div>
+
+</div>
+</div>
+
+<div class="note">
+<strong>展開UIで表示する情報（裏向きでも分かるもの）:</strong>
+<ul style="margin:4px 0 0; padding-left:18px; line-height:1.6;">
+  <li><strong>順序</strong>: 1番上(最新) から最古まで</li>
+  <li><strong>置かれたターン</strong>: いつ追加されたか</li>
+  <li><strong>由来</strong>: 推理@誰のLP? アクション[事件]? 効果名? <br>(ゲームログ由来情報なので両プレイヤー把握可能)</li>
+  <li><strong>カード中身</strong>: 裏向きは「?」、表向き化された特例のみ画像表示</li>
+</ul>
+<p style="margin: 6px 0 0;"><strong>カード効果で「証拠を見る/選ぶ/表向きにする」が出た時のみ:</strong>
+別途専用モーダルを開き、対象プレイヤーが該当証拠を選択する。</p>
+</div>
+
+<div class="note" style="background:rgba(40,180,80,0.1); border-color:#44dd99; color:#88ee88;">
+<strong>追加メリット:</strong> 「由来」を記録することで、相手も自分の証拠の構成を完全には予測できないが、推測する手がかりになる（戦略性が増す）。例: 「相手はLP1のキャラで3回推理 = 3枚の証拠は全て『その時点でデッキトップだったカード』」=情報非対称が保たれる。
+</div>

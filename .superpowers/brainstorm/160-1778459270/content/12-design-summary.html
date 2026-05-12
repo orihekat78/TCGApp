@@ -1,0 +1,66 @@
+<h2>UI設計 — 決定事項まとめ</h2>
+<p class="subtitle">全11問の決定を最終仕様としてまとめます。これをベースに設計ドキュメントを作成します。</p>
+
+<style>
+.decisions {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 14px;
+  margin: 12px 0;
+}
+.decisions h3 { margin: 4px 0 8px; color: #ffd700; }
+.dt-list { display: grid; grid-template-columns: 200px 1fr; gap: 4px 14px; font-size: 11px; align-items: baseline; }
+.dt-list dt { color: #88aacc; font-weight: 700; }
+.dt-list dd { margin: 0; color: #e0ecf8; }
+.tag { display: inline-block; background: #44dd99; color: #000; padding: 1px 6px; border-radius: 2px; font-weight: 700; font-size: 9px; margin-right: 4px; }
+.tag.warn { background: #ee5050; color: #fff; }
+.tag.info { background: #3a6ea5; color: #fff; }
+</style>
+
+<div class="decisions">
+<h3>📐 環境・レイアウト</h3>
+<dl class="dt-list">
+<dt>Q1 ターゲット環境</dt><dd><span class="tag">Desktop only</span> 1920×1080 中心, 最低 1280×720</dd>
+<dt>Q2 全体レイアウト</dt><dd><span class="tag">公式準拠</span> プレイマット出忠実 / サイドバーなし / 上端=章タグ+フェイズストリップ / 相手マット180°回転 / 中央=KEEP OUT 仕切り</dd>
+</dl>
+</div>
+
+<div class="decisions">
+<h3>🃏 カード表現</h3>
+<dl class="dt-list">
+<dt>カード画像</dt><dd>公式 takaratomy.co.jp から取得 → `.cache/images/` にローカルキャッシュ</dd>
+<dt>Q3 オーバーレイ</dt><dd><span class="tag">状態のみ</span> AP/LP/レベルはカード画像に任せ、状態(名乗り/セット枚数等)のみバッジで補強</dd>
+<dt>Q5 状態表現</dt><dd><span class="tag">回転+バッジ</span> スリープ=-90°回転 / スタン=180°回転 / 名乗り=回転なし+「名乗り」バッジ / すべて中央にラベル</dd>
+<dt>事件カード</dt><dd>事件編=青スタンプ / 解決編=赤スタンプ (右上にコーナー表示) / 横向き縦向き両対応</dd>
+</dl>
+</div>
+
+<div class="decisions">
+<h3>✋ 手札・操作</h3>
+<dl class="dt-list">
+<dt>Q4 手札表示</dt><dd><span class="tag">完全フラット</span> MTGA型・横一列・ホバーで上に浮く・ホバーで拡大プレビュー</dd>
+<dt>Q8 対象選択</dt><dd><span class="tag">クリック+確認</span> MTGA型: ①キャラクリック→メニュー ②アクション選択→対象ハイライト ③対象クリック→確認ダイアログ→OK</dd>
+<dt>Q9 確認モーダル</dt><dd><span class="tag warn">厳格</span> すべての行動で確認ダイアログ介在</dd>
+</dl>
+</div>
+
+<div class="decisions">
+<h3>📊 情報パネル</h3>
+<dl class="dt-list">
+<dt>Q6 証拠展開</dt><dd>クリックで拡張表示。自分の証拠も基本は<strong>裏向き</strong>(中身不可視)。順序・置かれたターン・由来(誰の推理など)は両プレイヤーに可視。特例で表向き化されたカードのみ画像表示。</dd>
+<dt>Q7 対戦ログ</dt><dd><span class="tag">下端折りたたみ</span> 普段は閉じてプレイマット広く。クリックで展開・直近5件可視・全件はスクロール</dd>
+<dt>FILE / 証拠 / リムーブ</dt><dd>FILE = 裏向き+横向き並べ / 証拠 = 裏向き縦積み / リムーブ = 表向き(最新のみ視認、クリックで全件)</dd>
+</dl>
+</div>
+
+<div class="decisions">
+<h3>🎨 視覚スタイル・アニメーション</h3>
+<dl class="dt-list">
+<dt>Q10a ビジュアル</dt><dd><span class="tag">公式忠実</span> プレイシートのダークネイビー(#0a1a28)+レンガ壁+KEEP OUT黄テープ仕切り+ネオン青枠</dd>
+<dt>Q10b アニメ</dt><dd><span class="tag">標準</span> 0.3-0.5秒の滑らかアニメ・設定でスキップ可 / コンタクトVS・証拠めくれ・ターン切替に重点</dd>
+<dt>カラートークン</dt><dd>背景=#0a1a28 / アクセント=#ffd700(黄) #3a6ea5(青) / 状態=スリープ青/スタン赤/名乗り黄</dd>
+</dl>
+</div>
+
+<p class="subtitle" style="margin-top:14px">この決定を元に、これから設計の各セクション（全体構成・コンポーネント分解・状態→UIマップ・対話フロー・スタイルトークン）をターミナルで提示していきます。承認をいただきながら最終的に <code style="background:#000;padding:1px 4px;border-radius:2px">docs/superpowers/specs/&lt;date&gt;-ui-playmat-design.md</code> として保存します。</p>

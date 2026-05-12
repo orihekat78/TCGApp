@@ -1,0 +1,218 @@
+<h2>Q5: 対象選択のインタラクション</h2>
+<p class="subtitle">「アクションを宣言する→対象を指定する→確定」の操作フロー。シナリオ: 自分の毛利蘭(AP5000)で相手の侵入者(AP3000)にアクション宣言。</p>
+
+<style>
+.demo {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 14px 8px 8px;
+  margin: 14px 0;
+  position: relative;
+  min-height: 320px;
+}
+.demo-label {
+  position: absolute; top: -10px; left: 12px;
+  background: #ffd700; color: #000; padding: 1px 8px; font-weight: bold;
+  border-radius: 3px; font-size: 11px;
+}
+.mat {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  grid-template-rows: auto auto;
+  gap: 6px;
+  padding: 8px;
+  font-size: 10px;
+  color: #b8d4f0;
+}
+.mat-zone {
+  background: rgba(0,0,0,0.3);
+  border: 1px dashed #3a6ea5;
+  border-radius: 3px;
+  padding: 6px;
+}
+.mat-zone .label-mini { font-size: 9px; color: #7090b5; text-transform: uppercase; letter-spacing: 0.5px; }
+.scene-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.t-card {
+  width: 60px; height: 84px;
+  background: linear-gradient(135deg, #2a4a6a, #1a3a5a);
+  border: 1.5px solid #ffd700;
+  border-radius: 3px;
+  padding: 4px;
+  display: flex; flex-direction: column;
+  font-size: 9px; color: #fff; font-weight: 600;
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+}
+.t-card .name { color: #ffd700; font-size: 10px; }
+.t-card .img { flex:1; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.3); margin: 2px 0; border-radius: 2px; font-size: 16px; }
+.t-card .ap { color: #ff6644; }
+.t-card .lp { color: #44dd99; }
+.t-card.sleep { transform: rotate(-90deg); margin: 12px 0; }
+.t-card.stun { transform: rotate(180deg); }
+.area-opp { background: rgba(60,40,80,0.3); border-color: #aa66dd; }
+.area-self { background: rgba(40,80,60,0.3); border-color: #44dd99; }
+
+/* highlights */
+.t-card.selected { border-color: #ffd700; box-shadow: 0 0 12px #ffd700; transform: translateY(-4px); }
+.t-card.selected.sleep { transform: rotate(-90deg) translateX(-4px); }
+.t-card.target-ok { border-color: #44dd99; box-shadow: 0 0 8px #44dd99; }
+.t-card.target-ok.sleep { box-shadow: 0 0 8px #44dd99; }
+.t-card.target-bad { opacity: 0.3; cursor: not-allowed; }
+.t-card.target-ng { border-color: #ee6644; opacity: 0.4; }
+
+.arrow-overlay {
+  position: absolute;
+  pointer-events: none;
+  font-size: 32px;
+  color: #ffd700;
+  filter: drop-shadow(0 0 6px #ffd700);
+  animation: pulse 1.2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
+
+.flow-steps {
+  display: flex; gap: 6px; justify-content: center;
+  font-size: 11px; padding: 8px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 3px;
+  margin-bottom: 8px;
+}
+.flow-steps .step { padding: 4px 10px; background:#1b3a5c; border-radius: 2px; color: #7090b5; }
+.flow-steps .step.active { background: #ffd700; color: #000; font-weight: 700; }
+
+.action-buttons {
+  display: flex; gap: 6px; justify-content: center; margin-top: 8px;
+}
+.btn {
+  background: #1b3a5c; color: #b8d4f0; border: 1px solid #3a6ea5;
+  padding: 6px 12px; border-radius: 3px; font-size: 10px; cursor: pointer;
+}
+.btn.primary { background: #ffd700; color: #000; border-color: #ffd700; font-weight: 700; }
+.btn.danger  { background: #ee2255; color: #fff; border-color: #ee2255; }
+</style>
+
+<!-- ============== A. Drag arrow ============== -->
+<div class="demo">
+<div class="demo-label">A. ドラッグ&ドロップ（Hearthstone型）</div>
+<div class="flow-steps">
+  <span class="step">①自分のキャラを長押し</span>
+  <span class="step active">②ドラッグで矢印描画 ← 今ここ</span>
+  <span class="step">③有効ターゲット上で離す→自動確定</span>
+</div>
+<div class="mat" style="position:relative">
+  <!-- opponent row -->
+  <div class="mat-zone area-opp" style="grid-column:1"><div class="label-mini">相手 事件</div><div class="scene-row"><div class="t-card target-bad">事件編<br>Lv7</div></div></div>
+  <div class="mat-zone area-opp" style="grid-column:2"><div class="label-mini">相手 現場</div>
+    <div class="scene-row">
+      <div class="t-card target-bad">古城#1<br>2/2</div>
+      <div class="t-card sleep target-ok">古城#2<br>4/1</div>
+      <div class="t-card stun target-ok">侵入者<br>3/3</div>
+    </div>
+  </div>
+  <div class="mat-zone area-opp" style="grid-column:3"><div class="label-mini">相手 P</div><div class="scene-row"><div class="t-card target-bad" style="background:#0a1a28">怪盗キッド</div></div></div>
+  <!-- self row -->
+  <div class="mat-zone area-self" style="grid-column:1"><div class="label-mini">自分 事件</div><div class="scene-row"><div class="t-card">事件編<br>Lv7</div></div></div>
+  <div class="mat-zone area-self" style="grid-column:2"><div class="label-mini">自分 現場</div>
+    <div class="scene-row">
+      <div class="t-card selected">毛利蘭<br>5/3</div>
+      <div class="t-card">小五郎<br>4/2</div>
+    </div>
+  </div>
+  <div class="mat-zone area-self" style="grid-column:3"><div class="label-mini">自分 P</div><div class="scene-row"><div class="t-card">江戸川コナン</div></div></div>
+  <!-- arrow -->
+  <div class="arrow-overlay" style="left:30%; top:35%; transform: rotate(-30deg);">↗</div>
+  <div style="position:absolute; left:45%; top:25%; background: rgba(0,0,0,0.85); color: #ffd700; padding: 4px 8px; border-radius: 4px; font-size: 10px; border: 1px solid #ffd700;">毛利蘭 → 侵入者<br>AP 5000 vs 3000</div>
+</div>
+<div style="font-size:10px; color:#7090b5; text-align:center; padding:8px">緑枠=対象可（スリープ/スタン状態の相手キャラ・証拠ある事件） / 暗=対象外</div>
+</div>
+
+<!-- ============== B. Click-confirm ============== -->
+<div class="demo">
+<div class="demo-label">B. クリック宣言→対象クリック確定（MTGA型）</div>
+<div class="flow-steps">
+  <span class="step">①自分のキャラをクリック→「アクション」「推理」「能力」メニュー出現</span>
+  <span class="step active">②「アクション」選択→対象ハイライト ← 今ここ</span>
+  <span class="step">③対象クリック→確認ダイアログ→OK</span>
+</div>
+<div class="mat">
+  <div class="mat-zone area-opp" style="grid-column:1"><div class="label-mini">相手 事件</div><div class="scene-row"><div class="t-card target-bad">事件編<br>Lv7</div></div></div>
+  <div class="mat-zone area-opp" style="grid-column:2"><div class="label-mini">相手 現場</div>
+    <div class="scene-row">
+      <div class="t-card target-bad">古城#1<br>2/2</div>
+      <div class="t-card sleep target-ok">古城#2<br>4/1</div>
+      <div class="t-card stun target-ok">侵入者<br>3/3</div>
+    </div>
+  </div>
+  <div class="mat-zone area-opp" style="grid-column:3"><div class="label-mini">相手 P</div><div class="scene-row"><div class="t-card target-bad">怪盗キッド</div></div></div>
+  <div class="mat-zone area-self" style="grid-column:1"><div class="label-mini">自分 事件</div><div class="scene-row"><div class="t-card">事件編<br>Lv7</div></div></div>
+  <div class="mat-zone area-self" style="grid-column:2"><div class="label-mini">自分 現場</div>
+    <div class="scene-row">
+      <div class="t-card selected">毛利蘭<br>5/3<br><span style="color:#000; background:#ffd700; padding:1px 3px; border-radius:2px; font-size:8px">⚡ACTION</span></div>
+      <div class="t-card">小五郎<br>4/2</div>
+    </div>
+  </div>
+  <div class="mat-zone area-self" style="grid-column:3"><div class="label-mini">自分 P</div><div class="scene-row"><div class="t-card">江戸川コナン</div></div></div>
+</div>
+<div class="action-buttons">
+  <button class="btn">推理</button>
+  <button class="btn primary">アクション中…</button>
+  <button class="btn">【宣言】能力</button>
+  <button class="btn danger">キャンセル</button>
+</div>
+<div style="font-size:10px; color:#7090b5; text-align:center; padding:8px">対象クリック後に「毛利蘭でアクション → 侵入者 / AP 5000 vs 3000 / 実行しますか？」確認ダイアログ</div>
+</div>
+
+<!-- ============== C. Hybrid ============== -->
+<div class="demo">
+<div class="demo-label">C. ハイブリッド（ドラッグ or クリックどちらも可）</div>
+<div class="flow-steps">
+  <span class="step active">①キャラを長押しドラッグ → A方式 / クリック → メニュー→対象クリック → B方式</span>
+</div>
+<div class="mat">
+  <div class="mat-zone area-opp" style="grid-column:1"><div class="label-mini">相手 事件</div><div class="scene-row"><div class="t-card target-bad">事件編<br>Lv7</div></div></div>
+  <div class="mat-zone area-opp" style="grid-column:2"><div class="label-mini">相手 現場</div>
+    <div class="scene-row">
+      <div class="t-card target-bad">古城#1<br>2/2</div>
+      <div class="t-card sleep target-ok">古城#2<br>4/1</div>
+      <div class="t-card stun target-ok">侵入者<br>3/3</div>
+    </div>
+  </div>
+  <div class="mat-zone area-opp" style="grid-column:3"><div class="label-mini">相手 P</div><div class="scene-row"><div class="t-card target-bad">怪盗キッド</div></div></div>
+  <div class="mat-zone area-self" style="grid-column:1"><div class="label-mini">自分 事件</div><div class="scene-row"><div class="t-card">事件編<br>Lv7</div></div></div>
+  <div class="mat-zone area-self" style="grid-column:2"><div class="label-mini">自分 現場</div>
+    <div class="scene-row">
+      <div class="t-card selected">毛利蘭<br>5/3</div>
+      <div class="t-card">小五郎<br>4/2</div>
+    </div>
+  </div>
+  <div class="mat-zone area-self" style="grid-column:3"><div class="label-mini">自分 P</div><div class="scene-row"><div class="t-card">江戸川コナン</div></div></div>
+</div>
+<div style="font-size:10px; color:#7090b5; text-align:center; padding:8px">どちらの操作スタイルも受け付ける。慣れない人はクリック、慣れた人はドラッグで素早く。</div>
+</div>
+
+<div class="section">
+<h3>判断ポイント</h3>
+<ul style="line-height:1.7">
+  <li><strong>A (ドラッグ)</strong>: 直感的・速い・誤操作リスクあり（リリース位置で確定）</li>
+  <li><strong>B (クリック)</strong>: 手堅い・確認ダイアログで誤操作防止・操作数が増える</li>
+  <li><strong>C (両方)</strong>: 学習コストは低いが実装が複雑、テストケースが倍</li>
+  <li>コナンTCGの<strong>「コンタクト」「ガード」</strong>は不可逆な判定なので、ドラッグ即確定よりクリック+確認が安全</li>
+</ul>
+</div>
+
+<div class="options" style="margin-top:16px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>ドラッグ即確定</h3><p>Hearthstone型、速い、不可逆操作には危険</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>クリック+確認</h3><p>MTGA型、誤操作防止、操作数は多い</p></div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>両方サポート</h3><p>柔軟、実装コスト2倍</p></div>
+  </div>
+</div>

@@ -1,0 +1,206 @@
+<h2>Q4: カード状態の視覚表現</h2>
+<p class="subtitle">「アクティブ / スリープ / スタン / 名乗り」の4状態をどう見分けるか。物理マットでは「回転」のみ使うが、デジタルでは補助情報を足すかが論点。</p>
+
+<style>
+.state-row {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 14px;
+  margin: 14px 0;
+  position: relative;
+}
+.state-row-label {
+  position: absolute; top: -10px; left: 12px;
+  background: #ffd700; color: #000; padding: 1px 8px; font-weight: bold;
+  border-radius: 3px; font-size: 11px;
+}
+.state-cards {
+  display: flex; gap: 36px; justify-content: center; align-items: center;
+  padding: 14px 0;
+  min-height: 180px;
+}
+.state-slot {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  position: relative;
+}
+.state-slot .state-label {
+  font-size: 11px; color: #b8d4f0; font-weight: 600;
+}
+.state-slot .desc {
+  font-size: 9px; color: #7090b5; max-width: 100px; text-align: center;
+}
+
+/* Card thumbnail */
+.s-card {
+  width: 70px; height: 100px;
+  background: linear-gradient(135deg, #2a4a6a 0%, #1a3a5a 100%);
+  border: 1.5px solid #ffd700;
+  border-radius: 4px;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: 4px;
+  font-size: 9px;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: 0.3s;
+}
+.s-card .name { font-size: 9px; color: #ffd700; }
+.s-card .img { flex:1; background: rgba(0,0,0,0.3); margin: 3px 0; border-radius: 2px; display:flex; align-items:center; justify-content:center; font-size: 16px; }
+.s-card .ap { color: #ff6644; }
+.s-card .lp { color: #44dd99; }
+
+/* State variations */
+.s-card.sleep { transform: rotate(-90deg); }
+.s-card.stun  { transform: rotate(180deg); }
+
+/* Option A: Pure rotation only */
+.opt-a .s-card.sleep,
+.opt-a .s-card.stun,
+.opt-a .s-card.named { /* nothing added */ }
+
+/* Option B: Rotation + tint overlay */
+.opt-b .s-card.sleep::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(50,80,200,0.3); border-radius: 4px;
+}
+.opt-b .s-card.stun::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(220,50,50,0.4); border-radius: 4px;
+}
+.opt-b .s-card.named::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(240,220,80,0.25);
+  border: 2px dashed #ffd700;
+  border-radius: 4px;
+}
+
+/* Option C: Rotation + badge label */
+.opt-c .badge {
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85); color: #fff;
+  padding: 2px 8px; border-radius: 12px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 5;
+  border: 1px solid #ffd700;
+}
+.opt-c .s-card.sleep + .badge { background: rgba(40,80,200,0.95); transform: translate(-50%, -50%) rotate(90deg); }
+.opt-c .s-card.stun + .badge  { background: rgba(220,50,50,0.95); }
+.opt-c .s-card.named + .badge { background: rgba(240,200,40,0.95); color: #000; }
+</style>
+
+<!-- ============= A: Physical-faithful (rotation only) ============= -->
+<div class="state-row opt-a">
+<div class="state-row-label">A. 物理通り回転のみ（公式マット忠実）</div>
+<div class="state-cards">
+  <div class="state-slot">
+    <div class="s-card"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">アクティブ</div>
+    <div class="desc">標準</div>
+  </div>
+  <div class="state-slot">
+    <div class="s-card sleep"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">スリープ</div>
+    <div class="desc">-90°回転のみ</div>
+  </div>
+  <div class="state-slot">
+    <div class="s-card stun"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">スタン</div>
+    <div class="desc">180°回転のみ</div>
+  </div>
+  <div class="state-slot">
+    <div class="s-card named"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">名乗り</div>
+    <div class="desc">区別なし（物理通り）<br>マウスホバーで状態確認</div>
+  </div>
+</div>
+</div>
+
+<!-- ============= B: Rotation + tint overlay ============= -->
+<div class="state-row opt-b">
+<div class="state-row-label">B. 回転 + 色オーバーレイ（推奨）</div>
+<div class="state-cards">
+  <div class="state-slot">
+    <div class="s-card"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">アクティブ</div>
+    <div class="desc">標準</div>
+  </div>
+  <div class="state-slot">
+    <div class="s-card sleep"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">スリープ</div>
+    <div class="desc">-90°回転 + 青ティント</div>
+  </div>
+  <div class="state-slot">
+    <div class="s-card stun"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">スタン</div>
+    <div class="desc">180°回転 + 赤ティント</div>
+  </div>
+  <div class="state-slot">
+    <div class="s-card named"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">名乗り</div>
+    <div class="desc">回転なし + 黄破線枠</div>
+  </div>
+</div>
+</div>
+
+<!-- ============= C: Rotation + badge ============= -->
+<div class="state-row opt-c">
+<div class="state-row-label">C. 回転 + バッジラベル</div>
+<div class="state-cards">
+  <div class="state-slot">
+    <div class="s-card"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="state-label">アクティブ</div>
+    <div class="desc">標準</div>
+  </div>
+  <div class="state-slot" style="position:relative">
+    <div class="s-card sleep"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="badge">スリープ</div>
+    <div class="state-label">スリープ</div>
+    <div class="desc">-90°回転 + 中央バッジ</div>
+  </div>
+  <div class="state-slot" style="position:relative">
+    <div class="s-card stun"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="badge">スタン</div>
+    <div class="state-label">スタン</div>
+    <div class="desc">180°回転 + 中央バッジ</div>
+  </div>
+  <div class="state-slot" style="position:relative">
+    <div class="s-card named"><div class="name">毛利蘭</div><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+    <div class="badge">名乗り</div>
+    <div class="state-label">名乗り</div>
+    <div class="desc">回転なし + 中央バッジ</div>
+  </div>
+</div>
+</div>
+
+<div class="section">
+<h3>判断ポイント</h3>
+<ul style="line-height: 1.7;">
+  <li><strong>名乗り状態</strong>は物理マットでは視覚区別なし(プレイヤーが記憶)。デジタルでは画面上多数のキャラを区別する必要があるため、明示が現実的</li>
+  <li><strong>A</strong>: 公式マット完全忠実だが名乗り状態の判別が記憶頼みになる</li>
+  <li><strong>B</strong>: 色オーバーレイで一目瞭然。ただしカード本来の色を覆うことになる</li>
+  <li><strong>C</strong>: バッジでテキスト明示。カード画像をほぼ覆わない</li>
+</ul>
+</div>
+
+<div class="options" style="margin-top:16px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>回転のみ</h3><p>公式マット忠実。名乗り状態はホバーで確認。</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>回転+色ティント</h3><p>一目瞭然。カード色は犠牲に。</p></div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>回転+バッジ</h3><p>テキスト明示。カード画像を尊重。</p></div>
+  </div>
+</div>

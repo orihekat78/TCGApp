@@ -1,0 +1,90 @@
+<h2>Q2: 全体レイアウト方針</h2>
+<p class="subtitle">どこまで公式UIモックアップ（FIbGuJWdwNw 3D CG動画）に従い、どこまで業界慣例で補強するか</p>
+
+<style>
+.layout-mock {
+  display: grid;
+  background: #0d1b2a;
+  border: 2px solid #3a6ea5;
+  border-radius: 4px;
+  padding: 6px;
+  gap: 4px;
+  font-size: 10px;
+  color: #b8d4f0;
+  aspect-ratio: 16/9;
+  margin-top: 8px;
+}
+.layout-mock > div {
+  background: #1b3a5c;
+  border: 1px dashed #3a6ea5;
+  padding: 3px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.mat-opp { background: #2a1b3c !important; color: #e0a0ff !important; }
+.mat-self { background: #1b3c2a !important; color: #a0ffd0 !important; }
+.center-hl { background: #3a5c8c !important; color: #ffd700 !important; font-weight:bold; }
+.dim { background: #0a1420 !important; color: #5a7090 !important; font-size:9px; }
+.hand { background: #4a3c1b !important; color: #ffd700 !important; }
+</style>
+
+<div class="cards">
+
+<div class="card" data-choice="a" onclick="toggleSelect(this)">
+<div class="card-image">
+<div class="layout-mock" style="grid-template-columns: 80px 1fr 130px; grid-template-rows: 22px 1fr 1fr 50px;">
+  <div style="grid-column:1/-1" class="dim">章タグ（先攻3ターン目） | 著作権</div>
+  <div style="grid-row:2/4" class="center-hl">📋<br>3-Phase<br>Indicator<br><br>● オート<br>○ メイン<br>○ エンド</div>
+  <div class="mat-opp">相手 現場(最大5) + 事件 + デッキ + リムーブ + 証拠</div>
+  <div style="grid-row:2/4" class="center-hl">🎯<br>6-Action<br>Menu<br><br>①手札使用<br>②NH<br>③P能力<br>④宣言<br>⑤推理<br>⑥アクション</div>
+  <div class="mat-self">自分 現場 + 事件 + パートナー + FILE + 証拠</div>
+  <div style="grid-column:2" class="hand">手札（扇形/フラット）+ End Turn</div>
+</div>
+</div>
+<div class="card-body">
+<h3>A. 公式CGモックアップ忠実</h3>
+<p>左サイドバー=3フェイズ常時表示 / 右サイドバー=6行動メニュー常時表示 / 中央=プレイマット / 下=手札</p>
+<p class="label">★ 公式UIに最も近い。チュートリアル動画と一貫性。</p>
+</div>
+</div>
+
+<div class="card" data-choice="b" onclick="toggleSelect(this)">
+<div class="card-image">
+<div class="layout-mock" style="grid-template-columns: 1fr 100px; grid-template-rows: 28px 1fr 1fr 60px;">
+  <div style="grid-column:1/-1" class="dim">章タグ + ターン残り時間ゲージ</div>
+  <div class="mat-opp">相手 現場 + 事件 + パートナー / 上 = 領域アイコン群（FILE/証拠/リムーブ）</div>
+  <div style="grid-row:2/4" class="center-hl">⚙️<br>Sub Zones<br><br>📁FILE<br>🏆証拠<br>🗑️リムーブ<br>🃏デッキ<br><br>(click to expand)</div>
+  <div class="mat-self">自分 現場 + 事件 + パートナー / 中央フェイズ点表示</div>
+  <div style="grid-column:1" class="hand">手札（扇形+ホバー拡大）+ End Turn 右</div>
+</div>
+</div>
+<div class="card-body">
+<h3>B. 業界標準型</h3>
+<p>プレイマット中心、サブ領域は右アイコン展開（MTGA/SV慣例）。フェイズは中央点表示、行動はドラッグ/コンテキスト主導。チュートリアル時のみガイド出す。</p>
+<p class="label">★ クリーンで遊びやすい。コナン色は薄め。</p>
+</div>
+</div>
+
+<div class="card" data-choice="c" onclick="toggleSelect(this)">
+<div class="card-image">
+<div class="layout-mock" style="grid-template-columns: 60px 1fr 100px; grid-template-rows: 22px 1fr 1fr 55px;">
+  <div style="grid-column:1/-1" class="dim">章タグ + ターン状態 + 著作権</div>
+  <div style="grid-row:2/4" class="center-hl">📋<br>Phase<br><br>● オート<br>○ メイン<br>○ エンド</div>
+  <div class="mat-opp">相手 現場 + 事件 + パートナー</div>
+  <div style="grid-row:2/4" class="center-hl">⚙️<br>📁FILE(7)<br>🏆証拠<br>🗑️リムーブ<br>🃏デッキ<br><br>--- 🎯 ---<br>⑤推理<br>⑥アクション<br>+more</div>
+  <div class="mat-self">自分 現場 + 事件 + パートナー</div>
+  <div style="grid-column:2" class="hand">手札（扇形+ホバー拡大）+ End Turn</div>
+</div>
+</div>
+<div class="card-body">
+<h3>C. ハイブリッド <span style="color:#ffd700">(推奨)</span></h3>
+<p>左=フェイズインジケータ（公式準拠）/ 右=領域アイコン+主要行動ボタン両方 / 中央=プレイマット / 手札はドラッグ&ホバー（業界標準）</p>
+<p class="label">★ 公式の識別性と業界の遊びやすさを両立。</p>
+</div>
+</div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">3案ともプレイマット中央に対称配置（自分=下／相手=上）。違いは「サイドバーをどれだけ常時表示するか」と「行動メニューを常時 vs ドラッグ主導にするか」です。</p>

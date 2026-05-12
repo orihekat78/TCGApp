@@ -1,0 +1,456 @@
+<h2>盤面モック v2（裏表・横向き・事件編/解決編ラベルを修正）</h2>
+<p class="subtitle">修正点: ①事件編/解決編を明示ラベル / ②事件カードは縦横どちらでも表示OK / ③証拠=裏向き縦積み / ④FILE=裏向き横向き / ⑤リムーブ=表向き</p>
+
+<style>
+.scene-mock {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 8px;
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
+  color: #b8d4f0;
+  margin-top: 12px;
+}
+.top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(0,0,0,0.4); padding: 6px 10px;
+  border-radius: 3px; margin-bottom: 8px;
+}
+.chapter { color: #ffd700; font-weight: bold; font-size: 12px; }
+.phase-strip { display: flex; gap: 4px; }
+.phase-item { padding: 3px 10px; border-radius: 2px; background: #1b3a5c; font-size: 10px; }
+.phase-item.active { background: #44dd99; color: #000; font-weight: 700; }
+
+.player-mat {
+  display: grid;
+  grid-template-columns: 130px 1fr 100px;
+  grid-template-rows: auto auto auto;
+  gap: 6px; padding: 8px; border-radius: 4px;
+}
+.player-mat.self { background: linear-gradient(180deg, #0d2640 0%, #1b3a5c 100%); border: 2px solid #44dd99; }
+.player-mat.opp  { background: linear-gradient(0deg, #0d2640 0%, #2a1b3c 100%); border: 2px solid #aa66dd; transform: rotate(180deg); }
+
+.cell {
+  background: rgba(0,0,0,0.3);
+  border: 1px dashed #3a6ea5;
+  border-radius: 3px;
+  padding: 5px;
+  display: flex; flex-direction: column;
+  gap: 3px;
+}
+.cell .lab { font-size: 9px; color: #7090b5; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Zone positions */
+.case   { grid-column: 1; grid-row: 1; }
+.scene  { grid-column: 2; grid-row: 1; }
+.deck   { grid-column: 3; grid-row: 1; }
+.evid   { grid-column: 1; grid-row: 2; }
+.partner{ grid-column: 2; grid-row: 2; }
+.remove { grid-column: 3; grid-row: 2; }
+.file   { grid-column: 1 / -1; grid-row: 3; min-height: 80px; }
+
+.cards-row { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; }
+
+/* Real card */
+.real { position: relative; display: inline-block; }
+.real img { display: block; border-radius: 3px; box-shadow: 0 2px 5px rgba(0,0,0,0.6); }
+.real.char img { width: 60px; height: 84px; }
+.real.partner-card img { width: 60px; height: 84px; }
+.real.case-card { display:inline-block; }
+.real.case-card img { max-width: 120px; max-height: 86px; width: auto; height: auto; }
+.real.sleep img { transform: rotate(-90deg); margin: 12px 4px; }
+.real.stun img  { transform: rotate(180deg); }
+
+/* State badge (center) */
+.real .badge {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.85); color: #fff;
+  padding: 1px 6px; border-radius: 12px;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  z-index: 5; pointer-events: none; white-space: nowrap;
+  border: 1px solid #ffd700;
+}
+.real.sleep .badge { transform: translate(-50%, -50%) rotate(90deg); background: rgba(40,80,200,0.95); }
+.real.stun .badge  { background: rgba(220,50,50,0.95); }
+
+/* Case card status badge (corner stamp) */
+.case-status-stamp {
+  position: absolute;
+  top: 4px; right: 4px;
+  background: #3366ff;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  transform: rotate(-8deg);
+  z-index: 6;
+}
+.case-status-stamp.resolved {
+  background: #ee2255;
+}
+.case-evid-progress {
+  position: absolute; bottom: 4px; left: 4px;
+  background: rgba(0,0,0,0.7); color: #ffd700;
+  padding: 1px 6px; border-radius: 2px;
+  font-size: 10px; font-weight: 700;
+  border: 1px solid #ffd700;
+}
+
+/* Card back (face-down) - showing brand pattern */
+.card-back {
+  width: 50px; height: 70px;
+  background:
+    radial-gradient(circle at center, rgba(255,215,0,0.15) 0%, transparent 50%),
+    linear-gradient(135deg, #0d1f3a 0%, #1a3a5c 50%, #0d1f3a 100%);
+  border: 1px solid #3a6ea5;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+.card-back::before {
+  content: 'DC';
+  font-family: serif;
+  font-size: 14px;
+  font-weight: 800;
+  font-style: italic;
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255,215,0,0.5);
+  letter-spacing: -1px;
+}
+.card-back::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 2px;
+  pointer-events: none;
+}
+/* Sideways card back for FILE area */
+.card-back.sideways {
+  width: 70px; height: 50px;
+}
+.card-back.sideways::before { transform: rotate(90deg); }
+
+/* Deck/Remove stack */
+.back-stack {
+  position: relative; width: 60px; height: 80px;
+  display: inline-block;
+}
+.back-stack .card-back {
+  position: absolute;
+  top: 0; left: 0;
+}
+.back-stack .card-back:nth-child(1) { transform: translate(0,0); z-index: 4; }
+.back-stack .card-back:nth-child(2) { transform: translate(-3px,-3px); z-index: 3; }
+.back-stack .card-back:nth-child(3) { transform: translate(-6px,-6px); z-index: 2; }
+.count-badge {
+  position: absolute; bottom: -4px; right: -4px;
+  background: #ffd700; color: #000; font-weight: 700;
+  padding: 1px 5px; border-radius: 10px;
+  font-size: 9px; z-index: 10;
+}
+
+/* Evidence stack: small face-down cards, stacked vertically */
+.evid-stack {
+  position: relative; width: 70px; height: 86px;
+}
+.evid-stack .card-back {
+  position: absolute; top: 0; left: 0;
+  width: 50px; height: 64px;
+}
+.evid-stack .card-back:nth-child(1) { transform: translate(0,0); z-index: 5; }
+.evid-stack .card-back:nth-child(2) { transform: translate(2px,3px); z-index: 4; }
+.evid-stack .card-back:nth-child(3) { transform: translate(4px,6px); z-index: 3; }
+.evid-stack .card-back:nth-child(4) { transform: translate(6px,9px); z-index: 2; }
+.evid-stack .card-back:nth-child(5) { transform: translate(8px,12px); z-index: 1; }
+
+/* Remove stack: face-UP, showing topmost card */
+.remove-stack {
+  position: relative; width: 60px; height: 80px;
+  display: inline-block;
+}
+.remove-stack img {
+  position: absolute; top: 0; left: 0;
+  width: 50px; height: 70px;
+  border-radius: 3px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+}
+.remove-stack img:nth-child(1) { transform: translate(0,0); z-index: 4; }
+.remove-stack img:nth-child(2) { transform: translate(-3px,-3px) rotate(-3deg); z-index: 3; opacity: 0.7; }
+
+/* File area: SIDEWAYS face-down cards */
+.file-row {
+  display: flex; gap: 4px; align-items: center;
+}
+
+.hand-flat {
+  display: flex; gap: 4px; justify-content: center;
+  background: rgba(80,60,20,0.4); padding: 6px; border-radius: 3px;
+  margin-top: 8px;
+}
+.hand-flat .real img { width: 64px; height: 90px; }
+.hand-flat .real:hover img { transform: translateY(-8px); transition: 0.2s; }
+
+.end-turn-btn {
+  margin-left: 12px; background: #ffd700; color: #000;
+  border: none; padding: 8px 20px; border-radius: 3px;
+  font-weight: 700; cursor: pointer;
+}
+
+.center-line {
+  height: 16px;
+  background: repeating-linear-gradient(90deg, #ffd700 0 18px, #000 18px 36px);
+  margin: 6px 0; position: relative;
+}
+.center-line::after {
+  content: "─ KEEP OUT ─ KEEP OUT ─";
+  position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  background: #ffd700; color: #000; padding: 1px 14px; font-size: 10px; font-weight: 700;
+}
+
+.annot {
+  background: rgba(255,215,0,0.1);
+  border-left: 3px solid #ffd700;
+  padding: 6px 10px;
+  font-size: 10px;
+  color: #ffd700;
+  margin-top: 10px;
+  border-radius: 0 3px 3px 0;
+}
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid #3a6ea5;
+  border-radius: 4px;
+}
+.legend-item {
+  display: flex; gap: 10px; align-items: center;
+  padding: 4px;
+  font-size: 11px;
+}
+.legend-item .swatch { flex-shrink: 0; }
+.legend-item .desc { flex: 1; color: #b8d4f0; }
+.legend-item .desc strong { color: #ffd700; }
+</style>
+
+<div class="scene-mock">
+
+<div class="top-bar">
+  <span class="chapter">▼ 先攻3ターン目 ・ 自分(青/CT-D08) vs 相手(黄/CT-D11)</span>
+  <div class="phase-strip">
+    <span class="phase-item">オート</span>
+    <span class="phase-item active">● メイン</span>
+    <span class="phase-item">エンド</span>
+  </div>
+  <span>© 青山剛昌／小学館 © TOMY</span>
+</div>
+
+<!-- ▼ 相手マット（180°回転） -->
+<div class="player-mat opp">
+  <div class="cell case">
+    <span class="lab">事件</span>
+    <div class="real case-card" style="position:relative">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977412418.jpg" alt="千速と重悟の婚活パーティー">
+      <span class="case-status-stamp resolved">解決編</span>
+      <span class="case-evid-progress">証拠 5/6</span>
+    </div>
+  </div>
+  <div class="cell scene">
+    <span class="lab">現場 (3/5)</span>
+    <div class="cards-row">
+      <div class="real char"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977377076.jpg" alt="高木渉"></div>
+      <div class="real char sleep"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977385875.jpg" alt="佐藤美和子"><span class="badge">スリープ</span></div>
+      <div class="real char stun"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608977356431.jpg" alt="目暮十三"><span class="badge">スタン</span></div>
+    </div>
+  </div>
+  <div class="cell deck">
+    <span class="lab">デッキ (裏向き)</span>
+    <div class="back-stack">
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <span class="count-badge">25</span>
+    </div>
+  </div>
+  <div class="cell evid">
+    <span class="lab">証拠 5/6 (裏向き縦積み)</span>
+    <div class="evid-stack">
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+    </div>
+  </div>
+  <div class="cell partner">
+    <span class="lab">パートナー</span>
+    <div class="real partner-card">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608962412925.jpg" alt="萩原千速">
+    </div>
+  </div>
+  <div class="cell remove">
+    <span class="lab">リムーブ 1 (表向き)</span>
+    <div class="remove-stack">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1775608962464705.jpg" alt="松田陣平 (リムーブ済)">
+    </div>
+  </div>
+  <div class="cell file">
+    <span class="lab">FILE 6/7 (裏向き・横向きで並べる)</span>
+    <div class="file-row">
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+    </div>
+  </div>
+</div>
+
+<div class="center-line"></div>
+
+<!-- ▼ 自分マット -->
+<div class="player-mat self">
+  <div class="cell case">
+    <span class="lab">事件</span>
+    <div class="real case-card" style="position:relative">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100639068.jpg" alt="青の古城探索事件">
+      <span class="case-status-stamp">事件編</span>
+      <span class="case-evid-progress">証拠 3/7</span>
+    </div>
+  </div>
+  <div class="cell scene">
+    <span class="lab">現場 (2/5)</span>
+    <div class="cards-row">
+      <div class="real char"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100625132.jpg" alt="毛利蘭"></div>
+      <div class="real char"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093512121.jpg" alt="阿笠博士"></div>
+    </div>
+  </div>
+  <div class="cell deck">
+    <span class="lab">デッキ (裏向き)</span>
+    <div class="back-stack">
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <span class="count-badge">30</span>
+    </div>
+  </div>
+  <div class="cell evid">
+    <span class="lab">証拠 3/7 (裏向き縦積み)</span>
+    <div class="evid-stack" style="height:70px">
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+      <div class="card-back"></div>
+    </div>
+  </div>
+  <div class="cell partner">
+    <span class="lab">パートナー</span>
+    <div class="real partner-card">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093420786.jpg" alt="江戸川コナン">
+    </div>
+  </div>
+  <div class="cell remove">
+    <span class="lab">リムーブ 2 (表向き)</span>
+    <div class="remove-stack">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093455670.jpg" alt="吉田歩美">
+      <img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100630487.jpg" alt="頼もしい">
+    </div>
+  </div>
+  <div class="cell file">
+    <span class="lab">FILE 5/7 (裏向き・横向きで並べる)</span>
+    <div class="file-row">
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+      <div class="card-back sideways"></div>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex; align-items:center;">
+  <div style="flex:1">
+    <span class="lab" style="color:#ffd700; font-size:10px;">🃏 自分の手札 6枚 (自分から見て表向き・相手からは裏向き)</span>
+    <div class="hand-flat">
+      <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100625132.jpg"></div>
+      <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093455670.jpg"></div>
+      <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093474254.jpg"></div>
+      <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093465803.jpg"></div>
+      <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100630487.jpg"></div>
+      <div class="real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100634648.jpg"></div>
+    </div>
+  </div>
+  <button class="end-turn-btn">End Turn</button>
+</div>
+
+</div>
+
+<!-- ============== Legend / verification panel ============== -->
+<h3 style="margin-top:20px">各エリアの初期状態（裏表・向き）— ルール対応表</h3>
+<div class="legend-grid">
+
+<div class="legend-item">
+  <div class="swatch real partner-card"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093420786.jpg" style="width:40px;height:56px"></div>
+  <div class="desc"><strong>パートナー:</strong> 開始時=裏向き / ゲームスタート後=表向き (04-game-setup.md)</div>
+</div>
+
+<div class="legend-item">
+  <div class="swatch real case-card"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100639068.jpg" style="max-width:80px;max-height:56px"></div>
+  <div class="desc"><strong>事件:</strong> 開始時=裏向き / ゲームスタート後=表向き。事件編/解決編をマーカーで表示。<strong>横向きカードが多い</strong>のでコンテナはサイズフレキシブル。</div>
+</div>
+
+<div class="legend-item">
+  <div class="swatch real char"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743100625132.jpg" style="width:40px;height:56px"></div>
+  <div class="desc"><strong>現場のキャラ:</strong> 登場時から常に表向き。スリープ=横向き、スタン=180°回転、名乗り=バッジ表示。</div>
+</div>
+
+<div class="legend-item">
+  <div class="swatch" style="width:60px;text-align:center"><div class="card-back" style="width:40px;height:56px;display:inline-block"></div></div>
+  <div class="desc"><strong>デッキ:</strong> 常に裏向き積み重ね。枚数バッジで残量表示。</div>
+</div>
+
+<div class="legend-item">
+  <div class="swatch" style="width:60px;text-align:center"><div class="card-back" style="width:40px;height:56px;display:inline-block"></div></div>
+  <div class="desc"><strong>証拠エリア:</strong> 裏向き縦積み(03-field-areas.md)。<strong>新しいものが1番上</strong> (15-推理.md)。ヒラメキ持ちは表向き例外。</div>
+</div>
+
+<div class="legend-item">
+  <div class="swatch" style="width:60px;text-align:center"><div class="card-back sideways" style="width:56px;height:40px;display:inline-block"></div></div>
+  <div class="desc"><strong>FILEエリア:</strong> <strong>裏向き＋横向き</strong>(プレイシート明記)。新しいものが1番上(05-turn-phases.md)。アシスト後のパートナーのみ表向きで混在。</div>
+</div>
+
+<div class="legend-item">
+  <div class="swatch real char"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093455670.jpg" style="width:40px;height:56px"></div>
+  <div class="desc"><strong>リムーブエリア:</strong> 表向き(16-card-set.md「裏向きセットカードはリムーブ時に表向きにして置く」)。最新リムーブのみ視認、クリックで全件モーダル。</div>
+</div>
+
+<div class="legend-item">
+  <div class="swatch real"><img src="https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/1743743093474254.jpg" style="width:40px;height:56px"></div>
+  <div class="desc"><strong>手札:</strong> 自分=表向き / 相手から=裏向き（相手側は枚数バッジのみ表示）。</div>
+</div>
+
+</div>
+
+<div class="annot">
+<strong>事件編/解決編の表示について（修正点）:</strong> 事件カード右上に <span style="background:#3366ff; color:#fff; padding:1px 6px; border-radius:3px; font-weight:700">事件編</span> / <span style="background:#ee2255; color:#fff; padding:1px 6px; border-radius:3px; font-weight:700">解決編</span> のスタンプを傾けて配置。さらに左下に「証拠 5/6」のように進捗を併記。物理マーカーの裏返し挙動をデジタルでも瞬時に把握できる。
+</div>
+
+<div class="annot" style="background:rgba(40,180,80,0.1); border-color:#44dd99; color:#88ee88;">
+<strong>横向き事件カードへの対応:</strong> 事件カードのコンテナは <code style="background:#000;padding:1px 4px;border-radius:2px">max-width: 120px; max-height: 86px; width:auto; height:auto;</code> でアスペクト比を保持。CT-D08「青の古城探索事件」もCT-D11「千速と重悟の婚活パーティー」も実は<strong>横向きデザイン</strong>で、それぞれ自動でフィット表示されています。
+</div>
+
+<h3 style="margin-top:20px">他のところで確認したいことがあれば教えてください</h3>
+<p>例: アシスト後のパートナーがFILEに混在する見せ方、ヒラメキ表向き証拠の表示、推理時の証拠めくれアニメ、デッキリフレッシュ演出など</p>

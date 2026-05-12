@@ -1,0 +1,170 @@
+<h2>Q3: 手札の表示方法</h2>
+<p class="subtitle">画面下端で5〜12枚の手札をどう収めるか。3案の見え方を実物カード写真風で示します。</p>
+
+<style>
+.hand-demo {
+  background: #0a1a28;
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  padding: 16px 8px 8px;
+  margin: 14px 0;
+  font-family: -apple-system, sans-serif;
+  color: #b8d4f0;
+  position: relative;
+  min-height: 200px;
+}
+.hand-label {
+  position: absolute; top: -10px; left: 12px;
+  background: #ffd700; color: #000; padding: 1px 8px; font-weight: bold;
+  border-radius: 3px; font-size: 11px;
+}
+.note {
+  font-size: 10px; color: #7090b5; margin: 6px 0 12px;
+}
+
+/* Card thumbnail (representing actual card image) */
+.h-card {
+  width: 78px; height: 110px;
+  background: linear-gradient(135deg, #2a4a6a 0%, #1a3a5a 100%);
+  border: 1.5px solid #ffd700;
+  border-radius: 4px;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: 4px;
+  font-size: 9px;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+}
+.h-card .name { font-size: 10px; color: #ffd700; margin-top: 2px; }
+.h-card .img { flex:1; background: rgba(0,0,0,0.3); margin: 3px 0; border-radius: 2px; display:flex; align-items:center; justify-content:center; font-size: 16px; }
+.h-card .level { background:#3366ff; color:#fff; border-radius:50%; width:18px; height:18px; line-height:18px; position:absolute; top:-6px; left:-6px; font-size: 9px; }
+.h-card .ap { color: #ff6644; }
+.h-card .lp { color: #44dd99; }
+
+/* Option A: flat row */
+.hand-flat {
+  display: flex; gap: 4px; justify-content: center;
+  padding: 4px;
+}
+.hand-flat .h-card:hover { transform: translateY(-12px); transition: 0.2s; }
+
+/* Option B: fan */
+.hand-fan {
+  display: flex; gap: 0; justify-content: center;
+  padding: 20px 0 0;
+  position: relative;
+  height: 160px;
+}
+.hand-fan .h-card {
+  position: relative;
+  transform-origin: center 150px;
+}
+.hand-fan .h-card:nth-child(1) { transform: rotate(-15deg) translateY(8px); margin-right: -32px; }
+.hand-fan .h-card:nth-child(2) { transform: rotate(-9deg) translateY(2px); margin-right: -32px; }
+.hand-fan .h-card:nth-child(3) { transform: rotate(-3deg); margin-right: -32px; }
+.hand-fan .h-card:nth-child(4) { transform: rotate(3deg); margin-right: -32px; }
+.hand-fan .h-card:nth-child(5) { transform: rotate(9deg) translateY(2px); margin-right: -32px; }
+.hand-fan .h-card:nth-child(6) { transform: rotate(15deg) translateY(8px); }
+
+/* Option C: slight tilt + overlap */
+.hand-tilt {
+  display: flex; gap: 0; justify-content: center;
+  padding: 4px;
+}
+.hand-tilt .h-card { margin-right: -20px; }
+.hand-tilt .h-card:nth-child(odd)  { transform: translateY(-3px) rotate(-2deg); }
+.hand-tilt .h-card:nth-child(even) { transform: translateY(0)    rotate(2deg); }
+.hand-tilt .h-card:last-child { margin-right: 0; }
+
+/* Hover preview overlay */
+.hover-preview {
+  position: absolute;
+  bottom: 110%;
+  right: 20px;
+  width: 180px; height: 250px;
+  background: linear-gradient(135deg, #3a5a8a 0%, #2a4a6a 100%);
+  border: 2px solid #ffd700;
+  border-radius: 6px;
+  display: flex; flex-direction: column;
+  padding: 8px;
+  font-size: 11px;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  z-index: 10;
+}
+.hover-preview .name { font-size: 14px; color: #ffd700; }
+.hover-preview .img { flex:1; background: rgba(0,0,0,0.4); margin: 4px 0; border-radius: 3px; display:flex; align-items:center; justify-content:center; font-size: 30px; }
+.hover-preview .stats { display: flex; justify-content: space-around; }
+.hover-preview .effect { font-size: 9px; color: #ccc; margin-top: 4px; padding-top: 4px; border-top: 1px solid #555; }
+</style>
+
+<!-- ============== A. 完全フラット ============== -->
+<div class="hand-demo">
+<div class="hand-label">A. 完全フラット (MTGA型)</div>
+<div class="note">カードを横一列にギャップなく並べる。ホバーで上に浮く（hover してみてください）。手札枚数が多い場合は重なりが自動でつまる。</div>
+<div class="hand-flat">
+  <div class="h-card"><span class="level">3</span><span class="name">推理</span><div class="img">🔍</div></div>
+  <div class="h-card"><span class="level">2</span><span class="name">少年探偵団</span><div class="img">👦</div><div><span class="ap">4000</span> <span class="lp">2</span></div></div>
+  <div class="h-card"><span class="level">3</span><span class="name">毛利蘭</span><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+  <div class="h-card"><span class="level">5</span><span class="name">古城探索</span><div class="img">🏰</div><div><span class="ap">7000</span> <span class="lp">2</span></div></div>
+  <div class="h-card"><span class="level">2</span><span class="name">カットイン</span><div class="img">⚡</div></div>
+  <div class="h-card"><span class="level">3</span><span class="name">変装</span><div class="img">🎭</div><div><span class="ap">3000</span> <span class="lp">3</span></div></div>
+</div>
+</div>
+
+<!-- ============== B. 扇形 ============== -->
+<div class="hand-demo">
+<div class="hand-label">B. 扇形展開 (Hearthstone型)</div>
+<div class="note">中央から放射状に開く。コナンTCGの「手札を扇形に持つ」物理動作のメタファー。狭いスペースに多くの手札を収納でき視覚的に映える。</div>
+<div class="hand-fan">
+  <div class="h-card"><span class="level">3</span><span class="name">推理</span><div class="img">🔍</div></div>
+  <div class="h-card"><span class="level">2</span><span class="name">少年探偵団</span><div class="img">👦</div><div><span class="ap">4000</span> <span class="lp">2</span></div></div>
+  <div class="h-card"><span class="level">3</span><span class="name">毛利蘭</span><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+  <div class="h-card"><span class="level">5</span><span class="name">古城探索</span><div class="img">🏰</div><div><span class="ap">7000</span> <span class="lp">2</span></div></div>
+  <div class="h-card"><span class="level">2</span><span class="name">カットイン</span><div class="img">⚡</div></div>
+  <div class="h-card"><span class="level">3</span><span class="name">変装</span><div class="img">🎭</div><div><span class="ap">3000</span> <span class="lp">3</span></div></div>
+</div>
+</div>
+
+<!-- ============== C. 軽い傾斜+重なり ============== -->
+<div class="hand-demo">
+<div class="hand-label">C. 軽い傾斜+重なり (Shadowverse型)</div>
+<div class="note">微妙に交互傾斜し、隣カードと20pxほど重なる。整然としつつ躍動感がある。</div>
+<div class="hand-tilt">
+  <div class="h-card"><span class="level">3</span><span class="name">推理</span><div class="img">🔍</div></div>
+  <div class="h-card"><span class="level">2</span><span class="name">少年探偵団</span><div class="img">👦</div><div><span class="ap">4000</span> <span class="lp">2</span></div></div>
+  <div class="h-card"><span class="level">3</span><span class="name">毛利蘭</span><div class="img">👧</div><div><span class="ap">5000</span> <span class="lp">3</span></div></div>
+  <div class="h-card"><span class="level">5</span><span class="name">古城探索</span><div class="img">🏰</div><div><span class="ap">7000</span> <span class="lp">2</span></div></div>
+  <div class="h-card"><span class="level">2</span><span class="name">カットイン</span><div class="img">⚡</div></div>
+  <div class="h-card"><span class="level">3</span><span class="name">変装</span><div class="img">🎭</div><div><span class="ap">3000</span> <span class="lp">3</span></div></div>
+</div>
+</div>
+
+<div class="section">
+<h3>3案共通の挙動</h3>
+<ul style="line-height:1.7">
+  <li>ホバーすると拡大プレビューを近接表示（カード詳細・効果テキストを読める）</li>
+  <li>クリック / ドラッグで使用宣言（盤面の置き場所にドラッグ）</li>
+  <li>使用できないカード（事件色不一致、FILE不足）は半透明＆操作ロック</li>
+  <li>手札枚数が多い場合（10枚超）は重なり量が自動で増える</li>
+</ul>
+</div>
+
+<div class="options" style="margin-top:16px">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>完全フラット</h3><p>視認性最大。シンプルでクリーン。手札位置が予測しやすい。</p></div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>扇形展開</h3><p>物理メタファー再現。コナンの「探偵が札を扇形で持つ」感。映える。</p></div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>軽い傾斜+重なり</h3><p>中間。整然+躍動感の両立。</p></div>
+  </div>
+</div>
