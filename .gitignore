@@ -27,3 +27,7 @@ coverage/
 
 # Claudian (GUI) のローカルセッション状態
 .claudian/
+
+# Playwright MCP screenshots/snapshots
+.playwright-mcp/
+phase7-demo-*.png

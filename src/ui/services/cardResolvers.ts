@@ -1,0 +1,117 @@
+// Phase 7 demo wiring: cardId → 表示用メタ解決
+// SceneArea / PartnerArea / RemoveArea / FileArea / CaseArea 共用。
+// cards.json (CT-D08 / CT-D11) を入力として受け取る factory パターン。
+// テスト時は固定 JSON を渡せる、本番は App.tsx で root の JSON を import。
+
+import type { ResolvedCardMeta, CardColor } from '@/ui/components/SceneArea.js';
+
+export type RawCard = {
+  cardId: string;
+  cardNum: string;
+  title: string;
+  type: '事件' | 'パートナー' | 'キャラ' | 'イベント';
+  color: string;          // 日本語 ('青' / '黄' / '赤' / '緑' / '紫')
+  cost: string | null;
+  ap: string | null;
+  lp: string | null;
+  rarity?: string;
+  mainPath?: string;
+  features?: string[];
+  effect?: string | null;
+  cutIn?: string | null;
+  hirameki?: string | null;
+  henso?: string | null;
+  difficultyFirst?: number | null;
+  difficultySecond?: number | null;
+};
+
+export type RawCardsJson = {
+  count: number;
+  cards: RawCard[];
+};
+
+export type CaseMeta = {
+  title: string;
+  color: CardColor;
+  level: number;
+};
+
+const JP_COLOR_TO_EN: Record<string, CardColor> = {
+  '青': 'blue',
+  '黄': 'yellow',
+  '赤': 'red',
+  '緑': 'green',
+  '紫': 'purple',
+};
+
+function parseIntSafe(value: string | number | null | undefined): number {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) ? 0 : n;
+}
+
+function mapColor(jp: string): CardColor {
+  return JP_COLOR_TO_EN[jp] ?? 'blue';
+}
+
+function buildIndex(sources: RawCardsJson[]): Map<string, RawCard> {
+  const idx = new Map<string, RawCard>();
+  for (const src of sources) {
+    for (const card of src.cards) {
+      idx.set(card.cardId, card);
+    }
+  }
+  return idx;
+}
+
+/**
+ * cardId → ResolvedCardMeta (キャラ / パートナー / イベント表示用)
+ * 未登録 ID は `{ name: '???', color: 'blue', ap: 0, lp: 0, lv: 0 }`
+ */
+export function createCardResolver(
+  ...sources: RawCardsJson[]
+): (cardId: string) => ResolvedCardMeta {
+  const idx = buildIndex(sources);
+  return (cardId: string): ResolvedCardMeta => {
+    const raw = idx.get(cardId);
+    if (!raw) {
+      return { name: '???', color: 'blue', ap: 0, lp: 0, lv: 0 };
+    }
+    return {
+      name: raw.title,
+      color: mapColor(raw.color),
+      ap: parseIntSafe(raw.ap),
+      lp: parseIntSafe(raw.lp),
+      // 'lv' は JSON に無い (cardNum 等から推定不能) — placeholder 0
+      lv: parseIntSafe(raw.cost ?? '0'),
+    };
+  };
+}
+
+/**
+ * cardId → CaseMeta (事件カード専用、title/color/level)
+ * 未登録 ID または type !== '事件' は cardId をタイトルにフォールバック。
+ */
+export function createCaseResolver(
+  ...sources: RawCardsJson[]
+): (cardId: string) => CaseMeta {
+  const idx = buildIndex(sources);
+  return (cardId: string): CaseMeta => {
+    const raw = idx.get(cardId);
+    if (!raw || raw.type !== '事件') {
+      return { title: cardId, color: 'blue', level: 0 };
+    }
+    return {
+      title: raw.title,
+      color: mapColor(raw.color),
+      // 事件 level は difficultyFirst / difficultySecond の最大値 (or cost)。
+      // cards.json の数値型カラムは string | null なので安全に parseInt。
+      level: Math.max(
+        parseIntSafe(raw.difficultyFirst),
+        parseIntSafe(raw.difficultySecond),
+        parseIntSafe(raw.cost),
+      ),
+    };
+  };
+}

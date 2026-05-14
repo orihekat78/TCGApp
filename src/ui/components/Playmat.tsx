@@ -31,29 +31,38 @@ const JP_COLOR_TO_EN: Record<string, CaseColor> = {
 export type PlaymatProps = {
   gameState: GameState | null;
   resolveCard: (cardId: string) => ResolvedCardMeta;
+  /**
+   * 事件 cardId → 表示用メタ解決 (任意)。
+   * 指定なしの場合は cardId をタイトルにフォールバックする placeholder ロジック。
+   */
+  resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number };
 };
 
 type PlayerMatProps = {
   side: 'self' | 'opp';
   state: GameState | null;
   resolveCard: (cardId: string) => ResolvedCardMeta;
+  resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number };
 };
 
-function PlayerMat({ side, state, resolveCard }: PlayerMatProps): JSX.Element {
+function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): JSX.Element {
   const scene = state?.players[side].scene ?? [];
   const engineCase = state?.players[side].case;
 
-  // engine → CaseInfo 変換。Phase 7 では cards.json 連携前なので title/level は
-  // placeholder。Phase 8 で resolveCase(cardId) → { title, level } を組み込む予定。
+  // engine の case → 表示用 CaseInfo に変換。resolveCase があれば title/color/level
+  // を cards.json 由来で解決、なければ cardId / requiredEvidence で placeholder。
   const caseInfo: CaseInfo | null = engineCase
-    ? {
-        cardId: engineCase.cardId,
-        title: engineCase.cardId,  // placeholder
-        color: JP_COLOR_TO_EN[engineCase.colors[0] ?? '青'] ?? 'blue',
-        level: engineCase.requiredEvidence,  // placeholder
-        status: engineCase.status,
-        requiredEvidence: engineCase.requiredEvidence,
-      }
+    ? (() => {
+        const resolved = resolveCase ? resolveCase(engineCase.cardId) : null;
+        return {
+          cardId: engineCase.cardId,
+          title: resolved?.title ?? engineCase.cardId,
+          color: resolved?.color ?? JP_COLOR_TO_EN[engineCase.colors[0] ?? '青'] ?? 'blue',
+          level: resolved?.level ?? engineCase.requiredEvidence,
+          status: engineCase.status,
+          requiredEvidence: engineCase.requiredEvidence,
+        };
+      })()
     : null;
   const turnOrder = side === 'self' && (state?.players.self.case.requiredEvidence ?? 7) === 7
     ? 'first'
@@ -85,7 +94,7 @@ function PlayerMat({ side, state, resolveCard }: PlayerMatProps): JSX.Element {
   );
 }
 
-export function Playmat({ gameState, resolveCard }: PlaymatProps): JSX.Element {
+export function Playmat({ gameState, resolveCard, resolveCase }: PlaymatProps): JSX.Element {
   return (
     <div className="scaler" id="scaler">
       <div className="stage">
@@ -99,12 +108,12 @@ export function Playmat({ gameState, resolveCard }: PlaymatProps): JSX.Element {
           {/* Opponent hand strip (top of opp mat) — Task 7.11 関連 */}
           <div className="opp-hand-strip" aria-label="相手手札" />
 
-          <PlayerMat side="opp" state={gameState} resolveCard={resolveCard} />
+          <PlayerMat side="opp" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
 
           {/* KEEP OUT divider — spec 要求 (mock では display:none) */}
           <div className="keep-out" role="separator" aria-label="KEEP OUT" />
 
-          <PlayerMat side="self" state={gameState} resolveCard={resolveCard} />
+          <PlayerMat side="self" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
         </div>
 
         {/* HandZone slot — Task 7.11 で実装 */}
