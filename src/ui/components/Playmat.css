@@ -116,20 +116,8 @@
   border-radius: 3px;
 }
 
-/* ---- Placeholder zones (Task 7.6 で実装される) ---- */
-/* scene-zone (7.4), partner-zone (7.5), deck-zone (7.7), remove-col (7.10) は実装済み */
-.mat .zone:not(.scene-zone):not(.partner-zone):not(.deck-zone):not(.remove-col) {
-  background: var(--bg-cell);
-  border: 1.5px dashed color-mix(in oklch, var(--border-zone) 40%, transparent);
-  border-radius: 4px;
-  display: grid;
-  place-items: center;
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.mat .zone.case-zone::before    { content: "事件 (Task 7.6)"; }
+/* Placeholder zones: 全 6 zone 実装済 (7.4 scene / 7.5 partner / 7.6 case /
+   7.7 deck / 7.10 remove + file-row 待ち)。残 placeholder は file-row のみ。 */
 
 /* ---- KEEP OUT divider (spec 復活、mock では display:none) ---- */
 .keep-out {

@@ -82,12 +82,22 @@ describe('Playmat', () => {
   it('renders all 6 zone slots per mat: case / scene / partner / deck / remove / file', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     // 各ゾーンは 2 (opp + self) で計 12
-    expect(html.match(/case-col case-zone/g)?.length).toBe(2);
+    expect(html.match(/case-col case-area/g)?.length).toBe(2);
+    expect(html.match(/case-zone/g)?.length).toBe(2);
     expect(html.match(/scene-col scene-zone/g)?.length).toBe(2);
     expect(html.match(/partner-col partner-zone/g)?.length).toBe(2);
     expect(html.match(/deck-col deck-zone/g)?.length).toBe(2);
     expect(html.match(/remove-col remove-zone/g)?.length).toBe(2);
     expect(html.match(/class="file-row"/g)?.length).toBe(2);
+  });
+
+  it('renders CaseArea (real component, empty when null state)', () => {
+    const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
+    expect(html.match(/case-area side-opp/g)?.length).toBe(1);
+    expect(html.match(/case-area side-self/g)?.length).toBe(1);
+    expect(html.match(/case-empty/g)?.length).toBe(2);
+    // "未開始" は aria-label + 表示テキストの両方に含まれるため計 4 件
+    expect(html.match(/未開始/g)?.length).toBe(4);
   });
 
   it('renders PartnerArea (real component) inside each mat', () => {

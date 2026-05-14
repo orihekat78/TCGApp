@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b35833d305a1`
+> Source hash: `c3711d190565`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -12,12 +12,12 @@
 
 | ルール | 参照数 | 参照元 (抜粋) |
 | ----- | ------ | ------------- |
-| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 20 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 17 件 |
+| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 21 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 18 件 |
 | [`02-deck-construction.md`](../../rules/02-deck-construction.md) | 8 | `cards/ct-d08/index.ts`, `cards/ct-d11/index.ts`, `cards/index.ts` ほか 5 件 |
 | [`03-field-areas.md`](../../rules/03-field-areas.md) | 21 | `cards/_shared/hiramekiCharStun.ts`, `cards/ct-d08/D08019.ts`, `cards/ct-d08/D08020.ts` ほか 18 件 |
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 10 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 7 件 |
 | [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 17 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 14 件 |
-| [`06-card-types.md`](../../rules/06-card-types.md) | 8 | `engine/cards/registry.ts`, `engine/cards/tsv-loader.ts`, `engine/flow/main/partner-ability.ts` ほか 5 件 |
+| [`06-card-types.md`](../../rules/06-card-types.md) | 9 | `engine/cards/registry.ts`, `engine/cards/tsv-loader.ts`, `engine/flow/main/partner-ability.ts` ほか 6 件 |
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 16 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 13 件 |
 | [`08-contact.md`](../../rules/08-contact.md) | 12 | `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts`, `cards/ct-d11/D11008.ts` ほか 9 件 |
 | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 18 | `cards/_shared/cutinFixedAP.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08007.ts` ほか 15 件 |

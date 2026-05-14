@@ -1,0 +1,194 @@
+/* CaseArea.css
+ * 事件ゾーン (事件カード + 検事印スタンプ + 必要証拠数) のスタイル。
+ * 01-board-mockup.html のクラス構造をそのまま流用し、
+ * 色はすべて CSS 変数 (--case-editing / --case-resolved / --color-* /
+ * --accent-gold / --text-*) で外出しした。
+ *
+ * 親 :root もしくは scope で以下の変数が定義されている前提:
+ *   --case-editing / --case-resolved
+ *   --color-blue / --color-yellow / --color-red / --color-green / --color-purple
+ *   --accent-gold
+ *   --text-primary / --text-secondary / --text-muted
+ *   --bg-cell / --border-zone
+ *   --font-jp / --font-mono
+ * fallback も与えてあるので単体動作もする。
+ */
+
+.case-area {
+  /* レイアウト用ローカル変数 (親側で上書き可) */
+  --case-card-w: 84px;
+  --case-card-h: 118px;
+
+  --case-bg-cell:        var(--bg-cell, rgba(0, 0, 0, 0.32));
+  --case-border-zone:    var(--border-zone, #3a6ea5);
+  --case-text-primary:   var(--text-primary, #e0ecf8);
+  --case-text-secondary: var(--text-secondary, #b8d4f0);
+  --case-text-muted:     var(--text-muted, #7090b5);
+  --case-accent-gold:    var(--accent-gold, #ffd700);
+  --case-editing-color:  var(--case-editing, #3366ff);
+  --case-resolved-color: var(--case-resolved, #ee2255);
+
+  font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
+  color: var(--case-text-primary);
+}
+
+/* ---- zone shell ---- */
+.case-area .zone.case-zone {
+  background: var(--case-bg-cell);
+  border: 1px solid color-mix(in oklch, var(--case-border-zone) 60%, transparent);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  overflow: visible; /* スタンプがはみ出すので隠さない */
+}
+
+.case-area .zone-label {
+  width: 100%;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--case-text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ---- 事件カード (portrait) ---- */
+.case-area .case-card {
+  /* landscape default (mock 互換) */
+  width: 116px;
+  height: 84px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #2a2030 0%, #1a1422 100%);
+  border: 1.5px solid #4a3050;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.case-area .case-card.portrait {
+  width: var(--case-card-w);
+  height: var(--case-card-h);
+}
+
+/* color borders — モック踏襲 */
+.case-area .case-card.color-blue {
+  border-color: color-mix(in oklch, var(--color-blue, #2b6cb5) 70%, white 12%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-blue, #2b6cb5) 25%, transparent);
+}
+.case-area .case-card.color-yellow {
+  border-color: color-mix(in oklch, var(--color-yellow, #d4a425) 70%, white 12%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-yellow, #d4a425) 25%, transparent);
+}
+.case-area .case-card.color-red {
+  border-color: color-mix(in oklch, var(--color-red, #c84040) 70%, white 12%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-red, #c84040) 25%, transparent);
+}
+.case-area .case-card.color-green {
+  border-color: color-mix(in oklch, var(--color-green, #3aa67a) 70%, white 12%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-green, #3aa67a) 25%, transparent);
+}
+.case-area .case-card.color-purple {
+  border-color: color-mix(in oklch, var(--color-purple, #8a4cc0) 70%, white 12%);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-purple, #8a4cc0) 25%, transparent);
+}
+
+/* ---- タイトル ---- */
+.case-area .case-card .case-title {
+  flex: 1;
+  background: linear-gradient(180deg,
+    color-mix(in oklch, var(--neon-blue, #4ec3ff) 6%, transparent),
+    rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--case-text-primary);
+}
+.case-area .case-card.portrait .case-title {
+  font-size: 9.5px;
+  padding: 4px 4px;
+}
+
+/* ---- メタ行 (EVT・色 / Lv) ---- */
+.case-area .case-card .case-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 6px;
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.6);
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  color: var(--case-text-secondary);
+}
+.case-area .case-card .case-lv {
+  font-weight: 800;
+  color: color-mix(in oklch, var(--case-accent-gold) 90%, white 10%);
+}
+
+/* ---- 検事印スタンプ ---- */
+.case-area .case-stamp {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  transform: rotate(8deg);
+  background: #fff;
+  color: var(--case-editing-color);
+  font-size: 8.5px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border: 2px solid var(--case-editing-color);
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  z-index: 3;
+  white-space: nowrap;
+  font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
+}
+.case-area .case-card.portrait .case-stamp {
+  font-size: 8.5px;
+  padding: 1px 4px;
+}
+.case-area .case-stamp.resolved {
+  color: var(--case-resolved-color);
+  border-color: var(--case-resolved-color);
+  transform: rotate(-6deg);
+}
+
+/* ---- 必要証拠 ---- */
+.case-area .evidence-required {
+  font-size: 10px;
+  color: var(--case-text-secondary);
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+  text-align: center;
+}
+.case-area .evidence-required strong {
+  color: var(--case-accent-gold);
+  font-size: 13px;
+  font-weight: 800;
+  margin: 0 2px;
+}
+
+/* ---- 相手側: スタンプの傾き方向のみ反転 ---- */
+.case-area.side-opp .case-stamp {
+  top: auto;
+  bottom: -4px;
+  right: auto;
+  left: -4px;
+  transform: rotate(-8deg);
+}
+.case-area.side-opp .case-stamp.resolved {
+  transform: rotate(6deg);
+}

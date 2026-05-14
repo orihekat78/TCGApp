@@ -19,7 +19,13 @@ import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
 import { LogPanel } from './LogPanel.js';
 import { EffectStackPanel } from './EffectStackPanel.js';
+import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import './Playmat.css';
+
+// engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
+const JP_COLOR_TO_EN: Record<string, CaseColor> = {
+  '青': 'blue', '黄': 'yellow', '赤': 'red', '緑': 'green', '紫': 'purple',
+};
 
 export type PlaymatProps = {
   gameState: GameState | null;
@@ -34,10 +40,29 @@ type PlayerMatProps = {
 
 function PlayerMat({ side, state, resolveCard }: PlayerMatProps): JSX.Element {
   const scene = state?.players[side].scene ?? [];
+  const engineCase = state?.players[side].case;
+
+  // engine → CaseInfo 変換。Phase 7 では cards.json 連携前なので title/level は
+  // placeholder。Phase 8 で resolveCase(cardId) → { title, level } を組み込む予定。
+  const caseInfo: CaseInfo | null = engineCase
+    ? {
+        cardId: engineCase.cardId,
+        title: engineCase.cardId,  // placeholder
+        color: JP_COLOR_TO_EN[engineCase.colors[0] ?? '青'] ?? 'blue',
+        level: engineCase.requiredEvidence,  // placeholder
+        status: engineCase.status,
+        requiredEvidence: engineCase.requiredEvidence,
+      }
+    : null;
+  const turnOrder = side === 'self' && (state?.players.self.case.requiredEvidence ?? 7) === 7
+    ? 'first'
+    : side === 'opp' && (state?.players.opp.case.requiredEvidence ?? 7) === 7
+    ? 'first'
+    : 'second';
 
   return (
     <div className={`mat ${side}`} data-side={side}>
-      <div className="zone case-col case-zone" aria-label="事件" />
+      <CaseArea caseInfo={caseInfo} turnOrder={turnOrder} side={side} />
       <SceneArea characters={scene} side={side} resolveCard={resolveCard} />
       <PartnerArea
         partner={state?.players[side].partner ?? null}
