@@ -1,0 +1,147 @@
+// ai.policies.heuristic — 優先順位ベースの AIPolicy 実装 (Phase 6 Group B Task 6.4)
+// spec: .claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md
+// rules: 01-victory-conditions.md (事件解決), 11-reasoning.md (LP≤0 で証拠0枚),
+//        07-action-flow.md / 08-contact.md (AP 判定), 12-next-hint.md, 13-keywords.md
+//
+// 優先順位 (高→低):
+//   1. solveCase — 勝利が見えるなら必ず取る
+//   2. assist — このアシストで FILE>=7 になる場合 (解決編移行) のみ
+//   3. reasoning — 最も LP の高いソースを選ぶ。LP=0 のソースしかない場合はスキップ (rules/11)
+//   4. actionAgainstCase — 最大 AP のアタッカーを選ぶ
+//   5. actionAgainstChar — 攻撃側 AP >= 対象 AP の候補のみ。攻撃 AP 最大を選ぶ
+//   6. handUseCard — event を優先、無ければ最初の候補
+//   7. startNextHint — FILE を消費するため優先度低め
+//   8. partnerAbility / declaredAbility — MVP では heuristic スコアを付けにくいのでフォールバック
+//   9. fallback: endTurn 以外をランダム
+//  10. endTurn — 最後の手段
+
+import type { AIPolicy } from '../policy.js';
+import type { Move } from '../move-enumerator.js';
+import type { GameState } from '@/engine/types';
+import { engine } from '@/engine';
+import { RandomPolicy, type RandomPolicyOptions } from './random.js';
+
+type Player = 'self' | 'opp';
+
+export interface HeuristicPolicyOptions extends RandomPolicyOptions {}
+
+export class HeuristicPolicy implements AIPolicy {
+  readonly name = 'heuristic';
+  private readonly fallback: RandomPolicy;
+
+  constructor(opts?: HeuristicPolicyOptions) {
+    this.fallback = new RandomPolicy(opts);
+  }
+
+  choose(state: GameState, candidates: Move[], byPlayer: Player): Move | null {
+    if (candidates.length === 0) return null;
+
+    // 優先順位 1: solveCase
+    const solve = candidates.find((m): m is Extract<Move, { kind: 'solveCase' }> => m.kind === 'solveCase');
+    if (solve) return solve;
+
+    // 優先順位 2: assist — このアシストで FILE が 7 枚以上になる場合のみ採用
+    // (rules/01, 13: FILE 7 枚以上で事件編 → 解決編)
+    const assist = candidates.find((m): m is Extract<Move, { kind: 'assist' }> => m.kind === 'assist');
+    if (assist) {
+      const fileLen = state.players[byPlayer].file.length;
+      // アシスト時にパートナーが FILE に加わるため +1
+      if (fileLen + 1 >= 7) return assist;
+    }
+
+    // 優先順位 3: reasoning — 最も LP の高い候補。LP > 0 のものに限る (rules/11)
+    const reasoningMoves = candidates.filter(
+      (m): m is Extract<Move, { kind: 'reasoning' }> => m.kind === 'reasoning',
+    );
+    if (reasoningMoves.length > 0) {
+      const scored = reasoningMoves
+        .map(m => ({ m, lp: lpOf(state, m.uid) }))
+        .sort((a, b) => b.lp - a.lp);
+      const best = scored[0];
+      if (best.lp > 0) return best.m;
+    }
+
+    // 優先順位 4: actionAgainstCase — 最大 AP のアタッカーを採用
+    const caseAttacks = candidates.filter(
+      (m): m is Extract<Move, { kind: 'actionAgainstCase' }> => m.kind === 'actionAgainstCase',
+    );
+    if (caseAttacks.length > 0) {
+      const scored = caseAttacks
+        .map(m => ({ m, ap: apOf(state, m.byUid) }))
+        .sort((a, b) => b.ap - a.ap);
+      return scored[0].m;
+    }
+
+    // 優先順位 5: actionAgainstChar — 攻撃側 AP >= 対象 AP の手のみ
+    // (rules/08: AP 同値でもリムーブ成立)。負ける攻撃は出さない。
+    const charAttacks = candidates.filter(
+      (m): m is Extract<Move, { kind: 'actionAgainstChar' }> => m.kind === 'actionAgainstChar',
+    );
+    const winningCharAttacks = charAttacks.filter(
+      m => apOf(state, m.byUid) >= apOf(state, m.targetUid),
+    );
+    if (winningCharAttacks.length > 0) {
+      const scored = winningCharAttacks
+        .map(m => ({ m, ap: apOf(state, m.byUid) }))
+        .sort((a, b) => b.ap - a.ap);
+      return scored[0].m;
+    }
+
+    // 優先順位 6: handUseCard — event を優先
+    const handCards = candidates.filter(
+      (m): m is Extract<Move, { kind: 'handUseCard' }> => m.kind === 'handUseCard',
+    );
+    if (handCards.length > 0) {
+      const eventCard = handCards.find(m => {
+        const def = engine.cards.get(m.cardId);
+        return def?.kind === 'event';
+      });
+      if (eventCard) return eventCard;
+      return handCards[0];
+    }
+
+    // 優先順位 7: startNextHint
+    const nh = candidates.find((m): m is Extract<Move, { kind: 'startNextHint' }> => m.kind === 'startNextHint');
+    if (nh) return nh;
+
+    // フォールバック: endTurn 以外をランダムに選ぶ
+    const nonEnd = candidates.filter(m => m.kind !== 'endTurn');
+    if (nonEnd.length > 0) {
+      return this.fallback.choose(state, nonEnd, byPlayer);
+    }
+
+    // 最後: endTurn
+    const endTurn = candidates.find((m): m is Extract<Move, { kind: 'endTurn' }> => m.kind === 'endTurn');
+    return endTurn ?? null;
+  }
+}
+
+/**
+ * lpOf — uid のエフェクティブ LP を返す。
+ *   - 'partner:self' / 'partner:opp' は CardDef.lp (現状 partner は override なし)
+ *   - scene のキャラは engine.read.char.lp で apOverride / lpOverride 反映済みの値
+ */
+function lpOf(state: GameState, uid: string): number {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
+    const cardId = state.players[p].partner.cardId;
+    if (!cardId) return 0;
+    const def = engine.cards.get(cardId);
+    return def?.lp ?? 0;
+  }
+  return engine.read.char.lp(state, uid);
+}
+
+/**
+ * apOf — uid のエフェクティブ AP を返す (lpOf と同様)
+ */
+function apOf(state: GameState, uid: string): number {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
+    const cardId = state.players[p].partner.cardId;
+    if (!cardId) return 0;
+    const def = engine.cards.get(cardId);
+    return def?.ap ?? 0;
+  }
+  return engine.read.char.ap(state, uid);
+}

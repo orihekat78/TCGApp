@@ -3,3 +3,5 @@
 
 export { RandomPolicy } from './random.js';
 export type { RandomPolicyOptions } from './random.js';
+export { HeuristicPolicy } from './heuristic.js';
+export type { HeuristicPolicyOptions } from './heuristic.js';
