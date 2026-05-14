@@ -116,9 +116,9 @@
   border-radius: 3px;
 }
 
-/* ---- Placeholder zones (Task 7.6, 7.7, 7.8, 7.9, 7.10 で実装される) ---- */
-/* scene-zone (7.4), partner-zone (7.5) は実装済み — このルールは除外 */
-.mat .zone:not(.scene-zone):not(.partner-zone) {
+/* ---- Placeholder zones (Task 7.6, 7.8, 7.9, 7.10 で実装される) ---- */
+/* scene-zone (7.4), partner-zone (7.5), deck-zone (7.7) は実装済み */
+.mat .zone:not(.scene-zone):not(.partner-zone):not(.deck-zone) {
   background: var(--bg-cell);
   border: 1.5px dashed color-mix(in oklch, var(--border-zone) 40%, transparent);
   border-radius: 4px;
@@ -130,7 +130,6 @@
   color: var(--text-muted);
 }
 .mat .zone.case-zone::before    { content: "事件 (Task 7.6)"; }
-.mat .zone.deck-zone::before    { content: "デッキ (Task 7.7)"; }
 .mat .zone.remove-zone::before  { content: "リムーブ (Task 7.10)"; }
 
 /* ---- KEEP OUT divider (spec 復活、mock では display:none) ---- */
