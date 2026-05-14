@@ -1,0 +1,196 @@
+// ai.move-enumerator — 合法手の全列挙 (Phase 6 Group A Task 6.1)
+// spec: .claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md
+// rules: 05-turn-phases.md (メインフェイズ 6 行動), 01-victory-conditions.md (事件解決),
+//        13-keywords.md (アシスト), 11-reasoning.md, 07-action-flow.md
+//
+// 設計メモ:
+//   - 列挙は GameState から決定論的に行う (順序は安定; テスト可能)
+//   - engine.flow.canX 系セレクタを順に呼び、合法手だけを収集する
+//   - 'assist' / 'solveCase' は flow に専用セレクタがないので state から派生判定
+//   - 'endTurn' は常に列挙される (プレイヤーは常にターン終了可)
+//   - actionAgainstChar は flow.action.candidates も併用し、G29 拡張対象も含める
+
+import type { GameState, CardDef, AbilityDef } from '@/engine/types';
+import { engine } from '@/engine';
+
+type Player = 'self' | 'opp';
+
+/**
+ * Move — エンジンに対して実行可能な行動の discriminated union。
+ * dispatcher (ai.policy.applyMove) が kind ごとに対応する flow API を呼ぶ。
+ */
+export type Move =
+  | { kind: 'handUseCard'; cardId: string }
+  | { kind: 'startNextHint' }
+  | { kind: 'partnerAbility'; abilityId: string }
+  | { kind: 'declaredAbility'; uid: string; abilityId: string }
+  | { kind: 'reasoning'; uid: string }
+  | { kind: 'actionAgainstChar'; byUid: string; targetUid: string }
+  | { kind: 'actionAgainstCase'; byUid: string; targetPlayer: 'self' | 'opp' }
+  | { kind: 'assist' }
+  | { kind: 'solveCase' }
+  | { kind: 'endTurn' };
+
+/**
+ * canAssist — flow に専用セレクタがないため state から派生判定。
+ * rules/13:
+ *   - パートナーが active かつ partner-area にいる
+ *   - その turn で assistedThisTurn === false
+ */
+export function canAssist(state: GameState, p: Player): boolean {
+  const ps = state.players[p];
+  if (ps.partner.state !== 'active') return false;
+  if (ps.partner.location !== 'partner-area') return false;
+  if (state.turnState[p].assistedThisTurn) return false;
+  return true;
+}
+
+/**
+ * canSolveCase — flow に専用セレクタがないため state から派生判定。
+ * rules/01:
+ *   - 事件が解決編 (= FILE 7 枚以上を経由してアシストされた後の状態)
+ *   - 証拠 >= 必要枚数
+ *   - パートナーが active 状態
+ *   - 同ターン assist 済みは不可 (rules/01 注意)
+ */
+export function canSolveCase(state: GameState, p: Player): boolean {
+  const ps = state.players[p];
+  if (ps.case.status !== '解決編') return false;
+  if (ps.evidence.length < ps.case.requiredEvidence) return false;
+  if (ps.partner.state !== 'active') return false;
+  if (state.turnState[p].assistedThisTurn) return false;
+  return true;
+}
+
+/**
+ * AbilityDef 型を narrow する (CardDef.abilities は AbilityDef[] だが
+ * 配列要素アクセス時 union narrowing を安全側で行う)。
+ */
+function isAbilityDef(a: unknown): a is AbilityDef {
+  return typeof a === 'object' && a !== null && 'id' in a && 'type' in a;
+}
+
+/**
+ * パートナーの declared abilities を取得 (空配列なら能力なし)
+ */
+function partnerDeclaredAbilities(state: GameState, p: Player): AbilityDef[] {
+  const cardId = state.players[p].partner.cardId;
+  if (!cardId) return [];
+  const def: CardDef | undefined = engine.cards.get(cardId);
+  if (!def) return [];
+  return def.abilities.filter((a): a is AbilityDef => isAbilityDef(a) && a.type === 'declared');
+}
+
+/**
+ * scene キャラの declared abilities を取得
+ */
+function charDeclaredAbilities(cardId: string): AbilityDef[] {
+  const def: CardDef | undefined = engine.cards.get(cardId);
+  if (!def) return [];
+  return def.abilities.filter((a): a is AbilityDef => isAbilityDef(a) && a.type === 'declared');
+}
+
+/**
+ * enumerateMoves — 与えられた state / プレイヤーで合法な Move を全て返す。
+ *
+ * 順序 (テスト可能な決定論):
+ *   1. assist
+ *   2. solveCase
+ *   3. handUseCard (手札順)
+ *   4. startNextHint
+ *   5. partnerAbility (定義順)
+ *   6. declaredAbility (scene 順 × ability 順)
+ *   7. reasoning (partner → scene)
+ *   8. actionAgainstChar (主体: partner → scene; 対象: candidates 順)
+ *   9. actionAgainstCase (主体: partner → scene)
+ *  10. endTurn (常)
+ */
+export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
+  const moves: Move[] = [];
+  const oppPlayer: Player = byPlayer === 'self' ? 'opp' : 'self';
+
+  // 1. assist
+  if (canAssist(state, byPlayer)) {
+    moves.push({ kind: 'assist' });
+  }
+
+  // 2. solveCase
+  if (canSolveCase(state, byPlayer)) {
+    moves.push({ kind: 'solveCase' });
+  }
+
+  // 3. handUseCard (手札順 — 同じ cardId が複数あっても各枚を区別しない; 重複は dedup)
+  {
+    const seen = new Set<string>();
+    for (const cardId of state.players[byPlayer].hand) {
+      if (seen.has(cardId)) continue;
+      seen.add(cardId);
+      if (engine.flow.canHandUseCard(state, byPlayer, cardId)) {
+        moves.push({ kind: 'handUseCard', cardId });
+      }
+    }
+  }
+
+  // 4. startNextHint
+  if (engine.flow.canStartNextHint(state, byPlayer)) {
+    moves.push({ kind: 'startNextHint' });
+  }
+
+  // 5. partnerAbility (declared のみ)
+  for (const ab of partnerDeclaredAbilities(state, byPlayer)) {
+    if (engine.flow.canPartnerAbility(state, byPlayer, ab.id)) {
+      moves.push({ kind: 'partnerAbility', abilityId: ab.id });
+    }
+  }
+
+  // 6. declaredAbility (scene 順 × ability 順)
+  for (const c of state.players[byPlayer].scene) {
+    for (const ab of charDeclaredAbilities(c.cardId)) {
+      if (engine.flow.canDeclaredAbility(state, c.uid, ab.id)) {
+        moves.push({ kind: 'declaredAbility', uid: c.uid, abilityId: ab.id });
+      }
+    }
+  }
+
+  // 7. reasoning (partner → scene)
+  const partnerUid = byPlayer === 'self' ? 'partner:self' : 'partner:opp';
+  if (engine.flow.canReason(state, partnerUid)) {
+    moves.push({ kind: 'reasoning', uid: partnerUid });
+  }
+  for (const c of state.players[byPlayer].scene) {
+    if (engine.flow.canReason(state, c.uid)) {
+      moves.push({ kind: 'reasoning', uid: c.uid });
+    }
+  }
+
+  // 8. actionAgainstChar
+  //    主体は partner と scene のキャラを順に試す。
+  //    対象は flow.action.candidates (G29 拡張対象も含む) で取得し、canActionAgainstChar
+  //    で再フィルタする (mustBeTargeted 等の最終判定は declare 時に行われるが、
+  //    列挙時には canActionAgainstChar を素直に呼んで合法手のみ採用)。
+  const actorUids: string[] = [partnerUid];
+  for (const c of state.players[byPlayer].scene) {
+    actorUids.push(c.uid);
+  }
+  for (const byUid of actorUids) {
+    if (!engine.flow.canAction(state, byUid)) continue;
+    const cands = engine.flow.action.candidates(state, byUid);
+    for (const t of cands) {
+      if (engine.flow.canActionAgainstChar(state, byUid, t.uid)) {
+        moves.push({ kind: 'actionAgainstChar', byUid, targetUid: t.uid });
+      }
+    }
+  }
+
+  // 9. actionAgainstCase (相手の事件)
+  for (const byUid of actorUids) {
+    if (engine.flow.canActionAgainstCase(state, byUid, oppPlayer)) {
+      moves.push({ kind: 'actionAgainstCase', byUid, targetPlayer: oppPlayer });
+    }
+  }
+
+  // 10. endTurn (常に列挙)
+  moves.push({ kind: 'endTurn' });
+
+  return moves;
+}
