@@ -18,10 +18,12 @@ import { registerAll } from '@/cards/index';
 import type { ValidationResult } from '@/engine/types';
 
 /**
- * 既知の validator 漏れ。Phase 6 で `validate.ts` の ATOM_VERBS に 'deckShuffle' を追加して
- * このリストから除去する。
+ * 既知の validator 漏れリスト。
+ * Phase 5 完了時点で D11019 を含んでいたが、Phase 6 冒頭で validate.ts の ATOM_VERBS に
+ * 'deckShuffle' を追加して解消。現在空。新たに validator が対応していない verb/condition を
+ * 使うカードが追加された場合のみ、ここに id を追加すること。
  */
-const KNOWN_FAILING_IDS = new Set<string>(['D11019']);
+const KNOWN_FAILING_IDS = new Set<string>([]);
 
 describe('engine.cards.validateAll — Phase 5 全47枚', () => {
   beforeEach(() => {
