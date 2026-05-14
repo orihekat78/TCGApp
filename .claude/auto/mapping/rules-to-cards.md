@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b94cb76fdc8b`
+> Source hash: `36898e703031`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -17,7 +17,7 @@
 | [`03-field-areas.md`](../../rules/03-field-areas.md) | 21 | `cards/_shared/hiramekiCharStun.ts`, `cards/ct-d08/D08019.ts`, `cards/ct-d08/D08020.ts` ほか 18 件 |
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 10 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 7 件 |
 | [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 17 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 14 件 |
-| [`06-card-types.md`](../../rules/06-card-types.md) | 7 | `engine/cards/registry.ts`, `engine/cards/tsv-loader.ts`, `engine/flow/main/partner-ability.ts` ほか 4 件 |
+| [`06-card-types.md`](../../rules/06-card-types.md) | 8 | `engine/cards/registry.ts`, `engine/cards/tsv-loader.ts`, `engine/flow/main/partner-ability.ts` ほか 5 件 |
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 16 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 13 件 |
 | [`08-contact.md`](../../rules/08-contact.md) | 12 | `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts`, `cards/ct-d11/D11008.ts` ほか 9 件 |
 | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 18 | `cards/_shared/cutinFixedAP.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08007.ts` ほか 15 件 |
@@ -29,7 +29,7 @@
 | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 47 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 44 件 |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 2 | `cards/ct-d08/D08021.ts`, `engine/mutate/scene.ts` |
 | [`17-icons.md`](../../rules/17-icons.md) | 47 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseTraitConditioned.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 44 件 |
-| [`18-mr.md`](../../rules/18-mr.md) | 2 | `engine/cond/eval.ts`, `engine/mutate/partner.ts` |
+| [`18-mr.md`](../../rules/18-mr.md) | 3 | `engine/cond/eval.ts`, `engine/mutate/partner.ts`, `ui/hooks/usePartner.ts` |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 16 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08025.ts` ほか 13 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 8 | `cards/ct-d08/D08024.ts`, `cards/ct-d08/D08025.ts`, `cards/ct-d11/D11019.ts` ほか 5 件 |
 | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 19 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d08/D08005.ts`, `cards/ct-d08/D08006.ts` ほか 16 件 |

@@ -2,14 +2,14 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b94cb76fdc8b`
+> Source hash: `36898e703031`
 
 `// rules:` コメントから生成した双方向マッピングのハブ。
 
 ## サマリ
 
-- ソースファイル: **152** (うち `// rules:` 参照あり: **121**)
-- 参照総数: **405**
+- ソースファイル: **153** (うち `// rules:` 参照あり: **122**)
+- 参照総数: **407**
 - 参照されているルール: **26/30**
 
 ## マッピング一覧
@@ -23,6 +23,20 @@
 ### ルール → ソース
 
 - [`rules-to-cards.md`](./rules-to-cards.md) — 各ルールがどのソースから参照されているか
+
+### 俯瞰図 (Mermaid)
+
+- [`graph-rules-engine-core.md`](./graph-rules-engine-core.md) — engine-core (types/read/mutate/event/cards) ↔ rules
+- [`graph-rules-engine-flow.md`](./graph-rules-engine-flow.md) — engine-flow (effect/flow/invariant/dyn/target/cost/cond/resolve) ↔ rules
+- [`graph-specs.md`](./graph-specs.md) — engine ↔ specs の関係図
+
+### Obsidian グラフビュー連携ハブ
+
+各エンティティを起点に source / rule / spec / namespace をリンクで辿れるハブファイル群。Obsidian で開くとグラフビューがエンジン ↔ ルール ↔ 仕様書の関係を描画する。
+
+- [`by-rule/`](./by-rule/) — 各ルールが起点のハブ（このルールを参照するソース・関連 spec・関連 engine namespace）
+- [`by-spec/`](./by-spec/) — 各 spec が起点のハブ
+- [`by-engine/`](./by-engine/) — 各 engine namespace が起点のハブ
 
 ---
 

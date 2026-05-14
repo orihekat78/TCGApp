@@ -111,9 +111,10 @@
   - [setup](.claude/auto/flows/setup.md) ｜ [auto-phase](.claude/auto/flows/auto-phase.md) ｜ [turn](.claude/auto/flows/turn.md) ｜ [action-fsm](.claude/auto/flows/action-fsm.md)
 - **auto/progress/** — ✅ Phase 3: 実装/テスト進捗
   - [cards](.claude/auto/progress/cards.md) ｜ [tests](.claude/auto/progress/tests.md)
-- **[auto/mapping/index](.claude/auto/mapping/index.md)** — ✅ Phase 4: ルール ↔ コード 双方向マッピング
-  - [rules-to-cards](.claude/auto/mapping/rules-to-cards.md) — 各ルールがどのソースから参照されているか（26/30 ルール参照）
-  - [cards-to-rules-cards](.claude/auto/mapping/cards-to-rules-cards.md) ｜ [engine-core](.claude/auto/mapping/cards-to-rules-engine-core.md) ｜ [engine-flow](.claude/auto/mapping/cards-to-rules-engine-flow.md) — エリア別ソース → ルール
+- **[auto/mapping/index](.claude/auto/mapping/index.md)** — ✅ Phase 4: ルール ↔ コード 双方向マッピング + Spec / Engine namespace 連携ハブ
+  - **テーブル**: [rules-to-cards](.claude/auto/mapping/rules-to-cards.md) ｜ [cards-to-rules-cards](.claude/auto/mapping/cards-to-rules-cards.md) ｜ [engine-core](.claude/auto/mapping/cards-to-rules-engine-core.md) ｜ [engine-flow](.claude/auto/mapping/cards-to-rules-engine-flow.md)
+  - **俯瞰図 (Mermaid)**: [engine-core ↔ rules](.claude/auto/mapping/graph-rules-engine-core.md) ｜ [engine-flow ↔ rules](.claude/auto/mapping/graph-rules-engine-flow.md) ｜ [engine ↔ specs](.claude/auto/mapping/graph-specs.md)
+  - **Obsidian グラフビュー連携ハブ**: [by-rule/](.claude/auto/mapping/by-rule/) ｜ [by-spec/](.claude/auto/mapping/by-spec/) ｜ [by-engine/](.claude/auto/mapping/by-engine/) — 各エンティティから source / rule / spec / namespace を辿れるハブ
 
 > ⚠️ `.claude/auto/` 配下は **編集禁止**（`npm run docs:*` で再生成）。
 
