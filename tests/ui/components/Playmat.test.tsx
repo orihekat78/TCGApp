@@ -75,6 +75,13 @@ describe('Playmat', () => {
     expect(html.match(/class="file-row"/g)?.length).toBe(2);
   });
 
+  it('renders PartnerArea (real component) inside each mat', () => {
+    const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
+    expect(html.match(/partner-area side-opp/g)?.length).toBe(1);
+    expect(html.match(/partner-area side-self/g)?.length).toBe(1);
+    expect(html.match(/zone-watermark-keyhole/g)?.length).toBe(2);
+  });
+
   it('renders empty SceneArea (5/5) when gameState is null', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     // 5 empty slots per mat × 2 mats = 10 .slot-empty divs

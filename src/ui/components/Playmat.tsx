@@ -14,6 +14,7 @@
 import type { JSX } from 'react';
 import type { GameState } from '@/engine/types/game-state.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
+import { PartnerArea } from './PartnerArea.js';
 import './Playmat.css';
 
 export type PlaymatProps = {
@@ -34,7 +35,11 @@ function PlayerMat({ side, state, resolveCard }: PlayerMatProps): JSX.Element {
     <div className={`mat ${side}`} data-side={side}>
       <div className="zone case-col case-zone" aria-label="事件" />
       <SceneArea characters={scene} side={side} resolveCard={resolveCard} />
-      <div className="zone partner-col partner-zone" aria-label="パートナー" />
+      <PartnerArea
+        partner={state?.players[side].partner ?? null}
+        side={side}
+        resolveCard={resolveCard}
+      />
       <div className="zone deck-col deck-zone" aria-label="デッキ" />
       <div className="zone remove-col remove-zone" aria-label="リムーブ" />
       <div className="file-row" aria-label="FILE" />

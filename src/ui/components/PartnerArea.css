@@ -1,0 +1,215 @@
+/* PartnerArea.css
+ * パートナーゾーン (1 枚) のスタイル。
+ * 視覚 SoT: design-mockups/01-board-mockup.html 691-701, 857-874 行
+ * トークン依存: src/ui/styles/tokens.css
+ */
+
+.partner-area {
+  --partner-card-w: 72px;
+  --partner-card-h: 100px;
+
+  background: var(--bg-cell);
+  border: 1px solid color-mix(in oklch, var(--border-zone) 60%, transparent);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-jp);
+  color: var(--text-primary);
+}
+
+/* ---- Keyhole watermark (background, decorative) ---- */
+.partner-area .zone-watermark-keyhole {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.18;
+}
+.partner-area .zone-watermark-keyhole svg {
+  width: 64px;
+  height: 84px;
+  filter: drop-shadow(0 0 6px color-mix(in oklch, var(--neon-blue) 30%, transparent));
+}
+.partner-area .zone-watermark-keyhole .lbl {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: -28px;
+  font-weight: 600;
+}
+
+/* ---- zone-label (top) ---- */
+.partner-area .zone-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 3;
+}
+.partner-area .zone-label .status-tag {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 800;
+  text-transform: none;
+}
+.partner-area .zone-label .status-tag.assist {
+  background: color-mix(in oklch, var(--accent-gold) 70%, transparent);
+  color: #2a1a05;
+}
+.partner-area .zone-label .status-tag.mr {
+  background: color-mix(in oklch, var(--color-purple) 80%, transparent);
+  color: #fff;
+}
+
+/* ---- Partner slot (card + info) ---- */
+.partner-area .partner-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-left: 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.partner-area .partner-info {
+  font-size: 9px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.partner-area .partner-info .name {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.partner-area .partner-info .meta {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* ---- Card (PartnerArea 内、72×100px) ---- */
+.partner-area .card {
+  width: var(--partner-card-w);
+  height: var(--partner-card-h);
+  border-radius: 4px;
+  background: linear-gradient(160deg, #1a2638 0%, #0a1320 100%);
+  border: 1.5px solid #2a4a6e;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.partner-area .card.color-blue {
+  border-color: color-mix(in oklch, var(--color-blue) 70%, white 10%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-blue) 30%, transparent);
+}
+.partner-area .card.color-yellow {
+  border-color: color-mix(in oklch, var(--color-yellow) 70%, white 10%);
+}
+.partner-area .card.color-red {
+  border-color: color-mix(in oklch, var(--color-red) 70%, white 10%);
+}
+.partner-area .card.color-green {
+  border-color: color-mix(in oklch, var(--color-green) 70%, white 10%);
+}
+.partner-area .card.color-purple {
+  border-color: color-mix(in oklch, var(--color-purple) 70%, white 10%);
+}
+
+.partner-area .card .color-stripe {
+  height: 7px;
+  flex-shrink: 0;
+  background: var(--color-blue);
+}
+.partner-area .card.color-yellow .color-stripe { background: var(--color-yellow); }
+.partner-area .card.color-red    .color-stripe { background: var(--color-red); }
+.partner-area .card.color-green  .color-stripe { background: var(--color-green); }
+.partner-area .card.color-purple .color-stripe { background: var(--color-purple); }
+
+.partner-area .card .art {
+  flex: 1;
+  margin: 3px;
+  background: linear-gradient(135deg,
+    color-mix(in oklch, var(--neon-blue) 8%, transparent),
+    rgba(0, 0, 0, 0.4));
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.partner-area .card .art .silhouette {
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(ellipse at 50% 30%,
+    rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.6));
+  border-radius: 50% 50% 40% 40%;
+  filter: blur(1.2px);
+}
+
+.partner-area .card .name {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 3px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.5);
+  min-height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.partner-area .card .stats {
+  padding: 1px 2px;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+}
+.partner-area .card .lp {
+  font-size: 9px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0 4px;
+  border-radius: 2px;
+  color: #ffd75e;
+}
+
+/* ---- State overlays ---- */
+.partner-area .card.sleep {
+  transform: rotate(-90deg);
+  box-shadow: 0 2px 8px var(--state-sleep),
+    inset 0 0 0 999px color-mix(in oklch, var(--state-sleep) 22%, transparent),
+    inset 0 0 0 1px rgba(78, 138, 216, 0.4);
+}
+.partner-area .card.stun {
+  transform: rotate(180deg);
+  border-color: var(--state-stun);
+  box-shadow: 0 2px 8px var(--state-stun);
+}
+
+/* ---- 相手側の対面感: 名前ラベルは反転しないが、watermark のみ 180° ---- */
+.partner-area.side-opp .zone-watermark-keyhole {
+  transform: rotate(180deg);
+}
