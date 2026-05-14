@@ -1,0 +1,303 @@
+/* SceneArea.css
+ * 現場ゾーン (最大5スロット) のスタイル。
+ * 01-board-mockup.html のクラス構造をそのまま流用し、
+ * 数値はすべて CSS 変数で外出ししているので親側で上書き可能。
+ *
+ * 親 :root もしくは scope で以下の変数が定義されている前提:
+ *   --color-blue / --color-yellow / --color-red / --color-green / --color-purple
+ *   --state-sleep / --state-stun / --state-named
+ *   --text-primary / --text-secondary / --text-muted
+ *   --font-jp / --font-mono
+ *   --bg-cell / --border-zone / --neon-blue
+ * ここでは fallback も与えてあるので単体動作もする。
+ */
+
+.scene-area {
+  --scene-card-w: 60px;
+  --scene-card-h: 84px;
+  --scene-slot-gap: 6px;
+
+  --scene-bg-cell: var(--bg-cell, rgba(0, 0, 0, 0.32));
+  --scene-border: var(--border-zone, #3a6ea5);
+  --scene-text-primary: var(--text-primary, #e0ecf8);
+  --scene-text-muted: var(--text-muted, #7090b5);
+  --scene-text-secondary: var(--text-secondary, #b8d4f0);
+  --scene-neon: var(--neon-blue, #4ec3ff);
+}
+
+/* ---- zone shell ---- */
+.scene-area.zone {
+  background: var(--scene-bg-cell);
+  border: 1px solid color-mix(in oklch, var(--scene-border) 60%, transparent);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
+  color: var(--scene-text-primary);
+}
+
+.scene-area .zone-watermark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 64px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.035);
+  pointer-events: none;
+  user-select: none;
+}
+
+.scene-area .zone-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--scene-text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+.scene-area .zone-label .count {
+  color: var(--scene-text-secondary);
+  font-weight: 600;
+}
+
+/* 相手側はラベル/ウォーターマークを反転させて、対面感を出す */
+.scene-area.side-opp .zone-watermark {
+  transform: rotate(180deg);
+}
+
+/* ---- 5-slot grid ---- */
+.scene-area .scene-slots {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--scene-slot-gap);
+  align-items: center;
+  justify-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.scene-area .slot-empty {
+  width: var(--scene-card-w);
+  height: var(--scene-card-h);
+  border: 1.5px dashed color-mix(in oklch, var(--scene-neon) 18%, transparent);
+  border-radius: 4px;
+  position: relative;
+}
+.scene-area .slot-empty::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(90deg, transparent calc(50% - 0.5px),
+      color-mix(in oklch, var(--scene-neon) 30%, transparent) calc(50% - 0.5px),
+      color-mix(in oklch, var(--scene-neon) 30%, transparent) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)),
+    linear-gradient(0deg, transparent calc(50% - 0.5px),
+      color-mix(in oklch, var(--scene-neon) 30%, transparent) calc(50% - 0.5px),
+      color-mix(in oklch, var(--scene-neon) 30%, transparent) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px));
+}
+
+/* ---- card base ---- */
+.scene-area .card {
+  width: var(--scene-card-w);
+  height: var(--scene-card-h);
+  border-radius: 4px;
+  background: linear-gradient(160deg, #1a2638 0%, #0a1320 100%);
+  border: 1.5px solid #2a4a6e;
+  position: relative;
+  color: var(--scene-text-primary);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transition: transform 0.3s ease-out;
+}
+
+/* color borders */
+.scene-area .card.color-blue {
+  border-color: color-mix(in oklch, var(--color-blue) 70%, white 10%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-blue) 30%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-blue) 50%, transparent);
+}
+.scene-area .card.color-yellow {
+  border-color: color-mix(in oklch, var(--color-yellow) 70%, white 10%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-yellow) 30%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-yellow) 50%, transparent);
+}
+.scene-area .card.color-red {
+  border-color: color-mix(in oklch, var(--color-red) 70%, white 10%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-red) 30%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-red) 50%, transparent);
+}
+.scene-area .card.color-green {
+  border-color: color-mix(in oklch, var(--color-green) 70%, white 10%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-green) 30%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-green) 50%, transparent);
+}
+.scene-area .card.color-purple {
+  border-color: color-mix(in oklch, var(--color-purple) 70%, white 10%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-purple) 30%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-purple) 50%, transparent);
+}
+
+/* top color stripe */
+.scene-area .card .color-stripe {
+  height: 4px;
+  flex-shrink: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--color-blue);
+}
+.scene-area .card.color-yellow .color-stripe { background: var(--color-yellow); }
+.scene-area .card.color-red    .color-stripe { background: var(--color-red); }
+.scene-area .card.color-green  .color-stripe { background: var(--color-green); }
+.scene-area .card.color-purple .color-stripe { background: var(--color-purple); }
+
+/* art (silhouette placeholder) */
+.scene-area .card .art {
+  flex: 1;
+  margin: 3px;
+  background: linear-gradient(135deg,
+    color-mix(in oklch, var(--scene-neon) 8%, transparent),
+    rgba(0, 0, 0, 0.4));
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.scene-area .card .art .silhouette {
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(ellipse at 50% 30%,
+    rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.6));
+  border-radius: 50% 50% 40% 40%;
+  filter: blur(1.2px);
+}
+
+/* name */
+.scene-area .card .name {
+  font-size: 7px;
+  font-weight: 700;
+  padding: 1px 3px;
+  text-align: center;
+  line-height: 1.1;
+  color: var(--scene-text-primary);
+  background: rgba(0, 0, 0, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-wrap: balance;
+}
+
+/* stats row */
+.scene-area .card .stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1px 2px;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.6);
+}
+.scene-area .card .ap,
+.scene-area .card .lp,
+.scene-area .card .lv {
+  font-size: 8px;
+  font-weight: 800;
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0 3px;
+  border-radius: 2px;
+  line-height: 1.3;
+}
+.scene-area .card .ap { color: #ff9b6e; }
+.scene-area .card .lp { color: #ffd75e; }
+.scene-area .card .lv { color: #6ed1ff; }
+
+/* ---- state overlays ---- */
+.scene-area .card.sleep {
+  transform: rotate(-90deg);
+  /* 青ティント */
+  box-shadow: 0 2px 8px var(--state-sleep, rgba(40, 80, 200, 0.6)),
+    inset 0 0 0 999px color-mix(in oklch,
+      var(--state-sleep, rgba(40, 80, 200, 0.6)) 22%, transparent),
+    inset 0 0 0 1px rgba(78, 138, 216, 0.4);
+}
+
+.scene-area .card.stun {
+  transform: rotate(180deg);
+  border-color: var(--state-stun, rgba(220, 50, 50, 0.65));
+  box-shadow: 0 2px 8px var(--state-stun, rgba(220, 50, 50, 0.65)),
+    inset 0 0 0 1px color-mix(in oklch,
+      var(--state-stun, rgba(220, 50, 50, 0.65)) 50%, transparent);
+}
+
+/* ---- badges ---- */
+.scene-area .card .named-badge {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  font-size: 7px;
+  font-weight: 900;
+  background: var(--state-named, rgba(240, 200, 40, 0.95));
+  color: #2a1a05;
+  padding: 1px 4px;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.08em;
+  z-index: 2;
+  line-height: 1.2;
+}
+
+.scene-area .card .set-badge {
+  position: absolute;
+  bottom: 14px;
+  left: -4px;
+  font-size: 7px;
+  font-weight: 700;
+  background: color-mix(in oklch, var(--color-blue) 70%, white 20%);
+  color: #fff;
+  padding: 1px 3px;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+  z-index: 2;
+  line-height: 1.2;
+}
+
+.scene-area .card .stack-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 7px;
+  font-weight: 800;
+  background: color-mix(in oklch, var(--color-purple) 75%, white 15%);
+  color: #fff;
+  padding: 0 3px;
+  border-radius: 2px;
+  line-height: 1.3;
+  z-index: 2;
+}
