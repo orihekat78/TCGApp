@@ -9,7 +9,7 @@
 
 ## 現在の状況（2026-05-14）
 
-**実装フェーズ進行中**。Engine 完全構築 + 47 カード全実装 (Phase 0-5) 完了。
+**実装フェーズ進行中**。Engine + 47 カード + AI (Random/Heuristic) 全実装 (Phase 0-6) 完了。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -21,14 +21,15 @@
 | 3 | Effect Resolver + Hooks + Cost + Target + Cond + Dyn | ✅ 完了 |
 | 4 | Flow Control (setup/auto/main/action-SM/contact/actionCase/guard) | ✅ 完了 |
 | 5 | cards/_shared/ 8 + 47カード (CT-D08 + CT-D11) + validateAll/smoke | ✅ 完了 |
-| 6 | AI (Random / Heuristic) | ← 次 |
-| 7 | UI Shell + プレイマット | ⏳ |
+| 6 | AI (Random / Heuristic + AI vs AI 100戦 smoke) | ✅ 完了 |
+| 7 | UI Shell + プレイマット | ← 次 |
 | 8 | UI 相互作用 + 動的モーダル | ⏳ |
 | 9 | 統合・自動プレイテスト1000戦・チュートリアル | ⏳ |
 
 ### テスト状況
 
-- **927 PASS / 106 Test Files** (Phase 5 完了時点)
+- **991 PASS / 112 Test Files** (Phase 6 完了時点)
+- 100戦 AI vs AI smoke: **0 invariant failure / 0 例外**
 - `npx tsc --noEmit` 通過
 - 骨格凍結原則遵守: Phase 5 内の engine 修正は Hook 配線漏れ修正 3 件のみ (deckShuffle / enter emit / case:to-resolved emit)。カード効果のための骨格修正はゼロ
 
@@ -60,6 +61,7 @@
 - [.claude/specs/INDEX.md](.claude/specs/INDEX.md) — Engine API / UI / カード分析 全 spec
 - [.claude/research/plans/2026-05-11-mvp-implementation/](.claude/research/plans/2026-05-11-mvp-implementation/) — MVP 実装プラン (10 Phase)
 - [.claude/sessions/](.claude/sessions/) — 過去セッションのアーカイブ
+- [.claude/auto/README.md](.claude/auto/README.md) — 🤖 自動生成ドキュメント運用ガイド（Phase 2以降でAPI/state/flows/progress/mappingを生成）
 
 ### Engine ソース ([src/engine/](src/engine/))
 

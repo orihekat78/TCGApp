@@ -83,8 +83,9 @@
 - Phase 3: [effect-resolver](.claude/research/plans/2026-05-11-mvp-implementation/phase-3-effect-resolver.md) ✅
 - Phase 4: [flow](.claude/research/plans/2026-05-11-mvp-implementation/phase-4-flow.md) ✅
 - Phase 5: [cards](.claude/research/plans/2026-05-11-mvp-implementation/phase-5-cards.md) ✅
-- Phase 6: [ai](.claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md) ← 現在
-- Phase 7–9: [ui-shell](.claude/research/plans/2026-05-11-mvp-implementation/phase-7-ui-shell.md) ｜ [ui-interactions](.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md) ｜ [polish](.claude/research/plans/2026-05-11-mvp-implementation/phase-9-polish.md)
+- Phase 6: [ai](.claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md) ✅
+- Phase 7: [ui-shell](.claude/research/plans/2026-05-11-mvp-implementation/phase-7-ui-shell.md) ← 現在
+- Phase 8–9: [ui-interactions](.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md) ｜ [polish](.claude/research/plans/2026-05-11-mvp-implementation/phase-9-polish.md)
 
 ## 📓 セッション履歴
 
@@ -92,6 +93,35 @@
 - [2026-05-10](.claude/sessions/2026-05-10.md) — 法務調査・ルール抽出
 - [2026-05-11](.claude/sessions/2026-05-11.md) ｜ [-2](.claude/sessions/2026-05-11-2.md) ｜ [-3](.claude/sessions/2026-05-11-3.md) ｜ [-4](.claude/sessions/2026-05-11-4.md) ｜ [-5](.claude/sessions/2026-05-11-5.md)
 - [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了 + Phase 5 完了
+- [2026-05-14](.claude/sessions/2026-05-14.md) — Phase 5 fix (D11019) + Phase 6 完了
+
+## 🤖 自動生成ドキュメント
+
+エンジン構造・進捗・フロー図を **コードから自動生成** して `.claude/auto/` に配置。
+人手で書く仕様書とは別に「実際のエンジンが今どう動いているか」をObsidianで確認できる。
+
+- **[auto/README](.claude/auto/README.md)** — 運用ガイド・再生成コマンド一覧
+- **[auto/api/index](.claude/auto/api/index.md)** — ✅ Phase 2: エンジン 12 namespace の public API reference（ts-morph 抽出済）
+  - [`read`](.claude/auto/api/read.md) ｜ [`mutate`](.claude/auto/api/mutate.md) ｜ [`invariant`](.claude/auto/api/invariant.md) ｜ [`event`](.claude/auto/api/event.md) ｜ [`effect`](.claude/auto/api/effect.md)
+  - [`dyn`](.claude/auto/api/dyn.md) ｜ [`target`](.claude/auto/api/target.md) ｜ [`cost`](.claude/auto/api/cost.md) ｜ [`cond`](.claude/auto/api/cond.md) ｜ [`resolve`](.claude/auto/api/resolve.md)
+  - [`flow`](.claude/auto/api/flow.md) ｜ [`cards`](.claude/auto/api/cards.md)
+- 予定（Phase 3 以降で順次追加）:
+  - `auto/state/` — GameState shape（Mermaid classDiagram）
+  - `auto/flows/` — Setup / Auto-Phase / Action FSM の状態遷移図
+  - `auto/progress/` — カード実装進捗 + vitest 結果サマリ
+  - `auto/mapping/` — `// rules: xx.md` コメントからの双方向マッピング
+
+> ⚠️ `.claude/auto/` 配下は **編集禁止**（`npm run docs:*` で再生成）。
+
+## 🔗 リンク形式方針
+
+| 場所 | 形式 | 理由 |
+| ---- | ---- | ---- |
+| 既存175件のドキュメント | 相対パス `[name](path.md)` | GitHub互換、現状維持 |
+| `.claude/auto/`（自動生成） | 相対パス | diff安定 |
+| この HUB.md・今後の新規ハブ | 相対パス + wikilink `[[name]]` 併用可 | Obsidianグラフ最適化、追加方式（移行しない） |
+
+→ 既存リンクの **wikilink移行は不要**。新規ノートで wikilink を **併用** するのは推奨。Obsidianは両形式を解析。
 
 ---
 
