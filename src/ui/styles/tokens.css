@@ -1,0 +1,84 @@
+/* Phase 7 Task 7.2: 視覚スタイルトークン (CSS variables)
+ * spec: .claude/specs/2026-05-11-ui-style-tokens.md
+ * SoT:  design-mockups/01-board-mockup.html :root (6-44 行)
+ * 挙動衝突=spec 採用、視覚衝突=mock 採用。
+ */
+
+:root {
+  /* ---- Base palette (ダークネイビー基調) ---- */
+  --bg-deep:        #0a1a28;
+  --bg-zone:        #1b3a5c;
+  --bg-self:        linear-gradient(180deg, #0d2640, #1b3a5c);
+  --bg-opp:         linear-gradient(0deg,   #0d2640, #2a1b3c);
+  --bg-self-1:      #0d2640;
+  --bg-self-2:      #1b3a5c;
+  --bg-opp-1:       #0d2640;
+  --bg-opp-2:       #2a1b3c;
+  --bg-cell:        rgba(0, 0, 0, 0.32);
+  --border-zone:    #3a6ea5;
+  --border-self:    #44dd99;
+  --border-opp:     #aa66dd;
+
+  /* ---- Accent ---- */
+  --accent-gold:    #ffd700;
+  --accent-blue:    #3a6ea5;
+  --neon-blue:      #4ec3ff;
+  --keep-out:       repeating-linear-gradient(
+                      90deg, #ffd700 0 22px, #0a0a0a 22px 44px);
+
+  /* ---- Card color palette (color-stripe) ---- */
+  --color-blue:     #2b6cb5;
+  --color-yellow:   #d4a425;
+  --color-red:      #c84040;
+  --color-green:    #3aa67a;
+  --color-purple:   #8a4cc0;
+
+  /* ---- State (opacity = mock 仕様) ---- */
+  --state-sleep:    rgba(40, 80, 200, 0.6);
+  --state-stun:     rgba(220, 50, 50, 0.65);
+  --state-named:    rgba(240, 200, 40, 0.95);
+
+  /* ---- Target ---- */
+  --target-valid:   #44dd99;
+  --target-invalid: rgba(238, 80, 80, 0.5);
+
+  /* ---- Case status ---- */
+  --case-editing:   #3366ff;
+  --case-resolved:  #ee2255;
+
+  /* ---- Text ---- */
+  --text-primary:   #e0ecf8;
+  --text-secondary: #b8d4f0;
+  --text-muted:     #7090b5;
+  --text-disabled:  #4a5a70;
+
+  /* ---- Typography ---- */
+  --font-primary: -apple-system, "Hiragino Sans", "Yu Gothic UI",
+                  "Noto Sans JP", sans-serif;
+  --font-jp:      var(--font-primary);
+  --font-mono:    "Cascadia Code", "Consolas", monospace;
+
+  --text-card-name:    14px;
+  --text-status-stamp: 11px;
+  --text-chapter:      12px;
+  --text-zone-label:   9px;
+  --text-badge:        10px;
+
+  /* ---- Card size 階層 ---- */
+  --card-scene-w:        60px;   /* 現場・パートナー */
+  --card-scene-h:        84px;
+  --card-hand-w:         64px;   /* 手札フラット並び */
+  --card-hand-h:         90px;
+  --card-hand-hover-w:   130px;  /* 手札ホバー時拡大 */
+  --card-hand-hover-h:   180px;
+  --card-detail-w:       250px;  /* 詳細モーダル */
+  --card-detail-h:       350px;
+  --card-file-w:         70px;   /* FILE 横向き */
+  --card-file-h:         50px;
+  --card-evidence-w:     50px;   /* 証拠スタック */
+  --card-evidence-h:     70px;
+  --card-case-max-w:     120px;  /* 事件カード (横向き対応) */
+  --card-case-max-h:     86px;
+  --card-vs-w:           200px;  /* VS 演出時 */
+  --card-vs-h:           280px;
+}
