@@ -7,9 +7,9 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-12）
+## 現在の状況（2026-05-14）
 
-**実装フェーズ進行中**。Engine 完全構築 (Phase 0-4) 完了。
+**実装フェーズ進行中**。Engine 完全構築 + 47 カード全実装 (Phase 0-5) 完了。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -20,17 +20,17 @@
 | 2 | engine.read / engine.mutate / invariant | ✅ 完了 |
 | 3 | Effect Resolver + Hooks + Cost + Target + Cond + Dyn | ✅ 完了 |
 | 4 | Flow Control (setup/auto/main/action-SM/contact/actionCase/guard) | ✅ 完了 |
-| 5 | cards/_shared/ 8 + 47カード (CT-D08 + CT-D11) | 🔄 進行中 (8共通+10カード完了/37残) |
-| 6 | AI (Random / Heuristic) | ⏳ |
+| 5 | cards/_shared/ 8 + 47カード (CT-D08 + CT-D11) + validateAll/smoke | ✅ 完了 |
+| 6 | AI (Random / Heuristic) | ← 次 |
 | 7 | UI Shell + プレイマット | ⏳ |
 | 8 | UI 相互作用 + 動的モーダル | ⏳ |
 | 9 | 統合・自動プレイテスト1000戦・チュートリアル | ⏳ |
 
 ### テスト状況
 
-- **816 PASS / 60+ Test Files** (Phase 5 部分完了時点)
+- **927 PASS / 106 Test Files** (Phase 5 完了時点)
 - `npx tsc --noEmit` 通過
-- 骨格凍結原則遵守: `src/engine/mutate/` 編集なし
+- 骨格凍結原則遵守: Phase 5 内の engine 修正は Hook 配線漏れ修正 3 件のみ (deckShuffle / enter emit / case:to-resolved emit)。カード効果のための骨格修正はゼロ
 
 ### 調査フェーズ完了済 (実装の前提)
 

@@ -2,17 +2,22 @@
 
 ## 現在地
 
-**フェーズ**: MVP 実装中 (Phase 0-4 完了 + Phase 5 部分完了 = engine 全構築 + cards/_shared/ 8共通クラス + Partners 4 / Cases 2 / Events 4 実装)
-**最新コミット**: `c40dcdd feat(cards): registerAll + cross-set registry test`
-**テスト状況**: 816 PASS / typecheck 通過
+**フェーズ**: MVP 実装中 (Phase 0-5 完了 = engine 全構築 + 47 カード全実装 + validateAll/smoke)
+**最新コミット**: `16801d9 test(cards): Phase 5 validateAll + smoke integration tests`
+**テスト状況**: 927 PASS / typecheck 通過
 
 ## 次セッション開始時の最優先タスク
 
-⭐ **Phase 5 Group D-F** から再開 — 残り 37 characters + validateAll smoke
+⭐ **Phase 6 AI** に着手 — Random / Heuristic CPU driver
 
-詳細プラン: [research/plans/2026-05-11-mvp-implementation/phase-5-cards.md](.claude/research/plans/2026-05-11-mvp-implementation/phase-5-cards.md)
+詳細プラン: [research/plans/2026-05-11-mvp-implementation/phase-6-ai.md](.claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md)
 
 引き続き **subagent-driven** で実行。
+
+## Phase 5 申し送り (Phase 6 で対応)
+
+- **D11019 validator 漏れ**: `src/engine/effect/validate.ts` の `ATOM_VERBS` に `'deckShuffle'` が未登録。
+  D11019 が `engine.cards.validate` で error 出力。`tests/cards/validate-all.test.ts` の `KNOWN_FAILING_IDS` で可視化済み。Phase 6 で 1 行追加すれば解消、KNOWN_FAILING_IDS からも削除すること。
 
 ## 進捗トラッカー
 
@@ -21,12 +26,12 @@
 - [x] Phase 2: read/mutate/invariant (4 commits, 308 tests)
 - [x] Phase 3: Effect Resolver + Hooks + Cost + Target + Cond + Dyn (13 commits, 529 tests)
 - [x] Phase 4: Flow Control (12 commits, 696 tests)
-- [ ] Phase 5: cards (進行中 — A/B/C 完了 = 10 commits 816 tests、Group D-F 残)
+- [x] Phase 5: cards (23 commits, 927 tests) ✅ 完了
   - [x] 5.1 AbilityDef + cards namespace + TSV loader
   - [x] 5.2 8 共通クラス (cards/_shared/)
   - [x] 5.3-5.5 Partners 4 + Cases 2 + Events 4
-  - [ ] 5.6 Characters 22 unique (D08 + D11)
-  - [ ] 5.7 validateAll + smoke
+  - [x] 5.6 Characters 37 (D08 21 + D11 16)
+  - [x] 5.7 validateAll + smoke
 - [ ] Phase 6: AI (Random/Heuristic)
 - [ ] Phase 7: UI Shell
 - [ ] Phase 8: UI Interactions
@@ -40,7 +45,7 @@
 - [2026-05-11-3](.claude/sessions/2026-05-11-3.md) — G23-G30 + 共通クラス + Q&A + MVPプラン
 - [2026-05-11-4](.claude/sessions/2026-05-11-4.md) — Phase 0-2 実装
 - [2026-05-11-5](.claude/sessions/2026-05-11-5.md) — Phase 3 完了
-- [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了 + Phase 5 開始 (A/B/C 完了)
+- [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了 + Phase 5 完了
 
 ## 主要参照
 
