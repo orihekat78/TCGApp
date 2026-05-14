@@ -118,18 +118,20 @@ function buildActionFsmFlow(actionPhases: string[]): FlowDoc {
 }
 
 function buildAutoPhaseFlow(): FlowDoc {
+  // Hook 名は src/engine/flow/auto-phase.ts と一致させる:
+  //   phase:auto:start → activate (partner + scene) → phase:auto:before-draw →
+  //   draw → phase:auto:after-draw → place file → phase:auto:after-file
   const mermaid = fenceMermaid(
     [
       'stateDiagram-v2',
       '  direction LR',
-      '  [*] --> activatePartner',
-      '  activatePartner --> activateScene : phase:auto:partner emit',
-      '  activateScene --> draw : phase:auto:scene emit',
-      '  draw --> placeFile : phase:auto:draw emit',
-      '  placeFile --> [*] : phase:auto:file emit',
-      '  note right of activateScene',
-      '    スタン状態のキャラは',
-      '    アクティブにならず スリープへ',
+      '  [*] --> activate : phase:auto:start emit',
+      '  activate --> draw : phase:auto:before-draw emit',
+      '  draw --> placeFile : phase:auto:after-draw emit',
+      '  placeFile --> [*] : phase:auto:after-file emit',
+      '  note right of activate',
+      '    パートナー + 現場キャラを active 化',
+      '    スタン状態は active 化されず sleep に',
       '    (rules/03)',
       '  end note',
       '  note right of placeFile',
@@ -182,13 +184,18 @@ function buildSetupFlow(): FlowDoc {
 }
 
 function buildTurnFlow(): FlowDoc {
+  // Hook 名は src/engine/flow/turn.ts と一致させる:
+  //   turn:start → phase:main:start → ... → phase:main:end → phase:end:start →
+  //   phase:end:cleanup → turn:end
   const mermaid = fenceMermaid(
     [
       'stateDiagram-v2',
       '  [*] --> auto : flow.startTurn() / turn:start emit',
       '  auto --> main : phase:main:start emit',
-      '  main --> end : flow.endTurn() / phase:main:end emit',
-      '  end --> [*] : phase:end:cleanup emit',
+      '  main --> endStart : flow.endTurn() / phase:main:end emit',
+      '  endStart --> endCleanup : phase:end:start emit',
+      '  endCleanup --> turnEnd : phase:end:cleanup emit',
+      '  turnEnd --> [*] : turn:end emit',
       '  state main {',
       '    [*] --> idle',
       '    idle --> handUseCard : 手札の使用 (1 ターン 1 回)',
@@ -218,7 +225,7 @@ function buildTurnFlow(): FlowDoc {
     ],
     mermaid,
     notes:
-      '- イベント発火順 (1 ターン): `turn:start` → auto 4 emits → `phase:main:start` → ...(main 行動) → `phase:main:end` → `phase:end:start` → `phase:end:cleanup`\n'
+      '- イベント発火順 (1 ターン): `turn:start` → `phase:auto:start` → `phase:auto:before-draw` → `phase:auto:after-draw` → `phase:auto:after-file` → `phase:main:start` → ...(main 行動) → `phase:main:end` → `phase:end:start` → `phase:end:cleanup` → `turn:end`\n'
       + '- 手札の使用は **1 ターン 1 回まで** （`turnState[p].handUseUsed`）。ネクストヒントを行ったターンは手札使用不可。',
   };
 }

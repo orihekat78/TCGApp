@@ -11,14 +11,13 @@
 ```mermaid
 stateDiagram-v2
   direction LR
-  [*] --> activatePartner
-  activatePartner --> activateScene : phase:auto:partner emit
-  activateScene --> draw : phase:auto:scene emit
-  draw --> placeFile : phase:auto:draw emit
-  placeFile --> [*] : phase:auto:file emit
-  note right of activateScene
-    スタン状態のキャラは
-    アクティブにならず スリープへ
+  [*] --> activate : phase:auto:start emit
+  activate --> draw : phase:auto:before-draw emit
+  draw --> placeFile : phase:auto:after-draw emit
+  placeFile --> [*] : phase:auto:after-file emit
+  note right of activate
+    パートナー + 現場キャラを active 化
+    スタン状態は active 化されず sleep に
     (rules/03)
   end note
   note right of placeFile

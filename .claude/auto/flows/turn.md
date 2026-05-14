@@ -12,8 +12,10 @@
 stateDiagram-v2
   [*] --> auto : flow.startTurn() / turn:start emit
   auto --> main : phase:main:start emit
-  main --> end : flow.endTurn() / phase:main:end emit
-  end --> [*] : phase:end:cleanup emit
+  main --> endStart : flow.endTurn() / phase:main:end emit
+  endStart --> endCleanup : phase:end:start emit
+  endCleanup --> turnEnd : phase:end:cleanup emit
+  turnEnd --> [*] : turn:end emit
   state main {
     [*] --> idle
     idle --> handUseCard : 手札の使用 (1 ターン 1 回)
@@ -33,7 +35,7 @@ stateDiagram-v2
 
 ## 補足
 
-- イベント発火順 (1 ターン): `turn:start` → auto 4 emits → `phase:main:start` → ...(main 行動) → `phase:main:end` → `phase:end:start` → `phase:end:cleanup`
+- イベント発火順 (1 ターン): `turn:start` → `phase:auto:start` → `phase:auto:before-draw` → `phase:auto:after-draw` → `phase:auto:after-file` → `phase:main:start` → ...(main 行動) → `phase:main:end` → `phase:end:start` → `phase:end:cleanup` → `turn:end`
 - 手札の使用は **1 ターン 1 回まで** （`turnState[p].handUseUsed`）。ネクストヒントを行ったターンは手札使用不可。
 
 ---
