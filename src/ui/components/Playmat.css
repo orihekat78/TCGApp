@@ -1,0 +1,187 @@
+/* Phase 7 Task 7.3: Playmat レイアウト
+ * 視覚 SoT: design-mockups/01-board-mockup.html
+ *   .stage (44 行), .play-area (253-257), .mat (329-351),
+ *   .keep-out (spec 復活), .scaler (1202)
+ * トークンは src/ui/styles/tokens.css に依存 (--bg-*, --keep-out, --neon-blue, etc.)
+ */
+
+/* ---- Stage scaler ---- */
+.scaler {
+  transform-origin: center center;
+}
+
+.stage {
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  flex-shrink: 0;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-jp);
+  overflow: hidden;
+}
+
+/* ---- Background (detective-noir 5層, mock 23-41 行) ---- */
+.stage .bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -8%, rgba(78,195,255,0.10), transparent 70%),
+    repeating-linear-gradient(115deg, transparent 0 80px, rgba(0,0,0,0.10) 80px 82px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'><g fill='none' stroke='%23ffd75e' stroke-width='1.4' opacity='0.07'><circle cx='150' cy='150' r='95'/><circle cx='150' cy='150' r='80'/><line x1='220' y1='220' x2='320' y2='320' stroke-width='10'/><circle cx='150' cy='150' r='55' stroke-dasharray='2 5'/></g></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%234ec3ff' stroke-width='1.2' opacity='0.06'><circle cx='180' cy='180' r='85'/><circle cx='180' cy='180' r='72'/><line x1='118' y1='118' x2='20' y2='20' stroke-width='8'/></g></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><g fill='none' stroke='%234ec3ff' stroke-width='0.5' opacity='0.06'><path d='M0 0h48v48H0z'/><path d='M24 0v48M0 24h48'/></g></svg>"),
+    radial-gradient(ellipse at 50% 30%, #15263e 0%, #0a1424 50%, #050a14 100%);
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+  background-position: 0 0, 0 0, right -40px bottom -40px, left -30px top -30px, 0 0, 0 0;
+  background-size: auto, auto, 360px 360px, 320px 320px, 48px 48px, auto;
+  pointer-events: none;
+}
+
+.stage .vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+
+/* ---- TopBar (Task 7.12 placeholder) ---- */
+.stage .topbar {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 44px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.4));
+  border-bottom: 1px solid rgba(78, 195, 255, 0.18);
+  z-index: 20;
+}
+.stage .topbar.topbar-placeholder {
+  /* 未実装ゾーンの視覚マーカー (Task 7.12 で差し替え) */
+  background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(78,195,255,0.04));
+}
+
+/* ---- Play area (3-row grid: opp-hand-strip / opp mat / self mat) ---- */
+.stage .play-area {
+  position: absolute;
+  left: 124px;
+  right: 232px;
+  top: 56px;
+  bottom: 200px;
+  display: grid;
+  grid-template-rows: 36px 1fr auto 1fr;
+  gap: 6px;
+}
+
+.stage .opp-hand-strip {
+  background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.3));
+  border: 1px solid rgba(78, 138, 216, 0.35);
+  border-radius: 4px;
+}
+
+/* ---- Mat (3-col 2-row grid per side) ---- */
+.mat {
+  display: grid;
+  grid-template-columns: 180px 1fr 130px;
+  grid-template-rows: 1fr 1fr;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  position: relative;
+}
+.mat.opp {
+  background: linear-gradient(0deg, var(--bg-opp-1), var(--bg-opp-2));
+  border: 1px solid rgba(170, 102, 221, 0.25);
+  transform: rotate(180deg);
+}
+.mat.self {
+  background: linear-gradient(180deg, var(--bg-self-1), var(--bg-self-2));
+  border: 1px solid rgba(68, 221, 153, 0.25);
+}
+
+/* Column placement (一致は mock 329-351 行) */
+.mat .case-col    { grid-column: 1; grid-row: 1 / span 2; }
+.mat .scene-col   { grid-column: 2; grid-row: 1; }
+.mat .deck-col    { grid-column: 3; grid-row: 1; }
+.mat .partner-col { grid-column: 2; grid-row: 2; }
+.mat .remove-col  { grid-column: 3; grid-row: 2; }
+
+/* File row at bottom (absolute, full mat width 内側) */
+.mat .file-row {
+  position: absolute;
+  left: 196px;
+  right: 8px;
+  bottom: -2px;
+  height: 56px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed color-mix(in oklch, var(--neon-blue) 18%, transparent);
+  border-radius: 3px;
+}
+
+/* ---- Placeholder zones (Task 7.5-7.13 で実装される) ---- */
+.mat .zone:not(.scene-zone) {
+  background: var(--bg-cell);
+  border: 1.5px dashed color-mix(in oklch, var(--border-zone) 40%, transparent);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.mat .zone.case-zone::before    { content: "事件 (Task 7.6)"; }
+.mat .zone.partner-zone::before { content: "パートナー (Task 7.5)"; }
+.mat .zone.deck-zone::before    { content: "デッキ (Task 7.7)"; }
+.mat .zone.remove-zone::before  { content: "リムーブ (Task 7.10)"; }
+
+/* ---- KEEP OUT divider (spec 復活、mock では display:none) ---- */
+.keep-out {
+  height: 18px;
+  background: var(--keep-out);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top:    1px solid rgba(0, 0, 0, 0.6);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+}
+.keep-out::before,
+.keep-out::after {
+  content: "KEEP OUT";
+  position: absolute;
+  font-size: 10px;
+  font-weight: 900;
+  color: #000;
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+}
+.keep-out::before { left: 20%; }
+.keep-out::after  { right: 20%; }
+
+/* ---- HandZone placeholder (Task 7.11) ---- */
+.stage .hand-zone {
+  position: absolute;
+  left: 124px;
+  right: 232px;
+  bottom: 56px;
+  height: 110px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1.5px dashed color-mix(in oklch, var(--neon-blue) 30%, transparent);
+  border-radius: 4px;
+}
+
+/* ---- LogPanel button (Task 7.13) ---- */
+.stage .log-btn {
+  position: absolute;
+  left: 16px;
+  bottom: 12px;
+  width: 80px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--neon-blue);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  cursor: not-allowed;
+  z-index: 30;
+}
