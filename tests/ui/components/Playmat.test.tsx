@@ -28,11 +28,18 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="vignette"/);
   });
 
-  it('renders TopBar / HandZone / LogPanel placeholders for future tasks', () => {
+  it('renders TopBar / HandZone placeholders for future tasks', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     expect(html).toMatch(/topbar-placeholder/);
     expect(html).toMatch(/hand-placeholder/);
-    expect(html).toMatch(/log-btn/);
+  });
+
+  it('renders LogPanel (real component, closed by default)', () => {
+    const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
+    expect(html).toMatch(/class="log-panel"/);
+    expect(html).not.toMatch(/log-panel open/);
+    expect(html).toMatch(/class="log-btn"/);
+    expect(html).toMatch(/class="log-btn-count">0/);
   });
 
   it('renders both opponent and self mats inside play-area', () => {

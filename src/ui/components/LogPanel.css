@@ -1,0 +1,132 @@
+/* LogPanel.css
+ * 下端折りたたみログパネル。
+ * 視覚 SoT: design-mockups/01-board-mockup.html 145-163 行 (.log-btn のみ)
+ * 開時パネルは ui-overall.md「閉時 32px / 展開時 200px」を実装。
+ */
+
+.log-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.6));
+  border-top: 1px solid color-mix(in oklch, var(--neon-blue) 25%, transparent);
+  transition: height 0.2s ease-out;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+}
+
+.log-panel.open {
+  height: 200px;
+}
+
+/* ---- .log-btn (mock 145-163 行から lift) ---- */
+.log-panel .log-btn {
+  position: relative;
+  align-self: flex-start;
+  margin: 4px 0 0 16px;
+  height: 24px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--neon-blue);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-family: var(--font-jp);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  cursor: not-allowed;  /* Phase 8 で pointer に */
+}
+.log-panel .log-btn-icon {
+  color: var(--neon-blue);
+  font-size: 12px;
+}
+.log-panel .log-btn-label {
+  font-weight: 700;
+}
+.log-panel .log-btn-count {
+  background: color-mix(in oklch, var(--neon-blue) 25%, transparent);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 2px;
+  margin-left: 4px;
+}
+
+/* ---- .log-list (open 時のみ表示) ---- */
+.log-panel .log-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 16px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.log-panel .log-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+
+.log-panel .log-entry {
+  display: grid;
+  grid-template-columns: 60px 30px 22px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 2px 6px;
+  border-left: 2px solid transparent;
+  border-radius: 2px;
+}
+.log-panel .log-entry.side-self {
+  border-left-color: color-mix(in oklch, var(--border-self) 60%, transparent);
+  background: color-mix(in oklch, var(--border-self) 4%, transparent);
+}
+.log-panel .log-entry.side-opp {
+  border-left-color: color-mix(in oklch, var(--border-opp) 60%, transparent);
+  background: color-mix(in oklch, var(--border-opp) 4%, transparent);
+}
+
+.log-panel .log-time {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+.log-panel .log-turn {
+  color: var(--accent-gold);
+  font-size: 9px;
+  font-weight: 700;
+}
+.log-panel .log-player {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+}
+.log-panel .log-action {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.log-panel .log-target {
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+.log-panel .log-result {
+  color: var(--text-muted);
+  font-size: 9px;
+}

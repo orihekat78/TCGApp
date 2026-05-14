@@ -17,6 +17,7 @@ import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
+import { LogPanel } from './LogPanel.js';
 import './Playmat.css';
 
 export type PlaymatProps = {
@@ -78,13 +79,8 @@ export function Playmat({ gameState, resolveCard }: PlaymatProps): JSX.Element {
         {/* HandZone slot — Task 7.11 で実装 */}
         <div className="hand-zone hand-placeholder" aria-label="手札" />
 
-        {/* LogPanel button — Task 7.13 で実装 */}
-        <button
-          type="button"
-          className="log-btn"
-          aria-label="ログを開く"
-          disabled
-        />
+        {/* LogPanel (閉時は .log-btn のみ。開閉は Phase 8) */}
+        <LogPanel entries={gameState?.log ?? []} open={false} />
       </div>
     </div>
   );
