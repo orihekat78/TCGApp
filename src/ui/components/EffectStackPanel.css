@@ -1,0 +1,148 @@
+/* EffectStackPanel.css
+ * 効果スタック表示パネル (count badge + 開時のエントリ一覧)。
+ * 視覚 SoT: design-mockups/01-board-mockup.html 1221 行 + CSS 97 行 (.effect-stack)
+ * パネル本体は spec ベース (ui-effect-stack.md / ui-overall.md)。
+ */
+
+.effect-stack-panel {
+  position: absolute;
+  right: 16px;
+  top: 56px;
+  width: 200px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-jp);
+  color: var(--text-primary);
+  pointer-events: none; /* badge は static、Phase 8 で operate */
+}
+
+.effect-stack-panel.open {
+  width: 320px;
+}
+
+.effect-stack-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid color-mix(in oklch, var(--neon-blue) 50%, transparent);
+  border-radius: 3px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.effect-stack-label {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.effect-stack-count {
+  background: var(--state-stun);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 2px;
+  min-width: 16px;
+  text-align: center;
+  box-shadow: 0 0 6px color-mix(in oklch, var(--state-stun) 60%, transparent);
+}
+
+.effect-stack-empty {
+  color: var(--text-disabled);
+  font-family: var(--font-mono);
+}
+
+/* ---- Open list ---- */
+.effect-stack-list {
+  pointer-events: auto;
+  max-height: 360px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.78);
+  border: 1px solid color-mix(in oklch, var(--neon-blue) 30%, transparent);
+  border-radius: 4px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.effect-stack-empty-list {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 12px 0;
+  font-size: 11px;
+}
+
+.effect-stack-entry {
+  display: grid;
+  grid-template-columns: 50px 18px 1fr auto auto auto;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 6px;
+  border-radius: 2px;
+  border-left: 3px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+}
+.effect-stack-entry.side-self {
+  border-left-color: color-mix(in oklch, var(--border-self) 70%, transparent);
+}
+.effect-stack-entry.side-opp {
+  border-left-color: color-mix(in oklch, var(--border-opp) 70%, transparent);
+}
+
+.effect-stack-entry.state-resolving {
+  background: color-mix(in oklch, var(--accent-gold) 12%, transparent);
+}
+.effect-stack-entry.state-resolved {
+  opacity: 0.55;
+}
+.effect-stack-entry.state-cancelled {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.entry-state {
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+}
+.entry-player {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 9px;
+  font-weight: 800;
+}
+.entry-hook {
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entry-source {
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+.entry-turn {
+  color: var(--accent-gold);
+  font-size: 9px;
+  font-weight: 700;
+}
+.entry-order {
+  color: var(--neon-blue);
+  font-size: 9px;
+  font-weight: 800;
+}

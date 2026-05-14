@@ -42,6 +42,14 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="log-btn-count">0/);
   });
 
+  it('renders EffectStackPanel (real component, closed by default with empty stack)', () => {
+    const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
+    expect(html).toMatch(/class="effect-stack-panel"/);
+    expect(html).not.toMatch(/effect-stack-panel open/);
+    expect(html).toMatch(/effect-stack-label">効果解決</);
+    expect(html).toMatch(/effect-stack-empty">—</);
+  });
+
   it('renders both opponent and self mats inside play-area', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     expect(html).toMatch(/class="play-area"/);
@@ -102,7 +110,7 @@ describe('Playmat', () => {
     expect(html.match(/remove-area side-opp/g)?.length).toBe(1);
     expect(html.match(/remove-area side-self/g)?.length).toBe(1);
     expect(html.match(/class="count zero">0</g)?.length).toBe(2);
-    expect(html.match(/stack-empty/g)?.length).toBe(2);
+    expect(html.match(/class="stack-empty"/g)?.length).toBe(2);
   });
 
   it('renders empty SceneArea (5/5) when gameState is null', () => {

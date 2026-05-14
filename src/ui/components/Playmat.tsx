@@ -18,6 +18,7 @@ import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
 import { LogPanel } from './LogPanel.js';
+import { EffectStackPanel } from './EffectStackPanel.js';
 import './Playmat.css';
 
 export type PlaymatProps = {
@@ -78,6 +79,9 @@ export function Playmat({ gameState, resolveCard }: PlaymatProps): JSX.Element {
 
         {/* HandZone slot — Task 7.11 で実装 */}
         <div className="hand-zone hand-placeholder" aria-label="手札" />
+
+        {/* EffectStackPanel (件数バッジ + 展開リスト。Phase 7 では閉時) */}
+        <EffectStackPanel entries={gameState?.pendingEffects ?? []} open={false} />
 
         {/* LogPanel (閉時は .log-btn のみ。開閉は Phase 8) */}
         <LogPanel entries={gameState?.log ?? []} open={false} />
