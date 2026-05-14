@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `cc5585f78dc4`
+> Source hash: `e1a9cfd4c950`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **54** ファイル（[全体 index](./index.md)）
+このグループ: **55** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (4)
 
@@ -80,9 +80,10 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (2)
+## その他 (3)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/ui/hooks/useSceneCharacters.ts`](../../../src/ui/hooks/useSceneCharacters.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
+| [`src/ui/services/cardImage.ts`](../../../src/ui/services/cardImage.ts) | _(参照なし)_ |
 | [`src/ui/state/store.ts`](../../../src/ui/state/store.ts) | _(参照なし)_ |
