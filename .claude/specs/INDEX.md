@@ -37,6 +37,14 @@
 
 - ui-modal-flows.md / ui-style-anim.md は分割後の参照誘導のみ
 
+### モック参考資産 (design-mockups/)
+
+UI 視覚デザイン参考のモック群。実装規範ではなく視覚参照。
+
+- [`design-mockups/01-board-mockup.html`](../../design-mockups/01-board-mockup.html) — **Phase 7 採用レイアウト基準** (盤面ハイファイモック)
+- [`design-mockups/`](../../design-mockups/) — ②③④（推理プロト / VS プロト / モーダルカタログ / アニメ検証）は Phase 7 着手時に採否判断
+- 詳細: [`design-mockups/README.md`](../../design-mockups/README.md)
+
 ## 骨格 (Engine) API 設計ファイル一覧 (2026-05-11)
 
 カード効果のあらゆるパターンを骨格を増やさず表現できる API 群。

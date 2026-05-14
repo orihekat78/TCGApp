@@ -8,8 +8,15 @@
     "build": "vite build",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p scripts/tsconfig.json",
+    "lint": "eslint . --ext .ts,.tsx",
+    "docs:api": "tsx scripts/gen-docs/index.ts api",
+    "docs:state": "tsx scripts/gen-docs/index.ts state",
+    "docs:flows": "tsx scripts/gen-docs/index.ts flows",
+    "docs:progress": "tsx scripts/gen-docs/index.ts progress",
+    "docs:mapping": "tsx scripts/gen-docs/index.ts mapping",
+    "docs": "tsx scripts/gen-docs/index.ts all",
+    "docs:check": "tsx scripts/gen-docs/index.ts check"
   },
   "keywords": [],
   "author": "",
@@ -25,9 +32,15 @@
     "immer": "^11.1.8",
     "jsdom": "^29.1.1",
     "prettier": "^3.8.3",
+    "simple-git-hooks": "^2.13.1",
+    "ts-morph": "^28.0.0",
+    "tsx": "^4.20.3",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
     "vitest": "^4.1.5"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npm run docs:check"
   },
   "dependencies": {
     "react": "^19.2.6",

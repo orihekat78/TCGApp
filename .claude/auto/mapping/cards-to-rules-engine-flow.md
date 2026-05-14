@@ -1,0 +1,87 @@
+# 🤖 Engine (effect/flow/invariant) → ルール マッピング
+
+> ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
+> 再生成: `npm run docs:mapping`
+> Source hash: `13559443887d`
+
+`// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
+
+このグループ: **53** ファイル（[全体 index](./index.md)）
+
+## engine/effect (4)
+
+| ソース | 参照ルール |
+| ------ | --------- |
+| [`src/engine/effect/atom-handlers.ts`](../../../src/engine/effect/atom-handlers.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
+| [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
+| [`src/engine/effect/resolver.ts`](../../../src/engine/effect/resolver.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
+
+## engine/flow (17)
+
+| ソース | 参照ルール |
+| ------ | --------- |
+| [`src/engine/flow/action-case.ts`](../../../src/engine/flow/action-case.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`10-action-event.md`](../../rules/10-action-event.md) |
+| [`src/engine/flow/action/order.ts`](../../../src/engine/flow/action/order.ts) | [`08-contact.md`](../../rules/08-contact.md) |
+| [`src/engine/flow/action/state-machine.ts`](../../../src/engine/flow/action/state-machine.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
+| [`src/engine/flow/action/target-expander.ts`](../../../src/engine/flow/action/target-expander.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) |
+| [`src/engine/flow/auto-phase.ts`](../../../src/engine/flow/auto-phase.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
+| [`src/engine/flow/contact.ts`](../../../src/engine/flow/contact.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) |
+| [`src/engine/flow/guard.ts`](../../../src/engine/flow/guard.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
+| [`src/engine/flow/index.ts`](../../../src/engine/flow/index.ts) | _(参照なし)_ |
+| [`src/engine/flow/main/action.ts`](../../../src/engine/flow/main/action.ts) | _(参照なし)_ |
+| [`src/engine/flow/main/declared-ability.ts`](../../../src/engine/flow/main/declared-ability.ts) | [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
+| [`src/engine/flow/main/hand-use-card.ts`](../../../src/engine/flow/main/hand-use-card.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/engine/flow/main/index.ts`](../../../src/engine/flow/main/index.ts) | _(参照なし)_ |
+| [`src/engine/flow/main/next-hint.ts`](../../../src/engine/flow/main/next-hint.ts) | _(参照なし)_ |
+| [`src/engine/flow/main/partner-ability.ts`](../../../src/engine/flow/main/partner-ability.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
+| [`src/engine/flow/main/reasoning.ts`](../../../src/engine/flow/main/reasoning.ts) | _(参照なし)_ |
+| [`src/engine/flow/setup.ts`](../../../src/engine/flow/setup.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) |
+| [`src/engine/flow/turn.ts`](../../../src/engine/flow/turn.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
+
+## engine/invariant (9)
+
+| ソース | 参照ルール |
+| ------ | --------- |
+| [`src/engine/invariant/caseExists.ts`](../../../src/engine/invariant/caseExists.ts) | _(参照なし)_ |
+| [`src/engine/invariant/caseMonotonic.ts`](../../../src/engine/invariant/caseMonotonic.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`06-card-types.md`](../../rules/06-card-types.md) |
+| [`src/engine/invariant/effectIsSerializable.ts`](../../../src/engine/invariant/effectIsSerializable.ts) | _(参照なし)_ |
+| [`src/engine/invariant/frozenSurface.ts`](../../../src/engine/invariant/frozenSurface.ts) | _(参照なし)_ |
+| [`src/engine/invariant/index.ts`](../../../src/engine/invariant/index.ts) | _(参照なし)_ |
+| [`src/engine/invariant/partnerExists.ts`](../../../src/engine/invariant/partnerExists.ts) | _(参照なし)_ |
+| [`src/engine/invariant/sceneAtMost5.ts`](../../../src/engine/invariant/sceneAtMost5.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
+| [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
+
+## engine (他) (22)
+
+| ソース | 参照ルール |
+| ------ | --------- |
+| [`src/engine/cards/index.ts`](../../../src/engine/cards/index.ts) | _(参照なし)_ |
+| [`src/engine/cards/registry.ts`](../../../src/engine/cards/registry.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
+| [`src/engine/cards/tsv-loader.ts`](../../../src/engine/cards/tsv-loader.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/engine/cond/eval.ts`](../../../src/engine/cond/eval.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`18-mr.md`](../../rules/18-mr.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/cond/index.ts`](../../../src/engine/cond/index.ts) | _(参照なし)_ |
+| [`src/engine/cost/evaluate.ts`](../../../src/engine/cost/evaluate.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
+| [`src/engine/cost/index.ts`](../../../src/engine/cost/index.ts) | _(参照なし)_ |
+| [`src/engine/cost/pay.ts`](../../../src/engine/cost/pay.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/dyn/eval.ts`](../../../src/engine/dyn/eval.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
+| [`src/engine/dyn/index.ts`](../../../src/engine/dyn/index.ts) | _(参照なし)_ |
+| [`src/engine/event/index.ts`](../../../src/engine/event/index.ts) | _(参照なし)_ |
+| [`src/engine/event/registry.ts`](../../../src/engine/event/registry.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
+| [`src/engine/index.ts`](../../../src/engine/index.ts) | _(参照なし)_ |
+| [`src/engine/produce.ts`](../../../src/engine/produce.ts) | _(参照なし)_ |
+| [`src/engine/resolve/index.ts`](../../../src/engine/resolve/index.ts) | _(参照なし)_ |
+| [`src/engine/resolve/stack.ts`](../../../src/engine/resolve/stack.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/rng.ts`](../../../src/engine/rng.ts) | _(参照なし)_ |
+| [`src/engine/state-factory.ts`](../../../src/engine/state-factory.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`03-field-areas.md`](../../rules/03-field-areas.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) |
+| [`src/engine/target/candidates.ts`](../../../src/engine/target/candidates.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
+| [`src/engine/target/card-def-registry.ts`](../../../src/engine/target/card-def-registry.ts) | _(参照なし)_ |
+| [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
+| [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
+
+## その他 (1)
+
+| ソース | 参照ルール |
+| ------ | --------- |
+| [`src/ui/state/store.ts`](../../../src/ui/state/store.ts) | _(参照なし)_ |

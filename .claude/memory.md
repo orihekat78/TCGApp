@@ -6,18 +6,9 @@
 **最新コミット**: `dfbe16d test(integration): AI vs AI 100 matches smoke + heuristic comparison`
 **テスト状況**: 991 PASS / typecheck 通過 / 100戦 0 invariant failure
 
-## 2026-05-14: Obsidian × Engine 統合 (meta-tooling)
+## 2026-05-14 (Session 2): Obsidian × Engine 統合 完了 ✅
 
-エンジン本体に手を入れずドキュメントを Obsidian で扱える状態に整備中。詳細プラン: `C:\Users\arumi\.claude\plans\claudecode-structured-peacock.md`
-
-- **Phase 1 完了**: ルート `HUB.md` に「🤖 自動生成」「🔗 リンク形式方針」追記、`.claude/auto/README.md` 新規（運用ガイド）、README.md に auto/ 導線追加
-- **Phase 2 完了**: `scripts/gen-docs/` 配下に ts-morph ベースの API extractor (gen-api.ts / index.ts / lib/header.ts / lib/markdown.ts)、`scripts/tsconfig.json` 追加、`package.json` に `docs:api` / `docs` / `docs:check` 追加（ts-morph + tsx を devDeps 追加）
-  - `npm run docs:api` で `.claude/auto/api/{index,read,mutate,...,cards}.md` 13 ファイル生成
-  - source-hash で決定論性確認済み（再実行で 0 diff）
-  - `npm run typecheck` は src + scripts 両方を検査
-  - `.claude/auto/` は手編集禁止（CLAUDE.md に運用ルール追記済）
-- **残 Phase**: 3 (state/flows/progress 図生成) / 4 (ルール↔コード mapping + pre-commit)
-- **リンク形式方針**: 既存 175 件の相対パスは維持。新規ハブで wikilink **併用** OK（追加方式、移行なし）
+エンジン本体無変更で `.claude/auto/` に 25 ファイル自動生成（api 13 + state 1 + flows 4 + progress 2 + mapping 5）。`npm run docs:check` を pre-commit に配線。詳細: [sessions/2026-05-14-2](.claude/sessions/2026-05-14-2.md)
 
 ## 次セッション開始時の最優先タスク
 
@@ -74,6 +65,8 @@
 - [2026-05-11-4](.claude/sessions/2026-05-11-4.md) — Phase 0-2 実装
 - [2026-05-11-5](.claude/sessions/2026-05-11-5.md) — Phase 3 完了
 - [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了 + Phase 5 完了
+- [2026-05-14](.claude/sessions/2026-05-14.md) — Phase 5 fix (D11019) + Phase 6 完了
+- [2026-05-14-2](.claude/sessions/2026-05-14-2.md) — Obsidian × Engine 統合 (meta-tooling)
 - [2026-05-14](.claude/sessions/2026-05-14.md) — Phase 5 fix (D11019) + Phase 6 完了
 
 ## 主要参照

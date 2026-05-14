@@ -129,6 +129,22 @@
 | 新カード追加時の修正行数 | 200 | 100 | 80 |
 | バグ修正 PR / 月 | 高 | 中 | 低 |
 
+## 自動生成ドキュメント運用 (`.claude/auto/`)
+
+`.claude/auto/` 配下のファイルは `scripts/gen-docs/` により自動生成される。
+
+- **編集禁止**: 手で書き換えても次回 `npm run docs:*` で上書きされる
+- **唯一の例外**: `.claude/auto/README.md`（運用ガイド、手書き）
+- **再生成コマンド**:
+  - `npm run docs:api` — エンジン public API reference
+  - `npm run docs:state` / `docs:flows` / `docs:progress` / `docs:mapping` — 各カテゴリ
+  - `npm run docs` — 全部生成
+  - `npm run docs:check` — 差分検知のみ（pre-commit hook が自動実行）
+- **pre-commit hook**: `simple-git-hooks` で `docs:check` を自動実行。差分があるとコミット失敗 → `npm run docs` で再生成してから再コミット
+- **詳細**: [.claude/auto/README.md](auto/README.md)
+
+骨格凍結原則との整合: 自動生成はエンジン本体に手を入れずに行うため `scripts/gen-docs/` 配下のみ変更する。
+
 ## メモリ運用ルール
 
 - **作業時は必ず** `.claude/memory.md` に追記する

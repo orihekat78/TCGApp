@@ -20,3 +20,10 @@ coverage/
 
 # ローカル設定
 .claude/settings.local.json
+
+# Obsidian プラグイン本体（バイナリ + ローカルで生成された認証情報を含むため除外）
+# プラグイン名リストは .obsidian/community-plugins.json で管理
+.obsidian/plugins/
+
+# Claudian (GUI) のローカルセッション状態
+.claudian/

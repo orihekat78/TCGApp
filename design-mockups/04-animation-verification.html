@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>Animation Verification — コナンカードゲーム</title>
+<style>
+  :root {
+    --bg-deep: #060a12;
+    --neon-blue: #4ec3ff;
+    --neon-green: #44dd99;
+    --neon-red: #ff5d5d;
+    --neon-purple: #b48cff;
+    --accent-gold: #ffd75e;
+    --color-blue: #4a8ad8;
+    --color-yellow: #e0b830;
+    --color-red: #e05050;
+    --text-primary: #f0f4f8;
+    --text-secondary: #b8c4d0;
+    --text-muted: #6a7785;
+    --font-jp: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    --font-display: "Trajan Pro", "Cinzel", serif;
+    --font-mono: "JetBrains Mono", "Menlo", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #050810;
+    color: var(--text-primary);
+    font-family: var(--font-jp);
+    min-height: 100vh;
+  }
+  .page {
+    max-width: 1800px; margin: 0 auto;
+    padding: 28px 36px 60px;
+  }
+  .page-header {
+    display: flex; align-items: center; gap: 18px;
+    border-bottom: 1px solid rgba(78,195,255,0.3);
+    padding-bottom: 16px; margin-bottom: 28px;
+  }
+  .page-header h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.04em; }
+  .page-header h1 strong { color: var(--accent-gold); }
+  .page-header .meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .page-header .legend { margin-left: auto; display: flex; gap: 14px; font-size: 11px; color: var(--text-secondary); }
+
+  .scene-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px;
+  }
+  @media (max-width: 1400px) { .scene-grid { grid-template-columns: 1fr; } }
+
+  .scene-card {
+    background: linear-gradient(180deg, rgba(20,32,48,0.6), rgba(8,12,20,0.6));
+    border: 1px solid rgba(78,195,255,0.25);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .scene-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(78,195,255,0.18);
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  .scene-head .num { color: var(--accent-gold); font-family: var(--font-mono); font-size: 13px; font-weight: 800; }
+  .scene-head h2 { font-size: 16px; font-weight: 800; letter-spacing: 0.04em; }
+  .scene-head .dur { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+  .scene-viewport {
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
+    background: radial-gradient(ellipse at 50% 40%, #0e1828 0%, #050810 75%);
+    overflow: hidden;
+    border-bottom: 1px solid rgba(78,195,255,0.12);
+  }
+
+  .scene-controls {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px;
+    background: rgba(0,0,0,0.4);
+  }
+  .scene-controls button {
+    padding: 7px 16px;
+    background: linear-gradient(180deg, #2a78c4, #1a4d7e);
+    border: 1.5px solid rgba(78,195,255,0.6);
+    border-radius: 3px;
+    color: #fff;
+    font-family: var(--font-jp); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  .scene-controls button:hover { box-shadow: 0 0 12px rgba(78,195,255,0.4); }
+  .scene-controls button.replay { background: linear-gradient(180deg,#3aa67a,#1f7a55); border-color: rgba(68,221,153,0.6); }
+  .scene-controls .scrubber {
+    flex: 1;
+    -webkit-appearance: none; appearance: none;
+    height: 4px; background: rgba(78,195,255,0.2); border-radius: 2px;
+    cursor: pointer;
+  }
+  .scene-controls .scrubber::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--neon-blue); border: 2px solid #fff;
+    box-shadow: 0 0 8px var(--neon-blue);
+  }
+  .scene-controls .time {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary);
+    min-width: 70px; text-align: right;
+  }
+
+  .scene-keyframes {
+    padding: 14px 18px;
+    background: rgba(0,0,0,0.3);
+    font-size: 11px; color: var(--text-secondary); line-height: 1.7;
+  }
+  .scene-keyframes .kf {
+    display: grid; grid-template-columns: 60px 1fr;
+    border-bottom: 1px dashed rgba(78,195,255,0.1);
+    padding: 4px 0;
+  }
+  .scene-keyframes .kf:last-child { border: 0; }
+  .scene-keyframes .t { font-family: var(--font-mono); color: var(--accent-gold); }
+
+  /* ═══════════ Shared card visuals ═══════════ */
+  .vc-card {
+    width: 140px; height: 196px;
+    border-radius: 6px;
+    background: linear-gradient(160deg, #1a2638 0%, #0a1320 100%);
+    border: 2px solid #4a8ad8;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 16px rgba(78,138,216,0.4);
+    display: flex; flex-direction: column; overflow: hidden;
+    position: relative;
+  }
+  .vc-card.col-y { border-color: #e0b830; box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 16px rgba(224,184,48,0.4); }
+  .vc-card .stripe { height: 10px; background: #4a8ad8; }
+  .vc-card.col-y .stripe { background: #e0b830; }
+  .vc-card .art {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, rgba(78,195,255,0.06), rgba(0,0,0,0.4));
+  }
+  .vc-card .sil {
+    width: 70%; height: 70%;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.2), rgba(0,0,0,0.6));
+    border-radius: 50% 50% 40% 40%;
+  }
+  .vc-card .cn {
+    background: rgba(0,0,0,0.55); padding: 5px;
+    text-align: center; font-size: 11px; font-weight: 800;
+  }
+  .vc-card .ap {
+    position: absolute; top: -8px; right: -8px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ff8060, #802820);
+    border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 900;
+    box-shadow: 0 0 8px rgba(255,128,96,0.7);
+  }
+
+  /* ═══════════════════════════════════════════
+     Scene 1: Contact VS — 1.4s sequence
+     0.0-0.4s  cards slide in from sides
+     0.4-0.7s  VS banner slams in
+     0.7-1.0s  shockwave + AP badges pop
+     1.0-1.4s  hold + subtle pulse
+     ═══════════════════════════════════════════ */
+  .vs-stage {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at 50% 50%, rgba(40,15,15,0.4), rgba(0,0,0,0.85));
+  }
+  .vs-stage::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 50%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,215,94,0.35), transparent);
+    transform: translateY(-1px);
+    opacity: 0;
+  }
+  .vs-stage.playing::before { animation: vs-line 1.4s ease-out forwards; }
+  @keyframes vs-line {
+    0% { opacity: 0; transform: translateY(-1px) scaleX(0); }
+    40% { opacity: 1; transform: translateY(-1px) scaleX(1); }
+    100% { opacity: 1; transform: translateY(-1px) scaleX(1); }
+  }
+  .vs-shock {
+    position: absolute; left: 50%; top: 50%;
+    width: 0; height: 0;
+    border-radius: 50%;
+    border: 3px solid var(--accent-gold);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+  .vs-stage.playing .vs-shock { animation: vs-shockwave 0.7s ease-out 0.4s forwards; }
+  @keyframes vs-shockwave {
+    0% { width: 30px; height: 30px; opacity: 1; border-width: 6px; }
+    100% { width: 480px; height: 480px; opacity: 0; border-width: 1px; }
+  }
+  .vs-card-left, .vs-card-right {
+    position: absolute; top: 50%;
+    transform: translateY(-50%) translateX(-300px);
+    opacity: 0;
+  }
+  .vs-card-left { left: 22%; }
+  .vs-card-right { right: 22%; transform: translateY(-50%) translateX(300px); }
+  .vs-stage.playing .vs-card-left { animation: vs-slide-l 1.4s cubic-bezier(.2,1.2,.4,1) forwards; }
+  .vs-stage.playing .vs-card-right { animation: vs-slide-r 1.4s cubic-bezier(.2,1.2,.4,1) forwards; }
+  @keyframes vs-slide-l {
+    0% { transform: translateY(-50%) translateX(-300px) rotate(-8deg); opacity: 0; }
+    30% { transform: translateY(-50%) translateX(0) rotate(-4deg); opacity: 1; }
+    50% { transform: translateY(-50%) translateX(20px) rotate(-2deg); opacity: 1; }
+    100% { transform: translateY(-50%) translateX(0) rotate(0); opacity: 1; }
+  }
+  @keyframes vs-slide-r {
+    0% { transform: translateY(-50%) translateX(300px) rotate(8deg); opacity: 0; }
+    30% { transform: translateY(-50%) translateX(0) rotate(4deg); opacity: 1; }
+    50% { transform: translateY(-50%) translateX(-20px) rotate(2deg); opacity: 1; }
+    100% { transform: translateY(-50%) translateX(0) rotate(0); opacity: 1; }
+  }
+  .vs-card-left .ap, .vs-card-right .ap { opacity: 0; transform: scale(0); }
+  .vs-stage.playing .vs-card-left .ap { animation: ap-pop 0.4s cubic-bezier(.2,1.6,.4,1) 0.7s forwards; }
+  .vs-stage.playing .vs-card-right .ap { animation: ap-pop 0.4s cubic-bezier(.2,1.6,.4,1) 0.8s forwards; }
+  @keyframes ap-pop {
+    0% { opacity: 0; transform: scale(0) rotate(-180deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  .vs-banner {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%) scale(3) skewX(-8deg);
+    font-family: var(--font-display); font-size: 92px; font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 30px rgba(255,215,94,0.7), 0 0 60px rgba(255,150,40,0.5);
+    letter-spacing: 0.04em;
+    opacity: 0;
+    z-index: 5;
+  }
+  .vs-stage.playing .vs-banner { animation: vs-banner 1s cubic-bezier(.2,1.4,.4,1) 0.4s forwards; }
+  @keyframes vs-banner {
+    0% { transform: translate(-50%, -50%) scale(3) skewX(-30deg); opacity: 0; letter-spacing: 0.3em; }
+    40% { transform: translate(-50%, -50%) scale(1.15) skewX(-8deg); opacity: 1; letter-spacing: 0.04em; }
+    100% { transform: translate(-50%, -50%) scale(1) skewX(-8deg); opacity: 1; }
+  }
+
+  /* ═══════════════════════════════════════════
+     Scene 2: 解決編 stamp — 2.0s sequence
+     0.0-0.5s  spotlight fades in
+     0.5-1.0s  case file slides up
+     1.0-1.4s  STAMP slams down with rotation + shake
+     1.4-2.0s  case meta fades in below
+     ═══════════════════════════════════════════ */
+  .resolve-stage {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0,0,0,0.92), rgba(0,0,0,0.98));
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 14px;
+  }
+  .resolve-spot {
+    position: absolute; left: 50%; top: -10%;
+    width: 70%; height: 140%;
+    background: radial-gradient(ellipse at center, rgba(255,215,94,0.25), transparent 60%);
+    transform: translateX(-50%);
+    opacity: 0;
+  }
+  .resolve-stage.playing .resolve-spot { animation: resolve-spot 2s ease-out forwards; }
+  @keyframes resolve-spot {
+    0% { opacity: 0; }
+    25% { opacity: 1; }
+    100% { opacity: 0.7; }
+  }
+  .resolve-case-meta {
+    position: relative;
+    padding: 12px 22px;
+    background: rgba(20,30,50,0.85); border: 1.5px solid rgba(255,215,94,0.4);
+    border-radius: 4px;
+    text-align: center;
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  .resolve-stage.playing .resolve-case-meta { animation: resolve-case 0.5s ease-out 0.5s forwards; }
+  @keyframes resolve-case {
+    0% { transform: translateY(40px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .resolve-case-meta .name { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .resolve-case-meta .meta { font-size: 10px; color: var(--text-muted); letter-spacing: 0.14em; font-family: var(--font-mono); }
+  .resolve-stamp {
+    display: inline-block;
+    padding: 14px 30px;
+    background: rgba(255,215,94,0.08);
+    border: 5px double var(--accent-gold);
+    font-family: var(--font-display); font-size: 48px; font-weight: 900;
+    color: var(--accent-gold); letter-spacing: 0.2em;
+    text-shadow: 0 3px 12px rgba(0,0,0,0.7);
+    box-shadow: 0 0 32px rgba(255,215,94,0.4), inset 0 0 14px rgba(255,215,94,0.1);
+    transform: scale(3) rotate(20deg);
+    opacity: 0;
+  }
+  .resolve-stage.playing .resolve-stamp { animation: resolve-stamp 0.5s cubic-bezier(.2,1.4,.4,1) 1s forwards, stamp-shake 0.4s ease-in-out 1.4s; }
+  @keyframes resolve-stamp {
+    0% { transform: scale(3) rotate(20deg); opacity: 0; }
+    100% { transform: scale(1) rotate(-4deg); opacity: 1; }
+  }
+  @keyframes stamp-shake {
+    0%, 100% { transform: scale(1) rotate(-4deg) translateX(0); }
+    20% { transform: scale(1.04) rotate(-4deg) translateX(-4px); }
+    40% { transform: scale(1) rotate(-4deg) translateX(4px); }
+    60% { transform: scale(1.02) rotate(-4deg) translateX(-2px); }
+    80% { transform: scale(1) rotate(-4deg) translateX(2px); }
+  }
+  .resolve-sub {
+    position: relative;
+    font-size: 11px; color: var(--text-secondary); letter-spacing: 0.18em;
+    opacity: 0;
+  }
+  .resolve-stage.playing .resolve-sub { animation: resolve-sub 0.5s ease-out 1.5s forwards; }
+  @keyframes resolve-sub {
+    0% { opacity: 0; letter-spacing: 0.4em; }
+    100% { opacity: 1; letter-spacing: 0.18em; }
+  }
+
+  /* ═══════════════════════════════════════════
+     Scene 3: Refresh — 2.2s sequence
+     0.0-0.3s  removal stack starts spinning
+     0.3-1.5s  cards arc-fly back to deck (staggered 5 cards)
+     1.5-1.8s  deck pulse + count increment
+     1.8-2.2s  toast slides in
+     ═══════════════════════════════════════════ */
+  .refresh-stage {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(8,16,28,0.95), rgba(0,0,0,0.98));
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 12% 0 12%;
+  }
+  .refresh-stage::after {
+    content: ""; position: absolute; left: 12%; right: 12%; top: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(78,195,255,0.3), transparent);
+    transform: translateY(-0.5px);
+    opacity: 0;
+  }
+  .refresh-stage.playing::after { animation: rf-path 1.5s ease-out 0.2s forwards; }
+  @keyframes rf-path {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  /* Removal stack (left) */
+  .rf-remove {
+    position: relative; width: 80px; height: 112px;
+  }
+  .rf-remove .label {
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--text-muted); letter-spacing: 0.18em;
+    font-family: var(--font-mono);
+  }
+  .rf-remove .layer {
+    position: absolute; left: 0; top: 0;
+    width: 80px; height: 112px; border-radius: 4px;
+    background: linear-gradient(160deg, #1f2438, #0a0e1c);
+    border: 1.5px solid #2a3552;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+  }
+  .rf-remove .layer:nth-child(2) { transform: translate(-3px, -3px); opacity: 0.7; }
+  .rf-remove .layer:nth-child(3) { transform: translate(-6px, -6px); opacity: 0.5; }
+  /* Deck stack (right) */
+  .rf-deck {
+    position: relative; width: 80px; height: 112px;
+  }
+  .rf-deck .label {
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--text-muted); letter-spacing: 0.18em;
+    font-family: var(--font-mono);
+  }
+  .rf-deck .layer {
+    position: absolute; left: 0; top: 0;
+    width: 80px; height: 112px; border-radius: 4px;
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(255,215,0,0.12), transparent 60%),
+      linear-gradient(160deg, #1f2438, #0a0e1c);
+    border: 1.5px solid #2a3552;
+  }
+  .rf-deck .layer:nth-child(2) { transform: translate(3px, 3px); opacity: 0.7; }
+  .rf-deck .layer:nth-child(3) { transform: translate(6px, 6px); opacity: 0.5; }
+  .rf-deck .count {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-mono); font-size: 22px; font-weight: 800;
+    color: var(--accent-gold);
+    background: rgba(0,0,0,0.7); padding: 4px 8px; border-radius: 3px;
+    border: 1px solid rgba(255,215,94,0.4);
+    z-index: 3;
+  }
+  .refresh-stage.playing .rf-deck .count { animation: rf-count-bump 0.4s cubic-bezier(.2,1.4,.4,1) 1.5s; }
+  @keyframes rf-count-bump {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.5); color: #fff; text-shadow: 0 0 12px var(--accent-gold); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+  /* Flying cards */
+  .rf-fly {
+    position: absolute; left: 12%; top: 50%;
+    width: 60px; height: 84px;
+    margin-top: -42px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #1f2438, #0a0e1c);
+    border: 1.5px solid var(--neon-blue);
+    box-shadow: 0 0 12px rgba(78,195,255,0.5);
+    opacity: 0;
+  }
+  .refresh-stage.playing .rf-fly { animation: rf-fly 1.4s cubic-bezier(.4,0,.6,1) forwards; }
+  .refresh-stage.playing .rf-fly.f1 { animation-delay: 0.3s; }
+  .refresh-stage.playing .rf-fly.f2 { animation-delay: 0.45s; }
+  .refresh-stage.playing .rf-fly.f3 { animation-delay: 0.6s; }
+  .refresh-stage.playing .rf-fly.f4 { animation-delay: 0.75s; }
+  .refresh-stage.playing .rf-fly.f5 { animation-delay: 0.9s; }
+  @keyframes rf-fly {
+    0% { left: 12%; transform: translateY(0) rotate(0); opacity: 0; }
+    10% { opacity: 1; }
+    50% { transform: translateY(-40px) rotate(360deg); }
+    90% { opacity: 1; transform: translateY(-15px) rotate(720deg); }
+    100% { left: 85%; transform: translateY(0) rotate(720deg); opacity: 0; }
+  }
+  .rf-toast {
+    position: absolute; left: 50%; top: 12%;
+    transform: translateX(-50%) translateY(-20px);
+    padding: 8px 22px;
+    background: linear-gradient(180deg, rgba(46,201,119,0.92), rgba(31,122,85,0.92));
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 3px;
+    color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0.14em;
+    box-shadow: 0 6px 24px rgba(46,201,119,0.5);
+    opacity: 0;
+  }
+  .refresh-stage.playing .rf-toast { animation: rf-toast 0.5s ease-out 1.8s forwards; }
+  @keyframes rf-toast {
+    0% { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-header">
+    <h1><strong>コナンカードゲーム</strong> ／ Animation Verification</h1>
+    <div class="meta">3 scenes · scrub & replay · keyframes annotated</div>
+    <div class="legend">
+      <span style="color:#ffd75e">⚔ VS 演出</span>
+      <span style="color:#ffd75e">📁 解決編スタンプ</span>
+      <span style="color:#44dd99">↻ リフレッシュ</span>
+    </div>
+  </div>
+
+  <div class="scene-grid">
+
+    <!-- ─── Scene 1: VS ─── -->
+    <div class="scene-card" data-scene="vs">
+      <div class="scene-head">
+        <span class="num">01</span>
+        <h2>Contact VS 演出</h2>
+        <span class="dur">1.4s</span>
+      </div>
+      <div class="scene-viewport">
+        <div class="vs-stage">
+          <div class="vs-shock"></div>
+          <div class="vs-card vs-card-left">
+            <div class="ap">3</div>
+            <div class="stripe"></div>
+            <div class="art"><div class="sil"></div></div>
+            <div class="cn">服部 平次</div>
+          </div>
+          <div class="vs-banner">VS</div>
+          <div class="vs-card vs-card-right col-y">
+            <div class="ap">2</div>
+            <div class="stripe"></div>
+            <div class="art"><div class="sil"></div></div>
+            <div class="cn">怪盗キッド</div>
+          </div>
+        </div>
+      </div>
+      <div class="scene-controls">
+        <button class="replay" data-play>▶ 再生</button>
+        <input type="range" class="scrubber" min="0" max="1400" value="0" step="10" />
+        <span class="time">0.00 / 1.40s</span>
+      </div>
+      <div class="scene-keyframes">
+        <div class="kf"><span class="t">0.0–0.4s</span><span>両カードが左右からスライドイン（オーバーシュート）</span></div>
+        <div class="kf"><span class="t">0.4–1.0s</span><span>VSバナーがスラム＋ショックウェーブ＋線が伸びる</span></div>
+        <div class="kf"><span class="t">0.7–1.2s</span><span>AP値バッジが回転ポップ</span></div>
+        <div class="kf"><span class="t">1.0–1.4s</span><span>静止ホールド（判定確定）</span></div>
+      </div>
+    </div>
+
+    <!-- ─── Scene 2: 解決編 ─── -->
+    <div class="scene-card" data-scene="resolve">
+      <div class="scene-head">
+        <span class="num">02</span>
+        <h2>解決編スタンプ</h2>
+        <span class="dur">2.0s</span>
+      </div>
+      <div class="scene-viewport">
+        <div class="resolve-stage">
+          <div class="resolve-spot"></div>
+          <div class="resolve-case-meta">
+            <div class="name">千速と重悟の婚活パーティー</div>
+            <div class="meta">CASE · LV.2 · 後攻 T6</div>
+          </div>
+          <div class="resolve-stamp">解 決 編</div>
+          <div class="resolve-sub">CASE CLOSED</div>
+        </div>
+      </div>
+      <div class="scene-controls">
+        <button class="replay" data-play>▶ 再生</button>
+        <input type="range" class="scrubber" min="0" max="2000" value="0" step="10" />
+        <span class="time">0.00 / 2.00s</span>
+      </div>
+      <div class="scene-keyframes">
+        <div class="kf"><span class="t">0.0–0.5s</span><span>スポットライトがフェードイン</span></div>
+        <div class="kf"><span class="t">0.5–1.0s</span><span>事件メタが下から浮上</span></div>
+        <div class="kf"><span class="t">1.0–1.4s</span><span>「解決編」スタンプがスケールイン → シェイク</span></div>
+        <div class="kf"><span class="t">1.5–2.0s</span><span>サブテキストがレタースペーシング解除でフェードイン</span></div>
+      </div>
+    </div>
+
+    <!-- ─── Scene 3: Refresh ─── -->
+    <div class="scene-card" data-scene="refresh">
+      <div class="scene-head">
+        <span class="num">03</span>
+        <h2>デッキ リフレッシュ</h2>
+        <span class="dur">2.2s</span>
+      </div>
+      <div class="scene-viewport">
+        <div class="refresh-stage">
+          <div class="rf-remove">
+            <div class="label">REMOVE</div>
+            <div class="layer"></div>
+            <div class="layer"></div>
+            <div class="layer"></div>
+          </div>
+          <div class="rf-fly f1"></div>
+          <div class="rf-fly f2"></div>
+          <div class="rf-fly f3"></div>
+          <div class="rf-fly f4"></div>
+          <div class="rf-fly f5"></div>
+          <div class="rf-deck">
+            <div class="label">DECK</div>
+            <div class="layer"></div>
+            <div class="layer"></div>
+            <div class="layer"></div>
+            <div class="count">+12</div>
+          </div>
+          <div class="rf-toast">↻ DECK REFRESHED · +12</div>
+        </div>
+      </div>
+      <div class="scene-controls">
+        <button class="replay" data-play>▶ 再生</button>
+        <input type="range" class="scrubber" min="0" max="2200" value="0" step="10" />
+        <span class="time">0.00 / 2.20s</span>
+      </div>
+      <div class="scene-keyframes">
+        <div class="kf"><span class="t">0.2–1.5s</span><span>除外側からデッキへガイドラインが伸びる</span></div>
+        <div class="kf"><span class="t">0.3–1.7s</span><span>カードが弧を描いて飛ぶ（5枚スタガー）</span></div>
+        <div class="kf"><span class="t">1.5–1.9s</span><span>デッキカウントが+12にバンプ</span></div>
+        <div class="kf"><span class="t">1.8–2.2s</span><span>トーストが上からスライドイン</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function playScene(sceneEl) {
+    const stage = sceneEl.querySelector('.vs-stage, .resolve-stage, .refresh-stage');
+    if (!stage) return;
+    // Remove and re-add the class to retrigger animations
+    stage.classList.remove('playing');
+    // force reflow
+    void stage.offsetWidth;
+    stage.classList.add('playing');
+
+    // Update scrubber
+    const scrubber = sceneEl.querySelector('.scrubber');
+    const time = sceneEl.querySelector('.time');
+    const max = parseInt(scrubber.max);
+    const start = performance.now();
+    function tick() {
+      const elapsed = performance.now() - start;
+      const pct = Math.min(elapsed, max);
+      scrubber.value = pct;
+      const total = (max / 1000).toFixed(2);
+      time.textContent = (pct / 1000).toFixed(2) + ' / ' + total + 's';
+      if (elapsed < max) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function seekScene(sceneEl, ms) {
+    const stage = sceneEl.querySelector('.vs-stage, .resolve-stage, .refresh-stage');
+    if (!stage) return;
+    // Use negative animation-delay trick by setting animation-delay via inline style
+    stage.classList.remove('playing');
+    void stage.offsetWidth;
+    // Make every animation start at -ms
+    const total = parseInt(sceneEl.querySelector('.scrubber').max);
+    const time = sceneEl.querySelector('.time');
+    time.textContent = (ms / 1000).toFixed(2) + ' / ' + (total / 1000).toFixed(2) + 's';
+    // Set inline override for animation-delay on all descendants currently using animation
+    const allAnimated = stage.querySelectorAll('*');
+    stage.style.setProperty('--seek', (-ms / 1000) + 's');
+    // To "scrub" we apply playing then immediately pause animations at a frame
+    stage.classList.add('playing', 'seeking');
+    requestAnimationFrame(() => {
+      stage.querySelectorAll('*').forEach(el => {
+        const cs = getComputedStyle(el);
+        if (cs.animationName && cs.animationName !== 'none') {
+          el.style.animationPlayState = 'paused';
+          // Adjust delay so the requested ms is shown
+          const dur = parseFloat(cs.animationDuration) * 1000;
+          const origDelay = parseFloat(cs.animationDelay) * 1000;
+          // Offset so 'ms' becomes the visible time
+          el.style.animationDelay = ((ms - origDelay - origDelay) / 1000) + 's';
+        }
+      });
+      // Stage itself
+      stage.style.animationPlayState = 'paused';
+    });
+  }
+
+  document.querySelectorAll('.scene-card').forEach(card => {
+    const btn = card.querySelector('[data-play]');
+    const scrubber = card.querySelector('.scrubber');
+    btn.addEventListener('click', () => playScene(card));
+    scrubber.addEventListener('input', () => {
+      const ms = parseInt(scrubber.value);
+      seekScene(card, ms);
+    });
+  });
+
+  // Auto-play all once on load
+  setTimeout(() => {
+    document.querySelectorAll('.scene-card').forEach(playScene);
+  }, 400);
+</script>
+
+</body>
+</html>

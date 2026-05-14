@@ -94,6 +94,7 @@
 - [2026-05-11](.claude/sessions/2026-05-11.md) ｜ [-2](.claude/sessions/2026-05-11-2.md) ｜ [-3](.claude/sessions/2026-05-11-3.md) ｜ [-4](.claude/sessions/2026-05-11-4.md) ｜ [-5](.claude/sessions/2026-05-11-5.md)
 - [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了 + Phase 5 完了
 - [2026-05-14](.claude/sessions/2026-05-14.md) — Phase 5 fix (D11019) + Phase 6 完了
+- [2026-05-14-2](.claude/sessions/2026-05-14-2.md) — Obsidian × Engine 統合 (meta-tooling)
 
 ## 🤖 自動生成ドキュメント
 
@@ -105,11 +106,14 @@
   - [`read`](.claude/auto/api/read.md) ｜ [`mutate`](.claude/auto/api/mutate.md) ｜ [`invariant`](.claude/auto/api/invariant.md) ｜ [`event`](.claude/auto/api/event.md) ｜ [`effect`](.claude/auto/api/effect.md)
   - [`dyn`](.claude/auto/api/dyn.md) ｜ [`target`](.claude/auto/api/target.md) ｜ [`cost`](.claude/auto/api/cost.md) ｜ [`cond`](.claude/auto/api/cond.md) ｜ [`resolve`](.claude/auto/api/resolve.md)
   - [`flow`](.claude/auto/api/flow.md) ｜ [`cards`](.claude/auto/api/cards.md)
-- 予定（Phase 3 以降で順次追加）:
-  - `auto/state/` — GameState shape（Mermaid classDiagram）
-  - `auto/flows/` — Setup / Auto-Phase / Action FSM の状態遷移図
-  - `auto/progress/` — カード実装進捗 + vitest 結果サマリ
-  - `auto/mapping/` — `// rules: xx.md` コメントからの双方向マッピング
+- **[auto/state/game-state](.claude/auto/state/game-state.md)** — ✅ Phase 3: GameState shape（Mermaid classDiagram）
+- **auto/flows/** — ✅ Phase 3: 状態遷移図
+  - [setup](.claude/auto/flows/setup.md) ｜ [auto-phase](.claude/auto/flows/auto-phase.md) ｜ [turn](.claude/auto/flows/turn.md) ｜ [action-fsm](.claude/auto/flows/action-fsm.md)
+- **auto/progress/** — ✅ Phase 3: 実装/テスト進捗
+  - [cards](.claude/auto/progress/cards.md) ｜ [tests](.claude/auto/progress/tests.md)
+- **[auto/mapping/index](.claude/auto/mapping/index.md)** — ✅ Phase 4: ルール ↔ コード 双方向マッピング
+  - [rules-to-cards](.claude/auto/mapping/rules-to-cards.md) — 各ルールがどのソースから参照されているか（26/30 ルール参照）
+  - [cards-to-rules-cards](.claude/auto/mapping/cards-to-rules-cards.md) ｜ [engine-core](.claude/auto/mapping/cards-to-rules-engine-core.md) ｜ [engine-flow](.claude/auto/mapping/cards-to-rules-engine-flow.md) — エリア別ソース → ルール
 
 > ⚠️ `.claude/auto/` 配下は **編集禁止**（`npm run docs:*` で再生成）。
 
