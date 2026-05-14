@@ -127,7 +127,8 @@ function compactType(text: string): string {
     const fieldCount = inner.split(';').filter((s) => s.trim()).length;
     return `«object×${fieldCount}»`;
   }
-  if (text.length > 45) return text.slice(0, 42) + '...';
+  // smartTruncate でセンテンス境界 + 引用符バランスを保つ
+  if (text.length > 45) return smartTruncate(text, 45);
   return text;
 }
 
