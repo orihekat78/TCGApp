@@ -88,7 +88,8 @@ describe('Playmat', () => {
     expect(html.match(/partner-col partner-zone/g)?.length).toBe(2);
     expect(html.match(/deck-col deck-zone/g)?.length).toBe(2);
     expect(html.match(/remove-col remove-zone/g)?.length).toBe(2);
-    expect(html.match(/class="file-row"/g)?.length).toBe(2);
+    // FileArea が file-row placeholder を置換 (zone file-strip + file-area)
+    expect(html.match(/file-area side-/g)?.length).toBe(2);
   });
 
   it('renders CaseArea (real component, empty when null state)', () => {

@@ -104,16 +104,14 @@
 .mat .partner-col { grid-column: 2; grid-row: 2; }
 .mat .remove-col  { grid-column: 3; grid-row: 2; }
 
-/* File row at bottom (absolute, full mat width 内側) */
-.mat .file-row {
+/* FileArea (file-strip) は Mat 内に絶対配置で底面右寄り (mock 通り、
+   元の .file-row 位置)。FileArea.css 側で内部 layout を持つ。 */
+.mat .file-area {
   position: absolute;
-  left: 196px;
+  left: 196px;   /* case-col の右端から */
   right: 8px;
   bottom: -2px;
-  height: 56px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px dashed color-mix(in oklch, var(--neon-blue) 18%, transparent);
-  border-radius: 3px;
+  height: 60px;
 }
 
 /* Placeholder zones: 全 6 zone 実装済 (7.4 scene / 7.5 partner / 7.6 case /

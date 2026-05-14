@@ -1,0 +1,275 @@
+/* FileArea.css
+ * FILE エリア (横向き card-back スタック + 7枚進捗 + アシスト中パートナー混在) のスタイル。
+ * 01-board-mockup.html のクラス構造を流用し、色は CSS 変数で外出ししている。
+ *
+ * 親 :root もしくは scope で以下の変数が定義されている前提:
+ *   --accent-gold / --neon-blue
+ *   --color-blue / --color-yellow / --color-red / --color-green / --color-purple
+ *   --bg-cell
+ *   --text-primary / --text-secondary / --text-muted
+ *   --font-jp / --font-mono
+ * fallback も与えてあるので単体動作もする。
+ */
+
+.file-area {
+  /* layout tokens (親側で上書き可) */
+  --file-card-w: 64px;
+  --file-card-h: 90px;
+
+  --file-accent:        var(--accent-gold, #ffd700);
+  --file-neon:          var(--neon-blue, #4ec3ff);
+  --file-bg-cell:       var(--bg-cell, rgba(0, 0, 0, 0.32));
+  --file-text-primary:  var(--text-primary, #e0ecf8);
+  --file-text-second:   var(--text-secondary, #b8d4f0);
+  --file-text-muted:    var(--text-muted, #7090b5);
+
+  font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
+  color: var(--file-text-primary);
+}
+
+/* ---- zone shell (.file-strip) ---- */
+.file-area.zone.file-strip {
+  background: var(--file-bg-cell);
+  border: 1px solid color-mix(in oklch, var(--file-accent) 32%, transparent);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.file-area.zone.file-strip:hover {
+  border-color: color-mix(in oklch, var(--file-accent) 65%, transparent);
+  background: rgba(40, 30, 10, 0.4);
+}
+
+/* ---- header (FILE ラベル + 7マス進捗) ---- */
+.file-area .file-strip-header {
+  color: color-mix(in oklch, var(--file-accent) 85%, white 5%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.file-area .file-strip-header .progress-7 {
+  display: flex;
+  gap: 2px;
+}
+.file-area .file-strip-header .progress-7 span {
+  width: 12px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1px;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+.file-area .file-strip-header .progress-7 span.filled {
+  background: var(--file-accent);
+  box-shadow: 0 0 4px color-mix(in oklch, var(--file-accent) 50%, transparent);
+}
+
+/* ---- zone-label (FILE / count) — 控えめに ---- */
+.file-area .zone-label {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--file-text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.file-area .zone-label .count {
+  color: var(--file-text-second);
+  font-weight: 600;
+}
+
+/* ---- stack-display ---- */
+.file-area .stack-display {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--file-card-h) + 12px);
+  padding: 4px 0;
+}
+
+.file-area .stack-display .card-back {
+  width: var(--file-card-w);
+  height: var(--file-card-h);
+  border-radius: 4px;
+  transform: rotate(-2deg);
+  background:
+    radial-gradient(circle at 6px 6px,
+      color-mix(in oklch, var(--file-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    radial-gradient(circle at calc(100% - 6px) 6px,
+      color-mix(in oklch, var(--file-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    radial-gradient(circle at 6px calc(100% - 6px),
+      color-mix(in oklch, var(--file-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    radial-gradient(circle at calc(100% - 6px) calc(100% - 6px),
+      color-mix(in oklch, var(--file-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    linear-gradient(160deg, #1f2438 0%, #0a0e1c 100%);
+  border: 1px solid color-mix(in oklch, var(--file-accent) 28%, transparent);
+  position: relative;
+  z-index: 2;
+}
+
+/* monogram / magnifier は SVG ::before で代替するので非表示 */
+.file-area .stack-display .card-back .monogram,
+.file-area .stack-display .card-back .magnifier {
+  display: none;
+}
+
+/* FILE 用 SVG (書類フォルダ + 虫眼鏡) */
+.file-area .stack-display.file .card-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 90'><g><path d='M12 24 L26 24 L30 28 L52 28 L52 64 L12 64 Z' fill='none' stroke='%23ffd75e' stroke-width='1.5' opacity='0.85'/><path d='M14 32 L50 32' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/><path d='M14 38 L46 38' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/><path d='M14 44 L48 44' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/><path d='M14 50 L42 50' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/></g><g transform='translate(34 52)'><circle cx='6' cy='6' r='6' fill='none' stroke='%234ec3ff' stroke-width='1.4'/><line x1='10' y1='10' x2='16' y2='16' stroke='%234ec3ff' stroke-width='2' stroke-linecap='round'/></g></svg>") no-repeat center / 80% auto;
+}
+
+/* 空時の card-back は薄く */
+.file-area .stack-display .card-back.empty {
+  opacity: 0.25;
+  filter: grayscale(0.6);
+}
+
+/* ---- stack-shadow (3 層) ---- */
+.file-area .stack-display .stack-shadow {
+  position: absolute;
+  width: var(--file-card-w);
+  height: var(--file-card-h);
+  border-radius: 4px;
+  background: linear-gradient(160deg, #1a1f30, #0a0e1c);
+  border: 1.5px solid #2a3552;
+  z-index: 1;
+}
+.file-area .stack-shadow.s1 { transform: translate(2px, 2px) rotate(1deg); }
+.file-area .stack-shadow.s2 { transform: translate(4px, 4px) rotate(3deg); }
+.file-area .stack-shadow.s3 { transform: translate(6px, 6px) rotate(-1deg); }
+
+/* ---- count-overlay ---- */
+.file-area .stack-display .count-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--file-accent);
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  font-size: 22px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border: 1.5px solid var(--file-accent);
+  border-radius: 3px;
+  text-shadow: 0 0 6px color-mix(in oklch, var(--file-accent) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklch, var(--file-accent) 30%, transparent);
+  z-index: 3;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+/* ---- 進捗バー (連続ストライプ) ---- */
+.file-area .progress-track {
+  height: 4px;
+  margin-top: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.file-area .progress-track .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--file-accent),
+    color-mix(in oklch, var(--file-accent) 50%, #ff9b3e));
+  border-radius: 2px;
+  box-shadow: 0 0 6px color-mix(in oklch, var(--file-accent) 50%, transparent);
+  transition: width 0.3s ease-out;
+}
+
+/* ---- アシスト中パートナー (FILE 内に混入する識別カード) ---- */
+.file-area .stack-display .card-back.assisted-partner {
+  /* スリープ向きで一目で「パートナーがアシスト中」とわかるようにする */
+  transform: rotate(-90deg);
+  background:
+    linear-gradient(160deg,
+      color-mix(in oklch, var(--color-blue, #2b6cb5) 35%, #0a0e1c),
+      #0a0e1c);
+  border: 1px solid color-mix(in oklch, var(--file-accent) 55%, transparent);
+  box-shadow: 0 0 8px color-mix(in oklch, var(--color-blue, #2b6cb5) 40%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 4px;
+}
+/* assisted-partner の場合 SVG オーバーレイは出さない (パートナー色を見せる) */
+.file-area .stack-display.file .card-back.assisted-partner::before {
+  display: none;
+}
+
+/* 色違いボーダー */
+.file-area .card-back.assisted-partner.color-blue   { box-shadow: 0 0 8px color-mix(in oklch, var(--color-blue,   #2b6cb5) 50%, transparent); }
+.file-area .card-back.assisted-partner.color-yellow { box-shadow: 0 0 8px color-mix(in oklch, var(--color-yellow, #d4a425) 50%, transparent); }
+.file-area .card-back.assisted-partner.color-red    { box-shadow: 0 0 8px color-mix(in oklch, var(--color-red,    #c84040) 50%, transparent); }
+.file-area .card-back.assisted-partner.color-green  { box-shadow: 0 0 8px color-mix(in oklch, var(--color-green,  #3aa67a) 50%, transparent); }
+.file-area .card-back.assisted-partner.color-purple { box-shadow: 0 0 8px color-mix(in oklch, var(--color-purple, #8a4cc0) 50%, transparent); }
+
+/* パートナー識別マーカー */
+.file-area .card-back.assisted-partner .partner-stripe {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-blue, #2b6cb5);
+}
+.file-area .card-back.assisted-partner.color-yellow .partner-stripe { background: var(--color-yellow, #d4a425); }
+.file-area .card-back.assisted-partner.color-red    .partner-stripe { background: var(--color-red,    #c84040); }
+.file-area .card-back.assisted-partner.color-green  .partner-stripe { background: var(--color-green,  #3aa67a); }
+.file-area .card-back.assisted-partner.color-purple .partner-stripe { background: var(--color-purple, #8a4cc0); }
+
+.file-area .card-back.assisted-partner .partner-mark {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--file-accent);
+  text-shadow: 0 0 4px color-mix(in oklch, var(--file-accent) 50%, transparent);
+  /* rotate(-90) を打ち消して読みやすく */
+  transform: rotate(90deg);
+}
+.file-area .card-back.assisted-partner .partner-name {
+  font-size: 7px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--file-text-second);
+  line-height: 1.1;
+  padding: 1px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 1px;
+  /* 90 度回転を打ち消して読みやすく */
+  transform: rotate(90deg);
+  transform-origin: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 相手側はスタックを上下反転 (対面感) */
+.file-area.side-opp .stack-display .card-back:not(.assisted-partner) {
+  transform: rotate(178deg);
+}
+.file-area.side-opp .stack-shadow.s1 { transform: translate(-2px, -2px) rotate(-1deg); }
+.file-area.side-opp .stack-shadow.s2 { transform: translate(-4px, -4px) rotate(-3deg); }
+.file-area.side-opp .stack-shadow.s3 { transform: translate(-6px, -6px) rotate(1deg); }

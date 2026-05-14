@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>FileArea — プロトタイププレビュー</title>
+
+<!-- React + Babel (pinned) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="FileArea.css">
+
+<style>
+  :root {
+    --bg-deep:        #0a1a28;
+    --bg-cell:        rgba(0, 0, 0, 0.32);
+    --border-zone:    #3a6ea5;
+    --neon-blue:      #4ec3ff;
+    --accent-gold:    #ffd700;
+
+    --color-blue:     #2b6cb5;
+    --color-yellow:   #d4a425;
+    --color-red:      #c84040;
+    --color-green:    #3aa67a;
+    --color-purple:   #8a4cc0;
+
+    --text-primary:   #e0ecf8;
+    --text-secondary: #b8d4f0;
+    --text-muted:     #7090b5;
+    --text-disabled:  #4a5a70;
+
+    --font-jp:   "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", -apple-system, sans-serif;
+    --font-mono: "Cascadia Code", "Consolas", "Menlo", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; min-height: 100%;
+    background:
+      radial-gradient(ellipse at 50% 30%, #15263e 0%, #0a1424 50%, #050a14 100%);
+    color: var(--text-primary);
+    font-family: var(--font-jp);
+  }
+  body { padding: 40px 28px 56px; }
+
+  .page-title {
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .page-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    max-width: 800px;
+    line-height: 1.7;
+  }
+  .page-sub code {
+    font-family: var(--font-mono);
+    background: rgba(255,255,255,0.06);
+    padding: 0 4px;
+    border-radius: 2px;
+    color: #ffd75e;
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 280px));
+    gap: 36px 28px;
+    max-width: 720px;
+  }
+  .demo-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .demo-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    border-left: 2px solid var(--accent-gold);
+    padding: 2px 0 2px 10px;
+  }
+  .demo-label small {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-disabled);
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    font-size: 10px;
+    text-transform: none;
+  }
+
+  .file-host {
+    width: 156px;
+  }
+
+  .legend {
+    margin-top: 44px;
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 215, 0, 0.18);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 760px;
+  }
+  .legend h3 {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .legend code {
+    font-family: var(--font-mono);
+    background: rgba(255,255,255,0.06);
+    padding: 0 4px;
+    border-radius: 2px;
+    color: #ffd75e;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">FileArea — Phase 7 静的表示プロトタイプ</div>
+<p class="page-sub">
+  FILE エリア (横向き card-back スタック + 7マス進捗 + アシスト中パートナー混在) の検証。
+  実プロジェクトでは <code>cards</code> 配列の <code>type: 'card-back' | 'assisted-partner'</code>
+  と、必要に応じて <code>resolveCard(cardId)</code> を渡してください。
+  操作系 (クリック → モーダル展開) は本フェーズでは未実装。
+</p>
+
+<div id="root"></div>
+
+<div class="legend">
+  <h3>凡例</h3>
+  <div>
+    上端 <code>.progress-7</code>: 7 マスのドット、FILE 枚数だけ <code>--accent-gold</code> で点灯
+  </div>
+  <div>
+    中央 <code>.card-back</code>: 通常は <strong>書類＋虫眼鏡</strong> SVG オーバーレイ。
+    アシスト中パートナーは <strong>sleep 向き (rotate -90°)</strong> ＋ パートナー色ストライプで識別
+  </div>
+  <div>
+    下端 <code>.progress-track</code>: 連続バー、<code>FILE / 7 × 100%</code> でフィル
+  </div>
+  <div>
+    枚数オーバーレイ: <code>--accent-gold</code> ボーダー + glow、0 枚時も "0" を表示
+  </div>
+</div>
+
+<script type="text/babel" data-presets="typescript,react">
+// ============================================================
+// FileArea.tsx 内容をインライン展開
+// ============================================================
+
+function FileCardItem({ card, resolveCard }) {
+  if (card.type === 'card-back') {
+    return (
+      <div className="card-back" aria-label="FILE card (face-down)">
+        <div className="monogram" aria-hidden="true">DC</div>
+        <div className="magnifier" aria-hidden="true"></div>
+      </div>
+    );
+  }
+  const meta = resolveCard ? resolveCard(card.cardId) : null;
+  const color = (meta && meta.color) || 'blue';
+  return (
+    <div
+      className={`card-back assisted-partner sleep color-${color}`}
+      data-card-id={card.cardId}
+      aria-label="Assisted partner in FILE"
+    >
+      <div className="partner-stripe" aria-hidden="true"></div>
+      <div className="partner-mark">P</div>
+      {meta && meta.name && <div className="partner-name">{meta.name}</div>}
+    </div>
+  );
+}
+
+function FileArea({ cards, side, resolveCard, threshold = 7 }) {
+  const count = cards.length;
+  const progress = Math.min(count, threshold);
+  const fillPct = Math.min(100, (count / threshold) * 100);
+  const lastAssisted = [...cards].reverse().find(c => c.type === 'assisted-partner');
+  const topCard = lastAssisted || { type: 'card-back' };
+  const cells = Array.from({ length: threshold }, (_, i) => i < progress);
+  return (
+    <div
+      className={`zone file-strip file-area side-${side}`}
+      data-side={side}
+      data-count={count}
+    >
+      <div className="file-strip-header">
+        <span>FILE</span>
+        <div
+          className="progress-7"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={threshold}
+          aria-valuenow={progress}
+        >
+          {cells.map((on, i) => (
+            <span key={i} className={on ? 'filled' : ''}></span>
+          ))}
+        </div>
+      </div>
+      <div className="zone-label">
+        <span>FILE</span>
+        <span className="count">{count}</span>
+      </div>
+      <div className="stack-display file">
+        <div className="stack-shadow s3" aria-hidden="true"></div>
+        <div className="stack-shadow s2" aria-hidden="true"></div>
+        <div className="stack-shadow s1" aria-hidden="true"></div>
+        {count > 0 ? (
+          <FileCardItem card={topCard} resolveCard={resolveCard} />
+        ) : (
+          <div className="card-back empty" aria-label="FILE empty"></div>
+        )}
+        <div className="count-overlay">{count}</div>
+      </div>
+      <div className="progress-track">
+        <div className="progress-fill" style={{ width: `${fillPct}%` }}></div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ダミー resolveCard (パートナー名解決) — 汎用探偵モチーフ
+// ============================================================
+const CARD_DB = {
+  'pd-001': { name: 'シャーロック・H', color: 'blue',   ap: 6000, lp: 2, lv: 8 },
+  'pd-003': { name: 'M. デュパン',     color: 'yellow', ap: 5500, lp: 1, lv: 7 },
+};
+const resolveCard = (id) => CARD_DB[id] || { name: '???', color: 'blue', ap: 0, lp: 0, lv: 1 };
+
+// ============================================================
+// 4 ケース
+// ============================================================
+const CASE_0 = []; // 空 0/7
+const CASE_4 = [
+  { type: 'card-back' }, { type: 'card-back' },
+  { type: 'card-back' }, { type: 'card-back' },
+]; // 4/7
+const CASE_7 = [
+  { type: 'card-back' }, { type: 'card-back' }, { type: 'card-back' },
+  { type: 'card-back' }, { type: 'card-back' }, { type: 'card-back' },
+  { type: 'card-back' },
+]; // 7/7
+const CASE_MIX = [
+  { type: 'card-back' }, { type: 'card-back' }, { type: 'card-back' },
+  { type: 'card-back' }, { type: 'card-back' },
+  { type: 'assisted-partner', cardId: 'pd-001' },
+]; // 6/7, 末尾がアシスト中パートナー
+
+function App() {
+  return (
+    <div className="demo-grid">
+      <div className="demo-cell">
+        <div className="demo-label">
+          FILE 0 枚
+          <small>空状態 / 進捗 0/7</small>
+        </div>
+        <div className="file-host">
+          <FileArea cards={CASE_0} side="self" />
+        </div>
+      </div>
+
+      <div className="demo-cell">
+        <div className="demo-label">
+          FILE 4 枚
+          <small>進捗 4/7 (≈ 57%)</small>
+        </div>
+        <div className="file-host">
+          <FileArea cards={CASE_4} side="self" />
+        </div>
+      </div>
+
+      <div className="demo-cell">
+        <div className="demo-label">
+          FILE 7 枚 ✦
+          <small>解決編移行可 / 進捗 7/7 満タン</small>
+        </div>
+        <div className="file-host">
+          <FileArea cards={CASE_7} side="self" />
+        </div>
+      </div>
+
+      <div className="demo-cell">
+        <div className="demo-label">
+          FILE 6 枚 + アシスト中
+          <small>card-back 5 + パートナー 1 / 進捗 6/7</small>
+        </div>
+        <div className="file-host">
+          <FileArea cards={CASE_MIX} side="self" resolveCard={resolveCard} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+
+</body>
+</html>

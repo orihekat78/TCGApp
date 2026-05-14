@@ -20,6 +20,7 @@ import { RemoveArea } from './RemoveArea.js';
 import { LogPanel } from './LogPanel.js';
 import { EffectStackPanel } from './EffectStackPanel.js';
 import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
+import { FileArea } from './FileArea.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -75,7 +76,11 @@ function PlayerMat({ side, state, resolveCard }: PlayerMatProps): JSX.Element {
         side={side}
         resolveCard={resolveCard}
       />
-      <div className="file-row" aria-label="FILE" />
+      <FileArea
+        cards={state?.players[side].file ?? []}
+        side={side}
+        resolveCard={resolveCard}
+      />
     </div>
   );
 }
