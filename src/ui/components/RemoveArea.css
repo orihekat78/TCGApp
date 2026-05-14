@@ -1,0 +1,108 @@
+/* RemoveArea.css
+ * リムーブエリア (最新カード + 枚数) のスタイル。
+ * 視覚 SoT: design-mockups/01-board-mockup.html 1407-1418 行
+ */
+
+.remove-area {
+  --remove-card-w: 46px;
+  --remove-card-h: 64px;
+
+  background: var(--bg-cell);
+  border: 1px solid color-mix(in oklch, var(--border-zone) 60%, transparent);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-jp);
+  color: var(--text-primary);
+}
+
+.remove-area .zone-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.remove-area .zone-label .count {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.remove-area .zone-label .count.zero {
+  color: color-mix(in oklch, var(--state-stun) 80%, white 20%);
+}
+
+.remove-area .stack-display {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.remove-area .card {
+  width: var(--remove-card-w);
+  height: var(--remove-card-h);
+  border-radius: 4px;
+  background: linear-gradient(160deg, #1a2638 0%, #0a1320 100%);
+  border: 1.5px solid #2a4a6e;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transform: rotate(-2deg);
+}
+
+.remove-area .card.color-blue   { border-color: color-mix(in oklch, var(--color-blue)   70%, white 10%); }
+.remove-area .card.color-yellow { border-color: color-mix(in oklch, var(--color-yellow) 70%, white 10%); }
+.remove-area .card.color-red    { border-color: color-mix(in oklch, var(--color-red)    70%, white 10%); }
+.remove-area .card.color-green  { border-color: color-mix(in oklch, var(--color-green)  70%, white 10%); }
+.remove-area .card.color-purple { border-color: color-mix(in oklch, var(--color-purple) 70%, white 10%); }
+
+.remove-area .card .color-stripe {
+  height: 5px;
+  flex-shrink: 0;
+  background: var(--color-blue);
+}
+.remove-area .card.color-yellow .color-stripe { background: var(--color-yellow); }
+.remove-area .card.color-red    .color-stripe { background: var(--color-red); }
+.remove-area .card.color-green  .color-stripe { background: var(--color-green); }
+.remove-area .card.color-purple .color-stripe { background: var(--color-purple); }
+
+.remove-area .card .art {
+  flex: 1;
+  margin: 2px;
+  background: linear-gradient(135deg,
+    color-mix(in oklch, var(--neon-blue) 8%, transparent),
+    rgba(0, 0, 0, 0.4));
+  border-radius: 2px;
+}
+.remove-area .card .art .silhouette {
+  width: 70%;
+  height: 70%;
+  margin: 15% auto;
+  background: radial-gradient(ellipse at 50% 30%,
+    rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.6));
+  border-radius: 50% 50% 40% 40%;
+  filter: blur(1.2px);
+}
+
+.remove-area .stack-empty {
+  width: var(--remove-card-w);
+  height: var(--remove-card-h);
+  display: grid;
+  place-items: center;
+  border: 1.5px dashed color-mix(in oklch, var(--state-stun) 50%, transparent);
+  border-radius: 4px;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: color-mix(in oklch, var(--state-stun) 80%, white 20%);
+  font-weight: 800;
+}

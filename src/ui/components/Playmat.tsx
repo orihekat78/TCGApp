@@ -16,6 +16,7 @@ import type { GameState } from '@/engine/types/game-state.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
+import { RemoveArea } from './RemoveArea.js';
 import './Playmat.css';
 
 export type PlaymatProps = {
@@ -42,7 +43,11 @@ function PlayerMat({ side, state, resolveCard }: PlayerMatProps): JSX.Element {
         resolveCard={resolveCard}
       />
       <DeckArea count={state?.players[side].deck.length ?? 0} side={side} />
-      <div className="zone remove-col remove-zone" aria-label="リムーブ" />
+      <RemoveArea
+        cards={state?.players[side].remove ?? []}
+        side={side}
+        resolveCard={resolveCard}
+      />
       <div className="file-row" aria-label="FILE" />
     </div>
   );

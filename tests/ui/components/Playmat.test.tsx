@@ -90,6 +90,14 @@ describe('Playmat', () => {
     expect(html.match(/deck-empty/g)?.length).toBe(2);
   });
 
+  it('renders RemoveArea (real component) inside each mat (EMPTY when null state)', () => {
+    const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
+    expect(html.match(/remove-area side-opp/g)?.length).toBe(1);
+    expect(html.match(/remove-area side-self/g)?.length).toBe(1);
+    expect(html.match(/class="count zero">0</g)?.length).toBe(2);
+    expect(html.match(/stack-empty/g)?.length).toBe(2);
+  });
+
   it('renders empty SceneArea (5/5) when gameState is null', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     // 5 empty slots per mat × 2 mats = 10 .slot-empty divs
