@@ -2,9 +2,9 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1 + 8.2 完了 ✅
-**最新コミット**: `009c3b9` (Task 8.1 useEngineDispatch land) — Task 8.2 commit 待ち
-**テスト状況**: 1162 PASS / 130 test files (+31 from Phase 7.5) / typecheck clean / docs:check clean
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1 + 8.2 + 8.3 完了 ✅
+**最新コミット**: `1bff9b2` (Task 8.2 useTargetPicker) — Task 8.3 commit 待ち
+**テスト状況**: 1173 PASS / 131 test files (+42 from Phase 7.5) / typecheck clean / docs:check clean
 **ブラウザ表示**: `npm run dev` で 13 エリア描画 (操作配線は Task 8.5 で着手)
 
 ## 進捗トラッカー
@@ -15,7 +15,7 @@
 - [ ] **Phase 8: UI Interactions** ← 進行中
   - [x] **8.1** `useEngineDispatch` — [sessions/2026-05-15-3](sessions/2026-05-15-3.md)
   - [x] **8.2** `useTargetPicker` — [sessions/2026-05-15-3](sessions/2026-05-15-3.md) (#8.2 追記)
-  - [ ] 8.3 `useConfirmation`
+  - [x] **8.3** `useConfirmation` — [sessions/2026-05-15-4](sessions/2026-05-15-4.md)
   - [ ] 8.4 ゲーム開始モーダル
   - [ ] 8.5 ActionsPanel onClick 配線
   - [ ] 8.6 コンタクトモーダル
@@ -24,14 +24,14 @@
 
 ## 次セッション開始時の最優先タスク
 
-⭐ **Phase 8 Task 8.3** `useConfirmation`
+⭐ **Phase 8 Task 8.4** ゲーム開始モーダル (Setup → Mulligan → FirstPlayer → Reveal → Start)
 
 詳細プラン: [phase-8-ui-interactions.md](research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md)
+spec: `.claude/specs/2026-05-11-ui-game-setup-flows.md`
 
-Q9 厳格モード — 「全行動で実行/キャンセル確認」モーダルの hook。
-useTargetPicker の confirming phase とは別レイヤ (target を持たない宣言行動の確認や
-アシストの強警告・事件解決の勝利予告など、target picker 不要なケース対応)。
-最終的に統一/分離するかは 8.3 設計時に判断。
+`flow.setup()` engine API と組合せ、useEngineDispatch / useConfirmation を再利用して
+ゲーム開始フローを構築する。8.5 (ActionsPanel onClick 配線) より先にやることで
+初回起動時のゲーム生成パスを通せる。
 
 ### Phase 8 完了後の layout polish TODO
 
@@ -52,7 +52,8 @@ Phase 8 完了後にもう 1 ラウンド polish 予定: カード画像実フ�
 - [2026-05-14-2](sessions/2026-05-14-2.md) — Obsidian × Engine 統合
 - [2026-05-15](sessions/2026-05-15.md) — Phase 7 UI Shell 完了 (session 1)
 - [2026-05-15-2](sessions/2026-05-15-2.md) — Phase 7.5 layout pivot (session 2)
-- [2026-05-15-3](sessions/2026-05-15-3.md) — **Phase 8.1 useEngineDispatch** (session 3)
+- [2026-05-15-3](sessions/2026-05-15-3.md) — Phase 8.1 useEngineDispatch + 8.2 useTargetPicker
+- [2026-05-15-4](sessions/2026-05-15-4.md) — **Phase 8.3 useConfirmation** (session 4)
 
 ## 主要参照
 

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c395a81952f3`
+> Source hash: `f18647eaef32`
 
 仕様書 [`2026-05-11-ui-action-flows`](../../../specs/2026-05-11-ui-action-flows.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 
@@ -17,6 +17,7 @@
 - [`17-icons.md`](../by-rule/17-icons.md)
 - [`26-05-11-ui-action-flows.md`](../by-rule/26-05-11-ui-action-flows.md)
 
-## 📄 参照ソース (1)
+## 📄 参照ソース (2)
 
+- [`src/ui/hooks/useConfirmation.ts`](../../../../src/ui/hooks/useConfirmation.ts)
 - [`src/ui/hooks/useTargetPicker.ts`](../../../../src/ui/hooks/useTargetPicker.ts)
