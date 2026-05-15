@@ -3,12 +3,12 @@
 // Playmat に渡す。これによって useEngineDispatch 経由の更新が UI に反映される。
 
 import { Playmat } from '@/ui/components/Playmat';
+import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import {
   createCardResolver,
   createCaseResolver,
   createHandCardResolver,
 } from '@/ui/services/cardResolvers';
-import { createSampleGameState } from '@/ui/fixtures/sampleGameState';
 import { useGameStateStore } from '@/ui/state/store.js';
 import '@/ui/styles/tokens.css';
 
@@ -19,20 +19,22 @@ const resolveCard = createCardResolver(ctD08 as never, ctD11 as never);
 const resolveCase = createCaseResolver(ctD08 as never, ctD11 as never);
 const resolveHandCard = createHandCardResolver(ctD08 as never, ctD11 as never);
 
-// 起動時に store を初期化 (一度だけ — null チェックで HMR にも耐える)
-if (useGameStateStore.getState().gameState === null) {
-  useGameStateStore.getState().setGameState(createSampleGameState());
-}
+// Task 8.4: 起動時の sampleGameState 自動 push を廃止。
+// gameState === null のとき GameSetupModal が表示され、ユーザの「対戦開始」操作で
+// setGameState が呼ばれる動線に変更。
 
 export default function App() {
   // Store から購読: dispatch が走ったときに再描画される。
   const gameState = useGameStateStore((s) => s.gameState);
   return (
-    <Playmat
-      gameState={gameState}
-      resolveCard={resolveCard}
-      resolveCase={resolveCase}
-      resolveHandCard={resolveHandCard}
-    />
+    <>
+      <Playmat
+        gameState={gameState}
+        resolveCard={resolveCard}
+        resolveCase={resolveCase}
+        resolveHandCard={resolveHandCard}
+      />
+      <GameSetupModal />
+    </>
   );
 }

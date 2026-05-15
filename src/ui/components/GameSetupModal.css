@@ -1,0 +1,72 @@
+/* GameSetupModal.css — Task 8.4
+ * 起動時の全画面オーバーレイ + 中央モーダル。tokens.css の変数を流用。
+ */
+
+.game-setup-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.game-setup-modal {
+  background: linear-gradient(140deg, #0e1722 0%, #1c2a3f 100%);
+  border: 1px solid color-mix(in oklch, var(--scene-neon, #6cf) 40%, transparent);
+  border-radius: 12px;
+  padding: 48px 64px;
+  text-align: center;
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.6),
+              0 0 30px color-mix(in oklch, var(--scene-neon, #6cf) 30%, transparent);
+  min-width: 420px;
+}
+
+.game-setup-modal h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-primary, #fff);
+}
+
+.game-setup-subtitle {
+  margin: 0 0 32px;
+  font-size: 13px;
+  color: var(--text-muted, #8aa3c0);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.game-setup-start-btn {
+  display: inline-block;
+  padding: 14px 56px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #fff;
+  background: linear-gradient(135deg, #4a9eff 0%, #2967c9 100%);
+  border: 1px solid color-mix(in oklch, #4a9eff 60%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.game-setup-start-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(74, 158, 255, 0.4);
+}
+
+.game-setup-start-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.game-setup-note {
+  margin: 24px 0 0;
+  font-size: 11px;
+  color: var(--text-muted, #8aa3c0);
+  line-height: 1.5;
+}
