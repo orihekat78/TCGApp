@@ -23,7 +23,10 @@ import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
 import { HandZone, type HandCardMeta } from './HandZone.js';
 import { TopBar } from './TopBar.js';
-import { ActionsPanel } from './ActionsPanel.js';
+import { ActionsPanel, type ActionItemId } from './ActionsPanel.js';
+import { ConfirmModal } from './ConfirmModal.js';
+import { runEndTurnFlow } from '../hooks/useActionsPanelFlow.js';
+import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -166,7 +169,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* HandZone (Task 7.11) */}
         <HandZone cards={handCards} />
 
-        {/* ActionsPanel (Phase 7.5、操作系は Phase 8 で配線) */}
+        {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}
         <ActionsPanel
           handCount={handCards.length}
           handUseRemaining={gameState?.turnState.self.handUseUsed ? 0 : 1}
@@ -177,8 +180,21 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           reasoningTotalLP={0}
           actionMode="idle"
           currentPhase={gameState?.turn.phase ?? 'main'}
-          canEndTurn={true}
+          canEndTurn={
+            (gameState?.turn.player === 'self') &&
+            (gameState?.turn.phase === 'main')
+          }
+          onEndTurn={() => { void runEndTurnFlow({ player: 'self' }); }}
+          onActionItemClick={(id: ActionItemId) => {
+            // Phase 8.6+ で各アクションのフローを配線する。
+            // 現状は console に出して未配線であることを示す。
+            // eslint-disable-next-line no-console
+            console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
+          }}
         />
+
+        {/* ConfirmModal — useConfirmation の state を全画面オーバーレイで描画 */}
+        <PlaymatConfirmModal />
 
         {/* Narrator message bar (bottom, 操作説明用 — Phase 8 で動的に) */}
         <div className="narrator-msg" role="status">
@@ -190,4 +206,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       </div>
     </div>
   );
+}
+
+/**
+ * Playmat 内部の ConfirmModal ラッパ。
+ * useConfirmation store を subscribe して controlled な ConfirmModal に渡す。
+ * ConfirmModal 本体は presentation のみ (SSR/test 容易性のため)。
+ */
+function PlaymatConfirmModal(): JSX.Element | null {
+  const current = useConfirmationStore((s) => s.current);
+  const { accept, reject } = useConfirmation();
+  return <ConfirmModal current={current} onAccept={accept} onReject={reject} />;
 }

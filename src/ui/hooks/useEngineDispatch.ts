@@ -12,10 +12,10 @@
 //     friendly な DispatchResult を返す (engine の throw は engine-error として包む)。
 
 import { produce } from 'immer';
-import * as flow from '@/engine/flow';
-import { runAllUntilEmpty } from '@/engine/resolve';
-import { useGameStateStore } from '@/ui/state/store';
-import type { GameState } from '@/engine/types/game-state';
+import * as flow from '@/engine/flow/index.js';
+import { runAllUntilEmpty } from '@/engine/resolve/index.js';
+import { useGameStateStore } from '@/ui/state/store.js';
+import type { GameState } from '@/engine/types/game-state.js';
 
 type Player = 'self' | 'opp';
 

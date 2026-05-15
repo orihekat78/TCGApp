@@ -1,0 +1,112 @@
+/* Phase 8 Task 8.5: ConfirmModal styling */
+
+.confirm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: confirm-modal-fade-in 0.16s ease-out;
+}
+
+.confirm-modal {
+  background: #f5efe1;
+  border: 2px solid #6b3a17;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  min-width: 360px;
+  max-width: 480px;
+  font-family: var(--font-jp, 'Yu Gothic UI', sans-serif);
+  color: #1a1a1a;
+  overflow: hidden;
+}
+
+.confirm-modal-header {
+  background: linear-gradient(180deg, #c5a25d 0%, #b48b46 100%);
+  color: #fff;
+  padding: 12px 20px;
+  border-bottom: 1px solid #6b3a17;
+}
+
+.confirm-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.confirm-modal-body {
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.confirm-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 20px 16px;
+  background: rgba(0, 0, 0, 0.04);
+  border-top: 1px solid rgba(107, 58, 23, 0.25);
+}
+
+.confirm-cancel,
+.confirm-ok {
+  min-width: 96px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.06s;
+  border: 1px solid #6b3a17;
+}
+
+.confirm-cancel {
+  background: #e5dccb;
+  color: #3a2410;
+}
+
+.confirm-ok {
+  background: linear-gradient(180deg, #4fa84f 0%, #357335 100%);
+  color: #fff;
+  border-color: #2a5c2a;
+}
+
+.confirm-cancel:hover,
+.confirm-ok:hover {
+  filter: brightness(1.06);
+}
+
+.confirm-cancel:active,
+.confirm-ok:active {
+  transform: translateY(1px);
+}
+
+/* kind modifiers */
+.confirm-modal--warning .confirm-modal-header {
+  background: linear-gradient(180deg, #c8732b 0%, #a35415 100%);
+}
+
+.confirm-modal--warning .confirm-ok {
+  background: linear-gradient(180deg, #d6533a 0%, #a83320 100%);
+  border-color: #6b1a0c;
+}
+
+.confirm-modal--victory .confirm-modal-header {
+  background: linear-gradient(180deg, #d4af37 0%, #a37414 100%);
+}
+
+.confirm-modal--victory .confirm-ok {
+  background: linear-gradient(180deg, #d4af37 0%, #8b5a14 100%);
+  border-color: #6b3e07;
+  color: #1a1a1a;
+}
+
+@keyframes confirm-modal-fade-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}

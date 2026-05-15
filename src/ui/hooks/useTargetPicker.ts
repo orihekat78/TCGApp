@@ -22,6 +22,7 @@
 //   - これにより React レンダラ無しのテストから直接 hook を呼び出せる。
 
 import { create } from 'zustand';
+// (no other module imports — state is self-contained)
 
 export type PickerPhase =
   | { phase: 'idle' }

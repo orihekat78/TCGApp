@@ -27,7 +27,19 @@ export type ActionsPanelProps = {
   currentPhase: PhaseId;
   /** END ターン押下可否 (Phase 7.5 は常時 true、Phase 8 で制御) */
   canEndTurn: boolean;
+  /** END ターン終了 ボタンクリック (Phase 8.5 で配線) */
+  onEndTurn?: () => void;
+  /** 6 行動 のクリック (Phase 8.5 で onEndTurn 以外はスタブ、8.6+ で配線) */
+  onActionItemClick?: (actionId: ActionItemId) => void;
 };
+
+export type ActionItemId =
+  | 'hand-use'
+  | 'next-hint'
+  | 'partner-ability'
+  | 'declared-ability'
+  | 'reasoning'
+  | 'action';
 
 type ActionItem = {
   id: string;
@@ -53,6 +65,8 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
     actionMode,
     currentPhase,
     canEndTurn,
+    onEndTurn,
+    onActionItemClick,
   } = props;
 
   const actionModeLabel =
@@ -118,6 +132,12 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
               className={classes}
               data-action-id={item.id}
               aria-disabled={item.disabled || undefined}
+              onClick={
+                item.disabled || !onActionItemClick
+                  ? undefined
+                  : () => onActionItemClick(item.id as ActionItemId)
+              }
+              style={item.disabled ? undefined : { cursor: 'pointer' }}
             >
               <span className="action-icon" aria-hidden="true" />
               <span className="action-body">
@@ -153,6 +173,7 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
         className="end-turn-btn"
         aria-label="ターン終了"
         disabled={!canEndTurn}
+        onClick={onEndTurn}
       >
         <span className="end-turn-small">END</span>
         <span className="end-turn-big">ターン終了</span>

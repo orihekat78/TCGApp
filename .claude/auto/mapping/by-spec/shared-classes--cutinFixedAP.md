@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `f18647eaef32`
+> Source hash: `4f7903966e5a`
 
 仕様書 [`cutinFixedAP`](../../../specs/shared-classes/cutinFixedAP.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 
