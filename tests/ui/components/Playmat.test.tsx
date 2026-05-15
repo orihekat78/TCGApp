@@ -50,14 +50,16 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="panel-log-btn-count">0/);
   });
 
-  it('renders ActionsPanel (Phase 7.5 — 6 action items + phase toggles + END turn)', () => {
+  it('renders ActionsPanel (Phase 8.6 — 8 action items (6 main + assist + solve-case) + phase toggles + END turn)', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     expect(html).toMatch(/class="actions-panel"[^>]*aria-label="操作パネル"/);
     expect(html).toMatch(/actions-header">ACTIONS</);
-    // 6 action items
-    expect(html.match(/class="action-item/g)?.length).toBe(6);
+    // 6 main + アシスト + 事件解決 = 8 items (Phase 8.6 で追加)
+    expect(html.match(/class="action-item/g)?.length).toBe(8);
     expect(html).toMatch(/data-action-id="hand-use"/);
     expect(html).toMatch(/data-action-id="action"/);
+    expect(html).toMatch(/data-action-id="assist"/);
+    expect(html).toMatch(/data-action-id="solve-case"/);
     // phase toggles
     expect(html.match(/data-phase="(auto|main|end)"/g)?.length).toBe(3);
     // END turn

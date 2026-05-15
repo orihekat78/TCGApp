@@ -123,3 +123,96 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   if (!accepted) return { ok: false, reason: 'cancelled' };
   return dispatchEngineAction({ type: 'nextHint', player: opts.player });
 }
+
+/**
+ * UI 側 can-check: src/ai/move-enumerator.ts canAssist と同条件。
+ * ActionsPanel の disabled 表示と runAssistFlow 内 not-allowed 判定で共有する。
+ */
+export function canAssistForUi(
+  state: import('@/engine/types/game-state.js').GameState,
+  player: Player,
+): boolean {
+  const ps = state.players[player];
+  if (ps.partner.state !== 'active') return false;
+  if (ps.partner.location !== 'partner-area') return false;
+  if (state.turnState[player].assistedThisTurn) return false;
+  return true;
+}
+
+/**
+ * UI 側 can-check: src/ai/move-enumerator.ts canSolveCase と同条件。
+ */
+export function canSolveCaseForUi(
+  state: import('@/engine/types/game-state.js').GameState,
+  player: Player,
+): boolean {
+  const ps = state.players[player];
+  if (ps.case.status !== '解決編') return false;
+  if (ps.evidence.length < ps.case.requiredEvidence) return false;
+  if (ps.partner.state !== 'active') return false;
+  if (state.turnState[player].assistedThisTurn) return false;
+  return true;
+}
+
+/**
+ * アシストフロー: warning モーダル → accept → mutate.partner.assist。
+ *
+ * rules: 13-keywords.md §アシスト / 01-victory-conditions.md §アシストしたターンは勝利できない
+ * spec: ui-action-flows.md ③アシスト
+ *
+ * - no-state / not-allowed → reason そのまま返す (state 不変)
+ * - reject → cancelled
+ * - accept → dispatchEngineAction assist の戻り値
+ *
+ * 注: assist 後の FILE 7 枚到達 → 解決編 自動移行は engine 側 (mutate.partner.assist →
+ * mutate.file.insertAssistedPartner) で処理されるため UI は気にしない。
+ */
+export async function runAssistFlow(opts: { player: Player }): Promise<FlowResult> {
+  const state = useGameStateStore.getState().gameState;
+  if (state === null) return { ok: false, reason: 'no-state' };
+  if (!canAssistForUi(state, opts.player)) {
+    return { ok: false, reason: 'not-allowed' };
+  }
+  const fileCount = state.players[opts.player].file.length;
+  const accepted = await useConfirmation().ask({
+    kind: 'warning',
+    title: 'アシスト',
+    body:
+      `パートナーをスリープしてFILEへ移動します (現在 FILE ${fileCount} 枚 → ${fileCount + 1} 枚)。` +
+      'このターン中は事件解決できなくなります。',
+    okLabel: 'アシスト',
+    cancelLabel: 'キャンセル',
+  });
+  if (!accepted) return { ok: false, reason: 'cancelled' };
+  return dispatchEngineAction({ type: 'assist', player: opts.player });
+}
+
+/**
+ * 事件解決フロー: victory モーダル → accept → mutate.partner.solveCase でゲーム勝利。
+ *
+ * rules: 01-victory-conditions.md §事件解決
+ * spec: ui-action-flows.md ④事件解決
+ *
+ * - no-state / not-allowed → そのまま返す
+ * - reject → cancelled
+ * - accept → dispatchEngineAction solveCase。`gameResult.winner` がセットされる。
+ */
+export async function runSolveCaseFlow(opts: { player: Player }): Promise<FlowResult> {
+  const state = useGameStateStore.getState().gameState;
+  if (state === null) return { ok: false, reason: 'no-state' };
+  if (!canSolveCaseForUi(state, opts.player)) {
+    return { ok: false, reason: 'not-allowed' };
+  }
+  const ps = state.players[opts.player];
+  const accepted = await useConfirmation().ask({
+    kind: 'victory',
+    title: '事件解決 ★勝利',
+    body:
+      `必要証拠 ${ps.case.requiredEvidence} 件 / 現在 ${ps.evidence.length} 件。` +
+      'パートナーをスリープして勝利を宣言します。',
+    okLabel: '事件解決',
+    cancelLabel: 'キャンセル',
+  });
+  if (!accepted) return { ok: false, reason: 'cancelled' };
+  return dispatchEngineAction({ type: 'solveCase', player: opts.player });
+}

@@ -2,15 +2,12 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.6 (推理 + ネクストヒント) 完了 ✅
-**最新コミット**: `21b3b9f` Phase 8.6 ネクストヒントフロー UI 統合 (4 tests)
-**テスト状況**: 1191 PASS / 135 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: 推理 + ネクストヒント + endTurn が end-to-end 動作 (5177)
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.6 (推理 + ネクストヒント + アシスト + 事件解決) 完了 ✅
+**最新コミット**: Commit F — Phase 8.6 アシスト / 事件解決フロー UI 統合 (8 tests)
+**テスト状況**: 1199 PASS / 136 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: 推理 + ネクストヒント + アシスト + 事件解決 + endTurn が end-to-end 動作 (5177)
 
-**未コミット作業 (中断時点)**:
-
-- `tests/ui/hooks/useActionsPanelFlow.assist.test.ts` (RED tests 9件: assist 4 + solveCase 5)
-- impl 未着手 — 再開時に runAssistFlow / runSolveCaseFlow + EngineAction 拡張 (`assist` / `solveCase`)
+**未コミット作業**: なし
 
 ## 進捗トラッカー
 
@@ -26,8 +23,9 @@
   - [x] **8.5 polish** HandZone 縮小/拡大 + narrator/log を ActionsPanel に集約 + 大型 scene カード等
   - [x] **8.6 推理** フロー UI 統合 (target picker + ハイライト + dispatch)
   - [x] **8.6 ネクストヒント** フロー UI 統合 (`21b3b9f`, 4 tests)
-  - [ ] **8.6 残**: 手札の使用 / アシスト (RED 4 件あり) / 事件解決 (RED 5 件あり) /
-        パートナー能力 / 宣言能力 / アクション宣言 (target + 9段階 state machine)
+  - [x] **8.6 アシスト + 事件解決** フロー UI 統合 (Commit F, 8 tests)
+  - [ ] **8.6 残**: 手札の使用 / パートナー能力 / 宣言能力 /
+        アクション宣言 (target + 9段階 state machine)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
@@ -37,25 +35,15 @@
 
 **まず手を付けるのが楽な順**:
 
-1. **アシスト + 事件解決** ← RED tests 9 件すでに書いてある (`tests/ui/hooks/useActionsPanelFlow.assist.test.ts`)
-   - 実装: `useActionsPanelFlow.runAssistFlow` / `runSolveCaseFlow` を新設
-   - `useEngineDispatch` の `EngineAction` discriminated union に `assist` / `solveCase` を追加
-     - can-check は `src/ai/move-enumerator.ts` の `canAssist` / `canSolveCase` ロジックを inline
-     - 実行は `engine.mutate.partner.assist` / `engine.mutate.partner.solveCase` を呼ぶ
-       (engine.flow にラッパーがないため、AI 側 `src/ai/policy.ts:117/126` と同じ)
-   - `ActionsPanel`: 6 行動 + 「アシスト」「事件解決」の 2 item 追加 (Phase 8.6 暫定)
-     ※将来は ActionMenu component に移す
-   - `Playmat`: `onActionItemClick('assist')` / `('solve-case')` を配線
-
-2. **手札の使用** — 拡大手札の HandCard クリックを起点にする
+1. **手札の使用** — 拡大手札の HandCard クリックを起点にする
    - 既存の `HandZone.expanded` モード + `onCardClick` prop は実装済 (Phase 8.5)
    - `runHandUseFlow(cardId)` を追加: `canHandUseCard` check → ConfirmModal → dispatch handUseCard
    - キャラの場合は 8.6 後半で「現場スロット選択」UI を追加 (今は flag セットのみで OK、登場処理は Phase 5 listener)
 
-3. **パートナー能力 / 宣言能力** — cost 解決と Phase 5 listener が絡むため複雑。
+2. **パートナー能力 / 宣言能力** — cost 解決と Phase 5 listener が絡むため複雑。
    別タスクで設計検討。
 
-4. **アクション宣言** — target picker + 9 段階 state machine + ガード/コンタクト/カットイン。
+3. **アクション宣言** — target picker + 9 段階 state machine + ガード/コンタクト/カットイン。
    ui-action-flows.md / ui-modal-flows-contact.md を読み直して Phase 8.7+ で着手。
 
 Task 8.4 (ゲーム開始モーダル) は sampleGameState で代替中、必要になったら着手。

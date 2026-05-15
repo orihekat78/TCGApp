@@ -13,6 +13,7 @@
 
 import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
+import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
@@ -20,8 +21,10 @@ import type { GameState } from '@/engine/types/game-state.js';
 type Player = 'self' | 'opp';
 
 /**
- * Phase 8.1 で扱うメインフェイズ単発 action。
- * - action 宣言 / アシスト / 事件解決 / コンタクト 9 段階等は後続 task で別 dispatcher。
+ * Phase 8.1+ で扱うメインフェイズ単発 action。
+ * - action 宣言 / コンタクト 9 段階等は後続 task で別 dispatcher。
+ * - assist / solveCase は flow に専用ラッパが無いため `mutate.partner.*` を直叩き
+ *   (`src/ai/policy.ts` と同じ運用)。can-check は move-enumerator と同じ条件を inline。
  */
 export type EngineAction =
   | { type: 'reasoning'; uid: string }
@@ -29,6 +32,8 @@ export type EngineAction =
   | { type: 'nextHint'; player: Player; optionalCardId?: string }
   | { type: 'partnerAbility'; player: Player; abilId: string }
   | { type: 'declaredAbility'; uid: string; abilId: string }
+  | { type: 'assist'; player: Player }
+  | { type: 'solveCase'; player: Player }
   | { type: 'endTurn'; player: Player };
 
 export type DispatchResult =
@@ -49,6 +54,23 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
       return flow.canPartnerAbility(state, action.player, action.abilId);
     case 'declaredAbility':
       return flow.canDeclaredAbility(state, action.uid, action.abilId);
+    case 'assist': {
+      // src/ai/move-enumerator.ts canAssist と同条件
+      const ps = state.players[action.player];
+      if (ps.partner.state !== 'active') return false;
+      if (ps.partner.location !== 'partner-area') return false;
+      if (state.turnState[action.player].assistedThisTurn) return false;
+      return true;
+    }
+    case 'solveCase': {
+      // src/ai/move-enumerator.ts canSolveCase と同条件
+      const ps = state.players[action.player];
+      if (ps.case.status !== '解決編') return false;
+      if (ps.evidence.length < ps.case.requiredEvidence) return false;
+      if (ps.partner.state !== 'active') return false;
+      if (state.turnState[action.player].assistedThisTurn) return false;
+      return true;
+    }
     case 'endTurn':
       // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
       return state.turn.player === action.player && state.turn.phase === 'main';
@@ -73,6 +95,14 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     case 'declaredAbility':
       flow.useDeclaredAbility(draft, action.uid, action.abilId);
+      return;
+    case 'assist':
+      // flow.assist 未提供のため mutate を直叩き (src/ai/policy.ts:117 と同じ)
+      mutate.partner.assist(draft, action.player);
+      return;
+    case 'solveCase':
+      // flow.solveCase 未提供のため mutate を直叩き (src/ai/policy.ts:126 と同じ)
+      mutate.partner.solveCase(draft, action.player);
       return;
     case 'endTurn':
       flow.endTurn(draft, action.player);

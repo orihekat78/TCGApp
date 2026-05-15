@@ -21,6 +21,10 @@ export type ActionsPanelProps = {
   declaredTargetCount: number;
   /** 推理: 合計 LP (パートナー + active scene キャラ) */
   reasoningTotalLP: number;
+  /** アシスト可否 (move-enumerator.canAssist と同条件) */
+  canAssist?: boolean;
+  /** 事件解決可否 (move-enumerator.canSolveCase と同条件) */
+  canSolveCase?: boolean;
   /** アクション: 対象選択中等の現在モード ('idle' なら未選択) */
   actionMode: 'idle' | 'selecting-target' | 'in-progress';
   /** 現在の Phase (auto / main / end) */
@@ -45,7 +49,9 @@ export type ActionItemId =
   | 'partner-ability'
   | 'declared-ability'
   | 'reasoning'
-  | 'action';
+  | 'action'
+  | 'assist'
+  | 'solve-case';
 
 type ActionItem = {
   id: string;
@@ -68,6 +74,8 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
     partnerActive,
     declaredTargetCount,
     reasoningTotalLP,
+    canAssist = false,
+    canSolveCase = false,
     actionMode,
     currentPhase,
     canEndTurn,
@@ -120,6 +128,18 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
       label: 'アクション',
       subtitle: actionModeLabel,
       active: actionMode !== 'idle',
+    },
+    {
+      id: 'assist',
+      label: 'アシスト',
+      subtitle: canAssist ? 'パートナー→FILE' : '使用不可',
+      disabled: !canAssist,
+    },
+    {
+      id: 'solve-case',
+      label: '事件解決 ★勝利',
+      subtitle: canSolveCase ? '実行可' : 'まだ',
+      disabled: !canSolveCase,
     },
   ];
 

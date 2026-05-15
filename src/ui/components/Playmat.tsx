@@ -25,7 +25,16 @@ import { HandZone, type HandCardMeta } from './HandZone.js';
 import { TopBar } from './TopBar.js';
 import { ActionsPanel, type ActionItemId } from './ActionsPanel.js';
 import { ConfirmModal } from './ConfirmModal.js';
-import { runEndTurnFlow, runReasoningFlow, enumReasoningCandidates, runNextHintFlow } from '../hooks/useActionsPanelFlow.js';
+import {
+  runEndTurnFlow,
+  runReasoningFlow,
+  enumReasoningCandidates,
+  runNextHintFlow,
+  runAssistFlow,
+  runSolveCaseFlow,
+  canAssistForUi,
+  canSolveCaseForUi,
+} from '../hooks/useActionsPanelFlow.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
 import './Playmat.css';
@@ -243,6 +252,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           reasoningTotalLP={
             gameState ? enumReasoningCandidates(gameState, 'self').length : 0
           }
+          canAssist={gameState ? canAssistForUi(gameState, 'self') : false}
+          canSolveCase={gameState ? canSolveCaseForUi(gameState, 'self') : false}
           actionMode="idle"
           currentPhase={gameState?.turn.phase ?? 'main'}
           canEndTurn={
@@ -259,7 +270,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               void runNextHintFlow({ player: 'self' });
               return;
             }
-            // 8.6 残: hand-use / next-hint / partner-ability / declared-ability / action
+            if (id === 'assist') {
+              void runAssistFlow({ player: 'self' });
+              return;
+            }
+            if (id === 'solve-case') {
+              void runSolveCaseFlow({ player: 'self' });
+              return;
+            }
+            // 8.6 残: hand-use / partner-ability / declared-ability / action
             // eslint-disable-next-line no-console
             console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
           }}
