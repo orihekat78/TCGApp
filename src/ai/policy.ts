@@ -14,6 +14,8 @@ import type { GameState, EffectCtx } from '@/engine/types';
 import { engine } from '@/engine';
 import { produce } from 'immer';
 import { enumerateMoves, type Move } from './move-enumerator.js';
+import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-resolution.js';
+import { HeuristicPolicy } from './policies/heuristic.js';
 
 type Player = 'self' | 'opp';
 
@@ -29,6 +31,21 @@ export interface AIPolicy {
    * Returns null if no moves are available (shouldn't happen — at minimum endTurn is always available).
    */
   choose(state: GameState, candidates: Move[], byPlayer: Player): Move | null;
+
+  /**
+   * Phase 8.7c: ガード判定 (optional)。
+   * 防御側の active キャラ候補から 1 つを選んでガードする。null なら passGuard。
+   * 未実装ポリシー (RandomPolicy 等) は省略可 — その場合 caller 側は passGuard で fallback。
+   *
+   * @param ax 進行中の ActionContext (declare 後、guard-window phase)
+   * @param candidates 防御側でガード可能な active キャラ一覧
+   *                   (engine.flow.guard.candidates() の戻り値)
+   */
+  chooseGuard?(
+    state: GameState,
+    ax: import('@/engine/types').ActionContext,
+    candidates: ReadonlyArray<{ uid: string; cardId: string }>,
+  ): string | null;
 
   /** Identifier for logging / debug */
   readonly name: string;
@@ -83,33 +100,13 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       return;
     }
     case 'actionAgainstChar': {
-      const ax = engine.flow.action.declare(state, move.byUid, {
-        kind: 'char',
-        uid: move.targetUid,
-      });
-      // Phase 6 簡略実装: AI 側はガード/カットイン/変装を行わない。
-      // passGuard → leave-resolution → contact-pending → action-1 → action-2 → judge へ進める。
-      engine.flow.action.passGuard(state, ax);
-      engine.flow.action.advance(state, ax); // leave-resolution → contact-pending
-      engine.flow.action.advance(state, ax); // contact-pending → action-1
-      engine.flow.action.advance(state, ax); // action-1 → action-2
-      engine.flow.action.advance(state, ax); // action-2 → judge
-      engine.flow.action.snapshotAP(state, ax);
-      engine.flow.contact.judge(state, ax);
-      engine.flow.action.advance(state, ax); // judge → contact-end
-      engine.flow.action.advance(state, ax); // contact-end → action-end
+      // Phase 8.7c: 防御側ガード判定を HeuristicPolicy に委譲。
+      // 共通ヘルパ resolveActionAgainstChar (src/ai/action-resolution.ts) を経由。
+      resolveActionAgainstChar(state, move.byUid, move.targetUid, new HeuristicPolicy());
       return;
     }
     case 'actionAgainstCase': {
-      const ax = engine.flow.action.declare(state, move.byUid, {
-        kind: 'case',
-        player: move.targetPlayer,
-      });
-      engine.flow.action.passGuard(state, ax);
-      engine.flow.actionCase.removeOpponentEvidenceTop(state, ax);
-      engine.flow.actionCase.gainSelfEvidence(state, ax);
-      engine.flow.action.advance(state, ax); // judge → contact-end (case は contact 省略)
-      engine.flow.action.advance(state, ax); // contact-end → action-end
+      resolveActionAgainstCase(state, move.byUid, move.targetPlayer);
       return;
     }
     case 'assist': {

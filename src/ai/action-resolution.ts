@@ -1,0 +1,77 @@
+// ai.action-resolution — Phase 8.7c: アクション宣言の共通解決ヘルパ
+//
+// rules: 07-action-flow.md / 08-contact.md
+// spec: .claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md
+//
+// 役割:
+//   policy.applyMove と useEngineDispatch (UI) の actionAgainstChar / actionAgainstCase
+//   が同じシーケンスで FSM を端まで進める必要がある。Phase 8.7a までは両者に inline で
+//   重複していたが、Phase 8.7c でガード判定を追加するにあたり、一本化する。
+//
+// 設計:
+//   - state は Immer draft (caller が produce() 内で呼ぶ)
+//   - defenderPolicy.chooseGuard? を呼んでガード判定。未実装 / null 返却なら passGuard
+//   - actionAgainstCase は contact 省略 (rules/10: 証拠リムーブ + 自証拠獲得のみ)
+
+import { engine } from '@/engine';
+import type { GameState } from '@/engine/types';
+import type { AIPolicy } from './policy.js';
+
+type Player = 'self' | 'opp';
+
+/**
+ * アクション [キャラ] の完全解決 (rules/07 / rules/08)。
+ *
+ * Phase 6 簡略実装をベースに、ガード判定だけ defenderPolicy.chooseGuard に委譲。
+ * カットイン / 変装は Phase 8.7d / 8.7e で追加予定 (現状 advance × 4 で素通り)。
+ */
+export function resolveActionAgainstChar(
+  state: GameState,
+  byUid: string,
+  targetUid: string,
+  defenderPolicy: AIPolicy,
+): void {
+  const ax = engine.flow.action.declare(state, byUid, { kind: 'char', uid: targetUid });
+
+  // ガード判定 (Phase 8.7c)
+  const cands = engine.flow.guard.candidates(state, ax.byUid);
+  const guardUid =
+    cands.length > 0 && defenderPolicy.chooseGuard
+      ? defenderPolicy.chooseGuard(state, ax, cands)
+      : null;
+  if (guardUid !== null) {
+    engine.flow.action.tryGuard(state, ax, guardUid);
+  } else {
+    engine.flow.action.passGuard(state, ax);
+  }
+
+  // FSM 進行 (Phase 8.7d 以降でカットイン/変装をここに織り込む)
+  engine.flow.action.advance(state, ax); // leave-resolution → contact-pending
+  engine.flow.action.advance(state, ax); // contact-pending → action-1
+  engine.flow.action.advance(state, ax); // action-1 → action-2
+  engine.flow.action.advance(state, ax); // action-2 → judge
+  engine.flow.action.snapshotAP(state, ax);
+  engine.flow.contact.judge(state, ax);
+  engine.flow.action.advance(state, ax); // judge → contact-end
+  engine.flow.action.advance(state, ax); // contact-end → action-end
+}
+
+/**
+ * アクション [事件] の完全解決 (rules/10)。
+ *
+ * - declare → passGuard (case ターゲットには guard 不可能、rules/08)
+ * - removeOpponentEvidenceTop → gainSelfEvidence
+ * - judge → contact-end → action-end へ advance × 2
+ */
+export function resolveActionAgainstCase(
+  state: GameState,
+  byUid: string,
+  targetPlayer: Player,
+): void {
+  const ax = engine.flow.action.declare(state, byUid, { kind: 'case', player: targetPlayer });
+  engine.flow.action.passGuard(state, ax);
+  engine.flow.actionCase.removeOpponentEvidenceTop(state, ax);
+  engine.flow.actionCase.gainSelfEvidence(state, ax);
+  engine.flow.action.advance(state, ax); // judge → contact-end
+  engine.flow.action.advance(state, ax); // contact-end → action-end
+}

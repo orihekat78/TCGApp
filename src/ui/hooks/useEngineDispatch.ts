@@ -17,6 +17,8 @@ import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
+import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
+import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 
 type Player = 'self' | 'opp';
 
@@ -111,36 +113,14 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       mutate.partner.solveCase(draft, action.player);
       return;
     case 'actionAgainstChar': {
-      // Phase 8.7a: AI 側はガード/カットイン/変装なしの簡略実装
-      //   (src/ai/policy.ts:85-101 と同じシーケンス)。9 段階 FSM を端まで進める。
-      const ax = flow.action.declare(draft, action.byUid, {
-        kind: 'char',
-        uid: action.targetUid,
-      });
-      flow.action.passGuard(draft, ax);
-      flow.action.advance(draft, ax); // leave-resolution → contact-pending
-      flow.action.advance(draft, ax); // contact-pending → action-1
-      flow.action.advance(draft, ax); // action-1 → action-2
-      flow.action.advance(draft, ax); // action-2 → judge
-      flow.action.snapshotAP(draft, ax);
-      flow.contact.judge(draft, ax);
-      flow.action.advance(draft, ax); // judge → contact-end
-      flow.action.advance(draft, ax); // contact-end → action-end
+      // Phase 8.7c: ガード判定を HeuristicPolicy に委譲。共通ヘルパで policy.applyMove と
+      // 同一シーケンスを共有 (将来カットイン/変装追加時もここを 1 箇所変更で OK)。
+      resolveActionAgainstChar(draft, action.byUid, action.targetUid, new HeuristicPolicy());
       return;
     }
-    case 'actionAgainstCase': {
-      // src/ai/policy.ts:103-113 と同じ。case ターゲットは contact 省略。
-      const ax = flow.action.declare(draft, action.byUid, {
-        kind: 'case',
-        player: action.targetPlayer,
-      });
-      flow.action.passGuard(draft, ax);
-      flow.actionCase.removeOpponentEvidenceTop(draft, ax);
-      flow.actionCase.gainSelfEvidence(draft, ax);
-      flow.action.advance(draft, ax); // judge → contact-end
-      flow.action.advance(draft, ax); // contact-end → action-end
+    case 'actionAgainstCase':
+      resolveActionAgainstCase(draft, action.byUid, action.targetPlayer);
       return;
-    }
     case 'endTurn':
       flow.endTurn(draft, action.player);
       return;

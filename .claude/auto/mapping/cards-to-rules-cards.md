@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `77e061429a97`
+> Source hash: `6158150d13fc`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **66** ファイル（[全体 index](./index.md)）
+このグループ: **67** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (9)
 
@@ -87,10 +87,11 @@
 | ------ | --------- |
 | [`src/cards/index.ts`](../../../src/cards/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## ai (7)
+## ai (8)
 
 | ソース | 参照ルール |
 | ------ | --------- |
+| [`src/ai/action-resolution.ts`](../../../src/ai/action-resolution.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) |
 | [`src/ai/index.ts`](../../../src/ai/index.ts) | _(参照なし)_ |
 | [`src/ai/match.ts`](../../../src/ai/match.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/ai/move-enumerator.ts`](../../../src/ai/move-enumerator.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`13-keywords.md`](../../rules/13-keywords.md) |

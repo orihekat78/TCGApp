@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `7e6d1e8f5405`
+> Source hash: `52023f7039b7`
 
 公式ルール [`07-action-flow.md`](../../../rules/07-action-flow.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,8 +21,9 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (17)
+## 📄 参照ソース (18)
 
+- [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
 - [`src/ai/policy.ts`](../../../../src/ai/policy.ts)

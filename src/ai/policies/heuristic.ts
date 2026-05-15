@@ -17,9 +17,25 @@
 
 import type { AIPolicy } from '../policy.js';
 import type { Move } from '../move-enumerator.js';
-import type { GameState } from '@/engine/types';
+import type { GameState, ActionContext } from '@/engine/types';
 import { engine } from '@/engine';
 import { RandomPolicy, type RandomPolicyOptions } from './random.js';
+
+/**
+ * partner uid を考慮した AP 読み出し (rules/07: パートナーもアクション可能)。
+ * read.char.ap は scene[] のみスキャンするため、partner uid は CardDef から直接取得。
+ * (state-machine.ts:46 readEffectiveAp と同じロジック)
+ */
+function readEffectiveAp(s: GameState, uid: string): number {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p = uid === 'partner:self' ? 'self' : 'opp';
+    const partner = s.players[p].partner;
+    if (!partner.cardId) return 0;
+    const def = engine.cards.get(partner.cardId);
+    return def?.ap ?? 0;
+  }
+  return engine.read.char.ap(s, uid);
+}
 
 type Player = 'self' | 'opp';
 
@@ -113,6 +129,36 @@ export class HeuristicPolicy implements AIPolicy {
     // 最後: endTurn
     const endTurn = candidates.find((m): m is Extract<Move, { kind: 'endTurn' }> => m.kind === 'endTurn');
     return endTurn ?? null;
+  }
+
+  /**
+   * Phase 8.7c: ガード判定 (rules/07 / rules/08)。
+   *
+   * ヒューリスティック:
+   *   - 候補 0 件 → null (passGuard)
+   *   - 最大 AP の候補 >= attacker AP → そのキャラでガード
+   *     (引き分け以上なら attacker をリムーブできるため、ガード価値あり)
+   *   - 全候補 AP < attacker AP → null (どうせ負けるならガード資源を温存)
+   *
+   * 注: 「ガード対象キャラ自身もリムーブされる可能性」「ターン回数温存」等の
+   * 高度な評価は将来拡張。MVP では単純な AP 比較で十分。
+   */
+  chooseGuard(state: GameState, ax: ActionContext, candidates: ReadonlyArray<{ uid: string; cardId: string }>): string | null {
+    if (candidates.length === 0) return null;
+    const attackerAp = readEffectiveAp(state, ax.byUid);
+    let best = candidates[0];
+    let bestAp = readEffectiveAp(state, best.uid);
+    for (let i = 1; i < candidates.length; i++) {
+      const c = candidates[i];
+      const ap = readEffectiveAp(state, c.uid);
+      if (ap > bestAp) {
+        best = c;
+        bestAp = ap;
+      }
+    }
+    // 防御側の最大 AP が attacker に届かない → ガードしても倒せず資源浪費
+    if (bestAp < attackerAp) return null;
+    return best.uid;
   }
 }
 

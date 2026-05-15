@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `7e6d1e8f5405`
+> Source hash: `52023f7039b7`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -18,8 +18,8 @@
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 10 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 7 件 |
 | [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 18 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 15 件 |
 | [`06-card-types.md`](../../rules/06-card-types.md) | 9 | `engine/cards/registry.ts`, `engine/cards/tsv-loader.ts`, `engine/flow/main/partner-ability.ts` ほか 6 件 |
-| [`07-action-flow.md`](../../rules/07-action-flow.md) | 17 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 14 件 |
-| [`08-contact.md`](../../rules/08-contact.md) | 12 | `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts`, `cards/ct-d11/D11008.ts` ほか 9 件 |
+| [`07-action-flow.md`](../../rules/07-action-flow.md) | 18 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 15 件 |
+| [`08-contact.md`](../../rules/08-contact.md) | 13 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts` ほか 10 件 |
 | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 18 | `cards/_shared/cutinFixedAP.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08007.ts` ほか 15 件 |
 | [`10-action-event.md`](../../rules/10-action-event.md) | 12 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts` ほか 9 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 9 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `engine/mutate/evidence.ts` ほか 6 件 |
