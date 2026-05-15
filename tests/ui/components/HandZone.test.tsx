@@ -23,7 +23,7 @@ function card(overrides: Partial<HandCardMeta> & Pick<HandCardMeta, 'cardId'>): 
 
 describe('HandZone', () => {
   it('renders empty state when no cards', () => {
-    const html = strip(renderToString(<HandZone cards={[]} />));
+    const html = strip(renderToString(<HandZone cards={[]} expanded={true} />));
     expect(html).toMatch(/hand-zone hand-zone--empty/);
     expect(html).toMatch(/aria-label="手札 0 枚"/);
     expect(html).toMatch(/hand-empty-message">手札なし/);
@@ -35,7 +35,7 @@ describe('HandZone', () => {
       card({ cardId: 'B', name: 'カードB', color: 'yellow' }),
       card({ cardId: 'C', name: 'カードC', color: 'red' }),
     ];
-    const html = strip(renderToString(<HandZone cards={cards} />));
+    const html = strip(renderToString(<HandZone cards={cards} expanded={true} />));
     expect(html).toMatch(/role="list"/);
     expect(html).toMatch(/aria-label="手札 3 枚"/);
     expect(html).toMatch(/data-count="3"/);
@@ -49,7 +49,7 @@ describe('HandZone', () => {
     const cards: HandCardMeta[] = [
       card({ cardId: 'A', cost: 5, type: 'キャラ', ap: 7000, lp: 2, lv: 5 }),
     ];
-    const html = strip(renderToString(<HandZone cards={cards} />));
+    const html = strip(renderToString(<HandZone cards={cards} expanded={true} />));
     expect(html).toMatch(/class="cost">5</);
     expect(html).toMatch(/class="type-badge">キャラ</);
     expect(html).toMatch(/class="ap">7000</);
@@ -61,7 +61,7 @@ describe('HandZone', () => {
     const cards: HandCardMeta[] = [
       card({ cardId: 'E', type: 'イベント', ap: null, lp: null, lv: 3 }),
     ];
-    const html = strip(renderToString(<HandZone cards={cards} />));
+    const html = strip(renderToString(<HandZone cards={cards} expanded={true} />));
     expect(html).toMatch(/class="type-badge">イベント</);
     expect(html).toMatch(/class="ap">—</);
     expect(html).toMatch(/class="lp">—</);
@@ -74,7 +74,7 @@ describe('HandZone', () => {
       card({ cardId: 'B' }),
     ];
     const html = strip(renderToString(
-      <HandZone cards={cards} featuredCardId="B" />,
+      <HandZone cards={cards} expanded={true} featuredCardId="B" />,
     ));
     expect(html).toMatch(/hand-card color-blue featured/);
     // featured が 1 枚のみ
@@ -89,6 +89,7 @@ describe('HandZone', () => {
     const html = strip(renderToString(
       <HandZone
         cards={cards}
+        expanded={true}
         canUse={(c) => c.color === 'yellow'}
         disabledReason={() => '色不一致'}
       />,
@@ -112,7 +113,7 @@ describe('HandZone', () => {
   it('renders all 5 color classes for cards', () => {
     const colors: HandCardMeta['color'][] = ['blue', 'yellow', 'red', 'green', 'purple'];
     const cards: HandCardMeta[] = colors.map((color, i) => card({ cardId: `c-${i}`, color }));
-    const html = strip(renderToString(<HandZone cards={cards} />));
+    const html = strip(renderToString(<HandZone cards={cards} expanded={true} />));
     for (const color of colors) {
       expect(html).toMatch(new RegExp(`hand-card color-${color}`));
     }

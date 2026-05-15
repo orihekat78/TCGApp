@@ -30,12 +30,195 @@
   color: var(--hand-text);
 }
 
+/* Phase 8.5: hand-zone--collapsed (デフォルト) と --expanded (× 閉じる付き)
+   の 2 モードを追加。collapsed は他エリアに被らない高さに収める。 */
+
+/* ---- collapsed (デフォルト) ---- */
+/* Phase 8.5 改訂: 枠なし、ヒントテキスト撤去、ミニカードを mini playing-card 風に。
+   各ミニカードクリックで onExpand 起動。キャラ/イベント識別アイコン付き。 */
+.hand-zone.hand-zone--collapsed {
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  background: transparent;
+  border: none;
+  position: relative;
+}
+.hand-zone--collapsed .hand-mini-strip {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(78, 195, 255, 0.25) transparent;
+}
+
+/* ミニカード: 54×72 (card-like 縦比)、color stripe top-bar + cost circle + type icon + name */
+.hand-zone--collapsed .hand-mini-card {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 76px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(165deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 40%,
+      rgba(0, 0, 0, 0.20) 100%),
+    linear-gradient(160deg, #18293f 0%, #0a1320 100%);
+  color: var(--hand-text);
+  font-family: inherit;
+  padding: 0;
+  display: grid;
+  grid-template-rows: 4px 1fr 16px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.12s ease, border-color 0.12s, box-shadow 0.12s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.hand-zone--collapsed .hand-mini-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--hand-neon);
+  box-shadow: 0 4px 10px color-mix(in oklch, var(--hand-neon) 35%, rgba(0, 0, 0, 0.6));
+}
+
+/* color top-bar (4px high) */
+.hand-zone--collapsed .hand-mini-card::before {
+  content: '';
+  display: block;
+  height: 4px;
+  width: 100%;
+}
+.hand-zone--collapsed .color-blue::before   { background: var(--color-blue,   #3a87d6); }
+.hand-zone--collapsed .color-yellow::before { background: var(--color-yellow, #e0b736); }
+.hand-zone--collapsed .color-red::before    { background: var(--color-red,    #d05a5a); }
+.hand-zone--collapsed .color-green::before  { background: var(--color-green,  #43b67a); }
+.hand-zone--collapsed .color-purple::before { background: var(--color-purple, #9a6cc8); }
+
+/* cost — 左上の小さい円バッジ */
+.hand-zone--collapsed .hand-mini-cost {
+  position: absolute;
+  top: 6px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--hand-accent, #ffd700);
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  font-family: var(--font-mono, monospace);
+}
+
+/* type badge — 右上 "CH"/"EV" タグ */
+.hand-zone--collapsed .hand-mini-type-badge {
+  position: absolute;
+  top: 6px;
+  right: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  z-index: 2;
+  color: #1a1a1a;
+}
+.hand-zone--collapsed .is-character .hand-mini-type-badge {
+  background: rgba(120, 200, 220, 0.85); /* シアン系 = キャラ */
+}
+.hand-zone--collapsed .is-event .hand-mini-type-badge {
+  background: rgba(255, 180, 120, 0.85); /* オレンジ系 = イベント */
+}
+
+/* type icon (中央) */
+.hand-zone--collapsed .hand-mini-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+}
+.hand-zone--collapsed .is-event .hand-mini-art {
+  color: rgba(255, 200, 130, 0.75);
+}
+.hand-zone--collapsed .is-character .hand-mini-art {
+  color: rgba(140, 200, 230, 0.75);
+}
+
+/* name — 下端、1行 clamp */
+.hand-zone--collapsed .hand-mini-name {
+  font-size: 9px;
+  text-align: center;
+  line-height: 1.1;
+  color: var(--hand-text);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 1px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ---- expanded ---- */
+.hand-zone.hand-zone--expanded {
+  position: relative;
+  padding-top: 22px;
+}
+.hand-zone--expanded .hand-cards-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--hand-gap);
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.hand-zone--expanded .hand-close-btn {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in oklch, var(--hand-neon) 50%, transparent);
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--hand-text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  transition: background 0.12s, border-color 0.12s;
+}
+.hand-zone--expanded .hand-close-btn:hover {
+  background: color-mix(in oklch, var(--hand-neon) 35%, rgba(0, 0, 0, 0.6));
+  border-color: var(--hand-neon);
+}
+
+/* ---- clickable hand-card hover ---- */
+.hand-zone .hand-card.clickable {
+  cursor: pointer;
+}
+.hand-zone .hand-card.clickable:hover {
+  border-color: var(--hand-neon);
+  box-shadow: 0 0 12px color-mix(in oklch, var(--hand-neon) 40%, transparent);
+}
+
 /* 横方向にあふれそうなときは横スクロール (overflow ケース対応) */
 .hand-zone[data-count] {
   overflow-x: auto;
   overflow-y: visible; /* featured pop / cost / type-badge のはみ出しを許可 */
-  /* featured 時の translateY(-12px) のクリア用に上方向余白を確保 */
-  padding-top: 22px;
   scrollbar-width: thin;
   scrollbar-color: rgba(78, 195, 255, 0.3) transparent;
 }

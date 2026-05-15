@@ -67,7 +67,9 @@
   left: 16px;
   right: 232px;  /* ActionsPanel 200 + 余白 32 */
   top: 56px;
-  bottom: 156px; /* HandZone 130 + 余白 */
+  /* Phase 8.5: HandZone collapsed 72px + bottom margin 16 + 余白 16 ≒ 104px。
+     expanded 時は HandZone が play-area 下半分にオーバーレイする (z-index:50)。 */
+  bottom: 104px;
   display: grid;
   grid-template-rows: 36px 1fr 1fr;
   gap: 8px;
@@ -218,13 +220,30 @@
 
 /* Phase 7.5: KEEP OUT 撤去、case-col の旧 absolute layout も撤去済 */
 
-/* ---- HandZone placeholder (Task 7.11) ---- */
+/* ---- HandZone (Task 7.11 + Phase 8.5 collapse/expand) ---- */
 .stage .hand-zone {
   position: absolute;
   left: 124px;
   right: 232px;
-  bottom: 56px;
-  height: 110px;
+  /* 共通: 下端から少し浮かせる */
+  bottom: 16px;
+}
+/* collapsed: 小さいチップストリップ、play-area 下にきれいに収まる */
+.stage .hand-zone.hand-zone--collapsed {
+  height: 72px;
+}
+/* expanded: 実寸カード + × 閉じる。play-area の下半分にオーバーレイする想定。 */
+.stage .hand-zone.hand-zone--expanded {
+  /* HandCard 88×124 + padding-top 22 + featured pop 余白 + close-btn 上端 */
+  height: 168px;
+  background: rgba(10, 14, 26, 0.92);
+  border: 1px solid color-mix(in oklch, var(--neon-blue) 40%, transparent);
+  border-radius: 6px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 50; /* play-area 上にオーバーレイ */
+}
+.stage .hand-zone.hand-zone--empty {
+  height: 56px;
   background: rgba(0, 0, 0, 0.4);
   border: 1.5px dashed color-mix(in oklch, var(--neon-blue) 30%, transparent);
   border-radius: 4px;

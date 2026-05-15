@@ -11,7 +11,7 @@
 // TopBar, HandZone, LogPanel) は Task 7.5-7.13 で実装するため placeholder。
 // 操作系 (クリック・DnD) は Phase 8。
 
-import type { JSX } from 'react';
+import { useState, type JSX } from 'react';
 import type { GameState } from '@/engine/types/game-state.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { PartnerArea } from './PartnerArea.js';
@@ -128,6 +128,8 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
 }
 
 export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }: PlaymatProps): JSX.Element {
+  // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
+  const [handExpanded, setHandExpanded] = useState(false);
   const handCards: HandCardMeta[] = resolveHandCard
     ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
     : [];
@@ -167,7 +169,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         </div>
 
         {/* HandZone (Task 7.11) */}
-        <HandZone cards={handCards} />
+        <HandZone
+          cards={handCards}
+          expanded={handExpanded}
+          onExpand={() => setHandExpanded(true)}
+          onCollapse={() => setHandExpanded(false)}
+        />
 
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}
         <ActionsPanel

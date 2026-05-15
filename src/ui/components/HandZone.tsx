@@ -1,9 +1,8 @@
-// Phase 7 Task 7.11: HandZone
-// 自分の手札 (HandCardMeta[]) を MTGA 型フラット並びで表示。
-// 操作系 (クリック / ドラッグ / hover) は Phase 8。
+// Phase 7 Task 7.11 + Phase 8.5 hand expand/collapse:
+//   - 自分の手札を MTGA 型フラット並びで表示。
+//   - デフォルトはコラプス状態 (小さいストリップ) で他エリアに被らない。
+//   - クリックで実寸展開 / × ボタンでコラプスに戻す。
 // rules: 05-turn-phases.md §手札の使用 / 12-next-hint.md / 20-color-and-switch.md
-// 視覚: design-mockups/01-board-mockup.html 1552-1601, CSS 893-985 行
-// 由来: Claude Design (Research Preview) — engine 型に接続して取込み
 
 import type { JSX } from 'react';
 import './HandZone.css';
@@ -29,6 +28,14 @@ export type HandCardMeta = {
 
 export type HandZoneProps = {
   cards: HandCardMeta[];
+  /** true: 実寸カード + × 閉じるボタン。false (default): 縮小ストリップ。 */
+  expanded?: boolean;
+  /** コラプス状態のミニカードがクリックされたとき */
+  onExpand?: () => void;
+  /** 展開状態の × がクリックされたとき */
+  onCollapse?: () => void;
+  /** 個別カードクリック (展開状態のみ反応)。Phase 8.6+ で手札使用フロー配線。 */
+  onCardClick?: (cardId: CardId) => void;
   /** 使用可能判定。false なら .disabled。未指定なら全カード使用可。 */
   canUse?: (card: HandCardMeta) => boolean;
   /** 強調表示するカード ID (hover 相当のプロトタイピング用) */
@@ -38,7 +45,7 @@ export type HandZoneProps = {
 };
 
 // ------------------------------------------------------------------
-// 個別カード
+// 個別カード (展開モード)
 // ------------------------------------------------------------------
 
 type HandCardProps = {
@@ -46,6 +53,7 @@ type HandCardProps = {
   featured: boolean;
   disabled: boolean;
   disabledTitle?: string;
+  onClick?: () => void;
 };
 
 function HandCard({
@@ -53,12 +61,14 @@ function HandCard({
   featured,
   disabled,
   disabledTitle,
+  onClick,
 }: HandCardProps): JSX.Element {
   const classes = [
     'hand-card',
     `color-${card.color}`,
     featured && 'featured',
     disabled && 'disabled',
+    onClick && !disabled && 'clickable',
   ]
     .filter(Boolean)
     .join(' ');
@@ -73,6 +83,7 @@ function HandCard({
       data-color={card.color}
       title={disabled ? disabledTitle : undefined}
       aria-disabled={disabled || undefined}
+      onClick={disabled ? undefined : onClick}
     >
       <div className="cost">{card.cost}</div>
       <div className="type-badge">{card.type}</div>
@@ -91,11 +102,65 @@ function HandCard({
 }
 
 // ------------------------------------------------------------------
+// ミニカード (コラプスモード) — 40×56 程度のチップ
+// ------------------------------------------------------------------
+
+function HandMiniCard({
+  card,
+  onClick,
+}: {
+  card: HandCardMeta;
+  onClick?: () => void;
+}): JSX.Element {
+  const isEvent = card.type === 'イベント';
+  return (
+    <button
+      type="button"
+      className={`hand-mini-card color-${card.color} ${isEvent ? 'is-event' : 'is-character'}`}
+      data-card-id={card.cardId}
+      data-color={card.color}
+      data-type={card.type}
+      onClick={onClick}
+      aria-label={`${card.name} (${card.type}, レベル${card.lv}, コスト${card.cost})`}
+    >
+      <span className="hand-mini-cost" aria-hidden="true">{card.cost}</span>
+      <span className="hand-mini-type-badge" aria-hidden="true">
+        {isEvent ? 'EV' : 'CH'}
+      </span>
+      <span className="hand-mini-art" aria-hidden="true">
+        {/* type icon */}
+        {isEvent ? (
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M12 2l2.4 6.4L21 9l-5 4.6 1.6 7L12 17l-5.6 3.6L8 13.6 3 9l6.6-0.6L12 2z"
+              fill="currentColor" opacity="0.85" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.85" />
+            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="currentColor" opacity="0.85" />
+          </svg>
+        )}
+      </span>
+      <span className="hand-mini-name">{card.name}</span>
+    </button>
+  );
+}
+
+// ------------------------------------------------------------------
 // HandZone 本体
 // ------------------------------------------------------------------
 
 export function HandZone(props: HandZoneProps): JSX.Element {
-  const { cards, canUse, featuredCardId, disabledReason } = props;
+  const {
+    cards,
+    expanded = false,
+    onExpand,
+    onCollapse,
+    onCardClick,
+    canUse,
+    featuredCardId,
+    disabledReason,
+  } = props;
 
   if (cards.length === 0) {
     return (
@@ -105,27 +170,58 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     );
   }
 
+  // コラプスモード: 小さいチップを横並びで配置。各チップクリックで展開。
+  if (!expanded) {
+    return (
+      <div
+        className="hand-zone hand-zone--collapsed"
+        aria-label={`手札 ${cards.length} 枚 (クリックで拡大)`}
+        data-count={cards.length}
+      >
+        <div className="hand-mini-strip" role="list">
+          {cards.map((c) => (
+            <HandMiniCard key={c.cardId} card={c} onClick={onExpand} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 展開モード: 実寸カード + × 閉じるボタン (オーバーレイ風)。
   return (
     <div
-      className="hand-zone"
+      className="hand-zone hand-zone--expanded"
       role="list"
       aria-label={`手札 ${cards.length} 枚`}
       data-count={cards.length}
     >
-      {cards.map((c) => {
-        const usable = canUse ? canUse(c) : true;
-        const isFeatured = featuredCardId === c.cardId;
-        const reason = !usable && disabledReason ? disabledReason(c) : undefined;
-        return (
-          <HandCard
-            key={c.cardId}
-            card={c}
-            featured={isFeatured}
-            disabled={!usable}
-            disabledTitle={reason}
-          />
-        );
-      })}
+      {onCollapse && (
+        <button
+          type="button"
+          className="hand-close-btn"
+          aria-label="手札を閉じる"
+          onClick={onCollapse}
+        >
+          ×
+        </button>
+      )}
+      <div className="hand-cards-row">
+        {cards.map((c) => {
+          const usable = canUse ? canUse(c) : true;
+          const isFeatured = featuredCardId === c.cardId;
+          const reason = !usable && disabledReason ? disabledReason(c) : undefined;
+          return (
+            <HandCard
+              key={c.cardId}
+              card={c}
+              featured={isFeatured}
+              disabled={!usable}
+              disabledTitle={reason}
+              onClick={onCardClick ? () => onCardClick(c.cardId) : undefined}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
