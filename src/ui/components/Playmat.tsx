@@ -25,7 +25,7 @@ import { HandZone, type HandCardMeta } from './HandZone.js';
 import { TopBar } from './TopBar.js';
 import { ActionsPanel, type ActionItemId } from './ActionsPanel.js';
 import { ConfirmModal } from './ConfirmModal.js';
-import { runEndTurnFlow, runReasoningFlow, enumReasoningCandidates } from '../hooks/useActionsPanelFlow.js';
+import { runEndTurnFlow, runReasoningFlow, enumReasoningCandidates, runNextHintFlow } from '../hooks/useActionsPanelFlow.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
 import './Playmat.css';
@@ -253,6 +253,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           onActionItemClick={(id: ActionItemId) => {
             if (id === 'reasoning') {
               void runReasoningFlow({ player: 'self' });
+              return;
+            }
+            if (id === 'next-hint') {
+              void runNextHintFlow({ player: 'self' });
               return;
             }
             // 8.6 残: hand-use / next-hint / partner-ability / declared-ability / action

@@ -94,3 +94,32 @@ export async function runReasoningFlow(opts: { player: Player }): Promise<FlowRe
 
   return dispatchEngineAction({ type: 'reasoning', uid: chosen });
 }
+
+/**
+ * ネクストヒントフロー: 確認 → FILE 最上部を手札に + 続けて使用可。
+ *
+ * rules: 12-next-hint.md, 17-icons.md (【FILE(X)】)
+ * spec: ui-action-flows.md ⑥ネクストヒント
+ *
+ * - canStartNextHint=false → not-allowed
+ * - reject → cancelled
+ * - accept → dispatchEngineAction nextHint (optionalCardId は MVP では省略、
+ *   FILE pop + nextHintUsed フラグのみ。次段で「続けて 1 枚使用」UI を実装予定)
+ */
+export async function runNextHintFlow(opts: { player: Player }): Promise<FlowResult> {
+  const state = useGameStateStore.getState().gameState;
+  if (state === null) return { ok: false, reason: 'no-state' };
+  if (!flow.canStartNextHint(state, opts.player)) {
+    return { ok: false, reason: 'not-allowed' };
+  }
+  const fileCount = state.players[opts.player].file.length;
+  const accepted = await useConfirmation().ask({
+    kind: 'standard',
+    title: 'ネクストヒント',
+    body: `FILE 最上部 (現在 ${fileCount} 枚) のカードを手札に加え、続けて 1 枚使用できます。`,
+    okLabel: 'ネクストヒント',
+    cancelLabel: 'キャンセル',
+  });
+  if (!accepted) return { ok: false, reason: 'cancelled' };
+  return dispatchEngineAction({ type: 'nextHint', player: opts.player });
+}
