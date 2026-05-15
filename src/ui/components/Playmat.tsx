@@ -32,9 +32,11 @@ import {
   runNextHintFlow,
   runAssistFlow,
   runSolveCaseFlow,
+  runHandUseFlow,
   canAssistForUi,
   canSolveCaseForUi,
 } from '../hooks/useActionsPanelFlow.js';
+import * as engineFlow from '@/engine/flow/index.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
 import './Playmat.css';
@@ -233,12 +235,18 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           />
         </div>
 
-        {/* HandZone (Task 7.11) */}
+        {/* HandZone (Task 7.11) — Phase 8.6: onCardClick → runHandUseFlow */}
         <HandZone
           cards={handCards}
           expanded={handExpanded}
           onExpand={() => setHandExpanded(true)}
           onCollapse={() => setHandExpanded(false)}
+          onCardClick={(cardId) => {
+            void runHandUseFlow({ player: 'self', cardId });
+          }}
+          canUse={(c) =>
+            gameState !== null && engineFlow.canHandUseCard(gameState, 'self', c.cardId)
+          }
         />
 
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}
@@ -278,7 +286,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               void runSolveCaseFlow({ player: 'self' });
               return;
             }
-            // 8.6 残: hand-use / partner-ability / declared-ability / action
+            if (id === 'hand-use') {
+              // 手札を展開するだけ。個別カード選択は HandZone.onCardClick → runHandUseFlow。
+              setHandExpanded(true);
+              return;
+            }
+            // 8.6 残: partner-ability / declared-ability / action
             // eslint-disable-next-line no-console
             console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
           }}

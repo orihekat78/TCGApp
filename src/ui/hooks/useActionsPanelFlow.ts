@@ -125,6 +125,46 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
 }
 
 /**
+ * 手札の使用フロー: 確認モーダル → accept → engine.handUseCard dispatch。
+ *
+ * rules: 05-turn-phases.md §手札の使用 (1 ターン 1 回 / ネクストヒント済不可) /
+ *        20-color-and-switch.md (色制限) / 12-next-hint.md (レベル制限)
+ * spec: ui-action-flows.md ①手札の使用
+ *
+ * - no-state → no-state
+ * - canHandUseCard=false → not-allowed (色/レベル/フラグ/手札不在 全てここで弾く)
+ * - reject → cancelled
+ * - accept → dispatchEngineAction handUseCard
+ *
+ * カード効果の実体 (キャラ登場 / イベント効果) は engine の effect:declared hook と
+ * Phase 5 listener が pendingEffects に積み、`runAllUntilEmpty` (dispatchEngineAction
+ * 内 wrap) が解決する。本フローは「フラグ + ログ + hook emit」までの責任。
+ */
+export async function runHandUseFlow(opts: {
+  player: Player;
+  cardId: string;
+}): Promise<FlowResult> {
+  const state = useGameStateStore.getState().gameState;
+  if (state === null) return { ok: false, reason: 'no-state' };
+  if (!flow.canHandUseCard(state, opts.player, opts.cardId)) {
+    return { ok: false, reason: 'not-allowed' };
+  }
+  const accepted = await useConfirmation().ask({
+    kind: 'standard',
+    title: '手札の使用',
+    body: `${opts.cardId} を使用します。`,
+    okLabel: '使用',
+    cancelLabel: 'キャンセル',
+  });
+  if (!accepted) return { ok: false, reason: 'cancelled' };
+  return dispatchEngineAction({
+    type: 'handUseCard',
+    player: opts.player,
+    cardId: opts.cardId,
+  });
+}
+
+/**
  * UI 側 can-check: src/ai/move-enumerator.ts canAssist と同条件。
  * ActionsPanel の disabled 表示と runAssistFlow 内 not-allowed 判定で共有する。
  */
