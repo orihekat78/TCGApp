@@ -2,9 +2,9 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1 完了 ✅
-**最新コミット**: `cded622` (commit 待ち: useEngineDispatch hook)
-**テスト状況**: 1145 PASS / 129 test files / typecheck (src+scripts) clean / docs:check clean
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1 + 8.2 完了 ✅
+**最新コミット**: `009c3b9` (Task 8.1 useEngineDispatch land) — Task 8.2 commit 待ち
+**テスト状況**: 1162 PASS / 130 test files (+31 from Phase 7.5) / typecheck clean / docs:check clean
 **ブラウザ表示**: `npm run dev` で 13 エリア描画 (操作配線は Task 8.5 で着手)
 
 ## 進捗トラッカー
@@ -14,7 +14,7 @@
 - [x] **Phase 7.5: layout pivot ✅** (3 commits) — [sessions/2026-05-15-2](sessions/2026-05-15-2.md)
 - [ ] **Phase 8: UI Interactions** ← 進行中
   - [x] **8.1** `useEngineDispatch` — [sessions/2026-05-15-3](sessions/2026-05-15-3.md)
-  - [ ] 8.2 `useTargetPicker`
+  - [x] **8.2** `useTargetPicker` — [sessions/2026-05-15-3](sessions/2026-05-15-3.md) (#8.2 追記)
   - [ ] 8.3 `useConfirmation`
   - [ ] 8.4 ゲーム開始モーダル
   - [ ] 8.5 ActionsPanel onClick 配線
@@ -24,13 +24,14 @@
 
 ## 次セッション開始時の最優先タスク
 
-⭐ **Phase 8 Task 8.2** `useTargetPicker`
+⭐ **Phase 8 Task 8.3** `useConfirmation`
 
 詳細プラン: [phase-8-ui-interactions.md](research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md)
 
-spec: `.claude/specs/2026-05-11-ui-action-flows.md` — クリック+確認 UX (Q8 MTGA型) /
-candidate ハイライト → クリック → 確認 → resolve / 0枚選択可スキップ。
-推理 / アクション宣言 / 宣言能力 / アシスト 等で共通利用する基盤 hook。
+Q9 厳格モード — 「全行動で実行/キャンセル確認」モーダルの hook。
+useTargetPicker の confirming phase とは別レイヤ (target を持たない宣言行動の確認や
+アシストの強警告・事件解決の勝利予告など、target picker 不要なケース対応)。
+最終的に統一/分離するかは 8.3 設計時に判断。
 
 ### Phase 8 完了後の layout polish TODO
 

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8153992c0a70`
+> Source hash: `4cf4de696966`
 
 公式ルール [`17-icons.md`](../../../rules/17-icons.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -19,13 +19,14 @@
 
 ## 📐 関連 Spec
 
+- [`2026-05-11-ui-action-flows`](../by-spec/2026-05-11-ui-action-flows.md)
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseTraitConditioned`](../by-spec/shared-classes--caseTraitConditioned.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (47)
+## 📄 参照ソース (48)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseTraitConditioned.ts`](../../../../src/cards/_shared/caseTraitConditioned.ts)
@@ -47,4 +48,4 @@
 - [`src/cards/ct-d08/D08016.ts`](../../../../src/cards/ct-d08/D08016.ts)
 - [`src/cards/ct-d08/D08017.ts`](../../../../src/cards/ct-d08/D08017.ts)
 - [`src/cards/ct-d08/D08018.ts`](../../../../src/cards/ct-d08/D08018.ts)
-- _...ほか 27 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 28 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

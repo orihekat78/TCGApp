@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8153992c0a70`
+> Source hash: `4cf4de696966`
 
 公式ルール [`07-action-flow.md`](../../../rules/07-action-flow.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -17,10 +17,11 @@
 
 ## 📐 関連 Spec
 
+- [`2026-05-11-ui-action-flows`](../by-spec/2026-05-11-ui-action-flows.md)
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (16)
+## 📄 参照ソース (17)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -38,3 +39,4 @@
 - [`src/engine/types/effect.ts`](../../../../src/engine/types/effect.ts)
 - [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
 - [`src/engine/types/results.ts`](../../../../src/engine/types/results.ts)
+- [`src/ui/hooks/useTargetPicker.ts`](../../../../src/ui/hooks/useTargetPicker.ts)
