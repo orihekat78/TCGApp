@@ -151,12 +151,18 @@
   margin: 0 4px;
 }
 
-/* ---- Mat (3-col 2-row grid per side) ---- */
+/* ---- Mat (3-col grid、wrapper div で row 構造を持つ。対称・重なりなし) ----
+ * .mat
+ *   ├─ .left-col   (col 1, 縦 2 行 = case + file)
+ *   ├─ .center-col (col 2, scene 上 / below-scene 下: evidence | partner)
+ *   └─ .right-col  (col 3, 縦 2 行 = deck + remove)
+ *
+ * opp は transform: rotate(180deg) で 180° 反転 (対称配置)、内部 grid 同じ。
+ */
 .mat {
   display: grid;
-  grid-template-columns: 180px 1fr 130px;
-  grid-template-rows: 1fr 1fr;
-  gap: 6px;
+  grid-template-columns: 150px 1fr 120px;
+  gap: 8px;
   padding: 8px;
   border-radius: 6px;
   position: relative;
@@ -171,27 +177,46 @@
   border: 1px solid rgba(68, 221, 153, 0.25);
 }
 
-/* Column placement (一致は mock 329-351 行) */
-/* Phase 7.5: case-col に FileArea を追加 (case + evidence + file 縦 3 段) */
-.mat .case-col {
-  grid-column: 1;
-  grid-row: 1 / span 2;
+/* Left col: 事件 (1.4fr) + FILE (1fr) */
+.mat .left-col {
   display: grid;
-  grid-template-rows: 1.2fr 1fr 0.7fr;
+  grid-template-rows: 1.4fr 1fr;
   gap: 6px;
+  min-width: 0;
+  min-height: 0;
 }
-.mat .scene-col   { grid-column: 2; grid-row: 1; }
-.mat .deck-col    { grid-column: 3; grid-row: 1; }
-.mat .partner-col { grid-column: 2; grid-row: 2; }
-.mat .remove-col  { grid-column: 3; grid-row: 2; }
-
-/* Phase 7.5: FileArea は case-col 内 row 3 に通常配置 (絶対配置を撤去) */
-.mat .case-col .file-area {
-  min-height: 0; /* grid 内で contents が overflow しないように */
+.mat .left-col > * {
+  min-height: 0; /* grid overflow 防止 */
 }
 
-/* Phase 7.5: KEEP OUT 撤去 (user layout feedback、mock 通り display:none と
-   同等の効果に揃え、Playmat は単純な opp/self 2-row grid に) */
+/* Center col: 現場 (1.4fr) + 下段 (1fr: evidence | partner) */
+.mat .center-col {
+  display: grid;
+  grid-template-rows: 1.4fr 1fr;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+}
+.mat .center-col > * { min-height: 0; }
+.mat .center-col .below-scene {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;  /* evidence 狭め、partner 広め */
+  gap: 6px;
+  min-height: 0;
+}
+.mat .center-col .below-scene > * { min-height: 0; }
+
+/* Right col: deck (1fr) + remove (1fr) */
+.mat .right-col {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 6px;
+  min-width: 0;
+  min-height: 0;
+}
+.mat .right-col > * { min-height: 0; }
+
+/* Phase 7.5: KEEP OUT 撤去、case-col の旧 absolute layout も撤去済 */
 
 /* ---- HandZone placeholder (Task 7.11) ---- */
 .stage .hand-zone {

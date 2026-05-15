@@ -84,7 +84,7 @@ function selfPlayer(): PlayerState {
 function oppPlayer(): PlayerState {
   return {
     partner: { cardId: 'P001', state: 'sleep', location: 'partner-area' },
-    case: { cardId: '0499', status: '事件編', requiredEvidence: 7, colors: ['青'] },
+    case: { cardId: '0499', status: '解決編', requiredEvidence: 7, colors: ['青'] },
     scene: [
       makeScene('0489', 'opp-1', { enterOrder: 0 }),
       makeScene('0490', 'opp-2', { enterOrder: 1, state: 'sleep' }),

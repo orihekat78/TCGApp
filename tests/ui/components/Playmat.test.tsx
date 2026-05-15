@@ -87,17 +87,19 @@ describe('Playmat', () => {
     expect(html.match(/scene-area side-self/g)?.length).toBe(1);
   });
 
-  it('renders all 6 zone slots per mat: case / scene / partner / deck / remove / file', () => {
+  it('renders all 7 zone slots per mat in the new 3-col layout', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
-    // 各ゾーンは 2 (opp + self) で計 12
-    expect(html.match(/class="case-col"/g)?.length).toBe(2);
+    // 各ゾーンは 2 (opp + self) で計 14
+    expect(html.match(/class="left-col"/g)?.length).toBe(2);
+    expect(html.match(/class="center-col"/g)?.length).toBe(2);
+    expect(html.match(/class="right-col"/g)?.length).toBe(2);
+    expect(html.match(/class="below-scene"/g)?.length).toBe(2);
     expect(html.match(/case-area side-/g)?.length).toBe(2);
     expect(html.match(/evidence-area side-/g)?.length).toBe(2);
     expect(html.match(/scene-col scene-zone/g)?.length).toBe(2);
     expect(html.match(/partner-col partner-zone/g)?.length).toBe(2);
     expect(html.match(/deck-col deck-zone/g)?.length).toBe(2);
     expect(html.match(/remove-col remove-zone/g)?.length).toBe(2);
-    // FileArea が file-row placeholder を置換 (zone file-strip + file-area)
     expect(html.match(/file-area side-/g)?.length).toBe(2);
   });
 

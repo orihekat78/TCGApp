@@ -81,33 +81,45 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
   const evidenceCount = state?.players[side].evidence.length ?? 0;
   const requiredEvidence = engineCase?.requiredEvidence ?? 7;
 
+  // レイアウト構造 (対称配置、エリア重なりなし):
+  //   .mat (3-col grid)
+  //     ├─ .left-col   : CaseArea (上) + FileArea (下)
+  //     ├─ .center-col : SceneArea (上) + .below-scene (下: EvidenceArea | PartnerArea)
+  //     └─ .right-col  : DeckArea (上) + RemoveArea (下)
+  //   opp は transform: rotate(180deg) で全体が上下逆転 (対称配置)
   return (
     <div className={`mat ${side}`} data-side={side}>
-      <div className="case-col">
+      <div className="left-col">
         <CaseArea caseInfo={caseInfo} turnOrder={turnOrder} side={side} />
-        <EvidenceArea
-          count={evidenceCount}
-          requiredEvidence={requiredEvidence}
-          side={side}
-        />
         <FileArea
           cards={state?.players[side].file ?? []}
           side={side}
           resolveCard={resolveCard}
         />
       </div>
-      <SceneArea characters={scene} side={side} resolveCard={resolveCard} />
-      <PartnerArea
-        partner={state?.players[side].partner ?? null}
-        side={side}
-        resolveCard={resolveCard}
-      />
-      <DeckArea count={state?.players[side].deck.length ?? 0} side={side} />
-      <RemoveArea
-        cards={state?.players[side].remove ?? []}
-        side={side}
-        resolveCard={resolveCard}
-      />
+      <div className="center-col">
+        <SceneArea characters={scene} side={side} resolveCard={resolveCard} />
+        <div className="below-scene">
+          <EvidenceArea
+            count={evidenceCount}
+            requiredEvidence={requiredEvidence}
+            side={side}
+          />
+          <PartnerArea
+            partner={state?.players[side].partner ?? null}
+            side={side}
+            resolveCard={resolveCard}
+          />
+        </div>
+      </div>
+      <div className="right-col">
+        <DeckArea count={state?.players[side].deck.length ?? 0} side={side} />
+        <RemoveArea
+          cards={state?.players[side].remove ?? []}
+          side={side}
+          resolveCard={resolveCard}
+        />
+      </div>
     </div>
   );
 }
