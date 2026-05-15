@@ -41,6 +41,7 @@ import {
 import * as engineFlow from '@/engine/flow/index.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
+import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -171,6 +172,8 @@ function PlayerMat({
 }
 
 export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }: PlaymatProps): JSX.Element {
+  // Phase 8.7b: opp ターンを自動進行 (HeuristicPolicy + flow.endTurn で self へ戻す)
+  useOppTurnDriver();
   // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
   const [handExpanded, setHandExpanded] = useState(false);
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
@@ -208,13 +211,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     }
   }
 
-  // narrator: picker phase 中は動的に切替
+  // narrator: opp ターン中 / picker phase 中 で動的に切替 (Phase 8.7b)
   const narratorMessage =
-    pickerPhase.phase === 'picking'
-      ? `${labelForPurpose(pickerPhase.purpose)} の対象を選択してください。`
-      : pickerPhase.phase === 'confirming'
-        ? '確認モーダルで実行/キャンセルを選んでください。'
-        : '⑥ アクション を選択すると、攻撃元キャラ指定 → 相手のスリープ/スタン状態キャラに対しアクション対象を選べます。';
+    gameState?.turn.player === 'opp'
+      ? '相手のターン処理中…'
+      : pickerPhase.phase === 'picking'
+        ? `${labelForPurpose(pickerPhase.purpose)} の対象を選択してください。`
+        : pickerPhase.phase === 'confirming'
+          ? '確認モーダルで実行/キャンセルを選んでください。'
+          : '⑥ アクション を選択すると、攻撃元キャラ指定 → 相手のスリープ/スタン状態キャラに対しアクション対象を選べます。';
   const handCards: HandCardMeta[] = resolveHandCard
     ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
     : [];

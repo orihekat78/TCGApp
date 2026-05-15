@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `778966bbd53f`
+> Source hash: `77e061429a97`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **70** ファイル（[全体 index](./index.md)）
+このグループ: **71** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (4)
 
@@ -80,7 +80,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (18)
+## その他 (19)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -94,6 +94,7 @@
 | [`src/ui/hooks/useEvidence.ts`](../../../src/ui/hooks/useEvidence.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useFile.ts`](../../../src/ui/hooks/useFile.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useOppTurnDriver.ts`](../../../src/ui/hooks/useOppTurnDriver.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/usePartner.ts`](../../../src/ui/hooks/usePartner.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`18-mr.md`](../../rules/18-mr.md) |
 | [`src/ui/hooks/useRemoveCards.ts`](../../../src/ui/hooks/useRemoveCards.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useSceneCharacters.ts`](../../../src/ui/hooks/useSceneCharacters.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |

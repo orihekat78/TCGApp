@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7a 完了 ✅
-**最新コミット**: Commit H — Phase 8.7a アクション宣言フロー UI 統合 (12 tests)
-**テスト状況**: 1217 PASS / 138 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: 推理 + ネクストヒント + アシスト + 事件解決 + 手札の使用 + アクション (相手 CPU 簡略) + endTurn が end-to-end 動作 (5177)
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7b 完了 ✅
+**最新コミット**: Commit I — Phase 8.7b opp ターン自動進行ドライバ (5 tests)
+**テスト状況**: 1222 PASS / 139 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: ゲームが end-to-end で回る — self ターン全行動 + endTurn → opp が HeuristicPolicy で自動消化 → self に戻る
 
 **未コミット作業**: なし
 
@@ -26,8 +26,9 @@
   - [x] **8.6 アシスト + 事件解決** フロー UI 統合 (Commit F, 8 tests)
   - [x] **8.6 手札の使用** フロー UI 統合 (Commit G, 6 tests) — HandZone.onCardClick + canUse 連動
   - [x] **8.7a アクション宣言** フロー UI 統合 (Commit H, 12 tests) — source + target 2 段階 picker、相手 CPU は ガード/カットイン/変装なし簡略
-  - [ ] **8.7b 残**: ガード判定モーダル / カットイン / 変装 / コンタクト対話 UI /
-        パートナー能力 / 宣言能力
+  - [x] **8.7b opp ターン自動進行** (Commit I, 5 tests) — useOppTurnDriver + HeuristicPolicy + flow.endTurn 連携。試合が end-to-end で回るようになった
+  - [ ] **8.7c 残**: CPU 側 ガード/カットイン/変装 政策強化 (現状 passGuard 固定) /
+        パートナー能力 / 宣言能力 / PvP 用モーダル UI (Phase 9.x)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
