@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1 + 8.2 + 8.3 完了 ✅
-**最新コミット**: `1bff9b2` (Task 8.2 useTargetPicker) — Task 8.3 commit 待ち
-**テスト状況**: 1173 PASS / 131 test files (+42 from Phase 7.5) / typecheck clean / docs:check clean
-**ブラウザ表示**: `npm run dev` で 13 エリア描画 (操作配線は Task 8.5 で着手)
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.6 完了 ✅
+**最新コミット**: `b407718` Phase 8.6 推理フロー UI 統合 (target picker + ハイライト + dispatch)
+**テスト状況**: 1187 PASS / 134 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: 推理フロー end-to-end 動作確認済 (推理→ハイライト→クリック→確認→sleep化)
 
 ## 進捗トラッカー
 
@@ -16,22 +16,28 @@
   - [x] **8.1** `useEngineDispatch` — [sessions/2026-05-15-3](sessions/2026-05-15-3.md)
   - [x] **8.2** `useTargetPicker` — [sessions/2026-05-15-3](sessions/2026-05-15-3.md) (#8.2 追記)
   - [x] **8.3** `useConfirmation` — [sessions/2026-05-15-4](sessions/2026-05-15-4.md)
-  - [ ] 8.4 ゲーム開始モーダル
-  - [ ] 8.5 ActionsPanel onClick 配線
+  - [ ] 8.4 ゲーム開始モーダル (8.5 を先行のため後回し)
+  - [x] **8.5** ActionsPanel onClick 配線 (endTurn + ConfirmModal) — [sessions/2026-05-15-5](sessions/2026-05-15-5.md)
+  - [x] **8.5 polish** HandZone 縮小/拡大 + narrator/log を ActionsPanel に集約 + 大型 scene カード等
+  - [x] **8.6** 推理フロー UI 統合 (target picker + ハイライト + dispatch)
   - [ ] 8.6 コンタクトモーダル
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
 ## 次セッション開始時の最優先タスク
 
-⭐ **Phase 8 Task 8.4** ゲーム開始モーダル (Setup → Mulligan → FirstPlayer → Reveal → Start)
+⭐ **Phase 8 Task 8.6 残部分** (アクション宣言 / コンタクト / アシスト / 事件解決 etc)
 
-詳細プラン: [phase-8-ui-interactions.md](research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md)
-spec: `.claude/specs/2026-05-11-ui-game-setup-flows.md`
+8.6 で推理だけ wire 済。残り 6 アクションを順次:
 
-`flow.setup()` engine API と組合せ、useEngineDispatch / useConfirmation を再利用して
-ゲーム開始フローを構築する。8.5 (ActionsPanel onClick 配線) より先にやることで
-初回起動時のゲーム生成パスを通せる。
+- 手札の使用 (キャラ登場 vs イベント解決の分岐 + 色制限 + FILE 制限)
+- ネクストヒント (FILE 最上部 → 手札、続けて optional カード使用)
+- パートナー能力 / 宣言能力 (cost 解決 + Phase 5 listener)
+- アクション宣言 (target picker + 9段階 state machine + ガード判定)
+- アシスト (強警告 confirm + パートナー sleep + FILE 7枚チェック)
+- 事件解決 (勝利予告 confirm + アシスト済みターン判定)
+
+Task 8.4 (ゲーム開始モーダル) は sampleGameState で代替中、必要になったら着手。
 
 ### Phase 8 完了後の layout polish TODO
 
@@ -53,7 +59,8 @@ Phase 8 完了後にもう 1 ラウンド polish 予定: カード画像実フ�
 - [2026-05-15](sessions/2026-05-15.md) — Phase 7 UI Shell 完了 (session 1)
 - [2026-05-15-2](sessions/2026-05-15-2.md) — Phase 7.5 layout pivot (session 2)
 - [2026-05-15-3](sessions/2026-05-15-3.md) — Phase 8.1 useEngineDispatch + 8.2 useTargetPicker
-- [2026-05-15-4](sessions/2026-05-15-4.md) — **Phase 8.3 useConfirmation** (session 4)
+- [2026-05-15-4](sessions/2026-05-15-4.md) — Phase 8.3 useConfirmation (session 4)
+- [2026-05-15-5](sessions/2026-05-15-5.md) — **Phase 8.5 polish + 8.6 推理フロー** (session 5)
 
 ## 主要参照
 
