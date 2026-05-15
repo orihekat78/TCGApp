@@ -47,6 +47,20 @@ export interface AIPolicy {
     candidates: ReadonlyArray<{ uid: string; cardId: string }>,
   ): string | null;
 
+  /**
+   * Phase 8.7d: カットイン判定 (optional)。
+   * コンタクト中の action-1 / action-2 phase で、player が手札から
+   * カットイン持ちカードを使うか決める。null なら contact.pass。
+   *
+   * @param candidates 既に canCutIn を満たすことが確認された手札 cardId 一覧
+   */
+  chooseCutIn?(
+    state: GameState,
+    ax: import('@/engine/types').ActionContext,
+    player: Player,
+    candidates: ReadonlyArray<string>,
+  ): string | null;
+
   /** Identifier for logging / debug */
   readonly name: string;
 }

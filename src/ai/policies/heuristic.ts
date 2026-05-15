@@ -22,6 +22,30 @@ import { engine } from '@/engine';
 import { RandomPolicy, type RandomPolicyOptions } from './random.js';
 
 /**
+ * uid のオーナープレイヤーを判定 (chooseCutIn 内部用)。
+ * partner uid と scene uid 両対応。
+ */
+function ownerOfUid(s: GameState, uid: string): 'self' | 'opp' | null {
+  if (uid === 'partner:self') return 'self';
+  if (uid === 'partner:opp') return 'opp';
+  for (const p of ['self', 'opp'] as const) {
+    if (s.players[p].scene.some((c) => c.uid === uid)) return p;
+  }
+  return null;
+}
+
+/**
+ * ax の firstUid / secondUid のうち、player 側のキャラ uid を返す (chooseCutIn 用)。
+ */
+function pickContactUidFor(s: GameState, ax: ActionContext, player: 'self' | 'opp'): string | null {
+  const candidates = [ax.firstUid, ax.secondUid].filter((u): u is string => Boolean(u));
+  for (const uid of candidates) {
+    if (ownerOfUid(s, uid) === player) return uid;
+  }
+  return null;
+}
+
+/**
  * partner uid を考慮した AP 読み出し (rules/07: パートナーもアクション可能)。
  * read.char.ap は scene[] のみスキャンするため、partner uid は CardDef から直接取得。
  * (state-machine.ts:46 readEffectiveAp と同じロジック)
@@ -129,6 +153,35 @@ export class HeuristicPolicy implements AIPolicy {
     // 最後: endTurn
     const endTurn = candidates.find((m): m is Extract<Move, { kind: 'endTurn' }> => m.kind === 'endTurn');
     return endTurn ?? null;
+  }
+
+  /**
+   * Phase 8.7d: カットイン判定 (rules/08 / rules/09)。
+   *
+   * ヒューリスティック:
+   *   - candidates 0 件 → null
+   *   - 自分のコンタクトキャラの AP >= 相手の AP → null (既に勝てる)
+   *   - そうでなければ candidates[0] を選ぶ (不利の挽回試行)
+   *
+   * ※「どのカットインを選ぶか」は MVP では先頭固定。将来は AP+ 量や
+   * 効果内容で最適化したい (Phase 8.7d2 ポリッシュ)。
+   */
+  chooseCutIn(
+    state: GameState,
+    ax: ActionContext,
+    player: 'self' | 'opp',
+    candidates: ReadonlyArray<string>,
+  ): string | null {
+    if (candidates.length === 0) return null;
+    // 自分 / 相手 のコンタクトキャラ uid を特定
+    const myUid = pickContactUidFor(state, ax, player);
+    if (!myUid) return null;
+    const oppUid = myUid === ax.firstUid ? ax.secondUid : ax.firstUid;
+    if (!oppUid) return null;
+    const myAp = readEffectiveAp(state, myUid);
+    const oppAp = readEffectiveAp(state, oppUid);
+    if (myAp >= oppAp) return null; // 既に勝てるので資源温存
+    return candidates[0];
   }
 
   /**

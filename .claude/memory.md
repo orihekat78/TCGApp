@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7c 完了 ✅
-**最新コミット**: Commit J — Phase 8.7c CPU ガード判断強化 (7 tests)
-**テスト状況**: 1229 PASS / 141 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: CPU が高 AP キャラを持っていればガードして攻撃を防ぐようになった (引分以上で ガード成立 → 何も起こらない判定)
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7d 完了 ✅
+**最新コミット**: Commit K — Phase 8.7d CPU カットイン判断 + 1番目再行動 (4 tests)
+**テスト状況**: 1233 PASS / 142 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: CPU はガード + カットイン (1番目/2番目 + 再行動) で対応するようになった。AP 不利時に手札からカットインカードを切る判断が入る
 
 **未コミット作業**: なし
 
@@ -28,7 +28,8 @@
   - [x] **8.7a アクション宣言** フロー UI 統合 (Commit H, 12 tests) — source + target 2 段階 picker、相手 CPU は ガード/カットイン/変装なし簡略
   - [x] **8.7b opp ターン自動進行** (Commit I, 5 tests) — useOppTurnDriver + HeuristicPolicy + flow.endTurn 連携。試合が end-to-end で回るようになった
   - [x] **8.7c CPU ガード判断** (Commit J, 7 tests) — AIPolicy.chooseGuard? + HeuristicPolicy 実装 + src/ai/action-resolution.ts 共通ヘルパ。policy.applyMove と useEngineDispatch を一本化
-  - [ ] **8.7d 残**: CPU カットイン判断 / **8.7e 変装** /
+  - [x] **8.7d CPU カットイン判断** (Commit K, 4 tests) — AIPolicy.chooseCutIn? + HeuristicPolicy 実装、resolveCutInForPhase ヘルパで action-1/action-2/redo phase を統合
+  - [ ] **8.7e 残**: CPU 変装判断 (chooseDisguise) /
         パートナー能力 / 宣言能力 / PvP 用モーダル UI (Phase 9.x)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
