@@ -7,9 +7,9 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-14）
+## 現在の状況（2026-05-15）
 
-**実装フェーズ進行中**。Engine + 47 カード + AI (Random/Heuristic) 全実装 (Phase 0-6) 完了。
+**Phase 7 UI Shell 完了**。Engine + 47 カード + AI + 12 UI components + ブラウザ表示 (Phase 0-7) 完了。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -22,16 +22,17 @@
 | 4 | Flow Control (setup/auto/main/action-SM/contact/actionCase/guard) | ✅ 完了 |
 | 5 | cards/_shared/ 8 + 47カード (CT-D08 + CT-D11) + validateAll/smoke | ✅ 完了 |
 | 6 | AI (Random / Heuristic + AI vs AI 100戦 smoke) | ✅ 完了 |
-| 7 | UI Shell + プレイマット | ← 次 |
-| 8 | UI 相互作用 + 動的モーダル | ⏳ |
+| 7 | UI Shell + プレイマット (12 components + cardResolvers + App 統合) | ✅ 完了 |
+| 8 | UI 相互作用 + 動的モーダル + layout pivot | ← 次 |
 | 9 | 統合・自動プレイテスト1000戦・チュートリアル | ⏳ |
 
 ### テスト状況
 
-- **991 PASS / 112 Test Files** (Phase 6 完了時点)
+- **1132 PASS / 128 Test Files** (Phase 7 完了時点)
 - 100戦 AI vs AI smoke: **0 invariant failure / 0 例外**
-- `npx tsc --noEmit` 通過
-- 骨格凍結原則遵守: Phase 5 内の engine 修正は Hook 配線漏れ修正 3 件のみ (deckShuffle / enter emit / case:to-resolved emit)。カード効果のための骨格修正はゼロ
+- `npm run typecheck` (src + scripts) 通過 / `npm run docs:check` クリーン
+- `npm run dev` で http://localhost:5173/ にブラウザ表示 (Playmat 全 12 エリア)
+- 骨格凍結原則遵守: Phase 5 内の engine 修正は Hook 配線漏れ修正 3 件のみ。Phase 7 はエンジン無変更
 
 ### 調査フェーズ完了済 (実装の前提)
 

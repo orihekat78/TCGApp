@@ -67,10 +67,10 @@
 - [x] 7.6 CaseArea (事件カード + マーカー) ✅ `a314853` (Claude Design pilot #2)
 - [x] 7.7 DeckArea (枚数表示) ✅ `405942a`
 - [x] 7.8 FileArea (積み重ね表示) ✅ `ba57868` (Claude Design pilot #3)
-- [ ] 7.9 EvidenceArea (裏向き積み + クリック展開モーダル: ui-modal-flows-other) — 🚧 Claude Design 納品待ち、REQUEST.md 配置済
+- [x] 7.9 EvidenceArea (裏向き積み + クリック展開モーダル受け皿) ✅ (Claude Design pilot #4) + case-col refactor
 - [x] 7.10 RemoveArea (枚数 + クリックで一覧) ✅ `f7d8d55`
-- [ ] 7.11 HandZone (フラット表示 MTGA型) — 🚧 Claude Design 納品待ち、REQUEST.md 配置済
-- [ ] 7.12 TopBar (フェイズ・痕跡・必要証拠数・効果スタック数) — 🚧 Claude Design 納品待ち、REQUEST.md 配置済
+- [x] 7.11 HandZone (フラット表示 MTGA型) ✅ (Claude Design pilot #5)
+- [x] 7.12 TopBar (フェイズ・痕跡・必要証拠数・効果スタック数) ✅ (Claude Design pilot #6)
 - [x] 7.13 LogPanel (下端折りたたみ) ✅ `5902fe8`
 
 ### Task 7.14: EffectStackPanel + 状態オーバーレイ ✅ `aece1c3`

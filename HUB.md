@@ -84,8 +84,9 @@
 - Phase 4: [flow](.claude/research/plans/2026-05-11-mvp-implementation/phase-4-flow.md) ✅
 - Phase 5: [cards](.claude/research/plans/2026-05-11-mvp-implementation/phase-5-cards.md) ✅
 - Phase 6: [ai](.claude/research/plans/2026-05-11-mvp-implementation/phase-6-ai.md) ✅
-- Phase 7: [ui-shell](.claude/research/plans/2026-05-11-mvp-implementation/phase-7-ui-shell.md) ← 現在
-- Phase 8–9: [ui-interactions](.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md) ｜ [polish](.claude/research/plans/2026-05-11-mvp-implementation/phase-9-polish.md)
+- Phase 7: [ui-shell](.claude/research/plans/2026-05-11-mvp-implementation/phase-7-ui-shell.md) ✅ (12 components + cardResolvers + App 統合)
+- Phase 8: [ui-interactions](.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md) ← 次 (layout pivot から開始予定)
+- Phase 9: [polish](.claude/research/plans/2026-05-11-mvp-implementation/phase-9-polish.md)
 
 ## 📓 セッション履歴
 
@@ -95,6 +96,7 @@
 - [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了 + Phase 5 完了
 - [2026-05-14](.claude/sessions/2026-05-14.md) — Phase 5 fix (D11019) + Phase 6 完了
 - [2026-05-14-2](.claude/sessions/2026-05-14-2.md) — Obsidian × Engine 統合 (meta-tooling)
+- [2026-05-15](.claude/sessions/2026-05-15.md) — **Phase 7 UI Shell 完了** (12 components / 1132 tests / Claude Design dual-track 6 pilots)
 
 ## 🤖 自動生成ドキュメント
 
