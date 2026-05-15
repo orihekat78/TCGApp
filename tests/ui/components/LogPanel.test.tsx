@@ -14,29 +14,21 @@ function makeEntry(overrides: Partial<LogEntry> & Pick<LogEntry, 'ts' | 'player'
 }
 
 describe('LogPanel', () => {
-  it('renders the .log-btn with LOG label and count (closed by default)', () => {
+  it('renders nothing when closed (Phase 8.5: LOG ボタンは ActionsPanel に移動)', () => {
     const html = strip(renderToString(
       <LogPanel entries={[]} open={false} />,
     ));
-    expect(html).toMatch(/class="log-panel"/);
-    expect(html).not.toMatch(/log-panel open/);
-    expect(html).toMatch(/aria-expanded="false"/);
-    expect(html).toMatch(/class="log-btn"/);
-    expect(html).toMatch(/aria-label="ログを開く"/);
-    expect(html).toMatch(/class="log-btn-label">LOG/);
-    expect(html).toMatch(/class="log-btn-count">0/);
-    // 閉時は log-list を描画しない
-    expect(html).not.toMatch(/class="log-list"/);
+    expect(html).toBe('');
   });
 
-  it('renders count badge reflecting entries length even when closed', () => {
+  it('still renders nothing when closed even with entries', () => {
     const entries: LogEntry[] = Array.from({ length: 5 }).map((_, i) => makeEntry({
       ts: 1_000_000 + i, player: 'self', turn: 1, action: 'reasoning',
     }));
     const html = strip(renderToString(
       <LogPanel entries={entries} open={false} />,
     ));
-    expect(html).toMatch(/class="log-btn-count">5/);
+    expect(html).toBe('');
   });
 
   it('renders log-list with "ログなし" when open and empty', () => {
@@ -47,7 +39,7 @@ describe('LogPanel', () => {
     expect(html).toMatch(/aria-expanded="true"/);
     expect(html).toMatch(/class="log-list"/);
     expect(html).toMatch(/class="log-empty">ログなし/);
-    expect(html).toMatch(/aria-label="ログを閉じる"/);
+    // Phase 8.5: 閉じるボタンは LogPanel から削除済 (open=false で何も描画しない設計に変更)
   });
 
   it('renders entries in reverse chronological order (newest first)', () => {

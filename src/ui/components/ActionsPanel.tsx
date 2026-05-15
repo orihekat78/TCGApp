@@ -31,6 +31,12 @@ export type ActionsPanelProps = {
   onEndTurn?: () => void;
   /** 6 行動 のクリック (Phase 8.5 で onEndTurn 以外はスタブ、8.6+ で配線) */
   onActionItemClick?: (actionId: ActionItemId) => void;
+  /** ナレーター文言: 操作ガイダンス (Phase 7.5 までは stage 下部に表示、8.5 でここへ移動) */
+  narratorMessage?: string;
+  /** LOG ボタン用: エントリ数 / 開閉状態 / トグルコールバック */
+  logEntryCount?: number;
+  logOpen?: boolean;
+  onLogToggle?: () => void;
 };
 
 export type ActionItemId =
@@ -67,6 +73,10 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
     canEndTurn,
     onEndTurn,
     onActionItemClick,
+    narratorMessage,
+    logEntryCount = 0,
+    logOpen = false,
+    onLogToggle,
   } = props;
 
   const actionModeLabel =
@@ -148,6 +158,28 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
           );
         })}
       </ul>
+
+      {/* Phase 8.5: actions-list と phase-toggles の間に narrator + log セクションを集約 */}
+      <div className="panel-narrator-log">
+        {narratorMessage !== undefined && (
+          <div className="panel-narrator-text" role="status">
+            {narratorMessage}
+          </div>
+        )}
+        {onLogToggle && (
+          <button
+            type="button"
+            className="panel-log-btn"
+            aria-label={logOpen ? 'ログを閉じる' : 'ログを開く'}
+            aria-pressed={logOpen}
+            onClick={onLogToggle}
+          >
+            <span className="panel-log-btn-icon" aria-hidden="true">▤</span>
+            <span className="panel-log-btn-label">LOG</span>
+            <span className="panel-log-btn-count">{logEntryCount}</span>
+          </button>
+        )}
+      </div>
 
       <div className="phase-toggles" role="group" aria-label="フェイズ">
         {(['auto', 'main', 'end'] as const).map((p) => {

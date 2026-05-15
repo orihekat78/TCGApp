@@ -42,12 +42,12 @@ describe('Playmat', () => {
     expect(html).toMatch(/手札なし/);
   });
 
-  it('renders LogPanel (real component, closed by default)', () => {
+  it('does not render LogPanel when closed (Phase 8.5: LOG ボタンは ActionsPanel に集約)', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
-    expect(html).toMatch(/class="log-panel"/);
-    expect(html).not.toMatch(/log-panel open/);
-    expect(html).toMatch(/class="log-btn"/);
-    expect(html).toMatch(/class="log-btn-count">0/);
+    expect(html).not.toMatch(/class="log-panel"/);
+    // ActionsPanel 内の LOG ボタンは描画される
+    expect(html).toMatch(/class="panel-log-btn"/);
+    expect(html).toMatch(/class="panel-log-btn-count">0/);
   });
 
   it('renders ActionsPanel (Phase 7.5 — 6 action items + phase toggles + END turn)', () => {

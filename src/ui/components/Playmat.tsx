@@ -130,6 +130,11 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
 export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }: PlaymatProps): JSX.Element {
   // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
   const [handExpanded, setHandExpanded] = useState(false);
+  // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
+  const [logOpen, setLogOpen] = useState(false);
+  // 仮のナレーター文言 (Phase 8.6+ で engine state 連動の動的メッセージに置換予定)
+  const narratorMessage =
+    '⑥ アクション を選択すると、攻撃元キャラ指定 → 相手のスリープ/スタン状態キャラに対しアクション対象を選べます。';
   const handCards: HandCardMeta[] = resolveHandCard
     ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
     : [];
@@ -198,18 +203,18 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             // eslint-disable-next-line no-console
             console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
           }}
+          narratorMessage={narratorMessage}
+          logEntryCount={gameState?.log.length ?? 0}
+          logOpen={logOpen}
+          onLogToggle={() => setLogOpen((v) => !v)}
         />
 
         {/* ConfirmModal — useConfirmation の state を全画面オーバーレイで描画 */}
         <PlaymatConfirmModal />
 
-        {/* Narrator message bar (bottom, 操作説明用 — Phase 8 で動的に) */}
-        <div className="narrator-msg" role="status">
-          あなたは ⑥ <strong>アクション</strong> を選択しました。攻撃元キャラを指定し、相手のスリープ/スタン状態のキャラからアクション対象を選んでください。
-        </div>
-
-        {/* LogPanel (閉時は .log-btn のみ。開閉は Phase 8) */}
-        <LogPanel entries={gameState?.log ?? []} open={false} />
+        {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
+            LogPanel は open=true のときのみオーバーレイで描画。 */}
+        <LogPanel entries={gameState?.log ?? []} open={logOpen} />
       </div>
     </div>
   );

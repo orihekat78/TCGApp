@@ -39,24 +39,15 @@ function formatTime(ts: number): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-export function LogPanel({ entries, open, maxEntries = 30 }: LogPanelProps): JSX.Element {
-  // 最新が末尾なら逆順、最新が先頭なら sorted のまま — engine の log は
-  // append 順 (古→新) なので、逆順にして上が新しい表示にする。
+export function LogPanel({ entries, open, maxEntries = 30 }: LogPanelProps): JSX.Element | null {
+  // Phase 8.5: 閉時は何もレンダリングしない (LOG ボタンは ActionsPanel が持つ)
+  if (!open) return null;
+
+  // engine の log は append 順 (古→新)。逆順にして上が新しい表示にする。
   const sorted = entries.slice(-maxEntries).reverse();
 
   return (
-    <div className={`log-panel${open ? ' open' : ''}`} aria-expanded={open}>
-      <button
-        type="button"
-        className="log-btn"
-        aria-label={open ? 'ログを閉じる' : 'ログを開く'}
-        disabled
-      >
-        <span className="log-btn-icon" aria-hidden="true">▤</span>
-        <span className="log-btn-label">LOG</span>
-        <span className="log-btn-count">{entries.length}</span>
-      </button>
-
+    <div className="log-panel open" aria-expanded={true}>
       {open && (
         <div className="log-list" role="log" aria-live="polite">
           {sorted.length === 0 ? (
