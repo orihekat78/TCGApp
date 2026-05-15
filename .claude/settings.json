@@ -46,11 +46,27 @@
       "Bash(git checkout *)",
       "Bash(git stash *)",
       "Bash(git ls-tree *)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Skill(superpowers:test-driven-development)",
+      "Skill(superpowers:test-driven-development:*)",
+      "Bash(printf '\\\\n' >> \".claude/memory.md\" && tail -c 5 \".claude/memory.md\" | od -c | head -2)",
+      "Bash(printf '\\\\n' >> \".claude/sessions/2026-05-15-3.md\" && wc -l \".claude/sessions/2026-05-15-3.md\" && tail -c 4 \".claude/sessions/2026-05-15-3.md\" | od -c | head -1)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:__TRACKED_VAR__/)",
+      "Bash(break)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(printf '\\\\n' >> \".claude/sessions/2026-05-15-6.md\" && wc -l \".claude/sessions/2026-05-15-6.md\")",
+      "Bash(printf '\\\\n' >> \".claude/sessions/NEXT-SESSION-PROMPT.md\" && wc -l \".claude/sessions/NEXT-SESSION-PROMPT.md\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\arumi\\OneDrive\\�f�X�N�g�b�v\\conan\\.claude",
-      "c:\\Users\\arumi\\OneDrive\\�f�X�N�g�b�v\\conan\\.claude\\auto\\mapping"
+      "c:\\Users\\arumi\\OneDrive\\�f�X�N�g�b�v\\conan\\.claude\\auto\\mapping",
+      "C:\\Users\\arumi\\OneDrive\\デスクトップ\\conan\\.claude",
+      "C:\\Users\\arumi\\OneDrive\\デスクトップ\\conan\\.claude\\sessions"
     ]
   }
 }

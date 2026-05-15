@@ -6,10 +6,10 @@
 
 | # | ファイル | 内容 |
 |---|----------|------|
-| 01 | [01-card-data-source.md](01-card-data-source.md) | カードデータ取得元 (公式DB等) |
-| 02 | [02-card-schema-design.md](02-card-schema-design.md) | カードスキーマ設計 (TypeScript型) |
-| 03 | [03-image-handling.md](03-image-handling.md) | 画像取り扱い (法務・キャッシュ) |
-| 04 | [04-folder-structure.md](04-folder-structure.md) | フォルダ構造設計 |
+| 01 | [01-card-data-source.md](data/01-card-data-source.md) | カードデータ取得元 (公式DB等) |
+| 02 | [02-card-schema-design.md](data/02-card-schema-design.md) | カードスキーマ設計 (TypeScript型) |
+| 03 | [03-image-handling.md](data/03-image-handling.md) | 画像取り扱い (法務・キャッシュ) |
+| 04 | [04-folder-structure.md](data/04-folder-structure.md) | フォルダ構造設計 |
 
 ## 関連 specs
 

@@ -37,13 +37,13 @@
 
 ## 🧠 研究 — 設計判断のための調査
 
-- [research/legal/INDEX](.claude/research/legal/INDEX.md) — 法務・著作権スタンス確定
-- [research/data/INDEX](.claude/research/data/INDEX.md) — カードデータ取得・スキーマ・画像
-- [research/arch/INDEX](.claude/research/arch/INDEX.md) — アーキテクチャ全般 (10ファイル)
-- [research/ux/INDEX](.claude/research/ux/INDEX.md) — 対戦UX/UI設計 (動画解析含む)
-- [research/ui/INDEX](.claude/research/ui/INDEX.md) — プレイマット由来UIレイアウト
-- [research/tutorial/INDEX](.claude/research/tutorial/INDEX.md) — チュートリアル学習設計
-- [research/decisions/INDEX](.claude/research/decisions/INDEX.md) — UIブレインストーミング決定事項
+- [research/legal](.claude/research/legal.md) — 法務・著作権スタンス確定
+- [research/data](.claude/research/data.md) — カードデータ取得・スキーマ・画像
+- [research/arch](.claude/research/arch.md) — アーキテクチャ全般 (10ファイル)
+- [research/ux](.claude/research/ux.md) — 対戦UX/UI設計 (動画解析含む)
+- [research/ui](.claude/research/ui.md) — プレイマット由来UIレイアウト
+- [research/tutorial](.claude/research/tutorial.md) — チュートリアル学習設計
+- [research/decisions](.claude/research/decisions.md) — UIブレインストーミング決定事項
 - [research/rules/commmune-wiki-map](.claude/research/rules/commmune-wiki-map.md) — コミュニティWiki構造
 
 ★ **UX準拠ソース**: [ux/14 公式UIモックアップ観察](.claude/research/ux/14-official-ui-mockup.md)
@@ -94,7 +94,7 @@
 - [2026-05-10](.claude/sessions/2026-05-10.md) — 法務調査・ルール抽出
 - [2026-05-11](.claude/sessions/2026-05-11.md) ｜ [-2](.claude/sessions/2026-05-11-2.md) ｜ [-3](.claude/sessions/2026-05-11-3.md) ｜ [-4](.claude/sessions/2026-05-11-4.md) ｜ [-5](.claude/sessions/2026-05-11-5.md)
 - [2026-05-12](.claude/sessions/2026-05-12.md) — Phase 4 完了 + Phase 5 完了
-- [2026-05-14](.claude/sessions/2026-05-14.md) — Phase 5 fix (D11019) + Phase 6 完了
+- [2026-05-14-2](.claude/sessions/2026-05-14-2.md) — Phase 5 fix + Phase 6 + Obsidian 統合
 - [2026-05-14-2](.claude/sessions/2026-05-14-2.md) — Obsidian × Engine 統合 (meta-tooling)
 - [2026-05-15](.claude/sessions/2026-05-15.md) — **Phase 7 UI Shell 完了** (12 components / 1132 tests / Claude Design dual-track 6 pilots)
 

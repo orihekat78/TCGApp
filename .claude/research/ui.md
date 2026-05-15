@@ -8,7 +8,7 @@
 | ファイル | 内容 |
 |----------|------|
 | [playsheet-layout.md](playsheet-layout.md) | 公式プレイシート由来のUIレイアウト参照 |
-| [02-industry-conventions.md](02-industry-conventions.md) | TCG業界UI慣例 (MTGA・Hearthstone等) |
+| [02-industry-conventions.md](ui/02-industry-conventions.md) | TCG業界UI慣例 (MTGA・Hearthstone等) |
 
 ## 関連 specs
 

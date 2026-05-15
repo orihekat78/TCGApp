@@ -7,7 +7,7 @@
 
 | 日付 | ファイル | テーマ |
 |------|----------|--------|
-| 2026-05-11 | [2026-05-11-ui-brainstorm.md](2026-05-11-ui-brainstorm.md) | UI設計ブレスト 全10問 |
+| 2026-05-11 | [2026-05-11-ui-brainstorm.md](decisions/2026-05-11-ui-brainstorm.md) | UI設計ブレスト 全10問 |
 
 ## 関連 specs
 

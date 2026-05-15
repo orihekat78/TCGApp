@@ -94,4 +94,4 @@
 ## 関連
 
 - [ui-state-map.md](2026-05-11-ui-state-map.md)
-- [ui-style-anim.md](2026-05-11-ui-style-anim.md)
+- ui-style-anim.md (削除済、内容は ui-style-tokens.md に統合)

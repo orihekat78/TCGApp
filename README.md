@@ -7,32 +7,32 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-15）
+## 現在の状況（2026-05-16）
 
-**Phase 7 UI Shell 完了**。Engine + 47 カード + AI + 12 UI components + ブラウザ表示 (Phase 0-7) 完了。
+**Phase 8 UI Interactions 大半完了**。ActionsPanel 全 8 item 配線 / CPU 9 段階コンタクト応答 /
+能力 cost 解決 (UI+AI 対称) / ゲーム開始モーダル / 盤面アニメまで完了。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
 | Phase | 内容 | 状態 |
 |------|-----|-----|
-| 0 | プロジェクトブートストラップ | ✅ 完了 |
-| 1 | 型・GameState・RNG・Immer | ✅ 完了 |
-| 2 | engine.read / engine.mutate / invariant | ✅ 完了 |
-| 3 | Effect Resolver + Hooks + Cost + Target + Cond + Dyn | ✅ 完了 |
-| 4 | Flow Control (setup/auto/main/action-SM/contact/actionCase/guard) | ✅ 完了 |
-| 5 | cards/_shared/ 8 + 47カード (CT-D08 + CT-D11) + validateAll/smoke | ✅ 完了 |
-| 6 | AI (Random / Heuristic + AI vs AI 100戦 smoke) | ✅ 完了 |
-| 7 | UI Shell + プレイマット (12 components + cardResolvers + App 統合) | ✅ 完了 |
-| 8 | UI 相互作用 + 動的モーダル + layout pivot | ← 次 |
-| 9 | 統合・自動プレイテスト1000戦・チュートリアル | ⏳ |
+| 0-6 | Engine + 47 カード + AI | ✅ 完了 |
+| 7 | UI Shell (12 components + cardResolvers + App 統合) | ✅ 完了 |
+| 8.1-8.3 | hooks 基盤 (useEngineDispatch / useTargetPicker / useConfirmation) | ✅ 完了 |
+| 8.5 / 8.6 | ActionsPanel onClick + 推理/ネクストヒント/アシスト/事件解決/手札使用 | ✅ 完了 |
+| 8.7a-e | アクション宣言 / opp ターン自動進行 / CPU ガード/カットイン/変装 政策強化 | ✅ 完了 |
+| 8.8a-d | パートナー能力 / 宣言能力 / 能力 cost 解決 (UI + AI) | ✅ 完了 |
+| 8.4 / 8.10a-e | ゲーム開始モーダル / opp overlay / アクショントースト / アニメ / judge log | ✅ 完了 |
+| 8.4b / 8.10 残 | 正規 setup / リムーブフェード / 画面フラッシュ | ⏳ 残 |
+| 9 | 統合・自動プレイテスト1000戦・チュートリアル / PvP モーダル | ⏳ |
 
 ### テスト状況
 
-- **1132 PASS / 128 Test Files** (Phase 7 完了時点)
+- **1275 PASS / 153 Test Files** (Phase 8.10e 完了時点)
 - 100戦 AI vs AI smoke: **0 invariant failure / 0 例外**
-- `npm run typecheck` (src + scripts) 通過 / `npm run docs:check` クリーン
-- `npm run dev` で http://localhost:5173/ にブラウザ表示 (Playmat 全 12 エリア)
-- 骨格凍結原則遵守: Phase 5 内の engine 修正は Hook 配線漏れ修正 3 件のみ。Phase 7 はエンジン無変更
+- `npm run typecheck` 通過 / `npm run docs:check` クリーン
+- `npm run dev` で http://localhost:5173/ — ゲーム開始モーダル → end-to-end プレイ可能
+- 骨格凍結原則遵守: 本セッションの engine 変更は contact.judge log 追加 1 行のみ (8.10e ログ欠落補修)
 
 ### 調査フェーズ完了済 (実装の前提)
 
@@ -66,25 +66,9 @@
 
 ### Engine ソース ([src/engine/](src/engine/))
 
-| Namespace | 役割 |
-|-----------|------|
-| `engine.read` | 純粋セレクタ (turn/player/scene/char/def/game/log) |
-| `engine.mutate` | Immer draft 上の primitive (deck/hand/scene/char/evidence/file/...) |
-| `engine.invariant` | 不変条件チェック (case/partner/stun semantics 等) |
-| `engine.event` | Hook on/emit/queue + EffectStackEntry 自動 wrap |
-| `engine.effect` | Atom dispatcher / DSL Resolver / Validator |
-| `engine.dyn` | `$self.ap` / `$contact.X` / `$cost.X` / `$dyn.X` 動的式評価 |
-| `engine.target` | 候補列挙 + 選択検証 (rules/19 split-name + distinctNames) |
-| `engine.cost` | canPay / pay (viaCost フラグ管理) |
-| `engine.cond` | 26 Condition variants 評価 |
-| `engine.resolve` | Effect Stack (queue/next/runOne/runAllUntilEmpty + cancel/replace/lock) |
-| `engine.flow.setup` | init / decideFirstPlayer / dealOpeningHand / mulligan / reveal / startGame |
-| `engine.flow.runAutoPhase` | 3-step auto (activate/draw/FILE) + first-turn FILE=1 + stun→sleep |
-| `engine.flow.main` | 6 actions: handUseCard / nextHint / partner / declared / reasoning / action (canX/doX) |
-| `engine.flow.action` | 9-phase state machine + target-expander (G29) + mustBeTargeted (G28) |
-| `engine.flow.contact` | cutIn / disguise / pass / judge / computeOrder |
-| `engine.flow.actionCase` | evidence remove → ヒラメキ window → gain |
-| `engine.flow.guard` | candidates + canGuard (ブレット exception) |
+`engine.read` / `mutate` / `invariant` / `event` / `effect` / `dyn` / `target` /
+`cost` / `cond` / `resolve` / `flow.{setup,runAutoPhase,main,action,contact,actionCase,guard,handUseCard,nextHint,partner,declared,reasoning,endTurn}` の
+namespace 構成。詳細は [HUB.md](HUB.md) と [.claude/auto/](.claude/auto/) の自動生成 API ドキュメント参照。
 
 ## 法務スタンス（重要）
 

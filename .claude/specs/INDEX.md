@@ -35,7 +35,7 @@
 
 ### 互換参照（旧版）
 
-- ui-modal-flows.md / ui-style-anim.md は分割後の参照誘導のみ
+- ui-modal-flows.md / ui-style-anim.md は削除済 (実体は -contact / -other / -tokens)
 
 ### モック参考資産 (design-mockups/)
 

@@ -6,9 +6,9 @@
 
 | # | ファイル | 内容 |
 |---|----------|------|
-| 01 | [01-curriculum-design.md](01-curriculum-design.md) | カリキュラム全体構成・学習段階 |
-| 02 | [02-step-by-step-flow.md](02-step-by-step-flow.md) | レッスン単位ステップフロー |
-| 03 | [03-visual-conventions.md](03-visual-conventions.md) | 演出・UI規則 |
+| 01 | [01-curriculum-design.md](tutorial/01-curriculum-design.md) | カリキュラム全体構成・学習段階 |
+| 02 | [02-step-by-step-flow.md](tutorial/02-step-by-step-flow.md) | レッスン単位ステップフロー |
+| 03 | [03-visual-conventions.md](tutorial/03-visual-conventions.md) | 演出・UI規則 |
 
 ## 関連 rules (必須対応)
 
