@@ -81,9 +81,9 @@
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  /* Phase 8.5: カードを左寄せではなくパートナーエリアの中央に置く (ユーザ要望) */
+  justify-content: center;
   gap: 10px;
-  padding-left: 6px;
   position: relative;
   z-index: 2;
 }

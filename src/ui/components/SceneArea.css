@@ -13,9 +13,11 @@
  */
 
 .scene-area {
-  --scene-card-w: 60px;
-  --scene-card-h: 84px;
-  --scene-slot-gap: 6px;
+  /* Phase 8.5: 現場カードは他エリア (Partner 72px / Hand 88px) より大きく表示 (ユーザ要望)
+     縦余裕があるためさらに拡大 (2026-05-15 第2要望) */
+  --scene-card-w: 132px;
+  --scene-card-h: 188px;
+  --scene-slot-gap: 4px;
 
   --scene-bg-cell: var(--bg-cell, rgba(0, 0, 0, 0.32));
   --scene-border: var(--border-zone, #3a6ea5);
