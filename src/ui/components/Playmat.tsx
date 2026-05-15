@@ -133,8 +133,16 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         />
 
         <div className="play-area">
-          {/* Opponent hand strip (top of opp mat) — Task 7.11 関連 */}
-          <div className="opp-hand-strip" aria-label="相手手札" />
+          {/* Opponent hand strip (top of opp mat, count + mini card-backs) */}
+          <div className="opp-hand-strip" aria-label="相手手札">
+            <span className="opp-hand-label">相手の手札</span>
+            <div className="mini-cards">
+              {Array.from({ length: gameState?.players.opp.hand.length ?? 0 }).map((_, i) => (
+                <div key={i} className="mini-card-back" aria-hidden="true">DC</div>
+              ))}
+            </div>
+            <span className="opp-hand-count">{gameState?.players.opp.hand.length ?? 0} 枚</span>
+          </div>
 
           <PlayerMat side="opp" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
 
@@ -159,6 +167,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           currentPhase={gameState?.turn.phase ?? 'main'}
           canEndTurn={true}
         />
+
+        {/* Narrator message bar (bottom, 操作説明用 — Phase 8 で動的に) */}
+        <div className="narrator-msg" role="status">
+          あなたは ⑥ <strong>アクション</strong> を選択しました。攻撃元キャラを指定し、相手のスリープ/スタン状態のキャラからアクション対象を選んでください。
+        </div>
 
         {/* LogPanel (閉時は .log-btn のみ。開閉は Phase 8) */}
         <LogPanel entries={gameState?.log ?? []} open={false} />

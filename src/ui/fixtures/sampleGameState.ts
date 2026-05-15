@@ -60,79 +60,76 @@ function makeLog(ts: number, player: 'self' | 'opp', turn: number, action: strin
   return { ts, player, turn, action, target };
 }
 
+// User's reference scenario: 後攻 4ターン目、self が CT-D11 黄 (後攻)、
+// opp が CT-D08 青 (先攻)。self.evidence 4/6, self.file 3, opp.file 5/7。
+// pendingEffects=0 (TopBar "効果スタック: 0")、scratchTrace self=発見済。
 function selfPlayer(): PlayerState {
   return {
-    partner: { cardId: 'P001', state: 'active', location: 'partner-area' },
-    case: { cardId: '0499', status: '事件編', requiredEvidence: 7, colors: ['青'] },
+    partner: { cardId: 'P076', state: 'sleep', location: 'partner-area' },
+    case: { cardId: '0946', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
     scene: [
-      makeScene('0489', 'self-1', { enterOrder: 0 }),
-      makeScene('0490', 'self-2', { enterOrder: 1, state: 'sleep' }),
-      makeScene('0491', 'self-3', { enterOrder: 2, isNamed: true, setCards: [{ cardId: 'X', faceUp: true }] }),
+      makeScene('0936', 'self-1', { enterOrder: 0, isNamed: true }),
+      makeScene('0937', 'self-2', { enterOrder: 1 }),
+      makeScene('0938', 'self-3', { enterOrder: 2 }),
     ],
-    hand: ['0489', '0490', '0491', '0492', '0493'],
-    deck: Array.from({ length: 28 }, (_, i) => `deck-${i}`),
-    evidence: [makeEvidence(1), makeEvidence(2), makeEvidence(3)],
-    remove: ['0492', '0493'],
-    file: [fileBack, fileBack, fileBack, fileBack],
+    hand: ['0936', '0937', '0938', '0939', '0940'],
+    deck: Array.from({ length: 25 }, (_, i) => `deck-${i}`),
+    evidence: [makeEvidence(1), makeEvidence(2), makeEvidence(3), makeEvidence(4)],
+    remove: ['0941', '0942', '0943'],
+    file: [fileBack, fileBack, fileBack],
     mulliganUsed: true,
   };
 }
 
 function oppPlayer(): PlayerState {
   return {
-    partner: { cardId: 'P076', state: 'sleep', location: 'partner-area' },
-    case: { cardId: '0946', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
+    partner: { cardId: 'P001', state: 'sleep', location: 'partner-area' },
+    case: { cardId: '0499', status: '事件編', requiredEvidence: 7, colors: ['青'] },
     scene: [
-      makeScene('0936', 'opp-1', { enterOrder: 0, state: 'sleep' }),
-      makeScene('0937', 'opp-2', { enterOrder: 1, state: 'stun', stackedCards: 1 }),
+      makeScene('0489', 'opp-1', { enterOrder: 0 }),
+      makeScene('0490', 'opp-2', { enterOrder: 1, state: 'sleep' }),
+      makeScene('0491', 'opp-3', { enterOrder: 2, state: 'stun' }),
     ],
-    hand: ['0936', '0937', '0938', '0939', '0940'],
-    deck: Array.from({ length: 30 }, (_, i) => `opp-deck-${i}`),
-    evidence: [makeEvidence(1), makeEvidence(2)],
-    remove: ['0940'],
-    file: [fileBack, fileBack, fileBack],
+    hand: ['0489', '0490', '0491', '0492', '0493'],
+    deck: Array.from({ length: 2 }, (_, i) => `opp-deck-${i}`),
+    evidence: [makeEvidence(1), makeEvidence(2), makeEvidence(3), makeEvidence(4), makeEvidence(5)],
+    remove: ['0494'],
+    file: [fileBack, fileBack, fileBack, fileBack, fileBack],
     mulliganUsed: true,
   };
 }
 
 function pendingEffects(): EffectStackEntry[] {
-  return [
-    {
-      id: 'fx-001',
-      source: { player: 'self', cardId: '0491' },
-      triggeredBy: { hook: 'OnReasoning' },
-      triggeredAt: { turn: 4, phase: 'main', nano: 1 },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      effect: { kind: 'demo-placeholder' } as any,
-      state: 'pending',
-      ownerChosenOrder: 0,
-    },
-  ];
+  // User reference: 効果スタック: 0
+  return [];
 }
 
 function logEntries(): LogEntry[] {
-  return [
-    makeLog(1_000_001, 'self', 1, 'reasoning'),
-    makeLog(1_000_002, 'opp',  2, 'action', 'self.scene[0]'),
-    makeLog(1_000_003, 'self', 3, 'handUse', 'cardId:0492'),
-    makeLog(1_000_004, 'opp',  3, 'nextHint'),
-    makeLog(1_000_005, 'self', 4, 'reasoning'),
-  ];
+  // User reference: 対戦ログ 24 — turn 1-4 で 24 件分のログ
+  const entries: LogEntry[] = [];
+  let ts = 1_000_000;
+  const actions = ['reasoning', 'action', 'handUse', 'nextHint', 'endTurn', 'guard'];
+  for (let turn = 1; turn <= 4; turn++) {
+    for (let i = 0; i < 6; i++) {
+      entries.push(makeLog(ts++, i % 2 === 0 ? 'self' : 'opp', turn, actions[i % actions.length] ?? 'action'));
+    }
+  }
+  return entries;
 }
 
 /**
- * 視覚デモ用 GameState を 1 つ生成。
+ * 視覚デモ用 GameState を 1 つ生成 (ユーザ参考画像のシナリオ準拠)。
  *
- * シナリオ:
- * - 自分 (先攻、CT-D08「青の古城探索事件」、partner=江戸川コナン active)
- *   - 現場: 灰原哀 (sleep) + 江戸川コナン (active) + 吉田歩美 (active, 名乗り中, setCards 1 枚)
- *   - 手札 5 / デッキ 28 / 証拠 3/7 / リムーブ 2 / FILE 4
- * - 相手 (後攻、CT-D11「千速と重悟の婚活パーティー」、partner=萩原千速 sleep)
- *   - 現場: 萩原千速 (sleep) + 横溝重悟 (stun, 重ね 1 枚)
- *   - 手札 5 / デッキ 30 / 証拠 2/6 / リムーブ 1 / FILE 3
+ * シナリオ: 後攻 4ターン目 (自分のターン)
+ * - 自分 (後攻、CT-D11「千速と重悟の婚活パーティー」黄、partner=萩原千速 sleep)
+ *   - 現場: 萩原千速 (名乗り) + 横溝重悟 + 第3キャラ
+ *   - 手札 5 / デッキ 25 / 証拠 4/6 / リムーブ 3 / FILE 3
+ * - 相手 (先攻、CT-D08「青の古城探索事件」青、partner=江戸川コナン sleep)
+ *   - 現場: 0489 + 0490 (sleep) + 0491 (stun)
+ *   - 手札 5 / デッキ 2 / 証拠 5/7 / リムーブ 1 / FILE 5/7
  * - 痕跡: 自=発見済 / 相=未発見
- * - 効果スタック: 1 件 (pending)
- * - ログ: 5 件
+ * - 効果スタック: 0
+ * - ログ: 24 件 (turn 1-4 × 6 件)
  */
 export function createSampleGameState(): GameState {
   return {

@@ -77,6 +77,78 @@
   background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.3));
   border: 1px solid rgba(78, 138, 216, 0.35);
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+}
+.stage .opp-hand-strip .opp-hand-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.stage .opp-hand-strip .mini-cards {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+}
+.stage .opp-hand-strip .mini-card-back {
+  width: 22px;
+  height: 28px;
+  flex-shrink: 0;
+  background: linear-gradient(160deg, #1f2438, #0a0e1c);
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: serif;
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--accent-gold);
+  text-shadow: 0 0 3px rgba(255, 215, 0, 0.4);
+}
+.stage .opp-hand-strip .opp-hand-count {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent-gold);
+  font-family: var(--font-mono);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+/* ---- Narrator message bar (bottom, above HandZone) ---- */
+.stage .narrator-msg {
+  position: absolute;
+  left: 16px;
+  right: 232px;
+  bottom: 8px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.85));
+  border-top: 1px solid color-mix(in oklch, var(--neon-blue) 25%, transparent);
+  letter-spacing: 0.04em;
+  z-index: 22;
+  pointer-events: none;
+  text-align: center;
+}
+.stage .narrator-msg strong {
+  color: var(--accent-gold);
+  font-weight: 800;
+  margin: 0 4px;
 }
 
 /* ---- Mat (3-col 2-row grid per side) ---- */
