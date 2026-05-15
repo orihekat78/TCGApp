@@ -23,6 +23,7 @@ import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
 import { HandZone, type HandCardMeta } from './HandZone.js';
+import { TopBar } from './TopBar.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -121,8 +122,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         <div className="bg" />
         <div className="vignette" />
 
-        {/* TopBar slot — Task 7.12 で実装 */}
-        <div className="topbar topbar-placeholder" aria-label="TopBar" />
+        {/* TopBar (Task 7.12) */}
+        <TopBar
+          turn={{
+            number: gameState?.turn.number ?? 1,
+            player: gameState?.turn.player ?? 'self',
+          }}
+          scratchTrace={gameState?.scratchTrace ?? { self: '未発見', opp: '未発見' }}
+          effectStackCount={gameState?.pendingEffects.length ?? 0}
+        />
 
         <div className="play-area">
           {/* Opponent hand strip (top of opp mat) — Task 7.11 関連 */}

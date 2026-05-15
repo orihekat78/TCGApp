@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>TopBar — プロトタイププレビュー</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="TopBar.css">
+
+<style>
+  :root {
+    --bg-deep:        #0a1a28;
+    --neon-blue:      #4ec3ff;
+    --accent-gold:    #ffd700;
+
+    --text-primary:   #e0ecf8;
+    --text-secondary: #b8d4f0;
+    --text-muted:     #7090b5;
+    --text-disabled:  #4a5a70;
+
+    --font-jp:   "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", -apple-system, sans-serif;
+    --font-mono: "Cascadia Code", "Consolas", "Menlo", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; min-height: 100%;
+    background: radial-gradient(ellipse at 50% 30%, #15263e 0%, #0a1424 50%, #050a14 100%);
+    color: var(--text-primary);
+    font-family: var(--font-jp);
+  }
+  body { padding: 40px 28px 56px; }
+
+  .page-title { font-size: 13px; letter-spacing: 0.18em; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+  .page-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 32px; max-width: 900px; line-height: 1.7; }
+  .page-sub code { font-family: var(--font-mono); background: rgba(255,255,255,0.06); padding: 0 4px; border-radius: 2px; color: #ffd75e; }
+
+  .demo-section {
+    margin-bottom: 36px;
+  }
+  .demo-label {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 700;
+    border-left: 2px solid var(--neon-blue); padding: 2px 0 2px 10px;
+    margin-bottom: 8px;
+  }
+  .demo-label small {
+    display: block; margin-top: 4px;
+    color: var(--text-disabled); letter-spacing: 0.04em;
+    font-weight: 500; font-size: 10px; text-transform: none;
+  }
+  /* TopBar は absolute 配置なので、スコープを切るためのステージを用意 */
+  .stage {
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+    height: 80px;
+    background: linear-gradient(180deg, #0a1424 0%, #0d1a2a 100%);
+    border: 1px solid rgba(78, 195, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .stage::after {
+    /* TopBar 下の余白で「ボードの始まり」を匂わせる */
+    content: "";
+    position: absolute; left: 0; right: 0; top: 44px; bottom: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 0%,
+      rgba(78,195,255,0.08), transparent 70%);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">TopBar — Phase 7 静的表示プロトタイプ</div>
+<p class="page-sub">
+  画面最上部 1920×44px の chrome バー。3 カラム grid (1fr auto 1fr) で
+  左=チャプタータグ / 中央=痕跡＋効果スタック / 右=ナレーター＋©。
+  ナレーターアバターは特定キャラを模さない汎用シルエット。
+  本フェーズでは静的表示のみ、フェイズ表示 (<code>.phase-bar</code>) は別タスクで分離。
+</p>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="typescript,react">
+
+const PLAYER_LABEL = { self: '先攻', opp: '後攻' };
+
+function ScratchItem({ who, state }) {
+  const found = state === '発見済';
+  return (
+    <div
+      className={`scratch${found ? ' found' : ''}`}
+      title={`痕跡: ${who}`}
+      data-state={state}
+    >
+      <span className="dot" aria-hidden="true"></span>
+      <span>
+        痕跡 {who}{' '}
+        {found
+          ? <strong>{state}</strong>
+          : <span className="state-unfound">{state}</span>}
+      </span>
+    </div>
+  );
+}
+
+function TopBar({
+  turn,
+  scratchTrace,
+  effectStackCount,
+  narratorName = 'ナレーター',
+  copyright = '© 青山剛昌／小学館 © TOMY',
+}) {
+  const chapterText = `${PLAYER_LABEL[turn.player]} ${turn.number}ターン目`;
+  return (
+    <div className="topbar" role="banner">
+      <div className="topbar-left">
+        <span className="chapter-tag" aria-label={chapterText}>
+          <span className="ico" aria-hidden="true"></span>
+          {chapterText}
+        </span>
+      </div>
+      <div className="topbar-center">
+        <ScratchItem who="自" state={scratchTrace.self} />
+        <div
+          className="effect-stack"
+          aria-label={`効果スタック ${effectStackCount} 件`}
+        >
+          効果スタック: {effectStackCount}
+        </div>
+        <ScratchItem who="相" state={scratchTrace.opp} />
+      </div>
+      <div className="topbar-right">
+        <div className="narrator" aria-label={`ナレーター: ${narratorName}`}>
+          <div className="narrator-avatar" aria-hidden="true"></div>
+          <span className="narrator-name">{narratorName}</span>
+        </div>
+        <span className="copyright">{copyright}</span>
+      </div>
+    </div>
+  );
+}
+
+const CASES = [
+  {
+    label: '先攻 3 ターン目 / 自=発見済 / 相=未発見 / stack=0',
+    sub: '推理によって自軍の痕跡が発見された序盤',
+    props: {
+      turn: { number: 3, player: 'self' },
+      scratchTrace: { self: '発見済', opp: '未発見' },
+      effectStackCount: 0,
+    },
+  },
+  {
+    label: '後攻 4 ターン目 / 自=未発見 / 相=発見済 / stack=3',
+    sub: '相手にリフレッシュされ痕跡発覚、効果スタック 3 件保留',
+    props: {
+      turn: { number: 4, player: 'opp' },
+      scratchTrace: { self: '未発見', opp: '発見済' },
+      effectStackCount: 3,
+    },
+  },
+  {
+    label: '先攻 1 ターン目 / 自=未発見 / 相=未発見 / stack=0',
+    sub: '開幕直後、両軍痕跡なし',
+    props: {
+      turn: { number: 1, player: 'self' },
+      scratchTrace: { self: '未発見', opp: '未発見' },
+      effectStackCount: 0,
+    },
+  },
+  {
+    label: '後攻 7 ターン目 / 自=発見済 / 相=発見済 / stack=5',
+    sub: '終盤、両軍痕跡発覚 + 効果スタック過多',
+    props: {
+      turn: { number: 7, player: 'opp' },
+      scratchTrace: { self: '発見済', opp: '発見済' },
+      effectStackCount: 5,
+    },
+  },
+];
+
+function App() {
+  return (
+    <>
+      {CASES.map((c, i) => (
+        <div className="demo-section" key={i}>
+          <div className="demo-label">
+            Case {i + 1}: {c.label}
+            <small>{c.sub}</small>
+          </div>
+          <div className="stage">
+            <TopBar {...c.props} />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+
+</body>
+</html>

@@ -28,9 +28,15 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="vignette"/);
   });
 
-  it('renders TopBar placeholder (Task 7.12 待ち) + HandZone (real component)', () => {
-    const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
-    expect(html).toMatch(/topbar-placeholder/);
+  it('renders TopBar + HandZone real components (default for null state)', () => {
+    const raw = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
+    // React SSR は隣接 text 子要素間に <!-- --> を挿入するため除去
+    const html = raw.replace(/<!--.*?-->/g, '');
+    // TopBar real component (uses defaults when gameState is null)
+    expect(html).toMatch(/class="topbar"[^>]*role="banner"/);
+    expect(html).toMatch(/chapter-tag/);
+    expect(html).toMatch(/先攻 1ターン目/);
+    expect(html).toMatch(/効果スタック: 0/);
     // HandZone real component (empty when no resolveHandCard)
     expect(html).toMatch(/hand-zone hand-zone--empty/);
     expect(html).toMatch(/手札なし/);
