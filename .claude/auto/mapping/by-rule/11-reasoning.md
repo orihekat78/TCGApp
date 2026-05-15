@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d581bde118e6`
+> Source hash: `8153992c0a70`
 
 公式ルール [`11-reasoning.md`](../../../rules/11-reasoning.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -16,7 +16,7 @@
 - [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 - [`engine.types`](../by-engine/types.md)
 
-## 📄 参照ソース (7)
+## 📄 参照ソース (8)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -25,3 +25,4 @@
 - [`src/engine/types/candidate.ts`](../../../../src/engine/types/candidate.ts)
 - [`src/engine/types/effect.ts`](../../../../src/engine/types/effect.ts)
 - [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
+- [`src/ui/hooks/useEngineDispatch.ts`](../../../../src/ui/hooks/useEngineDispatch.ts)

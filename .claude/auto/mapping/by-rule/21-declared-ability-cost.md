@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d581bde118e6`
+> Source hash: `8153992c0a70`
 
 公式ルール [`21-declared-ability-cost.md`](../../../rules/21-declared-ability-cost.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (19)
+## 📄 参照ソース (20)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d08/D08005.ts`](../../../../src/cards/ct-d08/D08005.ts)
@@ -42,3 +42,4 @@
 - [`src/engine/types/effect-ctx.ts`](../../../../src/engine/types/effect-ctx.ts)
 - [`src/engine/types/effect.ts`](../../../../src/engine/types/effect.ts)
 - [`src/engine/types/results.ts`](../../../../src/engine/types/results.ts)
+- [`src/ui/hooks/useEngineDispatch.ts`](../../../../src/ui/hooks/useEngineDispatch.ts)

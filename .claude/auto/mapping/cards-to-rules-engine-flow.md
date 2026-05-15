@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d4d18e60679b`
+> Source hash: `613ca4b8226a`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **66** ファイル（[全体 index](./index.md)）
+このグループ: **67** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (4)
 
@@ -80,7 +80,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (14)
+## その他 (15)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -88,6 +88,7 @@
 | [`src/ui/hooks/useCase.ts`](../../../src/ui/hooks/useCase.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`06-card-types.md`](../../rules/06-card-types.md) |
 | [`src/ui/hooks/useDeckCount.ts`](../../../src/ui/hooks/useDeckCount.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEffectStack.ts`](../../../src/ui/hooks/useEffectStack.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useEngineDispatch.ts`](../../../src/ui/hooks/useEngineDispatch.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ui/hooks/useEvidence.ts`](../../../src/ui/hooks/useEvidence.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useFile.ts`](../../../src/ui/hooks/useFile.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |
