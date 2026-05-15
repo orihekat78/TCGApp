@@ -40,57 +40,58 @@
 
 ---
 
-### Task 7.1: Zustand store (engine state ホルダ + dispatcher)
+### Task 7.1: Zustand store (engine state ホルダ + dispatcher) ✅ `474b95b`
 
-- [ ] テスト: store.gameState 取得・更新
-- [ ] 実装: `useGameStateStore` (engine state を保持・dispatch で mutation 適用)
+- [x] テスト: store.gameState 取得・更新
+- [x] 実装: `useGameStateStore` (engine state を保持・dispatch で mutation 適用)
 
-### Task 7.2: スタイルトークン ([ui-style-tokens.md](../../../specs/2026-05-11-ui-style-tokens.md))
+### Task 7.2: スタイルトークン ([ui-style-tokens.md](../../../specs/2026-05-11-ui-style-tokens.md)) ✅ `aa348ba`
 
-- [ ] CSS variables (--c-bg, --c-card-back-blue, etc.)
-- [ ] カードサイズ階層 (XS/S/M/L)
-- [ ] フォント・色・余白規定
-- [ ] テスト: storybook サンプル
+- [x] CSS variables (--bg-*, --color-*, --state-*, --neon-blue 等)
+- [x] カードサイズ階層 (scene / hand / detail / file / evidence / case / vs の 8 用途)
+- [x] フォント・色・余白規定
+- [x] テスト: storybook サンプル → tests/ui/styles/tokens.test.ts (9 件) で代替 (content audit)
 
-### Task 7.3: Playmat レイアウト (1920×1080 / 最低1280×720)
+### Task 7.3: Playmat レイアウト (1920×1080 / 最低1280×720) ✅ `e8a8a43`
 
-- [ ] グリッド (8 areas × 自他陣)
-- [ ] 相手陣 180度回転
-- [ ] テスト: スナップショット (vitest snapshot)
+- [x] グリッド (8 areas × 自他陣) + .scaler / .stage / .play-area
+- [x] 相手陣 180度回転 (.mat.opp)
+- [x] テスト: スナップショット (vitest SSR snapshot 14 件)
 
 ### Task 7.4-7.13: 各エリアコンポーネント
 
 各 task: コンポーネント + props + selector hook + スナップショットテスト
 
-- [ ] 7.4 SceneArea (5枚スロット)
-- [ ] 7.5 PartnerArea (1枚 + MR用)
-- [ ] 7.6 CaseArea (事件カード + マーカー)
-- [ ] 7.7 DeckArea (枚数表示)
-- [ ] 7.8 FileArea (積み重ね表示)
-- [ ] 7.9 EvidenceArea (裏向き積み + クリック展開モーダル: ui-modal-flows-other)
-- [ ] 7.10 RemoveArea (枚数 + クリックで一覧)
-- [ ] 7.11 HandZone (フラット表示 MTGA型)
-- [ ] 7.12 TopBar (フェイズ・痕跡・必要証拠数・効果スタック数)
-- [ ] 7.13 LogPanel (下端折りたたみ)
+- [x] 7.4 SceneArea (5枚スロット) ✅ `cf4109a` (Claude Design dual-track pilot #1)
+- [x] 7.5 PartnerArea (1枚 + MR用) ✅ `70803ba`
+- [x] 7.6 CaseArea (事件カード + マーカー) ✅ `a314853` (Claude Design pilot #2)
+- [x] 7.7 DeckArea (枚数表示) ✅ `405942a`
+- [x] 7.8 FileArea (積み重ね表示) ✅ `ba57868` (Claude Design pilot #3)
+- [ ] 7.9 EvidenceArea (裏向き積み + クリック展開モーダル: ui-modal-flows-other) — 🚧 Claude Design 納品待ち、REQUEST.md 配置済
+- [x] 7.10 RemoveArea (枚数 + クリックで一覧) ✅ `f7d8d55`
+- [ ] 7.11 HandZone (フラット表示 MTGA型) — 🚧 Claude Design 納品待ち、REQUEST.md 配置済
+- [ ] 7.12 TopBar (フェイズ・痕跡・必要証拠数・効果スタック数) — 🚧 Claude Design 納品待ち、REQUEST.md 配置済
+- [x] 7.13 LogPanel (下端折りたたみ) ✅ `5902fe8`
 
-### Task 7.14: EffectStackPanel + 状態オーバーレイ
+### Task 7.14: EffectStackPanel + 状態オーバーレイ ✅ `aece1c3`
 
-- [ ] 効果スタック件数バッジ
-- [ ] active/sleep/stun の回転+バッジ表現 (ui-mr-and-special)
-- [ ] 名乗り状態バッジ
-- [ ] テスト
+- [x] 効果スタック件数バッジ
+- [x] active/sleep/stun の回転+バッジ表現 (SceneArea / PartnerArea で sweep 済)
+- [x] 名乗り状態バッジ (SceneArea で .named-badge 実装)
+- [x] テスト (8 件)
 
-### Task 7.15: カード画像実行時フェッチ + キャッシュ
+### Task 7.15: カード画像実行時フェッチ + キャッシュ ✅ `b048cf4`
 
-- [ ] 公式 URL から imagePath 経由で取得
-- [ ] localStorage / memory cache
-- [ ] フォールバック (取得失敗時の placeholder)
-- [ ] テスト: モック fetch
+- [x] 公式 URL から imagePath 経由で取得 — fetchCardImageUrl(cardId, candidateUrl)
+- [x] localStorage / memory cache (2-tier, 7 日 TTL)
+- [x] フォールバック (取得失敗時の data: URI SVG placeholder)
+- [x] テスト: モック fetch (11 件)
+- 注: 各 Area component への <img> 統合は未実施 (Phase 8 で URL pattern と共に)
+
+### 追加成果 (`73708e0`): App + Playmat デモ統合
+
+App.tsx を Playmat に置換、cardResolvers (CT-D08+CT-D11)、sampleGameState fixture、Playmat.tsx に resolveCase prop。`npm run dev` でブラウザ表示確認 + Playwright MCP screenshot 取得。
 
 ## 完了基準
 
-- 全 16 UI specs ファイルの **静的部分** がレンダリング可能
-- ダミー GameState を渡せばプレイマットが描画される
-- 操作不可 (Phase 8 で実装)
-
-→ Phase 8 へ
+全 16 UI specs ファイルの **静的部分** がレンダリング可能 / ダミー GameState を渡せばプレイマットが描画される / 操作不可 (Phase 8)。→ Phase 8 へ
