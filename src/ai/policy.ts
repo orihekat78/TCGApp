@@ -61,6 +61,19 @@ export interface AIPolicy {
     candidates: ReadonlyArray<string>,
   ): string | null;
 
+  /**
+   * Phase 8.7e: 変装判定 (optional)。
+   * コンタクト中の action-1 / action-2 phase で、player が手札から
+   * 変装持ちキャラを使うか決める。null なら disguise スキップ。
+   * cutin と排他: 同 phase で chooseCutIn が cardId を返した場合は本関数は呼ばれない。
+   */
+  chooseDisguise?(
+    state: GameState,
+    ax: import('@/engine/types').ActionContext,
+    player: Player,
+    candidates: ReadonlyArray<string>,
+  ): string | null;
+
   /** Identifier for logging / debug */
   readonly name: string;
 }

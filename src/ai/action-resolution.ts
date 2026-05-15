@@ -59,24 +59,38 @@ function resolveCutInForPhase(
     return;
   }
   const policy = uid === ax.byUid ? attackerPolicy : defenderPolicy;
-  if (!policy.chooseCutIn) {
-    engine.flow.contact.pass(state, ax, player);
-    ax[flagKey] = false;
-    return;
+
+  // 1) cutin を試す (Phase 8.7d)
+  if (policy.chooseCutIn) {
+    const cutinCands = state.players[player].hand.filter((c) =>
+      engine.flow.contact.canCutIn(state, ax, player, c),
+    );
+    const cutinChoice = policy.chooseCutIn(state, ax, player, cutinCands);
+    if (cutinChoice !== null) {
+      engine.flow.contact.cutIn(state, ax, player, cutinChoice);
+      engine.resolve.runAllUntilEmpty(state);
+      ax[flagKey] = true;
+      return;
+    }
   }
-  const candidates = state.players[player].hand.filter((c) =>
-    engine.flow.contact.canCutIn(state, ax, player, c),
-  );
-  const chosen = policy.chooseCutIn(state, ax, player, candidates);
-  if (chosen !== null) {
-    engine.flow.contact.cutIn(state, ax, player, chosen);
-    // カットインの AP+ 等は pendingEffects に積まれる → 解消
-    engine.resolve.runAllUntilEmpty(state);
-    ax[flagKey] = true;
-  } else {
-    engine.flow.contact.pass(state, ax, player);
-    ax[flagKey] = false;
+
+  // 2) cutin が選ばれなければ disguise を試す (Phase 8.7e)
+  if (policy.chooseDisguise) {
+    const disgCands = state.players[player].hand.filter((c) =>
+      engine.flow.contact.canDisguise(state, ax, player, c),
+    );
+    const disgChoice = policy.chooseDisguise(state, ax, player, disgCands);
+    if (disgChoice !== null) {
+      engine.flow.contact.disguise(state, ax, player, disgChoice);
+      engine.resolve.runAllUntilEmpty(state);
+      ax[flagKey] = true;
+      return;
+    }
   }
+
+  // 3) どちらも選ばれなければ pass
+  engine.flow.contact.pass(state, ax, player);
+  ax[flagKey] = false;
 }
 
 /**

@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7d 完了 ✅
-**最新コミット**: Commit K — Phase 8.7d CPU カットイン判断 + 1番目再行動 (4 tests)
-**テスト状況**: 1233 PASS / 142 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: CPU はガード + カットイン (1番目/2番目 + 再行動) で対応するようになった。AP 不利時に手札からカットインカードを切る判断が入る
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7e 完了 ✅
+**最新コミット**: Commit L — Phase 8.7e CPU 変装判断 (4 tests)
+**テスト状況**: 1237 PASS / 143 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: CPU は ガード / カットイン / 変装 を AP 比較で自動判断するようになった。コンタクト 9 段階の AI 自動応答 完成
 
 **未コミット作業**: なし
 
@@ -29,8 +29,9 @@
   - [x] **8.7b opp ターン自動進行** (Commit I, 5 tests) — useOppTurnDriver + HeuristicPolicy + flow.endTurn 連携。試合が end-to-end で回るようになった
   - [x] **8.7c CPU ガード判断** (Commit J, 7 tests) — AIPolicy.chooseGuard? + HeuristicPolicy 実装 + src/ai/action-resolution.ts 共通ヘルパ。policy.applyMove と useEngineDispatch を一本化
   - [x] **8.7d CPU カットイン判断** (Commit K, 4 tests) — AIPolicy.chooseCutIn? + HeuristicPolicy 実装、resolveCutInForPhase ヘルパで action-1/action-2/redo phase を統合
-  - [ ] **8.7e 残**: CPU 変装判断 (chooseDisguise) /
-        パートナー能力 / 宣言能力 / PvP 用モーダル UI (Phase 9.x)
+  - [x] **8.7e CPU 変装判断** (Commit L, 4 tests) — AIPolicy.chooseDisguise? + HeuristicPolicy 実装。cutin との 2 段階フォールバック (cutin 不可 → disguise → pass)
+  - [ ] **次タスク候補**: パートナー能力 / 宣言能力 (cost 解決) / Task 8.4 ゲーム開始モーダル /
+        PvP 用モーダル UI (Phase 9.x) / アニメ (Phase 8.10)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 

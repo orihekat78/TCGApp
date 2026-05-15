@@ -185,6 +185,33 @@ export class HeuristicPolicy implements AIPolicy {
   }
 
   /**
+   * Phase 8.7e: 変装判定 (rules/09)。
+   *
+   * ヒューリスティック: chooseCutIn と同じ AP 比較ロジック。
+   *   - candidates 0 件 → null
+   *   - 自 AP >= 敵 AP → null
+   *   - そうでなければ candidates[0]
+   *
+   * ※「変装後の新カード AP を考慮して最大を選ぶ」最適化は将来 (8.7e2)。
+   */
+  chooseDisguise(
+    state: GameState,
+    ax: ActionContext,
+    player: 'self' | 'opp',
+    candidates: ReadonlyArray<string>,
+  ): string | null {
+    if (candidates.length === 0) return null;
+    const myUid = pickContactUidFor(state, ax, player);
+    if (!myUid) return null;
+    const oppUid = myUid === ax.firstUid ? ax.secondUid : ax.firstUid;
+    if (!oppUid) return null;
+    const myAp = readEffectiveAp(state, myUid);
+    const oppAp = readEffectiveAp(state, oppUid);
+    if (myAp >= oppAp) return null;
+    return candidates[0];
+  }
+
+  /**
    * Phase 8.7c: ガード判定 (rules/07 / rules/08)。
    *
    * ヒューリスティック:
