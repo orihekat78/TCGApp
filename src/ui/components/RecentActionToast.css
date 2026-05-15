@@ -1,0 +1,47 @@
+/* RecentActionToast.css — Phase 8.10b
+ * 画面右下にスライドイン表示。OppTurnOverlay とは異なり pointer-events 通常 (操作可能)。
+ */
+
+.recent-action-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(15, 25, 40, 0.92), rgba(28, 42, 64, 0.92));
+  border: 1px solid color-mix(in oklch, var(--scene-neon, #6cf) 45%, transparent);
+  border-radius: 6px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45),
+              0 0 18px color-mix(in oklch, var(--scene-neon, #6cf) 30%, transparent);
+  z-index: 8500;
+  font-size: 13px;
+  color: var(--text-primary, #fff);
+  animation: recent-toast-in 220ms ease-out both;
+  max-width: 360px;
+}
+
+@keyframes recent-toast-in {
+  from { opacity: 0; transform: translate(20px, 0); }
+  to   { opacity: 1; transform: translate(0,    0); }
+}
+
+.toast-who {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: color-mix(in oklch, var(--scene-neon, #6cf) 30%, transparent);
+  letter-spacing: 0.08em;
+}
+
+.toast-action {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.toast-target {
+  font-size: 11px;
+  color: var(--text-muted, #8aa3c0);
+  font-family: ui-monospace, monospace;
+}

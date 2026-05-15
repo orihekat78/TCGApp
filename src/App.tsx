@@ -5,6 +5,7 @@
 import { Playmat } from '@/ui/components/Playmat';
 import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
+import { RecentActionToast } from '@/ui/components/RecentActionToast';
 import {
   createCardResolver,
   createCaseResolver,
@@ -37,6 +38,7 @@ export default function App() {
       />
       <GameSetupModal />
       <OppTurnOverlay />
+      <RecentActionToast />
     </>
   );
 }
