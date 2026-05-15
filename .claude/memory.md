@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7e 完了 ✅
-**最新コミット**: Commit L — Phase 8.7e CPU 変装判断 (4 tests)
-**テスト状況**: 1237 PASS / 143 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: CPU は ガード / カットイン / 変装 を AP 比較で自動判断するようになった。コンタクト 9 段階の AI 自動応答 完成
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8a 完了 ✅
+**最新コミット**: Commit M — Phase 8.8a パートナー能力フロー UI (5 tests)
+**テスト状況**: 1242 PASS / 144 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: パートナー能力ボタンが動作。1 件なら即 confirm、複数なら picker で選択 → dispatch
 
 **未コミット作業**: なし
 
@@ -30,8 +30,10 @@
   - [x] **8.7c CPU ガード判断** (Commit J, 7 tests) — AIPolicy.chooseGuard? + HeuristicPolicy 実装 + src/ai/action-resolution.ts 共通ヘルパ。policy.applyMove と useEngineDispatch を一本化
   - [x] **8.7d CPU カットイン判断** (Commit K, 4 tests) — AIPolicy.chooseCutIn? + HeuristicPolicy 実装、resolveCutInForPhase ヘルパで action-1/action-2/redo phase を統合
   - [x] **8.7e CPU 変装判断** (Commit L, 4 tests) — AIPolicy.chooseDisguise? + HeuristicPolicy 実装。cutin との 2 段階フォールバック (cutin 不可 → disguise → pass)
-  - [ ] **次タスク候補**: パートナー能力 / 宣言能力 (cost 解決) / Task 8.4 ゲーム開始モーダル /
-        PvP 用モーダル UI (Phase 9.x) / アニメ (Phase 8.10)
+  - [x] **8.8a パートナー能力 UI** (Commit M, 5 tests) — runPartnerAbilityFlow + enumPartnerAbilityIds、1件即confirm/複数picker → dispatch
+  - [ ] **8.8b 宣言能力 UI** (キャラ+事件 source + ability の 2 段階 picker)
+  - [ ] **8.8c 能力 cost 解決** (engine.cost.pay を UI から wire、cost 確認モーダル)
+  - [ ] **次の候補**: Task 8.4 ゲーム開始モーダル / PvP モーダル UI (Phase 9.x) / アニメ (Phase 8.10)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 

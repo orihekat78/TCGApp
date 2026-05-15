@@ -10,6 +10,7 @@
 // source unit selection を要するため Task 8.6+ で順次実装する。
 
 import * as flow from '@/engine/flow/index.js';
+import { engine } from '@/engine';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction, type DispatchResult } from './useEngineDispatch.js';
 import { useConfirmation } from './useConfirmation.js';
@@ -122,6 +123,71 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
   return dispatchEngineAction({ type: 'nextHint', player: opts.player });
+}
+
+/**
+ * パートナー能力の候補列挙 (Phase 8.8a)。
+ *
+ * - パートナーカードに登録された declared ability を取り出す
+ * - `flow.canPartnerAbility` で使用可能なものだけに絞る
+ * - 戻り値は abilId の配列 (picker.candidates に渡す)
+ */
+export function enumPartnerAbilityIds(
+  state: import('@/engine/types/game-state.js').GameState,
+  player: Player,
+): string[] {
+  const cardId = state.players[player].partner.cardId;
+  if (!cardId) return [];
+  const def = engine.cards.get(cardId);
+  if (!def) return [];
+  return def.abilities
+    .filter((a) => a.type === 'declared')
+    .filter((a) => flow.canPartnerAbility(state, player, a.id))
+    .map((a) => a.id);
+}
+
+/**
+ * パートナー能力フロー (Phase 8.8a, spec: ui-action-flows.md ③):
+ *   1. enumPartnerAbilityIds で使用可能能力を列挙
+ *   2. 0 件 → not-allowed
+ *   3. 1 件なら即 confirm、複数なら picker (purpose='partner-ability') で選択
+ *   4. confirm モーダル → accept → dispatch `partnerAbility`
+ *
+ * rules: 13-keywords.md (パートナー共通能力) / 21-declared-ability-cost.md
+ *
+ * 注: cost 解決は engine の `usePartnerAbility` 内 effect listener が担当。
+ * 明示的な cost.pay 呼出は Phase 8.8c (cost UI) で追加予定。
+ */
+export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<FlowResult> {
+  const state = useGameStateStore.getState().gameState;
+  if (state === null) return { ok: false, reason: 'no-state' };
+  const ids = enumPartnerAbilityIds(state, opts.player);
+  if (ids.length === 0) return { ok: false, reason: 'not-allowed' };
+
+  let chosenId: string;
+  if (ids.length === 1) {
+    chosenId = ids[0];
+  } else {
+    const picker = useTargetPicker();
+    const picked = await picker.start({ candidates: ids, purpose: 'partner-ability' });
+    if (picked === null) return { ok: false, reason: 'cancelled' };
+    chosenId = picked;
+  }
+
+  const accepted = await useConfirmation().ask({
+    kind: 'standard',
+    title: 'パートナー能力',
+    body: `${chosenId} を発動します。`,
+    okLabel: '発動',
+    cancelLabel: 'キャンセル',
+  });
+  if (!accepted) return { ok: false, reason: 'cancelled' };
+
+  return dispatchEngineAction({
+    type: 'partnerAbility',
+    player: opts.player,
+    abilId: chosenId,
+  });
 }
 
 /**

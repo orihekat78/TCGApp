@@ -34,6 +34,7 @@ import {
   runSolveCaseFlow,
   runHandUseFlow,
   runActionFlow,
+  runPartnerAbilityFlow,
   canAssistForUi,
   canSolveCaseForUi,
   ACTION_CASE_TARGET_OPP,
@@ -342,7 +343,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               void runActionFlow({ player: 'self' });
               return;
             }
-            // 8.6 残: partner-ability / declared-ability
+            if (id === 'partner-ability') {
+              void runPartnerAbilityFlow({ player: 'self' });
+              return;
+            }
+            // 残: declared-ability (Phase 8.8b で配線予定)
             // eslint-disable-next-line no-console
             console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
           }}
@@ -383,6 +388,7 @@ function labelForPurpose(purpose: string): string {
     case 'action:target':   return 'アクション対象';
     case 'assist':          return 'アシスト';
     case 'solveCase':       return '事件解決';
+    case 'partner-ability': return 'パートナー能力';
     default:                return '対象';
   }
 }
