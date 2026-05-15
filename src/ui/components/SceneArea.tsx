@@ -59,6 +59,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick }: SceneCharacterCa
     <div
       className={classes}
       data-uid={ch.uid}
+      data-state={ch.state}
       onClick={isCandidate && onClick ? onClick : undefined}
       style={isCandidate ? { cursor: 'pointer' } : undefined}
     >
