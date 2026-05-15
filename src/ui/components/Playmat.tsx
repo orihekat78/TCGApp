@@ -21,6 +21,7 @@ import { LogPanel } from './LogPanel.js';
 import { EffectStackPanel } from './EffectStackPanel.js';
 import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import { FileArea } from './FileArea.js';
+import { EvidenceArea } from './EvidenceArea.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -70,9 +71,19 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
     ? 'first'
     : 'second';
 
+  const evidenceCount = state?.players[side].evidence.length ?? 0;
+  const requiredEvidence = engineCase?.requiredEvidence ?? 7;
+
   return (
     <div className={`mat ${side}`} data-side={side}>
-      <CaseArea caseInfo={caseInfo} turnOrder={turnOrder} side={side} />
+      <div className="case-col">
+        <CaseArea caseInfo={caseInfo} turnOrder={turnOrder} side={side} />
+        <EvidenceArea
+          count={evidenceCount}
+          requiredEvidence={requiredEvidence}
+          side={side}
+        />
+      </div>
       <SceneArea characters={scene} side={side} resolveCard={resolveCard} />
       <PartnerArea
         partner={state?.players[side].partner ?? null}

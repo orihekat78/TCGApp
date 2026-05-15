@@ -52,7 +52,7 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
   if (caseInfo === null) {
     return (
       <div
-        className={`case-col case-area side-${side}`}
+        className={`case-area side-${side}`}
         data-side={side}
         data-turn-order={turnOrder}
       >
@@ -79,7 +79,7 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
 
   return (
     <div
-      className={`case-col case-area side-${side}`}
+      className={`case-area side-${side}`}
       data-side={side}
       data-turn-order={turnOrder}
     >

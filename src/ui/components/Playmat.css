@@ -98,7 +98,13 @@
 }
 
 /* Column placement (一致は mock 329-351 行) */
-.mat .case-col    { grid-column: 1; grid-row: 1 / span 2; }
+.mat .case-col {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 6px;
+}
 .mat .scene-col   { grid-column: 2; grid-row: 1; }
 .mat .deck-col    { grid-column: 3; grid-row: 1; }
 .mat .partner-col { grid-column: 2; grid-row: 2; }

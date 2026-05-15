@@ -1,0 +1,198 @@
+/* EvidenceArea.css
+ * 証拠ゾーン (裏向きスタック + 虫眼鏡/指紋 SVG + 進捗バー)。
+ * 01-board-mockup.html のクラス構造をそのまま流用し、色は CSS 変数で外出し。
+ *
+ * 親 :root もしくは scope で以下の変数が定義されている前提:
+ *   --accent-gold / --bg-cell / --border-zone
+ *   --text-primary / --text-secondary / --text-muted
+ *   --font-jp / --font-mono
+ * fallback も与えてあるので単体動作もする。
+ */
+
+.evidence-area {
+  --ev-card-w: 64px;
+  --ev-card-h: 90px;
+
+  --ev-accent:        var(--accent-gold, #ffd700);
+  --ev-bg-cell:       var(--bg-cell, rgba(0, 0, 0, 0.32));
+  --ev-border-zone:   var(--border-zone, #3a6ea5);
+  --ev-text-primary:  var(--text-primary, #e0ecf8);
+  --ev-text-second:   var(--text-secondary, #b8d4f0);
+  --ev-text-muted:    var(--text-muted, #7090b5);
+
+  font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
+  color: var(--ev-text-primary);
+}
+
+/* ---- zone shell ---- */
+.evidence-area.zone.evidence-zone {
+  background: var(--ev-bg-cell);
+  border: 1px solid color-mix(in oklch, var(--ev-border-zone) 60%, transparent);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.evidence-area.zone.evidence-zone:hover,
+.evidence-area.zone.evidence-zone:focus-visible {
+  border-color: color-mix(in oklch, var(--ev-accent) 55%, transparent);
+  background: rgba(40, 30, 10, 0.32);
+  outline: none;
+}
+.evidence-area.complete {
+  border-color: color-mix(in oklch, var(--ev-accent) 70%, transparent);
+  box-shadow: 0 0 16px color-mix(in oklch, var(--ev-accent) 28%, transparent);
+}
+
+/* ---- zone-label (証拠 / 5 / 7) ---- */
+.evidence-area .zone-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ev-text-muted);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.evidence-area .zone-label .count {
+  color: var(--ev-text-second);
+  font-weight: 600;
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  letter-spacing: 0.05em;
+}
+.evidence-area.complete .zone-label .count {
+  color: var(--ev-accent);
+}
+
+/* ---- stack-display ---- */
+.evidence-area .stack-display {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--ev-card-h) + 12px);
+  padding: 4px 0;
+}
+
+.evidence-area .stack-display .card-back {
+  width: var(--ev-card-w);
+  height: var(--ev-card-h);
+  border-radius: 4px;
+  transform: rotate(-2deg);
+  background:
+    radial-gradient(circle at 6px 6px,
+      color-mix(in oklch, var(--ev-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    radial-gradient(circle at calc(100% - 6px) 6px,
+      color-mix(in oklch, var(--ev-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    radial-gradient(circle at 6px calc(100% - 6px),
+      color-mix(in oklch, var(--ev-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    radial-gradient(circle at calc(100% - 6px) calc(100% - 6px),
+      color-mix(in oklch, var(--ev-accent) 50%, transparent) 0 1.5px,
+      transparent 2px),
+    linear-gradient(160deg, #1f2438 0%, #0a0e1c 100%);
+  border: 1px solid color-mix(in oklch, var(--ev-accent) 28%, transparent);
+  position: relative;
+  z-index: 2;
+}
+.evidence-area .stack-display .card-back .monogram,
+.evidence-area .stack-display .card-back .magnifier {
+  display: none;
+}
+
+/* Evidence 用 SVG: 虫眼鏡 + 指紋 */
+.evidence-area .stack-display.evidence .card-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 90'><g fill='none' stroke='%23ffd75e' stroke-width='1.4' opacity='0.85'><circle cx='28' cy='38' r='16'/><circle cx='28' cy='38' r='13' opacity='0.5'/><line x1='40' y1='50' x2='52' y2='66' stroke-width='3.5' stroke-linecap='round'/><circle cx='28' cy='38' r='1.5' fill='%23ffd75e'/></g><g fill='none' stroke='%23ffd75e' stroke-width='0.8' opacity='0.55'><path d='M22 38 Q28 30 34 38'/><path d='M20 40 Q28 28 36 40'/><path d='M24 42 Q28 36 32 42'/></g></svg>") no-repeat center / 80% auto;
+}
+
+/* ---- 3 層 shadow ---- */
+.evidence-area .stack-display .stack-shadow {
+  position: absolute;
+  width: var(--ev-card-w);
+  height: var(--ev-card-h);
+  border-radius: 4px;
+  background: linear-gradient(160deg, #1a1f30, #0a0e1c);
+  border: 1.5px solid #2a3552;
+  z-index: 1;
+}
+.evidence-area .stack-shadow.s1 { transform: translate(2px, 2px) rotate(1deg); }
+.evidence-area .stack-shadow.s2 { transform: translate(4px, 4px) rotate(3deg); }
+.evidence-area .stack-shadow.s3 { transform: translate(6px, 6px) rotate(-1deg); }
+
+/* ---- count-overlay ---- */
+.evidence-area .stack-display .count-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--ev-accent);
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  font-size: 22px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border: 1.5px solid var(--ev-accent);
+  border-radius: 3px;
+  text-shadow: 0 0 6px color-mix(in oklch, var(--ev-accent) 50%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklch, var(--ev-accent) 30%, transparent);
+  z-index: 3;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+/* 空状態: overlay だけ控えめに */
+.evidence-area[data-count="0"] .count-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--ev-text-muted);
+  border-color: color-mix(in oklch, var(--ev-text-muted) 60%, transparent);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+/* 完了時: overlay を強調 */
+.evidence-area.complete .count-overlay {
+  box-shadow: 0 0 18px color-mix(in oklch, var(--ev-accent) 55%, transparent);
+  animation: ev-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ev-pulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in oklch, var(--ev-accent) 40%, transparent); }
+  50%      { box-shadow: 0 0 24px color-mix(in oklch, var(--ev-accent) 70%, transparent); }
+}
+
+/* ---- 進捗バー ---- */
+.evidence-area .progress-track {
+  height: 4px;
+  margin-top: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.evidence-area .progress-track .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--ev-accent),
+    color-mix(in oklch, var(--ev-accent) 50%, #ff9b3e));
+  border-radius: 2px;
+  box-shadow: 0 0 6px color-mix(in oklch, var(--ev-accent) 50%, transparent);
+  transition: width 0.3s ease-out;
+}
+
+/* 相手側: スタックを反転 */
+.evidence-area.side-opp .stack-display .card-back {
+  transform: rotate(178deg);
+}
+.evidence-area.side-opp .stack-shadow.s1 { transform: translate(-2px, -2px) rotate(-1deg); }
+.evidence-area.side-opp .stack-shadow.s2 { transform: translate(-4px, -4px) rotate(-3deg); }
+.evidence-area.side-opp .stack-shadow.s3 { transform: translate(-6px, -6px) rotate(1deg); }

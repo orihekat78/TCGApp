@@ -82,8 +82,9 @@ describe('Playmat', () => {
   it('renders all 6 zone slots per mat: case / scene / partner / deck / remove / file', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     // 各ゾーンは 2 (opp + self) で計 12
-    expect(html.match(/case-col case-area/g)?.length).toBe(2);
-    expect(html.match(/case-zone/g)?.length).toBe(2);
+    expect(html.match(/class="case-col"/g)?.length).toBe(2);
+    expect(html.match(/case-area side-/g)?.length).toBe(2);
+    expect(html.match(/evidence-area side-/g)?.length).toBe(2);
     expect(html.match(/scene-col scene-zone/g)?.length).toBe(2);
     expect(html.match(/partner-col partner-zone/g)?.length).toBe(2);
     expect(html.match(/deck-col deck-zone/g)?.length).toBe(2);
