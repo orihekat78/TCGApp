@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8d + 8.4 完了 ✅
-**最新コミット**: Commit Q — Task 8.4 ゲーム開始モーダル (3 tests)
-**テスト状況**: 1260 PASS / 148 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: 起動時に「対戦開始」モーダルが表示。ボタンクリックでゲーム盤面 (sampleGameState) を表示
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8d + 8.4 + 8.10a 完了 ✅
+**最新コミット**: Commit R — Phase 8.10a opp ターン視覚化オーバーレイ (3 tests)
+**テスト状況**: 1263 PASS / 149 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: opp ターン中に半透明オーバーレイ + パルスする「相手のターン処理中...」表示。400ms 遅延で視認時間確保
 
 **未コミット作業**: なし
 
@@ -35,7 +35,8 @@
   - [x] **8.8c 能力 cost 解決** (Commit O, 5 tests) — modal body に cost 表示、canPay フィルタ、dispatch で cost.pay → flow.use* atomic
   - [x] **8.8d AI policy 側 cost.pay 統合** (Commit P, 4 tests) — src/ai/ability-ctx.ts ヘルパ + move-enumerator canPay フィルタ + policy.applyMove で cost.pay → UI/AI 対称
   - [x] **Task 8.4 ゲーム開始モーダル** (Commit Q, 3 tests) — GameSetupModal で起動時の sampleGameState 自動 push を廃止、ユーザ操作で対戦開始
-  - [ ] **次のタスク順 (ユーザ指定)**: 1) Phase 8.10 アニメ / 2) Phase 9.x PvP モーダル UI / 3) Task 8.4b 正規 setup wire
+  - [x] **Phase 8.10a opp ターン視覚化** (Commit R, 3 tests) — OppTurnOverlay + driver の 400ms 遅延でユーザ視認時間確保
+  - [ ] **次のタスク順 (ユーザ指定)**: 1) Phase 8.10 残 (アニメ続き) / 2) Phase 9.x PvP モーダル UI / 3) Task 8.4b 正規 setup wire
   - [ ] **次の候補**: Task 8.4 ゲーム開始モーダル / PvP モーダル UI (Phase 9.x) / アニメ (Phase 8.10)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)

@@ -4,6 +4,7 @@
 
 import { Playmat } from '@/ui/components/Playmat';
 import { GameSetupModal } from '@/ui/components/GameSetupModal';
+import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
 import {
   createCardResolver,
   createCaseResolver,
@@ -35,6 +36,7 @@ export default function App() {
         resolveHandCard={resolveHandCard}
       />
       <GameSetupModal />
+      <OppTurnOverlay />
     </>
   );
 }

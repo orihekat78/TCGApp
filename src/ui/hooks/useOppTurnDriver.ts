@@ -72,11 +72,29 @@ export function driveOppTurn(): void {
  *     React の batch 中に setState を呼ぶことになり警告対象
  *   - Promise.resolve().then() で次マイクロタスクに送ると安全
  */
+/**
+ * opp ターン処理開始までの遅延 (ms)。
+ *
+ * Phase 8.10a: OppTurnOverlay を視認できる時間を確保するため、playTurn の同期実行を
+ * setTimeout で遅らせる。0 にすればテスト互換 + 即時処理。本番は ~400ms。
+ *
+ * `_setOppTurnDriverDelay(0)` でテスト中はゼロにできる。
+ */
+let oppTurnDelayMs = 400;
+export function _setOppTurnDriverDelay(ms: number): void {
+  oppTurnDelayMs = ms;
+}
+
 export function useOppTurnDriver(): void {
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
   useEffect(() => {
     if (turnPlayer === 'opp') {
+      if (oppTurnDelayMs > 0) {
+        const id = setTimeout(driveOppTurn, oppTurnDelayMs);
+        return () => clearTimeout(id);
+      }
       Promise.resolve().then(driveOppTurn);
     }
+    return undefined;
   }, [turnPlayer]);
 }
