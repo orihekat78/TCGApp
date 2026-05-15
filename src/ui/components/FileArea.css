@@ -273,3 +273,13 @@
 .file-area.side-opp .stack-shadow.s1 { transform: translate(-2px, -2px) rotate(-1deg); }
 .file-area.side-opp .stack-shadow.s2 { transform: translate(-4px, -4px) rotate(-3deg); }
 .file-area.side-opp .stack-shadow.s3 { transform: translate(-6px, -6px) rotate(1deg); }
+
+/* Phase 8.10d: FILE カード登場アニメ (オートフェイズで FILE に追加される瞬間) */
+@keyframes file-card-enter {
+  from { opacity: 0; transform: translateY(-6px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.file-area .card-back.assisted-partner,
+.file-area .stack-display .card-back:not(.empty) {
+  animation: file-card-enter 220ms ease-out both;
+}

@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8d + 8.4 + 8.10a/b/c 完了 ✅
-**最新コミット**: Commit T — Phase 8.10c scene キャラ登場/状態遷移アニメ (2 tests)
-**テスト状況**: 1269 PASS / 151 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: 新キャラ登場で fade-in + scale-up、active→sleep で -90° 滑らかに回転
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8d + 8.4 + 8.10a/b/c/d 完了 ✅
+**最新コミット**: Commit U — Phase 8.10d 他エリア登場アニメ (3 tests)
+**テスト状況**: 1272 PASS / 152 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: 手札/FILE/リムーブの各エリアでカード追加時に CSS-only fade-in アニメ。盤面全体で「新カード」が視覚的に区別可能
 
 **未コミット作業**: なし
 
@@ -38,7 +38,8 @@
   - [x] **Phase 8.10a opp ターン視覚化** (Commit R, 3 tests) — OppTurnOverlay + driver の 400ms 遅延でユーザ視認時間確保
   - [x] **Phase 8.10b 最近のアクション通知トースト** (Commit S, 4 tests) — RecentActionToast + actionLabel pure 関数で log エントリを 日本語で表示
   - [x] **Phase 8.10c scene キャラ登場/状態遷移アニメ** (Commit T, 2 tests) — CSS-only fade-in + scale + transition、data-state 属性追加
-  - [ ] **次のタスク順 (ユーザ指定)**: 1) Phase 8.10 残 (コンタクト判定演出 / 手札 etc. の他エリアアニメ) / 2) Phase 9.x PvP モーダル UI / 3) Task 8.4b 正規 setup wire
+  - [x] **Phase 8.10d 他エリア登場アニメ** (Commit U, 3 tests) — HandZone / FileArea / RemoveArea に CSS keyframe で fade-in、共通パターンで盤面統一
+  - [ ] **次のタスク順 (ユーザ指定)**: 1) Phase 8.10 残 (コンタクト判定演出) / 2) Phase 9.x PvP モーダル UI / 3) Task 8.4b 正規 setup wire
   - [ ] **次の候補**: Task 8.4 ゲーム開始モーダル / PvP モーダル UI (Phase 9.x) / アニメ (Phase 8.10)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)

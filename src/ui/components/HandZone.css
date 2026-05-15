@@ -452,3 +452,13 @@
   z-index: 3;
   white-space: nowrap;
 }
+
+/* Phase 8.10d: 手札カード登場アニメ (key={cardId} で新規 mount 時のみ再生) */
+@keyframes hand-card-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hand-zone .hand-card,
+.hand-zone .hand-mini-card {
+  animation: hand-card-enter 260ms ease-out both;
+}
