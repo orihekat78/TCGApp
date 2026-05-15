@@ -59,16 +59,18 @@
   background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(78,195,255,0.04));
 }
 
-/* ---- Play area (3-row grid: opp-hand-strip / opp mat / self mat) ---- */
+/* ---- Play area (Phase 7.5: KEEP OUT 撤去、3-row → 2-row mat grid) ----
+ * ActionsPanel が右側 200px + 16px margin を占有するため右オフセット拡大。
+ */
 .stage .play-area {
   position: absolute;
-  left: 124px;
-  right: 232px;
+  left: 16px;
+  right: 232px;  /* ActionsPanel 200 + 余白 32 */
   top: 56px;
-  bottom: 200px;
+  bottom: 156px; /* HandZone 130 + 余白 */
   display: grid;
-  grid-template-rows: 36px 1fr auto 1fr;
-  gap: 6px;
+  grid-template-rows: 36px 1fr 1fr;
+  gap: 8px;
 }
 
 .stage .opp-hand-strip {
@@ -98,11 +100,12 @@
 }
 
 /* Column placement (一致は mock 329-351 行) */
+/* Phase 7.5: case-col に FileArea を追加 (case + evidence + file 縦 3 段) */
 .mat .case-col {
   grid-column: 1;
   grid-row: 1 / span 2;
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: 1.2fr 1fr 0.7fr;
   gap: 6px;
 }
 .mat .scene-col   { grid-column: 2; grid-row: 1; }
@@ -110,42 +113,13 @@
 .mat .partner-col { grid-column: 2; grid-row: 2; }
 .mat .remove-col  { grid-column: 3; grid-row: 2; }
 
-/* FileArea (file-strip) は Mat 内に絶対配置で底面右寄り (mock 通り、
-   元の .file-row 位置)。FileArea.css 側で内部 layout を持つ。 */
-.mat .file-area {
-  position: absolute;
-  left: 196px;   /* case-col の右端から */
-  right: 8px;
-  bottom: -2px;
-  height: 60px;
+/* Phase 7.5: FileArea は case-col 内 row 3 に通常配置 (絶対配置を撤去) */
+.mat .case-col .file-area {
+  min-height: 0; /* grid 内で contents が overflow しないように */
 }
 
-/* Placeholder zones: 全 6 zone 実装済 (7.4 scene / 7.5 partner / 7.6 case /
-   7.7 deck / 7.10 remove + file-row 待ち)。残 placeholder は file-row のみ。 */
-
-/* ---- KEEP OUT divider (spec 復活、mock では display:none) ---- */
-.keep-out {
-  height: 18px;
-  background: var(--keep-out);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-top:    1px solid rgba(0, 0, 0, 0.6);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.6);
-}
-.keep-out::before,
-.keep-out::after {
-  content: "KEEP OUT";
-  position: absolute;
-  font-size: 10px;
-  font-weight: 900;
-  color: #000;
-  letter-spacing: 0.3em;
-  text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
-}
-.keep-out::before { left: 20%; }
-.keep-out::after  { right: 20%; }
+/* Phase 7.5: KEEP OUT 撤去 (user layout feedback、mock 通り display:none と
+   同等の効果に揃え、Playmat は単純な opp/self 2-row grid に) */
 
 /* ---- HandZone placeholder (Task 7.11) ---- */
 .stage .hand-zone {

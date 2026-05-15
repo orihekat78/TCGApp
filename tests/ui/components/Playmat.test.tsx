@@ -50,12 +50,18 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="log-btn-count">0/);
   });
 
-  it('renders EffectStackPanel (real component, closed by default with empty stack)', () => {
+  it('renders ActionsPanel (Phase 7.5 — 6 action items + phase toggles + END turn)', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
-    expect(html).toMatch(/class="effect-stack-panel"/);
-    expect(html).not.toMatch(/effect-stack-panel open/);
-    expect(html).toMatch(/effect-stack-label">効果解決</);
-    expect(html).toMatch(/effect-stack-empty">—</);
+    expect(html).toMatch(/class="actions-panel"[^>]*aria-label="操作パネル"/);
+    expect(html).toMatch(/actions-header">ACTIONS</);
+    // 6 action items
+    expect(html.match(/class="action-item/g)?.length).toBe(6);
+    expect(html).toMatch(/data-action-id="hand-use"/);
+    expect(html).toMatch(/data-action-id="action"/);
+    // phase toggles
+    expect(html.match(/data-phase="(auto|main|end)"/g)?.length).toBe(3);
+    // END turn
+    expect(html).toMatch(/class="end-turn-btn"[^>]*aria-label="ターン終了"/);
   });
 
   it('renders both opponent and self mats inside play-area', () => {
@@ -65,20 +71,14 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="mat self"[^>]*data-side="self"/);
   });
 
-  it('mats are in opp → self order so opp can rotate 180° with KEEP OUT between', () => {
+  it('mats are in opp → self order (Phase 7.5: KEEP OUT 撤去)', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     const oppIdx = html.indexOf('data-side="opp"');
-    const keepOutIdx = html.indexOf('class="keep-out"');
     const selfIdx = html.indexOf('data-side="self"');
     expect(oppIdx).toBeGreaterThan(0);
-    expect(keepOutIdx).toBeGreaterThan(oppIdx);
-    expect(selfIdx).toBeGreaterThan(keepOutIdx);
-  });
-
-  it('renders KEEP OUT divider (spec 要求、mock では display:none で抑止されているが復活)', () => {
-    const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
-    expect(html).toMatch(/class="keep-out"[^>]*role="separator"/);
-    expect(html).toMatch(/aria-label="KEEP OUT"/);
+    expect(selfIdx).toBeGreaterThan(oppIdx);
+    // KEEP OUT は Phase 7.5 で撤去済
+    expect(html).not.toMatch(/class="keep-out"/);
   });
 
   it('renders SceneArea inside each mat with correct side prop', () => {

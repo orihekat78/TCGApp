@@ -18,12 +18,12 @@ import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
 import { LogPanel } from './LogPanel.js';
-import { EffectStackPanel } from './EffectStackPanel.js';
 import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
 import { HandZone, type HandCardMeta } from './HandZone.js';
 import { TopBar } from './TopBar.js';
+import { ActionsPanel } from './ActionsPanel.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -90,6 +90,11 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
           requiredEvidence={requiredEvidence}
           side={side}
         />
+        <FileArea
+          cards={state?.players[side].file ?? []}
+          side={side}
+          resolveCard={resolveCard}
+        />
       </div>
       <SceneArea characters={scene} side={side} resolveCard={resolveCard} />
       <PartnerArea
@@ -100,11 +105,6 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
       <DeckArea count={state?.players[side].deck.length ?? 0} side={side} />
       <RemoveArea
         cards={state?.players[side].remove ?? []}
-        side={side}
-        resolveCard={resolveCard}
-      />
-      <FileArea
-        cards={state?.players[side].file ?? []}
         side={side}
         resolveCard={resolveCard}
       />
@@ -138,8 +138,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
 
           <PlayerMat side="opp" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
 
-          {/* KEEP OUT divider — spec 要求 (mock では display:none) */}
-          <div className="keep-out" role="separator" aria-label="KEEP OUT" />
+          {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
 
           <PlayerMat side="self" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
         </div>
@@ -147,8 +146,19 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* HandZone (Task 7.11) */}
         <HandZone cards={handCards} />
 
-        {/* EffectStackPanel (件数バッジ + 展開リスト。Phase 7 では閉時) */}
-        <EffectStackPanel entries={gameState?.pendingEffects ?? []} open={false} />
+        {/* ActionsPanel (Phase 7.5、操作系は Phase 8 で配線) */}
+        <ActionsPanel
+          handCount={handCards.length}
+          handUseRemaining={gameState?.turnState.self.handUseUsed ? 0 : 1}
+          nextHintFileCount={gameState?.players.self.file.length ?? 0}
+          nextHintUsed={gameState?.turnState.self.nextHintUsed ?? false}
+          partnerActive={gameState?.players.self.partner.state === 'active'}
+          declaredTargetCount={0}
+          reasoningTotalLP={0}
+          actionMode="idle"
+          currentPhase={gameState?.turn.phase ?? 'main'}
+          canEndTurn={true}
+        />
 
         {/* LogPanel (閉時は .log-btn のみ。開閉は Phase 8) */}
         <LogPanel entries={gameState?.log ?? []} open={false} />

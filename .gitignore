@@ -31,3 +31,6 @@ coverage/
 # Playwright MCP screenshots/snapshots
 .playwright-mcp/
 phase7-demo-*.png
+
+# Phase 7.5 screenshot artifact
+phase7.5-*.png
