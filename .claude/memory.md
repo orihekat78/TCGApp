@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8b 完了 ✅
-**最新コミット**: Commit N — Phase 8.8b 宣言能力フロー UI (6 tests)
-**テスト状況**: 1248 PASS / 145 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: ActionsPanel 全 8 item が配線完了。宣言能力 = source picker + ability picker の 2 段階で dispatch
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8c 完了 ✅
+**最新コミット**: Commit O — Phase 8.8c 能力 cost 解決 UI (5 tests)
+**テスト状況**: 1253 PASS / 146 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: パートナー能力 / 宣言能力の confirm modal に cost 表示。支払不能な能力は自動的に candidates から除外、accept で cost.pay → flow.use* の atomic 実行
 
 **未コミット作業**: なし
 
@@ -32,7 +32,9 @@
   - [x] **8.7e CPU 変装判断** (Commit L, 4 tests) — AIPolicy.chooseDisguise? + HeuristicPolicy 実装。cutin との 2 段階フォールバック (cutin 不可 → disguise → pass)
   - [x] **8.8a パートナー能力 UI** (Commit M, 5 tests) — runPartnerAbilityFlow + enumPartnerAbilityIds、1件即confirm/複数picker → dispatch
   - [x] **8.8b 宣言能力 UI** (Commit N, 6 tests) — runDeclaredAbilityFlow + source picker + ability picker の 2 段階 (各 1 件時は省略) → dispatch
-  - [ ] **8.8c 能力 cost 解決** (engine.cost.pay を UI から wire、cost 確認モーダル)
+  - [x] **8.8c 能力 cost 解決** (Commit O, 5 tests) — modal body に cost 表示、canPay フィルタ、dispatch で cost.pay → flow.use* atomic
+  - [ ] **8.8d 残**: AI policy 側 cost.pay wire (現在 CPU は cost 払わず能力使い放題) /
+        対話的 cost picker (choice / removeFromHand 等) — 後続改善
   - [ ] **次の候補**: Task 8.4 ゲーム開始モーダル / PvP モーダル UI (Phase 9.x) / アニメ (Phase 8.10)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)

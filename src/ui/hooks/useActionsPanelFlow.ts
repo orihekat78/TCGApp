@@ -15,6 +15,49 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction, type DispatchResult } from './useEngineDispatch.js';
 import { useConfirmation } from './useConfirmation.js';
 import { useTargetPicker } from './useTargetPicker.js';
+import type { Cost, EffectCtx } from '@/engine/types';
+
+/**
+ * Phase 8.8c: cost を人間可読なテキストに変換 (confirm modal body 表示用)。
+ */
+function costToText(cost: Cost): string {
+  switch (cost.kind) {
+    case 'sleepSelf':         return 'このキャラをスリープ';
+    case 'sleepChar':         return 'キャラ 1 枚をスリープ';
+    case 'removeFromHand':    return `手札 ${cost.n} 枚をリムーブ`;
+    case 'removeFromScene':   return `現場 ${cost.n} 枚をリムーブ`;
+    case 'removeDeckTop':     return `デッキ上 ${cost.n} 枚をリムーブ`;
+    case 'discardEvidence':   return `証拠 ${cost.n} 枚をリムーブ`;
+    case 'selfToDeckBottom':  return 'このキャラをデッキの下へ';
+    case 'pay':               return cost.items.map(costToText).join(' + ');
+    case 'choice':            return cost.items.map(costToText).join(' / ');
+    case 'fileFrom':          return `FILE から ${cost.n} 枚`;
+    case 'flipFaceUpEvidence':return `証拠 ${cost.n.min}〜${cost.n.max} 枚を表向きに`;
+    case 'custom':            return '(独自コスト)';
+  }
+}
+
+/**
+ * EffectCtx を能力 cost.pay / canPay 用に構築。
+ */
+function makeAbilityCtx(opts: {
+  player: Player;
+  uid: string;
+  cardId: string;
+  abilityId: string;
+  area: 'scene' | 'partner-area';
+}): EffectCtx {
+  return {
+    source: {
+      cardId: opts.cardId,
+      uid: opts.uid,
+      abilityId: opts.abilityId,
+      player: opts.player,
+      area: opts.area,
+    },
+    bindings: {},
+  };
+}
 
 type Player = 'self' | 'opp';
 
@@ -143,6 +186,18 @@ export function enumPartnerAbilityIds(
   return def.abilities
     .filter((a) => a.type === 'declared')
     .filter((a) => flow.canPartnerAbility(state, player, a.id))
+    .filter((a) => {
+      // Phase 8.8c: cost 支払不能な能力は除外
+      if (!a.cost) return true;
+      const ctx = makeAbilityCtx({
+        player,
+        uid: `partner:${player}`,
+        cardId,
+        abilityId: a.id,
+        area: 'partner-area',
+      });
+      return engine.cost.canPay(state, a.cost, ctx);
+    })
     .map((a) => a.id);
 }
 
@@ -174,10 +229,26 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
     chosenId = picked;
   }
 
+  // Phase 8.8c: cost 情報を取得 (modal 本文 + dispatch atomic payment 用)
+  const partner = state.players[opts.player].partner;
+  const partnerDef = partner.cardId ? engine.cards.get(partner.cardId) : null;
+  const chosenAbil = partnerDef?.abilities.find((a) => a.id === chosenId);
+  const cost = chosenAbil?.cost;
+  const ctx = partner.cardId
+    ? makeAbilityCtx({
+        player: opts.player,
+        uid: `partner:${opts.player}`,
+        cardId: partner.cardId,
+        abilityId: chosenId,
+        area: 'partner-area',
+      })
+    : undefined;
+  const costText = cost ? costToText(cost) : '無し';
+
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: 'パートナー能力',
-    body: `${chosenId} を発動します。`,
+    body: `${chosenId} を発動します。\nコスト: ${costText}`,
     okLabel: '発動',
     cancelLabel: 'キャンセル',
   });
@@ -187,6 +258,7 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
     type: 'partnerAbility',
     player: opts.player,
     abilId: chosenId,
+    ...(cost && ctx ? { cost, ctx } : {}),
   });
 }
 
@@ -206,9 +278,22 @@ export function enumDeclaredAbilitySources(
   for (const c of state.players[player].scene) {
     const def = engine.cards.get(c.cardId);
     if (!def) continue;
-    const hasUsable = def.abilities.some(
-      (a) => a.type === 'declared' && flow.canDeclaredAbility(state, c.uid, a.id),
-    );
+    const hasUsable = def.abilities.some((a) => {
+      if (a.type !== 'declared') return false;
+      if (!flow.canDeclaredAbility(state, c.uid, a.id)) return false;
+      // Phase 8.8c: cost 支払不能なら使用不可
+      if (a.cost) {
+        const ctx = makeAbilityCtx({
+          player,
+          uid: c.uid,
+          cardId: c.cardId,
+          abilityId: a.id,
+          area: 'scene',
+        });
+        if (!engine.cost.canPay(state, a.cost, ctx)) return false;
+      }
+      return true;
+    });
     if (hasUsable) sources.push(c.uid);
   }
   return sources;
@@ -221,21 +306,34 @@ export function enumDeclaredAbilityIdsFor(
   state: import('@/engine/types/game-state.js').GameState,
   uid: string,
 ): string[] {
-  // uid から cardId を引く (scene を走査)
+  // uid から cardId / owner player を引く
   let cardId: string | null = null;
+  let owner: Player | null = null;
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((x) => x.uid === uid);
     if (c) {
       cardId = c.cardId;
+      owner = p;
       break;
     }
   }
-  if (!cardId) return [];
+  if (!cardId || !owner) return [];
   const def = engine.cards.get(cardId);
   if (!def) return [];
   return def.abilities
     .filter((a) => a.type === 'declared')
     .filter((a) => flow.canDeclaredAbility(state, uid, a.id))
+    .filter((a) => {
+      if (!a.cost) return true;
+      const ctx = makeAbilityCtx({
+        player: owner!,
+        uid,
+        cardId: cardId!,
+        abilityId: a.id,
+        area: 'scene',
+      });
+      return engine.cost.canPay(state, a.cost, ctx);
+    })
     .map((a) => a.id);
 }
 
@@ -286,21 +384,46 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     chosenAbilId = picked;
   }
 
-  // 3) confirm
+  // 3) cost 情報を取得して confirm
+  let cardId: string | null = null;
+  let owner: Player | null = null;
+  for (const p of ['self', 'opp'] as const) {
+    const c = stateAfterSrc.players[p].scene.find((x) => x.uid === sourceUid);
+    if (c) {
+      cardId = c.cardId;
+      owner = p;
+      break;
+    }
+  }
+  const charDef = cardId ? engine.cards.get(cardId) : null;
+  const chosenAbil = charDef?.abilities.find((a) => a.id === chosenAbilId);
+  const cost = chosenAbil?.cost;
+  const ctx = cardId && owner
+    ? makeAbilityCtx({
+        player: owner,
+        uid: sourceUid,
+        cardId,
+        abilityId: chosenAbilId,
+        area: 'scene',
+      })
+    : undefined;
+  const costText = cost ? costToText(cost) : '無し';
+
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: '宣言能力',
-    body: `${sourceUid} の ${chosenAbilId} を発動します。`,
+    body: `${sourceUid} の ${chosenAbilId} を発動します。\nコスト: ${costText}`,
     okLabel: '発動',
     cancelLabel: 'キャンセル',
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
 
-  // 4) dispatch
+  // 4) dispatch (cost あれば atomic に pay → use)
   return dispatchEngineAction({
     type: 'declaredAbility',
     uid: sourceUid,
     abilId: chosenAbilId,
+    ...(cost && ctx ? { cost, ctx } : {}),
   });
 }
 

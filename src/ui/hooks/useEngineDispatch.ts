@@ -15,8 +15,10 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
+import { cost as engineCost } from '@/engine/cost/index.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
+import type { Cost, EffectCtx } from '@/engine/types';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 
@@ -32,8 +34,8 @@ export type EngineAction =
   | { type: 'reasoning'; uid: string }
   | { type: 'handUseCard'; player: Player; cardId: string }
   | { type: 'nextHint'; player: Player; optionalCardId?: string }
-  | { type: 'partnerAbility'; player: Player; abilId: string }
-  | { type: 'declaredAbility'; uid: string; abilId: string }
+  | { type: 'partnerAbility'; player: Player; abilId: string; cost?: Cost; ctx?: EffectCtx }
+  | { type: 'declaredAbility'; uid: string; abilId: string; cost?: Cost; ctx?: EffectCtx }
   | { type: 'assist'; player: Player }
   | { type: 'solveCase'; player: Player }
   | { type: 'actionAgainstChar'; byUid: string; targetUid: string }
@@ -99,9 +101,16 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       flow.runNextHint(draft, action.player, action.optionalCardId);
       return;
     case 'partnerAbility':
+      // Phase 8.8c: cost が指定されていれば canPay + pay (atomic: pay → use)
+      if (action.cost && action.ctx) {
+        engineCost.pay(draft, action.cost, action.ctx);
+      }
       flow.usePartnerAbility(draft, action.player, action.abilId);
       return;
     case 'declaredAbility':
+      if (action.cost && action.ctx) {
+        engineCost.pay(draft, action.cost, action.ctx);
+      }
       flow.useDeclaredAbility(draft, action.uid, action.abilId);
       return;
     case 'assist':
