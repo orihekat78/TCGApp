@@ -125,6 +125,119 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
 }
 
 /**
+ * アクション宣言フローの target identifier: opp 事件 を表す virtual uid。
+ *
+ * picker.candidates に通常の scene uid と混ぜて入れることで、target ピッカー上で
+ * 「相手 case (事件)」を選択可能にする。実 uid と衝突しない接頭辞 'case:' を使う。
+ */
+export const ACTION_CASE_TARGET_OPP = 'case:opp' as const;
+
+/**
+ * source 候補列挙: アクション可能な自プレイヤーのキャラ + パートナー (rules/07)。
+ *   - flow.canAction が active / 名乗り / 迅速・突撃キーワード等の全条件をカバー
+ */
+export function enumActionSourceCandidates(
+  state: import('@/engine/types/game-state.js').GameState,
+  player: Player,
+): string[] {
+  const candidates: string[] = [];
+  const partnerUid = `partner:${player}`;
+  if (flow.canAction(state, partnerUid)) candidates.push(partnerUid);
+  for (const c of state.players[player].scene) {
+    if (flow.canAction(state, c.uid)) candidates.push(c.uid);
+  }
+  return candidates;
+}
+
+/**
+ * target 候補列挙: byUid から見たアクション対象 (rules/07)。
+ *   - opp.scene の sleep/stun キャラ (canActionAgainstChar 経由で target-expander 反映)
+ *   - 'case:opp' (canActionAgainstCase: opp.evidence ≥ 1)
+ *
+ * 注: byUid 側のプレイヤーは canActionAgainstCase が判定するため、self/opp 双方の
+ * 視点で同じ列挙関数を呼べる (将来 opp ターン用に拡張する場合の互換性確保)。
+ */
+export function enumActionTargetCandidates(
+  state: import('@/engine/types/game-state.js').GameState,
+  byUid: string,
+): string[] {
+  const candidates: string[] = [];
+  // opp 側を対象に想定 (self ターン中のアクション → 相手陣に攻撃)
+  for (const c of state.players.opp.scene) {
+    if (flow.canActionAgainstChar(state, byUid, c.uid)) candidates.push(c.uid);
+  }
+  if (flow.canActionAgainstCase(state, byUid, 'opp')) {
+    candidates.push(ACTION_CASE_TARGET_OPP);
+  }
+  return candidates;
+}
+
+/**
+ * アクション宣言フロー: source 選択 → target 選択 → 確認 → dispatch。
+ *
+ * rules: 07-action-flow.md / 08-contact.md / 10-action-event.md / 13-keywords.md
+ * spec: ui-action-flows.md ⑤アクション
+ *
+ * Phase 8.7a スコープ: 相手 CPU はガード/カットイン/変装を行わない簡略実装
+ * (engine の policy.applyMove と同シーケンスで FSM を端まで進める)。
+ * 対話的なガード/カットイン UI は Phase 8.7b 以降で追加。
+ *
+ * - no-state → no-state
+ * - source 候補 0 または target 候補 0 → not-allowed
+ * - picker cancel / confirm reject → cancelled
+ * - accept → dispatchEngineAction の結果そのまま
+ */
+export async function runActionFlow(opts: { player: Player }): Promise<FlowResult> {
+  const state = useGameStateStore.getState().gameState;
+  if (state === null) return { ok: false, reason: 'no-state' };
+
+  const sources = enumActionSourceCandidates(state, opts.player);
+  if (sources.length === 0) return { ok: false, reason: 'not-allowed' };
+
+  const picker = useTargetPicker();
+
+  // 1. source 選択
+  const source = await picker.start({ candidates: sources, purpose: 'action:source' });
+  if (source === null) return { ok: false, reason: 'cancelled' };
+
+  // 2. target 候補列挙 (source 確定後の state で)
+  const stateAfterSrc = useGameStateStore.getState().gameState;
+  if (stateAfterSrc === null) return { ok: false, reason: 'no-state' };
+  const targets = enumActionTargetCandidates(stateAfterSrc, source);
+  if (targets.length === 0) return { ok: false, reason: 'not-allowed' };
+
+  // 3. target 選択
+  const target = await picker.start({ candidates: targets, purpose: 'action:target' });
+  if (target === null) return { ok: false, reason: 'cancelled' };
+
+  // 4. 確認
+  const isCase = target === ACTION_CASE_TARGET_OPP;
+  const targetLabel = isCase ? '相手の事件' : target;
+  const accepted = await useConfirmation().ask({
+    kind: 'standard',
+    title: 'アクション',
+    body: `${source} で ${targetLabel} にアクションします。`,
+    okLabel: 'アクション',
+    cancelLabel: 'キャンセル',
+  });
+  if (!accepted) return { ok: false, reason: 'cancelled' };
+
+  // 5. dispatch
+  if (isCase) {
+    return dispatchEngineAction({
+      type: 'actionAgainstCase',
+      byUid: source,
+      targetPlayer: 'opp',
+    });
+  }
+  return dispatchEngineAction({
+    type: 'actionAgainstChar',
+    byUid: source,
+    targetUid: target,
+  });
+}
+
+/**
  * 手札の使用フロー: 確認モーダル → accept → engine.handUseCard dispatch。
  *
  * rules: 05-turn-phases.md §手札の使用 (1 ターン 1 回 / ネクストヒント済不可) /

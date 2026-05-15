@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.6 (推理 + ネクストヒント + アシスト + 事件解決 + 手札の使用) 完了 ✅
-**最新コミット**: Commit G — Phase 8.6 手札の使用フロー UI 統合 (6 tests)
-**テスト状況**: 1205 PASS / 137 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: 推理 + ネクストヒント + アシスト + 事件解決 + 手札の使用 + endTurn が end-to-end 動作 (5177)
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.7a 完了 ✅
+**最新コミット**: Commit H — Phase 8.7a アクション宣言フロー UI 統合 (12 tests)
+**テスト状況**: 1217 PASS / 138 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: 推理 + ネクストヒント + アシスト + 事件解決 + 手札の使用 + アクション (相手 CPU 簡略) + endTurn が end-to-end 動作 (5177)
 
 **未コミット作業**: なし
 
@@ -25,8 +25,9 @@
   - [x] **8.6 ネクストヒント** フロー UI 統合 (`21b3b9f`, 4 tests)
   - [x] **8.6 アシスト + 事件解決** フロー UI 統合 (Commit F, 8 tests)
   - [x] **8.6 手札の使用** フロー UI 統合 (Commit G, 6 tests) — HandZone.onCardClick + canUse 連動
-  - [ ] **8.6 残**: パートナー能力 / 宣言能力 /
-        アクション宣言 (target + 9段階 state machine)
+  - [x] **8.7a アクション宣言** フロー UI 統合 (Commit H, 12 tests) — source + target 2 段階 picker、相手 CPU は ガード/カットイン/変装なし簡略
+  - [ ] **8.7b 残**: ガード判定モーダル / カットイン / 変装 / コンタクト対話 UI /
+        パートナー能力 / 宣言能力
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
@@ -39,12 +40,15 @@
 1. **パートナー能力 / 宣言能力** — cost 解決と Phase 5 listener が絡むため複雑。
    別タスクで設計検討。
 
-2. **アクション宣言** — target picker + 9 段階 state machine + ガード/コンタクト/カットイン。
-   ui-action-flows.md / ui-modal-flows-contact.md を読み直して Phase 8.7+ で着手。
+2. **Phase 8.7b: ガード判定モーダル / カットイン / 変装** — ui-modal-flows-contact.md 準拠。
+   現状は相手 CPU の自動 passGuard 経路のみ実装、対話的 UI 未着手。
 
 3. **手札の使用 後続ポリッシュ** — キャラ登場時の現場スロット選択 UI、
    カード名 (HandCardMeta.name) を確認モーダル本文に出す。
    現状 cardId 直 表示なので最低限の使い勝手のみ。
+
+4. **アクション宣言 ポリッシュ** — 確認モーダルにキャラ名 + AP 表示、
+   target 候補 0 件のときに source picker を表示しない (UX 改善)。
 
 Task 8.4 (ゲーム開始モーダル) は sampleGameState で代替中、必要になったら着手。
 

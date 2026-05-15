@@ -34,6 +34,8 @@ export type EngineAction =
   | { type: 'declaredAbility'; uid: string; abilId: string }
   | { type: 'assist'; player: Player }
   | { type: 'solveCase'; player: Player }
+  | { type: 'actionAgainstChar'; byUid: string; targetUid: string }
+  | { type: 'actionAgainstCase'; byUid: string; targetPlayer: Player }
   | { type: 'endTurn'; player: Player };
 
 export type DispatchResult =
@@ -71,6 +73,10 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
       if (state.turnState[action.player].assistedThisTurn) return false;
       return true;
     }
+    case 'actionAgainstChar':
+      return flow.canActionAgainstChar(state, action.byUid, action.targetUid);
+    case 'actionAgainstCase':
+      return flow.canActionAgainstCase(state, action.byUid, action.targetPlayer);
     case 'endTurn':
       // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
       return state.turn.player === action.player && state.turn.phase === 'main';
@@ -104,6 +110,37 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // flow.solveCase 未提供のため mutate を直叩き (src/ai/policy.ts:126 と同じ)
       mutate.partner.solveCase(draft, action.player);
       return;
+    case 'actionAgainstChar': {
+      // Phase 8.7a: AI 側はガード/カットイン/変装なしの簡略実装
+      //   (src/ai/policy.ts:85-101 と同じシーケンス)。9 段階 FSM を端まで進める。
+      const ax = flow.action.declare(draft, action.byUid, {
+        kind: 'char',
+        uid: action.targetUid,
+      });
+      flow.action.passGuard(draft, ax);
+      flow.action.advance(draft, ax); // leave-resolution → contact-pending
+      flow.action.advance(draft, ax); // contact-pending → action-1
+      flow.action.advance(draft, ax); // action-1 → action-2
+      flow.action.advance(draft, ax); // action-2 → judge
+      flow.action.snapshotAP(draft, ax);
+      flow.contact.judge(draft, ax);
+      flow.action.advance(draft, ax); // judge → contact-end
+      flow.action.advance(draft, ax); // contact-end → action-end
+      return;
+    }
+    case 'actionAgainstCase': {
+      // src/ai/policy.ts:103-113 と同じ。case ターゲットは contact 省略。
+      const ax = flow.action.declare(draft, action.byUid, {
+        kind: 'case',
+        player: action.targetPlayer,
+      });
+      flow.action.passGuard(draft, ax);
+      flow.actionCase.removeOpponentEvidenceTop(draft, ax);
+      flow.actionCase.gainSelfEvidence(draft, ax);
+      flow.action.advance(draft, ax); // judge → contact-end
+      flow.action.advance(draft, ax); // contact-end → action-end
+      return;
+    }
     case 'endTurn':
       flow.endTurn(draft, action.player);
       return;

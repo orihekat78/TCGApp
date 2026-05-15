@@ -37,6 +37,10 @@ export type CaseAreaProps = {
   caseInfo: CaseInfo | null;
   turnOrder: 'first' | 'second';
   side: 'self' | 'opp';
+  /** Phase 8.7a: アクション対象候補ハイライト */
+  isCandidate?: boolean;
+  /** Phase 8.7a: クリックで pick+confirm を 1 タップ完結 */
+  onClick?: () => void;
 };
 
 const COLOR_LABEL: Record<CaseColor, string> = {
@@ -53,14 +57,19 @@ const TURN_LABEL: Record<'first' | 'second', string> = {
 };
 
 export function CaseArea(props: CaseAreaProps): JSX.Element {
-  const { caseInfo, turnOrder, side } = props;
+  const { caseInfo, turnOrder, side, isCandidate, onClick } = props;
+  const rootClass = `case-area side-${side}${isCandidate ? ' case-area--candidate' : ''}`;
+  const interactiveProps = onClick
+    ? { onClick, style: { cursor: 'pointer' as const } }
+    : {};
 
   if (caseInfo === null) {
     return (
       <div
-        className={`case-area side-${side}`}
+        className={rootClass}
         data-side={side}
         data-turn-order={turnOrder}
+        {...interactiveProps}
       >
         <div className="zone case-zone">
           <div className="zone-label">
@@ -85,9 +94,10 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
 
   return (
     <div
-      className={`case-area side-${side}`}
+      className={rootClass}
       data-side={side}
       data-turn-order={turnOrder}
+      {...interactiveProps}
     >
       <div className="zone case-zone">
         <div className="zone-label">

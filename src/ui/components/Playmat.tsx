@@ -33,8 +33,10 @@ import {
   runAssistFlow,
   runSolveCaseFlow,
   runHandUseFlow,
+  runActionFlow,
   canAssistForUi,
   canSolveCaseForUi,
+  ACTION_CASE_TARGET_OPP,
 } from '../hooks/useActionsPanelFlow.js';
 import * as engineFlow from '@/engine/flow/index.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
@@ -78,7 +80,11 @@ type PlayerMatProps = CandidateProps & {
 function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
-}: PlayerMatProps): JSX.Element {
+  isCaseCandidate, onCaseClick,
+}: PlayerMatProps & {
+  isCaseCandidate?: boolean;
+  onCaseClick?: () => void;
+}): JSX.Element {
   const scene = state?.players[side].scene ?? [];
   const engineCase = state?.players[side].case;
 
@@ -116,7 +122,13 @@ function PlayerMat({
   return (
     <div className={`mat ${side}`} data-side={side}>
       <div className="left-col">
-        <CaseArea caseInfo={caseInfo} turnOrder={turnOrder} side={side} />
+        <CaseArea
+          caseInfo={caseInfo}
+          turnOrder={turnOrder}
+          side={side}
+          isCandidate={isCaseCandidate}
+          onClick={onCaseClick}
+        />
         <FileArea
           cards={state?.players[side].file ?? []}
           side={side}
@@ -173,11 +185,26 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     confirmTarget();
   };
   const candidateUidsSelf = new Set<string>();
+  const candidateUidsOpp = new Set<string>();
   let isSelfPartnerCandidate = false;
+  let isOppCaseCandidate = false;
   if (pickerPhase.phase !== 'idle') {
+    // purpose に応じて自陣/相手陣どちらに候補を振るか分岐。
+    // - 'action:source' / 'reasoning' / その他 → self 側候補
+    // - 'action:target' → opp 側候補 (+ case)
+    const isTargetingOpp = pickerPhase.purpose === 'action:target';
     for (const uid of pickerPhase.candidates) {
-      if (uid === 'partner:self') isSelfPartnerCandidate = true;
-      else if (!uid.startsWith('partner:')) candidateUidsSelf.add(uid);
+      if (uid === ACTION_CASE_TARGET_OPP) {
+        isOppCaseCandidate = true;
+        continue;
+      }
+      if (uid === 'partner:self') {
+        isSelfPartnerCandidate = true;
+        continue;
+      }
+      if (uid === 'partner:opp') continue;
+      if (isTargetingOpp) candidateUidsOpp.add(uid);
+      else candidateUidsSelf.add(uid);
     }
   }
 
@@ -219,7 +246,16 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             <span className="opp-hand-count">{gameState?.players.opp.hand.length ?? 0} 枚</span>
           </div>
 
-          <PlayerMat side="opp" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} /* 相手側は Phase 8.6 のスコープ外 — candidate は self のみ */ />
+          <PlayerMat
+            side="opp"
+            state={gameState}
+            resolveCard={resolveCard}
+            resolveCase={resolveCase}
+            candidateUids={candidateUidsOpp}
+            onUnitClick={(uid) => pickAndConfirm(uid)}
+            isCaseCandidate={isOppCaseCandidate}
+            onCaseClick={() => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
+          />
 
           {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
 
@@ -262,7 +298,13 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           }
           canAssist={gameState ? canAssistForUi(gameState, 'self') : false}
           canSolveCase={gameState ? canSolveCaseForUi(gameState, 'self') : false}
-          actionMode="idle"
+          actionMode={
+            pickerPhase.phase !== 'idle' &&
+            typeof pickerPhase.purpose === 'string' &&
+            pickerPhase.purpose.startsWith('action:')
+              ? 'selecting-target'
+              : 'idle'
+          }
           currentPhase={gameState?.turn.phase ?? 'main'}
           canEndTurn={
             (gameState?.turn.player === 'self') &&
@@ -291,7 +333,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               setHandExpanded(true);
               return;
             }
-            // 8.6 残: partner-ability / declared-ability / action
+            if (id === 'action') {
+              void runActionFlow({ player: 'self' });
+              return;
+            }
+            // 8.6 残: partner-ability / declared-ability
             // eslint-disable-next-line no-console
             console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
           }}
@@ -326,10 +372,12 @@ function PlaymatConfirmModal(): JSX.Element | null {
 /** picker.purpose を表示用ラベルに変換 (Phase 8.6 reasoning 等)。 */
 function labelForPurpose(purpose: string): string {
   switch (purpose) {
-    case 'reasoning': return '推理';
-    case 'action':    return 'アクション';
-    case 'assist':    return 'アシスト';
-    case 'solveCase': return '事件解決';
-    default:          return '対象';
+    case 'reasoning':       return '推理';
+    case 'action':          return 'アクション';
+    case 'action:source':   return 'アクション元キャラ';
+    case 'action:target':   return 'アクション対象';
+    case 'assist':          return 'アシスト';
+    case 'solveCase':       return '事件解決';
+    default:                return '対象';
   }
 }

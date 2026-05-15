@@ -206,3 +206,21 @@
   color: var(--case-text-muted);
   font-weight: 700;
 }
+
+/* Phase 8.7a: アクション宣言フローの target picker ハイライト */
+.case-area--candidate .case-card {
+  border-color: var(--scene-neon, #6cf);
+  box-shadow:
+    0 0 14px color-mix(in oklch, var(--scene-neon, #6cf) 60%, transparent),
+    0 0 0 2px color-mix(in oklch, var(--scene-neon, #6cf) 55%, transparent);
+  animation: case-candidate-pulse 1.6s ease-in-out infinite;
+}
+.case-area--candidate:hover .case-card {
+  filter: brightness(1.08);
+}
+@keyframes case-candidate-pulse {
+  0%, 100% { box-shadow: 0 0 14px color-mix(in oklch, var(--scene-neon, #6cf) 55%, transparent),
+                          0 0 0 2px color-mix(in oklch, var(--scene-neon, #6cf) 50%, transparent); }
+  50%      { box-shadow: 0 0 22px color-mix(in oklch, var(--scene-neon, #6cf) 80%, transparent),
+                          0 0 0 3px color-mix(in oklch, var(--scene-neon, #6cf) 70%, transparent); }
+}
