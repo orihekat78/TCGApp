@@ -25,8 +25,9 @@ import { HandZone, type HandCardMeta } from './HandZone.js';
 import { TopBar } from './TopBar.js';
 import { ActionsPanel, type ActionItemId } from './ActionsPanel.js';
 import { ConfirmModal } from './ConfirmModal.js';
-import { runEndTurnFlow } from '../hooks/useActionsPanelFlow.js';
+import { runEndTurnFlow, runReasoningFlow, enumReasoningCandidates } from '../hooks/useActionsPanelFlow.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
+import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -49,14 +50,24 @@ export type PlaymatProps = {
   resolveHandCard?: (cardId: string) => HandCardMeta;
 };
 
-type PlayerMatProps = {
+type CandidateProps = {
+  candidateUids?: ReadonlySet<string>;
+  onUnitClick?: (uid: string) => void;
+  isPartnerCandidate?: boolean;
+  onPartnerClick?: () => void;
+};
+
+type PlayerMatProps = CandidateProps & {
   side: 'self' | 'opp';
   state: GameState | null;
   resolveCard: (cardId: string) => ResolvedCardMeta;
   resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number; orientation?: 'portrait' | 'landscape' };
 };
 
-function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): JSX.Element {
+function PlayerMat({
+  side, state, resolveCard, resolveCase,
+  candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
+}: PlayerMatProps): JSX.Element {
   const scene = state?.players[side].scene ?? [];
   const engineCase = state?.players[side].case;
 
@@ -102,7 +113,13 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
         />
       </div>
       <div className="center-col">
-        <SceneArea characters={scene} side={side} resolveCard={resolveCard} />
+        <SceneArea
+          characters={scene}
+          side={side}
+          resolveCard={resolveCard}
+          candidateUids={candidateUids}
+          onUnitClick={onUnitClick}
+        />
         <div className="below-scene">
           <EvidenceArea
             count={evidenceCount}
@@ -113,6 +130,8 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
             partner={state?.players[side].partner ?? null}
             side={side}
             resolveCard={resolveCard}
+            isCandidate={isPartnerCandidate}
+            onClick={onPartnerClick}
           />
         </div>
       </div>
@@ -133,9 +152,31 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const [handExpanded, setHandExpanded] = useState(false);
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
   const [logOpen, setLogOpen] = useState(false);
-  // 仮のナレーター文言 (Phase 8.6+ で engine state 連動の動的メッセージに置換予定)
+
+  // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
+  const pickerPhase = useTargetPickerStore((s) => s.phase);
+  const { pick: pickTarget, confirm: confirmTarget } = useTargetPicker();
+  // クリック 1 回で pick + confirm を同時に行う (最終確認は useConfirmation 側のモーダル)
+  const pickAndConfirm = (uid: string): void => {
+    pickTarget(uid);
+    confirmTarget();
+  };
+  const candidateUidsSelf = new Set<string>();
+  let isSelfPartnerCandidate = false;
+  if (pickerPhase.phase !== 'idle') {
+    for (const uid of pickerPhase.candidates) {
+      if (uid === 'partner:self') isSelfPartnerCandidate = true;
+      else if (!uid.startsWith('partner:')) candidateUidsSelf.add(uid);
+    }
+  }
+
+  // narrator: picker phase 中は動的に切替
   const narratorMessage =
-    '⑥ アクション を選択すると、攻撃元キャラ指定 → 相手のスリープ/スタン状態キャラに対しアクション対象を選べます。';
+    pickerPhase.phase === 'picking'
+      ? `${labelForPurpose(pickerPhase.purpose)} の対象を選択してください。`
+      : pickerPhase.phase === 'confirming'
+        ? '確認モーダルで実行/キャンセルを選んでください。'
+        : '⑥ アクション を選択すると、攻撃元キャラ指定 → 相手のスリープ/スタン状態キャラに対しアクション対象を選べます。';
   const handCards: HandCardMeta[] = resolveHandCard
     ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
     : [];
@@ -167,11 +208,20 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             <span className="opp-hand-count">{gameState?.players.opp.hand.length ?? 0} 枚</span>
           </div>
 
-          <PlayerMat side="opp" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
+          <PlayerMat side="opp" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} /* 相手側は Phase 8.6 のスコープ外 — candidate は self のみ */ />
 
           {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
 
-          <PlayerMat side="self" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
+          <PlayerMat
+            side="self"
+            state={gameState}
+            resolveCard={resolveCard}
+            resolveCase={resolveCase}
+            candidateUids={candidateUidsSelf}
+            onUnitClick={(uid) => pickAndConfirm(uid)}
+            isPartnerCandidate={isSelfPartnerCandidate}
+            onPartnerClick={() => pickAndConfirm('partner:self')}
+          />
         </div>
 
         {/* HandZone (Task 7.11) */}
@@ -190,7 +240,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           nextHintUsed={gameState?.turnState.self.nextHintUsed ?? false}
           partnerActive={gameState?.players.self.partner.state === 'active'}
           declaredTargetCount={0}
-          reasoningTotalLP={0}
+          reasoningTotalLP={
+            gameState ? enumReasoningCandidates(gameState, 'self').length : 0
+          }
           actionMode="idle"
           currentPhase={gameState?.turn.phase ?? 'main'}
           canEndTurn={
@@ -199,8 +251,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           }
           onEndTurn={() => { void runEndTurnFlow({ player: 'self' }); }}
           onActionItemClick={(id: ActionItemId) => {
-            // Phase 8.6+ で各アクションのフローを配線する。
-            // 現状は console に出して未配線であることを示す。
+            if (id === 'reasoning') {
+              void runReasoningFlow({ player: 'self' });
+              return;
+            }
+            // 8.6 残: hand-use / next-hint / partner-ability / declared-ability / action
             // eslint-disable-next-line no-console
             console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
           }}
@@ -230,4 +285,15 @@ function PlaymatConfirmModal(): JSX.Element | null {
   const current = useConfirmationStore((s) => s.current);
   const { accept, reject } = useConfirmation();
   return <ConfirmModal current={current} onAccept={accept} onReject={reject} />;
+}
+
+/** picker.purpose を表示用ラベルに変換 (Phase 8.6 reasoning 等)。 */
+function labelForPurpose(purpose: string): string {
+  switch (purpose) {
+    case 'reasoning': return '推理';
+    case 'action':    return 'アクション';
+    case 'assist':    return 'アシスト';
+    case 'solveCase': return '事件解決';
+    default:          return '対象';
+  }
 }

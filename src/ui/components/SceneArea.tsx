@@ -26,14 +26,20 @@ export type SceneAreaProps = {
   resolveCard: (cardId: string) => ResolvedCardMeta;
   /** 最大スロット数 (デフォルト 5; rules/03 で 5 枚上限) */
   maxSlots?: number;
+  /** Phase 8.5: 推理/アクション 対象選択時の候補 uid 集合 (highlight 表示) */
+  candidateUids?: ReadonlySet<string>;
+  /** Phase 8.5: 候補キャラがクリックされたとき (uid 通知) */
+  onUnitClick?: (uid: string) => void;
 };
 
 type SceneCharacterCardProps = {
   ch: SceneCharacter;
   meta: ResolvedCardMeta;
+  isCandidate: boolean;
+  onClick?: () => void;
 };
 
-function SceneCharacterCard({ ch, meta }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick }: SceneCharacterCardProps): JSX.Element {
   const ap = ch.apOverride ?? meta.ap;
   const lp = ch.lpOverride ?? meta.lp;
 
@@ -42,6 +48,7 @@ function SceneCharacterCard({ ch, meta }: SceneCharacterCardProps): JSX.Element 
     `color-${meta.color}`,
     ch.state === 'sleep' && 'sleep',
     ch.state === 'stun' && 'stun',
+    isCandidate && 'candidate',
   ]
     .filter(Boolean)
     .join(' ');
@@ -49,7 +56,12 @@ function SceneCharacterCard({ ch, meta }: SceneCharacterCardProps): JSX.Element 
   const setCount = ch.setCards.length;
 
   return (
-    <div className={classes} data-uid={ch.uid}>
+    <div
+      className={classes}
+      data-uid={ch.uid}
+      onClick={isCandidate && onClick ? onClick : undefined}
+      style={isCandidate ? { cursor: 'pointer' } : undefined}
+    >
       <div className="color-stripe" />
       <div className="art">
         <div className="silhouette" />
@@ -71,7 +83,7 @@ function SceneCharacterCard({ ch, meta }: SceneCharacterCardProps): JSX.Element 
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5 } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -93,13 +105,18 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
         </span>
       </div>
       <div className="scene-slots">
-        {filled.map((ch) => (
-          <SceneCharacterCard
-            key={ch.uid}
-            ch={ch}
-            meta={resolveCard(ch.cardId)}
-          />
-        ))}
+        {filled.map((ch) => {
+          const isCandidate = candidateUids?.has(ch.uid) ?? false;
+          return (
+            <SceneCharacterCard
+              key={ch.uid}
+              ch={ch}
+              meta={resolveCard(ch.cardId)}
+              isCandidate={isCandidate}
+              onClick={onUnitClick ? () => onUnitClick(ch.uid) : undefined}
+            />
+          );
+        })}
         {Array.from({ length: emptyCount }).map((_, i) => (
           <div key={`empty-${i}`} className="slot-empty" />
         ))}

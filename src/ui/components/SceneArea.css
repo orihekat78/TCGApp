@@ -258,6 +258,25 @@
       var(--state-stun, rgba(220, 50, 50, 0.65)) 50%, transparent);
 }
 
+/* Phase 8.5: 推理/アクション 対象選択時の候補ハイライト */
+.scene-area .card.candidate {
+  border-color: var(--scene-neon);
+  box-shadow:
+    0 0 12px color-mix(in oklch, var(--scene-neon) 60%, transparent),
+    0 0 0 2px color-mix(in oklch, var(--scene-neon) 55%, transparent);
+  animation: scene-candidate-pulse 1.6s ease-in-out infinite;
+}
+.scene-area .card.candidate:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+@keyframes scene-candidate-pulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in oklch, var(--scene-neon) 55%, transparent),
+                          0 0 0 2px color-mix(in oklch, var(--scene-neon) 50%, transparent); }
+  50%      { box-shadow: 0 0 20px color-mix(in oklch, var(--scene-neon) 80%, transparent),
+                          0 0 0 3px color-mix(in oklch, var(--scene-neon) 70%, transparent); }
+}
+
 /* ---- badges ---- */
 .scene-area .card .named-badge {
   position: absolute;

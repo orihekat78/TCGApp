@@ -13,6 +13,10 @@ export type PartnerAreaProps = {
   partner: PartnerOnBoard | null;
   side: 'self' | 'opp';
   resolveCard: (cardId: string) => ResolvedCardMeta;
+  /** Phase 8.5: 推理/宣言能力/アシスト 対象選択中のハイライト */
+  isCandidate?: boolean;
+  /** Phase 8.5: 候補としてクリックされたとき。uid は親が知っている (`partner:self` 等)。 */
+  onClick?: () => void;
 };
 
 const STATE_LABEL: Record<PartnerOnBoard['state'], string> = {
@@ -40,7 +44,7 @@ const COLOR_LABEL: Record<ResolvedCardMeta['color'], string> = {
  * 'file-area' (アシスト中) / 'mr-removed' (MR リムーブ) のときは
  * キーホール透かしのみ + 状態ラベルを表示する。
  */
-export function PartnerArea({ partner, side, resolveCard }: PartnerAreaProps): JSX.Element {
+export function PartnerArea({ partner, side, resolveCard, isCandidate, onClick }: PartnerAreaProps): JSX.Element {
   const isOnBoard = partner !== null && partner.location === 'partner-area';
   const assisted  = partner !== null && partner.location === 'file-area';
   const mrRemoved = partner !== null && partner.location === 'mr-removed';
@@ -71,7 +75,9 @@ export function PartnerArea({ partner, side, resolveCard }: PartnerAreaProps): J
         {isOnBoard && partner !== null && meta !== null && (
           <>
             <div
-              className={`card color-${meta.color}${partner.state === 'sleep' ? ' sleep' : ''}${partner.state === 'stun' ? ' stun' : ''}`}
+              className={`card color-${meta.color}${partner.state === 'sleep' ? ' sleep' : ''}${partner.state === 'stun' ? ' stun' : ''}${isCandidate ? ' candidate' : ''}`}
+              onClick={isCandidate && onClick ? onClick : undefined}
+              style={isCandidate ? { cursor: 'pointer' } : undefined}
               data-card-id={partner.cardId}
             >
               <div className="color-stripe" />
