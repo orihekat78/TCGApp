@@ -22,6 +22,7 @@ import { EffectStackPanel } from './EffectStackPanel.js';
 import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
+import { HandZone, type HandCardMeta } from './HandZone.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -37,6 +38,11 @@ export type PlaymatProps = {
    * 指定なしの場合は cardId をタイトルにフォールバックする placeholder ロジック。
    */
   resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number };
+  /**
+   * 手札 cardId → HandCardMeta 解決 (任意)。
+   * 指定なしの場合は HandZone は空表示。
+   */
+  resolveHandCard?: (cardId: string) => HandCardMeta;
 };
 
 type PlayerMatProps = {
@@ -105,7 +111,10 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
   );
 }
 
-export function Playmat({ gameState, resolveCard, resolveCase }: PlaymatProps): JSX.Element {
+export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }: PlaymatProps): JSX.Element {
+  const handCards: HandCardMeta[] = resolveHandCard
+    ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
+    : [];
   return (
     <div className="scaler" id="scaler">
       <div className="stage">
@@ -127,8 +136,8 @@ export function Playmat({ gameState, resolveCard, resolveCase }: PlaymatProps): 
           <PlayerMat side="self" state={gameState} resolveCard={resolveCard} resolveCase={resolveCase} />
         </div>
 
-        {/* HandZone slot — Task 7.11 で実装 */}
-        <div className="hand-zone hand-placeholder" aria-label="手札" />
+        {/* HandZone (Task 7.11) */}
+        <HandZone cards={handCards} />
 
         {/* EffectStackPanel (件数バッジ + 展開リスト。Phase 7 では閉時) */}
         <EffectStackPanel entries={gameState?.pendingEffects ?? []} open={false} />

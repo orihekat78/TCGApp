@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>HandZone — プロトタイププレビュー</title>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="HandZone.css">
+
+<style>
+  :root {
+    --bg-deep:        #0a1a28;
+    --bg-cell:        rgba(0, 0, 0, 0.32);
+    --neon-blue:      #4ec3ff;
+    --accent-gold:    #ffd700;
+
+    --color-blue:     #2b6cb5;
+    --color-yellow:   #d4a425;
+    --color-red:      #c84040;
+    --color-green:    #3aa67a;
+    --color-purple:   #8a4cc0;
+
+    --text-primary:   #e0ecf8;
+    --text-secondary: #b8d4f0;
+    --text-muted:     #7090b5;
+    --text-disabled:  #4a5a70;
+
+    --font-jp:   "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", -apple-system, sans-serif;
+    --font-mono: "Cascadia Code", "Consolas", "Menlo", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; min-height: 100%;
+    background: radial-gradient(ellipse at 50% 30%, #15263e 0%, #0a1424 50%, #050a14 100%);
+    color: var(--text-primary);
+    font-family: var(--font-jp);
+  }
+  body { padding: 40px 28px 56px; }
+
+  .page-title { font-size: 13px; letter-spacing: 0.18em; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+  .page-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 32px; max-width: 800px; line-height: 1.7; }
+  .page-sub code { font-family: var(--font-mono); background: rgba(255,255,255,0.06); padding: 0 4px; border-radius: 2px; color: #ffd75e; }
+
+  .demo-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 40px;
+  }
+  .demo-label {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 700;
+    border-left: 2px solid var(--neon-blue); padding: 6px 0 6px 10px;
+    margin-top: 16px;
+  }
+  .demo-label small {
+    display: block; margin-top: 6px;
+    color: var(--text-disabled); letter-spacing: 0.04em;
+    font-weight: 500; font-size: 10px; text-transform: none;
+    line-height: 1.5;
+  }
+  /* プレイマット模倣 — bottom 配置の hand-zone を仮想ステージ内で見る */
+  .stage {
+    position: relative;
+    height: 200px;
+    background: linear-gradient(180deg,
+      rgba(78, 195, 255, 0.04),
+      rgba(0, 0, 0, 0.5));
+    border: 1px solid rgba(78, 195, 255, 0.12);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .stage .stage-label {
+    position: absolute; top: 6px; left: 8px;
+    font-size: 9px; letter-spacing: 0.18em;
+    color: var(--text-disabled); font-weight: 700; text-transform: uppercase;
+  }
+  .stage .stage-hand-host {
+    position: absolute; left: 0; right: 0; bottom: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">HandZone — Phase 7 静的表示プロトタイプ</div>
+<p class="page-sub">
+  自分の手札を MTGA 型フラット並びで表示。各カードは 88×124px、<code>.featured</code> は
+  hover 相当 (translateY -12px + neon-blue glow)、<code>.disabled</code> は色不一致時の
+  使用不可表示 (opacity 0.4 + grayscale)。ダミーキャラ名はパブリックドメイン探偵
+  (Holmes / Watson / Dupin / Marple / Adler / Moriarty)。操作系は Phase 8 で追加。
+</p>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="typescript,react">
+
+function HandCard({ card, featured, disabled, disabledTitle }) {
+  const classes = [
+    'hand-card',
+    `color-${card.color}`,
+    featured && 'featured',
+    disabled && 'disabled',
+  ].filter(Boolean).join(' ');
+  const apText = card.ap === null ? '—' : String(card.ap);
+  const lpText = card.lp === null ? '—' : String(card.lp);
+  return (
+    <div
+      className={classes}
+      data-card-id={card.cardId}
+      data-color={card.color}
+      title={disabled ? disabledTitle : undefined}
+      aria-disabled={disabled || undefined}
+    >
+      <div className="cost">{card.cost}</div>
+      <div className="type-badge">{card.type}</div>
+      <div className="color-stripe" aria-hidden="true"></div>
+      <div className="art" aria-hidden="true"><div className="silhouette"></div></div>
+      <div className="name">{card.name}</div>
+      <div className="stats">
+        <span className="ap">{apText}</span>
+        <span className="lp">{lpText}</span>
+        <span className="lv">{card.lv}</span>
+      </div>
+    </div>
+  );
+}
+
+function HandZone({ cards, canUse, featuredCardId, disabledReason }) {
+  if (cards.length === 0) {
+    return (
+      <div className="hand-zone hand-zone--empty" aria-label="手札 0 枚">
+        <div className="hand-empty-message">手札なし</div>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="hand-zone"
+      role="list"
+      aria-label={`手札 ${cards.length} 枚`}
+      data-count={cards.length}
+    >
+      {cards.map((c) => {
+        const usable = canUse ? canUse(c) : true;
+        const isFeatured = featuredCardId === c.cardId;
+        const reason = !usable && disabledReason ? disabledReason(c) : undefined;
+        return (
+          <HandCard
+            key={c.cardId}
+            card={c}
+            featured={isFeatured}
+            disabled={!usable}
+            disabledTitle={reason}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// ダミー手札 (パブリックドメイン探偵モチーフ)
+// ============================================================
+const CASE_5 = [
+  { cardId: 'h-001', name: 'シャーロック・H',     color: 'yellow', type: 'キャラ',   cost: 5, ap: 5000, lp: 1, lv: 5 },
+  { cardId: 'h-002', name: 'M. デュパン',         color: 'yellow', type: 'キャラ',   cost: 8, ap: 8000, lp: 1, lv: 8 },
+  { cardId: 'h-003', name: '迷い猫の依頼書',      color: 'yellow', type: 'イベント', cost: 3, ap: null, lp: null, lv: 3 },
+  { cardId: 'h-004', name: 'J. ワトソン',         color: 'blue',   type: 'キャラ',   cost: 4, ap: 6000, lp: 1, lv: 4 },
+  { cardId: 'h-005', name: 'I. アドラー',         color: 'blue',   type: 'キャラ',   cost: 6, ap: 5500, lp: 2, lv: 7 },
+];
+
+const CASE_7_OVERFLOW = [
+  { cardId: 'o-001', name: 'シャーロック・H',     color: 'yellow', type: 'キャラ',   cost: 5, ap: 5000, lp: 1, lv: 5 },
+  { cardId: 'o-002', name: 'M. デュパン',         color: 'yellow', type: 'キャラ',   cost: 8, ap: 8000, lp: 1, lv: 8 },
+  { cardId: 'o-003', name: 'J. ワトソン',         color: 'blue',   type: 'キャラ',   cost: 4, ap: 6000, lp: 1, lv: 4 },
+  { cardId: 'o-004', name: 'I. アドラー',         color: 'purple', type: 'キャラ',   cost: 6, ap: 5500, lp: 2, lv: 7 },
+  { cardId: 'o-005', name: 'J. マープル',         color: 'green',  type: 'キャラ',   cost: 5, ap: 4000, lp: 2, lv: 6 },
+  { cardId: 'o-006', name: '霧の駅の謎',          color: 'red',    type: 'イベント', cost: 2, ap: null, lp: null, lv: 2 },
+  { cardId: 'o-007', name: 'モリアーティ',        color: 'red',    type: 'キャラ',   cost: 9, ap: 7000, lp: 1, lv: 9 },
+];
+
+const CASE_SINGLE = [
+  { cardId: 's-001', name: 'シャーロック・H',     color: 'yellow', type: 'キャラ',   cost: 5, ap: 5000, lp: 1, lv: 5 },
+];
+
+// 「現在の事件色 = 黄」想定で blue/red/green/purple を disabled に
+const canUse_caseYellow = (c) => c.color === 'yellow';
+const disabledReason_caseYellow = (c) =>
+  c.color === 'yellow' ? '' : `色不一致で使用不可 (事件: 黄 / カード: ${c.color})`;
+
+function App() {
+  return (
+    <>
+      <div className="demo-row">
+        <div className="demo-label">
+          5 枚 (yellow ×3 + blue ×2)
+          <small>
+            事件色 = 黄、blue 2 枚は <code>.disabled</code>。
+            <br />中央 (cost 8) を <code>.featured</code> 強調
+          </small>
+        </div>
+        <div className="stage">
+          <div className="stage-label">Playmat (mock — 1920×1080 中央)</div>
+          <div className="stage-hand-host">
+            <HandZone
+              cards={CASE_5}
+              featuredCardId="h-002"
+              canUse={canUse_caseYellow}
+              disabledReason={disabledReason_caseYellow}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="demo-row">
+        <div className="demo-label">
+          0 枚
+          <small>empty 表示 (手札なし)</small>
+        </div>
+        <div className="stage">
+          <div className="stage-label">Playmat (empty hand)</div>
+          <div className="stage-hand-host">
+            <HandZone cards={[]} />
+          </div>
+        </div>
+      </div>
+
+      <div className="demo-row">
+        <div className="demo-label">
+          7 枚 overflow
+          <small>5 色フル、横スクロールで対応。<br />featured は <code>o-005</code></small>
+        </div>
+        <div className="stage">
+          <div className="stage-label">Playmat (overflow)</div>
+          <div className="stage-hand-host">
+            <HandZone
+              cards={CASE_7_OVERFLOW}
+              featuredCardId="o-005"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="demo-row">
+        <div className="demo-label">
+          1 枚 single, featured
+          <small>最後の 1 枚を強調</small>
+        </div>
+        <div className="stage">
+          <div className="stage-label">Playmat (single card)</div>
+          <div className="stage-hand-host">
+            <HandZone cards={CASE_SINGLE} featuredCardId="s-001" />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+
+</body>
+</html>

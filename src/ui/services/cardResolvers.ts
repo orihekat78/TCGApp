@@ -90,6 +90,56 @@ export function createCardResolver(
 }
 
 /**
+ * cardId → HandCardMeta (手札表示用、type/cost/ap/lp/lv 込み)
+ * イベント・パートナーで ap/lp が null の場合は null のまま (UI 側で '—' 表示)。
+ * 未登録 ID は placeholder (cost=0, type='キャラ')。
+ */
+export type HandCardMeta = {
+  cardId: string;
+  name: string;
+  color: CardColor;
+  type: 'キャラ' | 'イベント';
+  cost: number;
+  ap: number | null;
+  lp: number | null;
+  lv: number;
+};
+
+function parseIntOrNull(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') return value;
+  const n = parseInt(value, 10);
+  return Number.isNaN(n) ? null : n;
+}
+
+function mapCardType(jp: RawCard['type']): 'キャラ' | 'イベント' {
+  // パートナーは手札に来ないので キャラ 扱い、事件 も同様 (実用上は不要なケース)
+  return jp === 'イベント' ? 'イベント' : 'キャラ';
+}
+
+export function createHandCardResolver(
+  ...sources: RawCardsJson[]
+): (cardId: string) => HandCardMeta {
+  const idx = buildIndex(sources);
+  return (cardId: string): HandCardMeta => {
+    const raw = idx.get(cardId);
+    if (!raw) {
+      return { cardId, name: '???', color: 'blue', type: 'キャラ', cost: 0, ap: null, lp: null, lv: 0 };
+    }
+    return {
+      cardId,
+      name: raw.title,
+      color: mapColor(raw.color),
+      type: mapCardType(raw.type),
+      cost: parseIntSafe(raw.cost),
+      ap: parseIntOrNull(raw.ap),
+      lp: parseIntOrNull(raw.lp),
+      lv: parseIntSafe(raw.cost),
+    };
+  };
+}
+
+/**
  * cardId → CaseMeta (事件カード専用、title/color/level)
  * 未登録 ID または type !== '事件' は cardId をタイトルにフォールバック。
  */

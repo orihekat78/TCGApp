@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createCardResolver,
   createCaseResolver,
+  createHandCardResolver,
   type RawCardsJson,
 } from '@/ui/services/cardResolvers';
 
@@ -127,5 +128,46 @@ describe('createCaseResolver', () => {
     const resolve = createCaseResolver(sampleSource);
     expect(resolve('C001').title).toBe('C001');  // C001 is キャラ, not 事件
     expect(resolve('C001').level).toBe(0);
+  });
+});
+
+describe('createHandCardResolver', () => {
+  it('resolves character card with all stat fields', () => {
+    const resolve = createHandCardResolver(sampleSource);
+    expect(resolve('C001')).toEqual({
+      cardId: 'C001',
+      name: 'キャラ青',
+      color: 'blue',
+      type: 'キャラ',
+      cost: 5,
+      ap: 5000,
+      lp: 1,
+      lv: 5,
+    });
+  });
+
+  it('preserves null AP/LP for event cards (not coerced to 0)', () => {
+    const src: RawCardsJson = {
+      count: 1,
+      cards: [{
+        cardId: 'EV1', cardNum: 'X', title: '捜査依頼',
+        type: 'イベント', color: '黄',
+        cost: '2', ap: null, lp: null,
+      }],
+    };
+    const resolve = createHandCardResolver(src);
+    const r = resolve('EV1');
+    expect(r.type).toBe('イベント');
+    expect(r.ap).toBeNull();
+    expect(r.lp).toBeNull();
+    expect(r.cost).toBe(2);
+  });
+
+  it('returns placeholder for unknown cardId', () => {
+    const resolve = createHandCardResolver(sampleSource);
+    expect(resolve('UNKNOWN')).toEqual({
+      cardId: 'UNKNOWN', name: '???', color: 'blue',
+      type: 'キャラ', cost: 0, ap: null, lp: null, lv: 0,
+    });
   });
 });

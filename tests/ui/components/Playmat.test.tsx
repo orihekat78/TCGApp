@@ -28,10 +28,12 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="vignette"/);
   });
 
-  it('renders TopBar / HandZone placeholders for future tasks', () => {
+  it('renders TopBar placeholder (Task 7.12 待ち) + HandZone (real component)', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     expect(html).toMatch(/topbar-placeholder/);
-    expect(html).toMatch(/hand-placeholder/);
+    // HandZone real component (empty when no resolveHandCard)
+    expect(html).toMatch(/hand-zone hand-zone--empty/);
+    expect(html).toMatch(/手札なし/);
   });
 
   it('renders LogPanel (real component, closed by default)', () => {

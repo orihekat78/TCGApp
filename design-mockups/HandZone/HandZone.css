@@ -1,0 +1,260 @@
+/* HandZone.css
+ * 手札ゾーン (MTGA 型フラット並び + featured / disabled 状態) のスタイル。
+ * 01-board-mockup.html のクラス構造をそのまま流用し、色は CSS 変数で外出ししている。
+ *
+ * 親 :root もしくは scope で以下の変数が定義されている前提:
+ *   --color-blue / --color-yellow / --color-red / --color-green / --color-purple
+ *   --neon-blue / --accent-gold
+ *   --text-primary / --text-secondary / --text-muted
+ *   --font-jp / --font-mono
+ */
+
+.hand-zone {
+  /* layout tokens (親側で上書き可) */
+  --hand-card-w: 88px;
+  --hand-card-h: 124px;
+  --hand-gap: 8px;
+
+  --hand-neon:    var(--neon-blue, #4ec3ff);
+  --hand-accent:  var(--accent-gold, #ffd700);
+  --hand-text:    var(--text-primary, #e0ecf8);
+  --hand-muted:   var(--text-muted, #7090b5);
+
+  /* MTGA flat 並び — bottom 配置・中央寄せ */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--hand-gap);
+  padding: 12px 20px 0;
+  font-family: var(--font-jp, "Hiragino Sans", "Noto Sans JP", sans-serif);
+  color: var(--hand-text);
+}
+
+/* 横方向にあふれそうなときは横スクロール (overflow ケース対応) */
+.hand-zone[data-count] {
+  overflow-x: auto;
+  overflow-y: visible; /* featured pop / cost / type-badge のはみ出しを許可 */
+  /* featured 時の translateY(-12px) のクリア用に上方向余白を確保 */
+  padding-top: 22px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(78, 195, 255, 0.3) transparent;
+}
+.hand-zone::-webkit-scrollbar { height: 6px; }
+.hand-zone::-webkit-scrollbar-thumb {
+  background: rgba(78, 195, 255, 0.3);
+  border-radius: 3px;
+}
+
+/* empty state */
+.hand-zone--empty {
+  justify-content: center;
+  align-items: center;
+  min-height: var(--hand-card-h);
+}
+.hand-zone .hand-empty-message {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--hand-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  border: 1px dashed color-mix(in oklch, var(--hand-muted) 50%, transparent);
+  border-radius: 3px;
+  padding: 14px 22px;
+}
+
+/* ---- 個別カード ---- */
+.hand-zone .hand-card {
+  width: var(--hand-card-w);
+  height: var(--hand-card-h);
+  border-radius: 5px;
+  background: linear-gradient(160deg, #1a2638 0%, #0a1320 100%);
+  border: 1.5px solid #2a4a6e;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
+}
+
+/* color borders */
+.hand-zone .hand-card.color-blue {
+  border-color: color-mix(in oklch, var(--color-blue, #2b6cb5) 70%, white 12%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px color-mix(in oklch, var(--color-blue, #2b6cb5) 50%, transparent);
+}
+.hand-zone .hand-card.color-yellow {
+  border-color: color-mix(in oklch, var(--color-yellow, #d4a425) 70%, white 12%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px color-mix(in oklch, var(--color-yellow, #d4a425) 50%, transparent);
+}
+.hand-zone .hand-card.color-red {
+  border-color: color-mix(in oklch, var(--color-red, #c84040) 70%, white 12%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px color-mix(in oklch, var(--color-red, #c84040) 50%, transparent);
+}
+.hand-zone .hand-card.color-green {
+  border-color: color-mix(in oklch, var(--color-green, #3aa67a) 70%, white 12%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px color-mix(in oklch, var(--color-green, #3aa67a) 50%, transparent);
+}
+.hand-zone .hand-card.color-purple {
+  border-color: color-mix(in oklch, var(--color-purple, #8a4cc0) 70%, white 12%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 0 1px color-mix(in oklch, var(--color-purple, #8a4cc0) 50%, transparent);
+}
+
+/* featured = hover/focus 相当の強調 */
+.hand-zone .hand-card.featured {
+  transform: translateY(-12px) scale(1.04);
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--hand-neon) 50%, transparent),
+    0 0 0 2px var(--hand-neon);
+  z-index: 5;
+}
+
+/* disabled = 色不一致等で使用不可 */
+.hand-zone .hand-card.disabled {
+  opacity: 0.4;
+  filter: grayscale(0.4);
+  cursor: not-allowed;
+}
+/* disabled が featured を打ち消さないように合成 (現実には両立しないが防御的に) */
+.hand-zone .hand-card.disabled.featured {
+  transform: none;
+}
+
+/* ---- top color stripe ---- */
+.hand-zone .hand-card .color-stripe {
+  height: 9px;
+  border-radius: 4px 4px 0 0;
+  flex-shrink: 0;
+  background: var(--color-blue, #2b6cb5);
+}
+.hand-zone .hand-card.color-blue   .color-stripe { background: var(--color-blue,   #2b6cb5); }
+.hand-zone .hand-card.color-yellow .color-stripe { background: var(--color-yellow, #d4a425); }
+.hand-zone .hand-card.color-red    .color-stripe { background: var(--color-red,    #c84040); }
+.hand-zone .hand-card.color-green  .color-stripe { background: var(--color-green,  #3aa67a); }
+.hand-zone .hand-card.color-purple .color-stripe { background: var(--color-purple, #8a4cc0); }
+
+/* ---- art ---- */
+.hand-zone .hand-card .art {
+  flex: 1;
+  margin: 4px;
+  background: linear-gradient(135deg,
+    color-mix(in oklch, var(--hand-neon) 8%, transparent),
+    rgba(0, 0, 0, 0.4));
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.hand-zone .hand-card .art .silhouette {
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(ellipse at 50% 30%,
+    rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0.6));
+  border-radius: 50% 50% 40% 40%;
+  filter: blur(1px);
+}
+
+/* ---- name ---- */
+.hand-zone .hand-card .name {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 4px;
+  text-align: center;
+  line-height: 1.15;
+  background: rgba(0, 0, 0, 0.5);
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-wrap: balance;
+}
+
+/* ---- stats ---- */
+.hand-zone .hand-card .stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 4px;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.65);
+  font-size: 9.5px;
+  font-weight: 800;
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+}
+.hand-zone .hand-card .ap,
+.hand-zone .hand-card .lp,
+.hand-zone .hand-card .lv {
+  padding: 0 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.hand-zone .hand-card .ap { color: #ff9b6e; }
+.hand-zone .hand-card .lp { color: #ffd75e; }
+.hand-zone .hand-card .lv { color: #6ed1ff; }
+
+/* ---- cost (左上バッジ) ---- */
+.hand-zone .hand-card .cost {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%,
+    color-mix(in oklch, var(--color-blue, #2b6cb5) 50%, white 30%),
+    color-mix(in oklch, var(--color-blue, #2b6cb5) 80%, #000 10%));
+  border: 1.5px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono, "Cascadia Code", monospace);
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  z-index: 4;
+  line-height: 1;
+}
+.hand-zone .hand-card.color-yellow .cost {
+  background: radial-gradient(circle at 30% 30%,
+    color-mix(in oklch, var(--color-yellow, #d4a425) 50%, white 30%),
+    color-mix(in oklch, var(--color-yellow, #d4a425) 80%, #000 10%));
+}
+.hand-zone .hand-card.color-red .cost {
+  background: radial-gradient(circle at 30% 30%,
+    color-mix(in oklch, var(--color-red, #c84040) 50%, white 30%),
+    color-mix(in oklch, var(--color-red, #c84040) 80%, #000 10%));
+}
+.hand-zone .hand-card.color-green .cost {
+  background: radial-gradient(circle at 30% 30%,
+    color-mix(in oklch, var(--color-green, #3aa67a) 50%, white 30%),
+    color-mix(in oklch, var(--color-green, #3aa67a) 80%, #000 10%));
+}
+.hand-zone .hand-card.color-purple .cost {
+  background: radial-gradient(circle at 30% 30%,
+    color-mix(in oklch, var(--color-purple, #8a4cc0) 50%, white 30%),
+    color-mix(in oklch, var(--color-purple, #8a4cc0) 80%, #000 10%));
+}
+
+/* ---- type-badge (右上、cost より下) ---- */
+.hand-zone .hand-card .type-badge {
+  position: absolute;
+  top: 14px;
+  right: -4px;
+  font-size: 8px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 2px 5px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  letter-spacing: 0.05em;
+  z-index: 3;
+  white-space: nowrap;
+}
