@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `041c1fcf41b2`
+> Source hash: `5325235729bd`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **67** ファイル（[全体 index](./index.md)）
+このグループ: **68** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (9)
 
@@ -87,10 +87,11 @@
 | ------ | --------- |
 | [`src/cards/index.ts`](../../../src/cards/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## ai (8)
+## ai (9)
 
 | ソース | 参照ルール |
 | ------ | --------- |
+| [`src/ai/ability-ctx.ts`](../../../src/ai/ability-ctx.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ai/action-resolution.ts`](../../../src/ai/action-resolution.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) |
 | [`src/ai/index.ts`](../../../src/ai/index.ts) | _(参照なし)_ |
 | [`src/ai/match.ts`](../../../src/ai/match.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |

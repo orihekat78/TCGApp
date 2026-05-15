@@ -16,6 +16,7 @@ import { produce } from 'immer';
 import { enumerateMoves, type Move } from './move-enumerator.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-resolution.js';
 import { HeuristicPolicy } from './policies/heuristic.js';
+import { makePartnerAbilCtx, makeDeclaredAbilCtx } from './ability-ctx.js';
 
 type Player = 'self' | 'opp';
 
@@ -115,10 +116,25 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       return;
     }
     case 'partnerAbility': {
+      // Phase 8.8d: cost があれば pay → flow.useXxx (UI 側と対称な atomic)
+      const partnerCardId = state.players[byPlayer].partner.cardId;
+      const partnerDef = partnerCardId ? engine.cards.get(partnerCardId) : null;
+      const ab = partnerDef?.abilities.find((a) => a.id === move.abilityId);
+      if (ab?.cost && partnerCardId) {
+        const ctx = makePartnerAbilCtx(byPlayer, partnerCardId, move.abilityId);
+        engine.cost.pay(state, ab.cost, ctx);
+      }
       engine.flow.usePartnerAbility(state, byPlayer, move.abilityId, makeCtx(byPlayer));
       return;
     }
     case 'declaredAbility': {
+      // Phase 8.8d: 同じく cost あれば pay
+      const ctx = makeDeclaredAbilCtx(state, move.uid, move.abilityId);
+      if (ctx?.source.cardId) {
+        const def = engine.cards.get(ctx.source.cardId);
+        const ab = def?.abilities.find((a) => a.id === move.abilityId);
+        if (ab?.cost) engine.cost.pay(state, ab.cost, ctx);
+      }
       engine.flow.useDeclaredAbility(state, move.uid, move.abilityId, makeCtx(byPlayer));
       return;
     }

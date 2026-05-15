@@ -12,6 +12,7 @@
 
 import type { GameState, CardDef, AbilityDef } from '@/engine/types';
 import { engine } from '@/engine';
+import { makePartnerAbilCtx, makeDeclaredAbilCtx } from './ability-ctx.js';
 
 type Player = 'self' | 'opp';
 
@@ -137,18 +138,28 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   }
 
   // 5. partnerAbility (declared のみ)
+  // Phase 8.8d: ability.cost が払えない候補は除外
+  const partnerCardId = state.players[byPlayer].partner.cardId;
   for (const ab of partnerDeclaredAbilities(state, byPlayer)) {
-    if (engine.flow.canPartnerAbility(state, byPlayer, ab.id)) {
-      moves.push({ kind: 'partnerAbility', abilityId: ab.id });
+    if (!engine.flow.canPartnerAbility(state, byPlayer, ab.id)) continue;
+    if (ab.cost && partnerCardId) {
+      const ctx = makePartnerAbilCtx(byPlayer, partnerCardId, ab.id);
+      if (!engine.cost.canPay(state, ab.cost, ctx)) continue;
     }
+    moves.push({ kind: 'partnerAbility', abilityId: ab.id });
   }
 
   // 6. declaredAbility (scene 順 × ability 順)
+  // Phase 8.8d: 同じく cost.canPay フィルタ
   for (const c of state.players[byPlayer].scene) {
     for (const ab of charDeclaredAbilities(c.cardId)) {
-      if (engine.flow.canDeclaredAbility(state, c.uid, ab.id)) {
-        moves.push({ kind: 'declaredAbility', uid: c.uid, abilityId: ab.id });
+      if (!engine.flow.canDeclaredAbility(state, c.uid, ab.id)) continue;
+      if (ab.cost) {
+        const ctx = makeDeclaredAbilCtx(state, c.uid, ab.id);
+        if (!ctx) continue;
+        if (!engine.cost.canPay(state, ab.cost, ctx)) continue;
       }
+      moves.push({ kind: 'declaredAbility', uid: c.uid, abilityId: ab.id });
     }
   }
 
