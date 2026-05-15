@@ -11,8 +11,9 @@
 
 .hand-zone {
   /* layout tokens (親側で上書き可) */
-  --hand-card-w: 88px;
-  --hand-card-h: 124px;
+  /* Phase 8.5: 拡大時にコンテナを満たすサイズに増大 (ユーザ要望) */
+  --hand-card-w: 116px;
+  --hand-card-h: 162px;
   --hand-gap: 8px;
 
   --hand-neon:    var(--neon-blue, #4ec3ff);
@@ -170,7 +171,16 @@
 /* ---- expanded ---- */
 .hand-zone.hand-zone--expanded {
   position: relative;
-  padding-top: 22px;
+  /* Phase 8.5: 余白を最小化、カードが上下フィットするように */
+  padding-top: 6px;
+  padding-bottom: 6px;
+  cursor: pointer; /* backdrop click で閉じる UI cue */
+}
+.hand-zone--expanded .hand-card {
+  cursor: default; /* カード自体は閉じる対象外 */
+}
+.hand-zone--expanded .hand-close-btn {
+  cursor: pointer;
 }
 .hand-zone--expanded .hand-cards-row {
   display: flex;
@@ -291,7 +301,8 @@
 
 /* featured = hover/focus 相当の強調 */
 .hand-zone .hand-card.featured {
-  transform: translateY(-12px) scale(1.04);
+  /* Phase 8.5: 拡大手札の上余白を詰めたためポップ量を縮小 */
+  transform: translateY(-4px) scale(1.04);
   box-shadow: 0 8px 24px color-mix(in oklch, var(--hand-neon) 50%, transparent),
     0 0 0 2px var(--hand-neon);
   z-index: 5;

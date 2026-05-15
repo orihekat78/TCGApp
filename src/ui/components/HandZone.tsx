@@ -187,13 +187,21 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     );
   }
 
-  // 展開モード: 実寸カード + × 閉じるボタン (オーバーレイ風)。
+  // 展開モード: 実寸カード + × 閉じるボタン + 空白クリックでも閉じる
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    // クリックがコンテナ本体 (背景) なら閉じる。カード/ボタンの onClick は stopPropagation 不要 (target が異なる)。
+    if (e.target === e.currentTarget && onCollapse) onCollapse();
+  };
+  const handleRowBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    if (e.target === e.currentTarget && onCollapse) onCollapse();
+  };
   return (
     <div
       className="hand-zone hand-zone--expanded"
       role="list"
       aria-label={`手札 ${cards.length} 枚`}
       data-count={cards.length}
+      onClick={handleBackdropClick}
     >
       {onCollapse && (
         <button
@@ -205,7 +213,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
           ×
         </button>
       )}
-      <div className="hand-cards-row">
+      <div className="hand-cards-row" onClick={handleRowBackdropClick}>
         {cards.map((c) => {
           const usable = canUse ? canUse(c) : true;
           const isFeatured = featuredCardId === c.cardId;

@@ -234,8 +234,8 @@
 }
 /* expanded: 実寸カード + × 閉じる。play-area の下半分にオーバーレイする想定。 */
 .stage .hand-zone.hand-zone--expanded {
-  /* HandCard 88×124 + padding-top 22 + featured pop 余白 + close-btn 上端 */
-  height: 168px;
+  /* Phase 8.5: カード 162 + padding 上下 12 + featured pop 4 = 178、丸めて 180 */
+  height: 180px;
   background: rgba(10, 14, 26, 0.92);
   border: 1px solid color-mix(in oklch, var(--neon-blue) 40%, transparent);
   border-radius: 6px;
