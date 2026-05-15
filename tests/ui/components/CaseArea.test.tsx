@@ -38,11 +38,33 @@ describe('CaseArea', () => {
     ));
     expect(html).toMatch(/class="case-card portrait color-blue"/);
     expect(html).toMatch(/data-card-id="CASE-001"/);
+    expect(html).toMatch(/data-orientation="portrait"/);
     expect(html).toMatch(/class="case-title">テスト事件</);
     expect(html).toMatch(/EVT・青/);
     expect(html).toMatch(/class="case-lv">Lv 7</);
     expect(html).toMatch(/class="case-stamp">事件編</);
     expect(html).toMatch(/必要証拠 <strong>7<\/strong>（先攻）/);
+  });
+
+  it('renders landscape case card when orientation="landscape" (Phase 8.5)', () => {
+    const html = strip(renderToString(
+      <CaseArea
+        caseInfo={makeCase({ orientation: 'landscape' })}
+        turnOrder="first"
+        side="self"
+      />,
+    ));
+    expect(html).toMatch(/class="case-card landscape color-blue"/);
+    expect(html).toMatch(/data-orientation="landscape"/);
+    expect(html).not.toMatch(/case-card portrait/);
+  });
+
+  it('defaults to portrait orientation when caseInfo.orientation is undefined', () => {
+    const html = strip(renderToString(
+      <CaseArea caseInfo={makeCase()} turnOrder="first" side="self" />,
+    ));
+    // makeCase() does not set orientation → portrait
+    expect(html).toMatch(/data-orientation="portrait"/);
   });
 
   it('applies .resolved class to stamp when status is 解決編', () => {

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `9219b6d61356`
+> Source hash: `0959250f06dd`
 
 仕様書 [`hiramekiDraw`](../../../specs/shared-classes/hiramekiDraw.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

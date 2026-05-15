@@ -34,6 +34,9 @@ export type CaseMeta = {
   title: string;
   color: CardColor;
   level: number;
+  /** カードの向き。cards.json に orientation 情報が無い場合は portrait に解決される。
+   *  Phase 8.5 追加 — landscape promo / 拡張用 (MVP CT-D08/CT-D11 は portrait のみ)。 */
+  orientation?: 'portrait' | 'landscape';
 };
 
 const JP_COLOR_TO_EN: Record<string, CardColor> = {
@@ -152,6 +155,11 @@ export function createCaseResolver(
     if (!raw || raw.type !== '事件') {
       return { title: cardId, color: 'blue', level: 0 };
     }
+    // Phase 8.5: cards.json に orientation フィールドがあれば反映、無ければ portrait。
+    // raw.orientation は未定義の可能性が高いので optional として読む。
+    const rawAny = raw as RawCard & { orientation?: string };
+    const orientation: 'portrait' | 'landscape' =
+      rawAny.orientation === 'landscape' ? 'landscape' : 'portrait';
     return {
       title: raw.title,
       color: mapColor(raw.color),
@@ -162,6 +170,7 @@ export function createCaseResolver(
         parseIntSafe(raw.difficultySecond),
         parseIntSafe(raw.cost),
       ),
+      orientation,
     };
   };
 }

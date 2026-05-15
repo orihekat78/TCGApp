@@ -41,7 +41,7 @@ export type PlaymatProps = {
    * 事件 cardId → 表示用メタ解決 (任意)。
    * 指定なしの場合は cardId をタイトルにフォールバックする placeholder ロジック。
    */
-  resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number };
+  resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number; orientation?: 'portrait' | 'landscape' };
   /**
    * 手札 cardId → HandCardMeta 解決 (任意)。
    * 指定なしの場合は HandZone は空表示。
@@ -53,7 +53,7 @@ type PlayerMatProps = {
   side: 'self' | 'opp';
   state: GameState | null;
   resolveCard: (cardId: string) => ResolvedCardMeta;
-  resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number };
+  resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number; orientation?: 'portrait' | 'landscape' };
 };
 
 function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): JSX.Element {
@@ -72,6 +72,7 @@ function PlayerMat({ side, state, resolveCard, resolveCase }: PlayerMatProps): J
           level: resolved?.level ?? engineCase.requiredEvidence,
           status: engineCase.status,
           requiredEvidence: engineCase.requiredEvidence,
+          orientation: resolved?.orientation ?? 'portrait',
         };
       })()
     : null;

@@ -95,6 +95,7 @@ describe('createCaseResolver', () => {
       title: 'テスト事件',
       color: 'blue',
       level: 7,  // max(difficultyFirst=7, difficultySecond=6, cost=7) = 7
+      orientation: 'portrait',
     });
   });
 
@@ -112,6 +113,7 @@ describe('createCaseResolver', () => {
       title: 'コストのみ事件',
       color: 'green',
       level: 8,
+      orientation: 'portrait',
     });
   });
 

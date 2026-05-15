@@ -17,6 +17,8 @@ export type CaseStatus = '事件編' | '解決編';
  * 表示用の事件メタ。engine の `players[side].case` (cardId / status / requiredEvidence
  * / colors) を cards.json から解決した結果を渡す想定。
  */
+export type CaseOrientation = 'portrait' | 'landscape';
+
 export type CaseInfo = {
   cardId: string;
   title: string;            // 事件タイトル (例: "月光に潜む古城の影")
@@ -24,6 +26,10 @@ export type CaseInfo = {
   level: number;            // 事件レベル
   status: CaseStatus;
   requiredEvidence: number; // 7 (先攻) or 6 (後攻)
+  /** カードの向き。MVP の CT-D08/CT-D11 は portrait。promo / 拡張 で landscape
+   *  が混ざる場合があるため、cards.json に orientation 情報が追加されたら
+   *  cardResolvers 経由で渡す。default は portrait。 */
+  orientation?: CaseOrientation;
 };
 
 export type CaseAreaProps = {
@@ -88,7 +94,11 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
           <span>事件</span>
         </div>
 
-        <div className={`case-card portrait color-${color}`} data-card-id={caseInfo.cardId}>
+        <div
+          className={`case-card ${caseInfo.orientation ?? 'portrait'} color-${color}`}
+          data-card-id={caseInfo.cardId}
+          data-orientation={caseInfo.orientation ?? 'portrait'}
+        >
           <div className="case-title">{titleNodes}</div>
           <div className="case-meta">
             <span>EVT・{COLOR_LABEL[color]}</span>
