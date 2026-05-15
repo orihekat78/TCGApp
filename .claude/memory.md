@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8d + 8.4 + 8.10a/b/c/d 完了 ✅
-**最新コミット**: Commit U — Phase 8.10d 他エリア登場アニメ (3 tests)
-**テスト状況**: 1272 PASS / 152 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: 手札/FILE/リムーブの各エリアでカード追加時に CSS-only fade-in アニメ。盤面全体で「新カード」が視覚的に区別可能
+**フェーズ**: Phase 8 (UI Interactions) 進行中 — Task 8.1〜8.8d + 8.4 + 8.10a/b/c/d/e 完了 ✅
+**最新コミット**: Commit V — Phase 8.10e コンタクト判定 log 追加 (3 tests)
+**テスト状況**: 1275 PASS / 153 test files / typecheck clean / docs:check clean
+**ブラウザ表示**: コンタクト判定 (AP 比較) の hit/miss がトーストに表示されるようになった (例: 「自分 / 判定 [hit]」)
 
 **未コミット作業**: なし
 
@@ -39,7 +39,8 @@
   - [x] **Phase 8.10b 最近のアクション通知トースト** (Commit S, 4 tests) — RecentActionToast + actionLabel pure 関数で log エントリを 日本語で表示
   - [x] **Phase 8.10c scene キャラ登場/状態遷移アニメ** (Commit T, 2 tests) — CSS-only fade-in + scale + transition、data-state 属性追加
   - [x] **Phase 8.10d 他エリア登場アニメ** (Commit U, 3 tests) — HandZone / FileArea / RemoveArea に CSS keyframe で fade-in、共通パターンで盤面統一
-  - [ ] **次のタスク順 (ユーザ指定)**: 1) Phase 8.10 残 (コンタクト判定演出) / 2) Phase 9.x PvP モーダル UI / 3) Task 8.4b 正規 setup wire
+  - [x] **Phase 8.10e コンタクト判定 log** (Commit V, 3 tests) — engine.flow.contact.judge に log.append 追加、actionLabel に 'contact-judge': '判定' 追加。既存 UI が自動的に拾う
+  - [ ] **次のタスク順 (ユーザ指定)**: 1) Phase 9.x PvP モーダル UI / 2) Task 8.4b 正規 setup wire / 3) Phase 8.10 さらなる演出 (フラッシュ等)
   - [ ] **次の候補**: Task 8.4 ゲーム開始モーダル / PvP モーダル UI (Phase 9.x) / アニメ (Phase 8.10)
   - [ ] 8.7-8.11 各種モーダル / 効果スタック UI / AI 進行 / アニメ / E2E
 - [ ] Phase 9: Polish (1000戦/チュートリアル)

@@ -228,6 +228,15 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
     { player: ax.byPlayer, uid: ax.byUid },
   );
 
+  // Phase 8.10e: judge 結果を state.log に記録 (UI の RecentActionToast / LogPanel が拾う)
+  mutate.log.append(state, {
+    ts: Date.now(),
+    player: ax.byPlayer,
+    turn: state.turn.number,
+    action: 'contact-judge',
+    result: defenderRemoved ? 'hit' : 'miss',
+  });
+
   return result;
 }
 

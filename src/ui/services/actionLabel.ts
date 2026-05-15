@@ -20,6 +20,7 @@ const LABELS: Record<string, string> = {
   'contact-cutin':   'カットイン',
   'contact-disguise':'変装',
   'contact-pass':    'パス',
+  'contact-judge':   '判定',
   'auto-phase':      'オートフェイズ',
 };
 

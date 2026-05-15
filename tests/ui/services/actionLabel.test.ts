@@ -24,4 +24,8 @@ describe('actionLabel', () => {
   it('returns raw action string for unknown action (fallback)', () => {
     expect(actionLabel(entry('unknownCustomAction'))).toBe('unknownCustomAction');
   });
+
+  it('maps "contact-judge" → "判定" (Phase 8.10e)', () => {
+    expect(actionLabel(entry('contact-judge'))).toBe('判定');
+  });
 });
