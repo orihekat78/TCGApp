@@ -191,6 +191,120 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
 }
 
 /**
+ * 宣言能力の source 候補列挙 (Phase 8.8b)。
+ *
+ * - 自プレイヤーの scene キャラのうち declared ability を持つ uid を返す
+ * - engine の canDeclaredAbility が必要となる ability ごとに判定されるため、
+ *   ここでは「最低 1 つの declared ability が canDeclaredAbility を満たす」キャラを抽出
+ * - case / partner は別フロー (8.8a パートナー能力 / case は engine 未対応)
+ */
+export function enumDeclaredAbilitySources(
+  state: import('@/engine/types/game-state.js').GameState,
+  player: Player,
+): string[] {
+  const sources: string[] = [];
+  for (const c of state.players[player].scene) {
+    const def = engine.cards.get(c.cardId);
+    if (!def) continue;
+    const hasUsable = def.abilities.some(
+      (a) => a.type === 'declared' && flow.canDeclaredAbility(state, c.uid, a.id),
+    );
+    if (hasUsable) sources.push(c.uid);
+  }
+  return sources;
+}
+
+/**
+ * 指定 uid の使用可能 declared ability ids を列挙 (Phase 8.8b)。
+ */
+export function enumDeclaredAbilityIdsFor(
+  state: import('@/engine/types/game-state.js').GameState,
+  uid: string,
+): string[] {
+  // uid から cardId を引く (scene を走査)
+  let cardId: string | null = null;
+  for (const p of ['self', 'opp'] as const) {
+    const c = state.players[p].scene.find((x) => x.uid === uid);
+    if (c) {
+      cardId = c.cardId;
+      break;
+    }
+  }
+  if (!cardId) return [];
+  const def = engine.cards.get(cardId);
+  if (!def) return [];
+  return def.abilities
+    .filter((a) => a.type === 'declared')
+    .filter((a) => flow.canDeclaredAbility(state, uid, a.id))
+    .map((a) => a.id);
+}
+
+/**
+ * 宣言能力フロー (Phase 8.8b, spec: ui-action-flows.md ④):
+ *   1. enumDeclaredAbilitySources で使用可能なキャラ uid を列挙
+ *   2. 0 件 → not-allowed
+ *   3. 1 件なら即その uid、複数なら picker (purpose='declared-ability:source')
+ *   4. 選択 source の ability ids を列挙
+ *   5. 1 件なら即その abilId、複数なら picker (purpose='declared-ability:ability')
+ *   6. confirm → dispatch declaredAbility
+ *
+ * rules: 21-declared-ability-cost.md (cost は engine 内部、8.8c で UI 化予定)
+ *
+ * Phase 8.8b スコープ外: case 由来の declared ability (engine 未対応) /
+ * パートナーエリアの MR (rules/18) — 8.8a partnerAbility 経由なので別フロー
+ */
+export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<FlowResult> {
+  const state0 = useGameStateStore.getState().gameState;
+  if (state0 === null) return { ok: false, reason: 'no-state' };
+  const sources = enumDeclaredAbilitySources(state0, opts.player);
+  if (sources.length === 0) return { ok: false, reason: 'not-allowed' };
+
+  const picker = useTargetPicker();
+
+  // 1) source 選択 (1 件なら省略)
+  let sourceUid: string;
+  if (sources.length === 1) {
+    sourceUid = sources[0];
+  } else {
+    const picked = await picker.start({ candidates: sources, purpose: 'declared-ability:source' });
+    if (picked === null) return { ok: false, reason: 'cancelled' };
+    sourceUid = picked;
+  }
+
+  // 2) ability 選択
+  const stateAfterSrc = useGameStateStore.getState().gameState;
+  if (stateAfterSrc === null) return { ok: false, reason: 'no-state' };
+  const abilIds = enumDeclaredAbilityIdsFor(stateAfterSrc, sourceUid);
+  if (abilIds.length === 0) return { ok: false, reason: 'not-allowed' };
+
+  let chosenAbilId: string;
+  if (abilIds.length === 1) {
+    chosenAbilId = abilIds[0];
+  } else {
+    const picked = await picker.start({ candidates: abilIds, purpose: 'declared-ability:ability' });
+    if (picked === null) return { ok: false, reason: 'cancelled' };
+    chosenAbilId = picked;
+  }
+
+  // 3) confirm
+  const accepted = await useConfirmation().ask({
+    kind: 'standard',
+    title: '宣言能力',
+    body: `${sourceUid} の ${chosenAbilId} を発動します。`,
+    okLabel: '発動',
+    cancelLabel: 'キャンセル',
+  });
+  if (!accepted) return { ok: false, reason: 'cancelled' };
+
+  // 4) dispatch
+  return dispatchEngineAction({
+    type: 'declaredAbility',
+    uid: sourceUid,
+    abilId: chosenAbilId,
+  });
+}
+
+/**
  * アクション宣言フローの target identifier: opp 事件 を表す virtual uid。
  *
  * picker.candidates に通常の scene uid と混ぜて入れることで、target ピッカー上で

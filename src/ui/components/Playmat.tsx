@@ -35,6 +35,7 @@ import {
   runHandUseFlow,
   runActionFlow,
   runPartnerAbilityFlow,
+  runDeclaredAbilityFlow,
   canAssistForUi,
   canSolveCaseForUi,
   ACTION_CASE_TARGET_OPP,
@@ -347,9 +348,13 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               void runPartnerAbilityFlow({ player: 'self' });
               return;
             }
-            // 残: declared-ability (Phase 8.8b で配線予定)
+            if (id === 'declared-ability') {
+              void runDeclaredAbilityFlow({ player: 'self' });
+              return;
+            }
+            // 残作業はなし — 全 ActionsPanel item が配線済 (Phase 8.6〜8.8b 完了)
             // eslint-disable-next-line no-console
-            console.log(`[Phase 8.5] action item clicked (not yet wired): ${id}`);
+            console.warn(`[Playmat] unknown action item: ${id}`);
           }}
           narratorMessage={narratorMessage}
           logEntryCount={gameState?.log.length ?? 0}
@@ -389,6 +394,8 @@ function labelForPurpose(purpose: string): string {
     case 'assist':          return 'アシスト';
     case 'solveCase':       return '事件解決';
     case 'partner-ability': return 'パートナー能力';
+    case 'declared-ability:source':  return '宣言能力 source';
+    case 'declared-ability:ability': return '宣言能力';
     default:                return '対象';
   }
 }
