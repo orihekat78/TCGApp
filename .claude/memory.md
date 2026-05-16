@@ -22,7 +22,8 @@
 - [x] **Phase 9a-2 チュートリアル L1-L5** (Commit Z, 3 tests) — 13 step 追加 (L1 デッキ / L2 場 / L3 ターン / L4 推理 / L5 パートナー)
 - [x] **Phase 9b チュートリアル L6-L10 コンタクト** (Commit AA) — 10 step 追加 (L6 アクション宣言 / L7 ガード / L8 AP 判定 / L9 カットイン / L10 変装)
 - [x] **Phase 9c チュートリアル L11-L13 アドバンスド** (Commit AB) — 7 step 追加 (L11 ヒラメキ / アクション[事件] / L12 リフレッシュ / 痕跡 / L13 MR)
-- [ ] **次のタスク**: Phase 8.10 残演出 / PvP モーダル UI / 9d インタラクティブ強化 (TutorialStepGuide ハイライト)
+- [x] **Phase 8.10f コンタクト判定フラッシュ** (Commit AC, 4 tests) — ContactFlash 新規 (hit=赤 / miss=青) を App.tsx にマウント
+- [ ] **次のタスク**: Phase 8.10g (リムーブ fade / 証拠追加演出) / PvP モーダル UI / 9d インタラクティブ強化
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
 ## 次セッション開始時の最優先タスク
