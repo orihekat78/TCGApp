@@ -240,6 +240,18 @@ export class HeuristicPolicy implements AIPolicy {
     if (bestAp < attackerAp) return null;
     return best.uid;
   }
+
+  /**
+   * Phase 8 完全クローズ Commit 3a: ヒラメキ発動判定。
+   * ヒラメキは「証拠を失ったお詫び」として手札 +1 / 相手キャラ stun といった
+   * 防御リソース系効果のため、常に発動するのが定石。MVP 単純実装で常に true。
+   */
+  chooseHiramekiTrigger(
+    _state: GameState,
+    _pending: { cardId: string; abilityId: string },
+  ): boolean {
+    return true;
+  }
 }
 
 /**

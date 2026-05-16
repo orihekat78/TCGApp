@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `225868b68031`
+> Source hash: `338ee780b7a4`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -13,6 +13,7 @@
 ## 🧩 関連 Engine Namespace
 
 - [`engine.flow`](../by-engine/flow.md) — [`api/flow`](../../api/flow.md)
+- [`engine.listeners`](../by-engine/listeners.md)
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
 
 ## 📐 関連 Spec
@@ -21,7 +22,7 @@
 - [`hiramekiCharStun`](../by-spec/shared-classes--hiramekiCharStun.md)
 - [`hiramekiDraw`](../by-spec/shared-classes--hiramekiDraw.md)
 
-## 📄 参照ソース (13)
+## 📄 参照ソース (15)
 
 - [`src/cards/_shared/hiramekiCharStun.ts`](../../../../src/cards/_shared/hiramekiCharStun.ts)
 - [`src/cards/_shared/hiramekiDraw.ts`](../../../../src/cards/_shared/hiramekiDraw.ts)
@@ -34,5 +35,7 @@
 - [`src/cards/ct-d11/D11010.ts`](../../../../src/cards/ct-d11/D11010.ts)
 - [`src/cards/ct-d11/D11012.ts`](../../../../src/cards/ct-d11/D11012.ts)
 - [`src/engine/flow/action-case.ts`](../../../../src/engine/flow/action-case.ts)
+- [`src/engine/listeners/hirameki.ts`](../../../../src/engine/listeners/hirameki.ts)
 - [`src/engine/mutate/evidence.ts`](../../../../src/engine/mutate/evidence.ts)
 - [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)
+- [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../../src/ui/hooks/useHiramekiFlowDriver.ts)

@@ -31,6 +31,26 @@ export type GameStateStore = {
    */
   activeActionId: string | null;
   setActiveActionId: (id: string | null) => void;
+  /**
+   * Phase 8 完全クローズ Commit 3a: アクション[事件] による証拠リムーブで
+   * ヒラメキ能力が検出された時の保留状態。
+   * - engine listener (`src/engine/listeners/hirameki.ts`) が
+   *   `evidence:remove-by-action` 発火で側チャネル経由で set
+   * - useHiramekiFlowDriver が監視し、self owner ならモーダル / opp owner なら AI 自動
+   * - `hiramekiResolve` dispatch で fire/skip 決定 → クリア
+   */
+  pendingHirameki: PendingHirameki | null;
+  setPendingHirameki: (p: PendingHirameki | null) => void;
+};
+
+/** ヒラメキ保留 (Commit 3a) */
+export type PendingHirameki = {
+  /** 証拠の所有者 = ヒラメキ発動権利者 */
+  player: 'self' | 'opp';
+  /** 元証拠カードの cardId */
+  cardId: string;
+  /** 発動対象 ability id */
+  abilityId: string;
 };
 
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
@@ -43,4 +63,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   },
   activeActionId: null,
   setActiveActionId: (id) => set({ activeActionId: id }),
+  pendingHirameki: null,
+  setPendingHirameki: (p) => set({ pendingHirameki: p }),
 }));

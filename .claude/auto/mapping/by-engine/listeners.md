@@ -1,0 +1,17 @@
+# 🤖 Engine ハブ: engine.listeners
+
+> ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
+> 再生成: `npm run docs:mapping`
+> Source hash: `fa1c70260dee`
+
+`src/engine/listeners/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
+
+> 注: `engine.listeners` は型定義 namespace で public API ハブ無し。ソース参照のみ。
+
+## 📜 参照 Rule (1)
+
+- [`10-action-event.md`](../by-rule/10-action-event.md)
+
+## 📄 ソース (1)
+
+- [`src/engine/listeners/hirameki.ts`](../../../../src/engine/listeners/hirameki.ts)

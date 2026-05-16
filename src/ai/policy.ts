@@ -75,6 +75,17 @@ export interface AIPolicy {
     candidates: ReadonlyArray<string>,
   ): string | null;
 
+  /**
+   * Phase 8 完全クローズ Commit 3a: ヒラメキ発動/スキップ判定 (optional)。
+   * 自分の証拠 (ヒラメキ持ち) がアクション[事件]でリムーブされる際、
+   * 発動するか (true) スキップするか (false) を決める。
+   * 未実装ポリシーは省略可 — その場合 driver 側は true で fallback。
+   */
+  chooseHiramekiTrigger?(
+    state: GameState,
+    pending: { cardId: string; abilityId: string },
+  ): boolean;
+
   /** Identifier for logging / debug */
   readonly name: string;
 }

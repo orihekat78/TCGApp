@@ -21,6 +21,9 @@ import type { GameState } from '@/engine/types/game-state.js';
 import type { Cost, EffectCtx } from '@/engine/types';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
+import { event as engineEvent } from '@/engine/event/index.js';
+import { def as readDef } from '@/engine/read/def.js';
+import { _drainPendingHirameki } from '@/engine/listeners/hirameki.js';
 
 type Player = 'self' | 'opp';
 
@@ -60,6 +63,8 @@ export type EngineAction =
   | { type: 'actionContact'; actionId: string; player: Player; choice: ContactChoice }
   | { type: 'actionAdvance'; actionId: string }
   | { type: 'actionJudge'; actionId: string }
+  // Phase 8 完全クローズ Commit 3a: ヒラメキ発動 / スキップ決定
+  | { type: 'hiramekiResolve'; choice: 'fire' | 'skip' }
   | { type: 'endTurn'; player: Player };
 
 export type DispatchResult =
@@ -138,6 +143,10 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'actionJudge': {
       const ax = flow.action._getContext(action.actionId);
       return !!ax && ax.phase === 'judge';
+    }
+    case 'hiramekiResolve': {
+      // pendingHirameki が set されているときのみ有効
+      return useGameStateStore.getState().pendingHirameki !== null;
     }
     case 'endTurn':
       // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
@@ -247,6 +256,28 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       }
       return;
     }
+    case 'hiramekiResolve': {
+      const pending = useGameStateStore.getState().pendingHirameki;
+      if (!pending) return;
+      if (action.choice === 'fire') {
+        // ability の effect を pendingEffects に queue → runAllUntilEmpty で解決
+        const def = readDef.card(pending.cardId);
+        const ability = def?.abilities.find(
+          (a: unknown) => a !== null && typeof a === 'object' && (a as { id?: string }).id === pending.abilityId,
+        ) as { effect?: unknown } | undefined;
+        if (ability?.effect) {
+          engineEvent.queue(
+            draft,
+            ability.effect as never,
+            { player: pending.player, cardId: pending.cardId },
+            'evidence:remove-by-action',
+            { player: pending.player, ev: { cardId: pending.cardId } },
+          );
+        }
+      }
+      // クリアは produce 後に dispatchEngineAction が行う
+      return;
+    }
     case 'endTurn':
       flow.endTurn(draft, action.player);
       return;
@@ -286,6 +317,16 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     if (_justDeclaredAxId) {
       store.setActiveActionId(_justDeclaredAxId);
       _justDeclaredAxId = null;
+    }
+    // Commit 3a: evidence:remove-by-action listener が側チャネルにセットしていれば
+    // Zustand pendingHirameki に転送。
+    const hiramekiSide = _drainPendingHirameki();
+    if (hiramekiSide) {
+      store.setPendingHirameki(hiramekiSide);
+    }
+    // hiramekiResolve dispatch 後は pendingHirameki をクリア
+    if (action.type === 'hiramekiResolve') {
+      store.setPendingHirameki(null);
     }
     return { ok: true };
   } catch (e) {

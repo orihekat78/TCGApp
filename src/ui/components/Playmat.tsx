@@ -46,9 +46,13 @@ import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.
 import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
 import { useContactFlowDriver } from '../hooks/useContactFlowDriver.js';
 import { useContactModalStore } from '../hooks/useContactModalStore.js';
+import { useHiramekiFlowDriver } from '../hooks/useHiramekiFlowDriver.js';
 import { GuardPickerModal } from './GuardPickerModal.js';
 import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
+import { HiramekiPickerModal } from './HiramekiPickerModal.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
+import { useGameStateStore } from '../state/store.js';
+import { def as readDef } from '@/engine/read/def.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -183,6 +187,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useOppTurnDriver();
   // Phase 8 完全クローズ Commit 2: contact フロー (declare→ガード→コンタクト→AP判定) 駆動。
   useContactFlowDriver();
+  // Phase 8 完全クローズ Commit 3a: ヒラメキ判定駆動 (opp owner なら AI 自動 / self owner はモーダル待ち)。
+  useHiramekiFlowDriver();
   // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
   const [handExpanded, setHandExpanded] = useState(false);
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
@@ -376,6 +382,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         <PlaymatGuardPickerModal />
         <PlaymatCutInDisguisePickerModal />
 
+        {/* Phase 8 完全クローズ Commit 3a: ヒラメキモーダル */}
+        <PlaymatHiramekiPickerModal />
+
         {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
             LogPanel は open=true のときのみオーバーレイで描画。 */}
         <LogPanel entries={gameState?.log ?? []} open={logOpen} />
@@ -416,6 +425,41 @@ function PlaymatGuardPickerModal(): JSX.Element | null {
         close();
         dispatchEngineAction({ type: 'actionGuard', actionId: current.actionId, guarderUid: null });
       }}
+    />
+  );
+}
+
+/**
+ * Phase 8 完全クローズ Commit 3a: HiramekiPickerModal ラッパ。
+ * useGameStateStore.pendingHirameki を subscribe し、self owner のとき open。
+ * fire/skip で hiramekiResolve dispatch + クリア。
+ */
+function PlaymatHiramekiPickerModal(): JSX.Element | null {
+  const pending = useGameStateStore((s) => s.pendingHirameki);
+  if (!pending || pending.player !== 'self') {
+    return (
+      <HiramekiPickerModal
+        open={false}
+        cardName=""
+        abilityText=""
+        onFire={() => {}}
+        onSkip={() => {}}
+      />
+    );
+  }
+  const def = readDef.card(pending.cardId);
+  const cardName = def?.names?.[0] ?? pending.cardId;
+  const ability = def?.abilities.find(
+    (a: unknown) => a !== null && typeof a === 'object' && (a as { id?: string }).id === pending.abilityId,
+  ) as { description?: string } | undefined;
+  const abilityText = ability?.description ?? 'ヒラメキ能力';
+  return (
+    <HiramekiPickerModal
+      open={true}
+      cardName={cardName}
+      abilityText={abilityText}
+      onFire={() => dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' })}
+      onSkip={() => dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' })}
     />
   );
 }

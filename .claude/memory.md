@@ -27,6 +27,16 @@
 - [x] **Phase 8.10 完了** (Commit AE, 16 tests) — g-2 SceneArea ゴースト fade-out / h CaseArea stamp-flip / i RefreshOverlay + engine refresh log / j VictoryOverlay
 - [x] **Phase 8.6α/β Commit 1** (`eb21e8c`, 9 tests) — GuardPickerModal + CutInDisguisePickerModal UI 単体 (engine 統合は次セッション)
 - [x] **Phase 8 完全クローズ Commit 2** (`770624e`, 12 tests) — per-step action dispatch + useContactFlowDriver
+- [x] **Phase 8 完全クローズ Commit 3a** (9 tests) — Hirameki end-to-end (engine listener + UI modal + AI policy)
+   - `src/engine/listeners/hirameki.ts` 新規: `evidence:remove-by-action` listener が type:'icon-flash' を検出 → 側チャネル `_pendingHiramekiSideChannel`
+   - `engine/index.ts` で init 時に `registerHiramekiListener()`
+   - `useGameStateStore.pendingHirameki` slice 追加 / `useEngineDispatch` が drain → Zustand 転送
+   - 新 dispatch `hiramekiResolve({choice:'fire'|'skip'})` — fire で `event.queue` 経由で effect を pendingEffects へ
+   - `useHiramekiFlowDriver` 新規: pending 監視 → opp owner なら AI 自動 / self owner はモーダル
+   - `HiramekiPickerModal` (新規 + CSS) と Playmat ホスト追加
+   - `HeuristicPolicy.chooseHiramekiTrigger` 実装 (常に true)
+   - `AIPolicy` interface に `chooseHiramekiTrigger?` 追加
+   - **Misread (rules/13) は Phase 5 task として Commit 3b に分離**
 - [x] **Phase 8 完全クローズ Commit 2.5** (6 tests) — playTurn pauseOnAction + useOppTurnDriver per-step contact integration
    - `playTurn` に `PlayTurnOptions { pauseOnAction?: boolean }` 追加 / `PlayTurnResult.paused?: { move }` で early return 可能化
    - `useOppTurnDriver.driveOppTurn` を pauseOnAction:true + paused 分岐に対応 / activeActionId 監視で再 fire

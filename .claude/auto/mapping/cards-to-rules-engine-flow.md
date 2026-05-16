@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `dd99fba14768`
+> Source hash: `c5cb5cca653b`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **78** ファイル（[全体 index](./index.md)）
+このグループ: **80** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (4)
 
@@ -53,7 +53,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (22)
+## engine (他) (23)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -70,6 +70,7 @@
 | [`src/engine/event/index.ts`](../../../src/engine/event/index.ts) | _(参照なし)_ |
 | [`src/engine/event/registry.ts`](../../../src/engine/event/registry.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/index.ts`](../../../src/engine/index.ts) | _(参照なし)_ |
+| [`src/engine/listeners/hirameki.ts`](../../../src/engine/listeners/hirameki.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/engine/produce.ts`](../../../src/engine/produce.ts) | _(参照なし)_ |
 | [`src/engine/resolve/index.ts`](../../../src/engine/resolve/index.ts) | _(参照なし)_ |
 | [`src/engine/resolve/stack.ts`](../../../src/engine/resolve/stack.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
@@ -80,7 +81,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (26)
+## その他 (27)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -95,6 +96,7 @@
 | [`src/ui/hooks/useEngineDispatch.ts`](../../../src/ui/hooks/useEngineDispatch.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ui/hooks/useEvidence.ts`](../../../src/ui/hooks/useEvidence.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useFile.ts`](../../../src/ui/hooks/useFile.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../src/ui/hooks/useHiramekiFlowDriver.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useOppTurnDriver.ts`](../../../src/ui/hooks/useOppTurnDriver.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/usePartner.ts`](../../../src/ui/hooks/usePartner.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`18-mr.md`](../../rules/18-mr.md) |

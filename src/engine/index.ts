@@ -12,8 +12,14 @@ import { cond } from './cond/index.js';
 import { resolve } from './resolve/index.js';
 import { flow } from './flow/index.js';
 import { cards } from './cards/index.js';
+import { registerHiramekiListener } from './listeners/hirameki.js';
 
 const effect = { runAtom, run: effectRun, validate: effectValidate };
+
+// Phase 8 完全クローズ Commit 3a: engine init 時に listener を登録。
+// listener registry はモジュールレベル singleton (event/registry.ts) なので
+// 1 回だけ呼べばよい (registerHiramekiListener 内部でも _registered ガード)。
+registerHiramekiListener();
 
 export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve, flow, cards };
 
