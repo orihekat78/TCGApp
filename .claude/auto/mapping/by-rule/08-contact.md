@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `548af1bff278`
+> Source hash: `0b8d32558883`
 
 公式ルール [`08-contact.md`](../../../rules/08-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,7 +20,7 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (13)
+## 📄 参照ソース (15)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -35,3 +35,5 @@
 - [`src/engine/types/effect.ts`](../../../../src/engine/types/effect.ts)
 - [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
 - [`src/engine/types/results.ts`](../../../../src/engine/types/results.ts)
+- [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)
+- [`src/ui/hooks/useContactModalStore.ts`](../../../../src/ui/hooks/useContactModalStore.ts)

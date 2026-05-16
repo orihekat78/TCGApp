@@ -44,6 +44,11 @@ import * as engineFlow from '@/engine/flow/index.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
 import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
+import { useContactFlowDriver } from '../hooks/useContactFlowDriver.js';
+import { useContactModalStore } from '../hooks/useContactModalStore.js';
+import { GuardPickerModal } from './GuardPickerModal.js';
+import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
+import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -176,6 +181,8 @@ function PlayerMat({
 export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }: PlaymatProps): JSX.Element {
   // Phase 8.7b: opp ターンを自動進行 (HeuristicPolicy + flow.endTurn で self へ戻す)
   useOppTurnDriver();
+  // Phase 8 完全クローズ Commit 2: contact フロー (declare→ガード→コンタクト→AP判定) 駆動。
+  useContactFlowDriver();
   // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
   const [handExpanded, setHandExpanded] = useState(false);
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
@@ -365,6 +372,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* ConfirmModal — useConfirmation の state を全画面オーバーレイで描画 */}
         <PlaymatConfirmModal />
 
+        {/* Phase 8 完全クローズ Commit 2: コンタクトフロー用モーダル */}
+        <PlaymatGuardPickerModal />
+        <PlaymatCutInDisguisePickerModal />
+
         {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
             LogPanel は open=true のときのみオーバーレイで描画。 */}
         <LogPanel entries={gameState?.log ?? []} open={logOpen} />
@@ -382,6 +393,91 @@ function PlaymatConfirmModal(): JSX.Element | null {
   const current = useConfirmationStore((s) => s.current);
   const { accept, reject } = useConfirmation();
   return <ConfirmModal current={current} onAccept={accept} onReject={reject} />;
+}
+
+/**
+ * Phase 8 完全クローズ Commit 2: GuardPickerModal ラッパ。
+ * useContactModalStore.guardPicker を subscribe し、選択でガード dispatch。
+ */
+function PlaymatGuardPickerModal(): JSX.Element | null {
+  const current = useContactModalStore((s) => s.guardPicker);
+  if (!current) return <GuardPickerModal open={false} candidates={[]} onPick={() => {}} onSkip={() => {}} />;
+  const close = () => useContactModalStore.getState()._setGuardPicker(null);
+  return (
+    <GuardPickerModal
+      open={true}
+      candidates={current.candidates}
+      attackerName={current.attackerName}
+      onPick={(uid) => {
+        close();
+        dispatchEngineAction({ type: 'actionGuard', actionId: current.actionId, guarderUid: uid });
+      }}
+      onSkip={() => {
+        close();
+        dispatchEngineAction({ type: 'actionGuard', actionId: current.actionId, guarderUid: null });
+      }}
+    />
+  );
+}
+
+/**
+ * Phase 8 完全クローズ Commit 2: CutInDisguisePickerModal ラッパ。
+ * useContactModalStore.cutInDisguise を subscribe し、選択で actionContact + actionAdvance dispatch。
+ */
+function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
+  const current = useContactModalStore((s) => s.cutInDisguise);
+  if (!current) {
+    return (
+      <CutInDisguisePickerModal
+        open={false}
+        actorLabel="1番目"
+        candidates={[]}
+        onPickCutIn={() => {}}
+        onPickDisguise={() => {}}
+        onPass={() => {}}
+      />
+    );
+  }
+  const close = () => useContactModalStore.getState()._setCutInDisguise(null);
+  const dispatchAdvance = () =>
+    dispatchEngineAction({ type: 'actionAdvance', actionId: current.actionId });
+  return (
+    <CutInDisguisePickerModal
+      open={true}
+      actorLabel={current.actorLabel}
+      candidates={current.candidates}
+      onPickCutIn={(cardId) => {
+        close();
+        dispatchEngineAction({
+          type: 'actionContact',
+          actionId: current.actionId,
+          player: current.player,
+          choice: { kind: 'cutin', cardId },
+        });
+        dispatchAdvance();
+      }}
+      onPickDisguise={(cardId) => {
+        close();
+        dispatchEngineAction({
+          type: 'actionContact',
+          actionId: current.actionId,
+          player: current.player,
+          choice: { kind: 'disguise', cardId },
+        });
+        dispatchAdvance();
+      }}
+      onPass={() => {
+        close();
+        dispatchEngineAction({
+          type: 'actionContact',
+          actionId: current.actionId,
+          player: current.player,
+          choice: { kind: 'pass' },
+        });
+        dispatchAdvance();
+      }}
+    />
+  );
 }
 
 /** picker.purpose を表示用ラベルに変換 (Phase 8.6 reasoning 等)。 */

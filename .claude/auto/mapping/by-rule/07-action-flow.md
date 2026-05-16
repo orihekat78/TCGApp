@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `548af1bff278`
+> Source hash: `0b8d32558883`
 
 公式ルール [`07-action-flow.md`](../../../rules/07-action-flow.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (18)
+## 📄 参照ソース (20)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -40,4 +40,6 @@
 - [`src/engine/types/effect.ts`](../../../../src/engine/types/effect.ts)
 - [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
 - [`src/engine/types/results.ts`](../../../../src/engine/types/results.ts)
+- [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)
+- [`src/ui/hooks/useContactModalStore.ts`](../../../../src/ui/hooks/useContactModalStore.ts)
 - [`src/ui/hooks/useTargetPicker.ts`](../../../../src/ui/hooks/useTargetPicker.ts)

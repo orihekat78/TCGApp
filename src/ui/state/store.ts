@@ -22,6 +22,15 @@ export type GameStateStore = {
    * gameState が null の場合は何もしない（mutator も呼ばれない）。
    */
   dispatch: (mutator: GameStateMutator) => void;
+  /**
+   * Phase 8 完全クローズ Commit 2: 進行中の ActionContext.id を保持。
+   * - actionDeclareChar/Case dispatch 直後にセット
+   * - useContactFlowDriver が監視し phase ごとにモーダル open / AI 自動進行
+   * - phase='action-end' に到達したら driver が null にクリア
+   * GameState には積まない理由は src/engine/flow/action/state-machine.ts の冒頭コメント参照。
+   */
+  activeActionId: string | null;
+  setActiveActionId: (id: string | null) => void;
 };
 
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
@@ -32,4 +41,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     if (current === null) return;
     set({ gameState: mutator(current) });
   },
+  activeActionId: null,
+  setActiveActionId: (id) => set({ activeActionId: id }),
 }));

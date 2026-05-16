@@ -30,6 +30,17 @@ type Player = 'self' | 'opp';
  * - assist / solveCase は flow に専用ラッパが無いため `mutate.partner.*` を直叩き
  *   (`src/ai/policy.ts` と同じ運用)。can-check は move-enumerator と同じ条件を inline。
  */
+/**
+ * Phase 8 完全クローズ Commit 2: コンタクト 中の人間プレイヤーの選択肢。
+ *  - 'cutin': 手札のカットイン能力カードを選択
+ *  - 'disguise': 手札の変装能力カードを選択
+ *  - 'pass': 行動しない
+ */
+export type ContactChoice =
+  | { kind: 'cutin'; cardId: string }
+  | { kind: 'disguise'; cardId: string }
+  | { kind: 'pass' };
+
 export type EngineAction =
   | { type: 'reasoning'; uid: string }
   | { type: 'handUseCard'; player: Player; cardId: string }
@@ -40,11 +51,29 @@ export type EngineAction =
   | { type: 'solveCase'; player: Player }
   | { type: 'actionAgainstChar'; byUid: string; targetUid: string }
   | { type: 'actionAgainstCase'; byUid: string; targetPlayer: Player }
+  // Phase 8 完全クローズ Commit 2: per-step action dispatch
+  // - 既存 actionAgainstChar / actionAgainstCase は CPU vs CPU 用に温存
+  // - 新 dispatch は useContactFlowDriver と組み合わせて人間プレイヤー介入を実現
+  | { type: 'actionDeclareChar'; byUid: string; targetUid: string }
+  | { type: 'actionDeclareCase'; byUid: string; targetPlayer: Player }
+  | { type: 'actionGuard'; actionId: string; guarderUid: string | null }
+  | { type: 'actionContact'; actionId: string; player: Player; choice: ContactChoice }
+  | { type: 'actionAdvance'; actionId: string }
+  | { type: 'actionJudge'; actionId: string }
   | { type: 'endTurn'; player: Player };
 
 export type DispatchResult =
   | { ok: true }
   | { ok: false; reason: 'no-state' | 'not-allowed' | 'engine-error'; detail?: string };
+
+/**
+ * Phase 8 完全クローズ Commit 2: actionDeclareChar/Case 直後に
+ * `flow.action.declare()` が返した ActionContext.id を runEngineAction から
+ * dispatchEngineAction へ伝える側チャネル (produce 境界を越えるため必要)。
+ * 各 dispatch 開始時に null リセット → declare 時にセット → produce 完了後に
+ * dispatchEngineAction が store.setActiveActionId へ転送して null に戻す。
+ */
+let _justDeclaredAxId: string | null = null;
 
 // ---- can-check (前段ガード) ----
 
@@ -81,6 +110,35 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
       return flow.canActionAgainstChar(state, action.byUid, action.targetUid);
     case 'actionAgainstCase':
       return flow.canActionAgainstCase(state, action.byUid, action.targetPlayer);
+    // Phase 8 完全クローズ Commit 2: per-step action dispatch can-check
+    case 'actionDeclareChar':
+      return flow.canActionAgainstChar(state, action.byUid, action.targetUid);
+    case 'actionDeclareCase':
+      return flow.canActionAgainstCase(state, action.byUid, action.targetPlayer);
+    case 'actionGuard': {
+      const ax = flow.action._getContext(action.actionId);
+      if (!ax) return false;
+      if (ax.phase !== 'guard-window') return false;
+      if (action.guarderUid === null) return true; // pass はいつでも可
+      return flow.guard.canGuard(state, ax.byUid, action.guarderUid);
+    }
+    case 'actionContact': {
+      const ax = flow.action._getContext(action.actionId);
+      if (!ax) return false;
+      if (ax.phase !== 'action-1' && ax.phase !== 'action-2' && ax.phase !== 'action-1-redo') return false;
+      if (action.choice.kind === 'pass') return true;
+      if (action.choice.kind === 'cutin') return flow.contact.canCutIn(state, ax, action.player, action.choice.cardId);
+      if (action.choice.kind === 'disguise') return flow.contact.canDisguise(state, ax, action.player, action.choice.cardId);
+      return false;
+    }
+    case 'actionAdvance': {
+      const ax = flow.action._getContext(action.actionId);
+      return !!ax && ax.phase !== 'action-end';
+    }
+    case 'actionJudge': {
+      const ax = flow.action._getContext(action.actionId);
+      return !!ax && ax.phase === 'judge';
+    }
     case 'endTurn':
       // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
       return state.turn.player === action.player && state.turn.phase === 'main';
@@ -130,6 +188,65 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'actionAgainstCase':
       resolveActionAgainstCase(draft, action.byUid, action.targetPlayer);
       return;
+    // Phase 8 完全クローズ Commit 2: per-step action dispatch
+    case 'actionDeclareChar': {
+      const ax = flow.action.declare(draft, action.byUid, { kind: 'char', uid: action.targetUid });
+      _justDeclaredAxId = ax.id;
+      return;
+    }
+    case 'actionDeclareCase': {
+      const ax = flow.action.declare(draft, action.byUid, { kind: 'case', player: action.targetPlayer });
+      _justDeclaredAxId = ax.id;
+      return;
+    }
+    case 'actionGuard': {
+      const ax = flow.action._getContext(action.actionId);
+      if (!ax) return;
+      if (action.guarderUid === null) {
+        flow.action.passGuard(draft, ax);
+      } else {
+        flow.action.tryGuard(draft, ax, action.guarderUid);
+      }
+      return;
+    }
+    case 'actionContact': {
+      const ax = flow.action._getContext(action.actionId);
+      if (!ax) return;
+      // first/second の actedフラグも更新 (advance() の redo 判定用)
+      const actorUid =
+        action.player === ax.byPlayer ? ax.byUid : (ax.guardUid ?? (ax.target.kind === 'char' ? ax.target.uid : ''));
+      const isFirst = ax.firstUid === actorUid;
+      if (action.choice.kind === 'cutin') {
+        flow.contact.cutIn(draft, ax, action.player, action.choice.cardId);
+        if (isFirst) ax.firstActed = true; else ax.secondActed = true;
+      } else if (action.choice.kind === 'disguise') {
+        flow.contact.disguise(draft, ax, action.player, action.choice.cardId);
+        if (isFirst) ax.firstActed = true; else ax.secondActed = true;
+      } else {
+        flow.contact.pass(draft, ax, action.player);
+        if (isFirst) ax.firstActed = false; else ax.secondActed = false;
+      }
+      return;
+    }
+    case 'actionAdvance': {
+      const ax = flow.action._getContext(action.actionId);
+      if (!ax) return;
+      flow.action.advance(draft, ax);
+      return;
+    }
+    case 'actionJudge': {
+      const ax = flow.action._getContext(action.actionId);
+      if (!ax) return;
+      if (ax.target.kind === 'case') {
+        // rules/10: 相手証拠リムーブ + 自証拠獲得
+        flow.actionCase.removeOpponentEvidenceTop(draft, ax);
+        flow.actionCase.gainSelfEvidence(draft, ax);
+      } else {
+        flow.action.snapshotAP(draft, ax);
+        flow.contact.judge(draft, ax);
+      }
+      return;
+    }
     case 'endTurn':
       flow.endTurn(draft, action.player);
       return;
@@ -155,6 +272,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
   if (current === null) return { ok: false, reason: 'no-state' };
   if (!isAllowed(current, action)) return { ok: false, reason: 'not-allowed' };
 
+  _justDeclaredAxId = null;
   try {
     store.dispatch((state) =>
       produce(state, (draft) => {
@@ -164,8 +282,14 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
         runAllUntilEmpty(draft);
       }),
     );
+    // Commit 2: declareChar/Case 直後は ActionContext.id を store.activeActionId にセット
+    if (_justDeclaredAxId) {
+      store.setActiveActionId(_justDeclaredAxId);
+      _justDeclaredAxId = null;
+    }
     return { ok: true };
   } catch (e) {
+    _justDeclaredAxId = null;
     const detail = e instanceof Error ? e.message : String(e);
     return { ok: false, reason: 'engine-error', detail };
   }

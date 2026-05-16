@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `548af1bff278`
+> Source hash: `0b8d32558883`
 
 公式ルール [`24-qa-naming-stun.md`](../../../rules/24-qa-naming-stun.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,7 +22,7 @@
 - [`hiramekiCharStun`](../by-spec/shared-classes--hiramekiCharStun.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (13)
+## 📄 参照ソース (14)
 
 - [`src/cards/_shared/hiramekiCharStun.ts`](../../../../src/cards/_shared/hiramekiCharStun.ts)
 - [`src/cards/_shared/partnerColorKeyword.ts`](../../../../src/cards/_shared/partnerColorKeyword.ts)
@@ -37,3 +37,4 @@
 - [`src/engine/flow/guard.ts`](../../../../src/engine/flow/guard.ts)
 - [`src/engine/flow/main/declared-ability.ts`](../../../../src/engine/flow/main/declared-ability.ts)
 - [`src/engine/types/card-def.ts`](../../../../src/engine/types/card-def.ts)
+- [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)

@@ -525,16 +525,21 @@ export async function runActionFlow(opts: { player: Player }): Promise<FlowResul
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
 
-  // 5. dispatch
+  // 5. dispatch — Phase 8 完全クローズ Commit 2:
+  //   人間プレイヤーが attacker の場合は per-step dispatch で driver に委譲する。
+  //   declare → ガード判定 → コンタクト → AP判定 までは useContactFlowDriver が
+  //   activeActionId を監視して進める (CPU defender は AI 自動・self defender は
+  //   将来追加されるモーダル経由)。既存の actionAgainstChar/actionAgainstCase は
+  //   CPU vs CPU シナリオ用に温存。
   if (isCase) {
     return dispatchEngineAction({
-      type: 'actionAgainstCase',
+      type: 'actionDeclareCase',
       byUid: source,
       targetPlayer: 'opp',
     });
   }
   return dispatchEngineAction({
-    type: 'actionAgainstChar',
+    type: 'actionDeclareChar',
     byUid: source,
     targetUid: target,
   });

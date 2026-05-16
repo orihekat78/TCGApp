@@ -171,13 +171,14 @@ describe('runActionFlow', () => {
     const result = await promise;
     expect(result.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
-    // target キャラがリムーブされた (AP 0 vs 0 → 引き分け以上で remove)
-    expect(after.players.opp.scene.find((c) => c.uid === 't1')).toBeUndefined();
+    // Phase 8 Commit 2: runActionFlow は declare のみ (FSM 完了は useContactFlowDriver の責務)
     // attacker s1 はスリープ済 (declare 時)
     expect(after.players.self.scene.find((c) => c.uid === 's1')?.state).toBe('sleep');
+    // activeActionId が set されている (driver 引き継ぎ用)
+    expect(useGameStateStore.getState().activeActionId).not.toBeNull();
   });
 
-  it('source pick → target case:opp pick → confirm accept → dispatch actionAgainstCase', async () => {
+  it('source pick → target case:opp pick → confirm accept → dispatch actionDeclareCase', async () => {
     useGameStateStore.setState({ gameState: setupForAction() });
     const promise = runActionFlow({ player: 'self' });
 
@@ -187,10 +188,8 @@ describe('runActionFlow', () => {
 
     const result = await promise;
     expect(result.ok).toBe(true);
-    const after = useGameStateStore.getState().gameState!;
-    // opp.evidence -1 / self.evidence +1
-    expect(after.players.opp.evidence.length).toBe(0);
-    expect(after.players.self.evidence.length).toBe(1);
+    // Phase 8 Commit 2: declare のみ完了 → activeActionId set / 後続 (証拠操作) は driver 担当
+    expect(useGameStateStore.getState().activeActionId).not.toBeNull();
   });
 
   it('returns cancelled when source picker cancels', async () => {
