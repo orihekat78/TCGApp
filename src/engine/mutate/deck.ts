@@ -3,6 +3,7 @@
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
 import type { GameState, CardId, RefreshResult } from '@/engine/types';
+import { log as logMut } from './log.js';
 
 type Player = 'self' | 'opp';
 type OrderMode = 'given' | 'reverse';
@@ -116,6 +117,15 @@ function refresh(s: GameState, p: Player): RefreshResult {
 
   // 相手 scratchTrace = '発見済' (rules/13, 26)
   s.scratchTrace[opp] = '発見済';
+
+  // Phase 8.10i: refresh を state.log に記録 (UI RefreshOverlay が拾う)
+  logMut.append(s, {
+    ts: Date.now(),
+    player: p,
+    turn: s.turn.number,
+    action: 'refresh',
+    result: String(reshuffled),
+  });
 
   return {
     ok: true,

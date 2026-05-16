@@ -5,9 +5,20 @@
 // 視覚: design-mockups/01-board-mockup.html 1326-1356 / 1452-1483 行 + 376-478 行 CSS
 // 由来: Claude Design (Research Preview) — engine 型に接続して取込み
 
-import type { JSX } from 'react';
+import { useEffect, useRef, useState, type JSX } from 'react';
 import type { SceneCharacter } from '@/engine/types/game-state.js';
 import './SceneArea.css';
+
+// Phase 8.10g-2: 前回キャラ配列と現キャラ配列を比較し、消えた SceneCharacter を返す
+export function pickRemovedCharacters(
+  prev: readonly SceneCharacter[],
+  current: readonly SceneCharacter[],
+): SceneCharacter[] {
+  const currentUids = new Set(current.map((c) => c.uid));
+  return prev.filter((c) => !currentUids.has(c.uid));
+}
+
+const GHOST_DURATION_MS = 420;
 
 export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
 
@@ -37,9 +48,11 @@ type SceneCharacterCardProps = {
   meta: ResolvedCardMeta;
   isCandidate: boolean;
   onClick?: () => void;
+  /** Phase 8.10g-2: ゴースト (fade-out 中) の場合 true → .removing クラスを付与 */
+  isGhost?: boolean;
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, isGhost }: SceneCharacterCardProps): JSX.Element {
   const ap = ch.apOverride ?? meta.ap;
   const lp = ch.lpOverride ?? meta.lp;
 
@@ -49,6 +62,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick }: SceneCharacterCa
     ch.state === 'sleep' && 'sleep',
     ch.state === 'stun' && 'stun',
     isCandidate && 'candidate',
+    isGhost && 'removing',
   ]
     .filter(Boolean)
     .join(' ');
@@ -60,8 +74,9 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick }: SceneCharacterCa
       className={classes}
       data-uid={ch.uid}
       data-state={ch.state}
-      onClick={isCandidate && onClick ? onClick : undefined}
-      style={isCandidate ? { cursor: 'pointer' } : undefined}
+      onClick={isCandidate && onClick && !isGhost ? onClick : undefined}
+      style={isCandidate && !isGhost ? { cursor: 'pointer' } : undefined}
+      aria-hidden={isGhost ? 'true' : undefined}
     >
       <div className="color-stripe" />
       <div className="art">
@@ -91,6 +106,30 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
   const filled = sorted.slice(0, maxSlots);
   const emptyCount = Math.max(0, maxSlots - filled.length);
 
+  // Phase 8.10g-2: ゴーストトラッカー — 前回いて今いないキャラを 420ms フェード表示
+  const prevCharsRef = useRef<SceneCharacter[]>([]);
+  const [ghosts, setGhosts] = useState<
+    Array<{ ch: SceneCharacter; meta: ResolvedCardMeta; key: string }>
+  >([]);
+
+  useEffect(() => {
+    const removed = pickRemovedCharacters(prevCharsRef.current, characters);
+    if (removed.length > 0) {
+      const ts = Date.now();
+      const newGhosts = removed.map((ch, i) => ({
+        ch,
+        meta: resolveCard(ch.cardId),
+        key: `${ch.uid}-${ts}-${i}`,
+      }));
+      const keys = newGhosts.map((g) => g.key);
+      setGhosts((prev) => [...prev, ...newGhosts]);
+      setTimeout(() => {
+        setGhosts((prev) => prev.filter((g) => !keys.includes(g.key)));
+      }, GHOST_DURATION_MS);
+    }
+    prevCharsRef.current = characters;
+  }, [characters, resolveCard]);
+
   return (
     <div
       className={`zone scene-col scene-zone scene-area side-${side}`}
@@ -118,6 +157,15 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
             />
           );
         })}
+        {ghosts.map((g) => (
+          <SceneCharacterCard
+            key={g.key}
+            ch={g.ch}
+            meta={g.meta}
+            isCandidate={false}
+            isGhost
+          />
+        ))}
         {Array.from({ length: emptyCount }).map((_, i) => (
           <div key={`empty-${i}`} className="slot-empty" />
         ))}

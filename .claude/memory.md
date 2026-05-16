@@ -24,7 +24,8 @@
 - [x] **Phase 9c チュートリアル L11-L13 アドバンスド** (Commit AB) — 7 step 追加 (L11 ヒラメキ / アクション[事件] / L12 リフレッシュ / 痕跡 / L13 MR)
 - [x] **Phase 8.10f コンタクト判定フラッシュ** (Commit AC, 4 tests) — ContactFlash 新規 (hit=赤 / miss=青) を App.tsx にマウント
 - [x] **Phase 8.10g-1 証拠追加バンプ** (Commit AD) — count-overlay を count 値 key で remount → CSS keyframe で拡大/光る
-- [ ] **次のタスク**: Phase 8.10g-2 (リムーブ fade-out / FLIP 基盤) / PvP モーダル UI / 9d インタラクティブ強化
+- [x] **Phase 8.10 完了** (Commit AE, 16 tests) — g-2 SceneArea ゴースト fade-out / h CaseArea stamp-flip / i RefreshOverlay + engine refresh log / j VictoryOverlay
+- [ ] **次のタスク**: PvP モーダル UI / 9d インタラクティブ強化 (TutorialStepGuide ハイライト) / 1000戦 smoke
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
 ## 次セッション開始時の最優先タスク

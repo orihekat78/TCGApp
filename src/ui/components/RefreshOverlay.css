@@ -1,0 +1,68 @@
+/* Phase 8.10i: RefreshOverlay — リフレッシュ全画面演出 */
+
+.refresh-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 8500;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(20, 40, 80, 0.6) 0%,
+    rgba(8, 14, 28, 0.4) 60%,
+    transparent 100%
+  );
+  backdrop-filter: blur(3px);
+  animation: refresh-overlay-fade 1.2s ease-out forwards;
+}
+
+.refresh-overlay .refresh-icon {
+  font-size: 56px;
+  animation: refresh-icon-spin 1.0s linear;
+  filter: drop-shadow(0 0 16px rgba(110, 180, 255, 0.85));
+}
+
+.refresh-overlay .refresh-title {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #e0f0ff;
+  text-shadow: 0 0 18px rgba(110, 180, 255, 0.9),
+               0 0 6px rgba(255, 255, 255, 0.6);
+  animation: refresh-title-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.refresh-overlay .refresh-sub {
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  color: rgba(200, 220, 240, 0.85);
+  text-transform: uppercase;
+}
+
+@keyframes refresh-overlay-fade {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes refresh-icon-spin {
+  from { transform: rotate(0deg)    scale(0.6); }
+  to   { transform: rotate(540deg)  scale(1.0); }
+}
+
+@keyframes refresh-title-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1.0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refresh-overlay,
+  .refresh-overlay .refresh-icon,
+  .refresh-overlay .refresh-title { animation-duration: 0.2s; }
+}

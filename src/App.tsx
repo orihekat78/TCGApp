@@ -7,6 +7,8 @@ import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
 import { ContactFlash } from '@/ui/components/ContactFlash';
+import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
+import { VictoryOverlay } from '@/ui/components/VictoryOverlay';
 import { TutorialOverlay } from '@/ui/components/TutorialOverlay';
 import { registerAll } from '@/cards/index';
 import {
@@ -47,6 +49,8 @@ export default function App() {
       <OppTurnOverlay />
       <RecentActionToast />
       <ContactFlash />
+      <RefreshOverlay />
+      <VictoryOverlay />
       <TutorialOverlay />
     </>
   );

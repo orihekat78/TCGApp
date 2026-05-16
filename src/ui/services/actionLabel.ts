@@ -22,6 +22,7 @@ const LABELS: Record<string, string> = {
   'contact-pass':    'パス',
   'contact-judge':   '判定',
   'auto-phase':      'オートフェイズ',
+  refresh:           'リフレッシュ',
 };
 
 export function actionLabel(entry: LogEntry): string {
