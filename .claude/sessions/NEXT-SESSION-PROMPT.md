@@ -22,24 +22,15 @@
   - activeActionId slice (useGameStateStore) で driver 駆動
   - Playmat に driver + 2 モーダルホスト mount
   - runActionFlow を per-step に差し替え
+- **Phase 8 完全クローズ Commit 2.5 (`62fa8b2`) — playTurn pauseOnAction + useOppTurnDriver per-step contact (6 tests) ✅**
+  - policy.ts: PlayTurnOptions { pauseOnAction } / PlayTurnResult.paused 追加
+  - useOppTurnDriver: paused 分岐で actionDeclareChar/Case dispatch → useContactFlowDriver に委譲
+  - useEffect deps に activeActionId 追加 — action 完了で続きの move 再開
+  - CPU 攻撃時に GuardPickerModal が自動 open
 - Phase 9a-1 / 9a-2 / 9b / 9c チュートリアル L0-L13 ✅
-- ベース: 1333 PASS / 168 files / typecheck clean / docs:check clean
+- ベース: 1339 PASS / 170 files / typecheck clean / docs:check clean
 
 ## 残タスク (この続きでやる作業)
-
-### Commit 2.5 — useOppTurnDriver の per-step 移行 (前回 scope 外、~4 tests)
-
-**問題**: 現状 `useOppTurnDriver` は `playTurn` 経由で `resolveActionAgainstChar` を呼び、
-CPU が attacker のとき human の guard/cutin/disguise を AI heuristic が勝手に決めてしまう。
-
-**改修**:
-- `playTurn` (src/ai/policy.ts) で `actionAgainstChar/Case` の Move を選んだら、
-  `resolveActionAgainstChar` ではなく `flow.action.declare` のみを呼び、`activeActionId` を
-  set して loop を break。
-- useOppTurnDriver: driver が `action-end` まで進めるのを待ってから残り Move を再開。
-  `useEffect(() => { if (activeActionId === null && turnPlayer === 'opp') driveOppTurn() }, ...)`
-- 既存 CPU vs CPU テスト互換性維持: `playTurn` に optional flag `pauseOnAction: boolean` を追加し、
-  デフォルト false (既存) / UI 経由は true。
 
 ### Commit 3 — Misread / Hirameki モーダル (~4 tests)
 - engine 側で推理発動時 / 証拠リムーブ時のフック点を確認 (`pendingEffects` か `event.emit`)
@@ -82,7 +73,7 @@ CPU が attacker のとき human の guard/cutin/disguise を AI heuristic が�
 
 ## 参考
 
-- 直近 commit: `770624e` (Commit 2 — per-step action dispatch + ContactFlowDriver)
+- 直近 commit: `62fa8b2` (Commit 2.5 — playTurn pauseOnAction + useOppTurnDriver per-step)
 - 既存 driver: `src/ui/hooks/useContactFlowDriver.ts`
 - 既存 modal store: `src/ui/hooks/useContactModalStore.ts`
 - Phase 8 原 spec: `.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md`
