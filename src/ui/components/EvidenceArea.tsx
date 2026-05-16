@@ -65,7 +65,8 @@ export function EvidenceArea(props: EvidenceAreaProps): JSX.Element {
             </div>
           </>
         )}
-        <div className="count-overlay">{safeCount}</div>
+        {/* Phase 8.10g: count-overlay は count 値を key にして remount → CSS animation 再起動 */}
+        <div className="count-overlay" key={safeCount}>{safeCount}</div>
       </div>
 
       <div
