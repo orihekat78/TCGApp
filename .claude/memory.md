@@ -17,8 +17,9 @@
 - [x] **Phase 8.5 / 8.6 ActionsPanel + 推理 / ネクストヒント ✅** — [-5](sessions/2026-05-15-5.md) / [-6](sessions/2026-05-15-6.md)
 - [x] **Phase 8.6 残 + 8.7a-e CPU コンタクト応答 ✅** — [-7](sessions/2026-05-15-7.md) (7 commits, 47 tests)
 - [x] **Phase 8.8 + Task 8.4 + Phase 8.10 ✅** — [-8](sessions/2026-05-15-8.md) (10 commits, 38 tests)
-- [x] **Task 8.4b 正規 turn-1 setup wire** (Commit X = `96ba184`, 6 tests) — deckBuilder + gameStarter + GameSetupModal の 2 ボタン化 (正規 / デモ)
-- [ ] **次のタスク**: Phase 9 チュートリアル実装 / Phase 8.10 残 (フラッシュ等) / Phase 9 PvP モーダル
+- [x] **Task 8.4b 正規 turn-1 setup wire** (Commit X, 6 tests) — deckBuilder + gameStarter + GameSetupModal の 2 ボタン化
+- [x] **Phase 9a-1 チュートリアル骨格 + L0** (Commit Y, 8 tests) — tutorialStore + TutorialOverlay + L0「ゲーム目的」3 ステップ
+- [ ] **次のタスク**: Phase 9a-2 (L1-L5 準備〜パートナー) / 9b (L6-L10 コンタクト) / Phase 8.10 残 / PvP モーダル
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
 ## 次セッション開始時の最優先タスク

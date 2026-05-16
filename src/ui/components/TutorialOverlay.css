@@ -1,0 +1,84 @@
+/* TutorialOverlay.css — Phase 9a-1
+ * 画面下部 ~14vh の字幕バー。盤面操作は阻害せずチュートリアル UI のみ受け取る。
+ */
+
+.tutorial-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8800;
+  pointer-events: none; /* バー自身のみ pointer-events:auto */
+  animation: tutorial-slide-up 280ms ease-out both;
+}
+
+@keyframes tutorial-slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.tutorial-bar {
+  pointer-events: auto;
+  margin: 0 auto 14px;
+  max-width: 900px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(8, 18, 32, 0.96), rgba(16, 30, 56, 0.96));
+  border: 1px solid color-mix(in oklch, #ffd75e 50%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6),
+              0 0 22px color-mix(in oklch, #ffd75e 25%, transparent);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.tutorial-content { display: flex; flex-direction: column; gap: 4px; }
+.tutorial-meta {
+  display: flex; gap: 12px; font-size: 11px;
+  color: color-mix(in oklch, #ffd75e 90%, white 5%);
+  letter-spacing: 0.12em;
+}
+.tutorial-id { font-weight: 700; }
+.tutorial-progress { opacity: 0.7; }
+.tutorial-title {
+  margin: 0; font-size: 18px; font-weight: 700;
+  color: var(--text-primary, #fff);
+  letter-spacing: 0.04em;
+}
+.tutorial-body {
+  margin: 0; font-size: 14px; line-height: 1.55;
+  color: var(--text-secondary, #c9d3e0);
+}
+
+.tutorial-actions { display: flex; gap: 8px; align-items: center; }
+.tutorial-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: filter 0.12s, transform 0.12s;
+}
+.tutorial-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.tutorial-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; filter: none; }
+
+.tutorial-btn-prev {
+  background: #2a3a52;
+  border: 1px solid #4a5a72;
+  color: #c9d3e0;
+}
+.tutorial-btn-next {
+  background: linear-gradient(135deg, #ffd75e 0%, #d9a31a 100%);
+  border: 1px solid #d9a31a;
+  color: #2a1d00;
+  padding: 8px 24px;
+}
+.tutorial-btn-exit {
+  background: transparent;
+  border: 1px solid #5a6a82;
+  color: #8aa3c0;
+  padding: 4px 10px;
+  font-size: 15px;
+  line-height: 1;
+}

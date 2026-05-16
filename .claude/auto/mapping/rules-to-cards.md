@@ -2,17 +2,18 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8fac9da29520`
+> Source hash: `356b12e58bec`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
-**27/31** ルールが少なくとも1ファイルから参照されている。
+**28/32** ルールが少なくとも1ファイルから参照されている。
 
 ## 参照あり
 
 | ルール | 参照数 | 参照元 (抜粋) |
 | ----- | ------ | ------------- |
-| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 21 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 18 件 |
+| [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) | 1 | `ui/services/tutorialSteps.ts` |
+| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 22 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 19 件 |
 | [`02-deck-construction.md`](../../rules/02-deck-construction.md) | 9 | `cards/ct-d08/index.ts`, `cards/ct-d11/index.ts`, `cards/index.ts` ほか 6 件 |
 | [`03-field-areas.md`](../../rules/03-field-areas.md) | 21 | `cards/_shared/hiramekiCharStun.ts`, `cards/ct-d08/D08019.ts`, `cards/ct-d08/D08020.ts` ほか 18 件 |
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 11 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 8 件 |

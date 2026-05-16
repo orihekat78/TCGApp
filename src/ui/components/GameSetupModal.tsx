@@ -10,6 +10,7 @@
 
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
+import { useTutorialStore } from '@/ui/state/tutorialStore.js';
 import { performGameStart } from '@/ui/services/gameStarter.js';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState.js';
 import './GameSetupModal.css';
@@ -30,6 +31,12 @@ export function GameSetupModal(): JSX.Element | null {
     useGameStateStore.getState().setGameState(createSampleGameState());
   };
 
+  const handleTutorial = (): void => {
+    // Phase 9a-1: 正規 turn-1 開始 + チュートリアル字幕起動
+    useGameStateStore.getState().setGameState(performGameStart());
+    useTutorialStore.getState().start();
+  };
+
   return (
     <div className="game-setup-modal-overlay" role="dialog" aria-labelledby="setup-title">
       <div className="game-setup-modal">
@@ -42,6 +49,14 @@ export function GameSetupModal(): JSX.Element | null {
           data-testid="game-setup-start"
         >
           対戦開始
+        </button>
+        <button
+          type="button"
+          className="game-setup-tutorial-btn"
+          onClick={handleTutorial}
+          data-testid="game-setup-tutorial"
+        >
+          チュートリアル開始
         </button>
         <button
           type="button"

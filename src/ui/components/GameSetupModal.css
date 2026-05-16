@@ -70,3 +70,30 @@
   color: var(--text-muted, #8aa3c0);
   line-height: 1.5;
 }
+
+/* Phase 9a-1: チュートリアル / デモ 副ボタン */
+.game-setup-tutorial-btn,
+.game-setup-demo-btn {
+  display: inline-block;
+  margin-top: 12px;
+  margin-left: 8px;
+  padding: 10px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255, 215, 94, 0.18), rgba(217, 163, 26, 0.12));
+  border: 1px solid color-mix(in oklch, #ffd75e 50%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.12s ease;
+}
+.game-setup-demo-btn {
+  background: linear-gradient(135deg, rgba(140, 180, 220, 0.18), rgba(80, 110, 150, 0.12));
+  border-color: rgba(140, 180, 220, 0.45);
+}
+.game-setup-tutorial-btn:hover,
+.game-setup-demo-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
