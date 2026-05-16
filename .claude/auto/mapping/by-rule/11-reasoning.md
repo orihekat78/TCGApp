@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `356b12e58bec`
+> Source hash: `bece07fce1c9`
 
 公式ルール [`11-reasoning.md`](../../../rules/11-reasoning.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,7 +20,7 @@
 
 - [`2026-05-11-ui-action-flows`](../by-spec/2026-05-11-ui-action-flows.md)
 
-## 📄 参照ソース (9)
+## 📄 参照ソース (10)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -31,3 +31,4 @@
 - [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
 - [`src/ui/hooks/useEngineDispatch.ts`](../../../../src/ui/hooks/useEngineDispatch.ts)
 - [`src/ui/hooks/useTargetPicker.ts`](../../../../src/ui/hooks/useTargetPicker.ts)
+- [`src/ui/services/tutorialSteps.ts`](../../../../src/ui/services/tutorialSteps.ts)

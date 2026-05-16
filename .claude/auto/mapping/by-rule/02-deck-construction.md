@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `356b12e58bec`
+> Source hash: `bece07fce1c9`
 
 公式ルール [`02-deck-construction.md`](../../../rules/02-deck-construction.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,7 +23,7 @@
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
 
-## 📄 参照ソース (9)
+## 📄 参照ソース (10)
 
 - [`src/cards/ct-d08/index.ts`](../../../../src/cards/ct-d08/index.ts)
 - [`src/cards/ct-d11/index.ts`](../../../../src/cards/ct-d11/index.ts)
@@ -34,3 +34,4 @@
 - [`src/engine/read/def.ts`](../../../../src/engine/read/def.ts)
 - [`src/engine/types/card-def.ts`](../../../../src/engine/types/card-def.ts)
 - [`src/ui/services/deckBuilder.ts`](../../../../src/ui/services/deckBuilder.ts)
+- [`src/ui/services/tutorialSteps.ts`](../../../../src/ui/services/tutorialSteps.ts)
