@@ -16,75 +16,74 @@
 - Phase 8.8 a-d (パートナー / 宣言能力 / cost 解決 / AI 統合) ✅
 - Task 8.4 / 8.4b (ゲーム開始モーダル + 正規 turn-1 setup) ✅
 - Phase 8.10 全 (OppTurnOverlay / Toast / 登場アニメ / contact-judge log / ContactFlash / 証拠バンプ / 退場 fade / スタンプ反転 / Refresh / Victory) ✅
-- Phase 8.6α/β Commit 1 (`eb21e8c`) — GuardPickerModal + CutInDisguisePickerModal の UI 単体 (9 tests) ✅
+- Phase 8.6α/β Commit 1 (`eb21e8c`) — GuardPickerModal + CutInDisguisePickerModal UI 単体 (9 tests) ✅
+- **Phase 8 完全クローズ Commit 2 (`770624e`) — per-step action dispatch + useContactFlowDriver (12 tests) ✅**
+  - actionDeclareChar/Case / actionGuard / actionContact / actionAdvance / actionJudge を追加
+  - activeActionId slice (useGameStateStore) で driver 駆動
+  - Playmat に driver + 2 モーダルホスト mount
+  - runActionFlow を per-step に差し替え
 - Phase 9a-1 / 9a-2 / 9b / 9c チュートリアル L0-L13 ✅
-- ベース: 1321 PASS / 166 files / typecheck clean / docs:check clean
+- ベース: 1333 PASS / 168 files / typecheck clean / docs:check clean
 
 ## 残タスク (この続きでやる作業)
 
-承認済プラン: `~/.claude/plans/drifting-imagining-duckling.md`
+### Commit 2.5 — useOppTurnDriver の per-step 移行 (前回 scope 外、~4 tests)
 
-### Commit 2 — engine 統合 (state.activeAction + per-step dispatch)
-- `GameState` に `activeAction?: ActionContext | null` 追加
-- `createEmptyGameState` で `activeAction: undefined` 初期化
-- `useEngineDispatch` に新型を追加:
-  - `actionDeclareChar(byUid, targetUid)` — declare して activeAction セット
-  - `actionDeclareCase(byUid, targetPlayer)` — 同上 (case)
-  - `actionGuard({ guarderUid: string | null })` — tryGuard or passGuard
-  - `actionContact({ kind: 'cutin'|'disguise'|'pass', player, cardId? })`
-  - `actionAdvance()` — advance 単発
-  - `actionJudge()` — snapshotAP + judge + advance × 2
-- `useContactFlowDriver` hook 新規: activeAction の phase を監視し、defender が self なら GuardPickerModal を開き、opp なら HeuristicPolicy で自動進行
-- 既存 `resolveActionAgainstChar` (action-resolution.ts) は CPU vs CPU 用に残す
-- 既存 `runActionFlow` (useActionsPanelFlow) を新 dispatcher に差し替え
-- 新規 ~12 tests (driver FSM + 各 dispatch)
+**問題**: 現状 `useOppTurnDriver` は `playTurn` 経由で `resolveActionAgainstChar` を呼び、
+CPU が attacker のとき human の guard/cutin/disguise を AI heuristic が勝手に決めてしまう。
 
-### Commit 3 — Misread / Hirameki モーダル
+**改修**:
+- `playTurn` (src/ai/policy.ts) で `actionAgainstChar/Case` の Move を選んだら、
+  `resolveActionAgainstChar` ではなく `flow.action.declare` のみを呼び、`activeActionId` を
+  set して loop を break。
+- useOppTurnDriver: driver が `action-end` まで進めるのを待ってから残り Move を再開。
+  `useEffect(() => { if (activeActionId === null && turnPlayer === 'opp') driveOppTurn() }, ...)`
+- 既存 CPU vs CPU テスト互換性維持: `playTurn` に optional flag `pauseOnAction: boolean` を追加し、
+  デフォルト false (既存) / UI 経由は true。
+
+### Commit 3 — Misread / Hirameki モーダル (~4 tests)
 - engine 側で推理発動時 / 証拠リムーブ時のフック点を確認 (`pendingEffects` か `event.emit`)
 - `MisreadConfirmModal` / `HiramekiConfirmModal` 新規
 - driver 拡張: 該当イベントで self 側モーダル発火
-- 新規 ~4 tests
 
-### Commit 4 — Souza / Switch モーダル
+### Commit 4 — Souza / Switch モーダル (~5 tests)
 - `SouzaReorderModal`: 公開 N 枚を ▲▼ 並び替え
 - `SceneSwitchModal`: 現場 5 枚から 1 体ピック
 - `pendingEffects` 解決と統合
-- 新規 ~5 tests
 
-### Commit 5 — 8.8 効果スタック reorder UI
+### Commit 5 — 8.8 効果スタック reorder UI (~8 tests)
 - `EffectStackPanel.tsx` に同所有者効果の `ownerChosenOrder` 設定 UI (▲▼)
 - 「解決中」ロックインジケータ
 - engine dispatch `setOwnerChosenOrder(entryId, order)`
-- 新規 ~8 tests
 
-### Commit 6 — 8.11 統合 E2E + 回帰検証
+### Commit 6 — 8.11 統合 E2E + 回帰検証 (~6 tests)
 - `tests/integration/human-vs-ai-playthrough.test.tsx`: setup → 推理 → アクション → CPU 応答 → 勝利条件
 - 既存 CPU パス回帰確認
-- 新規 ~6 tests
 
 ## 作業手順
 
 1. `.claude/CLAUDE.md` 規約・ルール参照義務を確認
-2. プラン (`~/.claude/plans/drifting-imagining-duckling.md`) を再読
-3. Commit 2 から順次実装。各 commit で:
+2. `git log --oneline -5` で最新 commit `770624e` 確認 (Commit 2 完了済)
+3. Commit 2.5 から順次実装。各 commit で:
    - 新規 test → GREEN
    - 全体 vitest / typecheck / docs:check clean
    - memory.md 更新 + commit
 4. 全 commit 完了後 `git push origin main`
 
 ## エッジケース (CLAUDE.md §設計レビュー)
-- 0 候補時のスキップ (guard / cutin / souza X 枚未満)
+- CPU が attacker かつ human の guard 候補 0 件 → driver で skip + advance
 - アクション継続性 (rules/22 条件途中失効でも継続)
 - MR 重複登場 (scene switch 中の自動リムーブ)
 - 同所有者同タイミング効果 0/1 件時 reorder UI 非表示
-- gameResult セット後 全 dispatch no-op
+- gameResult セット後 全 dispatch no-op (driver 冒頭ガード済)
 ```
 
 ---
 
 ## 参考
 
-- 承認済プラン: `~/.claude/plans/drifting-imagining-duckling.md`
-- 現状コード把握: `git log --oneline -10` で最新 commit `eb21e8c` から確認
+- 直近 commit: `770624e` (Commit 2 — per-step action dispatch + ContactFlowDriver)
+- 既存 driver: `src/ui/hooks/useContactFlowDriver.ts`
+- 既存 modal store: `src/ui/hooks/useContactModalStore.ts`
 - Phase 8 原 spec: `.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md`
-- 既存 modal 雛形: `src/ui/components/{GuardPickerModal,CutInDisguisePickerModal}.tsx`
+- 既存 modal: `src/ui/components/{GuardPickerModal,CutInDisguisePickerModal}.tsx`
