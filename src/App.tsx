@@ -6,6 +6,7 @@ import { Playmat } from '@/ui/components/Playmat';
 import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
+import { registerAll } from '@/cards/index';
 import {
   createCardResolver,
   createCaseResolver,
@@ -24,6 +25,10 @@ const resolveHandCard = createHandCardResolver(ctD08 as never, ctD11 as never);
 // Task 8.4: 起動時の sampleGameState 自動 push を廃止。
 // gameState === null のとき GameSetupModal が表示され、ユーザの「対戦開始」操作で
 // setGameState が呼ばれる動線に変更。
+
+// Task 8.4b: カード CardDef を起動時に 1 回だけ登録。
+// performGameStart() 内の setup.init が validateDeck で参照するため必須。
+registerAll();
 
 export default function App() {
   // Store から購読: dispatch が走ったときに再描画される。

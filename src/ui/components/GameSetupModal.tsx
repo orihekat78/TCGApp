@@ -10,6 +10,7 @@
 
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
+import { performGameStart } from '@/ui/services/gameStarter.js';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState.js';
 import './GameSetupModal.css';
 
@@ -20,8 +21,12 @@ export function GameSetupModal(): JSX.Element | null {
   if (gameState !== null) return null;
 
   const handleStart = (): void => {
-    // Task 8.4b で engine.flow.setup を使った正規初期化に置換予定。
-    // 現状は sampleGameState (turn-4 中盤状態) で代用。
+    // Task 8.4b: 正規 turn-1 初期化 (engine.flow.setup 経由)
+    useGameStateStore.getState().setGameState(performGameStart());
+  };
+
+  const handleDemo = (): void => {
+    // 開発用: turn-4 中盤状態の sampleGameState
     useGameStateStore.getState().setGameState(createSampleGameState());
   };
 
@@ -38,8 +43,17 @@ export function GameSetupModal(): JSX.Element | null {
         >
           対戦開始
         </button>
+        <button
+          type="button"
+          className="game-setup-demo-btn"
+          onClick={handleDemo}
+          data-testid="game-setup-demo"
+        >
+          デモ (turn-4) を読込
+        </button>
         <p className="game-setup-note">
-          ※ 現在は中盤状態 (turn 4) からの開始です。正規の turn-1 初期化は今後対応予定。
+          ※「対戦開始」で CT-D08 vs CT-D11 の turn-1 を正規開始 (マリガン自動スキップ)。
+          「デモ」は中盤の動作確認用。
         </p>
       </div>
     </div>

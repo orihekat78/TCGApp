@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `996531c1415f`
+> Source hash: `8fac9da29520`
 
 公式ルール [`04-game-setup.md`](../../../rules/04-game-setup.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
 
-## 📄 参照ソース (10)
+## 📄 参照ソース (11)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/cards/ct-d08/D08001.ts`](../../../../src/cards/ct-d08/D08001.ts)
@@ -33,3 +33,4 @@
 - [`src/engine/mutate/hand.ts`](../../../../src/engine/mutate/hand.ts)
 - [`src/engine/read/turn.ts`](../../../../src/engine/read/turn.ts)
 - [`src/engine/state-factory.ts`](../../../../src/engine/state-factory.ts)
+- [`src/ui/services/gameStarter.ts`](../../../../src/ui/services/gameStarter.ts)
