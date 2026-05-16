@@ -3,9 +3,9 @@
 import { describe, it, expect } from 'vitest';
 import { TUTORIAL_STEPS } from '@/ui/services/tutorialSteps';
 
-describe('TUTORIAL_STEPS (Phase 9a-1 + 9a-2: L0-L5)', () => {
-  it('has at least 16 steps (L0 3 + L1-L5 13)', () => {
-    expect(TUTORIAL_STEPS.length).toBeGreaterThanOrEqual(16);
+describe('TUTORIAL_STEPS (Phase 9a + 9b: L0-L10)', () => {
+  it('has at least 26 steps (L0-L5 16 + L6-L10 10)', () => {
+    expect(TUTORIAL_STEPS.length).toBeGreaterThanOrEqual(26);
   });
 
   it('each step has id / title / body', () => {
@@ -17,9 +17,9 @@ describe('TUTORIAL_STEPS (Phase 9a-1 + 9a-2: L0-L5)', () => {
     }
   });
 
-  it('contains each lesson prefix L0-L5 at least once', () => {
+  it('contains each lesson prefix L0-L10 at least once', () => {
     const prefixes = new Set(TUTORIAL_STEPS.map((s) => s.id.split('-')[0]));
-    for (const p of ['L0', 'L1', 'L2', 'L3', 'L4', 'L5']) {
+    for (const p of ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8', 'L9', 'L10']) {
       expect(prefixes.has(p)).toBe(true);
     }
   });

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bece07fce1c9`
+> Source hash: `347007d04206`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -13,19 +13,19 @@
 | ルール | 参照数 | 参照元 (抜粋) |
 | ----- | ------ | ------------- |
 | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) | 1 | `ui/services/tutorialSteps.ts` |
-| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 22 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 19 件 |
-| [`02-deck-construction.md`](../../rules/02-deck-construction.md) | 10 | `cards/ct-d08/index.ts`, `cards/ct-d11/index.ts`, `cards/index.ts` ほか 7 件 |
-| [`03-field-areas.md`](../../rules/03-field-areas.md) | 22 | `cards/_shared/hiramekiCharStun.ts`, `cards/ct-d08/D08019.ts`, `cards/ct-d08/D08020.ts` ほか 19 件 |
+| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 21 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 18 件 |
+| [`02-deck-construction.md`](../../rules/02-deck-construction.md) | 9 | `cards/ct-d08/index.ts`, `cards/ct-d11/index.ts`, `cards/index.ts` ほか 6 件 |
+| [`03-field-areas.md`](../../rules/03-field-areas.md) | 21 | `cards/_shared/hiramekiCharStun.ts`, `cards/ct-d08/D08019.ts`, `cards/ct-d08/D08020.ts` ほか 18 件 |
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 11 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 8 件 |
-| [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 19 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 16 件 |
+| [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 18 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 15 件 |
 | [`06-card-types.md`](../../rules/06-card-types.md) | 9 | `engine/cards/registry.ts`, `engine/cards/tsv-loader.ts`, `engine/flow/main/partner-ability.ts` ほか 6 件 |
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 18 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 15 件 |
 | [`08-contact.md`](../../rules/08-contact.md) | 13 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts` ほか 10 件 |
 | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 18 | `cards/_shared/cutinFixedAP.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08007.ts` ほか 15 件 |
 | [`10-action-event.md`](../../rules/10-action-event.md) | 12 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts` ほか 9 件 |
-| [`11-reasoning.md`](../../rules/11-reasoning.md) | 10 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `engine/mutate/evidence.ts` ほか 7 件 |
+| [`11-reasoning.md`](../../rules/11-reasoning.md) | 9 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `engine/mutate/evidence.ts` ほか 6 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 7 | `ai/policies/heuristic.ts`, `engine/flow/main/hand-use-card.ts`, `engine/mutate/file.ts` ほか 4 件 |
-| [`13-keywords.md`](../../rules/13-keywords.md) | 45 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 42 件 |
+| [`13-keywords.md`](../../rules/13-keywords.md) | 44 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 41 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 15 | `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts`, `cards/ct-d08/D08014.ts` ほか 12 件 |
 | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 47 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 44 件 |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 2 | `cards/ct-d08/D08021.ts`, `engine/mutate/scene.ts` |

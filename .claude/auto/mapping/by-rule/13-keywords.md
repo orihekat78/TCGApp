@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bece07fce1c9`
+> Source hash: `347007d04206`
 
 公式ルール [`13-keywords.md`](../../../rules/13-keywords.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -25,7 +25,7 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (45)
+## 📄 参照ソース (44)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -47,4 +47,4 @@
 - [`src/cards/ct-d11/D11004.ts`](../../../../src/cards/ct-d11/D11004.ts)
 - [`src/cards/ct-d11/D11007.ts`](../../../../src/cards/ct-d11/D11007.ts)
 - [`src/cards/ct-d11/D11008.ts`](../../../../src/cards/ct-d11/D11008.ts)
-- _...ほか 25 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 24 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

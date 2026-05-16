@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8c88463f4634`
+> Source hash: `5c05454b145f`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
@@ -105,6 +105,6 @@
 | [`src/ui/services/cardResolvers.ts`](../../../src/ui/services/cardResolvers.ts) | _(参照なし)_ |
 | [`src/ui/services/deckBuilder.ts`](../../../src/ui/services/deckBuilder.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 | [`src/ui/services/gameStarter.ts`](../../../src/ui/services/gameStarter.ts) | [`04-game-setup.md`](../../rules/04-game-setup.md) |
-| [`src/ui/services/tutorialSteps.ts`](../../../src/ui/services/tutorialSteps.ts) | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) / [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`03-field-areas.md`](../../rules/03-field-areas.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
+| [`src/ui/services/tutorialSteps.ts`](../../../src/ui/services/tutorialSteps.ts) | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) |
 | [`src/ui/state/store.ts`](../../../src/ui/state/store.ts) | _(参照なし)_ |
 | [`src/ui/state/tutorialStore.ts`](../../../src/ui/state/tutorialStore.ts) | _(参照なし)_ |

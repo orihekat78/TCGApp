@@ -20,7 +20,8 @@
 - [x] **Task 8.4b 正規 turn-1 setup wire** (Commit X, 6 tests) — deckBuilder + gameStarter + GameSetupModal の 2 ボタン化
 - [x] **Phase 9a-1 チュートリアル骨格 + L0** (Commit Y, 8 tests) — tutorialStore + TutorialOverlay + L0「ゲーム目的」3 ステップ
 - [x] **Phase 9a-2 チュートリアル L1-L5** (Commit Z, 3 tests) — 13 step 追加 (L1 デッキ / L2 場 / L3 ターン / L4 推理 / L5 パートナー)
-- [ ] **次のタスク**: Phase 9b (L6-L10 コンタクト) / Phase 8.10 残 / PvP モーダル / 9d インタラクティブ強化
+- [x] **Phase 9b チュートリアル L6-L10 コンタクト** (Commit AA) — 10 step 追加 (L6 アクション宣言 / L7 ガード / L8 AP 判定 / L9 カットイン / L10 変装)
+- [ ] **次のタスク**: Phase 9c (L11-L13 アドバンスド) / Phase 8.10 残 / PvP モーダル / 9d インタラクティブ強化
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
 ## 次セッション開始時の最優先タスク
