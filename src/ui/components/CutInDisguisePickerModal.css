@@ -1,0 +1,112 @@
+/* Phase 8.6β: CutInDisguisePickerModal */
+
+.cid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9700;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  animation: cid-fade-in 0.2s ease-out;
+}
+
+.cid-modal {
+  background: linear-gradient(140deg, #0e1722 0%, #1c2a3f 100%);
+  border: 1px solid color-mix(in oklch, var(--scene-neon, #6cf) 50%, transparent);
+  border-radius: 10px;
+  padding: 24px 32px;
+  min-width: 460px;
+  max-width: 620px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+}
+
+.cid-header h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  color: #ffd75e;
+}
+.cid-header .cid-sub {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #b8d4f0;
+}
+
+.cid-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.cid-section h3 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #889;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.cid-empty {
+  font-size: 11px;
+  color: #667;
+  padding: 8px 0;
+}
+
+.cid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cid-cand {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #e0ecf8;
+  cursor: pointer;
+  transition: filter 0.1s, transform 0.1s;
+}
+.cid-cand-cutin {
+  background: rgba(255, 120, 60, 0.18);
+  border: 1px solid color-mix(in oklch, #ff7a3c 50%, transparent);
+}
+.cid-cand-disg {
+  background: rgba(120, 180, 255, 0.18);
+  border: 1px solid color-mix(in oklch, #6cb4ff 50%, transparent);
+}
+.cid-cand:hover {
+  filter: brightness(1.18);
+  transform: translateY(-1px);
+}
+
+.cid-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cid-pass {
+  padding: 7px 22px;
+  background: rgba(80, 80, 90, 0.4);
+  border: 1px solid rgba(140, 140, 160, 0.45);
+  border-radius: 5px;
+  color: #d8d8e0;
+  font-size: 12px;
+  cursor: pointer;
+  transition: filter 0.1s;
+}
+.cid-pass:hover { filter: brightness(1.2); }
+
+@keyframes cid-fade-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1);    }
+}
