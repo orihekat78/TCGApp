@@ -25,7 +25,8 @@
 - [x] **Phase 8.10f コンタクト判定フラッシュ** (Commit AC, 4 tests) — ContactFlash 新規 (hit=赤 / miss=青) を App.tsx にマウント
 - [x] **Phase 8.10g-1 証拠追加バンプ** (Commit AD) — count-overlay を count 値 key で remount → CSS keyframe で拡大/光る
 - [x] **Phase 8.10 完了** (Commit AE, 16 tests) — g-2 SceneArea ゴースト fade-out / h CaseArea stamp-flip / i RefreshOverlay + engine refresh log / j VictoryOverlay
-- [ ] **次のタスク**: PvP モーダル UI / 9d インタラクティブ強化 (TutorialStepGuide ハイライト) / 1000戦 smoke
+- [x] **Phase 8.6α/β Commit 1** (`eb21e8c`, 9 tests) — GuardPickerModal + CutInDisguisePickerModal UI 単体 (engine 統合は次セッション)
+- [ ] **次セッション継続**: Phase 8 完全クローズ Commit 2-6 → [sessions/NEXT-SESSION-PROMPT.md](sessions/NEXT-SESSION-PROMPT.md)
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
 ## 次セッション開始時の最優先タスク
