@@ -27,12 +27,28 @@
   - useOppTurnDriver: paused 分岐で actionDeclareChar/Case dispatch → useContactFlowDriver に委譲
   - useEffect deps に activeActionId 追加 — action 完了で続きの move 再開
   - CPU 攻撃時に GuardPickerModal が自動 open
+- **Phase 8 完全クローズ Commit 3a (`5d1620d`) — Hirameki end-to-end (9 tests) ✅**
+  - engine/listeners/hirameki.ts 新規 — evidence:remove-by-action listener
+  - pendingHirameki slice + hiramekiResolve dispatch + 側チャネル drain
+  - useHiramekiFlowDriver / HiramekiPickerModal / AI chooseHiramekiTrigger
 - Phase 9a-1 / 9a-2 / 9b / 9c チュートリアル L0-L13 ✅
-- ベース: 1339 PASS / 170 files / typecheck clean / docs:check clean
+- ベース: 1348 PASS / 173 files / typecheck clean / docs:check clean
 
 ## 残タスク (この続きでやる作業)
 
-### Commit 3 — Misread / Hirameki モーダル (~4 tests)
+### Commit 3b — Misread モーダル (~6 tests, engine work 含む)
+
+**前提**: Misread (rules/13) は engine 側に reasoning:before-add listener が未登録 (Phase 5 タスク)。
+Commit 3a (Hirameki) と同パターンで:
+
+- `src/engine/listeners/misread.ts` 新規: `reasoning:before-add` で両側 scene の active ミスリード持ち抽出
+- 側チャネル `_pendingMisreadSideChannel = { reasoningUid, candidates: { uid, x }[] }`
+- `useGameStateStore.pendingMisread` slice
+- `MisreadPickerModal` (複数選択可: rules/13 「1 推理に複数枚同時」)
+- `dispatchEngineAction({type:'misreadResolve', picks: uid[]})` で各キャラを sleep + LP-X 効果適用
+- AIPolicy.chooseMisreadTriggers (LP削り最大化ヒューリスティック)
+
+### Commit 4 — Souza / SceneSwitch モーダル (~5 tests)
 - engine 側で推理発動時 / 証拠リムーブ時のフック点を確認 (`pendingEffects` か `event.emit`)
 - `MisreadConfirmModal` / `HiramekiConfirmModal` 新規
 - driver 拡張: 該当イベントで self 側モーダル発火
@@ -73,7 +89,7 @@
 
 ## 参考
 
-- 直近 commit: `62fa8b2` (Commit 2.5 — playTurn pauseOnAction + useOppTurnDriver per-step)
+- 直近 commit: `5d1620d` (Commit 3a — Hirameki end-to-end)
 - 既存 driver: `src/ui/hooks/useContactFlowDriver.ts`
 - 既存 modal store: `src/ui/hooks/useContactModalStore.ts`
 - Phase 8 原 spec: `.claude/research/plans/2026-05-11-mvp-implementation/phase-8-ui-interactions.md`
