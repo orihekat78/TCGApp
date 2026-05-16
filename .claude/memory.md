@@ -26,14 +26,13 @@
 - [x] **Phase 8.10g-1 証拠追加バンプ** (Commit AD) — count-overlay を count 値 key で remount → CSS keyframe で拡大/光る
 - [x] **Phase 8.10 完了** (Commit AE, 16 tests) — g-2 SceneArea ゴースト fade-out / h CaseArea stamp-flip / i RefreshOverlay + engine refresh log / j VictoryOverlay
 - [x] **Phase 8.6α/β Commit 1** (`eb21e8c`, 9 tests) — GuardPickerModal + CutInDisguisePickerModal UI 単体 (engine 統合は次セッション)
-- [x] **Phase 8 完全クローズ Commit 2** (12 tests) — per-step action dispatch + useContactFlowDriver
-   - `EngineAction` に `actionDeclareChar/Case`, `actionGuard`, `actionContact`, `actionAdvance`, `actionJudge` 追加
-   - `useGameStateStore.activeActionId` slice 追加 (GameState には積まない: module-level Map で十分)
-   - `useContactFlowDriver` 新規: phase 監視 → self=defender なら GuardPickerModal / CutInDisguisePickerModal open / opp=defender なら HeuristicPolicy 自動
-   - `Playmat.tsx` に driver mount + 2 モーダルホスト追加
-   - `runActionFlow` を declareChar/Case dispatch に差し替え (FSM 完了は driver の責務)
-   - 既存 `actionAgainstChar/Case` は CPU vs CPU 用に温存。useOppTurnDriver の rewrite は次セッション (`playTurn` の async 化が必要なので scope 外)
-- [ ] **次セッション継続**: Phase 8 完全クローズ Commit 3-6 + useOppTurnDriver rewrite → [sessions/NEXT-SESSION-PROMPT.md](sessions/NEXT-SESSION-PROMPT.md)
+- [x] **Phase 8 完全クローズ Commit 2** (`770624e`, 12 tests) — per-step action dispatch + useContactFlowDriver
+- [x] **Phase 8 完全クローズ Commit 2.5** (6 tests) — playTurn pauseOnAction + useOppTurnDriver per-step contact integration
+   - `playTurn` に `PlayTurnOptions { pauseOnAction?: boolean }` 追加 / `PlayTurnResult.paused?: { move }` で early return 可能化
+   - `useOppTurnDriver.driveOppTurn` を pauseOnAction:true + paused 分岐に対応 / activeActionId 監視で再 fire
+   - `useOppTurnDriver` の useEffect deps に activeActionId 追加 — action 完了 (activeActionId=null) で続きの move を再開
+   - CPU 攻撃時に GuardPickerModal が自動 open → human defender がモーダル介入可能に
+- [ ] **次セッション継続**: Phase 8 完全クローズ Commit 3-6 (Misread/Hirameki / Souza/Switch / 効果スタック reorder / 統合 E2E) → [sessions/NEXT-SESSION-PROMPT.md](sessions/NEXT-SESSION-PROMPT.md)
 - [ ] Phase 9: Polish (1000戦/チュートリアル)
 
 ## 次セッション開始時の最優先タスク

@@ -23,6 +23,7 @@ import { playTurn } from '@/ai/policy.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
+import { dispatchEngineAction } from './useEngineDispatch.js';
 
 let isDriving = false;
 
@@ -42,22 +43,40 @@ export function driveOppTurn(): void {
   if (current === null) return;
   if (current.turn.player !== 'opp') return;
   if (current.gameResult) return; // null or undefined はどちらも「未決着」扱い
+  // Commit 2.5: action 進行中 (useContactFlowDriver が駆動) → 引き継ぎ。
+  if (store.activeActionId) return;
   if (isDriving) return;
   isDriving = true;
   try {
-    store.dispatch((s) => {
-      // playTurn は AI の Move 列を順に apply し、endTurn 候補が選ばれた時点で
-      // ループを抜けるが、**flow.endTurn は呼ばれない** (policy.ts:187 のコメント参照)。
-      // ここで明示的に flow.endTurn を呼んで turn.player を 'self' に戻し、
-      // ターン終了 listener が積んだ pendingEffects も解消する。
-      const { finalState } = playTurn(s, new HeuristicPolicy(), 'opp');
-      return produce(finalState, (draft) => {
+    // Commit 2.5: pauseOnAction で action move を検出したら applyMove せず paused 返却。
+    // UI 側で actionDeclareChar/Case を dispatch → useContactFlowDriver に委譲する。
+    const result = playTurn(current, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
+    // 中間 state を store にコミット (action 直前の状態 / または通常 move 適用後の状態)
+    store.setGameState(result.finalState);
+
+    if (result.paused) {
+      const m = result.paused.move;
+      if (m.kind === 'actionAgainstChar') {
+        dispatchEngineAction({ type: 'actionDeclareChar', byUid: m.byUid, targetUid: m.targetUid });
+      } else if (m.kind === 'actionAgainstCase') {
+        dispatchEngineAction({ type: 'actionDeclareCase', byUid: m.byUid, targetPlayer: m.targetPlayer });
+      }
+      // activeActionId が set される → useContactFlowDriver が駆動 → action-end で
+      // activeActionId=null → useOppTurnDriver useEffect が再 fire → 続きの move へ。
+      return;
+    }
+
+    // 通常終了: playTurn は endTurn move を選んでも flow.endTurn を呼ばない
+    // (policy.ts コメント参照)。ここで明示的に呼んで turn.player を 'self' に戻し、
+    // ターン終了 listener が積んだ pendingEffects も解消する。
+    store.dispatch((s) =>
+      produce(s, (draft) => {
         if (draft.gameResult) return;
         if (draft.turn.player !== 'opp') return;
         flow.endTurn(draft, 'opp');
         runAllUntilEmpty(draft);
-      });
-    });
+      }),
+    );
   } finally {
     isDriving = false;
   }
@@ -87,8 +106,11 @@ export function _setOppTurnDriverDelay(ms: number): void {
 
 export function useOppTurnDriver(): void {
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
+  // Commit 2.5: activeActionId 復帰 (action-end) で続きの move を再開するため
+  // useEffect deps に追加。set 中は driveOppTurn 内で early return される。
+  const activeActionId = useGameStateStore((s) => s.activeActionId);
   useEffect(() => {
-    if (turnPlayer === 'opp') {
+    if (turnPlayer === 'opp' && activeActionId === null) {
       if (oppTurnDelayMs > 0) {
         const id = setTimeout(driveOppTurn, oppTurnDelayMs);
         return () => clearTimeout(id);
@@ -96,5 +118,5 @@ export function useOppTurnDriver(): void {
       Promise.resolve().then(driveOppTurn);
     }
     return undefined;
-  }, [turnPlayer]);
+  }, [turnPlayer, activeActionId]);
 }

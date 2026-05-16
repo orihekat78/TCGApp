@@ -203,15 +203,30 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
  * `result` プロパティを介して呼出側に最終 state を渡す API を別途用意するか、
  * 戻り値を `{ moves, finalState }` にする。本タスクでは後者を採用する。
  */
+/**
+ * Phase 8 完全クローズ Commit 2.5: playTurn の停止可能化。
+ * pauseOnAction を true にすると、action move (`actionAgainstChar` / `actionAgainstCase`)
+ * を選んだ時点で applyMove せず paused で early return する。UI 側 (useOppTurnDriver)
+ * が dispatchEngineAction({type:'actionDeclareChar/Case', ...}) で declare を呼び、
+ * useContactFlowDriver にコンタクト FSM を委譲することで、CPU 攻撃時も人間プレイヤーの
+ * ガード/カットイン/変装モーダルが正しく開く。
+ */
+export type PlayTurnOptions = {
+  pauseOnAction?: boolean;
+};
+
 export type PlayTurnResult = {
   moves: Move[];
   finalState: GameState;
+  /** pauseOnAction 時、action move が選ばれた場合に set される */
+  paused?: { move: Move };
 };
 
 export function playTurn(
   state: GameState,
   policy: AIPolicy,
   byPlayer: Player,
+  opts?: PlayTurnOptions,
 ): PlayTurnResult {
   const moves: Move[] = [];
   let s = state;
@@ -223,10 +238,18 @@ export function playTurn(
       // 候補が無い (起こり得ない — endTurn が常にある)。安全側で終了する。
       return { moves, finalState: s };
     }
-    moves.push(chosen);
     if (chosen.kind === 'endTurn') {
+      moves.push(chosen);
       return { moves, finalState: s };
     }
+    // Commit 2.5: action move pause
+    if (
+      opts?.pauseOnAction &&
+      (chosen.kind === 'actionAgainstChar' || chosen.kind === 'actionAgainstCase')
+    ) {
+      return { moves, finalState: s, paused: { move: chosen } };
+    }
+    moves.push(chosen);
     s = produce(s, draft => {
       applyMove(draft, chosen, byPlayer);
     });
