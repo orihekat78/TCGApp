@@ -59,10 +59,13 @@ function mapColor(jp: string): CardColor {
 }
 
 function buildIndex(sources: RawCardsJson[]): Map<string, RawCard> {
+  // engine.cards registry のキーは def.id = cardNum (D-prefix) なので
+  // resolver も cardNum をキーにして整合性を取る。
+  // 旧 `card.cardId` (4桁数字) は JSON 独自のフィールドで registry とズレていた。
   const idx = new Map<string, RawCard>();
   for (const src of sources) {
     for (const card of src.cards) {
-      idx.set(card.cardId, card);
+      idx.set(card.cardNum, card);
     }
   }
   return idx;

@@ -169,8 +169,8 @@ export function HandZone(props: HandZoneProps): JSX.Element {
         data-count={cards.length}
       >
         <div className="hand-mini-strip" role="list">
-          {cards.map((c) => (
-            <HandMiniCard key={c.cardId} card={c} onClick={onExpand} />
+          {cards.map((c, index) => (
+            <HandMiniCard key={`${c.cardId}-${index}`} card={c} onClick={onExpand} />
           ))}
         </div>
       </div>
@@ -204,13 +204,13 @@ export function HandZone(props: HandZoneProps): JSX.Element {
         </button>
       )}
       <div className="hand-cards-row" onClick={handleRowBackdropClick}>
-        {cards.map((c) => {
+        {cards.map((c, index) => {
           const usable = canUse ? canUse(c) : true;
           const isFeatured = featuredCardId === c.cardId;
           const reason = !usable && disabledReason ? disabledReason(c) : undefined;
           return (
             <HandCard
-              key={c.cardId}
+              key={`${c.cardId}-${index}`}
               card={c}
               featured={isFeatured}
               disabled={!usable}

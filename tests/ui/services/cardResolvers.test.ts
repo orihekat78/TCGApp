@@ -44,7 +44,7 @@ const sampleSource: RawCardsJson = {
 describe('createCardResolver', () => {
   it('resolves known character card with parsed AP/LP', () => {
     const resolve = createCardResolver(sampleSource);
-    expect(resolve('C001')).toEqual({
+    expect(resolve('D08010')).toEqual({
       name: 'キャラ青',
       color: 'blue',
       ap: 5000,
@@ -55,12 +55,12 @@ describe('createCardResolver', () => {
 
   it('maps Japanese colors to English', () => {
     const resolve = createCardResolver(sampleSource);
-    expect(resolve('C002').color).toBe('yellow');
+    expect(resolve('D11020').color).toBe('yellow');
   });
 
   it('handles null AP/LP (partner card) as 0', () => {
     const resolve = createCardResolver(sampleSource);
-    const r = resolve('P001');
+    const r = resolve('D08001');
     expect(r.ap).toBe(0);
     expect(r.lp).toBe(1);
     expect(r.name).toBe('探偵パートナー');
@@ -73,7 +73,7 @@ describe('createCardResolver', () => {
     });
   });
 
-  it('merges multiple sources by cardId', () => {
+  it('merges multiple sources by cardNum', () => {
     const extra: RawCardsJson = {
       count: 1,
       cards: [{
@@ -84,14 +84,14 @@ describe('createCardResolver', () => {
     };
     const resolve = createCardResolver(sampleSource, extra);
     expect(resolve('X001').name).toBe('別ソース');
-    expect(resolve('C001').name).toBe('キャラ青');
+    expect(resolve('D08010').name).toBe('キャラ青');
   });
 });
 
 describe('createCaseResolver', () => {
   it('resolves known case card with level', () => {
     const resolve = createCaseResolver(sampleSource);
-    expect(resolve('EVT01')).toEqual({
+    expect(resolve('D08026')).toEqual({
       title: 'テスト事件',
       color: 'blue',
       level: 7,  // max(difficultyFirst=7, difficultySecond=6, cost=7) = 7
@@ -109,7 +109,7 @@ describe('createCaseResolver', () => {
       }],
     };
     const resolve = createCaseResolver(src);
-    expect(resolve('EVT-X')).toEqual({
+    expect(resolve('X')).toEqual({
       title: 'コストのみ事件',
       color: 'green',
       level: 8,
@@ -136,8 +136,8 @@ describe('createCaseResolver', () => {
 describe('createHandCardResolver', () => {
   it('resolves character card with all stat fields', () => {
     const resolve = createHandCardResolver(sampleSource);
-    expect(resolve('C001')).toEqual({
-      cardId: 'C001',
+    expect(resolve('D08010')).toEqual({
+      cardId: 'D08010',
       name: 'キャラ青',
       color: 'blue',
       type: 'キャラ',
@@ -158,7 +158,7 @@ describe('createHandCardResolver', () => {
       }],
     };
     const resolve = createHandCardResolver(src);
-    const r = resolve('EV1');
+    const r = resolve('X');
     expect(r.type).toBe('イベント');
     expect(r.ap).toBeNull();
     expect(r.lp).toBeNull();

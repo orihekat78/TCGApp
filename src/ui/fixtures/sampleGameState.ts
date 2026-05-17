@@ -1,8 +1,9 @@
 // Phase 7 demo wiring: ブラウザ表示用サンプル GameState fixture
 // 視覚状態を網羅したダミーデータ。engine 型に完全準拠。
 //
-// 実 cardId は CT-D08 (self 側) / CT-D11 (opp 側) から借用、
+// 実 cardId は CT-D11 (self 側、後攻) / CT-D08 (opp 側、先攻) から借用、
 // cards.json と組み合わせて実キャラ名・色・AP/LP が表示される。
+// engine.cards.get のキーは `cardNum` (D-prefix 形式) なので fixture も D-prefix を使う。
 
 import type {
   GameState,
@@ -65,17 +66,17 @@ function makeLog(ts: number, player: 'self' | 'opp', turn: number, action: strin
 // pendingEffects=0 (TopBar "効果スタック: 0")、scratchTrace self=発見済。
 function selfPlayer(): PlayerState {
   return {
-    partner: { cardId: 'P076', state: 'sleep', location: 'partner-area' },
-    case: { cardId: '0946', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
+    partner: { cardId: 'D11001', state: 'sleep', location: 'partner-area' },
+    case: { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
     scene: [
-      makeScene('0936', 'self-1', { enterOrder: 0, isNamed: true }),
-      makeScene('0937', 'self-2', { enterOrder: 1 }),
-      makeScene('0938', 'self-3', { enterOrder: 2 }),
+      makeScene('D11004', 'self-1', { enterOrder: 0, isNamed: true }),
+      makeScene('D11006', 'self-2', { enterOrder: 1 }),
+      makeScene('D11008', 'self-3', { enterOrder: 2 }),
     ],
-    hand: ['0936', '0937', '0938', '0939', '0940'],
+    hand: ['D11004', 'D11006', 'D11008', 'D11010', 'D11013'],
     deck: Array.from({ length: 25 }, (_, i) => `deck-${i}`),
     evidence: [makeEvidence(1), makeEvidence(2), makeEvidence(3), makeEvidence(4)],
-    remove: ['0941', '0942', '0943'],
+    remove: ['D11014', 'D11015', 'D11017'],
     file: [fileBack, fileBack, fileBack],
     mulliganUsed: true,
   };
@@ -83,17 +84,17 @@ function selfPlayer(): PlayerState {
 
 function oppPlayer(): PlayerState {
   return {
-    partner: { cardId: 'P001', state: 'sleep', location: 'partner-area' },
-    case: { cardId: '0499', status: '解決編', requiredEvidence: 7, colors: ['青'] },
+    partner: { cardId: 'D08001', state: 'sleep', location: 'partner-area' },
+    case: { cardId: 'D08026', status: '解決編', requiredEvidence: 7, colors: ['青'] },
     scene: [
-      makeScene('0489', 'opp-1', { enterOrder: 0 }),
-      makeScene('0490', 'opp-2', { enterOrder: 1, state: 'sleep' }),
-      makeScene('0491', 'opp-3', { enterOrder: 2, state: 'stun' }),
+      makeScene('D08004', 'opp-1', { enterOrder: 0 }),
+      makeScene('D08006', 'opp-2', { enterOrder: 1, state: 'sleep' }),
+      makeScene('D08008', 'opp-3', { enterOrder: 2, state: 'stun' }),
     ],
-    hand: ['0489', '0490', '0491', '0492', '0493'],
+    hand: ['D08004', 'D08006', 'D08008', 'D08010', 'D08012'],
     deck: Array.from({ length: 2 }, (_, i) => `opp-deck-${i}`),
     evidence: [makeEvidence(1), makeEvidence(2), makeEvidence(3), makeEvidence(4), makeEvidence(5)],
-    remove: ['0494'],
+    remove: ['D08014'],
     file: [fileBack, fileBack, fileBack, fileBack, fileBack],
     mulliganUsed: true,
   };
