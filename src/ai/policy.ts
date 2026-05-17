@@ -10,7 +10,7 @@
 //   - actionAgainstChar は contact 判定までを単純実行する (Phase 6 では AI 側 cutin/disguise なし)
 //   - 200 手の安全弁を設けて無限ループを防止する
 
-import type { GameState, EffectCtx } from '@/engine/types';
+import type { GameState, EffectCtx, Cost } from '@/engine/types';
 import { engine } from '@/engine';
 import { produce } from 'immer';
 import { enumerateMoves, type Move } from './move-enumerator.js';
@@ -120,6 +120,55 @@ function makeCtx(p: Player): EffectCtx {
 }
 
 /**
+ * populateCostParams — Phase 9-B (B3 fix): cost picker が必要なコストに対し、
+ * `ctx.dyn.costParams` を AI が自動充填する。
+ *
+ * cost.pay (src/engine/cost/pay.ts:166) は `flipFaceUpEvidence` で
+ * `ctx.dyn.costParams.flipFaceUpEvidence.indices` を要求し、未供給だと
+ * `picks 0 out of [min, max]` で throw する (Random vs Random 100戦で 34% 失敗)。
+ *
+ * AI 側 (move-enumerator の canPay は枚数だけを見るため列挙時には合格するが、
+ * applyMove で pay 呼出時に indices が空) でこの値を greedy 供給することで解消。
+ *
+ * - `flipFaceUpEvidence`: face-down 証拠の先頭から `n.min` 枚を採用
+ * - `pay` (composite): 全 items を再帰
+ * - `choice`: cost.pay 側で「ctx.dyn.costChoice 未指定 → 最初に canPay する branch」に
+ *   fallback するので明示的指定は不要。再帰だけ行う
+ * - 他: picker 不要のためノーオペ
+ */
+function populateCostParams(
+  state: GameState,
+  player: Player,
+  cost: Cost,
+  ctx: EffectCtx,
+): void {
+  switch (cost.kind) {
+    case 'pay':
+      for (const item of cost.items) populateCostParams(state, player, item, ctx);
+      return;
+    case 'choice':
+      for (const item of cost.items) populateCostParams(state, player, item, ctx);
+      return;
+    case 'flipFaceUpEvidence': {
+      const evidence = state.players[player].evidence;
+      const indices: number[] = [];
+      for (let i = 0; i < evidence.length && indices.length < cost.n.min; i++) {
+        if (!evidence[i].faceUp) indices.push(i);
+      }
+      const dyn = (ctx.dyn ?? {}) as Record<string, unknown>;
+      const params = (dyn['costParams'] ?? {}) as Record<string, unknown>;
+      params['flipFaceUpEvidence'] = { indices };
+      dyn['costParams'] = params;
+      ctx.dyn = dyn;
+      return;
+    }
+    default:
+      // Other cost kinds: no picker needed
+      return;
+  }
+}
+
+/**
  * applyMove — Move kind ごとに対応する engine API を呼ぶ。
  *
  * 重要:
@@ -145,6 +194,7 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       const ab = partnerDef?.abilities.find((a) => a.id === move.abilityId);
       if (ab?.cost && partnerCardId) {
         const ctx = makePartnerAbilCtx(byPlayer, partnerCardId, move.abilityId);
+        populateCostParams(state, byPlayer, ab.cost, ctx);
         engine.cost.pay(state, ab.cost, ctx);
       }
       engine.flow.usePartnerAbility(state, byPlayer, move.abilityId, makeCtx(byPlayer));
@@ -156,7 +206,10 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       if (ctx?.source.cardId) {
         const def = engine.cards.get(ctx.source.cardId);
         const ab = def?.abilities.find((a) => a.id === move.abilityId);
-        if (ab?.cost) engine.cost.pay(state, ab.cost, ctx);
+        if (ab?.cost) {
+          populateCostParams(state, ctx.source.player as Player, ab.cost, ctx);
+          engine.cost.pay(state, ab.cost, ctx);
+        }
       }
       engine.flow.useDeclaredAbility(state, move.uid, move.abilityId, makeCtx(byPlayer));
       return;

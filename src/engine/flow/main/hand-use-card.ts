@@ -63,6 +63,9 @@ export function canHandUseCard(state: GameState, p: Player, cardId: string): boo
   if (!colorAllowed(state, p, cardId)) return false;
   // レベル (rules/12)
   if (!levelAllowed(state, p, cardId)) return false;
+  // キャラの場合: 現場上限 5 (rules/20) — switch 経路は Phase 5 advance で追加するまで保留
+  const d = readDef.card(cardId);
+  if (d?.kind === 'character' && state.players[p].scene.length >= 5) return false;
   return true;
 }
 
@@ -84,8 +87,7 @@ export function handUseCard(
   if (!canHandUseCard(state, p, cardId)) {
     throw new Error(`handUseCard: not allowed for ${p} cardId=${cardId}`);
   }
-  // 手札からリムーブ (イベントは使用後リムーブ / キャラは Phase 5 で登場処理側が担当)
-  // Phase 4 ではフラグ + ログ + hook のみ。実体移動はカード登録時に効果側で行う。
+  // フラグ + ログ
   mutate.flag.setHandUseUsed(state, p, true);
   mutate.log.append(state, {
     ts: Date.now(),
@@ -100,4 +102,24 @@ export function handUseCard(
     { kind: 'handUseCard', cardId },
     { player: p, cardId },
   );
+  // キャラの場合: 現場へ登場 (rules/05 §01 + rules/06 + rules/12 §3 — アクティブ・名乗り状態で登場)
+  // NextHint と同じパターン (flow/main/next-hint.ts L105-119) を踏襲。
+  // 手札の使用とは異なり、効果による登場ではないので viaEffect:false。
+  const d = readDef.card(cardId);
+  if (d?.kind === 'character') {
+    // 手札から除去
+    const handIdx = state.players[p].hand.indexOf(cardId);
+    if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+    // 現場登場 (名乗り状態 = rules/05 同ターン登場)
+    const newChar = mutate.scene.enter(state, p, cardId, {
+      named: true,
+      viaEffect: false,
+    });
+    event.emit(
+      state,
+      'enter',
+      { uid: newChar.uid, viaEffect: false, enterOrder: newChar.enterOrder },
+      { player: p, cardId, uid: newChar.uid },
+    );
+  }
 }
