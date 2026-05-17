@@ -9,6 +9,7 @@ export { runAutoPhase } from './auto-phase.js';
 export { startTurn, endTurn, startMainPhase } from './turn.js';
 export {
   canHandUseCard,
+  canHandUseCardSwitch,
   handUseCard,
   canStartNextHint,
   runNextHint,

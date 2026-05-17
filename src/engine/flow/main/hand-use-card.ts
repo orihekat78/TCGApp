@@ -50,9 +50,10 @@ function levelAllowed(state: GameState, p: Player, cardId: string): boolean {
 }
 
 /**
- * canHandUseCard — 手札の使用が可能か判定する。
+ * 手札の使用 共通ゲート: 色 / レベル / 1ターン1回 / nextHint 済を判定。
+ * scene 上限は呼出側 (canHandUseCard / canHandUseCardSwitch) で別途。
  */
-export function canHandUseCard(state: GameState, p: Player, cardId: string): boolean {
+function handUseGateCommon(state: GameState, p: Player, cardId: string): boolean {
   // 手札にあるか
   if (!state.players[p].hand.includes(cardId)) return false;
   // 1 ターン 1 回制限 (rules/05)
@@ -63,9 +64,31 @@ export function canHandUseCard(state: GameState, p: Player, cardId: string): boo
   if (!colorAllowed(state, p, cardId)) return false;
   // レベル (rules/12)
   if (!levelAllowed(state, p, cardId)) return false;
-  // キャラの場合: 現場上限 5 (rules/20) — switch 経路は Phase 5 advance で追加するまで保留
+  return true;
+}
+
+/**
+ * canHandUseCard — 通常の手札使用が可能か (scene 上限 5 未満)。
+ * scene が 5 でキャラ登場するときは canHandUseCardSwitch を使う (rules/20 §スイッチ)。
+ */
+export function canHandUseCard(state: GameState, p: Player, cardId: string): boolean {
+  if (!handUseGateCommon(state, p, cardId)) return false;
+  // キャラの場合: 現場上限 5 (rules/20) — スイッチ経路は canHandUseCardSwitch
   const d = readDef.card(cardId);
   if (d?.kind === 'character' && state.players[p].scene.length >= 5) return false;
+  return true;
+}
+
+/**
+ * canHandUseCardSwitch — 手札使用 + スイッチ (rules/20 §スイッチ) が可能か判定。
+ * 条件: 通常ゲート ∧ cardId がキャラ ∧ 現場が満員 (5 枚)。
+ * リムーブ対象 removeUid の検証 (scene に存在するか) は呼出側 / mutate.scene.switchEnter 側。
+ */
+export function canHandUseCardSwitch(state: GameState, p: Player, cardId: string): boolean {
+  if (!handUseGateCommon(state, p, cardId)) return false;
+  const d = readDef.card(cardId);
+  if (d?.kind !== 'character') return false;
+  if (state.players[p].scene.length < 5) return false;
   return true;
 }
 
@@ -83,8 +106,15 @@ export function handUseCard(
   p: Player,
   cardId: string,
   _ctx?: unknown,
+  switchRemoveUid?: string,
 ): void {
-  if (!canHandUseCard(state, p, cardId)) {
+  // switch 経路と通常経路でゲート判定を切替 (rules/20 §スイッチ)。
+  const isSwitch = switchRemoveUid !== undefined;
+  if (isSwitch) {
+    if (!canHandUseCardSwitch(state, p, cardId)) {
+      throw new Error(`handUseCard: switch not allowed for ${p} cardId=${cardId}`);
+    }
+  } else if (!canHandUseCard(state, p, cardId)) {
     throw new Error(`handUseCard: not allowed for ${p} cardId=${cardId}`);
   }
   // フラグ + ログ
@@ -110,11 +140,17 @@ export function handUseCard(
     // 手札から除去
     const handIdx = state.players[p].hand.indexOf(cardId);
     if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
-    // 現場登場 (名乗り状態 = rules/05 同ターン登場)
-    const newChar = mutate.scene.enter(state, p, cardId, {
-      named: true,
-      viaEffect: false,
-    });
+    // 現場登場 (名乗り状態 = rules/05 同ターン登場)。switch 経路では既存 1 枚を
+    // 先にリムーブしてから enter (mutate.scene.switchEnter)。
+    const newChar = isSwitch
+      ? mutate.scene.switchEnter(state, p, cardId, switchRemoveUid as string, {
+          named: true,
+          viaEffect: false,
+        })
+      : mutate.scene.enter(state, p, cardId, {
+          named: true,
+          viaEffect: false,
+        });
     event.emit(
       state,
       'enter',

@@ -314,4 +314,56 @@ describe('enumerateMoves', () => {
     const hand = moves.filter(m => m.kind === 'handUseCard');
     expect(hand).toHaveLength(1);
   });
+
+  // ---- rules/20 §スイッチ (Phase 5 advance) ----
+  it('scene=5 + character in hand: emits handUseCardSwitch for each scene char (5 moves)', () => {
+    registerCardDef(makeCard('CharA', { kind: 'character', colors: ['赤'], level: 0, ap: 1000, lp: 1 }));
+    registerCardDef(makeCard('SC', { kind: 'character', colors: ['赤'], level: 0, ap: 1000, lp: 1 }));
+    const s = produce(makeBaseState(), draft => {
+      draft.players.self.hand.push('CharA');
+      // 5 既存 scene chars
+      for (let i = 0; i < 5; i++) {
+        mutate.scene.enter(draft, 'self', 'SC', { named: false, viaEffect: false });
+      }
+    });
+    const moves = enumerateMoves(s, 'self');
+    const handNormal = moves.filter(m => m.kind === 'handUseCard');
+    const handSwitch = moves.filter((m): m is Extract<Move, { kind: 'handUseCardSwitch' }> => m.kind === 'handUseCardSwitch');
+    // 通常 handUseCard は出ない (scene=5 で canHandUseCard=false)
+    expect(handNormal).toHaveLength(0);
+    // switch は scene char 数 (5) と同数列挙
+    expect(handSwitch).toHaveLength(5);
+    // 各 removeUid が scene の uid と一致
+    const sceneUids = s.players.self.scene.map(c => c.uid);
+    const removeUids = handSwitch.map(m => m.removeUid);
+    expect(new Set(removeUids)).toEqual(new Set(sceneUids));
+  });
+
+  it('scene=4 + character in hand: emits normal handUseCard only (no switch)', () => {
+    registerCardDef(makeCard('CharA', { kind: 'character', colors: ['赤'], level: 0, ap: 1000, lp: 1 }));
+    registerCardDef(makeCard('SC', { kind: 'character', colors: ['赤'], level: 0, ap: 1000, lp: 1 }));
+    const s = produce(makeBaseState(), draft => {
+      draft.players.self.hand.push('CharA');
+      for (let i = 0; i < 4; i++) {
+        mutate.scene.enter(draft, 'self', 'SC', { named: false, viaEffect: false });
+      }
+    });
+    const moves = enumerateMoves(s, 'self');
+    expect(moves.filter(m => m.kind === 'handUseCard')).toHaveLength(1);
+    expect(moves.filter(m => m.kind === 'handUseCardSwitch')).toHaveLength(0);
+  });
+
+  it('scene=5 + event in hand: emits handUseCard normally (event は scene 上限と無関係)', () => {
+    registerCardDef(makeCard('EvtA', { kind: 'event', colors: ['赤'], level: 0 }));
+    registerCardDef(makeCard('SC', { kind: 'character', colors: ['赤'], level: 0, ap: 1000, lp: 1 }));
+    const s = produce(makeBaseState(), draft => {
+      draft.players.self.hand.push('EvtA');
+      for (let i = 0; i < 5; i++) {
+        mutate.scene.enter(draft, 'self', 'SC', { named: false, viaEffect: false });
+      }
+    });
+    const moves = enumerateMoves(s, 'self');
+    expect(moves.filter(m => m.kind === 'handUseCard')).toHaveLength(1);
+    expect(moves.filter(m => m.kind === 'handUseCardSwitch')).toHaveLength(0);
+  });
 });

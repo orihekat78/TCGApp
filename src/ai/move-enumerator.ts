@@ -22,6 +22,7 @@ type Player = 'self' | 'opp';
  */
 export type Move =
   | { kind: 'handUseCard'; cardId: string }
+  | { kind: 'handUseCardSwitch'; cardId: string; removeUid: string }
   | { kind: 'startNextHint' }
   | { kind: 'partnerAbility'; abilityId: string }
   | { kind: 'declaredAbility'; uid: string; abilityId: string }
@@ -121,6 +122,8 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   }
 
   // 3. handUseCard (手札順 — 同じ cardId が複数あっても各枚を区別しない; 重複は dedup)
+  //    rules/20 §スイッチ: scene>=5 でキャラ手札使用したい場合は handUseCardSwitch を
+  //    各 scene char (removeUid) ごとに列挙する。
   {
     const seen = new Set<string>();
     for (const cardId of state.players[byPlayer].hand) {
@@ -128,6 +131,12 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
       seen.add(cardId);
       if (engine.flow.canHandUseCard(state, byPlayer, cardId)) {
         moves.push({ kind: 'handUseCard', cardId });
+        continue;
+      }
+      if (engine.flow.canHandUseCardSwitch(state, byPlayer, cardId)) {
+        for (const sc of state.players[byPlayer].scene) {
+          moves.push({ kind: 'handUseCardSwitch', cardId, removeUid: sc.uid });
+        }
       }
     }
   }

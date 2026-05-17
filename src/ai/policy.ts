@@ -183,6 +183,12 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       engine.flow.handUseCard(state, byPlayer, move.cardId, makeCtx(byPlayer));
       return;
     }
+    case 'handUseCardSwitch': {
+      // rules/20 §スイッチ: scene 5 埋まりキャラ登場時の代替経路。
+      // 第 5 引数 switchRemoveUid を渡すと engine 側で mutate.scene.switchEnter を呼ぶ。
+      engine.flow.handUseCard(state, byPlayer, move.cardId, makeCtx(byPlayer), move.removeUid);
+      return;
+    }
     case 'startNextHint': {
       engine.flow.runNextHint(state, byPlayer);
       return;

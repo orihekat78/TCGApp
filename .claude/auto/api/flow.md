@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `2e258011d7e0`
+> Source hash: `99caeab28c40`
 
 フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard）
 
@@ -40,13 +40,14 @@
 | `canActionAgainstCase` | `(state: GameState, byUid: string, targetPlayer: Player): boolean` | canActionAgainstCase — 相手事件へのアクション可否。 - 主体が canAction (target='case') - 相手の証拠 ≥ 1 (rules/07: 証拠が1つもない事件は対象不可) / |
 | `canActionAgainstChar` | `(state: GameState, byUid: string, targetUid: string): boolean` | canActionAgainstChar — 相手キャラへのアクション可否。 - 主体が canAction (target='char') - 対象が targetExpander.candidates() に含まれる - 通常 (rules/… |
 | `canDeclaredAbility` | `(state: GameState, uid: string, _abilId: string): boolean` | 宣言能力の【ターン①/②】判定。 - Phase 4 では maxPerTurn を引数で受けず、abilId が登録時に持つ前提で エンジン側はカウントの読み取りのみ提供する。 - 呼出元 (UI / カードリスナ) が `engine.read.char.declaredUseCount` を見て 上限超過なら canDeclaredAbility=false を返すよう拡張可能。… |
-| `canHandUseCard` | `(state: GameState, p: Player, cardId: string): boolean` | canHandUseCard — 手札の使用が可能か判定する。 / |
+| `canHandUseCard` | `(state: GameState, p: Player, cardId: string): boolean` | canHandUseCard — 通常の手札使用が可能か (scene 上限 5 未満)。 scene が 5 でキャラ登場するときは canHandUseCardSwitch を使う (rules/20 §スイッチ)。 / |
+| `canHandUseCardSwitch` | `(state: GameState, p: Player, cardId: string): boolean` | canHandUseCardSwitch — 手札使用 + スイッチ (rules/20 §スイッチ) が可能か判定。 条件: 通常ゲート ∧ cardId がキャラ ∧ 現場が満員 (5 枚)。 リムーブ対象 removeUid の検証 (scene に存在するか) は呼出側 / mutate.scene.switchEnter 側。 / |
 | `canPartnerAbility` | `(state: GameState, p: Player, _abilId: string): boolean` | canPartnerAbility — パートナー能力使用可能か判定する。 - パートナーがアクティブ状態 - パートナーが partner-area にいる (file-area / mr-removed は不可) abilId 単位の細かい条件 (【ターン①】等) はカード固有 listener で判定する想定。 / |
 | `canReason` | `(state: GameState, uid: string): boolean` | canReason — 推理可能か判定する。 - 対象キャラ / パートナーが存在 - active 状態 - キャラの場合: 名乗りなし or 迅速持ち (rules/11, 13) - パートナーの場合: 名乗り状態の概念なし (rules/06) → active なら常に可 / |
 | `canStartNextHint` | `(state: GameState, p: Player): boolean` | canStartNextHint — ネクストヒントを開始可能か判定する。 - FILE 最上部 (アシストパートナー以外) が 1 枚以上必要 (= 実質 FILE ≥ 1 + 非アシスト) / |
 | `doReasoning` | `(state: GameState, uid: string): void` | doReasoning — 推理を実行する。 - reasoning:declare → スリープ化 → reasoning:before-add → 証拠追加 → reasoning:end - LP は max(0, lp) で証拠枚数を決定 (rules/… |
 | `endTurn` | `(state: GameState, p: Player): void` | ターン終了処理 (rules/05 エンドフェイズ): 1. phase:main:end (メインフェイズ終了) 2. phase:end:start (エンドフェイズ開始 — ターン終了時能力発火窓) 3. [呼出元の責務] resolve.runAllUntilEmpty でターン終了時 trigger 解決 4.… |
-| `handUseCard` | `(state: GameState, p: Player, cardId: string, _ctx?: unknown): void` | handUseCard — 手札の使用を宣言する。 - turnFlags.handUseUsed=true をセット - effect:declared hook を emit (Phase 5 で登録された listener が pendingEffects に積む) - ログ追加 実際のカード効果解決は呼出元が engine.resolve.runAllUntilEmpty を実行する責務。… |
+| `handUseCard` | `(state: GameState, p: Player, cardId: string, _ctx?: unknown, switchRemoveUid?: string): void` | handUseCard — 手札の使用を宣言する。 - turnFlags.handUseUsed=true をセット - effect:declared hook を emit (Phase 5 で登録された listener が pendingEffects に積む) - ログ追加 実際のカード効果解決は呼出元が engine.resolve.runAllUntilEmpty を実行する責務。… |
 | `mustTargetCandidates` | `(state: GameState, byUid: string): TargetCandidate[]` | mustTargetCandidates — 必ず指定すべき対象 (G28: turnEffects.mustBeTargeted=true) - 相手 (opp) の scene を走査 - turnEffects.mustBeTargeted === true のキャラのみ返す / |
 | `registerTargetExpander` | `(uid: string, expander: TargetExpander): Unsubscribe` | registerTargetExpander — 指定 uid を発火元とする対象拡張を登録する。 戻り値の Unsubscribe を呼ぶと該当 uid のエントリを削除する。 同じ uid で複数回登録した場合は **後勝ち** (上書き)。 / |
 | `runAutoPhase` | `(state: GameState, p: Player): void` | runAutoPhase — オートフェイズの 1 ターン分を実行する。 ⚠ Phase 4: 各ステップは状態変更のみ。能力起動 (登場時等) は emit 経由で pendingEffects に積まれる。実際の解決は呼出元が engine.resolve.runAllUntilEmpty を呼ぶ責務。 / |

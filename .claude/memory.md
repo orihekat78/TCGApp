@@ -22,7 +22,9 @@
 - [x] **C+D scope-out**: sampleGameState cardId 正規化 (D-prefix) + HandZone key 一意化 + cardResolvers idx key cardNum 化 (pre-existing registry mismatch)
 - [x] **React Internal error "Expected static flag" 解消**: CaseArea の `useCardOrientation` を early-return より前に移動 (Rules of Hooks 違反 fix)
 - [x] **demo path 検証**: 「デモ (turn-4) を読込」経路で 17 CardArt 全 CDN 取得 + name/cost 表示 + console clean を Playwright 確認 (実装不要、C 拡張 + React fix の累積で自然解消)
-- [ ] Phase 5 advance: 実カード追加 + Misread / Souza / SceneSwitch engine 統合
+- [x] **Phase 5 advance: SceneSwitch (Engine + AI)**: rules/20 §スイッチ — scene 5 枚埋まり時の handUseCard を engine.flow に追加、AI move-enumerator + heuristic 拡張 (1409 PASS / 1000戦 smoke 完走)
+- [ ] Phase 5 advance: SceneSwitch UI (SceneSwitchPickerModal + store + Playmat wrapper) 次セッション
+- [ ] Phase 5 advance: 実カード追加 + Misread / Souza / Hirameki engine 統合
 - [ ] 残 scope-out: MCTS AI / Phase 9-G リプレイ / 9-H パフォーマンス計測
 
 ## セッションログ index

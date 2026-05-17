@@ -140,6 +140,22 @@ export class HeuristicPolicy implements AIPolicy {
       return handCards[0];
     }
 
+    // 優先順位 6b: handUseCardSwitch (rules/20 §スイッチ、scene 5 枚埋まり時の代替経路)
+    // Option A: 各 cardId について最古 enterOrder の removeUid を選ぶ (戦術強化は Phase 9-F)。
+    const handSwitchCards = candidates.filter(
+      (m): m is Extract<Move, { kind: 'handUseCardSwitch' }> => m.kind === 'handUseCardSwitch',
+    );
+    if (handSwitchCards.length > 0) {
+      const oldest = [...state.players[byPlayer].scene].sort(
+        (a, b) => a.enterOrder - b.enterOrder,
+      )[0];
+      if (oldest) {
+        const picked = handSwitchCards.find(m => m.removeUid === oldest.uid);
+        if (picked) return picked;
+      }
+      return handSwitchCards[0];
+    }
+
     // 優先順位 7: startNextHint (Phase 9-B: fileLen >= 8 の surplus がある時だけ)
     // NextHint は FILE を消費するため、assist 用 7 枚を確保した上での surplus でのみ使う。
     // この gate を入れないと FILE 蓄積が NextHint で相殺され assist 閾値に到達しない。
