@@ -1,7 +1,34 @@
+---
+aliases:
+  - HUB
+  - ナビゲーションハブ
+  - プロジェクトハブ
+tags:
+  - hub
+  - navigation
+  - project/conan-tcg
+status: phase-8-closed
+phase: 8
+last_updated: 2026-05-17
+related:
+  - "[[PROJECT-MAP.canvas]]"
+  - "[[README]]"
+---
+
 # 🔍 名探偵コナンTCG プロジェクト — ナビゲーションハブ
 
 このファイルは Obsidian の `Cmd/Ctrl + O` から開ける**プロジェクト中央の出発点**。
 ルール / 研究 / 設計 / 実装計画 / セッションログ全てへ1ホップで届くように再構成。
+
+> [!tip] 視覚マップあり
+> 6つの主要ドキュメント群の関係を一望したい場合は [[PROJECT-MAP.canvas|プロジェクトマップ Canvas]] を開いてください。
+
+---
+
+> [!important] 現在のフェーズ: Phase 8 完全クローズ達成 ✅
+> Commit 1〜6 完了 ／ 直近: `038a331` (NEXT-SESSION-PROMPT を Phase 9 へ)
+> Engine: 1377 tests GREEN ／ 182 files ／ TypeCheck Clean ／ docs:check Clean
+> 次: Phase 9 Polish / Phase 5 advance (実カード追加)
 
 ## 🚀 まず最初に読む
 

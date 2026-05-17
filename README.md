@@ -7,10 +7,11 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-16）
+## 現在の状況（2026-05-17）
 
-**Phase 8 UI Interactions 大半完了**。ActionsPanel 全 8 item 配線 / CPU 9 段階コンタクト応答 /
-能力 cost 解決 (UI+AI 対称) / ゲーム開始モーダル / 盤面アニメまで完了。
+**Phase 8 完全クローズ達成** ✅ ActionsPanel 全配線 / per-step action dispatch /
+ContactFlowDriver / Hirameki end-to-end / Misread・Souza・SceneSwitch infrastructure /
+効果スタック reorder UI / 人間 vs CPU E2E まで完了。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -18,21 +19,18 @@
 |------|-----|-----|
 | 0-6 | Engine + 47 カード + AI | ✅ 完了 |
 | 7 | UI Shell (12 components + cardResolvers + App 統合) | ✅ 完了 |
-| 8.1-8.3 | hooks 基盤 (useEngineDispatch / useTargetPicker / useConfirmation) | ✅ 完了 |
-| 8.5 / 8.6 | ActionsPanel onClick + 推理/ネクストヒント/アシスト/事件解決/手札使用 | ✅ 完了 |
-| 8.7a-e | アクション宣言 / opp ターン自動進行 / CPU ガード/カットイン/変装 政策強化 | ✅ 完了 |
-| 8.8a-d | パートナー能力 / 宣言能力 / 能力 cost 解決 (UI + AI) | ✅ 完了 |
-| 8.4 / 8.10a-e | ゲーム開始モーダル / opp overlay / アクショントースト / アニメ / judge log | ✅ 完了 |
-| 8.4b / 8.10 残 | 正規 setup / リムーブフェード / 画面フラッシュ | ⏳ 残 |
-| 9 | 統合・自動プレイテスト1000戦・チュートリアル / PvP モーダル | ⏳ |
+| 8.1-8.10 | hooks 基盤 / 推理 / アクション / 演出 / チュートリアル L0-L13 | ✅ 完了 |
+| 8 完全クローズ Commit 1-6 | per-step dispatch / Hirameki / Misread・Souza・Switch infra / 効果 reorder / E2E | ✅ 完了 |
+| Phase 5 prep の engine 統合 | Misread / Souza / SceneSwitch の listener / dispatch 統合 | ⏳ 実カード追加と同時 |
+| 9 | Polish (1000戦チューニング / リプレイ / カード追加 / パフォーマンス) | ⏳ |
 
 ### テスト状況
 
-- **1275 PASS / 153 Test Files** (Phase 8.10e 完了時点)
+- **1377 PASS / 182 Test Files** (Phase 8 完全クローズ達成時点)
 - 100戦 AI vs AI smoke: **0 invariant failure / 0 例外**
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
-- `npm run dev` で http://localhost:5173/ — ゲーム開始モーダル → end-to-end プレイ可能
-- 骨格凍結原則遵守: 本セッションの engine 変更は contact.judge log 追加 1 行のみ (8.10e ログ欠落補修)
+- `npm run dev` で http://localhost:5173/ — ゲーム開始 → end-to-end プレイ可能、人間 defender のモーダル介入動作
+- 骨格凍結原則遵守: 本クローズ作業の engine 変更は reasoning.ts に LP 再読み 1 行 + listener モジュール 2 件新規 (`hirameki.ts` / `misread.ts`) のみ
 
 ### 調査フェーズ完了済 (実装の前提)
 

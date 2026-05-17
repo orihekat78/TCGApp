@@ -7,13 +7,55 @@
   "showOrphans": true,
   "collapse-color-groups": false,
   "colorGroups": [
-    { "query": "path:.claude/rules/",    "color": { "a": 1, "rgb": 14701131 } },
-    { "query": "path:.claude/specs/",    "color": { "a": 1, "rgb": 4039359  } },
-    { "query": "path:.claude/research/", "color": { "a": 1, "rgb": 5025616  } },
-    { "query": "path:.claude/sessions/", "color": { "a": 1, "rgb": 16770048 } },
-    { "query": "path:.claude/auto/",     "color": { "a": 0.55, "rgb": 8421504 } },
-    { "query": "path:src/",              "color": { "a": 1, "rgb": 10892543 } },
-    { "query": "path:tests/",            "color": { "a": 1, "rgb": 16744319 } }
+    {
+      "query": "path:.claude/rules/",
+      "color": {
+        "a": 1,
+        "rgb": 14701131
+      }
+    },
+    {
+      "query": "path:.claude/specs/",
+      "color": {
+        "a": 1,
+        "rgb": 4039359
+      }
+    },
+    {
+      "query": "path:.claude/research/",
+      "color": {
+        "a": 1,
+        "rgb": 5025616
+      }
+    },
+    {
+      "query": "path:.claude/sessions/",
+      "color": {
+        "a": 1,
+        "rgb": 16770048
+      }
+    },
+    {
+      "query": "path:.claude/auto/",
+      "color": {
+        "a": 1,
+        "rgb": 8421504
+      }
+    },
+    {
+      "query": "path:src/",
+      "color": {
+        "a": 1,
+        "rgb": 10892543
+      }
+    },
+    {
+      "query": "path:tests/",
+      "color": {
+        "a": 1,
+        "rgb": 16744319
+      }
+    }
   ],
   "collapse-display": false,
   "showArrow": true,
@@ -25,6 +67,6 @@
   "repelStrength": 15.15625,
   "linkStrength": 1,
   "linkDistance": 500,
-  "scale": 0.22920135941748948,
+  "scale": 0.2292013594174876,
   "close": true
 }

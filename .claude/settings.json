@@ -60,7 +60,8 @@
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_take_screenshot",
       "Bash(printf '\\\\n' >> \".claude/sessions/2026-05-15-6.md\" && wc -l \".claude/sessions/2026-05-15-6.md\")",
-      "Bash(printf '\\\\n' >> \".claude/sessions/NEXT-SESSION-PROMPT.md\" && wc -l \".claude/sessions/NEXT-SESSION-PROMPT.md\")"
+      "Bash(printf '\\\\n' >> \".claude/sessions/NEXT-SESSION-PROMPT.md\" && wc -l \".claude/sessions/NEXT-SESSION-PROMPT.md\")",
+      "Bash(Get-Content -Path \"src/engine/types/results.ts\" -Head 150)"
     ],
     "additionalDirectories": [
       "c:\\Users\\arumi\\OneDrive\\�f�X�N�g�b�v\\conan\\.claude",
