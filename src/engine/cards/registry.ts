@@ -16,7 +16,8 @@ import {
 } from '../read/def.js';
 import { def as defSelectors } from '../read/def.js';
 import { validateCards } from '../effect/validate.js';
-import { loadSet } from './tsv-loader.js';
+// loadSet は Node 専用 (`tsv-loader-fs.ts`) — `load()` 内で動的 import する。
+// ブラウザバンドルに node:fs を巻き込まないための分離 (Phase 9-B hotfix)。
 
 function register(def: CardDef): void {
   _register(def);
@@ -54,7 +55,9 @@ function validateAll(): ValidationResult[] {
 
 // load(setCode): TSV をパースしてレジストリへ register する。
 // 同一 id を再ロードした場合は上書きされる (Map の挙動)。
+// loadSet は node:fs 依存のため tsv-loader-fs から動的 import (ブラウザ非引込み)。
 async function load(setCode: 'CT-D08' | 'CT-D11'): Promise<void> {
+  const { loadSet } = await import('./tsv-loader-fs.js');
   const defs = loadSet(setCode);
   for (const d of defs) register(d);
 }

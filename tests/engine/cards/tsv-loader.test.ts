@@ -2,7 +2,9 @@
 // spec: .claude/specs/cards-data/INDEX.md
 
 import { describe, it, expect } from 'vitest';
-import { parseTsv, loadSet } from '@/engine/cards';
+import { parseTsv } from '@/engine/cards';
+// Phase 9-B hotfix: loadSet は Node 専用に分離 (tsv-loader-fs.ts)。
+import { loadSet } from '@/engine/cards/tsv-loader-fs';
 import type { CardDef } from '@/engine/types';
 
 describe('parseTsv — unescape rules', () => {

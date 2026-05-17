@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c17aea49214c`
+> Source hash: `6e0f2a4b4906`
 
 仕様書 [`engine-api-effect-descriptor`](../../../specs/engine-api-effect-descriptor.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 
@@ -19,9 +19,10 @@
 - [`15-abilities-effects.md`](../by-rule/15-abilities-effects.md)
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 
-## 📄 参照ソース (4)
+## 📄 参照ソース (5)
 
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
 - [`src/engine/effect/index.ts`](../../../../src/engine/effect/index.ts)
 - [`src/engine/effect/resolver.ts`](../../../../src/engine/effect/resolver.ts)
+- [`src/engine/effect/validate-spec-files.ts`](../../../../src/engine/effect/validate-spec-files.ts)
 - [`src/engine/effect/validate.ts`](../../../../src/engine/effect/validate.ts)

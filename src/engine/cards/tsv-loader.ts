@@ -1,4 +1,4 @@
-// engine.cards.* — TSV ローダ
+// engine.cards.tsv-loader — TSV ローダ (pure parseTsv のみ)
 // rules: 02-deck-construction.md, 06-card-types.md, 19-special-rules.md, 20-color-and-switch.md
 // spec: .claude/specs/cards-data/INDEX.md
 //
@@ -8,20 +8,11 @@
 //   - abilities は空配列で出力。Phase 5 Group B-E で共通クラス側から merge する
 //   - color は単一値 (rules/20 に 2色MR の記述はあるが MVP データセットは単色)
 //   - traits は '|' 区切り
+//
+//   - 旧 `loadSet(setCode)` は node:fs 依存があるため `./tsv-loader-fs.ts` に分離。
+//     ブラウザバンドルから fs を切り離すため、ここでは parseTsv のみを export。
 
-import { readFileSync } from 'node:fs';
-import { resolve as resolvePath, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { CardDef } from '../types/index.js';
-
-// ---------- パス解決 ----------
-// このファイル: src/engine/cards/tsv-loader.ts
-// プロジェクトルート: ../../..
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const PROJECT_ROOT = resolvePath(__dirname, '..', '..', '..');
-const CARDS_DATA_DIR = resolvePath(PROJECT_ROOT, '.claude', 'specs', 'cards-data');
 
 // ---------- エスケープ解除 ----------
 // 注: 順序重要。\\\\ を先に処理しないと \\n / \\t の中の \ を誤変換する。
@@ -173,19 +164,4 @@ export function parseTsv(text: string, kind: CardDef['kind']): CardDef[] {
   return parseRows(text).map(r => rowToCardDef(r, kind));
 }
 
-/**
- * セット内の全 TSV (partner/character/event/case) を読みこみ CardDef[] にする。
- * abilities は空配列 (Phase 5 Group B-E で共通クラス側から merge する)。
- */
-export function loadSet(setCode: 'CT-D08' | 'CT-D11'): CardDef[] {
-  const setDir = setCode.toLowerCase();
-  const dir = resolvePath(CARDS_DATA_DIR, setDir);
-  const out: CardDef[] = [];
-  const kinds: CardDef['kind'][] = ['partner', 'character', 'event', 'case'];
-  for (const k of kinds) {
-    const file = resolvePath(dir, `${k}.tsv`);
-    const text = readFileSync(file, 'utf8');
-    out.push(...parseTsv(text, k));
-  }
-  return out;
-}
+// 旧 loadSet は ./tsv-loader-fs.ts に移動。

@@ -15,7 +15,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
 import { registerAll } from '@/cards/index';
-import type { ValidationResult } from '@/engine/types';
 
 /**
  * 既知の validator 漏れリスト。
@@ -67,17 +66,15 @@ describe('engine.cards.validateAll — Phase 5 全47枚', () => {
     }
   });
 
-  it('全カードの ruleRefs に記載されたファイルが実在する (既知失敗除く)', () => {
-    // engine.cards.validate は内部で ruleRefs の existsSync を行う
-    // → validateAll が ok:true なら ruleRefs も実在
-    const results: ValidationResult[] = engine.cards.validateAll();
+  it('全カードの ruleRefs に記載されたファイルが実在する (Node only — validateRuleRefs)', async () => {
+    // Phase 9-B hotfix: ruleRefs 実在チェックは validate-spec-files.ts (Node 専用) に分離。
+    // validateAll (pure) は ruleRefs を見ないため、別途 validateRuleRefs を呼ぶ。
+    const { validateRuleRefs } = await import('@/engine/effect/validate-spec-files');
     const all = engine.cards.all();
-    results.forEach((r, i) => {
-      const def = all[i];
-      if (KNOWN_FAILING_IDS.has(def.id)) return;
-      const msg = r.ok === false ? `${def.id}: ${r.errors.join('; ')}` : def.id;
-      expect(r.ok, msg).toBe(true);
-    });
+    const filtered = all.filter(d => !KNOWN_FAILING_IDS.has(d.id));
+    const result = validateRuleRefs(filtered);
+    const msg = result.ok === false ? result.errors.join('\n') : 'all refs exist';
+    expect(result.ok, msg).toBe(true);
   });
 
   it('セット別カウント (CT-D08: 26, CT-D11: 21)', () => {

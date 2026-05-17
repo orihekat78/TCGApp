@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `7231c7b7cedf`
+> Source hash: `d194ab5c2445`
 
 `src/engine/cards/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -22,8 +22,9 @@
 - [`INDEX`](../by-spec/cards-data--INDEX.md)
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 
-## 📄 ソース (3)
+## 📄 ソース (4)
 
 - [`src/engine/cards/index.ts`](../../../../src/engine/cards/index.ts)
 - [`src/engine/cards/registry.ts`](../../../../src/engine/cards/registry.ts)
+- [`src/engine/cards/tsv-loader-fs.ts`](../../../../src/engine/cards/tsv-loader-fs.ts)
 - [`src/engine/cards/tsv-loader.ts`](../../../../src/engine/cards/tsv-loader.ts)

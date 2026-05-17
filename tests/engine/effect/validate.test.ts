@@ -154,20 +154,25 @@ describe('engine.cards.validate', () => {
     }
   });
 
-  it('ruleRefs pointing to existing file passes', () => {
+  it('ruleRefs pointing to existing file passes (validateRuleRefs)', async () => {
+    // Phase 9-B hotfix: ruleRefs 実在チェックは validate-spec-files に分離。
     // 11-reasoning.md does exist in .claude/rules/
+    const { validateRuleRefs } = await import('@/engine/effect/validate-spec-files');
     const def = newDef({
       ruleRefs: ['rules/11-reasoning.md§LP≤0'],
     });
-    const r = validateCards([def]);
+    const r = validateRuleRefs([def]);
     expect(r.ok).toBe(true);
   });
 
-  it('ruleRefs pointing to non-existing file fails with clear message', () => {
+  it('ruleRefs pointing to non-existing file fails with clear message (validateRuleRefs)', async () => {
+    // Phase 9-B hotfix: validateCards (pure) からは fs check が削除されたため
+    // validateRuleRefs (Node 専用) を呼んで検証する。
+    const { validateRuleRefs } = await import('@/engine/effect/validate-spec-files');
     const def = newDef({
       ruleRefs: ['rules/99-not-a-real-rule.md§nope'],
     });
-    const r = validateCards([def]);
+    const r = validateRuleRefs([def]);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.errors.join('\n')).toMatch(/file not found/);

@@ -1,4 +1,4 @@
-// engine.effect.validate / engine.cards.validate — static lint pass
+// engine.effect.validate / engine.cards.validate — static lint pass (pure)
 // spec: .claude/specs/engine-api-effect-descriptor.md
 // rules: 15-abilities-effects.md
 //
@@ -9,14 +9,10 @@
 //   - conditional は if + then を必須
 //   - choice は options に1件以上
 //
-//   - cards.validate は ability.id 重複 + 各 ability.effect の validate +
-//     ruleRefs の `.claude/rules/<file>.md` 実在チェック
-//   - ruleRefs は 'rules/<file>.md§<anchor>' or 'rules/<file>.md' の形式を許容
-//   - file 存在チェックは Node fs.existsSync (build-time / test-time のみ)
+//   - cards.validate は ability.id 重複 + 各 ability.effect の validate
+//   - ruleRefs の実在チェックは `./validate-spec-files.ts` (Node 専用) に分離。
+//     ブラウザバンドルから node:fs 依存を切り離すため、ここでは行わない。
 
-import { existsSync } from 'node:fs';
-import { resolve as resolvePath, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { Effect, ValidationResult, CardDef } from '../types/index.js';
 
 // 既知 AtomVerb の runtime リスト。Effect 型のリテラル union とズレないよう
@@ -137,22 +133,16 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
 
 // --- engine.cards.validate ---
 
-// Resolve project root relative to this file so test-time and build-time both work.
-// __dirname equivalent for ESM:
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-// This file lives at src/engine/effect/validate.ts → project root is ../../..
-const PROJECT_ROOT = resolvePath(__dirname, '..', '..', '..');
-const RULES_DIR = resolvePath(PROJECT_ROOT, '.claude', 'rules');
-
 /**
- * Validate an array of CardDef:
+ * Validate an array of CardDef (pure):
  * - ability ids unique within a def
  * - each ability.effect passes engine.effect.validate
- * - ruleRefs entries point to existing files under .claude/rules/
  *
  * Note: ability shape is currently typed as `unknown[]` until Phase 5
  * formalises AbilityDef. This validator narrows on the fly.
+ *
+ * ruleRefs 実在チェックは `validate-spec-files.ts` の `validateRuleRefs` を
+ * Node 経路 (tests / scripts) から別途呼ぶこと。
  */
 export function validateCards(defs: CardDef[]): ValidationResult {
   const errors: string[] = [];
@@ -181,16 +171,6 @@ export function validateCards(defs: CardDef[]): ValidationResult {
         }
       }
     });
-
-    // ruleRefs: 'rules/11-reasoning.md' or 'rules/11-reasoning.md§<anchor>'
-    for (const ref of def.ruleRefs ?? []) {
-      const stripped = ref.split('§')[0];
-      const trimmed = stripped.replace(/^rules\//, '');
-      const filePath = resolvePath(RULES_DIR, trimmed);
-      if (!existsSync(filePath)) {
-        errors.push(`card ${def.id}: ruleRefs entry "${ref}" — file not found at ${filePath}`);
-      }
-    }
   }
 
   if (errors.length > 0) return { ok: false, errors };

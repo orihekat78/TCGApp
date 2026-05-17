@@ -32,7 +32,9 @@ export { invariant } from './invariant/index.js';
 export { event } from './event/index.js';
 export { runAtom, run as effectRun, validate as effectValidate, validateCards } from './effect/index.js';
 export { cards } from './cards/index.js';
-export { parseTsv, loadSet } from './cards/index.js';
+export { parseTsv } from './cards/index.js';
+// `loadSet` は Node 専用 (`./cards/tsv-loader-fs.js`)。ブラウザバンドル汚染回避のため
+// engine/index からは re-export しない。
 export { dyn } from './dyn/index.js';
 export { target } from './target/index.js';
 export { cost } from './cost/index.js';

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c87e80fd64ac`
+> Source hash: `7ebda76b1273`
 
 公式ルール [`19-special-rules.md`](../../../rules/19-special-rules.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -26,7 +26,7 @@
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (16)
+## 📄 参照ソース (17)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/eventRemoveByAP.ts`](../../../../src/cards/_shared/eventRemoveByAP.ts)
@@ -36,6 +36,7 @@
 - [`src/cards/ct-d11/D11020.ts`](../../../../src/cards/ct-d11/D11020.ts)
 - [`src/cards/ct-d11/D11021.ts`](../../../../src/cards/ct-d11/D11021.ts)
 - [`src/engine/cards/registry.ts`](../../../../src/engine/cards/registry.ts)
+- [`src/engine/cards/tsv-loader-fs.ts`](../../../../src/engine/cards/tsv-loader-fs.ts)
 - [`src/engine/cards/tsv-loader.ts`](../../../../src/engine/cards/tsv-loader.ts)
 - [`src/engine/cond/eval.ts`](../../../../src/engine/cond/eval.ts)
 - [`src/engine/mutate/char.ts`](../../../../src/engine/mutate/char.ts)
