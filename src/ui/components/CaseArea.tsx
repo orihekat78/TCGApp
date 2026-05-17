@@ -8,6 +8,7 @@
 
 import { Fragment } from 'react';
 import type { JSX } from 'react';
+import { CardArt } from './CardArt.js';
 import './CaseArea.css';
 
 export type CaseColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
@@ -109,6 +110,7 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
           data-card-id={caseInfo.cardId}
           data-orientation={caseInfo.orientation ?? 'portrait'}
         >
+          <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
           <div className="case-title">{titleNodes}</div>
           <div className="case-meta">
             <span>EVT・{COLOR_LABEL[color]}</span>

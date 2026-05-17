@@ -7,6 +7,7 @@
 import type { JSX } from 'react';
 import type { PartnerOnBoard } from '@/engine/types/game-state.js';
 import type { ResolvedCardMeta } from './SceneArea.js';
+import { CardArt } from './CardArt.js';
 import './PartnerArea.css';
 
 export type PartnerAreaProps = {
@@ -82,7 +83,7 @@ export function PartnerArea({ partner, side, resolveCard, isCandidate, onClick }
             >
               <div className="color-stripe" />
               <div className="art">
-                <div className="silhouette" />
+                <CardArt cardId={partner.cardId} alt={meta.name} />
               </div>
               <div className="name">{meta.name}</div>
               <div className="stats">

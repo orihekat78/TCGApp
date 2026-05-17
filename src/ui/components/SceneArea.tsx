@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState, type JSX } from 'react';
 import type { SceneCharacter } from '@/engine/types/game-state.js';
+import { CardArt } from './CardArt.js';
 import './SceneArea.css';
 
 // Phase 8.10g-2: 前回キャラ配列と現キャラ配列を比較し、消えた SceneCharacter を返す
@@ -80,7 +81,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, isGhost }: SceneCh
     >
       <div className="color-stripe" />
       <div className="art">
-        <div className="silhouette" />
+        <CardArt cardId={ch.cardId} alt={meta.name} />
       </div>
       <div className="name">{meta.name}</div>
       <div className="stats">

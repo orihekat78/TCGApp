@@ -71,6 +71,21 @@
   flex-direction: column;
   overflow: hidden;
 }
+/* Phase 9-C: case 背景にカード画像を半透明で重ねる */
+.case-area .case-card .case-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.45;
+  z-index: 0;
+  pointer-events: none;
+}
+.case-area .case-card > *:not(.case-bg) {
+  position: relative;
+  z-index: 1;
+}
 .case-area .case-card.portrait {
   width: var(--case-card-w);
   height: var(--case-card-h);

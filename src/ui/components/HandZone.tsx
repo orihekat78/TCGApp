@@ -5,6 +5,7 @@
 // rules: 05-turn-phases.md §手札の使用 / 12-next-hint.md / 20-color-and-switch.md
 
 import type { JSX } from 'react';
+import { CardArt } from './CardArt.js';
 import './HandZone.css';
 
 // ------------------------------------------------------------------
@@ -89,7 +90,7 @@ function HandCard({
       <div className="type-badge">{card.type}</div>
       <div className="color-stripe" aria-hidden="true" />
       <div className="art" aria-hidden="true">
-        <div className="silhouette" />
+        <CardArt cardId={card.cardId} alt={card.name} />
       </div>
       <div className="name">{card.name}</div>
       <div className="stats">
@@ -128,18 +129,7 @@ function HandMiniCard({
         {isEvent ? 'EV' : 'CH'}
       </span>
       <span className="hand-mini-art" aria-hidden="true">
-        {/* type icon */}
-        {isEvent ? (
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <path d="M12 2l2.4 6.4L21 9l-5 4.6 1.6 7L12 17l-5.6 3.6L8 13.6 3 9l6.6-0.6L12 2z"
-              fill="currentColor" opacity="0.85" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <circle cx="12" cy="8" r="4" fill="currentColor" opacity="0.85" />
-            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="currentColor" opacity="0.85" />
-          </svg>
-        )}
+        <CardArt cardId={card.cardId} alt={card.name} />
       </span>
       <span className="hand-mini-name">{card.name}</span>
     </button>
