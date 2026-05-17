@@ -43,8 +43,18 @@ export function _resetPendingHirameki(): void {
 let _registered = false;
 
 /**
+ * テスト用: `_registered` flag をリセットして次回 `registerHiramekiListener()` 呼出で
+ * listener を再登録可能にする。`event._resetRegistry()` 直後に呼ぶ必要がある
+ * (event registry がクリアされた後も `_registered=true` のままだと listener が消えたまま
+ * になるため)。
+ */
+export function _resetHiramekiRegistered(): void {
+  _registered = false;
+}
+
+/**
  * engine init 時に 1 回だけ呼ぶ。重複登録は no-op。
- * テスト用に `_unregisterHiramekiListener` も export する。
+ * テスト用に `_resetHiramekiRegistered` で flag を戻してから再登録可。
  */
 export function registerHiramekiListener(): void {
   if (_registered) return;

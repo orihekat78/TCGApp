@@ -41,4 +41,15 @@ export class RandomPolicy implements AIPolicy {
     const safeIdx = Math.min(idx, candidates.length - 1);
     return candidates[safeIdx];
   }
+
+  /**
+   * Phase 5 advance: ヒラメキ発動判定 (rules/10)。
+   * RandomPolicy は 50/50 で fire/skip を選ぶ (1000戦 smoke での経路カバレッジ確保)。
+   */
+  chooseHiramekiTrigger(
+    _state: GameState,
+    _pending: { cardId: string; abilityId: string },
+  ): boolean {
+    return this.rng() < 0.5;
+  }
 }

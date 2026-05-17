@@ -24,7 +24,8 @@
 - [x] **demo path 検証**: 「デモ (turn-4) を読込」経路で 17 CardArt 全 CDN 取得 + name/cost 表示 + console clean を Playwright 確認 (実装不要、C 拡張 + React fix の累積で自然解消)
 - [x] **Phase 5 advance: SceneSwitch (Engine + AI)**: rules/20 §スイッチ — scene 5 枚埋まり時の handUseCard を engine.flow に追加、AI move-enumerator + heuristic 拡張 (1409 PASS / 1000戦 smoke 完走)
 - [x] **Phase 5 advance: SceneSwitch UI**: SceneSwitchPickerModal (presentation 既存) を runHandUseFlow に接続。useSceneSwitchPickerStore 新規 + EngineAction.handUseCardSwitch 追加 + Playmat wrapper (常時同一 JSX で React 19 fiber static flag 回避)。1414 PASS / Playwright で modal renders / pick / cancel すべて検証済
-- [ ] Phase 5 advance: 実カード追加 + Misread / Souza / Hirameki engine 統合
+- [x] **Phase 5 advance: Hirameki E2E 結合検証 + bug fix**: integration test 5 件 (D08013/D08019 fire/skip/non-hirameki/連続/CharStun) で全経路実証。listener bug 発見・修正 (`_resetHiramekiRegistered` 追加で `event._resetRegistry()` 後の再登録可能化) + RandomPolicy.chooseHiramekiTrigger fallback (50/50)。1419 PASS / 1000戦 smoke 完走 0 regression
+- [ ] Phase 5 advance: Misread / Souza engine 統合
 - [ ] 残 scope-out: MCTS AI / Phase 9-G リプレイ / 9-H パフォーマンス計測
 
 ## セッションログ index
