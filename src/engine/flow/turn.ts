@@ -16,6 +16,7 @@
 import type { GameState } from '../types/index.js';
 import { event } from '../event/index.js';
 import { runAutoPhase } from './auto-phase.js';
+import { scene as sceneMutator } from '../mutate/scene.js';
 
 type Player = 'self' | 'opp';
 
@@ -48,8 +49,9 @@ export function startMainPhase(state: GameState, p: Player): void {
  *   2. phase:end:start (エンドフェイズ開始 — ターン終了時能力発火窓)
  *   3. [呼出元の責務] resolve.runAllUntilEmpty でターン終了時 trigger 解決
  *   4. phase:end:cleanup (turnEffects 等クリーンアップ窓)
- *   5. turn:end (ターン完全終了直前)
- *   6. turn.number++ & turn.player を入替 (次ターンへ)
+ *   5. 名乗り状態の解除 (rules/11: 「同ターン内に登場した」キャラ限定)
+ *   6. turn:end (ターン完全終了直前)
+ *   7. turn.number++ & turn.player を入替 (次ターンへ)
  */
 export function endTurn(state: GameState, p: Player): void {
   state.turn.phase = 'end';
@@ -58,6 +60,13 @@ export function endTurn(state: GameState, p: Player): void {
   // 呼出元はここで engine.resolve.runAllUntilEmpty を回す責務を持つ
   // (Phase 5 で「ターン終了時」trigger が積まれる)
   event.emit(state, 'phase:end:cleanup', { player: p }, undefined);
+  // 名乗り (isNamed) 解除: ターン p のオーナーの scene キャラに対して。
+  // rules/11 (推理): 「同ターン内に登場したキャラ」 = 名乗り状態 → ターン終了で解除されるべき。
+  // Phase 6 時点で clearNamed mutator は実装済だが呼出箇所が存在せず、結果として
+  // 全キャラが永続的に名乗り状態となり、推理リソースが partner 1 枚に固定されていた。
+  for (const c of state.players[p].scene) {
+    if (c.isNamed) sceneMutator.clearNamed(state, c.uid);
+  }
   event.emit(state, 'turn:end', { player: p }, undefined);
   // ターン情報の繰上げ
   state.turn.number += 1;
