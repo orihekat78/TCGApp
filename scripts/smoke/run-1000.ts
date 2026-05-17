@@ -107,7 +107,12 @@ function pickPairingForIndex(index: number): Pairing {
   return { deckA: PAIRINGS[0].deckA, deckB: PAIRINGS[0].deckB };
 }
 
-function playOneGame(index: number, seed: string, pairing: Pairing): GameRecord {
+function playOneGame(
+  index: number,
+  seed: string,
+  pairing: Pairing,
+  verbose = false,
+): GameRecord {
   const rng = createRng(seed);
   Math.random = () => rng.next();
   resetBetweenGames();
@@ -123,6 +128,12 @@ function playOneGame(index: number, seed: string, pairing: Pairing): GameRecord 
     oppPolicy: new HeuristicPolicy({ seed: `H-B-${seed}` }),
     initialState: state,
     maxTurns: MAX_TURNS,
+    onTurn: verbose
+      ? (turnNo, byPlayer, moves) => {
+          const kinds = moves.map(m => m.kind).join(', ');
+          console.error(`  T${turnNo} ${byPlayer}: [${kinds}]`);
+        }
+      : undefined,
   });
   const durationMs = Date.now() - t0;
 
@@ -145,13 +156,14 @@ function playOneGame(index: number, seed: string, pairing: Pairing): GameRecord 
   };
 }
 
-function parseArgs(): { singleSeed: string | null } {
+function parseArgs(): { singleSeed: string | null; verbose: boolean } {
+  let singleSeed: string | null = null;
+  let verbose = false;
   for (const a of process.argv.slice(2)) {
-    if (a.startsWith('--seed=')) {
-      return { singleSeed: a.slice('--seed='.length) };
-    }
+    if (a.startsWith('--seed=')) singleSeed = a.slice('--seed='.length);
+    else if (a === '--verbose') verbose = true;
   }
-  return { singleSeed: null };
+  return { singleSeed, verbose };
 }
 
 function getEngineSha(): string {
@@ -175,7 +187,7 @@ function findFreeReportPaths(baseName: string): { jsonPath: string; mdPath: stri
   }
 }
 
-function runSingle(singleSeed: string): void {
+function runSingle(singleSeed: string, verbose: boolean): void {
   const m = singleSeed.match(/^smoke-(\d+)$/);
   if (!m) {
     console.error(`invalid --seed format: ${singleSeed} (expected smoke-N)`);
@@ -191,9 +203,9 @@ function runSingle(singleSeed: string): void {
   try {
     resetForRun();
     console.log(
-      `Running single game: seed=${singleSeed}, index=${index}, pairing=${pairing.deckA} vs ${pairing.deckB}`,
+      `Running single game: seed=${singleSeed}, index=${index}, pairing=${pairing.deckA} vs ${pairing.deckB}${verbose ? ' (verbose)' : ''}`,
     );
-    const record = playOneGame(index, singleSeed, pairing);
+    const record = playOneGame(index, singleSeed, pairing, verbose);
     console.log(JSON.stringify(record, null, 2));
   } finally {
     Math.random = origRandom;
@@ -257,9 +269,9 @@ function runFull(): void {
 }
 
 function main(): void {
-  const { singleSeed } = parseArgs();
+  const { singleSeed, verbose } = parseArgs();
   if (singleSeed !== null) {
-    runSingle(singleSeed);
+    runSingle(singleSeed, verbose);
   } else {
     runFull();
   }
