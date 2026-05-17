@@ -98,3 +98,26 @@
 }
 
 /* 相手側はモノグラム/カウントの相対位置はそのまま (mat 全体が rotate(180deg) で回るため) */
+
+/* Phase 9-E: 低残量警告 (count 1〜2 / rules/14 リフレッシュ間近) */
+.deck-area.low-stock .layer.top {
+  border-color: #ff8c42;
+  box-shadow:
+    0 0 6px rgba(255, 140, 66, 0.5),
+    inset 0 0 4px rgba(255, 140, 66, 0.3);
+  animation: deck-low-pulse 1.6s ease-in-out infinite;
+}
+.deck-area.low-stock .deck-count {
+  color: #ff8c42;
+  border-color: rgba(255, 140, 66, 0.7);
+  font-weight: 900;
+}
+@keyframes deck-low-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.72; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-area.low-stock .layer.top {
+    animation: none;
+  }
+}

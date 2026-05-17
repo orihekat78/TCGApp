@@ -110,11 +110,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: serif;
-  font-size: 9px;
-  font-weight: 900;
   color: var(--accent-gold);
-  text-shadow: 0 0 3px rgba(255, 215, 0, 0.4);
+}
+/* Phase 9-E: 相手手札の裏面 SVG (虫眼鏡) — FileArea / EvidenceArea と統一 */
+.stage .opp-hand-strip .mini-card-back .mini-card-back-icon {
+  opacity: 0.7;
+  filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.35));
 }
 .stage .opp-hand-strip .opp-hand-count {
   font-size: 11px;

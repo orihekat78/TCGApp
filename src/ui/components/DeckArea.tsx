@@ -28,8 +28,12 @@ export function DeckArea({ count, side }: DeckAreaProps): JSX.Element {
   const showL3   = count >= 4;
   const showTop  = count >= 1;
 
+  // Phase 9-E: count 1〜2 で低残量警告 (rules/14 リフレッシュ間近の視覚化)
+  const isLowStock = count > 0 && count <= 2;
+  const rootClass = `zone deck-col deck-zone deck-area side-${side}${isLowStock ? ' low-stock' : ''}`;
+
   return (
-    <div className={`zone deck-col deck-zone deck-area side-${side}`}>
+    <div className={rootClass}>
       <div className="zone-label"><span>デッキ</span></div>
       <div className="deck-display">
         <div className="deck-stack" data-count={count}>

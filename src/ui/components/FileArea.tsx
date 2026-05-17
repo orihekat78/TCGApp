@@ -94,7 +94,7 @@ export function FileArea(props: FileAreaProps): JSX.Element {
       <div className="file-strip-header">
         <span>FILE</span>
         <div
-          className="progress-7"
+          className={`progress-7${count >= threshold ? ' complete' : ''}`}
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={threshold}
