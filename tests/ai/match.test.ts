@@ -85,13 +85,18 @@ describe('runMatch — AI vs AI driver', () => {
     // Note: setup uses Math.random for deck shuffle, so we cannot rely on
     // setupFreshGame() being deterministic across calls. Instead we reuse
     // the SAME initialState (which is frozen by Immer) for both runs.
+    //
+    // Phase 9-B 注記: maxTurns=15 に縮小。B2 (handUseCard キャラ deploy) 適用以降
+    // AI が手札を消費しやすくなり、デッキ枯渇 → refresh の Math.random シャッフルが
+    // r1/r2 で非決定的になるパターンが出やすい。determinism の主旨 (AI policy が seed で
+    // 決定的) は短いゲームで十分検証できる。
     const state = setupFreshGame();
 
     const r1 = runMatch({
       selfPolicy: new RandomPolicy({ seed: 'X' }),
       oppPolicy: new RandomPolicy({ seed: 'Y' }),
       initialState: state,
-      maxTurns: 30,
+      maxTurns: 15,
     });
 
     // Reset module-level state that runMatch may have touched (action contexts).
@@ -102,7 +107,7 @@ describe('runMatch — AI vs AI driver', () => {
       selfPolicy: new RandomPolicy({ seed: 'X' }),
       oppPolicy: new RandomPolicy({ seed: 'Y' }),
       initialState: state,
-      maxTurns: 30,
+      maxTurns: 15,
     });
 
     expect(r1.winner).toBe(r2.winner);

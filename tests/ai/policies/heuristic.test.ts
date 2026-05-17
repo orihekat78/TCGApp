@@ -323,14 +323,34 @@ describe('HeuristicPolicy — priority 6: handUseCard (prefer event)', () => {
 });
 
 describe('HeuristicPolicy — priority 7: startNextHint', () => {
-  it('picks startNextHint when no higher-priority moves are available', () => {
+  it('picks startNextHint when fileLen >= 8 (surplus over assist threshold)', () => {
+    // Phase 9-B: NextHint は FILE >= 8 の surplus がある時のみ採用。
+    // assist 用 7 枚を確保した上での余剰でのみ使うため。
     const policy = new HeuristicPolicy({ seed: 's' });
+    const state = produce(makeBaseState(), draft => {
+      draft.players.self.file = Array.from({ length: 8 }, (_, i) => `f${i}`);
+    });
     const moves: Move[] = [
       { kind: 'startNextHint' },
       { kind: 'endTurn' },
     ];
-    const got = policy.choose(makeBaseState(), moves, 'self');
+    const got = policy.choose(state, moves, 'self');
     expect(got?.kind).toBe('startNextHint');
+  });
+
+  it('prefers endTurn over startNextHint when fileLen < 8 (Phase 9-B FILE protection)', () => {
+    // Phase 9-B: FILE 不足で NextHint を抑制する gate のテスト。
+    // assist 閾値到達を阻害しないための surplus 戦略。
+    const policy = new HeuristicPolicy({ seed: 's' });
+    const state = produce(makeBaseState(), draft => {
+      draft.players.self.file = Array.from({ length: 5 }, (_, i) => `f${i}`);
+    });
+    const moves: Move[] = [
+      { kind: 'startNextHint' },
+      { kind: 'endTurn' },
+    ];
+    const got = policy.choose(state, moves, 'self');
+    expect(got?.kind).toBe('endTurn');
   });
 });
 

@@ -140,12 +140,15 @@ export class HeuristicPolicy implements AIPolicy {
       return handCards[0];
     }
 
-    // 優先順位 7: startNextHint
+    // 優先順位 7: startNextHint (Phase 9-B: fileLen >= 8 の surplus がある時だけ)
+    // NextHint は FILE を消費するため、assist 用 7 枚を確保した上での surplus でのみ使う。
+    // この gate を入れないと FILE 蓄積が NextHint で相殺され assist 閾値に到達しない。
     const nh = candidates.find((m): m is Extract<Move, { kind: 'startNextHint' }> => m.kind === 'startNextHint');
-    if (nh) return nh;
+    if (nh && state.players[byPlayer].file.length >= 8) return nh;
 
-    // フォールバック: endTurn 以外をランダムに選ぶ
-    const nonEnd = candidates.filter(m => m.kind !== 'endTurn');
+    // フォールバック: endTurn / startNextHint 以外をランダムに選ぶ
+    // (NextHint は priority 7 gate を通らない場合は使用しない)
+    const nonEnd = candidates.filter(m => m.kind !== 'endTurn' && m.kind !== 'startNextHint');
     if (nonEnd.length > 0) {
       return this.fallback.choose(state, nonEnd, byPlayer);
     }
