@@ -15,6 +15,8 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction, type DispatchResult } from './useEngineDispatch.js';
 import { useConfirmation } from './useConfirmation.js';
 import { useTargetPicker } from './useTargetPicker.js';
+import { useSceneSwitchPickerStore } from './useSceneSwitchPickerStore.js';
+import { def as readDef } from '@/engine/read/def.js';
 import type { Cost, EffectCtx } from '@/engine/types';
 
 /**
@@ -567,9 +569,14 @@ export async function runHandUseFlow(opts: {
 }): Promise<FlowResult> {
   const state = useGameStateStore.getState().gameState;
   if (state === null) return { ok: false, reason: 'no-state' };
-  if (!flow.canHandUseCard(state, opts.player, opts.cardId)) {
+
+  // rules/20 §スイッチ: scene=5 でキャラ使用したい場合は switch 経路。
+  const canNormal = flow.canHandUseCard(state, opts.player, opts.cardId);
+  const canSwitch = !canNormal && flow.canHandUseCardSwitch(state, opts.player, opts.cardId);
+  if (!canNormal && !canSwitch) {
     return { ok: false, reason: 'not-allowed' };
   }
+
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: '手札の使用',
@@ -578,10 +585,39 @@ export async function runHandUseFlow(opts: {
     cancelLabel: 'キャンセル',
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
+
+  if (canNormal) {
+    return dispatchEngineAction({
+      type: 'handUseCard',
+      player: opts.player,
+      cardId: opts.cardId,
+    });
+  }
+
+  // switch 経路: SceneSwitchPickerModal を Promise で待機。
+  // candidates は現場全 char (アクティブ / スリープ / スタン / 名乗り 全て可、rules/20)。
+  const sceneChars = state.players[opts.player].scene.map((c) => ({
+    uid: c.uid,
+    cardId: c.cardId,
+    name: readDef.card(c.cardId)?.names?.[0] ?? c.cardId,
+    state: c.state,
+    isNamed: c.isNamed,
+  }));
+  const newCardName = readDef.card(opts.cardId)?.names?.[0] ?? opts.cardId;
+  const removeUid = await new Promise<string | null>((resolve) => {
+    useSceneSwitchPickerStore.getState()._open({
+      cardId: opts.cardId,
+      newCardName,
+      candidates: sceneChars,
+      resolve,
+    });
+  });
+  if (removeUid === null) return { ok: false, reason: 'cancelled' };
   return dispatchEngineAction({
-    type: 'handUseCard',
+    type: 'handUseCardSwitch',
     player: opts.player,
     cardId: opts.cardId,
+    removeUid,
   });
 }
 

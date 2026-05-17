@@ -50,6 +50,8 @@ export type ContactChoice =
 export type EngineAction =
   | { type: 'reasoning'; uid: string }
   | { type: 'handUseCard'; player: Player; cardId: string }
+  // Phase 5 advance: SceneSwitch (rules/20) — scene 5 埋まり時のキャラ手札使用
+  | { type: 'handUseCardSwitch'; player: Player; cardId: string; removeUid: string }
   | { type: 'nextHint'; player: Player; optionalCardId?: string }
   | { type: 'partnerAbility'; player: Player; abilId: string; cost?: Cost; ctx?: EffectCtx }
   | { type: 'declaredAbility'; uid: string; abilId: string; cost?: Cost; ctx?: EffectCtx }
@@ -95,6 +97,8 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
       return flow.canReason(state, action.uid);
     case 'handUseCard':
       return flow.canHandUseCard(state, action.player, action.cardId);
+    case 'handUseCardSwitch':
+      return flow.canHandUseCardSwitch(state, action.player, action.cardId);
     case 'nextHint':
       return flow.canStartNextHint(state, action.player);
     case 'partnerAbility':
@@ -183,6 +187,10 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     case 'handUseCard':
       flow.handUseCard(draft, action.player, action.cardId);
+      return;
+    case 'handUseCardSwitch':
+      // rules/20 §スイッチ: engine.flow.handUseCard の 5 番目引数 switchRemoveUid を渡す
+      flow.handUseCard(draft, action.player, action.cardId, undefined, action.removeUid);
       return;
     case 'nextHint':
       flow.runNextHint(draft, action.player, action.optionalCardId);

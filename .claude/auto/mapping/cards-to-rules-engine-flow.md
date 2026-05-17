@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c1176471553d`
+> Source hash: `c3768300c7b7`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **85** ファイル（[全体 index](./index.md)）
+このグループ: **86** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (5)
 
@@ -84,7 +84,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (29)
+## その他 (30)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -107,6 +107,7 @@
 | [`src/ui/hooks/usePartner.ts`](../../../src/ui/hooks/usePartner.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`18-mr.md`](../../rules/18-mr.md) |
 | [`src/ui/hooks/useRemoveCards.ts`](../../../src/ui/hooks/useRemoveCards.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useSceneCharacters.ts`](../../../src/ui/hooks/useSceneCharacters.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
+| [`src/ui/hooks/useSceneSwitchPickerStore.ts`](../../../src/ui/hooks/useSceneSwitchPickerStore.ts) | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/ui/hooks/useTargetPicker.ts`](../../../src/ui/hooks/useTargetPicker.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useTopBar.ts`](../../../src/ui/hooks/useTopBar.ts) | _(参照なし)_ |
 | [`src/ui/services/actionLabel.ts`](../../../src/ui/services/actionLabel.ts) | _(参照なし)_ |

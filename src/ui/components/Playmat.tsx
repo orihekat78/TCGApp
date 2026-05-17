@@ -50,6 +50,8 @@ import { useHiramekiFlowDriver } from '../hooks/useHiramekiFlowDriver.js';
 import { GuardPickerModal } from './GuardPickerModal.js';
 import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
 import { HiramekiPickerModal } from './HiramekiPickerModal.js';
+import { SceneSwitchPickerModal } from './SceneSwitchPickerModal.js';
+import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
@@ -393,6 +395,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* Phase 8 完全クローズ Commit 3a: ヒラメキモーダル */}
         <PlaymatHiramekiPickerModal />
 
+        {/* Phase 5 advance: SceneSwitch UI (rules/20 §スイッチ) */}
+        <PlaymatSceneSwitchPickerModal />
+
         {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
             LogPanel は open=true のときのみオーバーレイで描画。 */}
         <LogPanel entries={gameState?.log ?? []} open={logOpen} />
@@ -528,6 +533,39 @@ function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
         });
         dispatchAdvance();
       }}
+    />
+  );
+}
+
+/**
+ * Phase 5 advance: SceneSwitchPickerModal ラッパ (rules/20 §スイッチ)。
+ * useSceneSwitchPickerStore.current を subscribe し、scene 5 埋まり時のキャラ手札
+ * 使用で開く。pick / cancel で Promise resolver を呼んで runHandUseFlow を進める。
+ *
+ * 重要: React 19 fiber static flag invariant 違反を避けるため、early return せず
+ *       常時同一 JSX (open={!!current} 切替) で返す (CaseArea L65 と同ポリシー)。
+ */
+function PlaymatSceneSwitchPickerModal(): JSX.Element {
+  const current = useSceneSwitchPickerStore((s) => s.current);
+  const handlePick = (uid: string): void => {
+    const c = useSceneSwitchPickerStore.getState().current;
+    if (!c) return;
+    useSceneSwitchPickerStore.getState()._close();
+    c.resolve(uid);
+  };
+  const handleCancel = (): void => {
+    const c = useSceneSwitchPickerStore.getState().current;
+    if (!c) return;
+    useSceneSwitchPickerStore.getState()._close();
+    c.resolve(null);
+  };
+  return (
+    <SceneSwitchPickerModal
+      open={!!current}
+      sceneChars={current?.candidates ?? []}
+      newCardName={current?.newCardName ?? ''}
+      onPick={handlePick}
+      onCancel={handleCancel}
     />
   );
 }
