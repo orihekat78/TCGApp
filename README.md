@@ -25,6 +25,7 @@ engine 4 バグ修正 / カード画像 UI 統合 / 視覚調整 5 系統 / 裏�
 | 9-C | カード画像 UI 統合 (CardArt + useCardImage) | ✅ 完了 |
 | 9-D | case 向き auto-detect / partner 拡大 / hand 色あせ / Remove 画像 / Evidence↔FILE swap | ✅ 完了 |
 | 9-E | deck low-stock / FILE progress-7 完了 / opp 手札 mini back 統一 | ✅ 完了 |
+| Phase 5 advance prep | [guardrails spec](.claude/specs/2026-05-17-phase5-advance-guardrails.md) 起草 (9-B 4件再発防止策) | ✅ 完了 |
 | Phase 5 advance | 実カード追加 + Misread / Souza / SceneSwitch engine 統合 | ⏳ 次セッション候補 |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 

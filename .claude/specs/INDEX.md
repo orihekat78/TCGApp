@@ -68,6 +68,7 @@ UI 視覚デザイン参考のモック群。実装規範ではなく視覚参�
 - [engine-api-flow-contact.md](engine-api-flow-contact.md) — コンタクト/事件/ガード (audit追加)
 - [engine-api-state-mutate-meta.md](engine-api-state-mutate-meta.md) — フラグ/ログ/結果/MR (audit追加)
 - [engine-api-types.md](engine-api-types.md) — 戻り値型・EffectCtx (audit追加)
+- [2026-05-17-phase5-advance-guardrails.md](2026-05-17-phase5-advance-guardrails.md) — Phase 5 advance ガードレール (9-B 4件再発防止 / ルール行CL / AI同期PR / smoke dump / listenerテンプレ)
 
 ## ブレインストーミング決定一覧
 
