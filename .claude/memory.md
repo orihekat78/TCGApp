@@ -27,6 +27,11 @@
 - [x] **Phase 8.10 完了** (Commit AE, 16 tests) — g-2 SceneArea ゴースト fade-out / h CaseArea stamp-flip / i RefreshOverlay + engine refresh log / j VictoryOverlay
 - [x] **Phase 8.6α/β Commit 1** (`eb21e8c`, 9 tests) — GuardPickerModal + CutInDisguisePickerModal UI 単体 (engine 統合は次セッション)
 - [x] **Phase 8 完全クローズ Commit 2** (`770624e`, 12 tests) — per-step action dispatch + useContactFlowDriver
+- [x] **Phase 8 完全クローズ達成** ✅ Commits 4/5/6 landed (Phase 8 完全クローズ完遂)
+   - **Commit 4** (`3360006`, 4 tests) — Souza/SceneSwitch モーダル scaffold (Phase 5 prep)
+   - **Commit 5** (`60be8b4`, 9 tests) — 効果スタック reorder UI (setEffectOrder dispatch + ▲▼ buttons)
+   - **Commit 6** (~6 tests) — human-vs-cpu E2E (reasoning / per-step action / pauseOnAction / hirameki fire / solveCase / CPU vs CPU 回帰)
+   - **最終状態**: 1377 PASS / 182 files / typecheck clean / docs:check clean
 - [x] **Phase 8 完全クローズ Commit 3b** (10 tests) — Misread infrastructure (Phase 5 prep)
    - `src/cards/_shared/misreadX.ts` 新規 — `type:'icon-misread'` ability factory
    - `AbilityType` union に `'icon-misread'` 追加
