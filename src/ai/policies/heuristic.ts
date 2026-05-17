@@ -301,6 +301,19 @@ export class HeuristicPolicy implements AIPolicy {
     }
     return picks;
   }
+
+  /**
+   * Phase 5 advance: 捜査X 順番決定 (rules/13)。
+   * MVP では「発見された」参照効果がないため戦術差なし。peek 順をそのまま return。
+   * Phase 9-F で「相手の有用カードを先頭 (= 早く下に戻る) に置く」等の戦術強化候補。
+   */
+  chooseSouzaOrder(
+    _state: GameState,
+    _defender: 'self' | 'opp',
+    cardIds: ReadonlyArray<string>,
+  ): ReadonlyArray<string> {
+    return cardIds;
+  }
 }
 
 /**

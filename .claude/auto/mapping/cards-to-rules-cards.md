@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `76b9076aa0a7`
+> Source hash: `7d180ec7c42f`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **69** ファイル（[全体 index](./index.md)）
+このグループ: **70** ファイル（[全体 index](./index.md)）
 
-## cards/_shared (10)
+## cards/_shared (11)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -22,6 +22,7 @@
 | [`src/cards/_shared/index.ts`](../../../src/cards/_shared/index.ts) | _(参照なし)_ |
 | [`src/cards/_shared/misreadX.ts`](../../../src/cards/_shared/misreadX.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/cards/_shared/partnerColorKeyword.ts`](../../../src/cards/_shared/partnerColorKeyword.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
+| [`src/cards/_shared/souzaX.ts`](../../../src/cards/_shared/souzaX.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
 
 ## cards/ct-d08 (27)
 

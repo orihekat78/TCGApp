@@ -102,7 +102,7 @@ export type AtomVerb =
   | 'partnerAssist' | 'partnerSetState' | 'partnerSolveCase'
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
-  | 'deckRevealUntil' | 'deckToBottomBound' | 'deckShuffle'
+  | 'deckRevealUntil' | 'deckToBottomBound' | 'deckShuffle' | 'souza'
   | 'log' | 'noop';
 
 // ---------- Cost ----------

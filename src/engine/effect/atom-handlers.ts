@@ -314,6 +314,38 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.deck.shuffle(s, p, ctx.rng);
       return;
     }
+    case 'souza': {
+      // rules/13 §捜査X: defender (player) のデッキ上 X 枚を、defender の好きな順で
+      // デッキの下に移す。Sub-task A (Phase 5 advance): peek 順そのまま (= defender が
+      // 順番変更しない default)。AI policy chooseSouzaOrder は将来 Sub-task B/C で
+      // listener / dispatcher 経由で呼ぶ予定。「発見された」参照効果は scope 外。
+      const player = a.player as Player;
+      const x = a.x as number;
+      const deck = s.players[player].deck;
+      const count = Math.min(x, deck.length);
+      if (count === 0) {
+        mutate.log.append(s, {
+          ts: Date.now(),
+          player,
+          turn: s.turn.number,
+          action: 'souza',
+          target: '',
+          result: 'no-op (deck empty)',
+        });
+        return;
+      }
+      const top = deck.splice(0, count);
+      mutate.deck.toBottom(s, player, top);
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player,
+        turn: s.turn.number,
+        action: 'souza',
+        target: '',
+        result: `revealed ${count}`,
+      });
+      return;
+    }
 
     // --- メタ ---
     case 'log': {

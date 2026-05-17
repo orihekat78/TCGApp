@@ -8,6 +8,7 @@ export { cutinFixedAP } from './cutinFixedAP.js';
 export { hiramekiCharStun } from './hiramekiCharStun.js';
 export { hiramekiDraw } from './hiramekiDraw.js';
 export { misreadX } from './misreadX.js';
+export { souzaX } from './souzaX.js';
 export { caseTraitConditioned } from './caseTraitConditioned.js';
 export { caseResolvedHandRemove } from './caseResolvedHandRemove.js';
 export { caseDeclaredEvidenceFlip } from './caseDeclaredEvidenceFlip.js';

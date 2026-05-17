@@ -29,7 +29,7 @@ const ATOM_VERBS = new Set<string>([
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
   'caseToResolved',
   'startContact', 'endActionEarly',
-  'deckRevealUntil', 'deckToBottomBound', 'deckShuffle',
+  'deckRevealUntil', 'deckToBottomBound', 'deckShuffle', 'souza',
   'log', 'noop',
 ]);
 

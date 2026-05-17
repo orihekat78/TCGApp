@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-progress.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:progress`
-> Source hash: `3a8a32508c16`
+> Source hash: `1c2b58d4e965`
 
 `src/cards/` 配下のファイル数をデッキ別に集計。`_shared` 配下は別表に分離。
 
@@ -24,7 +24,7 @@
 
 `D11001` / `D11002` / `D11003` / `D11004` / `D11005` / `D11006` / `D11007` / `D11008` / `D11009` / `D11010` / `D11011` / `D11012` / `D11013` / `D11014` / `D11015` / `D11016` / `D11017` / `D11018` / `D11019` / `D11020` / `D11021`
 
-## 共通クラス (`_shared/` 9 件)
+## 共通クラス (`_shared/` 10 件)
 
 - `caseDeclaredEvidenceFlip`
 - `caseResolvedHandRemove`
@@ -35,6 +35,7 @@
 - `hiramekiDraw`
 - `misreadX`
 - `partnerColorKeyword`
+- `souzaX`
 
 ---
 

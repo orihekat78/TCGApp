@@ -64,4 +64,21 @@ export class RandomPolicy implements AIPolicy {
   ): Array<{ uid: string; x: number }> {
     return candidates.filter(() => this.rng() < 0.5);
   }
+
+  /**
+   * Phase 5 advance: 捜査X 順番決定 (rules/13)。
+   * RandomPolicy は Fisher-Yates で順番をシャッフル (1000戦 smoke での経路カバレッジ)。
+   */
+  chooseSouzaOrder(
+    _state: GameState,
+    _defender: 'self' | 'opp',
+    cardIds: ReadonlyArray<string>,
+  ): ReadonlyArray<string> {
+    const arr = [...cardIds];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(this.rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
 }

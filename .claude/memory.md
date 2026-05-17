@@ -26,7 +26,8 @@
 - [x] **Phase 5 advance: SceneSwitch UI**: SceneSwitchPickerModal (presentation 既存) を runHandUseFlow に接続。useSceneSwitchPickerStore 新規 + EngineAction.handUseCardSwitch 追加 + Playmat wrapper (常時同一 JSX で React 19 fiber static flag 回避)。1414 PASS / Playwright で modal renders / pick / cancel すべて検証済
 - [x] **Phase 5 advance: Hirameki E2E 結合検証 + bug fix**: integration test 5 件 (D08013/D08019 fire/skip/non-hirameki/連続/CharStun) で全経路実証。listener bug 発見・修正 (`_resetHiramekiRegistered` 追加で `event._resetRegistry()` 後の再登録可能化) + RandomPolicy.chooseHiramekiTrigger fallback (50/50)。1419 PASS / 1000戦 smoke 完走 0 regression
 - [x] **Phase 5 advance: Misread E2E (Human defender 経路) + bug fix**: integration test 6 件 (side-channel set / 候補なし / 複数 / sleep&stun除外 / dispatch resolve / empty picks) で経路実証。同じ `_registered` bug を修正 (`_resetMisreadRegistered` 追加) + RandomPolicy.chooseMisreadTriggers fallback (per-candidate 50/50)。1425 PASS / 1000戦 smoke 完走 0 regression
-- [ ] Phase 5 advance: Misread UI (useMisreadFlowDriver + PlaymatMisreadPickerModal) / Souza engine 統合
+- [x] **Phase 5 advance: Souza (rules/13 捜査X) engine atom + AI auto-order**: 新規 atom 'souza' を ATOM_VERBS + AtomVerb + atom-handlers に追加。AIPolicy.chooseSouzaOrder method 追加 (Heuristic=peek 順 / Random=Fisher-Yates shuffle) + cards/_shared/souzaX.ts factory + unit test 9 件。Sub-task A (CPU 経路) 完了、Sub-task B/C (UI + 「発見された」参照) は次セッション。1434 PASS / 1000戦 smoke 完走 0 regression
+- [ ] Phase 5 advance: Misread UI / Souza Sub-task B/C / 「発見された」参照機構
 - [ ] 残 scope-out: MCTS AI / Phase 9-G リプレイ / 9-H パフォーマンス計測
 
 ## セッションログ index

@@ -98,6 +98,18 @@ export interface AIPolicy {
     candidates: ReadonlyArray<{ uid: string; x: number }>,
   ): ReadonlyArray<{ uid: string; x: number }>;
 
+  /**
+   * Phase 5 advance: 捜査X 順番決定 (rules/13)。
+   * defender (公開させられる側) の policy が、公開された X 枚をデッキの下に戻す順番を決める。
+   * 戻り値: cardId の配列 (同じカード集合の permutation)。
+   * 未実装ポリシーは fallback として peek 順 (atom 側で `?? cardIds`)。
+   */
+  chooseSouzaOrder?(
+    state: GameState,
+    defender: Player,
+    cardIds: ReadonlyArray<string>,
+  ): ReadonlyArray<string>;
+
   /** Identifier for logging / debug */
   readonly name: string;
 }
