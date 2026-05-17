@@ -86,6 +86,18 @@ export interface AIPolicy {
     pending: { cardId: string; abilityId: string },
   ): boolean;
 
+  /**
+   * Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ選択 (optional)。
+   * 相手が推理したとき、自分の現場の active ミスリード持ちから発動する組合せを選ぶ。
+   * 1 推理に対し何枚でも同時発動可 (rules/13)。
+   * 戻り値: 発動する候補の配列 (空配列で全スキップ)。
+   */
+  chooseMisreadTriggers?(
+    state: GameState,
+    reasoningUid: string,
+    candidates: ReadonlyArray<{ uid: string; x: number }>,
+  ): ReadonlyArray<{ uid: string; x: number }>;
+
   /** Identifier for logging / debug */
   readonly name: string;
 }

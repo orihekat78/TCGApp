@@ -27,6 +27,17 @@
 - [x] **Phase 8.10 完了** (Commit AE, 16 tests) — g-2 SceneArea ゴースト fade-out / h CaseArea stamp-flip / i RefreshOverlay + engine refresh log / j VictoryOverlay
 - [x] **Phase 8.6α/β Commit 1** (`eb21e8c`, 9 tests) — GuardPickerModal + CutInDisguisePickerModal UI 単体 (engine 統合は次セッション)
 - [x] **Phase 8 完全クローズ Commit 2** (`770624e`, 12 tests) — per-step action dispatch + useContactFlowDriver
+- [x] **Phase 8 完全クローズ Commit 3b** (10 tests) — Misread infrastructure (Phase 5 prep)
+   - `src/cards/_shared/misreadX.ts` 新規 — `type:'icon-misread'` ability factory
+   - `AbilityType` union に `'icon-misread'` 追加
+   - `src/engine/flow/main/reasoning.ts` — emit 後の LP 再読み (1 行修正)
+   - `src/engine/listeners/misread.ts` 新規 — `reasoning:before-add` listener (AI defender 同期解決 / human defender 側チャネル)
+   - `engine/index.ts` で `registerMisreadListener()` 呼出
+   - `useGameStateStore.pendingMisread` slice + `misreadResolve` dispatch + 側チャネル drain
+   - `MisreadPickerModal` + CSS (複数選択 UI, scaffold)
+   - `HeuristicPolicy.chooseMisreadTriggers` (greedy: x 降順で LP ≤ 0 にできる最小組合せ、届かない場合は資源温存で全スキップ)
+   - **MVP デッキ (CT-D08/CT-D11) には icon-misread カードがないため Phase 5 で実カード追加時に動作確認**
+   - Human defender modal の実発動は reasoning per-step dispatch 化が必要なため別 commit へ
 - [x] **Phase 8 完全クローズ Commit 3a** (9 tests) — Hirameki end-to-end (engine listener + UI modal + AI policy)
    - `src/engine/listeners/hirameki.ts` 新規: `evidence:remove-by-action` listener が type:'icon-flash' を検出 → 側チャネル `_pendingHiramekiSideChannel`
    - `engine/index.ts` で init 時に `registerHiramekiListener()`

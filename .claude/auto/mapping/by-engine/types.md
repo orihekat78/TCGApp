@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `78ae077072f4`
+> Source hash: `7bc8bbd9326a`
 
 `src/engine/types/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
 > 注: `engine.types` は型定義 namespace で public API ハブ無し。ソース参照のみ。
 
-## 📜 参照 Rule (18)
+## 📜 参照 Rule (16)
 
 - [`01-victory-conditions.md`](../by-rule/01-victory-conditions.md)
 - [`02-deck-construction.md`](../by-rule/02-deck-construction.md)
@@ -22,11 +22,9 @@
 - [`13-keywords.md`](../by-rule/13-keywords.md)
 - [`14-refresh.md`](../by-rule/14-refresh.md)
 - [`15-abilities-effects.md`](../by-rule/15-abilities-effects.md)
-- [`17-icons.md`](../by-rule/17-icons.md)
 - [`19-special-rules.md`](../by-rule/19-special-rules.md)
 - [`21-declared-ability-cost.md`](../by-rule/21-declared-ability-cost.md)
 - [`22-qa-action-contact.md`](../by-rule/22-qa-action-contact.md)
-- [`24-qa-naming-stun.md`](../by-rule/24-qa-naming-stun.md)
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 
 ## 📐 参照 Spec (2)

@@ -110,8 +110,11 @@ export function doReasoning(state: GameState, uid: string): void {
   const lpRaw = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
   event.emit(state, 'reasoning:before-add', { uid, lpUsed: lpRaw }, { player, uid });
 
-  // LP クランプ → max(0, lpRaw) 枚を証拠に追加 (rules/11)
-  const lpToUse = Math.max(0, lpRaw);
+  // Phase 8 完全クローズ Commit 3b: emit 後の LP を再読み (mislead listener が
+  // turnEffects.lpMod_turn 等で LP を下げた可能性がある)。
+  const lpFinal = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
+  // LP クランプ → max(0, lpFinal) 枚を証拠に追加 (rules/11)
+  const lpToUse = Math.max(0, lpFinal);
   if (lpToUse > 0) {
     mutate.evidence.addFromDeck(state, player, lpToUse, false, {
       turn: state.turn.number,

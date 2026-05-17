@@ -252,6 +252,36 @@ export class HeuristicPolicy implements AIPolicy {
   ): boolean {
     return true;
   }
+
+  /**
+   * Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ選択。
+   * Greedy 戦略: 推理対象の LP を 0 以下にできる最小限の組み合わせを選ぶ。
+   *   1. candidates を x 降順にソート
+   *   2. 累計 x が必要削減量 (= 推理対象 LP) を超えたら採用打ち切り
+   *   3. LP を 0 以下にできない場合は 1 枚も発動しない (資源温存)
+   * 注: chooseGuard と同じ「届かないなら発動しない」哲学。
+   */
+  chooseMisreadTriggers(
+    state: GameState,
+    reasoningUid: string,
+    candidates: ReadonlyArray<{ uid: string; x: number }>,
+  ): ReadonlyArray<{ uid: string; x: number }> {
+    if (candidates.length === 0) return [];
+    const targetLp = lpOf(state, reasoningUid);
+    const sorted = [...candidates].sort((a, b) => b.x - a.x);
+    const totalX = sorted.reduce((sum, c) => sum + c.x, 0);
+    // 全部発動しても LP <= 0 にできない → 資源温存で全スキップ
+    if (totalX < targetLp) return [];
+    // Greedy: x 降順に必要分まで採用
+    const picks: { uid: string; x: number }[] = [];
+    let acc = 0;
+    for (const c of sorted) {
+      picks.push(c);
+      acc += c.x;
+      if (acc >= targetLp) break;
+    }
+    return picks;
+  }
 }
 
 /**

@@ -41,6 +41,15 @@ export type GameStateStore = {
    */
   pendingHirameki: PendingHirameki | null;
   setPendingHirameki: (p: PendingHirameki | null) => void;
+  /**
+   * Phase 8 完全クローズ Commit 3b: 推理に対する human-side ミスリード保留状態。
+   * - listener (`src/engine/listeners/misread.ts`) が human defender ケースで側チャネル経由で set
+   * - AI defender ケースは listener 内で同期解決するため pending は使わない
+   * - useMisreadFlowDriver が監視し、self defender ならモーダル open
+   * - `misreadResolve` dispatch で picks 決定 → クリア
+   */
+  pendingMisread: PendingMisread | null;
+  setPendingMisread: (p: PendingMisread | null) => void;
 };
 
 /** ヒラメキ保留 (Commit 3a) */
@@ -51,6 +60,16 @@ export type PendingHirameki = {
   cardId: string;
   /** 発動対象 ability id */
   abilityId: string;
+};
+
+/** ミスリード保留 (Commit 3b) */
+export type PendingMisread = {
+  /** 推理側 (LP-X 対象) の uid */
+  reasoningUid: string;
+  /** 推理側プレイヤー */
+  reasoningPlayer: 'self' | 'opp';
+  /** 発動候補 (反対側 active misread 持ち) */
+  candidates: { uid: string; x: number }[];
 };
 
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
@@ -65,4 +84,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setActiveActionId: (id) => set({ activeActionId: id }),
   pendingHirameki: null,
   setPendingHirameki: (p) => set({ pendingHirameki: p }),
+  pendingMisread: null,
+  setPendingMisread: (p) => set({ pendingMisread: p }),
 }));

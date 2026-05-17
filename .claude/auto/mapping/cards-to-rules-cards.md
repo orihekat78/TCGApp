@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c5cb5cca653b`
+> Source hash: `a6c7c201b503`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **68** ファイル（[全体 index](./index.md)）
+このグループ: **69** ファイル（[全体 index](./index.md)）
 
-## cards/_shared (9)
+## cards/_shared (10)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -20,6 +20,7 @@
 | [`src/cards/_shared/hiramekiCharStun.ts`](../../../src/cards/_shared/hiramekiCharStun.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/cards/_shared/hiramekiDraw.ts`](../../../src/cards/_shared/hiramekiDraw.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) |
 | [`src/cards/_shared/index.ts`](../../../src/cards/_shared/index.ts) | _(参照なし)_ |
+| [`src/cards/_shared/misreadX.ts`](../../../src/cards/_shared/misreadX.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/cards/_shared/partnerColorKeyword.ts`](../../../src/cards/_shared/partnerColorKeyword.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 
 ## cards/ct-d08 (27)

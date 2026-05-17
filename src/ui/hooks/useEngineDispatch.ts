@@ -23,7 +23,9 @@ import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { event as engineEvent } from '@/engine/event/index.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { char as readCharFromEngine } from '@/engine/read/char.js';
 import { _drainPendingHirameki } from '@/engine/listeners/hirameki.js';
+import { _drainPendingMisread } from '@/engine/listeners/misread.js';
 
 type Player = 'self' | 'opp';
 
@@ -65,6 +67,8 @@ export type EngineAction =
   | { type: 'actionJudge'; actionId: string }
   // Phase 8 完全クローズ Commit 3a: ヒラメキ発動 / スキップ決定
   | { type: 'hiramekiResolve'; choice: 'fire' | 'skip' }
+  // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択
+  | { type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }
   | { type: 'endTurn'; player: Player };
 
 export type DispatchResult =
@@ -147,6 +151,10 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'hiramekiResolve': {
       // pendingHirameki が set されているときのみ有効
       return useGameStateStore.getState().pendingHirameki !== null;
+    }
+    case 'misreadResolve': {
+      // pendingMisread が set されているときのみ有効
+      return useGameStateStore.getState().pendingMisread !== null;
     }
     case 'endTurn':
       // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
@@ -278,6 +286,27 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
+    case 'misreadResolve': {
+      const pending = useGameStateStore.getState().pendingMisread;
+      if (!pending) return;
+      // 各 pick について sleep + LP-X 合算
+      let totalReduction = 0;
+      for (const pick of action.picks) {
+        mutate.scene.setState(draft, pick.uid, 'sleep');
+        totalReduction += pick.x;
+      }
+      // listener と同じパターン: lpOverride で 1 回適用 (partner uid は対象外)
+      if (
+        totalReduction > 0 &&
+        pending.reasoningUid !== 'partner:self' &&
+        pending.reasoningUid !== 'partner:opp'
+      ) {
+        const currentLp = readCharFromEngine.lp(draft, pending.reasoningUid);
+        mutate.char.setOverrideLP(draft, pending.reasoningUid, currentLp - totalReduction);
+      }
+      // クリアは produce 後に dispatchEngineAction が行う
+      return;
+    }
     case 'endTurn':
       flow.endTurn(draft, action.player);
       return;
@@ -327,6 +356,14 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     // hiramekiResolve dispatch 後は pendingHirameki をクリア
     if (action.type === 'hiramekiResolve') {
       store.setPendingHirameki(null);
+    }
+    // Commit 3b: reasoning:before-add listener が human defender ケースで側チャネル set した分
+    const misreadSide = _drainPendingMisread();
+    if (misreadSide) {
+      store.setPendingMisread(misreadSide);
+    }
+    if (action.type === 'misreadResolve') {
+      store.setPendingMisread(null);
     }
     return { ok: true };
   } catch (e) {

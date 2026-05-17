@@ -2,16 +2,18 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `fa1c70260dee`
+> Source hash: `2f3b6728fc3b`
 
 `src/engine/listeners/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
 > 注: `engine.listeners` は型定義 namespace で public API ハブ無し。ソース参照のみ。
 
-## 📜 参照 Rule (1)
+## 📜 参照 Rule (2)
 
 - [`10-action-event.md`](../by-rule/10-action-event.md)
+- [`13-keywords.md`](../by-rule/13-keywords.md)
 
-## 📄 ソース (1)
+## 📄 ソース (2)
 
 - [`src/engine/listeners/hirameki.ts`](../../../../src/engine/listeners/hirameki.ts)
+- [`src/engine/listeners/misread.ts`](../../../../src/engine/listeners/misread.ts)

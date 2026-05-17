@@ -15,7 +15,8 @@ export type AbilityType =
   | 'declared'        // 【宣言】 宣言能力 (rules/21)
   | 'icon-cutin'      // カットイン (rules/09)
   | 'icon-flash'      // ヒラメキ (rules/10)
-  | 'icon-disguise';  // 変装 (rules/09)
+  | 'icon-disguise'   // 変装 (rules/09)
+  | 'icon-misread';   // ミスリード (rules/13) — Phase 8 完全クローズ Commit 3b 追加
 
 // ---------- AbilityScope ----------
 

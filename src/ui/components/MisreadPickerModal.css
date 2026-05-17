@@ -1,0 +1,92 @@
+/* Phase 8 完全クローズ Commit 3b: MisreadPickerModal */
+
+.misread-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.misread-picker-modal {
+  background: linear-gradient(180deg, #f5e6ff 0%, #fff 100%);
+  border: 3px solid #9b59b6;
+  border-radius: 12px;
+  padding: 20px 24px;
+  min-width: 420px;
+  max-width: 560px;
+  box-shadow: 0 8px 32px rgba(155, 89, 182, 0.4);
+}
+
+.misread-picker-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  color: #6c2caa;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.misread-picker-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.misread-picker-body {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(155, 89, 182, 0.08);
+  border-radius: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.misread-picker-empty {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.misread-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.misread-picker-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.misread-picker-row:hover { background: rgba(155, 89, 182, 0.12); }
+
+.misread-name { font-size: 14px; color: #333; }
+.misread-x { font-size: 13px; color: #c0392b; font-weight: 600; }
+
+.misread-picker-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.misread-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+
+.misread-btn:hover { opacity: 0.85; }
+.misread-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.misread-btn-fire { background: #9b59b6; color: #fff; }
+.misread-btn-skip { background: #ddd; color: #555; }
