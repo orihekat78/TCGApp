@@ -146,3 +146,27 @@
   font-size: 9px;
   font-weight: 800;
 }
+
+/* Phase 8 完全クローズ Commit 5: 効果スタック reorder UI */
+.entry-reorder {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 4px;
+}
+.reorder-btn {
+  background: transparent;
+  border: 1px solid var(--neon-blue);
+  color: var(--neon-blue);
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  cursor: pointer;
+  line-height: 1;
+}
+.reorder-btn:hover:not(:disabled) {
+  background: rgba(64, 156, 255, 0.2);
+}
+.reorder-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

@@ -22,6 +22,7 @@ import type { Cost, EffectCtx } from '@/engine/types';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { event as engineEvent } from '@/engine/event/index.js';
+import { _getResolutionLock } from '@/engine/event/registry.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readCharFromEngine } from '@/engine/read/char.js';
 import { _drainPendingHirameki } from '@/engine/listeners/hirameki.js';
@@ -69,6 +70,8 @@ export type EngineAction =
   | { type: 'hiramekiResolve'; choice: 'fire' | 'skip' }
   // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択
   | { type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }
+  // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
+  | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   | { type: 'endTurn'; player: Player };
 
 export type DispatchResult =
@@ -155,6 +158,15 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'misreadResolve': {
       // pendingMisread が set されているときのみ有効
       return useGameStateStore.getState().pendingMisread !== null;
+    }
+    case 'setEffectOrder': {
+      // resolution lock 中は禁止
+      const lock = _getResolutionLock();
+      if (lock.locked) return false;
+      // entry が存在 + owner が action.player と一致する場合のみ
+      const entry = state.pendingEffects.find((e) => e.id === action.entryId);
+      if (!entry) return false;
+      return entry.source.player === action.player;
     }
     case 'endTurn':
       // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
@@ -305,6 +317,12 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         mutate.char.setOverrideLP(draft, pending.reasoningUid, currentLp - totalReduction);
       }
       // クリアは produce 後に dispatchEngineAction が行う
+      return;
+    }
+    case 'setEffectOrder': {
+      // entry を直接 mutate (isAllowed で entry 存在 + owner 一致は確認済)
+      const entry = draft.pendingEffects.find((e) => e.id === action.entryId);
+      if (entry) entry.ownerChosenOrder = action.order;
       return;
     }
     case 'endTurn':
