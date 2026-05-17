@@ -2,12 +2,11 @@
 
 ## 現在地
 
-**フェーズ**: Phase 8 完全クローズ達成 ✅ (Commit 1〜6 全完了)
-**最新コミット**: `038a331` (docs: NEXT-SESSION-PROMPT を Phase 9 候補へリセット) — origin/main 同期済
-**テスト状況**: 1377 PASS / 182 test files / typecheck clean / docs:check clean
-**ブラウザ表示**: 人間 vs CPU エンドツーエンド動作。人間 defender の guard/cutin/disguise + Hirameki モーダル介入が機能。
-
-**未コミット作業**: なし (本セッション終了処理は別 commit で完了予定)
+**フェーズ**: Phase 9-A クローズ達成 ✅ (Phase 8 完全クローズに加え、1000戦 smoke ベースライン取得)
+**最新コミット**: `afd9d17` (chore(smoke): initial 1000-game baseline report) → C4 で更に進む
+**テスト状況**: 1393 PASS / 184 test files / typecheck clean / docs:check clean
+**1000戦 smoke**: heuristic × heuristic 1000戦 / 20.6s / **0 例外** / 100% turn-cap (Heuristic mirror stall 既知)
+**ブラウザ表示**: 人間 vs CPU エンドツーエンド動作 (変化なし)
 
 ## 進捗トラッカー (高レベル)
 
@@ -23,8 +22,13 @@
    - Commit 4 (`3360006`): Souza/SceneSwitch modal scaffolds (Phase 5 prep)
    - Commit 5 (`60be8b4`): 効果スタック reorder UI
    - Commit 6 (`135a12b`): human-vs-CPU E2E
+- [x] **Phase 9-A**: 1000戦 smoke ベースライン取得 — [reports/smoke-2026-05-17](reports/smoke-2026-05-17.md)
+   - C1 (`e4878ba`): aggregate / format-md pure + tests (+15)
+   - C2 (`e540f38`): run-1000.ts runner + smoke:1000 script
+   - C2.5 (`0f3fc73`): anomaly Markdown 表示上限 20 件
+   - C3 (`afd9d17`): 初回レポート (1000戦 / 20.6s / 0 例外 / 100% turn-cap)
 - [ ] Phase 5 prep の engine 統合 (実カード追加と同時)
-- [ ] Phase 9: Polish (1000戦チューニング / リプレイ / カード追加)
+- [ ] Phase 9-B 以降: Polish (AI チューニング / リプレイ / カード追加 / パフォーマンス)
 
 ## セッションログ index
 
