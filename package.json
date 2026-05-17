@@ -16,7 +16,8 @@
     "docs:progress": "tsx scripts/gen-docs/index.ts progress",
     "docs:mapping": "tsx scripts/gen-docs/index.ts mapping",
     "docs": "tsx scripts/gen-docs/index.ts all",
-    "docs:check": "tsx scripts/gen-docs/index.ts check"
+    "docs:check": "tsx scripts/gen-docs/index.ts check",
+    "smoke:1000": "tsx scripts/smoke/run-1000.ts"
   },
   "keywords": [],
   "author": "",
