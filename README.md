@@ -9,9 +9,10 @@
 
 ## 現在の状況（2026-05-17）
 
-**Phase 9-A〜9-E クローズ達成** ✅ 1 セッションで Phase 9 polish を完了:
-engine 4 バグ修正 / カード画像 UI 統合 / 視覚調整 5 系統 / 裏向きエリア改善。
-1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6**。
+**Phase 5 advance engine 4 sub-feature 達成** ✅ 1 セッションで 9 commits を一気通貫:
+SceneSwitch (engine+AI+UI) / Hirameki E2E / Misread E2E / Souza atom 新規実装。
+listener bug 2 件発見・修正、React 19 fiber static flag 解消。
+1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (baseline 完全維持)**。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -25,18 +26,21 @@ engine 4 バグ修正 / カード画像 UI 統合 / 視覚調整 5 系統 / 裏�
 | 9-C | カード画像 UI 統合 (CardArt + useCardImage) | ✅ 完了 |
 | 9-D | case 向き auto-detect / partner 拡大 / hand 色あせ / Remove 画像 / Evidence↔FILE swap | ✅ 完了 |
 | 9-E | deck low-stock / FILE progress-7 完了 / opp 手札 mini back 統一 | ✅ 完了 |
-| Phase 5 advance prep | [guardrails spec](.claude/specs/2026-05-17-phase5-advance-guardrails.md) 起草 (9-B 4件再発防止策) | ✅ 完了 |
-| Phase 5 advance | 実カード追加 + Misread / Souza / SceneSwitch engine 統合 | ⏳ 次セッション候補 |
+| Phase 5 advance prep | [guardrails spec](.claude/specs/2026-05-17-phase5-advance-guardrails.md) 起草 (`5cdc3bb`) | ✅ 完了 |
+| Phase 5 advance: SceneSwitch | rules/20 §スイッチ engine + AI + UI (`6625283` / `1421772`) | ✅ 完了 |
+| Phase 5 advance: Hirameki | rules/10 E2E 結合 + listener bug fix (`75fe5f4`) | ✅ engine 完了 |
+| Phase 5 advance: Misread | rules/13 §ミスリード E2E (Human defender) + bug fix (`9070556`) | ✅ engine 完了、UI 残 |
+| Phase 5 advance: Souza | rules/13 §捜査X engine atom + AI auto-order (`59183f4`) | ✅ engine 完了、Sub-task B/C 残 |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1399 PASS / 185 Test Files** (Phase 9-E 完了時点)
-- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
-  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン
+- **1434 PASS / 189 Test Files** (Phase 5 advance engine 完了時点、最新 `59183f4`)
+- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.x s**
+  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、5 連続 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
-- `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能
-- 骨格凍結原則: 9-B の engine 修正は CLAUDE.md §例外「骨格自体のバグ修正」に該当 (3 touched files)、9-C〜9-E は UI のみ
+- `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能、SceneSwitch UI 配線済
+- 骨格凍結原則: Phase 5 advance の engine 修正は §例外「Phase 5 で延期された基本機能の完成 / バグ修正」に該当
 
 ### 調査フェーズ完了済 (実装の前提)
 

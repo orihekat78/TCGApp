@@ -7,77 +7,68 @@
 ## コピペ用プロンプト
 
 ```text
-名探偵コナンTCG MVP — Phase 9-A〜9-E クローズ達成済 (2026-05-17)。
-次フェーズの作業を開始したい。
+名探偵コナンTCG MVP — Phase 5 advance engine 4 sub-feature 達成 (2026-05-17 / 最新 `59183f4`)。
+次の作業を開始したい。
 
 ## 完了状態
 
-**Phase 9-E クローズ達成** ✅ (9-A〜9-E 一気通貫 / 1399 PASS / 185 files / typecheck clean)
+**Phase 5 advance engine 全 sub-feature 達成** ✅ 1 セッションで 9 commits 一気通貫:
 
-- Phase 0-8 完全クローズ達成済 (engine + 47 カード + UI シェル + E2E)
-- 9-A (`e4878ba`〜`3fa7fcc`): 1000戦 smoke baseline
-- 9-B (`8490fd0`〜`2635c9a`) + hotfix (`e74b16e`):
-  engine 4 バグ修正 (clearNamed / handUseCard char deploy / AI cost picker / Heuristic NextHint gate)
-  + node:fs を browser bundle から分離
-- 9-C (`ea165e6`): カード画像 UI 統合 (CardArt + useCardImage + onError fallback)
-- 9-D (`37d0371`): case 向き auto-detect / partner 拡大 / hand 色あせ / Remove 画像 / Evidence↔FILE swap
-- 9-E (`76681f6`): deck low-stock / FILE progress-7 完了 / opp 手札 mini back 統一
+- Phase 0-9-E 完全クローズ済
+- 9-A〜9-E (`e4878ba`〜`76681f6`): 1000戦 smoke baseline + engine 4 バグ修正 + UI polish 一式
+- Phase 5 advance prep (`5cdc3bb`): guardrails spec 起草
+- C+D scope-out (`616272c`): sampleGameState cardId 正規化 + HandZone key 一意化 + cardResolvers idx 整合
+- React 19 fix (`e79c0d0`): CaseArea Rules of Hooks 修正で "Expected static flag" 完全解消
+- demo path 検証 (`321f4f2`): 17 CardArt 全 CDN 取得確認 (実装不要)
+- SceneSwitch (`6625283` engine+AI / `1421772` UI): rules/20 §スイッチ 完全実装
+- Hirameki E2E (`75fe5f4`): action[case] → listener → drain → fire/skip 経路全実証 + listener bug fix
+- Misread E2E (`9070556`): Human defender 経路 6 件 + 同種 listener bug fix
+- Souza engine (`59183f4`): rules/13 §捜査X engine atom + AI auto-order 新規実装
 
-## 1000戦 smoke (現状ベースライン)
+## テスト状況 (現状ベースライン)
 
-- 構成: heuristic × heuristic / 3 deck pairing
-- 結果: 1000 戦完走 / 20.6s → 3.4s に短縮 / **0 例外 / 0 timeout**
-- 勝率: A 52.4% vs B 47.6% / 平均 10.35 ターン
+- **1434 PASS / 189 test files** / typecheck clean / docs:check clean
+- 1000戦 smoke: heuristic × heuristic / 3.x s / **0 例外 / 0 timeout** / 524/476 baseline 完全維持 (5 連続 commit で regression 0)
 
 ## 残課題 (本セッションで選んでください)
 
-### scope-out from 9-C〜9-E
+### Phase 5 advance UI 統合 (残)
 
-- **C**: demo (turn-4) fixture の cardId 不整合
-  (`'0499'` 形式 → `'D08003'` 等の正規 ID に修正、デモでも画像表示)
-- **D**: HandZone 内 D08015/D08019 React key 重複 warning
-  (map() key を `${cardId}-${index}` 等に一意化)
-
-### Phase 5 advance
-
-- 実カード追加 (CT-D08/D11 以外、または同セット未実装カード)
-- Misread / Souza / SceneSwitch の engine 統合 (Phase 5 prep として infrastructure のみ完成済)
-  1. Misread (rules/13): reasoning per-step dispatch 化 → human defender modal 実発動
-  2. Souza (rules/13): engine 'souza' atom 追加 + listener + dispatch
-  3. SceneSwitch (rules/20): sceneSwitch effect で removeUid を user pick できる経路
-  4. Hirameki: 実カード経由の action[case] フロー結合
+1. **Misread UI**: useMisreadFlowDriver + PlaymatMisreadPickerModal wrapper (presentation 既存)
+2. **Souza Sub-task B**: listener + side-channel `_pendingSouzaSideChannel` + dispatcher
+3. **Souza Sub-task C**: useSouzaFlowDriver + PlaymatSouzaReorderModal wrapper (Human pick UI)
+4. **「発見された」カード参照機構**: `state.discoveredCards` + `$discovered` placeholder (該当実カード追加時)
 
 ### Phase 9 継続
 
-- **9-F**: HeuristicPolicy さらなる強化 (MCTS / 重み付け scoring)
-- **9-G**: ローカル保存・リプレイ機能 (localStorage / IndexedDB)
+- **9-F**: HeuristicPolicy 強化 (MCTS / 重み付け scoring、SceneSwitch Option B/C / Souza 順番判定 / Misread greedy 改良)
+- **9-G**: ローカル保存・リプレイ (localStorage / IndexedDB)
 - **9-H**: パフォーマンス計測 (ターン時間 / メモリ)
 
 ## 作業手順
 
 1. `.claude/CLAUDE.md` 規約を確認
-2. `git log --oneline -20` で 9-A〜9-E の commit を確認
-3. `.claude/sessions/2026-05-17-2.md` で前セッションの全体像を把握
-4. 上記候補から 1 つ選んで brainstorming → plan → 実装
-5. UI 編集を含む場合は **Playwright screenshot + console error 確認** を必ず挟む
-   (mem-feedback-ui-screenshot-verification)
-6. CLAUDE.md §README.md 運用義務に従い、各フェーズ完了時に README 更新
+2. `git log --oneline -10` で本セッションの 9 commits を確認
+3. `.claude/sessions/2026-05-17-4.md` で前セッション全容把握
+4. `.claude/specs/2026-05-17-phase5-advance-guardrails.md` で残作業時の guardrails 確認
+5. 上記候補から 1 つ選んで brainstorming → plan → 実装
+6. UI 編集を含む場合は Playwright screenshot + console error 確認 必須
 
 ## エッジケース (CLAUDE.md §設計レビュー)
 
-- Phase 5 advance 時: touched files ≤ 3 制約 / カード単位
-- engine 触る場合: §骨格凍結原則 §例外条件 (バグ修正のみ) を厳守
-- UI 編集: prefers-reduced-motion 対応 / aria-label 維持
+- engine 触る場合: §骨格凍結原則 §例外条件 (バグ修正 / 延期された基本機能完成 / ルール変更) を厳守
+- 新カード追加時: touched files ≤ 3 制約
+- UI 編集: prefers-reduced-motion 対応 / aria-label 維持 / React 19 fiber static flag 回避 (常時同一 JSX で返す)
+- listener 追加時: `_reset*Registered` を必ず export (テスト分離のため、Hirameki/Misread の前例参照)
 ```
 
 ---
 
 ## 参考
 
-- 直近 commit: `76681f6` (Phase 9-E) — origin/main 同期済
-- ベース: 1399 PASS / 185 files / typecheck clean / docs:check clean
+- 直近 commit: `59183f4` (Phase 5 advance Souza engine atom) — origin/main 同期済
+- ベース: 1434 PASS / 189 files / typecheck clean / docs:check clean
 - 主要レポート:
-  - `.claude/reports/smoke-2026-05-17.md` — 9-A baseline (engine バグ前)
-  - `.claude/reports/smoke-2026-05-17-phase9b.md` — 9-B 修正後
-  - `.claude/sessions/2026-05-17-2.md` — Phase 9 一気通貫の詳細
-- Playwright screenshot 集: `.playwright-mcp/phase9{c,d,e}-*.png`
+  - `.claude/sessions/2026-05-17-4.md` — 本セッション 9 commits 詳細
+  - `.claude/specs/2026-05-17-phase5-advance-guardrails.md` — Phase 5 advance ガードレール spec
+  - `.claude/reports/smoke-2026-05-17-{2..5}.{json,md}` — 1000戦 smoke レポート群
