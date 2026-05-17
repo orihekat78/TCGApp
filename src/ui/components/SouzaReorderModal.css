@@ -1,0 +1,86 @@
+/* Phase 8 完全クローズ Commit 4: SouzaReorderModal */
+
+.souza-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.souza-modal {
+  background: linear-gradient(180deg, #eaf4ff 0%, #fff 100%);
+  border: 3px solid #2980b9;
+  border-radius: 12px;
+  padding: 20px 24px;
+  min-width: 420px;
+  max-width: 560px;
+  box-shadow: 0 8px 32px rgba(41, 128, 185, 0.4);
+}
+
+.souza-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  color: #1f5f8b;
+}
+
+.souza-sub { margin: 0; font-size: 13px; color: #555; }
+
+.souza-body {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(41, 128, 185, 0.08);
+  border-radius: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.souza-empty { margin: 0; font-size: 13px; color: #888; }
+
+.souza-list { list-style: none; margin: 0; padding: 0; }
+
+.souza-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 32px 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  margin-bottom: 4px;
+}
+
+.souza-index { font-weight: 600; color: #1f5f8b; }
+.souza-name { font-size: 14px; color: #333; }
+
+.souza-arrow {
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.souza-arrow:hover:not(:disabled) { background: #eaf4ff; }
+.souza-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.souza-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.souza-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.souza-btn-confirm { background: #2980b9; color: #fff; }
+.souza-btn-cancel { background: #ddd; color: #555; }

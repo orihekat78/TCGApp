@@ -1,0 +1,76 @@
+/* Phase 8 完全クローズ Commit 4: SceneSwitchPickerModal */
+
+.ssp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ssp-modal {
+  background: linear-gradient(180deg, #fef3e6 0%, #fff 100%);
+  border: 3px solid #e67e22;
+  border-radius: 12px;
+  padding: 20px 24px;
+  min-width: 380px;
+  max-width: 520px;
+  box-shadow: 0 8px 32px rgba(230, 126, 34, 0.4);
+}
+
+.ssp-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  color: #a0521d;
+}
+
+.ssp-sub { margin: 0; font-size: 13px; color: #555; }
+
+.ssp-body {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(230, 126, 34, 0.08);
+  border-radius: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.ssp-empty { margin: 0; font-size: 13px; color: #888; }
+
+.ssp-list { list-style: none; margin: 0; padding: 0; }
+
+.ssp-cand {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.ssp-cand:hover { background: #fef3e6; }
+.ssp-name { font-size: 14px; color: #333; }
+.ssp-state { font-size: 12px; color: #888; }
+
+.ssp-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.ssp-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.ssp-btn-cancel { background: #ddd; color: #555; }
