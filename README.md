@@ -9,10 +9,8 @@
 
 ## 現在の状況（2026-05-17）
 
-**Phase 9-A クローズ達成** ✅ 1000戦 AI vs AI smoke ベースライン取得。
-Phase 8 完全クローズ達成済 (ActionsPanel 全配線 / per-step action dispatch /
-ContactFlowDriver / Hirameki end-to-end / Misread・Souza・SceneSwitch infrastructure /
-効果スタック reorder UI / 人間 vs CPU E2E)。
+**Phase 9-B クローズ達成** ✅ engine 整合性 4 バグ修正 + Heuristic チューニングで
+1000戦 smoke が **0 timeout / 0 例外 / 勝率 52.4 vs 47.6** に到達。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -22,19 +20,20 @@ ContactFlowDriver / Hirameki end-to-end / Misread・Souza・SceneSwitch infrastr
 | 7 | UI Shell (12 components + cardResolvers + App 統合) | ✅ 完了 |
 | 8.1-8.10 | hooks 基盤 / 推理 / アクション / 演出 / チュートリアル L0-L13 | ✅ 完了 |
 | 8 完全クローズ Commit 1-6 | per-step dispatch / Hirameki / Misread・Souza・Switch infra / 効果 reorder / E2E | ✅ 完了 |
-| 9-A | 1000戦 smoke + レポート ([reports/smoke-2026-05-17.md](.claude/reports/smoke-2026-05-17.md)) | ✅ 完了 |
+| 9-A | 1000戦 smoke baseline ([smoke-2026-05-17.md](.claude/reports/smoke-2026-05-17.md)) | ✅ 完了 |
+| 9-B | engine 4 バグ修正 + Heuristic チューニング ([smoke-...-phase9b.md](.claude/reports/smoke-2026-05-17-phase9b.md)) | ✅ 完了 |
 | Phase 5 prep の engine 統合 | Misread / Souza / SceneSwitch の listener / dispatch 統合 | ⏳ 実カード追加と同時 |
-| 9-B〜E | Polish (AI チューニング / リプレイ / カード追加 / パフォーマンス) | ⏳ |
+| 9-C〜E | Polish (リプレイ / カード追加 / パフォーマンス) | ⏳ |
 
 ### テスト状況
 
-- **1393 PASS / 184 Test Files** (Phase 9-A 完了時点)
-- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 20.6 s**
-  - 観測: 1000/1000 が turn-cap (200) — HeuristicPolicy mirror は決着不能 (既知の AI 弱点)
-  - 解釈: engine 信頼度ベースライン確立、AI チューニングが Phase 9-B 優先候補
+- **1394 PASS / 184 Test Files** (Phase 9-B 完了時点)
+- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
+  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン
+  - 修正内容: B1 endTurn で名乗り解除 / B2 handUseCard でキャラ scene 登場 / B3 AI cost picker indices / B4 Heuristic NextHint gate
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
 - `npm run dev` で http://localhost:5173/ — ゲーム開始 → end-to-end プレイ可能、人間 defender のモーダル介入動作
-- 骨格凍結原則遵守: 9-A 作業範囲は `scripts/smoke/` + `.claude/reports/` のみ、engine / AI / カード本体への変更なし
+- 骨格凍結原則: 9-B の engine 修正は CLAUDE.md §例外「骨格自体のバグ修正」に該当 (3 touched files)
 
 ### 調査フェーズ完了済 (実装の前提)
 

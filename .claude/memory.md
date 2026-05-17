@@ -2,11 +2,11 @@
 
 ## 現在地
 
-**フェーズ**: Phase 9-A クローズ達成 ✅ (Phase 8 完全クローズに加え、1000戦 smoke ベースライン取得)
-**最新コミット**: `afd9d17` (chore(smoke): initial 1000-game baseline report) → C4 で更に進む
-**テスト状況**: 1393 PASS / 184 test files / typecheck clean / docs:check clean
-**1000戦 smoke**: heuristic × heuristic 1000戦 / 20.6s / **0 例外** / 100% turn-cap (Heuristic mirror stall 既知)
-**ブラウザ表示**: 人間 vs CPU エンドツーエンド動作 (変化なし)
+**フェーズ**: Phase 9-B クローズ達成 ✅ engine 4 バグ修正 + AI チューニングで smoke が決着
+**最新コミット**: `0adf3a4` (chore(smoke): post-engine-fix 1000-game report) → C5 (docs) 進行中
+**テスト状況**: 1394 PASS / 184 test files / typecheck clean / docs:check clean
+**1000戦 smoke**: heuristic × heuristic 1000戦 / 3.4s / **0 例外 / 0 timeout** / A 52.4% vs B 47.6% / 平均 10.35 ターン
+**ブラウザ表示**: 人間 vs CPU エンドツーエンド動作 (engine fix で内部挙動改善、UI 視点は不変)
 
 ## 進捗トラッカー (高レベル)
 
@@ -27,8 +27,13 @@
    - C2 (`e540f38`): run-1000.ts runner + smoke:1000 script
    - C2.5 (`0f3fc73`): anomaly Markdown 表示上限 20 件
    - C3 (`afd9d17`): 初回レポート (1000戦 / 20.6s / 0 例外 / 100% turn-cap)
+- [x] **Phase 9-B**: Engine 整合性修正 + Heuristic チューニング — [reports/smoke-2026-05-17-phase9b](reports/smoke-2026-05-17-phase9b.md)
+   - C2 (`8490fd0`): B1 — endTurn で `clearNamed` 呼出、名乗り状態を rules/11 通りにクリア
+   - C3 (`7b9984d`): B2 + B3 — handUseCard でキャラを scene.enter、AI が cost picker indices を populate
+   - C3.5 (`a0d4c1c`): B4 — Heuristic NextHint gate (fileLen>=8) + テスト更新
+   - C4 (`0adf3a4`): 修正後レポート (1000戦 / 3.4s / 0 例外 / 0 timeout / A 52.4% vs B 47.6%)
 - [ ] Phase 5 prep の engine 統合 (実カード追加と同時)
-- [ ] Phase 9-B 以降: Polish (AI チューニング / リプレイ / カード追加 / パフォーマンス)
+- [ ] Phase 9-C 以降: リプレイ / カード追加 / パフォーマンス
 
 ## セッションログ index
 
