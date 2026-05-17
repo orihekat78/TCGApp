@@ -9,31 +9,33 @@
 
 ## 現在の状況（2026-05-17）
 
-**Phase 9-B クローズ達成** ✅ engine 整合性 4 バグ修正 + Heuristic チューニングで
-1000戦 smoke が **0 timeout / 0 例外 / 勝率 52.4 vs 47.6** に到達。
+**Phase 9-A〜9-E クローズ達成** ✅ 1 セッションで Phase 9 polish を完了:
+engine 4 バグ修正 / カード画像 UI 統合 / 視覚調整 5 系統 / 裏向きエリア改善。
+1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6**。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
 | Phase | 内容 | 状態 |
 |------|-----|-----|
 | 0-6 | Engine + 47 カード + AI | ✅ 完了 |
-| 7 | UI Shell (12 components + cardResolvers + App 統合) | ✅ 完了 |
-| 8.1-8.10 | hooks 基盤 / 推理 / アクション / 演出 / チュートリアル L0-L13 | ✅ 完了 |
-| 8 完全クローズ Commit 1-6 | per-step dispatch / Hirameki / Misread・Souza・Switch infra / 効果 reorder / E2E | ✅ 完了 |
+| 7 + 7.5 | UI Shell (12 components + cardResolvers + App 統合) | ✅ 完了 |
+| 8.1-8.10 + 完全クローズ | hooks / per-step dispatch / Hirameki / 各種 modal / E2E | ✅ 完了 |
 | 9-A | 1000戦 smoke baseline ([smoke-2026-05-17.md](.claude/reports/smoke-2026-05-17.md)) | ✅ 完了 |
-| 9-B | engine 4 バグ修正 + Heuristic チューニング ([smoke-...-phase9b.md](.claude/reports/smoke-2026-05-17-phase9b.md)) | ✅ 完了 |
-| Phase 5 prep の engine 統合 | Misread / Souza / SceneSwitch の listener / dispatch 統合 | ⏳ 実カード追加と同時 |
-| 9-C〜E | Polish (リプレイ / カード追加 / パフォーマンス) | ⏳ |
+| 9-B | engine 4 バグ修正 + Heuristic チューニング + hotfix (node:fs 分離) | ✅ 完了 |
+| 9-C | カード画像 UI 統合 (CardArt + useCardImage) | ✅ 完了 |
+| 9-D | case 向き auto-detect / partner 拡大 / hand 色あせ / Remove 画像 / Evidence↔FILE swap | ✅ 完了 |
+| 9-E | deck low-stock / FILE progress-7 完了 / opp 手札 mini back 統一 | ✅ 完了 |
+| Phase 5 advance | 実カード追加 + Misread / Souza / SceneSwitch engine 統合 | ⏳ 次セッション候補 |
+| 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1394 PASS / 184 Test Files** (Phase 9-B 完了時点)
+- **1399 PASS / 185 Test Files** (Phase 9-E 完了時点)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
   - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン
-  - 修正内容: B1 endTurn で名乗り解除 / B2 handUseCard でキャラ scene 登場 / B3 AI cost picker indices / B4 Heuristic NextHint gate
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
-- `npm run dev` で http://localhost:5173/ — ゲーム開始 → end-to-end プレイ可能、人間 defender のモーダル介入動作
-- 骨格凍結原則: 9-B の engine 修正は CLAUDE.md §例外「骨格自体のバグ修正」に該当 (3 touched files)
+- `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能
+- 骨格凍結原則: 9-B の engine 修正は CLAUDE.md §例外「骨格自体のバグ修正」に該当 (3 touched files)、9-C〜9-E は UI のみ
 
 ### 調査フェーズ完了済 (実装の前提)
 
