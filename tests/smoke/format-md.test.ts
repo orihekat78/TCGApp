@@ -75,6 +75,21 @@ describe('formatMarkdown', () => {
     expect(md).not.toContain('再現コマンド');
   });
 
+  it('caps anomaly list at 20 entries with overflow notice', () => {
+    const r = sampleReport();
+    r.anomalies = Array.from({ length: 100 }, (_, i) => ({
+      seed: `smoke-${i}`,
+      pairing: { deckA: 'CT-D08' as const, deckB: 'CT-D08' as const },
+      reason: 'timeout' as const,
+      turn: 201,
+    }));
+    const md = formatMarkdown(r);
+    expect(md).toContain('`smoke-0` — timeout');
+    expect(md).toContain('`smoke-19` — timeout');
+    expect(md).not.toContain('`smoke-20` — timeout');
+    expect(md).toContain('+80 more anomalies');
+  });
+
   it('truncates very long error stacks', () => {
     const r = sampleReport();
     r.anomalies = [

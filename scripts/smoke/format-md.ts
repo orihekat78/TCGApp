@@ -54,7 +54,10 @@ export function formatMarkdown(report: AggregateReport): string {
   if (report.anomalies.length === 0) {
     lines.push('_異常なし_');
   } else {
-    for (const a of report.anomalies) {
+    const ANOMALY_DISPLAY_CAP = 20;
+    const total = report.anomalies.length;
+    const shown = report.anomalies.slice(0, ANOMALY_DISPLAY_CAP);
+    for (const a of shown) {
       const pair = `${a.pairing.deckA} vs ${a.pairing.deckB}`;
       if (a.reason === 'timeout') {
         lines.push(`- \`${a.seed}\` — timeout @ turn ${a.turn} (${pair})`);
@@ -62,6 +65,10 @@ export function formatMarkdown(report: AggregateReport): string {
         const err = a.error ? ` — ${truncate(a.error, 120)}` : '';
         lines.push(`- \`${a.seed}\` — exception @ turn ${a.turn} (${pair})${err}`);
       }
+    }
+    if (total > ANOMALY_DISPLAY_CAP) {
+      lines.push('');
+      lines.push(`_+${total - ANOMALY_DISPLAY_CAP} more anomalies — see JSON for the full list_`);
     }
     lines.push('');
     lines.push('### 再現コマンド');
