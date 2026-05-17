@@ -112,7 +112,9 @@ function PlayerMat({
           level: resolved?.level ?? engineCase.requiredEvidence,
           status: engineCase.status,
           requiredEvidence: engineCase.requiredEvidence,
-          orientation: resolved?.orientation ?? 'portrait',
+          // Phase 9-D: undefined のままで CaseArea に渡し、画像実測 (useCardOrientation)
+          // にフォールバックさせる。
+          orientation: resolved?.orientation,
         };
       })()
     : null;
@@ -127,8 +129,8 @@ function PlayerMat({
 
   // レイアウト構造 (対称配置、エリア重なりなし):
   //   .mat (3-col grid)
-  //     ├─ .left-col   : CaseArea (上) + FileArea (下)
-  //     ├─ .center-col : SceneArea (上) + .below-scene (下: EvidenceArea | PartnerArea)
+  //     ├─ .left-col   : CaseArea (上) + EvidenceArea (下)  ← Phase 9-D で swap
+  //     ├─ .center-col : SceneArea (上) + .below-scene (下: FileArea | PartnerArea)
   //     └─ .right-col  : DeckArea (上) + RemoveArea (下)
   //   opp は transform: rotate(180deg) で全体が上下逆転 (対称配置)
   return (
@@ -141,10 +143,10 @@ function PlayerMat({
           isCandidate={isCaseCandidate}
           onClick={onCaseClick}
         />
-        <FileArea
-          cards={state?.players[side].file ?? []}
+        <EvidenceArea
+          count={evidenceCount}
+          requiredEvidence={requiredEvidence}
           side={side}
-          resolveCard={resolveCard}
         />
       </div>
       <div className="center-col">
@@ -156,10 +158,10 @@ function PlayerMat({
           onUnitClick={onUnitClick}
         />
         <div className="below-scene">
-          <EvidenceArea
-            count={evidenceCount}
-            requiredEvidence={requiredEvidence}
+          <FileArea
+            cards={state?.players[side].file ?? []}
             side={side}
+            resolveCard={resolveCard}
           />
           <PartnerArea
             partner={state?.players[side].partner ?? null}

@@ -9,6 +9,7 @@
 import { Fragment } from 'react';
 import type { JSX } from 'react';
 import { CardArt } from './CardArt.js';
+import { useCardOrientation } from '../hooks/useCardOrientation.js';
 import './CaseArea.css';
 
 export type CaseColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
@@ -85,6 +86,11 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
   const { title, color, level, status, requiredEvidence } = caseInfo;
   const isResolved = status === '解決編';
 
+  // Phase 9-D: cardId 画像から向きを自動判定。
+  // 優先順: props.orientation 明示 > 画像実測 > portrait fallback。
+  const detectedOrientation = useCardOrientation(caseInfo.cardId);
+  const orientation = caseInfo.orientation ?? detectedOrientation ?? 'portrait';
+
   // タイトル中の \n を <br /> に変換
   const titleNodes = title.split(/\r?\n/).map((line, i, arr) => (
     <Fragment key={i}>
@@ -106,9 +112,9 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
         </div>
 
         <div
-          className={`case-card ${caseInfo.orientation ?? 'portrait'} color-${color}`}
+          className={`case-card ${orientation} color-${color}`}
           data-card-id={caseInfo.cardId}
-          data-orientation={caseInfo.orientation ?? 'portrait'}
+          data-orientation={orientation}
         >
           <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
           <div className="case-title">{titleNodes}</div>

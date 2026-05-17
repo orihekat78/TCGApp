@@ -7,6 +7,7 @@
 import type { JSX } from 'react';
 import type { CardId } from '@/engine/types/game-state.js';
 import type { ResolvedCardMeta } from './SceneArea.js';
+import { CardArt } from './CardArt.js';
 import './RemoveArea.css';
 
 export type RemoveAreaProps = {
@@ -39,7 +40,7 @@ export function RemoveArea({ cards, side, resolveCard }: RemoveAreaProps): JSX.E
           >
             <div className="color-stripe" />
             <div className="art">
-              <div className="silhouette" />
+              <CardArt cardId={top} alt={topMeta.name} />
             </div>
           </div>
         ) : (

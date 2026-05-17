@@ -60,9 +60,7 @@
 
 /* ---- 事件カード (portrait) ---- */
 .case-area .case-card {
-  /* landscape default (mock 互換) */
-  width: 116px;
-  height: 84px;
+  /* 共通スタイル — 寸法は portrait / landscape で個別指定 (Phase 9-D 自動判定) */
   border-radius: 4px;
   background: linear-gradient(135deg, #2a2030 0%, #1a1422 100%);
   border: 1.5px solid #4a3050;
@@ -70,6 +68,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+/* landscape: D08026 のような横長 (1000×716) 用 */
+.case-area .case-card.landscape {
+  width: 116px;
+  height: 84px;
 }
 /* Phase 9-C: case 背景にカード画像を半透明で重ねる */
 .case-area .case-card .case-bg {

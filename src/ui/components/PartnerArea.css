@@ -5,8 +5,9 @@
  */
 
 .partner-area {
-  --partner-card-w: 72px;
-  --partner-card-h: 100px;
+  /* Phase 9-D: パートナーエリアの slot 高さ (138px) ぎりぎりまで拡大 */
+  --partner-card-w: 100px;
+  --partner-card-h: 138px;
 
   background: var(--bg-cell);
   border: 1px solid color-mix(in oklch, var(--border-zone) 60%, transparent);

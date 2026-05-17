@@ -155,11 +155,15 @@ export function createCaseResolver(
     if (!raw || raw.type !== '事件') {
       return { title: cardId, color: 'blue', level: 0 };
     }
-    // Phase 8.5: cards.json に orientation フィールドがあれば反映、無ければ portrait。
-    // raw.orientation は未定義の可能性が高いので optional として読む。
+    // Phase 9-D: cards.json に orientation が明示されているときのみ採用。
+    // 未指定なら undefined を返し、CaseArea 側の `useCardOrientation` (画像実測)
+    // にフォールバックさせる。`'portrait'` を default で返すと auto-detect が
+    // 効かなくなるため要 undefined。
     const rawAny = raw as RawCard & { orientation?: string };
-    const orientation: 'portrait' | 'landscape' =
-      rawAny.orientation === 'landscape' ? 'landscape' : 'portrait';
+    const orientation: 'portrait' | 'landscape' | undefined =
+      rawAny.orientation === 'landscape' ? 'landscape'
+      : rawAny.orientation === 'portrait' ? 'portrait'
+      : undefined;
     return {
       title: raw.title,
       color: mapColor(raw.color),

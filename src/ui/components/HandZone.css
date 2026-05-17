@@ -318,6 +318,12 @@
 .hand-zone .hand-card.disabled.featured {
   transform: none;
 }
+/* Phase 9-D: 展開モードでは disabled の色あせを解除して画像を鮮明に表示
+ * (使用可否は mini モード側で grayscale 表示するため、拡大時は色情報を保つ) */
+.hand-zone--expanded .hand-card.disabled {
+  opacity: 1;
+  filter: none;
+}
 
 /* ---- top color stripe ---- */
 .hand-zone .hand-card .color-stripe {
