@@ -65,6 +65,13 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
     ? { onClick, style: { cursor: 'pointer' as const } }
     : {};
 
+  // Phase 9-D: cardId 画像から向きを自動判定。
+  // 優先順: props.orientation 明示 > 画像実測 > portrait fallback。
+  // Rules of Hooks: hook は early-return より前に必ず呼ぶ。caseInfo===null 経路でも
+  // 同じ hook 数を維持しないと React 19 が "Expected static flag" を投げる。
+  // null/undefined は useCardOrientation 側で受理済 (placeholder 経路に分岐)。
+  const detectedOrientation = useCardOrientation(caseInfo?.cardId);
+
   if (caseInfo === null) {
     return (
       <div
@@ -85,10 +92,6 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
 
   const { title, color, level, status, requiredEvidence } = caseInfo;
   const isResolved = status === '解決編';
-
-  // Phase 9-D: cardId 画像から向きを自動判定。
-  // 優先順: props.orientation 明示 > 画像実測 > portrait fallback。
-  const detectedOrientation = useCardOrientation(caseInfo.cardId);
   const orientation = caseInfo.orientation ?? detectedOrientation ?? 'portrait';
 
   // タイトル中の \n を <br /> に変換
