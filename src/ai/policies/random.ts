@@ -52,4 +52,16 @@ export class RandomPolicy implements AIPolicy {
   ): boolean {
     return this.rng() < 0.5;
   }
+
+  /**
+   * Phase 5 advance: ミスリード発動キャラ選択 (rules/13)。
+   * RandomPolicy は各候補について 50/50 で発動 / スキップ。複数発動可能 (rules/13)。
+   */
+  chooseMisreadTriggers(
+    _state: GameState,
+    _reasoningUid: string,
+    candidates: ReadonlyArray<{ uid: string; x: number }>,
+  ): Array<{ uid: string; x: number }> {
+    return candidates.filter(() => this.rng() < 0.5);
+  }
 }

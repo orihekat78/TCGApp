@@ -43,6 +43,15 @@ export function _resetPendingMisread(): void {
   _pendingMisreadSideChannel = null;
 }
 
+/**
+ * テスト用: `_registered` flag をリセットして次回 `registerMisreadListener()` 呼出で
+ * listener を再登録可能にする。`event._resetRegistry()` 直後に呼ぶ必要がある
+ * (Hirameki と同じ pattern, commit 75fe5f4)。
+ */
+export function _resetMisreadRegistered(): void {
+  _registered = false;
+}
+
 function findOwnerOfUid(state: GameState, uid: string): 'self' | 'opp' | null {
   if (uid === 'partner:self') return 'self';
   if (uid === 'partner:opp') return 'opp';
