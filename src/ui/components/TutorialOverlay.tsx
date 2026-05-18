@@ -6,6 +6,7 @@
 import { useEffect, useState, type JSX } from 'react';
 import { useTutorialStore } from '@/ui/state/tutorialStore.js';
 import { TUTORIAL_STEPS } from '@/ui/services/tutorialSteps.js';
+import { TutorialHighlight } from './TutorialHighlight.js';
 import './TutorialOverlay.css';
 
 export function TutorialOverlay(): JSX.Element | null {
@@ -28,6 +29,9 @@ export function TutorialOverlay(): JSX.Element | null {
 
   return (
     <div className="tutorial-overlay" role="dialog" data-testid="tutorial-overlay">
+      {/* Round 3c-A: step.target があるとき盤面要素を border + glow + 矢印でハイライト。
+          無いときは bar のみ表示 (story-only step の fallback) */}
+      {step.target && <TutorialHighlight key={step.id} target={step.target} />}
       <div className="tutorial-bar">
         <div className="tutorial-content">
           <div className="tutorial-meta">

@@ -13,10 +13,22 @@
 // アドバンスド (9c): L11 (ヒラメキ / アクション[事件]) → L12 (リフレッシュ / 痕跡) → L13 (MR)
 // Phase 9d 以降: インタラクティブ強化 (TutorialStepGuide ハイライト / 確認問題)
 
+/** Round 3c-A: 各 step が指す盤面要素 (border + glow pulse + 矢印で TutorialHighlight が描画)。
+ *  selector が存在しない / 解決できない step は target なしで bar のみ表示 (graceful fallback)。 */
+export type TutorialTarget = {
+  /** document.querySelector に渡す CSS セレクタ (例: '.actions-panel', '.case-area') */
+  selector: string;
+  /** 矢印の配置方向。default 'top' (target の上から下向き ▼ 矢印で指し示す) */
+  placement?: 'top' | 'bottom' | 'left' | 'right';
+};
+
 export type TutorialStep = {
   id: string;
   title: string;
   body: string;
+  /** Round 3c-A 追加: ハイライト対象。未設定の step は下端 tutorial bar のみ表示。
+   *  全カード実装後に target 追記予定の step は skipReason コメントで明示する。 */
+  target?: TutorialTarget;
 };
 
 export const TUTORIAL_STEPS: readonly TutorialStep[] = [
@@ -33,7 +45,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     id: 'L0-3',
     title: '進めましょう',
-    body: '盤面右側の「ACTIONS」パネルから推理・アクション・ターン終了が選べます。まずは END ターンを押してみよう。',
+    body: '盤面右側の「ACTIONS」パネルから推理・アクション・ターン終了が選べます。まずは ターン終了を押してみよう。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   // ---- L1: デッキ構成 (rules/02) ----
   {
@@ -51,6 +64,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L2-1',
     title: '8 つのエリア',
     body: '現場 (最大 5 枚) / パートナーエリア / 事件エリア / デッキ / 証拠 / FILE / リムーブ / 手札。それぞれ役割が異なる。',
+    target: { selector: '.play-area', placement: 'top' },
   },
   {
     id: 'L2-2',
@@ -66,61 +80,70 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     id: 'L3-2',
     title: 'オートフェイズ',
-    body: '自分のパートナー + 現場キャラを active に / デッキから 1 枚ドロー / FILE に 2 枚追加。先攻 1 ターン目のみ FILE 1 枚。',
+    body: '自分のパートナー + 現場キャラをアクティブに / デッキから 1 枚ドロー / FILE に 2 枚追加。先攻 1 ターン目のみ FILE 1 枚。',
   },
   {
     id: 'L3-3',
     title: 'メインフェイズの 6 行動',
     body: '手札の使用 / ネクストヒント / パートナー能力 / 宣言能力 / 推理 / アクション。好きな順番で何度でも繰り返せる (手札使用は 1 回)。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   // ---- L4: 推理 (rules/11) ----
   {
     id: 'L4-1',
     title: '推理とは',
-    body: 'active なキャラまたはパートナーを sleep して、そのカードの LP 分の証拠をデッキ上から集める。証拠勝利の主軸。',
+    body: 'アクティブなキャラまたはパートナーをスリープして、そのカードの LP 分の証拠をデッキ上から集める。証拠勝利の主軸。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   {
     id: 'L4-2',
     title: 'LP の高い味方で',
     body: 'LP 3 のキャラで推理すれば 3 枚の証拠が増える。LP 0 のキャラは推理しても証拠が 0 になる点に注意。',
+    target: { selector: '.partner-area.side-self', placement: 'top' },
   },
   // ---- L5: パートナー基礎 (rules/01 / 13) ----
   {
     id: 'L5-1',
     title: 'アシスト',
-    body: 'パートナーを sleep して FILE に移動。FILE が 7 枚以上になると事件が「事件編 → 解決編」に進化する。',
+    body: 'パートナーをスリープして FILE に移動。FILE が 7 枚以上になると事件が「事件編 → 解決編」に進化する。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   {
     id: 'L5-2',
     title: '事件解決 ★',
-    body: '解決編 + 必要証拠数 + active パートナー → 事件解決を宣言して勝利!  ただしアシストしたターンは事件解決できない。',
+    body: '解決編 + 必要証拠数 + アクティブなパートナー → 事件解決を宣言して勝利!  ただしアシストしたターンは事件解決できない。',
+    target: { selector: '.case-area', placement: 'top' },
   },
   {
     id: 'L5-3',
     title: '名乗り状態',
     body: '登場したターン中のキャラは「名乗り状態」で推理 / アクション不可。「迅速」「突撃」を持つキャラだけ例外。',
+    target: { selector: '.scene-area.side-self', placement: 'top' },
   },
   {
     id: 'L5-4',
     title: '練習開始!',
-    body: '基本は以上です。実際に END ターンを押してオートフェイズを体験し、アクション・推理を試してみよう。',
+    body: '基本は以上です。実際に ターン終了を押してオートフェイズを体験し、アクション・推理を試してみよう。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   // ---- L6: アクション宣言 (rules/07) ----
   {
     id: 'L6-1',
     title: 'アクションとは',
-    body: '自分の現場の active キャラ (or パートナー) が攻撃を仕掛ける行動。対象は相手の現場の sleep/stun キャラ、または相手の事件。',
+    body: '自分の現場のアクティブなキャラ (or パートナー) が攻撃を仕掛ける行動。対象は相手の現場のスリープ/スタン状態のキャラ、または相手の事件。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   {
     id: 'L6-2',
     title: 'アクション宣言の流れ',
-    body: '攻撃元を選び → 対象を選び → 自分の攻撃キャラを sleep → ガード判定 → コンタクト → 判定 → 終了。9 段階の状態機械で進む。',
+    body: '攻撃元を選び → 対象を選び → 自分の攻撃キャラをスリープ → ガード判定 → コンタクト → 判定 → 終了。9 段階の状態機械で進む。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   // ---- L7: ガード判定 (rules/07,08) ----
   {
     id: 'L7-1',
     title: 'ガードとは',
-    body: '対象が攻撃された側は、自分の現場の active キャラ 1 体を sleep してガード可能。ガードしたキャラがコンタクト相手に置き換わる。',
+    body: '対象が攻撃された側は、自分の現場のアクティブなキャラ 1 体をスリープしてガード可能。ガードしたキャラがコンタクト相手に置き換わる。',
   },
   {
     id: 'L7-2',

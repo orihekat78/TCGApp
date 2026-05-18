@@ -82,3 +82,9 @@
   font-size: 15px;
   line-height: 1;
 }
+
+/* Round 3c-A: 水平展開で他 component と一貫化 (ContactFlash / RefreshOverlay 等は既対応) */
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-overlay { animation: none; }
+}
+

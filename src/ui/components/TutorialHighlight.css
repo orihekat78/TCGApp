@@ -1,0 +1,75 @@
+/* TutorialHighlight.css — Round 3c-A
+ * 盤面 target 要素を border + outer glow pulse で囲み、矢印 (▼/▲/◀/▶) を方向に配置。
+ * 視覚規約: .claude/research/tutorial/03-visual-conventions.md (矢印・吹き出し・ハイライト)
+ * 踏襲パターン: OppTurnOverlay.css `@keyframes opp-turn-pulse` (box-shadow glow infinite)
+ */
+
+.tutorial-highlight {
+  position: fixed;
+  /* z-index 8799: TutorialOverlay (8800) の直下 / ActionsPanel (25) / CardListModal (1500) より上 */
+  z-index: 8799;
+  pointer-events: none;
+  border: 2px solid var(--neon-blue, #4ec3ff);
+  border-radius: 6px;
+  box-shadow: 0 0 24px color-mix(in oklch, var(--neon-blue, #4ec3ff) 60%, transparent),
+              0 0 8px color-mix(in oklch, var(--neon-blue, #4ec3ff) 80%, transparent) inset;
+  animation: tutorial-highlight-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tutorial-highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 24px color-mix(in oklch, var(--neon-blue, #4ec3ff) 60%, transparent),
+                0 0 8px color-mix(in oklch, var(--neon-blue, #4ec3ff) 80%, transparent) inset;
+  }
+  50% {
+    box-shadow: 0 0 36px color-mix(in oklch, var(--neon-blue, #4ec3ff) 90%, transparent),
+                0 0 12px color-mix(in oklch, var(--neon-blue, #4ec3ff) 95%, transparent) inset;
+  }
+}
+
+.tutorial-arrow {
+  position: fixed;
+  /* z-index 8801: TutorialOverlay (8800) の bar より僅かに上、矢印が overlay と被ったときに見える */
+  z-index: 8801;
+  pointer-events: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--neon-blue, #4ec3ff);
+  text-shadow: 0 0 8px color-mix(in oklch, var(--neon-blue, #4ec3ff) 80%, transparent),
+               0 0 16px color-mix(in oklch, var(--neon-blue, #4ec3ff) 50%, transparent);
+  font-family: sans-serif;
+}
+
+/* placement に応じて bob (跳ね) 方向を変える: 矢印が target に向かって動く印象 */
+.tutorial-arrow--top    { animation: tutorial-arrow-bob-down 1.0s ease-in-out infinite; }
+.tutorial-arrow--bottom { animation: tutorial-arrow-bob-up   1.0s ease-in-out infinite; }
+.tutorial-arrow--left   { animation: tutorial-arrow-bob-right 1.0s ease-in-out infinite; }
+.tutorial-arrow--right  { animation: tutorial-arrow-bob-left  1.0s ease-in-out infinite; }
+
+@keyframes tutorial-arrow-bob-down {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+@keyframes tutorial-arrow-bob-up {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes tutorial-arrow-bob-right {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(6px); }
+}
+@keyframes tutorial-arrow-bob-left {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-highlight,
+  .tutorial-arrow {
+    animation: none;
+  }
+}

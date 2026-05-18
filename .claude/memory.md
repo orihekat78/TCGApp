@@ -2,11 +2,11 @@
 
 ## 現在地
 
-**フェーズ**: Round 3b LogPanel HandZone パターン化 完了 ✅ (Round 3 全 12 項目中 10 件解消、B5/B7 残)
-**最新コミット**: Round 3b commit 直前 (実装 + test + session log 完了、commit 待ち) — local main
-**テスト状況**: 1440 PASS + 1 skipped / 189 test files / typecheck clean / docs:check clean
-**1000戦 smoke**: heuristic × heuristic / 3.4 s / **0 例外 / 0 timeout** / 524/476 baseline 完全維持 (Round 2+3a+3b 全 10 commit で regression 0)
-**ブラウザ表示**: 人間 vs CPU エンドツーエンド + Round 3a 視覚 + Round 3b LogPanel fixed overlay / backdrop click 閉 / scrollbar thin / fade-in
+**フェーズ**: Round 3c-A チュートリアル矢印機構 完了 ✅ (Round 3 全 12 項目中 11 件、3c-B 残のみ)
+**最新コミット**: Round 3c-A commit 直前 (実装 + test + session log 完了、commit 待ち) — local main
+**テスト状況**: 1448 PASS + 1 skipped / 190 test files / typecheck clean / docs 再生成済
+**1000戦 smoke**: heuristic × heuristic / 3.3 s / **0 例外 / 0 timeout** / 524/476 baseline 完全維持 (Round 2+3a+3b+3c-A 全 11 commit で regression 0)
+**ブラウザ表示**: 人間 vs CPU エンドツーエンド + tutorial 矢印 (border + glow pulse + ▼/▲/◀/▶) + 11 key step で target ハイライト
 
 ## 進捗トラッカー (高レベル)
 
@@ -18,9 +18,11 @@
 - [x] **Round 3a UI 追加修正** (2026-05-18-2): 12 項目中 9 件解消 (commits `8161efb` + `d15b495`)
   - B3 case-stamp 削除 + edition tag 独立配置 / B6 scrollbar 完全削除 / B9a-b FileArea+modal /
   - B11 grayscale / B12 next-hint engine bug fix / A8 event カード組込 / A1+A10 説明
-- [x] **Round 3b UI 追加修正** (2026-05-18-3): B4 LogPanel HandZone パターン化 (本セッション)
+- [x] **Round 3b UI 追加修正** (2026-05-18-3): B4 LogPanel HandZone パターン化
   - fixed overlay (z=200) + 透明 backdrop layer (z=199) で click-outside-to-close / scrollbar thin / fade-in 260ms / role+aria
-- [ ] **Round 3c**: B7 チュートリアル矢印/吹き出し (規模大)
+- [x] **Round 3c-A UI 追加修正** (2026-05-18-4): B7 part 1 チュートリアル矢印機構 + key 11 step マッピング (本セッション)
+  - TutorialHighlight 新規 (border + glow pulse + 矢印 ▼/▲/◀/▶ + createPortal)、TutorialStep.target 拡張、prefers-reduced-motion 追加、text 修正 (END ターン→ターン終了、active/sleep/stun→アクティブ/スリープ/スタン)
+- [ ] **Round 3c-B**: 残り 22 step の target マッピング + 全 33 step Playwright tour (次サブセッション)
 - [ ] **Round 3d**: B5 CPU-vs-CPU 観戦モード (規模中)
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
 - [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
@@ -35,4 +37,5 @@
 - [2026-05-17-4](sessions/2026-05-17-4.md) — Phase 5 advance engine 4 sub-feature 達成
 - [2026-05-18](sessions/2026-05-18.md) — Round 2 UI/UX 修正: 18 バグ全解消
 - [2026-05-18-2](sessions/2026-05-18-2.md) — Round 3a UI 追加修正: 9/12 解消
-- **[2026-05-18-3](sessions/2026-05-18-3.md) — Round 3b LogPanel HandZone パターン化** (本セッション)
+- [2026-05-18-3](sessions/2026-05-18-3.md) — Round 3b LogPanel HandZone パターン化
+- **[2026-05-18-4](sessions/2026-05-18-4.md) — Round 3c-A チュートリアル矢印機構** (本セッション)
