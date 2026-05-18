@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `366ba9f0b802`
+> Source hash: `ce531362fba7`
 
 engine namespace と仕様書の参照関係を Mermaid flowchart で表示。`cards-analysis/` 配下は 1:1 で量が多いため除外。Obsidian グラフビュー連携は [by-spec/](./by-spec/) / [by-engine/](./by-engine/) を参照。
 
@@ -13,11 +13,13 @@ flowchart LR
     NS_effect["effect"]
     NS_event["event"]
     NS_flow["flow"]
+    NS_listeners["listeners"]
     NS_resolve["resolve"]
     NS_types["types"]
   end
   subgraph specs["Specs"]
     S_cards_data_INDEX_md["INDEX"]
+    S_engine_api_card_abilities_md["engine-api-card-abilities"]
     S_engine_api_card_shape_md["engine-api-card-shape"]
     S_engine_api_effect_descriptor_md["engine-api-effect-descriptor"]
     S_engine_api_events_md["engine-api-events"]
@@ -34,6 +36,7 @@ flowchart LR
   NS_flow -.-> S_engine_api_flow_contact_md
   NS_flow -.-> S_engine_api_flow_control_md
   NS_flow -.-> S_engine_api_flow_setup_md
+  NS_listeners -.-> S_engine_api_card_abilities_md
   NS_resolve -.-> S_engine_api_resolver_md
   NS_types -.-> S_engine_api_card_shape_md
   NS_types -.-> S_engine_api_resolver_md

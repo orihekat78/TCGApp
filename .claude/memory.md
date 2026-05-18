@@ -2,15 +2,16 @@
 
 ## 現在地
 
-**フェーズ**: Round 4a 重大バグ修正 + RCA + 水平展開 + Obsidian Base 導入 完了 ✅
-**最新コミット**: Round 4a commit 待ち (engine 3 fix + 防止策 spec + Obsidian Base 導入)
-**テスト状況**: 1450 PASS + 1 skipped / 191 test files / typecheck clean
+**フェーズ**: Round 4b triggered ability listener 整備 完了 ✅
+**最新コミット**: Round 4b commit 待ち (`src/engine/listeners/triggered.ts` 新規 + 7 hook 配線 + emit kind 分離)
+**テスト状況**: 1455 PASS + 1 skipped / 192 test files / typecheck clean
 **1000戦 smoke**: heuristic × heuristic / **0 例外 / 0 timeout** / 524/476 baseline 完全維持
-**Round 4a 主成果**:
-  - engine 3 fix: BUG-008 イベントカード手札残留 / BUG-009 FILE 7+ で解決編 / 水平展開 next-hint.ts
-  - 防止策 spec: card-addition-checklist.md / dispatch-to-state.test.ts / CLAUDE.md §セルフレビュー追記
-  - リスク・バグ管理 Obsidian Base 化: `.claude/bugs/BUG-001〜010.md` + index.base + specs/index.base
-  - 作業フォルダ整理: 74 PNG / 271 .playwright-mcp / 4 空フォルダ削除
+**Round 4b 主成果**:
+  - `src/engine/listeners/triggered.ts` 新規 — 7 hook (enter/effect:declared/action:declare/action:guarded/contact:start/case:to-resolved/phase:end:start) 用汎用 listener
+  - `engine/index.ts` 初期化に `registerTriggeredListener()` 追加
+  - emit payload kind 分離 (`event-use` / `character-use`) で eventRemoveByAP 等の matcher と整合
+  - BUG-005 / BUG-007 機構修正済 (要 Playwright 実機検証は次セッション)
+  - 既存 2 test 修正 + 新規 5 test (triggered.test.ts)
 
 ## 進捗トラッカー (高レベル)
 
@@ -28,12 +29,14 @@
   - TutorialHighlight 新規 (border + glow pulse + 矢印 ▼/▲/◀/▶ + createPortal)、TutorialStep.target 拡張、prefers-reduced-motion 追加、text 修正 (END ターン→ターン終了、active/sleep/stun→アクティブ/スリープ/スタン)
 - [x] **Round 3c-B UI 追加修正** (2026-05-18-5): B7 part 2 残り 22 step マッピング (14 target + 8 skip) (commit `c8118d0`)
   - 全 33 step Playwright walkthrough: 25 target + 8 skip、全 viewport 内、console error 0、overlay 終了確認
-- [x] **Round 4a 重大バグ修正 + RCA + Obsidian Base 導入** (2026-05-18-6): engine 3 fix (BUG-008/009 + 水平展開) + 防止策 spec + Obsidian Bases (本セッション、commit 待ち)
+- [x] **Round 4a 重大バグ修正 + RCA + Obsidian Base 導入** (2026-05-18-6): engine 3 fix (BUG-008/009 + 水平展開) + 防止策 spec + Obsidian Bases (commit `e10b3a4`)
   - `.claude/bugs/` 10 ファイル + `index.base` でバグ管理を Obsidian Base 化
   - `.claude/specs/index.base` で spec 最終更新日管理
   - `.claude/specs/card-addition-checklist.md` + `tests/integration/dispatch-to-state.test.ts` 骨格
   - CLAUDE.md §セルフレビュー追記 (Playwright 1試合通し / 管理表更新 / カード追加チェックリスト)
-- [ ] **Round 4b**: BUG-005/007 triggered ability listener 整備 (`src/engine/listeners/triggered.ts` 新規 + 7 hook 配線) + BUG-006 Playwright 実機再現
+- [x] **Round 4b BUG-005/007 triggered listener 整備** (2026-05-18-7): `src/engine/listeners/triggered.ts` 新規 + 7 hook 配線 + emit kind 分離 (本セッション、commit 待ち)
+  - 機構整備済、要 Playwright 実機検証は次セッション
+- [ ] **Round 4b 残**: BUG-006 (action[事件] 証拠変動) Playwright 実機再現 + 個別カード effect 検証
 - [ ] **Round 4c (旧 3d 統合)**: BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 Round 3d B5 観戦モード
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
 - [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
@@ -51,4 +54,5 @@
 - [2026-05-18-3](sessions/2026-05-18-3.md) — Round 3b LogPanel HandZone パターン化
 - [2026-05-18-4](sessions/2026-05-18-4.md) — Round 3c-A チュートリアル矢印機構
 - [2026-05-18-5](sessions/2026-05-18-5.md) — Round 3c-B 全 33 step マッピング + Playwright walkthrough
-- **[2026-05-18-6](sessions/2026-05-18-6.md) — Round 4a 重大バグ修正 + RCA + Obsidian Base 導入** (本セッション)
+- [2026-05-18-6](sessions/2026-05-18-6.md) — Round 4a 重大バグ修正 + RCA + Obsidian Base 導入
+- **[2026-05-18-7](sessions/2026-05-18-7.md) — Round 4b triggered ability listener 整備** (本セッション)

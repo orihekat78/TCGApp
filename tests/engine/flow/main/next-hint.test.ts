@@ -80,7 +80,8 @@ describe('engine.flow.main.runNextHint', () => {
     let fired = 0;
     event.on('effect:declared', (_s, payload) => {
       const p = payload as { kind: string };
-      if (p && p.kind === 'nextHintCardUse') fired++;
+      // Round 4b: kind は 'event-use' / 'character-use' に分離 (eventRemoveByAP matcher 整合)
+      if (p && (p.kind === 'event-use' || p.kind === 'character-use')) fired++;
     });
     const s = makeStateWithFile(2, { hand: ['EV1'] });
     const after = produce(s, draft => {

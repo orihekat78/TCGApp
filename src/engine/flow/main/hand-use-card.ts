@@ -126,16 +126,19 @@ export function handUseCard(
     action: 'handUseCard',
     target: cardId,
   });
+  // Round 4b: payload kind は event-use / character-use に分離。
+  // eventRemoveByAP (cards/_shared) 等の matcher が `kind === 'event-use'` を期待する契約。
+  const d = readDef.card(cardId);
+  const emitKind = d?.kind === 'event' ? 'event-use' : 'character-use';
   event.emit(
     state,
     'effect:declared',
-    { kind: 'handUseCard', cardId },
+    { kind: emitKind, cardId },
     { player: p, cardId },
   );
   // キャラの場合: 現場へ登場 (rules/05 §01 + rules/06 + rules/12 §3 — アクティブ・名乗り状態で登場)
   // NextHint と同じパターン (flow/main/next-hint.ts L105-119) を踏襲。
   // 手札の使用とは異なり、効果による登場ではないので viaEffect:false。
-  const d = readDef.card(cardId);
   if (d?.kind === 'character') {
     // 手札から除去
     const handIdx = state.players[p].hand.indexOf(cardId);

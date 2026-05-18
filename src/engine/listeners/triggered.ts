@@ -1,0 +1,146 @@
+// Round 4b: triggered ability の汎用 listener
+//
+// rules: 15-abilities-effects.md §条件発動, 17-icons.md §【登場時】等
+// spec: .claude/specs/engine-api-card-abilities.md, engine-api-events.md
+//
+// 役割:
+//   - 7 種類の hook (enter / effect:declared / action:declare / action:guarded /
+//     contact:start / case:to-resolved / phase:end:start) を listener 登録
+//   - 発火時に scene / partner-area / case-area / hand 上の全カードを走査
+//   - 各カードの triggered ability で hook が一致するものを抽出
+//   - scope / selfOnly / matcher / condition でフィルタし、合格分の effect を
+//     pendingEffects へ queue
+//
+// 設計上の注意:
+//   - Round 1-3 で hirameki / misread の 2 hook しか listener なく、enter 等の
+//     triggered ability が全件 noop になっていた (BUG-005 / BUG-007) を解消
+//   - 既存 hirameki / misread listener は icon ability 専用パスで残存、本 listener は
+//     type='triggered' (条件発動) のみを対象とする
+//   - 'effect:declared' hook では payload.cardId を見て on-hand のカード自身を判定
+//     (event card 自身が「使われた」とき発動する eventRemoveByAP 等の pattern)
+//   - selfOnly: scene/partner では source.uid が一致、hand では payload.cardId が一致
+
+import { event } from '../event/registry.js';
+import { def as readDef } from '../read/def.js';
+import type { GameState, AbilityDef, AbilityScope } from '../types/index.js';
+
+type Player = 'self' | 'opp';
+
+const TRIGGERED_HOOKS = [
+  'enter',
+  'effect:declared',
+  'action:declare',
+  'action:guarded',
+  'contact:start',
+  'case:to-resolved',
+  'phase:end:start',
+] as const;
+
+type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];
+
+type CardLocation = {
+  player: Player;
+  uid: string;
+  cardId: string;
+  area: 'scene' | 'partner-area' | 'case' | 'hand';
+};
+
+function collectCardsInPlay(state: GameState): CardLocation[] {
+  const result: CardLocation[] = [];
+  for (const p of ['self', 'opp'] as const) {
+    const ps = state.players[p];
+    // scene キャラ
+    for (const c of ps.scene) {
+      result.push({ player: p, uid: c.uid, cardId: c.cardId, area: 'scene' });
+    }
+    // partner card
+    if (ps.partner.cardId) {
+      result.push({ player: p, uid: `partner:${p}`, cardId: ps.partner.cardId, area: 'partner-area' });
+    }
+    // case card (rules/06: 事件カード)
+    if (ps.case.cardId) {
+      result.push({ player: p, uid: `case:${p}`, cardId: ps.case.cardId, area: 'case' });
+    }
+    // hand card (event card の on-hand ability 用)
+    for (const cardId of ps.hand) {
+      result.push({ player: p, uid: `hand:${p}:${cardId}`, cardId, area: 'hand' });
+    }
+  }
+  return result;
+}
+
+function scopeAllowsArea(scope: AbilityScope | undefined, area: CardLocation['area']): boolean {
+  // scope 未指定は 'on-scene' default (rules/15)
+  const s = scope ?? 'on-scene';
+  if (s === 'always') return true;
+  if (s === 'on-scene') return area === 'scene';
+  // on-partner-area: パートナーエリア OR 現場 (MR でも両方で動く)
+  if (s === 'on-partner-area') return area === 'partner-area' || area === 'scene';
+  if (s === 'on-hand') return area === 'hand';
+  if (s === 'on-evidence') return false; // 証拠 card scan は別経路 (hirameki listener)
+  return false;
+}
+
+function selfOnlyMatches(
+  card: CardLocation,
+  payload: unknown,
+  source: unknown,
+): boolean {
+  const sourceUid = (source as { uid?: string } | undefined)?.uid;
+  // on-hand のカード (event card 自身の使用検知) は payload.cardId で一致確認
+  if (card.area === 'hand') {
+    const payloadCardId = (payload as { cardId?: string } | undefined)?.cardId;
+    return payloadCardId === card.cardId;
+  }
+  // scene/partner/case は source.uid で一致確認
+  return sourceUid === card.uid;
+}
+
+function handleHook(
+  hookName: TriggeredHook,
+  state: GameState,
+  payload: unknown,
+  source: unknown,
+): void {
+  for (const card of collectCardsInPlay(state)) {
+    const def = readDef.card(card.cardId);
+    if (!def) continue;
+    for (const ability of def.abilities as AbilityDef[]) {
+      if (ability.type !== 'triggered') continue;
+      const trig = ability.trigger;
+      if (!trig || trig.hook !== hookName) continue;
+      // scope check
+      if (!scopeAllowsArea(ability.scope, card.area)) continue;
+      // selfOnly check
+      if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+      // matcher check (カード側で custom 判定)
+      if (trig.matcher && !trig.matcher(payload, state)) continue;
+      // effect が無いと queue しても無意味
+      if (!ability.effect) continue;
+      // queue
+      event.queue(
+        state,
+        ability.effect,
+        { player: card.player, uid: card.uid, cardId: card.cardId },
+        hookName,
+        payload,
+      );
+    }
+  }
+}
+
+let _registered = false;
+
+export function _resetTriggeredRegistered(): void {
+  _registered = false;
+}
+
+export function registerTriggeredListener(): void {
+  if (_registered) return;
+  _registered = true;
+  for (const hook of TRIGGERED_HOOKS) {
+    event.on(hook, (state, payload, source) => {
+      handleHook(hook, state, payload, source);
+    });
+  }
+}

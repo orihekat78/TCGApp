@@ -100,7 +100,8 @@ describe('engine.flow.main.handUseCard', () => {
     let fired = false;
     event.on('effect:declared', (_s, payload) => {
       const p = payload as { kind?: string } | undefined;
-      if (p && p.kind === 'handUseCard') fired = true;
+      // Round 4b: kind は 'event-use' / 'character-use' に分離 (eventRemoveByAP matcher 整合)
+      if (p && (p.kind === 'event-use' || p.kind === 'character-use')) fired = true;
     });
     const s = makeState({ caseColors: ['赤'], hand: ['EV1'] });
     produce(s, draft => {

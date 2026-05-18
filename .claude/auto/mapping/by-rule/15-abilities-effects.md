@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bae45b3cb4ae`
+> Source hash: `7cdf2e208317`
 
 公式ルール [`15-abilities-effects.md`](../../../rules/15-abilities-effects.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -17,12 +17,14 @@
 - [`engine.effect`](../by-engine/effect.md) — [`api/effect`](../../api/effect.md)
 - [`engine.event`](../by-engine/event.md) — [`api/event`](../../api/event.md)
 - [`engine.flow`](../by-engine/flow.md) — [`api/flow`](../../api/flow.md)
+- [`engine.listeners`](../by-engine/listeners.md)
 - [`engine.resolve`](../by-engine/resolve.md) — [`api/resolve`](../../api/resolve.md)
 - [`engine.target`](../by-engine/target.md) — [`api/target`](../../api/target.md)
 - [`engine.types`](../by-engine/types.md)
 
 ## 📐 関連 Spec
 
+- [`engine-api-card-abilities`](../by-spec/engine-api-card-abilities.md)
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-api-effect-descriptor`](../by-spec/engine-api-effect-descriptor.md)
 - [`engine-api-events`](../by-spec/engine-api-events.md)
@@ -33,7 +35,7 @@
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 - [`hiramekiCharStun`](../by-spec/shared-classes--hiramekiCharStun.md)
 
-## 📄 参照ソース (48)
+## 📄 参照ソース (49)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
@@ -55,4 +57,4 @@
 - [`src/cards/ct-d08/D08020.ts`](../../../../src/cards/ct-d08/D08020.ts)
 - [`src/cards/ct-d08/D08021.ts`](../../../../src/cards/ct-d08/D08021.ts)
 - [`src/cards/ct-d08/D08024.ts`](../../../../src/cards/ct-d08/D08024.ts)
-- _...ほか 28 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 29 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

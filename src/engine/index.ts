@@ -14,6 +14,7 @@ import { flow } from './flow/index.js';
 import { cards } from './cards/index.js';
 import { registerHiramekiListener } from './listeners/hirameki.js';
 import { registerMisreadListener } from './listeners/misread.js';
+import { registerTriggeredListener } from './listeners/triggered.js';
 
 const effect = { runAtom, run: effectRun, validate: effectValidate };
 
@@ -22,6 +23,7 @@ const effect = { runAtom, run: effectRun, validate: effectValidate };
 // 1 回だけ呼べばよい (各 register 関数内部でも _registered ガード)。
 registerHiramekiListener();
 registerMisreadListener();
+registerTriggeredListener();
 
 export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve, flow, cards };
 

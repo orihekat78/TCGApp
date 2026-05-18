@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `f10cccaf0f4d`
+> Source hash: `adf5076418f6`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **89** ファイル（[全体 index](./index.md)）
+このグループ: **90** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (5)
 
@@ -54,7 +54,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (25)
+## engine (他) (26)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -74,6 +74,7 @@
 | [`src/engine/index.ts`](../../../src/engine/index.ts) | _(参照なし)_ |
 | [`src/engine/listeners/hirameki.ts`](../../../src/engine/listeners/hirameki.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/engine/listeners/misread.ts`](../../../src/engine/listeners/misread.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
+| [`src/engine/listeners/triggered.ts`](../../../src/engine/listeners/triggered.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/produce.ts`](../../../src/engine/produce.ts) | _(参照なし)_ |
 | [`src/engine/resolve/index.ts`](../../../src/engine/resolve/index.ts) | _(参照なし)_ |
 | [`src/engine/resolve/stack.ts`](../../../src/engine/resolve/stack.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |

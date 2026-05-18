@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bae45b3cb4ae`
+> Source hash: `7cdf2e208317`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -27,9 +27,9 @@
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 8 | `ai/policies/heuristic.ts`, `engine/flow/main/hand-use-card.ts`, `engine/mutate/file.ts` ほか 5 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 47 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 44 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 15 | `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts`, `cards/ct-d08/D08014.ts` ほか 12 件 |
-| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 48 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 45 件 |
+| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 49 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 46 件 |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 2 | `cards/ct-d08/D08021.ts`, `engine/mutate/scene.ts` |
-| [`17-icons.md`](../../rules/17-icons.md) | 47 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseTraitConditioned.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 44 件 |
+| [`17-icons.md`](../../rules/17-icons.md) | 48 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseTraitConditioned.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 45 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 3 | `engine/cond/eval.ts`, `engine/mutate/partner.ts`, `ui/hooks/usePartner.ts` |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 17 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08025.ts` ほか 14 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 11 | `cards/ct-d08/D08024.ts`, `cards/ct-d08/D08025.ts`, `cards/ct-d11/D11019.ts` ほか 8 件 |

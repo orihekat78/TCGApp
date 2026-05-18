@@ -94,7 +94,9 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     event.emit(
       state,
       'effect:declared',
-      { kind: 'nextHintCardUse', cardId: optionalCardId },
+      // Round 4b: payload kind を event-use / character-use に分離。
+      // hand-use-card.ts と同じ規約 (eventRemoveByAP matcher 'kind===event-use' との整合)。
+      { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId },
       { player: p, cardId: optionalCardId },
     );
     // キャラの場合: 現場へ登場 (rules/12 §3 — アクティブ・名乗り状態で登場)。
