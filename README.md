@@ -9,13 +9,17 @@
 
 ## 現在の状況（2026-05-18）
 
-**Round 3b LogPanel HandZone パターン化 完了** ✅ Round 2 (18 バグ全解消) + Round 3a (12 項目中 9 件解消) + Round 3b (B4) で計 16 連続 commit:
+**Round 4b triggered ability listener 整備 完了** ✅ Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化) で **計 20 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
-- Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal アシスト中表示 / 手札 grayscale / next-hint engine bug fix / event カード組込
-- Round 3b: LogPanel を HandZone と同等の fixed overlay + 透明 backdrop click 閉 + scrollbar thin + fade-in 演出 + role/aria に統一
+- Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
+- Round 3b (`ccdd4b5`): LogPanel を HandZone 同等の fixed overlay + 透明 backdrop click 閉 + scrollbar thin + fade-in + role/aria
+- Round 3c (commits `f362175` + `c8118d0`): B7 チュートリアル矢印機構 (border + glow pulse + ▼▲◀▶ + createPortal) + 全 33 step マッピング (25 target + 8 skip)
+- Round 4a (`e10b3a4`): **RCA + 水平展開** + 重大バグ engine 3 fix (BUG-008 イベントカード手札残留 / BUG-009 FILE 7+ 解決編移行 / next-hint 水平展開) + リスク・バグ管理 **Obsidian Base** 化 (`.claude/bugs/` + 2 base) + 再発防止 spec (`card-addition-checklist.md` / `dispatch-to-state.test.ts` / CLAUDE.md §セルフレビュー追記)
+- Round 4b (`4c64c79`): triggered ability **汎用 listener** 整備 (`src/engine/listeners/triggered.ts` 新規、7 hook 配線、emit payload kind 分離で eventRemoveByAP matcher と整合)
 
-1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (baseline 完全維持)**、Round 3 残 2 項目 (B7 チュートリアル矢印 / B5 観戦モード) は次セッション。
+1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (Phase 9-A baseline 完全維持)**。
+残課題: BUG-006 (action[事件] state-machine) Playwright 実機検証 / Round 4c (UI 課題 BUG-001/002/010) / 旧 Round 3d (B5 CPU-vs-CPU 観戦モード)。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -36,18 +40,23 @@
 | Phase 5 advance: Souza | rules/13 §捜査X engine atom + AI auto-order (`59183f4`) | ✅ engine 完了、Sub-task B/C 残 |
 | Round 2 UI/UX 修正 | Human-vs-CPU 18 バグ全解消 (`e61bb7f` 〜 `d343fde`) | ✅ 完了 |
 | Round 3a UI 追加修正 | 12 項目中 9 件解消 (B3/B6/B9/B11/B12/A8/A1/A10) (`8161efb` + `d15b495`) | ✅ 完了 |
-| Round 3b UI 追加修正 | B4 LogPanel HandZone パターン化 (fixed overlay + 透明 backdrop + scrollbar thin + fade-in) | ✅ 完了 |
-| Round 3 残 | B7 チュートリアル矢印 / B5 観戦モード | ⏳ |
+| Round 3b UI 追加修正 | B4 LogPanel HandZone パターン化 (fixed overlay + 透明 backdrop + scrollbar thin + fade-in) (`ccdd4b5`) | ✅ 完了 |
+| Round 3c UI 追加修正 | B7 チュートリアル矢印機構 + 全 33 step マッピング (25 target + 8 skip) (`f362175` + `c8118d0`) | ✅ 完了 |
+| Round 4a 重大バグ修正 + RCA | BUG-008/009 + 水平展開 next-hint + Obsidian Base 化 + 再発防止 spec (`e10b3a4`) | ✅ 完了 |
+| Round 4b 機構整備 | triggered ability 汎用 listener (7 hook) + emit kind 分離 (`4c64c79`) | ✅ 完了 |
+| Round 4b 残 | BUG-006 Playwright 実機再現 + 47 cards effect 個別検証 | ⏳ |
+| Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1440 PASS + 1 skipped / 189 Test Files** (Round 3b 完了時点)
+- **1455 PASS + 1 skipped / 192 Test Files** (Round 4b 完了時点)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
-  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、Round 2+3a+3b 全 10 commit で regression 0)
+  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、Round 2+3+4 全 20 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
-- `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能、SceneSwitch UI 配線済
-- 骨格凍結原則: Phase 5 advance の engine 修正は §例外「Phase 5 で延期された基本機能の完成 / バグ修正」に該当
+- `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能
+- リスク・バグ管理: `.claude/bugs/index.base` を Obsidian で開いて全バグ集約 view (Round 4a 導入)
+- 骨格凍結原則: Round 4a/4b の engine 修正は §例外「公式ルール準拠のためのバグ修正」に該当
 
 ### 調査フェーズ完了済 (実装の前提)
 

@@ -2,16 +2,15 @@
 
 ## 現在地
 
-**フェーズ**: Round 4b triggered ability listener 整備 完了 ✅
-**最新コミット**: Round 4b commit 待ち (`src/engine/listeners/triggered.ts` 新規 + 7 hook 配線 + emit kind 分離)
-**テスト状況**: 1455 PASS + 1 skipped / 192 test files / typecheck clean
+**フェーズ**: Round 4b triggered ability listener 整備 完了 ✅ (Round 4 全 commit 完了、新セッション準備)
+**最新コミット**: `4c64c79` (Round 4b triggered listener) — Round 4a `e10b3a4` の続き
+**テスト状況**: 1455 PASS + 1 skipped / 192 test files / typecheck clean / docs:check clean
 **1000戦 smoke**: heuristic × heuristic / **0 例外 / 0 timeout** / 524/476 baseline 完全維持
-**Round 4b 主成果**:
-  - `src/engine/listeners/triggered.ts` 新規 — 7 hook (enter/effect:declared/action:declare/action:guarded/contact:start/case:to-resolved/phase:end:start) 用汎用 listener
-  - `engine/index.ts` 初期化に `registerTriggeredListener()` 追加
-  - emit payload kind 分離 (`event-use` / `character-use`) で eventRemoveByAP 等の matcher と整合
-  - BUG-005 / BUG-007 機構修正済 (要 Playwright 実機検証は次セッション)
-  - 既存 2 test 修正 + 新規 5 test (triggered.test.ts)
+**現状**:
+- engine 3 fix (Round 4a) + 7 hook listener (Round 4b) で機構整備済
+- 47 cards の triggered ability が実際に動作するか **Playwright 実機検証は次セッション**
+- BUG-006 (action[事件] state-machine) Playwright 再現も次セッション
+- UI 課題 (BUG-001/002/010) は Round 4c で対応予定
 
 ## 進捗トラッカー (高レベル)
 
