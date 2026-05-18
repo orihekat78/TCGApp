@@ -7,12 +7,14 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-17）
+## 現在の状況（2026-05-18）
 
-**Phase 5 advance engine 4 sub-feature 達成** ✅ 1 セッションで 9 commits を一気通貫:
-SceneSwitch (engine+AI+UI) / Hirameki E2E / Misread E2E / Souza atom 新規実装。
-listener bug 2 件発見・修正、React 19 fiber static flag 解消。
-1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (baseline 完全維持)**。
+**Round 3a UI 追加修正 完了** ✅ Round 2 (18 バグ全解消) + Round 3a (12 項目中 9 件解消) で計 14 連続 commit:
+
+- Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
+- Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal アシスト中表示 / 手札 grayscale / next-hint engine bug fix / event カード組込
+
+1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (baseline 完全維持)**、Round 3 残 3 項目 (B4 LogPanel パターン / B7 チュートリアル矢印 / B5 観戦モード) は次セッション。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -31,13 +33,16 @@ listener bug 2 件発見・修正、React 19 fiber static flag 解消。
 | Phase 5 advance: Hirameki | rules/10 E2E 結合 + listener bug fix (`75fe5f4`) | ✅ engine 完了 |
 | Phase 5 advance: Misread | rules/13 §ミスリード E2E (Human defender) + bug fix (`9070556`) | ✅ engine 完了、UI 残 |
 | Phase 5 advance: Souza | rules/13 §捜査X engine atom + AI auto-order (`59183f4`) | ✅ engine 完了、Sub-task B/C 残 |
+| Round 2 UI/UX 修正 | Human-vs-CPU 18 バグ全解消 (`e61bb7f` 〜 `d343fde`) | ✅ 完了 |
+| Round 3a UI 追加修正 | 12 項目中 9 件解消 (B3/B6/B9/B11/B12/A8/A1/A10) (`8161efb` + `d15b495`) | ✅ 完了 |
+| Round 3 残 | B4 LogPanel パターン / B7 チュートリアル矢印 / B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1434 PASS / 189 Test Files** (Phase 5 advance engine 完了時点、最新 `59183f4`)
+- **1434 PASS + 1 skipped / 189 Test Files** (Round 3a 完了時点、最新 `d15b495`)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.x s**
-  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、5 連続 commit で regression 0)
+  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、Round 2+3a 全 9 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
 - `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能、SceneSwitch UI 配線済
 - 骨格凍結原則: Phase 5 advance の engine 修正は §例外「Phase 5 で延期された基本機能の完成 / バグ修正」に該当
