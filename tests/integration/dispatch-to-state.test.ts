@@ -55,12 +55,99 @@ describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
     expect(state.players.self.case.status).toBe('事件編');
   });
 
+  // BUG-006: actionDeclareCase + per-step dispatch chain → 相手証拠 -1 / 自証拠 +1
+  // rules/10: アクション[事件] がガードされなかった場合、相手証拠を1枚リムーブ + 自証拠+1
+  //
+  // 本テストは「dispatch chain は正常か」を検証する。
+  // 実機 (Playwright) で再現するが Vitest で再現しない場合、bug は React reactivity 側。
+  // 両方で再現する場合、bug は engine/dispatcher 側。
+  it('BUG-006: actionDeclareCase → actionGuard(null) → 連続 advance → actionJudge で 相手証拠 -1 / 自証拠 +1', () => {
+    const state = useGameStateStore.getState().gameState!;
+    // self-2 (横溝重悟) を active 名乗り解除済に固定 — action[case] 可能状態
+    const actor = state.players.self.scene.find((s) => s.uid === 'self-2');
+    if (!actor) throw new Error('test fixture missing self-2');
+    actor.state = 'active';
+    actor.isNamed = false;
+    // opp.scene を全 sleep/stun に倒し、guard 候補ゼロ状態にする (auto-pass シナリオ)
+    for (const s of state.players.opp.scene) s.state = 'sleep';
+    // opp partner はもともと sleep
+    useGameStateStore.setState({ gameState: state });
+
+    const oppEvidenceBefore = state.players.opp.evidence.length;
+    const selfEvidenceBefore = state.players.self.evidence.length;
+    const selfDeckBefore = state.players.self.deck.length;
+    expect(oppEvidenceBefore).toBeGreaterThanOrEqual(1);
+    expect(selfDeckBefore).toBeGreaterThanOrEqual(1);
+
+    // 1. Declare action[case]
+    dispatchEngineAction({ type: 'actionDeclareCase', byUid: 'self-2', targetPlayer: 'opp' });
+    const actionId = useGameStateStore.getState().activeActionId;
+    expect(actionId).toBeTruthy();
+
+    // 2. Guard pass (null = ガードしない)
+    dispatchEngineAction({ type: 'actionGuard', actionId: actionId!, guarderUid: null });
+
+    // 3. 'judge' phase に到達するまで advance 連射 (max 10 step、安全策)
+    for (let i = 0; i < 10; i++) {
+      const ax = engine.flow.action._getContext(actionId!);
+      if (!ax) break;
+      if (ax.phase === 'judge') break;
+      if (ax.phase === 'action-end' || ax.phase === 'contact-end') break;
+      dispatchEngineAction({ type: 'actionAdvance', actionId: actionId! });
+    }
+
+    // 4. judge phase に到達したことを確認
+    const axAtJudge = engine.flow.action._getContext(actionId!);
+    expect(axAtJudge?.phase).toBe('judge');
+
+    // 5. actionJudge → 証拠変動
+    dispatchEngineAction({ type: 'actionJudge', actionId: actionId! });
+
+    // 6. judge → contact-end → action-end まで送る
+    dispatchEngineAction({ type: 'actionAdvance', actionId: actionId! });
+
+    const stateAfter = useGameStateStore.getState().gameState!;
+    expect(stateAfter.players.opp.evidence.length).toBe(oppEvidenceBefore - 1);
+    expect(stateAfter.players.self.evidence.length).toBe(selfEvidenceBefore + 1);
+    expect(stateAfter.players.self.deck.length).toBe(selfDeckBefore - 1);
+  });
+
+  it('BUG-006 拡張: guard 候補ありで人間 pass した場合も 証拠 -1 / +1 (driver 経路と同条件)', () => {
+    const state = useGameStateStore.getState().gameState!;
+    const actor = state.players.self.scene.find((s) => s.uid === 'self-2');
+    if (!actor) throw new Error('test fixture missing self-2');
+    actor.state = 'active';
+    actor.isNamed = false;
+    // opp-1 は既定で active → guard 候補となる。明示的に維持
+    const oppGuard = state.players.opp.scene.find((s) => s.uid === 'opp-1');
+    if (oppGuard) oppGuard.state = 'active';
+    useGameStateStore.setState({ gameState: state });
+
+    const oppEvidenceBefore = state.players.opp.evidence.length;
+    const selfEvidenceBefore = state.players.self.evidence.length;
+
+    dispatchEngineAction({ type: 'actionDeclareCase', byUid: 'self-2', targetPlayer: 'opp' });
+    const actionId = useGameStateStore.getState().activeActionId!;
+    dispatchEngineAction({ type: 'actionGuard', actionId, guarderUid: null });
+
+    for (let i = 0; i < 10; i++) {
+      const ax = engine.flow.action._getContext(actionId);
+      if (!ax || ax.phase === 'judge') break;
+      if (ax.phase === 'action-end' || ax.phase === 'contact-end') break;
+      dispatchEngineAction({ type: 'actionAdvance', actionId });
+    }
+
+    dispatchEngineAction({ type: 'actionJudge', actionId });
+    dispatchEngineAction({ type: 'actionAdvance', actionId });
+
+    const stateAfter = useGameStateStore.getState().gameState!;
+    expect(stateAfter.players.opp.evidence.length).toBe(oppEvidenceBefore - 1);
+    expect(stateAfter.players.self.evidence.length).toBe(selfEvidenceBefore + 1);
+  });
+
   // 残 dispatch → state シナリオ (今後追加):
-  // - BUG-006: actionAgainstCase / actionDeclareCase + 全 per-step → 証拠 -1 / +1
   // - BUG-008: handUseCard kind='event' → 手札除去 + remove.add
   // - 推理: dispatch reasoning → 証拠 +LP / partner sleep
   // - アクション[キャラ]: dispatch actionAgainstChar → guard → contact → judge → リムーブ
   // - 事件解決: dispatch solveCase → gameResult set
-  //
-  // 各シナリオは Round 4b/4c で実装拡張時に追加。本 round では assist+FILE 7+ の最小骨格のみ。
 });

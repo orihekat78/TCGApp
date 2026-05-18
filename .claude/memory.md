@@ -2,15 +2,19 @@
 
 ## 現在地
 
-**フェーズ**: Round 4b triggered ability listener 整備 完了 ✅ (Round 4 全 commit 完了、新セッション準備)
-**最新コミット**: `4c64c79` (Round 4b triggered listener) — Round 4a `e10b3a4` の続き
-**テスト状況**: 1455 PASS + 1 skipped / 192 test files / typecheck clean / docs:check clean
+**フェーズ**: Round 4c BUG-006 修正 + Playwright E2E 導入 完了 ✅
+**最新コミット**: (本セッション commit 待ち) — Round 4b `4c64c79` の続き
+**テスト状況**: 1457 PASS + 1 skipped / 192 test files / E2E 1 pass + 1 skip / typecheck clean / docs 再生成済
 **1000戦 smoke**: heuristic × heuristic / **0 例外 / 0 timeout** / 524/476 baseline 完全維持
 **現状**:
+- **BUG-006 修正済** (Round 4c): store.dispatch で same-reference 時 shallow copy を強制し ContactFlowDriver useEffect を起動
+  - 根本原因: state-machine `advance()` が `contact-pending → judge` (case shortcut) で gameState を一切 mutate せず、Immer produce が同一参照を返し Zustand subscribers が起きなかった
+  - 修正範囲: `src/ui/state/store.ts` のみ (UI dispatch wrapper、骨格凍結原則は遵守)
+  - 水平展開: action[char] は contact.snapshotAP で必ず mutate あり影響なし、CPU vs CPU 経路も影響なし (smoke baseline 完全維持)
+- **@playwright/test 導入** + `tests/e2e/bug-006.spec.ts` + `playwright.config.ts` で React reactivity 込みの実機検証基盤を整備
 - engine 3 fix (Round 4a) + 7 hook listener (Round 4b) で機構整備済
-- 47 cards の triggered ability が実際に動作するか **Playwright 実機検証は次セッション**
-- BUG-006 (action[事件] state-machine) Playwright 再現も次セッション
-- UI 課題 (BUG-001/002/010) は Round 4c で対応予定
+- **47 cards triggered ability 個別検証** は次セッション (新 E2E 基盤で実機検証可能に)
+- UI 課題 (BUG-001/002/010) は Round 4c+ で対応予定
 
 ## 進捗トラッカー (高レベル)
 
@@ -33,10 +37,10 @@
   - `.claude/specs/index.base` で spec 最終更新日管理
   - `.claude/specs/card-addition-checklist.md` + `tests/integration/dispatch-to-state.test.ts` 骨格
   - CLAUDE.md §セルフレビュー追記 (Playwright 1試合通し / 管理表更新 / カード追加チェックリスト)
-- [x] **Round 4b BUG-005/007 triggered listener 整備** (2026-05-18-7): `src/engine/listeners/triggered.ts` 新規 + 7 hook 配線 + emit kind 分離 (本セッション、commit 待ち)
-  - 機構整備済、要 Playwright 実機検証は次セッション
-- [ ] **Round 4b 残**: BUG-006 (action[事件] 証拠変動) Playwright 実機再現 + 個別カード effect 検証
-- [ ] **Round 4c (旧 3d 統合)**: BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 Round 3d B5 観戦モード
+- [x] **Round 4b BUG-005/007 triggered listener 整備** (2026-05-18-7): `src/engine/listeners/triggered.ts` 新規 + 7 hook 配線 + emit kind 分離 (commit `4c64c79`)
+- [x] **Round 4c BUG-006 修正 + Playwright E2E 導入** (2026-05-18-8): `src/ui/state/store.ts` で driver reactivity 修正 + `@playwright/test` 基盤 + `tests/e2e/bug-006.spec.ts` (本セッション)
+- [ ] **47 cards triggered ability 個別検証** (新 E2E 基盤で実施可能、次セッション)
+- [ ] **Round 4c+ (旧 3d 統合)**: BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 Round 3d B5 観戦モード
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
 - [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
 - [ ] Round 2+3 全 commits の origin/main push (現在 local main のみ)
@@ -54,4 +58,5 @@
 - [2026-05-18-4](sessions/2026-05-18-4.md) — Round 3c-A チュートリアル矢印機構
 - [2026-05-18-5](sessions/2026-05-18-5.md) — Round 3c-B 全 33 step マッピング + Playwright walkthrough
 - [2026-05-18-6](sessions/2026-05-18-6.md) — Round 4a 重大バグ修正 + RCA + Obsidian Base 導入
-- **[2026-05-18-7](sessions/2026-05-18-7.md) — Round 4b triggered ability listener 整備** (本セッション)
+- [2026-05-18-7](sessions/2026-05-18-7.md) — Round 4b triggered ability listener 整備
+- **[2026-05-18-8](sessions/2026-05-18-8.md) — Round 4c BUG-006 修正 + Playwright E2E 導入** (本セッション)

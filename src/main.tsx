@@ -1,10 +1,28 @@
+/// <reference types="vite/client" />
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { useGameStateStore } from './ui/state/store';
+import { dispatchEngineAction } from './ui/hooks/useEngineDispatch';
+import { createSampleGameState } from './ui/fixtures/sampleGameState';
+import * as engine from './engine';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error('Root element not found');
+}
+
+if (import.meta.env.DEV) {
+  (globalThis as unknown as { __game?: unknown }).__game = {
+    store: useGameStateStore,
+    getState: () => useGameStateStore.getState(),
+    setGameState: (gs: ReturnType<typeof createSampleGameState>) =>
+      useGameStateStore.setState({ gameState: gs }),
+    createSampleGameState,
+    dispatch: dispatchEngineAction,
+    flow: engine.flow,
+    getActionContext: (id: string) => engine.flow.action._getContext(id),
+  };
 }
 
 createRoot(rootElement).render(

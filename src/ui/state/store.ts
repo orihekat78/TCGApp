@@ -78,7 +78,13 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   dispatch: (mutator) => {
     const current = get().gameState;
     if (current === null) return;
-    set({ gameState: mutator(current) });
+    const next = mutator(current);
+    // BUG-006: state-machine の advance() は module-level ax.phase のみ変えて
+    // GameState を mutate しないケースがあり、Immer produce が同一参照を返す。
+    // 同一参照だと Zustand subscribers が起きず、ContactFlowDriver の useEffect が
+    // 再 run しないため judge phase で stuck する。常に新参照を保証して driver を起動する。
+    const nextRef = Object.is(next, current) ? { ...current } : next;
+    set({ gameState: nextRef });
   },
   activeActionId: null,
   setActiveActionId: (id) => set({ activeActionId: id }),
