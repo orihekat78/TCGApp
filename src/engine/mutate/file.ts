@@ -16,8 +16,10 @@ function addFromDeckTop(s: GameState, p: Player, n: number): void {
   for (let i = 0; i < n; i++) {
     const d = s.players[p].deck;
     if (d.length === 0) break; // デッキ不足は呼出元が管理
-    d.shift(); // デッキ上から取り除く (裏向き処理なので cardId は不要)
-    const card: FileCard = { type: 'card-back' };
+    // Round 3: ネクストヒント時に表向きで手札に渡せるよう cardId を保持
+    const cardId = d.shift();
+    if (cardId === undefined) break;
+    const card: FileCard = { type: 'card-back', cardId };
     s.players[p].file.push(card);
   }
 }

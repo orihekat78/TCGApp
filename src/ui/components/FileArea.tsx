@@ -32,10 +32,9 @@ export type FileAreaProps = {
 
 type FileCardItemProps = {
   card: FileCard;
-  resolveCard?: (cardId: string) => ResolvedCardMeta;
 };
 
-function FileCardItem({ card, resolveCard }: FileCardItemProps): JSX.Element {
+function FileCardItem({ card }: FileCardItemProps): JSX.Element {
   if (card.type === 'card-back') {
     // 通常の裏向き FILE カード — ファイル + 虫眼鏡アイコンは CSS の ::before で描画
     return (
@@ -46,18 +45,17 @@ function FileCardItem({ card, resolveCard }: FileCardItemProps): JSX.Element {
     );
   }
 
-  // アシスト中パートナー — sleep 向き (rotate -90deg) で表向き相当の識別を行う
-  const meta = resolveCard ? resolveCard(card.cardId) : null;
-  const color = meta?.color ?? 'blue';
+  // Round 3: アシスト中パートナーも裏向き原則に従い名前/識別表示を削除。
+  // 通常 card-back と同じ虫眼鏡デザインで統一 (rules/12 FILE は基本裏向き)。
+  // data-card-id は engine 状態追跡のため残すが、視覚は完全に card-back と同一。
   return (
     <div
-      className={`card-back assisted-partner sleep color-${color}`}
+      className="card-back assisted-partner"
       data-card-id={card.cardId}
-      aria-label="Assisted partner in FILE"
+      aria-label="FILE card (face-down)"
     >
-      <div className="partner-stripe" aria-hidden="true" />
-      <div className="partner-mark">P</div>
-      {meta?.name && <div className="partner-name">{meta.name}</div>}
+      <div className="monogram" aria-hidden="true">DC</div>
+      <div className="magnifier" aria-hidden="true" />
     </div>
   );
 }
@@ -67,7 +65,9 @@ function FileCardItem({ card, resolveCard }: FileCardItemProps): JSX.Element {
 // ------------------------------------------------------------------
 
 export function FileArea(props: FileAreaProps): JSX.Element {
-  const { cards, side, resolveCard, threshold = 7, onClick } = props;
+  // Round 3: resolveCard はもう使用しない (アシスト中パートナーも裏向き表示に統一) が、
+  // 呼出側 (Playmat) との互換性のため prop 型は残す。
+  const { cards, side, threshold = 7, onClick } = props;
 
   const count = cards.length;
   const progress = Math.min(count, threshold);
@@ -81,7 +81,13 @@ export function FileArea(props: FileAreaProps): JSX.Element {
     (c): c is { type: 'assisted-partner'; cardId: string } =>
       c.type === 'assisted-partner',
   );
-  const topCard: FileCard = lastAssisted ?? { type: 'card-back' };
+  // Round 3: card-back に cardId 必須 → display 用 placeholder で fallback
+  // (実際には cards[topIdx] を使うべきだが、UI は表向き要素を出さないため値は任意)
+  const lastCardBack = [...cards].reverse().find(
+    (c): c is { type: 'card-back'; cardId: string } =>
+      c.type === 'card-back',
+  );
+  const topCard: FileCard = lastAssisted ?? lastCardBack ?? { type: 'card-back', cardId: '' };
 
   // 7マス進捗 (上端)
   const cells = Array.from({ length: threshold }, (_, i) => i < progress);
@@ -125,7 +131,7 @@ export function FileArea(props: FileAreaProps): JSX.Element {
         <div className="stack-shadow s2" aria-hidden="true" />
         <div className="stack-shadow s1" aria-hidden="true" />
         {count > 0 ? (
-          <FileCardItem card={topCard} resolveCard={resolveCard} />
+          <FileCardItem card={topCard} />
         ) : (
           // 0 枚時は影だけ残し card-back は描かない (空気感)
           <div className="card-back empty" aria-label="FILE empty" />

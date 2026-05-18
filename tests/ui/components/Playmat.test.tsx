@@ -110,8 +110,10 @@ describe('Playmat', () => {
     expect(html.match(/case-area side-opp/g)?.length).toBe(1);
     expect(html.match(/case-area side-self/g)?.length).toBe(1);
     expect(html.match(/case-empty/g)?.length).toBe(2);
-    // "未開始" は aria-label + 表示テキストの両方に含まれるため計 4 件
-    expect(html.match(/未開始/g)?.length).toBe(4);
+    // Round 3: case-edition-tag が事件↔証拠 余白に追加されたため "未開始" 表示が 4 → 8 に増加
+    //   内訳: case-area aria-label + 表示テキスト 2 × 2 mat = 4
+    //         case-edition-tag aria-label + 表示テキスト 2 × 2 mat = 4
+    expect(html.match(/未開始/g)?.length).toBe(8);
   });
 
   it('renders PartnerArea (real component) inside each mat', () => {

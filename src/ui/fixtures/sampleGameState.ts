@@ -55,7 +55,8 @@ function emptyTurnFlags(): TurnScopedFlags {
   };
 }
 
-const fileBack: FileCard = { type: 'card-back' };
+// Round 3: card-back に cardId 必須化。fixture では placeholder で OK (表示は裏向き統一)
+const fileBack: FileCard = { type: 'card-back', cardId: 'D08003' };
 
 function makeLog(ts: number, player: 'self' | 'opp', turn: number, action: string, target?: string): LogEntry {
   return { ts, player, turn, action, target };

@@ -1,40 +1,10 @@
 // Phase 8.10h: CaseArea stamp-flip class application
+// Round 3: case-stamp は事件カードから削除 (edition tag が Playmat 側に独立配置)。
+//   旧 test (stamp class application) は意味を失ったため skip 化 + 説明コメント残置。
+//   regression 担保は Playmat 側の .case-edition-tag.resolved class test で代替予定。
 
-import { describe, it, expect } from 'vitest';
-import { renderToString } from 'react-dom/server';
-import { CaseArea } from '@/ui/components/CaseArea';
+import { describe, it } from 'vitest';
 
-const baseInfo = {
-  cardId: 'D08026',
-  title: '青の古城探索事件',
-  color: 'blue' as const,
-  level: 7,
-  requiredEvidence: 7,
-  orientation: 'portrait' as const,
-};
-
-describe('CaseArea — 解決編 stamp class', () => {
-  it('does NOT apply resolved class while 事件編', () => {
-    const html = renderToString(
-      <CaseArea
-        caseInfo={{ ...baseInfo, status: '事件編' }}
-        turnOrder="first"
-        side="self"
-      />,
-    );
-    expect(html).toContain('case-stamp');
-    expect(html).not.toContain('case-stamp resolved');
-    expect(html).not.toMatch(/case-stamp[^"]*\bresolved\b/);
-  });
-
-  it('applies resolved class when 解決編 (animation hook)', () => {
-    const html = renderToString(
-      <CaseArea
-        caseInfo={{ ...baseInfo, status: '解決編' }}
-        turnOrder="first"
-        side="self"
-      />,
-    );
-    expect(html).toMatch(/case-stamp[^"]*\bresolved\b/);
-  });
+describe.skip('CaseArea — 解決編 stamp class (Round 3 で削除)', () => {
+  it.skip('case-stamp 自体が削除済 — Playmat.case-edition-tag.resolved で代替テスト', () => {});
 });

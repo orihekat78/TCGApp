@@ -92,10 +92,13 @@ describe('dispatchEngineAction (pure function)', () => {
       expect(after.log.at(-1)?.target).toBe('X');
     });
 
-    it('nextHint: pops FILE top to hand and flags nextHintUsed', () => {
+    it('nextHint: pops FILE top to hand and flags nextHintUsed (Round 3: 実 cardId)', () => {
       const init = withMainPhase(createEmptyGameState());
-      const fb: FileCard = { type: 'card-back' };
-      init.players.self.file = [fb, fb, fb];
+      // Round 3: FileCard.card-back に cardId 必須化、ネクストヒントで実 cardId が手札に渡る
+      const fb1: FileCard = { type: 'card-back', cardId: 'FILE_A' };
+      const fb2: FileCard = { type: 'card-back', cardId: 'FILE_B' };
+      const fb3: FileCard = { type: 'card-back', cardId: 'FILE_C' };
+      init.players.self.file = [fb1, fb2, fb3];
       const handBefore = init.players.self.hand.length;
       useGameStateStore.setState({ gameState: init });
 
@@ -104,7 +107,8 @@ describe('dispatchEngineAction (pure function)', () => {
       const after = useGameStateStore.getState().gameState!;
       expect(after.players.self.file.length).toBe(2);
       expect(after.players.self.hand.length).toBe(handBefore + 1);
-      expect(after.players.self.hand.at(-1)).toBe(FILE_CARD_BACK_PLACEHOLDER);
+      // Round 3: 旧 FILE_CARD_BACK_PLACEHOLDER → 実 cardId (popTop は末尾 = FILE_C を返す)
+      expect(after.players.self.hand.at(-1)).toBe('FILE_C');
       expect(after.turnState.self.nextHintUsed).toBe(true);
     });
 

@@ -16,7 +16,8 @@ const resolveCard = (cardId: string): ResolvedCardMeta => ({
   ap: 0, lp: 1, lv: 0,
 });
 
-const cardBack: FileCard = { type: 'card-back' };
+// Round 3: FileCard.card-back に cardId 必須 (placeholder で OK、表示は裏向き統一)
+const cardBack: FileCard = { type: 'card-back', cardId: 'C-PLACE' };
 const assisted = (cardId: string): FileCard => ({ type: 'assisted-partner', cardId });
 
 describe('FileArea', () => {
@@ -72,23 +73,24 @@ describe('FileArea', () => {
       <FileArea cards={cards} side="self" resolveCard={resolveCard} />,
     ));
     expect(html).toMatch(/data-count="6"/);
-    // 最前面が assisted-partner
-    expect(html).toMatch(/assisted-partner sleep color-blue/);
+    // Round 3: assisted-partner も card-back と同じ虫眼鏡 + monogram で表示 (名前/識別非表示)
+    expect(html).toMatch(/assisted-partner/);
     expect(html).toMatch(/data-card-id="P-Conan"/);
-    expect(html).toMatch(/class="partner-mark">P</);
-    expect(html).toMatch(/class="partner-name">探偵パートナー</);
+    expect(html).not.toMatch(/partner-mark/);
+    expect(html).not.toMatch(/partner-name/);
     // count バッジは 6 (FILE 全体)
     expect(html).toMatch(/class="count-overlay">6</);
   });
 
-  it('uses blue fallback color when resolveCard not provided for assisted-partner', () => {
+  it('Round 3: assisted-partner も裏向き表示 (partner-name / partner-mark 描画されない)', () => {
     const cards: FileCard[] = [cardBack, assisted('P-???')];
     const html = strip(renderToString(
       <FileArea cards={cards} side="self" />,
     ));
-    expect(html).toMatch(/assisted-partner sleep color-blue/);
-    // resolveCard 不在のため partner-name は描画されない
+    // Round 3: assisted-partner 表示は card-back と統一 (虫眼鏡 + monogram)
+    expect(html).toMatch(/assisted-partner/);
     expect(html).not.toMatch(/partner-name/);
+    expect(html).not.toMatch(/partner-mark/);
   });
 
   it('respects custom threshold (e.g. 5)', () => {

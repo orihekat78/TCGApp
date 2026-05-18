@@ -82,8 +82,9 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
     );
   }
 
-  const { title, color, status, requiredEvidence } = caseInfo;
-  const isResolved = status === '解決編';
+  // Round 3: status は Playmat 側 case-edition-tag で表示するため CaseArea では未使用に
+  const { title, color, requiredEvidence } = caseInfo;
+  // Round 3: isResolved は case-stamp 削除に伴い未使用に。Playmat の case-edition-tag 側で使用。
   const orientation = caseInfo.orientation ?? detectedOrientation ?? 'portrait';
 
   // タイトル中の \n を <br /> に変換
@@ -113,11 +114,8 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
         >
           <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
           <div className="case-title">{titleNodes}</div>
-          {/* Round 2: EVT-色 + Lv 表記は冗長 (タイトルとカード画像で十分判別可能)
-              のためユーザ指摘を受けて削除。事件編/解決編は <case-stamp> で別途表示。 */}
-          <div className={`case-stamp${isResolved ? ' resolved' : ''}`}>
-            {status}
-          </div>
+          {/* Round 2: EVT-色 + Lv 表記は冗長 (タイトルとカード画像で十分判別可能) → 削除済
+              Round 3: case-stamp も削除。事件編/解決編 は Playmat 側の余白に独立 tag で表示。 */}
         </div>
 
         <div className="evidence-required">

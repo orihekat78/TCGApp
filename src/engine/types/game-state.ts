@@ -59,7 +59,7 @@ export type EvidenceOrigin = {
 };
 
 export type FileCard =
-  | { type: 'card-back' }
+  | { type: 'card-back'; cardId: string }  // Round 3: 隠された cardId を保持 (ネクストヒント時に表向きで手札に渡すため)
   | { type: 'assisted-partner'; cardId: string };
 
 /**

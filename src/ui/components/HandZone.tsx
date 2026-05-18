@@ -146,11 +146,6 @@ function HandMiniCard({
         <CardArt cardId={card.cardId} alt={card.name} />
       </span>
       <span className="hand-mini-name">{card.name}</span>
-      {!usable && (
-        <span className="hand-mini-lock" aria-hidden="true" title={disabledReason ?? '使用不可'}>
-          🔒
-        </span>
-      )}
     </button>
   );
 }

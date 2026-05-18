@@ -180,16 +180,45 @@
   border: 1px solid rgba(68, 221, 153, 0.25);
 }
 
-/* Left col: 事件 (1.4fr) + FILE (1fr) */
+/* Left col: 事件 (1.4fr) + 余白 edition タグ (auto) + 証拠 (1fr)
+   Round 3: 事件↔証拠 の余白に edition tag (事件編/解決編) を独立表示 */
 .mat .left-col {
   display: grid;
-  grid-template-rows: 1.4fr 1fr;
+  grid-template-rows: 1.4fr auto 1fr;
   gap: 6px;
   min-width: 0;
   min-height: 0;
 }
 .mat .left-col > * {
   min-height: 0; /* grid overflow 防止 */
+}
+
+/* Round 3: 事件編/解決編 タグ (事件カード上の case-stamp 削除に伴い独立表示) */
+.mat .case-edition-tag {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #2a4366 0%, #1a2a44 100%);
+  border: 1.5px solid #4a6a90;
+  color: #c8d6ec;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  user-select: none;
+}
+.mat .case-edition-tag.resolved {
+  background: linear-gradient(180deg, #5a3a18 0%, #3a2410 100%);
+  border-color: #c89a4a;
+  color: #ffe2a0;
+  box-shadow: 0 2px 8px color-mix(in oklch, #ffd54a 30%, transparent),
+    inset 0 0 0 1px rgba(255, 220, 130, 0.18);
+}
+.mat.opp .case-edition-tag {
+  /* opp 側は mat が rotate(180deg) されているのでタグの中身は読みやすい向きに */
+  transform: rotate(180deg);
 }
 
 /* Center col: 現場 (1.4fr) + 下段 (1fr: evidence | partner) */

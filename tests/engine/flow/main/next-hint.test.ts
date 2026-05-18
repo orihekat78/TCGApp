@@ -32,7 +32,8 @@ function makeStateWithFile(n: number, opts: { caseColors?: string[]; hand?: stri
     draft.players.self.case.colors = opts.caseColors ?? ['赤'];
     draft.players.self.case.cardId = 'CASE';
     for (let i = 0; i < n; i++) {
-      draft.players.self.file.push({ type: 'card-back' });
+      // Round 3: FileCard.card-back に cardId 必須 (placeholder で OK)
+      draft.players.self.file.push({ type: 'card-back', cardId: `FILE_${i}` });
     }
     draft.players.self.hand = opts.hand ?? [];
   });
@@ -54,13 +55,14 @@ describe('engine.flow.main.runNextHint', () => {
     expect(canStartNextHint(s, 'self')).toBe(false);
   });
 
-  it('FILE 上のカード (card-back) を手札に加え、フラグをセットする', () => {
+  it('FILE 最上部のカードを手札に加え、フラグをセットする (Round 3: 実 cardId)', () => {
     const s = makeStateWithFile(3);
     const after = produce(s, draft => {
       runNextHint(draft, 'self');
     });
     expect(after.players.self.file).toHaveLength(2);
-    expect(after.players.self.hand).toContain('card-back');
+    // Round 3: 旧 'card-back' placeholder → 実 cardId (FILE_2 = 最後に push されたもの)
+    expect(after.players.self.hand).toContain('FILE_2');
     expect(after.turnState.self.nextHintUsed).toBe(true);
   });
 

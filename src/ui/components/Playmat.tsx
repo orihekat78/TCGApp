@@ -149,6 +149,11 @@ function PlayerMat({
           isCandidate={isCaseCandidate}
           onClick={onCaseClick}
         />
+        {/* Round 3: 事件編/解決編 を 事件↔証拠 余白に独立表示 (事件カード上の case-stamp は削除済)
+            caseInfo null (ゲーム未開始時) は空 placeholder 表示 */}
+        <div className={`case-edition-tag${caseInfo?.status === '解決編' ? ' resolved' : ''}`} aria-label={`事件状態: ${caseInfo?.status ?? '未開始'}`}>
+          {caseInfo?.status ?? '未開始'}
+        </div>
         <EvidenceArea
           count={evidenceCount}
           requiredEvidence={requiredEvidence}
@@ -449,16 +454,29 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             リムーブは表向きなので cards (cardId[]) で実カード表示。 */}
         {areaModal && gameState && (() => {
           const player = gameState.players[areaModal.side];
-          const cards =
-            areaModal.kind === 'remove'
-              ? (player.remove as string[])
-              : [];
-          const faceDownCount =
-            areaModal.kind === 'remove'
-              ? 0
-              : areaModal.kind === 'file'
-                ? player.file.length
-                : (player.evidence?.length ?? 0);
+          // Round 3: FILE 内アシスト中パートナーのみ表向き表示 (ユーザ指示)
+          //   - file の中身を 「assisted-partner cards (表向き)」 と 「card-back count (裏向き)」 に分割
+          //   - リムーブは全カード表向き / 証拠 は全カード裏向き
+          let cards: string[] = [];
+          let faceDownCount = 0;
+          if (areaModal.kind === 'remove') {
+            cards = player.remove as string[];
+          } else if (areaModal.kind === 'file') {
+            const partnerInFile: string[] = [];
+            let backCount = 0;
+            for (const f of player.file) {
+              if (f.type === 'assisted-partner') {
+                partnerInFile.push(f.cardId);
+              } else {
+                backCount += 1;
+              }
+            }
+            cards = partnerInFile;
+            faceDownCount = backCount;
+          } else {
+            // evidence: 全裏向き
+            faceDownCount = player.evidence?.length ?? 0;
+          }
           return (
             <CardListModal
               kind={areaModal.kind}

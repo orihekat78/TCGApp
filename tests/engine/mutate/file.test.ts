@@ -25,8 +25,9 @@ describe('engine.mutate.file', () => {
         file.addFromDeckTop(draft, 'self', 2);
       });
       expect(result.players.self.file).toHaveLength(2);
-      expect(result.players.self.file[0]).toEqual({ type: 'card-back' });
-      expect(result.players.self.file[1]).toEqual({ type: 'card-back' });
+      // Round 3: FileCard.card-back に cardId 保持 (ネクストヒント時に表向きで手札に渡すため)
+      expect(result.players.self.file[0]).toEqual({ type: 'card-back', cardId: 'C001' });
+      expect(result.players.self.file[1]).toEqual({ type: 'card-back', cardId: 'C002' });
       expect(result.players.self.deck).toEqual(['C003']);
     });
 

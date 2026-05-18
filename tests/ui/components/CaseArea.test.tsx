@@ -41,10 +41,10 @@ describe('CaseArea', () => {
     expect(html).toMatch(/data-orientation="portrait"/);
     expect(html).toMatch(/class="case-title">テスト事件</);
     // Round 2: EVT・色 と Lv 表記は冗長としてユーザ指摘を受けて削除済。
-    // case-stamp と必要証拠 の表示は維持。
+    // Round 3: case-stamp も削除 (edition tag は Playmat 側 .case-edition-tag に独立配置)。
     expect(html).not.toMatch(/EVT・/);
     expect(html).not.toMatch(/case-lv/);
-    expect(html).toMatch(/class="case-stamp">事件編</);
+    expect(html).not.toMatch(/case-stamp/);
     expect(html).toMatch(/必要証拠 <strong>7<\/strong>（先攻）/);
   });
 
@@ -69,7 +69,7 @@ describe('CaseArea', () => {
     expect(html).toMatch(/data-orientation="portrait"/);
   });
 
-  it('applies .resolved class to stamp when status is 解決編', () => {
+  it('Round 3: case-stamp 削除済 — 解決編表示は Playmat .case-edition-tag.resolved で担保', () => {
     const html = strip(renderToString(
       <CaseArea
         caseInfo={makeCase({ status: '解決編' })}
@@ -77,7 +77,10 @@ describe('CaseArea', () => {
         side="self"
       />,
     ));
-    expect(html).toMatch(/class="case-stamp resolved">解決編</);
+    // case-stamp は完全削除されているはず
+    expect(html).not.toMatch(/case-stamp/);
+    // 解決編 文字も CaseArea には出さない
+    expect(html).not.toMatch(/解決編/);
   });
 
   it('shows 後攻 + 必要証拠 6 when turnOrder is second', () => {
