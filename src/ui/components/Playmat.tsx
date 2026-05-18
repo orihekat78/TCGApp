@@ -424,7 +424,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
 
         {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
             LogPanel は open=true のときのみオーバーレイで描画。 */}
-        <LogPanel entries={gameState?.log ?? []} open={logOpen} />
+        <LogPanel
+          entries={gameState?.log ?? []}
+          open={logOpen}
+          onClose={() => setLogOpen(false)}
+        />
       </div>
     </div>
   );
