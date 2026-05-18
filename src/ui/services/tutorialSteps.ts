@@ -36,11 +36,13 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L0-1',
     title: 'ようこそ、名探偵',
     body: '名探偵コナンTCG は 2 人で証拠を集めて事件を解決するカードゲーム。CT-D08 と CT-D11 のデッキで対戦します。',
+    target: { selector: '.play-area', placement: 'top' },
   },
   {
     id: 'L0-2',
     title: '勝利条件',
     body: '相手より先に事件の必要証拠数を集め、パートナーで「事件解決」を宣言したら勝利。先攻は 7 枚、後攻は 6 枚の証拠が必要。',
+    target: { selector: '.case-area', placement: 'top' },
   },
   {
     id: 'L0-3',
@@ -53,7 +55,10 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L1-1',
     title: 'デッキの構成',
     body: 'デッキは「パートナー 1 枚 + 事件 1 枚 + メイン 40 枚」。本対戦では CT-D08 と CT-D11 を使用。',
+    target: { selector: '.play-area', placement: 'top' },
   },
+  // L1-2 skipReason: デッキ構築ルール (ID 3 枚制限 + 色制限) は実プレイ UI に対応する盤面要素なし。
+  //                  デッキビルダー UI 実装時に target 追記予定。
   {
     id: 'L1-2',
     title: '同じカードは最大 3 枚',
@@ -70,17 +75,20 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L2-2',
     title: 'カードの状態',
     body: 'アクティブ (タテ・行動可) / スリープ (横・行動不可) / スタン (逆向き・行動不可)。スタンは特殊な解除手順が必要。',
+    target: { selector: '.scene-area.side-self', placement: 'top' },
   },
   // ---- L3: ターン進行 (rules/05) ----
   {
     id: 'L3-1',
     title: '3 フェイズで進む',
     body: 'オートフェイズ → メインフェイズ → エンドフェイズ。メインフェイズが主役、ここで様々な行動を取る。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   {
     id: 'L3-2',
     title: 'オートフェイズ',
     body: '自分のパートナー + 現場キャラをアクティブに / デッキから 1 枚ドロー / FILE に 2 枚追加。先攻 1 ターン目のみ FILE 1 枚。',
+    target: { selector: '.actions-panel', placement: 'top' },
   },
   {
     id: 'L3-3',
@@ -144,7 +152,9 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L7-1',
     title: 'ガードとは',
     body: '対象が攻撃された側は、自分の現場のアクティブなキャラ 1 体をスリープしてガード可能。ガードしたキャラがコンタクト相手に置き換わる。',
+    target: { selector: '.scene-area.side-opp', placement: 'top' },
   },
+  // L7-2 skipReason: ガードしない戦略判断は概念のみ、特定 UI 要素を指せない。
   {
     id: 'L7-2',
     title: 'ガードしない選択',
@@ -155,7 +165,9 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L8-1',
     title: 'コンタクト判定',
     body: '攻撃側 AP ≧ 防御側 AP なら防御側をリムーブ。AP が同じでもリムーブされる。攻撃側は判定でリムーブされない。',
+    target: { selector: '.scene-area.side-self', placement: 'top' },
   },
+  // L8-2 skipReason: コンタクトの行動順は概念で、ContactFlash は瞬間表示。target なし。
   {
     id: 'L8-2',
     title: '行動順',
@@ -166,7 +178,9 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L9-1',
     title: 'カットイン',
     body: 'コンタクト中に手札のカットイン持ちカードを使い、AP+ 等の効果を発生させる。1 コンタクトにつき 1 枚まで。色制限なし。',
+    target: { selector: '.hand-zone', placement: 'top' },
   },
+  // L9-2 skipReason: タイミング論で UI 特化なし。
   {
     id: 'L9-2',
     title: 'カットインのタイミング',
@@ -177,7 +191,9 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L10-1',
     title: '変装',
     body: 'コンタクト中の自分のキャラを、手札の変装持ちキャラと入替。元のキャラはデッキの下へ。状態 / セット / 効果は引き継がれる。',
+    target: { selector: '.hand-zone', placement: 'top' },
   },
+  // L10-2 skipReason: 変装時/登場時の能力分岐は規約説明で、特定 UI なし。
   {
     id: 'L10-2',
     title: '変装の注意',
@@ -188,23 +204,28 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L11-1',
     title: 'アクション[事件]',
     body: '対象を相手の事件にしてアクションすると、ガードされなければ相手の証拠を 1 枚リムーブし、自分の証拠を 1 枚追加する。',
+    target: { selector: '.case-area', placement: 'top' },
   },
   {
     id: 'L11-2',
     title: 'ヒラメキ',
     body: 'アクション[事件] によってリムーブされる証拠カードがヒラメキを持っていたら、相手はその効果を発動できる。能力リムーブでは発動しない。',
+    target: { selector: '.evidence-area.side-self', placement: 'top' },
   },
   // ---- L12: リフレッシュ + 痕跡 (rules/14, 26, 13) ----
   {
     id: 'L12-1',
     title: 'リフレッシュ',
     body: 'デッキが 0 枚になったらリムーブエリアをシャッフルしてデッキに戻す。同時に相手は証拠 1 枚を得る。',
+    target: { selector: '.deck-area.side-self', placement: 'top' },
   },
+  // L12-2 skipReason: デッキ切れ敗北は条件のみ、特定 UI 要素なし。
   {
     id: 'L12-2',
     title: 'デッキ切れ敗北',
     body: 'リフレッシュ時にリムーブエリアが 0 枚なら、そのプレイヤーは即敗北。終盤はデッキ消費とリムーブ補充のバランスが鍵。',
   },
+  // L12-3 skipReason: 痕跡 UI は MVP 未実装。全カード実装時に target 追記予定。
   {
     id: 'L12-3',
     title: '痕跡',
@@ -215,7 +236,9 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     id: 'L13-1',
     title: 'MR キャラ',
     body: 'MR は特別ランク。相手ターン中に現場を離れる場合、パートナーエリアに移動する。自分ターン中は通常通り離れる。',
+    target: { selector: '.partner-area.side-self', placement: 'top' },
   },
+  // L13-2 skipReason: MR 重複登場ロジックは MVP 未対応 (MR UI 不完全)、全カード実装時に target 追記。
   {
     id: 'L13-2',
     title: 'MR の重複登場',
