@@ -157,5 +157,13 @@ export function handUseCard(
       { uid: newChar.uid, viaEffect: false, enterOrder: newChar.enterOrder },
       { player: p, cardId, uid: newChar.uid },
     );
+  } else if (d?.kind === 'event') {
+    // Round 4a (バグ D): イベントカードは使い切り、使用後リムーブエリアへ (rules/06)。
+    // 旧実装は kind='character' 分岐のみで event 用処理が欠落、使用後も手札に残るバグだった。
+    // 効果自体は 'effect:declared' hook の listener (Round 4b で整備予定) が
+    // pendingEffects に積む設計。本 fix は「手札除去 + リムーブ移動」のみを保証する。
+    const handIdx = state.players[p].hand.indexOf(cardId);
+    if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+    mutate.remove.add(state, p, [cardId]);
   }
 }

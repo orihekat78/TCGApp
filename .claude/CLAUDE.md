@@ -39,6 +39,13 @@
 - [ ] エッジケース（手札0枚、デッキ0枚、リフレッシュ、同時アクション、変装中の効果引継ぎ等）を考慮しているか
 - [ ] テストが通るか
 - [ ] 型エラー・lintエラーがないか
+- [ ] **Playwright 1 試合通し検証** (機能変更を含む round の場合、Round 4a Phase 6.3 導入)
+  - 静的 screenshot だけでなく、click → effect resolution → state 反映を実機で確認
+  - 人間 vs CPU を mulligan → 勝敗決定 (or max 30 turn) まで通して操作
+  - 各 step で console error 0 確認
+  - **「画面表示確認 ≠ 機能確認」**、両方必要
+- [ ] **リスク・バグ管理表更新** ([.claude/bugs/](bugs/) 配下に該当 BUG-XXX.md を作成 or 更新、Round 4a Phase 6.4 導入)
+- [ ] **カード追加時**は [card-addition-checklist.md](specs/card-addition-checklist.md) を必ず通す (kind 分岐網羅 / hook listener 配線 / resolver dispatch 確認)
 
 ### 2. 水平展開調査（必須）
 
@@ -144,6 +151,26 @@
 - **詳細**: [.claude/auto/README.md](auto/README.md)
 
 骨格凍結原則との整合: 自動生成はエンジン本体に手を入れずに行うため `scripts/gen-docs/` 配下のみ変更する。
+
+## リスク・バグ管理表 運用 (Round 4a 導入)
+
+全バグ・リスクは `.claude/bugs/` 配下に Obsidian Base 形式で管理する:
+
+- 各バグは `.claude/bugs/BUG-XXX.md` に個別ファイル (frontmatter で `id` / `severity` / `category` / `status` / `round` / `date_found` を管理)
+- 集約 view は **[.claude/bugs/index.base](bugs/index.base)** を Obsidian で開いて参照
+  - 全バグ一覧 / 🔴 重大バグ / 🔧 現 Round 対応中 / ⏳ 未着手 等の view が用意済
+- 解説 hub (RCA + 水平展開計画 + 凡例) は [.claude/specs/risk-and-bug-tracker.md](specs/risk-and-bug-tracker.md)
+
+### 運用フロー
+
+1. **新規バグ発見時**: `.claude/bugs/BUG-XXX.md` を作成 (frontmatter + 期待動作 + 実動作 + 関連ファイル + RCA + 水平展開 + 防止策)
+2. **修正完了時**: 該当 BUG-XXX.md の `status` を `修正済` に更新、`commit` プロパティに commit hash 追記
+3. **水平展開で発見した同種バグ**: 同 commit で修正 + 新規 BUG-XXX.md 追加
+4. **Round 完了時**: session log に `.claude/bugs/index.base` view へのリンク掲載、Round 範囲のバグ進捗を要約
+
+詳細な RCA + 水平展開計画は [.claude/specs/risk-and-bug-tracker.md](specs/risk-and-bug-tracker.md) を参照。
+
+---
 
 ## メモリ運用ルール
 

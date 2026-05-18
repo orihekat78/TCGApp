@@ -40,12 +40,23 @@ function setLocation(s: GameState, p: Player, loc: PartnerLocation): void {
  * - location を 'file-area' へ
  * - FILE に assisted-partner カードとして追加
  * - assistedThisTurn = true
+ *
+ * Round 4a (バグ B): FILE 7 枚以上で事件編→解決編 自動遷移 (rules/01, 25)。
+ * 公式 Q&A (rules/25): 「アシスト後、FILE 7+ 条件達成時、解決編にしないことは不可。必ず移行」。
+ * 旧実装は `src/ai/policy.ts:assist` のみで check していたが、UI dispatch
+ * (`src/ui/hooks/useEngineDispatch.ts:assist`) は単に mutate.partner.assist を呼ぶだけで
+ * check を持たず、人間プレイで「FILE 7 枚で解決編に行けない」バグの原因だった。
+ * engine mutator 内に check を移して全 caller (AI / UI 両方) で自動適用される。
  */
 function assist(s: GameState, p: Player): void {
   s.players[p].partner.state = 'sleep';
   s.players[p].partner.location = 'file-area';
   fileMutate.insertAssistedPartner(s, p);
   s.turnState[p].assistedThisTurn = true;
+  // rules/01 + rules/25: FILE 7 枚以上 (アシストしたパートナー含む) で必ず解決編へ移行
+  if (s.players[p].case.status === '事件編' && s.players[p].file.length >= 7) {
+    s.players[p].case.status = '解決編';
+  }
 }
 
 /**

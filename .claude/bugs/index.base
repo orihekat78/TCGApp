@@ -1,0 +1,85 @@
+filters:
+  and:
+    - file.inFolder("bugs")
+    - 'file.ext == "md"'
+
+formulas:
+  severity_icon: 'if(severity == "重大", "🔴", if(severity == "高", "🟠", if(severity == "中", "🟡", "🟢")))'
+  status_icon: 'if(status == "修正済", "✅", if(status == "検証中", "🔍", if(status == "対応中", "🔧", "⏳")))'
+
+properties:
+  formula.severity_icon:
+    displayName: "🚨"
+  formula.status_icon:
+    displayName: "📊"
+  id:
+    displayName: "ID"
+  title:
+    displayName: "タイトル"
+  severity:
+    displayName: "重大度"
+  category:
+    displayName: "種別"
+  status:
+    displayName: "状況"
+  round:
+    displayName: "担当 Round"
+  date_found:
+    displayName: "発見日"
+
+views:
+  - type: table
+    name: "全バグ一覧"
+    order:
+      - id
+      - formula.severity_icon
+      - title
+      - formula.status_icon
+      - status
+      - round
+      - category
+
+  - type: table
+    name: "🔴 重大バグ (engine)"
+    filters:
+      and:
+        - 'severity == "重大"'
+    order:
+      - id
+      - title
+      - formula.status_icon
+      - status
+      - round
+
+  - type: table
+    name: "🔧 Round 4a (本セッション)"
+    filters:
+      and:
+        - 'round == "Round 4a"'
+    order:
+      - id
+      - title
+      - formula.status_icon
+      - status
+      - severity
+
+  - type: table
+    name: "⏳ 未着手"
+    filters:
+      and:
+        - 'status == "未着手"'
+    order:
+      - id
+      - title
+      - severity
+      - round
+
+  - type: cards
+    name: "カード view (発見日順)"
+    order:
+      - title
+      - id
+      - severity
+      - category
+      - status
+      - round

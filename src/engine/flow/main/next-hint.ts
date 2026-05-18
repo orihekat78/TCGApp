@@ -114,6 +114,12 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
         viaEffect: false,
         enterOrder: newChar.enterOrder,
       }, { player: p, cardId: optionalCardId, uid: newChar.uid });
+    } else if (d && d.kind === 'event') {
+      // Round 4a (バグ D 水平展開): ネクストヒント経由でイベントカード使用時も
+      // 手札除去 + リムーブ移動を保証 (rules/06 §使い切り)。hand-use-card.ts と同じ修正。
+      const handIdx = state.players[p].hand.indexOf(optionalCardId);
+      if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+      mutate.remove.add(state, p, [optionalCardId]);
     }
   }
 

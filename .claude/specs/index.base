@@ -1,0 +1,84 @@
+filters:
+  and:
+    - file.inFolder("specs")
+    - 'file.ext == "md"'
+    - 'file.name != "INDEX.md"'
+
+formulas:
+  age_days: '(now() - file.mtime).days'
+  age_label: 'if((now() - file.mtime).days > 30, "🟦 stable", if((now() - file.mtime).days > 7, "🟨 recent", "🟢 active"))'
+  size_kb: '(file.size / 1024).toFixed(1)'
+
+properties:
+  formula.age_label:
+    displayName: "鮮度"
+  formula.age_days:
+    displayName: "経過日"
+  formula.size_kb:
+    displayName: "KB"
+  file.basename:
+    displayName: "ファイル"
+  file.mtime:
+    displayName: "最終更新"
+
+views:
+  - type: table
+    name: "📅 最終更新日順 (新→古)"
+    order:
+      - file.basename
+      - formula.age_label
+      - file.mtime
+      - formula.age_days
+      - formula.size_kb
+
+  - type: table
+    name: "🟢 直近 7 日に更新"
+    filters:
+      and:
+        - 'formula.age_days <= 7'
+    order:
+      - file.basename
+      - file.mtime
+      - formula.size_kb
+
+  - type: table
+    name: "🟨 7-30 日 (recent)"
+    filters:
+      and:
+        - 'formula.age_days > 7'
+        - 'formula.age_days <= 30'
+    order:
+      - file.basename
+      - file.mtime
+      - formula.age_days
+
+  - type: table
+    name: "🟦 30 日以上 (stable / 完成済 design)"
+    filters:
+      and:
+        - 'formula.age_days > 30'
+    order:
+      - file.basename
+      - file.mtime
+      - formula.age_days
+      - formula.size_kb
+
+  - type: table
+    name: "📂 engine-api 関連"
+    filters:
+      and:
+        - '/^engine-api/.matches(file.basename)'
+    order:
+      - file.basename
+      - file.mtime
+      - formula.size_kb
+
+  - type: table
+    name: "🎨 UI 設計 (2026-05-11 シリーズ)"
+    filters:
+      and:
+        - '/^2026-05-11-ui/.matches(file.basename)'
+    order:
+      - file.basename
+      - file.mtime
+      - formula.size_kb
