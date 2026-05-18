@@ -18,6 +18,8 @@ export type EvidenceAreaProps = {
   /** 必要証拠数 (先攻=7 / 後攻=6) */
   requiredEvidence: number;
   side: 'self' | 'opp';
+  /** Round 2: エリアクリックで内容モーダルを開く callback */
+  onClick?: () => void;
 };
 
 // ------------------------------------------------------------------
@@ -25,7 +27,7 @@ export type EvidenceAreaProps = {
 // ------------------------------------------------------------------
 
 export function EvidenceArea(props: EvidenceAreaProps): JSX.Element {
-  const { count, requiredEvidence, side } = props;
+  const { count, requiredEvidence, side, onClick } = props;
 
   const safeCount = Math.max(0, count);
   const fillPct = Math.min(
@@ -42,9 +44,11 @@ export function EvidenceArea(props: EvidenceAreaProps): JSX.Element {
       }`}
       role="button"
       tabIndex={0}
-      aria-label={`証拠 ${safeCount} / ${requiredEvidence} 枚`}
+      aria-label={`${side === 'self' ? '自分の' : '相手の'}証拠 ${safeCount} / ${requiredEvidence} 枚${onClick ? ' (クリックで内容表示)' : ''}`}
       data-side={side}
       data-count={safeCount}
+      onClick={onClick}
+      style={onClick ? { cursor: 'pointer' } : undefined}
     >
       <div className="zone-label">
         <span>証拠</span>

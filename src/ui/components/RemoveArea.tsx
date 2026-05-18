@@ -14,19 +14,28 @@ export type RemoveAreaProps = {
   cards: CardId[];
   side: 'self' | 'opp';
   resolveCard: (cardId: string) => ResolvedCardMeta;
+  /** Round 2: エリアクリックで内容モーダルを開く callback */
+  onClick?: () => void;
 };
 
 /**
  * 最新カード (配列末尾) を表向きで小さく表示 + count バッジ。
  * 0 枚なら空表示 (リフレッシュ時の敗北リスク視覚化)。
  */
-export function RemoveArea({ cards, side, resolveCard }: RemoveAreaProps): JSX.Element {
+export function RemoveArea({ cards, side, resolveCard, onClick }: RemoveAreaProps): JSX.Element {
   const count = cards.length;
   const top = count > 0 ? cards[count - 1] : null;
   const topMeta = top !== null && top !== undefined ? resolveCard(top) : null;
 
   return (
-    <div className={`zone remove-col remove-zone remove-area side-${side}`}>
+    <div
+      className={`zone remove-col remove-zone remove-area side-${side}${onClick ? ' clickable' : ''}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `${side === 'self' ? '自分の' : '相手の'}リムーブエリアを開く (${count} 枚)` : undefined}
+      style={onClick ? { cursor: 'pointer' } : undefined}
+    >
       <div className="zone-label">
         <span>リムーブ</span>
         <span className={`count${count === 0 ? ' zero' : ''}`}>{count}</span>

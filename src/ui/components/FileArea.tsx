@@ -22,6 +22,8 @@ export type FileAreaProps = {
   resolveCard?: (cardId: string) => ResolvedCardMeta;
   /** 解決編移行に必要な FILE 枚数 (デフォルト 7、rules/01) */
   threshold?: number;
+  /** Round 2: エリアクリックで内容モーダルを開く callback */
+  onClick?: () => void;
 };
 
 // ------------------------------------------------------------------
@@ -65,7 +67,7 @@ function FileCardItem({ card, resolveCard }: FileCardItemProps): JSX.Element {
 // ------------------------------------------------------------------
 
 export function FileArea(props: FileAreaProps): JSX.Element {
-  const { cards, side, resolveCard, threshold = 7 } = props;
+  const { cards, side, resolveCard, threshold = 7, onClick } = props;
 
   const count = cards.length;
   const progress = Math.min(count, threshold);
@@ -86,9 +88,14 @@ export function FileArea(props: FileAreaProps): JSX.Element {
 
   return (
     <div
-      className={`zone file-strip file-area side-${side}`}
+      className={`zone file-strip file-area side-${side}${onClick ? ' clickable' : ''}`}
       data-side={side}
       data-count={count}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `${side === 'self' ? '自分の' : '相手の'}FILE エリアを開く (${count} 枚)` : undefined}
+      style={onClick ? { cursor: 'pointer' } : undefined}
     >
       {/* 7マス進捗 + ラベル */}
       <div className="file-strip-header">

@@ -16,7 +16,8 @@ describe('EvidenceArea', () => {
     expect(html).toMatch(/evidence-area side-self/);
     expect(html).toMatch(/<span>証拠<\/span>/);
     expect(html).toMatch(/role="button"/);
-    expect(html).toMatch(/aria-label="証拠 0 \/ 7 枚"/);
+    // Round 2: aria-label に「自分の/相手の」prefix を追加 (B-9 modal 改修)
+    expect(html).toMatch(/aria-label="自分の証拠 0 \/ 7 枚/);
   });
 
   it('shows 0/7 + no stack when empty', () => {

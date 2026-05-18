@@ -18,6 +18,7 @@ import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
 import { LogPanel } from './LogPanel.js';
+import { CardListModal, type CardListKind } from './CardListModal.js';
 import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
@@ -90,12 +91,14 @@ type PlayerMatProps = CandidateProps & {
   state: GameState | null;
   resolveCard: (cardId: string) => ResolvedCardMeta;
   resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number; orientation?: 'portrait' | 'landscape' };
+  /** Round 2: FILE/証拠/リムーブ エリアクリックで内容モーダルを開く callback */
+  onAreaClick?: (kind: 'file' | 'evidence' | 'remove', side: 'self' | 'opp') => void;
 };
 
 function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
-  isCaseCandidate, onCaseClick,
+  isCaseCandidate, onCaseClick, onAreaClick,
 }: PlayerMatProps & {
   isCaseCandidate?: boolean;
   onCaseClick?: () => void;
@@ -150,6 +153,7 @@ function PlayerMat({
           count={evidenceCount}
           requiredEvidence={requiredEvidence}
           side={side}
+          onClick={onAreaClick ? () => onAreaClick('evidence', side) : undefined}
         />
       </div>
       <div className="center-col">
@@ -165,6 +169,7 @@ function PlayerMat({
             cards={state?.players[side].file ?? []}
             side={side}
             resolveCard={resolveCard}
+            onClick={onAreaClick ? () => onAreaClick('file', side) : undefined}
           />
           <PartnerArea
             partner={state?.players[side].partner ?? null}
@@ -181,6 +186,7 @@ function PlayerMat({
           cards={state?.players[side].remove ?? []}
           side={side}
           resolveCard={resolveCard}
+          onClick={onAreaClick ? () => onAreaClick('remove', side) : undefined}
         />
       </div>
     </div>
@@ -198,6 +204,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const [handExpanded, setHandExpanded] = useState(false);
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
   const [logOpen, setLogOpen] = useState(false);
+  // Round 2: FILE/証拠/リムーブ クリック → 内容モーダル表示の state。
+  const [areaModal, setAreaModal] = useState<{ kind: CardListKind; side: 'self' | 'opp' } | null>(null);
+  const handleAreaClick = (kind: CardListKind, side: 'self' | 'opp'): void => {
+    setAreaModal({ kind, side });
+  };
+  const closeAreaModal = (): void => setAreaModal(null);
 
   // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
   const pickerPhase = useTargetPickerStore((s) => s.phase);
@@ -297,6 +309,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onUnitClick={(uid) => pickAndConfirm(uid)}
             isCaseCandidate={isOppCaseCandidate}
             onCaseClick={() => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
+            onAreaClick={handleAreaClick}
           />
 
           {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
@@ -310,6 +323,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onUnitClick={(uid) => pickAndConfirm(uid)}
             isPartnerCandidate={isSelfPartnerCandidate}
             onPartnerClick={() => pickAndConfirm('partner:self')}
+            onAreaClick={handleAreaClick}
           />
         </div>
 
@@ -429,6 +443,32 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           open={logOpen}
           onClose={() => setLogOpen(false)}
         />
+
+        {/* Round 2: FILE/証拠/リムーブ クリック → 内容確認モーダル
+            証拠 / FILE は engine 上裏向きなので faceDownCount で枚数のみ表示。
+            リムーブは表向きなので cards (cardId[]) で実カード表示。 */}
+        {areaModal && gameState && (() => {
+          const player = gameState.players[areaModal.side];
+          const cards =
+            areaModal.kind === 'remove'
+              ? (player.remove as string[])
+              : [];
+          const faceDownCount =
+            areaModal.kind === 'remove'
+              ? 0
+              : areaModal.kind === 'file'
+                ? player.file.length
+                : (player.evidence?.length ?? 0);
+          return (
+            <CardListModal
+              kind={areaModal.kind}
+              side={areaModal.side}
+              cards={cards}
+              faceDownCount={faceDownCount}
+              onClose={closeAreaModal}
+            />
+          );
+        })()}
       </div>
     </div>
   );
