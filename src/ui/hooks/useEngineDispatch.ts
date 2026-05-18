@@ -333,9 +333,23 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       if (entry) entry.ownerChosenOrder = action.order;
       return;
     }
-    case 'endTurn':
+    case 'endTurn': {
+      // Round 2 修正: 旧実装は endTurn のみで、次プレイヤーの startTurn を呼ばなかった。
+      // 結果 (a) opp.turn 開始時に auto-phase 走らず、(b) opp.endTurn 後 self.turn でも
+      // 同様 — 後攻 Human の auto-phase 欠落 + phase が 'end' のまま固定 → ターン終了
+      // button 永続 disabled の root cause だった。次プレイヤーまで進めて phase='main'
+      // に遷移させ、両プレイヤー対称な turn boundary を保証する。
+      // (smoke harness src/ai/match.ts L106-112 と同等の遷移パターン)
+      const nextPlayer: Player = action.player === 'self' ? 'opp' : 'self';
       flow.endTurn(draft, action.player);
+      runAllUntilEmpty(draft);
+      if (draft.gameResult) return;
+      mutate.flag.resetTurnFlags(draft, nextPlayer);
+      draft.turn.isFirstPlayerFirstTurn = false;
+      flow.startTurn(draft, nextPlayer);
+      runAllUntilEmpty(draft);
       return;
+    }
   }
 }
 

@@ -4,6 +4,7 @@
 
 import { Playmat } from '@/ui/components/Playmat';
 import { GameSetupModal } from '@/ui/components/GameSetupModal';
+import { MulliganModal } from '@/ui/components/MulliganModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
 import { ContactFlash } from '@/ui/components/ContactFlash';
@@ -46,6 +47,7 @@ export default function App() {
         resolveHandCard={resolveHandCard}
       />
       <GameSetupModal />
+      <MulliganModal />
       <OppTurnOverlay />
       <RecentActionToast />
       <ContactFlash />

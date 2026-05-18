@@ -248,12 +248,23 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         <div className="bg" />
         <div className="vignette" />
 
-        {/* TopBar (Task 7.12) */}
+        {/* TopBar (Task 7.12) — Round 2 修正: firstPlayer を engine state から動的判定し
+            「先攻/後攻」ラベル + プレイヤー視点の N ターン目 を正しく表示。
+            先攻判定は rules/01 の必要証拠数で行う (先攻=7枚 / 後攻=6枚)。 */}
         <TopBar
           turn={{
             number: gameState?.turn.number ?? 1,
             player: gameState?.turn.player ?? 'self',
           }}
+          firstPlayer={
+            // gameState null 時は default 'self' を返す (setup modal 表示時の placeholder)。
+            // ゲーム開始後は engine の requiredEvidence で判定 (先攻=7 / 後攻=6 rules/01)。
+            gameState === null
+              ? 'self'
+              : gameState.players.self.case.requiredEvidence === 7
+                ? 'self'
+                : 'opp'
+          }
           scratchTrace={gameState?.scratchTrace ?? { self: '未発見', opp: '未発見' }}
           effectStackCount={gameState?.pendingEffects.length ?? 0}
         />

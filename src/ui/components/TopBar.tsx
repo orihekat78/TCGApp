@@ -22,6 +22,16 @@ export type TopBarProps = {
     number: number;
     player: 'self' | 'opp';
   };
+  /**
+   * 先攻プレイヤー ('self' | 'opp')。engine は `state.players[p].case.requiredEvidence === 7`
+   * で先攻判定するので、呼出元はそれを評価して渡す。
+   *
+   * Round 2 修正: 旧実装は `PLAYER_LABEL: { self: '先攻', opp: '後攻' }` という静的 mapping
+   * で `self/opp` (UI 視点の 2 値) と「先攻/後攻」(engine のランダム決定) を同一視していた。
+   * `decideFirstPlayer('random')` で self が後攻になった回で実機誤表示 (例:「先攻 2ターン目」
+   * → 正しくは「後攻 1ターン目」) が出ていたため、動的判定に移行する。
+   */
+  firstPlayer: 'self' | 'opp';
   scratchTrace: {
     self: ScratchState;
     opp: ScratchState;
@@ -40,10 +50,31 @@ export type TopBarProps = {
 // 内部ヘルパ
 // ------------------------------------------------------------------
 
-const PLAYER_LABEL: Record<'self' | 'opp', string> = {
-  self: '先攻',
-  opp:  '後攻',
-};
+/**
+ * 先攻/後攻ラベルと「N ターン目」をプレイヤー視点で算出する。
+ *
+ * turn.number はゲーム全体の通し番号 (1=先攻のT1, 2=後攻のT1, 3=先攻のT2, ...)。
+ * UI 上は各プレイヤーの視点での「N ターン目」を表示したいので変換が必要。
+ *
+ * @param turnNumber ゲーム全体のターン番号 (engine.state.turn.number、1-based)
+ * @param turnPlayer 現在ターンのプレイヤー
+ * @param firstPlayer 先攻プレイヤー
+ * @returns { label: '先攻'|'後攻', playerTurnNumber: number }
+ */
+export function computeChapterTag(
+  turnNumber: number,
+  turnPlayer: 'self' | 'opp',
+  firstPlayer: 'self' | 'opp',
+): { label: '先攻' | '後攻'; playerTurnNumber: number } {
+  const isFirstPlayer = turnPlayer === firstPlayer;
+  const label: '先攻' | '後攻' = isFirstPlayer ? '先攻' : '後攻';
+  // 先攻プレイヤーは奇数ターン (1,3,5,…) で打つ → 自分視点 = ceil(n/2)
+  // 後攻プレイヤーは偶数ターン (2,4,6,…) で打つ → 自分視点 = n/2
+  const playerTurnNumber = isFirstPlayer
+    ? Math.ceil(turnNumber / 2)
+    : Math.floor(turnNumber / 2);
+  return { label, playerTurnNumber };
+}
 
 type ScratchItemProps = {
   who: '自' | '相';
@@ -78,13 +109,19 @@ function ScratchItem({ who, state }: ScratchItemProps): JSX.Element {
 export function TopBar(props: TopBarProps): JSX.Element {
   const {
     turn,
+    firstPlayer,
     scratchTrace,
     effectStackCount,
     narratorName = 'ナレーター',
     copyright = '© 青山剛昌／小学館 © TOMY',
   } = props;
 
-  const chapterText = `${PLAYER_LABEL[turn.player]} ${turn.number}ターン目`;
+  const { label, playerTurnNumber } = computeChapterTag(
+    turn.number,
+    turn.player,
+    firstPlayer,
+  );
+  const chapterText = `${label} ${playerTurnNumber}ターン目`;
 
   return (
     <div className="topbar" role="banner">

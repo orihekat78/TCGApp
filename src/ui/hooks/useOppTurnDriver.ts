@@ -22,6 +22,7 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { playTurn } from '@/ai/policy.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
+import { mutate as engineMutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { dispatchEngineAction } from './useEngineDispatch.js';
 
@@ -69,11 +70,21 @@ export function driveOppTurn(): void {
     // 通常終了: playTurn は endTurn move を選んでも flow.endTurn を呼ばない
     // (policy.ts コメント参照)。ここで明示的に呼んで turn.player を 'self' に戻し、
     // ターン終了 listener が積んだ pendingEffects も解消する。
+    //
+    // Round 2 修正: 旧実装は endTurn(opp) のみで止まり、self の startTurn を呼ばなかった。
+    // 結果 self.turn 開始時に (a) auto-phase 未実行 (b) phase='end' のまま (c) ターン終了
+    // button 永続 disabled という連鎖バグが発生。useEngineDispatch.endTurn と対称的に
+    // resetTurnFlags + startTurn(self) を呼ぶ。
     store.dispatch((s) =>
       produce(s, (draft) => {
         if (draft.gameResult) return;
         if (draft.turn.player !== 'opp') return;
         flow.endTurn(draft, 'opp');
+        runAllUntilEmpty(draft);
+        if (draft.gameResult) return;
+        engineMutate.flag.resetTurnFlags(draft, 'self');
+        draft.turn.isFirstPlayerFirstTurn = false;
+        flow.startTurn(draft, 'self');
         runAllUntilEmpty(draft);
       }),
     );

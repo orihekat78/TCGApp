@@ -1,0 +1,268 @@
+/* Round 2 — マリガンモーダル
+ * 視覚: ConfirmModal と整合 (backdrop / centered card) + 手札横並び表示
+ */
+
+.mulligan-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 24, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* GameSetupModal の z-index=9999 より上層に表示する必要あり
+     (await promptMulligan 中は gameState===null のままで GameSetupModal が
+      まだ描画されている。Round 2 の async flow 都合) */
+  z-index: 10001;
+  backdrop-filter: blur(4px);
+}
+
+.mulligan-modal {
+  background: #182841;
+  border: 1px solid #3a5a8a;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  padding: 20px 24px;
+  max-width: min(960px, 92vw);
+  width: 100%;
+  color: #e2eaf6;
+  font-family: system-ui, sans-serif;
+}
+
+.mulligan-modal-header {
+  margin-bottom: 16px;
+}
+
+.mulligan-modal-header h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+
+.mulligan-modal-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #97aac4;
+  line-height: 1.5;
+}
+
+.mulligan-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 20px;
+  justify-content: center;
+}
+
+.mulligan-card-wrap {
+  position: relative;
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mulligan-card-toggle {
+  background: #243854;
+  border: 2px solid #406384;
+  border-radius: 6px;
+  padding: 6px 6px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 120ms ease-out, background 120ms ease-out, transform 120ms ease-out;
+  color: inherit;
+  font: inherit;
+  width: 100%;
+}
+
+.mulligan-card-toggle:hover {
+  background: #2a4366;
+  border-color: #5a89b0;
+  transform: translateY(-2px);
+}
+
+.mulligan-card-wrap.selected .mulligan-card-toggle {
+  background: #4a1d28;
+  border-color: #c84040;
+  box-shadow: 0 0 0 2px rgba(200, 64, 64, 0.4) inset;
+}
+
+.mulligan-card-art {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 716 / 1000;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #0a1220;
+}
+
+.mulligan-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.mulligan-card-id {
+  font-size: 10px;
+  color: #97aac4;
+  letter-spacing: 0.02em;
+}
+
+.mulligan-card-mark {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffaaaa;
+  text-shadow: 0 0 6px rgba(200, 64, 64, 0.5);
+}
+
+/* 拡大ボタン (各カード右上に重ねる) */
+.mulligan-card-zoom {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(20, 32, 52, 0.85);
+  border: 1px solid rgba(150, 175, 210, 0.5);
+  color: #c8d6ec;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 120ms ease-out, transform 120ms ease-out;
+}
+
+.mulligan-card-zoom:hover {
+  background: rgba(50, 80, 120, 0.95);
+  transform: scale(1.1);
+}
+
+/* 拡大表示オーバーレイ */
+.mulligan-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  backdrop-filter: blur(6px);
+  cursor: zoom-out;
+}
+
+.mulligan-zoom-content {
+  background: #1a2a44;
+  border: 1px solid #4a6a90;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: min(420px, 92vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: default;
+}
+
+.mulligan-zoom-art {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  aspect-ratio: 716 / 1000;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #0a1220;
+}
+
+.mulligan-zoom-info {
+  text-align: center;
+}
+
+.mulligan-zoom-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e2eaf6;
+}
+
+.mulligan-zoom-id {
+  font-size: 12px;
+  color: #97aac4;
+}
+
+.mulligan-zoom-close {
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #5a6f8a;
+  color: #c3cfe0;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.mulligan-zoom-close:hover {
+  background: rgba(90, 111, 138, 0.18);
+}
+
+.mulligan-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.mulligan-modal-footer button {
+  padding: 10px 18px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease-out, border-color 120ms ease-out;
+  font-family: inherit;
+}
+
+.mulligan-skip {
+  background: transparent;
+  border-color: #5a6f8a;
+  color: #c3cfe0;
+}
+
+.mulligan-skip:hover {
+  background: rgba(90, 111, 138, 0.18);
+}
+
+.mulligan-confirm {
+  background: #3aa67a;
+  color: #fff;
+  border-color: #3aa67a;
+}
+
+.mulligan-confirm:hover:not(:disabled) {
+  background: #45c08c;
+  border-color: #45c08c;
+}
+
+.mulligan-confirm:disabled {
+  background: #364a66;
+  border-color: #364a66;
+  color: #97aac4;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mulligan-card,
+  .mulligan-modal-footer button {
+    transition: none;
+  }
+  .mulligan-card:hover {
+    transform: none;
+  }
+}

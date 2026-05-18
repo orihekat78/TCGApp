@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `7d180ec7c42f`
+> Source hash: `1c02c155ba07`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **86** ファイル（[全体 index](./index.md)）
+このグループ: **88** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (5)
 
@@ -84,7 +84,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (30)
+## その他 (32)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -103,6 +103,7 @@
 | [`src/ui/hooks/useFile.ts`](../../../src/ui/hooks/useFile.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../src/ui/hooks/useHiramekiFlowDriver.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useMulligan.ts`](../../../src/ui/hooks/useMulligan.ts) | [`26-05-11-ui-game-setup-flows.md`](../../rules/26-05-11-ui-game-setup-flows.md) |
 | [`src/ui/hooks/useOppTurnDriver.ts`](../../../src/ui/hooks/useOppTurnDriver.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/usePartner.ts`](../../../src/ui/hooks/usePartner.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`18-mr.md`](../../rules/18-mr.md) |
 | [`src/ui/hooks/useRemoveCards.ts`](../../../src/ui/hooks/useRemoveCards.ts) | _(参照なし)_ |
@@ -116,5 +117,6 @@
 | [`src/ui/services/deckBuilder.ts`](../../../src/ui/services/deckBuilder.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 | [`src/ui/services/gameStarter.ts`](../../../src/ui/services/gameStarter.ts) | [`04-game-setup.md`](../../rules/04-game-setup.md) |
 | [`src/ui/services/tutorialSteps.ts`](../../../src/ui/services/tutorialSteps.ts) | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) |
+| [`src/ui/services/uidNames.ts`](../../../src/ui/services/uidNames.ts) | _(参照なし)_ |
 | [`src/ui/state/store.ts`](../../../src/ui/state/store.ts) | _(参照なし)_ |
 | [`src/ui/state/tutorialStore.ts`](../../../src/ui/state/tutorialStore.ts) | _(参照なし)_ |

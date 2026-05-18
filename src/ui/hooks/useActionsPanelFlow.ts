@@ -17,6 +17,7 @@ import { useConfirmation } from './useConfirmation.js';
 import { useTargetPicker } from './useTargetPicker.js';
 import { useSceneSwitchPickerStore } from './useSceneSwitchPickerStore.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Cost, EffectCtx } from '@/engine/types';
 
 /**
@@ -129,10 +130,12 @@ export async function runReasoningFlow(opts: { player: Player }): Promise<FlowRe
   }
 
   const confirmation = useConfirmation();
+  // Round 2: uid → 名前解決して人間可読 ("partner:self" → "江戸川コナン")。
+  const chosenName = uidToDisplayName(state, chosen);
   const accepted = await confirmation.ask({
     kind: 'standard',
     title: '推理',
-    body: `${chosen} で推理します。`,
+    body: `${chosenName} で推理します。`,
     okLabel: '推理',
     cancelLabel: 'キャンセル',
   });
@@ -247,10 +250,14 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
     : undefined;
   const costText = cost ? costToText(cost) : '無し';
 
+  // Round 2: partner cardId → 名前解決して "[江戸川コナン] の [ability] を発動します" 表示。
+  const partnerName = partner.cardId
+    ? cardIdToDisplayName(partner.cardId)
+    : 'パートナー';
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: 'パートナー能力',
-    body: `${chosenId} を発動します。\nコスト: ${costText}`,
+    body: `${partnerName} の能力 (${chosenId}) を発動します。\nコスト: ${costText}`,
     okLabel: '発動',
     cancelLabel: 'キャンセル',
   });
@@ -411,10 +418,12 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     : undefined;
   const costText = cost ? costToText(cost) : '無し';
 
+  // Round 2: sourceUid → 名前解決。declaredAbility は scene キャラの宣言能力。
+  const sourceName = uidToDisplayName(stateAfterSrc, sourceUid);
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: '宣言能力',
-    body: `${sourceUid} の ${chosenAbilId} を発動します。\nコスト: ${costText}`,
+    body: `${sourceName} の能力 (${chosenAbilId}) を発動します。\nコスト: ${costText}`,
     okLabel: '発動',
     cancelLabel: 'キャンセル',
   });
@@ -515,13 +524,15 @@ export async function runActionFlow(opts: { player: Player }): Promise<FlowResul
   const target = await picker.start({ candidates: targets, purpose: 'action:target' });
   if (target === null) return { ok: false, reason: 'cancelled' };
 
-  // 4. 確認
+  // 4. 確認 — Round 2: source/target uid を名前解決して人間可読化。
+  // 名前解決は stateAfterSrc (target 列挙時の最新 state) を使用。
   const isCase = target === ACTION_CASE_TARGET_OPP;
-  const targetLabel = isCase ? '相手の事件' : target;
+  const sourceName = uidToDisplayName(stateAfterSrc, source);
+  const targetLabel = isCase ? '相手の事件' : uidToDisplayName(stateAfterSrc, target);
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: 'アクション',
-    body: `${source} で ${targetLabel} にアクションします。`,
+    body: `${sourceName} で ${targetLabel} にアクションします。`,
     okLabel: 'アクション',
     cancelLabel: 'キャンセル',
   });
@@ -577,10 +588,12 @@ export async function runHandUseFlow(opts: {
     return { ok: false, reason: 'not-allowed' };
   }
 
+  // Round 2: cardId → 名前解決 ("D08023" → "毛利蘭")。
+  const cardName = cardIdToDisplayName(opts.cardId);
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: '手札の使用',
-    body: `${opts.cardId} を使用します。`,
+    body: `${cardName} を使用します。`,
     okLabel: '使用',
     cancelLabel: 'キャンセル',
   });
@@ -670,13 +683,20 @@ export async function runAssistFlow(opts: { player: Player }): Promise<FlowResul
   if (!canAssistForUi(state, opts.player)) {
     return { ok: false, reason: 'not-allowed' };
   }
+  // Round 2: spec ui-action-flows.md §③アシスト に従い、FILE 7+ で解決編移行する
+  // ことも明示。旧実装は移行情報を欠落していたため、初心者に手順が伝わりにくかった。
   const fileCount = state.players[opts.player].file.length;
+  const nextFileCount = fileCount + 1;
+  const willTransition = nextFileCount >= 7;
   const accepted = await useConfirmation().ask({
     kind: 'warning',
     title: 'アシスト',
     body:
-      `パートナーをスリープしてFILEへ移動します (現在 FILE ${fileCount} 枚 → ${fileCount + 1} 枚)。` +
-      'このターン中は事件解決できなくなります。',
+      `パートナーをスリープしてFILEへ移動します (現在 FILE ${fileCount} 枚 → ${nextFileCount} 枚)。` +
+      'このターン中は事件解決できなくなります。' +
+      (willTransition
+        ? '\n※ FILE 7 枚以上になるため、事件カードは「解決編」に移行します。'
+        : ''),
     okLabel: 'アシスト',
     cancelLabel: 'キャンセル',
   });

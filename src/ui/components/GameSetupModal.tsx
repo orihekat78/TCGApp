@@ -21,9 +21,10 @@ export function GameSetupModal(): JSX.Element | null {
   const gameState = useGameStateStore.getState().gameState;
   if (gameState !== null) return null;
 
-  const handleStart = (): void => {
-    // Task 8.4b: 正規 turn-1 初期化 (engine.flow.setup 経由)
-    useGameStateStore.getState().setGameState(performGameStart());
+  const handleStart = async (): Promise<void> => {
+    // Round 2: performGameStart は async (マリガン UI await)
+    const state = await performGameStart();
+    useGameStateStore.getState().setGameState(state);
   };
 
   const handleDemo = (): void => {
@@ -31,9 +32,10 @@ export function GameSetupModal(): JSX.Element | null {
     useGameStateStore.getState().setGameState(createSampleGameState());
   };
 
-  const handleTutorial = (): void => {
-    // Phase 9a-1: 正規 turn-1 開始 + チュートリアル字幕起動
-    useGameStateStore.getState().setGameState(performGameStart());
+  const handleTutorial = async (): Promise<void> => {
+    // Round 2: performGameStart は async
+    const state = await performGameStart();
+    useGameStateStore.getState().setGameState(state);
     useTutorialStore.getState().start();
   };
 
@@ -67,7 +69,7 @@ export function GameSetupModal(): JSX.Element | null {
           デモ (turn-4) を読込
         </button>
         <p className="game-setup-note">
-          ※「対戦開始」で CT-D08 vs CT-D11 の turn-1 を正規開始 (マリガン自動スキップ)。
+          ※「対戦開始」で CT-D08 vs CT-D11 の turn-1 を正規開始 (手札の引き直し UI が表示されます)。
           「デモ」は中盤の動作確認用。
         </p>
       </div>

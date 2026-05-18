@@ -140,9 +140,17 @@ describe('dispatchEngineAction (pure function)', () => {
       expect(after.log.at(-1)?.action).toBe('declaredAbility');
     });
 
-    it('endTurn: swaps turn.player, increments turn.number, sets phase=end', () => {
+    it('endTurn: swaps turn.player, increments turn.number, advances to next player main phase (Round 2)', () => {
+      // Round 2 修正前: endTurn のみ呼出 → phase='end' で stuck (= ターン終了 button 永続 disabled
+      //   の root cause)。本 test は旧仕様で phase='end' を assert していたが、
+      //   修正後は startTurn(nextPlayer) が連続実行され phase='main' に遷移する。
       const init = createEmptyGameState();
       init.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      // startTurn 内の runAutoPhase は deck から 1 枚 draw + FILE に 2 枚配置するため、
+      // 最低 3 枚の opp deck が必要 (engine.flow.runAutoPhase 仕様)。
+      init.players.opp.deck.push({ cardId: 'D11003', faceUp: false });
+      init.players.opp.deck.push({ cardId: 'D11003', faceUp: false });
+      init.players.opp.deck.push({ cardId: 'D11003', faceUp: false });
       useGameStateStore.setState({ gameState: init });
 
       const result = dispatchEngineAction({ type: 'endTurn', player: 'self' });
@@ -150,7 +158,8 @@ describe('dispatchEngineAction (pure function)', () => {
       const after = useGameStateStore.getState().gameState!;
       expect(after.turn.player).toBe('opp');
       expect(after.turn.number).toBe(4);
-      expect(after.turn.phase).toBe('end');
+      // Round 2: phase は next player の main に遷移済
+      expect(after.turn.phase).toBe('main');
     });
   });
 

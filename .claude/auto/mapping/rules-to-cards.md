@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `ee8ecd51c459`
+> Source hash: `91317d930045`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
-**28/32** ルールが少なくとも1ファイルから参照されている。
+**29/33** ルールが少なくとも1ファイルから参照されている。
 
 ## 参照あり
 
@@ -39,6 +39,7 @@
 | [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) | 13 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/partnerColorKeyword.ts`, `cards/ct-d08/D08009.ts` ほか 10 件 |
 | [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) | 9 | `cards/_shared/caseResolvedHandRemove.ts`, `cards/ct-d08/D08005.ts`, `cards/ct-d08/D08006.ts` ほか 6 件 |
 | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) | 4 | `ui/hooks/useActionsPanelFlow.ts`, `ui/hooks/useConfirmation.ts`, `ui/hooks/useOppTurnDriver.ts`, `ui/hooks/useTargetPicker.ts` |
+| [`26-05-11-ui-game-setup-flows.md`](../../rules/26-05-11-ui-game-setup-flows.md) | 1 | `ui/hooks/useMulligan.ts` |
 | [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) | 8 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d08/D08026.ts`, `cards/ct-d11/D11019.ts` ほか 5 件 |
 
 ## 参照なし (要確認)
