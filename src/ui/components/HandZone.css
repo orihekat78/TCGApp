@@ -237,12 +237,12 @@
   box-shadow: 0 0 12px color-mix(in oklch, var(--hand-neon) 40%, transparent);
 }
 
-/* Round 2: 旧 overflow-x:auto は手札数 ≤ 6 で常に scroll-bar が表示されるユーザ違和感の元
-   だった。手札がはみ出る場合は cell-shrink で対応 (flex-shrink + min-width 調整)。
-   scrollbar 完全非表示でも data-count 別の column-gap 自動調整は機能維持。 */
+/* Round 2: 旧 overflow-x:auto は手札数 ≤ 6 で常に scroll-bar が表示されるユーザ違和感の元。
+   Round 3: overflow-x:hidden + overflow-y:visible は CSS 仕様上ブラウザが overflow-y を
+   auto に強制変換するため、Y 軸にスクロールバーが残ってしまっていた。両方 hidden に統一。
+   featured pop / cost / type-badge のはみ出しは margin/translate で内側に収める。 */
 .hand-zone[data-count] {
-  overflow-x: hidden;
-  overflow-y: visible; /* featured pop / cost / type-badge のはみ出しを許可 */
+  overflow: hidden;
 }
 
 /* empty state */
