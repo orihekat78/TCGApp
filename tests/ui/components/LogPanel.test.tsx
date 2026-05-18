@@ -1,7 +1,10 @@
 // Phase 7 Task 7.13: LogPanel tests
+// Round 3b 追加: role/aria + backdrop click filter (HandZone パターン統一)
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { createRoot, type Root } from 'react-dom/client';
+import { act } from 'react';
 import type { LogEntry } from '@/engine/types/game-state.js';
 import { LogPanel } from '@/ui/components/LogPanel';
 
@@ -109,5 +112,97 @@ describe('LogPanel', () => {
       <LogPanel entries={entries} open={true} />,
     ));
     expect(html).toMatch(/class="log-action">customAction/);
+  });
+
+  // Round 3b: HandZone パターン統一に伴う accessibility 属性
+  it('exposes role="dialog" and aria-label="ゲームログ" when open (Round 3b)', () => {
+    const html = strip(renderToString(
+      <LogPanel entries={[]} open={true} />,
+    ));
+    expect(html).toMatch(/role="dialog"/);
+    expect(html).toMatch(/aria-label="ゲームログ"/);
+  });
+});
+
+// Round 3b: HandZone と同じ backdrop click 閉じパターンの interaction tests
+describe('LogPanel — interaction (Round 3b)', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => { root.unmount(); });
+    container.remove();
+  });
+
+  it('close × button click invokes onClose', () => {
+    const onClose = vi.fn();
+    act(() => {
+      root.render(<LogPanel entries={[]} open={true} onClose={onClose} />);
+    });
+    const closeBtn = container.querySelector('.log-panel-close') as HTMLButtonElement | null;
+    expect(closeBtn).not.toBeNull();
+    act(() => {
+      closeBtn!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('backdrop layer (.log-panel-backdrop) click invokes onClose', () => {
+    const onClose = vi.fn();
+    act(() => {
+      root.render(<LogPanel entries={[]} open={true} onClose={onClose} />);
+    });
+    // Round 3b: 透明 backdrop layer が panel の外側 click を捕捉する。
+    const backdrop = container.querySelector('.log-panel-backdrop') as HTMLDivElement | null;
+    expect(backdrop).not.toBeNull();
+    act(() => {
+      backdrop!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('panel root click (target === currentTarget) invokes onClose (fallback)', () => {
+    const onClose = vi.fn();
+    act(() => {
+      root.render(<LogPanel entries={[]} open={true} onClose={onClose} />);
+    });
+    const panel = container.querySelector('.log-panel') as HTMLDivElement | null;
+    expect(panel).not.toBeNull();
+    // panel 内部余白 click 想定: target === currentTarget で filter pass
+    act(() => {
+      panel!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT render backdrop layer when onClose is undefined', () => {
+    act(() => {
+      root.render(<LogPanel entries={[]} open={true} />);
+    });
+    const backdrop = container.querySelector('.log-panel-backdrop');
+    expect(backdrop).toBeNull();
+  });
+
+  it('entry click does NOT invoke onClose (target !== currentTarget filter)', () => {
+    const onClose = vi.fn();
+    const entries: LogEntry[] = [
+      { ts: 1, player: 'self', turn: 1, action: 'reasoning' },
+    ];
+    act(() => {
+      root.render(<LogPanel entries={entries} open={true} onClose={onClose} />);
+    });
+    const entry = container.querySelector('.log-entry') as HTMLDivElement | null;
+    expect(entry).not.toBeNull();
+    // dispatch on a child entry: bubbles to panel but target !== currentTarget on handler
+    act(() => {
+      entry!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

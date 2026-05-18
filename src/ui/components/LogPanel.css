@@ -1,25 +1,48 @@
 /* LogPanel.css
  * 下端折りたたみログパネル。
  * 視覚 SoT: design-mockups/01-board-mockup.html 145-163 行 (.log-btn のみ)
- * 開時パネルは ui-overall.md「閉時 32px / 展開時 200px」を実装。
+ * Round 3b: HandZone パターンに統一 (fixed overlay / backdrop click 閉 / scrollbar thin / fade-in)。
+ *           閉時は LogPanel.tsx 側で `return null` (LOG ボタンは ActionsPanel 持ち)。
  */
 
+/* Round 3b: 透明 backdrop layer (CardListModal と同様の click-outside pattern、ただし dim なし)。
+   panel の外側 click を捕捉して onClose を呼ぶ。z=199 で panel (200) のすぐ下。 */
+.log-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 199;
+  cursor: pointer;
+}
+
 .log-panel {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 32px;
+  /* Round 3b: 画面追従。min-height で最低限の閲覧領域、max-height で画面占有を抑制。 */
+  min-height: 200px;
+  max-height: 50vh;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.6));
   border-top: 1px solid color-mix(in oklch, var(--neon-blue) 25%, transparent);
-  transition: height 0.2s ease-out;
-  z-index: 30;
+  /* z-index 200: ActionsPanel(25)/TopBar(20)/HandZone overlay(50) より上、
+     ConfirmModal/picker(1000)/CardListModal(1500)/VictoryOverlay(9500) より下。 */
+  z-index: 200;
   display: flex;
   flex-direction: column;
 }
 
 .log-panel.open {
-  height: 200px;
+  animation: log-panel-enter 260ms ease-out both;
+}
+
+@keyframes log-panel-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .log-panel.open { animation: none; }
 }
 
 /* Round 2: panel header + close button (旧実装は close ボタンを持たず、ActionsPanel の
@@ -115,7 +138,17 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Round 3b: scrollbar thin (機能保持しつつ視覚的に目立たなく)。
+     Firefox: scrollbar-width / Webkit: ::-webkit-scrollbar 系で両対応。 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 196, 224, 0.4) transparent;
 }
+.log-panel .log-list::-webkit-scrollbar { width: 6px; }
+.log-panel .log-list::-webkit-scrollbar-thumb {
+  background: rgba(124, 196, 224, 0.4);
+  border-radius: 3px;
+}
+.log-panel .log-list::-webkit-scrollbar-track { background: transparent; }
 
 .log-panel .log-empty {
   display: grid;

@@ -7,7 +7,7 @@
 // 注: mock は下端パネル未実装 → ui-overall.md の「閉時 32px / 展開時 200px」
 //     仕様を実装。閉時の見た目のみ mock の .log-btn を流用。
 
-import type { JSX } from 'react';
+import type { JSX, MouseEvent } from 'react';
 import type { LogEntry } from '@/engine/types/game-state.js';
 import './LogPanel.css';
 
@@ -17,8 +17,7 @@ export type LogPanelProps = {
   /** 表示する最新エントリ件数 (デフォルト 30) */
   maxEntries?: number;
   /** Round 2: ログを閉じる callback (panel 内 close button から呼ぶ)。
-   *  旧実装は LOG button toggle のみで、log entries が close button を覆って閉じれない
-   *  バグがあった (ユーザ指摘)。panel 内に独立 close ボタンを追加して解消。 */
+   *  Round 3b: backdrop (root container) click でも呼ばれるようになった (HandZone と同じパターン)。 */
   onClose?: () => void;
 };
 
@@ -68,12 +67,32 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose }: LogPanelPr
   // engine の log は append 順 (古→新)。逆順にして上が新しい表示にする。
   const sorted = entries.slice(-maxEntries).reverse();
 
+  // Round 3b: backdrop click 閉。
+  //   - `.log-panel-backdrop` 透明レイヤ (z=199) で panel の外側 click を捕捉。
+  //   - panel 自体 (z=200) には `e.target === e.currentTarget` フィルタも残す
+  //     (header/list 内側の余白 click にも対応するため)。HandZone と同じ pattern。
+  const handleBackdropClick = (e: MouseEvent<HTMLDivElement>): void => {
+    if (e.target === e.currentTarget && onClose) onClose();
+  };
+
   return (
-    <div className="log-panel open" aria-expanded={true}>
-      {/* Round 2: panel 内 header + 閉じるボタンを追加。
-          旧実装は ActionsPanel 内の LOG ボタンのみで toggle していたが、log entries
-          が overlay として close button を覆って click 不能になっていた。
-          panel 自身に独立 close button を持たせて確実に閉じれる構造に。 */}
+    <>
+      {onClose && (
+        <div
+          className="log-panel-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        className="log-panel open"
+        role="dialog"
+        aria-label="ゲームログ"
+        aria-expanded={true}
+        onClick={handleBackdropClick}
+      >
+      {/* Round 2: panel 内 header + 閉じるボタン (close button)。
+          Round 3b: HandZone パターン統一に伴い backdrop click でも閉じれるように。 */}
       <div className="log-panel-header">
         <span className="log-panel-title">ログ</span>
         {onClose && (
@@ -106,6 +125,7 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose }: LogPanelPr
           ))
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
