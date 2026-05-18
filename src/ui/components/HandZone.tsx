@@ -109,20 +109,34 @@ function HandCard({
 function HandMiniCard({
   card,
   onClick,
+  usable = true,
+  disabledReason,
 }: {
   card: HandCardMeta;
   onClick?: () => void;
+  /** false なら disabled スタイル + click 可だが expand のみ実行 */
+  usable?: boolean;
+  /** disabled 理由 (FILE 不足 / 色制限 / 1 ターン 1 回使用済) — title 属性に */
+  disabledReason?: string;
 }): JSX.Element {
   const isEvent = card.type === 'イベント';
+  // Round 2: collapsed mini-card にも canUse 判定を反映 (手札 UX 改善)。
+  // disabled 時も clickable のまま (expand は許可) だが visual に grey out + title で
+  // 理由表示。aria-label にも disabled 状況を含める。
+  const ariaLabel = usable
+    ? `${card.name} (${card.type}, レベル${card.lv}, コスト${card.cost})`
+    : `${card.name} (${card.type}, レベル${card.lv}, コスト${card.cost}) — 使用不可: ${disabledReason ?? '条件未満'}`;
   return (
     <button
       type="button"
-      className={`hand-mini-card color-${card.color} ${isEvent ? 'is-event' : 'is-character'}`}
+      className={`hand-mini-card color-${card.color} ${isEvent ? 'is-event' : 'is-character'}${usable ? '' : ' is-unusable'}`}
       data-card-id={card.cardId}
       data-color={card.color}
       data-type={card.type}
+      data-usable={usable ? 'true' : 'false'}
       onClick={onClick}
-      aria-label={`${card.name} (${card.type}, レベル${card.lv}, コスト${card.cost})`}
+      aria-label={ariaLabel}
+      title={!usable && disabledReason ? disabledReason : undefined}
     >
       <span className="hand-mini-cost" aria-hidden="true">{card.cost}</span>
       <span className="hand-mini-type-badge" aria-hidden="true">
@@ -132,6 +146,11 @@ function HandMiniCard({
         <CardArt cardId={card.cardId} alt={card.name} />
       </span>
       <span className="hand-mini-name">{card.name}</span>
+      {!usable && (
+        <span className="hand-mini-lock" aria-hidden="true" title={disabledReason ?? '使用不可'}>
+          🔒
+        </span>
+      )}
     </button>
   );
 }
@@ -169,9 +188,21 @@ export function HandZone(props: HandZoneProps): JSX.Element {
         data-count={cards.length}
       >
         <div className="hand-mini-strip" role="list">
-          {cards.map((c, index) => (
-            <HandMiniCard key={`${c.cardId}-${index}`} card={c} onClick={onExpand} />
-          ))}
+          {cards.map((c, index) => {
+            // Round 2: collapsed view にも canUse 判定を反映。
+            // usable=false でも click は許可 (expand 動作のみ — expanded で詳細確認)。
+            const usable = canUse ? canUse(c) : true;
+            const reason = !usable && disabledReason ? disabledReason(c) : undefined;
+            return (
+              <HandMiniCard
+                key={`${c.cardId}-${index}`}
+                card={c}
+                onClick={onExpand}
+                usable={usable}
+                disabledReason={reason}
+              />
+            );
+          })}
         </div>
       </div>
     );

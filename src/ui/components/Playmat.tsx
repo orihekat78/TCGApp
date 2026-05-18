@@ -41,6 +41,7 @@ import {
   ACTION_CASE_TARGET_OPP,
 } from '../hooks/useActionsPanelFlow.js';
 import * as engineFlow from '@/engine/flow/index.js';
+import { getHandUseDisabledReason } from '@/ui/services/handUseReason.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
 import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
@@ -200,7 +201,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
 
   // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
   const pickerPhase = useTargetPickerStore((s) => s.phase);
-  const { pick: pickTarget, confirm: confirmTarget } = useTargetPicker();
+  const { pick: pickTarget, confirm: confirmTarget, cancel: cancelTarget } = useTargetPicker();
   // クリック 1 回で pick + confirm を同時に行う (最終確認は useConfirmation 側のモーダル)
   const pickAndConfirm = (uid: string): void => {
     pickTarget(uid);
@@ -312,7 +313,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           />
         </div>
 
-        {/* HandZone (Task 7.11) — Phase 8.6: onCardClick → runHandUseFlow */}
+        {/* HandZone (Task 7.11) — Phase 8.6: onCardClick → runHandUseFlow
+            Round 2: collapsed/expanded 両方で disabled 状態を可視化 + tooltip で理由表示。
+            ユーザ指摘「コスト 8 のカードが出てる」(FILE 不足で使えないのに見た目が同じ) を解消。 */}
         <HandZone
           cards={handCards}
           expanded={handExpanded}
@@ -323,6 +326,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           }}
           canUse={(c) =>
             gameState !== null && engineFlow.canHandUseCard(gameState, 'self', c.cardId)
+          }
+          disabledReason={(c) =>
+            gameState !== null
+              ? getHandUseDisabledReason(gameState, 'self', c.cardId) ?? '使用不可'
+              : '未開始'
           }
         />
 
@@ -353,6 +361,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           }
           onEndTurn={() => { void runEndTurnFlow({ player: 'self' }); }}
           onActionItemClick={(id: ActionItemId) => {
+            // Round 2: picker stack 整理 — 別 ACTIONS item を選んだら現在の picker は
+            // キャンセル (ガイドラベル + outline glow 消す)。flow 内で再度 start() するなら
+            // そこで再開始される (useTargetPicker.start は "既に picking 中" の自動 cancel
+            // ルートを持つので二重 cancel しても安全)。
+            cancelTarget();
             if (id === 'reasoning') {
               void runReasoningFlow({ player: 'self' });
               return;

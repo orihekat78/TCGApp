@@ -23,6 +23,8 @@
   --accent-gold:    #ffd700;
   --accent-blue:    #3a6ea5;
   --neon-blue:      #4ec3ff;
+  /* Round 2: picker candidate ハイライト用 — 暗い盤面背景で高コントラスト */
+  --neon-yellow:    #ffd54a;
   --keep-out:       repeating-linear-gradient(
                       90deg, #ffd700 0 22px, #0a0a0a 22px 44px);
 

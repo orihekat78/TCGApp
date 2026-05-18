@@ -261,23 +261,60 @@
       var(--state-stun, rgba(220, 50, 50, 0.65)) 50%, transparent);
 }
 
-/* Phase 8.5: 推理/アクション 対象選択時の候補ハイライト */
+/* Phase 8.5: 推理/アクション 対象選択時の候補ハイライト
+   Round 2 強化: PartnerArea と統一して黄色グロー + ガイドラベル付与 */
 .scene-area .card.candidate {
-  border-color: var(--scene-neon);
+  /* PartnerArea と同じ理由: outline で base の border-color 上書きを回避 */
+  outline: 3px solid var(--neon-yellow, #ffd54a);
+  outline-offset: -1px;
   box-shadow:
-    0 0 12px color-mix(in oklch, var(--scene-neon) 60%, transparent),
-    0 0 0 2px color-mix(in oklch, var(--scene-neon) 55%, transparent);
-  animation: scene-candidate-pulse 1.6s ease-in-out infinite;
+    0 0 18px color-mix(in oklch, var(--neon-yellow, #ffd54a) 70%, transparent),
+    0 0 0 3px color-mix(in oklch, var(--neon-yellow, #ffd54a) 70%, transparent),
+    inset 0 0 0 2px color-mix(in oklch, var(--neon-yellow, #ffd54a) 40%, transparent);
+  animation: scene-candidate-pulse 1.2s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+.scene-area .card.candidate::after {
+  content: '👆 クリックして選択';
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--neon-yellow, #ffd54a);
+  color: #1a1300;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 .scene-area .card.candidate:hover {
-  filter: brightness(1.08);
-  transform: translateY(-2px);
+  filter: brightness(1.15);
+  transform: translateY(-3px);
 }
 @keyframes scene-candidate-pulse {
-  0%, 100% { box-shadow: 0 0 12px color-mix(in oklch, var(--scene-neon) 55%, transparent),
-                          0 0 0 2px color-mix(in oklch, var(--scene-neon) 50%, transparent); }
-  50%      { box-shadow: 0 0 20px color-mix(in oklch, var(--scene-neon) 80%, transparent),
-                          0 0 0 3px color-mix(in oklch, var(--scene-neon) 70%, transparent); }
+  0%, 100% {
+    box-shadow:
+      0 0 18px color-mix(in oklch, var(--neon-yellow, #ffd54a) 60%, transparent),
+      0 0 0 3px color-mix(in oklch, var(--neon-yellow, #ffd54a) 60%, transparent),
+      inset 0 0 0 2px color-mix(in oklch, var(--neon-yellow, #ffd54a) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 28px color-mix(in oklch, var(--neon-yellow, #ffd54a) 90%, transparent),
+      0 0 0 4px color-mix(in oklch, var(--neon-yellow, #ffd54a) 85%, transparent),
+      inset 0 0 0 2px color-mix(in oklch, var(--neon-yellow, #ffd54a) 50%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-area .card.candidate {
+    animation: none;
+  }
 }
 
 /* ---- badges ---- */

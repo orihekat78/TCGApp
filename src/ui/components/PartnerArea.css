@@ -106,23 +106,64 @@
   font-size: 10px;
 }
 
-/* Phase 8.5: 推理/宣言能力 対象選択中のパートナーハイライト */
+/* Phase 8.5: 推理/宣言能力 対象選択中のパートナーハイライト
+   Round 2 強化: 視覚的に subtle すぎて気づかないとの指摘を受け、
+   - 黄色 + より広いグロー (青の盤面背景でコントラスト最大)
+   - pulse 振幅 / glow 半径を拡大
+   - 「クリックして選択」ガイドラベルを ::after で追加 */
 .partner-area .card.candidate {
-  border-color: var(--neon-blue, #4ec3ff);
+  /* base `.partner-area .card { border: 1.5px solid ... }` が後段で border-color を上書き
+     してしまうため、outline (border と独立) を使ってグロー輪郭を描く。 */
+  outline: 3px solid var(--neon-yellow, #ffd54a);
+  outline-offset: -1px;
   box-shadow:
-    0 0 12px color-mix(in oklch, var(--neon-blue, #4ec3ff) 60%, transparent),
-    0 0 0 2px color-mix(in oklch, var(--neon-blue, #4ec3ff) 55%, transparent);
-  animation: partner-candidate-pulse 1.6s ease-in-out infinite;
+    0 0 18px color-mix(in oklch, var(--neon-yellow, #ffd54a) 70%, transparent),
+    0 0 0 3px color-mix(in oklch, var(--neon-yellow, #ffd54a) 70%, transparent),
+    inset 0 0 0 2px color-mix(in oklch, var(--neon-yellow, #ffd54a) 40%, transparent);
+  animation: partner-candidate-pulse 1.2s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+.partner-area .card.candidate::after {
+  content: '👆 クリックして選択';
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--neon-yellow, #ffd54a);
+  color: #1a1300;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 .partner-area .card.candidate:hover {
-  filter: brightness(1.08);
-  transform: translateY(-2px);
+  filter: brightness(1.15);
+  transform: translateY(-3px);
 }
 @keyframes partner-candidate-pulse {
-  0%, 100% { box-shadow: 0 0 12px color-mix(in oklch, var(--neon-blue, #4ec3ff) 55%, transparent),
-                          0 0 0 2px color-mix(in oklch, var(--neon-blue, #4ec3ff) 50%, transparent); }
-  50%      { box-shadow: 0 0 20px color-mix(in oklch, var(--neon-blue, #4ec3ff) 80%, transparent),
-                          0 0 0 3px color-mix(in oklch, var(--neon-blue, #4ec3ff) 70%, transparent); }
+  0%, 100% {
+    box-shadow:
+      0 0 18px color-mix(in oklch, var(--neon-yellow, #ffd54a) 60%, transparent),
+      0 0 0 3px color-mix(in oklch, var(--neon-yellow, #ffd54a) 60%, transparent),
+      inset 0 0 0 2px color-mix(in oklch, var(--neon-yellow, #ffd54a) 35%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 28px color-mix(in oklch, var(--neon-yellow, #ffd54a) 90%, transparent),
+      0 0 0 4px color-mix(in oklch, var(--neon-yellow, #ffd54a) 85%, transparent),
+      inset 0 0 0 2px color-mix(in oklch, var(--neon-yellow, #ffd54a) 50%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-area .card.candidate {
+    animation: none;
+  }
 }
 
 /* ---- Card (PartnerArea 内、72×100px) ---- */

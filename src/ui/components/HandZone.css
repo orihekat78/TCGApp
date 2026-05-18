@@ -86,6 +86,28 @@
   box-shadow: 0 4px 10px color-mix(in oklch, var(--hand-neon) 35%, rgba(0, 0, 0, 0.6));
 }
 
+/* Round 2: 使用不可カード (FILE 不足 / 色制限 / 1ターン1回使用済 等) — 半透明 + ロック表示。
+   ユーザはどのカードが「今 使えない」か即視認できるように。 */
+.hand-zone--collapsed .hand-mini-card.is-unusable {
+  opacity: 0.45;
+  filter: grayscale(0.4);
+  cursor: help;
+}
+.hand-zone--collapsed .hand-mini-card.is-unusable:hover {
+  opacity: 0.6;
+  filter: grayscale(0.2);
+}
+.hand-zone--collapsed .hand-mini-card .hand-mini-lock {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  padding: 1px 3px;
+  pointer-events: none;
+}
+
 /* color top-bar (4px high) */
 .hand-zone--collapsed .hand-mini-card::before {
   content: '';

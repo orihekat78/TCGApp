@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `91317d930045`
+> Source hash: `979366007424`
 
 公式ルール [`20-color-and-switch.md`](../../../rules/20-color-and-switch.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 
 - [`INDEX`](../by-spec/cards-data--INDEX.md)
 
-## 📄 参照ソース (10)
+## 📄 参照ソース (11)
 
 - [`src/cards/ct-d08/D08024.ts`](../../../../src/cards/ct-d08/D08024.ts)
 - [`src/cards/ct-d08/D08025.ts`](../../../../src/cards/ct-d08/D08025.ts)
@@ -33,3 +33,4 @@
 - [`src/engine/invariant/sceneAtMost5.ts`](../../../../src/engine/invariant/sceneAtMost5.ts)
 - [`src/engine/mutate/scene.ts`](../../../../src/engine/mutate/scene.ts)
 - [`src/ui/hooks/useSceneSwitchPickerStore.ts`](../../../../src/ui/hooks/useSceneSwitchPickerStore.ts)
+- [`src/ui/services/handUseReason.ts`](../../../../src/ui/services/handUseReason.ts)
