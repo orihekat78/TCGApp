@@ -45,14 +45,6 @@ export type CaseAreaProps = {
   onClick?: () => void;
 };
 
-const COLOR_LABEL: Record<CaseColor, string> = {
-  blue:   '青',
-  yellow: '黄',
-  red:    '赤',
-  green:  '緑',
-  purple: '紫',
-};
-
 const TURN_LABEL: Record<'first' | 'second', string> = {
   first:  '先攻',
   second: '後攻',
@@ -90,7 +82,7 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
     );
   }
 
-  const { title, color, level, status, requiredEvidence } = caseInfo;
+  const { title, color, status, requiredEvidence } = caseInfo;
   const isResolved = status === '解決編';
   const orientation = caseInfo.orientation ?? detectedOrientation ?? 'portrait';
 
@@ -121,10 +113,8 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
         >
           <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
           <div className="case-title">{titleNodes}</div>
-          <div className="case-meta">
-            <span>EVT・{COLOR_LABEL[color]}</span>
-            <span className="case-lv">Lv {level}</span>
-          </div>
+          {/* Round 2: EVT-色 + Lv 表記は冗長 (タイトルとカード画像で十分判別可能)
+              のためユーザ指摘を受けて削除。事件編/解決編は <case-stamp> で別途表示。 */}
           <div className={`case-stamp${isResolved ? ' resolved' : ''}`}>
             {status}
           </div>

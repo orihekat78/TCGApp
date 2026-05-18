@@ -40,8 +40,10 @@ describe('CaseArea', () => {
     expect(html).toMatch(/data-card-id="CASE-001"/);
     expect(html).toMatch(/data-orientation="portrait"/);
     expect(html).toMatch(/class="case-title">テスト事件</);
-    expect(html).toMatch(/EVT・青/);
-    expect(html).toMatch(/class="case-lv">Lv 7</);
+    // Round 2: EVT・色 と Lv 表記は冗長としてユーザ指摘を受けて削除済。
+    // case-stamp と必要証拠 の表示は維持。
+    expect(html).not.toMatch(/EVT・/);
+    expect(html).not.toMatch(/case-lv/);
     expect(html).toMatch(/class="case-stamp">事件編</);
     expect(html).toMatch(/必要証拠 <strong>7<\/strong>（先攻）/);
   });
@@ -124,7 +126,9 @@ describe('CaseArea', () => {
         />,
       ));
       expect(html).toMatch(new RegExp(`color-${color}`));
-      expect(html).toMatch(new RegExp(`EVT・${label}`));
+      // Round 2: EVT・色 表記は削除されたため、color class のみで確認
+      // (label 引数は将来の use case のため残す)
+      void label;
     }
   });
 });

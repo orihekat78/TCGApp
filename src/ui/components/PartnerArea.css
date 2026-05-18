@@ -89,21 +89,34 @@
   z-index: 2;
 }
 
+/* Round 2: partner-info を 右下絶対配置に変更 (ユーザ指摘: 状態テキストがアシスト中
+   カード表示と重なる)。カード自体は中央配置のままで、サブ情報はエリア右下にコンパクト
+   に置いて重なりを回避。 */
 .partner-area .partner-info {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
   font-size: 9px;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  align-items: flex-end;
+  text-align: right;
+  background: rgba(8, 14, 26, 0.75);
+  padding: 3px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 3;
 }
 .partner-area .partner-info .name {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-primary);
   font-weight: 700;
 }
 .partner-area .partner-info .meta {
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 9px;
 }
 
 /* Phase 8.5: 推理/宣言能力 対象選択中のパートナーハイライト

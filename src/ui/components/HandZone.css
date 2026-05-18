@@ -247,17 +247,12 @@
   box-shadow: 0 0 12px color-mix(in oklch, var(--hand-neon) 40%, transparent);
 }
 
-/* 横方向にあふれそうなときは横スクロール (overflow ケース対応) */
+/* Round 2: 旧 overflow-x:auto は手札数 ≤ 6 で常に scroll-bar が表示されるユーザ違和感の元
+   だった。手札がはみ出る場合は cell-shrink で対応 (flex-shrink + min-width 調整)。
+   scrollbar 完全非表示でも data-count 別の column-gap 自動調整は機能維持。 */
 .hand-zone[data-count] {
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: visible; /* featured pop / cost / type-badge のはみ出しを許可 */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(78, 195, 255, 0.3) transparent;
-}
-.hand-zone::-webkit-scrollbar { height: 6px; }
-.hand-zone::-webkit-scrollbar-thumb {
-  background: rgba(78, 195, 255, 0.3);
-  border-radius: 3px;
 }
 
 /* empty state */
@@ -294,31 +289,47 @@
   transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
 }
 
-/* color borders */
+/* color borders — Round 2: 控えめに調整 (色味は 70% → 35%, 縁取り 1px → 0.5px) */
 .hand-zone .hand-card.color-blue {
-  border-color: color-mix(in oklch, var(--color-blue, #2b6cb5) 70%, white 12%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px color-mix(in oklch, var(--color-blue, #2b6cb5) 50%, transparent);
+  border-color: color-mix(in oklch, var(--color-blue, #2b6cb5) 35%, #2a4a6e);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 .hand-zone .hand-card.color-yellow {
-  border-color: color-mix(in oklch, var(--color-yellow, #d4a425) 70%, white 12%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px color-mix(in oklch, var(--color-yellow, #d4a425) 50%, transparent);
+  border-color: color-mix(in oklch, var(--color-yellow, #d4a425) 35%, #2a4a6e);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 .hand-zone .hand-card.color-red {
-  border-color: color-mix(in oklch, var(--color-red, #c84040) 70%, white 12%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px color-mix(in oklch, var(--color-red, #c84040) 50%, transparent);
+  border-color: color-mix(in oklch, var(--color-red, #c84040) 35%, #2a4a6e);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 .hand-zone .hand-card.color-green {
-  border-color: color-mix(in oklch, var(--color-green, #3aa67a) 70%, white 12%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px color-mix(in oklch, var(--color-green, #3aa67a) 50%, transparent);
+  border-color: color-mix(in oklch, var(--color-green, #3aa67a) 35%, #2a4a6e);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 .hand-zone .hand-card.color-purple {
+  border-color: color-mix(in oklch, var(--color-purple, #8a4cc0) 35%, #2a4a6e);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+/* hover/focus 時のみ色を強調して identification しやすくする */
+.hand-zone .hand-card.color-blue:hover,
+.hand-zone .hand-card.color-blue:focus-visible {
+  border-color: color-mix(in oklch, var(--color-blue, #2b6cb5) 70%, white 12%);
+}
+.hand-zone .hand-card.color-yellow:hover,
+.hand-zone .hand-card.color-yellow:focus-visible {
+  border-color: color-mix(in oklch, var(--color-yellow, #d4a425) 70%, white 12%);
+}
+.hand-zone .hand-card.color-red:hover,
+.hand-zone .hand-card.color-red:focus-visible {
+  border-color: color-mix(in oklch, var(--color-red, #c84040) 70%, white 12%);
+}
+.hand-zone .hand-card.color-green:hover,
+.hand-zone .hand-card.color-green:focus-visible {
+  border-color: color-mix(in oklch, var(--color-green, #3aa67a) 70%, white 12%);
+}
+.hand-zone .hand-card.color-purple:hover,
+.hand-zone .hand-card.color-purple:focus-visible {
   border-color: color-mix(in oklch, var(--color-purple, #8a4cc0) 70%, white 12%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px color-mix(in oklch, var(--color-purple, #8a4cc0) 50%, transparent);
 }
 
 /* featured = hover/focus 相当の強調 */

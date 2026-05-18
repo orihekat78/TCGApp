@@ -74,14 +74,16 @@
   width: 116px;
   height: 84px;
 }
-/* Phase 9-C: case 背景にカード画像を半透明で重ねる */
+/* Phase 9-C: case 背景にカード画像を重ねる
+   Round 2: 旧 opacity 0.45 は「暗くなっている」とユーザ指摘あり。
+   カード画像は事件のメイン視覚要素として 0.85 で表示 (タイトル文字も読めるバランス)。 */
 .case-area .case-card .case-bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.45;
+  opacity: 0.85;
   z-index: 0;
   pointer-events: none;
 }
