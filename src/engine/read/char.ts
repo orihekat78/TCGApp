@@ -4,6 +4,7 @@
 import type { GameState, CardId, SetCardEntry } from '@/engine/types';
 import { scene } from './scene.js';
 import { def } from './def.js';
+import { evalCond } from '../cond/eval.js';
 
 // AP: apOverride が null でなければそれを使用、あれば CardDef base を取得
 // turnEffects の AP 修正は charModifyAP verb で apOverride に吸収される設計のため
@@ -63,15 +64,39 @@ function keywords(s: GameState, uid: string): string[] {
   if (!char) return [];
   const granted = char.keywordOverrides.granted;
   if (char.keywordOverrides.disabledOriginal) {
-    // 元の CardDef キーワードは除外、granted のみ
+    // 元の CardDef キーワードと continuous ability の grantKeywords は除外 (rules/19)
+    // granted は外部から与えられたキーワードなので残る (rules/19 §他のカード能力/効果による付与は無効にならない)
     return [...granted];
   }
-  // CardDef にキーワードがあれば取得 (Phase 5 で abilities から展開)
-  // Phase 5 実装前は空配列をベースに granted を追加
   const d = def.card(char.cardId);
   const base: string[] = (d as { keywords?: string[] } | undefined)?.keywords ?? [];
-  // granted を追加 (重複除去)
-  return [...new Set([...base, ...granted])];
+
+  // BUG-030 修正: scene 上の continuous + grantKeywords ability を resolve
+  // rules/24 §常時有効型: 条件成立中は自動的に効果あり / 条件外で即失効
+  // rules/13 §キーワード能力 + rules/17 §条件を満たしていない場合 → 能力を持っていない扱い
+  const fromContinuous: string[] = [];
+  if (d) {
+    // owner side を解決 (scene.byUid は side を返さないので inline)
+    const owner: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === uid)
+      ? 'self'
+      : s.players.opp.scene.some(c => c.uid === uid)
+        ? 'opp'
+        : null;
+
+    if (owner) {
+      const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
+      for (const ability of d.abilities ?? []) {
+        if (ability.type !== 'continuous') continue;
+        const grantFn = ability.continuousModifier?.grantKeywords;
+        if (!grantFn) continue;
+        if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+        const kws = grantFn(s, { uid });
+        if (Array.isArray(kws)) fromContinuous.push(...kws);
+      }
+    }
+  }
+
+  return [...new Set([...base, ...granted, ...fromContinuous])];
 }
 
 function hasKeyword(s: GameState, uid: string, kw: string): boolean {

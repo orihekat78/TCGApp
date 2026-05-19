@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
-import { setupGamePage, buildGameState, expectNoConsoleErrors } from '../helpers';
+import {
+  setupGamePage,
+  buildGameState,
+  expectCharHasKeyword,
+  expectCharNotHasKeyword,
+  expectNoConsoleErrors,
+} from '../helpers';
 import type { GameStateLike } from '../helpers';
 
 // Round 4f Phase 2: partnerColorKeyword 共通クラスを使う 5 カードを 1 spec で集約検証。
@@ -105,7 +111,7 @@ test.describe('partnerColorKeyword — partner 色一致で keyword 付与 (5 �
         { cardId, side, uid, resolved: !!requireResolved },
       );
 
-      // 検証:
+      // 検証 (3-layer):
       //  (1) cardDef.abilities に continuous + grantKeywords ability あり
       //  (2) ability.condition は state で TRUE と評価される (partnerColor match)
       //  (3) grantKeywords は [keyword] を返す
@@ -113,6 +119,10 @@ test.describe('partnerColorKeyword — partner 色一致で keyword 付与 (5 �
       expect(result.abilityExists, 'partnerColorKeyword ability is defined').toBe(true);
       expect(result.conditionMet, 'partnerColor (+ additionalCondition) is met').toBe(true);
       expect(result.grantedKeywords, 'grantKeywords returns target kw').toContain(keyword);
+
+      // 4-layer: Round 4g BUG-030 修正後、engine read.char.keywords が
+      // continuous modifier resolver で keyword を effective に grant する
+      await expectCharHasKeyword(page, uid, keyword);
 
       expectNoConsoleErrors(errors);
     });
@@ -141,6 +151,9 @@ test.describe('partnerColorKeyword — partner 色一致で keyword 付与 (5 �
         const result = await evalCondition(page, cardId, uid, 'self');
         expect(result.abilityExists, 'partnerColorKeyword ability is defined').toBe(true);
         expect(result.conditionMet, '事件編 のため AND 条件 false').toBe(false);
+
+        // 4-layer: BUG-030 修正後、engine も keyword を effective に持たないことを assert
+        await expectCharNotHasKeyword(page, uid, keyword);
 
         expectNoConsoleErrors(errors);
       });

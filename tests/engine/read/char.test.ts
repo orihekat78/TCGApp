@@ -181,6 +181,107 @@ describe('engine.read.char', () => {
       const s = withChar(makeChar());
       expect(char.keywords(s, 'uid-1')).toEqual([]);
     });
+
+    // BUG-030: continuous + grantKeywords ability の resolve
+    describe('continuous modifier resolver (BUG-030)', () => {
+      it('continuous ability で condition 満たせば grantKeywords が反映', () => {
+        const d: CardDef = {
+          ...makeDef(),
+          abilities: [{
+            id: 'a_test_pck',
+            type: 'continuous',
+            scope: 'on-scene',
+            condition: { kind: 'true' },
+            continuousModifier: { grantKeywords: () => ['突撃'] },
+            description: 'test',
+          }],
+        };
+        register(d);
+        const s = withChar(makeChar());
+        expect(char.keywords(s, 'uid-1')).toContain('突撃');
+      });
+
+      it('continuous ability で condition 満たさなければ grantKeywords 反映なし', () => {
+        const d: CardDef = {
+          ...makeDef(),
+          abilities: [{
+            id: 'a_test_pck',
+            type: 'continuous',
+            scope: 'on-scene',
+            condition: { kind: 'false' },
+            continuousModifier: { grantKeywords: () => ['突撃'] },
+            description: 'test',
+          }],
+        };
+        register(d);
+        const s = withChar(makeChar());
+        expect(char.keywords(s, 'uid-1')).not.toContain('突撃');
+      });
+
+      it('disabledOriginal=true なら continuous ability の grantKeywords も無効 (rules/19)', () => {
+        const d: CardDef = {
+          ...makeDef(),
+          abilities: [{
+            id: 'a_test_pck',
+            type: 'continuous',
+            scope: 'on-scene',
+            condition: { kind: 'true' },
+            continuousModifier: { grantKeywords: () => ['突撃'] },
+            description: 'test',
+          }],
+        };
+        register(d);
+        const s = withChar(makeChar({
+          keywordOverrides: { granted: ['迅速'], disabledOriginal: true },
+        }));
+        const kws = char.keywords(s, 'uid-1');
+        expect(kws).toContain('迅速');
+        expect(kws).not.toContain('突撃');
+      });
+
+      it('partnerColor 条件: partner が指定色なら grant', () => {
+        const partnerDef: CardDef = { ...makeDef(), id: 'PARTNER_BLUE', colors: ['青'] };
+        register(partnerDef);
+        const charDef: CardDef = {
+          ...makeDef(),
+          id: 'TEST_CHAR',
+          abilities: [{
+            id: 'a_pck_突撃',
+            type: 'continuous',
+            scope: 'on-scene',
+            condition: { kind: 'partnerColor', color: '青' },
+            continuousModifier: { grantKeywords: () => ['突撃'] },
+            description: 'test',
+          }],
+        };
+        register(charDef);
+        const s = withChar(makeChar({ cardId: 'TEST_CHAR' }));
+        // self.partner cardId を青のものに
+        s.players.self.partner = { cardId: 'PARTNER_BLUE', state: 'sleep', location: 'partner-area' };
+        expect(char.keywords(s, 'uid-1')).toContain('突撃');
+      });
+
+      it('partnerColor 条件: partner が異なる色なら grant されない', () => {
+        const partnerDef: CardDef = { ...makeDef(), id: 'PARTNER_YELLOW', colors: ['黄'] };
+        register(partnerDef);
+        const charDef: CardDef = {
+          ...makeDef(),
+          id: 'TEST_CHAR',
+          abilities: [{
+            id: 'a_pck_突撃',
+            type: 'continuous',
+            scope: 'on-scene',
+            condition: { kind: 'partnerColor', color: '青' },
+            continuousModifier: { grantKeywords: () => ['突撃'] },
+            description: 'test',
+          }],
+        };
+        register(charDef);
+        const s = withChar(makeChar({ cardId: 'TEST_CHAR' }));
+        s.players.self.partner = { cardId: 'PARTNER_YELLOW', state: 'sleep', location: 'partner-area' };
+        expect(char.keywords(s, 'uid-1')).not.toContain('突撃');
+      });
+    });
   });
 
   describe('hasKeyword', () => {
