@@ -9,7 +9,7 @@
 
 ## 現在の状況（2026-05-19）
 
-**Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止 完了** ✅ Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + headed default) で **計 22 連続 commit**:
+**Round 4e Phase 1 完了** ✅ — E2E helpers 整備 + cutinFixedAP 6 カード集約検証。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + headed default + 47 カード E2E 開始) で **計 23 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
 - Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
@@ -18,7 +18,8 @@
 - Round 4a (`e10b3a4`): **RCA + 水平展開** + 重大バグ engine 3 fix (BUG-008 イベントカード手札残留 / BUG-009 FILE 7+ 解決編移行 / next-hint 水平展開) + リスク・バグ管理 **Obsidian Base** 化 (`.claude/bugs/` + 2 base) + 再発防止 spec (`card-addition-checklist.md` / `dispatch-to-state.test.ts` / CLAUDE.md §セルフレビュー追記)
 - Round 4b (`4c64c79`): triggered ability **汎用 listener** 整備 (`src/engine/listeners/triggered.ts` 新規、7 hook 配線、emit payload kind 分離で eventRemoveByAP matcher と整合)
 - Round 4c (`d54e328`): **BUG-006 修正** (store.dispatch で same-reference 時 shallow copy 強制 → ContactFlowDriver useEffect を起動) + **`@playwright/test` 実機 E2E 基盤** (`playwright.config.ts` + `tests/e2e/bug-006.spec.ts` + `window.__game` DEV expose) + dispatch-to-state.test.ts に BUG-006 2 case 追加
-- Round 4d (本セッション): Playwright **headed default** (`headless: !!process.env.CI`) で「真っ白」問題解消 + Round 2 18 件バグを **BUG-011〜BUG-028** に履歴移行 + **BUG-029**「現場カード sleep 反映なし」は Round 4c で副次解消と確定し Vitest 統合 2 + E2E 2 で回帰防止
+- Round 4d (`f38268c`): Playwright **headed default** (`headless: !!process.env.CI`) で「真っ白」問題解消 + Round 2 18 件バグを **BUG-011〜BUG-028** に履歴移行 + **BUG-029**「現場カード sleep 反映なし」は Round 4c で副次解消と確定し Vitest 統合 2 + E2E 2 で回帰防止
+- Round 4e Phase 1 (本セッション): **tests/e2e/helpers/** 共通基盤 (types/setup/state/assertions/index) + **cutinFixedAP** 共通クラス使用 6 カード (D08015/D08017/D08023/D11017/D11018/D11019) の E2E spec 化、全 pass
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (Phase 9-A baseline 完全維持)**。
 残課題: BUG-006 (action[事件] state-machine) Playwright 実機検証 / Round 4c (UI 課題 BUG-001/002/010) / 旧 Round 3d (B5 CPU-vs-CPU 観戦モード)。
@@ -47,15 +48,16 @@
 | Round 4a 重大バグ修正 + RCA | BUG-008/009 + 水平展開 next-hint + Obsidian Base 化 + 再発防止 spec (`e10b3a4`) | ✅ 完了 |
 | Round 4b 機構整備 | triggered ability 汎用 listener (7 hook) + emit kind 分離 (`4c64c79`) | ✅ 完了 |
 | Round 4c BUG-006 修正 + E2E 基盤 | driver reactivity 修正 (`src/ui/state/store.ts`) + `@playwright/test` 導入 + dispatch-to-state.test.ts BUG-006 2 case (`d54e328`) | ✅ 完了 |
-| Round 4d Playwright 可視化 + 履歴移行 + BUG-029 | headed default + BUG-011〜028 履歴化 + BUG-029 回帰防止 (本セッション) | ✅ 完了 |
-| 47 cards effect 個別検証 | 新 E2E 基盤 + Phase D plan で実機検証 (Round 4e) | ⏳ |
+| Round 4d Playwright 可視化 + 履歴移行 + BUG-029 | headed default + BUG-011〜028 履歴化 + BUG-029 回帰防止 (`f38268c`) | ✅ 完了 |
+| Round 4e Phase 1: E2E helpers + cutinFixedAP | tests/e2e/helpers/ + cutin-fixed-ap.spec.ts 6 カード集約 (本セッション) | ✅ 完了 |
+| Round 4f: 残り共通パターン | caseTraitConditioned / hiramekiDraw / hiramekiCharStun / partnerColorKeyword / eventRemoveByAP | ⏳ |
 | Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1459 PASS + 1 skipped / 192 Test Files** (Round 4d 完了時点、BUG-029 統合 +2 case 追加)
-- **E2E 3 pass + 1 skipped** (`tests/e2e/bug-006.spec.ts` + `tests/e2e/bug-029.spec.ts`、`npm run test:e2e` は **headed default**、CI 環境で自動 headless)
+- **1459 PASS + 1 skipped / 192 Test Files** (Round 4e Phase 1 完了時点)
+- **E2E 9 pass + 1 skipped** (bug-006 1 + bug-029 2 + **cutinFixedAP 6 カード集約** = 9 / `npm run test:e2e` は **headed default**、CI 環境で自動 headless)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
   - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、Round 2+3+4 全 20 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
