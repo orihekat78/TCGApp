@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Round 4i 完了 ✅ — eventRemoveByAP 2 カード E2E + listener gap 2 件登録 (BUG-032/033)
-**最新コミット**: Round 4i (commit hash 取得後置換) — 計 27 連続 commit (Round 2〜4i)
+**最新コミット**: Round 4i `8d35359` (Round 4h `08621c0` 続き) — 計 27 連続 commit (Round 2〜4i)
 **テスト状況**: 1464 PASS + 1 skipped / 192 files / **E2E 23 pass + 1 skip** / **smoke 525/475 baseline 維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-4i):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化、計 15 E2E pass
