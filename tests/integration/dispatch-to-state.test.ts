@@ -145,9 +145,43 @@ describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
     expect(stateAfter.players.self.evidence.length).toBe(selfEvidenceBefore + 1);
   });
 
+  // BUG-029: 現場カードがアクション/推理してもスリープにならない (UI 反映)
+  //
+  // Round 4c の BUG-006 修正 (store.dispatch の shallow-copy fallback) で同根原因
+  // (Zustand subscriber 不発火) として副次解消された。本テストは回帰防止用 lock。
+  it('BUG-029: reasoning dispatch で scene character が sleep になり、store 観測で確認できる', () => {
+    const state = useGameStateStore.getState().gameState!;
+    const actor = state.players.self.scene.find((s) => s.uid === 'self-2');
+    if (!actor) throw new Error('test fixture missing self-2');
+    actor.state = 'active';
+    actor.isNamed = false;
+    useGameStateStore.setState({ gameState: state });
+
+    dispatchEngineAction({ type: 'reasoning', uid: 'self-2' });
+
+    const stateAfter = useGameStateStore.getState().gameState!;
+    const actorAfter = stateAfter.players.self.scene.find((s) => s.uid === 'self-2');
+    expect(actorAfter?.state).toBe('sleep');
+  });
+
+  it('BUG-029: actionDeclareCase dispatch で byUid character が sleep になる', () => {
+    const state = useGameStateStore.getState().gameState!;
+    const actor = state.players.self.scene.find((s) => s.uid === 'self-2');
+    if (!actor) throw new Error('test fixture missing self-2');
+    actor.state = 'active';
+    actor.isNamed = false;
+    for (const s of state.players.opp.scene) s.state = 'sleep';
+    useGameStateStore.setState({ gameState: state });
+
+    dispatchEngineAction({ type: 'actionDeclareCase', byUid: 'self-2', targetPlayer: 'opp' });
+
+    const stateAfter = useGameStateStore.getState().gameState!;
+    const actorAfter = stateAfter.players.self.scene.find((s) => s.uid === 'self-2');
+    expect(actorAfter?.state).toBe('sleep');
+  });
+
   // 残 dispatch → state シナリオ (今後追加):
   // - BUG-008: handUseCard kind='event' → 手札除去 + remove.add
-  // - 推理: dispatch reasoning → 証拠 +LP / partner sleep
   // - アクション[キャラ]: dispatch actionAgainstChar → guard → contact → judge → リムーブ
   // - 事件解決: dispatch solveCase → gameResult set
 });

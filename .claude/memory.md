@@ -2,9 +2,9 @@
 
 ## 現在地
 
-**フェーズ**: Round 4c BUG-006 修正 + Playwright E2E 導入 完了 ✅
-**最新コミット**: (本セッション commit 待ち) — Round 4b `4c64c79` の続き
-**テスト状況**: 1457 PASS + 1 skipped / 192 test files / E2E 1 pass + 1 skip / typecheck clean / docs 再生成済
+**フェーズ**: Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止 完了 ✅
+**最新コミット**: Round 4c `d54e328` + Round 4d (本セッション commit 待ち)
+**テスト状況**: 1459 PASS + 1 skipped / 192 test files / E2E 3 pass + 1 skip / smoke 524-476 / typecheck clean / docs:check clean
 **1000戦 smoke**: heuristic × heuristic / **0 例外 / 0 timeout** / 524/476 baseline 完全維持
 **現状**:
 - **BUG-006 修正済** (Round 4c): store.dispatch で same-reference 時 shallow copy を強制し ContactFlowDriver useEffect を起動
@@ -38,9 +38,10 @@
   - `.claude/specs/card-addition-checklist.md` + `tests/integration/dispatch-to-state.test.ts` 骨格
   - CLAUDE.md §セルフレビュー追記 (Playwright 1試合通し / 管理表更新 / カード追加チェックリスト)
 - [x] **Round 4b BUG-005/007 triggered listener 整備** (2026-05-18-7): `src/engine/listeners/triggered.ts` 新規 + 7 hook 配線 + emit kind 分離 (commit `4c64c79`)
-- [x] **Round 4c BUG-006 修正 + Playwright E2E 導入** (2026-05-18-8): `src/ui/state/store.ts` で driver reactivity 修正 + `@playwright/test` 基盤 + `tests/e2e/bug-006.spec.ts` (本セッション)
-- [ ] **47 cards triggered ability 個別検証** (新 E2E 基盤で実施可能、次セッション)
-- [ ] **Round 4c+ (旧 3d 統合)**: BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 Round 3d B5 観戦モード
+- [x] **Round 4c BUG-006 修正 + Playwright E2E 導入** (2026-05-18-8): `src/ui/state/store.ts` で driver reactivity 修正 + `@playwright/test` 基盤 + `tests/e2e/bug-006.spec.ts` (commit `d54e328`)
+- [x] **Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止** (2026-05-18-9): headed default + BUG-011〜028 + BUG-029 (Round 4c で副次解消) + Vitest/E2E 回帰防止
+- [ ] **47 cards triggered ability 個別検証** (新 E2E 基盤 + Phase D plan で実施、次セッション)
+- [ ] **Round 4e+ UI 課題**: BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 Round 3d B5 観戦モード
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
 - [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
 - [ ] Round 2+3 全 commits の origin/main push (現在 local main のみ)
@@ -59,4 +60,5 @@
 - [2026-05-18-5](sessions/2026-05-18-5.md) — Round 3c-B 全 33 step マッピング + Playwright walkthrough
 - [2026-05-18-6](sessions/2026-05-18-6.md) — Round 4a 重大バグ修正 + RCA + Obsidian Base 導入
 - [2026-05-18-7](sessions/2026-05-18-7.md) — Round 4b triggered ability listener 整備
-- **[2026-05-18-8](sessions/2026-05-18-8.md) — Round 4c BUG-006 修正 + Playwright E2E 導入** (本セッション)
+- [2026-05-18-8](sessions/2026-05-18-8.md) — Round 4c BUG-006 修正 + Playwright E2E 導入
+- **[2026-05-18-9](sessions/2026-05-18-9.md) — Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止** (本セッション)

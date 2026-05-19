@@ -32,7 +32,13 @@ test.describe('BUG-006: action[case] evidence change', () => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
     page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`);
+      if (msg.type() !== 'error') return;
+      const text = msg.text();
+      const url = msg.location()?.url ?? '';
+      // 静的リソース (favicon 等) の 404 はテスト本旨と無関係なため除外
+      if (text.includes('Failed to load resource') && /404/.test(text)) return;
+      if (/favicon\.ico|robots\.txt/.test(url)) return;
+      errors.push(`console.error: ${text}`);
     });
     await page.goto('/');
     await page.waitForFunction(() => typeof (window as unknown as GameWindow).__game !== 'undefined');
