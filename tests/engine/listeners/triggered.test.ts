@@ -165,6 +165,98 @@ describe('engine.listeners.triggered', () => {
     expect(after.pendingEffects).toHaveLength(0);
   });
 
+  // Round 4i-fix: BUG-032 — on-hand triggered ability + selfOnly:true で opp 手札の同 cardId が誤発動しない
+  it('on-hand + selfOnly:true: opp.hand に同 cardId があっても self の event-use では self 側のみ発動 (BUG-032)', () => {
+    const effect = { kind: 'atom' as const, verb: 'draw', args: { player: 'self', n: 1 } };
+    const cardDef = {
+      id: 'EV1', no: '0000/EV1', kind: 'event' as const, names: ['EV1'], colors: ['赤'], level: 1, traits: [], rarity: 'C' as const, imageUrl: 'test.jpg', ruleRefs: [],
+      abilities: [{
+        id: 'a1',
+        type: 'triggered' as const,
+        scope: 'on-hand' as const,
+        trigger: {
+          hook: 'effect:declared' as const,
+          selfOnly: true,
+          matcher: (p: unknown) => (p as { kind?: string })?.kind === 'event-use',
+        },
+        effect,
+        description: '',
+      }],
+    };
+    registerCardDef(cardDef);
+    registerTriggeredListener();
+
+    const { state } = makeStateWith(cardDef);
+    // self.hand と opp.hand 双方に EV1 を仕込む (BUG-032 検出経路)
+    state.players.self.hand = ['EV1'];
+    state.players.opp.hand = ['EV1'];
+
+    const after = produce(state, (draft) => {
+      // self が EV1 を使用したことを emit
+      event.emit(draft, 'effect:declared', { kind: 'event-use', cardId: 'EV1' }, { player: 'self', cardId: 'EV1' });
+    });
+
+    // self.source の entry が 1 個、opp.source の entry は 0 個 (BUG-032 修正後)
+    expect(after.pendingEffects).toHaveLength(1);
+    expect(after.pendingEffects[0]?.source?.player).toBe('self');
+  });
+
+  // Round 4i-fix: BUG-033 — ability.condition が false なら queue されない
+  it('ability.condition が unmet なら queue されない (BUG-033 partnerColor false)', () => {
+    const effect = { kind: 'atom' as const, verb: 'draw', args: { player: 'self', n: 1 } };
+    const cardDef = makeChar('C1', [{
+      id: 'a1',
+      type: 'triggered',
+      scope: 'on-scene',
+      trigger: { hook: 'enter', selfOnly: true },
+      condition: { kind: 'partnerColor' as const, color: '青' },
+      effect,
+      description: '',
+    }]);
+    // partner-self は colors:['赤'] (青ではない)
+    registerCardDef(cardDef);
+    registerCardDef({
+      id: 'partner-self', no: '0000/partner-self', kind: 'partner', names: ['P'], colors: ['赤'], level: 1, traits: [], rarity: 'C', imageUrl: 'test.jpg', ruleRefs: [], abilities: [], lp: 1,
+    } as unknown as CardDef);
+    registerTriggeredListener();
+
+    const { state, uid } = makeStateWith(cardDef);
+    const after = produce(state, (draft) => {
+      event.emit(draft, 'enter', { uid, viaEffect: false, enterOrder: 0 }, { player: 'self', cardId: 'C1', uid });
+    });
+
+    // condition unmet → queue されない
+    expect(after.pendingEffects).toHaveLength(0);
+  });
+
+  // Round 4i-fix: BUG-033 — ability.condition が true なら通常 queue
+  it('ability.condition が met なら通常 queue される (BUG-033 partnerColor true)', () => {
+    const effect = { kind: 'atom' as const, verb: 'draw', args: { player: 'self', n: 1 } };
+    const cardDef = makeChar('C1', [{
+      id: 'a1',
+      type: 'triggered',
+      scope: 'on-scene',
+      trigger: { hook: 'enter', selfOnly: true },
+      condition: { kind: 'partnerColor' as const, color: '赤' },
+      effect,
+      description: '',
+    }]);
+    // partner-self は colors:['赤'] (一致)
+    registerCardDef(cardDef);
+    registerCardDef({
+      id: 'partner-self', no: '0000/partner-self', kind: 'partner', names: ['P'], colors: ['赤'], level: 1, traits: [], rarity: 'C', imageUrl: 'test.jpg', ruleRefs: [], abilities: [], lp: 1,
+    } as unknown as CardDef);
+    registerTriggeredListener();
+
+    const { state, uid } = makeStateWith(cardDef);
+    const after = produce(state, (draft) => {
+      event.emit(draft, 'enter', { uid, viaEffect: false, enterOrder: 0 }, { player: 'self', cardId: 'C1', uid });
+    });
+
+    // condition met → queue 1
+    expect(after.pendingEffects).toHaveLength(1);
+  });
+
   it('listener 重複登録は no-op (_registered フラグで防止)', () => {
     registerTriggeredListener();
     registerTriggeredListener();

@@ -41,7 +41,8 @@ CLAUDE.md §骨格凍結原則 / §設計レビュー §水平展開 と連動�
 - [ ] `'reasoning:before-add'` — `misread.ts` で登録済
 - [ ] **新規 hook を使う場合**: 必ず listener 側に追加実装
 
-**Round 4a 教訓**: Round 1-3 を通じて hook を使うカード追加は多数あったが、listener 側の対応が忘れられて 7 hook が全 noop (BUG-005 / BUG-007)。
+**Round 4a 教訓**: Round 1-3 で hook を使うカード追加多数だが listener 側未対応で 7 hook 全 noop (BUG-005 / BUG-007)。
+**Round 4i-fix 教訓**: `scope: 'on-hand'` + `type: 'triggered'` は **`trigger.selfOnly: true` 必須** (listener が両プレイヤー手札 scan のため、`eventRemoveByAP` factory + D11019/D11020/D08024 で発見 / BUG-032)。
 
 ### 3. effect descriptor の resolver dispatch table 確認
 
@@ -94,8 +95,6 @@ CLAUDE.md §セルフレビュー §Playwright 1 試合通し検証 (Round 4a Ph
 
 ## 関連
 
-- [.claude/specs/risk-and-bug-tracker.md](risk-and-bug-tracker.md) — 全バグ管理 hub
-- [.claude/bugs/index.base](../bugs/index.base) — バグ集約 view (Obsidian Base)
-- [.claude/CLAUDE.md](../CLAUDE.md) — プロジェクト全体規約
-- [.claude/specs/INDEX.md](INDEX.md) — spec 一覧
+- [.claude/specs/risk-and-bug-tracker.md](risk-and-bug-tracker.md) / [.claude/bugs/index.base](../bugs/index.base) — バグ管理 hub + Obsidian Base view
+- [.claude/CLAUDE.md](../CLAUDE.md) / [.claude/specs/INDEX.md](INDEX.md) — 規約 + spec 一覧
 - [tests/integration/dispatch-to-state.test.ts](../../tests/integration/dispatch-to-state.test.ts) — end-to-end integration test (Round 4a 新規)

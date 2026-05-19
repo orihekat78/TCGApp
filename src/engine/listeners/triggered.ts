@@ -22,6 +22,7 @@
 
 import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
+import { evalCond } from '../cond/eval.js';
 import type { GameState, AbilityDef, AbilityScope } from '../types/index.js';
 
 type Player = 'self' | 'opp';
@@ -87,10 +88,14 @@ function selfOnlyMatches(
   source: unknown,
 ): boolean {
   const sourceUid = (source as { uid?: string } | undefined)?.uid;
-  // on-hand のカード (event card 自身の使用検知) は payload.cardId で一致確認
+  // on-hand のカード (event card 自身の使用検知) は payload.cardId + source.player で一致確認。
+  // Round 4i-fix (BUG-032): player 比較を追加。両プレイヤー手札に同 cardId があると
+  // 誤発動していた gap を塞ぐ。handUseCard は source.player を emit 時に詰めるので
+  // ここで照合できる (src/engine/flow/main/hand-use-card.ts)。
   if (card.area === 'hand') {
     const payloadCardId = (payload as { cardId?: string } | undefined)?.cardId;
-    return payloadCardId === card.cardId;
+    const sourcePlayer = (source as { player?: string } | undefined)?.player;
+    return payloadCardId === card.cardId && sourcePlayer === card.player;
   }
   // scene/partner/case は source.uid で一致確認
   return sourceUid === card.uid;
@@ -115,6 +120,21 @@ function handleHook(
       if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
       // matcher check (カード側で custom 判定)
       if (trig.matcher && !trig.matcher(payload, state)) continue;
+      // Round 4i-fix: ability.condition の 6 stage gate (BUG-033)
+      // partnerColor / caseTrait 等の condition が未達なら queue しない (rules/17 §条件アイコン)
+      if (ability.condition) {
+        const ctx = {
+          source: {
+            cardId: card.cardId,
+            uid: card.uid,
+            abilityId: ability.id,
+            player: card.player,
+            area: card.area,
+          },
+          bindings: {},
+        };
+        if (!evalCond(state, ability.condition, ctx)) continue;
+      }
       // effect が無いと queue しても無意味
       if (!ability.effect) continue;
       // queue

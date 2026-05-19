@@ -263,13 +263,10 @@ test.describe('eventRemoveByAP — イベント手札使用で AP X 以下リム
       // listener が self.hand 上の event card 自身の effect を queue したことを assert
       expect(scan.selfCount, `pendingEffects に self.source=${cardId} の entry が 1 個以上 queue`).toBeGreaterThanOrEqual(1);
 
-      // gap-1 (BUG-032 候補): opp.hand にも同 cardId を仕込んだので、selfOnly 未設定なら
-      // opp 側 source の entry が混入する可能性。現状動作を verify (test は green、混入数を doc 化)。
-      // NOTE: spec doc § engine gap §gap-1 — 検出時 BUG-032 として登録、fix は次 round。
-      if (scan.oppCount > 0) {
-        // eslint-disable-next-line no-console
-        console.warn(`[Round 4i gap-1 detected] ${cardId}: opp.source の pendingEffects が ${scan.oppCount} 個混入 → BUG-032 登録対象`);
-      }
+      // Round 4i-fix (BUG-032): selfOnly:true + selfOnlyMatches の player 比較追加で
+      // opp.hand の同 cardId は誤発動しない。fixture で opp.hand にも仕込んでいるので、
+      // 修正がないとここで oppCount > 0 になる。
+      expect(scan.oppCount, 'opp.hand の同 cardId は selfOnly により発動しない (BUG-032 fixed)').toBe(0);
 
       expectNoConsoleErrors(errors);
     });
@@ -288,4 +285,48 @@ test.describe('eventRemoveByAP — イベント手札使用で AP X 以下リム
       expectNoConsoleErrors(errors);
     });
   }
+
+  // Round 4i-fix (BUG-033): D08025 の partnerColor:青 condition が listener 段で評価される
+  // ことを E2E で verify。partner=黄 (D11001) → condition false → pendingEffects に queue されない。
+  test('D08025: partner=黄 (条件未達) → listener が condition gate で reject (BUG-033 fixed)', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await buildGameState<FixtureArg>(
+      page,
+      (gs, arg) => {
+        const self = gs.players.self as unknown as {
+          partner: { cardId: string; state: string; location: string };
+          case: { cardId: string; status: string; requiredEvidence: number; colors: string[] };
+          hand: string[];
+          file: FileCardLike[];
+        };
+        // partner = D11001 (黄) → partnerColor:'青' 条件未達
+        self.partner.cardId = 'D11001';
+        self.partner.state = 'active';
+        self.partner.location = 'partner-area';
+        // case は黄 (D11020 は黄 / D08025 は青だが、テスト対象は D08025 のため case 黄黄でも色 gate は色 OR 制限で青を含む必要あり)
+        // 色 gate は handUseCard 内 colorAllowed で「カード色 ⊆ 事件色」を要求。D08025=青、事件は青+黄 にする
+        self.case.cardId = 'D08026';
+        self.case.status = '事件編';
+        self.case.requiredEvidence = 7;
+        self.case.colors = ['青', '黄'];
+        const fileBack: FileCardLike = { type: 'card-back', cardId: 'D08003' };
+        self.file = [fileBack, fileBack, fileBack, fileBack, fileBack, fileBack, fileBack, fileBack];
+        self.hand = [arg.cardId];
+        const ts = (gs as unknown as { turnState: { self: { handUseUsed: boolean; nextHintUsed: boolean } } }).turnState;
+        ts.self.handUseUsed = false;
+        ts.self.nextHintUsed = false;
+        (gs as unknown as { pendingEffects: unknown[] }).pendingEffects = [];
+      },
+      { cardId: 'D08025' },
+    );
+
+    await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'D08025' });
+    const scan = await scanPendingEffectsFor(page, 'D08025');
+
+    // partnerColor:'青' 条件が listener 段で評価され、partner 黄なら queue されない
+    expect(scan.selfCount, 'partner 黄 (青ではない) で D08025 を使用 → condition false → queue されない').toBe(0);
+    expect(scan.oppCount, 'opp 側も発動しない').toBe(0);
+
+    expectNoConsoleErrors(errors);
+  });
 });

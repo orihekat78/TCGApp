@@ -26,6 +26,7 @@ export function eventRemoveByAP(opts: {
     scope: 'on-hand',
     trigger: {
       hook: 'effect:declared',
+      selfOnly: true,
       matcher: (p: unknown, _s: GameState) => {
         if (!p || typeof p !== 'object') return false;
         return (p as { kind?: unknown }).kind === 'event-use';
