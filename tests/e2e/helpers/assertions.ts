@@ -68,6 +68,55 @@ export async function expectActionPhase(page: Page, expected: string): Promise<v
 }
 
 /**
+ * 指定 uid の char が指定 keyword を持つことを engine state で assert。
+ * `read.char.hasKeyword(state, uid, kw)` で continuous modifier 評価込みの判定。
+ */
+export async function expectCharHasKeyword(
+  page: Page,
+  uid: string,
+  keyword: string,
+): Promise<void> {
+  const has = await page.evaluate(
+    ({ u, kw }) => {
+      const w = (window as unknown as {
+        __game: {
+          getState: () => { gameState: unknown };
+          read: { char: { hasKeyword: (s: unknown, u: string, kw: string) => boolean } };
+        };
+      }).__game;
+      const gs = w.getState().gameState;
+      return w.read.char.hasKeyword(gs, u, kw);
+    },
+    { u: uid, kw: keyword },
+  );
+  expect(has).toBe(true);
+}
+
+/**
+ * 指定 uid の char が指定 keyword を持たないことを assert (negative case 用)。
+ */
+export async function expectCharNotHasKeyword(
+  page: Page,
+  uid: string,
+  keyword: string,
+): Promise<void> {
+  const has = await page.evaluate(
+    ({ u, kw }) => {
+      const w = (window as unknown as {
+        __game: {
+          getState: () => { gameState: unknown };
+          read: { char: { hasKeyword: (s: unknown, u: string, kw: string) => boolean } };
+        };
+      }).__game;
+      const gs = w.getState().gameState;
+      return w.read.char.hasKeyword(gs, u, kw);
+    },
+    { u: uid, kw: keyword },
+  );
+  expect(has).toBe(false);
+}
+
+/**
  * console error が空であることを assert (setupGamePage の errors を渡す)。
  */
 export function expectNoConsoleErrors(errors: string[]): void {

@@ -17,6 +17,12 @@ export type GameWindow = {
       cutInUsed?: Record<string, boolean>;
     } | null;
     flow: unknown;
+    read: {
+      char: {
+        keywords: (state: unknown, uid: string) => string[];
+        hasKeyword: (state: unknown, uid: string, kw: string) => boolean;
+      };
+    };
   };
 };
 

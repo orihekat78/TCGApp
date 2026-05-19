@@ -21,6 +21,8 @@ if (import.meta.env.DEV) {
     createSampleGameState,
     dispatch: dispatchEngineAction,
     flow: engine.flow,
+    read: engine.read,
+    cond: engine.cond,
     getActionContext: (id: string) => engine.flow.action._getContext(id),
   };
 }

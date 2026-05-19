@@ -9,7 +9,7 @@
 
 ## 現在の状況（2026-05-19）
 
-**Round 4e Phase 1 完了** ✅ — E2E helpers 整備 + cutinFixedAP 6 カード集約検証。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + headed default + 47 カード E2E 開始) で **計 23 連続 commit**:
+**Round 4f Phase 2 完了** ✅ — partnerColorKeyword 5 カード E2E + BUG-030 engine 未実装ギャップ登録。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 2 パターン) で **計 24 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
 - Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
@@ -19,7 +19,8 @@
 - Round 4b (`4c64c79`): triggered ability **汎用 listener** 整備 (`src/engine/listeners/triggered.ts` 新規、7 hook 配線、emit payload kind 分離で eventRemoveByAP matcher と整合)
 - Round 4c (`d54e328`): **BUG-006 修正** (store.dispatch で same-reference 時 shallow copy 強制 → ContactFlowDriver useEffect を起動) + **`@playwright/test` 実機 E2E 基盤** (`playwright.config.ts` + `tests/e2e/bug-006.spec.ts` + `window.__game` DEV expose) + dispatch-to-state.test.ts に BUG-006 2 case 追加
 - Round 4d (`f38268c`): Playwright **headed default** (`headless: !!process.env.CI`) で「真っ白」問題解消 + Round 2 18 件バグを **BUG-011〜BUG-028** に履歴移行 + **BUG-029**「現場カード sleep 反映なし」は Round 4c で副次解消と確定し Vitest 統合 2 + E2E 2 で回帰防止
-- Round 4e Phase 1 (本セッション): **tests/e2e/helpers/** 共通基盤 (types/setup/state/assertions/index) + **cutinFixedAP** 共通クラス使用 6 カード (D08015/D08017/D08023/D11017/D11018/D11019) の E2E spec 化、全 pass
+- Round 4e Phase 1 (`cf3380c`): **tests/e2e/helpers/** 共通基盤 (types/setup/state/assertions/index) + **cutinFixedAP** 共通クラス使用 6 カード (D08015/D08017/D08023/D11017/D11018/D11019) の E2E spec 化、全 pass
+- Round 4f Phase 2 (本セッション): **partnerColorKeyword** 共通クラス使用 5 カード (D08009/D08022/D11007/D11009/D11011) を E2E spec 化、6 テスト (5 positive + 1 negative) 全 pass + **BUG-030** (engine `read.char.keywords` が continuousModifier.grantKeywords を resolve しない、Phase 5 未実装) を登録
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (Phase 9-A baseline 完全維持)**。
 残課題: BUG-006 (action[事件] state-machine) Playwright 実機検証 / Round 4c (UI 課題 BUG-001/002/010) / 旧 Round 3d (B5 CPU-vs-CPU 観戦モード)。
@@ -49,15 +50,16 @@
 | Round 4b 機構整備 | triggered ability 汎用 listener (7 hook) + emit kind 分離 (`4c64c79`) | ✅ 完了 |
 | Round 4c BUG-006 修正 + E2E 基盤 | driver reactivity 修正 (`src/ui/state/store.ts`) + `@playwright/test` 導入 + dispatch-to-state.test.ts BUG-006 2 case (`d54e328`) | ✅ 完了 |
 | Round 4d Playwright 可視化 + 履歴移行 + BUG-029 | headed default + BUG-011〜028 履歴化 + BUG-029 回帰防止 (`f38268c`) | ✅ 完了 |
-| Round 4e Phase 1: E2E helpers + cutinFixedAP | tests/e2e/helpers/ + cutin-fixed-ap.spec.ts 6 カード集約 (本セッション) | ✅ 完了 |
-| Round 4f: 残り共通パターン | caseTraitConditioned / hiramekiDraw / hiramekiCharStun / partnerColorKeyword / eventRemoveByAP | ⏳ |
+| Round 4e Phase 1: E2E helpers + cutinFixedAP | tests/e2e/helpers/ + cutin-fixed-ap.spec.ts 6 カード集約 (`cf3380c`) | ✅ 完了 |
+| Round 4f Phase 2: partnerColorKeyword + BUG-030 | partner-color-keyword.spec.ts 6 テスト + engine 未実装ギャップ登録 (本セッション) | ✅ 完了 |
+| Round 4g+: 残り共通パターン | caseTraitConditioned / eventRemoveByAP / hiramekiDraw / hiramekiCharStun (BUG-030 engine 修正含む) | ⏳ |
 | Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1459 PASS + 1 skipped / 192 Test Files** (Round 4e Phase 1 完了時点)
-- **E2E 9 pass + 1 skipped** (bug-006 1 + bug-029 2 + **cutinFixedAP 6 カード集約** = 9 / `npm run test:e2e` は **headed default**、CI 環境で自動 headless)
+- **1459 PASS + 1 skipped / 192 Test Files** (Round 4f Phase 2 完了時点)
+- **E2E 15 pass + 1 skipped** (bug-006 1 + bug-029 2 + **cutinFixedAP 6 カード** + **partnerColorKeyword 6 (5 + 1 negative)** = 15 / `npm run test:e2e` は **headed default**、CI 環境で自動 headless)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
   - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、Round 2+3+4 全 20 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン

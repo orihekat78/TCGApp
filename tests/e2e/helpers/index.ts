@@ -17,5 +17,7 @@ export {
   expectActorRemoved,
   expectCutInUsed,
   expectActionPhase,
+  expectCharHasKeyword,
+  expectCharNotHasKeyword,
   expectNoConsoleErrors,
 } from './assertions';

@@ -2,9 +2,9 @@
 
 ## 現在地
 
-**フェーズ**: Round 4e Phase 1 完了 ✅ — E2E helpers 整備 + cutinFixedAP 6 カード集約検証
-**最新コミット**: Round 4d `f38268c` + Round 4e (本セッション commit 待ち)
-**テスト状況**: 1459 PASS + 1 skipped / 192 test files / **E2E 9 pass + 1 skip** (bug-006 + bug-029 + cutin-fixed-ap 6) / smoke 524-476 / typecheck clean / docs:check clean
+**フェーズ**: Round 4f Phase 2 完了 ✅ — partnerColorKeyword 5 カード E2E + BUG-030 engine ギャップ登録
+**最新コミット**: Round 4e `cf3380c` + Round 4f (本セッション commit 待ち)
+**テスト状況**: 1459 PASS + 1 skipped / 192 test files / **E2E 15 pass + 1 skip** (bug-006 + bug-029 + cutin-fixed-ap 6 + partner-color-keyword 6) / smoke 524-476 / typecheck clean / docs:check clean
 **1000戦 smoke**: heuristic × heuristic / **0 例外 / 0 timeout** / 524/476 baseline 完全維持
 **現状**:
 - **BUG-006 修正済** (Round 4c): store.dispatch で same-reference 時 shallow copy を強制し ContactFlowDriver useEffect を起動
@@ -40,8 +40,11 @@
 - [x] **Round 4b BUG-005/007 triggered listener 整備** (2026-05-18-7): `src/engine/listeners/triggered.ts` 新規 + 7 hook 配線 + emit kind 分離 (commit `4c64c79`)
 - [x] **Round 4c BUG-006 修正 + Playwright E2E 導入** (2026-05-18-8): `src/ui/state/store.ts` で driver reactivity 修正 + `@playwright/test` 基盤 + `tests/e2e/bug-006.spec.ts` (commit `d54e328`)
 - [x] **Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止** (2026-05-18-9): headed default + BUG-011〜028 + BUG-029 (Round 4c で副次解消) + Vitest/E2E 回帰防止 (commit `f38268c`)
-- [x] **Round 4e Phase 1 — E2E helpers 整備 + cutinFixedAP 6 カード** (2026-05-19): tests/e2e/helpers/ 5 ファイル + cutin-fixed-ap.spec.ts 6 カード集約検証、全 pass
-- [ ] **Round 4f**: 残り共通パターン (caseTraitConditioned / hiramekiDraw / hiramekiCharStun / partnerColorKeyword / eventRemoveByAP) を E2E 化
+- [x] **Round 4e Phase 1 — E2E helpers 整備 + cutinFixedAP 6 カード** (2026-05-19): tests/e2e/helpers/ 5 ファイル + cutin-fixed-ap.spec.ts 6 カード集約検証、全 pass (commit `cf3380c`)
+- [x] **Round 4f Phase 2 — partnerColorKeyword 5 カード E2E + BUG-030 登録** (2026-05-19-2): partner-color-keyword.spec.ts 6 テスト (5+1 negative) 集約検証、engine continuous modifier resolver 未実装をBUG-030として登録
+- [ ] **BUG-030 engine 修正**: read.char.keywords を継続 modifier resolver 対応に拡張 (推奨次セッション)
+- [ ] **Round 4g**: caseTraitConditioned 2 カード spec (D11003 / D11005)
+- [ ] **Round 4h+**: eventRemoveByAP / hiramekiDraw / hiramekiCharStun
 - [ ] **Round 4g**: Partner / 事件 / 固有 effect カード spec
 - [ ] **Round 4h+ UI 課題**: BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 Round 3d B5 観戦モード
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
@@ -64,4 +67,5 @@
 - [2026-05-18-7](sessions/2026-05-18-7.md) — Round 4b triggered ability listener 整備
 - [2026-05-18-8](sessions/2026-05-18-8.md) — Round 4c BUG-006 修正 + Playwright E2E 導入
 - [2026-05-18-9](sessions/2026-05-18-9.md) — Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止
-- **[2026-05-19](sessions/2026-05-19.md) — Round 4e Phase 1: E2E helpers + cutinFixedAP 6 カード** (本セッション)
+- [2026-05-19](sessions/2026-05-19.md) — Round 4e Phase 1: E2E helpers + cutinFixedAP 6 カード
+- **[2026-05-19-2](sessions/2026-05-19-2.md) — Round 4f Phase 2: partnerColorKeyword 5 カード + BUG-030** (本セッション)
