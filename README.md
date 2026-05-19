@@ -7,9 +7,9 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-19）
+## 現在の状況（2026-05-20）
 
-**Round 4h 完了** ✅ — caseTraitConditioned 2 カード E2E + BUG-031 data fix (D11021 '婚活' trait 追加)。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 3 パターン + engine keyword resolver + データ整合性修正) で **計 26 連続 commit**:
+**Round 4i 完了** ✅ — eventRemoveByAP 2 カード E2E + listener gap 2 件登録 (BUG-032 selfOnly / BUG-033 condition layering、fix は Round 4i-fix で予定)。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 4 パターン + engine keyword resolver + データ整合性修正 + listener gap 検出) で **計 27 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
 - Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
@@ -22,10 +22,11 @@
 - Round 4e Phase 1 (`cf3380c`): **tests/e2e/helpers/** 共通基盤 (types/setup/state/assertions/index) + **cutinFixedAP** 共通クラス使用 6 カード (D08015/D08017/D08023/D11017/D11018/D11019) の E2E spec 化、全 pass
 - Round 4f Phase 2 (`4eb103a`): **partnerColorKeyword** 共通クラス使用 5 カード (D08009/D08022/D11007/D11009/D11011) を E2E spec 化、6 テスト (5 positive + 1 negative) 全 pass + **BUG-030** (engine `read.char.keywords` が continuousModifier.grantKeywords を resolve しない、Phase 5 未実装) を登録
 - Round 4g (`3932d04`): **BUG-030 engine 修正** — `src/engine/read/char.ts` の `keywords()` に continuous modifier resolver を実装、unit test +5、E2E spec 4-layer 拡張。smoke baseline 525/475 (1 game shift、avg turns 10.35→9.85 positive 変化)
-- Round 4h (本セッション): **caseTraitConditioned** 2 カード (D11003 a2 / D11005 a1) を E2E spec 化、4 テスト (2 positive + 2 negative) 全 pass + **BUG-031** data fix (`src/cards/ct-d11/D11021.ts` の traits に '婚活' 追加、engine データ不整合修正)
+- Round 4h (`08621c0`): **caseTraitConditioned** 2 カード (D11003 a2 / D11005 a1) を E2E spec 化、4 テスト (2 positive + 2 negative) 全 pass + **BUG-031** data fix (`src/cards/ct-d11/D11021.ts` の traits に '婚活' 追加、engine データ不整合修正)
+- Round 4i (本セッション): **eventRemoveByAP** 2 カード (D08025 factory pure / D11020 individual sequence) を E2E spec 化、4 テスト全 pass + dispatch 経路で **engine listener gap 2 件検出** → **BUG-032** (`eventRemoveByAP` trigger.selfOnly 未設定 → opp 手札の同 cardId が誤発動) / **BUG-033** (triggered.ts handleHook が ability.condition 未評価) 登録、fix は次 round (Round 4i-fix)
 
-1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の新 baseline 525/475、avg 9.85 ターン)**。
-残課題: Round 4i (eventRemoveByAP) / Round 4j (hiramekiDraw) / Round 4k (hiramekiCharStun) / Round 4l+ UI (BUG-001/002/010 + 旧 B5 観戦モード) / origin push (約 29 commits 未 push)。
+1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の baseline 525/475 維持、avg 9.85 ターン)**。
+残課題: Round 4i-fix (BUG-032/033 engine 修正) / Round 4j (hiramekiDraw) / Round 4k (hiramekiCharStun) / Round 4l+ UI (BUG-001/002/010 + 旧 B5 観戦モード) / origin push (約 30 commits 未 push)。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -55,18 +56,20 @@
 | Round 4e Phase 1: E2E helpers + cutinFixedAP | tests/e2e/helpers/ + cutin-fixed-ap.spec.ts 6 カード集約 (`cf3380c`) | ✅ 完了 |
 | Round 4f Phase 2: partnerColorKeyword + BUG-030 | partner-color-keyword.spec.ts 6 テスト + engine 未実装ギャップ登録 (`4eb103a`) | ✅ 完了 |
 | Round 4g: BUG-030 engine 修正 | read.char.keywords に continuous modifier resolver 実装 + unit test 5 + spec 4-layer 拡張 (`3932d04`) | ✅ 完了 |
-| Round 4h: caseTraitConditioned + BUG-031 | case-trait-conditioned.spec.ts 4 tests + D11021 traits '婚活' data fix (本セッション) | ✅ 完了 |
-| Round 4i+: 残り共通パターン | eventRemoveByAP / hiramekiDraw / hiramekiCharStun | ⏳ |
+| Round 4h: caseTraitConditioned + BUG-031 | case-trait-conditioned.spec.ts 4 tests + D11021 traits '婚活' data fix (`08621c0`) | ✅ 完了 |
+| Round 4i: eventRemoveByAP + BUG-032/033 検出 | event-remove-by-ap.spec.ts 4 tests + listener gap 2 件登録 (本セッション) | ✅ 完了 |
+| Round 4i-fix: BUG-032/033 engine 修正 | trigger.selfOnly 水平展開 + handleHook condition gate 追加 + 回帰テスト | ⏳ |
+| Round 4j+: 残り共通パターン | hiramekiDraw / hiramekiCharStun | ⏳ |
 | Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1464 PASS + 1 skipped / 192 Test Files** (Round 4h 完了時点、Round 4g BUG-030 unit test +5 維持)
-- **E2E 19 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 = 19)
-- **1000戦 smoke baseline 525/475** (Round 4g で 524/476 から 1 game positive shift、avg turns 10.35 → 9.85)
-- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.3 s**
-  - A 勝率 52.5% / B 勝率 47.5% / 平均 9.85 ターン (Round 4g 以降の **新 baseline 525/475**、BUG-030 修正により AI が突撃/迅速 を最適活用、Round 2-4h 全 26 commit で regression 0)
+- **1464 PASS + 1 skipped / 192 Test Files** (Round 4i 完了時点、unit test 増減なし)
+- **E2E 23 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 + eventRemoveByAP 4 = 23)
+- **1000戦 smoke baseline 525/475 維持** (Round 4g で 524/476 から 1 game positive shift、avg turns 9.85)
+- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.2 s**
+  - A 勝率 52.5% / B 勝率 47.5% / 平均 9.85 ターン (Round 4g 以降の **baseline 525/475 を Round 4i も維持**、Round 2-4i 全 27 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
 - `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能
 - リスク・バグ管理: `.claude/bugs/index.base` を Obsidian で開いて全バグ集約 view (Round 4a 導入)
