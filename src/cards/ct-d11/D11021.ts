@@ -24,7 +24,7 @@ export const D11021: CardDef = {
   kind: 'case',
   names: ['千速と重悟の婚活パーティー'],
   colors: ['黄'],
-  traits: [],
+  traits: ['婚活'],
   rarity: 'D',
   imageUrl: '1775608977412418.jpg',
   caseLevel: 7,

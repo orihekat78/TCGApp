@@ -2,9 +2,9 @@
 
 ## 現在地
 
-**フェーズ**: Round 4g 完了 ✅ — BUG-030 engine 修正 (continuous modifier resolver 実装)
-**最新コミット**: Round 4f `4eb103a` + Round 4g (本セッション commit 待ち)
-**テスト状況**: **1464 PASS + 1 skipped** / 192 test files / **E2E 15 pass + 1 skip** (4-layer assert) / smoke **525/475** (1 game shift, avg turns 10.35 → 9.85 positive 変化) / typecheck clean / docs:check clean
+**フェーズ**: Round 4h 完了 ✅ — caseTraitConditioned 2 カード E2E + BUG-031 data fix (D11021 '婚活' trait 追加)
+**最新コミット**: Round 4g `3932d04` + Round 4h (本セッション commit 待ち)
+**テスト状況**: 1464 PASS + 1 skipped / 192 test files / **E2E 19 pass + 1 skip** (Round 4g 15 + caseTraitConditioned 4) / smoke 525/475 baseline 維持 / typecheck clean / docs:check clean
 **1000戦 smoke**: heuristic × heuristic / **0 例外 / 0 timeout** / 524/476 baseline 完全維持
 **現状**:
 - **BUG-006 修正済** (Round 4c): store.dispatch で same-reference 時 shallow copy を強制し ContactFlowDriver useEffect を起動
@@ -42,9 +42,10 @@
 - [x] **Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止** (2026-05-18-9): headed default + BUG-011〜028 + BUG-029 (Round 4c で副次解消) + Vitest/E2E 回帰防止 (commit `f38268c`)
 - [x] **Round 4e Phase 1 — E2E helpers 整備 + cutinFixedAP 6 カード** (2026-05-19): tests/e2e/helpers/ 5 ファイル + cutin-fixed-ap.spec.ts 6 カード集約検証、全 pass (commit `cf3380c`)
 - [x] **Round 4f Phase 2 — partnerColorKeyword 5 カード E2E + BUG-030 登録** (2026-05-19-2): partner-color-keyword.spec.ts 6 テスト (5+1 negative) 集約検証 (commit `4eb103a`)
-- [x] **Round 4g BUG-030 engine 修正** (2026-05-19-3): read.char.keywords に continuous modifier resolver 追加 + unit test 5 + spec 4-layer 拡張、smoke 525/475 positive shift
-- [ ] **Round 4h**: caseTraitConditioned 2 カード spec (D11003 / D11005)
-- [ ] **Round 4i+**: eventRemoveByAP / hiramekiDraw / hiramekiCharStun
+- [x] **Round 4g BUG-030 engine 修正** (2026-05-19-3): read.char.keywords に continuous modifier resolver 追加 + unit test 5 + spec 4-layer 拡張、smoke 525/475 positive shift (commit `3932d04`)
+- [x] **Round 4h caseTraitConditioned 2 カード + BUG-031 data fix** (2026-05-19-4): case-trait-conditioned.spec.ts 4 tests + D11021 traits ['婚活'] 追加 (engine データ不整合修正)
+- [ ] **Round 4i**: eventRemoveByAP 2 カード spec (D08025 / D11020)
+- [ ] **Round 4j+**: hiramekiDraw / hiramekiCharStun
 - [ ] **Round 4g**: Partner / 事件 / 固有 effect カード spec
 - [ ] **Round 4h+ UI 課題**: BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 Round 3d B5 観戦モード
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
@@ -69,4 +70,5 @@
 - [2026-05-18-9](sessions/2026-05-18-9.md) — Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止
 - [2026-05-19](sessions/2026-05-19.md) — Round 4e Phase 1: E2E helpers + cutinFixedAP 6 カード
 - [2026-05-19-2](sessions/2026-05-19-2.md) — Round 4f Phase 2: partnerColorKeyword 5 カード + BUG-030 登録
-- **[2026-05-19-3](sessions/2026-05-19-3.md) — Round 4g: BUG-030 engine 修正 (continuous modifier resolver)** (本セッション)
+- [2026-05-19-3](sessions/2026-05-19-3.md) — Round 4g: BUG-030 engine 修正 (continuous modifier resolver)
+- **[2026-05-19-4](sessions/2026-05-19-4.md) — Round 4h: caseTraitConditioned 2 カード + BUG-031 data fix** (本セッション)

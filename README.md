@@ -9,7 +9,7 @@
 
 ## 現在の状況（2026-05-19）
 
-**Round 4g 完了** ✅ — BUG-030 engine 修正 (read.char.keywords に continuous modifier resolver 追加)。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 2 パターン + engine keyword resolver) で **計 25 連続 commit**:
+**Round 4h 完了** ✅ — caseTraitConditioned 2 カード E2E + BUG-031 data fix (D11021 '婚活' trait 追加)。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 3 パターン + engine keyword resolver + データ整合性修正) で **計 26 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
 - Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
@@ -21,7 +21,8 @@
 - Round 4d (`f38268c`): Playwright **headed default** (`headless: !!process.env.CI`) で「真っ白」問題解消 + Round 2 18 件バグを **BUG-011〜BUG-028** に履歴移行 + **BUG-029**「現場カード sleep 反映なし」は Round 4c で副次解消と確定し Vitest 統合 2 + E2E 2 で回帰防止
 - Round 4e Phase 1 (`cf3380c`): **tests/e2e/helpers/** 共通基盤 (types/setup/state/assertions/index) + **cutinFixedAP** 共通クラス使用 6 カード (D08015/D08017/D08023/D11017/D11018/D11019) の E2E spec 化、全 pass
 - Round 4f Phase 2 (`4eb103a`): **partnerColorKeyword** 共通クラス使用 5 カード (D08009/D08022/D11007/D11009/D11011) を E2E spec 化、6 テスト (5 positive + 1 negative) 全 pass + **BUG-030** (engine `read.char.keywords` が continuousModifier.grantKeywords を resolve しない、Phase 5 未実装) を登録
-- Round 4g (本セッション): **BUG-030 engine 修正** — `src/engine/read/char.ts` の `keywords()` に continuous modifier resolver を実装、unit test +5、E2E spec 4-layer 拡張。smoke baseline 525/475 (1 game shift、avg turns 10.35→9.85 positive 変化)
+- Round 4g (`3932d04`): **BUG-030 engine 修正** — `src/engine/read/char.ts` の `keywords()` に continuous modifier resolver を実装、unit test +5、E2E spec 4-layer 拡張。smoke baseline 525/475 (1 game shift、avg turns 10.35→9.85 positive 変化)
+- Round 4h (本セッション): **caseTraitConditioned** 2 カード (D11003 a2 / D11005 a1) を E2E spec 化、4 テスト (2 positive + 2 negative) 全 pass + **BUG-031** data fix (`src/cards/ct-d11/D11021.ts` の traits に '婚活' 追加、engine データ不整合修正)
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (Phase 9-A baseline 完全維持)**。
 残課題: BUG-006 (action[事件] state-machine) Playwright 実機検証 / Round 4c (UI 課題 BUG-001/002/010) / 旧 Round 3d (B5 CPU-vs-CPU 観戦モード)。
@@ -53,15 +54,16 @@
 | Round 4d Playwright 可視化 + 履歴移行 + BUG-029 | headed default + BUG-011〜028 履歴化 + BUG-029 回帰防止 (`f38268c`) | ✅ 完了 |
 | Round 4e Phase 1: E2E helpers + cutinFixedAP | tests/e2e/helpers/ + cutin-fixed-ap.spec.ts 6 カード集約 (`cf3380c`) | ✅ 完了 |
 | Round 4f Phase 2: partnerColorKeyword + BUG-030 | partner-color-keyword.spec.ts 6 テスト + engine 未実装ギャップ登録 (`4eb103a`) | ✅ 完了 |
-| Round 4g: BUG-030 engine 修正 | read.char.keywords に continuous modifier resolver 実装 + unit test 5 + spec 4-layer 拡張 (本セッション) | ✅ 完了 |
-| Round 4h+: 残り共通パターン | caseTraitConditioned / eventRemoveByAP / hiramekiDraw / hiramekiCharStun | ⏳ |
+| Round 4g: BUG-030 engine 修正 | read.char.keywords に continuous modifier resolver 実装 + unit test 5 + spec 4-layer 拡張 (`3932d04`) | ✅ 完了 |
+| Round 4h: caseTraitConditioned + BUG-031 | case-trait-conditioned.spec.ts 4 tests + D11021 traits '婚活' data fix (本セッション) | ✅ 完了 |
+| Round 4i+: 残り共通パターン | eventRemoveByAP / hiramekiDraw / hiramekiCharStun | ⏳ |
 | Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1464 PASS + 1 skipped / 192 Test Files** (Round 4g 完了時点、BUG-030 unit test +5)
-- **E2E 15 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 (4-layer assert) = 15)
+- **1464 PASS + 1 skipped / 192 Test Files** (Round 4h 完了時点、Round 4g BUG-030 unit test +5 維持)
+- **E2E 19 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 = 19)
 - **1000戦 smoke baseline 525/475** (Round 4g で 524/476 から 1 game positive shift、avg turns 10.35 → 9.85)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
   - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、Round 2+3+4 全 20 commit で regression 0)
