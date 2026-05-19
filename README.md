@@ -24,8 +24,8 @@
 - Round 4g (`3932d04`): **BUG-030 engine 修正** — `src/engine/read/char.ts` の `keywords()` に continuous modifier resolver を実装、unit test +5、E2E spec 4-layer 拡張。smoke baseline 525/475 (1 game shift、avg turns 10.35→9.85 positive 変化)
 - Round 4h (本セッション): **caseTraitConditioned** 2 カード (D11003 a2 / D11005 a1) を E2E spec 化、4 テスト (2 positive + 2 negative) 全 pass + **BUG-031** data fix (`src/cards/ct-d11/D11021.ts` の traits に '婚活' 追加、engine データ不整合修正)
 
-1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.4 vs 47.6 (Phase 9-A baseline 完全維持)**。
-残課題: BUG-006 (action[事件] state-machine) Playwright 実機検証 / Round 4c (UI 課題 BUG-001/002/010) / 旧 Round 3d (B5 CPU-vs-CPU 観戦モード)。
+1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の新 baseline 525/475、avg 9.85 ターン)**。
+残課題: Round 4i (eventRemoveByAP) / Round 4j (hiramekiDraw) / Round 4k (hiramekiCharStun) / Round 4l+ UI (BUG-001/002/010 + 旧 B5 観戦モード) / origin push (約 29 commits 未 push)。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -65,8 +65,8 @@
 - **1464 PASS + 1 skipped / 192 Test Files** (Round 4h 完了時点、Round 4g BUG-030 unit test +5 維持)
 - **E2E 19 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 = 19)
 - **1000戦 smoke baseline 525/475** (Round 4g で 524/476 から 1 game positive shift、avg turns 10.35 → 9.85)
-- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.4 s**
-  - A 勝率 52.4% / B 勝率 47.6% / 平均 10.35 ターン (Phase 9-A baseline 完全維持、Round 2+3+4 全 20 commit で regression 0)
+- 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.3 s**
+  - A 勝率 52.5% / B 勝率 47.5% / 平均 9.85 ターン (Round 4g 以降の **新 baseline 525/475**、BUG-030 修正により AI が突撃/迅速 を最適活用、Round 2-4h 全 26 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
 - `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能
 - リスク・バグ管理: `.claude/bugs/index.base` を Obsidian で開いて全バグ集約 view (Round 4a 導入)
