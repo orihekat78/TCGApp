@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Phase 7-2 完了 ✅ — BUG-035 汎用 $pick substitution 完成 (recursive resolveEffectPicks utility + triggered/hiramekiResolve 2 経路 retrofit + 9 cards 完全カバー)
-**最新コミット**: Phase 7-2 (commit hash 取得後置換) — 計 33 連続 commit (Round 2〜Phase 7-2)
+**最新コミット**: Phase 7-2 `3f50e99` (Phase 7-1 `4bf79a1` 続き) — 計 33 連続 commit (Round 2〜Phase 7-2)
 **テスト状況**: **1476 PASS + 1 skipped** / 193 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Phase 7-2):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
