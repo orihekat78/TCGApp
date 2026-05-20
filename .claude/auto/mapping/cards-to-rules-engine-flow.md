@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b1ab933685f0`
+> Source hash: `6aa26b4afa7c`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **91** ファイル（[全体 index](./index.md)）
+このグループ: **93** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (6)
 
@@ -86,12 +86,13 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (33)
+## その他 (35)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/ui/fixtures/sampleGameState.ts`](../../../src/ui/fixtures/sampleGameState.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow.ts`](../../../src/ui/hooks/useActionsPanelFlow.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
+| [`src/ui/hooks/useCardExpandModal.ts`](../../../src/ui/hooks/useCardExpandModal.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCardImage.ts`](../../../src/ui/hooks/useCardImage.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCardOrientation.ts`](../../../src/ui/hooks/useCardOrientation.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCase.ts`](../../../src/ui/hooks/useCase.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`06-card-types.md`](../../rules/06-card-types.md) |
@@ -111,6 +112,7 @@
 | [`src/ui/hooks/useRemoveCards.ts`](../../../src/ui/hooks/useRemoveCards.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useSceneCharacters.ts`](../../../src/ui/hooks/useSceneCharacters.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 | [`src/ui/hooks/useSceneSwitchPickerStore.ts`](../../../src/ui/hooks/useSceneSwitchPickerStore.ts) | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/ui/hooks/useSpectatorTurnDriver.ts`](../../../src/ui/hooks/useSpectatorTurnDriver.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/ui/hooks/useTargetPicker.ts`](../../../src/ui/hooks/useTargetPicker.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useTopBar.ts`](../../../src/ui/hooks/useTopBar.ts) | _(参照なし)_ |
 | [`src/ui/services/actionLabel.ts`](../../../src/ui/services/actionLabel.ts) | _(参照なし)_ |

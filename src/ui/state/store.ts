@@ -50,6 +50,13 @@ export type GameStateStore = {
    */
   pendingMisread: PendingMisread | null;
   setPendingMisread: (p: PendingMisread | null) => void;
+  /**
+   * Round 4l (B5 観戦モード): true なら self ターンも AI が自動進行 (AI vs AI 観戦)。
+   * - GameSetupModal の「観戦」button で true に
+   * - useSpectatorTurnDriver が turnPlayer==='self' && spectatorMode==true で driveSelfTurn を実行
+   */
+  spectatorMode: boolean;
+  setSpectatorMode: (v: boolean) => void;
 };
 
 /** ヒラメキ保留 (Commit 3a) */
@@ -92,4 +99,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingHirameki: (p) => set({ pendingHirameki: p }),
   pendingMisread: null,
   setPendingMisread: (p) => set({ pendingMisread: p }),
+  spectatorMode: false,
+  setSpectatorMode: (v) => set({ spectatorMode: v }),
 }));

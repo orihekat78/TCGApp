@@ -18,6 +18,8 @@ export type PartnerAreaProps = {
   isCandidate?: boolean;
   /** Phase 8.5: 候補としてクリックされたとき。uid は親が知っている (`partner:self` 等)。 */
   onClick?: () => void;
+  /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
+  onExpand?: (cardId: string) => void;
 };
 
 const STATE_LABEL: Record<PartnerOnBoard['state'], string> = {
@@ -45,7 +47,7 @@ const COLOR_LABEL: Record<ResolvedCardMeta['color'], string> = {
  * 'file-area' (アシスト中) / 'mr-removed' (MR リムーブ) のときは
  * キーホール透かしのみ + 状態ラベルを表示する。
  */
-export function PartnerArea({ partner, side, resolveCard, isCandidate, onClick }: PartnerAreaProps): JSX.Element {
+export function PartnerArea({ partner, side, resolveCard, isCandidate, onClick, onExpand }: PartnerAreaProps): JSX.Element {
   const isOnBoard = partner !== null && partner.location === 'partner-area';
   const assisted  = partner !== null && partner.location === 'file-area';
   const mrRemoved = partner !== null && partner.location === 'mr-removed';
@@ -77,8 +79,14 @@ export function PartnerArea({ partner, side, resolveCard, isCandidate, onClick }
           <>
             <div
               className={`card color-${meta.color}${partner.state === 'sleep' ? ' sleep' : ''}${partner.state === 'stun' ? ' stun' : ''}${isCandidate ? ' candidate' : ''}`}
-              onClick={isCandidate && onClick ? onClick : undefined}
-              style={isCandidate ? { cursor: 'pointer' } : undefined}
+              onClick={
+                isCandidate && onClick
+                  ? onClick
+                  : onExpand
+                    ? () => onExpand(partner.cardId)
+                    : undefined
+              }
+              style={isCandidate || onExpand ? { cursor: 'pointer' } : undefined}
               data-card-id={partner.cardId}
             >
               <div className="color-stripe" />

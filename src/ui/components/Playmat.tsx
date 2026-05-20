@@ -19,6 +19,8 @@ import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
 import { LogPanel } from './LogPanel.js';
 import { CardListModal, type CardListKind } from './CardListModal.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CaseArea, type CaseInfo, type CaseColor } from './CaseArea.js';
 import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
@@ -46,6 +48,7 @@ import { getHandUseDisabledReason } from '@/ui/services/handUseReason.js';
 import { useConfirmation, useConfirmationStore } from '../hooks/useConfirmation.js';
 import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.js';
 import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
+import { useSpectatorTurnDriver } from '../hooks/useSpectatorTurnDriver.js';
 import { useContactFlowDriver } from '../hooks/useContactFlowDriver.js';
 import { useContactModalStore } from '../hooks/useContactModalStore.js';
 import { useHiramekiFlowDriver } from '../hooks/useHiramekiFlowDriver.js';
@@ -93,12 +96,14 @@ type PlayerMatProps = CandidateProps & {
   resolveCase?: (cardId: string) => { title: string; color: CaseColor; level: number; orientation?: 'portrait' | 'landscape' };
   /** Round 2: FILE/証拠/リムーブ エリアクリックで内容モーダルを開く callback */
   onAreaClick?: (kind: 'file' | 'evidence' | 'remove', side: 'self' | 'opp') => void;
+  /** Round 4l (BUG-001): カード単体クリックで拡大 modal を開く callback */
+  onExpand?: (cardId: string) => void;
 };
 
 function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
-  isCaseCandidate, onCaseClick, onAreaClick,
+  isCaseCandidate, onCaseClick, onAreaClick, onExpand,
 }: PlayerMatProps & {
   isCaseCandidate?: boolean;
   onCaseClick?: () => void;
@@ -148,6 +153,7 @@ function PlayerMat({
           side={side}
           isCandidate={isCaseCandidate}
           onClick={onCaseClick}
+          onExpand={onExpand}
         />
         {/* Round 3: 事件編/解決編 を 事件↔証拠 余白に独立表示 (事件カード上の case-stamp は削除済)
             caseInfo null (ゲーム未開始時) は空 placeholder 表示 */}
@@ -168,6 +174,7 @@ function PlayerMat({
           resolveCard={resolveCard}
           candidateUids={candidateUids}
           onUnitClick={onUnitClick}
+          onExpand={onExpand}
         />
         <div className="below-scene">
           <FileArea
@@ -182,6 +189,7 @@ function PlayerMat({
             resolveCard={resolveCard}
             isCandidate={isPartnerCandidate}
             onClick={onPartnerClick}
+            onExpand={onExpand}
           />
         </div>
       </div>
@@ -201,12 +209,16 @@ function PlayerMat({
 export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }: PlaymatProps): JSX.Element {
   // Phase 8.7b: opp ターンを自動進行 (HeuristicPolicy + flow.endTurn で self へ戻す)
   useOppTurnDriver();
+  // Round 4l (B5 観戦モード): spectatorMode=true なら self ターンも AI 自動進行
+  useSpectatorTurnDriver();
   // Phase 8 完全クローズ Commit 2: contact フロー (declare→ガード→コンタクト→AP判定) 駆動。
   useContactFlowDriver();
   // Phase 8 完全クローズ Commit 3a: ヒラメキ判定駆動 (opp owner なら AI 自動 / self owner はモーダル待ち)。
   useHiramekiFlowDriver();
   // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
   const [handExpanded, setHandExpanded] = useState(false);
+  // Round 4l (BUG-001): カード拡大 modal の state
+  const expandModal = useCardExpandModal();
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
   const [logOpen, setLogOpen] = useState(false);
   // Round 2: FILE/証拠/リムーブ クリック → 内容モーダル表示の state。
@@ -315,6 +327,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             isCaseCandidate={isOppCaseCandidate}
             onCaseClick={() => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
             onAreaClick={handleAreaClick}
+            onExpand={expandModal.open}
           />
 
           {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
@@ -329,6 +342,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             isPartnerCandidate={isSelfPartnerCandidate}
             onPartnerClick={() => pickAndConfirm('partner:self')}
             onAreaClick={handleAreaClick}
+            onExpand={expandModal.open}
           />
         </div>
 
@@ -487,6 +501,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             />
           );
         })()}
+        {/* Round 4l (BUG-001): カード拡大表示 modal */}
+        <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
       </div>
     </div>
   );

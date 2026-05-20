@@ -185,7 +185,8 @@
 .mat .left-col {
   display: grid;
   grid-template-rows: 1.4fr auto 1fr;
-  gap: 6px;
+  /* Round 4l (BUG-002): gap 6px → 0 で事件↔edition tag↔証拠 の隙間を消す */
+  gap: 0;
   min-width: 0;
   min-height: 0;
 }

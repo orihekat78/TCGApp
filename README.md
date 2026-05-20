@@ -9,7 +9,7 @@
 
 ## 現在の状況（2026-05-20）
 
-**Phase 7-2 完了** ✅ — BUG-035 汎用 $pick substitution 完成 (recursive `resolveEffectPicks` utility、triggered.ts listener + hiramekiResolve retrofit) + 9 cards 完全カバー + unit +9 (1476 PASS)。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 6 パターン + engine keyword resolver + データ整合性修正 + listener gap 検出/修正 + dev-mode bug + test-isolation + Phase 7 gap 登録) + Phase 7 ($pick auto-resolution 完成) で **計 33 連続 commit**:
+**Round 4l 完了** ✅ — UI 4 課題一括対応 (BUG-001 カード拡大 modal + BUG-002 edition tag 隙間 + BUG-010 opp turn 可視化 + B5 観戦モード新機能)。**未着手 BUG ゼロ達成** 🎉。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity + E2E 基盤 + 47 カード E2E 計 6 パターン + engine keyword resolver + データ整合性 + listener gap 検出/修正 + dev-mode bug + test-isolation + Phase 7 gap 登録) + Phase 7 ($pick auto-resolution 完成) + Round 4l (UI 4 課題) で **計 34 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
 - Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
@@ -29,10 +29,11 @@
 - Round 4j-fix (`52f2b61`): **BUG-034 真因再診断** → `useHiramekiFlowDriver` の auto-resolve race が真因 → fixture 反転で test-isolation、hirameki-draw.spec.ts 3 → 7 tests に拡張 + 防御的改善 (globalThis 側 side-channel + engine namespace re-export + misread 水平展開)
 - Round 4k (`f50028f`): **hiramekiCharStun** 2 カード E2E (D08019 a2 / D11009 a3) + **BUG-035** 登録 + 共通パターン spec **6/5 拡張**
 - Phase 7-1 (`4bf79a1`): BUG-035 hirameki 経路最小修正 + 共通パターン spec 6/6 達成
-- Phase 7-2 (本セッション): **BUG-035 汎用 substitution 完成** — `src/engine/effect/resolve-picks.ts` に recursive `resolveEffectPicks` 新規作成 (atom/choice/sequence/parallel/optional/conditional/forEach/replace 全 kind walk + first candidate 採用 + no-op fallback)、triggered.ts listener と useEngineDispatch.ts:hiramekiResolve の 2 経路に retrofit、9 cards 完全カバー (hirameki 経路 + triggered/declared 経路)。unit +9 (1476 PASS)、BUG-035 修正済
+- Phase 7-2 (`3f50e99`): BUG-035 汎用 $pick substitution 完成 (`resolveEffectPicks` utility) + 9 cards 完全カバー
+- Round 4l (本セッション): **UI 4 課題一括** — BUG-002 (edition tag 隙間 1-line CSS fix) + BUG-001 (`CardExpandModal` + `useCardExpandModal` hook + Playmat onExpand 配線、3 zone click で拡大表示) + BUG-010 (OppTurnOverlay action 表示 + MAX_MOVES 安全上限 200 手 明示) + **B5 観戦モード新機能** (`spectatorMode` store field + `useSpectatorTurnDriver` + GameSetupModal 「観戦モード (AI vs AI)」button)。**未着手 BUG ゼロ達成** 🎉
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の baseline 525/475 維持、avg 9.85 ターン)**。
-残課題: Round 4l+ UI (BUG-001/002/010 + 旧 B5 観戦モード) / AI policy `chooseAtomTarget` 拡張 (Phase 7-3 候補) / origin push (本セッション末で sync 予定)。
+残課題: Phase 5 advance UI 残 (Misread UI / Souza Sub-task B+C) / Phase 7-3 候補 (AI policy `chooseAtomTarget` 拡張) / Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -69,8 +70,9 @@
 | Round 4j-fix: BUG-034 真因再診断 + spec 拡張 + misread 水平展開 | fixture 反転で test-isolation + 7 tests + globalThis + engine re-export (`52f2b61`) | ✅ 完了 |
 | Round 4k: hiramekiCharStun + BUG-035 登録 | hirameki-char-stun.spec.ts 7 tests + $pick auto-resolution Phase 7 deferred (`f50028f`) | ✅ 完了 |
 | Phase 7-1: hirameki 経路 $pick 最小修正 | resolveHiramekiPick + fire test を sleep 検証に upgrade + 共通パターン 6/6 達成 (`4bf79a1`) | ✅ 完了 |
-| Phase 7-2: 汎用 $pick substitution + 9 cards 完全カバー | recursive `resolveEffectPicks` utility + triggered.ts/hiramekiResolve retrofit + unit +9 (本セッション) | ✅ 完了 |
-| Phase 7-3 候補: AI policy `chooseAtomTarget` 拡張 | 現状先頭採用、Round 4l 以降で AI ヒューリスティック拡張 | ⏳ |
+| Phase 7-2: 汎用 $pick substitution + 9 cards 完全カバー | recursive `resolveEffectPicks` utility + triggered.ts/hiramekiResolve retrofit + unit +9 (`3f50e99`) | ✅ 完了 |
+| Round 4l: UI 4 課題一括対応 | BUG-001/002/010 + B5 観戦モード新機能 (本セッション) | ✅ 完了 |
+| Phase 7-3 候補: AI policy `chooseAtomTarget` 拡張 | 現状先頭採用、AI ヒューリスティック拡張で smart 化 | ⏳ |
 | Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
@@ -80,7 +82,7 @@
 - **E2E 38 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 + eventRemoveByAP 5 + hiramekiDraw 7 + hiramekiCharStun 7 = 38)
 - **1000戦 smoke baseline 525/475 完全維持** (Round 4g 以降不変、avg turns 9.85、Round 4j で副作用なし)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.3 s**
-  - A 勝率 52.5% / B 勝率 47.5% / 平均 9.85 ターン (Round 4g 以降の **baseline 525/475 を Phase 7-2 も維持**、Round 2-Phase 7-2 全 33 commit で regression 0)
+  - A 勝率 52.5% / B 勝率 47.5% / 平均 9.85 ターン (Round 4g 以降の **baseline 525/475 を Round 4l も維持**、Round 2-Round 4l 全 34 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
 - `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能
 - リスク・バグ管理: `.claude/bugs/index.base` を Obsidian で開いて全バグ集約 view (Round 4a 導入)

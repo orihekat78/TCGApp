@@ -42,6 +42,8 @@ export type SceneAreaProps = {
   candidateUids?: ReadonlySet<string>;
   /** Phase 8.5: 候補キャラがクリックされたとき (uid 通知) */
   onUnitClick?: (uid: string) => void;
+  /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
+  onExpand?: (cardId: string) => void;
 };
 
 type SceneCharacterCardProps = {
@@ -49,11 +51,13 @@ type SceneCharacterCardProps = {
   meta: ResolvedCardMeta;
   isCandidate: boolean;
   onClick?: () => void;
+  /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
+  onExpand?: (cardId: string) => void;
   /** Phase 8.10g-2: ゴースト (fade-out 中) の場合 true → .removing クラスを付与 */
   isGhost?: boolean;
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, isGhost }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost }: SceneCharacterCardProps): JSX.Element {
   const ap = ch.apOverride ?? meta.ap;
   const lp = ch.lpOverride ?? meta.lp;
 
@@ -75,8 +79,16 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, isGhost }: SceneCh
       className={classes}
       data-uid={ch.uid}
       data-state={ch.state}
-      onClick={isCandidate && onClick && !isGhost ? onClick : undefined}
-      style={isCandidate && !isGhost ? { cursor: 'pointer' } : undefined}
+      onClick={
+        isGhost
+          ? undefined
+          : isCandidate && onClick
+            ? onClick
+            : onExpand
+              ? () => onExpand(ch.cardId)
+              : undefined
+      }
+      style={(isCandidate || onExpand) && !isGhost ? { cursor: 'pointer' } : undefined}
       aria-hidden={isGhost ? 'true' : undefined}
     >
       <div className="color-stripe" />
@@ -100,7 +112,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, isGhost }: SceneCh
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -155,6 +167,7 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               meta={resolveCard(ch.cardId)}
               isCandidate={isCandidate}
               onClick={onUnitClick ? () => onUnitClick(ch.uid) : undefined}
+              onExpand={onExpand}
             />
           );
         })}

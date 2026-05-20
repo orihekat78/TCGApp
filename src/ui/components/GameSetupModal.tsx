@@ -39,6 +39,16 @@ export function GameSetupModal(): JSX.Element | null {
     useTutorialStore.getState().start();
   };
 
+  const handleSpectate = async (): Promise<void> => {
+    // Round 4l (B5 観戦モード): AI vs AI 自動進行
+    // - spectatorMode=true で useSpectatorTurnDriver が self ターンも自動進行
+    // - 既存 useOppTurnDriver が opp ターンを自動進行 (変更なし)
+    // - 勝敗 detect (gameResult set) で両 driver が停止
+    const state = await performGameStart();
+    useGameStateStore.getState().setGameState(state);
+    useGameStateStore.getState().setSpectatorMode(true);
+  };
+
   return (
     <div className="game-setup-modal-overlay" role="dialog" aria-labelledby="setup-title">
       <div className="game-setup-modal">
@@ -67,6 +77,14 @@ export function GameSetupModal(): JSX.Element | null {
           data-testid="game-setup-demo"
         >
           デモ (turn-4) を読込
+        </button>
+        <button
+          type="button"
+          className="game-setup-spectate-btn"
+          onClick={handleSpectate}
+          data-testid="game-setup-spectate"
+        >
+          観戦モード (AI vs AI)
         </button>
         <p className="game-setup-note">
           ※「対戦開始」で CT-D08 vs CT-D11 の turn-1 を正規開始 (手札の引き直し UI が表示されます)。

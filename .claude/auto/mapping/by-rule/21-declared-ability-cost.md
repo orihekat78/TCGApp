@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `dcde4b2a64ae`
+> Source hash: `8f771498eab8`
 
 公式ルール [`21-declared-ability-cost.md`](../../../rules/21-declared-ability-cost.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

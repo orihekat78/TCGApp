@@ -29,6 +29,15 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
               0 0 24px color-mix(in oklch, #c97aff 35%, transparent);
   animation: opp-turn-pulse 1.8s ease-in-out infinite;
+  flex-wrap: wrap;
+}
+
+/* Round 4l (BUG-010): MAX_MOVES safety cap 表示 */
+.opp-turn-safety-cap {
+  font-size: 12px;
+  color: rgba(220, 200, 240, 0.7);
+  margin-left: 8px;
+  font-weight: 400;
 }
 
 @keyframes opp-turn-pulse {

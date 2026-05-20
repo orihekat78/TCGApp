@@ -1,0 +1,68 @@
+/* Round 4l (BUG-001) — カード拡大表示 modal
+ * 視覚: CardListModal と整合、単一カードを最大化表示 */
+
+.card-expand-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 24, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1600; /* CardListModal (1500) より前面 */
+  backdrop-filter: blur(6px);
+  cursor: zoom-out;
+}
+
+.card-expand-modal {
+  position: relative;
+  max-width: min(560px, 80vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: default;
+}
+
+.card-expand-modal .card-art-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.card-expand-modal img {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+.card-expand-close {
+  position: absolute;
+  top: -36px;
+  right: 0;
+  background: rgba(40, 60, 90, 0.9);
+  border: 1px solid #5a7ab0;
+  color: #e2eaf6;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.card-expand-close:hover {
+  background: rgba(60, 90, 130, 1);
+}
+
+.card-expand-modal .card-name {
+  margin-top: 12px;
+  color: #e2eaf6;
+  font-size: 14px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}

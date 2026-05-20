@@ -43,6 +43,8 @@ export type CaseAreaProps = {
   isCandidate?: boolean;
   /** Phase 8.7a: クリックで pick+confirm を 1 タップ完結 */
   onClick?: () => void;
+  /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
+  onExpand?: (cardId: string) => void;
 };
 
 const TURN_LABEL: Record<'first' | 'second', string> = {
@@ -51,10 +53,16 @@ const TURN_LABEL: Record<'first' | 'second', string> = {
 };
 
 export function CaseArea(props: CaseAreaProps): JSX.Element {
-  const { caseInfo, turnOrder, side, isCandidate, onClick } = props;
+  const { caseInfo, turnOrder, side, isCandidate, onClick, onExpand } = props;
   const rootClass = `case-area side-${side}${isCandidate ? ' case-area--candidate' : ''}`;
-  const interactiveProps = onClick
-    ? { onClick, style: { cursor: 'pointer' as const } }
+  // Round 4l (BUG-001): isCandidate=true なら action onClick、false かつ onExpand 提供時は expand
+  const effectiveClick = isCandidate && onClick
+    ? onClick
+    : onExpand && caseInfo?.cardId
+      ? () => onExpand(caseInfo.cardId as string)
+      : undefined;
+  const interactiveProps = effectiveClick
+    ? { onClick: effectiveClick, style: { cursor: 'pointer' as const } }
     : {};
 
   // Phase 9-D: cardId 画像から向きを自動判定。
