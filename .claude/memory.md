@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Round 4j 完了 ✅ — hiramekiDraw shape E2E + BUG-034 (vite module isolation) 登録 + 共通パターン spec 5/5
-**最新コミット**: Round 4j (commit hash 取得後置換) — 計 29 連続 commit (Round 2〜4j)
+**最新コミット**: Round 4j `4dd2cd8` (Round 4i-fix `6a372a9` 続き) — 計 29 連続 commit (Round 2〜4j)
 **テスト状況**: 1467 PASS + 1 skipped / 192 files / **E2E 27 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-4j):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
