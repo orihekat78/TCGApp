@@ -2,19 +2,20 @@
 
 ## 現在地
 
-**フェーズ**: Round 4j-fix 完了 ✅ — BUG-034 真因再診断 (auto-resolve race) + fixture 反転 + spec 拡張 + misread 水平展開
-**最新コミット**: Round 4j-fix `52f2b61` (Round 4j `4dd2cd8` 続き) — 計 30 連続 commit (Round 2〜4j-fix)
-**テスト状況**: 1467 PASS + 1 skipped / 192 files / **E2E 31 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
-**現状サマリ** (Round 4e-4j-fix):
+**フェーズ**: Round 4k 完了 ✅ — hiramekiCharStun 2 カード E2E + BUG-035 ($pick auto-resolution Phase 7 deferred) 登録 + 共通パターン spec 6/5 拡張
+**最新コミット**: Round 4k (commit hash 取得後置換) — 計 31 連続 commit (Round 2〜4k)
+**テスト状況**: 1467 PASS + 1 skipped / 192 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
+**現状サマリ** (Round 4e-4k):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
 - Round 4g: **BUG-030 修正** (engine `read.char.keywords` に continuous modifier resolver、smoke positive shift 525-475)
 - Round 4h: **caseTraitConditioned 2 カード** spec + **BUG-031 data fix** (D11021 '婚活' trait 追加)
 - Round 4i (`8d35359`): **eventRemoveByAP 2 カード** spec + listener gap 2 件登録 (BUG-032/033)
 - Round 4i-fix (`6a372a9`): **BUG-032/033 engine 修正** — selfOnly 水平展開 + selfOnlyMatches player check + handleHook condition gate
 - Round 4j (`4dd2cd8`): hiramekiDraw 2 カード shape E2E + BUG-034 登録 + **共通パターン 5/5 完了** 🎉
-- Round 4j-fix (本): **BUG-034 真因再診断** → auto-resolve race が真因、fixture 反転で test-isolation + hirameki-draw.spec.ts 3→7 tests + globalThis + engine re-export + misread 水平展開
-- 共通パターン spec 進捗: **5/5 + fire/skip 検証で実機テスト精度向上**
-- BUG-XXX 管理: BUG-001〜034 計 34 件、**修正済 32 件 + 未着手 UI 系のみ** (BUG-034 が今回 修正済 化)
+- Round 4j-fix (`52f2b61`): BUG-034 真因再診断 (auto-resolve race) + fixture 反転 + spec 拡張 + misread 水平展開
+- Round 4k (本): **hiramekiCharStun 2 カード** E2E (D08019 a2 / D11009 a3) shape + queue + no-op fallback 検証 (7 tests) + **BUG-035** ($pick auto-resolution Phase 7 deferred、$pick atom 9 件水平展開) 登録
+- 共通パターン spec 進捗: **6/5 拡張** (hiramekiCharStun shape + queue 検証、state 変化は Phase 7 で深掘り)
+- BUG-XXX 管理: BUG-001〜035 計 35 件、**修正済 32 件 + 未着手 BUG-035 + UI 系 (BUG-001/002/010)**
 
 ## 進捗トラッカー (高レベル)
 
@@ -31,8 +32,9 @@
   - 4i (`8d35359`): eventRemoveByAP 2 カード + BUG-032/033 listener gap 検出
   - 4i-fix (`6a372a9`): BUG-032/033 engine 修正 (selfOnly 水平展開 + handleHook condition gate)
   - 4j (`4dd2cd8`): hiramekiDraw shape E2E + BUG-034 登録 + **共通パターン 5/5 完了**
-  - 4j-fix (本): BUG-034 真因再診断 (auto-resolve race) + fixture 反転 + spec 拡張 + misread 水平展開
-- [ ] **Round 4k**: hiramekiCharStun 2 カード (D08019 / D11009)
+  - 4j-fix (`52f2b61`): BUG-034 真因再診断 + fixture 反転 + spec 拡張 + misread 水平展開
+  - 4k (本): hiramekiCharStun 2 カード shape + queue + BUG-035 (Phase 7 deferred) 登録 + 共通パターン 6/5 拡張
+- [ ] **Phase 7**: BUG-035 $pick auto-resolution + 9 件水平展開 (D11020/D11014/D11012/D11005/D11015/D11003/D08003/D08019/D11009)
 - [ ] **Round 4l+ UI 課題**: BUG-001 拡大表示 / BUG-002 edition tag / BUG-010 opp turn 可視化 / B5 観戦モード
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
 - [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
@@ -61,4 +63,5 @@
 - [2026-05-20](sessions/2026-05-20.md) — Round 4i: eventRemoveByAP 2 カード + BUG-032/033 listener gap 登録
 - [2026-05-20-2](sessions/2026-05-20-2.md) — Round 4i-fix: BUG-032/033 engine 修正
 - [2026-05-20-3](sessions/2026-05-20-3.md) — Round 4j: hiramekiDraw shape E2E + BUG-034 + 共通パターン 5/5
-- **[2026-05-20-4](sessions/2026-05-20-4.md) — Round 4j-fix: BUG-034 真因再診断 + spec 拡張 + misread 水平展開** (本セッション)
+- [2026-05-20-4](sessions/2026-05-20-4.md) — Round 4j-fix: BUG-034 真因再診断 + spec 拡張 + misread 水平展開
+- **[2026-05-20-5](sessions/2026-05-20-5.md) — Round 4k: hiramekiCharStun E2E + BUG-035 (Phase 7 deferred) 登録** (本セッション)

@@ -9,7 +9,7 @@
 
 ## 現在の状況（2026-05-20）
 
-**Round 4j-fix 完了** ✅ — BUG-034 真因再診断 (`useHiramekiFlowDriver` の auto-resolve race) + fixture 反転で test-isolation + hirameki-draw.spec.ts fire/skip 拡張 + misread 水平展開。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 5 パターン + engine keyword resolver + データ整合性修正 + listener gap 検出 + listener gap 修正 + dev-mode bug 検出 + test-isolation 修正) で **計 30 連続 commit**:
+**Round 4k 完了** ✅ — hiramekiCharStun 2 カード E2E (D08019 a2 / D11009 a3) shape + queue + no-op fallback 検証 + **BUG-035** ($pick auto-resolution Phase 7 deferred) 登録 + 共通パターン spec **6/5 拡張**。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity 修正 + E2E 基盤 + 47 カード E2E 計 6 パターン + engine keyword resolver + データ整合性修正 + listener gap 検出/修正 + dev-mode bug + test-isolation 修正 + Phase 7 gap 登録) で **計 31 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
 - Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
@@ -26,10 +26,11 @@
 - Round 4i (`8d35359`): **eventRemoveByAP** 2 カード (D08025 factory pure / D11020 individual sequence) を E2E spec 化、4 テスト全 pass + dispatch 経路で **engine listener gap 2 件検出** → **BUG-032** (`eventRemoveByAP` trigger.selfOnly 未設定 → opp 手札の同 cardId が誤発動) / **BUG-033** (triggered.ts handleHook が ability.condition 未評価) 登録
 - Round 4i-fix (`6a372a9`): **BUG-032/033 engine 修正** — `eventRemoveByAP` factory + D11019/D11020/D08024 a1 に `selfOnly:true` 水平展開、`selfOnlyMatches` の hand 経路に player 比較追加、`triggered.ts handleHook` に condition gate (`evalCond`) 追加
 - Round 4j (`4dd2cd8`): **hiramekiDraw** 2 カード shape E2E (3 tests) + **BUG-034** 登録 + **共通パターン spec 5/5 完了** 🎉
-- Round 4j-fix (本セッション): **BUG-034 真因再診断** → `useHiramekiFlowDriver` の auto-resolve race が真因 (vite module isolation 説は誤り) → fixture を opp attacks self に反転して test-isolation 実現、hirameki-draw.spec.ts を 3 → 7 tests に拡張 (各カード fire/skip + 既存) + 防御的改善 (globalThis 経由 side-channel + engine namespace re-export + misread 水平展開)
+- Round 4j-fix (`52f2b61`): **BUG-034 真因再診断** → `useHiramekiFlowDriver` の auto-resolve race が真因 → fixture 反転で test-isolation、hirameki-draw.spec.ts 3 → 7 tests に拡張 + 防御的改善 (globalThis 側 side-channel + engine namespace re-export + misread 水平展開)
+- Round 4k (本セッション): **hiramekiCharStun** 2 カード E2E (D08019 a2 / D11009 a3) shape + queue + no-op fallback 検証 (7 tests) + **BUG-035** ($pick auto-resolution Phase 7 deferred、$pick atom 9 件水平展開) 登録 + 共通パターン spec **6/5 拡張**
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の baseline 525/475 維持、avg 9.85 ターン)**。
-残課題: Round 4k (hiramekiCharStun) / Round 4l+ UI (BUG-001/002/010 + 旧 B5 観戦モード) / origin push (本セッション末で sync 予定)。
+残課題: Phase 7 (BUG-035 $pick auto-resolution + 9 件水平展開) / Round 4l+ UI (BUG-001/002/010 + 旧 B5 観戦モード) / origin push (本セッション末で sync 予定)。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -63,18 +64,19 @@
 | Round 4i: eventRemoveByAP + BUG-032/033 検出 | event-remove-by-ap.spec.ts 4 tests + listener gap 2 件登録 (`8d35359`) | ✅ 完了 |
 | Round 4i-fix: BUG-032/033 engine 修正 | selfOnly 水平展開 + selfOnlyMatches player check + handleHook condition gate + unit/E2E +4 (`6a372a9`) | ✅ 完了 |
 | Round 4j: hiramekiDraw shape + BUG-034 検出 | hirameki-draw.spec.ts 3 tests + 共通パターン 5/5 (`4dd2cd8`) | ✅ 完了 |
-| Round 4j-fix: BUG-034 真因再診断 + spec 拡張 + misread 水平展開 | fixture 反転で test-isolation + 7 tests + globalThis + engine re-export (本セッション) | ✅ 完了 |
-| Round 4k: 残り共通パターン | hiramekiCharStun | ⏳ |
+| Round 4j-fix: BUG-034 真因再診断 + spec 拡張 + misread 水平展開 | fixture 反転で test-isolation + 7 tests + globalThis + engine re-export (`52f2b61`) | ✅ 完了 |
+| Round 4k: hiramekiCharStun + BUG-035 登録 | hirameki-char-stun.spec.ts 7 tests + $pick auto-resolution Phase 7 deferred (本セッション) | ✅ 完了 |
+| Phase 7: $pick auto-resolution | BUG-035 + 9 件水平展開 (D11020/D11014/D11012/D11005/D11015/D11003/D08003/D08019/D11009) | ⏳ |
 | Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
 - **1467 PASS + 1 skipped / 192 Test Files** (Round 4j 完了時点、Round 4i-fix の +3 維持、unit test 増減なし)
-- **E2E 31 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 + eventRemoveByAP 5 + hiramekiDraw 7 = 31)
+- **E2E 38 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 + eventRemoveByAP 5 + hiramekiDraw 7 + hiramekiCharStun 7 = 38)
 - **1000戦 smoke baseline 525/475 完全維持** (Round 4g 以降不変、avg turns 9.85、Round 4j で副作用なし)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.3 s**
-  - A 勝率 52.5% / B 勝率 47.5% / 平均 9.85 ターン (Round 4g 以降の **baseline 525/475 を Round 4j + 4j-fix も維持**、Round 2-4j-fix 全 30 commit で regression 0)
+  - A 勝率 52.5% / B 勝率 47.5% / 平均 9.85 ターン (Round 4g 以降の **baseline 525/475 を Round 4k も維持**、Round 2-4k 全 31 commit で regression 0)
 - `npm run typecheck` 通過 / `npm run docs:check` クリーン
 - `npm run dev` で http://localhost:5173/ — 公式 CDN 画像付きの人間 vs CPU が end-to-end でプレイ可能
 - リスク・バグ管理: `.claude/bugs/index.base` を Obsidian で開いて全バグ集約 view (Round 4a 導入)
