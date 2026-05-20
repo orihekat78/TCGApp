@@ -43,3 +43,17 @@ export { cost } from './cost/index.js';
 export { cond } from './cond/index.js';
 export { resolve } from './resolve/index.js';
 export { flow } from './flow/index.js';
+
+// Round 4j-fix (BUG-034): hirameki/misread side-channel drain/reset を engine namespace で
+// re-export。vite dev mode で `'@/engine/listeners/*.js'` 直接 import と `'./listeners/*.js'`
+// 相対 import が別 module instance に分裂する問題を回避するため、UI 側からは必ず `@/engine`
+// 経由 (engine/index.ts → 同 module から再 export) で取得させる。
+export {
+  _drainPendingHirameki,
+  _resetPendingHirameki,
+  _resetHiramekiRegistered,
+} from './listeners/hirameki.js';
+export {
+  _drainPendingMisread,
+  _resetPendingMisread,
+} from './listeners/misread.js';

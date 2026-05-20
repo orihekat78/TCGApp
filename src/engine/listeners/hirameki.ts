@@ -23,21 +23,33 @@ export type PendingHiramekiSide = {
   abilityId: string;
 };
 
-let _pendingHiramekiSideChannel: PendingHiramekiSide | null = null;
+// Round 4j-fix (BUG-034): vite dev mode の module instance 分離回避のため globalThis 経由で
+// side-channel を保持。複数の hirameki.ts module instance が存在しても、すべて同じ
+// globalThis.__pendingHirameki を read/write する。jsdom + browser 両方で動作。
+declare global {
+  // eslint-disable-next-line no-var
+  var __pendingHirameki: PendingHiramekiSide | null | undefined;
+}
+function _readSide(): PendingHiramekiSide | null {
+  return (globalThis as { __pendingHirameki?: PendingHiramekiSide | null }).__pendingHirameki ?? null;
+}
+function _writeSide(v: PendingHiramekiSide | null): void {
+  (globalThis as { __pendingHirameki?: PendingHiramekiSide | null }).__pendingHirameki = v;
+}
 
 /**
  * dispatchEngineAction が produce 完了後に呼び、Zustand に転送するための drain API。
  * 呼び出すと現在の値を返し、側チャネルを null クリアする。
  */
 export function _drainPendingHirameki(): PendingHiramekiSide | null {
-  const v = _pendingHiramekiSideChannel;
-  _pendingHiramekiSideChannel = null;
+  const v = _readSide();
+  _writeSide(null);
   return v;
 }
 
 /** テスト用: 側チャネルを直接リセット */
 export function _resetPendingHirameki(): void {
-  _pendingHiramekiSideChannel = null;
+  _writeSide(null);
 }
 
 let _registered = false;
@@ -68,11 +80,11 @@ export function registerHiramekiListener(): void {
       (a: unknown) => a !== null && typeof a === 'object' && (a as { type?: string }).type === 'icon-flash',
     ) as { id: string } | undefined;
     if (!flash) return;
-    _pendingHiramekiSideChannel = {
+    _writeSide({
       player: p.player,
       cardId: p.ev.cardId,
       abilityId: flash.id,
-    };
+    });
     return;
   });
 }

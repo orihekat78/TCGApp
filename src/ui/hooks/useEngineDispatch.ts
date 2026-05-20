@@ -25,8 +25,8 @@ import { event as engineEvent } from '@/engine/event/index.js';
 import { _getResolutionLock } from '@/engine/event/registry.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readCharFromEngine } from '@/engine/read/char.js';
-import { _drainPendingHirameki } from '@/engine/listeners/hirameki.js';
-import { _drainPendingMisread } from '@/engine/listeners/misread.js';
+// Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
+import { _drainPendingHirameki, _drainPendingMisread } from '@/engine';
 
 type Player = 'self' | 'opp';
 

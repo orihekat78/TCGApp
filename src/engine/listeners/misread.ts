@@ -29,18 +29,29 @@ export type PendingMisreadSide = {
   candidates: MisreadCandidate[];
 };
 
-let _pendingMisreadSideChannel: PendingMisreadSide | null = null;
+// Round 4j-fix (BUG-034): vite dev mode の module instance 分離回避のため globalThis 経由で
+// side-channel を保持。hirameki.ts と同パターン (水平展開)。
+declare global {
+  // eslint-disable-next-line no-var
+  var __pendingMisread: PendingMisreadSide | null | undefined;
+}
+function _readMisreadSide(): PendingMisreadSide | null {
+  return (globalThis as { __pendingMisread?: PendingMisreadSide | null }).__pendingMisread ?? null;
+}
+function _writeMisreadSide(v: PendingMisreadSide | null): void {
+  (globalThis as { __pendingMisread?: PendingMisreadSide | null }).__pendingMisread = v;
+}
 
 /** dispatchEngineAction が produce 完了後に呼び、Zustand に転送するための drain API */
 export function _drainPendingMisread(): PendingMisreadSide | null {
-  const v = _pendingMisreadSideChannel;
-  _pendingMisreadSideChannel = null;
+  const v = _readMisreadSide();
+  _writeMisreadSide(null);
   return v;
 }
 
 /** テスト用: 側チャネル直接リセット */
 export function _resetPendingMisread(): void {
-  _pendingMisreadSideChannel = null;
+  _writeMisreadSide(null);
 }
 
 /**
@@ -116,10 +127,10 @@ export function registerMisreadListener(): void {
     }
 
     // Human defender → 側チャネル (UI 側で resolve、Commit 3b では scaffold のみ)
-    _pendingMisreadSideChannel = {
+    _writeMisreadSide({
       reasoningUid: p.uid,
       reasoningPlayer,
       candidates,
-    };
+    });
   });
 }
