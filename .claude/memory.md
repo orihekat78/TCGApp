@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Phase 7-1 完了 ✅ — BUG-035 hirameki 経路 $pick auto-resolution 最小修正 + spec を sleep 検証に upgrade + 共通パターン 6/6 達成 🎉
-**最新コミット**: Phase 7-1 (commit hash 取得後置換) — 計 32 連続 commit (Round 2〜Phase 7-1)
+**最新コミット**: Phase 7-1 `4bf79a1` (Round 4k `f50028f` 続き) — 計 32 連続 commit (Round 2〜Phase 7-1)
 **テスト状況**: 1467 PASS + 1 skipped / 192 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Phase 7-1):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
