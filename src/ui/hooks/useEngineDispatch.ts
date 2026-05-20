@@ -16,6 +16,7 @@ import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { cost as engineCost } from '@/engine/cost/index.js';
+import { candidates as targetCandidates } from '@/engine/target/candidates.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
 import type { Cost, EffectCtx } from '@/engine/types';
@@ -294,9 +295,15 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           (a: unknown) => a !== null && typeof a === 'object' && (a as { id?: string }).id === pending.abilityId,
         ) as { effect?: unknown } | undefined;
         if (ability?.effect) {
+          // Phase 7-1 (BUG-035): hirameki 経路の $pick auto-resolution
+          // effect が `choice → atom (uid:$pick, target:{kind:'pick',...})` 構造の場合、
+          // 候補から 1 件 (first or empty) を選んで uid を substitute する。 候補ゼロなら
+          // 元の no-op fallback (rules/10 §ヒラメキ「対象 0 で空発動可」)。
+          // 他 cards (D11020 等 7 件) は Phase 7-2 で汎用的 resolver 経路に拡張予定。
+          const resolved = resolveHiramekiPick(draft, ability.effect, pending);
           engineEvent.queue(
             draft,
-            ability.effect as never,
+            resolved as never,
             { player: pending.player, cardId: pending.cardId },
             'evidence:remove-by-action',
             { player: pending.player, ev: { cardId: pending.cardId } },
@@ -354,6 +361,65 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
 }
 
 // ---- public API ----
+
+/**
+ * Phase 7-1 (BUG-035 fix): hirameki effect 内の `$pick` placeholder を
+ * 候補 enumeration → 1 件選択 (first candidate) で resolve。
+ *
+ * 想定 effect 構造: `{ kind:'choice', options:[{ kind:'atom', args:{ uid:'$pick',
+ *   target:{ kind:'pick', query:{...}, n:{min,max}, chooser:'self' }, ...other }}]}`
+ *
+ * - choice の options が単一かつ atom かつ args.uid==='$pick' のとき発動
+ * - target.query を `engine.target.candidates` で enumerate
+ * - 候補 0 件: 元 effect そのまま (no-op fallback、rules/10 で対象 0 許容)
+ * - 候補 1+ 件: 先頭を採用、effect を deep clone して args.uid = picked.uid、target は削除
+ *
+ * 他 effect 構造 (sequence + conditional + 個別 sceneRemove 等、9 cards 中 D11020 含む)
+ * は Phase 7-2 で対応予定 (本実装の対象外)。
+ */
+function resolveHiramekiPick(
+  state: GameState,
+  effect: unknown,
+  pending: { player: 'self' | 'opp'; cardId: string; abilityId: string },
+): unknown {
+  if (!effect || typeof effect !== 'object') return effect;
+  const e = effect as {
+    kind?: string;
+    options?: { kind?: string; verb?: string; args?: { uid?: string; target?: unknown } & Record<string, unknown> }[];
+  };
+  if (e.kind !== 'choice' || !Array.isArray(e.options) || e.options.length === 0) return effect;
+  const opt = e.options[0];
+  if (!opt || opt.kind !== 'atom' || !opt.args) return effect;
+  const uid = opt.args.uid;
+  const target = opt.args.target as { kind?: string; query?: unknown } | undefined;
+  if (uid !== '$pick' || !target || target.kind !== 'pick') return effect;
+
+  // candidates enumerate
+  const ctx: EffectCtx = {
+    source: { player: pending.player, cardId: pending.cardId, area: 'evidence' },
+    bindings: {},
+  };
+  const cands = targetCandidates(state, target as never, ctx);
+  if (cands.length === 0) return effect; // no-op fallback (rules/10)
+
+  const picked = cands[0];
+  if (!picked || picked.kind !== 'char') return effect;
+
+  // Deep clone effect with substituted uid (target 除去)
+  const { target: _omit, ...restArgs } = opt.args;
+  void _omit;
+  return {
+    kind: 'choice',
+    chooser: (e as { chooser?: unknown }).chooser,
+    options: [
+      {
+        kind: 'atom',
+        verb: opt.verb,
+        args: { ...restArgs, uid: picked.uid },
+      },
+    ],
+  };
+}
 
 /**
  * Pure dispatcher. React の外からも (テスト等) 呼べる。

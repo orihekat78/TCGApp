@@ -218,7 +218,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
       expectNoConsoleErrors(errors);
     });
 
-    test(`${cardId} ${abilityId} (${kind}): fire path → no-op fallback (BUG-035 既知挙動)`, async ({ page }) => {
+    test(`${cardId} ${abilityId} (${kind}): fire path → scene state sleep (Phase 7-1 で BUG-035 partial fix)`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
       await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
@@ -231,14 +231,13 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
       expect(pending?.abilityId, `pending.abilityId === ${abilityId}`).toBe(abilityId);
 
       const stateBefore = await getSceneState(page, 'self', 0);
+      expect(stateBefore, 'pre-fire state is active').toBe('active');
       await dispatchAction(page, { type: 'hiramekiResolve', choice: 'fire' });
       const stateAfter = await getSceneState(page, 'self', 0);
 
-      // BUG-035: `$pick` auto-resolution 未実装 (Phase 7 deferred)
-      // sceneSetState atom が '$pick' リテラルそのまま受取り、no-op fallback で進行
-      // Phase 7 fix 後はここで `'sleep'` への変化を期待 → 当面は `'active'` 不変が現状動作
-      expect(stateAfter, 'self.scene[0].state は no-op fallback で active 不変 (BUG-035 既知挙動)').toBe(stateBefore);
-      expect(stateAfter, 'scene state remains active').toBe('active');
+      // Phase 7-1 (BUG-035 partial fix): hiramekiResolve handler が $pick を first candidate
+      // に置換するため、scene[0] (唯一の active 候補) が sleep 化される
+      expect(stateAfter, 'self.scene[0].state === sleep (Phase 7-1 $pick resolved to scene[0])').toBe('sleep');
       expect(await getPendingHirameki(page), 'pendingHirameki cleared after resolve').toBeNull();
 
       expectNoConsoleErrors(errors);
