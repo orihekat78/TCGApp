@@ -2,10 +2,10 @@
 
 ## 現在地
 
-**フェーズ**: Phase 7-1 完了 ✅ — BUG-035 hirameki 経路 $pick auto-resolution 最小修正 + spec を sleep 検証に upgrade + 共通パターン 6/6 達成 🎉
-**最新コミット**: Phase 7-1 `4bf79a1` (Round 4k `f50028f` 続き) — 計 32 連続 commit (Round 2〜Phase 7-1)
-**テスト状況**: 1467 PASS + 1 skipped / 192 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
-**現状サマリ** (Round 4e-Phase 7-1):
+**フェーズ**: Phase 7-2 完了 ✅ — BUG-035 汎用 $pick substitution 完成 (recursive resolveEffectPicks utility + triggered/hiramekiResolve 2 経路 retrofit + 9 cards 完全カバー)
+**最新コミット**: Phase 7-2 (commit hash 取得後置換) — 計 33 連続 commit (Round 2〜Phase 7-2)
+**テスト状況**: **1476 PASS + 1 skipped** / 193 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
+**現状サマリ** (Round 4e-Phase 7-2):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
 - Round 4g: **BUG-030 修正** (engine `read.char.keywords` に continuous modifier resolver、smoke positive shift 525-475)
 - Round 4h: **caseTraitConditioned 2 カード** spec + **BUG-031 data fix** (D11021 '婚活' trait 追加)
@@ -14,9 +14,10 @@
 - Round 4j (`4dd2cd8`): hiramekiDraw 2 カード shape E2E + BUG-034 登録 + **共通パターン 5/5 完了** 🎉
 - Round 4j-fix (`52f2b61`): BUG-034 真因再診断 (auto-resolve race) + fixture 反転 + spec 拡張 + misread 水平展開
 - Round 4k (`f50028f`): hiramekiCharStun 2 カード E2E + BUG-035 登録 + 共通パターン 6/5 拡張
-- Phase 7-1 (本): **BUG-035 hirameki 経路最小修正** — `useEngineDispatch.ts` に `resolveHiramekiPick` 関数追加 ($pick → first candidate 解決) + hirameki-char-stun fire test を `'sleep'` 検証に upgrade
-- 共通パターン spec 進捗: **6/6 達成** 🎉 (hiramekiCharStun も state 変化検証完了)
-- BUG-XXX 管理: BUG-001〜035 計 35 件、修正済 32 件 + **部分修正済 BUG-035** + UI 系 (BUG-001/002/010)
+- Phase 7-1 (`4bf79a1`): BUG-035 hirameki 経路最小修正 + 共通パターン spec 6/6 達成
+- Phase 7-2 (本): **BUG-035 汎用 substitution 完成** — `src/engine/effect/resolve-picks.ts` recursive utility (atom/choice/sequence/parallel/optional/conditional/forEach/replace 全 kind walk + first candidate + no-op fallback) を triggered.ts/useEngineDispatch.ts に適用、9 cards 完全カバー、unit +9 (1476 PASS)
+- 共通パターン spec 進捗: **6/6 維持** + engine fix が全 9 cards に波及
+- BUG-XXX 管理: BUG-001〜035 計 35 件、**修正済 33 件** (BUG-035 含む) + UI 系 (BUG-001/002/010)
 
 ## 進捗トラッカー (高レベル)
 
@@ -35,8 +36,9 @@
   - 4j (`4dd2cd8`): hiramekiDraw shape E2E + BUG-034 登録 + **共通パターン 5/5 完了**
   - 4j-fix (`52f2b61`): BUG-034 真因再診断 + fixture 反転 + spec 拡張 + misread 水平展開
   - 4k (`f50028f`): hiramekiCharStun 2 カード shape + queue + BUG-035 登録
-  - Phase 7-1 (本): BUG-035 hirameki 経路 $pick 最小修正 + spec を sleep 検証に upgrade
-- [ ] **Phase 7-2**: 汎用 $pick substitution + 残 7 cards 水平展開 (D11020/D11014/D11012/D11005/D11015/D11003/D08003)
+  - Phase 7-1 (`4bf79a1`): BUG-035 hirameki 経路 $pick 最小修正
+  - Phase 7-2 (本): BUG-035 汎用 $pick substitution + 9 cards 完全カバー (recursive resolveEffectPicks)
+- [ ] **Phase 7-3 候補**: AI policy `chooseAtomTarget` 拡張 (現状先頭採用)
 - [ ] **Round 4l+ UI 課題**: BUG-001 拡大表示 / BUG-002 edition tag / BUG-010 opp turn 可視化 / B5 観戦モード
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
 - [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
@@ -67,4 +69,5 @@
 - [2026-05-20-3](sessions/2026-05-20-3.md) — Round 4j: hiramekiDraw shape E2E + BUG-034 + 共通パターン 5/5
 - [2026-05-20-4](sessions/2026-05-20-4.md) — Round 4j-fix: BUG-034 真因再診断 + spec 拡張 + misread 水平展開
 - [2026-05-20-5](sessions/2026-05-20-5.md) — Round 4k: hiramekiCharStun E2E + BUG-035 (Phase 7 deferred) 登録
-- **[2026-05-20-6](sessions/2026-05-20-6.md) — Phase 7-1: BUG-035 hirameki 経路 $pick auto-resolution 最小修正 + 共通パターン 6/6 達成** (本セッション)
+- [2026-05-20-6](sessions/2026-05-20-6.md) — Phase 7-1: BUG-035 hirameki 経路 $pick auto-resolution 最小修正 + 共通パターン 6/6 達成
+- **[2026-05-21](sessions/2026-05-21.md) — Phase 7-2: 汎用 $pick substitution + 9 cards 完全カバー で BUG-035 修正済** (本セッション)

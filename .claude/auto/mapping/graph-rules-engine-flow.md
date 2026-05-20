@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `fa2ab38bee1a`
+> Source hash: `dcde4b2a64ae`
 
 engine namespace effect / flow / invariant / dyn / target / cost / cond / resolve と公式ルールの参照関係を Mermaid flowchart で表示。Obsidian グラフビュー連携は [by-rule/](./by-rule/) / [by-engine/](./by-engine/) を参照。
 
@@ -53,6 +53,7 @@ flowchart LR
   NS_cost --> R_25_qa_effects_resolution_md
   NS_cost --> R_26_qa_deck_refresh_md
   NS_dyn --> R_15_abilities_effects_md
+  NS_effect --> R_10_action_event_md
   NS_effect --> R_15_abilities_effects_md
   NS_effect --> R_25_qa_effects_resolution_md
   NS_flow --> R_01_victory_conditions_md

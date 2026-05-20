@@ -23,6 +23,7 @@
 import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
+import { resolveEffectPicks } from '../effect/resolve-picks.js';
 import type { GameState, AbilityDef, AbilityScope } from '../types/index.js';
 
 type Player = 'self' | 'opp';
@@ -137,10 +138,23 @@ function handleHook(
       }
       // effect が無いと queue しても無意味
       if (!ability.effect) continue;
+      // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を先頭候補で substitute してから queue
+      // recursive utility が atom / choice / sequence / conditional / optional 等を walk
+      const resolveCtx = {
+        source: {
+          cardId: card.cardId,
+          uid: card.uid,
+          abilityId: ability.id,
+          player: card.player,
+          area: card.area,
+        },
+        bindings: {},
+      };
+      const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx);
       // queue
       event.queue(
         state,
-        ability.effect,
+        resolvedEffect,
         { player: card.player, uid: card.uid, cardId: card.cardId },
         hookName,
         payload,
