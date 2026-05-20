@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Round 4j-fix 完了 ✅ — BUG-034 真因再診断 (auto-resolve race) + fixture 反転 + spec 拡張 + misread 水平展開
-**最新コミット**: Round 4j-fix (commit hash 取得後置換) — 計 30 連続 commit (Round 2〜4j-fix)
+**最新コミット**: Round 4j-fix `52f2b61` (Round 4j `4dd2cd8` 続き) — 計 30 連続 commit (Round 2〜4j-fix)
 **テスト状況**: 1467 PASS + 1 skipped / 192 files / **E2E 31 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-4j-fix):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
