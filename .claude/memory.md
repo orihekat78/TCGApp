@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Phase 9-H 完了 ✅ — パフォーマンス計測 baseline (avg 0.19ms / p95 0.46ms / max 4.84ms, target 100ms の 200x 余裕)
-**最新コミット**: Phase 9-H (commit hash 未確定、後で memory.md に反映) — 計 36 連続 commit (Phase 7-3 `2b49942` から +1)
+**最新コミット**: Phase 9-H `3d6c103` (Phase 7-3 `2b49942` から +1) — 計 36 連続 commit
 **テスト状況**: 1497 PASS + 1 skipped / 194 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
