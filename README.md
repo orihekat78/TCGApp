@@ -7,9 +7,37 @@
 > 公開・配布は行いません。
 > © 青山剛昌／小学館 © TOMY
 
-## 現在の状況（2026-05-20）
+## 現在の状況（2026-05-22）
 
-**Round 4l 完了** ✅ — UI 4 課題一括対応 (BUG-001 カード拡大 modal + BUG-002 edition tag 隙間 + BUG-010 opp turn 可視化 + B5 観戦モード新機能)。**未着手 BUG ゼロ達成** 🎉。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity + E2E 基盤 + 47 カード E2E 計 6 パターン + engine keyword resolver + データ整合性 + listener gap 検出/修正 + dev-mode bug + test-isolation + Phase 7 gap 登録) + Phase 7 ($pick auto-resolution 完成) + Round 4l (UI 4 課題) で **計 34 連続 commit**:
+**user_request 20260521_01 triage Phase α + β 完了** ✅ — ユーザー指摘 18 件のうち
+**13 件解決** (BUG-037 / 038 / 040 / 041 / 042 / 043 / 044 + Phase α meta 6 件)、
+残 5 件は規模大で別セッション (#3 contact UI driver / #9 E2E / #12 AI speed
+slider / #18 audit umbrella)。
+
+`user_request/20260521_01.txt` 対応:
+- #1 #16 (sleep CSS): `9567c0c` BUG-037 SceneArea.css animation fill-mode
+- #7 (sleep target): `152253d` BUG-038 仕様外 close (BUG-037 で間接解決)
+- Phase α 6 件 (#2 #5 #6 #10 #11 #14): `8d33d03` 公式裁定確認 + 運用 doc 整備
+  - `.claude/docs/user-request-clarifications.md` (#5 解決編 / #6+#14 NH は
+    公式 PDF p.12-13 引用で「現実装が正しい」と確定)
+  - `.claude/specs/DEFERRED-INDEX.md` / `.claude/bugs/README.md` 新設
+  - CLAUDE.md「効率より精度」方針追加 (#2)
+- #15 (declared ability): `d823f7f` BUG-040 Playmat.tsx `declaredTargetCount`
+  ハードコーディング修正 (4 行)
+- #13 (hand-use switch): `a96f900` BUG-041 `canUse` に switch fallback 追加
+- #17 (deck select): `db0cd9b` BUG-042 GameSetupModal にデッキ選択 dropdown
+  追加、`buildDeckPair({selfDeckId, oppDeckId})` 新 API
+- #8 (hand expand): `cd2d161` BUG-043 HandZone 右クリック → CardExpandModal
+- #4 (AI case attack): `5ffed7c` BUG-044 heuristic に reasoning vs case
+  attack スコア比較、threshold 4 回試行錯誤後 「劣勢時 disruption only」
+
+**主要パターン発見**: BUG-040/041/042/043 すべて「engine + flow + picker は
+完成しているのに Playmat.tsx の prop 配線漏れで UI 側だけ動かない」同一
+pattern (4 件)。Phase γ で Playmat ActionsPanel prop audit を検討推奨。
+
+過去進捗:
+
+**Round 4l 完了** — UI 4 課題一括対応 (BUG-001 カード拡大 modal + BUG-002 edition tag 隙間 + BUG-010 opp turn 可視化 + B5 観戦モード新機能)。Round 2 (18 バグ全解消) + Round 3 (B4/B7) + Round 4 (engine 重大バグ修正 + RCA + Obsidian Base 化 + driver reactivity + E2E 基盤 + 47 カード E2E 計 6 パターン + engine keyword resolver + データ整合性 + listener gap 検出/修正 + dev-mode bug + test-isolation + Phase 7 gap 登録) + Phase 7 ($pick auto-resolution 完成) + Round 4l (UI 4 課題) で **計 34 連続 commit**:
 
 - Round 2 (commits `e61bb7f` 〜 `d343fde`): startTurn 統一 / TopBar 動的 / 引き直し UI / 手札 UX / picker glow / FILE/証拠/リムーブ モーダル / ログ閉じる + 日本語化 / チュートリアル「次へ」修正
 - Round 3a (commits `8161efb` + `d15b495`): 事件 stamp 削除 + edition tag 独立 / 手札 scrollbar 完全削除 / FileArea+modal / 手札 grayscale / next-hint engine bug fix / event カード組込
@@ -32,7 +60,9 @@
 - Phase 7-2 (`3f50e99`): BUG-035 汎用 $pick substitution 完成 (`resolveEffectPicks` utility) + 9 cards 完全カバー
 - Round 4l (本セッション): **UI 4 課題一括** — BUG-002 (edition tag 隙間 1-line CSS fix) + BUG-001 (`CardExpandModal` + `useCardExpandModal` hook + Playmat onExpand 配線、3 zone click で拡大表示) + BUG-010 (OppTurnOverlay action 表示 + MAX_MOVES 安全上限 200 手 明示) + **B5 観戦モード新機能** (`spectatorMode` store field + `useSpectatorTurnDriver` + GameSetupModal 「観戦モード (AI vs AI)」button)。**未着手 BUG ゼロ達成** 🎉
 
-1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の baseline 525/475 維持、avg 9.85 ターン)**。
+1000戦 smoke は **0 timeout / 0 例外 / 勝率 500-500 (BUG-044 + BUG-042 後の
+baseline、avg 11.19 ターン / p95 14 / max 19)**。BUG-042 のデッキ選択 API 化
+により 3 マッチアップ (08vs08 / 08vs11 / 11vs11) が smoke で自動テスト化。
 残課題: Phase 9-F.2 (MCTS strength tuning) / Phase 9-G.2 (リプレイ UI) / Cleanup (隠れタスク 9 件)。Phase 9-H 計測 + Phase 9-F MCTS infra + Phase 9-G.1 リプレイ engine 側 + Misread UI 完了。Souza Sub-task B/C は MVP デッキで souza 使用カード皆無のため公式 defer。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
