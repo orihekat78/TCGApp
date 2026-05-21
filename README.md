@@ -33,7 +33,7 @@
 - Round 4l (本セッション): **UI 4 課題一括** — BUG-002 (edition tag 隙間 1-line CSS fix) + BUG-001 (`CardExpandModal` + `useCardExpandModal` hook + Playmat onExpand 配線、3 zone click で拡大表示) + BUG-010 (OppTurnOverlay action 表示 + MAX_MOVES 安全上限 200 手 明示) + **B5 観戦モード新機能** (`spectatorMode` store field + `useSpectatorTurnDriver` + GameSetupModal 「観戦モード (AI vs AI)」button)。**未着手 BUG ゼロ達成** 🎉
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の baseline 525/475 維持、avg 9.85 ターン)**。
-残課題: Phase 9-F.2 (MCTS strength tuning) / 9-G (リプレイ) / Phase 5 advance UI 残 (Misread UI / Souza Sub-task B+C) / Cleanup (隠れタスク 9 件)。Phase 9-H 計測 + Phase 9-F MCTS infrastructure は完了。
+残課題: Phase 9-F.2 (MCTS strength tuning) / Phase 9-G.2 (リプレイ UI) / Phase 5 advance UI 残 (Misread UI / Souza Sub-task B+C) / Cleanup (隠れタスク 9 件)。Phase 9-H 計測 + Phase 9-F MCTS infra + Phase 9-G.1 リプレイ engine 側 は完了。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -74,14 +74,16 @@
 | Round 4l: UI 4 課題一括対応 | BUG-001/002/010 + B5 観戦モード新機能 (`5716953`) | ✅ 完了 |
 | Phase 7-3: AI policy `chooseAtomTarget` verb 別ヒューリスティック | sceneRemove/sceneSetState/charModifyAP/charModifyLP 別戦術 + unit 14 + E2E 期待更新 (`2b49942`) | ✅ 完了 |
 | Phase 9-H: パフォーマンス計測 | `MatchOpts.profile` + `--profile` smoke + `npm run benchmark` + per-turn p50/p95/p99 (`3d6c103`, avg 0.19ms / 100ms target の 200x 余裕) | ✅ 完了 |
-| Phase 9-F MVP: MCTSPolicy (rollout-based) | `src/ai/policies/mcts.ts` + MCTS vs Heuristic ベンチ (本セッション、⚠️ 現状 33% vs 63% で AI 強度低下、9-F.2 で tuning 予定) | ✅ MVP 完了 |
+| Phase 9-F MVP: MCTSPolicy (rollout-based) | `src/ai/policies/mcts.ts` + MCTS vs Heuristic ベンチ (`3836d65`, ⚠️ 33% vs 63% で AI 強度低下、9-F.2 で tuning 予定) | ✅ MVP 完了 |
 | Phase 9-F.2: MCTS strength tuning | UCB1 tree + 静的評価関数 + 並列化 | ⏳ |
+| Phase 9-G.1: リプレイ機構 engine 側 | `src/ai/replay/{recorder,player}.ts` + record→replay 完全再現 (本セッション) | ✅ 完了 |
+| Phase 9-G.2: リプレイ UI 層 | ReplayPanel / useReplayDriver / GameSetupModal mode | ⏳ |
 | Phase 9-G: リプレイ機構 | recorder/player + ReplayPanel UI | ⏳ |
 | Phase 5 advance UI 残 | Misread UI / Souza Sub-task B+C | ⏳ |
 
 ### テスト状況
 
-- **1505 PASS + 1 skipped / 195 Test Files** (Phase 9-F MVP 完了時点、mcts.test.ts +8)
+- **1511 PASS + 1 skipped / 196 Test Files** (Phase 9-G.1 完了時点、replay/recorder.test.ts +6)
 - **E2E 38 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 + eventRemoveByAP 5 + hiramekiDraw 7 + hiramekiCharStun 7 = 38)
 - **1000戦 smoke baseline 525/475 完全維持** (Round 4g 以降不変、avg turns 9.85、Round 4j で副作用なし)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.3 s**

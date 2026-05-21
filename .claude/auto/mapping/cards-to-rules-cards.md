@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8bf25c19da72`
+> Source hash: `ed5bbe1a1079`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **71** ファイル（[全体 index](./index.md)）
+このグループ: **74** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (11)
 
@@ -89,7 +89,7 @@
 | ------ | --------- |
 | [`src/cards/index.ts`](../../../src/cards/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## ai (10)
+## ai (13)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -103,3 +103,6 @@
 | [`src/ai/policies/mcts.ts`](../../../src/ai/policies/mcts.ts) | _(参照なし)_ |
 | [`src/ai/policies/random.ts`](../../../src/ai/policies/random.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/ai/policy.ts`](../../../src/ai/policy.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
+| [`src/ai/replay/index.ts`](../../../src/ai/replay/index.ts) | _(参照なし)_ |
+| [`src/ai/replay/player.ts`](../../../src/ai/replay/player.ts) | _(参照なし)_ |
+| [`src/ai/replay/recorder.ts`](../../../src/ai/replay/recorder.ts) | _(参照なし)_ |
