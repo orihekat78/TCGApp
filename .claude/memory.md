@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Cleanup Phase 小規模 4 件完了 ✅ — #4/#5/#7/#8 + BUG-036 新規 (deck-out 敗北未実装)
-**最新コミット**: Cleanup 小規模 (commit hash 未確定) — 計 42 連続 commit (Souza defer `a14b62b` から +1)
+**最新コミット**: Cleanup 小規模 `b07bcc9` — 計 42 連続 commit (Souza defer `a14b62b` から +1)
 **テスト状況**: 1511 PASS + 1 skipped / 196 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
