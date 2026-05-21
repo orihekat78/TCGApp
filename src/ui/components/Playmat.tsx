@@ -32,6 +32,7 @@ import {
   runEndTurnFlow,
   runReasoningFlow,
   enumReasoningCandidates,
+  enumDeclaredAbilitySources,
   runNextHintFlow,
   runAssistFlow,
   runSolveCaseFlow,
@@ -379,7 +380,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           nextHintFileCount={gameState?.players.self.file.length ?? 0}
           nextHintUsed={gameState?.turnState.self.nextHintUsed ?? false}
           partnerActive={gameState?.players.self.partner.state === 'active'}
-          declaredTargetCount={0}
+          declaredTargetCount={
+            gameState ? enumDeclaredAbilitySources(gameState, 'self').length : 0
+          }
           reasoningTotalLP={
             gameState ? enumReasoningCandidates(gameState, 'self').length : 0
           }

@@ -22,3 +22,11 @@
   - `.claude/specs/DEFERRED-INDEX.md` 新規 (#11)
   - `.claude/bugs/README.md` 新規 (#10)
 - 関連 memory: `feedback_accuracy_over_speed`, `feedback_rule_rebuttal_pattern`
+
+## 2026-05-22 セッション 12 (Phase β #7 #15 — BUG-038 close + BUG-040 fix)
+
+- BUG-038 (#7 sleep target): Playwright headed で再現せず → 仕様外 close (BUG-037 で間接解決) `152253d`
+- BUG-040 (#15 declared ability): `Playmat.tsx:382` で `declaredTargetCount={0}` ハードコーディング → メニュー常時 disabled
+  - 修正: `enumDeclaredAbilitySources(state, 'self').length` を計算
+  - Playwright headed: source picker → ability auto-select → 発動 → sleepSelf cost paid + log に declaredAbility 記録
+  - unit 1511 + E2E 40 PASS
