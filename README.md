@@ -79,7 +79,9 @@
 | Phase 9-G.1: リプレイ機構 engine 側 | `src/ai/replay/{recorder,player}.ts` + record→replay 完全再現 (`6e835f8`) | ✅ 完了 |
 | Phase 9-G.2: リプレイ UI 層 | ReplayPanel / useReplayDriver / GameSetupModal mode | ⏳ |
 | Phase 5 advance UI: Misread UI | `useMisreadFlowDriver` + PlaymatMisreadPickerModal (`35a0736`, MVP デッキで dormant) | ✅ 完了 |
-| Phase 5 advance: Souza Sub-task B/C | MVP デッキで souza 使用カード皆無を確認、公式 defer (本セッション) | ⏸ deferred |
+| Phase 5 advance: Souza Sub-task B/C | MVP デッキで souza 使用カード皆無を確認、公式 defer (`a14b62b`) | ⏸ deferred |
+| Cleanup Phase 小規模 4 件 | #4 ヒラメキ TODO / #5 CaseArea 向き判定 / #7 skipped test / #8 rules 検証 + BUG-036 新規 (本セッション) | ✅ 完了 |
+| Cleanup Phase 中/大規模 5 件 | #1 動的式評価括弧 / #2 cost picker / #3 ヒューリスティック / #6 Playmat レスポンシブ / #9 listener 漏れ | ⏳ |
 | Phase 9-G: リプレイ機構 | recorder/player + ReplayPanel UI | ⏳ |
 | Phase 5 advance UI 残 | Misread UI / Souza Sub-task B+C | ⏳ |
 

@@ -65,8 +65,9 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
     ? { onClick: effectiveClick, style: { cursor: 'pointer' as const } }
     : {};
 
-  // Phase 9-D: cardId 画像から向きを自動判定。
-  // 優先順: props.orientation 明示 > 画像実測 > portrait fallback。
+  // Phase 9-D (実装済): cardId 画像から向きを自動判定する `useCardOrientation` hook。
+  // 優先順: props.orientation 明示 > 画像実測 (`naturalWidth/Height` 比) > portrait fallback。
+  // hook は Phase 8.10g 以降に導入済、本コメントは状態を反映した更新版。
   // Rules of Hooks: hook は early-return より前に必ず呼ぶ。caseInfo===null 経路でも
   // 同じ hook 数を維持しないと React 19 が "Expected static flag" を投げる。
   // null/undefined は useCardOrientation 側で受理済 (placeholder 経路に分岐)。

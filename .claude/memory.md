@@ -2,8 +2,8 @@
 
 ## 現在地
 
-**フェーズ**: Phase 5 advance UI A 完結 ✅ — Misread UI 完了 + Souza B/C 公式 defer 化 (MVP デッキで souza 使用カード皆無を確認)
-**最新コミット**: Souza B/C defer `a14b62b` — 計 41 連続 commit (Misread UI `35a0736` から +1)
+**フェーズ**: Cleanup Phase 小規模 4 件完了 ✅ — #4/#5/#7/#8 + BUG-036 新規 (deck-out 敗北未実装)
+**最新コミット**: Cleanup 小規模 (commit hash 未確定) — 計 42 連続 commit (Souza defer `a14b62b` から +1)
 **テスト状況**: 1511 PASS + 1 skipped / 196 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
@@ -49,6 +49,9 @@
 - [ ] **Phase 9-G.2 (deferred)**: UI 層 (ReplayPanel / useReplayDriver / GameSetupModal mode)
 - [x] **Phase 5 advance UI: Misread UI 完了**: `useMisreadFlowDriver` + PlaymatMisreadPickerModal (MVP デッキで dormant)
 - [x] **Phase 5 advance UI: Souza Sub-task B/C 公式 defer**: MVP デッキで souza 使用カード皆無を確認、後続カード追加時に着手
+- [x] **Cleanup Phase 小規模 4 件**: #4 ヒラメキ TODO update / #5 CaseArea 向き判定 (実装済 comment 修正) / #7 GuardPickerModal skipped 継続 / #8 rules 検証 + BUG-036 新規 (deck-out 未実装)
+- [ ] **Cleanup Phase 中/大規模 5 件**: #1 動的式評価括弧 / #2 AI cost picker / #3 AI ヒューリスティック「有用カード操作」/ #6 Playmat レスポンシブ / #9 触発 listener 漏れ
+- [ ] **BUG-036**: refresh ok:false 時に gameResult が deck-out で設定されない (未着手、修正案 spec 内)
 - [ ] **Phase 9-G (B 大)**: リプレイ機構 (12-16h)
 - [ ] **Phase 5 advance UI (A)**: Misread UI / Souza Sub-task B / Souza Sub-task C 確認
 - [ ] **Cleanup (Phase 9-I)**: 隠れタスク 9 件まとめて
@@ -89,4 +92,5 @@
 - [2026-05-21-5](sessions/2026-05-21-5.md) — Phase 9-F MVP: MCTSPolicy rollout-based (⚠️ AI 強度低下、9-F.2 で tuning)
 - [2026-05-21-6](sessions/2026-05-21-6.md) — Phase 9-G.1: リプレイ機構 engine 側 (recordMatch + replayLog 完全再現)
 - [2026-05-21-7](sessions/2026-05-21-7.md) — Phase 5 advance UI: Misread UI (useMisreadFlowDriver + PlaymatMisreadPickerModal)
-- **[2026-05-21-8](sessions/2026-05-21-8.md) — Phase 5 advance: Souza Sub-task B/C 公式 defer (MVP デッキで souza 使用カード皆無)** (本セッション)
+- [2026-05-21-8](sessions/2026-05-21-8.md) — Phase 5 advance: Souza Sub-task B/C 公式 defer (MVP デッキで souza 使用カード皆無)
+- **[2026-05-21-9](sessions/2026-05-21-9.md) — Cleanup Phase 小規模 4 件 (#4/#5/#7/#8 + BUG-036 新規)** (本セッション)

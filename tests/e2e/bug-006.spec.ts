@@ -120,9 +120,11 @@ test.describe('BUG-006: action[case] evidence change', () => {
     expect(errors).toEqual([]);
   });
 
-  // TODO(Round 4c): GuardPickerModal が opp-1 active の状態でも開かない原因を別途調査。
-  // dispatch chain は Vitest 統合テストの guard 候補あり case で確認済 (証拠変動 OK)。
-  // E2E では UI 探索が必要なため別 Round で扱う。
+  // TODO(Cleanup follow-up, 2026-05-21): Cleanup Phase で再確認 — Round 4l UI 拡張後も
+  // GuardPickerModal が opp-1 active シナリオで開かない (`guard-picker-skip` button 5s timeout)。
+  // dispatch chain は Vitest 統合テストで確認済のため engine 側ロジックは OK、E2E 側で UI 表示が
+  // 起きない原因 (driver の subscribe / scroll / mount tag mismatch 等) を別 issue で調査。
+  // 単独 commit で fix できなかったため引き続き skip 継続。
   test.skip('guard 候補あり (opp-1 active): GuardPickerModal が開き ガードしない click → 完走', async ({ page }) => {
     const { oppBefore, selfBefore } = await page.evaluate(() => {
       const w = window as unknown as GameWindow;

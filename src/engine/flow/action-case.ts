@@ -5,7 +5,9 @@
 // 提供 API:
 //   - removeOpponentEvidenceTop: 相手証拠最上部1枚を取り出し → リムーブ
 //                                + evidence:remove-by-action emit (ヒラメキ判定窓)
-//   - flashWindow:               (Phase 4 stub — Phase 5 ヒラメキ targeting で実装)
+//   - flashWindow:               (Phase 4 stub、Phase 7-1/7-2 で実機構は evidence:remove-by-action
+//                                  listener (hirameki.ts) + useEngineDispatch:hiramekiResolve に
+//                                  移行済。本関数は legacy log 専用で外部呼び出しなし)
 //   - gainSelfEvidence:          自分の証拠+1 (LP無関係) — byUid 不在でも進める
 
 import type { GameState, ActionContext, EvidenceCard } from '../types/index.js';
@@ -21,8 +23,9 @@ type Player = 'self' | 'opp';
  * - evidence:remove-by-action emit (spec: { player, ev })
  * - 戻り値: 取り出した EvidenceCard (なければ undefined)
  *
- * 注意: spec では「ヒラメキ判定窓」はこの Hook で発火させ、別途 flashWindow で
- *       具体的なヒラメキ処理 (Phase 5) を行う設計。
+ * 注意: spec では「ヒラメキ判定窓」はこの Hook で発火させる設計だが、
+ *       Phase 7-1/7-2 で `evidence:remove-by-action` listener (hirameki.ts) +
+ *       UI dispatch (`hiramekiResolve`) の経路に移行済。flashWindow は legacy stub。
  */
 export function removeOpponentEvidenceTop(
   state: GameState,
@@ -47,10 +50,15 @@ export function removeOpponentEvidenceTop(
 }
 
 /**
- * flashWindow — ヒラメキ判定窓 (Phase 4 stub)
+ * flashWindow — ヒラメキ判定窓 (Phase 4 legacy stub)
  *
- * Phase 5 でヒラメキ持ち判定 → 相手選択 → 効果解決 → リムーブ の流れを実装。
- * 現状はログ追記のみ。
+ * Phase 7-1/7-2 で実機構は移行済:
+ *   - `evidence:remove-by-action` event を `removeOpponentEvidenceTop` が emit
+ *   - `src/engine/listeners/hirameki.ts` が捕捉、pendingHirameki side-channel set
+ *   - UI/AI が `hiramekiResolve` dispatch → `resolveEffectPicks` で effect 解決
+ *
+ * 本関数は **legacy log 専用** で、外部呼び出しは無し (barrel から export はされるが unused)。
+ * 削除は将来の cleanup phase で実施予定 (現状は API 互換性のため保持)。
  *
  * @param ev   リムーブ対象の証拠カード
  * @param owner 証拠の所有者 (リムーブされた側 = ヒラメキ発動可能側)
@@ -60,15 +68,13 @@ export function flashWindow(
   ev: EvidenceCard,
   owner: Player,
 ): void {
-  // TODO(phase5): ヒラメキ targeting — ev が icon-flash 持ちか確認し、owner に発動/パスを選択させ、
-  //               効果解決後にリムーブエリアへ移動する flow を実装する。
   mutate.log.append(state, {
     ts: Date.now(),
     player: owner,
     turn: state.turn.number,
     action: 'flash-window-stub',
     target: ev.cardId,
-    result: 'phase5-pending',
+    result: 'legacy-stub',
   });
 }
 
