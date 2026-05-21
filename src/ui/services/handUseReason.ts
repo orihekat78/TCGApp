@@ -68,9 +68,10 @@ export function getHandUseDisabledReason(
   }
 
   // 6. 現場上限 (キャラのみ)
-  if (d.kind === 'character' && state.players[player].scene.length >= 5) {
-    return '現場が 5 枚埋まっているためキャラを登場させられません (スイッチ機能で既存キャラと交換可能)';
-  }
-
+  // rules/20 §スイッチ: scene が 5 でも switch 経路で既存キャラと交換可能。
+  // runHandUseFlow 側で canHandUseCardSwitch を fallback として評価しているため、
+  // ここで「使用不可」とせず null を返し、UI clickable を維持する (BUG-041)。
+  // (switch 不可の状況 — 例えば character ではない event だが scene 5 — は engine
+  //  ゲート側で reject されるので、UI 側は寛容に許可しておく)
   return null;
 }

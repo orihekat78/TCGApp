@@ -30,3 +30,12 @@
   - 修正: `enumDeclaredAbilitySources(state, 'self').length` を計算
   - Playwright headed: source picker → ability auto-select → 発動 → sleepSelf cost paid + log に declaredAbility 記録
   - unit 1511 + E2E 40 PASS
+
+## 2026-05-22 セッション 13 (Phase β #13 — BUG-041 fix)
+
+- BUG-041 (#13 登場時効果カードが手札から出せない): scene 5 枚時の switch 経路が UI から呼べなかった
+  - 原因: `Playmat.tsx:367` `canUse` が `canHandUseCard` のみで判定、`canHandUseCardSwitch` 未評価
+  - 副因: `handUseReason.ts:78` で問答無用 reject メッセージ → null に変更
+  - 修正: 4 行 + 1 ブロック差分。BUG-040 と同 pattern「engine + flow 完成、Playmat 配線漏れ」
+  - Playwright headed: scene 5 枚 → level≤FILE のキャラ click → switch picker (ssp-overlay) → 退場 + 登場確認
+  - unit 1511 + E2E 40 PASS

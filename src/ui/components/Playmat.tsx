@@ -364,7 +364,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             void runHandUseFlow({ player: 'self', cardId });
           }}
           canUse={(c) =>
-            gameState !== null && engineFlow.canHandUseCard(gameState, 'self', c.cardId)
+            gameState !== null && (
+              engineFlow.canHandUseCard(gameState, 'self', c.cardId) ||
+              engineFlow.canHandUseCardSwitch(gameState, 'self', c.cardId)
+            )
           }
           disabledReason={(c) =>
             gameState !== null
