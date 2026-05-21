@@ -196,15 +196,33 @@
 
 ## 関連ファイル・ディレクトリ
 
-- `README.md` — プロジェクトトップREADME（**フェーズ進行に応じて随時更新する**）
-- `.claude/CLAUDE.md` — 本ファイル
-- `.claude/memory.md` — 現セッション作業ログ
+新しいセッション開始時は以下を順に確認すること:
+
+1. `.claude/CLAUDE.md` — 本ファイル (規約 / 運用ルール)
+2. `README.md` — プロジェクト紹介 + 起動方法 + 主要リンク集 (薄い、頻繁には変わらない)
+3. **`CHANGELOG.md`** — 📜 Phase / Round 完了履歴 ("何ができたか")。最新の作業状況はここを最初に見る
+4. **`.claude/auto/structure.md`** — 🗂 リポジトリ全フォルダ・全ファイル説明 (`npm run docs:structure` で自動生成、手で編集禁止)
+5. `.claude/memory.md` — 現セッション scratchpad (進行中の作業ログ)
+
+詳細仕様・履歴アーカイブ:
+
 - `.claude/rules/` — 公式ルール抜粋（必読）
 - `.claude/research/` — 設計判断のための調査結果
-- `.claude/sessions/` — 過去セッションのアーカイブ
+- `.claude/specs/INDEX.md` — Engine API / UI / カード分析 全 spec
+- `.claude/sessions/` — 過去セッションの日次詳細ログ
+- `.claude/bugs/index.base` — リスク・バグ管理表 (Obsidian Base)
+- `.claude/auto/` — 🤖 自動生成ドキュメント全般 (api / state / flows / progress / mapping / structure)
 
-## README.md 運用義務
+## ドキュメント更新義務 (役割分離)
 
-各フェーズ完了時、新たな決定事項発生時には **必ず `README.md` の状況テーブル・ドキュメント構成を更新する**。
-他者やClaudeが新しいセッションで本プロジェクトを開いたとき、
-README.md だけで全体像と進捗が把握できる状態を保つこと。
+README.md は **薄く保ち** (紹介 + 起動 + リンク集のみ)、内容別に書き分ける:
+
+| 何 | どこ | いつ更新 | 形式 |
+| --- | --- | --- | --- |
+| **何ができたか (履歴)** | `CHANGELOG.md` (生成物) ← `.claude/changelog-entries/<date>-<seq>-<slug>.md` (ソース) | Phase / Round 完了時にエントリ追加 | **半自動** (エントリ手書き → `npm run docs:changelog` で集約) |
+| **構造・ファイル説明** | `.claude/auto/structure.md` | ファイル追加・削除時 | **自動生成** (`npm run docs:structure`、手書き禁止) |
+| **日次作業ログ** | `.claude/memory.md` + `.claude/sessions/` | 作業中 | 既存運用通り (80 行で sessions/ にローテート) |
+| **プロジェクト紹介・起動** | `README.md` | 技術スタック変更時のみ | 手書き、薄く保つ |
+| **規約・手順** | `.claude/CLAUDE.md` (本ファイル) | 運用ルール変更時 | 手書き |
+
+新しいセッションの Claude が `README.md` → `CHANGELOG.md` → `.claude/auto/structure.md` の 3 ファイルだけで「何をやっているプロジェクトか」「最新の状況」「どこに何があるか」を把握できる状態を保つこと。

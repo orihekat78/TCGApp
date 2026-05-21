@@ -15,6 +15,8 @@
     "docs:flows": "tsx scripts/gen-docs/index.ts flows",
     "docs:progress": "tsx scripts/gen-docs/index.ts progress",
     "docs:mapping": "tsx scripts/gen-docs/index.ts mapping",
+    "docs:structure": "tsx scripts/gen-docs/index.ts structure",
+    "docs:changelog": "tsx scripts/gen-docs/index.ts changelog",
     "docs": "tsx scripts/gen-docs/index.ts all",
     "docs:check": "tsx scripts/gen-docs/index.ts check",
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",

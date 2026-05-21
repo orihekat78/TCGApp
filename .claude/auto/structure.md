@@ -2,16 +2,16 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `bcd558426c9d`
+> Source hash: `ed122b81162a`
 
-ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。
+ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 118
-- **ファイル数**: 1046
-- **辞書エントリ**: dirs 44 / files 39
+- **ディレクトリ数**: 119
+- **ファイル数**: 1086
+- **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
 - **`.claude/`** — Claude Code 用プロジェクトコンテキスト一式
@@ -176,6 +176,46 @@
     - `BUG-045.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `README.md` — バグ管理表の使い方
+  - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
+    - `_footer.md`
+    - `_unreleased.md`
+    - `2026-05-11-01-phase-0-6.md`
+    - `2026-05-12-01-phase-7-shell.md`
+    - `2026-05-13-01-phase-8.md`
+    - `2026-05-14-01-round-2.md`
+    - `2026-05-15-01-round-3a.md`
+    - `2026-05-15-02-round-3b.md`
+    - `2026-05-15-03-round-3c.md`
+    - `2026-05-17-01-phase-9-a.md`
+    - `2026-05-17-02-phase-9-b.md`
+    - `2026-05-17-03-phase-9-c.md`
+    - `2026-05-17-04-phase-9-d.md`
+    - `2026-05-17-05-phase-9-e.md`
+    - `2026-05-17-06-phase-5-advance-prep.md`
+    - `2026-05-17-07-phase-5-advance.md`
+    - `2026-05-18-01-round-4a.md`
+    - `2026-05-18-02-round-4b.md`
+    - `2026-05-18-03-round-4c.md`
+    - `2026-05-18-04-round-4d.md`
+    - `2026-05-18-05-round-4e-phase-1.md`
+    - `2026-05-19-01-round-4f-phase-2.md`
+    - `2026-05-19-02-round-4g.md`
+    - `2026-05-19-03-round-4h.md`
+    - `2026-05-19-04-round-4i.md`
+    - `2026-05-19-05-round-4i-fix.md`
+    - `2026-05-19-06-round-4j.md`
+    - `2026-05-19-07-round-4j-fix.md`
+    - `2026-05-19-08-round-4k.md`
+    - `2026-05-20-01-phase-7-1.md`
+    - `2026-05-20-02-phase-7-2.md`
+    - `2026-05-20-03-phase-9-f-mvp.md`
+    - `2026-05-21-01-phase-9-g-1.md`
+    - `2026-05-21-02-phase-9-h.md`
+    - `2026-05-21-03-phase-7-3.md`
+    - `2026-05-22-01-triage-alpha-beta.md`
+    - `2026-05-22-02-triage-gamma.md`
+    - `2026-05-22-03-round-4l.md`
+    - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
@@ -581,6 +621,7 @@
       - `header.ts` — 自動生成ヘッダ + source hash 計算
       - `markdown.ts` — Markdown 書き出し・diff 検出ユーティリティ
     - `gen-api.ts` — engine public API リファレンス生成器
+    - `gen-changelog.ts` — CHANGELOG.md 集約生成器 (.claude/changelog-entries/ から)
     - `gen-flows.ts` — 状態遷移図生成器 (setup / auto-phase / turn / action FSM)
     - `gen-mapping.ts` — ルール↔カード双方向リンク生成器
     - `gen-progress.ts` — カード実装進捗・テスト数生成器

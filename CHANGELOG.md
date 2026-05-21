@@ -1,8 +1,10 @@
 # Changelog
 
-「何ができたか」を時系列で記録する。日次の詳細ログは [.claude/sessions/](.claude/sessions/) に、現セッション scratchpad は [.claude/memory.md](.claude/memory.md) にある。
+> ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
+> 再生成: `npm run docs:changelog`
+> Source hash: `18f7e1a8620f`
 
-形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
+「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
 ## [Unreleased]
 
@@ -247,50 +249,6 @@ commit `e10b3a4`。
 - 再発防止 spec: `card-addition-checklist.md` / `dispatch-to-state.test.ts`
 - CLAUDE.md §セルフレビュー追記
 
-## Round 3c — B7 チュートリアル矢印機構 (2026-05-15 頃)
-
-commits `f362175` + `c8118d0`。
-
-### Added
-- チュートリアル矢印機構 (border + glow pulse + ▼▲◀▶ + createPortal)
-- 全 33 step マッピング (25 target + 8 skip)
-
-## Round 3b — LogPanel HandZone パターン化 (2026-05-15 頃)
-
-commit `ccdd4b5`。
-
-### Changed
-- LogPanel を HandZone 同等の fixed overlay + 透明 backdrop click 閉 + scrollbar thin + fade-in + role/aria
-
-## Round 3a — UI 追加修正 12 項目中 9 件 (2026-05-15 頃)
-
-commits `8161efb` + `d15b495`。B3/B6/B9/B11/B12/A8/A1/A10。
-
-### Added
-- FileArea + modal
-- event カード組込
-
-### Changed
-- 事件 stamp 削除 + edition tag 独立
-- 手札 scrollbar 完全削除 + grayscale
-
-### Fixed
-- next-hint engine bug fix
-
-## Round 2 — Human-vs-CPU UI/UX 修正 18 件 (2026-05-14 頃)
-
-commits `e61bb7f` 〜 `d343fde`。
-
-### Changed
-- startTurn 統一
-- TopBar 動的
-- 引き直し UI
-- 手札 UX
-- picker glow
-- FILE/証拠/リムーブ モーダル
-- ログ閉じる + 日本語化
-- チュートリアル「次へ」修正
-
 ## Phase 5 advance — SceneSwitch / Hirameki / Misread / Souza (2026-05-17 〜 18)
 
 ### Added
@@ -339,6 +297,50 @@ commit `5cdc3bb`。
 
 ### Added
 - 1000戦 AI vs AI smoke harness ベースライン
+
+## Round 3c — B7 チュートリアル矢印機構 (2026-05-15 頃)
+
+commits `f362175` + `c8118d0`。
+
+### Added
+- チュートリアル矢印機構 (border + glow pulse + ▼▲◀▶ + createPortal)
+- 全 33 step マッピング (25 target + 8 skip)
+
+## Round 3b — LogPanel HandZone パターン化 (2026-05-15 頃)
+
+commit `ccdd4b5`。
+
+### Changed
+- LogPanel を HandZone 同等の fixed overlay + 透明 backdrop click 閉 + scrollbar thin + fade-in + role/aria
+
+## Round 3a — UI 追加修正 12 項目中 9 件 (2026-05-15 頃)
+
+commits `8161efb` + `d15b495`。B3/B6/B9/B11/B12/A8/A1/A10。
+
+### Added
+- FileArea + modal
+- event カード組込
+
+### Changed
+- 事件 stamp 削除 + edition tag 独立
+- 手札 scrollbar 完全削除 + grayscale
+
+### Fixed
+- next-hint engine bug fix
+
+## Round 2 — Human-vs-CPU UI/UX 修正 18 件 (2026-05-14 頃)
+
+commits `e61bb7f` 〜 `d343fde`。
+
+### Changed
+- startTurn 統一
+- TopBar 動的
+- 引き直し UI
+- 手札 UX
+- picker glow
+- FILE/証拠/リムーブ モーダル
+- ログ閉じる + 日本語化
+- チュートリアル「次へ」修正
 
 ## Phase 8.1-8.10 + 完全クローズ
 

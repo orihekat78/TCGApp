@@ -3,14 +3,16 @@ import { runGenState } from './gen-state.js';
 import { runGenFlows } from './gen-flows.js';
 import { runGenProgress } from './gen-progress.js';
 import { runGenMapping } from './gen-mapping.js';
+import { runGenStructure } from './gen-structure.js';
+import { runGenChangelog } from './gen-changelog.js';
 
-type Command = 'api' | 'state' | 'flows' | 'progress' | 'mapping' | 'all' | 'check';
+type Command = 'api' | 'state' | 'flows' | 'progress' | 'mapping' | 'structure' | 'changelog' | 'all' | 'check';
 
 interface ParsedArgs {
   command: Command;
 }
 
-const COMMANDS: Command[] = ['api', 'state', 'flows', 'progress', 'mapping', 'all', 'check'];
+const COMMANDS: Command[] = ['api', 'state', 'flows', 'progress', 'mapping', 'structure', 'changelog', 'all', 'check'];
 
 function parseArgs(argv: string[]): ParsedArgs {
   const arg = argv[2] ?? 'all';
@@ -33,6 +35,8 @@ const GENERATORS: GeneratorEntry[] = [
   { name: 'flows', matches: (c) => c === 'flows' || c === 'all' || c === 'check', run: runGenFlows },
   { name: 'progress', matches: (c) => c === 'progress' || c === 'all' || c === 'check', run: runGenProgress },
   { name: 'mapping', matches: (c) => c === 'mapping' || c === 'all' || c === 'check', run: runGenMapping },
+  { name: 'structure', matches: (c) => c === 'structure' || c === 'all' || c === 'check', run: runGenStructure },
+  { name: 'changelog', matches: (c) => c === 'changelog' || c === 'all' || c === 'check', run: runGenChangelog },
 ];
 
 function main(): void {

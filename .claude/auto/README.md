@@ -36,6 +36,9 @@ pre-commit hook (`simple-git-hooks`) で `npm run docs:check` が自動実行さ
 └── structure.md           # Phase 5: リポジトリ構造 + 全ファイル説明
 ```
 
+> 注: `CHANGELOG.md` はプロジェクトルートに出力される (Phase 5 で追加)。
+> ソースは `.claude/changelog-entries/` に手書きエントリ、`npm run docs:changelog` で集約。
+
 ## 再生成コマンド
 
 | コマンド | 生成対象 | Phase |
@@ -46,6 +49,7 @@ pre-commit hook (`simple-git-hooks`) で `npm run docs:check` が自動実行さ
 | `npm run docs:progress` | progress/ | 3 |
 | `npm run docs:mapping` | mapping/ | 4 |
 | `npm run docs:structure` | structure.md | 5 |
+| `npm run docs:changelog` | CHANGELOG.md (プロジェクトルート) | 5 |
 | `npm run docs` | 全部 | 3+ |
 | `npm run docs:check` | （差分検知のみ、書き込まない） | 4 |
 
