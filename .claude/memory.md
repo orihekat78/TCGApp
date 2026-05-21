@@ -49,3 +49,13 @@
   - CSS スタイル追加 (`.game-setup-deck-select`)
   - Playwright headed: swap (self=D11, opp=D08) → mulligan に D11 カード出現 → engine state で case/partner 検証 ✓
   - unit 1511 + E2E 40 PASS
+
+## 2026-05-22 セッション 15 (Phase β #8 — BUG-043 fix)
+
+- BUG-043 (#8 手札カード個別拡大表示): HandZone は zone 折畳/展開しかなく、CardExpandModal の trigger 無し
+  - 修正: HandZone の HandMiniCard / HandCard 両方に `onContextMenu` 追加 (右クリック → onExpand 呼出)
+  - HandZoneProps に `onCardExpand` (zone 展開と区別する prop 名) 追加
+  - Playmat.tsx で `onCardExpand={expandModal.open}` 配線
+  - Playwright headed: collapsed mini-card / expanded hand-card 両方で右クリック → CardExpandModal 開く ✓
+  - 「Playmat.tsx 配線漏れ」pattern 4 件目 (BUG-040/041/042/043)
+  - unit 1511 + E2E 40 PASS

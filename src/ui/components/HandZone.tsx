@@ -37,6 +37,11 @@ export type HandZoneProps = {
   onCollapse?: () => void;
   /** 個別カードクリック (展開状態のみ反応)。Phase 8.6+ で手札使用フロー配線。 */
   onCardClick?: (cardId: CardId) => void;
+  /**
+   * BUG-043 (#8): 個別カード右クリックで CardExpandModal を開く。
+   * collapsed / expanded 両方の view で動作。
+   */
+  onCardExpand?: (cardId: CardId) => void;
   /** 使用可能判定。false なら .disabled。未指定なら全カード使用可。 */
   canUse?: (card: HandCardMeta) => boolean;
   /** 強調表示するカード ID (hover 相当のプロトタイピング用) */
@@ -55,6 +60,8 @@ type HandCardProps = {
   disabled: boolean;
   disabledTitle?: string;
   onClick?: () => void;
+  /** BUG-043 (#8): 右クリックで個別カード拡大表示 (CardExpandModal) */
+  onExpand?: (cardId: string) => void;
 };
 
 function HandCard({
@@ -63,6 +70,7 @@ function HandCard({
   disabled,
   disabledTitle,
   onClick,
+  onExpand,
 }: HandCardProps): JSX.Element {
   const classes = [
     'hand-card',
@@ -82,9 +90,23 @@ function HandCard({
       className={classes}
       data-card-id={card.cardId}
       data-color={card.color}
-      title={disabled ? disabledTitle : undefined}
+      title={
+        disabled
+          ? `${disabledTitle ?? ''}${onExpand ? '\n(右クリックで拡大表示)' : ''}`
+          : onExpand
+            ? '右クリックで拡大表示'
+            : undefined
+      }
       aria-disabled={disabled || undefined}
       onClick={disabled ? undefined : onClick}
+      onContextMenu={
+        onExpand
+          ? (e) => {
+              e.preventDefault();
+              onExpand(card.cardId);
+            }
+          : undefined
+      }
     >
       <div className="cost">{card.cost}</div>
       <div className="type-badge">{card.type}</div>
@@ -109,11 +131,14 @@ function HandCard({
 function HandMiniCard({
   card,
   onClick,
+  onExpand,
   usable = true,
   disabledReason,
 }: {
   card: HandCardMeta;
   onClick?: () => void;
+  /** BUG-043 (#8): 右クリックで個別カード拡大表示 (CardExpandModal) */
+  onExpand?: (cardId: string) => void;
   /** false なら disabled スタイル + click 可だが expand のみ実行 */
   usable?: boolean;
   /** disabled 理由 (FILE 不足 / 色制限 / 1 ターン 1 回使用済) — title 属性に */
@@ -135,8 +160,22 @@ function HandMiniCard({
       data-type={card.type}
       data-usable={usable ? 'true' : 'false'}
       onClick={onClick}
+      onContextMenu={
+        onExpand
+          ? (e) => {
+              e.preventDefault();
+              onExpand(card.cardId);
+            }
+          : undefined
+      }
       aria-label={ariaLabel}
-      title={!usable && disabledReason ? disabledReason : undefined}
+      title={
+        !usable && disabledReason
+          ? `${disabledReason}\n(右クリックで拡大表示)`
+          : onExpand
+            ? '右クリックで拡大表示'
+            : undefined
+      }
     >
       <span className="hand-mini-cost" aria-hidden="true">{card.cost}</span>
       <span className="hand-mini-type-badge" aria-hidden="true">
@@ -161,6 +200,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     onExpand,
     onCollapse,
     onCardClick,
+    onCardExpand,
     canUse,
     featuredCardId,
     disabledReason,
@@ -193,6 +233,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
                 key={`${c.cardId}-${index}`}
                 card={c}
                 onClick={onExpand}
+                onExpand={onCardExpand}
                 usable={usable}
                 disabledReason={reason}
               />
@@ -242,6 +283,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
               disabled={!usable}
               disabledTitle={reason}
               onClick={onCardClick ? () => onCardClick(c.cardId) : undefined}
+              onExpand={onCardExpand}
             />
           );
         })}

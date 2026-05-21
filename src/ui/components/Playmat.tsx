@@ -363,6 +363,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           onCardClick={(cardId) => {
             void runHandUseFlow({ player: 'self', cardId });
           }}
+          onCardExpand={expandModal.open}
           canUse={(c) =>
             gameState !== null && (
               engineFlow.canHandUseCard(gameState, 'self', c.cardId) ||
