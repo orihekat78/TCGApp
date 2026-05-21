@@ -8,4 +8,4 @@
 - 検証: typecheck / 1511 unit / 38+1 E2E / 1000-game smoke 0 errors
 - 新規 spec: `tests/e2e/bug-037.spec.ts` (sleep + stun computed transform を assert)
 - セッション詳細: `.claude/sessions/2026-05-21-10.md`
-- 観測: S147/S148 から S149 へ (commit hash 確定後追記)
+- commit: `9567c0c`
