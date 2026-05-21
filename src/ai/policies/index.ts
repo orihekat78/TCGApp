@@ -5,3 +5,5 @@ export { RandomPolicy } from './random.js';
 export type { RandomPolicyOptions } from './random.js';
 export { HeuristicPolicy } from './heuristic.js';
 export type { HeuristicPolicyOptions } from './heuristic.js';
+export { MCTSPolicy } from './mcts.js';
+export type { MCTSPolicyOptions } from './mcts.js';

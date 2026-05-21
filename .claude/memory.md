@@ -2,9 +2,9 @@
 
 ## 現在地
 
-**フェーズ**: Phase 9-H 完了 ✅ — パフォーマンス計測 baseline (avg 0.19ms / p95 0.46ms / max 4.84ms, target 100ms の 200x 余裕)
-**最新コミット**: Phase 9-H `3d6c103` (Phase 7-3 `2b49942` から +1) — 計 36 連続 commit
-**テスト状況**: 1497 PASS + 1 skipped / 194 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
+**フェーズ**: Phase 9-F MVP 完了 ✅ — MCTSPolicy rollout-based (⚠️ AI 強度自体は HeuristicPolicy 未満、strength tuning は Phase 9-F.2 deferred)
+**最新コミット**: Phase 9-F (commit hash 未確定) — 計 37 連続 commit (Phase 9-H `3d6c103` から +1)
+**テスト状況**: 1505 PASS + 1 skipped / 195 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
 - Round 4g: **BUG-030 修正** (engine `read.char.keywords` に continuous modifier resolver、smoke positive shift 525-475)
@@ -43,7 +43,8 @@
   - Phase 7-3 (本, commit pending): AI policy `chooseAtomTarget` verb 別ヒューリスティック実装
 - [x] **Phase 7-3 完了**: AI policy `chooseAtomTarget` 拡張 (sceneRemove/sceneSetState/charModifyAP/charModifyLP)
 - [x] **Phase 9-H 完了**: パフォーマンス計測 (smoke `--profile` + `npm run benchmark`、target 100ms の 200x 余裕)
-- [ ] **Phase 9-F (B 中)**: MCTS Policy (8-12h)
+- [x] **Phase 9-F MVP 完了**: MCTSPolicy class / rollout-based 1-ply 評価 (⚠️ AI 強度自体は HeuristicPolicy 未満)
+- [ ] **Phase 9-F.2 (deferred)**: 真の UCB1 tree / 静的評価関数 / 並列化 で strength tuning
 - [ ] **Phase 9-G (B 大)**: リプレイ機構 (12-16h)
 - [ ] **Phase 5 advance UI (A)**: Misread UI / Souza Sub-task B / Souza Sub-task C 確認
 - [ ] **Cleanup (Phase 9-I)**: 隠れタスク 9 件まとめて
@@ -80,4 +81,5 @@
 - [2026-05-21](sessions/2026-05-21.md) — Phase 7-2: 汎用 $pick substitution + 9 cards 完全カバー
 - [2026-05-21-2](sessions/2026-05-21-2.md) — Round 4l: UI 4 課題一括 (BUG-001/002/010 + B5 観戦モード)、未着手 BUG ゼロ達成
 - [2026-05-21-3](sessions/2026-05-21-3.md) — Phase 7-3: AI Policy `chooseAtomTarget` verb 別ヒューリスティック
-- **[2026-05-21-4](sessions/2026-05-21-4.md) — Phase 9-H: パフォーマンス計測 baseline (avg 0.19ms / target 100ms の 200x 余裕)** (本セッション)
+- [2026-05-21-4](sessions/2026-05-21-4.md) — Phase 9-H: パフォーマンス計測 baseline (avg 0.19ms / target 100ms の 200x 余裕)
+- **[2026-05-21-5](sessions/2026-05-21-5.md) — Phase 9-F MVP: MCTSPolicy rollout-based (⚠️ AI 強度低下、9-F.2 で tuning)** (本セッション)
