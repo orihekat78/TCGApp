@@ -137,4 +137,53 @@ describe('aggregate', () => {
     expect(r.engineSha).toBe('abc1234');
     expect(r.schemaVersion).toBe(1);
   });
+
+  // Phase 9-H: per-turn ms percentile (profile=true 時のみ計算)
+  describe('Phase 9-H: turnDurationsMs percentiles', () => {
+    it('no profile data → avgTurnMs / p50TurnMs etc are undefined', () => {
+      const recs = [makeRecord(), makeRecord({ index: 1 })];
+      const r = aggregate(recs, 'r', 's');
+      expect(r.summary.avgTurnMs).toBeUndefined();
+      expect(r.summary.p50TurnMs).toBeUndefined();
+      expect(r.summary.p95TurnMs).toBeUndefined();
+      expect(r.summary.p99TurnMs).toBeUndefined();
+      expect(r.summary.maxTurnMs).toBeUndefined();
+    });
+
+    it('flattens turnDurationsMs across records and computes percentiles', () => {
+      const recs = [
+        makeRecord({ index: 0, turns: 3, turnDurationsMs: [1, 2, 3] }),
+        makeRecord({ index: 1, turns: 3, turnDurationsMs: [4, 5, 6] }),
+        makeRecord({ index: 2, turns: 4, turnDurationsMs: [7, 8, 9, 10] }),
+      ];
+      const r = aggregate(recs, 'r', 's');
+      // flatten = [1..10], 10 samples
+      expect(r.summary.avgTurnMs).toBeCloseTo(5.5);
+      expect(r.summary.maxTurnMs).toBe(10);
+      // percentile (rank-interpolated): p50 of 10 samples = rank 4.5 → 5.5
+      expect(r.summary.p50TurnMs).toBeCloseTo(5.5);
+      expect(r.summary.p95TurnMs).toBeCloseTo(9.55, 1);
+      expect(r.summary.p99TurnMs).toBeCloseTo(9.91, 1);
+    });
+
+    it('empty turnDurationsMs arrays are skipped (no errors)', () => {
+      const recs = [
+        makeRecord({ index: 0, turnDurationsMs: [] }),
+        makeRecord({ index: 1, turnDurationsMs: undefined }),
+      ];
+      const r = aggregate(recs, 'r', 's');
+      expect(r.summary.avgTurnMs).toBeUndefined();
+    });
+
+    it('mixed: some records with profile, others without', () => {
+      const recs = [
+        makeRecord({ index: 0, turnDurationsMs: [2, 4] }),
+        makeRecord({ index: 1 }), // no profile
+        makeRecord({ index: 2, turnDurationsMs: [6] }),
+      ];
+      const r = aggregate(recs, 'r', 's');
+      expect(r.summary.avgTurnMs).toBeCloseTo(4);
+      expect(r.summary.maxTurnMs).toBe(6);
+    });
+  });
 });

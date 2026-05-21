@@ -112,6 +112,7 @@ function playOneGame(
   seed: string,
   pairing: Pairing,
   verbose = false,
+  profile = false, // Phase 9-H: true で per-turn 経過 ms を記録
 ): GameRecord {
   const rng = createRng(seed);
   Math.random = () => rng.next();
@@ -128,6 +129,7 @@ function playOneGame(
     oppPolicy: new HeuristicPolicy({ seed: `H-B-${seed}` }),
     initialState: state,
     maxTurns: MAX_TURNS,
+    profile, // Phase 9-H: --profile 指定時のみ per-turn 計測
     onTurn: verbose
       ? (turnNo, byPlayer, moves) => {
           const kinds = moves.map(m => m.kind).join(', ');
@@ -153,17 +155,20 @@ function playOneGame(
     turns: result.turns,
     durationMs,
     error: result.error,
+    turnDurationsMs: result.turnDurationsMs, // Phase 9-H: profile=false なら undefined
   };
 }
 
-function parseArgs(): { singleSeed: string | null; verbose: boolean } {
+function parseArgs(): { singleSeed: string | null; verbose: boolean; profile: boolean } {
   let singleSeed: string | null = null;
   let verbose = false;
+  let profile = false;
   for (const a of process.argv.slice(2)) {
     if (a.startsWith('--seed=')) singleSeed = a.slice('--seed='.length);
     else if (a === '--verbose') verbose = true;
+    else if (a === '--profile') profile = true; // Phase 9-H: per-turn timing 有効化
   }
-  return { singleSeed, verbose };
+  return { singleSeed, verbose, profile };
 }
 
 function getEngineSha(): string {
@@ -187,7 +192,7 @@ function findFreeReportPaths(baseName: string): { jsonPath: string; mdPath: stri
   }
 }
 
-function runSingle(singleSeed: string, verbose: boolean): void {
+function runSingle(singleSeed: string, verbose: boolean, profile = false): void {
   const m = singleSeed.match(/^smoke-(\d+)$/);
   if (!m) {
     console.error(`invalid --seed format: ${singleSeed} (expected smoke-N)`);
@@ -205,14 +210,14 @@ function runSingle(singleSeed: string, verbose: boolean): void {
     console.log(
       `Running single game: seed=${singleSeed}, index=${index}, pairing=${pairing.deckA} vs ${pairing.deckB}${verbose ? ' (verbose)' : ''}`,
     );
-    const record = playOneGame(index, singleSeed, pairing, verbose);
+    const record = playOneGame(index, singleSeed, pairing, verbose, profile);
     console.log(JSON.stringify(record, null, 2));
   } finally {
     Math.random = origRandom;
   }
 }
 
-function runFull(): void {
+function runFull(profile = false): void {
   const engineSha = getEngineSha();
   console.log(`Running ${TOTAL_GAMES} games (heuristic × heuristic) ...`);
   console.log(`engine=${engineSha}, maxTurns=${MAX_TURNS}`);
@@ -226,7 +231,7 @@ function runFull(): void {
     for (let i = 0; i < TOTAL_GAMES; i++) {
       const seed = `smoke-${i}`;
       const pairing = pickPairingForIndex(i);
-      const rec = playOneGame(i, seed, pairing);
+      const rec = playOneGame(i, seed, pairing, false, profile);
       records.push(rec);
 
       if ((i + 1) % 100 === 0) {
@@ -263,17 +268,23 @@ function runFull(): void {
     `\nSummary: winsA=${s.winsA}, winsB=${s.winsB}, timeouts=${s.timeouts}, exceptions=${s.exceptions}`,
   );
   console.log(`Avg turns=${s.avgTurns.toFixed(2)}, p50=${s.p50Turns.toFixed(1)}, p95=${s.p95Turns.toFixed(1)}, max=${s.maxTurns}`);
+  // Phase 9-H: profile データがあれば per-turn 経過 ms を console 出力
+  if (s.p50TurnMs !== undefined) {
+    console.log(
+      `Per-turn ms: avg=${s.avgTurnMs!.toFixed(2)}, p50=${s.p50TurnMs.toFixed(2)}, p95=${s.p95TurnMs!.toFixed(2)}, p99=${s.p99TurnMs!.toFixed(2)}, max=${s.maxTurnMs!.toFixed(2)}`,
+    );
+  }
   if (report.anomalies.length > 0) {
     console.log(`Anomalies: ${report.anomalies.length} — see report for details`);
   }
 }
 
 function main(): void {
-  const { singleSeed, verbose } = parseArgs();
+  const { singleSeed, verbose, profile } = parseArgs();
   if (singleSeed !== null) {
-    runSingle(singleSeed, verbose);
+    runSingle(singleSeed, verbose, profile);
   } else {
-    runFull();
+    runFull(profile);
   }
 }
 

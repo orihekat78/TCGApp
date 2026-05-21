@@ -22,6 +22,8 @@ export type GameRecord = {
   turns: number;
   durationMs: number;
   error?: string;
+  /** Phase 9-H: profile=true で smoke 実行時の per-turn 経過 ms (playTurn のみ) */
+  turnDurationsMs?: number[];
 };
 
 export type Summary = {
@@ -37,6 +39,15 @@ export type Summary = {
   p95Turns: number;
   maxTurns: number;
   totalDurationMs: number;
+  /**
+   * Phase 9-H: per-turn 経過 ms percentile (全 records の turnDurationsMs を flat 集約)。
+   * profile データが 1 件も無い場合は undefined (display 側で section ごと省略)。
+   */
+  avgTurnMs?: number;
+  p50TurnMs?: number;
+  p95TurnMs?: number;
+  p99TurnMs?: number;
+  maxTurnMs?: number;
 };
 
 export type PerPairing = {
@@ -102,6 +113,22 @@ export function aggregate(
     maxTurns: sortedTurns.length === 0 ? 0 : sortedTurns[sortedTurns.length - 1],
     totalDurationMs: records.reduce((s, r) => s + r.durationMs, 0),
   };
+
+  // Phase 9-H: per-turn 経過 ms の percentile (profile データがあるときのみ)
+  const allTurnMs: number[] = [];
+  for (const r of records) {
+    if (r.turnDurationsMs && r.turnDurationsMs.length > 0) {
+      for (const ms of r.turnDurationsMs) allTurnMs.push(ms);
+    }
+  }
+  if (allTurnMs.length > 0) {
+    const sortedTurnMs = allTurnMs.slice().sort((a, b) => a - b);
+    summary.avgTurnMs = allTurnMs.reduce((s, x) => s + x, 0) / allTurnMs.length;
+    summary.p50TurnMs = percentile(sortedTurnMs, 50);
+    summary.p95TurnMs = percentile(sortedTurnMs, 95);
+    summary.p99TurnMs = percentile(sortedTurnMs, 99);
+    summary.maxTurnMs = sortedTurnMs[sortedTurnMs.length - 1];
+  }
 
   const groups = new Map<string, GameRecord[]>();
   for (const r of records) {

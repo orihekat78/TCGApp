@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "runId": "smoke-2026-05-21-102103",
+  "engineSha": "43f6871",
+  "totalGames": 1000,
+  "matrix": [
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D08",
+      "games": 333
+    },
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D11",
+      "games": 334
+    },
+    {
+      "deckA": "CT-D11",
+      "deckB": "CT-D11",
+      "games": 333
+    }
+  ],
+  "summary": {
+    "totalGames": 1000,
+    "winsA": 525,
+    "winsB": 475,
+    "timeouts": 0,
+    "exceptions": 0,
+    "avgTurns": 9.853,
+    "p50Turns": 10,
+    "p95Turns": 11,
+    "maxTurns": 14,
+    "totalDurationMs": 3182,
+    "avgTurnMs": 0.19036162590074288,
+    "p50TurnMs": 0.15460000000007312,
+    "p95TurnMs": 0.4613999999998665,
+    "p99TurnMs": 0.6641759999999335,
+    "maxTurnMs": 4.8409999999998945
+  },
+  "perPairing": [
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D08",
+      "games": 333,
+      "winsA": 167,
+      "winsB": 166,
+      "timeouts": 0,
+      "exceptions": 0,
+      "avgTurns": 9.54054054054054
+    },
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D11",
+      "games": 334,
+      "winsA": 189,
+      "winsB": 145,
+      "timeouts": 0,
+      "exceptions": 0,
+      "avgTurns": 9.862275449101796
+    },
+    {
+      "deckA": "CT-D11",
+      "deckB": "CT-D11",
+      "games": 333,
+      "winsA": 169,
+      "winsB": 164,
+      "timeouts": 0,
+      "exceptions": 0,
+      "avgTurns": 10.156156156156156
+    }
+  ],
+  "anomalies": []
+}

@@ -16,6 +16,7 @@
 //   - try/catch でループを包み、エンジン bug / invariant 違反を 'invariant-fail' で受ける
 //   - movesPerTurn に各ターンの move 数を記録 (debug 用)
 
+import { performance } from 'node:perf_hooks';
 import type { GameState } from '@/engine/types';
 import { engine } from '@/engine';
 import { produce } from '@/engine/produce';
@@ -33,6 +34,11 @@ export type MatchResult = {
   finalState: GameState;
   /** populated when winner === 'invariant-fail' */
   error?: string;
+  /**
+   * Phase 9-H: profile=true 時の per-turn 経過 ms (playTurn のみ、endTurn / autoPhase 除外)。
+   * `MatchOpts.profile` が false (default) なら undefined。
+   */
+  turnDurationsMs?: number[];
 };
 
 export type MatchOpts = {
@@ -45,6 +51,11 @@ export type MatchOpts = {
   maxTurns?: number;
   /** optional hook for streaming per-turn moves (debug) */
   onTurn?: (turnNo: number, byPlayer: Player, moves: Move[]) => void;
+  /**
+   * Phase 9-H: per-turn 計測を有効化。true で `MatchResult.turnDurationsMs` に
+   * playTurn 経過時間 (ms) を push する。default false (overhead ゼロ)。
+   */
+  profile?: boolean;
 };
 
 const DEFAULT_MAX_TURNS = 100;
@@ -66,6 +77,8 @@ export function runMatch(opts: MatchOpts): MatchResult {
   const maxTurns = opts.maxTurns ?? DEFAULT_MAX_TURNS;
   let state = opts.initialState;
   const movesPerTurn: number[] = [];
+  // Phase 9-H: profile=true 時のみ allocate (default は undefined のまま zero-overhead)
+  const turnDurationsMs: number[] | undefined = opts.profile ? [] : undefined;
 
   try {
     while (!state.gameResult && state.turn.number <= maxTurns) {
@@ -74,7 +87,9 @@ export function runMatch(opts: MatchOpts): MatchResult {
       const turnNo = state.turn.number;
 
       // 1. メインフェイズ: policy にターンを駆動させる
+      const tStart = turnDurationsMs ? performance.now() : 0;
       const { moves, finalState: afterPlay } = playTurn(state, policy, currentPlayer);
+      if (turnDurationsMs) turnDurationsMs.push(performance.now() - tStart);
       state = afterPlay;
       movesPerTurn.push(moves.length);
       opts.onTurn?.(turnNo, currentPlayer, moves);
@@ -124,6 +139,7 @@ export function runMatch(opts: MatchOpts): MatchResult {
       movesPerTurn,
       finalState: state,
       error: msg,
+      turnDurationsMs,
     };
   }
 
@@ -137,6 +153,7 @@ export function runMatch(opts: MatchOpts): MatchResult {
       turns: state.turn.number,
       movesPerTurn,
       finalState: state,
+      turnDurationsMs,
     };
   }
 
@@ -147,5 +164,6 @@ export function runMatch(opts: MatchOpts): MatchResult {
     turns: state.turn.number,
     movesPerTurn,
     finalState: state,
+    turnDurationsMs,
   };
 }

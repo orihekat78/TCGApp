@@ -36,6 +36,12 @@ export function formatMarkdown(report: AggregateReport): string {
   lines.push(`| 平均ターン数 | ${s.avgTurns.toFixed(2)} |`);
   lines.push(`| ターン数 p50 / p95 | ${s.p50Turns.toFixed(1)} / ${s.p95Turns.toFixed(1)} |`);
   lines.push(`| 最大ターン数 | ${s.maxTurns} |`);
+  // Phase 9-H: profile=true で smoke 実行された場合のみ per-turn ms percentile を表示
+  if (s.p50TurnMs !== undefined) {
+    lines.push(
+      `| ターン処理時間 (ms) avg / p50 / p95 / p99 / max | ${s.avgTurnMs!.toFixed(2)} / ${s.p50TurnMs.toFixed(2)} / ${s.p95TurnMs!.toFixed(2)} / ${s.p99TurnMs!.toFixed(2)} / ${s.maxTurnMs!.toFixed(2)} |`,
+    );
+  }
   lines.push('');
 
   lines.push('## デッキ別');

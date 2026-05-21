@@ -18,6 +18,7 @@
     "docs": "tsx scripts/gen-docs/index.ts all",
     "docs:check": "tsx scripts/gen-docs/index.ts check",
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",
+    "benchmark": "tsx scripts/benchmark/run.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed"
   },
