@@ -33,7 +33,7 @@
 - Round 4l (本セッション): **UI 4 課題一括** — BUG-002 (edition tag 隙間 1-line CSS fix) + BUG-001 (`CardExpandModal` + `useCardExpandModal` hook + Playmat onExpand 配線、3 zone click で拡大表示) + BUG-010 (OppTurnOverlay action 表示 + MAX_MOVES 安全上限 200 手 明示) + **B5 観戦モード新機能** (`spectatorMode` store field + `useSpectatorTurnDriver` + GameSetupModal 「観戦モード (AI vs AI)」button)。**未着手 BUG ゼロ達成** 🎉
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の baseline 525/475 維持、avg 9.85 ターン)**。
-残課題: Phase 9-F.2 (MCTS strength tuning) / Phase 9-G.2 (リプレイ UI) / Phase 5 advance UI 残 (Souza Sub-task B+C) / Cleanup (隠れタスク 9 件)。Phase 9-H 計測 + Phase 9-F MCTS infra + Phase 9-G.1 リプレイ engine 側 + Misread UI は完了。
+残課題: Phase 9-F.2 (MCTS strength tuning) / Phase 9-G.2 (リプレイ UI) / Cleanup (隠れタスク 9 件)。Phase 9-H 計測 + Phase 9-F MCTS infra + Phase 9-G.1 リプレイ engine 側 + Misread UI 完了。Souza Sub-task B/C は MVP デッキで souza 使用カード皆無のため公式 defer。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -78,7 +78,8 @@
 | Phase 9-F.2: MCTS strength tuning | UCB1 tree + 静的評価関数 + 並列化 | ⏳ |
 | Phase 9-G.1: リプレイ機構 engine 側 | `src/ai/replay/{recorder,player}.ts` + record→replay 完全再現 (`6e835f8`) | ✅ 完了 |
 | Phase 9-G.2: リプレイ UI 層 | ReplayPanel / useReplayDriver / GameSetupModal mode | ⏳ |
-| Phase 5 advance UI: Misread UI | `useMisreadFlowDriver` + PlaymatMisreadPickerModal (本セッション、MVP デッキで dormant) | ✅ 完了 |
+| Phase 5 advance UI: Misread UI | `useMisreadFlowDriver` + PlaymatMisreadPickerModal (`35a0736`, MVP デッキで dormant) | ✅ 完了 |
+| Phase 5 advance: Souza Sub-task B/C | MVP デッキで souza 使用カード皆無を確認、公式 defer (本セッション) | ⏸ deferred |
 | Phase 9-G: リプレイ機構 | recorder/player + ReplayPanel UI | ⏳ |
 | Phase 5 advance UI 残 | Misread UI / Souza Sub-task B+C | ⏳ |
 

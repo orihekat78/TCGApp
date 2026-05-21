@@ -2,8 +2,8 @@
 
 ## 現在地
 
-**フェーズ**: Phase 5 advance UI Misread UI 完了 ✅ — `useMisreadFlowDriver` + PlaymatMisreadPickerModal 配線 (MVP デッキで dormant、将来カード追加時に有効化)
-**最新コミット**: Phase 5 advance UI Misread `35a0736` — 計 39 連続 commit (Phase 9-G.1 `6e835f8` から +1)
+**フェーズ**: Phase 5 advance UI A 完結 ✅ — Misread UI 完了 + Souza B/C 公式 defer 化 (MVP デッキで souza 使用カード皆無を確認)
+**最新コミット**: Souza B/C defer (commit hash 未確定) — 計 40 連続 commit (Misread UI `35a0736` から +1)
 **テスト状況**: 1511 PASS + 1 skipped / 196 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
@@ -48,6 +48,7 @@
 - [x] **Phase 9-G.1 完了**: リプレイ機構 engine 側 (recordMatch + ScriptedPolicy + replayLog) — 完全決定論的再現
 - [ ] **Phase 9-G.2 (deferred)**: UI 層 (ReplayPanel / useReplayDriver / GameSetupModal mode)
 - [x] **Phase 5 advance UI: Misread UI 完了**: `useMisreadFlowDriver` + PlaymatMisreadPickerModal (MVP デッキで dormant)
+- [x] **Phase 5 advance UI: Souza Sub-task B/C 公式 defer**: MVP デッキで souza 使用カード皆無を確認、後続カード追加時に着手
 - [ ] **Phase 9-G (B 大)**: リプレイ機構 (12-16h)
 - [ ] **Phase 5 advance UI (A)**: Misread UI / Souza Sub-task B / Souza Sub-task C 確認
 - [ ] **Cleanup (Phase 9-I)**: 隠れタスク 9 件まとめて
@@ -87,4 +88,5 @@
 - [2026-05-21-4](sessions/2026-05-21-4.md) — Phase 9-H: パフォーマンス計測 baseline (avg 0.19ms / target 100ms の 200x 余裕)
 - [2026-05-21-5](sessions/2026-05-21-5.md) — Phase 9-F MVP: MCTSPolicy rollout-based (⚠️ AI 強度低下、9-F.2 で tuning)
 - [2026-05-21-6](sessions/2026-05-21-6.md) — Phase 9-G.1: リプレイ機構 engine 側 (recordMatch + replayLog 完全再現)
-- **[2026-05-21-7](sessions/2026-05-21-7.md) — Phase 5 advance UI: Misread UI (useMisreadFlowDriver + PlaymatMisreadPickerModal)** (本セッション)
+- [2026-05-21-7](sessions/2026-05-21-7.md) — Phase 5 advance UI: Misread UI (useMisreadFlowDriver + PlaymatMisreadPickerModal)
+- **[2026-05-21-8](sessions/2026-05-21-8.md) — Phase 5 advance: Souza Sub-task B/C 公式 defer (MVP デッキで souza 使用カード皆無)** (本セッション)
