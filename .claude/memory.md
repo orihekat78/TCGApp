@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Phase 5 advance UI Misread UI 完了 ✅ — `useMisreadFlowDriver` + PlaymatMisreadPickerModal 配線 (MVP デッキで dormant、将来カード追加時に有効化)
-**最新コミット**: Phase 5 advance UI Misread (commit hash 未確定) — 計 39 連続 commit (Phase 9-G.1 `6e835f8` から +1)
+**最新コミット**: Phase 5 advance UI Misread `35a0736` — 計 39 連続 commit (Phase 9-G.1 `6e835f8` から +1)
 **テスト状況**: 1511 PASS + 1 skipped / 196 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
