@@ -3,10 +3,10 @@
 このディレクトリ配下のファイルは **`scripts/gen-docs/`** から自動生成される。
 **人手で編集してはならない。** 編集しても次の `npm run docs:*` 実行で上書きされる。
 
-## 現状（2026-05-14）
+## 現状（2026-05-22）
 
-**Phase 1**: このREADME と [../../HUB.md](../../HUB.md) のみ。スクリプト未実装。
-**Phase 2 以降**: 以下のディレクトリが順次追加される。
+api / state / flows / progress / mapping / structure の 6 generator が稼働中。
+pre-commit hook (`simple-git-hooks`) で `npm run docs:check` が自動実行され、差分があるとコミット失敗する。
 
 ## 予定される構成
 
@@ -30,9 +30,10 @@
 ├── progress/              # Phase 3: 進捗テーブル
 │   ├── cards.md           # CT-D08/D11 実装進捗
 │   └── tests.md           # vitest結果サマリ
-└── mapping/               # Phase 4: ルール↔コード双方向リンク
-    ├── rules-to-cards.md  # ルール → それを参照するカード
-    └── cards-to-rules.md  # カード → 参照しているルール
+├── mapping/               # Phase 4: ルール↔コード双方向リンク
+│   ├── rules-to-cards.md  # ルール → それを参照するカード
+│   └── cards-to-rules.md  # カード → 参照しているルール
+└── structure.md           # Phase 5: リポジトリ構造 + 全ファイル説明
 ```
 
 ## 再生成コマンド
@@ -44,10 +45,9 @@
 | `npm run docs:flows` | flows/ | 3 |
 | `npm run docs:progress` | progress/ | 3 |
 | `npm run docs:mapping` | mapping/ | 4 |
+| `npm run docs:structure` | structure.md | 5 |
 | `npm run docs` | 全部 | 3+ |
 | `npm run docs:check` | （差分検知のみ、書き込まない） | 4 |
-
-> 現時点で `scripts.docs*` は未実装。Phase 2 以降で `package.json` に追加される。
 
 ## 各ファイルのヘッダ
 

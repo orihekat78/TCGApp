@@ -12,9 +12,45 @@
 //   - deckRevealUntil の binding shape: Candidate { kind: 'card', cardId, area: 'deck', player }
 
 import type { GameState, AtomVerb, EffectCtx, LogEntry, FileCard, Candidate } from '../types/index.js';
+import type { TargetFilter } from '../types/effect.js';
 import { FILE_CARD_BACK_PLACEHOLDER } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
+import { cards as engineCards } from '../cards/index.js';
+
+/**
+ * BUG-045 (#9 spectator stall fix の副産物): deckRevealUntil 等で
+ * TargetFilter (declarative object) を predicate に変換するヘルパ。
+ * src/engine/target/candidates.ts matchOneFilter の cardId-based subset。
+ * 対応: cardId / color / trait / levelMin/Max / kind ('character' | 'event')。
+ */
+function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: string) => boolean {
+  if (!filter) return () => true;
+  return (cardId: string) => {
+    const d = engineCards.get(cardId);
+    if (!d) return false;
+    if (filter.cardId !== undefined) {
+      const ids = Array.isArray(filter.cardId) ? filter.cardId : [filter.cardId];
+      if (!ids.includes(cardId)) return false;
+    }
+    if (filter.color !== undefined) {
+      const wants = Array.isArray(filter.color) ? filter.color : [filter.color];
+      if (!wants.some(w => d.colors.includes(w))) return false;
+    }
+    if (filter.trait !== undefined) {
+      const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
+      if (!wants.some(w => d.traits?.includes(w))) return false;
+    }
+    if (filter.levelMin !== undefined && (d.level ?? 0) < filter.levelMin) return false;
+    if (filter.levelMax !== undefined && (d.level ?? Infinity) > filter.levelMax) return false;
+    const kind = (filter as TargetFilter & { kind?: string }).kind;
+    if (kind !== undefined) {
+      const want = kind === 'character' ? 'character' : kind === 'event' ? 'event' : null;
+      if (want && d.kind !== want) return false;
+    }
+    return true;
+  };
+}
 
 type Player = 'self' | 'opp';
 
@@ -49,6 +85,19 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'discard': {
+      // BUG-045 fix: target が pick query object のまま渡されると mutate.hand
+      // 内部で「not iterable」例外。Phase 7-2 の $pick resolver は uid:'$pick' のみ
+      // 対応で、discard atom (target は cardId 配列を想定) の pick 解決は未配線。
+      // 一時防御策: 非配列なら no-op skip + 警告 log。本格対応は別 BUG で resolver 拡張。
+      if (!Array.isArray(a.target)) {
+        mutate.log.append(s, {
+          ts: Date.now(),
+          player: a.player as Player,
+          turn: s.turn.number,
+          action: 'discard:skip-unresolved-pick',
+        });
+        return;
+      }
       const target = a.target as string[];
       mutate.hand.discardToRemove(s, a.player as Player, target);
       return;
@@ -257,7 +306,12 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     // --- デッキ操作 (G18/G22) ---
     case 'deckRevealUntil': {
       const p = a.player as Player;
-      const filter = a.filter as ((cardId: string) => boolean) | undefined;
+      // BUG-045 fix: filter は declarative TargetFilter object として渡される
+      // (D11019.ts 等)。predicate 関数化して使用 (旧コードは function を期待していて crash)。
+      const filterArg = a.filter as TargetFilter | ((cardId: string) => boolean) | undefined;
+      const filter = typeof filterArg === 'function'
+        ? filterArg
+        : targetFilterToPredicate(filterArg);
       const bindKey = a.bind as string | undefined;
       const bindMatchKey = a.bindMatch as string | undefined;
       const deck = s.players[p].deck;
@@ -266,7 +320,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // デッキ上から 1 枚ずつ、filter にマッチしたら停止
       for (const cardId of deck) {
         revealed.push(cardId);
-        if (filter && filter(cardId)) {
+        if (filter(cardId)) {
           matched = cardId;
           break;
         }

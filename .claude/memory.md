@@ -60,6 +60,18 @@
   - 「Playmat.tsx 配線漏れ」pattern 4 件目 (BUG-040/041/042/043)
   - unit 1511 + E2E 40 PASS
 
+## 2026-05-22 セッション 17 (Phase γ #9 — BUG-045 fix)
+
+- BUG-045: 1 試合通し E2E spec + spectator stall + engine bug 2 件発覚
+  - spectator AI vs AI で contact 発生時 cutin/guard modal が開いて hang
+  - useContactFlowDriver に spectatorMode 判定を追加、self も AI 委譲
+  - 追加で engine 2 bug 発覚 (E2E で初めて顕在化):
+    - atom-handlers `deckRevealUntil`: filter object → predicate 化 helper 追加
+    - atom-handlers `discard`: target pick query 未 resolve → 防御 skip
+  - 新規 tests/e2e/full-match.spec.ts: 観戦モード完走 + GameSetupModal 配線確認 2 tests
+  - Playwright 実機: turn 12 / winner=self / console errors 0 で完了
+  - unit 1511 + E2E 42 (新規 2 込み) + smoke 1000 avg 11.19 維持
+
 ## 2026-05-22 セッション 16 (Phase β #4 — BUG-044 fix)
 
 - BUG-044 (#4 AI が事件アクションしない): heuristic で reasoning が常に優先固定 → case attack 不発

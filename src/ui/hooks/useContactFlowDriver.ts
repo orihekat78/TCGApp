@@ -104,6 +104,7 @@ function actorLabelFor(phase: ActionContext['phase']): '1番目' | '2番目' | '
 export function useContactFlowDriver(): void {
   const activeActionId = useGameStateStore((s) => s.activeActionId);
   const gameState = useGameStateStore((s) => s.gameState);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const guardPickerOpen = useContactModalStore((s) => s.guardPicker !== null);
   const cutInDisguiseOpen = useContactModalStore((s) => s.cutInDisguise !== null);
 
@@ -123,11 +124,11 @@ export function useContactFlowDriver(): void {
       return;
     }
 
-    runOneStep(gameState, ax);
-  }, [activeActionId, gameState, guardPickerOpen, cutInDisguiseOpen]);
+    runOneStep(gameState, ax, spectatorMode);
+  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen]);
 }
 
-function runOneStep(state: GameState, ax: ActionContext): void {
+function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean): void {
   switch (ax.phase) {
     case 'declared':
     case 'leave-resolution':
@@ -147,7 +148,8 @@ function runOneStep(state: GameState, ax: ActionContext): void {
         return;
       }
       const defender: Player = ax.byPlayer === 'self' ? 'opp' : 'self';
-      if (defender === 'self') {
+      // BUG-045 (#9 spectator stall fix): spectator mode では self も AI 委譲
+      if (defender === 'self' && !spectatorMode) {
         // GuardPickerModal を open。ユーザー操作で actionGuard dispatch される。
         const attackerName = readApLp(state, ax.byUid).name;
         useContactModalStore.getState()._setGuardPicker({
@@ -157,7 +159,7 @@ function runOneStep(state: GameState, ax: ActionContext): void {
         });
         return;
       }
-      // opp defender: AI
+      // opp defender OR spectator mode の self: AI
       const ai = new HeuristicPolicy();
       const rawCands = flow.guard.candidates(state, ax.byUid);
       const choice = ai.chooseGuard?.(state, ax, rawCands) ?? null;
@@ -194,7 +196,8 @@ function runOneStep(state: GameState, ax: ActionContext): void {
         dispatchEngineAction({ type: 'actionAdvance', actionId: ax.id });
         return;
       }
-      if (decider === 'self') {
+      // BUG-045 (#9 spectator stall fix): spectator mode では self も AI 委譲
+      if (decider === 'self' && !spectatorMode) {
         useContactModalStore.getState()._setCutInDisguise({
           actionId: ax.id,
           player: 'self',
@@ -203,7 +206,7 @@ function runOneStep(state: GameState, ax: ActionContext): void {
         });
         return;
       }
-      // opp decider: AI
+      // opp decider OR spectator mode の self: AI
       const ai = new HeuristicPolicy();
       const choice = chooseAiContact(state, ax, decider, ai);
       dispatchEngineAction({ type: 'actionContact', actionId: ax.id, player: decider, choice });
@@ -240,7 +243,8 @@ function chooseAiContact(
 
 /**
  * Test 用: 外部から1ステップ駆動。React 不要で pure dispatch シーケンスを検証可能。
+ * spectatorMode default false で既存テスト互換 (modal 経路維持)。
  */
-export function _runDriverStep(state: GameState, ax: ActionContext): void {
-  runOneStep(state, ax);
+export function _runDriverStep(state: GameState, ax: ActionContext, spectatorMode = false): void {
+  runOneStep(state, ax, spectatorMode);
 }
