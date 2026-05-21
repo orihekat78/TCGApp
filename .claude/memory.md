@@ -2,8 +2,8 @@
 
 ## 現在地
 
-**フェーズ**: Phase 7-3 完了 ✅ — AI Policy `chooseAtomTarget` verb 別ヒューリスティック実装 (commit hash 未確定、commit 後 memory.md に反映)
-**最新コミット**: Round 4l `5716953` (Phase 7-3 commit 予定) — 計 34 連続 commit (Round 2〜Round 4l)、Phase 7-3 で 35
+**フェーズ**: Phase 7-3 完了 ✅ — AI Policy `chooseAtomTarget` verb 別ヒューリスティック実装 (`2b49942`)
+**最新コミット**: Phase 7-3 `2b49942` (Round 4l `5716953` 続き) — 計 35 連続 commit (Round 2〜Phase 7-3)
 **テスト状況**: 1493 PASS + 1 skipped / 194 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
