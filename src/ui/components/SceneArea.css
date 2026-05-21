@@ -125,7 +125,11 @@
   position: relative;
   color: var(--scene-text-primary);
   /* Phase 8.10c: 新規 mount 時の登場アニメ + state 遷移のスムーズ化 */
-  animation: scene-card-enter 280ms ease-out both;
+  /* Cleanup (2026-05-21, user request #1): fill-mode を `both` → `backwards` に変更。
+     `both` だと 100% keyframe の transform:translateY(0) scale(1) が animation 終了後も保持され、
+     後から付与される .sleep / .stun の rotate(-90deg) / rotate(180deg) を上書きしていた。
+     `backwards` なら animation 終了後は base style (.card.sleep 等) が transform を制御する。 */
+  animation: scene-card-enter 280ms ease-out backwards;
   transition: transform 280ms ease, filter 220ms ease, border-color 180ms ease;
   display: flex;
   flex-direction: column;

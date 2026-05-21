@@ -1,96 +1,11 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-## 現在地
+## 2026-05-21 セッション 10 (BUG-037 CSS animation fill-mode 修正)
 
-**フェーズ**: Cleanup Phase 小規模 4 件完了 ✅ — #4/#5/#7/#8 + BUG-036 新規 (deck-out 敗北未実装)
-**最新コミット**: Cleanup 小規模 `b07bcc9` — 計 42 連続 commit (Souza defer `a14b62b` から +1)
-**テスト状況**: 1511 PASS + 1 skipped / 196 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
-**現状サマリ** (Round 4e-Round 4l):
-- Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
-- Round 4g: **BUG-030 修正** (engine `read.char.keywords` に continuous modifier resolver、smoke positive shift 525-475)
-- Round 4h: **caseTraitConditioned 2 カード** spec + **BUG-031 data fix** (D11021 '婚活' trait 追加)
-- Round 4i (`8d35359`): **eventRemoveByAP 2 カード** spec + listener gap 2 件登録 (BUG-032/033)
-- Round 4i-fix (`6a372a9`): **BUG-032/033 engine 修正** — selfOnly 水平展開 + selfOnlyMatches player check + handleHook condition gate
-- Round 4j (`4dd2cd8`): hiramekiDraw 2 カード shape E2E + BUG-034 登録 + **共通パターン 5/5 完了** 🎉
-- Round 4j-fix (`52f2b61`): BUG-034 真因再診断 (auto-resolve race) + fixture 反転 + spec 拡張 + misread 水平展開
-- Round 4k (`f50028f`): hiramekiCharStun 2 カード E2E + BUG-035 登録 + 共通パターン 6/5 拡張
-- Phase 7-1 (`4bf79a1`): BUG-035 hirameki 経路最小修正 + 共通パターン spec 6/6 達成
-- Phase 7-2 (`3f50e99`): BUG-035 汎用 $pick substitution 完成 + 9 cards 完全カバー
-- Round 4l (本): **UI 4 課題一括** — BUG-002 (1-line CSS) + BUG-001 (CardExpandModal + useCardExpandModal hook + Playmat 配線) + BUG-010 (OppTurnOverlay 拡張) + B5 観戦モード新機能 (spectatorMode + useSpectatorTurnDriver + GameSetupModal 観戦 button)
-- 共通パターン spec 進捗: 6/6 維持
-- BUG-XXX 管理: BUG-001〜035 計 35 件、**修正済 36 件** (BUG-001/002/010 含む) + 未着手 0 件 🎉
-
-## 進捗トラッカー (高レベル)
-
-- [x] **Phase 0-9-E**: engine + 47 カード + AI + UI Shell + smoke baseline + engine 4 バグ修正 (詳細は session log 参照)
-- [x] **Phase 5 advance engine**: SceneSwitch / Hirameki / Misread / Souza atom
-- [x] **Round 2-3 UI/UX 修正** (2026-05-18 / 18 件 + B4/B7): commits `e61bb7f` 〜 `c8118d0`
-- [x] **Round 4a-b 機構整備** (2026-05-18-6/7): engine 3 fix + Obsidian Base + triggered listener (commits `e10b3a4` / `4c64c79`)
-- [x] **Round 4c-d UI reactivity 修正 + Playwright 基盤** (2026-05-18-8/9): BUG-006 修正 + @playwright/test + headed default + Round 2 18 件 BUG-XXX 移行 (`d54e328` / `f38268c`)
-- [x] **Round 4e-j 47 カード E2E + engine 修正 (共通パターン 5/5 完了)** (2026-05-19〜2026-05-20):
-  - 4e (`cf3380c`): E2E helpers + cutinFixedAP 6 カード
-  - 4f (`4eb103a`): partnerColorKeyword 5 カード + BUG-030 登録
-  - 4g (`3932d04`): BUG-030 修正 (continuous modifier resolver) + smoke positive shift
-  - 4h (`08621c0`): caseTraitConditioned 2 カード + BUG-031 data fix
-  - 4i (`8d35359`): eventRemoveByAP 2 カード + BUG-032/033 listener gap 検出
-  - 4i-fix (`6a372a9`): BUG-032/033 engine 修正 (selfOnly 水平展開 + handleHook condition gate)
-  - 4j (`4dd2cd8`): hiramekiDraw shape E2E + BUG-034 登録 + **共通パターン 5/5 完了**
-  - 4j-fix (`52f2b61`): BUG-034 真因再診断 + fixture 反転 + spec 拡張 + misread 水平展開
-  - 4k (`f50028f`): hiramekiCharStun 2 カード shape + queue + BUG-035 登録
-  - Phase 7-1 (`4bf79a1`): BUG-035 hirameki 経路 $pick 最小修正
-  - Phase 7-2 (`3f50e99`): BUG-035 汎用 $pick substitution + 9 cards 完全カバー
-  - Round 4l: UI 4 課題一括 (BUG-001/002/010 + B5 観戦モード新機能)、**未着手 BUG ゼロ達成** 🎉
-  - Phase 7-3 (本, commit pending): AI policy `chooseAtomTarget` verb 別ヒューリスティック実装
-- [x] **Phase 7-3 完了**: AI policy `chooseAtomTarget` 拡張 (sceneRemove/sceneSetState/charModifyAP/charModifyLP)
-- [x] **Phase 9-H 完了**: パフォーマンス計測 (smoke `--profile` + `npm run benchmark`、target 100ms の 200x 余裕)
-- [x] **Phase 9-F MVP 完了**: MCTSPolicy class / rollout-based 1-ply 評価 (⚠️ AI 強度自体は HeuristicPolicy 未満)
-- [ ] **Phase 9-F.2 (deferred)**: 真の UCB1 tree / 静的評価関数 / 並列化 で strength tuning
-- [x] **Phase 9-G.1 完了**: リプレイ機構 engine 側 (recordMatch + ScriptedPolicy + replayLog) — 完全決定論的再現
-- [ ] **Phase 9-G.2 (deferred)**: UI 層 (ReplayPanel / useReplayDriver / GameSetupModal mode)
-- [x] **Phase 5 advance UI: Misread UI 完了**: `useMisreadFlowDriver` + PlaymatMisreadPickerModal (MVP デッキで dormant)
-- [x] **Phase 5 advance UI: Souza Sub-task B/C 公式 defer**: MVP デッキで souza 使用カード皆無を確認、後続カード追加時に着手
-- [x] **Cleanup Phase 小規模 4 件**: #4 ヒラメキ TODO update / #5 CaseArea 向き判定 (実装済 comment 修正) / #7 GuardPickerModal skipped 継続 / #8 rules 検証 + BUG-036 新規 (deck-out 未実装)
-- [ ] **Cleanup Phase 中/大規模 5 件**: #1 動的式評価括弧 / #2 AI cost picker / #3 AI ヒューリスティック「有用カード操作」/ #6 Playmat レスポンシブ / #9 触発 listener 漏れ
-- [ ] **BUG-036**: refresh ok:false 時に gameResult が deck-out で設定されない (未着手、修正案 spec 内)
-- [ ] **Phase 9-G (B 大)**: リプレイ機構 (12-16h)
-- [ ] **Phase 5 advance UI (A)**: Misread UI / Souza Sub-task B / Souza Sub-task C 確認
-- [ ] **Cleanup (Phase 9-I)**: 隠れタスク 9 件まとめて
-- [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
-- [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
-- [ ] **origin/main push** (本セッション末で sync)
-
-## セッションログ index
-
-- [2026-05-15](sessions/2026-05-15.md) etc — Phase 7 / 8 系
-- [2026-05-17](sessions/2026-05-17.md) — Phase 8 完全クローズ達成
-- [2026-05-17-2](sessions/2026-05-17-2.md) — Phase 9-A〜9-E 一気通貫
-- [2026-05-17-3](sessions/2026-05-17-3.md) — Phase 5 advance prep + C+D + React fix
-- [2026-05-17-4](sessions/2026-05-17-4.md) — Phase 5 advance engine 4 sub-feature 達成
-- [2026-05-18](sessions/2026-05-18.md) — Round 2 UI/UX 修正: 18 バグ全解消
-- [2026-05-18-2](sessions/2026-05-18-2.md) — Round 3a UI 追加修正: 9/12 解消
-- [2026-05-18-3](sessions/2026-05-18-3.md) — Round 3b LogPanel HandZone パターン化
-- [2026-05-18-4](sessions/2026-05-18-4.md) — Round 3c-A チュートリアル矢印機構
-- [2026-05-18-5](sessions/2026-05-18-5.md) — Round 3c-B 全 33 step マッピング + Playwright walkthrough
-- [2026-05-18-6](sessions/2026-05-18-6.md) — Round 4a 重大バグ修正 + RCA + Obsidian Base 導入
-- [2026-05-18-7](sessions/2026-05-18-7.md) — Round 4b triggered ability listener 整備
-- [2026-05-18-8](sessions/2026-05-18-8.md) — Round 4c BUG-006 修正 + Playwright E2E 導入
-- [2026-05-18-9](sessions/2026-05-18-9.md) — Round 4d Playwright 可視化 + Round 2 18 件履歴移行 + BUG-029 回帰防止
-- [2026-05-19](sessions/2026-05-19.md) — Round 4e Phase 1: E2E helpers + cutinFixedAP 6 カード
-- [2026-05-19-2](sessions/2026-05-19-2.md) — Round 4f Phase 2: partnerColorKeyword 5 カード + BUG-030 登録
-- [2026-05-19-3](sessions/2026-05-19-3.md) — Round 4g: BUG-030 engine 修正 (continuous modifier resolver)
-- [2026-05-19-4](sessions/2026-05-19-4.md) — Round 4h: caseTraitConditioned 2 カード + BUG-031 data fix
-- [2026-05-20](sessions/2026-05-20.md) — Round 4i: eventRemoveByAP 2 カード + BUG-032/033 listener gap 登録
-- [2026-05-20-2](sessions/2026-05-20-2.md) — Round 4i-fix: BUG-032/033 engine 修正
-- [2026-05-20-3](sessions/2026-05-20-3.md) — Round 4j: hiramekiDraw shape E2E + BUG-034 + 共通パターン 5/5
-- [2026-05-20-4](sessions/2026-05-20-4.md) — Round 4j-fix: BUG-034 真因再診断 + spec 拡張 + misread 水平展開
-- [2026-05-20-5](sessions/2026-05-20-5.md) — Round 4k: hiramekiCharStun E2E + BUG-035 (Phase 7 deferred) 登録
-- [2026-05-20-6](sessions/2026-05-20-6.md) — Phase 7-1: BUG-035 hirameki 経路 $pick auto-resolution 最小修正 + 共通パターン 6/6 達成
-- [2026-05-21](sessions/2026-05-21.md) — Phase 7-2: 汎用 $pick substitution + 9 cards 完全カバー
-- [2026-05-21-2](sessions/2026-05-21-2.md) — Round 4l: UI 4 課題一括 (BUG-001/002/010 + B5 観戦モード)、未着手 BUG ゼロ達成
-- [2026-05-21-3](sessions/2026-05-21-3.md) — Phase 7-3: AI Policy `chooseAtomTarget` verb 別ヒューリスティック
-- [2026-05-21-4](sessions/2026-05-21-4.md) — Phase 9-H: パフォーマンス計測 baseline (avg 0.19ms / target 100ms の 200x 余裕)
-- [2026-05-21-5](sessions/2026-05-21-5.md) — Phase 9-F MVP: MCTSPolicy rollout-based (⚠️ AI 強度低下、9-F.2 で tuning)
-- [2026-05-21-6](sessions/2026-05-21-6.md) — Phase 9-G.1: リプレイ機構 engine 側 (recordMatch + replayLog 完全再現)
-- [2026-05-21-7](sessions/2026-05-21-7.md) — Phase 5 advance UI: Misread UI (useMisreadFlowDriver + PlaymatMisreadPickerModal)
-- [2026-05-21-8](sessions/2026-05-21-8.md) — Phase 5 advance: Souza Sub-task B/C 公式 defer (MVP デッキで souza 使用カード皆無)
-- **[2026-05-21-9](sessions/2026-05-21-9.md) — Cleanup Phase 小規模 4 件 (#4/#5/#7/#8 + BUG-036 新規)** (本セッション)
+- user_request #1 / #16 (重複): scene card が sleep にならない
+- 原因: `SceneArea.css:128` `animation: scene-card-enter ... both;` の `forwards` 側が transform を lock
+- 修正: fill-mode `both` → `backwards` の 1 行
+- 検証: typecheck / 1511 unit / 38+1 E2E / 1000-game smoke 0 errors
+- 新規 spec: `tests/e2e/bug-037.spec.ts` (sleep + stun computed transform を assert)
+- セッション詳細: `.claude/sessions/2026-05-21-10.md`
+- 観測: S147/S148 から S149 へ (commit hash 確定後追記)
