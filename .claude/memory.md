@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Phase 5 advance UI A 完結 ✅ — Misread UI 完了 + Souza B/C 公式 defer 化 (MVP デッキで souza 使用カード皆無を確認)
-**最新コミット**: Souza B/C defer (commit hash 未確定) — 計 40 連続 commit (Misread UI `35a0736` から +1)
+**最新コミット**: Souza B/C defer `a14b62b` — 計 41 連続 commit (Misread UI `35a0736` から +1)
 **テスト状況**: 1511 PASS + 1 skipped / 196 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
