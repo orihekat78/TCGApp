@@ -39,3 +39,13 @@
   - 修正: 4 行 + 1 ブロック差分。BUG-040 と同 pattern「engine + flow 完成、Playmat 配線漏れ」
   - Playwright headed: scene 5 枚 → level≤FILE のキャラ click → switch picker (ssp-overlay) → 退場 + 登場確認
   - unit 1511 + E2E 40 PASS
+
+## 2026-05-22 セッション 14 (Phase β #17 — BUG-042 fix)
+
+- BUG-042 (#17 デッキ選択 UI): self=CT-D08 / opp=CT-D11 がハードコーディング → 選択 UI 配備
+  - 修正: `deckBuilder.ts` に `DeckId` 型 + `AVAILABLE_DECKS` + `buildDeckPair({selfDeckId, oppDeckId})` 新 API
+  - `gameStarter.ts:performGameStart` に optional 第二引数 `deckSelection` 追加
+  - `GameSetupModal.tsx` に 2 つの `<select>` (data-testid: game-setup-self-deck / game-setup-opp-deck)
+  - CSS スタイル追加 (`.game-setup-deck-select`)
+  - Playwright headed: swap (self=D11, opp=D08) → mulligan に D11 カード出現 → engine state で case/partner 検証 ✓
+  - unit 1511 + E2E 40 PASS

@@ -8,33 +8,40 @@
 //   - 「対戦開始」ボタンで sampleGameState (MVP) を setGameState
 //   - Task 8.4b 以降で engine.flow.setup を使った正規初期化に置換予定
 
-import type { JSX } from 'react';
+import { useState, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { useTutorialStore } from '@/ui/state/tutorialStore.js';
 import { performGameStart } from '@/ui/services/gameStarter.js';
 import { createSampleGameState } from '@/ui/fixtures/sampleGameState.js';
+import { AVAILABLE_DECKS, type DeckId } from '@/ui/services/deckBuilder.js';
 import './GameSetupModal.css';
 
 export function GameSetupModal(): JSX.Element | null {
   // 親 (App.tsx) が gameState を subscribe して再描画 → 本コンポーネントも再評価される。
   // 自前の subscription は不要 (SSR テスト互換性 + zustand 不要な hooks 回避)。
   const gameState = useGameStateStore.getState().gameState;
+  // BUG-042 (#17): self / opp のデッキを独立選択可能化
+  const [selfDeckId, setSelfDeckId] = useState<DeckId>('CT-D08');
+  const [oppDeckId, setOppDeckId] = useState<DeckId>('CT-D11');
   if (gameState !== null) return null;
+
+  const deckSelection = { selfDeckId, oppDeckId };
 
   const handleStart = async (): Promise<void> => {
     // Round 2: performGameStart は async (マリガン UI await)
-    const state = await performGameStart();
+    // BUG-042: deckSelection を渡してユーザー選択のデッキで開始
+    const state = await performGameStart(undefined, deckSelection);
     useGameStateStore.getState().setGameState(state);
   };
 
   const handleDemo = (): void => {
-    // 開発用: turn-4 中盤状態の sampleGameState
+    // 開発用: turn-4 中盤状態の sampleGameState (固定 CT-D08 vs CT-D11)
     useGameStateStore.getState().setGameState(createSampleGameState());
   };
 
   const handleTutorial = async (): Promise<void> => {
     // Round 2: performGameStart は async
-    const state = await performGameStart();
+    const state = await performGameStart(undefined, deckSelection);
     useGameStateStore.getState().setGameState(state);
     useTutorialStore.getState().start();
   };
@@ -44,7 +51,7 @@ export function GameSetupModal(): JSX.Element | null {
     // - spectatorMode=true で useSpectatorTurnDriver が self ターンも自動進行
     // - 既存 useOppTurnDriver が opp ターンを自動進行 (変更なし)
     // - 勝敗 detect (gameResult set) で両 driver が停止
-    const state = await performGameStart();
+    const state = await performGameStart(undefined, deckSelection);
     useGameStateStore.getState().setGameState(state);
     useGameStateStore.getState().setSpectatorMode(true);
   };
@@ -54,6 +61,36 @@ export function GameSetupModal(): JSX.Element | null {
       <div className="game-setup-modal">
         <h1 id="setup-title">名探偵コナンTCG</h1>
         <p className="game-setup-subtitle">MVP 開発版</p>
+        {/* BUG-042 (#17): デッキ選択。MVP では CT-D08 / CT-D11 の 2 種。 */}
+        <fieldset className="game-setup-deck-select">
+          <legend>デッキ選択</legend>
+          <label className="game-setup-deck-row">
+            <span className="game-setup-deck-label">自分</span>
+            <select
+              value={selfDeckId}
+              onChange={(e) => setSelfDeckId(e.target.value as DeckId)}
+              data-testid="game-setup-self-deck"
+              aria-label="自分のデッキ"
+            >
+              {AVAILABLE_DECKS.map((d) => (
+                <option key={d.id} value={d.id}>{d.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="game-setup-deck-row">
+            <span className="game-setup-deck-label">CPU</span>
+            <select
+              value={oppDeckId}
+              onChange={(e) => setOppDeckId(e.target.value as DeckId)}
+              data-testid="game-setup-opp-deck"
+              aria-label="CPU のデッキ"
+            >
+              {AVAILABLE_DECKS.map((d) => (
+                <option key={d.id} value={d.id}>{d.label}</option>
+              ))}
+            </select>
+          </label>
+        </fieldset>
         <button
           type="button"
           className="game-setup-start-btn"

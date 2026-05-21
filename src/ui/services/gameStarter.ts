@@ -12,7 +12,7 @@ import { produce } from 'immer';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { engine } from '@/engine';
 import { resolve } from '@/engine/resolve/index.js';
-import { buildMvpDeckPair } from './deckBuilder.js';
+import { buildMvpDeckPair, buildDeckPair, type DeckId } from './deckBuilder.js';
 import { promptMulligan } from '@/ui/hooks/useMulligan.js';
 import type { GameState } from '@/engine/types/game-state';
 import type { CardId } from '@/engine/types';
@@ -65,10 +65,14 @@ const defaultMulliganProvider: MulliganProvider = async (player, hand) => {
 
 export async function performGameStart(
   mulliganProvider: MulliganProvider = defaultMulliganProvider,
+  deckSelection?: { selfDeckId: DeckId; oppDeckId: DeckId },
 ): Promise<GameState> {
+  const decks = deckSelection
+    ? buildDeckPair(deckSelection)
+    : buildMvpDeckPair();
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {
-    engine.flow.setup.init(draft, buildMvpDeckPair());
+    engine.flow.setup.init(draft, decks);
     engine.flow.setup.decideFirstPlayer(draft, 'random');
     engine.flow.setup.dealOpeningHand(draft, 'self');
     engine.flow.setup.dealOpeningHand(draft, 'opp');

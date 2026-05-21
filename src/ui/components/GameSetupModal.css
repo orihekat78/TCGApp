@@ -97,3 +97,48 @@
   filter: brightness(1.15);
   transform: translateY(-1px);
 }
+
+/* BUG-042 (#17): デッキ選択 UI */
+.game-setup-deck-select {
+  border: 1px solid rgba(140, 180, 220, 0.35);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 0 0 6px;
+  background: rgba(20, 28, 40, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.game-setup-deck-select legend {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(220, 230, 245, 0.85);
+  padding: 0 6px;
+  letter-spacing: 0.04em;
+}
+.game-setup-deck-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.game-setup-deck-label {
+  min-width: 48px;
+  font-size: 13px;
+  color: rgba(220, 230, 245, 0.9);
+  letter-spacing: 0.05em;
+}
+.game-setup-deck-row select {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(15, 22, 32, 0.85);
+  border: 1px solid rgba(140, 180, 220, 0.45);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.game-setup-deck-row select:focus {
+  outline: none;
+  border-color: rgba(180, 210, 240, 0.8);
+  box-shadow: 0 0 0 2px rgba(140, 180, 220, 0.3);
+}

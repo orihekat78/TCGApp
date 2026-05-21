@@ -2,13 +2,22 @@
 //
 // rules: 02-deck-construction.md (40枚・同 ID 最大 3 枚)
 //
-// CT-D08 (青の古城探索事件) を self、CT-D11 (千速と重悟の婚活パーティー) を opp に固定。
-// MVP では デッキ選択 UI を出さず、両者固定の対戦を提供。
+// MVP は CT-D08 (青の古城探索事件) と CT-D11 (千速と重悟の婚活パーティー) の
+// 2 デッキを提供。BUG-042 (#17) で self / opp ごとに独立選択可能化。
 // 整合性は engine.flow.setup.init() の validateDeck() で実行時に保証。
 
 import type { DeckPair } from '@/engine/flow/setup';
 
 type CardId = string;
+type DeckSpec = DeckPair['self'];  // engine.flow.setup の Deck 型を借用
+
+/** ゲーム開始時に選択可能なデッキ ID。Phase 9+ で追加可。 */
+export type DeckId = 'CT-D08' | 'CT-D11';
+
+export const AVAILABLE_DECKS: ReadonlyArray<{ id: DeckId; label: string }> = [
+  { id: 'CT-D08', label: 'CT-D08 — 青の古城探索事件' },
+  { id: 'CT-D11', label: 'CT-D11 — 千速と重悟の婚活パーティー' },
+];
 
 // Round 3: event カード組込 (ユーザ要望)
 //   D08: 12 character × 3 + 2 event × 2 = 40 枚 (D08024「あら…頼もしい」 / D08025「蘭の一撃」)
@@ -37,15 +46,34 @@ function buildDeck40(
   return out.slice(0, 40);
 }
 
+/** デッキ ID から DeckSpec (partnerId / caseId / mainCards 40 枚) を生成。 */
+function buildDeckSpec(deckId: DeckId): DeckSpec {
+  switch (deckId) {
+    case 'CT-D08':
+      return { partnerId: 'D08001', caseId: 'D08026', mainCards: buildDeck40(D08_CHAR_IDS, D08_EVENT_IDS) };
+    case 'CT-D11':
+      return { partnerId: 'D11001', caseId: 'D11021', mainCards: buildDeck40(D11_CHAR_IDS, D11_EVENT_IDS) };
+  }
+}
+
 /**
- * MVP の DeckPair を生成する。
- * - self = CT-D08 (青)、opp = CT-D11 (黄)
+ * 任意の self / opp デッキ組み合わせで DeckPair を生成 (BUG-042 / user_request #17)。
+ *
  * - 各 main 40 枚、同 ID 最大 3 枚 (rules/02 制約準拠)
- * - Round 3: event カード × 2 種 × 2 枚 含む
+ * - 同一 deck を双方が使う対戦 (ミラー戦) も可
+ */
+export function buildDeckPair(opts: { selfDeckId: DeckId; oppDeckId: DeckId }): DeckPair {
+  return {
+    self: buildDeckSpec(opts.selfDeckId),
+    opp:  buildDeckSpec(opts.oppDeckId),
+  };
+}
+
+/**
+ * MVP のデフォルト DeckPair を生成 (後方互換)。
+ * - self = CT-D08 (青)、opp = CT-D11 (黄)
+ * - 既存 import を壊さないため API は維持、内部は buildDeckPair に委譲。
  */
 export function buildMvpDeckPair(): DeckPair {
-  return {
-    self: { partnerId: 'D08001', caseId: 'D08026', mainCards: buildDeck40(D08_CHAR_IDS, D08_EVENT_IDS) },
-    opp:  { partnerId: 'D11001', caseId: 'D11021', mainCards: buildDeck40(D11_CHAR_IDS, D11_EVENT_IDS) },
-  };
+  return buildDeckPair({ selfDeckId: 'CT-D08', oppDeckId: 'CT-D11' });
 }
