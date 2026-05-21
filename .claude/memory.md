@@ -59,3 +59,13 @@
   - Playwright headed: collapsed mini-card / expanded hand-card 両方で右クリック → CardExpandModal 開く ✓
   - 「Playmat.tsx 配線漏れ」pattern 4 件目 (BUG-040/041/042/043)
   - unit 1511 + E2E 40 PASS
+
+## 2026-05-22 セッション 16 (Phase β #4 — BUG-044 fix)
+
+- BUG-044 (#4 AI が事件アクションしない): heuristic で reasoning が常に優先固定 → case attack 不発
+  - 修正: reasoning vs actionAgainstCase をスコア比較、後期 (opp evidence ≥ req-1 ∧ self 劣勢) で case attack 優先
+  - threshold 4 回試行錯誤: 135.5→94.8→53.4→11.19 turn (timeouts 641→424→208→**0**)
+  - 採用 threshold: oppEvidence ≥ req-1 ∧ selfEvidence < oppEvidence (劣勢時 disruption のみ)
+  - smoke: avg 11.19 / timeouts 0 / wins 500-500 均衡
+  - BUG-042 副作用で 3 マッチアップ smoke が自動テスト化された
+  - AI 116 unit + 1511 全 unit + 40 E2E PASS

@@ -1,0 +1,1941 @@
+{
+  "schemaVersion": 1,
+  "runId": "smoke-2026-05-21-155256",
+  "engineSha": "f1a1c2b",
+  "totalGames": 1000,
+  "matrix": [
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D08",
+      "games": 333
+    },
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D11",
+      "games": 334
+    },
+    {
+      "deckA": "CT-D11",
+      "deckB": "CT-D11",
+      "games": 333
+    }
+  ],
+  "summary": {
+    "totalGames": 1000,
+    "winsA": 416,
+    "winsB": 376,
+    "timeouts": 208,
+    "exceptions": 0,
+    "avgTurns": 53.385,
+    "p50Turns": 16,
+    "p95Turns": 201,
+    "maxTurns": 201,
+    "totalDurationMs": 60219
+  },
+  "perPairing": [
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D08",
+      "games": 333,
+      "winsA": 161,
+      "winsB": 163,
+      "timeouts": 9,
+      "exceptions": 0,
+      "avgTurns": 19.207207207207208
+    },
+    {
+      "deckA": "CT-D08",
+      "deckB": "CT-D11",
+      "games": 334,
+      "winsA": 170,
+      "winsB": 142,
+      "timeouts": 22,
+      "exceptions": 0,
+      "avgTurns": 27.206586826347305
+    },
+    {
+      "deckA": "CT-D11",
+      "deckB": "CT-D11",
+      "games": 333,
+      "winsA": 85,
+      "winsB": 71,
+      "timeouts": 177,
+      "exceptions": 0,
+      "avgTurns": 113.81981981981981
+    }
+  ],
+  "anomalies": [
+    {
+      "seed": "smoke-50",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-68",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-81",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-142",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-155",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-175",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-189",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-193",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-219",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D08"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-336",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-353",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-376",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-386",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-393",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-408",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-433",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-454",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-467",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-486",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-524",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-530",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-543",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-562",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-593",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-632",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-634",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-637",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-644",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-649",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-650",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-660",
+      "pairing": {
+        "deckA": "CT-D08",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-667",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-670",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-672",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-674",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-675",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-676",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-678",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-680",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-681",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-683",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-684",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-685",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-686",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-687",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-689",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-690",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-692",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-693",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-694",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-695",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-697",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-701",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-704",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-709",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-711",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-715",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-716",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-717",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-718",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-719",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-720",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-721",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-723",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-724",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-729",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-730",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-731",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-733",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-734",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-735",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-736",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-737",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-740",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-741",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-742",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-744",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-745",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-747",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-749",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-750",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-753",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-755",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-759",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-760",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-761",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-762",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-763",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-764",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-766",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-767",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-768",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-771",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-772",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-773",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-774",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-775",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-776",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-777",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-778",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-779",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-786",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-787",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-788",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-789",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-791",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-792",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-796",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-797",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-798",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-802",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-803",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-804",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-807",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-814",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-819",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-822",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-823",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-827",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-828",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-829",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-830",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-831",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-834",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-835",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-836",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-837",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-838",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-840",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-841",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-842",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-843",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-845",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-849",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-851",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-853",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-855",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-856",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-857",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-858",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-859",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-860",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-861",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-864",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-866",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-867",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-868",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-869",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-874",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-875",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-876",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-877",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-882",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-883",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-885",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-886",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-887",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-888",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-892",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-893",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-894",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-895",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-898",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-899",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-900",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-906",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-909",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-910",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-911",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-913",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-914",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-920",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-921",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-924",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-925",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-926",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-928",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-930",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-931",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-935",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-940",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-941",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-943",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-953",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-954",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-955",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-957",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-958",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-962",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-965",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-966",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-967",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-970",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-971",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-972",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-974",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-975",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-977",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-979",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-982",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-983",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-984",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-985",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-986",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-988",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-992",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-995",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    },
+    {
+      "seed": "smoke-996",
+      "pairing": {
+        "deckA": "CT-D11",
+        "deckB": "CT-D11"
+      },
+      "reason": "timeout",
+      "turn": 201
+    }
+  ]
+}

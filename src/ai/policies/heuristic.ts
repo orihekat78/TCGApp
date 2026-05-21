@@ -96,28 +96,59 @@ export class HeuristicPolicy implements AIPolicy {
       if (fileLen + 1 >= 7) return assist;
     }
 
-    // 優先順位 3: reasoning — 最も LP の高い候補。LP > 0 のものに限る (rules/11)
+    // 優先順位 3 / 4: reasoning vs actionAgainstCase (BUG-044 / user_request #4)
+    //
+    // 旧実装は reasoning を常に先に評価し LP > 0 なら return していたため
+    // CPU が actionAgainstCase を選ぶ機会がほぼゼロだった (ユーザー指摘 #4)。
+    //
+    // ただし「常に case attack を選ぶ」と双方 AI が攻防戦に陥り試合が延々と
+    // 終わらない (試 smoke で 9.85→135.54 turn / timeout 0→641 を観測)。
+    //
+    // 解決: 後期ゲーム条件 (相手証拠が必要数の半分以上、または自分の reasoning
+    // LP が低い) でのみ case attack を優先。それ以外は既存通り reasoning 優先。
     const reasoningMoves = candidates.filter(
       (m): m is Extract<Move, { kind: 'reasoning' }> => m.kind === 'reasoning',
     );
-    if (reasoningMoves.length > 0) {
+    const caseAttacks = candidates.filter(
+      (m): m is Extract<Move, { kind: 'actionAgainstCase' }> => m.kind === 'actionAgainstCase',
+    );
+    const bestReasoning = (() => {
+      if (reasoningMoves.length === 0) return null;
       const scored = reasoningMoves
         .map(m => ({ m, lp: lpOf(state, m.uid) }))
         .sort((a, b) => b.lp - a.lp);
       const best = scored[0];
-      if (best.lp > 0) return best.m;
-    }
-
-    // 優先順位 4: actionAgainstCase — 最大 AP のアタッカーを採用
-    const caseAttacks = candidates.filter(
-      (m): m is Extract<Move, { kind: 'actionAgainstCase' }> => m.kind === 'actionAgainstCase',
-    );
-    if (caseAttacks.length > 0) {
+      return best.lp > 0 ? best : null;
+    })();
+    const bestCaseAttack = (() => {
+      if (caseAttacks.length === 0) return null;
+      const oppPlayer: Player = byPlayer === 'self' ? 'opp' : 'self';
+      const oppEvidence = state.players[oppPlayer].evidence.length;
+      const oppRequired = state.players[oppPlayer].case.requiredEvidence;
+      // 「劣勢時のみ disruption」戦略 (BUG-044 試行錯誤後の最終 threshold):
+      //   - 相手があと 1 で勝つ状態 (oppEvidence ≥ req-1) かつ
+      //   - 自分が劣勢 (selfEvidence < oppEvidence)
+      // の両条件を満たすときのみ case attack を選択。
+      // 序盤/中盤は reasoning 優先 (smoke turn 数 9.85 維持目的)。
+      // 攻撃側と同位/優位の時は reasoning でレースし勝ち切るほうが効率的。
+      const selfEvidence = state.players[byPlayer].evidence.length;
+      const oppCriticalWin = oppEvidence >= oppRequired - 1;
+      const selfBehind = selfEvidence < oppEvidence;
+      if (oppEvidence < 1) return null;       // rules/07: 証拠 0 の事件は対象不可
+      if (!oppCriticalWin || !selfBehind) return null;
       const scored = caseAttacks
         .map(m => ({ m, ap: apOf(state, m.byUid) }))
         .sort((a, b) => b.ap - a.ap);
-      return scored[0].m;
+      // case attack の期待差分: +1 自 / -1 相手 = 2
+      return { m: scored[0].m, score: 2 };
+    })();
+    if (bestReasoning && bestCaseAttack) {
+      // 後期ゲームのみ case attack score=2 と LP を比較 — LP=1 なら case 優先、
+      // LP≧2 なら reasoning 優先 (既存挙動維持)
+      return bestReasoning.lp >= bestCaseAttack.score ? bestReasoning.m : bestCaseAttack.m;
     }
+    if (bestReasoning) return bestReasoning.m;
+    if (bestCaseAttack) return bestCaseAttack.m;
 
     // 優先順位 5: actionAgainstChar — 攻撃側 AP >= 対象 AP の手のみ
     // (rules/08: AP 同値でもリムーブ成立)。負ける攻撃は出さない。
