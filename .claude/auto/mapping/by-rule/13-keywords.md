@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `057004596ac1`
+> Source hash: `7c00b7598c86`
 
 公式ルール [`13-keywords.md`](../../../rules/13-keywords.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,9 +24,10 @@
 
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
+- [`phase-9-h-performance`](../by-spec/phase-9-h-performance.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (47)
+## 📄 参照ソース (48)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -48,4 +49,4 @@
 - [`src/cards/ct-d11/D11002.ts`](../../../../src/cards/ct-d11/D11002.ts)
 - [`src/cards/ct-d11/D11003.ts`](../../../../src/cards/ct-d11/D11003.ts)
 - [`src/cards/ct-d11/D11004.ts`](../../../../src/cards/ct-d11/D11004.ts)
-- _...ほか 27 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 28 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

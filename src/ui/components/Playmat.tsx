@@ -52,6 +52,8 @@ import { useSpectatorTurnDriver } from '../hooks/useSpectatorTurnDriver.js';
 import { useContactFlowDriver } from '../hooks/useContactFlowDriver.js';
 import { useContactModalStore } from '../hooks/useContactModalStore.js';
 import { useHiramekiFlowDriver } from '../hooks/useHiramekiFlowDriver.js';
+import { useMisreadFlowDriver } from '../hooks/useMisreadFlowDriver.js';
+import { MisreadPickerModal, type MisreadCandidateView } from './MisreadPickerModal.js';
 import { GuardPickerModal } from './GuardPickerModal.js';
 import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
 import { HiramekiPickerModal } from './HiramekiPickerModal.js';
@@ -60,6 +62,7 @@ import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { char as readChar } from '@/engine/read/char.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -215,6 +218,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useContactFlowDriver();
   // Phase 8 完全クローズ Commit 3a: ヒラメキ判定駆動 (opp owner なら AI 自動 / self owner はモーダル待ち)。
   useHiramekiFlowDriver();
+  // Phase 5 advance UI: Misread driver (reasoningPlayer='self' なら AI 自動解決、'opp' なら modal 待ち)
+  useMisreadFlowDriver();
   // Phase 8.5: 手札は default で collapsed (小さいストリップ)、クリックで expanded (実寸 + ×)
   const [handExpanded, setHandExpanded] = useState(false);
   // Round 4l (BUG-001): カード拡大 modal の state
@@ -452,6 +457,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* Phase 8 完全クローズ Commit 3a: ヒラメキモーダル */}
         <PlaymatHiramekiPickerModal />
 
+        {/* Phase 5 advance UI: ミスリードモーダル (相手推理時、自分の現場 misread 持ち候補から複数選択) */}
+        <PlaymatMisreadPickerModal />
+
         {/* Phase 5 advance: SceneSwitch UI (rules/20 §スイッチ) */}
         <PlaymatSceneSwitchPickerModal />
 
@@ -575,6 +583,60 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
       abilityText={abilityText}
       onFire={() => dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' })}
       onSkip={() => dispatchEngineAction({ type: 'hiramekiResolve', choice: 'skip' })}
+    />
+  );
+}
+
+/**
+ * Phase 5 advance UI: MisreadPickerModal ラッパ。
+ * useGameStateStore.pendingMisread を subscribe し、reasoningPlayer==='opp' (相手推理 / 自分 defender) のとき open。
+ * confirm/skip で misreadResolve dispatch + クリア。
+ * - reasoningPlayer==='self' (自分推理 / AI defender) は useMisreadFlowDriver が自動解決するため open しない。
+ */
+function PlaymatMisreadPickerModal(): JSX.Element | null {
+  const pending = useGameStateStore((s) => s.pendingMisread);
+  const gameState = useGameStateStore((s) => s.gameState);
+  if (!pending || pending.reasoningPlayer !== 'opp' || !gameState) {
+    return (
+      <MisreadPickerModal
+        open={false}
+        reasoningName=""
+        reasoningLp={0}
+        candidates={[]}
+        onConfirm={() => {}}
+        onSkip={() => {}}
+      />
+    );
+  }
+  // 推理側 (= 相手 = 'opp') の表示名と LP
+  const reasoningCardId = pending.reasoningUid.startsWith('partner:')
+    ? gameState.players[pending.reasoningPlayer].partner.cardId
+    : gameState.players[pending.reasoningPlayer].scene.find((c) => c.uid === pending.reasoningUid)?.cardId;
+  const reasoningDef = reasoningCardId ? readDef.card(reasoningCardId) : null;
+  const reasoningName = reasoningDef?.names?.[0] ?? '相手キャラ';
+  const reasoningLp = pending.reasoningUid.startsWith('partner:')
+    ? (reasoningDef?.lp ?? 0)
+    : readChar.lp(gameState, pending.reasoningUid);
+  // candidates を MisreadCandidateView 形式に展開
+  const candidateViews: MisreadCandidateView[] = pending.candidates.map((c) => {
+    const sceneChar = gameState.players.self.scene.find((sc) => sc.uid === c.uid);
+    const cardName = sceneChar
+      ? (readDef.card(sceneChar.cardId)?.names?.[0] ?? sceneChar.cardId)
+      : c.uid;
+    return { uid: c.uid, cardName, x: c.x };
+  });
+  return (
+    <MisreadPickerModal
+      open={true}
+      reasoningName={reasoningName}
+      reasoningLp={reasoningLp}
+      candidates={candidateViews}
+      onConfirm={(picks) => {
+        dispatchEngineAction({ type: 'misreadResolve', picks });
+      }}
+      onSkip={() => {
+        dispatchEngineAction({ type: 'misreadResolve', picks: [] });
+      }}
     />
   );
 }

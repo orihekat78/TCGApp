@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `057004596ac1`
+> Source hash: `7c00b7598c86`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -25,7 +25,7 @@
 | [`10-action-event.md`](../../rules/10-action-event.md) | 16 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts` ほか 13 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 9 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `engine/mutate/evidence.ts` ほか 6 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 8 | `ai/policies/heuristic.ts`, `engine/flow/main/hand-use-card.ts`, `engine/mutate/file.ts` ほか 5 件 |
-| [`13-keywords.md`](../../rules/13-keywords.md) | 47 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 44 件 |
+| [`13-keywords.md`](../../rules/13-keywords.md) | 48 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 45 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 15 | `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts`, `cards/ct-d08/D08014.ts` ほか 12 件 |
 | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 50 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 47 件 |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 2 | `cards/ct-d08/D08021.ts`, `engine/mutate/scene.ts` |
