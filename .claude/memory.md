@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Phase 9-F MVP 完了 ✅ — MCTSPolicy rollout-based (⚠️ AI 強度自体は HeuristicPolicy 未満、strength tuning は Phase 9-F.2 deferred)
-**最新コミット**: Phase 9-F (commit hash 未確定) — 計 37 連続 commit (Phase 9-H `3d6c103` から +1)
+**最新コミット**: Phase 9-F MVP `3836d65` — 計 37 連続 commit (Phase 9-H `3d6c103` から +1)
 **テスト状況**: 1505 PASS + 1 skipped / 195 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
