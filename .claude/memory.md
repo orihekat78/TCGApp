@@ -3,7 +3,7 @@
 ## 現在地
 
 **フェーズ**: Phase 9-G.1 完了 ✅ — リプレイ機構 engine 側 (recordMatch + ScriptedPolicy + replayLog)、record→replay 完全再現確認
-**最新コミット**: Phase 9-G.1 (commit hash 未確定) — 計 38 連続 commit (Phase 9-F `3836d65` から +1)
+**最新コミット**: Phase 9-G.1 `6e835f8` — 計 38 連続 commit (Phase 9-F `3836d65` から +1)
 **テスト状況**: 1511 PASS + 1 skipped / 196 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
