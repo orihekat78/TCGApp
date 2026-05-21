@@ -297,11 +297,18 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         if (ability?.effect) {
           // Phase 7-1 + 7-2 (BUG-035): hirameki effect 内の $pick atom を recursive utility で
           // substitute。Phase 7-1 の局所版 resolveHiramekiPick を resolveEffectPicks に retrofit。
+          // Phase 7-3: chooseAtomTarget callback で verb 別ヒューリスティック選択
+          // (D11009 sceneSetState stun → 敵 active 最高 AP 等)。
+          // Human/AI 共通で適用 — UI 側 modal が出るときはこの dispatch 経路を通らないため実害なし。
           const ctx: EffectCtx = {
             source: { player: pending.player, cardId: pending.cardId, area: 'evidence' },
             bindings: {},
           };
-          const resolved = resolveEffectPicks(draft, ability.effect as never, ctx);
+          const aiPolicy = new HeuristicPolicy();
+          const resolved = resolveEffectPicks(draft, ability.effect as never, ctx, {
+            chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+            byPlayer: pending.player,
+          });
           engineEvent.queue(
             draft,
             resolved as never,

@@ -110,6 +110,25 @@ export interface AIPolicy {
     cardIds: ReadonlyArray<string>,
   ): ReadonlyArray<string>;
 
+  /**
+   * Phase 7-3: `$pick` atom target ヒューリスティック選択 (optional)。
+   * `resolveEffectPicks` (engine/effect/resolve-picks.ts) が `$pick` placeholder atom を
+   * 列挙候補から 1 つに置換する際、verb / args / 自陣敵陣を考慮して best を選ぶ。
+   * 戻り値 null → caller 側で先頭採用 fallback (no-op semantics 維持)。
+   *
+   * @param atomVerb atom verb (例: 'sceneRemove', 'sceneSetState', 'charModifyAP')
+   * @param atomArgs atom args (delta / state / cause 等の verb 別判定材料)
+   * @param candidates targetCandidates 戻り値 (uid:'$pick' を置換する候補)
+   * @param byPlayer 効果発動側プレイヤー
+   */
+  chooseAtomTarget?(
+    state: GameState,
+    atomVerb: string,
+    atomArgs: Readonly<Record<string, unknown>>,
+    candidates: ReadonlyArray<import('@/engine/types').Candidate>,
+    byPlayer: Player,
+  ): import('@/engine/types').Candidate | null;
+
   /** Identifier for logging / debug */
   readonly name: string;
 }

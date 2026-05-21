@@ -24,6 +24,7 @@ import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
+import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope } from '../types/index.js';
 
 type Player = 'self' | 'opp';
@@ -138,8 +139,9 @@ function handleHook(
       }
       // effect が無いと queue しても無意味
       if (!ability.effect) continue;
-      // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を先頭候補で substitute してから queue
+      // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を候補から substitute してから queue
       // recursive utility が atom / choice / sequence / conditional / optional 等を walk
+      // Phase 7-3: chooseAtomTarget callback で verb 別ヒューリスティック選択 (敵 highest AP 等)
       const resolveCtx = {
         source: {
           cardId: card.cardId,
@@ -150,7 +152,13 @@ function handleHook(
         },
         bindings: {},
       };
-      const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx);
+      // Phase 7-3: listener callback 内で instantiate (module top では circular import 発生)。
+      // misread.ts:110 と同じパターン。allocation cost は 1 ability/frame で実害なし。
+      const aiPolicy = new HeuristicPolicy();
+      const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx, {
+        chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+        byPlayer: card.player,
+      });
       // queue
       event.queue(
         state,

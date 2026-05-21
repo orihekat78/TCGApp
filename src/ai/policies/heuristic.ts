@@ -17,9 +17,16 @@
 
 import type { AIPolicy } from '../policy.js';
 import type { Move } from '../move-enumerator.js';
-import type { GameState, ActionContext } from '@/engine/types';
-import { engine } from '@/engine';
+import type { GameState, ActionContext, Candidate } from '@/engine/types';
+// Phase 7-3 (BUG: circular import fix): `@/engine` umbrella を使うと
+// triggered.ts → heuristic.ts → engine/index.ts → triggered.ts の TDZ ループに陥るため、
+// 必要な submodule のみ直接 import する。
+import { cards as engineCards } from '@/engine/cards/index.js';
+import { read as engineRead } from '@/engine/read/index.js';
 import { RandomPolicy, type RandomPolicyOptions } from './random.js';
+
+/** 旧コード互換: `engine.cards` / `engine.read` のみ使用していたため facade で代替。 */
+const engine = { cards: engineCards, read: engineRead };
 
 /**
  * uid のオーナープレイヤーを判定 (chooseCutIn 内部用)。
@@ -313,6 +320,92 @@ export class HeuristicPolicy implements AIPolicy {
     cardIds: ReadonlyArray<string>,
   ): ReadonlyArray<string> {
     return cardIds;
+  }
+
+  /**
+   * Phase 7-3: $pick atom target ヒューリスティック選択。
+   * resolveEffectPicks (engine/effect/resolve-picks.ts) から呼ばれ、verb / args / 自陣敵陣を
+   * 考慮して best 候補を選ぶ。戻り値 null → caller 側で先頭採用 fallback。
+   *
+   * verb 別戦術:
+   *   - sceneRemove          → 敵候補から AP 最高 (脅威排除)、無ければ LP 最高
+   *   - sceneSetState sleep/stun → 敵 active 最高 AP (脅威阻害)。active 無ければ任意敵
+   *   - sceneSetState active → 自陣 sleep/stun 最高 AP (再活性)、無ければ任意自陣
+   *   - charModifyAP delta>0 → 自陣 AP 最低 (伸び代の大きい味方を強化)
+   *   - charModifyAP delta<0 → 敵 AP 最高 (脅威弱化)
+   *   - charModifyLP delta>0 → 自陣 LP 最高 (推理エースを強化)
+   *   - charModifyLP delta<0 → 敵 LP 最高 (推理妨害)
+   *   - その他 verb         → null (caller の先頭採用 fallback)
+   *
+   * 'char' kind 以外の候補は無視 (substituteAtomPick の制約と整合)。
+   * 候補 0 件は呼ばれない (caller 側で先に no-op fallback)。
+   */
+  chooseAtomTarget(
+    state: GameState,
+    atomVerb: string,
+    atomArgs: Readonly<Record<string, unknown>>,
+    candidates: ReadonlyArray<Candidate>,
+    byPlayer: 'self' | 'opp',
+  ): Candidate | null {
+    type CharCand = Candidate & { kind: 'char' };
+    const chars = candidates.filter((c): c is CharCand => c.kind === 'char');
+    if (chars.length === 0) return null;
+
+    const oppSide: 'self' | 'opp' = byPlayer === 'self' ? 'opp' : 'self';
+    const enemies = chars.filter((c) => c.player === oppSide);
+    const allies = chars.filter((c) => c.player === byPlayer);
+
+    const pickMaxAP = (pool: CharCand[]): CharCand | null =>
+      pool.reduce<CharCand | null>(
+        (best, c) => (best === null || apOf(state, c.uid) > apOf(state, best.uid) ? c : best),
+        null,
+      );
+    const pickMinAP = (pool: CharCand[]): CharCand | null =>
+      pool.reduce<CharCand | null>(
+        (best, c) => (best === null || apOf(state, c.uid) < apOf(state, best.uid) ? c : best),
+        null,
+      );
+    const pickMaxLP = (pool: CharCand[]): CharCand | null =>
+      pool.reduce<CharCand | null>(
+        (best, c) => (best === null || lpOf(state, c.uid) > lpOf(state, best.uid) ? c : best),
+        null,
+      );
+    const charState = (uid: string): 'active' | 'sleep' | 'stun' => engine.read.char.state(state, uid);
+
+    switch (atomVerb) {
+      case 'sceneRemove': {
+        return pickMaxAP(enemies) ?? pickMaxLP(enemies);
+      }
+      case 'sceneSetState': {
+        const targetState = atomArgs['state'];
+        if (targetState === 'sleep' || targetState === 'stun') {
+          const activeEnemies = enemies.filter((c) => charState(c.uid) === 'active');
+          return pickMaxAP(activeEnemies) ?? pickMaxAP(enemies);
+        }
+        if (targetState === 'active') {
+          const downedAllies = allies.filter((c) => {
+            const st = charState(c.uid);
+            return st === 'sleep' || st === 'stun';
+          });
+          return pickMaxAP(downedAllies) ?? pickMaxAP(allies);
+        }
+        return null;
+      }
+      case 'charModifyAP': {
+        const delta = typeof atomArgs['delta'] === 'number' ? (atomArgs['delta'] as number) : 0;
+        if (delta > 0) return pickMinAP(allies);
+        if (delta < 0) return pickMaxAP(enemies);
+        return null;
+      }
+      case 'charModifyLP': {
+        const delta = typeof atomArgs['delta'] === 'number' ? (atomArgs['delta'] as number) : 0;
+        if (delta > 0) return pickMaxLP(allies);
+        if (delta < 0) return pickMaxLP(enemies);
+        return null;
+      }
+      default:
+        return null;
+    }
   }
 }
 

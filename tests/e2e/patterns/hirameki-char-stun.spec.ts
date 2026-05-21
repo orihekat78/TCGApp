@@ -218,7 +218,7 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
       expectNoConsoleErrors(errors);
     });
 
-    test(`${cardId} ${abilityId} (${kind}): fire path → scene state sleep (Phase 7-1 で BUG-035 partial fix)`, async ({ page }) => {
+    test(`${cardId} ${abilityId} (${kind}): fire path → 敵 scene state sleep (Phase 7-3 chooseAtomTarget)`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
       await buildGameState<FixtureArg>(page, applyFixture, { evidenceCardId: cardId });
 
@@ -230,14 +230,21 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
       expect(pending?.cardId, `pending.cardId === ${cardId}`).toBe(cardId);
       expect(pending?.abilityId, `pending.abilityId === ${abilityId}`).toBe(abilityId);
 
-      const stateBefore = await getSceneState(page, 'self', 0);
-      expect(stateBefore, 'pre-fire state is active').toBe('active');
+      const selfStateBefore = await getSceneState(page, 'self', 0);
+      const oppStateBefore = await getSceneState(page, 'opp', 0);
+      expect(selfStateBefore, 'pre-fire self.scene[0] is active').toBe('active');
+      expect(oppStateBefore, 'pre-fire opp.scene[0] is active (sampleGameState 既定)').toBe('active');
       await dispatchAction(page, { type: 'hiramekiResolve', choice: 'fire' });
-      const stateAfter = await getSceneState(page, 'self', 0);
+      const selfStateAfter = await getSceneState(page, 'self', 0);
+      const oppStateAfter = await getSceneState(page, 'opp', 0);
 
-      // Phase 7-1 (BUG-035 partial fix): hiramekiResolve handler が $pick を first candidate
-      // に置換するため、scene[0] (唯一の active 候補) が sleep 化される
-      expect(stateAfter, 'self.scene[0].state === sleep (Phase 7-1 $pick resolved to scene[0])').toBe('sleep');
+      // Phase 7-3 (chooseAtomTarget): hiramekiResolve handler が $pick を verb 別ヒューリスティックで
+      // 置換するため、sceneSetState sleep は「敵 active 最高 AP」を選ぶ → opp.scene[0] が sleep 化される。
+      // 自陣 self.scene[0] は対象外で active 不変。
+      // (Phase 7-1 は first candidate = self.scene[0] を選んでいたが、意味的に「敵に sleep を与える」
+      //  カードなので Phase 7-3 の方が正しい挙動)
+      expect(oppStateAfter, 'opp.scene[0].state === sleep (Phase 7-3 heuristic picks enemy active)').toBe('sleep');
+      expect(selfStateAfter, 'self.scene[0].state 不変 (active)').toBe('active');
       expect(await getPendingHirameki(page), 'pendingHirameki cleared after resolve').toBeNull();
 
       expectNoConsoleErrors(errors);

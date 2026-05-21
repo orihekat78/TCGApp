@@ -33,7 +33,7 @@
 - Round 4l (本セッション): **UI 4 課題一括** — BUG-002 (edition tag 隙間 1-line CSS fix) + BUG-001 (`CardExpandModal` + `useCardExpandModal` hook + Playmat onExpand 配線、3 zone click で拡大表示) + BUG-010 (OppTurnOverlay action 表示 + MAX_MOVES 安全上限 200 手 明示) + **B5 観戦モード新機能** (`spectatorMode` store field + `useSpectatorTurnDriver` + GameSetupModal 「観戦モード (AI vs AI)」button)。**未着手 BUG ゼロ達成** 🎉
 
 1000戦 smoke は **0 timeout / 0 例外 / 勝率 52.5 vs 47.5 (Round 4g 以降の baseline 525/475 維持、avg 9.85 ターン)**。
-残課題: Phase 5 advance UI 残 (Misread UI / Souza Sub-task B+C) / Phase 7-3 候補 (AI policy `chooseAtomTarget` 拡張) / Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)。
+残課題: Phase 5 advance UI 残 (Misread UI / Souza Sub-task B+C) / Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)。
 
 ### MVP 実装プラン進捗 ([詳細](.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md))
 
@@ -71,14 +71,14 @@
 | Round 4k: hiramekiCharStun + BUG-035 登録 | hirameki-char-stun.spec.ts 7 tests + $pick auto-resolution Phase 7 deferred (`f50028f`) | ✅ 完了 |
 | Phase 7-1: hirameki 経路 $pick 最小修正 | resolveHiramekiPick + fire test を sleep 検証に upgrade + 共通パターン 6/6 達成 (`4bf79a1`) | ✅ 完了 |
 | Phase 7-2: 汎用 $pick substitution + 9 cards 完全カバー | recursive `resolveEffectPicks` utility + triggered.ts/hiramekiResolve retrofit + unit +9 (`3f50e99`) | ✅ 完了 |
-| Round 4l: UI 4 課題一括対応 | BUG-001/002/010 + B5 観戦モード新機能 (本セッション) | ✅ 完了 |
-| Phase 7-3 候補: AI policy `chooseAtomTarget` 拡張 | 現状先頭採用、AI ヒューリスティック拡張で smart 化 | ⏳ |
+| Round 4l: UI 4 課題一括対応 | BUG-001/002/010 + B5 観戦モード新機能 (`5716953`) | ✅ 完了 |
+| Phase 7-3: AI policy `chooseAtomTarget` verb 別ヒューリスティック | sceneRemove/sceneSetState/charModifyAP/charModifyLP 別戦術 + unit 14 + E2E 期待更新 (本セッション) | ✅ 完了 |
 | Round 4c UI 残 | BUG-001 拡大表示 / BUG-002 edition tag 隙間 / BUG-010 opp turn 可視化 + 旧 B5 観戦モード | ⏳ |
 | 9-F〜H | AI 強化 (MCTS) / リプレイ / パフォーマンス計測 | ⏳ |
 
 ### テスト状況
 
-- **1476 PASS + 1 skipped / 193 Test Files** (Phase 7-2 完了時点、resolve-picks.test.ts +9)
+- **1493 PASS + 1 skipped / 194 Test Files** (Phase 7-3 完了時点、heuristic.atom-target.test.ts +14 / resolve-picks.test.ts +3)
 - **E2E 38 pass + 1 skipped** (bug-006 1 + bug-029 2 + cutinFixedAP 6 + partnerColorKeyword 6 + caseTraitConditioned 4 + eventRemoveByAP 5 + hiramekiDraw 7 + hiramekiCharStun 7 = 38)
 - **1000戦 smoke baseline 525/475 完全維持** (Round 4g 以降不変、avg turns 9.85、Round 4j で副作用なし)
 - 1000戦 AI vs AI smoke (heuristic × heuristic): **0 invariant failure / 0 例外 / 0 timeout / 3.3 s**

@@ -2,9 +2,9 @@
 
 ## 現在地
 
-**フェーズ**: Round 4l 完了 ✅ — UI 4 課題一括対応 (BUG-001/002/010 + B5 観戦モード新機能)、**未着手 BUG ゼロ達成** 🎉
-**最新コミット**: Round 4l `5716953` (Phase 7-2 `3f50e99` 続き) — 計 34 連続 commit (Round 2〜Round 4l)
-**テスト状況**: 1476 PASS + 1 skipped / 193 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
+**フェーズ**: Phase 7-3 完了 ✅ — AI Policy `chooseAtomTarget` verb 別ヒューリスティック実装 (commit hash 未確定、commit 後 memory.md に反映)
+**最新コミット**: Round 4l `5716953` (Phase 7-3 commit 予定) — 計 34 連続 commit (Round 2〜Round 4l)、Phase 7-3 で 35
+**テスト状況**: 1493 PASS + 1 skipped / 194 files / **E2E 38 pass + 1 skip** / **smoke 525/475 baseline 完全維持** / typecheck clean / docs:check clean
 **現状サマリ** (Round 4e-Round 4l):
 - Round 4e-4f: E2E helpers 整備 + **cutinFixedAP 6 カード** + **partnerColorKeyword 5 カード** spec 化
 - Round 4g: **BUG-030 修正** (engine `read.char.keywords` に continuous modifier resolver、smoke positive shift 525-475)
@@ -39,9 +39,9 @@
   - 4k (`f50028f`): hiramekiCharStun 2 カード shape + queue + BUG-035 登録
   - Phase 7-1 (`4bf79a1`): BUG-035 hirameki 経路 $pick 最小修正
   - Phase 7-2 (`3f50e99`): BUG-035 汎用 $pick substitution + 9 cards 完全カバー
-  - Round 4l (本): UI 4 課題一括 (BUG-001/002/010 + B5 観戦モード新機能)、**未着手 BUG ゼロ達成** 🎉
-- [ ] **Phase 7-3 候補**: AI policy `chooseAtomTarget` 拡張 (現状先頭採用)
-- [ ] **Round 4l+ UI 課題**: BUG-001 拡大表示 / BUG-002 edition tag / BUG-010 opp turn 可視化 / B5 観戦モード
+  - Round 4l: UI 4 課題一括 (BUG-001/002/010 + B5 観戦モード新機能)、**未着手 BUG ゼロ達成** 🎉
+  - Phase 7-3 (本, commit pending): AI policy `chooseAtomTarget` verb 別ヒューリスティック実装
+- [x] **Phase 7-3 完了**: AI policy `chooseAtomTarget` 拡張 (sceneRemove/sceneSetState/charModifyAP/charModifyLP)
 - [ ] **Phase 5 advance UI** 残: Misread UI / Souza Sub-task B+C
 - [ ] Phase 9-F (MCTS) / 9-G (リプレイ) / 9-H (パフォーマンス計測)
 - [ ] **origin/main push** (本セッション末で sync)
@@ -73,4 +73,5 @@
 - [2026-05-20-5](sessions/2026-05-20-5.md) — Round 4k: hiramekiCharStun E2E + BUG-035 (Phase 7 deferred) 登録
 - [2026-05-20-6](sessions/2026-05-20-6.md) — Phase 7-1: BUG-035 hirameki 経路 $pick auto-resolution 最小修正 + 共通パターン 6/6 達成
 - [2026-05-21](sessions/2026-05-21.md) — Phase 7-2: 汎用 $pick substitution + 9 cards 完全カバー
-- **[2026-05-21-2](sessions/2026-05-21-2.md) — Round 4l: UI 4 課題一括 (BUG-001/002/010 + B5 観戦モード)、未着手 BUG ゼロ達成** (本セッション)
+- [2026-05-21-2](sessions/2026-05-21-2.md) — Round 4l: UI 4 課題一括 (BUG-001/002/010 + B5 観戦モード)、未着手 BUG ゼロ達成
+- **[2026-05-21-3](sessions/2026-05-21-3.md) — Phase 7-3: AI Policy `chooseAtomTarget` verb 別ヒューリスティック** (本セッション)

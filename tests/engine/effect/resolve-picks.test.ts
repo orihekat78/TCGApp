@@ -122,4 +122,45 @@ describe('engine.effect.resolveEffectPicks', () => {
     expect((resolved.steps[0] as { options: { args: { uid: string } }[] }).options[0]?.args.uid).toBe('self-1');
     expect((resolved.steps[1] as { then: { args: { uid: string } } }).then.args.uid).toBe('self-1');
   });
+
+  // Phase 7-3: opts.chooseAtomTarget callback (AIPolicy.chooseAtomTarget) 経由の選択
+  it('Phase 7-3: opts.chooseAtomTarget 指定時に hook の返り値で uid を置換', () => {
+    const s = stateWithSelfChar('self-1');
+    // 2 体目を追加
+    s.players.self.scene.push({
+      cardId: 'D08002', uid: 'self-2', state: 'active', isNamed: false, enterOrder: 2,
+      setCards: [], stackedCards: 0,
+      keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null,
+      turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    });
+    const chooser = (
+      _state: unknown,
+      _verb: string,
+      _args: Readonly<Record<string, unknown>>,
+      cands: ReadonlyArray<{ kind: string; uid?: string }>,
+    ) => cands.find((c) => c.kind === 'char' && (c as { uid: string }).uid === 'self-2') ?? null;
+    const resolved = resolveEffectPicks(s, PICK_ATOM, ctxSelf(), {
+      chooseAtomTarget: chooser as never,
+      byPlayer: 'self',
+    }) as { args: { uid: string } };
+    expect(resolved.args.uid).toBe('self-2'); // hook 戻り値が反映
+  });
+
+  it('Phase 7-3: opts.chooseAtomTarget が null を返した場合は先頭採用 fallback', () => {
+    const s = stateWithSelfChar('self-1');
+    const chooser = () => null;
+    const resolved = resolveEffectPicks(s, PICK_ATOM, ctxSelf(), {
+      chooseAtomTarget: chooser as never,
+      byPlayer: 'self',
+    }) as { args: { uid: string } };
+    expect(resolved.args.uid).toBe('self-1'); // first-pick fallback
+  });
+
+  it('Phase 7-3: opts 省略時は Phase 7-2 互換 (先頭採用)', () => {
+    const s = stateWithSelfChar('self-1');
+    const resolved = resolveEffectPicks(s, PICK_ATOM, ctxSelf()) as { args: { uid: string } };
+    expect(resolved.args.uid).toBe('self-1');
+  });
 });
