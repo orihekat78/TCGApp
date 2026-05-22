@@ -75,6 +75,32 @@ function requireField<T>(args: Record<string, unknown>, key: string, kind: 'stri
  * Atom Verb → engine.mutate.* ディスパッチャ
  * 未知の verb は Error を throw する (defensive)
  */
+/**
+ * user_request 20260522_01 #12 fix: bind 参照 `$key.field` を ctx.bindings から
+ * 解決する helper。
+ *
+ * D11019 等で `args: { cardId: '$matched.cardId' }` のような bind 参照が
+ * atom handler に未解決のまま到達して `cardId='$matched.cardId'` の scene char
+ * が作られ ?? 表示になっていたのを修正。
+ *
+ * pattern: `$<bindKey>.<field>` (例: `$matched.cardId`, `$matched.uid`)
+ * - bindKey が ctx.bindings にあり、配列の先頭要素から field を取り出して返却
+ * - 未解決 / 想定外 → 元 value をそのまま返す (caller 側で warning)
+ */
+function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
+  if (typeof value !== 'string') return value;
+  if (!value.startsWith('$')) return value;
+  const dot = value.indexOf('.');
+  if (dot < 0) return value;
+  const key = value.slice(1, dot);
+  const field = value.slice(dot + 1);
+  const binding = (ctx.bindings as Record<string, unknown>)[key];
+  if (!Array.isArray(binding) || binding.length === 0) return value;
+  const first = binding[0] as Record<string, unknown>;
+  const fieldVal = first[field];
+  return fieldVal ?? value;
+}
+
 export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: EffectCtx): void {
   const a = args as Record<string, unknown>;
   switch (verb) {
@@ -169,10 +195,27 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 効果による登場 (atom verb 駆動) は viaEffect=true がデフォルト。
       // ただし args に明示があれば尊重する (テスト・特殊呼出用)。
       const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
-      const newChar = mutate.scene.enter(s, requireField<Player>(a, 'player', 'string'), requireField<string>(a, 'cardId', 'string'), {
+      // user_request 20260522_01 #12 fix: $matched.cardId 等の bind ref を解決
+      // (D11019 deckRevealUntil → sceneEnter sequence で必要)
+      const rawCardId = requireField<string>(a, 'cardId', 'string');
+      const cardId = resolveBindRef(rawCardId, ctx) as string;
+      if (typeof cardId !== 'string' || cardId.startsWith('$')) {
+        // 未解決の bind ref → no-op skip (BUG-048 と同 pattern)
+        return;
+      }
+      const newChar = mutate.scene.enter(s, requireField<Player>(a, 'player', 'string'), cardId, {
         named: (a.named as boolean | undefined) ?? false,
         viaEffect,
       });
+      // user_request 20260522_01 #12 fix: 新 uid を $matched に書き戻し、
+      // 後続 atom (charGrantKeyword 等) が `$matched.uid` で参照できるよう
+      // する。元 binding の cardId は維持しつつ uid を上書き。
+      const bindKey = '$matched'.slice(1); // 'matched'
+      const existing = (ctx.bindings as Record<string, unknown>)[bindKey];
+      if (Array.isArray(existing) && existing.length > 0) {
+        const entry = existing[0] as Record<string, unknown>;
+        entry.uid = newChar.uid;
+      }
       // rules/17 — 現場登場時 Hook (【登場時】・【疾風 N】判定)
       event.emit(s, 'enter', {
         uid: newChar.uid,
@@ -235,11 +278,16 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charGrantKeyword': {
-      mutate.char.grantKeyword(s, a.uid as string, a.kw as string, (a.scope as 'turn' | 'contact' | 'permanent' | undefined) ?? 'permanent');
+      // user_request 20260522_01 #12 fix: $matched.uid 等の bind ref 解決
+      const grantUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof grantUid !== 'string' || grantUid.startsWith('$')) return;
+      mutate.char.grantKeyword(s, grantUid, a.kw as string, (a.scope as 'turn' | 'contact' | 'permanent' | undefined) ?? 'permanent');
       return;
     }
     case 'charRevokeKeyword': {
-      mutate.char.revokeKeyword(s, a.uid as string, a.kw as string);
+      const revokeUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof revokeUid !== 'string' || revokeUid.startsWith('$')) return;
+      mutate.char.revokeKeyword(s, revokeUid, a.kw as string);
       return;
     }
     case 'charDisableOriginal': {
