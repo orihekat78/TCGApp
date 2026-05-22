@@ -9,7 +9,24 @@
 
 import type { JSX, MouseEvent } from 'react';
 import type { LogEntry } from '@/engine/types/game-state.js';
+import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import './LogPanel.css';
+
+/**
+ * user_request 20260522_01 #3 BUG-060: log entry の target が cardId (Dxxxxx)
+ * の場合、表示名 (例: '蘭の一撃') に解決する。target が cardId pattern にマッチ
+ * しなければ素通し。
+ */
+function formatTarget(target: string | undefined): string | undefined {
+  if (!target) return undefined;
+  // CT-D08 / CT-D11 の cardId pattern: D08xxx / D11xxx (3 桁 numeric suffix)
+  if (/^D\d{2}\d{3}/.test(target)) {
+    const name = cardIdToDisplayName(target);
+    // cardIdToDisplayName が未登録時 cardId をそのまま返すなら "[name (id)]" 形式
+    return name === target ? target : `${name} (${target})`;
+  }
+  return target;
+}
 
 export type LogPanelProps = {
   entries: LogEntry[];
@@ -119,7 +136,7 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose }: LogPanelPr
               <span className="log-turn">T{e.turn}</span>
               <span className="log-player">{e.player === 'self' ? '自' : '相'}</span>
               <span className="log-action">{ACTION_LABEL[e.action] ?? e.action}</span>
-              {e.target !== undefined && <span className="log-target">→ {e.target}</span>}
+              {e.target !== undefined && <span className="log-target">→ {formatTarget(e.target)}</span>}
               {e.result !== undefined && <span className="log-result">: {e.result}</span>}
             </div>
           ))

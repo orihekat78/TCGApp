@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1143
+- **ファイル数**: 1144
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -188,6 +188,7 @@
     - `BUG-057.md`
     - `BUG-058.md`
     - `BUG-059.md`
+    - `BUG-060.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `README.md` — バグ管理表の使い方
   - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
