@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1141
+- **ファイル数**: 1143
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -187,6 +187,7 @@
     - `BUG-056.md`
     - `BUG-057.md`
     - `BUG-058.md`
+    - `BUG-059.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `README.md` — バグ管理表の使い方
   - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
@@ -565,6 +566,7 @@
     - `2026-05-11-ui-turn-flags.md` — ターンスコープフラグ・スタン特殊挙動 (2026-05-11)
     - `2026-05-17-phase5-advance-guardrails.md` — Phase 5 Advance Guardrails
     - `card-addition-checklist.md` — 新カード追加時のチェックリスト
+    - `cpu-visibility-options.md` — CPU 行動可視化 — 解決案候補 (BUG-059 / user_request 20260522_01 #15)
     - `DEFERRED-INDEX.md` — 保留中タスクの一覧
     - `engine-api-card-abilities.md` — engine.* — AbilityDef (能力定義)
     - `engine-api-card-shape.md` — engine.* — カード定義シェイプ (CardDef)
