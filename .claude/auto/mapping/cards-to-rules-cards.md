@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `15e18ef72dab`
+> Source hash: `45c067ad224a`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **76** ファイル（[全体 index](./index.md)）
+このグループ: **77** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (11)
 
@@ -89,7 +89,7 @@
 | ------ | --------- |
 | [`src/cards/index.ts`](../../../src/cards/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## ai (15)
+## ai (16)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -101,6 +101,7 @@
 | [`src/ai/policies/heuristic.ts`](../../../src/ai/policies/heuristic.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/ai/policies/index.ts`](../../../src/ai/policies/index.ts) | _(参照なし)_ |
 | [`src/ai/policies/mcts-tree.ts`](../../../src/ai/policies/mcts-tree.ts) | _(参照なし)_ |
+| [`src/ai/policies/mcts-worker-pool.ts`](../../../src/ai/policies/mcts-worker-pool.ts) | _(参照なし)_ |
 | [`src/ai/policies/mcts.ts`](../../../src/ai/policies/mcts.ts) | _(参照なし)_ |
 | [`src/ai/policies/random.ts`](../../../src/ai/policies/random.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/ai/policies/state-evaluator.ts`](../../../src/ai/policies/state-evaluator.ts) | _(参照なし)_ |
