@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1187
+- **ファイル数**: 1192
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -132,6 +132,7 @@
     - `structure.md` — プロジェクト構造
   - **`bugs/`** — バグ・リスク管理表 (Obsidian Base 形式、BUG-XXX.md 個別ファイル)
     - `AUDIT-2026-05-22.md` — BUG フォルダ AUDIT (2026-05-22)
+    - `AUDIT-2026-05-23.md` — 全 BUG audit 結果 — 2026-05-23
     - `AUDIT-template.md` — BUG フォルダ AUDIT (YYYY-MM-DD)
     - `BUG-001.md`
     - `BUG-002.md`
@@ -198,6 +199,10 @@
     - `BUG-064.md`
     - `BUG-065.md`
     - `BUG-066.md`
+    - `BUG-067.md`
+    - `BUG-068.md`
+    - `BUG-069.md`
+    - `BUG-070.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト

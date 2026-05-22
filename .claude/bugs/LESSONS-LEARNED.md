@@ -118,6 +118,33 @@ replacement string parser はこれを backref として認識せず `\x01` (SOH
 **対処**: raw f-string + 連結 `rf'\1' + '\n' + f'...'` で組み立てるか、
 名前付き backref `\g<1>` を使う。
 
+## 教訓 11: 「修正済」transition の前提条件 — 残課題は別 BUG で同時起票
+
+**該当**: BUG-045 (`9169af4`、2026-05-22) → BUG-065 (`8c2f3e2`、2026-05-23) で本格対応 / BUG-053 (`7b1e86b`) / BUG-054 (`bacc22b`) / BUG-051 / BUG-052 / BUG-060 / BUG-009 (audit 2026-05-23 で発覚、BUG-067〜070 起票)
+
+BUG ファイルに「本格対応は別 BUG で」「次セッションで grep」「別 refactor で」等の deferred 文言を書きつつ、その別 BUG を起票せずに status を「修正済」にしていた。結果:
+
+- BUG-045: 1 日後にユーザーが D08015 a1 不発を報告して BUG-065 緊急対応
+- BUG-053 / BUG-054: 同根 (pattern B 未対応、BUG-065 で本格対応)
+- BUG-051 / BUG-052 / BUG-060 / BUG-009: audit (2026-05-23) で発覚、BUG-067〜070 として起票
+
+**プロトコル** (新規定):
+
+「修正済」transition の前提条件は以下のいずれか:
+
+(a) 残課題が無い (全部 fix)、または
+(b) 残課題が **out-of-scope** と明示され、かつ **新 BUG-ID が同時に起票されてリンクされている** こと
+
+「次セッションで」「別 BUG で対応」「本格対応は別 BUG で」のような **未起票の deferred** は禁止。
+
+claude が 「修正済」と記述する前に必ず verify する 3 点 ([BUG-066](BUG-066.md)):
+
+1. **関連ファイル現状確認** — 該当 BUG の「関連ファイル」セクションに挙がっているコードを Read で確認、修正内容が実在することを verify
+2. **警告語句 grep** — 修正範囲周辺に `暫定` / `TODO` / `FIXME` / `未対応` / `未配線` / `skip` / `本格対応` / `仮対応` / `workaround` が無いか grep、見つかった場合は別 BUG として起票
+3. **memory observation 検索** — mem-search で BUG ID と関連キーワード (atom 名 / function 名) を検索、続報・未解決事項を確認
+
+---
+
 ## 教訓 → enforcement mapping (Phase 7、能動化)
 
 | 教訓 | enforcement script / mechanism |
@@ -132,11 +159,13 @@ replacement string parser はこれを backref として認識せず `\x01` (SOH
 | 8 ok:false Hook 委譲禁止 | **`scripts/lint-ok-false-pattern.ts`** (能動 heuristic、break/return 単独警告) |
 | 9 BUG status 二択厳守 | `scripts/lint-bug-frontmatter.ts` (status 注釈付き禁止) |
 | 10 Python re.sub 罠 | `(passive doc、内部 dev 知見)` |
+| 11 修正済 transition protocol | `scripts/lint-bug-followup.ts` (defer): deferred 文言が残ったまま status=修正済 になっていないか warn |
 
 追加 enforcement (Phase 8):
 - **test coverage threshold**: `npm run test:coverage && npm run check:coverage`
   (line ≥ 70% / branch ≥ 60% / function ≥ 70% / statement ≥ 70%)
 - **新規 src/.ts → tests/.test.ts pair**: `scripts/lint-test-pair.ts` (warn)
+- **修正済 transition protocol** (audit 2026-05-23 で追加): BUG 内に「本格対応は別 BUG で」「次セッションで」等の deferred 文言が残ったまま status=修正済 になっていないか lint で warn (`scripts/lint-bug-followup.ts` 候補、defer)
 
 月次 audit で metric を tracking: `npm run bug:trend`
 smoke baseline: `npm run check:smoke-baseline`
