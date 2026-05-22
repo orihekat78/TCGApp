@@ -102,6 +102,25 @@
   gap: 4px;
 }
 
+/* user_request 20260522_01 #11 BUG-057: クリック可能カード (button 化) */
+.card-list-item--clickable {
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s, transform 0.1s;
+}
+.card-list-item--clickable:hover {
+  background: #2f4a70;
+  border-color: #6090c0;
+  transform: scale(1.03);
+}
+.card-list-item--clickable:focus-visible {
+  outline: 2px solid #80a0e8;
+  outline-offset: 2px;
+}
+
 .card-list-item-art {
   width: 100%;
   aspect-ratio: 716 / 1000;

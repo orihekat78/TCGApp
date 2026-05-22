@@ -526,6 +526,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               cards={cards}
               faceDownCount={faceDownCount}
               onClose={closeAreaModal}
+              onExpand={(cardId) => expandModal.open(cardId)}
             />
           );
         })()}

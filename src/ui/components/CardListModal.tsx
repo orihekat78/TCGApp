@@ -42,10 +42,15 @@ export type CardListModalProps = {
   faceDownCount?: number;
   /** 閉じる callback */
   onClose: () => void;
+  /**
+   * user_request 20260522_01 #11 BUG-057: 個別カードをクリック → 拡大表示。
+   * 未指定なら item は静的表示 (旧挙動)。
+   */
+  onExpand?: (cardId: CardId) => void;
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, onClose } = props;
+  const { kind, side, cards, faceDownCount = 0, onClose, onExpand } = props;
 
   // Esc で閉じる (本 modal のみ scope。global keymap には影響しない)
   useEffect(() => {
@@ -97,21 +102,41 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
           ) : (
             <div className="card-list-modal-grid">
               {/* 表向きカード (リムーブエリア等で公開されているもの) */}
-              {cards.map((cardId, idx) => (
-                <div key={`face-${cardId}-${idx}`} className="card-list-item">
-                  <CardArt
-                    cardId={cardId}
-                    alt={cardIdToDisplayName(cardId)}
-                    className="card-list-item-art"
-                  />
-                  <div className="card-list-item-name">
-                    {cardIdToDisplayName(cardId)}
+              {/* user_request 20260522_01 #11 BUG-057: onExpand 指定時はクリック
+                  可能 (button 化) で個別カード拡大表示。未指定なら従来通り div */}
+              {cards.map((cardId, idx) => {
+                const itemContent = (
+                  <>
+                    <CardArt
+                      cardId={cardId}
+                      alt={cardIdToDisplayName(cardId)}
+                      className="card-list-item-art"
+                    />
+                    <div className="card-list-item-name">
+                      {cardIdToDisplayName(cardId)}
+                    </div>
+                    <div className="card-list-item-id">
+                      No.{cardIdToPrintedNumber(cardId)}
+                    </div>
+                  </>
+                );
+                return onExpand ? (
+                  <button
+                    type="button"
+                    key={`face-${cardId}-${idx}`}
+                    className="card-list-item card-list-item--clickable"
+                    onClick={() => onExpand(cardId)}
+                    data-testid={`card-list-item-${cardId}-${idx}`}
+                    aria-label={`${cardIdToDisplayName(cardId)} を拡大表示`}
+                  >
+                    {itemContent}
+                  </button>
+                ) : (
+                  <div key={`face-${cardId}-${idx}`} className="card-list-item">
+                    {itemContent}
                   </div>
-                  <div className="card-list-item-id">
-                    No.{cardIdToPrintedNumber(cardId)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {/* 裏向きカード (FILE / 証拠 など、内容非公開) */}
               {Array.from({ length: faceDownCount }).map((_, idx) => (
                 <div key={`back-${idx}`} className="card-list-item face-down">
