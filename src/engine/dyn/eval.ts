@@ -42,11 +42,20 @@ export function evalDyn(state: GameState, expr: string | number | boolean, ctx: 
 }
 
 const OPERATORS = new Set(['+', '-', '*', '/', '%']);
+const PARENS = new Set(['(', ')']);
+// Cleanup Phase #1 (2026-05-22): 演算子優先度 (precedence) と括弧 (parens) 対応
+// `*` / `/` / `%` > `+` / `-`、括弧でグループ化可能
+const PRECEDENCE: Record<'+' | '-' | '*' | '/' | '%', number> = {
+  '+': 1, '-': 1,
+  '*': 2, '/': 2, '%': 2,
+};
 
 type Token =
   | { type: 'num'; value: number }
   | { type: 'str'; value: string }
-  | { type: 'op'; value: '+' | '-' | '*' | '/' | '%' };
+  | { type: 'op'; value: '+' | '-' | '*' | '/' | '%' }
+  | { type: 'lparen' }
+  | { type: 'rparen' };
 
 function tokenize(state: GameState, expr: string, ctx: EffectCtx): Token[] {
   const tokens: Token[] = [];
@@ -69,11 +78,23 @@ function tokenize(state: GameState, expr: string, ctx: EffectCtx): Token[] {
       continue;
     }
 
+    // Parenthesis (Cleanup Phase #1)
+    if (ch === '(') {
+      tokens.push({ type: 'lparen' });
+      i++;
+      continue;
+    }
+    if (ch === ')') {
+      tokens.push({ type: 'rparen' });
+      i++;
+      continue;
+    }
+
     // $-prefixed placeholder
     if (ch === '$') {
       // Read $root.path.path...
       let j = i + 1;
-      while (j < n && !OPERATORS.has(expr[j]) && expr[j] !== ' ' && expr[j] !== '\t') {
+      while (j < n && !OPERATORS.has(expr[j]) && !PARENS.has(expr[j]) && expr[j] !== ' ' && expr[j] !== '\t') {
         j++;
       }
       const placeholder = expr.slice(i, j);
@@ -113,16 +134,16 @@ function evaluateExpression(state: GameState, expr: string, ctx: EffectCtx): Dyn
   const raw = tokenize(state, expr, ctx);
   if (raw.length === 0) return undefined;
 
-  // Fold unary minus: a leading '-' token or a '-' immediately after a binary operator
+  // Fold unary minus: a leading '-' token, or a '-' immediately after another op or '(',
   // combined with the following number token becomes a negative number literal.
-  // This allows '-3 * $dyn.x' and '$dyn.x + -1' to work correctly.
+  // This allows '-3 * $dyn.x' / '$dyn.x + -1' / '($a + -2)' to work correctly.
   const tokens: Token[] = [];
   for (let i = 0; i < raw.length; i++) {
     const t = raw[i];
     if (
       t.type === 'op' &&
       t.value === '-' &&
-      (i === 0 || raw[i - 1]?.type === 'op')
+      (i === 0 || raw[i - 1]?.type === 'op' || raw[i - 1]?.type === 'lparen')
     ) {
       const next = raw[i + 1];
       if (next?.type === 'num') {
@@ -137,33 +158,82 @@ function evaluateExpression(state: GameState, expr: string, ctx: EffectCtx): Dyn
   // Single token: return raw value
   if (tokens.length === 1) {
     const t = tokens[0];
-    if (t.type === 'op') throw new Error(`dyn.eval: lone operator in "${expr}"`);
+    if (t.type === 'op' || t.type === 'lparen' || t.type === 'rparen') {
+      throw new Error(`dyn.eval: lone operator/paren in "${expr}"`);
+    }
     return t.value;
   }
 
-  // Arithmetic: tokens must alternate value op value op value...
-  // Left-to-right precedence (TODO Phase 5: standard precedence with parens)
-  let acc: number;
-  const first = tokens[0];
-  if (first.type !== 'num') {
-    throw new Error(`dyn.eval: expected number at start of arithmetic in "${expr}"`);
-  }
-  acc = first.value;
-
-  for (let k = 1; k < tokens.length; k += 2) {
-    const opTok = tokens[k];
-    const valTok = tokens[k + 1];
-    if (opTok?.type !== 'op') throw new Error(`dyn.eval: expected operator at index ${k} in "${expr}"`);
-    if (valTok?.type !== 'num') throw new Error(`dyn.eval: expected number at index ${k + 1} in "${expr}"`);
-    switch (opTok.value) {
-      case '+': acc = acc + valTok.value; break;
-      case '-': acc = acc - valTok.value; break;
-      case '*': acc = acc * valTok.value; break;
-      case '/': acc = acc / valTok.value; break;
-      case '%': acc = acc % valTok.value; break;
+  // Cleanup Phase #1 (2026-05-22): shunting-yard 法で precedence + parens 対応
+  // 1. infix → postfix (RPN) 変換
+  // 2. RPN を stack で評価
+  // 文字列 token は arithmetic に含まれないため reject
+  const output: Token[] = [];
+  const opStack: Token[] = [];
+  for (const t of tokens) {
+    if (t.type === 'num') {
+      output.push(t);
+    } else if (t.type === 'str') {
+      throw new Error(`dyn.eval: string operand in arithmetic "${expr}"`);
+    } else if (t.type === 'op') {
+      while (opStack.length > 0) {
+        const top = opStack[opStack.length - 1];
+        if (top.type === 'op' && PRECEDENCE[top.value] >= PRECEDENCE[t.value]) {
+          output.push(opStack.pop()!);
+        } else {
+          break;
+        }
+      }
+      opStack.push(t);
+    } else if (t.type === 'lparen') {
+      opStack.push(t);
+    } else if (t.type === 'rparen') {
+      // pop until matching lparen
+      let found = false;
+      while (opStack.length > 0) {
+        const top = opStack.pop()!;
+        if (top.type === 'lparen') {
+          found = true;
+          break;
+        }
+        output.push(top);
+      }
+      if (!found) throw new Error(`dyn.eval: unmatched ')' in "${expr}"`);
     }
   }
-  return acc;
+  // drain operator stack
+  while (opStack.length > 0) {
+    const top = opStack.pop()!;
+    if (top.type === 'lparen' || top.type === 'rparen') {
+      throw new Error(`dyn.eval: unmatched '(' in "${expr}"`);
+    }
+    output.push(top);
+  }
+
+  // Evaluate RPN
+  const stack: number[] = [];
+  for (const t of output) {
+    if (t.type === 'num') {
+      stack.push(t.value);
+    } else if (t.type === 'op') {
+      const b = stack.pop();
+      const a = stack.pop();
+      if (a === undefined || b === undefined) {
+        throw new Error(`dyn.eval: operator '${t.value}' missing operand in "${expr}"`);
+      }
+      switch (t.value) {
+        case '+': stack.push(a + b); break;
+        case '-': stack.push(a - b); break;
+        case '*': stack.push(a * b); break;
+        case '/': stack.push(a / b); break;
+        case '%': stack.push(a % b); break;
+      }
+    }
+  }
+  if (stack.length !== 1) {
+    throw new Error(`dyn.eval: invalid expression "${expr}" (stack size ${stack.length})`);
+  }
+  return stack[0];
 }
 
 /**

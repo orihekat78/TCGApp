@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `89f00ebba8b3`
+> Source hash: `d78780406706`
 
 仕様書 [`phase-9-h-performance`](../../../specs/phase-9-h-performance.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

@@ -192,11 +192,49 @@ describe('engine.dyn.eval', () => {
       expect(evalDyn(s, '$self.ap + 100', ctx)).toBe(300);
     });
 
-    it('left-to-right with multiple ops', () => {
+    it('standard precedence: * binds tighter than + (Cleanup Phase #1)', () => {
       const s = createEmptyGameState();
       const ctx = makeCtx({ dyn: { a: 10 } });
-      // 10 + 2 * 3 → left-to-right: (10+2)*3 = 36
-      expect(evalDyn(s, '$dyn.a + 2 * 3', ctx)).toBe(36);
+      // Cleanup Phase #1 (2026-05-22): 標準 precedence に変更
+      // 10 + 2 * 3 → 10 + (2*3) = 16
+      expect(evalDyn(s, '$dyn.a + 2 * 3', ctx)).toBe(16);
+    });
+
+    it('parentheses override precedence (Cleanup Phase #1)', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ dyn: { a: 10 } });
+      // (10 + 2) * 3 = 36
+      expect(evalDyn(s, '($dyn.a + 2) * 3', ctx)).toBe(36);
+    });
+
+    it('nested parentheses + precedence (Cleanup Phase #1)', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ dyn: { a: 4, b: 2 } });
+      // 2 * (4 + 2 * 3) = 2 * (4 + 6) = 20
+      expect(evalDyn(s, '$dyn.b * ($dyn.a + 2 * 3)', ctx)).toBe(20);
+    });
+
+    it('division/modulo precedence (Cleanup Phase #1)', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ dyn: { a: 20, m: 10 } });
+      // 20 / 4 + 1 = 5 + 1 = 6 (not 20 / (4+1) = 4)
+      expect(evalDyn(s, '$dyn.a / 4 + 1', ctx)).toBe(6);
+      // 10 % 3 * 2 = 1 * 2 = 2 (same precedence, left-to-right)
+      expect(evalDyn(s, '$dyn.m % 3 * 2', ctx)).toBe(2);
+    });
+
+    it('unary minus inside parens (Cleanup Phase #1)', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ dyn: { a: 5 } });
+      // (-3 + $dyn.a) * 2 = (5 + -3) * 2 = 4
+      expect(evalDyn(s, '(-3 + $dyn.a) * 2', ctx)).toBe(4);
+    });
+
+    it('unmatched paren throws (Cleanup Phase #1)', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ dyn: { a: 1 } });
+      expect(() => evalDyn(s, '($dyn.a + 1', ctx)).toThrow(/unmatched/);
+      expect(() => evalDyn(s, '$dyn.a + 1)', ctx)).toThrow(/unmatched/);
     });
 
     it('handles whitespace', () => {
