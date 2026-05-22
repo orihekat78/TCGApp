@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1110
+- **ファイル数**: 1112
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -655,6 +655,7 @@
     - **`policies/`**
       - `heuristic.ts` — ai.policies.heuristic — 優先順位ベースの AIPolicy 実装 (Phase 6 Group B Task 6.4)
       - `index.ts` — ai.policies barrel — Phase 6 Group B
+      - `mcts-tree.ts` — ai.policies.mcts-tree — Phase 9-F.2 (Cleanup 6-B): UCB1 tree-based MCTS
       - `mcts.ts` — ai.policies.mcts — Phase 9-F (MVP: rollout-based)
       - `random.ts` — ai.policies.random — 候補からランダムに 1 手を選ぶ AIPolicy 実装 (Phase 6 Group B Task 6.3)
       - `state-evaluator.ts` — ai.policies.state-evaluator — Phase 9-F.2 静的評価関数
@@ -978,6 +979,7 @@
       - `heuristic.disguise.test.ts` — Phase 8.7e: HeuristicPolicy.chooseDisguise unit tests
       - `heuristic.guard.test.ts` — Phase 8.7c: HeuristicPolicy.chooseGuard tests
       - `heuristic.test.ts` — tests/ai/policies/heuristic.test.ts — Phase 6 Group B Task 6.4 tests
+      - `mcts-tree.test.ts` — Phase 9-F.2 (Cleanup 6-B) — MCTSTreePolicy (UCB1 tree) tests
       - `mcts.test.ts` — MCTSPolicy — Phase 9-F MVP unit tests
       - `random.test.ts` — tests/ai/policies/random.test.ts — Phase 6 Group B Task 6.3 tests
       - `state-evaluator.test.ts` — Phase 9-F.2 (Cleanup 6-A) — defaultStateEvaluator tests
