@@ -362,8 +362,10 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'effectPickResolve': {
-      // user_request 20260522_01 #2/#6 BUG-054:
-      // pendingEffectPick の atomArgs を picked uid で置換して queue + run
+      // user_request 20260522_01 #2/#6 BUG-054 + BUG-065:
+      // pendingEffectPick の atomArgs を pattern により置換して queue + run
+      //   Pattern A (uid='$pick'): uid → picked、target → drop
+      //   Pattern B (uid 不在):    target → [cardId of picked candidate]
       const pending = useGameStateStore.getState().pendingEffectPick;
       if (!pending) return;
       const picked = action.pickedUid;
@@ -372,14 +374,29 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         // クリアは produce 後の post-dispatch drain で行う (return のみ)
         return;
       }
-      // atomArgs.uid を picked で置換、target は drop
-      const { target: _omit, ...restArgs } = pending.atomArgs;
-      void _omit;
-      const resolvedAtom = {
-        kind: 'atom' as const,
-        verb: pending.atomVerb as never,
-        args: { ...restArgs, uid: picked },
-      };
+      const pendingArgs = pending.atomArgs as { uid?: unknown };
+      const isPatternA = pendingArgs.uid === '$pick';
+      let resolvedAtom: { kind: 'atom'; verb: never; args: Record<string, unknown> };
+      if (isPatternA) {
+        // pattern A: atomArgs.uid を picked で置換、target は drop
+        const { target: _omit, ...restArgs } = pending.atomArgs;
+        void _omit;
+        resolvedAtom = {
+          kind: 'atom' as const,
+          verb: pending.atomVerb as never,
+          args: { ...restArgs, uid: picked },
+        };
+      } else {
+        // BUG-065 pattern B: synthetic uid (cardId#index) → candidates から cardId 逆引き
+        // → atomArgs.target を [cardId] で上書き (atom-handler は配列を期待)
+        const cand = pending.candidates.find((c) => c.uid === picked);
+        if (!cand) return; // 候補一致なし: 想定外、防御スキップ
+        resolvedAtom = {
+          kind: 'atom' as const,
+          verb: pending.atomVerb as never,
+          args: { ...pending.atomArgs, target: [cand.cardId] },
+        };
+      }
       engineEvent.queue(
         draft,
         resolvedAtom as never,

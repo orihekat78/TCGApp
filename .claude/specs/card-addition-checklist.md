@@ -41,8 +41,7 @@ CLAUDE.md §骨格凍結原則 / §設計レビュー §水平展開 と連動�
 - [ ] `'reasoning:before-add'` — `misread.ts` で登録済
 - [ ] **新規 hook を使う場合**: 必ず listener 側に追加実装
 
-**Round 4a 教訓**: Round 1-3 で hook を使うカード追加多数だが listener 側未対応で 7 hook 全 noop (BUG-005 / BUG-007)。
-**Round 4i-fix 教訓**: `scope: 'on-hand'` + `type: 'triggered'` は **`trigger.selfOnly: true` 必須** (listener が両プレイヤー手札 scan のため、`eventRemoveByAP` factory + D11019/D11020/D08024 で発見 / BUG-032)。
+**教訓**: 新規 hook 追加時は listener 登録必須 (Round 1-3 で 7 hook 全 noop / BUG-005 / BUG-007)。`scope: 'on-hand'` + `triggered` は `trigger.selfOnly: true` 必須 (両プレイヤー手札 scan / BUG-032 / Round 4i-fix)。
 
 ### 3. effect descriptor の resolver dispatch table 確認
 
@@ -79,9 +78,10 @@ CLAUDE.md §セルフレビュー §Playwright 1 試合通し検証 (Round 4a Ph
 - [ ] console error 0
 - [ ] 1 試合通し (mulligan → 勝敗決定 or max 30 turn) で regression なし
 
-### 8. リスク・バグ管理表 ([.claude/bugs/](../bugs/)) との連動
+### 8. リスク・バグ管理表 ([.claude/bugs/](../bugs/)) との連動 + ワークフロー図
 
 - [ ] 既知のバグ (BUG-005 / BUG-007 等) に該当する変更の場合、該当 BUG-XXX.md の `status` を更新 + 修正 commit を `commit` プロパティに記録
+- [ ] 複雑効果カードは `cards-analysis/<カードID>-workflow.md` を [WORKFLOW-GUIDELINES.md](cards-analysis/WORKFLOW-GUIDELINES.md) に準拠して作成 (BUG-064)
 
 ---
 

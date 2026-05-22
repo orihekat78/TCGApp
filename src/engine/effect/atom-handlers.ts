@@ -132,10 +132,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'discard': {
-      // BUG-045 fix: target が pick query object のまま渡されると mutate.hand
-      // 内部で「not iterable」例外。Phase 7-2 の $pick resolver は uid:'$pick' のみ
-      // 対応で、discard atom (target は cardId 配列を想定) の pick 解決は未配線。
-      // 一時防御策: 非配列なら no-op skip + 警告 log。本格対応は別 BUG で resolver 拡張。
+      // BUG-065 (本格対応) で resolve-picks.ts が pattern B (uid なし + target.kind='pick')
+      // の解決をサポートするよう拡張済み。ここに到達した時点で a.target は string[] のはず。
+      // ただし cands 0 件などで resolver が解決できなかった場合の安全網として
+      // skip + log を維持 (本来到達しないパスだが防御として残す)。
+      // 元: BUG-045 で導入された暫定 skip。BUG-065 で resolver 拡張により本格対応。
       if (!Array.isArray(a.target)) {
         mutate.log.append(s, {
           ts: Date.now(),

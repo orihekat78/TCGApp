@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1b0b9a0c7a52`
+> Source hash: `593acb73c0d5`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
@@ -42,8 +42,8 @@
 | [`src/cards/ct-d08/D08012.ts`](../../../src/cards/ct-d08/D08012.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) _(継承: D08011)_ |
 | [`src/cards/ct-d08/D08013.ts`](../../../src/cards/ct-d08/D08013.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-d08/D08014.ts`](../../../src/cards/ct-d08/D08014.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) _(継承: D08013)_ |
-| [`src/cards/ct-d08/D08015.ts`](../../../src/cards/ct-d08/D08015.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
-| [`src/cards/ct-d08/D08016.ts`](../../../src/cards/ct-d08/D08016.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) _(継承: D08015)_ |
+| [`src/cards/ct-d08/D08015.ts`](../../../src/cards/ct-d08/D08015.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`15-workflow.md`](../../rules/15-workflow.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-d08/D08016.ts`](../../../src/cards/ct-d08/D08016.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`15-workflow.md`](../../rules/15-workflow.md) / [`17-icons.md`](../../rules/17-icons.md) _(継承: D08015)_ |
 | [`src/cards/ct-d08/D08017.ts`](../../../src/cards/ct-d08/D08017.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-d08/D08018.ts`](../../../src/cards/ct-d08/D08018.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) _(継承: D08017)_ |
 | [`src/cards/ct-d08/D08019.ts`](../../../src/cards/ct-d08/D08019.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |

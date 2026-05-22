@@ -91,9 +91,17 @@ function substituteAtomPick(
 ): Effect {
   if (!atom.args || typeof atom.args !== 'object') return atom as Effect;
   const args = atom.args as { uid?: unknown; target?: unknown } & Record<string, unknown>;
-  if (args.uid !== '$pick') return atom as Effect;
-  const target = args.target as { kind?: string } | undefined;
+  const target = args.target as { kind?: string; n?: { min?: number; max?: number } } | undefined;
   if (!target || target.kind !== 'pick') return atom as Effect;
+
+  // BUG-065: 2 つの effect 記述形式を区別して解決:
+  //   Pattern A: { uid: '$pick', target: {kind:'pick',...} } (sceneRemove / charModifyAP 等)
+  //              → uid を picked.uid に置換、target を drop
+  //   Pattern B: { target: {kind:'pick',...} } (uid 不在、discard / evidenceToHand 等)
+  //              → target を picked の cardId/uid 配列に置換 (atom-handler は配列を期待)
+  const isPatternA = args.uid === '$pick';
+  const isPatternB = !isPatternA && args.uid === undefined;
+  if (!isPatternA && !isPatternB) return atom as Effect;
 
   const cands = targetCandidates(state, target as TargetingRef, ctx);
   if (cands.length === 0) return atom as Effect; // no-op fallback
@@ -101,15 +109,27 @@ function substituteAtomPick(
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
   const byPlayer: Player = opts.byPlayer ?? 'self';
 
-  // user_request 20260522_01 #2/#6 BUG-054: human player のときは side-channel
-  // に候補を set して atom を未解決のまま返却 (caller が queue 抑止)
+  // user_request 20260522_01 #2/#6 BUG-054 + BUG-065: human player のときは side-channel
+  // に候補を set して atom を未解決のまま返却 (caller が queue 抑止)。
+  // pattern A は char candidate (scene uid)、pattern B は card candidate (hand cardId) を含む。
   if (opts.humanChooser) {
-    const charCands = cands.filter((c) => c.kind === 'char') as { uid: string; cardId: string; player: Player }[];
-    if (charCands.length === 0) return atom as Effect;
+    const cardCands = cands.filter((c) => c.kind === 'char' || c.kind === 'card') as Array<
+      | { kind: 'char'; uid: string; cardId: string; player: Player }
+      | { kind: 'card'; cardId: string; area: string; player: Player; index?: number }
+    >;
+    if (cardCands.length === 0) return atom as Effect;
     const targetRef = target as { n?: { min?: number; max?: number } };
     setPendingEffectPickSide({
       player: byPlayer,
-      candidates: charCands.map((c) => ({ uid: c.uid, cardId: c.cardId, player: c.player })),
+      candidates: cardCands.map((c) =>
+        c.kind === 'char'
+          ? { uid: c.uid, cardId: c.cardId, player: c.player }
+          // BUG-065 pattern B: card candidate には uid が無いので、
+          // synthetic uid (cardId#index) を作って UI 側 modal の key として使用。
+          // dispatch 側 (useEngineDispatch.effectPickResolve) で synthetic uid から
+          // cardId を逆引きして target 配列を構築する。
+          : { uid: `${c.cardId}#${c.index ?? 0}`, cardId: c.cardId, player: c.player },
+      ),
       atomVerb: verb,
       atomArgs: { ...args },
       nMin: targetRef.n?.min ?? 1,
@@ -127,15 +147,28 @@ function substituteAtomPick(
     byPlayer,
   );
   const picked = heuristicPick ?? cands[0];
-  if (!picked || picked.kind !== 'char') return atom as Effect;
+  if (!picked) return atom as Effect;
 
-  // deep clone the atom with substituted uid + target removed
-  const { target: _omit, ...restArgs } = args;
-  void _omit;
+  if (isPatternA) {
+    if (picked.kind !== 'char') return atom as Effect;
+    const { target: _omit, ...restArgs } = args;
+    void _omit;
+    return {
+      kind: 'atom',
+      verb: atom.verb as never,
+      args: { ...restArgs, uid: picked.uid },
+    } as Effect;
+  }
+
+  // Pattern B: target → cardId/uid 配列に置換 (atom-handler が配列を期待)
+  const pickValue =
+    picked.kind === 'card' ? picked.cardId :
+    picked.kind === 'char' ? picked.uid : null;
+  if (pickValue === null) return atom as Effect;
   return {
     kind: 'atom',
     verb: atom.verb as never,
-    args: { ...restArgs, uid: picked.uid },
+    args: { ...args, target: [pickValue] },
   } as Effect;
 }
 

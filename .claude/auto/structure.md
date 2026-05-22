@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1179
+- **ファイル数**: 1187
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -69,6 +69,7 @@
         - `13-keywords.md` — 🤖 ルール参照ハブ: 13-keywords.md
         - `14-refresh.md` — 🤖 ルール参照ハブ: 14-refresh.md
         - `15-abilities-effects.md` — 🤖 ルール参照ハブ: 15-abilities-effects.md
+        - `15-workflow.md` — 🤖 ルール参照ハブ: 15-workflow.md
         - `16-card-set.md` — 🤖 ルール参照ハブ: 16-card-set.md
         - `17-icons.md` — 🤖 ルール参照ハブ: 17-icons.md
         - `18-mr.md` — 🤖 ルール参照ハブ: 18-mr.md
@@ -194,6 +195,9 @@
     - `BUG-061.md`
     - `BUG-062.md`
     - `BUG-063.md`
+    - `BUG-064.md`
+    - `BUG-065.md`
+    - `BUG-066.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -344,6 +348,8 @@
     - `smoke-2026-05-22-12.md` — Smoke 1000戦レポート — smoke-2026-05-22-115404
     - `smoke-2026-05-22-13.json`
     - `smoke-2026-05-22-13.md` — Smoke 1000戦レポート — smoke-2026-05-22-134037
+    - `smoke-2026-05-22-14.json`
+    - `smoke-2026-05-22-14.md` — Smoke 1000戦レポート — smoke-2026-05-22-164241
     - `smoke-2026-05-22-2.json`
     - `smoke-2026-05-22-2.md` — Smoke 1000戦レポート — smoke-2026-05-22-004100
     - `smoke-2026-05-22-3.json`
@@ -522,6 +528,7 @@
       - `D08009.md` — D08009 小嶋元太 (キャラ) [別印刷: D08010]
       - `D08011.md` — D08011 円谷光彦 (キャラ) [別印刷: D08012]
       - `D08013.md` — D08013 吉田歩美 (キャラ) [別印刷: D08014]
+      - `D08015-workflow.md` — D08015 小嶋元太 (コスト 3、青、Lv3) — 処理ワークフロー
       - `D08015.md` — D08015 小嶋元太 (キャラ) [別印刷: D08016]
       - `D08017.md` — D08017 円谷光彦 (キャラ) [別印刷: D08018]
       - `D08019.md` — D08019 阿笠博士 (キャラ) [別印刷: D08020]
@@ -550,6 +557,7 @@
       - `INDEX.md` — カード効果分析 INDEX (2026-05-11)
       - `SHARED-PATTERNS.md` — 共通パターン集計 (cards/_shared 候補)
       - `TEMPLATE.md` — カード効果分析テンプレート (TSV参照型)
+      - `WORKFLOW-GUIDELINES.md` — カード処理ワークフロー図 作成ガイドライン
     - **`cards-data/`**
       - **`ct-d08/`**
         - `case.tsv`

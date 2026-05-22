@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `948cb02965cf`
+> Source hash: `543cfaccfd7a`
 
 公式ルール [`03-field-areas.md`](../../../rules/03-field-areas.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

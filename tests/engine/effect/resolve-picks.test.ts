@@ -5,7 +5,7 @@
 // + parallel / forEach / replace のネスト再帰
 // + 候補 0 件の no-op fallback
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { Effect, EffectCtx, GameState } from '@/engine/types';
@@ -162,5 +162,81 @@ describe('engine.effect.resolveEffectPicks', () => {
     const s = stateWithSelfChar('self-1');
     const resolved = resolveEffectPicks(s, PICK_ATOM, ctxSelf()) as { args: { uid: string } };
     expect(resolved.args.uid).toBe('self-1');
+  });
+});
+
+// BUG-065: pattern B (uid なし + target.kind='pick') の解決
+// 例: discard atom の target 配列 / evidenceToHand の target 配列
+const DISCARD_PICK_ATOM: Effect = {
+  kind: 'atom',
+  verb: 'discard',
+  args: {
+    player: 'self',
+    target: { kind: 'pick', query: { area: 'hand', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'self' },
+  },
+} as Effect;
+
+function stateWithSelfHand(...handCards: string[]): GameState {
+  const s = createEmptyGameState();
+  s.players.self.hand.push(...handCards);
+  return s;
+}
+
+describe('engine.effect.resolveEffectPicks — pattern B (BUG-065)', () => {
+  beforeEach(() => {
+    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+  });
+
+  it('atom: discard target を first candidate cardId 配列に substitute (AI heuristic fallback)', () => {
+    const s = stateWithSelfHand('D08015', 'D08001');
+    const resolved = resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf()) as {
+      args: { player: string; target?: unknown };
+    };
+    expect(Array.isArray(resolved.args.target)).toBe(true);
+    expect(resolved.args.target).toEqual(['D08015']);
+    expect(resolved.args.player).toBe('self');
+  });
+
+  it('atom: 候補 0 件は元 atom そのまま (target 未解決のまま)', () => {
+    const s = createEmptyGameState();
+    const resolved = resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf()) as {
+      args: { target: { kind?: string } };
+    };
+    expect(resolved.args.target.kind).toBe('pick');
+  });
+
+  it('atom: humanChooser=true で side-channel に candidate set、atom は未解決返却', () => {
+    const s = stateWithSelfHand('D08015', 'D08001');
+    const resolved = resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf(), {
+      humanChooser: true,
+      source: { cardId: 'D08015', abilityId: 'a1' },
+    }) as { args: { target: { kind?: string } } };
+    expect(resolved.args.target.kind).toBe('pick');
+    const side = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide as {
+      candidates: { cardId: string }[];
+      atomVerb: string;
+      nMin: number;
+      nMax: number;
+    } | null;
+    expect(side).toBeTruthy();
+    expect(side?.atomVerb).toBe('discard');
+    expect(side?.candidates.map((c) => c.cardId).sort()).toEqual(['D08001', 'D08015']);
+    expect(side?.nMin).toBe(1);
+    expect(side?.nMax).toBe(1);
+  });
+
+  it('atom: chooseAtomTarget が返した candidate の cardId を target に反映', () => {
+    const s = stateWithSelfHand('D08015', 'D08001');
+    const chooser = (
+      _state: GameState,
+      _verb: string,
+      _args: Readonly<Record<string, unknown>>,
+      cands: ReadonlyArray<{ kind: string; cardId: string }>,
+    ) => cands.find((c) => c.cardId === 'D08001') ?? null;
+    const resolved = resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf(), {
+      chooseAtomTarget: chooser as never,
+      byPlayer: 'self',
+    }) as { args: { target: string[] } };
+    expect(resolved.args.target).toEqual(['D08001']);
   });
 });

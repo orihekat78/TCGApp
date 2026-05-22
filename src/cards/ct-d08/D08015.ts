@@ -1,6 +1,6 @@
 // cards/ct-d08/D08015 小嶋元太 (キャラ)
 // rules: 09-cutin-disguise.md, 14-refresh.md, 15-abilities-effects.md, 17-icons.md
-// spec: .claude/specs/cards-analysis/D08015.md
+// spec: .claude/specs/cards-analysis/D08015-workflow.md
 //
 // 公式テキスト:
 //   【登場時】カードを1枚引き、手札を1枚リムーブする。

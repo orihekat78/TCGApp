@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `948cb02965cf`
+> Source hash: `543cfaccfd7a`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
-**29/33** ルールが少なくとも1ファイルから参照されている。
+**30/34** ルールが少なくとも1ファイルから参照されている。
 
 ## 参照あり
 
@@ -28,6 +28,7 @@
 | [`13-keywords.md`](../../rules/13-keywords.md) | 48 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 45 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 15 | `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts`, `cards/ct-d08/D08014.ts` ほか 12 件 |
 | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 50 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 47 件 |
+| [`15-workflow.md`](../../rules/15-workflow.md) | 2 | `cards/ct-d08/D08015.ts`, `cards/ct-d08/D08016.ts` |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 2 | `cards/ct-d08/D08021.ts`, `engine/mutate/scene.ts` |
 | [`17-icons.md`](../../rules/17-icons.md) | 48 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseTraitConditioned.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 45 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 3 | `engine/cond/eval.ts`, `engine/mutate/partner.ts`, `ui/hooks/usePartner.ts` |
