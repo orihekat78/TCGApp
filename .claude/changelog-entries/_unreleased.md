@@ -6,7 +6,10 @@
 - ~~Cleanup #2 cost picker~~ → 実は Phase 9-B B3 fix (`populateCostParams`) で
   実装済を確認 (cost tests 31 PASS、smoke 0 exception)。MVP に multi-option
   human picker UI が必要なカード無しのため UI 部分は defer 継続
-- Cleanup #3 ヒューリスティック (sceneRemove cardValue) / #6 Playmat レスポンシブ / #9 listener 漏れ
+- ~~Cleanup #9 listener 漏れ~~ → 実は配線済を確認 (`triggered.ts` 7 hook +
+  `misread.ts` + `hirameki.ts`)、cards で使用される全 hook が網羅されており
+  実害なし
+- Cleanup #3 ヒューリスティック (sceneRemove cardValue) / #6 Playmat レスポンシブ
 - ~~user_request 20260521_01 triage 残 4 件~~ → **全 18 件 完了** (Phase δ + ε で #3 / #12 / #18 解決)
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
