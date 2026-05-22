@@ -165,16 +165,47 @@ export class HeuristicPolicy implements AIPolicy {
       return scored[0].m;
     }
 
-    // 優先順位 6: handUseCard — event を優先
+    // 優先順位 6: handUseCard (user_request 20260521_01 #12 改修)
+    // 改修前: event を優先、無ければ最初の候補 — character は AP/LP 無視で先頭固定
+    // 改修後: scene が空いている (< 3) なら character を AP/LP scoring で選ぶ、
+    //         scene 充足時は event を優先 (推理盤面の補強より effect を優先)
     const handCards = candidates.filter(
       (m): m is Extract<Move, { kind: 'handUseCard' }> => m.kind === 'handUseCard',
     );
     if (handCards.length > 0) {
-      const eventCard = handCards.find(m => {
-        const def = engine.cards.get(m.cardId);
-        return def?.kind === 'event';
-      });
-      if (eventCard) return eventCard;
+      const sceneLen = state.players[byPlayer].scene.length;
+      const isSparse = sceneLen < 3;
+      // 各カードを (def, m) ペアで分類
+      const classified = handCards.map(m => ({
+        m,
+        def: engine.cards.get(m.cardId),
+      }));
+      const charCards = classified.filter(c => c.def?.kind === 'character');
+      const eventCards = classified.filter(c => c.def?.kind === 'event');
+
+      // scoring: AP + LP * 1.5 (推理重視のためLPを少し重く)
+      const scoreCharCard = (def: { ap?: number | null; lp?: number | null } | undefined): number => {
+        const ap = def?.ap ?? 0;
+        const lp = def?.lp ?? 0;
+        return ap + lp * 1.5;
+      };
+
+      if (isSparse && charCards.length > 0) {
+        // scene 空き — 最大スコアの character を優先
+        const best = charCards
+          .map(c => ({ m: c.m, score: scoreCharCard(c.def) }))
+          .sort((a, b) => b.score - a.score)[0];
+        return best.m;
+      }
+      // それ以外は従来通り event > character (先頭)
+      if (eventCards.length > 0) return eventCards[0].m;
+      if (charCards.length > 0) {
+        // scene 充足時の character は scoring で最良を選ぶ (上書き効果や登場時効果優先)
+        const best = charCards
+          .map(c => ({ m: c.m, score: scoreCharCard(c.def) }))
+          .sort((a, b) => b.score - a.score)[0];
+        return best.m;
+      }
       return handCards[0];
     }
 

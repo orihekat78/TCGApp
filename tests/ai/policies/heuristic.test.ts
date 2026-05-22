@@ -290,11 +290,53 @@ describe('HeuristicPolicy — priority 5: actionAgainstChar (AP filter)', () => 
   });
 });
 
-describe('HeuristicPolicy — priority 6: handUseCard (prefer event)', () => {
-  it('prefers event card over character card when both present in handUseCard moves', () => {
-    registerCardDef(makeCard('CharCard', { kind: 'character', colors: ['赤'], level: 0 }));
+describe('HeuristicPolicy — priority 6: handUseCard (sparse-aware)', () => {
+  // user_request 20260521_01 #12 改修:
+  // - scene < 3 (sparse): character を AP/LP scoring で優先
+  // - scene >= 3 (full): event を優先 (盤面補強より effect 優先)
+  // - 同種内は AP/LP スコア最大
+
+  it('prefers character card when scene is sparse (< 3) — character lays foundation first', () => {
+    registerCardDef(makeCard('CharCard', { kind: 'character', colors: ['赤'], level: 0, ap: 3000, lp: 2 }));
     registerCardDef(makeCard('EventCard', { kind: 'event', colors: ['赤'], level: 0 }));
-    const s = makeBaseState();
+    const s = makeBaseState(); // scene 空
+    const policy = new HeuristicPolicy({ seed: 's' });
+    const moves: Move[] = [
+      { kind: 'handUseCard', cardId: 'CharCard' },
+      { kind: 'handUseCard', cardId: 'EventCard' },
+      { kind: 'endTurn' },
+    ];
+    const got = policy.choose(s, moves, 'self');
+    expect(got?.kind).toBe('handUseCard');
+    expect((got as Extract<Move, { kind: 'handUseCard' }>).cardId).toBe('CharCard');
+  });
+
+  it('prefers event card when scene is full (>= 3) — effect over redundant character', () => {
+    registerCardDef(makeCard('CharCard', { kind: 'character', colors: ['赤'], level: 0, ap: 3000, lp: 2 }));
+    registerCardDef(makeCard('EventCard', { kind: 'event', colors: ['赤'], level: 0 }));
+    registerCardDef(makeCard('ExistingChar', { kind: 'character', ap: 1000, lp: 1 }));
+    const s = produce(makeBaseState(), draft => {
+      draft.players.self.scene = [
+        { cardId: 'ExistingChar', uid: 'e1', state: 'sleep', isNamed: false, enterOrder: 0,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+        { cardId: 'ExistingChar', uid: 'e2', state: 'sleep', isNamed: false, enterOrder: 1,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+        { cardId: 'ExistingChar', uid: 'e3', state: 'sleep', isNamed: false, enterOrder: 2,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+      ];
+    });
     const policy = new HeuristicPolicy({ seed: 's' });
     const moves: Move[] = [
       { kind: 'handUseCard', cardId: 'CharCard' },
@@ -306,9 +348,9 @@ describe('HeuristicPolicy — priority 6: handUseCard (prefer event)', () => {
     expect((got as Extract<Move, { kind: 'handUseCard' }>).cardId).toBe('EventCard');
   });
 
-  it('picks first handUseCard when only character cards present', () => {
-    registerCardDef(makeCard('CharA', { kind: 'character' }));
-    registerCardDef(makeCard('CharB', { kind: 'character' }));
+  it('picks highest AP+LP scored character when only character cards present (sparse)', () => {
+    registerCardDef(makeCard('CharA', { kind: 'character', ap: 2000, lp: 1 }));
+    registerCardDef(makeCard('CharB', { kind: 'character', ap: 5000, lp: 3 }));
     const s = makeBaseState();
     const policy = new HeuristicPolicy({ seed: 's' });
     const moves: Move[] = [
@@ -318,7 +360,7 @@ describe('HeuristicPolicy — priority 6: handUseCard (prefer event)', () => {
     ];
     const got = policy.choose(s, moves, 'self');
     expect(got?.kind).toBe('handUseCard');
-    expect((got as Extract<Move, { kind: 'handUseCard' }>).cardId).toBe('CharA');
+    expect((got as Extract<Move, { kind: 'handUseCard' }>).cardId).toBe('CharB');
   });
 });
 
