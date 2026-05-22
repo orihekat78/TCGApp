@@ -23,6 +23,10 @@ export type CutInDisguisePickerOpen = {
   actionId: string;
   player: 'self' | 'opp';
   actorLabel: '1番目' | '2番目' | '1番目 (再行動)';
+  // user_request 20260522_01 #7 (BUG-055): 1番目/2番目 だけでなく actor の
+  // カード名を表示するため optional で渡す。useContactFlowDriver が
+  // ownerOfUid → readDef 経由で解決する。
+  actorName?: string;
   candidates: readonly CutInDisguiseCandidate[];
 };
 

@@ -23,6 +23,8 @@ export type CutInDisguisePickerModalProps = {
   open: boolean;
   /** どちらの行動順か (header 表示用) */
   actorLabel: '1番目' | '2番目' | '1番目 (再行動)';
+  /** user_request 20260522_01 #7 (BUG-055): actor の カード名 (optional) */
+  actorName?: string;
   /** 候補カード (cutin と disguise が混在) */
   candidates: readonly CutInDisguiseCandidate[];
   onPickCutIn: (cardId: string) => void;
@@ -31,11 +33,14 @@ export type CutInDisguisePickerModalProps = {
 };
 
 export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): JSX.Element | null {
-  const { open, actorLabel, candidates, onPickCutIn, onPickDisguise, onPass } = props;
+  const { open, actorLabel, actorName, candidates, onPickCutIn, onPickDisguise, onPass } = props;
   if (!open) return null;
 
   const cutins = candidates.filter((c) => c.kind === 'cutin');
   const disgs = candidates.filter((c) => c.kind === 'disguise');
+  // user_request 20260522_01 #7 (BUG-055): 「1番目 (江戸川コナン): ...」と
+  // カード名を含めて表示
+  const actorDisplay = actorName ? `${actorLabel} (${actorName})` : actorLabel;
 
   return (
     <div
@@ -48,7 +53,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
       <div className="cid-modal">
         <div className="cid-header">
           <h2 id="cid-title">コンタクト行動</h2>
-          <p className="cid-sub">{`${actorLabel}: カットイン / 変装 を選択`}</p>
+          <p className="cid-sub" data-testid="cid-actor-label">{`${actorDisplay}: カットイン / 変装 を選択`}</p>
         </div>
 
         <div className="cid-body">

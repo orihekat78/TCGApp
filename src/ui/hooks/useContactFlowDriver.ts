@@ -198,10 +198,15 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
       }
       // BUG-045 (#9 spectator stall fix): spectator mode では self も AI 委譲
       if (decider === 'self' && !spectatorMode) {
+        // user_request 20260522_01 #7 BUG-055: actorName を渡して
+        // 「1番目 (江戸川コナン)」のように具体表示
+        const actorUid = ax.phase === 'action-2' ? ax.secondUid : ax.firstUid;
+        const actorName = actorUid ? readApLp(state, actorUid).name : undefined;
         useContactModalStore.getState()._setCutInDisguise({
           actionId: ax.id,
           player: 'self',
           actorLabel: actorLabelFor(ax.phase),
+          actorName,
           candidates: cands,
         });
         return;

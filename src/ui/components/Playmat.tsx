@@ -686,6 +686,7 @@ function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
     <CutInDisguisePickerModal
       open={true}
       actorLabel={current.actorLabel}
+      actorName={current.actorName}
       candidates={current.candidates}
       onPickCutIn={(cardId) => {
         close();
