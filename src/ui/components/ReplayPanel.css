@@ -1,0 +1,95 @@
+/* Phase 9-G.2 (Cleanup 7-B): ReplayPanel — 上部固定 playback UI */
+
+.replay-panel {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9100;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(20, 24, 40, 0.92);
+  color: #f0f0f0;
+  border: 1px solid #4a5070;
+  border-radius: 6px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  min-width: 540px;
+}
+
+.replay-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.replay-panel-label {
+  font-weight: 600;
+  color: #c8d0e8;
+  min-width: 50px;
+}
+
+.replay-panel-btn,
+.replay-panel-preset {
+  padding: 4px 10px;
+  border: 1px solid #4a5070;
+  background: #2a3050;
+  color: #d8d8e8;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.replay-panel-btn:hover:not(:disabled),
+.replay-panel-preset:hover {
+  background: #3a4070;
+  border-color: #6080a0;
+}
+
+.replay-panel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.replay-panel-preset.is-active {
+  background: #4060c0;
+  border-color: #80a0e8;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.replay-panel-close {
+  margin-left: auto;
+  background: #802020;
+  border-color: #c04040;
+}
+
+.replay-panel-close:hover:not(:disabled) {
+  background: #a03030;
+  border-color: #e06060;
+}
+
+.replay-panel-progress,
+.replay-panel-current {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+  color: #a0a8c0;
+  min-width: 60px;
+}
+
+.replay-panel-seek {
+  flex: 1;
+  min-width: 120px;
+}
+
+.replay-panel-move-info {
+  margin-left: auto;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+  color: #80a0e8;
+}

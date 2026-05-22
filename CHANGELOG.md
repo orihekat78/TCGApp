@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `04991425fef4`
+> Source hash: `8741a4bb5a17`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -10,8 +10,17 @@
 
 ### 残課題
 
-- Phase 9-F.2: MCTS strength tuning (UCB1 tree + 静的評価関数 + 並列化)
-- Phase 9-G.2: リプレイ UI 層 (ReplayPanel / useReplayDriver / GameSetupModal mode)
+- ~~Phase 9-F.2 MCTS strength tuning~~ → 完了:
+  - 6-A 静的評価関数 → `bdcea93` (`defaultStateEvaluator` + partial rollout)
+  - 6-B UCB1 tree → `aeda597` (`MCTSTreePolicy` 4-phase tree MCTS)
+  - 6-C 並列化 → `c3e2325` (`WorkerPool` scaffold + SequentialPool default、
+    真の Web Worker / worker_threads は Phase 9-F.3 で engine worker-safe 化と
+    合わせて実装)
+- ~~Phase 9-G.2 リプレイ UI 層~~ → 完了 (commits TBD):
+  - 7-A useReplayDriver hook (play/pause/step/seek/setSpeed)
+  - 7-B ReplayPanel component (上部固定 toolbar、4 速度 preset)
+  - 7-C GameSetupModal にファイルピッカー追加 (リプレイ JSON 読込)
+  - 7-D E2E spec (`tests/e2e/replay-ui.spec.ts` 3 シナリオ)
 - ~~Cleanup Phase 中/大規模 5 件 全完了~~:
   - #1 動的式評価括弧 → `a8bc6b1` (shunting-yard で precedence + parens)
   - #2 cost picker → 実は `populateCostParams` で実装済を確認 (`616728a` doc)
@@ -23,6 +32,41 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## Phase 9-G.2 — リプレイ UI 層 (2026-05-22)
+
+commit (TBD)。Phase 9-G.1 (engine 側 ReplayLog 機構) で完成した record/replay
+API に UI 層を追加。
+
+### Added
+
+- `src/ui/hooks/useReplayDriver.ts`: playback hook
+  - state: log / currentMoveIndex / isPlaying / speedMs
+  - API: loadLog / unloadLog / play / pause / step / seek / setSpeed
+  - 各 step で `initialState から moves[0..N] を apply` して GameState を再構築、
+    store に書き込み → Playmat が re-render
+- `src/ui/components/ReplayPanel.tsx` / `.css`: 上部固定 toolbar
+  - play/pause toggle / 1 step button / seek bar (HTML range) / 4 速度 preset
+    (200/600/1500/3000ms) / 現在 move 情報 / close button
+  - z-index 9100 (OppTurnOverlay より上、Modal より下)
+- `src/ui/components/GameSetupModal.tsx`: optional `onLoadReplay` prop +
+  `<input type="file">` (JSON ピッカー)
+- `src/App.tsx`: useReplayDriver + ReplayPanel mount + GameSetupModal に
+  loadLog 配線
+- `tests/e2e/replay-ui.spec.ts` (新規 3 tests): GameSetupModal label /
+  file event 経由 loadLog / step + speed + close 動作
+
+### 検証
+
+- vitest UI 378 PASS / 1 skipped (regression なし)
+- E2E 全 51 PASS / 1 skipped (replay-ui +3)
+- typecheck clean
+
+### Out of Scope (defer)
+
+- リプレイ JSON ファイル保存機能 (record→download button) — Phase 9-G.3
+- 部分 replay / branching — Phase 9-G.3
+- speed slider のスムーズ変化 (現状 4 preset)
 
 ## user_request 20260521_01 triage Phase ε — #18 card audit umbrella (2026-05-22)
 

@@ -16,7 +16,31 @@ import { createSampleGameState } from '@/ui/fixtures/sampleGameState.js';
 import { AVAILABLE_DECKS, type DeckId } from '@/ui/services/deckBuilder.js';
 import './GameSetupModal.css';
 
-export function GameSetupModal(): JSX.Element | null {
+export type GameSetupModalProps = {
+  /**
+   * Phase 9-G.2: リプレイ JSON が読込まれたら呼ばれる callback (App.tsx
+   * 側で useReplayDriver.loadLog を渡す)。未指定なら「リプレイ読込」button 非表示。
+   */
+  onLoadReplay?: (log: unknown) => void;
+};
+
+export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | null {
+  const { onLoadReplay } = props;
+  const handleReplayFile = (e: import('react').ChangeEvent<HTMLInputElement>): void => {
+    if (!onLoadReplay) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const json = JSON.parse(String(reader.result));
+        onLoadReplay(json);
+      } catch (err) {
+        console.error('replay load: invalid JSON', err);
+      }
+    };
+    reader.readAsText(file);
+  };
   // 親 (App.tsx) が gameState を subscribe して再描画 → 本コンポーネントも再評価される。
   // 自前の subscription は不要 (SSR テスト互換性 + zustand 不要な hooks 回避)。
   const gameState = useGameStateStore.getState().gameState;
@@ -123,6 +147,17 @@ export function GameSetupModal(): JSX.Element | null {
         >
           観戦モード (AI vs AI)
         </button>
+        {onLoadReplay && (
+          <label className="game-setup-replay-label" data-testid="game-setup-replay-label">
+            リプレイ JSON 読込
+            <input
+              type="file"
+              accept=".json,application/json"
+              onChange={handleReplayFile}
+              data-testid="game-setup-replay-file"
+            />
+          </label>
+        )}
         <p className="game-setup-note">
           ※「対戦開始」で CT-D08 vs CT-D11 の turn-1 を正規開始 (手札の引き直し UI が表示されます)。
           「デモ」は中盤の動作確認用。

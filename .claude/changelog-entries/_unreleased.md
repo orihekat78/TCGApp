@@ -1,7 +1,16 @@
 ### 残課題
 
-- Phase 9-F.2: MCTS strength tuning (UCB1 tree + 静的評価関数 + 並列化)
-- Phase 9-G.2: リプレイ UI 層 (ReplayPanel / useReplayDriver / GameSetupModal mode)
+- ~~Phase 9-F.2 MCTS strength tuning~~ → 完了:
+  - 6-A 静的評価関数 → `bdcea93` (`defaultStateEvaluator` + partial rollout)
+  - 6-B UCB1 tree → `aeda597` (`MCTSTreePolicy` 4-phase tree MCTS)
+  - 6-C 並列化 → `c3e2325` (`WorkerPool` scaffold + SequentialPool default、
+    真の Web Worker / worker_threads は Phase 9-F.3 で engine worker-safe 化と
+    合わせて実装)
+- ~~Phase 9-G.2 リプレイ UI 層~~ → 完了 (commits TBD):
+  - 7-A useReplayDriver hook (play/pause/step/seek/setSpeed)
+  - 7-B ReplayPanel component (上部固定 toolbar、4 速度 preset)
+  - 7-C GameSetupModal にファイルピッカー追加 (リプレイ JSON 読込)
+  - 7-D E2E spec (`tests/e2e/replay-ui.spec.ts` 3 シナリオ)
 - ~~Cleanup Phase 中/大規模 5 件 全完了~~:
   - #1 動的式評価括弧 → `a8bc6b1` (shunting-yard で precedence + parens)
   - #2 cost picker → 実は `populateCostParams` で実装済を確認 (`616728a` doc)

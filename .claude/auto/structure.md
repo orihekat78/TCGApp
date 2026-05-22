@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1114
+- **ファイル数**: 1119
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -220,6 +220,7 @@
     - `2026-05-22-03-round-4l.md`
     - `2026-05-22-04-triage-delta.md`
     - `2026-05-22-05-triage-epsilon.md`
+    - `2026-05-22-06-phase-9-g2.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -908,6 +909,8 @@
       - `RefreshOverlay.tsx` — Phase 8.10i: リフレッシュ全画面演出
       - `RemoveArea.css`
       - `RemoveArea.tsx` — Phase 7 Task 7.10: RemoveArea
+      - `ReplayPanel.css`
+      - `ReplayPanel.tsx` — Phase 9-G.2 (Cleanup 7-B): リプレイ playback UI panel
       - `SceneArea.css`
       - `SceneArea.tsx` — Phase 7 Task 7.4: SceneArea
       - `SceneSwitchPickerModal.css`
@@ -948,6 +951,7 @@
       - `useOppTurnDriver.ts` — Phase 8.7b Task: opp ターン自動進行ドライバ
       - `usePartner.ts` — Phase 7 Task 7.5: PartnerArea selector hook
       - `useRemoveCards.ts` — Phase 7 Task 7.10: RemoveArea selector hook
+      - `useReplayDriver.ts` — Phase 9-G.2 (Cleanup 7-A): リプレイ playback driver hook
       - `useSceneCharacters.ts` — Phase 7 Task 7.4: SceneArea selector hook
       - `useSceneSwitchPickerStore.ts` — Phase 5 advance — SceneSwitch UI: picker open 状態 store
       - `useSpectatorTurnDriver.ts` — Round 4l (B5 観戦モード): self ターンも AI が自動進行する driver
@@ -1064,6 +1068,7 @@
     - `bug-037.spec.ts` — BUG-037: 現場カードの sleep / stun が computed transform で実際に rotate されるかを検証。
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
+    - `replay-ui.spec.ts` — Phase 9-G.2 (Cleanup 7-D): リプレイ UI E2E
     - `spectator-speed.spec.ts` — user_request 20260521_01 #12: 観戦モード speed slider + pause/step E2E
   - **`engine/`** — Engine ユニットテスト
     - **`cards/`**

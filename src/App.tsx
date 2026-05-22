@@ -7,6 +7,9 @@ import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import { MulliganModal } from '@/ui/components/MulliganModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
 import { SpectatorHUD } from '@/ui/components/SpectatorHUD';
+import { ReplayPanel } from '@/ui/components/ReplayPanel';
+import { useReplayDriver } from '@/ui/hooks/useReplayDriver';
+import type { ReplayLog } from '@/ai/replay';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
 import { ContactFlash } from '@/ui/components/ContactFlash';
 import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
@@ -46,6 +49,8 @@ export default function App() {
   useGameStateStore((s) => s.aiSpeedMs);
   useGameStateStore((s) => s.isAiPaused);
   useGameStateStore((s) => s.aiStepCounter);
+  // Phase 9-G.2: リプレイ playback driver
+  const replayDriver = useReplayDriver();
   return (
     <>
       <Playmat
@@ -54,7 +59,8 @@ export default function App() {
         resolveCase={resolveCase}
         resolveHandCard={resolveHandCard}
       />
-      <GameSetupModal />
+      <GameSetupModal onLoadReplay={(log) => replayDriver.loadLog(log as ReplayLog)} />
+      <ReplayPanel driver={replayDriver} />
       <MulliganModal />
       <OppTurnOverlay />
       <SpectatorHUD />
