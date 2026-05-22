@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1131
+- **ファイル数**: 1137
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -182,6 +182,7 @@
     - `BUG-051.md`
     - `BUG-052.md`
     - `BUG-053.md`
+    - `BUG-054.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `README.md` — バグ管理表の使い方
   - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
@@ -332,6 +333,8 @@
     - `smoke-2026-05-22-7.md` — Smoke 1000戦レポート — smoke-2026-05-22-064209
     - `smoke-2026-05-22-8.json`
     - `smoke-2026-05-22-8.md` — Smoke 1000戦レポート — smoke-2026-05-22-065231
+    - `smoke-2026-05-22-9.json`
+    - `smoke-2026-05-22-9.md` — Smoke 1000戦レポート — smoke-2026-05-22-070557
     - `smoke-2026-05-22.json`
     - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
@@ -888,6 +891,8 @@
       - `CutInDisguisePickerModal.tsx` — Phase 8.6β: CutInDisguisePickerModal
       - `DeckArea.css`
       - `DeckArea.tsx` — Phase 7 Task 7.7: DeckArea
+      - `EffectPickerModal.css`
+      - `EffectPickerModal.tsx` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 modal
       - `EffectStackPanel.css`
       - `EffectStackPanel.tsx` — Phase 7 Task 7.14: EffectStackPanel
       - `EvidenceArea.css`
@@ -951,6 +956,7 @@
       - `useContactFlowDriver.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver
       - `useContactModalStore.ts` — Phase 8 完全クローズ Commit 2: コンタクトフロー用モーダル状態 store
       - `useDeckCount.ts` — Phase 7 Task 7.7: DeckArea selector hook
+      - `useEffectPickFlowDriver.ts` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 driver
       - `useEffectStack.ts` — Phase 7 Task 7.14: EffectStackPanel selector hook
       - `useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
       - `useEvidence.ts` — Phase 7 Task 7.9: EvidenceArea selector hook

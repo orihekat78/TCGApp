@@ -39,6 +39,48 @@ export interface ResolveEffectPicksOpts {
   chooseAtomTarget?: ChooseAtomTargetFn;
   /** chooser に渡される byPlayer (省略時 'self')。 */
   byPlayer?: Player;
+  /**
+   * user_request 20260522_01 #2/#6 BUG-054: human player による pick が必要な
+   * effect の場合 true。`substituteAtomPick` で `$pick` 未解決時に
+   * globalThis 側チャネル `__pendingEffectPickSide` に候補を set し、
+   * atom はそのまま (未解決) 返却する。caller (triggered listener) は
+   * side-channel が set されていれば event.queue をスキップ。
+   */
+  humanChooser?: boolean;
+  /** Pending side-channel に保存する識別子 (UI 側で表示や resolve 時に使用) */
+  source?: { cardId: string; abilityId: string };
+}
+
+// user_request 20260522_01 #6 BUG-054: human pick の側チャネル
+declare global {
+  // eslint-disable-next-line no-var
+  var __pendingEffectPickSide: PendingEffectPickSide | null | undefined;
+}
+
+export type PendingEffectPickSide = {
+  player: Player;
+  /** 候補 uid 配列 (Candidate.kind === 'char' のみ抽出) */
+  candidates: { uid: string; cardId: string; player: Player }[];
+  /** 元 atom の verb (例: 'sceneRemove') */
+  atomVerb: string;
+  /** atom args (uid='$pick' 含む、resolve 後に上書きされる) */
+  atomArgs: Record<string, unknown>;
+  /** 任意効果の min/max (n.min === 0 なら skip 可) */
+  nMin: number;
+  nMax: number;
+  /** ability source (UI 表示・log 用) */
+  source: { cardId: string; abilityId: string };
+};
+
+function setPendingEffectPickSide(v: PendingEffectPickSide | null): void {
+  (globalThis as { __pendingEffectPickSide?: PendingEffectPickSide | null }).__pendingEffectPickSide = v;
+}
+
+/** dispatch 経由で UI 側 store に転送するための drain ヘルパ */
+export function _drainPendingEffectPickSide(): PendingEffectPickSide | null {
+  const v = (globalThis as { __pendingEffectPickSide?: PendingEffectPickSide | null }).__pendingEffectPickSide ?? null;
+  setPendingEffectPickSide(null);
+  return v;
 }
 
 function substituteAtomPick(
@@ -58,6 +100,25 @@ function substituteAtomPick(
 
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
   const byPlayer: Player = opts.byPlayer ?? 'self';
+
+  // user_request 20260522_01 #2/#6 BUG-054: human player のときは side-channel
+  // に候補を set して atom を未解決のまま返却 (caller が queue 抑止)
+  if (opts.humanChooser) {
+    const charCands = cands.filter((c) => c.kind === 'char') as { uid: string; cardId: string; player: Player }[];
+    if (charCands.length === 0) return atom as Effect;
+    const targetRef = target as { n?: { min?: number; max?: number } };
+    setPendingEffectPickSide({
+      player: byPlayer,
+      candidates: charCands.map((c) => ({ uid: c.uid, cardId: c.cardId, player: c.player })),
+      atomVerb: verb,
+      atomArgs: { ...args },
+      nMin: targetRef.n?.min ?? 1,
+      nMax: targetRef.n?.max ?? 1,
+      source: opts.source ?? { cardId: '', abilityId: '' },
+    });
+    return atom as Effect; // 未解決のまま返却
+  }
+
   const heuristicPick = opts.chooseAtomTarget?.(
     state,
     verb,

@@ -13,6 +13,8 @@ import type { ReplayLog } from '@/ai/replay';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { useEffect } from 'react';
+import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
+import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
 import { ContactFlash } from '@/ui/components/ContactFlash';
 import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
 import { VictoryOverlay } from '@/ui/components/VictoryOverlay';
@@ -60,6 +62,8 @@ export default function App() {
   }, [spectatorMode]);
   // Phase 9-G.2: リプレイ playback driver
   const replayDriver = useReplayDriver();
+  // BUG-054 (user_request 20260522_01 #2/#6): human effect pick driver
+  useEffectPickFlowDriver();
   return (
     <>
       <Playmat
@@ -73,6 +77,7 @@ export default function App() {
       <MulliganModal />
       <OppTurnOverlay />
       <SpectatorHUD />
+      <EffectPickerModal />
       <RecentActionToast />
       <ContactFlash />
       <RefreshOverlay />

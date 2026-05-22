@@ -172,18 +172,26 @@ function handleHook(
       // Phase 7-3: listener callback 内で instantiate (module top では circular import 発生)。
       // misread.ts:110 と同じパターン。allocation cost は 1 ability/frame で実害なし。
       const aiPolicy = new HeuristicPolicy();
-      // user_request 20260522_01 #6/#2 fix: human player owned effect では
-      // chooseAtomTarget を skip して $pick を unresolved のまま queue。
-      // (proper UI picker integration は別 BUG-054 で扱う、本 fix は「自動選択
-      // 停止」のみで「ユーザー依存」とのスコープ分離基盤を作る)
+      // user_request 20260522_01 #6/#2 + BUG-054: human player owned effect は
+      // humanChooser=true で resolveEffectPicks に渡し、$pick 検出時に
+      // side-channel `__pendingEffectPickSide` を set。caller (本 listener) は
+      // side-channel が set されていれば queue を skip → UI が modal で
+      // ユーザー選択 → effectPickResolve dispatch で再 queue。
       const humanSide = getHumanPlayerSide();
       const isHumanEffect = humanSide !== null && card.player === humanSide;
       const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx, {
         chooseAtomTarget: isHumanEffect
-          ? undefined  // skip auto-pick for human-owned effects (defer to UI)
+          ? undefined
           : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
         byPlayer: card.player,
+        humanChooser: isHumanEffect,
+        source: { cardId: card.cardId, abilityId: ability.id },
       });
+      // BUG-054: side-channel set されていれば queue を skip (UI 側で
+      // 後で effectPickResolve dispatch される)
+      if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
+        continue;
+      }
       // queue
       event.queue(
         state,

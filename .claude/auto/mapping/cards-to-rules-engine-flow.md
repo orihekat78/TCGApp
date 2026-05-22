@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `9179f08d402b`
+> Source hash: `f0aa81346f02`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **96** ファイル（[全体 index](./index.md)）
+このグループ: **97** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (6)
 
@@ -86,7 +86,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (38)
+## その他 (39)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -100,6 +100,7 @@
 | [`src/ui/hooks/useContactFlowDriver.ts`](../../../src/ui/hooks/useContactFlowDriver.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/ui/hooks/useContactModalStore.ts`](../../../src/ui/hooks/useContactModalStore.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |
 | [`src/ui/hooks/useDeckCount.ts`](../../../src/ui/hooks/useDeckCount.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useEffectPickFlowDriver.ts`](../../../src/ui/hooks/useEffectPickFlowDriver.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEffectStack.ts`](../../../src/ui/hooks/useEffectStack.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEngineDispatch.ts`](../../../src/ui/hooks/useEngineDispatch.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ui/hooks/useEvidence.ts`](../../../src/ui/hooks/useEvidence.ts) | _(参照なし)_ |

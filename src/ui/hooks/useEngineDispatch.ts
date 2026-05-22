@@ -28,6 +28,7 @@ import { def as readDef } from '@/engine/read/def.js';
 import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread } from '@/engine';
+import { _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 
 type Player = 'self' | 'opp';
 
@@ -73,6 +74,9 @@ export type EngineAction =
   | { type: 'hiramekiResolve'; choice: 'fire' | 'skip' }
   // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択
   | { type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }
+  // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択結果
+  // pickedUid=null は「選ばない」(skip、n.min===0 任意効果のみ可能)
+  | { type: 'effectPickResolve'; pickedUid: string | null }
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   | { type: 'endTurn'; player: Player };
@@ -163,6 +167,10 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'misreadResolve': {
       // pendingMisread が set されているときのみ有効
       return useGameStateStore.getState().pendingMisread !== null;
+    }
+    case 'effectPickResolve': {
+      // BUG-054: pendingEffectPick が set されているときのみ有効
+      return useGameStateStore.getState().pendingEffectPick !== null;
     }
     case 'setEffectOrder': {
       // resolution lock 中は禁止
@@ -352,6 +360,35 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       if (entry) entry.ownerChosenOrder = action.order;
       return;
     }
+    case 'effectPickResolve': {
+      // user_request 20260522_01 #2/#6 BUG-054:
+      // pendingEffectPick の atomArgs を picked uid で置換して queue + run
+      const pending = useGameStateStore.getState().pendingEffectPick;
+      if (!pending) return;
+      const picked = action.pickedUid;
+      if (picked === null) {
+        // skip (n.min === 0 の任意効果のみ可能、UI 側で gate される想定)
+        return;
+      }
+      // atomArgs.uid を picked で置換、target は drop
+      const { target: _omit, ...restArgs } = pending.atomArgs;
+      void _omit;
+      const resolvedAtom = {
+        kind: 'atom' as const,
+        verb: pending.atomVerb as never,
+        args: { ...restArgs, uid: picked },
+      };
+      const event = engineEvent;
+      event.queue(
+        draft,
+        resolvedAtom as never,
+        { player: pending.player, cardId: pending.source.cardId },
+        'effect:human-pick-resolved',
+        { picked, source: pending.source },
+      );
+      // クリアは produce 後に dispatchEngineAction が行う
+      return;
+    }
     case 'endTurn': {
       // Round 2 修正: 旧実装は endTurn のみで、次プレイヤーの startTurn を呼ばなかった。
       // 結果 (a) opp.turn 開始時に auto-phase 走らず、(b) opp.endTurn 後 self.turn でも
@@ -423,6 +460,14 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     }
     if (action.type === 'misreadResolve') {
       store.setPendingMisread(null);
+    }
+    // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択
+    const effectPickSide = _drainPendingEffectPickSide();
+    if (effectPickSide) {
+      store.setPendingEffectPick(effectPickSide);
+    }
+    if (action.type === 'effectPickResolve') {
+      store.setPendingEffectPick(null);
     }
     return { ok: true };
   } catch (e) {

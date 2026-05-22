@@ -1,0 +1,96 @@
+/* BUG-054: EffectPickerModal styles (GuardPickerModal と同じ pattern) */
+
+.effect-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.effect-picker-modal {
+  background: #1a1e30;
+  color: #f0f0f0;
+  border: 2px solid #4a5070;
+  border-radius: 8px;
+  padding: 20px 24px;
+  min-width: 420px;
+  max-width: 720px;
+  font-family: system-ui, sans-serif;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.effect-picker-header h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #c0d0f0;
+}
+
+.effect-picker-sub {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #a0a8c0;
+}
+
+.effect-picker-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.effect-picker-cand {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #4a5070;
+  background: #2a3050;
+  color: #d8d8e8;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.effect-picker-cand:hover {
+  background: #3a4070;
+  border-color: #6080a0;
+}
+
+.cand-name {
+  font-weight: 500;
+}
+
+.cand-side {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #4060c0;
+  color: #ffffff;
+}
+
+.effect-picker-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.effect-picker-skip {
+  padding: 6px 14px;
+  border: 1px solid #4a5070;
+  background: #2a3050;
+  color: #d8d8e8;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.effect-picker-skip:hover {
+  background: #3a4070;
+}

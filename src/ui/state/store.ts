@@ -81,6 +81,25 @@ export type GameStateStore = {
    */
   aiStepCounter: number;
   incrementAiStep: () => void;
+  /**
+   * user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象
+   * 選択待ち state。triggered listener が humanChooser fired 時に
+   * resolve-picks 経由 globalThis 側チャネルにセット → useEngineDispatch
+   * post-dispatch drain で本 field に転送 → useEffectPickFlowDriver が modal を
+   * 開きユーザー選択を待つ。
+   */
+  pendingEffectPick: PendingEffectPick | null;
+  setPendingEffectPick: (p: PendingEffectPick | null) => void;
+};
+
+export type PendingEffectPick = {
+  player: 'self' | 'opp';
+  candidates: { uid: string; cardId: string; player: 'self' | 'opp' }[];
+  atomVerb: string;
+  atomArgs: Record<string, unknown>;
+  nMin: number;
+  nMax: number;
+  source: { cardId: string; abilityId: string };
 };
 
 /** ヒラメキ保留 (Commit 3a) */
@@ -131,4 +150,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setAiPaused: (v) => set({ isAiPaused: v }),
   aiStepCounter: 0,
   incrementAiStep: () => set((s) => ({ aiStepCounter: s.aiStepCounter + 1 })),
+  pendingEffectPick: null,
+  setPendingEffectPick: (p) => set({ pendingEffectPick: p }),
 }));
