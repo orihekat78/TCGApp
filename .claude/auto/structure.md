@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1144
+- **ファイル数**: 1145
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -236,6 +236,7 @@
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
+    - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
   - **`reports/`** — smoke (AI vs AI) 実行レポート・ベンチマーク結果
     - `README.md` — .claude/reports
