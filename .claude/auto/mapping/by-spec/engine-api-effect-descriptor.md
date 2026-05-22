@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `97e46ae5c5a2`
+> Source hash: `7092f8394bf0`
 
 仕様書 [`engine-api-effect-descriptor`](../../../specs/engine-api-effect-descriptor.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

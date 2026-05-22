@@ -148,4 +148,59 @@ describe('useEngineDispatch — per-step action FSM', () => {
     ax = flow.action._getContext(axId);
     expect(ax?.phase).toBe('action-2');
   });
+
+  // user_request 20260522_01 #8 fix
+  it('actionJudge: case target が guard 成立 (guardUid set) → 証拠変動なし (rules/10)', () => {
+    // 盤面: self が opp の事件カードに action、opp が s1 (active 自陣 char) で guard
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.self.scene = [makeChar('attacker', 'active')];
+    s.players.opp.scene = [makeChar('guarder', 'active')];
+    s.players.opp.case = { cardId: 'C1', status: '事件編', requiredEvidence: 7, colors: ['blue'] };
+    s.players.opp.evidence = [
+      { cardId: 'card-back', faceUp: false, origin: { turn: 1, via: 'reasoning' } },
+      { cardId: 'card-back', faceUp: false, origin: { turn: 1, via: 'reasoning' } },
+    ];
+    s.players.self.deck = ['evi-1', 'evi-2'];
+    s.players.self.evidence = [];
+    useGameStateStore.setState({ gameState: s });
+
+    const evOppBefore = s.players.opp.evidence.length;
+    const evSelfBefore = s.players.self.evidence.length;
+
+    // 1. declare case
+    dispatchEngineAction({ type: 'actionDeclareCase', byUid: 'attacker', targetPlayer: 'opp' });
+    const axId = useGameStateStore.getState().activeActionId!;
+
+    // 2. guard 成立 (guardUid set)
+    dispatchEngineAction({ type: 'actionGuard', actionId: axId, guarderUid: 'guarder' });
+
+    // 3. advance を action-end まで進める (leave-resolution → contact-pending → action-1 →
+    //    action-2 → judge → contact-end → action-end)
+    // 各 contact phase は pass で進める
+    const advanceTillEnd = (): void => {
+      for (let i = 0; i < 20; i++) {
+        const cur = flow.action._getContext(axId);
+        if (!cur || cur.phase === 'action-end') break;
+        if (cur.phase === 'action-1' || cur.phase === 'action-2' || cur.phase === 'action-1-redo') {
+          dispatchEngineAction({
+            type: 'actionContact',
+            actionId: axId,
+            player: cur.byPlayer,
+            choice: { kind: 'pass' },
+          });
+        }
+        if (cur.phase === 'judge') {
+          dispatchEngineAction({ type: 'actionJudge', actionId: axId });
+        }
+        dispatchEngineAction({ type: 'actionAdvance', actionId: axId });
+      }
+    };
+    advanceTillEnd();
+
+    const after = useGameStateStore.getState().gameState!;
+    // 証拠は不変 (guard 成立で rules/10 evidence change スキップ)
+    expect(after.players.opp.evidence.length).toBe(evOppBefore);
+    expect(after.players.self.evidence.length).toBe(evSelfBefore);
+  });
 });

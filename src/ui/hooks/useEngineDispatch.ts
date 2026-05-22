@@ -275,11 +275,15 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'actionJudge': {
       const ax = flow.action._getContext(action.actionId);
       if (!ax) return;
-      if (ax.target.kind === 'case') {
-        // rules/10: 相手証拠リムーブ + 自証拠獲得
+      // user_request 20260522_01 #8 fix: case target でも guard 成立した場合は
+      // 証拠変動なし — contact AP 判定で攻撃キャラ or ガードキャラのリムーブ
+      // のみ行う (rules/07 + rules/10: 証拠操作は「ガードされなかった場合」のみ)。
+      if (ax.target.kind === 'case' && !ax.guardUid) {
+        // rules/10: 相手証拠リムーブ + 自証拠獲得 (unguarded のみ)
         flow.actionCase.removeOpponentEvidenceTop(draft, ax);
         flow.actionCase.gainSelfEvidence(draft, ax);
       } else {
+        // char target OR case target + guard 成立 → contact AP 判定
         flow.action.snapshotAP(draft, ax);
         flow.contact.judge(draft, ax);
       }

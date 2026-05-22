@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1119
+- **ファイル数**: 1122
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -177,6 +177,8 @@
     - `BUG-046.md`
     - `BUG-047.md`
     - `BUG-048.md`
+    - `BUG-049.md`
+    - `BUG-050.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `README.md` — バグ管理表の使い方
   - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
@@ -1238,6 +1240,7 @@
   - `sanity.test.ts`
 - **`user_request/`** — ユーザーからの要望テキスト (triage 元データ)
   - `20260521_01.txt`
+  - `20260522_01.txt`
 - `.gitignore` — Git 除外パターン
 - `CHANGELOG.md` — フェーズ/Round 完了履歴 (Keep a Changelog 形式)
 - `ct-d08-cards.json` — CT-D08 デッキカードデータ (公式テキスト抽出)
