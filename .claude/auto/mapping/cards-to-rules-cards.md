@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b1f53e120d40`
+> Source hash: `49753c03c3c0`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **74** ファイル（[全体 index](./index.md)）
+このグループ: **75** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (11)
 
@@ -89,7 +89,7 @@
 | ------ | --------- |
 | [`src/cards/index.ts`](../../../src/cards/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## ai (13)
+## ai (14)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -102,6 +102,7 @@
 | [`src/ai/policies/index.ts`](../../../src/ai/policies/index.ts) | _(参照なし)_ |
 | [`src/ai/policies/mcts.ts`](../../../src/ai/policies/mcts.ts) | _(参照なし)_ |
 | [`src/ai/policies/random.ts`](../../../src/ai/policies/random.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
+| [`src/ai/policies/state-evaluator.ts`](../../../src/ai/policies/state-evaluator.ts) | _(参照なし)_ |
 | [`src/ai/policy.ts`](../../../src/ai/policy.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`07-action-flow.md`](../../rules/07-action-flow.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/ai/replay/index.ts`](../../../src/ai/replay/index.ts) | _(参照なし)_ |
 | [`src/ai/replay/player.ts`](../../../src/ai/replay/player.ts) | _(参照なし)_ |

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1106
+- **ファイル数**: 1110
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -318,6 +318,8 @@
     - `smoke-2026-05-22-3.md` — Smoke 1000戦レポート — smoke-2026-05-22-011221
     - `smoke-2026-05-22-4.json`
     - `smoke-2026-05-22-4.md` — Smoke 1000戦レポート — smoke-2026-05-22-012307
+    - `smoke-2026-05-22-5.json`
+    - `smoke-2026-05-22-5.md` — Smoke 1000戦レポート — smoke-2026-05-22-012816
     - `smoke-2026-05-22.json`
     - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
@@ -655,6 +657,7 @@
       - `index.ts` — ai.policies barrel — Phase 6 Group B
       - `mcts.ts` — ai.policies.mcts — Phase 9-F (MVP: rollout-based)
       - `random.ts` — ai.policies.random — 候補からランダムに 1 手を選ぶ AIPolicy 実装 (Phase 6 Group B Task 6.3)
+      - `state-evaluator.ts` — ai.policies.state-evaluator — Phase 9-F.2 静的評価関数
     - **`replay/`**
       - `index.ts` — ai.replay — Phase 9-G.1 barrel
       - `player.ts` — ai.replay.player — Phase 9-G.1 (replay playback)
@@ -977,6 +980,7 @@
       - `heuristic.test.ts` — tests/ai/policies/heuristic.test.ts — Phase 6 Group B Task 6.4 tests
       - `mcts.test.ts` — MCTSPolicy — Phase 9-F MVP unit tests
       - `random.test.ts` — tests/ai/policies/random.test.ts — Phase 6 Group B Task 6.3 tests
+      - `state-evaluator.test.ts` — Phase 9-F.2 (Cleanup 6-A) — defaultStateEvaluator tests
     - **`replay/`**
       - `recorder.test.ts` — ai.replay — Phase 9-G.1 unit tests (recorder + player)
     - `.gitkeep`

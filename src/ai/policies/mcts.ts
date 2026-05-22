@@ -25,6 +25,7 @@ import { produce } from '@/engine/produce';
 import { runMatch } from '../match.js';
 import { HeuristicPolicy, type HeuristicPolicyOptions } from './heuristic.js';
 import { RandomPolicy } from './random.js';
+import { defaultStateEvaluator, type StateEvaluator } from './state-evaluator.js';
 
 type Player = 'self' | 'opp';
 
@@ -33,17 +34,32 @@ export interface MCTSPolicyOptions extends HeuristicPolicyOptions {
   rollouts?: number;
   /** rollout 内 maxTurns (default 30 — avg 9.85 turns の 3 倍を安全マージン) */
   rolloutMaxTurns?: number;
+  /**
+   * Phase 9-F.2 (Cleanup): 静的評価関数を使った partial rollout 有効化。
+   * 0 (default) → full-game rollout (既存挙動)
+   * N > 0 → N ターン rollout 後に evaluator で評価 (高速 + variance 低下)
+   */
+  evaluationTurns?: number;
+  /**
+   * Phase 9-F.2: 状態評価関数。default は `defaultStateEvaluator`。
+   * evaluationTurns > 0 のときのみ使用。
+   */
+  evaluator?: StateEvaluator;
 }
 
 export class MCTSPolicy implements AIPolicy {
   readonly name = 'mcts-rollout';
   private readonly rollouts: number;
   private readonly rolloutMaxTurns: number;
+  private readonly evaluationTurns: number;
+  private readonly evaluator: StateEvaluator;
   private readonly heuristic: HeuristicPolicy;
 
   constructor(opts: MCTSPolicyOptions = {}) {
     this.rollouts = opts.rollouts ?? 10;
     this.rolloutMaxTurns = opts.rolloutMaxTurns ?? 30;
+    this.evaluationTurns = opts.evaluationTurns ?? 0;
+    this.evaluator = opts.evaluator ?? defaultStateEvaluator;
     this.heuristic = new HeuristicPolicy(opts);
   }
 
@@ -93,14 +109,25 @@ export class MCTSPolicy implements AIPolicy {
       }
       // rollout policy は HeuristicPolicy (rolloutIdx で variant seed)
       const rolloutPolicy = new HeuristicPolicy({ seed: `mcts-rollout-${rolloutIdx}` });
+      // Phase 9-F.2: evaluationTurns > 0 なら partial rollout + evaluator
+      const maxTurns = this.evaluationTurns > 0 ? this.evaluationTurns : this.rolloutMaxTurns;
       const result = runMatch({
         selfPolicy: rolloutPolicy,
         oppPolicy: rolloutPolicy,
         initialState: afterMove,
-        maxTurns: this.rolloutMaxTurns,
+        maxTurns,
       });
       if (result.winner === 'invariant-fail') return -1; // バグ扱い、保守的に敗北
-      if (result.winner === 'draw') return 0;
+      if (result.winner === 'draw') {
+        // Phase 9-F.2: rollout が gameResult 未到達 (max-turn cap) なら evaluator で
+        // 終端 state を評価。current state は runMatch 内部にあるため finalState は取得
+        // できないが、result.finalState で公開されていれば使う。draw → 0 fallback。
+        const finalState = (result as { finalState?: GameState }).finalState;
+        if (this.evaluationTurns > 0 && finalState) {
+          return this.evaluator(finalState, byPlayer);
+        }
+        return 0;
+      }
       return scoreFor(result.winner, byPlayer);
     } catch {
       // applyMove 中の例外 → 保守的に敗北扱い
