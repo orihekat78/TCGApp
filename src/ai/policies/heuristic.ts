@@ -210,16 +210,20 @@ export class HeuristicPolicy implements AIPolicy {
     }
 
     // 優先順位 6b: handUseCardSwitch (rules/20 §スイッチ、scene 5 枚埋まり時の代替経路)
-    // Option A: 各 cardId について最古 enterOrder の removeUid を選ぶ (戦術強化は Phase 9-F)。
+    // Cleanup #3 (2026-05-22): 「最古 enterOrder」→ cardValue 最低の自陣 char を
+    // 削除するよう改修。価値の低いカード (低 AP + 低 LP) を犠牲にして新カード召喚。
     const handSwitchCards = candidates.filter(
       (m): m is Extract<Move, { kind: 'handUseCardSwitch' }> => m.kind === 'handUseCardSwitch',
     );
     if (handSwitchCards.length > 0) {
-      const oldest = [...state.players[byPlayer].scene].sort(
-        (a, b) => a.enterOrder - b.enterOrder,
-      )[0];
-      if (oldest) {
-        const picked = handSwitchCards.find(m => m.removeUid === oldest.uid);
+      // 削除候補 = self.scene のうち handSwitchCards の removeUid に含まれるもの
+      const removableUids = new Set(handSwitchCards.map(m => m.removeUid));
+      const removables = state.players[byPlayer].scene.filter(c => removableUids.has(c.uid));
+      const worst = removables
+        .map(c => ({ uid: c.uid, score: cardValueSelf(state, c.uid) }))
+        .sort((a, b) => a.score - b.score)[0]; // ascending = 価値最低が先頭
+      if (worst) {
+        const picked = handSwitchCards.find(m => m.removeUid === worst.uid);
         if (picked) return picked;
       }
       return handSwitchCards[0];
@@ -499,4 +503,28 @@ function apOf(state: GameState, uid: string): number {
     return def?.ap ?? 0;
   }
   return engine.read.char.ap(state, uid);
+}
+
+/**
+ * Cleanup #3 (2026-05-22): 自陣 char の「価値」を 1 つの number で評価する
+ * helper。handUseCardSwitch の犠牲選択 (score 最低を捨てる) に使用。
+ *
+ * 設計:
+ *   - AP + LP * 1.5 (BUG-047 で handUseCard scoring に追加した数式と統一)
+ *   - 能力数 (abilities.length) を bonus +500/each (有用カード保護)
+ *   - 名乗り状態 +0 (制約なし、後述 turn でアクション可能)
+ *
+ * 将来拡張: ability priority weight / ターン経過予測等は Phase 9-F.2 で。
+ */
+function cardValueSelf(state: GameState, uid: string): number {
+  const ap = apOf(state, uid);
+  const lp = lpOf(state, uid);
+  const cardId = uid === 'partner:self' || uid === 'partner:opp'
+    ? state.players[uid === 'partner:self' ? 'self' : 'opp'].partner.cardId
+    : state.players.self.scene.find((c) => c.uid === uid)?.cardId
+      ?? state.players.opp.scene.find((c) => c.uid === uid)?.cardId
+      ?? '';
+  const def = cardId ? engine.cards.get(cardId) : null;
+  const abilityCount = def?.abilities?.length ?? 0;
+  return ap + lp * 1.5 + abilityCount * 500;
 }

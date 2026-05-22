@@ -452,3 +452,63 @@ describe('HeuristicPolicy — name', () => {
     expect(p.name).toBe('heuristic');
   });
 });
+
+describe('HeuristicPolicy — handUseCardSwitch removeUid (Cleanup #3 cardValue)', () => {
+  // Cleanup #3 (2026-05-22): 「最古 enterOrder」→ cardValueSelf 最低を犠牲に変更
+  it('picks lowest-cardValue self char for removeUid (not just oldest)', () => {
+    registerCardDef(makeCard('NewCard', { kind: 'character', colors: ['赤'], level: 0, ap: 3000, lp: 2 }));
+    registerCardDef(makeCard('Strong', { kind: 'character', ap: 6000, lp: 3 }));
+    registerCardDef(makeCard('Weak', { kind: 'character', ap: 1000, lp: 1 }));
+    const s = produce(makeBaseState(), draft => {
+      // scene を 5 体埋める (switch 経路条件)
+      // strongOld = 一番古いが高価値 / weakNew = 一番新しいが低価値 / 他 3 体
+      draft.players.self.scene = [
+        { cardId: 'Strong', uid: 'strongOld', state: 'active', isNamed: false, enterOrder: 0,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+        { cardId: 'Strong', uid: 's2', state: 'active', isNamed: false, enterOrder: 1,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+        { cardId: 'Strong', uid: 's3', state: 'active', isNamed: false, enterOrder: 2,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+        { cardId: 'Strong', uid: 's4', state: 'active', isNamed: false, enterOrder: 3,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+        { cardId: 'Weak', uid: 'weakNew', state: 'active', isNamed: false, enterOrder: 4,
+          setCards: [], stackedCards: 0,
+          keywordOverrides: { granted: [], disabledOriginal: false },
+          apOverride: null, lpOverride: null,
+          turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+          declaredUseCount: {} },
+      ];
+    });
+    const policy = new HeuristicPolicy({ seed: 's' });
+    const moves: Move[] = [
+      // 全 5 体それぞれを犠牲にするオプション
+      { kind: 'handUseCardSwitch', cardId: 'NewCard', removeUid: 'strongOld' },
+      { kind: 'handUseCardSwitch', cardId: 'NewCard', removeUid: 's2' },
+      { kind: 'handUseCardSwitch', cardId: 'NewCard', removeUid: 's3' },
+      { kind: 'handUseCardSwitch', cardId: 'NewCard', removeUid: 's4' },
+      { kind: 'handUseCardSwitch', cardId: 'NewCard', removeUid: 'weakNew' },
+      { kind: 'endTurn' },
+    ];
+    const got = policy.choose(s, moves, 'self');
+    expect(got?.kind).toBe('handUseCardSwitch');
+    // 改修前 (oldest enterOrder): strongOld が選ばれる
+    // 改修後 (cardValue 最低): weakNew が選ばれる
+    expect((got as Extract<Move, { kind: 'handUseCardSwitch' }>).removeUid).toBe('weakNew');
+  });
+});
