@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1148
+- **ファイル数**: 1150
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -190,6 +190,7 @@
     - `BUG-058.md`
     - `BUG-059.md`
     - `BUG-060.md`
+    - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
     - `README.md` — バグ管理表の使い方
@@ -675,6 +676,7 @@
     - `aggregate.ts` — scripts/smoke/aggregate — Phase 9-A smoke aggregation (pure)
     - `format-md.ts` — scripts/smoke/format-md — Phase 9-A smoke Markdown formatter (pure)
     - `run-1000.ts` — scripts/smoke/run-1000 — Phase 9-A 1000-game AI vs AI smoke runner
+  - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
   - `tsconfig.json`
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)

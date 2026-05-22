@@ -19,6 +19,7 @@
     "docs:changelog": "tsx scripts/gen-docs/index.ts changelog",
     "docs": "tsx scripts/gen-docs/index.ts all",
     "docs:check": "tsx scripts/gen-docs/index.ts check",
+    "lint:bugs": "tsx scripts/lint-bug-frontmatter.ts",
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",
     "benchmark": "tsx scripts/benchmark/run.ts",
     "test:e2e": "playwright test",
@@ -47,7 +48,7 @@
     "vitest": "^4.1.5"
   },
   "simple-git-hooks": {
-    "pre-commit": "npm run docs:check"
+    "pre-commit": "npm run docs:check && npm run lint:bugs"
   },
   "dependencies": {
     "react": "^19.2.6",
