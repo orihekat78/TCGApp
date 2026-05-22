@@ -13,12 +13,16 @@ import './SpectatorHUD.css';
 
 type Preset = { label: string; ms: number };
 
+// user_request 20260522_01 #14 BUG-058: 「まだ早い」フィードバックを受け、
+// 最遅をさらに遅い 5000ms / 10000ms preset を追加
 const PRESETS: readonly Preset[] = [
   { label: '高速', ms: 200 },
   { label: '標準', ms: 400 },
   { label: '普通', ms: 800 },
   { label: 'ゆっくり', ms: 1500 },
   { label: '最遅', ms: 3000 },
+  { label: '5秒/手', ms: 5000 },
+  { label: '10秒/手', ms: 10000 },
 ];
 
 export function SpectatorHUD(): JSX.Element | null {
