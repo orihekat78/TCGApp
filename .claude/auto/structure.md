@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1164
+- **ファイル数**: 1171
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -131,6 +131,7 @@
     - `structure.md` — プロジェクト構造
   - **`bugs/`** — バグ・リスク管理表 (Obsidian Base 形式、BUG-XXX.md 個別ファイル)
     - `AUDIT-2026-05-22.md` — BUG フォルダ AUDIT (2026-05-22)
+    - `AUDIT-template.md` — BUG フォルダ AUDIT (YYYY-MM-DD)
     - `BUG-001.md`
     - `BUG-002.md`
     - `BUG-003.md`
@@ -246,6 +247,7 @@
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
   - **`reports/`** — smoke (AI vs AI) 実行レポート・ベンチマーク結果
+    - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `README.md` — .claude/reports
     - `smoke-2026-05-17-2.json`
     - `smoke-2026-05-17-2.md` — Smoke 1000戦レポート — smoke-2026-05-17-103950
@@ -357,6 +359,7 @@
     - `smoke-2026-05-22-9.md` — Smoke 1000戦レポート — smoke-2026-05-22-070557
     - `smoke-2026-05-22.json`
     - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
+    - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
       - `01-frameworks-survey.md` — 01. フレームワーク選定
@@ -687,7 +690,11 @@
     - `aggregate.ts` — scripts/smoke/aggregate — Phase 9-A smoke aggregation (pure)
     - `format-md.ts` — scripts/smoke/format-md — Phase 9-A smoke Markdown formatter (pure)
     - `run-1000.ts` — scripts/smoke/run-1000 — Phase 9-A 1000-game AI vs AI smoke runner
+  - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
+  - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):
   - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
+  - `lint-card-addition.ts` — Phase 7-C (LESSONS-LEARNED 教訓 3 enforcement):
+  - `lint-listener-scope.ts` — Phase 7-D (LESSONS-LEARNED 教訓 2 enforcement):
   - `tsconfig.json`
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)

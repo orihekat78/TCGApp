@@ -177,6 +177,19 @@
 
 詳細な RCA + 水平展開計画は [.claude/specs/risk-and-bug-tracker.md](specs/risk-and-bug-tracker.md) を参照。
 
+### 月次 audit 運用 (Phase 7-F 導入、収縮計画の cadence)
+
+毎月末 or Round 完了時に手動実行:
+
+1. `npm run bug:trend` で 5 再発パターン × 月次集計
+2. `npm run lint:bugs` / `npm run lint:listener` / `npm run lint:card-addition`
+   で各種規約違反を確認
+3. [.claude/bugs/AUDIT-template.md](bugs/AUDIT-template.md) を雛形に
+   `.claude/bugs/AUDIT-YYYY-MM.md` を作成
+4. 新教訓が発見された場合 [.claude/bugs/LESSONS-LEARNED.md](bugs/LESSONS-LEARNED.md)
+   に追記 (各教訓に「→ enforcement: <script名>」明示)
+5. `.claude/reports/smoke-baseline.json` の threshold 妥当性を見直し
+
 ---
 
 ## メモリ運用ルール

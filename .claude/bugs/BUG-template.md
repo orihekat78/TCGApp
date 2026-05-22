@@ -10,6 +10,7 @@ date_fixed: YYYY-MM-DD (修正済 status のみ必須)
 commit: <git hash> (修正済 status のみ必須、TBD は CI fail)
 reporter: <user | claude | claude (session)>
 related: <BUG-YYY 等の前提・関連 BUG, optional>
+recurrence_cluster: <side-channel | listener | ui-text | modal-stack | binding-ref | none>
 ---
 
 ## ユーザー指摘 (or 発見契機)

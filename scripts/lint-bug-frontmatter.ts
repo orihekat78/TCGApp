@@ -22,6 +22,15 @@ const ALLOWED_CATEGORY = new Set([
   'meta',
   'infrastructure',
 ]);
+// Phase 7-B: 再発パターンクラスタ enum (LESSONS-LEARNED 5 cluster + none)
+const ALLOWED_CLUSTER = new Set([
+  'side-channel',
+  'listener',
+  'ui-text',
+  'modal-stack',
+  'binding-ref',
+  'none',
+]);
 
 type Issue = { file: string; level: 'error' | 'warn'; msg: string };
 
@@ -59,6 +68,10 @@ function lintBug(file: string, content: string): Issue[] {
   }
   if (fm.category && !ALLOWED_CATEGORY.has(fm.category)) {
     issues.push({ file, level: 'warn', msg: `category "${fm.category}" は推奨 enum 外 (warn のみ、移行猶予中)` });
+  }
+  // Phase 7-B: recurrence_cluster は optional だが、指定されていれば enum check
+  if (fm.recurrence_cluster && !ALLOWED_CLUSTER.has(fm.recurrence_cluster)) {
+    issues.push({ file, level: 'warn', msg: `recurrence_cluster "${fm.recurrence_cluster}" は enum 外 (allowed: ${[...ALLOWED_CLUSTER].join(' / ')})` });
   }
 
   // status=修正済 → commit + date_fixed 必須

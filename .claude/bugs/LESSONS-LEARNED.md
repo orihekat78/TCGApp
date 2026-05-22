@@ -118,8 +118,27 @@ replacement string parser はこれを backref として認識せず `\x01` (SOH
 **対処**: raw f-string + 連結 `rf'\1' + '\n' + f'...'` で組み立てるか、
 名前付き backref `\g<1>` を使う。
 
+## 教訓 → enforcement mapping (Phase 7、能動化)
+
+| 教訓 | enforcement script / mechanism |
+|---|---|
+| 1 side-channel pattern | `.claude/specs/side-channel-pattern.md` (passive doc、設計レビュー時参照) |
+| 2 listener 3 点セット | `scripts/lint-listener-scope.ts` (能動、pre-commit hook) |
+| 3 card data resolver test 先行 | `scripts/lint-card-addition.ts` (warn、pre-commit hook) |
+| 4 ui-text format/fallback | `(passive doc、教訓のみ)` |
+| 5 modal stack interaction E2E | `(passive doc、教訓のみ)` |
+| 6 frontmatter enum 統一 | `scripts/lint-bug-frontmatter.ts` (能動、pre-commit hook) |
+| 7 公式 PDF 原文 verify | `.claude/docs/user-request-clarifications.md` (passive doc) |
+| 8 ok:false Hook 委譲禁止 | `(passive doc、docstring 周知)` |
+| 9 BUG status 二択厳守 | `scripts/lint-bug-frontmatter.ts` (status 注釈付き禁止) |
+| 10 Python re.sub 罠 | `(passive doc、内部 dev 知見)` |
+
+月次 audit で metric を tracking: `npm run bug:trend`
+smoke baseline: `npm run check:smoke-baseline` (pre-push hook 候補)
+
 ## 関連
 
 - audit report: [AUDIT-2026-05-22.md](AUDIT-2026-05-22.md)
+- audit 雛形: [AUDIT-template.md](AUDIT-template.md)
 - BUG index: [index.base](index.base)
 - 全 BUG-XXX.md 個別ファイル

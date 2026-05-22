@@ -20,6 +20,10 @@
     "docs": "tsx scripts/gen-docs/index.ts all",
     "docs:check": "tsx scripts/gen-docs/index.ts check",
     "lint:bugs": "tsx scripts/lint-bug-frontmatter.ts",
+    "lint:listener": "tsx scripts/lint-listener-scope.ts",
+    "lint:card-addition": "tsx scripts/lint-card-addition.ts",
+    "bug:trend": "tsx scripts/bug-trend.ts",
+    "check:smoke-baseline": "tsx scripts/check-smoke-baseline.ts",
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",
     "benchmark": "tsx scripts/benchmark/run.ts",
     "test:e2e": "playwright test",
@@ -48,7 +52,7 @@
     "vitest": "^4.1.5"
   },
   "simple-git-hooks": {
-    "pre-commit": "npm run docs:check && npm run lint:bugs"
+    "pre-commit": "npm run docs:check && npm run lint:bugs && npm run lint:listener && npm run lint:card-addition"
   },
   "dependencies": {
     "react": "^19.2.6",
