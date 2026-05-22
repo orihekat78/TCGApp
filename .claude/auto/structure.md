@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1102
+- **ファイル数**: 1104
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -944,6 +944,7 @@
       - `useSceneCharacters.ts` — Phase 7 Task 7.4: SceneArea selector hook
       - `useSceneSwitchPickerStore.ts` — Phase 5 advance — SceneSwitch UI: picker open 状態 store
       - `useSpectatorTurnDriver.ts` — Round 4l (B5 観戦モード): self ターンも AI が自動進行する driver
+      - `useStageScale.ts` — Cleanup Phase #6 (user_request 20260521_01 関連): Playmat のレスポンシブ対応
       - `useTargetPicker.ts` — Phase 8 Task 8.2: クリック+確認 UX (target picker)
       - `useTopBar.ts` — Phase 7 Task 7.12: TopBar selector hook
     - **`services/`**
@@ -1205,6 +1206,7 @@
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
       - `useOppTurnDriver.test.ts` — Phase 8.7b: useOppTurnDriver tests
       - `useSceneSwitchPickerStore.test.ts` — tests/ui/hooks/useSceneSwitchPickerStore.test.…
+      - `useStageScale.test.ts` — Cleanup #6 (user_request 関連): Playmat scale hook tests
       - `useTargetPicker.test.ts` — Phase 8 Task 8.2: useTargetPicker
     - **`services/`**
       - `actionLabel.test.ts` — Phase 8.10b: actionLabel pure 関数テスト

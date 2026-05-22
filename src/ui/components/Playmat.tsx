@@ -51,6 +51,7 @@ import { useTargetPicker, useTargetPickerStore } from '../hooks/useTargetPicker.
 import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
 import { useSpectatorTurnDriver } from '../hooks/useSpectatorTurnDriver.js';
 import { useContactFlowDriver } from '../hooks/useContactFlowDriver.js';
+import { useStageScale } from '../hooks/useStageScale.js';
 import { useContactModalStore } from '../hooks/useContactModalStore.js';
 import { useHiramekiFlowDriver } from '../hooks/useHiramekiFlowDriver.js';
 import { useMisreadFlowDriver } from '../hooks/useMisreadFlowDriver.js';
@@ -278,8 +279,20 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const handCards: HandCardMeta[] = resolveHandCard
     ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
     : [];
+  // Cleanup #6: viewport に合わせて stage を縮小 (1920×1080 fixed → fit)
+  const stageScale = useStageScale();
   return (
-    <div className="scaler" id="scaler">
+    <div
+      className="scaler"
+      id="scaler"
+      style={{
+        transform: `scale(${stageScale})`,
+        // 縮小後のサイズに合わせて container を縮める (scrollbar 防止)
+        width: stageScale < 1 ? `${1920 * stageScale}px` : undefined,
+        height: stageScale < 1 ? `${1080 * stageScale}px` : undefined,
+      }}
+      data-stage-scale={stageScale}
+    >
       <div className="stage">
         <div className="bg" />
         <div className="vignette" />

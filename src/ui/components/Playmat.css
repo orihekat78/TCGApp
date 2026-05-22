@@ -5,9 +5,11 @@
  * トークンは src/ui/styles/tokens.css に依存 (--bg-*, --keep-out, --neon-blue, etc.)
  */
 
-/* ---- Stage scaler ---- */
+/* ---- Stage scaler (Cleanup #6: responsive scale) ---- */
 .scaler {
-  transform-origin: center center;
+  /* transform は inline style で動的設定 (useStageScale hook 経由) */
+  transform-origin: top left;
+  overflow: hidden;
 }
 
 .stage {
