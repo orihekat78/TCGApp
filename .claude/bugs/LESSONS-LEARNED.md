@@ -122,19 +122,24 @@ replacement string parser はこれを backref として認識せず `\x01` (SOH
 
 | 教訓 | enforcement script / mechanism |
 |---|---|
-| 1 side-channel pattern | `.claude/specs/side-channel-pattern.md` (passive doc、設計レビュー時参照) |
+| 1 side-channel pattern | **`scripts/lint-side-channel.ts`** (能動、4 点配線 check) |
 | 2 listener 3 点セット | `scripts/lint-listener-scope.ts` (能動、pre-commit hook) |
 | 3 card data resolver test 先行 | `scripts/lint-card-addition.ts` (warn、pre-commit hook) |
 | 4 ui-text format/fallback | `(passive doc、教訓のみ)` |
-| 5 modal stack interaction E2E | `(passive doc、教訓のみ)` |
+| 5 modal stack interaction E2E | **`scripts/lint-component-testid.ts`** (能動、role="dialog" 必須 data-testid) |
 | 6 frontmatter enum 統一 | `scripts/lint-bug-frontmatter.ts` (能動、pre-commit hook) |
 | 7 公式 PDF 原文 verify | `.claude/docs/user-request-clarifications.md` (passive doc) |
-| 8 ok:false Hook 委譲禁止 | `(passive doc、docstring 周知)` |
+| 8 ok:false Hook 委譲禁止 | **`scripts/lint-ok-false-pattern.ts`** (能動 heuristic、break/return 単独警告) |
 | 9 BUG status 二択厳守 | `scripts/lint-bug-frontmatter.ts` (status 注釈付き禁止) |
 | 10 Python re.sub 罠 | `(passive doc、内部 dev 知見)` |
 
+追加 enforcement (Phase 8):
+- **test coverage threshold**: `npm run test:coverage && npm run check:coverage`
+  (line ≥ 70% / branch ≥ 60% / function ≥ 70% / statement ≥ 70%)
+- **新規 src/.ts → tests/.test.ts pair**: `scripts/lint-test-pair.ts` (warn)
+
 月次 audit で metric を tracking: `npm run bug:trend`
-smoke baseline: `npm run check:smoke-baseline` (pre-push hook 候補)
+smoke baseline: `npm run check:smoke-baseline`
 
 ## 関連
 

@@ -1,0 +1,10 @@
+{
+  "_comment": "Phase 8-1: test coverage threshold baseline. Adjusted after first run of npm run test:coverage. Tighten over time.",
+  "_updated": "2026-05-22",
+  "thresholds": {
+    "lines_min_pct": 70,
+    "branches_min_pct": 60,
+    "functions_min_pct": 70,
+    "statements_min_pct": 70
+  }
+}

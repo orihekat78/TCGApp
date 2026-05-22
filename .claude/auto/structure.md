@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1173
+- **ファイル数**: 1179
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -248,6 +248,7 @@
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
   - **`reports/`** — smoke (AI vs AI) 実行レポート・ベンチマーク結果
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
+    - `coverage-baseline.json`
     - `README.md` — .claude/reports
     - `smoke-2026-05-17-2.json`
     - `smoke-2026-05-17-2.md` — Smoke 1000戦レポート — smoke-2026-05-17-103950
@@ -693,10 +694,15 @@
     - `format-md.ts` — scripts/smoke/format-md — Phase 9-A smoke Markdown formatter (pure)
     - `run-1000.ts` — scripts/smoke/run-1000 — Phase 9-A 1000-game AI vs AI smoke runner
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
+  - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):
   - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
   - `lint-card-addition.ts` — Phase 7-C (LESSONS-LEARNED 教訓 3 enforcement):
+  - `lint-component-testid.ts` — Phase 8-4: data-testid 必須 lint
   - `lint-listener-scope.ts` — Phase 7-D (LESSONS-LEARNED 教訓 2 enforcement):
+  - `lint-ok-false-pattern.ts` — Phase 8-5: ok:false caller heuristic check
+  - `lint-side-channel.ts` — Phase 8-3: side-channel pattern 4 点配線 AST check
+  - `lint-test-pair.ts` — Phase 8-2: 新規 .ts file → test pair 必須 lint
   - `tsconfig.json`
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)
