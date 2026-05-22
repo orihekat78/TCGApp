@@ -19,7 +19,11 @@ export function caseResolvedHandRemove(opts?: {
   return {
     id: opts?.abilityId ?? 'a_case_resolved_handremove',
     type: 'triggered',
-    scope: 'on-scene',
+    // user_request 20260522_01 #5 fix: 事件カードは 'case' area 所在のため
+    // 'on-scene' scope だと listener の scopeAllowsArea で弾かれて発動しない。
+    // 条件 (case:to-resolved hook + caseStatus) で適切に gate されるため
+    // 'always' で OK。
+    scope: 'always',
     trigger: {
       hook: 'case:to-resolved',
       matcher: (p: unknown, _s: GameState) => {

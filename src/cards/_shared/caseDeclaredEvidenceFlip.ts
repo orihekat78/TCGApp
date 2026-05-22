@@ -27,7 +27,10 @@ export function caseDeclaredEvidenceFlip(opts: {
   return {
     id: opts.abilityId ?? 'a_case_decl_flip',
     type: 'declared',
-    scope: 'on-scene',
+    // user_request 20260522_01 #5 fix: 事件カードは 'case' area 所在のため
+    // 'on-scene' scope だと UI の declared ability 列挙で弾かれて発動不能。
+    // 条件 (caseStatus: '解決編') で適切に gate されるため 'always' で OK。
+    scope: 'always',
     condition,
     limit: { kind: 'turn', n: 1 },
     cost: { kind: 'flipFaceUpEvidence', n: { min: 1, max: Infinity } },

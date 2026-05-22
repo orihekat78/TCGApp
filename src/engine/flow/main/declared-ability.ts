@@ -17,12 +17,31 @@ import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 
 /**
- * findSceneChar — 場のキャラを uid で探す
+ * findCardOnBoard — uid のカードを場 (scene / case / partner-area) から探す。
+ *
+ * user_request 20260522_01 #5 fix: 旧 `findSceneChar` は scene のみ走査だったため
+ * 事件カード (uid 'case:self'/'case:opp') の declared ability が canDeclaredAbility
+ * で常に false 判定され UI から発動不可だった。case + partner も含める。
  */
-function findSceneChar(state: GameState, uid: string): { player: 'self' | 'opp'; cardId: string } | null {
+function findCardOnBoard(
+  state: GameState,
+  uid: string,
+): { player: 'self' | 'opp'; cardId: string; area: 'scene' | 'case' | 'partner-area' } | null {
+  if (uid === 'case:self' || uid === 'case:opp') {
+    const p: 'self' | 'opp' = uid === 'case:self' ? 'self' : 'opp';
+    const cardId = state.players[p].case.cardId;
+    if (cardId) return { player: p, cardId, area: 'case' };
+    return null;
+  }
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p: 'self' | 'opp' = uid === 'partner:self' ? 'self' : 'opp';
+    const cardId = state.players[p].partner.cardId;
+    if (cardId) return { player: p, cardId, area: 'partner-area' };
+    return null;
+  }
   for (const p of ['self', 'opp'] as const) {
-    const c = state.players[p].scene.find(c => c.uid === uid);
-    if (c) return { player: p, cardId: c.cardId };
+    const c = state.players[p].scene.find((c) => c.uid === uid);
+    if (c) return { player: p, cardId: c.cardId, area: 'scene' };
   }
   return null;
 }
@@ -45,7 +64,7 @@ function findSceneChar(state: GameState, uid: string): { player: 'self' | 'opp';
  * - 【ターン①/②】チェックは listener の responsibility (Phase 5)
  */
 export function canDeclaredAbility(state: GameState, uid: string, _abilId: string): boolean {
-  return findSceneChar(state, uid) !== null;
+  return findCardOnBoard(state, uid) !== null;
 }
 
 /**
@@ -63,9 +82,9 @@ export function useDeclaredAbility(
   abilId: string,
   _ctx?: unknown,
 ): void {
-  const found = findSceneChar(state, uid);
+  const found = findCardOnBoard(state, uid);
   if (!found) {
-    throw new Error(`useDeclaredAbility: char uid=${uid} not in scene`);
+    throw new Error(`useDeclaredAbility: card uid=${uid} not on board (scene/case/partner-area)`);
   }
   mutate.flag.incrDeclaredUseCount(state, uid, abilId);
   mutate.log.append(state, {

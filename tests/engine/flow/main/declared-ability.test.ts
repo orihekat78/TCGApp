@@ -78,6 +78,6 @@ describe('engine.flow.main.useDeclaredAbility', () => {
       produce(createEmptyGameState(), draft => {
         useDeclaredAbility(draft, 'nonexistent', 'A');
       }),
-    ).toThrow(/not in scene/);
+    ).toThrow(/not on board/);
   });
 });

@@ -48,7 +48,7 @@ function makeAbilityCtx(opts: {
   uid: string;
   cardId: string;
   abilityId: string;
-  area: 'scene' | 'partner-area';
+  area: 'scene' | 'partner-area' | 'case';
 }): EffectCtx {
   return {
     source: {
@@ -284,6 +284,7 @@ export function enumDeclaredAbilitySources(
   player: Player,
 ): string[] {
   const sources: string[] = [];
+  // 1. scene chars
   for (const c of state.players[player].scene) {
     const def = engine.cards.get(c.cardId);
     if (!def) continue;
@@ -305,6 +306,30 @@ export function enumDeclaredAbilitySources(
     });
     if (hasUsable) sources.push(c.uid);
   }
+  // 2. case card (user_request 20260522_01 #5 fix)
+  const caseCardId = state.players[player].case.cardId;
+  if (caseCardId) {
+    const def = engine.cards.get(caseCardId);
+    if (def) {
+      const caseUid = `case:${player}`;
+      const hasUsable = def.abilities.some((a) => {
+        if (a.type !== 'declared') return false;
+        if (!flow.canDeclaredAbility(state, caseUid, a.id)) return false;
+        if (a.cost) {
+          const ctx = makeAbilityCtx({
+            player,
+            uid: caseUid,
+            cardId: caseCardId,
+            abilityId: a.id,
+            area: 'case',
+          });
+          if (!engine.cost.canPay(state, a.cost, ctx)) return false;
+        }
+        return true;
+      });
+      if (hasUsable) sources.push(caseUid);
+    }
+  }
   return sources;
 }
 
@@ -315,15 +340,22 @@ export function enumDeclaredAbilityIdsFor(
   state: import('@/engine/types/game-state.js').GameState,
   uid: string,
 ): string[] {
-  // uid から cardId / owner player を引く
+  // uid から cardId / owner player / area を引く (user_request 20260522_01 #5: case 対応)
   let cardId: string | null = null;
   let owner: Player | null = null;
-  for (const p of ['self', 'opp'] as const) {
-    const c = state.players[p].scene.find((x) => x.uid === uid);
-    if (c) {
-      cardId = c.cardId;
-      owner = p;
-      break;
+  let area: 'scene' | 'case' = 'scene';
+  if (uid === 'case:self' || uid === 'case:opp') {
+    owner = uid === 'case:self' ? 'self' : 'opp';
+    cardId = state.players[owner].case.cardId ?? null;
+    area = 'case';
+  } else {
+    for (const p of ['self', 'opp'] as const) {
+      const c = state.players[p].scene.find((x) => x.uid === uid);
+      if (c) {
+        cardId = c.cardId;
+        owner = p;
+        break;
+      }
     }
   }
   if (!cardId || !owner) return [];
@@ -339,7 +371,7 @@ export function enumDeclaredAbilityIdsFor(
         uid,
         cardId: cardId!,
         abilityId: a.id,
-        area: 'scene',
+        area,
       });
       return engine.cost.canPay(state, a.cost, ctx);
     })
@@ -393,15 +425,22 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     chosenAbilId = picked;
   }
 
-  // 3) cost 情報を取得して confirm
+  // 3) cost 情報を取得して confirm (user_request 20260522_01 #5: case 対応)
   let cardId: string | null = null;
   let owner: Player | null = null;
-  for (const p of ['self', 'opp'] as const) {
-    const c = stateAfterSrc.players[p].scene.find((x) => x.uid === sourceUid);
-    if (c) {
-      cardId = c.cardId;
-      owner = p;
-      break;
+  let area: 'scene' | 'case' = 'scene';
+  if (sourceUid === 'case:self' || sourceUid === 'case:opp') {
+    owner = sourceUid === 'case:self' ? 'self' : 'opp';
+    cardId = stateAfterSrc.players[owner].case.cardId ?? null;
+    area = 'case';
+  } else {
+    for (const p of ['self', 'opp'] as const) {
+      const c = stateAfterSrc.players[p].scene.find((x) => x.uid === sourceUid);
+      if (c) {
+        cardId = c.cardId;
+        owner = p;
+        break;
+      }
     }
   }
   const charDef = cardId ? engine.cards.get(cardId) : null;
@@ -413,7 +452,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
         uid: sourceUid,
         cardId,
         abilityId: chosenAbilId,
-        area: 'scene',
+        area,
       })
     : undefined;
   const costText = cost ? costToText(cost) : '無し';

@@ -10,7 +10,8 @@ describe('caseDeclaredEvidenceFlip', () => {
     const d = caseDeclaredEvidenceFlip({ delta: 1000 });
     expect(d.id).toBe('a_case_decl_flip');
     expect(d.type).toBe('declared');
-    expect(d.scope).toBe('on-scene');
+    // user_request 20260522_01 #5 fix: case area で発動するため 'always' に変更
+    expect(d.scope).toBe('always');
     expect(d.limit).toEqual({ kind: 'turn', n: 1 });
     expect(d.cost).toEqual({ kind: 'flipFaceUpEvidence', n: { min: 1, max: Infinity } });
     expect(d.description).toMatch(/【解決編】【宣言】【ターン1】/);

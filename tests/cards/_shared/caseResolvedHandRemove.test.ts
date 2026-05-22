@@ -11,7 +11,8 @@ describe('caseResolvedHandRemove', () => {
     const d = caseResolvedHandRemove();
     expect(d.id).toBe('a_case_resolved_handremove');
     expect(d.type).toBe('triggered');
-    expect(d.scope).toBe('on-scene');
+    // user_request 20260522_01 #5 fix: case area で発動するため 'always' に変更
+    expect(d.scope).toBe('always');
     expect(d.description).toMatch(/解決編になったとき/);
     expect(d.ruleRefs).toContain('rules/01-victory-conditions.md');
   });
