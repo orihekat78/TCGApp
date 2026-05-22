@@ -92,9 +92,9 @@ function HandCard({
       data-color={card.color}
       title={
         disabled
-          ? `${disabledTitle ?? ''}${onExpand ? '\n(右クリックで拡大表示)' : ''}`
+          ? `${disabledTitle ?? ''}${onExpand ? '\n(右クリック or 🔍 で拡大表示)' : ''}`
           : onExpand
-            ? '右クリックで拡大表示'
+            ? '右クリック or 🔍 で拡大表示'
             : undefined
       }
       aria-disabled={disabled || undefined}
@@ -120,6 +120,22 @@ function HandCard({
         <span className="lp">{lpText}</span>
         <span className="lv">{card.lv}</span>
       </div>
+      {/* user_request 20260522_01 #9 BUG-056: 虫眼鏡ボタンで拡大表示 (右クリックと並列) */}
+      {onExpand && (
+        <button
+          type="button"
+          className="hand-card-magnifier"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpand(card.cardId);
+          }}
+          data-testid={`hand-card-magnifier-${card.cardId}`}
+          aria-label={`${card.name} を拡大表示`}
+          title="拡大表示"
+        >
+          🔍
+        </button>
+      )}
     </div>
   );
 }
