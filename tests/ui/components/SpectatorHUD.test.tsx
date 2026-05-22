@@ -7,10 +7,24 @@ import { useGameStateStore } from '@/ui/state/store';
 
 describe('SpectatorHUD', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ spectatorMode: false, aiSpeedMs: 400 });
+    // BUG-063: HUD は gameState !== null で表示されるよう変更
+    // テストで gameState を minimal placeholder にセット
+    useGameStateStore.setState({
+      spectatorMode: false,
+      aiSpeedMs: 400,
+      gameState: {} as never,
+    });
   });
 
-  it('renders nothing when spectatorMode === false', () => {
+  it('renders HUD with CPU label when spectatorMode === false (human vs CPU)', () => {
+    // BUG-063: 人間 vs CPU でも HUD 表示、ただし label は CPU 用
+    const html = renderToString(<SpectatorHUD />);
+    expect(html).toContain('spectator-hud');
+    expect(html).toContain('CPU 速度');
+  });
+
+  it('renders nothing when gameState === null', () => {
+    useGameStateStore.setState({ gameState: null });
     const html = renderToString(<SpectatorHUD />);
     expect(html).toBe('');
   });

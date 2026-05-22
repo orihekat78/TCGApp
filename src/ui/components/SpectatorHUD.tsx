@@ -1,9 +1,13 @@
 // user_request 20260521_01 #12: 観戦モード speed slider HUD
+// user_request 20260522_01 #15 (BUG-063): 人間 vs CPU でも展開 — CPU 行動の
+// pause/step を可能にしてユーザー任意進行
 //
 // 役割:
-//   - spectatorMode === true のとき右上に小さな HUD を表示
-//   - preset 5 段で AI ターン進行速度を選択 (aiSpeedMs を store に書き込む)
-//   - useOppTurnDriver / useSpectatorTurnDriver が aiSpeedMs を subscribe して反映
+//   - gameState !== null なら右上に小さな HUD を表示 (any active game)
+//   - preset で AI/CPU ターン進行速度を選択 (aiSpeedMs を store に書き込む)
+//   - useOppTurnDriver / useSpectatorTurnDriver が aiSpeedMs / isAiPaused /
+//     aiStepCounter を subscribe して反映
+//   - spectator: 「AI 速度」「制御」、human vs CPU: 「CPU 速度」「CPU 制御」
 //
 // z-index: 9100 (OppTurnOverlay 9000 より上、Modal 9700 より下)
 
@@ -30,13 +34,18 @@ export function SpectatorHUD(): JSX.Element | null {
   // 親 (App.tsx) が spectatorMode / aiSpeedMs / isAiPaused / aiStepCounter を
   // subscribe するため再描画は親経由で伝搬する。
   const store = useGameStateStore.getState();
-  const { spectatorMode, aiSpeedMs, setAiSpeedMs, isAiPaused, setAiPaused, incrementAiStep } = store;
-  if (!spectatorMode) return null;
+  const { spectatorMode, aiSpeedMs, setAiSpeedMs, isAiPaused, setAiPaused, incrementAiStep, gameState } = store;
+  // BUG-063: 観戦モードに加えて、人間 vs CPU (gameState !== null && !spectatorMode)
+  // でも HUD を表示し CPU 行動の pause/step を可能にする
+  if (gameState === null) return null;
+  const speedLabel = spectatorMode ? 'AI 速度' : 'CPU 速度';
+  const controlLabel = spectatorMode ? '制御' : 'CPU 制御';
+  const ariaLabel = spectatorMode ? '観戦モード制御' : 'CPU 行動制御';
 
   return (
-    <div className="spectator-hud" role="toolbar" aria-label="観戦モード制御" data-testid="spectator-hud">
+    <div className="spectator-hud" role="toolbar" aria-label={ariaLabel} data-testid="spectator-hud">
       <div className="spectator-hud-section">
-        <span className="spectator-hud-label">AI 速度</span>
+        <span className="spectator-hud-label">{speedLabel}</span>
         <div className="spectator-hud-buttons">
           {PRESETS.map((p) => (
             <button
@@ -57,7 +66,7 @@ export function SpectatorHUD(): JSX.Element | null {
         </span>
       </div>
       <div className="spectator-hud-section">
-        <span className="spectator-hud-label">制御</span>
+        <span className="spectator-hud-label">{controlLabel}</span>
         <button
           type="button"
           className={`spectator-hud-control ${isAiPaused ? 'is-paused' : ''}`}
