@@ -6,6 +6,7 @@ import { Playmat } from '@/ui/components/Playmat';
 import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import { MulliganModal } from '@/ui/components/MulliganModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
+import { SpectatorHUD } from '@/ui/components/SpectatorHUD';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
 import { ContactFlash } from '@/ui/components/ContactFlash';
 import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
@@ -38,6 +39,10 @@ registerAll();
 export default function App() {
   // Store から購読: dispatch が走ったときに再描画される。
   const gameState = useGameStateStore((s) => s.gameState);
+  // user_request 20260521_01 #12: SpectatorHUD が getState() ベースで描画される
+  // ため、spectatorMode / aiSpeedMs 変化を親で subscribe して再描画を伝搬する。
+  useGameStateStore((s) => s.spectatorMode);
+  useGameStateStore((s) => s.aiSpeedMs);
   return (
     <>
       <Playmat
@@ -49,6 +54,7 @@ export default function App() {
       <GameSetupModal />
       <MulliganModal />
       <OppTurnOverlay />
+      <SpectatorHUD />
       <RecentActionToast />
       <ContactFlash />
       <RefreshOverlay />

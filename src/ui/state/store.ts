@@ -57,6 +57,15 @@ export type GameStateStore = {
    */
   spectatorMode: boolean;
   setSpectatorMode: (v: boolean) => void;
+  /**
+   * user_request 20260521_01 #12: AI ターン進行の遅延 (ms)。
+   * - useOppTurnDriver / useSpectatorTurnDriver が setTimeout(driver, aiSpeedMs) で参照
+   * - SpectatorHUD の slider で変更可能
+   * - default 400ms (既存 oppTurnDelayMs / spectatorDelayMs と一致)
+   * - preset: 200 (高速) / 400 (標準) / 800 (普通) / 1500 (ゆっくり) / 3000 (最遅)
+   */
+  aiSpeedMs: number;
+  setAiSpeedMs: (ms: number) => void;
 };
 
 /** ヒラメキ保留 (Commit 3a) */
@@ -101,4 +110,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingMisread: (p) => set({ pendingMisread: p }),
   spectatorMode: false,
   setSpectatorMode: (v) => set({ spectatorMode: v }),
+  aiSpeedMs: 400,
+  setAiSpeedMs: (ms) => set({ aiSpeedMs: ms }),
 }));

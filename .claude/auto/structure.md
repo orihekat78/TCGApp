@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1087
+- **ファイル数**: 1090
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -895,6 +895,8 @@
       - `SceneSwitchPickerModal.tsx` — Phase 8 完全クローズ Commit 4: SceneSwitchPickerModal (scaffold)
       - `SouzaReorderModal.css`
       - `SouzaReorderModal.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal (scaffold)
+      - `SpectatorHUD.css`
+      - `SpectatorHUD.tsx` — user_request 20260521_01 #12: 観戦モード speed slider HUD
       - `TopBar.css`
       - `TopBar.tsx` — Phase 7 Task 7.12: TopBar
       - `TutorialHighlight.css`
@@ -1166,6 +1168,7 @@
       - `SceneArea.test.tsx` — Phase 7 Task 7.4: SceneArea snapshot/behavior tests
       - `SceneSwitchPickerModal.test.tsx` — Phase 8 完全クローズ Commit 4: SceneSwitchPickerModal SSR test
       - `SouzaReorderModal.test.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal SSR test
+      - `SpectatorHUD.test.tsx` — user_request 20260521_01 #12: SpectatorHUD tests
       - `TopBar.test.tsx` — Phase 7 Task 7.12: TopBar tests
       - `TutorialHighlight.test.tsx` — Round 3c-A: TutorialHighlight tests
       - `TutorialOverlay.test.tsx` — Phase 9a-1: TutorialOverlay tests

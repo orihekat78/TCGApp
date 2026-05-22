@@ -108,11 +108,12 @@ export function driveOppTurn(): void {
  * Phase 8.10a: OppTurnOverlay を視認できる時間を確保するため、playTurn の同期実行を
  * setTimeout で遅らせる。0 にすればテスト互換 + 即時処理。本番は ~400ms。
  *
- * `_setOppTurnDriverDelay(0)` でテスト中はゼロにできる。
+ * Phase 12-A (user_request #12): module-level の固定値から store.aiSpeedMs 直読に
+ * 変更。SpectatorHUD slider 経由でユーザーが任意の速度を選べる。
+ * テスト互換のため `_setOppTurnDriverDelay` legacy 関数は残置 (store を更新)。
  */
-let oppTurnDelayMs = 400;
 export function _setOppTurnDriverDelay(ms: number): void {
-  oppTurnDelayMs = ms;
+  useGameStateStore.getState().setAiSpeedMs(ms);
 }
 
 export function useOppTurnDriver(): void {
@@ -120,14 +121,15 @@ export function useOppTurnDriver(): void {
   // Commit 2.5: activeActionId 復帰 (action-end) で続きの move を再開するため
   // useEffect deps に追加。set 中は driveOppTurn 内で early return される。
   const activeActionId = useGameStateStore((s) => s.activeActionId);
+  const aiSpeedMs = useGameStateStore((s) => s.aiSpeedMs);
   useEffect(() => {
     if (turnPlayer === 'opp' && activeActionId === null) {
-      if (oppTurnDelayMs > 0) {
-        const id = setTimeout(driveOppTurn, oppTurnDelayMs);
+      if (aiSpeedMs > 0) {
+        const id = setTimeout(driveOppTurn, aiSpeedMs);
         return () => clearTimeout(id);
       }
       Promise.resolve().then(driveOppTurn);
     }
     return undefined;
-  }, [turnPlayer, activeActionId]);
+  }, [turnPlayer, activeActionId, aiSpeedMs]);
 }

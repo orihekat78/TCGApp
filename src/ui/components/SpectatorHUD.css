@@ -1,0 +1,67 @@
+/* user_request 20260521_01 #12: SpectatorHUD — 右上の小さな制御 HUD */
+
+.spectator-hud {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9100; /* OppTurnOverlay (9000) より上 / Modal (9700) より下 */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(20, 24, 40, 0.88);
+  color: #f0f0f0;
+  border: 1px solid #4a5070;
+  border-radius: 6px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.spectator-hud-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spectator-hud-label {
+  font-weight: 600;
+  color: #c8d0e8;
+}
+
+.spectator-hud-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.spectator-hud-preset {
+  padding: 4px 8px;
+  border: 1px solid #4a5070;
+  background: #2a3050;
+  color: #d8d8e8;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.spectator-hud-preset:hover {
+  background: #3a4070;
+  border-color: #6080a0;
+}
+
+.spectator-hud-preset.is-active {
+  background: #4060c0;
+  border-color: #80a0e8;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.spectator-hud-current {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+  color: #a0a8c0;
+  min-width: 50px;
+  text-align: right;
+}

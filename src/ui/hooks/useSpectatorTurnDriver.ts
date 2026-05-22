@@ -66,23 +66,24 @@ function driveSelfTurn(): void {
   }
 }
 
-let spectatorDelayMs = 400;
+// Phase 12-A (user_request #12): module-level の固定値から store.aiSpeedMs 直読に変更
 export function _setSpectatorDriverDelay(ms: number): void {
-  spectatorDelayMs = ms;
+  useGameStateStore.getState().setAiSpeedMs(ms);
 }
 
 export function useSpectatorTurnDriver(): void {
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
   const activeActionId = useGameStateStore((s) => s.activeActionId);
+  const aiSpeedMs = useGameStateStore((s) => s.aiSpeedMs);
   useEffect(() => {
     if (spectatorMode && turnPlayer === 'self' && activeActionId === null) {
-      if (spectatorDelayMs > 0) {
-        const id = setTimeout(driveSelfTurn, spectatorDelayMs);
+      if (aiSpeedMs > 0) {
+        const id = setTimeout(driveSelfTurn, aiSpeedMs);
         return () => clearTimeout(id);
       }
       Promise.resolve().then(driveSelfTurn);
     }
     return undefined;
-  }, [spectatorMode, turnPlayer, activeActionId]);
+  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs]);
 }
