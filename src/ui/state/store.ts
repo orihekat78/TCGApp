@@ -66,6 +66,21 @@ export type GameStateStore = {
    */
   aiSpeedMs: number;
   setAiSpeedMs: (ms: number) => void;
+  /**
+   * user_request 20260521_01 #12: AI 自動進行の一時停止フラグ。
+   * - true なら driver の setTimeout は走らない (= AI 進行停止)
+   * - SpectatorHUD の pause / resume ボタンで切替
+   * - step button は paused でも 1 回駆動 (aiStepCounter で gate)
+   */
+  isAiPaused: boolean;
+  setAiPaused: (v: boolean) => void;
+  /**
+   * user_request 20260521_01 #12: step button counter。
+   * - paused 中に increment → driver が 1 回だけ駆動して再度停止
+   * - driver 側は最後に消費した counter 値を useRef で記憶
+   */
+  aiStepCounter: number;
+  incrementAiStep: () => void;
 };
 
 /** ヒラメキ保留 (Commit 3a) */
@@ -112,4 +127,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setSpectatorMode: (v) => set({ spectatorMode: v }),
   aiSpeedMs: 400,
   setAiSpeedMs: (ms) => set({ aiSpeedMs: ms }),
+  isAiPaused: false,
+  setAiPaused: (v) => set({ isAiPaused: v }),
+  aiStepCounter: 0,
+  incrementAiStep: () => set((s) => ({ aiStepCounter: s.aiStepCounter + 1 })),
 }));

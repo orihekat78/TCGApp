@@ -48,4 +48,27 @@ describe('SpectatorHUD', () => {
     expect(html).toContain('1500ms');
     expect(html).not.toContain('>400ms<');
   });
+
+  // Phase 12-B: pause / step control
+  it('renders pause-toggle and step buttons when spectatorMode === true', () => {
+    useGameStateStore.setState({ spectatorMode: true, aiSpeedMs: 400, isAiPaused: false });
+    const html = renderToString(<SpectatorHUD />);
+    expect(html).toContain('data-testid="spectator-pause-toggle"');
+    expect(html).toContain('data-testid="spectator-step"');
+    expect(html).toContain('⏸ 一時停止');
+  });
+
+  it('shows "再開" label and step button enabled when isAiPaused === true', () => {
+    useGameStateStore.setState({ spectatorMode: true, aiSpeedMs: 400, isAiPaused: true });
+    const html = renderToString(<SpectatorHUD />);
+    expect(html).toContain('▶ 再開');
+    // step button disabled 属性は paused === true で OFF (= enabled)
+    expect(html).toMatch(/data-testid="spectator-step"(?![^>]*disabled)/);
+  });
+
+  it('disables step button when not paused', () => {
+    useGameStateStore.setState({ spectatorMode: true, aiSpeedMs: 400, isAiPaused: false });
+    const html = renderToString(<SpectatorHUD />);
+    expect(html).toMatch(/data-testid="spectator-step"[^>]*disabled/);
+  });
 });

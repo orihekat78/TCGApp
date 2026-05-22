@@ -65,3 +65,31 @@
   min-width: 50px;
   text-align: right;
 }
+
+.spectator-hud-control {
+  padding: 4px 10px;
+  border: 1px solid #4a5070;
+  background: #2a3050;
+  color: #d8d8e8;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.spectator-hud-control:hover:not(:disabled) {
+  background: #3a4070;
+  border-color: #6080a0;
+}
+
+.spectator-hud-control:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spectator-hud-control.is-paused {
+  background: #c08040;
+  border-color: #e0a060;
+  color: #ffffff;
+  font-weight: 600;
+}

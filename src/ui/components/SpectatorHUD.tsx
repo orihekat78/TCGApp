@@ -23,9 +23,10 @@ const PRESETS: readonly Preset[] = [
 
 export function SpectatorHUD(): JSX.Element | null {
   // OppTurnOverlay と同じく getState() で SSR 互換性を維持。
-  // 親 (App.tsx) が spectatorMode / aiSpeedMs を subscribe するため再描画は親経由で伝搬する。
+  // 親 (App.tsx) が spectatorMode / aiSpeedMs / isAiPaused / aiStepCounter を
+  // subscribe するため再描画は親経由で伝搬する。
   const store = useGameStateStore.getState();
-  const { spectatorMode, aiSpeedMs, setAiSpeedMs } = store;
+  const { spectatorMode, aiSpeedMs, setAiSpeedMs, isAiPaused, setAiPaused, incrementAiStep } = store;
   if (!spectatorMode) return null;
 
   return (
@@ -50,6 +51,29 @@ export function SpectatorHUD(): JSX.Element | null {
         <span className="spectator-hud-current" data-testid="spectator-speed-current">
           {aiSpeedMs}ms
         </span>
+      </div>
+      <div className="spectator-hud-section">
+        <span className="spectator-hud-label">制御</span>
+        <button
+          type="button"
+          className={`spectator-hud-control ${isAiPaused ? 'is-paused' : ''}`}
+          onClick={() => setAiPaused(!isAiPaused)}
+          data-testid="spectator-pause-toggle"
+          aria-pressed={isAiPaused}
+          title={isAiPaused ? '再開 (resume)' : '一時停止 (pause)'}
+        >
+          {isAiPaused ? '▶ 再開' : '⏸ 一時停止'}
+        </button>
+        <button
+          type="button"
+          className="spectator-hud-control"
+          onClick={() => incrementAiStep()}
+          data-testid="spectator-step"
+          disabled={!isAiPaused}
+          title="1 ステップ進める (paused 時のみ)"
+        >
+          ⏭ 1 ステップ
+        </button>
       </div>
     </div>
   );

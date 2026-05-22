@@ -40,9 +40,12 @@ export default function App() {
   // Store から購読: dispatch が走ったときに再描画される。
   const gameState = useGameStateStore((s) => s.gameState);
   // user_request 20260521_01 #12: SpectatorHUD が getState() ベースで描画される
-  // ため、spectatorMode / aiSpeedMs 変化を親で subscribe して再描画を伝搬する。
+  // ため、spectatorMode / aiSpeedMs / isAiPaused / aiStepCounter 変化を親で
+  // subscribe して再描画を伝搬する。
   useGameStateStore((s) => s.spectatorMode);
   useGameStateStore((s) => s.aiSpeedMs);
+  useGameStateStore((s) => s.isAiPaused);
+  useGameStateStore((s) => s.aiStepCounter);
   return (
     <>
       <Playmat

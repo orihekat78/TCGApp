@@ -116,20 +116,30 @@ export function _setOppTurnDriverDelay(ms: number): void {
   useGameStateStore.getState().setAiSpeedMs(ms);
 }
 
+// Phase 12-B: step button で消費済みの counter 値を tracker
+// useRef だと StrictMode で 2 回 fire するので module-level に置く。
+let _lastConsumedStep = 0;
+
 export function useOppTurnDriver(): void {
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
   // Commit 2.5: activeActionId 復帰 (action-end) で続きの move を再開するため
   // useEffect deps に追加。set 中は driveOppTurn 内で early return される。
   const activeActionId = useGameStateStore((s) => s.activeActionId);
   const aiSpeedMs = useGameStateStore((s) => s.aiSpeedMs);
+  const isAiPaused = useGameStateStore((s) => s.isAiPaused);
+  const aiStepCounter = useGameStateStore((s) => s.aiStepCounter);
   useEffect(() => {
-    if (turnPlayer === 'opp' && activeActionId === null) {
-      if (aiSpeedMs > 0) {
-        const id = setTimeout(driveOppTurn, aiSpeedMs);
-        return () => clearTimeout(id);
-      }
-      Promise.resolve().then(driveOppTurn);
+    if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
+    // Phase 12-B: paused なら step 要求があった時だけ進む
+    if (isAiPaused) {
+      if (aiStepCounter <= _lastConsumedStep) return undefined;
+      _lastConsumedStep = aiStepCounter;
     }
+    if (aiSpeedMs > 0) {
+      const id = setTimeout(driveOppTurn, aiSpeedMs);
+      return () => clearTimeout(id);
+    }
+    Promise.resolve().then(driveOppTurn);
     return undefined;
-  }, [turnPlayer, activeActionId, aiSpeedMs]);
+  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter]);
 }

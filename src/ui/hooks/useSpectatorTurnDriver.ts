@@ -71,19 +71,28 @@ export function _setSpectatorDriverDelay(ms: number): void {
   useGameStateStore.getState().setAiSpeedMs(ms);
 }
 
+// Phase 12-B: step button で消費済みの counter 値を tracker
+let _lastConsumedStep = 0;
+
 export function useSpectatorTurnDriver(): void {
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const turnPlayer = useGameStateStore((s) => s.gameState?.turn.player ?? null);
   const activeActionId = useGameStateStore((s) => s.activeActionId);
   const aiSpeedMs = useGameStateStore((s) => s.aiSpeedMs);
+  const isAiPaused = useGameStateStore((s) => s.isAiPaused);
+  const aiStepCounter = useGameStateStore((s) => s.aiStepCounter);
   useEffect(() => {
-    if (spectatorMode && turnPlayer === 'self' && activeActionId === null) {
-      if (aiSpeedMs > 0) {
-        const id = setTimeout(driveSelfTurn, aiSpeedMs);
-        return () => clearTimeout(id);
-      }
-      Promise.resolve().then(driveSelfTurn);
+    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null) return undefined;
+    // Phase 12-B: paused なら step 要求があった時だけ進む
+    if (isAiPaused) {
+      if (aiStepCounter <= _lastConsumedStep) return undefined;
+      _lastConsumedStep = aiStepCounter;
     }
+    if (aiSpeedMs > 0) {
+      const id = setTimeout(driveSelfTurn, aiSpeedMs);
+      return () => clearTimeout(id);
+    }
+    Promise.resolve().then(driveSelfTurn);
     return undefined;
-  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs]);
+  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter]);
 }
