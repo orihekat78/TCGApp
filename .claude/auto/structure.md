@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1094
+- **ファイル数**: 1095
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1045,6 +1045,7 @@
     - `bug-037.spec.ts` — BUG-037: 現場カードの sleep / stun が computed transform で実際に rotate されるかを検証。
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
+    - `spectator-speed.spec.ts` — user_request 20260521_01 #12: 観戦モード speed slider + pause/step E2E
   - **`engine/`** — Engine ユニットテスト
     - **`cards/`**
       - `registry.test.ts` — engine.cards.* — registry namespace tests
