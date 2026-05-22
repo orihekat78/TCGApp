@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1162
+- **ファイル数**: 1164
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -239,6 +239,7 @@
     - `2026-05-22-04-triage-delta.md`
     - `2026-05-22-05-triage-epsilon.md`
     - `2026-05-22-06-phase-9-g2.md`
+    - `2026-05-22-07-user-request-20260522.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -501,6 +502,7 @@
     - `2026-05-21-8.md` — 2026-05-21-8 — Phase 5 advance: Souza Sub-task B / C 公式 defer
     - `2026-05-21-9.md` — 2026-05-21-9 — Cleanup Phase: 小規模 4 件
     - `2026-05-21.md` — 2026-05-21 — Phase 7-2: 汎用 $pick substitution + 7 cards 水平展開で BUG-035 完全解消
+    - `2026-05-22.md` — 作業ログ — 名探偵コナンTCG プロジェクト
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義

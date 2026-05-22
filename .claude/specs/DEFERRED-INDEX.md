@@ -20,7 +20,7 @@
 | Cleanup Phase 中/大規模 #6 | Playmat レスポンシブレイアウト | undocumented |
 | Cleanup Phase 中/大規模 #9 | 触発 listener 漏れ | undocumented |
 | BUG-006 | GuardPickerModal が active 状況で開かず E2E skipped | `tests/e2e/bug-006.spec.ts` skip 継続 |
-| BUG-036 | refresh ok:false 時 gameResult 未配線 | `.claude/bugs/BUG-036.md` 未着手 |
+| BUG-036 | refresh ok:false 時 gameResult 未配線 | ✅ 修正済 (`1480465` / 2026-05-22) |
 
 ## コード TODO grep 結果 (2026-05-21)
 

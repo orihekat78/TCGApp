@@ -1,83 +1,47 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-## 2026-05-21 セッション 10 (BUG-037 CSS animation fill-mode 修正)
+過去のセッションログ: [.claude/sessions/](sessions/)
 
-- user_request #1 / #16 (重複): scene card が sleep にならない
-- 原因: `SceneArea.css:128` `animation: scene-card-enter ... both;` の `forwards` 側が transform を lock
-- 修正: fill-mode `both` → `backwards` の 1 行
-- 検証: typecheck / 1511 unit / 38+1 E2E / 1000-game smoke 0 errors
-- 新規 spec: `tests/e2e/bug-037.spec.ts` (sleep + stun computed transform を assert)
-- セッション詳細: `.claude/sessions/2026-05-21-10.md`
-- commit: `9567c0c` (BUG-037 修正) / `cdaa5f7` (hash 反映)
+## 2026-05-22 セッション 18 (user_request 20260522_01 16 件 + 派生 + Phase 5/6)
 
-## 2026-05-21 セッション 11 (Phase α — user_request triage)
+### user_request 20260522_01 (16 件本体 + 関連)
 
-- plan 作成: `C:\Users\arumi\.claude\plans\shimmying-dancing-hippo.md`
-- 公式 PDF p.12-13 を WebFetch + Read で直接確認:
-  - #5 解決編移行は **必ず移行 (移行させないことはできません)** ← 仕様通り
-  - #6/#14 NH は **権利が増え、後で使えるわけではありません** ← 仕様通り
-- Phase α 4 件:
-  - `.claude/CLAUDE.md` — 「効率より精度」方針追加 (#2)
-  - `.claude/docs/user-request-clarifications.md` 新規 (#5/#6/#14)
-  - `.claude/specs/DEFERRED-INDEX.md` 新規 (#11)
-  - `.claude/bugs/README.md` 新規 (#10)
-- 関連 memory: `feedback_accuracy_over_speed`, `feedback_rule_rebuttal_pattern`
+| # | 内容 | BUG | commit |
+|---|---|---|---|
+| 1 | バグフォルダ audit + 教訓集 | AUDIT/LESSONS-LEARNED | `2db6bf5` |
+| 2 / 6 | 任意効果 auto-pick 停止 + UI 統合 | BUG-053 + BUG-054 | `7b1e86b` `bacc22b` |
+| 3 | log カード名 | BUG-060 | `78a93f2` |
+| 4 / 16 | FILE 7+ 解決編 auto-phase 経路配線 | BUG-050 | `cdc0725` |
+| 5 | 事件カード能力 (scope='always') | BUG-051 | `d558f8c` |
+| 7 | cutin actor 名 | BUG-055 | `4d24567` |
+| 8 | action[事件] ガード時証拠誤変動 | BUG-049 | `4d32418` |
+| 9 | 手札虫眼鏡 | BUG-056 | `761d46a` |
+| 10 / 13 | Q&A clarification | docs only | `9fd65f8` |
+| 11 | リムーブ拡大 | BUG-057 | `52a2adf` |
+| 12 | D11019 bind ref + 演出 | BUG-052 + BUG-061 | `f85edfe` `2894c61` |
+| 14 | speed preset 拡張 | BUG-058 | `ca23f9e` |
+| 15 | CPU 可視化 spec + 案 1/2 実装 | BUG-059 + 062 + 063 | `094805b` `5394ee4` `99f6c0c` |
 
-## 2026-05-22 セッション 12 (Phase β #7 #15 — BUG-038 close + BUG-040 fix)
+### AUDIT 派生
 
-- BUG-038 (#7 sleep target): Playwright headed で再現せず → 仕様外 close (BUG-037 で間接解決) `152253d`
-- BUG-040 (#15 declared ability): `Playmat.tsx:382` で `declaredTargetCount={0}` ハードコーディング → メニュー常時 disabled
-  - 修正: `enumDeclaredAbilitySources(state, 'self').length` を計算
-  - Playwright headed: source picker → ability auto-select → 発動 → sleepSelf cost paid + log に declaredAbility 記録
-  - unit 1511 + E2E 40 PASS
+- commit hash 12 件補填 (`9b36f5f`)
+- BUG template + lint script (`ebeebed`)
+- side-channel pattern doc (`f53598c`)
+- category enum migration 29 件 → warns=0 (`bf19605`)
 
-## 2026-05-22 セッション 13 (Phase β #13 — BUG-041 fix)
+### Phase 5: BUG-036 deck-out 敗北条件配線 (`1480465`)
 
-- BUG-041 (#13 登場時効果カードが手札から出せない): scene 5 枚時の switch 経路が UI から呼べなかった
-  - 原因: `Playmat.tsx:367` `canUse` が `canHandUseCard` のみで判定、`canHandUseCardSwitch` 未評価
-  - 副因: `handUseReason.ts:78` で問答無用 reject メッセージ → null に変更
-  - 修正: 4 行 + 1 ブロック差分。BUG-040 と同 pattern「engine + flow 完成、Playmat 配線漏れ」
-  - Playwright headed: scene 5 枚 → level≤FILE のキャラ click → switch picker (ssp-overlay) → 退場 + 登場確認
-  - unit 1511 + E2E 40 PASS
+`draw()` で refresh 失敗時 `gameResult.set(opp, 'deck-out')` 配線。
+既存 gameResult 上書き gate 付き。test 3 件追加 (1547 → 1551 PASS)。
 
-## 2026-05-22 セッション 14 (Phase β #17 — BUG-042 fix)
+### Phase 6: 9 BUG status 正規化 (`a68f58b`)
 
-- BUG-042 (#17 デッキ選択 UI): self=CT-D08 / opp=CT-D11 がハードコーディング → 選択 UI 配備
-  - 修正: `deckBuilder.ts` に `DeckId` 型 + `AVAILABLE_DECKS` + `buildDeckPair({selfDeckId, oppDeckId})` 新 API
-  - `gameStarter.ts:performGameStart` に optional 第二引数 `deckSelection` 追加
-  - `GameSetupModal.tsx` に 2 つの `<select>` (data-testid: game-setup-self-deck / game-setup-opp-deck)
-  - CSS スタイル追加 (`.game-setup-deck-select`)
-  - Playwright headed: swap (self=D11, opp=D08) → mulligan に D11 カード出現 → engine state で case/partner 検証 ✓
-  - unit 1511 + E2E 40 PASS
+「対応中・見送り・仕様外」9 件を全て 修正済 に正規化。**全 62 BUG が
+修正済 status** (errors=0 / warns=0) 達成。
 
-## 2026-05-22 セッション 15 (Phase β #8 — BUG-043 fix)
-
-- BUG-043 (#8 手札カード個別拡大表示): HandZone は zone 折畳/展開しかなく、CardExpandModal の trigger 無し
-  - 修正: HandZone の HandMiniCard / HandCard 両方に `onContextMenu` 追加 (右クリック → onExpand 呼出)
-  - HandZoneProps に `onCardExpand` (zone 展開と区別する prop 名) 追加
-  - Playmat.tsx で `onCardExpand={expandModal.open}` 配線
-  - Playwright headed: collapsed mini-card / expanded hand-card 両方で右クリック → CardExpandModal 開く ✓
-  - 「Playmat.tsx 配線漏れ」pattern 4 件目 (BUG-040/041/042/043)
-  - unit 1511 + E2E 40 PASS
-
-## 2026-05-22 セッション 17 (Phase γ #9 — BUG-045 fix)
-
-- BUG-045: 1 試合通し E2E spec + spectator stall + engine bug 2 件発覚
-  - spectator AI vs AI で contact 発生時 cutin/guard modal が開いて hang
-  - useContactFlowDriver に spectatorMode 判定を追加、self も AI 委譲
-  - 追加で engine 2 bug 発覚 (E2E で初めて顕在化):
-    - atom-handlers `deckRevealUntil`: filter object → predicate 化 helper 追加
-    - atom-handlers `discard`: target pick query 未 resolve → 防御 skip
-  - 新規 tests/e2e/full-match.spec.ts: 観戦モード完走 + GameSetupModal 配線確認 2 tests
-  - Playwright 実機: turn 12 / winner=self / console errors 0 で完了
-  - unit 1511 + E2E 42 (新規 2 込み) + smoke 1000 avg 11.19 維持
-
-## 2026-05-22 セッション 16 (Phase β #4 — BUG-044 fix)
-
-- BUG-044 (#4 AI が事件アクションしない): heuristic で reasoning が常に優先固定 → case attack 不発
-  - 修正: reasoning vs actionAgainstCase をスコア比較、後期 (opp evidence ≥ req-1 ∧ self 劣勢) で case attack 優先
-  - threshold 4 回試行錯誤: 135.5→94.8→53.4→11.19 turn (timeouts 641→424→208→**0**)
-  - 採用 threshold: oppEvidence ≥ req-1 ∧ selfEvidence < oppEvidence (劣勢時 disruption のみ)
-  - smoke: avg 11.19 / timeouts 0 / wins 500-500 均衡
-  - BUG-042 副作用で 3 マッチアップ smoke が自動テスト化された
-  - AI 116 unit + 1511 全 unit + 40 E2E PASS
+### 数値
+- vitest 1551 PASS / 1 skipped
+- E2E 53 PASS / 1 skipped
+- smoke 1000 戦: avg 10.64 / 0 timeout / 0 exception
+- lint:bugs: 62 BUG / errors=0 / warns=0
+- 80+ commit を origin/main へ push

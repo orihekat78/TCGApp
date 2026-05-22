@@ -82,6 +82,42 @@ catch すれば自動化可能)。
 [.claude/docs/user-request-clarifications.md](../docs/user-request-clarifications.md)
 に追記。関連 feedback memory: `feedback_rule_rebuttal_pattern`。
 
+## 教訓 8: `ok:false` 戻り値の Hook 委譲は配線漏れを生む
+
+**該当 BUG**: BUG-036 (deck-out 敗北条件配線忘れ)
+
+`mutate/deck.ts:refresh()` が `{ok:false, reason:'remove-empty'}` を返すだけで、
+呼出元 `draw()` が `break` のみで `gameResult` を set しない実装が放置されて
+いた (「呼出元 Hook 担当」と暗黙委譲)。smoke 1000 戦で deck 使い切らない
+ため 6 ヶ月顕在化せず。
+
+**仕組み化**: `ok:false` を返す関数の docstring に「呼出元の責務」を明記、
+かつ即近の呼出元で必ず処理 (Hook 経由のような遅延配線は避ける)。
+
+## 教訓 9: BUG status は二択厳守 (注釈付き status 禁止)
+
+**該当**: BUG-005/007 (status 「機構整備済 (要 Playwright 検証)」)、
+BUG-053 (「修正済 (partial)」)、BUG-038 (「仕様外」が実は閉)
+
+frontmatter enum (`未着手 / 対応中 / 修正済 / 見送り / 仕様外`) に追加の
+注釈 (`(要 Playwright 検証)` 等) を付けると終了判定が曖昧化し、6 ヶ月後の
+audit で正規化作業が発生 (本セッション Phase 6)。
+
+**仕組み化**: lint script (`scripts/lint-bug-frontmatter.ts`) が enum 外の
+status を error として弾く。「partial」状態は別 BUG (follow-up) として
+起票して original を 修正済 化する。
+
+## 教訓 10: Python re.sub の f-string + `\\1\n` は backref が壊れる
+
+**該当**: 本セッション Phase 6 の batch script デバッグ
+
+`f'\\1\n...'` は Python 解釈で `\1<NEWLINE>...` (3 char) になる。re.sub の
+replacement string parser はこれを backref として認識せず `\x01` (SOH ASCII)
+として展開する罠。
+
+**対処**: raw f-string + 連結 `rf'\1' + '\n' + f'...'` で組み立てるか、
+名前付き backref `\g<1>` を使う。
+
 ## 関連
 
 - audit report: [AUDIT-2026-05-22.md](AUDIT-2026-05-22.md)

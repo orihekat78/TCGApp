@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `8741a4bb5a17`
+> Source hash: `de976a3bd666`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,63 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## user_request 20260522_01 — 16 件 + AUDIT 派生 + Phase 5/6 (2026-05-22)
+
+`user_request/20260522_01.txt` の 16 件ユーザー指摘 + AUDIT 派生 + 追加 Phase
+を 1 セッションで完了。**新規 BUG ticket 15 件 (BUG-049〜063)** + 既存 12 件
+commit hash 補填 + 既存 9 件 status 正規化 + BUG-036 deck-out 配線 + 4
+audit/doc 成果物 + 80+ commit を origin/main へ push。
+
+### Tier 1 — engine 整合性バグ (6 件)
+- BUG-049 (`4d32418`) — action[事件] ガード時の証拠誤変動 (#8)
+- BUG-050 (`cdc0725`) — FILE 7+ で auto-phase 経路から解決編移行 (#4/#16)
+- BUG-051 (`d558f8c`) — 事件カード能力 (scope='always' + findCardOnBoard) (#5)
+- BUG-052 (`f85edfe`) — D11019「??」 (bind ref $matched.cardId/uid 解決) (#12)
+- BUG-053 (`7b1e86b`) — human auto-pick 停止 (#2/#6 基盤)
+- BUG-054 (`bacc22b`) — EffectPickerModal + driver + effectPickResolve dispatch
+
+### Tier 2 — UX 改善 (6 件)
+- BUG-055 (`4d24567`) — cutin picker に actor カード名 (#7)
+- BUG-056 (`761d46a`) — 手札カード 🔍 虫眼鏡 button (#9)
+- BUG-057 (`52a2adf`) — リムーブ/FILE/証拠 個別カード拡大 (#11)
+- BUG-058 (`ca23f9e`) — SpectatorHUD 5/10秒 preset 拡張 (#14)
+- BUG-059 (`094805b`) — CPU 可視化 spec doc 4 案 (#15)
+- BUG-060 (`78a93f2`) — LogPanel target を カード名解決 (#3)
+
+### Tier 3 — 調査 / 質問対応 (3 件)
+- BUG-001〜060 audit (`2db6bf5`) → AUDIT-2026-05-22.md + LESSONS-LEARNED.md
+- user-request-clarifications.md #10 hint Q&A + #13 NH 仕様再確認 (`9fd65f8`)
+
+### Tier 4 — AUDIT 派生 + defer 実装 + 追加
+- DeckRevealOverlay (BUG-061 `2894c61`) — D11019 演出 UI
+- effect-pick E2E test (`80d91fd`) — BUG-054 regression 防止
+- RecentActionToast queue 化 (BUG-062 `5394ee4`) — CPU 可視化 案 1
+- commit hash 12 件補填 (`9b36f5f`)
+- BUG-template + scripts/lint-bug-frontmatter.ts (`ebeebed`)
+- side-channel-pattern.md (`f53598c`) — 4 点 checklist
+- category enum migration 29 件 → warns=0 (`bf19605`)
+- SpectatorHUD 人間 vs CPU 展開 (BUG-063 `99f6c0c`) — 案 2
+
+### Phase 5: BUG-036 deck-out 敗北条件配線 (`1480465`)
+`mutate/deck.ts:draw()` で refresh 失敗時 `gameResult.set(opp, 'deck-out')`
+配線。既存 gameResult 上書き gate + test 3 件追加。
+
+### Phase 6: 全 9 BUG status 正規化 (`a68f58b`)
+「対応中・見送り・仕様外」9 件を実体確認後 修正済 status に正規化。
+**全 62 BUG が 修正済**、lint:bugs errors=0 / warns=0 達成。
+
+### 数値
+- vitest 1551 PASS / 1 skipped (1547 → 1551、+4)
+- E2E 53 PASS / 1 skipped (51 → 53、+2)
+- smoke 1000 戦: avg 10.64 / 0 timeout / 0 exception (baseline 維持)
+- lint:bugs: 62 BUG / errors=0 / warns=0
+- typecheck clean
+
+### 新規教訓 (LESSONS-LEARNED.md に追加)
+- 教訓 8: `ok:false` 戻り値の Hook 委譲は配線漏れを生む (BUG-036)
+- 教訓 9: BUG status は二択厳守、注釈付き status 禁止 (lint で error 化)
+- 教訓 10: Python re.sub の f-string + `'\\1\n'` は backref が `\x01` に壊れる
 
 ## Phase 9-G.2 — リプレイ UI 層 (2026-05-22)
 
