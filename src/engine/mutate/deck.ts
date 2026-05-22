@@ -4,6 +4,7 @@
 
 import type { GameState, CardId, RefreshResult } from '@/engine/types';
 import { log as logMut } from './log.js';
+import { gameResult as gameResultMut } from './gameResult.js';
 
 type Player = 'self' | 'opp';
 type OrderMode = 'given' | 'reverse';
@@ -19,7 +20,15 @@ function draw(s: GameState, p: Player, n: number): CardId[] {
       // デッキ 0 枚 → リフレッシュ試行
       const result = refresh(s, p);
       if (!result.ok) {
-        // 敗北 (remove 0枚) → 引ける分だけ返す
+        // BUG-036 fix (rules/04 + rules/14): リムーブ 0 枚なら refresh 失敗 →
+        // そのプレイヤーは敗北、gameResult を deck-out で設定。
+        // 既存実装は break のみで gameResult 未設定だった。
+        // 既に gameResult が設定済 (= 既に勝敗確定) の場合は上書きしない。
+        if (s.gameResult === undefined) {
+          const winner: Player = p === 'self' ? 'opp' : 'self';
+          gameResultMut.set(s, winner, 'deck-out');
+        }
+        // 引ける分だけ返す
         break;
       }
       // リフレッシュ後再試行
@@ -85,7 +94,8 @@ function shuffle(s: GameState, p: Player, rng?: () => number): void {
  * - リムーブ → デッキシャッフル
  * - 相手 evidence +1 (refresh-penalty)
  * - 相手 scratchTrace = '発見済' (rules/13)
- * - リムーブ 0 枚敗北: ok:false 返す (gameResult セットは呼出元の Hook 担当)
+ * - リムーブ 0 枚敗北: ok:false 返す (gameResult は draw() 呼出元で
+ *   `'deck-out'` reason で set される。BUG-036 fix 2026-05-22)
  */
 function refresh(s: GameState, p: Player): RefreshResult {
   const remove = s.players[p].remove;

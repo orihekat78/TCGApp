@@ -101,6 +101,38 @@ describe('engine.mutate.deck', () => {
       expect(drawn).toHaveLength(1);
     });
 
+    // BUG-036 (rules/04 + rules/14): refresh 失敗で gameResult が deck-out で
+    // set される。修正前は break のみで gameResult 未設定だった。
+    it('リフレッシュ失敗 (remove 0 枚) → gameResult={winner:opp, reason:"deck-out"} が設定', () => {
+      const s = makeState({ selfDeck: [], selfRemove: [] });
+      const result = produce(s, draft => {
+        deck.draw(draft, 'self', 1);
+      });
+      expect(result.gameResult).toEqual({ winner: 'opp', reason: 'deck-out' });
+    });
+
+    it('opp の refresh 失敗で gameResult={winner:self}', () => {
+      // makeState は selfXxx を受けるため opp 側を直接編集
+      const s = makeState({});
+      s.players.opp.deck = [];
+      s.players.opp.remove = [];
+      const result = produce(s, draft => {
+        deck.draw(draft, 'opp', 1);
+      });
+      expect(result.gameResult).toEqual({ winner: 'self', reason: 'deck-out' });
+    });
+
+    it('既に gameResult が設定済の場合は上書きしない', () => {
+      const s = makeState({ selfDeck: [], selfRemove: [] });
+      // 既に evidence 勝利が確定している状態を再現
+      s.gameResult = { winner: 'self', reason: 'evidence' };
+      const result = produce(s, draft => {
+        deck.draw(draft, 'self', 1);
+      });
+      // deck-out で上書きされず、evidence 勝利のまま
+      expect(result.gameResult).toEqual({ winner: 'self', reason: 'evidence' });
+    });
+
     it('n=0 で空配列を返す', () => {
       const s = makeState({ selfDeck: ['c1', 'c2'] });
       const drawn: string[] = [];
