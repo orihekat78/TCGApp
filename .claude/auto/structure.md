@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1156
+- **ファイル数**: 1159
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -191,6 +191,7 @@
     - `BUG-059.md`
     - `BUG-060.md`
     - `BUG-061.md`
+    - `BUG-062.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -332,6 +333,8 @@
     - `smoke-2026-05-21.md` — Smoke 1000戦レポート — smoke-2026-05-21-102103
     - `smoke-2026-05-22-10.json`
     - `smoke-2026-05-22-10.md` — Smoke 1000戦レポート — smoke-2026-05-22-111623
+    - `smoke-2026-05-22-11.json`
+    - `smoke-2026-05-22-11.md` — Smoke 1000戦レポート — smoke-2026-05-22-112334
     - `smoke-2026-05-22-2.json`
     - `smoke-2026-05-22-2.md` — Smoke 1000戦レポート — smoke-2026-05-22-004100
     - `smoke-2026-05-22-3.json`
@@ -938,7 +941,7 @@
       - `Playmat.css`
       - `Playmat.tsx` — Phase 7 Task 7.3: Playmat レイアウト (1920×1080 / 最低 1280×720)
       - `RecentActionToast.css`
-      - `RecentActionToast.tsx` — Phase 8.10b: 最近のアクション通知トースト
+      - `RecentActionToast.tsx` — Phase 8.10b + BUG-062 (user_request 20260522_01 #15):
       - `RefreshOverlay.css`
       - `RefreshOverlay.tsx` — Phase 8.10i: リフレッシュ全画面演出
       - `RemoveArea.css`

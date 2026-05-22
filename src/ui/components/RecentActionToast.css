@@ -45,3 +45,21 @@
   color: var(--text-muted, #8aa3c0);
   font-family: ui-monospace, monospace;
 }
+
+/* user_request 20260522_01 #15 BUG-062: CPU (opp) 行動を強調表示 */
+.recent-action-toast.is-opp {
+  border-color: rgba(255, 100, 100, 0.7);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(255, 100, 100, 0.35);
+  background: linear-gradient(135deg, rgba(40, 15, 20, 0.92), rgba(64, 28, 38, 0.92));
+}
+.recent-action-toast.is-opp .toast-who {
+  background: rgba(255, 100, 100, 0.35);
+  color: #ffe4e4;
+}
+
+.toast-cpu-badge {
+  font-size: 14px;
+  line-height: 1;
+}
