@@ -27,6 +27,23 @@ import { resolveEffectPicks } from '../effect/resolve-picks.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope } from '../types/index.js';
 
+// user_request 20260522_01 #6/#2: human player side の globalThis 側チャネル
+// (hirameki / misread と同じ pattern)。UI 側 (App.tsx 等) が GameSetupModal で
+// 「対戦開始」(spectatorMode=false) のとき 'self' を set、観戦モード/null は
+// human 無し。triggered.ts は本 flag を見て auto-pick を skip する。
+declare global {
+  // eslint-disable-next-line no-var
+  var __humanPlayerSide: 'self' | 'opp' | null | undefined;
+}
+
+function getHumanPlayerSide(): 'self' | 'opp' | null {
+  return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+}
+
+export function _setHumanPlayerSide(side: 'self' | 'opp' | null): void {
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = side;
+}
+
 type Player = 'self' | 'opp';
 
 const TRIGGERED_HOOKS = [
@@ -155,8 +172,16 @@ function handleHook(
       // Phase 7-3: listener callback 内で instantiate (module top では circular import 発生)。
       // misread.ts:110 と同じパターン。allocation cost は 1 ability/frame で実害なし。
       const aiPolicy = new HeuristicPolicy();
+      // user_request 20260522_01 #6/#2 fix: human player owned effect では
+      // chooseAtomTarget を skip して $pick を unresolved のまま queue。
+      // (proper UI picker integration は別 BUG-054 で扱う、本 fix は「自動選択
+      // 停止」のみで「ユーザー依存」とのスコープ分離基盤を作る)
+      const humanSide = getHumanPlayerSide();
+      const isHumanEffect = humanSide !== null && card.player === humanSide;
       const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx, {
-        chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+        chooseAtomTarget: isHumanEffect
+          ? undefined  // skip auto-pick for human-owned effects (defer to UI)
+          : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
         byPlayer: card.player,
       });
       // queue

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1128
+- **ファイル数**: 1131
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -181,6 +181,7 @@
     - `BUG-050.md`
     - `BUG-051.md`
     - `BUG-052.md`
+    - `BUG-053.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `README.md` — バグ管理表の使い方
   - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
@@ -329,6 +330,8 @@
     - `smoke-2026-05-22-6.md` — Smoke 1000戦レポート — smoke-2026-05-22-063625
     - `smoke-2026-05-22-7.json`
     - `smoke-2026-05-22-7.md` — Smoke 1000戦レポート — smoke-2026-05-22-064209
+    - `smoke-2026-05-22-8.json`
+    - `smoke-2026-05-22-8.md` — Smoke 1000戦レポート — smoke-2026-05-22-065231
     - `smoke-2026-05-22.json`
     - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)

@@ -11,6 +11,8 @@ import { ReplayPanel } from '@/ui/components/ReplayPanel';
 import { useReplayDriver } from '@/ui/hooks/useReplayDriver';
 import type { ReplayLog } from '@/ai/replay';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
+import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
+import { useEffect } from 'react';
 import { ContactFlash } from '@/ui/components/ContactFlash';
 import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
 import { VictoryOverlay } from '@/ui/components/VictoryOverlay';
@@ -49,6 +51,13 @@ export default function App() {
   useGameStateStore((s) => s.aiSpeedMs);
   useGameStateStore((s) => s.isAiPaused);
   useGameStateStore((s) => s.aiStepCounter);
+  // user_request 20260522_01 #6/#2: spectator mode に応じて humanPlayerSide
+  // を engine 側 globalThis 側チャネルに反映。triggered listener が「human
+  // 所有 effect は auto-pick せず」に判定する材料。
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  useEffect(() => {
+    _setHumanPlayerSide(spectatorMode ? null : 'self');
+  }, [spectatorMode]);
   // Phase 9-G.2: リプレイ playback driver
   const replayDriver = useReplayDriver();
   return (
