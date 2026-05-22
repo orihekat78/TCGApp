@@ -90,6 +90,20 @@ export type GameStateStore = {
    */
   pendingEffectPick: PendingEffectPick | null;
   setPendingEffectPick: (p: PendingEffectPick | null) => void;
+  /**
+   * user_request 20260522_01 #12 BUG-061: D11019「15の受難」等の
+   * deckRevealUntil 効果でデッキ上から公開されたカードを順次めくる演出用。
+   * atom-handlers.deckRevealUntil 末尾で side-channel set → dispatch drain で
+   * 本 field に反映 → DeckRevealOverlay が表示 → auto-dismiss で null へ。
+   */
+  pendingDeckReveal: PendingDeckReveal | null;
+  setPendingDeckReveal: (p: PendingDeckReveal | null) => void;
+};
+
+export type PendingDeckReveal = {
+  player: 'self' | 'opp';
+  revealed: string[];
+  matched: string | null;
 };
 
 export type PendingEffectPick = {
@@ -152,4 +166,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   incrementAiStep: () => set((s) => ({ aiStepCounter: s.aiStepCounter + 1 })),
   pendingEffectPick: null,
   setPendingEffectPick: (p) => set({ pendingEffectPick: p }),
+  pendingDeckReveal: null,
+  setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
 }));

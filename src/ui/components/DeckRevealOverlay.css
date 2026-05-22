@@ -1,0 +1,84 @@
+/* BUG-061: DeckRevealOverlay — D11019 等の deckRevealUntil 演出
+ * z-index 9050: ContactFlash(9000) より上、EffectPickerModal(9700) より下 */
+
+.deck-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.deck-reveal-box {
+  background: #1a1e30;
+  color: #f0f0f0;
+  border: 2px solid #4a5070;
+  border-radius: 8px;
+  padding: 18px 24px;
+  min-width: 360px;
+  max-width: 640px;
+  font-family: system-ui, sans-serif;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+}
+
+.deck-reveal-header {
+  font-size: 14px;
+  color: #a0a8c0;
+  margin-bottom: 12px;
+}
+
+.deck-reveal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deck-reveal-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid #4a5070;
+  background: #2a3050;
+  border-radius: 4px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: deck-reveal-flip 0.5s ease-out forwards;
+  animation-delay: calc(var(--reveal-index) * 0.5s);
+}
+
+.deck-reveal-card.is-matched {
+  background: #4a3060;
+  border-color: #b890e0;
+  box-shadow: 0 0 12px rgba(180, 140, 230, 0.55);
+}
+
+.deck-reveal-card-num {
+  font-size: 12px;
+  color: #8a90a8;
+  min-width: 18px;
+}
+
+.deck-reveal-card-name {
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.deck-reveal-match-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: #b890e0;
+  color: #1a1e30;
+  font-weight: 700;
+}
+
+@keyframes deck-reveal-flip {
+  0%   { opacity: 0; transform: translateY(8px) rotateX(-20deg); }
+  50%  { opacity: 0.6; transform: translateY(0) rotateX(10deg); }
+  100% { opacity: 1; transform: translateY(0) rotateX(0); }
+}

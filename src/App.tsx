@@ -15,6 +15,7 @@ import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { useEffect } from 'react';
 import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
 import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
+import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { ContactFlash } from '@/ui/components/ContactFlash';
 import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
 import { VictoryOverlay } from '@/ui/components/VictoryOverlay';
@@ -78,6 +79,7 @@ export default function App() {
       <OppTurnOverlay />
       <SpectatorHUD />
       <EffectPickerModal />
+      <DeckRevealOverlay />
       <RecentActionToast />
       <ContactFlash />
       <RefreshOverlay />

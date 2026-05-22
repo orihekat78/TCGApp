@@ -18,6 +18,27 @@ import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { cards as engineCards } from '../cards/index.js';
 
+// user_request 20260522_01 #12 BUG-061: deckRevealUntil UI 演出側チャネル
+// (side-channel-pattern.md 4 点 checklist 準拠)
+declare global {
+  // eslint-disable-next-line no-var
+  var __pendingDeckRevealSide: PendingDeckRevealSide | null | undefined;
+}
+
+export type PendingDeckRevealSide = {
+  player: 'self' | 'opp';
+  /** デッキ上から公開した順番のカード ID (matched 含む末尾) */
+  revealed: string[];
+  /** filter match した cardId、null なら全公開でも不一致 */
+  matched: string | null;
+};
+
+export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
+  const v = (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide ?? null;
+  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = null;
+  return v;
+}
+
 /**
  * BUG-045 (#9 spectator stall fix の副産物): deckRevealUntil 等で
  * TargetFilter (declarative object) を predicate に変換するヘルパ。
@@ -388,6 +409,17 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         ctx.bindings[bindMatchKey] = matched
           ? [{ kind: 'card', cardId: matched, area: 'deck', player: p }]
           : [];
+      }
+      // user_request 20260522_01 #12 BUG-061: UI 演出側チャネル
+      // `__pendingDeckRevealSide` に revealed/matched を set。後続 atom が
+      // 結果を消費する前 (sceneEnter / deckToBottomBound / shuffle 前) の
+      // スナップショットとして公開する。
+      if (revealed.length > 0) {
+        (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
+          player: p,
+          revealed: [...revealed],
+          matched,
+        };
       }
       return;
     }

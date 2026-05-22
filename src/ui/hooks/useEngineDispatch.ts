@@ -29,6 +29,7 @@ import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread } from '@/engine';
 import { _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
+import { _drainPendingDeckRevealSide } from '@/engine/effect/atom-handlers';
 
 type Player = 'self' | 'opp';
 
@@ -470,6 +471,11 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     }
     if (action.type === 'effectPickResolve') {
       store.setPendingEffectPick(null);
+    }
+    // user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出側チャネル drain
+    const deckRevealSide = _drainPendingDeckRevealSide();
+    if (deckRevealSide) {
+      store.setPendingDeckReveal(deckRevealSide);
     }
     return { ok: true };
   } catch (e) {

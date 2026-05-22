@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bd76da555255`
+> Source hash: `2d0e1e63c73a`
 
 仕様書 [`phase-9-f-mcts`](../../../specs/phase-9-f-mcts.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

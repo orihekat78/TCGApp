@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1151
+- **ファイル数**: 1156
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -190,6 +190,7 @@
     - `BUG-058.md`
     - `BUG-059.md`
     - `BUG-060.md`
+    - `BUG-061.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -329,6 +330,8 @@
     - `smoke-2026-05-21-9.md` — Smoke 1000戦レポート — smoke-2026-05-21-155256
     - `smoke-2026-05-21.json`
     - `smoke-2026-05-21.md` — Smoke 1000戦レポート — smoke-2026-05-21-102103
+    - `smoke-2026-05-22-10.json`
+    - `smoke-2026-05-22-10.md` — Smoke 1000戦レポート — smoke-2026-05-22-111623
     - `smoke-2026-05-22-2.json`
     - `smoke-2026-05-22-2.md` — Smoke 1000戦レポート — smoke-2026-05-22-004100
     - `smoke-2026-05-22-3.json`
@@ -904,6 +907,8 @@
       - `CutInDisguisePickerModal.tsx` — Phase 8.6β: CutInDisguisePickerModal
       - `DeckArea.css`
       - `DeckArea.tsx` — Phase 7 Task 7.7: DeckArea
+      - `DeckRevealOverlay.css`
+      - `DeckRevealOverlay.tsx` — user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出 overlay
       - `EffectPickerModal.css`
       - `EffectPickerModal.tsx` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 modal
       - `EffectStackPanel.css`
