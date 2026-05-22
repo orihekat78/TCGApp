@@ -368,6 +368,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       const picked = action.pickedUid;
       if (picked === null) {
         // skip (n.min === 0 の任意効果のみ可能、UI 側で gate される想定)
+        // クリアは produce 後の post-dispatch drain で行う (return のみ)
         return;
       }
       // atomArgs.uid を picked で置換、target は drop
@@ -378,14 +379,15 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         verb: pending.atomVerb as never,
         args: { ...restArgs, uid: picked },
       };
-      const event = engineEvent;
-      event.queue(
+      engineEvent.queue(
         draft,
         resolvedAtom as never,
         { player: pending.player, cardId: pending.source.cardId },
         'effect:human-pick-resolved',
         { picked, source: pending.source },
       );
+      // 即座に flush (他 dispatch case と同 pattern)
+      runAllUntilEmpty(draft);
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }

@@ -230,6 +230,13 @@ test.describe('eventRemoveByAP — イベント手札使用で AP X 以下リム
   for (const { cardId, abilityId, kind } of CARDS) {
     test(`${cardId} ${abilityId} (${kind}): shape + handUseCard dispatch → pendingEffects に queue`, async ({ page }) => {
       const { errors } = await setupGamePage(page);
+      // BUG-053/054 以後、App.tsx は humanPlayerSide='self' を default で
+      // セットする (spectatorMode=false)。本テストは「AI-style auto-pick が
+      // pendingEffects を queue する」engine-level 検証なので、humanPlayerSide
+      // を null に override して human pick 経路を bypass する。
+      await page.evaluate(() => {
+        (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+      });
       await buildGameState<FixtureArg>(page, applyFixture, { cardId });
 
       const probe = await probeAbility(page, cardId, abilityId);
