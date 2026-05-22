@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1147
+- **ファイル数**: 1148
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -602,6 +602,7 @@
     - `round-4j-hirameki-draw-design.md` — Round 4j — hiramekiDraw E2E spec 設計
     - `round-4k-hirameki-char-stun-design.md` — Round 4k — hiramekiCharStun E2E spec 設計
     - `round-4l-ui-quad-design.md` — Round 4l — UI 4 課題一括対応 design
+    - `side-channel-pattern.md` — Side-Channel Pattern — engine ↔ UI 通信規約
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
