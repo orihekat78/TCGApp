@@ -147,4 +147,45 @@ describe('engine.mutate.file', () => {
       expect(result.players.self.file).toHaveLength(1);
     });
   });
+
+  // user_request 20260522_01 #4/#16 fix
+  describe('addFromDeckTop — FILE 7+ で 解決編 自動遷移 (rules/01 + rules/13 + rules/25)', () => {
+    it('FILE 5 → addFromDeckTop(2) で 7 到達 → 事件編→解決編', () => {
+      const s = makeState({
+        deck: ['C001', 'C002'],
+        file: Array.from({ length: 5 }, () => ({ type: 'card-back' as const })),
+        case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [] },
+      });
+      const result = produce(s, draft => {
+        file.addFromDeckTop(draft, 'self', 2);
+      });
+      expect(result.players.self.file).toHaveLength(7);
+      expect(result.players.self.case.status).toBe('解決編');
+    });
+
+    it('FILE 5 → addFromDeckTop(1) で 6 のみ → 事件編 維持', () => {
+      const s = makeState({
+        deck: ['C001'],
+        file: Array.from({ length: 5 }, () => ({ type: 'card-back' as const })),
+        case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [] },
+      });
+      const result = produce(s, draft => {
+        file.addFromDeckTop(draft, 'self', 1);
+      });
+      expect(result.players.self.file).toHaveLength(6);
+      expect(result.players.self.case.status).toBe('事件編');
+    });
+
+    it('解決編 既に到達済なら変化なし', () => {
+      const s = makeState({
+        deck: ['C001'],
+        file: Array.from({ length: 8 }, () => ({ type: 'card-back' as const })),
+        case: { cardId: 'CASE', status: '解決編' as const, requiredEvidence: 7, colors: [] },
+      });
+      const result = produce(s, draft => {
+        file.addFromDeckTop(draft, 'self', 1);
+      });
+      expect(result.players.self.case.status).toBe('解決編');
+    });
+  });
 });

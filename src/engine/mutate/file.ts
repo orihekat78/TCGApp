@@ -22,6 +22,12 @@ function addFromDeckTop(s: GameState, p: Player, n: number): void {
     const card: FileCard = { type: 'card-back', cardId };
     s.players[p].file.push(card);
   }
+  // user_request 20260522_01 #4/#16 fix: FILE 7 枚以上で事件編→解決編 自動遷移
+  // (rules/01 + rules/13 + rules/25)。assist() に同等 check があるが、
+  // auto-phase の addFromDeckTop は経由しないため独立で必要。
+  if (s.players[p].case.status === '事件編' && s.players[p].file.length >= 7) {
+    s.players[p].case.status = '解決編';
+  }
 }
 
 /**
