@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `0ea9892bd1bb`
+> Source hash: `93d9b3b702f2`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -14,7 +14,9 @@
 - Phase 9-G.2: リプレイ UI 層 (ReplayPanel / useReplayDriver / GameSetupModal mode)
 - Cleanup Phase 中/大規模 5 件 — #1 動的式評価括弧 / #2 cost picker / #3 ヒューリスティック / #6 Playmat レスポンシブ / #9 listener 漏れ
 - ~~user_request 20260521_01 triage 残 4 件~~ → **全 18 件 完了** (Phase δ + ε で #3 / #12 / #18 解決)
-- Phase 5 advance UI 残 — Misread UI / Souza Sub-task B+C
+- ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
+- Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
+  MVP に使用カード 0 枚で実装不要
 
 ## user_request 20260521_01 triage Phase ε — #18 card audit umbrella (2026-05-22)
 

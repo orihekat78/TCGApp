@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1101
+- **ファイル数**: 1100
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1230,7 +1230,6 @@
 - `playwright.config.ts` — Playwright E2E 設定
 - `PROJECT-MAP.canvas` — Obsidian Canvas によるプロジェクト全体図
 - `README.md` — プロジェクト紹介・起動方法・主要リンク集
-- `temp-snapshot.md` — (一時) ワーキングスナップショット
 - `tsconfig.json` — TypeScript 設定
 - `vite.config.ts` — Vite ビルド設定
 - `vitest.config.ts` — Vitest 設定
