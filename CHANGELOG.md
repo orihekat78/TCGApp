@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `18f7e1a8620f`
+> Source hash: `0ea9892bd1bb`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -13,8 +13,74 @@
 - Phase 9-F.2: MCTS strength tuning (UCB1 tree + 静的評価関数 + 並列化)
 - Phase 9-G.2: リプレイ UI 層 (ReplayPanel / useReplayDriver / GameSetupModal mode)
 - Cleanup Phase 中/大規模 5 件 — #1 動的式評価括弧 / #2 cost picker / #3 ヒューリスティック / #6 Playmat レスポンシブ / #9 listener 漏れ
-- user_request 20260521_01 triage 残 4 件 — #3 contact UI driver / #12 AI speed slider / #18 audit umbrella (#9 完了)
+- ~~user_request 20260521_01 triage 残 4 件~~ → **全 18 件 完了** (Phase δ + ε で #3 / #12 / #18 解決)
 - Phase 5 advance UI 残 — Misread UI / Souza Sub-task B+C
+
+## user_request 20260521_01 triage Phase ε — #18 card audit umbrella (2026-05-22)
+
+commit `9f126c7`。#18「カードごとに個別実装した処理がきちんと機能していない
+(umbrella)」を audit。
+
+### 結論
+
+**新規 BUG 起票無し**。Phase α/β/γ (BUG-040/041/045 修正) で実質的に解決済
+であることを 3 軸で確認。
+
+### Audit 結果
+
+- **vitest tests/cards/**: 46 test files / 176 tests 全 PASS
+- **playwright tests/e2e/patterns/**: 35 pattern tests 全 PASS
+- **smoke 1000 戦**: avg 10.64 turn / p95 13 / 0 timeout / 0 exception
+
+CT-D08 27 枚 + CT-D11 22 枚を P1 (declared) / P2 (appear) / P3 (contact-effect)
+/ P4 (no-test) で分類、Tier 1 (multi-pattern) 7 枚 / Tier 2 (P1 単体) 9 枚 /
+Tier 3 (P2 単体) 8 枚 はすべて既存テスト + smoke で機能確認。
+
+P4 (no-test) 13 枚は全て **絵柄違い variant** (`...DXXXXX` で他カードの def
+継承) または **能力なし partner** (D08002)。独立テスト不要であることを確認。
+
+詳細は [.claude/specs/cards-analysis/AUDIT-USER-REQUEST-18.md] 参照。
+
+### user_request 20260521_01 全 18 件 完了 🎉
+
+| Phase | 件数 | 内容 |
+|-------|------|------|
+| α | 6 件 | #2 / #5 / #6 / #10 / #11 / #14 (公式裁定確認 + 運用 doc 整備) |
+| β | 6 件 | #1 / #4 / #7 / #8 / #13 / #15 / #16 / #17 (BUG-037〜044) |
+| γ | 1 件 | #9 (BUG-045 1 試合通し E2E + spectator stall) |
+| δ | 2 件 | #3 (contact UX) / #12 (spectator HUD + heuristic) |
+| ε | 1 件 | #18 (card audit umbrella) |
+
+## user_request 20260521_01 triage Phase δ — #3 contact UX + #12 spectator HUD (2026-05-22)
+
+commits `cc3a605` / `98efb82` / `49a7063` / `4b654fd` / `25589ad` / `f1b3ebc`。
+#3 contact UI driver と #12 spectator speed / hand-use heuristic を解決。
+
+### #3 相手ターン中の contact 処理 — verify + UX 改善
+
+- BUG-044 (`5ffed7c`) と BUG-045 (`9169af4`) の修正で構造的に動作することを
+  Playwright headed + 既存 vitest (useContactFlowDriver.test.ts) で確定
+- `OppTurnOverlay` を強化: activeActionId 中は attacker → target (phase 名)
+  を具体表示 (cc3a605)
+- E2E spec `tests/e2e/opp-turn-contact.spec.ts` を新規 (98efb82): 3 シナリオ
+  (guard modal / cutin modal / case ターゲット表示) で回帰防止
+
+### #12 観戦モード speed + AI 手札使用 改善
+
+- `store.aiSpeedMs` + `SpectatorHUD` 新規: 200/400/800/1500/3000ms の
+  5 preset + 現在値表示 (49a7063)
+- `store.isAiPaused` + `aiStepCounter` + pause/step ボタン: paused 中は AI
+  進行停止、step button で 1 cycle (opp + self) 進める (4b654fd)
+- `handUseCard` heuristic を sparse-aware 化: scene < 3 で character を
+  AP+LP*1.5 score で優先、scene >= 3 で event 優先 (25589ad)
+- E2E spec `tests/e2e/spectator-speed.spec.ts` (f1b3ebc): 3 シナリオ
+
+### Metrics
+
+- smoke 1000 戦: avg 11.19 → 10.64 (アグレッシブ化 / max 19→16 で variance 改善)
+  winsA 50% → 51.1% (許容範囲)
+- ユニット 1522 PASS / 1 skipped (改修前から +9 tests)
+- E2E 48 PASS / 1 skipped (改修前 42 から +6 = 3 opp-turn-contact + 3 spectator-speed)
 
 ## Round 4l — UI 4 課題一括対応 (2026-05-22)
 

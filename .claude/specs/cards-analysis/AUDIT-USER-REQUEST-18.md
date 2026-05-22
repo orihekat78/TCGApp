@@ -118,4 +118,44 @@ audit 結果は本ファイル末尾「Audit Log」に追記する。
 
 ## Audit Log
 
-(Phase 18-B 着手時に追記)
+### 2026-05-22 Phase 18-B (実施日)
+
+#### 自動テスト baseline
+
+- **vitest tests/cards/**: 46 test files / 176 tests **全 PASS** (5.4s)
+- **playwright tests/e2e/patterns/**: 35 pattern tests **全 PASS** (21.8s)
+- **smoke 1000 戦**: avg 10.64 turn / p95 13 / 0 timeout / 0 exception
+  (改修後の baseline、Phase 12-C `25589ad`)
+
+#### Tier 別検証結果
+
+- **Tier 1 (P1+P2+ 等)** 7 枚: 既存 unit + E2E + smoke で機能確認 ✓
+  - D11019 (P1+P2+P3): BUG-045 (`9169af4`) で `deckRevealUntil` 修正済、
+    smoke 1000 で異常なし、card test PASS
+  - D08013 / D08015 / D08019 / D08024 / D11009 / D11012: card test PASS
+- **Tier 2 (P1 declared 単体)** 9 枚: BUG-040 (`d823f7f`) で
+  `declaredTargetCount` ハードコード修正済、card test PASS
+- **Tier 3 (P2 appear 単体)** 8 枚: BUG-041 (`a96f900`) で `canUse` switch
+  fallback 修正済、card test PASS
+
+#### P4 (no-test) 13 枚の再分類 — **実装欠落ではなく絵柄違い variant**
+
+P4 とした 13 枚はいずれも以下のいずれかに該当:
+- **絵柄違い variant (12 枚)**: `...DXXXXX` で他カードの def を継承
+  - CT-D08: D08004, D08006, D08008, D08010, D08012, D08014, D08016, D08018, D08020
+    (D08003, D08005, D08007, D08009, D08011, D08013, D08015, D08017, D08019 の絵柄違い)
+  - CT-D11: D11004, D11006, D11008, D11010 (他カードの絵柄違い)
+- **能力なしの partner**: D08002 (`abilities: []`)
+
+→ **テストは元カードの test ファイルでカバーされている** ので不要
+
+#### 結論
+
+user_request 20260521_01 #18「カード個別実装が機能していない (umbrella)」は
+**Phase α/β/γ (BUG-040/041/045 修正) で実質的に解決済** であることを確認。
+
+- Tier 1〜3 (24 枚): 既知 BUG pattern 該当は全て修正済 → unit/E2E/smoke で機能確認
+- P4 (13 枚): 絵柄違い variant のため独立テスト不要
+
+新規 BUG 起票は無し。Phase 18-C (helper 抽出) も該当なしで skip。
+

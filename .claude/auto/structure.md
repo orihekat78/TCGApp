@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1096
+- **ファイル数**: 1098
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -215,6 +215,8 @@
     - `2026-05-22-01-triage-alpha-beta.md`
     - `2026-05-22-02-triage-gamma.md`
     - `2026-05-22-03-round-4l.md`
+    - `2026-05-22-04-triage-delta.md`
+    - `2026-05-22-05-triage-epsilon.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
