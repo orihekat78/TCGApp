@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1192
+- **ファイル数**: 1195
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -203,6 +203,7 @@
     - `BUG-068.md`
     - `BUG-069.md`
     - `BUG-070.md`
+    - `BUG-071.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -373,6 +374,8 @@
     - `smoke-2026-05-22-9.md` — Smoke 1000戦レポート — smoke-2026-05-22-070557
     - `smoke-2026-05-22.json`
     - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
+    - `smoke-2026-05-23.json`
+    - `smoke-2026-05-23.md` — Smoke 1000戦レポート — smoke-2026-05-23-002544
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)

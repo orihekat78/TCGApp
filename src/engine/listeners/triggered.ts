@@ -172,11 +172,20 @@ function handleHook(
       // Phase 7-3: listener callback 内で instantiate (module top では circular import 発生)。
       // misread.ts:110 と同じパターン。allocation cost は 1 ability/frame で実害なし。
       const aiPolicy = new HeuristicPolicy();
-      // user_request 20260522_01 #6/#2 + BUG-054: human player owned effect は
-      // humanChooser=true で resolveEffectPicks に渡し、$pick 検出時に
-      // side-channel `__pendingEffectPickSide` を set。caller (本 listener) は
-      // side-channel が set されていれば queue を skip → UI が modal で
-      // ユーザー選択 → effectPickResolve dispatch で再 queue。
+      // user_request 20260522_01 #6/#2 + BUG-054 + BUG-065-followup:
+      // human player owned effect は humanChooser=true で resolveEffectPicks に
+      // 渡し、$pick 検出時に side-channel `__pendingEffectPickSide` を set。
+      //
+      // BUG-065-followup: 旧実装は side-channel set 時に effect 全体の queue を
+      // skip していたが、sequence の途中で pick が出る effect (例: D08015 a1 =
+      // sequence([draw, choice([discard with pick])])) では pre-pick step
+      // (draw) も失われていた。pattern A 時代は effect 全体が pick atom 1 つ
+      // だったため問題にならなかった。
+      //
+      // 現実装: effect 全体を常に queue する。pick 未解決の atom は
+      // atom-handlers の safety net (例: discard:skip-unresolved-pick) で no-op
+      // 扱い。後で UI が modal でユーザー選択 → effectPickResolve dispatch で
+      // 解決済み atom が単体で queue されて実行される。
       const humanSide = getHumanPlayerSide();
       const isHumanEffect = humanSide !== null && card.player === humanSide;
       const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx, {
@@ -187,12 +196,7 @@ function handleHook(
         humanChooser: isHumanEffect,
         source: { cardId: card.cardId, abilityId: ability.id },
       });
-      // BUG-054: side-channel set されていれば queue を skip (UI 側で
-      // 後で effectPickResolve dispatch される)
-      if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
-        continue;
-      }
-      // queue
+      // queue (side-channel set されていても skip しない、pre-pick step 実行のため)
       event.queue(
         state,
         resolvedEffect,
