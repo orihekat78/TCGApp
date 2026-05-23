@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `9aae17208118`
+> Source hash: `26084582894f`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,68 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-05-23
+title: BUG-077 修正 — Pattern B 初期 walk side-channel 抑止 + 後続 BUG-078 起票
+type: fix
+scope: engine / bugs
+---
+
+## BUG-077: D08013 a1 step 2 evidenceToHand が UI 経路で適用されない問題の本格修正
+
+Playwright 実機 trace で root cause を特定し、`resolveEffectPicks` の Pattern B 初期 walk
+ロジックを修正。
+
+### 真の root cause (BUG-077 Phase 2)
+
+`triggered.ts` の `resolveEffectPicks(humanChooser=true)` 初期 walk:
+
+| step | atom | 初期 walk cands | 結果 |
+| --- | --- | --- | --- |
+| 1 | evidenceGain | n/a (no pick) | execute later |
+| 2 | evidenceToHand PB | 0 件 (evidence empty) | side-channel set せず |
+| 3 | discard PB | 5 件 (hand) | **side-channel set** |
+
+→ runtime drain で step 2 awaiting-pick の tryRePickFromAtom が globalThis set 済で bail。
+UI に表示される modal は step 3 (discard / hand pick) だが、ログは step 2 (evidenceToHand)
+も出るので「ログには出るが state 反映されない」状態に。
+
+### 修正内容
+
+`src/engine/effect/resolve-picks.ts`:
+
+- `ResolveEffectPicksOpts._fromAtomHandler` を追加 (default false)。
+- `tryRePickFromAtom` は `_fromAtomHandler: true` を渡す。
+- `substituteAtomPick` の humanChooser 分岐に Pattern B 抑止条件追加:
+  `if (isPatternB && !opts._fromAtomHandler) return atom`
+- → 初期 walk では PB の side-channel set を抑止、runtime atom-handler 経由でのみ set。
+- → Pattern A は引き続き初期 walk で set (runtime に awaiting-pick path 無いため)。
+
+`tests/engine/effect/bug-077-evidence-to-hand-e2e.test.ts`:
+
+- Phase E test 追加 (sequence [evidenceGain, evidenceToHand PB, discard PB] の初期 walk
+  が PB side-channel を set しないこと、runtime drain で step 2 用が set されること)。
+
+`tests/engine/effect/resolve-picks.test.ts` / `pattern-b-cards.test.ts`:
+
+- humanChooser 初期 walk の side-channel set test を新仕様 (`_fromAtomHandler: true` で
+  runtime path を test) に update。
+
+### 検証
+
+- vitest 1575 PASS / 1 skipped (新仕様 + Phase E test 追加)
+- typecheck clean
+- smoke:1000 timeouts=0 exceptions=0 winsA=511 winsB=489
+- Playwright 実機 verify: D08013 a1 step 2 で modal に evidence (cardId 'D08007') が
+  正しく表示、選択後 evidence=0 / hand に D08007 追加。
+
+### 後続課題 → BUG-078 起票
+
+step 2 解決後、step 3 (discard) modal が表示されない問題は別途 BUG-078 として起票。
+原因: `effectPickResolve` dispatch が resolved step 2 atom を単発 queue するだけで、
+sequence の残り step を再 queue する仕組みが無い。BUG-076 の tryRePickFromAtom 追加は
+step 2/3 modal chain を意図していたが、resolved 後の re-queue 部分が未実装だった。
 
 ---
 date: 2026-05-23

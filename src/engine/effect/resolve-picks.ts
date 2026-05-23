@@ -49,6 +49,18 @@ export interface ResolveEffectPicksOpts {
   humanChooser?: boolean;
   /** Pending side-channel に保存する識別子 (UI 側で表示や resolve 時に使用) */
   source?: { cardId: string; abilityId: string };
+  /**
+   * BUG-077: tryRePickFromAtom (runtime atom-handler awaiting-pick) から呼ばれた場合 true。
+   * 初期 walk (resolveEffectPicks via triggered.ts) から呼ばれた場合 false (default)。
+   * Pattern B atom (uid 不在、target=pick query) は runtime tryRePickFromAtom が
+   * 各 atom 実行時に正しい state で side-channel を set できるため、初期 walk では
+   * set を抑止する。初期 walk で sequence の後続 step が先行 step の target を
+   * 横取りする問題 (D08013 a1: step2 evidenceToHand cands=0 → step3 discard が
+   * side-channel を奪う) を防ぐ。
+   * Pattern A atom (uid='$pick') は runtime handler に awaiting-pick path が無く
+   * 初期 walk での side-channel set が必須なので、この flag に関わらず set する。
+   */
+  _fromAtomHandler?: boolean;
 }
 
 // user_request 20260522_01 #6 BUG-054: human pick の側チャネル
@@ -104,7 +116,9 @@ export function tryRePickFromAtom(
   if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
     return; // 既に set 済み (別 atom の pick 待ち)
   }
-  substituteAtomPick(state, atom, ctx, { ...opts, humanChooser: true });
+  // BUG-077: _fromAtomHandler=true で substituteAtomPick を呼ぶことで、
+  // Pattern B でも side-channel set を許可 (初期 walk からの呼出と区別)。
+  substituteAtomPick(state, atom, ctx, { ...opts, humanChooser: true, _fromAtomHandler: true });
 }
 
 function substituteAtomPick(
@@ -144,6 +158,14 @@ function substituteAtomPick(
   // evidence area を pick する場合に対応するため、evidence/file kind も candidate に含める。
   if (opts.humanChooser) {
     if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
+      return atom as Effect;
+    }
+    // BUG-077: Pattern B (uid 不在) は runtime atom-handler の awaiting-pick path で
+    // tryRePickFromAtom 経由で side-channel set される (正しい state を持つため)。
+    // 初期 walk (triggered.ts → resolveEffectPicks) では set を抑止し、後続 step が
+    // 先行 step の target を横取りする問題を回避。Pattern A は runtime に awaiting-pick
+    // path が無いため、初期 walk でも set 必要 (flag 無視)。
+    if (isPatternB && !opts._fromAtomHandler) {
       return atom as Effect;
     }
     type CardLike = { uid: string; cardId: string; player: Player };

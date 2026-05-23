@@ -205,13 +205,31 @@ describe('engine.effect.resolveEffectPicks — pattern B (BUG-065)', () => {
     expect(resolved.args.target.kind).toBe('pick');
   });
 
-  it('atom: humanChooser=true で side-channel に candidate set、atom は未解決返却', () => {
+  it('atom: humanChooser=true 初期 walk では Pattern B の side-channel を set しない (BUG-077)', () => {
+    // BUG-077: 初期 walk (resolveEffectPicks) は Pattern B (uid 不在) の side-channel set を
+    // 抑止する。理由: sequence の後続 step が先行 step の target を横取りする問題を回避。
+    // runtime atom-handler awaiting-pick (tryRePickFromAtom 経由) で正しく set される。
+    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
     const s = stateWithSelfHand('D08015', 'D08001');
     const resolved = resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf(), {
       humanChooser: true,
       source: { cardId: 'D08015', abilityId: 'a1' },
     }) as { args: { target: { kind?: string } } };
     expect(resolved.args.target.kind).toBe('pick');
+    const side = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide;
+    expect(side, '初期 walk では Pattern B side-channel を set しない').toBeFalsy();
+  });
+
+  it('atom: humanChooser=true + _fromAtomHandler=true (runtime path) は Pattern B でも side-channel set (BUG-077)', () => {
+    // BUG-077: runtime atom-handler awaiting-pick から呼ばれる tryRePickFromAtom 経由では
+    // _fromAtomHandler=true 渡され、Pattern B でも正しく side-channel set される。
+    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+    const s = stateWithSelfHand('D08015', 'D08001');
+    resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf(), {
+      humanChooser: true,
+      _fromAtomHandler: true,
+      source: { cardId: 'D08015', abilityId: 'a1' },
+    });
     const side = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide as {
       candidates: { cardId: string }[];
       atomVerb: string;

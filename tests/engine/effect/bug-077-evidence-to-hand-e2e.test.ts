@@ -131,4 +131,68 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     expect(s.players.self.evidence.length, 'evidence -1').toBe(0);
     expect(s.players.self.hand, 'hand +1').toEqual(['X']);
   });
+
+  // Phase E (Playwright trace 2026-05-23 で発覚): D08013 a1 の sequence で
+  // [evidenceGain, evidenceToHand(PB), discard(PB)] のような複数 PB pick atom がある場合、
+  // 初期 walk (resolveEffectPicks humanChooser=true) で step 2 evidenceToHand は
+  // cands=0 (evidence empty before step 1 executes) → no side-channel set。
+  // 続けて step 3 discard が初期 walk で cands=hand 5 枚 → side-channel set。
+  // 結果、runtime で step 2 awaiting-pick の tryRePickFromAtom が
+  // globalThis already set で bails → UI が discard modal を表示。
+  it('Phase E: 初期 walk で後続 PB が side-channel を奪わない (sequence [evidenceGain, evidenceToHand, discard])', async () => {
+    const { resolveEffectPicks } = await import('@/engine/effect/resolve-picks');
+    const { run: runEffect } = await import('@/engine/effect/resolver');
+
+    const s = createEmptyGameState();
+    s.players.self.deck.push('DECK1');
+    s.players.self.hand.push('H1', 'H2', 'H3', 'H4', 'H5');
+
+    const sequence = {
+      kind: 'sequence' as const,
+      steps: [
+        { kind: 'atom' as const, verb: 'evidenceGain' as never, args: { player: 'self', n: 1 } },
+        {
+          kind: 'choice' as const,
+          chooser: 'self' as const,
+          options: [
+            {
+              kind: 'atom' as const,
+              verb: 'evidenceToHand' as never,
+              args: { player: 'self', target: { kind: 'pick', query: { area: 'evidence', side: 'self' }, n: { min: 1, max: 1 } } },
+            },
+          ],
+        },
+        {
+          kind: 'choice' as const,
+          chooser: 'self' as const,
+          options: [
+            {
+              kind: 'atom' as const,
+              verb: 'discard' as never,
+              args: { player: 'self', target: { kind: 'pick', query: { area: 'hand', side: 'self' }, n: { min: 1, max: 1 } } },
+            },
+          ],
+        },
+      ],
+    };
+
+    // 初期 walk (triggered.ts と同じ humanChooser=true)
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'D08013', abilityId: 'a1' }, bindings: {} };
+    const resolved = resolveEffectPicks(s, sequence, ctx, { humanChooser: true, byPlayer: 'self', source: { cardId: 'D08013', abilityId: 'a1' } });
+
+    // 初期 walk 後の side-channel: PB atom は runtime で set すべき。
+    // 期待: side-channel は null (初期 walk では set されない)
+    const sideAfterInitWalk = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide;
+    expect(sideAfterInitWalk, '初期 walk では PB atom の side-channel を set しない').toBeFalsy();
+
+    // runtime drain (event.queue → runAllUntilEmpty 相当)
+    runEffect(s, resolved, ctx);
+
+    // runtime drain 後: step 1 evidenceGain で +1、step 2 awaiting-pick で side-channel
+    // (evidenceToHand) set、step 3 awaiting-pick は guard で bail。
+    const sideAfterRuntime = (globalThis as { __pendingEffectPickSide?: { atomVerb: string; candidates: { cardId: string }[] } | null }).__pendingEffectPickSide;
+    expect(sideAfterRuntime, 'runtime で side-channel が set される').toBeTruthy();
+    expect(sideAfterRuntime?.atomVerb, 'step 2 (evidenceToHand) が modal owner').toBe('evidenceToHand');
+    expect(sideAfterRuntime?.candidates?.[0]?.cardId, 'cand は step 1 が追加した evidence の cardId').toBe('DECK1');
+  });
 });

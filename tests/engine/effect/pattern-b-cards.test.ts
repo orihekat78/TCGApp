@@ -113,14 +113,16 @@ describe('BUG-073: pattern B 水平展開 — 影響カード 4 件の effect �
     }
   });
 
-  it('D08015 a1 (フィルタ無し、filter 依存しない代表ケース): humanChooser=true で side-channel が set される', () => {
-    // 他カード (D08003 / D08013 / D11007) は trait/cost filter で candidate が
-    // hand 内容次第になるため、確実に hand candidate が出る D08015 のみで humanChooser
-    // verify を実施。他カードは AI heuristic test (上記) でカバー済み。
+  it('D08015 a1 (フィルタ無し、filter 依存しない代表ケース): humanChooser=true + _fromAtomHandler=true で side-channel が set される (BUG-077)', () => {
+    // BUG-077: 初期 walk (humanChooser=true、_fromAtomHandler 未指定) では Pattern B
+    // の side-channel set を抑止する設計に変更。runtime tryRePickFromAtom 経由でのみ set。
+    // 本テストは runtime path 相当 (_fromAtomHandler=true) で D08015 a1 の discard PB が
+    // 正しく side-channel に set されることを確認。
     (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
     const s = stateWithSelfHand('D08015', 'D08001');
     resolveEffectPicks(s, D08015.abilities[0]!.effect, ctxSelf(), {
       humanChooser: true,
+      _fromAtomHandler: true,
       source: { cardId: 'D08015', abilityId: 'a1' },
     });
     const side = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide;
