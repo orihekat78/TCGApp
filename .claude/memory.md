@@ -1,50 +1,45 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-過去のセッションログ: [.claude/sessions/](sessions/)
-次セッション引継ぎ: [.claude/sessions/NEXT-SESSION-PROMPT.md](sessions/NEXT-SESSION-PROMPT.md)
+## セッション 2026-05-23 PM (BUG-077 修正)
 
-## 2026-05-23 セッション (BUG-064 〜 BUG-077 cascade)
+### 結果
 
-### 概要
-
-D08015 (小嶋元太) ワークフロー作成依頼から始まり、a1 機能不全発覚 → resolve-picks pattern B 修正 → 連続 incomplete fix 発覚 → 各々修正。**BUG-066 で立てた「修正済 前の 4 点 verify protocol」を 6 回連続で破った**反省記録。
-
-### 主要 commit (24 件)
-
-| BUG | commit | 概要 | 状態 |
-| --- | --- | --- | --- |
-| BUG-064 | 8c2f3e2 同梱 | ワークフロー図の抽象度漏れ、WORKFLOW-GUIDELINES.md 新規 | 修正済 |
-| BUG-065 | 8c2f3e2 | resolve-picks pattern B 対応 | 修正済 |
-| BUG-066 | 8c2f3e2 | claude 自己検証漏れ起票、4 点 verify protocol 明文化 | 修正済 |
-| BUG-067〜070 | 78679d0 | 全 BUG audit (4 agent 並列) で発覚した 4 件起票 | 未着手 |
-| BUG-071 | 37ffb3a | triggered listener sequence pre-step skip 廃止 | 修正済 |
-| BUG-072 | 6297ed4 | effect log + ACTION_LABEL 日本語化 | 修正済 |
-| BUG-073 | 6c6d685 | 全 atom log + pattern B カード水平展開 verify | 修正済 |
-| BUG-074 | 4f72085 | evidenceToHand/handAddFromRemove target string\|array 両対応 | 修正済 |
-| BUG-075 | ac2cfe6 | side-channel 上書き防止 | 修正済 |
-| BUG-076 | 8d18c4f | tryRePickFromAtom + evidence kind 対応 | 修正済 |
-| **BUG-077** | **f022d72** | **D08013 a1 step 2 が UI 経路で反映されない** | **対応中** (engine logic 4/4 PASS、UI trace 要) |
-
-### 既存 BUG 訂正 (78679d0)
-
-- BUG-035 / 045 / 048 / 053 / 054: 「修正済」過大 claim を訂正、BUG-065 で初完全動作
-- LESSONS-LEARNED 教訓 11: 4 点 verify protocol 厳格化
-
-### 検証
-
-- vitest 1573 PASS / 1 skipped
+- BUG-077 修正完了 (commit `a5a22b7`)
+- BUG-078 起票 (step 2 解決後 step 3 modal 未表示、本 commit verify 中に発覚)
+- vitest 1575 PASS / 1 skipped
 - typecheck clean
-- smoke:1000 timeouts=0 exceptions=0 winsA=511 winsB=489
+- smoke 1000 戦 timeouts=0 exceptions=0 winsA=511 winsB=489
 
-### 残課題
+### BUG-077 真の root cause (Playwright trace で特定)
 
-1. **BUG-077 RCA Phase 2** — Playwright trace (詳細は NEXT-SESSION-PROMPT.md)
-2. **BUG-067〜070** — case declared limit / resolveBindRef 拡張 / LogPanel uid / BUG-009 残 4 項目
-3. ユーザー実機 verify: D08015 a1 + D08013 a1
+`triggered.ts → resolveEffectPicks(humanChooser=true)` の初期 walk で、D08013 a1
+sequence の step 3 discard PB が先行して side-channel set:
 
-### メタ反省
+- step 2 evidenceToHand PB: 初期 walk 時点 evidence empty → cands=0 → set せず
+- step 3 discard PB: hand=5 cands → side-channel に discard 内容を set
+- runtime drain で step 2 awaiting-pick の tryRePickFromAtom が globalThis set 済で bail
+- → UI には step 3 (hand pick) modal が表示、log は step 2 + step 3 双方出る
 
-- 「修正済」前に 4 点 verify ([BUG-066](bugs/BUG-066.md) + 教訓 11) を徹底
-- engine 関数修正時は caller 側も verify
-- カードドキュメントは公式効果テキスト全文を必ず読む
-- 複数 pattern B atom を含む sequence の e2e test を fixture に追加
+### 修正内容
+
+`src/engine/effect/resolve-picks.ts`:
+
+- `ResolveEffectPicksOpts._fromAtomHandler?: boolean` 追加 (default false)
+- `tryRePickFromAtom` → `substituteAtomPick` 呼出時に `_fromAtomHandler: true`
+- `substituteAtomPick` humanChooser 分岐: `if (isPatternB && !opts._fromAtomHandler) return atom`
+- → Pattern B side-channel set は runtime tryRePickFromAtom 経由でのみ実行
+- → Pattern A は引き続き初期 walk で set (runtime awaiting-pick path 無いため)
+
+### 検証 (Playwright 実機)
+
+- D08013 投入 → step 1 evidenceGain (+D08007 to evidence)
+- step 2 modal: 候補に cardId='D08007' (evidence の cardId)、atomVerb='evidenceToHand' ✓
+- 選択 → evidence=[]、hand に D08007 追加 ✓
+
+### 後続 BUG-078
+
+step 2 解決後 step 3 (discard) modal が表示されない。
+原因: `effectPickResolve` dispatch が resolved step 2 atom を単発 queue する
+だけで、sequence の残り step を再 queue する仕組みが無い。
+BUG-076 の tryRePickFromAtom 追加は step 2/3 modal chain を意図していたが、
+resolved 後の re-queue 部分が未実装。
