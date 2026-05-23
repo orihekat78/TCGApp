@@ -17,6 +17,7 @@ import { FILE_CARD_BACK_PLACEHOLDER } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { cards as engineCards } from '../cards/index.js';
+import { tryRePickFromAtom } from './resolve-picks.js';
 
 // user_request 20260522_01 #12 BUG-061: deckRevealUntil UI 演出側チャネル
 // (side-channel-pattern.md 4 点 checklist 準拠)
@@ -165,7 +166,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // listener の queue skip を廃止 → human pick 待ちの atom はここで no-op skip。
       // BUG-072: skip 時の action 名を 'effect:discard:awaiting-pick' に変更し
       // UI で「効果: 手札選択待ち」と日本語表示できるよう mapping 追加。
+      // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set (連続 pick)
       if (!Array.isArray(a.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: a.player as Player, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, {
           ts: Date.now(),
           player: a.player as Player,
@@ -249,9 +252,13 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-074: BUG-065 で resolve-picks が target を array 化 (`[cardId]`) する設計に
       // 変更されたため、string|array 両対応に正規化。未解決の pick query object の場合は
       // awaiting-pick として skip + log (D08013 a1 step 2 等で発覚)。
+      // BUG-076: awaiting-pick 時に resolve-picks の tryRePickFromAtom を呼んで、
+      // 残り atom 用に side-channel を再 set。これで sequence 内の連続 pattern B atom
+      // が順次 modal を出せる (D08013 a1 step 2 → step 3 の連鎖)。
       const p = a.player as Player;
       const target = normalizeTargetToString(a.target);
       if (!target) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand:awaiting-pick' });
         return;
       }
@@ -269,9 +276,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'handAddFromRemove': {
       // BUG-074: 同じく string|array 両対応に正規化
+      // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set
       const p = a.player as Player;
       const target = normalizeTargetToString(a.target);
       if (!target) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });
         return;
       }

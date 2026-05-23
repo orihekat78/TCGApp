@@ -83,6 +83,30 @@ export function _drainPendingEffectPickSide(): PendingEffectPickSide | null {
   return v;
 }
 
+/**
+ * BUG-076: atom-handler の awaiting-pick path から呼ばれる「単一 atom の pattern B
+ * pick を side-channel に set する」エントリポイント。sequence 内の複数 pattern B
+ * atom がある場合、step N が atom-handler で awaiting-pick した時点で本関数を呼ぶ
+ * ことで、step N 用の side-channel を set し、UI が次の modal を表示できる。
+ *
+ * 呼び出し条件:
+ *   - atom-handler で a.target が string|array に正規化できない (pick query object のまま)
+ *   - side-channel が現在空 (上書きしない)
+ *
+ * 呼び出し場所: src/engine/effect/atom-handlers.ts の各 case の awaiting-pick path。
+ */
+export function tryRePickFromAtom(
+  state: GameState,
+  atom: { kind: 'atom'; verb: unknown; args: unknown },
+  ctx: EffectCtx,
+  opts: ResolveEffectPicksOpts,
+): void {
+  if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
+    return; // 既に set 済み (別 atom の pick 待ち)
+  }
+  substituteAtomPick(state, atom, ctx, { ...opts, humanChooser: true });
+}
+
 function substituteAtomPick(
   state: GameState,
   atom: { kind: 'atom'; verb: unknown; args: unknown },
@@ -91,8 +115,8 @@ function substituteAtomPick(
 ): Effect {
   if (!atom.args || typeof atom.args !== 'object') return atom as Effect;
   const args = atom.args as { uid?: unknown; target?: unknown } & Record<string, unknown>;
-  const target = args.target as { kind?: string; n?: { min?: number; max?: number } } | undefined;
-  if (!target || target.kind !== 'pick') return atom as Effect;
+  const target = args.target as { kind?: string; query?: unknown; n?: { min?: number; max?: number } } | undefined;
+  if (!target || target.kind !== 'pick' || !target.query) return atom as Effect;
 
   // BUG-065: 2 つの effect 記述形式を区別して解決:
   //   Pattern A: { uid: '$pick', target: {kind:'pick',...} } (sceneRemove / charModifyAP 等)
@@ -109,35 +133,39 @@ function substituteAtomPick(
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
   const byPlayer: Player = opts.byPlayer ?? 'self';
 
-  // user_request 20260522_01 #2/#6 BUG-054 + BUG-065 + BUG-075: human player のときは
-  // side-channel に候補を set して atom を未解決のまま返却 (caller が queue 抑止)。
-  // pattern A は char candidate (scene uid)、pattern B は card candidate (hand cardId) を含む。
+  // user_request 20260522_01 #2/#6 BUG-054 + BUG-065 + BUG-075 + BUG-076: human player の
+  // ときは side-channel に候補を set して atom を未解決のまま返却 (caller が queue 抑止)。
   //
-  // BUG-075: sequence 内に複数 pattern B atom がある場合 (D08013 a1 等)、後続 atom の
-  // walk で side-channel を上書きすると最初の atom 用 modal が出なくなる。既に set 済み
-  // なら新規 set せず未解決返却し、ユーザーの 1 段階目選択を待つ。次段階の解決は
-  // effectPickResolve dispatch + 再 queue で実現する想定 (defer)。
+  // BUG-075: sequence 内に複数 pattern B atom がある場合、後続 atom の walk で side-channel
+  // を上書きすると最初の atom 用 modal が出なくなる。既に set 済みなら新規 set せず未解決返却。
+  //
+  // BUG-076: evidence kind の Candidate は cardId field を持たないため (kind:'evidence',
+  // player, index のみ)、従来 filter から除外されていた。evidenceToHand などの atom で
+  // evidence area を pick する場合に対応するため、evidence/file kind も candidate に含める。
   if (opts.humanChooser) {
     if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
       return atom as Effect;
     }
-    const cardCands = cands.filter((c) => c.kind === 'char' || c.kind === 'card') as Array<
-      | { kind: 'char'; uid: string; cardId: string; player: Player }
-      | { kind: 'card'; cardId: string; area: string; player: Player; index?: number }
-    >;
-    if (cardCands.length === 0) return atom as Effect;
+    type CardLike = { uid: string; cardId: string; player: Player };
+    const cardLikeCands: CardLike[] = [];
+    for (const c of cands) {
+      if (c.kind === 'char') {
+        cardLikeCands.push({ uid: c.uid, cardId: c.cardId, player: c.player });
+      } else if (c.kind === 'card') {
+        // BUG-065 pattern B: card candidate には uid が無いので synthetic uid (cardId#index)
+        cardLikeCands.push({ uid: `${c.cardId}#${c.index ?? 0}`, cardId: c.cardId, player: c.player });
+      } else if (c.kind === 'evidence') {
+        // BUG-076: evidence area の pick (D08013 a1 step 2 evidenceToHand 等)
+        const evCardId = state.players[c.player].evidence[c.index]?.cardId ?? 'unknown';
+        cardLikeCands.push({ uid: `evidence:${c.player}:${c.index}`, cardId: evCardId, player: c.player });
+      }
+      // file kind は face-down で cardId 不明のため skip (face-up にした後 separately 処理)
+    }
+    if (cardLikeCands.length === 0) return atom as Effect;
     const targetRef = target as { n?: { min?: number; max?: number } };
     setPendingEffectPickSide({
       player: byPlayer,
-      candidates: cardCands.map((c) =>
-        c.kind === 'char'
-          ? { uid: c.uid, cardId: c.cardId, player: c.player }
-          // BUG-065 pattern B: card candidate には uid が無いので、
-          // synthetic uid (cardId#index) を作って UI 側 modal の key として使用。
-          // dispatch 側 (useEngineDispatch.effectPickResolve) で synthetic uid から
-          // cardId を逆引きして target 配列を構築する。
-          : { uid: `${c.cardId}#${c.index ?? 0}`, cardId: c.cardId, player: c.player },
-      ),
+      candidates: cardLikeCands,
       atomVerb: verb,
       atomArgs: { ...args },
       nMin: targetRef.n?.min ?? 1,
