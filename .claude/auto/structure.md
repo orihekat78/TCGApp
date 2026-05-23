@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1196
+- **ファイル数**: 1200
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -205,6 +205,7 @@
     - `BUG-070.md`
     - `BUG-071.md`
     - `BUG-072.md`
+    - `BUG-073.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -375,6 +376,8 @@
     - `smoke-2026-05-22-9.md` — Smoke 1000戦レポート — smoke-2026-05-22-070557
     - `smoke-2026-05-22.json`
     - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
+    - `smoke-2026-05-23-2.json`
+    - `smoke-2026-05-23-2.md` — Smoke 1000戦レポート — smoke-2026-05-23-005334
     - `smoke-2026-05-23.json`
     - `smoke-2026-05-23.md` — Smoke 1000戦レポート — smoke-2026-05-23-002544
     - `smoke-baseline.json`
@@ -1160,6 +1163,7 @@
     - **`effect/`**
       - `atom-handlers.test.ts` — engine.effect.runAtom — Atom Verb dispatcher tests
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
+      - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests

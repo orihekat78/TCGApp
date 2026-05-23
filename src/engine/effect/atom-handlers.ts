@@ -169,11 +169,19 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'mill': {
-      mutate.deck.removeFromTop(s, a.player as Player, a.n as number);
+      // BUG-073: effect log
+      const millP = a.player as Player;
+      const millN = a.n as number;
+      mutate.deck.removeFromTop(s, millP, millN);
+      mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: String(millN) });
       return;
     }
     case 'fileAdd': {
-      mutate.file.addFromDeckTop(s, a.player as Player, a.n as number);
+      // BUG-073: effect log
+      const faP = a.player as Player;
+      const faN = a.n as number;
+      mutate.file.addFromDeckTop(s, faP, faN);
+      mutate.log.append(s, { ts: Date.now(), player: faP, turn: s.turn.number, action: 'effect:fileAdd', result: String(faN) });
       return;
     }
     case 'filePopToHand': {
@@ -185,25 +193,37 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         const cardId = popped.type === 'assisted-partner' ? popped.cardId : FILE_CARD_BACK_PLACEHOLDER;
         mutate.hand.add(s, p, [cardId]);
       }
+      // BUG-073: effect log (popped が無い場合も log には残す)
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand' });
       return;
     }
     case 'evidenceGain': {
       const p = a.player as Player;
       const n = a.n as number;
       mutate.evidence.addFromDeck(s, p, n, false, { turn: s.turn.number, via: 'effect' });
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceGain', result: String(n) });
       return;
     }
     case 'evidenceLose': {
       const p = a.player as Player;
       const n = a.n as number;
+      let lost = 0;
       for (let i = 0; i < n; i++) {
         const removed = mutate.evidence.removeTop(s, p);
         if (!removed) break;
+        lost++;
       }
+      // BUG-073: effect log (実際にロストした枚数を記録)
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceLose', result: String(lost) });
       return;
     }
     case 'evidenceFlip': {
-      mutate.evidence.flipFaceUp(s, a.player as Player, a.idx as number);
+      const efP = a.player as Player;
+      const efIdx = a.idx as number;
+      mutate.evidence.flipFaceUp(s, efP, efIdx);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: efP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(efIdx) });
       return;
     }
     // --- 証拠 / 手札 (G25/G30) ---
@@ -212,10 +232,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const target = a.target as string;
       const list = s.players[p].evidence;
       const idx = list.findIndex(e => e.cardId === target);
+      let moved = false;
       if (idx !== -1) {
         list.splice(idx, 1);
         mutate.hand.add(s, p, [target]);
+        moved = true;
       }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target, result: moved ? 'ok' : 'not-found' });
       return;
     }
     case 'handAddFromRemove': {
@@ -223,10 +247,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const target = a.target as string;
       const rem = s.players[p].remove;
       const idx = rem.indexOf(target);
+      let moved = false;
       if (idx !== -1) {
         rem.splice(idx, 1);
         mutate.hand.add(s, p, [target]);
+        moved = true;
       }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target, result: moved ? 'ok' : 'not-found' });
       return;
     }
 
@@ -243,7 +271,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         // 未解決の bind ref → no-op skip (BUG-048 と同 pattern)
         return;
       }
-      const newChar = mutate.scene.enter(s, requireField<Player>(a, 'player', 'string'), cardId, {
+      const enterPlayer = requireField<Player>(a, 'player', 'string');
+      const newChar = mutate.scene.enter(s, enterPlayer, cardId, {
         named: (a.named as boolean | undefined) ?? false,
         viaEffect,
       });
@@ -256,6 +285,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         const entry = existing[0] as Record<string, unknown>;
         entry.uid = newChar.uid;
       }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter', target: cardId });
       // rules/17 — 現場登場時 Hook (【登場時】・【疾風 N】判定)
       event.emit(s, 'enter', {
         uid: newChar.uid,
@@ -266,10 +297,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'sceneSwitch': {
       const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
-      const newChar = mutate.scene.switchEnter(s, a.player as Player, a.cardId as string, a.removeUid as string, {
+      const swPlayer = a.player as Player;
+      const swCardId = a.cardId as string;
+      const newChar = mutate.scene.switchEnter(s, swPlayer, swCardId, a.removeUid as string, {
         named: (a.named as boolean | undefined) ?? false,
         viaEffect,
       });
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: swPlayer, turn: s.turn.number, action: 'effect:sceneSwitch', target: swCardId });
       // スイッチ登場も rules/17 上「登場」として enter Hook が発火する
       event.emit(s, 'enter', {
         uid: newChar.uid,
@@ -280,25 +315,46 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'sceneRemove': {
       type RemoveCause = 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
-      mutate.scene.removeToRemove(s, a.uid as string, (a.cause as RemoveCause) ?? 'effect');
+      const srUid = a.uid as string;
+      mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect');
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
       return;
     }
     case 'sceneSetState': {
-      mutate.scene.setState(s, a.uid as string, a.state as 'active' | 'sleep' | 'stun');
+      const ssUid = a.uid as string;
+      const ssState = a.state as 'active' | 'sleep' | 'stun';
+      mutate.scene.setState(s, ssUid, ssState);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneSetState', target: ssUid, result: ssState });
       return;
     }
     case 'sceneDisguise': {
-      mutate.char.disguiseInto(s, a.uid as string, a.newCardId as string);
+      const dgUid = a.uid as string;
+      const dgNewCardId = a.newCardId as string;
+      mutate.char.disguiseInto(s, dgUid, dgNewCardId);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneDisguise', target: dgUid, result: dgNewCardId });
       return;
     }
 
     // --- キャラ修正 ---
     case 'charModifyAP': {
-      mutate.char.modifyAP(s, a.uid as string, a.delta as number, a.scope as 'turn' | 'contact' | 'permanent');
+      const maUid = a.uid as string;
+      const maDelta = a.delta as number;
+      const maScope = a.scope as 'turn' | 'contact' | 'permanent';
+      mutate.char.modifyAP(s, maUid, maDelta, maScope);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyAP', target: maUid, result: `${maDelta >= 0 ? '+' : ''}${maDelta}/${maScope}` });
       return;
     }
     case 'charModifyLP': {
-      mutate.char.modifyLP(s, a.uid as string, a.delta as number, a.scope as 'turn' | 'contact' | 'permanent');
+      const mlUid = a.uid as string;
+      const mlDelta = a.delta as number;
+      const mlScope = a.scope as 'turn' | 'contact' | 'permanent';
+      mutate.char.modifyLP(s, mlUid, mlDelta, mlScope);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP', target: mlUid, result: `${mlDelta >= 0 ? '+' : ''}${mlDelta}/${mlScope}` });
       return;
     }
     // charSetAP / charSetLP: 「APをXにする」(修正は上乗せ) — rules/19
@@ -310,59 +366,101 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'charSetLP':
       throw new Error('charSetLP: not yet supported — Phase 5 must define mutate.char.setExact');
     case 'charOverrideAP': {
-      mutate.char.setOverrideAP(s, a.uid as string, a.val as number | null);
+      const oaUid = a.uid as string;
+      const oaVal = a.val as number | null;
+      mutate.char.setOverrideAP(s, oaUid, oaVal);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charOverrideAP', target: oaUid, result: oaVal === null ? 'reset' : String(oaVal) });
       return;
     }
     case 'charOverrideLP': {
-      mutate.char.setOverrideLP(s, a.uid as string, a.val as number | null);
+      const olUid = a.uid as string;
+      const olVal = a.val as number | null;
+      mutate.char.setOverrideLP(s, olUid, olVal);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charOverrideLP', target: olUid, result: olVal === null ? 'reset' : String(olVal) });
       return;
     }
     case 'charGrantKeyword': {
       // user_request 20260522_01 #12 fix: $matched.uid 等の bind ref 解決
       const grantUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof grantUid !== 'string' || grantUid.startsWith('$')) return;
-      mutate.char.grantKeyword(s, grantUid, a.kw as string, (a.scope as 'turn' | 'contact' | 'permanent' | undefined) ?? 'permanent');
+      const grantKw = a.kw as string;
+      const grantScope = (a.scope as 'turn' | 'contact' | 'permanent' | undefined) ?? 'permanent';
+      mutate.char.grantKeyword(s, grantUid, grantKw, grantScope);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantKeyword', target: grantUid, result: `${grantKw}/${grantScope}` });
       return;
     }
     case 'charRevokeKeyword': {
       const revokeUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof revokeUid !== 'string' || revokeUid.startsWith('$')) return;
-      mutate.char.revokeKeyword(s, revokeUid, a.kw as string);
+      const revokeKw = a.kw as string;
+      mutate.char.revokeKeyword(s, revokeUid, revokeKw);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRevokeKeyword', target: revokeUid, result: revokeKw });
       return;
     }
     case 'charDisableOriginal': {
-      mutate.char.disableOriginalAbilities(s, a.uid as string);
+      const doUid = a.uid as string;
+      mutate.char.disableOriginalAbilities(s, doUid);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charDisableOriginal', target: doUid });
       return;
     }
     case 'charSetTurnEffect': {
-      mutate.char.setTurnEffect(s, a.uid as string, a.key as string, a.val);
+      const teUid = a.uid as string;
+      const teKey = a.key as string;
+      mutate.char.setTurnEffect(s, teUid, teKey, a.val);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetTurnEffect', target: teUid, result: `${teKey}=${String(a.val)}` });
       return;
     }
     case 'charSetCard': {
-      mutate.char.setCard(s, a.uid as string, a.cardId as string, a.faceUp as boolean);
+      const scUid = a.uid as string;
+      const scCardId = a.cardId as string;
+      mutate.char.setCard(s, scUid, scCardId, a.faceUp as boolean);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: scCardId });
       return;
     }
     case 'charStackCard': {
-      mutate.char.stackCard(s, a.uid as string, a.n as number);
+      const stUid = a.uid as string;
+      const stN = a.n as number;
+      mutate.char.stackCard(s, stUid, stN);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard', target: stUid, result: String(stN) });
       return;
     }
 
     // --- パートナー / 事件 ---
     case 'partnerAssist': {
-      mutate.partner.assist(s, a.player as Player);
+      const paP = a.player as Player;
+      mutate.partner.assist(s, paP);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: paP, turn: s.turn.number, action: 'effect:partnerAssist' });
       return;
     }
     case 'partnerSetState': {
-      mutate.partner.setState(s, a.player as Player, a.state as 'active' | 'sleep' | 'stun');
+      const psP = a.player as Player;
+      const psState = a.state as 'active' | 'sleep' | 'stun';
+      mutate.partner.setState(s, psP, psState);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: psP, turn: s.turn.number, action: 'effect:partnerSetState', result: psState });
       return;
     }
     case 'partnerSolveCase': {
-      mutate.partner.solveCase(s, a.player as Player);
+      const scP = a.player as Player;
+      mutate.partner.solveCase(s, scP);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: scP, turn: s.turn.number, action: 'effect:partnerSolveCase' });
       return;
     }
     case 'caseToResolved': {
       const p = a.player as Player;
       mutate.case.toResolved(s, p);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:caseToResolved' });
       // rules/01 — 事件編→解決編 移行 Hook (一方通行)。
       // caseResolvedHandRemove 等の事件カード共通能力がここで反応する。
       event.emit(s, 'case:to-resolved', { player: p }, ctx.source);
@@ -440,6 +538,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
           matched,
         };
       }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckRevealUntil', result: `revealed=${revealed.length} matched=${matched ?? 'none'}` });
       return;
     }
     case 'deckToBottomBound': {
@@ -459,12 +559,16 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         if (idx !== -1) deck.splice(idx, 1);
       }
       mutate.deck.toBottom(s, p, ids);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(ids.length) });
       return;
     }
     case 'deckShuffle': {
       // rules/04, 14, 26 — デッキ基本シャッフル (D11019 等で使用)
       const p = a.player as Player;
       mutate.deck.shuffle(s, p, ctx.rng);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckShuffle' });
       return;
     }
     case 'souza': {
