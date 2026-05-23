@@ -127,27 +127,45 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
   switch (verb) {
     // --- ドロー / FILE / 証拠 ---
     case 'draw': {
-      // deck.draw が手札への push まで内部で行う
-      mutate.deck.draw(s, requireField<Player>(a, 'player', 'string'), requireField<number>(a, 'n', 'number'));
+      // BUG-072: deck.draw が手札への push まで内部で行う + effect 経由の draw を log に残す
+      const drawPlayer = requireField<Player>(a, 'player', 'string');
+      const drawN = requireField<number>(a, 'n', 'number');
+      mutate.deck.draw(s, drawPlayer, drawN);
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player: drawPlayer,
+        turn: s.turn.number,
+        action: 'effect:draw',
+        result: String(drawN),
+      });
       return;
     }
     case 'discard': {
       // BUG-065 (本格対応) で resolve-picks.ts が pattern B (uid なし + target.kind='pick')
-      // の解決をサポートするよう拡張済み。ここに到達した時点で a.target は string[] のはず。
-      // ただし cands 0 件などで resolver が解決できなかった場合の安全網として
-      // skip + log を維持 (本来到達しないパスだが防御として残す)。
-      // 元: BUG-045 で導入された暫定 skip。BUG-065 で resolver 拡張により本格対応。
+      // の解決をサポート。ここに到達した時点で a.target は string[] のはず。
+      // BUG-071: pre-pick step (例: D08015 a1 step 1 draw) 実行のため、triggered
+      // listener の queue skip を廃止 → human pick 待ちの atom はここで no-op skip。
+      // BUG-072: skip 時の action 名を 'effect:discard:awaiting-pick' に変更し
+      // UI で「効果: 手札選択待ち」と日本語表示できるよう mapping 追加。
       if (!Array.isArray(a.target)) {
         mutate.log.append(s, {
           ts: Date.now(),
           player: a.player as Player,
           turn: s.turn.number,
-          action: 'discard:skip-unresolved-pick',
+          action: 'effect:discard:awaiting-pick',
         });
         return;
       }
       const target = a.target as string[];
       mutate.hand.discardToRemove(s, a.player as Player, target);
+      // BUG-072: effect 経由の discard 成功も log に残す
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player: a.player as Player,
+        turn: s.turn.number,
+        action: 'effect:discard',
+        result: String(target.length),
+      });
       return;
     }
     case 'mill': {

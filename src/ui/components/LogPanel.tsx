@@ -67,6 +67,10 @@ const ACTION_LABEL: Record<string, string> = {
   'contact-disguise': '変装',
   'contact-pass': 'パス',
   'contact-judge': '判定',
+  // BUG-072: effect 経由 atom の log を日本語化
+  'effect:draw': '効果: ドロー',
+  'effect:discard': '効果: 手札リムーブ',
+  'effect:discard:awaiting-pick': '効果: 手札選択待ち',
 };
 
 function formatTime(ts: number): string {
