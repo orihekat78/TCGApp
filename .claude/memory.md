@@ -1,47 +1,50 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
 過去のセッションログ: [.claude/sessions/](sessions/)
+次セッション引継ぎ: [.claude/sessions/NEXT-SESSION-PROMPT.md](sessions/NEXT-SESSION-PROMPT.md)
 
-## 2026-05-22 セッション 18 (user_request 20260522_01 16 件 + 派生 + Phase 5/6)
+## 2026-05-23 セッション (BUG-064 〜 BUG-077 cascade)
 
-### user_request 20260522_01 (16 件本体 + 関連)
+### 概要
 
-| # | 内容 | BUG | commit |
-|---|---|---|---|
-| 1 | バグフォルダ audit + 教訓集 | AUDIT/LESSONS-LEARNED | `2db6bf5` |
-| 2 / 6 | 任意効果 auto-pick 停止 + UI 統合 | BUG-053 + BUG-054 | `7b1e86b` `bacc22b` |
-| 3 | log カード名 | BUG-060 | `78a93f2` |
-| 4 / 16 | FILE 7+ 解決編 auto-phase 経路配線 | BUG-050 | `cdc0725` |
-| 5 | 事件カード能力 (scope='always') | BUG-051 | `d558f8c` |
-| 7 | cutin actor 名 | BUG-055 | `4d24567` |
-| 8 | action[事件] ガード時証拠誤変動 | BUG-049 | `4d32418` |
-| 9 | 手札虫眼鏡 | BUG-056 | `761d46a` |
-| 10 / 13 | Q&A clarification | docs only | `9fd65f8` |
-| 11 | リムーブ拡大 | BUG-057 | `52a2adf` |
-| 12 | D11019 bind ref + 演出 | BUG-052 + BUG-061 | `f85edfe` `2894c61` |
-| 14 | speed preset 拡張 | BUG-058 | `ca23f9e` |
-| 15 | CPU 可視化 spec + 案 1/2 実装 | BUG-059 + 062 + 063 | `094805b` `5394ee4` `99f6c0c` |
+D08015 (小嶋元太) ワークフロー作成依頼から始まり、a1 機能不全発覚 → resolve-picks pattern B 修正 → 連続 incomplete fix 発覚 → 各々修正。**BUG-066 で立てた「修正済 前の 4 点 verify protocol」を 6 回連続で破った**反省記録。
 
-### AUDIT 派生
+### 主要 commit (24 件)
 
-- commit hash 12 件補填 (`9b36f5f`)
-- BUG template + lint script (`ebeebed`)
-- side-channel pattern doc (`f53598c`)
-- category enum migration 29 件 → warns=0 (`bf19605`)
+| BUG | commit | 概要 | 状態 |
+| --- | --- | --- | --- |
+| BUG-064 | 8c2f3e2 同梱 | ワークフロー図の抽象度漏れ、WORKFLOW-GUIDELINES.md 新規 | 修正済 |
+| BUG-065 | 8c2f3e2 | resolve-picks pattern B 対応 | 修正済 |
+| BUG-066 | 8c2f3e2 | claude 自己検証漏れ起票、4 点 verify protocol 明文化 | 修正済 |
+| BUG-067〜070 | 78679d0 | 全 BUG audit (4 agent 並列) で発覚した 4 件起票 | 未着手 |
+| BUG-071 | 37ffb3a | triggered listener sequence pre-step skip 廃止 | 修正済 |
+| BUG-072 | 6297ed4 | effect log + ACTION_LABEL 日本語化 | 修正済 |
+| BUG-073 | 6c6d685 | 全 atom log + pattern B カード水平展開 verify | 修正済 |
+| BUG-074 | 4f72085 | evidenceToHand/handAddFromRemove target string\|array 両対応 | 修正済 |
+| BUG-075 | ac2cfe6 | side-channel 上書き防止 | 修正済 |
+| BUG-076 | 8d18c4f | tryRePickFromAtom + evidence kind 対応 | 修正済 |
+| **BUG-077** | **f022d72** | **D08013 a1 step 2 が UI 経路で反映されない** | **対応中** (engine logic 4/4 PASS、UI trace 要) |
 
-### Phase 5: BUG-036 deck-out 敗北条件配線 (`1480465`)
+### 既存 BUG 訂正 (78679d0)
 
-`draw()` で refresh 失敗時 `gameResult.set(opp, 'deck-out')` 配線。
-既存 gameResult 上書き gate 付き。test 3 件追加 (1547 → 1551 PASS)。
+- BUG-035 / 045 / 048 / 053 / 054: 「修正済」過大 claim を訂正、BUG-065 で初完全動作
+- LESSONS-LEARNED 教訓 11: 4 点 verify protocol 厳格化
 
-### Phase 6: 9 BUG status 正規化 (`a68f58b`)
+### 検証
 
-「対応中・見送り・仕様外」9 件を全て 修正済 に正規化。**全 62 BUG が
-修正済 status** (errors=0 / warns=0) 達成。
+- vitest 1573 PASS / 1 skipped
+- typecheck clean
+- smoke:1000 timeouts=0 exceptions=0 winsA=511 winsB=489
 
-### 数値
-- vitest 1551 PASS / 1 skipped
-- E2E 53 PASS / 1 skipped
-- smoke 1000 戦: avg 10.64 / 0 timeout / 0 exception
-- lint:bugs: 62 BUG / errors=0 / warns=0
-- 80+ commit を origin/main へ push
+### 残課題
+
+1. **BUG-077 RCA Phase 2** — Playwright trace (詳細は NEXT-SESSION-PROMPT.md)
+2. **BUG-067〜070** — case declared limit / resolveBindRef 拡張 / LogPanel uid / BUG-009 残 4 項目
+3. ユーザー実機 verify: D08015 a1 + D08013 a1
+
+### メタ反省
+
+- 「修正済」前に 4 点 verify ([BUG-066](bugs/BUG-066.md) + 教訓 11) を徹底
+- engine 関数修正時は caller 側も verify
+- カードドキュメントは公式効果テキスト全文を必ず読む
+- 複数 pattern B atom を含む sequence の e2e test を fixture に追加

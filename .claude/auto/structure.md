@@ -539,7 +539,7 @@
     - `2026-05-21.md` — 2026-05-21 — Phase 7-2: 汎用 $pick substitution + 7 cards 水平展開で BUG-035 完全解消
     - `2026-05-22.md` — 作業ログ — 名探偵コナンTCG プロジェクト
     - `2026-05-23.md` — セッション 2026-05-23 — BUG-064 〜 077 cascade 詳細ログ
-    - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト
+    - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
