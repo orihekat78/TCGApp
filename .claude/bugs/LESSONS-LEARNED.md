@@ -137,11 +137,14 @@ BUG ファイルに「本格対応は別 BUG で」「次セッションで grep
 
 「次セッションで」「別 BUG で対応」「本格対応は別 BUG で」のような **未起票の deferred** は禁止。
 
-claude が 「修正済」と記述する前に必ず verify する 3 点 ([BUG-066](BUG-066.md)):
+claude が 「修正済」と記述する前に必ず verify する 4 点 ([BUG-066](BUG-066.md) + 2026-05-23 D08013 指摘):
 
+0. **カードの公式効果テキストを必ず読む** (BUG-073 D08013 指摘で追加) — カードファイル冒頭コメントの「公式テキスト」全文 + `description` を読み、各 atom がテキストのどの一文に対応するか書き出す。resolve-picks の atom 分類だけで効果を要約しない (step 数や atom 種別が公式テキストの動詞数と一致しないなら、見落としあり)。
 1. **関連ファイル現状確認** — 該当 BUG の「関連ファイル」セクションに挙がっているコードを Read で確認、修正内容が実在することを verify
 2. **警告語句 grep** — 修正範囲周辺に `暫定` / `TODO` / `FIXME` / `未対応` / `未配線` / `skip` / `本格対応` / `仮対応` / `workaround` が無いか grep、見つかった場合は別 BUG として起票
 3. **memory observation 検索** — mem-search で BUG ID と関連キーワード (atom 名 / function 名) を検索、続報・未解決事項を確認
+
+加えて、修正範囲が engine 側関数の場合、その関数の **caller 側コード** も同じ 4 点 verify を適用する (BUG-071 triggered listener skip 漏れの教訓)。
 
 ---
 
