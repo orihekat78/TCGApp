@@ -122,6 +122,24 @@ function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
   return fieldVal ?? value;
 }
 
+/**
+ * BUG-074: BUG-065 で resolve-picks が pattern B 解決時に target を array (`[cardId]`)
+ * で構築するよう変更。一部 atom (evidenceToHand / handAddFromRemove) は元々 string を
+ * 期待していたため、両形式から最初の cardId を取り出す正規化ヘルパー。
+ *
+ * 戻り値:
+ *   - string → そのまま返す
+ *   - string[] → 先頭要素を返す (n=1 ケースのみ正しく動作。n>1 の場合は要拡張)
+ *   - その他 (undefined / pick query object) → undefined (caller が awaiting-pick と判断)
+ */
+function normalizeTargetToString(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+    return value[0];
+  }
+  return undefined;
+}
+
 export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: EffectCtx): void {
   const a = args as Record<string, unknown>;
   switch (verb) {
@@ -228,8 +246,15 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     // --- 証拠 / 手札 (G25/G30) ---
     case 'evidenceToHand': {
+      // BUG-074: BUG-065 で resolve-picks が target を array 化 (`[cardId]`) する設計に
+      // 変更されたため、string|array 両対応に正規化。未解決の pick query object の場合は
+      // awaiting-pick として skip + log (D08013 a1 step 2 等で発覚)。
       const p = a.player as Player;
-      const target = a.target as string;
+      const target = normalizeTargetToString(a.target);
+      if (!target) {
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand:awaiting-pick' });
+        return;
+      }
       const list = s.players[p].evidence;
       const idx = list.findIndex(e => e.cardId === target);
       let moved = false;
@@ -243,8 +268,13 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'handAddFromRemove': {
+      // BUG-074: 同じく string|array 両対応に正規化
       const p = a.player as Player;
-      const target = a.target as string;
+      const target = normalizeTargetToString(a.target);
+      if (!target) {
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });
+        return;
+      }
       const rem = s.players[p].remove;
       const idx = rem.indexOf(target);
       let moved = false;

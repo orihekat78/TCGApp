@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1200
+- **ファイル数**: 1204
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -206,6 +206,7 @@
     - `BUG-071.md`
     - `BUG-072.md`
     - `BUG-073.md`
+    - `BUG-074.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -378,6 +379,8 @@
     - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
     - `smoke-2026-05-23-2.json`
     - `smoke-2026-05-23-2.md` — Smoke 1000戦レポート — smoke-2026-05-23-005334
+    - `smoke-2026-05-23-3.json`
+    - `smoke-2026-05-23-3.md` — Smoke 1000戦レポート — smoke-2026-05-23-020302
     - `smoke-2026-05-23.json`
     - `smoke-2026-05-23.md` — Smoke 1000戦レポート — smoke-2026-05-23-002544
     - `smoke-baseline.json`
@@ -1163,6 +1166,7 @@
     - **`effect/`**
       - `atom-handlers.test.ts` — engine.effect.runAtom — Atom Verb dispatcher tests
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
+      - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests

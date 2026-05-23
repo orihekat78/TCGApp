@@ -103,6 +103,9 @@ const ACTION_LABEL: Record<string, string> = {
   'effect:deckToBottomBound': '効果: デッキ下へ移動',
   'effect:deckShuffle': '効果: デッキシャッフル',
   souza: '捜査',
+  // BUG-074: pick 待ち atom の awaiting-pick log
+  'effect:evidenceToHand:awaiting-pick': '効果: 証拠 → 手札 (選択待ち)',
+  'effect:handAddFromRemove:awaiting-pick': '効果: リムーブ → 手札 (選択待ち)',
 };
 
 function formatTime(ts: number): string {
