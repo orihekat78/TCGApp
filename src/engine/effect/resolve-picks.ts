@@ -109,10 +109,18 @@ function substituteAtomPick(
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
   const byPlayer: Player = opts.byPlayer ?? 'self';
 
-  // user_request 20260522_01 #2/#6 BUG-054 + BUG-065: human player のときは side-channel
-  // に候補を set して atom を未解決のまま返却 (caller が queue 抑止)。
+  // user_request 20260522_01 #2/#6 BUG-054 + BUG-065 + BUG-075: human player のときは
+  // side-channel に候補を set して atom を未解決のまま返却 (caller が queue 抑止)。
   // pattern A は char candidate (scene uid)、pattern B は card candidate (hand cardId) を含む。
+  //
+  // BUG-075: sequence 内に複数 pattern B atom がある場合 (D08013 a1 等)、後続 atom の
+  // walk で side-channel を上書きすると最初の atom 用 modal が出なくなる。既に set 済み
+  // なら新規 set せず未解決返却し、ユーザーの 1 段階目選択を待つ。次段階の解決は
+  // effectPickResolve dispatch + 再 queue で実現する想定 (defer)。
   if (opts.humanChooser) {
+    if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
+      return atom as Effect;
+    }
     const cardCands = cands.filter((c) => c.kind === 'char' || c.kind === 'card') as Array<
       | { kind: 'char'; uid: string; cardId: string; player: Player }
       | { kind: 'card'; cardId: string; area: string; player: Player; index?: number }
