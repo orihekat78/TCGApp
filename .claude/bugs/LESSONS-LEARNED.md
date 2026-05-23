@@ -23,6 +23,7 @@ state 反映 → UI 表示まで complete flow を E2E で検証しない限り�
 **該当 BUG**: BUG-032 / BUG-033 / BUG-051
 
 listener handler 追加時は以下 3 点を必ず明示検査:
+
 1. `ability.condition`: gate 評価 logic が listener に到達するか
 2. `trigger.selfOnly`: cross-player 発動の意図確認
 3. `listener.scope` (=`on-scene`/`on-hand`/etc): 配置 area との整合
@@ -48,6 +49,7 @@ resolver / engine test case を先に書いてから data を入れる。data �
 
 「??」「cardId が見える」「uid 直出し」のような UX 劣化は繰返し発生する。
 text fix BUG では:
+
 - display format (例: `${name} (${cardId})`)
 - fallback rule (resolveCard 失敗時の挙動)
 - i18n 余地 (将来英訳時の hook)
@@ -151,7 +153,7 @@ claude が 「修正済」と記述する前に必ず verify する 4 点 ([BUG-
 ## 教訓 → enforcement mapping (Phase 7、能動化)
 
 | 教訓 | enforcement script / mechanism |
-|---|---|
+| --- | --- |
 | 1 side-channel pattern | **`scripts/lint-side-channel.ts`** (能動、4 点配線 check) |
 | 2 listener 3 点セット | `scripts/lint-listener-scope.ts` (能動、pre-commit hook) |
 | 3 card data resolver test 先行 | `scripts/lint-card-addition.ts` (warn、pre-commit hook) |
@@ -165,6 +167,7 @@ claude が 「修正済」と記述する前に必ず verify する 4 点 ([BUG-
 | 11 修正済 transition protocol | `scripts/lint-bug-followup.ts` (defer): deferred 文言が残ったまま status=修正済 になっていないか warn |
 
 追加 enforcement (Phase 8):
+
 - **test coverage threshold**: `npm run test:coverage && npm run check:coverage`
   (line ≥ 70% / branch ≥ 60% / function ≥ 70% / statement ≥ 70%)
 - **新規 src/.ts → tests/.test.ts pair**: `scripts/lint-test-pair.ts` (warn)
