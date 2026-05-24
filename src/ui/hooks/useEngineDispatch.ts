@@ -482,12 +482,14 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       store.setPendingMisread(null);
     }
     // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択
+    // BUG-078 fix: queue 化対応。effectPickResolve 時は「次の pending を drain して set」
+    // (queue が空なら null)。他 action では「新規 pending があれば先頭を set」。
     const effectPickSide = _drainPendingEffectPickSide();
-    if (effectPickSide) {
-      store.setPendingEffectPick(effectPickSide);
-    }
     if (action.type === 'effectPickResolve') {
-      store.setPendingEffectPick(null);
+      // resolve で current pending を消化したので次の queue 先頭を反映 (or 空なら null)
+      store.setPendingEffectPick(effectPickSide);
+    } else if (effectPickSide) {
+      store.setPendingEffectPick(effectPickSide);
     }
     // user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出側チャネル drain
     const deckRevealSide = _drainPendingDeckRevealSide();

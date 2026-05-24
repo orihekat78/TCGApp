@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `a37ab1dfbebd`
+> Source hash: `1661d7fa6bca`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,58 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-05-25
+title: BUG-078 修正 — side-channel queue 化で multi-PB pick sequence の step 3 modal 表示
+type: fix
+scope: engine / ui
+---
+
+## BUG-078: D08013 a1 step 2 解決後 step 3 modal が出ない問題
+
+D08013 a1 = `[evidenceGain, evidenceToHand, discard]` の 3 step sequence で、step 2
+(evidenceToHand) 解決後に step 3 (discard) の modal が出ず、効果が完結しない不具合。
+
+## 採用方針: side-channel の queue 化
+
+従来 `__pendingEffectPickSide` は単一スロット (objet | null)。BUG-075 由来の「上書き
+しない」guard により sequence 内で複数の PB pick atom があっても 1 つしか保持できない
+設計。**FIFO queue 化** することで複数 awaiting を順次保持・順次消化。
+
+### 変更
+
+`src/engine/effect/resolve-picks.ts`:
+
+- `__pendingEffectPickQueue: PendingEffectPickSide[]` 新設 (legacy `__pendingEffectPickSide`
+  は queue[0] を反映する read-only compat property)
+- `pushPendingEffectPickSide` (末尾 push) / `_drainPendingEffectPickSide` (FIFO shift)
+- BUG-075 由来の「既に set 済みなら上書きしない」guard 削除 (queue 化で再発不能化)
+- `_clearPendingEffectPickQueue` / `_peekPendingEffectPickQueueLength` / `_pushPendingEffectPickSideForTest` (テスト用)
+
+`src/ui/hooks/useEngineDispatch.ts`:
+
+- effectPickResolve 時の post-drain: 「current 消化済 → queue 先頭を反映 (空なら null)」
+
+### 検証
+
+- 新規 test Phase H (`bug-077-evidence-to-hand-e2e.test.ts`): D08013 a1 同型 sequence の
+  初回 drain で queue に step 2 + step 3 両方が push されることを assert
+- 既存 test 更新: BUG-075 不変 (上書きしない) → 「queue 末尾 push」不変に書き換え、
+  side-channel 直接 read を `_drainPendingEffectPickSide` 経由に
+- vitest 1578 PASS / 1 skipped、typecheck clean、smoke 1000 戦 0 例外
+- Playwright 実機: D08013 a1 → step 2 modal → 選択 → **step 3 modal 自動表示** →
+  選択 → 完了 (evidence=0、hand=6、remove=[discard 対象])
+
+### 既知の限界 (follow-up)
+
+step 3 discard 候補は **初回 drain 時の hand**。step 2 で hand に追加された evidence card は
+step 3 候補に含まれない。実害は薄いので別 task。
+
+### 関連 BUG
+
+BUG-075 (上書きしない不変、queue 化で置換) / BUG-076 (連続 pick の tryRePickFromAtom) /
+BUG-077 (step 2 silent skip 修正)
 
 ---
 date: 2026-05-24

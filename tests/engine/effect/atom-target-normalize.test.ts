@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { _clearPendingEffectPickQueue, _pushPendingEffectPickSideForTest, _peekPendingEffectPickQueueLength, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import type { EffectCtx } from '@/engine/types';
 
 function ctxSelf(): EffectCtx {
@@ -72,7 +73,7 @@ describe('BUG-074: handAddFromRemove target normalize', () => {
 // BUG-076: tryRePickFromAtom が awaiting-pick 時に side-channel を再 set することの verify
 describe('BUG-076: tryRePickFromAtom 経由で連続 pick (sequence の step 2 → step 3 modal flow)', () => {
   beforeEach(() => {
-    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+    _clearPendingEffectPickQueue();
   });
 
   it('evidenceToHand で awaiting-pick 時、有効な query があれば side-channel が set される', () => {
@@ -101,9 +102,9 @@ describe('BUG-076: tryRePickFromAtom 経由で連続 pick (sequence の step 2 �
     expect(s.log[s.log.length - 1]?.action).toBe('effect:evidenceToHand:awaiting-pick');
   });
 
-  it('side-channel が既に set 済みなら、tryRePickFromAtom は上書きしない (BUG-075 不変)', () => {
-    // 既存 side-channel を set 状態にする
-    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = {
+  it('BUG-078 queue 化後: side-channel に既存 entry があるとき tryRePickFromAtom は queue 末尾に push (旧 BUG-075 不変は queue 化で置換)', () => {
+    // 既存 side-channel を queue に push しておく
+    _pushPendingEffectPickSideForTest({
       player: 'self',
       candidates: [{ uid: 'OLD-uid', cardId: 'OLD', player: 'self' }],
       atomVerb: 'discard',
@@ -111,7 +112,7 @@ describe('BUG-076: tryRePickFromAtom 経由で連続 pick (sequence の step 2 �
       nMin: 1,
       nMax: 1,
       source: { cardId: '', abilityId: '' },
-    };
+    });
     const s = createEmptyGameState();
     s.players.self.evidence.push({ cardId: 'X', faceUp: false, origin: { turn: 0, via: 'init' } });
     runAtom(
@@ -127,9 +128,13 @@ describe('BUG-076: tryRePickFromAtom 経由で連続 pick (sequence の step 2 �
       },
       ctxSelf(),
     );
-    // 既存 side-channel が上書きされていない
-    const side = (globalThis as { __pendingEffectPickSide?: { atomVerb: string; candidates: { cardId: string }[] } | null }).__pendingEffectPickSide;
-    expect(side?.atomVerb).toBe('discard');
-    expect(side?.candidates[0]?.cardId).toBe('OLD');
+    // queue 化により BUG-075 の「上書きしない」不変は「末尾 push」に変わる
+    expect(_peekPendingEffectPickQueueLength(), 'queue に 2 件 (既存 discard + 新規 evidenceToHand)').toBe(2);
+    const head = _drainPendingEffectPickSide();
+    expect(head?.atomVerb, 'queue 先頭は既存の discard (順序保証)').toBe('discard');
+    expect(head?.candidates[0]?.cardId).toBe('OLD');
+    const next = _drainPendingEffectPickSide();
+    expect(next?.atomVerb, 'queue 末尾は新規 evidenceToHand').toBe('evidenceToHand');
+    expect(next?.candidates[0]?.cardId).toBe('X');
   });
 });

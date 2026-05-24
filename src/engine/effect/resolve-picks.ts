@@ -63,8 +63,16 @@ export interface ResolveEffectPicksOpts {
   _fromAtomHandler?: boolean;
 }
 
-// user_request 20260522_01 #6 BUG-054: human pick の側チャネル
+// user_request 20260522_01 #6 BUG-054 + BUG-078 (queue 化): human pick の側チャネル。
+// BUG-078 fix: 単一スロットから FIFO queue に変更。sequence 内に複数 PB pick atom がある
+// 場合 (D08013 a1 step 2 evidenceToHand → step 3 discard 等)、初回 drain で両方を push し、
+// effectPickResolve dispatch ごとに先頭を shift して順次 UI に出す。
 declare global {
+  // eslint-disable-next-line no-var
+  var __pendingEffectPickQueue: PendingEffectPickSide[] | undefined;
+  // Legacy backward-compat: 旧コード/テストが queue[0] を読む時の互換 property。
+  // 書き込み (`= null`) しても queue は変わらないため、cleanup は
+  // `_clearPendingEffectPickQueue()` を使うこと。
   // eslint-disable-next-line no-var
   var __pendingEffectPickSide: PendingEffectPickSide | null | undefined;
 }
@@ -84,15 +92,46 @@ export type PendingEffectPickSide = {
   source: { cardId: string; abilityId: string };
 };
 
-function setPendingEffectPickSide(v: PendingEffectPickSide | null): void {
-  (globalThis as { __pendingEffectPickSide?: PendingEffectPickSide | null }).__pendingEffectPickSide = v;
+function getPendingQueue(): PendingEffectPickSide[] {
+  const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };
+  if (!g.__pendingEffectPickQueue) g.__pendingEffectPickQueue = [];
+  return g.__pendingEffectPickQueue;
 }
 
-/** dispatch 経由で UI 側 store に転送するための drain ヘルパ */
+/** 旧 single-slot property を queue[0] に同期 (テスト等の backward compat) */
+function syncLegacyPickProperty(): void {
+  const q = getPendingQueue();
+  (globalThis as { __pendingEffectPickSide?: PendingEffectPickSide | null }).__pendingEffectPickSide = q[0] ?? null;
+}
+
+function pushPendingEffectPickSide(v: PendingEffectPickSide): void {
+  getPendingQueue().push(v);
+  syncLegacyPickProperty();
+}
+
+/** test fixture / 内部 caller 用: queue に直接 push する公開ヘルパ */
+export function _pushPendingEffectPickSideForTest(v: PendingEffectPickSide): void {
+  pushPendingEffectPickSide(v);
+}
+
+/** dispatch 経由で UI 側 store に転送するための drain ヘルパ。FIFO 先頭を 1 件取り出す。 */
 export function _drainPendingEffectPickSide(): PendingEffectPickSide | null {
-  const v = (globalThis as { __pendingEffectPickSide?: PendingEffectPickSide | null }).__pendingEffectPickSide ?? null;
-  setPendingEffectPickSide(null);
+  const q = getPendingQueue();
+  const v = q.shift() ?? null;
+  syncLegacyPickProperty();
   return v;
+}
+
+/** queue の長さを確認するヘルパ (テスト/UI 用) */
+export function _peekPendingEffectPickQueueLength(): number {
+  return getPendingQueue().length;
+}
+
+/** queue を全クリア (テスト用 / セッション初期化用) */
+export function _clearPendingEffectPickQueue(): void {
+  const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };
+  g.__pendingEffectPickQueue = [];
+  syncLegacyPickProperty();
 }
 
 /**
@@ -113,9 +152,8 @@ export function tryRePickFromAtom(
   ctx: EffectCtx,
   opts: ResolveEffectPicksOpts,
 ): void {
-  if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
-    return; // 既に set 済み (別 atom の pick 待ち)
-  }
+  // BUG-078 fix: queue 化したので「既に set 済み」guard は不要。同 sequence 内の連続 PB
+  // atom も全て push する (UI が先頭から消化、effectPickResolve のたびに次が drain される)。
   // BUG-077: _fromAtomHandler=true で substituteAtomPick を呼ぶことで、
   // Pattern B でも side-channel set を許可 (初期 walk からの呼出と区別)。
   substituteAtomPick(state, atom, ctx, { ...opts, humanChooser: true, _fromAtomHandler: true });
@@ -181,14 +219,13 @@ function substituteAtomPick(
   // player, index のみ)、従来 filter から除外されていた。evidenceToHand などの atom で
   // evidence area を pick する場合に対応するため、evidence/file kind も candidate に含める。
   if (opts.humanChooser) {
-    if ((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide) {
-      return atom as Effect;
-    }
+    // BUG-078 fix: queue 化したので「既に set 済み」guard は不要。複数の awaiting を
+    // 全て push し、UI が FIFO で消化する (BUG-075 の上書き問題は queue 化で解消)。
     // BUG-077: Pattern B (uid 不在) は runtime atom-handler の awaiting-pick path で
-    // tryRePickFromAtom 経由で side-channel set される (正しい state を持つため)。
+    // tryRePickFromAtom 経由で push される (正しい state を持つため)。
     // 初期 walk (triggered.ts → resolveEffectPicks) では set を抑止し、後続 step が
     // 先行 step の target を横取りする問題を回避。Pattern A は runtime に awaiting-pick
-    // path が無いため、初期 walk でも set 必要 (flag 無視)。
+    // path が無いため、初期 walk でも push 必要 (flag 無視)。
     if (isPatternB && !opts._fromAtomHandler) {
       return atom as Effect;
     }
@@ -209,7 +246,7 @@ function substituteAtomPick(
     }
     if (cardLikeCands.length === 0) return atom as Effect;
     const targetRef = target as { n?: { min?: number; max?: number } };
-    setPendingEffectPickSide({
+    pushPendingEffectPickSide({
       player: byPlayer,
       candidates: cardLikeCands,
       atomVerb: verb,

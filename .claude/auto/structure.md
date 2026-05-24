@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1224
+- **ファイル数**: 1227
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -261,6 +261,7 @@
     - `2026-05-23-01-bug-065-077-pattern-b-cascade.md`
     - `2026-05-23-02-bug-077-fix.md`
     - `2026-05-24-01-pb-atom-short-form.md`
+    - `2026-05-25-01-bug-078-pick-queue.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -396,6 +397,8 @@
     - `smoke-2026-05-23-6.md` — Smoke 1000戦レポート — smoke-2026-05-23-032939
     - `smoke-2026-05-23.json`
     - `smoke-2026-05-23.md` — Smoke 1000戦レポート — smoke-2026-05-23-002544
+    - `smoke-2026-05-24-2.json`
+    - `smoke-2026-05-24-2.md` — Smoke 1000戦レポート — smoke-2026-05-24-150154
     - `smoke-2026-05-24.json`
     - `smoke-2026-05-24.md` — Smoke 1000戦レポート — smoke-2026-05-24-143431
     - `smoke-baseline.json`

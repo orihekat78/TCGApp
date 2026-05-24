@@ -6,7 +6,7 @@
 // + 候補 0 件の no-op fallback
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
+import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { Effect, EffectCtx, GameState } from '@/engine/types';
 
@@ -184,7 +184,7 @@ function stateWithSelfHand(...handCards: string[]): GameState {
 
 describe('engine.effect.resolveEffectPicks — pattern B (BUG-065)', () => {
   beforeEach(() => {
-    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+    _clearPendingEffectPickQueue();
   });
 
   it('atom: discard target を first candidate cardId 配列に substitute (AI heuristic fallback)', () => {
@@ -209,28 +209,28 @@ describe('engine.effect.resolveEffectPicks — pattern B (BUG-065)', () => {
     // BUG-077: 初期 walk (resolveEffectPicks) は Pattern B (uid 不在) の side-channel set を
     // 抑止する。理由: sequence の後続 step が先行 step の target を横取りする問題を回避。
     // runtime atom-handler awaiting-pick (tryRePickFromAtom 経由) で正しく set される。
-    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+    _clearPendingEffectPickQueue();
     const s = stateWithSelfHand('D08015', 'D08001');
     const resolved = resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf(), {
       humanChooser: true,
       source: { cardId: 'D08015', abilityId: 'a1' },
     }) as { args: { target: { kind?: string } } };
     expect(resolved.args.target.kind).toBe('pick');
-    const side = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide;
+    const side = _drainPendingEffectPickSide();
     expect(side, '初期 walk では Pattern B side-channel を set しない').toBeFalsy();
   });
 
   it('atom: humanChooser=true + _fromAtomHandler=true (runtime path) は Pattern B でも side-channel set (BUG-077)', () => {
     // BUG-077: runtime atom-handler awaiting-pick から呼ばれる tryRePickFromAtom 経由では
     // _fromAtomHandler=true 渡され、Pattern B でも正しく side-channel set される。
-    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+    _clearPendingEffectPickQueue();
     const s = stateWithSelfHand('D08015', 'D08001');
     resolveEffectPicks(s, DISCARD_PICK_ATOM, ctxSelf(), {
       humanChooser: true,
       _fromAtomHandler: true,
       source: { cardId: 'D08015', abilityId: 'a1' },
     });
-    const side = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide as {
+    const side = _drainPendingEffectPickSide() as {
       candidates: { cardId: string }[];
       atomVerb: string;
       nMin: number;

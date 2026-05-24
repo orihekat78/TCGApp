@@ -7,7 +7,7 @@
 // 確認する。
 
 import { describe, it, expect } from 'vitest';
-import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
+import { resolveEffectPicks, _clearPendingEffectPickQueue, _peekPendingEffectPickQueueLength } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { Effect, EffectCtx, GameState } from '@/engine/types';
 
@@ -118,14 +118,13 @@ describe('BUG-073: pattern B 水平展開 — 影響カード 4 件の effect �
     // の side-channel set を抑止する設計に変更。runtime tryRePickFromAtom 経由でのみ set。
     // 本テストは runtime path 相当 (_fromAtomHandler=true) で D08015 a1 の discard PB が
     // 正しく side-channel に set されることを確認。
-    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+    _clearPendingEffectPickQueue();
     const s = stateWithSelfHand('D08015', 'D08001');
     resolveEffectPicks(s, D08015.abilities[0]!.effect, ctxSelf(), {
       humanChooser: true,
       _fromAtomHandler: true,
       source: { cardId: 'D08015', abilityId: 'a1' },
     });
-    const side = (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide;
-    expect(side).toBeTruthy();
+    expect(_peekPendingEffectPickQueueLength(), 'queue に 1 件 push される').toBeGreaterThan(0);
   });
 });

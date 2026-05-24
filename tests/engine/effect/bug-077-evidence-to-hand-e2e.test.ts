@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { EffectCtx } from '@/engine/types';
 
 function ctxSelf(): EffectCtx {
@@ -15,7 +16,7 @@ function ctxSelf(): EffectCtx {
 
 describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
   beforeEach(() => {
-    (globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide = null;
+    _clearPendingEffectPickQueue();
   });
 
   it('Phase A: atom-handler の awaiting-pick → tryRePickFromAtom で side-channel set', () => {
@@ -240,5 +241,43 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     const resolved = resolveEffectPicks(s, atom, ctx, { byPlayer: 'self' }) as { args: { target?: unknown } };
     expect(Array.isArray(resolved.args.target), 'AI 経路では target が cardId 配列に解決').toBe(true);
     expect(resolved.args.target).toEqual(['EV-A']);
+  });
+
+  // BUG-078: D08013 a1 の step 2 (evidenceToHand) 解決後に step 3 (discard) modal が表示されない問題。
+  // queue 化により、初回 drain で step 2 / step 3 が queue に順次 push されることを検証する。
+  it('BUG-078 fix: D08013 a1 sequence の初回 drain で step 2 + step 3 が queue に push される', async () => {
+    const { resolveEffectPicks, _peekPendingEffectPickQueueLength, _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
+    const { run: runEffect } = await import('@/engine/effect/resolver');
+
+    const s = createEmptyGameState();
+    s.players.self.deck.push('DECK1'); // step 1 evidenceGain で取り込まれる
+    s.players.self.hand.push('H1', 'H2', 'H3', 'H4', 'H5');
+
+    // D08013 a1 と同型の sequence (短縮形)
+    const sequence = {
+      kind: 'sequence' as const,
+      steps: [
+        { kind: 'atom' as const, verb: 'evidenceGain' as never,   args: { player: 'self', n: 1 } },
+        { kind: 'atom' as const, verb: 'evidenceToHand' as never, args: { player: 'self', n: 1 } },
+        { kind: 'atom' as const, verb: 'discard' as never,        args: { player: 'self', n: 1 } },
+      ],
+    };
+
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'D08013', abilityId: 'a1' }, bindings: {} };
+    const resolved = resolveEffectPicks(s, sequence, ctx, { humanChooser: true, byPlayer: 'self', source: { cardId: 'D08013', abilityId: 'a1' } });
+
+    // 初回 drain (event.queue + runAllUntilEmpty 相当)
+    runEffect(s, resolved, ctx);
+
+    // queue に step 2 (evidenceToHand) と step 3 (discard) が両方 push されていること
+    expect(_peekPendingEffectPickQueueLength(), 'queue に 2 件 push').toBe(2);
+
+    const first = _drainPendingEffectPickSide();
+    expect(first?.atomVerb, 'queue 先頭は step 2 evidenceToHand').toBe('evidenceToHand');
+    expect(first?.candidates?.[0]?.cardId, 'step 1 で追加された evidence cardId').toBe('DECK1');
+
+    const second = _drainPendingEffectPickSide();
+    expect(second?.atomVerb, 'queue 末尾は step 3 discard').toBe('discard');
+    expect(second?.candidates?.length, 'discard 候補は hand 5 枚').toBe(5);
   });
 });
