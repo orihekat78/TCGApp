@@ -21,9 +21,9 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'evidenceGain',   args: { player: 'self', n: 1 } },
-      { kind: 'atom', verb: 'evidenceToHand', args: { player: 'self', n: 1 } },
-      { kind: 'atom', verb: 'discard',        args: { player: 'self', n: 1 } },
+      { kind: 'atom', verb: 'evidenceGain',   args: { player: 'self', n: 1 } }, // 証拠を1つ得る
+      { kind: 'atom', verb: 'evidenceToHand', args: { player: 'self', n: 1 } }, // 自分の証拠を1つ選び、手札に加える
+      { kind: 'atom', verb: 'discard',        args: { player: 'self', n: 1 } }, // 自分は手札を1枚選びリムーブする
     ],
   },
   description:
