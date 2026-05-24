@@ -60,6 +60,8 @@ UI 視覚デザイン参考のモック群。実装規範ではなく視覚参�
 - [engine-api-conditions.md](engine-api-conditions.md) — 条件評価
 - [engine-api-flow-control.md](engine-api-flow-control.md) — フロー制御
 - [engine-api-resolver.md](engine-api-resolver.md) — 効果スタック解決
+- [engine-api-atom-verbs.md](engine-api-atom-verbs.md) — 全 39 atom verb の引数 shape リファレンス
+- [engine-api-pick-substitution.md](engine-api-pick-substitution.md) — `$pick` placeholder 置換 (Pattern A/B / side-channel / tryRePickFromAtom)
 - [engine-api-card-shape.md](engine-api-card-shape.md) — カード定義
 - [engine-api-card-abilities.md](engine-api-card-abilities.md) — 能力定義
 - [engine-api-edge-cases.md](engine-api-edge-cases.md) — エッジケースAPI挙動

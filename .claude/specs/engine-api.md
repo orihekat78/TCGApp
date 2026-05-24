@@ -47,6 +47,8 @@
 | 15 | [engine-api-flow-contact.md](engine-api-flow-contact.md) | コンタクト中行動・アクション[事件]・ガード |
 | 16 | [engine-api-state-mutate-meta.md](engine-api-state-mutate-meta.md) | ターン跨ぎフラグ/ログ/結果/MR遷移 |
 | 17 | [engine-api-types.md](engine-api-types.md) | 共通戻り値型・EffectCtx・HookName union |
+| 18 | [engine-api-atom-verbs.md](engine-api-atom-verbs.md) | 全 39 atom verb の引数 shape リファレンス |
+| 19 | [engine-api-pick-substitution.md](engine-api-pick-substitution.md) | `$pick` placeholder 置換機構 (Pattern A/B / side-channel) |
 
 ## 名前空間規約
 

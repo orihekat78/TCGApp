@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1219
+- **ファイル数**: 1221
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -627,6 +627,7 @@
     - `card-addition-checklist.md` — 新カード追加時のチェックリスト
     - `cpu-visibility-options.md` — CPU 行動可視化 — 解決案候補 (BUG-059 / user_request 20260522_01 #15)
     - `DEFERRED-INDEX.md` — 保留中タスクの一覧
+    - `engine-api-atom-verbs.md` — engine-api-atom-verbs
     - `engine-api-card-abilities.md` — engine.* — AbilityDef (能力定義)
     - `engine-api-card-shape.md` — engine.* — カード定義シェイプ (CardDef)
     - `engine-api-conditions.md` — engine.cond.* — 条件評価API
@@ -638,6 +639,7 @@
     - `engine-api-flow-control.md` — engine.flow.* — フェイズ/アクション/コンタクト制御
     - `engine-api-flow-setup.md` — engine.flow.setup.* — ゲーム開始フロー API
     - `engine-api-invariants.md` — engine.invariant.* — 不変条件・凍結ポリシー
+    - `engine-api-pick-substitution.md` — engine-api-pick-substitution
     - `engine-api-resolver.md` — engine.resolve.* — 効果スタック・解決順制御
     - `engine-api-state-mutate-meta.md` — engine.mutate.* — メタ系 mutation (フラグ/ログ/結果/MR)
     - `engine-api-state-mutate.md` — engine.mutate.* — 全state変更プリミティブ
