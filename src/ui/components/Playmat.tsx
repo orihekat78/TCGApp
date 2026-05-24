@@ -11,7 +11,7 @@
 // TopBar, HandZone, LogPanel) は Task 7.5-7.13 で実装するため placeholder。
 // 操作系 (クリック・DnD) は Phase 8。
 
-import { useState, type JSX } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import type { GameState } from '@/engine/types/game-state.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { PartnerArea } from './PartnerArea.js';
@@ -234,6 +234,38 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     setAreaModal({ kind, side });
   };
   const closeAreaModal = (): void => setAreaModal(null);
+
+  // User vision (CardListModal を pick UI として流用):
+  // pendingEffectPick.atomVerb が area-based pick の場合、対応 CardListModal を
+  // 自動 open する。EffectPickerModal は area pick 中は無効化 (下記 EffectPickerModal.tsx 側で対応)。
+  //
+  // verb → area mapping:
+  //   evidenceToHand → evidence
+  //   handAddFromRemove → remove (future)
+  //   discard (hand pick) は HandZone で直接 pick する方が自然 (本実装では対応せず EffectPickerModal 維持)
+  const pendingPickForArea = useGameStateStore((s) => s.pendingEffectPick);
+  const pickAreaKind: CardListKind | null = (() => {
+    if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
+    if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
+    if (pendingPickForArea.atomVerb === 'handAddFromRemove') return 'remove';
+    return null;
+  })();
+  useEffect(() => {
+    if (pickAreaKind === null) return;
+    // すでに対応 area modal が開いていれば noop
+    if (areaModal && areaModal.kind === pickAreaKind && areaModal.side === 'self') return;
+    setAreaModal({ kind: pickAreaKind, side: 'self' });
+  }, [pickAreaKind, areaModal]);
+  // pick 解決 (pending クリア) で modal 自動 close (ユーザーが × でも閉じれる)
+  useEffect(() => {
+    if (pickAreaKind !== null) return;
+    // area pick が無くなり、area modal が pick 用に開いていた場合は閉じる
+    if (areaModal && areaModal.side === 'self' && (areaModal.kind === 'evidence' || areaModal.kind === 'remove')) {
+      // pendingEffectPick が消えた → pick 完了 or skip
+      // (手動で開いた閲覧モーダルも閉じてしまうが、pick 関連の自然な挙動として許容)
+      setAreaModal(null);
+    }
+  }, [pickAreaKind]);
 
   // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
   const pickerPhase = useTargetPickerStore((s) => s.phase);
@@ -519,6 +551,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             // evidence: 全裏向き
             faceDownCount = player.evidence?.length ?? 0;
           }
+          // User vision: pending pick が当該 area なら pick mode で開く
+          const isPickModeForThisArea =
+            pendingPickForArea?.player === 'self' &&
+            areaModal.side === 'self' &&
+            ((pendingPickForArea.atomVerb === 'evidenceToHand' && areaModal.kind === 'evidence') ||
+              (pendingPickForArea.atomVerb === 'handAddFromRemove' && areaModal.kind === 'remove'));
           return (
             <CardListModal
               kind={areaModal.kind}
@@ -527,6 +565,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               faceDownCount={faceDownCount}
               onClose={closeAreaModal}
               onExpand={(cardId) => expandModal.open(cardId)}
+              pickCands={isPickModeForThisArea ? pendingPickForArea!.candidates : undefined}
+              onPick={isPickModeForThisArea ? (uid) => {
+                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
+              } : undefined}
             />
           );
         })()}

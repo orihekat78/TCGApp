@@ -12,10 +12,19 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { def as readDef } from '@/engine/read/def.js';
 import './EffectPickerModal.css';
 
+/**
+ * User vision: area-based pick (evidenceToHand / handAddFromRemove) は CardListModal を
+ * pick mode で開く方が UX が良いため、EffectPickerModal は表示しない。
+ * scene char / その他のキャラ pick は引き続き本 modal を使用する。
+ */
+const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove']);
+
 export function EffectPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
   const gameState = useGameStateStore((s) => s.gameState);
   if (!pending || pending.player !== 'self') return null;
+  // area pick は CardListModal に譲る (Playmat.tsx が auto-open する)
+  if (AREA_PICK_VERBS.has(pending.atomVerb)) return null;
 
   const sourceName = pending.source.cardId
     ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId

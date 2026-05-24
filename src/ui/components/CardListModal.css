@@ -152,3 +152,16 @@
   justify-content: center;
   color: #5a89b0;
 }
+
+/* Pick mode: User vision (CardListModal を pick UI として流用)。
+   ハイライト + hover で「ここを選択」ヒントを視覚化。 */
+.card-list-item--pickable {
+  border: 2px solid #ffd966;
+  box-shadow: 0 0 8px rgba(255, 217, 102, 0.4);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.card-list-item--pickable:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(255, 217, 102, 0.7);
+}

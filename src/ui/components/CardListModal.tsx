@@ -47,10 +47,42 @@ export type CardListModalProps = {
    * 未指定なら item は静的表示 (旧挙動)。
    */
   onExpand?: (cardId: CardId) => void;
+  /**
+   * Pick mode: 候補 uid の配列。指定されたら、対応する card cell が click 可能になり
+   * onPick が発火される。User vision (CardListModal を pick UI として流用) の実装。
+   *
+   * uid 形式:
+   *   - face-down (evidence): `evidence:<side>:<idx>` → faceDown[idx] が click 対応
+   *   - face-up (remove): cards[idx] の cardId と一致する uid → 該当 cell が click 対応
+   */
+  pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp' }>;
+  /** Pick mode で cell が click された時の handler (uid を受ける) */
+  onPick?: (uid: string) => void;
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, onClose, onExpand } = props;
+  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, onPick } = props;
+  const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
+
+  /** 裏向き cell の idx (= evidence の index) から候補 uid を逆引き。pick mode 外では undefined。 */
+  const findFaceDownPickUid = (idx: number): string | undefined => {
+    if (!inPickMode) return undefined;
+    if (kind !== 'evidence') return undefined;
+    const wantUid = `evidence:${side}:${idx}`;
+    return pickCands!.find((c) => c.uid === wantUid)?.uid;
+  };
+
+  /** 表向き cell (cards[idx]) から候補 uid を逆引き。同 cardId の重複がある場合は cardId と index 両方の合致を試みる。 */
+  const findFaceUpPickUid = (cardId: CardId, idx: number): string | undefined => {
+    if (!inPickMode) return undefined;
+    // remove area の pick (handAddFromRemove 用、将来) 等の場合、uid は cardId そのもの (BUG-065 pattern B)
+    // synthetic uid `<cardId>#<idx>` の合致を試みる
+    const wantUid = `${cardId}#${idx}`;
+    const exact = pickCands!.find((c) => c.uid === wantUid);
+    if (exact) return exact.uid;
+    // fallback: cardId だけで match (重複時は最初の候補)
+    return pickCands!.find((c) => c.cardId === cardId)?.uid;
+  };
 
   // Esc で閉じる (本 modal のみ scope。global keymap には影響しない)
   useEffect(() => {
@@ -120,6 +152,22 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                     </div>
                   </>
                 );
+                // Pick mode 優先 (User vision: CardListModal を pick UI として流用)
+                const pickUid = findFaceUpPickUid(cardId, idx);
+                if (pickUid !== undefined) {
+                  return (
+                    <button
+                      type="button"
+                      key={`face-${cardId}-${idx}`}
+                      className="card-list-item card-list-item--clickable card-list-item--pickable"
+                      onClick={() => onPick!(pickUid)}
+                      data-testid={`card-list-pick-${pickUid}`}
+                      aria-label={`${cardIdToDisplayName(cardId)} を選択`}
+                    >
+                      {itemContent}
+                    </button>
+                  );
+                }
                 return onExpand ? (
                   <button
                     type="button"
@@ -137,18 +185,40 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   </div>
                 );
               })}
-              {/* 裏向きカード (FILE / 証拠 など、内容非公開) */}
-              {Array.from({ length: faceDownCount }).map((_, idx) => (
-                <div key={`back-${idx}`} className="card-list-item face-down">
-                  <div className="card-list-item-back" aria-label="裏向きカード">
-                    <svg viewBox="0 0 24 24" width="32" height="32">
-                      <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-                      <line x1="14.5" y1="14.5" x2="19" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
+              {/* 裏向きカード (FILE / 証拠 など、内容非公開)。pick mode 中は click 可能化。 */}
+              {Array.from({ length: faceDownCount }).map((_, idx) => {
+                const pickUid = findFaceDownPickUid(idx);
+                const backContent = (
+                  <>
+                    <div className="card-list-item-back" aria-label="裏向きカード">
+                      <svg viewBox="0 0 24 24" width="32" height="32">
+                        <circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                        <line x1="14.5" y1="14.5" x2="19" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <div className="card-list-item-name">非公開</div>
+                  </>
+                );
+                if (pickUid !== undefined) {
+                  return (
+                    <button
+                      type="button"
+                      key={`back-${idx}`}
+                      className="card-list-item face-down card-list-item--clickable card-list-item--pickable"
+                      onClick={() => onPick!(pickUid)}
+                      data-testid={`card-list-pick-${pickUid}`}
+                      aria-label={`${idx + 1} 番目の${TITLE[kind]}カード (非公開) を選択`}
+                    >
+                      {backContent}
+                    </button>
+                  );
+                }
+                return (
+                  <div key={`back-${idx}`} className="card-list-item face-down">
+                    {backContent}
                   </div>
-                  <div className="card-list-item-name">非公開</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
