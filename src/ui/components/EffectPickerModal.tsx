@@ -14,6 +14,7 @@ import './EffectPickerModal.css';
 
 export function EffectPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
+  const gameState = useGameStateStore((s) => s.gameState);
   if (!pending || pending.player !== 'self') return null;
 
   const sourceName = pending.source.cardId
@@ -26,6 +27,22 @@ export function EffectPickerModal(): JSX.Element | null {
   };
   const handleSkip = (): void => {
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+  };
+
+  /**
+   * User 指摘 (BUG-077 後): 裏向き証拠の cardId/名前が EffectPickerModal で
+   * 見えてしまう問題。証拠 candidate (uid='evidence:<side>:<idx>') について
+   * gameState から faceUp を確認し、裏向きなら「(非公開)」表示にする。
+   */
+  const candDisplayName = (c: { uid: string; cardId: string }): string => {
+    const evMatch = c.uid.match(/^evidence:(self|opp):(\d+)$/);
+    if (evMatch && gameState) {
+      const evPlayer = evMatch[1] as 'self' | 'opp';
+      const evIdx = parseInt(evMatch[2]!, 10);
+      const evCard = gameState.players[evPlayer]?.evidence?.[evIdx];
+      if (evCard && !evCard.faceUp) return '(非公開)';
+    }
+    return readDef.card(c.cardId)?.names?.[0] ?? c.cardId;
   };
 
   return (
@@ -43,7 +60,7 @@ export function EffectPickerModal(): JSX.Element | null {
         </div>
         <ul className="effect-picker-list">
           {pending.candidates.map((c) => {
-            const name = readDef.card(c.cardId)?.names?.[0] ?? c.cardId;
+            const name = candDisplayName(c);
             return (
               <li key={c.uid}>
                 <button
