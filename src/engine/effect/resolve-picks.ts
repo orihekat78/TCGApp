@@ -121,6 +121,17 @@ export function tryRePickFromAtom(
   substituteAtomPick(state, atom, ctx, { ...opts, humanChooser: true, _fromAtomHandler: true });
 }
 
+/**
+ * 物理動作 atom 短縮形対応: target 未指定 + n: number の verb で既定 pick query を補完。
+ * カード DSL では `evidenceToHand({player:'self', n:1})` のように書きたく、target query は
+ * verb 既定 (area/side/chooser) を engine が推論する。
+ */
+const PB_DEFAULT_PICK_AREA: Record<string, 'evidence' | 'hand' | 'remove'> = {
+  evidenceToHand: 'evidence',
+  discard: 'hand',
+  handAddFromRemove: 'remove',
+};
+
 function substituteAtomPick(
   state: GameState,
   atom: { kind: 'atom'; verb: unknown; args: unknown },
@@ -128,8 +139,21 @@ function substituteAtomPick(
   opts: ResolveEffectPicksOpts,
 ): Effect {
   if (!atom.args || typeof atom.args !== 'object') return atom as Effect;
-  const args = atom.args as { uid?: unknown; target?: unknown } & Record<string, unknown>;
-  const target = args.target as { kind?: string; query?: unknown; n?: { min?: number; max?: number } } | undefined;
+  const args = atom.args as { uid?: unknown; target?: unknown; player?: unknown; n?: unknown } & Record<string, unknown>;
+  const verbStr = typeof atom.verb === 'string' ? atom.verb : '';
+  // 物理動作 atom 短縮形: { player, n } のみで target 未指定なら verb 既定で pick query を構築
+  let effectiveTarget = args.target as { kind?: string; query?: unknown; n?: { min?: number; max?: number }; chooser?: Player } | undefined;
+  if (effectiveTarget === undefined && typeof args.n === 'number' && PB_DEFAULT_PICK_AREA[verbStr]) {
+    const defaultArea = PB_DEFAULT_PICK_AREA[verbStr];
+    const p = (args.player as Player) ?? 'self';
+    effectiveTarget = {
+      kind: 'pick',
+      query: { area: defaultArea, side: p },
+      n: { min: args.n, max: args.n },
+      chooser: p,
+    };
+  }
+  const target = effectiveTarget;
   if (!target || target.kind !== 'pick' || !target.query) return atom as Effect;
 
   // BUG-065: 2 つの effect 記述形式を区別して解決:
@@ -219,9 +243,12 @@ function substituteAtomPick(
   }
 
   // Pattern B: target → cardId/uid 配列に置換 (atom-handler が配列を期待)
+  // BUG-077 後続: evidence kind (evidenceToHand 等の AI 経路) も解決対象に含む
   const pickValue =
     picked.kind === 'card' ? picked.cardId :
-    picked.kind === 'char' ? picked.uid : null;
+    picked.kind === 'char' ? picked.uid :
+    picked.kind === 'evidence' ? (state.players[picked.player].evidence[picked.index]?.cardId ?? null) :
+    null;
   if (pickValue === null) return atom as Effect;
   return {
     kind: 'atom',

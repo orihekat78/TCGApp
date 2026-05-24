@@ -195,4 +195,50 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     expect(sideAfterRuntime?.atomVerb, 'step 2 (evidenceToHand) が modal owner').toBe('evidenceToHand');
     expect(sideAfterRuntime?.candidates?.[0]?.cardId, 'cand は step 1 が追加した evidence の cardId').toBe('DECK1');
   });
+
+  // 物理動作 atom 短縮形対応: card DSL 上 `{ player, n }` だけで pick query を engine 既定で
+  // 補完する仕組みの動作確認 (substituteAtomPick + atom-handler 両方)。
+  it('Phase F: 短縮形 {player, n} のみで evidenceToHand が awaiting-pick 経由で side-channel set', async () => {
+    const { resolveEffectPicks } = await import('@/engine/effect/resolve-picks');
+    const { run: runEffect } = await import('@/engine/effect/resolver');
+
+    const s = createEmptyGameState();
+    s.players.self.evidence.push({ cardId: 'EV1', faceUp: false, origin: { turn: 0, via: 'init' } });
+
+    // 短縮形 sequence: evidenceToHand を target 無しで呼ぶ
+    const sequence = {
+      kind: 'sequence' as const,
+      steps: [
+        { kind: 'atom' as const, verb: 'evidenceToHand' as never, args: { player: 'self', n: 1 } },
+      ],
+    };
+
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'D08013', abilityId: 'a1' }, bindings: {} };
+    const resolved = resolveEffectPicks(s, sequence, ctx, { humanChooser: true, byPlayer: 'self', source: { cardId: 'D08013', abilityId: 'a1' } });
+
+    // 初期 walk: PB は side-channel set を抑止 → null のまま
+    expect((globalThis as { __pendingEffectPickSide?: unknown }).__pendingEffectPickSide, '初期 walk では set しない').toBeFalsy();
+
+    // runtime drain: atom-handler が defaults 補完 → tryRePickFromAtom → side-channel set
+    runEffect(s, resolved, ctx);
+
+    const side = (globalThis as { __pendingEffectPickSide?: { atomVerb: string; candidates: { cardId: string }[] } | null }).__pendingEffectPickSide;
+    expect(side?.atomVerb).toBe('evidenceToHand');
+    expect(side?.candidates?.[0]?.cardId).toBe('EV1');
+  });
+
+  it('Phase G: 短縮形 + AI heuristic 経路 (humanChooser=false) で evidenceToHand が target 配列に解決', async () => {
+    const { resolveEffectPicks } = await import('@/engine/effect/resolve-picks');
+
+    const s = createEmptyGameState();
+    s.players.self.evidence.push({ cardId: 'EV-A', faceUp: false, origin: { turn: 0, via: 'init' } });
+
+    const atom = { kind: 'atom' as const, verb: 'evidenceToHand' as never, args: { player: 'self', n: 1 } };
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'D08013', abilityId: 'a1' }, bindings: {} };
+
+    // humanChooser=false (AI path) で短縮形を walk → cands[0] 採用 → target: [cardId]
+    const resolved = resolveEffectPicks(s, atom, ctx, { byPlayer: 'self' }) as { args: { target?: unknown } };
+    expect(Array.isArray(resolved.args.target), 'AI 経路では target が cardId 配列に解決').toBe(true);
+    expect(resolved.args.target).toEqual(['EV-A']);
+  });
 });

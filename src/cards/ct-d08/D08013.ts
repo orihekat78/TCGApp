@@ -7,6 +7,7 @@
 //   【ヒラメキ】カードを1枚引く。
 //
 // a1: enter trigger → 証拠+1 → 選択証拠を手札へ → 手札1枚リム
+//     物理動作 atom を順に並べるだけ。pick query は engine が verb 既定で推論。
 // a2: hiramekiDraw
 
 import type { AbilityDef, CardDef } from '@/engine/types';
@@ -20,45 +21,9 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'evidenceGain', args: { player: 'self', n: 1 } },
-      {
-        kind: 'choice',
-        chooser: 'self',
-        options: [
-          {
-            kind: 'atom',
-            verb: 'evidenceToHand',
-            args: {
-              player: 'self',
-              target: {
-                kind: 'pick',
-                query: { area: 'evidence', side: 'self' },
-                n: { min: 1, max: 1 },
-                chooser: 'self',
-              },
-            },
-          },
-        ],
-      },
-      {
-        kind: 'choice',
-        chooser: 'self',
-        options: [
-          {
-            kind: 'atom',
-            verb: 'discard',
-            args: {
-              player: 'self',
-              target: {
-                kind: 'pick',
-                query: { area: 'hand', side: 'self' },
-                n: { min: 1, max: 1 },
-                chooser: 'self',
-              },
-            },
-          },
-        ],
-      },
+      { kind: 'atom', verb: 'evidenceGain',   args: { player: 'self', n: 1 } },
+      { kind: 'atom', verb: 'evidenceToHand', args: { player: 'self', n: 1 } },
+      { kind: 'atom', verb: 'discard',        args: { player: 'self', n: 1 } },
     ],
   },
   description:

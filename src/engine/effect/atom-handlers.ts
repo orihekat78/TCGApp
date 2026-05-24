@@ -141,6 +141,34 @@ function normalizeTargetToString(value: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Pattern B atom (evidenceToHand / discard / handAddFromRemove) の引数省略形対応 helper。
+ *
+ * カード DSL 上「自分の x エリアから n 枚選ぶ」と書きたい場合、target を毎回
+ * `{ kind:'pick', query:{area,side}, n:{min,max}, chooser }` で書くのは冗長。
+ * `args: { player, n }` だけ渡された場合に、verb 既定の area を使って pick query を
+ * 自動構築する。
+ *
+ * - target 既指定 (string / array / pick query object) → そのまま返す (既存挙動を破壊しない)
+ * - target 未指定 + n: number → 既定の pick query を生成
+ * - 上記以外 → undefined (atom-handler 側で awaiting-pick / no-op 判断)
+ */
+function defaultPickTarget(
+  rawTarget: unknown,
+  n: unknown,
+  defaultArea: 'evidence' | 'hand' | 'remove',
+  player: Player,
+): unknown {
+  if (rawTarget !== undefined) return rawTarget;
+  if (typeof n !== 'number') return undefined;
+  return {
+    kind: 'pick',
+    query: { area: defaultArea, side: player },
+    n: { min: n, max: n },
+    chooser: player,
+  };
+}
+
 export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: EffectCtx): void {
   const a = args as Record<string, unknown>;
   switch (verb) {
@@ -167,17 +195,22 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-072: skip 時の action 名を 'effect:discard:awaiting-pick' に変更し
       // UI で「効果: 手札選択待ち」と日本語表示できるよう mapping 追加。
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set (連続 pick)
-      if (!Array.isArray(a.target)) {
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: a.player as Player, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+      // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
+      const dcP = a.player as Player;
+      const dcArgs = a.target === undefined
+        ? { ...a, target: defaultPickTarget(undefined, a.n, 'hand', dcP) }
+        : a;
+      if (!Array.isArray(dcArgs.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: dcArgs }, ctx, { byPlayer: dcP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, {
           ts: Date.now(),
-          player: a.player as Player,
+          player: dcP,
           turn: s.turn.number,
           action: 'effect:discard:awaiting-pick',
         });
         return;
       }
-      const target = a.target as string[];
+      const target = dcArgs.target as string[];
       mutate.hand.discardToRemove(s, a.player as Player, target);
       // BUG-072: effect 経由の discard 成功も log に残す
       mutate.log.append(s, {
@@ -255,10 +288,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-076: awaiting-pick 時に resolve-picks の tryRePickFromAtom を呼んで、
       // 残り atom 用に side-channel を再 set。これで sequence 内の連続 pattern B atom
       // が順次 modal を出せる (D08013 a1 step 2 → step 3 の連鎖)。
+      // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const p = a.player as Player;
-      const target = normalizeTargetToString(a.target);
+      const ethArgs = a.target === undefined
+        ? { ...a, target: defaultPickTarget(undefined, a.n, 'evidence', p) }
+        : a;
+      const target = normalizeTargetToString(ethArgs.target);
       if (!target) {
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: ethArgs }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand:awaiting-pick' });
         return;
       }
@@ -277,10 +314,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'handAddFromRemove': {
       // BUG-074: 同じく string|array 両対応に正規化
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set
+      // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const p = a.player as Player;
-      const target = normalizeTargetToString(a.target);
+      const hafrArgs = a.target === undefined
+        ? { ...a, target: defaultPickTarget(undefined, a.n, 'remove', p) }
+        : a;
+      const target = normalizeTargetToString(hafrArgs.target);
       if (!target) {
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: hafrArgs }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });
         return;
       }
