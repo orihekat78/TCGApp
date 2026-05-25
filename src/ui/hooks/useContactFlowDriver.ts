@@ -107,6 +107,10 @@ export function useContactFlowDriver(): void {
   const spectatorMode = useGameStateStore((s) => s.spectatorMode);
   const guardPickerOpen = useContactModalStore((s) => s.guardPicker !== null);
   const cutInDisguiseOpen = useContactModalStore((s) => s.cutInDisguise !== null);
+  // D11007 a3 fix: 「コンタクトしたとき」効果 (rules/22) は action-1 (カットイン window) より
+  // 先に解決すべき。contact:start で queue された pendingEffectPick が解決されるまで
+  // contact flow を pause する。
+  const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
 
   useEffect(() => {
     if (!activeActionId || !gameState) return;
@@ -117,6 +121,10 @@ export function useContactFlowDriver(): void {
     }
     // モーダルが open 中はユーザー操作待ち
     if (guardPickerOpen || cutInDisguiseOpen) return;
+    // D11007 a3 fix: effect pick modal (contact:start triggered の chain など)
+    // が open 中は contact flow を進めない (rules/22 「コンタクトしたとき」が
+    // 行動順確認の前に解決)
+    if (pendingEffectPick !== null) return;
 
     const ax = flow.action._getContext(activeActionId);
     if (!ax) {
@@ -125,7 +133,7 @@ export function useContactFlowDriver(): void {
     }
 
     runOneStep(gameState, ax, spectatorMode);
-  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen]);
+  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick]);
 }
 
 function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean): void {
