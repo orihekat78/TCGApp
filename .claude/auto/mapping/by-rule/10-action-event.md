@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `88e476c132d3`
+> Source hash: `d0cd587b77bf`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

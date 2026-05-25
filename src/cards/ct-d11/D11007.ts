@@ -53,9 +53,9 @@ const a3: AbilityDef = {
     },
   },
   effect: {
-    kind: 'optional',
+    kind: 'optional', // 「してもよい」 = する/しない 確認
     effect: {
-      kind: 'sequence',
+      kind: 'chain', // 「そうした場合」 = step 1 (discard) 実リムーブで applied のときのみ step 2 を実行 (D08003 a1 同型)
       steps: [
         { kind: 'atom', verb: 'discard',      args: { player: 'self', n: 1 } },                          // 手札を1枚選びリムーブ
         { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 3000, scope: 'contact' } },  // このキャラを AP+3000 (コンタクト中)
