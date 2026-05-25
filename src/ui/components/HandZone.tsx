@@ -70,6 +70,8 @@ type HandCardProps = {
   onClick?: () => void;
   /** BUG-043 (#8): 右クリックで個別カード拡大表示 (CardExpandModal) */
   onExpand?: (cardId: string) => void;
+  /** Pick mode 中の cell: 黄色ハイライト + cursor pointer */
+  pickable?: boolean;
 };
 
 function HandCard({
@@ -79,6 +81,7 @@ function HandCard({
   disabledTitle,
   onClick,
   onExpand,
+  pickable,
 }: HandCardProps): JSX.Element {
   const classes = [
     'hand-card',
@@ -86,6 +89,7 @@ function HandCard({
     featured && 'featured',
     disabled && 'disabled',
     onClick && !disabled && 'clickable',
+    pickable && 'hand-card--pickable',
   ]
     .filter(Boolean)
     .join(' ');
@@ -296,10 +300,16 @@ export function HandZone(props: HandZoneProps): JSX.Element {
           ×
         </button>
       )}
+      {pickMode && (
+        <div className="hand-zone-pick-banner" role="status">
+          手札から1枚選んでリムーブしてください
+        </div>
+      )}
       <div className="hand-cards-row" onClick={handleRowBackdropClick}>
         {cards.map((c, index) => {
           // Pick mode (User vision): 全 card cell が pick 対象、click → onPickCard
           // (`<cardId>#<idx>` 形式 uid)。onCardClick は suppress。
+          // pickable=true で黄色ハイライト + cursor pointer。
           if (pickMode && onPickCard) {
             return (
               <HandCard
@@ -309,6 +319,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
                 disabled={false}
                 onClick={() => onPickCard(`${c.cardId}#${index}`)}
                 onExpand={onCardExpand}
+                pickable
               />
             );
           }

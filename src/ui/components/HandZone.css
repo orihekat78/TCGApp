@@ -517,3 +517,35 @@
   background: rgba(40, 80, 200, 0.9);
   transform: scale(1.1);
 }
+
+/* Pick mode (User vision: discard 等の hand pick UI として手札拡大ビューを流用)。
+   黄色 border + hover scale で「ここを選択」ヒントを視覚化。CardListModal の
+   .card-list-item--pickable と統一感を持たせる。 */
+.hand-zone .hand-card--pickable {
+  border: 2px solid #ffd966 !important;
+  box-shadow: 0 0 10px rgba(255, 217, 102, 0.5);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.hand-zone .hand-card--pickable:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 0 14px rgba(255, 217, 102, 0.8);
+}
+
+/* pick mode 中の expanded view 上部に案内バナーを表示 */
+.hand-zone-pick-banner {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 16px;
+  background: rgba(255, 217, 102, 0.15);
+  border: 1px solid #ffd966;
+  border-radius: 4px;
+  color: #ffd966;
+  font-size: 12px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+}
