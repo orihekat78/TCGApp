@@ -33,6 +33,38 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       }
       return;
     }
+    // 拡張 5 (D08003 driver): 公式テキスト「そうした場合」 semantics。
+    // step N の実効果あり (= pick 不可で no-op でない) のとき N+1 を実行。
+    // pick await (side-channel push) 時は残りを `__pendingChainContinuation` queue に
+    // 保存し、effectPickResolve 後に再 queue される (useEngineDispatch 側で対応)。
+    case 'chain': {
+      const g = globalThis as {
+        __pendingEffectPickQueue?: unknown[];
+        __chainStepNoApply?: boolean;
+        __pendingChainContinuation?: { remainder: Effect[]; ctx: EffectCtx }[];
+      };
+      for (let i = 0; i < eff.steps.length; i++) {
+        const step = eff.steps[i]!;
+        g.__chainStepNoApply = false;
+        const queueLenBefore = g.__pendingEffectPickQueue?.length ?? 0;
+        run(state, step, ctx);
+        const queueLenAfter = g.__pendingEffectPickQueue?.length ?? 0;
+        if (queueLenAfter > queueLenBefore) {
+          // step が pick await → 残り step を chain continuation queue に保存
+          const remainder = eff.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            if (!g.__pendingChainContinuation) g.__pendingChainContinuation = [];
+            g.__pendingChainContinuation.push({ remainder, ctx });
+          }
+          return; // chain 一時停止
+        }
+        if (g.__chainStepNoApply) {
+          // step が no-candidate → chain break (以降 skip)
+          return;
+        }
+      }
+      return;
+    }
     case 'parallel': {
       // TODO: Phase 4+ で必要に応じて並列セマンティクスを定義する。
       // 現状は sequence と同じ挙動 (副作用順は配列順)。

@@ -19,14 +19,16 @@ describe('D08003 江戸川コナン (character, Lv8 multi-ability)', () => {
     expect(D08003.abilities.length).toBe(2);
   });
 
-  it('a1: パートナー青 enter optional sequence (discard → sceneRemove)', () => {
+  it('a1: パートナー青 enter chain (discard → sceneRemove) — 拡張 5 chain semantics', () => {
+    // refactor: 旧 optional+sequence → chain (公式テキスト「そうした場合」を 1:1 表現)
+    // step 1 (discard max:1) skip / no-candidate なら chain break で step 2 実行されない
     const a1 = D08003.abilities[0];
     expect(a1.id).toBe('a1');
     expect(a1.type).toBe('triggered');
     expect(a1.condition).toEqual({ kind: 'partnerColor', color: '青' });
     expect(a1.trigger?.hook).toBe('enter');
     expect(a1.trigger?.selfOnly).toBe(true);
-    expect(a1.effect?.kind).toBe('optional');
+    expect(a1.effect?.kind).toBe('chain');
   });
 
   it('a2: ターン終了時 sceneHas[少年探偵団]≥3 で 1ドロー', () => {

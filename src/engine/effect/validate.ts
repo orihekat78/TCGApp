@@ -62,7 +62,9 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
   const kind = obj['kind'];
   switch (kind) {
     case 'sequence':
-    case 'parallel': {
+    case 'parallel':
+    // 拡張 5: chain も同じ steps[] 構造 (semantics は resolver 側で差異)
+    case 'chain': {
       const steps = obj['steps'];
       if (!Array.isArray(steps)) {
         errors.push(`${path}.steps: expected array`);

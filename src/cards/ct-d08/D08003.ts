@@ -13,54 +13,16 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  condition: { kind: 'partnerColor', color: '青' },
-  trigger: { hook: 'enter', selfOnly: true },
+  condition: { kind: 'partnerColor', color: '青' },   // 【パートナー青】
+  trigger: { hook: 'enter', selfOnly: true },        // 【登場時】
   effect: {
-    kind: 'optional',
-    effect: {
-      kind: 'sequence',
-      steps: [
-        {
-          kind: 'choice',
-          chooser: 'self',
-          options: [
-            {
-              kind: 'atom',
-              verb: 'discard',
-              args: {
-                player: 'self',
-                target: {
-                  kind: 'pick',
-                  query: { area: 'hand', side: 'self', filter: { trait: '少年探偵団' } },
-                  n: { min: 1, max: 1 },
-                  chooser: 'self',
-                },
-              },
-            },
-          ],
-        },
-        {
-          kind: 'choice',
-          chooser: 'self',
-          options: [
-            {
-              kind: 'atom',
-              verb: 'sceneRemove',
-              args: {
-                uid: '$pick',
-                cause: 'effect',
-                target: {
-                  kind: 'pick',
-                  query: { area: 'scene', side: 'either', filter: { apMax: 8000 } },
-                  n: { min: 0, max: 1 },
-                  chooser: 'self',
-                },
-              },
-            },
-          ],
-        },
-      ],
-    },
+    // 「してもよい」「そうした場合」semantics: chain + 各 step の max:1 で表現。
+    // step 1 の discard が user skip (pickedUid=null) or no-candidate なら chain break。
+    kind: 'chain',
+    steps: [
+      { kind: 'atom', verb: 'discard',     args: { player: 'self', max: 1, filter: { trait: '少年探偵団' } } }, // 手札から[少年探偵団]を1枚までリムーブ
+      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { apMax: 8000 } } }, // 現場(味方/相手)のAP≤8000を1枚までリムーブ (step 1 applied 時のみ)
+    ],
   },
   description:
     '【パートナー青】【登場時】手札から[少年探偵団]を1枚リムーブしてもよい。そうした場合 AP8000以下を1枚までリムーブ。',

@@ -133,4 +133,8 @@ export type Effect =
   | { kind: 'replace'; trigger: TriggerRef; with: Effect }
   | { kind: 'negate'; trigger: TriggerRef }
   | { kind: 'atom'; verb: AtomVerb; args: unknown }
-  | { kind: 'custom'; fn: (s: GameState, ctx: EffectCtx) => void };
+  | { kind: 'custom'; fn: (s: GameState, ctx: EffectCtx) => void }
+  // 拡張 5 (D08003 driver): 公式テキスト「そうした場合」 semantics。
+  // step N が「実効果あり」のとき N+1 を実行。N が no-op (no candidate) なら以降 skip。
+  // pick await 時は chain 継続情報を保存して effectPickResolve 後に再 queue する。
+  | { kind: 'chain'; steps: Effect[] };

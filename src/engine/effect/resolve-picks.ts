@@ -75,6 +75,10 @@ declare global {
   // `_clearPendingEffectPickQueue()` を使うこと。
   // eslint-disable-next-line no-var
   var __pendingEffectPickSide: PendingEffectPickSide | null | undefined;
+  // 拡張 5 (chain): substituteAtomPick で humanChooser 候補 0 件のとき true を set。
+  // resolver chain case が step 後に check して、true なら chain break。
+  // eslint-disable-next-line no-var
+  var __chainStepNoApply: boolean | undefined;
 }
 
 export type PendingEffectPickSide = {
@@ -216,7 +220,11 @@ function substituteAtomPick(
   if (!isPatternA && !isPatternB) return atom as Effect;
 
   const cands = targetCandidates(state, target as TargetingRef, ctx);
-  if (cands.length === 0) return atom as Effect; // no-op fallback
+  if (cands.length === 0) {
+    // 拡張 5 (chain): no-candidate を chain break 信号として記録
+    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+    return atom as Effect; // no-op fallback
+  }
 
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
   const byPlayer: Player = opts.byPlayer ?? 'self';
@@ -256,7 +264,11 @@ function substituteAtomPick(
       }
       // file kind は face-down で cardId 不明のため skip (face-up にした後 separately 処理)
     }
-    if (cardLikeCands.length === 0) return atom as Effect;
+    if (cardLikeCands.length === 0) {
+      // 拡張 5 (chain): cardLikeCands 0 = pick 不能 → chain break 信号
+      (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+      return atom as Effect;
+    }
     const targetRef = target as { n?: { min?: number; max?: number } };
     pushPendingEffectPickSide({
       player: byPlayer,

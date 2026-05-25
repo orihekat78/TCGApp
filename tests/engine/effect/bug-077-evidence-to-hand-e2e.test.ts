@@ -381,4 +381,54 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     const candUids = side?.candidates?.map(c => c.uid).sort() ?? [];
     expect(candUids, '両 side の AP≤8000 候補').toEqual(['D08018#0', 'D11003#0']);
   });
+
+  // 拡張 5 chain: step 1 が no-candidate (no-op) なら step 2 が skip される
+  it('Phase M: chain で step 1 no-candidate なら step 2 が skip', async () => {
+    const { run: runEffect } = await import('@/engine/effect/resolver');
+    const { registerAll } = await import('@/cards/index');
+    registerAll();
+
+    const s = createEmptyGameState();
+    // 手札に [少年探偵団] 無し (D11003 = 警察)
+    s.players.self.hand.push('D11003');
+
+    const chainEffect = {
+      kind: 'chain' as const,
+      steps: [
+        // step 1: 手札の [少年探偵団] を 1 枚リムーブ (cands=0 で no-op)
+        { kind: 'atom' as const, verb: 'discard' as never, args: { player: 'self', n: 1, filter: { trait: '少年探偵団' } } },
+        // step 2: 1 枚ドロー (step 1 no-op なら実行されないはず)
+        { kind: 'atom' as const, verb: 'draw' as never, args: { player: 'self', n: 1 } },
+      ],
+    };
+
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'TEST', abilityId: 'a1' }, bindings: {} };
+    runEffect(s, chainEffect, ctx);
+
+    // step 1 で hand 変化なし + step 2 で draw も実行されないので hand = [D11003] のまま
+    expect(s.players.self.hand, 'chain break で step 2 draw が skip').toEqual(['D11003']);
+  });
+
+  // 拡張 5 chain: step 1 が applied なら step 2 が実行される
+  it('Phase N: chain で step 1 applied なら step 2 が実行される', async () => {
+    const { run: runEffect } = await import('@/engine/effect/resolver');
+    const { registerAll } = await import('@/cards/index');
+    registerAll();
+
+    const s = createEmptyGameState();
+    // deck に 1 枚 (step 2 draw 用)、step 1 は pure draw (no pick) なので即 applied
+    s.players.self.deck.push('NEW1');
+
+    const chainEffect = {
+      kind: 'chain' as const,
+      steps: [
+        { kind: 'atom' as const, verb: 'evidenceGain' as never, args: { player: 'self', n: 0 } }, // n=0 は no-op だが pick もない、resolver は何もしない (applied 判定が緩い)
+      ],
+    };
+
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'TEST', abilityId: 'a1' }, bindings: {} };
+    runEffect(s, chainEffect, ctx);
+    // pure atom (pick なし) は chain でも普通に実行される (Phase M とは異なり no-op flag が立たない)
+    expect(s.players.self.evidence.length).toBe(0);
+  });
 });

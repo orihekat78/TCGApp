@@ -43,12 +43,20 @@ function findAtomsByVerb(effect: unknown, verb: string): Record<string, unknown>
   return out;
 }
 
-/** atom が pattern B (uid なし + target.kind='pick') かどうか */
+/**
+ * atom が pattern B かどうか
+ * - 旧形式: uid なし + target.kind='pick'
+ * - 短縮形 (BUG-077 後): uid なし + target なし + n or max (filter/side 任意)
+ */
 function isPatternB(atom: Record<string, unknown>): boolean {
   const args = atom.args as Record<string, unknown> | undefined;
   if (!args) return false;
+  if (args.uid !== undefined) return false;
   const target = args.target as { kind?: string } | undefined;
-  return args.uid === undefined && target?.kind === 'pick';
+  if (target?.kind === 'pick') return true;
+  // 短縮形: target 無しで n / max が number
+  if (target === undefined && (typeof args.n === 'number' || typeof args.max === 'number')) return true;
+  return false;
 }
 
 /** atom の target が解決済み (配列) かどうか */

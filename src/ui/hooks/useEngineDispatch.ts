@@ -19,7 +19,7 @@ import { cost as engineCost } from '@/engine/cost/index.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
-import type { Cost, EffectCtx } from '@/engine/types';
+import type { Cost, Effect, EffectCtx } from '@/engine/types';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { event as engineEvent } from '@/engine/event/index.js';
@@ -403,6 +403,10 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       const picked = action.pickedUid;
       if (picked === null) {
         // skip (n.min === 0 の任意効果のみ可能、UI 側で gate される想定)
+        // 拡張 5 (chain): user skip 時は chain continuation も drop
+        // (step 1 が applied されなかったので step 2 を実行しない)
+        const chainG = globalThis as { __pendingChainContinuation?: unknown[] };
+        chainG.__pendingChainContinuation?.shift();
         // クリアは produce 後の post-dispatch drain で行う (return のみ)
         return;
       }
@@ -442,6 +446,24 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       );
       // 即座に flush (他 dispatch case と同 pattern)
       runAllUntilEmpty(draft);
+      // 拡張 5 (chain continuation): resolved 後 chain の残り step を queue
+      // resolved atom が applied (no-op でない) で、chain remainder が pending なら queue
+      const chainG = globalThis as { __pendingChainContinuation?: { remainder: Effect[]; ctx: EffectCtx }[] };
+      const chainCont = chainG.__pendingChainContinuation?.shift();
+      if (chainCont) {
+        // remainder を chain で wrap して queue (再度 chain semantics 適用)
+        const remainderEffect: Effect = chainCont.remainder.length === 1
+          ? chainCont.remainder[0]!
+          : { kind: 'chain', steps: chainCont.remainder };
+        engineEvent.queue(
+          draft,
+          remainderEffect as never,
+          { player: pending.player, cardId: pending.source.cardId },
+          'effect:chain-continuation',
+          { source: pending.source },
+        );
+        runAllUntilEmpty(draft);
+      }
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
