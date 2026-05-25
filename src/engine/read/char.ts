@@ -6,26 +6,32 @@ import { scene } from './scene.js';
 import { def } from './def.js';
 import { evalCond } from '../cond/eval.js';
 
-// AP: apOverride が null でなければそれを使用、あれば CardDef base を取得
-// turnEffects の AP 修正は charModifyAP verb で apOverride に吸収される設計のため
-// ここでは apOverride || (CardDef.ap ?? 0) とする
+// AP: apOverride 優先 / 不在なら CardDef.ap、加えて turnEffects['apMod_*'] を合算
+// (charModifyAP verb は turnEffects に delta を蓄積する設計。permanent/turn/contact の
+// 3 scope を全て合算)
+// 2026-05-25 fix: 旧コードは turnEffects を合算せず charModifyAP の効果が AP 判定
+// に反映されないバグ (D11007 a3 の AP+3000 が無効化されていた根本原因)
 // rules: 19-special-rules.md (下限なし)
 function ap(s: GameState, uid: string): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
-  if (char.apOverride !== null) return char.apOverride;
-  const d = def.card(char.cardId);
-  return d?.ap ?? 0;
+  const base = char.apOverride !== null ? char.apOverride : (def.card(char.cardId)?.ap ?? 0);
+  const modPermanent = (char.turnEffects['apMod_permanent'] as number | undefined) ?? 0;
+  const modTurn      = (char.turnEffects['apMod_turn']      as number | undefined) ?? 0;
+  const modContact   = (char.turnEffects['apMod_contact']   as number | undefined) ?? 0;
+  return base + modPermanent + modTurn + modContact;
 }
 
-// LP: 同様に lpOverride 優先
+// LP: lpOverride 優先 / 不在なら CardDef.lp、加えて turnEffects['lpMod_*'] を合算
 // rules: 19-special-rules.md (下限なし), 11-reasoning.md (LP≤0 で証拠0枚)
 function lp(s: GameState, uid: string): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
-  if (char.lpOverride !== null) return char.lpOverride;
-  const d = def.card(char.cardId);
-  return d?.lp ?? 0;
+  const base = char.lpOverride !== null ? char.lpOverride : (def.card(char.cardId)?.lp ?? 0);
+  const modPermanent = (char.turnEffects['lpMod_permanent'] as number | undefined) ?? 0;
+  const modTurn      = (char.turnEffects['lpMod_turn']      as number | undefined) ?? 0;
+  const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
+  return base + modPermanent + modTurn + modContact;
 }
 
 function level(s: GameState, uid: string): number {

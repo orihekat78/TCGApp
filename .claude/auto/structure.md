@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1257
+- **ファイル数**: 1259
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -412,6 +412,8 @@
     - `smoke-2026-05-25-12.md` — Smoke 1000戦レポート — smoke-2026-05-25-115135
     - `smoke-2026-05-25-13.json`
     - `smoke-2026-05-25-13.md` — Smoke 1000戦レポート — smoke-2026-05-25-120422
+    - `smoke-2026-05-25-14.json`
+    - `smoke-2026-05-25-14.md` — Smoke 1000戦レポート — smoke-2026-05-25-121334
     - `smoke-2026-05-25-2.json`
     - `smoke-2026-05-25-2.md` — Smoke 1000戦レポート — smoke-2026-05-25-061607
     - `smoke-2026-05-25-3.json`
@@ -1274,7 +1276,7 @@
       - `scene.test.ts` — rules: 03-field-areas.md, 09-cutin-disguise.md, 16-card-set.…
       - `scratchTrace.test.ts` — rules: 13-keywords.md (痕跡), 26-qa-deck-refresh.md
     - **`read/`**
-      - `char.test.ts` — CardDef に keywords があっても除外される
+      - `char.test.ts` — 2026-05-25 fix: charModifyAP は turnEffects['apMod_*'] に蓄積する。
       - `def.test.ts`
       - `game.test.ts`
       - `log.test.ts`

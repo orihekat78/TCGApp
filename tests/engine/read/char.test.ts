@@ -84,6 +84,59 @@ describe('engine.read.char', () => {
       const s = createEmptyGameState();
       expect(char.ap(s, 'nonexistent')).toBe(0);
     });
+
+    // 2026-05-25 fix: charModifyAP は turnEffects['apMod_*'] に蓄積する。
+    // 旧コードはこれを合算せず、D11007 a3 +3000/contact 等の AP 修正が
+    // 実 AP 判定に反映されない silent bug があった。
+    it('turnEffects[apMod_contact] が base AP に加算される (D11007 a3 driver)', () => {
+      register(makeDef({ ap: 5000 }));
+      const s = withChar(makeChar({
+        apOverride: null,
+        turnEffects: { contactImmune: false, removeOnTurnEnd: false, apMod_contact: 3000 },
+      }));
+      expect(char.ap(s, 'uid-1')).toBe(8000); // 5000 + 3000
+    });
+
+    it('turnEffects[apMod_turn] が base AP に加算される', () => {
+      register(makeDef({ ap: 5000 }));
+      const s = withChar(makeChar({
+        apOverride: null,
+        turnEffects: { contactImmune: false, removeOnTurnEnd: false, apMod_turn: 1000 },
+      }));
+      expect(char.ap(s, 'uid-1')).toBe(6000);
+    });
+
+    it('apMod_permanent / turn / contact 全て合算される', () => {
+      register(makeDef({ ap: 5000 }));
+      const s = withChar(makeChar({
+        apOverride: null,
+        turnEffects: {
+          contactImmune: false,
+          removeOnTurnEnd: false,
+          apMod_permanent: 500,
+          apMod_turn: 1000,
+          apMod_contact: 3000,
+        },
+      }));
+      expect(char.ap(s, 'uid-1')).toBe(9500); // 5000 + 500 + 1000 + 3000
+    });
+
+    it('apOverride が set されていても apMod_* は加算される', () => {
+      const s = withChar(makeChar({
+        apOverride: 6000,
+        turnEffects: { contactImmune: false, removeOnTurnEnd: false, apMod_contact: 2000 },
+      }));
+      expect(char.ap(s, 'uid-1')).toBe(8000); // 6000 (override) + 2000 (contact mod)
+    });
+
+    it('負の delta (apMod < 0) も合算される (rules/19 下限なし)', () => {
+      register(makeDef({ ap: 3000 }));
+      const s = withChar(makeChar({
+        apOverride: null,
+        turnEffects: { contactImmune: false, removeOnTurnEnd: false, apMod_turn: -5000 },
+      }));
+      expect(char.ap(s, 'uid-1')).toBe(-2000); // 3000 - 5000 = -2000 (rules/19)
+    });
   });
 
   describe('lp', () => {
