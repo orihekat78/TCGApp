@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1237
+- **ファイル数**: 1241
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -211,6 +211,7 @@
     - `BUG-076.md`
     - `BUG-077.md`
     - `BUG-078.md`
+    - `BUG-079.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -409,6 +410,8 @@
     - `smoke-2026-05-25-3.md` — Smoke 1000戦レポート — smoke-2026-05-25-062119
     - `smoke-2026-05-25-4.json`
     - `smoke-2026-05-25-4.md` — Smoke 1000戦レポート — smoke-2026-05-25-062738
+    - `smoke-2026-05-25-5.json`
+    - `smoke-2026-05-25-5.md` — Smoke 1000戦レポート — smoke-2026-05-25-094917
     - `smoke-2026-05-25.json`
     - `smoke-2026-05-25.md` — Smoke 1000戦レポート — smoke-2026-05-25-055403
     - `smoke-baseline.json`
@@ -1201,6 +1204,7 @@
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
+      - `player-resolution-bug.test.ts` — tests/engine/effect/player-resolution-bug
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests

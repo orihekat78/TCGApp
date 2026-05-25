@@ -94,6 +94,22 @@ function requireField<T>(args: Record<string, unknown>, key: string, kind: 'stri
 }
 
 /**
+ * BUG-079: card DSL の `player: 'self'` リテラルを ctx.source.player ベースで
+ * relative resolution する。'self' = source card の owner、'opp' = opp-of-owner。
+ *
+ * 旧コードは `resolvePlayer(a.player, ctx)` でリテラル絶対 ID として処理していたため、
+ * CPU 側 (opp) の card の `player: 'self'` が人間 (絶対 self) に効果を向けて
+ * いた。cond/eval.ts の `resolvePlayer` と同じ慣習を atom 側にも統一。
+ */
+function resolvePlayer(p: unknown, ctx: EffectCtx): Player {
+  const owner = ctx.source.player as Player;
+  if (p === 'self') return owner;
+  if (p === 'opp')  return owner === 'self' ? 'opp' : 'self';
+  // 想定外の入力は明示 throw (旧 requireField<Player> の保護を維持)
+  throw new Error(`atom args missing string field "player" (got ${typeof p})`);
+}
+
+/**
  * Atom Verb → engine.mutate.* ディスパッチャ
  * 未知の verb は Error を throw する (defensive)
  */
@@ -185,7 +201,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     // --- ドロー / FILE / 証拠 ---
     case 'draw': {
       // BUG-072: deck.draw が手札への push まで内部で行う + effect 経由の draw を log に残す
-      const drawPlayer = requireField<Player>(a, 'player', 'string');
+      const drawPlayer = resolvePlayer(a.player, ctx);
       const drawN = requireField<number>(a, 'n', 'number');
       mutate.deck.draw(s, drawPlayer, drawN);
       mutate.log.append(s, {
@@ -206,7 +222,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // UI で「効果: 手札選択待ち」と日本語表示できるよう mapping 追加。
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set (連続 pick)
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
-      const dcP = a.player as Player;
+      const dcP = resolvePlayer(a.player, ctx);
       const dcArgs = a.target === undefined
         ? { ...a, target: defaultPickTarget(undefined, a.n, 'hand', dcP, { max: a.max, filter: a.filter }) }
         : a;
@@ -221,11 +237,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         return;
       }
       const target = dcArgs.target as string[];
-      mutate.hand.discardToRemove(s, a.player as Player, target);
+      mutate.hand.discardToRemove(s, resolvePlayer(a.player, ctx), target);
       // BUG-072: effect 経由の discard 成功も log に残す
       mutate.log.append(s, {
         ts: Date.now(),
-        player: a.player as Player,
+        player: resolvePlayer(a.player, ctx),
         turn: s.turn.number,
         action: 'effect:discard',
         result: String(target.length),
@@ -234,7 +250,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'mill': {
       // BUG-073: effect log
-      const millP = a.player as Player;
+      const millP = resolvePlayer(a.player, ctx);
       const millN = a.n as number;
       mutate.deck.removeFromTop(s, millP, millN);
       mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: String(millN) });
@@ -242,14 +258,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'fileAdd': {
       // BUG-073: effect log
-      const faP = a.player as Player;
+      const faP = resolvePlayer(a.player, ctx);
       const faN = a.n as number;
       mutate.file.addFromDeckTop(s, faP, faN);
       mutate.log.append(s, { ts: Date.now(), player: faP, turn: s.turn.number, action: 'effect:fileAdd', result: String(faN) });
       return;
     }
     case 'filePopToHand': {
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       const popped: FileCard | undefined = mutate.file.popTop(s, p);
       // 裏向き card-back は手札に戻すとき "card-back" として加える (リバース不能なシリアライズ)
       // assisted-partner は popTop が除外するためここでは card-back のみ
@@ -262,7 +278,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'evidenceGain': {
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       const n = a.n as number;
       mutate.evidence.addFromDeck(s, p, n, false, { turn: s.turn.number, via: 'effect' });
       // BUG-073: effect log
@@ -270,7 +286,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'evidenceLose': {
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       const n = a.n as number;
       let lost = 0;
       for (let i = 0; i < n; i++) {
@@ -283,7 +299,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'evidenceFlip': {
-      const efP = a.player as Player;
+      const efP = resolvePlayer(a.player, ctx);
       const efIdx = a.idx as number;
       mutate.evidence.flipFaceUp(s, efP, efIdx);
       // BUG-073: effect log
@@ -299,7 +315,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 残り atom 用に side-channel を再 set。これで sequence 内の連続 pattern B atom
       // が順次 modal を出せる (D08013 a1 step 2 → step 3 の連鎖)。
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       const ethArgs = a.target === undefined
         ? { ...a, target: defaultPickTarget(undefined, a.n, 'evidence', p, { max: a.max, filter: a.filter }) }
         : a;
@@ -325,7 +341,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-074: 同じく string|array 両対応に正規化
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       const hafrArgs = a.target === undefined
         ? { ...a, target: defaultPickTarget(undefined, a.n, 'remove', p, { max: a.max, filter: a.filter }) }
         : a;
@@ -361,7 +377,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         // 未解決の bind ref → no-op skip (BUG-048 と同 pattern)
         return;
       }
-      const enterPlayer = requireField<Player>(a, 'player', 'string');
+      const enterPlayer = resolvePlayer(a.player, ctx);
       const newChar = mutate.scene.enter(s, enterPlayer, cardId, {
         named: (a.named as boolean | undefined) ?? false,
         viaEffect,
@@ -387,7 +403,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'sceneSwitch': {
       const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
-      const swPlayer = a.player as Player;
+      const swPlayer = resolvePlayer(a.player, ctx);
       const swCardId = a.cardId as string;
       const newChar = mutate.scene.switchEnter(s, swPlayer, swCardId, a.removeUid as string, {
         named: (a.named as boolean | undefined) ?? false,
@@ -409,7 +425,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // の場合、PA pick query を構築 + tryRePickFromAtom で side-channel set + awaiting-pick log。
       // (D08003 a1 step 2 「現場 AP≤8000 を1枚まで選びリムーブ」等で使用)
       if (a.uid === undefined && typeof a.player === 'string' && (typeof a.n === 'number' || typeof a.max === 'number')) {
-        const srP = a.player as Player;
+        const srP = resolvePlayer(a.player, ctx);
         const srSide = (a.side as 'self' | 'opp' | 'either' | undefined) ?? srP;
         const hasN = typeof a.n === 'number';
         const nMin = hasN ? (a.n as number) : 0;
@@ -553,14 +569,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- パートナー / 事件 ---
     case 'partnerAssist': {
-      const paP = a.player as Player;
+      const paP = resolvePlayer(a.player, ctx);
       mutate.partner.assist(s, paP);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: paP, turn: s.turn.number, action: 'effect:partnerAssist' });
       return;
     }
     case 'partnerSetState': {
-      const psP = a.player as Player;
+      const psP = resolvePlayer(a.player, ctx);
       const psState = a.state as 'active' | 'sleep' | 'stun';
       mutate.partner.setState(s, psP, psState);
       // BUG-073: effect log
@@ -568,14 +584,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'partnerSolveCase': {
-      const scP = a.player as Player;
+      const scP = resolvePlayer(a.player, ctx);
       mutate.partner.solveCase(s, scP);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: scP, turn: s.turn.number, action: 'effect:partnerSolveCase' });
       return;
     }
     case 'caseToResolved': {
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       mutate.case.toResolved(s, p);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:caseToResolved' });
@@ -609,7 +625,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- デッキ操作 (G18/G22) ---
     case 'deckRevealUntil': {
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       // BUG-045 fix: filter は declarative TargetFilter object として渡される
       // (D11019.ts 等)。predicate 関数化して使用 (旧コードは function を期待していて crash)。
       const filterArg = a.filter as TargetFilter | ((cardId: string) => boolean) | undefined;
@@ -661,7 +677,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'deckToBottomBound': {
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       const bindKey = a.bindKey as string;
       const bound = ctx.bindings[bindKey];
       if (!bound || bound.length === 0) return;
@@ -683,7 +699,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'deckShuffle': {
       // rules/04, 14, 26 — デッキ基本シャッフル (D11019 等で使用)
-      const p = a.player as Player;
+      const p = resolvePlayer(a.player, ctx);
       mutate.deck.shuffle(s, p, ctx.rng);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckShuffle' });
@@ -694,7 +710,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // デッキの下に移す。Sub-task A (Phase 5 advance): peek 順そのまま (= defender が
       // 順番変更しない default)。AI policy chooseSouzaOrder は将来 Sub-task B/C で
       // listener / dispatcher 経由で呼ぶ予定。「発見された」参照効果は scope 外。
-      const player = a.player as Player;
+      const player = resolvePlayer(a.player, ctx);
       const x = a.x as number;
       const deck = s.players[player].deck;
       const count = Math.min(x, deck.length);
@@ -726,7 +742,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'log': {
       const entry: LogEntry = {
         ts: (a.ts as number | undefined) ?? Date.now(),
-        player: (a.player as Player | undefined) ?? ctx.source.player,
+        player: a.player !== undefined ? resolvePlayer(a.player, ctx) : (ctx.source.player as Player),
         turn: (a.turn as number | undefined) ?? s.turn.number,
         action: (a.action as string | undefined) ?? 'log',
         target: a.target as string | undefined,
