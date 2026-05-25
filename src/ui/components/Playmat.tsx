@@ -235,15 +235,17 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   };
   const closeAreaModal = (): void => setAreaModal(null);
 
-  // User vision (CardListModal を pick UI として流用):
-  // pendingEffectPick.atomVerb が area-based pick の場合、対応 CardListModal を
-  // 自動 open する。EffectPickerModal は area pick 中は無効化 (下記 EffectPickerModal.tsx 側で対応)。
+  // User vision (CardListModal を pick UI として流用 + HandZone も同様):
+  // pendingEffectPick.atomVerb に応じて、対応する既存 UI (CardListModal / HandZone 拡大) を
+  // 自動 open する。EffectPickerModal は area pick 中は無効化。
   //
-  // verb → area mapping:
-  //   evidenceToHand → evidence
-  //   handAddFromRemove → remove (future)
-  //   discard (hand pick) は HandZone で直接 pick する方が自然 (本実装では対応せず EffectPickerModal 維持)
+  // verb → UI mapping:
+  //   evidenceToHand → CardListModal kind='evidence' を auto-open
+  //   handAddFromRemove → CardListModal kind='remove' を auto-open
+  //   discard → HandZone を auto-expand (pick mode)
   const pendingPickForArea = useGameStateStore((s) => s.pendingEffectPick);
+  const isDiscardPick =
+    pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'discard';
   const pickAreaKind: CardListKind | null = (() => {
     if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
     if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
@@ -266,6 +268,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       setAreaModal(null);
     }
   }, [pickAreaKind]);
+  // discard pick 中は HandZone を自動 expand (User vision: 手札拡大表示から選択)
+  useEffect(() => {
+    if (isDiscardPick) setHandExpanded(true);
+  }, [isDiscardPick]);
 
   // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
   const pickerPhase = useTargetPickerStore((s) => s.phase);
@@ -420,6 +426,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               ? getHandUseDisabledReason(gameState, 'self', c.cardId) ?? '使用不可'
               : '未開始'
           }
+          pickMode={isDiscardPick}
+          onPickCard={isDiscardPick ? (uid) => {
+            dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
+          } : undefined}
         />
 
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}

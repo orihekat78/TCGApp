@@ -48,6 +48,14 @@ export type HandZoneProps = {
   featuredCardId?: CardId | null;
   /** disabled 時の理由 (title 属性) */
   disabledReason?: (card: HandCardMeta) => string;
+  /**
+   * Pick mode (User vision: 手札拡大表示から card 選択):
+   * true なら全カード cell を pick 対象として click 可能化し onCardClick の代わりに
+   * onPickCard(`<cardId>#<idx>`) を発火。expanded view のみ対応。
+   */
+  pickMode?: boolean;
+  /** Pick mode で card 選択時の handler。uid は `<cardId>#<idx>` 形式。 */
+  onPickCard?: (uid: string) => void;
 };
 
 // ------------------------------------------------------------------
@@ -220,6 +228,8 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     canUse,
     featuredCardId,
     disabledReason,
+    pickMode = false,
+    onPickCard,
   } = props;
 
   if (cards.length === 0) {
@@ -288,6 +298,20 @@ export function HandZone(props: HandZoneProps): JSX.Element {
       )}
       <div className="hand-cards-row" onClick={handleRowBackdropClick}>
         {cards.map((c, index) => {
+          // Pick mode (User vision): 全 card cell が pick 対象、click → onPickCard
+          // (`<cardId>#<idx>` 形式 uid)。onCardClick は suppress。
+          if (pickMode && onPickCard) {
+            return (
+              <HandCard
+                key={`${c.cardId}-${index}`}
+                card={c}
+                featured={false}
+                disabled={false}
+                onClick={() => onPickCard(`${c.cardId}#${index}`)}
+                onExpand={onCardExpand}
+              />
+            );
+          }
           const usable = canUse ? canUse(c) : true;
           const isFeatured = featuredCardId === c.cardId;
           const reason = !usable && disabledReason ? disabledReason(c) : undefined;

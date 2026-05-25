@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 119
-- **ファイル数**: 1228
+- **ファイル数**: 1229
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -263,6 +263,7 @@
     - `2026-05-24-01-pb-atom-short-form.md`
     - `2026-05-25-01-bug-078-pick-queue.md`
     - `2026-05-25-02-cardlistmodal-pick-mode.md`
+    - `2026-05-25-03-handzone-pick-mode.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント

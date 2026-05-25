@@ -95,6 +95,38 @@ export type DispatchResult =
  */
 let _justDeclaredAxId: string | null = null;
 
+/**
+ * BUG-078 follow-up: pending.candidates (queue push 時の snapshot) は sequence の
+ * 先行 step (例: D08013 step 2 evidenceToHand) で当該 area の内容が変化すると
+ * stale になる。現在の gameState から uid → cardId を再解決して常に最新を採用する。
+ *
+ * uid 形式:
+ *   - `evidence:<side>:<idx>` → gameState.players[side].evidence[idx].cardId
+ *   - `<cardId>#<idx>` → cardId 部分 (Pattern B card kind の synthetic uid)
+ *
+ * Pattern A (uid='$pick' / scene char uid) は対象外 (本関数を呼ばない経路)
+ */
+function resolveCardIdFromPickUid(
+  uid: string,
+  state: GameState | null,
+  pending: { candidates: ReadonlyArray<{ uid: string; cardId: string }> },
+): string | null {
+  if (!state) {
+    // フォールバック: state 無し → pending snapshot を使用
+    return pending.candidates.find((c) => c.uid === uid)?.cardId ?? null;
+  }
+  const ev = uid.match(/^evidence:(self|opp):(\d+)$/);
+  if (ev) {
+    const side = ev[1] as 'self' | 'opp';
+    const idx = parseInt(ev[2]!, 10);
+    return state.players[side]?.evidence?.[idx]?.cardId ?? null;
+  }
+  const ch = uid.match(/^([^#]+)#\d+$/);
+  if (ch) return ch[1] ?? null;
+  // フォールバック: snapshot 参照
+  return pending.candidates.find((c) => c.uid === uid)?.cardId ?? null;
+}
+
 // ---- can-check (前段ガード) ----
 
 function isAllowed(state: GameState, action: EngineAction): boolean {
@@ -387,14 +419,18 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           args: { ...restArgs, uid: picked },
         };
       } else {
-        // BUG-065 pattern B: synthetic uid (cardId#index) → candidates から cardId 逆引き
+        // BUG-065 pattern B: synthetic uid (cardId#index) → cardId 逆引き
         // → atomArgs.target を [cardId] で上書き (atom-handler は配列を期待)
-        const cand = pending.candidates.find((c) => c.uid === picked);
-        if (!cand) return; // 候補一致なし: 想定外、防御スキップ
+        // BUG-078 follow-up: pending.candidates は queue push 時の snapshot で、
+        // sequence の先行 step (例: D08013 step 2 evidenceToHand) により当該 area の
+        // 内容が変化していると stale。現在の gameState から uid を再解決する。
+        const currentState = useGameStateStore.getState().gameState;
+        const resolvedCardId = resolveCardIdFromPickUid(picked, currentState, pending);
+        if (!resolvedCardId) return; // 想定外、防御スキップ
         resolvedAtom = {
           kind: 'atom' as const,
           verb: pending.atomVerb as never,
-          args: { ...pending.atomArgs, target: [cand.cardId] },
+          args: { ...pending.atomArgs, target: [resolvedCardId] },
         };
       }
       engineEvent.queue(

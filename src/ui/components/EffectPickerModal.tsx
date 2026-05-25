@@ -13,11 +13,13 @@ import { def as readDef } from '@/engine/read/def.js';
 import './EffectPickerModal.css';
 
 /**
- * User vision: area-based pick (evidenceToHand / handAddFromRemove) は CardListModal を
- * pick mode で開く方が UX が良いため、EffectPickerModal は表示しない。
+ * User vision: area-based pick は既存 UI (CardListModal / HandZone 拡大) を流用する方が
+ * UX が良いため、EffectPickerModal は表示しない。
+ * - evidenceToHand / handAddFromRemove → CardListModal kind='evidence'/'remove' (auto-open)
+ * - discard → HandZone を pick mode で auto-expand
  * scene char / その他のキャラ pick は引き続き本 modal を使用する。
  */
-const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove']);
+const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'discard']);
 
 export function EffectPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
