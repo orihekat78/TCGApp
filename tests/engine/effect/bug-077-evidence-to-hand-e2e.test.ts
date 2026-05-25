@@ -357,4 +357,28 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     expect(side?.candidates?.length, 'filter で [少年探偵団] のみ 1 件').toBe(1);
     expect(side?.candidates?.[0]?.cardId).toBe('D08013');
   });
+
+  // D08003 driver: 拡張 3 (sceneRemove 短縮形 PA) — { player, max, side, filter } で
+  // PA pick が awaiting-pick になり scene 候補が side-channel に push される
+  it('Phase L: sceneRemove 短縮形 PA で scene 候補が side-channel set', async () => {
+    const { _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
+    const { registerAll } = await import('@/cards/index');
+    registerAll();
+
+    const s = createEmptyGameState();
+    // 両 side の scene に char 配置 (D11003 = 警察 AP6000、D08018 = 少年探偵団 AP1000)
+    s.players.self.scene.push({ cardId: 'D11003', uid: 'D11003#0', state: 'active', ap: 6000, lp: 1, level: 8, namedThisTurn: false, mods: { ap: 0, lp: 0, scope: 'turn' } });
+    s.players.opp.scene.push({ cardId: 'D08018', uid: 'D08018#0', state: 'active', ap: 1000, lp: 1, level: 2, namedThisTurn: false, mods: { ap: 0, lp: 0, scope: 'turn' } });
+
+    // sceneRemove 短縮形 (D08003 a1 step 2 と同じ shape): AP≤8000 両 side
+    runAtom(s, 'sceneRemove', { player: 'self', max: 1, side: 'either', filter: { apMax: 8000 } }, ctxSelf());
+
+    const side = _drainPendingEffectPickSide();
+    expect(side?.atomVerb, 'sceneRemove pick awaiting').toBe('sceneRemove');
+    expect(side?.nMin, 'max: 1 で n.min=0').toBe(0);
+    expect(side?.nMax, 'max: 1 で n.max=1').toBe(1);
+    // 両 side の scene char が候補に入る (apMax 8000 で両方該当)
+    const candUids = side?.candidates?.map(c => c.uid).sort() ?? [];
+    expect(candUids, '両 side の AP≤8000 候補').toEqual(['D08018#0', 'D11003#0']);
+  });
 });

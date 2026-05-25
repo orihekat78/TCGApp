@@ -44,6 +44,14 @@ export type SceneAreaProps = {
   onUnitClick?: (uid: string) => void;
   /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
   onExpand?: (cardId: string) => void;
+  /**
+   * Effect pick mode (User vision: SceneArea も pick UI として流用)。
+   * 候補 uid 集合。空でなければ各 char が pick 対象として黄色枠 + click 可能化。
+   * onPickChar が同時に渡された場合のみ動作。
+   */
+  pickCharUids?: ReadonlySet<string>;
+  /** Pick mode で char が選択されたとき (uid 通知) */
+  onPickChar?: (uid: string) => void;
 };
 
 type SceneCharacterCardProps = {
@@ -55,9 +63,13 @@ type SceneCharacterCardProps = {
   onExpand?: (cardId: string) => void;
   /** Phase 8.10g-2: ゴースト (fade-out 中) の場合 true → .removing クラスを付与 */
   isGhost?: boolean;
+  /** Pick mode (effect pick) — true で黄色枠 + cursor pointer。onPickClick 経由で発火 */
+  isPickable?: boolean;
+  /** Pick mode で click → onPickClick (uid 通知) */
+  onPickClick?: () => void;
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick }: SceneCharacterCardProps): JSX.Element {
   const ap = ch.apOverride ?? meta.ap;
   const lp = ch.lpOverride ?? meta.lp;
 
@@ -68,6 +80,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost 
     ch.state === 'stun' && 'stun',
     isCandidate && 'candidate',
     isGhost && 'removing',
+    isPickable && 'effect-pickable',
   ]
     .filter(Boolean)
     .join(' ');
@@ -82,13 +95,15 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost 
       onClick={
         isGhost
           ? undefined
-          : isCandidate && onClick
-            ? onClick
-            : onExpand
-              ? () => onExpand(ch.cardId)
-              : undefined
+          : isPickable && onPickClick
+            ? onPickClick  // Pick mode 優先 (effect 対象選択)
+            : isCandidate && onClick
+              ? onClick
+              : onExpand
+                ? () => onExpand(ch.cardId)
+                : undefined
       }
-      style={(isCandidate || onExpand) && !isGhost ? { cursor: 'pointer' } : undefined}
+      style={((isCandidate || isPickable || onExpand) && !isGhost) ? { cursor: 'pointer' } : undefined}
       aria-hidden={isGhost ? 'true' : undefined}
     >
       <div className="color-stripe" />
@@ -112,7 +127,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost 
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -160,6 +175,7 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
       <div className="scene-slots">
         {filled.map((ch) => {
           const isCandidate = candidateUids?.has(ch.uid) ?? false;
+          const isPickable = pickCharUids?.has(ch.uid) ?? false;
           return (
             <SceneCharacterCard
               key={ch.uid}
@@ -168,6 +184,8 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               isCandidate={isCandidate}
               onClick={onUnitClick ? () => onUnitClick(ch.uid) : undefined}
               onExpand={onExpand}
+              isPickable={isPickable}
+              onPickClick={isPickable && onPickChar ? () => onPickChar(ch.uid) : undefined}
             />
           );
         })}

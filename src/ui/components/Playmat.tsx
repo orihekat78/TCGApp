@@ -103,12 +103,16 @@ type PlayerMatProps = CandidateProps & {
   onAreaClick?: (kind: 'file' | 'evidence' | 'remove', side: 'self' | 'opp') => void;
   /** Round 4l (BUG-001): カード単体クリックで拡大 modal を開く callback */
   onExpand?: (cardId: string) => void;
+  /** User vision (拡張 4): scene キャラ pick mode (sceneRemove 等の effect 対象選択) */
+  pickCharUids?: ReadonlySet<string>;
+  onPickChar?: (uid: string) => void;
 };
 
 function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
   isCaseCandidate, onCaseClick, onAreaClick, onExpand,
+  pickCharUids, onPickChar,
 }: PlayerMatProps & {
   isCaseCandidate?: boolean;
   onCaseClick?: () => void;
@@ -180,6 +184,8 @@ function PlayerMat({
           candidateUids={candidateUids}
           onUnitClick={onUnitClick}
           onExpand={onExpand}
+          pickCharUids={pickCharUids}
+          onPickChar={onPickChar}
         />
         <div className="below-scene">
           <FileArea
@@ -272,6 +278,21 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useEffect(() => {
     if (isDiscardPick) setHandExpanded(true);
   }, [isDiscardPick]);
+  // User vision (拡張 4): sceneRemove 等の scene キャラ pick mode 検出
+  // pendingEffectPick.atomVerb が scene 系で、candidates が scene キャラ uid を含むなら active
+  const isScenePick =
+    pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'sceneRemove';
+  const scenePickUidsSelf = new Set<string>();
+  const scenePickUidsOpp = new Set<string>();
+  if (isScenePick && pendingPickForArea) {
+    for (const c of pendingPickForArea.candidates) {
+      if (c.player === 'self') scenePickUidsSelf.add(c.uid);
+      else scenePickUidsOpp.add(c.uid);
+    }
+  }
+  const handleScenePick = isScenePick ? (uid: string): void => {
+    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
+  } : undefined;
 
   // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
   const pickerPhase = useTargetPickerStore((s) => s.phase);
@@ -385,6 +406,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onCaseClick={() => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
             onAreaClick={handleAreaClick}
             onExpand={expandModal.open}
+            pickCharUids={scenePickUidsOpp}
+            onPickChar={handleScenePick}
           />
 
           {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
@@ -400,6 +423,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onPartnerClick={() => pickAndConfirm('partner:self')}
             onAreaClick={handleAreaClick}
             onExpand={expandModal.open}
+            pickCharUids={scenePickUidsSelf}
+            onPickChar={handleScenePick}
           />
         </div>
 

@@ -19,7 +19,7 @@ import './EffectPickerModal.css';
  * - discard → HandZone を pick mode で auto-expand
  * scene char / その他のキャラ pick は引き続き本 modal を使用する。
  */
-const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'discard']);
+const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'discard', 'sceneRemove']);
 
 export function EffectPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectPick);

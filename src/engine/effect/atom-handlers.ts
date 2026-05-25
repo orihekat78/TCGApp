@@ -405,6 +405,34 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'sceneRemove': {
       type RemoveCause = 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+      // 物理動作 atom 化 (拡張 3): 短縮形 { player, n or max, side, filter } で uid 不在
+      // の場合、PA pick query を構築 + tryRePickFromAtom で side-channel set + awaiting-pick log。
+      // (D08003 a1 step 2 「現場 AP≤8000 を1枚まで選びリムーブ」等で使用)
+      if (a.uid === undefined && typeof a.player === 'string' && (typeof a.n === 'number' || typeof a.max === 'number')) {
+        const srP = a.player as Player;
+        const srSide = (a.side as 'self' | 'opp' | 'either' | undefined) ?? srP;
+        const hasN = typeof a.n === 'number';
+        const nMin = hasN ? (a.n as number) : 0;
+        const nMax = hasN ? (a.n as number) : (a.max as number);
+        const filterObj = (a.filter && typeof a.filter === 'object') ? a.filter as Record<string, unknown> : undefined;
+        const paTarget = {
+          kind: 'pick' as const,
+          query: filterObj ? { area: 'scene' as const, side: srSide, filter: filterObj } : { area: 'scene' as const, side: srSide },
+          n: { min: nMin, max: nMax },
+          chooser: srP,
+        };
+        // PA 短縮形: uid='$pick' を明示して PA branch に乗せる
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: srP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: srP, turn: s.turn.number, action: 'effect:sceneRemove:awaiting-pick' });
+        return;
+      }
+      // 「$pick」placeholder のまま atom-handler 到達 = pick で 0 枚選択された場合
+      // (max: N で min=0 だと user が skip 可能)。silent no-op (log のみ)。
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', result: 'skipped' });
+        return;
+      }
       const srUid = a.uid as string;
       mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect');
       // BUG-073: effect log
