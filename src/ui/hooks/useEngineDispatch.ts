@@ -455,12 +455,16 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         const remainderEffect: Effect = chainCont.remainder.length === 1
           ? chainCont.remainder[0]!
           : { kind: 'chain', steps: chainCont.remainder };
+        // D11007 a3 driver fix 2026-05-25: 保存された ctx.source をそのまま渡す。
+        // 旧コードは { player, cardId } のみ渡して uid を drop していたため、
+        // remainder の atom が `uid: '$self'` 等を使うと ctx.source.uid 未設定で
+        // resolveBindRef が解決できず silent no-op (AP+3000 効果が走らないバグ)。
         engineEvent.queue(
           draft,
           remainderEffect as never,
-          { player: pending.player, cardId: pending.source.cardId },
+          chainCont.ctx.source,
           'effect:chain-continuation',
-          { source: pending.source },
+          { source: chainCont.ctx.source },
         );
         runAllUntilEmpty(draft);
       }

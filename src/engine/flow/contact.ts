@@ -205,6 +205,11 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
   }
   const { aUid, aAP, bUid, bAP } = ax.apSnapshot;
 
+  // User request 2026-05-25: judge 時点の最終 AP (能力 / カットイン適用後) を log に出すため、
+  // removeToRemove する前に card 情報を捕捉。
+  const aSide = formatJudgeSide(state, aUid, aAP);
+  const bSide = formatJudgeSide(state, bUid, bAP);
+
   let defenderRemoved = false;
   if (aAP >= bAP && !ax.contactImmune) {
     mutate.scene.removeToRemove(state, bUid, 'contact-ap');
@@ -229,15 +234,40 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
   );
 
   // Phase 8.10e: judge 結果を state.log に記録 (UI の RecentActionToast / LogPanel が拾う)
+  // 2026-05-25 拡張: 最終 AP 詳細 + 勝敗を含める。
+  const verdict = defenderRemoved ? '✓ HIT (defender removed)' : '✗ MISS';
   mutate.log.append(state, {
     ts: Date.now(),
     player: ax.byPlayer,
     turn: state.turn.number,
     action: 'contact-judge',
-    result: defenderRemoved ? 'hit' : 'miss',
+    result: `${aSide} VS ${bSide} → ${verdict}`,
   });
 
   return result;
+}
+
+/**
+ * 最終 AP 判定用の side format。state-machine.ts の formatContactSide と同形だが
+ * (1) contact.ts が partner uid を受け取らない (snapshotAP 経由で uid を保持)、
+ * (2) judge 時点の最終 AP を引数で受け取る、点が異なる。
+ */
+function formatJudgeSide(s: GameState, uid: string, finalAp: number): string {
+  let cardId: string | undefined;
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p = uid === 'partner:self' ? 'self' : 'opp';
+    cardId = s.players[p].partner?.cardId;
+  } else {
+    for (const p of ['self', 'opp'] as const) {
+      const c = s.players[p].scene.find(c => c.uid === uid);
+      if (c) { cardId = c.cardId; break; }
+    }
+  }
+  if (!cardId) return `${uid}:AP${finalAp}`;
+  const d = readDef.card(cardId);
+  const name = d?.names?.[0] ?? cardId;
+  const level = d?.level ?? '?';
+  return `Lv${level} ${name}(${cardId}):AP${finalAp}`;
 }
 
 /**

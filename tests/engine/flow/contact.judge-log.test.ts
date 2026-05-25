@@ -68,10 +68,13 @@ describe('Phase 8.10e: contact.judge logs result', () => {
     });
     const judgeEntry = after.log.find((e) => e.action === 'contact-judge');
     expect(judgeEntry).toBeDefined();
-    expect(judgeEntry?.result).toBe('hit');
+    // 2026-05-25 拡張: 最終 AP 詳細 + 勝敗を含む format に変更
+    expect(judgeEntry?.result).toMatch(/HIT/);
+    expect(judgeEntry?.result).toMatch(/AP2000/);
+    expect(judgeEntry?.result).toMatch(/AP1000/);
   });
 
-  it('attacker AP < defender AP → log includes contact-judge with result="miss"', () => {
+  it('attacker AP < defender AP → log includes contact-judge with MISS detail', () => {
     registerCardDef(makeCard('WeakAtk', { ap: 800, lp: 1 }));
     registerCardDef(makeCard('StrongDef', { ap: 2000, lp: 1 }));
     const s = produce(setupBase(), (d) => {
@@ -85,6 +88,9 @@ describe('Phase 8.10e: contact.judge logs result', () => {
     });
     const judgeEntry = after.log.find((e) => e.action === 'contact-judge');
     expect(judgeEntry).toBeDefined();
-    expect(judgeEntry?.result).toBe('miss');
+    // 2026-05-25 拡張: 最終 AP 詳細 + 勝敗を含む format
+    expect(judgeEntry?.result).toMatch(/MISS/);
+    expect(judgeEntry?.result).toMatch(/AP800/);
+    expect(judgeEntry?.result).toMatch(/AP2000/);
   });
 });
