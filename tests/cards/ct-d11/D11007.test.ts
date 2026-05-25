@@ -37,7 +37,7 @@ describe('D11007 松田陣平 (対象拡張 + partnerColor 突撃 + contact reve
     expect(a2.description).toMatch(/突撃/);
   });
 
-  it('a3 = triggered contact:start, limit turn 1, optional + chain (discard → AP+3000)', () => {
+  it('a3 = triggered contact:start, limit turn 1, chain (discard max:1 → AP+3000)', () => {
     const a3 = D11007.abilities[2];
     expect(a3.type).toBe('triggered');
     expect(a3.trigger?.hook).toBe('contact:start');
@@ -46,13 +46,13 @@ describe('D11007 松田陣平 (対象拡張 + partnerColor 突撃 + contact reve
     // D11007 v2 Phase 2: matcher 関数 → matcherCondition declarative kind
     expect(a3.trigger?.matcher).toBeUndefined();
     expect(a3.trigger?.matcherCondition).toEqual({ kind: 'contactOpponentApHigher' });
-    expect(a3.effect?.kind).toBe('optional');
-    // 公式テキスト「リムーブしてもよい。そうした場合、〜」は optional + chain (D08003 同型)。
-    const inner = (a3.effect as { effect?: { kind?: string; steps?: { verb?: string }[] } }).effect;
-    expect(inner?.kind).toBe('chain');
-    expect(inner?.steps?.length).toBe(2);
-    expect(inner?.steps?.[0]?.verb).toBe('discard');
-    expect(inner?.steps?.[1]?.verb).toBe('charModifyAP');
+    // D11007 v2 fix: optional 撤去 (UI 未配線で常に skip される) → chain + max:1 で「してもよい」表現 (D08003 a1 同型)
+    const eff = a3.effect as { kind?: string; steps?: { verb?: string; args?: Record<string, unknown> }[] };
+    expect(eff.kind).toBe('chain');
+    expect(eff.steps?.length).toBe(2);
+    expect(eff.steps?.[0]?.verb).toBe('discard');
+    expect(eff.steps?.[0]?.args?.max).toBe(1); // 「してもよい」= max:1 で skip 可能
+    expect(eff.steps?.[1]?.verb).toBe('charModifyAP');
   });
 
   it('D11008 variant shares abilities with D11007', () => {

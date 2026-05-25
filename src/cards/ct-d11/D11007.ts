@@ -54,14 +54,13 @@ const a3: AbilityDef = {
     matcherCondition: { kind: 'contactOpponentApHigher' }, // このキャラより AP の高いキャラとコンタクトしたとき
   },
   effect: {
-    kind: 'optional', // 「してもよい」 = する/しない 確認
-    effect: {
-      kind: 'chain', // 「そうした場合」 = step 1 (discard) 実リムーブで applied のときのみ step 2 を実行 (D08003 a1 同型)
-      steps: [
-        { kind: 'atom', verb: 'discard',      args: { player: 'self', n: 1 } },                          // 手札を1枚選びリムーブ
-        { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 3000, scope: 'contact' } },  // このキャラを AP+3000 (コンタクト中)
-      ],
-    },
+    // 「してもよい」「そうした場合」semantics: chain + step 1 max:1 (skip 可能) で表現 (D08003 a1 同型)。
+    // optional 単体は ctx.dyn.optionalRun の UI 配線が未実装で常に skip されるため使えない。
+    kind: 'chain',
+    steps: [
+      { kind: 'atom', verb: 'discard',      args: { player: 'self', max: 1 } },                         // 手札を1枚リムーブしてもよい (max:1 で skip 可能、skip 時は chain break)
+      { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 3000, scope: 'contact' } },   // そうした場合、このキャラを AP+3000 (コンタクト中)
+    ],
   },
   description: '【自分ターン中】【ターン1】高APコンタクト時、手札1リムでこのキャラAP＋3000 (コンタクト中)。',
   ruleRefs: ['rules/08-contact.md', 'rules/22-qa-action-contact.md'],
