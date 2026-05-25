@@ -181,3 +181,31 @@
   text-align: center;
   width: fit-content;
 }
+
+/* Pick mode で skip 可能 (n.min===0) のとき banner と並べて skip ボタン */
+.card-list-modal-pick-banner-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px auto 0 auto;
+  width: fit-content;
+}
+.card-list-modal-pick-banner-row .card-list-modal-pick-banner {
+  margin: 0;
+}
+.card-list-modal-pick-skip-btn {
+  padding: 5px 14px;
+  background: rgba(60, 60, 60, 0.6);
+  border: 1px solid #888;
+  border-radius: 4px;
+  color: #ddd;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.card-list-modal-pick-skip-btn:hover {
+  background: rgba(80, 80, 80, 0.8);
+  border-color: #ccc;
+  color: #fff;
+}

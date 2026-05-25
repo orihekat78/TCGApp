@@ -56,6 +56,10 @@ export type HandZoneProps = {
   pickMode?: boolean;
   /** Pick mode で card 選択時の handler。uid は `<cardId>#<idx>` 形式。 */
   onPickCard?: (uid: string) => void;
+  /** Pick mode で skip 可能 (n.min===0、max:N の任意効果) なら true。skip ボタン表示 */
+  pickCanSkip?: boolean;
+  /** Pick mode で「しない」を選んだとき (= effectPickResolve pickedUid=null) */
+  onPickSkip?: () => void;
 };
 
 // ------------------------------------------------------------------
@@ -234,6 +238,8 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     disabledReason,
     pickMode = false,
     onPickCard,
+    pickCanSkip = false,
+    onPickSkip,
   } = props;
 
   if (cards.length === 0) {
@@ -301,8 +307,20 @@ export function HandZone(props: HandZoneProps): JSX.Element {
         </button>
       )}
       {pickMode && (
-        <div className="hand-zone-pick-banner" role="status">
-          手札から1枚選んでリムーブしてください
+        <div className="hand-zone-pick-banner-row">
+          <div className="hand-zone-pick-banner" role="status">
+            手札から1枚選んでリムーブしてください
+          </div>
+          {pickCanSkip && onPickSkip && (
+            <button
+              type="button"
+              className="hand-zone-pick-skip-btn"
+              onClick={onPickSkip}
+              data-testid="hand-zone-pick-skip"
+            >
+              リムーブしない
+            </button>
+          )}
         </div>
       )}
       <div className="hand-cards-row" onClick={handleRowBackdropClick}>

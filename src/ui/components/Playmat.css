@@ -283,3 +283,42 @@
 }
 
 /* LogPanel は src/ui/components/LogPanel.css で定義 (Task 7.13 で実装) */
+
+/* 拡張 5 chain: SceneArea pick mode で skip 可能なとき (max:N) の overlay。
+   画面上部中央に banner + skip ボタンを固定表示。 */
+.scene-pick-skip-overlay {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(20, 30, 50, 0.92);
+  border: 1px solid #ffd966;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+}
+.scene-pick-skip-banner {
+  color: #ffd966;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.scene-pick-skip-btn {
+  padding: 5px 14px;
+  background: rgba(60, 60, 60, 0.6);
+  border: 1px solid #888;
+  border-radius: 4px;
+  color: #ddd;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.scene-pick-skip-btn:hover {
+  background: rgba(80, 80, 80, 0.8);
+  border-color: #ccc;
+  color: #fff;
+}

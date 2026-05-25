@@ -65,10 +65,14 @@ export type CardListModalProps = {
   pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp' }>;
   /** Pick mode で cell が click された時の handler (uid を受ける) */
   onPick?: (uid: string) => void;
+  /** Pick mode で skip 可能 (任意効果 n.min===0) なら true */
+  pickCanSkip?: boolean;
+  /** Pick skip した時の handler */
+  onPickSkip?: () => void;
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, onPick } = props;
+  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, onPick, pickCanSkip, onPickSkip } = props;
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
 
   /** 裏向き cell の idx (= evidence の index) から候補 uid を逆引き。pick mode 外では undefined。 */
@@ -136,8 +140,20 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
         </header>
 
         {inPickMode && (
-          <div className="card-list-modal-pick-banner" role="status">
-            {PICK_BANNER_TEXT[kind]}
+          <div className="card-list-modal-pick-banner-row">
+            <div className="card-list-modal-pick-banner" role="status">
+              {PICK_BANNER_TEXT[kind]}
+            </div>
+            {pickCanSkip && onPickSkip && (
+              <button
+                type="button"
+                className="card-list-modal-pick-skip-btn"
+                onClick={onPickSkip}
+                data-testid="card-list-pick-skip"
+              >
+                選ばない
+              </button>
+            )}
           </div>
         )}
 

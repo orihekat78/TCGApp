@@ -455,6 +455,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           onPickCard={isDiscardPick ? (uid) => {
             dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
           } : undefined}
+          pickCanSkip={isDiscardPick && (pendingPickForArea?.nMin ?? 1) === 0}
+          onPickSkip={isDiscardPick ? () => {
+            dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+          } : undefined}
         />
 
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}
@@ -604,11 +608,30 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               onPick={isPickModeForThisArea ? (uid) => {
                 dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
               } : undefined}
+              pickCanSkip={isPickModeForThisArea && (pendingPickForArea?.nMin ?? 1) === 0}
+              onPickSkip={isPickModeForThisArea ? () => {
+                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+              } : undefined}
             />
           );
         })()}
         {/* Round 4l (BUG-001): カード拡大表示 modal */}
         <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+        {/* User vision (拡張 5 chain): SceneArea pick mode で skip 可能 (max:N) の場合
+            scene キャラを click せず「リムーブしない」できるよう overlay ボタン表示 */}
+        {isScenePick && (pendingPickForArea?.nMin ?? 1) === 0 && (
+          <div className="scene-pick-skip-overlay" role="status">
+            <span className="scene-pick-skip-banner">現場キャラを 1 枚選んでリムーブ してください</span>
+            <button
+              type="button"
+              className="scene-pick-skip-btn"
+              onClick={() => dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })}
+              data-testid="scene-pick-skip"
+            >
+              リムーブしない
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
