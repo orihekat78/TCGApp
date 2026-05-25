@@ -431,4 +431,31 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     // pure atom (pick なし) は chain でも普通に実行される (Phase M とは異なり no-op flag が立たない)
     expect(s.players.self.evidence.length).toBe(0);
   });
+
+  // D11020 driver: sceneRemove 短縮形に `state: ['sleep']` が pass-through される
+  // (D11020 a1 step 1「レベル7以下のスリープ状態のキャラを1枚まで」)
+  it('Phase O: sceneRemove 短縮形で state:[sleep] + filter:levelMax が pick query に展開', async () => {
+    const { _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
+    const { registerAll } = await import('@/cards/index');
+    registerAll();
+
+    const s = createEmptyGameState();
+    // self scene: D11003 level=8 active (除外: levelMax=7 で hit せず)、D11007 level=6 sleep (hit)
+    s.players.self.scene.push({ cardId: 'D11003', uid: 'D11003#0', state: 'active', ap: 6000, lp: 1, level: 8, namedThisTurn: false, mods: { ap: 0, lp: 0, scope: 'turn' } });
+    s.players.self.scene.push({ cardId: 'D11007', uid: 'D11007#0', state: 'sleep',  ap: 4000, lp: 1, level: 6, namedThisTurn: false, mods: { ap: 0, lp: 0, scope: 'turn' } });
+    // opp scene: D08018 level=2 sleep (hit、両 side either)、D08013 level=4 active (state filter で除外)
+    s.players.opp.scene.push({ cardId: 'D08018', uid: 'D08018#0', state: 'sleep',  ap: 1000, lp: 1, level: 2, namedThisTurn: false, mods: { ap: 0, lp: 0, scope: 'turn' } });
+    s.players.opp.scene.push({ cardId: 'D08013', uid: 'D08013#0', state: 'active', ap: 2000, lp: 1, level: 4, namedThisTurn: false, mods: { ap: 0, lp: 0, scope: 'turn' } });
+
+    runAtom(s, 'sceneRemove', { player: 'self', max: 1, side: 'either', filter: { levelMax: 7 }, state: ['sleep'] }, ctxSelf());
+
+    const side = _drainPendingEffectPickSide();
+    expect(side?.atomVerb, 'sceneRemove awaiting').toBe('sceneRemove');
+    expect(side?.nMin).toBe(0);
+    expect(side?.nMax).toBe(1);
+    // hit すべき: D11007#0 (self level=6 sleep) + D08018#0 (opp level=2 sleep)
+    // 除外: D11003#0 (level=8 で levelMax 超過)、D08013#0 (active で state filter 失敗)
+    const candUids = side?.candidates?.map(c => c.uid).sort() ?? [];
+    expect(candUids, 'state:[sleep] + levelMax:7 で 2 件').toEqual(['D08018#0', 'D11007#0']);
+  });
 });

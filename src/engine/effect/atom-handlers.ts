@@ -431,9 +431,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         const nMin = hasN ? (a.n as number) : 0;
         const nMax = hasN ? (a.n as number) : (a.max as number);
         const filterObj = (a.filter && typeof a.filter === 'object') ? a.filter as Record<string, unknown> : undefined;
+        // D11020 18の想起 step 1: `state: ['sleep']` 等 TargetQuery top-level 状態フィルタを pass-through
+        const stateArr = Array.isArray(a.state) ? a.state as ('active' | 'sleep' | 'stun')[] : undefined;
+        const queryObj: Record<string, unknown> = { area: 'scene', side: srSide };
+        if (filterObj) queryObj.filter = filterObj;
+        if (stateArr) queryObj.state = stateArr;
         const paTarget = {
           kind: 'pick' as const,
-          query: filterObj ? { area: 'scene' as const, side: srSide, filter: filterObj } : { area: 'scene' as const, side: srSide },
+          query: queryObj as { area: 'scene'; side: 'self' | 'opp' | 'either' },
           n: { min: nMin, max: nMax },
           chooser: srP,
         };
