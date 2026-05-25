@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `a4139499aa01`
+> Source hash: `a586faa55cd4`
 
 公式ルール [`26-05-11-ui-game-setup-flows.md`](../../../rules/26-05-11-ui-game-setup-flows.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

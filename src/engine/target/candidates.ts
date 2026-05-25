@@ -200,7 +200,7 @@ function matchesFilters(
   return true;
 }
 
-function matchOneFilter(
+export function matchOneFilter(
   state: GameState,
   cardId: string,
   filter: TargetFilter,

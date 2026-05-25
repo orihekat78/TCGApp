@@ -380,4 +380,54 @@ describe('engine.cond.eval', () => {
       expect(evalCond(s, { kind: 'contactOpponentApHigher' }, ctxPartial)).toBe(false);
     });
   });
+
+  // D11014 v2 Phase 1: enterOrderEquals (【疾風 N】matcher → matcherCondition declarative)
+  describe('enterOrderEquals (D11014 / D11003 / D11009 driver)', () => {
+    it('payload.enterOrder === n → true', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ triggerPayload: { enterOrder: 1 } });
+      expect(evalCond(s, { kind: 'enterOrderEquals', n: 1 }, ctx)).toBe(true);
+    });
+    it('payload.enterOrder !== n → false', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ triggerPayload: { enterOrder: 2 } });
+      expect(evalCond(s, { kind: 'enterOrderEquals', n: 1 }, ctx)).toBe(false);
+    });
+    it('payload 不在 → false', () => {
+      const s = createEmptyGameState();
+      expect(evalCond(s, { kind: 'enterOrderEquals', n: 1 }, makeCtx())).toBe(false);
+    });
+  });
+
+  // D11014 v2 Phase 3: boundMatchesFilter (custom check → declarative)
+  describe('boundMatchesFilter (D11014 a2 driver)', () => {
+    it('binding[0].cardId が cardName filter に分割名完全一致 → true', () => {
+      const s = createEmptyGameState();
+      registerCardDef(defOf({ id: 'D11003', names: ['萩原千速'] }));
+      const ctx = makeCtx({ bindings: { '$entered': [{ kind: 'card', cardId: 'D11003' } as never] } });
+      expect(evalCond(s, { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } }, ctx)).toBe(true);
+    });
+    it('cardName が違うなら → false', () => {
+      const s = createEmptyGameState();
+      registerCardDef(defOf({ id: 'D11010', names: ['萩原研二'] }));
+      const ctx = makeCtx({ bindings: { '$entered': [{ kind: 'card', cardId: 'D11010' } as never] } });
+      expect(evalCond(s, { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } }, ctx)).toBe(false);
+    });
+    it('binding 空 → false (defensive)', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ bindings: { '$entered': [] } });
+      expect(evalCond(s, { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } }, ctx)).toBe(false);
+    });
+    it('binding 未設定 → false', () => {
+      const s = createEmptyGameState();
+      expect(evalCond(s, { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } }, makeCtx())).toBe(false);
+    });
+    it('trait filter も動く', () => {
+      const s = createEmptyGameState();
+      registerCardDef(defOf({ id: 'C1', traits: ['警察', '神奈川県警'] }));
+      const ctx = makeCtx({ bindings: { '$e': [{ kind: 'card', cardId: 'C1' } as never] } });
+      expect(evalCond(s, { kind: 'boundMatchesFilter', bindKey: '$e', filter: { trait: '警察' } }, ctx)).toBe(true);
+      expect(evalCond(s, { kind: 'boundMatchesFilter', bindKey: '$e', filter: { trait: '探偵' } }, ctx)).toBe(false);
+    });
+  });
 });

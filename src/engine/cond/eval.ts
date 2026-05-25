@@ -173,6 +173,45 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const bAp = charRead.ap(state, payload.bUid);
       return bAp > aAp;
     }
+    case 'enterOrderEquals': {
+      // D11014 a1 / D11003 / D11009 driver: enter hook payload.enterOrder が n と一致するか
+      // (【疾風 N】 = ターン N 番目に登場で発火)
+      const payload = ctx.triggerPayload as { enterOrder?: number } | undefined;
+      return payload?.enterOrder === cond.n;
+    }
+    case 'boundMatchesFilter': {
+      // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
+      // (「〚カード名[X]〛を登場させた場合」を declarative 化)
+      const bound = ctx.bindings?.[cond.bindKey];
+      if (!Array.isArray(bound) || bound.length === 0) return false;
+      const cardId = (bound[0] as { cardId?: string }).cardId;
+      if (typeof cardId !== 'string') return false;
+      const d = lookupCardDef(cardId);
+      const f = cond.filter;
+      // CardDef-driven filter のみサポート (SceneCharacter state 系は対象外)
+      if (f.cardId !== undefined) {
+        const ids = Array.isArray(f.cardId) ? f.cardId : [f.cardId];
+        if (!ids.includes(cardId)) return false;
+      }
+      if (f.cardName !== undefined) {
+        const wants = Array.isArray(f.cardName) ? f.cardName : [f.cardName];
+        const components = d ? allCardNameComponentsForDef(d) : [];
+        if (!wants.some(w => components.includes(w))) return false;
+      }
+      if (f.trait !== undefined) {
+        const wants = Array.isArray(f.trait) ? f.trait : [f.trait];
+        const traits = d?.traits ?? [];
+        if (!wants.some(w => traits.includes(w))) return false;
+      }
+      if (f.color !== undefined) {
+        const wants = Array.isArray(f.color) ? f.color : [f.color];
+        const colors = d?.colors ?? [];
+        if (!wants.some(w => colors.includes(w))) return false;
+      }
+      if (f.levelMin !== undefined && (d?.level ?? 0) < f.levelMin) return false;
+      if (f.levelMax !== undefined && (d?.level ?? 0) > f.levelMax) return false;
+      return true;
+    }
     case 'custom':
       return cond.check(state, ctx);
   }

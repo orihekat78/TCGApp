@@ -36,6 +36,12 @@ export type Condition =
   // D11007 a3: contact:start hook 発火時、attacker (aUid) より defender (bUid) の方が AP が高い場合
   // payload は ctx.triggerPayload に詰められ、listener から評価される (TriggerDef.matcherCondition 経由)
   | { kind: 'contactOpponentApHigher' }
+  // D11014 a1 / D11003 / D11009 driver: enter hook の payload.enterOrder が n と一致するか
+  // (【疾風 N】 = ターン N 番目に登場で発火、matcher → matcherCondition declarative 化)
+  | { kind: 'enterOrderEquals'; n: number }
+  // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
+  // (「〚カード名[X]〛を登場させた場合」を declarative 化、matchOneFilter 再利用)
+  | { kind: 'boundMatchesFilter'; bindKey: string; filter: TargetFilter }
   | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean };
 
 // ---------- TargetFilter / TargetQuery / TargetingRef ----------

@@ -8,9 +8,9 @@
 //     〚特徴［警察］〛のキャラを1枚まで選び、登場させる。
 //     〚カード名［萩原千速］〛を登場させた場合、カードを1枚引く。
 
-import type { AbilityDef, CardDef, EffectCtx, GameState } from '@/engine/types';
-import { engine } from '@/engine';
+import type { AbilityDef, CardDef } from '@/engine/types';
 
+// a1: 【疾風】= 1番目登場 trigger + charModifyAP PA 短縮形 (D08003 / D11020 同型 DSL)
 const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
@@ -18,26 +18,21 @@ const a1: AbilityDef = {
   trigger: {
     hook: 'enter',
     selfOnly: true,
-    matcher: (p: unknown, _s: GameState) => (p as { enterOrder?: number })?.enterOrder === 1,
+    matcherCondition: { kind: 'enterOrderEquals', n: 1 }, // 【疾風】= 1番目に登場で発火
   },
   effect: {
-    kind: 'choice', chooser: 'self',
-    options: [{
-      kind: 'atom', verb: 'charModifyAP',
-      args: {
-        uid: '$pick', delta: -1000, scope: 'turn',
-        target: {
-          kind: 'pick',
-          query: { area: 'scene', side: 'either' },
-          n: { min: 0, max: 1 }, chooser: 'self',
-        },
-      },
-    }],
+    kind: 'atom', verb: 'charModifyAP',
+    args: { max: 1, side: 'either', delta: -1000, scope: 'turn' }, // キャラを1枚まで選び、ターン終了時までAP-1000
   },
   description: '【疾風】キャラを1枚まで選び、ターン終了時までAP－1000する。',
   ruleRefs: ['rules/17-icons.md', 'rules/19-special-rules.md'],
 };
 
+// a2: 【宣言】【スリープ】手札 1 リム → リムーブ警察 Lv5- 登場 → 萩原千速 なら 1 ドロー
+//   - sleepSelf cost: もともと sleep / stun なら canPay=false で宣言不可 (rules/21 engine 既存保証)
+//   - removeFromHand n:1: 手札 0 枚なら canPay=false で宣言不可 (engine 既存保証)
+//   - sceneEnter の `bind: '$entered'` で登場キャラ情報を ctx.bindings に格納
+//   - boundMatchesFilter で 〚カード名[萩原千速]〛(分割名完全一致) を declarative 判定
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
@@ -45,52 +40,28 @@ const a2: AbilityDef = {
   cost: {
     kind: 'pay',
     items: [
-      { kind: 'sleepSelf' },
-      {
-        kind: 'removeFromHand',
-        n: 1,
-        target: {
-          kind: 'pick',
-          query: { area: 'hand', side: 'self' },
-          n: { min: 1, max: 1 }, chooser: 'self',
-        },
-      },
+      { kind: 'sleepSelf' },                                                                                                                                  // 【宣言】【スリープ】
+      { kind: 'removeFromHand', n: 1, target: { kind: 'pick', query: { area: 'hand', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'self' } },              // 〚手札を1枚リムーブする〛
     ],
   },
   effect: {
     kind: 'sequence',
     steps: [
-      {
-        kind: 'choice', chooser: 'self',
-        options: [{
-          kind: 'atom', verb: 'sceneEnter',
+      { kind: 'choice', chooser: 'self',
+        options: [{ kind: 'atom', verb: 'sceneEnter',
           args: {
             player: 'self', cardId: '$pick.cardId', viaEffect: true, bind: '$entered',
-            target: {
-              kind: 'pick',
-              query: { area: 'remove', side: 'self', filter: { trait: '警察', levelMax: 5 } },
-              n: { min: 0, max: 1 }, chooser: 'self',
-            },
+            target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { trait: '警察', levelMax: 5 } }, n: { min: 0, max: 1 }, chooser: 'self' },
           },
         }],
-      },
-      {
-        kind: 'conditional',
-        if: {
-          kind: 'custom',
-          check: (_s: GameState, ctx: EffectCtx) => {
-            const entered = ctx.bindings?.['$entered'] as { cardId?: string }[] | undefined;
-            const cardId = entered?.[0]?.cardId;
-            if (!cardId) return false;
-            const def = engine.cards.get(cardId);
-            return !!def && def.names.includes('萩原千速');
-          },
-        },
-        then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+      }, // 自分のリムーブエリアにあるレベル5以下の[警察]のキャラを1枚まで選び、登場させる
+      { kind: 'conditional',
+        if: { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } }, // 〚カード名[萩原千速]〛を登場させた場合 (分割名完全一致)
+        then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },                       // カードを1枚引く
       },
     ],
   },
-  description: '【宣言】【スリープ】〚手札1リム〛: リムーブのLv5以下[警察]を登場。[萩原千速]を登場で1ドロー。',
+  description: '【宣言】【スリープ】〚手札を1枚リムーブする〛: リムーブのLv5以下[警察]を1枚まで登場。[萩原千速]登場で1ドロー。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/21-declared-ability-cost.md'],
 };
 

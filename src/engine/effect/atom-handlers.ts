@@ -397,6 +397,15 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         const entry = existing[0] as Record<string, unknown>;
         entry.uid = newChar.uid;
       }
+      // D11014 a2 driver (2026-05-25): args.bind が指定されていれば、登場したキャラ情報
+      // ({ cardId, uid }) を `ctx.bindings[bind]` に格納。後続 condition (boundMatchesFilter 等)
+      // が「〚カード名[X]〛を登場させた場合」を declarative に判定できる。
+      const enteredBindKey = a.bind as string | undefined;
+      if (enteredBindKey) {
+        ctx.bindings[enteredBindKey] = [{
+          kind: 'card', cardId, area: 'scene', player: enterPlayer, uid: newChar.uid,
+        } as unknown as Candidate];
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter', target: cardId });
       // rules/17 — 現場登場時 Hook (【登場時】・【疾風 N】判定)
@@ -486,6 +495,34 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- キャラ修正 ---
     case 'charModifyAP': {
+      // D11014 a1 driver: PA 短縮形 — uid 不在 + delta + n/max なら pick query 構築 + tryRePickFromAtom
+      // (sceneRemove 短縮形と同 pattern。「キャラを1枚まで選び AP±N」を declarative に表現)
+      if (a.uid === undefined && typeof a.delta === 'number' && (typeof a.n === 'number' || typeof a.max === 'number')) {
+        const maSide = (a.side as 'self' | 'opp' | 'either' | undefined) ?? 'either';
+        const hasN = typeof a.n === 'number';
+        const nMin = hasN ? (a.n as number) : 0;
+        const nMax = hasN ? (a.n as number) : (a.max as number);
+        const filterObj = (a.filter && typeof a.filter === 'object') ? a.filter as Record<string, unknown> : undefined;
+        const stateArr = Array.isArray(a.state) ? a.state as ('active' | 'sleep' | 'stun')[] : undefined;
+        const queryObj: Record<string, unknown> = { area: 'scene', side: maSide };
+        if (filterObj) queryObj.filter = filterObj;
+        if (stateArr) queryObj.state = stateArr;
+        const paTarget = {
+          kind: 'pick' as const,
+          query: queryObj as { area: 'scene'; side: 'self' | 'opp' | 'either' },
+          n: { min: nMin, max: nMax },
+          chooser: ctx.source.player as Player,
+        };
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: ctx.source.player as Player, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyAP:awaiting-pick' });
+        return;
+      }
+      // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyAP', result: 'skipped' });
+        return;
+      }
       const maUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof maUid !== 'string' || maUid.startsWith('$')) return;
       const maDelta = a.delta as number;
