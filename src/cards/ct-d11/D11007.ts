@@ -57,24 +57,8 @@ const a3: AbilityDef = {
     effect: {
       kind: 'sequence',
       steps: [
-        {
-          kind: 'choice', chooser: 'self',
-          options: [{
-            kind: 'atom', verb: 'discard',
-            args: {
-              player: 'self',
-              target: {
-                kind: 'pick',
-                query: { area: 'hand', side: 'self' },
-                n: { min: 1, max: 1 }, chooser: 'self',
-              },
-            },
-          }],
-        },
-        {
-          kind: 'atom', verb: 'charModifyAP',
-          args: { uid: '$self', delta: 3000, scope: 'contact' },
-        },
+        { kind: 'atom', verb: 'discard',      args: { player: 'self', n: 1 } },                          // 手札を1枚選びリムーブ
+        { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 3000, scope: 'contact' } },  // このキャラを AP+3000 (コンタクト中)
       ],
     },
   },
