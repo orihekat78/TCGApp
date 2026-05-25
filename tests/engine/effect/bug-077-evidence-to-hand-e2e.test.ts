@@ -280,4 +280,81 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     expect(second?.atomVerb, 'queue 末尾は step 3 discard').toBe('discard');
     expect(second?.candidates?.length, 'discard 候補は hand 5 枚').toBe(5);
   });
+
+  // D08003 driver: 拡張 1 (filter) — discard 短縮形に filter 追加で候補を絞り込める
+  it('Phase I: discard 短縮形 + filter で候補が絞り込まれる', async () => {
+    const { resolveEffectPicks } = await import('@/engine/effect/resolve-picks');
+    const { registerAll } = await import('@/cards/index');
+    registerAll();
+
+    const s = createEmptyGameState();
+    // 手札に [少年探偵団] 2 枚 + 別 trait 1 枚
+    // D08013 = 吉田歩美 [少年探偵団]、D08015 = 小嶋元太 [少年探偵団]、D11003 = [警察/神奈川県警]
+    s.players.self.hand.push('D08013', 'D08015', 'D11003');
+
+    const atom = {
+      kind: 'atom' as const,
+      verb: 'discard' as never,
+      args: { player: 'self', n: 1, filter: { trait: '少年探偵団' } },
+    };
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'D08003', abilityId: 'a1' }, bindings: {} };
+
+    // AI 経路 (humanChooser=false) で resolved に → target が [cardId of first 少年探偵団]
+    const resolved = resolveEffectPicks(s, atom, ctx, { byPlayer: 'self' }) as { args: { target?: unknown } };
+    expect(Array.isArray(resolved.args.target)).toBe(true);
+    // filter 適用で D08013 or D08015 のみ候補 (D11003 警察系は除外)
+    const target = resolved.args.target as string[];
+    expect(['D08013', 'D08015']).toContain(target[0]);
+  });
+
+  // D08003 driver: 拡張 2 (max) — max: 1 で n.min=0/max=1 = 「1枚まで」
+  it('Phase J: 短縮形 max: N で n.min=0/max=N (任意 pick) になる', async () => {
+    const { resolveEffectPicks, _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
+
+    const s = createEmptyGameState();
+    s.players.self.evidence.push({ cardId: 'EV1', faceUp: false, origin: { turn: 0, via: 'init' } });
+
+    const atom = {
+      kind: 'atom' as const,
+      verb: 'evidenceToHand' as never,
+      args: { player: 'self', max: 1 }, // max: 1 → n.min=0, n.max=1
+    };
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'TEST', abilityId: 'a1' }, bindings: {} };
+
+    // humanChooser=true + _fromAtomHandler=true (runtime path) で side-channel set
+    resolveEffectPicks(s, atom, ctx, { humanChooser: true, _fromAtomHandler: true, byPlayer: 'self', source: { cardId: 'TEST', abilityId: 'a1' } });
+
+    const side = _drainPendingEffectPickSide();
+    expect(side?.atomVerb).toBe('evidenceToHand');
+    expect(side?.nMin, 'max: 1 で n.min=0 (skip 可)').toBe(0);
+    expect(side?.nMax, 'max: 1 で n.max=1').toBe(1);
+  });
+
+  // D08003 driver: filter + max 組合せ (a1 step 1 と同じ shape の sanity check)
+  it('Phase K: 短縮形 {player, max, filter} 組合せ動作', async () => {
+    const { resolveEffectPicks, _drainPendingEffectPickSide } = await import('@/engine/effect/resolve-picks');
+    const { registerAll } = await import('@/cards/index');
+    registerAll();
+
+    const s = createEmptyGameState();
+    // D08013 = [少年探偵団]、D11003 = [警察] (少年探偵団 でない)
+    s.players.self.hand.push('D08013', 'D11003');
+
+    const atom = {
+      kind: 'atom' as const,
+      verb: 'discard' as never,
+      args: { player: 'self', max: 1, filter: { trait: '少年探偵団' } },
+    };
+    const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'D08003', abilityId: 'a1' }, bindings: {} };
+
+    resolveEffectPicks(s, atom, ctx, { humanChooser: true, _fromAtomHandler: true, byPlayer: 'self', source: { cardId: 'D08003', abilityId: 'a1' } });
+
+    const side = _drainPendingEffectPickSide();
+    expect(side?.atomVerb).toBe('discard');
+    expect(side?.nMin).toBe(0);
+    expect(side?.nMax).toBe(1);
+    // filter 適用で D08013 のみ候補
+    expect(side?.candidates?.length, 'filter で [少年探偵団] のみ 1 件').toBe(1);
+    expect(side?.candidates?.[0]?.cardId).toBe('D08013');
+  });
 });

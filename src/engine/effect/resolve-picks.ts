@@ -177,17 +177,29 @@ function substituteAtomPick(
   opts: ResolveEffectPicksOpts,
 ): Effect {
   if (!atom.args || typeof atom.args !== 'object') return atom as Effect;
-  const args = atom.args as { uid?: unknown; target?: unknown; player?: unknown; n?: unknown } & Record<string, unknown>;
+  const args = atom.args as {
+    uid?: unknown; target?: unknown; player?: unknown;
+    n?: unknown; max?: unknown; filter?: unknown;
+  } & Record<string, unknown>;
   const verbStr = typeof atom.verb === 'string' ? atom.verb : '';
-  // 物理動作 atom 短縮形: { player, n } のみで target 未指定なら verb 既定で pick query を構築
+  // 物理動作 atom 短縮形: { player, n or max, filter? } で target 未指定なら
+  // verb 既定 area を使って pick query を engine が補完する。
+  // - n: number → { min: n, max: n } 固定
+  // - max: number → { min: 0, max } 任意 (0 枚 skip 可)
+  // - filter → query.filter に pass-through (trait / apMax / levelMax / cardName 等)
   let effectiveTarget = args.target as { kind?: string; query?: unknown; n?: { min?: number; max?: number }; chooser?: Player } | undefined;
-  if (effectiveTarget === undefined && typeof args.n === 'number' && PB_DEFAULT_PICK_AREA[verbStr]) {
+  const hasShortForm = effectiveTarget === undefined && PB_DEFAULT_PICK_AREA[verbStr]
+    && (typeof args.n === 'number' || typeof args.max === 'number');
+  if (hasShortForm) {
     const defaultArea = PB_DEFAULT_PICK_AREA[verbStr];
     const p = (args.player as Player) ?? 'self';
+    const nMin = typeof args.n === 'number' ? args.n : 0;
+    const nMax = typeof args.n === 'number' ? args.n : (args.max as number);
+    const filterObj = (args.filter && typeof args.filter === 'object') ? args.filter as Record<string, unknown> : undefined;
     effectiveTarget = {
       kind: 'pick',
-      query: { area: defaultArea, side: p },
-      n: { min: args.n, max: args.n },
+      query: filterObj ? { area: defaultArea, side: p, filter: filterObj } : { area: defaultArea, side: p },
+      n: { min: nMin, max: nMax },
       chooser: p,
     };
   }

@@ -158,13 +158,23 @@ function defaultPickTarget(
   n: unknown,
   defaultArea: 'evidence' | 'hand' | 'remove',
   player: Player,
+  opts?: { max?: unknown; filter?: unknown },
 ): unknown {
   if (rawTarget !== undefined) return rawTarget;
-  if (typeof n !== 'number') return undefined;
+  // 短縮形対応:
+  // - n: number → { min: n, max: n } 固定
+  // - opts.max: number → { min: 0, max } 任意 (skip 可)
+  // - opts.filter → query.filter pass-through
+  const hasN = typeof n === 'number';
+  const hasMax = typeof opts?.max === 'number';
+  if (!hasN && !hasMax) return undefined;
+  const nMin = hasN ? (n as number) : 0;
+  const nMax = hasN ? (n as number) : (opts!.max as number);
+  const filterObj = (opts?.filter && typeof opts.filter === 'object') ? opts.filter as Record<string, unknown> : undefined;
   return {
     kind: 'pick',
-    query: { area: defaultArea, side: player },
-    n: { min: n, max: n },
+    query: filterObj ? { area: defaultArea, side: player, filter: filterObj } : { area: defaultArea, side: player },
+    n: { min: nMin, max: nMax },
     chooser: player,
   };
 }
@@ -198,7 +208,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const dcP = a.player as Player;
       const dcArgs = a.target === undefined
-        ? { ...a, target: defaultPickTarget(undefined, a.n, 'hand', dcP) }
+        ? { ...a, target: defaultPickTarget(undefined, a.n, 'hand', dcP, { max: a.max, filter: a.filter }) }
         : a;
       if (!Array.isArray(dcArgs.target)) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: dcArgs }, ctx, { byPlayer: dcP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
@@ -291,7 +301,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const p = a.player as Player;
       const ethArgs = a.target === undefined
-        ? { ...a, target: defaultPickTarget(undefined, a.n, 'evidence', p) }
+        ? { ...a, target: defaultPickTarget(undefined, a.n, 'evidence', p, { max: a.max, filter: a.filter }) }
         : a;
       const target = normalizeTargetToString(ethArgs.target);
       if (!target) {
@@ -317,7 +327,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const p = a.player as Player;
       const hafrArgs = a.target === undefined
-        ? { ...a, target: defaultPickTarget(undefined, a.n, 'remove', p) }
+        ? { ...a, target: defaultPickTarget(undefined, a.n, 'remove', p, { max: a.max, filter: a.filter }) }
         : a;
       const target = normalizeTargetToString(hafrArgs.target);
       if (!target) {
