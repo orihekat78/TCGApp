@@ -7,6 +7,7 @@
 //   【カットイン】AP＋1000
 //
 // a1: enter trigger → 1ドロー → 手札1リム
+//     物理動作 atom を順に並べるだけ。pick query は engine が verb 既定で推論。
 // a2: cutinFixedAP({ delta:1000 })
 
 import type { AbilityDef, CardDef } from '@/engine/types';
@@ -20,26 +21,8 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
-      {
-        kind: 'choice',
-        chooser: 'self',
-        options: [
-          {
-            kind: 'atom',
-            verb: 'discard',
-            args: {
-              player: 'self',
-              target: {
-                kind: 'pick',
-                query: { area: 'hand', side: 'self' },
-                n: { min: 1, max: 1 },
-                chooser: 'self',
-              },
-            },
-          },
-        ],
-      },
+      { kind: 'atom', verb: 'draw',    args: { player: 'self', n: 1 } }, // カードを1枚引く
+      { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } }, // 手札を1枚選びリムーブする
     ],
   },
   description: '【登場時】カードを1枚引き、手札を1枚リムーブする。',
