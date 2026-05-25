@@ -31,6 +31,13 @@ const HINT: Record<CardListKind, string> = {
   remove:   '使用済イベント / リムーブされたキャラ。リフレッシュでデッキに戻る対象 (rules/14)。',
 };
 
+/** Pick mode 中の案内バナー文言 (User 指摘: 選択モーダルでも説明文が欲しい)。 */
+const PICK_BANNER_TEXT: Record<CardListKind, string> = {
+  file:     'FILE から1枚選んでください',
+  evidence: '証拠から1枚選んで手札に加えてください',
+  remove:   'リムーブから1枚選んで手札に加えてください',
+};
+
 export type CardListModalProps = {
   /** null なら非表示。null 以外なら該当種別を表示。 */
   kind: CardListKind | null;
@@ -127,6 +134,12 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
             ×
           </button>
         </header>
+
+        {inPickMode && (
+          <div className="card-list-modal-pick-banner" role="status">
+            {PICK_BANNER_TEXT[kind]}
+          </div>
+        )}
 
         <div className="card-list-modal-body">
           {total === 0 ? (

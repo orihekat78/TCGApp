@@ -532,12 +532,12 @@
   box-shadow: 0 0 14px rgba(255, 217, 102, 0.8);
 }
 
-/* pick mode 中の expanded view 上部に案内バナーを表示 */
+/* pick mode 中の expanded view 上部に案内バナーを表示。
+   カードと重ならないよう非 absolute (通常 block) で配置、
+   hand-cards-row の前に独立行として置かれる。 */
 .hand-zone-pick-banner {
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
+  display: block;
+  margin: 0 auto 6px auto;
   padding: 4px 16px;
   background: rgba(255, 217, 102, 0.15);
   border: 1px solid #ffd966;
@@ -546,6 +546,7 @@
   font-size: 12px;
   font-weight: bold;
   pointer-events: none;
-  z-index: 10;
   white-space: nowrap;
+  width: fit-content;
+  text-align: center;
 }
