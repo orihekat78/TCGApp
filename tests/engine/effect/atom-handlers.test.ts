@@ -319,6 +319,28 @@ describe('engine.effect.runAtom', () => {
       });
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(1000);
     });
+
+    // D11007 a3 driver fix: `uid: '$self'` リテラルが ctx.source.uid に解決される
+    // (旧 BUG: silent no-op で AP+3000 が走らず、コンタクト AP 判定で勝てない問題)
+    it('uid: $self → ctx.source.uid に解決され AP modifier が適用される', () => {
+      const c = makeChar({ uid: 'self-uid-x' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'self-uid-x' } });
+      const result = produce(s, draft => {
+        runAtom(draft, 'charModifyAP', { uid: '$self', delta: 3000, scope: 'contact' }, ctx);
+      });
+      expect(result.players.self.scene[0].turnEffects['apMod_contact']).toBe(3000);
+    });
+
+    it('uid: $self で ctx.source.uid 未設定なら no-op (defensive)', () => {
+      const c = makeChar({ uid: 'self-uid-y' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene' } }); // uid なし
+      const result = produce(s, draft => {
+        runAtom(draft, 'charModifyAP', { uid: '$self', delta: 3000, scope: 'contact' }, ctx);
+      });
+      expect(result.players.self.scene[0].turnEffects['apMod_contact']).toBeUndefined();
+    });
   });
 
   describe('charModifyLP', () => {

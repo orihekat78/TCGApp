@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5d13b3beaf82`
+> Source hash: `3fb837688d4c`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 

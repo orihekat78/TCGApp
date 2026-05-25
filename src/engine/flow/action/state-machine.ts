@@ -54,6 +54,33 @@ function readEffectiveAp(s: GameState, uid: string): number {
   return readChar.ap(s, uid);
 }
 
+/**
+ * User request 2026-05-25: contact 開始時に「レベルX キャラ名(ID):APXXXX VS 〜」を
+ * log に出力するための format helper。partner uid も考慮 (level は CardDef.level)。
+ */
+function formatContactSide(s: GameState, uid: string): string {
+  let cardId: string | undefined;
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
+    cardId = s.players[p].partner?.cardId;
+  } else {
+    for (const p of ['self', 'opp'] as const) {
+      const c = s.players[p].scene.find(c => c.uid === uid);
+      if (c) { cardId = c.cardId; break; }
+    }
+  }
+  if (!cardId) return `${uid}:AP?`;
+  const d = readDef.card(cardId);
+  const name = d?.names?.[0] ?? cardId;
+  const level = d?.level ?? '?';
+  const ap = readEffectiveAp(s, uid);
+  return `Lv${level} ${name}(${cardId}):AP${ap}`;
+}
+
+function formatContactDetail(s: GameState, aUid: string, bUid: string): string {
+  return `${formatContactSide(s, aUid)} VS ${formatContactSide(s, bUid)}`;
+}
+
 // ActionContext モジュールレベル保持
 const _contexts: Map<string, ActionContext> = new Map();
 let _idCounter = 0;
@@ -325,6 +352,17 @@ export function advance(state: GameState, ax: ActionContext): void {
     // char target: コンタクト開始
     const aUid = ax.byUid;
     const bUid = ax.guardUid ?? (ax.target as { kind: 'char'; uid: string }).uid;
+
+    // User request: コンタクト詳細を log に出力 (「レベルXキャラ名(ID):APXXXX VS 〜」)
+    const contactDetail = formatContactDetail(state, aUid, bUid);
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: ax.byPlayer,
+      turn: state.turn.number,
+      action: 'contact:detail',
+      result: contactDetail,
+    });
+
     event.emit(state, 'contact:start', { aUid, bUid }, { player: ax.byPlayer, uid: ax.byUid });
 
     // 行動順 (AP は snapshot 後だが、ここでは未スナップショットでも先に order を計算)

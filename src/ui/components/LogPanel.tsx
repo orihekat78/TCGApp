@@ -53,6 +53,7 @@ const ACTION_LABEL: Record<string, string> = {
   handUseCard: '手札の使用',
   nextHint: 'ネクストヒント',
   refresh: 'リフレッシュ',
+  'contact:detail': 'コンタクト',
   endTurn: 'ターン終了',
   partnerAbility: 'パートナー能力',
   declaredAbility: '宣言能力',

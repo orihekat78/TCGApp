@@ -128,6 +128,12 @@ function resolvePlayer(p: unknown, ctx: EffectCtx): Player {
 function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
   if (typeof value !== 'string') return value;
   if (!value.startsWith('$')) return value;
+  // $self (no dot) → ctx.source.uid (source card's uid)
+  // 多くのカード (D11007 a3 charModifyAP / D08005 charGrantKeyword / D11005 charSetTurnEffect 等)
+  // が「このキャラ自身」を指すために $self を使う。
+  if (value === '$self') {
+    return ctx.source.uid ?? value;
+  }
   const dot = value.indexOf('.');
   if (dot < 0) return value;
   const key = value.slice(1, dot);
@@ -461,7 +467,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'sceneSetState': {
-      const ssUid = a.uid as string;
+      const ssUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof ssUid !== 'string' || ssUid.startsWith('$')) return;
       const ssState = a.state as 'active' | 'sleep' | 'stun';
       mutate.scene.setState(s, ssUid, ssState);
       // BUG-073: effect log
@@ -479,7 +486,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- キャラ修正 ---
     case 'charModifyAP': {
-      const maUid = a.uid as string;
+      const maUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof maUid !== 'string' || maUid.startsWith('$')) return;
       const maDelta = a.delta as number;
       const maScope = a.scope as 'turn' | 'contact' | 'permanent';
       mutate.char.modifyAP(s, maUid, maDelta, maScope);
@@ -488,7 +496,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charModifyLP': {
-      const mlUid = a.uid as string;
+      const mlUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof mlUid !== 'string' || mlUid.startsWith('$')) return;
       const mlDelta = a.delta as number;
       const mlScope = a.scope as 'turn' | 'contact' | 'permanent';
       mutate.char.modifyLP(s, mlUid, mlDelta, mlScope);
@@ -548,7 +557,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charSetTurnEffect': {
-      const teUid = a.uid as string;
+      const teUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof teUid !== 'string' || teUid.startsWith('$')) return;
       const teKey = a.key as string;
       mutate.char.setTurnEffect(s, teUid, teKey, a.val);
       // BUG-073: effect log
