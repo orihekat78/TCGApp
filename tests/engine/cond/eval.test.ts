@@ -337,4 +337,47 @@ describe('engine.cond.eval', () => {
       expect(result).toEqual([true, false, true]);
     });
   });
+
+  // D11007 v2 Phase 2: matcherCondition declarative 化用 (TriggerDef.matcherCondition)
+  describe('contactOpponentApHigher (D11007 a3 driver)', () => {
+    function setupContact(s: GameState, aAp: number, bAp: number): {
+      state: GameState; aUid: string; bUid: string;
+    } {
+      const aChar = makeChar({ uid: 'A#0', cardId: 'A', apOverride: aAp });
+      const bChar = makeChar({ uid: 'B#0', cardId: 'B', apOverride: bAp });
+      registerCardDef(defOf({ id: 'A', ap: aAp, lp: 1, level: 1 }));
+      registerCardDef(defOf({ id: 'B', ap: bAp, lp: 1, level: 1 }));
+      const state = withScene(withScene(s, 'self', [aChar]), 'opp', [bChar]);
+      return { state, aUid: 'A#0', bUid: 'B#0' };
+    }
+
+    it('opponent (bUid) AP が higher → true', () => {
+      const s = createEmptyGameState();
+      const { state, aUid, bUid } = setupContact(s, 3000, 5000);
+      const ctx = makeCtx({ triggerPayload: { aUid, bUid } });
+      expect(evalCond(state, { kind: 'contactOpponentApHigher' }, ctx)).toBe(true);
+    });
+
+    it('opponent (bUid) AP が equal → false (strict greater than)', () => {
+      const s = createEmptyGameState();
+      const { state, aUid, bUid } = setupContact(s, 5000, 5000);
+      const ctx = makeCtx({ triggerPayload: { aUid, bUid } });
+      expect(evalCond(state, { kind: 'contactOpponentApHigher' }, ctx)).toBe(false);
+    });
+
+    it('opponent (bUid) AP が lower → false', () => {
+      const s = createEmptyGameState();
+      const { state, aUid, bUid } = setupContact(s, 5000, 3000);
+      const ctx = makeCtx({ triggerPayload: { aUid, bUid } });
+      expect(evalCond(state, { kind: 'contactOpponentApHigher' }, ctx)).toBe(false);
+    });
+
+    it('payload 不在 / aUid 欠落 → false (defensive)', () => {
+      const s = createEmptyGameState();
+      const ctxNoPayload = makeCtx();
+      expect(evalCond(s, { kind: 'contactOpponentApHigher' }, ctxNoPayload)).toBe(false);
+      const ctxPartial = makeCtx({ triggerPayload: { aUid: 'X' } });
+      expect(evalCond(s, { kind: 'contactOpponentApHigher' }, ctxPartial)).toBe(false);
+    });
+  });
 });

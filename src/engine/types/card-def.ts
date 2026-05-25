@@ -41,6 +41,13 @@ export type AbilityLimit =
 export type TriggerDef = {
   hook: HookName;
   matcher?: (payload: unknown, state: GameState) => boolean;
+  /**
+   * matcher の declarative 版 (D11007 a3 等で payload 依存判定を inline 関数ではなく
+   * Condition kind で表現するため)。listener は matcher / matcherCondition のどちらか
+   * (あれば両方) を評価し、false なら trigger を skip する。
+   * payload は ctx.triggerPayload に詰めて evalCond に渡す経路。
+   */
+  matcherCondition?: Condition;
   selfOnly?: boolean;                      // 自分のキャラに対する発火のみ
   ignoreCostInduced?: boolean;             // viaCost: true を無視 (rules/21, 25)
 };

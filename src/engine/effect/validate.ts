@@ -30,6 +30,7 @@ const ATOM_VERBS = new Set<string>([
   'caseToResolved',
   'startContact', 'endActionEarly',
   'deckRevealUntil', 'deckToBottomBound', 'deckShuffle', 'souza',
+  'expandActionTargets', // D11007 v2 Phase 3
   'log', 'noop',
 ]);
 

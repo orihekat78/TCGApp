@@ -759,6 +759,40 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'noop':
       return;
 
+    // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
+    // candidates() (target-expander.ts) が emit する action:pre-target hook の listener が
+    // この atom を queue → resolver が drain → ここで __pendingActionExpansion に push →
+    // candidates() が pop して enumeration に merge
+    case 'expandActionTargets': {
+      const g = globalThis as {
+        __pendingActionExpansion?: Array<{
+          byUid: string;
+          side: 'self' | 'opp' | 'either';
+          state?: ('active' | 'sleep' | 'stun')[];
+          levelMin?: number;
+          levelMax?: number;
+        }>;
+      };
+      if (!g.__pendingActionExpansion) g.__pendingActionExpansion = [];
+      const byUid = ctx.source.uid;
+      if (!byUid) return; // source.uid 不在ならスキップ (defensive)
+      g.__pendingActionExpansion.push({
+        byUid,
+        side: (a.side as 'self' | 'opp' | 'either' | undefined) ?? 'opp',
+        state: a.state as ('active' | 'sleep' | 'stun')[] | undefined,
+        levelMin: a.levelMin as number | undefined,
+        levelMax: a.levelMax as number | undefined,
+      });
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player: ctx.source.player,
+        turn: s.turn.number,
+        action: 'effect:expandActionTargets',
+        target: byUid,
+      });
+      return;
+    }
+
     default: {
       // exhaustiveness check
       const _exhaustive: never = verb;

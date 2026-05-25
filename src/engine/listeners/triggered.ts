@@ -49,6 +49,7 @@ type Player = 'self' | 'opp';
 const TRIGGERED_HOOKS = [
   'enter',
   'effect:declared',
+  'action:pre-target', // D11007 v2 Phase 3: attacker 選択時、target 列挙前
   'action:declare',
   'action:guarded',
   'contact:start',
@@ -139,6 +140,22 @@ function handleHook(
       if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
       // matcher check (カード側で custom 判定)
       if (trig.matcher && !trig.matcher(payload, state)) continue;
+      // D11007 v2 (Phase 2): matcherCondition (declarative 版 matcher)
+      // payload を ctx.triggerPayload に詰めて evalCond に渡す
+      if (trig.matcherCondition) {
+        const ctxMc = {
+          source: {
+            cardId: card.cardId,
+            uid: card.uid,
+            abilityId: ability.id,
+            player: card.player,
+            area: card.area,
+          },
+          bindings: {},
+          triggerPayload: payload,
+        };
+        if (!evalCond(state, trig.matcherCondition, ctxMc)) continue;
+      }
       // Round 4i-fix: ability.condition の 6 stage gate (BUG-033)
       // partnerColor / caseTrait 等の condition が未達なら queue しない (rules/17 §条件アイコン)
       if (ability.condition) {
@@ -151,6 +168,7 @@ function handleHook(
             area: card.area,
           },
           bindings: {},
+          triggerPayload: payload,
         };
         if (!evalCond(state, ability.condition, ctx)) continue;
       }

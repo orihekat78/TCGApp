@@ -267,4 +267,93 @@ describe('engine.flow.action.target-expander', () => {
       expect(canActionAgainstChar(s, selfUid, oppUids[0])).toBe(true);
     });
   });
+
+  // D11007 v2 Phase 3: action:pre-target hook + expandActionTargets atom の declarative DSL
+  describe('action:pre-target declarative trigger (D11007 v2 Phase 3)', () => {
+    it('attacker が action:pre-target + expandActionTargets を宣言していれば level7+ active opp が候補化', () => {
+      _resetUidCounter();
+      resetDefRegistry();
+      _resetTargetExpanders();
+      _resetActionContexts();
+      // attacker: D11007 同型 (a1 = action:pre-target trigger で level>=7 active opp 拡張)
+      registerCardDef(makeCard('AtkD11007Like', {
+        ap: 5000,
+        abilities: [{
+          id: 'a1',
+          type: 'triggered',
+          scope: 'on-scene',
+          trigger: { hook: 'action:pre-target', selfOnly: true },
+          effect: {
+            kind: 'atom',
+            verb: 'expandActionTargets',
+            args: { side: 'opp', state: ['active'], levelMin: 7 },
+          },
+        }],
+      }));
+      registerCardDef(makeCard('OppActiveLv8', { level: 8 }));
+      registerCardDef(makeCard('OppActiveLv3', { level: 3 })); // 拡張対象外 (level<7)
+      registerCardDef(makeCard('OppSleepLv2', { level: 2 }));  // base 候補 (sleep)
+
+      const initial = createEmptyGameState();
+      let attackerUid = '';
+      const oppUids: Record<string, string> = {};
+      const s = produce(initial, draft => {
+        const a = mutate.scene.enter(draft, 'self', 'AtkD11007Like', {});
+        attackerUid = a.uid;
+        const o1 = mutate.scene.enter(draft, 'opp', 'OppActiveLv8', {});
+        oppUids['Lv8active'] = o1.uid;
+        const o2 = mutate.scene.enter(draft, 'opp', 'OppActiveLv3', {});
+        oppUids['Lv3active'] = o2.uid;
+        const o3 = mutate.scene.enter(draft, 'opp', 'OppSleepLv2', {});
+        oppUids['Lv2sleep'] = o3.uid;
+        mutate.scene.setState(draft, o3.uid, 'sleep');
+      });
+
+      const cands = candidates(s, attackerUid).map(c => c.uid).sort();
+      // 期待: base = Lv2sleep + 拡張 = Lv8active
+      // 除外: Lv3active (state=active かつ levelMin=7 未満)
+      expect(cands).toEqual([oppUids['Lv2sleep'], oppUids['Lv8active']].sort());
+    });
+
+    it('selfOnly により別 attacker のときは拡張が適用されない', () => {
+      _resetUidCounter();
+      resetDefRegistry();
+      _resetTargetExpanders();
+      _resetActionContexts();
+      // D11007 同型 (selfOnly trigger) を self scene に置くが、attacker は別キャラ
+      registerCardDef(makeCard('SelfD11007Like', {
+        ap: 5000,
+        abilities: [{
+          id: 'a1',
+          type: 'triggered',
+          scope: 'on-scene',
+          trigger: { hook: 'action:pre-target', selfOnly: true },
+          effect: {
+            kind: 'atom',
+            verb: 'expandActionTargets',
+            args: { side: 'opp', state: ['active'], levelMin: 7 },
+          },
+        }],
+      }));
+      registerCardDef(makeCard('OtherAttacker', { ap: 3000 }));
+      registerCardDef(makeCard('OppActiveLv8', { level: 8 }));
+
+      const initial = createEmptyGameState();
+      let otherUid = '';
+      let oppUid = '';
+      const s = produce(initial, draft => {
+        mutate.scene.enter(draft, 'self', 'SelfD11007Like', {}); // not attacker
+        const oa = mutate.scene.enter(draft, 'self', 'OtherAttacker', {});
+        otherUid = oa.uid;
+        const o = mutate.scene.enter(draft, 'opp', 'OppActiveLv8', {});
+        oppUid = o.uid;
+      });
+
+      // OtherAttacker が attacker → selfOnly により拡張は適用されない
+      // opp は active のみ → base (sleep/stun) なし → 空
+      const cands = candidates(s, otherUid).map(c => c.uid);
+      expect(cands).toEqual([]);
+      expect(oppUid).not.toBe(''); // 参照だけ
+    });
+  });
 });

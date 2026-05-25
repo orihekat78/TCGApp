@@ -164,6 +164,15 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const uids = resolveCharsForRef(state, cond.ref, ctx);
       return uids.some(uid => charRead.stackedCount(state, uid) >= cond.n);
     }
+    case 'contactOpponentApHigher': {
+      // D11007 a3: contact:start payload から aUid (attacker) / bUid (defender) を取得
+      // (相手 = bUid) の AP が (自分 = aUid) より高い場合に true
+      const payload = ctx.triggerPayload as { aUid?: string; bUid?: string } | undefined;
+      if (!payload?.aUid || !payload?.bUid) return false;
+      const aAp = charRead.ap(state, payload.aUid);
+      const bAp = charRead.ap(state, payload.bUid);
+      return bAp > aAp;
+    }
     case 'custom':
       return cond.check(state, ctx);
   }

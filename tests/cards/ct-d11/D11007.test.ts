@@ -15,12 +15,20 @@ describe('D11007 松田陣平 (対象拡張 + partnerColor 突撃 + contact reve
     expect(D11007.abilities.length).toBe(3);
   });
 
-  it('a1 = continuous target expansion (active L7+ targetable)', () => {
+  it('a1 = trigger action:pre-target + expandActionTargets atom (D11007 v2 Phase 3)', () => {
     const a1 = D11007.abilities[0];
-    expect(a1.type).toBe('continuous');
+    expect(a1.type).toBe('triggered');
     expect(a1.scope).toBe('on-scene');
-    expect(a1.description).toMatch(/レベル7以上/);
-    expect(typeof a1.continuousModifier?.customSelectorPatch).toBe('function');
+    expect(a1.trigger?.hook).toBe('action:pre-target');
+    expect(a1.trigger?.selfOnly).toBe(true);
+    const eff = a1.effect as { kind: string; verb: string; args: Record<string, unknown> };
+    expect(eff.kind).toBe('atom');
+    expect(eff.verb).toBe('expandActionTargets');
+    expect(eff.args.side).toBe('opp');
+    expect(eff.args.state).toEqual(['active']);
+    expect(eff.args.levelMin).toBe(7);
+    // customSelectorPatch (旧 stub) は撤去
+    expect(a1.continuousModifier).toBeUndefined();
   });
 
   it('a2 = partnerColor 黄 突撃 (continuous)', () => {
@@ -35,9 +43,11 @@ describe('D11007 松田陣平 (対象拡張 + partnerColor 突撃 + contact reve
     expect(a3.trigger?.hook).toBe('contact:start');
     expect(a3.limit).toEqual({ kind: 'turn', n: 1 });
     expect(a3.condition).toEqual({ kind: 'turn', player: 'self' });
+    // D11007 v2 Phase 2: matcher 関数 → matcherCondition declarative kind
+    expect(a3.trigger?.matcher).toBeUndefined();
+    expect(a3.trigger?.matcherCondition).toEqual({ kind: 'contactOpponentApHigher' });
     expect(a3.effect?.kind).toBe('optional');
     // 公式テキスト「リムーブしてもよい。そうした場合、〜」は optional + chain (D08003 同型)。
-    // chain により discard step が no-op (手札 0 等) なら charModifyAP step が skip される。
     const inner = (a3.effect as { effect?: { kind?: string; steps?: { verb?: string }[] } }).effect;
     expect(inner?.kind).toBe('chain');
     expect(inner?.steps?.length).toBe(2);

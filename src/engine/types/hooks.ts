@@ -20,6 +20,10 @@ export type HookName =
   | 'reasoning:before-add'
   | 'reasoning:end'
   // アクション関連 (rules: 07-action-flow.md)
+  // D11007 v2 Phase 3: action:pre-target — attacker 選択時、target 候補列挙の前に fire
+  //   payload: { byUid }、source: { uid, cardId, player } (attacker)
+  //   listener が `expandActionTargets` 等で側 channel に拡張仕様を push、candidates() が consume
+  | 'action:pre-target'
   | 'action:declare'
   | 'action:guard-window'
   | 'action:guarded'

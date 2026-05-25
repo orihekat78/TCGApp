@@ -8,31 +8,39 @@
 //   【自分ターン中】【ターン1】このキャラが、このキャラよりAPの高いキャラとコンタクトしたとき、
 //     手札を1枚リムーブしてもよい。そうした場合、そのコンタクト中、このキャラをAP＋3000する。
 //
-// NOTE (G29 target expander): 「レベル7以上アクティブも対象可」 はカード固有の対象拡張。
-// 現状 continuous ability + customSelectorPatch で expansion 情報を選手キャラに付与する。
-// TODO Phase 5+: engine.flow.action.canActionAgainstChar が selectorPatch の
-// `expandTargetable.activeMinLevel` を参照する実装が必要。
+// engine 実装: a1 は trigger { hook: 'action:pre-target', selfOnly: true } で表現。
+// candidates() (target-expander.ts) が attacker = D11007 のとき expandActionTargets atom の
+// args を直接 lookup し、対象列挙に拡張仕様を merge する (D11007 v2 Phase 3 で導入)。
 
-import type { AbilityDef, CardDef, GameState } from '@/engine/types';
-import { engine } from '@/engine';
-import { partnerColorKeyword } from '../_shared/index.js';
+import type { AbilityDef, CardDef } from '@/engine/types';
 
-// a1 アクション対象拡張: customSelectorPatch にメタ情報を付与
+// a1: アクション対象拡張 — このキャラが attacker のとき、相手の現場の level≥7 active も対象可
 const a1: AbilityDef = {
   id: 'a1',
-  type: 'continuous',
+  type: 'triggered',
   scope: 'on-scene',
-  continuousModifier: {
-    customSelectorPatch: () => ({
-      // メタ情報: flow.canActionAgainstChar 側でこの値を見て対象拡張する想定
-      expandTargetable: { activeMinLevel: 7 } as unknown as undefined,
-    } as never),
+  trigger: { hook: 'action:pre-target', selfOnly: true }, // アクションでこのカードが選ばれたとき
+  effect: {
+    kind: 'atom',
+    verb: 'expandActionTargets',
+    args: { side: 'opp', state: ['active'], levelMin: 7 }, // 相手の現場の レベル7以上 アクティブを対象に追加
   },
   description: 'このキャラは相手の現場にいるレベル7以上のアクティブ状態のキャラを指定してアクションできる。',
   ruleRefs: ['rules/07-action-flow.md'],
 };
 
-const a2 = partnerColorKeyword({ color: '黄', kw: '突撃', abilityId: 'a2' });
+// a2: 【パートナー黄】〚突撃〛 — D08003 a1 inline pattern と同型 (partnerColor cond + continuousModifier)
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'continuous',
+  scope: 'on-scene',
+  condition: { kind: 'partnerColor', color: '黄' }, // 【パートナー黄】
+  continuousModifier: {
+    grantKeywords: () => ['突撃'], // 〚突撃〛
+  },
+  description: '【パートナー黄】〚突撃〛',
+  ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
+};
 
 // a3 自分ターン中 ターン1: 高APコンタクト時に手札1リム → self AP+3000 (コンタクト中)
 const a3: AbilityDef = {
@@ -43,14 +51,7 @@ const a3: AbilityDef = {
   limit: { kind: 'turn', n: 1 },
   trigger: {
     hook: 'contact:start',
-    matcher: (p: unknown, s: GameState) => {
-      if (!p || typeof p !== 'object') return false;
-      const obj = p as { aUid?: string; bUid?: string };
-      if (!obj.aUid || !obj.bUid) return false;
-      const aAp = engine.read.char.ap(s, obj.aUid);
-      const bAp = engine.read.char.ap(s, obj.bUid);
-      return bAp > aAp;
-    },
+    matcherCondition: { kind: 'contactOpponentApHigher' }, // このキャラより AP の高いキャラとコンタクトしたとき
   },
   effect: {
     kind: 'optional', // 「してもよい」 = する/しない 確認

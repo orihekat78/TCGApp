@@ -33,6 +33,9 @@ export type Condition =
   | { kind: 'removeTraitAtLeast'; player: 'self' | 'opp'; trait: string | string[]; n: number }
   | { kind: 'removeNameAtLeast'; player: 'self' | 'opp'; cardName: string | string[]; n: number }
   | { kind: 'stackedCountAtLeast'; ref: TargetingRef; n: number }
+  // D11007 a3: contact:start hook 発火時、attacker (aUid) より defender (bUid) の方が AP が高い場合
+  // payload は ctx.triggerPayload に詰められ、listener から評価される (TriggerDef.matcherCondition 経由)
+  | { kind: 'contactOpponentApHigher' }
   | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean };
 
 // ---------- TargetFilter / TargetQuery / TargetingRef ----------
@@ -103,6 +106,9 @@ export type AtomVerb =
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
   | 'deckRevealUntil' | 'deckToBottomBound' | 'deckShuffle' | 'souza'
+  // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
+  // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
+  | 'expandActionTargets'
   | 'log' | 'noop';
 
 // ---------- Cost ----------

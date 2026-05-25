@@ -16,6 +16,8 @@
 //     char target が mustTarget リストに含まれない場合は throw
 
 import type { GameState } from '../../types/index.js';
+import { def as readDef } from '../../read/def.js';
+import { char as readChar } from '../../read/char.js';
 
 type Player = 'self' | 'opp';
 export type TargetCandidate = { uid: string; cardId: string; player: Player };
@@ -77,7 +79,7 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
     }
   }
 
-  // expander
+  // expander (legacy registerTargetExpander; G29)
   const seen = new Set(baseList.map(c => c.uid));
   const extra: TargetCandidate[] = [];
   for (const expander of _expanders.values()) {
@@ -96,7 +98,58 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
     }
   }
 
+  // D11007 v2 Phase 3: 「action:pre-target」 declarative trigger を直接 lookup
+  //
+  // Card-side DSL は trigger { hook: 'action:pre-target', selfOnly: true } + effect:
+  // atom expandActionTargets { side, state[], levelMin, levelMax } で表現される。
+  // queue 経由の事後 resolve では candidates() の即時 enumeration に間に合わないので、
+  // ここで直接 scene 上の triggered ability を walk して args を読む (sync inline)。
+  applyPreTargetExpansion(state, byUid, actor, opp, seen, extra);
+
   return [...baseList, ...extra];
+}
+
+function applyPreTargetExpansion(
+  state: GameState,
+  byUid: string,
+  actor: Player,
+  opp: Player,
+  seen: Set<string>,
+  extra: TargetCandidate[],
+): void {
+  for (const ownerSide of ['self', 'opp'] as const) {
+    for (const sceneCard of state.players[ownerSide].scene) {
+      const cardDef = readDef.card(sceneCard.cardId);
+      if (!cardDef?.abilities) continue;
+      for (const ab of cardDef.abilities) {
+        if (ab.type !== 'triggered') continue;
+        if (ab.trigger?.hook !== 'action:pre-target') continue;
+        // selfOnly: source カード自身が attacker のときのみ
+        if (ab.trigger?.selfOnly && sceneCard.uid !== byUid) continue;
+        const eff = ab.effect;
+        if (!eff || eff.kind !== 'atom' || eff.verb !== 'expandActionTargets') continue;
+        const args = (eff.args ?? {}) as Record<string, unknown>;
+        const sideArg = (args.side as 'self' | 'opp' | 'either' | undefined) ?? 'opp';
+        const stateFilter = args.state as ('active' | 'sleep' | 'stun')[] | undefined;
+        const levelMin = args.levelMin as number | undefined;
+        const levelMax = args.levelMax as number | undefined;
+        const sides: Player[] = sideArg === 'opp' ? [opp]
+          : sideArg === 'self' ? [actor]
+          : [actor, opp]; // 'either'
+        for (const sd of sides) {
+          for (const c of state.players[sd].scene) {
+            if (seen.has(c.uid)) continue;
+            if (stateFilter && !stateFilter.includes(c.state)) continue;
+            const lvl = readChar.level(state, c.uid);
+            if (levelMin !== undefined && lvl < levelMin) continue;
+            if (levelMax !== undefined && lvl > levelMax) continue;
+            seen.add(c.uid);
+            extra.push({ uid: c.uid, cardId: c.cardId, player: sd });
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
