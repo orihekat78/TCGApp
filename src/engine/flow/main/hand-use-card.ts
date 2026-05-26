@@ -157,7 +157,7 @@ export function handUseCard(
     event.emit(
       state,
       'enter',
-      { uid: newChar.uid, viaEffect: false, enterOrder: newChar.enterOrder },
+      { uid: newChar.uid, viaEffect: false, enterOrder: newChar.enterOrder, enterOrderThisTurn: newChar.enterOrderThisTurn },
       { player: p, cardId, uid: newChar.uid },
     );
   } else if (d?.kind === 'event') {

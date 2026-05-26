@@ -413,6 +413,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         uid: newChar.uid,
         viaEffect,
         enterOrder: newChar.enterOrder,
+        enterOrderThisTurn: newChar.enterOrderThisTurn,
       }, ctx.source);
       return;
     }
@@ -431,6 +432,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         uid: newChar.uid,
         viaEffect,
         enterOrder: newChar.enterOrder,
+        enterOrderThisTurn: newChar.enterOrderThisTurn,
       }, ctx.source);
       return;
     }

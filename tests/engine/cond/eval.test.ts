@@ -385,12 +385,12 @@ describe('engine.cond.eval', () => {
   describe('enterOrderEquals (D11014 / D11003 / D11009 driver)', () => {
     it('payload.enterOrder === n → true', () => {
       const s = createEmptyGameState();
-      const ctx = makeCtx({ triggerPayload: { enterOrder: 1 } });
+      const ctx = makeCtx({ triggerPayload: { enterOrderThisTurn: 1 } });
       expect(evalCond(s, { kind: 'enterOrderEquals', n: 1 }, ctx)).toBe(true);
     });
     it('payload.enterOrder !== n → false', () => {
       const s = createEmptyGameState();
-      const ctx = makeCtx({ triggerPayload: { enterOrder: 2 } });
+      const ctx = makeCtx({ triggerPayload: { enterOrderThisTurn: 2 } });
       expect(evalCond(s, { kind: 'enterOrderEquals', n: 1 }, ctx)).toBe(false);
     });
     it('payload 不在 → false', () => {

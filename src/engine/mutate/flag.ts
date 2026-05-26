@@ -49,6 +49,7 @@ function resetTurnFlags(s: GameState, p: Player): void {
   s.turnState[p].handUseUsed = false;
   s.turnState[p].nextHintUsed = false;
   s.turnState[p].assistedThisTurn = false;
+  s.turnState[p].enterCountThisTurn = 0; // rules/17 §【疾風 N】用 counter リセット
   s.turnState[p].declaredAbilityUseCount = {};
 }
 

@@ -33,15 +33,24 @@ describe('D11014 横溝重悟 (疾風 AP-1000 + 宣言 reanimate)', () => {
     expect(a1.description).toMatch(/1000/);
   });
 
-  it('a2 = declared pay (sleepSelf + removeFromHand) → reanimate from remove with bonus draw', () => {
+  it('a2 = declared sleepSelf cost + effect sequence (discard modal → sceneEnter → 萩原千速 draw)', () => {
     const a2 = D11014.abilities[1];
     expect(a2.type).toBe('declared');
-    expect(a2.cost?.kind).toBe('pay');
+    // D11014 v2 (2nd fix 2026-05-25): cost を sleepSelf のみに簡素化。手札 1 リムは
+    // effect step として D08013 同型 (modal pick)。auto-pick されないよう移動。
+    expect(a2.cost?.kind).toBe('sleepSelf');
     expect(a2.effect?.kind).toBe('sequence');
     expect(a2.description).toMatch(/萩原千速/);
-    // D11014 v2: custom check → boundMatchesFilter declarative kind
-    const eff = a2.effect as { kind: string; steps: ({ kind: 'conditional'; if: { kind: string; bindKey?: string; filter?: Record<string, unknown> } } | unknown)[] };
-    const condStep = eff.steps[1] as { kind: 'conditional'; if: { kind: string; bindKey?: string; filter?: Record<string, unknown> } };
+    const eff = a2.effect as { kind: string; steps: unknown[] };
+    // step 1: discard (modal pick)
+    const step1 = eff.steps[0] as { kind: string; verb: string; args: Record<string, unknown> };
+    expect(step1.kind).toBe('atom');
+    expect(step1.verb).toBe('discard');
+    expect(step1.args.player).toBe('self');
+    expect(step1.args.n).toBe(1);
+    // step 3: conditional + boundMatchesFilter
+    const condStep = eff.steps[2] as { kind: 'conditional'; if: { kind: string; bindKey?: string; filter?: Record<string, unknown> } };
+    expect(condStep.kind).toBe('conditional');
     expect(condStep.if.kind).toBe('boundMatchesFilter');
     expect(condStep.if.bindKey).toBe('$entered');
     expect(condStep.if.filter).toEqual({ cardName: '萩原千速' });

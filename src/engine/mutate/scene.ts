@@ -44,12 +44,16 @@ function enter(s: GameState, p: Player, cardId: string, opts: EnterOpts): SceneC
   }
 
   const currentCount = s.players[p].scene.length;
+  // rules/17 §【疾風 N】用: ターン境界でリセットされる「このターンの登場番目」を increment
+  const prevTurnEnter = s.turnState[p].enterCountThisTurn ?? 0;
+  s.turnState[p].enterCountThisTurn = prevTurnEnter + 1;
   const char: SceneCharacter = {
     cardId,
     uid: generateUid(cardId),
     state: opts.active === false ? 'sleep' : 'active',
     isNamed: opts.named ?? false,
     enterOrder: currentCount + 1,
+    enterOrderThisTurn: prevTurnEnter + 1,
     setCards: [],
     stackedCards: 0,
     keywordOverrides: { granted: [], disabledOriginal: false },

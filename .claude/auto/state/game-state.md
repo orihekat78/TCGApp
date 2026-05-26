@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `18159c9f4379`
+> Source hash: `0f9c02c4e80d`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -38,6 +38,7 @@ classDiagram
     +nextHintUsed: boolean
     +assistedThisTurn: boolean
     +declaredAbilityUseCount: Record<string, number>
+    +enterCountThisTurn?: number
   }
   class LogEntry {
     +ts: number
@@ -58,6 +59,7 @@ classDiagram
     +state: 'active' | 'sleep' | 'stun'
     +isNamed: boolean
     +enterOrder: number
+    +enterOrderThisTurn?: number
     +setCards: SetCardEntry[]
     +stackedCards: number
     +keywordOverrides: «object×2»

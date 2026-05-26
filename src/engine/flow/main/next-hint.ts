@@ -115,6 +115,7 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
         uid: newChar.uid,
         viaEffect: false,
         enterOrder: newChar.enterOrder,
+        enterOrderThisTurn: newChar.enterOrderThisTurn,
       }, { player: p, cardId: optionalCardId, uid: newChar.uid });
     } else if (d && d.kind === 'event') {
       // Round 4a (バグ D 水平展開): ネクストヒント経由でイベントカード使用時も

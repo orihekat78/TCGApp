@@ -27,6 +27,12 @@ export type SceneCharacter = {
   state: 'active' | 'sleep' | 'stun';
   isNamed: boolean;
   enterOrder: number;
+  /**
+   * 「このターン何番目に登場したか」(rules/17 §【疾風 N】判定用)。
+   * `enterOrder` (累積 scene 位置) と異なり、turn 境界で counter リセット。
+   * mutate.scene.enter で turnState[p].enterCountThisTurn を increment して設定。
+   */
+  enterOrderThisTurn?: number;
   setCards: SetCardEntry[];   // rules: 16-card-set.md (裏向きセット対応)
   stackedCards: number;
   keywordOverrides: { granted: string[]; disabledOriginal: boolean };
@@ -74,6 +80,12 @@ export type TurnScopedFlags = {
   nextHintUsed: boolean;
   assistedThisTurn: boolean;
   declaredAbilityUseCount: Record<string, number>;
+  /**
+   * 「このターンの登場順」カウンタ (rules/17 §【疾風 N】用)。
+   * mutate.scene.enter で increment、turn:start で 0 リセット。
+   * SceneCharacter.enterOrder (cumulative 累積位置) とは別。
+   */
+  enterCountThisTurn?: number;
 };
 
 export type LogEntry = {

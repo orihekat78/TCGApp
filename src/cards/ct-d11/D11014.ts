@@ -28,25 +28,22 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/17-icons.md', 'rules/19-special-rules.md'],
 };
 
-// a2: 【宣言】【スリープ】手札 1 リム → リムーブ警察 Lv5- 登場 → 萩原千速 なら 1 ドロー
-//   - sleepSelf cost: もともと sleep / stun なら canPay=false で宣言不可 (rules/21 engine 既存保証)
-//   - removeFromHand n:1: 手札 0 枚なら canPay=false で宣言不可 (engine 既存保証)
+// a2: 【宣言】【スリープ】〚手札を1枚リムーブする〛: リムーブ警察 Lv5- 登場 → 萩原千速 なら 1 ドロー
+//   - cost: sleepSelf のみ (もともと sleep / stun なら canPay=false で宣言不可 — rules/21、engine 既存保証)
+//   - 手札 1 リムは effect step として D08013 同型 ({ player: 'self', n: 1 } で modal pick)
+//     → 自動リムーブではなく user 選択。後続 step が pendingEffectPick 解決まで pause
+//   - sceneEnter の `max: 1` + 候補 0 件なら user は skip → chain 進行
 //   - sceneEnter の `bind: '$entered'` で登場キャラ情報を ctx.bindings に格納
 //   - boundMatchesFilter で 〚カード名[萩原千速]〛(分割名完全一致) を declarative 判定
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
   scope: 'on-scene',
-  cost: {
-    kind: 'pay',
-    items: [
-      { kind: 'sleepSelf' },                                                                                                                                  // 【宣言】【スリープ】
-      { kind: 'removeFromHand', n: 1, target: { kind: 'pick', query: { area: 'hand', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'self' } },              // 〚手札を1枚リムーブする〛
-    ],
-  },
+  cost: { kind: 'sleepSelf' }, // 【宣言】【スリープ】 (もともと sleep / stun なら canPay=false で宣言不可)
   effect: {
     kind: 'sequence',
     steps: [
+      { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } }, // 〚手札を1枚リムーブする〛 (D08013 同型 modal pick)
       { kind: 'choice', chooser: 'self',
         options: [{ kind: 'atom', verb: 'sceneEnter',
           args: {
@@ -54,7 +51,7 @@ const a2: AbilityDef = {
             target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { trait: '警察', levelMax: 5 } }, n: { min: 0, max: 1 }, chooser: 'self' },
           },
         }],
-      }, // 自分のリムーブエリアにあるレベル5以下の[警察]のキャラを1枚まで選び、登場させる
+      }, // 自分のリムーブエリアにあるレベル5以下の[警察]のキャラを1枚まで選び、登場させる (候補 0 件 / user skip OK)
       { kind: 'conditional',
         if: { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } }, // 〚カード名[萩原千速]〛を登場させた場合 (分割名完全一致)
         then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },                       // カードを1枚引く

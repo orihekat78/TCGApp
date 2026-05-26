@@ -174,10 +174,11 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return bAp > aAp;
     }
     case 'enterOrderEquals': {
-      // D11014 a1 / D11003 / D11009 driver: enter hook payload.enterOrder が n と一致するか
-      // (【疾風 N】 = ターン N 番目に登場で発火)
-      const payload = ctx.triggerPayload as { enterOrder?: number } | undefined;
-      return payload?.enterOrder === cond.n;
+      // D11014 a1 / D11003 / D11009 driver: enter hook payload.enterOrderThisTurn が n と一致するか
+      // rules/17 §【疾風 N】: 「自分の現場にこのターン N番目に登場したとき」
+      // (累積 enterOrder ではなく、ターン境界でリセットされる counter を参照)
+      const payload = ctx.triggerPayload as { enterOrderThisTurn?: number } | undefined;
+      return payload?.enterOrderThisTurn === cond.n;
     }
     case 'boundMatchesFilter': {
       // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
