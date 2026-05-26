@@ -256,6 +256,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
     if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
     if (pendingPickForArea.atomVerb === 'handAddFromRemove') return 'remove';
+    // D11014 a2 driver 2026-05-26: sceneEnter (D08024/D11014 reanimate) は area: remove
+    // CardListModal pick mode で D08013 evidenceToHand と同 UI を流用
+    if (pendingPickForArea.atomVerb === 'sceneEnter') {
+      const args = pendingPickForArea.atomArgs as { target?: { query?: { area?: string } } } | undefined;
+      const area = args?.target?.query?.area;
+      if (area === 'remove') return 'remove';
+      if (area === 'evidence') return 'evidence';
+      if (area === 'file') return 'file';
+    }
     return null;
   })();
   useEffect(() => {
@@ -280,8 +289,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   }, [isDiscardPick]);
   // User vision (拡張 4): sceneRemove 等の scene キャラ pick mode 検出
   // pendingEffectPick.atomVerb が scene 系で、candidates が scene キャラ uid を含むなら active
+  // D11014 a1 driver 2026-05-26: charModifyAP も scene pick (D08003 sceneRemove と同 UI 流用 — 黄色 highlight + click)
   const isScenePick =
-    pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'sceneRemove';
+    pendingPickForArea?.player === 'self' &&
+    (pendingPickForArea.atomVerb === 'sceneRemove' || pendingPickForArea.atomVerb === 'charModifyAP');
   const scenePickUidsSelf = new Set<string>();
   const scenePickUidsOpp = new Set<string>();
   if (isScenePick && pendingPickForArea) {
@@ -621,7 +632,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             scene キャラを click せず「リムーブしない」できるよう overlay ボタン表示 */}
         {isScenePick && (pendingPickForArea?.nMin ?? 1) === 0 && (
           <div className="scene-pick-skip-overlay" role="status">
-            <span className="scene-pick-skip-banner">現場キャラを 1 枚選んでリムーブ してください</span>
+            <span className="scene-pick-skip-banner">
+              {pendingPickForArea?.atomVerb === 'charModifyAP'
+                ? '現場キャラを 1 枚選んで効果を適用してください'
+                : '現場キャラを 1 枚選んでリムーブ してください'}
+            </span>
             <button
               type="button"
               className="scene-pick-skip-btn"
