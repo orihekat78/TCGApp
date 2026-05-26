@@ -619,6 +619,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               onClose={closeAreaModal}
               onExpand={(cardId) => expandModal.open(cardId)}
               pickCands={isPickModeForThisArea ? pendingPickForArea!.candidates : undefined}
+              pickBannerText={
+                isPickModeForThisArea && pendingPickForArea?.atomVerb === 'sceneEnter'
+                  ? 'リムーブから1枚選んで現場に登場させてください'
+                  : undefined
+              }
               onPick={isPickModeForThisArea ? (uid) => {
                 dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
               } : undefined}

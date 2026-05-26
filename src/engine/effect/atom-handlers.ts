@@ -400,6 +400,32 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         return;
       }
       const enterPlayer = resolvePlayer(a.player, ctx);
+      // D11014 a2 driver 2026-05-26: pick query で source area が指定されていれば、
+      // そこから cardId 1 枚を取り除いてから scene へ。これがないと「リムーブから
+      // 登場」が「リムーブに残ったまま scene にコピー登場」になる duplication bug。
+      // handAddFromRemove と同 pattern (line 360-367)。
+      const sourceArea = ((a.target && typeof a.target === 'object')
+        ? ((a.target as { query?: { area?: string; side?: string } }).query?.area)
+        : undefined) as 'remove' | 'evidence' | 'file' | 'deck' | 'hand' | undefined;
+      const sourceSide = ((a.target && typeof a.target === 'object')
+        ? ((a.target as { query?: { side?: string } }).query?.side)
+        : undefined) as 'self' | 'opp' | undefined;
+      if (sourceArea === 'remove') {
+        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const arr = s.players[fromPlayer].remove;
+        const idx = arr.indexOf(cardId);
+        if (idx !== -1) arr.splice(idx, 1);
+      } else if (sourceArea === 'hand') {
+        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const arr = s.players[fromPlayer].hand;
+        const idx = arr.indexOf(cardId);
+        if (idx !== -1) arr.splice(idx, 1);
+      } else if (sourceArea === 'deck') {
+        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const arr = s.players[fromPlayer].deck;
+        const idx = arr.indexOf(cardId);
+        if (idx !== -1) arr.splice(idx, 1);
+      }
       const newChar = mutate.scene.enter(s, enterPlayer, cardId, {
         named: (a.named as boolean | undefined) ?? false,
         viaEffect,

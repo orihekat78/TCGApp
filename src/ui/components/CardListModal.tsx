@@ -31,7 +31,10 @@ const HINT: Record<CardListKind, string> = {
   remove:   '使用済イベント / リムーブされたキャラ。リフレッシュでデッキに戻る対象 (rules/14)。',
 };
 
-/** Pick mode 中の案内バナー文言 (User 指摘: 選択モーダルでも説明文が欲しい)。 */
+/**
+ * Pick mode 中の案内バナー文言 default。
+ * `pickBannerText` prop で override 可 (D11014 a2 sceneEnter 等 verb 別 文言)。
+ */
 const PICK_BANNER_TEXT: Record<CardListKind, string> = {
   file:     'FILE から1枚選んでください',
   evidence: '証拠から1枚選んで手札に加えてください',
@@ -63,6 +66,12 @@ export type CardListModalProps = {
    *   - face-up (remove): cards[idx] の cardId と一致する uid → 該当 cell が click 対応
    */
   pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp' }>;
+  /**
+   * Pick mode banner 文言 override (default は kind 別 PICK_BANNER_TEXT)。
+   * D11014 a2 sceneEnter のように「手札に加える」ではなく「現場に登場」させる
+   * 場合に Playmat から verb 別文言を渡すための prop。
+   */
+  pickBannerText?: string;
   /** Pick mode で cell が click された時の handler (uid を受ける) */
   onPick?: (uid: string) => void;
   /** Pick mode で skip 可能 (任意効果 n.min===0) なら true */
@@ -72,7 +81,7 @@ export type CardListModalProps = {
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, onPick, pickCanSkip, onPickSkip } = props;
+  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip } = props;
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
 
   /** 裏向き cell の idx (= evidence の index) から候補 uid を逆引き。pick mode 外では undefined。 */
@@ -142,7 +151,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
         {inPickMode && (
           <div className="card-list-modal-pick-banner-row">
             <div className="card-list-modal-pick-banner" role="status">
-              {PICK_BANNER_TEXT[kind]}
+              {pickBannerText ?? PICK_BANNER_TEXT[kind]}
             </div>
             {pickCanSkip && onPickSkip && (
               <button
