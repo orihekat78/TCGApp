@@ -655,10 +655,70 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charStackCard': {
-      const stUid = a.uid as string;
+      // D08021 driver 2026-05-26: sceneEnter (line 374) と同型の pick-await + source-area cleanup pattern を流用。
+      //   - 旧 contract: { uid, n } → 即 stackedCards += n (本パスを末尾に維持)
+      //   - 新 contract: { uid:'$self', cardIds:'$pick.cardIds', target:{kind:'pick',...,n:{min,max}} }
+      //     → cardIds 未解決時 side-channel queue で modal、resolve 後に
+      //       stack count=cardIds.length + 各 cardId を source area から splice
+      //   - multi-pick (n>1) は UI 側 (CardListModal nMax>1 multi-select) と
+      //     useEngineDispatch.ts effectPickResolve dispatcher の協調で実装。
+      const stUid = resolveBindRef(a.uid, ctx) as string;
+      const rawCardIds = a.cardIds;
+      // 新 multi-pick contract: cardIds が array (resolved) or '$pick.cardIds' (await)
+      if (rawCardIds === '$pick.cardIds') {
+        if (a.target && typeof a.target === 'object') {
+          const ctxP = ctx.source.player ?? 'self';
+          // D08021 driver 2026-05-26: $self は ctx.source.uid に依存するが、effectPickResolve
+          // 経由の re-dispatch では ctx.source.uid が drop される (useEngineDispatch.ts は
+          // { player, cardId } のみ渡す)。tryRePickFromAtom 呼出時点で stUid に置換しておき、
+          // 再 dispatch 時に handler が resolveBindRef を再実行しても解決済 uid を使えるよう保証。
+          const argsWithResolvedUid = { ...a, uid: stUid };
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: argsWithResolvedUid }, ctx, {
+            byPlayer: ctxP,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, {
+            ts: Date.now(), player: ctxP, turn: s.turn.number,
+            action: 'effect:charStackCard:awaiting-pick',
+          });
+        }
+        return; // pick query 無し or await 完了 → no-op return
+      }
+      if (Array.isArray(rawCardIds)) {
+        const cardIds = rawCardIds as string[];
+        if (cardIds.length === 0) {
+          // skip (n.min=0 で 0 枚 pick) → no-op + log
+          mutate.log.append(s, {
+            ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
+            action: 'effect:charStackCard', target: stUid, result: '0',
+          });
+          return;
+        }
+        const sourceArea = ((a.target && typeof a.target === 'object')
+          ? ((a.target as { query?: { area?: string; side?: string } }).query?.area)
+          : undefined) as 'remove' | 'hand' | 'deck' | undefined;
+        const sourceSide = ((a.target && typeof a.target === 'object')
+          ? ((a.target as { query?: { side?: string } }).query?.side)
+          : undefined) as 'self' | 'opp' | undefined;
+        const ownerP = ctx.source.player ?? 'self';
+        if (sourceArea === 'remove' || sourceArea === 'hand' || sourceArea === 'deck') {
+          const fromPlayer = sourceSide === 'opp' ? 'opp' : ownerP;
+          const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[sourceArea];
+          for (const cid of cardIds) {
+            const idx = arr?.indexOf(cid) ?? -1;
+            if (idx !== -1) arr.splice(idx, 1);
+          }
+        }
+        mutate.char.stackCard(s, stUid, cardIds.length);
+        mutate.log.append(s, {
+          ts: Date.now(), player: ownerP, turn: s.turn.number,
+          action: 'effect:charStackCard', target: stUid, result: cardIds.join(','),
+        });
+        return;
+      }
+      // legacy: { uid, n }
       const stN = a.n as number;
       mutate.char.stackCard(s, stUid, stN);
-      // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard', target: stUid, result: String(stN) });
       return;
     }

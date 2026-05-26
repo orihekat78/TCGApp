@@ -11,7 +11,7 @@
 //   - リムーブは表向きなので cardId / 名前を CardArt + cardIdToDisplayName で描画
 //   - Esc / 背景 click / × ボタンで閉じる
 
-import { useEffect, type JSX } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import type { CardId } from '@/engine/types';
 import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
@@ -78,11 +78,34 @@ export type CardListModalProps = {
   pickCanSkip?: boolean;
   /** Pick skip した時の handler */
   onPickSkip?: () => void;
+  /**
+   * D08021 driver 2026-05-26: multi-pick mode (nMax > 1) で 0〜nMax 枚選択。
+   * pickNMax > 1 を渡すと multi-select モードになり、各 cell click が toggle、
+   * 「完了 (N枚選択)」 ボタンで onPickMulti(uids[]) を発火する。
+   * pickNMin / pickNMax が無いか pickNMax===1 の場合は既存 single-pick 挙動。
+   */
+  pickNMin?: number;
+  pickNMax?: number;
+  /** Multi-pick 完了時の handler (cards の uid 配列を受ける) */
+  onPickMulti?: (uids: string[]) => void;
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip } = props;
+  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti } = props;
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
+  // D08021 driver: multi-pick mode (nMax > 1) で local selection state を保持
+  const isMultiPick = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
+  const [selectedUids, setSelectedUids] = useState<string[]>([]);
+  // pending pick が切り替わった (kind change) で local selection reset
+  useEffect(() => { setSelectedUids([]); }, [kind, pickCands]);
+  const toggleSelect = (uid: string): void => {
+    setSelectedUids((prev) => {
+      if (prev.includes(uid)) return prev.filter((u) => u !== uid);
+      if (typeof pickNMax === 'number' && prev.length >= pickNMax) return prev; // 上限ガード
+      return [...prev, uid];
+    });
+  };
+  const canConfirm = isMultiPick && (selectedUids.length >= (pickNMin ?? 0));
 
   /** 裏向き cell の idx (= evidence の index) から候補 uid を逆引き。pick mode 外では undefined。 */
   const findFaceDownPickUid = (idx: number): string | undefined => {
@@ -152,7 +175,22 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
           <div className="card-list-modal-pick-banner-row">
             <div className="card-list-modal-pick-banner" role="status">
               {pickBannerText ?? PICK_BANNER_TEXT[kind]}
+              {isMultiPick && (
+                <span className="card-list-modal-pick-count">
+                  {` (${selectedUids.length}/${pickNMax} 枚選択中)`}
+                </span>
+              )}
             </div>
+            {isMultiPick && canConfirm && (
+              <button
+                type="button"
+                className="card-list-modal-pick-confirm-btn"
+                onClick={() => onPickMulti!(selectedUids)}
+                data-testid="card-list-pick-confirm"
+              >
+                {`完了 (${selectedUids.length}枚)`}
+              </button>
+            )}
             {pickCanSkip && onPickSkip && (
               <button
                 type="button"
@@ -160,7 +198,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 onClick={onPickSkip}
                 data-testid="card-list-pick-skip"
               >
-                選ばない
+                {isMultiPick && selectedUids.length === 0 ? '選ばない' : isMultiPick ? '選び直し' : '選ばない'}
               </button>
             )}
           </div>
@@ -193,14 +231,16 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 // Pick mode 優先 (User vision: CardListModal を pick UI として流用)
                 const pickUid = findFaceUpPickUid(cardId, idx);
                 if (pickUid !== undefined) {
+                  const isSelected = isMultiPick && selectedUids.includes(pickUid);
                   return (
                     <button
                       type="button"
                       key={`face-${cardId}-${idx}`}
-                      className="card-list-item card-list-item--clickable card-list-item--pickable"
-                      onClick={() => onPick!(pickUid)}
+                      className={`card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}`}
+                      onClick={() => isMultiPick ? toggleSelect(pickUid) : onPick!(pickUid)}
                       data-testid={`card-list-pick-${pickUid}`}
-                      aria-label={`${cardIdToDisplayName(cardId)} を選択`}
+                      aria-label={`${cardIdToDisplayName(cardId)} を${isSelected ? '選択解除' : '選択'}`}
+                      aria-pressed={isMultiPick ? isSelected : undefined}
                     >
                       {itemContent}
                     </button>

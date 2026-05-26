@@ -265,6 +265,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       if (area === 'evidence') return 'evidence';
       if (area === 'file') return 'file';
     }
+    // D08021 driver 2026-05-26: charStackCard (multi-pick 0-5 から下に重ねる) も
+    // target.query.area で area kind が決まる (typically remove)。
+    if (pendingPickForArea.atomVerb === 'charStackCard') {
+      const args = pendingPickForArea.atomArgs as { target?: { query?: { area?: string } } } | undefined;
+      const area = args?.target?.query?.area;
+      if (area === 'remove') return 'remove';
+      if (area === 'evidence') return 'evidence';
+      if (area === 'file') return 'file';
+    }
     return null;
   })();
   useEffect(() => {
@@ -609,7 +618,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               (pendingPickForArea.atomVerb === 'handAddFromRemove' && areaModal.kind === 'remove') ||
               // D11014 a2 / D08024 driver 2026-05-26: sceneEnter は target.query.area で
               // pickAreaKind が決まる (remove / evidence / file)。area kind を一致確認。
-              (pendingPickForArea.atomVerb === 'sceneEnter' && areaModal.kind === pickAreaKind));
+              (pendingPickForArea.atomVerb === 'sceneEnter' && areaModal.kind === pickAreaKind) ||
+              // D08021 driver 2026-05-26: charStackCard multi-pick (0-5 枚) も同パターン
+              (pendingPickForArea.atomVerb === 'charStackCard' && areaModal.kind === pickAreaKind));
           return (
             <CardListModal
               kind={areaModal.kind}
@@ -622,6 +633,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               pickBannerText={
                 isPickModeForThisArea && pendingPickForArea?.atomVerb === 'sceneEnter'
                   ? 'リムーブから1枚選んで現場に登場させてください'
+                  : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'charStackCard'
+                  ? `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`
                   : undefined
               }
               onPick={isPickModeForThisArea ? (uid) => {
@@ -630,6 +643,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               pickCanSkip={isPickModeForThisArea && (pendingPickForArea?.nMin ?? 1) === 0}
               onPickSkip={isPickModeForThisArea ? () => {
                 dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+              } : undefined}
+              pickNMin={isPickModeForThisArea ? pendingPickForArea?.nMin : undefined}
+              pickNMax={isPickModeForThisArea ? pendingPickForArea?.nMax : undefined}
+              onPickMulti={isPickModeForThisArea ? (uids) => {
+                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uids[0] ?? null, pickedUids: uids });
               } : undefined}
             />
           );

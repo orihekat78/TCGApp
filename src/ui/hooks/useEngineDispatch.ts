@@ -77,7 +77,9 @@ export type EngineAction =
   | { type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }
   // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択結果
   // pickedUid=null は「選ばない」(skip、n.min===0 任意効果のみ可能)
-  | { type: 'effectPickResolve'; pickedUid: string | null }
+  // pickedUids は multi-pick (nMax>1) で複数選択を一括 resolve するため。
+  // D08021 charStackCard 等 multi-pick atom が cardIds:'$pick.cardIds' を resolved 配列で受ける。
+  | { type: 'effectPickResolve'; pickedUid: string | null; pickedUids?: string[] }
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   | { type: 'endTurn'; player: Player };
@@ -437,7 +439,19 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         // カードを splice するので、target を [cardId] で上書きせず pick query のまま
         // 保持する必要がある (ed453d8 の source-area-remove 連携)。
         const hasCardIdBind = (pending.atomArgs as { cardId?: unknown }).cardId === '$pick.cardId';
-        const newArgs: Record<string, unknown> = hasCardIdBind
+        // D08021 driver 2026-05-26: multi-pick atom (charStackCard 等) は cardIds:'$pick.cardIds'
+        // を resolved 配列に substitute する。pickedUids が指定されていれば全 cardId を解決、
+        // 単 pickedUid のみなら 1 件配列として変換 (n=1 で multi-pick UI を経由しないケース)。
+        const hasCardIdsBind = (pending.atomArgs as { cardIds?: unknown }).cardIds === '$pick.cardIds';
+        const currentStateForMulti = useGameStateStore.getState().gameState;
+        const resolveOne = (u: string): string | null => resolveCardIdFromPickUid(u, currentStateForMulti, pending);
+        const allUids: string[] = action.pickedUids ?? [picked];
+        const allCardIds: string[] = allUids
+          .map((u) => resolveOne(u))
+          .filter((c): c is string => typeof c === 'string');
+        const newArgs: Record<string, unknown> = hasCardIdsBind
+          ? { ...pending.atomArgs, cardIds: allCardIds } // target は元の pick query を保持
+          : hasCardIdBind
           ? { ...pending.atomArgs, cardId: resolvedCardId } // target は元の pick query を保持
           : { ...pending.atomArgs, target: [resolvedCardId] }; // 従来 pattern (handAddFromRemove 等)
         resolvedAtom = {

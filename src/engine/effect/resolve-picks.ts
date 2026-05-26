@@ -216,7 +216,11 @@ function substituteAtomPick(
   //   Pattern B: { target: {kind:'pick',...} } (uid 不在、discard / evidenceToHand 等)
   //              → target を picked の cardId/uid 配列に置換 (atom-handler は配列を期待)
   const isPatternA = args.uid === '$pick';
-  const isPatternB = !isPatternA && args.uid === undefined;
+  // D08021 driver 2026-05-26: Pattern B was originally restricted to args.uid===undefined
+  // (discard / evidenceToHand 等)。charStackCard は uid='$self' を保持し cardIds/target を
+  // pick で解決する必要があるため、uid が '$pick' でない全パターンを Pattern B として扱う。
+  // 初期 walk (`!_fromAtomHandler`) では Pattern B push は下記 guard で抑止される。
+  const isPatternB = !isPatternA;
   if (!isPatternA && !isPatternB) return atom as Effect;
 
   const cands = targetCandidates(state, target as TargetingRef, ctx);

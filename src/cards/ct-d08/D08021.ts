@@ -18,28 +18,27 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
   effect: {
-    kind: 'choice',
-    chooser: 'self',
-    options: [
-      {
-        kind: 'atom',
-        verb: 'charStackCard',
-        args: {
-          uid: '$self',
-          target: {
-            kind: 'pick',
-            query: {
-              area: 'remove',
-              side: 'self',
-              filter: { trait: '少年探偵団' },
-              distinctNames: true,
-            },
-            n: { min: 0, max: 5 },
-            chooser: 'self',
-          },
+    kind: 'atom',
+    verb: 'charStackCard',
+    args: {
+      uid: '$self',
+      // D08021 driver 2026-05-26: cardIds:'$pick.cardIds' は multi-pick atom contract。
+      // CardListModal の multi-select mode (nMax>1) で 0〜5 枚を選択、effectPickResolve
+      // 時に dispatcher が cardIds を resolved 配列に substitute する。atom-handler は
+      // a.target.query.area から source area (remove) も参照、splice する。
+      cardIds: '$pick.cardIds',
+      target: {
+        kind: 'pick',
+        query: {
+          area: 'remove',
+          side: 'self',
+          filter: { trait: '少年探偵団' },
+          distinctNames: true,
         },
+        n: { min: 0, max: 5 },
+        chooser: 'self',
       },
-    ],
+    },
   },
   description:
     '【登場時】リムーブの[少年探偵団] (カード名が異なる) を5枚までこのキャラの下に重ねる。',

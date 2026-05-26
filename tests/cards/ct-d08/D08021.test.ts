@@ -18,13 +18,26 @@ describe('D08021 結成 少年探偵団 (character, enter stack + threshold abil
     expect(D08021.abilities.length).toBe(4);
   });
 
-  it('a1: enter triggered (charStackCard from remove with distinctNames)', () => {
+  it('a1: enter triggered (charStackCard multi-pick 0-5 from remove with distinctNames)', () => {
     const a1 = D08021.abilities[0];
     expect(a1.id).toBe('a1');
     expect(a1.type).toBe('triggered');
     expect(a1.trigger?.hook).toBe('enter');
     expect(a1.trigger?.selfOnly).toBe(true);
-    expect(a1.effect?.kind).toBe('choice');
+    // D08021 v2 driver 2026-05-26: choice ラップ → atom 直結に簡素化
+    // cardIds:'$pick.cardIds' multi-pick contract で n.max=5
+    expect(a1.effect?.kind).toBe('atom');
+    const eff = a1.effect as { kind: string; verb?: string; args?: Record<string, unknown> };
+    expect(eff.verb).toBe('charStackCard');
+    expect(eff.args?.uid).toBe('$self');
+    expect(eff.args?.cardIds).toBe('$pick.cardIds');
+    const target = eff.args?.target as { kind?: string; query?: { area?: string; filter?: { trait?: string }; distinctNames?: boolean }; n?: { min?: number; max?: number } };
+    expect(target?.kind).toBe('pick');
+    expect(target?.query?.area).toBe('remove');
+    expect(target?.query?.filter?.trait).toBe('少年探偵団');
+    expect(target?.query?.distinctNames).toBe(true);
+    expect(target?.n?.min).toBe(0);
+    expect(target?.n?.max).toBe(5);
   });
 
   it('a2: continuous stackedCount≥1 → grant 突撃', () => {
