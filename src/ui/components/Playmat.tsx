@@ -606,7 +606,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             pendingPickForArea?.player === 'self' &&
             areaModal.side === 'self' &&
             ((pendingPickForArea.atomVerb === 'evidenceToHand' && areaModal.kind === 'evidence') ||
-              (pendingPickForArea.atomVerb === 'handAddFromRemove' && areaModal.kind === 'remove'));
+              (pendingPickForArea.atomVerb === 'handAddFromRemove' && areaModal.kind === 'remove') ||
+              // D11014 a2 / D08024 driver 2026-05-26: sceneEnter は target.query.area で
+              // pickAreaKind が決まる (remove / evidence / file)。area kind を一致確認。
+              (pendingPickForArea.atomVerb === 'sceneEnter' && areaModal.kind === pickAreaKind));
           return (
             <CardListModal
               kind={areaModal.kind}
