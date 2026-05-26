@@ -431,10 +431,19 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         const currentState = useGameStateStore.getState().gameState;
         const resolvedCardId = resolveCardIdFromPickUid(picked, currentState, pending);
         if (!resolvedCardId) return; // 想定外、防御スキップ
+        // D11014 a2 driver 2026-05-26: sceneEnter のように cardId='$pick.cardId' で
+        // pick await している atom は、cardId フィールドも resolved に substitute する
+        // 必要がある。さらに sceneEnter は a.target.query.area を見て source area から
+        // カードを splice するので、target を [cardId] で上書きせず pick query のまま
+        // 保持する必要がある (ed453d8 の source-area-remove 連携)。
+        const hasCardIdBind = (pending.atomArgs as { cardId?: unknown }).cardId === '$pick.cardId';
+        const newArgs: Record<string, unknown> = hasCardIdBind
+          ? { ...pending.atomArgs, cardId: resolvedCardId } // target は元の pick query を保持
+          : { ...pending.atomArgs, target: [resolvedCardId] }; // 従来 pattern (handAddFromRemove 等)
         resolvedAtom = {
           kind: 'atom' as const,
           verb: pending.atomVerb as never,
-          args: { ...pending.atomArgs, target: [resolvedCardId] },
+          args: newArgs,
         };
       }
       engineEvent.queue(
