@@ -12,9 +12,16 @@
 //   - cost は呼出元の responsibility (engine.cost.canPay/pay を ctx に渡す)
 //   - 実際の Effect 実行は Phase 5 のカード登録で listener が pendingEffects に積む
 
-import type { GameState } from '../../types/index.js';
+import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
+import { def as readDef } from '../../read/def.js';
+import { resolveEffectPicks } from '../../effect/resolve-picks.js';
+import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
+
+function getHumanPlayerSide(): 'self' | 'opp' | null {
+  return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+}
 
 /**
  * findCardOnBoard — uid のカードを場 (scene / case / partner-area) から探す。
@@ -99,5 +106,41 @@ export function useDeclaredAbility(
     'effect:declared',
     { kind: 'declaredAbility', uid, abilId },
     { player: found.player, uid, cardId: found.cardId },
+  );
+
+  // 2026-05-26 fix: type:'declared' ability の effect を直接 queue する。
+  // triggered.ts listener は `type === 'triggered'` のみ処理するため、宣言能力の
+  // effect は engine 側のどこにも実行 path がなかった (D11014 a2 / D11003 a2 /
+  // D11012 a1 / D08005 a2 等が silent no-op していた長年バグの根本対応)。
+  const def = readDef.card(found.cardId);
+  const ability = def?.abilities?.find((a: AbilityDef) => a.id === abilId);
+  if (!ability) return;
+  if (ability.type !== 'declared' || !ability.effect) return;
+
+  const resolveCtx: EffectCtx = {
+    source: {
+      cardId: found.cardId,
+      uid,
+      abilityId: abilId,
+      player: found.player,
+      area: found.area as EffectCtx['source']['area'],
+    },
+    bindings: {},
+  };
+  const humanSide = getHumanPlayerSide();
+  const isHumanEffect = humanSide !== null && found.player === humanSide;
+  const aiPolicy = new HeuristicPolicy();
+  const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx, {
+    chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+    byPlayer: found.player,
+    humanChooser: isHumanEffect,
+    source: { cardId: found.cardId, abilityId: abilId },
+  });
+  event.queue(
+    state,
+    resolvedEffect,
+    { player: found.player, uid, cardId: found.cardId, abilityId: abilId, area: found.area },
+    'declaredAbility',
+    { kind: 'declaredAbility', uid, abilId },
   );
 }
