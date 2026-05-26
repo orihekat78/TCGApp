@@ -94,6 +94,12 @@ export type PendingEffectPickSide = {
   nMax: number;
   /** ability source (UI 表示・log 用) */
   source: { cardId: string; abilityId: string };
+  /**
+   * D08021 driver 2026-05-26: target.query.distinctNames を UI に渡すための flag。
+   * true なら UI multi-select で「同じ name component (rules/19 分割名展開後) を持つ
+   * 既選択カードと衝突する候補」を click 不可化する。
+   */
+  distinctNames?: boolean;
 };
 
 function getPendingQueue(): PendingEffectPickSide[] {
@@ -273,7 +279,7 @@ function substituteAtomPick(
       (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
       return atom as Effect;
     }
-    const targetRef = target as { n?: { min?: number; max?: number } };
+    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean } };
     pushPendingEffectPickSide({
       player: byPlayer,
       candidates: cardLikeCands,
@@ -282,6 +288,9 @@ function substituteAtomPick(
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
       source: opts.source ?? { cardId: '', abilityId: '' },
+      // D08021 driver 2026-05-26: target.query.distinctNames を UI に伝える。
+      // CardListModal multi-select で同 name component 衝突候補を click 不可化する。
+      distinctNames: targetRef.query?.distinctNames === true,
     });
     return atom as Effect; // 未解決のまま返却
   }

@@ -114,6 +114,11 @@ export type PendingEffectPick = {
   nMin: number;
   nMax: number;
   source: { cardId: string; abilityId: string };
+  /**
+   * D08021 driver 2026-05-26: target.query.distinctNames を UI multi-select に伝達。
+   * CardListModal で同 name component (rules/19) の重複選択を click 不可化する。
+   */
+  distinctNames?: boolean;
 };
 
 /** ヒラメキ保留 (Commit 3a) */

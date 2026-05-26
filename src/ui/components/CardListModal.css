@@ -193,6 +193,19 @@
 .card-list-modal-pick-confirm-btn:hover {
   background: #22c55e;
 }
+/* D08021 driver 2026-05-26: distinctNames 制約 (rules/19) で同 name component
+   重複により選択不可な候補。click 不可 + 半透明 + 警告色 outline。 */
+.card-list-item--blocked {
+  opacity: 0.35;
+  border-color: #6b7280;
+  box-shadow: 0 0 4px rgba(107, 114, 128, 0.5);
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+.card-list-item--blocked:hover {
+  transform: none;
+  box-shadow: 0 0 4px rgba(107, 114, 128, 0.5);
+}
 
 /* Pick mode banner: User vision (CardListModal を pick UI として流用) で
    何を選択するかを明示。HandZone と統一感のあるスタイル。 */

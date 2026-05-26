@@ -65,6 +65,9 @@ import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readChar } from '@/engine/read/char.js';
+// D08021 driver 2026-05-26: distinctNames 制約 (rules/19) を multi-pick UI で
+// 適用するため、name component 計算 helper を import。
+import { allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
 import './Playmat.css';
 
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
@@ -649,6 +652,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               onPickMulti={isPickModeForThisArea ? (uids) => {
                 dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uids[0] ?? null, pickedUids: uids });
               } : undefined}
+              pickDistinctNames={isPickModeForThisArea ? (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames : undefined}
+              pickComponents={isPickModeForThisArea && (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames
+                ? Object.fromEntries(
+                    (pendingPickForArea?.candidates ?? []).map((c) => {
+                      const d = readDef.card(c.cardId);
+                      return [c.uid, d ? allCardNameComponentsForDef(d) : [c.cardId]];
+                    })
+                  )
+                : undefined}
             />
           );
         })()}

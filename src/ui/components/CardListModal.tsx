@@ -88,20 +88,48 @@ export type CardListModalProps = {
   pickNMax?: number;
   /** Multi-pick 完了時の handler (cards の uid 配列を受ける) */
   onPickMulti?: (uids: string[]) => void;
+  /**
+   * D08021 driver 2026-05-26: rules/19 「カード名の異なる」(分割名展開後の component が
+   * 重複しない) 制約を multi-select に適用するフラグ。true で同 component の既選択と
+   * 衝突する候補を disable + 半透明表示。pickCands の cardId から component を計算するため
+   * `pickComponents` を併せて渡す (engine helper `allCardNameComponentsForDef` で生成)。
+   */
+  pickDistinctNames?: boolean;
+  /**
+   * 各 pickCands uid → name components のマップ (rules/19 分割名展開済)。
+   * pickDistinctNames=true のとき、選択済との重複検査に使用する。
+   */
+  pickComponents?: Record<string, string[]>;
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti } = props;
+  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents } = props;
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
   // D08021 driver: multi-pick mode (nMax > 1) で local selection state を保持
   const isMultiPick = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
   // pending pick が切り替わった (kind change) で local selection reset
   useEffect(() => { setSelectedUids([]); }, [kind, pickCands]);
+  // D08021 driver 2026-05-26: 選択済 uid → 集計済 name component Set (rules/19)
+  const selectedComponents = new Set<string>();
+  if (pickDistinctNames && pickComponents) {
+    for (const u of selectedUids) {
+      for (const c of pickComponents[u] ?? []) selectedComponents.add(c);
+    }
+  }
+  /** 候補 uid が distinctNames 制約で disabled か (未選択かつ既選択と component が衝突する) */
+  const isDistinctNamesBlocked = (uid: string): boolean => {
+    if (!pickDistinctNames || !pickComponents) return false;
+    if (selectedUids.includes(uid)) return false; // 既選択は toggle off できるよう許可
+    const cmps = pickComponents[uid] ?? [];
+    return cmps.some((c) => selectedComponents.has(c));
+  };
   const toggleSelect = (uid: string): void => {
     setSelectedUids((prev) => {
       if (prev.includes(uid)) return prev.filter((u) => u !== uid);
       if (typeof pickNMax === 'number' && prev.length >= pickNMax) return prev; // 上限ガード
+      // distinctNames 衝突は click 不可なので click 経路に到達しないが、念のため防御
+      if (isDistinctNamesBlocked(uid)) return prev;
       return [...prev, uid];
     });
   };
@@ -232,15 +260,19 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 const pickUid = findFaceUpPickUid(cardId, idx);
                 if (pickUid !== undefined) {
                   const isSelected = isMultiPick && selectedUids.includes(pickUid);
+                  const isBlocked = isMultiPick && isDistinctNamesBlocked(pickUid);
+                  const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}`;
                   return (
                     <button
                       type="button"
                       key={`face-${cardId}-${idx}`}
-                      className={`card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}`}
+                      className={cls}
+                      disabled={isBlocked}
                       onClick={() => isMultiPick ? toggleSelect(pickUid) : onPick!(pickUid)}
                       data-testid={`card-list-pick-${pickUid}`}
-                      aria-label={`${cardIdToDisplayName(cardId)} を${isSelected ? '選択解除' : '選択'}`}
+                      aria-label={`${cardIdToDisplayName(cardId)} を${isBlocked ? '選択不可 (同名重複)' : isSelected ? '選択解除' : '選択'}`}
                       aria-pressed={isMultiPick ? isSelected : undefined}
+                      title={isBlocked ? '同じカード名は1枚まで (rules/19)' : undefined}
                     >
                       {itemContent}
                     </button>

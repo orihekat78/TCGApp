@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `43dc73d37319`
+> Source hash: `e0c8a14ced38`
 
 仕様書 [`hiramekiCharStun`](../../../specs/shared-classes/hiramekiCharStun.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

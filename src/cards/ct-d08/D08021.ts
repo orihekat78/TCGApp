@@ -49,14 +49,8 @@ const a2: AbilityDef = {
   id: 'a2',
   type: 'continuous',
   scope: 'on-scene',
-  condition: {
-    kind: 'stackedCountAtLeast',
-    ref: { kind: 'self' },
-    n: 1,
-  },
-  continuousModifier: {
-    grantKeywords: () => ['突撃'],
-  },
+  condition: {kind: 'stackedCountAtLeast',ref: { kind: 'self' },n: 1,},
+  continuousModifier: {grantKeywords: () => ['突撃'],},
   description: '【1枚以上】〚突撃〛',
   ruleRefs: ['rules/16-card-set.md', 'rules/13-keywords.md'],
 };
