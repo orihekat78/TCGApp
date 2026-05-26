@@ -379,8 +379,24 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // (D11019 deckRevealUntil → sceneEnter sequence で必要)
       const rawCardId = requireField<string>(a, 'cardId', 'string');
       const cardId = resolveBindRef(rawCardId, ctx) as string;
+      // D11014 a2 driver 2026-05-26: cardId が `$pick.*` で未解決かつ target に
+      // pick query があれば tryRePickFromAtom で side-channel set (Pattern A 同型)。
+      // handAddFromRemove と同 pattern。これがないと sceneEnter は silent no-op で
+      // modal が出ない長年バグ (D08024 / D11014 a2 等が影響)。
       if (typeof cardId !== 'string' || cardId.startsWith('$')) {
-        // 未解決の bind ref → no-op skip (BUG-048 と同 pattern)
+        if (rawCardId === '$pick.cardId' && a.target && typeof a.target === 'object') {
+          const sePlayer = resolvePlayer(a.player, ctx);
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+            byPlayer: sePlayer,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, {
+            ts: Date.now(), player: sePlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:awaiting-pick',
+          });
+          return;
+        }
+        // それ以外の未解決 bind ref は従来通り silent no-op (BUG-048 と同 pattern)
         return;
       }
       const enterPlayer = resolvePlayer(a.player, ctx);

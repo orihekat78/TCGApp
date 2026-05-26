@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 119
-- **ファイル数**: 1268
+- **ディレクトリ数**: 139
+- **ファイル数**: 1367
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -438,6 +438,8 @@
     - `smoke-2026-05-26-2.md` — Smoke 1000戦レポート — smoke-2026-05-26-102003
     - `smoke-2026-05-26-3.json`
     - `smoke-2026-05-26-3.md` — Smoke 1000戦レポート — smoke-2026-05-26-102903
+    - `smoke-2026-05-26-4.json`
+    - `smoke-2026-05-26-4.md` — Smoke 1000戦レポート — smoke-2026-05-26-103648
     - `smoke-2026-05-26.json`
     - `smoke-2026-05-26.md` — Smoke 1000戦レポート — smoke-2026-05-26-095757
     - `smoke-baseline.json`
@@ -634,7 +636,73 @@
       - `TEMPLATE.md` — カード効果分析テンプレート (TSV参照型)
       - `WORKFLOW-GUIDELINES.md` — カード処理ワークフロー図 作成ガイドライン
     - **`cards-data/`**
+      - **`_raw/`**
+        - `_fetch_all.cjs`
+        - `ct-d01-api.json`
+        - `ct-d02-api.json`
+        - `ct-d03-api.json`
+        - `ct-d04-api.json`
+        - `ct-d05-api.json`
+        - `ct-d06-api.json`
+        - `ct-d07-api.json`
+        - `ct-d09-api.json`
+        - `ct-d10-api.json`
+        - `ct-p01-api.json`
+        - `ct-p02-api.json`
+        - `ct-p03-api.json`
+        - `ct-p04-api.json`
+        - `ct-p05-api.json`
+        - `ct-p06-api.json`
+        - `ct-p07-api.json`
+        - `ct-p08-api.json`
+        - `ct-p09-api.json`
+        - `pr-01-api.json`
+      - **`ct-d01/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d02/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d03/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d04/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d05/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d06/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d07/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
       - **`ct-d08/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d09/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-d10/`**
         - `case.tsv`
         - `character.tsv`
         - `event.tsv`
@@ -644,8 +712,59 @@
         - `character.tsv`
         - `event.tsv`
         - `partner.tsv`
+      - **`ct-p01/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p02/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p03/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p04/`**
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p05/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p06/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p07/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p08/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`ct-p09/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - **`pr-01/`**
+        - `case.tsv`
+        - `character.tsv`
+        - `event.tsv`
+        - `partner.tsv`
+      - `_regen_all.cjs`
       - `_regen.js` — TSV regenerator from fresh API JSON in _raw/.
       - `INDEX.md` — cards-data — カードデータ TSV (権威ソース)
+      - `packages.md` — cards-data パッケージ一覧
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
       - `caseResolvedHandRemove.md` — caseResolvedHandRemove
