@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 139
-- **ファイル数**: 1375
+- **ファイル数**: 1379
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1132,6 +1132,8 @@
       - `ConfirmModal.tsx` — Phase 8 Task 8.5: ConfirmModal (controlled component)
       - `ContactFlash.css`
       - `ContactFlash.tsx` — Phase 8.10f: コンタクト判定フラッシュ
+      - `CutinDemoBanner.tsx` — 2026-05-27 カットイン効果検証 demo 完了 banner (HiramekiDemoBanner の cutin 版)
+      - `CutinDemoPickerModal.tsx` — 2026-05-27 カットイン効果検証 demo の card picker modal
       - `CutInDisguisePickerModal.css`
       - `CutInDisguisePickerModal.tsx` — Phase 8.6β: CutInDisguisePickerModal
       - `DeckArea.css`
@@ -1195,6 +1197,7 @@
       - `VictoryOverlay.css`
       - `VictoryOverlay.tsx` — Phase 8.10j: 勝利演出
     - **`fixtures/`**
+      - `cutinDemoState.ts` — 2026-05-27 カットイン効果検証 demo 用 GameState fixture
       - `hiramekiDemoState.ts` — 2026-05-26 ヒラメキ効果検証 demo 用 GameState fixture
       - `sampleGameState.ts` — Phase 7 demo wiring: ブラウザ表示用サンプル GameState fixture
     - **`hooks/`**
@@ -1207,6 +1210,7 @@
       - `useConfirmation.ts` — Phase 8 Task 8.3: 厳格モード モーダル (Q9) 共通 hook
       - `useContactFlowDriver.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver
       - `useContactModalStore.ts` — Phase 8 完全クローズ Commit 2: コンタクトフロー用モーダル状態 store
+      - `useCutinDemoDriver.ts` — 2026-05-27 カットイン効果検証 demo の完了検知 driver
       - `useDeckCount.ts` — Phase 7 Task 7.7: DeckArea selector hook
       - `useEffectPickFlowDriver.ts` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 driver
       - `useEffectStack.ts` — Phase 7 Task 7.14: EffectStackPanel selector hook

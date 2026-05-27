@@ -111,6 +111,15 @@ export type GameStateStore = {
   /** Demo で選択された hirameki カードの cardId (banner 表示用)。 */
   hiramekiDemoSelectedCardId: string | null;
   setHiramekiDemoSelectedCardId: (id: string | null) => void;
+  /**
+   * 2026-05-27 カットイン効果検証 demo モード (hirameki demo と同型)。
+   * 'idle' → 'picking' (picker 表示) → 'playing' (contact flow 進行中) →
+   * 'completed' (cutin effect 適用 + judge 完了)。
+   */
+  cutinDemoMode: 'idle' | 'picking' | 'playing' | 'completed';
+  setCutinDemoMode: (m: 'idle' | 'picking' | 'playing' | 'completed') => void;
+  cutinDemoSelectedCardId: string | null;
+  setCutinDemoSelectedCardId: (id: string | null) => void;
 };
 
 export type PendingDeckReveal = {
@@ -190,4 +199,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setHiramekiDemoMode: (m) => set({ hiramekiDemoMode: m }),
   hiramekiDemoSelectedCardId: null,
   setHiramekiDemoSelectedCardId: (id) => set({ hiramekiDemoSelectedCardId: id }),
+  cutinDemoMode: 'idle',
+  setCutinDemoMode: (m) => set({ cutinDemoMode: m }),
+  cutinDemoSelectedCardId: null,
+  setCutinDemoSelectedCardId: (id) => set({ cutinDemoSelectedCardId: id }),
 }));

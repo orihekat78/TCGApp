@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `eb0c71120436`
+> Source hash: `83af1a5a0932`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **99** ファイル（[全体 index](./index.md)）
+このグループ: **101** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (6)
 
@@ -86,10 +86,11 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (41)
+## その他 (43)
 
 | ソース | 参照ルール |
 | ------ | --------- |
+| [`src/ui/fixtures/cutinDemoState.ts`](../../../src/ui/fixtures/cutinDemoState.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |
 | [`src/ui/fixtures/hiramekiDemoState.ts`](../../../src/ui/fixtures/hiramekiDemoState.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/fixtures/sampleGameState.ts`](../../../src/ui/fixtures/sampleGameState.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow.ts`](../../../src/ui/hooks/useActionsPanelFlow.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
@@ -100,6 +101,7 @@
 | [`src/ui/hooks/useConfirmation.ts`](../../../src/ui/hooks/useConfirmation.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useContactFlowDriver.ts`](../../../src/ui/hooks/useContactFlowDriver.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/ui/hooks/useContactModalStore.ts`](../../../src/ui/hooks/useContactModalStore.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |
+| [`src/ui/hooks/useCutinDemoDriver.ts`](../../../src/ui/hooks/useCutinDemoDriver.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |
 | [`src/ui/hooks/useDeckCount.ts`](../../../src/ui/hooks/useDeckCount.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEffectPickFlowDriver.ts`](../../../src/ui/hooks/useEffectPickFlowDriver.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEffectStack.ts`](../../../src/ui/hooks/useEffectStack.ts) | _(参照なし)_ |

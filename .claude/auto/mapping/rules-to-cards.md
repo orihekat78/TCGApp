@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1a85680a50ff`
+> Source hash: `de9838699a43`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -20,8 +20,8 @@
 | [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 20 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 17 件 |
 | [`06-card-types.md`](../../rules/06-card-types.md) | 10 | `engine/cards/registry.ts`, `engine/cards/tsv-loader-fs.ts`, `engine/cards/tsv-loader.ts` ほか 7 件 |
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 20 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 17 件 |
-| [`08-contact.md`](../../rules/08-contact.md) | 15 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts` ほか 12 件 |
-| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 20 | `cards/_shared/cutinFixedAP.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08007.ts` ほか 17 件 |
+| [`08-contact.md`](../../rules/08-contact.md) | 17 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts` ほか 14 件 |
+| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 22 | `cards/_shared/cutinFixedAP.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08007.ts` ほか 19 件 |
 | [`10-action-event.md`](../../rules/10-action-event.md) | 18 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts` ほか 15 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 9 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `engine/mutate/evidence.ts` ほか 6 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 8 | `ai/policies/heuristic.ts`, `engine/flow/main/hand-use-card.ts`, `engine/mutate/file.ts` ほか 5 件 |

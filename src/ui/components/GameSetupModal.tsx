@@ -46,11 +46,14 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   const gameState = useGameStateStore.getState().gameState;
   // 2026-05-26: ヒラメキデモ picker 表示中は GameSetupModal を隠す (picker が上にかぶる)。
   const hiramekiDemoMode = useGameStateStore.getState().hiramekiDemoMode;
+  // 2026-05-27: カットインデモ picker 表示中も隠す。
+  const cutinDemoMode = useGameStateStore.getState().cutinDemoMode;
   // BUG-042 (#17): self / opp のデッキを独立選択可能化
   const [selfDeckId, setSelfDeckId] = useState<DeckId>('CT-D08');
   const [oppDeckId, setOppDeckId] = useState<DeckId>('CT-D11');
   if (gameState !== null) return null;
   if (hiramekiDemoMode !== 'idle') return null;
+  if (cutinDemoMode !== 'idle') return null;
 
   const deckSelection = { selfDeckId, oppDeckId };
 
@@ -71,6 +74,13 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
     // Playmat 側 (HiramekiDemoPickerModal mount) が picker を表示し、
     // ユーザがカードを選んだら createHiramekiDemoState で初期化 + actionAgainstCase dispatch。
     useGameStateStore.getState().setHiramekiDemoMode('picking');
+  };
+
+  const handleCutinDemo = (): void => {
+    // 2026-05-27 カットイン効果検証 demo モードへ遷移 (hirameki demo 同型)。
+    // App.tsx が CutinDemoPickerModal を mount し、ユーザが cutin カードを選んだら
+    // createCutinDemoState で初期化 + actionDeclareChar dispatch。
+    useGameStateStore.getState().setCutinDemoMode('picking');
   };
 
   const handleTutorial = async (): Promise<void> => {
@@ -156,6 +166,14 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
           data-testid="game-setup-hirameki-demo"
         >
           ヒラメキデモ
+        </button>
+        <button
+          type="button"
+          className="game-setup-cutin-demo-btn"
+          onClick={handleCutinDemo}
+          data-testid="game-setup-cutin-demo"
+        >
+          カットインデモ
         </button>
         <button
           type="button"

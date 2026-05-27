@@ -19,6 +19,10 @@ import { HiramekiDemoPickerModal } from '@/ui/components/HiramekiDemoPickerModal
 import { HiramekiDemoBanner } from '@/ui/components/HiramekiDemoBanner';
 import { useHiramekiDemoDriver } from '@/ui/hooks/useHiramekiDemoDriver';
 import { createHiramekiDemoState, HIRAMEKI_DEMO_OPP_ATTACKER_UID } from '@/ui/fixtures/hiramekiDemoState';
+import { CutinDemoPickerModal } from '@/ui/components/CutinDemoPickerModal';
+import { CutinDemoBanner } from '@/ui/components/CutinDemoBanner';
+import { useCutinDemoDriver } from '@/ui/hooks/useCutinDemoDriver';
+import { createCutinDemoState, CUTIN_DEMO_OPP_ATTACKER_UID, CUTIN_DEMO_SELF_DEFENDER_UID } from '@/ui/fixtures/cutinDemoState';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { ContactFlash } from '@/ui/components/ContactFlash';
@@ -74,9 +78,12 @@ export default function App() {
   // hiramekiDemoMode='playing' 中、pendingHirameki が non-null → null になったら
   // mode='completed' へ。HiramekiDemoBanner が表示される。
   useHiramekiDemoDriver();
-  // hiramekiDemoMode を subscribe して mode 変化時に App を再描画 (GameSetupModal
+  // 2026-05-27: カットイン効果検証 demo の完了検知 driver。
+  useCutinDemoDriver();
+  // demoMode を subscribe して mode 変化時に App を再描画 (GameSetupModal
   // の hide 判定が getState() 依存のため、親の再描画が必須)。
   const hiramekiDemoMode = useGameStateStore((s) => s.hiramekiDemoMode);
+  const cutinDemoMode = useGameStateStore((s) => s.cutinDemoMode);
   return (
     <>
       <Playmat
@@ -107,6 +114,27 @@ export default function App() {
         />
       )}
       <HiramekiDemoBanner />
+      {cutinDemoMode === 'picking' && (
+        <CutinDemoPickerModal
+          onPick={(cardId) => {
+            // 1. 選択 cardId を記録 (banner 表示用)
+            useGameStateStore.getState().setCutinDemoSelectedCardId(cardId);
+            // 2. demo 初期 gameState を構築 (self.hand=[cardId]、self.scene defender、opp.scene attacker)
+            useGameStateStore.getState().setGameState(createCutinDemoState(cardId));
+            // 3. mode を 'playing' に遷移 (driver は playing 中の log で contact-cutin 検知)
+            useGameStateStore.getState().setCutinDemoMode('playing');
+            // 4. opp attacker → self defender へ action[char] dispatch
+            //    useContactFlowDriver が引き取って guard-window → action-1 → cutin picker と進行
+            dispatchEngineAction({
+              type: 'actionDeclareChar',
+              byUid: CUTIN_DEMO_OPP_ATTACKER_UID,
+              targetUid: CUTIN_DEMO_SELF_DEFENDER_UID,
+            });
+          }}
+          onClose={() => useGameStateStore.getState().setCutinDemoMode('idle')}
+        />
+      )}
+      <CutinDemoBanner />
       <ReplayPanel driver={replayDriver} />
       <MulliganModal />
       <OppTurnOverlay />
