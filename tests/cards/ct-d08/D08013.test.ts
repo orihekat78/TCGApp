@@ -27,11 +27,19 @@ describe('D08013 吉田歩美 (character, enter evidence manip + hiramekiDraw)',
     expect(a1.effect?.kind).toBe('sequence');
   });
 
-  it('a2: hiramekiDraw n=1', () => {
+  it('a2: 【ヒラメキ】 inline declaration (draw 1) — 2026-05-27 factory 展開', () => {
     const a2 = D08013.abilities[1];
     expect(a2.id).toBe('a2');
     expect(a2.type).toBe('icon-flash');
-    expect(a2.description).toMatch(/1枚/);
+    expect(a2.scope).toBe('on-evidence');
+    expect(a2.description).toBe('【ヒラメキ】カードを1枚引く。');
+    // inline 後: effect は kind:'atom' verb:'draw' args:{player:'self', n:1}
+    const eff = a2.effect as { kind: string; verb?: string; args?: Record<string, unknown> };
+    expect(eff.kind).toBe('atom');
+    expect(eff.verb).toBe('draw');
+    expect(eff.args).toEqual({ player: 'self', n: 1 });
+    // trigger フィールドは icon-flash では engine 未使用のため省略済
+    expect(a2.trigger).toBeUndefined();
   });
 
   it('D08014 variant shares abilities with D08013', () => {
