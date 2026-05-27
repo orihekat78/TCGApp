@@ -30,17 +30,15 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
-// a2: 【ヒラメキ】証拠が action[case] でリムーブされた時 (evidence:remove-by-action) に発動。
-//     プレイヤーは fire/skip を選択可。fire の場合 1 ドロー。
-//     能力/効果によるリムーブでは発動しない (rules/10 §ヒラメキ)。
-//     type:'icon-flash' は専用 listener (src/engine/listeners/hirameki.ts) が
-//     evidence:remove-by-action emit 時に本 ability を検出する。`trigger` フィールドは
-//     icon-flash では engine 未使用のため省略 (発動条件はコメントで明記)。
 const a2: AbilityDef = {
   id: 'a2',
-  type: 'icon-flash',        // ヒラメキ専用 listener が拾う ability 型 (rules/10)
-  scope: 'on-evidence',      // 証拠エリアにいる間に有効 (rules/10)
-  effect: {kind: 'atom',verb: 'draw',args: { player: 'self', n: 1 },}, // カードを1枚引く
+  // 2026-05-27 Option C: type:'icon-flash' → 'triggered' + trigger:{hook,optional:true} に統合。
+  // handleEvidenceRemovedHook (triggered.ts) が optional:true を検出して pendingHirameki に push、
+  // UI が fire/skip を扱う (rules/10 §ヒラメキ)。
+  type: 'triggered',
+  scope: 'on-evidence',                                                  // 証拠エリアにいる間に有効 (rules/10)
+  trigger: { hook: 'evidence:remove-by-action', optional: true },        // 任意発動 (fire/skip)
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }, // カードを1枚引く
   description: '【ヒラメキ】カードを1枚引く。',
   ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
 };

@@ -9,7 +9,9 @@ describe('hiramekiCharStun', () => {
   it('returns icon-flash AbilityDef with default abilityId', () => {
     const d = hiramekiCharStun();
     expect(d.id).toBe('a_flash_stun');
-    expect(d.type).toBe('icon-flash');
+    expect(d.type).toBe('triggered');
+    expect(d.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(d.trigger?.optional).toBe(true);
     expect(d.scope).toBe('on-evidence');
     expect(d.description).toMatch(/ヒラメキ/);
     expect(d.ruleRefs!.length).toBeGreaterThan(0);

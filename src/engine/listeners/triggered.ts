@@ -26,6 +26,9 @@ import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope } from '../types/index.js';
+// 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
+// として本 listener で処理。検出時は pendingHirameki side-channel に push して fire/skip を UI に委譲。
+import { pushPendingHirameki } from './hirameki.js';
 
 // user_request 20260522_01 #6/#2: human player side の globalThis 側チャネル
 // (hirameki / misread と同じ pattern)。UI 側 (App.tsx 等) が GameSetupModal で
@@ -55,6 +58,9 @@ const TRIGGERED_HOOKS = [
   'contact:start',
   'case:to-resolved',
   'phase:end:start',
+  // 2026-05-27 Option C: ヒラメキ統合。payload.ev.cardId の def から
+  // trigger.hook='evidence:remove-by-action' の ability を探す (in-play scan 経路と別)。
+  'evidence:remove-by-action',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];
@@ -63,7 +69,9 @@ type CardLocation = {
   player: Player;
   uid: string;
   cardId: string;
-  area: 'scene' | 'partner-area' | 'case' | 'hand';
+  // 2026-05-27 Option C: 'evidence' を追加。handleEvidenceRemovedHook が virtual な
+  // 「リムーブされた証拠」を CardLocation として組み立てて handleHook の共通処理 (effect queue) を再利用する。
+  area: 'scene' | 'partner-area' | 'case' | 'hand' | 'evidence';
 };
 
 function collectCardsInPlay(state: GameState): CardLocation[] {
@@ -98,7 +106,10 @@ function scopeAllowsArea(scope: AbilityScope | undefined, area: CardLocation['ar
   // on-partner-area: パートナーエリア OR 現場 (MR でも両方で動く)
   if (s === 'on-partner-area') return area === 'partner-area' || area === 'scene';
   if (s === 'on-hand') return area === 'hand';
-  if (s === 'on-evidence') return false; // 証拠 card scan は別経路 (hirameki listener)
+  // 2026-05-27 Option C: on-evidence scope を許可。area='evidence' は
+  // handleEvidenceRemovedHook の VIRTUAL CardLocation 経由でのみ渡る (collectCardsInPlay
+  // は通常 evidence を返さない)。これで scope 整合性 check が通る。
+  if (s === 'on-evidence') return area === 'evidence';
   return false;
 }
 
@@ -236,8 +247,88 @@ export function registerTriggeredListener(): void {
   if (_registered) return;
   _registered = true;
   for (const hook of TRIGGERED_HOOKS) {
+    if (hook === 'evidence:remove-by-action') {
+      // 2026-05-27 Option C: ヒラメキ統合経路。in-play scan ではなく payload の cardId から
+      // 直接 def を引いて ability を探す (evidence area の card は collectCardsInPlay に出ない)。
+      event.on(hook, (state, payload, source) => {
+        handleEvidenceRemovedHook(state, payload, source);
+      });
+      continue;
+    }
     event.on(hook, (state, payload, source) => {
       handleHook(hook, state, payload, source);
     });
   }
+}
+
+/**
+ * 2026-05-27 Option C: ヒラメキ用 hook。
+ * payload = { player, ev: { cardId } } (player はリムーブされた側 = ヒラメキ発動権利者)。
+ * - in-play scan ではなく payload.ev.cardId から CardDef を取得
+ * - virtual CardLocation を組み立てて scope/matcher/condition チェック
+ * - trigger.optional=true なら pendingHirameki に push (UI が fire/skip)
+ * - trigger.optional=false なら従来の triggered と同じく強制発動 (effect queue)
+ */
+function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: unknown): void {
+  const p = payload as { player?: 'self' | 'opp'; ev?: { cardId?: string } } | undefined;
+  if (!p || !p.player || !p.ev || !p.ev.cardId) return;
+  const def = readDef.card(p.ev.cardId);
+  if (!def) return;
+  const card: CardLocation = {
+    player: p.player,
+    uid: `evidence:${p.player}`,
+    cardId: p.ev.cardId,
+    area: 'evidence',
+  };
+  for (const ability of def.abilities as AbilityDef[]) {
+    if (ability.type !== 'triggered') continue;
+    const trig = ability.trigger;
+    if (!trig || trig.hook !== 'evidence:remove-by-action') continue;
+    if (!scopeAllowsArea(ability.scope, card.area)) continue;
+    if (trig.matcher && !trig.matcher(payload, state)) continue;
+    const baseCtx = {
+      source: {
+        cardId: card.cardId,
+        uid: card.uid,
+        abilityId: ability.id,
+        player: card.player,
+        area: card.area,
+      },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
+    if (!ability.effect) continue;
+
+    if (trig.optional) {
+      // ヒラメキ semantics: fire/skip 選択を UI に委譲
+      // (旧 hirameki.ts listener と同等の動作)
+      pushPendingHirameki({
+        player: card.player,
+        cardId: card.cardId,
+        abilityId: ability.id,
+      });
+      return; // 1 イベントで複数 optional は想定せず、最初の 1 件のみ
+    }
+
+    // 強制発動 (rules/15 §必須効果) — 通常 triggered と同じ経路
+    const humanSide = getHumanPlayerSide();
+    const isHumanEffect = humanSide !== null && card.player === humanSide;
+    const aiPolicy = new HeuristicPolicy();
+    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
+      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+      byPlayer: card.player,
+      humanChooser: isHumanEffect,
+      source: { cardId: card.cardId, abilityId: ability.id },
+    });
+    event.queue(
+      state,
+      resolvedEffect,
+      { player: card.player, uid: card.uid, cardId: card.cardId },
+      'evidence:remove-by-action',
+      payload,
+    );
+  }
+  void source;
 }

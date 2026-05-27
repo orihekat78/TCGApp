@@ -55,8 +55,10 @@ const a1: AbilityDef = {
 
 const a2: AbilityDef = {
   id: 'a2',
-  type: 'icon-flash',
+  // 2026-05-27 Option C: type:'icon-flash' → 'triggered' + trigger:{hook,optional:true} に統合
+  type: 'triggered',
   scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
   effect: {
     kind: 'choice', chooser: 'self',
     options: [{

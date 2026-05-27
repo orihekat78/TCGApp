@@ -39,7 +39,7 @@ describe('caseTraitConditioned', () => {
     const inner = hiramekiDraw({ n: 2, abilityId: 'a_inner' });
     const d = caseTraitConditioned({ trait: '婚活', inner });
     expect(d.id).toBe('a_inner');
-    expect(d.type).toBe('icon-flash');
+    expect(d.type).toBe('triggered'); // 2026-05-27 Option C migration
     expect(d.effect).toEqual(inner.effect);
     expect(d.description).toMatch(/^【事件婚活】/);
   });

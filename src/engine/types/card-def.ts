@@ -14,9 +14,10 @@ export type AbilityType =
   | 'triggered'       // 「〜したとき」 条件発動
   | 'declared'        // 【宣言】 宣言能力 (rules/21)
   | 'icon-cutin'      // カットイン (rules/09)
-  | 'icon-flash'      // ヒラメキ (rules/10)
   | 'icon-disguise'   // 変装 (rules/09)
   | 'icon-misread';   // ミスリード (rules/13) — Phase 8 完全クローズ Commit 3b 追加
+  // 2026-05-27 Option C: 'icon-flash' 廃止。ヒラメキは type:'triggered' + trigger:{hook:'evidence:remove-by-action', optional:true}
+  // に統合 (src/engine/listeners/triggered.ts handleEvidenceRemovedHook が処理)。
 
 // ---------- AbilityScope ----------
 
@@ -50,6 +51,13 @@ export type TriggerDef = {
   matcherCondition?: Condition;
   selfOnly?: boolean;                      // 自分のキャラに対する発火のみ
   ignoreCostInduced?: boolean;             // viaCost: true を無視 (rules/21, 25)
+  /**
+   * 2026-05-27 (Option C migration): 任意発動。true なら listener は effect を直接 queue せず、
+   * pendingHirameki side-channel に push してプレイヤーの fire/skip 選択を待つ (rules/10 §ヒラメキ)。
+   * 主に hook='evidence:remove-by-action' (ヒラメキ) で使用。false / 未指定なら従来の
+   * 強制発動 (rules/15 §必須効果)。
+   */
+  optional?: boolean;
 };
 
 // ---------- ContinuousModifier ----------

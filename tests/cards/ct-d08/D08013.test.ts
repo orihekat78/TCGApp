@@ -30,7 +30,9 @@ describe('D08013 吉田歩美 (character, enter evidence manip + hiramekiDraw)',
   it('a2: 【ヒラメキ】 inline declaration (draw 1) — 2026-05-27 factory 展開', () => {
     const a2 = D08013.abilities[1];
     expect(a2.id).toBe('a2');
-    expect(a2.type).toBe('icon-flash');
+    expect(a2.type).toBe('triggered');
+    expect(a2.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(a2.trigger?.optional).toBe(true);
     expect(a2.scope).toBe('on-evidence');
     expect(a2.description).toBe('【ヒラメキ】カードを1枚引く。');
     // inline 後: effect は kind:'atom' verb:'draw' args:{player:'self', n:1}
@@ -38,8 +40,8 @@ describe('D08013 吉田歩美 (character, enter evidence manip + hiramekiDraw)',
     expect(eff.kind).toBe('atom');
     expect(eff.verb).toBe('draw');
     expect(eff.args).toEqual({ player: 'self', n: 1 });
-    // trigger フィールドは icon-flash では engine 未使用のため省略済
-    expect(a2.trigger).toBeUndefined();
+    // 2026-05-27 Option C: type='triggered' + trigger:{hook,optional:true} 必須
+    // (旧 icon-flash → triggered 統合により、trigger は定義必須に)
   });
 
   it('D08014 variant shares abilities with D08013', () => {

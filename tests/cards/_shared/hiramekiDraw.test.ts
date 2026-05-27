@@ -9,7 +9,9 @@ describe('hiramekiDraw', () => {
   it('returns icon-flash AbilityDef with defaults', () => {
     const d = hiramekiDraw();
     expect(d.id).toBe('a_flash_draw');
-    expect(d.type).toBe('icon-flash');
+    expect(d.type).toBe('triggered');
+    expect(d.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(d.trigger?.optional).toBe(true);
     expect(d.scope).toBe('on-evidence');
     expect(d.description).toBe('【ヒラメキ】カードを1枚引く。');
     expect(d.ruleRefs).toContain('rules/10-action-event.md');

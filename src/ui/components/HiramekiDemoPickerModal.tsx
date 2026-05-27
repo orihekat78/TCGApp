@@ -26,7 +26,11 @@ export type HiramekiDemoPickerModalProps = {
 /** ALL_CARDS から icon-flash ability を持つカードを抽出 (キャッシュ目的の module-level 計算) */
 function getIconFlashCards(): CardDef[] {
   return ALL_CARDS.filter((d) =>
-    d.abilities.some((a) => (a as { type?: string }).type === 'icon-flash'),
+    // 2026-05-27 Option C: 'icon-flash' 廃止 → triggered + hook='evidence:remove-by-action' + optional:true
+    d.abilities.some((a) => {
+      const ab = a as { type?: string; trigger?: { hook?: string; optional?: boolean } };
+      return ab.type === 'triggered' && ab.trigger?.hook === 'evidence:remove-by-action' && ab.trigger?.optional === true;
+    }),
   );
 }
 
@@ -81,9 +85,10 @@ export function HiramekiDemoPickerModal(props: HiramekiDemoPickerModalProps): JS
             </div>
           ) : (
             ICON_FLASH_CARDS.map((d) => {
-              const flash = d.abilities.find(
-                (a) => (a as { type?: string }).type === 'icon-flash',
-              ) as { description?: string } | undefined;
+              const flash = d.abilities.find((a) => {
+                const ab = a as { type?: string; trigger?: { hook?: string; optional?: boolean } };
+                return ab.type === 'triggered' && ab.trigger?.hook === 'evidence:remove-by-action' && ab.trigger?.optional === true;
+              }) as { description?: string } | undefined;
               return (
                 <button
                   type="button"

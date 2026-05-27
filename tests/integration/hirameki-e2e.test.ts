@@ -24,6 +24,12 @@ import {
   _resetPendingHirameki,
   _resetHiramekiRegistered,
 } from '@/engine/listeners/hirameki';
+// 2026-05-27 Option C: ヒラメキは triggered listener に統合されたので、test reset で
+// triggered listener も再登録する必要がある。
+import {
+  registerTriggeredListener,
+  _resetTriggeredRegistered,
+} from '@/engine/listeners/triggered';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -41,8 +47,10 @@ function fullReset(): void {
   _resetUidCounter();
   _resetPendingHirameki();
   _resetHiramekiRegistered(); // event._resetRegistry() 後の再登録に必要
+  _resetTriggeredRegistered(); // 2026-05-27 Option C: ヒラメキは triggered listener 経由
   registerAll();
   registerHiramekiListener();
+  registerTriggeredListener(); // 2026-05-27 Option C: evidence:remove-by-action hook 再登録
   useGameStateStore.setState({
     gameState: null,
     activeActionId: null,

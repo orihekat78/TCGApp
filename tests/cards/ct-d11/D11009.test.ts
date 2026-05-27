@@ -35,7 +35,9 @@ describe('D11009 萩原研二 (partnerColor 突撃[キャラ] + 疾風 sleep + �
 
   it('a3 = hiramekiCharStun (icon-flash)', () => {
     const a3 = D11009.abilities[2];
-    expect(a3.type).toBe('icon-flash');
+    expect(a3.type).toBe('triggered');
+    expect(a3.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(a3.trigger?.optional).toBe(true);
     expect(a3.description).toMatch(/スリープ/);
   });
 

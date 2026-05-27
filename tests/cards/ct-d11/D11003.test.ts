@@ -37,7 +37,9 @@ describe('D11003 萩原千速 (疾風+宣言+ヒラメキ)', () => {
 
   it('a3 = icon-flash activate choice', () => {
     const a3 = D11003.abilities[2];
-    expect(a3.type).toBe('icon-flash');
+    expect(a3.type).toBe('triggered');
+    expect(a3.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(a3.trigger?.optional).toBe(true);
     expect(a3.description).toMatch(/アクティブ/);
   });
 

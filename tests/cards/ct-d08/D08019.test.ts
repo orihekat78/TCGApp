@@ -31,7 +31,9 @@ describe('D08019 阿笠博士 (character, 解決編enter sleep + hiramekiCharStu
   it('a2: hiramekiCharStun (icon-flash)', () => {
     const a2 = D08019.abilities[1];
     expect(a2.id).toBe('a2');
-    expect(a2.type).toBe('icon-flash');
+    expect(a2.type).toBe('triggered');
+    expect(a2.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(a2.trigger?.optional).toBe(true);
     expect(a2.description).toMatch(/スリープ/);
   });
 

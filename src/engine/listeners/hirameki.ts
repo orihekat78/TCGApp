@@ -14,8 +14,8 @@
 //   - 側チャネル経由で UI に通知 → ユーザー (self) or AI (opp) が fire/skip 判定
 //   - listener はモジュールレベル singleton。テスト用に `_resetPendingHirameki()` 公開
 
-import { event } from '../event/registry.js';
-import { def as readDef } from '../read/def.js';
+// 2026-05-27 Option C migration: event registry / def lookup は本ファイルでは不要 (triggered.ts
+// 側で処理)。本ファイルは PendingHirameki 型 + side-channel helper の export のみを担う。
 
 export type PendingHiramekiSide = {
   player: 'self' | 'opp';
@@ -35,6 +35,15 @@ function _readSide(): PendingHiramekiSide | null {
 }
 function _writeSide(v: PendingHiramekiSide | null): void {
   (globalThis as { __pendingHirameki?: PendingHiramekiSide | null }).__pendingHirameki = v;
+}
+
+/**
+ * 2026-05-27 Option C migration: triggered.ts listener が hook='evidence:remove-by-action'
+ * + trigger.optional=true の ability を検出した時に呼ぶ。dispatch drain で UI 側に
+ * 転送され HiramekiPickerModal / useHiramekiFlowDriver が fire/skip を扱う。
+ */
+export function pushPendingHirameki(v: PendingHiramekiSide): void {
+  _writeSide(v);
 }
 
 /**
@@ -65,26 +74,15 @@ export function _resetHiramekiRegistered(): void {
 }
 
 /**
- * engine init 時に 1 回だけ呼ぶ。重複登録は no-op。
- * テスト用に `_resetHiramekiRegistered` で flag を戻してから再登録可。
+ * 2026-05-27 Option C migration: ヒラメキの event listener は triggered.ts に統合。
+ * 本関数は engine/index.ts からの呼出 ABI 互換性のため残しているが no-op (実際の登録は
+ * registerTriggeredListener が hook='evidence:remove-by-action' で行う)。
+ * 旧 type:'icon-flash' を持つカードは type:'triggered' + trigger:{hook,optional:true} に移行済。
+ *
+ * `_resetHiramekiRegistered` も後方互換のために残置 (テストが呼ぶケースのみ存在)。
  */
 export function registerHiramekiListener(): void {
   if (_registered) return;
   _registered = true;
-  event.on('evidence:remove-by-action', (_state, payload) => {
-    const p = payload as { player: 'self' | 'opp'; ev: { cardId: string } } | undefined;
-    if (!p || !p.ev) return;
-    const def = readDef.card(p.ev.cardId);
-    if (!def) return;
-    const flash = def.abilities.find(
-      (a: unknown) => a !== null && typeof a === 'object' && (a as { type?: string }).type === 'icon-flash',
-    ) as { id: string } | undefined;
-    if (!flash) return;
-    _writeSide({
-      player: p.player,
-      cardId: p.ev.cardId,
-      abilityId: flash.id,
-    });
-    return;
-  });
+  // intentionally empty — see comment above
 }

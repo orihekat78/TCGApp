@@ -25,7 +25,9 @@ describe('D11012 横溝重悟 (宣言+ヒラメキ reanimate name)', () => {
 
   it('a2 = icon-flash handAddFromRemove targeting 萩原千速', () => {
     const a2 = D11012.abilities[1];
-    expect(a2.type).toBe('icon-flash');
+    expect(a2.type).toBe('triggered');
+    expect(a2.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(a2.trigger?.optional).toBe(true);
     expect(a2.scope).toBe('on-evidence');
     expect(a2.description).toMatch(/萩原千速/);
   });

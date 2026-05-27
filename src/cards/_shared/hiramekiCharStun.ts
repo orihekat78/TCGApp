@@ -15,8 +15,11 @@ export function hiramekiCharStun(opts?: {
 }): AbilityDef {
   return {
     id: opts?.abilityId ?? 'a_flash_stun',
-    type: 'icon-flash',
+    // 2026-05-27 Option C: type:'icon-flash' から triggered + optional trigger に統合。
+    // fire/skip semantics は triggered listener (handleEvidenceRemovedHook) が処理。
+    type: 'triggered',
     scope: 'on-evidence',
+    trigger: { hook: 'evidence:remove-by-action', optional: true },
     effect: {
       kind: 'choice',
       chooser: 'self',

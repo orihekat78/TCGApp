@@ -20,8 +20,9 @@ describe('AbilityDef type system', () => {
       'triggered',
       'declared',
       'icon-cutin',
-      'icon-flash',
+      // 'icon-flash' は 2026-05-27 Option C 移行で廃止 (triggered + trigger:{hook,optional} に統合)
       'icon-disguise',
+      'icon-misread',
     ];
     expect(types).toHaveLength(6);
   });

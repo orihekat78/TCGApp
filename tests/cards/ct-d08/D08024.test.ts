@@ -27,7 +27,9 @@ describe('D08024 「あら…頼もしいじゃない…」 (event)', () => {
   it('abilities[1] is hiramekiDraw n=1 (icon-flash)', () => {
     const a2 = D08024.abilities[1];
     expect(a2.id).toBe('a2');
-    expect(a2.type).toBe('icon-flash');
+    expect(a2.type).toBe('triggered');
+    expect(a2.trigger?.hook).toBe('evidence:remove-by-action');
+    expect(a2.trigger?.optional).toBe(true);
     expect(a2.description).toMatch(/ヒラメキ/);
     expect(a2.description).toMatch(/1枚引く/);
   });

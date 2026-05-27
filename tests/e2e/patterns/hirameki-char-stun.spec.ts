@@ -99,7 +99,7 @@ async function probeCharStunAbility(
       const target = args?.target;
       return {
         abilityExists: true,
-        typeIsIconFlash: ability.type === 'icon-flash',
+        typeIsIconFlash: ability.type === 'triggered' && ability.trigger?.hook === 'evidence:remove-by-action' && ability.trigger?.optional === true, // 2026-05-27 Option C: icon-flash → triggered + optional
         scopeIsOnEvidence: ability.scope === 'on-evidence',
         outerKind: effect?.kind ?? null,
         optionsLen: effect?.options?.length ?? null,
@@ -121,7 +121,7 @@ async function hasIconFlashAbility(page: Page, cardId: string): Promise<boolean>
     const w = (window as unknown as { __game: { read: { def: { card: (id: string) => unknown } } } }).__game;
     const def = w.read.def.card(cId) as undefined | { abilities: { type?: string }[] };
     if (!def) return false;
-    return def.abilities.some((a) => a.type === 'icon-flash');
+    return def.abilities.some((a) => a.type === 'triggered' && a.trigger?.hook === 'evidence:remove-by-action' && a.trigger?.optional === true);
   }, cardId)) as boolean;
 }
 
