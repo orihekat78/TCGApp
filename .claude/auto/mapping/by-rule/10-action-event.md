@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `93bb92b55eda`
+> Source hash: `1a85680a50ff`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,7 +23,7 @@
 - [`hiramekiCharStun`](../by-spec/shared-classes--hiramekiCharStun.md)
 - [`hiramekiDraw`](../by-spec/shared-classes--hiramekiDraw.md)
 
-## 📄 参照ソース (16)
+## 📄 参照ソース (18)
 
 - [`src/cards/_shared/hiramekiCharStun.ts`](../../../../src/cards/_shared/hiramekiCharStun.ts)
 - [`src/cards/_shared/hiramekiDraw.ts`](../../../../src/cards/_shared/hiramekiDraw.ts)
@@ -39,5 +39,7 @@
 - [`src/engine/flow/action-case.ts`](../../../../src/engine/flow/action-case.ts)
 - [`src/engine/listeners/hirameki.ts`](../../../../src/engine/listeners/hirameki.ts)
 - [`src/engine/mutate/evidence.ts`](../../../../src/engine/mutate/evidence.ts)
+- [`src/ui/fixtures/hiramekiDemoState.ts`](../../../../src/ui/fixtures/hiramekiDemoState.ts)
 - [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)
+- [`src/ui/hooks/useHiramekiDemoDriver.ts`](../../../../src/ui/hooks/useHiramekiDemoDriver.ts)
 - [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../../src/ui/hooks/useHiramekiFlowDriver.ts)

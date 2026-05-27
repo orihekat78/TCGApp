@@ -1,0 +1,52 @@
+/* 2026-05-26 ヒラメキ効果検証 demo 完了 banner */
+
+.hirameki-demo-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(74, 222, 128, 0.95);
+  color: #064e3b;
+  border: 2px solid #16a34a;
+  border-radius: 8px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 8500;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  max-width: 90vw;
+}
+
+.hirameki-demo-banner-text {
+  font-size: 0.95rem;
+}
+
+.hirameki-demo-banner-text strong {
+  font-weight: 700;
+}
+
+.hirameki-demo-banner-card {
+  color: #052e16;
+}
+
+.hirameki-demo-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hirameki-demo-banner-reset,
+.hirameki-demo-banner-exit {
+  background: #064e3b;
+  color: #ecfdf5;
+  border: 1px solid #022c22;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hirameki-demo-banner-reset:hover,
+.hirameki-demo-banner-exit:hover {
+  background: #052e16;
+}

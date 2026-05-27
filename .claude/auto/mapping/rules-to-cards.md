@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `93bb92b55eda`
+> Source hash: `1a85680a50ff`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -22,7 +22,7 @@
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 20 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 17 件 |
 | [`08-contact.md`](../../rules/08-contact.md) | 15 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/ct-d11/D11007.ts` ほか 12 件 |
 | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 20 | `cards/_shared/cutinFixedAP.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08007.ts` ほか 17 件 |
-| [`10-action-event.md`](../../rules/10-action-event.md) | 16 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts` ほか 13 件 |
+| [`10-action-event.md`](../../rules/10-action-event.md) | 18 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/hiramekiDraw.ts`, `cards/ct-d08/D08013.ts` ほか 15 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 9 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `engine/mutate/evidence.ts` ほか 6 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 8 | `ai/policies/heuristic.ts`, `engine/flow/main/hand-use-card.ts`, `engine/mutate/file.ts` ほか 5 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 48 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 45 件 |

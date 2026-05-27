@@ -44,10 +44,13 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   // 親 (App.tsx) が gameState を subscribe して再描画 → 本コンポーネントも再評価される。
   // 自前の subscription は不要 (SSR テスト互換性 + zustand 不要な hooks 回避)。
   const gameState = useGameStateStore.getState().gameState;
+  // 2026-05-26: ヒラメキデモ picker 表示中は GameSetupModal を隠す (picker が上にかぶる)。
+  const hiramekiDemoMode = useGameStateStore.getState().hiramekiDemoMode;
   // BUG-042 (#17): self / opp のデッキを独立選択可能化
   const [selfDeckId, setSelfDeckId] = useState<DeckId>('CT-D08');
   const [oppDeckId, setOppDeckId] = useState<DeckId>('CT-D11');
   if (gameState !== null) return null;
+  if (hiramekiDemoMode !== 'idle') return null;
 
   const deckSelection = { selfDeckId, oppDeckId };
 
@@ -61,6 +64,13 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   const handleDemo = (): void => {
     // 開発用: turn-4 中盤状態の sampleGameState (固定 CT-D08 vs CT-D11)
     useGameStateStore.getState().setGameState(createSampleGameState());
+  };
+
+  const handleHiramekiDemo = (): void => {
+    // 2026-05-26 ヒラメキ効果検証 demo モードへ遷移。
+    // Playmat 側 (HiramekiDemoPickerModal mount) が picker を表示し、
+    // ユーザがカードを選んだら createHiramekiDemoState で初期化 + actionAgainstCase dispatch。
+    useGameStateStore.getState().setHiramekiDemoMode('picking');
   };
 
   const handleTutorial = async (): Promise<void> => {
@@ -138,6 +148,14 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
           data-testid="game-setup-demo"
         >
           デモ (turn-4) を読込
+        </button>
+        <button
+          type="button"
+          className="game-setup-hirameki-demo-btn"
+          onClick={handleHiramekiDemo}
+          data-testid="game-setup-hirameki-demo"
+        >
+          ヒラメキデモ
         </button>
         <button
           type="button"

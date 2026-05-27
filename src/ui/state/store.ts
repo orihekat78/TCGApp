@@ -98,6 +98,19 @@ export type GameStateStore = {
    */
   pendingDeckReveal: PendingDeckReveal | null;
   setPendingDeckReveal: (p: PendingDeckReveal | null) => void;
+  /**
+   * 2026-05-26 ヒラメキ効果検証 demo モード。
+   * 'idle'      … 未使用 (通常ゲーム)
+   * 'picking'   … HiramekiDemoPickerModal 表示中、ユーザが icon-flash カード選択待ち
+   * 'playing'   … setGameState 完了、actionAgainstCase dispatch 済み、
+   *               hirameki resolve 待ち。useHiramekiDemoDriver が pendingHirameki 監視。
+   * 'completed' … hirameki resolve 完了、HiramekiDemoBanner 表示。Reset で 'idle' に戻る。
+   */
+  hiramekiDemoMode: 'idle' | 'picking' | 'playing' | 'completed';
+  setHiramekiDemoMode: (m: 'idle' | 'picking' | 'playing' | 'completed') => void;
+  /** Demo で選択された hirameki カードの cardId (banner 表示用)。 */
+  hiramekiDemoSelectedCardId: string | null;
+  setHiramekiDemoSelectedCardId: (id: string | null) => void;
 };
 
 export type PendingDeckReveal = {
@@ -173,4 +186,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingEffectPick: (p) => set({ pendingEffectPick: p }),
   pendingDeckReveal: null,
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
+  hiramekiDemoMode: 'idle',
+  setHiramekiDemoMode: (m) => set({ hiramekiDemoMode: m }),
+  hiramekiDemoSelectedCardId: null,
+  setHiramekiDemoSelectedCardId: (id) => set({ hiramekiDemoSelectedCardId: id }),
 }));

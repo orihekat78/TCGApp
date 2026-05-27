@@ -15,6 +15,11 @@ import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { useEffect } from 'react';
 import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
 import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
+import { HiramekiDemoPickerModal } from '@/ui/components/HiramekiDemoPickerModal';
+import { HiramekiDemoBanner } from '@/ui/components/HiramekiDemoBanner';
+import { useHiramekiDemoDriver } from '@/ui/hooks/useHiramekiDemoDriver';
+import { createHiramekiDemoState, HIRAMEKI_DEMO_OPP_ATTACKER_UID } from '@/ui/fixtures/hiramekiDemoState';
+import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { ContactFlash } from '@/ui/components/ContactFlash';
 import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
@@ -65,6 +70,13 @@ export default function App() {
   const replayDriver = useReplayDriver();
   // BUG-054 (user_request 20260522_01 #2/#6): human effect pick driver
   useEffectPickFlowDriver();
+  // 2026-05-26: ヒラメキ効果検証 demo の完了検知 driver。
+  // hiramekiDemoMode='playing' 中、pendingHirameki が non-null → null になったら
+  // mode='completed' へ。HiramekiDemoBanner が表示される。
+  useHiramekiDemoDriver();
+  // hiramekiDemoMode を subscribe して mode 変化時に App を再描画 (GameSetupModal
+  // の hide 判定が getState() 依存のため、親の再描画が必須)。
+  const hiramekiDemoMode = useGameStateStore((s) => s.hiramekiDemoMode);
   return (
     <>
       <Playmat
@@ -74,6 +86,27 @@ export default function App() {
         resolveHandCard={resolveHandCard}
       />
       <GameSetupModal onLoadReplay={(log) => replayDriver.loadLog(log as ReplayLog)} />
+      {hiramekiDemoMode === 'picking' && (
+        <HiramekiDemoPickerModal
+          onPick={(cardId) => {
+            // 1. 選択 cardId を記録 (banner 表示用)
+            useGameStateStore.getState().setHiramekiDemoSelectedCardId(cardId);
+            // 2. demo 初期 gameState を構築 (self.evidence top に cardId 配置)
+            useGameStateStore.getState().setGameState(createHiramekiDemoState(cardId));
+            // 3. mode を 'playing' に遷移
+            useGameStateStore.getState().setHiramekiDemoMode('playing');
+            // 4. opp 現場 #1 が self の case を攻撃 → self.evidence top リムーブ → hirameki 発火
+            //    Zustand store は sync 更新なので setGameState 直後でも dispatch が読める
+            dispatchEngineAction({
+              type: 'actionAgainstCase',
+              byUid: HIRAMEKI_DEMO_OPP_ATTACKER_UID,
+              targetPlayer: 'self',
+            });
+          }}
+          onClose={() => useGameStateStore.getState().setHiramekiDemoMode('idle')}
+        />
+      )}
+      <HiramekiDemoBanner />
       <ReplayPanel driver={replayDriver} />
       <MulliganModal />
       <OppTurnOverlay />

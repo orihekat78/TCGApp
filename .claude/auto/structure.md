@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 139
-- **ファイル数**: 1369
+- **ファイル数**: 1375
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1152,6 +1152,10 @@
       - `GuardPickerModal.tsx` — Phase 8.6α: GuardPickerModal
       - `HandZone.css`
       - `HandZone.tsx` — Phase 7 Task 7.11 + Phase 8.5 hand expand/collapse:
+      - `HiramekiDemoBanner.css`
+      - `HiramekiDemoBanner.tsx` — 2026-05-26 ヒラメキ効果検証 demo 完了 banner
+      - `HiramekiDemoPickerModal.css`
+      - `HiramekiDemoPickerModal.tsx` — 2026-05-26 ヒラメキ効果検証 demo の card picker modal
       - `HiramekiPickerModal.css`
       - `HiramekiPickerModal.tsx` — Phase 8 完全クローズ Commit 3a: HiramekiPickerModal
       - `LogPanel.css`
@@ -1191,6 +1195,7 @@
       - `VictoryOverlay.css`
       - `VictoryOverlay.tsx` — Phase 8.10j: 勝利演出
     - **`fixtures/`**
+      - `hiramekiDemoState.ts` — 2026-05-26 ヒラメキ効果検証 demo 用 GameState fixture
       - `sampleGameState.ts` — Phase 7 demo wiring: ブラウザ表示用サンプル GameState fixture
     - **`hooks/`**
       - `.gitkeep`
@@ -1208,6 +1213,7 @@
       - `useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
       - `useEvidence.ts` — Phase 7 Task 7.9: EvidenceArea selector hook
       - `useFile.ts` — Phase 7 Task 7.8: FileArea selector hook
+      - `useHiramekiDemoDriver.ts` — 2026-05-26 ヒラメキ効果検証 demo の完了検知 driver
       - `useHiramekiFlowDriver.ts` — Phase 8 完全クローズ Commit 3a: Hirameki driver
       - `useLogEntries.ts` — Phase 7 Task 7.13: LogPanel selector hook
       - `useMisreadFlowDriver.ts` — Phase 5 advance UI — Misread driver
