@@ -26,7 +26,12 @@ export type CutinDemoPickerModalProps = {
 /** ALL_CARDS から icon-cutin ability を持つカードを抽出 (module-level cache) */
 function getIconCutinCards(): CardDef[] {
   return ALL_CARDS.filter((d) =>
-    d.abilities.some((a) => (a as { type?: string }).type === 'icon-cutin'),
+    // 2026-05-27 Option C: 'icon-cutin' 廃止 → triggered + hook='effect:declared' + optional:true + scope='on-hand'
+    d.abilities.some((a) => {
+      const ab = a as { type?: string; scope?: string; trigger?: { hook?: string; optional?: boolean } };
+      return ab.type === 'triggered' && ab.scope === 'on-hand'
+        && ab.trigger?.hook === 'effect:declared' && ab.trigger?.optional === true;
+    }),
   );
 }
 
@@ -81,9 +86,11 @@ export function CutinDemoPickerModal(props: CutinDemoPickerModalProps): JSX.Elem
             </div>
           ) : (
             ICON_CUTIN_CARDS.map((d) => {
-              const cutin = d.abilities.find(
-                (a) => (a as { type?: string }).type === 'icon-cutin',
-              ) as { description?: string } | undefined;
+              const cutin = d.abilities.find((a) => {
+                const ab = a as { type?: string; scope?: string; trigger?: { hook?: string; optional?: boolean } };
+                return ab.type === 'triggered' && ab.scope === 'on-hand'
+                  && ab.trigger?.hook === 'effect:declared' && ab.trigger?.optional === true;
+              }) as { description?: string } | undefined;
               return (
                 <button
                   type="button"

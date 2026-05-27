@@ -17,8 +17,12 @@ export function cutinFixedAP(opts: {
   const sign = opts.delta >= 0 ? '＋' : '－';
   return {
     id: opts.abilityId ?? 'a_cutin_ap',
-    type: 'icon-cutin',
+    // 2026-05-27 Option C: type:'icon-cutin' → 'triggered' + trigger:{hook,optional:true,selfOnly} に統合。
+    // flow.contact.cutIn() が effect:declared を emit (discardToRemove より前)、
+    // triggered listener が scope:'on-hand' でこの ability を見つけて effect を queue する。
+    type: 'triggered',
     scope: 'on-hand',
+    trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
     condition: opts.additionalCondition,
     effect: {
       kind: 'atom',

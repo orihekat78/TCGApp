@@ -20,7 +20,9 @@ describe('D11013 萩原千速 (cutin AP+1000 + 警察 draw)', () => {
 
   it('a1 cutin with partnerColor 黄 condition + sequence effect', () => {
     const a1 = D11013.abilities[0];
-    expect(a1.type).toBe('icon-cutin');
+    expect(a1.type).toBe('triggered');
+    expect(a1.trigger?.hook).toBe('effect:declared');
+    expect(a1.trigger?.optional).toBe(true);
     expect(a1.scope).toBe('on-hand');
     expect(a1.condition).toEqual({ kind: 'partnerColor', color: '黄' });
     expect(a1.effect?.kind).toBe('sequence');

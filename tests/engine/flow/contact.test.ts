@@ -21,7 +21,14 @@ import type { CardDef, GameState, ActionContext } from '@/engine/types';
 
 function makeCard(id: string, opts: Partial<CardDef> & { ciOrDis?: 'cutin' | 'disguise' | 'both' } = {}): CardDef {
   const abilities: unknown[] = opts.abilities ?? [];
-  if (opts.ciOrDis === 'cutin' || opts.ciOrDis === 'both') abilities.push({ type: 'icon-cutin' });
+  // 2026-05-27 Option C: icon-cutin → triggered+optional. fixture も新 shape で push。
+  if (opts.ciOrDis === 'cutin' || opts.ciOrDis === 'both') {
+    abilities.push({
+      type: 'triggered',
+      scope: 'on-hand',
+      trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
+    });
+  }
   if (opts.ciOrDis === 'disguise' || opts.ciOrDis === 'both') abilities.push({ type: 'icon-disguise' });
   return {
     id,

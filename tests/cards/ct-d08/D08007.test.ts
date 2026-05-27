@@ -21,7 +21,9 @@ describe('D08007 吉田歩美 (character, cutin trait scaling AP)', () => {
   it('a1: icon-cutin, 自分ターン中, delta via $dyn expression', () => {
     const a1 = D08007.abilities[0];
     expect(a1.id).toBe('a1');
-    expect(a1.type).toBe('icon-cutin');
+    expect(a1.type).toBe('triggered');
+    expect(a1.trigger?.hook).toBe('effect:declared');
+    expect(a1.trigger?.optional).toBe(true);
     expect(a1.condition).toEqual({ kind: 'turn', player: 'self' });
     const eff = a1.effect as { kind: string; verb: string; args: { delta: string } };
     expect(eff.kind).toBe('atom');

@@ -9,7 +9,10 @@ describe('cutinFixedAP', () => {
   it('returns icon-cutin AbilityDef with default abilityId', () => {
     const d = cutinFixedAP({ delta: 1000 });
     expect(d.id).toBe('a_cutin_ap');
-    expect(d.type).toBe('icon-cutin');
+    expect(d.type).toBe('triggered');
+    expect(d.trigger?.hook).toBe('effect:declared');
+    expect(d.trigger?.optional).toBe(true);
+    expect(d.trigger?.selfOnly).toBe(true);
     expect(d.scope).toBe('on-hand');
     expect(d.description).toBe('【カットイン】AP＋1000');
     expect(d.ruleRefs!.length).toBeGreaterThan(0);

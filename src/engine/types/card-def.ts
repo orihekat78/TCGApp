@@ -13,11 +13,13 @@ export type AbilityType =
   | 'continuous'      // 「〜の場合 〜限り、AP+X」 常時有効 (rules/24, 25)
   | 'triggered'       // 「〜したとき」 条件発動
   | 'declared'        // 【宣言】 宣言能力 (rules/21)
-  | 'icon-cutin'      // カットイン (rules/09)
   | 'icon-disguise'   // 変装 (rules/09)
   | 'icon-misread';   // ミスリード (rules/13) — Phase 8 完全クローズ Commit 3b 追加
   // 2026-05-27 Option C: 'icon-flash' 廃止。ヒラメキは type:'triggered' + trigger:{hook:'evidence:remove-by-action', optional:true}
   // に統合 (src/engine/listeners/triggered.ts handleEvidenceRemovedHook が処理)。
+  // 2026-05-27 Option C: 'icon-cutin' 廃止。カットインは type:'triggered' + scope:'on-hand'
+  // + trigger:{hook:'effect:declared', optional:true} に統合 (flow.contact.cutIn() が
+  // emit→discard 順で発火し、triggered listener が hand-area scope で effect を queue)。
 
 // ---------- AbilityScope ----------
 

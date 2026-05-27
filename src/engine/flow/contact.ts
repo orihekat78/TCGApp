@@ -35,9 +35,23 @@ function hasAbilityType(def: CardDef | undefined, type: string): boolean {
 
 /**
  * cutIn 持ちか
+ *
+ * 2026-05-27 Option C: type:'icon-cutin' は廃止、type:'triggered' + scope:'on-hand'
+ * + trigger:{hook:'effect:declared', optional:true} のパターンを「カットイン」と判定。
+ * optional:true は「プレイヤー選択 (cutin/disguise/pass) 経由で発動」マーカー。
  */
 function isCutInCard(cardId: string): boolean {
-  return hasAbilityType(readDef.card(cardId), 'icon-cutin');
+  const def = readDef.card(cardId);
+  if (!def) return false;
+  return def.abilities.some((a: unknown) => {
+    const ab = a as { type?: string; scope?: string; trigger?: { hook?: string; optional?: boolean } };
+    return (
+      ab.type === 'triggered' &&
+      ab.scope === 'on-hand' &&
+      ab.trigger?.hook === 'effect:declared' &&
+      ab.trigger?.optional === true
+    );
+  });
 }
 
 /**
@@ -94,12 +108,15 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   if (!canCutIn(state, ax, p, cardId)) {
     throw new Error(`flow.contact.cutIn: cannot cut in cardId=${cardId} for ${p}`);
   }
+  // 2026-05-27 Option C: emit を discardToRemove より前に実行。triggered listener が
+  // scope:'on-hand' で card を hand 上で見つけて effect を queue する必要があるため
+  // (旧 icon-cutin 専用 listener では handler 内で別経路だった、新 path では順序が重要)。
+  // emit は同期的に listener を呼び pendingEffects に push。push 後の discardToRemove で
+  // card が remove に移っても、queue 済 effect は ctx を保持しているので動作不変。
+  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, { player: p, cardId });
   mutate.hand.discardToRemove(state, p, [cardId]);
   if (!ax.cutInUsed) ax.cutInUsed = {};
   ax.cutInUsed[p] = true;
-
-  // Phase 5 で listener が処理する想定 — effect:declared emit
-  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, { player: p, cardId });
 
   mutate.log.append(state, {
     ts: Date.now(),

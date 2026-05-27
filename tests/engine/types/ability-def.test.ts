@@ -19,12 +19,12 @@ describe('AbilityDef type system', () => {
       'continuous',
       'triggered',
       'declared',
-      'icon-cutin',
-      // 'icon-flash' は 2026-05-27 Option C 移行で廃止 (triggered + trigger:{hook,optional} に統合)
+      // 'icon-cutin' / 'icon-flash' は 2026-05-27 Option C 移行で廃止
+      // (triggered + trigger:{hook,optional} に統合)
       'icon-disguise',
       'icon-misread',
     ];
-    expect(types).toHaveLength(6);
+    expect(types).toHaveLength(5);
   });
 
   it('accepts each AbilityScope', () => {

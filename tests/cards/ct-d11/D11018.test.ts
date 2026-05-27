@@ -19,7 +19,9 @@ describe('D11018 佐藤美和子 (cutinFixedAP)', () => {
 
   it('a1 is icon-cutin AP+2000', () => {
     const a = D11018.abilities[0];
-    expect(a.type).toBe('icon-cutin');
+    expect(a.type).toBe('triggered');
+    expect(a.trigger?.hook).toBe('effect:declared');
+    expect(a.trigger?.optional).toBe(true);
     expect(a.description).toMatch(/2000/);
   });
 });

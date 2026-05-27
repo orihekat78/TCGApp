@@ -22,7 +22,9 @@ describe('D08017 円谷光彦 (character)', () => {
 
   it('a1: cutinFixedAP delta=2000', () => {
     const a1 = D08017.abilities[0];
-    expect(a1.type).toBe('icon-cutin');
+    expect(a1.type).toBe('triggered');
+    expect(a1.trigger?.hook).toBe('effect:declared');
+    expect(a1.trigger?.optional).toBe(true);
     expect(a1.description).toMatch(/2000/);
   });
 

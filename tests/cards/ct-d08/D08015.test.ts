@@ -29,7 +29,9 @@ describe('D08015 小嶋元太 (character, enter draw+discard + cutinFixedAP)', (
   it('a2: cutinFixedAP delta=1000', () => {
     const a2 = D08015.abilities[1];
     expect(a2.id).toBe('a2');
-    expect(a2.type).toBe('icon-cutin');
+    expect(a2.type).toBe('triggered');
+    expect(a2.trigger?.hook).toBe('effect:declared');
+    expect(a2.trigger?.optional).toBe(true);
     expect(a2.description).toMatch(/1000/);
   });
 

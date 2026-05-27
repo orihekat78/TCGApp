@@ -11,8 +11,10 @@ import type { AbilityDef, CardDef } from '@/engine/types';
 
 const a1: AbilityDef = {
   id: 'a1',
-  type: 'icon-cutin',
+  // 2026-05-27 Option C: type:'icon-cutin' → 'triggered' + trigger:{hook,optional:true,selfOnly}
+  type: 'triggered',
   scope: 'on-hand',
+  trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
   condition: { kind: 'turn', player: 'self' },
   effect: {
     kind: 'atom',
