@@ -40,7 +40,12 @@ function entryToCtx(entry: EffectStackEntry): EffectCtx {
       cardId: entry.source.cardId,
       uid: entry.source.uid,
     },
-    bindings: {},
+    // 2026-05-27 (Option C follow-up): entry.bindings に queue 時点の値があれば復元。
+    // `$contact.byUid` 等の bind ref が atom-handler 実行時に正しく解決されるよう保証。
+    // entry.bindings の値は Candidate[] とは限らない (例: contact bindings は
+    // 任意 object array) ため、resolveBindRef 内の `as Record<string, unknown>` cast
+    // で読み出される。型レベルでは Record<string, Candidate[]> として渡す (cast 必要)。
+    bindings: (entry.bindings ?? {}) as EffectCtx['bindings'],
     triggerPayload: entry.triggeredBy.payload,
   };
 }

@@ -69,6 +69,11 @@ export function buildEntry(
     hook?: string;
     payload?: unknown;
     source?: unknown;
+    /**
+     * 2026-05-27 (Option C follow-up): queue 時点の bindings を entry に永続化。
+     * 主にカットイン (`$contact.byUid` 等) で使用。entryToCtx が復元する。
+     */
+    bindings?: Record<string, unknown[]>;
   } = {},
 ): EffectStackEntry {
   return {
@@ -82,6 +87,7 @@ export function buildEntry(
     },
     effect,
     state: 'pending',
+    bindings: opts.bindings,
   };
 }
 
@@ -136,8 +142,15 @@ function emit(state: GameState, name: HookName, payload: unknown, source?: unkno
  * emit からも、外部からも呼べる (Resolver / 個別 listener が直接 queue したい場合)。
  * Effect を渡すと内部で EffectStackEntry にラップする。
  */
-function queue(state: GameState, effect: Effect, source?: unknown, hook?: string, payload?: unknown): void {
-  const entry = buildEntry(state, effect, { hook: hook ?? 'manual', payload, source });
+function queue(
+  state: GameState,
+  effect: Effect,
+  source?: unknown,
+  hook?: string,
+  payload?: unknown,
+  bindings?: Record<string, unknown[]>,
+): void {
+  const entry = buildEntry(state, effect, { hook: hook ?? 'manual', payload, source, bindings });
   state.pendingEffects.push(entry);
 }
 

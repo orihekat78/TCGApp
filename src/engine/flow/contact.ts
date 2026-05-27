@@ -113,7 +113,21 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   // (旧 icon-cutin 専用 listener では handler 内で別経路だった、新 path では順序が重要)。
   // emit は同期的に listener を呼び pendingEffects に push。push 後の discardToRemove で
   // card が remove に移っても、queue 済 effect は ctx を保持しているので動作不変。
-  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, { player: p, cardId });
+  //
+  // 2026-05-27 (Option C follow-up): source.bindings.contact に当該 ax 情報を詰めて emit。
+  // triggered listener が event.queue に伝達し、entry.bindings → entryToCtx → ctx.bindings
+  // と渡り、atom-handler の resolveBindRef が `$contact.byUid` を解決できる。
+  const contactBindings: Record<string, unknown[]> = {
+    contact: [{
+      byUid: ax.byUid,
+      byPlayer: ax.byPlayer,
+      targetUid: ax.target.kind === 'char' ? ax.target.uid : undefined,
+      guardUid: ax.guardUid,
+    }],
+  };
+  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, {
+    player: p, cardId, bindings: contactBindings,
+  });
   mutate.hand.discardToRemove(state, p, [cardId]);
   if (!ax.cutInUsed) ax.cutInUsed = {};
   ax.cutInUsed[p] = true;

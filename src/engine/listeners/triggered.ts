@@ -226,12 +226,16 @@ function handleHook(
         source: { cardId: card.cardId, abilityId: ability.id },
       });
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)
+      // 2026-05-27 (Option C follow-up): emit source.bindings (例: cutin の contact bindings)
+      // を event.queue 経由で entry に永続化、effect 実行時に $contact.byUid 等が解決可能に。
+      const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
       event.queue(
         state,
         resolvedEffect,
         { player: card.player, uid: card.uid, cardId: card.cardId },
         hookName,
         payload,
+        sourceBindings,
       );
     }
   }
@@ -322,13 +326,15 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
       humanChooser: isHumanEffect,
       source: { cardId: card.cardId, abilityId: ability.id },
     });
+    // ヒラメキ用に source.bindings も伝達 (今後 $evidence.* 等を使うカードを想定)
+    const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
     event.queue(
       state,
       resolvedEffect,
       { player: card.player, uid: card.uid, cardId: card.cardId },
       'evidence:remove-by-action',
       payload,
+      sourceBindings,
     );
   }
-  void source;
 }
