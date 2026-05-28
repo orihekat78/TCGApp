@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 139
-- **ファイル数**: 1385
+- **ディレクトリ数**: 140
+- **ファイル数**: 1425
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -882,6 +882,47 @@
   - `04-animation-verification.html`
   - `design-canvas.jsx` — DesignCanvas.jsx — Figma-ish design canvas wrapper
   - `README.md` — Design Mockups — コナンカードゲーム UI 参考資料
+- **`design-mockups_v2/`**
+  - `05-app.jsx` — 05-app.jsx
+  - `05-card.jsx` — 05-card.jsx
+  - `05-effect-animations.html`
+  - `05-fx.jsx` — 05-fx.jsx
+  - `05-scenes-card.jsx` — 05-scenes-card.jsx
+  - `05-scenes-contact.jsx` — 05-scenes-contact.jsx
+  - `05-scenes-hirameki.jsx` — 05-scenes-hirameki.jsx
+  - `05-scenes-misread.jsx` — 05-scenes-misread.jsx
+  - `05-scenes-solution.jsx` — 05-scenes-solution.jsx
+  - `05-scenes-victory.jsx` — 05-scenes-victory.jsx
+  - `06-card-data.jsx` — 06-card-data.jsx
+  - `06-deck-3col.jsx` — 06-deck-3col.jsx
+  - `06-deck-md.jsx` — 06-deck-md.jsx
+  - `06-home.jsx` — 06-home.jsx — Master Duel-style home screen for the conan TCG.
+  - `06-meta-screens.html`
+  - `06-shared.jsx` — 06-shared.jsx
+  - `07-screen-flow.html`
+  - `08-cards.jsx` — 08-cards.jsx
+  - `08-history.jsx` — 08-history.jsx
+  - `08-meta-screens-2.html`
+  - `08-result.jsx` — 08-result.jsx
+  - `08-settings.jsx` — 08-settings.jsx
+  - `08-setup.jsx` — 08-setup.jsx
+  - `08-tutorial.jsx` — 08-tutorial.jsx
+  - `09-app.jsx` — 09-app.jsx
+  - `09-placeholders.jsx` — 09-placeholders.jsx
+  - `09-prototype.html`
+  - `10-engine-stub.jsx` — 10-engine-stub.jsx
+  - `animations.jsx` — animations.jsx
+  - `C-engine-ui-map.md` — C — 画面 ↔ エンジン API 接続マップ
+  - `C9-modal-review.md` — C-9 — モーダルカタログ レビュー
+  - `design-canvas.jsx` — DesignCanvas.jsx — Figma-ish design canvas wrapper
+  - `E13-design-system.md` — E-13 — デザインシステム
+  - `E14-screen-flow-spec.md` — E-14 — 画面遷移仕様書
+  - `E15-component-guide.md` — E-15 — コンポーネント実装ガイド
+  - `F-rule-audit.md` — F — ルール準拠 + 既存システム整合性 監査
+  - `G-integration-plan.md` — G — リポジトリ統合設計
+  - `match-board.html`
+  - `memory.md` — memory.md — コナン TCG デザインモック プロジェクト履歴
+  - `README.md` — コナン TCG メタゲーム デザインモック
 - **`scripts/`** — ビルド・メンテナンスツール
   - **`benchmark/`**
     - `mcts-vs-heuristic.ts` — scripts/benchmark/mcts-vs-heuristic — Phase 9-F: MCTS vs Heuristic 100 戦比較

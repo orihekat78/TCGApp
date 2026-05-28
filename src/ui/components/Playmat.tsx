@@ -628,6 +628,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           entries={gameState?.log ?? []}
           open={logOpen}
           onClose={() => setLogOpen(false)}
+          gameState={gameState}
         />
 
         {/* Round 2: FILE/証拠/リムーブ クリック → 内容確認モーダル

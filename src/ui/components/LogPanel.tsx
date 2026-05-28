@@ -8,21 +8,30 @@
 //     仕様を実装。閉時の見た目のみ mock の .log-btn を流用。
 
 import type { JSX, MouseEvent } from 'react';
-import type { LogEntry } from '@/engine/types/game-state.js';
-import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
+import type { GameState, LogEntry } from '@/engine/types/game-state.js';
+import { cardIdToDisplayName, uidToDisplayName } from '@/ui/services/uidNames.js';
 import './LogPanel.css';
 
 /**
  * user_request 20260522_01 #3 BUG-060: log entry の target が cardId (Dxxxxx)
  * の場合、表示名 (例: '蘭の一撃') に解決する。target が cardId pattern にマッチ
  * しなければ素通し。
+ *
+ * BUG-069 follow-up (2026-05-28): scene character uid (`self-N` / `opp-N`) や
+ * partner uid (`partner:self` / `partner:opp`) も `uidToDisplayName(state, uid)`
+ * で名前解決する。`state` 無し or resolution 失敗時は uid を fallback。
  */
-function formatTarget(target: string | undefined): string | undefined {
+function formatTarget(target: string | undefined, state: GameState | null | undefined): string | undefined {
   if (!target) return undefined;
   // CT-D08 / CT-D11 の cardId pattern: D08xxx / D11xxx (3 桁 numeric suffix)
   if (/^D\d{2}\d{3}/.test(target)) {
     const name = cardIdToDisplayName(target);
     // cardIdToDisplayName が未登録時 cardId をそのまま返すなら "[name (id)]" 形式
+    return name === target ? target : `${name} (${target})`;
+  }
+  // uid pattern: `partner:self` / `partner:opp` / `self-N` / `opp-N` (rules/03 §パートナーエリア + scene)
+  if (state && /^(?:partner:(?:self|opp)|(?:self|opp)-\d+)$/.test(target)) {
+    const name = uidToDisplayName(state, target);
     return name === target ? target : `${name} (${target})`;
   }
   return target;
@@ -36,6 +45,9 @@ export type LogPanelProps = {
   /** Round 2: ログを閉じる callback (panel 内 close button から呼ぶ)。
    *  Round 3b: backdrop (root container) click でも呼ばれるようになった (HandZone と同じパターン)。 */
   onClose?: () => void;
+  /** BUG-069 (2026-05-28): scene char uid / partner uid を表示名に解決するため受け取る。
+   *  未指定なら uid を素通しで表示 (テスト互換)。 */
+  gameState?: GameState | null;
 };
 
 // Round 2: ACTION_LABEL を engine 側 log entry に合わせて拡張。
@@ -117,7 +129,7 @@ function formatTime(ts: number): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-export function LogPanel({ entries, open, maxEntries = 30, onClose }: LogPanelProps): JSX.Element | null {
+export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState }: LogPanelProps): JSX.Element | null {
   // Phase 8.5: 閉時は何もレンダリングしない (LOG ボタンは ActionsPanel が持つ)
   if (!open) return null;
 
@@ -176,7 +188,7 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose }: LogPanelPr
               <span className="log-turn">T{e.turn}</span>
               <span className="log-player">{e.player === 'self' ? '自' : '相'}</span>
               <span className="log-action">{ACTION_LABEL[e.action] ?? e.action}</span>
-              {e.target !== undefined && <span className="log-target">→ {formatTarget(e.target)}</span>}
+              {e.target !== undefined && <span className="log-target">→ {formatTarget(e.target, gameState)}</span>}
               {e.result !== undefined && <span className="log-result">: {e.result}</span>}
             </div>
           ))

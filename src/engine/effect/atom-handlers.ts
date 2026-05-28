@@ -462,8 +462,12 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'sceneSwitch': {
       const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
       const swPlayer = resolvePlayer(a.player, ctx);
-      const swCardId = a.cardId as string;
-      const newChar = mutate.scene.switchEnter(s, swPlayer, swCardId, a.removeUid as string, {
+      // BUG-068: bind ref ($matched.cardId / $entered.uid 等) 解決を配線
+      const swCardId = resolveBindRef(a.cardId, ctx) as string;
+      if (typeof swCardId !== 'string' || swCardId.startsWith('$')) return;
+      const swRemoveUid = resolveBindRef(a.removeUid, ctx) as string;
+      if (typeof swRemoveUid !== 'string' || swRemoveUid.startsWith('$')) return;
+      const newChar = mutate.scene.switchEnter(s, swPlayer, swCardId, swRemoveUid, {
         named: (a.named as boolean | undefined) ?? false,
         viaEffect,
       });
@@ -513,7 +517,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', result: 'skipped' });
         return;
       }
-      const srUid = a.uid as string;
+      // BUG-068: bind ref ($matched.uid 等) 解決を配線
+      const srUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof srUid !== 'string' || srUid.startsWith('$')) return;
       mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect');
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
@@ -529,8 +535,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'sceneDisguise': {
-      const dgUid = a.uid as string;
-      const dgNewCardId = a.newCardId as string;
+      // BUG-068: bind ref 解決を配線
+      const dgUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof dgUid !== 'string' || dgUid.startsWith('$')) return;
+      const dgNewCardId = resolveBindRef(a.newCardId, ctx) as string;
+      if (typeof dgNewCardId !== 'string' || dgNewCardId.startsWith('$')) return;
       mutate.char.disguiseInto(s, dgUid, dgNewCardId);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneDisguise', target: dgUid, result: dgNewCardId });
@@ -595,7 +604,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'charSetLP':
       throw new Error('charSetLP: not yet supported — Phase 5 must define mutate.char.setExact');
     case 'charOverrideAP': {
-      const oaUid = a.uid as string;
+      // BUG-068: bind ref 解決を配線
+      const oaUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof oaUid !== 'string' || oaUid.startsWith('$')) return;
       const oaVal = a.val as number | null;
       mutate.char.setOverrideAP(s, oaUid, oaVal);
       // BUG-073: effect log
@@ -603,7 +614,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charOverrideLP': {
-      const olUid = a.uid as string;
+      // BUG-068: bind ref 解決を配線
+      const olUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof olUid !== 'string' || olUid.startsWith('$')) return;
       const olVal = a.val as number | null;
       mutate.char.setOverrideLP(s, olUid, olVal);
       // BUG-073: effect log
@@ -631,7 +644,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charDisableOriginal': {
-      const doUid = a.uid as string;
+      // BUG-068: bind ref 解決を配線
+      const doUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof doUid !== 'string' || doUid.startsWith('$')) return;
       mutate.char.disableOriginalAbilities(s, doUid);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charDisableOriginal', target: doUid });
@@ -647,8 +662,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charSetCard': {
-      const scUid = a.uid as string;
-      const scCardId = a.cardId as string;
+      // BUG-068: bind ref 解決を配線
+      const scUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof scUid !== 'string' || scUid.startsWith('$')) return;
+      const scCardId = resolveBindRef(a.cardId, ctx) as string;
+      if (typeof scCardId !== 'string' || scCardId.startsWith('$')) return;
       mutate.char.setCard(s, scUid, scCardId, a.faceUp as boolean);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: scCardId });

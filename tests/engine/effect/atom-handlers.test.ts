@@ -285,6 +285,31 @@ describe('engine.effect.runAtom', () => {
       expect(result.players.self.scene).toHaveLength(0);
       expect(result.players.self.remove).toContain('C200');
     });
+
+    // BUG-068 (2026-05-28): resolveBindRef 配線 → bind ref が解決される
+    it('BUG-068: $matched.uid bind ref が ctx.bindings から解決される', () => {
+      const c = makeChar({ uid: 'rm-uid', cardId: 'C200' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const ctxWithBind = makeCtx({
+        bindings: { matched: [{ kind: 'character', cardId: 'C200', uid: 'rm-uid' } as Candidate] },
+      });
+      const result = produce(s, draft => {
+        runAtom(draft, 'sceneRemove', { uid: '$matched.uid', cause: 'effect' }, ctxWithBind);
+      });
+      expect(result.players.self.scene).toHaveLength(0);
+      expect(result.players.self.remove).toContain('C200');
+    });
+
+    it('BUG-068: bind ref 未解決 ($ で始まる残り) は silent no-op', () => {
+      const c = makeChar({ uid: 'rm-uid', cardId: 'C200' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const result = produce(s, draft => {
+        // bindings に matched なし → resolveBindRef は元 string をそのまま返す
+        runAtom(draft, 'sceneRemove', { uid: '$matched.uid', cause: 'effect' }, makeCtx());
+      });
+      expect(result.players.self.scene).toHaveLength(1); // 未変化
+      expect(result.players.self.remove).not.toContain('C200');
+    });
   });
 
   describe('sceneSetState', () => {

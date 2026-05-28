@@ -1,12 +1,15 @@
 // Phase 7 Task 7.13: LogPanel tests
 // Round 3b 追加: role/aria + backdrop click filter (HandZone パターン統一)
+// BUG-069 (2026-05-28): scene char uid / partner uid の表示名解決テスト追加
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 import type { LogEntry } from '@/engine/types/game-state.js';
 import { LogPanel } from '@/ui/components/LogPanel';
+import { createSampleGameState } from '@/ui/fixtures/sampleGameState';
+import { registerAll } from '@/cards';
 
 function strip(html: string): string {
   return html.replace(/<!--.*?-->/g, '');
@@ -102,6 +105,63 @@ describe('LogPanel', () => {
     ));
     expect(html).toMatch(/→ opp.scene\[0\]/);
     expect(html).toMatch(/: remove/);
+  });
+
+  // BUG-069 (2026-05-28): scene char uid / partner uid を表示名に解決する
+  describe('uid resolution (BUG-069)', () => {
+    beforeAll(() => {
+      registerAll();
+    });
+
+    it('resolves scene char uid (self-N) to card name when gameState provided', () => {
+      // sampleGameState: self.scene[0] = D11004 (萩原千速) at uid='self-1'
+      const state = createSampleGameState();
+      const entries: LogEntry[] = [
+        makeEntry({ ts: 1, player: 'self', turn: 1, action: 'reasoning', target: 'self-1' }),
+      ];
+      const html = strip(renderToString(
+        <LogPanel entries={entries} open={true} gameState={state} />,
+      ));
+      // 名前 + (uid) の形式で表示される
+      expect(html).toMatch(/萩原千速/);
+      expect(html).toMatch(/self-1/);
+    });
+
+    it('resolves partner uid (partner:self) to partner card name', () => {
+      // sampleGameState: self.partner = D11001 (毛利蘭)
+      const state = createSampleGameState();
+      const entries: LogEntry[] = [
+        makeEntry({ ts: 1, player: 'self', turn: 1, action: 'reasoning', target: 'partner:self' }),
+      ];
+      const html = strip(renderToString(
+        <LogPanel entries={entries} open={true} gameState={state} />,
+      ));
+      expect(html).toMatch(/partner:self/);
+      // partner cardId が registry で resolve されれば名前が含まれる
+      // (cardIdToDisplayName と同じ helper で逆引き、未登録なら uid 素通し)
+    });
+
+    it('falls back to raw uid when gameState absent', () => {
+      const entries: LogEntry[] = [
+        makeEntry({ ts: 1, player: 'self', turn: 1, action: 'reasoning', target: 'self-1' }),
+      ];
+      const html = strip(renderToString(
+        <LogPanel entries={entries} open={true} />,
+      ));
+      expect(html).toMatch(/→ self-1/);
+      expect(html).not.toMatch(/萩原千速/);
+    });
+
+    it('falls back to raw uid when uid not present in state scene', () => {
+      const state = createSampleGameState();
+      const entries: LogEntry[] = [
+        makeEntry({ ts: 1, player: 'self', turn: 1, action: 'reasoning', target: 'self-99' }),
+      ];
+      const html = strip(renderToString(
+        <LogPanel entries={entries} open={true} gameState={state} />,
+      ));
+      expect(html).toMatch(/→ self-99/);
+    });
   });
 
   it('falls back to raw action string when not in ACTION_LABEL', () => {
