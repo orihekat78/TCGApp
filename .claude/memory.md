@@ -43,3 +43,28 @@ step 2 解決後 step 3 (discard) modal が表示されない。
 だけで、sequence の残り step を再 queue する仕組みが無い。
 BUG-076 の tryRePickFromAtom 追加は step 2/3 modal chain を意図していたが、
 resolved 後の re-queue 部分が未実装。
+
+## 2026-05-28 ネクストヒント step2 UI を HandZone pick-mode に統合 (commit db08c74)
+
+ユーザ要望「手札拡大 UI で出せるカードを黄色枠でピックアップ選択したい」反映。
+専用 modal (NextHintPickerModal) を廃止し HandZone pick-mode を汎用化して再利用。
+
+- HandZone: pickBannerText / pickableCardIds / pickSkipLabel / onPickCancel /
+  pickCancelLabel prop 追加。pickableCardIds 外は dim+選択不可、内は黄色枠
+- Playmat: useNextHintPickerStore subscribe → NH pick 中は手札自動展開、
+  FILE-top を合成カードとして手札末尾に追加、候補のみ pickable。
+  onPickCard→acceptUse / onPickSkip→acceptSkip / onPickCancel→acceptCancel
+- engine 変更なし (骨格凍結原則準拠)。useNextHintPicker.ask 経路不変、駆動先のみ変更
+
+### 水平展開
+- pickMode を使う既存 discard-pick 経路 (effectPickResolve) は pickableCardIds
+  未指定 → 全カード pickable の従来動作を維持、回帰なし
+
+### Playwright 実機検証 (console error 0)
+- use (FILE-top 合成カード): 名乗り active 登場 + FILE 3→2 + nextHintUsed=true
+  + handUseUsed=false
+- skip: step1 のみ (FILE-top 手札追加、scene 登場なし)
+- cancel: state 不変
+- 反復可能 (bug2 fix): NH 後も button enabled (FILE 2枚 使用済 表示)
+- NH 後の通常「手札の使用」は disabled (残0回)
+- typecheck clean / vitest 1615 PASS

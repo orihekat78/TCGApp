@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 139
-- **ファイル数**: 1381
+- **ファイル数**: 1384
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -212,6 +212,8 @@
     - `BUG-077.md`
     - `BUG-078.md`
     - `BUG-079.md`
+    - `BUG-080.md`
+    - `BUG-081.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -265,6 +267,7 @@
     - `2026-05-25-01-bug-078-pick-queue.md`
     - `2026-05-25-02-cardlistmodal-pick-mode.md`
     - `2026-05-25-03-handzone-pick-mode.md`
+    - `2026-05-28-01-nexthint-step2-handzone.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
