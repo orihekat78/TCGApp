@@ -577,3 +577,19 @@
   border-color: #ccc;
   color: #fff;
 }
+/* 2026-05-28 ネクストヒント: cancel ボタン (skip と並ぶ) */
+.hand-zone-pick-cancel-btn {
+  padding: 4px 14px;
+  background: transparent;
+  border: 1px solid #6b7280;
+  border-radius: 4px;
+  color: #d1d5db;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.hand-zone-pick-cancel-btn:hover {
+  background: rgba(80, 80, 80, 0.6);
+  border-color: #ccc;
+  color: #fff;
+}

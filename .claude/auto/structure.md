@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 139
-- **ファイル数**: 1383
+- **ファイル数**: 1381
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1166,8 +1166,6 @@
       - `MisreadPickerModal.tsx` — Phase 8 完全クローズ Commit 3b: MisreadPickerModal (scaffold)
       - `MulliganModal.css`
       - `MulliganModal.tsx` — Round 2 — マリガン UI モーダル
-      - `NextHintPickerModal.css`
-      - `NextHintPickerModal.tsx` — 2026-05-28: ネクストヒント step2 picker modal
       - `OppTurnOverlay.css`
       - `OppTurnOverlay.tsx` — Phase 8.10a + Round 4l (BUG-010): opp ターン視覚化オーバーレイ
       - `PartnerArea.css`

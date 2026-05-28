@@ -59,7 +59,7 @@ import { MisreadPickerModal, type MisreadCandidateView } from './MisreadPickerMo
 import { GuardPickerModal } from './GuardPickerModal.js';
 import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
 import { HiramekiPickerModal } from './HiramekiPickerModal.js';
-import { NextHintPickerModal } from './NextHintPickerModal.js';
+import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHintPicker.js';
 import { SceneSwitchPickerModal } from './SceneSwitchPickerModal.js';
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
@@ -256,6 +256,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const pendingPickForArea = useGameStateStore((s) => s.pendingEffectPick);
   const isDiscardPick =
     pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'discard';
+  // 2026-05-28: ネクストヒント step2 pick。useNextHintPicker store に current が
+  // set されている間、HandZone を expand + pick mode (FILE-top + 使用可能手札を黄色枠)。
+  const nextHintPick = useNextHintPickerStore((s) => s.current);
+  const isNextHintPick = nextHintPick !== null;
   const pickAreaKind: CardListKind | null = (() => {
     if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
     if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
@@ -300,6 +304,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useEffect(() => {
     if (isDiscardPick) setHandExpanded(true);
   }, [isDiscardPick]);
+  // 2026-05-28: ネクストヒント step2 pick 中も HandZone を自動 expand
+  useEffect(() => {
+    if (isNextHintPick) setHandExpanded(true);
+  }, [isNextHintPick]);
   // User vision (拡張 4): sceneRemove 等の scene キャラ pick mode 検出
   // pendingEffectPick.atomVerb が scene 系で、candidates が scene キャラ uid を含むなら active
   // D11014 a1 driver 2026-05-26: charModifyAP も scene pick (D08003 sceneRemove と同 UI 流用 — 黄色 highlight + click)
@@ -362,6 +370,16 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const handCards: HandCardMeta[] = resolveHandCard
     ? (gameState?.players.self.hand ?? []).map(resolveHandCard)
     : [];
+  // 2026-05-28: ネクストヒント step2 pick 用の表示カード群。
+  // 手札 + FILE 最上部 (これから引くカード) を末尾に合成し、HandZone pick mode で
+  // 使用可能カード (nextHintPick.candidates) のみ黄色枠化する。
+  const nextHintPickableIds = isNextHintPick
+    ? new Set(nextHintPick!.candidates.map((c) => c.cardId))
+    : undefined;
+  const handCardsForZone: HandCardMeta[] =
+    isNextHintPick && resolveHandCard
+      ? [...handCards, resolveHandCard(nextHintPick!.fileTopCardId)]
+      : handCards;
   // Cleanup #6: viewport に合わせて stage を縮小 (1920×1080 fixed → fit)
   const stageScale = useStageScale();
   return (
@@ -456,7 +474,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             Round 2: collapsed/expanded 両方で disabled 状態を可視化 + tooltip で理由表示。
             ユーザ指摘「コスト 8 のカードが出てる」(FILE 不足で使えないのに見た目が同じ) を解消。 */}
         <HandZone
-          cards={handCards}
+          cards={isNextHintPick ? handCardsForZone : handCards}
           expanded={handExpanded}
           onExpand={() => setHandExpanded(true)}
           onCollapse={() => setHandExpanded(false)}
@@ -475,14 +493,33 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               ? getHandUseDisabledReason(gameState, 'self', c.cardId) ?? '使用不可'
               : '未開始'
           }
-          pickMode={isDiscardPick}
-          onPickCard={isDiscardPick ? (uid) => {
-            dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
-          } : undefined}
-          pickCanSkip={isDiscardPick && (pendingPickForArea?.nMin ?? 1) === 0}
-          onPickSkip={isDiscardPick ? () => {
-            dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
-          } : undefined}
+          pickMode={isDiscardPick || isNextHintPick}
+          // 2026-05-28: ネクストヒントは discard と同じ HandZone pick mode を流用。
+          // FILE-top + 使用可能手札を黄色枠化 (pickableCardIds)、選択で acceptUse。
+          pickableCardIds={isNextHintPick ? nextHintPickableIds : undefined}
+          pickBannerText={isNextHintPick
+            ? `ネクストヒント: 使用するカードを選んでください (黄色枠)。末尾の〈${nextHintPick!.fileTopName}〉が FILE から引くカードです。`
+            : undefined}
+          pickSkipLabel={isNextHintPick ? '使用しない (引くだけ)' : undefined}
+          onPickCancel={isNextHintPick ? () => useNextHintPicker().acceptCancel() : undefined}
+          pickCancelLabel={isNextHintPick ? 'キャンセル' : undefined}
+          onPickCard={
+            isNextHintPick
+              ? (uid) => useNextHintPicker().acceptUse(uid.split('#')[0]!)
+              : isDiscardPick
+              ? (uid) => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid }); }
+              : undefined
+          }
+          pickCanSkip={
+            isNextHintPick ? true : isDiscardPick && (pendingPickForArea?.nMin ?? 1) === 0
+          }
+          onPickSkip={
+            isNextHintPick
+              ? () => useNextHintPicker().acceptSkip()
+              : isDiscardPick
+              ? () => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }); }
+              : undefined
+          }
         />
 
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}
@@ -577,8 +614,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* Phase 8 完全クローズ Commit 3a: ヒラメキモーダル */}
         <PlaymatHiramekiPickerModal />
 
-        {/* 2026-05-28: ネクストヒント step2 picker (FILE→手札 + 任意 1 枚使用) */}
-        <NextHintPickerModal />
+        {/* 2026-05-28: ネクストヒント step2 picker は HandZone pick mode に統合 (別 modal 廃止) */}
 
         {/* Phase 5 advance UI: ミスリードモーダル (相手推理時、自分の現場 misread 持ち候補から複数選択) */}
         <PlaymatMisreadPickerModal />

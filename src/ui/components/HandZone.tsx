@@ -60,6 +60,19 @@ export type HandZoneProps = {
   pickCanSkip?: boolean;
   /** Pick mode で「しない」を選んだとき (= effectPickResolve pickedUid=null) */
   onPickSkip?: () => void;
+  /**
+   * 2026-05-28 ネクストヒント用に pickMode を汎用化:
+   * - pickBannerText: banner 文言 override (default は discard 文言)
+   * - pickableCardIds: 指定時はこの cardId のみ pickable (黄色枠+click)、他は dimmed/disabled。
+   *   未指定なら全カード pickable (discard 既存挙動)。
+   * - pickSkipLabel: skip ボタン文言 override (default「リムーブしない」)
+   * - onPickCancel / pickCancelLabel: 指定時 cancel ボタンを追加表示。
+   */
+  pickBannerText?: string;
+  pickableCardIds?: ReadonlySet<string>;
+  pickSkipLabel?: string;
+  onPickCancel?: () => void;
+  pickCancelLabel?: string;
 };
 
 // ------------------------------------------------------------------
@@ -240,6 +253,11 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     onPickCard,
     pickCanSkip = false,
     onPickSkip,
+    pickBannerText,
+    pickableCardIds,
+    pickSkipLabel,
+    onPickCancel,
+    pickCancelLabel,
   } = props;
 
   if (cards.length === 0) {
@@ -309,7 +327,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
       {pickMode && (
         <div className="hand-zone-pick-banner-row">
           <div className="hand-zone-pick-banner" role="status">
-            手札から1枚選んでリムーブしてください
+            {pickBannerText ?? '手札から1枚選んでリムーブしてください'}
           </div>
           {pickCanSkip && onPickSkip && (
             <button
@@ -318,7 +336,17 @@ export function HandZone(props: HandZoneProps): JSX.Element {
               onClick={onPickSkip}
               data-testid="hand-zone-pick-skip"
             >
-              リムーブしない
+              {pickSkipLabel ?? 'リムーブしない'}
+            </button>
+          )}
+          {onPickCancel && (
+            <button
+              type="button"
+              className="hand-zone-pick-cancel-btn"
+              onClick={onPickCancel}
+              data-testid="hand-zone-pick-cancel"
+            >
+              {pickCancelLabel ?? 'キャンセル'}
             </button>
           )}
         </div>
@@ -329,15 +357,19 @@ export function HandZone(props: HandZoneProps): JSX.Element {
           // (`<cardId>#<idx>` 形式 uid)。onCardClick は suppress。
           // pickable=true で黄色ハイライト + cursor pointer。
           if (pickMode && onPickCard) {
+            // 2026-05-28: pickableCardIds 指定時は該当カードのみ pickable (黄色枠+click)。
+            // 非該当は disabled (dimmed, click 無効)。未指定なら全 pickable (discard 既存挙動)。
+            const canPick = pickableCardIds ? pickableCardIds.has(c.cardId) : true;
             return (
               <HandCard
                 key={`${c.cardId}-${index}`}
                 card={c}
                 featured={false}
-                disabled={false}
-                onClick={() => onPickCard(`${c.cardId}#${index}`)}
+                disabled={!canPick}
+                disabledTitle={!canPick ? 'レベル / 色制限で使用不可' : undefined}
+                onClick={canPick ? () => onPickCard(`${c.cardId}#${index}`) : undefined}
                 onExpand={onCardExpand}
-                pickable
+                pickable={canPick}
               />
             );
           }
