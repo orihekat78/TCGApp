@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 141
-- **ファイル数**: 1435
+- **ファイル数**: 1436
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -781,6 +781,7 @@
       - `06-screens-play-flow.md` — 06 — 主要対戦経路 (HOME / SETUP / RESULT)
       - `07-screens-library.md` — 07 — カード管理経路 (DECK 編集 / CARDS)
       - `08-screens-reference.md` — 08 — 履歴・学習・設定 (HISTORY / REPLAY / TUTORIAL / SETTINGS)
+      - `09-phasing-and-verification.md` — 09 — Phase 10 工程と検証
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
