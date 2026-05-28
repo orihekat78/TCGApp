@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 141
-- **ファイル数**: 1436
+- **ディレクトリ数**: 154
+- **ファイル数**: 1468
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -133,6 +133,7 @@
   - **`bugs/`** — バグ・リスク管理表 (Obsidian Base 形式、BUG-XXX.md 個別ファイル)
     - `AUDIT-2026-05-22.md` — BUG フォルダ AUDIT (2026-05-22)
     - `AUDIT-2026-05-23.md` — 全 BUG audit 結果 — 2026-05-23
+    - `AUDIT-2026-05-28-BUG-070.md` — AUDIT-2026-05-28 — BUG-070 (BUG-009 水平展開 4 項目 follow-up)
     - `AUDIT-template.md` — BUG フォルダ AUDIT (YYYY-MM-DD)
     - `BUG-001.md`
     - `BUG-002.md`
@@ -215,6 +216,7 @@
     - `BUG-080.md`
     - `BUG-081.md`
     - `BUG-082.md`
+    - `BUG-083.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -935,6 +937,49 @@
   - `match-board.html`
   - `memory.md` — memory.md — コナン TCG デザインモック プロジェクト履歴
   - `README.md` — コナン TCG メタゲーム デザインモック
+- **`dist-meta/`**
+  - **`assets/`**
+    - `index-Bz7J5Ggc.js`
+    - `index-DKrZpaQH.css`
+  - `index.html`
+- **`meta-app/`**
+  - **`src/`**
+    - **`data/`**
+      - `cardPool.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
+      - `sampleDeck.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
+      - `types.ts` — spec: .claude/specs/meta-ui/02-design-system.md + 05-engine-stub.md
+    - **`router/`**
+      - `routes.ts` — spec: .claude/specs/meta-ui/03-routing.md
+    - **`screens/`**
+    - **`shared/`**
+      - `AppTopBar.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 03-routing.md
+      - `Button.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `CardSilhouette.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `EmptyState.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `FilterGroup.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
+      - `index.ts` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `interactionStyles.ts` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `LoadingDots.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `MetaBg.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `MetaCard.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
+      - `NavHUD.tsx` — spec: .claude/specs/meta-ui/03-routing.md
+      - `NetworkStatus.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `tokens.ts` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `WarningBanner.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
+    - **`state/`**
+      - `metaStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
+    - **`stubs/`**
+    - **`styles/`**
+      - `meta.css`
+    - `App.tsx` — spec: .claude/specs/meta-ui/03-routing.md
+    - `main.tsx` — spec: .claude/specs/meta-ui/01-project-setup.md
+    - `vite-env.d.ts` — / <reference types="vite/client" />
+  - **`tests/`**
+    - **`e2e/`**
+  - `index.html`
+  - `tsconfig.json`
+  - `tsconfig.node.json`
+  - `vite.config.meta.ts` — spec: .claude/specs/meta-ui/01-project-setup.md
 - **`scripts/`** — ビルド・メンテナンスツール
   - **`benchmark/`**
     - `mcts-vs-heuristic.ts` — scripts/benchmark/mcts-vs-heuristic — Phase 9-F: MCTS vs Heuristic 100 戦比較
