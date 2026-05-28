@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 154
-- **ファイル数**: 1468
+- **ファイル数**: 1470
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -967,6 +967,8 @@
       - `tokens.ts` — spec: .claude/specs/meta-ui/02-design-system.md
       - `WarningBanner.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
     - **`state/`**
+      - `decksStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
+      - `historyStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
       - `metaStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
     - **`stubs/`**
     - **`styles/`**
