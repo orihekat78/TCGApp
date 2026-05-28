@@ -6,21 +6,27 @@
 
 ## ディレクトリ構成
 
+MVP 対象デッキ (CT-D08 / CT-D11) に加え、2026-05-26 に **全 19 パッケージ (2049 枚)** を保管。
+将来スコープ「全カード対応」のためのメタデータ源として保持する。
+
 ```
 cards-data/
 ├── INDEX.md (本ファイル)
-├── _regen.js (元 JSON から TSV を再生成するスクリプト)
-├── ct-d08/
-│   ├── partner.tsv     (2枚)
-│   ├── character.tsv   (21枚)
-│   ├── event.tsv       (2枚)
-│   └── case.tsv        (1枚)
-└── ct-d11/
-    ├── partner.tsv     (2枚)
-    ├── character.tsv   (16枚)
-    ├── event.tsv       (2枚)
-    └── case.tsv        (1枚)
+├── _regen.js       (CT-D08/CT-D11 のみ再生成、レガシー残置)
+├── _regen_all.cjs  (_raw/*-api.json を全件再生成、19 パッケージ対応)
+├── _raw/           (API レスポンス キャッシュ、_fetch_all.cjs で取得)
+│   ├── _fetch_all.cjs   (全パッケージ取得スクリプト)
+│   ├── ct-d01-api.json …
+│   └── pr-01-api.json
+├── ct-d01/ ～ ct-d11/     (Case-StartDeck 01-05 + Case-ThemeDeck 01-06)
+├── ct-p01/ ～ ct-p09/     (Case-Booster 01-09)
+└── pr-01/                 (プロモーションカード)
 ```
+
+### パッケージ別カード数
+
+[packages.md](packages.md) を参照。**MVP 実装は CT-D08 / CT-D11 のみ**、
+その他パッケージは将来スコープ用のメタデータ保持のみ。
 
 ## TSV スキーマ (kind 別)
 
@@ -65,11 +71,17 @@ cards-data/
 
 ## データソース
 
-- `_raw/ct-d08-api.json` / `_raw/ct-d11-api.json` — 公式 API レスポンス キャッシュ
-- 取得元: `https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards?page=1&package=CT-D08` (ページング: page=1,2,...)
-- 再フェッチ: 上記 URL を curl で取得し `_raw/` へ保存後 `node _regen.js`
+- `_raw/<pkg>-api.json` — 公式 API レスポンス キャッシュ (ページ統合済み)
+- 取得元: `https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards?page=N&package=<CODE>`
+  - `<CODE>` は HTML `<option value="...">` の値。CT-P01 ～ CT-P09, CT-D01 ～ CT-D11, **PR-01** (プロモ)
+  - ページング: レスポンスの `lastPage` まで取得
+- 全パッケージ再フェッチ: `cd _raw && node _fetch_all.cjs` (約 80 リクエスト、polite throttle 300ms)
+- TSV 再生成:
+  - **全パッケージ**: `node _regen_all.cjs` (`_raw/*-api.json` を全件処理)
+  - レガシー (CT-D08/CT-D11 のみ): `node _regen.js`
 - API レスポンスのキー対応:
   - `feature` → effect, `cut_in` → cutIn, `category1/2/3` → features (joined `|`)
+  - `card_num` → cardNum (一意), `card_id` → cardId (絵柄違いで共有)
 
 ## 規約
 
@@ -80,6 +92,7 @@ cards-data/
 
 ## 関連
 
+- [packages.md](packages.md) — パッケージ別カード数一覧
 - [../cards-analysis/INDEX.md](../cards-analysis/INDEX.md) — 効果分析 (能力分解)
 - [../cards-analysis/TEMPLATE.md](../cards-analysis/TEMPLATE.md) — 分析テンプレ
 - [../engine-api-card-shape.md](../engine-api-card-shape.md) — CardDef 型
