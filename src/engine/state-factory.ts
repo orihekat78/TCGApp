@@ -24,6 +24,7 @@ function createEmptyPlayerState(requiredEvidence: number): PlayerState {
       status: '事件編',
       requiredEvidence,
       colors: [],
+      declaredUseCount: {}, // BUG-067: 事件カード declared ability の ターン① enforcement 用
     },
     scene: [],
     hand: [],

@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 140
-- **ファイル数**: 1425
+- **ディレクトリ数**: 141
+- **ファイル数**: 1435
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -771,6 +771,17 @@
       - `_regen.js` — TSV regenerator from fresh API JSON in _raw/.
       - `INDEX.md` — cards-data — カードデータ TSV (権威ソース)
       - `packages.md` — cards-data パッケージ一覧
+    - **`meta-ui/`**
+      - `00-overview.md` — 00 — メタ UI 統合設計 概要
+      - `01-project-setup.md` — 01 — meta-app プロジェクト構成
+      - `02-design-system.md` — 02 — デザインシステム (tokens + 共通プリミティブ)
+      - `03-routing.md` — 03 — ルーティング (useHashRoute + MetaShell)
+      - `04-state-stores.md` — 04 — 状態管理 (zustand 3 store + persist)
+      - `05-engine-stub.md` — 05 — engineStub TS 化
+      - `06-screens-play-flow.md` — 06 — 主要対戦経路 (HOME / SETUP / RESULT)
+      - `07-screens-library.md` — 07 — カード管理経路 (DECK 編集 / CARDS)
+      - `08-screens-reference.md` — 08 — 履歴・学習・設定 (HISTORY / REPLAY / TUTORIAL / SETTINGS)
+      - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
       - `caseResolvedHandRemove.md` — caseResolvedHandRemove

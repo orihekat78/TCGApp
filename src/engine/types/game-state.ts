@@ -5,7 +5,8 @@ export type CardId = string;
 
 export type PlayerState = {
   partner: PartnerOnBoard;
-  case: { cardId: string; status: '事件編' | '解決編'; requiredEvidence: number; colors: string[] };
+  // BUG-067 (2026-05-28): declaredUseCount を case にも追加して ターン① enforcement を可能に
+  case: { cardId: string; status: '事件編' | '解決編'; requiredEvidence: number; colors: string[]; declaredUseCount: Record<string, number> };
   scene: SceneCharacter[];
   hand: CardId[];
   deck: CardId[];

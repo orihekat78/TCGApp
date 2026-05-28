@@ -154,7 +154,7 @@ describe('engine.mutate.file', () => {
       const s = makeState({
         deck: ['C001', 'C002'],
         file: Array.from({ length: 5 }, () => ({ type: 'card-back' as const })),
-        case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [] },
+        case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [], declaredUseCount: {} },
       });
       const result = produce(s, draft => {
         file.addFromDeckTop(draft, 'self', 2);
@@ -167,7 +167,7 @@ describe('engine.mutate.file', () => {
       const s = makeState({
         deck: ['C001'],
         file: Array.from({ length: 5 }, () => ({ type: 'card-back' as const })),
-        case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [] },
+        case: { cardId: 'CASE', status: '事件編' as const, requiredEvidence: 7, colors: [], declaredUseCount: {} },
       });
       const result = produce(s, draft => {
         file.addFromDeckTop(draft, 'self', 1);
@@ -180,7 +180,7 @@ describe('engine.mutate.file', () => {
       const s = makeState({
         deck: ['C001'],
         file: Array.from({ length: 8 }, () => ({ type: 'card-back' as const })),
-        case: { cardId: 'CASE', status: '解決編' as const, requiredEvidence: 7, colors: [] },
+        case: { cardId: 'CASE', status: '解決編' as const, requiredEvidence: 7, colors: [], declaredUseCount: {} },
       });
       const result = produce(s, draft => {
         file.addFromDeckTop(draft, 'self', 1);

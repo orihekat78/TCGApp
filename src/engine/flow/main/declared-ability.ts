@@ -16,6 +16,7 @@ import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
+import { char as readChar } from '../../read/char.js'; // BUG-067: ability.limit enforcement
 import { resolveEffectPicks } from '../../effect/resolve-picks.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 
@@ -68,10 +69,21 @@ function findCardOnBoard(
  * - 対象キャラが存在する
  * - 名乗り状態でも OK (rules/24)
  * - active でなくても OK (ただし sleep コストは支払不可なため別途 engine.cost.canPay 判定が必要)
- * - 【ターン①/②】チェックは listener の responsibility (Phase 5)
+ * - 【ターン①/②】 ability.limit (kind:'turn') を enforcement (BUG-067, 2026-05-28)
+ *   - 'game' kind は declaredUseCount がターン境界で reset されるため将来仕様、
+ *     現状未使用 (cards/_shared / cards/ct-* で全 turn:n=1)
  */
-export function canDeclaredAbility(state: GameState, uid: string, _abilId: string): boolean {
-  return findCardOnBoard(state, uid) !== null;
+export function canDeclaredAbility(state: GameState, uid: string, abilId: string): boolean {
+  const found = findCardOnBoard(state, uid);
+  if (!found) return false;
+  // ability.limit enforcement
+  const cardDef = readDef.card(found.cardId);
+  const ability = cardDef?.abilities?.find((a: AbilityDef) => a.id === abilId);
+  if (ability?.limit?.kind === 'turn') {
+    const used = readChar.declaredUseCount(state, uid, abilId);
+    if (used >= ability.limit.n) return false;
+  }
+  return true;
 }
 
 /**

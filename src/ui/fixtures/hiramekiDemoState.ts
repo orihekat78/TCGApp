@@ -53,7 +53,7 @@ function selfSide(pickedCardId: string): PlayerState {
   };
   return {
     partner: { cardId: 'D11001', state: 'active', location: 'partner-area' },
-    case: { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
+    case: { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['黄'], declaredUseCount: {} },
     scene: [],
     hand: [],
     deck: Array.from({ length: 8 }, () => 'D11008'),
@@ -67,7 +67,7 @@ function selfSide(pickedCardId: string): PlayerState {
 function oppSide(): PlayerState {
   return {
     partner: { cardId: 'D08001', state: 'active', location: 'partner-area' },
-    case: { cardId: 'D08020', status: '事件編', requiredEvidence: 7, colors: ['青'] },
+    case: { cardId: 'D08020', status: '事件編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} },
     scene: [
       // 現場 #1 (active) — actionAgainstCase の byUid に使う
       makeScene('D08017', 'demo-opp-1', { enterOrder: 0, state: 'active' }),

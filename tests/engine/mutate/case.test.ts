@@ -12,7 +12,7 @@ function makeState(status: '事件編' | '解決編' = '事件編'): GameState {
     players: {
       self: {
         ...s.players.self,
-        case: { cardId: 'CASE001', status, requiredEvidence: 7, colors: ['青'] },
+        case: { cardId: 'CASE001', status, requiredEvidence: 7, colors: ['青'], declaredUseCount: {} },
       },
       opp: s.players.opp,
     },
@@ -45,7 +45,7 @@ describe('engine.mutate.case', () => {
           self: s.players.self,
           opp: {
             ...s.players.opp,
-            case: { cardId: 'CASE002', status: '事件編' as const, requiredEvidence: 6, colors: ['赤'] },
+            case: { cardId: 'CASE002', status: '事件編' as const, requiredEvidence: 6, colors: ['赤'], declaredUseCount: {} },
           },
         },
       };

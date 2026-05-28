@@ -68,7 +68,7 @@ function makeLog(ts: number, player: 'self' | 'opp', turn: number, action: strin
 function selfPlayer(): PlayerState {
   return {
     partner: { cardId: 'D11001', state: 'sleep', location: 'partner-area' },
-    case: { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
+    case: { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['黄'], declaredUseCount: {} },
     scene: [
       makeScene('D11004', 'self-1', { enterOrder: 0, isNamed: true }),
       makeScene('D11006', 'self-2', { enterOrder: 1 }),
@@ -86,7 +86,7 @@ function selfPlayer(): PlayerState {
 function oppPlayer(): PlayerState {
   return {
     partner: { cardId: 'D08001', state: 'sleep', location: 'partner-area' },
-    case: { cardId: 'D08026', status: '解決編', requiredEvidence: 7, colors: ['青'] },
+    case: { cardId: 'D08026', status: '解決編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} },
     scene: [
       makeScene('D08004', 'opp-1', { enterOrder: 0 }),
       makeScene('D08006', 'opp-2', { enterOrder: 1, state: 'sleep' }),

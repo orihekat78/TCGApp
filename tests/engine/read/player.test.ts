@@ -21,7 +21,7 @@ describe('engine.read.player', () => {
   });
 
   it('case: 事件情報を返す', () => {
-    const s = withPlayer({ case: { cardId: 'C001', status: '解決編', requiredEvidence: 7, colors: ['青'] } });
+    const s = withPlayer({ case: { cardId: 'C001', status: '解決編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} } });
     expect(player.case(s, 'self').status).toBe('解決編');
     expect(player.case(s, 'self').colors).toContain('青');
   });

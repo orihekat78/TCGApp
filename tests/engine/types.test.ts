@@ -8,7 +8,7 @@ describe('engine types', () => {
       players: {
         self: {
           partner: { cardId: 'P1', state: 'active', location: 'partner-area' },
-          case: { cardId: 'C1', status: '事件編', requiredEvidence: 7, colors: ['青'] },
+          case: { cardId: 'C1', status: '事件編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} },
           scene: [],
           hand: [],
           deck: [],
@@ -18,7 +18,7 @@ describe('engine types', () => {
         },
         opp: {
           partner: { cardId: 'P2', state: 'active', location: 'partner-area' },
-          case: { cardId: 'C2', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
+          case: { cardId: 'C2', status: '事件編', requiredEvidence: 6, colors: ['黄'], declaredUseCount: {} },
           scene: [],
           hand: [],
           deck: [],
@@ -73,7 +73,7 @@ describe('engine types', () => {
       players: {
         self: {
           partner: { cardId: 'P1', state: 'sleep', location: 'partner-area' },
-          case: { cardId: 'C1', status: '解決編', requiredEvidence: 7, colors: ['青'] },
+          case: { cardId: 'C1', status: '解決編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} },
           scene: [],
           hand: [],
           deck: [],
@@ -83,7 +83,7 @@ describe('engine types', () => {
         },
         opp: {
           partner: { cardId: 'P2', state: 'active', location: 'file-area' },
-          case: { cardId: 'C2', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
+          case: { cardId: 'C2', status: '事件編', requiredEvidence: 6, colors: ['黄'], declaredUseCount: {} },
           scene: [],
           hand: [],
           deck: [],

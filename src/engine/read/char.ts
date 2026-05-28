@@ -146,6 +146,11 @@ function turnEffect(s: GameState, uid: string, key: string): unknown {
 
 // 宣言能力の使用回数 (rules: 15-abilities-effects.md 【ターン①】)
 function declaredUseCount(s: GameState, uid: string, abilityId: string): number {
+  // BUG-067: 事件カード (case:self / case:opp) の declared ability にも対応
+  if (uid === 'case:self' || uid === 'case:opp') {
+    const p = uid === 'case:self' ? 'self' : 'opp';
+    return s.players[p].case.declaredUseCount[abilityId] ?? 0;
+  }
   const char = scene.byUid(s, uid);
   return char?.declaredUseCount[abilityId] ?? 0;
 }

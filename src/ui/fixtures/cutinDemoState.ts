@@ -47,7 +47,7 @@ function makeScene(
 function selfSide(pickedCardId: string): PlayerState {
   return {
     partner: { cardId: 'D11001', state: 'sleep', location: 'partner-area' },
-    case: { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['黄'] },
+    case: { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['黄'], declaredUseCount: {} },
     // defender 1 体 (sleep — opp の action[char] 対象)
     scene: [
       makeScene('D11004', 'demo-self-def', { enterOrder: 0, state: 'sleep' }),
@@ -65,7 +65,7 @@ function selfSide(pickedCardId: string): PlayerState {
 function oppSide(): PlayerState {
   return {
     partner: { cardId: 'D08001', state: 'active', location: 'partner-area' },
-    case: { cardId: 'D08020', status: '事件編', requiredEvidence: 7, colors: ['青'] },
+    case: { cardId: 'D08020', status: '事件編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} },
     // attacker (active) — actionDeclareChar の byUid に使う
     scene: [
       makeScene('D08003', 'demo-opp-atk', { enterOrder: 0, state: 'active' }),
