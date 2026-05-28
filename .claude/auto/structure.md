@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 139
-- **ファイル数**: 1384
+- **ファイル数**: 1385
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -214,6 +214,7 @@
     - `BUG-079.md`
     - `BUG-080.md`
     - `BUG-081.md`
+    - `BUG-082.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
