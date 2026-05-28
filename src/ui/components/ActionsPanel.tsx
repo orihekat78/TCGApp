@@ -15,6 +15,12 @@ export type ActionsPanelProps = {
   /** ネクストヒント: 使用可否は呼び出し側で判定済み、FILE 枚数を表示 */
   nextHintFileCount: number;
   nextHintUsed: boolean;
+  /**
+   * 2026-05-28 バグ2 修正: NH は rules/05 で「制限なし」(同ターン何度でも可)。
+   * canStartNextHint (FILE に非アシストカード ≥1) を呼び出し側が渡す。
+   * 旧実装は disabled に nextHintUsed を含め 1 回で塞いでいた (バグ)。
+   */
+  canNextHint: boolean;
   /** パートナー能力: パートナーが active でなければ disabled */
   partnerActive: boolean;
   /** 宣言能力: 利用可能対象数 */
@@ -70,7 +76,7 @@ const PHASE_LABEL: Record<PhaseId, { en: string; jp: string }> = {
 export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
   const {
     handCount, handUseRemaining,
-    nextHintFileCount, nextHintUsed,
+    nextHintFileCount, nextHintUsed, canNextHint,
     partnerActive,
     declaredTargetCount,
     reasoningTotalLP,
@@ -101,9 +107,12 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
     },
     {
       id: 'next-hint',
+      // 2026-05-28 バグ2 修正: NH は「制限なし」(rules/05)。disabled は canNextHint
+      // (= canStartNextHint: FILE に非アシストカード ≥1) のみで判定。nextHintUsed は見ない。
+      // nextHintUsed は subtitle 表示用に残す (NH 済の視覚ヒント)。
       label: 'ネクストヒント',
-      subtitle: `FILE ${nextHintFileCount}枚`,
-      disabled: nextHintUsed || nextHintFileCount === 0,
+      subtitle: nextHintUsed ? `FILE ${nextHintFileCount}枚 (使用済)` : `FILE ${nextHintFileCount}枚`,
+      disabled: !canNextHint,
     },
     {
       id: 'partner-ability',

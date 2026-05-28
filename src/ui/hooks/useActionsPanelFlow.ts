@@ -15,6 +15,7 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction, type DispatchResult } from './useEngineDispatch.js';
 import { useConfirmation } from './useConfirmation.js';
 import { useTargetPicker } from './useTargetPicker.js';
+import { useNextHintPicker, type NextHintCandidate } from './useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from './useSceneSwitchPickerStore.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
@@ -145,32 +146,84 @@ export async function runReasoningFlow(opts: { player: Player }): Promise<FlowRe
 }
 
 /**
- * ネクストヒントフロー: 確認 → FILE 最上部を手札に + 続けて使用可。
+ * ネクストヒントフロー: picker で step1 (FILE→手札) + step2 (任意 1 枚使用) を提示。
  *
- * rules: 12-next-hint.md, 17-icons.md (【FILE(X)】)
- * spec: ui-action-flows.md ⑥ネクストヒント
+ * rules: 12-next-hint.md, 17-icons.md (【FILE(X)】), 20-color-and-switch.md (色制限)
+ * spec: ui-action-flows.md ⑥ネクストヒント / plan「ネクストヒント step2 UI 実装」
  *
- * - canStartNextHint=false → not-allowed
- * - reject → cancelled
- * - accept → dispatchEngineAction nextHint (optionalCardId は MVP では省略、
- *   FILE pop + nextHintUsed フラグのみ。次段で「続けて 1 枚使用」UI を実装予定)
+ * Option A (atomic, engine 不変): engine runNextHint(state, p, optionalCardId?) が
+ * step1+step2 を 1 call で atomic 実行する設計を活かし、UI 側で候補を事前提示する。
+ * これにより ❶❷ の間に他行動を挟む隙間が構造的に発生しない (rules/12 §Point)。
+ *
+ * フロー:
+ *   1. canStartNextHint check
+ *   2. FILE 最上部 cardId を算出 (配列末尾の非 assisted-partner、popTop と同ロジック)
+ *   3. postPopCount = (非アシスト FILE 枚数 - 1)。候補 = FILE-top + 手札を
+ *      level ≤ postPopCount かつ 色 ⊆ 事件色 で filter (rules/12 + rules/20)
+ *   4. picker 提示 → use(cardId) / skip / cancel
+ *   5. use → dispatch nextHint(optionalCardId) / skip → dispatch nextHint() / cancel → no-op
+ *
+ * NOTE: NH step2 のカード使用は handUseUsed を消費しない (engine が nextHintUsed のみ set)。
  */
 export async function runNextHintFlow(opts: { player: Player }): Promise<FlowResult> {
   const state = useGameStateStore.getState().gameState;
   if (state === null) return { ok: false, reason: 'no-state' };
-  if (!flow.canStartNextHint(state, opts.player)) {
+  const p = opts.player;
+  if (!flow.canStartNextHint(state, p)) {
     return { ok: false, reason: 'not-allowed' };
   }
-  const fileCount = state.players[opts.player].file.length;
-  const accepted = await useConfirmation().ask({
-    kind: 'standard',
-    title: 'ネクストヒント',
-    body: `FILE 最上部 (現在 ${fileCount} 枚) のカードを手札に加え、続けて 1 枚使用できます。`,
-    okLabel: 'ネクストヒント',
-    cancelLabel: 'キャンセル',
-  });
-  if (!accepted) return { ok: false, reason: 'cancelled' };
-  return dispatchEngineAction({ type: 'nextHint', player: opts.player });
+
+  // FILE 最上部 (非 assisted-partner) = 配列末尾から探す (mutate/file.ts popTop と同ロジック)
+  const file = state.players[p].file;
+  let fileTopCardId: string | null = null;
+  let nonAssistedCount = 0;
+  for (const f of file) {
+    if (f.type !== 'assisted-partner') nonAssistedCount += 1;
+  }
+  for (let i = file.length - 1; i >= 0; i--) {
+    if (file[i]!.type !== 'assisted-partner') { fileTopCardId = file[i]!.cardId; break; }
+  }
+  if (fileTopCardId === null) return { ok: false, reason: 'not-allowed' };
+
+  // rules/12: step1 で抜いた分は step2 の FILE 枚数判定に数えない → postPopCount
+  const postPopCount = nonAssistedCount - 1;
+  const caseColors = state.players[p].case.colors;
+
+  /** level ≤ postPopCount かつ 色 ⊆ 事件色 の キャラ/イベント のみ候補化 */
+  const toCandidate = (cardId: string, source: 'file' | 'hand'): NextHintCandidate | null => {
+    const d = readDef.card(cardId);
+    if (!d) return null;
+    if (d.kind !== 'character' && d.kind !== 'event') return null;
+    // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)
+    if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))) return null;
+    // レベル ≤ postPopCount (rules/12)
+    if (d.level !== undefined && d.level > postPopCount) return null;
+    return {
+      cardId,
+      source,
+      name: d.names?.[0] ?? cardId,
+      level: d.level ?? 0,
+      kind: d.kind,
+    };
+  };
+
+  const candidates: NextHintCandidate[] = [];
+  const fileTopCand = toCandidate(fileTopCardId, 'file');
+  if (fileTopCand) candidates.push(fileTopCand);
+  for (const cardId of state.players[p].hand) {
+    const c = toCandidate(cardId, 'hand');
+    if (c) candidates.push(c);
+  }
+
+  const fileTopName = readDef.card(fileTopCardId)?.names?.[0] ?? fileTopCardId;
+  const choice = await useNextHintPicker().ask({ fileTopCardId, fileTopName, candidates });
+
+  if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+  if (choice.kind === 'use') {
+    return dispatchEngineAction({ type: 'nextHint', player: p, optionalCardId: choice.cardId });
+  }
+  // skip: step1 のみ (FILE→手札、使用しない)
+  return dispatchEngineAction({ type: 'nextHint', player: p });
 }
 
 /**

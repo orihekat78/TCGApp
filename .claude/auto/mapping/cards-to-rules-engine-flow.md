@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `2a3825c0f73b`
+> Source hash: `aae98fe005fc`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **101** ファイル（[全体 index](./index.md)）
+このグループ: **102** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (6)
 
@@ -86,7 +86,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (43)
+## その他 (44)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -113,6 +113,7 @@
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useMisreadFlowDriver.ts`](../../../src/ui/hooks/useMisreadFlowDriver.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/ui/hooks/useMulligan.ts`](../../../src/ui/hooks/useMulligan.ts) | [`26-05-11-ui-game-setup-flows.md`](../../rules/26-05-11-ui-game-setup-flows.md) |
+| [`src/ui/hooks/useNextHintPicker.ts`](../../../src/ui/hooks/useNextHintPicker.ts) | [`12-next-hint.md`](../../rules/12-next-hint.md) |
 | [`src/ui/hooks/useOppTurnDriver.ts`](../../../src/ui/hooks/useOppTurnDriver.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/usePartner.ts`](../../../src/ui/hooks/usePartner.ts) | [`06-card-types.md`](../../rules/06-card-types.md) / [`18-mr.md`](../../rules/18-mr.md) |
 | [`src/ui/hooks/useRemoveCards.ts`](../../../src/ui/hooks/useRemoveCards.ts) | _(参照なし)_ |

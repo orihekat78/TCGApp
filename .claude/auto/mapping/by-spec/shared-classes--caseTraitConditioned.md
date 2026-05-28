@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `f6a531b34b39`
+> Source hash: `25f2f53c82ef`
 
 仕様書 [`caseTraitConditioned`](../../../specs/shared-classes/caseTraitConditioned.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

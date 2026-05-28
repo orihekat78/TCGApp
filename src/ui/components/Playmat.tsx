@@ -59,6 +59,7 @@ import { MisreadPickerModal, type MisreadCandidateView } from './MisreadPickerMo
 import { GuardPickerModal } from './GuardPickerModal.js';
 import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
 import { HiramekiPickerModal } from './HiramekiPickerModal.js';
+import { NextHintPickerModal } from './NextHintPickerModal.js';
 import { SceneSwitchPickerModal } from './SceneSwitchPickerModal.js';
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
@@ -487,9 +488,14 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}
         <ActionsPanel
           handCount={handCards.length}
-          handUseRemaining={gameState?.turnState.self.handUseUsed ? 0 : 1}
+          handUseRemaining={
+            // 2026-05-28: NH したターンは通常「手札の使用」不可 (rules/05、engine gate と一致)。
+            // handUseUsed (1ターン1回) に加え nextHintUsed でも 0 にして button を disable。
+            (gameState?.turnState.self.handUseUsed || gameState?.turnState.self.nextHintUsed) ? 0 : 1
+          }
           nextHintFileCount={gameState?.players.self.file.length ?? 0}
           nextHintUsed={gameState?.turnState.self.nextHintUsed ?? false}
+          canNextHint={gameState ? engineFlow.canStartNextHint(gameState, 'self') : false}
           partnerActive={gameState?.players.self.partner.state === 'active'}
           declaredTargetCount={
             gameState ? enumDeclaredAbilitySources(gameState, 'self').length : 0
@@ -570,6 +576,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
 
         {/* Phase 8 完全クローズ Commit 3a: ヒラメキモーダル */}
         <PlaymatHiramekiPickerModal />
+
+        {/* 2026-05-28: ネクストヒント step2 picker (FILE→手札 + 任意 1 枚使用) */}
+        <NextHintPickerModal />
 
         {/* Phase 5 advance UI: ミスリードモーダル (相手推理時、自分の現場 misread 持ち候補から複数選択) */}
         <PlaymatMisreadPickerModal />

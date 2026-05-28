@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 139
-- **ファイル数**: 1379
+- **ファイル数**: 1383
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1166,6 +1166,8 @@
       - `MisreadPickerModal.tsx` — Phase 8 完全クローズ Commit 3b: MisreadPickerModal (scaffold)
       - `MulliganModal.css`
       - `MulliganModal.tsx` — Round 2 — マリガン UI モーダル
+      - `NextHintPickerModal.css`
+      - `NextHintPickerModal.tsx` — 2026-05-28: ネクストヒント step2 picker modal
       - `OppTurnOverlay.css`
       - `OppTurnOverlay.tsx` — Phase 8.10a + Round 4l (BUG-010): opp ターン視覚化オーバーレイ
       - `PartnerArea.css`
@@ -1222,6 +1224,7 @@
       - `useLogEntries.ts` — Phase 7 Task 7.13: LogPanel selector hook
       - `useMisreadFlowDriver.ts` — Phase 5 advance UI — Misread driver
       - `useMulligan.ts` — Round 2 (Phase 5 advance) — マリガン UI Promise-based prompt
+      - `useNextHintPicker.ts` — 2026-05-28: ネクストヒント step2 (カード使用) picker 用 store + Promise hook
       - `useOppTurnDriver.ts` — Phase 8.7b Task: opp ターン自動進行ドライバ
       - `usePartner.ts` — Phase 7 Task 7.5: PartnerArea selector hook
       - `useRemoveCards.ts` — Phase 7 Task 7.10: RemoveArea selector hook
@@ -1487,7 +1490,7 @@
       - `useActionsPanelFlow.cost.test.ts` — Phase 8.8c: Ability cost resolution UI tests
       - `useActionsPanelFlow.declared-ability.test.ts` — Phase 8.8b: runDeclaredAbilityFlow tests
       - `useActionsPanelFlow.handuse.test.ts` — Phase 8.6: runHandUseFlow tests
-      - `useActionsPanelFlow.nextHint.test.ts` — Phase 8.6: runNextHintFlow tests
+      - `useActionsPanelFlow.nextHint.test.ts` — 2026-05-28: runNextHintFlow tests (step2 picker 経路)
       - `useActionsPanelFlow.partner-ability.test.ts` — Phase 8.8a: runPartnerAbilityFlow tests
       - `useActionsPanelFlow.reasoning.test.ts` — Phase 8 Task 8.6: runReasoningFlow tests
       - `useActionsPanelFlow.test.ts` — Phase 8 Task 8.5: ActionsPanel フロー (endTurn 最小配線)
@@ -1497,6 +1500,7 @@
       - `useEngineDispatch.effect-order.test.ts` — Phase 8 完全クローズ Commit 5: setEffectOrder dispatch tests
       - `useEngineDispatch.hirameki.test.ts` — Phase 8 完全クローズ Commit 3a: hiramekiResolve dispatch tests
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
+      - `useNextHintPicker.test.ts` — 2026-05-28: useNextHintPicker hook tests
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
       - `useOppTurnDriver.test.ts` — Phase 8.7b: useOppTurnDriver tests
       - `useSceneSwitchPickerStore.test.ts` — tests/ui/hooks/useSceneSwitchPickerStore.test.…
