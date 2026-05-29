@@ -37,13 +37,38 @@
 
 - ui-modal-flows.md / ui-style-anim.md は削除済 (実体は -contact / -other / -tokens)
 
-### モック参考資産 (design-mockups/)
+### モック参考資産 (design-mockups/ + design-mockups_v2/)
 
 UI 視覚デザイン参考のモック群。実装規範ではなく視覚参照。
 
 - [`design-mockups/01-board-mockup.html`](../../design-mockups/01-board-mockup.html) — **Phase 7 採用レイアウト基準** (盤面ハイファイモック)
 - [`design-mockups/`](../../design-mockups/) — ②③④（推理プロト / VS プロト / モーダルカタログ / アニメ検証）は Phase 7 着手時に採否判断
 - 詳細: [`design-mockups/README.md`](../../design-mockups/README.md)
+- [`design-mockups_v2/`](../../design-mockups_v2/) — **メタゲーム UI モック (HOME / SETUP / RESULT / DECK / CARDS / HISTORY / REPLAY / TUTORIAL / SETTINGS の 9 画面)** — `meta-app/` (Phase 10) の実装ソース
+
+### メタゲーム UI 統合 (Phase 10, 2026-05-28)
+
+`design-mockups_v2/` を `meta-app/` (port 5174 独立 TypeScript/React アプリ) として正式実装。
+既存 `src/` (port 5173 ゲーム) は完全不変、データ連携なし。詳細INDEX → [meta-ui/INDEX.md](meta-ui/INDEX.md)
+
+- [meta-ui/INDEX.md](meta-ui/INDEX.md) — サブ INDEX
+- [meta-ui/00-overview.md](meta-ui/00-overview.md) — 目的 / スコープ / 独立アプリ方針
+- [meta-ui/01-project-setup.md](meta-ui/01-project-setup.md) — meta-app 構成 / Vite / scripts / tsconfig
+- [meta-ui/02-design-system.md](meta-ui/02-design-system.md) — tokens.ts / 共通プリミティブ
+- [meta-ui/03-routing.md](meta-ui/03-routing.md) — useHashRoute / MetaShell / 遷移エッジ / ショートカット
+- [meta-ui/04-state-stores.md](meta-ui/04-state-stores.md) — metaStore / decksStore / historyStore + persist
+- [meta-ui/05-engine-stub.md](meta-ui/05-engine-stub.md) — engineStub TS 化計画
+- [meta-ui/06-screens-play-flow.md](meta-ui/06-screens-play-flow.md) — HOME / SETUP / RESULT
+- [meta-ui/07-screens-library.md](meta-ui/07-screens-library.md) — DECK / CARDS
+- [meta-ui/08-screens-reference.md](meta-ui/08-screens-reference.md) — HISTORY / REPLAY / TUTORIAL / SETTINGS
+- [meta-ui/09-phasing-and-verification.md](meta-ui/09-phasing-and-verification.md) — Phase 10-A〜10-J 工程 + 検証
+- [meta-ui/10-integration-with-src.md](meta-ui/10-integration-with-src.md) — **Phase 11**: 5174 を src/ 実機ゲームと統合 (Playmat / mulligan / CardArt 等 import 再利用、src 不変)
+- [meta-ui/11-cards-rebuild.md](meta-ui/11-cards-rebuild.md) — **Phase 12**: CardsScreen 元モック忠実再構築 (COVERAGE / 47 枚 JSON / 検索 / ソート / ★ お気に入り / USAGE)
+- [meta-ui/12-screens-rebuild.md](meta-ui/12-screens-rebuild.md) — **Phase 13**: 残り 7 画面 (HOME/SETUP/RESULT/DECK/HISTORY/TUTORIAL/SETTINGS/REPLAY) を元モック忠実に rebuild
+- [meta-ui/13-implementations.md](meta-ui/13-implementations.md) — **Phase 14**: MetaCard chrome 削除 + 未実装機能完成 (カスタムデッキ実機対戦 / フィルター拡張 / log 集計 / 練習試合 / cardBack)
+- [meta-ui/14-tutorial-complete.md](meta-ui/14-tutorial-complete.md) — **Phase 15**: チュートリアル完成 (8 章 + 進捗 persist + 練習試合連携、rules/01〜26 網羅)
+- [meta-ui/15-tutorial-lesson-viewer.md](meta-ui/15-tutorial-lesson-viewer.md) — **Phase 16**: ステップクリック→フルスクリーン lesson viewer (33 ステップ図解 / ページめくり carousel / Workflow ルール監査 15 finding 反映、他 TCG 参考)
+- [meta-ui/16-tutorial-real-board.md](meta-ui/16-tutorial-real-board.md) — **Phase 17**: 実対戦フォーマット流用 (実 Playmat 盤面スナップショット / 事件カード横向き / 該当箇所強調) + ワイド2ペイン + 章ごとガイド付き実戦 (src TutorialOverlay 流用)
 
 ## 骨格 (Engine) API 設計ファイル一覧 (2026-05-11)
 

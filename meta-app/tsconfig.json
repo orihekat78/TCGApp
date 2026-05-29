@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    // src/ の既存コードは noUncheckedIndexedAccess: false 前提のため、合わせる
+    "noUncheckedIndexedAccess": false,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "types": ["node", "vite/client"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "outDir": "../dist-meta",
+    "rootDir": "..",
+    "paths": {
+      "@meta/*": ["./src/*"],
+      "@/*": ["../src/*"]
+    },
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["src", "tests"],
+  "exclude": ["node_modules", "../dist-meta"]
+}

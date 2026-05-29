@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>06 Meta Screens — コナンTCG ホーム / デッキ編集</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: #050810;
+    color: #e0ecf8;
+    font-family: "Hiragino Sans","Yu Gothic UI","Noto Sans JP",-apple-system,sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Design canvas wrapper -->
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<!-- Data + shared primitives -->
+<script type="text/babel" src="06-card-data.jsx"></script>
+<script type="text/babel" src="06-shared.jsx"></script>
+
+<!-- Screens -->
+<script type="text/babel" src="06-home.jsx"></script>
+<script type="text/babel" src="06-deck-3col.jsx"></script>
+<script type="text/babel" src="06-deck-md.jsx"></script>
+
+<!-- App -->
+<script type="text/babel">
+function MetaScreensApp() {
+  return (
+    <DesignCanvas>
+      <DCSection
+        id="home"
+        title="ホーム画面"
+        subtitle="Master Duel 風メインロビー · ヒーロー中央 + ニュース/ミッション周辺配置"
+      >
+        <DCArtboard id="home-md" label="A · Master Duel 風ホーム" width={1920} height={1080}>
+          <HomeScreen />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection
+        id="deck"
+        title="デッキ編集画面"
+        subtitle="2 案。3 カラム高密度 vs Master Duel 風デッキスプレッド"
+      >
+        <DCArtboard id="deck-3col" label="B · 3 カラム / 競技勢向け高密度" width={1920} height={1080}>
+          <DeckEditor3Col />
+        </DCArtboard>
+        <DCArtboard id="deck-md" label="C · Master Duel 風スプレッド" width={1920} height={1080}>
+          <DeckEditorMD />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('app'));
+root.render(<MetaScreensApp />);
+</script>
+</body>
+</html>

@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 154
-- **ファイル数**: 1470
+- **ディレクトリ数**: 156
+- **ファイル数**: 1519
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -271,6 +271,13 @@
     - `2026-05-25-02-cardlistmodal-pick-mode.md`
     - `2026-05-25-03-handzone-pick-mode.md`
     - `2026-05-28-01-nexthint-step2-handzone.md`
+    - `2026-05-28-02-phase-11-meta-app-integration.md`
+    - `2026-05-28-03-phase-12-cards-rebuild.md`
+    - `2026-05-28-04-phase-13-screens-rebuild.md`
+    - `2026-05-28-05-phase-14-implementations.md`
+    - `2026-05-29-01-phase-15-tutorial-complete.md`
+    - `2026-05-29-02-phase-16-tutorial-lesson-viewer.md`
+    - `2026-05-29-03-phase-17-tutorial-real-board.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -599,6 +606,8 @@
     - `2026-05-22.md` — 作業ログ — 名探偵コナンTCG プロジェクト
     - `2026-05-23.md` — セッション 2026-05-23 — BUG-064 〜 077 cascade 詳細ログ
     - `2026-05-25.md` — セッション 2026-05-25 — Pilot Stage 3 完了 + D11007 v2 + 各種 fix 群
+    - `2026-05-28.md` — セッション 2026-05-28 — NH step2 UI 統合 + Phase 10〜14 (meta-app)
+    - `2026-05-29.md` — セッション 2026-05-29 — Phase 15 / 16 チュートリアル (meta-app)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -784,6 +793,13 @@
       - `07-screens-library.md` — 07 — カード管理経路 (DECK 編集 / CARDS)
       - `08-screens-reference.md` — 08 — 履歴・学習・設定 (HISTORY / REPLAY / TUTORIAL / SETTINGS)
       - `09-phasing-and-verification.md` — 09 — Phase 10 工程と検証
+      - `10-integration-with-src.md` — 10 — Phase 11 src/ 統合 (5174 を実機ゲーム + メタ UI 統合版へ)
+      - `11-cards-rebuild.md` — 11 — Phase 12 CardsScreen 元モック忠実再構築
+      - `12-screens-rebuild.md` — 12 — Phase 13 残り 7 画面の元モック忠実 rebuild
+      - `13-implementations.md` — 13 — Phase 14: chrome 削除 + 未実装機能の完成
+      - `14-tutorial-complete.md` — 14 — Phase 15: チュートリアル完成 (8 章 + 進捗 persist + 練習試合連携)
+      - `15-tutorial-lesson-viewer.md` — 15 — Phase 16: チュートリアル lesson viewer (ステップ → 別画面)
+      - `16-tutorial-real-board.md` — 16 — Phase 17: チュートリアル実対戦フォーマット流用 + ガイド付き実戦
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
@@ -848,6 +864,7 @@
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
+  - `scheduled_tasks.lock`
   - `settings.json` — Claude Code 設定 (権限・hooks 等)
 - **`.obsidian/`** — Obsidian Vault 設定 (ワークスペース / グラフ / プラグイン)
   - `app.json`
@@ -939,29 +956,51 @@
   - `README.md` — コナン TCG メタゲーム デザインモック
 - **`dist-meta/`**
   - **`assets/`**
-    - `index-Bz7J5Ggc.js`
-    - `index-DKrZpaQH.css`
+    - `index-CSfC8djj.css`
+    - `index-DfnJOjLD.js`
+    - `tsv-loader-fs-BWZZNTOu.js`
   - `index.html`
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
-      - `cardPool.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
+      - `cardPool.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 11-cards-rebuild.md
       - `sampleDeck.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
       - `types.ts` — spec: .claude/specs/meta-ui/02-design-system.md + 05-engine-stub.md
     - **`router/`**
       - `routes.ts` — spec: .claude/specs/meta-ui/03-routing.md
+      - `useGlobalShortcuts.ts` — spec: .claude/specs/meta-ui/03-routing.md
+      - `useHashRoute.ts` — spec: .claude/specs/meta-ui/03-routing.md
     - **`screens/`**
+      - **`tutorial/`**
+        - `AnnotatedCard.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
+        - `boardHints.ts` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
+        - `illustrations.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
+        - `TutorialBoardSnapshot.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
+        - `TutorialLessonViewer.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
+        - `types.ts` — spec: .claude/specs/meta-ui/15-tutorial-lesson-viewer.md
+      - `CardsScreen.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 11-cards-rebuild.md
+      - `DeckEditor.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 12-screens-rebuild.md
+      - `HistoryScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
+      - `HomeScreen.tsx` — spec: .claude/specs/meta-ui/06-screens-play-flow.md + 12-screens-rebuild.md
+      - `PlaceholderScreen.tsx` — spec: .claude/specs/meta-ui/03-routing.md
+      - `RealMatchView.tsx` — spec: .claude/specs/meta-ui/10-integration-with-src.md
+      - `ReplayScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
+      - `ResultScreen.tsx` — spec: .claude/specs/meta-ui/06-screens-play-flow.md + 10-integration-with-src.…
+      - `SettingsScreen.tsx` — spec: .claude/specs/meta-ui/08-screens-reference.md + 12-screens-rebuild.md
+      - `SetupScreen.tsx` — spec: .claude/specs/meta-ui/06-screens-play-flow.md + 10-integration-with-src.…
+      - `TutorialScreen.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
     - **`shared/`**
       - `AppTopBar.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 03-routing.md
       - `Button.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `CardSilhouette.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `EmptyState.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `FilterGroup.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
+      - `HelpOverlay.tsx` — spec: .claude/specs/meta-ui/03-routing.md
       - `index.ts` — spec: .claude/specs/meta-ui/02-design-system.md
       - `interactionStyles.ts` — spec: .claude/specs/meta-ui/02-design-system.md
       - `LoadingDots.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `MetaBg.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
-      - `MetaCard.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
+      - `MetaCard.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 13-implementations.md
       - `NavHUD.tsx` — spec: .claude/specs/meta-ui/03-routing.md
       - `NetworkStatus.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `tokens.ts` — spec: .claude/specs/meta-ui/02-design-system.md
@@ -971,14 +1010,26 @@
       - `historyStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
       - `metaStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
     - **`stubs/`**
+      - `engineStub.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
     - **`styles/`**
       - `meta.css`
+    - **`util/`**
+      - `customGameStart.ts` — spec: .claude/specs/meta-ui/13-implementations.md
+      - `deckBridge.ts` — spec: .claude/specs/meta-ui/10-integration-with-src.md + 13-implementations.md
+      - `tutorialResolvers.ts` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
     - `App.tsx` — spec: .claude/specs/meta-ui/03-routing.md
-    - `main.tsx` — spec: .claude/specs/meta-ui/01-project-setup.md
+    - `main.tsx` — Phase 11: src/ のエンジンを 5174 でも利用するためカード登録を起動時に実行
+    - `MetaShell.tsx` — spec: .claude/specs/meta-ui/03-routing.md
     - `vite-env.d.ts` — / <reference types="vite/client" />
   - **`tests/`**
     - **`e2e/`**
+      - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
+      - `engine-stub.spec.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 10-integration-with-src.md
+      - `golden-path.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.…
+      - `smoke.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
+      - `tutorial.spec.ts` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
   - `index.html`
+  - `playwright.config.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
   - `tsconfig.json`
   - `tsconfig.node.json`
   - `vite.config.meta.ts` — spec: .claude/specs/meta-ui/01-project-setup.md

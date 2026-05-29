@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `cdd78a32cfe7`
+> Source hash: `82490a38eda1`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,470 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-05-29
+title: Phase 17 — チュートリアルに実対戦フォーマット流用 + 横向き事件カード + ワイド2ペイン + 章ごとガイド付き実戦
+type: feat
+scope: meta-app
+---
+
+## ユーザー指示
+
+> 実際の対戦フォーマットを流用するようにしてください
+> 事件カードについては横カードなのだから対応してください
+> 出てくるテキストボックスが小さいので大きくしてほしい。カードの表示も大きくして、説明文がどの箇所を指しているのか該当箇所を強調してほしい
+> step3 からは実際のプレイを交えながら行っていったほうがいいかもしれませんね
+> 質問やモックでの確認もしてくれて構いません
+
+確定方針 (AskUserQuestion + モック提示): Q1=実 Playmat 静的埋め込み / Q2=章ごとガイド付き実戦 / Q3=ワイド2ペイン。
+
+## 主要変更 (`meta-app/` のみ、`src/` は import only で git diff = 0)
+
+### A. ワイド2ペイン viewer + 拡大 (Q3)
+- `TutorialLessonViewer` を `min(1040px,96vw)` の 2 ペインに再構成
+- 左ペイン = step 種別で出し分け (card / board / illustration)、右ペイン = STEP + **拡大本文 (15px/lineHeight1.85)** + パーツ/ゾーン一覧 + ナビ
+
+### B. 実カード拡大 + 横向き事件 + 該当箇所強調 (Q1, #2, #3)
+- `AnnotatedCard` 新規: 実 `CardArt` を拡大描画 (縦 ~300px / 事件は **116:84 横向き ~440px**)。旧 `MetaCard w=140` 縦固定による歪みを解消
+- `CARD_REGIONS` 正規化矩形でカード各パーツ (種類/色/名前/AP/LP/効果/No/事件レベル) に発光ボックス + 番号。公式実画像を Playwright 目視確認して座標確定 (AP「6000」LP「1」事件レベル「先7/後6」等に正対応)
+- 右ペイン一覧 hover ↔ 左の region を共有 `activeKey` で gold pulse 強調、他は dim (該当箇所強調)
+
+### C. 実 Playmat 盤面スナップショット (Q1, #1)
+- `TutorialBoardSnapshot` 新規: `FitScaleBox` (実測フィット縮小) で実 `<Playmat gameState={createSampleGameState()}>` を読み取り専用描画 (pointer-events none)
+- `boardHints.ts` の `STEP_BOARD_ZONES` で各 step の強調ゾーン (.scene-area.side-self 等) を定義 → snapshot root 内 querySelector で box 描画 + 右ペイン一覧 hover 連動
+- 左ペイン出し分け: ch1-2/ch3/ch4/ch5-1..4 = 盤面、ch1-1/ch6/ch7/ch8 = 既存模式図、ch2-* = 実カード
+- `util/tutorialResolvers.ts` に resolver を共有抽出 (RealMatchView も同 import に差替、挙動不変)
+
+### D. 章ごとガイド付き実戦 (Q2, #4)
+- viewer フッタ (ch3+) 「▶ この章を実戦で試す」→ `useTutorialStore.setState({currentStep: CHAPTER_TO_SRC_STEP[ch]})` + customGameStart + #match。RealMatchView 既存 `<TutorialOverlay/>` が実盤面で該当 step のガイド + ゾーンハイライトを表示 (実際に推理/アクションを操作しながら学べる)
+- `CHAPTER_TO_SRC_STEP`: meta 章 → src `TUTORIAL_STEPS` index (ch3→L3-1「3フェイズ」, ch4→L4-1「推理」, ch5→L5-1「アシスト」, ch6→L9-1「カットイン」, ch7→L6-1「アクション」, ch8→L13-1「MR」)
+- overlay リセットは **非ガイド起動側で決定的に** (startPractice / SetupScreen.handleReady で `exit()`)。unmount cleanup での exit は React StrictMode が currentStep を消すため不可と検証で判明 → 採用しない
+
+## 検証
+
+- tsc green / e2e **29/29 全緑** (既存 25 + 追加 4: 盤面スナップショット `.case-area` / 横事件 width>height / region 注釈 + パーツ一覧 / ガイド実戦起動→#match + `.tutorial-overlay`)
+- Playwright 実機: 横事件 (440×319)・region 正対応・hover で該当 region gold pulse・ch3 CTA→実戦+overlay「3フェイズで進む(8/33)」+highlight・console error 0
+- `src/` git diff = 0 (`src/ vite.config.ts tsconfig.json tests/` = 0 件)
+
+## 仕様 / 記録
+
+- `.claude/specs/meta-ui/16-tutorial-real-board.md` 新規 + meta-ui/INDEX・specs/INDEX に entry 17
+- 本エントリ `2026-05-29-03-phase-17-tutorial-real-board.md`
+
+## 持ち越し (Phase 18+)
+
+- 操作の正誤判定 / ゲーティング (現状 overlay は手動 next)
+- 章別シナリオ盤面 (専用 deck/手札固定) / viewer スワイプ / バンドル分割
+
+---
+date: 2026-05-29
+title: Phase 16 — チュートリアルを「ステップ→別画面 lesson viewer」化 (33 ステップ図解 + Workflow ルール監査)
+type: feat
+scope: meta-app
+---
+
+## ユーザー指示
+
+> 説明の項目をクリックしたら別画面で説明が始まるようにしてほしい
+> このチュートリアルについては他 TCG ゲームを参考に開発してほしい
+> チュートリアルでのレイアウトはコナンカードゲーム公式ページに例が上がっているので Playwright で確認して参考に
+> https://conan-tcg.commmune.com/view/knowledgebase/post/16862 こういったページ周辺も参考に
+
+Phase 15 はステップクリックが「クリア記録」のみで、説明は常時右パネルに章単位表示だった。本 Phase で「クリック → 別画面で説明開始」へ刷新。
+
+## 他 TCG 参考 (Playwright + Web)
+
+- **Yu-Gi-Oh Master Duel**「遊び方」= 1 トピック 1 ページのページめくり式 → lesson viewer の基本形
+- 公式「初めての方へ」(takaratomy) = 8 セクション 2 グループ構成を踏襲
+- 公式ルールマニュアル Ver 2.4 (commmune P3-5) = カード annotated 表記 → `CardAnnotated` の番号注釈に反映
+- カルーセル UX (NN/g, Smashing): 1 画面 1 概念 / 進捗ドット / 常時 skip 可
+
+## 主要変更 (`meta-app/` のみ)
+
+### A. データモデル分解 (16-A, `screens/tutorial/`)
+- `tutorial/types.ts` 新規 — `TutorialStep` / `TutorialChapter` 型を切り出し (TutorialScreen ↔ viewer の循環依存回避)
+- `illustrations.tsx` を **章単位 8 コンポーネント → ステップ単位 33 図解** へ分解、`STEP_ILLUSTRATIONS: Record<stepId, ReactNode>` レジストリを export
+- 共通プリミティブ拡充: 既存 Panel/SectionLabel/TermRow/PointBox/WarnBox に加え Zone/PhaseBox/FlowStep/Token/MiniChar/CaseStateBox/TimingChip/CardAnnotated/CalloutPill/DeckPile/KeywordCard/AdvancedSection
+
+### B. TutorialLessonViewer 新規 (16-B)
+- フルスクリーン没入オーバーレイ (`position: fixed; inset: 0; z-index: 300`、backdrop blur) で AppTopBar も覆う (Master Duel 風)
+- ヘッダ `CHAPTER 0X · {title} · ステップ N / M` + × / 本体 `STEP {num}` + title + `STEP_ILLUSTRATIONS[id]` + body / フッタ 進捗ドット (クリックでジャンプ) + 「← 前」「次へ →」(最終「章を完了 ✓」)
+- 「次へ」= `onStepComplete(stepId)` (= markStepCleared) → 前進 / 最終は閉じる
+- Esc / ← / → キーボード + backdrop / × で離脱 (skip 常時可)
+
+### C. TutorialScreen ハブ再構成 (16-C)
+- 右パネル常時 Illustration を撤廃、3 カラム (左 ChapterProgress+ChapterList / 中央 StepCardList「▸ 開く」/ 右 ChapterSummary「この章で学ぶこと」+ 進捗 + 「章を最初から学ぶ ▸」CTA) に
+- `viewerState: { chapterNum, stepIndex } | null` でステップ別画面を開閉
+- `TUTORIAL_CHAPTERS` は引き続き export (ResultScreen が step id 集計に使用)、Phase 15-E 練習試合連携 (ch5 自動クリア) 保持
+
+### D. Workflow による章別 adversarial ルール監査 (16-review)
+33 ステップ図解 vs `rules/01〜26` を 8 章 reviewer + refute-by-default verifier (計 24 agent) で照合、**確認 15 finding を反映**:
+- **ch1-2**: 「場の 7 エリア」→ **8 エリア** (手札含む) / FILE「オート +2」→「毎ターン +2 (初手1)」
+- **ch2-1**: 「AP はコンタクト (戦闘) で比較」→ **「アクション (攻撃) で比較」** (現行用語)
+- **ch3-1** (high): 開幕に **「① 事件/パートナーを裏向き配置」** を追加 (公式 04 step1 欠落) / マリガンに **「デッキをシャッフル」**+先攻先決定を追記
+- **ch3-2** (high): AUTO に **「アシスト中パートナーは戻す / スタンは代わりにスリープ / FILE は 1 枚ずつ最新が上」** + メイン制限 (手札 1 回・名乗り不可・割り込み不可) を追記
+- **ch4-1**: 推理に **「名乗り/スリープは推理不可」** / **ch4-2** (high): アクション対象 **「スリープ/スタンの相手キャラ・証拠ある事件のみ、アクティブ相手・証拠0事件は不可」** / **ch4-3** (high): コンタクト **「AP 同値は非ターンプレイヤーが 1 番目」** / **ch4-4**: NH **「登場キャラは同ターン登場 (名乗り→推理不可)」**
+- **ch6-1** (high): ヒラメキ **「アクション[事件]によるリムーブ時のみ発動 (カード効果では不発動)」**
+- **ch7-1**: 疾風 **「能力・効果による登場でも発動」** / **ch7-4**: ブレット例を非公式「直接通る」→公式準拠「ガードを宣言できない」に
+
+## 不変条件 (継続遵守)
+
+- ✅ `src/` 配下 1 行も変更なし (`git status -- src/ vite.config.ts tsconfig.json tests/` = 0 件)
+- ✅ Phase 11 統合経路保持 (`useGameStateStore` / `setGameState` / `customGameStart`)
+- ✅ Phase 15 進捗 persist (`tutorialClearedStepIds`) / Phase 15-E 練習試合連携 維持
+- ✅ カード画像非同梱・ローカル限定運用 (法務スタンス維持)
+
+## 検証
+
+- tsc (`meta-app/tsconfig.json`) green / build green
+- meta-app e2e **25/25 全緑** (既存 19 + tutorial 6: ハブ 8 章 / ステップカードクリック→viewer / 次へ進行+persist / ch2 番号注釈 / ch7 KeywordCard / Esc クローズ)
+- セルフレビュー実施済 / 水平展開 = 33 図解全件を rules 照合 (Workflow 8 章 fan-out)
+
+## 仕様 / 記録
+
+- `.claude/specs/meta-ui/15-tutorial-lesson-viewer.md` (76 行) + meta-ui/INDEX.md・specs/INDEX.md に entry 16 登録
+- `.claude/changelog-entries/2026-05-29-06-phase-16-tutorial-lesson-viewer.md` (本ファイル)
+
+## 持ち越し (Phase 17+)
+
+- 動的 unlock (章チェーン) / 各ステップ末クイズ
+- 練習試合中に src/ TutorialOverlay を active 化 (実盤面 highlight)
+- 章別の練習シナリオ (ch4 コンタクト / ch6 カットイン 等)
+- viewer のスワイプ操作 (タッチ) 対応 / バンドル分割
+
+---
+date: 2026-05-29
+title: Phase 15 — チュートリアル完成 (8 章 + 進捗 persist + 練習試合連携、rules/01〜26 網羅)
+type: feat
+scope: meta-app
+---
+
+## ユーザー指示
+
+> チュートリアルを完成させたい
+> チュートリアルにはキャラクター、イベント、事件、パートナーカードのそれぞれの記載の説明をしてくれるシーンも作成してほしい
+> 特有のキーワードについてのチュートリアルも実装したい (疾風・突撃など)
+> 他にルールを参照してみて、チュートリアルに加えたほうがいい内容を加えてほしい
+> 動的アンロックは今実装しないでほしい
+> 公式ページ (takaratomy + commmune) を Playwright で参照して
+
+Phase 14-D で骨格はあったが、章 4 のみ Illustration / step state ハードコード / persist なしという未完成状態。Phase 15 で標準スコープ実装 (動的 unlock 除外)。
+
+## 主要変更 (`meta-app/` のみ)
+
+### A. metaStore 拡張 (15-A)
+- `Settings.tutorialClearedStepIds: string[]` + persist + hydrate fallback
+- `_pendingPracticeChapter: number | null` (transient、persist しない)
+- actions: `markStepCleared` / `markChapterStepsCleared` / `isStepCleared` / `startPracticeFor` / `consumePendingPractice`
+
+### B. TutorialScreen progress-driven (15-B)
+- 旧 6 章 hardcoded → **新 8 章** progress-driven 構造に書換
+- ChapterList を 2 グループ (「初めての方は」beginner 4 / 「詳しく知りたい方」advanced 4) + 番号バッジ
+- step state 算出: `cleared` / `current` (章内最初の未 clear) / `pending`
+- 動的 unlock 撤回 (開発中のため) — 全章常時アクセス可
+- step click → `markStepCleared` → persist
+
+### C. 全 8 章 Illustration (15-C, `screens/tutorial/illustrations.tsx` 一括)
+公式 https://www.takaratomy.co.jp/products/conan-cardgame/beginner/ と https://conan-tcg.commmune.com/ (ルールマニュアル Ver 2.4 全 27 ページ) を Playwright で参照、章構成と Illustration デザインに反映:
+- 共通プリミティブ: `Panel` / `SectionLabel` / `TermRow` / `PointBox` / `WarnBox`
+- **ch1** 基本ルール: 7 エリア構造 (相手陣 / 自陣 鏡像)
+- **ch2** カードの読み方 🆕 (公式 P3-5 参考): `CardAnnotated` + `CalloutPill` 新規、キャラ/イベント/事件/パートナーの 4 種をそれぞれ番号注釈付きで解説
+- **ch3** ゲーム開始からターン進行: マリガン 6 ステップ + 3 フェイズ flow
+- **ch4** キャラ行動とリソース管理: 推理 vs アクション + コンタクト AP 比較 + ネクストヒント + リフレッシュ + 敗北 WARN
+- **ch5** 解決編とアシスト勝利不可: 事件編→解決編 + 必要証拠 7/6 + WARNING
+- **ch6** 効果と能力: アイコン能力 4 種 grid + 宣言能力構文解説 + タイミングアイコン chip
+- **ch7** キーワード能力 🆕: 6 キーワード (疾風 / 突撃 / 迅速 / ブレット / 捜査 / 痕跡) icon + 説明 + 例
+- **ch8** 上級者向け: MR / 色制限 + スイッチ / スタン特殊 / 数値修正 / セット vs 下に重ねる の 5 セクション
+
+### D. ResultScreen 練習試合連携 (15-E)
+- 終局時に `consumePendingPractice()` で章番号取得
+- `result.winner === 'self'` なら該当章 (ch5 = 解決編) の全 step を `markChapterStepsCleared` で一括 cleared
+- 敗北では章クリアしない (再挑戦推奨)
+
+### 公式ルール網羅
+| rules | カバー章 |
+|---|---|
+| 01 勝利条件 / 02 デッキ / 03 エリア / 04 開幕 / 05 ターン / 06 種別 | ch1, ch3, ch5 |
+| 07-08 アクション / 09-10 cutin-hirameki / 11 推理 / 12 NH / 13 keywords / 14 refresh | ch4, ch5, ch6, ch7 |
+| 15 / 16 / 17 / 18 / 19 / 20 / 21 / 22-26 Q&A | ch6, ch7, ch8 |
+| 27-30 制限/エラッタ/フロアルール | ❌ out of scope (競技規定) |
+
+## 不変条件 (継続遵守)
+
+- ✅ `src/` 配下 1 行も変更なし (Phase 10-14 から継続)
+- ✅ Phase 11 統合経路保持 (`useGameStateStore` / `setGameState` / `customGameStart`)
+- ✅ 既存 vitest / playwright e2e 全件無修正で緑
+
+## 検証
+
+- tsc + build green
+- meta-app e2e **24/24 全緑** (Phase 14 既存 19 件 + Phase 15 tutorial 5 件)
+  - 8 章すべてリスト表示 (2 グループ label 含む)
+  - step クリック → localStorage `tutorialClearedStepIds` 含まれる
+  - ch2 CardAnnotated 4 種表示
+  - ch4 「ネクストヒント」「リフレッシュ」+ WARNING 表示
+  - ch7 キーワード 6 種すべて表示
+- 5174 で:
+  - 全 8 章クリック可能 (locked なし)
+  - 各章右パネルに Illustration 表示
+  - step click → 進捗 bar 更新 + リロード後も persist
+  - ch5 練習試合 → 勝利 → ch5 全 step 自動 cleared
+  - HOME ホームへ戻っても 進捗保持
+
+## 仕様 / 記録
+
+- `.claude/specs/meta-ui/14-tutorial-complete.md` 新規 (78 行) + INDEX 登録
+- `.claude/changelog-entries/2026-05-29-01-phase-15-tutorial-complete.md` (本ファイル)
+
+## 持ち越し (Phase 16+)
+
+- **動的 unlock** (章チェーン unlock) — 開発が落ち着いてから
+- 各章末にクイズ (選択式) 追加
+- 練習試合中に src/ TutorialOverlay を active 化 (現ステップ highlight)
+- 章ごとに専用の練習試合シナリオ (ch4 → コンタクト、ch6 → カットイン 等)
+- ReplayScreen 実盤面再生
+- バンドル分割
+
+---
+date: 2026-05-28
+title: Phase 14 — MetaCard chrome 削除 + 未実装機能の完成 (カスタムデッキ実機対戦 / フィルター拡張 / log 集計 / 練習試合 / cardBack)
+type: feat
+scope: meta-app
+---
+
+## ユーザー指示
+
+> カードごとに使われている青枠みたいなのは、対戦以外には必要ないので削除して外してください。
+> また、モックの反映は出来たと思うので未実装のところについても実装を行ってください。
+
+Phase 13 で全 9 画面の構造は揃ったが、MetaCard chrome (色枠/上部ストライプ/下部フッタ) が CardArt 公式画像と重なって冗長、また持ち越し項目が残っていた。Phase 14 でまとめて解消。
+
+## 主要変更 (`meta-app/` のみ)
+
+### MetaCard chrome 削除 (前段)
+- `shared/MetaCard.tsx`: `linear-gradient` 背景 / 上部 cost+rarity ストライプ / 下部 name+AP フッタ / 色付き 1px border を**削除**
+- 残置: 選択リング (gold outline) / count badge / favorited ★ / partner/case badge / hover アニメ
+- 結果: 対戦外画面で `<CardArt cardId>` のみが素表示され、Playmat (src/) のカード描画と整合
+
+### Phase 14-A: カスタムデッキ → engine DeckSpec 変換
+- `util/customGameStart.ts` 新規: `toEngineDeck(deck: DeckRecord)` + `customGameStart(self, opp)` で src/gameStarter の内部ロジックをミラー
+- `util/deckBridge.ts` の `isPlayable`: deckId 一致 → **validateDeck 合格** で判定に変更
+- `screens/SetupScreen.tsx` の `handleReady`: `performGameStart` → `customGameStart(selfDeck, oppDeck)` に切替
+- パートナー→事件マップ: `D08001/D08002 → D08026`, `D11001/D11002 → D11021`, color fallback で他にも対応
+- 結果: カスタムデッキで実機対戦が動作するようになった
+
+### Phase 14-B: DeckEditor フィルター拡張
+- 既存の色/種別フィルターに加え:
+  - `costFilter: Set<number>` (0〜8, 8 は 8+ 集約)
+  - `featureFilter: Set<string>` (CARD_POOL 全 features 自動列挙)
+  - `keywordFilter: Set<string>` (CARD_POOL 全 keywords 自動列挙)
+- `FilterRail` UI に 3 つのフィルター + 全リセットで全クリア
+- 全フィルター AND で適用、各 chip に件数表示
+
+### Phase 14-C: HistoryScreen 統計を engine.log 集計へ
+- `ResultScreen.buildMatchRecord` に `countLogActions(gs.log)` 追加
+  - `contacts`: `contact-judge` / `contact:judge` カウント
+  - `hirameki`: action / result に `hirameki` 含むエントリ
+  - `misread`: action / result に `misread` 含むエントリ
+- 新規対戦の MatchRecord は実値、旧履歴は 0 のまま (互換)
+
+### Phase 14-D: TutorialScreen 練習試合 → 実ゲーム起動
+- `startPractice()` 関数: SAMPLE_DECK (D08) + SAMPLE_DECK_OPP (D11) で `customGameStart` を直接呼出
+- 章 04「練習試合」ボタンと SubToolbar「PRACTICE」ボタン両方が同じ動作
+- SETUP 経由せず直接 #match へ遷移 → mulligan modal → 対戦開始
+
+### Phase 14-E: SettingsScreen card back + audio 実装
+- `metaStore.Settings` 拡張: `cardBack: CardBackId` ('gold'|'azure'|'crimson'|'jade'|'noir') + `bgmVolume` + `seEnabled`
+- `onRehydrateStorage` で旧 v1 hydrate fallback (フィールド欠落 → default 補填)
+- `CardBackSelector` コンポーネント: 5 種 gradient プレビュー + active バッジ + クリックで切替
+- SystemRightRail に「CARD BACK · 現在」プレビュー追加
+- audio スライダー / トグル は persist のみ (実音は Phase 15+)
+
+## 不変条件 (継続遵守)
+
+- ✅ `src/` 配下 1 行も変更なし
+- ✅ Phase 11 統合経路保持
+- ✅ 既存 vitest / playwright e2e 全件無修正で緑
+
+## 検証
+
+- tsc + build green
+- meta-app e2e 19/19 全緑 (smoke 10 / golden-path 3 / cards 4 / engine-stub 2)
+- 5174 で:
+  - HOME/DECK/CARDS のカードが純粋な CardArt 表示 (chrome なし)
+  - DeckEditor のフィルターが cost / 特徴 / キーワード も動作
+  - SETUP → READY でカスタムデッキも実機対戦可能 (validateDeck OK 前提)
+  - TUTORIAL の「練習試合」ボタンで直接実機対戦開始
+  - SETTINGS で cardBack 選択 → persist → 再起動後も保持
+  - RESULT 後 history に記録される MatchRecord に実 contacts/hirameki/misread
+
+## 仕様 / 記録
+
+- `.claude/specs/meta-ui/13-implementations.md` 新規 (83 行) + INDEX 登録
+- `.claude/specs/INDEX.md` に Phase 14 追記
+
+## 持ち越し (Phase 15+)
+
+- ReplayScreen の実盤面再生 (`engine.event.applyUntil`)
+- OpponentHeatmap を実 history から動的集計
+- audio (BGM/SE) の実音実装
+- TutorialScreen 進捗 persist
+- バンドル分割 (chunk size warning 解消)
+
+---
+date: 2026-05-28
+title: Phase 13 — 残り 7 画面を元モック忠実に rebuild (HOME / SETUP / RESULT / DECK / HISTORY / TUTORIAL / SETTINGS / REPLAY)
+type: feat
+scope: meta-app
+---
+
+## ユーザー指示
+
+> 他モックについても同様にお願いします
+
+Phase 12 で CardsScreen を `design-mockups_v2/08-cards.jsx` 忠実版に書き直した実績を、残り 7 画面に横展開。`src/` は完全不変、Phase 11 統合 (SetupScreen → performGameStart、ResultScreen → gameState 直読) は壊さず維持。
+
+## 画面別 rebuild
+
+| 画面 | 旧 LOC | 新 LOC | 主要追加要素 |
+|---|---|---|---|
+| ResultScreen   | 208 | 350+ | ResultBackdrop (radial bloom + light rays + 40 particle dots) / Verdict 巨大 JP + VICTORY 装飾 / MVPShowcase (gradient + ⭐ + big card + ContribRow x 4) / ResultStats (ScoreSide + 6 StatCompare grid + PROGRESS) / 5 button Actions |
+| SetupScreen    | 242 | 350+ | ModeTile (SELECTED badge + ModeAvatar x 2 + desc) / PlayerConfigPanel (P1/P2 + partner + ConfigRow + MiniMetric) / SwapButton / SetupMatchOptions (4 OptionToggle) |
+| HomeScreen     | 268 | 420+ | HeroBackdrop (skyline SVG + magnifier watermark + light beam) / CenterHero / HeroPartner (3 カード fan + sparkles) / DuelButton (大型シェブロン) / 強化 Panel 群 |
+| DeckEditor     | 237 | 530+ | SubToolbar (rename + Save) / FilterRail / CardListGrid + CardDetailPanel / DeckHeader (40/40) / DeckStats (CostCurve + ColorBar + TypeRow) / DeckList (cost sort + AP + keyword chip) |
+| HistoryScreen  | 157 | 360+ | HistorySubToolbar (filter chips + deck select) / WinRateSummary (sparkline 14 戦) / DeckPerformance (実 history 集計) / MatchDetail / OpponentHeatmap (3x5 matchup) |
+| TutorialScreen | 224 | 400+ | SubToolbar (進捗 bar) / ChapterProgress (rank) / ChapterList (locked/cleared/current 状態別) / ChapterContent (TutorialStep) / ChapterIllustration (CardDiagram + WARNING + TermRow + POINT) |
+| SettingsScreen | 173 | 320+ | Header (戻る/データ削除) / CategoryRail (6 cats + icon) / DetailPanel (visual/play/audio/control/data/about) / SegmentedControl / Toggle / Slider / SystemRightRail |
+| ReplayScreen   | 125 | 220+ | BoardZone snapshot (partner + 現場 mock) / Scrubber (⏮◀▶⏭ + progress bar) / ActionLog (turn ごとカラーログ) |
+
+## 不変条件 (絶対遵守、すべて達成)
+
+- ✅ `src/` 配下 1 行も変更なし (`git status -- src/ tsconfig.json vite.config.ts tests/` = 0 件)
+- ✅ Phase 11-C SetupScreen 配線保持: `nav('match')` 先実行 → `performGameStart` async → `setGameState`
+- ✅ Phase 11-E ResultScreen 配線保持: `gameState` 直読 + `recordedRef` dedup + `setState({ gameState: null })`
+- ✅ Phase 12 CardsScreen 動作維持
+- ✅ 既存 vitest / playwright e2e 全件無修正で緑 (golden-path の 2 件のテキスト追従修正のみ)
+
+## 検証
+
+- tsc + build green (bundle 600KB 程度)
+- meta-app e2e 19/19 全緑 (smoke 10 / golden-path 3 / cards 4 / engine-stub 2)
+- 5174 で全 9 画面確認 (HOME → SETUP → 実機対戦 → RESULT → HISTORY → REPLAY 通し動作)
+
+## 仕様 / 記録
+
+- `.claude/specs/meta-ui/12-screens-rebuild.md` 新規 (100 行以内) + `meta-ui/INDEX.md` + `.claude/specs/INDEX.md` 登録
+- `.claude/memory.md` 末尾に Phase 13 ログ追記
+- F-rule-audit 残課題: TutorialScreen 章 04 で「アシスト勝利不可」図解を完全反映
+
+## 持ち越し (Phase 14+)
+
+- カスタムデッキ → engine DeckSpec 変換 (現状 CT-D08 / CT-D11 専用)
+- HistoryScreen の MatchRecord 集計を engine.log ベースに精緻化 (contacts/hirameki/misread)
+- ReplayScreen の実盤面再生 (`engine.event.applyUntil` 利用)
+- OpponentHeatmap を実 history から動的集計
+- バンドル分割 (chunk size warning 解消)
+
+---
+date: 2026-05-28
+title: Phase 12 — CardsScreen を元モック忠実に再構築 + 47 枚カード対応
+type: feat
+scope: meta-app
+---
+
+## ユーザー指摘
+
+> design-mockups_v2 既存のこちらでは、スクショのようになっていたのですがなぜ変更されているのでしょうか？
+
+スクショで提示された元モック CARDS 画面 (COVERAGE パネル / 47/47 種類 / 検索 / ソート / ★ お気に入り / USAGE 統計) と私の Phase 10 実装の乖離 (約 42% 削減) が指摘された。Phase 11-B で導入した `CardArt` (公式画像) は維持しつつ、CardsScreen のレイアウト/機能のみ元モック `design-mockups_v2/08-cards.jsx` (479 行) に忠実に作り直した。
+
+## 主要変更 (`meta-app/` のみ)
+
+- **data/cardPool.ts 全面書換**: 27 枚ハードコード → `src/ct-d08-cards.json` (26 枚) + `src/ct-d11-cards.json` (21 枚) を直接 import + 型変換 (日本語 type/color → 英語 enum、string ap/lp/cost → number、cutIn/hirameki/henso + effect 文字列から keywords 派生)
+- **state/metaStore.ts**: `favorites: string[]` フィールド追加、`toggleFavorite` / `isFavorited` action、`onRehydrateStorage` で旧 v1 (favorites 欠落) を `[]` fallback
+- **shared/MetaCard.tsx**: `isFavorited?: boolean` prop 追加 → 右上に ★ overlay (count badge と非衝突位置)
+- **screens/CardsScreen.tsx 全面書換** (198→528 行): SubToolbar (証拠ファイル + 47/47 + 検索 + 表示モード ✱✱✱ + 新着順/コスト順) + 左 CoveragePanel (100% + 47/47 + BY COLOR バー × 5 + BY RARITY × 4) + 左 FiltersPanel (色/種別/キーワード チップ群 + リセット) + 中央 CardGrid (CARDS · N 件 + ★お気に入り数 + auto-fill grid) + 右 SelectedDetail (大カード + C/AP/LP 3box + EFFECT セクション + USAGE: 採用デッキ N/D / 勝率 / MVP 数 + ★お気に入り toggle + + デッキへ追加)
+- **tests/e2e/cards.spec.ts (新)**: 47/47 表示 / COVERAGE / 検索件数変化 / ★ お気に入り persist / + デッキへ追加 遷移
+- **.claude/specs/meta-ui/11-cards-rebuild.md (新)** + INDEX 登録
+
+## USAGE 集計ロジック
+
+- 採用デッキ: `decks.filter(d => d.cards.some(e => e.num === cardNum)).length`
+- 勝率(採用時): 当該カード採用デッキの試合のみで `wins/total`
+- MVP 数: `history.filter(m => m.mvp === cardNum).length`
+
+`useMemo` で派生計算 (zustand selector の infinite loop 回避)。
+
+## 不変条件 (継続遵守)
+
+- `src/` 配下 1 行も変更しない (JSON は import 経由)
+- 既存 5173 ゲーム挙動完全維持、既存 vitest + playwright e2e 全件無修正で緑
+
+## 検証
+
+- tsc + build green (bundle 589KB)
+- meta-app e2e 19/19 全緑 (Phase 11 既存 15 件 + Phase 12 cards.spec.ts 4 件)
+- 5174/#cards: COVERAGE 100% (47/47) + BY COLOR/RARITY バー + 検索で件数変化 + 詳細パネル EFFECT/USAGE + ★ お気に入り → localStorage persist + + デッキへ追加で #deck 遷移、すべて動作
+
+## 持ち越し (Phase 13+)
+
+- 他画面 (HOME / DECK / HISTORY / TUTORIAL / SETTINGS) も元モック比 30-50% 簡素化されている。CardsScreen と同様 rebuild の余地あり (調査結果より)
+- カスタムデッキ → engine DeckSpec 変換 (現状 D08 / D11 専用)
+
+---
+date: 2026-05-28
+title: Phase 11 — meta-app (5174) を src/ 実機ゲーム機能と統合
+type: feat
+scope: meta-app
+---
+
+## ユーザー要望
+
+> 5173はそのままで5173と提供UIを統合させた5174を作成してほしかったんですよね
+
+Phase 10 で完成した meta-app (port 5174) は完全独立アプリ・engineStub 模擬対戦だったため、ユーザー意図と齟齬。Phase 11 で `src/` を **完全不変** に保ったまま import 経由で実機エンジン・Playmat・モーダル群を 5174 内に取り込み、5173 体験と等価な実機対戦を 5174 上で成立させた。
+
+## 主要変更 (meta-app/ のみ、~12 ファイル)
+
+- **vite.config.meta.ts**: `@/*` → `../src/*` alias 追加 (既存 `@meta/*` 維持)
+- **tsconfig.json**: `paths` に `@/*`, `rootDir: ".."`, `types: ["node", "vite/client"]`, `noUncheckedIndexedAccess: false` (src/ に合わせる)
+- **main.tsx**: `registerAll()` を module top で呼出 (src/App.tsx と同パターン、bundle 単位で副作用分離)
+- **shared/MetaCard.tsx**: 内部の `<CardSilhouette>` を `<CardArt cardId={card.num} />` に置換 → DECK / CARDS / HOME / SETUP / RESULT で公式画像 (or src 既存 fallback) 表示
+- **util/deckBridge.ts** (新): meta `DeckRecord.id` → engine `DeckId` ('CT-D08' / 'CT-D11') 変換
+- **screens/SetupScreen.tsx**: `engineStub.flow.simulateMatch` → `performGameStart({ selfDeckId, oppDeckId })` + `useGameStateStore.setGameState(gs)` (async, mulligan 経由)
+- **screens/RealMatchView.tsx** (新): src/App.tsx (133 行) の Playmat + 14 modals + 4 driver hooks を 5174 内に配置 — `engine.read.game.result` で終局検知し ResultScreen へ自動遷移 (1.8s 遅延で VictoryOverlay を見せる)
+- **screens/ResultScreen.tsx**: `useHistoryStore.byId` ベース → `useGameStateStore.gameState` 直読 + engine 統計 (turn / evidence / refresh / scratchTrace) 集計 + historyStore に 1 件記録 (StrictMode dedup)
+- **screens/MatchPlaceholder.tsx**: 削除 (RealMatchView に置換)
+- **App.tsx**: `case 'match'` を `<RealMatchView onMatchEnd={() => nav('result')} />` に
+- **tests/e2e/golden-path.spec.ts**: 模擬経路 → 実機経路 (HOME → SETUP → READY → MulliganModal「引き直しなし」→ Playmat) に書き換え
+- **tests/e2e/engine-stub.spec.ts**: simulateMatch 系テスト削除、validateDeck + localStorage 分離テストのみ残置
+- **.claude/specs/meta-ui/10-integration-with-src.md** (新) + INDEX 登録
+
+## 不変条件 (絶対遵守)
+
+- `src/` 配下 **1 行も変更しない** (import のみ) — `git status -- src/ vite.config.ts tsconfig.json tests/` で確認
+- 既存 5173 ゲーム挙動完全維持、既存 vitest + playwright e2e 全件無修正で緑
+
+## 検証
+
+- tsc + build green (bundle 581 KB)
+- meta-app e2e 15/15 緑 (smoke 10 / golden-path 3 / engine-stub 2)
+- 5174 で HOME → 「推理開始」 → SETUP → READY → MulliganModal「引き直しなし」 → 本物 Playmat 表示 → 終局 → ResultScreen 自動遷移
+- カード画像が公式画像 (or src/cardImage の SVG fallback) になる
+
+## 実装で踏んだ罠 (10-integration-with-src.md に記録)
+
+- `include` で `../src/**/*` 指定は rootDir 違反 → `paths` のみで paths 解決 + `rootDir: ".."` で解消
+- node types: `tsv-loader-fs.ts` 経路 → `types: ["node"]` 追加
+- `setGameState(null)` は型不可 → `useGameStateStore.setState({ gameState: null })` で直接
+- MulliganModal は `useMulliganStore` 経由のため、RealMatchView を pre-mount してから performGameStart 開始する必要あり (SetupScreen で `nav('match')` を先に実行)
+
+## 持ち越し (Phase 12+)
+
+- 任意 DeckRecord → engine DeckSpec 変換 (現状 D08 / D11 専用)
+- HistoryScreen の MatchRecord 集計を engine.log ベースに精緻化 (contacts / hirameki / misread)
+- ReplayScreen の実盤面再生 (engine.event.applyUntil 利用)
 
 ---
 date: 2026-05-28

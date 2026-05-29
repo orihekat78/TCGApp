@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>盤面モック — 公式3DCG踏襲</title>
+<style>
+  :root {
+    --bg-deep: #0a1a28;
+    --bg-zone: #1b3a5c;
+    --bg-self-1: #0d2640;
+    --bg-self-2: #1b3a5c;
+    --bg-opp-1: #0d2640;
+    --bg-opp-2: #2a1b3c;
+    --bg-cell: rgba(0,0,0,0.32);
+    --border-zone: #3a6ea5;
+    --border-self: #44dd99;
+    --border-opp: #aa66dd;
+    --accent-gold: #ffd700;
+    --accent-blue: #3a6ea5;
+    --neon-blue: #4ec3ff;
+    --keep-out: repeating-linear-gradient(90deg, #ffd700 0 22px, #0a0a0a 22px 44px);
+    --state-sleep: rgba(40, 80, 200, 0.6);
+    --state-stun: rgba(220, 50, 50, 0.65);
+    --state-named: rgba(240, 200, 40, 0.95);
+    --case-editing: #3366ff;
+    --case-resolved: #ee2255;
+    --text-primary: #e0ecf8;
+    --text-secondary: #b8d4f0;
+    --text-muted: #7090b5;
+    --text-disabled: #4a5a70;
+    --color-blue: #2b6cb5;
+    --color-yellow: #d4a425;
+    --color-red: #c84040;
+    --color-green: #3aa67a;
+    --color-purple: #8a4cc0;
+    --font-jp: "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", -apple-system, sans-serif;
+    --font-mono: "Cascadia Code", "Consolas", monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; font-family: var(--font-jp); color: var(--text-primary); }
+  body { display: grid; place-items: center; }
+
+  /* Stage: 1920×1080 scaled to viewport */
+  .stage { width: 1920px; height: 1080px; position: relative; transform-origin: center center; flex-shrink: 0; }
+
+  /* Detective-noir background — deep navy with blueprint grid, magnifying-glass watermarks, light film-noir spotlight */
+  .bg {
+    position: absolute; inset: 0;
+    background:
+      /* Top spotlight (case-light over board) */
+      radial-gradient(ellipse 70% 50% at 50% -8%, rgba(78,195,255,0.10), transparent 70%),
+      /* Venetian-blind subtle diagonal shadow */
+      repeating-linear-gradient(115deg, transparent 0 80px, rgba(0,0,0,0.10) 80px 82px),
+      /* Magnifier watermark - bottom-right */
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'><g fill='none' stroke='%23ffd75e' stroke-width='1.4' opacity='0.07'><circle cx='150' cy='150' r='95'/><circle cx='150' cy='150' r='80'/><line x1='220' y1='220' x2='320' y2='320' stroke-width='10'/><circle cx='150' cy='150' r='55' stroke-dasharray='2 5'/></g></svg>"),
+      /* Magnifier watermark - top-left mirrored */
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><g fill='none' stroke='%234ec3ff' stroke-width='1.2' opacity='0.06'><circle cx='180' cy='180' r='85'/><circle cx='180' cy='180' r='72'/><line x1='118' y1='118' x2='20' y2='20' stroke-width='8'/></g></svg>"),
+      /* Blueprint grid */
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><g fill='none' stroke='%234ec3ff' stroke-width='0.5' opacity='0.06'><path d='M0 0h48v48H0z'/><path d='M24 0v48M0 24h48'/></g></svg>"),
+      /* Base gradient: navy → near-black */
+      radial-gradient(ellipse at 50% 30%, #15263e 0%, #0a1424 50%, #050a14 100%);
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+    background-position: 0 0, 0 0, right -40px bottom -40px, left -30px top -30px, 0 0, 0 0;
+    background-size: auto, auto, 360px 360px, 320px 320px, 48px 48px, auto;
+  }
+  .bg::after { display: none; }
+  .vignette { position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(0,0,0,0.55) 100%); }
+
+  /* ─── TopBar ─── */
+  .topbar {
+    position: absolute; left: 0; right: 0; top: 0; height: 44px;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: 0 24px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.4));
+    border-bottom: 1px solid rgba(78, 195, 255, 0.18);
+    z-index: 20;
+  }
+  .chapter-tag {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 6px 16px;
+    background: linear-gradient(90deg, rgba(78,195,255,0.18), rgba(78,195,255,0.02));
+    border-left: 3px solid var(--neon-blue);
+    font-size: 14px; font-weight: 700; letter-spacing: 0.08em;
+    color: #d8eeff;
+  }
+  .chapter-tag .ico { width: 14px; height: 14px; border: 1.5px solid var(--neon-blue); border-radius: 50%; position: relative; }
+  .chapter-tag .ico::after { content: ""; position: absolute; inset: 3px; background: var(--neon-blue); border-radius: 50%; }
+  .topbar-center { display: flex; gap: 18px; align-items: center; }
+  .scratch {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--text-secondary); letter-spacing: 0.04em;
+  }
+  .scratch .dot { width: 8px; height: 8px; border-radius: 50%; background: #444; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); }
+  .scratch.found .dot { background: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold); }
+  .effect-stack {
+    font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em;
+    padding: 4px 10px; border: 1px solid rgba(255,255,255,0.08); border-radius: 3px;
+  }
+  .topbar-right { justify-self: end; display: flex; align-items: center; gap: 14px; }
+  .copyright { font-size: 10px; color: var(--text-disabled); letter-spacing: 0.06em; }
+  .narrator {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .narrator-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #b88, #6a3a3a 70%);
+    border: 2px solid var(--neon-blue);
+    box-shadow: 0 0 8px rgba(78,195,255,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .narrator-avatar::after {
+    content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, transparent, rgba(40,20,30,0.6));
+  }
+  .narrator-name { font-size: 11px; color: var(--text-secondary); }
+
+  /* ─── Bottom-right Phase indicator (horizontal pill) ─── */
+  .phase-bar {
+    position: absolute; right: 24px; top: 500px;
+    display: flex; flex-direction: column; gap: 6px; align-items: stretch;
+    z-index: 15;
+  }
+  .phase-bar .phase-cell {
+    min-width: 132px;
+    padding: 12px 18px;
+    border: 1.5px solid rgba(78,195,255,0.28); border-radius: 4px;
+    background: rgba(10,18,30,0.78);
+    color: var(--text-secondary);
+    display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px;
+    transition: all .25s ease-out;
+  }
+  .phase-bar .phase-cell .ph-en { font-size: 11px; letter-spacing: 0.18em; color: var(--text-muted); font-weight: 600; }
+  .phase-bar .phase-cell .ph-jp { font-size: 19px; font-weight: 700; line-height: 1; }
+  .phase-bar .phase-cell.active {
+    background: linear-gradient(180deg, #2a78c4, #1a4d7e);
+    border-color: var(--neon-blue); color: #fff;
+    box-shadow: 0 0 14px rgba(78,195,255,0.45), inset 0 0 0 1px rgba(255,255,255,0.12);
+  }
+  .phase-bar .phase-cell.active .ph-en { color: rgba(255,255,255,0.7); }
+
+  /* Battle log button (bottom-left, in space freed by removed left sidebar) */
+  .log-btn {
+    position: absolute; left: 24px; bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 18px;
+    background: rgba(10,18,30,0.78);
+    border: 1.5px solid rgba(78,195,255,0.32);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 12px; letter-spacing: 0.08em; font-weight: 600;
+    cursor: pointer;
+    z-index: 15;
+    transition: all .2s ease-out;
+  }
+  .log-btn:hover { background: rgba(78,195,255,0.12); border-color: var(--neon-blue); color: #fff; }
+  .log-btn .icon {
+    width: 18px; height: 18px;
+    display: flex; flex-direction: column; gap: 2px; justify-content: center;
+  }
+  .log-btn .icon span {
+    display: block; height: 2px; background: currentColor; border-radius: 1px;
+  }
+  .log-btn .icon span:nth-child(1) { width: 100%; }
+  .log-btn .icon span:nth-child(2) { width: 70%; }
+  .log-btn .icon span:nth-child(3) { width: 90%; }
+  .log-btn .icon span:nth-child(4) { width: 60%; }
+  .log-btn .count { color: var(--neon-blue); font-family: var(--font-mono); font-weight: 800; font-size: 11px; }
+
+  /* legacy left-sidebar kept for compatibility but hidden */
+  .left-sidebar {
+    display: none;
+    position: absolute; left: 16px; top: 60px; bottom: 60px; width: 92px;
+    flex-direction: column; gap: 14px;
+    align-items: stretch; padding: 12px 0;
+    z-index: 15;
+  }
+  .left-sidebar-label {
+    font-size: 9px; letter-spacing: 0.2em; color: var(--text-muted);
+    text-align: center; text-transform: uppercase;
+    padding-bottom: 6px; border-bottom: 1px solid rgba(78,195,255,0.15);
+  }
+  .phase-cell {
+    flex: 1; min-height: 0;
+    border: 2px solid rgba(78,195,255,0.25); border-radius: 4px;
+    background: rgba(20, 40, 70, 0.45);
+    color: var(--text-secondary);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; padding: 8px 6px;
+    font-size: 13px; font-weight: 700;
+    transition: all .3s ease-out;
+  }
+  .phase-cell .ph-en { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; font-weight: 500; }
+  .phase-cell .ph-jp { font-size: 13px; line-height: 1.2; text-align: center; }
+  .phase-cell.active {
+    background: linear-gradient(180deg, #2a78c4, #1a4d7e);
+    border-color: var(--neon-blue);
+    color: #fff;
+    box-shadow: 0 0 18px rgba(78,195,255,0.45), inset 0 0 0 1px rgba(255,255,255,0.15);
+  }
+  .phase-cell.active .ph-en { color: rgba(255,255,255,0.7); }
+
+  /* ─── Right Sidebar: 6-action menu ─── */
+  .right-sidebar {
+    position: absolute; right: 16px; top: 60px; bottom: 200px; width: 200px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 15;
+  }
+  .right-sidebar-label {
+    font-size: 9px; letter-spacing: 0.2em; color: var(--text-muted);
+    text-align: center; text-transform: uppercase;
+    padding-bottom: 6px; border-bottom: 1px solid rgba(78,195,255,0.15);
+    margin-bottom: 2px;
+  }
+  .action-item {
+    display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: center;
+    padding: 10px 12px;
+    background: rgba(20, 40, 70, 0.35);
+    border: 1.5px solid rgba(78,195,255,0.22);
+    border-radius: 4px;
+    font-size: 13px; color: var(--text-secondary);
+    transition: all .25s ease-out;
+    cursor: pointer;
+  }
+  .action-item .num {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.4); color: var(--text-muted);
+  }
+  .action-item .label { font-weight: 600; }
+  .action-item .sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; }
+  .action-item.available { border-color: rgba(78,195,255,0.55); color: var(--text-primary); }
+  .action-item.available .num { background: var(--accent-blue); color: #fff; }
+  .action-item.current {
+    background: linear-gradient(180deg, #3aa67a, #1f7a55);
+    border-color: #6fdfae;
+    color: #fff;
+    box-shadow: 0 0 16px rgba(58,166,122,0.55);
+  }
+  .action-item.current .num { background: #fff; color: #1f7a55; }
+  .action-item.current .sub { color: rgba(255,255,255,0.8); }
+  .action-item.disabled {
+    opacity: 0.4; color: var(--text-disabled);
+    border-color: rgba(255,255,255,0.05);
+    cursor: not-allowed;
+  }
+  .action-item.disabled .num { color: var(--text-disabled); }
+
+  /* ─── Center play area ─── */
+  .play-area {
+    position: absolute; left: 124px; right: 232px; top: 56px; bottom: 200px;
+    display: grid; grid-template-rows: 36px 1fr 1fr;
+    gap: 6px;
+  }
+
+  /* Opponent hand strip (count + mini card-backs, above opp mat) */
+  .opp-hand-strip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 12px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.3));
+    border: 1px solid rgba(78, 138, 216, 0.35);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .opp-hand-strip .label {
+    font-size: 10px; letter-spacing: 0.18em; color: var(--text-muted);
+    font-weight: 700; text-transform: uppercase; white-space: nowrap;
+  }
+  .opp-hand-strip .mini-cards {
+    flex: 1; display: flex; gap: 3px; align-items: center;
+    overflow: hidden; min-width: 0;
+  }
+  .opp-hand-strip .count {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 800;
+    color: var(--neon-blue); letter-spacing: 0.05em;
+    background: rgba(78,195,255,0.1); padding: 2px 8px; border-radius: 3px;
+    border: 1px solid rgba(78,195,255,0.3);
+  }
+  .card-back-mini {
+    width: 22px; height: 30px; flex-shrink: 0;
+    background: linear-gradient(160deg, #1f2438, #0a0e1c);
+    border: 1px solid #2a3552;
+    border-radius: 2px;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  .card-back-mini::after {
+    content: "DC"; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: serif; font-weight: 900; font-size: 9px;
+    color: rgba(255,215,0,0.45);
+  }
+
+  /* KEEP OUT divider (REMOVED - hidden) */
+  .keep-out {
+    display: none !important;
+  }
+  .keep-out-disabled-stub {
+    position: relative;
+    background: var(--keep-out);
+    border-top: 1px solid rgba(0,0,0,0.5);
+    border-bottom: 1px solid rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .keep-out::before, .keep-out::after {
+    content: "KEEP OUT  •  KEEP OUT  •  KEEP OUT  •  KEEP OUT  •  KEEP OUT  •  KEEP OUT  •  KEEP OUT";
+    position: absolute; white-space: nowrap;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 900;
+    color: #0a0a0a; letter-spacing: 0.2em;
+    background: var(--accent-gold);
+    padding: 2px 16px;
+    border: 1px solid rgba(0,0,0,0.4);
+  }
+  .keep-out::before { transform: rotate(0deg); top: 50%; margin-top: -10px; left: 50%; transform: translate(-50%, -50%); display: none; }
+  .keep-out::after { display: none; }
+  .keep-out .label {
+    position: relative; z-index: 2;
+    background: #0a0a0a; color: var(--accent-gold);
+    padding: 2px 14px; font-size: 10px; font-weight: 900;
+    letter-spacing: 0.3em; font-family: var(--font-mono);
+    border: 1px solid var(--accent-gold);
+  }
+
+  /* PlayerMat shared */
+  .mat {
+    display: grid;
+    grid-template-columns: 180px 1fr 130px;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    position: relative;
+  }
+  .mat.opp {
+    background: linear-gradient(0deg, var(--bg-opp-1), var(--bg-opp-2));
+    border: 1px solid rgba(170,102,221,0.25);
+    transform: rotate(180deg);
+  }
+  .mat.self {
+    background: linear-gradient(180deg, var(--bg-self-1), var(--bg-self-2));
+    border: 1px solid rgba(68,221,153,0.25);
+  }
+  .mat .case-col { grid-column: 1; grid-row: 1 / span 2; display: grid; grid-template-rows: 1fr 1fr; gap: 6px; }
+  .mat .scene-col { grid-column: 2; grid-row: 1; }
+  .mat .deck-col { grid-column: 3; grid-row: 1; }
+  .mat .partner-col { grid-column: 2; grid-row: 2; }
+  .mat .remove-col { grid-column: 3; grid-row: 2; }
+  /* file row at bottom, full width */
+  .mat .file-row {
+    position: absolute; left: 196px; right: 8px; bottom: -2px;
+    height: 0;
+    /* will be placed inline differently */
+  }
+
+  /* Zone cell */
+  .zone {
+    background: var(--bg-cell);
+    border: 1px solid rgba(58, 110, 165, 0.4);
+    border-radius: 4px;
+    padding: 8px;
+    display: flex; flex-direction: column; gap: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+  .zone-label {
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 700;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .zone-label .count { color: var(--text-secondary); font-weight: 600; }
+
+  /* Scene zone: 5 slots */
+  .scene-slots {
+    flex: 1;
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    align-items: center; justify-items: center;
+  }
+  .slot-empty {
+    width: 80px; height: 112px;
+    border: 1.5px dashed rgba(78,195,255,0.18);
+    border-radius: 4px;
+    position: relative;
+  }
+  .slot-empty::after {
+    content: ""; position: absolute; inset: 50% 50% auto auto;
+    width: 14px; height: 14px;
+    transform: translate(50%, -50%);
+    background:
+      linear-gradient(90deg, transparent calc(50% - 0.5px), rgba(78,195,255,0.3) calc(50% - 0.5px), rgba(78,195,255,0.3) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+      linear-gradient(0deg, transparent calc(50% - 0.5px), rgba(78,195,255,0.3) calc(50% - 0.5px), rgba(78,195,255,0.3) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  }
+
+  /* Card visual */
+  .card {
+    width: 80px; height: 112px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #1a2638 0%, #0a1320 100%);
+    border: 1.5px solid #2a4a6e;
+    position: relative;
+    color: var(--text-primary);
+    display: flex; flex-direction: column;
+    overflow: visible;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.04);
+    transition: transform .3s ease-out;
+  }
+  .card.color-blue { border-color: #4a8ad8; box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(78,138,216,0.3), 0 0 0 1px rgba(78,138,216,0.5); }
+  .card.color-yellow { border-color: #e0b830; box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(224,184,48,0.3), 0 0 0 1px rgba(224,184,48,0.5); }
+  .card .color-stripe { height: 8px; flex-shrink: 0; background: var(--color-blue); border-radius: 3px 3px 0 0; }
+  .card.color-yellow .color-stripe { background: var(--color-yellow); }
+  .card.color-red .color-stripe { background: var(--color-red); }
+  .card.color-green .color-stripe { background: var(--color-green); }
+  .card.color-purple .color-stripe { background: var(--color-purple); }
+
+  .card .art {
+    flex: 1; margin: 4px;
+    background: linear-gradient(135deg, rgba(78,195,255,0.08), rgba(0,0,0,0.4));
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .card .art .silhouette {
+    width: 70%; height: 70%;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.18), rgba(0,0,0,0.6));
+    border-radius: 50% 50% 40% 40%;
+    filter: blur(1.5px);
+  }
+  .card .name {
+    font-size: 8.5px; font-weight: 700; padding: 2px 4px;
+    text-align: center; line-height: 1.1;
+    color: var(--text-primary);
+    background: rgba(0,0,0,0.45);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    min-height: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card .stats {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 2px 3px; gap: 2px;
+    background: rgba(0,0,0,0.55);
+  }
+  .card .ap, .card .lp, .card .lv {
+    font-size: 9px; font-weight: 800; font-family: var(--font-mono);
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+    padding: 1px 4px; border-radius: 2px; line-height: 1.2;
+  }
+  .card .ap { color: #ff9b6e; }
+  .card .lp { color: #ffd75e; }
+  .card .lv { color: #6ed1ff; }
+
+  /* card states */
+  .card.sleep {
+    transform: rotate(-90deg);
+  }
+  .card.stun {
+    transform: rotate(180deg);
+    border-color: var(--state-stun);
+    box-shadow: 0 2px 8px rgba(220,50,50,0.4), inset 0 0 0 1px rgba(220,50,50,0.5);
+  }
+  .card .named-badge {
+    position: absolute; top: -6px; right: -4px;
+    font-size: 8px; font-weight: 900;
+    background: var(--state-named); color: #2a1a05;
+    padding: 1px 5px; border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    letter-spacing: 0.08em;
+    z-index: 2;
+  }
+  .card .set-badge {
+    position: absolute; bottom: 18px; left: -4px;
+    font-size: 7.5px; font-weight: 700;
+    background: rgba(106, 178, 255, 0.92); color: #fff;
+    padding: 1px 4px; border-radius: 2px;
+    letter-spacing: 0.04em;
+  }
+  .card .stack-badge {
+    position: absolute; top: 2px; right: 2px;
+    font-size: 8px; font-weight: 800;
+    background: rgba(120, 80, 220, 0.92); color: #fff;
+    padding: 1px 4px; border-radius: 2px; line-height: 1.3;
+  }
+
+  /* Card back — Conan detective theme: gold magnifying glass over fingerprint */
+  .card-back {
+    width: 80px; height: 112px;
+    border-radius: 4px;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(255,215,0,0.15) 0%, transparent 55%),
+      linear-gradient(160deg, #1f2438 0%, #0a0e1c 100%);
+    border: 1.5px solid #2a3552;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .card-back .monogram {
+    display: none;
+    font-family: "Trajan Pro", "Times New Roman", serif;
+    font-size: 24px; font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 8px rgba(255,215,0,0.5);
+    letter-spacing: -0.05em;
+  }
+  .card-back .magnifier { display: none; }
+  .card-back .magnifier::after { display: none; content: ""; position: absolute; top: 100%; left: 100%;
+    width: 6px; height: 1.5px; background: rgba(255,215,0,0.5);
+    transform: translate(-3px, -1px) rotate(45deg);
+    transform-origin: 0 50%;
+  }
+
+  /* Case zone — supports both landscape (default) and portrait case cards */
+  .case-zone { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; }
+  .case-card {
+    /* landscape default (most cases ship horizontal) */
+    width: 116px; height: 84px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #2a2030 0%, #1a1422 100%);
+    border: 1.5px solid #4a3050;
+    position: relative;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  /* Portrait variant — taller, narrower, supports cards with vertical artwork */
+  .case-card.portrait {
+    width: 84px; height: 118px;
+  }
+  .case-card.portrait .case-title {
+    font-size: 9.5px;
+    padding: 4px 4px;
+  }
+  .case-card.portrait .case-stamp {
+    font-size: 8.5px;
+    padding: 1px 4px;
+  }
+  .case-card.color-blue { border-color: #4a8ad8; box-shadow: inset 0 0 0 1px rgba(78,138,216,0.25); }
+  .case-card.color-yellow { border-color: #e0b830; box-shadow: inset 0 0 0 1px rgba(224,184,48,0.25); }
+  .case-card .case-title {
+    flex: 1;
+    background: linear-gradient(180deg, rgba(78,195,255,0.06), rgba(0,0,0,0.5));
+    display: flex; align-items: center; justify-content: center;
+    padding: 4px 6px;
+    font-size: 10px; font-weight: 700; line-height: 1.2;
+    text-align: center;
+  }
+  .case-card .case-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 6px; font-size: 9px;
+    background: rgba(0,0,0,0.6);
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+  }
+  .case-card .case-lv { font-weight: 800; color: #ffd75e; }
+  .case-card .case-color {
+    width: 8px; height: 8px; border-radius: 50%;
+    box-shadow: 0 0 4px currentColor;
+  }
+  .case-stamp {
+    position: absolute; top: -4px; right: -4px;
+    transform: rotate(8deg);
+    background: #fff; color: var(--case-editing);
+    font-size: 8.5px; font-weight: 900;
+    padding: 2px 6px;
+    border: 2px solid var(--case-editing);
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    z-index: 3;
+  }
+  .case-stamp.resolved {
+    color: var(--case-resolved);
+    border-color: var(--case-resolved);
+    transform: rotate(-6deg);
+  }
+  .evidence-required {
+    font-size: 10px; color: var(--text-secondary);
+    font-family: var(--font-mono); letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .evidence-required strong { color: var(--accent-gold); font-size: 13px; }
+
+  /* Evidence stack */
+  .evidence-zone, .remove-zone {
+    cursor: pointer;
+  }
+  .stack-display {
+    flex: 1; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stack-display .card-back {
+    width: 64px; height: 90px;
+    transform: rotate(-2deg);
+    background:
+      /* Gold filigree corner ornaments */
+      radial-gradient(circle at 6px 6px, rgba(255,215,0,0.5) 0 1.5px, transparent 2px),
+      radial-gradient(circle at calc(100% - 6px) 6px, rgba(255,215,0,0.5) 0 1.5px, transparent 2px),
+      radial-gradient(circle at 6px calc(100% - 6px), rgba(255,215,0,0.5) 0 1.5px, transparent 2px),
+      radial-gradient(circle at calc(100% - 6px) calc(100% - 6px), rgba(255,215,0,0.5) 0 1.5px, transparent 2px),
+      linear-gradient(160deg, #1f2438 0%, #0a0e1c 100%);
+    border: 1px solid rgba(255,215,0,0.28);
+  }
+  /* Evidence stack: magnifying-glass + fingerprint icon centered on card back */
+  .stack-display.evidence .card-back::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 90'><g fill='none' stroke='%23ffd75e' stroke-width='1.4' opacity='0.85'><circle cx='28' cy='38' r='16'/><circle cx='28' cy='38' r='13' opacity='0.5'/><line x1='40' y1='50' x2='52' y2='66' stroke-width='3.5' stroke-linecap='round'/><circle cx='28' cy='38' r='1.5' fill='%23ffd75e'/></g><g fill='none' stroke='%23ffd75e' stroke-width='0.8' opacity='0.55'><path d='M22 38 Q28 30 34 38'/><path d='M20 40 Q28 28 36 40'/><path d='M24 42 Q28 36 32 42'/></g></svg>") no-repeat center / 80% auto;
+  }
+  /* FILE stack: case-folder + magnifier icon centered on card back */
+  .stack-display.file .card-back::before,
+  .file-modal .face-down::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 90'><g><path d='M12 24 L26 24 L30 28 L52 28 L52 64 L12 64 Z' fill='none' stroke='%23ffd75e' stroke-width='1.5' opacity='0.85'/><path d='M14 32 L50 32' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/><path d='M14 38 L46 38' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/><path d='M14 44 L48 44' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/><path d='M14 50 L42 50' stroke='%23ffd75e' stroke-width='0.7' opacity='0.45'/></g><g transform='translate(34 52)'><circle cx='6' cy='6' r='6' fill='none' stroke='%234ec3ff' stroke-width='1.4'/><line x1='10' y1='10' x2='16' y2='16' stroke='%234ec3ff' stroke-width='2' stroke-linecap='round'/></g></svg>") no-repeat center / 80% auto;
+  }
+  .stack-display .stack-shadow {
+    position: absolute;
+    width: 64px; height: 90px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #1a1f30, #0a0e1c);
+    border: 1.5px solid #2a3552;
+  }
+  .stack-shadow.s1 { transform: translate(2px, 2px) rotate(1deg); }
+  .stack-shadow.s2 { transform: translate(4px, 4px) rotate(3deg); }
+  .stack-shadow.s3 { transform: translate(6px, 6px) rotate(-1deg); }
+  .stack-display .count-overlay {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.85);
+    color: var(--accent-gold);
+    font-family: var(--font-mono); font-size: 22px; font-weight: 800;
+    padding: 4px 12px;
+    border: 1.5px solid var(--accent-gold);
+    border-radius: 3px;
+    text-shadow: 0 0 6px rgba(255,215,0,0.5);
+  }
+  .stack-display.evidence .count-overlay { box-shadow: 0 0 12px rgba(255,215,0,0.3); }
+  .progress-track {
+    height: 4px; margin-top: 4px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 2px; overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, #ffd75e, #ff9b3e);
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(255,215,0,0.5);
+  }
+
+  /* Deck zone */
+  .deck-display {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .deck-stack {
+    position: relative; width: 64px; height: 92px;
+  }
+  .deck-stack .layer {
+    position: absolute; left: 0; top: 0;
+    width: 64px; height: 90px;
+    border-radius: 4px;
+    background: linear-gradient(160deg, #1f2438, #0a0e1c);
+    border: 1.5px solid #2a3552;
+  }
+  .deck-stack .layer.l1 { top: 1px; left: 1px; }
+  .deck-stack .layer.l2 { top: 2px; left: 2px; }
+  .deck-stack .layer.l3 { top: 3px; left: 3px; }
+  .deck-stack .layer.top {
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(255,215,0,0.15) 0%, transparent 55%),
+      linear-gradient(160deg, #1f2438 0%, #0a0e1c 100%);
+    display: flex; align-items: center; justify-content: center;
+    top: 4px; left: 4px;
+  }
+  .deck-stack .layer.top .monogram {
+    font-size: 18px; color: var(--accent-gold);
+    font-family: serif; font-weight: 900;
+    text-shadow: 0 0 6px rgba(255,215,0,0.4);
+  }
+  .deck-count {
+    position: absolute; bottom: -2px; right: -8px;
+    background: rgba(0,0,0,0.8); color: var(--text-primary);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 800;
+    padding: 1px 5px; border-radius: 2px;
+    border: 1px solid rgba(78,195,255,0.3);
+  }
+
+  /* Partner zone */
+  .partner-zone .partner-slot {
+    flex: 1;
+    display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+    padding-left: 6px;
+  }
+  .partner-zone .partner-info {
+    font-size: 9px; color: var(--text-secondary);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .partner-zone .partner-info .name { font-size: 11px; color: var(--text-primary); font-weight: 700; }
+  .partner-zone .partner-info .meta { color: var(--text-muted); }
+
+  /* FILE: evidence-style card-back stack with count + progress (click → modal) */
+  .file-strip {
+    background: rgba(0,0,0,0.32);
+    border: 1px solid rgba(255,215,0,0.32);
+    border-radius: 4px;
+    padding: 8px;
+    display: flex; flex-direction: column; gap: 0;
+    overflow: visible;
+    position: relative;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .file-strip:hover {
+    border-color: rgba(255,215,0,0.65);
+    background: rgba(40,30,10,0.4);
+  }
+  .file-strip .stack-display.file .count-overlay {
+    box-shadow: 0 0 12px rgba(255,215,0,0.3);
+    color: var(--accent-gold);
+  }
+  .file-strip .progress-track .progress-fill {
+    background: linear-gradient(90deg, var(--accent-gold), #ffd75e);
+  }
+  .file-strip-header {
+    color: rgba(255,215,0,0.85);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9px; letter-spacing: 0.18em; font-weight: 700; text-transform: uppercase;
+  }
+  .file-strip-header .progress-7 {
+    display: flex; gap: 2px;
+  }
+  .file-strip-header .progress-7 span {
+    width: 12px; height: 4px; background: rgba(255,255,255,0.08); border-radius: 1px;
+  }
+  .file-strip-header .progress-7 span.filled { background: var(--accent-gold); box-shadow: 0 0 4px rgba(255,215,0,0.5); }
+  .file-cards {
+    flex: 1; display: flex; gap: 4px; align-items: center;
+    padding: 0 2px;
+  }
+  .file-card-sideways {
+    width: 46px; height: 32px; flex-shrink: 0;
+    background: linear-gradient(160deg, #1f2438, #0a0e1c);
+    border: 1px solid #2a3552;
+    border-radius: 3px;
+    position: relative;
+  }
+  .file-card-sideways::after {
+    content: "DC"; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: serif; font-weight: 900; font-size: 11px;
+    color: rgba(255,215,0,0.5);
+  }
+  .file-card-sideways.partner {
+    background: linear-gradient(160deg, #2a3a55, #1a2638);
+    border-color: #4a8ad8;
+  }
+  .file-card-sideways.partner::after {
+    content: ""; /* show face */
+  }
+  .file-card-sideways.partner .face-mini {
+    position: absolute; inset: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7.5px; font-weight: 700; color: #fff;
+    text-align: center; line-height: 1.1;
+    background: linear-gradient(180deg, rgba(78,195,255,0.15), transparent);
+  }
+
+  /* Mat layout: scene spans full top-row middle width; FILE + partner + (assist target) in bottom row */
+  .mat {
+    grid-template-columns: 160px 132px 1fr 120px;
+    grid-template-rows: 1fr 1fr;
+    grid-template-areas:
+      "case scene   scene   deck"
+      "case file    partner remove";
+  }
+  .mat .case-col    { grid-area: case; display: flex; flex-direction: column; gap: 6px; }
+  .mat .scene-col   { grid-area: scene; }
+  .mat .partner-col { grid-area: partner; }
+  .mat .deck-col    { grid-area: deck; }
+  .mat .file-strip  { grid-area: file; }
+  .mat .remove-col  { grid-area: remove; }
+
+  /* Partner zone in bottom row - horizontal card + info layout, CENTERED */
+  .mat .partner-zone .partner-slot {
+    flex-direction: row; align-items: center; justify-content: center; gap: 14px;
+    padding: 2px 6px;
+  }
+  .mat .partner-zone .partner-info {
+    align-items: flex-start; text-align: left; gap: 3px;
+  }
+  .mat .partner-zone .partner-info .name { font-size: 12px; }
+  .mat .partner-zone .partner-info .meta { font-size: 10px; }
+
+  /* ─── Empty-state aesthetic (matches reference screenshots) ───
+     Scratched dark crime-scene with dotted/spattered texture,
+     cyan neon borders, large watermark kanji, KEEP OUT corner tape */
+  .scene-zone, .partner-zone {
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(78,195,255,0.04) 0%, transparent 70%),
+      radial-gradient(circle at 8% 22%, rgba(255,255,255,0.05) 0 1px, transparent 1.2px),
+      radial-gradient(circle at 31% 71%, rgba(255,255,255,0.04) 0 1px, transparent 1.2px),
+      radial-gradient(circle at 62% 18%, rgba(255,255,255,0.05) 0 1px, transparent 1.2px),
+      radial-gradient(circle at 84% 56%, rgba(255,255,255,0.04) 0 1px, transparent 1.2px),
+      radial-gradient(circle at 18% 88%, rgba(255,255,255,0.05) 0 1px, transparent 1.2px),
+      radial-gradient(circle at 75% 92%, rgba(255,255,255,0.04) 0 1px, transparent 1.2px),
+      radial-gradient(circle at 92% 12%, rgba(255,255,255,0.04) 0 1px, transparent 1.2px),
+      linear-gradient(180deg, #0d1722 0%, #0a131e 100%);
+    border: 1px solid rgba(78,195,255,0.18);
+    border-bottom: 1.5px solid rgba(78,195,255,0.55);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 0 14px rgba(78,195,255,0.08) inset;
+    position: relative;
+    overflow: hidden;
+  }
+  /* KEEP OUT diagonal tape in corners of scene zone */
+  .scene-zone::before, .scene-zone::after {
+    content: "KEEP OUT • KEEP OUT • KEEP OUT";
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 8px; font-weight: 900; letter-spacing: 0.15em;
+    color: rgba(0,0,0,0.75);
+    background: repeating-linear-gradient(90deg,
+      var(--keep-out-yellow, #d9b830) 0 10px,
+      #1a1206 10px 16px);
+    padding: 2px 60px;
+    pointer-events: none;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+    text-shadow: 0 0 2px rgba(0,0,0,0.5);
+    z-index: 1;
+    white-space: nowrap;
+  }
+  .scene-zone::before {
+    top: 14px; left: -50px;
+    transform: rotate(-32deg);
+    transform-origin: 0 0;
+  }
+  .scene-zone::after {
+    bottom: 14px; right: -50px;
+    transform: rotate(-32deg);
+    transform-origin: 100% 100%;
+  }
+  /* Large watermark kanji label for empty scene */
+  .scene-zone .zone-watermark {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px; font-weight: 800; letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.07);
+    pointer-events: none;
+    z-index: 0;
+    text-shadow: 0 0 12px rgba(78,195,255,0.15);
+  }
+  .scene-zone .scene-slots { position: relative; z-index: 2; }
+  .scene-zone .zone-label { position: relative; z-index: 3; }
+
+  /* Partner empty-state: keyhole silhouette watermark */
+  .partner-zone .zone-watermark-keyhole {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    pointer-events: none; z-index: 0;
+    opacity: 0.18;
+  }
+  .partner-zone .zone-watermark-keyhole svg {
+    width: 64px; height: 84px;
+    filter: drop-shadow(0 0 6px rgba(78,195,255,0.3));
+  }
+  .partner-zone .zone-watermark-keyhole .lbl {
+    font-size: 11px; letter-spacing: 0.25em;
+    color: rgba(255,255,255,0.5);
+    margin-top: -28px;
+    font-weight: 600;
+  }
+  .partner-zone .partner-slot { position: relative; z-index: 2; }
+  .partner-zone .zone-label { position: relative; z-index: 3; }
+
+  /* FILE strip border / assist hint */
+  .file-strip {
+    border-color: rgba(255,215,0,0.32);
+    border-bottom: 1.5px solid rgba(255,215,0,0.55);
+  }
+  .file-strip .assist-hint {
+    position: absolute; bottom: 2px; left: 6px; right: 6px;
+    text-align: center;
+    font-size: 7.5px; letter-spacing: 0.08em;
+    color: rgba(255,215,0,0.45);
+    pointer-events: none;
+  }
+
+  /* Self mat overrides */
+  .mat.self .case-stamp { /* keep */ }
+
+  /* Hand zone */
+  .hand-zone {
+    position: absolute; left: 124px; right: 232px; bottom: 56px; height: 130px;
+    display: flex; align-items: flex-end; justify-content: center; gap: 8px;
+    padding: 0 20px;
+    z-index: 10;
+  }
+  .hand-card {
+    width: 88px; height: 124px;
+    border-radius: 5px;
+    background: linear-gradient(160deg, #1a2638 0%, #0a1320 100%);
+    border: 1.5px solid #2a4a6e;
+    position: relative;
+    display: flex; flex-direction: column;
+    overflow: visible;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    transition: transform .25s ease-out;
+  }
+  .hand-card.color-blue { border-color: #4a8ad8; box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 0 1px rgba(78,138,216,0.5); }
+  .hand-card.color-yellow { border-color: #e0b830; box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 0 1px rgba(224,184,48,0.5); }
+  .hand-card.featured {
+    transform: translateY(-12px) scale(1.04);
+    box-shadow: 0 8px 24px rgba(78,195,255,0.5), 0 0 0 2px var(--neon-blue);
+    z-index: 5;
+  }
+  .hand-card.disabled {
+    opacity: 0.4; filter: grayscale(0.4);
+  }
+  .hand-card .color-stripe { height: 9px; border-radius: 4px 4px 0 0; flex-shrink: 0; }
+  .hand-card.color-blue .color-stripe { background: var(--color-blue); }
+  .hand-card.color-yellow .color-stripe { background: var(--color-yellow); }
+  .hand-card .art {
+    flex: 1; margin: 4px;
+    background: linear-gradient(135deg, rgba(78,195,255,0.08), rgba(0,0,0,0.4));
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .hand-card .art .silhouette {
+    width: 70%; height: 70%;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.2), rgba(0,0,0,0.6));
+    border-radius: 50% 50% 40% 40%;
+    filter: blur(1px);
+  }
+  .hand-card .name {
+    font-size: 9.5px; font-weight: 700; padding: 3px 4px;
+    text-align: center; line-height: 1.15;
+    background: rgba(0,0,0,0.5);
+    min-height: 22px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hand-card .stats {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 4px; gap: 2px;
+    background: rgba(0,0,0,0.65);
+    font-size: 9.5px; font-weight: 800; font-family: var(--font-mono);
+  }
+  .hand-card .ap { color: #ff9b6e; }
+  .hand-card .lp { color: #ffd75e; }
+  .hand-card .lv { color: #6ed1ff; }
+  .hand-card .cost {
+    position: absolute; top: -6px; left: -6px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #5ec1ff, #1f5e9a);
+    border: 1.5px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 800;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .hand-card.color-yellow .cost {
+    background: radial-gradient(circle at 30% 30%, #ffd75e, #a07020);
+  }
+  .hand-card .type-badge {
+    position: absolute; top: 14px; right: -4px;
+    font-size: 8px; font-weight: 700;
+    background: rgba(0,0,0,0.85); color: #fff;
+    padding: 2px 5px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.15);
+    letter-spacing: 0.05em;
+  }
+
+  /* End-turn button */
+  .end-turn-btn {
+    position: absolute; right: 24px; top: 670px;
+    width: 168px; height: 80px;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #3aa67a, #1f7a55);
+    border: 2px solid #6fdfae;
+    color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; letter-spacing: 0.1em;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(58,166,122,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    z-index: 11;
+  }
+  .end-turn-btn .small { font-size: 9px; font-weight: 600; letter-spacing: 0.15em; opacity: 0.85; margin-bottom: 4px; }
+  .end-turn-btn .big { font-size: 16px; }
+
+  /* Bottom narrator message + log bar */
+  .narrator-msg {
+    position: absolute; left: 124px; right: 232px; bottom: 16px; height: 34px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.85), rgba(0,0,0,0.6));
+    border: 1px solid rgba(78,195,255,0.3);
+    border-radius: 3px;
+    display: flex; align-items: center;
+    padding: 0 16px;
+    font-size: 12px; color: #d8eeff;
+    z-index: 12;
+  }
+  .narrator-msg::before {
+    content: "▶";
+    color: var(--neon-blue); font-size: 10px; margin-right: 10px;
+  }
+
+  /* FILE modal (opens on folder-icon click) */
+  .file-modal {
+    position: fixed; inset: 0;
+    background: rgba(5,10,20,0.7);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  .file-modal.open { display: flex; }
+  .file-modal .panel {
+    width: 720px; max-height: 80vh;
+    background: linear-gradient(180deg, #1a1612 0%, #0e0c0a 100%);
+    border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 6px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,215,0,0.15);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  .file-modal .panel::before {
+    content: ""; position: absolute;
+    top: -10px; left: 32px;
+    width: 120px; height: 14px;
+    background: linear-gradient(180deg, #c89a30, #8a6820);
+    border-radius: 4px 4px 0 0;
+    border: 1px solid rgba(0,0,0,0.5); border-bottom: none;
+  }
+  .file-modal .panel-header {
+    padding: 14px 20px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,215,0,0.2);
+    background: linear-gradient(180deg, rgba(255,215,0,0.06), transparent);
+  }
+  .file-modal .panel-header .title {
+    font-size: 13px; letter-spacing: 0.25em; font-weight: 800;
+    color: rgba(255,215,0,0.9); text-transform: uppercase;
+  }
+  .file-modal .panel-header .sub {
+    font-size: 10px; color: var(--text-muted); margin-left: 12px; letter-spacing: 0.08em;
+  }
+  .file-modal .panel-header .close {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary); padding: 4px 10px; border-radius: 3px;
+    font-size: 11px; cursor: pointer; letter-spacing: 0.1em;
+  }
+  .file-modal .panel-header .close:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .file-modal .progress-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .file-modal .progress-row .label {
+    font-size: 10px; color: var(--text-muted); letter-spacing: 0.15em;
+  }
+  .file-modal .progress-row .slots {
+    flex: 1; display: flex; gap: 4px;
+  }
+  .file-modal .progress-row .slots span {
+    flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 1px;
+  }
+  .file-modal .progress-row .slots span.filled {
+    background: var(--accent-gold); box-shadow: 0 0 6px rgba(255,215,0,0.5);
+  }
+  .file-modal .panel-body {
+    padding: 16px 20px 20px;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
+    overflow-y: auto;
+  }
+  .file-modal .file-slot {
+    aspect-ratio: 5 / 7; min-height: 110px;
+    border: 1.5px dashed rgba(255,215,0,0.2);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,215,0,0.25); font-size: 18px; font-weight: 700;
+    background: rgba(255,215,0,0.02);
+  }
+  .file-modal .file-slot.filled {
+    border-style: solid;
+    background: linear-gradient(160deg, rgba(78,138,216,0.12), rgba(0,0,0,0.5));
+    border-color: rgba(78,138,216,0.55);
+    position: relative; padding: 0;
+    gap: 0;
+    color: var(--text-primary);
+  }
+  /* FILE modal: face-DOWN by default (card back), reveal-on-hover */
+  .file-modal .file-slot.filled .face-down {
+    width: 100%; height: 100%;
+    border-radius: 3px;
+    background:
+      radial-gradient(ellipse at 50% 40%, rgba(255,215,0,0.12) 0%, transparent 55%),
+      linear-gradient(160deg, #1f2438 0%, #0a0e1c 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .file-modal .file-slot.filled .face-down::after {
+    content: "DC";
+    font-family: "Trajan Pro", "Times New Roman", serif;
+    font-size: 24px; font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 8px rgba(255,215,0,0.5);
+  }
+  .file-modal .file-slot.filled .acquired {
+    position: absolute; top: 4px; right: 4px;
+    font-size: 8px; font-family: var(--font-mono); font-weight: 800;
+    color: var(--accent-gold);
+    background: rgba(0,0,0,0.75); padding: 1px 4px; border-radius: 2px;
+    z-index: 2;
+  }
+  .file-modal .file-slot.filled .face-up {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column; gap: 3px; padding: 6px 4px;
+    background: linear-gradient(160deg, rgba(78,138,216,0.18), rgba(0,0,0,0.6));
+    border-radius: 3px;
+  }
+  .file-modal .file-slot.filled .face-up { display: none !important; }
+  .file-modal .file-slot.filled .mini-art {
+    flex: 1; width: 100%;
+    background: linear-gradient(135deg, rgba(78,195,255,0.1), rgba(0,0,0,0.4));
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .file-modal .file-slot.filled .mini-art .sil {
+    width: 60%; height: 60%;
+    background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.2), rgba(0,0,0,0.6));
+    border-radius: 50% 50% 40% 40%; filter: blur(1px);
+  }
+  .file-modal .file-slot.filled .cname {
+    font-size: 8.5px; font-weight: 700; text-align: center; line-height: 1.1;
+    color: #fff;
+  }
+  .file-modal .file-slot.filled .meta {
+    font-size: 8px; color: var(--text-muted); letter-spacing: 0.05em;
+  }
+  .file-modal .file-slot.filled .acquired {
+    position: absolute; top: 3px; right: 3px;
+    font-size: 8px; font-family: var(--font-mono); font-weight: 800;
+    color: var(--accent-gold);
+    background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 2px;
+  }
+  .file-modal .panel-footer {
+    padding: 10px 20px; border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 10px; color: var(--text-muted);
+    display: flex; justify-content: space-between;
+  }
+
+  /* Student bubble (tutorial chrome) */
+  .student-bubble {
+    position: absolute; left: 132px; bottom: 200px;
+    max-width: 240px;
+    background: rgba(20, 30, 50, 0.92);
+    border: 1px solid rgba(78,195,255,0.4);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 11px; color: var(--text-primary);
+    z-index: 11;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+  .student-bubble::after {
+    content: ""; position: absolute; bottom: -8px; left: 24px;
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(78,195,255,0.4);
+  }
+  .student-bubble .speaker {
+    font-size: 9px; color: var(--neon-blue);
+    letter-spacing: 0.1em; font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  /* Action indicator (top-right of mat) */
+  .action-indicator {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(78,195,255,0.4);
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 10px; color: var(--text-primary);
+    letter-spacing: 0.05em;
+    z-index: 2;
+  }
+  .action-indicator strong { color: var(--neon-blue); }
+
+  /* Highlight ring for active player mat */
+  .mat.self.turn-active {
+    box-shadow: 0 0 24px rgba(68,221,153,0.35), inset 0 0 0 1px rgba(68,221,153,0.45);
+  }
+  .mat.opp.turn-inactive {
+    opacity: 0.92;
+  }
+
+  /* Scale wrapper */
+  .scaler {
+    transform-origin: center center;
+  }
+</style>
+</head>
+<body>
+<div class="scaler" id="scaler">
+<div class="stage">
+  <div class="bg"></div>
+
+  <!-- TopBar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="chapter-tag"><span class="ico"></span>後攻 4ターン目</span>
+    </div>
+    <div class="topbar-center">
+      <div class="scratch found" title="痕跡: 自">
+        <span class="dot"></span><span>痕跡 自 <strong style="color:#ffd700">発見済</strong></span>
+      </div>
+      <div class="effect-stack">効果スタック: 0</div>
+      <div class="scratch" title="痕跡: 相">
+        <span class="dot"></span><span>痕跡 相 <span style="color:#7090b5">未発見</span></span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="narrator">
+        <div class="narrator-avatar"></div>
+        <span class="narrator-name">ナレーター</span>
+      </div>
+      <span class="copyright">© 青山剛昌／小学館 © TOMY</span>
+    </div>
+  </div>
+
+  <!-- Battle log button (bottom-left) -->
+  <div class="log-btn" onclick="document.getElementById('log-modal') && document.getElementById('log-modal').classList.add('open')">
+    <div class="icon"><span></span><span></span><span></span><span></span></div>
+    <span>対戦ログ</span>
+    <span class="count">24</span>
+  </div>
+
+  <!-- Bottom-right Phase indicator (horizontal) -->
+  <div class="phase-bar">
+    <div class="phase-cell"><span class="ph-en">AUTO</span><span class="ph-jp">オート</span></div>
+    <div class="phase-cell active"><span class="ph-en">MAIN</span><span class="ph-jp">メイン</span></div>
+    <div class="phase-cell"><span class="ph-en">END</span><span class="ph-jp">エンド</span></div>
+  </div>
+
+  <!-- Right sidebar: 6 action menu -->
+  <div class="right-sidebar">
+    <div class="right-sidebar-label">ACTIONS</div>
+    <div class="action-item available">
+      <div class="num">①</div>
+      <div><div class="label">手札の使用</div><div class="sub">5枚 / 残1回</div></div>
+    </div>
+    <div class="action-item available">
+      <div class="num">②</div>
+      <div><div class="label">ネクストヒント</div><div class="sub">FILE 3枚</div></div>
+    </div>
+    <div class="action-item disabled">
+      <div class="num">③</div>
+      <div><div class="label">パートナーの能力</div><div class="sub">スリープ中</div></div>
+    </div>
+    <div class="action-item available">
+      <div class="num">④</div>
+      <div><div class="label">宣言能力</div><div class="sub">対象 1キャラ</div></div>
+    </div>
+    <div class="action-item available">
+      <div class="num">⑤</div>
+      <div><div class="label">推理</div><div class="sub">LP 計 4</div></div>
+    </div>
+    <div class="action-item current">
+      <div class="num">⑥</div>
+      <div><div class="label">アクション</div><div class="sub">対象選択中</div></div>
+    </div>
+  </div>
+
+  <!-- Center play area -->
+  <div class="play-area">
+
+    <!-- Opponent hand count strip (above opp mat) -->
+    <div class="opp-hand-strip">
+      <span class="label">相手の手札</span>
+      <div class="mini-cards">
+        <div class="card-back-mini"></div>
+        <div class="card-back-mini"></div>
+        <div class="card-back-mini"></div>
+        <div class="card-back-mini"></div>
+        <div class="card-back-mini"></div>
+      </div>
+      <span class="count">5 枚</span>
+    </div>
+
+    <!-- Opponent mat (CT-D08 青) -->
+    <div class="mat opp turn-inactive">
+      <div class="action-indicator"><strong>相手:</strong> 待機中</div>
+
+      <!-- Case column -->
+      <div class="case-col">
+        <div class="zone case-zone">
+          <div class="zone-label"><span>事件</span></div>
+          <div class="case-card portrait color-blue">
+            <div class="case-title">月光に潜む<br>古城の影</div>
+            <div class="case-meta">
+              <span>EVT・青</span>
+              <span class="case-lv">Lv 7</span>
+            </div>
+            <div class="case-stamp">事件編</div>
+          </div>
+          <div class="evidence-required">必要証拠 <strong>7</strong>（先攻）</div>
+        </div>
+        <div class="zone evidence-zone">
+          <div class="zone-label"><span>証拠</span><span class="count">5 / 7</span></div>
+          <div class="stack-display evidence">
+            <div class="stack-shadow s3"></div>
+            <div class="stack-shadow s2"></div>
+            <div class="stack-shadow s1"></div>
+            <div class="card-back"><div class="monogram">DC</div><div class="magnifier"></div></div>
+            <div class="count-overlay">5</div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:71%"></div></div>
+        </div>
+      </div>
+
+      <!-- Scene column -->
+      <div class="zone scene-col scene-zone">
+        <div class="zone-watermark">現　場</div>
+        <div class="zone-label"><span>現場</span><span class="count">3 / 5</span></div>
+        <div class="scene-slots">
+          <!-- Char 1: active 灰原哀 -->
+          <div class="card color-blue">
+            <div class="color-stripe"></div>
+            <div class="art"><div class="silhouette"></div></div>
+            <div class="name">灰原 哀</div>
+            <div class="stats"><span class="ap">6000</span><span class="lp">1</span><span class="lv">7</span></div>
+          </div>
+          <!-- Char 2: sleep 江戸川コナン -->
+          <div class="card color-blue sleep">
+            <div class="color-stripe"></div>
+            <div class="art"><div class="silhouette"></div></div>
+            <div class="name">江戸川 コナン</div>
+            <div class="stats"><span class="ap">7000</span><span class="lp">2</span><span class="lv">8</span></div>
+            <div class="set-badge">+1セット</div>
+          </div>
+          <!-- Char 3: stun 毛利蘭 -->
+          <div class="card color-blue stun">
+            <div class="color-stripe"></div>
+            <div class="art"><div class="silhouette"></div></div>
+            <div class="name">毛利 蘭</div>
+            <div class="stats"><span class="ap">5000</span><span class="lp">1</span><span class="lv">6</span></div>
+          </div>
+          <div class="slot-empty"></div>
+          <div class="slot-empty"></div>
+        </div>
+      </div>
+
+      <!-- Partner (bottom row, horizontal card + info) -->
+      <div class="zone partner-col partner-zone">
+        <div class="zone-watermark-keyhole">
+          <svg viewBox="0 0 64 84" fill="none"><path d="M32 8 C 20 8 14 18 14 28 C 14 36 19 42 24 45 L 20 76 L 44 76 L 40 45 C 45 42 50 36 50 28 C 50 18 44 8 32 8 Z" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-dasharray="2 2"/></svg>
+          <div class="lbl">パートナー</div>
+        </div>
+        <div class="zone-label"><span>パートナー</span></div>
+        <div class="partner-slot">
+          <div class="card color-blue" style="width:72px;height:100px">
+            <div class="color-stripe" style="height:7px"></div>
+            <div class="art" style="margin:3px"><div class="silhouette"></div></div>
+            <div class="name" style="font-size:8px;min-height:14px">江戸川コナン</div>
+            <div class="stats" style="padding:1px 2px"><span class="lp" style="font-size:9px">LP 1</span></div>
+          </div>
+          <div class="partner-info">
+            <span class="name">江戸川 コナン</span>
+            <span class="meta">青 / LP 1</span>
+            <span class="meta" style="color:var(--neon-blue)">● アクティブ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deck (top-right) -->
+      <div class="zone deck-col deck-zone">
+        <div class="zone-label"><span>デッキ</span></div>
+        <div class="deck-display">
+          <div class="deck-stack">
+            <div class="layer l3"></div>
+            <div class="layer l2"></div>
+            <div class="layer l1"></div>
+            <div class="layer top"><div class="monogram">DC</div></div>
+            <div class="deck-count">28</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILE (evidence-style stack, click → modal) -->
+      <div class="zone file-strip" onclick="document.getElementById('file-modal-opp').classList.add('open')">
+        <div class="zone-label"><span>FILE</span><span class="count">2</span></div>
+        <div class="stack-display file">
+          <div class="stack-shadow s3"></div>
+          <div class="stack-shadow s2"></div>
+          <div class="stack-shadow s1"></div>
+          <div class="card-back"><div class="monogram">DC</div><div class="magnifier"></div></div>
+          <div class="count-overlay">2</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:29%"></div></div>
+      </div>
+
+      <!-- Remove (bottom-right) -->
+      <div class="zone remove-col">
+        <div class="zone-label"><span>リムーブ</span><span class="count">4</span></div>
+        <div class="stack-display">
+          <div class="card color-blue" style="width:46px;height:64px;transform:rotate(-2deg)">
+            <div class="color-stripe" style="height:5px"></div>
+            <div class="art" style="margin:2px"><div class="silhouette"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEEP OUT divider removed per user feedback -->
+
+    <!-- Self mat (CT-D11 黄) -->
+    <div class="mat self turn-active">
+      <div class="action-indicator"><strong>あなた:</strong> アクション → 対象選択</div>
+
+      <!-- Case column -->
+      <div class="case-col">
+        <div class="zone case-zone">
+          <div class="zone-label"><span>事件</span></div>
+          <div class="case-card color-yellow">
+            <div class="case-title">千速と重悟の<br>婚活パーティー</div>
+            <div class="case-meta">
+              <span>EVT・黄</span>
+              <span class="case-lv">Lv 6</span>
+            </div>
+            <div class="case-stamp">事件編</div>
+          </div>
+          <div class="evidence-required">必要証拠 <strong>6</strong>（後攻）</div>
+        </div>
+        <div class="zone evidence-zone">
+          <div class="zone-label"><span>証拠</span><span class="count">4 / 6</span></div>
+          <div class="stack-display evidence">
+            <div class="stack-shadow s3"></div>
+            <div class="stack-shadow s2"></div>
+            <div class="stack-shadow s1"></div>
+            <div class="card-back"><div class="monogram">DC</div><div class="magnifier"></div></div>
+            <div class="count-overlay">4</div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:67%"></div></div>
+        </div>
+      </div>
+
+      <!-- Scene -->
+      <div class="zone scene-col scene-zone">
+        <div class="zone-watermark">現　場</div>
+        <div class="zone-label"><span>現場</span><span class="count">3 / 5</span></div>
+        <div class="scene-slots">
+          <!-- 萩原千速 (active, named state for newly summoned) -->
+          <div class="card color-yellow">
+            <div class="color-stripe"></div>
+            <div class="art"><div class="silhouette"></div></div>
+            <div class="name">萩原 千速</div>
+            <div class="stats"><span class="ap">8000</span><span class="lp">1</span><span class="lv">8</span></div>
+            <div class="named-badge">名乗り</div>
+          </div>
+          <!-- 横溝重悟 (active) -->
+          <div class="card color-yellow">
+            <div class="color-stripe"></div>
+            <div class="art"><div class="silhouette"></div></div>
+            <div class="name">横溝 重悟</div>
+            <div class="stats"><span class="ap">8000</span><span class="lp">1</span><span class="lv">8</span></div>
+          </div>
+          <!-- 警察キャラ (sleep) -->
+          <div class="card color-yellow sleep">
+            <div class="color-stripe"></div>
+            <div class="art"><div class="silhouette"></div></div>
+            <div class="name">高木 渉</div>
+            <div class="stats"><span class="ap">4000</span><span class="lp">1</span><span class="lv">5</span></div>
+          </div>
+          <div class="slot-empty"></div>
+          <div class="slot-empty"></div>
+        </div>
+      </div>
+
+      <!-- Partner (bottom row, horizontal card + info) -->
+      <div class="zone partner-col partner-zone">
+        <div class="zone-watermark-keyhole">
+          <svg viewBox="0 0 64 84" fill="none"><path d="M32 8 C 20 8 14 18 14 28 C 14 36 19 42 24 45 L 20 76 L 44 76 L 40 45 C 45 42 50 36 50 28 C 50 18 44 8 32 8 Z" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-dasharray="2 2"/></svg>
+          <div class="lbl">パートナー</div>
+        </div>
+        <div class="zone-label"><span>パートナー</span></div>
+        <div class="partner-slot">
+          <div class="card color-yellow sleep" style="width:72px;height:100px">
+            <div class="color-stripe" style="height:7px"></div>
+            <div class="art" style="margin:3px"><div class="silhouette"></div></div>
+            <div class="name" style="font-size:8px;min-height:14px">萩原千速</div>
+            <div class="stats" style="padding:1px 2px"><span class="lp" style="font-size:9px">LP 1</span></div>
+          </div>
+          <div class="partner-info">
+            <span class="name">萩原 千速</span>
+            <span class="meta">黄 / LP 1</span>
+            <span class="meta" style="color:#5a8ec4">● スリープ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deck (top-right) -->
+      <div class="zone deck-col deck-zone">
+        <div class="zone-label"><span>デッキ</span></div>
+        <div class="deck-display">
+          <div class="deck-stack">
+            <div class="layer l3"></div>
+            <div class="layer l2"></div>
+            <div class="layer l1"></div>
+            <div class="layer top"><div class="monogram">DC</div></div>
+            <div class="deck-count">25</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILE (evidence-style stack, click → modal) -->
+      <div class="zone file-strip" onclick="document.getElementById('file-modal-self').classList.add('open')">
+        <div class="zone-label"><span>FILE</span><span class="count">3</span></div>
+        <div class="stack-display file">
+          <div class="stack-shadow s3"></div>
+          <div class="stack-shadow s2"></div>
+          <div class="stack-shadow s1"></div>
+          <div class="card-back"><div class="monogram">DC</div><div class="magnifier"></div></div>
+          <div class="count-overlay">3</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:43%"></div></div>
+      </div>
+
+      <!-- Remove (bottom-right) -->
+      <div class="zone remove-col">
+        <div class="zone-label"><span>リムーブ</span><span class="count">3</span></div>
+        <div class="stack-display">
+          <div class="card color-yellow" style="width:46px;height:64px;transform:rotate(-2deg)">
+            <div class="color-stripe" style="height:5px"></div>
+            <div class="art" style="margin:2px"><div class="silhouette"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student bubble (tutorial chrome) -->
+  <div class="student-bubble">
+    <div class="speaker">学生</div>
+    <div>アクションの対象は、相手の <strong>スリープ/スタン</strong> 状態のキャラか、<strong>証拠1枚以上</strong> の事件です。</div>
+  </div>
+
+  <!-- Hand -->
+  <div class="hand-zone">
+    <div class="hand-card color-yellow">
+      <div class="cost">5</div>
+      <div class="type-badge">キャラ</div>
+      <div class="color-stripe"></div>
+      <div class="art"><div class="silhouette"></div></div>
+      <div class="name">佐藤 美和子</div>
+      <div class="stats"><span class="ap">5000</span><span class="lp">1</span><span class="lv">5</span></div>
+    </div>
+    <div class="hand-card color-yellow featured">
+      <div class="cost">8</div>
+      <div class="type-badge">キャラ</div>
+      <div class="color-stripe"></div>
+      <div class="art"><div class="silhouette"></div></div>
+      <div class="name">横溝 参悟</div>
+      <div class="stats"><span class="ap">8000</span><span class="lp">1</span><span class="lv">8</span></div>
+    </div>
+    <div class="hand-card color-yellow">
+      <div class="cost">3</div>
+      <div class="type-badge">イベント</div>
+      <div class="color-stripe"></div>
+      <div class="art"><div class="silhouette"></div></div>
+      <div class="name">証拠を集める</div>
+      <div class="stats"><span class="ap">—</span><span class="lp">—</span><span class="lv">3</span></div>
+    </div>
+    <div class="hand-card color-blue disabled" title="色不一致で使用不可">
+      <div class="cost">4</div>
+      <div class="type-badge">キャラ</div>
+      <div class="color-stripe"></div>
+      <div class="art"><div class="silhouette"></div></div>
+      <div class="name">服部 平次</div>
+      <div class="stats"><span class="ap">6000</span><span class="lp">1</span><span class="lv">4</span></div>
+    </div>
+    <div class="hand-card color-yellow">
+      <div class="cost">2</div>
+      <div class="type-badge">イベント</div>
+      <div class="color-stripe"></div>
+      <div class="art"><div class="silhouette"></div></div>
+      <div class="name">捜査依頼</div>
+      <div class="stats"><span class="ap">—</span><span class="lp">—</span><span class="lv">2</span></div>
+    </div>
+  </div>
+
+  <!-- End-turn button -->
+  <button class="end-turn-btn">
+    <span class="small">END</span>
+    <span class="big">ターン終了</span>
+  </button>
+
+  <!-- Narrator message -->
+  <div class="narrator-msg">
+    あなたは <strong style="color:#fff">⑥ アクション</strong> を選択しました。 攻撃元キャラの「横溝 重悟（AP 8000）」を指定し、相手のスリープ/スタン状態のキャラからアクション対象を選んでください。
+  </div>
+
+  <div class="vignette"></div>
+</div>
+</div>
+
+<script>
+  // Scale stage to viewport
+  function scale() {
+    const s = document.getElementById('scaler');
+    const sx = window.innerWidth / 1920;
+    const sy = window.innerHeight / 1080;
+    const k = Math.min(sx, sy);
+    s.style.transform = `scale(${k})`;
+  }
+  window.addEventListener('resize', scale);
+  scale();
+
+  // ─── Action popup for clicking self scene characters ───
+  (function setupActionPopup(){
+    // Build popup once
+    const popup = document.createElement('div');
+    popup.className = 'action-popup';
+    popup.id = 'actionPopup';
+    document.body.appendChild(popup);
+
+    // Inject CSS
+    const css = document.createElement('style');
+    css.textContent = `
+      .action-popup {
+        position: fixed; z-index: 9000;
+        min-width: 230px;
+        background: linear-gradient(180deg, rgba(8,16,28,0.97), rgba(4,10,18,0.97));
+        border: 1.5px solid rgba(78,195,255,0.55);
+        border-radius: 4px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 24px rgba(78,195,255,0.25);
+        padding: 8px 0; display: none;
+        font-family: var(--font-jp);
+        animation: ap-in 0.15s ease-out;
+      }
+      @keyframes ap-in {
+        from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .action-popup.open { display: block; }
+      .action-popup .ap-header {
+        padding: 8px 14px 10px;
+        border-bottom: 1px solid rgba(78,195,255,0.2);
+        font-family: var(--font-mono); font-size: 9.5px;
+        letter-spacing: 0.16em; color: rgba(255,215,94,0.85);
+      }
+      .action-popup .ap-header .name {
+        display: block;
+        font-family: var(--font-jp); font-size: 12.5px;
+        font-weight: 800; color: #fff;
+        margin-top: 2px; letter-spacing: 0.02em;
+      }
+      .action-popup .ap-header .state {
+        font-size: 9.5px; color: var(--text-muted);
+        letter-spacing: 0.1em; margin-top: 2px;
+        font-family: var(--font-mono);
+      }
+      .action-popup .ap-item {
+        display: grid; grid-template-columns: 22px 1fr auto;
+        gap: 10px; align-items: center;
+        padding: 9px 14px;
+        cursor: pointer;
+        transition: background 0.12s;
+        border-left: 2px solid transparent;
+        color: var(--text-secondary);
+      }
+      .action-popup .ap-item:hover {
+        background: rgba(78,195,255,0.12);
+        border-left-color: var(--neon-blue, #4ec3ff);
+        color: #fff;
+      }
+      .action-popup .ap-item .num {
+        width: 20px; height: 20px; border-radius: 50%;
+        background: rgba(0,0,0,0.4);
+        border: 1.5px solid currentColor;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-mono); font-weight: 700; font-size: 10.5px;
+      }
+      .action-popup .ap-item .lbl { font-size: 13px; font-weight: 700; }
+      .action-popup .ap-item .sub { font-size: 9.5px; color: var(--text-muted); font-family: var(--font-mono); letter-spacing: 0.08em; }
+      .action-popup .ap-item.disabled {
+        opacity: 0.4; cursor: not-allowed;
+        color: var(--text-disabled);
+      }
+      .action-popup .ap-item.disabled:hover {
+        background: transparent; border-left-color: transparent;
+        color: var(--text-disabled);
+      }
+      .action-popup .ap-item.disabled .reason {
+        color: rgba(255,93,93,0.65);
+      }
+      .action-popup .ap-divider {
+        height: 1px; background: rgba(78,195,255,0.15);
+        margin: 4px 0;
+      }
+      .action-popup .ap-footer {
+        padding: 4px 14px 8px;
+        font-size: 9.5px; color: var(--text-muted);
+        font-family: var(--font-mono); letter-spacing: 0.1em;
+        text-align: center;
+      }
+      .action-popup .ap-footer button {
+        background: transparent; border: 0; color: inherit;
+        font-family: inherit; font-size: inherit; cursor: pointer;
+        padding: 4px 8px; letter-spacing: inherit;
+      }
+      .action-popup .ap-footer button:hover { color: #fff; }
+
+      /* Selected state on card */
+      .mat.self .scene-slots .card.is-selected {
+        box-shadow: 0 4px 14px rgba(0,0,0,0.6), 0 0 22px rgba(255,215,94,0.6), inset 0 0 0 2px rgba(255,215,94,0.7) !important;
+        z-index: 8;
+      }
+      .mat.self .scene-slots .card,
+      .mat.self .partner-zone .card { cursor: pointer; }
+    `;
+    document.head.appendChild(css);
+
+    // Determine character state from DOM classes
+    function readState(card) {
+      const isSleep = card.classList.contains('sleep');
+      const isStun = card.classList.contains('stun');
+      const isNamed = !!card.querySelector('.named-badge');
+      const name = card.querySelector('.name')?.textContent?.trim() || 'キャラ';
+      return { isSleep, isStun, isNamed, name };
+    }
+
+    // Build menu items for a character
+    function buildMenuItems(state, isPartner) {
+      const items = [];
+      const inactive = state.isSleep || state.isStun;
+      // 推理
+      items.push({
+        num: '①',
+        lbl: '推理',
+        sub: isPartner ? 'パートナー / LP分の証拠を得る' : 'キャラ / LP分の証拠を得る',
+        disabled: inactive || state.isNamed,
+        reason: inactive ? '(スリープ/スタン中)' : state.isNamed ? '(名乗り中)' : ''
+      });
+      // アクション
+      items.push({
+        num: '②',
+        lbl: 'アクション',
+        sub: '相手キャラ/事件にコンタクト',
+        disabled: inactive || (state.isNamed),
+        reason: inactive ? '(スリープ/スタン中)' : state.isNamed ? '(名乗り中・突撃なし)' : ''
+      });
+      // アシスト (partner only)
+      if (isPartner) {
+        items.push({
+          num: '③',
+          lbl: 'アシスト',
+          sub: 'FILE へ移動 (＋7枚で解決編)',
+          disabled: inactive,
+          reason: inactive ? '(スリープ/スタン中)' : ''
+        });
+        items.push({
+          num: '④',
+          lbl: '事件解決',
+          sub: '勝利宣言 (解決編＋証拠到達時)',
+          disabled: true,
+          reason: '(事件編中)'
+        });
+      }
+      // 宣言能力
+      items.push({
+        num: isPartner ? '⑤' : '③',
+        lbl: '宣言能力',
+        sub: '【宣言】効果を発動',
+        disabled: inactive,
+        reason: inactive ? '(スリープ/スタン中)' : ''
+      });
+      // セットカード使用 (キャラのみ・サンプル)
+      if (!isPartner) {
+        items.push({
+          num: '④',
+          lbl: 'セット解放',
+          sub: 'セットされたカードを発動',
+          disabled: true,
+          reason: '(セットなし)'
+        });
+      }
+      return items;
+    }
+
+    function showFor(card, opts) {
+      const state = readState(card);
+      const isPartner = !!opts?.partner;
+      const items = buildMenuItems(state, isPartner);
+      const stateLabel = state.isStun ? 'STUN' : state.isSleep ? 'SLEEP' : state.isNamed ? '名乗り (ACTIVE)' : 'ACTIVE';
+      popup.innerHTML = `
+        <div class="ap-header">
+          ${isPartner ? '▶ PARTNER' : '▶ SCENE CHARACTER'}
+          <span class="name">${state.name}</span>
+          <span class="state">${stateLabel}</span>
+        </div>
+        ${items.map(it => `
+          <div class="ap-item${it.disabled ? ' disabled' : ''}" data-action="${it.lbl}">
+            <span class="num">${it.num}</span>
+            <span><span class="lbl">${it.lbl}</span><br><span class="sub">${it.sub}</span></span>
+            <span class="sub reason">${it.reason || ''}</span>
+          </div>
+        `).join('<div class="ap-divider"></div>')}
+        <div class="ap-divider"></div>
+        <div class="ap-footer"><button data-close>✕ 閉じる (Esc)</button></div>
+      `;
+
+      // Position popup right of card (clamp to viewport)
+      const rect = card.getBoundingClientRect();
+      // We're inside scaled stage, so use card rect directly from viewport
+      let left = rect.right + 12;
+      let top = rect.top;
+      popup.classList.add('open');
+      // After render, get popup size and clamp
+      requestAnimationFrame(() => {
+        const pr = popup.getBoundingClientRect();
+        if (left + pr.width > window.innerWidth - 12) {
+          left = rect.left - pr.width - 12;
+        }
+        if (top + pr.height > window.innerHeight - 12) {
+          top = window.innerHeight - pr.height - 12;
+        }
+        if (top < 12) top = 12;
+        popup.style.left = left + 'px';
+        popup.style.top = top + 'px';
+      });
+
+      // Highlight selected card
+      document.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
+      card.classList.add('is-selected');
+
+      // Bind close button
+      popup.querySelector('[data-close]').onclick = closePopup;
+      // Bind item click (just log for prototype)
+      popup.querySelectorAll('.ap-item').forEach(item => {
+        if (item.classList.contains('disabled')) return;
+        item.onclick = () => {
+          const act = item.getAttribute('data-action');
+          // For prototype: just flash and close
+          item.style.background = 'rgba(255,215,94,0.25)';
+          setTimeout(() => { closePopup(); }, 200);
+        };
+      });
+    }
+
+    function closePopup() {
+      popup.classList.remove('open');
+      document.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
+    }
+
+    // Wire up self scene characters
+    document.querySelectorAll('.mat.self .scene-slots .card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showFor(card, { partner: false });
+      });
+    });
+    // Wire up self partner
+    document.querySelectorAll('.mat.self .partner-zone .card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showFor(card, { partner: true });
+      });
+    });
+    // Click outside to close
+    document.addEventListener('click', (e) => {
+      if (!popup.contains(e.target) && !e.target.closest('.mat.self .scene-slots .card, .mat.self .partner-zone .card')) {
+        closePopup();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePopup();
+    });
+  })();
+</script>
+<!-- FILE modals (open on folder-icon click) -->
+<div class="file-modal" id="file-modal-opp" onclick="if(event.target===this) this.classList.remove('open')">
+  <div class="panel">
+    <div class="panel-header">
+      <div><span class="title">FILE — 相手</span><span class="sub">CT-D08 青 / コナン陣営</span></div>
+      <button class="close" onclick="document.getElementById('file-modal-opp').classList.remove('open')">✕ CLOSE</button>
+    </div>
+    <div class="progress-row">
+      <span class="label">PROGRESS</span>
+      <div class="slots">
+        <span class="filled"></span><span class="filled"></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <span class="label" style="font-family:var(--font-mono);color:var(--accent-gold);font-weight:800">2 / 7</span>
+    </div>
+    <div class="panel-body">
+      <div class="file-slot filled">
+        <div class="face-down"></div>
+        <div class="face-up">
+        <span class="acquired">T2</span>
+        <div class="mini-art"><div class="sil"></div></div>
+        <div class="cname">鈴木園子</div>
+        <div class="meta">キャラ / 4000</div>
+        </div>
+      </div>
+      <div class="file-slot filled">
+        <div class="face-down"></div>
+        <div class="face-up">
+        <span class="acquired">T3</span>
+        <div class="mini-art"><div class="sil"></div></div>
+        <div class="cname">服部 平次</div>
+        <div class="meta">キャラ / 6000</div>
+        </div>
+      </div>
+      <div class="file-slot">3</div>
+      <div class="file-slot">4</div>
+      <div class="file-slot">5</div>
+      <div class="file-slot">6</div>
+      <div class="file-slot">7</div>
+    </div>
+    <div class="panel-footer">
+      <span>クリックで閉じる・スロットを探して記憶する</span>
+      <span>FILE 7枚 ⏩ 勝利</span>
+    </div>
+  </div>
+</div>
+
+<div class="file-modal" id="file-modal-self" onclick="if(event.target===this) this.classList.remove('open')">
+  <div class="panel">
+    <div class="panel-header">
+      <div><span class="title">FILE — あなた</span><span class="sub">CT-D11 黄 / 警察陣営</span></div>
+      <button class="close" onclick="document.getElementById('file-modal-self').classList.remove('open')">✕ CLOSE</button>
+    </div>
+    <div class="progress-row">
+      <span class="label">PROGRESS</span>
+      <div class="slots">
+        <span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span><span></span>
+      </div>
+      <span class="label" style="font-family:var(--font-mono);color:var(--accent-gold);font-weight:800">3 / 7</span>
+    </div>
+    <div class="panel-body">
+      <div class="file-slot filled" style="background:linear-gradient(160deg,rgba(224,184,48,0.12),rgba(0,0,0,0.5));border-color:rgba(224,184,48,0.55)">
+        <div class="face-down"></div>
+        <div class="face-up">
+        <span class="acquired">T1</span>
+        <div class="mini-art"><div class="sil"></div></div>
+        <div class="cname">毛利 小五郎</div>
+        <div class="meta">キャラ / 5000</div>
+        </div>
+      </div>
+      <div class="file-slot filled" style="background:linear-gradient(160deg,rgba(224,184,48,0.12),rgba(0,0,0,0.5));border-color:rgba(224,184,48,0.55)">
+        <div class="face-down"></div>
+        <div class="face-up">
+        <span class="acquired">T2</span>
+        <div class="mini-art"><div class="sil"></div></div>
+        <div class="cname">隊長 白鳥</div>
+        <div class="meta">キャラ / 6000</div>
+        </div>
+      </div>
+      <div class="file-slot filled" style="background:linear-gradient(160deg,rgba(224,184,48,0.12),rgba(0,0,0,0.5));border-color:rgba(224,184,48,0.55)">
+        <div class="face-down"></div>
+        <div class="face-up">
+        <span class="acquired">T3</span>
+        <div class="mini-art"><div class="sil"></div></div>
+        <div class="cname">黄下 闣太郎</div>
+        <div class="meta">イベント</div>
+        </div>
+      </div>
+      <div class="file-slot">4</div>
+      <div class="file-slot">5</div>
+      <div class="file-slot">6</div>
+      <div class="file-slot">7</div>
+    </div>
+    <div class="panel-footer">
+      <span>クリックで閉じる・スロットを探して記憶する</span>
+      <span>FILE 7枚 ⏩ 勝利</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

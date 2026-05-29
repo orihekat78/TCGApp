@@ -1,0 +1,47 @@
+/* spec: .claude/specs/meta-ui/02-design-system.md
+ * Phase 10-A: 最小限のリセット。10-B で meta-* インタラクションクラスを追加する。
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#meta-root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: #0a1a28;
+  color: #e0ecf8;
+  font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Noto Sans JP', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Phase 11-B: CardArt が MetaCard 内の art area を fill するように調整 */
+.meta-card-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}

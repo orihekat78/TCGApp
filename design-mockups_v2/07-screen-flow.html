@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>07 Screen Flow — コナンTCG 画面遷移図</title>
+<style>
+  :root {
+    --bg-deep: #0a1a28;
+    --gold: #ffd700;
+    --neon-blue: #4ec3ff;
+    --green: #44dd99;
+    --red: #c84040;
+    --purple: #8a4cc0;
+    --text-primary: #e0ecf8;
+    --text-secondary: #b8d4f0;
+    --text-muted: #7090b5;
+    --text-disabled: #4a5a70;
+    --font-jp: "Hiragino Sans","Yu Gothic UI","Noto Sans JP",-apple-system,sans-serif;
+    --font-mono: "Cascadia Code","Consolas","JetBrains Mono",monospace;
+    --font-serif: "Hiragino Mincho ProN","Yu Mincho",serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: #050810; color: var(--text-primary);
+    font-family: var(--font-jp);
+    width: 100%; min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { display: grid; place-items: center; }
+
+  .stage {
+    width: 1920px; height: 1080px;
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 30%, #15263e 0%, #0a1424 50%, #050a14 100%);
+    background-size: cover;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .stage::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'><g fill='none' stroke='%234ec3ff' stroke-width='0.5' opacity='0.07'><path d='M0 0h48v48H0z'/><path d='M24 0v48M0 24h48'/></g></svg>");
+    pointer-events: none;
+  }
+  .stage::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+  }
+
+  /* ── Header ──────────────────────────────────────────────── */
+  .header {
+    position: absolute; left: 0; right: 0; top: 0; height: 92px;
+    padding: 0 48px;
+    display: flex; align-items: center;
+    border-bottom: 1px solid rgba(78,195,255,0.18);
+    background: linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.25));
+    z-index: 5;
+  }
+  .header-title {
+    font-family: var(--font-serif);
+    font-size: 28px; font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: 0.08em;
+  }
+  .header-title strong {
+    color: var(--gold);
+    font-family: var(--font-mono);
+    margin-right: 14px;
+    font-size: 22px;
+  }
+  .header-meta {
+    margin-left: auto;
+    display: flex; gap: 18px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px; color: var(--text-muted);
+    letter-spacing: 0.18em;
+  }
+  .legend-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(78,195,255,0.2);
+    font-size: 11px;
+  }
+  .legend-chip .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .legend-chip.done   .dot { background: var(--green);  box-shadow: 0 0 6px var(--green); }
+  .legend-chip.design .dot { background: var(--gold);   box-shadow: 0 0 6px var(--gold); }
+  .legend-chip.plan   .dot { background: var(--text-disabled); }
+
+  /* ── Section dividers (subtle annotations) ───────────────── */
+  .section-label {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 800;
+    color: var(--gold);
+    letter-spacing: 0.4em;
+    z-index: 4;
+    padding: 4px 12px;
+    background: rgba(0,0,0,0.5);
+    border-left: 2px solid var(--gold);
+  }
+  .section-label .jp {
+    color: var(--text-secondary);
+    margin-left: 12px;
+    letter-spacing: 0.1em;
+    font-family: var(--font-jp);
+    font-weight: 600;
+  }
+
+  /* ── Screen card ─────────────────────────────────────────── */
+  .screen {
+    position: absolute;
+    background: linear-gradient(180deg, rgba(13,38,64,0.92), rgba(13,38,64,0.65));
+    border: 1px solid rgba(78,195,255,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.55);
+    z-index: 3;
+    transition: transform 150ms, box-shadow 150ms;
+  }
+  .screen.done   { border-color: rgba(68,221,153,0.55); }
+  .screen.design { border-color: rgba(255,215,0,0.65); box-shadow: 0 8px 28px rgba(0,0,0,0.6), 0 0 14px rgba(255,215,0,0.18); }
+  .screen.plan   { border-color: rgba(74,90,112,0.5); opacity: 0.82; }
+  .screen.hub {
+    border-color: var(--gold);
+    border-width: 2px;
+    background: linear-gradient(180deg, rgba(20,52,84,0.95), rgba(13,38,64,0.85));
+    box-shadow: 0 12px 32px rgba(0,0,0,0.65), 0 0 24px rgba(255,215,0,0.22);
+  }
+  .screen-thumb {
+    flex: 1; position: relative; min-height: 0;
+    background: linear-gradient(180deg, #0a1828, #050810);
+    overflow: hidden;
+    border-bottom: 1px solid rgba(78,195,255,0.12);
+  }
+  .screen-meta {
+    padding: 8px 12px 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .screen-meta .code {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+  }
+  .screen-meta .jp {
+    flex: 1;
+    font-size: 14px; font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.04em;
+  }
+  .screen.hub .screen-meta .jp { color: var(--gold); font-size: 16px; }
+  .screen-meta .status {
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 800;
+    border-radius: 2px;
+    letter-spacing: 0.18em;
+  }
+  .screen.done .status   { color: var(--green); background: rgba(68,221,153,0.15); border: 1px solid rgba(68,221,153,0.4); }
+  .screen.design .status { color: var(--gold); background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.4); }
+  .screen.plan .status   { color: var(--text-muted); background: rgba(74,90,112,0.18); border: 1px solid rgba(74,90,112,0.4); }
+  .screen-note {
+    padding: 0 12px 10px;
+    font-size: 10px; color: var(--text-muted);
+    line-height: 1.45;
+    font-family: var(--font-jp);
+  }
+
+  /* ── Thumbnail mini-scenes ───────────────────────────────── */
+  .th-bar {
+    position: absolute; left: 0; right: 0; top: 0; height: 10px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.7), transparent);
+    border-bottom: 1px solid rgba(78,195,255,0.15);
+  }
+  .th-bar .nav-dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--gold); position: absolute;
+    top: 3px;
+  }
+  .th-box {
+    position: absolute;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(78,195,255,0.2);
+    border-radius: 2px;
+  }
+  .th-card {
+    position: absolute;
+    background: linear-gradient(180deg, #4ec3ff44, #2b6cb588);
+    border: 1px solid rgba(78,195,255,0.55);
+    border-radius: 2px;
+  }
+  .th-card.gold { background: linear-gradient(180deg, #ffd70044, #d4a42588); border-color: rgba(255,215,0,0.5); }
+  .th-card.red  { background: linear-gradient(180deg, #c8404044, #c8404088); border-color: rgba(200,64,64,0.5); }
+  .th-card.partner { background: linear-gradient(180deg, #ffd700, #d4a425); border-color: #fff8d0; }
+
+  /* Grid-friendly card (position:static so display:grid lays them out) */
+  .thumb-card {
+    background: linear-gradient(180deg, #4ec3ff44, #2b6cb588);
+    border: 1px solid rgba(78,195,255,0.55);
+    border-radius: 2px;
+  }
+  .thumb-card.gold { background: linear-gradient(180deg, #ffd70044, #d4a42588); border-color: rgba(255,215,0,0.5); }
+  .thumb-card.red  { background: linear-gradient(180deg, #c8404044, #c8404088); border-color: rgba(200,64,64,0.5); }
+
+  .th-label {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 7px;
+    color: rgba(176,196,224,0.7);
+    letter-spacing: 0.1em;
+    pointer-events: none;
+  }
+  .th-text {
+    position: absolute;
+    background: rgba(255,255,255,0.18);
+    border-radius: 1px;
+  }
+
+  /* ── Arrow labels ────────────────────────────────────────── */
+  .arrow-label {
+    position: absolute;
+    background: rgba(8,16,28,0.92);
+    border: 1px solid rgba(78,195,255,0.35);
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+    z-index: 4;
+    line-height: 1.3;
+  }
+  .arrow-label .jp {
+    color: var(--text-primary);
+    font-family: var(--font-jp);
+    margin-right: 6px;
+    font-weight: 700;
+  }
+  .arrow-label.primary {
+    background: rgba(28,16,4,0.95);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .arrow-label.primary .jp { color: var(--gold); }
+  .arrow-label.back {
+    background: rgba(8,16,28,0.85);
+    border-color: rgba(74,90,112,0.55);
+    color: var(--text-muted);
+    font-size: 9px;
+  }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  .footer {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 40px;
+    padding: 0 48px;
+    display: flex; align-items: center;
+    border-top: 1px solid rgba(78,195,255,0.12);
+    background: linear-gradient(0deg, rgba(0,0,0,0.7), rgba(0,0,0,0.25));
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.18em;
+    z-index: 5;
+  }
+  .footer .right { margin-left: auto; }
+
+  /* Scale stage to viewport */
+  @media (max-width: 1920px) {
+    body { display: block; }
+    .stage { transform: scale(0.5); transform-origin: top left; }
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-title">
+      <strong>07</strong>
+      Screen Flow — 画面遷移マップ
+    </div>
+    <div class="header-meta">
+      <span>conan TCG · 11 screens · meta + match</span>
+      <span class="legend-chip done"><span class="dot"></span>実装済 IMPLEMENTED</span>
+      <span class="legend-chip design"><span class="dot"></span>設計済 DESIGNED</span>
+      <span class="legend-chip plan"><span class="dot"></span>未着手 PLANNED</span>
+    </div>
+  </header>
+
+  <!-- SVG arrows layer (drawn first so screens overlay) -->
+  <svg style="position:absolute; left:0; top:0; width:1920px; height:1080px; pointer-events:none; z-index:2;" viewBox="0 0 1920 1080">
+    <defs>
+      <marker id="arrowhead-gold" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L9,3 L0,6 Z" fill="#ffd700" />
+      </marker>
+      <marker id="arrowhead-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L9,3 L0,6 Z" fill="#4ec3ff" />
+      </marker>
+      <marker id="arrowhead-muted" markerWidth="9" markerHeight="9" refX="8" refY="2.5" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L8,2.5 L0,5 Z" fill="#7090b5" />
+      </marker>
+    </defs>
+
+    <!-- Section dividers -->
+    <line x1="0" y1="500" x2="1920" y2="500" stroke="rgba(78,195,255,0.10)" stroke-width="1" stroke-dasharray="6 6" />
+
+    <!-- Primary match flow (top row) -->
+    <!-- HOME → MATCH SETUP -->
+    <path d="M 460 310 L 530 310" stroke="#ffd700" stroke-width="2.5" fill="none" marker-end="url(#arrowhead-gold)" />
+    <!-- MATCH SETUP → MATCH -->
+    <path d="M 880 310 L 1010 310" stroke="#ffd700" stroke-width="2.5" fill="none" marker-end="url(#arrowhead-gold)" />
+    <!-- MATCH → RESULT -->
+    <path d="M 1360 310 L 1490 310" stroke="#ffd700" stroke-width="2.5" fill="none" marker-end="url(#arrowhead-gold)" />
+    <!-- RESULT → HOME (curve back) -->
+    <path d="M 1620 230 C 1620 130, 320 130, 320 220" stroke="rgba(255,215,0,0.55)" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#arrowhead-gold)" />
+
+    <!-- Match Setup ⇄ HOME (back) -->
+    <path d="M 530 360 C 470 380, 430 380, 380 380 L 380 360" stroke="rgba(112,144,181,0.5)" stroke-width="1.5" fill="none" marker-end="url(#arrowhead-muted)" />
+
+    <!-- Deck flow (middle band) -->
+    <!-- HOME → DECK -->
+    <path d="M 240 460 C 240 510, 300 540, 380 590" stroke="#4ec3ff" stroke-width="2.2" fill="none" marker-end="url(#arrowhead-blue)" />
+    <!-- DECK ⇄ CARDS -->
+    <path d="M 700 670 L 800 670" stroke="#4ec3ff" stroke-width="2.2" fill="none" marker-end="url(#arrowhead-blue)" />
+    <path d="M 800 720 L 700 720" stroke="rgba(78,195,255,0.55)" stroke-width="1.6" fill="none" marker-end="url(#arrowhead-blue)" />
+    <!-- DECK → HOME (back) -->
+    <path d="M 380 590 C 290 530, 240 480, 240 460" stroke="rgba(112,144,181,0.4)" stroke-width="1.4" stroke-dasharray="4 4" fill="none" />
+
+    <!-- History / Tutorial / Settings (bottom row) -->
+    <!-- HOME → HISTORY -->
+    <path d="M 220 460 C 220 600, 280 770, 380 870" stroke="#4ec3ff" stroke-width="2.2" fill="none" marker-end="url(#arrowhead-blue)" />
+    <!-- HISTORY → REPLAY -->
+    <path d="M 700 920 L 810 920" stroke="#4ec3ff" stroke-width="2.2" fill="none" marker-end="url(#arrowhead-blue)" />
+    <!-- HOME → TUTORIAL -->
+    <path d="M 360 470 C 700 540, 1180 700, 1280 870" stroke="#4ec3ff" stroke-width="2" fill="none" marker-end="url(#arrowhead-blue)" />
+    <!-- HOME → SETTINGS -->
+    <path d="M 360 470 C 780 530, 1430 750, 1620 870" stroke="#4ec3ff" stroke-width="2" fill="none" marker-end="url(#arrowhead-blue)" />
+    <!-- TUTORIAL → MATCH (start a guided match) -->
+    <path d="M 1340 870 C 1340 700, 1240 540, 1160 410" stroke="rgba(68,221,153,0.5)" stroke-width="1.5" stroke-dasharray="4 4" fill="none" marker-end="url(#arrowhead-muted)" />
+  </svg>
+
+  <!-- Section labels -->
+  <div class="section-label" style="left: 28px; top: 130px;">
+    PLAY FLOW <span class="jp">対戦フロー</span>
+  </div>
+  <div class="section-label" style="left: 28px; top: 525px;">
+    LIBRARY <span class="jp">カード管理</span>
+  </div>
+  <div class="section-label" style="left: 28px; top: 805px;">
+    REFERENCE <span class="jp">参照 / 学習 / 設定</span>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────
+       SCREENS
+       ───────────────────────────────────────────────────────── -->
+
+  <!-- HOME (hub) -->
+  <div class="screen hub design" style="left: 40px; top: 220px; width: 340px; height: 250px;">
+    <div class="screen-thumb">
+      <div class="th-bar"><div class="nav-dot" style="left:20px;"></div><div class="nav-dot" style="left:32px;"></div><div class="nav-dot" style="left:44px;"></div></div>
+      <!-- mini hero card -->
+      <div class="th-card partner" style="left:50%; margin-left:-22px; top:30px; width:44px; height:62px;"></div>
+      <div class="th-card" style="left:50%; margin-left:-54px; top:42px; width:32px; height:46px; transform: rotate(-10deg);"></div>
+      <div class="th-card" style="left:50%; margin-left:22px; top:42px; width:32px; height:46px; transform: rotate(10deg);"></div>
+      <!-- mini side panels -->
+      <div class="th-box" style="left:8px; top:18px; width:60px; height:84px;"></div>
+      <div class="th-box" style="right:8px; top:18px; width:60px; height:84px;"></div>
+      <!-- CTA -->
+      <div class="th-text" style="left:50%; margin-left:-44px; bottom:18px; width:88px; height:14px; background:#ffd700;"></div>
+      <!-- bottom CTAs row -->
+      <div class="th-box" style="left:80px; bottom:4px; width:18px; height:10px;"></div>
+      <div class="th-box" style="left:104px; bottom:4px; width:18px; height:10px;"></div>
+      <div class="th-box" style="right:104px; bottom:4px; width:18px; height:10px;"></div>
+      <div class="th-box" style="right:80px; bottom:4px; width:18px; height:10px;"></div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">HUB</div>
+      <div class="jp">ホーム</div>
+      <div class="status">DESIGNED</div>
+    </div>
+    <div class="screen-note">対戦・デッキ編集・履歴・チュートリアル・設定の起点。直近の戦績とニュースを表示。</div>
+  </div>
+
+  <!-- MATCH SETUP -->
+  <div class="screen design" style="left: 540px; top: 220px; width: 340px; height: 240px;">
+    <div class="screen-thumb">
+      <div class="th-bar"></div>
+      <!-- 2 mode tiles -->
+      <div class="th-box" style="left:20px; top:24px; width:120px; height:80px; background:rgba(255,215,0,0.08); border-color:rgba(255,215,0,0.5);">
+        <div class="th-text" style="left:8px; top:8px; width:60px; height:5px; background:#ffd700;"></div>
+        <div class="th-text" style="left:8px; top:20px; width:90px; height:3px;"></div>
+        <div class="th-card partner" style="right:8px; bottom:8px; width:24px; height:34px;"></div>
+      </div>
+      <div class="th-box" style="right:20px; top:24px; width:120px; height:80px;">
+        <div class="th-text" style="left:8px; top:8px; width:60px; height:5px;"></div>
+        <div class="th-text" style="left:8px; top:20px; width:90px; height:3px;"></div>
+        <div class="th-card" style="right:8px; bottom:8px; width:24px; height:34px;"></div>
+      </div>
+      <!-- difficulty row -->
+      <div class="th-text" style="left:20px; top:114px; width:90px; height:5px;"></div>
+      <div class="th-box" style="left:20px; top:124px; width:32px; height:18px; background:rgba(68,221,153,0.2);"></div>
+      <div class="th-box" style="left:58px; top:124px; width:32px; height:18px;"></div>
+      <div class="th-box" style="left:96px; top:124px; width:32px; height:18px;"></div>
+      <!-- ready button -->
+      <div class="th-text" style="right:20px; bottom:8px; width:88px; height:14px; background:#ffd700;"></div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">SETUP</div>
+      <div class="jp">対戦準備</div>
+      <div class="status">PLANNED</div>
+    </div>
+    <div class="screen-note">モード選択(単独捜査 / 観察ルーム)+ デッキ + AI 難易度。READY で対戦開始。</div>
+  </div>
+
+  <!-- MATCH (implemented) -->
+  <div class="screen done" style="left: 1020px; top: 220px; width: 340px; height: 270px;">
+    <div class="screen-thumb">
+      <!-- Mini board mockup -->
+      <div style="position:absolute; inset:0; background: radial-gradient(ellipse at 50% 30%, #15263e, #050a14);"></div>
+      <!-- Opp zone -->
+      <div class="th-box" style="left:14px; right:14px; top:16px; height:50px; background:rgba(170,102,221,0.08); border-color:rgba(170,102,221,0.4);">
+        <div class="th-card" style="left:10px; top:6px; width:22px; height:32px; background:rgba(170,102,221,0.3); border-color:rgba(170,102,221,0.7);"></div>
+        <div class="th-card" style="left:36px; top:6px; width:22px; height:32px; background:rgba(170,102,221,0.3); border-color:rgba(170,102,221,0.7);"></div>
+        <div class="th-card" style="left:62px; top:6px; width:22px; height:32px; background:rgba(170,102,221,0.3); border-color:rgba(170,102,221,0.7);"></div>
+      </div>
+      <!-- Case row -->
+      <div class="th-box" style="left:60px; right:60px; top:74px; height:30px;">
+        <div class="th-box" style="left:10px; top:6px; width:28px; height:18px; background:rgba(255,215,0,0.2);"></div>
+        <div class="th-box" style="left:44px; top:6px; width:28px; height:18px;"></div>
+        <div class="th-box" style="left:78px; top:6px; width:28px; height:18px;"></div>
+        <div class="th-box" style="left:112px; top:6px; width:28px; height:18px;"></div>
+        <div class="th-box" style="right:10px; top:6px; width:28px; height:18px;"></div>
+      </div>
+      <!-- Self zone -->
+      <div class="th-box" style="left:14px; right:14px; top:112px; height:54px; background:rgba(68,221,153,0.08); border-color:rgba(68,221,153,0.4);">
+        <div class="th-card partner" style="left:10px; top:6px; width:24px; height:34px;"></div>
+        <div class="th-card" style="left:38px; top:6px; width:22px; height:32px;"></div>
+      </div>
+      <!-- Hand -->
+      <div style="position:absolute; left:50%; bottom:8px; transform:translateX(-50%); display:flex; gap:3px;">
+        <div class="th-card" style="position:relative; width:24px; height:34px; transform:rotate(-6deg);"></div>
+        <div class="th-card" style="position:relative; width:24px; height:34px; transform:rotate(-3deg);"></div>
+        <div class="th-card" style="position:relative; width:24px; height:34px;"></div>
+        <div class="th-card" style="position:relative; width:24px; height:34px; transform:rotate(3deg);"></div>
+        <div class="th-card" style="position:relative; width:24px; height:34px; transform:rotate(6deg);"></div>
+      </div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">MATCH</div>
+      <div class="jp">対戦</div>
+      <div class="status">IMPL</div>
+    </div>
+    <div class="screen-note">単独捜査 / 観察ルーム(AI同士)の両モード対応。盤面 + 16 種モーダル + 6 種演出。</div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen plan" style="left: 1500px; top: 220px; width: 340px; height: 240px;">
+    <div class="screen-thumb">
+      <!-- Trophy / verdict -->
+      <div class="th-text" style="left:50%; margin-left:-60px; top:18px; width:120px; height:18px; background:#ffd700;"></div>
+      <div class="th-text" style="left:50%; margin-left:-40px; top:40px; width:80px; height:6px;"></div>
+      <!-- MVP card -->
+      <div class="th-card partner" style="left:24px; top:64px; width:48px; height:68px;"></div>
+      <!-- stats grid -->
+      <div class="th-box" style="left:90px; top:64px; right:24px; height:18px;">
+        <div class="th-text" style="left:6px; top:6px; width:60px; height:5px;"></div>
+        <div class="th-text" style="right:6px; top:6px; width:30px; height:5px; background:rgba(255,215,0,0.5);"></div>
+      </div>
+      <div class="th-box" style="left:90px; top:88px; right:24px; height:18px;">
+        <div class="th-text" style="left:6px; top:6px; width:60px; height:5px;"></div>
+        <div class="th-text" style="right:6px; top:6px; width:30px; height:5px;"></div>
+      </div>
+      <div class="th-box" style="left:90px; top:112px; right:24px; height:18px;">
+        <div class="th-text" style="left:6px; top:6px; width:60px; height:5px;"></div>
+        <div class="th-text" style="right:6px; top:6px; width:30px; height:5px;"></div>
+      </div>
+      <!-- buttons -->
+      <div class="th-text" style="left:24px; bottom:8px; width:60px; height:12px;"></div>
+      <div class="th-text" style="right:24px; bottom:8px; width:80px; height:12px; background:#ffd700;"></div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">RESULT</div>
+      <div class="jp">対戦結果</div>
+      <div class="status">PLANNED</div>
+    </div>
+    <div class="screen-note">勝敗・MVP カード・統計サマリ(ターン数・コンタクト数・ヒラメキ発動)。次へ進む前のクッション。</div>
+  </div>
+
+  <!-- DECK -->
+  <div class="screen design" style="left: 380px; top: 590px; width: 320px; height: 200px;">
+    <div class="screen-thumb">
+      <div class="th-bar"></div>
+      <div class="th-box" style="left:8px; top:16px; width:50px; bottom:8px;">
+        <div class="th-card" style="left:4px; top:4px; width:18px; height:24px;"></div>
+        <div class="th-card" style="left:26px; top:4px; width:18px; height:24px;"></div>
+        <div class="th-card" style="left:4px; top:32px; width:18px; height:24px;"></div>
+        <div class="th-card" style="left:26px; top:32px; width:18px; height:24px;"></div>
+        <div class="th-card" style="left:4px; top:60px; width:18px; height:24px;"></div>
+        <div class="th-card" style="left:26px; top:60px; width:18px; height:24px;"></div>
+      </div>
+      <div class="th-box" style="left:64px; top:16px; width:64px; bottom:8px; background:rgba(255,215,0,0.06);">
+        <div class="th-card partner" style="left:50%; margin-left:-12px; top:14px; width:24px; height:34px;"></div>
+        <div class="th-text" style="left:50%; margin-left:-20px; top:54px; width:40px; height:4px; background:#ffd700;"></div>
+      </div>
+      <div class="th-box" style="right:8px; top:16px; left:134px; bottom:8px;">
+        <div class="th-text" style="left:6px; top:8px; width:40px; height:4px; background:#ffd700;"></div>
+        <!-- cost curve -->
+        <div style="position:absolute; left:6px; right:6px; top:24px; height:30px; display:flex; align-items:flex-end; gap:2px;">
+          <div style="flex:1; height:30%; background:#ffd700;"></div>
+          <div style="flex:1; height:55%; background:#ffd700;"></div>
+          <div style="flex:1; height:75%; background:#ffd700;"></div>
+          <div style="flex:1; height:50%; background:#ffd700;"></div>
+          <div style="flex:1; height:35%; background:#ffd700;"></div>
+          <div style="flex:1; height:25%; background:#ffd700;"></div>
+          <div style="flex:1; height:18%; background:#ffd700;"></div>
+        </div>
+        <div class="th-text" style="left:6px; top:62px; width:40px; height:3px;"></div>
+        <div class="th-text" style="left:6px; top:70px; width:60px; height:3px;"></div>
+        <div class="th-text" style="left:6px; top:78px; width:50px; height:3px;"></div>
+      </div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">DECK</div>
+      <div class="jp">デッキ編集</div>
+      <div class="status">DESIGNED</div>
+    </div>
+  </div>
+
+  <!-- CARDS (collection) -->
+  <div class="screen plan" style="left: 810px; top: 590px; width: 320px; height: 200px;">
+    <div class="screen-thumb">
+      <div class="th-bar"></div>
+      <div class="th-box" style="left:8px; top:14px; width:64px; height:14px;"></div>
+      <div class="th-box" style="left:76px; top:14px; right:8px; height:14px;"></div>
+      <div style="position:absolute; left:8px; right:8px; top:34px; bottom:8px; display:grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(3, 1fr); gap:3px;">
+        <div class="thumb-card"></div>
+        <div class="thumb-card gold"></div>
+        <div class="thumb-card red"></div>
+        <div class="thumb-card"></div>
+        <div class="thumb-card gold"></div>
+        <div class="thumb-card" style="opacity:0.3;"></div>
+        <div class="thumb-card gold"></div>
+        <div class="thumb-card"></div>
+        <div class="thumb-card"></div>
+        <div class="thumb-card red"></div>
+        <div class="thumb-card gold"></div>
+        <div class="thumb-card" style="opacity:0.3;"></div>
+        <div class="thumb-card"></div>
+        <div class="thumb-card red"></div>
+        <div class="thumb-card gold"></div>
+        <div class="thumb-card"></div>
+        <div class="thumb-card" style="opacity:0.3;"></div>
+        <div class="thumb-card" style="opacity:0.3;"></div>
+      </div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">CARDS</div>
+      <div class="jp">カードリスト</div>
+      <div class="status">PLANNED</div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="screen plan" style="left: 380px; top: 870px; width: 320px; height: 175px;">
+    <div class="screen-thumb">
+      <div class="th-bar"></div>
+      <div style="position:absolute; left:8px; right:8px; top:14px; bottom:8px; display:flex; flex-direction:column; gap:4px;">
+        <div class="th-box" style="position:relative; height:16px; display:flex; align-items:center; padding:0 6px;">
+          <div style="width:10px; height:10px; background:#44dd99; border-radius:2px;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:60px; height:4px;"></div>
+          <div class="th-text" style="position:absolute; right:6px; top:6px; width:30px; height:3px;"></div>
+        </div>
+        <div class="th-box" style="position:relative; height:16px; display:flex; align-items:center; padding:0 6px;">
+          <div style="width:10px; height:10px; background:#44dd99; border-radius:2px;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:60px; height:4px;"></div>
+          <div class="th-text" style="position:absolute; right:6px; top:6px; width:30px; height:3px;"></div>
+        </div>
+        <div class="th-box" style="position:relative; height:16px; display:flex; align-items:center; padding:0 6px;">
+          <div style="width:10px; height:10px; background:#c84040; border-radius:2px;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:60px; height:4px;"></div>
+          <div class="th-text" style="position:absolute; right:6px; top:6px; width:30px; height:3px;"></div>
+        </div>
+        <div class="th-box" style="position:relative; height:16px; display:flex; align-items:center; padding:0 6px;">
+          <div style="width:10px; height:10px; background:#44dd99; border-radius:2px;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:60px; height:4px;"></div>
+          <div class="th-text" style="position:absolute; right:6px; top:6px; width:30px; height:3px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">HIST</div>
+      <div class="jp">対戦履歴</div>
+      <div class="status">PLANNED</div>
+    </div>
+  </div>
+
+  <!-- REPLAY -->
+  <div class="screen plan" style="left: 820px; top: 870px; width: 300px; height: 175px;">
+    <div class="screen-thumb">
+      <div class="th-bar"></div>
+      <!-- timeline -->
+      <div class="th-box" style="left:8px; right:8px; top:14px; height:60px;">
+        <!-- mini game state -->
+        <div class="th-card" style="left:14px; top:8px; width:14px; height:20px;"></div>
+        <div class="th-card" style="left:34px; top:8px; width:14px; height:20px;"></div>
+        <div class="th-card partner" style="right:14px; bottom:8px; width:14px; height:20px;"></div>
+      </div>
+      <!-- scrubber -->
+      <div class="th-box" style="left:8px; right:8px; top:82px; height:8px;">
+        <div class="th-text" style="left:35%; top:0; width:8px; height:8px; background:#ffd700;"></div>
+      </div>
+      <!-- log lines -->
+      <div class="th-text" style="left:8px; top:98px; width:80%; height:3px;"></div>
+      <div class="th-text" style="left:8px; top:106px; width:60%; height:3px;"></div>
+      <div class="th-text" style="left:8px; top:114px; width:70%; height:3px;"></div>
+      <div class="th-text" style="left:8px; top:122px; width:50%; height:3px;"></div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">REPLAY</div>
+      <div class="jp">リプレイ詳細</div>
+      <div class="status">PLANNED</div>
+    </div>
+  </div>
+
+  <!-- TUTORIAL -->
+  <div class="screen plan" style="left: 1240px; top: 870px; width: 200px; height: 175px;">
+    <div class="screen-thumb">
+      <div class="th-bar"></div>
+      <div style="position:absolute; left:8px; right:8px; top:14px; bottom:8px; display:flex; flex-direction:column; gap:6px;">
+        <div class="th-box" style="position:relative; height:18px; display:flex; align-items:center; padding:0 6px; background:rgba(68,221,153,0.15); border-color:rgba(68,221,153,0.4);">
+          <div style="width:12px; height:12px; background:#44dd99; border-radius:50%;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:80px; height:4px;"></div>
+        </div>
+        <div class="th-box" style="position:relative; height:18px; display:flex; align-items:center; padding:0 6px; background:rgba(255,215,0,0.15); border-color:rgba(255,215,0,0.5);">
+          <div style="width:12px; height:12px; background:#ffd700; border-radius:50%; color:#000;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:80px; height:4px;"></div>
+        </div>
+        <div class="th-box" style="position:relative; height:18px; display:flex; align-items:center; padding:0 6px; opacity:0.4;">
+          <div style="width:12px; height:12px; background:#4a5a70; border-radius:50%;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:60px; height:4px;"></div>
+        </div>
+        <div class="th-box" style="position:relative; height:18px; display:flex; align-items:center; padding:0 6px; opacity:0.4;">
+          <div style="width:12px; height:12px; background:#4a5a70; border-radius:50%;"></div>
+          <div class="th-text" style="position:relative; left:6px; width:70px; height:4px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">TUTOR</div>
+      <div class="jp">チュートリアル</div>
+      <div class="status">PLANNED</div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen plan" style="left: 1550px; top: 870px; width: 200px; height: 175px;">
+    <div class="screen-thumb">
+      <div class="th-bar"></div>
+      <div style="position:absolute; left:8px; right:8px; top:14px; bottom:8px; display:flex; flex-direction:column; gap:8px;">
+        <div style="position:relative; display:flex; align-items:center; gap:6px;">
+          <div class="th-text" style="position:relative; width:60px; height:4px;"></div>
+          <div class="th-box" style="position:relative; margin-left:auto; width:34px; height:14px; border-radius:7px;">
+            <div style="position:absolute; right:2px; top:2px; width:8px; height:8px; background:#44dd99; border-radius:50%;"></div>
+          </div>
+        </div>
+        <div style="position:relative; display:flex; align-items:center; gap:6px;">
+          <div class="th-text" style="position:relative; width:50px; height:4px;"></div>
+          <div class="th-box" style="position:relative; margin-left:auto; width:34px; height:14px; border-radius:7px;">
+            <div style="position:absolute; left:2px; top:2px; width:8px; height:8px; background:#7090b5; border-radius:50%;"></div>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <div class="th-text" style="width:40px; height:4px; margin-bottom:4px;"></div>
+          <div class="th-box" style="position:relative; height:6px;">
+            <div style="position:absolute; left:0; top:0; bottom:0; width:60%; background:#ffd700;"></div>
+          </div>
+        </div>
+        <div style="position:relative;">
+          <div class="th-text" style="width:54px; height:4px; margin-bottom:4px;"></div>
+          <div class="th-box" style="position:relative; height:6px;">
+            <div style="position:absolute; left:0; top:0; bottom:0; width:40%; background:#4ec3ff;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-meta">
+      <div class="code">CFG</div>
+      <div class="jp">設定</div>
+      <div class="status">PLANNED</div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────
+       ARROW LABELS
+       ───────────────────────────────────────────────────────── -->
+
+  <div class="arrow-label primary" style="left: 426px; top: 268px;">
+    <span class="jp">推理開始</span>START
+  </div>
+  <div class="arrow-label primary" style="left: 884px; top: 268px;">
+    <span class="jp">READY</span>BEGIN
+  </div>
+  <div class="arrow-label primary" style="left: 1366px; top: 268px;">
+    <span class="jp">勝敗確定</span>END
+  </div>
+  <div class="arrow-label back" style="left: 970px; top: 75px; background: rgba(28,16,4,0.7);">
+    <span class="jp">ホームへ</span>RETURN
+  </div>
+  <div class="arrow-label back" style="left: 430px; top: 365px;">
+    <span class="jp">戻る</span>BACK
+  </div>
+
+  <div class="arrow-label" style="left: 256px; top: 530px;">
+    <span class="jp">編集</span>OPEN
+  </div>
+  <div class="arrow-label" style="left: 715px; top: 656px;">
+    <span class="jp">追加</span>ADD
+  </div>
+  <div class="arrow-label back" style="left: 715px; top: 696px;">
+    <span class="jp">プレビュー</span>VIEW
+  </div>
+
+  <div class="arrow-label" style="left: 256px; top: 700px;">
+    <span class="jp">履歴</span>HIST
+  </div>
+  <div class="arrow-label" style="left: 715px; top: 906px;">
+    <span class="jp">詳細</span>DETAIL
+  </div>
+  <div class="arrow-label" style="left: 1090px; top: 720px;">
+    <span class="jp">教材</span>LEARN
+  </div>
+  <div class="arrow-label" style="left: 1340px; top: 720px;">
+    <span class="jp">設定</span>CFG
+  </div>
+  <div class="arrow-label back" style="left: 1190px; top: 620px;">
+    <span class="jp">練習試合</span>GUIDED
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span>conan TCG · 11 screens · 5 implemented/designed · 6 planned</span>
+    <span class="right">design-mockups/07-screen-flow.html</span>
+  </footer>
+</div>
+
+<script>
+  // Auto-fit to viewport
+  const stage = document.getElementById('stage');
+  function fit() {
+    const sw = window.innerWidth, sh = window.innerHeight;
+    const scale = Math.min(sw / 1920, sh / 1080);
+    stage.style.transform = `scale(${scale})`;
+    stage.style.transformOrigin = 'top left';
+    document.body.style.width = (1920 * scale) + 'px';
+    document.body.style.height = (1080 * scale) + 'px';
+  }
+  fit();
+  window.addEventListener('resize', fit);
+</script>
+</body>
+</html>
