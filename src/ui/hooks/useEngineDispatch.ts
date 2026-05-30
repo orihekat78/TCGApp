@@ -250,7 +250,9 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       if (action.cost && action.ctx) {
         engineCost.pay(draft, action.cost, action.ctx);
       }
-      flow.useDeclaredAbility(draft, action.uid, action.abilId);
+      // BUG-085: cost.pay 済みの ctx を渡して costPaid / dyn を effect 解決へ引き継ぐ
+      // (caseDeclaredEvidenceFlip の `$cost.flipFaceUpEvidence.count` 数値化に必要)。
+      flow.useDeclaredAbility(draft, action.uid, action.abilId, action.ctx);
       return;
     case 'assist':
       // flow.assist 未提供のため mutate を直叩き (src/ai/policy.ts:117 と同じ)
@@ -342,6 +344,15 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           (a: unknown) => a !== null && typeof a === 'object' && (a as { id?: string }).id === pending.abilityId,
         ) as { effect?: unknown } | undefined;
         if (ability?.effect) {
+          // 2026-05-29 user_request: ヒラメキ発動をフロントログ + トーストに明示。
+          // RecentActionToast は log 末尾を拾うため、この 1 行で「【ヒラメキ】発動」演出も出る。
+          mutate.log.append(draft, {
+            ts: Date.now(),
+            player: pending.player,
+            turn: draft.turn.number,
+            action: 'hirameki:fire',
+            target: pending.cardId,
+          });
           // Phase 7-1 + 7-2 (BUG-035): hirameki effect 内の $pick atom を recursive utility で
           // substitute。Phase 7-1 の局所版 resolveHiramekiPick を resolveEffectPicks に retrofit。
           // Phase 7-3: chooseAtomTarget callback で verb 別ヒューリスティック選択

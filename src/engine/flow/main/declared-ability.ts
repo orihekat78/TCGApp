@@ -99,7 +99,11 @@ export function useDeclaredAbility(
   state: GameState,
   uid: string,
   abilId: string,
-  _ctx?: unknown,
+  // BUG-085: 呼出元 (UI dispatch / AI policy) が cost.pay 済みの ctx を渡す。
+  // ctx.costPaid / ctx.dyn を effect 解決の resolveCtx に引き継ぐことで、
+  // `$cost.flipFaceUpEvidence.count` 等の cost 依存 dyn を human-pick 境界の前に
+  // 数値化できる (caseDeclaredEvidenceFlip の AP±1000×枚数)。
+  ctx?: { costPaid?: Record<string, unknown>; dyn?: Record<string, unknown> },
 ): void {
   const found = findCardOnBoard(state, uid);
   if (!found) {
@@ -138,6 +142,10 @@ export function useDeclaredAbility(
       area: found.area as EffectCtx['source']['area'],
     },
     bindings: {},
+    // BUG-085: cost 支払いで積まれた costPaid / dyn を effect 解決へ引き継ぐ
+    // (resolveEffectPicks の dyn-arg 解決が `$cost.*` を参照するため)。
+    ...(ctx?.costPaid ? { costPaid: ctx.costPaid } : {}),
+    ...(ctx?.dyn ? { dyn: ctx.dyn } : {}),
   };
   const humanSide = getHumanPlayerSide();
   const isHumanEffect = humanSide !== null && found.player === humanSide;

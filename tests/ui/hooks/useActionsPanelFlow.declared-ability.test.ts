@@ -6,7 +6,8 @@
 // 仕様:
 //   1. 自プレイヤーの scene キャラのうち declared ability を持つ uid を列挙
 //   2. 0 件 → not-allowed
-//   3. 1 件 → そのまま使用 / 複数 → picker (purpose='declared-ability:source')
+//   3. 2026-05-30 user_request: 1 件でも必ず picker (purpose='declared-ability:source')
+//      を通し、宣言できるカードを盤面で黄色強調 → クリックさせる
 //   4. 選択 source の declared ability ids を列挙
 //   5. 1 件 → 即 confirm / 複数 → picker (purpose='declared-ability:ability')
 //   6. confirm → dispatch declaredAbility
@@ -101,17 +102,26 @@ describe('runDeclaredAbilityFlow', () => {
     if (!result.ok) expect(result.reason).toBe('not-allowed');
   });
 
-  it('1 source + 1 ability: no pickers → confirm → dispatch', async () => {
+  it('1 source + 1 ability: source picker (always) → confirm → dispatch', async () => {
     registerCardDef(makeCard('Solo', { abilities: [makeDecl('a1')] }));
     const s = produce(setupBase(), (d) => {
       mutate.scene.enter(d, 'self', 'Solo', { active: true });
     });
     useGameStateStore.setState({ gameState: s });
+    const soloUid = s.players.self.scene.find((c) => c.cardId === 'Solo')!.uid;
     const promise = runDeclaredAbilityFlow({ player: 'self' });
 
-    expect(useTargetPickerStore.getState().phase.phase).toBe('idle');
-    expect(useConfirmationStore.getState().current?.title).toContain('宣言能力');
+    // 2026-05-30 user_request: 1 source でも source picker を必ず通す (黄色強調 → クリック)
+    const phase = useTargetPickerStore.getState().phase;
+    expect(phase.phase).toBe('picking');
+    if (phase.phase === 'picking') {
+      expect(phase.purpose).toBe('declared-ability:source');
+      expect(phase.candidates).toEqual([soloUid]);
+    }
+    await pickAndConfirmPicker(soloUid);
 
+    // 1 ability → 即 confirm
+    expect(useConfirmationStore.getState().current?.title).toContain('宣言能力');
     await acceptConfirmation();
     const result = await promise;
     expect(result.ok).toBe(true);
@@ -185,8 +195,10 @@ describe('runDeclaredAbilityFlow', () => {
       mutate.scene.enter(d, 'self', 'M', { active: true });
     });
     useGameStateStore.setState({ gameState: s });
+    const mUid = s.players.self.scene.find((c) => c.cardId === 'M')!.uid;
     const promise = runDeclaredAbilityFlow({ player: 'self' });
-    // source picker skipped (1 source). ability picker runs (2 abilities).
+    // 2026-05-30: source picker (1 source) を通してから ability picker (2 abilities) を cancel
+    await pickAndConfirmPicker(mUid);
     expect(useTargetPickerStore.getState().phase.phase).toBe('picking');
     await cancelPicker();
     const result = await promise;
@@ -200,10 +212,59 @@ describe('runDeclaredAbilityFlow', () => {
       mutate.scene.enter(d, 'self', 'Solo', { active: true });
     });
     useGameStateStore.setState({ gameState: s });
+    const soloUid = s.players.self.scene.find((c) => c.cardId === 'Solo')!.uid;
     const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(soloUid); // source picker (1 source) を通す
     await rejectConfirmation();
     const result = await promise;
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('cancelled');
+  });
+
+  // 2026-05-30 user_request: 事件カード (case:self) を宣言能力 source とする UI 統合テスト。
+  // confirm body に 事件名 (not "case:self") と能力の説明文 (not "(a1)") が出ることを検証。
+  it('case:self source: 事件が候補 → 事件名と説明文で confirm → dispatch', async () => {
+    const caseDef = {
+      id: 'CaseDecl', no: 'CaseDecl', kind: 'case',
+      names: ['テスト事件'], colors: ['赤'], level: 0, traits: [],
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'always',
+        effect: { kind: 'atom', verb: 'noop', args: {} },
+        description: 'テスト宣言能力の説明', ruleRefs: [],
+      }],
+    } as unknown as CardDef;
+    registerCardDef(caseDef);
+    const s = produce(setupBase(), (d) => {
+      d.players.self.case = {
+        cardId: 'CaseDecl', status: '事件編', requiredEvidence: 7, colors: ['赤'], declaredUseCount: {},
+      };
+    });
+    useGameStateStore.setState({ gameState: s });
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+
+    // source picker に case:self が候補として出る (盤面では事件カードが黄色強調される)
+    const phase = useTargetPickerStore.getState().phase;
+    expect(phase.phase).toBe('picking');
+    if (phase.phase === 'picking') {
+      expect(phase.purpose).toBe('declared-ability:source');
+      expect(phase.candidates).toContain('case:self');
+    }
+    await pickAndConfirmPicker('case:self');
+
+    // confirm body: 事件名 + 能力説明文 (case:self / (a1) ではない)
+    const body = useConfirmationStore.getState().current?.body ?? '';
+    expect(body).toContain('テスト事件');
+    expect(body).not.toContain('case:self');
+    expect(body).toContain('テスト宣言能力の説明');
+    expect(body).not.toContain('(a1)');
+    await acceptConfirmation();
+
+    const result = await promise;
+    expect(result.ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
+    const lastLog = after.log[after.log.length - 1];
+    expect(lastLog?.action).toBe('declaredAbility');
+    expect(lastLog?.target).toContain('case:self');
   });
 });

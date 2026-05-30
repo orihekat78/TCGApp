@@ -32,9 +32,6 @@ const a1: AbilityDef = {
 
 const a2: AbilityDef = {
   id: 'a2',
-  // 2026-05-27 Option C: type:'icon-flash' → 'triggered' + trigger:{hook,optional:true} に統合。
-  // handleEvidenceRemovedHook (triggered.ts) が optional:true を検出して pendingHirameki に push、
-  // UI が fire/skip を扱う (rules/10 §ヒラメキ)。
   type: 'triggered',
   scope: 'on-evidence',                                                  // 証拠エリアにいる間に有効 (rules/10)
   trigger: { hook: 'evidence:remove-by-action', optional: true },        // 任意発動 (fire/skip)

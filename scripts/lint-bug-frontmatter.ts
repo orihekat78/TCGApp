@@ -35,10 +35,12 @@ const ALLOWED_CLUSTER = new Set([
 type Issue = { file: string; level: 'error' | 'warn'; msg: string };
 
 function parseFrontmatter(content: string): Record<string, string> | null {
-  const m = content.match(/^---\n([\s\S]*?)\n---/);
+  // 2026-05-30: CRLF (\r\n) 改行のファイルにも対応 (.claude/bugs/ は大半が CRLF)。
+  // 旧 /^---\n/ は CRLF だと "---\r\n" にマッチせず frontmatter 未検出になっていた。
+  const m = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!m) return null;
   const fm: Record<string, string> = {};
-  for (const line of m[1].split('\n')) {
+  for (const line of m[1].split(/\r?\n/)) {
     const i = line.indexOf(':');
     if (i < 0) continue;
     fm[line.slice(0, i).trim()] = line.slice(i + 1).trim();

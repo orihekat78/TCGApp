@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d8b10adc3d64`
+> Source hash: `9b7e49f828e9`
 
 公式ルール [`01-victory-conditions.md`](../../../rules/01-victory-conditions.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,7 +24,7 @@
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 
-## 📄 参照ソース (21)
+## 📄 参照ソース (22)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -46,4 +46,4 @@
 - [`src/engine/read/game.ts`](../../../../src/engine/read/game.ts)
 - [`src/engine/state-factory.ts`](../../../../src/engine/state-factory.ts)
 - [`src/engine/types/game-state.ts`](../../../../src/engine/types/game-state.ts)
-- _...ほか 1 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 2 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

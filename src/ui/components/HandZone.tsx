@@ -67,12 +67,15 @@ export type HandZoneProps = {
    *   未指定なら全カード pickable (discard 既存挙動)。
    * - pickSkipLabel: skip ボタン文言 override (default「リムーブしない」)
    * - onPickCancel / pickCancelLabel: 指定時 cancel ボタンを追加表示。
+   * - pickHideBanner: 2026-05-29 ネクストヒント用 compact モード。banner 文言を隠し、
+   *   skip / cancel ボタンを縦並びにする。
    */
   pickBannerText?: string;
   pickableCardIds?: ReadonlySet<string>;
   pickSkipLabel?: string;
   onPickCancel?: () => void;
   pickCancelLabel?: string;
+  pickHideBanner?: boolean;
 };
 
 // ------------------------------------------------------------------
@@ -258,6 +261,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     pickSkipLabel,
     onPickCancel,
     pickCancelLabel,
+    pickHideBanner = false,
   } = props;
 
   if (cards.length === 0) {
@@ -325,10 +329,24 @@ export function HandZone(props: HandZoneProps): JSX.Element {
         </button>
       )}
       {pickMode && (
-        <div className="hand-zone-pick-banner-row">
-          <div className="hand-zone-pick-banner" role="status">
-            {pickBannerText ?? '手札から1枚選んでリムーブしてください'}
-          </div>
+        <div
+          className={
+            'hand-zone-pick-banner-row' +
+            (pickHideBanner ? ' hand-zone-pick-banner-row--vertical' : '')
+          }
+        >
+          {!pickHideBanner && (
+            <div className="hand-zone-pick-banner" role="status">
+              {pickBannerText ?? '手札から1枚選んでリムーブしてください'}
+            </div>
+          )}
+          {/* compact モード (ネクストヒント): 大きい banner ではなく短いヒント caption のみ。
+              step2 (黄枠カードをクリックで使用) の操作方法を 1 行で示す。 */}
+          {pickHideBanner && pickBannerText && (
+            <div className="hand-zone-pick-caption" role="status">
+              {pickBannerText}
+            </div>
+          )}
           {pickCanSkip && onPickSkip && (
             <button
               type="button"

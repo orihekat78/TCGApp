@@ -62,6 +62,7 @@ import { HiramekiPickerModal } from './HiramekiPickerModal.js';
 import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHintPicker.js';
 import { SceneSwitchPickerModal } from './SceneSwitchPickerModal.js';
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
+import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useEvidenceFlipPicker.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
@@ -110,13 +111,18 @@ type PlayerMatProps = CandidateProps & {
   /** User vision (拡張 4): scene キャラ pick mode (sceneRemove 等の effect 対象選択) */
   pickCharUids?: ReadonlySet<string>;
   onPickChar?: (uid: string) => void;
+  /**
+   * 2026-05-30 user_request: ネクストヒントのピッカー表示中、FILE 表示枚数を -1 して
+   * 「step1 で引いた後」の実効枚数を見せる (self のみ true)。
+   */
+  nextHintDrawPreview?: boolean;
 };
 
 function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
   isCaseCandidate, onCaseClick, onAreaClick, onExpand,
-  pickCharUids, onPickChar,
+  pickCharUids, onPickChar, nextHintDrawPreview = false,
 }: PlayerMatProps & {
   isCaseCandidate?: boolean;
   onCaseClick?: () => void;
@@ -197,6 +203,7 @@ function PlayerMat({
             side={side}
             resolveCard={resolveCard}
             onClick={onAreaClick ? () => onAreaClick('file', side) : undefined}
+            pendingDrawn={nextHintDrawPreview ? 1 : 0}
           />
           <PartnerArea
             partner={state?.players[side].partner ?? null}
@@ -300,6 +307,14 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       setAreaModal(null);
     }
   }, [pickAreaKind]);
+  // BUG-085 review (Finding 2): 証拠 flip picker が開いたら、手動で開いていた証拠
+  // 閲覧 areaModal を閉じて backdrop の二重表示を防ぐ。
+  const flipPickerActive = useEvidenceFlipPickerStore((s) => s.current !== null);
+  useEffect(() => {
+    if (flipPickerActive && areaModal && areaModal.kind === 'evidence') {
+      setAreaModal(null);
+    }
+  }, [flipPickerActive, areaModal]);
   // discard pick 中は HandZone を自動 expand (User vision: 手札拡大表示から選択)
   useEffect(() => {
     if (isDiscardPick) setHandExpanded(true);
@@ -338,6 +353,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const candidateUidsOpp = new Set<string>();
   let isSelfPartnerCandidate = false;
   let isOppCaseCandidate = false;
+  // 2026-05-30 user_request: 事件カードの宣言能力 source ('case:self') を盤面で黄色強調する。
+  let isSelfCaseCandidate = false;
   if (pickerPhase.phase !== 'idle') {
     // purpose に応じて自陣/相手陣どちらに候補を振るか分岐。
     // - 'action:source' / 'reasoning' / その他 → self 側候補
@@ -346,6 +363,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     for (const uid of pickerPhase.candidates) {
       if (uid === ACTION_CASE_TARGET_OPP) {
         isOppCaseCandidate = true;
+        continue;
+      }
+      // 宣言能力 source: 自分の事件カード
+      if (uid === 'case:self') {
+        isSelfCaseCandidate = true;
         continue;
       }
       if (uid === 'partner:self') {
@@ -463,10 +485,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onUnitClick={(uid) => pickAndConfirm(uid)}
             isPartnerCandidate={isSelfPartnerCandidate}
             onPartnerClick={() => pickAndConfirm('partner:self')}
+            // 2026-05-30: 宣言能力 source として自分の事件が候補のとき黄色強調 + クリックで選択
+            isCaseCandidate={isSelfCaseCandidate}
+            onCaseClick={() => pickAndConfirm('case:self')}
             onAreaClick={handleAreaClick}
             onExpand={expandModal.open}
             pickCharUids={scenePickUidsSelf}
             onPickChar={handleScenePick}
+            // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
+            nextHintDrawPreview={isNextHintPick}
           />
         </div>
 
@@ -497,10 +524,14 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           // 2026-05-28: ネクストヒントは discard と同じ HandZone pick mode を流用。
           // FILE-top + 使用可能手札を黄色枠化 (pickableCardIds)、選択で acceptUse。
           pickableCardIds={isNextHintPick ? nextHintPickableIds : undefined}
+          // 2026-05-29 user_request: ネクストヒントの長い説明文言は廃止し、
+          // ボタンを縦並びに (pickHideBanner)。ただし step2 (現場登場) の操作方法が
+          // 分からなくなる回帰があったため、短い一行ヒントのみ残す (黄枠クリック=使用)。
+          pickHideBanner={isNextHintPick}
           pickBannerText={isNextHintPick
-            ? `ネクストヒント: 使用するカードを選んでください (黄色枠)。末尾の〈${nextHintPick!.fileTopName}〉が FILE から引くカードです。`
+            ? `使うカードを選択（黄枠 / レベル${nextHintPick!.postPopCount}以下）`
             : undefined}
-          pickSkipLabel={isNextHintPick ? '使用しない (引くだけ)' : undefined}
+          pickSkipLabel={isNextHintPick ? '使用しない' : undefined}
           onPickCancel={isNextHintPick ? () => useNextHintPicker().acceptCancel() : undefined}
           pickCancelLabel={isNextHintPick ? 'キャンセル' : undefined}
           onPickCard={
@@ -530,6 +561,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             // handUseUsed (1ターン1回) に加え nextHintUsed でも 0 にして button を disable。
             (gameState?.turnState.self.handUseUsed || gameState?.turnState.self.nextHintUsed) ? 0 : 1
           }
+          handUseUsed={gameState?.turnState.self.handUseUsed ?? false}
           nextHintFileCount={gameState?.players.self.file.length ?? 0}
           nextHintUsed={gameState?.turnState.self.nextHintUsed ?? false}
           canNextHint={gameState ? engineFlow.canStartNextHint(gameState, 'self') : false}
@@ -622,6 +654,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* Phase 5 advance: SceneSwitch UI (rules/20 §スイッチ) */}
         <PlaymatSceneSwitchPickerModal />
 
+        {/* BUG-085: 宣言能力コスト〚裏向きの証拠を表向きにする〛の証拠選択 picker
+            (証拠エリア拡大表示 CardListModal を pick mode で流用) */}
+        <PlaymatEvidenceFlipPickerModal />
+
         {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
             LogPanel は open=true のときのみオーバーレイで描画。 */}
         <LogPanel
@@ -641,6 +677,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           //   - リムーブは全カード表向き / 証拠 は全カード裏向き
           let cards: string[] = [];
           let faceDownCount = 0;
+          // BUG-085: 証拠は faceUp が混在し得る。表向きは公開表示する。
+          let faceUpEvidence: { index: number; cardId: string }[] | undefined;
           if (areaModal.kind === 'remove') {
             cards = player.remove as string[];
           } else if (areaModal.kind === 'file') {
@@ -656,8 +694,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             cards = partnerInFile;
             faceDownCount = backCount;
           } else {
-            // evidence: 全裏向き
+            // evidence: faceDownCount は全証拠枚数 (cell idx = 証拠配列 index で整合)。
+            // faceUp の証拠は公開カードとして描画する (faceUpEvidence)。
             faceDownCount = player.evidence?.length ?? 0;
+            faceUpEvidence = (player.evidence ?? [])
+              .map((e, index) => (e.faceUp ? { index, cardId: e.cardId } : null))
+              .filter((e): e is { index: number; cardId: string } => e !== null);
           }
           // User vision: pending pick が当該 area なら pick mode で開く
           const isPickModeForThisArea =
@@ -676,6 +718,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               side={areaModal.side}
               cards={cards}
               faceDownCount={faceDownCount}
+              faceUpEvidence={faceUpEvidence}
               onClose={closeAreaModal}
               onExpand={(cardId) => expandModal.open(cardId)}
               pickCands={isPickModeForThisArea ? pendingPickForArea!.candidates : undefined}
@@ -955,6 +998,71 @@ function PlaymatSceneSwitchPickerModal(): JSX.Element {
   );
 }
 
+/**
+ * BUG-085: 宣言能力コスト〚裏向きの証拠を1つ以上表向きにする〛の証拠選択モーダル。
+ * useEvidenceFlipPickerStore.current を subscribe し、runDeclaredAbilityFlow が
+ * ask() した間だけ、証拠エリアの拡大表示 (CardListModal) を pick mode で開く。
+ *
+ * - 全証拠を裏向きセルとして表示し、候補 (裏向きのみ) の cell を click 可能化。
+ * - nMax=1 (D08005): single-pick (1 クリックで確定) / nMax=Infinity (D08026/D11021):
+ *   multi-select (toggle → 「完了」ボタンで確定)。
+ * - × / 背景クリック → cancel (能力使用を取り消し、state 不変)。
+ *
+ * faceDownCount は「全証拠枚数」を渡す必要がある (cell index = evidence 配列 index で
+ * 候補 uid `evidence:<side>:<idx>` と整合させるため)。表向き証拠が混在する場合、その
+ * cell は候補に含まれず click 不可で表示される。
+ */
+function PlaymatEvidenceFlipPickerModal(): JSX.Element | null {
+  const current = useEvidenceFlipPickerStore((s) => s.current);
+  const evidence = useGameStateStore((s) =>
+    s.gameState && current ? s.gameState.players[current.side].evidence : null,
+  );
+  if (!current) return null;
+  const evidenceLen = evidence?.length ?? 0;
+  // BUG-085: 既に表向きの証拠は公開表示 (picker 中も非公開のまま隠さない)。候補は裏向きのみ。
+  const faceUpEvidence = (evidence ?? [])
+    .map((e, index) => (e.faceUp ? { index, cardId: e.cardId } : null))
+    .filter((e): e is { index: number; cardId: string } => e !== null);
+
+  const parseIdx = (uid: string): number | null => {
+    const m = uid.match(/^evidence:(?:self|opp):(\d+)$/);
+    return m ? parseInt(m[1]!, 10) : null;
+  };
+  const pickCands = current.candidates.map((c) => ({
+    uid: `evidence:${current.side}:${c.index}`,
+    cardId: c.cardId,
+    player: current.side,
+  }));
+  const rangeLabel = Number.isFinite(current.nMax)
+    ? current.nMin === current.nMax
+      ? `${current.nMin} 枚`
+      : `${current.nMin}〜${current.nMax} 枚`
+    : `${current.nMin} 枚以上`;
+
+  return (
+    <CardListModal
+      kind="evidence"
+      side={current.side}
+      cards={[]}
+      faceDownCount={evidenceLen}
+      faceUpEvidence={faceUpEvidence}
+      onClose={() => useEvidenceFlipPicker().cancel()}
+      pickCands={pickCands}
+      pickBannerText={`${current.sourceName}: 表向きにする裏向き証拠を選んでください（${rangeLabel}）`}
+      onPick={(uid) => {
+        const i = parseIdx(uid);
+        if (i !== null) useEvidenceFlipPicker().confirm([i]);
+      }}
+      pickNMin={current.nMin}
+      pickNMax={current.nMax}
+      onPickMulti={(uids) => {
+        const idxs = uids.map(parseIdx).filter((i): i is number => i !== null);
+        useEvidenceFlipPicker().confirm(idxs);
+      }}
+    />
+  );
+}
+
 /** picker.purpose を表示用ラベルに変換 (Phase 8.6 reasoning 等)。 */
 function labelForPurpose(purpose: string): string {
   switch (purpose) {
@@ -965,7 +1073,7 @@ function labelForPurpose(purpose: string): string {
     case 'assist':          return 'アシスト';
     case 'solveCase':       return '事件解決';
     case 'partner-ability': return 'パートナー能力';
-    case 'declared-ability:source':  return '宣言能力 source';
+    case 'declared-ability:source':  return '宣言能力を使うカード';
     case 'declared-ability:ability': return '宣言能力';
     default:                return '対象';
   }

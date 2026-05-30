@@ -41,6 +41,18 @@ export function uidToDisplayName(state: GameState, uid: string): string {
     return uid;
   }
 
+  // 2026-05-30 user_request: 事件カードの宣言能力 source uid ('case:self'/'case:opp')。
+  // 旧実装は未対応で raw "case:self" が confirm body に表示されていた。
+  if (uid === 'case:self' || uid === 'case:opp') {
+    const player = uid === 'case:self' ? 'self' : 'opp';
+    const cardId = state.players[player].case.cardId;
+    if (cardId) {
+      const d = readDef.card(cardId);
+      if (d && d.names.length > 0) return d.names[0];
+    }
+    return uid;
+  }
+
   // scene character uid: 両プレイヤーの scene から探索
   for (const player of ['self', 'opp'] as const) {
     const c = state.players[player].scene.find((sc) => sc.uid === uid);

@@ -34,12 +34,26 @@ export function makePartnerAbilCtx(
 /**
  * 宣言能力 (scene キャラ) の EffectCtx を構築。
  * uid から所有プレイヤー + cardId を逆引きする。見つからなければ null。
+ *
+ * 2026-05-30 BUG-084: 事件カードの宣言能力 (uid 'case:self'/'case:opp') に対応。
+ * UI 側 (useActionsPanelFlow.makeAbilityCtx, area:'case') と挙動を揃える。
  */
 export function makeDeclaredAbilCtx(
   state: GameState,
   uid: string,
   abilityId: string,
 ): EffectCtx | null {
+  // 事件カード (rules/21: 自分の事件の宣言能力)
+  if (uid === 'case:self' || uid === 'case:opp') {
+    const p: Player = uid === 'case:self' ? 'self' : 'opp';
+    const cardId = state.players[p].case.cardId;
+    if (!cardId) return null;
+    return {
+      source: { cardId, uid, abilityId, player: p, area: 'case' },
+      bindings: {},
+    };
+  }
+  // scene キャラ
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((x) => x.uid === uid);
     if (c) {

@@ -64,6 +64,7 @@ const ACTION_LABEL: Record<string, string> = {
   handUse: '手札の使用',
   handUseCard: '手札の使用',
   nextHint: 'ネクストヒント',
+  'hirameki:fire': '【ヒラメキ】発動',
   refresh: 'リフレッシュ',
   'contact:detail': 'コンタクト',
   endTurn: 'ターン終了',

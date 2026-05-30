@@ -20,10 +20,49 @@
 //     未指定 / null 返却 → 先頭採用 fallback (Phase 7-2 と互換)
 
 import { candidates as targetCandidates } from '../target/candidates.js';
+import { evalDyn } from '../dyn/eval.js';
 import type { GameState, Effect, EffectCtx, TargetingRef } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 
 type Player = 'self' | 'opp';
+
+/**
+ * 2026-05-30 BUG-085: atom args の `{ dyn: <expr> }` 値を late-bound 評価して
+ * literal (number / string) に確定する。
+ *
+ * caseDeclaredEvidenceFlip (D08026 / D11021) の
+ *   `delta: { dyn: '$cost.flipFaceUpEvidence.count * N' }`
+ * を、human-pick 境界 (pendingEffectPick.atomArgs として運ばれる) を越える前に
+ * ここで数値化することが目的。境界の先 (useEngineDispatch.effectPickResolve) では
+ * costPaid を持つ ctx が再構築されないため、cost 依存 dyn はこのタイミング (= ctx に
+ * costPaid が乗っている useDeclaredAbility の resolveEffectPicks 初期 walk) でしか
+ * 解決できない。
+ *
+ * `{ dyn }` 値を持つ atom が現状 caseDeclaredEvidenceFlip のみのため、他カードへの
+ * 影響はゼロ (dyn 値が無い args はそのまま同一参照を返す)。
+ */
+function resolveDynArgs(
+  state: GameState,
+  args: Record<string, unknown>,
+  ctx: EffectCtx,
+): Record<string, unknown> {
+  let mutated = false;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(args)) {
+    if (
+      v !== null &&
+      typeof v === 'object' &&
+      'dyn' in v &&
+      typeof (v as { dyn: unknown }).dyn === 'string'
+    ) {
+      out[k] = evalDyn(state, (v as { dyn: string }).dyn, ctx);
+      mutated = true;
+    } else {
+      out[k] = v;
+    }
+  }
+  return mutated ? out : args;
+}
 
 /** Phase 7-3: $pick 候補から best を選ぶ callback (AIPolicy.chooseAtomTarget に対応)。 */
 export type ChooseAtomTargetFn = (
@@ -284,7 +323,9 @@ function substituteAtomPick(
       player: byPlayer,
       candidates: cardLikeCands,
       atomVerb: verb,
-      atomArgs: { ...args },
+      // BUG-085: { dyn } 値 (例 delta) を costPaid を持つ ctx で literal 化してから
+      // pendingEffectPick として human-pick 境界へ運ぶ。
+      atomArgs: resolveDynArgs(state, { ...args }, ctx),
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
       source: opts.source ?? { cardId: '', abilityId: '' },
@@ -312,7 +353,8 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: { ...restArgs, uid: picked.uid },
+      // BUG-085: AI / heuristic 経路 (human-pick 境界なし) でも { dyn } を literal 化する。
+      args: resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx),
     } as Effect;
   }
 
@@ -327,7 +369,7 @@ function substituteAtomPick(
   return {
     kind: 'atom',
     verb: atom.verb as never,
-    args: { ...args, target: [pickValue] },
+    args: resolveDynArgs(state, { ...args, target: [pickValue] }, ctx),
   } as Effect;
 }
 

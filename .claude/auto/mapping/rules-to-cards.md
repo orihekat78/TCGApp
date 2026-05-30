@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d8b10adc3d64`
+> Source hash: `9b7e49f828e9`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -13,7 +13,7 @@
 | ルール | 参照数 | 参照元 (抜粋) |
 | ----- | ------ | ------------- |
 | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) | 1 | `ui/services/tutorialSteps.ts` |
-| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 21 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 18 件 |
+| [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 22 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 19 件 |
 | [`02-deck-construction.md`](../../rules/02-deck-construction.md) | 10 | `cards/ct-d08/index.ts`, `cards/ct-d11/index.ts`, `cards/index.ts` ほか 7 件 |
 | [`03-field-areas.md`](../../rules/03-field-areas.md) | 21 | `cards/_shared/hiramekiCharStun.ts`, `cards/ct-d08/D08019.ts`, `cards/ct-d08/D08020.ts` ほか 18 件 |
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 11 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 8 件 |
@@ -34,7 +34,7 @@
 | [`18-mr.md`](../../rules/18-mr.md) | 3 | `engine/cond/eval.ts`, `engine/mutate/partner.ts`, `ui/hooks/usePartner.ts` |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 17 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08025.ts` ほか 14 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 11 | `cards/ct-d08/D08024.ts`, `cards/ct-d08/D08025.ts`, `cards/ct-d11/D11019.ts` ほか 8 件 |
-| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 21 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d08/D08005.ts` ほか 18 件 |
+| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 22 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d08/D08005.ts` ほか 19 件 |
 | [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) | 17 | `cards/_shared/cutinFixedAP.ts`, `cards/ct-d08/D08007.ts`, `cards/ct-d08/D08008.ts` ほか 14 件 |
 | [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) | 6 | `cards/_shared/cutinFixedAP.ts`, `cards/ct-d11/D11013.ts`, `cards/ct-d11/D11017.ts` ほか 3 件 |
 | [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) | 13 | `cards/_shared/hiramekiCharStun.ts`, `cards/_shared/partnerColorKeyword.ts`, `cards/ct-d08/D08009.ts` ほか 10 件 |

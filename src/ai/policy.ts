@@ -248,7 +248,10 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
           engine.cost.pay(state, ab.cost, ctx);
         }
       }
-      engine.flow.useDeclaredAbility(state, move.uid, move.abilityId, makeCtx(byPlayer));
+      // BUG-085: cost.pay 済み ctx (costPaid/dyn 付き) を useDeclaredAbility に渡し、
+      // `$cost.flipFaceUpEvidence.count` 等 cost 依存 dyn を effect 解決へ引き継ぐ。
+      // ctx が null (uid 解決失敗) のときのみ makeCtx fallback。
+      engine.flow.useDeclaredAbility(state, move.uid, move.abilityId, ctx ?? makeCtx(byPlayer));
       return;
     }
     case 'reasoning': {

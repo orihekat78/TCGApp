@@ -24,6 +24,13 @@ export type FileAreaProps = {
   threshold?: number;
   /** Round 2: エリアクリックで内容モーダルを開く callback */
   onClick?: () => void;
+  /**
+   * 2026-05-30 user_request: ネクストヒント step1 で引く予定の枚数 (表示プレビュー)。
+   * ネクストヒントは「引いてから出す」ため、ピッカー表示中は引いた分を先取りして
+   * 表示枚数を -pendingDrawn する (実効 FILE 枚数 = step2 のレベル上限と一致させ誤解を防ぐ)。
+   * engine state は不変 (atomic 確定時に実際に減る)。
+   */
+  pendingDrawn?: number;
 };
 
 // ------------------------------------------------------------------
@@ -67,9 +74,10 @@ function FileCardItem({ card }: FileCardItemProps): JSX.Element {
 export function FileArea(props: FileAreaProps): JSX.Element {
   // Round 3: resolveCard はもう使用しない (アシスト中パートナーも裏向き表示に統一) が、
   // 呼出側 (Playmat) との互換性のため prop 型は残す。
-  const { cards, side, threshold = 7, onClick } = props;
+  const { cards, side, threshold = 7, onClick, pendingDrawn = 0 } = props;
 
-  const count = cards.length;
+  // 2026-05-30: ネクストヒントで引く予定の分を先取りして表示 (実効枚数)。
+  const count = Math.max(0, cards.length - pendingDrawn);
   const progress = Math.min(count, threshold);
   const fillPct = Math.min(100, (count / threshold) * 100);
 

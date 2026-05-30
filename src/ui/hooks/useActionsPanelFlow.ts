@@ -17,6 +17,7 @@ import { useConfirmation } from './useConfirmation.js';
 import { useTargetPicker } from './useTargetPicker.js';
 import { useNextHintPicker, type NextHintCandidate } from './useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from './useSceneSwitchPickerStore.js';
+import { useEvidenceFlipPicker } from './useEvidenceFlipPicker.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Cost, EffectCtx } from '@/engine/types';
@@ -36,9 +37,31 @@ function costToText(cost: Cost): string {
     case 'pay':               return cost.items.map(costToText).join(' + ');
     case 'choice':            return cost.items.map(costToText).join(' / ');
     case 'fileFrom':          return `FILE から ${cost.n} 枚`;
-    case 'flipFaceUpEvidence':return `証拠 ${cost.n.min}〜${cost.n.max} 枚を表向きに`;
+    case 'flipFaceUpEvidence':
+      // 2026-05-30 user_request: max が Infinity (上限なし) のとき "Infinity" 表示を回避。
+      return Number.isFinite(cost.n.max)
+        ? `証拠 ${cost.n.min}〜${cost.n.max} 枚を表向きに`
+        : `証拠 ${cost.n.min} 枚以上を表向きに`;
     case 'custom':            return '(独自コスト)';
   }
+}
+
+/**
+ * 2026-05-30 BUG-085: cost の中から flipFaceUpEvidence (〚裏向きの証拠を表向きに〛)
+ * を探す。pay (複合) / choice (択一) でネストしていても再帰で最初の 1 件を返す。
+ * 現状のカード (D08026 / D11021 / D08005) は top-level だが、将来のネストにも備える。
+ */
+type FlipFaceUpCost = Extract<Cost, { kind: 'flipFaceUpEvidence' }>;
+function findFlipFaceUpCost(cost: Cost | undefined): FlipFaceUpCost | null {
+  if (!cost) return null;
+  if (cost.kind === 'flipFaceUpEvidence') return cost;
+  if (cost.kind === 'pay' || cost.kind === 'choice') {
+    for (const item of cost.items) {
+      const found = findFlipFaceUpCost(item);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 /**
@@ -186,7 +209,7 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   if (fileTopCardId === null) return { ok: false, reason: 'not-allowed' };
 
   // rules/12: step1 で抜いた分は step2 の FILE 枚数判定に数えない → postPopCount
-  const postPopCount = nonAssistedCount - 1;
+  const postPopCount = nonAssistedCount ;
   const caseColors = state.players[p].case.colors;
 
   /** level ≤ postPopCount かつ 色 ⊆ 事件色 の キャラ/イベント のみ候補化 */
@@ -216,7 +239,7 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   }
 
   const fileTopName = readDef.card(fileTopCardId)?.names?.[0] ?? fileTopCardId;
-  const choice = await useNextHintPicker().ask({ fileTopCardId, fileTopName, candidates });
+  const choice = await useNextHintPicker().ask({ fileTopCardId, fileTopName, candidates, postPopCount });
 
   if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
   if (choice.kind === 'use') {
@@ -453,15 +476,12 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
 
   const picker = useTargetPicker();
 
-  // 1) source 選択 (1 件なら省略)
-  let sourceUid: string;
-  if (sources.length === 1) {
-    sourceUid = sources[0];
-  } else {
-    const picked = await picker.start({ candidates: sources, purpose: 'declared-ability:source' });
-    if (picked === null) return { ok: false, reason: 'cancelled' };
-    sourceUid = picked;
-  }
+  // 1) source 選択
+  // 2026-05-30 user_request: 1 件でも自動選択せず必ず picker を通し、宣言できるカードを
+  // 盤面で黄色強調 → クリック → その後に確認文言、という順序にする。
+  const picked = await picker.start({ candidates: sources, purpose: 'declared-ability:source' });
+  if (picked === null) return { ok: false, reason: 'cancelled' };
+  const sourceUid: string = picked;
 
   // 2) ability 選択
   const stateAfterSrc = useGameStateStore.getState().gameState;
@@ -510,16 +530,54 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     : undefined;
   const costText = cost ? costToText(cost) : '無し';
 
-  // Round 2: sourceUid → 名前解決。declaredAbility は scene キャラの宣言能力。
+  // Round 2: sourceUid → 名前解決。declaredAbility は scene キャラ/事件の宣言能力。
   const sourceName = uidToDisplayName(stateAfterSrc, sourceUid);
+  // 2026-05-30 user_request: ability id ("a2") ではなく能力の説明文言を表示する。
+  const abilityText = chosenAbil?.description ?? `能力 (${chosenAbilId})`;
   const accepted = await useConfirmation().ask({
     kind: 'standard',
     title: '宣言能力',
-    body: `${sourceName} の能力 (${chosenAbilId}) を発動します。\nコスト: ${costText}`,
+    body: `${sourceName} の宣言能力を発動します。\n${abilityText}\nコスト: ${costText}`,
     okLabel: '発動',
     cancelLabel: 'キャンセル',
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
+
+  // 3.5) BUG-085: 〚裏向きの証拠を1つ以上表向きにする〛コスト (caseDeclaredEvidenceFlip /
+  //   D08005 等) は、どの裏向き証拠を表向きにするかを user に選ばせる必要がある。
+  //   engine.cost.pay は ctx.dyn.costParams.flipFaceUpEvidence.indices を要求し、
+  //   未供給だと "picks 0 out of [min,max]" で throw → dispatch 全体が rollback して
+  //   「OK 押下後に何も起きない」症状になっていた (本バグの直接原因)。
+  //   確認モーダル accept 後に証拠エリア拡大表示 (CardListModal) を流用した picker を出す。
+  const flipCost = findFlipFaceUpCost(cost);
+  if (flipCost && owner === 'self' && ctx) {
+    const flipState = useGameStateStore.getState().gameState;
+    if (flipState === null) return { ok: false, reason: 'no-state' };
+    const evidence = flipState.players[owner].evidence;
+    const candidates = evidence
+      .map((e, index) => (!e.faceUp ? { index, cardId: e.cardId } : null))
+      .filter((c): c is { index: number; cardId: string } => c !== null);
+    // canPay は列挙時に facedown >= n.min を確認済だが、source/ability 選択中に状態が
+    // 変わる可能性に備えて防御 (足りなければ使用不可)。
+    if (candidates.length < flipCost.n.min) {
+      return { ok: false, reason: 'not-allowed' };
+    }
+    const choice = await useEvidenceFlipPicker().ask({
+      side: owner,
+      sourceName,
+      candidates,
+      nMin: flipCost.n.min,
+      nMax: flipCost.n.max,
+    });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    // 選択 index を ctx.dyn.costParams.flipFaceUpEvidence.indices に積む (cost.pay が読む)。
+    // この ctx は下の dispatch にそのまま渡され、costPaid.count → effect の $cost dyn にも繋がる。
+    const dyn = (ctx.dyn ?? {}) as Record<string, unknown>;
+    const params = (dyn['costParams'] ?? {}) as Record<string, unknown>;
+    params['flipFaceUpEvidence'] = { indices: choice.indices };
+    dyn['costParams'] = params;
+    ctx.dyn = dyn;
+  }
 
   // 4) dispatch (cost あれば atomic に pay → use)
   return dispatchEngineAction({

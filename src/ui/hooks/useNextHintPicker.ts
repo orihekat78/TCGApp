@@ -30,6 +30,11 @@ export type NextHintRequest = {
   fileTopName: string;
   /** step2 で使用可能な候補 (level ≤ postPopCount かつ色一致でフィルタ済) */
   candidates: NextHintCandidate[];
+  /**
+   * 2026-05-30: step1 で 1 枚引いた後の実効 FILE 枚数 (= 使用可能レベル上限)。
+   * picker キャプションに「レベル N 以下」と明示し、FILE-1 の暗算を不要にする。
+   */
+  postPopCount: number;
 };
 
 /** picker の確定結果 */

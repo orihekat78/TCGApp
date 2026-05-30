@@ -16,6 +16,7 @@ const REQ: NextHintRequest = {
   candidates: [
     { cardId: 'D08017', source: 'file', name: '円谷光彦', level: 2, kind: 'character' },
   ],
+  postPopCount: 2,
 };
 
 describe('useNextHintPicker', () => {

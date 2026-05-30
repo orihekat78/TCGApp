@@ -288,6 +288,46 @@ describe('enumerateMoves', () => {
     expect(da).toBeDefined();
   });
 
+  // 2026-05-30 BUG-084: 事件カード (case:self) の宣言能力を AI が列挙する。
+  it('BUG-084: declaredAbility on case card is enumerated with uid=case:self', () => {
+    const ability: AbilityDef = { id: 'ca1', type: 'declared', description: 'test case declared' };
+    registerCardDef(makeCard('CASE-SELF', { kind: 'case', abilities: [ability] }));
+    const s = makeBaseState();
+    const moves = enumerateMoves(s, 'self');
+    const caseDa = moves.filter(
+      (m): m is Extract<Move, { kind: 'declaredAbility' }> =>
+        m.kind === 'declaredAbility' && m.uid === 'case:self',
+    );
+    expect(caseDa).toHaveLength(1);
+    expect(caseDa[0].abilityId).toBe('ca1');
+  });
+
+  // 2026-05-30 BUG-084: cost あり事件宣言能力は canPay フィルタを受ける (ctx area=case)。
+  it('BUG-084: cost-bearing case declaredAbility is filtered by canPay (flipFaceUpEvidence)', () => {
+    const ability = {
+      id: 'ca1', type: 'declared', description: 'test',
+      cost: { kind: 'flipFaceUpEvidence', n: { min: 1, max: 1 } },
+    } as unknown as AbilityDef;
+    registerCardDef(makeCard('CASE-SELF', { kind: 'case', abilities: [ability] }));
+
+    const hasCaseDecl = (st: GameState): boolean =>
+      enumerateMoves(st, 'self').some(
+        m => m.kind === 'declaredAbility' &&
+          (m as Extract<Move, { kind: 'declaredAbility' }>).uid === 'case:self',
+      );
+
+    // 裏向き証拠 0 枚 → flip できない → 列挙されない
+    expect(hasCaseDecl(makeBaseState())).toBe(false);
+
+    // 裏向き証拠 1 枚 → flip 可能 → 列挙される
+    const sWithEv = produce(makeBaseState(), draft => {
+      draft.players.self.evidence.push({
+        cardId: 'card-back', faceUp: false, origin: { turn: 1, via: 'reasoning' },
+      });
+    });
+    expect(hasCaseDecl(sWithEv)).toBe(true);
+  });
+
   it('deterministic order: assist > solveCase > handUseCard > startNextHint > ... > endTurn', () => {
     registerCardDef(makeCard('CharA', { colors: ['赤'], level: 0, ap: 1000, lp: 1 }));
     const s = produce(makeBaseState(), draft => {

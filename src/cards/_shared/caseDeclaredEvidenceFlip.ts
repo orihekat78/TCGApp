@@ -5,7 +5,10 @@
 //
 // 事件カード【解決編】【宣言】【ターン1】
 // 〚裏向き証拠を1つ以上表向き〛 コストで対象 AP 修正。
-// dyn: `cost.flipFaceUpEvidence.count * <delta>` で表向きにした証拠枚数を乗ずる。
+// dyn: `$cost.flipFaceUpEvidence.count * <delta>` で表向きにした証拠枚数を乗ずる。
+// ($ prefix 必須 — engine.dyn.eval は $-placeholder のみ評価する。コスト支払い時に
+//  ctx.costPaid['flipFaceUpEvidence'].count が積まれ、resolveEffectPicks の dyn-arg
+//  解決 (resolve-picks.ts) で human-pick 境界を越える前に literal 数値へ確定する。)
 
 import type { AbilityDef } from '@/engine/types';
 import type { Condition, TargetFilter } from '@/engine/types';
@@ -43,7 +46,7 @@ export function caseDeclaredEvidenceFlip(opts: {
           verb: 'charModifyAP',
           args: {
             uid: '$pick',
-            delta: { dyn: `cost.flipFaceUpEvidence.count * ${opts.delta}` },
+            delta: { dyn: `$cost.flipFaceUpEvidence.count * ${opts.delta}` },
             scope: 'turn',
             target: {
               kind: 'pick',

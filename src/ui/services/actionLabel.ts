@@ -15,6 +15,7 @@ const LABELS: Record<string, string> = {
   assist:            'アシスト',
   solveCase:         '事件解決 ★',
   nextHint:          'ネクストヒント',
+  'hirameki:fire':   '【ヒラメキ】発動',
   endTurn:           'ターン終了',
   'setup.reveal':    'ゲーム開始',
   'contact-cutin':   'カットイン',

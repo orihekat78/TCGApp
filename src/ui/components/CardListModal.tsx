@@ -50,6 +50,13 @@ export type CardListModalProps = {
   cards: ReadonlyArray<CardId>;
   /** 裏向きカードの枚数 (FILE / 証拠 など)。表向きカードと合わせて合計枚数を表示。 */
   faceDownCount?: number;
+  /**
+   * BUG-085: 裏向き cell (faceDownCount 枠) のうち「実際は表向き」の証拠を公開表示する。
+   * `index` は faceDownCount ループの絶対インデックス (= 証拠配列の index)。該当 cell は
+   * 非公開バックではなく CardArt + カード名で描画し、onExpand 提供時は拡大可能にする。
+   * 表向き証拠は公開情報 (rules/10 ヒラメキ / D08005 等が参照) のため隠してはならない。
+   */
+  faceUpEvidence?: ReadonlyArray<{ index: number; cardId: CardId }>;
   /** 閉じる callback */
   onClose: () => void;
   /**
@@ -62,7 +69,9 @@ export type CardListModalProps = {
    * onPick が発火される。User vision (CardListModal を pick UI として流用) の実装。
    *
    * uid 形式:
-   *   - face-down (evidence): `evidence:<side>:<idx>` → faceDown[idx] が click 対応
+   *   - face-down (evidence): `evidence:<side>:<idx>` → evidence[idx] が click 対応
+   *     (idx = 全証拠配列中の絶対インデックス。呼出側は faceDownCount に全証拠枚数を渡し、
+   *      裏向きの index のみ pickCands に含める = 表向き cell は非 click 化される。BUG-085)
    *   - face-up (remove): cards[idx] の cardId と一致する uid → 該当 cell が click 対応
    */
   pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp' }>;
@@ -103,7 +112,9 @@ export type CardListModalProps = {
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents } = props;
+  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents } = props;
+  // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
+  const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
   // D08021 driver: multi-pick mode (nMax > 1) で local selection state を保持
   const isMultiPick = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
@@ -205,7 +216,10 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
               {pickBannerText ?? PICK_BANNER_TEXT[kind]}
               {isMultiPick && (
                 <span className="card-list-modal-pick-count">
-                  {` (${selectedUids.length}/${pickNMax} 枚選択中)`}
+                  {/* BUG-085: nMax=Infinity (「1つ以上」) のとき "/Infinity" を出さない */}
+                  {Number.isFinite(pickNMax)
+                    ? ` (${selectedUids.length}/${pickNMax} 枚選択中)`
+                    : ` (${selectedUids.length} 枚選択中)`}
                 </span>
               )}
             </div>
@@ -297,6 +311,37 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
               })}
               {/* 裏向きカード (FILE / 証拠 など、内容非公開)。pick mode 中は click 可能化。 */}
               {Array.from({ length: faceDownCount }).map((_, idx) => {
+                // BUG-085: この index の証拠が表向きなら公開カードとして描画する。
+                const faceUpCardId = faceUpByIndex.get(idx);
+                if (faceUpCardId !== undefined) {
+                  const revealedContent = (
+                    <>
+                      <CardArt
+                        cardId={faceUpCardId}
+                        alt={cardIdToDisplayName(faceUpCardId)}
+                        className="card-list-item-art"
+                      />
+                      <div className="card-list-item-name">{cardIdToDisplayName(faceUpCardId)}</div>
+                      <div className="card-list-item-id">No.{cardIdToPrintedNumber(faceUpCardId)}</div>
+                    </>
+                  );
+                  return onExpand ? (
+                    <button
+                      type="button"
+                      key={`faceup-${idx}`}
+                      className="card-list-item card-list-item--clickable"
+                      onClick={() => onExpand(faceUpCardId)}
+                      data-testid={`card-list-evidence-faceup-${idx}`}
+                      aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を拡大表示`}
+                    >
+                      {revealedContent}
+                    </button>
+                  ) : (
+                    <div key={`faceup-${idx}`} className="card-list-item" data-testid={`card-list-evidence-faceup-${idx}`}>
+                      {revealedContent}
+                    </div>
+                  );
+                }
                 const pickUid = findFaceDownPickUid(idx);
                 const backContent = (
                   <>
@@ -310,14 +355,20 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   </>
                 );
                 if (pickUid !== undefined) {
+                  // BUG-085: 裏向き証拠 (flipFaceUpEvidence コスト) の multi-select 対応。
+                  // 従来は単一 onPick のみだったが、「1つ以上」コストでは複数選択が必要。
+                  // 表向きセル (上) と同じ toggle / 選択ハイライト挙動を裏向きセルにも付与する。
+                  const isSelected = isMultiPick && selectedUids.includes(pickUid);
+                  const cls = `card-list-item face-down card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}`;
                   return (
                     <button
                       type="button"
                       key={`back-${idx}`}
-                      className="card-list-item face-down card-list-item--clickable card-list-item--pickable"
-                      onClick={() => onPick!(pickUid)}
+                      className={cls}
+                      onClick={() => (isMultiPick ? toggleSelect(pickUid) : onPick!(pickUid))}
                       data-testid={`card-list-pick-${pickUid}`}
-                      aria-label={`${idx + 1} 番目の${TITLE[kind]}カード (非公開) を選択`}
+                      aria-pressed={isMultiPick ? isSelected : undefined}
+                      aria-label={`${idx + 1} 番目の${TITLE[kind]}カード (非公開) を${isSelected ? '選択解除' : '選択'}`}
                     >
                       {backContent}
                     </button>

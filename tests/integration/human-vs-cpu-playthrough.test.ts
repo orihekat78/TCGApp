@@ -74,8 +74,10 @@ function setupMidGame(): GameState {
   s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
   s.players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
   s.players.opp.partner = { cardId: 'D11001', state: 'active', location: 'partner-area' };
-  s.players.self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['blue'] };
-  s.players.opp.case = { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['yellow'] };
+  // BUG-085: declaredUseCount は CaseState の必須フィールド (BUG-067)。case literal で
+  //   上書きする際に欠落していたため、BUG-084 の case 宣言能力列挙/使用で throw していた。
+  s.players.self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['blue'], declaredUseCount: {} };
+  s.players.opp.case = { cardId: 'D11021', status: '事件編', requiredEvidence: 6, colors: ['yellow'], declaredUseCount: {} };
   s.players.self.scene = [makeChar('s1', 'D08003')];
   s.players.opp.scene = [makeChar('o1', 'D11003')];
   s.players.self.deck = Array(20).fill('D08005');

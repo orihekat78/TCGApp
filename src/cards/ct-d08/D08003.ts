@@ -16,12 +16,12 @@ const a1: AbilityDef = {
   condition: { kind: 'partnerColor', color: '青' },   // 【パートナー青】
   trigger: { hook: 'enter', selfOnly: true },        // 【登場時】
   effect: {
-    // 「してもよい」「そうした場合」semantics: chain + 各 step の max:1 で表現。
-    // step 1 の discard が user skip (pickedUid=null) or no-candidate なら chain break。
     kind: 'chain',
     steps: [
-      { kind: 'atom', verb: 'discard',     args: { player: 'self', max: 1, filter: { trait: '少年探偵団' } } }, // 手札から[少年探偵団]を1枚までリムーブ
-      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { apMax: 8000 } } }, // 現場(味方/相手)のAP≤8000を1枚までリムーブ (step 1 applied 時のみ)
+      // 手札から[少年探偵団]を1枚までリムーブ
+      { kind: 'atom', verb: 'discard',     args: { player: 'self', max: 1, filter: { trait: '少年探偵団' } } }, 
+      // 現場(味方/相手)のAP≤8000を1枚までリムーブ (step 1 applied 時のみ)
+      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { apMax: 8000 } } }, 
     ],
   },
   description:
@@ -33,15 +33,13 @@ const a2: AbilityDef = {
   id: 'a2',
   type: 'triggered',
   scope: 'on-scene',
-  trigger: { hook: 'phase:end:start' },
+  trigger: { hook: 'phase:end:start' },   //自分のターン終了時
   condition: { kind: 'turn', player: 'self' },
   effect: {
     kind: 'conditional',
-    if: {
-      kind: 'sceneHas',
-      query: { area: 'scene', side: 'self', filter: { trait: '少年探偵団' } },
-      nMin: 3,
-    },
+    // 自分の現場に〚特徴［少年探偵団］〛のキャラが3枚以上いる場合、
+    if: {kind: 'sceneHas',query: { area: 'scene', side: 'self', filter: { trait: '少年探偵団' } },nMin: 3,},
+    // カードを1枚引く。
     then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
   },
   description: '自分のターン終了時、現場の[少年探偵団]3枚以上で1ドロー。',

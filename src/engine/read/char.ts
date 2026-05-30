@@ -147,12 +147,16 @@ function turnEffect(s: GameState, uid: string, key: string): unknown {
 // 宣言能力の使用回数 (rules: 15-abilities-effects.md 【ターン①】)
 function declaredUseCount(s: GameState, uid: string, abilityId: string): number {
   // BUG-067: 事件カード (case:self / case:opp) の declared ability にも対応
+  // BUG-085: declaredUseCount は BUG-067 で後から case 型に追加されたため、それ以前
+  //   形状の state (一部 fixture / 旧 serialize) では未定義のことがある。canDeclaredAbility
+  //   経由で AI/UI が case 宣言能力を列挙する際 (BUG-084) に未定義参照で throw していたので、
+  //   optional chaining で 0 (= 未使用) に倒す。
   if (uid === 'case:self' || uid === 'case:opp') {
     const p = uid === 'case:self' ? 'self' : 'opp';
-    return s.players[p].case.declaredUseCount[abilityId] ?? 0;
+    return s.players[p].case.declaredUseCount?.[abilityId] ?? 0;
   }
   const char = scene.byUid(s, uid);
-  return char?.declaredUseCount[abilityId] ?? 0;
+  return char?.declaredUseCount?.[abilityId] ?? 0;
 }
 
 export const char = {

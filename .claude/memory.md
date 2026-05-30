@@ -12,6 +12,18 @@
   - tsc green / e2e 29/29 緑 / src/ git diff 0 / Playwright 実機で region 正対応・横事件・ガイド overlay 確認
 - **Phase 16 完了** — ステップ→別画面 lesson viewer (33 図解 / ページめくり / Workflow 監査 15 finding)。spec `meta-ui/15`
 
+## 2026-05-30 BUG-085 — 事件宣言能力 flipFaceUpEvidence コスト修正 (user 報告)
+
+- 症状: 事件カードの宣言能力 OK 後に何も起きない。原因 2 層:
+  - Layer1 (UI): cost picker 欠落 → `cost.pay` が indices 空で throw → rollback。
+  - Layer2 (engine): 効果 delta `{dyn:'$cost...count*1000'}` が未評価 (evalDyn dead code) → AP NaN。
+- 修正: useEvidenceFlipPicker (新) + runDeclaredAbilityFlow で証拠 picker (CardListModal 流用) /
+  resolve-picks.resolveDynArgs で `{dyn}` literal 化 / useDeclaredAbility に costPaid 引き継ぎ (UI+AI) /
+  descriptor `$cost` / read/char.declaredUseCount を `?.` (BUG-084 fixture throw 防御)。
+- 検証: 全 1641 test pass + e2e 実機クリック 2 件 (混在 face-up 含む) + 敵対レビュー 13→3 (1 は false positive を e2e で棄却)。
+- 詳細: `.claude/bugs/BUG-085.md` / memory `effect-dyn-arg-evaluation`。
+- 未: commit 時に `npm run docs` 必須 (新規 src ファイルで structure.md stale)。eslint の test 既存 debt は別件。
+
 ## 継続中の不変条件 (meta-app 作業)
 
 - `src/` 配下 1 行も変更しない (import 経由のみ、`git status -- src/ vite.config.ts tsconfig.json tests/` = 0 で確認)

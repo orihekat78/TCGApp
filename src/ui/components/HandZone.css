@@ -562,6 +562,24 @@
 .hand-zone-pick-banner-row .hand-zone-pick-banner {
   margin: 0;  /* 横並びにするため、 banner 自身の margin は削除 */
 }
+/* 2026-05-29 ネクストヒント compact: 大きい banner は隠し、ボタンを縦並びにする */
+.hand-zone-pick-banner-row--vertical {
+  flex-direction: column;
+  gap: 8px;
+}
+.hand-zone-pick-banner-row--vertical .hand-zone-pick-skip-btn,
+.hand-zone-pick-banner-row--vertical .hand-zone-pick-cancel-btn {
+  width: 160px;
+  text-align: center;
+}
+/* step2 の操作方法を示す短い 1 行ヒント (大きい黄色 banner ではなく控えめな caption) */
+.hand-zone-pick-caption {
+  font-size: 11px;
+  color: #ffd966;
+  text-align: center;
+  pointer-events: none;
+  margin-bottom: 2px;
+}
 .hand-zone-pick-skip-btn {
   padding: 4px 14px;
   background: rgba(60, 60, 60, 0.6);

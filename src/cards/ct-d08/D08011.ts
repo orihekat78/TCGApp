@@ -12,24 +12,13 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  trigger: { hook: 'enter', selfOnly: true },
+  trigger: { hook: 'enter', selfOnly: true },   //【登場時】
   effect: {
     kind: 'conditional',
-    if: {
-      kind: 'sceneHas',
-      query: {
-        area: 'scene',
-        side: 'self',
-        filter: { trait: '少年探偵団' },
-        excludeSelf: true,
-      },
-      nMin: 1,
-    },
-    then: {
-      kind: 'atom',
-      verb: 'charGrantKeyword',
-      args: { uid: '$self', kw: '突撃', scope: 'turn' },
-    },
+    // 自分の現場にこのキャラ以外の[少年探偵団]がいる場合、
+    if: {kind: 'sceneHas',query: {area: 'scene',side: 'self',filter: { trait: '少年探偵団' },excludeSelf: true,},nMin: 1,},
+    // ターン終了時までこのキャラは〚突撃〛を持つ。
+    then: {kind: 'atom',verb: 'charGrantKeyword',args: { uid: '$self', kw: '突撃', scope: 'turn' },},
   },
   description:
     '【登場時】自分の現場にこのキャラ以外の[少年探偵団]がいる場合、ターン終了時までこのキャラは〚突撃〛を持つ。',

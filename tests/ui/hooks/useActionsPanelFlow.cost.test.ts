@@ -64,6 +64,16 @@ async function rejectConfirmation(): Promise<void> {
   await new Promise<void>((r2) => setTimeout(r2, 0));
 }
 
+// 2026-05-30 user_request: runDeclaredAbilityFlow は 1 source でも source picker を通すため、
+// confirm に進む前に picker を解決するヘルパ。
+async function pickAndConfirmPicker(uid: string): Promise<void> {
+  const r = useTargetPickerStore.getState()._resolver!;
+  useTargetPickerStore.getState()._setPhase({ phase: 'idle' });
+  useTargetPickerStore.getState()._setResolver(null);
+  r(uid);
+  await new Promise<void>((r2) => setTimeout(r2, 0));
+}
+
 beforeEach(() => {
   useGameStateStore.setState({ gameState: null });
   useTargetPickerStore.getState()._reset();
@@ -81,6 +91,7 @@ describe('Phase 8.8c: ability cost in confirm modal', () => {
     });
     useGameStateStore.setState({ gameState: s });
     const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(s.players.self.scene[0].uid); // source picker (1 source)
     const body = useConfirmationStore.getState().current?.body ?? '';
     expect(body).toContain('コスト');
     expect(body).toContain('無し');
@@ -99,6 +110,7 @@ describe('Phase 8.8c: ability cost in confirm modal', () => {
     const charUid = s.players.self.scene[0].uid;
 
     const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(charUid); // source picker (1 source)
     const body = useConfirmationStore.getState().current?.body ?? '';
     expect(body).toContain('スリープ'); // costToText('sleepSelf')
 
@@ -133,6 +145,7 @@ describe('Phase 8.8c: ability cost in confirm modal', () => {
     useGameStateStore.setState({ gameState: s });
     const before = useGameStateStore.getState().gameState;
     const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(s.players.self.scene[0].uid); // source picker (1 source)
     await rejectConfirmation();
     const result = await promise;
     expect(result.ok).toBe(false);

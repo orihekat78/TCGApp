@@ -12,6 +12,13 @@ export type ActionsPanelProps = {
   /** 手札の使用: 残り回数 (turnState.handUseUsed が true なら 0) と手札枚数 */
   handCount: number;
   handUseRemaining: number;
+  /**
+   * 2026-05-29 user_request: 手札の使用が不可なとき、その理由を区別して表示するため。
+   * - handUseUsed=true: 実際に使用済 → 「使用済」
+   * - handUseUsed=false かつ nextHintUsed=true: ネクストヒントでブロック (消費ではない、rules/05)
+   *   → 「ネクストヒント使用のため不可」と表示し「カウントが減った」誤解を防ぐ。
+   */
+  handUseUsed?: boolean;
   /** ネクストヒント: 使用可否は呼び出し側で判定済み、FILE 枚数を表示 */
   nextHintFileCount: number;
   nextHintUsed: boolean;
@@ -75,7 +82,7 @@ const PHASE_LABEL: Record<PhaseId, { en: string; jp: string }> = {
 
 export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
   const {
-    handCount, handUseRemaining,
+    handCount, handUseRemaining, handUseUsed = false,
     nextHintFileCount, nextHintUsed, canNextHint,
     partnerActive,
     declaredTargetCount,
@@ -102,7 +109,12 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
     {
       id: 'hand-use',
       label: '手札の使用',
-      subtitle: `${handCount}枚 / 残${handUseRemaining}回`,
+      // 2026-05-29 user_request: NH でブロックされた場合は「消費」ではなく理由を明示。
+      subtitle: handUseUsed
+        ? `${handCount}枚 / 使用済`
+        : nextHintUsed
+          ? 'ネクストヒント使用のため不可'
+          : `${handCount}枚 / 残${handUseRemaining}回`,
       disabled: handUseRemaining <= 0 || handCount === 0,
     },
     {

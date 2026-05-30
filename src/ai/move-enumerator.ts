@@ -172,6 +172,25 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     }
   }
 
+  // 6b. 事件カードの declaredAbility (uid 'case:self'/'case:opp')
+  // 2026-05-30 BUG-084: UI 側 enumDeclaredAbilitySources は case を含むのに AI 列挙が
+  // scene のみで欠落していた (AI vs AI 時に事件の宣言能力を使えない) のを修正。
+  {
+    const caseCardId = state.players[byPlayer].case.cardId;
+    if (caseCardId) {
+      const caseUid = `case:${byPlayer}`;
+      for (const ab of charDeclaredAbilities(caseCardId)) {
+        if (!engine.flow.canDeclaredAbility(state, caseUid, ab.id)) continue;
+        if (ab.cost) {
+          const ctx = makeDeclaredAbilCtx(state, caseUid, ab.id);
+          if (!ctx) continue;
+          if (!engine.cost.canPay(state, ab.cost, ctx)) continue;
+        }
+        moves.push({ kind: 'declaredAbility', uid: caseUid, abilityId: ab.id });
+      }
+    }
+  }
+
   // 7. reasoning (partner → scene)
   const partnerUid = byPlayer === 'self' ? 'partner:self' : 'partner:opp';
   if (engine.flow.canReason(state, partnerUid)) {

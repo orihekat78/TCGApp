@@ -64,7 +64,7 @@ describe('caseDeclaredEvidenceFlip', () => {
     expect(atom.verb).toBe('charModifyAP');
     expect(atom.args.uid).toBe('$pick');
     expect(atom.args.scope).toBe('turn');
-    expect(atom.args.delta).toEqual({ dyn: 'cost.flipFaceUpEvidence.count * 1500' });
+    expect(atom.args.delta).toEqual({ dyn: '$cost.flipFaceUpEvidence.count * 1500' });
   });
 
   it('effect passes engine.effect.validate', () => {

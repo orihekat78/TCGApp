@@ -2,20 +2,19 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `ed122b81162a`
+> Source hash: `dfff1d435d29`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 156
-- **ファイル数**: 1519
+- **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
+- **ディレクトリ数**: 169
+- **ファイル数**: 1523
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
 - **`.claude/`** — Claude Code 用プロジェクトコンテキスト一式
-  - **`agents/`** — プロジェクト固有のサブエージェント定義
   - **`auto/`** — 自動生成ドキュメント (scripts/gen-docs/ 出力先・手書き禁止)
     - **`api/`**
       - `cards.md` — 🤖 engine.cards
@@ -217,6 +216,8 @@
     - `BUG-081.md`
     - `BUG-082.md`
     - `BUG-083.md`
+    - `BUG-084.md`
+    - `BUG-085.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -279,7 +280,6 @@
     - `2026-05-29-02-phase-16-tutorial-lesson-viewer.md`
     - `2026-05-29-03-phase-17-tutorial-real-board.md`
     - `README.md` — Changelog エントリ
-  - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
@@ -610,7 +610,6 @@
     - `2026-05-29.md` — セッション 2026-05-29 — Phase 15 / 16 チュートリアル (meta-app)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
-  - **`skills/`** — プロジェクト固有のスキル定義
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
     - **`cards-analysis/`**
       - `AUDIT-USER-REQUEST-18.md` — Card Audit — user_request 20260521_01 #18
@@ -954,12 +953,6 @@
   - `match-board.html`
   - `memory.md` — memory.md — コナン TCG デザインモック プロジェクト履歴
   - `README.md` — コナン TCG メタゲーム デザインモック
-- **`dist-meta/`**
-  - **`assets/`**
-    - `index-CSfC8djj.css`
-    - `index-DfnJOjLD.js`
-    - `tsv-loader-fs-BWZZNTOu.js`
-  - `index.html`
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
@@ -1100,6 +1093,13 @@
       - `misreadX.ts` — cards/_shared/misreadX
       - `partnerColorKeyword.ts` — cards/_shared/partnerColorKeyword
       - `souzaX.ts` — cards/_shared/souzaX
+    - **`ct-d01/`**
+    - **`ct-d02/`**
+    - **`ct-d03/`**
+    - **`ct-d04/`**
+    - **`ct-d05/`**
+    - **`ct-d06/`**
+    - **`ct-d07/`**
     - **`ct-d08/`** — CT-D08「青の古城探索事件」デッキ 23 枚
       - `.gitkeep`
       - `D08001.ts` — cards/ct-d08/D08001 江戸川コナン (パートナー)
@@ -1129,6 +1129,8 @@
       - `D08025.ts` — cards/ct-d08/D08025 蘭の一撃 (イベント)
       - `D08026.ts` — cards/ct-d08/D08026 青の古城探索事件 (事件)
       - `index.ts` — cards/ct-d08 barrel — Phase 5 Group C + D
+    - **`ct-d09/`**
+    - **`ct-d10/`**
     - **`ct-d11/`** — CT-D11「千速と重悟の婚活パーティー」デッキ 24 枚
       - `.gitkeep`
       - `D11001.ts` — cards/ct-d11/D11001 萩原千速 (パートナー)
@@ -1153,6 +1155,15 @@
       - `D11020.ts` — cards/ct-d11/D11020 18の想起 (イベント)
       - `D11021.ts` — cards/ct-d11/D11021 千速と重悟の婚活パーティー (事件)
       - `index.ts` — cards/ct-d11 barrel — Phase 5 Group C + E
+    - **`ct-p01/`**
+    - **`ct-p02/`**
+    - **`ct-p03/`**
+    - **`ct-p04/`**
+    - **`ct-p05/`**
+    - **`ct-p06/`**
+    - **`ct-p07/`**
+    - **`ct-p08/`**
+    - **`ct-p09/`**
     - `index.ts` — cards/index — トップレベル barrel + registerAll()
   - **`engine/`** — Engine コア (React 非依存、純関数 + Immer)
     - **`cards/`**
@@ -1371,6 +1382,7 @@
       - `useEffectStack.ts` — Phase 7 Task 7.14: EffectStackPanel selector hook
       - `useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
       - `useEvidence.ts` — Phase 7 Task 7.9: EvidenceArea selector hook
+      - `useEvidenceFlipPicker.ts` — 2026-05-30 BUG-085: 宣言能力コスト〚裏向きの証拠を1つ以上表向きにする〛の
       - `useFile.ts` — Phase 7 Task 7.8: FileArea selector hook
       - `useHiramekiDemoDriver.ts` — 2026-05-26 ヒラメキ効果検証 demo の完了検知 driver
       - `useHiramekiFlowDriver.ts` — Phase 8 完全クローズ Commit 3a: Hirameki driver
@@ -1430,6 +1442,7 @@
     - `policy.test.ts` — tests/ai/policy.test.ts — Phase 6 Group A Task 6.2 tests
   - **`cards/`** — カード単体ユニットテスト
     - **`_shared/`**
+      - `caseDeclaredEvidenceFlip.effect.test.ts` — BUG-085 Layer 2 end-to-end: caseDeclaredEvidenceFlip の
       - `caseDeclaredEvidenceFlip.test.ts` — tests/cards/_shared/caseDeclaredEvidenceFlip
       - `caseResolvedHandRemove.test.ts` — tests/cards/_shared/caseResolvedHandRemove
       - `caseTraitConditioned.test.ts` — tests/cards/_shared/caseTraitConditioned
@@ -1496,6 +1509,7 @@
     - `bug-006.spec.ts` — BUG-006: アクション[事件] で証拠が変動しない (rules/10)
     - `bug-029.spec.ts` — BUG-029: 現場カードがアクション/推理してもスリープにならない (UI 反映)
     - `bug-037.spec.ts` — BUG-037: 現場カードの sleep / stun が computed transform で実際に rotate されるかを検証。
+    - `bug-085.spec.ts` — E2E regression: BUG-085 — 事件カード宣言能力の flipFaceUpEvidence コスト picker
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
@@ -1642,6 +1656,7 @@
       - `useActionsPanelFlow.assist.test.ts` — Phase 8.6: runAssistFlow / runSolveCaseFlow tests
       - `useActionsPanelFlow.cost.test.ts` — Phase 8.8c: Ability cost resolution UI tests
       - `useActionsPanelFlow.declared-ability.test.ts` — Phase 8.8b: runDeclaredAbilityFlow tests
+      - `useActionsPanelFlow.flip-cost.test.ts` — BUG-085: runDeclaredAbilityFlow の flipFaceUpEvidence コスト統合テスト
       - `useActionsPanelFlow.handuse.test.ts` — Phase 8.6: runHandUseFlow tests
       - `useActionsPanelFlow.nextHint.test.ts` — 2026-05-28: runNextHintFlow tests (step2 picker 経路)
       - `useActionsPanelFlow.partner-ability.test.ts` — Phase 8.8a: runPartnerAbilityFlow tests
@@ -1653,6 +1668,7 @@
       - `useEngineDispatch.effect-order.test.ts` — Phase 8 完全クローズ Commit 5: setEffectOrder dispatch tests
       - `useEngineDispatch.hirameki.test.ts` — Phase 8 完全クローズ Commit 3a: hiramekiResolve dispatch tests
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
+      - `useEvidenceFlipPicker.test.ts` — BUG-085: useEvidenceFlipPicker store + Promise hook の単体テスト
       - `useNextHintPicker.test.ts` — 2026-05-28: useNextHintPicker hook tests
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
       - `useOppTurnDriver.test.ts` — Phase 8.7b: useOppTurnDriver tests
@@ -1679,6 +1695,7 @@
 - `CHANGELOG.md` — フェーズ/Round 完了履歴 (Keep a Changelog 形式)
 - `ct-d08-cards.json` — CT-D08 デッキカードデータ (公式テキスト抽出)
 - `ct-d11-cards.json` — CT-D11 デッキカードデータ (公式テキスト抽出)
+- `eslint.config.js` — ESLint v9+ flat config. Lints TypeScript/TSX sources only (matches the
 - `HUB.md` — 全ドキュメントへのナビゲーションハブ (Obsidian 推奨)
 - `index.html` — Vite エントリ HTML
 - `package-lock.json` — npm 依存ロック
