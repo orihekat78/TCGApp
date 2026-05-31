@@ -127,7 +127,8 @@ export function RealMatchView({ onMatchEnd }: Props) {
       <ReplayPanel driver={replayDriver} />
       <MulliganModal />
       <OppTurnOverlay />
-      <SpectatorHUD />
+      {/* BUG-088: replay 再生中は CPU 制御 HUD を出さない (ReplayPanel と top で重なり close を遮るため) */}
+      {replayDriver.state.log === null && <SpectatorHUD />}
       <EffectPickerModal />
       <DeckRevealOverlay />
       <RecentActionToast />

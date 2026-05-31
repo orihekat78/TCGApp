@@ -35,8 +35,10 @@
   - 修正: `nonAssistedCount - 1`。engine (next-hint.ts post-pop file.length) は元から正しく整合。
   - test: nextHint.test.ts に `postPopCount===2` / Lv3(D08023) 候補外 追加 (既存は Lv2 のみで両しきい値通過し検出できず)。
 - 検証: tsc green / vitest **1642 pass** / e2e bug-085・bug-086・effect-pick pass。
-- ⚠ **BUG-085 マージ (37bdd6b) 由来の既存 e2e 失敗 2 件**を発見 (私の修正と無関係、clean state でも fail、要別途調査):
-  `event-remove-by-ap.spec.ts:231` (D11020 pendingEffects queue) / `replay-ui.spec.ts:98` (close ボタン spectator-hud が pointer 干渉)。
+- full e2e で既存 e2e 失敗 2 件を発見 → Workflow で adversarial root-cause → **両方修正済 (BUG-085 とは無関係、より古い commit 由来)**:
+  - **BUG-088** (real-bug, 中): replay 中に SpectatorHUD が ReplayPanel と重なり close を遮る。誘因 `99f6c0c`(BUG-063 が HUD ゲートを `!spectatorMode`→`gameState===null` に変更)。修正: App.tsx + RealMatchView で `{replayDriver.state.log===null && <SpectatorHUD/>}`。
+  - **D11020 stale-test** (製品バグなし): `4ffa74f` で D11020 が choice→sceneRemove 短縮形 atom に refactor 済 (挙動正)。`event-remove-by-ap.spec.ts` の probe が旧 choice path を読んでいた → 新 `atom/sceneRemove` path に更新。
+  - 検証: full e2e **56 passed / 0 failed**。
 
 ## 継続中の不変条件 (meta-app 作業)
 

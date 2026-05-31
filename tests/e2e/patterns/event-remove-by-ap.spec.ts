@@ -119,11 +119,12 @@ async function probeAbility(
       let d11020Step1ConditionalTrait: string | null = null;
       let d11020Step1ConditionalN: number | null = null;
       if (effectKind === 'sequence' && Array.isArray(effect?.steps)) {
-        const s0 = effect.steps[0] as { kind?: string; options?: { args?: { target?: { query?: { filter?: { levelMax?: number }; state?: string[] } } } }[] } | undefined;
-        if (s0?.kind === 'choice' && s0.options?.[0]?.args) {
-          const q = (s0.options[0].args as { target?: { query?: { filter?: { levelMax?: number }; state?: string[] } } }).target?.query;
-          d11020Step0LevelMax = q?.filter?.levelMax ?? null;
-          d11020Step0HasSleepState = Array.isArray(q?.state) && q.state.includes('sleep');
+        // commit 4ffa74f で step[0] は choice ラッパ → sceneRemove 短縮形 (atom) に refactor 済。
+        // levelMax/state は args.filter.levelMax / args.state に直接ある (engine が pick query を推論)。
+        const s0 = effect.steps[0] as { kind?: string; verb?: string; args?: { filter?: { levelMax?: number }; state?: string[] } } | undefined;
+        if (s0?.kind === 'atom' && s0.verb === 'sceneRemove' && s0.args) {
+          d11020Step0LevelMax = s0.args.filter?.levelMax ?? null;
+          d11020Step0HasSleepState = Array.isArray(s0.args.state) && s0.args.state.includes('sleep');
         }
         const s1 = effect.steps[1] as { kind?: string; if?: { kind?: string; trait?: string; n?: number } } | undefined;
         if (s1?.kind === 'conditional' && s1.if) {
@@ -253,7 +254,7 @@ test.describe('eventRemoveByAP — イベント手札使用で AP X 以下リム
         expect(probe.conditionShape, 'condition === partnerColor 青').toBe('partnerColor-青');
       } else if (cardId === 'D11020') {
         expect(probe.effectKind, 'effect.kind').toBe('sequence');
-        expect(probe.d11020Step0LevelMax, 'step[0] choice filter.levelMax').toBe(7);
+        expect(probe.d11020Step0LevelMax, 'step[0] sceneRemove filter.levelMax').toBe(7);
         expect(probe.d11020Step0HasSleepState, "step[0] state ⊇ ['sleep']").toBe(true);
         // probe は s1.kind === 'conditional' 確認後に s1.if.* を assign する。
         // 値が 'removeTraitAtLeast' を返せば step[1].kind === 'conditional' と s1.if.kind === 'removeTraitAtLeast' を同時に保証。
