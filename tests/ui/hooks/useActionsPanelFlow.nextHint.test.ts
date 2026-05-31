@@ -64,6 +64,27 @@ describe('runNextHintFlow (step2 picker)', () => {
     expect(after.turnState.self.handUseUsed).toBe(false);
   });
 
+  // BUG-087: rules/12「1で手札に加えたカードは2の判定時のFILE枚数に数えない」
+  // FILE 3 枚 → step1 で 1 枚抜く → postPopCount = 2。Lv3 は候補外、Lv2 は候補内。
+  it('BUG-087: FILE 3 枚なら postPopCount=2、Lv3 カードは候補外 (off-by-one 回帰)', async () => {
+    const s = setupWithFile(); // FILE = D08017(青Lv2) ×3、case = 青
+    s.players.self.hand = ['D08023', 'D08017']; // D08023=青Lv3 / D08017=青Lv2
+    useGameStateStore.setState({ gameState: s });
+    const promise = runNextHintFlow({ player: 'self' });
+
+    const req = useNextHintPickerStore.getState().current;
+    expect(req).not.toBeNull();
+    // step1 で抜いた分を数えない → FILE 3 → postPopCount 2
+    expect(req?.postPopCount).toBe(2);
+    // Lv3 (D08023) は 3 > 2 で候補外
+    expect(req?.candidates.some((c) => c.cardId === 'D08023')).toBe(false);
+    // Lv2 (D08017) は 2 ≤ 2 で候補内
+    expect(req?.candidates.some((c) => c.cardId === 'D08017')).toBe(true);
+
+    useNextHintPicker().acceptCancel();
+    await promise;
+  });
+
   it('acceptSkip → step1 のみ (FILE→手札、使用しない)', async () => {
     useGameStateStore.setState({ gameState: setupWithFile() });
     const promise = runNextHintFlow({ player: 'self' });

@@ -209,7 +209,8 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   if (fileTopCardId === null) return { ok: false, reason: 'not-allowed' };
 
   // rules/12: step1 で抜いた分は step2 の FILE 枚数判定に数えない → postPopCount
-  const postPopCount = nonAssistedCount ;
+  // (BUG-087: 元実装で `- 1` が欠落し、FILE N 枚で level ≤ N を許可していた)
+  const postPopCount = nonAssistedCount - 1;
   const caseColors = state.players[p].case.colors;
 
   /** level ≤ postPopCount かつ 色 ⊆ 事件色 の キャラ/イベント のみ候補化 */

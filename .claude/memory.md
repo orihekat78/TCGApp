@@ -24,6 +24,20 @@
 - 詳細: `.claude/bugs/BUG-085.md` / memory `effect-dyn-arg-evaluation`。
 - 未: commit 時に `npm run docs` 必須 (新規 src ファイルで structure.md stale)。eslint の test 既存 debt は別件。
 
+## 2026-05-31 BUG-086 / BUG-087 — 証拠表向き pick 不可 / NextHint level off-by-one (user 報告)
+
+- **BUG-086** (中, ui): 証拠に表向きカードがある状態で D08013 evidenceToHand pick が非公開しか選べない。
+  - 原因: `CardListModal.tsx` 表向き分岐が `findFaceDownPickUid(idx)` を呼ばず onExpand/静的のみ (BUG-085 で追加時 pick 未配線)。`Playmat.tsx:724` は全 index を pickCands に渡している。
+  - 修正: 表向き分岐に pick 判定追加 → pickable button。flip picker は候補=裏向き index のみで影響なし。
+  - test: `tests/e2e/bug-086.spec.ts` (修正前 fail / 後 pass)。※ D08013 は level4 → handUseCard に FILE≥4 必要。
+- **BUG-087** (中, ui): NextHint step2 が FILE N 枚で level ≤ N を許可 (rules/12「1で抜いた分は数えない」→ −1)。
+  - 原因: `useActionsPanelFlow.ts:212` `postPopCount = nonAssistedCount` (− 1 欠落、起源 commit 9380314、BUG-085 無関係)。
+  - 修正: `nonAssistedCount - 1`。engine (next-hint.ts post-pop file.length) は元から正しく整合。
+  - test: nextHint.test.ts に `postPopCount===2` / Lv3(D08023) 候補外 追加 (既存は Lv2 のみで両しきい値通過し検出できず)。
+- 検証: tsc green / vitest **1642 pass** / e2e bug-085・bug-086・effect-pick pass。
+- ⚠ **BUG-085 マージ (37bdd6b) 由来の既存 e2e 失敗 2 件**を発見 (私の修正と無関係、clean state でも fail、要別途調査):
+  `event-remove-by-ap.spec.ts:231` (D11020 pendingEffects queue) / `replay-ui.spec.ts:98` (close ボタン spectator-hud が pointer 干渉)。
+
 ## 継続中の不変条件 (meta-app 作業)
 
 - `src/` 配下 1 行も変更しない (import 経由のみ、`git status -- src/ vite.config.ts tsconfig.json tests/` = 0 で確認)

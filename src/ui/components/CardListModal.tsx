@@ -325,6 +325,29 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                       <div className="card-list-item-id">No.{cardIdToPrintedNumber(faceUpCardId)}</div>
                     </>
                   );
+                  // BUG-086: 表向き証拠も pick 候補なら選択可能にする。
+                  // evidenceToHand (D08013 等) は「自分の証拠を1つ選び手札に加える」で
+                  // 表向き/裏向きを問わず選べる。findFaceDownPickUid は index ベース
+                  // (evidence:side:idx) なので表向き index にも使える。flipFaceUpEvidence
+                  // picker は候補が裏向き index のみ → 表向き cell は undefined で非 pick のまま。
+                  const faceUpPickUid = findFaceDownPickUid(idx);
+                  if (faceUpPickUid !== undefined) {
+                    const isSelected = isMultiPick && selectedUids.includes(faceUpPickUid);
+                    const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}`;
+                    return (
+                      <button
+                        type="button"
+                        key={`faceup-${idx}`}
+                        className={cls}
+                        onClick={() => (isMultiPick ? toggleSelect(faceUpPickUid) : onPick!(faceUpPickUid))}
+                        data-testid={`card-list-pick-${faceUpPickUid}`}
+                        aria-pressed={isMultiPick ? isSelected : undefined}
+                        aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isSelected ? '選択解除' : '選択'}`}
+                      >
+                        {revealedContent}
+                      </button>
+                    );
+                  }
                   return onExpand ? (
                     <button
                       type="button"

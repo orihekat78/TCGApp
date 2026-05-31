@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 156
-- **ファイル数**: 1527
+- **ファイル数**: 1530
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -219,6 +219,8 @@
     - `BUG-083.md`
     - `BUG-084.md`
     - `BUG-085.md`
+    - `BUG-086.md`
+    - `BUG-087.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -1501,6 +1503,7 @@
     - `bug-029.spec.ts` — BUG-029: 現場カードがアクション/推理してもスリープにならない (UI 反映)
     - `bug-037.spec.ts` — BUG-037: 現場カードの sleep / stun が computed transform で実際に rotate されるかを検証。
     - `bug-085.spec.ts` — E2E regression: BUG-085 — 事件カード宣言能力の flipFaceUpEvidence コスト picker
+    - `bug-086.spec.ts` — E2E regression: BUG-086 — 証拠エリアの「表向き」カードが evidenceToHand pick で選択不可
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
