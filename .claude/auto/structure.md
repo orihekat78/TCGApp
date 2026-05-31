@@ -2,19 +2,20 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `dfff1d435d29`
+> Source hash: `ed122b81162a`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
-- **ディレクトリ数**: 169
-- **ファイル数**: 1523
+- **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
+- **ディレクトリ数**: 156
+- **ファイル数**: 1527
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
 - **`.claude/`** — Claude Code 用プロジェクトコンテキスト一式
+  - **`agents/`** — プロジェクト固有のサブエージェント定義
   - **`auto/`** — 自動生成ドキュメント (scripts/gen-docs/ 出力先・手書き禁止)
     - **`api/`**
       - `cards.md` — 🤖 engine.cards
@@ -280,6 +281,7 @@
     - `2026-05-29-02-phase-16-tutorial-lesson-viewer.md`
     - `2026-05-29-03-phase-17-tutorial-real-board.md`
     - `README.md` — Changelog エントリ
+  - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
@@ -610,6 +612,7 @@
     - `2026-05-29.md` — セッション 2026-05-29 — Phase 15 / 16 チュートリアル (meta-app)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
+  - **`skills/`** — プロジェクト固有のスキル定義
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
     - **`cards-analysis/`**
       - `AUDIT-USER-REQUEST-18.md` — Card Audit — user_request 20260521_01 #18
@@ -953,6 +956,12 @@
   - `match-board.html`
   - `memory.md` — memory.md — コナン TCG デザインモック プロジェクト履歴
   - `README.md` — コナン TCG メタゲーム デザインモック
+- **`dist-meta/`**
+  - **`assets/`**
+    - `index-CSfC8djj.css`
+    - `index-DfnJOjLD.js`
+    - `tsv-loader-fs-BWZZNTOu.js`
+  - `index.html`
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
@@ -1093,13 +1102,6 @@
       - `misreadX.ts` — cards/_shared/misreadX
       - `partnerColorKeyword.ts` — cards/_shared/partnerColorKeyword
       - `souzaX.ts` — cards/_shared/souzaX
-    - **`ct-d01/`**
-    - **`ct-d02/`**
-    - **`ct-d03/`**
-    - **`ct-d04/`**
-    - **`ct-d05/`**
-    - **`ct-d06/`**
-    - **`ct-d07/`**
     - **`ct-d08/`** — CT-D08「青の古城探索事件」デッキ 23 枚
       - `.gitkeep`
       - `D08001.ts` — cards/ct-d08/D08001 江戸川コナン (パートナー)
@@ -1129,8 +1131,6 @@
       - `D08025.ts` — cards/ct-d08/D08025 蘭の一撃 (イベント)
       - `D08026.ts` — cards/ct-d08/D08026 青の古城探索事件 (事件)
       - `index.ts` — cards/ct-d08 barrel — Phase 5 Group C + D
-    - **`ct-d09/`**
-    - **`ct-d10/`**
     - **`ct-d11/`** — CT-D11「千速と重悟の婚活パーティー」デッキ 24 枚
       - `.gitkeep`
       - `D11001.ts` — cards/ct-d11/D11001 萩原千速 (パートナー)
@@ -1155,15 +1155,6 @@
       - `D11020.ts` — cards/ct-d11/D11020 18の想起 (イベント)
       - `D11021.ts` — cards/ct-d11/D11021 千速と重悟の婚活パーティー (事件)
       - `index.ts` — cards/ct-d11 barrel — Phase 5 Group C + E
-    - **`ct-p01/`**
-    - **`ct-p02/`**
-    - **`ct-p03/`**
-    - **`ct-p04/`**
-    - **`ct-p05/`**
-    - **`ct-p06/`**
-    - **`ct-p07/`**
-    - **`ct-p08/`**
-    - **`ct-p09/`**
     - `index.ts` — cards/index — トップレベル barrel + registerAll()
   - **`engine/`** — Engine コア (React 非依存、純関数 + Immer)
     - **`cards/`**

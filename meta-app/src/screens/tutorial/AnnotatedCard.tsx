@@ -128,7 +128,7 @@ export const STEP_CARD_ANNOTATIONS: Record<string, CardAnnotation> = {
       { key: 'type', num: 1, label: 'カードの種類 / コスト・Lv', rects: [{ t: 1.5, l: 3, w: 12, h: 7.5 }] },
       { key: 'color', num: 2, label: 'カードの色 — カードの縁 (フレーム) の色が色を表す' },
       { key: 'name', num: 3, label: 'カード名', rects: [{ t: 1.5, l: 17, w: 50, h: 7 }] },
-      { key: 'effect', num: 4, label: '能力 (中央テキスト)', rects: [{ t: 64, l: 5, w: 90, h: 30 }] },
+      { key: 'effect', num: 4, label: '能力 (中央テキスト)', rects: [{ t: 69, l: 5, w: 90, h: 24 }] },
       { key: 'no', num: 5, label: 'カードNo', rects: [{ t: 94, l: 3, w: 14, h: 3.6 }] },
     ],
   },
