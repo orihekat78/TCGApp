@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `65f5ba682af6`
+> Source hash: `3280d5cc978c`
 
 `// rules:` コメントから生成した双方向マッピングのハブ。
 

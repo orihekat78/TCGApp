@@ -766,12 +766,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     }
     case 'caseToResolved': {
       const p = resolvePlayer(a.player, ctx);
+      // BUG-089: case:to-resolved hook emit は mutate.case.toResolved に集約
+      // (assist / FILE>=7 自動移行を含む全移行経路で発火させるため)。ここでの二重 emit は不要。
       mutate.case.toResolved(s, p);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:caseToResolved' });
-      // rules/01 — 事件編→解決編 移行 Hook (一方通行)。
-      // caseResolvedHandRemove 等の事件カード共通能力がここで反応する。
-      event.emit(s, 'case:to-resolved', { player: p }, ctx.source);
       return;
     }
 

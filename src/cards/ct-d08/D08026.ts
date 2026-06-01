@@ -9,14 +9,27 @@
 //     ターン終了時までAP＋1000する。
 //
 // 先攻7 / 後攻6 (rules/01) — caseLevel は先攻基準。
-// a1: caseResolvedHandRemove({ n:1 })
+// a1: inline triggered — 解決編 (case:to-resolved hook) になったとき discard self n=1
 // a2: caseDeclaredEvidenceFlip({ delta:+1000, targetFilter:{ trait:'少年探偵団' }, side:'self' })
 
-import type { CardDef } from '@/engine/types';
-import {
-  caseResolvedHandRemove,
-  caseDeclaredEvidenceFlip,
-} from '@/cards/_shared/index';
+import type { AbilityDef, CardDef } from '@/engine/types';
+import { caseDeclaredEvidenceFlip } from '@/cards/_shared/index';
+
+// a1: この事件が解決編になったとき、自分は手札を1枚リムーブする。
+// D08013 と同様の inline triggered ability 形 (case:to-resolved hook で発火 / discard atom 短縮形)。
+// ※ 解決編移行時の hook emit は mutate.case.toResolved に集約 (BUG-089)。
+const a1: AbilityDef = {
+  id: 'a1',
+  type: 'triggered',
+  scope: 'always', // 事件カードは case area 所在 → case:to-resolved hook + selfOnly で gate
+  trigger: {
+    hook: 'case:to-resolved',
+    selfOnly: true, // 自分の事件カードが解決編になったときのみ発火 (source.uid===card.uid で gate / 相手の事件には誤発火しない)
+  },
+  effect: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
+  description: 'この事件が解決編になったとき、自分は手札を1枚リムーブする。',
+  ruleRefs: ['rules/01-victory-conditions.md', 'rules/15-abilities-effects.md'],
+};
 
 export const D08026: CardDef = {
   id: 'D08026',
@@ -30,7 +43,7 @@ export const D08026: CardDef = {
   caseLevel: 7,
   caseTraits: ['古城'],
   abilities: [
-    caseResolvedHandRemove({ n: 1, abilityId: 'a1' }),
+    a1,
     caseDeclaredEvidenceFlip({
       delta: 1000,
       targetFilter: { trait: '少年探偵団' },

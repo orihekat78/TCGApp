@@ -270,12 +270,9 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
     }
     case 'assist': {
       // flow.assist は未実装のため mutate.partner.assist を直接呼ぶ。
+      // BUG-089: FILE 7 枚以上 → 解決編 移行 + case:to-resolved hook emit は
+      // mutate.partner.assist (→ mutate.case.toResolved) に集約済。直接代入 (hook を出さない) は除去。
       engine.mutate.partner.assist(state, byPlayer);
-      // FILE 7 枚以上で事件編 → 解決編 (rules/01, 25)
-      const ps = state.players[byPlayer];
-      if (ps.case.status === '事件編' && ps.file.length >= 7) {
-        ps.case.status = '解決編';
-      }
       return;
     }
     case 'solveCase': {

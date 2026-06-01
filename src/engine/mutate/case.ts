@@ -3,6 +3,7 @@
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
 import type { GameState } from '@/engine/types';
+import { event } from '../event/index.js';
 
 type Player = 'self' | 'opp';
 
@@ -27,6 +28,13 @@ function init(s: GameState, p: Player, cardId: string, colors: string[]): void {
 function toResolved(s: GameState, p: Player): void {
   if (s.players[p].case.status === '解決編') return;
   s.players[p].case.status = '解決編';
+  // BUG-089: 事件編→解決編 移行 Hook を emit (rules/01 一方通行)。
+  // caseResolvedHandRemove 等の事件カード共通能力 (trigger.hook='case:to-resolved') がここで発火する。
+  // 旧実装は 実プレイ未使用の caseToResolved atom でしか emit せず、assist / FILE>=7 自動移行
+  // (file.ts / partner.ts の直接代入) では a1 が永遠に発火しなかった。全移行経路を本関数に集約。
+  // source.uid = case card の uid (collectCardsInPlay の `case:${p}` と一致)。
+  // a1 の selfOnly が source.uid === card.uid で「その所有者の事件カード」のみを発火対象に gate する。
+  event.emit(s, 'case:to-resolved', { player: p }, { player: p, uid: `case:${p}`, cardId: s.players[p].case.cardId });
 }
 
 export const caseOp = {

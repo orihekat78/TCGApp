@@ -4,6 +4,7 @@
 
 import { current } from '@/engine/produce';
 import type { GameState, FileCard } from '@/engine/types';
+import { caseOp } from './case.js';
 
 type Player = 'self' | 'opp';
 
@@ -26,7 +27,7 @@ function addFromDeckTop(s: GameState, p: Player, n: number): void {
   // (rules/01 + rules/13 + rules/25)。assist() に同等 check があるが、
   // auto-phase の addFromDeckTop は経由しないため独立で必要。
   if (s.players[p].case.status === '事件編' && s.players[p].file.length >= 7) {
-    s.players[p].case.status = '解決編';
+    caseOp.toResolved(s, p); // BUG-089: hook 経由で a1 (caseResolvedHandRemove) を発火させる
   }
 }
 

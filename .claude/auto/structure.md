@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 156
-- **ファイル数**: 1531
+- **ファイル数**: 1539
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -222,6 +222,7 @@
     - `BUG-086.md`
     - `BUG-087.md`
     - `BUG-088.md`
+    - `BUG-089.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -462,6 +463,12 @@
     - `smoke-2026-05-26-5.md` — Smoke 1000戦レポート — smoke-2026-05-26-104842
     - `smoke-2026-05-26.json`
     - `smoke-2026-05-26.md` — Smoke 1000戦レポート — smoke-2026-05-26-095757
+    - `smoke-2026-06-01-2.json`
+    - `smoke-2026-06-01-2.md` — Smoke 1000戦レポート — smoke-2026-06-01-081240
+    - `smoke-2026-06-01-3.json`
+    - `smoke-2026-06-01-3.md` — Smoke 1000戦レポート — smoke-2026-06-01-081854
+    - `smoke-2026-06-01.json`
+    - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -1438,6 +1445,7 @@
     - **`_shared/`**
       - `caseDeclaredEvidenceFlip.effect.test.ts` — BUG-085 Layer 2 end-to-end: caseDeclaredEvidenceFlip の
       - `caseDeclaredEvidenceFlip.test.ts` — tests/cards/_shared/caseDeclaredEvidenceFlip
+      - `caseResolvedHandRemove.e2e.test.ts` — BUG-089 e2e: 事件カードが解決編になったとき a1 (caseResolvedHandRemove) の discard が実際に発火するか
       - `caseResolvedHandRemove.test.ts` — tests/cards/_shared/caseResolvedHandRemove
       - `caseTraitConditioned.test.ts` — tests/cards/_shared/caseTraitConditioned
       - `cutinFixedAP.test.ts` — tests/cards/_shared/cutinFixedAP
