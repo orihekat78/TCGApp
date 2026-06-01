@@ -10,6 +10,15 @@ import type { SceneCharacter } from '@/engine/types/game-state.js';
 import { CardArt } from './CardArt.js';
 import './SceneArea.css';
 
+// BUG-092/093: 名乗り例外 (速攻/突撃系) キーワードのバッジ表示。突撃の付与を視認できるように
+// 名乗りバッジと同様に表示する。read.char.keywords の有効キーワード集合と照合する。
+const CHARGE_BADGES: { kw: string; label: string }[] = [
+  { kw: '迅速', label: '迅' },
+  { kw: '突撃', label: '突' },
+  { kw: '突撃[キャラ]', label: '突キ' },
+  { kw: '突撃[事件]', label: '突事' },
+];
+
 // Phase 8.10g-2: 前回キャラ配列と現キャラ配列を比較し、消えた SceneCharacter を返す
 export function pickRemovedCharacters(
   prev: readonly SceneCharacter[],
@@ -52,6 +61,11 @@ export type SceneAreaProps = {
   pickCharUids?: ReadonlySet<string>;
   /** Pick mode で char が選択されたとき (uid 通知) */
   onPickChar?: (uid: string) => void;
+  /**
+   * BUG-092/093: char uid → 有効キーワード (read.char.keywords)。突撃/迅速 等のバッジ表示に使う。
+   * 省略時はバッジ非表示。
+   */
+  resolveKeywords?: (uid: string) => readonly string[];
 };
 
 type SceneCharacterCardProps = {
@@ -67,9 +81,12 @@ type SceneCharacterCardProps = {
   isPickable?: boolean;
   /** Pick mode で click → onPickClick (uid 通知) */
   onPickClick?: () => void;
+  /** BUG-092/093: このキャラの有効キーワード一覧 (突撃/迅速 バッジ表示用) */
+  chargeKeywords?: readonly string[];
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick, chargeKeywords }: SceneCharacterCardProps): JSX.Element {
+  const charges = CHARGE_BADGES.filter((b) => (chargeKeywords ?? []).includes(b.kw));
   const ap = ch.apOverride ?? meta.ap;
   const lp = ch.lpOverride ?? meta.lp;
 
@@ -118,6 +135,15 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
       </div>
 
       {ch.isNamed && <div className="named-badge">名</div>}
+      {charges.length > 0 && (
+        <div className="charge-badges" data-testid={`charge-badges-${ch.uid}`}>
+          {charges.map((b) => (
+            <div key={b.kw} className="charge-badge" title={b.kw}>
+              {b.label}
+            </div>
+          ))}
+        </div>
+      )}
       {setCount > 0 && <div className="set-badge">+{setCount}</div>}
       {ch.stackedCards > 0 && (
         <div className="stack-badge">×{ch.stackedCards + 1}</div>
@@ -127,7 +153,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar, resolveKeywords } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -186,6 +212,7 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               onExpand={onExpand}
               isPickable={isPickable}
               onPickClick={isPickable && onPickChar ? () => onPickChar(ch.uid) : undefined}
+              chargeKeywords={resolveKeywords?.(ch.uid)}
             />
           );
         })}

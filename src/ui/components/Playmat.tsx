@@ -196,6 +196,7 @@ function PlayerMat({
           onExpand={onExpand}
           pickCharUids={pickCharUids}
           onPickChar={onPickChar}
+          resolveKeywords={(uid) => (state ? readChar.keywords(state, uid) : [])}
         />
         <div className="below-scene">
           <FileArea

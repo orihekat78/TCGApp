@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 156
-- **ファイル数**: 1556
+- **ファイル数**: 1557
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1528,6 +1528,7 @@
     - `bug-086.spec.ts` — E2E regression: BUG-086 — 証拠エリアの「表向き」カードが evidenceToHand pick で選択不可
     - `bug-090-case-resolved-pick.spec.ts` — E2E regression: BUG-090 — human の auto-phase で 事件編→解決編 になり case card a1
     - `bug-091-d11019-scene-enter.spec.ts` — E2E regression: BUG-091 — D11019「15の受難」a1 で deckRevealUntil が matched した
+    - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。

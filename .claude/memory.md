@@ -22,6 +22,7 @@
 - **BUG-093**: `sceneEnter`/`sceneSwitch` の既定が `named:false` → 効果登場キャラが名乗りにならず、突撃無しでも action 可能だった。既定を `named:true` に修正 (rules/06,17 効果登場も同ターン登場=名乗り)。D11019/D08024/D11014 影響。
 - **BUG-092**: `read.char.keywords()` が `turnEffects['grantedKeywords']` (turn-scope 付与先) を読まず突撃4枚が空振り + `clearTurnEffects` が未呼出で turn-scope 効果が永続。keywords() に統合 + `flow/turn.ts endTurn` で両者 scene を `clearTurnEffects` 清掃。
 - 連携: D11019 → 黄<20 で名乗り action[事件]不可 / 黄>=20 で突撃[事件] 効いて可 / turn 終了で解除。
+- **突撃バッジ UI** (user 要望): SceneArea に名乗りバッジ同様の突撃バッジ (突/突キ/突事/迅) を追加。Playmat が `resolveKeywords={(uid)=>readChar.keywords(state,uid)}` を渡し、有効キーワードと CHARGE_BADGES を照合。`tests/e2e/charge-keyword-badge.spec.ts`。
 - 検証: `D11019.charge-keyword.test.ts` 4件 / vitest **1653** / smoke 1000 exc0 (win 微変動=挙動修正)。詳細 `.claude/bugs/BUG-092.md` `BUG-093.md`。
 
 ## 2026-06-01 D11019 deck reveal UI 改善 (user 指摘 #1, 完了)
