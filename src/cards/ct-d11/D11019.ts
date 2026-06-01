@@ -8,7 +8,7 @@
 //   自分のリムーブエリアに【黄】のカードが20枚以上ある場合、ターン終了時までそのキャラに〚突撃［事件］〛を持たせる。
 //   【カットイン】AP＋1000
 //
-// a1: 個別実装 sequence (deckRevealUntil → conditional sceneEnter → deckToBottomBound → deckShuffle → conditional charGrantKeyword)
+// a1: 個別実装 sequence (D11020 と同じ DSL コンパクト形 — 1 step = 1 行 + 公式テキスト対応コメント)
 // a2: cutinFixedAP({ delta:1000 })
 
 import type { AbilityDef, CardDef, GameState } from '@/engine/types';
@@ -21,61 +21,21 @@ const a1: AbilityDef = {
   trigger: {
     hook: 'effect:declared',
     selfOnly: true,
-    matcher: (p: unknown, _s: GameState) => {
-      if (!p || typeof p !== 'object') return false;
-      return (p as { kind?: unknown }).kind === 'event-use';
-    },
+    matcher: (p: unknown, _s: GameState) => (p as { kind?: unknown })?.kind === 'event-use', // このイベント自身が使われたとき発火
   },
   effect: {
     kind: 'sequence',
     steps: [
-      {
-        kind: 'atom',
-        verb: 'deckRevealUntil',
-        args: {
-          player: 'self',
-          filter: { color: '黄', levelMax: 4, kind: 'character' },
-          bind: '$revealed',
-          bindMatch: '$matched',
-        },
-      },
-      {
-        kind: 'conditional',
+      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { color: '黄', levelMax: 4, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } }, // デッキ上からレベル4以下【黄】のキャラが出るまで1枚ずつ公開 ($matched=該当キャラ / $revealed=公開した全カード)
+      { kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
-        then: {
-          kind: 'atom',
-          verb: 'sceneEnter',
-          args: {
-            player: 'self',
-            cardId: '$matched.cardId',
-            viaEffect: true,
-          },
-        },
+        then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true } }, // 公開した【黄】キャラを登場させる
       },
-      {
-        kind: 'atom',
-        verb: 'deckToBottomBound',
-        args: { player: 'self', bindKey: '$revealed' },
-      },
-      {
-        kind: 'atom',
-        verb: 'deckShuffle',
-        args: { player: 'self' },
-      },
-      {
-        kind: 'conditional',
-        if: {
-          kind: 'and',
-          cs: [
-            { kind: 'bound', key: '$matched', presence: 'matched' },
-            { kind: 'removeColorAtLeast', player: 'self', color: '黄', n: 20 },
-          ],
-        },
-        then: {
-          kind: 'atom',
-          verb: 'charGrantKeyword',
-          args: { uid: '$matched.uid', kw: '突撃[事件]', scope: 'turn' },
-        },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } }, // 残りの公開カードをデッキの下に移す
+      { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } }, // デッキをシャッフルする
+      { kind: 'conditional',
+        if: { kind: 'and', cs: [{ kind: 'bound', key: '$matched', presence: 'matched' }, { kind: 'removeColorAtLeast', player: 'self', color: '黄', n: 20 }] }, // リムーブエリアに【黄】が20枚以上ある場合
+        then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$matched.uid', kw: '突撃[事件]', scope: 'turn' } }, // ターン終了時までそのキャラに突撃[事件]を付与
       },
     ],
   },
