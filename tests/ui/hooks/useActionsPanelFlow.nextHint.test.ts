@@ -85,6 +85,29 @@ describe('runNextHintFlow (step2 picker)', () => {
     await promise;
   });
 
+  // BUG-094: rules/17 【FILE(X)】「アシストしているパートナーも枚数に数える」。
+  // FILE 4 枚 (非partner 3 + assisted-partner 1) → step1 で 1 枚抜く → postPopCount = 3
+  // (パートナーも数える)。Lv3 カードが候補内になるべき。旧実装は nonAssistedCount-1=2 で Lv3 を弾いた。
+  it('BUG-094: アシスト中パートナーも FILE 枚数に数える → postPopCount = file.length - 1', async () => {
+    const s = setupWithFile(); // case = 青
+    const fb: FileCard = { type: 'card-back', cardId: FILE_CARD };
+    // 非partner 3 + アシスト中パートナー 1 = file.length 4
+    s.players.self.file = [fb, fb, fb, { type: 'assisted-partner', cardId: 'D08001' }];
+    s.players.self.hand = ['D08023']; // 青 Lv3
+    useGameStateStore.setState({ gameState: s });
+    const promise = runNextHintFlow({ player: 'self' });
+
+    const req = useNextHintPickerStore.getState().current;
+    expect(req).not.toBeNull();
+    // FILE 4 (パートナー含む) → step1 で 1 → postPopCount = 3 (rules/17 パートナーも数える)
+    expect(req?.postPopCount).toBe(3);
+    // Lv3 (D08023) は 3 ≤ 3 で候補内
+    expect(req?.candidates.some((c) => c.cardId === 'D08023')).toBe(true);
+
+    useNextHintPicker().acceptCancel();
+    await promise;
+  });
+
   it('acceptSkip → step1 のみ (FILE→手札、使用しない)', async () => {
     useGameStateStore.setState({ gameState: setupWithFile() });
     const promise = runNextHintFlow({ player: 'self' });

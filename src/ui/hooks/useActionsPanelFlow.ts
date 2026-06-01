@@ -199,18 +199,17 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
   // FILE 最上部 (非 assisted-partner) = 配列末尾から探す (mutate/file.ts popTop と同ロジック)
   const file = state.players[p].file;
   let fileTopCardId: string | null = null;
-  let nonAssistedCount = 0;
-  for (const f of file) {
-    if (f.type !== 'assisted-partner') nonAssistedCount += 1;
-  }
   for (let i = file.length - 1; i >= 0; i--) {
     if (file[i]!.type !== 'assisted-partner') { fileTopCardId = file[i]!.cardId; break; }
   }
   if (fileTopCardId === null) return { ok: false, reason: 'not-allowed' };
 
-  // rules/12: step1 で抜いた分は step2 の FILE 枚数判定に数えない → postPopCount
-  // (BUG-087: 元実装で `- 1` が欠落し、FILE N 枚で level ≤ N を許可していた)
-  const postPopCount = nonAssistedCount - 1;
+  // rules/12: step1 で抜いた分は step2 の FILE 枚数判定に数えない → file.length - 1。
+  // BUG-094: rules/17 【FILE(X)】「アシストしているパートナーも枚数に数える」。閾値は
+  // file.length (アシスト中パートナー含む) を基準にする (engine next-hint.ts:89 の post-pop
+  // file.length 判定と一致)。旧実装は nonAssistedCount (パートナー除外) を使い、アシスト中は
+  // 閾値が 1 少なくなって level=FILE枚数 のカードが候補から漏れていた (BUG-087 の base 誤り)。
+  const postPopCount = file.length - 1;
   const caseColors = state.players[p].case.colors;
 
   /** level ≤ postPopCount かつ 色 ⊆ 事件色 の キャラ/イベント のみ候補化 */
