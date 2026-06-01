@@ -69,10 +69,15 @@ function keywords(s: GameState, uid: string): string[] {
   const char = scene.byUid(s, uid);
   if (!char) return [];
   const granted = char.keywordOverrides.granted;
+  // BUG-092: scope='turn'/'contact' の付与キーワード (mutate.char.grantKeyword) は
+  // turnEffects['grantedKeywords'] に積まれる。これを統合しないと突撃[事件]等の turn-scope 付与が
+  // namedExceptionAllowed (突撃/迅速 の名乗り例外判定) 等で読まれず無効だった。
+  // turn-scope の付与も「外部から与えられた能力」なので disabledOriginal でも残す (rules/19)。
+  const turnGranted = (char.turnEffects['grantedKeywords'] as string[] | undefined) ?? [];
   if (char.keywordOverrides.disabledOriginal) {
     // 元の CardDef キーワードと continuous ability の grantKeywords は除外 (rules/19)
     // granted は外部から与えられたキーワードなので残る (rules/19 §他のカード能力/効果による付与は無効にならない)
-    return [...granted];
+    return [...new Set([...granted, ...turnGranted])];
   }
   const d = def.card(char.cardId);
   const base: string[] = (d as { keywords?: string[] } | undefined)?.keywords ?? [];
@@ -102,7 +107,7 @@ function keywords(s: GameState, uid: string): string[] {
     }
   }
 
-  return [...new Set([...base, ...granted, ...fromContinuous])];
+  return [...new Set([...base, ...granted, ...turnGranted, ...fromContinuous])];
 }
 
 function hasKeyword(s: GameState, uid: string, kw: string): boolean {

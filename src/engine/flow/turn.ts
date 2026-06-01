@@ -17,6 +17,7 @@ import type { GameState } from '../types/index.js';
 import { event } from '../event/index.js';
 import { runAutoPhase } from './auto-phase.js';
 import { scene as sceneMutator } from '../mutate/scene.js';
+import { char as charMutator } from '../mutate/char.js';
 
 type Player = 'self' | 'opp';
 
@@ -66,6 +67,15 @@ export function endTurn(state: GameState, p: Player): void {
   // 全キャラが永続的に名乗り状態となり、推理リソースが partner 1 枚に固定されていた。
   for (const c of state.players[p].scene) {
     if (c.isNamed) sceneMutator.clearNamed(state, c.uid);
+  }
+  // BUG-092: turn-scope 効果 (apMod_turn / lpMod_turn / apMod_contact / lpMod_contact /
+  // grantedKeywords) を turn 終了で解除。clearTurnEffects は実装済だが呼出が無く、
+  // 「ターン終了時まで突撃[事件]を持たせる」等の付与が永続していた。現ターンで付与された
+  // 効果は両プレイヤーの scene キャラに乗りうるため両者を清掃する (phase:end:cleanup 窓)。
+  for (const player of ['self', 'opp'] as const) {
+    for (const c of state.players[player].scene) {
+      charMutator.clearTurnEffects(state, c.uid, 'turn');
+    }
   }
   event.emit(state, 'turn:end', { player: p }, undefined);
   // ターン情報の繰上げ

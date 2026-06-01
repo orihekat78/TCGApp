@@ -434,7 +434,10 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         if (idx !== -1) arr.splice(idx, 1);
       }
       const newChar = mutate.scene.enter(s, enterPlayer, cardId, {
-        named: (a.named as boolean | undefined) ?? false,
+        // BUG-093: 効果/能力による登場も「同ターン登場」= 名乗り状態 (rules/06, 17)。
+        // 既定 false だと効果登場キャラが名乗りにならず、名乗り例外 (突撃/迅速) 無しでも
+        // action/推理できてしまっていた。明示 false を渡さない限り名乗りで登場させる。
+        named: (a.named as boolean | undefined) ?? true,
         viaEffect,
       });
       // user_request 20260522_01 #12 fix: 新 uid を $matched に書き戻し、
@@ -476,7 +479,10 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const swRemoveUid = resolveBindRef(a.removeUid, ctx) as string;
       if (typeof swRemoveUid !== 'string' || swRemoveUid.startsWith('$')) return;
       const newChar = mutate.scene.switchEnter(s, swPlayer, swCardId, swRemoveUid, {
-        named: (a.named as boolean | undefined) ?? false,
+        // BUG-093: 効果/能力による登場も「同ターン登場」= 名乗り状態 (rules/06, 17)。
+        // 既定 false だと効果登場キャラが名乗りにならず、名乗り例外 (突撃/迅速) 無しでも
+        // action/推理できてしまっていた。明示 false を渡さない限り名乗りで登場させる。
+        named: (a.named as boolean | undefined) ?? true,
         viaEffect,
       });
       // BUG-073: effect log

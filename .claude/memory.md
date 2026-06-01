@@ -17,9 +17,12 @@
 - 修正 (Workflow 4 agents で安全確定): resolveBindRef に $込みキー fallback (additive) + sceneEnter write-back を両キー対応。`$matched` 使用は D11019 のみ。
 - 検証: unit 2件 (修正前 fail) + Playwright e2e (実機登場) / vitest **1649** / smoke 1000 exc0。詳細 `.claude/bugs/BUG-091.md`。
 
-## 2026-06-01 BUG-092 (未着手, 起票のみ) — scope='turn' キーワード付与が無効
+## 2026-06-01 BUG-092 + BUG-093 (修正済) — 突撃付与が無効 / 効果登場が名乗りにならない (user 報告)
 
-- `mutate.char.grantKeyword(scope='turn')` は `turnEffects['grantedKeywords']` に格納するが `read.char.keywords()` が読まない → 突撃4枚 (D08005/D08011/D11015/D11019) の付与が空振り。BUG-091 とは独立。詳細 `.claude/bugs/BUG-092.md`。
+- **BUG-093**: `sceneEnter`/`sceneSwitch` の既定が `named:false` → 効果登場キャラが名乗りにならず、突撃無しでも action 可能だった。既定を `named:true` に修正 (rules/06,17 効果登場も同ターン登場=名乗り)。D11019/D08024/D11014 影響。
+- **BUG-092**: `read.char.keywords()` が `turnEffects['grantedKeywords']` (turn-scope 付与先) を読まず突撃4枚が空振り + `clearTurnEffects` が未呼出で turn-scope 効果が永続。keywords() に統合 + `flow/turn.ts endTurn` で両者 scene を `clearTurnEffects` 清掃。
+- 連携: D11019 → 黄<20 で名乗り action[事件]不可 / 黄>=20 で突撃[事件] 効いて可 / turn 終了で解除。
+- 検証: `D11019.charge-keyword.test.ts` 4件 / vitest **1653** / smoke 1000 exc0 (win 微変動=挙動修正)。詳細 `.claude/bugs/BUG-092.md` `BUG-093.md`。
 
 ## 2026-06-01 D11019 deck reveal UI 改善 (user 指摘 #1, 完了)
 

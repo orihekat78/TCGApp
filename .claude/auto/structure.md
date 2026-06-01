@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 156
-- **ファイル数**: 1552
+- **ファイル数**: 1556
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -226,6 +226,7 @@
     - `BUG-090.md`
     - `BUG-091.md`
     - `BUG-092.md`
+    - `BUG-093.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -474,6 +475,8 @@
     - `smoke-2026-06-01-4.md` — Smoke 1000戦レポート — smoke-2026-06-01-102852
     - `smoke-2026-06-01-5.json`
     - `smoke-2026-06-01-5.md` — Smoke 1000戦レポート — smoke-2026-06-01-112654
+    - `smoke-2026-06-01-6.json`
+    - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
     - `smoke-2026-06-01.json`
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
     - `smoke-baseline.json`
@@ -1496,6 +1499,7 @@
       - `D11016.test.ts` — tests/cards/ct-d11/D11016
       - `D11017.test.ts` — tests/cards/ct-d11/D11017
       - `D11018.test.ts` — tests/cards/ct-d11/D11018
+      - `D11019.charge-keyword.test.ts` — BUG-092 / BUG-093: D11019 a1 の登場キャラの「名乗り + 突撃[事件] 付与」挙動。
       - `D11019.scene-enter.test.ts` — BUG-091: D11019「15の受難」a1 が deckRevealUntil で matched した黄キャラを現場に登場
       - `D11019.test.ts` — tests/cards/ct-d11/D11019
       - `D11020.test.ts` — tests/cards/ct-d11/D11020

@@ -37,8 +37,8 @@ describe('D11019 a1 — 公開した黄キャラを現場に登場 (BUG-091)', (
   it('リムーブに黄20枚以上のとき、$matched.uid が解決され登場キャラに突撃[事件]が付与される', () => {
     // BUG-091 write-back 検証: sceneEnter が登場キャラの新 uid を $matched binding に書き戻し、
     // 後続 charGrantKeyword が `$matched.uid` で「その登場キャラ」を正しく対象にできること。
-    // ※ scope='turn' の付与先は turnEffects['grantedKeywords'] (keywordOverrides.granted ではない)。
-    //    なお turn-scope keyword が read.char.keywords() で読まれない件は別バグ BUG-092 (本修正の範囲外)。
+    // ※ scope='turn' の付与先は turnEffects['grantedKeywords']。read.char.keywords() で読まれるか/
+    //    名乗り例外で効くかは BUG-092/093 修正後の D11019.charge-keyword.test.ts で別途検証。
     const s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.case = { cardId: 'D11021', status: '事件編', requiredEvidence: 7, colors: ['黄'], declaredUseCount: {} };
