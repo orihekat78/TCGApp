@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `59de575eb668`
+> Source hash: `0333751432d1`
 
 公式ルール [`15-workflow.md`](../../../rules/15-workflow.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

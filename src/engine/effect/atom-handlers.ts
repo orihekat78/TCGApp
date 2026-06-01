@@ -138,7 +138,14 @@ function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
   if (dot < 0) return value;
   const key = value.slice(1, dot);
   const field = value.slice(dot + 1);
-  const binding = (ctx.bindings as Record<string, unknown>)[key];
+  // BUG-091: ctx.bindings のキー規約が混在する。contact.ts は `contact` ($無し) で格納し、
+  // deckRevealUntil は `$matched` / `$revealed` ($込み、a.bind/a.bindMatch をそのまま使用) で格納する。
+  // まず $無しキー (contact 等) を引き、無ければ $込みキー ($matched 等) に fallback する
+  // (純粋に additive — 従来 $無しで解決していたカードの挙動は不変)。
+  let binding = (ctx.bindings as Record<string, unknown>)[key];
+  if (!Array.isArray(binding) || binding.length === 0) {
+    binding = (ctx.bindings as Record<string, unknown>)[value.slice(0, dot)];
+  }
   if (!Array.isArray(binding) || binding.length === 0) return value;
   const first = binding[0] as Record<string, unknown>;
   const fieldVal = first[field];
@@ -433,11 +440,12 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // user_request 20260522_01 #12 fix: 新 uid を $matched に書き戻し、
       // 後続 atom (charGrantKeyword 等) が `$matched.uid` で参照できるよう
       // する。元 binding の cardId は維持しつつ uid を上書き。
-      const bindKey = '$matched'.slice(1); // 'matched'
-      const existing = (ctx.bindings as Record<string, unknown>)[bindKey];
+      // BUG-091: deckRevealUntil は $込みキー ('$matched') で格納するため、$無し ('matched') と
+      // 両方を試して登場キャラの新 uid を書き戻す (後続 $matched.uid = charGrantKeyword 参照のため)。
+      const existing = ((ctx.bindings as Record<string, unknown>)['matched']
+        ?? (ctx.bindings as Record<string, unknown>)['$matched']) as Record<string, unknown>[] | undefined;
       if (Array.isArray(existing) && existing.length > 0) {
-        const entry = existing[0] as Record<string, unknown>;
-        entry.uid = newChar.uid;
+        existing[0].uid = newChar.uid;
       }
       // D11014 a2 driver (2026-05-25): args.bind が指定されていれば、登場したキャラ情報
       // ({ cardId, uid }) を `ctx.bindings[bind]` に格納。後続 condition (boundMatchesFilter 等)

@@ -1,80 +1,37 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
 > memory.md は現セッション scratchpad。80 行超過時に `.claude/sessions/YYYY-MM-DD.md` へ退避。
-> 過去ログ: `.claude/sessions/` (直近: 2026-05-29 = Phase 15/16, 2026-05-28 = Phase 10-14, 2026-05-23 = BUG-064〜077)
+> 過去ログ: `.claude/sessions/` (直近: 2026-06-01 = Phase17/BUG-085〜090 アーカイブ)
 
-## 現在地 (2026-05-29 時点)
+## 現在地 (2026-06-01)
 
-- **Phase 17 完了** — チュートリアルに実対戦フォーマット流用 + 横向き事件カード + ワイド2ペイン + 章ごとガイド付き実戦 (meta-app)
-  - 詳細: `CHANGELOG.md` Phase 17 / spec `meta-ui/16-tutorial-real-board.md`
-  - 新規: `AnnotatedCard.tsx` (実カード拡大+region強調, 事件116:84横) / `TutorialBoardSnapshot.tsx` (FitScaleBox+実Playmat) / `boardHints.ts` / `util/tutorialResolvers.ts`
-  - ガイド実戦: viewer ch3+ CTA → `useTutorialStore.setState({currentStep})` + customGameStart → RealMatchView 既存 `<TutorialOverlay/>` 表示。overlay reset は非ガイド起動側(startPractice/SetupScreen)で決定的に (StrictMode で unmount cleanup は不可)
-  - tsc green / e2e 29/29 緑 / src/ git diff 0 / Playwright 実機で region 正対応・横事件・ガイド overlay 確認
-- **Phase 16 完了** — ステップ→別画面 lesson viewer (33 図解 / ページめくり / Workflow 監査 15 finding)。spec `meta-ui/15`
+- 直近 commit: bfb9c36 (BUG-089) → 7462ec8 (a2 inline) → 6eda0f2 (BUG-090) → b1e1bf3 (D11019 整形)。
+- 事件カード a1/a2 と D11019 a1 を **DSL inline コンパクト形**に統一 (factory 非経由、byte 一致検証済)。
+- 詳細な過去バグは `.claude/sessions/2026-06-01.md` + 各 `.claude/bugs/BUG-XXX.md`。
 
-## 2026-05-30 BUG-085 — 事件宣言能力 flipFaceUpEvidence コスト修正 (user 報告)
+## 2026-06-01 BUG-091 — D11019 a1「公開した黄キャラが現場に登場しない」(user 報告)
 
-- 症状: 事件カードの宣言能力 OK 後に何も起きない。原因 2 層:
-  - Layer1 (UI): cost picker 欠落 → `cost.pay` が indices 空で throw → rollback。
-  - Layer2 (engine): 効果 delta `{dyn:'$cost...count*1000'}` が未評価 (evalDyn dead code) → AP NaN。
-- 修正: useEvidenceFlipPicker (新) + runDeclaredAbilityFlow で証拠 picker (CardListModal 流用) /
-  resolve-picks.resolveDynArgs で `{dyn}` literal 化 / useDeclaredAbility に costPaid 引き継ぎ (UI+AI) /
-  descriptor `$cost` / read/char.declaredUseCount を `?.` (BUG-084 fixture throw 防御)。
-- 検証: 全 1641 test pass + e2e 実機クリック 2 件 (混在 face-up 含む) + 敵対レビュー 13→3 (1 は false positive を e2e で棄却)。
-- 詳細: `.claude/bugs/BUG-085.md` / memory `effect-dyn-arg-evaluation`。
-- 未: commit 時に `npm run docs` 必須 (新規 src ファイルで structure.md stale)。eslint の test 既存 debt は別件。
+- 症状: deckRevealUntil で matched しても sceneEnter が silent no-op → 登場せず (ログ matched=D11013 だが scene 空)。
+- RCA: deckRevealUntil は `ctx.bindings['$matched']` ($込み) に格納するが、resolveBindRef は `value.slice(1,dot)='matched'` ($無し) で lookup → 未解決 `$matched.cardId` を返し sceneEnter が `startsWith('$')` で no-op。sceneEnter の uid write-back も同じキー不一致。
+- キー規約混在: contact.ts は `'contact'` ($無し)、deck-reveal は `'$matched'/'$revealed'` ($込み)。
+- 修正 (Workflow 4 agents で安全確定): resolveBindRef に $込みキー fallback (additive) + sceneEnter write-back を両キー対応。`$matched` 使用は D11019 のみ。
+- 検証: unit 2件 (修正前 fail) + Playwright e2e (実機登場) / vitest **1649** / smoke 1000 exc0。詳細 `.claude/bugs/BUG-091.md`。
 
-## 2026-05-31 BUG-086 / BUG-087 — 証拠表向き pick 不可 / NextHint level off-by-one (user 報告)
+## 2026-06-01 BUG-092 (未着手, 起票のみ) — scope='turn' キーワード付与が無効
 
-- **BUG-086** (中, ui): 証拠に表向きカードがある状態で D08013 evidenceToHand pick が非公開しか選べない。
-  - 原因: `CardListModal.tsx` 表向き分岐が `findFaceDownPickUid(idx)` を呼ばず onExpand/静的のみ (BUG-085 で追加時 pick 未配線)。`Playmat.tsx:724` は全 index を pickCands に渡している。
-  - 修正: 表向き分岐に pick 判定追加 → pickable button。flip picker は候補=裏向き index のみで影響なし。
-  - test: `tests/e2e/bug-086.spec.ts` (修正前 fail / 後 pass)。※ D08013 は level4 → handUseCard に FILE≥4 必要。
-- **BUG-087** (中, ui): NextHint step2 が FILE N 枚で level ≤ N を許可 (rules/12「1で抜いた分は数えない」→ −1)。
-  - 原因: `useActionsPanelFlow.ts:212` `postPopCount = nonAssistedCount` (− 1 欠落、起源 commit 9380314、BUG-085 無関係)。
-  - 修正: `nonAssistedCount - 1`。engine (next-hint.ts post-pop file.length) は元から正しく整合。
-  - test: nextHint.test.ts に `postPopCount===2` / Lv3(D08023) 候補外 追加 (既存は Lv2 のみで両しきい値通過し検出できず)。
-- 検証: tsc green / vitest **1642 pass** / e2e bug-085・bug-086・effect-pick pass。
-- full e2e で既存 e2e 失敗 2 件を発見 → Workflow で adversarial root-cause → **両方修正済 (BUG-085 とは無関係、より古い commit 由来)**:
-  - **BUG-088** (real-bug, 中): replay 中に SpectatorHUD が ReplayPanel と重なり close を遮る。誘因 `99f6c0c`(BUG-063 が HUD ゲートを `!spectatorMode`→`gameState===null` に変更)。修正: App.tsx + RealMatchView で `{replayDriver.state.log===null && <SpectatorHUD/>}`。
-  - **D11020 stale-test** (製品バグなし): `4ffa74f` で D11020 が choice→sceneRemove 短縮形 atom に refactor 済 (挙動正)。`event-remove-by-ap.spec.ts` の probe が旧 choice path を読んでいた → 新 `atom/sceneRemove` path に更新。
-  - 検証: full e2e **56 passed / 0 failed**。
+- `mutate.char.grantKeyword(scope='turn')` は `turnEffects['grantedKeywords']` に格納するが `read.char.keywords()` が読まない → 突撃4枚 (D08005/D08011/D11015/D11019) の付与が空振り。BUG-091 とは独立。詳細 `.claude/bugs/BUG-092.md`。
 
-## 2026-06-01 BUG-089 — 事件カード a1「解決編→手札1枚リムーブ」が実プレイで一度も発火しない (user 報告 / commit bfb9c36)
+## D11019 残作業 (user 指摘 #1, 本セッション継続)
 
-- 症状: D08026 / D11021 の a1 が解決編移行で発火せず。原因 2 層 + matcher:
-  - Layer1 (engine): `case:to-resolved` hook を emit するのは**未使用の caseToResolved atom のみ**。
-    実プレイの移行 (assist / FILE≥7 自動 / AI policy) は `case.status` 直接代入で hook 未発火 → a1 永遠 noop。
-  - Layer2 (matcher): `caseResolvedHandRemove` の matcher が payload.player のみ見てカード所有者を見ず、
-    self 解決編で opp の a1 も二重発火 / opp 解決編ではどの a1 も発火しない。
-- 修正: `mutate/case.ts toResolved` で hook emit (source.uid=`case:${p}`)、**全移行経路を toResolved に集約**
-  (file.ts / partner.ts / ai/policy.ts 直接代入除去 / atom-handlers 重複 emit 除去)。
-  a1 を D08013 同様 inline `AbilityDef` (`trigger{hook:'case:to-resolved', selfOnly:true}` / `discard self n=1`)。
-  selfOnly で `source.uid===card.uid` gate → 二重発火 / opp 誤発火 解消。
-- 検証: 新 e2e 4 件 (self/FILE/opp 帰属/二重発火なし) fail→pass / tsc green / vitest **1646 pass** /
-  smoke 1000 ×3 (exc 0) / adversarial workflow 6 agents (confirmed 1=stale comment 反映済)。
-- ※ `caseResolvedHandRemove` 共通クラスは a1 inline 化で**未使用化** (unit test は残置、害なし)。詳細 `.claude/bugs/BUG-089.md`。
-- 追補 (同 user 依頼): a2 も a1 同様 **inline 展開** (`caseDeclaredEvidenceFlip` factory 非経由)。
-  factory 出力と **byte 一致** (deep-equal で確認、`$cost` 動的 delta 保存 / 挙動不変)。`caseDeclaredEvidenceFlip` も未使用化。
-
-## 2026-06-01 BUG-090 — a1 が auto-phase 解決編移行で「何も起きない」(user 報告)
-
-- 症状: FILE7→解決編でも a1 の手札リムーブ picker が出ない。BUG-089 で emit/queue は直ったが先の human pick が UI 未到達。
-- RCA: human の discard は side-channel `__pendingEffectPickQueue` に defer されるが、**auto-phase 経由 (driveOppTurn の startTurn(self)+runAllUntilEmpty) は dispatchEngineAction と違い side-channel を store へ転送せず** pick 取り残し。useSpectatorTurnDriver も同型欠落 (Workflow 8 agents 確認)。
-- 修正: `useEngineDispatch` に共有 helper `surfacePendingSideChannels()` (hirameki/misread/effectPick/deckReveal drain→store.set)、driveOppTurn / driveSelfTurn の produce 直後に呼ぶ。driver は Playmat で mount=src/App+meta 両経路カバー。
-- ※ `discard` の pick UI は EffectPickerModal ではなく **HandZone pick mode** (`.hand-card--pickable` auto-expand)。
-- 検証: 新 unit test (driveOppTurn FILE7→pick surface, 修正前 fail) + Playwright e2e (実機 picker→手札選択→remove 移動) / vitest **1647** / smoke 1000 exc0 (AI 不変)。詳細 `.claude/bugs/BUG-090.md`。
+- DeckRevealOverlay (src/ui) がカード**名のみ**表示 → カード画像 (CardArt) 表示 + 「残りをデッキ下へ」「シャッフル」の演出を追加してほしい。`RealMatchView`/`Playmat` で mount。
 
 ## 継続中の不変条件 (meta-app 作業)
 
-- `src/` 配下 1 行も変更しない (import 経由のみ、`git status -- src/ vite.config.ts tsconfig.json tests/` = 0 で確認)
-- Phase 11 統合経路保持 (`useGameStateStore` / `setGameState` / `customGameStart`)
-- meta-app は port 5174 独立 (`npm run dev:meta` / `build:meta` / `test:meta:e2e`)、localStorage namespace `conan.meta.v1.*`
-- カード画像非同梱・公開ホスティング禁止 (法務スタンス)
-- tsc は `npx tsc --noEmit -p meta-app/tsconfig.json` (root `npm run typecheck` は src/ 用)
+- `src/` は meta-app 機能では import のみ (engine/UI バグ修正は例外として可)。
+- Phase 11 統合経路保持 (`useGameStateStore` / `setGameState` / `customGameStart`)。meta-app は port 5174 独立。
+- カード画像非同梱・公開ホスティング禁止 (法務スタンス)。tsc は `npx tsc --noEmit -p meta-app/tsconfig.json`。
 
-## 持ち越し (Phase 17+)
+## 持ち越し
 
-- 動的 unlock (章チェーン) / 各ステップ末クイズ / 練習試合中 src/ TutorialOverlay active 化
-- 章別練習シナリオ / viewer スワイプ操作 / バンドル分割
-- engine 側: BUG-078 (effectPickResolve re-queue 未実装) — `.claude/bugs/` 参照
+- BUG-092 (turn-scope keyword read) / BUG-078 (effectPickResolve re-queue 未実装)。
+- Phase 17+: 動的 unlock / クイズ / 章別練習シナリオ / バンドル分割。
