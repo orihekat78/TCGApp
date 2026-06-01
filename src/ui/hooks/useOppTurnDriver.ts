@@ -24,7 +24,7 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
 import { mutate as engineMutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { dispatchEngineAction } from './useEngineDispatch.js';
+import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
 
 let isDriving = false;
 
@@ -88,6 +88,11 @@ export function driveOppTurn(): void {
         runAllUntilEmpty(draft);
       }),
     );
+    // BUG-090: self の auto-phase (上の startTurn(self)+runAllUntilEmpty) で
+    // 事件編→解決編 になり case card a1 (case:to-resolved → discard) が発火すると、
+    // human の discard pick が side-channel queue に積まれる。dispatchEngineAction と
+    // 同様に store へ転送しないと EffectPickerModal が出ず「何も起きない」ため、ここで surface する。
+    surfacePendingSideChannels();
   } finally {
     isDriving = false;
   }

@@ -528,6 +528,33 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
 // ---- public API ----
 
 /**
+ * BUG-090: dispatchEngineAction 以外で human(self) の effect を runAllUntilEmpty で
+ * 解決する経路 (ターンドライバ等) 向けに、engine 側 globalThis 側チャネルへ積まれた
+ * pending pick / hirameki / misread / deckReveal を Zustand store に転送する。
+ *
+ * 背景: human の auto-phase (driveOppTurn の flow.startTurn(self)+runAllUntilEmpty) で
+ *   事件編→解決編 になり case card a1 (case:to-resolved → discard) が発火すると、
+ *   discard pick が __pendingEffectPickQueue に積まれる。dispatchEngineAction は produce 後に
+ *   各 side-channel を drain → store.set しているが、ターンドライバ側ではこの転送が無く
+ *   pick が取り残されて EffectPickerModal が出ない (= 「何も起きない」) バグだった。
+ *
+ * dispatchEngineAction の post-produce 同期と異なり action 種別が無いため、
+ * 「新規 pending があれば先頭を set」(非 null のみ) の共通動作のみ行う。
+ * effectPickResolve 等の「queue 空なら null クリア」特殊処理は dispatchEngineAction 専用。
+ */
+export function surfacePendingSideChannels(): void {
+  const store = useGameStateStore.getState();
+  const hiramekiSide = _drainPendingHirameki();
+  if (hiramekiSide) store.setPendingHirameki(hiramekiSide);
+  const misreadSide = _drainPendingMisread();
+  if (misreadSide) store.setPendingMisread(misreadSide);
+  const effectPickSide = _drainPendingEffectPickSide();
+  if (effectPickSide) store.setPendingEffectPick(effectPickSide);
+  const deckRevealSide = _drainPendingDeckRevealSide();
+  if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
+}
+
+/**
  * Pure dispatcher. React の外からも (テスト等) 呼べる。
  *
  *   const result = dispatchEngineAction({ type: 'reasoning', uid: 'partner:self' });

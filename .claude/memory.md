@@ -57,6 +57,14 @@
 - 追補 (同 user 依頼): a2 も a1 同様 **inline 展開** (`caseDeclaredEvidenceFlip` factory 非経由)。
   factory 出力と **byte 一致** (deep-equal で確認、`$cost` 動的 delta 保存 / 挙動不変)。`caseDeclaredEvidenceFlip` も未使用化。
 
+## 2026-06-01 BUG-090 — a1 が auto-phase 解決編移行で「何も起きない」(user 報告)
+
+- 症状: FILE7→解決編でも a1 の手札リムーブ picker が出ない。BUG-089 で emit/queue は直ったが先の human pick が UI 未到達。
+- RCA: human の discard は side-channel `__pendingEffectPickQueue` に defer されるが、**auto-phase 経由 (driveOppTurn の startTurn(self)+runAllUntilEmpty) は dispatchEngineAction と違い side-channel を store へ転送せず** pick 取り残し。useSpectatorTurnDriver も同型欠落 (Workflow 8 agents 確認)。
+- 修正: `useEngineDispatch` に共有 helper `surfacePendingSideChannels()` (hirameki/misread/effectPick/deckReveal drain→store.set)、driveOppTurn / driveSelfTurn の produce 直後に呼ぶ。driver は Playmat で mount=src/App+meta 両経路カバー。
+- ※ `discard` の pick UI は EffectPickerModal ではなく **HandZone pick mode** (`.hand-card--pickable` auto-expand)。
+- 検証: 新 unit test (driveOppTurn FILE7→pick surface, 修正前 fail) + Playwright e2e (実機 picker→手札選択→remove 移動) / vitest **1647** / smoke 1000 exc0 (AI 不変)。詳細 `.claude/bugs/BUG-090.md`。
+
 ## 継続中の不変条件 (meta-app 作業)
 
 - `src/` 配下 1 行も変更しない (import 経由のみ、`git status -- src/ vite.config.ts tsconfig.json tests/` = 0 で確認)

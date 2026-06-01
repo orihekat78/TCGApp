@@ -16,7 +16,7 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
 import { mutate as engineMutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { dispatchEngineAction } from './useEngineDispatch.js';
+import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
 
 let isDriving = false;
 
@@ -61,6 +61,10 @@ function driveSelfTurn(): void {
         runAllUntilEmpty(draft);
       }),
     );
+    // BUG-090: useOppTurnDriver と対称。auto-phase 解決で side-channel queue に積まれた
+    // pending (deckReveal 演出等) を store へ転送し取り残しを防ぐ。観戦モードは human pick が
+    // 出ない (__humanPlayerSide=null) が、全ターンドライバで一貫して surface しておく。
+    surfacePendingSideChannels();
   } finally {
     isDriving = false;
   }

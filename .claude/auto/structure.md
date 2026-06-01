@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 156
-- **ファイル数**: 1539
+- **ファイル数**: 1544
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -223,6 +223,7 @@
     - `BUG-087.md`
     - `BUG-088.md`
     - `BUG-089.md`
+    - `BUG-090.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -467,6 +468,8 @@
     - `smoke-2026-06-01-2.md` — Smoke 1000戦レポート — smoke-2026-06-01-081240
     - `smoke-2026-06-01-3.json`
     - `smoke-2026-06-01-3.md` — Smoke 1000戦レポート — smoke-2026-06-01-081854
+    - `smoke-2026-06-01-4.json`
+    - `smoke-2026-06-01-4.md` — Smoke 1000戦レポート — smoke-2026-06-01-102852
     - `smoke-2026-06-01.json`
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
     - `smoke-baseline.json`
@@ -1513,6 +1516,7 @@
     - `bug-037.spec.ts` — BUG-037: 現場カードの sleep / stun が computed transform で実際に rotate されるかを検証。
     - `bug-085.spec.ts` — E2E regression: BUG-085 — 事件カード宣言能力の flipFaceUpEvidence コスト picker
     - `bug-086.spec.ts` — E2E regression: BUG-086 — 証拠エリアの「表向き」カードが evidenceToHand pick で選択不可
+    - `bug-090-case-resolved-pick.spec.ts` — E2E regression: BUG-090 — human の auto-phase で 事件編→解決編 になり case card a1
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
@@ -1673,6 +1677,7 @@
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
       - `useEvidenceFlipPicker.test.ts` — BUG-085: useEvidenceFlipPicker store + Promise hook の単体テスト
       - `useNextHintPicker.test.ts` — 2026-05-28: useNextHintPicker hook tests
+      - `useOppTurnDriver.case-resolved-pick.test.ts` — BUG-090: human の auto-phase で 事件編→解決編 になり case card a1 (case:to-resolved →
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
       - `useOppTurnDriver.test.ts` — Phase 8.7b: useOppTurnDriver tests
       - `useSceneSwitchPickerStore.test.ts` — tests/ui/hooks/useSceneSwitchPickerStore.test.…
