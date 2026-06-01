@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `cd90a89baaf7`
+> Source hash: `eab28c454a78`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
@@ -53,7 +53,7 @@
 | [`src/cards/ct-d08/D08023.ts`](../../../src/cards/ct-d08/D08023.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-d08/D08024.ts`](../../../src/cards/ct-d08/D08024.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/cards/ct-d08/D08025.ts`](../../../src/cards/ct-d08/D08025.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
-| [`src/cards/ct-d08/D08026.ts`](../../../src/cards/ct-d08/D08026.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
+| [`src/cards/ct-d08/D08026.ts`](../../../src/cards/ct-d08/D08026.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-d08/index.ts`](../../../src/cards/ct-d08/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
 ## cards/ct-d11 (22)

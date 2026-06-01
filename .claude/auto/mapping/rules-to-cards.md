@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3280d5cc978c`
+> Source hash: `6381892bd7e6`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -32,7 +32,7 @@
 | [`16-card-set.md`](../../rules/16-card-set.md) | 2 | `cards/ct-d08/D08021.ts`, `engine/mutate/scene.ts` |
 | [`17-icons.md`](../../rules/17-icons.md) | 48 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseTraitConditioned.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 45 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 3 | `engine/cond/eval.ts`, `engine/mutate/partner.ts`, `ui/hooks/usePartner.ts` |
-| [`19-special-rules.md`](../../rules/19-special-rules.md) | 17 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08025.ts` ほか 14 件 |
+| [`19-special-rules.md`](../../rules/19-special-rules.md) | 18 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d08/D08025.ts` ほか 15 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 11 | `cards/ct-d08/D08024.ts`, `cards/ct-d08/D08025.ts`, `cards/ct-d11/D11019.ts` ほか 8 件 |
 | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 22 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d08/D08005.ts` ほか 19 件 |
 | [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) | 17 | `cards/_shared/cutinFixedAP.ts`, `cards/ct-d08/D08007.ts`, `cards/ct-d08/D08008.ts` ほか 14 件 |

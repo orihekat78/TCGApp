@@ -40,6 +40,23 @@
   - **D11020 stale-test** (製品バグなし): `4ffa74f` で D11020 が choice→sceneRemove 短縮形 atom に refactor 済 (挙動正)。`event-remove-by-ap.spec.ts` の probe が旧 choice path を読んでいた → 新 `atom/sceneRemove` path に更新。
   - 検証: full e2e **56 passed / 0 failed**。
 
+## 2026-06-01 BUG-089 — 事件カード a1「解決編→手札1枚リムーブ」が実プレイで一度も発火しない (user 報告 / commit bfb9c36)
+
+- 症状: D08026 / D11021 の a1 が解決編移行で発火せず。原因 2 層 + matcher:
+  - Layer1 (engine): `case:to-resolved` hook を emit するのは**未使用の caseToResolved atom のみ**。
+    実プレイの移行 (assist / FILE≥7 自動 / AI policy) は `case.status` 直接代入で hook 未発火 → a1 永遠 noop。
+  - Layer2 (matcher): `caseResolvedHandRemove` の matcher が payload.player のみ見てカード所有者を見ず、
+    self 解決編で opp の a1 も二重発火 / opp 解決編ではどの a1 も発火しない。
+- 修正: `mutate/case.ts toResolved` で hook emit (source.uid=`case:${p}`)、**全移行経路を toResolved に集約**
+  (file.ts / partner.ts / ai/policy.ts 直接代入除去 / atom-handlers 重複 emit 除去)。
+  a1 を D08013 同様 inline `AbilityDef` (`trigger{hook:'case:to-resolved', selfOnly:true}` / `discard self n=1`)。
+  selfOnly で `source.uid===card.uid` gate → 二重発火 / opp 誤発火 解消。
+- 検証: 新 e2e 4 件 (self/FILE/opp 帰属/二重発火なし) fail→pass / tsc green / vitest **1646 pass** /
+  smoke 1000 ×3 (exc 0) / adversarial workflow 6 agents (confirmed 1=stale comment 反映済)。
+- ※ `caseResolvedHandRemove` 共通クラスは a1 inline 化で**未使用化** (unit test は残置、害なし)。詳細 `.claude/bugs/BUG-089.md`。
+- 追補 (同 user 依頼): a2 も a1 同様 **inline 展開** (`caseDeclaredEvidenceFlip` factory 非経由)。
+  factory 出力と **byte 一致** (deep-equal で確認、`$cost` 動的 delta 保存 / 挙動不変)。`caseDeclaredEvidenceFlip` も未使用化。
+
 ## 継続中の不変条件 (meta-app 作業)
 
 - `src/` 配下 1 行も変更しない (import 経由のみ、`git status -- src/ vite.config.ts tsconfig.json tests/` = 0 で確認)
