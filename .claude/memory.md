@@ -21,9 +21,9 @@
 
 - `mutate.char.grantKeyword(scope='turn')` は `turnEffects['grantedKeywords']` に格納するが `read.char.keywords()` が読まない → 突撃4枚 (D08005/D08011/D11015/D11019) の付与が空振り。BUG-091 とは独立。詳細 `.claude/bugs/BUG-092.md`。
 
-## D11019 残作業 (user 指摘 #1, 本セッション継続)
+## 2026-06-01 D11019 deck reveal UI 改善 (user 指摘 #1, 完了)
 
-- DeckRevealOverlay (src/ui) がカード**名のみ**表示 → カード画像 (CardArt) 表示 + 「残りをデッキ下へ」「シャッフル」の演出を追加してほしい。`RealMatchView`/`Playmat` で mount。
+- DeckRevealOverlay (src/ui) を刷新: カード**画像** (CardArt) 表示 + reveal→toBottom(残りをデッキ下へ slide)→shuffle(山札シャッフル) の3フェーズ演出。`tests/e2e/deck-reveal-overlay-ui.spec.ts` で検証。`RealMatchView`/`Playmat` mount で meta も反映。
 
 ## 継続中の不変条件 (meta-app 作業)
 

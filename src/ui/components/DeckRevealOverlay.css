@@ -1,4 +1,5 @@
 /* BUG-061: DeckRevealOverlay — D11019 等の deckRevealUntil 演出
+ * 2026-06-01 (user 指摘 #1): カード画像 + デッキ下移動 / シャッフル演出
  * z-index 9050: ContactFlash(9000) より上、EffectPickerModal(9700) より下 */
 
 .deck-reveal-overlay {
@@ -18,8 +19,8 @@
   border: 2px solid #4a5070;
   border-radius: 8px;
   padding: 18px 24px;
-  min-width: 360px;
-  max-width: 640px;
+  min-width: 380px;
+  max-width: 560px;
   font-family: system-ui, sans-serif;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
 }
@@ -40,7 +41,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   border: 1px solid #4a5070;
   background: #2a3050;
   border-radius: 4px;
@@ -50,10 +51,28 @@
   animation-delay: calc(var(--reveal-index) * 0.5s);
 }
 
+/* カード画像 (縦カードのサムネイル) */
+.deck-reveal-card-art {
+  width: 46px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid #5a6080;
+  background: #111420;
+  flex: 0 0 auto;
+}
+
 .deck-reveal-card.is-matched {
   background: #4a3060;
   border-color: #b890e0;
   box-shadow: 0 0 12px rgba(180, 140, 230, 0.55);
+}
+
+.deck-reveal-card.is-matched .deck-reveal-card-art {
+  width: 54px;
+  height: 75px;
+  border-color: #b890e0;
+  box-shadow: 0 0 10px rgba(180, 140, 230, 0.7);
 }
 
 .deck-reveal-card-num {
@@ -78,7 +97,100 @@
 }
 
 @keyframes deck-reveal-flip {
-  0%   { opacity: 0; transform: translateY(8px) rotateX(-20deg); }
-  50%  { opacity: 0.6; transform: translateY(0) rotateX(10deg); }
-  100% { opacity: 1; transform: translateY(0) rotateX(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(8px) rotateX(-20deg);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateY(0) rotateX(10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+
+/* phase=toBottom: matched 以外を「デッキの下へ」スライドダウン + フェード。
+ * matched は登場確定として残し pulse。 */
+.deck-reveal-list.phase-toBottom .deck-reveal-card.is-rest {
+  animation: deck-to-bottom 0.9s ease-in forwards;
+}
+
+.deck-reveal-list.phase-toBottom .deck-reveal-card.is-matched {
+  animation: deck-matched-stay 0.9s ease-out forwards;
+}
+
+@keyframes deck-to-bottom {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(120px) scale(0.7);
+  }
+}
+
+@keyframes deck-matched-stay {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.06);
+    box-shadow: 0 0 18px rgba(180, 140, 230, 0.85);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* phase=shuffle: 山札シャッフル演出 (カードバックが交差) */
+.deck-reveal-shuffle {
+  position: relative;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-shuffle-card {
+  position: absolute;
+  width: 52px;
+  height: 72px;
+  border-radius: 4px;
+  border: 1px solid #5a6080;
+  background: linear-gradient(135deg, #2a3050 0%, #3a4070 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.deck-shuffle-card.s1 {
+  animation: deck-shuffle-a 0.5s ease-in-out infinite alternate;
+}
+.deck-shuffle-card.s2 {
+  animation: deck-shuffle-b 0.5s ease-in-out infinite alternate;
+}
+.deck-shuffle-card.s3 {
+  animation: deck-shuffle-a 0.5s 0.12s ease-in-out infinite alternate;
+}
+.deck-shuffle-card.s4 {
+  animation: deck-shuffle-b 0.5s 0.12s ease-in-out infinite alternate;
+}
+
+@keyframes deck-shuffle-a {
+  0% {
+    transform: translateX(-26px) rotate(-8deg);
+  }
+  100% {
+    transform: translateX(26px) rotate(8deg);
+  }
+}
+
+@keyframes deck-shuffle-b {
+  0% {
+    transform: translateX(26px) rotate(8deg);
+  }
+  100% {
+    transform: translateX(-26px) rotate(-8deg);
+  }
 }
