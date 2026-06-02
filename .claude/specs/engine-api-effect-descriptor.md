@@ -124,3 +124,4 @@ const onEnter = engine.effect.choose([
 - [engine-api-targeting.md](engine-api-targeting.md) — `TargetingRef`
 - [engine-api-conditions.md](engine-api-conditions.md) — `Condition`
 - [engine-api-resolver.md](engine-api-resolver.md)
+- [card-authoring-convention.md](card-authoring-convention.md) — 1行atom / comment-above 規約

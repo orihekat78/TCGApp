@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1560
+- **ファイル数**: 1562
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -850,6 +850,8 @@
     - `2026-05-11-ui-turn-flags.md` — ターンスコープフラグ・スタン特殊挙動 (2026-05-11)
     - `2026-05-17-phase5-advance-guardrails.md` — Phase 5 Advance Guardrails
     - `card-addition-checklist.md` — 新カード追加時のチェックリスト
+    - `card-authoring-convention.md` — カード実装コーディング規約
+    - `card-condition-catalog.md` — condition カタログ (カード実装早見表)
     - `cpu-visibility-options.md` — CPU 行動可視化 — 解決案候補 (BUG-059 / user_request 20260522_01 #15)
     - `DEFERRED-INDEX.md` — 保留中タスクの一覧
     - `engine-api-atom-verbs.md` — engine-api-atom-verbs

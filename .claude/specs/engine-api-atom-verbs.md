@@ -87,3 +87,4 @@
 - 実装: [atom-handlers.ts](../../src/engine/effect/atom-handlers.ts)
 - mutate primitives: [engine-api-state-mutate.md](engine-api-state-mutate.md)
 - Effect Descriptor: [engine-api-effect-descriptor.md](engine-api-effect-descriptor.md)
+- カード規約: [card-authoring-convention.md](card-authoring-convention.md)

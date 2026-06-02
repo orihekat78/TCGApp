@@ -96,5 +96,5 @@ CLAUDE.md §セルフレビュー §Playwright 1 試合通し検証 (Round 4a Ph
 ## 関連
 
 - [.claude/specs/risk-and-bug-tracker.md](risk-and-bug-tracker.md) / [.claude/bugs/index.base](../bugs/index.base) — バグ管理 hub + Obsidian Base view
-- [.claude/CLAUDE.md](../CLAUDE.md) / [.claude/specs/INDEX.md](INDEX.md) — 規約 + spec 一覧
+- [.claude/CLAUDE.md](../CLAUDE.md) / [INDEX.md](INDEX.md) / [card-authoring-convention.md](card-authoring-convention.md) / [card-condition-catalog.md](card-condition-catalog.md) — 規約 + spec 一覧
 - [tests/integration/dispatch-to-state.test.ts](../../tests/integration/dispatch-to-state.test.ts) — end-to-end integration test (Round 4a 新規)

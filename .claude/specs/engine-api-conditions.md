@@ -88,3 +88,4 @@ engine.cond.describe(c): string                  // UI 説明文用 (例: "事�
 ## 関連
 - [engine-api-events.md](engine-api-events.md) — Hook の condition フィールド
 - [engine-api-resolver.md](engine-api-resolver.md)
+- [card-condition-catalog.md](card-condition-catalog.md) — カード実装の condition 早見表
