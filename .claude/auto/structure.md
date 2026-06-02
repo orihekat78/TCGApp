@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1562
+- **ファイル数**: 1563
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1564,6 +1564,7 @@
       - `player-resolution-bug.test.ts` — tests/engine/effect/player-resolution-bug
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
+      - `short-form-characterization.test.ts` — 短縮形 characterization test (Phase2 refactor の動作不変オラクル)
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests
     - **`event/`**
       - `hirameki-listener.test.ts` — Phase 8 完全クローズ Commit 3a: Hirameki listener tests
