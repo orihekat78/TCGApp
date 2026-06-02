@@ -23,6 +23,7 @@ import { candidates as targetCandidates } from '../target/candidates.js';
 import { evalDyn } from '../dyn/eval.js';
 import type { GameState, Effect, EffectCtx, TargetingRef } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
+import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
 
 type Player = 'self' | 'opp';
 
@@ -213,11 +214,7 @@ export function tryRePickFromAtom(
  * カード DSL では `evidenceToHand({player:'self', n:1})` のように書きたく、target query は
  * verb 既定 (area/side/chooser) を engine が推論する。
  */
-const PB_DEFAULT_PICK_AREA: Record<string, 'evidence' | 'hand' | 'remove'> = {
-  evidenceToHand: 'evidence',
-  discard: 'hand',
-  handAddFromRemove: 'remove',
-};
+// 短縮形の verb → 既定 area マッピングは ATOM_PICK_SPEC (atom-pick-spec.ts) に集約。
 
 function substituteAtomPick(
   state: GameState,
@@ -237,19 +234,13 @@ function substituteAtomPick(
   // - max: number → { min: 0, max } 任意 (0 枚 skip 可)
   // - filter → query.filter に pass-through (trait / apMax / levelMax / cardName 等)
   let effectiveTarget = args.target as { kind?: string; query?: unknown; n?: { min?: number; max?: number }; chooser?: Player } | undefined;
-  const hasShortForm = effectiveTarget === undefined && PB_DEFAULT_PICK_AREA[verbStr]
-    && (typeof args.n === 'number' || typeof args.max === 'number');
-  if (hasShortForm) {
-    const defaultArea = PB_DEFAULT_PICK_AREA[verbStr];
+  // 短縮形 (PB のみ初期 walk で target 構築。PA は実行時 atom-handler 側で解決): ATOM_PICK_SPEC が権威。
+  const sfSpec = ATOM_PICK_SPEC[verbStr];
+  if (effectiveTarget === undefined && sfSpec?.mode === 'PB'
+    && (typeof args.n === 'number' || typeof args.max === 'number')) {
     const p = (args.player as Player) ?? 'self';
-    const nMin = typeof args.n === 'number' ? args.n : 0;
-    const nMax = typeof args.n === 'number' ? args.n : (args.max as number);
-    const filterObj = (args.filter && typeof args.filter === 'object') ? args.filter as Record<string, unknown> : undefined;
-    effectiveTarget = {
-      kind: 'pick',
-      query: filterObj ? { area: defaultArea, side: p, filter: filterObj } : { area: defaultArea, side: p },
-      n: { min: nMin, max: nMax },
-      chooser: p,
+    effectiveTarget = buildShortFormPick(sfSpec.defaultArea, args, p, p) as {
+      kind?: string; query?: unknown; n?: { min?: number; max?: number }; chooser?: Player;
     };
   }
   const target = effectiveTarget;

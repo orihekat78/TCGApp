@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1563
+- **ファイル数**: 1568
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -86,11 +86,13 @@
       - **`by-spec/`**
         - `2026-05-11-ui-action-flows.md` — 🤖 Spec 参照ハブ: 2026-05-11-ui-action-flows
         - `2026-05-11-ui-game-setup-flows.md` — 🤖 Spec 参照ハブ: 2026-05-11-ui-game-setup-flows
+        - `card-authoring-convention.md` — 🤖 Spec 参照ハブ: card-authoring-convention
         - `cards-data--INDEX.md` — 🤖 Spec 参照ハブ: INDEX
         - `caseDeclaredEvidenceFlip.md` — 🤖 Spec 参照ハブ: caseDeclaredEvidenceFlip
         - `caseResolvedHandRemove.md` — 🤖 Spec 参照ハブ: caseResolvedHandRemove
         - `caseTraitConditioned.md` — 🤖 Spec 参照ハブ: caseTraitConditioned
         - `cutinFixedAP.md` — 🤖 Spec 参照ハブ: cutinFixedAP
+        - `engine-api-atom-verbs.md` — 🤖 Spec 参照ハブ: engine-api-atom-verbs
         - `engine-api-card-abilities.md` — 🤖 Spec 参照ハブ: engine-api-card-abilities
         - `engine-api-card-shape.md` — 🤖 Spec 参照ハブ: engine-api-card-shape
         - `engine-api-effect-descriptor.md` — 🤖 Spec 参照ハブ: engine-api-effect-descriptor
@@ -480,6 +482,8 @@
     - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
     - `smoke-2026-06-01.json`
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
+    - `smoke-2026-06-02.json`
+    - `smoke-2026-06-02.md` — Smoke 1000戦レポート — smoke-2026-06-02-123940
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -1207,6 +1211,7 @@
     - **`effect/`**
       - `.gitkeep`
       - `atom-handlers.ts` — engine.effect.runAtom — Atom Verb dispatcher
+      - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
       - `index.ts` — engine.effect namespace barrel
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)

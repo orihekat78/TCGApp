@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `4d681eaccc0b`
+> Source hash: `e43fd149b3cc`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -16,14 +16,17 @@
 - [`15-abilities-effects.md`](../by-rule/15-abilities-effects.md)
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 
-## 📐 参照 Spec (2)
+## 📐 参照 Spec (4)
 
+- [`card-authoring-convention`](../by-spec/card-authoring-convention.md)
+- [`engine-api-atom-verbs`](../by-spec/engine-api-atom-verbs.md)
 - [`engine-api-effect-descriptor`](../by-spec/engine-api-effect-descriptor.md)
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 
-## 📄 ソース (6)
+## 📄 ソース (7)
 
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
+- [`src/engine/effect/atom-pick-spec.ts`](../../../../src/engine/effect/atom-pick-spec.ts)
 - [`src/engine/effect/index.ts`](../../../../src/engine/effect/index.ts)
 - [`src/engine/effect/resolve-picks.ts`](../../../../src/engine/effect/resolve-picks.ts)
 - [`src/engine/effect/resolver.ts`](../../../../src/engine/effect/resolver.ts)
