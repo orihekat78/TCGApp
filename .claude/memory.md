@@ -29,6 +29,17 @@
 
 - DeckRevealOverlay (src/ui) を刷新: カード**画像** (CardArt) 表示 + reveal→toBottom(残りをデッキ下へ slide)→shuffle(山札シャッフル) の3フェーズ演出。`tests/e2e/deck-reveal-overlay-ui.spec.ts` で検証。`RealMatchView`/`Playmat` mount で meta も反映。
 
+## 2026-06-02 カード atom コンパクト化 + 規約制定 (完了)
+
+- 規約2本制定: `card-authoring-convention.md` (1行atom/comment-above/短縮形優先/冗長choice除去) + `card-condition-catalog.md` (Condition.kind 早見表)。既存 doc 相互リンク。
+- engine: 短縮形を `ATOM_PICK_SPEC` テーブル + `buildShortFormPick` に一本化 (動作不変 refactor)。新 PA 短縮形 sceneSetState/charModifyLP/sceneEnter(area) + dyn-delta。adversarial 3 lens で動作不変確認。
+- 全 non-partner カードを comment-above 1行形に統一 (B0-B5)。冗長 choice→短縮形。partner (D08001/02,D11001/02)・`_shared/*` 対象外。
+- **水平展開 (完了)**: 残る explicit `kind:'pick'` は全て正当 — D08021(multi-pick charStackCard) / D08026・D11021(dyn-delta 宣言能力=rule3例外) / D11014(bind:$entered) / `_shared/*`(対象外)。残 choice は D11012(真の2分岐)等。除去可能な冗長 pick は皆無。
+- **教訓1**: dyn-delta(`delta:{dyn}`) 宣言能力を短縮形にすると AI 列挙時 costPaid 不在で dyn eval throw → explicit target 保持必須 (D11021 を explicit に戻して解消)。
+- **教訓2**: 単一 option choice 除去は実行結果不変だが AI seeded 列挙木が変わり smoke 決着が 471/529→502/498 に動く (bisect で card 動作 byte 不変を確認)。
+- **教訓3**: per-card test(隔離) は invariant/列挙回帰を見逃す → full suite + smoke 中央検証が必須 (workflow 並列 reformat の smoke 667 例外を中央検証で検出)。
+- commit: 9f6e1be(規約) / 57a0f08・02695af・77630c1(engine) / 481d827(cards)。詳細 changelog 2026-06-02-01。
+
 ## 継続中の不変条件 (meta-app 作業)
 
 - `src/` は meta-app 機能では import のみ (engine/UI バグ修正は例外として可)。

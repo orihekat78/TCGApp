@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1585
+- **ファイル数**: 1586
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -291,6 +291,7 @@
     - `2026-05-29-01-phase-15-tutorial-complete.md`
     - `2026-05-29-02-phase-16-tutorial-lesson-viewer.md`
     - `2026-05-29-03-phase-17-tutorial-real-board.md`
+    - `2026-06-02-01-card-atom-compaction.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
