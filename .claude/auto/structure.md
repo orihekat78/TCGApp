@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1566
+- **ファイル数**: 1567
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -995,6 +995,7 @@
       - `2026-06-02-card-atom-compaction.md` — カード atom コンパクト化 + 規約制定 Implementation Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
+      - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
