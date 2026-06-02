@@ -8,10 +8,9 @@
 //
 // a1: enter trigger → 1ドロー → 手札1リム
 //     物理動作 atom を順に並べるだけ。pick query は engine が verb 既定で推論。
-// a2: cutinFixedAP({ delta:1000 })
+// a2: 【カットイン】AP＋1000 (inline — 旧 cutinFixedAP factory を展開)
 
 import type { AbilityDef, CardDef } from '@/engine/types';
-import { cutinFixedAP } from '../_shared/index.js';
 
 const a1: AbilityDef = {
   id: 'a1',
@@ -31,6 +30,17 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
+// a2: 【カットイン】AP＋1000 — コンタクト中の攻撃キャラ ($contact.byUid) を contact scope で加算
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-hand',
+  trigger: { hook: 'effect:declared', optional: true, selfOnly: true }, // 【カットイン】(コンタクト中に手札から使用)
+  effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
+  description: '【カットイン】AP＋1000',
+  ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'],
+};
+
 export const D08015: CardDef = {
   id: 'D08015',
   no: '0495/D08015',
@@ -44,7 +54,7 @@ export const D08015: CardDef = {
   keywords: [],
   rarity: 'D',
   imageUrl: '1743743093493248.jpg',
-  abilities: [a1, cutinFixedAP({ delta: 1000, abilityId: 'a2' })],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/09-cutin-disguise.md',
     'rules/15-abilities-effects.md',

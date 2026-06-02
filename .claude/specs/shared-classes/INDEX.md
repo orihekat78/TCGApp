@@ -8,7 +8,7 @@
 | クラス | spec | 出現枚数 | パラメータ | 性質 |
 |--------|------|---------|-----------|------|
 | partnerColorKeyword | [spec](partnerColorKeyword.md) | 5+ | { color, kw, scope?, additionalCondition? } | continuous |
-| cutinFixedAP | [spec](cutinFixedAP.md) | 7 | { delta } | icon-cutin |
+| ~~cutinFixedAP~~ | 廃止 2026-06-02 | — | カットインは各カードに inline atom で記述 (D08007 同型) | — |
 | hiramekiCharStun | [spec](hiramekiCharStun.md) | 4 | { side?='either', n?=1 } | icon-flash |
 | hiramekiDraw | [spec](hiramekiDraw.md) | 4 | { n=1 } | icon-flash |
 | caseTraitConditioned | [spec](caseTraitConditioned.md) | 4 | { trait, conditionInner } | wrapper |
@@ -36,7 +36,7 @@
 cards/
 ├── _shared/
 │   ├── partnerColorKeyword.ts
-│   ├── cutinFixedAP.ts
+│   ├── (cutinFixedAP.ts — 2026-06-02 廃止: cutin は inline atom 化)
 │   ├── ...
 │   └── index.ts (re-export)
 ├── ct-d08/

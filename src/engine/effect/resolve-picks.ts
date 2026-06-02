@@ -244,7 +244,14 @@ function substituteAtomPick(
     };
   }
   const target = effectiveTarget;
-  if (!target || target.kind !== 'pick' || !target.query) return atom as Effect;
+  if (!target || target.kind !== 'pick' || !target.query) {
+    // 非 pick atom (uid=$contact.byUid 等で target なし) でも {dyn} arg は literal 化する。
+    // 例: D08007 cutin の delta:{dyn:'$self.sceneTrait.少年探偵団 * 1000'} (pick 不在だが dyn 評価が必要)。
+    // resolveDynArgs は {dyn} object のみ変換し、それ以外は同一参照を返すため既存 atom は no-op。
+    const dynResolved = resolveDynArgs(state, args, ctx);
+    if (dynResolved === args) return atom as Effect;
+    return { kind: 'atom', verb: atom.verb as never, args: dynResolved } as Effect;
+  }
 
   // BUG-065: 2 つの effect 記述形式を区別して解決:
   //   Pattern A: { uid: '$pick', target: {kind:'pick',...} } (sceneRemove / charModifyAP 等)

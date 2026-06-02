@@ -9,10 +9,9 @@
 //   【カットイン】AP＋1000
 //
 // a1: 個別実装 sequence (D11020 と同じ DSL コンパクト形 — 1 step = 1 行 + 公式テキスト対応コメント)
-// a2: cutinFixedAP({ delta:1000 })
+// a2: 【カットイン】AP＋1000 (inline — 旧 cutinFixedAP factory を展開)
 
 import type { AbilityDef, CardDef, GameState } from '@/engine/types';
-import { cutinFixedAP } from '@/cards/_shared/cutinFixedAP';
 
 const a1: AbilityDef = {
   id: 'a1',
@@ -54,6 +53,17 @@ const a1: AbilityDef = {
   ],
 };
 
+// a2: 【カットイン】AP＋1000 — コンタクト中の攻撃キャラ ($contact.byUid) を contact scope で加算
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-hand',
+  trigger: { hook: 'effect:declared', optional: true, selfOnly: true }, // 【カットイン】(コンタクト中に手札から使用)
+  effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
+  description: '【カットイン】AP＋1000',
+  ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'],
+};
+
 export const D11019: CardDef = {
   id: 'D11019',
   no: '0944/D11019',
@@ -64,7 +74,7 @@ export const D11019: CardDef = {
   traits: [],
   rarity: 'D',
   imageUrl: '1775608977394523.jpg',
-  abilities: [a1, cutinFixedAP({ delta: 1000, abilityId: 'a2' })],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/09-cutin-disguise.md',
     'rules/13-keywords.md',

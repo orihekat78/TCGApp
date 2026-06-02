@@ -22,7 +22,7 @@ type EffectCtx = {
   contact?: ContactCtx;                    // コンタクト中効果用バインド (G21)
   dyn?: Record<string, any>;               // 動的式評価結果 (G24)
                                            //   $self.ap → ctx.dyn.self.ap
-                                           //   $dyn.shogtanteiCount → ctx.dyn.shogtanteiCount
+                                           //   $self.sceneTrait.<特徴> → 現場(ctx.source.player)で<特徴>を持つキャラ数 (D08007 cutin scaling)
                                            //   evaluator は engine.dyn.eval(s, expr, ctx)
   rng?: () => number;                      // 確率系効果用
   parent?: EffectCtx;                      // ネスト効果の親参照

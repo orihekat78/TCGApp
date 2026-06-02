@@ -96,6 +96,27 @@ describe('engine.dyn.eval', () => {
       expect(evalDyn(s, '$self.lp', ctx)).toBe(2000);
     });
 
+    it('$self.sceneTrait.<trait> counts ctx.source.player scene chars with the trait (cutin scaling, D08007)', () => {
+      registerCardDef(defOf({ id: 'STK', traits: ['少年探偵団'] }));
+      registerCardDef(defOf({ id: 'OTH', traits: ['探偵'] }));
+      const s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 's1', cardId: 'STK' }),
+        makeChar({ uid: 's2', cardId: 'STK' }),
+        makeChar({ uid: 's3', cardId: 'OTH' }),
+      ]);
+      // cutin: source は手札カード (uid なし) でも player から自陣 scene を数える
+      const ctx = makeCtx({ source: { player: 'self', area: 'hand', cardId: 'D08007', abilityId: 'a1' } });
+      expect(evalDyn(s, '$self.sceneTrait.少年探偵団', ctx)).toBe(2);
+      expect(evalDyn(s, '$self.sceneTrait.少年探偵団 * 1000', ctx)).toBe(2000);
+    });
+
+    it('$self.sceneTrait counts opp scene when source.player=opp; 0 when none', () => {
+      registerCardDef(defOf({ id: 'STK', traits: ['少年探偵団'] }));
+      const s = withScene(createEmptyGameState(), 'opp', [makeChar({ uid: 'o1', cardId: 'STK' })]);
+      expect(evalDyn(s, '$self.sceneTrait.少年探偵団', makeCtx({ source: { player: 'opp', area: 'hand' } }))).toBe(1);
+      expect(evalDyn(s, '$self.sceneTrait.少年探偵団', makeCtx({ source: { player: 'self', area: 'hand' } }))).toBe(0);
+    });
+
     it('$self.uid returns ctx.source.uid', () => {
       const s = createEmptyGameState();
       const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'XYZ' } });

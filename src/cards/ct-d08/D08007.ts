@@ -14,16 +14,10 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-hand',
   trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
-  condition: { kind: 'turn', player: 'self' },
-  effect: {
-    kind: 'atom',
-    verb: 'charModifyAP',
-    args: {
-      uid: '$contact.byUid',
-      delta: '$dyn.shonentanteiCount * 1000',
-      scope: 'contact',
-    },
-  },
+  condition: { kind: 'turn', player: 'self' }, // 【自分ターン中】
+  // 自分の現場の[少年探偵団]1枚につき、コンタクト中の攻撃キャラを AP＋1000
+  // delta は object dyn 形 {dyn} で記述 (resolveDynArgs が評価)。$self.sceneTrait.<trait> は ctx.source.player の現場特徴数を state から算出。
+  effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: { dyn: '$self.sceneTrait.少年探偵団 * 1000' }, scope: 'contact' } },
   description:
     '【カットイン】【自分ターン中】自分の現場の[少年探偵団]1枚につき、AP＋1000。',
   ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'],

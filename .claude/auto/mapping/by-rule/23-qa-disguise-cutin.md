@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `22c87437f5e0`
+> Source hash: `d1f93e3e23bf`
 
 公式ルール [`23-qa-disguise-cutin.md`](../../../rules/23-qa-disguise-cutin.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -17,11 +17,9 @@
 ## 📐 関連 Spec
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
-- [`cutinFixedAP`](../by-spec/shared-classes--cutinFixedAP.md)
 
-## 📄 参照ソース (6)
+## 📄 参照ソース (5)
 
-- [`src/cards/_shared/cutinFixedAP.ts`](../../../../src/cards/_shared/cutinFixedAP.ts)
 - [`src/cards/ct-d11/D11013.ts`](../../../../src/cards/ct-d11/D11013.ts)
 - [`src/cards/ct-d11/D11017.ts`](../../../../src/cards/ct-d11/D11017.ts)
 - [`src/cards/ct-d11/D11018.ts`](../../../../src/cards/ct-d11/D11018.ts)

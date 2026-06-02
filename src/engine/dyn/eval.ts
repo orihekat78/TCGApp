@@ -275,6 +275,16 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     throw new Error(`dyn.eval: $self requires a property path (e.g. $self.ap) — got "${original}"`);
   }
   const prop = rest[0];
+  // $self.sceneTrait.<trait>: ctx.source.player の現場で特徴 <trait> を持つキャラ数 (D08007 カットイン等のスケーリング)。
+  // カットインは手札カード由来で ctx.source.uid を持たないため、uid 要件より前に player ベースで数える。
+  if (prop === 'sceneTrait') {
+    const trait = rest[1];
+    if (typeof trait !== 'string' || trait.length === 0) {
+      throw new Error(`dyn.eval: $self.sceneTrait requires a trait name (e.g. $self.sceneTrait.少年探偵団) — got "${original}"`);
+    }
+    const side = ctx.source.player;
+    return state.players[side].scene.filter(c => charRead.traits(state, c.uid).includes(trait)).length;
+  }
   const uid = ctx.source.uid;
   if (!uid) {
     throw new Error(`dyn.eval: $self.${prop} requires ctx.source.uid (none provided)`);

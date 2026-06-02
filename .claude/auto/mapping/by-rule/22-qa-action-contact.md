@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `22c87437f5e0`
+> Source hash: `d1f93e3e23bf`
 
 公式ルール [`22-qa-action-contact.md`](../../../rules/22-qa-action-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,11 +20,9 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
-- [`cutinFixedAP`](../by-spec/shared-classes--cutinFixedAP.md)
 
-## 📄 参照ソース (17)
+## 📄 参照ソース (16)
 
-- [`src/cards/_shared/cutinFixedAP.ts`](../../../../src/cards/_shared/cutinFixedAP.ts)
 - [`src/cards/ct-d08/D08007.ts`](../../../../src/cards/ct-d08/D08007.ts)
 - [`src/cards/ct-d08/D08008.ts`](../../../../src/cards/ct-d08/D08008.ts)
 - [`src/cards/ct-d08/D08009.ts`](../../../../src/cards/ct-d08/D08009.ts)

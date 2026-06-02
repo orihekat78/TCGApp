@@ -5,9 +5,9 @@ import { describe, it, expect } from 'vitest';
 import * as shared from '@/cards/_shared';
 
 describe('cards/_shared barrel', () => {
-  it('exports all 8 shared class factories', () => {
+  it('exports shared class factories (cutinFixedAP は 2026-06-02 廃止)', () => {
     expect(typeof shared.partnerColorKeyword).toBe('function');
-    expect(typeof shared.cutinFixedAP).toBe('function');
+    expect((shared as Record<string, unknown>).cutinFixedAP).toBeUndefined(); // 廃止確認
     expect(typeof shared.hiramekiCharStun).toBe('function');
     expect(typeof shared.hiramekiDraw).toBe('function');
     expect(typeof shared.caseTraitConditioned).toBe('function');

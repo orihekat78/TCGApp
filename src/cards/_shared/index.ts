@@ -4,7 +4,7 @@
 // 共通クラスは破壊的変更禁止。新パターンは新クラス追加で対応。
 
 export { partnerColorKeyword } from './partnerColorKeyword.js';
-export { cutinFixedAP } from './cutinFixedAP.js';
+// cutinFixedAP は廃止 (2026-06-02): カットインは各カードに inline atom で記述する (D08007 同型)。
 export { hiramekiCharStun } from './hiramekiCharStun.js';
 export { hiramekiDraw } from './hiramekiDraw.js';
 export { misreadX } from './misreadX.js';

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1586
+- **ファイル数**: 1566
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -292,6 +292,7 @@
     - `2026-05-29-02-phase-16-tutorial-lesson-viewer.md`
     - `2026-05-29-03-phase-17-tutorial-real-board.md`
     - `2026-06-02-01-card-atom-compaction.md`
+    - `2026-06-02-02-cutin-inline-d08007-fix.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -483,24 +484,6 @@
     - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
     - `smoke-2026-06-01.json`
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
-    - `smoke-2026-06-02-2.json`
-    - `smoke-2026-06-02-2.md` — Smoke 1000戦レポート — smoke-2026-06-02-124351
-    - `smoke-2026-06-02-3.json`
-    - `smoke-2026-06-02-3.md` — Smoke 1000戦レポート — smoke-2026-06-02-124602
-    - `smoke-2026-06-02-4.json`
-    - `smoke-2026-06-02-4.md` — Smoke 1000戦レポート — smoke-2026-06-02-124714
-    - `smoke-2026-06-02-5.json`
-    - `smoke-2026-06-02-5.md` — Smoke 1000戦レポート — smoke-2026-06-02-125936
-    - `smoke-2026-06-02-6.json`
-    - `smoke-2026-06-02-6.md` — Smoke 1000戦レポート — smoke-2026-06-02-130456
-    - `smoke-2026-06-02-7.json`
-    - `smoke-2026-06-02-7.md` — Smoke 1000戦レポート — smoke-2026-06-02-130553
-    - `smoke-2026-06-02-8.json`
-    - `smoke-2026-06-02-8.md` — Smoke 1000戦レポート — smoke-2026-06-02-130600
-    - `smoke-2026-06-02-9.json`
-    - `smoke-2026-06-02-9.md` — Smoke 1000戦レポート — smoke-2026-06-02-130818
-    - `smoke-2026-06-02.json`
-    - `smoke-2026-06-02.md` — Smoke 1000戦レポート — smoke-2026-06-02-123940
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -850,7 +833,6 @@
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
       - `caseResolvedHandRemove.md` — caseResolvedHandRemove
       - `caseTraitConditioned.md` — caseTraitConditioned
-      - `cutinFixedAP.md` — cutinFixedAP
       - `eventRemoveByAP.md` — eventRemoveByAP
       - `hiramekiCharStun.md` — hiramekiCharStun
       - `hiramekiDraw.md` — hiramekiDraw
@@ -1145,7 +1127,6 @@
       - `caseDeclaredEvidenceFlip.ts` — cards/_shared/caseDeclaredEvidenceFlip
       - `caseResolvedHandRemove.ts` — cards/_shared/caseResolvedHandRemove
       - `caseTraitConditioned.ts` — cards/_shared/caseTraitConditioned
-      - `cutinFixedAP.ts` — cards/_shared/cutinFixedAP
       - `eventRemoveByAP.ts` — cards/_shared/eventRemoveByAP
       - `hiramekiCharStun.ts` — cards/_shared/hiramekiCharStun
       - `hiramekiDraw.ts` — cards/_shared/hiramekiDraw
@@ -1490,7 +1471,6 @@
       - `caseResolvedHandRemove.e2e.test.ts` — BUG-089 e2e: 事件カードが解決編になったとき a1 (caseResolvedHandRemove) の discard が実際に発火するか
       - `caseResolvedHandRemove.test.ts` — tests/cards/_shared/caseResolvedHandRemove
       - `caseTraitConditioned.test.ts` — tests/cards/_shared/caseTraitConditioned
-      - `cutinFixedAP.test.ts` — tests/cards/_shared/cutinFixedAP
       - `eventRemoveByAP.test.ts` — tests/cards/_shared/eventRemoveByAP
       - `hiramekiCharStun.test.ts` — tests/cards/_shared/hiramekiCharStun
       - `hiramekiDraw.test.ts` — tests/cards/_shared/hiramekiDraw

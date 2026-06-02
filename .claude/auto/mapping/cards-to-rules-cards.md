@@ -2,20 +2,19 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `2c274010e9ed`
+> Source hash: `1bcf38bf363f`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **77** ファイル（[全体 index](./index.md)）
+このグループ: **76** ファイル（[全体 index](./index.md)）
 
-## cards/_shared (11)
+## cards/_shared (10)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../src/cards/_shared/caseResolvedHandRemove.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/cards/_shared/caseTraitConditioned.ts`](../../../src/cards/_shared/caseTraitConditioned.ts) | [`17-icons.md`](../../rules/17-icons.md) |
-| [`src/cards/_shared/cutinFixedAP.ts`](../../../src/cards/_shared/cutinFixedAP.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) |
 | [`src/cards/_shared/eventRemoveByAP.ts`](../../../src/cards/_shared/eventRemoveByAP.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/cards/_shared/hiramekiCharStun.ts`](../../../src/cards/_shared/hiramekiCharStun.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/cards/_shared/hiramekiDraw.ts`](../../../src/cards/_shared/hiramekiDraw.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) |

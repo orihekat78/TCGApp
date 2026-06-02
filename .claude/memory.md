@@ -40,6 +40,15 @@
 - **教訓3**: per-card test(隔離) は invariant/列挙回帰を見逃す → full suite + smoke 中央検証が必須 (workflow 並列 reformat の smoke 667 例外を中央検証で検出)。
 - commit: 9f6e1be(規約) / 57a0f08・02695af・77630c1(engine) / 481d827(cards)。詳細 changelog 2026-06-02-01。
 
+## 2026-06-02 (2) カットイン inline 化 + D08007 cutin バグ修正 (完了)
+
+- **D08007 latent bug**: 「現場[少年探偵団]×1000 cutin」が実機で壊れていた。delta が bare string `'$dyn.shonentanteiCount*1000'` で resolveDynArgs ({dyn} object のみ評価) を通らず apMod_contact が文字列化→AP NaN。$dyn.shonentanteiCount も未 populate。shape test のみで見逃し (AI はカットイン未使用)。
+- **engine fix**: dyn root `$self.sceneTrait.<特徴>` 追加 (ctx.source.player の現場特徴数を state 算出、uid 不在 cutin でも可)。`substituteAtomPick` 非 pick early-return でも `resolveDynArgs` 通す ({dyn} のみ変換=既存 atom no-op)。
+- **D08007**: delta を `{dyn:'$self.sceneTrait.少年探偵団 * 1000'}` object 形へ + **runtime test** 追加 (apMod_contact===2000)。
+- **cutin inline 化**: `cutinFixedAP` factory 廃止、6枚 (D08015/17/23, D11017/18/19) を inline atom 化 (D08007 同型)。factory .ts/.test/.md 削除、barrel/index.test/shared-classes INDEX 更新。e2e 6/6 PASS で挙動不変。
+- 教訓: shape-only test は dyn 未評価 runtime バグを見逃す → 数値効果は runtime オラクル必須。
+- **次 (user 要望)**: カットイン選択 UI を「手札拡大表示 UI 流用 + cutin 可能カードを黄色枠強調」に (テキストボタン廃止)。別途 brainstorm。
+
 ## 継続中の不変条件 (meta-app 作業)
 
 - `src/` は meta-app 機能では import のみ (engine/UI バグ修正は例外として可)。

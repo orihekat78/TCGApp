@@ -9,12 +9,13 @@
 1. **1ステップ=1行**: `{ kind:'atom', verb, args:{...} },` を1物理行に。`kind`/`verb`/`args` を改行で割らない。
 2. **comment-above**: 各ステップの **直前行** に公式テキスト対応句を `//` で置く（末尾コメント禁止）。`conditional` は `if`/`then` で意味が分かれる場合、分岐ごとに直前行コメント可。
 3. **短縮形優先**: pick を伴う atom は `target:{kind:'pick'}` を書かず `args:{ player, n|max, side?, filter?|filterAny?, state? }` で書く。`n`=固定 / `max`=0〜max(skip可)。短縮形が効く verb は [engine-api-atom-verbs.md](engine-api-atom-verbs.md) の `ATOM_PICK_SPEC` が権威。
-   - ⚠ **例外**: `delta:{dyn}` を使う宣言能力 (D08026/D11021 の `$cost.*`) は **explicit `target` を保持**。短縮形は target を実行時構築するため AI 列挙時に `costPaid` 不在で dyn eval が throw する。
+   - ⚠ **dyn-delta**: `delta` は **object 形 `{dyn:'...'}`** で書く（bare string は `resolveDynArgs` が評価せず AP が文字列化する）。`$pick` を伴う宣言能力 (D08026/D11021 の `$cost.*`) は explicit `target` を保持（短縮形は `costPaid` 不在で throw）。非 pick atom (cutin の `$contact.byUid` 等) の `{dyn}` は resolve-picks が解決する。
 4. **冗長 choice 除去**: 単一 option を pick のためだけに包む `choice→options:[atom]` は、短縮形が pick を駆動するので削除。本物の「AかBを選ぶ」分岐のみ `choice` を残す（例: D11012 LP+1/AP+2000）。
    - 注: 単一 option choice の除去は **実行結果不変** (resolver は `options[0]` を実行) だが、AI の seeded 列挙木が変わり smoke の決着分布が動くことがある（カード動作は不変。0 exception で確認）。
 5. **condition**: `condition:`(能力ゲート) と `conditional{if,then}`(効果内分岐) は [card-condition-catalog.md](card-condition-catalog.md) の語彙で。`if`/`then` も可能な限り1行。
-6. **closure は最終手段**: `continuousModifier` の `apDelta`/`lpDelta` 関数 (D08005) と `kind:'custom'` check (D11013) は atom 化できない正当例。`dyn` 式 (D08007 `$dyn.*`) で代替可能なら優先する。
+6. **closure は最終手段**: `continuousModifier` の `apDelta`/`lpDelta` 関数 (D08005) と `kind:'custom'` check (D11013) は atom 化できない正当例。状態計算は engine read API / dyn root (`$self.sceneTrait.<特徴>` 等) で表現し、カード側で `s.players.*.scene` を直接走査しない。
 7. **ヘッダ / 順序**: ファイル冒頭に「公式テキスト全文 → a1/a2… の1行要約」。`ability` は `a1,a2,…` 連番で `abilities:[...]` 出現順と一致。各 ability に `ruleRefs` 必須。
+8. **カットイン**: 旧 `cutinFixedAP` factory は廃止。各カードに inline atom で記述する (D08007 同型)。形: `type:'triggered'` / `scope:'on-hand'` / `trigger:{ hook:'effect:declared', optional:true, selfOnly:true }` / `effect:{ kind:'atom', verb:'charModifyAP', args:{ uid:'$contact.byUid', delta, scope:'contact' } }`。固定値は `delta:<number>`、現場特徴数スケーリングは `delta:{dyn:'$self.sceneTrait.<特徴> * N'}`。
 
 ## 例 (comment-above)
 

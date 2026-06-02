@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `22c87437f5e0`
+> Source hash: `d1f93e3e23bf`
 
 公式ルール [`09-cutin-disguise.md`](../../../rules/09-cutin-disguise.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -19,12 +19,10 @@
 ## 📐 関連 Spec
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
-- [`cutinFixedAP`](../by-spec/shared-classes--cutinFixedAP.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (22)
+## 📄 参照ソース (21)
 
-- [`src/cards/_shared/cutinFixedAP.ts`](../../../../src/cards/_shared/cutinFixedAP.ts)
 - [`src/cards/_shared/eventRemoveByAP.ts`](../../../../src/cards/_shared/eventRemoveByAP.ts)
 - [`src/cards/ct-d08/D08007.ts`](../../../../src/cards/ct-d08/D08007.ts)
 - [`src/cards/ct-d08/D08008.ts`](../../../../src/cards/ct-d08/D08008.ts)
@@ -44,4 +42,5 @@
 - [`src/engine/types/effect.ts`](../../../../src/engine/types/effect.ts)
 - [`src/ui/fixtures/cutinDemoState.ts`](../../../../src/ui/fixtures/cutinDemoState.ts)
 - [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)
-- _...ほか 2 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- [`src/ui/hooks/useContactModalStore.ts`](../../../../src/ui/hooks/useContactModalStore.ts)
+- _...ほか 1 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
