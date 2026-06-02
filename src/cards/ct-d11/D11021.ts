@@ -25,6 +25,7 @@ const a1: AbilityDef = {
     hook: 'case:to-resolved',
     selfOnly: true, // 自分の事件カードが解決編になったときのみ発火 (source.uid===card.uid で gate / 相手の事件には誤発火しない)
   },
+  // この事件が解決編になったとき、自分は手札を1枚リムーブする。
   effect: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
   description: 'この事件が解決編になったとき、自分は手札を1枚リムーブする。',
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/15-abilities-effects.md'],
@@ -51,6 +52,8 @@ const a2: AbilityDef = {
   },
   limit: { kind: 'turn', n: 1 },
   cost: { kind: 'flipFaceUpEvidence', n: { min: 1, max: Infinity } },
+  // キャラを1枚まで選び、表向きにした証拠1つにつき、ターン終了時までAP－1000する。
+  // dyn-delta は宣言能力では explicit target を保持する (短縮形は AI 列挙時に costPaid 不在で dyn eval が throw する。D08026 同型)。
   effect: {
     kind: 'choice',
     chooser: 'self',

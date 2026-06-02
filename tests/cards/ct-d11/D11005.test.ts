@@ -16,12 +16,14 @@ describe('D11005 横溝重悟 (登場時自AP以下リムーブ + 宣言挑発)'
     expect(D11005.abilities.length).toBe(2);
   });
 
-  it('a1 = caseTraitConditioned(婚活) wrapping enter triggered with sceneRemove choice', () => {
+  it('a1 = caseTraitConditioned(婚活) wrapping enter triggered with sceneRemove (短縮形 atom)', () => {
     const a1 = D11005.abilities[0];
     expect(a1.type).toBe('triggered');
     expect(a1.trigger?.hook).toBe('enter');
     expect(a1.description).toMatch(/事件婚活/);
-    expect(a1.effect?.kind).toBe('choice');
+    // 冗長 choice→options:[sceneRemove] を pick 駆動の短縮形 atom に置換 (動作不変)
+    expect(a1.effect?.kind).toBe('atom');
+    expect((a1.effect as { verb?: string }).verb).toBe('sceneRemove');
   });
 
   it('a2 = declared sleepSelf → charSetTurnEffect mustBeTargeted (opp-turn)', () => {

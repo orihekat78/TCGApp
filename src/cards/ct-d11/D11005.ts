@@ -23,27 +23,18 @@ const a1Inner: AbilityDef = {
   scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
   effect: {
-    kind: 'choice', chooser: 'self',
-    options: [{
-      kind: 'atom', verb: 'sceneRemove',
-      args: {
-        uid: '$pick', cause: 'effect',
-        target: {
-          kind: 'pick',
-          query: {
-            area: 'scene', side: 'either',
-            filter: {
-              custom: (s: GameState, cand: Candidate) => {
-                if (cand.kind !== 'char') return false;
-                const tgtAp = engine.read.char.ap(s, cand.uid);
-                return tgtAp <= 8000;
-              },
-            },
-          },
-          n: { min: 0, max: 1 }, chooser: 'self',
+    // このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする (apMax は custom closure で動的比較)
+    kind: 'atom', verb: 'sceneRemove',
+    args: {
+      player: 'self', max: 1, side: 'either', cause: 'effect',
+      filter: {
+        custom: (s: GameState, cand: Candidate) => {
+          if (cand.kind !== 'char') return false;
+          const tgtAp = engine.read.char.ap(s, cand.uid);
+          return tgtAp <= 8000;
         },
       },
-    }],
+    },
   },
   description: '【登場時】このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
@@ -56,10 +47,8 @@ const a2: AbilityDef = {
   type: 'declared',
   scope: 'on-scene',
   cost: { kind: 'sleepSelf' },
-  effect: {
-    kind: 'atom', verb: 'charSetTurnEffect',
-    args: { uid: '$self', key: 'mustBeTargeted', value: true, scope: 'opp-turn' },
-  },
+  // 相手のターン終了時までこのキャラは「アクション対象に必ず指定される」(挑発) を持つ
+  effect: { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'mustBeTargeted', value: true, scope: 'opp-turn' } },
   description: '【宣言】【スリープ】相手ターン終了時まで「アクション対象に必ず指定される」(挑発)。',
   ruleRefs: ['rules/07-action-flow.md', 'rules/21-declared-ability-cost.md'],
 };

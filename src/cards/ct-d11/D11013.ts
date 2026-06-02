@@ -19,11 +19,9 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      {
-        kind: 'atom',
-        verb: 'charModifyAP',
-        args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' },
-      },
+      // AP＋1000 (コンタクト中のこのカット元キャラ)
+      { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
+      // [警察]のキャラに【カットイン】した場合、カードを1枚引く
       {
         kind: 'conditional',
         if: {

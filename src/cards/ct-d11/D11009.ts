@@ -26,26 +26,8 @@ const a2: AbilityDef = {
       return (p as { enterOrder?: number }).enterOrder === 1;
     },
   },
-  effect: {
-    kind: 'choice',
-    chooser: 'self',
-    options: [
-      {
-        kind: 'atom',
-        verb: 'sceneSetState',
-        args: {
-          uid: '$pick',
-          state: 'sleep',
-          target: {
-            kind: 'pick',
-            query: { area: 'scene', side: 'either' },
-            n: { min: 0, max: 1 },
-            chooser: 'self',
-          },
-        },
-      },
-    ],
-  },
+  // キャラを1枚まで選び、スリープさせる
+  effect: { kind: 'atom', verb: 'sceneSetState', args: { player: 'self', max: 1, side: 'either', state: 'sleep' } },
   description: '【疾風】キャラを1枚まで選び、スリープさせる。',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
 };

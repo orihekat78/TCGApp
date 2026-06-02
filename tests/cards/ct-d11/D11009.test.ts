@@ -24,13 +24,13 @@ describe('D11009 萩原研二 (partnerColor 突撃[キャラ] + 疾風 sleep + �
     expect(a1.description).toMatch(/突撃\[キャラ\]/);
   });
 
-  it('a2 = 疾風 enter triggered with matcher (enterOrder=1) -> sleep choice', () => {
+  it('a2 = 疾風 enter triggered with matcher (enterOrder=1) -> sleep atom', () => {
     const a2 = D11009.abilities[1];
     expect(a2.type).toBe('triggered');
     expect(a2.trigger?.hook).toBe('enter');
     expect(a2.trigger?.selfOnly).toBe(true);
     expect(typeof a2.trigger?.matcher).toBe('function');
-    expect(a2.effect?.kind).toBe('choice');
+    expect(a2.effect?.kind).toBe('atom');
   });
 
   it('a3 = hiramekiCharStun (icon-flash)', () => {

@@ -19,11 +19,13 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  trigger: { hook: 'action:pre-target', selfOnly: true }, // アクションでこのカードが選ばれたとき
+  // アクションでこのカードが選ばれたとき
+  trigger: { hook: 'action:pre-target', selfOnly: true },
   effect: {
     kind: 'atom',
     verb: 'expandActionTargets',
-    args: { side: 'opp', state: ['active'], levelMin: 7 }, // 相手の現場の レベル7以上 アクティブを対象に追加
+    // 相手の現場の レベル7以上 アクティブを対象に追加
+    args: { side: 'opp', state: ['active'], levelMin: 7 },
   },
   description: 'このキャラは相手の現場にいるレベル7以上のアクティブ状態のキャラを指定してアクションできる。',
   ruleRefs: ['rules/07-action-flow.md'],
@@ -34,9 +36,11 @@ const a2: AbilityDef = {
   id: 'a2',
   type: 'continuous',
   scope: 'on-scene',
-  condition: { kind: 'partnerColor', color: '黄' }, // 【パートナー黄】
+  // 【パートナー黄】
+  condition: { kind: 'partnerColor', color: '黄' },
   continuousModifier: {
-    grantKeywords: () => ['突撃'], // 〚突撃〛
+    // 〚突撃〛
+    grantKeywords: () => ['突撃'],
   },
   description: '【パートナー黄】〚突撃〛',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
@@ -51,15 +55,18 @@ const a3: AbilityDef = {
   limit: { kind: 'turn', n: 1 },
   trigger: {
     hook: 'contact:start',
-    matcherCondition: { kind: 'contactOpponentApHigher' }, // このキャラより AP の高いキャラとコンタクトしたとき
+    // このキャラより AP の高いキャラとコンタクトしたとき
+    matcherCondition: { kind: 'contactOpponentApHigher' },
   },
   effect: {
     // 「してもよい」「そうした場合」semantics: chain + step 1 max:1 (skip 可能) で表現 (D08003 a1 同型)。
     // optional 単体は ctx.dyn.optionalRun の UI 配線が未実装で常に skip されるため使えない。
     kind: 'chain',
     steps: [
-      { kind: 'atom', verb: 'discard',      args: { player: 'self', max: 1 } },                         // 手札を1枚リムーブしてもよい (max:1 で skip 可能、skip 時は chain break)
-      { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 3000, scope: 'contact' } },   // そうした場合、このキャラを AP+3000 (コンタクト中)
+      // 手札を1枚リムーブしてもよい (max:1 で skip 可能、skip 時は chain break)
+      { kind: 'atom', verb: 'discard',      args: { player: 'self', max: 1 } },
+      // そうした場合、このキャラを AP+3000 (コンタクト中)
+      { kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 3000, scope: 'contact' } },
     ],
   },
   description: '【自分ターン中】【ターン1】高APコンタクト時、手札1リムでこのキャラAP＋3000 (コンタクト中)。',

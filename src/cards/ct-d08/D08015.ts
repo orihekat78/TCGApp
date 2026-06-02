@@ -21,8 +21,10 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'draw',    args: { player: 'self', n: 1 } }, // カードを1枚引く
-      { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } }, // 手札を1枚選びリムーブする
+      // カードを1枚引く
+      { kind: 'atom', verb: 'draw',    args: { player: 'self', n: 1 } },
+      // 手札を1枚選びリムーブする
+      { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
     ],
   },
   description: '【登場時】カードを1枚引き、手札を1枚リムーブする。',

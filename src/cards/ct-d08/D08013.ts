@@ -21,9 +21,12 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'evidenceGain',   args: { player: 'self', n: 1 } }, // 証拠を1つ得る
-      { kind: 'atom', verb: 'evidenceToHand', args: { player: 'self', n: 1 } }, // 自分の証拠を1つ選び、手札に加える
-      { kind: 'atom', verb: 'discard',        args: { player: 'self', n: 1 } }, // 自分は手札を1枚選びリムーブする
+      // 証拠を1つ得る
+      { kind: 'atom', verb: 'evidenceGain',   args: { player: 'self', n: 1 } },
+      // 自分の証拠を1つ選び、手札に加える
+      { kind: 'atom', verb: 'evidenceToHand', args: { player: 'self', n: 1 } },
+      // 自分は手札を1枚選びリムーブする
+      { kind: 'atom', verb: 'discard',        args: { player: 'self', n: 1 } },
     ],
   },
   description:'【登場時】証拠を1つ得る。自分の証拠を1つ選び、手札に加える。自分は手札を1枚リムーブする。',
@@ -33,9 +36,12 @@ const a1: AbilityDef = {
 const a2: AbilityDef = {
   id: 'a2',
   type: 'triggered',
-  scope: 'on-evidence',                                                  // 証拠エリアにいる間に有効 (rules/10)
-  trigger: { hook: 'evidence:remove-by-action', optional: true },        // 任意発動 (fire/skip)
-  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }, // カードを1枚引く
+  // 証拠エリアにいる間に有効 (rules/10)
+  scope: 'on-evidence',
+  // 任意発動 (fire/skip)
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  // カードを1枚引く
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
   description: '【ヒラメキ】カードを1枚引く。',
   ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
 };

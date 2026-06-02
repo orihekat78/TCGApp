@@ -14,39 +14,14 @@ const a1: AbilityDef = {
   type: 'declared',
   scope: 'on-scene',
   cost: { kind: 'selfToDeckBottom' },
+  // LP0の[警察]を1枚まで選び、ターン終了時までLP＋1するか、ターン終了時までAP＋2000する。(LP+1 / AP+2000 の真の分岐)
   effect: {
     kind: 'choice', chooser: 'self',
     options: [
       // option 1: 対象キャラに LP+1 (turn)
-      {
-        kind: 'choice', chooser: 'self',
-        options: [{
-          kind: 'atom', verb: 'charModifyLP',
-          args: {
-            uid: '$pick', delta: 1, scope: 'turn',
-            target: {
-              kind: 'pick',
-              query: { area: 'scene', side: 'self', filter: { trait: '警察', lpMax: 0 } },
-              n: { min: 0, max: 1 }, chooser: 'self',
-            },
-          },
-        }],
-      },
+      { kind: 'atom', verb: 'charModifyLP', args: { delta: 1, max: 1, side: 'self', filter: { trait: '警察', lpMax: 0 }, scope: 'turn' } },
       // option 2: 対象キャラに AP+2000 (turn)
-      {
-        kind: 'choice', chooser: 'self',
-        options: [{
-          kind: 'atom', verb: 'charModifyAP',
-          args: {
-            uid: '$pick', delta: 2000, scope: 'turn',
-            target: {
-              kind: 'pick',
-              query: { area: 'scene', side: 'self', filter: { trait: '警察', lpMax: 0 } },
-              n: { min: 0, max: 1 }, chooser: 'self',
-            },
-          },
-        }],
-      },
+      { kind: 'atom', verb: 'charModifyAP', args: { delta: 2000, max: 1, side: 'self', filter: { trait: '警察', lpMax: 0 }, scope: 'turn' } },
     ],
   },
   description: '【宣言】〚デッキ下〛: LP0の[警察]を1枚まで選び、ターン終了時までLP＋1かAP＋2000。',
@@ -59,20 +34,8 @@ const a2: AbilityDef = {
   type: 'triggered',
   scope: 'on-evidence',
   trigger: { hook: 'evidence:remove-by-action', optional: true },
-  effect: {
-    kind: 'choice', chooser: 'self',
-    options: [{
-      kind: 'atom', verb: 'handAddFromRemove',
-      args: {
-        player: 'self',
-        target: {
-          kind: 'pick',
-          query: { area: 'remove', side: 'self', filter: { cardName: '萩原千速' } },
-          n: { min: 0, max: 1 }, chooser: 'self',
-        },
-      },
-    }],
-  },
+  // 【ヒラメキ】自分のリムーブエリアにある[萩原千速]を1枚まで選び、手札に加える。
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { cardName: '萩原千速' } } },
   description: '【ヒラメキ】リムーブの[萩原千速]を1枚まで選び、手札に加える。',
   ruleRefs: ['rules/10-action-event.md', 'rules/19-special-rules.md'],
 };

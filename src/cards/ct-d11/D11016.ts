@@ -26,14 +26,10 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      {
-        kind: 'atom', verb: 'sceneSetState',
-        args: { uid: '$self', state: 'active' },
-      },
-      {
-        kind: 'atom', verb: 'charModifyAP',
-        args: { uid: '$self', delta: 2000, scope: 'turn' },
-      },
+      // ガードしたキャラをアクティブにし
+      { kind: 'atom', verb: 'sceneSetState', args: { uid: '$self', state: 'active' } },
+      // ターン終了時までAP＋2000する
+      { kind: 'atom', verb: 'charModifyAP',  args: { uid: '$self', delta: 2000, scope: 'turn' } },
     ],
   },
   description: '【相手ターン中】【ターン1】ガードしたとき、ガードしたキャラをアクティブにしAP＋2000。',

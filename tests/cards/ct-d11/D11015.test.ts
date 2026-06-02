@@ -22,7 +22,9 @@ describe('D11015 目暮十三 (action:declare buff + enter conditional 突撃)',
     expect(a1.type).toBe('triggered');
     expect(a1.trigger?.hook).toBe('action:declare');
     expect(a1.trigger?.selfOnly).toBe(true);
-    expect(a1.effect?.kind).toBe('choice');
+    // 冗長 choice→options:[charModifyAP] を pick 駆動の短縮形 atom に置換 (動作不変)
+    expect(a1.effect?.kind).toBe('atom');
+    expect((a1.effect as { verb?: string }).verb).toBe('charModifyAP');
   });
 
   it('a2 = enter triggered with two conditional grants (突撃[キャラ] / 突撃[事件])', () => {

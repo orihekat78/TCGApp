@@ -18,31 +18,10 @@ const a1: AbilityDef = {
   trigger: { hook: 'enter', selfOnly: true },
   effect: {
     kind: 'conditional',
-    if: {
-      kind: 'sceneHas',
-      query: { area: 'scene', side: 'self', filter: { trait: '少年探偵団' } },
-      nMin: 1,
-    },
-    then: {
-      kind: 'choice',
-      chooser: 'self',
-      options: [
-        {
-          kind: 'atom',
-          verb: 'sceneSetState',
-          args: {
-            uid: '$pick',
-            state: 'sleep',
-            target: {
-              kind: 'pick',
-              query: { area: 'scene', side: 'either' },
-              n: { min: 0, max: 1 },
-              chooser: 'self',
-            },
-          },
-        },
-      ],
-    },
+    // 自分の現場に[少年探偵団]のキャラがいる場合
+    if: { kind: 'sceneHas', query: { area: 'scene', side: 'self', filter: { trait: '少年探偵団' } }, nMin: 1 },
+    // キャラを1枚まで選び、スリープさせる
+    then: { kind: 'atom', verb: 'sceneSetState', args: { player: 'self', max: 1, side: 'either', state: 'sleep' } },
   },
   description:
     '【解決編】【登場時】自分の現場に[少年探偵団]がいる場合、キャラを1枚までスリープ。',

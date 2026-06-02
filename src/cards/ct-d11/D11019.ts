@@ -26,16 +26,22 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { color: '黄', levelMax: 4, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } }, // デッキ上からレベル4以下【黄】のキャラが出るまで1枚ずつ公開 ($matched=該当キャラ / $revealed=公開した全カード)
+      // デッキ上からレベル4以下【黄】のキャラが出るまで1枚ずつ公開 ($matched=該当キャラ / $revealed=公開した全カード)
+      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { color: '黄', levelMax: 4, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } },
       { kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
-        then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true } }, // 公開した【黄】キャラを登場させる
+        // 公開した【黄】キャラを登場させる
+        then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true } },
       },
-      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } }, // 残りの公開カードをデッキの下に移す
-      { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } }, // デッキをシャッフルする
+      // 残りの公開カードをデッキの下に移す
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+      // デッキをシャッフルする
+      { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
       { kind: 'conditional',
-        if: { kind: 'and', cs: [{ kind: 'bound', key: '$matched', presence: 'matched' }, { kind: 'removeColorAtLeast', player: 'self', color: '黄', n: 20 }] }, // リムーブエリアに【黄】が20枚以上ある場合
-        then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$matched.uid', kw: '突撃[事件]', scope: 'turn' } }, // ターン終了時までそのキャラに突撃[事件]を付与
+        // リムーブエリアに【黄】が20枚以上ある場合
+        if: { kind: 'and', cs: [{ kind: 'bound', key: '$matched', presence: 'matched' }, { kind: 'removeColorAtLeast', player: 'self', color: '黄', n: 20 }] },
+        // ターン終了時までそのキャラに突撃[事件]を付与
+        then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$matched.uid', kw: '突撃[事件]', scope: 'turn' } },
       },
     ],
   },

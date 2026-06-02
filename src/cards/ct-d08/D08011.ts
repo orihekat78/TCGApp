@@ -12,7 +12,8 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  trigger: { hook: 'enter', selfOnly: true },   //【登場時】
+  // 【登場時】
+  trigger: { hook: 'enter', selfOnly: true },
   effect: {
     kind: 'conditional',
     // 自分の現場にこのキャラ以外の[少年探偵団]がいる場合、

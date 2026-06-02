@@ -19,6 +19,7 @@ const a1: AbilityDef = {
     selfOnly: true,
     matcher: (p: unknown, _s: GameState) => (p as { enterOrder?: number })?.enterOrder === 1,
   },
+  // 【疾風】自分は証拠を1つ得る
   effect: { kind: 'atom', verb: 'evidenceGain', args: { player: 'self', n: 1 } },
   description: '【疾風】自分は証拠を1つ得る。',
   ruleRefs: ['rules/17-icons.md'],
@@ -34,20 +35,8 @@ const a2Inner: AbilityDef = {
     query: { area: 'scene', side: 'self', filter: { trait: '警察' } },
     nMin: 2,
   },
-  effect: {
-    kind: 'choice', chooser: 'self',
-    options: [{
-      kind: 'atom', verb: 'sceneRemove',
-      args: {
-        uid: '$pick', cause: 'effect',
-        target: {
-          kind: 'pick',
-          query: { area: 'scene', side: 'either', filter: { apMax: 6000 } },
-          n: { min: 0, max: 1 }, chooser: 'self',
-        },
-      },
-    }],
-  },
+  // AP6000以下のキャラを1枚まで選び、リムーブする
+  effect: { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect', filter: { apMax: 6000 } } },
   description: '【宣言】【スリープ】AP6000以下のキャラを1枚まで選び、リムーブする。警察2枚以上で宣言可。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/21-declared-ability-cost.md'],
 };
@@ -59,20 +48,8 @@ const a3: AbilityDef = {
   type: 'triggered',
   scope: 'on-evidence',
   trigger: { hook: 'evidence:remove-by-action', optional: true },
-  effect: {
-    kind: 'choice', chooser: 'self',
-    options: [{
-      kind: 'atom', verb: 'sceneSetState',
-      args: {
-        uid: '$pick', state: 'active',
-        target: {
-          kind: 'pick',
-          query: { area: 'scene', side: 'either' },
-          n: { min: 0, max: 1 }, chooser: 'self',
-        },
-      },
-    }],
-  },
+  // キャラを1枚まで選び、アクティブにする
+  effect: { kind: 'atom', verb: 'sceneSetState', args: { player: 'self', max: 1, side: 'either', state: 'active' } },
   description: '【ヒラメキ】キャラを1枚まで選び、アクティブにする。',
   ruleRefs: ['rules/10-action-event.md', 'rules/03-field-areas.md'],
 };

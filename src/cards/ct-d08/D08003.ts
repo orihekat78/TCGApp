@@ -13,8 +13,10 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-scene',
-  condition: { kind: 'partnerColor', color: '青' },   // 【パートナー青】
-  trigger: { hook: 'enter', selfOnly: true },        // 【登場時】
+  // 【パートナー青】
+  condition: { kind: 'partnerColor', color: '青' },
+  // 【登場時】
+  trigger: { hook: 'enter', selfOnly: true },
   effect: {
     kind: 'chain',
     steps: [
@@ -33,7 +35,8 @@ const a2: AbilityDef = {
   id: 'a2',
   type: 'triggered',
   scope: 'on-scene',
-  trigger: { hook: 'phase:end:start' },   //自分のターン終了時
+  // 自分のターン終了時
+  trigger: { hook: 'phase:end:start' },
   condition: { kind: 'turn', player: 'self' },
   effect: {
     kind: 'conditional',

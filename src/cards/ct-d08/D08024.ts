@@ -29,55 +29,10 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      {
-        kind: 'choice',
-        chooser: 'self',
-        options: [
-          {
-            kind: 'atom',
-            verb: 'sceneEnter',
-            args: {
-              player: 'self',
-              cardId: '$pick',
-              viaEffect: true,
-              target: {
-                kind: 'pick',
-                query: {
-                  area: 'remove',
-                  side: 'self',
-                  filterAny: [
-                    { cardName: '阿笠博士', levelMax: 5 },
-                    { trait: '少年探偵団', levelMax: 5 },
-                  ],
-                },
-                n: { min: 0, max: 1 },
-                chooser: 'self',
-              },
-            },
-          },
-        ],
-      },
-      {
-        kind: 'choice',
-        chooser: 'self',
-        options: [
-          {
-            kind: 'atom',
-            verb: 'charModifyAP',
-            args: {
-              uid: '$pick',
-              delta: 2000,
-              scope: 'turn',
-              target: {
-                kind: 'pick',
-                query: { area: 'scene', side: 'either', filter: { trait: '少年探偵団' } },
-                n: { min: 0, max: 1 },
-                chooser: 'self',
-              },
-            },
-          },
-        ],
-      },
+      // リムーブから[阿笠博士]/[少年探偵団] Lv5以下を1枚まで選び、登場させる
+      { kind: 'atom', verb: 'sceneEnter',   args: { player: 'self', from: 'remove', max: 1, viaEffect: true, filterAny: [{ cardName: '阿笠博士', levelMax: 5 }, { trait: '少年探偵団', levelMax: 5 }] } },
+      // [少年探偵団]を1枚まで選び、ターン終了時まで AP+2000
+      { kind: 'atom', verb: 'charModifyAP', args: { delta: 2000, max: 1, side: 'either', filter: { trait: '少年探偵団' }, scope: 'turn' } },
     ],
   },
   description: 'リムーブから[阿衣博士]/[少年探偵団] Lv5以下を1枚まで登場し、[少年探偵団]を1枚まで AP+2000/ターン。',

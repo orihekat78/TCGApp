@@ -24,10 +24,13 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { levelMax: 7 }, state: ['sleep'] } }, // レベル7以下のスリープ状態のキャラを1枚まで選び、リムーブする
+      // レベル7以下のスリープ状態のキャラを1枚まで選び、リムーブする
+      { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { levelMax: 7 }, state: ['sleep'] } },
       { kind: 'conditional',
-        if: { kind: 'removeTraitAtLeast', player: 'self', trait: '神奈川県警', n: 3 }, // 自分のリムーブエリアに[神奈川県警]のキャラが3枚以上ある場合
-        then: { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { apMax: 8000 } } }, // AP8000以下のキャラを1枚まで選び、リムーブする
+        // 自分のリムーブエリアに[神奈川県警]のキャラが3枚以上ある場合
+        if: { kind: 'removeTraitAtLeast', player: 'self', trait: '神奈川県警', n: 3 },
+        // AP8000以下のキャラを1枚まで選び、リムーブする
+        then: { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { apMax: 8000 } } },
       },
     ],
   },

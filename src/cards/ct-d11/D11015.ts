@@ -14,20 +14,8 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-scene',
   trigger: { hook: 'action:declare', selfOnly: true },
-  effect: {
-    kind: 'choice', chooser: 'self',
-    options: [{
-      kind: 'atom', verb: 'charModifyAP',
-      args: {
-        uid: '$pick', delta: 1000, scope: 'turn',
-        target: {
-          kind: 'pick',
-          query: { area: 'scene', side: 'either' },
-          n: { min: 0, max: 1 }, chooser: 'self',
-        },
-      },
-    }],
-  },
+  // キャラを1枚まで選び、ターン終了時までAP＋1000する
+  effect: { kind: 'atom', verb: 'charModifyAP', args: { delta: 1000, max: 1, side: 'either', scope: 'turn' } },
   description: 'このキャラがアクションしたとき、キャラを1枚まで選び、ターン終了時までAP＋1000。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/05-turn-phases.md'],
 };
@@ -40,25 +28,17 @@ const a2: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
+      // 相手の現場にキャラが3枚以上いる場合、ターン終了時まで〚突撃［キャラ］〛を持つ
       {
         kind: 'conditional',
-        if: {
-          kind: 'sceneHas',
-          query: { area: 'scene', side: 'opp' },
-          nMin: 3,
-        },
-        then: {
-          kind: 'atom', verb: 'charGrantKeyword',
-          args: { uid: '$self', kw: '突撃[キャラ]', scope: 'turn' },
-        },
+        if: { kind: 'sceneHas', query: { area: 'scene', side: 'opp' }, nMin: 3 },
+        then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$self', kw: '突撃[キャラ]', scope: 'turn' } },
       },
+      // 相手の証拠が3つ以上ある場合、ターン終了時まで〚突撃［事件］〛を持つ
       {
         kind: 'conditional',
         if: { kind: 'evidenceAtLeast', player: 'opp', n: 3 },
-        then: {
-          kind: 'atom', verb: 'charGrantKeyword',
-          args: { uid: '$self', kw: '突撃[事件]', scope: 'turn' },
-        },
+        then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$self', kw: '突撃[事件]', scope: 'turn' } },
       },
     ],
   },

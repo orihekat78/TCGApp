@@ -21,8 +21,8 @@ const a1: AbilityDef = {
     matcherCondition: { kind: 'enterOrderEquals', n: 1 }, // 【疾風】= 1番目に登場で発火
   },
   effect: {
-    kind: 'atom', verb: 'charModifyAP',
-    args: { max: 1, side: 'either', delta: -1000, scope: 'turn' }, // キャラを1枚まで選び、ターン終了時までAP-1000
+    // キャラを1枚まで選び、ターン終了時まで AP-1000
+    kind: 'atom', verb: 'charModifyAP', args: { max: 1, side: 'either', delta: -1000, scope: 'turn' },
   },
   description: '【疾風】キャラを1枚まで選び、ターン終了時までAP－1000する。',
   ruleRefs: ['rules/17-icons.md', 'rules/19-special-rules.md'],
@@ -43,7 +43,10 @@ const a2: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } }, // 〚手札を1枚リムーブする〛 (D08013 同型 modal pick)
+      // 〚手札を1枚リムーブする〛 (D08013 同型 modal pick)
+      { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
+      // 自分のリムーブエリアにあるレベル5以下の[警察]のキャラを1枚まで選び、登場させる (候補 0 件 / user skip OK)
+      // bind:$entered が必要なため短縮形にせず明示 target を保持
       { kind: 'choice', chooser: 'self',
         options: [{ kind: 'atom', verb: 'sceneEnter',
           args: {
@@ -51,10 +54,11 @@ const a2: AbilityDef = {
             target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { trait: '警察', levelMax: 5 } }, n: { min: 0, max: 1 }, chooser: 'self' },
           },
         }],
-      }, // 自分のリムーブエリアにあるレベル5以下の[警察]のキャラを1枚まで選び、登場させる (候補 0 件 / user skip OK)
+      },
+      // 〚カード名[萩原千速]〛を登場させた場合 (分割名完全一致) カードを1枚引く
       { kind: 'conditional',
-        if: { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } }, // 〚カード名[萩原千速]〛を登場させた場合 (分割名完全一致)
-        then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },                       // カードを1枚引く
+        if: { kind: 'boundMatchesFilter', bindKey: '$entered', filter: { cardName: '萩原千速' } },
+        then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
       },
     ],
   },
