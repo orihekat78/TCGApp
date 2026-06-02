@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1568
+- **ファイル数**: 1571
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -482,6 +482,8 @@
     - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
     - `smoke-2026-06-01.json`
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
+    - `smoke-2026-06-02-2.json`
+    - `smoke-2026-06-02-2.md` — Smoke 1000戦レポート — smoke-2026-06-02-124351
     - `smoke-2026-06-02.json`
     - `smoke-2026-06-02.md` — Smoke 1000戦レポート — smoke-2026-06-02-123940
     - `smoke-baseline.json`
@@ -1570,6 +1572,7 @@
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
       - `short-form-characterization.test.ts` — 短縮形 characterization test (Phase2 refactor の動作不変オラクル)
+      - `short-form-new-verbs.test.ts` — 新規 verb 短縮形 test (Phase2 Task2.4-2.7)
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests
     - **`event/`**
       - `hirameki-listener.test.ts` — Phase 8 完全クローズ Commit 3a: Hirameki listener tests

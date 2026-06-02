@@ -360,6 +360,16 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- 現場 ---
     case 'sceneEnter': {
+      // PA 短縮形 (area からの登場): cardId 不在 + from + n|max で source area pick を構築し、
+      // cardId='$pick.cardId' + target を付与して下記 $pick.cardId awaiting-pick 経路に合流させる。
+      // sourceSplice (remove/evidence から実体除去) は解決後の本処理が target.query.area を見て行う。
+      if (a.cardId === undefined && typeof a.from === 'string' && hasNorMax(a)) {
+        const seP0 = resolvePlayer(a.player, ctx);
+        const seTarget = buildShortFormPick(a.from, a, seP0, seP0);
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: { ...a, cardId: '$pick.cardId', target: seTarget } }, ctx, { byPlayer: seP0, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: seP0, turn: s.turn.number, action: 'effect:sceneEnter:awaiting-pick' });
+        return;
+      }
       // 効果による登場 (atom verb 駆動) は viaEffect=true がデフォルト。
       // ただし args に明示があれば尊重する (テスト・特殊呼出用)。
       const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
@@ -507,6 +517,16 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'sceneSetState': {
+      // PA 短縮形: uid 不在 + player + state(設定する状態の文字列) + n|max → scene pick を構築。
+      // a.state は「設定先の状態」なので候補 filter には載せない (buildShortFormPick は配列 state のみ拾う)。
+      if (a.uid === undefined && typeof a.player === 'string' && typeof a.state === 'string' && hasNorMax(a)) {
+        const ssP = resolvePlayer(a.player, ctx);
+        const paTarget = buildShortFormPick('scene', a, ssP, 'either');
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: ssP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: ssP, turn: s.turn.number, action: 'effect:sceneSetState:awaiting-pick' });
+        return;
+      }
       const ssUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof ssUid !== 'string' || ssUid.startsWith('$')) return;
       const ssState = a.state as 'active' | 'sleep' | 'stun';
@@ -556,6 +576,15 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charModifyLP': {
+      // PA 短縮形 (charModifyAP と同型, dyn-delta 対応): chooser/byPlayer=ctx.source.player, side 既定='either'。
+      if (a.uid === undefined && isShortFormDelta(a.delta) && hasNorMax(a)) {
+        const mlP = ctx.source.player as Player;
+        const paTarget = buildShortFormPick('scene', a, mlP, 'either');
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: mlP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP:awaiting-pick' });
+        return;
+      }
       const mlUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof mlUid !== 'string' || mlUid.startsWith('$')) return;
       const mlDelta = a.delta as number;
