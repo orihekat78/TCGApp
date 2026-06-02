@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 156
-- **ファイル数**: 1558
+- **ディレクトリ数**: 159
+- **ファイル数**: 1559
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -984,6 +984,10 @@
     - `index-DfnJOjLD.js`
     - `tsv-loader-fs-BWZZNTOu.js`
   - `index.html`
+- **`docs/`**
+  - **`superpowers/`**
+    - **`specs/`**
+      - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
