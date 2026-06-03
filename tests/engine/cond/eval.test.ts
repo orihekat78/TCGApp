@@ -351,24 +351,31 @@ describe('engine.cond.eval', () => {
       return { state, aUid: 'A#0', bUid: 'B#0' };
     }
 
-    it('opponent (bUid) AP が higher → true', () => {
+    it('自分(aUid)が攻撃者 & opponent (bUid) AP が higher → true', () => {
       const s = createEmptyGameState();
       const { state, aUid, bUid } = setupContact(s, 3000, 5000);
-      const ctx = makeCtx({ triggerPayload: { aUid, bUid } });
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: aUid }, triggerPayload: { aUid, bUid } });
       expect(evalCond(state, { kind: 'contactOpponentApHigher' }, ctx)).toBe(true);
+    });
+
+    it('aUid !== ctx.source.uid (自分が攻撃者でない) → false (BUG-098 自己照合)', () => {
+      const s = createEmptyGameState();
+      const { state, aUid, bUid } = setupContact(s, 3000, 5000); // bAp>aAp だが自分は非当事者
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'OTHER#0' }, triggerPayload: { aUid, bUid } });
+      expect(evalCond(state, { kind: 'contactOpponentApHigher' }, ctx)).toBe(false);
     });
 
     it('opponent (bUid) AP が equal → false (strict greater than)', () => {
       const s = createEmptyGameState();
       const { state, aUid, bUid } = setupContact(s, 5000, 5000);
-      const ctx = makeCtx({ triggerPayload: { aUid, bUid } });
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: aUid }, triggerPayload: { aUid, bUid } });
       expect(evalCond(state, { kind: 'contactOpponentApHigher' }, ctx)).toBe(false);
     });
 
     it('opponent (bUid) AP が lower → false', () => {
       const s = createEmptyGameState();
       const { state, aUid, bUid } = setupContact(s, 5000, 3000);
-      const ctx = makeCtx({ triggerPayload: { aUid, bUid } });
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: aUid }, triggerPayload: { aUid, bUid } });
       expect(evalCond(state, { kind: 'contactOpponentApHigher' }, ctx)).toBe(false);
     });
 

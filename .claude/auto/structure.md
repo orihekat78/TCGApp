@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1863
+- **ファイル数**: 1869
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -233,6 +233,7 @@
     - `BUG-095.md`
     - `BUG-096.md`
     - `BUG-097.md`
+    - `BUG-098.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -300,6 +301,7 @@
     - `2026-06-03-02-all-partners.md`
     - `2026-06-03-03-continuous-apdelta-wiring.md`
     - `2026-06-03-04-triggered-limit-and-guard.md`
+    - `2026-06-03-05-d11007-contact-scope.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -497,6 +499,10 @@
     - `smoke-2026-06-03-3.md` — Smoke 1000戦レポート — smoke-2026-06-03-014330
     - `smoke-2026-06-03-4.json`
     - `smoke-2026-06-03-4.md` — Smoke 1000戦レポート — smoke-2026-06-03-031240
+    - `smoke-2026-06-03-5.json`
+    - `smoke-2026-06-03-5.md` — Smoke 1000戦レポート — smoke-2026-06-03-031951
+    - `smoke-2026-06-03-6.json`
+    - `smoke-2026-06-03-6.md` — Smoke 1000戦レポート — smoke-2026-06-03-032211
     - `smoke-2026-06-03.json`
     - `smoke-2026-06-03.md` — Smoke 1000戦レポート — smoke-2026-06-03-005826
     - `smoke-baseline.json`

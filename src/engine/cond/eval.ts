@@ -165,10 +165,13 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return uids.some(uid => charRead.stackedCount(state, uid) >= cond.n);
     }
     case 'contactOpponentApHigher': {
-      // D11007 a3: contact:start payload から aUid (attacker) / bUid (defender) を取得
-      // (相手 = bUid) の AP が (自分 = aUid) より高い場合に true
+      // D11007 a3: contact:start payload から aUid (attacker) / bUid (defender) を取得。
+      // 自分 (ctx.source.uid) が攻撃者 (aUid) として、相手 (bUid) の AP が自分より高いコンタクトのみ true。
+      // BUG-098: 旧実装は自分の関与を確認せず、任意のコンタクト (defender>attacker) で過剰発火していた。
+      // 【自分ターン中】= 自分が攻撃するので攻撃者 (aUid) 限定で十分 (rules/07-08)。
       const payload = ctx.triggerPayload as { aUid?: string; bUid?: string } | undefined;
       if (!payload?.aUid || !payload?.bUid) return false;
+      if (payload.aUid !== ctx.source.uid) return false; // 自分が攻撃者のコンタクトのみ
       const aAp = charRead.ap(state, payload.aUid);
       const bAp = charRead.ap(state, payload.bUid);
       return bAp > aAp;

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `319c1cf4d2f4`
+> Source hash: `660a7ef09efc`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,29 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-06-03
+title: D11007 a3 の contactOpponentApHigher を自分のコンタクト限定に scope (BUG-098)
+type: fix
+scope: engine
+---
+
+## D11007 a3 過剰発火の修正 (BUG-098)
+
+BUG-097 (D11016 guardedBySelf) の水平展開で検出。`contactOpponentApHigher`
+([cond/eval.ts](../src/engine/cond/eval.ts)) は contact の aUid/bUid の AP だけを見て、D11007 自身が
+コンタクト当事者かを確認していなかった。`contact:start` は全コンタクトで emit されるため、D11007 が
+関与しない任意のコンタクト (defender>attacker) でも a3 が発火していた。
+
+→ `if (payload.aUid !== ctx.source.uid) return false;` を追加し、**自分 (D11007) が攻撃者の
+コンタクトのみ**評価。【自分ターン中】= 自分が攻撃するので攻撃者限定で十分。
+
+## 検証
+
+- tsc clean / vitest **1665 PASS** (+2 behavioral: 自分攻撃→発火 / 別キャラ攻撃→不発火、+1 unit: aUid≠self→false) /
+  smoke 1000 例外0 (502/498 不変)。
+- 既存 contactOpponentApHigher unit test (eval.test.ts) を source.uid=aUid 前提に更新 (scope 修正反映)。
 
 ---
 date: 2026-06-03
