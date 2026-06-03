@@ -14,7 +14,12 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerAll } from '@/cards/index';
+import { registerAll, GENERATED_PARTNERS } from '@/cards/index';
+
+// MVP 47枚 baseline + generator 出力分を加算 (詳細は registry.test.ts)。
+const GEN = GENERATED_PARTNERS.length;
+const GEN_BLUE = GENERATED_PARTNERS.filter((c) => c.colors.includes('青')).length;
+const GEN_YELLOW = GENERATED_PARTNERS.filter((c) => c.colors.includes('黄')).length;
 
 /**
  * 既知の validator 漏れリスト。
@@ -30,8 +35,8 @@ describe('engine.cards.validateAll — Phase 5 全47枚', () => {
     registerAll();
   });
 
-  it('全 47 枚が登録される', () => {
-    expect(engine.cards.all().length).toBe(47);
+  it('全カード (MVP 47 + generated) が登録される', () => {
+    expect(engine.cards.all().length).toBe(47 + GEN);
   });
 
   it('既知の失敗カード (KNOWN_FAILING_IDS) を除き、全カードが engine.cards.validate を通る (ok: true)', () => {
@@ -83,11 +88,11 @@ describe('engine.cards.validateAll — Phase 5 全47枚', () => {
     expect(all.filter(d => d.id.startsWith('D11')).length).toBe(21);
   });
 
-  it('色別カウント (青: 26, 黄: 21)', () => {
+  it('色別カウント (青: 26 MVP + generated, 黄: 21 MVP + generated)', () => {
     const blue = engine.cards.byColor('青').length;
     const yellow = engine.cards.byColor('黄').length;
-    expect(blue).toBe(26);
-    expect(yellow).toBe(21);
+    expect(blue).toBe(26 + GEN_BLUE);
+    expect(yellow).toBe(21 + GEN_YELLOW);
   });
 
   it('ability id は各カード内で一意', () => {

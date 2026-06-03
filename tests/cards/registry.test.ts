@@ -4,21 +4,27 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerAll, ALL_CARDS } from '@/cards';
+import { registerAll, ALL_CARDS, GENERATED_PARTNERS } from '@/cards';
 
-describe('cards/registerAll (Phase 5 Group C + D + E: 47 cards)', () => {
+// MVP 47枚 (CT-D08:26青 + CT-D11:21黄) を baseline に、generator 出力分を加算して期待値を導出。
+// generator 再実行で枚数が変わっても自動追従する一方、MVP 側の 47/26/21 が崩れれば検出される。
+const GEN = GENERATED_PARTNERS.length;
+const GEN_BLUE = GENERATED_PARTNERS.filter((c) => c.colors.includes('青')).length;
+const GEN_YELLOW = GENERATED_PARTNERS.filter((c) => c.colors.includes('黄')).length;
+
+describe('cards/registerAll (Phase 5 MVP 47 + generated partners)', () => {
   beforeEach(() => {
     engine.cards._resetRegistry();
   });
 
-  it('ALL_CARDS contains exactly 47 cards (Group C: 10 + Group D: 21 + Group E: 16)', () => {
-    expect(ALL_CARDS.length).toBe(47);
+  it('ALL_CARDS = MVP 47枚 + generated partners', () => {
+    expect(ALL_CARDS.length).toBe(47 + GEN);
   });
 
-  it('registerAll() registers all 47 CardDefs to engine.cards', () => {
+  it('registerAll() registers all CardDefs to engine.cards', () => {
     expect(engine.cards.all().length).toBe(0);
     registerAll();
-    expect(engine.cards.all().length).toBe(47);
+    expect(engine.cards.all().length).toBe(47 + GEN);
   });
 
   it('engine.cards.get returns each card by id (CT-D08 + CT-D11)', () => {
@@ -57,8 +63,8 @@ describe('cards/registerAll (Phase 5 Group C + D + E: 47 cards)', () => {
     expect(ids).toContain('D08017');
     expect(ids).toContain('D08021');
     expect(ids).toContain('D08023');
-    // All CT-D08 cards are blue
-    expect(blueCards.length).toBe(26);
+    // MVP CT-D08 全26枚が青 + generator 由来の青パートナー
+    expect(blueCards.length).toBe(26 + GEN_BLUE);
   });
 
   it('byColor("黄") returns CT-D11 cards', () => {
@@ -76,8 +82,8 @@ describe('cards/registerAll (Phase 5 Group C + D + E: 47 cards)', () => {
     expect(ids).toContain('D11013');
     expect(ids).toContain('D11017');
     expect(ids).toContain('D11018');
-    // 21 CT-D11 cards total: 5 (Group C) + 16 (Group E)
-    expect(yellowCards.length).toBe(21);
+    // MVP CT-D11 全21枚が黄 + generator 由来の黄パートナー
+    expect(yellowCards.length).toBe(21 + GEN_YELLOW);
   });
 
   it('partners (D08001/D08002/D11001/D11002) have empty abilities', () => {
@@ -101,10 +107,10 @@ describe('cards/registerAll (Phase 5 Group C + D + E: 47 cards)', () => {
     }
   });
 
-  it('registerAll() is idempotent (re-register overwrites, count stays 47)', () => {
+  it('registerAll() is idempotent (re-register overwrites, count unchanged)', () => {
     registerAll();
-    expect(engine.cards.all().length).toBe(47);
+    expect(engine.cards.all().length).toBe(47 + GEN);
     registerAll();
-    expect(engine.cards.all().length).toBe(47);
+    expect(engine.cards.all().length).toBe(47 + GEN);
   });
 });

@@ -9,13 +9,15 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerAll } from '@/cards/index';
+import { registerAll, GENERATED_PARTNERS } from '@/cards/index';
 import { event } from '@/engine/event/index';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import type { GameState } from '@/engine/types';
+
+const GEN = GENERATED_PARTNERS.length; // MVP 47 + generated partners
 
 /**
  * 40枚デッキを構築するヘルパー。
@@ -61,8 +63,8 @@ describe('Phase 5 smoke — registerAll + 簡単なゲーム進行', () => {
     registerAll();
   });
 
-  it('registerAll → 47 枚登録', () => {
-    expect(engine.cards.all().length).toBe(47);
+  it('registerAll → MVP 47 + generated 枚登録', () => {
+    expect(engine.cards.all().length).toBe(47 + GEN);
   });
 
   it('setup.init → decideFirstPlayer → dealOpeningHand → reveal → startGame が無例外', () => {

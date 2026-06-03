@@ -58,6 +58,10 @@ import { D11019 } from './ct-d11/D11019.js';
 import { D11020 } from './ct-d11/D11020.js';
 import { D11021 } from './ct-d11/D11021.js';
 
+// 非MVP 17パッケージの partner CardDef (auto-generated, abilities:[] stub)
+import { GENERATED_PARTNERS } from './_generated/partners.js';
+export { GENERATED_PARTNERS };
+
 export {
   D08001, D08002, D08003, D08004, D08005, D08006, D08007, D08008,
   D08009, D08010, D08011, D08012, D08013, D08014, D08015, D08016,
@@ -85,6 +89,7 @@ export const ALL_CARDS: CardDef[] = [
   D11009, D11010, D11011, D11012, D11013, D11014,
   D11015, D11016, D11017, D11018,
   D11019, D11020, D11021,
+  ...GENERATED_PARTNERS,
 ];
 
 /**
