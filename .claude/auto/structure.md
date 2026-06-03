@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1869
+- **ファイル数**: 1871
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -136,6 +136,7 @@
     - `AUDIT-2026-05-22.md` — BUG フォルダ AUDIT (2026-05-22)
     - `AUDIT-2026-05-23.md` — 全 BUG audit 結果 — 2026-05-23
     - `AUDIT-2026-05-28-BUG-070.md` — AUDIT-2026-05-28 — BUG-070 (BUG-009 水平展開 4 項目 follow-up)
+    - `AUDIT-2026-06-03-mvp-card-lensf.md` — AUDIT 2026-06-03 — MVP カード Lens F 深掘り監査
     - `AUDIT-template.md` — BUG フォルダ AUDIT (YYYY-MM-DD)
     - `BUG-001.md`
     - `BUG-002.md`
@@ -1881,6 +1882,7 @@
     - **`dyn/`**
       - `eval.test.ts` — engine.dyn.eval — Dyn evaluator tests
     - **`effect/`**
+      - `_diag-d11020-audit.test.ts` — DIAGNOSTIC (temporary) — D11020 a1 short-form sceneRemove CPU resolution audit
       - `atom-handlers.test.ts` — engine.effect.runAtom — Atom Verb dispatcher tests
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で

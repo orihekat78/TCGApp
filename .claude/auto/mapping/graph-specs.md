@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `f8efd3432c9c`
+> Source hash: `33237b2d005b`
 
 engine namespace と仕様書の参照関係を Mermaid flowchart で表示。`cards-analysis/` 配下は 1:1 で量が多いため除外。Obsidian グラフビュー連携は [by-spec/](./by-spec/) / [by-engine/](./by-engine/) を参照。
 
