@@ -95,7 +95,7 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
-  test('GuardPickerModal skip → CutInDisguisePickerModal 表示 → pass で action 完了', async ({ page }) => {
+  test('GuardPickerModal skip → cutin hand-pick パス で action 完了', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await page.evaluate((makeCharSrc) => {
       eval(makeCharSrc);
@@ -116,37 +116,27 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
     await expect(page.locator('[data-testid="guard-picker-modal"]')).toBeVisible({ timeout: 3000 });
     await page.locator('[data-testid="guard-picker-skip"]').click();
 
-    // self hand に cutin 可能カードが含まれていれば CID modal 表示
-    // → 表示されたら pass する。表示されなければ auto-pass で action 完了
-    const cidVisible = await page
-      .locator('[data-testid="cid-picker-modal"]')
+    // self の cutin 判断は HandZone pick mode (黄色枠) で表示される (cid modal は変装専用に)。
+    // cutin 可能カードがあれば pick mode の skip でパス、無ければ auto-pass。どちらも action 完了を待つ。
+    const skipBtn = page.locator('[data-testid="hand-zone-pick-skip"]');
+    const pickVisible = await skipBtn
       .waitFor({ state: 'visible', timeout: 2000 })
       .then(() => true)
       .catch(() => false);
-    if (cidVisible) {
-      // 1番目 (self) のパス
-      await page.locator('[data-testid="cid-pass"]').click();
-      // 2番目 (opp) は AI 自動 → action-end まで待つ
-      // ただし opp の判定が cutin/disguise なら state 動かないので modal 出ないことだけ確認
-      await page.waitForFunction(
-        () => {
-          const w = window as unknown as GameWindow;
-          const id = w.__game.getState().activeActionId;
-          if (!id) return true;
-          const ax = w.__game.getActionContext(id);
-          return ax == null || ax.phase === 'action-end';
-        },
-        null,
-        { timeout: 5000 },
-      );
-    } else {
-      // auto-pass で action 完了
-      await page.waitForFunction(
-        () => (window as unknown as GameWindow).__game.getState().activeActionId === null,
-        null,
-        { timeout: 5000 },
-      );
+    if (pickVisible) {
+      await skipBtn.click(); // self パス
     }
+    await page.waitForFunction(
+      () => {
+        const w = window as unknown as GameWindow;
+        const id = w.__game.getState().activeActionId;
+        if (!id) return true;
+        const ax = w.__game.getActionContext(id);
+        return ax == null || ax.phase === 'action-end';
+      },
+      null,
+      { timeout: 5000 },
+    );
 
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
