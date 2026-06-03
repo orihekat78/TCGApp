@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1559
+- **ファイル数**: 1554
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -293,6 +293,7 @@
     - `2026-05-29-03-phase-17-tutorial-real-board.md`
     - `2026-06-02-01-card-atom-compaction.md`
     - `2026-06-02-02-cutin-inline-d08007-fix.md`
+    - `2026-06-03-01-hirameki-inline.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -822,8 +823,6 @@
       - `caseResolvedHandRemove.md` — caseResolvedHandRemove
       - `caseTraitConditioned.md` — caseTraitConditioned
       - `eventRemoveByAP.md` — eventRemoveByAP
-      - `hiramekiCharStun.md` — hiramekiCharStun
-      - `hiramekiDraw.md` — hiramekiDraw
       - `INDEX.md` — cards/_shared/ — 共通クラス INDEX (2026-05-11)
       - `partnerColorKeyword.md` — partnerColorKeyword
     - `2026-05-11-ui-action-flows.md` — 主要アクションフロー (2026-05-11)
@@ -1120,8 +1119,6 @@
       - `caseResolvedHandRemove.ts` — cards/_shared/caseResolvedHandRemove
       - `caseTraitConditioned.ts` — cards/_shared/caseTraitConditioned
       - `eventRemoveByAP.ts` — cards/_shared/eventRemoveByAP
-      - `hiramekiCharStun.ts` — cards/_shared/hiramekiCharStun
-      - `hiramekiDraw.ts` — cards/_shared/hiramekiDraw
       - `index.ts` — cards/_shared barrel — 共通クラスの公開 API
       - `misreadX.ts` — cards/_shared/misreadX
       - `partnerColorKeyword.ts` — cards/_shared/partnerColorKeyword
@@ -1464,8 +1461,6 @@
       - `caseResolvedHandRemove.test.ts` — tests/cards/_shared/caseResolvedHandRemove
       - `caseTraitConditioned.test.ts` — tests/cards/_shared/caseTraitConditioned
       - `eventRemoveByAP.test.ts` — tests/cards/_shared/eventRemoveByAP
-      - `hiramekiCharStun.test.ts` — tests/cards/_shared/hiramekiCharStun
-      - `hiramekiDraw.test.ts` — tests/cards/_shared/hiramekiDraw
       - `index.test.ts` — tests/cards/_shared/index — barrel export smoke test
       - `misreadX.test.ts` — Phase 8 完全クローズ Commit 3b: misreadX shared class tests
       - `partnerColorKeyword.test.ts` — tests/cards/_shared/partnerColorKeyword

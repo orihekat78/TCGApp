@@ -3,7 +3,6 @@
 
 import { describe, it, expect } from 'vitest';
 import { caseTraitConditioned } from '@/cards/_shared/caseTraitConditioned';
-import { hiramekiDraw } from '@/cards/_shared/hiramekiDraw';
 import { validate as effectValidate } from '@/engine/effect/validate';
 import type { AbilityDef } from '@/engine/types';
 
@@ -36,7 +35,13 @@ describe('caseTraitConditioned', () => {
   });
 
   it('preserves inner type/effect/limit and id (spread)', () => {
-    const inner = hiramekiDraw({ n: 2, abilityId: 'a_inner' });
+    const inner: AbilityDef = {
+      id: 'a_inner', type: 'triggered', scope: 'on-evidence',
+      trigger: { hook: 'evidence:remove-by-action', optional: true },
+      effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 2 } },
+      description: '【ヒラメキ】カードを2枚引く。',
+      ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+    };
     const d = caseTraitConditioned({ trait: '婚活', inner });
     expect(d.id).toBe('a_inner');
     expect(d.type).toBe('triggered'); // 2026-05-27 Option C migration
@@ -57,7 +62,13 @@ describe('caseTraitConditioned', () => {
   });
 
   it('wrapped inner effect still passes engine.effect.validate', () => {
-    const inner = hiramekiDraw({ n: 1 });
+    const inner: AbilityDef = {
+      id: 'a_flash', type: 'triggered', scope: 'on-evidence',
+      trigger: { hook: 'evidence:remove-by-action', optional: true },
+      effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+      description: '【ヒラメキ】カードを1枚引く。',
+      ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+    };
     const d = caseTraitConditioned({ trait: '婚活', inner });
     const r = effectValidate(d.effect!);
     expect(r.ok).toBe(true);

@@ -9,10 +9,9 @@
 //   【ヒラメキ】カードを1枚引く。
 //
 // a1: 個別実装 (sequence: choice→sceneEnter + choice→charModifyAP)
-// a2: hiramekiDraw 共通クラス
+// a2: 【ヒラメキ】カードを1枚引く (inline 化、D08013 a2 同型)
 
 import type { AbilityDef, CardDef, GameState } from '@/engine/types';
-import { hiramekiDraw } from '@/cards/_shared/hiramekiDraw';
 
 const a1: AbilityDef = {
   id: 'a1',
@@ -39,6 +38,18 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/20-color-and-switch.md'],
 };
 
+// a2: 【ヒラメキ】カードを1枚引く (旧 hiramekiDraw factory を inline 展開、D08013 a2 同型)
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true }, // 任意発動 (action[事件] リムーブ時)
+  // カードを1枚引く
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  description: '【ヒラメキ】カードを1枚引く。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+};
+
 export const D08024: CardDef = {
   id: 'D08024',
   no: '0498/D08024',
@@ -49,7 +60,7 @@ export const D08024: CardDef = {
   traits: [],
   rarity: 'D',
   imageUrl: '1743743100630487.jpg',
-  abilities: [a1, hiramekiDraw({ n: 1, abilityId: 'a2' })],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/10-action-event.md',
     'rules/15-abilities-effects.md',

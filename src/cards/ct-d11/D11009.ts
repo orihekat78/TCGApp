@@ -8,7 +8,7 @@
 //   ヒラメキ: キャラを1枚まで選び、スリープさせる。
 
 import type { AbilityDef, CardDef, GameState } from '@/engine/types';
-import { partnerColorKeyword, hiramekiCharStun } from '../_shared/index.js';
+import { partnerColorKeyword } from '../_shared/index.js';
 
 // a1 partnerColorKeyword (突撃[キャラ])
 const a1 = partnerColorKeyword({ color: '黄', kw: '突撃[キャラ]', abilityId: 'a1' });
@@ -32,7 +32,29 @@ const a2: AbilityDef = {
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
 };
 
-const a3 = hiramekiCharStun({ side: 'either', abilityId: 'a3' });
+// a3: 【ヒラメキ】キャラを1枚まで選び、スリープさせる (旧 hiramekiCharStun factory を inline + sceneSetState 短縮形)
+const a3: AbilityDef = {
+  id: 'a3',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true }, // 任意発動
+  // キャラを1枚まで選び、スリープさせる
+  // 注: hirameki fire は hiramekiResolve handler が chooseAtomTarget で $pick を自動解決するため、
+  //     明示 target ($pick + pick query) を保持する (sceneSetState 短縮形だと fire 時 auto-pick されず side-channel 待ちになる)。
+  effect: {
+    kind: 'choice',
+    chooser: 'self',
+    options: [
+      {
+        kind: 'atom',
+        verb: 'sceneSetState',
+        args: { uid: '$pick', state: 'sleep', target: { kind: 'pick', query: { area: 'scene', side: 'either' }, n: { min: 0, max: 1 }, chooser: 'self' } },
+      },
+    ],
+  },
+  description: '【ヒラメキ】キャラを1枚まで選び、スリープさせる。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/03-field-areas.md'],
+};
 
 export const D11009: CardDef = {
   id: 'D11009',

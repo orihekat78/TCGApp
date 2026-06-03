@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d1f93e3e23bf`
+> Source hash: `d3b4da4da155`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,13 +20,9 @@
 ## 📐 関連 Spec
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
-- [`hiramekiCharStun`](../by-spec/shared-classes--hiramekiCharStun.md)
-- [`hiramekiDraw`](../by-spec/shared-classes--hiramekiDraw.md)
 
-## 📄 参照ソース (18)
+## 📄 参照ソース (16)
 
-- [`src/cards/_shared/hiramekiCharStun.ts`](../../../../src/cards/_shared/hiramekiCharStun.ts)
-- [`src/cards/_shared/hiramekiDraw.ts`](../../../../src/cards/_shared/hiramekiDraw.ts)
 - [`src/cards/ct-d08/D08013.ts`](../../../../src/cards/ct-d08/D08013.ts)
 - [`src/cards/ct-d08/D08014.ts`](../../../../src/cards/ct-d08/D08014.ts)
 - [`src/cards/ct-d08/D08019.ts`](../../../../src/cards/ct-d08/D08019.ts)

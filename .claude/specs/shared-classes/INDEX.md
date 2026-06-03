@@ -9,8 +9,8 @@
 |--------|------|---------|-----------|------|
 | partnerColorKeyword | [spec](partnerColorKeyword.md) | 5+ | { color, kw, scope?, additionalCondition? } | continuous |
 | ~~cutinFixedAP~~ | 廃止 2026-06-02 | — | カットインは各カードに inline atom で記述 (D08007 同型) | — |
-| hiramekiCharStun | [spec](hiramekiCharStun.md) | 4 | { side?='either', n?=1 } | icon-flash |
-| hiramekiDraw | [spec](hiramekiDraw.md) | 4 | { n=1 } | icon-flash |
+| ~~hiramekiCharStun~~ | 廃止 2026-06-03 | — | ヒラメキは各カードに inline atom (D08013 a2 同型) | — |
+| ~~hiramekiDraw~~ | 廃止 2026-06-03 | — | 同上 | — |
 | caseTraitConditioned | [spec](caseTraitConditioned.md) | 4 | { trait, conditionInner } | wrapper |
 | caseResolvedHandRemove | [spec](caseResolvedHandRemove.md) | 2 (弾跨ぎ) | { n=1 } | triggered |
 | caseDeclaredEvidenceFlip | [spec](caseDeclaredEvidenceFlip.md) | 2 (弾跨ぎ) | { delta, targetFilter, condition? } | declared |

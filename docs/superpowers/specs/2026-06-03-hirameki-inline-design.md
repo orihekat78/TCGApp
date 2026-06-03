@@ -12,17 +12,19 @@
   // カードを1枚引く
   effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
   ```
-- **D08019 a2 / D11009 a3** (`hiramekiCharStun({side:'either'})`) → triggered + **sceneSetState 短縮形** に inline:
+- **D08019 a2 / D11009 a3** (`hiramekiCharStun({side:'either'})`) → triggered + **明示 target の sceneSetState** を inline (factory 構造をそのまま展開、byte 一致):
   ```typescript
   trigger: { hook: 'evidence:remove-by-action', optional: true },
-  // キャラを1枚まで選び、スリープさせる
-  effect: { kind: 'atom', verb: 'sceneSetState', args: { player: 'self', max: 1, side: 'either', state: 'sleep' } },
+  // キャラを1枚まで選び、スリープさせる ($pick + 明示 target)
+  effect: { kind:'choice', chooser:'self', options:[{ kind:'atom', verb:'sceneSetState',
+    args:{ uid:'$pick', state:'sleep', target:{ kind:'pick', query:{area:'scene', side:'either'}, n:{min:0,max:1}, chooser:'self' } } }] },
   ```
+  ⚠ **sceneSetState 短縮形は不採用** (実装時の e2e で判明): hirameki fire は `hiramekiResolve` handler が `chooseAtomTarget` で `$pick` を自動解決するため明示 target が必要。短縮形だと fire 時に auto-pick されず side-channel 待ちになり挙動が変わる (enter/action trigger では短縮形が動作不変だが hirameki fire path は別)。
 
 ## 動作不変性
 - hiramekiDraw → draw atom: **byte 一致**。
-- hiramekiCharStun → sceneSetState 短縮形: **同一 pick query を生成** (Phase2 検証済、B2 で D08019 a1 / D11003 a3 が実証)。`{ player:'self', max:1, side:'either', state:'sleep' }` → `target:{kind:'pick', query:{area:'scene', side:'either'}, n:{min:0,max:1}, chooser:'self'}` + uid:'$pick'。単一 option `choice` を除去 (resolver は `options[0]` 実行で結果不変)。
-- ⚠ choice 除去で AI seeded 列挙木が変わり smoke 決着分布が動く可能性 (カード動作は不変、cutin/Phase3 と同様の既知良性挙動)。
+- hiramekiCharStun → **明示 target を保持して inline** (factory 出力と byte 一致、choice も保持)。短縮形は hirameki fire path の auto-resolve を壊すため不採用 (上記 ⚠)。
+- smoke 決着分布も不変 (502/498)。
 
 ## 付随更新
 - **factory 削除**: `src/cards/_shared/hiramekiDraw.ts` / `hiramekiCharStun.ts` + 各 unit test (`tests/cards/_shared/hiramekiDraw.test.ts` / `hiramekiCharStun.test.ts`) + spec (`shared-classes/hiramekiDraw.md` / `hiramekiCharStun.md`)。

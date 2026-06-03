@@ -5,8 +5,7 @@
 
 export { partnerColorKeyword } from './partnerColorKeyword.js';
 // cutinFixedAP は廃止 (2026-06-02): カットインは各カードに inline atom で記述する (D08007 同型)。
-export { hiramekiCharStun } from './hiramekiCharStun.js';
-export { hiramekiDraw } from './hiramekiDraw.js';
+// hiramekiDraw / hiramekiCharStun は廃止 (2026-06-03): ヒラメキは各カードに inline atom で記述 (D08013 a2 同型)。
 export { misreadX } from './misreadX.js';
 export { souzaX } from './souzaX.js';
 export { caseTraitConditioned } from './caseTraitConditioned.js';

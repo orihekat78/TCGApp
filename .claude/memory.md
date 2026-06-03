@@ -49,6 +49,13 @@
 - 教訓: shape-only test は dyn 未評価 runtime バグを見逃す → 数値効果は runtime オラクル必須。
 - **次 (user 要望)**: カットイン選択 UI を「手札拡大表示 UI 流用 + cutin 可能カードを黄色枠強調」に (テキストボタン廃止)。別途 brainstorm。
 
+## 2026-06-03 カットイン選択UI (手札pick) + ヒラメキ inline 化 (完了)
+
+- **カットイン選択UI**: テキストボタン modal → HandZone pick mode (手札自動展開 + cutin可能カードを黄色枠 `pickableCardIds` + パス skip)。Playmat のみ変更、変装は dormant modal。e2e `cutin-handzone-pick.spec` 新規 + `opp-turn-contact` 更新。commit d77dc27 / 4daf877 / 8ed6087。
+- **ヒラメキ inline 化**: `hiramekiDraw` / `hiramekiCharStun` factory 廃止、3カード (D08024 a2 draw, D08019 a2 / D11009 a3 sceneSetState) を inline (cutin と同パターン)。
+- **⚠ 知見**: hiramekiCharStun は **sceneSetState 短縮形を使えない**。hirameki fire (`hiramekiResolve{fire}`) は `chooseAtomTarget` で `$pick` を自動解決するため**明示 target が必要**。短縮形だと fire 時 side-channel (human pick) 待ちで挙動が変わる。→ 明示 target 形で inline (factory byte 一致)。enter/action trigger は短縮形OK だが **hirameki fire path は別経路**。
+- 検証: vitest 1654 / smoke 例外0 (502/498) / e2e hirameki (draw+char-stun) 全PASS。
+
 ## 継続中の不変条件 (meta-app 作業)
 
 - `src/` は meta-app 機能では import のみ (engine/UI バグ修正は例外として可)。

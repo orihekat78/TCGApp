@@ -8,7 +8,6 @@
 //   【ヒラメキ】キャラを1枚まで選び、スリープさせる。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
-import { hiramekiCharStun } from '../_shared/index.js';
 
 const a1: AbilityDef = {
   id: 'a1',
@@ -28,6 +27,30 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
+// a2: 【ヒラメキ】キャラを1枚まで選び、スリープさせる (旧 hiramekiCharStun factory を inline + sceneSetState 短縮形)
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true }, // 任意発動
+  // キャラを1枚まで選び、スリープさせる
+  // 注: hirameki fire は hiramekiResolve handler が chooseAtomTarget で $pick を自動解決するため、
+  //     明示 target ($pick + pick query) を保持する (sceneSetState 短縮形だと fire 時 auto-pick されず side-channel 待ちになる)。
+  effect: {
+    kind: 'choice',
+    chooser: 'self',
+    options: [
+      {
+        kind: 'atom',
+        verb: 'sceneSetState',
+        args: { uid: '$pick', state: 'sleep', target: { kind: 'pick', query: { area: 'scene', side: 'either' }, n: { min: 0, max: 1 }, chooser: 'self' } },
+      },
+    ],
+  },
+  description: '【ヒラメキ】キャラを1枚まで選び、スリープさせる。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/03-field-areas.md'],
+};
+
 export const D08019: CardDef = {
   id: 'D08019',
   no: '0497/D08019',
@@ -41,7 +64,7 @@ export const D08019: CardDef = {
   keywords: [],
   rarity: 'D',
   imageUrl: '1743743093512121.jpg',
-  abilities: [a1, hiramekiCharStun({ side: 'either', abilityId: 'a2' })],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/03-field-areas.md',
     'rules/10-action-event.md',

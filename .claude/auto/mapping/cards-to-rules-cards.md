@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1bcf38bf363f`
+> Source hash: `4693e21cc545`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **76** ファイル（[全体 index](./index.md)）
+このグループ: **74** ファイル（[全体 index](./index.md)）
 
-## cards/_shared (10)
+## cards/_shared (8)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -16,8 +16,6 @@
 | [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../src/cards/_shared/caseResolvedHandRemove.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/cards/_shared/caseTraitConditioned.ts`](../../../src/cards/_shared/caseTraitConditioned.ts) | [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/_shared/eventRemoveByAP.ts`](../../../src/cards/_shared/eventRemoveByAP.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
-| [`src/cards/_shared/hiramekiCharStun.ts`](../../../src/cards/_shared/hiramekiCharStun.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
-| [`src/cards/_shared/hiramekiDraw.ts`](../../../src/cards/_shared/hiramekiDraw.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) |
 | [`src/cards/_shared/index.ts`](../../../src/cards/_shared/index.ts) | _(参照なし)_ |
 | [`src/cards/_shared/misreadX.ts`](../../../src/cards/_shared/misreadX.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/cards/_shared/partnerColorKeyword.ts`](../../../src/cards/_shared/partnerColorKeyword.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
