@@ -119,10 +119,14 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   // と渡り、atom-handler の resolveBindRef が `$contact.byUid` を解決できる。
   const contactBindings: Record<string, unknown[]> = {
     contact: [{
-      byUid: ax.byUid,
-      byPlayer: ax.byPlayer,
-      targetUid: ax.target.kind === 'char' ? ax.target.uid : undefined,
+      // BUG-104: カットインした側 (p) のコンタクト中キャラ。攻撃側 cutin (p===byPlayer) では ax.byUid 不変、
+      // 防御側 cutin (D11013 等 turn 制限なし) では p 自身のキャラを指す ($contact.byUid の AP+X 対象が正しくなる)。
+      byUid: contactCharUidOf(ax, p) ?? ax.byUid,
+      byPlayer: p,
+      // p から見たコンタクト相手 (D11013 の警察判定 / ctx.contact.targetUid 用)。ガード時はガードキャラ。
+      targetUid: contactCharUidOf(ax, p === 'self' ? 'opp' : 'self'),
       guardUid: ax.guardUid,
+      attackerSide: ax.byPlayer, // ctx.contact 用 (実際の攻撃側)
     }],
   };
   event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, {

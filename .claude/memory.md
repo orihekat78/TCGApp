@@ -40,8 +40,12 @@
 - **✅ バッチ2a 修正済**: H=BUG-102 (D11019 sceneEnter に target deck query → splice、複製解消) /
   D=BUG-103 (D08021 charStackCard multi-pick を AI 初期 walk で解決、stackedCards 0→3 + splice、empirical 確認)。
   ⚠ 知見: AI は side-channel pick (Pattern B 単一: discard 等) を drain しない構造問題が残存 (D08021 は初期 walk 解決で回避)。
+- **✅ バッチ2b 修正済**: F=BUG-104 (D11013 防御側カットイン: contact.ts cutin binding を p 視点 [contactCharUidOf] +
+  attackerSide、stack.ts entryToCtx で ctx.contact 展開)。empirical 確認 (防御 AP+1000 + 警察ドロー、攻撃不変)。
+  ⚠ 知見: D11013 a1 は condition partnerColor:黄 — 防御側カットインでも owner の partner 色を見る。
 - **⏳ 残り (後続)**: C (sequence pick-pause: D08024/D11020/D11014、⚠ resolver 改修は BUG-078/D08013 回帰リスク) /
-  E (D11012 choiceIndex: dyn 永続化 + AI/UI 選択) / F (D11013 cutin: ctx.contact 未配線 + byUid 攻撃者固定)。clean: D08003/D08013/D11015。
+  E (D11012 choiceIndex: dyn 永続化 + AI/UI 選択)。clean: D08003/D08013/D11015。
+- Playwright e2e 全64件 (63 pass/1 skip) で batch1+2a の engine 変更が実機回帰なしを確認済 (2026-06-03)。
 
 ## 直近の重要知見 (継続参照)
 

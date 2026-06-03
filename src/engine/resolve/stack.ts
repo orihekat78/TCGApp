@@ -33,6 +33,12 @@ const SAFETY_CAP = 1000;
  * EffectCtx via direct engine.effect.run calls.
  */
 function entryToCtx(entry: EffectStackEntry): EffectCtx {
+  // BUG-104: cutin の contact binding を ctx.contact に展開する。D11013 custom check は
+  // ctx.contact.targetUid (コンタクト相手) を読んで「警察か」を判定するが、従来 ctx.contact 未設定で
+  // 永久 false (1ドロー不発) だった。bindings.contact は cutIn (flow/contact.ts) が詰める。
+  const cb = (entry.bindings as Record<string, unknown[]> | undefined)?.['contact']?.[0] as
+    | { byUid?: string; targetUid?: string; guardUid?: string; attackerSide?: 'self' | 'opp' }
+    | undefined;
   return {
     source: {
       player: entry.source.player,
@@ -47,6 +53,9 @@ function entryToCtx(entry: EffectStackEntry): EffectCtx {
     // で読み出される。型レベルでは Record<string, Candidate[]> として渡す (cast 必要)。
     bindings: (entry.bindings ?? {}) as EffectCtx['bindings'],
     triggerPayload: entry.triggeredBy.payload,
+    ...(cb
+      ? { contact: { byUid: cb.byUid ?? '', targetUid: cb.targetUid, guardUid: cb.guardUid, attackerSide: cb.attackerSide ?? 'self' } }
+      : {}),
   };
 }
 

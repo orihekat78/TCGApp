@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `ce6adc995cc3`
+> Source hash: `7752196621be`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,28 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-06-03
+title: Lens F 監査 修正バッチ2b — D11013 防御側カットイン (BUG-104)
+type: fix
+scope: engine
+---
+
+## Lens F 監査 batch2b (F)
+
+- **BUG-104 (F)**: D11013 防御側カットインの2バグ:
+  - ctx.contact 未設定 → custom check (コンタクト相手が警察か) が常に false → 1ドロー不発。
+  - cutin binding の byUid が攻撃者固定 → 防御側カットインで AP+1000 が相手(攻撃)キャラに誤って乗る。
+  - 修正: flow/contact.ts の cutin binding を `contactCharUidOf(ax, p)` (カットイン側視点) + attackerSide 付与、
+    resolve/stack.ts entryToCtx で contact binding を ctx.contact に展開。攻撃側カットインは byUid 不変。
+
+## 検証
+
+- tsc / vitest **1675 PASS** (+1 behavioral: 防御側カットインで防御キャラ AP+1000 + 警察攻撃者でドロー) /
+  smoke 1000 例外0 (500/500) / cutin e2e 8件 PASS (D08007/15/17/23, D11017/18/19 攻撃側不変) /
+  empirical (AP 1000→2000 on 防御, draw 発火, 攻撃 8000 不変)。
+- 残り監査 group: C (sequence pick-pause: D08024/D11020/D11014、BUG-078 回帰リスク) / E (D11012 choiceIndex)。
 
 ---
 date: 2026-06-03

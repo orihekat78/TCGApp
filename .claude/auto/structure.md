@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1884
+- **ファイル数**: 1889
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -240,6 +240,7 @@
     - `BUG-101.md`
     - `BUG-102.md`
     - `BUG-103.md`
+    - `BUG-104.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -310,6 +311,7 @@
     - `2026-06-03-05-d11007-contact-scope.md`
     - `2026-06-03-06-lensf-batch1.md`
     - `2026-06-03-07-lensf-batch2a.md`
+    - `2026-06-03-08-lensf-batch2b.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -515,6 +517,8 @@
     - `smoke-2026-06-03-7.md` — Smoke 1000戦レポート — smoke-2026-06-03-084127
     - `smoke-2026-06-03-8.json`
     - `smoke-2026-06-03-8.md` — Smoke 1000戦レポート — smoke-2026-06-03-090738
+    - `smoke-2026-06-03-9.json`
+    - `smoke-2026-06-03-9.md` — Smoke 1000戦レポート — smoke-2026-06-03-091809
     - `smoke-2026-06-03.json`
     - `smoke-2026-06-03.md` — Smoke 1000戦レポート — smoke-2026-06-03-005826
     - `smoke-baseline.json`
@@ -1928,6 +1932,7 @@
       - `contact.test.ts` — Phase 4 Group B Task 4.5 — flow.contact (cutIn/disguise/pass/judge/computeOrder)
       - `guard.test.ts` — Phase 4 Group B Task 4.7 — flow.guard
       - `lensf-batch1.test.ts` — tests/engine/flow/lensf-batch1 — Lens F 監査 修正バッチ1 (BUG-099 / BUG-101)
+      - `lensf-batch2b-cutin.test.ts` — tests/engine/flow/lensf-batch2b-cutin — Lens F batch2b (BUG-104 D11013 防御側カットイン)
       - `setup.test.ts` — Phase 4 Task 4.1 — engine.flow.setup
       - `turn.test.ts` — engine.flow.turn — Turn-level wrappers tests
     - **`integration/`**
