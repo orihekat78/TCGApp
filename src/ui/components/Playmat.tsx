@@ -268,6 +268,37 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // set されている間、HandZone を expand + pick mode (FILE-top + 使用可能手札を黄色枠)。
   const nextHintPick = useNextHintPickerStore((s) => s.current);
   const isNextHintPick = nextHintPick !== null;
+
+  // カットイン選択 (User 要望): useContactModalStore.cutInDisguise を HandZone pick mode (黄色枠) で扱う。
+  // self + cutin候補あり + 変装候補なし のときのみ hand-pick。変装候補あり (MVP 不発) は旧 modal。
+  const cutInStore = useContactModalStore((s) => s.cutInDisguise);
+  const cutInHasDisguise = (cutInStore?.candidates ?? []).some((c) => c.kind === 'disguise');
+  const isCutinPick =
+    cutInStore !== null &&
+    cutInStore.player === 'self' &&
+    cutInStore.candidates.some((c) => c.kind === 'cutin') &&
+    !cutInHasDisguise;
+  const cutinPickableIds = isCutinPick
+    ? new Set(cutInStore!.candidates.filter((c) => c.kind === 'cutin').map((c) => c.cardId))
+    : undefined;
+  const cutinBannerText = cutInStore
+    ? `カットインするカードを選択（パス可）— ${cutInStore.actorLabel}${cutInStore.actorName ? `（${cutInStore.actorName}）` : ''}`
+    : undefined;
+  const handleCutinPick = (uid: string): void => {
+    const cur = useContactModalStore.getState().cutInDisguise;
+    if (!cur) return;
+    const cardId = uid.split('#')[0]!;
+    useContactModalStore.getState()._setCutInDisguise(null);
+    dispatchEngineAction({ type: 'actionContact', actionId: cur.actionId, player: cur.player, choice: { kind: 'cutin', cardId } });
+    dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
+  };
+  const handleCutinPass = (): void => {
+    const cur = useContactModalStore.getState().cutInDisguise;
+    if (!cur) return;
+    useContactModalStore.getState()._setCutInDisguise(null);
+    dispatchEngineAction({ type: 'actionContact', actionId: cur.actionId, player: cur.player, choice: { kind: 'pass' } });
+    dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
+  };
   const pickAreaKind: CardListKind | null = (() => {
     if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
     if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
@@ -324,6 +355,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useEffect(() => {
     if (isNextHintPick) setHandExpanded(true);
   }, [isNextHintPick]);
+  // カットイン判断中も HandZone を自動 expand (手札拡大から選択)
+  useEffect(() => {
+    if (isCutinPick) setHandExpanded(true);
+  }, [isCutinPick]);
   // User vision (拡張 4): sceneRemove 等の scene キャラ pick mode 検出
   // pendingEffectPick.atomVerb が scene 系で、candidates が scene キャラ uid を含むなら active
   // D11014 a1 driver 2026-05-26: charModifyAP も scene pick (D08003 sceneRemove と同 UI 流用 — 黄色 highlight + click)
@@ -521,32 +556,37 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               ? getHandUseDisabledReason(gameState, 'self', c.cardId) ?? '使用不可'
               : '未開始'
           }
-          pickMode={isDiscardPick || isNextHintPick}
-          // 2026-05-28: ネクストヒントは discard と同じ HandZone pick mode を流用。
-          // FILE-top + 使用可能手札を黄色枠化 (pickableCardIds)、選択で acceptUse。
-          pickableCardIds={isNextHintPick ? nextHintPickableIds : undefined}
-          // 2026-05-29 user_request: ネクストヒントの長い説明文言は廃止し、
-          // ボタンを縦並びに (pickHideBanner)。ただし step2 (現場登場) の操作方法が
-          // 分からなくなる回帰があったため、短い一行ヒントのみ残す (黄枠クリック=使用)。
+          pickMode={isDiscardPick || isNextHintPick || isCutinPick}
+          // cutin / ネクストヒント / discard を HandZone pick mode で流用 (黄色枠 pickableCardIds)。
+          // cutin: 候補 cardId を黄色枠化、click で cutin / skip で パス。
+          pickableCardIds={isCutinPick ? cutinPickableIds : isNextHintPick ? nextHintPickableIds : undefined}
           pickHideBanner={isNextHintPick}
-          pickBannerText={isNextHintPick
-            ? `使うカードを選択（黄枠 / レベル${nextHintPick!.postPopCount}以下）`
-            : undefined}
-          pickSkipLabel={isNextHintPick ? '使用しない' : undefined}
+          pickBannerText={
+            isCutinPick
+              ? cutinBannerText
+              : isNextHintPick
+              ? `使うカードを選択（黄枠 / レベル${nextHintPick!.postPopCount}以下）`
+              : undefined
+          }
+          pickSkipLabel={isCutinPick ? 'パス' : isNextHintPick ? '使用しない' : undefined}
           onPickCancel={isNextHintPick ? () => useNextHintPicker().acceptCancel() : undefined}
           pickCancelLabel={isNextHintPick ? 'キャンセル' : undefined}
           onPickCard={
-            isNextHintPick
+            isCutinPick
+              ? handleCutinPick
+              : isNextHintPick
               ? (uid) => useNextHintPicker().acceptUse(uid.split('#')[0]!)
               : isDiscardPick
               ? (uid) => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid }); }
               : undefined
           }
           pickCanSkip={
-            isNextHintPick ? true : isDiscardPick && (pendingPickForArea?.nMin ?? 1) === 0
+            isCutinPick ? true : isNextHintPick ? true : isDiscardPick && (pendingPickForArea?.nMin ?? 1) === 0
           }
           onPickSkip={
-            isNextHintPick
+            isCutinPick
+              ? handleCutinPass
+              : isNextHintPick
               ? () => useNextHintPicker().acceptSkip()
               : isDiscardPick
               ? () => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }); }
@@ -911,7 +951,10 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
  */
 function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
   const current = useContactModalStore((s) => s.cutInDisguise);
-  if (!current) {
+  // 変装候補があるときだけ modal を出す。cutin のみ (MVP は常にこちら) は Playmat の
+  // HandZone pick mode (黄色枠) で処理するため modal は閉じたまま。
+  const hasDisguise = (current?.candidates ?? []).some((c) => c.kind === 'disguise');
+  if (!current || !hasDisguise) {
     return (
       <CutInDisguisePickerModal
         open={false}
