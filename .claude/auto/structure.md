@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1871
+- **ファイル数**: 1870
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1882,7 +1882,6 @@
     - **`dyn/`**
       - `eval.test.ts` — engine.dyn.eval — Dyn evaluator tests
     - **`effect/`**
-      - `_diag-d11020-audit.test.ts` — DIAGNOSTIC (temporary) — D11020 a1 short-form sceneRemove CPU resolution audit
       - `atom-handlers.test.ts` — engine.effect.runAtom — Atom Verb dispatcher tests
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
