@@ -13,7 +13,7 @@
 4. **冗長 choice 除去**: 単一 option を pick のためだけに包む `choice→options:[atom]` は、短縮形が pick を駆動するので削除。本物の「AかBを選ぶ」分岐のみ `choice` を残す（例: D11012 LP+1/AP+2000）。
    - 注: 単一 option choice の除去は **実行結果不変** (resolver は `options[0]` を実行) だが、AI の seeded 列挙木が変わり smoke の決着分布が動くことがある（カード動作は不変。0 exception で確認）。
 5. **condition**: `condition:`(能力ゲート) と `conditional{if,then}`(効果内分岐) は [card-condition-catalog.md](card-condition-catalog.md) の語彙で。`if`/`then` も可能な限り1行。
-6. **closure は最終手段**: `continuousModifier` の `apDelta`/`lpDelta` 関数 (D08005) と `kind:'custom'` check (D11013) は atom 化できない正当例。状態計算は engine read API / dyn root (`$self.sceneTrait.<特徴>` 等) で表現し、カード側で `s.players.*.scene` を直接走査しない。
+6. **continuousModifier の AP/LP 修正は dyn 式 (宣言形・推奨)**: `apDelta`/`lpDelta` は `{dyn:'…'}` 宣言形で書く (D08005 a1 = `{dyn:'$self.faceUpEvidence * 1000'}`)。`engine.read.char.ap/lp` が read 時に走査・合算 (rules/24 常時有効型)。closure は最終手段 (`kind:'custom'` check D11013 等、dyn で表せない場合のみ)。⚠ apDelta/lpDelta の dyn 式は `$self.ap`/`$self.lp` を **参照しない** (ap()→evalDyn→ap() 無限再帰)。状態計算は dyn root (`$self.sceneTrait.<特徴>` / `$self.faceUpEvidence` 等) で表現し、カード側で `s.players.*.scene` を直接走査しない。
 7. **ヘッダ / 順序**: ファイル冒頭に「公式テキスト全文 → a1/a2… の1行要約」。`ability` は `a1,a2,…` 連番で `abilities:[...]` 出現順と一致。各 ability に `ruleRefs` 必須。
 8. **カットイン**: 旧 `cutinFixedAP` factory は廃止。各カードに inline atom で記述する (D08007 同型)。形: `type:'triggered'` / `scope:'on-hand'` / `trigger:{ hook:'effect:declared', optional:true, selfOnly:true }` / `effect:{ kind:'atom', verb:'charModifyAP', args:{ uid:'$contact.byUid', delta, scope:'contact' } }`。固定値は `delta:<number>`、現場特徴数スケーリングは `delta:{dyn:'$self.sceneTrait.<特徴> * N'}`。
 

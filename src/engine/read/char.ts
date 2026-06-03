@@ -1,10 +1,47 @@
 // engine.read.char — キャラ単位派生情報セレクタ (純粋関数)
 // rules: 03-field-areas.md (状態), 11-reasoning.md (LP≤0), 13-keywords.md, 19-special-rules.md
 
-import type { GameState, CardId, SetCardEntry } from '@/engine/types';
+import type { GameState, CardId, SetCardEntry, EffectCtx } from '@/engine/types';
 import { scene } from './scene.js';
 import { def } from './def.js';
 import { evalCond } from '../cond/eval.js';
+import { evalDyn } from '../dyn/eval.js';
+
+// 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
+// keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
+// rules/24 §常時有効型: condition 成立中のみ加算、条件外で即失効 → read 毎に evalCond 判定。
+// delta は dyn 式 {dyn} (evalDyn) / 定数 / closure の3形 (card-def.ts ContinuousDelta)。
+function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'): number {
+  const char = scene.byUid(s, uid);
+  if (!char) return 0;
+  const d = def.card(char.cardId);
+  if (!d) return 0;
+  // owner side 解決 (scene.byUid は side を返さないので inline、keywords() と同じ)
+  const owner: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === uid)
+    ? 'self'
+    : s.players.opp.scene.some(c => c.uid === uid)
+      ? 'opp'
+      : null;
+  if (!owner) return 0;
+  const ctx = { source: { player: owner, uid, area: 'scene' }, bindings: {} } as EffectCtx;
+  let total = 0;
+  for (const ability of d.abilities ?? []) {
+    if (ability.type !== 'continuous') continue;
+    const delta = ability.continuousModifier?.[which];
+    if (delta === undefined) continue;
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    if (typeof delta === 'number') {
+      total += delta;
+    } else if (typeof delta === 'function') {
+      total += delta(s, { uid }) || 0;
+    } else if (typeof delta === 'object' && 'dyn' in delta) {
+      // NaN ガード (typeof NaN==='number'): 将来 '/' を含む dyn 式が NaN を返しても AP を汚染しない
+      const v = evalDyn(s, delta.dyn, ctx);
+      if (typeof v === 'number' && Number.isFinite(v)) total += v;
+    }
+  }
+  return total;
+}
 
 // AP: apOverride 優先 / 不在なら CardDef.ap、加えて turnEffects['apMod_*'] を合算
 // (charModifyAP verb は turnEffects に delta を蓄積する設計。permanent/turn/contact の
@@ -19,7 +56,8 @@ function ap(s: GameState, uid: string): number {
   const modPermanent = (char.turnEffects['apMod_permanent'] as number | undefined) ?? 0;
   const modTurn      = (char.turnEffects['apMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['apMod_contact']   as number | undefined) ?? 0;
-  return base + modPermanent + modTurn + modContact;
+  const modContinuous = continuousDelta(s, uid, 'apDelta');
+  return base + modPermanent + modTurn + modContact + modContinuous;
 }
 
 // LP: lpOverride 優先 / 不在なら CardDef.lp、加えて turnEffects['lpMod_*'] を合算
@@ -31,7 +69,8 @@ function lp(s: GameState, uid: string): number {
   const modPermanent = (char.turnEffects['lpMod_permanent'] as number | undefined) ?? 0;
   const modTurn      = (char.turnEffects['lpMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
-  return base + modPermanent + modTurn + modContact;
+  const modContinuous = continuousDelta(s, uid, 'lpDelta');
+  return base + modPermanent + modTurn + modContact + modContinuous;
 }
 
 function level(s: GameState, uid: string): number {

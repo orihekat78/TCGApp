@@ -285,6 +285,12 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     const side = ctx.source.player;
     return state.players[side].scene.filter(c => charRead.traits(state, c.uid).includes(trait)).length;
   }
+  // $self.faceUpEvidence: ctx.source.player の表向き証拠枚数 (D08005 a1 の AP スケーリング等)。
+  // sceneTrait と同じく uid 要件より前に player ベースで数える (continuous modifier は uid を渡すが統一)。
+  if (prop === 'faceUpEvidence') {
+    const side = ctx.source.player;
+    return state.players[side].evidence.filter(e => e.faceUp).length;
+  }
   const uid = ctx.source.uid;
   if (!uid) {
     throw new Error(`dyn.eval: $self.${prop} requires ctx.source.uid (none provided)`);

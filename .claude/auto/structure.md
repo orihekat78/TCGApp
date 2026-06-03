@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1849
+- **ファイル数**: 1856
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -230,6 +230,7 @@
     - `BUG-092.md`
     - `BUG-093.md`
     - `BUG-094.md`
+    - `BUG-095.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -295,6 +296,7 @@
     - `2026-06-02-02-cutin-inline-d08007-fix.md`
     - `2026-06-03-01-hirameki-inline.md`
     - `2026-06-03-02-all-partners.md`
+    - `2026-06-03-03-continuous-apdelta-wiring.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -486,6 +488,10 @@
     - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
     - `smoke-2026-06-01.json`
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
+    - `smoke-2026-06-03-2.json`
+    - `smoke-2026-06-03-2.md` — Smoke 1000戦レポート — smoke-2026-06-03-013320
+    - `smoke-2026-06-03-3.json`
+    - `smoke-2026-06-03-3.md` — Smoke 1000戦レポート — smoke-2026-06-03-014330
     - `smoke-2026-06-03.json`
     - `smoke-2026-06-03.md` — Smoke 1000戦レポート — smoke-2026-06-03-005826
     - `smoke-baseline.json`
@@ -640,6 +646,7 @@
     - `2026-05-28.md` — セッション 2026-05-28 — NH step2 UI 統合 + Phase 10〜14 (meta-app)
     - `2026-05-29.md` — セッション 2026-05-29 — Phase 15 / 16 チュートリアル (meta-app)
     - `2026-06-01.md` — セッションログ 2026-06-01 (および直近の前段作業アーカイブ)
+    - `2026-06-03.md` — セッションログ 2026-06-03
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義

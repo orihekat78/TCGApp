@@ -7,29 +7,17 @@
 //   【宣言】【ターン1】〚裏向きの証拠を1つ表向きにする〛:
 //     ターン終了時までこのキャラは〚突撃〛を持つ。
 
-import type { AbilityDef, CardDef, GameState } from '@/engine/types';
+import type { AbilityDef, CardDef } from '@/engine/types';
 
 const a1: AbilityDef = {
   id: 'a1',
   type: 'continuous',
   scope: 'on-scene',
   condition: { kind: 'turn', player: 'self' },
-  continuousModifier: {
-    apDelta: (s: GameState, ctx: { uid: string }) => {
-      // 自分のプレイヤーの「表向き」証拠枚数 * 1000
-      // ctx.uid のキャラが所属するプレイヤー側を判定
-      const owner = s.players.self.scene.some((c) => c.uid === ctx.uid)
-        ? s.players.self
-        : s.players.opp.scene.some((c) => c.uid === ctx.uid)
-        ? s.players.opp
-        : null;
-      if (!owner) return 0;
-      const faceUp = owner.evidence.filter((e) => e.faceUp).length;
-      return faceUp * 1000;
-    },
-  },
+  // 自分の表向きの証拠1つにつき AP+1000 (read 時に再計算: engine.read.char.ap が走査)
+  continuousModifier: { apDelta: { dyn: '$self.faceUpEvidence * 1000' } },
   description: '【自分ターン中】自分の表向きの証拠1つにつき、AP+1000。',
-  ruleRefs: ['rules/15-abilities-effects.md', 'rules/25-qa-effects-resolution.md'],
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/24-qa-naming-stun.md'],
 };
 
 const a2: AbilityDef = {

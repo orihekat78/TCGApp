@@ -66,9 +66,17 @@ export type TriggerDef = {
 // G23: 常時有効型の selector 計算
 // engine.read.char.ap/lp/keywords 等が selector 経由で動的に合算する
 
+// 常時有効型の AP/LP 修正値 (rules/24 §常時有効型: read 時に毎回再計算)。
+// dyn 式 {dyn:'...'} (宣言形・推奨) / 定数 / closure (後方互換・最終手段) の3形を許容。
+// engine.read.char.ap/lp が走査・合算する (grantKeywords と同じ continuous 経路)。
+export type ContinuousDelta =
+  | number
+  | { dyn: string }
+  | ((s: GameState, ctx: { uid: string }) => number);
+
 export type ContinuousModifier = {
-  apDelta?: (s: GameState, ctx: { uid: string }) => number;
-  lpDelta?: (s: GameState, ctx: { uid: string }) => number;
+  apDelta?: ContinuousDelta;
+  lpDelta?: ContinuousDelta;
   grantKeywords?: (s: GameState, ctx: { uid: string }) => string[];
   customSelectorPatch?: (s: GameState, uid: string, base: SceneCharacter) => Partial<SceneCharacter>;
 };
