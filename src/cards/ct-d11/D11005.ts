@@ -48,7 +48,7 @@ const a2: AbilityDef = {
   scope: 'on-scene',
   cost: { kind: 'sleepSelf' },
   // 相手のターン終了時までこのキャラは「アクション対象に必ず指定される」(挑発) を持つ
-  effect: { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'mustBeTargeted', value: true, scope: 'opp-turn' } },
+  effect: { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$self', key: 'mustBeTargeted', val: true, scope: 'opp-turn' } },
   description: '【宣言】【スリープ】相手ターン終了時まで「アクション対象に必ず指定される」(挑発)。',
   ruleRefs: ['rules/07-action-flow.md', 'rules/21-declared-ability-cost.md'],
 };

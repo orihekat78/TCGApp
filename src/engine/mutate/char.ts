@@ -112,7 +112,7 @@ function setTurnEffect(s: GameState, uid: string, key: string, val: unknown): vo
  * ターン終了時の turnEffects クリーンアップ
  * scope='turn': turn 系エフェクト (apMod_turn, lpMod_turn, apMod_contact, lpMod_contact, grantedKeywords) を削除
  */
-function clearTurnEffects(s: GameState, uid: string, scope: 'turn'): void {
+function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn'): void {
   const found = findChar(s, uid);
   if (!found) return;
   const te = found.char.turnEffects;
@@ -122,6 +122,10 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn'): void {
     delete te['apMod_contact'];
     delete te['lpMod_contact'];
     delete te['grantedKeywords'];
+  } else if (scope === 'opp-turn') {
+    // BUG-101: D11005 挑発 (mustBeTargeted) は「相手のターン終了時まで」。
+    // endTurn(p) が相手 (非p=設定者) scene を清掃する経路から呼ばれる。
+    delete te['mustBeTargeted'];
   }
 }
 

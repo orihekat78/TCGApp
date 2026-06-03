@@ -162,16 +162,26 @@ describe('engine.flow.action.target-expander', () => {
       expect(mustTargetCandidates(s, selfUid)).toEqual([]);
     });
 
-    it('mustBeTargeted=true のキャラを返す', () => {
+    it('mustBeTargeted=true かつ legal target (sleep) のキャラを返す', () => {
       const { s, selfUid, oppUids } = makeBoard({
         oppChars: [
           { id: 'O1', state: 'sleep' },
-          { id: 'O2', state: 'active', mustBeTargeted: true },
+          { id: 'O2', state: 'sleep', mustBeTargeted: true },
         ],
       });
       const list = mustTargetCandidates(s, selfUid);
       expect(list.length).toBe(1);
       expect(list[0].uid).toBe(oppUids[1]);
+    });
+
+    it('active な mustBeTargeted キャラは強制対象に含めない (BUG-101: 「指定できる場合」のみ強制)', () => {
+      const { s, selfUid } = makeBoard({
+        oppChars: [
+          { id: 'O1', state: 'sleep' },
+          { id: 'O2', state: 'active', mustBeTargeted: true }, // active = アクション対象に取れない
+        ],
+      });
+      expect(mustTargetCandidates(s, selfUid).length).toBe(0);
     });
   });
 
@@ -198,7 +208,7 @@ describe('engine.flow.action.target-expander', () => {
         produce(s, draft => {
           declare(draft, selfUid, { kind: 'char', uid: oppUids[0] });
         }),
-      ).toThrow(/must target/);
+      ).toThrow(/must target|cannot action/); // BUG-101: canActionAgainstChar gate が先に reject ("cannot action")
     });
 
     it('mustTarget リスト内のキャラなら declare 可能', () => {

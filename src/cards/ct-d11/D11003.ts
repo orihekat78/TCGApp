@@ -7,7 +7,7 @@
 //   【事件婚活パーティー】【宣言】【スリープ】:AP6000以下を1枚まで選びリムーブ。警察2枚以上で宣言可。
 //   【ヒラメキ】キャラを1枚まで選び、アクティブにする。
 
-import type { AbilityDef, CardDef, GameState } from '@/engine/types';
+import type { AbilityDef, CardDef } from '@/engine/types';
 import { caseTraitConditioned } from '../_shared/index.js';
 
 const a1: AbilityDef = {
@@ -17,7 +17,8 @@ const a1: AbilityDef = {
   trigger: {
     hook: 'enter',
     selfOnly: true,
-    matcher: (p: unknown, _s: GameState) => (p as { enterOrder?: number })?.enterOrder === 1,
+    // 【疾風】= このターン1番目に登場で発火 (BUG-100: 累積 enterOrder でなく enterOrderThisTurn を見る)
+    matcherCondition: { kind: 'enterOrderEquals', n: 1 },
   },
   // 【疾風】自分は証拠を1つ得る
   effect: { kind: 'atom', verb: 'evidenceGain', args: { player: 'self', n: 1 } },

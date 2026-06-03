@@ -163,9 +163,13 @@ export function mustTargetCandidates(state: GameState, byUid: string): TargetCan
   if (!actor) return [];
   const opp: Player = actor === 'self' ? 'opp' : 'self';
 
+  // BUG-101: 「このキャラを指定できる場合、必ず指定する」(D11005)。強制対象は legal な
+  // action target (candidates = opp の sleep/stun + 拡張) でもある場合のみ。active 等で対象に
+  // 取れない mustBeTargeted キャラは強制しない (state-machine enforce / canActionAgainstChar と整合)。
+  const legal = candidates(state, byUid);
   const out: TargetCandidate[] = [];
   for (const c of state.players[opp].scene) {
-    if (c.turnEffects.mustBeTargeted === true) {
+    if (c.turnEffects.mustBeTargeted === true && legal.some(x => x.uid === c.uid)) {
       out.push({ uid: c.uid, cardId: c.cardId, player: opp });
     }
   }

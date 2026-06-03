@@ -33,7 +33,12 @@
   **E** choice の choiceIndex 未配線 (D11012)。**F** D11013 cutin (ctx.contact 未設定/byUid 攻撃者固定)。
   **G** D11005 mustBeTargeted (val/value 不一致✅ + scope 未配線)。**H** D11019 deck reveal 複製。
 - **card-condition-catalog.md 全面更新済** (condition kind 網羅 + matcherCondition 節 + ⚠ gap A/B/C)。commit 40c88f8。
-- **次**: 各 group を BUG-XXX 昇格 → 修正 (user triage 待ち)。clean: D08003/D08013/D11015。
+- **✅ バッチ1 修正済**: A=BUG-099 (canDeclaredAbility に condition gate) / B=BUG-100 (疾風 enterOrderEquals 化
+  D11003/D11009) / G=BUG-101 (D11005 挑発: val 修正 + opp-turn clearing + mustTargetCandidates intersect +
+  canActionAgainstChar gate)。⚠ G1 を live 化すると AI が違法手→smoke 回帰 29/100、G3 (enumerator gate +
+  「指定できる場合」legal-target intersect) で解消。vitest 1671 / smoke 500-500 exc0。
+- **⏳ 残り (要 re-trace + 別バッチ)**: C (sequence pick-pause) / D (AI multi-pick D08021) / E (D11012 choiceIndex) /
+  F (D11013 cutin ctx.contact/byUid) / H (D11019 deck複製)。clean: D08003/D08013/D11015。
 
 ## 直近の重要知見 (継続参照)
 

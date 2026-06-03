@@ -17,6 +17,7 @@ import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
 import { char as readChar } from '../../read/char.js'; // BUG-067: ability.limit enforcement
+import { evalCond } from '../../cond/eval.js';          // BUG-099: ability.condition gate
 import { resolveEffectPicks } from '../../effect/resolve-picks.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 
@@ -82,6 +83,16 @@ export function canDeclaredAbility(state: GameState, uid: string, abilId: string
   if (ability?.limit?.kind === 'turn') {
     const used = readChar.declaredUseCount(state, uid, abilId);
     if (used >= ability.limit.n) return false;
+  }
+  // BUG-099: ability.condition gate (rules/17 §条件アイコン: 条件未達なら能力を持たない扱い=使用不可)。
+  // triggered は triggered.ts:172 で評価済だが declared は未配線だった (canDeclaredAbility が
+  // 存在+limit のみ判定)。UI/AI 列挙は canDeclaredAbility で gate するため修正で自動波及する。
+  if (ability?.condition) {
+    const ctx = {
+      source: { player: found.player, uid, abilityId: abilId, area: found.area },
+      bindings: {},
+    } as EffectCtx;
+    if (!evalCond(state, ability.condition, ctx)) return false;
   }
   return true;
 }

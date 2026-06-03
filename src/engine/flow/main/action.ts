@@ -13,7 +13,7 @@
 
 import type { GameState } from '../../types/index.js';
 import { char as readChar } from '../../read/char.js';
-import { candidates as targetCandidates } from '../action/target-expander.js';
+import { candidates as targetCandidates, mustTargetCandidates } from '../action/target-expander.js';
 
 type Player = 'self' | 'opp';
 
@@ -97,7 +97,13 @@ function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKin
 export function canActionAgainstChar(state: GameState, byUid: string, targetUid: string): boolean {
   if (!_canAction(state, byUid, 'char')) return false;
   const cands = targetCandidates(state, byUid);
-  return cands.some(c => c.uid === targetUid);
+  if (!cands.some(c => c.uid === targetUid)) return false;
+  // BUG-101: mustBeTargeted (D11005 挑発) — 強制対象 (legal な must-target) がいる場合、
+  // char target はそのリストに限定 (state-machine.ts:152-162 の enforce と整合、AI/UI 列挙が
+  // 違法手を出さないようにする)。mustTargetCandidates は legal target に絞り込み済 (上記)。
+  const must = mustTargetCandidates(state, byUid);
+  if (must.length > 0 && !must.some(c => c.uid === targetUid)) return false;
+  return true;
 }
 
 /**

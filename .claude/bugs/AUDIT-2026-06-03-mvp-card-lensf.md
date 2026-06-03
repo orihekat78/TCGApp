@@ -39,8 +39,14 @@ resolver.ts の `sequence` は全 step を同期実行 (chain のような pendi
 ### H. D11019 deck reveal 複製 ○ [HIGH]
 - **a1**: マッチ黄キャラの `sceneEnter($matched.cardId)` に source pick-query (target) が無く deck-splice 分岐が走らない + `$revealed` が matched を除外 → 登場後もデッキに残り**現場+デッキで複製**。
 
+## 修正状況
+
+- **✅ バッチ1 修正済 (2026-06-03)**: A=BUG-099 / B=BUG-100 / G=BUG-101 (個人確認済3グループ)。
+- **⏳ 未修正 (要 re-trace + 別バッチ)**: C (sequence pick-pause) / D (AI multi-pick) / E (choiceIndex) /
+  F (D11013 cutin) / H (D11019 deck複製)。
+
 ## 次アクション
 
-- 各 group を BUG-XXX.md に昇格 → 修正 (engine gap A/C/D/E + card B/F/G/H)。
+- 残り C/D/E/F/H を各々個人 re-trace → BUG-XXX 昇格 → 修正。
 - enforcement gap A/B/C は [card-condition-catalog.md](../specs/card-condition-catalog.md) ⚠節にも記載済。
 - 詳細 (file:line・empirical repro): workflow 出力 `tasks/wi0i16z50.output`。

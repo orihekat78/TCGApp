@@ -18,11 +18,13 @@ describe('D11003 萩原千速 (疾風+宣言+ヒラメキ)', () => {
     expect(D11003.abilities.length).toBe(3);
   });
 
-  it('a1 = 疾風 enter triggered (enterOrder=1 matcher) → evidenceGain', () => {
+  it('a1 = 疾風 enter triggered (enterOrderEquals matcherCondition) → evidenceGain', () => {
     const a1 = D11003.abilities[0];
     expect(a1.type).toBe('triggered');
     expect(a1.trigger?.hook).toBe('enter');
-    expect(typeof a1.trigger?.matcher).toBe('function');
+    // BUG-100: closure matcher (累積 enterOrder) → enterOrderEquals matcherCondition (turn-local)
+    expect(a1.trigger?.matcher).toBeUndefined();
+    expect(a1.trigger?.matcherCondition).toEqual({ kind: 'enterOrderEquals', n: 1 });
     expect(a1.effect?.kind).toBe('atom');
   });
 

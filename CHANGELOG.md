@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `660a7ef09efc`
+> Source hash: `4e4fd4b8aa5c`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,35 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-06-03
+title: Lens F 監査 修正バッチ1 — declared condition gate / 疾風 enterOrderEquals / D11005 挑発 (BUG-099/100/101)
+type: fix
+scope: engine
+---
+
+## Lens F 監査の高確度 3 グループを修正
+
+MVP Lens F 深掘り監査 (AUDIT-2026-06-03) の個人確認済 3 グループ:
+
+- **BUG-099 (A)**: declared ability の `condition` が `canDeclaredAbility` で未評価だった (limit のみ判定)。
+  triggered は gate 済だが declared が未配線 → D08026/D11003/D11021 a2 の【解決編】等が未 gate。
+  `canDeclaredAbility` に `evalCond(ability.condition)` を追加。
+- **BUG-100 (B)**: 疾風 (D11003 a1 / D11009 a2) が closure matcher で累積 `enterOrder` を参照していた
+  (turn-local `enterOrderThisTurn` が正)。`matcherCondition:{kind:'enterOrderEquals',n:1}` に置換 (D11014 同型)。
+- **BUG-101 (G)**: D11005 挑発 (mustBeTargeted) が ① args key 不一致 (`value`→`val`) で dead-code、
+  ② `opp-turn` scope 未配線で永続化、③ enumerator 未対応 (G1 修正で live 化すると AI が違法手→smoke 29/100 回帰)。
+  → val 修正 + clearTurnEffects('opp-turn') + endTurn で相手 scene 清掃 + mustTargetCandidates を legal target に
+  intersect (「指定できる場合」nuance) + canActionAgainstChar に mustBeTargeted gate。
+
+## 検証
+
+- tsc clean / vitest **1671 PASS** (+behavioral: A 条件 gate / G1 set / G3 sleep強制・active非強制 / G2 endTurn 解除 /
+  B shape を matcherCondition assert に更新) / smoke 1000 例外0 (502/498 → 500/500、condition gate + 挑発 live 化で
+  AI 挙動が変化、回帰 29/100→0)。
+- 残り監査グループ (C sequence pick-pause / D AI multi-pick / E choiceIndex / F D11013 cutin / H D11019 deck複製) は
+  別バッチ (未個人 re-trace 含む)。
 
 ---
 date: 2026-06-03

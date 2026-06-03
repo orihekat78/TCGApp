@@ -54,7 +54,7 @@ describe('Player resolution bug — CPU card `player: self` should grant CPU (no
       event.emit(
         draft,
         'enter',
-        { enterOrder: 1 },
+        { enterOrder: 1, enterOrderThisTurn: 1 },
         { player: 'opp', uid: 'D11003#opp-0', cardId: 'D11003' },
       );
 
@@ -106,7 +106,7 @@ describe('Player resolution bug — CPU card `player: self` should grant CPU (no
       event.emit(
         draft,
         'enter',
-        { enterOrder: 1 },
+        { enterOrder: 1, enterOrderThisTurn: 1 },
         { player: 'self', uid: 'D11003#self-0', cardId: 'D11003' },
       );
 
@@ -151,7 +151,7 @@ describe('Player resolution bug — CPU card `player: self` should grant CPU (no
       event.emit(
         draft,
         'enter',
-        { enterOrder: 1 },
+        { enterOrder: 1, enterOrderThisTurn: 1 },
         { player: 'opp', uid: 'D08013#opp-0', cardId: 'D08013' },
       );
 

@@ -7,7 +7,7 @@
 //   【疾風】キャラを1枚まで選び、スリープさせる。
 //   ヒラメキ: キャラを1枚まで選び、スリープさせる。
 
-import type { AbilityDef, CardDef, GameState } from '@/engine/types';
+import type { AbilityDef, CardDef } from '@/engine/types';
 import { partnerColorKeyword } from '../_shared/index.js';
 
 // a1 partnerColorKeyword (突撃[キャラ])
@@ -21,10 +21,8 @@ const a2: AbilityDef = {
   trigger: {
     hook: 'enter',
     selfOnly: true,
-    matcher: (p: unknown, _s: GameState) => {
-      if (!p || typeof p !== 'object') return false;
-      return (p as { enterOrder?: number }).enterOrder === 1;
-    },
+    // 【疾風】= このターン1番目に登場で発火 (BUG-100: 累積 enterOrder でなく enterOrderThisTurn を見る)
+    matcherCondition: { kind: 'enterOrderEquals', n: 1 },
   },
   // キャラを1枚まで選び、スリープさせる
   effect: { kind: 'atom', verb: 'sceneSetState', args: { player: 'self', max: 1, side: 'either', state: 'sleep' } },

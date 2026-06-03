@@ -77,6 +77,13 @@ export function endTurn(state: GameState, p: Player): void {
       charMutator.clearTurnEffects(state, c.uid, 'turn');
     }
   }
+  // BUG-101: 'opp-turn' scope (D11005 挑発 mustBeTargeted) は「相手のターン終了時まで」。
+  // p のターン終了時、相手 (非p=設定者) の scene の opp-turn 効果を清掃する
+  // (設定者から見て「相手のターン (= p のターン) が終了した」= 解除タイミング)。
+  const oppOfP: Player = p === 'self' ? 'opp' : 'self';
+  for (const c of state.players[oppOfP].scene) {
+    charMutator.clearTurnEffects(state, c.uid, 'opp-turn');
+  }
   event.emit(state, 'turn:end', { player: p }, undefined);
   // ターン情報の繰上げ
   state.turn.number += 1;
