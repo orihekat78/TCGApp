@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 160
-- **ファイル数**: 1554
+- **ファイル数**: 1567
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -473,6 +473,18 @@
     - `smoke-2026-05-26-5.md` — Smoke 1000戦レポート — smoke-2026-05-26-104842
     - `smoke-2026-05-26.json`
     - `smoke-2026-05-26.md` — Smoke 1000戦レポート — smoke-2026-05-26-095757
+    - `smoke-2026-06-01-2.json`
+    - `smoke-2026-06-01-2.md` — Smoke 1000戦レポート — smoke-2026-06-01-081240
+    - `smoke-2026-06-01-3.json`
+    - `smoke-2026-06-01-3.md` — Smoke 1000戦レポート — smoke-2026-06-01-081854
+    - `smoke-2026-06-01-4.json`
+    - `smoke-2026-06-01-4.md` — Smoke 1000戦レポート — smoke-2026-06-01-102852
+    - `smoke-2026-06-01-5.json`
+    - `smoke-2026-06-01-5.md` — Smoke 1000戦レポート — smoke-2026-06-01-112654
+    - `smoke-2026-06-01-6.json`
+    - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
+    - `smoke-2026-06-01.json`
+    - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -985,6 +997,7 @@
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
+      - `2026-06-03-all-partners-generator-design.md` — 設計: 全パートナーカード生成 (generator) (2026-06-03)
       - `2026-06-03-hirameki-inline-design.md` — 設計: ヒラメキ inline 化 + factory 廃止 (2026-06-03)
 - **`meta-app/`**
   - **`src/`**
