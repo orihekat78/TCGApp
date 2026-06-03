@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1856
+- **ファイル数**: 1857
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1010,6 +1010,7 @@
       - `2026-06-03-all-partners-generator-design.md` — 設計: 全パートナーカード生成 (generator) (2026-06-03)
       - `2026-06-03-continuous-apdelta-wiring-design.md` — 設計: 常時有効型 continuousModifier.apDelta/lpDelta の engine 配線 + D08005 a1 宣言形化 (2026-…
       - `2026-06-03-hirameki-inline-design.md` — 設計: ヒラメキ inline 化 + factory 廃止 (2026-06-03)
+      - `2026-06-03-triggered-limit-and-d11016-guard-design.md` — 設計: triggered ability の limit enforcement + D11016 a1 ガード自己判定 (2026-06-03)
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
