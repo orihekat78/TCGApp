@@ -23,6 +23,18 @@
 - 検証: vitest **1665** / smoke 502-498 exc0 / 新 test 7件 (triggered-limit-guard.test.ts ×6 + eval.test.ts ×1)。
   commit: 8538174 (BUG-096/097) + 本コミット (BUG-098)。
 
+## 2026-06-03 (4) MVP Lens F 深掘り監査 — 16 issue 確定 (未修正、要 triage)
+
+- 複雑カード15枚を1枚ずつ end-to-end 精査 → **16 issue** を8根本原因に集約。詳細
+  `.claude/bugs/AUDIT-2026-06-03-mvp-card-lensf.md`。3件 Claude 個人確認済✅。
+- **A** declared ability の condition 未評価✅ (D08026/D11003/D11021 a2 — canDeclaredAbility が limit のみ)。
+  **B** 疾風 closure matcher が累積 enterOrder✅ (D11003 a1/D11009 a2)。**C** sequence が pick で
+  pause しない (D08024/D11014/D11020)。**D** AI 経路 multi-pick 未解決 (D08021 a1, empirical✅)。
+  **E** choice の choiceIndex 未配線 (D11012)。**F** D11013 cutin (ctx.contact 未設定/byUid 攻撃者固定)。
+  **G** D11005 mustBeTargeted (val/value 不一致✅ + scope 未配線)。**H** D11019 deck reveal 複製。
+- **card-condition-catalog.md 全面更新済** (condition kind 網羅 + matcherCondition 節 + ⚠ gap A/B/C)。commit 40c88f8。
+- **次**: 各 group を BUG-XXX 昇格 → 修正 (user triage 待ち)。clean: D08003/D08013/D11015。
+
 ## 直近の重要知見 (継続参照)
 
 - **triggered ability の limit**: declared と同じ `declaredUseCount` を triggered.ts でも enforcement (BUG-096)。
