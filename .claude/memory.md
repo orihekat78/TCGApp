@@ -43,8 +43,11 @@
 - **✅ バッチ2b 修正済**: F=BUG-104 (D11013 防御側カットイン: contact.ts cutin binding を p 視点 [contactCharUidOf] +
   attackerSide、stack.ts entryToCtx で ctx.contact 展開)。empirical 確認 (防御 AP+1000 + 警察ドロー、攻撃不変)。
   ⚠ 知見: D11013 a1 は condition partnerColor:黄 — 防御側カットインでも owner の partner 色を見る。
-- **⏳ 残り (後続)**: C (sequence pick-pause: D08024/D11020/D11014、⚠ resolver 改修は BUG-078/D08013 回帰リスク) /
-  E (D11012 choiceIndex: dyn 永続化 + AI/UI 選択)。clean: D08003/D08013/D11015。
+- **✅ バッチ2c 一部修正**: C=BUG-105 (resolver sequence に pick-await pause+continuation 追加、chain 同型・no-apply-break 無し)。
+  D08024/D11020 (state 依存) 修正、D08013/BUG-078 保護 (bug-077 Phase F を pause→continuation 機構に更新、15/15)。
+  ⚠ D11014 は bind 依存のため部分: sceneEnter は正順実行されるが $entered bind が pick-resolve 越し continuation に伝播しない (継続課題)。
+- **⏳ 継続課題**: D11014 $entered bind 伝播 / AI 経路の side-channel 単一 PB pick drain (D08021 と同根) / **E (D11012 choiceIndex 未配線、未着手)**。
+  clean: D08003/D08013/D11015。Playwright 63/64 (resolver 変更も UI 回帰なし)。
 - Playwright e2e 全64件 (63 pass/1 skip) で batch1+2a の engine 変更が実機回帰なしを確認済 (2026-06-03)。
 
 ## 直近の重要知見 (継続参照)

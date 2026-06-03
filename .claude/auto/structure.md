@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1889
+- **ファイル数**: 1893
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -241,6 +241,7 @@
     - `BUG-102.md`
     - `BUG-103.md`
     - `BUG-104.md`
+    - `BUG-105.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -312,6 +313,7 @@
     - `2026-06-03-06-lensf-batch1.md`
     - `2026-06-03-07-lensf-batch2a.md`
     - `2026-06-03-08-lensf-batch2b.md`
+    - `2026-06-03-09-lensf-batch2c-resolver.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -503,6 +505,8 @@
     - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
     - `smoke-2026-06-01.json`
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
+    - `smoke-2026-06-03-10.json`
+    - `smoke-2026-06-03-10.md` — Smoke 1000戦レポート — smoke-2026-06-03-094615
     - `smoke-2026-06-03-2.json`
     - `smoke-2026-06-03-2.md` — Smoke 1000戦レポート — smoke-2026-06-03-013320
     - `smoke-2026-06-03-3.json`

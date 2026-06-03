@@ -44,7 +44,10 @@ resolver.ts の `sequence` は全 step を同期実行 (chain のような pendi
 - **✅ バッチ1 修正済 (2026-06-03)**: A=BUG-099 / B=BUG-100 / G=BUG-101 (個人確認済3グループ)。
 - **✅ バッチ2a 修正済 (2026-06-03)**: H=BUG-102 (D11019 deck splice) / D=BUG-103 (D08021 AI multi-pick、empirical 確認)。
 - **✅ バッチ2b 修正済 (2026-06-03)**: F=BUG-104 (D11013 防御側カットイン: ctx.contact + byUid per-player、empirical 確認)。
-- **⏳ 未修正 (後続バッチ)**: C (sequence pick-pause: D08024/D11020/D11014、BUG-078 回帰リスク) / E (D11012 choiceIndex)。
+- **✅ バッチ2c 一部修正 (2026-06-03)**: C=BUG-105 (resolver sequence pick-pause)。D08024/D11020 (state 依存) 修正、
+  D08013/BUG-078 保護 (Phase F 更新)。D11014 は bind 依存のため部分 (⚠ 下記継続)。
+- **⏳ 継続課題**: D11014 の `$entered` bind が pick-resolve 越しに伝播しない / AI 経路の side-channel pick drain
+  (D08021 と同根、単一 PB pick が AI で no-op) / **E (D11012 choiceIndex 未配線)**。
 
 ## 次アクション
 

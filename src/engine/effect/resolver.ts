@@ -28,8 +28,26 @@ import { resolve as resolveTarget } from '../target/resolve.js';
 export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
   switch (eff.kind) {
     case 'sequence': {
-      for (const step of eff.steps) {
-        run(state, step, ctx);
+      // BUG-105: pick await で一時停止し、残り step を __pendingChainContinuation に保存する
+      // (chain と同型。ただし no-apply-break はしない = 各 step は独立)。pick を含む step の後段が
+      // pick 解決前の盤面で評価される不具合 (D08024 step2 AP対象 / D11020 step2 条件 / D11014 step3 draw) を修正。
+      // 注: pick を持たない step のみの sequence は queue 長が増えず従来通り一括実行 (動作不変)。
+      const gSeq = globalThis as {
+        __pendingEffectPickQueue?: unknown[];
+        __pendingChainContinuation?: { remainder: Effect[]; ctx: EffectCtx }[];
+      };
+      for (let i = 0; i < eff.steps.length; i++) {
+        const qBefore = gSeq.__pendingEffectPickQueue?.length ?? 0;
+        run(state, eff.steps[i]!, ctx);
+        const qAfter = gSeq.__pendingEffectPickQueue?.length ?? 0;
+        if (qAfter > qBefore) {
+          const remainder = eff.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            if (!gSeq.__pendingChainContinuation) gSeq.__pendingChainContinuation = [];
+            gSeq.__pendingChainContinuation.push({ remainder, ctx });
+          }
+          return; // sequence 一時停止 (pick 解決後に continuation で残り step が post-pick 盤面で実行)
+        }
       }
       return;
     }
