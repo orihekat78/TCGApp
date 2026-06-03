@@ -22,6 +22,8 @@
 
 import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
+import { char as readChar } from '../read/char.js'; // BUG-096: triggered ability の limit enforcement
+import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
@@ -185,6 +187,12 @@ function handleHook(
       }
       // effect が無いと queue しても無意味
       if (!ability.effect) continue;
+      // BUG-096: triggered ability の limit:{kind:'turn',n} (【ターン①/②】) を enforcement。
+      // declared フロー (declared-ability.ts:82-84) と同じ declaredUseCount を流用
+      // (SceneCharacter.declaredUseCount、resetTurnFlags がターン境界で reset、rules/17)。
+      if (ability.limit?.kind === 'turn') {
+        if (readChar.declaredUseCount(state, card.uid, ability.id) >= ability.limit.n) continue;
+      }
       // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を候補から substitute してから queue
       // recursive utility が atom / choice / sequence / conditional / optional 等を walk
       // Phase 7-3: chooseAtomTarget callback で verb 別ヒューリスティック選択 (敵 highest AP 等)
@@ -237,6 +245,10 @@ function handleHook(
         payload,
         sourceBindings,
       );
+      // BUG-096: 発火を記録 (limit:{turn} のカウント。limit 無しは no-op)
+      if (ability.limit?.kind === 'turn') {
+        flag.incrDeclaredUseCount(state, card.uid, ability.id);
+      }
     }
   }
 }

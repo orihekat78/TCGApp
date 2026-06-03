@@ -6,7 +6,7 @@
 //   【相手ターン中】【ターン1】このキャラが指定されたアクションをガードしたとき、
 //     ガードしたキャラをアクティブにし、ターン終了時までAP＋2000する。
 
-import type { AbilityDef, CardDef, GameState } from '@/engine/types';
+import type { AbilityDef, CardDef } from '@/engine/types';
 
 const a1: AbilityDef = {
   id: 'a1',
@@ -16,12 +16,9 @@ const a1: AbilityDef = {
   limit: { kind: 'turn', n: 1 },
   trigger: {
     hook: 'action:guarded',
-    selfOnly: false,
-    matcher: (p: unknown, _s: GameState) => {
-      if (!p || typeof p !== 'object') return false;
-      const obj = p as { guardUid?: unknown };
-      return typeof obj.guardUid === 'string';
-    },
+    // このキャラがガードしたとき (payload.guardUid === 自分) のみ発火 (rules/07、BUG-097)。
+    // matcher closure は card.uid を参照不可のため matcherCondition で declarative に自己判定。
+    matcherCondition: { kind: 'guardedBySelf' },
   },
   effect: {
     kind: 'sequence',

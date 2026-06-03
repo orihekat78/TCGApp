@@ -36,6 +36,8 @@ export type Condition =
   // D11007 a3: contact:start hook 発火時、attacker (aUid) より defender (bUid) の方が AP が高い場合
   // payload は ctx.triggerPayload に詰められ、listener から評価される (TriggerDef.matcherCondition 経由)
   | { kind: 'contactOpponentApHigher' }
+  // D11016 a1: action:guarded payload.guardUid === ctx.source.uid (このキャラがガードしたとき、rules/07)
+  | { kind: 'guardedBySelf' }
   // D11014 a1 / D11003 / D11009 driver: enter hook の payload.enterOrder が n と一致するか
   // (【疾風 N】 = ターン N 番目に登場で発火、matcher → matcherCondition declarative 化)
   | { kind: 'enterOrderEquals'; n: number }

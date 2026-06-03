@@ -173,6 +173,12 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const bAp = charRead.ap(state, payload.bUid);
       return bAp > aAp;
     }
+    case 'guardedBySelf': {
+      // D11016 a1: action:guarded payload.guardUid が自分 (ctx.source.uid) と一致するとき true
+      // (「このキャラがガードしたとき」= 自分のガードのみ発火、rules/07。BUG-097)
+      const guardUid = (ctx.triggerPayload as { guardUid?: string } | undefined)?.guardUid;
+      return guardUid === ctx.source.uid;
+    }
     case 'enterOrderEquals': {
       // D11014 a1 / D11003 / D11009 driver: enter hook payload.enterOrderThisTurn が n と一致するか
       // rules/17 §【疾風 N】: 「自分の現場にこのターン N番目に登場したとき」

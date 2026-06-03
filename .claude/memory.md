@@ -11,7 +11,22 @@
   D08005 a1 を `{dyn:'$self.faceUpEvidence * 1000'}` 宣言形へ。詳細 `.claude/bugs/BUG-095.md`。
 - 当日の他作業 (カットイン/ヒラメキ inline・全パートナー276枚) は `.claude/sessions/2026-06-03.md`。
 
+## 2026-06-03 (3) MVP デッドコード監査 + BUG-096/097 (完了)
+
+- MVP 47カードを6レンズ網羅監査。**verb/hook/cost/condition/dyn はクリーン** (全件コード照合)。
+- **BUG-096**: triggered ability の `limit:{turn,n}` 未 enforcement (declared フローのみ)。triggered.ts で
+  declaredUseCount 流用 enforcement。影響 D11016 a1 / D11007 a3。
+- **BUG-097**: D11016 a1 が任意のガードで過剰発火 (matcher が card.uid 非参照)。Condition kind
+  `guardedBySelf` 追加 + matcherCondition 化。
+- 検証: vitest 1662 / smoke 502-498 exc0 / 新 test 4件 (triggered-limit-guard.test.ts)。commit 後に hash 記録。
+- **⚠ 未対応 issue3**: D11007 a3 の `contactOpponentApHigher` も自己照合欠落 (contact aUid/bUid のみ見て自分を
+  確認しない) → 任意 contact で過剰発火の疑い。attacker/defender どちら scope か rules 判断要 → user 確認待ち。
+
 ## 直近の重要知見 (継続参照)
+
+- **triggered ability の limit**: declared と同じ `declaredUseCount` を triggered.ts でも enforcement (BUG-096)。
+- **trigger 自己判定**: matcher closure は card.uid 非参照 → 自己照合は matcherCondition + ctx.source.uid で
+  (guardedBySelf 等)。closure matcher だけでは「自分が〜したとき」を判定できない。
 
 - **continuousModifier.apDelta/lpDelta**: engine read 時に ap()/lp() が走査・合算 (BUG-095 で配線)。
   dyn 宣言形推奨、`$self.ap`/`$self.lp` 参照禁止 (ap()→evalDyn→ap() 無限再帰)。
