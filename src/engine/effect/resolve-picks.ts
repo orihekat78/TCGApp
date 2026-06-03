@@ -358,6 +358,24 @@ function substituteAtomPick(
 
   // Pattern B: target → cardId/uid 配列に置換 (atom-handler が配列を期待)
   // BUG-077 後続: evidence kind (evidenceToHand 等の AI 経路) も解決対象に含む
+  // BUG-103 (D08021): multi-pick contract (cardIds:'$pick.cardIds')。AI 経路では cardIds が
+  // 未解決のまま handler に届き awaiting-pick → no-op (stackedCards=0、a2突撃/a3draw/a4evidence が
+  // unlock されず CPU の D08021 がバニラ化)。単一 pick の target:[uid] では cardIds を埋められないため、
+  // card 候補から最大 max 枚を greedy 選択し cardIds 配列に詰める (heuristic: 取れるだけ取る)。
+  if (args.cardIds === '$pick.cardIds') {
+    const nMaxC = (target as { n?: { max?: number } } | undefined)?.n?.max ?? cands.length;
+    const chosenIds = cands
+      .filter((c) => c.kind === 'card')
+      .slice(0, nMaxC)
+      .map((c) => (c as { cardId: string }).cardId);
+    // target (pick query) は残す: handler が target.query.area を見て source area (remove 等) から
+    // 各 cardId を splice する (落とすと stackedCards は増えるが source に残り複製になる)。
+    return {
+      kind: 'atom',
+      verb: atom.verb as never,
+      args: resolveDynArgs(state, { ...args, cardIds: chosenIds }, ctx),
+    } as Effect;
+  }
   const pickValue =
     picked.kind === 'card' ? picked.cardId :
     picked.kind === 'char' ? picked.uid :

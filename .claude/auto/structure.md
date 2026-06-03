@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1878
+- **ファイル数**: 1884
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -238,6 +238,8 @@
     - `BUG-099.md`
     - `BUG-100.md`
     - `BUG-101.md`
+    - `BUG-102.md`
+    - `BUG-103.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -307,6 +309,7 @@
     - `2026-06-03-04-triggered-limit-and-guard.md`
     - `2026-06-03-05-d11007-contact-scope.md`
     - `2026-06-03-06-lensf-batch1.md`
+    - `2026-06-03-07-lensf-batch2a.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -510,6 +513,8 @@
     - `smoke-2026-06-03-6.md` — Smoke 1000戦レポート — smoke-2026-06-03-032211
     - `smoke-2026-06-03-7.json`
     - `smoke-2026-06-03-7.md` — Smoke 1000戦レポート — smoke-2026-06-03-084127
+    - `smoke-2026-06-03-8.json`
+    - `smoke-2026-06-03-8.md` — Smoke 1000戦レポート — smoke-2026-06-03-090738
     - `smoke-2026-06-03.json`
     - `smoke-2026-06-03.md` — Smoke 1000戦レポート — smoke-2026-06-03-005826
     - `smoke-baseline.json`
@@ -1893,6 +1898,7 @@
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
+      - `lensf-batch2a.test.ts` — tests/engine/effect/lensf-batch2a — Lens F batch2a (BUG-102 D11019 deck splice /…
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
       - `player-resolution-bug.test.ts` — tests/engine/effect/player-resolution-bug
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests

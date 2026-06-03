@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `4e4fd4b8aa5c`
+> Source hash: `ce6adc995cc3`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,32 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-06-03
+title: Lens F 監査 修正バッチ2a — D11019 deck複製 / D08021 AI multi-pick (BUG-102/103)
+type: fix
+scope: engine
+---
+
+## Lens F 監査 batch2a
+
+- **BUG-102 (H)**: D11019 a1 deck reveal でマッチした黄キャラがデッキから除去されず現場+デッキで複製していた。
+  sceneEnter args に `target:{query:{area:'deck',side:'self'}}` を追加し、既存 deck-splice 分岐で
+  デッキから1枚除去 (engine 無改修)。
+- **BUG-103 (D)**: D08021 a1 charStackCard の multi-pick (`cardIds:'$pick.cardIds'`) が AI/CPU 経路で
+  未解決 (heuristic Pattern B が単一 pick しか解決せず cardIds を埋めない) → stackedCards=0 で
+  CPU の D08021 が a2突撃/a3draw/a4evidence を全 unlock できずバニラ化。
+  resolve-picks.ts の AI 初期 walk に multi-pick cardIds 解決分岐を追加 (取れるだけ greedy 選択、
+  target 保持で source splice)。guard 限定 (D08021 a1 のみ)。
+
+## 検証
+
+- tsc / vitest **1674 PASS** (+3 behavioral: CPU D08021 → stackedCards=3 + remove splice / 候補0で 0 /
+  D11019 登場後デッキ重複なし + 総枚数保存) / smoke 1000 例外0 (500/500)。
+- empirical repro で D08021 stackedCards 0→3 + remove=[] を実機確認。
+- ⚠ 残: AI が side-channel pick (単一 Pattern B discard 等) を drain しない構造問題は別 issue。
+  残り監査 group C (sequence pick-pause) / E (D11012 choiceIndex) / F (D11013 cutin) は後続バッチ。
 
 ---
 date: 2026-06-03

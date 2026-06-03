@@ -37,8 +37,11 @@
   D11003/D11009) / G=BUG-101 (D11005 挑発: val 修正 + opp-turn clearing + mustTargetCandidates intersect +
   canActionAgainstChar gate)。⚠ G1 を live 化すると AI が違法手→smoke 回帰 29/100、G3 (enumerator gate +
   「指定できる場合」legal-target intersect) で解消。vitest 1671 / smoke 500-500 exc0。
-- **⏳ 残り (要 re-trace + 別バッチ)**: C (sequence pick-pause) / D (AI multi-pick D08021) / E (D11012 choiceIndex) /
-  F (D11013 cutin ctx.contact/byUid) / H (D11019 deck複製)。clean: D08003/D08013/D11015。
+- **✅ バッチ2a 修正済**: H=BUG-102 (D11019 sceneEnter に target deck query → splice、複製解消) /
+  D=BUG-103 (D08021 charStackCard multi-pick を AI 初期 walk で解決、stackedCards 0→3 + splice、empirical 確認)。
+  ⚠ 知見: AI は side-channel pick (Pattern B 単一: discard 等) を drain しない構造問題が残存 (D08021 は初期 walk 解決で回避)。
+- **⏳ 残り (後続)**: C (sequence pick-pause: D08024/D11020/D11014、⚠ resolver 改修は BUG-078/D08013 回帰リスク) /
+  E (D11012 choiceIndex: dyn 永続化 + AI/UI 選択) / F (D11013 cutin: ctx.contact 未配線 + byUid 攻撃者固定)。clean: D08003/D08013/D11015。
 
 ## 直近の重要知見 (継続参照)
 

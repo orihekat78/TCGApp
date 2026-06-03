@@ -42,8 +42,8 @@ resolver.ts の `sequence` は全 step を同期実行 (chain のような pendi
 ## 修正状況
 
 - **✅ バッチ1 修正済 (2026-06-03)**: A=BUG-099 / B=BUG-100 / G=BUG-101 (個人確認済3グループ)。
-- **⏳ 未修正 (要 re-trace + 別バッチ)**: C (sequence pick-pause) / D (AI multi-pick) / E (choiceIndex) /
-  F (D11013 cutin) / H (D11019 deck複製)。
+- **✅ バッチ2a 修正済 (2026-06-03)**: H=BUG-102 (D11019 deck splice) / D=BUG-103 (D08021 AI multi-pick、empirical 確認)。
+- **⏳ 未修正 (後続バッチ)**: C (sequence pick-pause: D08024/D11020/D11014) / E (D11012 choiceIndex) / F (D11013 cutin)。
 
 ## 次アクション
 

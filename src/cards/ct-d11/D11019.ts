@@ -30,7 +30,9 @@ const a1: AbilityDef = {
       { kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },
         // 公開した【黄】キャラを登場させる
-        then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true } },
+        // BUG-102: target に source area=deck を指定し、登場時にマッチカードをデッキから除去
+        // (sourceArea='deck' → atom-handlers sceneEnter:421 splice)。無いと現場+デッキで複製。
+        then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true, target: { query: { area: 'deck', side: 'self' } } } },
       },
       // 残りの公開カードをデッキの下に移す
       { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
