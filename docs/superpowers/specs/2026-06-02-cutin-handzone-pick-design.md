@@ -36,7 +36,7 @@ self のコンタクト判断 (action-1/2/再行動) を `HandZone.pickMode` 経
 
 ## テスト
 - **unit**: `useContactFlowDriver` 自動パス (候補0で store を開かず `actionContact{pass}` dispatch)。
-- **e2e 更新**: `tests/e2e/patterns/cutin-fixed-ap.spec.ts` (6枚) / `tests/e2e/opp-turn-contact.spec.ts` の self cutin 選択を `cid-cutin-<cardId>` ボタン → **黄色枠手札カード click** に変更。helper (`expectCutInUsed` 等) は据え置き。
+- **e2e**: `cutin-fixed-ap.spec.ts` は engine action を直接 dispatch するため UI 変更の影響なし（不変）。更新は `opp-turn-contact.spec.ts`（cid-modal 期待 → `hand-zone-pick-skip`）+ 新規 `cutin-handzone-pick.spec.ts`（黄色枠 click → `contact-cutin` log / skip → パス）。判定は安定する `gameState.log` の `contact-cutin`(player) を使用（action context は完走時に消えるため）。
 - **Playwright headed**: 黄色枠表示 / pick / パス / 自動パス / banner actor 表示 を実機確認 (console error 0)。
 
 ## 関連
