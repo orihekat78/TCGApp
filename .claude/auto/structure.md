@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1848
+- **ファイル数**: 1849
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1001,6 +1001,7 @@
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
       - `2026-06-03-all-partners-generator-design.md` — 設計: 全パートナーカード生成 (generator) (2026-06-03)
+      - `2026-06-03-continuous-apdelta-wiring-design.md` — 設計: 常時有効型 continuousModifier.apDelta/lpDelta の engine 配線 + D08005 a1 宣言形化 (2026-…
       - `2026-06-03-hirameki-inline-design.md` — 設計: ヒラメキ inline 化 + factory 廃止 (2026-06-03)
 - **`meta-app/`**
   - **`src/`**
