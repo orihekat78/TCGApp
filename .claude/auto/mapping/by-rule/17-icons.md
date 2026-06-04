@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0f3ec25e0b40`
+> Source hash: `790b4e0a859c`
 
 公式ルール [`17-icons.md`](../../../rules/17-icons.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,32 +20,33 @@
 ## 📐 関連 Spec
 
 - [`2026-05-11-ui-action-flows`](../by-spec/2026-05-11-ui-action-flows.md)
+- [`card-condition-catalog`](../by-spec/card-condition-catalog.md)
 - [`engine-api-card-abilities`](../by-spec/engine-api-card-abilities.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseTraitConditioned`](../by-spec/shared-classes--caseTraitConditioned.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (48)
+## 📄 参照ソース (150)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
+- [`src/cards/_shared/caseMonoColor.ts`](../../../../src/cards/_shared/caseMonoColor.ts)
 - [`src/cards/_shared/caseTraitConditioned.ts`](../../../../src/cards/_shared/caseTraitConditioned.ts)
 - [`src/cards/_shared/eventRemoveByAP.ts`](../../../../src/cards/_shared/eventRemoveByAP.ts)
 - [`src/cards/_shared/partnerColorKeyword.ts`](../../../../src/cards/_shared/partnerColorKeyword.ts)
-- [`src/cards/ct-d08/D08003.ts`](../../../../src/cards/ct-d08/D08003.ts)
-- [`src/cards/ct-d08/D08004.ts`](../../../../src/cards/ct-d08/D08004.ts)
-- [`src/cards/ct-d08/D08005.ts`](../../../../src/cards/ct-d08/D08005.ts)
-- [`src/cards/ct-d08/D08006.ts`](../../../../src/cards/ct-d08/D08006.ts)
-- [`src/cards/ct-d08/D08007.ts`](../../../../src/cards/ct-d08/D08007.ts)
-- [`src/cards/ct-d08/D08008.ts`](../../../../src/cards/ct-d08/D08008.ts)
-- [`src/cards/ct-d08/D08009.ts`](../../../../src/cards/ct-d08/D08009.ts)
-- [`src/cards/ct-d08/D08010.ts`](../../../../src/cards/ct-d08/D08010.ts)
-- [`src/cards/ct-d08/D08011.ts`](../../../../src/cards/ct-d08/D08011.ts)
-- [`src/cards/ct-d08/D08012.ts`](../../../../src/cards/ct-d08/D08012.ts)
-- [`src/cards/ct-d08/D08013.ts`](../../../../src/cards/ct-d08/D08013.ts)
-- [`src/cards/ct-d08/D08014.ts`](../../../../src/cards/ct-d08/D08014.ts)
-- [`src/cards/ct-d08/D08015.ts`](../../../../src/cards/ct-d08/D08015.ts)
-- [`src/cards/ct-d08/D08016.ts`](../../../../src/cards/ct-d08/D08016.ts)
-- [`src/cards/ct-d08/D08017.ts`](../../../../src/cards/ct-d08/D08017.ts)
-- [`src/cards/ct-d08/D08018.ts`](../../../../src/cards/ct-d08/D08018.ts)
-- _...ほか 28 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- [`src/cards/ct-d01/D01005.ts`](../../../../src/cards/ct-d01/D01005.ts)
+- [`src/cards/ct-d01/D01009.ts`](../../../../src/cards/ct-d01/D01009.ts)
+- [`src/cards/ct-d01/D01011.ts`](../../../../src/cards/ct-d01/D01011.ts)
+- [`src/cards/ct-d02/D02003.ts`](../../../../src/cards/ct-d02/D02003.ts)
+- [`src/cards/ct-d02/D02006.ts`](../../../../src/cards/ct-d02/D02006.ts)
+- [`src/cards/ct-d02/D02007.ts`](../../../../src/cards/ct-d02/D02007.ts)
+- [`src/cards/ct-d02/D02010.ts`](../../../../src/cards/ct-d02/D02010.ts)
+- [`src/cards/ct-d02/D02012.ts`](../../../../src/cards/ct-d02/D02012.ts)
+- [`src/cards/ct-d03/D03003.ts`](../../../../src/cards/ct-d03/D03003.ts)
+- [`src/cards/ct-d03/D03005.ts`](../../../../src/cards/ct-d03/D03005.ts)
+- [`src/cards/ct-d03/D03006.ts`](../../../../src/cards/ct-d03/D03006.ts)
+- [`src/cards/ct-d03/D03008.ts`](../../../../src/cards/ct-d03/D03008.ts)
+- [`src/cards/ct-d03/D03012.ts`](../../../../src/cards/ct-d03/D03012.ts)
+- [`src/cards/ct-d04/D04003.ts`](../../../../src/cards/ct-d04/D04003.ts)
+- [`src/cards/ct-d04/D04006.ts`](../../../../src/cards/ct-d04/D04006.ts)
+- _...ほか 130 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

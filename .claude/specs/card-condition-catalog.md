@@ -31,6 +31,8 @@
 | bind 有無 | `{ kind:'bound', key:'$matched', presence:'matched' }` | D11019 |
 | bind が filter 一致 | `{ kind:'boundMatchesFilter', bindKey:'$entered', filter:{cardName:'萩原千速'} }` | D11014 |
 | 独自条件 (最終手段) | `{ kind:'custom', check:(s,ctx)=>… }` | D11013 |
+| カットイン相手が名/特徴/色一致 | `contactTargetMatches({names?,traits?,colors?})` (cards/_shared, custom 包み) | B06041/B06092/B07009/PR087 |
+| 事件が指定色の単色 | `caseMonoColor(color)` (cards/_shared, not+caseColor) | B05010/B05036/B05070 |
 
 ## trigger.matcherCondition 用 kind (triggered 発火ゲート)
 

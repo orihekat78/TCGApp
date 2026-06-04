@@ -8,6 +8,8 @@
 | クラス | spec | 出現枚数 | パラメータ | 性質 |
 |--------|------|---------|-----------|------|
 | partnerColorKeyword | [spec](partnerColorKeyword.md) | 5+ | { color, kw, scope?, additionalCondition? } | continuous |
+| contactTargetMatches | [spec](contactTargetMatches.md) | 4+ | { names?, traits?, colors? } | custom Condition (cutin) |
+| caseMonoColor | [spec](caseMonoColor.md) | 3+ | { color } | Condition (not+caseColor) |
 | ~~cutinFixedAP~~ | 廃止 2026-06-02 | — | カットインは各カードに inline atom で記述 (D08007 同型) | — |
 | ~~hiramekiCharStun~~ | 廃止 2026-06-03 | — | ヒラメキは各カードに inline atom (D08013 a2 同型) | — |
 | ~~hiramekiDraw~~ | 廃止 2026-06-03 | — | 同上 | — |

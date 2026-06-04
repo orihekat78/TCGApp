@@ -4,13 +4,17 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerAll, ALL_CARDS, GENERATED_PARTNERS } from '@/cards';
+import {
+  registerAll, ALL_CARDS,
+  GENERATED_PARTNERS, GENERATED_SIMPLE_CARDS, GENERATED_COMPLEX_CUTINS,
+} from '@/cards';
 
 // MVP 47枚 (CT-D08:26青 + CT-D11:21黄) を baseline に、generator 出力分を加算して期待値を導出。
 // generator 再実行で枚数が変わっても自動追従する一方、MVP 側の 47/26/21 が崩れれば検出される。
-const GEN = GENERATED_PARTNERS.length;
-const GEN_BLUE = GENERATED_PARTNERS.filter((c) => c.colors.includes('青')).length;
-const GEN_YELLOW = GENERATED_PARTNERS.filter((c) => c.colors.includes('黄')).length;
+const GENERATED = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS];
+const GEN = GENERATED.length;
+const GEN_BLUE = GENERATED.filter((c) => c.colors.includes('青')).length;
+const GEN_YELLOW = GENERATED.filter((c) => c.colors.includes('黄')).length;
 
 describe('cards/registerAll (Phase 5 MVP 47 + generated partners)', () => {
   beforeEach(() => {

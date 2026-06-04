@@ -62,6 +62,14 @@ import { D11021 } from './ct-d11/D11021.js';
 import { GENERATED_PARTNERS } from './_generated/partners.js';
 export { GENERATED_PARTNERS };
 
+// 非MVP 単純カード (simple cut-in / keyword-only / case no-ability, auto-generated)
+import { GENERATED_SIMPLE_CARDS } from './_generated/simple-cards.js';
+export { GENERATED_SIMPLE_CARDS };
+
+// 非MVP 複雑カットイン (条件付きドロー / スケーリング / 全リムーブ / アクティブ化 / DEFERRED stub, auto-generated)
+import { GENERATED_COMPLEX_CUTINS } from './_generated/complex-cutins.js';
+export { GENERATED_COMPLEX_CUTINS };
+
 export {
   D08001, D08002, D08003, D08004, D08005, D08006, D08007, D08008,
   D08009, D08010, D08011, D08012, D08013, D08014, D08015, D08016,
@@ -90,6 +98,8 @@ export const ALL_CARDS: CardDef[] = [
   D11015, D11016, D11017, D11018,
   D11019, D11020, D11021,
   ...GENERATED_PARTNERS,
+  ...GENERATED_SIMPLE_CARDS,
+  ...GENERATED_COMPLEX_CUTINS,
 ];
 
 /**

@@ -148,6 +148,11 @@ claude が 「修正済」と記述する前に必ず verify する 4 点 ([BUG-
 
 加えて、修正範囲が engine 側関数の場合、その関数の **caller 側コード** も同じ 4 点 verify を適用する (BUG-071 triggered listener skip 漏れの教訓)。
 
+> **教訓 12〜22 (BUG-074〜113 期) は [LESSONS-LEARNED-2.md](LESSONS-LEARNED-2.md) に分割** (100 行制約)。
+> 直近セッションの主な教訓: 12 human/AI pick parity / 13 派生数値 read.char 単一化 / 14 コード vs ルール review /
+> 15 cost が source 場外移動 / 16 modal z-index / 17 sequence 複数 pick / 18 matcher 自己照合 /
+> 19 turn-scope 三角 / 20 binding 境界保持 / 21 engine-呼出元 parity / 22 hook emit 完全性。
+
 ---
 
 ## 教訓 → enforcement mapping (Phase 7、能動化)
@@ -165,6 +170,7 @@ claude が 「修正済」と記述する前に必ず verify する 4 点 ([BUG-
 | 9 BUG status 二択厳守 | `scripts/lint-bug-frontmatter.ts` (status 注釈付き禁止) |
 | 10 Python re.sub 罠 | `(passive doc、内部 dev 知見)` |
 | 11 修正済 transition protocol | `scripts/lint-bug-followup.ts` (defer): deferred 文言が残ったまま status=修正済 になっていないか warn |
+| 12〜22 (直近期 BUG-074〜113) | → [LESSONS-LEARNED-2.md](LESSONS-LEARNED-2.md) の mapping 参照 |
 
 追加 enforcement (Phase 8):
 

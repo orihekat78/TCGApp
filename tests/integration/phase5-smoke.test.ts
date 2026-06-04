@@ -9,7 +9,10 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerAll, GENERATED_PARTNERS } from '@/cards/index';
+import {
+  registerAll,
+  GENERATED_PARTNERS, GENERATED_SIMPLE_CARDS, GENERATED_COMPLEX_CUTINS,
+} from '@/cards/index';
 import { event } from '@/engine/event/index';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetUidCounter } from '@/engine/mutate/scene';
@@ -17,7 +20,8 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import type { GameState } from '@/engine/types';
 
-const GEN = GENERATED_PARTNERS.length; // MVP 47 + generated partners
+// MVP 47 + generated (partners + simple cards + complex cut-ins)
+const GEN = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS].length;
 
 /**
  * 40枚デッキを構築するヘルパー。

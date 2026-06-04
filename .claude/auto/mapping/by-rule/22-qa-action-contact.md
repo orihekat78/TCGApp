@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0f3ec25e0b40`
+> Source hash: `790b4e0a859c`
 
 公式ルール [`22-qa-action-contact.md`](../../../rules/22-qa-action-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -17,25 +17,31 @@
 
 ## 📐 関連 Spec
 
+- [`card-condition-catalog`](../by-spec/card-condition-catalog.md)
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 
-## 📄 参照ソース (16)
+## 📄 参照ソース (100)
 
+- [`src/cards/_shared/contactTargetMatches.ts`](../../../../src/cards/_shared/contactTargetMatches.ts)
+- [`src/cards/ct-d01/D01009.ts`](../../../../src/cards/ct-d01/D01009.ts)
+- [`src/cards/ct-d01/D01011.ts`](../../../../src/cards/ct-d01/D01011.ts)
+- [`src/cards/ct-d02/D02006.ts`](../../../../src/cards/ct-d02/D02006.ts)
+- [`src/cards/ct-d02/D02010.ts`](../../../../src/cards/ct-d02/D02010.ts)
+- [`src/cards/ct-d02/D02012.ts`](../../../../src/cards/ct-d02/D02012.ts)
+- [`src/cards/ct-d03/D03005.ts`](../../../../src/cards/ct-d03/D03005.ts)
+- [`src/cards/ct-d03/D03008.ts`](../../../../src/cards/ct-d03/D03008.ts)
+- [`src/cards/ct-d03/D03012.ts`](../../../../src/cards/ct-d03/D03012.ts)
+- [`src/cards/ct-d04/D04006.ts`](../../../../src/cards/ct-d04/D04006.ts)
+- [`src/cards/ct-d04/D04009.ts`](../../../../src/cards/ct-d04/D04009.ts)
+- [`src/cards/ct-d04/D04012.ts`](../../../../src/cards/ct-d04/D04012.ts)
+- [`src/cards/ct-d05/D05008.ts`](../../../../src/cards/ct-d05/D05008.ts)
+- [`src/cards/ct-d05/D05010.ts`](../../../../src/cards/ct-d05/D05010.ts)
+- [`src/cards/ct-d05/D05013.ts`](../../../../src/cards/ct-d05/D05013.ts)
+- [`src/cards/ct-d07/D07002.ts`](../../../../src/cards/ct-d07/D07002.ts)
 - [`src/cards/ct-d08/D08007.ts`](../../../../src/cards/ct-d08/D08007.ts)
 - [`src/cards/ct-d08/D08008.ts`](../../../../src/cards/ct-d08/D08008.ts)
 - [`src/cards/ct-d08/D08009.ts`](../../../../src/cards/ct-d08/D08009.ts)
 - [`src/cards/ct-d08/D08010.ts`](../../../../src/cards/ct-d08/D08010.ts)
-- [`src/cards/ct-d08/D08017.ts`](../../../../src/cards/ct-d08/D08017.ts)
-- [`src/cards/ct-d08/D08018.ts`](../../../../src/cards/ct-d08/D08018.ts)
-- [`src/cards/ct-d08/D08023.ts`](../../../../src/cards/ct-d08/D08023.ts)
-- [`src/cards/ct-d11/D11007.ts`](../../../../src/cards/ct-d11/D11007.ts)
-- [`src/cards/ct-d11/D11008.ts`](../../../../src/cards/ct-d11/D11008.ts)
-- [`src/cards/ct-d11/D11013.ts`](../../../../src/cards/ct-d11/D11013.ts)
-- [`src/cards/ct-d11/D11017.ts`](../../../../src/cards/ct-d11/D11017.ts)
-- [`src/cards/ct-d11/D11018.ts`](../../../../src/cards/ct-d11/D11018.ts)
-- [`src/engine/flow/action/state-machine.ts`](../../../../src/engine/flow/action/state-machine.ts)
-- [`src/engine/flow/contact.ts`](../../../../src/engine/flow/contact.ts)
-- [`src/engine/types/effect-stack.ts`](../../../../src/engine/types/effect-stack.ts)
-- [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)
+- _...ほか 80 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

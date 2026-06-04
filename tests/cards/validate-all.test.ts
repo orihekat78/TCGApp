@@ -14,12 +14,16 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerAll, GENERATED_PARTNERS } from '@/cards/index';
+import {
+  registerAll,
+  GENERATED_PARTNERS, GENERATED_SIMPLE_CARDS, GENERATED_COMPLEX_CUTINS,
+} from '@/cards/index';
+const GENERATED = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS];
 
 // MVP 47枚 baseline + generator 出力分を加算 (詳細は registry.test.ts)。
-const GEN = GENERATED_PARTNERS.length;
-const GEN_BLUE = GENERATED_PARTNERS.filter((c) => c.colors.includes('青')).length;
-const GEN_YELLOW = GENERATED_PARTNERS.filter((c) => c.colors.includes('黄')).length;
+const GEN = GENERATED.length;
+const GEN_BLUE = GENERATED.filter((c) => c.colors.includes('青')).length;
+const GEN_YELLOW = GENERATED.filter((c) => c.colors.includes('黄')).length;
 
 /**
  * 既知の validator 漏れリスト。
