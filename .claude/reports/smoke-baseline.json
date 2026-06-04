@@ -1,15 +1,15 @@
 {
   "_comment": "Phase 7-E (LESSONS-LEARNED 教訓 enforcement): smoke 1000 戦の baseline 値。check-smoke-baseline.ts が最新 smoke report と比較し、閾値超過時に exit 1。",
-  "_updated": "2026-05-22",
-  "_source_commit": "1480465 (Phase 5 BUG-036 fix 後の baseline)",
+  "_updated": "2026-06-03",
+  "_source_commit": "BUG-109 (AI PA 短縮形 drain) で CPU が 疾風/reanimate/buff を使うようになり re-baseline。winsA/winsB は乱数で run 毎に変動 (informational、check 対象外)。check は avgTurns delta / timeouts / exceptions のみ。",
   "expectations": {
     "matches": 1000,
-    "winsA": 511,
-    "winsB": 489,
-    "avgTurns": 10.64,
+    "winsA": 469,
+    "winsB": 531,
+    "avgTurns": 10.86,
     "p50Turns": 10.0,
     "p95Turns": 13.0,
-    "maxTurns": 16
+    "maxTurns": 18
   },
   "thresholds": {
     "timeouts_max": 0,

@@ -240,10 +240,17 @@ export function matchOneFilter(
     if (!wants.some(w => kws.includes(w))) return false;
   }
 
-  // Numeric filters — prefer SceneCharacter overrides where applicable
+  // Numeric filters — 効果解決時点の「有効値」で判定する (rules/15,19,22)。
+  // base(override?printed) に turnEffects の ±修正 (apMod/lpMod の permanent/turn/contact) を合算。
+  // 旧実装は override?printed のみで turn 修正を無視 → 疾風(AP-1000)等で debuff されたキャラが
+  // 「APX以下」リムーブ圏内に入っても対象外になる / D11012「LP0の警察」が buff 済キャラを誤って含む
+  // 不整合があった。read.char.ap/lp と同式 (継続効果 continuousDelta(dyn, D08005) のみ cycle 回避で
+  // 省略 — 残差は BUG-113)。c===null (非現場 candidate) は printed のまま。
   const base = d ?? null;
-  const ap = c?.apOverride ?? base?.ap ?? 0;
-  const lp = c?.lpOverride ?? base?.lp ?? 0;
+  const te = (c?.turnEffects ?? {}) as Record<string, unknown>;
+  const num = (k: string): number => (typeof te[k] === 'number' ? (te[k] as number) : 0);
+  const ap = (c?.apOverride ?? base?.ap ?? 0) + num('apMod_permanent') + num('apMod_turn') + num('apMod_contact');
+  const lp = (c?.lpOverride ?? base?.lp ?? 0) + num('lpMod_permanent') + num('lpMod_turn') + num('lpMod_contact');
   const level = base?.level ?? 0;
 
   if (filter.apMin !== undefined && ap < filter.apMin) return false;

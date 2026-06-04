@@ -376,6 +376,28 @@ function substituteAtomPick(
       args: resolveDynArgs(state, { ...args, cardIds: chosenIds }, ctx),
     } as Effect;
   }
+  // BUG-106 (D11014 a2 / D11019 a1 driver): single-pick contract (cardId:'$pick.cardId')。
+  // sceneEnter のように cardId を pick で解決し、target(pick query) を source-area splice の
+  // ために保持する atom。AI 経路で cardId を解決しないと handler が awaiting-pick →
+  // tryRePickFromAtom (target が pick-query でない) → silent no-op (reanimate 不発、後続 draw 不発)。
+  // human path の effectPickResolve (useEngineDispatch hasCardIdBind) と対称に cardId を解決する。
+  if (args.cardId === '$pick.cardId') {
+    // 2026-06-04 review(#4): 下の generic Pattern B と同じく evidence kind も解決可能にする
+    // (現状 sceneEnter は remove/deck/hand=card kind からのみで evidence 経路は未使用だが、整合のため)。
+    const pickedCardId =
+      picked.kind === 'card' ? picked.cardId :
+      picked.kind === 'char' ? picked.cardId :
+      picked.kind === 'evidence' ? (state.players[picked.player].evidence[picked.index]?.cardId ?? null) :
+      null;
+    if (pickedCardId === null) return atom as Effect;
+    // target (pick query) は残す: handler が target.query.area を見て source area (remove 等)
+    // から cardId を splice する。drop すると複製 (リムーブに残ったまま登場) になる。
+    return {
+      kind: 'atom',
+      verb: atom.verb as never,
+      args: resolveDynArgs(state, { ...args, cardId: pickedCardId }, ctx),
+    } as Effect;
+  }
   const pickValue =
     picked.kind === 'card' ? picked.cardId :
     picked.kind === 'char' ? picked.uid :
@@ -403,12 +425,29 @@ export function resolveEffectPicks(
       return { kind: 'sequence', steps: effect.steps.map((s) => resolveEffectPicks(state, s, ctx, opts)) };
     case 'parallel':
       return { kind: 'parallel', steps: effect.steps.map((s) => resolveEffectPicks(state, s, ctx, opts)) };
-    case 'choice':
+    case 'choice': {
+      // BUG-108: ctx.dyn.choiceIndex 指定時は選択 option へ unwrap する (dyn-arg / pick と同様に
+      // walk 中に bake)。resolver.run の choice も choiceIndex を読むが、effect は event.queue →
+      // entryToCtx で ctx.dyn が落ちるため runtime には届かない。ctx.dyn を保持する resolveEffectPicks
+      // (declared-ability / triggered の初期 walk) でここで解決する。
+      // 未指定 / 範囲外なら全 option を walk し、resolver.run の default (=0) に委ねる。
+      const rawIdx = (ctx.dyn as { choiceIndex?: unknown } | undefined)?.choiceIndex;
+      if (
+        typeof rawIdx === 'number' && Number.isInteger(rawIdx)
+        && rawIdx >= 0 && rawIdx < effect.options.length
+      ) {
+        // 2026-06-04 review(#5): 消費した choiceIndex は同一 ctx の後続 choice (sequence の別 step)
+        // へ leak させない。ctx.dyn は step 間で共有参照のため、消さないと 2 つ目の choice が
+        // 前段の index で誤 unwrap する (現状そのようなカードは無いが latent defect の予防)。
+        delete (ctx.dyn as { choiceIndex?: unknown }).choiceIndex;
+        return resolveEffectPicks(state, effect.options[rawIdx], ctx, opts);
+      }
       return {
         kind: 'choice',
         chooser: effect.chooser,
         options: effect.options.map((o) => resolveEffectPicks(state, o, ctx, opts)),
       };
+    }
     case 'optional':
       return { kind: 'optional', effect: resolveEffectPicks(state, effect.effect, ctx, opts) };
     case 'conditional':

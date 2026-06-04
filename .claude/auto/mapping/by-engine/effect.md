@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `a5c1b7174bc6`
+> Source hash: `bb497248a972`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -10,10 +10,11 @@
 
 - [`auto/api/effect.md`](../../api/effect.md)
 
-## 📜 参照 Rule (3)
+## 📜 参照 Rule (4)
 
 - [`10-action-event.md`](../by-rule/10-action-event.md)
 - [`15-abilities-effects.md`](../by-rule/15-abilities-effects.md)
+- [`21-declared-ability-cost.md`](../by-rule/21-declared-ability-cost.md)
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 
 ## 📐 参照 Spec (4)
@@ -23,8 +24,9 @@
 - [`engine-api-effect-descriptor`](../by-spec/engine-api-effect-descriptor.md)
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 
-## 📄 ソース (7)
+## 📄 ソース (8)
 
+- [`src/engine/effect/apply-pick.ts`](../../../../src/engine/effect/apply-pick.ts)
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
 - [`src/engine/effect/atom-pick-spec.ts`](../../../../src/engine/effect/atom-pick-spec.ts)
 - [`src/engine/effect/index.ts`](../../../../src/engine/effect/index.ts)

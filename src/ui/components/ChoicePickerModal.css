@@ -1,0 +1,71 @@
+/* BUG-108: ChoicePickerModal — choice effect 択一 UI (SceneSwitchPickerModal と同型) */
+
+.cp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cp-modal {
+  background: linear-gradient(180deg, #eaf3fe 0%, #fff 100%);
+  border: 3px solid #2980b9;
+  border-radius: 12px;
+  padding: 20px 24px;
+  min-width: 360px;
+  max-width: 520px;
+  box-shadow: 0 8px 32px rgba(41, 128, 185, 0.4);
+}
+
+.cp-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  color: #1d5a86;
+}
+
+.cp-sub { margin: 0; font-size: 13px; color: #555; }
+
+.cp-body {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(41, 128, 185, 0.08);
+  border-radius: 6px;
+}
+
+.cp-list { list-style: none; margin: 0; padding: 0; }
+
+.cp-cand {
+  width: 100%;
+  display: block;
+  padding: 12px 16px;
+  text-align: center;
+  border: 1px solid #b9d6ec;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d5a86;
+}
+
+.cp-cand:hover { background: #eaf3fe; }
+
+.cp-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.cp-btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.cp-btn-cancel { background: #ddd; color: #555; }

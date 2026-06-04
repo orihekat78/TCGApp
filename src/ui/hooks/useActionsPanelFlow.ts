@@ -18,9 +18,27 @@ import { useTargetPicker } from './useTargetPicker.js';
 import { useNextHintPicker, type NextHintCandidate } from './useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from './useSceneSwitchPickerStore.js';
 import { useEvidenceFlipPicker } from './useEvidenceFlipPicker.js';
+import { useChoicePicker } from './useChoicePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
-import type { Cost, EffectCtx } from '@/engine/types';
+import type { Cost, Effect, EffectCtx } from '@/engine/types';
+
+/**
+ * BUG-108: choice effect option を人間可読ラベルに変換 (ChoicePicker 表示用)。
+ * D11012 a1: charModifyLP(delta:1)→「LP＋1」/ charModifyAP(delta:2000)→「AP＋2000」。
+ * 未知 verb は verb 名 fallback (modal が無効になるより表示できる方を優先)。
+ */
+export function choiceOptionLabel(opt: Effect): string {
+  if (opt.kind !== 'atom') return opt.kind;
+  const args = (opt.args ?? {}) as { delta?: unknown };
+  const delta = typeof args.delta === 'number' ? args.delta : null;
+  const sign = delta !== null && delta >= 0 ? `＋${delta}` : delta !== null ? `${delta}` : '';
+  switch (opt.verb) {
+    case 'charModifyLP': return `LP${sign}`;
+    case 'charModifyAP': return `AP${sign}`;
+    default:             return String(opt.verb);
+  }
+}
 
 /**
  * Phase 8.8c: cost を人間可読なテキストに変換 (confirm modal body 表示用)。
@@ -579,12 +597,29 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     ctx.dyn = dyn;
   }
 
-  // 4) dispatch (cost あれば atomic に pay → use)
+  // 3.7) BUG-108: 複数 option を持つ top-level choice effect (D11012 a1「LP＋1するか / AP＋2000する」)
+  //   は user に択一させ、選択 index を ctx.dyn.choiceIndex に積む。useDeclaredAbility →
+  //   resolveEffectPicks の choice unwrap が「選択 option のみ」を解決する。
+  //   単一 option の choice (D11014 a2 step2 等) は modal を出さない (choiceIndex 既定 0)。
+  //   AI 経路の択一は BUG-109 (PA 短縮形 AI no-op) と併せて別途対応 (現状 default 0)。
+  const effect = chosenAbil?.effect as Effect | undefined;
+  if (effect && effect.kind === 'choice' && effect.options.length > 1 && owner === 'self' && ctx) {
+    const options = effect.options.map((o, index) => ({ index, label: choiceOptionLabel(o) }));
+    const choice = await useChoicePicker().ask({ sourceName, options });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    const dyn = (ctx.dyn ?? {}) as Record<string, unknown>;
+    dyn['choiceIndex'] = choice.index;
+    ctx.dyn = dyn;
+  }
+
+  // 4) dispatch (cost あれば atomic に pay → use)。ctx は choiceIndex / costParams を運ぶため
+  //   cost 有無に関わらず渡す (cost.pay は dispatch 側で cost && ctx を guard 済)。
   return dispatchEngineAction({
     type: 'declaredAbility',
     uid: sourceUid,
     abilId: chosenAbilId,
-    ...(cost && ctx ? { cost, ctx } : {}),
+    ...(cost ? { cost } : {}),
+    ...(ctx ? { ctx } : {}),
   });
 }
 

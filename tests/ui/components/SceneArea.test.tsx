@@ -87,6 +87,54 @@ describe('SceneArea', () => {
     expect(html).not.toMatch(/slot-empty/);
   });
 
+  // BUG-110: カード下の AP/LP は base ではなく「修正反映後の有効値」を表示する。
+  it('resolveCharStats が与えられたとき、修正後の有効 AP/LP を表示し modified クラスを付与する (BUG-110)', () => {
+    const chars: SceneCharacter[] = [makeChar({ cardId: 'c-blue', uid: 'u1', enterOrder: 0 })]; // base ap5000 lp2
+    const html = strip(renderToString(
+      <SceneArea
+        characters={chars}
+        side="self"
+        resolveCard={resolveCard}
+        resolveCharStats={(uid) => (uid === 'u1' ? { ap: 7000, lp: 3 } : undefined)}
+      />,
+    ));
+    // base (5000/2) ではなく 有効値 (7000/3) を表示する
+    expect(html).toMatch(/class="ap modified"[^>]*>7000/);
+    expect(html).toMatch(/class="lp modified"[^>]*>3/);
+    expect(html).not.toMatch(/>5000</);
+    // buff (有効値 > base) は data-mod="up"
+    expect(html).toMatch(/data-mod="up"/);
+  });
+
+  it('debuff (有効値 < base) は data-mod="down" を付ける', () => {
+    const chars: SceneCharacter[] = [makeChar({ cardId: 'c-red', uid: 'u1', enterOrder: 0 })]; // base ap6000
+    const html = strip(renderToString(
+      <SceneArea
+        characters={chars}
+        side="self"
+        resolveCard={resolveCard}
+        resolveCharStats={() => ({ ap: 5000, lp: 1 })}
+      />,
+    ));
+    expect(html).toMatch(/class="ap modified"[^>]*>5000/);
+    expect(html).toMatch(/data-mod="down"/);
+  });
+
+  it('resolveCharStats が base と同値なら modified クラスを付けない', () => {
+    const chars: SceneCharacter[] = [makeChar({ cardId: 'c-blue', uid: 'u1', enterOrder: 0 })]; // base ap5000 lp2
+    const html = strip(renderToString(
+      <SceneArea
+        characters={chars}
+        side="self"
+        resolveCard={resolveCard}
+        resolveCharStats={() => ({ ap: 5000, lp: 2 })}
+      />,
+    ));
+    expect(html).toMatch(/class="ap"[^>]*>5000/);
+    expect(html).toMatch(/class="lp"[^>]*>2/);
+    expect(html).not.toMatch(/modified/);
+  });
+
   it('applies side-opp class on opponent side', () => {
     const html = strip(renderToString(
       <SceneArea characters={[]} side="opp" resolveCard={resolveCard} />,
@@ -137,8 +185,9 @@ describe('SceneArea', () => {
     const html = strip(renderToString(
       <SceneArea characters={chars} side="self" resolveCard={resolveCard} />,
     ));
-    expect(html).toMatch(/class="ap">9999</);
-    expect(html).toMatch(/class="lp">0</);
+    // BUG-110: apOverride/lpOverride も印字 base と異なる修正なので modified 表示になる。
+    expect(html).toMatch(/class="ap modified"[^>]*>9999</);
+    expect(html).toMatch(/class="lp modified"[^>]*>0</);
   });
 
   it('truncates to maxSlots when characters exceed limit', () => {

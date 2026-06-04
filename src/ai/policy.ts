@@ -17,6 +17,7 @@ import { enumerateMoves, type Move } from './move-enumerator.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-resolution.js';
 import { HeuristicPolicy } from './policies/heuristic.js';
 import { makePartnerAbilCtx, makeDeclaredAbilCtx } from './ability-ctx.js';
+import { drainAiEffectPicks } from '@/engine/effect/apply-pick.js';
 
 type Player = 'self' | 'opp';
 
@@ -369,6 +370,10 @@ export function playTurn(
     // pendingEffects があれば解消する
     s = produce(s, draft => {
       engine.resolve.runAllUntilEmpty(draft);
+      // BUG-109: CPU には human modal が無いため、PA 短縮形 atom 等が runtime に
+      // __pendingEffectPickQueue へ積んだ pick が drain されず no-op になる。heuristic で順次解決する
+      // (chooseAtomTarget は walk と同じ HeuristicPolicy を使用。continuation も BUG-107 機構で進む)。
+      drainAiEffectPicks(draft, new HeuristicPolicy());
     });
     // gameResult が決まったら終了
     if (s.gameResult) {

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 181
-- **ファイル数**: 1893
+- **ファイル数**: 1929
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -137,6 +137,7 @@
     - `AUDIT-2026-05-23.md` — 全 BUG audit 結果 — 2026-05-23
     - `AUDIT-2026-05-28-BUG-070.md` — AUDIT-2026-05-28 — BUG-070 (BUG-009 水平展開 4 項目 follow-up)
     - `AUDIT-2026-06-03-mvp-card-lensf.md` — AUDIT 2026-06-03 — MVP カード Lens F 深掘り監査
+    - `AUDIT-2026-06-04-rules-compliance.md` — AUDIT 2026-06-04 — ルール準拠監査 (本セッション全変更 × rules/01〜30)
     - `AUDIT-template.md` — BUG フォルダ AUDIT (YYYY-MM-DD)
     - `BUG-001.md`
     - `BUG-002.md`
@@ -242,6 +243,14 @@
     - `BUG-103.md`
     - `BUG-104.md`
     - `BUG-105.md`
+    - `BUG-106.md`
+    - `BUG-107.md`
+    - `BUG-108.md`
+    - `BUG-109.md`
+    - `BUG-110.md`
+    - `BUG-111.md`
+    - `BUG-112.md`
+    - `BUG-113.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
@@ -314,6 +323,11 @@
     - `2026-06-03-07-lensf-batch2a.md`
     - `2026-06-03-08-lensf-batch2b.md`
     - `2026-06-03-09-lensf-batch2c-resolver.md`
+    - `2026-06-03-10-lensf-batch3-continuation.md`
+    - `2026-06-03-11-lensf-batch4-ai-drain.md`
+    - `2026-06-03-12-bug110-ap-lp-display.md`
+    - `2026-06-04-01-switch-on-effect-enter.md`
+    - `2026-06-04-02-effective-value-filter.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -507,6 +521,14 @@
     - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
     - `smoke-2026-06-03-10.json`
     - `smoke-2026-06-03-10.md` — Smoke 1000戦レポート — smoke-2026-06-03-094615
+    - `smoke-2026-06-03-11.json`
+    - `smoke-2026-06-03-11.md` — Smoke 1000戦レポート — smoke-2026-06-03-225821
+    - `smoke-2026-06-03-12.json`
+    - `smoke-2026-06-03-12.md` — Smoke 1000戦レポート — smoke-2026-06-03-233301
+    - `smoke-2026-06-03-13.json`
+    - `smoke-2026-06-03-13.md` — Smoke 1000戦レポート — smoke-2026-06-03-141256
+    - `smoke-2026-06-03-14.json`
+    - `smoke-2026-06-03-14.md` — Smoke 1000戦レポート — smoke-2026-06-03-235427
     - `smoke-2026-06-03-2.json`
     - `smoke-2026-06-03-2.md` — Smoke 1000戦レポート — smoke-2026-06-03-013320
     - `smoke-2026-06-03-3.json`
@@ -678,6 +700,7 @@
     - `2026-05-29.md` — セッション 2026-05-29 — Phase 15 / 16 チュートリアル (meta-app)
     - `2026-06-01.md` — セッションログ 2026-06-01 (および直近の前段作業アーカイブ)
     - `2026-06-03.md` — セッションログ 2026-06-03
+    - `2026-06-04.md` — セッション 2026-06-04 — ルール準拠改善 (review hardening + 3 タスク)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1553,6 +1576,7 @@
       - `index.ts` — engine.dyn — Dyn (late-bound) expression evaluator
     - **`effect/`**
       - `.gitkeep`
+      - `apply-pick.ts` — engine.effect.apply-pick — pending effect-pick の解決 + continuation 実行を一箇所に集約。
       - `atom-handlers.ts` — engine.effect.runAtom — Atom Verb dispatcher
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
       - `index.ts` — engine.effect namespace barrel
@@ -1663,6 +1687,8 @@
       - `CardListModal.tsx` — Round 2 — FILE / 証拠 / リムーブ エリアの内容を確認するモーダル
       - `CaseArea.css`
       - `CaseArea.tsx` — Phase 7 Task 7.6: CaseArea
+      - `ChoicePickerModal.css`
+      - `ChoicePickerModal.tsx` — BUG-108: ChoicePickerModal — 複数 option を持つ choice effect の択一 UI。
       - `ConfirmModal.css`
       - `ConfirmModal.tsx` — Phase 8 Task 8.5: ConfirmModal (controlled component)
       - `ContactFlash.css`
@@ -1742,6 +1768,7 @@
       - `useCardImage.ts` — useCardImage — cardId から公式 CDN 画像 URL を構築する React フック (Phase 9-C)
       - `useCardOrientation.ts` — useCardOrientation — cardId 画像の natural サイズから向きを自動判定するフック (Phase 9-D)
       - `useCase.ts` — Phase 7 Task 7.6: CaseArea selector hook
+      - `useChoicePicker.ts` — BUG-108: choice effect (複数 option の択一、例 D11012 a1「LP＋1するか / AP＋2000する」) の
       - `useConfirmation.ts` — Phase 8 Task 8.3: 厳格モード モーダル (Q9) 共通 hook
       - `useContactFlowDriver.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver
       - `useContactModalStore.ts` — Phase 8 完全クローズ Commit 2: コンタクトフロー用モーダル状態 store
@@ -1848,6 +1875,7 @@
       - `D11011.test.ts` — tests/cards/ct-d11/D11011
       - `D11012.test.ts` — tests/cards/ct-d11/D11012
       - `D11013.test.ts` — tests/cards/ct-d11/D11013
+      - `D11014.a2-ai-reanimate.test.ts` — BUG-106: D11014 a2 の AI/CPU 経路で単一 Pattern B pick (sceneEnter cardId:…
       - `D11014.test.ts` — tests/cards/ct-d11/D11014
       - `D11015.test.ts` — tests/cards/ct-d11/D11015
       - `D11016.test.ts` — tests/cards/ct-d11/D11016
@@ -1883,6 +1911,7 @@
     - `bug-090-case-resolved-pick.spec.ts` — E2E regression: BUG-090 — human の auto-phase で 事件編→解決編 になり case card a1
     - `bug-091-d11019-scene-enter.spec.ts` — E2E regression: BUG-091 — D11019「15の受難」a1 で deckRevealUntil が matched した
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
+    - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
@@ -1906,11 +1935,14 @@
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
+      - `bug-108-choice-index.test.ts` — BUG-108: choice effect の choiceIndex が production の人間/AI どちらでも set されず
+      - `bug-109-ai-pa-drain.test.ts` — BUG-109: PA 短縮形 atom (charModifyAP/LP 等) が AI/CPU 経路で silent no-op になる問題の修正検証。
       - `lensf-batch2a.test.ts` — tests/engine/effect/lensf-batch2a — Lens F batch2a (BUG-102 D11019 deck splice /…
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
       - `player-resolution-bug.test.ts` — tests/engine/effect/player-resolution-bug
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
+      - `review-hardening.test.ts` — 2026-06-04 adversarial review (BUG-106〜110 セッション) で確定した latent 修正の回帰テスト。
       - `short-form-characterization.test.ts` — 短縮形 characterization test (Phase2 refactor の動作不変オラクル)
       - `short-form-new-verbs.test.ts` — 新規 verb 短縮形 test (Phase2 Task2.4-2.7)
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests
@@ -1978,6 +2010,7 @@
       - `stack.test.ts` — engine.resolve.* — Effect Stack tests
     - **`target/`**
       - `candidates.test.ts` — engine.target.candidates / legalCount — tests
+      - `effective-value-filter.test.ts` — 数値フィルタ (apMin/apMax/lpMin/lpMax) は「効果解決時点の有効値」= turnEffects の ±修正を
       - `resolve.test.ts` — engine.target.resolve — tests
     - **`types/`**
       - `ability-def.test.ts` — AbilityDef 型のコンパイル時テスト
@@ -2033,6 +2066,9 @@
       - `TutorialOverlay.test.tsx` — Phase 9a-1: TutorialOverlay tests
       - `VictoryOverlay.test.tsx` — Phase 8.10j: VictoryOverlay tests
     - **`hooks/`**
+      - `bug-107-d11014-bind-propagation.test.ts` — BUG-107: D11014 a2 human 経路で sceneEnter の bind:'$entered' が pick-resolve 越しに
+      - `bug-108-choice-picker.test.ts` — BUG-108: D11012 a1「LP＋1するか / AP＋2000する」の choice 択一 UI フロー統合テスト。
+      - `switch-on-effect-enter.test.ts` — switch-on-effect-enter (rules/20 §スイッチ): 現場満杯の効果登場 (D11014 a2 reanimate) で、
       - `useActionsPanelFlow.action.test.ts` — Phase 8.7a: runActionFlow tests
       - `useActionsPanelFlow.assist.test.ts` — Phase 8.6: runAssistFlow / runSolveCaseFlow tests
       - `useActionsPanelFlow.cost.test.ts` — Phase 8.8c: Ability cost resolution UI tests

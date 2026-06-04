@@ -125,7 +125,9 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     }
 
     // engine.queue + runAllUntilEmpty (UI dispatch と同じ経路)
-    event.queue(s, resolvedAtom as never, { player: 'self', cardId: '' }, 'effect:human-pick-resolved', { picked: pickedUid, source: side!.source });
+    // 2026-06-04 review(#3): apply-pick.applyPickAndContinuation の共通化に伴い reason は
+    // 'effect:pick-resolved' (human/AI 共通) に変更済。テストの simulate も合わせる。
+    event.queue(s, resolvedAtom as never, { player: 'self', cardId: '' }, 'effect:pick-resolved', { picked: pickedUid, source: side!.source });
     runAllUntilEmpty(s);
 
     // 期待: evidence -1 / hand +1

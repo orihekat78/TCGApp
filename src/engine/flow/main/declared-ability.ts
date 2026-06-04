@@ -114,9 +114,25 @@ export function useDeclaredAbility(
   // ctx.costPaid / ctx.dyn を effect 解決の resolveCtx に引き継ぐことで、
   // `$cost.flipFaceUpEvidence.count` 等の cost 依存 dyn を human-pick 境界の前に
   // 数値化できる (caseDeclaredEvidenceFlip の AP±1000×枚数)。
-  ctx?: { costPaid?: Record<string, unknown>; dyn?: Record<string, unknown> },
+  ctx?: {
+    costPaid?: Record<string, unknown>;
+    dyn?: Record<string, unknown>;
+    source?: { cardId?: string; uid?: string; abilityId?: string; player?: 'self' | 'opp'; area?: string };
+  },
 ): void {
-  const found = findCardOnBoard(state, uid);
+  let found = findCardOnBoard(state, uid);
+  const src = ctx?.source;
+  if (!found && src?.cardId && src.player) {
+    // BUG-108 driver: selfToDeckBottom 等「自身を場から除く」コスト (D11012 a1) は
+    // useDeclaredAbility 呼出前に source を場外へ移すため findCardOnBoard が null になる。
+    // cost.pay 済 ctx.source (cardId/player/area) から ability を解決して救済する
+    // (rules/21 の cost-first → effect-after 順序は維持。effect は $self を参照しない前提)。
+    found = {
+      player: src.player,
+      cardId: src.cardId,
+      area: (src.area as 'scene' | 'case' | 'partner-area') ?? 'scene',
+    };
+  }
   if (!found) {
     throw new Error(`useDeclaredAbility: card uid=${uid} not on board (scene/case/partner-area)`);
   }

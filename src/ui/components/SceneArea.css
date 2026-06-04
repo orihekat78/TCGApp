@@ -247,6 +247,16 @@
 .scene-area .card .lp { color: #ffd75e; }
 .scene-area .card .lv { color: #6ed1ff; }
 
+/* BUG-110: AP＋XXXX / LP＋X 等の修正が反映された有効値は強調表示する。
+   buff (data-mod=up) は緑、debuff (data-mod=down) は赤。base と区別しやすいよう bold + glow。 */
+.scene-area .card .modified {
+  font-weight: 900;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 4px currentColor;
+}
+.scene-area .card .modified[data-mod='up'] { color: #51e08a; }
+.scene-area .card .modified[data-mod='down'] { color: #ff6b6b; }
+
 /* ---- state overlays ---- */
 .scene-area .card.sleep {
   transform: rotate(-90deg);

@@ -54,7 +54,7 @@
 | `runNextHint` | `(state: GameState, p: Player, optionalCardId?: string): void` | runNextHint — ネクストヒントを実行する。 @param optionalCardId — 2. の段で使用するカード (省略時は FILE→手札のみ) - rules/12: 1 で加えたカードは FILE 枚数判定に数えない → 判定はカード使用の **時点** の FILE 枚数を見るが、手札に加わったカードは FILE から既に取り除かれているので自然に正しくなる / |
 | `startMainPhase` | `(state: GameState, p: Player): void` | メインフェイズ開始 (再エントリ用): startTurn から自動的に呼ばれるが、 単独で呼出して phase:main:start のみ emit したい場合に使用する。 / |
 | `startTurn` | `(state: GameState, p: Player): void` | ターン開始: turn:start を emit → オートフェイズ実行 → phase:main:start を emit。 rules/05: - オートフェイズ (パートナー active / キャラ active / ドロー / FILE) - メインフェイズ突入 / |
-| `useDeclaredAbility` | `(state: GameState, uid: string, abilId: string, ctx?: { costPaid?: Record<string, unknown>; dyn?: Record<string, unknown> }): void` | useDeclaredAbility — 宣言能力使用を宣言する。 - declaredUseCount[abilId] をインクリメント - effect:declared を emit - ログ追加 cost 支払いは呼出元の responsibility (Phase 4 は分離). / |
+| `useDeclaredAbility` | `(state: GameState, uid: string, abilId: string, ctx?: { costPaid?: Record<string, unknown>; dyn?: Record<string, unknown>; source?: { cardId?: string; uid?: string; abilityId?: string; player?: 'self' \| 'opp'; area?: string }; }): void` | useDeclaredAbility — 宣言能力使用を宣言する。 - declaredUseCount[abilId] をインクリメント - effect:declared を emit - ログ追加 cost 支払いは呼出元の responsibility (Phase 4 は分離). / |
 | `usePartnerAbility` | `(state: GameState, p: Player, abilId: string, _ctx?: unknown): void` | usePartnerAbility — パートナー能力使用を宣言する。 - effect:declared を emit (cost / 効果は listener 側で処理) - ログ追加 / |
 
 ## 型エクスポート

@@ -15,11 +15,12 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
+import { applyPickAndContinuation } from '@/engine/effect/apply-pick.js';
 import { cost as engineCost } from '@/engine/cost/index.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
-import type { Cost, Effect, EffectCtx } from '@/engine/types';
+import type { Cost, EffectCtx } from '@/engine/types';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { event as engineEvent } from '@/engine/event/index.js';
@@ -79,7 +80,9 @@ export type EngineAction =
   // pickedUid=null は「選ばない」(skip、n.min===0 任意効果のみ可能)
   // pickedUids は multi-pick (nMax>1) で複数選択を一括 resolve するため。
   // D08021 charStackCard 等 multi-pick atom が cardIds:'$pick.cardIds' を resolved 配列で受ける。
-  | { type: 'effectPickResolve'; pickedUid: string | null; pickedUids?: string[] }
+  // switchRemoveUid: 効果登場 (sceneEnter) が現場満杯のとき、UI が SceneSwitchPickerModal で
+  // 収集した退場キャラ uid。rules/20 スイッチで switchEnter させる (switch-on-effect-enter)。
+  | { type: 'effectPickResolve'; pickedUid: string | null; pickedUids?: string[]; switchRemoveUid?: string }
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   | { type: 'endTurn'; player: Player };
@@ -97,37 +100,8 @@ export type DispatchResult =
  */
 let _justDeclaredAxId: string | null = null;
 
-/**
- * BUG-078 follow-up: pending.candidates (queue push 時の snapshot) は sequence の
- * 先行 step (例: D08013 step 2 evidenceToHand) で当該 area の内容が変化すると
- * stale になる。現在の gameState から uid → cardId を再解決して常に最新を採用する。
- *
- * uid 形式:
- *   - `evidence:<side>:<idx>` → gameState.players[side].evidence[idx].cardId
- *   - `<cardId>#<idx>` → cardId 部分 (Pattern B card kind の synthetic uid)
- *
- * Pattern A (uid='$pick' / scene char uid) は対象外 (本関数を呼ばない経路)
- */
-function resolveCardIdFromPickUid(
-  uid: string,
-  state: GameState | null,
-  pending: { candidates: ReadonlyArray<{ uid: string; cardId: string }> },
-): string | null {
-  if (!state) {
-    // フォールバック: state 無し → pending snapshot を使用
-    return pending.candidates.find((c) => c.uid === uid)?.cardId ?? null;
-  }
-  const ev = uid.match(/^evidence:(self|opp):(\d+)$/);
-  if (ev) {
-    const side = ev[1] as 'self' | 'opp';
-    const idx = parseInt(ev[2]!, 10);
-    return state.players[side]?.evidence?.[idx]?.cardId ?? null;
-  }
-  const ch = uid.match(/^([^#]+)#\d+$/);
-  if (ch) return ch[1] ?? null;
-  // フォールバック: snapshot 参照
-  return pending.candidates.find((c) => c.uid === uid)?.cardId ?? null;
-}
+// BUG-109: resolveCardIdFromPickUid + pick build/continuation 実行は engine の
+// apply-pick.ts (applyPickAndContinuation) へ移設し human/AI で共有 (重複排除)。
 
 // ---- can-check (前段ガード) ----
 
@@ -423,85 +397,10 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         // クリアは produce 後の post-dispatch drain で行う (return のみ)
         return;
       }
-      const pendingArgs = pending.atomArgs as { uid?: unknown };
-      const isPatternA = pendingArgs.uid === '$pick';
-      let resolvedAtom: { kind: 'atom'; verb: never; args: Record<string, unknown> };
-      if (isPatternA) {
-        // pattern A: atomArgs.uid を picked で置換、target は drop
-        const { target: _omit, ...restArgs } = pending.atomArgs;
-        void _omit;
-        resolvedAtom = {
-          kind: 'atom' as const,
-          verb: pending.atomVerb as never,
-          args: { ...restArgs, uid: picked },
-        };
-      } else {
-        // BUG-065 pattern B: synthetic uid (cardId#index) → cardId 逆引き
-        // → atomArgs.target を [cardId] で上書き (atom-handler は配列を期待)
-        // BUG-078 follow-up: pending.candidates は queue push 時の snapshot で、
-        // sequence の先行 step (例: D08013 step 2 evidenceToHand) により当該 area の
-        // 内容が変化していると stale。現在の gameState から uid を再解決する。
-        const currentState = useGameStateStore.getState().gameState;
-        const resolvedCardId = resolveCardIdFromPickUid(picked, currentState, pending);
-        if (!resolvedCardId) return; // 想定外、防御スキップ
-        // D11014 a2 driver 2026-05-26: sceneEnter のように cardId='$pick.cardId' で
-        // pick await している atom は、cardId フィールドも resolved に substitute する
-        // 必要がある。さらに sceneEnter は a.target.query.area を見て source area から
-        // カードを splice するので、target を [cardId] で上書きせず pick query のまま
-        // 保持する必要がある (ed453d8 の source-area-remove 連携)。
-        const hasCardIdBind = (pending.atomArgs as { cardId?: unknown }).cardId === '$pick.cardId';
-        // D08021 driver 2026-05-26: multi-pick atom (charStackCard 等) は cardIds:'$pick.cardIds'
-        // を resolved 配列に substitute する。pickedUids が指定されていれば全 cardId を解決、
-        // 単 pickedUid のみなら 1 件配列として変換 (n=1 で multi-pick UI を経由しないケース)。
-        const hasCardIdsBind = (pending.atomArgs as { cardIds?: unknown }).cardIds === '$pick.cardIds';
-        const currentStateForMulti = useGameStateStore.getState().gameState;
-        const resolveOne = (u: string): string | null => resolveCardIdFromPickUid(u, currentStateForMulti, pending);
-        const allUids: string[] = action.pickedUids ?? [picked];
-        const allCardIds: string[] = allUids
-          .map((u) => resolveOne(u))
-          .filter((c): c is string => typeof c === 'string');
-        const newArgs: Record<string, unknown> = hasCardIdsBind
-          ? { ...pending.atomArgs, cardIds: allCardIds } // target は元の pick query を保持
-          : hasCardIdBind
-          ? { ...pending.atomArgs, cardId: resolvedCardId } // target は元の pick query を保持
-          : { ...pending.atomArgs, target: [resolvedCardId] }; // 従来 pattern (handAddFromRemove 等)
-        resolvedAtom = {
-          kind: 'atom' as const,
-          verb: pending.atomVerb as never,
-          args: newArgs,
-        };
-      }
-      engineEvent.queue(
-        draft,
-        resolvedAtom as never,
-        { player: pending.player, cardId: pending.source.cardId },
-        'effect:human-pick-resolved',
-        { picked, source: pending.source },
-      );
-      // 即座に flush (他 dispatch case と同 pattern)
-      runAllUntilEmpty(draft);
-      // 拡張 5 (chain continuation): resolved 後 chain の残り step を queue
-      // resolved atom が applied (no-op でない) で、chain remainder が pending なら queue
-      const chainG = globalThis as { __pendingChainContinuation?: { remainder: Effect[]; ctx: EffectCtx }[] };
-      const chainCont = chainG.__pendingChainContinuation?.shift();
-      if (chainCont) {
-        // remainder を chain で wrap して queue (再度 chain semantics 適用)
-        const remainderEffect: Effect = chainCont.remainder.length === 1
-          ? chainCont.remainder[0]!
-          : { kind: 'chain', steps: chainCont.remainder };
-        // D11007 a3 driver fix 2026-05-25: 保存された ctx.source をそのまま渡す。
-        // 旧コードは { player, cardId } のみ渡して uid を drop していたため、
-        // remainder の atom が `uid: '$self'` 等を使うと ctx.source.uid 未設定で
-        // resolveBindRef が解決できず silent no-op (AP+3000 効果が走らないバグ)。
-        engineEvent.queue(
-          draft,
-          remainderEffect as never,
-          chainCont.ctx.source,
-          'effect:chain-continuation',
-          { source: chainCont.ctx.source },
-        );
-        runAllUntilEmpty(draft);
-      }
+      // BUG-109: resolved atom の build (Pattern A/B) + continuation (BUG-107 の保存 ctx 共有) は
+      // engine 共通 helper applyPickAndContinuation に集約 (AI drain drainAiEffectPicks と同実体)。
+      // resolveCardIdFromPickUid の state は draft (produce 内最新) を渡す。
+      applyPickAndContinuation(draft, pending, picked, action.pickedUids, action.switchRemoveUid);
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }

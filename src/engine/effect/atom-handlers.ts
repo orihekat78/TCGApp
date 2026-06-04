@@ -360,6 +360,22 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- 現場 ---
     case 'sceneEnter': {
+      // 2026-06-04 switch-on-effect-enter (rules/20 スイッチ): 現場満杯 (5枚) の効果登場の早期分岐。
+      //  - switchRemoveUid 指定済 (UI が満杯時に SceneSwitchPickerModal で退場キャラを収集) → skip せず
+      //    下の解決済 path で switchEnter する。
+      //  - 未指定の AI 経路 (humanSide でない側) → スイッチ選択 UI/heuristic 無しなので skip する
+      //    (rules: 0枚選択=合法な辞退。modal も無駄 pick cycle も出さない、smoke 不変)。
+      //  - 未指定の human 経路 → ここでは skip せず短縮形/await pick を通し、reanimate 対象を選ばせる。
+      //    解決時に UI が現場満杯を検知して switch 対象を収集 → switchRemoveUid 付きで再解決される。
+      {
+        const seFullP = resolvePlayer(a.player, ctx);
+        const seHasSwitch = typeof a.switchRemoveUid === 'string' && !(a.switchRemoveUid as string).startsWith('$');
+        const seHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+        if (s.players[seFullP].scene.length >= 5 && !seHasSwitch && seFullP !== seHumanSide) {
+          mutate.log.append(s, { ts: Date.now(), player: seFullP, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip' });
+          return;
+        }
+      }
       // PA 短縮形 (area からの登場): cardId 不在 + from + n|max で source area pick を構築し、
       // cardId='$pick.cardId' + target を付与して下記 $pick.cardId awaiting-pick 経路に合流させる。
       // sourceSplice (remove/evidence から実体除去) は解決後の本処理が target.query.area を見て行う。
@@ -398,6 +414,16 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         return;
       }
       const enterPlayer = resolvePlayer(a.player, ctx);
+      // switch-on-effect-enter (rules/20): 現場満杯時は既存キャラを除去 (switchEnter) して登場する。
+      // switchRemoveUid (UI が SceneSwitchPickerModal で収集した退場キャラ uid) があれば switchEnter、
+      // 無ければ skip (human が switch を辞退 / AI 経路)。room があれば通常 enter。
+      const seSwitchRemoveUid = resolveBindRef(a.switchRemoveUid, ctx) as string | undefined;
+      const seIsFull = s.players[enterPlayer].scene.length >= 5;
+      const seHasValidSwitch = typeof seSwitchRemoveUid === 'string' && !seSwitchRemoveUid.startsWith('$');
+      if (seIsFull && !seHasValidSwitch) {
+        mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip', target: cardId });
+        return;
+      }
       // D11014 a2 driver 2026-05-26: pick query で source area が指定されていれば、
       // そこから cardId 1 枚を取り除いてから scene へ。これがないと「リムーブから
       // 登場」が「リムーブに残ったまま scene にコピー登場」になる duplication bug。
@@ -424,13 +450,17 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         const idx = arr.indexOf(cardId);
         if (idx !== -1) arr.splice(idx, 1);
       }
-      const newChar = mutate.scene.enter(s, enterPlayer, cardId, {
+      const enterOpts = {
         // BUG-093: 効果/能力による登場も「同ターン登場」= 名乗り状態 (rules/06, 17)。
         // 既定 false だと効果登場キャラが名乗りにならず、名乗り例外 (突撃/迅速) 無しでも
         // action/推理できてしまっていた。明示 false を渡さない限り名乗りで登場させる。
         named: (a.named as boolean | undefined) ?? true,
         viaEffect,
-      });
+      };
+      // 満杯なら switchEnter (退場キャラを除去してから登場、rules/20)、room あれば通常 enter。
+      const newChar = seIsFull
+        ? mutate.scene.switchEnter(s, enterPlayer, cardId, seSwitchRemoveUid as string, enterOpts)
+        : mutate.scene.enter(s, enterPlayer, cardId, enterOpts);
       // user_request 20260522_01 #12 fix: 新 uid を $matched に書き戻し、
       // 後続 atom (charGrantKeyword 等) が `$matched.uid` で参照できるよう
       // する。元 binding の cardId は維持しつつ uid を上書き。

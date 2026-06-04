@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `65389730cd70`
+> Source hash: `28e1a1df365b`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,166 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## 数値ターゲットフィルタを有効値判定に修正 (rules/15,19,22 準拠)
+
+**Round/Phase**: 2026-06-04 ルール準拠改善 Task 2
+
+ターゲット/条件の数値フィルタ (`apMin/apMax/lpMin/lpMax`) が `override?printed` のみで判定し、
+turnEffects の ±修正 (疾風 AP-1000 / カットイン AP+ / D11012 LP+1 等) を無視していた。rules 上これらの
+条件は「効果解決時点の有効値」を参照すべき (rules/15 効果解決, 19 数値は±修正で変動, 22 AP 参照)。
+
+- **engine** (`target/candidates.ts` matchOneFilter): scene char (c≠null) は
+  `(override?printed) + apMod_{permanent,turn,contact}` (LP も同様) の **有効値** で判定。非現場 candidate
+  (c=null) は printed のまま。`cond/eval` も同 enumerate を使うため条件判定にも反映 (例:「AP◯以下をリムーブ」が
+  debuff されたキャラを正しく含む / D11012「LP0の警察」が buff 済 (有効LP>0) を誤って含めない)。
+- **card** (D11012 a1): 「LP0の」= 有効 LP ちょうど 0 → filter を `lpMax:0` → `lpMin:0, lpMax:0` に
+  (有効 LP は ±修正で負にもなりうるため厳密一致が必要)。
+- **残差** (BUG-113): 継続効果 (`continuousDelta` = dyn AP/LP, D08005 灰原哀) は import cycle 回避のため
+  inline 集計から除外。該当は D08005 のみで稀。
+
+裁定根拠: 「LP0の」は「LP0**以下**の」ではなく有効 LP **ちょうど 0** (rules/19 LP は 0 や負を取りうる)。
+`.claude/docs/user-request-clarifications.md` に記録。
+
+検証: 新規 effective-value-filter.test.ts 4 / vitest 1703 PASS / smoke1000 例外0・**baseline 不変** (10.86/469) /
+e2e 65 PASS / tsc clean。広域 (条件含む) 変更だが既存テスト・smoke に fallout 無し。
+
+## switch-on-effect-enter — 現場満杯時の効果登場でスイッチ提供 (rules/20 準拠)
+
+**Round/Phase**: 2026-06-04 ルール準拠改善 Task 1
+
+リムーブ等からの効果登場 (sceneEnter: D11014 a2 / D08024 / D11019) で自分の現場が満杯 (5枚) のとき、
+従来は登場を skip していた。rules/20 §スイッチでは既存キャラを退けて登場できるため、human に
+「どのキャラを退場させるか / 辞退」の選択を提供するよう実装 (switch-on-effect-enter、BUG-106 で DEFERRED だった項目)。
+
+- **engine** (atom-handlers sceneEnter): `switchRemoveUid` 付きなら `mutate.scene.switchEnter` で退場+登場、
+  満杯+未指定は skip。早期 guard は human を通し AI は skip 維持 (skip も rules 上「0枚選択=合法な辞退」)。
+- **pick threading** (apply-pick / useEngineDispatch): `effectPickResolve` に `switchRemoveUid` を追加し
+  解決済 sceneEnter atom args へ載せる (continuation の $entered 伝播はそのまま → step3 draw も発火)。
+- **UI** (Playmat): reanimate 対象選択後に現場満杯を検知し `SceneSwitchPickerModal` で退場キャラを収集
+  (手札使用 switch と同 modal を流用)。cancel = 辞退 (reanimate しない)。
+- **fix**: `SceneSwitchPickerModal` z-index 1000→1700 (reanimate の `CardListModal` 1500 の上に出す)。
+  ※ 実機 Playwright 検証で発見した stacking バグ。
+
+AI/smoke は skip 維持で挙動不変 (baseline shift 無し)。
+
+検証: 新規 engine 2 + integration 2 テスト / vitest 1697 PASS / smoke1000 例外0 baseline OK /
+Playwright e2e 65 PASS / 実機 (full scene reanimate→switch→step3 draw) 確認。
+
+---
+date: 2026-06-03
+title: 現場カードの AP/LP 表示を修正反映後の有効値に (BUG-110)
+type: fix
+scope: ui
+---
+
+## BUG-110 — カード下の AP/LP が修正を反映しない
+
+現場キャラの AP＋XXXX / LP＋X (turn 修正・continuous modifier) が `turnEffects` / read.char 側でのみ
+合算され、`SceneArea` の表示は `ch.apOverride ?? meta.ap` (印字 base) のままだった
+(例: 横溝重悟 AP＋2000 後も 4000 表示)。
+
+## 修正
+
+- `SceneArea` に `resolveCharStats?: (uid) => { ap; lp }` prop を追加し、`read.char.ap/lp` の **有効値** を表示。
+- 印字 base と異なる場合 `.modified` + `data-mod`(up/down) を付与し、CSS で **buff=緑 / debuff=赤** に着色
+  (AP＋XXXX/LP＋X が反映されているか視認可能に)。`Playmat` が self/opp 両側に配線。
+
+## 検証
+
+tsc clean / vitest **1693 PASS** (SceneArea buff/debuff/同値/override 4 ケース追加) / 実機 Playwright で
+buffed AP＋2000→6000(緑) / debuffed AP−1000→4000(赤) / plain→base を DOM 確認、console error 0。
+
+## 補足 (誤検知だったもの)
+
+事件カード下の「必要証拠 N（先攻/後攻）」が「両方先攻」に見えた件は、検証用に注入した state で
+`self.case.requiredEvidence=7` にしていたためで、実ゲーム (先攻=7/後攻=6, rules/01) では正しく
+self=6(後攻)/opp=7(先攻) 表示。Playmat の turnOrder 導出 (requiredEvidence===7→先攻) は正常。
+
+---
+date: 2026-06-03
+title: Lens F 監査 修正バッチ4 — AI PA 短縮形 pick drain (BUG-109)
+type: fix
+scope: engine+ai
+---
+
+## BUG-109 — PA 短縮形 atom が AI/CPU 経路で silent no-op
+
+charModifyAP/LP・sceneSetState・sceneRemove・短縮形 sceneEnter 等の PA 短縮形 atom は walk で展開されず
+(walk は PB 短縮形のみ展開)、runtime の `tryRePickFromAtom` (humanChooser:true 強制) で
+`__pendingEffectPickQueue` へ積まれるが、AI には drain 機構が無く no-op だった (疾風 AP-1000・D08024
+reanimate・D11012 a1 の効果が CPU で不発)。
+
+## 修正 — AI drain (runtime resolution)
+
+walk-expand は cross-step sequence (D08024 step2 が step1 登場キャラを対象) を pre-state で解決できないため、
+runtime resolution の **AI drain** を採用。
+
+- 新 engine module `src/engine/effect/apply-pick.ts`:
+  - `applyPickAndContinuation` — pending pick の resolved atom build (Pattern A/B) + 保存 ctx の runEffect
+    継続実行 (BUG-107)。human (useEngineDispatch.effectPickResolve) と AI (drain) の **共通実体**。
+  - `drainAiEffectPicks(state, policy)` — `__pendingEffectPickQueue` を heuristic で順次解決 (safety cap 64)。
+  - `resolveCardIdFromPickUid` を useEngineDispatch から移設 (重複排除)。
+- `policy.playTurn` が applyMove + runAllUntilEmpty 後に `drainAiEffectPicks` を呼ぶ
+  (useOppTurnDriver も playTurn 経由のため UI CPU 戦も同時カバー)。
+- `useEngineDispatch.effectPickResolve` を共通 helper 呼出に refactor (human 経路は同一挙動)。
+
+## smoke re-baseline
+
+CPU が 疾風/reanimate/buff を使うようになり smoke 1000 が legitimate にシフト (avgTurns 10.64→10.86、
+winsA 511→469、例外0)。`smoke-baseline.json` を更新。`check-smoke-baseline.ts` の連番 numeric sort bug
+("smoke-...-2" > "smoke-...-13" で古い report を最新誤認) も修正。
+
+## 残
+
+D11012 a1 の AI **intelligent 択一** (choiceIndex を AI が AP/LP で選ぶ) は branch 評価が必要で低優先
+(現状 AI は既定 option0=LP+1 を drain で適用、機能はする)。
+
+## 検証
+
+tsc clean / vitest **1690 PASS** (bug-109-ai-pa-drain 2 件: D11014 a1 charModifyAP / D08024 cross-step sequence) /
+smoke 1000 例外0 (re-baseline、check OK) / Playwright **65 PASS** (human pick 経路 refactor 回帰なし)。
+
+---
+date: 2026-06-03
+title: Lens F 監査 修正バッチ3 — 継続課題 3 件 (BUG-106 AI単一PB / BUG-107 bind伝播 / BUG-108 choiceIndex)
+type: fix
+scope: engine+ui
+---
+
+## BUG-106 — AI 単一 Pattern B pick (D11014 a2 sceneEnter) の walk 解決
+
+`substituteAtomPick` の AI 経路に `cardId:'$pick.cardId'` branch を追加 (BUG-103 の `cardIds` branch と同型)。
+CPU がリムーブの警察 Lv5 を登場できず萩原千速の 1 ドローも不発だった silent no-op を解消。
+副作用として現場満杯時の効果駆動 sceneEnter が throw する pre-existing gap が露呈 → handler に
+「現場満杯なら登場 skip」guard を追加 (rules/15「可能な限り行う」、source-splice 前判定でカード消失防止)。
+
+## BUG-107 — D11014 a2 `$entered` bind を pick-resolve 越しに伝播 (human 経路)
+
+`useEngineDispatch.effectPickResolve` の continuation 分岐を、保存 ctx を直接使う `runEffect` 実行に変更。
+pick 解決した sceneEnter atom と continuation remainder (conditional) を **同一の保存 ctx** で実行することで
+`$entered` bind を共有 (従来は別 `event.queue` で Immer draft に取り込まれ proxy 化して bind が消失していた)。
+D11007 a3 の uid drop も保存 ctx 使用で解消。
+
+## BUG-108 — D11012 a1 choice 択一 UI (LP＋1 / AP＋2000)
+
+- engine: `resolveEffectPicks` の choice を `ctx.dyn.choiceIndex` 指定時に選択 option へ unwrap (walk 中 bake)。
+- engine: `useDeclaredAbility` が selfToDeckBottom コストで場外へ移った source を `ctx.source` から救済解決。
+- ui: `useChoicePicker` + `ChoicePickerModal` 追加、`runDeclaredAbilityFlow` が複数 option の choice で modal ask →
+  `ctx.dyn.choiceIndex` に積む。Playmat に mount。複数 option choice は D11012 a1 のみ (他 8 箇所は単一 option)。
+- human 経路完了。AI fan-out は BUG-109 と併せ DEFERRED。
+
+## BUG-109 — PA 短縮形 atom の AI no-op (新発見・DEFERRED)
+
+charModifyAP/LP・短縮形 sceneEnter 等の PA 短縮形が AI 経路で全て silent no-op (疾風 AP-1000・D08024
+reanimate・D11012 a1 AI fan-out が不発)。walk が PB 短縮形のみ展開し、runtime の tryRePickFromAtom が
+humanChooser:true 強制 + AI drain 不在のため。**user 判断で次の focused セッションへ** (smoke baseline シフトを伴う)。
+
+## 検証
+
+tsc clean / vitest **1688 PASS** (+新規 10 件: bug-106 reanimate 3 / bug-107 bind 2 / bug-108 choice 5) /
+smoke 1000 例外0 (baseline OK avg10.69) / **Playwright 65 PASS** (+choice modal e2e 2、UI 回帰なし) /
+lint:side-channel 新規エラー0。
 
 ---
 date: 2026-06-03

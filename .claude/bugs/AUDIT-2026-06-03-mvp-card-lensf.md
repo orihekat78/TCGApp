@@ -45,12 +45,26 @@ resolver.ts の `sequence` は全 step を同期実行 (chain のような pendi
 - **✅ バッチ2a 修正済 (2026-06-03)**: H=BUG-102 (D11019 deck splice) / D=BUG-103 (D08021 AI multi-pick、empirical 確認)。
 - **✅ バッチ2b 修正済 (2026-06-03)**: F=BUG-104 (D11013 防御側カットイン: ctx.contact + byUid per-player、empirical 確認)。
 - **✅ バッチ2c 一部修正 (2026-06-03)**: C=BUG-105 (resolver sequence pick-pause)。D08024/D11020 (state 依存) 修正、
-  D08013/BUG-078 保護 (Phase F 更新)。D11014 は bind 依存のため部分 (⚠ 下記継続)。
-- **⏳ 継続課題**: D11014 の `$entered` bind が pick-resolve 越しに伝播しない / AI 経路の side-channel pick drain
-  (D08021 と同根、単一 PB pick が AI で no-op) / **E (D11012 choiceIndex 未配線)**。
+  D08013/BUG-078 保護 (Phase F 更新)。D11014 は bind 依存のため部分 (→ バッチ3 で完了)。
+- **✅ バッチ3 修正済 (2026-06-03、継続課題 3 件)**:
+  - **D (単一 PB)=BUG-106**: D11014 a2 AI sceneEnter の `cardId:'$pick.cardId'` walk substitution
+    (BUG-103 同型) + 効果駆動 sceneEnter の現場満杯 skip guard。
+  - **C (bind)=BUG-107**: D11014 a2 `$entered` bind を pick-resolve 越しに伝播 (useEngineDispatch
+    continuation を保存 ctx の runEffect 直接実行に変更、Immer 取込を回避)。
+  - **E (choiceIndex)=BUG-108**: D11012 a1 の choice 択一 UI (useChoicePicker + ChoicePickerModal +
+    resolveEffectPicks unwrap) + selfToDeckBottom コストの useDeclaredAbility lookup 救済 (human 経路完了)。
+- **✅ バッチ4 修正済 (2026-06-03、水平展開発見 → user 指示で同セッション修正)**:
+  - **BUG-109**: PA 短縮形 atom (charModifyAP/LP・sceneSetState・sceneRemove・短縮形 sceneEnter) の AI no-op を
+    **AI drain** (Approach B) で解消。新 engine module `apply-pick.ts` に human/AI 共通の
+    `applyPickAndContinuation` + `drainAiEffectPicks` を集約し、policy.playTurn が drain。
+    cross-step sequence (D08024) も continuation で post-step 盤面を見て解決。
+  - smoke **re-baseline** (avgTurns 10.64→10.86、winsA 511→469。CPU が 疾風/reanimate/buff を使うため)。
+    check-smoke-baseline の連番 numeric sort bug も修正。
+- **⏳ 残**: D11012 a1 の AI **intelligent 択一** (choiceIndex を AI が AP/LP で選ぶ) は branch 評価が必要で
+  低優先 (現状 AI は既定 option0=LP+1 を drain で適用、機能はする)。
 
 ## 次アクション
 
-- 残り C/D/E/F/H を各々個人 re-trace → BUG-XXX 昇格 → 修正。
+- (低優先) D11012 a1 AI fan-out の intelligent 択一 (choice option の AI heuristic)。
 - enforcement gap A/B/C は [card-condition-catalog.md](../specs/card-condition-catalog.md) ⚠節にも記載済。
-- 詳細 (file:line・empirical repro): workflow 出力 `tasks/wi0i16z50.output`。
+- 詳細 (file:line・empirical repro): workflow 出力 `tasks/wi0i16z50.output` + `tasks/w2tzpgiht.output` (バッチ3 understand)。

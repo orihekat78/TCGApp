@@ -5,6 +5,7 @@ import App from './App';
 import { useGameStateStore } from './ui/state/store';
 import { dispatchEngineAction } from './ui/hooks/useEngineDispatch';
 import { createSampleGameState } from './ui/fixtures/sampleGameState';
+import { useChoicePicker, useChoicePickerStore } from './ui/hooks/useChoicePicker';
 import * as engine from './engine';
 
 const rootElement = document.getElementById('root');
@@ -24,6 +25,11 @@ if (import.meta.env.DEV) {
     read: engine.read,
     cond: engine.cond,
     getActionContext: (id: string) => engine.flow.action._getContext(id),
+    // BUG-108: E2E が ChoicePickerModal の実 DOM render + option click を検証するための bridge。
+    choicePicker: {
+      ask: (req: Parameters<ReturnType<typeof useChoicePicker>['ask']>[0]) => useChoicePicker().ask(req),
+      store: useChoicePickerStore,
+    },
   };
 }
 

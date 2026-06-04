@@ -18,10 +18,11 @@ const a1: AbilityDef = {
   effect: {
     kind: 'choice', chooser: 'self',
     options: [
-      // option 1: 対象キャラに LP+1 (turn)
-      { kind: 'atom', verb: 'charModifyLP', args: { delta: 1, max: 1, side: 'self', filter: { trait: '警察', lpMax: 0 }, scope: 'turn' } },
+      // option 1: 対象キャラに LP+1 (turn)。「LP0の」= 有効 LP が **ちょうど 0** (rules/19: LP は ±修正で
+      //   負にもなりうるため lpMin:0+lpMax:0 で厳密一致。lpMax:0 単独だと debuff で LP<0 の警察も含む)。
+      { kind: 'atom', verb: 'charModifyLP', args: { delta: 1, max: 1, side: 'self', filter: { trait: '警察', lpMin: 0, lpMax: 0 }, scope: 'turn' } },
       // option 2: 対象キャラに AP+2000 (turn)
-      { kind: 'atom', verb: 'charModifyAP', args: { delta: 2000, max: 1, side: 'self', filter: { trait: '警察', lpMax: 0 }, scope: 'turn' } },
+      { kind: 'atom', verb: 'charModifyAP', args: { delta: 2000, max: 1, side: 'self', filter: { trait: '警察', lpMin: 0, lpMax: 0 }, scope: 'turn' } },
     ],
   },
   description: '【宣言】〚デッキ下〛: LP0の[警察]を1枚まで選び、ターン終了時までLP＋1かAP＋2000。',

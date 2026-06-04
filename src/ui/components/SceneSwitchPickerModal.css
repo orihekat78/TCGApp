@@ -7,7 +7,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* switch-on-effect-enter: reanimate の CardListModal(1500)/CardExpandModal(1600) の上に出す必要がある
+     (手札使用 switch では下に何も無いので 1000 で足りていたが、効果登場 switch では area modal が下に残る)。 */
+  z-index: 1700;
 }
 
 .ssp-modal {

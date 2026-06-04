@@ -24,9 +24,16 @@ function loadBaseline(): Baseline {
   return JSON.parse(readFileSync(BASELINE_PATH, 'utf-8')) as Baseline;
 }
 function loadLatestSmoke(): SmokeReport | null {
+  // BUG-109 fix: 連番 suffix を numeric で比較する (旧 .sort() は文字列比較で
+  // "smoke-...-2.json" > "smoke-...-13.json" となり古い report を最新と誤認していた)。
   const files = readdirSync(REPORTS_DIR)
     .filter((f) => /^smoke-\d{4}-\d{2}-\d{2}-\d+\.json$/.test(f))
-    .sort();
+    .sort((a, b) => {
+      const ma = a.match(/^smoke-(\d{4}-\d{2}-\d{2})-(\d+)\.json$/)!;
+      const mb = b.match(/^smoke-(\d{4}-\d{2}-\d{2})-(\d+)\.json$/)!;
+      if (ma[1] !== mb[1]) return ma[1]! < mb[1]! ? -1 : 1; // 日付は lexical
+      return Number(ma[2]) - Number(mb[2]); // 連番は numeric
+    });
   if (files.length === 0) return null;
   const latest = files[files.length - 1];
   const raw = JSON.parse(readFileSync(join(REPORTS_DIR, latest), 'utf-8')) as { summary?: Record<string, unknown> };

@@ -2,16 +2,17 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d9e890139ee6`
+> Source hash: `fb17652436fb`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **104** ファイル（[全体 index](./index.md)）
+このグループ: **106** ファイル（[全体 index](./index.md)）
 
-## engine/effect (7)
+## engine/effect (8)
 
 | ソース | 参照ルール |
 | ------ | --------- |
+| [`src/engine/effect/apply-pick.ts`](../../../src/engine/effect/apply-pick.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/engine/effect/atom-handlers.ts`](../../../src/engine/effect/atom-handlers.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
@@ -87,7 +88,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (45)
+## その他 (46)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -99,6 +100,7 @@
 | [`src/ui/hooks/useCardImage.ts`](../../../src/ui/hooks/useCardImage.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCardOrientation.ts`](../../../src/ui/hooks/useCardOrientation.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCase.ts`](../../../src/ui/hooks/useCase.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`06-card-types.md`](../../rules/06-card-types.md) |
+| [`src/ui/hooks/useChoicePicker.ts`](../../../src/ui/hooks/useChoicePicker.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/ui/hooks/useConfirmation.ts`](../../../src/ui/hooks/useConfirmation.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useContactFlowDriver.ts`](../../../src/ui/hooks/useContactFlowDriver.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/ui/hooks/useContactModalStore.ts`](../../../src/ui/hooks/useContactModalStore.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |

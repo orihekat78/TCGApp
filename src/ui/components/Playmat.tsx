@@ -62,6 +62,8 @@ import { HiramekiPickerModal } from './HiramekiPickerModal.js';
 import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHintPicker.js';
 import { SceneSwitchPickerModal } from './SceneSwitchPickerModal.js';
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
+import { ChoicePickerModal } from './ChoicePickerModal.js';
+import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.js';
 import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useEvidenceFlipPicker.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
@@ -197,6 +199,7 @@ function PlayerMat({
           pickCharUids={pickCharUids}
           onPickChar={onPickChar}
           resolveKeywords={(uid) => (state ? readChar.keywords(state, uid) : [])}
+          resolveCharStats={(uid) => (state ? { ap: readChar.ap(state, uid), lp: readChar.lp(state, uid) } : undefined)}
         />
         <div className="below-scene">
           <FileArea
@@ -376,6 +379,38 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const handleScenePick = isScenePick ? (uid: string): void => {
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
   } : undefined;
+
+  // switch-on-effect-enter (rules/20 §スイッチ): リムーブ等からの効果登場 (sceneEnter) で現場が満杯
+  // (5枚) のとき、reanimate 対象を選んだ後に SceneSwitchPickerModal で退場キャラを収集してから resolve。
+  //   - 退場キャラ選択 → switchRemoveUid 付きで resolve → engine が switchEnter で登場。
+  //   - cancel (辞退) → pickedUid:null で resolve → reanimate しない (rules: 0枚選択=合法な辞退)。
+  // 満杯でない sceneEnter / 他 area pick は従来通り即 resolve。
+  const resolveSceneEnterPick = async (uid: string): Promise<void> => {
+    const st = useGameStateStore.getState();
+    const pend = st.pendingEffectPick;
+    const gs = st.gameState;
+    if (pend && pend.atomVerb === 'sceneEnter' && gs && gs.players[pend.player].scene.length >= 5) {
+      const reanimateCardId = pend.candidates.find((c) => c.uid === uid)?.cardId ?? '';
+      const sceneChars = gs.players[pend.player].scene.map((c) => ({
+        uid: c.uid,
+        cardId: c.cardId,
+        name: readDef.card(c.cardId)?.names?.[0] ?? c.cardId,
+        state: c.state,
+        isNamed: c.isNamed,
+      }));
+      const newCardName = readDef.card(reanimateCardId)?.names?.[0] ?? reanimateCardId;
+      const removeUid = await new Promise<string | null>((resolve) => {
+        useSceneSwitchPickerStore.getState()._open({ cardId: reanimateCardId, newCardName, candidates: sceneChars, resolve });
+      });
+      if (removeUid === null) {
+        dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+        return;
+      }
+      dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid, switchRemoveUid: removeUid });
+      return;
+    }
+    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
+  };
 
   // Phase 8.6: target picker state を subscribe して候補ハイライト + click ハンドラを派生
   const pickerPhase = useTargetPickerStore((s) => s.phase);
@@ -695,6 +730,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* Phase 5 advance: SceneSwitch UI (rules/20 §スイッチ) */}
         <PlaymatSceneSwitchPickerModal />
 
+        {/* BUG-108: 複数 option choice effect (D11012 a1 LP＋1/AP＋2000) の択一 modal */}
+        <PlaymatChoicePickerModal />
+
         {/* BUG-085: 宣言能力コスト〚裏向きの証拠を表向きにする〛の証拠選択 picker
             (証拠エリア拡大表示 CardListModal を pick mode で流用) */}
         <PlaymatEvidenceFlipPickerModal />
@@ -770,9 +808,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                   ? `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`
                   : undefined
               }
-              onPick={isPickModeForThisArea ? (uid) => {
-                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
-              } : undefined}
+              onPick={isPickModeForThisArea ? (uid) => { void resolveSceneEnterPick(uid); } : undefined}
               pickCanSkip={isPickModeForThisArea && (pendingPickForArea?.nMin ?? 1) === 0}
               onPickSkip={isPickModeForThisArea ? () => {
                 dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
@@ -1038,6 +1074,25 @@ function PlaymatSceneSwitchPickerModal(): JSX.Element {
       newCardName={current?.newCardName ?? ''}
       onPick={handlePick}
       onCancel={handleCancel}
+    />
+  );
+}
+
+/**
+ * BUG-108: ChoicePickerModal ラッパ。useChoicePickerStore.current を subscribe し、
+ * runDeclaredAbilityFlow が ask() した間だけ複数 option の択一モーダルを開く。
+ * option クリック → choose(index) で Promise resolve → ctx.dyn.choiceIndex に積まれる。
+ */
+function PlaymatChoicePickerModal(): JSX.Element {
+  const current = useChoicePickerStore((s) => s.current);
+  const picker = useChoicePicker();
+  return (
+    <ChoicePickerModal
+      open={!!current}
+      sourceName={current?.sourceName ?? ''}
+      options={current?.options ?? []}
+      onPick={(index) => picker.choose(index)}
+      onCancel={() => picker.cancel()}
     />
   );
 }

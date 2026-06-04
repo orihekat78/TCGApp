@@ -66,6 +66,11 @@ export type SceneAreaProps = {
    * 省略時はバッジ非表示。
    */
   resolveKeywords?: (uid: string) => readonly string[];
+  /**
+   * BUG-110: char uid → 修正反映後の有効 AP/LP (read.char.ap/lp)。カード下の数値を base ではなく
+   * 「AP＋XXXX / LP＋X が反映された有効値」で表示するため。省略時は ch.apOverride ?? meta.ap (旧挙動)。
+   */
+  resolveCharStats?: (uid: string) => { ap: number; lp: number } | undefined;
 };
 
 type SceneCharacterCardProps = {
@@ -83,12 +88,18 @@ type SceneCharacterCardProps = {
   onPickClick?: () => void;
   /** BUG-092/093: このキャラの有効キーワード一覧 (突撃/迅速 バッジ表示用) */
   chargeKeywords?: readonly string[];
+  /** BUG-110: 修正反映後の有効 AP/LP (省略時は ch.apOverride ?? meta.ap) */
+  stats?: { ap: number; lp: number };
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick, chargeKeywords }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick, chargeKeywords, stats }: SceneCharacterCardProps): JSX.Element {
   const charges = CHARGE_BADGES.filter((b) => (chargeKeywords ?? []).includes(b.kw));
-  const ap = ch.apOverride ?? meta.ap;
-  const lp = ch.lpOverride ?? meta.lp;
+  // BUG-110: カード下の数値は「修正反映後の有効値」(read.char.ap/lp) を表示する。
+  // base (印字値 meta.ap/lp) と異なれば .modified を付けて着色し、AP＋XXXX/LP＋X の反映を視認可能にする。
+  const ap = stats?.ap ?? ch.apOverride ?? meta.ap;
+  const lp = stats?.lp ?? ch.lpOverride ?? meta.lp;
+  const apModified = ap !== meta.ap;
+  const lpModified = lp !== meta.lp;
 
   const classes = [
     'card',
@@ -129,8 +140,8 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
       </div>
       <div className="name">{meta.name}</div>
       <div className="stats">
-        <span className="ap">{ap}</span>
-        <span className="lp">{lp}</span>
+        <span className={apModified ? 'ap modified' : 'ap'} data-mod={apModified ? (ap > meta.ap ? 'up' : 'down') : undefined}>{ap}</span>
+        <span className={lpModified ? 'lp modified' : 'lp'} data-mod={lpModified ? (lp > meta.lp ? 'up' : 'down') : undefined}>{lp}</span>
         <span className="lv">{meta.lv}</span>
       </div>
 
@@ -153,7 +164,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar, resolveKeywords } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar, resolveKeywords, resolveCharStats } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -213,6 +224,7 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               isPickable={isPickable}
               onPickClick={isPickable && onPickChar ? () => onPickChar(ch.uid) : undefined}
               chargeKeywords={resolveKeywords?.(ch.uid)}
+              stats={resolveCharStats?.(ch.uid)}
             />
           );
         })}
