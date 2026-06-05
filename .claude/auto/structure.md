@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 182
-- **ファイル数**: 2535
+- **ファイル数**: 2537
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -255,6 +255,7 @@
     - `BUG-113.md`
     - `BUG-114.md`
     - `BUG-115.md`
+    - `BUG-116.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -346,6 +347,7 @@
     - `2026-06-05-10-engine-set-card-from-deck-top.md`
     - `2026-06-05-11-engine-set-card-pa-short-form.md`
     - `2026-06-05-12-deck-look-n-color-siblings.md`
+    - `2026-06-05-13-bug-116-declared-cost-bypass.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
