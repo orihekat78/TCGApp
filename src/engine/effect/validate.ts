@@ -22,7 +22,7 @@ const ATOM_VERBS = new Set<string>([
   'evidenceGain', 'evidenceLose', 'evidenceFlip',
   'evidenceToHand', 'handAddFromRemove',
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise',
-  'charModifyAP', 'charModifyLP', 'charSetAP', 'charSetLP',
+  'charModifyAP', 'charModifyLP', 'charModifyLevel', 'charSetAP', 'charSetLP',
   'charOverrideAP', 'charOverrideLP',
   'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',
   'charSetTurnEffect', 'charSetCard', 'charStackCard',

@@ -301,6 +301,10 @@ import { B08084 } from '../ct-p08/B08084.js';
 import { B08089 } from '../ct-p08/B08089.js';
 import { PR054 } from '../pr-01/PR054.js';
 
+// engine-extension #2 batch (charModifyLevel, 2026-06-05)
+import { B07103 } from '../ct-p07/B07103.js';
+import { B07103P } from '../ct-p07/B07103P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -340,4 +344,6 @@ export const REUSE_CARDS: CardDef[] = [
   PR202, PR208, PR235, PR241,
   // engine-extension #1 batch (leave:to-remove, 2026-06-05)
   D03013, D04010, B03013, B03091, B03130, B04010, B06009, B08084, B08089, PR054,
+  // engine-extension #2 batch (charModifyLevel, 2026-06-05)
+  B07103, B07103P,
 ];
