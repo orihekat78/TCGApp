@@ -19,7 +19,10 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import type { CardDef, GameState, ActionContext } from '@/engine/types';
 
-function makeCard(id: string, opts: Partial<CardDef> & { ciOrDis?: 'cutin' | 'disguise' | 'both' } = {}): CardDef {
+function makeCard(
+  id: string,
+  opts: Partial<CardDef> & { ciOrDis?: 'cutin' | 'disguise' | 'both'; disguiseCondition?: unknown } = {},
+): CardDef {
   const abilities: unknown[] = opts.abilities ?? [];
   // 2026-05-27 Option C: icon-cutin → triggered+optional. fixture も新 shape で push。
   if (opts.ciOrDis === 'cutin' || opts.ciOrDis === 'both') {
@@ -29,7 +32,10 @@ function makeCard(id: string, opts: Partial<CardDef> & { ciOrDis?: 'cutin' | 'di
       trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
     });
   }
-  if (opts.ciOrDis === 'disguise' || opts.ciOrDis === 'both') abilities.push({ type: 'icon-disguise' });
+  if (opts.ciOrDis === 'disguise' || opts.ciOrDis === 'both') {
+    // 変装ゲート条件 (【事件白】【FILE6】等) は icon-disguise ability の condition に格納 (canDisguise が評価)。
+    abilities.push({ id: 'd1', type: 'icon-disguise', condition: opts.disguiseCondition });
+  }
   return {
     id,
     no: id,
@@ -171,6 +177,69 @@ describe('engine.flow.contact.disguise', () => {
   it('canDisguise false if card is not a disguise card', () => {
     const { s, ax } = setupScene({ selfHand: ['Plain'] });
     expect(canDisguise(s, ax, 'self', 'Plain')).toBe(false);
+  });
+
+  // engine-extension (2026-06-06 タスクC): 変装ゲート条件 (rules/09 §変装, rules/17 §条件アイコン)。
+  // icon-disguise ability の condition を canDisguise が評価し、未達なら変装不可。
+  it('canDisguise respects 【事件白】 condition (caseColor)', () => {
+    _resetUidCounter();
+    resetDefRegistry();
+    registerCardDef(makeCard('Atk', { ap: 2000 }));
+    registerCardDef(makeCard('Def', { ap: 1000 }));
+    registerCardDef(makeCard('DisCaseWhite', {
+      ciOrDis: 'disguise',
+      disguiseCondition: { kind: 'caseColor', color: '白' },
+    }));
+    const initial = createEmptyGameState();
+    let selfUid = '';
+    let oppUid = '';
+    const base = produce(initial, draft => {
+      selfUid = mutate.scene.enter(draft, 'self', 'Atk', {}).uid;
+      oppUid = mutate.scene.enter(draft, 'opp', 'Def', {}).uid;
+      mutate.hand.add(draft, 'self', ['DisCaseWhite']);
+    });
+    const ax: ActionContext = {
+      id: 'ax', byUid: selfUid, byPlayer: 'self', target: { kind: 'char', uid: oppUid },
+      phase: 'action-1', cutInUsed: {}, startedAt: { turn: 0, nano: 0 },
+      apSnapshot: { aUid: selfUid, aAP: 2000, bUid: oppUid, bAP: 1000 }, contactImmune: false,
+    };
+    // 事件 白 → 変装可
+    const sWhite = produce(base, draft => { draft.players.self.case.colors = ['白']; });
+    expect(canDisguise(sWhite, ax, 'self', 'DisCaseWhite'), '事件白 → 変装可').toBe(true);
+    // 事件 赤 (白でない) → 変装不可
+    const sRed = produce(base, draft => { draft.players.self.case.colors = ['赤']; });
+    expect(canDisguise(sRed, ax, 'self', 'DisCaseWhite'), '事件白でない → 変装不可').toBe(false);
+  });
+
+  it('canDisguise respects 【FILE6】 condition (fileAtLeast)', () => {
+    _resetUidCounter();
+    resetDefRegistry();
+    registerCardDef(makeCard('Atk', { ap: 2000 }));
+    registerCardDef(makeCard('Def', { ap: 1000 }));
+    registerCardDef(makeCard('DisFile6', {
+      ciOrDis: 'disguise',
+      disguiseCondition: { kind: 'fileAtLeast', n: 6 },
+    }));
+    const initial = createEmptyGameState();
+    let selfUid = '';
+    let oppUid = '';
+    const base = produce(initial, draft => {
+      selfUid = mutate.scene.enter(draft, 'self', 'Atk', {}).uid;
+      oppUid = mutate.scene.enter(draft, 'opp', 'Def', {}).uid;
+      mutate.hand.add(draft, 'self', ['DisFile6']);
+    });
+    const ax: ActionContext = {
+      id: 'ax', byUid: selfUid, byPlayer: 'self', target: { kind: 'char', uid: oppUid },
+      phase: 'action-1', cutInUsed: {}, startedAt: { turn: 0, nano: 0 },
+      apSnapshot: { aUid: selfUid, aAP: 2000, bUid: oppUid, bAP: 1000 }, contactImmune: false,
+    };
+    const fb = { type: 'card-back' as const, cardId: 'Atk' };
+    // FILE 5 枚 → 変装不可
+    const sFile5 = produce(base, draft => { draft.players.self.file = [fb, fb, fb, fb, fb]; });
+    expect(canDisguise(sFile5, ax, 'self', 'DisFile6'), 'FILE5 → 変装不可').toBe(false);
+    // FILE 6 枚 → 変装可
+    const sFile6 = produce(base, draft => { draft.players.self.file = [fb, fb, fb, fb, fb, fb]; });
+    expect(canDisguise(sFile6, ax, 'self', 'DisFile6'), 'FILE6 → 変装可').toBe(true);
   });
 });
 

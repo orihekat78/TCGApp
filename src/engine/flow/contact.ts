@@ -9,30 +9,16 @@
 //   - judge                    (AP判定。同値もリムーブ。攻撃側はリムーブされない)
 //   - computeOrder             (低AP先、同値→防御側先)
 
-import type { GameState, ActionContext, JudgeResult, CardDef } from '../types/index.js';
+import type { GameState, ActionContext, JudgeResult, AbilityDef, EffectCtx } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
 import { abilityIsCutin } from '../read/keyword.js';
+import { evalCond } from '../cond/eval.js';
 import { computeOrder as _computeOrder } from './action/order.js';
 
 type Player = 'self' | 'opp';
-
-/**
- * CardDef.abilities から指定 type を持つ ability があるか判定
- * (Phase 5 で AbilityDef 型が定まる予定。現状 unknown[] のため narrow して判定)
- */
-function hasAbilityType(def: CardDef | undefined, type: string): boolean {
-  if (!def) return false;
-  return def.abilities.some(a => {
-    if (a && typeof a === 'object') {
-      const rec = a as Record<string, unknown>;
-      return rec.type === type;
-    }
-    return false;
-  });
-}
 
 /**
  * cutIn 持ちか
@@ -50,10 +36,14 @@ function isCutInCard(cardId: string): boolean {
 }
 
 /**
- * 変装 持ちか
+ * 変装 ability (type:'icon-disguise') を返す。無ければ undefined。
+ * 変装の可否ゲート条件 (【事件白】【FILE6】等, rules/09 §変装) はこの ability の
+ * `condition` フィールドに格納し、canDisguise が評価する。
  */
-function isDisguiseCard(cardId: string): boolean {
-  return hasAbilityType(readDef.card(cardId), 'icon-disguise');
+function disguiseAbility(cardId: string): AbilityDef | undefined {
+  const def = readDef.card(cardId);
+  if (!def) return undefined;
+  return (def.abilities as AbilityDef[]).find(a => a?.type === 'icon-disguise');
 }
 
 /**
@@ -146,14 +136,27 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
  * - cardId が p の手札にある
  * - CardDef に 変装 持ち
  * - p 側のコンタクト中キャラが存在
+ * - 変装 ability の condition (【事件白】【FILE6】等, rules/09 §変装) を満たす
+ *   ⚠ 条件未達なら「そもそも変装を持っていない扱い」(rules/17 §条件アイコン Point) → 変装不可
  */
 export function canDisguise(state: GameState, ax: ActionContext, p: Player, cardId: string): boolean {
   if (!state.players[p].hand.includes(cardId)) return false;
-  if (!isDisguiseCard(cardId)) return false;
+  const ability = disguiseAbility(cardId);
+  if (!ability) return false;
   const targetUid = contactCharUidOf(ax, p);
   if (!targetUid) return false;
   // 対象キャラが存在するか
-  return state.players[p].scene.some(c => c.uid === targetUid);
+  if (!state.players[p].scene.some(c => c.uid === targetUid)) return false;
+  // 変装ゲート条件 (【事件(色)】/【FILE(X)】等)。owner=p で evalCond。
+  // 条件未達は rules/17 §条件アイコン Point に従い「変装を持っていない」=変装不可。
+  if (ability.condition) {
+    const ctx: EffectCtx = {
+      source: { cardId, uid: targetUid, abilityId: ability.id, player: p, area: 'hand' },
+      bindings: {},
+    };
+    if (!evalCond(state, ability.condition, ctx)) return false;
+  }
+  return true;
 }
 
 /**

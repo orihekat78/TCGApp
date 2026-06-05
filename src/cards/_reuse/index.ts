@@ -392,6 +392,10 @@ import { B03102 } from '../ct-p03/B03102.js';
 import { B05011 } from '../ct-p05/B05011.js';
 // look-top-N batch (2026-06-06 タスクC): sceneEnter enterSleep (スリープ状態で登場)
 import { D01012 } from '../ct-d01/D01012.js';
+// disguise-hook batch (2026-06-06 タスクC): 変装ゲート条件 + 【変装時】(disguise:into) カード
+import { D06012 } from '../ct-d06/D06012.js';
+import { B03129 } from '../ct-p03/B03129.js';
+import { B02045 } from '../ct-p02/B02045.js';
 
 // engine-extension #5a deck-look-N batch #5 (ct-p01 早期再録 9 枚)
 import { B01048 } from '../ct-p01/B01048.js';
@@ -481,4 +485,6 @@ export const REUSE_CARDS: CardDef[] = [
   B03102, B05011,
   // look-top-N batch (enterSleep)
   D01012,
+  // disguise-hook batch (2026-06-06 タスクC): 変装ゲート条件 + 【変装時】
+  D06012, B03129, B02045,
 ];

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `a9a09c2f08ac`
+> Source hash: `86f63d6a98cb`
 
 公式ルール [`23-qa-disguise-cutin.md`](../../../rules/23-qa-disguise-cutin.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -18,10 +18,12 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (5)
+## 📄 参照ソース (7)
 
 - [`src/cards/ct-d11/D11013.ts`](../../../../src/cards/ct-d11/D11013.ts)
 - [`src/cards/ct-d11/D11017.ts`](../../../../src/cards/ct-d11/D11017.ts)
 - [`src/cards/ct-d11/D11018.ts`](../../../../src/cards/ct-d11/D11018.ts)
+- [`src/cards/ct-p02/B02045.ts`](../../../../src/cards/ct-p02/B02045.ts)
+- [`src/cards/ct-p03/B03129.ts`](../../../../src/cards/ct-p03/B03129.ts)
 - [`src/engine/flow/contact.ts`](../../../../src/engine/flow/contact.ts)
 - [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)

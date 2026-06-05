@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `a9a09c2f08ac`
+> Source hash: `86f63d6a98cb`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -21,22 +21,22 @@
 | [`06-card-types.md`](../../rules/06-card-types.md) | 29 | `cards/ct-d01/D01016.ts`, `cards/ct-d02/D02016.ts`, `cards/ct-d03/D03016.ts` ほか 26 件 |
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 34 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 31 件 |
 | [`08-contact.md`](../../rules/08-contact.md) | 22 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/_shared/contactTargetMatches.ts` ほか 19 件 |
-| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 138 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 135 件 |
+| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 141 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 138 件 |
 | [`10-action-event.md`](../../rules/10-action-event.md) | 78 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 75 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 25 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `cards/ct-d01/D01010.ts` ほか 22 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 11 | `ai/policies/heuristic.ts`, `cards/ct-p05/B05037.ts`, `cards/ct-p08/B08056.ts` ほか 8 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 137 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 134 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 67 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 64 件 |
-| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 389 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 386 件 |
+| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 391 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 388 件 |
 | [`15-workflow.md`](../../rules/15-workflow.md) | 2 | `cards/ct-d08/D08015.ts`, `cards/ct-d08/D08016.ts` |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 13 | `cards/ct-d08/D08021.ts`, `cards/ct-p02/B02020.ts`, `cards/ct-p02/B02023.ts` ほか 10 件 |
-| [`17-icons.md`](../../rules/17-icons.md) | 404 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 401 件 |
+| [`17-icons.md`](../../rules/17-icons.md) | 407 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 404 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 5 | `cards/ct-p05/B05066.ts`, `cards/ct-p07/B07093.ts`, `engine/cond/eval.ts` ほか 2 件 |
-| [`19-special-rules.md`](../../rules/19-special-rules.md) | 80 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 77 件 |
-| [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 48 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01015.ts` ほか 45 件 |
+| [`19-special-rules.md`](../../rules/19-special-rules.md) | 81 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 78 件 |
+| [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 49 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01015.ts` ほか 46 件 |
 | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 113 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 110 件 |
 | [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) | 127 | `cards/_shared/contactTargetMatches.ts`, `cards/ct-d01/D01009.ts`, `cards/ct-d01/D01010.ts` ほか 124 件 |
-| [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) | 5 | `cards/ct-d11/D11013.ts`, `cards/ct-d11/D11017.ts`, `cards/ct-d11/D11018.ts` ほか 2 件 |
+| [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) | 7 | `cards/ct-d11/D11013.ts`, `cards/ct-d11/D11017.ts`, `cards/ct-d11/D11018.ts` ほか 4 件 |
 | [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) | 58 | `cards/_shared/partnerColorKeyword.ts`, `cards/ct-d01/D01005.ts`, `cards/ct-d02/D02003.ts` ほか 55 件 |
 | [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) | 10 | `cards/_shared/caseResolvedHandRemove.ts`, `cards/ct-d08/D08005.ts`, `cards/ct-d08/D08006.ts` ほか 7 件 |
 | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) | 4 | `ui/hooks/useActionsPanelFlow.ts`, `ui/hooks/useConfirmation.ts`, `ui/hooks/useOppTurnDriver.ts`, `ui/hooks/useTargetPicker.ts` |

@@ -72,6 +72,14 @@ const TRIGGERED_HOOKS = [
   // 発火。推理キャラは scene に sleep で残るため collectCardsInPlay に出る → 特別 handler 不要、
   // 通常 in-play scan (handleHook) で処理。selfOnly=「このキャラが推理したとき」(source.uid 一致)。
   'reasoning:end',
+  // engine-extension (2026-06-06 タスクC): 変装時 (rules/09 §変装, 23-qa-disguise-cutin.md)。
+  // flow.contact.disguise が emit する disguise:into (source={player, uid}=変装で入れ替わったキャラ。
+  // uid は維持され cardId のみ変装カードに差替わる) を card-triggerable 化。変装後のキャラは scene に
+  // 残り、cardId は変装カードのものに変わるため collectCardsInPlay は変装カード def を走査する →
+  // 特別 handler 不要、通常 in-play scan (handleHook) で 【変装時】ability を発火。
+  // selfOnly=「(変装した) このキャラが…」(source.uid=変装キャラ uid 一致)。rules/09: 変装は「登場」では
+  // ないため enter hook は発火せず、disguise:into のみ発火する (登場時能力は別 hook で不発)。
+  'disguise:into',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];
