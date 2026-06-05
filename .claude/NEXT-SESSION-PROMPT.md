@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-05 夜 #2 時点)
+# 次セッション再開プロンプト (2026-06-05 夜 #3 時点)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
@@ -10,8 +10,8 @@
 ## 現在地
 
 - リポジトリ: c:/Users/arumi/OneDrive/デスクトップ/conan
-- 最新コミット: bcc48936 feat(cards): charSetCard batch #3 — 5 枚
-- ALL_CARDS: 918 枚 (前セッション 859 → +59 枚、本セッション中)
+- 最新コミット: a8aa42c4 feat(cards): deck-look-N batch #5 — 9 枚
+- ALL_CARDS: 933 枚 (前セッション 859 → +74 枚、本セッション中)
 - vitest: 1780 pass · 1 skip (回帰 0、BUG-077 のみ pre-existing flaky)
 - e2e: 13/13 pass (engine-extensions + reuse-cards + full-match-human-vs-cpu)
 - pre-commit hook: 全 lint clean (SKIP 不要)
@@ -27,10 +27,15 @@ engine 拡張 step 1〜5b の **batch #2** 連続実装 + lint 整備 + smoke te
 - charModifyLevel #2: MR 4 枚 (B05066/P/B07093/P, a2-only partial)
 - charSetCard #2: 6 枚 (B02020/P/B02030/B02046/P/B03061, partial-impl 含む)
 
-### batch #3 累積 (engine 変更 0、本 push バッチ)
+### batch #3 累積 (engine 変更 0)
 - leave:to-remove #3: 7 枚 (B04018/P/B05056/B06080/B08079/P/B08083, partial-impl 含む)
 - sceneToHand #3: 2 枚 (B06007/P 灰原哀 3択 choice)
 - charSetCard #3: 5 枚 (B02040/P/B03032/P/B05029, partial-impl 含む)
+
+### batch #4+#5 累積 (engine 変更 0、deck-look-N 拡充、本 push バッチ)
+- deck-look-N #4: 6 枚 (B01013/P/B01016/P/B01034/P, ct-p01 早期再録)
+- deck-look-N #5: 9 枚 (B01048/P/B01053/B01055/P/B01072/P/B01090/P, ct-p01)
+  - B01013=lpMax:0+kind filter, B01053=lpMin:2 filter, B01048=pass-all+declared/sleepSelf trigger
 
 ### lint / test 整備
 - lint:bug-frontmatter を prefix match 化 + BUG-115 commit hash 反映
@@ -38,16 +43,16 @@ engine 拡張 step 1〜5b の **batch #2** 連続実装 + lint 整備 + smoke te
 - BUG-116 (declaredAbility cost silent skip) 修正案 A 実装 + unit test
 - 1試合通し human vs CPU smoke spec を新規作成 (CLAUDE.md 6.3)
 
-### engine 拡張 5 ステップ × batch #1+#2+#3 累積 = 59 枚
+### engine 拡張 5 ステップ × batch #1〜#5 累積 = 74 枚
 
-| 拡張 | batch #1 | batch #2 | batch #3 | 合計 |
-|------|---------|---------|---------|------|
-| #1 leave:to-remove | 10 | 7 | 7 | 24 |
-| #2 charModifyLevel | 2 | 4 | — | 6 |
-| #3 multi-target Pattern A | 1 | — | — | 1 |
-| #4 sceneToHand | 2 | 5 | 2 | 9 |
-| #5a deckRevealUntil maxN | 6 | — | — | 6 |
-| #5b charSetCard | 2 | 6 | 5 | 13 |
+| 拡張 | #1 | #2 | #3 | #4 | #5 | 合計 |
+|------|----|----|----|----|----|------|
+| #1 leave:to-remove | 10 | 7 | 7 | — | — | 24 |
+| #2 charModifyLevel | 2 | 4 | — | — | — | 6 |
+| #3 multi-target Pattern A | 1 | — | — | — | — | 1 |
+| #4 sceneToHand | 2 | 5 | 2 | — | — | 9 |
+| #5a deckRevealUntil maxN | 6 | — | — | 6 | 9 | 21 |
+| #5b charSetCard | 2 | 6 | 5 | — | — | 13 |
 
 ## 推奨される次の動き
 
@@ -61,7 +66,8 @@ engine 拡張 step 1〜5b の **batch #2** 連続実装 + lint 整備 + smoke te
    batch #3 で 5〜10 枚追加可能
 5. **bounce 残**: 単純 enter/declared 系は batch #3 でさらに追加可能
 6. **level-modify 残**: B08048 アンドレ・キャメル等の triggered 系
-7. **set-card 残**: B02040/P / B03032/P 等、PA短縮形でさらに 5〜8 枚
+7. **deck-look-N (#5a) 残**: B01017 推理reaction型 / D01012・D05007 現場リムーブ時 trigger型 /
+   ct-p02 系 (B02019/P/B02044 怪盗キッド等) は batch #6 で追加可能
 
 ### 優先度 低 (技術負債)
 8. **BUG-077 flaky timeout**: vitest 全 suite 実行時のみ timeout、isolated は pass
@@ -73,7 +79,7 @@ engine 拡張 step 1〜5b の **batch #2** 連続実装 + lint 整備 + smoke te
 - ゲート表: `.claude/specs/card-impl-engine-gates.md`
 - DEFERRED 一覧: `.claude/specs/DEFERRED-INDEX.md`
 - BUG 一覧: `.claude/bugs/index.base`
-- 本セッション changelog: `.claude/changelog-entries/2026-06-05-03〜20`
+- 本セッション changelog: `.claude/changelog-entries/2026-06-05-03〜25`
 
 ## 注意事項
 
