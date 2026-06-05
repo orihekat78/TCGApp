@@ -6,7 +6,7 @@
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
 import type { GameState, Condition, EffectCtx, Candidate } from '@/engine/types';
-import { candidates } from '@/engine/target/candidates.js';
+import { candidates, matchOneFilter } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
@@ -220,6 +220,22 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       if (f.levelMin !== undefined && (d?.level ?? 0) < f.levelMin) return false;
       if (f.levelMax !== undefined && (d?.level ?? 0) > f.levelMax) return false;
+      return true;
+    }
+    case 'triggerCharMatches': {
+      // 2026-06-06 タスクC: トリガ payload のキャラ (reasoning:end の推理キャラ等) を side+filter で評価。
+      const pl = ctx.triggerPayload as { uid?: string; player?: 'self' | 'opp' } | undefined;
+      if (!pl?.uid || !pl.player) return false;
+      // side:'self' = トリガキャラが card 所有者と同じ側 (ctx.source.player)
+      const sameSide = pl.player === ctx.source.player;
+      if (cond.side === 'self' && !sameSide) return false;
+      if (cond.side === 'opp' && sameSide) return false;
+      if (cond.filter) {
+        const ch = state.players[pl.player].scene.find(c => c.uid === pl.uid);
+        if (!ch) return false;
+        const cand: Candidate = { kind: 'char', uid: ch.uid, cardId: ch.cardId, player: pl.player };
+        if (!matchOneFilter(state, ch.cardId, cond.filter, ch, cand)) return false;
+      }
       return true;
     }
     case 'custom':

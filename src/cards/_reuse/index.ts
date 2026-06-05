@@ -387,6 +387,9 @@ import { B01034P } from '../ct-p01/B01034P.js';
 // engine-extension reasoning-hook batch (2026-06-06 タスクC): 推理反応カード
 import { B01017 } from '../ct-p01/B01017.js';
 import { B01074 } from '../ct-p01/B01074.js';
+// reasoning-hook batch #2: 非 selfOnly (自分の現場のキャラが推理したとき / triggerCharMatches)
+import { B03102 } from '../ct-p03/B03102.js';
+import { B05011 } from '../ct-p05/B05011.js';
 
 // engine-extension #5a deck-look-N batch #5 (ct-p01 早期再録 9 枚)
 import { B01048 } from '../ct-p01/B01048.js';
@@ -472,4 +475,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01048, B01048P, B01053, B01055, B01055P, B01072, B01072P, B01090, B01090P,
   // engine-extension reasoning-hook batch (2026-06-06 タスクC)
   B01017, B01074,
+  // reasoning-hook batch #2 (非 selfOnly / triggerCharMatches)
+  B03102, B05011,
 ];

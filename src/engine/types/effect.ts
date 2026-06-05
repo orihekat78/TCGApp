@@ -44,6 +44,10 @@ export type Condition =
   // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
   // (「〚カード名[X]〛を登場させた場合」を declarative 化、matchOneFilter 再利用)
   | { kind: 'boundMatchesFilter'; bindKey: string; filter: TargetFilter }
+  // 2026-06-06 タスクC: トリガ payload のキャラ (例: reasoning:end の推理キャラ payload.uid) を
+  // side + TargetFilter で評価する。「自分/相手の現場にいる〚条件〛のキャラが推理したとき」を
+  // matcherCondition で declarative 化。side:'self'=payload.player===source.player (= card 所有者側)。
+  | { kind: 'triggerCharMatches'; side?: 'self' | 'opp' | 'either'; filter?: TargetFilter }
   | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean };
 
 // ---------- TargetFilter / TargetQuery / TargetingRef ----------
