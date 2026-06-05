@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 182
-- **ファイル数**: 2538
+- **ファイル数**: 2539
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -349,6 +349,7 @@
     - `2026-06-05-12-deck-look-n-color-siblings.md`
     - `2026-06-05-13-bug-116-declared-cost-bypass.md`
     - `2026-06-05-14-phase-a-lint-bugs-fix.md`
+    - `2026-06-05-15-bug-116-cost-warning-log.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント

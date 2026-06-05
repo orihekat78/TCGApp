@@ -160,6 +160,23 @@ export function useDeclaredAbility(
   if (!ability) return;
   if (ability.type !== 'declared' || !ability.effect) return;
 
+  // BUG-116 (2026-06-05): cost が定義されているのに ctx.costPaid 不在 → cost 未払い疑い。
+  // useEngineDispatch.declaredAbility は action.cost && action.ctx が両方渡されたときのみ
+  // engine.cost.pay を呼ぶため、e2e や直接 dispatch で渡し忘れると cost が silent skip
+  // される (effect だけ走る) latent バグへの早期検出。
+  // 既存挙動は変えず、warning log のみ append (rules 上はカードルール違反だが engine 層では
+  // throw せず caller (UI/AI) の責務として扱う、教訓 1 と同じ pattern)。
+  if (ability.cost && !ctx?.costPaid) {
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: found.player,
+      turn: state.turn.number,
+      action: 'declaredAbility:cost-not-paid',
+      target: `${uid}:${abilId}`,
+      result: 'WARN: ability.cost 定義あり / ctx.costPaid 不在 — cost 未払いで effect 解決へ',
+    });
+  }
+
   const resolveCtx: EffectCtx = {
     source: {
       cardId: found.cardId,

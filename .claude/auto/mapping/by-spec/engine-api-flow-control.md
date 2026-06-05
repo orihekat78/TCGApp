@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `241fbce0ef3c`
+> Source hash: `449452a7708e`
 
 仕様書 [`engine-api-flow-control`](../../../specs/engine-api-flow-control.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

@@ -238,4 +238,129 @@ describe('engine.flow.main.useDeclaredAbility', () => {
       expect(canDeclaredAbility(after, 'case:self', 'A')).toBe(true);
     });
   });
+
+  // BUG-116 (2026-06-05): cost が定義されているのに ctx.costPaid 不在の場合に warning log を出す
+  describe('BUG-116: cost-not-paid warning log', () => {
+    beforeEach(() => resetDefRegistry());
+    afterEach(() => resetDefRegistry());
+
+    it('ability.cost あり + ctx.costPaid 不在 → declaredAbility:cost-not-paid log', () => {
+      const cardDef: CardDef = {
+        id: 'COST_CARD',
+        no: '0000/COST_CARD',
+        kind: 'character',
+        names: ['コスト持ち'],
+        colors: ['赤'],
+        level: 1, ap: 1000, lp: 1,
+        traits: [], rarity: 'C', imageUrl: 't.jpg',
+        abilities: [{
+          id: 'a1',
+          type: 'declared',
+          scope: 'on-scene',
+          cost: { kind: 'sleepSelf' },
+          effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+          description: '【宣言】【スリープ】: 1ドロー',
+          ruleRefs: [],
+        }],
+        ruleRefs: [],
+      };
+      registerCardDef(cardDef);
+
+      _resetUidCounter();
+      const initial = createEmptyGameState();
+      let uid = '';
+      const s = produce(initial, draft => {
+        const c = mutate.scene.enter(draft, 'self', 'COST_CARD', {});
+        uid = c.uid;
+      });
+
+      // ctx 未指定で dispatch → costPaid 不在
+      const after = produce(s, draft => {
+        useDeclaredAbility(draft, uid, 'a1');
+      });
+
+      // log に cost-not-paid エントリがある
+      const hasWarning = after.log.some((e) => e.action === 'declaredAbility:cost-not-paid' && e.target === `${uid}:a1`);
+      expect(hasWarning, 'cost-not-paid warning log が記録される').toBe(true);
+    });
+
+    it('ability.cost あり + ctx.costPaid 提供 → warning log なし (cost.pay 完了後の正常 dispatch)', () => {
+      const cardDef: CardDef = {
+        id: 'COST_CARD2',
+        no: '0000/COST_CARD2',
+        kind: 'character',
+        names: ['コスト持ち2'],
+        colors: ['赤'],
+        level: 1, ap: 1000, lp: 1,
+        traits: [], rarity: 'C', imageUrl: 't.jpg',
+        abilities: [{
+          id: 'a1',
+          type: 'declared',
+          scope: 'on-scene',
+          cost: { kind: 'sleepSelf' },
+          effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+          description: '【宣言】【スリープ】: 1ドロー',
+          ruleRefs: [],
+        }],
+        ruleRefs: [],
+      };
+      registerCardDef(cardDef);
+
+      _resetUidCounter();
+      const initial = createEmptyGameState();
+      let uid = '';
+      const s = produce(initial, draft => {
+        const c = mutate.scene.enter(draft, 'self', 'COST_CARD2', {});
+        uid = c.uid;
+      });
+
+      // ctx.costPaid を渡す (cost.pay 完了済を模す)
+      const after = produce(s, draft => {
+        useDeclaredAbility(draft, uid, 'a1', {
+          costPaid: { sleepSelf: { uid } },
+          source: { cardId: 'COST_CARD2', uid, abilityId: 'a1', player: 'self', area: 'scene' },
+        });
+      });
+
+      const hasWarning = after.log.some((e) => e.action === 'declaredAbility:cost-not-paid');
+      expect(hasWarning, 'costPaid 提供時は warning なし').toBe(false);
+    });
+
+    it('ability.cost 未定義 → warning log なし (cost 不要な declared ability)', () => {
+      const cardDef: CardDef = {
+        id: 'NO_COST',
+        no: '0000/NO_COST',
+        kind: 'character',
+        names: ['コスト無し'],
+        colors: ['赤'],
+        level: 1, ap: 1000, lp: 1,
+        traits: [], rarity: 'C', imageUrl: 't.jpg',
+        abilities: [{
+          id: 'a1',
+          type: 'declared',
+          scope: 'on-scene',
+          effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+          description: '【宣言】: 1ドロー',
+          ruleRefs: [],
+        }],
+        ruleRefs: [],
+      };
+      registerCardDef(cardDef);
+
+      _resetUidCounter();
+      const initial = createEmptyGameState();
+      let uid = '';
+      const s = produce(initial, draft => {
+        const c = mutate.scene.enter(draft, 'self', 'NO_COST', {});
+        uid = c.uid;
+      });
+
+      const after = produce(s, draft => {
+        useDeclaredAbility(draft, uid, 'a1');
+      });
+
+      const hasWarning = after.log.some((e) => e.action === 'declaredAbility:cost-not-paid');
+      expect(hasWarning, 'cost 未定義 ability は warning なし').toBe(false);
+    });
+  });
 });
