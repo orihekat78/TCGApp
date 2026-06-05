@@ -148,6 +148,31 @@ describe('engine.cond.eval', () => {
     });
   });
 
+  describe('caseTrait (BUG-124: caseTraits field-drop)', () => {
+    it('matches trait stored in caseTraits only (例 D08026=古城, traits:[])', () => {
+      // 事件カードの特徴は caseTraits に格納される (traits=キャラ特徴用)。
+      registerCardDef(defOf({ id: 'CASE_KOJO', kind: 'case', traits: [], caseTraits: ['古城'] }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, case: { ...s.players.self.case, cardId: 'CASE_KOJO' } } } };
+      expect(evalCond(s, { kind: 'caseTrait', trait: '古城' }, makeCtx()), 'caseTraits の古城に一致').toBe(true);
+      expect(evalCond(s, { kind: 'caseTrait', trait: '婚活' }, makeCtx()), '非該当 trait は false').toBe(false);
+    });
+
+    it('backward-compat: trait stored in traits (例 D11021=婚活 は両フィールド)', () => {
+      registerCardDef(defOf({ id: 'CASE_KON', kind: 'case', traits: ['婚活'], caseTraits: ['婚活'] }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, case: { ...s.players.self.case, cardId: 'CASE_KON' } } } };
+      expect(evalCond(s, { kind: 'caseTrait', trait: '婚活' }, makeCtx())).toBe(true);
+    });
+
+    it('no match when case has no such trait', () => {
+      registerCardDef(defOf({ id: 'CASE_NONE', kind: 'case', traits: [], caseTraits: [] }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, case: { ...s.players.self.case, cardId: 'CASE_NONE' } } } };
+      expect(evalCond(s, { kind: 'caseTrait', trait: '古城' }, makeCtx())).toBe(false);
+    });
+  });
+
   describe('fileAtLeast', () => {
     it('checks file length', () => {
       let s = createEmptyGameState();

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2645
+- **ファイル数**: 2647
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -262,6 +262,7 @@
     - `BUG-121.md`
     - `BUG-122.md`
     - `BUG-123.md`
+    - `BUG-124.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -378,6 +379,7 @@
     - `2026-06-06-05-task-c-reasoning-hook-2.md`
     - `2026-06-06-06-task-c-look-top-n.md`
     - `2026-06-06-07-task-c-disguise-hook.md`
+    - `2026-06-06-08-bug-124-casetrait-field-drop.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
