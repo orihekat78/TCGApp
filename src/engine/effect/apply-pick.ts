@@ -59,11 +59,24 @@ export function applyPickAndContinuation(
   // ---- resolved atom を build (Pattern A: uid='$pick' → uid 置換 / Pattern B: cardId(s)/target 置換) ----
   const pendingArgs = pending.atomArgs as { uid?: unknown };
   const isPatternA = pendingArgs.uid === '$pick';
-  let resolvedAtom: { kind: 'atom'; verb: never; args: Record<string, unknown> };
+  let resolvedAtom: Effect;
   if (isPatternA) {
     const { target: _omit, ...restArgs } = pending.atomArgs;
     void _omit;
-    resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: { ...restArgs, uid: pickedUid } };
+    // engine-extension #3 (2026-06-05): multi-target Pattern A
+    // pickedUids が複数なら各 uid に atom を per-char 適用する sequence にまとめる。
+    // 単一なら従来通り (sequence wrap せずに atom のまま runEffect / event.queue)。
+    const uids = (pickedUids && pickedUids.length > 1) ? pickedUids : [pickedUid];
+    if (uids.length === 1) {
+      resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: { ...restArgs, uid: uids[0]! } };
+    } else {
+      const atoms: Effect[] = uids.map((u) => ({
+        kind: 'atom' as const,
+        verb: pending.atomVerb as never,
+        args: { ...restArgs, uid: u },
+      }));
+      resolvedAtom = { kind: 'sequence', steps: atoms };
+    }
   } else {
     const resolvedCardId = resolveCardIdFromPickUid(pickedUid, state, pending);
     if (!resolvedCardId) return; // 想定外、防御スキップ

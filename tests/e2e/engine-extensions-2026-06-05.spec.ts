@@ -32,6 +32,13 @@ async function levelOf(page: Page, uid: string): Promise<number> {
   }, uid);
 }
 
+async function apOf(page: Page, uid: string): Promise<number> {
+  return page.evaluate((u) => {
+    const w = window as unknown as { __game: { getState: () => { gameState: unknown }; read: { char: { ap: (s: unknown, uid: string) => number } } } };
+    return w.__game.read.char.ap(w.__game.getState().gameState, u);
+  }, uid);
+}
+
 type AnyState = Record<string, unknown>;
 
 test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
@@ -130,6 +137,59 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     const drewAlready = selfDeckAfter < selfDeckBefore;
     expect(d03013Removed, 'D03013 が removeエリア').toBe(true);
     expect(hasLeaveDraw || drewAlready, 'leave:to-remove 経路で draw が queue/resolve').toBe(true);
+    expect(errors).toEqual([]);
+  });
+
+  // ============================================================
+  // Engine 拡張 #3: multi-target Pattern A pick
+  // ============================================================
+  test('B02021 沖田総司 a1: 相手3キャラ全員に per-char AP-1000 が適用される (multi-target Pattern A)', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await prime(page);
+    await buildGameState(page, (gs: AnyState) => {
+      const mkC = (cardId: string, uid: string, state = 'active', ap: number | null = null) => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: ap, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
+      const self = (gs.players as AnyState).self as AnyState;
+      const opp = (gs.players as AnyState).opp as AnyState;
+      self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['緑'], declaredUseCount: {} };
+      self.scene = [mkC('B02021', 'okt#1')];
+      // 相手の現場に 3 キャラ — printed AP は default 値 (D11015=5000)
+      opp.scene = [
+        mkC('D11015', 'opp-1', 'sleep'),
+        mkC('D11015', 'opp-2', 'active'),
+        mkC('D11015', 'opp-3', 'sleep'),
+      ];
+      self.hand = []; self.evidence = []; self.remove = [];
+      gs.pendingEffects = [];
+      gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    // pre: 相手 3 キャラの AP
+    const pre1 = await apOf(page, 'opp-1');
+    const pre2 = await apOf(page, 'opp-2');
+    const pre3 = await apOf(page, 'opp-3');
+
+    // 宣言 a1
+    await dispatchAction(page, { type: 'declaredAbility', uid: 'okt#1', abilId: 'a1' });
+
+    // PA 短縮形 max:5 で pending pick (charModifyAP)
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('charModifyAP');
+    const pending = await getPendingEffectPick(page);
+    expect(pending?.candidates.length, '候補は 3 体').toBe(3);
+
+    // 全 3 体を multi-pick で resolve (engine-extension #3 で per-char 適用される)
+    await dispatchAction(page, {
+      type: 'effectPickResolve',
+      pickedUid: 'opp-1',
+      pickedUids: ['opp-1', 'opp-2', 'opp-3'],
+    });
+
+    // 全 3 体に AP-1000 が適用されている
+    expect(await apOf(page, 'opp-1'), 'opp-1: -1000').toBe(pre1 - 1000);
+    expect(await apOf(page, 'opp-2'), 'opp-2: -1000').toBe(pre2 - 1000);
+    expect(await apOf(page, 'opp-3'), 'opp-3: -1000').toBe(pre3 - 1000);
     expect(errors).toEqual([]);
   });
 });
