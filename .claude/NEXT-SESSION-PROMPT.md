@@ -1,80 +1,72 @@
-# 次セッション再開プロンプト (2026-05-11 末時点)
+# 次セッション再開プロンプト (2026-06-05 末時点)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
 ---
 
 ```
-名探偵コナンTCG MVP の実装を継続してください。
+名探偵コナンTCG MVP の engine 拡張バッチを継続してください。
 
 ## 現在地
 
 - リポジトリ: c:/Users/arumi/OneDrive/デスクトップ/conan
-- 最新コミット: e63c5c5 feat(engine): invariants + integration round-trip test
-- テスト状況: 308 PASS / 30 Test Files / typecheck 通過
-- Phase 0-2 完了 (engine 基礎: read/mutate/invariant 構築済)
+- 最新コミット: 169ca7e3 fix(lint): lint:side-channel に engine-internal queue allowlist 追加
+- ALL_CARDS: 882 枚 (前回 859 → +23 枚)
+- vitest: 1764 pass · 1 skip (回帰 0、BUG-077 のみ pre-existing flaky)
+- e2e: 16/16 pass (engine-extensions-2026-06-05.spec.ts + reuse-cards-2026-06-05.spec.ts)
+- pre-commit hook: 全 lint clean (SKIP 不要)
 
-## やること
+## 完了済 (本セッション 14 commit / 2026-06-05)
 
-`.claude/research/plans/2026-05-11-mvp-implementation/INDEX.md` の Phase 3 から実装を再開。
+engine-extension-plan.md step 1〜5b 全達成 + lint 整備:
 
-実行モード: subagent-driven-development (前セッションでユーザー選択した mode を維持)
-→ superpowers:subagent-driven-development skill を起動し、各 task を fresh subagent に dispatch
+1. engine #1 leave:to-remove hook + 10 枚 (D03013/D04010/B03013/B03091/B03130/B04010/B06009/B08084/B08089/PR054)
+2. engine #2 charModifyLevel verb + 2 枚 (B07103/P)
+3. engine #3 multi-target Pattern A pick + 1 枚 (B02021)
+4. engine #4 sceneToHand verb + 2 枚 (B06069/P)
+5. engine #5a deckRevealUntil maxN + handAddFromDeck + 6 枚 (D01013 + 5 色違い)
+6. engine #5b charSetCard fromDeckTop + PA短縮形 + 2 枚 (B08054, B02023)
+7. lint:bug-frontmatter prefix match 化 + BUG-115 commit 反映
+8. lint:side-channel engine-internal allowlist 追加
+9. BUG-116 (declaredAbility cost silent skip) 登録 (DEFERRED)
 
-## 開始手順
+## 推奨される次の動き
 
-1. .claude/memory.md を読み現在地確認
-2. .claude/sessions/2026-05-11-4.md で前セッション達成内容把握
-3. .claude/research/plans/2026-05-11-mvp-implementation/phase-3-effect-resolver.md で Phase 3 詳細確認
-4. subagent-driven-development skill 起動
-5. Phase 3 タスクを 2-3 グループに分割して subagent に dispatch (推奨):
-   - Group A: Hook Registry + Atom Verb ハンドラ (3.1-3.2)
-   - Group B: Targeting + Cost + Condition + Dyn evaluator (3.3-3.6)
-   - Group C: Effect Resolver + Effect Stack + Validator + 統合テスト (3.7-3.10)
-6. 各 task 完了後 spec compliance review (haiku/sonnet 軽量 model 可)
-7. Phase 3 完了で memory.md / sessions/2026-05-11-5.md 更新
+### 優先度 高
+1. **BUG-116 推奨修正案 A**:
+   useDeclaredAbility 内で `ability.cost && !ctx?.costPaid` を検出して warning log
+   (e2e で declared dispatch 時に cost 漏れを早期検出可能に)
 
-## 重要な前提・制約
+2. **1試合通し Playwright smoke**:
+   CLAUDE.md 6.3 要件 (mulligan→勝敗決定まで通して操作 / console error 0)
+   既存 e2e は ability 単発検証のみ、本来の「機能確認」未充足
 
-- 骨格凍結原則 (.claude/CLAUDE.md): カード効果対応のための骨格修正禁止
-- 全 Markdown 100行以内 (超過時分割)
-- TDD 必須 (test 先 → 失敗 → 実装 → PASS → commit)
-- commit メッセージ末尾に「Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>」必須
-- Engine API spec は .claude/specs/engine-api*.md (17 ファイル) に完全定義
+### 優先度 中 (batch 拡充、engine 変更ゼロで進められる)
+3. **leave:to-remove 残 79 枚** — 多くは draw/discard/sleep の単純パターン (engine#1 cards 参照)
+4. **bounce 残 25 枚** — B06076 ジェイムズ・ブラック等 (sceneToHand verb 既存)
+5. **level-modify 残 15 枚** — B05066 declared 等 (charModifyLevel verb 既存)
+6. **set-card 残** — B02018/B02020/B02030 等 (charSetCard fromDeckTop + PA短縮形 既存)
 
-## 残り全 Phase
+### 優先度 低 (engine 拡張・高リスク)
+7. continuous aura (他キャラ buff、~13 枚解禁) — AP/LP read 全体に波及
+8. untargetable (~6 枚) — 全ターゲット処理に波及
+9. partner ability rewrite (~10 枚)
 
-- Phase 3: Effect Resolver + Hooks + Cost + Target + Cond + Dyn (~5h)
-- Phase 4: Flow Control turn/phase/action/contact 9段階状態機械 (~4h)
-- Phase 5: cards/_shared/ 9 + 47カード実装 (~12h)
-- Phase 6: AI Random/Heuristic + 100戦 smoke (~2h)
-- Phase 7: UI Shell + プレイマット (~4h)
-- Phase 8: UI 相互作用 + モーダル群 (~4h)
-- Phase 9: 1000戦 + チュートリアル + リリース判定 (~3h)
+## 重要な参照ファイル
 
-合計約34h。1セッション 30-60分なら Phase 3 全完了 + Phase 4 一部 程度を目標に。
+- 拡張計画: `.claude/specs/engine-extension-plan.md`
+- ゲート表: `.claude/specs/card-impl-engine-gates.md`
+- DEFERRED 一覧: `.claude/specs/DEFERRED-INDEX.md`
+- BUG 一覧: `.claude/bugs/index.base`
+- 本セッション changelog: `.claude/changelog-entries/2026-06-05-03〜14`
 
-context budget が苦しくなったら、前セッションと同様にチェックポイント (memory.md / sessions/2026-05-11-N.md 更新) してから停止。
+## 注意事項 (本セッションで判明)
+
+- **BUG-116 (latent)**: `useEngineDispatch.declaredAbility` は `action.cost && action.ctx`
+  が揃わないと cost を silent skip。AI 経路と本番 UI は OK、e2e/直接 dispatch では cost フリー。
+  → 上記「優先度 高 #1」で対処予定
+- **BUG-077 flaky timeout**: D08013 a1 step 2 evidenceToHand の vitest 全 suite 実行時 timeout。
+  isolated 実行は pass。原因は registerAll 初期化負荷と推測 (pre-existing、対処は別途)
+
+最初に何をすべきかを宣言してから着手してください。
 ```
-
----
-
-## subagent-driven 実行のコツ (前セッション学習)
-
-- **1 dispatch あたりのファイル数上限 ~7-9 程度**。それ以上は分割
-- **TDD不要なタスク** (npm install, config 書き出し等) は spec review 省略可
-- **TDD要のタスク** (engine ロジック) は test → 失敗 → 実装 → PASS の順を厳守させる
-- **モデル選択**: 機械的タスク (config) は haiku、ロジック実装は sonnet、判断必要な設計は opus
-- **同じ namespace の tasks はまとめる** (例: Phase 1.1+1.2 は同じ types、Phase 2.4-2.7 は同じ mutate)
-- **spec reviewer は haiku で十分** (機械的チェック)、code quality review は実装ロジックがある時のみ
-- **状態管理**: 各 dispatch 前に memory.md を最新化、dispatch 後 TodoWrite 更新
-
-## 必要なドキュメント location
-
-- 実装プラン: .claude/research/plans/2026-05-11-mvp-implementation/
-- Engine API: .claude/specs/engine-api*.md (17)
-- Card 分析: .claude/specs/cards-analysis/ (32 md)
-- Card データ TSV: .claude/specs/cards-data/ (8 TSV + _raw/)
-- 共通クラス: .claude/specs/shared-classes/ (8 spec + INDEX)
-- ルール: .claude/rules/ (30)
-- 規約: .claude/CLAUDE.md
