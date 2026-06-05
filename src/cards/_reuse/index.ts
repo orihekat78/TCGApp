@@ -314,6 +314,12 @@ import { B06069P } from '../ct-p06/B06069P.js';
 
 // engine-extension #5a batch (deckRevealUntil maxN + handAddFromDeck, 2026-06-05)
 import { D01013 } from '../ct-d01/D01013.js';
+// engine-extension #5a batch #2: D01013 同型 5 色違い
+import { D02011 } from '../ct-d02/D02011.js';
+import { D03009 } from '../ct-d03/D03009.js';
+import { D04011 } from '../ct-d04/D04011.js';
+import { D05012 } from '../ct-d05/D05012.js';
+import { D07019 } from '../ct-d07/D07019.js';
 
 // engine-extension #5b batch (charSetCard fromDeckTop, 2026-06-05)
 import { B08054 } from '../ct-p08/B08054.js';
@@ -367,6 +373,8 @@ export const REUSE_CARDS: CardDef[] = [
   B06069, B06069P,
   // engine-extension #5a batch (deckRevealUntil maxN + handAddFromDeck, 2026-06-05)
   D01013,
+  // engine-extension #5a batch #2: D01013 同型 5 色違い
+  D02011, D03009, D04011, D05012, D07019,
   // engine-extension #5b batch (charSetCard fromDeckTop, 2026-06-05)
   B08054,
   // engine-extension #5b 残課題: charSetCard PA短縮形

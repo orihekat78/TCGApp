@@ -376,4 +376,53 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     expect(deck, 'デッキから D08013 splice').toEqual(['D08019']);
     expect(errors).toEqual([]);
   });
+
+  // ============================================================
+  // engine 拡張 #5a batch #2: D01013 同型 5 枚 (色違い)
+  // for ループで 5 case 生成 — filter の色違いで全て同じ semantics
+  // ============================================================
+  // 各色の match 用カード — ct-d{01..07} は折り目通り 1=青 / 2=緑 / 3=白 / 4=赤 / 5=黄 / 7=黒
+  const siblings = [
+    { cardId: 'D02011', color: '緑', matchCardId: 'D02002', caseColor: '緑' }, // D02002=緑
+    { cardId: 'D03009', color: '白', matchCardId: 'D03002', caseColor: '白' }, // D03002=白
+    { cardId: 'D04011', color: '赤', matchCardId: 'D04002', caseColor: '赤' }, // D04002=赤
+    { cardId: 'D05012', color: '黄', matchCardId: 'D11015', caseColor: '黄' }, // D11015=黄
+    { cardId: 'D07019', color: '黒', matchCardId: 'B07101', caseColor: '黒' }, // B07101=黒
+  ];
+  for (const { cardId, color, matchCardId, caseColor } of siblings) {
+    test(`D01013 同型 (${color}): ${cardId} は上から4枚見て【${color}】1枚を手札+discard1`, async ({ page }) => {
+      const { errors } = await setupGamePage(page);
+      await prime(page);
+      await buildGameState(page, (gs: AnyState, args: { cardId: string; matchCardId: string; caseColor: string }) => {
+        const self = (gs.players as AnyState).self as AnyState;
+        self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+        self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: [args.caseColor], declaredUseCount: {} };
+        self.scene = [];
+        // デッキ上 4 枚に match を 1 枚混ぜる
+        self.deck = ['D08019', args.matchCardId, 'D08021', 'D08019', 'D08005'];
+        self.hand = [args.cardId, 'D11005']; // discard 用ダミー
+        self.evidence = []; self.remove = [];
+        const fb = { type: 'card-back', cardId: 'D08017' };
+        self.file = [fb, fb, fb, fb, fb, fb, fb];
+        gs.pendingEffects = [];
+        gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+      }, { cardId, matchCardId, caseColor });
+
+      await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId });
+
+      await expect
+        .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+        .toBe('discard');
+      const pending = await getPendingEffectPick(page);
+      const d11005 = pending?.candidates.find((c) => c.cardId === 'D11005');
+      expect(d11005, 'D11005 が discard 候補').toBeTruthy();
+      await dispatchAction(page, { type: 'effectPickResolve', pickedUid: d11005!.uid });
+
+      const after = await getGameState(page);
+      const hand = (after.players.self as { hand: string[] }).hand;
+      expect(hand, `手札に ${color} の ${matchCardId}`).toContain(matchCardId);
+      expect(hand, '手札に D11005 は残っていない (discard 済)').not.toContain('D11005');
+      expect(errors).toEqual([]);
+    });
+  }
 });
