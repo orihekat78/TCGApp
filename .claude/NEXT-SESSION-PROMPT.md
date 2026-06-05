@@ -9,37 +9,34 @@
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md →
 .claude/auto/structure.md → .claude/sessions/2026-06-06.md を読んで状況を把握すること。
 
-## 現在地 (2026-06-06)
+## 現在地 (2026-06-06 #3 時点)
 
-- 最新コミット: cc18a10f (origin/main 同期済)
-- ALL_CARDS: 933 枚 (未実装 約 720 枚 = データ延べ 1653 − 933)
-- vitest: 1788 pass / 1 skip / 0 fail (bug-077 flaky は testTimeout 20s で解消済)
-- e2e: 96 pass / typecheck・lint (side-channel/listener/bugs/eslint) errors=0 / 回帰 0
-- 未解決 BUG: BUG-064 (workflow図, doc) / BUG-083 (rules/20 同時スイッチ未実装) /
-  BUG-111〜114 (DEFERRED, latent/非MVP)
+- 最新コミット: 042036fc (origin/main 未 push — 要 `git push`)
+- ALL_CARDS: 938 枚 (B/E/C で +5: B01017/B01074/B03102/B05011/D01012)
+- vitest: 1809 pass / 1 skip / 0 fail / e2e 含む / typecheck・lint errors=0 / 回帰 0
+- 未解決 BUG: BUG-064 (workflow図, doc) / BUG-111〜114 (DEFERRED, latent/非MVP)
+  ※ BUG-083 は throw 解消済を確認・修正済 (E)。BUG-122/123 は B で修正済。
 
-## 直近セッションで完了 (2026-06-05〜06)
+## 直近セッションで完了 (2026-06-06 #2/#3 — タスク B/E/C)
 
-- **engine バグ 5 系統 検出・修正** (Playwright 実機検証 × 多エージェント監査で発見):
-  - BUG-117 deckRevealUntil の ap/lp filter 黙殺 / BUG-118 matchOneFilter の kind 黙殺 /
-    BUG-119 charModifyLevel の lvlMod を clearTurnEffects が消さず永続化 /
-    BUG-120 charSetCard 短縮形の chooser 取り違え / BUG-121 enter 複数択 choice が surface されず
-- **BUG-121 を案B (engine pause) で汎用実装** — pendingEffectChoice 機構 (pick と同型)。
-  sequence 内 choice も holder 方式で対応 (pre-step 二重実行なし)
-- **残課題ゼロ化**: bug-077 flaky 解消 / 監査 suspect 6 件全検証 (engine 候補フィルタ + B03091 UI)
-- **規約化**: card-addition-checklist §7 + CLAUDE.md に「Playwright で画面処理=カードテキスト文言」検査追加
-- **教訓**: LESSONS-LEARNED-3.md (教訓 23〜25) + 教訓ファイル更新運用を明文化 (自動更新は無い)
+- **B 完了**: text-faithfulness 監査 横展開 (engine フィルタ経路 全数突合 + 7並列エージェントで 358枚)。
+  BUG-122 (filter.keyword がアイコン能力未検出 / engine read.keyword.defHasKeyword 新設) +
+  BUG-123 (remove/hand pick で kind:'character' 欠落 / B01094・B09044) 検出・修正。教訓 26。
+- **E 完了**: BUG-083 は 2026-06-04 switch-on-effect-enter で throw 解消済を確認・修正済化。
+- **C 進行中** (engine-extension-plan の中リスク群):
+  - #1 reasoning hook: reasoning:end を TRIGGERED_HOOKS 追加 (selfOnly)。B01017/B01074。
+  - #2 triggerCharMatches condition: 非 selfOnly「自分の現場のキャラが推理したとき」。B03102/B05011。
+  - #3 look-top-N: sceneEnter enterSleep:true (スリープ登場)。D01012。
 
-## 推奨される作業順 (前 session で議論: B → E → C → A → D)
+## 推奨される作業順 (B → E → C → A → D)
 
-未実装カードを実装するのは A/C/D のみ。B=既存実装の品質監査、E=バグ。全実装には A+C+D が必須。
-
-1. **B. text-faithfulness 監査 横展開** (最高レバレッジ・低リスク): BUG-117〜121 を見つけた
-   「Playwright × 多エージェント監査」を catalog-reuse(284枚)/ct-p01〜09 の既存実装に拡大。
-   隠れ engine バグを除去しつつ回帰テスト網を厚くする → 以降の全作業の土台。**A より必ず先**。
-2. **E. BUG-083** (rules/20「2つ以上同時登場で現場上限超過時のスイッチ」未実装) — 孤立した engine 正当性。
-3. **C. engine 拡張 中リスク**: reasoning hook(15枚) / disguise hook(13枚) / event→evidence(7枚) /
-   look-top-N(1枚)。additive・risk 順で D より先。解禁カードもこの段で実装。
+1. ~~**B. text-faithfulness 監査**~~ → ✅ 完了 (BUG-122/123)。
+2. ~~**E. BUG-083**~~ → ✅ 完了 (throw 解消済確認)。
+3. **C. engine 拡張 中リスク** (進行中): reasoning hook ✅(#1/#2)・look-top-N ✅(#3)。
+   **残**: disguise hook(13枚) ← **次の clean な一手**: `disguise:into` を TRIGGERED_HOOKS に追加
+   (reasoning:into と同型・disguiseInto で uid 維持→ in-play scan で 【変装時】発火可能と確認済) /
+   event→evidence(7枚, remove/hand→evidence verb 要) / reasoning 残 ~11 (souza/発見・optional
+   self-remove・multi-target・reasoner-binding 等の別機能ゲート)。
 4. **A. engine 変更0 カードバッチ** (大量・低リスク): deck-look-N 残 約50枚 (B03007/B03036/B05016
    /B07010 等 同型) + bounce/level-modify/set-card/multi-target 残 + 素のバニラカード。
 5. **D. engine 拡張 高リスク** (最後): continuous aura(13枚) / untargetable(6枚) /
