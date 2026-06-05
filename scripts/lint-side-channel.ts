@@ -9,6 +9,18 @@ const STORE_PATH = join(SRC_DIR, 'ui', 'state', 'store.ts');
 const DISPATCH_PATH = join(SRC_DIR, 'ui', 'hooks', 'useEngineDispatch.ts');
 const APP_PATH = join(SRC_DIR, 'App.tsx');
 
+// 2026-06-05: engine 内部 queue (UI modal 不要) を allowlist 化。
+// 以下は __pending<Name> 形式だが UI 表示は行わない engine-internal な保管庫:
+//   - EffectPickQueue: pending pick event の FIFO (apply-pick.ts) - dispatch が consume
+//   - ChainContinuation: 中断中 sequence/chain の継続情報 (apply-pick.ts) - dispatch が consume
+//   - ActionExpansion: action target expansion の bind (atom-handlers.ts) - candidates() が consume
+// これらは「engine→dispatch 内部プラミング」であり、ユーザ向け modal mount を期待しない。
+const ENGINE_INTERNAL_CHANNELS = new Set<string>([
+  'EffectPickQueue',
+  'ChainContinuation',
+  'ActionExpansion',
+]);
+
 function walk(dir: string, out: string[] = []): string[] {
   for (const e of readdirSync(dir)) {
     const p = join(dir, e);
@@ -49,6 +61,11 @@ function main(): void {
 
   for (const name of channels) {
     console.log(`\n[side-channel: ${name}]`);
+    // 2026-06-05: engine 内部 queue は UI 配線不要 → 4 点配線 check 全 skip
+    if (ENGINE_INTERNAL_CHANNELS.has(name)) {
+      console.log(`  [SKIP]  ${name} は engine-internal queue (UI 不要、allowlist 済)`);
+      continue;
+    }
     // 1. _drainPending<N> or _drainPending<N>Side export 存在 (suffix 両対応)
     const drainPattern = new RegExp(`_drainPending${name}(?:Side)?\\s*\\(`);
     const hasDrain = allFiles.some((f) => drainPattern.test(readFileSync(f, 'utf-8')));
