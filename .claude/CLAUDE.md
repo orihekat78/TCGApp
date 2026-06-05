@@ -51,6 +51,12 @@
   - 人間 vs CPU を mulligan → 勝敗決定 (or max 30 turn) まで通して操作
   - 各 step で console error 0 確認
   - **「画面表示確認 ≠ 機能確認」**、両方必要
+- [ ] **Playwright で「画面処理 = カードテキスト文言」検証** (2026-06-06 追加、BUG-117〜121 教訓)
+  - ゲーム画面上の処理 (候補列挙 / 選択 / 結果) が、カードの **公式テキストの文言と語義通り**に
+    一致するかを実機で確認する。表示が出るだけでは不十分。条件外の decoy を盤面に置き、
+    対象範囲・filter 条件 (LP/レベル/色/特徴/種別/状態)・枚数・選択者・持続・複数択 modal が
+    テキストの語と 1 対 1 で一致することを確認 (詳細: [card-addition-checklist.md](specs/card-addition-checklist.md) §7)
+  - 型/DSL に条件が書けていても engine が評価する保証はない (BUG-117/118)。実機で必ず踏むこと
 - [ ] **リスク・バグ管理表更新** ([.claude/bugs/](bugs/) 配下に該当 BUG-XXX.md を作成 or 更新、Round 4a Phase 6.4 導入)
 - [ ] **カード追加時**は [card-addition-checklist.md](specs/card-addition-checklist.md) を必ず通す (kind 分岐網羅 / hook listener 配線 / resolver dispatch 確認)
 

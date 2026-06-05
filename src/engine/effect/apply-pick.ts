@@ -12,8 +12,7 @@
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide } from './resolve-picks.js';
-import { resolveEffectPicks } from './resolve-picks.js';
-import { def as readDef } from '../read/def.js';
+import { resolveEffectPicks, _takePendingChoiceResume } from './resolve-picks.js';
 
 type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
@@ -127,22 +126,22 @@ export function applyPickAndContinuation(
 
 /**
  * BUG-121: pending choice を choiceIndex で解決し、選択 option を再開する。
- * applyPickAndContinuation の choice 版。元 effect を readDef から復元 (hiramekiResolve と同手法)、
- * choiceIndex 付きで resolveEffectPicks 再 walk → choice が unwrap され選択 option (atom 等) が返る。
- * 選択 option 内に $pick (例 B06007 option2 sceneToHand 短縮形) があれば humanChooser walk で
- * __pendingEffectPickQueue に再 push され、既存 effectPickResolve 経路で連鎖消化される。
- * 対象 (B06007/B06007P) は top-level choice のため continuation 無し: event.queue → runAllUntilEmpty。
+ * applyPickAndContinuation の choice 版。再開すべき effect は resolve-picks の engine holder
+ * (__pendingEffectChoiceResume) から取り出す:
+ *   - top-level choice (B06007): holder = choice 効果そのもの → unwrap で選択 option が返る。
+ *   - sequence 内 choice: holder = {sequence:[choice, ...remainder]} → option + remainder のみ実行
+ *     (pre-choice step は初回 runtime で実行済のため二重実行しない)。
+ * choiceIndex 付きで resolveEffectPicks 再 walk → choice unwrap。選択 option 内に $pick
+ * (例 B06007 option2 sceneToHand 短縮形) があれば humanChooser walk で __pendingEffectPickQueue に
+ * 再 push され、既存 effectPickResolve 経路で連鎖消化される。
  */
 export function applyChoiceAndContinuation(
   state: GameState,
   pending: PendingEffectChoiceSide,
   choiceIndex: number,
 ): void {
-  const def = readDef.card(pending.source.cardId);
-  const ability = def?.abilities.find(
-    (a: unknown) => a !== null && typeof a === 'object' && (a as { id?: string }).id === pending.source.abilityId,
-  ) as { effect?: Effect } | undefined;
-  if (!ability?.effect) return;
+  const resumeEffect = _takePendingChoiceResume();
+  if (!resumeEffect) return;
   // 再 walk 用 ctx (triggered.ts の resolveCtx と同 shape の plain object、Immer draft 非由来)。
   // source.uid は option1 (charGrantKeyword uid:'$self') の $self 解決 + event.queue source に使用。
   const ctx: EffectCtx = {
@@ -156,7 +155,7 @@ export function applyChoiceAndContinuation(
     bindings: {},
     dyn: { choiceIndex },
   };
-  const resolved = resolveEffectPicks(state, ability.effect, ctx, {
+  const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.player,
     humanChooser: true,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },

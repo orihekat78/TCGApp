@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2611
+- **ファイル数**: 2616
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -263,6 +263,7 @@
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
+    - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
     - `README.md` — バグ管理表の使い方
   - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
@@ -368,6 +369,7 @@
     - `2026-06-05-27-audit-bugs-118-119-120.md`
     - `2026-06-05-28-audit-suspects-coverage.md`
     - `2026-06-05-29-bug-121-choice-pause.md`
+    - `2026-06-06-01-bug-121-followup-residuals.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -749,6 +751,7 @@
     - `2026-06-05-2.md` — セッションログ — 2026-06-05 #2 カード text-faithfulness 監査 (Playwright 実機検証)
     - `2026-06-05-pattern1-event-react.md` — 2026-06-05 未検証パターン #1: effect:declared 他イベント反応 (+ Playwright 必須)
     - `2026-06-05.md` — セッションログ — 2026-06-05 Engine 拡張バッチ連続実装
+    - `2026-06-06.md` — セッションログ — 2026-06-06 BUG-121 残課題の全解消 + 規約/教訓更新
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
@@ -2608,9 +2611,11 @@
       - `atom-handlers.test.ts` — engine.effect.runAtom — Atom Verb dispatcher tests
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
+      - `audit-leave-suspects.test.ts` — 監査 suspect (leave:to-remove family) の候補フィルタ text-faithfulness を engine レベルで検証。
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
       - `bug-108-choice-index.test.ts` — BUG-108: choice effect の choiceIndex が production の人間/AI どちらでも set されず
       - `bug-109-ai-pa-drain.test.ts` — BUG-109: PA 短縮形 atom (charModifyAP/LP 等) が AI/CPU 経路で silent no-op になる問題の修正検証。
+      - `bug-121-sequence-choice.test.ts` — BUG-121 残課題解消: sequence 内の human 複数択 choice が、pre-choice step を二重実行せず
       - `foreach-all.test.ts` — forEach over:{kind:'all'} primitive verification — applies an atom to EACH match…
       - `lensf-batch2a.test.ts` — tests/engine/effect/lensf-batch2a — Lens F batch2a (BUG-102 D11019 deck splice /…
       - `multi-target-pick.test.ts` — engine-extension #3 (2026-06-05): multi-target Pattern A pick

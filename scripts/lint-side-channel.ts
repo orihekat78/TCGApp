@@ -14,11 +14,14 @@ const APP_PATH = join(SRC_DIR, 'App.tsx');
 //   - EffectPickQueue: pending pick event の FIFO (apply-pick.ts) - dispatch が consume
 //   - ChainContinuation: 中断中 sequence/chain の継続情報 (apply-pick.ts) - dispatch が consume
 //   - ActionExpansion: action target expansion の bind (atom-handlers.ts) - candidates() が consume
+//   - EffectChoiceResume: BUG-121 choice 再開 effect の holder (resolve-picks.ts) -
+//     applyChoiceAndContinuation が consume (store/UI へは出ない。UI 露出は別チャネル EffectChoice 側)
 // これらは「engine→dispatch 内部プラミング」であり、ユーザ向け modal mount を期待しない。
 const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   'EffectPickQueue',
   'ChainContinuation',
   'ActionExpansion',
+  'EffectChoiceResume',
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

@@ -123,6 +123,11 @@ declare global {
   // deckReveal と同じ単一スロット (choice は 1 dispatch に高々 1 個想定)。drain で null クリア。
   // eslint-disable-next-line no-var
   var __pendingEffectChoiceSide: PendingEffectChoiceSide | null | undefined;
+  // BUG-121 (残課題解消): choiceResolve 再開時に再 walk すべき effect (engine holder、store へは drain しない)。
+  // top-level choice なら choice 効果そのもの。sequence 内 choice なら sequence case が
+  // {sequence:[choice, ...post-choice remainder]} に wrap して保持 → pre-choice step の二重実行を防ぐ。
+  // eslint-disable-next-line no-var
+  var __pendingEffectChoiceResume: Effect | null | undefined;
 }
 
 export type PendingEffectPickSide = {
@@ -192,8 +197,11 @@ export function _clearPendingEffectPickQueue(): void {
 // BUG-121: human 複数 option choice の pause/surface — pick と同型 (別スロット)。
 // enter トリガ等の複数択 choice が option 0 既定化される問題を、pick と同じ
 // 「engine globalThis side-channel → UI store field → modal → choiceResolve dispatch」
-// 二段構成で補完する。effect tree は積まず {index, verb, args} の plain data のみ運び、
-// 再開時に readDef から元 effect を復元する (apply-pick.applyChoiceAndContinuation)。
+// 二段構成で補完する。store へ運ぶ side-channel は {index, verb, args} の plain data のみ
+// (JSON シリアライズ可能)。再開時に再 walk すべき実 effect tree は別 holder
+// (__pendingEffectChoiceResume) に engine 内で保持する (store へは drain しない)。
+// sequence 内 choice では sequence case が remainder を holder に wrap し、pre-choice step の
+// 二重実行を防ぐ (top-level B06007 では holder = choice 効果そのもの)。
 // ===========================================================================
 
 export type PendingEffectChoiceSide = {
@@ -216,14 +224,34 @@ export function _drainPendingEffectChoiceSide(): PendingEffectChoiceSide | null 
   return v;
 }
 
-/** slot をクリア (テスト用 / セッション初期化用)。 */
+/** slot + 再開 holder をクリア (テスト用 / セッション初期化用。side-channel と holder はペア)。 */
 export function _clearPendingEffectChoiceSide(): void {
   (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide = null;
+  (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = null;
 }
 
 /** slot を peek (テスト用)。 */
 export function _peekPendingEffectChoiceSide(): PendingEffectChoiceSide | null {
   return (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide ?? null;
+}
+
+// --- choice 再開用 holder (engine 内のみ、store へ drain しない) ---
+function setPendingChoiceResume(eff: Effect): void {
+  (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = eff;
+}
+function getPendingChoiceResume(): Effect | null {
+  return (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume ?? null;
+}
+/** choiceResolve 時に holder を取り出してクリア (apply-pick.applyChoiceAndContinuation が使用)。 */
+export function _takePendingChoiceResume(): Effect | null {
+  const g = globalThis as { __pendingEffectChoiceResume?: Effect | null };
+  const v = g.__pendingEffectChoiceResume ?? null;
+  g.__pendingEffectChoiceResume = null;
+  return v;
+}
+/** holder をクリア (テスト用 / セッション初期化用)。 */
+export function _clearPendingChoiceResume(): void {
+  (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = null;
 }
 
 /**
@@ -463,8 +491,28 @@ export function resolveEffectPicks(
   switch (effect.kind) {
     case 'atom':
       return substituteAtomPick(state, effect, ctx, opts);
-    case 'sequence':
-      return { kind: 'sequence', steps: effect.steps.map((s) => resolveEffectPicks(state, s, ctx, opts)) };
+    case 'sequence': {
+      // BUG-121 (残課題解消): sequence 内で human choice が pause したら、後続 step (remainder) を
+      // 再開 holder に wrap して walk を打ち切る。これにより runtime では pre-choice step のみ実行され、
+      // choiceResolve 再開時に holder (= {sequence:[choice, ...remainder]}) を再 walk して
+      // option + remainder を実行する (pre-choice step の二重実行を防ぐ)。任意深度のネストに対応
+      // (内側 sequence が holder を更新済 → 外側はさらに自身の remainder を wrap)。
+      const seqOut: Effect[] = [];
+      for (let i = 0; i < effect.steps.length; i++) {
+        const choiceBefore = _peekPendingEffectChoiceSide() !== null;
+        seqOut.push(resolveEffectPicks(state, effect.steps[i]!, ctx, opts));
+        const choiceAfter = _peekPendingEffectChoiceSide() !== null;
+        if (!choiceBefore && choiceAfter) {
+          const remainder = effect.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            const cur = getPendingChoiceResume();
+            if (cur) setPendingChoiceResume({ kind: 'sequence', steps: [cur, ...remainder] });
+          }
+          return { kind: 'sequence', steps: seqOut };
+        }
+      }
+      return { kind: 'sequence', steps: seqOut };
+    }
     case 'parallel':
       return { kind: 'parallel', steps: effect.steps.map((s) => resolveEffectPicks(state, s, ctx, opts)) };
     case 'choice': {
@@ -511,6 +559,9 @@ export function resolveEffectPicks(
             args: o.kind === 'atom' ? (o.args as Record<string, unknown>) : undefined,
           })),
         });
+        // 再開 holder = この choice 効果そのもの (top-level)。sequence 内なら sequence case が
+        // 後で {sequence:[choice, ...remainder]} に wrap する (pre-choice step 二重実行防止)。
+        setPendingChoiceResume(effect);
         return { kind: 'parallel', steps: [] };
       }
       return {
