@@ -25,7 +25,8 @@ const a1: AbilityDef = {
     kind: 'sequence',
     steps: [
       // 自分のリムーブエリアにある【黄】のキャラを1枚まで選び、手札に加える
-      { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { color: '黄' } }, n: { min: 0, max: 1 }, chooser: 'self' } } },
+      // BUG-123: テキストは「【黄】のキャラ」。kind:'character' が無いと remove の【黄】イベントも候補化する。
+      { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { color: '黄', kind: 'character' } }, n: { min: 0, max: 1 }, chooser: 'self' } } },
       // レベル7以下のキャラを1枚まで選び、ターン終了時まで〚突撃［キャラ］〛を与える
       { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$pick', kw: '突撃[キャラ]', scope: 'turn', target: { kind: 'pick', query: { area: 'scene', side: 'either', filter: { levelMax: 7 } }, n: { min: 0, max: 1 }, chooser: 'self' } } },
     ],

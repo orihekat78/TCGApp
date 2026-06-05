@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3d86a3a56fc4`
+> Source hash: `1e72adf732ed`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -16,12 +16,13 @@
 - [`engine.flow`](../by-engine/flow.md) — [`api/flow`](../../api/flow.md)
 - [`engine.listeners`](../by-engine/listeners.md)
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
+- [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 
 ## 📐 関連 Spec
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (76)
+## 📄 参照ソース (77)
 
 - [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
@@ -43,4 +44,4 @@
 - [`src/cards/ct-p01/B01046.ts`](../../../../src/cards/ct-p01/B01046.ts)
 - [`src/cards/ct-p01/B01064.ts`](../../../../src/cards/ct-p01/B01064.ts)
 - [`src/cards/ct-p01/B01083.ts`](../../../../src/cards/ct-p01/B01083.ts)
-- _...ほか 56 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 57 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

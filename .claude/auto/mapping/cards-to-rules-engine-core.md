@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `4c77ca7ea178`
+> Source hash: `ea3260630cb3`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **31** ファイル（[全体 index](./index.md)）
+このグループ: **32** ファイル（[全体 index](./index.md)）
 
 ## engine/types (9)
 
@@ -22,7 +22,7 @@
 | [`src/engine/types/index.ts`](../../../src/engine/types/index.ts) | _(参照なし)_ |
 | [`src/engine/types/results.ts`](../../../src/engine/types/results.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 
-## engine/read (8)
+## engine/read (9)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -30,6 +30,7 @@
 | [`src/engine/read/def.ts`](../../../src/engine/read/def.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/engine/read/game.ts`](../../../src/engine/read/game.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) |
 | [`src/engine/read/index.ts`](../../../src/engine/read/index.ts) | _(参照なし)_ |
+| [`src/engine/read/keyword.ts`](../../../src/engine/read/keyword.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/read/log.ts`](../../../src/engine/read/log.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/engine/read/player.ts`](../../../src/engine/read/player.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/read/scene.ts`](../../../src/engine/read/scene.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`13-keywords.md`](../../rules/13-keywords.md) |

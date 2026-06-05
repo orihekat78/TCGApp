@@ -33,6 +33,21 @@ BUG-121 (enter トリガの複数択 choice が surface されず option 0 既�
   enter等=pendingEffectChoice 機構)。新 choice カードは **トリガ別に surface するか実機確認**。
 - → enforcement: card-addition-checklist §7 の「選択者」「複数択 modal」項目 + [[choice-surface-pending-effect-choice]]。
 
+## 教訓 26: filter の「値の格納先」と「エリア×カード種別」を実データで確認する
+
+**該当**: BUG-122 (filter.keyword:'カットイン' が keywords[] のみ参照で ability-icon を未検出 → 候補0で機能不全) /
+BUG-123 (remove/hand pick で kind:'character' 欠落 → 同色イベントが誤候補化)
+
+教訓 23 (型に field 在る≠評価する) の **値レベルの続き**:
+
+- **値の格納先**: filter.keyword は型上任意文字列だが、アイコン能力 (カットイン/変装/ヒラメキ/ミスリード)
+  は keywords[] でなく ability 構造で表現される。判定述語は `engine.read.keyword.defHasKeyword` に一元化し、
+  複数経路 (matchOneFilter / contact.isCutInCard) が別実装しない (ドリフト = field-drop 再発の温床)。
+- **エリア × kind**: イベントを含むエリア (hand/remove/deck) から「キャラ」を選ぶ pick は `kind:'character'`
+  必須。色/レベル filter だけだと同条件イベントが混入 (trait/cardName filter は events traits:[] で安全)。
+  scene area は char 専用なので不要。
+- → enforcement: card-addition-checklist §7「アイコン能力 filter」「エリア × kind」項目。
+
 ---
 
 ## 教訓ファイルの更新運用 (2026-06-06 明文化、user 質問への回答)

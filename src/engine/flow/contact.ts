@@ -14,6 +14,7 @@ import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
+import { abilityIsCutin } from '../read/keyword.js';
 import { computeOrder as _computeOrder } from './action/order.js';
 
 type Player = 'self' | 'opp';
@@ -43,15 +44,9 @@ function hasAbilityType(def: CardDef | undefined, type: string): boolean {
 function isCutInCard(cardId: string): boolean {
   const def = readDef.card(cardId);
   if (!def) return false;
-  return def.abilities.some((a: unknown) => {
-    const ab = a as { type?: string; scope?: string; trigger?: { hook?: string; optional?: boolean } };
-    return (
-      ab.type === 'triggered' &&
-      ab.scope === 'on-hand' &&
-      ab.trigger?.hook === 'effect:declared' &&
-      ab.trigger?.optional === true
-    );
-  });
+  // BUG-122: 判定述語は engine.read.keyword.abilityIsCutin に一元化
+  // (matchOneFilter の filter.keyword:'カットイン' と同一基準を共有しドリフトを防ぐ)。
+  return def.abilities.some(abilityIsCutin);
 }
 
 /**

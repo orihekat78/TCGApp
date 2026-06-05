@@ -27,7 +27,8 @@ const a1: AbilityDef = {
         verb: 'sceneEnter',
         args: {
           player: 'self', cardId: '$pick.cardId', from: 'hand', viaEffect: true,
-          target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { color: ['青', '白'], levelMax: 6 } }, n: { min: 0, max: 1 }, chooser: 'self' },
+          // BUG-123: テキストは「【青】か【白】のキャラ」。kind:'character' が無いと手札の同色イベントも候補化する。
+          target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { color: ['青', '白'], levelMax: 6, kind: 'character' } }, n: { min: 0, max: 1 }, chooser: 'self' },
         },
       },
     ],
@@ -42,7 +43,8 @@ const a2: AbilityDef = {
   scope: 'on-evidence',
   trigger: { hook: 'evidence:remove-by-action', optional: true }, // 任意発動
   // 自分のリムーブエリアにあるレベル6以下の【青】か【白】のキャラを1枚まで選び、手札に加える
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { color: ['青', '白'], levelMax: 6 } } },
+  // BUG-123: テキストは「【青】か【白】のキャラ」。kind:'character' が無いと remove の同色イベントも候補化する。
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { color: ['青', '白'], levelMax: 6, kind: 'character' } } },
   description: '【ヒラメキ】自分のリムーブエリアにあるレベル6以下の【青】か【白】のキャラを1枚まで選び、手札に加える。',
   ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md', 'rules/20-color-and-switch.md'],
 };

@@ -12,6 +12,7 @@ import type {
   EffectCtx,
 } from '@/engine/types';
 import { lookupCardDef, allCardNameComponentsForDef } from './card-def-registry.js';
+import { defHasKeyword } from '@/engine/read/keyword.js';
 
 type Side = 'self' | 'opp';
 
@@ -236,8 +237,10 @@ export function matchOneFilter(
 
   if (filter.keyword !== undefined) {
     const wants = Array.isArray(filter.keyword) ? filter.keyword : [filter.keyword];
-    const kws = (d as { keywords?: string[] } | undefined)?.keywords ?? [];
-    if (!wants.some(w => kws.includes(w))) return false;
+    // BUG-122: keyword は通常 keywords[] に入るが、アイコン能力 (カットイン / 変装 / ヒラメキ /
+    // ミスリード) は keywords[] ではなく ability 構造で表現される。defHasKeyword が両表現を吸収する
+    // (旧実装は keywords[] のみ → B05112「【カットイン】を持つキャラ」が候補0で機能しなかった)。
+    if (!wants.some(w => defHasKeyword(d, w))) return false;
   }
 
   // BUG-118: カード種別 filter ('character' | 'event')。本関数 (target pick 候補列挙の正準経路) が

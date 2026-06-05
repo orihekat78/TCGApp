@@ -13,6 +13,7 @@ import type {
   TargetingRef,
   TargetQuery,
   Candidate,
+  AbilityDef,
 } from '@/engine/types';
 
 function makeCtx(overrides: Partial<EffectCtx> = {}): EffectCtx {
@@ -161,6 +162,45 @@ describe('engine.target.candidates', () => {
         pickRef({ side: 'self', filter: { trait: '少年探偵団', color: '赤' } }),
         makeCtx(),
       );
+      expect(result).toHaveLength(1);
+      expect((result[0] as { uid: string }).uid).toBe('a');
+    });
+  });
+
+  describe('keyword filter — icon abilities (BUG-122)', () => {
+    // アイコン能力 (カットイン/変装/ヒラメキ/ミスリード) は keywords[] に入らず ability 構造で表現される。
+    // filter.keyword:'カットイン' は keywords[] のみでなく ability も見て一致させる (B05112 repro)。
+    const cutinAbility: AbilityDef = {
+      id: 'cut',
+      type: 'triggered',
+      scope: 'on-hand',
+      trigger: { hook: 'effect:declared', optional: true },
+      description: 'カットイン AP+2000',
+    };
+
+    it("matches a card whose カットイン is an ability (not in keywords[])", () => {
+      registerCardDef(defOf({ id: 'CUT', colors: ['黒'], level: 4, keywords: [], abilities: [cutinAbility] }));
+      registerCardDef(defOf({ id: 'PLAIN', colors: ['黒'], level: 4, keywords: [] }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, hand: ['CUT', 'PLAIN'] } } };
+      const result = candidates(
+        s,
+        pickRef({ area: 'hand', side: 'self', filter: { keyword: 'カットイン', levelMax: 5, color: '黒' } }, 0, 1),
+        makeCtx(),
+      );
+      expect(result).toHaveLength(1);
+      expect((result[0] as { cardId: string }).cardId).toBe('CUT');
+    });
+
+    it('still matches normal keywords via keywords[] (迅速)', () => {
+      registerCardDef(defOf({ id: 'SWIFT', keywords: ['迅速'] }));
+      registerCardDef(defOf({ id: 'NONE', keywords: [] }));
+      let s = createEmptyGameState();
+      s = withScene(s, 'self', [
+        makeChar({ uid: 'a', cardId: 'SWIFT' }),
+        makeChar({ uid: 'b', cardId: 'NONE' }),
+      ]);
+      const result = candidates(s, pickRef({ side: 'self', filter: { keyword: '迅速' } }), makeCtx());
       expect(result).toHaveLength(1);
       expect((result[0] as { uid: string }).uid).toBe('a');
     });

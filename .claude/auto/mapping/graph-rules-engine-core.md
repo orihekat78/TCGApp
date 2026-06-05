@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3d86a3a56fc4`
+> Source hash: `1e72adf732ed`
 
 engine namespace types / read / mutate / event / cards と公式ルールの参照関係を Mermaid flowchart で表示。Obsidian グラフビュー連携は [by-rule/](./by-rule/) / [by-engine/](./by-engine/) を参照。
 
@@ -68,6 +68,8 @@ flowchart LR
   NS_read --> R_04_game_setup_md
   NS_read --> R_05_turn_phases_md
   NS_read --> R_06_card_types_md
+  NS_read --> R_09_cutin_disguise_md
+  NS_read --> R_10_action_event_md
   NS_read --> R_11_reasoning_md
   NS_read --> R_12_next_hint_md
   NS_read --> R_13_keywords_md

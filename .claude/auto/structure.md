@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2616
+- **ファイル数**: 2624
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -260,6 +260,8 @@
     - `BUG-119.md`
     - `BUG-120.md`
     - `BUG-121.md`
+    - `BUG-122.md`
+    - `BUG-123.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -370,6 +372,7 @@
     - `2026-06-05-28-audit-suspects-coverage.md`
     - `2026-06-05-29-bug-121-choice-pause.md`
     - `2026-06-06-01-bug-121-followup-residuals.md`
+    - `2026-06-06-02-task-b-icon-keyword-audit.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -751,6 +754,7 @@
     - `2026-06-05-2.md` — セッションログ — 2026-06-05 #2 カード text-faithfulness 監査 (Playwright 実機検証)
     - `2026-06-05-pattern1-event-react.md` — 2026-06-05 未検証パターン #1: effect:declared 他イベント反応 (+ Playwright 必須)
     - `2026-06-05.md` — セッションログ — 2026-06-05 Engine 拡張バッチ連続実装
+    - `2026-06-06-2.md` — セッションログ — 2026-06-06 #2 タスク B (text-faithfulness 監査 横展開)
     - `2026-06-06.md` — セッションログ — 2026-06-06 BUG-121 残課題の全解消 + 規約/教訓更新
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
@@ -2311,6 +2315,7 @@
       - `def.ts` — engine.read.def — カードDB参照セレクタ (純粋関数)
       - `game.ts` — engine.read.game — ゲーム全体情報セレクタ (純粋関数)
       - `index.ts` — engine.read namespace — 全セレクタを束ねる
+      - `keyword.ts` — engine.read.keyword — CardDef がキーワード / アイコン能力を「持つ」かを判定する純粋述語。
       - `log.ts` — engine.read.log — ログセレクタ (純粋関数)
       - `player.ts` — engine.read.player — プレイヤー情報セレクタ (純粋関数)
       - `scene.ts` — engine.read.scene — 現場セレクタ (純粋関数)
@@ -2554,6 +2559,7 @@
       - `D11020.test.ts` — tests/cards/ct-d11/D11020
       - `D11021.test.ts` — tests/cards/ct-d11/D11021
     - `.gitkeep`
+    - `bug-123-character-kind.test.ts` — BUG-123: イベントを含むエリア (remove/hand) からの「キャラ」pick は kind:'character' 必須。
     - `charmodifylevel-batch.test.ts` — engine-extension #2 charModifyLevel batch — 実カード経由 sanity test
     - `generated-batch.test.ts` — tests/cards/generated-batch — 非MVP 単純カード + 複雑カットイン generator 出力の構造検証
     - `leave-to-remove-batch.test.ts` — engine-extension #1 leave:to-remove batch — 実カード経由 sanity test
@@ -2584,6 +2590,7 @@
     - `bug-091-d11019-scene-enter.spec.ts` — E2E regression: BUG-091 — D11019「15の受難」a1 で deckRevealUntil が matched した
     - `bug-117-deckreveal-lp-filter.spec.ts` — E2E: BUG-117 — deckRevealUntil の ap/lp filter が黙って無視されるバグの実機検証。
     - `bug-118-120-audit-fixes.spec.ts` — E2E: 2026-06-05 engine 拡張バッチ監査 (workflow audit-engine-extension-batches) で検出した
+    - `bug-122-cutin-keyword-filter.spec.ts` — E2E: BUG-122 — matchOneFilter の filter.keyword がアイコン能力 (カットイン) を未検出だったバグの実機検証。
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
@@ -2684,6 +2691,7 @@
       - `char.test.ts` — 2026-05-25 fix: charModifyAP は turnEffects['apMod_*'] に蓄積する。
       - `def.test.ts`
       - `game.test.ts`
+      - `keyword.test.ts` — engine.read.keyword — defHasKeyword / abilityIsCutin /…
       - `log.test.ts`
       - `player.test.ts` — アシスト中のパートナーを含む 2 枚
       - `scene.test.ts`
