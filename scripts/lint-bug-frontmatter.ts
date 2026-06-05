@@ -61,9 +61,14 @@ function lintBug(file: string, content: string): Issue[] {
     if (!fm[k]) issues.push({ file, level: 'error', msg: `frontmatter "${k}" 欠落` });
   }
 
-  // enum check
-  if (fm.status && !ALLOWED_STATUS.has(fm.status)) {
-    issues.push({ file, level: 'error', msg: `status "${fm.status}" は enum 外 (allowed: ${[...ALLOWED_STATUS].join(' / ')})` });
+  // enum check — 2026-06-05: 完全一致ではなく **prefix match** に緩和。
+  // 既存の「修正済 (D08024/D11020) / 一部継続 (D11014 bind)」「未着手 (DEFERRED — …)」のような
+  // richer な suffix 表記を許容しつつ、先頭 token は enum 値のいずれかであることを保証する。
+  if (fm.status) {
+    const prefixOk = [...ALLOWED_STATUS].some((v) => fm.status === v || fm.status.startsWith(`${v} `) || fm.status.startsWith(`${v}(`));
+    if (!prefixOk) {
+      issues.push({ file, level: 'error', msg: `status "${fm.status}" の先頭 token が enum 外 (allowed: ${[...ALLOWED_STATUS].join(' / ')})` });
+    }
   }
   if (fm.severity && !ALLOWED_SEVERITY.has(fm.severity)) {
     issues.push({ file, level: 'error', msg: `severity "${fm.severity}" は enum 外 (allowed: ${[...ALLOWED_SEVERITY].join(' / ')})` });
@@ -76,13 +81,15 @@ function lintBug(file: string, content: string): Issue[] {
     issues.push({ file, level: 'warn', msg: `recurrence_cluster "${fm.recurrence_cluster}" は enum 外 (allowed: ${[...ALLOWED_CLUSTER].join(' / ')})` });
   }
 
-  // status=修正済 → commit + date_fixed 必須
-  if (fm.status === '修正済') {
+  // status=修正済 (prefix match) → commit + date_fixed 必須
+  // suffix 表記「修正済 (xxxxx) / 一部継続 (yyyyy)」等にも対応 (2026-06-05 lint 緩和)
+  const isFixed = typeof fm.status === 'string' && (fm.status === '修正済' || fm.status.startsWith('修正済 ') || fm.status.startsWith('修正済('));
+  if (isFixed) {
     if (!fm.commit || fm.commit === 'TBD' || fm.commit === '') {
-      issues.push({ file, level: 'error', msg: `status=修正済 だが commit が "${fm.commit ?? '(empty)'}" — git hash を反映してください` });
+      issues.push({ file, level: 'error', msg: `status=修正済 (prefix) だが commit が "${fm.commit ?? '(empty)'}" — git hash を反映してください` });
     }
     if (!fm.date_fixed) {
-      issues.push({ file, level: 'error', msg: 'status=修正済 だが date_fixed 欠落' });
+      issues.push({ file, level: 'error', msg: 'status=修正済 (prefix) だが date_fixed 欠落' });
     }
   }
 
