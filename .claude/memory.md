@@ -1,38 +1,51 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-> 過去の詳細は `.claude/sessions/YYYY-MM-DD.md` / `.claude/bugs/BUG-*.md` / `.claude/changelog-entries/`。
+## 2026-06-05 (続き) — Engine 拡張 #1 batch #1 (leave:to-remove 実カード 10 枚)
 
-## 現在の状態 (2026-06-04)
+Engine 拡張 step 1 で解禁した `leave:to-remove` hook を最初に使う 10 枚を `_reuse` に追加。
 
-直近セッション: **ルール準拠改善 3 タスク完了** (詳細 → [sessions/2026-06-04.md](sessions/2026-06-04.md))。
+### 実装カード (全 _reuse 経由で ALL_CARDS 拡張)
 
-- **Task1 switch-on-effect-enter** (rules/20): 現場満杯の効果登場で human にスイッチ提供。
-  engine (sceneEnter switchEnter) + apply-pick threading + UI (Playmat→SceneSwitchPickerModal, z-index 1700)。
-- **Task2 effective-value filter** (rules/15,19,22): 数値フィルタ (apMax/lpMax 等) を有効値 (turnEffects±修正込み)
-  判定に修正 (matchOneFilter)。D11012「LP0の」= lpMin:0,lpMax:0。裁定: 「LP0の」=有効 LP ちょうど 0。
-- **Task3** rules/01〜30 準拠監査 → 全変更矛盾なし ([AUDIT-2026-06-04-rules-compliance.md](bugs/AUDIT-2026-06-04-rules-compliance.md))。
-- 前段: BUG-106〜110 敵対的レビュー + hardening (#1〜6, review-hardening.test.ts)。
+- D03013 鈴木次郎吉 (leave:draw1 + 【ヒラメキ】sleep)
+- D04010 ジョディ・スターリング (leave:opp-discard1 + 【ヒラメキ】sleep)
+- B03013 大尉 (leave:charModifyAP-2000 turn)
+- B03091 高木長介 (leave:side-self+trait-警察 AP+1000 turn)
+- B03130 マッドサイエンティスト (leave:draw1 + 【ヒラメキ】draw)
+- B04010 本堂瑛祐 (leave:level≤4 sleep)
+- B06009 トラカゲ (leave:draw1→discard1 chain + 条件付ヒラメキ)
+- B08084 ウォッカ (leave:draw1→discard1 chain)
+- B08089 ヘルエンジェル (leave:draw1→caseStatus:解決編 conditional discard1)
+- PR054 灰原哀 (enter:draw1 + leave:self-discard1)
 
-### 検証 (最終)
-tsc clean / vitest **1703 PASS** / smoke1000 例外0・baseline 不変 (10.86/469) / e2e 65 PASS /
-Task1 実機 Playwright 確認済。
+### 共通実装パターン
 
-### 未解決 (latent、現 MVP プレイに無影響・deferred)
-- BUG-111 (pick↔continuation FIFO desync, multi-step) / BUG-112 (off-board char の declared limit 未追跡) /
-  BUG-113 (filter の continuousDelta=dyn AP 残差, D08005 のみ)。
+- `trigger: { hook: 'leave:to-remove', selfOnly: true }`
+- `condition: { kind: 'turn', player: 'opp' }` (【相手ターン中】)
+- `scope: 'on-scene'` (handleLeaveToRemoveSelf が virtual `area:'scene'` で発火する)
+- 【ヒラメキ】effect は `kind:'choice' + chooser:'self' + options[atom uid:'$pick' target:pick]` 形式
+  (D11009 a3 同型, fire 時 hiramekiResolve が chooseAtomTarget で auto-pick するため明示形を保持)
 
-## 2026-06-05 engine 拡張 #1: 現場リムーブ時 (leave:to-remove) hook 解禁
+### 検証
 
-骨格凍結 解除後の第1機能 (engine-extension-plan.md step1)。**計画の「internal で発火済」は誤りで
-`leave:to-remove` は未 emit だった** → emit を新設。既存カードは未購読のため additive・回帰0。
-- emit: `mutate.scene.removeToRemove` choke で `{uid,cause}` 発火 (rules/17 全 cause。
-  rules/30 misplay-overflow のみ除外)。
-- listener: `triggered.ts` に `leave:to-remove` 配線 + `handleLeaveToRemoveSelf` (離場カードは
-  scene から消えるため source から virtual location を組立、ヒラメキ handleEvidenceRemovedHook と同型)。
-- 検証: unit 5 新規 / vitest 1725 pass・1 skip / typecheck clean / reuse e2e 9/9。
-- 次: 対応 117 カード実装 (D03013 鈴木次郎吉 等が最易) + Playwright は未着手 (user 指示で中断→commit)。
+- typecheck clean
+- 新規 unit (`tests/cards/leave-to-remove-batch.test.ts`) 11/11 pass
+- 全 vitest 1736 pass / 1 skip (baseline 1725 + 新規 11 = 1736)
+- `tests/e2e/reuse-cards-2026-06-05.spec.ts` e2e 9/9 pass
+- npm run docs (自動生成 65 ファイル regen)、docs:check clean
+- lint:listener errors=0 / lint:card-addition pass
+- ALL_CARDS 計 869 枚 (+10)
 
-### ⚠ commit (2026-06-05)
-engine 2 files + leave-to-remove.test.ts + 再生成 docs + changelog 2026-06-05-03。
-pre-commit hook は lint:bugs(7) / lint:side-channel(9) が **pre-existing 非関連** で RED
-(前 commit 9eaa325 も同様) → user 指示の commit は --no-verify。
+### 残 leave:to-remove カード = 79 枚
+
+engine 機能ゲート blocker:
+- charSetLP / aura / untargetable / partner-area カード参照 / イベント特徴
+- enter optional self-remove (B09007/PR 等)
+- deckRevealUntil with bind+chain (デッキ公開→該当者を登場 系)
+- カットイン filter (rules/gates 既知 DEFER)
+
+step 2 以降 (level-modify→multi-target pick→char→hand bounce→deck-reorder→set-card) で順次解禁。
+
+### touched files
+
+- engine: 0 (engine 修正なし — 既存 hook 利用のみ)
+- 新規カード 10ファイル + tests 1 + _reuse/index.ts + engine-extension-plan.md + changelog-entries 1

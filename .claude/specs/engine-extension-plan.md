@@ -25,6 +25,9 @@ user が「①エンジン拡張」を選択し **骨格凍結原則を解除**�
 1. **leave/現場リムーブ時 hook**（117枚・additive・低リスク）← ✅ 実装済 2026-06-05。
    ⚠ 計画の「internal で発火済」は誤り→ `leave:to-remove` は未 emit だった。removeToRemove
    choke で emit 新設 (misplay-overflow 除外) + virtual handler。回帰0。詳細: changelog 2026-06-05-03
+   - **対応カード batch #1**: 10枚 (D03013/D04010/B03013/B03091/B03130/B04010/B06009/B08084/B08089/PR054)。
+     残 79枚は engine 機能ゲート (charSetLP / aura / untargetable / enter optional self-remove etc.) に
+     blocked。step 2 以降で順次解禁予定。詳細: changelog 2026-06-05-04
 2. level-modify（17・低-中）— 小さく安全に手順確認
 3. multi-target pick（23・中）
 4. char→hand bounce（96・中）— unlock 大

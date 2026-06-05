@@ -1,5 +1,7 @@
-// cards/_reuse — catalog-reuse バッチ (手書き, card-condition-catalog 流用)
-// 284 件。スキャン生成 (.tmp/reuse/build-barrel.cjs) — 各カードは header に "catalog-reuse batch" マーカ。
+// cards/_reuse — catalog-reuse バッチ (手書き, card-condition-catalog 流用) + engine-extension #1 batch
+// 284 件 catalog-reuse + 10 件 engine-extension #1 (leave:to-remove batch) = 294 件。
+// catalog-reuse はスキャン生成 (.tmp/reuse/build-barrel.cjs)、engine-extension #1 batch は手書き。
+// 各カードは header に "catalog-reuse batch" または "engine-extension #1 leave:to-remove batch" マーカ。
 import type { CardDef } from '@/engine/types';
 
 import { D01003 } from '../ct-d01/D01003.js';
@@ -287,6 +289,18 @@ import { PR208 } from '../pr-01/PR208.js';
 import { PR235 } from '../pr-01/PR235.js';
 import { PR241 } from '../pr-01/PR241.js';
 
+// engine-extension #1 batch (leave:to-remove, 2026-06-05)
+import { D03013 } from '../ct-d03/D03013.js';
+import { D04010 } from '../ct-d04/D04010.js';
+import { B03013 } from '../ct-p03/B03013.js';
+import { B03091 } from '../ct-p03/B03091.js';
+import { B03130 } from '../ct-p03/B03130.js';
+import { B04010 } from '../ct-p04/B04010.js';
+import { B06009 } from '../ct-p06/B06009.js';
+import { B08084 } from '../ct-p08/B08084.js';
+import { B08089 } from '../ct-p08/B08089.js';
+import { PR054 } from '../pr-01/PR054.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -324,4 +338,6 @@ export const REUSE_CARDS: CardDef[] = [
   PR101, PR107, PR131, PR147, PR148, PR149, PR150, PR151,
   PR152, PR156, PR162, PR174, PR177, PR192, PR197, PR198,
   PR202, PR208, PR235, PR241,
+  // engine-extension #1 batch (leave:to-remove, 2026-06-05)
+  D03013, D04010, B03013, B03091, B03130, B04010, B06009, B08084, B08089, PR054,
 ];

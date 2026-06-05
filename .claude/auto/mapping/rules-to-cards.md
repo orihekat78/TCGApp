@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `94090431e5f3`
+> Source hash: `0495183e5f42`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -15,22 +15,22 @@
 | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) | 1 | `ui/services/tutorialSteps.ts` |
 | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 65 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 62 件 |
 | [`02-deck-construction.md`](../../rules/02-deck-construction.md) | 11 | `cards/ct-d08/index.ts`, `cards/ct-d11/index.ts`, `cards/ct-p09/B09100.ts` ほか 8 件 |
-| [`03-field-areas.md`](../../rules/03-field-areas.md) | 82 | `cards/ct-d03/D03002.ts`, `cards/ct-d03/D03011.ts`, `cards/ct-d08/D08019.ts` ほか 79 件 |
+| [`03-field-areas.md`](../../rules/03-field-areas.md) | 83 | `cards/ct-d03/D03002.ts`, `cards/ct-d03/D03011.ts`, `cards/ct-d08/D08019.ts` ほか 80 件 |
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 11 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 8 件 |
 | [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 32 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 29 件 |
 | [`06-card-types.md`](../../rules/06-card-types.md) | 29 | `cards/ct-d01/D01016.ts`, `cards/ct-d02/D02016.ts`, `cards/ct-d03/D03016.ts` ほか 26 件 |
 | [`07-action-flow.md`](../../rules/07-action-flow.md) | 34 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 31 件 |
 | [`08-contact.md`](../../rules/08-contact.md) | 22 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/_shared/contactTargetMatches.ts` ほか 19 件 |
 | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 137 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 134 件 |
-| [`10-action-event.md`](../../rules/10-action-event.md) | 70 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d03/D03011.ts` ほか 67 件 |
+| [`10-action-event.md`](../../rules/10-action-event.md) | 75 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d03/D03011.ts` ほか 72 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 19 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `cards/ct-d01/D01010.ts` ほか 16 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 11 | `ai/policies/heuristic.ts`, `cards/ct-p05/B05037.ts`, `cards/ct-p08/B08056.ts` ほか 8 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 134 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 131 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 55 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d03/D03011.ts` ほか 52 件 |
-| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 335 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 332 件 |
+| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 345 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 342 件 |
 | [`15-workflow.md`](../../rules/15-workflow.md) | 2 | `cards/ct-d08/D08015.ts`, `cards/ct-d08/D08016.ts` |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 4 | `cards/ct-d08/D08021.ts`, `cards/ct-p08/B08007.ts`, `cards/ct-p08/B08022.ts`, `engine/mutate/scene.ts` |
-| [`17-icons.md`](../../rules/17-icons.md) | 349 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 346 件 |
+| [`17-icons.md`](../../rules/17-icons.md) | 359 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 356 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 3 | `engine/cond/eval.ts`, `engine/mutate/partner.ts`, `ui/hooks/usePartner.ts` |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 74 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 71 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 48 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01015.ts` ほか 45 件 |
