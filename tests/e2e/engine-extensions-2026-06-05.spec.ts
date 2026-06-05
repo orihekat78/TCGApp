@@ -192,4 +192,45 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     expect(await apOf(page, 'opp-3'), 'opp-3: -1000').toBe(pre3 - 1000);
     expect(errors).toEqual([]);
   });
+
+  // ============================================================
+  // Engine 拡張 #4: sceneToHand (char→hand bounce)
+  // ============================================================
+  test('B06069 a2: 【解決編】declared sleepSelf cost → 相手 levelMax:7 を 1枚 bounce', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await prime(page);
+    await buildGameState(page, (gs: AnyState) => {
+      const mkC = (cardId: string, uid: string, state = 'active') => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
+      const self = (gs.players as AnyState).self as AnyState;
+      const opp = (gs.players as AnyState).opp as AnyState;
+      self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      self.case = { cardId: 'D08026', status: '解決編', requiredEvidence: 7, colors: ['白'], declaredUseCount: {} };
+      self.scene = [mkC('B06069', 'sno#1')];
+      // opp の現場に level 4 D08013 (bounce 対象)
+      opp.scene = [mkC('D08013', 'opp-bnc')];
+      const oppHandBefore: string[] = [];
+      opp.hand = oppHandBefore;
+      self.hand = []; self.evidence = []; self.remove = [];
+      gs.pendingEffects = [];
+      gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    const before = await getGameState(page);
+    expect((before.players.opp as { hand: string[] }).hand, 'opp 手札 0 (前)').toHaveLength(0);
+    expect((before.players.opp as { scene: { uid: string }[] }).scene.length, 'opp scene 1 (前)').toBe(1);
+
+    await dispatchAction(page, { type: 'declaredAbility', uid: 'sno#1', abilId: 'a2' });
+
+    // sceneToHand PA短縮形で pending pick (max:1, side:opp, levelMax:7)
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('sceneToHand');
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: 'opp-bnc' });
+
+    const after = await getGameState(page);
+    expect((after.players.opp as { hand: string[] }).hand, 'opp 手札に D08013').toContain('D08013');
+    expect((after.players.opp as { scene: { uid: string }[] }).scene.length, 'opp scene 空').toBe(0);
+    // sleepSelf コストの確認は declared-ability cost system 側の責務 — sceneToHand verb の検証範囲外
+    expect(errors).toEqual([]);
+  });
 });

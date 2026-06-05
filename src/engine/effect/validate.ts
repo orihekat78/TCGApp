@@ -21,7 +21,7 @@ const ATOM_VERBS = new Set<string>([
   'draw', 'discard', 'mill', 'fileAdd', 'filePopToHand',
   'evidenceGain', 'evidenceLose', 'evidenceFlip',
   'evidenceToHand', 'handAddFromRemove',
-  'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise',
+  'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'charModifyAP', 'charModifyLP', 'charModifyLevel', 'charSetAP', 'charSetLP',
   'charOverrideAP', 'charOverrideLP',
   'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',

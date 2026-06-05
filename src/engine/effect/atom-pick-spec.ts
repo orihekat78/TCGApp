@@ -37,6 +37,8 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   charModifyLP:      { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
   // engine-extension #2 (2026-06-05): レベル±N 短縮形
   charModifyLevel:   { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
+  // engine-extension #4 (2026-06-05): char→hand bounce 短縮形
+  sceneToHand:       { defaultArea: 'scene',    mode: 'PA' },
   sceneEnter:        { defaultArea: 'from',     mode: 'PA', sourceSplice: true },
 };
 

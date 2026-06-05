@@ -546,6 +546,27 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
       return;
     }
+    case 'sceneToHand': {
+      // engine-extension #4 (2026-06-05): char→hand bounce verb. PA 短縮形 (sceneRemove と同型)。
+      // 「相手の現場のキャラを1枚まで選び、手札に移す」等で使用。所有者の手札に戻る点に注意。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        const sthP = resolvePlayer(a.player, ctx);
+        const paTarget = buildShortFormPick('scene', a, sthP, sthP);
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: sthP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: sthP, turn: s.turn.number, action: 'effect:sceneToHand:awaiting-pick' });
+        return;
+      }
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToHand', result: 'skipped' });
+        return;
+      }
+      const sthUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof sthUid !== 'string' || sthUid.startsWith('$')) return;
+      mutate.scene.toHand(s, sthUid);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToHand', target: sthUid });
+      return;
+    }
     case 'sceneSetState': {
       // PA 短縮形: uid 不在 + player + state(設定する状態の文字列) + n|max → scene pick を構築。
       // a.state は「設定先の状態」なので候補 filter には載せない (buildShortFormPick は配列 state のみ拾う)。

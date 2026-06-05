@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5a95df9f4995`
+> Source hash: `88f94186664d`
 
 仕様書 [`INDEX`](../../../specs/shared-classes/INDEX.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

@@ -159,6 +159,33 @@ function toDeckBottom(s: GameState, uid: string): void {
 }
 
 /**
+ * 現場から所有者の手札へ戻す (rules/16: 現場を離れるとき set/stacked はリムーブ)
+ * engine-extension #4 (2026-06-05): char→hand bounce verb の primitive.
+ * - リムーブではないため leave:to-remove は emit しない (rules/17 と整合)
+ * - 所有者の手札 (char の所属プレイヤー) に cardId を push。effect 発動側ではない点に注意。
+ */
+function toHand(s: GameState, uid: string): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+
+  const { char, player } = found;
+  // rules/16 setCards / stackedCards は離場時にリムーブされる
+  if (char.setCards.length > 0) {
+    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+  }
+  for (let i = 0; i < char.stackedCards; i++) {
+    s.players[player].remove.push('back-card');
+  }
+
+  const idx = s.players[player].scene.findIndex(c => c.uid === uid);
+  if (idx !== -1) {
+    s.players[player].scene.splice(idx, 1);
+  }
+  // キャラ本体は所有者の手札へ
+  s.players[player].hand.push(char.cardId);
+}
+
+/**
  * キャラの状態を直接設定 (rules/03)
  * ⚠ active を渡したとき、現在 stun なら sleep に変換 (スタン特殊挙動)
  * ⚠ stun 状態で sleep/stun を渡してもスタンのまま
@@ -201,6 +228,7 @@ export const scene = {
   enter,
   switchEnter,
   removeToRemove,
+  toHand,
   toDeckBottom,
   setState,
   tryActivate,

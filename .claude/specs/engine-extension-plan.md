@@ -36,7 +36,10 @@ user が「①エンジン拡張」を選択し **骨格凍結原則を解除**�
    apply-pick.ts Pattern A を pickedUids 配列対応に拡張 (sequence wrap で per-char 適用)。
    B02021 沖田総司 (相手5枚AP-1000) を batch #1 として実装。回帰 0。
    詳細: changelog 2026-06-05-07。残 22 枚は次セッションで順次実装予定。
-4. char→hand bounce（96・中）— unlock 大
+4. char→hand bounce（96・中）— unlock 大 ← ✅ engine 実装済 2026-06-05。
+   `sceneToHand` verb (PA 短縮形 / 所有者手札へ / leave:to-remove 不発動) を additive 追加。
+   B06069/P 鈴木園子 (相手レベル7以下を 1枚 bounce) を batch #1 として実装。回帰 0。
+   詳細: changelog 2026-06-05-08。残 25 枚は次セッションで順次実装予定。
 5. deck-reorder（74）/ set-card（64）— 中-高
 6. 高リスク（aura / untargetable / partner-rewrite）は最後、慎重に
 

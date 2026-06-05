@@ -312,6 +312,55 @@ describe('engine.effect.runAtom', () => {
     });
   });
 
+  // engine-extension #4 (2026-06-05): char→hand bounce
+  describe('sceneToHand', () => {
+    it('指定 uid のキャラを所有者の手札に戻す (self.scene → self.hand)', () => {
+      const c = makeChar({ uid: 'bnc-uid', cardId: 'C300' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const result = produce(s, draft => {
+        runAtom(draft, 'sceneToHand', { uid: 'bnc-uid' }, makeCtx());
+      });
+      expect(result.players.self.scene).toHaveLength(0);
+      expect(result.players.self.hand).toContain('C300');
+    });
+
+    it('opp の現場キャラは opp の手札に戻る (effect 発動側 self ではなく所有者 opp)', () => {
+      const c = makeChar({ uid: 'bnc-opp', cardId: 'C301' });
+      const s = withScene(createEmptyGameState(), 'opp', [c]);
+      const result = produce(s, draft => {
+        runAtom(draft, 'sceneToHand', { uid: 'bnc-opp' }, makeCtx());
+      });
+      expect(result.players.opp.scene).toHaveLength(0);
+      expect(result.players.opp.hand, '所有者 opp の手札に戻る').toContain('C301');
+      expect(result.players.self.hand, 'self の手札には入らない').not.toContain('C301');
+    });
+
+    it('rules/16: setCards はリムーブエリアへ (bounce 時)', () => {
+      const c = makeChar({
+        uid: 'bnc-set',
+        cardId: 'C302',
+        setCards: [{ kind: 'event', cardId: 'EV1' }],
+      });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const result = produce(s, draft => {
+        runAtom(draft, 'sceneToHand', { uid: 'bnc-set' }, makeCtx());
+      });
+      expect(result.players.self.hand, 'キャラ本体は手札').toContain('C302');
+      expect(result.players.self.remove, 'setCards はリムーブ').toContain('EV1');
+    });
+
+    it('leave:to-remove は emit されない (リムーブではない、rules/17)', () => {
+      // ※ leave:to-remove は removeToRemove からのみ emit。toHand は別経路で emit しない。
+      const c = makeChar({ uid: 'bnc-leave', cardId: 'C303' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const result = produce(s, draft => {
+        runAtom(draft, 'sceneToHand', { uid: 'bnc-leave' }, makeCtx());
+      });
+      expect(result.players.self.remove, '本体は remove へ行かない').not.toContain('C303');
+      expect(result.players.self.hand).toContain('C303');
+    });
+  });
+
   describe('sceneSetState', () => {
     it('キャラの状態を sleep にする', () => {
       const c = makeChar({ uid: 'st-uid', state: 'active' });
