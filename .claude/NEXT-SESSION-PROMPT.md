@@ -33,10 +33,15 @@
 1. ~~**B. text-faithfulness 監査**~~ → ✅ 完了 (BUG-122/123)。
 2. ~~**E. BUG-083**~~ → ✅ 完了 (throw 解消済確認)。
 3. **C. engine 拡張 中リスク** (進行中): reasoning hook ✅(#1/#2)・look-top-N ✅(#3)。
-   **残**: disguise hook(13枚) ← **次の clean な一手**: `disguise:into` を TRIGGERED_HOOKS に追加
-   (reasoning:into と同型・disguiseInto で uid 維持→ in-play scan で 【変装時】発火可能と確認済) /
-   event→evidence(7枚, remove/hand→evidence verb 要) / reasoning 残 ~11 (souza/発見・optional
-   self-remove・multi-target・reasoner-binding 等の別機能ゲート)。
+   **残**:
+   - **disguise hook(13枚)**: ①`disguise:into` を TRIGGERED_HOOKS 追加は clean・additive
+     (emit source={player,uid}・disguiseInto で uid 維持→ in-play scan で 【変装時】selfOnly 発火可、
+     contact.test.ts に disguise harness 有)。**ただし** 変装カード (例 B02045) は変装可否に
+     【事件白】【FILE4】等の **条件付き** (TSV col14 henso) があり、`canDisguise`/`isDisguiseCard` は
+     ability condition を見ない → **条件付き変装ゲーティングの engine 拡張も別途必要**。1 ユニットとして設計せよ。
+   - **event→evidence(7枚)**: remove/hand→evidence verb 要。
+   - **reasoning 残 ~11**: souza/発見・optional self-remove・multi-target・reasoner-binding 等の別機能ゲート。
+   - 既存 `triggerCharMatches` condition は他の payload-char 反応 (action/leave 等) にも再利用可。
 4. **A. engine 変更0 カードバッチ** (大量・低リスク): deck-look-N 残 約50枚 (B03007/B03036/B05016
    /B07010 等 同型) + bounce/level-modify/set-card/multi-target 残 + 素のバニラカード。
 5. **D. engine 拡張 高リスク** (最後): continuous aura(13枚) / untargetable(6枚) /
