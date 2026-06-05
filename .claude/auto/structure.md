@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2624
+- **ファイル数**: 2626
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -373,6 +373,7 @@
     - `2026-06-05-29-bug-121-choice-pause.md`
     - `2026-06-06-01-bug-121-followup-residuals.md`
     - `2026-06-06-02-task-b-icon-keyword-audit.md`
+    - `2026-06-06-03-task-e-bug-083-multi-entry.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -2620,6 +2621,7 @@
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `audit-leave-suspects.test.ts` — 監査 suspect (leave:to-remove family) の候補フィルタ text-faithfulness を engine レベルで検証。
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
+      - `bug-083-multi-entry-switch.test.ts` — BUG-083 characterization: 効果で複数キャラを同時登場させ現場上限 (5) を超える場合の挙動。
       - `bug-108-choice-index.test.ts` — BUG-108: choice effect の choiceIndex が production の人間/AI どちらでも set されず
       - `bug-109-ai-pa-drain.test.ts` — BUG-109: PA 短縮形 atom (charModifyAP/LP 等) が AI/CPU 経路で silent no-op になる問題の修正検証。
       - `bug-121-sequence-choice.test.ts` — BUG-121 残課題解消: sequence 内の human 複数択 choice が、pre-choice step を二重実行せず
