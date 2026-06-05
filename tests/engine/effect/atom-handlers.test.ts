@@ -576,6 +576,39 @@ describe('engine.effect.runAtom', () => {
       });
       expect(result.players.self.scene[0].setCards).toEqual([{ cardId: 'ITEM', faceUp: true }]);
     });
+
+    // engine-extension #5b (2026-06-05): fromDeckTop オプション
+    it('fromDeckTop: 自分のデッキ上端を裏向きでセット (deck.shift + setCards.push)', () => {
+      let s = createEmptyGameState();
+      const c = makeChar({ uid: 'set-deck' });
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, scene: [c], deck: ['DECK_TOP', 'DECK_2', 'DECK_3'] } } };
+      const result = produce(s, draft => {
+        runAtom(draft, 'charSetCard', { uid: 'set-deck', fromDeckTop: true, faceUp: false, player: 'self' }, makeCtx());
+      });
+      expect(result.players.self.scene[0].setCards).toEqual([{ cardId: 'DECK_TOP', faceUp: false }]);
+      expect(result.players.self.deck).toEqual(['DECK_2', 'DECK_3']);
+    });
+
+    it('fromDeckTop: 空デッキでは silent no-op', () => {
+      let s = createEmptyGameState();
+      const c = makeChar({ uid: 'set-empty' });
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, scene: [c], deck: [] } } };
+      const result = produce(s, draft => {
+        runAtom(draft, 'charSetCard', { uid: 'set-empty', fromDeckTop: true, faceUp: false, player: 'self' }, makeCtx());
+      });
+      expect(result.players.self.scene[0].setCards).toEqual([]);
+    });
+
+    it('rules/16: setCards はリムーブ時に表向きでリムーブエリアへ (回帰)', () => {
+      let s = createEmptyGameState();
+      const c = makeChar({ uid: 'set-leave', setCards: [{ cardId: 'SET_X', faceUp: false }] });
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, scene: [c] } } };
+      const result = produce(s, draft => {
+        runAtom(draft, 'sceneRemove', { uid: 'set-leave', cause: 'effect' }, makeCtx());
+      });
+      expect(result.players.self.scene).toHaveLength(0);
+      expect(result.players.self.remove, '裏向き set でもリムーブ時は cardId が見える').toContain('SET_X');
+    });
   });
 
   describe('charStackCard', () => {

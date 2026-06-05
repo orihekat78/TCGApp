@@ -760,8 +760,23 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-068: bind ref 解決を配線
       const scUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof scUid !== 'string' || scUid.startsWith('$')) return;
-      const scCardId = resolveBindRef(a.cardId, ctx) as string;
-      if (typeof scCardId !== 'string' || scCardId.startsWith('$')) return;
+      // engine-extension #5b (2026-06-05): fromDeckTop オプション。
+      // 「自分のデッキのカードを上から1枚裏向きでセットする」(B02018/B02020/B02023/B02030/B08054)
+      // 系で使用。a.player (既定 'self') の deck.shift で 1 枚 splice → そのまま setCard。
+      // (cardId 引数は無視、自動補完される)
+      let scCardId: string;
+      if (a.fromDeckTop) {
+        const sscP = resolvePlayer(a.player ?? 'self', ctx);
+        const sscDeck = s.players[sscP].deck;
+        if (sscDeck.length === 0) {
+          mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'empty-deck' });
+          return;
+        }
+        scCardId = sscDeck.shift()!;
+      } else {
+        scCardId = resolveBindRef(a.cardId, ctx) as string;
+        if (typeof scCardId !== 'string' || scCardId.startsWith('$')) return;
+      }
       mutate.char.setCard(s, scUid, scCardId, a.faceUp as boolean);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: scCardId });

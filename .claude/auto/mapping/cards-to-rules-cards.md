@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `253b0476e11d`
+> Source hash: `ce425baf96e0`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **905** ファイル（[全体 index](./index.md)）
+このグループ: **906** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (10)
 
@@ -82,7 +82,7 @@
 | [`src/cards/ct-d11/D11021.ts`](../../../src/cards/ct-d11/D11021.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-d11/index.ts`](../../../src/cards/ct-d11/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## cards (他) (830)
+## cards (他) (831)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -673,6 +673,7 @@
 | [`src/cards/ct-p08/B08045.ts`](../../../src/cards/ct-p08/B08045.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08045P.ts`](../../../src/cards/ct-p08/B08045P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08053.ts`](../../../src/cards/ct-p08/B08053.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
+| [`src/cards/ct-p08/B08054.ts`](../../../src/cards/ct-p08/B08054.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p08/B08055.ts`](../../../src/cards/ct-p08/B08055.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p08/B08055P.ts`](../../../src/cards/ct-p08/B08055P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08056.ts`](../../../src/cards/ct-p08/B08056.ts) | [`12-next-hint.md`](../../rules/12-next-hint.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |

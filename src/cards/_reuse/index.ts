@@ -315,6 +315,9 @@ import { B06069P } from '../ct-p06/B06069P.js';
 // engine-extension #5a batch (deckRevealUntil maxN + handAddFromDeck, 2026-06-05)
 import { D01013 } from '../ct-d01/D01013.js';
 
+// engine-extension #5b batch (charSetCard fromDeckTop, 2026-06-05)
+import { B08054 } from '../ct-p08/B08054.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -362,4 +365,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06069, B06069P,
   // engine-extension #5a batch (deckRevealUntil maxN + handAddFromDeck, 2026-06-05)
   D01013,
+  // engine-extension #5b batch (charSetCard fromDeckTop, 2026-06-05)
+  B08054,
 ];

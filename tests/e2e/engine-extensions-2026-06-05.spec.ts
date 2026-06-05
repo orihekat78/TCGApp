@@ -293,4 +293,42 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
 
     expect(errors).toEqual([]);
   });
+
+  // ============================================================
+  // Engine 拡張 #5b: charSetCard fromDeckTop
+  // ============================================================
+  test('B08054 広田正巳 a2: declared → 自分のデッキ上端を裏向きで $self にセット', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await prime(page);
+    await buildGameState(page, (gs: AnyState) => {
+      const mkC = (cardId: string, uid: string, state = 'active') => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
+      const self = (gs.players as AnyState).self as AnyState;
+      self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['赤'], declaredUseCount: {} };
+      self.scene = [mkC('B08054', 'hir#1')];
+      // デッキ上端を識別可能な特定 cardId に
+      self.deck = ['D08013', 'D08019', 'D08021'];
+      self.hand = []; self.evidence = []; self.remove = [];
+      gs.pendingEffects = [];
+      gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    const deckBefore = ((await getGameState(page)).players.self as { deck: string[] }).deck.slice();
+    expect(deckBefore[0]).toBe('D08013');
+
+    await dispatchAction(page, { type: 'declaredAbility', uid: 'hir#1', abilId: 'a2' });
+
+    const after = await getGameState(page);
+    const selfScene = (after.players.self as { scene: { uid: string; setCards: { cardId: string; faceUp: boolean }[] }[] }).scene;
+    const deck = (after.players.self as { deck: string[] }).deck;
+
+    // デッキ上端が消費される
+    expect(deck.length, 'デッキ -1').toBe(deckBefore.length - 1);
+    expect(deck[0], 'top は元 2 枚目').toBe('D08019');
+    // B08054 に裏向きで D08013 がセットされている
+    const hir = selfScene.find((c) => c.uid === 'hir#1');
+    expect(hir?.setCards.length, 'setCards に 1 枚').toBe(1);
+    expect(hir?.setCards[0], 'D08013 を裏向きで set').toEqual({ cardId: 'D08013', faceUp: false });
+    expect(errors).toEqual([]);
+  });
 });

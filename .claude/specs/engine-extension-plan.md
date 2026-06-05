@@ -44,7 +44,15 @@ user が「①エンジン拡張」を選択し **骨格凍結原則を解除**�
    `deckRevealUntil` に `maxN` オプション追加 (公式 "上から N 枚見る" semantics) +
    `handAddFromDeck` verb 新設。D01013 灰原哀 (上から4枚見て【青】1枚) を batch #1 として実装。
    詳細: changelog 2026-06-05-09。残 6 枚 (D02011/D03009/D04011/D05012/D07019 等同型色違い) は次バッチ。
-5b. set-card（64）— 未着手。次セッション以降で実装予定。
+5b. set-card（64）← ✅ engine 実装済 2026-06-05 (最小路線)。
+   既存 set-card 機構 (setCards 配列 / mutate.char.setCard / 離場リムーブ) はそのままに、
+   `charSetCard` に `fromDeckTop:true` オプションを追加して「デッキ上端を裏向きでセット」
+   パターンを解禁。B08054 広田正巳 を batch #1 として実装。回帰 0。
+   詳細: changelog 2026-06-05-10。
+   残課題:
+   - PA短縮形 (uid pick + fromDeckTop) で B02020/B02023/B02030 等の解禁
+   - replace-on-leave (B08054 a1, B01092 等) は `replace` kind 未対応で DEFER
+   - 「セットされるたび」hook (B02018 a1) は card-triggerable hook 未対応で DEFER
 6. 高リスク（aura / untargetable / partner-rewrite）は最後、慎重に
 
 ## 安全手順（各機能共通）
