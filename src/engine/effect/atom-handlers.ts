@@ -45,7 +45,13 @@ export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
  * BUG-045 (#9 spectator stall fix の副産物): deckRevealUntil 等で
  * TargetFilter (declarative object) を predicate に変換するヘルパ。
  * src/engine/target/candidates.ts matchOneFilter の cardId-based subset。
- * 対応: cardId / color / trait / levelMin/Max / kind ('character' | 'event')。
+ * 対応: cardId / color / trait / apMin/Max / lpMin/Max / levelMin/Max / kind ('character' | 'event')。
+ *
+ * BUG-117 (2026-06-05): apMin/apMax/lpMin/lpMax が未実装で **黙って drop** されていた。
+ *   型 (TargetFilter) には在るため typecheck は通り、B01013「LP0の青」/ B01053「LP2以上の白」が
+ *   LP 条件を無視して最初の色一致キャラを拾っていた (Playwright で実機検出)。
+ *   deck 内のカードは scene candidate (turnEffects/override) を持たないため、printed 値
+ *   (d.ap/d.lp/d.level、undefined は 0) で判定する = matchOneFilter の非現場ケースと同式。
  */
 function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: string) => boolean {
   if (!filter) return () => true;
@@ -64,6 +70,13 @@ function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: str
       const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
       if (!wants.some(w => d.traits?.includes(w))) return false;
     }
+    // BUG-117: AP/LP filter (printed 値判定 — deck card は override/turnEffect を持たない)
+    const ap = d.ap ?? 0;
+    if (filter.apMin !== undefined && ap < filter.apMin) return false;
+    if (filter.apMax !== undefined && ap > filter.apMax) return false;
+    const lp = d.lp ?? 0;
+    if (filter.lpMin !== undefined && lp < filter.lpMin) return false;
+    if (filter.lpMax !== undefined && lp > filter.lpMax) return false;
     if (filter.levelMin !== undefined && (d.level ?? 0) < filter.levelMin) return false;
     if (filter.levelMax !== undefined && (d.level ?? Infinity) > filter.levelMax) return false;
     const kind = (filter as TargetFilter & { kind?: string }).kind;

@@ -2,20 +2,19 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `ed122b81162a`
+> Source hash: `dfff1d435d29`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 182
-- **ファイル数**: 2602
+- **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
+- **ディレクトリ数**: 177
+- **ファイル数**: 2600
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
 - **`.claude/`** — Claude Code 用プロジェクトコンテキスト一式
-  - **`agents/`** — プロジェクト固有のサブエージェント定義
   - **`auto/`** — 自動生成ドキュメント (scripts/gen-docs/ 出力先・手書き禁止)
     - **`api/`**
       - `cards.md` — 🤖 engine.cards
@@ -256,6 +255,7 @@
     - `BUG-114.md`
     - `BUG-115.md`
     - `BUG-116.md`
+    - `BUG-117.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -360,8 +360,8 @@
     - `2026-06-05-23-set-card-batch-3.md`
     - `2026-06-05-24-deck-look-n-batch-4.md`
     - `2026-06-05-25-deck-look-n-batch-5.md`
+    - `2026-06-05-26-bug-117-deckreveal-lp-filter.md`
     - `README.md` — Changelog エントリ
-  - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
@@ -743,7 +743,6 @@
     - `2026-06-05.md` — セッションログ — 2026-06-05 Engine 拡張バッチ連続実装
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
-  - **`skills/`** — プロジェクト固有のスキル定義
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
     - **`cards-analysis/`**
       - `AUDIT-USER-REQUEST-18.md` — Card Audit — user_request 20260521_01 #18
@@ -1090,12 +1089,6 @@
   - `match-board.html`
   - `memory.md` — memory.md — コナン TCG デザインモック プロジェクト履歴
   - `README.md` — コナン TCG メタゲーム デザインモック
-- **`dist-meta/`**
-  - **`assets/`**
-    - `index-CSfC8djj.css`
-    - `index-DfnJOjLD.js`
-    - `tsv-loader-fs-BWZZNTOu.js`
-  - `index.html`
 - **`docs/`**
   - **`superpowers/`**
     - **`plans/`**
@@ -2576,6 +2569,7 @@
     - `bug-086.spec.ts` — E2E regression: BUG-086 — 証拠エリアの「表向き」カードが evidenceToHand pick で選択不可
     - `bug-090-case-resolved-pick.spec.ts` — E2E regression: BUG-090 — human の auto-phase で 事件編→解決編 になり case card a1
     - `bug-091-d11019-scene-enter.spec.ts` — E2E regression: BUG-091 — D11019「15の受難」a1 で deckRevealUntil が matched した
+    - `bug-117-deckreveal-lp-filter.spec.ts` — E2E: BUG-117 — deckRevealUntil の ap/lp filter が黙って無視されるバグの実機検証。
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
@@ -2782,7 +2776,6 @@
   - `20260521_01.txt`
   - `20260522_01.txt`
 - `.gitignore` — Git 除外パターン
-- `analysis.txt`
 - `CHANGELOG.md` — フェーズ/Round 完了履歴 (Keep a Changelog 形式)
 - `ct-d08-cards.json` — CT-D08 デッキカードデータ (公式テキスト抽出)
 - `ct-d11-cards.json` — CT-D11 デッキカードデータ (公式テキスト抽出)
