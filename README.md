@@ -18,10 +18,27 @@
 - **CPU AI**: Random / Heuristic / MCTS (MVP)
 - **将来スコープ**: 全カード対応
 
-## 起動
+## クイックスタート（Windows・ワンクリック）
+
+クローン後、初めて遊ぶ場合はこれだけ：
+
+1. リポジトリを取得：`git clone <repo>` → `git pull`
+2. リポジトリ直下の **`start.bat` をダブルクリック**
+
+`start.bat` が自動で以下を行います（[scripts/setup-and-run.ps1](scripts/setup-and-run.ps1)）：
+
+- Node.js のチェック（未導入なら `winget` で LTS を自動インストール）
+- 依存関係のインストール（`npm ci`。初回のみ、最新ならスキップ）
+- 開発サーバー起動（別ウィンドウ）＋ 既定ブラウザで **`http://localhost:5173`** を自動オープン
+
+→ ブラウザで「対戦開始」を押せばプレイ開始。**終了はサーバーウィンドウを閉じる**だけ。
+
+> winget が無い環境では、案内に従い [nodejs.org](https://nodejs.org/ja) から Node LTS を入れて再実行してください。
+
+## 起動（手動 / 開発者向け）
 
 ```sh
-npm install
+npm install      # または npm ci（package-lock.json から確実に再現）
 npm run dev      # http://localhost:5173/ — 人間 vs CPU を end-to-end でプレイ
 npm test         # Vitest (unit + integration)
 npm run test:e2e # Playwright (headed default)

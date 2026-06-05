@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 182
-- **ファイル数**: 2494
+- **ファイル数**: 2497
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -335,6 +335,7 @@
     - `2026-06-04-02-effective-value-filter.md`
     - `2026-06-04-03-simple-cards-batch.md`
     - `2026-06-05-01-catalog-reuse-engine-verify.md`
+    - `2026-06-05-02-oneclick-setup-windows.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -1194,6 +1195,7 @@
   - `lint-test-pair.ts` — Phase 8-2: 新規 .ts file → test pair 必須 lint
   - `reuse-registry-check.ts` — full-registry duplicate id check
   - `reuse-validate.ts`
+  - `setup-and-run.ps1`
   - `tsconfig.json`
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)
@@ -2687,6 +2689,7 @@
 - `playwright.config.ts` — Playwright E2E 設定
 - `PROJECT-MAP.canvas` — Obsidian Canvas によるプロジェクト全体図
 - `README.md` — プロジェクト紹介・起動方法・主要リンク集
+- `start.bat`
 - `tsconfig.json` — TypeScript 設定
 - `vite.config.ts` — Vite ビルド設定
 - `vitest.config.ts` — Vitest 設定
