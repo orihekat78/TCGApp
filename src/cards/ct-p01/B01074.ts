@@ -1,0 +1,39 @@
+// cards/ct-p01/B01074 羽田秀吉 (キャラ) — engine-extension reasoning-hook batch (2026-06-06 タスクC)
+// rules: 11-reasoning.md, 15-abilities-effects.md, 17-icons.md
+//
+// 公式テキスト:
+//   このキャラが推理したとき、相手は手札を公開する。（その後、元に戻す）
+//
+// a1: 推理反応 (reasoning:end selfOnly = このキャラが推理したとき)。相手手札公開は
+//     情報開示のみで状態変化なし → log atom (D05004 同型 no-op)。
+
+import type { AbilityDef, CardDef } from '@/engine/types';
+
+const a1: AbilityDef = {
+  id: 'a1',
+  type: 'triggered',
+  scope: 'on-scene',
+  // このキャラが推理したとき (reasoning:end、source.uid 一致でこのキャラ自身の推理のみ発火)
+  trigger: { hook: 'reasoning:end', selfOnly: true },
+  // 相手は手札を公開する（その後、元に戻す）= 情報開示のみ、状態不変 (D05004 a1 同型)
+  effect: { kind: 'atom', verb: 'log', args: { player: 'opp', action: 'reveal-hand', result: '相手は手札を公開する（その後、元に戻す）' } },
+  description: 'このキャラが推理したとき、相手は手札を公開する。（その後、元に戻す）',
+  ruleRefs: ['rules/11-reasoning.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
+};
+
+export const B01074: CardDef = {
+  id: 'B01074',
+  no: '0064/B01074',
+  kind: 'character',
+  names: ['羽田秀吉'],
+  colors: ['赤'],
+  level: 4,
+  ap: 4000,
+  lp: 1,
+  traits: ['棋士', '赤井家'],
+  keywords: [],
+  rarity: 'C',
+  imageUrl: '1714013053532063.jpg',
+  abilities: [a1],
+  ruleRefs: ['rules/11-reasoning.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
+};

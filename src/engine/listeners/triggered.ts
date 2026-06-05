@@ -67,6 +67,11 @@ const TRIGGERED_HOOKS = [
   // 2026-05-27 Option C: ヒラメキ統合。payload.ev.cardId の def から
   // trigger.hook='evidence:remove-by-action' の ability を探す (in-play scan 経路と別)。
   'evidence:remove-by-action',
+  // engine-extension (2026-06-06 タスクC): 推理反応 (rules/11)。doReasoning が emit する
+  // reasoning:end (source={player, uid}=推理したキャラ) を card-triggerable 化。推理後 (証拠加算後) に
+  // 発火。推理キャラは scene に sleep で残るため collectCardsInPlay に出る → 特別 handler 不要、
+  // 通常 in-play scan (handleHook) で処理。selfOnly=「このキャラが推理したとき」(source.uid 一致)。
+  'reasoning:end',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];

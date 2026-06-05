@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1e72adf732ed`
+> Source hash: `b224540ab33c`
 
 公式ルール [`26-qa-deck-refresh.md`](../../../rules/26-qa-deck-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,7 +20,7 @@
 
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (24)
+## 📄 参照ソース (25)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d01/D01013.ts`](../../../../src/cards/ct-d01/D01013.ts)
@@ -34,6 +34,7 @@
 - [`src/cards/ct-d11/D11021.ts`](../../../../src/cards/ct-d11/D11021.ts)
 - [`src/cards/ct-p01/B01013.ts`](../../../../src/cards/ct-p01/B01013.ts)
 - [`src/cards/ct-p01/B01016.ts`](../../../../src/cards/ct-p01/B01016.ts)
+- [`src/cards/ct-p01/B01017.ts`](../../../../src/cards/ct-p01/B01017.ts)
 - [`src/cards/ct-p01/B01048.ts`](../../../../src/cards/ct-p01/B01048.ts)
 - [`src/cards/ct-p01/B01053.ts`](../../../../src/cards/ct-p01/B01053.ts)
 - [`src/cards/ct-p05/B05083.ts`](../../../../src/cards/ct-p05/B05083.ts)
@@ -41,5 +42,4 @@
 - [`src/cards/ct-p07/B07091.ts`](../../../../src/cards/ct-p07/B07091.ts)
 - [`src/cards/ct-p08/B08030.ts`](../../../../src/cards/ct-p08/B08030.ts)
 - [`src/cards/ct-p08/B08030P.ts`](../../../../src/cards/ct-p08/B08030P.ts)
-- [`src/cards/ct-p09/B09064.ts`](../../../../src/cards/ct-p09/B09064.ts)
-- _...ほか 4 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 5 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
