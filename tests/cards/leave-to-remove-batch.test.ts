@@ -64,6 +64,14 @@ describe('engine-extension #1 leave:to-remove batch — 実カード経由 sanit
     ['B04059', '水無怜奈'],      // level≤5 sleep
     ['B09007', '脇田兼則'],      // 引く1
     ['B09007P', '脇田兼則 P'],   // 同
+    // batch #3 (2026-06-05 残課題)
+    ['B04018', '遠山和葉'],      // 引く1 (a2 only)
+    ['B04018P', '遠山和葉 P'],   // 同
+    ['B05056', '鈴木次郎吉'],    // 引く1 (a1 only)
+    ['B06080', '世良真純'],      // 引く1+discard1 (a1 only)
+    ['B08079', 'ピンガ'],         // a1 continuous AP / a2 引く1+discard1
+    ['B08079P', 'ピンガ P'],     // 同
+    ['B08083', 'ラム'],          // 引く1 (a1 only)
   ])('%s (%s): 相手ターン中の leave:to-remove で pendingEffects に queue される', (cardId) => {
     const s = setOppTurn(createEmptyGameState());
     const after = enterThenRemove(s, cardId);

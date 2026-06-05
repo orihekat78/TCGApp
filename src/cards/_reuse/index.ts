@@ -356,6 +356,15 @@ import { B02046 } from '../ct-p02/B02046.js';
 import { B02046P } from '../ct-p02/B02046P.js';
 import { B03061 } from '../ct-p03/B03061.js';
 
+// engine-extension #1 leave:to-remove batch #3 (2026-06-05 残課題)
+import { B04018 } from '../ct-p04/B04018.js';
+import { B04018P } from '../ct-p04/B04018P.js';
+import { B05056 } from '../ct-p05/B05056.js';
+import { B06080 } from '../ct-p06/B06080.js';
+import { B08079 } from '../ct-p08/B08079.js';
+import { B08079P } from '../ct-p08/B08079P.js';
+import { B08083 } from '../ct-p08/B08083.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -417,4 +426,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05066, B05066P, B07093, B07093P,
   // engine-extension #5b charSetCard batch #2 (2026-06-05 残課題)
   B02020, B02020P, B02030, B02046, B02046P, B03061,
+  // engine-extension #1 leave:to-remove batch #3 (2026-06-05 残課題)
+  B04018, B04018P, B05056, B06080, B08079, B08079P, B08083,
 ];
