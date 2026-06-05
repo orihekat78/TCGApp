@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2606
+- **ファイル数**: 2609
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -259,6 +259,7 @@
     - `BUG-118.md`
     - `BUG-119.md`
     - `BUG-120.md`
+    - `BUG-121.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -365,6 +366,7 @@
     - `2026-06-05-25-deck-look-n-batch-5.md`
     - `2026-06-05-26-bug-117-deckreveal-lp-filter.md`
     - `2026-06-05-27-audit-bugs-118-119-120.md`
+    - `2026-06-05-28-audit-suspects-coverage.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -2567,6 +2569,7 @@
       - `hirameki-char-stun.spec.ts` — Round 4k: hiramekiCharStun パターン (アクション[事件] 経由のヒラメキ → キャラを1枚 sleep) を
       - `hirameki-draw.spec.ts` — Round 4j (`4dd2cd8`) + Round 4j-fix: hiramekiDraw パターン (アクション[事件] 経由のヒラメキドロー)
       - `partner-color-keyword.spec.ts` — Round 4f Phase 2: partnerColorKeyword 共通クラスを使う 5 カードを 1 spec で集約検証。
+    - `audit-suspects-coverage.spec.ts` — E2E: 2026-06-05 監査 workflow が「静的には faithful・実機未確認」とした suspect の runtime カバレッジ。
     - `bug-006.spec.ts` — BUG-006: アクション[事件] で証拠が変動しない (rules/10)
     - `bug-029.spec.ts` — BUG-029: 現場カードがアクション/推理してもスリープにならない (UI 反映)
     - `bug-037.spec.ts` — BUG-037: 現場カードの sleep / stun が computed transform で実際に rotate されるかを検証。

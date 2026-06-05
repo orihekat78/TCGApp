@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `9c222c0c7339`
+> Source hash: `246ae54c9f48`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,36 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## 監査 suspect の Playwright 実機検証 + BUG-121 検出
+
+**Round/Phase**: 2026-06-05 session — audit workflow の suspect (faithful・実機未確認) を runtime 検証
+
+### 背景
+
+audit-engine-extension-batches workflow が「静的には faithful だが既存 e2e 代表と filter 形が
+異なり実機未確認」とした suspect を Playwright で検証。novel な filter 組合せの恒久カバレッジを追加。
+
+### 検証結果 (`tests/e2e/audit-suspects-coverage.spec.ts` 3 case)
+
+- **D09014 a2** ✓ faithful: sceneToHand long-form の `levelMax:5 AND state:['sleep']` (side:opp) が
+  AND 評価され、相手の「lv5以下 かつ sleep」のみ候補 (lv6/stun/active は除外) を実機確認。
+- **B03091** ✓ faithful: leave:to-remove (相手ターン中) → charModifyAP `trait:警察 + side:self` の pick が
+  owner(self) に surface、候補は自分の[警察]のみ。opp(AI) の B01063 リムーブ経由で end-to-end 確認。
+- **B06007 a2** → **BUG-121 検出**: enter トリガの 3 択 choice が handUseCard フローで surface されず、
+  engine が option 0 (突撃付与) に既定化。human は ②bounce / ③draw を選べない。
+
+### BUG-121 (新規・未着手)
+
+複数 option choice は宣言能力では `useActionsPanelFlow:606` が surface するが、enter トリガ
+(`runHandUseFlow`) は surface せず、engine も choice で pause しないため option 0 既定化。
+影響は **B06007/B06007P の 2 枚のみ** (他の triggered choice は単一 option=構造的 / declared /
+ヒラメキで未影響、MVP デッキは全て未影響)。dispatch contract / engine flow に触れる中規模修正のため
+方針確認待ち。詳細: [BUG-121](../bugs/BUG-121.md)。B06007 test は現状挙動を固定する characterization。
+
+### 検証
+
+- 全 e2e 95 pass / 1 skip 回帰 0 (suspect spec 3 件追加)。typecheck clean / lint errors=0。
 
 ## BUG-118/119/120 修正 — engine 拡張バッチ監査で検出した BUG-117 同型 3 件
 
