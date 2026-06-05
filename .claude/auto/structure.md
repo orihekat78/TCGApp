@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 182
-- **ファイル数**: 2516
+- **ファイル数**: 2517
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -2498,6 +2498,7 @@
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
+    - `engine-extensions-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 engine-extension #1/#2 batches:
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
     - `replay-ui.spec.ts` — Phase 9-G.2 (Cleanup 7-D): リプレイ UI E2E
