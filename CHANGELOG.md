@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `98bff1ae254a`
+> Source hash: `9c222c0c7339`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,43 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## BUG-118/119/120 修正 — engine 拡張バッチ監査で検出した BUG-117 同型 3 件
+
+**Round/Phase**: 2026-06-05 session — 多エージェント監査 workflow (audit-engine-extension-batches)
+
+### 背景
+
+BUG-117 を受け、今 session の engine 拡張 5 family (leave:to-remove / charModifyLevel /
+sceneToHand / charSetCard / multi-target、計 80 カード) を workflow で並列静的監査。
+各エージェントが「DSL/型に在る field・前提を engine 評価経路が黙って無視」する BUG-117 同型を
+**engine コード行を直接読んで** 探索 → 3 系統の確定バグを検出 (suspect 6 件は faithful 確認)。
+
+### 検出・修正した engine バグ (3 系統 / 計 11 枚相当)
+
+- **BUG-118** (B04009): `candidates.ts matchOneFilter` が `filter.kind` を未評価 → handAddFromRemove
+  「リムーブの【青】イベント」に青キャラ混入。`kind` を TargetFilter 型に昇格 + matchOneFilter に評価追加。
+- **BUG-119** (B07103/B05066/B07093 +P = 6 枚): `clearTurnEffects` が `lvlMod_turn/lvlMod_contact` を
+  消さず charModifyLevel「ターン終了時までレベル±N」が永続化。turn 分岐に delete 2 行追加 (ap/lp と対称化)。
+- **BUG-120** (B02020/B03032 +P = 4 枚): charSetCard 短縮形が `byPlayer=resolvePlayer(a.player)` を渡し、
+  `player:'opp'` で選択者が controller でなく相手に。chooser/byPlayer を `ctx.source.player` に修正
+  (charModifyAP 短縮形と対称化)。deck-source/side は a.player のまま。
+
+いずれも additive な engine バグ修正 (骨格凍結原則の例外)。カード DSL の修正は不要。
+
+### 検証
+
+- **Playwright** 新規 `tests/e2e/bug-118-120-audit-fixes.spec.ts` 3 case (各バグ 1)。
+  修正前 3/3 fail (kind 混入 / level 永続 / pick が opp 誤ルート) → 修正後 3/3 pass を実機確認。
+- 全 e2e **93 pass / 1 skip 回帰 0** (matchOneFilter は全 target pick 経路 → 広域回帰確認)。
+- vitest 1776 pass (bug-077 のみ本環境の import timeout flaky、--testTimeout=30000 で 15/15 pass = assertion 回帰 0)。
+- typecheck clean / lint errors=0。
+
+### 監査 workflow の所見
+
+5 family 80 カードを engine 評価経路 (matchOneFilter / targetFilterToPredicate / clearTurnEffects /
+buildShortFormPick / triggered.ts) まで追跡。leave:to-remove (24) / sceneToHand (9) / multi-target は
+faithful、suspect 6 件 (D09014 の levelMax+state array AND 等) は静的に faithful・実機確認推奨として残す。
 
 ## BUG-117 修正 — deckRevealUntil の ap/lp filter 黙殺 (engine バグ修正)
 

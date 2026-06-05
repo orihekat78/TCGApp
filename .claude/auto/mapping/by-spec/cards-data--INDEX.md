@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0c0f8c32efde`
+> Source hash: `813ebba573a7`
 
 仕様書 [`INDEX`](../../../specs/cards-data/INDEX.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

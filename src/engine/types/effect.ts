@@ -56,6 +56,9 @@ export type TargetFilter = {
   trait?: string | string[];
   color?: string | string[];
   keyword?: string | string[];
+  // BUG-118: カード種別 filter ('character' | 'event')。deckRevealUntil (targetFilterToPredicate) は
+  // 元から評価していたが matchOneFilter (target pick 経路) が未評価だったため型に昇格して両経路で honored 化。
+  kind?: 'character' | 'event';
   apMin?: number;
   apMax?: number;
   lpMin?: number;

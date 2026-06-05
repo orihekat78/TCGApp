@@ -126,7 +126,8 @@ function setTurnEffect(s: GameState, uid: string, key: string, val: unknown): vo
 
 /**
  * ターン終了時の turnEffects クリーンアップ
- * scope='turn': turn 系エフェクト (apMod_turn, lpMod_turn, apMod_contact, lpMod_contact, grantedKeywords) を削除
+ * scope='turn': turn 系エフェクト (apMod_turn, lpMod_turn, lvlMod_turn,
+ *   apMod_contact, lpMod_contact, lvlMod_contact, grantedKeywords) を削除
  */
 function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn'): void {
   const found = findChar(s, uid);
@@ -137,6 +138,11 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn')
     delete te['lpMod_turn'];
     delete te['apMod_contact'];
     delete te['lpMod_contact'];
+    // BUG-119: charModifyLevel (engine-extension #2) が追加した lvlMod_turn / lvlMod_contact が
+    // ここで未削除だったため scope:'turn' のレベル修正 (「ターン終了時までレベル±N」) が永続化していた。
+    // ap/lp の turn/contact と対称に turn 終了で解除する (read.char.level / filter level に波及していた)。
+    delete te['lvlMod_turn'];
+    delete te['lvlMod_contact'];
     delete te['grantedKeywords'];
   } else if (scope === 'opp-turn') {
     // BUG-101: D11005 挑発 (mustBeTargeted) は「相手のターン終了時まで」。

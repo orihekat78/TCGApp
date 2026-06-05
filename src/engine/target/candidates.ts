@@ -240,6 +240,11 @@ export function matchOneFilter(
     if (!wants.some(w => kws.includes(w))) return false;
   }
 
+  // BUG-118: カード種別 filter ('character' | 'event')。本関数 (target pick 候補列挙の正準経路) が
+  // kind を未評価で drop しており、B04009「リムーブの【青】イベント」で kind:'event' が効かず
+  // 青キャラも候補化していた。deckRevealUntil 側 (targetFilterToPredicate) は既に評価済 → 経路統一。
+  if (filter.kind !== undefined && d?.kind !== filter.kind) return false;
+
   // Numeric filters — 効果解決時点の「有効値」で判定する (rules/15,19,22)。
   // base(override?printed) に turnEffects の ±修正 (apMod/lpMod の permanent/turn/contact) を合算。
   // 旧実装は override?printed のみで turn 修正を無視 → 疾風(AP-1000)等で debuff されたキャラが

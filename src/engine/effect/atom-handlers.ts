@@ -79,11 +79,8 @@ function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: str
     if (filter.lpMax !== undefined && lp > filter.lpMax) return false;
     if (filter.levelMin !== undefined && (d.level ?? 0) < filter.levelMin) return false;
     if (filter.levelMax !== undefined && (d.level ?? Infinity) > filter.levelMax) return false;
-    const kind = (filter as TargetFilter & { kind?: string }).kind;
-    if (kind !== undefined) {
-      const want = kind === 'character' ? 'character' : kind === 'event' ? 'event' : null;
-      if (want && d.kind !== want) return false;
-    }
+    // BUG-118: kind は TargetFilter 型に昇格済 (matchOneFilter と統一)
+    if (filter.kind !== undefined && d.kind !== filter.kind) return false;
     return true;
   };
 }
@@ -774,11 +771,17 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // uid 未指定 + fromDeckTop + n/max で「キャラを N 枚まで選び、デッキ上端を裏向きでセット」
       // を declarative に表現できる (B02020/B02023/B02030 系)。sceneRemove/sceneToHand と同型。
       if (a.uid === undefined && a.fromDeckTop && typeof a.player === 'string' && hasNorMax(a)) {
+        // scsP = deck-source / 既定 side (a.player 側、'opp' なら相手の現場/デッキを対象)。
+        // BUG-120: 選択者 (chooser/byPlayer) は a.player ではなく **controller** (ctx.source.player)。
+        //   旧コードは byPlayer=scsP を渡し、player:'opp' (B02020/B03032) で『controller が相手キャラを
+        //   選ぶ』が「相手が選ぶ」に化けていた (charModifyAP/LP/Level は byPlayer=ctx.source.player で正)。
+        //   deck-source は後段 resolve (L798 resolvePlayer(a.player)) が a.player を別途参照するため不変。
         const scsP = resolvePlayer(a.player, ctx);
-        const paTarget = buildShortFormPick('scene', a, scsP, scsP);
+        const scsChooser = ctx.source.player as Player;
+        const paTarget = buildShortFormPick('scene', a, scsChooser, scsP);
         const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: scsP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: scsP, turn: s.turn.number, action: 'effect:charSetCard:awaiting-pick' });
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: scsChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: scsChooser, turn: s.turn.number, action: 'effect:charSetCard:awaiting-pick' });
         return;
       }
       // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2600
+- **ファイル数**: 2606
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -256,6 +256,9 @@
     - `BUG-115.md`
     - `BUG-116.md`
     - `BUG-117.md`
+    - `BUG-118.md`
+    - `BUG-119.md`
+    - `BUG-120.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -361,6 +364,7 @@
     - `2026-06-05-24-deck-look-n-batch-4.md`
     - `2026-06-05-25-deck-look-n-batch-5.md`
     - `2026-06-05-26-bug-117-deckreveal-lp-filter.md`
+    - `2026-06-05-27-audit-bugs-118-119-120.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -739,6 +743,7 @@
     - `2026-06-04-catalog-reuse.md` — 2026-06-04 catalog-reuse バッチ (非MVP・既存engine流用カード実装)
     - `2026-06-04-pilot-impl.md` — 2026-06-04 残カード実装 pilot (難易度振り分け + 最易から実装)
     - `2026-06-04.md` — セッション 2026-06-04 — ルール準拠改善 (review hardening + 3 タスク)
+    - `2026-06-05-2.md` — セッションログ — 2026-06-05 #2 カード text-faithfulness 監査 (Playwright 実機検証)
     - `2026-06-05-pattern1-event-react.md` — 2026-06-05 未検証パターン #1: effect:declared 他イベント反応 (+ Playwright 必須)
     - `2026-06-05.md` — セッションログ — 2026-06-05 Engine 拡張バッチ連続実装
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
@@ -2570,6 +2575,7 @@
     - `bug-090-case-resolved-pick.spec.ts` — E2E regression: BUG-090 — human の auto-phase で 事件編→解決編 になり case card a1
     - `bug-091-d11019-scene-enter.spec.ts` — E2E regression: BUG-091 — D11019「15の受難」a1 で deckRevealUntil が matched した
     - `bug-117-deckreveal-lp-filter.spec.ts` — E2E: BUG-117 — deckRevealUntil の ap/lp filter が黙って無視されるバグの実機検証。
+    - `bug-118-120-audit-fixes.spec.ts` — E2E: 2026-06-05 engine 拡張バッチ監査 (workflow audit-engine-extension-batches) で検出した
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
