@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `790b4e0a859c`
+> Source hash: `4f5d1732c5d8`
 
 公式ルール [`24-qa-naming-stun.md`](../../../rules/24-qa-naming-stun.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -19,12 +19,13 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (25)
+## 📄 参照ソース (55)
 
 - [`src/cards/_shared/partnerColorKeyword.ts`](../../../../src/cards/_shared/partnerColorKeyword.ts)
 - [`src/cards/ct-d01/D01005.ts`](../../../../src/cards/ct-d01/D01005.ts)
 - [`src/cards/ct-d02/D02003.ts`](../../../../src/cards/ct-d02/D02003.ts)
 - [`src/cards/ct-d02/D02007.ts`](../../../../src/cards/ct-d02/D02007.ts)
+- [`src/cards/ct-d03/D03002.ts`](../../../../src/cards/ct-d03/D03002.ts)
 - [`src/cards/ct-d03/D03003.ts`](../../../../src/cards/ct-d03/D03003.ts)
 - [`src/cards/ct-d03/D03006.ts`](../../../../src/cards/ct-d03/D03006.ts)
 - [`src/cards/ct-d04/D04003.ts`](../../../../src/cards/ct-d04/D04003.ts)
@@ -38,7 +39,6 @@
 - [`src/cards/ct-d08/D08019.ts`](../../../../src/cards/ct-d08/D08019.ts)
 - [`src/cards/ct-d08/D08020.ts`](../../../../src/cards/ct-d08/D08020.ts)
 - [`src/cards/ct-d08/D08022.ts`](../../../../src/cards/ct-d08/D08022.ts)
-- [`src/cards/ct-d11/D11009.ts`](../../../../src/cards/ct-d11/D11009.ts)
-- [`src/cards/ct-d11/D11010.ts`](../../../../src/cards/ct-d11/D11010.ts)
-- [`src/cards/ct-d11/D11011.ts`](../../../../src/cards/ct-d11/D11011.ts)
-- _...ほか 5 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- [`src/cards/ct-d09/D09006.ts`](../../../../src/cards/ct-d09/D09006.ts)
+- [`src/cards/ct-d09/D09008.ts`](../../../../src/cards/ct-d09/D09008.ts)
+- _...ほか 35 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

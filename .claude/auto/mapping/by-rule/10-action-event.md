@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `790b4e0a859c`
+> Source hash: `4f5d1732c5d8`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,8 +21,13 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (16)
+## 📄 参照ソース (70)
 
+- [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
+- [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
+- [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
+- [`src/cards/ct-d04/D04004.ts`](../../../../src/cards/ct-d04/D04004.ts)
+- [`src/cards/ct-d05/D05004.ts`](../../../../src/cards/ct-d05/D05004.ts)
 - [`src/cards/ct-d08/D08013.ts`](../../../../src/cards/ct-d08/D08013.ts)
 - [`src/cards/ct-d08/D08014.ts`](../../../../src/cards/ct-d08/D08014.ts)
 - [`src/cards/ct-d08/D08019.ts`](../../../../src/cards/ct-d08/D08019.ts)
@@ -31,11 +36,11 @@
 - [`src/cards/ct-d11/D11009.ts`](../../../../src/cards/ct-d11/D11009.ts)
 - [`src/cards/ct-d11/D11010.ts`](../../../../src/cards/ct-d11/D11010.ts)
 - [`src/cards/ct-d11/D11012.ts`](../../../../src/cards/ct-d11/D11012.ts)
-- [`src/engine/effect/resolve-picks.ts`](../../../../src/engine/effect/resolve-picks.ts)
-- [`src/engine/flow/action-case.ts`](../../../../src/engine/flow/action-case.ts)
-- [`src/engine/listeners/hirameki.ts`](../../../../src/engine/listeners/hirameki.ts)
-- [`src/engine/mutate/evidence.ts`](../../../../src/engine/mutate/evidence.ts)
-- [`src/ui/fixtures/hiramekiDemoState.ts`](../../../../src/ui/fixtures/hiramekiDemoState.ts)
-- [`src/ui/hooks/useContactFlowDriver.ts`](../../../../src/ui/hooks/useContactFlowDriver.ts)
-- [`src/ui/hooks/useHiramekiDemoDriver.ts`](../../../../src/ui/hooks/useHiramekiDemoDriver.ts)
-- [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../../src/ui/hooks/useHiramekiFlowDriver.ts)
+- [`src/cards/ct-p01/B01008.ts`](../../../../src/cards/ct-p01/B01008.ts)
+- [`src/cards/ct-p01/B01029.ts`](../../../../src/cards/ct-p01/B01029.ts)
+- [`src/cards/ct-p01/B01046.ts`](../../../../src/cards/ct-p01/B01046.ts)
+- [`src/cards/ct-p01/B01064.ts`](../../../../src/cards/ct-p01/B01064.ts)
+- [`src/cards/ct-p01/B01083.ts`](../../../../src/cards/ct-p01/B01083.ts)
+- [`src/cards/ct-p01/B01087.ts`](../../../../src/cards/ct-p01/B01087.ts)
+- [`src/cards/ct-p01/B01091.ts`](../../../../src/cards/ct-p01/B01091.ts)
+- _...ほか 50 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

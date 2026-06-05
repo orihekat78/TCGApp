@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `790b4e0a859c`
+> Source hash: `4f5d1732c5d8`
 
 公式ルール [`03-field-areas.md`](../../../rules/03-field-areas.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,8 +22,10 @@
 
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (20)
+## 📄 参照ソース (82)
 
+- [`src/cards/ct-d03/D03002.ts`](../../../../src/cards/ct-d03/D03002.ts)
+- [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
 - [`src/cards/ct-d08/D08019.ts`](../../../../src/cards/ct-d08/D08019.ts)
 - [`src/cards/ct-d08/D08020.ts`](../../../../src/cards/ct-d08/D08020.ts)
 - [`src/cards/ct-d11/D11005.ts`](../../../../src/cards/ct-d11/D11005.ts)
@@ -32,15 +34,14 @@
 - [`src/cards/ct-d11/D11010.ts`](../../../../src/cards/ct-d11/D11010.ts)
 - [`src/cards/ct-d11/D11016.ts`](../../../../src/cards/ct-d11/D11016.ts)
 - [`src/cards/ct-d11/D11020.ts`](../../../../src/cards/ct-d11/D11020.ts)
-- [`src/engine/flow/auto-phase.ts`](../../../../src/engine/flow/auto-phase.ts)
-- [`src/engine/invariant/sceneAtMost5.ts`](../../../../src/engine/invariant/sceneAtMost5.ts)
-- [`src/engine/invariant/stunSemantics.ts`](../../../../src/engine/invariant/stunSemantics.ts)
-- [`src/engine/mutate/char.ts`](../../../../src/engine/mutate/char.ts)
-- [`src/engine/mutate/remove.ts`](../../../../src/engine/mutate/remove.ts)
-- [`src/engine/mutate/scene.ts`](../../../../src/engine/mutate/scene.ts)
-- [`src/engine/read/char.ts`](../../../../src/engine/read/char.ts)
-- [`src/engine/read/player.ts`](../../../../src/engine/read/player.ts)
-- [`src/engine/read/scene.ts`](../../../../src/engine/read/scene.ts)
-- [`src/engine/state-factory.ts`](../../../../src/engine/state-factory.ts)
-- [`src/engine/types/game-state.ts`](../../../../src/engine/types/game-state.ts)
-- [`src/ui/hooks/useSceneCharacters.ts`](../../../../src/ui/hooks/useSceneCharacters.ts)
+- [`src/cards/ct-p01/B01040.ts`](../../../../src/cards/ct-p01/B01040.ts)
+- [`src/cards/ct-p01/B01063.ts`](../../../../src/cards/ct-p01/B01063.ts)
+- [`src/cards/ct-p01/B01091.ts`](../../../../src/cards/ct-p01/B01091.ts)
+- [`src/cards/ct-p02/B02032.ts`](../../../../src/cards/ct-p02/B02032.ts)
+- [`src/cards/ct-p02/B02051.ts`](../../../../src/cards/ct-p02/B02051.ts)
+- [`src/cards/ct-p03/B03004.ts`](../../../../src/cards/ct-p03/B03004.ts)
+- [`src/cards/ct-p03/B03009.ts`](../../../../src/cards/ct-p03/B03009.ts)
+- [`src/cards/ct-p03/B03010.ts`](../../../../src/cards/ct-p03/B03010.ts)
+- [`src/cards/ct-p03/B03010P.ts`](../../../../src/cards/ct-p03/B03010P.ts)
+- [`src/cards/ct-p03/B03015.ts`](../../../../src/cards/ct-p03/B03015.ts)
+- _...ほか 62 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

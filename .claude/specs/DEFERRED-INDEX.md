@@ -44,6 +44,13 @@
 |---------------|------|------------|
 | #18 (umbrella) | カード個別実装が機能していない | BUG-043 (audit umbrella) |
 
+## カード実装 defer (engine ゲート起因)
+
+| 起因 | 内容 | 状況 |
+|------|------|------|
+| 2026-06-04 pilot | catalog-reuse「reusable 306」は過大評価。最易30枚中 実装可2枚のみ。残はevent→evidence/leave・reasoning hook無/continuous他者buff/手札数condition/カットインfilter等の engine ゲート | ゲート一覧: [card-impl-engine-gates.md](card-impl-engine-gates.md)。reusable+unclassified の **engine-gate 再分類** が必要 |
+| 2026-06-04 pilot | workflow harness: schema 付き subagent が StructuredOutput 未呼びで 0-token 即終了 (30/30 fail) | 量産 harness として要調査。pilot 2枚は手実装で代替 |
+
 ## 運用
 
 - 新規 defer が発生したら本ファイルに追加 + 該当 BUG-XXX.md または spec doc に

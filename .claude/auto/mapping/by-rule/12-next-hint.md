@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `790b4e0a859c`
+> Source hash: `4f5d1732c5d8`
 
 公式ルール [`12-next-hint.md`](../../../rules/12-next-hint.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -16,9 +16,11 @@
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
 - [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 
-## 📄 参照ソース (9)
+## 📄 参照ソース (11)
 
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
+- [`src/cards/ct-p05/B05037.ts`](../../../../src/cards/ct-p05/B05037.ts)
+- [`src/cards/ct-p08/B08056.ts`](../../../../src/cards/ct-p08/B08056.ts)
 - [`src/engine/flow/main/hand-use-card.ts`](../../../../src/engine/flow/main/hand-use-card.ts)
 - [`src/engine/mutate/file.ts`](../../../../src/engine/mutate/file.ts)
 - [`src/engine/mutate/flag.ts`](../../../../src/engine/mutate/flag.ts)

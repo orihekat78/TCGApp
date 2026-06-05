@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `790b4e0a859c`
+> Source hash: `4f5d1732c5d8`
 
 公式ルール [`19-special-rules.md`](../../../rules/19-special-rules.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -26,23 +26,26 @@
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (18)
+## 📄 参照ソース (74)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/eventRemoveByAP.ts`](../../../../src/cards/_shared/eventRemoveByAP.ts)
+- [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
+- [`src/cards/ct-d01/D01004.ts`](../../../../src/cards/ct-d01/D01004.ts)
+- [`src/cards/ct-d01/D01015.ts`](../../../../src/cards/ct-d01/D01015.ts)
+- [`src/cards/ct-d02/D02002.ts`](../../../../src/cards/ct-d02/D02002.ts)
+- [`src/cards/ct-d02/D02015.ts`](../../../../src/cards/ct-d02/D02015.ts)
+- [`src/cards/ct-d03/D03002.ts`](../../../../src/cards/ct-d03/D03002.ts)
+- [`src/cards/ct-d03/D03015.ts`](../../../../src/cards/ct-d03/D03015.ts)
+- [`src/cards/ct-d04/D04002.ts`](../../../../src/cards/ct-d04/D04002.ts)
+- [`src/cards/ct-d04/D04015.ts`](../../../../src/cards/ct-d04/D04015.ts)
+- [`src/cards/ct-d05/D05002.ts`](../../../../src/cards/ct-d05/D05002.ts)
+- [`src/cards/ct-d05/D05015.ts`](../../../../src/cards/ct-d05/D05015.ts)
+- [`src/cards/ct-d07/D07004.ts`](../../../../src/cards/ct-d07/D07004.ts)
+- [`src/cards/ct-d07/D07022.ts`](../../../../src/cards/ct-d07/D07022.ts)
 - [`src/cards/ct-d08/D08025.ts`](../../../../src/cards/ct-d08/D08025.ts)
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
 - [`src/cards/ct-d11/D11012.ts`](../../../../src/cards/ct-d11/D11012.ts)
 - [`src/cards/ct-d11/D11014.ts`](../../../../src/cards/ct-d11/D11014.ts)
 - [`src/cards/ct-d11/D11020.ts`](../../../../src/cards/ct-d11/D11020.ts)
-- [`src/cards/ct-d11/D11021.ts`](../../../../src/cards/ct-d11/D11021.ts)
-- [`src/engine/cards/registry.ts`](../../../../src/engine/cards/registry.ts)
-- [`src/engine/cards/tsv-loader-fs.ts`](../../../../src/engine/cards/tsv-loader-fs.ts)
-- [`src/engine/cards/tsv-loader.ts`](../../../../src/engine/cards/tsv-loader.ts)
-- [`src/engine/cond/eval.ts`](../../../../src/engine/cond/eval.ts)
-- [`src/engine/mutate/char.ts`](../../../../src/engine/mutate/char.ts)
-- [`src/engine/read/char.ts`](../../../../src/engine/read/char.ts)
-- [`src/engine/read/def.ts`](../../../../src/engine/read/def.ts)
-- [`src/engine/target/candidates.ts`](../../../../src/engine/target/candidates.ts)
-- [`src/engine/target/resolve.ts`](../../../../src/engine/target/resolve.ts)
-- [`src/engine/types/card-def.ts`](../../../../src/engine/types/card-def.ts)
+- _...ほか 54 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

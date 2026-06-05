@@ -11,7 +11,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
 import {
   registerAll,
-  GENERATED_PARTNERS, GENERATED_SIMPLE_CARDS, GENERATED_COMPLEX_CUTINS,
+  GENERATED_PARTNERS, GENERATED_SIMPLE_CARDS, GENERATED_COMPLEX_CUTINS, REUSE_CARDS,
 } from '@/cards/index';
 import { event } from '@/engine/event/index';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
@@ -21,7 +21,7 @@ import { produce } from '@/engine/produce';
 import type { GameState } from '@/engine/types';
 
 // MVP 47 + generated (partners + simple cards + complex cut-ins)
-const GEN = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS].length;
+const GEN = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS, ...REUSE_CARDS].length;
 
 /**
  * 40枚デッキを構築するヘルパー。

@@ -16,9 +16,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
 import {
   registerAll,
-  GENERATED_PARTNERS, GENERATED_SIMPLE_CARDS, GENERATED_COMPLEX_CUTINS,
+  GENERATED_PARTNERS, GENERATED_SIMPLE_CARDS, GENERATED_COMPLEX_CUTINS, REUSE_CARDS,
 } from '@/cards/index';
-const GENERATED = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS];
+const GENERATED = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS, ...REUSE_CARDS];
 
 // MVP 47枚 baseline + generator 出力分を加算 (詳細は registry.test.ts)。
 const GEN = GENERATED.length;

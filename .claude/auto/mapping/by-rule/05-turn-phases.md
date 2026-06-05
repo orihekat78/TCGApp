@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `790b4e0a859c`
+> Source hash: `4f5d1732c5d8`
 
 公式ルール [`05-turn-phases.md`](../../../rules/05-turn-phases.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,25 +21,26 @@
 
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (20)
+## 📄 参照ソース (32)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/random.ts`](../../../../src/ai/policies/random.ts)
 - [`src/ai/policy.ts`](../../../../src/ai/policy.ts)
+- [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
+- [`src/cards/ct-d06/D06010.ts`](../../../../src/cards/ct-d06/D06010.ts)
 - [`src/cards/ct-d08/D08003.ts`](../../../../src/cards/ct-d08/D08003.ts)
 - [`src/cards/ct-d08/D08004.ts`](../../../../src/cards/ct-d08/D08004.ts)
 - [`src/cards/ct-d11/D11015.ts`](../../../../src/cards/ct-d11/D11015.ts)
+- [`src/cards/ct-p01/B01032.ts`](../../../../src/cards/ct-p01/B01032.ts)
+- [`src/cards/ct-p03/B03087.ts`](../../../../src/cards/ct-p03/B03087.ts)
+- [`src/cards/ct-p04/B04080.ts`](../../../../src/cards/ct-p04/B04080.ts)
+- [`src/cards/ct-p05/B05067.ts`](../../../../src/cards/ct-p05/B05067.ts)
+- [`src/cards/ct-p05/B05067P.ts`](../../../../src/cards/ct-p05/B05067P.ts)
+- [`src/cards/ct-p07/B07016.ts`](../../../../src/cards/ct-p07/B07016.ts)
+- [`src/cards/ct-p07/B07021.ts`](../../../../src/cards/ct-p07/B07021.ts)
+- [`src/cards/ct-p08/B08015.ts`](../../../../src/cards/ct-p08/B08015.ts)
+- [`src/cards/ct-p09/B09049.ts`](../../../../src/cards/ct-p09/B09049.ts)
+- [`src/cards/pr-01/PR174.ts`](../../../../src/cards/pr-01/PR174.ts)
 - [`src/engine/flow/auto-phase.ts`](../../../../src/engine/flow/auto-phase.ts)
-- [`src/engine/flow/main/hand-use-card.ts`](../../../../src/engine/flow/main/hand-use-card.ts)
-- [`src/engine/flow/turn.ts`](../../../../src/engine/flow/turn.ts)
-- [`src/engine/mutate/file.ts`](../../../../src/engine/mutate/file.ts)
-- [`src/engine/mutate/flag.ts`](../../../../src/engine/mutate/flag.ts)
-- [`src/engine/mutate/hand.ts`](../../../../src/engine/mutate/hand.ts)
-- [`src/engine/read/log.ts`](../../../../src/engine/read/log.ts)
-- [`src/engine/read/turn.ts`](../../../../src/engine/read/turn.ts)
-- [`src/engine/types/game-state.ts`](../../../../src/engine/types/game-state.ts)
-- [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
-- [`src/ui/hooks/useEngineDispatch.ts`](../../../../src/ui/hooks/useEngineDispatch.ts)
-- [`src/ui/hooks/useSpectatorTurnDriver.ts`](../../../../src/ui/hooks/useSpectatorTurnDriver.ts)
-- [`src/ui/services/handUseReason.ts`](../../../../src/ui/services/handUseReason.ts)
+- _...ほか 12 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

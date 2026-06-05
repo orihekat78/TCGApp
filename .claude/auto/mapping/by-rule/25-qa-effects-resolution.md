@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `790b4e0a859c`
+> Source hash: `4f5d1732c5d8`
 
 公式ルール [`25-qa-effects-resolution.md`](../../../rules/25-qa-effects-resolution.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -25,11 +25,12 @@
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 
-## 📄 参照ソース (9)
+## 📄 参照ソース (10)
 
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
 - [`src/cards/ct-d08/D08005.ts`](../../../../src/cards/ct-d08/D08005.ts)
 - [`src/cards/ct-d08/D08006.ts`](../../../../src/cards/ct-d08/D08006.ts)
+- [`src/cards/ct-p01/B01049.ts`](../../../../src/cards/ct-p01/B01049.ts)
 - [`src/engine/cond/eval.ts`](../../../../src/engine/cond/eval.ts)
 - [`src/engine/cost/pay.ts`](../../../../src/engine/cost/pay.ts)
 - [`src/engine/effect/resolver.ts`](../../../../src/engine/effect/resolver.ts)

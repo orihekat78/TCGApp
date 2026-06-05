@@ -70,6 +70,10 @@ export { GENERATED_SIMPLE_CARDS };
 import { GENERATED_COMPLEX_CUTINS } from './_generated/complex-cutins.js';
 export { GENERATED_COMPLEX_CUTINS };
 
+// 非MVP catalog-reuse バッチ (手書き, card-condition-catalog 流用 / 既存 atom verb のみ)
+import { REUSE_CARDS } from './_reuse/index.js';
+export { REUSE_CARDS };
+
 export {
   D08001, D08002, D08003, D08004, D08005, D08006, D08007, D08008,
   D08009, D08010, D08011, D08012, D08013, D08014, D08015, D08016,
@@ -100,6 +104,7 @@ export const ALL_CARDS: CardDef[] = [
   ...GENERATED_PARTNERS,
   ...GENERATED_SIMPLE_CARDS,
   ...GENERATED_COMPLEX_CUTINS,
+  ...REUSE_CARDS,
 ];
 
 /**
