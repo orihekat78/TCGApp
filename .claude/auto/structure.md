@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 182
-- **ファイル数**: 2539
+- **ファイル数**: 2541
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -350,6 +350,7 @@
     - `2026-06-05-13-bug-116-declared-cost-bypass.md`
     - `2026-06-05-14-phase-a-lint-bugs-fix.md`
     - `2026-06-05-15-bug-116-cost-warning-log.md`
+    - `2026-06-05-16-full-match-human-vs-cpu-smoke.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -2520,6 +2521,7 @@
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `engine-extensions-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 engine-extension #1/#2 batches:
+    - `full-match-human-vs-cpu.spec.ts` — 1試合通し Playwright smoke (human vs CPU) — CLAUDE.md 6.3 compliance
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
     - `replay-ui.spec.ts` — Phase 9-G.2 (Cleanup 7-D): リプレイ UI E2E
