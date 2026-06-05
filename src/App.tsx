@@ -15,6 +15,7 @@ import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { useEffect } from 'react';
 import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
 import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
+import { EffectChoiceModalHost } from '@/ui/components/EffectChoiceModalHost';
 import { HiramekiDemoPickerModal } from '@/ui/components/HiramekiDemoPickerModal';
 import { HiramekiDemoBanner } from '@/ui/components/HiramekiDemoBanner';
 import { useHiramekiDemoDriver } from '@/ui/hooks/useHiramekiDemoDriver';
@@ -141,6 +142,7 @@ export default function App() {
       {/* BUG-088: replay 再生中は CPU 制御 HUD を出さない (ReplayPanel と top で重なり close を遮るため) */}
       {replayDriver.state.log === null && <SpectatorHUD />}
       <EffectPickerModal />
+      <EffectChoiceModalHost />
       <DeckRevealOverlay />
       <RecentActionToast />
       <ContactFlash />

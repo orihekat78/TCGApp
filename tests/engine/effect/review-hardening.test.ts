@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { runAtom } from '@/engine/effect/atom-handlers';
-import { resolveEffectPicks, _clearPendingEffectPickQueue, _peekPendingEffectPickQueueLength } from '@/engine/effect/resolve-picks';
+import { resolveEffectPicks, _clearPendingEffectPickQueue, _peekPendingEffectPickQueueLength, _clearPendingEffectChoiceSide, _peekPendingEffectChoiceSide } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
 import type { EffectCtx, SceneCharacter } from '@/engine/types';
@@ -32,6 +32,7 @@ describe('review-hardening', () => {
   beforeAll(() => registerAll());
   beforeEach(() => {
     _clearPendingEffectPickQueue();
+    _clearPendingEffectChoiceSide();
     (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
   });
 
@@ -73,9 +74,12 @@ describe('review-hardening', () => {
     // step0: choiceIndex=1 → option1 (draw n:2) に unwrap
     expect(r.steps[0].kind).toBe('atom');
     expect((r.steps[0] as { args?: { n?: number } }).args?.n).toBe(2);
-    // step1: choiceIndex を引き継がず choice のまま (resolver.run の default 0 に委ねる)。leak していれば option1 (n:20) に誤 unwrap。
-    expect(r.steps[1].kind, '2 つ目の choice は leak した index で unwrap されない').toBe('choice');
-    expect(r.steps[1].options?.length).toBe(3);
+    // step1: 前段 choiceIndex を引き継がない (leak していれば option1 n:20 へ誤 unwrap)。
+    // BUG-121: humanChooser + 複数 option + choiceIndex 未指定なので、ここで pause (no-op 空 parallel) し
+    //   pendingEffectChoice を surface する (= leak していない確証: index 0 でも 1 でも unwrap せず pause)。
+    expect(r.steps[1].kind, '2 つ目の choice は leak した index で unwrap されず pause').toBe('parallel');
+    const side = _peekPendingEffectChoiceSide();
+    expect(side?.options.length, 'pause した choice2 (3 option) が surface').toBe(3);
   });
 
   // switch-on-effect-enter (rules/20): 満杯 + switchRemoveUid → 退場キャラ除去して登場 (switchEnter)

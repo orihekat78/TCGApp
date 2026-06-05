@@ -91,6 +91,13 @@ export type GameStateStore = {
   pendingEffectPick: PendingEffectPick | null;
   setPendingEffectPick: (p: PendingEffectPick | null) => void;
   /**
+   * BUG-121: enter トリガ等の human 複数 option choice 待ち state。pendingEffectPick と同型 —
+   * resolve-picks が humanChooser fired 時に globalThis 側チャネルにセット → useEngineDispatch
+   * post-dispatch drain で本 field に転送 → ChoiceResolveModalHost が modal を開き選択を待つ。
+   */
+  pendingEffectChoice: PendingEffectChoice | null;
+  setPendingEffectChoice: (p: PendingEffectChoice | null) => void;
+  /**
    * user_request 20260522_01 #12 BUG-061: D11019「15の受難」等の
    * deckRevealUntil 効果でデッキ上から公開されたカードを順次めくる演出用。
    * atom-handlers.deckRevealUntil 末尾で side-channel set → dispatch drain で
@@ -143,6 +150,13 @@ export type PendingEffectPick = {
   distinctNames?: boolean;
 };
 
+/** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */
+export type PendingEffectChoice = {
+  player: 'self' | 'opp';
+  source: { cardId: string; abilityId: string; uid: string };
+  options: { index: number; verb?: string; args?: Record<string, unknown> }[];
+};
+
 /** ヒラメキ保留 (Commit 3a) */
 export type PendingHirameki = {
   /** 証拠の所有者 = ヒラメキ発動権利者 */
@@ -193,6 +207,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   incrementAiStep: () => set((s) => ({ aiStepCounter: s.aiStepCounter + 1 })),
   pendingEffectPick: null,
   setPendingEffectPick: (p) => set({ pendingEffectPick: p }),
+  pendingEffectChoice: null,
+  setPendingEffectChoice: (p) => set({ pendingEffectChoice: p }),
   pendingDeckReveal: null,
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
   hiramekiDemoMode: 'idle',

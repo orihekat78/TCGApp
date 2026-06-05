@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyPickAndContinuation } from '@/engine/effect/apply-pick.js';
+import { applyPickAndContinuation, applyChoiceAndContinuation } from '@/engine/effect/apply-pick.js';
 import { cost as engineCost } from '@/engine/cost/index.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
@@ -29,7 +29,7 @@ import { def as readDef } from '@/engine/read/def.js';
 import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread } from '@/engine';
-import { _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingDeckRevealSide } from '@/engine/effect/atom-handlers';
 
 type Player = 'self' | 'opp';
@@ -83,6 +83,8 @@ export type EngineAction =
   // switchRemoveUid: 効果登場 (sceneEnter) が現場満杯のとき、UI が SceneSwitchPickerModal で
   // 収集した退場キャラ uid。rules/20 スイッチで switchEnter させる (switch-on-effect-enter)。
   | { type: 'effectPickResolve'; pickedUid: string | null; pickedUids?: string[]; switchRemoveUid?: string }
+  // BUG-121: human 複数 option choice の選択結果 (enter トリガ等)。pendingEffectChoice を解決する。
+  | { type: 'choiceResolve'; choiceIndex: number }
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   | { type: 'endTurn'; player: Player };
@@ -176,6 +178,10 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'misreadResolve': {
       // pendingMisread が set されているときのみ有効
       return useGameStateStore.getState().pendingMisread !== null;
+    }
+    case 'choiceResolve': {
+      // BUG-121: pendingEffectChoice が set されているときのみ有効
+      return useGameStateStore.getState().pendingEffectChoice !== null;
     }
     case 'effectPickResolve': {
       // BUG-054: pendingEffectPick が set されているときのみ有効
@@ -404,6 +410,16 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
+    case 'choiceResolve': {
+      // BUG-121: pendingEffectChoice を choiceIndex で解決。元 effect を readDef から復元し
+      // choiceIndex 付きで再 walk → 選択 option 内の $pick (option2 sceneToHand 等) は
+      // __pendingEffectPickQueue へ再 push され既存 effectPickResolve 経路で連鎖消化される。
+      const pendingC = useGameStateStore.getState().pendingEffectChoice;
+      if (!pendingC) return;
+      applyChoiceAndContinuation(draft, pendingC, action.choiceIndex);
+      // クリアは produce 後に dispatchEngineAction が行う
+      return;
+    }
     case 'endTurn': {
       // Round 2 修正: 旧実装は endTurn のみで、次プレイヤーの startTurn を呼ばなかった。
       // 結果 (a) opp.turn 開始時に auto-phase 走らず、(b) opp.endTurn 後 self.turn でも
@@ -449,6 +465,9 @@ export function surfacePendingSideChannels(): void {
   if (misreadSide) store.setPendingMisread(misreadSide);
   const effectPickSide = _drainPendingEffectPickSide();
   if (effectPickSide) store.setPendingEffectPick(effectPickSide);
+  // BUG-121: auto-phase enter 由来 choice の取り残し防止 (useOppTurnDriver 経路)
+  const effectChoiceSide = _drainPendingEffectChoiceSide();
+  if (effectChoiceSide) store.setPendingEffectChoice(effectChoiceSide);
   const deckRevealSide = _drainPendingDeckRevealSide();
   if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
 }
@@ -512,6 +531,14 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       store.setPendingEffectPick(effectPickSide);
     } else if (effectPickSide) {
       store.setPendingEffectPick(effectPickSide);
+    }
+    // BUG-121: human 複数 option choice の side-channel drain (effectPickSide と同 clear セマンティクス)
+    const effectChoiceSide = _drainPendingEffectChoiceSide();
+    if (action.type === 'choiceResolve') {
+      // resolve で current pending choice を消化 → 次の choice (通常 null) を反映
+      store.setPendingEffectChoice(effectChoiceSide);
+    } else if (effectChoiceSide) {
+      store.setPendingEffectChoice(effectChoiceSide);
     }
     // user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出側チャネル drain
     const deckRevealSide = _drainPendingDeckRevealSide();

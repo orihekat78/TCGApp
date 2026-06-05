@@ -119,6 +119,10 @@ declare global {
   // resolver chain case が step 後に check して、true なら chain break。
   // eslint-disable-next-line no-var
   var __chainStepNoApply: boolean | undefined;
+  // BUG-121: human の複数 option choice を pause/surface する side-channel (pick と同型・別スロット)。
+  // deckReveal と同じ単一スロット (choice は 1 dispatch に高々 1 個想定)。drain で null クリア。
+  // eslint-disable-next-line no-var
+  var __pendingEffectChoiceSide: PendingEffectChoiceSide | null | undefined;
 }
 
 export type PendingEffectPickSide = {
@@ -182,6 +186,44 @@ export function _clearPendingEffectPickQueue(): void {
   const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };
   g.__pendingEffectPickQueue = [];
   syncLegacyPickProperty();
+}
+
+// ===========================================================================
+// BUG-121: human 複数 option choice の pause/surface — pick と同型 (別スロット)。
+// enter トリガ等の複数択 choice が option 0 既定化される問題を、pick と同じ
+// 「engine globalThis side-channel → UI store field → modal → choiceResolve dispatch」
+// 二段構成で補完する。effect tree は積まず {index, verb, args} の plain data のみ運び、
+// 再開時に readDef から元 effect を復元する (apply-pick.applyChoiceAndContinuation)。
+// ===========================================================================
+
+export type PendingEffectChoiceSide = {
+  player: Player;
+  /** 元 ability の特定 + 再開 ctx 復元 + option1 の $self 解決 + event.queue source に使用 */
+  source: { cardId: string; abilityId: string; uid: string };
+  /** UI ラベル化用 (atom option のみ verb/args、それ以外は index のみ)。JSON シリアライズ可能 */
+  options: { index: number; verb?: string; args?: Record<string, unknown> }[];
+};
+
+function pushPendingEffectChoiceSide(v: PendingEffectChoiceSide): void {
+  (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide = v;
+}
+
+/** dispatch 経由で UI store に転送するための drain (取り出して null クリア)。 */
+export function _drainPendingEffectChoiceSide(): PendingEffectChoiceSide | null {
+  const g = globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null };
+  const v = g.__pendingEffectChoiceSide ?? null;
+  g.__pendingEffectChoiceSide = null;
+  return v;
+}
+
+/** slot をクリア (テスト用 / セッション初期化用)。 */
+export function _clearPendingEffectChoiceSide(): void {
+  (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide = null;
+}
+
+/** slot を peek (テスト用)。 */
+export function _peekPendingEffectChoiceSide(): PendingEffectChoiceSide | null {
+  return (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide ?? null;
 }
 
 /**
@@ -441,6 +483,35 @@ export function resolveEffectPicks(
         // 前段の index で誤 unwrap する (現状そのようなカードは無いが latent defect の予防)。
         delete (ctx.dyn as { choiceIndex?: unknown }).choiceIndex;
         return resolveEffectPicks(state, effect.options[rawIdx], ctx, opts);
+      }
+      // BUG-121: human の複数 option choice (chooser=owner 側) は option 0 既定化せず pause し、
+      // pendingEffectChoice を surface する。pick と同型: side-channel に積み、effect は no-op
+      // (空 parallel) を返して runtime に届けない (どの option も実行しない)。choiceResolve dispatch
+      // 後に applyChoiceAndContinuation が readDef から元 effect を復元し choiceIndex 付きで再 walk する。
+      //   - choiceIndex 指定済 (declared 経路) は上の unwrap 分岐で処理済 → ここに来ない (無傷)
+      //   - humanChooser=false (AI / hirameki) は従来通り全 walk → resolver.run default 0 (無傷)
+      //   - options.length===1 (構造的単一 choice: B02046/B04071/D11014 等) は従来通り (無傷)
+      //   - chooser==='opp' (相手が選ぶ) は human modal に出さない (従来通り)
+      if (
+        opts.humanChooser === true
+        && effect.options.length > 1
+        && effect.chooser !== 'opp'
+      ) {
+        const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';
+        pushPendingEffectChoiceSide({
+          player: opts.byPlayer ?? 'self',
+          source: {
+            cardId: opts.source?.cardId ?? '',
+            abilityId: opts.source?.abilityId ?? '',
+            uid: srcUid,
+          },
+          options: effect.options.map((o, i) => ({
+            index: i,
+            verb: o.kind === 'atom' ? (o.verb as string) : undefined,
+            args: o.kind === 'atom' ? (o.args as Record<string, unknown>) : undefined,
+          })),
+        });
+        return { kind: 'parallel', steps: [] };
       }
       return {
         kind: 'choice',

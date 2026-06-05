@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2609
+- **ファイル数**: 2611
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -367,6 +367,7 @@
     - `2026-06-05-26-bug-117-deckreveal-lp-filter.md`
     - `2026-06-05-27-audit-bugs-118-119-120.md`
     - `2026-06-05-28-audit-suspects-coverage.md`
+    - `2026-06-05-29-bug-121-choice-pause.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -2363,6 +2364,7 @@
       - `DeckArea.tsx` — Phase 7 Task 7.7: DeckArea
       - `DeckRevealOverlay.css`
       - `DeckRevealOverlay.tsx` — user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出 overlay
+      - `EffectChoiceModalHost.tsx` — BUG-121: enter トリガ等の human 複数 option choice を surface する store 駆動 modal。
       - `EffectPickerModal.css`
       - `EffectPickerModal.tsx` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 modal
       - `EffectStackPanel.css`

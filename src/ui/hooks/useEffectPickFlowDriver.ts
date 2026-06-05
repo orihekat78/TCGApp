@@ -13,6 +13,7 @@ import { dispatchEngineAction } from './useEngineDispatch.js';
 
 export function useEffectPickFlowDriver(): void {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
+  const pendingChoice = useGameStateStore((s) => s.pendingEffectChoice);
   useEffect(() => {
     if (!pending) return;
     if (pending.player !== 'self') {
@@ -22,4 +23,13 @@ export function useEffectPickFlowDriver(): void {
     }
     // self の場合は EffectPickerModal が render + 操作 → dispatch
   }, [pending]);
+  // BUG-121: human 複数 option choice の AI fallback。pending.player !== 'self' (CPU 所有 /
+  // spectator) のとき option 0 を自動選択 (declared choice の AI 経路と同じく現状 default 0)。
+  // self の場合は ChoiceResolveModalHost が render + 操作 → choiceResolve dispatch。
+  useEffect(() => {
+    if (!pendingChoice) return;
+    if (pendingChoice.player !== 'self') {
+      dispatchEngineAction({ type: 'choiceResolve', choiceIndex: 0 });
+    }
+  }, [pendingChoice]);
 }

@@ -6,7 +6,7 @@
 //   B06007 a2: enter choice の option2 (sceneToHand 短縮形 levelMax:7) が runtime で filter 効く
 //   B03091  : leave:to-remove (相手ターン中) → charModifyAP trait:警察 + side:self の pick が self に surface
 import { test, expect, type Page } from '@playwright/test';
-import { setupGamePage, buildGameState, dispatchAction } from './helpers';
+import { setupGamePage, buildGameState, dispatchAction, getGameState } from './helpers';
 
 async function prime(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -67,10 +67,11 @@ test.describe('audit suspects runtime coverage (2026-06-05)', () => {
   });
 
   // ----------------------------------------------------------------
-  // B06007 a2: enter choice の option2 (sceneToHand 短縮形 side:opp levelMax:7)
-  //   choice modal → cp-opt-1 click → 短縮形 pick が surface、候補は相手 lv7以下のみ。
+  // BUG-121 修正検証: B06007 a2 enter choice (3択) が UI で surface され、human が選べる。
+  //   handUseCard → choice modal → cp-opt-1 (option2 bounce) → sceneToHand pick →
+  //   相手 lv7 (oP) のみ候補 (lv8 oQ は levelMax:7 で除外) → bounce で opp 手札へ。
   // ----------------------------------------------------------------
-  test('B06007 a2: choice option2 bounce → 相手 level≤7 のみ候補 (choice入れ子+短縮形 filter)', async ({ page }) => {
+  test('BUG-121 B06007 a2: enter 3択 choice modal → option2 → 相手 lv7 bounce (engine pause)', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await prime(page);
     await buildGameState(page, new Function('gs', MK + `
@@ -81,7 +82,7 @@ test.describe('audit suspects runtime coverage (2026-06-05)', () => {
       self.hand = ['B06007']; self.evidence = []; self.remove = []; self.deck = ['D08005','D08013'];
       const fb = { type: 'card-back', cardId: 'D08017' };
       self.file = [fb,fb,fb,fb,fb,fb,fb]; // FILE 7 (B06007 lv7 使用可)
-      opp.scene = [ mkC('D08005', 'oP', 'active'), mkC('D08003', 'oQ', 'active') ]; // lv7 / lv8
+      opp.scene = [ mkC('D08005', 'oP', 'sleep'), mkC('D08003', 'oQ', 'sleep') ]; // lv7 / lv8
       opp.hand = []; opp.evidence = []; opp.remove = []; opp.deck = ['D08005'];
       gs.pendingEffects = [];
       gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
@@ -89,28 +90,39 @@ test.describe('audit suspects runtime coverage (2026-06-05)', () => {
 
     await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B06007' });
 
-    // ⚠ BUG-121: enter トリガの複数択 choice は handUseCard フローで choiceIndex を供給されず、
-    //   engine が option 0 (突撃付与) に既定化する。choice-picker-modal は出ず、human は選べない。
-    //   本テストは「現状の挙動」を固定する regression。BUG-121 修正後に「choice modal → option2 →
-    //   相手 lv7 bounce」へ書き換える (期待挙動)。
-    const modalVisible = await page.getByTestId('choice-picker-modal').isVisible().catch(() => false);
-    expect(modalVisible, 'BUG-121: 現状 enter choice modal は出ない (option 0 既定化)').toBe(false);
+    // BUG-121 修正: enter 3択 choice modal が surface される (option 0 既定化しない)
+    const modal = page.getByTestId('choice-picker-modal');
+    await expect(modal, 'enter choice modal が出る (human が選べる)').toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('cp-opt-0')).toBeVisible();
+    await expect(page.getByTestId('cp-opt-1')).toBeVisible();
+    await expect(page.getByTestId('cp-opt-2')).toBeVisible();
 
-    const after = await page.evaluate(() => {
+    // option2 (index 1 = 相手 lv≤7 bounce) を選択
+    await page.getByTestId('cp-opt-1').click();
+
+    // sceneToHand 短縮形 pick が連鎖 surface、候補は相手 lv7 (oP) のみ、lv8 (oQ) は除外
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('sceneToHand');
+    const pending = await getPendingEffectPick(page);
+    const uids = (pending?.candidates ?? []).map((c) => c.uid).sort();
+    expect(uids, 'lv7 の oP のみ (lv8 oQ は levelMax:7 で除外)').toEqual(['oP']);
+
+    // oP を bounce → opp 手札へ (rules: bounce は所有者の手札)
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: 'oP' });
+
+    const after = await getGameState(page);
+    const oppScene = (after.players.opp as { scene: { uid: string }[] }).scene.map((c) => c.uid);
+    const oppHand = (after.players.opp as { hand: string[] }).hand;
+    expect(oppScene, 'oP は現場から消える').toEqual(['oQ']);
+    expect(oppHand, 'oP(D08005) が opp 手札へ bounce').toContain('D08005');
+    // choice / pick の両 pending が解消
+    const pendingChoice = await page.evaluate(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const gs = (window as any).__game.getState().gameState;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const b06 = gs.players.self.scene.find((c: any) => c.cardId === 'B06007');
-      return {
-        b06Entered: !!b06,
-        b06TurnKw: (b06 && b06.turnEffects && b06.turnEffects.grantedKeywords) || [],
-        oppSceneLen: gs.players.opp.scene.length,
-      };
+      return (window as any).__game.getState().pendingEffectChoice;
     });
-    expect(after.b06Entered, 'B06007 は登場している').toBe(true);
-    // option 0 (突撃 turn-scope 付与) が既定適用 → opp 現場は不変 (option2 bounce は実行されない)
-    expect(after.b06TurnKw, 'option 0 既定: 突撃 が turn-scope で付与される').toContain('突撃');
-    expect(after.oppSceneLen, 'option2(bounce) は実行されない → opp 現場 2 のまま').toBe(2);
+    expect(pendingChoice, 'pendingEffectChoice は null に戻る').toBeNull();
+    expect(await getPendingEffectPick(page), 'pendingEffectPick も null').toBeNull();
     expect(errors).toEqual([]);
   });
 
