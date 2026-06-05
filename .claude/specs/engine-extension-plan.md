@@ -50,7 +50,8 @@ user が「①エンジン拡張」を選択し **骨格凍結原則を解除**�
    パターンを解禁。B08054 広田正巳 を batch #1 として実装。回帰 0。
    詳細: changelog 2026-06-05-10。
    残課題:
-   - PA短縮形 (uid pick + fromDeckTop) で B02020/B02023/B02030 等の解禁
+   - PA短縮形 (uid pick + fromDeckTop) ← ✅ 実装済 2026-06-05 (changelog 2026-06-05-11)。
+     B02023 遠山和葉を batch #1 として実装。B02020/B02030 は次バッチ
    - replace-on-leave (B08054 a1, B01092 等) は `replace` kind 未対応で DEFER
    - 「セットされるたび」hook (B02018 a1) は card-triggerable hook 未対応で DEFER
 6. 高リスク（aura / untargetable / partner-rewrite）は最後、慎重に

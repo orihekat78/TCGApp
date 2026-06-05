@@ -331,4 +331,49 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     expect(hir?.setCards[0], 'D08013 を裏向きで set').toEqual({ cardId: 'D08013', faceUp: false });
     expect(errors).toEqual([]);
   });
+
+  // ============================================================
+  // Engine 拡張 #5b 残課題: charSetCard PA短縮形 (uid pick + fromDeckTop)
+  // ============================================================
+  test('B02023 遠山和葉 a1: enter → 自陣キャラを1枚pick → デッキ上端を裏向きでセット', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await prime(page);
+    await buildGameState(page, (gs: AnyState) => {
+      const mkC = (cardId: string, uid: string, state = 'active') => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
+      const self = (gs.players as AnyState).self as AnyState;
+      self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['緑'], declaredUseCount: {} };
+      // 自陣に既存キャラ (set 対象) + 登場する B02023 (enter triggers a1)
+      self.scene = [mkC('D08006', 'tgt#1')];
+      self.deck = ['D08013', 'D08019'];
+      self.hand = ['B02023']; self.evidence = []; self.remove = [];
+      const fb = { type: 'card-back', cardId: 'D08017' };
+      self.file = [fb, fb, fb, fb, fb, fb, fb]; // FILE 7 (B02023 level 6 OK)
+      gs.pendingEffects = [];
+      gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    // B02023 を hand-use で登場
+    await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B02023' });
+
+    // PA短縮形 charSetCard → pending pick (自陣キャラから 0-1 枚 + fromDeckTop)
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('charSetCard');
+    const pending = await getPendingEffectPick(page);
+    // 候補 = 自陣 (tgt#1) + 登場した B02023 自身 → 2 件 (excludeSelf 未指定なので自身も含む)
+    expect(pending?.candidates.some((c) => c.uid === 'tgt#1'), 'tgt#1 候補に含まれる').toBe(true);
+
+    // tgt#1 にセット
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: 'tgt#1' });
+
+    const after = await getGameState(page);
+    const tgt = (after.players.self as { scene: { uid: string; setCards: { cardId: string; faceUp: boolean }[] }[] }).scene.find((c) => c.uid === 'tgt#1');
+    const deck = (after.players.self as { deck: string[] }).deck;
+
+    expect(tgt?.setCards.length, 'tgt#1 に 1 枚セット').toBe(1);
+    expect(tgt?.setCards[0], 'D08013 を裏向きで set').toEqual({ cardId: 'D08013', faceUp: false });
+    expect(deck, 'デッキから D08013 splice').toEqual(['D08019']);
+    expect(errors).toEqual([]);
+  });
 });

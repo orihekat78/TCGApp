@@ -757,6 +757,22 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charSetCard': {
+      // engine-extension #5b PA短縮形 (2026-06-05 残課題解消):
+      // uid 未指定 + fromDeckTop + n/max で「キャラを N 枚まで選び、デッキ上端を裏向きでセット」
+      // を declarative に表現できる (B02020/B02023/B02030 系)。sceneRemove/sceneToHand と同型。
+      if (a.uid === undefined && a.fromDeckTop && typeof a.player === 'string' && hasNorMax(a)) {
+        const scsP = resolvePlayer(a.player, ctx);
+        const paTarget = buildShortFormPick('scene', a, scsP, scsP);
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: scsP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: scsP, turn: s.turn.number, action: 'effect:charSetCard:awaiting-pick' });
+        return;
+      }
+      // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', result: 'skipped' });
+        return;
+      }
       // BUG-068: bind ref 解決を配線
       const scUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof scUid !== 'string' || scUid.startsWith('$')) return;

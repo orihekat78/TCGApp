@@ -317,6 +317,8 @@ import { D01013 } from '../ct-d01/D01013.js';
 
 // engine-extension #5b batch (charSetCard fromDeckTop, 2026-06-05)
 import { B08054 } from '../ct-p08/B08054.js';
+// engine-extension #5b 残課題: charSetCard PA短縮形 (uid pick + fromDeckTop)
+import { B02023 } from '../ct-p02/B02023.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -367,4 +369,6 @@ export const REUSE_CARDS: CardDef[] = [
   D01013,
   // engine-extension #5b batch (charSetCard fromDeckTop, 2026-06-05)
   B08054,
+  // engine-extension #5b 残課題: charSetCard PA短縮形
+  B02023,
 ];
