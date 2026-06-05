@@ -326,6 +326,15 @@ import { B08054 } from '../ct-p08/B08054.js';
 // engine-extension #5b 残課題: charSetCard PA短縮形 (uid pick + fromDeckTop)
 import { B02023 } from '../ct-p02/B02023.js';
 
+// engine-extension #1 leave:to-remove batch #2 (2026-06-05 残課題)
+import { D03004 } from '../ct-d03/D03004.js';
+import { B04030 } from '../ct-p04/B04030.js';
+import { B04030P } from '../ct-p04/B04030P.js';
+import { B04059 } from '../ct-p04/B04059.js';
+import { B08042 } from '../ct-p08/B08042.js';
+import { B09007 } from '../ct-p09/B09007.js';
+import { B09007P } from '../ct-p09/B09007P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -379,4 +388,6 @@ export const REUSE_CARDS: CardDef[] = [
   B08054,
   // engine-extension #5b 残課題: charSetCard PA短縮形
   B02023,
+  // engine-extension #1 leave:to-remove batch #2 (2026-06-05 残課題)
+  D03004, B04030, B04030P, B04059, B08042, B09007, B09007P,
 ];

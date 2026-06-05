@@ -56,6 +56,14 @@ describe('engine-extension #1 leave:to-remove batch — 実カード経由 sanit
     ['B08084', 'ウォッカ'],      // 引く1 + discard 1
     ['B08089', 'ヘルエンジェル'], // 引く1 + 解決編 conditional discard 1
     ['PR054',  '灰原哀'],        // 登場時 draw + leave self-discard 1
+    // batch #2 (2026-06-05 残課題)
+    ['D03004', '怪盗キッド'],    // level≤5 sleep state → stun
+    ['B08042', 'メデューサ'],    // sleep state → stun (no level limit)
+    ['B04030', '黒羽快斗'],      // level≤8 stun
+    ['B04030P', '黒羽快斗 P'],   // 同
+    ['B04059', '水無怜奈'],      // level≤5 sleep
+    ['B09007', '脇田兼則'],      // 引く1
+    ['B09007P', '脇田兼則 P'],   // 同
   ])('%s (%s): 相手ターン中の leave:to-remove で pendingEffects に queue される', (cardId) => {
     const s = setOppTurn(createEmptyGameState());
     const after = enterThenRemove(s, cardId);
