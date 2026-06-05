@@ -44,6 +44,22 @@ function modifyLP(s: GameState, uid: string, delta: number, scope: ModScope): vo
   found.char.turnEffects[key] = current + delta;
 }
 
+/**
+ * レベル修正 (rules/19 下限なし) — engine-extension #2 (2026-06-05)
+ * - scope='permanent': turnEffects['lvlMod_permanent'] に積む
+ * - scope='turn': turnEffects['lvlMod_turn'] に積む
+ * - scope='contact': turnEffects['lvlMod_contact'] に積む
+ * 読みは read.char.level (3 scope 合算) と target/candidates.ts (filter level 評価) に
+ * 反映済 (modifyAP/LP と同 pattern)。
+ */
+function modifyLevel(s: GameState, uid: string, delta: number, scope: ModScope): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+  const key = `lvlMod_${scope}`;
+  const current = (found.char.turnEffects[key] as number | undefined) ?? 0;
+  found.char.turnEffects[key] = current + delta;
+}
+
 /** apOverride を直接設定 (rules/19 元のLP/APを0にする等) */
 function setOverrideAP(s: GameState, uid: string, val: number | null): void {
   const found = findChar(s, uid);
@@ -191,6 +207,7 @@ function disguiseInto(s: GameState, uid: string, newCardId: string): void {
 export const char = {
   modifyAP,
   modifyLP,
+  modifyLevel,
   setOverrideAP,
   setOverrideLP,
   grantKeyword,

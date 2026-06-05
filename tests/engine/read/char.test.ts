@@ -168,6 +168,19 @@ describe('engine.read.char', () => {
       const s = withChar(makeChar());
       expect(char.level(s, 'uid-1')).toBe(0);
     });
+
+    // engine-extension #2 (2026-06-05): charModifyLevel に伴い 3 scope 合算へ拡張
+    it('lvlMod_turn を合算する (+2 turn delta)', () => {
+      register(makeDef({ level: 3 }));
+      const s = withChar(makeChar({ turnEffects: { contactImmune: false, removeOnTurnEnd: false, lvlMod_turn: 2 } }));
+      expect(char.level(s, 'uid-1')).toBe(5);
+    });
+
+    it('lvlMod_permanent + lvlMod_turn + lvlMod_contact を合算する (rules/19 下限なし)', () => {
+      register(makeDef({ level: 4 }));
+      const s = withChar(makeChar({ turnEffects: { contactImmune: false, removeOnTurnEnd: false, lvlMod_permanent: -1, lvlMod_turn: -3, lvlMod_contact: -2 } }));
+      expect(char.level(s, 'uid-1')).toBe(-2);
+    });
   });
 
   describe('colors', () => {

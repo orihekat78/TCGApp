@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 182
-- **ファイル数**: 2511
+- **ファイル数**: 2512
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -338,6 +338,7 @@
     - `2026-06-05-02-oneclick-setup-windows.md`
     - `2026-06-05-03-engine-leave-to-remove-hook.md`
     - `2026-06-05-04-leave-to-remove-batch-cards.md`
+    - `2026-06-05-05-engine-charmodifylevel-verb.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント

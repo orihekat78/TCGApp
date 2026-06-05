@@ -73,11 +73,18 @@ function lp(s: GameState, uid: string): number {
   return base + modPermanent + modTurn + modContact + modContinuous;
 }
 
+// Level: CardDef.level、加えて turnEffects['lvlMod_*'] を合算 (rules/19 下限なし)
+// engine-extension #2 (2026-06-05): charModifyLevel verb 追加に伴い 3 scope 合算へ拡張
+// (旧: 静的読み取りのみ → 旧挙動は modifyLevel 不使用時に互換 = base + 0 + 0 + 0)
 function level(s: GameState, uid: string): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
   const d = def.card(char.cardId);
-  return d?.level ?? 0;
+  const base = d?.level ?? 0;
+  const modPermanent = (char.turnEffects['lvlMod_permanent'] as number | undefined) ?? 0;
+  const modTurn      = (char.turnEffects['lvlMod_turn']      as number | undefined) ?? 0;
+  const modContact   = (char.turnEffects['lvlMod_contact']   as number | undefined) ?? 0;
+  return base + modPermanent + modTurn + modContact;
 }
 
 function colors(s: GameState, uid: string): string[] {

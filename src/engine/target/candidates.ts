@@ -251,7 +251,9 @@ export function matchOneFilter(
   const num = (k: string): number => (typeof te[k] === 'number' ? (te[k] as number) : 0);
   const ap = (c?.apOverride ?? base?.ap ?? 0) + num('apMod_permanent') + num('apMod_turn') + num('apMod_contact');
   const lp = (c?.lpOverride ?? base?.lp ?? 0) + num('lpMod_permanent') + num('lpMod_turn') + num('lpMod_contact');
-  const level = base?.level ?? 0;
+  // engine-extension #2 (2026-06-05): charModifyLevel に伴い filter level も 3 scope 合算
+  // (旧は base のみ → modifyLevel 不使用時 = base + 0 + 0 + 0 で互換)
+  const level = (base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact');
 
   if (filter.apMin !== undefined && ap < filter.apMin) return false;
   if (filter.apMax !== undefined && ap > filter.apMax) return false;

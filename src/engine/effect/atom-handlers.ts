@@ -624,6 +624,29 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP', target: mlUid, result: `${mlDelta >= 0 ? '+' : ''}${mlDelta}/${mlScope}` });
       return;
     }
+    case 'charModifyLevel': {
+      // engine-extension #2 (2026-06-05): PA 短縮形 (charModifyAP/LP と同型, dyn-delta 対応)
+      if (a.uid === undefined && isShortFormDelta(a.delta) && hasNorMax(a)) {
+        const mlvP = ctx.source.player as Player;
+        const paTarget = buildShortFormPick('scene', a, mlvP, 'either');
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: mlvP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLevel:awaiting-pick' });
+        return;
+      }
+      // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLevel', result: 'skipped' });
+        return;
+      }
+      const mlvUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof mlvUid !== 'string' || mlvUid.startsWith('$')) return;
+      const mlvDelta = a.delta as number;
+      const mlvScope = a.scope as 'turn' | 'contact' | 'permanent';
+      mutate.char.modifyLevel(s, mlvUid, mlvDelta, mlvScope);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLevel', target: mlvUid, result: `${mlvDelta >= 0 ? '+' : ''}${mlvDelta}/${mlvScope}` });
+      return;
+    }
     // charSetAP / charSetLP: 「APをXにする」(修正は上乗せ) — rules/19
     // Phase 5 で mutate.char.setExact を定義するまでは未サポート。
     // charOverrideAP / charOverrideLP (「元のAPをXにする」) とは意味が異なるため

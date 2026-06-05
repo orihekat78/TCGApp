@@ -379,6 +379,47 @@ describe('engine.effect.runAtom', () => {
     });
   });
 
+  // engine-extension #2 (2026-06-05): charModifyLevel verb
+  describe('charModifyLevel', () => {
+    it('Level modifier を turnEffects に積む (turn scope)', () => {
+      const c = makeChar({ uid: 'lvl-uid' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const result = produce(s, draft => {
+        runAtom(draft, 'charModifyLevel', { uid: 'lvl-uid', delta: -2, scope: 'turn' }, makeCtx());
+      });
+      expect(result.players.self.scene[0].turnEffects['lvlMod_turn']).toBe(-2);
+    });
+
+    it('permanent scope は lvlMod_permanent に積む', () => {
+      const c = makeChar({ uid: 'lvl-p' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const result = produce(s, draft => {
+        runAtom(draft, 'charModifyLevel', { uid: 'lvl-p', delta: 3, scope: 'permanent' }, makeCtx());
+      });
+      expect(result.players.self.scene[0].turnEffects['lvlMod_permanent']).toBe(3);
+    });
+
+    it('複数回の delta は加算される', () => {
+      const c = makeChar({ uid: 'lvl-acc' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const result = produce(s, draft => {
+        runAtom(draft, 'charModifyLevel', { uid: 'lvl-acc', delta: 1, scope: 'turn' }, makeCtx());
+        runAtom(draft, 'charModifyLevel', { uid: 'lvl-acc', delta: 2, scope: 'turn' }, makeCtx());
+      });
+      expect(result.players.self.scene[0].turnEffects['lvlMod_turn']).toBe(3);
+    });
+
+    it('uid: $self → ctx.source.uid に解決される (charModifyAP/LP と同型)', () => {
+      const c = makeChar({ uid: 'lvl-self' });
+      const s = withScene(createEmptyGameState(), 'self', [c]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'lvl-self' } });
+      const result = produce(s, draft => {
+        runAtom(draft, 'charModifyLevel', { uid: '$self', delta: 4, scope: 'turn' }, ctx);
+      });
+      expect(result.players.self.scene[0].turnEffects['lvlMod_turn']).toBe(4);
+    });
+  });
+
   describe('charSetAP', () => {
     it('Phase 5 未実装のため Error を投げる', () => {
       const c = makeChar({ uid: 'sap-uid' });

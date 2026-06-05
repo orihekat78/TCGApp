@@ -59,4 +59,24 @@ describe('effective-value-filter — 数値フィルタは有効値 (±修正込
     const s = withChar(ch);
     expect(matchOneFilter(s, 'D11012', { trait: '警察', lpMin: 0, lpMax: 0 }, ch, charCand('w', 'D11012'))).toBe(true);
   });
+
+  // engine-extension #2 (2026-06-05): level filter も 3 scope 合算で判定
+  it('levelMax: debuff (lvlMod_turn -2) で printed level 4 → 有効 2 が levelMax:3 に含まれる', () => {
+    const ch = sceneChar('D11012', 'lvl-a', { turnEffects: { contactImmune: false, removeOnTurnEnd: false, lvlMod_turn: -2 } });
+    const s = withChar(ch);
+    // 有効 level = 4 + (-2) = 2 ≤ 3 → match (旧 candidates は printed 4 で対象外だった)
+    expect(matchOneFilter(s, 'D11012', { levelMax: 3 }, ch, charCand('lvl-a', 'D11012'))).toBe(true);
+  });
+
+  it('levelMax: 修正なし (printed level 4) は levelMax:3 で対象外 (回帰)', () => {
+    const ch = sceneChar('D11012', 'lvl-b');
+    const s = withChar(ch);
+    expect(matchOneFilter(s, 'D11012', { levelMax: 3 }, ch, charCand('lvl-b', 'D11012'))).toBe(false);
+  });
+
+  it('levelMin: buff (lvlMod_permanent +5) で printed level 2 → 有効 7 が levelMin:5 に含まれる', () => {
+    const ch = sceneChar('D11013', 'lvl-c', { turnEffects: { contactImmune: false, removeOnTurnEnd: false, lvlMod_permanent: 5 } });
+    const s = withChar(ch);
+    expect(matchOneFilter(s, 'D11013', { levelMin: 5 }, ch, charCand('lvl-c', 'D11013'))).toBe(true);
+  });
 });

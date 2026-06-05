@@ -35,6 +35,8 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   // 新規
   sceneSetState:     { defaultArea: 'scene',    mode: 'PA', needs: 'state' },
   charModifyLP:      { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
+  // engine-extension #2 (2026-06-05): レベル±N 短縮形
+  charModifyLevel:   { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
   sceneEnter:        { defaultArea: 'from',     mode: 'PA', sourceSplice: true },
 };
 
