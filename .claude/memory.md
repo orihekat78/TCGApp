@@ -17,9 +17,10 @@
 - [.claude/sessions/2026-06-06-3.md](sessions/2026-06-06-3.md) — タスク E (BUG-083 = throw 解消済を確認・
   test 追加) + C #1 (reasoning hook 解禁: reasoning:end を card-triggerable 化 + B01017/B01074。
   ALL_CARDS 935)。次は C 残 (reasoning 残 ~13 / disguise / event→evidence / look-top-N) → A → D
-- [.claude/sessions/2026-06-06-4.md](sessions/2026-06-06-4.md) — C disguise-hook 解禁 (1ユニット):
+- [.claude/sessions/2026-06-06-4.md](sessions/2026-06-06-4.md) — C disguise-hook 解禁 (1ユニット, commit c15ad259):
   disguise:into を TRIGGERED_HOOKS 追加 (additive) + canDisguise に変装ゲート条件 (caseColor/fileAtLeast) 評価。
-  カード D06012/B03129/B02045。vitest 1815 pass 回帰0 / e2e 2 pass (gating + 実機変装→変装時 draw)。ALL_CARDS 938。
+  カード D06012/B03129/B02045。ALL_CARDS 938。+ **BUG-124** (commit 9a36b166, review 水平展開検出): caseTrait が
+  caseTraits 未参照の field-drop を union 修正。vitest 1818 pass 回帰0 / e2e (disguise 2 + case-trait 4) pass。
   次は C 残 (event→evidence / reasoning 残 ~11) → A (engine変更0 大量) → D
 
 次セッション kickoff: [.claude/NEXT-SESSION-PROMPT.md](NEXT-SESSION-PROMPT.md)

@@ -11,16 +11,18 @@
 
 ## 現在地 (2026-06-06 #4 時点)
 
+- 最新コミット: 9a36b166 (BUG-124) / c15ad259 (disguise-hook)。origin/main 未 push (要 `git push`)
 - ALL_CARDS: 938 枚 (C disguise-hook batch で +3: D06012/B03129/B02045。前回 prompt の "938/+5" は誤記、実際は 935→938)
-- vitest: 1815 pass / 1 skip / 0 fail / e2e 含む / typecheck・lint errors=0 / docs:check 同期 / 回帰 0
+- vitest: 1818 pass / 1 skip / 0 fail / e2e 含む / typecheck・lint errors=0 / docs:check 同期 / 回帰 0
 - 未解決 BUG: BUG-064 (workflow図, doc) / BUG-111〜114 (DEFERRED, latent/非MVP)
-  ※ BUG-083 は throw 解消済 (E)。BUG-122/123 は B で修正済。
+  ※ BUG-083 (E) / BUG-122/123 (B) / BUG-124 (C review 水平展開) は修正済。
 
-### 直近完了 (2026-06-06 #4 — C disguise-hook 1ユニット)
-- engine (additive): `disguise:into` を TRIGGERED_HOOKS 追加 (変装後キャラ in-play scan で【変装時】発火) +
-  canDisguise に変装ゲート条件 (icon-disguise ability の condition = caseColor/fileAtLeast) を evalCond 評価。
-- カード D06012 (pure gating) / B03129 (変装時 draw) / B02045 (変装時 AP-2000 pick)。
-  詳細: .claude/sessions/2026-06-06-4.md
+### 直近完了 (2026-06-06 #4)
+- **C disguise-hook 1ユニット** (commit c15ad259): engine additive 2点 — `disguise:into` を TRIGGERED_HOOKS 追加
+  (変装後キャラ in-play scan で【変装時】発火) + canDisguise に変装ゲート条件 (icon-disguise ability の condition
+  = caseColor/fileAtLeast) を evalCond 評価。カード D06012/B03129/B02045。詳細: .claude/sessions/2026-06-06-4.md
+- **BUG-124** (commit 9a36b166): disguise review 水平展開で検出。caseTrait condition が CardDef.traits を読み
+  事件特徴 caseTraits を未参照 → 古城系【事件特徴】永久 false。caseTraits+traits union で修正 (latent, 回帰0)。
 
 ## 直近セッションで完了 (2026-06-06 #2/#3 — タスク B/E/C)
 
