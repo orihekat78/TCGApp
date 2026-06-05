@@ -384,6 +384,17 @@ import { B01016P } from '../ct-p01/B01016P.js';
 import { B01034 } from '../ct-p01/B01034.js';
 import { B01034P } from '../ct-p01/B01034P.js';
 
+// engine-extension #5a deck-look-N batch #5 (ct-p01 早期再録 9 枚)
+import { B01048 } from '../ct-p01/B01048.js';
+import { B01048P } from '../ct-p01/B01048P.js';
+import { B01053 } from '../ct-p01/B01053.js';
+import { B01055 } from '../ct-p01/B01055.js';
+import { B01055P } from '../ct-p01/B01055P.js';
+import { B01072 } from '../ct-p01/B01072.js';
+import { B01072P } from '../ct-p01/B01072P.js';
+import { B01090 } from '../ct-p01/B01090.js';
+import { B01090P } from '../ct-p01/B01090P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -453,4 +464,6 @@ export const REUSE_CARDS: CardDef[] = [
   B02040, B02040P, B03032, B03032P, B05029,
   // engine-extension #5a deck-look-N batch #4
   B01013, B01013P, B01016, B01016P, B01034, B01034P,
+  // engine-extension #5a deck-look-N batch #5 (ct-p01 早期再録 9 枚)
+  B01048, B01048P, B01053, B01055, B01055P, B01072, B01072P, B01090, B01090P,
 ];
