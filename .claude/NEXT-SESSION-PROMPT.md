@@ -1,92 +1,67 @@
-# 次セッション再開プロンプト (2026-06-05 夜 #3 時点)
+# 次セッション再開プロンプト (2026-06-06 時点)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
+(ユーザーは `/goal` コマンドで依頼予定。希望順は E→B→C→A、ただし下記「推奨順」も参照)
 
 ---
 
 ```
-名探偵コナンTCG MVP の engine 拡張バッチを継続してください。
+名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md →
+.claude/auto/structure.md → .claude/sessions/2026-06-06.md を読んで状況を把握すること。
 
-## 現在地
+## 現在地 (2026-06-06)
 
-- リポジトリ: c:/Users/arumi/OneDrive/デスクトップ/conan
-- 最新コミット: a8aa42c4 feat(cards): deck-look-N batch #5 — 9 枚
-- ALL_CARDS: 933 枚 (前セッション 859 → +74 枚、本セッション中)
-- vitest: 1780 pass · 1 skip (回帰 0、BUG-077 のみ pre-existing flaky)
-- e2e: 13/13 pass (engine-extensions + reuse-cards + full-match-human-vs-cpu)
-- pre-commit hook: 全 lint clean (SKIP 不要)
-- remote: origin/main と同期済
+- 最新コミット: cc18a10f (origin/main 同期済)
+- ALL_CARDS: 933 枚 (未実装 約 720 枚 = データ延べ 1653 − 933)
+- vitest: 1788 pass / 1 skip / 0 fail (bug-077 flaky は testTimeout 20s で解消済)
+- e2e: 96 pass / typecheck・lint (side-channel/listener/bugs/eslint) errors=0 / 回帰 0
+- 未解決 BUG: BUG-064 (workflow図, doc) / BUG-083 (rules/20 同時スイッチ未実装) /
+  BUG-111〜114 (DEFERRED, latent/非MVP)
 
-## 完了済 (本セッション 9 commit 累積、2026-06-05)
+## 直近セッションで完了 (2026-06-05〜06)
 
-engine 拡張 step 1〜5b の **batch #2** 連続実装 + lint 整備 + smoke test:
+- **engine バグ 5 系統 検出・修正** (Playwright 実機検証 × 多エージェント監査で発見):
+  - BUG-117 deckRevealUntil の ap/lp filter 黙殺 / BUG-118 matchOneFilter の kind 黙殺 /
+    BUG-119 charModifyLevel の lvlMod を clearTurnEffects が消さず永続化 /
+    BUG-120 charSetCard 短縮形の chooser 取り違え / BUG-121 enter 複数択 choice が surface されず
+- **BUG-121 を案B (engine pause) で汎用実装** — pendingEffectChoice 機構 (pick と同型)。
+  sequence 内 choice も holder 方式で対応 (pre-step 二重実行なし)
+- **残課題ゼロ化**: bug-077 flaky 解消 / 監査 suspect 6 件全検証 (engine 候補フィルタ + B03091 UI)
+- **規約化**: card-addition-checklist §7 + CLAUDE.md に「Playwright で画面処理=カードテキスト文言」検査追加
+- **教訓**: LESSONS-LEARNED-3.md (教訓 23〜25) + 教訓ファイル更新運用を明文化 (自動更新は無い)
 
-### batch #2 累積 (engine 変更 0)
-- leave:to-remove #2: 7 枚 (D03004/B04030/P/B04059/B08042/B09007/P)
-- sceneToHand #2: 5 枚 (D09014/15/B06076/PR135/141)
-- charModifyLevel #2: MR 4 枚 (B05066/P/B07093/P, a2-only partial)
-- charSetCard #2: 6 枚 (B02020/P/B02030/B02046/P/B03061, partial-impl 含む)
+## 推奨される作業順 (前 session で議論: B → E → C → A → D)
 
-### batch #3 累積 (engine 変更 0)
-- leave:to-remove #3: 7 枚 (B04018/P/B05056/B06080/B08079/P/B08083, partial-impl 含む)
-- sceneToHand #3: 2 枚 (B06007/P 灰原哀 3択 choice)
-- charSetCard #3: 5 枚 (B02040/P/B03032/P/B05029, partial-impl 含む)
+未実装カードを実装するのは A/C/D のみ。B=既存実装の品質監査、E=バグ。全実装には A+C+D が必須。
 
-### batch #4+#5 累積 (engine 変更 0、deck-look-N 拡充、本 push バッチ)
-- deck-look-N #4: 6 枚 (B01013/P/B01016/P/B01034/P, ct-p01 早期再録)
-- deck-look-N #5: 9 枚 (B01048/P/B01053/B01055/P/B01072/P/B01090/P, ct-p01)
-  - B01013=lpMax:0+kind filter, B01053=lpMin:2 filter, B01048=pass-all+declared/sleepSelf trigger
+1. **B. text-faithfulness 監査 横展開** (最高レバレッジ・低リスク): BUG-117〜121 を見つけた
+   「Playwright × 多エージェント監査」を catalog-reuse(284枚)/ct-p01〜09 の既存実装に拡大。
+   隠れ engine バグを除去しつつ回帰テスト網を厚くする → 以降の全作業の土台。**A より必ず先**。
+2. **E. BUG-083** (rules/20「2つ以上同時登場で現場上限超過時のスイッチ」未実装) — 孤立した engine 正当性。
+3. **C. engine 拡張 中リスク**: reasoning hook(15枚) / disguise hook(13枚) / event→evidence(7枚) /
+   look-top-N(1枚)。additive・risk 順で D より先。解禁カードもこの段で実装。
+4. **A. engine 変更0 カードバッチ** (大量・低リスク): deck-look-N 残 約50枚 (B03007/B03036/B05016
+   /B07010 等 同型) + bounce/level-modify/set-card/multi-target 残 + 素のバニラカード。
+5. **D. engine 拡張 高リスク** (最後): continuous aura(13枚) / untargetable(6枚) /
+   partner ability rewrite(10枚)。全カードに波及 → テスト網が最厚の最終段で慎重に。
 
-### lint / test 整備
-- lint:bug-frontmatter を prefix match 化 + BUG-115 commit hash 反映
-- lint:side-channel に engine-internal queue allowlist 追加
-- BUG-116 (declaredAbility cost silent skip) 修正案 A 実装 + unit test
-- 1試合通し human vs CPU smoke spec を新規作成 (CLAUDE.md 6.3)
-
-### engine 拡張 5 ステップ × batch #1〜#5 累積 = 74 枚
-
-| 拡張 | #1 | #2 | #3 | #4 | #5 | 合計 |
-|------|----|----|----|----|----|------|
-| #1 leave:to-remove | 10 | 7 | 7 | — | — | 24 |
-| #2 charModifyLevel | 2 | 4 | — | — | — | 6 |
-| #3 multi-target Pattern A | 1 | — | — | — | — | 1 |
-| #4 sceneToHand | 2 | 5 | 2 | — | — | 9 |
-| #5a deckRevealUntil maxN | 6 | — | — | 6 | 9 | 21 |
-| #5b charSetCard | 2 | 6 | 5 | — | — | 13 |
-
-## 推奨される次の動き
-
-### 優先度 高 (engine 拡張 → 大量 unlock)
-1. **continuous aura** (~13 枚解禁) — 他キャラ buff、AP/LP read 全体に波及 (高リスク)
-2. **untargetable** (~6 枚) — 全ターゲット処理に波及 (高リスク)
-3. **partner ability rewrite** (~10 枚) — パートナー能力上書き機構
-
-### 優先度 中 (batch #3 拡充、engine 変更 0 で進められる)
-4. **leave:to-remove 残**: replace-on-leave (B01092 etc.) は別 engine 拡張、それ以外の simple は
-   batch #3 で 5〜10 枚追加可能
-5. **bounce 残**: 単純 enter/declared 系は batch #3 でさらに追加可能
-6. **level-modify 残**: B08048 アンドレ・キャメル等の triggered 系
-7. **deck-look-N (#5a) 残**: B01017 推理reaction型 / D01012・D05007 現場リムーブ時 trigger型 /
-   ct-p02 系 (B02019/P/B02044 怪盗キッド等) は batch #6 で追加可能
-
-### 優先度 低 (技術負債)
-8. **BUG-077 flaky timeout**: vitest 全 suite 実行時のみ timeout、isolated は pass
-   (registerAll 初期化負荷？) — root cause 調査必要
+### A/C/D いずれにも入らない恒久 defer (別途データ/構造対応)
+イベントの「特徴」参照 (全イベント traits:[]) / partner-area 特殊カード (ビッグジュエル B07045) /
+登場手段の source レベル参照 等。card-impl-engine-gates.md 参照。
 
 ## 重要な参照ファイル
 
-- 拡張計画: `.claude/specs/engine-extension-plan.md`
-- ゲート表: `.claude/specs/card-impl-engine-gates.md`
-- DEFERRED 一覧: `.claude/specs/DEFERRED-INDEX.md`
-- BUG 一覧: `.claude/bugs/index.base`
-- 本セッション changelog: `.claude/changelog-entries/2026-06-05-03〜25`
+- 拡張計画: .claude/specs/engine-extension-plan.md / ゲート表: card-impl-engine-gates.md
+- 監査手法: .claude/sessions/2026-06-05-2.md (workflow) / DEFERRED: DEFERRED-INDEX.md
+- 教訓: .claude/bugs/LESSONS-LEARNED.md (+ -2/-3) / BUG 一覧: .claude/bugs/index.base
+- choice 機構: memory「複数択 choice の surface 経路」/ filter 評価: memory「engine 評価経路の field-drop」
 
 ## 注意事項
 
-- pre-commit hook が SKIP 不要で clean に通過する状態を維持してください
-- partial-impl パターンの header 注記 (a1 DEFERRED 理由) は次セッション以降の拡張時の
-  guide になります。新規バッチでも同じ慣習で書いてください
-- engine#2 (charModifyLevel) MR partner-area declaration の partial-impl は将来対応領域
+- pre-commit hook が SKIP 不要で clean に通過する状態を維持 (docs:check 含む)
+- カード追加・engine 変更時は CLAUDE.md §セルフレビュー (特に新規の text-faithfulness Playwright 検査)
+  と card-addition-checklist を必ず通す
+- 骨格凍結原則: engine 編集はバグ修正/ルール変更時のみ。カード対応は cards/_shared/ 共通クラス経由
 
 最初に何をすべきかを宣言してから着手してください。
 ```
