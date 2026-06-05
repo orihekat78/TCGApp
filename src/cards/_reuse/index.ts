@@ -376,6 +376,14 @@ import { B03032 } from '../ct-p03/B03032.js';
 import { B03032P } from '../ct-p03/B03032P.js';
 import { B05029 } from '../ct-p05/B05029.js';
 
+// engine-extension #5a deck-look-N batch #4 (D01013 / D02011 同型)
+import { B01013 } from '../ct-p01/B01013.js';
+import { B01013P } from '../ct-p01/B01013P.js';
+import { B01016 } from '../ct-p01/B01016.js';
+import { B01016P } from '../ct-p01/B01016P.js';
+import { B01034 } from '../ct-p01/B01034.js';
+import { B01034P } from '../ct-p01/B01034P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -443,4 +451,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06007, B06007P,
   // engine-extension #5b charSetCard batch #3 (2026-06-05 残課題)
   B02040, B02040P, B03032, B03032P, B05029,
+  // engine-extension #5a deck-look-N batch #4
+  B01013, B01013P, B01016, B01016P, B01034, B01034P,
 ];
