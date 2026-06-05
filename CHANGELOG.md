@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `ca2c97f44c84`
+> Source hash: `69dd619730bb`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,40 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## タスク C #3: look-top-N 解禁 — sceneEnter enterSleep (スリープ状態で登場)
+
+**Round/Phase**: 2026-06-06 session — C 第3弾 (engine-extension-plan の look-top-N select)。
+
+### engine 拡張 (additive)
+
+- `sceneEnter` atom に **`enterSleep:true`** arg を追加 (atom-handlers.ts)。`mutate.scene.enter` の
+  既存 `EnterOpts.active===false → 'sleep'` 経路へ橋渡し (enter/switchEnter 共通)。未指定は従来通り active。
+  既存カードに enterSleep 使用 0 件 → 完全 additive (回帰 0)。
+
+### 対応カード (1 枚, ct-d01)
+
+- **D01012 灰原哀** (青Lv5): 【相手ターン中】【現場リムーブ時】デッキ上3枚からレベル4以下の【青】キャラを
+  1枚まで **スリープ状態で登場**、残りデッキ下 (leave:to-remove selfOnly + condition turn:opp +
+  deck-look-N maxN3 + sceneEnter enterSleep + deckToBottomBound)。a2 = 【ヒラメキ】キャラ1枚 sleep。
+  filter は `color:'青' + levelMax:4 + kind:'character'` (BUG-123 教訓)。
+
+### 検証
+
+- typecheck clean / 全 vitest **1809 pass / 0 fail** (回帰0、look-top-n-enterSleep 2 case:
+  [青]Lv4 を sleep 登場・青Lv5/緑Lv3 decoy 除外 / 自分ターンでは不発)。
+- D01012 a1 は leave:to-remove トリガ (UI 起動が非現実的) のため engine test で網羅 (leave-batch 先例と同方針)。
+- lint (eslint/side-channel/listener) errors=0。
+
+### ALL_CARDS
+
+937 → 938 枚 (+1)。
+
+### C 進捗まとめ
+
+reasoning hook (#1 selfOnly / #2 triggerCharMatches) + look-top-N (#3 enterSleep) を解禁。
+残: reasoning 残 ~11 (souza/発見・optional self-remove・multi-target・reasoner-binding) /
+disguise hook 13 / event→evidence 7。
 
 ## タスク C #2: reasoning hook 非selfOnly 解禁 — triggerCharMatches condition 追加
 

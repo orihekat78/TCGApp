@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `99bfc530facc`
+> Source hash: `a9a09c2f08ac`
 
 公式ルール [`11-reasoning.md`](../../../rules/11-reasoning.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,11 +20,12 @@
 
 - [`2026-05-11-ui-action-flows`](../by-spec/2026-05-11-ui-action-flows.md)
 
-## 📄 参照ソース (24)
+## 📄 参照ソース (25)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
 - [`src/cards/ct-d01/D01010.ts`](../../../../src/cards/ct-d01/D01010.ts)
+- [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
 - [`src/cards/ct-d02/D02009.ts`](../../../../src/cards/ct-d02/D02009.ts)
 - [`src/cards/ct-d03/D03010.ts`](../../../../src/cards/ct-d03/D03010.ts)
 - [`src/cards/ct-d07/D07016.ts`](../../../../src/cards/ct-d07/D07016.ts)
@@ -41,5 +42,4 @@
 - [`src/cards/ct-p06/B06093.ts`](../../../../src/cards/ct-p06/B06093.ts)
 - [`src/engine/mutate/evidence.ts`](../../../../src/engine/mutate/evidence.ts)
 - [`src/engine/read/char.ts`](../../../../src/engine/read/char.ts)
-- [`src/engine/types/candidate.ts`](../../../../src/engine/types/candidate.ts)
-- _...ほか 4 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 5 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

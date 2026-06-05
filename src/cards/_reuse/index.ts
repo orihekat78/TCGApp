@@ -390,6 +390,8 @@ import { B01074 } from '../ct-p01/B01074.js';
 // reasoning-hook batch #2: 非 selfOnly (自分の現場のキャラが推理したとき / triggerCharMatches)
 import { B03102 } from '../ct-p03/B03102.js';
 import { B05011 } from '../ct-p05/B05011.js';
+// look-top-N batch (2026-06-06 タスクC): sceneEnter enterSleep (スリープ状態で登場)
+import { D01012 } from '../ct-d01/D01012.js';
 
 // engine-extension #5a deck-look-N batch #5 (ct-p01 早期再録 9 枚)
 import { B01048 } from '../ct-p01/B01048.js';
@@ -477,4 +479,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01017, B01074,
   // reasoning-hook batch #2 (非 selfOnly / triggerCharMatches)
   B03102, B05011,
+  // look-top-N batch (enterSleep)
+  D01012,
 ];

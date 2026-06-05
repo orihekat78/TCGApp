@@ -488,6 +488,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         // action/推理できてしまっていた。明示 false を渡さない限り名乗りで登場させる。
         named: (a.named as boolean | undefined) ?? true,
         viaEffect,
+        // look-top-N (2026-06-06 タスクC, D01012): enterSleep:true で「スリープ状態で登場」(rules/03)。
+        // mutate.scene.enter が active===false → 'sleep' で生成する。既定 (undefined) は従来通り active。
+        active: a.enterSleep === true ? false : undefined,
       };
       // 満杯なら switchEnter (退場キャラを除去してから登場、rules/20)、room あれば通常 enter。
       const newChar = seIsFull
