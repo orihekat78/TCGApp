@@ -233,4 +233,64 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     // sleepSelf コストの確認は declared-ability cost system 側の責務 — sceneToHand verb の検証範囲外
     expect(errors).toEqual([]);
   });
+
+  // ============================================================
+  // Engine 拡張 #5a: deckRevealUntil maxN + handAddFromDeck
+  // ============================================================
+  test('D01013 灰原哀: handUseCard 経由 enter → 上から4枚見て【青】を手札+discard1 / 残りデッキ下', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await prime(page);
+    await buildGameState(page, (gs: AnyState) => {
+      const self = (gs.players as AnyState).self as AnyState;
+      self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['青'], declaredUseCount: {} };
+      self.scene = [];
+      // デッキ上 5 枚 — D08013 (青) が 2 番目に来る配置で、上から 4 枚見ると青 1 枚 (D08013) が拾える
+      self.deck = ['D11015', 'D08013', 'D11003', 'D11004', 'D08005'];
+      // 手札に D01013 (使用するキャラ) + ダミー D11005 (a1 chain で discard 用)
+      self.hand = ['D01013', 'D11005'];
+      self.evidence = []; self.remove = [];
+      const fb = { type: 'card-back', cardId: 'D08017' };
+      self.file = [fb, fb, fb, fb, fb, fb, fb]; // FILE 7 — D01013 (level 4) 使用可
+      gs.pendingEffects = [];
+      gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    // D01013 を hand-use で登場 → enter a1 が走る
+    await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'D01013' });
+
+    // a1 step 2: handAddFromDeck で D08013 が手札に入る (deckRevealUntil maxN=4 で $matched=D08013)
+    // a1 step 3: discard 1 — UI pick 待ち (humanChooser:self)
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('discard');
+    const beforePick = await getGameState(page);
+    const handBefore = (beforePick.players.self as { hand: string[] }).hand;
+    expect(handBefore, '手札に D08013 が加わっている').toContain('D08013');
+    // discard pick で D11005 を選択 (D08013 は残し、ダミーを捨てる)
+    const pickPending = await getPendingEffectPick(page);
+    const d11005Cand = pickPending?.candidates.find((c) => c.cardId === 'D11005');
+    expect(d11005Cand, 'D11005 が discard 候補').toBeTruthy();
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: d11005Cand!.uid });
+
+    const after = await getGameState(page);
+    const deck = (after.players.self as { deck: string[] }).deck;
+    const hand = (after.players.self as { hand: string[] }).hand;
+    const remove = (after.players.self as { remove: string[] }).remove;
+
+    // 手札: D08013 (拾った青) — D01013 は scene へ、D11005 は discard 済
+    expect(hand, '手札に D08013').toContain('D08013');
+    expect(hand, '手札に D11005 は残っていない (discard 済)').not.toContain('D11005');
+    expect(remove, 'D11005 がリムーブエリア').toContain('D11005');
+
+    // デッキ: 残りの 3 枚 [D11015, D11003, D11004] がデッキ下 + 元 5 枚目の D08005 が top
+    // → [D08005, D11015, D11003, D11004] (順序: 元 5 枚目 + 残り 3 枚を下に)
+    expect(deck.length, 'デッキ枚数 = 元 5 - 1(D08013手札) = 4').toBe(4);
+    expect(deck[0], 'top = 元 5 枚目 D08005').toBe('D08005');
+    // bottom 3 枚に残り (順不同で D11015/D11003/D11004 を含む)
+    const bottom3 = deck.slice(-3).sort();
+    expect(bottom3).toEqual(['D11003', 'D11004', 'D11015']);
+
+    expect(errors).toEqual([]);
+  });
 });

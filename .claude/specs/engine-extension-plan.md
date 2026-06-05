@@ -40,7 +40,11 @@ user が「①エンジン拡張」を選択し **骨格凍結原則を解除**�
    `sceneToHand` verb (PA 短縮形 / 所有者手札へ / leave:to-remove 不発動) を additive 追加。
    B06069/P 鈴木園子 (相手レベル7以下を 1枚 bounce) を batch #1 として実装。回帰 0。
    詳細: changelog 2026-06-05-08。残 25 枚は次セッションで順次実装予定。
-5. deck-reorder（74）/ set-card（64）— 中-高
+5a. deck-reorder (deck-look-N) ← ✅ engine 実装済 2026-06-05。
+   `deckRevealUntil` に `maxN` オプション追加 (公式 "上から N 枚見る" semantics) +
+   `handAddFromDeck` verb 新設。D01013 灰原哀 (上から4枚見て【青】1枚) を batch #1 として実装。
+   詳細: changelog 2026-06-05-09。残 6 枚 (D02011/D03009/D04011/D05012/D07019 等同型色違い) は次バッチ。
+5b. set-card（64）— 未着手。次セッション以降で実装予定。
 6. 高リスク（aura / untargetable / partner-rewrite）は最後、慎重に
 
 ## 安全手順（各機能共通）

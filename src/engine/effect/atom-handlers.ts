@@ -331,6 +331,28 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target, result: moved ? 'ok' : 'not-found' });
       return;
     }
+    case 'handAddFromDeck': {
+      // engine-extension #5a (2026-06-05): deck-reorder 系の補助 — bind 済 cardId をデッキから抜き手札へ。
+      // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).
+      // 通常 a.cardId='$matched.cardId' で bind 解決 → デッキから splice → hand.add。
+      const hadP = resolvePlayer(a.player, ctx);
+      const hadCardId = resolveBindRef(a.cardId, ctx) as string;
+      if (typeof hadCardId !== 'string' || hadCardId.startsWith('$')) {
+        // 未解決 (bind 不在) は silent no-op
+        mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: 'no-bind' });
+        return;
+      }
+      const deck = s.players[hadP].deck;
+      const idx = deck.indexOf(hadCardId);
+      let moved = false;
+      if (idx !== -1) {
+        deck.splice(idx, 1);
+        mutate.hand.add(s, hadP, [hadCardId]);
+        moved = true;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: hadCardId, result: moved ? 'ok' : 'not-found' });
+      return;
+    }
     case 'handAddFromRemove': {
       // BUG-074: 同じく string|array 両対応に正規化
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set
@@ -883,18 +905,49 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const deck = s.players[p].deck;
       const revealed: string[] = [];
       let matched: string | null = null;
-      // デッキ上から 1 枚ずつ、filter にマッチしたら停止
-      for (const cardId of deck) {
-        revealed.push(cardId);
-        if (filter(cardId)) {
-          matched = cardId;
-          break;
+      // engine-extension #5a (2026-06-05): maxN — "上から N 枚見る" 系。
+      // maxN 指定時: 上から min(deck.length, maxN) 枚を **全件** reveal してから最初の match を選ぶ。
+      //   $matched = 最初の match (or null) / $revealed = match を除いた残りの全 reveal カード。
+      //   この semantics で「上から N 枚見て、その中から該当 1 枚を取り、残りはデッキ下」が成立。
+      // maxN 未指定時: 従来通り (filter match まで or デッキ末尾まで reveal、match で stop)。
+      const maxN = a.maxN as number | undefined;
+      if (maxN !== undefined) {
+        // 公式テキスト "上から N 枚見る" — N 枚を全件 reveal し、その中から最初の match を採用
+        const lookN = Math.min(deck.length, maxN);
+        for (let i = 0; i < lookN; i++) {
+          revealed.push(deck[i]!);
+        }
+        for (const cardId of revealed) {
+          if (filter(cardId)) {
+            matched = cardId;
+            break;
+          }
+        }
+      } else {
+        // 従来 semantics: filter match まで 1 枚ずつ reveal、match で停止
+        for (const cardId of deck) {
+          revealed.push(cardId);
+          if (filter(cardId)) {
+            matched = cardId;
+            break;
+          }
         }
       }
       // bindings に Candidate[] として保存
       // { kind: 'card', cardId, area: 'deck', player } は Candidate の card バリアントに適合する
       if (bindKey) {
-        const restIds = matched ? revealed.slice(0, -1) : revealed;
+        // 旧 semantics (maxN 未指定): match は revealed の最後尾 → slice(0,-1) で除く
+        // 新 semantics (maxN 指定): match は revealed の任意位置 → matched の最初の出現を除外
+        let restIds: string[];
+        if (matched === null) {
+          restIds = revealed;
+        } else if (maxN === undefined) {
+          restIds = revealed.slice(0, -1);
+        } else {
+          // 最初の matched 出現を 1 件だけ除く (同 cardId 複数あっても 1 件のみ拾われる前提)
+          const idx = revealed.indexOf(matched);
+          restIds = idx === -1 ? revealed : [...revealed.slice(0, idx), ...revealed.slice(idx + 1)];
+        }
         ctx.bindings[bindKey] = restIds.map<Candidate>(id => ({
           kind: 'card',
           cardId: id,

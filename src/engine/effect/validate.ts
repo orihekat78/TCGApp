@@ -20,7 +20,7 @@ import type { Effect, ValidationResult, CardDef } from '../types/index.js';
 const ATOM_VERBS = new Set<string>([
   'draw', 'discard', 'mill', 'fileAdd', 'filePopToHand',
   'evidenceGain', 'evidenceLose', 'evidenceFlip',
-  'evidenceToHand', 'handAddFromRemove',
+  'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'charModifyAP', 'charModifyLP', 'charModifyLevel', 'charSetAP', 'charSetLP',
   'charOverrideAP', 'charOverrideLP',

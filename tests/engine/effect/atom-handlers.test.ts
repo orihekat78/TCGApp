@@ -710,6 +710,83 @@ describe('engine.effect.runAtom', () => {
       expect(ctx.bindings['hit']).toHaveLength(0);
       expect(ctx.bindings['all']).toHaveLength(2);
     });
+
+    // engine-extension #5a (2026-06-05): maxN — 上から N 枚見る系
+    it('maxN: 上から N 枚全件 reveal、match は 1 件抽出 / 残りを $revealed', () => {
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'TARGET', 'C', 'D'] } } };
+      const ctx = makeCtx();
+      produce(s, draft => {
+        runAtom(
+          draft,
+          'deckRevealUntil',
+          {
+            player: 'self',
+            filter: (id: string) => id === 'TARGET',
+            maxN: 4,
+            bind: 'revealed',
+            bindMatch: 'matched',
+          },
+          ctx,
+        );
+      });
+      expect(ctx.bindings['matched']).toHaveLength(1);
+      expect((ctx.bindings['matched'][0] as { cardId: string }).cardId).toBe('TARGET');
+      // 上から 4 枚 [A, B, TARGET, C] のうち TARGET を 1 件抽出 → 残り 3 枚
+      const revealedIds = (ctx.bindings['revealed'] as Array<{ cardId: string }>).map(c => c.cardId);
+      expect(revealedIds).toEqual(['A', 'B', 'C']);
+    });
+
+    it('maxN: 範囲内に match が無い場合 — $matched 空、$revealed=top N 全件', () => {
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'C', 'D', 'TARGET'] } } };
+      const ctx = makeCtx();
+      produce(s, draft => {
+        runAtom(
+          draft,
+          'deckRevealUntil',
+          {
+            player: 'self',
+            filter: (id: string) => id === 'TARGET',
+            maxN: 4, // TARGET は 5 枚目にあるため maxN=4 では拾えない
+            bind: 'revealed',
+            bindMatch: 'matched',
+          },
+          ctx,
+        );
+      });
+      expect(ctx.bindings['matched']).toHaveLength(0);
+      const revealedIds = (ctx.bindings['revealed'] as Array<{ cardId: string }>).map(c => c.cardId);
+      expect(revealedIds).toEqual(['A', 'B', 'C', 'D']);
+    });
+
+    it('maxN: デッキが maxN より短い場合は全 reveal (no match)', () => {
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B'] } } };
+      const ctx = makeCtx();
+      produce(s, draft => {
+        runAtom(
+          draft,
+          'deckRevealUntil',
+          { player: 'self', filter: () => false, maxN: 5, bind: 'all', bindMatch: 'hit' },
+          ctx,
+        );
+      });
+      expect(ctx.bindings['hit']).toHaveLength(0);
+      expect(ctx.bindings['all']).toHaveLength(2);
+    });
+
+    it('maxN: 未指定なら従来動作 (filter match まで or デッキ末尾) を維持 (回帰)', () => {
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'TARGET', 'C'] } } };
+      const ctx = makeCtx();
+      produce(s, draft => {
+        runAtom(draft, 'deckRevealUntil', { player: 'self', filter: (id: string) => id === 'TARGET', bind: 'r', bindMatch: 'm' }, ctx);
+      });
+      expect((ctx.bindings['m'][0] as { cardId: string }).cardId).toBe('TARGET');
+      const ids = (ctx.bindings['r'] as Array<{ cardId: string }>).map(c => c.cardId);
+      expect(ids).toEqual(['A', 'B']);
+    });
   });
 
   describe('deckToBottomBound', () => {
