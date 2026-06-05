@@ -3,6 +3,7 @@
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
 import type { GameState, SceneCharacter, RemoveResult } from '@/engine/types';
+import { event } from '../event/index.js';
 
 type Player = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
@@ -87,7 +88,7 @@ function switchEnter(
  * キャラをリムーブエリアへ移動 (rules/03, 16)
  * setCards → リムーブ、stackedCards → back-card でリムーブ
  */
-function removeToRemove(s: GameState, uid: string, _cause: RemoveCause): RemoveResult {
+function removeToRemove(s: GameState, uid: string, cause: RemoveCause): RemoveResult {
   const found = findChar(s, uid);
   if (!found) {
     return {
@@ -99,6 +100,9 @@ function removeToRemove(s: GameState, uid: string, _cause: RemoveCause): RemoveR
   }
 
   const { char, player } = found;
+  // rules/17 §【現場リムーブ時】 emit 用に離場カードの識別子を splice 前に捕捉
+  const leavingUid = char.uid;
+  const leavingCardId = char.cardId;
 
   // setCards のカードをリムーブエリアへ (rules/16 セット解除: リムーブ時表向きに)
   const setCardsRemoved: string[] = char.setCards.map(e => e.cardId);
@@ -116,6 +120,18 @@ function removeToRemove(s: GameState, uid: string, _cause: RemoveCause): RemoveR
     s.players[player].scene.splice(idx, 1);
   }
   s.players[player].remove.push(char.cardId);
+
+  // rules/17 §【現場リムーブ時】(リムーブ方法は問わない) → leave:to-remove Hook 発火。
+  // rules/30: 現場6枚超過の修正処置 (misplay-overflow) はリムーブ発動能力 不発動 → 除外。
+  // 既存カードは未購読のため additive (回帰0)。listener: src/engine/listeners/triggered.ts
+  if (cause !== 'misplay-overflow') {
+    event.emit(
+      s,
+      'leave:to-remove',
+      { uid: leavingUid, cause },
+      { player, uid: leavingUid, cardId: leavingCardId },
+    );
+  }
 
   return {
     removed: { uid: char.uid, cardId: char.cardId },

@@ -60,6 +60,10 @@ const TRIGGERED_HOOKS = [
   'contact:start',
   'case:to-resolved',
   'phase:end:start',
+  // engine-extension #1: 現場リムーブ時 (rules/17 §リムーブ方法は問わない)。離場カード自身は
+  // collectCardsInPlay に出ないため handleLeaveToRemoveSelf (virtual location) を併用、
+  // 在場カードの「キャラがリムーブされたとき」反応は通常 in-play scan (handleHook)。
+  'leave:to-remove',
   // 2026-05-27 Option C: ヒラメキ統合。payload.ev.cardId の def から
   // trigger.hook='evidence:remove-by-action' の ability を探す (in-play scan 経路と別)。
   'evidence:remove-by-action',
@@ -271,6 +275,17 @@ export function registerTriggeredListener(): void {
       });
       continue;
     }
+    if (hook === 'leave:to-remove') {
+      // engine-extension #1: 現場リムーブ時 (rules/17)。
+      //  - 離場したカード自身の【現場リムーブ時】: scene から消えた後なので source から
+      //    virtual location を組み立てて処理 (handleLeaveToRemoveSelf)
+      //  - 在場カードの「キャラがリムーブされたとき」反応: 通常 in-play scan (handleHook)
+      event.on(hook, (state, payload, source) => {
+        handleLeaveToRemoveSelf(state, payload, source);
+        handleHook('leave:to-remove', state, payload, source);
+      });
+      continue;
+    }
     event.on(hook, (state, payload, source) => {
       handleHook(hook, state, payload, source);
     });
@@ -345,6 +360,67 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
       resolvedEffect,
       { player: card.player, uid: card.uid, cardId: card.cardId },
       'evidence:remove-by-action',
+      payload,
+      sourceBindings,
+    );
+  }
+}
+
+/**
+ * engine-extension #1: 離場したキャラ自身の【現場リムーブ時】用 handler (rules/17)。
+ * source = { player, uid, cardId } (リムーブされたキャラ), payload = { uid, cause }。
+ * 離場後は collectCardsInPlay に出ないため source から virtual CardLocation を組み立て、
+ * その def の trigger.hook='leave:to-remove' ability を scope/selfOnly/matcher/condition で
+ * フィルタし effect を queue する (通常 triggered と同経路)。在場カードの反応は handleHook 側。
+ */
+function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unknown): void {
+  const s = source as { player?: Player; uid?: string; cardId?: string } | undefined;
+  if (!s || !s.player || !s.uid || !s.cardId) return;
+  const def = readDef.card(s.cardId);
+  if (!def) return;
+  const card: CardLocation = {
+    player: s.player,
+    uid: s.uid,
+    cardId: s.cardId,
+    area: 'scene', // 現場にいた → on-scene scope を通す (rules/17)
+  };
+  for (const ability of def.abilities as AbilityDef[]) {
+    if (ability.type !== 'triggered') continue;
+    const trig = ability.trigger;
+    if (!trig || trig.hook !== 'leave:to-remove') continue;
+    if (!scopeAllowsArea(ability.scope, card.area)) continue;
+    if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+    if (trig.matcher && !trig.matcher(payload, state)) continue;
+    const baseCtx = {
+      source: {
+        cardId: card.cardId,
+        uid: card.uid,
+        abilityId: ability.id,
+        player: card.player,
+        area: card.area,
+      },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
+    if (!ability.effect) continue;
+
+    const humanSide = getHumanPlayerSide();
+    const isHumanEffect = humanSide !== null && card.player === humanSide;
+    const aiPolicy = new HeuristicPolicy();
+    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
+      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+      byPlayer: card.player,
+      humanChooser: isHumanEffect,
+      source: { cardId: card.cardId, abilityId: ability.id },
+    });
+    const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
+    event.queue(
+      state,
+      resolvedEffect,
+      { player: card.player, uid: card.uid, cardId: card.cardId },
+      'leave:to-remove',
       payload,
       sourceBindings,
     );

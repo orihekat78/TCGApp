@@ -22,7 +22,9 @@ user が「①エンジン拡張」を選択し **骨格凍結原則を解除**�
 | look-top-N select | 1 | 中 | 覗き見選択 verb + UI |
 
 ## 推奨実装順（高unlock × 低リスク優先）
-1. **leave/現場リムーブ時 hook**（117枚・additive・低リスク）← 最初に着手
+1. **leave/現場リムーブ時 hook**（117枚・additive・低リスク）← ✅ 実装済 2026-06-05。
+   ⚠ 計画の「internal で発火済」は誤り→ `leave:to-remove` は未 emit だった。removeToRemove
+   choke で emit 新設 (misplay-overflow 除外) + virtual handler。回帰0。詳細: changelog 2026-06-05-03
 2. level-modify（17・低-中）— 小さく安全に手順確認
 3. multi-target pick（23・中）
 4. char→hand bounce（96・中）— unlock 大

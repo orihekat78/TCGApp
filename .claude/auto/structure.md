@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 182
-- **ファイル数**: 2497
+- **ファイル数**: 2499
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -336,6 +336,7 @@
     - `2026-06-04-03-simple-cards-batch.md`
     - `2026-06-05-01-catalog-reuse-engine-verify.md`
     - `2026-06-05-02-oneclick-setup-windows.md`
+    - `2026-06-05-03-engine-leave-to-remove-hook.md`
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -2548,6 +2549,7 @@
       - `scratchTraceMonotonic.test.ts` — rules: 13-keywords.md, 26-qa-deck-refresh.md (一度発見済になるとずっと維持)
       - `stunSemantics.test.ts` — rules: 03-field-areas.md (スタン特殊挙動)
     - **`listeners/`**
+      - `leave-to-remove.test.ts` — Engine 拡張 #1: leave/現場リムーブ時 hook (engine-extension-plan.md step 1)
       - `triggered-limit-guard.test.ts` — tests/engine/listeners/triggered-limit-guard — BUG-096 / BUG-097
       - `triggered.test.ts` — Round 4b: triggered ability 汎用 listener テスト
     - **`mutate/`**

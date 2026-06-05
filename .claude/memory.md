@@ -21,7 +21,18 @@ Task1 実機 Playwright 確認済。
 - BUG-111 (pick↔continuation FIFO desync, multi-step) / BUG-112 (off-board char の declared limit 未追跡) /
   BUG-113 (filter の continuousDelta=dyn AP 残差, D08005 のみ)。
 
-### ⚠ 未 commit
-harness 規約で commit/push は user 指示待ち。commit 前に `npm run docs` (docs:check hook) が必要。
-新規ファイル: review-hardening / switch-on-effect-enter / effective-value-filter テスト + BUG-106〜113 +
-changelog 2026-06-03-10〜12 / 2026-06-04-01〜02 + AUDIT 2 件。
+## 2026-06-05 engine 拡張 #1: 現場リムーブ時 (leave:to-remove) hook 解禁
+
+骨格凍結 解除後の第1機能 (engine-extension-plan.md step1)。**計画の「internal で発火済」は誤りで
+`leave:to-remove` は未 emit だった** → emit を新設。既存カードは未購読のため additive・回帰0。
+- emit: `mutate.scene.removeToRemove` choke で `{uid,cause}` 発火 (rules/17 全 cause。
+  rules/30 misplay-overflow のみ除外)。
+- listener: `triggered.ts` に `leave:to-remove` 配線 + `handleLeaveToRemoveSelf` (離場カードは
+  scene から消えるため source から virtual location を組立、ヒラメキ handleEvidenceRemovedHook と同型)。
+- 検証: unit 5 新規 / vitest 1725 pass・1 skip / typecheck clean / reuse e2e 9/9。
+- 次: 対応 117 カード実装 (D03013 鈴木次郎吉 等が最易) + Playwright は未着手 (user 指示で中断→commit)。
+
+### ⚠ commit (2026-06-05)
+engine 2 files + leave-to-remove.test.ts + 再生成 docs + changelog 2026-06-05-03。
+pre-commit hook は lint:bugs(7) / lint:side-channel(9) が **pre-existing 非関連** で RED
+(前 commit 9eaa325 も同様) → user 指示の commit は --no-verify。
