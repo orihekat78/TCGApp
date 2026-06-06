@@ -30,8 +30,14 @@
   「〜してもよい」を human に「する/しない」surface。vitest **1834 pass** 回帰0 / e2e 5 pass。ALL_CARDS **958**。
   次: reasoning 残 (evidence抑制/triggerChar-target/set-card除去/multi-hook共有limit/MR2色) or A (engine変更0 大量) → D
 
-- [.claude/sessions/2026-06-06-7.md](sessions/2026-06-06-7.md) — C reasoning 残 new-feature シリーズ
-  (お勧め順に全実装中)。① triggerChar→target (`$trigger.uid` を resolveBindRef に追加) + B05080。
-  次: ② multi-hook 共有 limit ③ set-card 除去 ④ evidence 抑制。
+- [.claude/sessions/2026-06-06-7.md](sessions/2026-06-06-7.md) — C reasoning 残 new-feature シリーズ **全完了**
+  (お勧め順 ①〜④): ① triggerChar→target (`$trigger.uid/gained`) + B05080 / ② multi-hook 共有【ターン1】
+  (TriggerDef.hooks[] + action:declare payload uid/player) + D03007/B04039/B02004系 / ③ set-card 除去
+  (charRemoveSetCard) + B08034/P / ④ evidence 抑制 (evidenceToDeck + optional triggerPayload) + B03038。
+  ⑤ B09047 のみ DEFER (engine 構造 = isMR/色数 filter 無 + partner-area MR 列挙枠無、※「データ無」は誤り)。
+  vitest **1851 pass** / 全 e2e 115 pass / 回帰0 / ALL_CARDS **967**。**C 完了**。
+
+**次セッション方針 (arumi 希望): A — engine変更0 の大量カードバッチ**。C で engine 機能が大幅増 → 「engine 不変で
+実装可能なカード」が増えた。まず残カタログを再サーベイ (実データ裏取り) → 🟢 を均質バッチで実装。詳細は NEXT-SESSION-PROMPT。
 
 次セッション kickoff: [.claude/NEXT-SESSION-PROMPT.md](NEXT-SESSION-PROMPT.md)

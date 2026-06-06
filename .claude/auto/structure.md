@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
 - **ディレクトリ数**: 177
-- **ファイル数**: 2702
+- **ファイル数**: 2705
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1141,6 +1141,7 @@
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
+      - `cardFilter.ts` — spec: .claude/specs/meta-ui/ (Phase 18: Master Duel 風カード絞り込みの共有モジュール)
       - `cardPool.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 11-cards-rebuild.md
       - `sampleDeck.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
       - `types.ts` — spec: .claude/specs/meta-ui/02-design-system.md + 05-engine-stub.md
@@ -1173,6 +1174,7 @@
       - `CardSilhouette.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `EmptyState.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `FilterGroup.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
+      - `FilterRail.tsx` — spec: .claude/specs/meta-ui/ (Phase 18: Master Duel 風 共有フィルタレール)
       - `HelpOverlay.tsx` — spec: .claude/specs/meta-ui/03-routing.md
       - `index.ts` — spec: .claude/specs/meta-ui/02-design-system.md
       - `interactionStyles.ts` — spec: .claude/specs/meta-ui/02-design-system.md
@@ -1185,6 +1187,7 @@
       - `WarningBanner.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
     - **`state/`**
       - `decksStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
+      - `filtersStore.ts` — spec: .claude/specs/meta-ui/ (Phase 18: フィルタ sticky 化)
       - `historyStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
       - `metaStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
     - **`stubs/`**
