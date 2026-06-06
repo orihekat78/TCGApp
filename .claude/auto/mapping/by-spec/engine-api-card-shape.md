@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `7e26d4c808bf`
+> Source hash: `c45fc46c5ff8`
 
 仕様書 [`engine-api-card-shape`](../../../specs/engine-api-card-shape.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

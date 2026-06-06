@@ -9,11 +9,11 @@
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md →
 .claude/auto/structure.md → .claude/sessions/2026-06-06.md を読んで状況を把握すること。
 
-## 現在地 (2026-06-06 #5 時点)
+## 現在地 (2026-06-06 #6 時点)
 
-- 最新コミット: 8ba5fa28 (event→evidence PR再録) … c15ad259 (disguise-hook)。origin/main 未 push (要 `git push`)
-- ALL_CARDS: **955 枚** (disguise +3 / event→evidence +17)
-- vitest: 1822 pass / 1 skip / 0 fail / e2e 含む / typecheck・変更ファイル lint errors=0 / docs:check 同期 / 回帰 0
+- 最新コミット: reasoning-hook batch #3 (B05039/B03096)。origin/main 未 push (要 `git push`、15+ commit 未push)
+- ALL_CARDS: **957 枚** (reasoning-hook batch #3 +2)
+- vitest: **1827 pass** / 1 skip / 0 fail / e2e 含む / typecheck・変更ファイル lint errors=0 / docs:check 同期 / 回帰 0
 - 未解決 BUG: BUG-064 (workflow図, doc) / BUG-111〜114 (DEFERRED, latent/非MVP)
   ※ BUG-083 (E) / BUG-122/123 (B) / BUG-124 (C review 水平展開) は修正済。
 - 既知 (本件無関係): src/engine/effect/validate.ts:68 に pre-existing eslint no-fallthrough (walk switch)。
@@ -46,7 +46,15 @@
      opponent-optional / 事件YAIBA DEFER / ビッグジュエル DEFER) は別機能ゲート。
    - ~~**event→evidence (selfToEvidence)**~~ → ✅ 完了 (f8526b97+8ba5fa28, 全17枚)。残 hand→evidence(裏向き,
      B06033等) / 相手証拠操作(B05103) / 証拠flip+ヒラメキ(B06034) は別 verb DEFER。
-   - **reasoning 残 ~11** (次): souza/発見・optional self-remove・multi-target・reasoner-binding 等の別機能ゲート。
+   - ~~**reasoning 残 全数分類 + batch #3**~~ → ✅ 完了 (#6)。10並列 workflow で全 13 枚を engine 突合分類。
+     既存 hook 2 枚 (**B05039** multi-target charModifyAP / **B03096** 捜査1=deckRevealUntil(opp) 代替) を実装。
+     残 11 = partial 3 (B08034/B02004+D10023+PR173/B05080) + new-feature: **B05019**(optional配線) /
+     B03038(evidence抑制) / B04039・D03007(multi-hook共有limit) / B09047(MR2色+データ無)。詳細: sessions/2026-06-06-6.md
+   - **次の最有力 engine 機能 = optional 決定の配線** (pendingOptional surface): B05019 完全解禁 + 全
+     「〜してもよい」カードに波及。pendingEffectChoice (BUG-121) と同型の additive 機構。resolver.ts:106 の
+     optionalRun を UI/AI 経路で set する配線 + EffectChoiceModalHost 流用。これを入れてから B05019 を実装。
+   - その後: multi-hook 共有 limit (D03007/B04039/B02004 の「推理かアクション」+【ターン1】) /
+     triggerChar→target binding (B05080「そのキャラ」) / set-card 除去 verb (B08034)。
    - 既存 `triggerCharMatches` condition は他の payload-char 反応 (action/leave 等) にも再利用可。
 4. **A. engine 変更0 カードバッチ** (大量・低リスク): deck-look-N 残 約50枚 (B03007/B03036/B05016
    /B07010 等 同型) + bounce/level-modify/set-card/multi-target 残 + 素のバニラカード。

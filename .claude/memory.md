@@ -24,6 +24,9 @@
 - [.claude/sessions/2026-06-06-5.md](sessions/2026-06-06-5.md) — C event→evidence 解禁 (commit f8526b97 + 8ba5fa28):
   新 verb `selfToEvidence` (イベント自身を remove→evidence 表向き化) 追加 + B0401x 5色 + PR再録12枚 = 全17枚。
   vitest 1822 pass 回帰0 / e2e 1 pass / review (4 agent) で additive・文言忠実確認。ALL_CARDS **955**。
-  次は C 残 (reasoning 残 ~11) → A (engine変更0 大量) → D
+- [.claude/sessions/2026-06-06-6.md](sessions/2026-06-06-6.md) — C reasoning 残 **全数分類** (10並列 workflow) +
+  reasoning-hook batch #3 (engine変更0): B05039 (multi-target charModifyAP) / B03096 (捜査1=deckRevealUntil(opp) 代替)。
+  残 11 は partial 3 + new-feature 4 系統 (最有力次機能=optional 決定配線)。vitest 1827 pass 回帰0 / e2e 3 pass。
+  ALL_CARDS **957**。次は optional 配線 or A (engine変更0 大量) → D
 
 次セッション kickoff: [.claude/NEXT-SESSION-PROMPT.md](NEXT-SESSION-PROMPT.md)
