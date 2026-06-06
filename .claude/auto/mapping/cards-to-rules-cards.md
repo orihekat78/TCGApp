@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `06bc330592fb`
+> Source hash: `02c17680171d`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **976** ファイル（[全体 index](./index.md)）
+このグループ: **988** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (10)
 
@@ -82,7 +82,7 @@
 | [`src/cards/ct-d11/D11021.ts`](../../../src/cards/ct-d11/D11021.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-d11/index.ts`](../../../src/cards/ct-d11/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## cards (他) (901)
+## cards (他) (913)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -828,6 +828,16 @@
 | [`src/cards/pr-01/PR009.ts`](../../../src/cards/pr-01/PR009.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR010.ts`](../../../src/cards/pr-01/PR010.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR011.ts`](../../../src/cards/pr-01/PR011.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR012.ts`](../../../src/cards/pr-01/PR012.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR013.ts`](../../../src/cards/pr-01/PR013.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR014.ts`](../../../src/cards/pr-01/PR014.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR015.ts`](../../../src/cards/pr-01/PR015.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR016.ts`](../../../src/cards/pr-01/PR016.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR017.ts`](../../../src/cards/pr-01/PR017.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR018.ts`](../../../src/cards/pr-01/PR018.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR019.ts`](../../../src/cards/pr-01/PR019.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR020.ts`](../../../src/cards/pr-01/PR020.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR021.ts`](../../../src/cards/pr-01/PR021.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR022.ts`](../../../src/cards/pr-01/PR022.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR023.ts`](../../../src/cards/pr-01/PR023.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR024.ts`](../../../src/cards/pr-01/PR024.ts) | _(参照なし)_ |
@@ -849,7 +859,9 @@
 | [`src/cards/pr-01/PR056.ts`](../../../src/cards/pr-01/PR056.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR058.ts`](../../../src/cards/pr-01/PR058.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR059.ts`](../../../src/cards/pr-01/PR059.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/pr-01/PR062.ts`](../../../src/cards/pr-01/PR062.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/cards/pr-01/PR063.ts`](../../../src/cards/pr-01/PR063.ts) | _(参照なし)_ |
+| [`src/cards/pr-01/PR066.ts`](../../../src/cards/pr-01/PR066.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR068.ts`](../../../src/cards/pr-01/PR068.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR069.ts`](../../../src/cards/pr-01/PR069.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR070.ts`](../../../src/cards/pr-01/PR070.ts) | _(参照なし)_ |

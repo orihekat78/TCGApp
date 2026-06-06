@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `fa17901d81da`
+> Source hash: `762f667738da`
 
 公式ルール [`06-card-types.md`](../../../rules/06-card-types.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,7 +24,7 @@
 - [`INDEX`](../by-spec/cards-data--INDEX.md)
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 
-## 📄 参照ソース (34)
+## 📄 参照ソース (35)
 
 - [`src/cards/ct-d01/D01016.ts`](../../../../src/cards/ct-d01/D01016.ts)
 - [`src/cards/ct-d02/D02016.ts`](../../../../src/cards/ct-d02/D02016.ts)
@@ -46,4 +46,4 @@
 - [`src/cards/ct-p04/B04041.ts`](../../../../src/cards/ct-p04/B04041.ts)
 - [`src/cards/ct-p04/B04062.ts`](../../../../src/cards/ct-p04/B04062.ts)
 - [`src/cards/ct-p04/B04086.ts`](../../../../src/cards/ct-p04/B04086.ts)
-- _...ほか 14 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 15 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

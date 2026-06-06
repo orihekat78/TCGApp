@@ -402,6 +402,19 @@ import { B04028 } from '../ct-p04/B04028.js';
 import { B04041 } from '../ct-p04/B04041.js';
 import { B04062 } from '../ct-p04/B04062.js';
 import { B04086 } from '../ct-p04/B04086.js';
+// event→evidence batch #2: PR 再録 12 枚 (PR012-021 = B0401x 再録 2 セット / PR062・PR066 = RUM!! 黒)
+import { PR012 } from '../pr-01/PR012.js';
+import { PR013 } from '../pr-01/PR013.js';
+import { PR014 } from '../pr-01/PR014.js';
+import { PR015 } from '../pr-01/PR015.js';
+import { PR016 } from '../pr-01/PR016.js';
+import { PR017 } from '../pr-01/PR017.js';
+import { PR018 } from '../pr-01/PR018.js';
+import { PR019 } from '../pr-01/PR019.js';
+import { PR020 } from '../pr-01/PR020.js';
+import { PR021 } from '../pr-01/PR021.js';
+import { PR062 } from '../pr-01/PR062.js';
+import { PR066 } from '../pr-01/PR066.js';
 
 // engine-extension #5a deck-look-N batch #5 (ct-p01 早期再録 9 枚)
 import { B01048 } from '../ct-p01/B01048.js';
@@ -495,4 +508,6 @@ export const REUSE_CARDS: CardDef[] = [
   D06012, B03129, B02045,
   // event→evidence batch (2026-06-06 タスクC): selfToEvidence (イベント自身を表向き証拠化)
   B04015, B04028, B04041, B04062, B04086,
+  // event→evidence batch #2: PR 再録 12 枚 (同 selfToEvidence)
+  PR012, PR013, PR014, PR015, PR016, PR017, PR018, PR019, PR020, PR021, PR062, PR066,
 ];
