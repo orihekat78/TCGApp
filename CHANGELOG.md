@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `d8ce78f70cf9`
+> Source hash: `be1cedc77452`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -64,8 +64,12 @@
 
 ### 残課題
 
-- ⑤ B09047 (闇の男爵) は partner-area MR 2色 condition が必要だが、**2色MR が MVP データセットに存在しない**
-  (tsv-loader.ts:9) ため Playwright text-faithfulness (実機検証必須) を満たせず DEFER。
+- ⑤ B09047 (闇の男爵) は DEFER。当初「2色MRデータ無」と記したが**誤り** — 2色MR は実在する
+  (B08093 灰原哀＆シェリー 青/黒・MR / B09108 / B09109 / B09110。tsv-loader.ts:9 コメントは stale)。
+  真の blocker は **engine 構造**: (1) TargetFilter に `isMR` / 色数(colorCountMin) 述語が無い
+  (candidates.ts 未対応) / (2) **パートナーエリアの MR キャラを列挙できない** — GameState は partner.cardId 単一枠のみで
+  MR能力①(rules/18) で移動した MR キャラのエンティティ枠が無い (ビッグジュエル B07045 と同型の高リスク構造問題)。
+  → D の高リスク群 (partner-area 構造拡張) として DEFER。教訓: stale コメントを信じず実データを確認すること。
 
 ## タスク C: set-card 除去 verb (charRemoveSetCard) + B08034 工藤優作
 

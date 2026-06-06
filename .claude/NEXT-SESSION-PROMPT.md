@@ -19,7 +19,8 @@
   - ② **multi-hook 共有【ターン1】** (TriggerDef.hooks[] + action:declare payload uid/player、D03007/B04039/B02004系)
   - ③ **set-card 除去 verb** (charRemoveSetCard、B08034/P)
   - ④ **evidence 抑制** (evidenceToDeck + optional triggerPayload 引継ぎ、B03038)
-  - ⑤ B09047 のみ 2色MR データ無で DEFER。
+  - ⑤ B09047 のみ DEFER (理由: engine 構造。**2色MR は実在する**が isMR/色数 filter 述語が無く、かつ
+    パートナーエリアの MR キャラを列挙する GameState 枠が無い = ビッグジュエル B07045 と同型の高リスク構造問題)。
 - 既存 engine 機構: pendingEffectOptional (「〜してもよい」surface) / pendingEffectChoice (BUG-121) /
   pendingEffectPick。optional は top-level のみ / AI は常に skip。
 - 未解決 BUG: BUG-064 (workflow図, doc) / BUG-111〜114 (DEFERRED, latent/非MVP)
@@ -57,7 +58,7 @@
    - ~~**reasoning 残 全数分類 + batch #3**~~ → ✅ 完了 (#6)。10並列 workflow で全 13 枚を engine 突合分類。
      既存 hook 2 枚 (**B05039** multi-target charModifyAP / **B03096** 捜査1=deckRevealUntil(opp) 代替) を実装。
      残 11 = partial 3 (B08034/B02004+D10023+PR173/B05080) + new-feature: **B05019**(optional配線) /
-     B03038(evidence抑制) / B04039・D03007(multi-hook共有limit) / B09047(MR2色+データ無)。詳細: sessions/2026-06-06-6.md
+     B03038(evidence抑制) / B04039・D03007(multi-hook共有limit) / B09047(isMR/色数filter+partner-area構造)。詳細: sessions/2026-06-06-6.md
    - ~~**optional 決定の配線**~~ → ✅ 完了。`pendingEffectOptional` 機構 (resolve-picks/apply-pick +
      store/dispatch/EffectOptionalModalHost、pendingEffectChoice 同型) を新設し **B05019** を実装。
      「〜してもよい」を human に「する/しない」surface。top-level optional のみ対応 / AI は常に skip。
@@ -67,7 +68,8 @@
      - triggerChar→target binding (B05080「そのキャラ(=推理者)」を effect target に) — reasoning:end payload.uid を
        resolveCtx.bindings['$reasoner'] へ。小さい additive。
      - set-card 除去 verb (B08034 推理反応。【登場時】部分は既存で partial 実装可)。
-     - evidence 抑制 (B03038、reasoning:before-add の card-triggerable 化が要、高難度) / MR2色 condition (B09047、データ無で DEFER)。
+     - evidence 抑制 (B03038、reasoning:before-add の card-triggerable 化が要、高難度) / MR2色 condition
+       (B09047、2色MR は実在するが isMR/色数 filter 述語 + partner-area MR 列挙の GameState 枠が無く DEFER)。
    - 既存 `triggerCharMatches` condition は他の payload-char 反応 (action/leave 等) にも再利用可。
 4. **A. engine 変更0 カードバッチ** (大量・低リスク): deck-look-N 残 約50枚 (B03007/B03036/B05016
    /B07010 等 同型) + bounce/level-modify/set-card/multi-target 残 + 素のバニラカード。
