@@ -445,6 +445,19 @@ import { B01072P } from '../ct-p01/B01072P.js';
 import { B01090 } from '../ct-p01/B01090.js';
 import { B01090P } from '../ct-p01/B01090P.js';
 
+// exact-reprint batch (2026-06-06 タスクA): 既存実装カードと公式テキスト byte 一致の色違い/パラレル/再録 11 枚
+import { B02004P } from '../ct-p02/B02004P.js';
+import { B02043 } from '../ct-p02/B02043.js';
+import { B03006 } from '../ct-p03/B03006.js';
+import { B03006P } from '../ct-p03/B03006P.js';
+import { B03122 } from '../ct-p03/B03122.js';
+import { B03129P } from '../ct-p03/B03129P.js';
+import { B04081 } from '../ct-p04/B04081.js';
+import { B04081P } from '../ct-p04/B04081P.js';
+import { B05029P } from '../ct-p05/B05029P.js';
+import { PR055 } from '../pr-01/PR055.js';
+import { PR057 } from '../pr-01/PR057.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -540,4 +553,6 @@ export const REUSE_CARDS: CardDef[] = [
   B04015, B04028, B04041, B04062, B04086,
   // event→evidence batch #2: PR 再録 12 枚 (同 selfToEvidence)
   PR012, PR013, PR014, PR015, PR016, PR017, PR018, PR019, PR020, PR021, PR062, PR066,
+  // exact-reprint batch (2026-06-06 タスクA): 既存実装カードの色違い/パラレル/再録 11 枚 (engine 不変)
+  B02004P, B02043, B03006, B03006P, B03122, B03129P, B04081, B04081P, B05029P, PR055, PR057,
 ];

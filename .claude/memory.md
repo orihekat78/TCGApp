@@ -36,6 +36,11 @@
   (charRemoveSetCard) + B08034/P / ④ evidence 抑制 (evidenceToDeck + optional triggerPayload) + B03038。
   ⑤ B09047 のみ DEFER (engine 構造 = isMR/色数 filter 無 + partner-area MR 列挙枠無、※「データ無」は誤り)。
   vitest **1851 pass** / 全 e2e 115 pass / 回帰0 / ALL_CARDS **967**。**C 完了**。
+- [.claude/sessions/2026-06-06-8.md](sessions/2026-06-06-8.md) — **タスク A 着手** (engine 変更 0)。再サーベイ:
+  カタログ 2049 / 実装 967 / 残 **1082** (= 661 distinct signature)。batch #1 = 既存実装と byte 一致の
+  **完全再録 11 枚** (spread パターン、engine 不変)。vitest **1851 pass** 回帰0 / ALL_CARDS **978**。
+  ⚠ gate 表 `card-impl-engine-gates.md` は 2026-06-04 stale (タスク C 追加 hook/verb 未反映) — 再分類時に実コード確認。
+  meta-app Phase 18 は別セッション進行中 → 不可触。
 
 **次セッション方針 (arumi 希望): A — engine変更0 の大量カードバッチ**。C で engine 機能が大幅増 → 「engine 不変で
 実装可能なカード」が増えた。まず残カタログを再サーベイ (実データ裏取り) → 🟢 を均質バッチで実装。詳細は NEXT-SESSION-PROMPT。

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `be1cedc77452`
+> Source hash: `da155ee2b8cf`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,86 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## タスク A: 完全一致再録カード 11 枚 (engine 変更 0)
+
+**Round/Phase**: 2026-06-06 session #8 — engine 変更 0 カードバッチ (タスク A) 着手 / batch #1。
+既存実装カードと公式テキスト byte 一致の色違い・パラレル・再録のみを刈り取り。
+
+### 再サーベイ (実データ裏取り)
+
+- 全カタログ **2049 枚**、実装済 **967** (= ALL_CARDS)、**残 1082 枚** (character 867 / event 157 / case 58) を実データで確定。
+- 残 1082 の signature (effect+cutIn+hirameki+henso) クラスタ分析: vanilla 0 / **既存実装と byte 一致の再録 11** /
+  その他 1071 (= **661 distinct signature**、うち 288 singleton + 373 multi-cluster で 783 枚をカバー)。
+- 最大クラスタ B05118×10 は「パートナー【事件解決】能力 書き換え」= D 高リスク。自動分類は過大評価しやすいため
+  確実 🟢 のみを batch 化。
+
+### 対応カード (11 枚、spread パターン)
+
+既存実装カードを `{ ...Base, id, no, rarity, imageUrl }` で spread (B01028P 既存 idiom)。abilities 完全流用 = engine 不変:
+
+- B02004P (←B02004) / B02043 (←D06012) / B03006・B03006P (←D08021) / B03122 (←D07019) /
+  B03129P・PR055 (←B03129) / B04081・B04081P (←D11012) / B05029P (←B05029) / PR057 (←D01013)。
+- 全 11 枚で name/color/level/AP/LP/kind が twin と一致 (差分は rarity と cardId/imageUrl のみ) を実データ検証済。
+- twin は全て faithful 実装 (DEFERRED/空 abilities/TODO 無) を確認。
+
+### 検証
+
+- typecheck clean / 全 vitest **1851 pass / 1 skip / 0 fail** (回帰 0) / eslint (新規 12 ファイル) 0 errors / docs:check 同期。
+- `tests/cards/registry.test.ts` の `engine.cards.all().length === 47 + GEN` (idempotent 登録) が通過 →
+  11 枚の id 一意・登録成功を保証 (重複 id なら fail する設計)。GEN は配列由来で自動追従のためテスト改変不要。
+- 機能変更 0 (metadata-only clone of test-verified twins) のため Playwright text-faithfulness 検査は twin から継承
+  (新規 engine 挙動なし)。
+- ALL_CARDS 967 → **978**。touched files: `cards/` 12 + `_reuse/index.ts` (engine 不変)。
+
+## meta-app(5174): Master Duel 風デッキビルダー全面リデザイン + 同ID3枚ルール是正 + 画面ルール準拠
+
+**Round/Phase**: 2026-06-06 session — meta-app(localhost:5174) UI/処理のルール準拠化。
+ユーザー報告バグ (同IDパラレルが3枚制限を回避) の修正と、カード編集/リスト画面の Master Duel 参考リデザイン。
+
+### ルール是正 (rules/02-deck-construction)
+
+- **BUG-125**: カード同一性を cardNum → **cardId** に是正。`CardDef.id` 追加 (`cardPool.toCardDef` で保持)、
+  `cardIdOf`/`countsByCardId` 追加。`validateDeck` と `DeckEditor.addCard` の3枚上限を cardId 集計化。
+  47印刷=34種(13組パラレル)を正しく同一視。実機 `isPlayable` ゲートも是正され違反デッキの投入を遮断。
+- **BUG-126**: `SAMPLE_DECK_OPP` の事件カード D11021×3 混入を除去 (題材キャラ3枚化で40維持)、
+  `validateDeck` に事件(type=case)拒否を追加。`DeckRecord.case`(事件スロット)を新設し検証・編集・実機に配線、
+  `decksStore` v2 マイグレーションで旧デッキに case をバックフィル。
+
+### カード編集 (DeckEditor) — Master Duel 風リデザイン
+
+- 3パネル (プール↔デッキ↔詳細)、共有 `FilterRail` (色/種別/コスト/レアリティ/特徴/キーワード, OR/AND, sticky)。
+- パートナー・事件スロットの選択UI、新規/複製/削除デッキ (従来は常にサンプル上書きの不具合)。
+- 同ID上限の **UI 可視化**: プールタイルに `n/3` バッジ + 到達でグレーアウト+「MAX 3」、詳細に「同 ID 上限」注記。
+- ダブルクリック/右クリック/±で追加除去、自動グルーピング ⇔ 手動ドラッグ並べ替え。
+- **デッキコード入出力** (CONAN1: base64, MD に無い機能)、**テストハンド5枚** ドロー。
+
+### カードリスト (CardsScreen) — リデザイン
+
+- 「種類」を distinct cardId (34) に是正、パラレルまとめトグル、CATALOG (偽の100%カバレッジを廃止)。
+- 名前/効果/番号/特徴 検索、AP/LP 等ソート、★お気に入り/採用中 フィルタ、グリッド大/小+リスト表示。
+- `MetaCard` にキーボード操作 (role/tabIndex/Enter/Space) を付与 (a11y)。
+
+### 画面外のルール準拠
+
+- `ResultScreen`: 先攻/後攻の必要証拠数を engine `requiredEvidence`(7/6) 直読に (ターン偶奇推測を廃止)。
+  `MatchRecord` に対戦種別(solo/observe)・相手デッキ名を記録。
+- `customGameStart`/`SetupScreen`: 観戦モードで人間マリガンを抑止、先攻トグル(P1/P2/ランダム)を実機に反映。
+- `HomeScreen`/`SetupScreen`/`DeckList` の「種類」を cardId 単位に統一。
+
+### 検証
+
+- typecheck clean (meta-app) / eslint 0 errors (既存 Button.tsx 空interfaceも是正)。
+- e2e (meta) 非tutorial **22 pass**: deck.spec(新規3, MAX可視/クリック→同ID上限/デッキコード) /
+  cards.spec(改修4) / smoke 全10ルート console error 0 / golden-path 実機対戦 / engine-stub。
+- node 実証: 違法パラレルデッキ・事件混入が NG、サンプルデッキ2種が OK。
+- 既知 flaky: tutorial「Esc で viewer」(1/3 pass、tutorial/router 未変更、遷移タイミング競合、本変更と無関係)。
+
+### 新規/変更ファイル (meta-app 内のみ、engine/cards 非干渉)
+
+- 新規: data/cardFilter.ts, state/filtersStore.ts, shared/FilterRail.tsx, util/deckCode.ts, tests/e2e/deck.spec.ts
+- 変更: data/{types,cardPool,sampleDeck}.ts, state/{decksStore,metaStore}.ts, stubs/engineStub.ts,
+  util/customGameStart.ts, shared/{MetaCard,Button}.tsx, screens/{DeckEditor,CardsScreen,SetupScreen,ResultScreen,HomeScreen}.tsx
 
 ## タスク C: evidence 抑制 (evidenceToDeck + optional triggerPayload 引継ぎ) + B03038
 
