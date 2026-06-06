@@ -31,7 +31,7 @@ Immer draft 上の primitive 変更操作
 | `case` _(internal: `caseOp`)_ | `init`, `toResolved` |
 | `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `grantKeyword`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `revokeKeyword`, `setCard`, `setOverrideAP`, `setOverrideLP`, `setTurnEffect`, `stackCard` |
 | `deck` | `draw`, `peek`, `refresh`, `removeFromTop`, `reveal`, `shuffle`, `toBottom`, `toTop` |
-| `evidence` | `addFromDeck`, `flipFaceUp`, `removeAt`, `removeTop`, `toRemove` |
+| `evidence` | `addFromDeck`, `flipFaceUp`, `gainCard`, `removeAt`, `removeTop`, `toRemove` |
 | `file` | `addFromDeckTop`, `insertAssistedPartner`, `popTop`, `removeAssistedPartner` |
 | `flag` | `incrDeclaredUseCount`, `resetTurnFlags`, `setAssistedThisTurn`, `setHandUseUsed`, `setNextHintUsed` |
 | `gameResult` | `clear`, `set` |

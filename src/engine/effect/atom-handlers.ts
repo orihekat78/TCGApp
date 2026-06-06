@@ -289,6 +289,20 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceGain', result: String(n) });
       return;
     }
+    case 'selfToEvidence': {
+      // 「このカードを表向きのまま証拠として得る」(rules/01 §必要証拠数 / rules/06 §イベント)。
+      // イベント使用後 handUseCard が当該カードをリムーブへ置くので、リムーブ→証拠 へ移す。
+      // ctx.source.cardId = 使用したイベント自身、ctx.source.player = 使用者。
+      const steP = resolvePlayer((a.player as 'self' | 'opp' | undefined) ?? 'self', ctx);
+      const steCardId = ctx.source.cardId;
+      if (typeof steCardId !== 'string' || steCardId.length === 0) return;
+      const steFaceUp = a.faceUp === undefined ? true : a.faceUp === true;
+      mutate.evidence.gainCard(s, steP, steCardId, steFaceUp, {
+        turn: s.turn.number, via: 'effect', sourceCardId: steCardId,
+      });
+      mutate.log.append(s, { ts: Date.now(), player: steP, turn: s.turn.number, action: 'effect:selfToEvidence', target: steCardId, result: steFaceUp ? '表向き' : '裏向き' });
+      return;
+    }
     case 'evidenceLose': {
       const p = resolvePlayer(a.player, ctx);
       const n = a.n as number;

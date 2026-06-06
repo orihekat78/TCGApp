@@ -396,6 +396,12 @@ import { D01012 } from '../ct-d01/D01012.js';
 import { D06012 } from '../ct-d06/D06012.js';
 import { B03129 } from '../ct-p03/B03129.js';
 import { B02045 } from '../ct-p02/B02045.js';
+// event→evidence batch (2026-06-06 タスクC): 「このカードを表向きのまま証拠として得る」(selfToEvidence verb)
+import { B04015 } from '../ct-p04/B04015.js';
+import { B04028 } from '../ct-p04/B04028.js';
+import { B04041 } from '../ct-p04/B04041.js';
+import { B04062 } from '../ct-p04/B04062.js';
+import { B04086 } from '../ct-p04/B04086.js';
 
 // engine-extension #5a deck-look-N batch #5 (ct-p01 早期再録 9 枚)
 import { B01048 } from '../ct-p01/B01048.js';
@@ -487,4 +493,6 @@ export const REUSE_CARDS: CardDef[] = [
   D01012,
   // disguise-hook batch (2026-06-06 タスクC): 変装ゲート条件 + 【変装時】
   D06012, B03129, B02045,
+  // event→evidence batch (2026-06-06 タスクC): selfToEvidence (イベント自身を表向き証拠化)
+  B04015, B04028, B04041, B04062, B04086,
 ];

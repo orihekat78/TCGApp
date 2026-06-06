@@ -80,8 +80,31 @@ function toRemove(s: GameState, ev: EvidenceCard): void {
   void evidenceList;
 }
 
+/**
+ * 指定 cardId を証拠エリアに追加する (rules: イベント自身を証拠化「このカードを表向きのまま証拠として得る」)。
+ * イベント使用後は handUseCard が当該カードを **リムーブエリア** へ置くため、リムーブから当該 cardId を
+ * 1 枚 (最後の出現) 取り除いてから証拠へ移す。リムーブに無い場合も証拠へは追加する (「得る」semantics)。
+ * fromArea で取り除き元を切替 (既定 'remove' = イベント自身経路)。
+ */
+function gainCard(
+  s: GameState,
+  p: Player,
+  cardId: string,
+  faceUp: boolean,
+  origin: EvidenceOrigin,
+  fromArea: 'remove' | 'none' = 'remove',
+): void {
+  if (fromArea === 'remove') {
+    const list = s.players[p].remove;
+    const idx = list.lastIndexOf(cardId);
+    if (idx !== -1) list.splice(idx, 1);
+  }
+  s.players[p].evidence.push({ cardId, faceUp, origin });
+}
+
 export const evidence = {
   addFromDeck,
+  gainCard,
   removeTop,
   removeAt,
   flipFaceUp,
