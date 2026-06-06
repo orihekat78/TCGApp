@@ -43,6 +43,14 @@ export type AbilityLimit =
 
 export type TriggerDef = {
   hook: HookName;
+  /**
+   * 2026-06-06 タスクC: 追加 hook (multi-hook trigger)。`hook` に加えてここに列挙した hook の
+   * いずれでも発火する。limit:{kind:'turn'} は ability.id 単位の declaredUseCount で数えるため、
+   * 複数 hook を跨いだ **共有【ターンN】** が自動的に成立する (例: D03007「推理かアクションしたとき」
+   * 【ターン1】= reasoning:end と action:declare のどちらか 1 回)。selfOnly / matcherCondition は
+   * 全 hook に共通適用される (action:declare payload も uid/player を持つよう拡張済)。
+   */
+  hooks?: HookName[];
   matcher?: (payload: unknown, state: GameState) => boolean;
   /**
    * matcher の declarative 版 (D11007 a3 等で payload 依存判定を inline 関数ではなく

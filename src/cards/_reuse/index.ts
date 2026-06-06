@@ -397,6 +397,12 @@ import { B03096 } from '../ct-p03/B03096.js';
 import { B05019 } from '../ct-p05/B05019.js';
 // triggerChar→target batch: 「そのキャラ」($trigger.uid) を effect target に (B05080)
 import { B05080 } from '../ct-p05/B05080.js';
+// multi-hook 共有【ターン1】batch: 「推理かアクションしたとき」(reasoning:end + action:declare)
+import { D03007 } from '../ct-d03/D03007.js';
+import { B04039 } from '../ct-p04/B04039.js';
+import { B02004 } from '../ct-p02/B02004.js';
+import { D10023 } from '../ct-d10/D10023.js';
+import { PR173 } from '../pr-01/PR173.js';
 // look-top-N batch (2026-06-06 タスクC): sceneEnter enterSleep (スリープ状態で登場)
 import { D01012 } from '../ct-d01/D01012.js';
 // disguise-hook batch (2026-06-06 タスクC): 変装ゲート条件 + 【変装時】(disguise:into) カード
@@ -515,6 +521,8 @@ export const REUSE_CARDS: CardDef[] = [
   B05019,
   // triggerChar→target batch (「そのキャラ」= $trigger.uid)
   B05080,
+  // multi-hook 共有【ターン1】batch (「推理かアクションしたとき」= reasoning:end + action:declare)
+  D03007, B04039, B02004, D10023, PR173,
   // look-top-N batch (enterSleep)
   D01012,
   // disguise-hook batch (2026-06-06 タスクC): 変装ゲート条件 + 【変装時】

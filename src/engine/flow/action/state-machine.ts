@@ -188,7 +188,10 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   _contexts.set(id, ax);
 
   // action:declare emit (spec: { byUid, target })
-  event.emit(state, 'action:declare', { byUid, target }, { player: byPlayer, uid: byUid });
+  // 2026-06-06 タスクC: triggerCharMatches が payload.uid/player を読めるよう uid/player を併記
+  // (multi-hook trigger で「自分の現場の[X]がアクションしたとき」を gate するため、reasoning:end と統一)。
+  // 既存 consumer は byUid/target / source.uid (selfOnly) のみ参照のため additive。
+  event.emit(state, 'action:declare', { byUid, target, uid: byUid, player: byPlayer }, { player: byPlayer, uid: byUid });
 
   // 即座に guard-window へ遷移
   ax.phase = 'guard-window';

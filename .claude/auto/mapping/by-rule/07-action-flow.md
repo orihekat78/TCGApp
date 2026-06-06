@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `58f13b745f03`
+> Source hash: `ec85b7123f6b`
 
 公式ルール [`07-action-flow.md`](../../../rules/07-action-flow.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,12 +21,13 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (34)
+## 📄 参照ソース (37)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
 - [`src/ai/policy.ts`](../../../../src/ai/policy.ts)
+- [`src/cards/ct-d03/D03007.ts`](../../../../src/cards/ct-d03/D03007.ts)
 - [`src/cards/ct-d06/D06010.ts`](../../../../src/cards/ct-d06/D06010.ts)
 - [`src/cards/ct-d09/D09008.ts`](../../../../src/cards/ct-d09/D09008.ts)
 - [`src/cards/ct-d11/D11005.ts`](../../../../src/cards/ct-d11/D11005.ts)
@@ -36,11 +37,10 @@
 - [`src/cards/ct-d11/D11016.ts`](../../../../src/cards/ct-d11/D11016.ts)
 - [`src/cards/ct-p01/B01028.ts`](../../../../src/cards/ct-p01/B01028.ts)
 - [`src/cards/ct-p01/B01032.ts`](../../../../src/cards/ct-p01/B01032.ts)
+- [`src/cards/ct-p02/B02004.ts`](../../../../src/cards/ct-p02/B02004.ts)
 - [`src/cards/ct-p03/B03067.ts`](../../../../src/cards/ct-p03/B03067.ts)
 - [`src/cards/ct-p03/B03074.ts`](../../../../src/cards/ct-p03/B03074.ts)
 - [`src/cards/ct-p03/B03087.ts`](../../../../src/cards/ct-p03/B03087.ts)
+- [`src/cards/ct-p04/B04039.ts`](../../../../src/cards/ct-p04/B04039.ts)
 - [`src/cards/ct-p05/B05071.ts`](../../../../src/cards/ct-p05/B05071.ts)
-- [`src/cards/ct-p05/B05110.ts`](../../../../src/cards/ct-p05/B05110.ts)
-- [`src/cards/ct-p06/B06091.ts`](../../../../src/cards/ct-p06/B06091.ts)
-- [`src/cards/ct-p07/B07040.ts`](../../../../src/cards/ct-p07/B07040.ts)
-- _...ほか 14 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 17 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

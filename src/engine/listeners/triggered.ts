@@ -163,7 +163,9 @@ function handleHook(
     for (const ability of def.abilities as AbilityDef[]) {
       if (ability.type !== 'triggered') continue;
       const trig = ability.trigger;
-      if (!trig || trig.hook !== hookName) continue;
+      // multi-hook (2026-06-06 タスクC): trig.hook OR trig.hooks のいずれかが一致で発火。
+      // 共有【ターンN】は limit が ability.id 単位のため自動成立 (下の limit check)。
+      if (!trig || (trig.hook !== hookName && !(trig.hooks?.includes(hookName) ?? false))) continue;
       // scope check
       if (!scopeAllowsArea(ability.scope, card.area)) continue;
       // selfOnly check
