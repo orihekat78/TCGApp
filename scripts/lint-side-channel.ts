@@ -22,6 +22,9 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   'ChainContinuation',
   'ActionExpansion',
   'EffectChoiceResume',
+  // 2026-06-06 タスクC: optional 再開 effect の holder (resolve-picks.ts) -
+  // applyOptionalAndContinuation が consume (store/UI へは出ない。UI 露出は別チャネル EffectOptional 側)
+  'EffectOptionalResume',
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

@@ -6,7 +6,7 @@
 // + 候補 0 件の no-op fallback
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
+import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectPickSide, _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { Effect, EffectCtx, GameState } from '@/engine/types';
 
@@ -85,12 +85,40 @@ describe('engine.effect.resolveEffectPicks', () => {
     expect(resolved.else.args.uid).toBe('self-1');
   });
 
-  it('optional: inner effect を再帰的に処理', () => {
+  // 2026-06-06 タスクC: optional 決定の配線。旧「inner を再帰 passthrough」から
+  // 「optionalRun 指定で walk / 非human は skip / human は surface して pause」に変更。
+  it('optional (run): ctx.dyn.optionalRun=true で内部 effect を walk ($pick 解決)', () => {
+    _clearPendingEffectOptionalSide();
     const s = stateWithSelfChar('self-1');
     const effect: Effect = { kind: 'optional', effect: PICK_ATOM };
-    const resolved = resolveEffectPicks(s, effect, ctxSelf()) as { kind: string; effect: { args: { uid: string } } };
-    expect(resolved.kind).toBe('optional');
-    expect(resolved.effect.args.uid).toBe('self-1');
+    const ctx = ctxSelf();
+    ctx.dyn = { optionalRun: true };
+    const resolved = resolveEffectPicks(s, effect, ctx) as { kind: string; args: { uid: string } };
+    expect(resolved.kind).toBe('atom');
+    expect(resolved.args.uid).toBe('self-1');
+  });
+
+  it('optional (skip): 非 human (humanChooser 未指定) は no-op (空 parallel)', () => {
+    _clearPendingEffectOptionalSide();
+    const s = stateWithSelfChar('self-1');
+    const effect: Effect = { kind: 'optional', effect: PICK_ATOM };
+    const resolved = resolveEffectPicks(s, effect, ctxSelf()) as { kind: string; steps: unknown[] };
+    expect(resolved.kind).toBe('parallel');
+    expect(resolved.steps).toHaveLength(0);
+    expect(_peekPendingEffectOptionalSide(), '非 human は surface しない').toBeNull();
+  });
+
+  it('optional (human): pendingEffectOptional を surface して no-op pause', () => {
+    _clearPendingEffectOptionalSide();
+    const s = stateWithSelfChar('self-1');
+    const effect: Effect = { kind: 'optional', effect: PICK_ATOM };
+    const resolved = resolveEffectPicks(s, effect, ctxSelf(), {
+      humanChooser: true, byPlayer: 'self', source: { cardId: 'X', abilityId: 'a1' },
+    }) as { kind: string; steps: unknown[] };
+    expect(resolved.kind).toBe('parallel');
+    expect(resolved.steps).toHaveLength(0);
+    expect(_peekPendingEffectOptionalSide(), 'human は pendingEffectOptional を surface').not.toBeNull();
+    _clearPendingEffectOptionalSide();
   });
 
   it('parallel: 各 step を再帰的に処理', () => {

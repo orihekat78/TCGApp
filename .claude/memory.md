@@ -26,7 +26,8 @@
   vitest 1822 pass 回帰0 / e2e 1 pass / review (4 agent) で additive・文言忠実確認。ALL_CARDS **955**。
 - [.claude/sessions/2026-06-06-6.md](sessions/2026-06-06-6.md) — C reasoning 残 **全数分類** (10並列 workflow) +
   reasoning-hook batch #3 (engine変更0): B05039 (multi-target charModifyAP) / B03096 (捜査1=deckRevealUntil(opp) 代替)。
-  残 11 は partial 3 + new-feature 4 系統 (最有力次機能=optional 決定配線)。vitest 1827 pass 回帰0 / e2e 3 pass。
-  ALL_CARDS **957**。次は optional 配線 or A (engine変更0 大量) → D
+  **+ optional 決定の配線** (pendingEffectOptional、pendingEffectChoice 同型 additive engine 機構) + B05019 中道和志。
+  「〜してもよい」を human に「する/しない」surface。vitest **1834 pass** 回帰0 / e2e 5 pass。ALL_CARDS **958**。
+  次: reasoning 残 (evidence抑制/triggerChar-target/set-card除去/multi-hook共有limit/MR2色) or A (engine変更0 大量) → D
 
 次セッション kickoff: [.claude/NEXT-SESSION-PROMPT.md](NEXT-SESSION-PROMPT.md)

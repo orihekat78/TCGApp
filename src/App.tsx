@@ -16,6 +16,7 @@ import { useEffect } from 'react';
 import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
 import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
 import { EffectChoiceModalHost } from '@/ui/components/EffectChoiceModalHost';
+import { EffectOptionalModalHost } from '@/ui/components/EffectOptionalModalHost';
 import { HiramekiDemoPickerModal } from '@/ui/components/HiramekiDemoPickerModal';
 import { HiramekiDemoBanner } from '@/ui/components/HiramekiDemoBanner';
 import { useHiramekiDemoDriver } from '@/ui/hooks/useHiramekiDemoDriver';
@@ -143,6 +144,7 @@ export default function App() {
       {replayDriver.state.log === null && <SpectatorHUD />}
       <EffectPickerModal />
       <EffectChoiceModalHost />
+      <EffectOptionalModalHost />
       <DeckRevealOverlay />
       <RecentActionToast />
       <ContactFlash />

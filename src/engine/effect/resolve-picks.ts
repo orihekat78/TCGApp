@@ -128,6 +128,14 @@ declare global {
   // {sequence:[choice, ...post-choice remainder]} に wrap して保持 → pre-choice step の二重実行を防ぐ。
   // eslint-disable-next-line no-var
   var __pendingEffectChoiceResume: Effect | null | undefined;
+  // 2026-06-06 タスクC: optional 決定の配線 (pendingEffectChoice と同型・別スロット)。
+  // 「〜してもよい」effect (Effect kind:'optional') を human に「する/しない」で問う side-channel。
+  // choice との違いは選択値が boolean (run) であること。drain で null クリア。
+  // eslint-disable-next-line no-var
+  var __pendingEffectOptionalSide: PendingEffectOptionalSide | null | undefined;
+  // optionalResolve 再開時に再 walk すべき optional 効果の holder (engine 内のみ、store へは drain しない)。
+  // eslint-disable-next-line no-var
+  var __pendingEffectOptionalResume: Effect | null | undefined;
 }
 
 export type PendingEffectPickSide = {
@@ -252,6 +260,62 @@ export function _takePendingChoiceResume(): Effect | null {
 /** holder をクリア (テスト用 / セッション初期化用)。 */
 export function _clearPendingChoiceResume(): void {
   (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = null;
+}
+
+// ===========================================================================
+// 2026-06-06 タスクC: optional 決定の配線 — pendingEffectChoice と同型 (別スロット)。
+// 「このキャラをリムーブしてもよい。そうした場合〜」(Effect kind:'optional') を human に
+// 「する/しない」で surface する。choice の boolean 版: choiceIndex の代わりに run(boolean)。
+//   - resolveEffectPicks の optional case が human walk で surface → no-op で pause。
+//   - optionalResolve dispatch → applyOptionalAndContinuation が ctx.dyn.optionalRun=run で再 walk。
+//   - AI / non-human は surface せず skip (optional は自己コストを含むことが多く既定で使わない)。
+// store へ運ぶのは {player, source} の plain data のみ。再開すべき optional 効果は別 holder
+// (__pendingEffectOptionalResume) に engine 内で保持する (store へは drain しない)。
+// ===========================================================================
+
+export type PendingEffectOptionalSide = {
+  player: Player;
+  /** 元 ability の特定 + 再開 ctx 復元 ($self 解決 / modal の文言表示) に使用 */
+  source: { cardId: string; abilityId: string; uid: string };
+};
+
+function pushPendingEffectOptionalSide(v: PendingEffectOptionalSide): void {
+  (globalThis as { __pendingEffectOptionalSide?: PendingEffectOptionalSide | null }).__pendingEffectOptionalSide = v;
+}
+
+/** dispatch 経由で UI store に転送するための drain (取り出して null クリア)。 */
+export function _drainPendingEffectOptionalSide(): PendingEffectOptionalSide | null {
+  const g = globalThis as { __pendingEffectOptionalSide?: PendingEffectOptionalSide | null };
+  const v = g.__pendingEffectOptionalSide ?? null;
+  g.__pendingEffectOptionalSide = null;
+  return v;
+}
+
+/** slot + 再開 holder をクリア (テスト用 / セッション初期化用。side-channel と holder はペア)。 */
+export function _clearPendingEffectOptionalSide(): void {
+  (globalThis as { __pendingEffectOptionalSide?: PendingEffectOptionalSide | null }).__pendingEffectOptionalSide = null;
+  (globalThis as { __pendingEffectOptionalResume?: Effect | null }).__pendingEffectOptionalResume = null;
+}
+
+/** slot を peek (テスト用)。 */
+export function _peekPendingEffectOptionalSide(): PendingEffectOptionalSide | null {
+  return (globalThis as { __pendingEffectOptionalSide?: PendingEffectOptionalSide | null }).__pendingEffectOptionalSide ?? null;
+}
+
+// --- optional 再開用 holder (engine 内のみ、store へ drain しない) ---
+function setPendingOptionalResume(eff: Effect): void {
+  (globalThis as { __pendingEffectOptionalResume?: Effect | null }).__pendingEffectOptionalResume = eff;
+}
+/** optionalResolve 時に holder を取り出してクリア (apply-pick.applyOptionalAndContinuation が使用)。 */
+export function _takePendingOptionalResume(): Effect | null {
+  const g = globalThis as { __pendingEffectOptionalResume?: Effect | null };
+  const v = g.__pendingEffectOptionalResume ?? null;
+  g.__pendingEffectOptionalResume = null;
+  return v;
+}
+/** holder をクリア (テスト用 / セッション初期化用)。 */
+export function _clearPendingOptionalResume(): void {
+  (globalThis as { __pendingEffectOptionalResume?: Effect | null }).__pendingEffectOptionalResume = null;
 }
 
 /**
@@ -570,8 +634,36 @@ export function resolveEffectPicks(
         options: effect.options.map((o) => resolveEffectPicks(state, o, ctx, opts)),
       };
     }
-    case 'optional':
-      return { kind: 'optional', effect: resolveEffectPicks(state, effect.effect, ctx, opts) };
+    case 'optional': {
+      // 2026-06-06 タスクC: optional 決定の配線 (choice の boolean 版)。
+      //   - ctx.dyn.optionalRun 指定済 (optionalResolve 再開) → その値で確定 (consume 後 delete で leak 防止)。
+      //   - humanChooser → pendingEffectOptional を surface して pause (no-op return)。
+      //   - AI / non-human → skip (optional は自己コストを含むことが多く既定で使わない)。
+      const dynRun = (ctx.dyn as { optionalRun?: unknown } | undefined)?.optionalRun;
+      if (typeof dynRun === 'boolean') {
+        // 消費した optionalRun は同一 ctx の後続/ネスト optional へ leak させない (choiceIndex と同方針)
+        delete (ctx.dyn as { optionalRun?: unknown }).optionalRun;
+        return dynRun
+          ? resolveEffectPicks(state, effect.effect, ctx, opts)
+          : { kind: 'parallel', steps: [] };
+      }
+      if (opts.humanChooser === true) {
+        const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';
+        pushPendingEffectOptionalSide({
+          player: opts.byPlayer ?? 'self',
+          source: {
+            cardId: opts.source?.cardId ?? '',
+            abilityId: opts.source?.abilityId ?? '',
+            uid: srcUid,
+          },
+        });
+        // 再開 holder = この optional 効果そのもの (optionalResolve 後に再 walk)。
+        setPendingOptionalResume(effect);
+        return { kind: 'parallel', steps: [] };
+      }
+      // AI / non-human: skip (resolver の optionalRun 未設定 default と同じ。surface しない)
+      return { kind: 'parallel', steps: [] };
+    }
     case 'conditional':
       return {
         kind: 'conditional',

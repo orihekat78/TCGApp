@@ -11,9 +11,11 @@
 
 ## 現在地 (2026-06-06 #6 時点)
 
-- 最新コミット: reasoning-hook batch #3 (B05039/B03096)。origin/main 未 push (要 `git push`、15+ commit 未push)
-- ALL_CARDS: **957 枚** (reasoning-hook batch #3 +2)
-- vitest: **1827 pass** / 1 skip / 0 fail / e2e 含む / typecheck・変更ファイル lint errors=0 / docs:check 同期 / 回帰 0
+- 最新コミット: optional 決定の配線 + B05019。origin/main 未 push (要 `git push`、17+ commit 未push)
+- ALL_CARDS: **958 枚** (reasoning-hook batch #3 +2 / optional B05019 +1)
+- vitest: **1834 pass** / 1 skip / 0 fail / e2e 含む / typecheck・変更ファイル lint errors=0 / docs:check 同期 / 回帰 0
+- 新 engine 機構: **pendingEffectOptional** (「〜してもよい」を human に「する/しない」surface、pendingEffectChoice 同型)。
+  optional は top-level のみ対応 / AI は常に skip (policy hook で将来 enhance 可)。
 - 未解決 BUG: BUG-064 (workflow図, doc) / BUG-111〜114 (DEFERRED, latent/非MVP)
   ※ BUG-083 (E) / BUG-122/123 (B) / BUG-124 (C review 水平展開) は修正済。
 - 既知 (本件無関係): src/engine/effect/validate.ts:68 に pre-existing eslint no-fallthrough (walk switch)。
@@ -50,11 +52,16 @@
      既存 hook 2 枚 (**B05039** multi-target charModifyAP / **B03096** 捜査1=deckRevealUntil(opp) 代替) を実装。
      残 11 = partial 3 (B08034/B02004+D10023+PR173/B05080) + new-feature: **B05019**(optional配線) /
      B03038(evidence抑制) / B04039・D03007(multi-hook共有limit) / B09047(MR2色+データ無)。詳細: sessions/2026-06-06-6.md
-   - **次の最有力 engine 機能 = optional 決定の配線** (pendingOptional surface): B05019 完全解禁 + 全
-     「〜してもよい」カードに波及。pendingEffectChoice (BUG-121) と同型の additive 機構。resolver.ts:106 の
-     optionalRun を UI/AI 経路で set する配線 + EffectChoiceModalHost 流用。これを入れてから B05019 を実装。
-   - その後: multi-hook 共有 limit (D03007/B04039/B02004 の「推理かアクション」+【ターン1】) /
-     triggerChar→target binding (B05080「そのキャラ」) / set-card 除去 verb (B08034)。
+   - ~~**optional 決定の配線**~~ → ✅ 完了。`pendingEffectOptional` 機構 (resolve-picks/apply-pick +
+     store/dispatch/EffectOptionalModalHost、pendingEffectChoice 同型) を新設し **B05019** を実装。
+     「〜してもよい」を human に「する/しない」surface。top-level optional のみ対応 / AI は常に skip。
+   - **次の engine 機能候補** (残 reasoning):
+     - multi-hook 共有 limit (D03007/B04039/B02004 の「推理かアクション」+【ターン1】を reasoning:end +
+       action:declare 2hook で 1 回に縛る) — 加えて B04039 は action:declare の triggerChar gate も要。
+     - triggerChar→target binding (B05080「そのキャラ(=推理者)」を effect target に) — reasoning:end payload.uid を
+       resolveCtx.bindings['$reasoner'] へ。小さい additive。
+     - set-card 除去 verb (B08034 推理反応。【登場時】部分は既存で partial 実装可)。
+     - evidence 抑制 (B03038、reasoning:before-add の card-triggerable 化が要、高難度) / MR2色 condition (B09047、データ無で DEFER)。
    - 既存 `triggerCharMatches` condition は他の payload-char 反応 (action/leave 等) にも再利用可。
 4. **A. engine 変更0 カードバッチ** (大量・低リスク): deck-look-N 残 約50枚 (B03007/B03036/B05016
    /B07010 等 同型) + bounce/level-modify/set-card/multi-target 残 + 素のバニラカード。

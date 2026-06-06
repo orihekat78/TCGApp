@@ -11,8 +11,8 @@
 //     human modal が無いため、PA 短縮形 atom の pick が drain されず no-op になる BUG-109 を解消)。
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
-import type { PendingEffectPickSide, PendingEffectChoiceSide } from './resolve-picks.js';
-import { resolveEffectPicks, _takePendingChoiceResume } from './resolve-picks.js';
+import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide } from './resolve-picks.js';
+import { resolveEffectPicks, _takePendingChoiceResume, _takePendingOptionalResume } from './resolve-picks.js';
 
 type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
@@ -166,6 +166,48 @@ export function applyChoiceAndContinuation(
     { player: pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
     'effect:choice-resolved',
     { choiceIndex, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
+  );
+  runAllUntilEmpty(state);
+}
+
+/**
+ * 2026-06-06 タスクC: pending optional を run(boolean) で解決し、optional 効果を再開する。
+ * applyChoiceAndContinuation の boolean 版。再開すべき optional 効果は engine holder
+ * (__pendingEffectOptionalResume) から取り出す。ctx.dyn.optionalRun=run を渡して再 walk すると
+ * resolveEffectPicks の optional case が:
+ *   - run=true  → 内部 effect を walk (内部の $pick は __pendingEffectPickQueue へ再 push)。
+ *   - run=false → no-op (空 parallel) を返す。
+ * を行い、結果を queue → runAllUntilEmpty で実行する。
+ */
+export function applyOptionalAndContinuation(
+  state: GameState,
+  pending: PendingEffectOptionalSide,
+  run: boolean,
+): void {
+  const resumeEffect = _takePendingOptionalResume();
+  if (!resumeEffect) return;
+  const ctx: EffectCtx = {
+    source: {
+      cardId: pending.source.cardId,
+      uid: pending.source.uid,
+      abilityId: pending.source.abilityId,
+      player: pending.player,
+      area: 'scene',
+    },
+    bindings: {},
+    dyn: { optionalRun: run },
+  };
+  const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
+    byPlayer: pending.player,
+    humanChooser: true,
+    source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
+  });
+  event.queue(
+    state,
+    resolved as never,
+    { player: pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
+    'effect:optional-resolved',
+    { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
   );
   runAllUntilEmpty(state);
 }

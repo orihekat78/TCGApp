@@ -14,6 +14,7 @@ import { dispatchEngineAction } from './useEngineDispatch.js';
 export function useEffectPickFlowDriver(): void {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
   const pendingChoice = useGameStateStore((s) => s.pendingEffectChoice);
+  const pendingOptional = useGameStateStore((s) => s.pendingEffectOptional);
   useEffect(() => {
     if (!pending) return;
     if (pending.player !== 'self') {
@@ -32,4 +33,14 @@ export function useEffectPickFlowDriver(): void {
       dispatchEngineAction({ type: 'choiceResolve', choiceIndex: 0 });
     }
   }, [pendingChoice]);
+  // 2026-06-06 タスクC: optional (「〜してもよい」) の AI/spectator fallback。
+  // pending.player !== 'self' (CPU 所有 / spectator) のとき「しない」(run:false) を自動選択。
+  // 通常 AI 経路は resolve-picks が surface しない (humanChooser=false で skip) ため本 path は防御的。
+  // self の場合は EffectOptionalModalHost が render + 操作 → optionalResolve dispatch。
+  useEffect(() => {
+    if (!pendingOptional) return;
+    if (pendingOptional.player !== 'self') {
+      dispatchEngineAction({ type: 'optionalResolve', run: false });
+    }
+  }, [pendingOptional]);
 }
