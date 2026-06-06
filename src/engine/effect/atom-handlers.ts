@@ -145,6 +145,18 @@ function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
   if (value === '$self') {
     return ctx.source.uid ?? value;
   }
+  // 2026-06-06 タスクC: $trigger.<field> → トリガ payload のキャラ参照。「そのキャラ」(=反応の
+  // きっかけになったキャラ) を effect target にするための binding。payload は hook ごとに形が
+  // 異なるため uid は payload.uid ?? payload.byUid で吸収 (reasoning:end={uid,player,gained} /
+  // action:declare={byUid,target} / leave:to-remove={uid,cause})。runtime ctx は entryToCtx で
+  // triggerPayload を持つ (stack.ts)。B05080「そのキャラをLP-1」等で使用。
+  if (value.startsWith('$trigger.')) {
+    const tfield = value.slice('$trigger.'.length);
+    const tp = (ctx as { triggerPayload?: Record<string, unknown> }).triggerPayload;
+    if (!tp || typeof tp !== 'object') return value;
+    if (tfield === 'uid') return (tp['uid'] ?? tp['byUid']) ?? value;
+    return tp[tfield] ?? value;
+  }
   const dot = value.indexOf('.');
   if (dot < 0) return value;
   const key = value.slice(1, dot);

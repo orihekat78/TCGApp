@@ -30,4 +30,8 @@
   「〜してもよい」を human に「する/しない」surface。vitest **1834 pass** 回帰0 / e2e 5 pass。ALL_CARDS **958**。
   次: reasoning 残 (evidence抑制/triggerChar-target/set-card除去/multi-hook共有limit/MR2色) or A (engine変更0 大量) → D
 
+- [.claude/sessions/2026-06-06-7.md](sessions/2026-06-06-7.md) — C reasoning 残 new-feature シリーズ
+  (お勧め順に全実装中)。① triggerChar→target (`$trigger.uid` を resolveBindRef に追加) + B05080。
+  次: ② multi-hook 共有 limit ③ set-card 除去 ④ evidence 抑制。
+
 次セッション kickoff: [.claude/NEXT-SESSION-PROMPT.md](NEXT-SESSION-PROMPT.md)
