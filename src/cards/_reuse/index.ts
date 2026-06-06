@@ -403,6 +403,9 @@ import { B04039 } from '../ct-p04/B04039.js';
 import { B02004 } from '../ct-p02/B02004.js';
 import { D10023 } from '../ct-d10/D10023.js';
 import { PR173 } from '../pr-01/PR173.js';
+// set-card 除去 batch: charRemoveSetCard verb (B08034)
+import { B08034 } from '../ct-p08/B08034.js';
+import { B08034P } from '../ct-p08/B08034P.js';
 // look-top-N batch (2026-06-06 タスクC): sceneEnter enterSleep (スリープ状態で登場)
 import { D01012 } from '../ct-d01/D01012.js';
 // disguise-hook batch (2026-06-06 タスクC): 変装ゲート条件 + 【変装時】(disguise:into) カード
@@ -523,6 +526,8 @@ export const REUSE_CARDS: CardDef[] = [
   B05080,
   // multi-hook 共有【ターン1】batch (「推理かアクションしたとき」= reasoning:end + action:declare)
   D03007, B04039, B02004, D10023, PR173,
+  // set-card 除去 batch (charRemoveSetCard verb)
+  B08034, B08034P,
   // look-top-N batch (enterSleep)
   D01012,
   // disguise-hook batch (2026-06-06 タスクC): 変装ゲート条件 + 【変装時】

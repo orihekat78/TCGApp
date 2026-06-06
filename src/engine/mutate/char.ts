@@ -192,6 +192,22 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
 }
 
 /**
+ * 2026-06-06 タスクC: キャラにセットされているカードを **1枚だけ** リムーブする (rules/16)。
+ * 最後にセットされた 1 枚 (setCards 末尾) を表向きにしてリムーブエリアへ。set card が無ければ no-op。
+ * removeAllSetAndStacked (離場時の全クリーンアップ) と異なり、在場キャラから 1 枚だけ外す用途
+ * (B08034「セットされているカードを1枚リムーブ」)。戻り値 = リムーブした cardId (無ければ null)。
+ */
+function removeOneSetCard(s: GameState, uid: string): string | null {
+  const found = findChar(s, uid);
+  if (!found) return null;
+  const { char, player } = found;
+  const entry = char.setCards.pop();
+  if (!entry) return null;
+  s.players[player].remove.push(entry.cardId);
+  return entry.cardId;
+}
+
+/**
  * 変装: cardId のみを新カードに変更 (rules/09, 23)
  * 引継ぎテーブル:
  *   ✓ state (スリープ状態)
@@ -224,5 +240,6 @@ export const char = {
   setCard,
   stackCard,
   removeAllSetAndStacked,
+  removeOneSetCard,
   disguiseInto,
 };

@@ -25,7 +25,7 @@ const ATOM_VERBS = new Set<string>([
   'charModifyAP', 'charModifyLP', 'charModifyLevel', 'charSetAP', 'charSetLP',
   'charOverrideAP', 'charOverrideLP',
   'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',
-  'charSetTurnEffect', 'charSetCard', 'charStackCard',
+  'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
   'caseToResolved',
   'startContact', 'endActionEarly',

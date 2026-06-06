@@ -41,6 +41,8 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   sceneToHand:       { defaultArea: 'scene',    mode: 'PA' },
   // engine-extension #5b (2026-06-05): set-card 短縮形 (fromDeckTop と組合せ)
   charSetCard:       { defaultArea: 'scene',    mode: 'PA' },
+  // 2026-06-06 タスクC: セット card を 1 枚外す短縮形 (hasSetCards filter で対象キャラを pick)
+  charRemoveSetCard: { defaultArea: 'scene',    mode: 'PA' },
   sceneEnter:        { defaultArea: 'from',     mode: 'PA', sourceSplice: true },
 };
 

@@ -607,6 +607,32 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
       return;
     }
+    case 'charRemoveSetCard': {
+      // 2026-06-06 タスクC: キャラに裏向きでセットされたカードを1枚リムーブ (rules/16, B08034)。
+      // PA 短縮形 (sceneRemove と同型): uid 不在 + n/max → pick query (filter hasSetCards:true で
+      // セット card を持つキャラのみ候補化) を構築 + tryRePickFromAtom。max:1 は skip 可 → chain break で
+      // 「リムーブしてもよい」を表現。resolve 後に removeOneSetCard で末尾 1 枚をリムーブエリアへ。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        const rsP = resolvePlayer(a.player, ctx);
+        const paTarget = buildShortFormPick('scene', a, rsP, rsP);
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: rsP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: rsP, turn: s.turn.number, action: 'effect:charRemoveSetCard:awaiting-pick' });
+        return;
+      }
+      // max:1 で 0 枚選択 (skip) は uid='$pick' のまま到達 → silent no-op (sceneRemove 同型)。
+      // chain の「そうした場合」break は skip 時の continuation-drop / no-candidate 時の
+      // __chainStepNoApply (resolve-picks) が担うため、ここでは立てない。
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRemoveSetCard', result: 'skipped' });
+        return;
+      }
+      const rsUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof rsUid !== 'string' || rsUid.startsWith('$')) return;
+      const removed = mutate.char.removeOneSetCard(s, rsUid);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRemoveSetCard', target: rsUid, result: removed ?? 'none' });
+      return;
+    }
     case 'sceneToHand': {
       // engine-extension #4 (2026-06-05): char→hand bounce verb. PA 短縮形 (sceneRemove と同型)。
       // 「相手の現場のキャラを1枚まで選び、手札に移す」等で使用。所有者の手札に戻る点に注意。

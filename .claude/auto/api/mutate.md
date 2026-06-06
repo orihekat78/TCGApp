@@ -29,7 +29,7 @@ Immer draft 上の primitive 変更操作
 | 名前 | メンバー |
 | ---- | -------- |
 | `case` _(internal: `caseOp`)_ | `init`, `toResolved` |
-| `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `grantKeyword`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `revokeKeyword`, `setCard`, `setOverrideAP`, `setOverrideLP`, `setTurnEffect`, `stackCard` |
+| `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `grantKeyword`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `removeOneSetCard`, `revokeKeyword`, `setCard`, `setOverrideAP`, `setOverrideLP`, `setTurnEffect`, `stackCard` |
 | `deck` | `draw`, `peek`, `refresh`, `removeFromTop`, `reveal`, `shuffle`, `toBottom`, `toTop` |
 | `evidence` | `addFromDeck`, `flipFaceUp`, `gainCard`, `removeAt`, `removeTop`, `toRemove` |
 | `file` | `addFromDeckTop`, `insertAssistedPartner`, `popTop`, `removeAssistedPartner` |
