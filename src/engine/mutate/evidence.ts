@@ -102,6 +102,25 @@ function gainCard(
   s.players[p].evidence.push({ cardId, faceUp, origin });
 }
 
+/**
+ * 2026-06-06 タスクC: 証拠エリア最上部の n 枚を **デッキ上** へ戻す (元の順序を保持)。
+ * 「この推理によって証拠を得ない」(B03038) の忠実実現 — addFromDeck (deck.shift→evidence.push) の逆操作。
+ * net で「証拠 0・デッキ復元」(rules/11 §LP≤0「証拠を1つも得ない」と同じ状態) を作る。
+ * 証拠が n 枚未満なら在る分だけ戻す。戻り値 = 実際に戻した枚数。
+ */
+function toDeckTop(s: GameState, p: Player, n: number): number {
+  const ev = s.players[p].evidence;
+  const taken: string[] = [];
+  for (let i = 0; i < n && ev.length > 0; i++) {
+    const cardId = ev[ev.length - 1]!.cardId; // primitive read (draft 不要)
+    ev.pop();
+    taken.push(cardId); // taken = [最後に得た, ...] = deck 逆順
+  }
+  taken.reverse(); // [deck[0], deck[1], ...] 元の deck 順に復元
+  s.players[p].deck.unshift(...taken);
+  return taken.length;
+}
+
 export const evidence = {
   addFromDeck,
   gainCard,
@@ -109,4 +128,5 @@ export const evidence = {
   removeAt,
   flipFaceUp,
   toRemove,
+  toDeckTop,
 };

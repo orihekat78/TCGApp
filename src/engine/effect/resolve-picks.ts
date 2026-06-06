@@ -277,6 +277,12 @@ export type PendingEffectOptionalSide = {
   player: Player;
   /** 元 ability の特定 + 再開 ctx 復元 ($self 解決 / modal の文言表示) に使用 */
   source: { cardId: string; abilityId: string; uid: string };
+  /**
+   * 2026-06-06 タスクC: optional 内の効果が $trigger.<field> (例 B03038 の $trigger.gained =
+   * 推理で得た証拠枚数) を参照する場合、トリガ payload を再開 ctx に復元するため保持する。
+   * reasoning:end payload = {uid,player,gained} 等の JSON-safe な plain data のみ。
+   */
+  triggerPayload?: unknown;
 };
 
 function pushPendingEffectOptionalSide(v: PendingEffectOptionalSide): void {
@@ -656,6 +662,8 @@ export function resolveEffectPicks(
             abilityId: opts.source?.abilityId ?? '',
             uid: srcUid,
           },
+          // 再開 ctx で $trigger.<field> を解決できるよう triggerPayload を保持 (B03038)
+          triggerPayload: (ctx as { triggerPayload?: unknown }).triggerPayload,
         });
         // 再開 holder = この optional 効果そのもの (optionalResolve 後に再 walk)。
         setPendingOptionalResume(effect);

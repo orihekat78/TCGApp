@@ -110,7 +110,7 @@ export type Scope = 'contact' | 'action' | 'turn' | 'opp-turn' | 'permanent' | '
 
 export type AtomVerb =
   | 'draw' | 'discard' | 'mill' | 'fileAdd' | 'filePopToHand'
-  | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'selfToEvidence'
+  | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'selfToEvidence' | 'evidenceToDeck'
   | 'evidenceToHand' | 'handAddFromRemove' | 'handAddFromDeck'
   | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise' | 'sceneToHand'
   | 'charModifyAP' | 'charModifyLP' | 'charModifyLevel' | 'charSetAP' | 'charSetLP'

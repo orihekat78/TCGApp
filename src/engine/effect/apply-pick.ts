@@ -196,18 +196,24 @@ export function applyOptionalAndContinuation(
     },
     bindings: {},
     dyn: { optionalRun: run },
+    // 2026-06-06 タスクC: optional 内の $trigger.<field> (B03038 の $trigger.gained 等) を解決可能に
+    triggerPayload: (pending as { triggerPayload?: unknown }).triggerPayload,
   };
   const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.player,
     humanChooser: true,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
   });
+  // 2026-06-06 タスクC: payload に元 triggerPayload を載せて queue する (あれば)。これで runtime ctx
+  // (entryToCtx) が triggerPayload を持ち、resumed effect 内の $trigger.<field> (B03038 evidenceToDeck の
+  // $trigger.gained 等) が実行時に解決される。triggerPayload 無し (通常 optional) は従来の {run, source} marker。
+  const optTriggerPayload = (pending as { triggerPayload?: unknown }).triggerPayload;
   event.queue(
     state,
     resolved as never,
     { player: pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
     'effect:optional-resolved',
-    { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
+    optTriggerPayload ?? { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
   );
   runAllUntilEmpty(state);
 }

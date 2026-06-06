@@ -328,6 +328,17 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceLose', result: String(lost) });
       return;
     }
+    case 'evidenceToDeck': {
+      // 2026-06-06 タスクC: 証拠最上部 n 枚をデッキ上へ戻す (B03038「この推理によって証拠を得ない」)。
+      // net で「証拠 0・デッキ復元」(rules/11 §LP≤0 と同じ状態)。n は number か $trigger.gained
+      // (= 推理で得た枚数 payload.gained) を resolveBindRef で解決。
+      const etdP = resolvePlayer(a.player, ctx);
+      const nRaw = resolveBindRef(a.n, ctx);
+      const etdN = typeof nRaw === 'number' ? nRaw : 0;
+      const moved = mutate.evidence.toDeckTop(s, etdP, etdN);
+      mutate.log.append(s, { ts: Date.now(), player: etdP, turn: s.turn.number, action: 'effect:evidenceToDeck', result: String(moved) });
+      return;
+    }
     case 'evidenceFlip': {
       const efP = resolvePlayer(a.player, ctx);
       const efIdx = a.idx as number;

@@ -224,6 +224,9 @@ function handleHook(
           area: card.area,
         },
         bindings: {},
+        // 2026-06-06 タスクC: optional surface 時に $trigger.<field> 用 payload を引き継ぐ
+        // (B03038 の $trigger.gained = reasoning:end payload.gained)。
+        triggerPayload: payload,
       };
       // Phase 7-3: listener callback 内で instantiate (module top では circular import 発生)。
       // misread.ts:110 と同じパターン。allocation cost は 1 ability/frame で実害なし。

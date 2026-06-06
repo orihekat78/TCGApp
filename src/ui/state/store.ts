@@ -168,6 +168,8 @@ export type PendingEffectChoice = {
 export type PendingEffectOptional = {
   player: 'self' | 'opp';
   source: { cardId: string; abilityId: string; uid: string };
+  /** optional 内が $trigger.<field> を参照する場合の再開 ctx 復元用 (B03038、JSON-safe) */
+  triggerPayload?: unknown;
 };
 
 /** ヒラメキ保留 (Commit 3a) */
