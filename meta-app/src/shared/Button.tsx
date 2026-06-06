@@ -126,7 +126,7 @@ export function SmallButton({ label, sub, accent = T.neonBlue, solid = false, ac
 }
 
 // ── Setup (BACK / EXPORT) ─────────────────────────────────────────────
-interface SetupProps extends BaseButtonProps {}
+type SetupProps = BaseButtonProps;
 export function SetupButton({ label, sub, onClick }: SetupProps) {
   ensureInteractionStyles();
   return (

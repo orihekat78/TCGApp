@@ -26,11 +26,21 @@ export interface Settings {
   tutorialClearedStepIds: string[];
 }
 
+export interface MatchMeta {
+  mode: 'solo' | 'observe';
+  selfDeckName: string;
+  oppDeckName: string;
+}
+
 interface MetaState {
   settings: Settings;
   _hasHydrated: boolean;
   // Phase 15-A: 練習試合起動時にセット、ResultScreen 解決後に consume してクリア (transient、persist しない)
   _pendingPracticeChapter: number | null;
+  // Phase 18: 対戦開始時 (SetupScreen) にセット、ResultScreen が MatchRecord 構築時に consume (transient)
+  _matchMeta: MatchMeta | null;
+  setMatchMeta: (m: MatchMeta) => void;
+  consumeMatchMeta: () => MatchMeta | null;
   setSettings: (patch: Partial<Settings>) => void;
   toggleFavorite: (cardNum: string) => void;
   isFavorited: (cardNum: string) => boolean;
@@ -61,6 +71,13 @@ export const useMetaStore = create<MetaState>()(
       settings: DEFAULT_SETTINGS,
       _hasHydrated: false,
       _pendingPracticeChapter: null,
+      _matchMeta: null,
+      setMatchMeta: (m) => set({ _matchMeta: m }),
+      consumeMatchMeta: () => {
+        const v = get()._matchMeta;
+        if (v !== null) set({ _matchMeta: null });
+        return v;
+      },
       setSettings: (patch) =>
         set((s) => ({ settings: { ...s.settings, ...patch } })),
       toggleFavorite: (cardNum) =>
@@ -108,6 +125,9 @@ export const useMetaStore = create<MetaState>()(
     {
       name: 'conan.meta.v1.settings',
       version: 1,
+      // 永続化するのは settings のみ。_matchMeta / _pendingPracticeChapter は
+      // セッション内 transient なので localStorage に書かない (古い値の読み込みを防ぐ)。
+      partialize: (s) => ({ settings: s.settings }),
       onRehydrateStorage: () => (state) => {
         // Phase 12-B / 14-E / 15-A: 旧 settings の欠落フィールドを default で補填
         if (state && state.settings) {

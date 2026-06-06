@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `da155ee2b8cf`
+> Source hash: `8e9eeb6200bd`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,38 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## タスク A: 残カタログ再分類サーベイ (多エージェント workflow、部分完了)
+
+**Round/Phase**: 2026-06-06 session #8 — タスク A batch #2 の土台。残 661 distinct signature
+(= 1071 枚) を現行 engine で 🟢/🟡/⚫ 再分類する 4-phase workflow (~75 agent) を実行。
+
+### 成果物 ([.claude/specs/catalog-survey-2026-06-06/](catalog-survey-2026-06-06/))
+
+- **capability-map.txt (70KB)** — 現行 engine 能力を実コード (verbs/conditions/filters/hooks/cost+dyn/patterns)
+  から再構築。`card-impl-engine-gates.md` (2026-06-04 stale) を置換。card-triggerable hook は「9個」→
+  **13個** (leave:to-remove/reasoning:end/disguise:into 追加)、optional・selfToEvidence・multi-target pick が
+  解禁済を確定。
+- **classification-partial.json** — 240 sig の verdict + mechanism + 懐疑 verify 理由。
+- **_buckets.json** — yellow を不足機能別集計 (task D 優先度マップ)。
+
+### 分類結果 (240/661 sig)
+
+- 🟢 **4 sig / 8 枚** (懐疑 verify 通過): B07041(high)・B07047(high)・B07057(med)・B07058(med) = batch #2 候補。
+- 🟡 **226 sig / 487 枚**。不足機能トップ: hand-count cond 66 / remove→deck-bottom verb 51 /
+  cutin-subtype filter 44 / continuous-aura(他キャラ) 28 / loseGame verb 14 / set-card→host 能力付与 14。
+- ⚫ **10 sig / 22 枚**: ほぼ partner-area entity slot / ビッグジュエル / MR-in-partner-area 構造ブロッカ。
+
+### ⚠ 部分完了 / 中断
+
+- chunk 00–11 (240 sig) のみ分類済。chunk 12–33 (残 421 sig) + verify + synthesize は
+  **API rate-limit + 「subscription access disabled」** で失敗 (agent 53/~75)。残りは次回 workflow 再実行が必要。
+- synthesize 未生成 → バッチ計画は README で手動代替。
+- workflow が session 中断で orphan 化 (5h idle) → journal 経由 resume で完走させた。
+
+### engine 変更 / カード追加
+
+- なし (調査・記録のみ)。ALL_CARDS は 978 のまま。
 
 ## タスク A: 完全一致再録カード 11 枚 (engine 変更 0)
 
@@ -102,8 +134,14 @@
 ### 検証
 
 - typecheck clean (meta-app) / eslint 0 errors (既存 Button.tsx 空interfaceも是正)。
-- e2e (meta) 非tutorial **22 pass**: deck.spec(新規3, MAX可視/クリック→同ID上限/デッキコード) /
-  cards.spec(改修4) / smoke 全10ルート console error 0 / golden-path 実機対戦 / engine-stub。
+- e2e (meta) 非tutorial **26 pass**: deck.spec(5: MAX可視/クリック→同ID上限/パラレル合算追加→4枚目ブロック/
+  v1→v2 migration修復/デッキコード) / cards.spec(改修4) / filter-decoy.spec(2: §7 色facet decoy除外) /
+  smoke 全10ルート console error 0 / golden-path 実機対戦 / engine-stub。
+- card-addition-checklist §7「画面処理=文言」を deck-builder に適用: 同ID上限の追加→兄弟絵柄MAX→ブロックを
+  実機で踏破、facet フィルタの decoy 除外を実機検証、スクリーンショット目視確認。
+- **自己レビュー (敵対的多エージェント, 5次元×検証)**: 10指摘→8確定(1重複)→7修正/2 refuted。
+  migration修復不足(高)/お気に入りcardId不整合(中)/_matchMeta stale(中)/FilterRailカウント×2/折畳ハイライト/
+  未知num受理(低×4) を同セッションで修正 ([[BUG-127]] / [[BUG-126]] 追記)。
 - node 実証: 違法パラレルデッキ・事件混入が NG、サンプルデッキ2種が OK。
 - 既知 flaky: tutorial「Esc で viewer」(1/3 pass、tutorial/router 未変更、遷移タイミング競合、本変更と無関係)。
 

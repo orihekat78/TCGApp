@@ -1,0 +1,1225 @@
+{
+ "counts": {
+  "sigs": 240,
+  "green": 4,
+  "greenCards": 8,
+  "yellow": 226,
+  "yellowCards": 487,
+  "black": 10,
+  "blackCards": 22
+ },
+ "green": [
+  {
+   "rep": "B07041",
+   "clusterSize": 2,
+   "mechanism": "a1 【パートナー白】【登場時】 = partnerColor cond + enter hook; キャラ1pick sceneSetState{state:'stun'}. a2 【宣言】【スリープ】 = declared + cost sleepSelf; 現場キャラ1pick charSetCard{fromDeckTop:true,faceUp:false} (B03032 同型). All verbs/conds present.",
+   "confidence": "high",
+   "verifyReason": "a1: 【パートナー白】=partnerColor cond (cond/eval.ts:36-43) gating a triggered enter ability (selfOnly via source.uid, triggered.ts:55,172; condition evaluated triggered.ts:193-206); 'キャラを1枚まで選びスタンさせる'=sceneSetState short-form with state:'stun' (atom-handlers.ts:671-682 accepts 'stun'; ATOM_PICK_SPEC.sceneSetState needs:'state', buildShortFormPick passes side default 'either'). a2: 【宣言】【スリープ】=declared + cost sleepSelf (cost/pay.ts:36-42); '現場のキャラ1枚にデッキ上端を裏向きセット'=charSetCard{fromDeckTop:true,faceUp:false,max:1,side:'self'} PA short-form (atom-handlers.ts:839-878), exact B03032 pattern (B03032.ts:24-31). Every clause maps to an existing verb/cond/hook."
+  },
+  {
+   "rep": "B07047",
+   "clusterSize": 2,
+   "mechanism": "【事件赤魔術】〚突撃〛 = caseTrait('赤魔術') gated continuous grantKeywords ['突撃'] (caseTrait honored, D11007/caseTraitConditioned pattern). 【登場時】 charSetCard{fromDeckTop:true,faceUp:false}. 【ヒラメキ】 = triggered hook evidence:remove-by-action optional:true → キャラ1pick sceneSetState{state:'sleep'} (D08013 hirameki pattern). All present.",
+   "confidence": "high",
+   "verifyReason": "〚突撃〛 gated by 【事件赤魔術】 = continuous ability with condition caseTrait('赤魔術') (cond/eval.ts:57-68, evaluates caseTraits∪traits) + continuousModifier.grantKeywords:()=>['突撃']; read.char.keywords (char.ts:114-157) re-evaluates continuous grantKeywords with condition gate (line 145-150), and namedExceptionAllowed (flow/main/action.ts:54) literally matches '突撃' — exact D11007 a2 pattern (D11007.ts:35-47). 【登場時】=enter selfOnly → charSetCard{fromDeckTop:true,faceUp:false} (B03032 pattern). 【ヒラメキ】=triggered hook evidence:remove-by-action optional:true (handleEvidenceRemovedHook triggered.ts:321-385, pushPendingHirameki) → effect sceneSetState sleep pick — D08013.ts a2 + D01003 sleepChar pattern. All present."
+  },
+  {
+   "rep": "B07057",
+   "clusterSize": 2,
+   "mechanism": "chain 'してもよい。そうした場合': (1) 現場の cardName[黒羽快斗] or [怪盗キッド] 1pick sceneToHand (cardName honored by matchOneFilter on SCENE picks — only the deckReveal predicate path drops cardName) → (2) キャラ1pick charGrantKeyword 突撃 scope:turn + draw. sceneToHand bounces to owner hand. All atoms exist.",
+   "confidence": "med",
+   "verifyReason": "'現場の〚カード名[黒羽快斗]か[怪盗キッド]〛を1枚手札に移す'=sceneToHand PA short-form (atom-handlers.ts:647-666; ATOM_PICK_SPEC.sceneToHand mode PA) with filter cardName array — matchOneFilter (candidates.ts:219-224) honors cardName via allCardNameComponentsForDef on scene picks; sceneToHand bounces to owner hand (mutate.scene.toHand). 'そうした場合'=chain (skip→__chainStepNoApply break, resolve-picks.ts:410-413). 'キャラを1枚まで選び突撃をターン終了まで与える'=charGrantKeyword{uid:'$pick',kw:'突撃',scope:'turn',target:{pick}} explicit Pattern-A form (atom-handlers.ts:797-806; exact B01094.ts:31 / B06060.ts:28 pattern). draw verb present. namedExceptionAllowed (action.ts:54) honors granted 突撃 via turnEffects.grantedKeywords (char.ts:122). All clauses map."
+  },
+  {
+   "rep": "B07058",
+   "clusterSize": 2,
+   "mechanism": "【事件赤魔術】 caseTrait gate. remove-area lvl3以下【白】 1pick sceneEnter (bind new uid). Then on that bound char: charModifyAP+3000 scope:turn + charGrantKeyword '突撃[キャラ]' scope:turn + charSetCard{fromDeckTop:true,faceUp:false} on the bound uid. sceneEnter writes new uid to binding; subsequent atoms use it. All verbs present (突撃[キャラ] = literal keyword string grant).",
+   "confidence": "med",
+   "verifyReason": "【事件赤魔術】 event gate = ability condition caseTrait('赤魔術') (cond/eval.ts:57-68), failing condition = no-op event (rules/17). 'リムーブのレベル3以下【白】キャラを1枚まで登場'=sceneEnter from remove with target pick filter{color:'白',levelMax:3} + bind:'$entered'; sceneEnter writes new uid to ctx.bindings[bind] (atom-handlers.ts:549-554) and splices source remove (line 506-510) — exact D11014.ts:50-57 pattern. Subsequent atoms on $entered.uid: charModifyAP{delta:3000,scope:'turn'} (atom-handlers.ts:718-724), charGrantKeyword{kw:'突撃[キャラ]',scope:'turn'} (line 797-806; 突撃[キャラ] literally matched by namedExceptionAllowed action.ts:55), charSetCard{fromDeckTop:true,faceUp:false} (line 835-878). uid writeback via $matched/sceneEnter confirmed by D11019.ts:35,45. Skip(0枚) gracefully no-ops ($entered.uid stays '$'-prefixed → handlers early-return). All present."
+  }
+ ],
+ "yellow": [
+  {
+   "rep": "B05118",
+   "clusterSize": 10,
+   "missing": "Needs (1) an ability-rewrite verb to replace the partner's built-in 事件解決 ability with a new 【宣言】【証拠隠滅】 ability, and (2) a loseGame/defeat verb (相手はゲームに敗北する). Neither exists: no ability-rewrite mechanism in engine, and AtomVerb has no lose/defeat verb (grep: zero hits for loseGame/敗北/defeat in atom-handlers + effect.ts). The case:to-resolved 'opp draws 1' clause IS expressible (caseResolvedHandRemove-style hook + draw), but the rewrite+lose clauses block it."
+  },
+  {
+   "rep": "D06003",
+   "clusterSize": 4,
+   "missing": "Body 'リムーブの「【カットイン】AP＋」を持つカードを1枚まで手札' needs a filter for a SPECIFIC cutin subtype (AP+ cut-in). TargetFilter.keyword:'カットイン' (defHasKeyword, candidates.ts:243) matches ANY cutin ability, not specifically an AP+ cutin, so it over-matches the text. No filter for cutin-effect-content. (【事件緑＆白】突撃 = caseColor combine:'and'; partnerColor+action:declare+turn1 are fine — only the AP+ cutin filter is the gap.)"
+  },
+  {
+   "rep": "B01023",
+   "clusterSize": 3,
+   "missing": "deckRevealUntil(maxN:5)+handAddFromDeck+deckToBottomBound covers the look-5 clause. But 'このイベントをキャラにセットする' + 'セットされているキャラは「コンタクトしたとき AP+2000」を持つ' requires a set card to CONFER a triggered ability (contact:start → charModifyAP) onto its host char. Engine tracks setCards (cardId/faceUp, read/char.ts:175) but never scans set-card abilities to grant them to the host (continuousModifier is owner-only; collectCardsInPlay does not include set cards). Missing: set-card-confers-ability-to-host. ヒラメキ draw is fine."
+  },
+  {
+   "rep": "B02076",
+   "clusterSize": 3,
+   "missing": "【登場時】'リムーブの[長野県警]キャラを1枚選び、デッキの下に移してもよい。そうした場合ドロー' needs a verb to move a PICKED remove-area card to deck bottom. No such verb: remove-touching verbs are handAddFromRemove (→hand), sceneEnter from:remove (→scene), charStackCard (→stack); deckToBottomBound only moves deck-reveal-bound cardIds. Zero cards/verbs do remove→deck-bottom. ヒラメキ(キャラ1枚スリープ) is fine."
+  },
+  {
+   "rep": "B02077",
+   "clusterSize": 3,
+   "missing": "Single 【登場時】 (trigger enter, selfOnly). Condition '現場にこのキャラ以外のLv7以上の探偵がいる場合' = sceneHas{query:{area:'scene',side:'self',excludeSelf:true,filter:{trait:'探偵',levelMin:7}},nMin:1} (excludeSelf candidates.ts:163, levelMin honored). Effect 'リムーブのLv5以下探偵を1枚までスリープ状態で登場' = sceneEnter{from:'remove',max:1,enterSleep:true,filter:{trait:'探偵',levelMax:5,kind:'character'}} (enterSleep atom-handlers.ts:528; from:remove filter via matchOneFilter; B02004 confirms from:remove pattern). No cutIn/hirameki/henso."
+  },
+  {
+   "rep": "B03005",
+   "clusterSize": 3,
+   "missing": "a1: 【パートナー青】=partnerColor{color:'青'} condition; 【宣言】【スリープ】=declared+cost sleepSelf; 'Lv6以下[毛利蘭]を1枚まで選び突撃を与える'=charGrantKeyword{uid:'$pick',kw:'突撃',scope:'turn',target:pick query area:scene filter:{cardName:'毛利蘭',levelMax:6}} (B01094 confirms charGrantKeyword uid:'$pick' to picked target; cardName honored via matchOneFilter candidates.ts:219). ヒラメキ: trigger evidence:remove-by-action optional → handAddFromRemove{max:1,filter:{cardName:'江戸川コナン'}} (split-name honored). All clauses covered."
+  },
+  {
+   "rep": "B03089",
+   "clusterSize": 3,
+   "missing": "Enter-from-hand/remove + AP+2000 + grant 突撃 are all fine. Blocker: '「ターン終了時、このキャラをリムーブする。」を与える' to the newly-entered char. Granting a turn-end-removal to ANOTHER char has no verb. The removeOnTurnEnd flag exists in game-state.ts:44 / scene.ts:63 but is NEVER consumed at phase end (grep: only comments + cleanup, no actual removal in flow/turn.ts). Missing: a consumed removeAtTurnEnd turn-effect (or ability-grant mechanism)."
+  },
+  {
+   "rep": "B03132",
+   "clusterSize": 3,
+   "missing": "deck-look-3 by 【黒】 (color filter, honored in deckRevealUntil) + handAddFromDeck is fine. Blocker: '手札からFILEエリアの枚数以下のレベルの【黒】キャラを1枚まで登場' needs a hand-enter with a DYNAMIC level cap = current FILE count. sceneEnter filter has no dyn levelMax computed from file.length; fileAtLeast is a fixed gate, not a dynamic per-card level cap. Missing: FILE-count-derived dynamic level filter (ネクストヒント step-2 semantics) as an effect."
+  },
+  {
+   "rep": "B04012",
+   "clusterSize": 3,
+   "missing": "【登場時】deck上1枚見て[妃英理]/[工藤新一]/[毛利探偵事務所]を手札。The deckRevealUntil predicate (targetFilterToPredicate atom-handlers.ts:56-85) honors only cardId/color/trait/ap/lp/level/kind — NOT cardName. cardName-by-component matching in deck-reveal is unsupported. PR135 comment explicitly DEFERS 'deckRevealUntil cardName + handAddFromDeck'. Missing: cardName honored in deckRevealUntil filter."
+  },
+  {
+   "rep": "B04038",
+   "clusterSize": 3,
+   "missing": "ミスリード1 = misreadX shared class (icon-misread, supported). Blocker: 【登場時】'リムーブエリアにあるすべてのカードをデッキの下に移し、シャッフル' needs a verb to move the ENTIRE remove pile to deck bottom. deckToBottomBound only moves deck-reveal-bound cardIds; deckShuffle exists. No verb/card moves all-remove→deck. Missing: removeAllToDeck (move whole remove pile to deck)."
+  },
+  {
+   "rep": "B04058",
+   "clusterSize": 3,
+   "missing": "【ターン1】'自分の現場のキャラのアクション［事件］によって証拠を得たとき' has no card-triggerable hook. TRIGGERED_HOOKS lacks an evidence-gained-by-action-event hook (evidence:gain is internal-only; action:declare fires at declaration, not on evidence gain, and can't distinguish action[事件]). Missing: an action[事件]-evidence-gain hook. (ヒラメキ '相手は手札を1枚リムーブ' = discard player:'opp' is fine.)"
+  },
+  {
+   "rep": "B05005",
+   "clusterSize": 3,
+   "missing": "a1 'ネクストヒントで【青】カードを使用したとき' — next-hint emits effect:declared with {kind:event-use/character-use,cardId} IDENTICAL to hand-use; no field distinguishes next-hint from hand-use, so 'ネクストヒントで' can't be isolated (missing: next-hint-specific trigger/payload flag). a2 '「必ずガードする」を与える' needs a mustGuard/forced-guard flag + guard-window enforcement — only mustBeTargeted (挑発, target side) exists; no mustGuard (grep zero). cutIn AP+2000 is fine."
+  },
+  {
+   "rep": "B05006",
+   "clusterSize": 3,
+   "missing": "Declared branches on THIS char's own state: 'アクティブ状態の場合〜。スリープ状態かスタン状態の場合〜'. No condition reads the source char's active/sleep/stun state. sceneHas{state:[...]} can't pin to ctx.source.uid (excludeSelf drops self, the opposite; no self-only query selector), and flag/TurnScopedFlags (handUseUsed/nextHintUsed/assistedThisTurn) don't expose char state. Missing: a self-char-state condition. (現場に妃英理/毛利探偵事務所 gate = sceneHas is fine.)"
+  },
+  {
+   "rep": "B05009",
+   "clusterSize": 3,
+   "missing": "a1 '自分のキャラの能力によって登場した場合' — enter payload has viaEffect (true for ANY effect entry incl. events) but no condition exposes the entry SOURCE being a character ability; no condition reads enter payload viaEffect/source. a2 '【絆工藤新一】相手のキャラがこのキャラとのコンタクトによってリムーブされたとき、ドロー' — contact:end/コンタクトリムーブ is internal-only (not in TRIGGERED_HOOKS). Missing: enter-via-character-ability condition AND contact-removed card hook. ヒラメキ draw is fine."
+  },
+  {
+   "rep": "B05046",
+   "clusterSize": 3,
+   "missing": "登場時(Lv7以下リムーブ)=sceneRemove, 宣言(手札から特徴鈴木財閥1枚リムーブ:キャラ1枚スリープ)=removeFromHand cost+sceneSetState are fine. Blocker: 'ターン終了時、自分の手札が4枚以下の場合、ドロー' needs a hand-count ≤N condition. No handAtLeast/handCount condition exists; sceneHas{area:hand} only does ≥nMin (wrong direction, can't do ≤4). Missing: hand-count-≤ condition."
+  },
+  {
+   "rep": "B05087",
+   "clusterSize": 3,
+   "missing": "'リムーブエリアにある[長野県警]キャラがリムーブエリアから離れたとき' has no 'left remove area' hook (leave:to-remove is entering-remove; no remove:leave). Also 2nd clause '手札が6枚以上ある場合 手札リムーブ' needs a hand-count ≥6 condition (none). Missing: a remove-area-leave hook AND a hand-count condition."
+  },
+  {
+   "rep": "B05088",
+   "clusterSize": 3,
+   "missing": "Same 'リムーブエリアから離れたとき' missing hook as B05087. Also a3 cost 'リムーブエリアにある[長野県警]キャラを1枚デッキの下に移す' is a remove→deck-bottom COST; Cost kinds (sleepSelf/sleepChar/removeFromHand/removeFromScene/removeDeckTop/discardEvidence/selfToDeckBottom/fileFrom/flipFaceUpEvidence) have no remove→deck cost. Missing: remove-area-leave hook AND remove→deck cost. (【絆上原由衣】AP+1000 continuous, grant 突撃 self are fine.)"
+  },
+  {
+   "rep": "B06013",
+   "clusterSize": 3,
+   "missing": "case. 解決編移行時手札リムーブ (caseResolvedHandRemove) + 【解決編】【宣言】【ターン1】 flipFaceUpEvidence cost + 現場に工藤新一/毛利蘭 gate (sceneHas cardName) are all fine. Blocker: the body 'deck上3枚見て[工藤新一]か[毛利蘭]を手札' uses deckRevealUntil with cardName filter, which is NOT honored in the deckReveal predicate path (cardId/color/trait/ap/lp/level/kind only; DEFERRED per PR135). Missing: cardName in deckRevealUntil."
+  },
+  {
+   "rep": "B07001",
+   "clusterSize": 3,
+   "missing": "a1 cost 'デッキ上3枚リムーブ' then 'コストでリムーブされた[少年探偵団]/[毛利探偵事務所]1枚につきAP+1000' — removeDeckTop records details in paidItems (pay.ts:77) but does NOT populate ctx.costPaid (only flipFaceUpEvidence does, pay.ts:131), so $cost.removeDeckTop trait-count is unavailable to dyn. Missing: cost-removed-card trait-count exposed to dyn. a2 '「相手のアクティブ状態のキャラを指定してアクションできる」を与える' — expandActionTargets is read only from the attacker's OWN printed action:pre-target ability (target-expander.ts:128 selfOnly), not grantable as a turn-effect to a picked char. Missing: grantable can-target-active turn-effect."
+  },
+  {
+   "rep": "B07034",
+   "clusterSize": 3,
+   "missing": "YELLOW: 【ターン2】'裏向きセットカードが1枚現場から離れるたび' needs a triggerable hook for a set-card leaving a char — no such hook in TRIGGERED_HOOKS (set-card removal emits nothing card-subscribable). Declared part (charSetCard fromDeckTop + sceneRemove lvl7以下) is fine. Missing: set-card-leave trigger hook."
+  },
+  {
+   "rep": "B09055",
+   "clusterSize": 3,
+   "missing": "YELLOW: declared effect '自分のパートナーエリアかリムーブエリアにある[赤井秀一&世良真純]を登場させる' — sceneEnter from='remove' is supported, but enumerating/登場 a non-partner card FROM パートナーエリア is structurally absent (no PA card slot, same B07045 gate). 登場時 lvl7以下 remove + selfToDeck/sceneRemove self are fine. Missing: partner-area-as-source enumeration/sceneEnter from='partner-area'."
+  },
+  {
+   "rep": "B09071",
+   "clusterSize": 3,
+   "missing": "YELLOW: (1) 【疾風】grants a turn-scoped textual action ability 'アクティブ状態の相手キャラを指定してアクション' — needs expandActionTargets state:['active'] but conditionally turn-granted via 疾風, with no charSetTurnEffect→action-enumeration wiring; (2) 【ターン1】'このキャラとのコンタクトによってリムーブされたとき' — leave:to-remove payload {uid,cause} carries NO attacker uid, so 'with THIS card' is inexpressible (only contactOpponentApHigher reads contact:start attacker, not removal). Missing: contact-removal-by-self trigger + turn-granted active-target action."
+  },
+  {
+   "rep": "B09072",
+   "clusterSize": 3,
+   "missing": "YELLOW: 登場時 'このターン中、自分のキャラの【疾風】が発動していた場合' needs a 'a 疾風 fired this turn' boolean turn-flag/condition — none exists (flag condition has no such key; 疾風 is an enter trigger, not tracked). Declared 'アクティブにし...「推理できない」を与える' grants a non-keyword textual restriction — no mechanism to grant '推理できない' (only keyword/expandActionTargets grants). Hirameki draw OK. Missing: 疾風-fired-this-turn flag + grant-'cannot-reason'."
+  },
+  {
+   "rep": "B09074",
+   "clusterSize": 3,
+   "missing": "YELLOW: '上から4枚見てその中から【疾風】を持つキャラを公開して手札' filters candidates by keyword:'疾風', but 疾風 is a triggered enter+enterOrderEquals ability with keywords:[] empty (not one of the 4 icon-keyword predicates in defHasKeyword) → filter.keyword:'疾風' never matches. Missing: 疾風 as a filterable keyword (or a hasFumai-style filter)."
+  },
+  {
+   "rep": "B09090",
+   "clusterSize": 3,
+   "missing": "YELLOW: 解決編移行時 discard is OK (caseResolvedHandRemove). But declared cost '[神奈川県警]キャラか【疾風】持ちをリムーブ' needs 疾風 as a filterable keyword (not in keywords[]), AND effect '次に自分の現場に登場したキャラは【疾風】の条件を無視できる(2番目以降でも発動)' needs a mechanism to force-fire 疾風 / override enterOrderEquals — no such verb/flag. Missing: 疾風 keyword filter + 疾風-condition-ignore grant."
+  },
+  {
+   "rep": "D09004",
+   "clusterSize": 3,
+   "missing": "YELLOW: 【絆諸伏高明】LP+1 continuous (bond condition) is OK. 登場時 'カードを1枚引き、手札を1枚リムーブする。リムーブしたカードが[長野県警]のキャラの場合〜' requires INSPECTING the discarded card's trait — discard atom has no bind of the discarded cardId, so the conditional on the removed card's trait is inexpressible. Missing: discard-with-bind so a subsequent condition can inspect the discarded card."
+  },
+  {
+   "rep": "PR060",
+   "clusterSize": 3,
+   "missing": "GREEN: 【解決編】= condition caseStatus{'解決編'}; 【登場時】= triggered hook 'enter' selfOnly; conditional if sceneHas{query:{area:'scene',side:'opp',state:['sleep','stun']},nMin:2} then atom sceneRemove (short-form PA pick, side:'opp', state:['sleep'], filter:{levelMax:7}, n max 1, cause:'effect'). All clauses map; 0-枚 legal via nMin:0. No engine change."
+  },
+  {
+   "rep": "B01005",
+   "clusterSize": 2,
+   "missing": "YELLOW: 'ネクストヒントで手札を使用したとき' — next-hint emits effect:declared {kind:event-use|character-use} with no flag distinguishing next-hint from normal hand-use, so the next-hint-specific trigger is inexpressible; 'そのカードのレベル以下のレベルのキャラ' needs the used card's level as a dynamic filter bound from the trigger (no such bind); and 'デッキの下に移す' has no scene-to-deck-bottom atom (only sceneToHand/sceneRemove). Missing: next-hint-use trigger + dyn level-from-trigger + sceneToDeckBottom verb."
+  },
+  {
+   "rep": "B01006",
+   "clusterSize": 2,
+   "missing": "YELLOW: 【絆江戸川コナン】'相手の能力や効果によって選ばれない' (untargetable) — no untargetability flag/filter exists anywhere in engine or cards; candidate enumeration (candidates.ts/matchOneFilter) has no 'protected/notSelectable' exclusion. Declared (sceneEnter lvl5以下少年探偵団 from hand + conditional draw on [江戸川コナン]) is fine. Missing: untargetable condition/flag honored by candidate enumeration."
+  },
+  {
+   "rep": "B01009",
+   "clusterSize": 2,
+   "missing": "YELLOW: 'お互いの現場にキャラ6枚以上の場合、手札にあるこのキャラはレベル4になる' — continuous level modification of a card IN HAND; continuousModifier/charModifyLevel operate only on scene chars (read.char by scene uid), no mechanism to alter a hand card's level for the 手札使用 level check. Declared (LP0以下の青 pick lpMax:0 + sceneSetState active, cost selfToDeckBottom) is fine. Missing: hand-card stat modification."
+  },
+  {
+   "rep": "B01010",
+   "clusterSize": 2,
+   "missing": "YELLOW: '相手の現場にいるキャラがこのキャラとのコンタクトによってリムーブされたとき、手札を1枚リムーブしてもよい。そうした場合、証拠を1つ得る' — leave:to-remove payload {uid,cause} has NO attacker identity, so 'このキャラとのコンタクト' (attacker=self) is inexpressible; contactOpponentApHigher only fires on contact:start (not removal). optional discard→evidenceGain chain is fine. Missing: contact-removal-by-self trigger (attacker uid in leave/contact-removal payload)."
+  },
+  {
+   "rep": "B01030",
+   "clusterSize": 2,
+   "missing": "YELLOW: 【ターン1】'相手の現場にいるキャラがコンタクトによってリムーブされたとき' — leave:to-remove (cause matchable) but the removed char has already left scene; payload {uid,cause} gives no side, so a matcher cannot restrict to OPPONENT's removed char reliably (own-char contact removal would also fire). リムーブから[カットイン]持ち[緑]を手札 IS expressible (keyword:'カットイン' via defHasKeyword). Missing: opponent-side discrimination for a contact-removed (departed) char."
+  },
+  {
+   "rep": "B01031",
+   "clusterSize": 2,
+   "missing": "YELLOW: 'コンタクトによってリムーブされたとき、ターン終了時までこのキャラは突撃を持つ' — charGrantKeyword{uid:'$self',kw:'突撃',scope:'turn'} is fine, but the TRIGGER 'an opponent's char removed by contact' has the same gap as B01030: leave:to-remove payload {uid,cause} lacks side, departed char's owner not determinable, so opponent-only gating is unreliable. Missing: opponent-side contact-removal trigger."
+  },
+  {
+   "rep": "B01035",
+   "clusterSize": 2,
+   "missing": "GREEN: 【現場リムーブ時】コンタクトによって = triggered hook 'leave:to-remove' selfOnly:true + matcher (p)=>p.cause==='contact-ap' (the leaving char itself reacts, no attacker needed); effect sceneSetState sleep short-form (side:'either', n min0/max1). 【ヒラメキ】draw = triggered evidence:remove-by-action optional inline (D03013 pattern). All clauses map; verified against D03013/B08083. No engine change."
+  },
+  {
+   "rep": "B01038",
+   "clusterSize": 2,
+   "missing": "YELLOW: 【自分ターン中】'自分の現場のこのキャラ以外の【緑】のキャラをAP+1000' = continuous AURA onto OTHER characters. continuousModifier is owner($self)-only (resolver fixes ctx.source.uid=bearer); no aura mechanism. A triggered/charModifyAP approach can't keep it continuously synced to scene membership. Hirameki draw is fine. Missing: continuous aura (buff other chars) capability."
+  },
+  {
+   "rep": "B01044",
+   "clusterSize": 2,
+   "missing": "YELLOW: 【登場時】'上から7枚リムーブしてもよい。そうした場合、キャラを1枚まで選び、デッキの下に移す' — optional + mill(7) is fine, but 'キャラを...デッキの下に移す' has NO atom verb (scene-to-deck-bottom). Only sceneToHand / sceneRemove exist; selfToDeckBottom is a self-only COST, not an effect for arbitrary picked chars. Missing: sceneToDeckBottom atom verb."
+  },
+  {
+   "rep": "B01047",
+   "clusterSize": 2,
+   "missing": "YELLOW: アクション終了時 'このキャラを現場からデッキの下に移してもよい' — no scene-to-deck-bottom atom (selfToDeckBottom is a cost, not an effect verb, and there's no action:end triggerable hook in TRIGGERED_HOOKS). 'そうした場合〜登場させ、突撃と「ターン終了時、現場から手札に移す」を与える' needs granting a scheduled self-bounce textual effect (only keyword grant exists). Missing: action:end card trigger + sceneToDeckBottom + grant-scheduled-hand-bounce."
+  },
+  {
+   "rep": "B01052",
+   "clusterSize": 2,
+   "missing": "YELLOW: 'スリープ状態で登場' (enterSleep) is fine. 【登場時】'上から1枚公開、レベル6以下のキャラの場合登場、それ以外手札' — needs reveal-1 then branch on kind=character AND levelMax6; boundMatchesFilter honors levelMin/Max but DROPS kind, so 'キャラ vs それ以外(event)' cannot be distinguished. Missing: kind honored in boundMatchesFilter (or a reveal-1 conditional on card kind)."
+  },
+  {
+   "rep": "B01054",
+   "clusterSize": 2,
+   "missing": "YELLOW: main clause 「ターン終了時まで元のLPを0にする」 needs a TURN-SCOPED lp override. charOverrideLP (setOverrideLP) is PERMANENT (no turn-end revert; same TODO as misread LP-X). charModifyLP scope:'turn' can't fake it because zeroing requires delta = -(picked target's PRINTED lp), and dyn has no $pick.lp / target-printed-LP placeholder ($self.lp = source only). Missing: turn-scoped charOverrideLP (revert at turn end) OR per-target printed-LP dyn. Hirameki (draw 1) is fine."
+  },
+  {
+   "rep": "B01057",
+   "clusterSize": 2,
+   "missing": "YELLOW: 「このイベントを白キャラにセットする」+「セットされているキャラは『【相手ターン中】【現場リムーブ時】手札からLv7以下の白を登場』を持つ」. Engine has NO set-card-confers-ability-to-bearer wiring: read.char.ap/lp/keywords only reads the bearer's OWN continuousModifiers/turnEffects, never a set card's abilities (read/char.ts setCards returns cardIds only). charSetCard sets a card but does not project its abilities onto the bearer. Missing: set-card → bearer ability projection mechanism."
+  },
+  {
+   "rep": "B01062",
+   "clusterSize": 2,
+   "missing": "GREEN: a1 = triggered hook 'action:declare' (NON-selfOnly) + matcherCondition triggerCharMatches{side:'self'} + matcher closure target.kind==='case' (B01032 precedent) + condition partnerColor 赤 + limit turn:1; effect sceneRemove filter{levelMax:7} max:1. a2 = type:'declared' limit turn:1 + charModifyAP filter{color:'赤'} delta:1000 scope:'turn' max:1 (B07093/D11015 precedent)."
+  },
+  {
+   "rep": "B01065",
+   "clusterSize": 2,
+   "missing": "GREEN: effect = triggered 'leave:to-remove' selfOnly + condition turn:opp (D04010 a1 precedent) → optional{ chain[ evidenceGain{player:'opp',n:1}, sceneRemove filter{levelMax:5} max:1 ] } (optional+chain 'そうした場合' = B03038 precedent). hirameki = scope:'on-evidence' evidence:remove-by-action optional + sceneSetState sleep pick (D04010 a2 precedent)."
+  },
+  {
+   "rep": "B01066",
+   "clusterSize": 2,
+   "missing": "GREEN: triggered 'action:declare' selfOnly + matcher closure target.kind==='case' + limit turn:1; effect sceneSetState{uid:'$self', state:'active'} (re-activate self after action[事件] sleeps it)."
+  },
+  {
+   "rep": "B01076",
+   "clusterSize": 2,
+   "missing": "GREEN: single event effect = atom sceneEnter{from:'remove', max:1, viaEffect:true, filter:{levelMax:6, color:'赤', kind:'character'}} (B02004 a1 / D08024 precedent). No other clauses."
+  },
+  {
+   "rep": "B01081",
+   "clusterSize": 2,
+   "missing": "YELLOW: 「Lv7以下のキャラを1枚まで選び、デッキの上か下に移す（自分が上か下かを選ぶ）」. No verb moves a PICKED scene char to deck. sceneRemove→remove area, sceneToHand→hand; selfToDeckBottom is a COST (self only); deckToBottomBound moves bound cardIds (deck-peek remainder, not scene chars). B07093 '現場からデッキの下に移す' rider was explicitly DEFERRED. Missing: sceneToDeck (top/bottom) verb. (action:declare trigger + partnerColor 黄 + turn1 are fine.)"
+  },
+  {
+   "rep": "B01084",
+   "clusterSize": 2,
+   "missing": "GREEN: triggered phase:end:start + condition turn:self → sequence: deckRevealUntil{player:'opp', maxN:1, filter:{levelMin:5}, bind:'$rest', bindMatch:'$found'} (捜査1 via deck-reveal substitute — B03096 precedent, since souza '発見された' ref is unimplemented) → conditional bound{$found,matched} then sceneSetState{state:'active', pick query{side:'self', excludeSelf:true, filter:{levelMax:6}} max:1} → deckToBottomBound $found/$rest."
+  },
+  {
+   "rep": "B01092",
+   "clusterSize": 2,
+   "missing": "YELLOW: 「このキャラ以外のキャラが…現場から離れるとき、このキャラをリムーブしてもよい。そうした場合、そのキャラは現場から離れる代わりに手札に移す」. This is a REPLACEMENT/redirect of another char's removal to hand. leave:to-remove fires AFTER the char has already left (post-removal). The 'replace' wrapper throws via effect.run (handled only by trigger/stack immediate-resolution layer, not as a card effect). Missing: leave-replacement hook ('代わりに' redirect of another char's removal to hand). Hirameki draw is fine but card blocked by main clause."
+  },
+  {
+   "rep": "B02003",
+   "clusterSize": 2,
+   "missing": "YELLOW: 【登場時】「Lv7以下のキャラを1枚まで選び、デッキの下に移す」 = move a picked scene char to deck bottom; no sceneToDeck verb exists (B07093 deferred same op; selfToDeckBottom is self-cost only, deckToBottomBound is for deck-peek cardIds). The 【宣言】LP+1 clause (charModifyLP cardName[毛利蘭] turn) is fine, but the 登場時 deck-move clause is uncovered. Missing: sceneToDeck verb."
+  },
+  {
+   "rep": "B02005",
+   "clusterSize": 2,
+   "missing": "GREEN: single declared ability limit turn:1; effect sequence/parallel on a self-side pick filter{cardName:'毛利小五郎'} max:1: charModifyAP delta:2000 scope:'turn' + charGrantKeyword{kw:'突撃', scope:'turn'} (grantKeyword turn-scope confirmed in mutate/char.ts; 突撃 honored in flow/main/action.ts namedException)."
+  },
+  {
+   "rep": "B02006",
+   "clusterSize": 2,
+   "missing": "GREEN(low): cutIn = triggered scope:'on-hand' effect:declared optional → conditional{ if: custom closure (contact target via $contact.targetUid is 特徴[少年探偵団] AND engine.read.char.level≤5), then charModifyAP{$contact.byUid, +3000, contact}, else +1000 } (contactTargetMatches custom precedent; level needs inline custom). hirameki = conditional{ if: sceneHas{side:'self', filter:{trait:'少年探偵団'}}, then draw 2 }."
+  },
+  {
+   "rep": "B02013",
+   "clusterSize": 2,
+   "missing": "YELLOW: 「このイベントをLv7以下の青キャラにセットする」+「セットされているキャラは突撃を持つ」. Set-card-confers-keyword-to-bearer has no engine wiring (read.char only reads bearer's own modifiers). A flat charSetCard+charGrantKeyword(permanent) does NOT honor 'while set' linkage (keyword would survive charRemoveSetCard of the event). Missing: set-card → bearer keyword projection. Hirameki '手札に加える' alone is fine."
+  },
+  {
+   "rep": "B02018",
+   "clusterSize": 2,
+   "missing": "YELLOW: a1 trigger 「このキャラにカード1枚がセットされるたび」 — there is NO card-set hook in HookName (no 'card:set'/'set:added'; charSetCard emits nothing subscribable). Cards cannot react to a set event. Missing: card-set trigger hook. (a2 declared with removeDeckTop n:3 cost + charSetCard fromDeckTop faceUp:false is fine, but a1 is uncovered.)"
+  },
+  {
+   "rep": "B02019",
+   "clusterSize": 2,
+   "missing": "GREEN: a1 enter selfOnly → deckRevealUntil{maxN:5, filter:{kind:'event', color:'緑'}, bind:'$rest', bindMatch:'$found'} → conditional($found) handAddFromDeck{$found.cardId} → deckToBottomBound $rest (D01013/B02019-style). a2 phase:end:start + turn:self → sceneSetState{state:'active', pick filter{hasSetCards:true} max:1}."
+  },
+  {
+   "rep": "B02022",
+   "clusterSize": 2,
+   "missing": "YELLOW: 突撃[キャラ] keyword IS honored (action.ts:55). But 【ターン1】「相手のキャラがアクションするとき、このキャラを指定できる場合、必ず指定する」= a PASSIVE always-on taunt limited once/turn. D11005 taunt works only as an ACTIVE declared ability (sleepSelf cost) that pre-sets mustBeTargeted for the whole opp turn. There is no trigger/continuous mechanism to auto-set mustBeTargeted with a 【ターン1】 gate at opponent's action-declaration (continuousModifier can't write turnEffects flags; no pre-declare hook). Missing: passive/continuous taunt (auto mustBeTargeted) with turn-limit."
+  },
+  {
+   "rep": "B02025",
+   "clusterSize": 2,
+   "missing": "GREEN: effect = triggered leave:to-remove selfOnly + condition turn:opp → handAddFromRemove{filter:{keyword:'カットイン', color:'緑'}, max:1}. keyword:'カットイン' IS honored on the matchOneFilter pick path via defHasKeyword icon-ability predicate (read/keyword.ts, BUG-122 fix). hirameki = same effect via evidence:remove-by-action optional."
+  },
+  {
+   "rep": "B02031",
+   "clusterSize": 2,
+   "missing": "YELLOW: event sets onto a 緑/探偵 char and grants 突撃[キャラ] PLUS a custom ability 「相手の現場のアクティブ状態のキャラを指定してアクションできる」. Two blockers: (1) set-card-confers-ability-to-bearer has no wiring; (2) the granted 'can action active-state opponent chars' is a non-keyword targeting expansion (expandActionTargets-style) that would need to be conditionally tied to the set card. Missing: set-card→bearer ability projection. Hirameki draw alone is fine."
+  },
+  {
+   "rep": "B02038",
+   "clusterSize": 2,
+   "missing": "GREEN: henso = type:'icon-disguise' condition and(caseColor 白, fileAtLeast 6) (B03129/D06012 precedent). 【変装時】 = triggered disguise:into selfOnly → sequence[ draw 1, charModifyAP{$self, +1000, scope:'contact'} ]. 【登場時】 = triggered enter selfOnly → sceneEnter{from:'remove', enterSleep:true, filter:{levelMax:4, color:'白', kind:'character'}, max:1}."
+  },
+  {
+   "rep": "B02041",
+   "clusterSize": 2,
+   "missing": "GREEN: henso = icon-disguise and(caseColor 白, fileAtLeast 6). 【登場時】【変装時】 shared effect = triggered{hook:'enter', hooks:['disguise:into'], selfOnly:true} (multi-hook, D03007 precedent) + condition partnerColor 白 → sceneSetState{state:'sleep', pick query{side:'either'} max:1}."
+  },
+  {
+   "rep": "B02044",
+   "clusterSize": 2,
+   "missing": "deckRevealUntil predicate (atom-handlers targetFilterToPredicate) honors only cardId/color/trait/ap/lp/level/kind — NOT keyword. The effect must reveal top-2 and find a char with 【変装】(keyword), which cannot be filtered. Need keyword (変装) support in the deckRevealUntil filter predicate. henso (icon-disguise + caseColor白 + fileAtLeast4) and 【登場時】【変装時】multi-hook are doable."
+  },
+  {
+   "rep": "B02049",
+   "clusterSize": 2,
+   "missing": "effect: triggered hook 'action:declare' (payload has uid/player, confirmed state-machine.ts:194) + matcherCondition triggerCharMatches{side:'self',filter:{trait:'怪盗'}} + limit{turn:1} + atom charModifyAP{uid:'$trigger.uid',delta:1000,scope:'turn'}. hirameki: triggered hook 'evidence:remove-by-action' optional:true + atom draw{n:1} (D08013 pattern)."
+  },
+  {
+   "rep": "B02052",
+   "clusterSize": 2,
+   "missing": "Set cards are counted-only (rules/16; charSetCard sets a generic face-down/up card with no abilities). This event, when set, must GRANT the host char a new conditional ability ('ターン終了時デッキ3枚リムーブ→スタン') AND the set-event itself needs a 【相手ターン中】【ターン1】own re-set trigger when leaving remove. No mechanism for set-card-granted abilities nor a set-event's own trigger."
+  },
+  {
+   "rep": "B02057",
+   "clusterSize": 2,
+   "missing": "a1 'このキャラがスリープ状態かスタン状態の場合' — no condition checks the SOURCE char's own state. sceneHas{state} tests existence of any char, not pinned to $self uid. Same DEFERRED gate as B06080 a2 (explicitly deferred for identical text). a2 (declared sleepSelf → grant ブレット/突撃[事件] choice to 赤 Lv7 char) is doable but a1 blocks."
+  },
+  {
+   "rep": "B02058",
+   "clusterSize": 2,
+   "missing": "a1 needs hand-count comparison '相手の手札が自分の手札の枚数以上' — no handCount/handAtLeast condition exists (flag is boolean-only). a2 'デッキから〚カード名[沖矢昴]〛が出るまで公開' needs cardName in deckRevealUntil predicate (only cardId/color/trait/ap/lp/level/kind honored)."
+  },
+  {
+   "rep": "B02066",
+   "clusterSize": 2,
+   "missing": "a1 【登場時】: sequence[atom draw{n:1}, atom discard{n:1}]. a2 【相手ターン中】【現場リムーブ時】: triggered hook 'leave:to-remove' selfOnly + condition turn{opp} + atom sceneEnter{from:'remove',max:1,enterSleep:true,filter:{cardName:'メアリー',levelMax:5,kind:'character'}}. Confirmed against B02004 a2 + D08024 reanimate-from-remove."
+  },
+  {
+   "rep": "B02067",
+   "clusterSize": 2,
+   "missing": "Set-event grants host char '相手の能力や効果によって選ばれたとき、それを無効にする'. Two missing capabilities: (1) set-card-granted abilities (set cards are counted-only), (2) untargetable/choose-negation ('選ばれたとき無効' / '選ばれない') — grep shows NO untargetable mechanism anywhere in engine or cards."
+  },
+  {
+   "rep": "B02072",
+   "clusterSize": 2,
+   "missing": "souza atom takes fixed x:number (atom-handlers.ts:1127 'a.x as number'), but X='自分の現場の〚特徴[警察]〛の数' is variable — no dyn for souza X. Also '発見されたカードのレベルの合計以下のレベル' requires summing revealed-card levels as a threshold — no level-sum dyn/reference (souza has no 発見された binding)."
+  },
+  {
+   "rep": "B02075",
+   "clusterSize": 2,
+   "missing": "Single ability 【相手ターン中】【現場リムーブ時】: triggered hook 'leave:to-remove' selfOnly + condition turn{opp} + atom sceneEnter{from:'remove',max:1,enterSleep:true,filter:{trait:'長野県警',levelMax:6,kind:'character'}}. Confirmed against B02004 a2 / D08024."
+  },
+  {
+   "rep": "B02084",
+   "clusterSize": 2,
+   "missing": "Set-event with its OWN trigger 'キャラにセットされていたこのイベントがリムーブエリアに置かれたとき' — set cards are counted-only and cannot carry their own leave-to-remove trigger. No mechanism for a set-event's own hook firing when it leaves to remove. (The initial set + conditional removal part is doable, but the second clause's trigger is not.)"
+  },
+  {
+   "rep": "B02086",
+   "clusterSize": 2,
+   "missing": "a1 【変装時】'相手は手札を1枚リムーブしてもよい。そうしなかった場合、コンタクトによってリムーブされない'. contactImmune is settable via charSetTurnEffect, BUT requires an OPPONENT-driven optional ('相手は…してもよい') and a conditional on the opp's choice outcome ('そうしなかった場合'). resolve-picks does NOT surface choice/optional for chooser:'opp' (defaults to index 0; AI skips optional). No card uses 'そうしなかった場合' (grep empty). a2 【登場時】 buff is fine."
+  },
+  {
+   "rep": "B02087",
+   "clusterSize": 2,
+   "missing": "Clause 1 'ネクストヒントで手札から使用する場合、このキャラは事件カードの色を無視できる' — no nexthint case-color-bypass mechanism (grep '色を無視' empty in engine+cards). Clause 2 (enter: charRemoveSetCard opp side + chain grant 突撃[キャラ] self) is doable, but clause 1 blocks."
+  },
+  {
+   "rep": "B02088",
+   "clusterSize": 2,
+   "missing": "'このキャラを表向きのまま証拠として得る' for a SCENE char — selfToEvidence is event-only (uses ctx.source.cardId from remove, no scene departure). A scene-char→evidence verb (leave scene → gain as evidence) does not exist. Also hirameki '相手はこのアクションによって証拠を得られない' has no mechanism to suppress action[event] evidence gain. cutin enter + 'this-char-removed-when-another-犯人-enters' (enter non-selfOnly) are doable but the two above block."
+  },
+  {
+   "rep": "B03002",
+   "clusterSize": 2,
+   "missing": "a1 '自分がネクストヒントで手札を使用したとき' — next-hint emits the SAME effect:declared{kind:'event-use'|'character-use',cardId} as 手札の使用 (next-hint.ts:96); no field discriminates 'via nexthint'. Matcher cannot gate nexthint-only. a2 (少年探偵団 declared-ability matcher → grant 突撃) is doable, but a1 blocks."
+  },
+  {
+   "rep": "B03003",
+   "clusterSize": 2,
+   "missing": "'この【宣言】能力のコストによって〚阿笠博士〛か〚少年探偵団〛がリムーブされた場合' — cost removeDeckTop removes deck-top cards to remove area but provides NO binding/inspection of what was removed. No condition can read 'cards removed by this cost'. Then deck-bottom a char (doable) is gated on that uninspectable result."
+  },
+  {
+   "rep": "B03016",
+   "clusterSize": 2,
+   "missing": "declared sleepSelf → reveal top 1 → if 〚阿笠博士〛(cardName) OR 〚少年探偵団〛(trait) char → hand else → deck bottom. deckRevealUntil predicate honors single filter only (no filterAny) and does NOT honor cardName — cannot express the cardName-OR-trait match. The branch-on-match-vs-not also needs both outcomes."
+  },
+  {
+   "rep": "B03024",
+   "clusterSize": 2,
+   "missing": "'自分のキャラをデッキの下に移してもよい' and '相手のキャラをデッキの下に移し' — no atom verb moves a SELECTED scene char to deck bottom. mutate.scene.toDeckBottom exists but is exposed only as the selfToDeckBottom COST (self uid). No sceneToDeckBottom effect verb for arbitrary/opponent chars. The '手札から青Lv6以下をスリープ登場' part is fine."
+  },
+  {
+   "rep": "B03028",
+   "clusterSize": 2,
+   "missing": "a1 【登場時】: sequence[deckRevealUntil{player:'self',filter:{color:'緑',kind:'event'},bind:'$rest',bindMatch:'$m'} (reveal 1-by-1 until match, maxN undefined), conditional bound matched → handAddFromDeck{'$m.cardId'}, deckToBottomBound{'$rest'}, deckShuffle]. a2 【自分ターン中】【ターン1】effect:declared matcher(kind event-use + engine.cards.get color 緑) → chain[optional discard, sceneRemove{levelMax:7,max:1}]. Confirmed against B07016 a1 (identical 服部) + D02011/B03096."
+  },
+  {
+   "rep": "B03029",
+   "clusterSize": 2,
+   "missing": "declared cost '〚リムーブエリアの【緑】イベントを2枚デッキの下に移す〛' — no such cost kind (costs: sleepSelf/sleepChar/removeFromHand/removeFromScene/removeDeckTop/discardEvidence/selfToDeckBottom/fileFrom/flipFaceUpEvidence; none moves remove-area cards to deck). Also effect '手札からイベントを1枚まで使用する' (play an event from hand as an effect) has no verb."
+  },
+  {
+   "rep": "B03030",
+   "clusterSize": 2,
+   "missing": "a1 '【絆大岡紅葉】相手の能力や効果によって選ばれない' — no untargetable mechanism (grep '選ばれない' empty in engine+cards). a2 (action:declare selfOnly → sceneEnter from hand 緑 Lv6 sleep) is doable, but a1 (untargetable) blocks."
+  },
+  {
+   "rep": "B03031",
+   "clusterSize": 2,
+   "missing": "deckRevealUntil predicate path does NOT honor cardName (only cardId/color/trait/ap/lp/level/kind per targetFilterToPredicate). Filter needs levelMin:8 AND cardName:[服部平次]; the name filter cannot be evaluated during reveal. Missing: cardName support in deckRevealUntil filter (or a cardId-list keyed to all 服部平次 printings, not wired). Hirameki handAddFromRemove-by-name also needs cardName in remove pick."
+  },
+  {
+   "rep": "B03033",
+   "clusterSize": 2,
+   "missing": "【自分ターン中】passive AURA onto OPPONENT chars with set-cards (AP-1000). continuousModifier is OWNER($self)-ONLY; no aura / cross-character continuous modifier. Missing: continuous aura keyed by hasSetCards on opp scene. (Hirameki draw is fine.)"
+  },
+  {
+   "rep": "B03036",
+   "clusterSize": 2,
+   "missing": "a2 declared effect 'このキャラを現場からデッキの下に移す' has NO scene-char->deck-bottom EFFECT atom (mutate.scene.toDeckBottom is exposed only via the selfToDeckBottom COST, not as an effect verb; sceneRemove=remove area, sceneToHand=hand). a1 look-4 by trait is doable. Missing: scene-to-deck-bottom effect atom."
+  },
+  {
+   "rep": "B03041",
+   "clusterSize": 2,
+   "missing": "Set event grants the bearer char two NEW TEXT abilities (forced-guard on its action + AP+2000 on contact). Engine grants only KEYWORDS (charGrantKeyword) or expandActionTargets, not arbitrary triggered/contact text-abilities onto a set-card-bearing char. Missing: grant-non-keyword-text-ability-via-set-event mechanism."
+  },
+  {
+   "rep": "B03046",
+   "clusterSize": 2,
+   "missing": "【パートナー白】passive rule change: opponent's stun chars do NOT activate in auto-phase. phase:auto:* hooks are internal-only (not card-subscribable); no card-controllable auto-phase activation rule. 【登場時】stun-1 is fine (sceneSetState stun $pick max1). Missing: card-controllable stun-stays-through-auto-phase rule."
+  },
+  {
+   "rep": "B03047",
+   "clusterSize": 2,
+   "missing": "突撃 + 【絆鈴木園子】AP+1000 buildable (keyword + bond-gated continuous apDelta). 'アクションがAP6000以下のキャラによってガードされたときアクティブ化' needs the GUARD char's AP, but action:guarded payload={byUid,guardUid} lacks uid/player so triggerCharMatches can't filter it and guardedBySelf checks the wrong side. Missing: condition reading the guarding char's AP from action:guarded."
+  },
+  {
+   "rep": "B03049",
+   "clusterSize": 2,
+   "missing": "【宣言】reveals BOTTOM deck card (no bottom-reveal verb; deckRevealUntil is deck-TOP only) AND uses dynamic level gate '自分のFILEエリアの枚数以下のレベル' (no FILE-count-relative levelMax in TargetFilter/deckReveal). Missing: reveal-bottom verb + FILE-count-relative level gate. (Hirameki draw fine.)"
+  },
+  {
+   "rep": "B03052",
+   "clusterSize": 2,
+   "missing": "The REPLACED card reacts to being disguised-out ('[ベルモット]が変装でこのキャラと入れ替わったとき'). disguise:into hook fires for the NEW char (selfOnly matches post-disguise cardId); シャロン is moved to deck bottom (out of play) so cannot react via in-play scan. No disguise-out/replaced hook. Missing: hook for the card replaced by disguise. (Hirameki draw fine.)"
+  },
+  {
+   "rep": "B03056",
+   "clusterSize": 2,
+   "missing": "a1 【登場時】: deckRevealUntil maxN:1 filter{trait:'探偵',kind:'character'} (trait+kind honored) -> handAddFromDeck($matched.cardId) -> deckToBottomBound($revealed), chain/sequence. a2 endphase: trigger phase:end:start, condition and(turn:self, sceneHas{area:scene,side:self,filter:{trait:'探偵'},state:['sleep'],nMin:3}); optional -> chain[ sceneRemove{uid:'$self'}, evidenceGain{player:self,n:1} ]. All verbs/conds/hooks confirmed."
+  },
+  {
+   "rep": "B03057",
+   "clusterSize": 2,
+   "missing": "Clause 1 'this char (while sleep) cannot be DESIGNATED as an action target' is a target-RESTRICTION; expandActionTargets only ADDS targets, never forbids one (no cannot-be-targeted flag). Clause 2 (【ターン1】own [探偵] using a 宣言 ability -> draw+discard) has no clean hook: effect:declared kind 'declaredAbility' fires but matcher can't reliably gate on the declaring char being an own scene [探偵]. Missing: cannot-be-targeted-while-sleep flag + declared-ability-by-trait reaction."
+  },
+  {
+   "rep": "B03062",
+   "clusterSize": 2,
+   "missing": "Leading clause '自分の現場のキャラを1枚デッキの下に移してもよい' has no scene-char->deck-bottom effect atom (same gap as B03036). The subsequent reveal-until-レベル8-char + 登場 chain would be buildable, but the deck-bottom-bounce clause blocks it. Missing: scene-to-deck-bottom effect verb."
+  },
+  {
+   "rep": "B03066",
+   "clusterSize": 2,
+   "missing": "【パートナー赤】突撃[事件]=partnerColorKeyword(color:'赤',kw:'突撃[事件]'). 【登場時】optional+chain['そうした場合']: evidenceGain{player:'opp',n:1} then sceneRemove PA short-form{side:'either',filter:{levelMax:7},max:1,cause:'effect'}. evidenceGain to opp (from opp deck) + sceneRemove by levelMax confirmed."
+  },
+  {
+   "rep": "B03068",
+   "clusterSize": 2,
+   "missing": "【登場時】choice{chooser:'self', options:[ sceneEnter from:'hand' filter{color:'赤',levelMax:4} enterSleep:true , chain[ evidenceGain{player:'opp',n:1}, draw{player:'self',n:1} ] ]} modelling '登場させなかった場合'. Both branches use confirmed verbs (sceneEnter short-form from hand+enterSleep; evidenceGain opp; draw self)."
+  },
+  {
+   "rep": "B03070",
+   "clusterSize": 2,
+   "missing": "Trigger '自分の現場のキャラのアクション[事件]によって証拠を得たとき' has NO card-subscribable hook (no 'self gained evidence by action[事件]' in TRIGGERED_HOOKS; reasoning:end is 推理-only, evidence:remove-by-action is opponent's removed evidence). Missing: action-event evidence-gain trigger hook."
+  },
+  {
+   "rep": "B03078",
+   "clusterSize": 2,
+   "missing": "'このキャラはスリープ状態でもガードできる' — flow/guard.ts candidates() hard-filters guard candidates to state==='active' with no keyword bypass; canGuard has no guard-while-sleep escape. Missing: a keyword honored in guard candidate enumeration. (Hirameki 青/赤-from-remove->hand + discard otherwise buildable.)"
+  },
+  {
+   "rep": "B03079",
+   "clusterSize": 2,
+   "missing": "【相手ターン中】【現場リムーブ時】: trigger leave:to-remove selfOnly, condition turn:opp; effect deckRevealUntil maxN:3 filter{color:'赤'} (color honored) -> handAddFromDeck($matched.cardId) -> deckToBottomBound($revealed). Hirameki: evidence:remove-by-action optional -> sceneSetState{uid:'$pick',state:'sleep', target side:either max:1}. Canonical look-3-by-color pattern; all hooks/conds/verbs confirmed."
+  },
+  {
+   "rep": "B03080",
+   "clusterSize": 2,
+   "missing": "Set event grants the bearer char a NEW triggered text-ability '【ターン1】アクション[事件]したときアクティブ化'. Same blocker as B03041: engine grants only keywords/expandActionTargets, not arbitrary triggered text-abilities onto a set-card-bearing char. Missing: grant-triggered-text-ability-via-set-event."
+  },
+  {
+   "rep": "B03084",
+   "clusterSize": 2,
+   "missing": "Three gaps: (1) '相手の証拠を1つまで選びデッキの下に' — evidenceToDeck moves TOP n only, no chosen-evidence pick. (2) '相手キャラを...相手はそのカードを表向きのまま証拠として得る' — no verb moving a SCENE char into OPPONENT's evidence face-up. (3) 捜査1 'レベル5以上が発見された場合' — souza has no '発見' downstream reference. Missing: choose-evidence-to-deck + scene-char->opp-evidence verb + souza discovery condition."
+  },
+  {
+   "rep": "B03085",
+   "clusterSize": 2,
+   "missing": "a1 【登場時】discard->reanimate from remove (sceneEnter from:'remove' filter{trait:'警察',levelMax:6} enterSleep) is buildable, but Hirameki '【解決編】アクション中のキャラを1枚まで選びスタン' needs a target filter for 'アクション中のキャラ' (chars in the live action/contact) — no in-action/in-contact state in TargetFilter/candidates. Missing: in-action/in-contact target filter. (caseStatus 解決編 gate fine.)"
+  },
+  {
+   "rep": "B03086",
+   "clusterSize": 2,
+   "missing": "【登場時】look-3 by trait is fine, but '残りをリムーブエリアに移す' has no verb: deckToBottomBound moves the bound $revealed remainder to deck BOTTOM (not remove), and mill removes the TOP n by index (wrong cards after handAddFromDeck of the matched). No 'move bound deck cards -> remove area' verb. Missing: deckRevealRemainder->remove verb (deckBoundToRemove)."
+  },
+  {
+   "rep": "B03088",
+   "clusterSize": 2,
+   "missing": "Declared (cost-free) + condition and[4× sceneHas{cardName}] all expressible. BLOCKER: the effect picks ONE char (level≤7) and applies THREE distinct atoms to it — sceneSetState(active) + charModifyAP(+1000,turn) + charGrantKeyword(突撃,turn) — plus draw. Pattern A '$pick' substitutes the picked uid into ONLY the single atom that triggered the pick; there is no mechanism to bind a user-picked scene-char uid and reuse it across multiple distinct atoms (forEach over:'pick' throws; engine-extension#3 only repeats the SAME atom per uid). MISSING: pick-result-uid binding reusable across atoms (or a composite 'activate+buff+grant' verb)."
+  },
+  {
+   "rep": "B03092",
+   "clusterSize": 2,
+   "missing": "Hook leave:to-remove (non-selfOnly, watching OTHER chars) fires, but to gate 'a level6+ 特徴[警察] char left SELF's scene' you need to match the leaving char's attributes+side. triggerCharMatches requires payload.player AND the char still on scene; the leave:to-remove payload is {uid,cause} (no player) and the char is spliced off scene BEFORE emit, so the filter can't apply. A matcher closure only receives (payload,state) (no owner, and payload has no cardId/def). MISSING: leave:to-remove payload carrying the leaving char's player+cardId/def for declarative attribute+side matching."
+  },
+  {
+   "rep": "B03094",
+   "clusterSize": 2,
+   "missing": "【パートナー黄】突撃 = partnerColorKeyword (green). action:declare selfOnly + optional(してもよい) + mill 2 = green. BLOCKER: 'アクション終了時までこのキャラをAP＋1000' — charModifyAP scope ∈ {turn,contact,permanent}; there is no 'action' (action-end) scope. 'turn' over-persists past the action; 'contact' expires at contact end (wrong for action[事件] / post-contact). MISSING: an action-end (アクション終了時) char-mod scope."
+  },
+  {
+   "rep": "B03098",
+   "clusterSize": 2,
+   "missing": "a1: enter hook selfOnly → sceneSetState{uid:'$self',state:'active'} (no-op on active entry, activates a sleep-entry — board-identical to 'スリープ状態で登場したときアクティブに'). hirameki: evidence:remove-by-action optional:true → sceneSetState{state:'active',max:1,side:'either'} (キャラ1枚まで選びアクティブ). Both clauses map."
+  },
+  {
+   "rep": "B03110",
+   "clusterSize": 2,
+   "missing": "phase:end:start + condition turn:self+partnerColor:黒 + optional + discard 2 + sceneRemove forEach over:all excludeSelf all map. BLOCKER: 'FILEエリアのカードを上から2枚手札に加える' — filePopToHand returns FILE_CARD_BACK_PLACEHOLDER for face-down (card-back) FILE cards (only assisted-partner yields the real cardId), so the player gets placeholders, not the actual cards. MISSING: filePopToHand surfacing the real cardId of a face-down FILE card to hand."
+  },
+  {
+   "rep": "B03111",
+   "clusterSize": 2,
+   "missing": "enter hook selfOnly + condition partnerColor:黒. Effect: discard{player:'opp', target:{kind:'pick',query:{area:'hand',side:'opp',filter:{levelMax:7}},chooser:'self'}}. Opp-hand candidates enumerated (candidates.ts:100), levelMax filter via matchesFiltersByCardId, chooser:'self' lets controller pick. '公開→元に戻す' is cosmetic (only the chosen card is removed)."
+  },
+  {
+   "rep": "B03112",
+   "clusterSize": 2,
+   "missing": "突撃 printed = OK. BLOCKER 1: 'コンタクト中に自分が【カットイン】を使用したとき AP+2000' — no hook/condition for 'a cut-in was used during THIS char's contact' (effect:declared{abilityId:'cutin'} fires but cannot be gated to 'self is in the contact' declaratively). BLOCKER 2: 【自分ターン中】【ターン1】'自分の現場の【黒】キャラが自分の能力や効果でリムーブされたとき LP+1' — leave:to-remove can't match the leaving char's color/side (payload lacks player; char off-scene). MISSING: cutin-in-own-contact trigger + leave-char color/side matching."
+  },
+  {
+   "rep": "B03113",
+   "clusterSize": 2,
+   "missing": "現場リムーブ時 (leave:to-remove selfOnly) + condition turn:opp + sceneEnter from remove enterSleep with filter{keyword:'カットイン',levelMax:6,color:'黒'} (keyword honored on remove via matchOneFilter, per B05112). cutIn AP+1000 ability OK. BLOCKER: '〚カード名［シェリー］〛以外' — no declarative cardName-exclusion TargetFilter field (excludeSelf only excludes by uid). Only a non-serializable custom() fn could express it. MISSING: declarative cardName-not / exclude-cardName filter."
+  },
+  {
+   "rep": "B03115",
+   "clusterSize": 2,
+   "missing": "sceneRemove levelMax:7 + deckRevealUntil maxN:3 + handAddFromDeck + deckToBottomBound + conditional discard all exist. BLOCKER: deckRevealUntil's targetFilterToPredicate honors only cardId/color/trait/ap/lp/level/kind — NOT keyword. The reveal must select a '【カットイン】持ち【黒】' card, but keyword:'カットイン' is dropped in the deck-reveal path. MISSING: keyword filter support in deckRevealUntil predicate."
+  },
+  {
+   "rep": "B03116",
+   "clusterSize": 2,
+   "missing": "leave:to-remove selfOnly + matcher closure(cause∈{effect,cost}) + condition turn:self+partnerColor:黒 + optional(してもよい) → sceneEnter self from remove (target pick query{area:'remove',side:'self',filter:{cardId:'B03116'}} so source-area splice fires) enterSleep + draw 1. cutIn AP+1000 OK. All atoms exist."
+  },
+  {
+   "rep": "B03135",
+   "clusterSize": 2,
+   "missing": "Case that rewrites the partner's 事件解決 ability into a new declared ability ('相手はゲームに敗北する'). BLOCKERS: (1) no verb that makes the OPPONENT lose the game (partnerSolveCase = self-win only); (2) no mechanism to rewrite/replace a partner's keyword ability; (3) custom declared cost '証拠を事件レベルの数だけリムーブ' = dynamic case-level evidence cost (discardEvidence n is a fixed number). MISSING: opponentLoses verb + partner-ability-rewrite + case-level-dynamic evidence cost."
+  },
+  {
+   "rep": "B04003",
+   "clusterSize": 2,
+   "missing": "BLOCKER 1: '[毛利蘭]が相手の能力や効果によって選ばれたとき' — no hook for 'a char was targeted/selected by an opponent effect' (no targeting-interception trigger), and 'それを無効にする' = negate (immediate-resolution, not freely runnable). BLOCKER 2: declared cost '〚手札から[毛利蘭]を1枚公開する〛' — '公開' (reveal, card stays) has no cost kind (only removeFromHand which discards it). MISSING: char-selected-by-opp-effect hook + reveal-hand-card cost."
+  },
+  {
+   "rep": "B04004",
+   "clusterSize": 2,
+   "missing": "迅速 printed OK. BLOCKER 1: '相手の現場のキャラがこのキャラとのコンタクトによってリムーブされたとき' — no card-subscribable hook for 'opp char removed via contact involving self' (leave:to-remove cause:'contact-ap' lacks contact-participant info to tie it to self). BLOCKER 2: '相手キャラが自分の[工藤新一]を指定してアクションしたとき' — action:declare payload.target is the targeted uid but no declarative condition matches 'target is a [name] char on self side' (triggerCharMatches keys on the attacker, not the target). MISSING: contact-removal-by-self hook + action-target-name/side condition."
+  },
+  {
+   "rep": "B04013",
+   "clusterSize": 2,
+   "missing": "Part 1 (deckRevealUntil maxN:3 filter{color:'青',kind:'character'} → handAddFromDeck → deckToBottomBound) maps. BLOCKER: Part 2 '手札からFILEエリアの枚数以下のレベルの【青】キャラを1枚まで登場' — needs sceneEnter from hand with levelMax = current FILE count (dynamic). filter.levelMax is a static number; no FILE-count-driven dynamic level cap exists. MISSING: dynamic levelMax = FILE-count for hand-source sceneEnter (ネクストヒント-style level gate)."
+  },
+  {
+   "rep": "B04014",
+   "clusterSize": 2,
+   "missing": "Event effect:declared event-use selfOnly + condition and[partnerColor:青, caseStatus:解決編] + choice{chooser:'self', options:[ sceneSetState(sleep,max:2,side:either)+draw1 ; sceneRemove levelMax:6,max:1 ; charGrantKeyword '$pick'+target 突撃 turn max:1 ]}. Each option applies a single effect-per-pick; all map."
+  },
+  {
+   "rep": "B04017",
+   "clusterSize": 2,
+   "missing": "【パートナー緑】【自分ターン中】【ターン1】 conditions OK; effect sceneRemove apMax:8000 OK. BLOCKER: trigger '[遠山和葉]が自分の現場に登場したとき' on the enter hook (non-selfOnly). triggerCharMatches needs payload.player to gate side, but the enter payload is {uid,viaEffect,enterOrder,enterOrderThisTurn} (no player), and a matcher closure can't determine the reacting card's owner side. MISSING: 'player' field in the enter hook payload (or owner-aware name+side enter matcher)."
+  },
+  {
+   "rep": "B04022",
+   "clusterSize": 2,
+   "missing": "leave:to-remove selfOnly (B04018 a2 precedent) + condition turn:opp + sceneEnter{from:'hand', max:1, enterSleep:true, filter:{cardName:'服部平次', levelMax:4}} (from:'hand' short-form w/ cardName filter per B09025; enterSleep per D01012). All clauses map."
+  },
+  {
+   "rep": "B04026",
+   "clusterSize": 2,
+   "missing": "Identical structure to B04013. Part 1 (deckRevealUntil maxN:3 color:'緑' kind:'character' → handAddFromDeck → deckToBottomBound) maps. BLOCKER: Part 2 '手札からFILE枚数以下のレベルの【緑】キャラを1枚まで登場' needs dynamic levelMax = FILE count for hand-source sceneEnter — no such dynamic level cap. MISSING: FILE-count-driven dynamic levelMax for sceneEnter."
+  },
+  {
+   "rep": "B04027",
+   "clusterSize": 2,
+   "missing": "Event effect:declared event-use selfOnly + condition and[not(fileAtLeast 6) (=FILE≤5使用制限, per B02032 usage-condition pattern), partnerColor:緑, caseStatus:解決編] + sequence[ sceneRemove{apMin:7000,max:1,side:either}, sceneRemove{apMax:5000,max:1,side:either} ]. Two independent picks/removes match '1枚までと1枚まで'."
+  },
+  {
+   "rep": "B04031",
+   "clusterSize": 2,
+   "missing": "Declared (cost-free) + sceneSleep-cost. BLOCKER: '[黒羽快斗]のキャラを1枚まで選び、AP＋1000し、〚突撃〛を与える' applies BOTH charModifyAP(+1000,turn) AND charGrantKeyword(突撃,turn) to the SAME picked char. Two separate '$pick'+target picks would let the player pick two different chars; there is no pick-result-uid reuse across distinct atoms. MISSING: bind-picked-uid reusable across multiple atoms (same blocker as B03088)."
+  },
+  {
+   "rep": "B04032",
+   "clusterSize": 2,
+   "missing": "a1 OK (continuous self LP+1 gated by sceneHas{trait:'探偵',nMin:5}). a2 MISSING: souza verb does not bind/track the discovered cards, so the 'レベル5以上のカードが発見された場合' reference effect is unimplementable (atom-handlers souza:1124 explicitly '発見された参照効果は scope 外'). Then it grants 突撃 to a picked char (charGrantKeyword OK) but the gating condition cannot be evaluated."
+  },
+  {
+   "rep": "B04040",
+   "clusterSize": 2,
+   "missing": "Look-top-3 take [白] char to hand + rest-to-deck-bottom IS doable (deckRevealUntil maxN=3 filter{color:白,kind:character} + handAddFromDeck + deckToBottomBound, per D04011). But final clause '手札からFILEエリアの枚数以下のレベルの【白】キャラを1枚まで登場' MISSING: sceneEnter pick filter levelMax is a static literal; no dyn/FILE-count-driven level cap exists (next-hint level cap is a dedicated path, not generic sceneEnter)."
+  },
+  {
+   "rep": "B04042",
+   "clusterSize": 2,
+   "missing": "【パートナー白】【解決編】 gates OK (partnerColor, caseStatus). MISSING: 'レベルの合計が10以下になるように2枚まで選びスタン' requires a sum-of-selected-levels pick constraint; pick supports per-candidate levelMax + nMax only, no cross-selection SUM constraint exists."
+  },
+  {
+   "rep": "B04046",
+   "clusterSize": 2,
+   "missing": "a2 enter (draw + sceneEnter from hand level6 FBI) OK. a1 MISSING: '【自分ターン中】相手の現場のキャラをレベル-1' is a continuous AURA on opponent chars; continuousModifier is owner($self)-only, no aura. a3 MISSING: grants an arbitrary triggered ability text ('コンタクトしたとき全キャラリムーブ') to a picked char — non-keyword ability-text grant unsupported (only keyword/expandActionTargets)."
+  },
+  {
+   "rep": "B04048",
+   "clusterSize": 2,
+   "missing": "a1 MISSING: '手札が7枚になるまで引く' needs draw-until-hand-size (draw verb requires literal n; no hand-size dyn) and '引いた枚数と同じ数をデッキ下へ' needs variable hand-to-deck-bottom. a2 MISSING: 'カード名を1つ指定し' requires runtime player-named cardName parameter; deckRevealUntil filter cardName is static and not even honored in the deckReveal predicate path."
+  },
+  {
+   "rep": "B04051",
+   "clusterSize": 2,
+   "missing": "'[赤井秀一]か[諸星大]か[ライ]が出るまで公開→手札→残りデッキ下+shuffle' MISSING: deckRevealUntil predicate (targetFilterToPredicate, atom-handlers:56) honors cardId/color/trait/ap/lp/level/kind only — NOT cardName (split-name matching). Reveal-by-card-name is not expressible. Hirameki draw1 is fine."
+  },
+  {
+   "rep": "B04061",
+   "clusterSize": 2,
+   "missing": "Same shape as B04040: look-top-3 take [赤] to hand + rest to deck bottom is doable, but final '手札からFILEエリアの枚数以下のレベルの【赤】キャラを1枚まで登場' MISSING — no FILE-count-dynamic levelMax on sceneEnter pick."
+  },
+  {
+   "rep": "B04063",
+   "clusterSize": 2,
+   "missing": "MISSING two: (1) '残りをリムーブエリアに移す' — only deckToBottomBound exists; no verb to move bound-revealed deck cards to remove area. (2) 'リムーブしたカードのレベルの合計以下のレベルのキャラを選びリムーブ' — needs dyn = sum of removed cards' levels as a level cap; no such dyn."
+  },
+  {
+   "rep": "B04069",
+   "clusterSize": 2,
+   "missing": "a1 (continuous self LP+1 via sceneHas trait警察 nMin3) OK; a3 (登場時 conditional removeTraitAtLeast警察 nMin3 → sceneRemove pick level8) OK. a2 MISSING: '【絆高木渉】【自分ターン中】自分の現場の[高木渉]をAP+1000' is a continuous AURA buffing a DIFFERENT named char; continuousModifier is owner-only, no aura."
+  },
+  {
+   "rep": "B04074",
+   "clusterSize": 2,
+   "missing": "【パートナー黄】【宣言】【ターン1】【スリープ】 + souza2 (風見いれば souza4 via conditional sceneHas cardName) is partly doable, BUT '発見されたカードのいずれかと同じレベルのキャラを選びリムーブ' MISSING: souza does not bind discovered cards, so '発見されたカードのレベル' reference is unimplementable."
+  },
+  {
+   "rep": "B04077",
+   "clusterSize": 2,
+   "missing": "a1 MISSING: grants 'このキャラは相手のアクティブ状態のキャラを指定してアクションできる' (=expandActionTargets) to a PICKED char as a turn effect. expandActionTargets is consumed only by an inline action:pre-target walk keyed on abilities printed on the attacker (target-expander, sceneCard.uid===byUid); there is no way to dynamically attach it to a chosen char. Hirameki (handAddFromRemove cardName 佐藤美和子) clause itself also can't filter by cardName cleanly via remove pick, but a1 already blocks."
+  },
+  {
+   "rep": "B04083",
+   "clusterSize": 2,
+   "missing": "Same shape as B04040/B04061: look-top-3 [黄] to hand + rest deck bottom doable, but final '手札からFILEエリアの枚数以下のレベルの【黄】キャラを1枚まで登場' MISSING — no FILE-count-dynamic levelMax for enter."
+  },
+  {
+   "rep": "B04085",
+   "clusterSize": 2,
+   "missing": "optional { chain: [ sceneSetState{uid:'$pick',state:'stun',target:{query:{area:'scene',side:'self',state:['active'],filter:{trait:'警察'}},n:{min:1,max:1}}} (=アクティブ警察スタン; pattern confirmed B06094), sceneRemove{pick either,0-1} (=キャラ1枚までリムーブ), draw{n:1} ] }. optional handles 'してもよい'; chain breaks if stun has no candidate handling 'そうした場合'. All verbs/conditions exist."
+  },
+  {
+   "rep": "B04088",
+   "clusterSize": 2,
+   "missing": "effect (sceneRemove AP8000以下 1枚) OK, but cost '相手の現場にいるキャラ1枚につき、デッキのカードを上から2枚リムーブ' MISSING: removeDeckTop cost n is a literal (cost/evaluate.ts:44); no dynamic cost count (n = 2 × opponent-scene-count) is expressible."
+  },
+  {
+   "rep": "B04089",
+   "clusterSize": 2,
+   "missing": "'自分の能力や効果によって相手の現場のキャラをリムーブしたとき' MISSING: leave:to-remove payload is {uid,cause} with no causing-player attribution; cause:'effect' cannot distinguish my-effect from the opponent removing their own char via their effect. Then スリープ自身→レベル7以下リムーブ would be fine, but the trigger gate is unimplementable."
+  },
+  {
+   "rep": "B04091",
+   "clusterSize": 2,
+   "missing": "Same trigger gap as B04089: '【自分ターン中】【ターン1】自分の能力や効果によって相手の現場のキャラをリムーブしたとき' needs causing-player attribution on leave:to-remove (payload lacks it). The reward (draw2 + discard1) is fine; the trigger is not. Hirameki draw1 OK."
+  },
+  {
+   "rep": "B04094",
+   "clusterSize": 2,
+   "missing": "Same trigger gap: '【ターン1】自分の能力や効果によって相手の現場のキャラをリムーブしたとき' → 突撃 (charGrantKeyword turn OK), but the by-own-effect-opponent-removal trigger is unimplementable (leave:to-remove payload has no causing-player)."
+  },
+  {
+   "rep": "B05007",
+   "clusterSize": 2,
+   "missing": "a1 (optional self-sleep → sceneEnter from hand filterAny{cardName:工藤新一 OR trait:毛利探偵事務所, levelMax6} + draw) is doable (B08009-style hand enter pick). a2 MISSING: '相手は【カットイン】を使用できない' — no cutin-prevention flag/mechanism in engine (no TurnScopedFlags entry, no cutin-disable gate in contact flow)."
+  },
+  {
+   "rep": "B05008",
+   "clusterSize": 2,
+   "missing": "a2 (解決編 declared → 突撃[キャラ] grant to picked 少年探偵団, charGrantKeyword) and hirameki (sceneSetState sleep pick) OK. a1 MISSING: '【絆江戸川コナン】相手の能力や効果によって選ばれない' — no untargetable mechanism; candidate enumeration has no 'exclude opponent-untargetable chars' filter and no such per-char flag."
+  },
+  {
+   "rep": "B05016",
+   "clusterSize": 2,
+   "missing": "'デッキ上3枚見る→[少年探偵団]キャラ1枚まで手札→残りをリムーブエリアに移す' MISSING: deckRevealUntil binds $revealed but the only bound-consumer is deckToBottomBound (to deck bottom); there is NO verb to move bound-revealed cards to the remove area, and a fixed mill cannot reproduce the variable count."
+  },
+  {
+   "rep": "B05020",
+   "clusterSize": 2,
+   "missing": "Missing: deckRevealUntil predicate honoring cardName. a1 reveals 1 deck card and picks by cardName-OR list (江戸川コナン/灰原哀/小嶋元太/円谷光彦) to hand; targetFilterToPredicate (atom-handlers.ts:56) supports only cardId/color/trait/ap/lp/level/kind — NOT cardName. A static cardId list can't faithfully cover all parallels of those names. cutIn AP+1000 is fine."
+  },
+  {
+   "rep": "B05023",
+   "clusterSize": 2,
+   "missing": "conditional{if:sceneHas[毛利小五郎], then:sequence(both), else:choice(two)} chooser self. Clause1 = charGrantKeyword{uid:'$pick',kw:'突撃',scope:'turn',target pick filter trait[毛利探偵事務所]} (B09085/B02061 pattern). Clause2 = sequence[sceneSetState sleep $pick, draw n:1]. All verbs/wrappers exist."
+  },
+  {
+   "rep": "B05024",
+   "clusterSize": 2,
+   "missing": "Missing: grant TWO keywords to ONE picked char. The declared effect grants 突撃[キャラ] AND ブレット to a single picked レベル5以上[毛利小五郎]. charGrantKeyword.kw is a single string (atom-handlers.ts:801) and there is no pick-bind reuse — two sequential charGrantKeyword{uid:'$pick'} re-prompt independent picks, not the same char. caseResolvedHandRemove + flipFaceUpEvidence{n:{min:3,max:3}} cost are fine."
+  },
+  {
+   "rep": "B05027",
+   "clusterSize": 2,
+   "missing": "Missing: enter-hook filtering by cardName + own-side. a2 reacts to '自分の現場に[服部平次]か[遠山和葉]が登場したとき' but the enter payload is {uid,viaEffect,enterOrder,enterOrderThisTurn} with NO player; triggerCharMatches requires payload.player (cond/eval.ts:233) so it can't gate side/cardName. Also a2 is a partner-area ability (on-partner-area scope, untested). a1 (choice active-or-突撃 on one pick) is fine via B07040 choice-of-two pattern."
+  },
+  {
+   "rep": "B05028",
+   "clusterSize": 2,
+   "missing": "a1 = chain[charRemoveSetCard{uid:'$pick',target pick side:'either' filter:{hasSetCards:true}}, sceneRemove{apMax:8000,side:'either'}] (charRemoveSetCard Pattern A via explicit target, B08034 a2 pattern; chain = そうした場合). a2 = sequence[charSetCard{player:'self',side:'self',fromDeckTop,max:1}, charSetCard{player:'opp',side:'opp',fromDeckTop,max:1}] — each char set from its 持ち主's deck (resolvePlayer(a.player)) per atom-handlers.ts:845/867."
+  },
+  {
+   "rep": "B05031",
+   "clusterSize": 2,
+   "missing": "a1 = charSetCard{player:'opp',side:'opp',fromDeckTop:true,max:1,faceUp:false} (set opp deck-top onto opp char). a2 = declared, cost pay[sleepSelf, removeFromScene{target:{self},n:1}] (リムーブエリアに移す, B05018/B07007), effect choice[sceneEnter from:'hand' filter{cardName:'大岡紅葉',levelMax:6}, sceneEnter from:'remove' filter{cardName:'大岡紅葉',levelMax:6}] (B08009/D11014)."
+  },
+  {
+   "rep": "B05041",
+   "clusterSize": 2,
+   "missing": "Missing: durable protection keyword '相手の能力や効果によってリムーブされず、スリープされず、スタンされない' granted via a set event. No keyword/flag exists for opponent-effect removal/sleep/stun immunity (not in keywords[], no mutate path honors such a flag). Also no verb to set an event card onto a char as a continuing aura. Hirameki (このカードを手札に加える = self event back to hand) also has no verb for returning a set event to hand."
+  },
+  {
+   "rep": "B05045",
+   "clusterSize": 2,
+   "missing": "Missing: verb to move a TARGET scene char to deck bottom. a1 'AP8000以下のキャラを1枚まで選び、デッキの下に移す' — only selfToDeckBottom (cost, self) and deckToBottomBound (revealed remainder) exist; no sceneToDeckBottom-style effect verb. a2 (FILE pop-to-hand + hand-to-FILE-bottom) is also non-standard FILE manipulation. cutIn AP+2000 fine."
+  },
+  {
+   "rep": "B05049",
+   "clusterSize": 2,
+   "missing": "Missing: cost '手札からカード名[怪盗キッド]を1枚公開してデッキの上に移す' (reveal a named hand card → move to deck TOP). Cost kinds (cost/pay.ts) only have removeFromHand (discard to remove); none moves a hand card to deck top. Hirameki (handAddFromRemove [黒羽快斗]) is fine, but the a1 cost blocks."
+  },
+  {
+   "rep": "B05059",
+   "clusterSize": 2,
+   "missing": "Missing: ability to filter the REMOVED char's trait+state on leave:to-remove. a1 fires when 'スリープ状態のこのキャラ or 自分の現場のスリープ状態[探偵]がリムーブされたとき' — payload is {uid,cause} (no player/state), matcher gets only (payload,state) not source, and the removed char is gone from scene so its sleep-state/trait can't be read. a2 (cost sleepChar one [探偵], remove AP8000以下) is fine."
+  },
+  {
+   "rep": "B05061",
+   "clusterSize": 2,
+   "missing": "Missing: verb to move a target scene char to deck bottom. 'そうした場合、相手の現場のキャラを1枚まで選び、デッキの下に移す' — same gap as B05045 (no sceneToDeckBottom effect verb). The optional mill-7 (mill n:7 + optional/chain) and partnerColor white condition are fine."
+  },
+  {
+   "rep": "B05063",
+   "clusterSize": 2,
+   "missing": "Missing: grant a turn-end self-removal rider ('ターン終了時、このキャラを現場から手札に移す') to a dynamically-entered char. Same DEFER as B07093 a1 (turn-end-deck-bottom rider). charSetTurnEffect has no consumer for scheduled per-char bounce, and phase:end:start can't target a specific entered uid (selfOnly source undefined; player-gated only). caseResolvedHandRemove + flip-3 cost + sceneEnter[京極真] + sceneHas[鈴木財閥]≥3 gate are fine."
+  },
+  {
+   "rep": "B05078",
+   "clusterSize": 2,
+   "missing": "a1 = sequence[deckRevealUntil{maxN:4, filter:{trait:['赤井家','探偵']}, bind/bindMatch}, conditional{bound $matched -> sequence[handAddFromDeck $matched.cardId, discard n:1]}, deckToBottomBound] (D01013/B01013 pattern; trait array OR honored in targetFilterToPredicate atom-handlers.ts:69). Hirameki = draw n:1."
+  },
+  {
+   "rep": "B05082",
+   "clusterSize": 2,
+   "missing": "Missing: verb to move the deck-reveal REMAINDER to the remove area. '上から5枚見る…残りをリムーブエリアに移す' — only deckToBottomBound (to deck bottom) exists for bound revealed cards; no deckRevealedToRemove. The reveal-pick-FBI-to-hand and subsequent sceneEnter from hand[FBI levelMax6] are otherwise fine."
+  },
+  {
+   "rep": "B05086",
+   "clusterSize": 2,
+   "missing": "a1 = triggered on action:declare, matcherCondition triggerCharMatches{side:'self',filter:{color:'黄'}} (action:declare payload has {uid,player}), effect sceneRemove{apMax:8000,side:'either'} + limit turn1. a2 = declared limit turn1, charModifyAP{filter:{color:'黄'},delta:1000,scope:'turn',max:1}; partner's own ability (collectCardsInPlay includes partner). cutIn AP+2000 fine."
+  },
+  {
+   "rep": "B05091",
+   "clusterSize": 2,
+   "missing": "a1(絆) = continuous{condition:bond{cardName:'降谷零'}, continuousModifier.grantKeywords:()=>['突撃[キャラ]']} (D08021 a2 pattern, self-only OK). a2 = triggered leave:to-remove selfOnly + condition turn:opp, sceneEnter from:'remove' filter{cardName:'降谷零',levelMax:6} enterSleep:true (D01012 + D11014). Hirameki = sceneSetState sleep $pick (D08019 a2)."
+  },
+  {
+   "rep": "B05093",
+   "clusterSize": 2,
+   "missing": "Missing: opponent-chooses-from-revealed flow. '上から3枚公開する。相手はその中からイベントか[喫茶ポアロ]キャラを1枚選び、自分はそれを手札に加える' — no deckReveal variant reveals N and lets the OPPONENT pick which card the controller takes; chooser:'opp' on a deck-card pick is not wired (resolve-picks surfaces choice/optional only for humanChooser, AI/opp default option 0). Then 残りを自分が好きな順でデッキ下."
+  },
+  {
+   "rep": "B05099",
+   "clusterSize": 2,
+   "missing": "Single ability: triggered leave:to-remove selfOnly + condition and[partnerColor 黄, turn:opp], effect sceneEnter from:'remove' filter{trait:'警察',levelMax:4} enterSleep:true (D01012 self-removal pattern + B08009 enter-from-remove + enterSleep at atom-handlers.ts:530)."
+  },
+  {
+   "rep": "B05103",
+   "clusterSize": 2,
+   "missing": "Missing two things: (1) relative evidence comparison '相手の証拠が自分の証拠より2つ以上多い場合' — evidenceAtLeast is absolute-only, no opp≥self+2 condition; (2) move a PICKED opponent evidence to deck bottom '相手の証拠を1つまで選び、デッキの下に移す' — evidenceToDeck moves TOP-n only, no picked-evidence-to-deck-bottom. The initial sceneRemove + evidenceGain are fine."
+  },
+  {
+   "rep": "B05106",
+   "clusterSize": 2,
+   "missing": "Missing: filter the removed char's SIDE on leave:to-remove. a1 '相手の現場にいるキャラがリムーブされたとき' — payload {uid,cause} lacks player, matcher signature is (payload,state) without source (triggered.ts:174), so a reacting in-play card can't tell the removed char was the opponent's. a2 (chain: remove own levelMax8 char → draw) is fine. cutIn AP+2000 fine."
+  },
+  {
+   "rep": "B05107",
+   "clusterSize": 2,
+   "missing": "突撃 keyword + re-enter from remove (sceneEnter from:'remove', enterSleep:true) are fine, and leave:to-remove (selfOnly) hook exists. MISSING: the leave:to-remove payload only carries {uid, cause:'effect'|'cost'|...}; there is no field identifying WHICH player's ability/effect caused the removal, so '自分の能力や効果によってリムーブされたとき' cannot be discriminated from opponent-caused removal."
+  },
+  {
+   "rep": "B05117",
+   "clusterSize": 2,
+   "missing": "Event sets onto a 黒 char (charSetCard faceUp), but it then GRANTS the host char a full triggered/leave-reactive ability ('this set char gains: 相手ターン中 現場離脱時…remove+enter from remove'). MISSING: no mechanism to attach a triggered/hook ability to a set-card host char; set cards only sit as data, they cannot register a leave:to-remove listener on the host."
+  },
+  {
+   "rep": "B05120",
+   "clusterSize": 2,
+   "missing": "case:to-resolved hook + draw{player:'opp'} covers clause 1. MISSING for clause 2: '自分は特徴[探偵]以外のキャラを手札から使用できない' — no engine mechanism to restrict hand/next-hint use by trait (no hand-use-restriction gate keyed on card trait)."
+  },
+  {
+   "rep": "B06003",
+   "clusterSize": 2,
+   "missing": "突撃 OK. Declared ability 1 uses cost 〚ターン終了時までLP－2する〛 — no such Cost kind (cost set has sleepSelf/sleepChar/removeFromHand/removeFromScene/removeDeckTop/discardEvidence/selfToDeckBottom/fileFrom/flipFaceUpEvidence only; no self-LP-reduction cost). Declared ability 2 needs condition '現場のキャラ全員のLPの合計が2以下' — no sum-of-all-scene-LP condition (only per-char lpAtLeast .some). partner-area declared scope is fine."
+  },
+  {
+   "rep": "B06004",
+   "clusterSize": 2,
+   "missing": "Clause 1 is continuous 'AP+1000 to 〚カード名[毛利蘭]〛 on own scene' = an AURA onto a DIFFERENT named char. continuousModifier is owner($self)-only (applies to bearer uid only); no continuous aura onto other chars. Declared ability (handAddFromDeck via reveal of 毛利蘭 + deckToBottom) is otherwise fine, but clause 1 blocks green."
+  },
+  {
+   "rep": "B06005",
+   "clusterSize": 2,
+   "missing": "charStackCard sources only from remove/hand/deck and stores a COUNT (no identity). MISSING: (a) '重ねたキャラのレベルの合計' cannot be computed because stacked cards have no identity/level; (b) declared ability '下に重なっているカードを2枚までそのキャラの下に重ねる' = move existing stacked cards between scene chars — no verb moves stacked cards from one char to another."
+  },
+  {
+   "rep": "B06008",
+   "clusterSize": 2,
+   "missing": "【登場時】 conditional grant 突撃 (caseless sceneHas remove-trait) is fine, but: (a) 'このキャラのアクション終了時' needs action:end hook which is INTERNAL-only (not in TRIGGERED_HOOKS); (b) 'このキャラをそのキャラの下に重ねる' = put THIS scene char under another scene char preserving identity — no verb (charStackCard only sources remove/hand/deck as count)."
+  },
+  {
+   "rep": "B06011",
+   "clusterSize": 2,
+   "missing": "【登場時】reveal-until via deckRevealUntil, but the filter is cardName[工藤新一]+levelMin7. MISSING: deckRevealUntil's predicate (targetFilterToPredicate) honors only cardId/color/trait/ap/lp/level/kind — cardName is NOT honored on this path, so 'カード名[工藤新一]が出るまで' (incl. split-name cards) cannot be filtered."
+  },
+  {
+   "rep": "B06012",
+   "clusterSize": 2,
+   "missing": "Event sets onto a 青 char (charSetCard). MISSING: clause 2 GRANTS the 特徴[少年探偵団] host char a triggered ability ('このキャラがコンタクトしたとき AP+2000') — no mechanism to attach a contact:start-reactive ability to a set-card host. (Clause 3 turn-end remove-set + enter 阿笠博士 from remove would be expressible, but clause 2 blocks.)"
+  },
+  {
+   "rep": "B06017",
+   "clusterSize": 2,
+   "missing": "【登場時】 sceneHas-conditioned draw and 変装 gate (【事件YAIBA】caseTrait + 【FILE5】fileAtLeast) are fine. MISSING: ヒラメキ '表向きの証拠を裏向きにする' = flip evidence FACE-DOWN; evidenceFlip only calls mutate.evidence.flipFaceUp (sets faceUp=true, face-down→face-up direction only). No face-up→face-down verb. Also evidence index would need a pick."
+  },
+  {
+   "rep": "B06018",
+   "clusterSize": 2,
+   "missing": "【事件YAIBA】 enter + discard + enter-from-remove + grant 突撃 are individually fine. MISSING: the granted clause 'ターン終了時、このキャラが現場にいる場合、このキャラを表向きのまま証拠として得る' — converting a SCENE char to evidence; selfToEvidence only acts on ctx.source.cardId (the using card, from remove), no scene-char→evidence verb, and no way to schedule this turn-end conversion onto another just-entered char."
+  },
+  {
+   "rep": "B06021",
+   "clusterSize": 2,
+   "missing": "突撃[事件] keyword + ヒラメキ draw are fine. MISSING: 'このキャラのアクション[事件]によって証拠を得たとき, カードを1枚引く' needs an action[事件]-evidence-gained trigger hook; none exists (no such entry in TRIGGERED_HOOKS; action:end/contact:* are internal-only)."
+  },
+  {
+   "rep": "B06028",
+   "clusterSize": 2,
+   "missing": "ヒラメキ gated by 【事件YAIBA】(caseTrait) + 【解決編】(caseStatus) is fine, but effect targets 'アクション中のキャラ' (the char performing the current action) — the hirameki/evidence:remove-by-action context does not bind/expose the attacking/in-action char, so there is no way to select and remove it."
+  },
+  {
+   "rep": "B06029",
+   "clusterSize": 2,
+   "missing": "【登場時】 evidenceToHand (optional, pick 1 own evidence) is fine; ヒラメキ sleepChar is fine. MISSING: '手札からカードを1枚裏向きで証拠として得る' — no hand-card→evidence verb (evidenceGain adds from DECK; selfToEvidence is the source card only). No verb moves a chosen hand card into evidence."
+  },
+  {
+   "rep": "B06031",
+   "clusterSize": 2,
+   "missing": "ヒラメキ draw is fine. MISSING: '相手のキャラがこのキャラとのコンタクトによってリムーブされたとき, draw' needs a contact-remove trigger hook; contact:judge/contact:end are INTERNAL-only (not card-triggerable). leave:to-remove fires for the leaving char but cannot express 'removed by contact WITH this specific char'."
+  },
+  {
+   "rep": "B06032",
+   "clusterSize": 2,
+   "missing": "ヒラメキ = triggered hook 'evidence:remove-by-action' (optional:true). 【解決編】 = condition caseStatus{status:'解決編'}. Effect = chain[ discard{player:'self',max:1} (手札1枚リムーブしてもよい), sceneEnter{player:'self',from:'remove',max:1,enterSleep:true,filter:{trait:'YAIBA',levelMax:5}} ] — chain 'そうした場合' breaks if no discard. All verbs/conditions confirmed (D08003 chain+discard, D08024/B02004 sceneEnter-from-remove+filter, atom-handlers enterSleep:true line 530)."
+  },
+  {
+   "rep": "B06033",
+   "clusterSize": 2,
+   "missing": "Clause 2 (enter YAIBA Lv6以下 緑 from hand) and ヒラメキ (handAddFromRemove this card) are fine. MISSING (clause 1): '手札からカードを1枚裏向きで証拠として得る' — no hand-card→evidence verb (same gap as B06029). evidenceGain is deck-sourced only."
+  },
+  {
+   "rep": "B06036",
+   "clusterSize": 2,
+   "missing": "case:to-resolved hand-remove is fine; declared cost flipFaceUpEvidence{n:3} exists. MISSING: 'コストによって表向きになった【ヒラメキ】を持つ[YAIBA]のカードを選び、その【ヒラメキ】効果を発動させてもよい' — no mechanism to identify cost-flipped evidence cards, filter by hirameki-keyword on evidence, nor to fire an arbitrary chosen evidence card's hirameki ability on demand."
+  },
+  {
+   "rep": "B06037",
+   "clusterSize": 2,
+   "missing": "カットイン AP+2000 fine. Clause 1 ('このキャラ以外の高校生が登場したとき remove') needs enter hook with other-char matcher excluding self — no 'payload.uid != source.uid' self-exclusion condition. Clause 2 declared grants a chosen char a turn-scoped NON-keyword text ability 'アクティブ状態のキャラを指定してアクションできる' — expandActionTargets is bound to the source card's own action:pre-target; no verb grants this action-target-expansion to a different char."
+  },
+  {
+   "rep": "B06038",
+   "clusterSize": 2,
+   "missing": "突撃 keyword fine. MISSING two hooks: (a) '相手のキャラがこのキャラとのコンタクトによってリムーブされたとき draw' — no contact-remove card-triggerable hook; (b) 'このキャラのアクション[事件]によって証拠を得たとき, 相手手札リムーブ' — no action[事件]-evidence-gained hook."
+  },
+  {
+   "rep": "B06039",
+   "clusterSize": 2,
+   "missing": "Missing hook: attacker-side reaction to '相手のキャラがこのキャラとのコンタクトによってリムーブされたとき'. mutate.scene.removeToRemove emits leave:to-remove with payload {uid, cause:'contact-ap'} + source = the LEAVING char; the attacker uid is NOT in payload, and contact:judge (source=attacker) is NOT in TRIGGERED_HOOKS. So 'removed by THIS card's contact' is ungateable. Other clauses OK (partnerColorKeyword 突撃[キャラ], continuous AP+1000 turn:self, hirameki sceneSetState sleep)."
+  },
+  {
+   "rep": "B06042",
+   "clusterSize": 2,
+   "missing": "Two gaps: (1) startContact atom is a log-only Phase-3 stub — cannot create a contact via effect, so '【宣言】...このキャラとのコンタクトを発生させる' is non-functional. (2) Granting an arbitrary non-keyword 【宣言】 ability to a char is not expressible (only charGrantKeyword for keywords + expandActionTargets). Hirameki draw OK; AP+1000 turn-scope OK."
+  },
+  {
+   "rep": "B06043",
+   "clusterSize": 2,
+   "missing": "deckRevealUntil predicate (targetFilterToPredicate, atom-handlers.ts:56) honors only cardId/color/trait/ap/lp/level/kind — NOT cardName. The declared effect '上から3枚見てカード名[服部平次]か[遠山和葉]を1枚まで手札' filters by cardName, which the deck-reveal path drops. caseResolvedHandRemove + flipFaceUpEvidence cost + sceneHas(現場[服部平次]/[遠山和葉]) declare-gate are all OK."
+  },
+  {
+   "rep": "B06046",
+   "clusterSize": 2,
+   "missing": "No hook for 'カードがセットされるたび' — charSetCard atom emits no hook, so '【ターン2】特徴YAIBAがセットされるたびアクティブにする' cannot trigger. Also no condition counting set-cards by trait ('セットが2枚以上' = only generic hasSetCards bool / stackedCountAtLeast exist, not set-card-by-trait count)."
+  },
+  {
+   "rep": "B06048",
+   "clusterSize": 2,
+   "missing": "【登場時】'上から3枚見てYAIBAを1枚まで手札、残りをリムーブエリアに移す'. deckRevealUntil(maxN:3, trait+kind) + handAddFromDeck($matched) work, but there is NO verb to remove the bound $revealed remainder to the remove pile (deckToBottomBound moves to deck bottom; mill removes a fixed top-N count, not the bound IDs). The '残りをリムーブ' clause is uncovered."
+  },
+  {
+   "rep": "B06051",
+   "clusterSize": 2,
+   "missing": "Same contact-removal blocker as B06039: '【事件YAIBA】【ターン1】相手のキャラがこのキャラとのコンタクトによってリムーブされたとき、手札1枚リムーブしてもよい。そうした場合証拠1得る' is an attacker-side reaction; leave:to-remove payload lacks attacker uid and contact:judge isn't triggerable. 突撃 keyword OK."
+  },
+  {
+   "rep": "B06053",
+   "clusterSize": 2,
+   "missing": "【登場時】triggered hook:'enter' selfOnly. effect = sequence[ deckRevealUntil{filter:{trait:'YAIBA',kind:'event'}, bind:'$revealed', bindMatch:'$matched'} (trait+kind both honored in predicate), handAddFromDeck{cardId:'$matched.cardId'}, deckToBottomBound{bindKey:'$revealed'}, deckShuffle ]. All verbs/filters confirmed in atom-handlers.ts. No-match case (reveal whole deck, $matched empty) degrades safely."
+  },
+  {
+   "rep": "B06062",
+   "clusterSize": 2,
+   "missing": "'このイベントを自分の現場のLv8以上YAIBA1枚にセットする' — no verb sets the SOURCE event card (ctx.source.cardId) onto a char. charSetCard only sets from deckTop or an explicit/bound cardId; selfToEvidence exists for event→evidence but no selfToSetCard for event→set-on-char. sceneRemove(apMax:8000) and mill(3) clauses are OK."
+  },
+  {
+   "rep": "B06063",
+   "clusterSize": 2,
+   "missing": "Same set-source-event-onto-char gap as B06062 (no selfToSetCard verb). Also 'このイベントがセットされているキャラは「【自分ターン中】AP+2000」を持つ' requires a continuous buff conditioned on this set-card's presence — not expressible (continuous is owner/self-only, no per-set-card continuous). sceneToHand(Lv7以下相手) clause OK."
+  },
+  {
+   "rep": "B06064",
+   "clusterSize": 2,
+   "missing": "Set-source-event-onto-char gap (no selfToSetCard). Plus 'セットされているキャラは「アクティブ状態のキャラを指定してアクションできる」を持つ' = grant a non-keyword targeting rule tied to set card (not expressible). Plus '【相手ターン中】キャラにセットされていたこのイベントがリムーブエリアに置かれたとき' = no hook for a set-card moving to remove."
+  },
+  {
+   "rep": "B06065",
+   "clusterSize": 2,
+   "missing": "Clause1 'この事件が解決編に移行したとき自分は手札1枚リムーブ' = caseResolvedHandRemove (_shared: triggered case:to-resolved, matcher player:self, discard 1). Clause2 '【解決編】【宣言】【ターン1】〚裏向きの証拠2つ表向き〛：リムーブのYAIBAイベント1枚まで手札' = declared, condition caseStatus{解決編}, limit turn1, cost flipFaceUpEvidence{n:{min:2,max:2}}, effect handAddFromRemove{filter:{trait:'YAIBA',kind:'event'}, max:1}. All verbs/conditions/costs confirmed."
+  },
+  {
+   "rep": "B06067",
+   "clusterSize": 2,
+   "missing": "'相手のキャラが自分の現場のこのキャラ以外の特徴[警察]のキャラとのコンタクトによってリムーブされたとき引く' = contact-removal reaction by ANOTHER 警察 char — no hook + cannot gate by the attacking char's trait (leave:to-remove lacks attacker identity). Also declared grants 'アクティブ状態のキャラを指定してアクションできる' to a char for a turn (non-keyword action-target grant, only expandActionTargets via action:pre-target exists, not a turn-scoped per-char grant)."
+  },
+  {
+   "rep": "B06068",
+   "clusterSize": 2,
+   "missing": "'【絆鈴木園子】【ターン1】相手のキャラがこのキャラとのコンタクトによってリムーブされたとき...そうした場合アクティブにし、突撃[キャラ]を失い突撃[事件]を持つ' = attacker-side contact-removal reaction (no hook, same as B06039). The aktivate + keyword swap part would be fine (charGrantKeyword/charRevokeKeyword) but the trigger itself is ungateable."
+  },
+  {
+   "rep": "B06072",
+   "clusterSize": 2,
+   "missing": "【事件YAIBA】'手札から使用する場合、事件色を無視できる' = color-restriction bypass on hand-use, not expressible as an ability. Also 【登場時】15枚以上branch '自分のリムーブエリアにあるすべてのカードをデッキの下に移す' has NO verb (no move-entire-remove-pile-to-deck). removeTraitAtLeast(YAIBA) count gating IS available, opp discard/evidenceGain available."
+  },
+  {
+   "rep": "B06077",
+   "clusterSize": 2,
+   "missing": "'【FILE6】このキャラのアクション終了時、このキャラを現場からリムーブしてもよい。そうした場合手札からLv6以下FBI1枚まで登場' — action:end is NOT in TRIGGERED_HOOKS (only action:declare/action:guarded are card-triggerable). No hook to react to 'アクション終了時'. partnerColorKeyword 突撃[キャラ] OK."
+  },
+  {
+   "rep": "B06078",
+   "clusterSize": 2,
+   "missing": "Declared effect gates on 'この【宣言】能力のコストによって特徴[赤井家]のキャラがリムーブされた場合' — the cost removeDeckTop(3) mills 3 cards but there is no binding/inspection of what the cost removed, and no condition over cost-milled card traits. Cannot evaluate whether a 赤井家 was milled. Hirameki sceneSetState sleep OK."
+  },
+  {
+   "rep": "B06082",
+   "clusterSize": 2,
+   "missing": "Event effect: conditional{if: caseStatus{解決編}, then: sequence[ sceneRemove{filter:{apMax:8000}, max:1, cause:'effect'}, optional{ effect: sequence[ filePopToHand{player:'self'}, sceneRemove{filter:{apMax:8000}, max:1} ] } ]}. caseStatus, sceneRemove(apMax), filePopToHand, optional wrapper all confirmed. Hirameki draw OK. ('相手は手札公開' is not present here.)"
+  },
+  {
+   "rep": "B06085",
+   "clusterSize": 2,
+   "missing": "Main declared effect needs: (1) select opp evidence and move to deck BOTTOM — evidenceToDeck only moves own top-n to deck TOP, no pick/bottom/opp-target; (2) move an opp SCENE char into opp's evidence area face-up — no scene→evidence atom (gainCard is selfToEvidence/used-event only); (3) MR-clause. Hirameki (sceneSetState sleep pick) is fine. Missing verbs: opp-evidence-to-deck-bottom-by-pick, scene-char-to-evidence."
+  },
+  {
+   "rep": "B06086",
+   "clusterSize": 2,
+   "missing": "Needs to select a face-down evidence (own AND opponent's) and flip face-up as an EFFECT. evidenceFlip takes a literal numeric idx, not a $pick; no atom converts an evidence pick into a flip. flipFaceUpEvidence exists only as a COST (own evidence). No mechanism to flip opponent's evidence at all. 突撃/action:declare/AP+1000 conditional all fine but the flip is unbuildable."
+  },
+  {
+   "rep": "B06087",
+   "clusterSize": 2,
+   "missing": "'相手の現場のキャラがこのキャラとのコンタクトによってリムーブされたとき' — leave:to-remove fires with payload {uid,cause} only (cause:'contact-ap'); it carries NO contact-attacker identity. selfOnly/matcher/matcherCondition cannot verify 'self was the attacker of that contact'. No hook/condition links a contact-AP removal to the attacking char. Missing: contact-attacker-linked removal hook/condition."
+  },
+  {
+   "rep": "B06090",
+   "clusterSize": 2,
+   "missing": "a1: trigger hook 'enter' selfOnly + optional + chain[ atom sceneSetState{uid:'$self',state:'sleep'}, atom sceneEnter{cardId:'$pick.cardId', target pick query area:'remove' side:'self' filter{trait:'喫茶ポアロ',levelMax:5}} ]. Hirameki: trigger 'evidence:remove-by-action' optional + atom handAddFromRemove{filter trait:'喫茶ポアロ'}. All verbs/filters confirmed (sceneEnter-from-remove area-splice, matchOneFilter trait honored)."
+  },
+  {
+   "rep": "B06095",
+   "clusterSize": 2,
+   "missing": "Declared 解決編/ターン1 cost flipFaceUpEvidence then '自分のすべてのエリアにあるキャラは特徴[喫茶ポアロ]を持つ' — no trait-grant verb (only charGrantKeyword/charRevokeKeyword; no charGrantTrait). The first clause (解決編になったとき手札1枚リムーブ) maps to caseResolvedHandRemove, fine. Missing verb: grant trait (turn-scoped, all areas)."
+  },
+  {
+   "rep": "B06098",
+   "clusterSize": 2,
+   "missing": "Clause 1 (declared, sceneHas 黒ずくめ≥2 gate, sceneRemove apMax8000) is buildable. Clause 2 needs deck-look filtering by keyword 'カットイン' — deckRevealUntil's targetFilterToPredicate honors only cardId/color/trait/ap/lp/level/kind, NOT keyword. Missing: keyword support in deckRevealUntil predicate (or look-N-select that uses matchOneFilter)."
+  },
+  {
+   "rep": "B06100",
+   "clusterSize": 2,
+   "missing": "Single 登場時: trigger hook 'enter' selfOnly + optional + chain[ atom discard{player:'self', max:1, filter{keyword:'カットイン', color:'黒'}}, atom draw{player:'self', n:2} ]. matchOneFilter honors keyword 'カットイン' for hand candidates (BUG-122 defHasKeyword) and color. chain gives 'そうした場合' (draw only if discard applied)."
+  },
+  {
+   "rep": "B06103",
+   "clusterSize": 2,
+   "missing": "'このターン中、自分は[ジン]を使用できず、登場させることができない' — no turn-flag/restriction verb to block hand-use/登場 of a named card for the turn. mutate.flag has no such flag and no atom exposes it. Missing: per-turn name-based use/enter restriction. (Rest: declared 解決編 + sceneRemove + sceneEnter sleep from hand, plus hand-source declared via 'on-hand' would also need verification, but the restriction clause already blocks.)"
+  },
+  {
+   "rep": "B06104",
+   "clusterSize": 2,
+   "missing": "'このターン中、自分はネクストヒントできない' — no verb/flag to block next-hint for the turn (mutate.flag only has nextHintUsed tracking, no atom exposes it, and that flag means 'already used' not 'blocked'). Rest (forEach all sceneRemove, filePopToHand x2, sceneEnter from hand, hirameki draw) is buildable. Missing: next-hint-block turn flag."
+  },
+  {
+   "rep": "B06105",
+   "clusterSize": 2,
+   "missing": "'自分の黒パートナーの事件解決能力を以下に書き換える' — no mechanism to replace/rewrite a partner's ability; partner abilities are static CardDef. Also the rewritten 【証拠隠滅】 victory ability (証拠を事件レベル分リムーブ → 相手敗北) has no built-in victory-by-evidence-removal verb. Missing: partner-ability-rewrite + custom victory verb."
+  },
+  {
+   "rep": "B06109",
+   "clusterSize": 2,
+   "missing": "'自分は[高校生]以外のキャラを手札から使用できない（ネクストヒント含む）' — continuous restriction on hand-use by trait. No mechanism to restrict hand-use/next-hint by a trait predicate; no verb/condition gates the hand-use action by card attributes. First clause (解決編になったとき相手1ドロー) is doable. Missing: trait-conditioned hand-use restriction."
+  },
+  {
+   "rep": "B07002",
+   "clusterSize": 2,
+   "missing": "Two uncovered clauses: (1) 登場時 'それぞれ色の異なる探偵を2枚リムーブした場合' — discard/remove-then-inspect-results is unsupported (discard has no bind to inspect what was removed). (2) 宣言 'このターン中、相手は【カットイン】と【変装】を使用できない' — no turn-flag to block opp cut-in/disguise. Missing: discard-result inspection + opp-cutin/disguise turn-restriction."
+  },
+  {
+   "rep": "B07003",
+   "clusterSize": 2,
+   "missing": "Clause 1: '自分の手札にある【青】のカードは「【カットイン】AP+1000」を持つ' — no mechanism to dynamically grant an icon/cut-in ability to hand cards (continuous is owner-bearer-only; hand cards have no ability-mod slot). Clause 2: move an opp scene char + same-name opp-remove char to deck BOTTOM — no scene→deck-bottom atom, no remove→deck-bottom verb, no same-name-as-target query. Missing: hand-card ability grant + scene/remove-to-deck-bottom verbs."
+  },
+  {
+   "rep": "B07004",
+   "clusterSize": 2,
+   "missing": "Declared/sleep: look top 4, enter a levelMax8 char named [小嶋元太] or [円谷光彦], rest to deck bottom. deckRevealUntil's targetFilterToPredicate does NOT honor cardName (only cardId/color/trait/ap/lp/level/kind), so name-based deck-look filtering can't be expressed. Missing: cardName support in deckRevealUntil predicate."
+  },
+  {
+   "rep": "B07012",
+   "clusterSize": 2,
+   "missing": "Main 登場時 needs (1) condition '自分の現場に【青】以外の色を持つキャラがいる' — color filter is membership-OR; cannot express 'has a color other than 青'; and (2) move an opp scene char to deck BOTTOM — no scene→deck-bottom atom (sceneRemove→remove, sceneToHand→hand only). Hirameki (handAddFromRemove) is fine. Missing: non-color predicate + scene-to-deck-bottom verb."
+  },
+  {
+   "rep": "B07014",
+   "clusterSize": 2,
+   "missing": "Event sets onto a 青 char (charSetCard ok) and grants the host BOTH 突撃[キャラ] (keyword, grantable) AND a new 【宣言】ability (remove→deck-top). No mechanism to grant an arbitrary DECLARED ability to a char via a set card (only keyword/expandActionTargets grants exist), and no remove→deck-top verb for the granted ability. Missing: ability-grant via set + remove-to-deck-top verb."
+  },
+  {
+   "rep": "B07015",
+   "clusterSize": 2,
+   "missing": "Clause 1 (declared/sleep): '手札からレベル5か6の緑イベントを1枚まで使用する' — no atom to play/use an event card from hand within an effect (no useEvent/playCard verb). Clause 2 (deck-look緑event to hand) would be buildable (color+kind honored), but clause 1 blocks. Missing: use-event-from-hand verb."
+  },
+  {
+   "rep": "B07017",
+   "clusterSize": 2,
+   "missing": "突撃[キャラ] (keyword) + 【絆大岡紅葉】AP+1000 (continuous apDelta + bond condition) are fine. But '相手キャラがこのキャラとのコンタクトによってリムーブされたとき → リムーブから緑イベント手札へ' needs the contact-attacker-linked removal hook: leave:to-remove payload {uid,cause} carries no attacker identity. Missing: condition/hook tying contact-AP removal to the attacking self."
+  },
+  {
+   "rep": "B07020",
+   "clusterSize": 2,
+   "missing": "Declared: cost pay{items:[sleepSelf, removeFromHand{n:1}]} + effect choice[ atom sceneEnter{cardId:'$pick.cardId', target pick area:'remove' side:'self' filterAny:[{cardName:'マロちゃん',levelMax:5},{trait:'警察',levelMax:5}]} ]. Both costs confirmed in cost/pay.ts; sceneEnter-from-remove with matchOneFilter (cardName/trait/level honored) confirmed (B08056 pattern)."
+  },
+  {
+   "rep": "B07023",
+   "clusterSize": 2,
+   "missing": "trigger hook 'phase:end:start' (per-card in-play scan sets source.uid=this char, so $self resolves) + condition turn:self + optional + chain[ atom sceneRemove{uid:'$self'}, atom sceneSetState{uid:'$pick', state:'active', target pick filter{cardName:['服部平次','毛利小五郎']}} ]. All confirmed (D08003 a2 phase:end:start pattern; matchOneFilter cardName)."
+  },
+  {
+   "rep": "B07026",
+   "clusterSize": 2,
+   "missing": "Clause 1 (【パートナー緑】 partnerColor cond + AP8000以下 1pick sceneRemove) is fully covered. Clause 2 — 'このイベントが能力や効果によって使用されていた場合、カードを1枚引く' — has NO condition. effect:declared event-use payload does not flag play-source (hand-use vs effect-played), and no Condition kind exposes 'this card was used by an ability/effect'. MISSING: a condition/payload flag for event-used-via-effect."
+  },
+  {
+   "rep": "B07031",
+   "clusterSize": 2,
+   "missing": "登場時 charSetCard{fromDeckTop:true,faceUp:false} OK; declared cost sleepSelf+removeFromHand OK; キャラ1pick sceneRemove OK; 解決後 remove-area→sceneEnter(白 lvl3以下) OK. BLOCKER: '自分の現場にいるキャラに裏向きでセットされているカードを合わせて2枚リムーブ' — charRemoveSetCard removes ONE set card per picked char (Pattern A). 'total 2 set cards across field' (count-2, possibly multiple on one char) has no aggregate set-card removal. MISSING: aggregate set-card removal verb / count-N-set-cards semantics."
+  },
+  {
+   "rep": "B07035",
+   "clusterSize": 2,
+   "missing": "Two gaps. (1) deckRevealUntil predicate path does NOT honor cardName (only cardId/color/trait/ap/lp/level/kind) — needs cardName[黒羽快斗]/[怪盗キッド] match. (2) '残りをリムーブエリアに移す' — only deckToBottomBound exists (revealed remainder → deck bottom); there is NO verb to move a bound revealed group to the remove area. MISSING: cardName in deckReveal predicate + revealed-remainder→remove verb."
+  },
+  {
+   "rep": "B07036",
+   "clusterSize": 2,
+   "missing": "【解決編】=caseStatus condition; 【登場時】=enter hook selfOnly. chain '〜してもよい。そうした場合': (1) sceneSetState{state:'sleep',filter:{color:'白'},n0/1} + discard(max1) → (2) レベル7以下キャラ1pick sceneRemove → (3) conditional via boundMatchesFilter{cardName:'黒羽快斗'} on the bound slept char (cardName IS honored in boundMatchesFilter) then draw. All atoms/conds exist."
+  },
+  {
+   "rep": "B07054",
+   "clusterSize": 2,
+   "missing": "Option 1 (白 1pick charModifyAP+2000 scope:turn + charGrantKeyword 突撃) OK; Option 2 (lvl7以下 sleep状態 1pick sceneSetState stun) OK. Option 3 — grant a picked 白 char the turn-scoped ability '相手の現場にいるアクティブ状態のキャラを指定してアクションできる' — expandActionTargets is a STATIC self-ability via action:pre-target hook keyed to that card's own def (D11007); there is NO verb to grant ANOTHER char a turn-scoped action-target-expansion (charSetTurnEffect has no consumer for action targeting). MISSING: grant turn-scoped action-target-expansion verb."
+  },
+  {
+   "rep": "B07055",
+   "clusterSize": 2,
+   "missing": "【事件赤魔術】(caseTrait) + 【パートナー白】(partnerColor) gates OK; AP8000以下 1pick sceneRemove OK; 'そうした場合 AP6000以下 1pick sceneRemove' (chain) OK. BLOCKER (same as B07031): '自分の現場にいるキャラに裏向きでセットされているカードを合わせて2枚リムーブ' = aggregate-2 set-card removal across field; charRemoveSetCard is per-char single set-card. MISSING: count-2-total set-card removal."
+  },
+  {
+   "rep": "B07063",
+   "clusterSize": 2,
+   "missing": "a2 (declared sleepSelf + removeFromHand cost → LP0 [高校生] 1pick sceneSetState active + charModifyAP+1000) is OK. a1 is the gap: '【ターン1】AP7000以上のキャラがアクションしたとき、そのキャラに「【ターン1】...コンタクトによってリムーブされたときカードを1枚引く」を与える' — granting a char a NESTED turn-scoped TRIGGERED ability at runtime. charGrantKeyword only grants keyword strings; charSetTurnEffect has no consumer firing a 'contact-remove → draw' trigger. MISSING: runtime grant of a triggered ability."
+  },
+  {
+   "rep": "B07065",
+   "clusterSize": 2,
+   "missing": "a1 【パートナー赤】【宣言】【ターン1】 removeFromHand → 1pick sceneRemove OK; カットイン AP+2000 inline OK; 'on-partner-area でも宣言' (MR-style declared scope) OK. BLOCKER: a2 condition 'この能力は自分の手札が2枚以下の場合に宣言できる' is a hand-count UPPER bound — no handAtMost/handCount condition exists (sceneHas{area:hand} is a LOWER-bound presence count only). MISSING: hand-size ≤N condition."
+  },
+  {
+   "rep": "B07066",
+   "clusterSize": 2,
+   "missing": "a1 【自分ターン中】【ターン1】 triggered on enter (matcherCondition triggerCharMatches{side:self,filter:{trait:'赤井家',levelMax:7,kind:'character'}}) → AP8000以下 1pick sceneRemove. a2 declared cost choice[sleepSelf | sleepChar{trait赤井家}] → deckRevealUntil{maxN:3,filter:{trait:'赤井家',kind:'character'}} + handAddFromDeck + deckToBottomBound (remainder to deck-bottom) + conditional(bound) discard. trait IS honored in deckReveal predicate (B01017 pattern). All present."
+  },
+  {
+   "rep": "B07068",
+   "clusterSize": 2,
+   "missing": "【パートナー白】【登場時】 chain: (1) sceneSetState sleep $self + discard(max1) → (2) remove-area lvl5以下【赤】1pick sceneEnter{enterSleep:true} → (3) conditional then アクティブ化 entered-char + self. ヒラメキ draw OK. BLOCKER: '自分の手札が2枚以下の場合' is a hand-count UPPER-bound condition — no handAtMost/handCount condition (sceneHas{area:hand} is lower-bound only). MISSING: hand-size ≤N condition."
+  },
+  {
+   "rep": "B07069",
+   "clusterSize": 2,
+   "missing": "a2 【FILE8】【宣言】【ターン1】【スリープ】 cost (removeFromHand + fileFrom1) → remove-area lvl7以下【赤】1pick sceneEnter — fully OK (fileAtLeast cond, fileFrom cost). a1 【パートナー赤】【宣言】【ターン1】 lvl8以下 1pick sceneRemove with condition '手札が2枚以下の場合に宣言できる' — hand-count UPPER bound, no such condition. MISSING: hand-size ≤N condition (same gap as B07065/B07068)."
+  }
+ ],
+ "black": [
+  {
+   "rep": "B07030",
+   "clusterSize": 3,
+   "blocker": "'リムーブの[ビッグジュエル]イベントをパートナーエリアに移す' and cost 'パートナーエリアにある[ビッグジュエル]カードを2枚リムーブする' require a partner-area entity slot for non-partner cards. candidates.ts:93-98 enumerates partner-area as ONLY the single partner.cardId — GameState has no slot for extra cards placed in the partner-area. This is the known structural DEFER gate (B07045-class). Permanent data/structure blocker."
+  },
+  {
+   "rep": "B07033",
+   "clusterSize": 3,
+   "blocker": "BLACK: requires partner-area extra-card slot — 【自分ターン中】counts [ビッグジュエル]イベントcards sitting in パートナーエリア (2枚以上), and 【変装時】moves a リムーブ event INTO パートナーエリア. GameState partner-area has no slot for non-partner cards (candidates.ts only scans partner.cardId); no atom moves a card to partner-area. 変装 gate (icon-disguise + fileAtLeast{6}) and 突撃 are fine, but the [ビッグジュエル]-in-PA enumeration/placement is structurally absent (same B07045-class blocker)."
+  },
+  {
+   "rep": "B06066",
+   "clusterSize": 2,
+   "blocker": "'この能力はパートナーエリアでも発動する' = MR-in-partner-area mechanic. collectCardsInPlay only registers the actual partner card in partner-area; there is NO GameState slot for a non-partner MR char sitting in the partner-area, and no isMR flag. Known B07045/B09047-class structural DEFER. The ターン終了時 ability cannot fire from partner-area."
+  },
+  {
+   "rep": "B06074",
+   "clusterSize": 2,
+   "blocker": "'この能力はパートナーエリアでも宣言できる' = MR-in-partner-area declared ability. No GameState partner-area slot for a non-partner MR char + no isMR flag (B07045/B09047-class structural DEFER). Additionally the declared effect is a delayed 'ターン終了時...FILE5枚以下ならデッキ上2枚をFILE' scheduled effect, but partner-area MR is the permanent structural blocker."
+  },
+  {
+   "rep": "B06084",
+   "clusterSize": 2,
+   "blocker": "'この能力はパートナーエリアでも宣言できる' = MR-in-partner-area declared ability — no GameState partner-area slot for non-partner MR + no isMR flag (B07045/B09047-class structural DEFER). Additionally the declared uses 捜査1 + 'レベル7以下のカードが発見された場合' which the souza verb does not support ('発見された' downstream reference unimplemented), but partner-area MR is the permanent blocker."
+  },
+  {
+   "rep": "B07032",
+   "clusterSize": 2,
+   "blocker": "AP8000以下 sceneRemove + declared cost OK, but '自分のパートナーエリアにある〚特徴[ビッグジュエル]〛のカードを1枚リムーブ' is structurally blocked: candidates.ts partner-area enumeration only returns partner.cardId, and GameState PartnerOnBoard has a single slot — no array for extra cards moved into partner-area. BLOCKER: no partner-area entity slot to hold/enumerate ビッグジュエル cards."
+  },
+  {
+   "rep": "B07039",
+   "clusterSize": 2,
+   "blocker": "【解決編】【宣言】【ターン1】 declared + caseStatus + limit turn1 + draw all OK, BUT the cost '〚パートナーエリアにある特徴[ビッグジュエル]のカードを1枚リムーブする〛' references a partner-area extra card. No partner-area entity slot (GameState single partner) and no Cost kind for partner-area card removal. BLOCKER: partner-area entity slot absent."
+  },
+  {
+   "rep": "B07059",
+   "clusterSize": 2,
+   "blocker": "【パートナー白】 AP8000以下 1pick sceneRemove OK, but 'このカードをパートナーエリアに移す' (effect AND hirameki) requires moving the event into partner-area as a persistent entity. No atom verb (selfToEvidence is evidence-only; no toPartnerArea), and PartnerOnBoard has a single slot. BLOCKER: partner-area entity slot + move-to-partner-area verb absent."
+  },
+  {
+   "rep": "B07060",
+   "clusterSize": 2,
+   "blocker": "【パートナー白】 draw + 手札からFILE枚数以下レベルの白キャラ1枚登場, then 'このカードをパートナーエリアに移す' (and ヒラメキ same) is structurally blocked: no partner-area entity slot, no move-to-partner-area verb. BLOCKER: partner-area entity slot absent."
+  },
+  {
+   "rep": "B07061",
+   "clusterSize": 2,
+   "blocker": "case card. 'この事件が解決編になったとき手札1リムーブ' = case:to-resolved hook + discard (caseResolvedHandRemove) OK; cost flipFaceUpEvidence OK. But 【解決編】【宣言】【ターン1】 'リムーブエリアにある特徴[ビッグジュエル]のカードを1枚選びパートナーエリアに移す' is double-blocked: no move-to-partner-area verb, and no partner-area entity slot to receive it. BLOCKER: partner-area entity slot + move verb absent."
+  }
+ ]
+}

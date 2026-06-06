@@ -39,8 +39,14 @@
 - [.claude/sessions/2026-06-06-8.md](sessions/2026-06-06-8.md) — **タスク A 着手** (engine 変更 0)。再サーベイ:
   カタログ 2049 / 実装 967 / 残 **1082** (= 661 distinct signature)。batch #1 = 既存実装と byte 一致の
   **完全再録 11 枚** (spread パターン、engine 不変)。vitest **1851 pass** 回帰0 / ALL_CARDS **978**。
-  ⚠ gate 表 `card-impl-engine-gates.md` は 2026-06-04 stale (タスク C 追加 hook/verb 未反映) — 再分類時に実コード確認。
+  ⚠ gate 表 `card-impl-engine-gates.md` は 2026-06-04 stale。**再分類 workflow を実行 → 部分完了**
+  (240/661 sig 後 rate-limit + subscription-access block で中断、agent 53/~75)。成果: 70KB capability-map
+  (gate 表を置換、hook 9→13個) + 🟢4 (B07041/B07047/B07057/B07058=8枚) + 🟡226 + ⚫10。
+  → [.claude/specs/catalog-survey-2026-06-06/](specs/catalog-survey-2026-06-06/)。残 chunk 12-33 は次回再実行。
   meta-app Phase 18 は別セッション進行中 → 不可触。
+- [.claude/sessions/2026-06-06-meta-app-phase18.md](sessions/2026-06-06-meta-app-phase18.md) — **別ワークストリーム** (meta-app/ + .claude/ のみ、engine/cards 不可触)。
+  5174 を Master Duel 参考に全面リデザイン + **同ID(cardId)3枚ルール是正** (BUG-125)。SAMPLE_DECK_OPP 事件混入 + migration 修復 (BUG-126)、
+  リデザイン回帰群 (BUG-127)。CardDef.id / DeckRecord.case / 共有FilterRail / デッキコード / テストハンド。e2e 非tutorial 26 pass。**完了**。
 
 **次セッション方針 (arumi 希望): A — engine変更0 の大量カードバッチ**。C で engine 機能が大幅増 → 「engine 不変で
 実装可能なカード」が増えた。まず残カタログを再サーベイ (実データ裏取り) → 🟢 を均質バッチで実装。詳細は NEXT-SESSION-PROMPT。

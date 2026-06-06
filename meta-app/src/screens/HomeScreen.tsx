@@ -10,7 +10,7 @@ import { EmptyState } from '../shared/EmptyState';
 import { engineStub } from '../stubs/engineStub';
 import { useDecksStore } from '../state/decksStore';
 import { useHistoryStore } from '../state/historyStore';
-import { CARD_POOL } from '../data/cardPool';
+import { CARD_POOL, cardIdOf } from '../data/cardPool';
 import type { Route } from '../router/routes';
 
 interface Props {
@@ -312,7 +312,7 @@ function MyDecksPanel({ decks, onSeeAll }: { decks: import('../data/types').Deck
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>{d.name}</div>
                   <div style={{ fontFamily: T.fontMono, fontSize: 10, color: T.textMuted, letterSpacing: '0.1em' }}>
-                    {total} 枚 · {d.cards.length} 種類
+                    {total} 枚 · {new Set(d.cards.map((e) => cardIdOf(e.num))).size} 種類
                   </div>
                 </div>
               </div>

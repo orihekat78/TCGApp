@@ -1,0 +1,13 @@
+{
+ "loseGame/defeat verb": 14,
+ "cutin-subtype filter": 44,
+ "continuous-aura (other chars)": 28,
+ "remove-area → deck-bottom verb": 51,
+ "MR / color-count filter": 11,
+ "hand-count condition": 66,
+ "other": 246,
+ "partner-area entity slot": 5,
+ "set-card confers ability to host": 14,
+ "grant turn-end-removal to char": 6,
+ "event traits (all empty)": 2
+}

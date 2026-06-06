@@ -10,21 +10,7 @@ import { promptMulligan } from '@/ui/hooks/useMulligan.js';
 import type { GameState } from '@/engine/types/game-state';
 import type { DeckPair } from '@/engine/flow/setup';
 import type { DeckRecord } from '../data/types';
-import { CARD_POOL } from '../data/cardPool';
-
-/** パートナー → 事件カード対応 (色を頼りに推定) */
-const PARTNER_TO_CASE: Record<string, string> = {
-  D08001: 'D08026', D08002: 'D08026',  // CT-D08 → 青の古城探索事件
-  D11001: 'D11021', D11002: 'D11021',  // CT-D11 → 千速と重悟の婚活パーティー
-};
-
-/** パートナーから caseId を推定。未登録なら color から fallback */
-function inferCaseId(partnerNum: string): string {
-  if (PARTNER_TO_CASE[partnerNum]) return PARTNER_TO_CASE[partnerNum]!;
-  const partner = CARD_POOL.find((c) => c.num === partnerNum);
-  if (partner?.color === 'yellow') return 'D11021';
-  return 'D08026';
-}
+import { defaultCaseForPartner } from '../data/cardPool';
 
 /** meta DeckRecord → engine Deck 変換 (mainCards を count 分展開) */
 export function toEngineDeck(deck: DeckRecord) {
@@ -34,15 +20,19 @@ export function toEngineDeck(deck: DeckRecord) {
   }
   return {
     partnerId: deck.partner,
-    caseId: inferCaseId(deck.partner),
+    // デッキの事件スロットを使う。未設定の旧デッキはパートナーから推定。
+    caseId: deck.case || defaultCaseForPartner(deck.partner),
     mainCards,
   };
 }
 
-/** カスタム DeckRecord ペアから実機対戦 GameState を生成 (src/services/gameStarter のミラー) */
+/** カスタム DeckRecord ペアから実機対戦 GameState を生成 (src/services/gameStarter のミラー)。
+ *  - spectator=true (観察ルーム) のときは両者 AI なので人間マリガンを出さない。
+ *  - firstPlayer 指定時は先攻を固定 (未指定ならランダム)。 */
 export async function customGameStart(
   selfDeck: DeckRecord,
   oppDeck: DeckRecord,
+  opts: { spectator?: boolean; firstPlayer?: 'self' | 'opp' } = {},
 ): Promise<GameState> {
   const decks: DeckPair = {
     self: toEngineDeck(selfDeck),
@@ -52,7 +42,8 @@ export async function customGameStart(
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {
     engine.flow.setup.init(draft, decks);
-    engine.flow.setup.decideFirstPlayer(draft, 'random');
+    if (opts.firstPlayer) engine.flow.setup.decideFirstPlayer(draft, 'manual', opts.firstPlayer);
+    else engine.flow.setup.decideFirstPlayer(draft, 'random');
     engine.flow.setup.dealOpeningHand(draft, 'self');
     engine.flow.setup.dealOpeningHand(draft, 'opp');
   });
@@ -60,10 +51,11 @@ export async function customGameStart(
   const first = state.turn.player as 'self' | 'opp';
   const second: 'self' | 'opp' = first === 'self' ? 'opp' : 'self';
 
-  // Phase B: mulligan (先攻 → 後攻 / CPU は自動 skip)
+  // Phase B: mulligan (先攻 → 後攻)。観戦モードでは人間操作が無いので self も自動 skip。
   for (const p of [first, second] as const) {
     const hand = state.players[p].hand;
-    const returns = p === 'self' ? await promptMulligan({ player: p, hand }) : [];
+    const isHuman = !opts.spectator && p === 'self';
+    const returns = isHuman ? await promptMulligan({ player: p, hand }) : [];
     state = produce(state, (draft) => {
       engine.flow.setup.mulligan(draft, p, [...returns]);
     });

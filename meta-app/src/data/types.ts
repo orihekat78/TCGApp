@@ -5,7 +5,11 @@ export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
 export type CardKind = 'character' | 'event' | 'partner' | 'case';
 
 export interface CardDef {
+  /** 印刷番号 (cardNum, 例 D08003)。絵柄違い (パラレル) ごとに異なる。 */
   num: string;
+  /** 正規カードID (cardId, 例 0489)。パラレルは同一 id を共有 = ゲーム上「同じカード」。
+   *  rules/02-deck-construction.md「絵柄が違っても ID が同じであれば同じカード」。 */
+  id: string;
   name: string;
   color: CardColor;
   type: CardKind;
@@ -22,7 +26,10 @@ export interface CardDef {
 export interface DeckRecord {
   id: string;
   name: string;
+  /** パートナーカード (cardNum)。1 デッキ 1 枚必須 (rules/02)。 */
   partner: string;
+  /** 事件カード (cardNum)。1 デッキ 1 枚必須。パートナー1+事件1+キャラ/イベント40 で 1 セット (rules/02)。 */
+  case: string;
   cards: { num: string; count: number }[];
   modified: number;
 }

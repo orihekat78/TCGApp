@@ -26,23 +26,49 @@ const cards = {
     if (!partner) errors.push('パートナーが指定されていません');
     else if (partner.type !== 'partner') errors.push('パートナー枠にパートナー以外のカードが指定されています');
 
+    // 事件は 1 デッキ 1 枚必須 (rules/02: パートナー1+事件1+キャラ/イベント40)。
+    const caseCard = CARD_POOL.find((c) => c.num === deck.case);
+    if (!deck.case) errors.push('事件が指定されていません');
+    else if (!caseCard) errors.push('事件カードが見つかりません');
+    else if (caseCard.type !== 'case') errors.push('事件枠に事件以外のカードが指定されています');
+
     const total = deck.cards.reduce((s, e) => s + e.count, 0);
     if (total !== 40) {
       const diff = total < 40 ? `(${40 - total} 枚不足)` : `(${total - 40} 枚超過)`;
       errors.push(`枚数違反: ${total}/40 ${diff}`);
     }
 
+    // 同一 cardId (パラレル) を合算して 3 枚上限を判定する。
+    // rules/02-deck-construction.md「絵柄が違っても ID が同じであれば同じカード」。
+    // cardNum 単位で数えると D08003×3 + D08004×3 (= 同 cardId 0489 を 6 枚) が通ってしまう。
+    const idAgg = new Map<string, { total: number; name: string; nums: Set<string> }>();
     for (const entry of deck.cards) {
-      if (entry.count > 3) {
-        const card = CARD_POOL.find((c) => c.num === entry.num);
-        errors.push(`同 ID 上限超過: ${card?.name || entry.num} ×${entry.count} (上限 3)`);
-      }
       if (entry.count < 1) {
         errors.push(`枚数 0 のエントリ: ${entry.num}`);
       }
       const card = CARD_POOL.find((c) => c.num === entry.num);
-      if (card?.type === 'partner') {
+      // 存在しないカード番号 (デッキコード import 等) は拒否する。
+      if (!card) {
+        errors.push(`未知のカード: ${entry.num}`);
+        continue;
+      }
+      // デッキにはキャラ/イベントのみ。パートナーと事件は入れられない (rules/02)。
+      if (card.type === 'partner') {
         errors.push(`デッキにパートナーは入れられません: ${card.name}`);
+      }
+      if (card.type === 'case') {
+        errors.push(`デッキに事件は入れられません: ${card.name}`);
+      }
+      const id = card.id;
+      const agg = idAgg.get(id) ?? { total: 0, name: card.name, nums: new Set<string>() };
+      agg.total += entry.count;
+      agg.nums.add(entry.num);
+      idAgg.set(id, agg);
+    }
+    for (const agg of idAgg.values()) {
+      if (agg.total > 3) {
+        const variants = agg.nums.size > 1 ? ` (${[...agg.nums].join('+')})` : '';
+        errors.push(`同 ID 上限超過: ${agg.name}${variants} ×${agg.total} (上限 3)`);
       }
     }
 

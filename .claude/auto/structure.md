@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/MASAKI CHINAMI/OneDrive/デスクトップ/TCGApp`)
-- **ディレクトリ数**: 177
-- **ファイル数**: 2723
+- **ディレクトリ数**: 178
+- **ファイル数**: 2731
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -265,6 +265,7 @@
     - `BUG-124.md`
     - `BUG-125.md`
     - `BUG-126.md`
+    - `BUG-127.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -392,6 +393,7 @@
     - `2026-06-06-16-task-c-evidence-suppression.md`
     - `2026-06-06-17-meta-app-md-deckbuilder.md`
     - `2026-06-06-17-task-a-exact-reprints.md`
+    - `2026-06-06-18-task-a-catalog-reclassify-survey.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -780,6 +782,7 @@
     - `2026-06-06-6.md` — セッションログ — 2026-06-06 #6 タスク C: reasoning 残 全数分類 + batch #3 (B05039/B03096)
     - `2026-06-06-7.md` — セッションログ — 2026-06-06 #7 タスク C: reasoning 残 new-feature 実装シリーズ
     - `2026-06-06-8.md` — セッションログ — 2026-06-06 #8 タスク A 着手: engine 変更 0 カードバッチ
+    - `2026-06-06-meta-app-phase18.md` — 2026-06-06 — meta-app(5174) Phase 18: Master Duel 風デッキビルダー全面リデザイン + 同ID3枚ルール是正
     - `2026-06-06.md` — セッションログ — 2026-06-06 BUG-121 残課題の全解消 + 規約/教訓更新
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
@@ -954,6 +957,11 @@
       - `_regen.js` — TSV regenerator from fresh API JSON in _raw/.
       - `INDEX.md` — cards-data — カードデータ TSV (権威ソース)
       - `packages.md` — cards-data パッケージ一覧
+    - **`catalog-survey-2026-06-06/`**
+      - `_buckets.json`
+      - `capability-map.txt`
+      - `classification-partial.json`
+      - `README.md` — 残カタログ再分類サーベイ (2026-06-06, session #8 タスク A) — **部分完了**
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -1213,6 +1221,7 @@
       - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
       - `deck.spec.ts` — spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)
       - `engine-stub.spec.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 10-integration-with-src.md
+      - `filter-decoy.spec.ts` — spec: card-addition-checklist.md §7 「画面処理 = テキスト文言」の deck-builder 適用。
       - `golden-path.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.…
       - `smoke.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
       - `tutorial.spec.ts` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…

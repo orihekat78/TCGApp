@@ -6,6 +6,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { DeckRecord } from '../data/types';
 import { SAMPLE_DECK, SAMPLE_DECK_OPP } from '../data/sampleDeck';
+import { defaultCaseForPartner, CARD_POOL } from '../data/cardPool';
 
 interface DecksState {
   decks: DeckRecord[];
@@ -42,7 +43,28 @@ export const useDecksStore = create<DecksState>()(
     }),
     {
       name: 'conan.meta.v1.decks',
-      version: 1,
+      version: 2,
+      // v1 → v2: DeckRecord に事件スロット (case) を追加 (rules/02)。
+      // 旧デッキはパートナーから既定の事件を補填する。さらに v1 のサンプルデッキは
+      // 事件カードがデッキ内に混入していた (BUG-126) ため、正データで上書きして修復する。
+      // カスタムデッキはパートナー/事件カードがデッキ内にあれば除去する (rules/02)。
+      migrate: (persisted, fromVersion) => {
+        const s = persisted as { decks?: DeckRecord[] } | undefined;
+        if (fromVersion < 2 && s?.decks) {
+          for (const d of s.decks) {
+            if (!d.case) d.case = defaultCaseForPartner(d.partner);
+            if (d.id === SAMPLE_DECK.id) d.cards = structuredClone(SAMPLE_DECK.cards);
+            else if (d.id === SAMPLE_DECK_OPP.id) d.cards = structuredClone(SAMPLE_DECK_OPP.cards);
+            else {
+              d.cards = (d.cards ?? []).filter((e) => {
+                const c = CARD_POOL.find((x) => x.num === e.num);
+                return c?.type !== 'partner' && c?.type !== 'case';
+              });
+            }
+          }
+        }
+        return s as DecksState;
+      },
       onRehydrateStorage: () => (state) => {
         state?._setHydrated(true);
       },

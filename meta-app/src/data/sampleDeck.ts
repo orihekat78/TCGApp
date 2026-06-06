@@ -9,6 +9,7 @@ export const SAMPLE_DECK: DeckRecord = {
   id: 'sample-d08',
   name: '少年探偵団・標準',
   partner: 'D08001',
+  case: 'D08026', // 青の古城探索事件
   modified: 0,
   cards: [
     { num: 'D08003', count: 2 },
@@ -32,11 +33,14 @@ export const SAMPLE_DECK_OPP: DeckRecord = {
   id: 'sample-d11',
   name: '警察・標準',
   partner: 'D11001',
+  case: 'D11021', // 千速と重悟の婚活パーティー
   modified: 0,
   cards: [
-    { num: 'D11003', count: 2 },
-    { num: 'D11005', count: 2 },
-    { num: 'D11007', count: 2 },
+    // 事件カード(D11021)はデッキに入れられない (rules/02) ため、題材キャラ
+    // (萩原千速/横溝重悟/松田陣平) を 3 枚ずつに増やして 40 枚を構成する。
+    { num: 'D11003', count: 3 },
+    { num: 'D11005', count: 3 },
+    { num: 'D11007', count: 3 },
     { num: 'D11009', count: 3 },
     { num: 'D11011', count: 3 },
     { num: 'D11013', count: 3 },
@@ -44,7 +48,6 @@ export const SAMPLE_DECK_OPP: DeckRecord = {
     { num: 'D11017', count: 3 },
     { num: 'D11019', count: 3 },
     { num: 'D11020', count: 3 },
-    { num: 'D11021', count: 3 },
     { num: 'D08007', count: 3 },
     { num: 'D08009', count: 3 },
     { num: 'D08011', count: 2 },

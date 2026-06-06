@@ -382,9 +382,10 @@ const REASON_LABELS: Record<'evidence' | 'deck-out' | 'concede', string> = {
 function computeStats(gs: import('@/engine/types/game-state').GameState): ResultStats | null {
   const result = engine.read.game.result(gs);
   if (!result) return null;
-  const firstPlayer = inferFirstPlayer(gs);
-  const selfTarget: 7 | 6 = firstPlayer === 'self' ? 7 : 6;
-  const oppTarget: 7 | 6 = firstPlayer === 'self' ? 6 : 7;
+  // エンジンが確定させた必要証拠数 (先攻7/後攻6) を直接参照する。
+  // ターン偶奇からの再構成は終局のターン状態によって崩れうるため使わない (rules/01,04)。
+  const selfTarget = engine.read.player.requiredEvidence(gs, 'self') as 7 | 6;
+  const oppTarget = engine.read.player.requiredEvidence(gs, 'opp') as 7 | 6;
   return {
     winner: result.winner,
     reason: REASON_LABELS[result.reason],
@@ -396,13 +397,6 @@ function computeStats(gs: import('@/engine/types/game-state').GameState): Result
     oppRefresh: gs.refreshCount.opp,
     selfScratch: gs.scratchTrace.self,
   };
-}
-
-function inferFirstPlayer(gs: import('@/engine/types/game-state').GameState): 'self' | 'opp' {
-  if (gs.turn.number % 2 === 0) {
-    return gs.turn.player === 'self' ? 'opp' : 'self';
-  }
-  return gs.turn.player;
 }
 
 function pickMvpCard(gs: import('@/engine/types/game-state').GameState): CardDef | undefined {
@@ -437,11 +431,15 @@ function buildMatchRecord(
   const stats = computeStats(gs);
   // Phase 14-C: engine.log から contacts/hirameki/misread を集計
   const counters = countLogActions(gs.log);
+  // Phase 18: SetupScreen が控えた対戦種別・デッキ名を履歴に反映 (consume して次戦への持ち越しを防ぐ)
+  const matchMeta = useMetaStore.getState().consumeMatchMeta();
   return {
     id: `m-${Date.now()}`,
     recorded: Date.now(),
     won: result.winner === 'self',
-    deckName: '実機対戦',
+    mode: matchMeta?.mode ?? 'solo',
+    deckName: matchMeta?.selfDeckName ?? '実機対戦',
+    oppDeckName: matchMeta?.oppDeckName,
     turns: gs.turn.number,
     duration: 0,
     evidGot: gs.players.self.evidence.length,

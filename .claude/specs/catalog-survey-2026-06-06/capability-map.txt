@@ -1,0 +1,606 @@
+# CURRENT ENGINE CAPABILITY REFERENCE (authoritative, from live code)
+
+### Engine capability: verbs
+I now have complete information on all verbs, wrappers, conditions, filters, and pick mechanisms. Producing the reference.
+
+# Detective Conan TCG — Frozen Engine Capability Reference (atom verbs, wrappers, conditions, pick mechanisms)
+
+Source files: `src/engine/types/effect.ts`, `src/engine/effect/atom-handlers.ts` (`runAtom`), `src/engine/effect/resolver.ts` (`run`), `src/engine/effect/resolve-picks.ts`, `src/engine/effect/apply-pick.ts`, `src/engine/effect/validate.ts`.
+Notation: ⛔ = throws / stub / unsupported / known gate. `player` resolution is **relative** to card owner via `resolvePlayer`: `'self'`=owner, `'opp'`=opp-of-owner; any other value ⛔ throws. Unresolved `$`-prefixed bind refs generally **silent no-op** (return) unless noted. `scope` ∈ `'turn'|'contact'|'permanent'` for char mods.
+
+## Atom EFFECT VERBs
+
+All verbs registered (must stay in sync between `effect.ts AtomVerb`, `validate.ts ATOM_VERBS`, and `runAtom` switch). Unknown verb → `runAtom` default throws `unknown atom verb`. Each verb appends a `effect:<verb>` log entry.
+
+### Draw / FILE / evidence (board flow)
+- **draw** — args `{player, n:number}`. `mutate.deck.draw` (pushes to hand). `requireField` ⛔ throws if `n` not number.
+- **discard** — args `{player, target?:string[], n?/max?, filter?}`. Discards hand cards to remove. Pattern B short-form (`buildShortFormPick`, defaultArea=hand). If `target` unresolved → `tryRePickFromAtom` + `effect:discard:awaiting-pick` no-op (pick pending).
+- **mill** — args `{player, n}`. `mutate.deck.removeFromTop`.
+- **fileAdd** — args `{player, n}`. `mutate.file.addFromDeckTop`.
+- **filePopToHand** — args `{player}`. Pops FILE top; if `assisted-partner` adds its cardId, else adds `FILE_CARD_BACK_PLACEHOLDER`. No-op log if FILE empty.
+- **evidenceGain** — args `{player, n}`. `mutate.evidence.addFromDeck` (face-down, via:'effect').
+- **selfToEvidence** — args `{player?='self', faceUp?=true}`. Moves `ctx.source.cardId` (the used event) into evidence via `mutate.evidence.gainCard`. Returns silently if source cardId empty.
+- **evidenceLose** — args `{player, n}`. Loops `evidence.removeTop` up to n (stops early if empty).
+- **evidenceToDeck** — args `{player, n:number|'$trigger.gained'}`. Moves top n evidence to deck top (`mutate.evidence.toDeckTop`). `n` resolved via `resolveBindRef`; non-number → 0. (B03038 "得ない" effect.)
+- **evidenceFlip** — args `{player, idx:number}`. `mutate.evidence.flipFaceUp(idx)`.
+
+### Evidence / hand movement
+- **evidenceToHand** — args `{player, target?:string|string[], n?/max?, filter?}`. Finds evidence by cardId, splices, adds to hand. Short-form (defaultArea=evidence). Unresolved → `tryRePickFromAtom` + awaiting-pick no-op. result `not-found` if cardId absent.
+- **handAddFromDeck** — args `{player, cardId:'$matched.cardId'|string}`. `resolveBindRef`; splices from deck → hand. `$`-unresolved → `no-bind` no-op. ("見るN→1枚手札" e.g. B01013.)
+- **handAddFromRemove** — args `{player, target?:string|string[], n?/max?, filter?}`. Splices from remove → hand. Short-form (defaultArea=remove). Unresolved → awaiting-pick no-op.
+
+### Scene (現場)
+- **sceneEnter** — args `{player, cardId:string|'$matched.cardId'|'$pick.cardId', target?(pick query), from?, n?/max?, named?=true, viaEffect?=true, enterSleep?, switchRemoveUid?, bind?}`. Enters char to scene (named/sleep optional). **Scene-full (≥5) handling**: AI side (not `__humanPlayerSide`) without `switchRemoveUid` → `scene-full-skip` no-op; with valid `switchRemoveUid` → `switchEnter` (rules/20 switch); human → await pick. Short-form `from`+n/max builds source-area pick (`$pick.cardId`). Source-area splice for `remove`/`hand`/`deck` (prevents dup). Writes new uid back to `$matched`/`matched` binding; sets `bind` binding. Emits `enter` hook (【登場時】/【疾風N】). Unresolved cardId without `$pick.cardId`+target → silent no-op.
+- **sceneSwitch** — args `{player, cardId, removeUid, named?=true, viaEffect?=true}`. `mutate.scene.switchEnter`; emits `enter` hook. `$`-unresolved cardId/removeUid → silent no-op.
+- **sceneRemove** — args `{player?, uid?:string|'$pick'|'$matched.uid', n?/max?, side?, state?, filter?, cause?}`. `mutate.scene.removeToRemove(cause∈'contact-ap'|'effect'|'switch'|'cost'|'misplay-overflow', default 'effect')`. Short-form (area=scene) → PA pick (`uid='$pick'`); `'$pick'` survivor (0 picked) → `skipped` no-op. `$`-unresolved → silent no-op.
+- **charRemoveSetCard** — args `{player?, uid?:'$pick'|bindref, n?/max?, filter?}`. Removes ONE face-down set card from a char (`mutate.char.removeOneSetCard`, rules/16). Short-form pick uses `filter.hasSetCards:true`. `'$pick'` 0-pick → `skipped`. (B08034.)
+- **sceneToHand** — args `{player?, uid?:'$pick'|bindref, n?/max?, filter?}`. Bounces char to **owner's** hand (`mutate.scene.toHand`). Short-form PA pick; `'$pick'` → `skipped`.
+- **sceneSetState** — args `{player, uid?:'$pick'|bindref, state:'active'|'sleep'|'stun', n?/max?, filter?}`. `mutate.scene.setState`. Short-form: needs `state` as string + n/max (state is target state, NOT a candidate filter); pick side='either'. `$`-unresolved uid → silent no-op.
+- **sceneDisguise** — args `{uid, newCardId}` (both bindref-resolvable). `mutate.char.disguiseInto` (rules/09 変装). `$`-unresolved either → silent no-op.
+
+### Char modify
+- **charModifyAP** — args `{uid?:'$pick'|bindref, delta:number|{dyn}, scope, n?/max?, filter?}`. `mutate.char.modifyAP`. Short-form when `uid` absent + `isShortFormDelta(delta)` + n/max → PA pick (side='either', chooser=`ctx.source.player`). `'$pick'` 0-pick → `skipped`. `$`-unresolved → silent no-op. `{dyn}` delta literalized at human-pick boundary / AI path.
+- **charModifyLP** — same shape/semantics, `mutate.char.modifyLP`.
+- **charModifyLevel** — same shape/semantics, `mutate.char.modifyLevel`. (engine-extension #2.)
+- **charSetAP** ⛔ — `throw new Error('charSetAP: not yet supported — Phase 5 must define mutate.char.setExact')`. **UNSUPPORTED.**
+- **charSetLP** ⛔ — `throw new Error('charSetLP: not yet supported …')`. **UNSUPPORTED.**
+- **charOverrideAP** — args `{uid, val:number|null}`. `mutate.char.setOverrideAP` (rules/19 "元のAPをXにする"; `null`=reset). `$`-unresolved → silent no-op.
+- **charOverrideLP** — args `{uid, val:number|null}`. `mutate.char.setOverrideLP`.
+- **charGrantKeyword** — args `{uid, kw:string, scope?='permanent'}`. `mutate.char.grantKeyword`. `$`-unresolved → no-op.
+- **charRevokeKeyword** — args `{uid, kw:string}`. `mutate.char.revokeKeyword`.
+- **charDisableOriginal** — args `{uid}`. `mutate.char.disableOriginalAbilities` (rules/19 元能力無効; MR能力は別系で無効化されない).
+- **charSetTurnEffect** — args `{uid, key:string, val:unknown}`. `mutate.char.setTurnEffect`. Generic per-char turn-scoped flag bag (semantics depend on `key` consumers elsewhere).
+- **charSetCard** — args `{uid?:'$pick'|bindref, cardId?:bindref, fromDeckTop?, faceUp:boolean, player?, n?/max?, filter?}`. Sets a card onto a char (rules/16). `fromDeckTop`: shifts deck top of `player` (default 'self'); empty deck → `empty-deck` no-op. Short-form: `uid` absent + `fromDeckTop` + n/max → PA pick; **chooser=controller (`ctx.source.player`)**, deck-source side=`a.player` (BUG-120 fix). `'$pick'` → `skipped`.
+- **charStackCard** — args legacy `{uid, n}` OR multi-pick `{uid:'$self'|bindref, cardIds:'$pick.cardIds'|string[], target(pick query)}`. `mutate.char.stackCard(count)` + splices each cardId from source area (`remove`/`hand`/`deck`, side from query). `'$pick.cardIds'` unresolved → awaiting-pick; empty array → `0` no-op. (rules/16 下に重ねる.)
+
+### Partner / case
+- **partnerAssist** — args `{player}`. `mutate.partner.assist` (rules/13 アシスト; FILE move + auto solve-edge migration handled in mutate).
+- **partnerSetState** — args `{player, state:'active'|'sleep'|'stun'}`. `mutate.partner.setState`.
+- **partnerSolveCase** — args `{player}`. `mutate.partner.solveCase` (事件解決→勝利).
+- **caseToResolved** — args `{player}`. `mutate.case.toResolved` (事件編→解決編; emits case:to-resolved hook internally, no double emit).
+
+### Flow — ⛔ STUBS (placeholder only, no real implementation)
+- **startContact** ⛔ — args `{}`. Logs `startContact:placeholder` only. **Phase 3 stub; never implemented in this file.** Do NOT rely on contact creation via effect.
+- **endActionEarly** ⛔ — args `{}`. Logs `endActionEarly:placeholder` only. **Stub.**
+
+### Deck ops
+- **deckRevealUntil** — args `{player, filter:TargetFilter|fn, bind?, bindMatch?, maxN?}`. Reveals deck top: if `maxN` set, reveals min(deck,maxN) all then first filter match; else reveals 1-by-1 until match/end. Binds remainder→`bind`, match→`bindMatch` (as Candidate `{kind:'card',area:'deck'}`). Sets `__pendingDeckRevealSide` UI channel. `filter` predicate via `targetFilterToPredicate` honoring **cardId/color/trait/apMin/apMax/lpMin/lpMax/levelMin/levelMax/kind** (printed values; BUG-117/118 fixed). cardName/keyword/hasSetCards/custom in this predicate path are **NOT** honored.
+- **deckToBottomBound** — args `{player, bindKey}`. Moves bound cardIds (e.g. `$revealed`) from deck to bottom (`mutate.deck.toBottom`). Empty/absent binding → no-op.
+- **deckShuffle** — args `{player}`. `mutate.deck.shuffle(ctx.rng)`.
+- **souza** (捜査X, rules/13) — args `{player, x:number}`. Splices top min(x,deck) and moves to bottom (peek order preserved — **no defender reorder, no "発見された" reference effect**; AI `chooseSouzaOrder` not wired). Empty deck → no-op.
+
+### Meta
+- **log** — args `{player?, action?, target?, result?, ts?, turn?}`. Appends a log entry.
+- **noop** — no args. Returns immediately.
+- **expandActionTargets** — args `{side?='opp', state?, levelMin?, levelMax?}`. Pushes an action-target expansion spec onto `globalThis.__pendingActionExpansion` (consumed by `candidates()`/target-expander on `action:pre-target` hook). No-op if `ctx.source.uid` absent. Side-channel mechanism (D11007).
+
+## Effect WRAPPERS (`resolver.run` runtime semantics)
+
+- **sequence** `{steps:Effect[]}` — runs steps in order. If a step **enqueues a pick** (`__pendingEffectPickQueue` grows), saves remaining steps to `__pendingChainContinuation` and **returns (pauses)**; remainder runs post-pick on updated board via `applyPickAndContinuation`. Steps are otherwise independent (no no-candidate break).
+- **chain** `{steps:Effect[]}` — "そうした場合" semantics. Like sequence, BUT also: after each step checks `__chainStepNoApply`; if a step had **no candidate** (set by `substituteAtomPick`), **breaks** (skips all later steps). Pick-await also pauses+continues like sequence.
+- **parallel** `{steps:Effect[]}` — currently **identical to sequence** (runs in array order; no true parallelism; TODO). Does NOT pause on pick the way sequence does (plain loop).
+- **choice** `{options:Effect[], chooser:'self'|'opp'|'owner'}` — runtime: runs `options[ctx.dyn.choiceIndex]` (default 0). Index out of `[0,len)` ⛔ **throws**. In resolve-picks walk: if `ctx.dyn.choiceIndex` valid → unwraps that option (consumed/deleted to avoid leak); else if `humanChooser && options.length>1 && chooser!=='opp'` → surfaces `__pendingEffectChoiceSide` + holds resume, returns empty parallel (pauses, no option run). AI/single-option/opp-chooser → walks all, runtime default 0.
+- **optional** `{effect:Effect}` — runtime: runs `effect` only if `ctx.dyn.optionalRun===true`, else skip. In resolve-picks walk: `optionalRun` boolean → run/skip (consumed); `humanChooser` → surface `__pendingEffectOptionalSide` + hold resume, pause (empty parallel); **AI/non-human → skip** (default off; ⚠ optional effects with self-cost are never auto-taken by CPU).
+- **conditional** `{if:Condition, then:Effect, else?:Effect}` — `evalCond(if)` → run `then` else run `else` (if present).
+- **forEach** `{over:TargetingRef, do:Effect}` — resolves `over` to Candidate list, binds each to `ctx.bindings['$each']=[cand]`, runs `do` per candidate; restores prior `$each` after (try/finally).
+- **replace** `{trigger, with}` ⛔ / **negate** `{trigger}` ⛔ — `resolver.run` **throws** (`replace/negate are immediate-resolution; not runnable via effect.run`). These are handled by the resolver-stack/trigger layer (immediate-resolution per rules/15), NOT executable as plain effects.
+- **atom** — dispatches `runAtom(verb,args,ctx)`.
+- **custom** `{fn:(s,ctx)=>void}` — runs `fn` directly. **Not JSON-serializable** (validate exempts it; only place a function is allowed).
+
+`validate.walk` rejects: function values outside `kind:'custom'`; unknown atom verb; unknown Effect kind; `forEach.over.kind` not in `{self,pick,all,fromBound}`; `conditional` missing `if`/`then`; `choice` with <1 option; `sequence/parallel/chain.steps` not array; `custom` missing `fn`. Condition trees and atom `args` are NOT deep-validated (args validated only at runtime in `runAtom`).
+
+## Pick mechanisms (single vs multi `pickedUids`)
+
+Two descriptor patterns (`substituteAtomPick`):
+- **Pattern A** — `args.uid:'$pick'` (+ optional pick query in `target`). Resolves by substituting `uid` → picked char uid; drops `target`. Used by `sceneRemove`/`charModifyAP|LP|Level`/`sceneSetState`/`charSetCard`/`charRemoveSetCard`/`sceneToHand`/`sceneEnter(switch)`. Pattern A **requires `picked.kind==='char'`** in AI path. Runtime: handlers detect short-form (`uid` absent + n/max) and call `tryRePickFromAtom` to enqueue, logging `…:awaiting-pick`.
+- **Pattern B** — `args.uid` absent/non-`$pick` (e.g. `discard`/`evidenceToHand`/`handAddFromRemove`), or bind contracts `cardId:'$pick.cardId'` (sceneEnter) / `cardIds:'$pick.cardIds'` (charStackCard). Resolves `target`→`[cardId]` array, or fills `cardId`/`cardIds` from candidates. **Pattern B push is suppressed in initial walk** (`!_fromAtomHandler`) to avoid later steps stealing earlier targets — pushed at runtime via `tryRePickFromAtom`.
+
+Candidate kinds folded into picks: `char` (uid,cardId), `card` (synthetic uid `cardId#index`), `evidence` (synthetic uid `evidence:side:idx`). `file` kind (face-down) is **skipped**. Empty candidate set → sets `__chainStepNoApply=true` (chain break signal) + returns atom unchanged (no-op fallback, rules/10 0-target legal).
+
+Multi-pick:
+- `nMin`/`nMax` come from `target.n.{min,max}` (default 1/1). `nMin===0` ⇒ skippable (0-pick legal; e.g. "〜枚まで").
+- **Human**: `__pendingEffectPickQueue` FIFO of `PendingEffectPickSide{player,candidates,atomVerb,atomArgs,nMin,nMax,source,distinctNames}`. `distinctNames` (from `target.query.distinctNames`) blocks same-name-component multi-select (rules/19). UI resolves via `applyPickAndContinuation(state,pending,pickedUid,pickedUids?,switchRemoveUid?)`.
+- **Multi `pickedUids`** (Pattern A): if `pickedUids.length>1`, builds a `sequence` of per-uid atoms (one atom per picked char). Single → single atom. (Pattern B multi: `cardIds`=all resolved cardIds; `target:[cardId]` single only — n>1 needs extension for generic target form.)
+- **AI** (`drainAiEffectPicks`/`chooseAiPick`): drains queue (guard 64). `chooseAtomTarget` policy picks best char, else first candidate. `nMax>1` → greedy `cands.slice(0,nMax)` as `pickedUids`. `pickedUid===null` (empty) → skip + drop paired continuation. AI/heuristic never surfaces choice/optional (choice default 0, optional skipped).
+- **`{dyn}` args** (e.g. `delta:{dyn:'$cost.flipFaceUpEvidence.count*N'}`, D08026/D11021) are literalized by `resolveDynArgs` at the human-pick boundary (ctx with `costPaid`) and in AI path — cost-dependent dyn **cannot** be resolved after crossing the human-pick boundary.
+
+Choice/optional resumption (apply-pick): `applyChoiceAndContinuation(state,pending,choiceIndex)` and `applyOptionalAndContinuation(state,pending,run:boolean)` re-walk the held resume effect with `ctx.dyn.choiceIndex`/`ctx.dyn.optionalRun` (+ restored `triggerPayload` for `$trigger.*`), then `event.queue` + `runAllUntilEmpty`. Continuations (`__pendingChainContinuation`) re-run on the same saved ctx to preserve bindings across steps (BUG-107).
+
+## Conditions (`Condition` union — usable in `conditional.if`, evaluated by `evalCond`, not in scope file but enumerated from type)
+`true`/`false`/`not`/`and`/`or`; `turn`(self/opp); `partnerColor`; `caseColor`(combine or/and); `caseTrait`; `fileAtLeast`; `caseStatus`(事件編/解決編); `bond`; `sceneHas`(query,nMin); `apAtLeast`/`lpAtLeast`(ref,n); `evidenceAtLeast`; `fileTopType`(card-back/assisted-partner); `scratchTrace`(痕跡 発見済/未発見); `flag`(TurnScopedFlags key); `declaredUseUnder`(uid,abilityId,max); `bound`(key,presence exists/matched); `removeColorAtLeast`/`removeTraitAtLeast`/`removeNameAtLeast`; `stackedCountAtLeast`; `contactOpponentApHigher`; `guardedBySelf`; `enterOrderEquals`(疾風N); `boundMatchesFilter`(bindKey,filter); `triggerCharMatches`(side,filter); `custom`(fn — non-serializable). (Evaluation logic is in `cond/eval.ts`, not in the read set — treat presence in union as "declared"; verify per-kind support there before trusting.)
+
+## TargetFilter fields (pick-query `filter` / condition filters)
+`cardId`, `cardName`, `trait`, `color`, `keyword`, `kind`('character'|'event'), `apMin/apMax`, `lpMin/lpMax`, `levelMin/levelMax`, `hasSetCards`, `custom(fn)`. ⚠ In the **`deckRevealUntil` predicate path** only cardId/color/trait/ap/lp/level/kind are honored (cardName/keyword/hasSetCards/custom dropped there). The full set is honored by `matchOneFilter` (target/candidates.ts) for normal scene/area picks — but that file is outside this read set; do not assume parity for every area without checking `candidates.ts`.
+
+## Known DEFER / unsupported summary (⛔)
+- `charSetAP`, `charSetLP` — throw; no `mutate.char.setExact` (use `charOverrideAP/LP` only for "元のAPをXにする").
+- `startContact`, `endActionEarly` — log-only placeholder stubs; cannot create/cut contact via effect.
+- `replace`, `negate` as `effect.run` inputs — throw (handled by trigger/stack layer, not as plain effects).
+- `souza` — no defender-reorder / no "発見された" downstream reference (peek-order only).
+- `expandActionTargets`, `deckRevealUntil` UI reveal — rely on `globalThis` side-channels; engine-internal, fragile across boundaries.
+- AI never takes `optional` effects and always picks `choice` option 0 (no heuristic) — cards needing CPU to opt-in to optional/choice behave as no-op/option-0 for the CPU side.
+- `resolvePlayer` throws on any `player` value other than `'self'`/`'opp'`.
+
+### Engine capability: conditions
+I have everything needed. Note `matchOneFilter` is referenced for filter semantics — the filter fields are already documented in `effect.ts`. Producing the reference now.
+
+# Detective Conan TCG Engine — Condition Reference (FROZEN)
+
+Source: `src/engine/cond/eval.ts`, `src/engine/types/effect.ts`. Every `Condition.kind` is enumerated below. All are fully evaluated in `evalCond` (no throws, no stubs in the condition evaluator itself). Player semantics: `'self'` = card owner (`ctx.source.player`); `'opp'` = opponent of owner.
+
+## Boolean combinators
+- **`true`** — always `true`. No args.
+- **`false`** — always `false`. No args.
+- **`not`** `{ c: Condition }` — negation of inner.
+- **`and`** `{ cs: Condition[] }` — all inner conditions true (`.every`).
+- **`or`** `{ cs: Condition[] }` — any inner condition true (`.some`).
+
+## Turn / player phase
+- **`turn`** `{ player: 'self'|'opp' }` — current turn player equals resolved player. (【自分ターン中】/【相手ターン中】)
+
+## Case / partner color & trait
+- **`partnerColor`** `{ color: string|string[] }` — owner's partner CardDef.colors intersects `color` (OR semantics; array means "has any of"). (【パートナー(色)】)
+- **`caseColor`** `{ color: string|string[]; combine?: 'or'|'and' }` — owner's case colors. `combine:'and'` ⇒ must have ALL; default/`'or'` ⇒ any. Falls back to `caseInfo.colors` if CardDef unregistered. (【事件(色)】, &-combine supported)
+- **`caseTrait`** `{ trait: string }` — owner's case has `trait`. Evaluates **union of `CardDef.caseTraits` + `CardDef.traits`** (BUG-124 fix — 古城/婚活 both work). Single trait only (no array).
+
+## FILE / case status
+- **`fileAtLeast`** `{ n: number }` — owner's `file.length >= n`. Assisted-partner entries are already in the file array, so they count. (【FILE(X)】)
+- **`caseStatus`** `{ status: '事件編'|'解決編' }` — owner's case status equals. (【事件編】/【解決編】)
+- **`fileTopType`** `{ type: 'card-back'|'assisted-partner' }` — owner's file top (last-pushed) entry `.type` equals. `false` if file empty.
+
+## Scene / character presence
+- **`bond`** `{ cardName: string|string[] }` — owner's **scene** (NOT partner) contains a char whose CardDef name-components (incl. split names via `allCardNameComponentsForDef`) intersect `cardName`. (【絆】)
+- **`sceneHas`** `{ query: TargetQuery; nMin?: number }` — `candidates(query)` count `>= nMin` (default 1). Full `TargetQuery` power (area/side/filter/filterAny/state/excludeSelf/named/distinctNames). The most general presence/count predicate available.
+
+## Character stat thresholds (via `TargetingRef`)
+Each resolves the ref to char uids (`resolveCharsForRef`) and is true if **ANY** resolved char meets the threshold (`.some`). Ref kinds: `self` / `pick` (uses `ctx.picked` else candidates) / `all` / `fromBound`. Resolution failure ⇒ `[]` ⇒ `false`.
+- **`apAtLeast`** `{ ref: TargetingRef; n: number }` — some char's current AP `>= n`.
+- **`lpAtLeast`** `{ ref: TargetingRef; n: number }` — some char's current LP `>= n`.
+- **`stackedCountAtLeast`** `{ ref: TargetingRef; n: number }` — some char's stacked-card count `>= n`.
+
+## Evidence
+- **`evidenceAtLeast`** `{ player: 'self'|'opp'; n: number }` — that player's `evidence.length >= n`.
+
+## Remove-area (リムーブ) counts by attribute
+Each filters the player's `remove` pile (array of cardIds) by CardDef attribute and checks count `>= n`. ⚠ These are the ONLY remove-area predicates — there is **NO total remove-count condition** and no remove-by-kind/level/keyword.
+- **`removeColorAtLeast`** `{ player; color: string|string[]; n }` — count of removed cards whose colors intersect `color`.
+- **`removeTraitAtLeast`** `{ player; trait: string|string[]; n }` — count by `CardDef.traits` (キャラ特徴 only; case-traits not unioned here).
+- **`removeNameAtLeast`** `{ player; cardName: string|string[]; n }` — count by name-components (split names honored).
+
+## Trace / turn flags / declared-use
+- **`scratchTrace`** `{ player: 'self'|'opp'; v: '発見済'|'未発見' }` — `state.scratchTrace[p]` equals. (痕跡; note: own-refresh never sets 発見済 per rules, enforced elsewhere.)
+- **`flag`** `{ player; key: keyof TurnScopedFlags; v: boolean }` — `state.turnState[p][key] === v`. Only boolean turn-scoped flags (key must be a literal `TurnScopedFlags` member). ⚠ Numeric turn-state (e.g. declaredAbilityUseCount Records) NOT comparable here — use `declaredUseUnder`.
+- **`declaredUseUnder`** `{ uid: string; abilityId: string; max: number }` — that char's declared-ability use count `< max`. (【ターン①】/【ターン②】 gating, by literal uid — not ref-resolved.)
+
+## Bindings
+- **`bound`** `{ key: string; presence?: 'exists'|'matched' }` — `ctx.bindings[key]`. `presence:'matched'` ⇒ is a non-empty array; default/`'exists'` ⇒ `!== undefined`.
+- **`boundMatchesFilter`** `{ bindKey: string; filter: TargetFilter }` — evaluates the cardId of `ctx.bindings[bindKey][0]` against a **CardDef-driven** filter. ⚠ Only these filter fields honored: `cardId`, `cardName`, `trait`, `color`, `levelMin`, `levelMax`. ⛔ `apMin/apMax/lpMin/lpMax/keyword/kind/hasSetCards/custom/state` are IGNORED here (SceneCharacter-state fields out of scope — only CardDef statics). (「〚カード名[X]〛を登場させた場合」)
+
+## Trigger-payload-dependent (only valid inside a triggered hook with matching `ctx.triggerPayload`)
+These read `ctx.triggerPayload`; if the expected payload shape is absent ⇒ `false`. Only meaningful as `matcherCondition` on the corresponding hook.
+- **`contactOpponentApHigher`** — requires `contact:start` payload `{aUid,bUid}`. True only if `aUid === ctx.source.uid` (self is attacker) AND defender AP `> ` attacker AP. ⚠ Self-as-attacker only (BUG-098); does NOT fire when self is defender.
+- **`guardedBySelf`** — `action:guarded` payload `.guardUid === ctx.source.uid`. (「このキャラがガードしたとき」)
+- **`enterOrderEquals`** `{ n: number }` — enter-hook payload `.enterOrderThisTurn === n` (turn-reset counter, not cumulative). (【疾風 N】)
+- **`triggerCharMatches`** `{ side?: 'self'|'opp'|'either'; filter?: TargetFilter }` — payload `{uid,player}` (e.g. `reasoning:end` reasoning char). `side:'self'` ⇒ payload.player === owner side; `'opp'` ⇒ opposite; `either`/undefined ⇒ no side gate. If `filter` set, runs **full `matchOneFilter`** against the scene char (all TargetFilter fields honored, incl. ap/lp/keyword/kind/state via SceneCharacter). ⚠ Only matches chars currently in `scene` (payload char must still be on scene to apply filter).
+
+## Escape hatch
+- **`custom`** `{ check: (state, ctx) => boolean }` — arbitrary TS predicate. NOT JSON-serializable; bypasses the DSL. Use is a last resort (骨格凍結/DSL-first policy). Treat any card requiring `custom` as **needing a function-valued condition** (not declarative).
+
+---
+
+## NOT expressible as a condition (⛔ — require engine/new-condition work; do NOT assume implementable)
+- ⛔ **Hand count** — no `handAtLeast`/`handCount` condition. `TargetQuery.area:'hand'` exists for `sceneHas`, so **hand-card-by-filter presence IS expressible** via `sceneHas{query:{area:'hand',...}}`, but a raw "hand size ≥ N" (any card) is only reachable by `sceneHas` with an empty/match-all filter.
+- ⛔ **Total remove-area count** (any card, ignoring color/trait/name) — only attribute-filtered `removeXAtLeast` exist. A plain "リムーブ N枚以上" needs a new condition (or a match-all attribute, which the three predicates don't provide).
+- ⛔ **Deck count / deck-top attribute** — no condition reads deck size or deck-top card (only `fileTopType` for FILE). Deck inspection is verb-side (`deckRevealUntil`), not condition-side.
+- ⛔ **Evidence by attribute / evidence-top** — only `evidenceAtLeast` (raw count). No "top evidence is X", no flipped-evidence count condition.
+- ⛔ **Stacked / set-card by attribute** — only `stackedCountAtLeast` (count). No condition on the identity/attributes of stacked or set cards. (`TargetFilter.hasSetCards` exists for targeting, not as a standalone condition.)
+- ⛔ **Numeric turn-state comparison** — `flag` is boolean-only; numeric counters (e.g. per-turn use Records) not comparable except via `declaredUseUnder` (single uid+abilityId).
+- ⛔ **`boundMatchesFilter` dynamic-stat fields** — ap/lp/keyword/kind/hasSetCards/state on a bound card are silently ignored (CardDef-statics only).
+- ⛔ **Cross-turn / historical predicates** beyond `scratchTrace` (痕跡) — no generic "this game, X happened" memory condition.
+- ⛔ **MR-specific gates** (isMR flag, color-count of a card) — no condition kind exposes `isMR` or "card has ≥2 colors". This is a known **DEFER gate** for 2-color MR / partner-area MR enumeration (engine has no isMR/色数 filter nor partner-area MR GameState slot; B07045/B09047 deferred).
+- ⛔ **Partner-area occupant predicates** — `bond` is scene-only; no condition enumerates/queries chars in partner-area (relevant to MR-in-partner-area cards).
+
+## Notes for downstream
+- A condition whose only fit is `custom` ⇒ NOT DSL-implementable (function-valued, non-serializable) — flag for review, do not auto-classify as "no engine change".
+- Trigger-payload conditions (`contactOpponentApHigher`, `guardedBySelf`, `enterOrderEquals`, `triggerCharMatches`) are inert outside their matching hook — only usable as that trigger's `matcherCondition`.
+- `sceneHas` + `TargetQuery` (with `area` covering scene/partner-area/hand/deck/remove/evidence/file/case, `side`, `filter`/`filterAny`, `state`, `named`, `distinctNames`) is the broadest declarative presence test — prefer it before assuming a gap.
+
+Files: `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\cond\eval.ts`, `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\types\effect.ts`, `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\cond\index.ts`.
+
+### Engine capability: filters
+# Engine Target Filter Reference (FROZEN)
+
+Authoritative as of read of `src/engine/target/{candidates,resolve}.ts`, `src/engine/types/{candidate,effect}.ts`, `src/engine/read/keyword.ts`. Covers `pick` / `all` / `forEach over` target queries. Validation path = `matchOneFilter` (the canonical pick-enumeration path).
+
+## TargetingRef.kind (top-level target shapes)
+- `self` — the effect's source card. No filter applied. Always 1 candidate (min/max=1).
+- `pick` — `{ query, n:{min,max}, chooser }`. Enumerated via query; player picks. `legalCount` clamps min/max to candidate count (so "N枚まで" allows 0 when fewer exist).
+- `all` — `{ query }`. All matching candidates auto-selected (min=max=count).
+- `fromBound` — `{ bindKey }`. Returns `ctx.bindings[bindKey]` verbatim (no filter re-applied). ⛔ Empty array if binding absent.
+
+## TargetQuery — selectors (apply BEFORE filters)
+- `area` — one of: `scene` (default), `partner-area`, `hand`, `deck`, `remove`, `evidence`, `file`, `case`.
+  - `scene` → `char` candidates (full filter support incl. state/named/numeric).
+  - `partner-area` → single `partner` candidate per side (partner.cardId filtered by-cardId only).
+  - `hand` / `deck` / `remove` → `card` candidates with `index`.
+  - `evidence` → `evidence` candidate; filtered by the evidence's `cardId`.
+  - `case` → `card` candidate (the case card) area=`case`.
+  - ⛔ `file` → emits `file` candidates UNFILTERED. `query.filter`/`filterAny`/`state`/`named` are NOT applied to file area (loop pushes every index unconditionally). Treat file targeting as "all file cards, no predicate".
+- `side` — `self`, `opp`, `either` (default; both sides), `owner` (= source's player), `opp-of-owner`. Default/`undefined` = `either` (both sides eligible).
+- `excludeSelf` — bool. Scene only. Drops the candidate whose `uid === ctx.source.uid`. ⛔ Only meaningful for `char` candidates; no effect on non-scene areas.
+- `state` — array of `'active' | 'sleep' | 'stun'`. Scene-char only (checked in `matchesQueryForChar`). ⛔ NOT evaluated for partner/hand/deck/remove/evidence/file/case candidates (no `state` field there).
+- `named` — `true` = only 名乗り(isNamed) chars; `false` = only non-named; `undefined` = no filter. ⛔ Scene-char only (uses `c.isNamed`); ignored elsewhere.
+- `distinctNames` — bool. Enforced at `resolve()` time only (rules/19 split-name): no two picks may share any card-name component. ⛔ Not a candidate filter — it rejects illegal multi-pick combos, throws on violation.
+- `filter` — single `TargetFilter`, ALL its fields ANDed.
+- `filterAny` — `TargetFilter[]`; passes if ANY one matches (OR group). Combined with `filter` as: `filter AND (any of filterAny)`.
+
+## TargetFilter predicates (each field ANDed within one filter object)
+- `cardId` — `string | string[]`. Exact match against candidate's `cardId` (membership if array).
+- `cardName` — `string | string[]`. Matches via `allCardNameComponentsForDef` → honors split-name cards (rules/19, e.g. 江戸川コナン&工藤新一 matches each component). Needs a registered CardDef; if def missing, components=[] → no match.
+- `trait` — `string | string[]`. True if def.traits intersects wants (OR within array). Empty traits if no def.
+- `color` — `string | string[]`. True if def.colors intersects wants (OR). 2-color card matches if it has ANY listed color. ⛔ No "must have ALL listed colors" mode; no color-count predicate.
+- `keyword` — `string | string[]`. Via `defHasKeyword`: checks `def.keywords[]` AND icon-abilities. Supported icon keywords: `カットイン`, `ヒラメキ`, `変装`, `ミスリード` (resolved from AbilityDef structure, BUG-122). Other keyword strings (迅速 / 突撃[X] / ブレット / 痕跡 etc.) matched only if literally present in `keywords[]`. OR within array.
+- `kind` — `'character' | 'event'`. Exact match against `def.kind` (BUG-118; now honored on this path). ⛔ Only these two literals; no `'partner'` / `'case'` kind filter.
+- `apMin` / `apMax` — numeric AP bound (inclusive). Effective AP = `apOverride ?? def.ap ?? 0` + `apMod_permanent` + `apMod_turn` + `apMod_contact` (from `c.turnEffects`). For non-scene candidates (`c===null`) uses printed only (no mods).
+- `lpMin` / `lpMax` — numeric LP bound (inclusive). Same formula with `lpOverride` + `lpMod_*`.
+- `levelMin` / `levelMax` — numeric level bound (inclusive). `def.level ?? 0` + `lvlMod_permanent`/`_turn`/`_contact`. ⛔ Non-scene candidates: printed level only.
+  - ⚠ Numeric note: continuous-delta (e.g. D08005 dyn continuousDelta) is intentionally OMITTED to avoid cycles → residual mismatch tracked as BUG-113.
+- `hasSetCards` — bool. `true` requires `c.setCards.length > 0`. ⛔ Scene-char only (needs `SceneCharacter`); always treated as "no set cards" / false-branch for non-scene candidates (`c===null` → has=false).
+- `custom` — `(state, candidate) => boolean`. Arbitrary escape-hatch predicate. ⛔ NOT JSON-serializable (function) — violates DSL serializability; avoid for new DSL cards.
+
+## Predicates that DO NOT EXIST ⛔ (cannot be expressed without engine change)
+- ⛔ `isMR` / MR-rank filter — no MR flag predicate. (Known DEFER gate: 2色MR / partner-area MR enumeration; see B07045/B09047 — no `isMR` + no GameState slot for partner-area MR列挙.)
+- ⛔ `colorCountMin` / color-count / multi-color / mono-color predicate — none. `color` is membership-OR only; cannot require "2+ colors" or "has ALL of these colors".
+- ⛔ "has ALL listed colors" (【事件(色1)&(色2)】-style AND over colors) — not supported (color is OR).
+- ⛔ "has ALL listed traits" — `trait` is OR-only; no trait-AND mode.
+- ⛔ `hasSetCards` on non-scene areas / set-card count / set-card content filter — only boolean presence, scene-char only.
+- ⛔ `state` / `named` / `excludeSelf` on non-scene areas — silently ignored.
+- ⛔ `filter`/`filterAny`/`state`/`named` on `area:'file'` — file candidates are emitted unfiltered.
+- ⛔ AP/LP/level filters reflecting continuous-delta (dyn) modifiers — omitted (BUG-113).
+- ⛔ Numeric/state/setCard filters with correct values on non-scene candidates — only printed stats, no turnEffects (no `c`).
+- ⛔ `kind` values beyond `'character'|'event'` (no partner/case/event-subtype).
+- ⛔ Keyword filter for arbitrary keywords not in `keywords[]` and not one of the 4 icon abilities (カットイン/ヒラメキ/変装/ミスリード).
+- ⛔ Any predicate on FILE/refresh/痕跡/評価-of-opponent-hand-contents, zone-count thresholds, "topmost only", evidence-face state, stun-vs-sleep transitions — none exist as target filters.
+
+## Candidate kinds produced (for downstream verb compatibility)
+- `char` (scene), `partner` (partner-area), `card` (hand/deck/remove/case), `evidence`, `file`. A verb expecting a `char` target (e.g. `sleepChar`, `removeFromScene`) ⛔ cannot consume `partner`/`card`/`evidence`/`file` candidates — area choice constrains usable verbs.
+
+### Engine capability: hooks
+I have all the information needed to produce the authoritative reference.
+
+# Detective Conan TCG Engine — Card-Triggerable Hook Reference (FROZEN)
+
+Source of truth: `src/engine/listeners/triggered.ts`, `src/engine/types/hooks.ts`, `src/engine/types/card-def.ts` (`TriggerDef`/`AbilityDef`), `src/engine/listeners/hirameki.ts`, `src/engine/listeners/misread.ts`, plus emit sites. A card can only react to a hook if (a) it appears in the `TRIGGERED_HOOKS` registration list **and** (b) something `event.emit(...)`s it. All else is internal-only (cards cannot subscribe).
+
+## How a `type:'triggered'` ability fires (common gate, `handleHook`)
+- Engine scans all cards in play each emit: scene chars, partner (uid `partner:<p>`), case (uid `case:<p>`), and **hand cards** (uid `hand:<p>:<cardId>`). Evidence/leaving cards handled by special handlers (below).
+- Per ability, in order: `type==='triggered'` → hook match (`trigger.hook` OR any of `trigger.hooks[]`) → `scope` gate → `selfOnly` → `matcher(payload,state)` (closure) → `matcherCondition` (declarative Condition, payload in `ctx.triggerPayload`) → `ability.condition` (6-stage condition icons) → `ability.effect` exists → `limit:{kind:'turn',n}` not exceeded (counted via `declaredUseCount` per `uid+abilityId`). Passing → `event.queue` of the `$pick`-resolved effect.
+- **`scope`** gates which area a card reacts from: `on-scene`(default)=scene only; `on-partner-area`=partner-area OR scene; `on-hand`=hand; `on-evidence`=evidence (virtual only); `always`=all.
+- **`selfOnly`** (`selfOnlyMatches`): hand cards match on `payload.cardId===card.cardId && source.player===card.player`; scene/partner/case match on `source.uid===card.uid`. ⛔ For hooks whose `source.uid` is NOT the reacting card (e.g. `action:guarded` source.uid = attacker), `selfOnly` cannot express "this card guarded" — use `matcherCondition` instead (BUG noted in spec; e.g. `guardedBySelf`).
+- **`matcherCondition`** & **`condition`** receive `ctx.triggerPayload=payload`; `triggerCharMatches{side,filter}` reads `payload.uid`+`payload.player` (requires both present in payload) and matches the trigger char by side (`self`=same side as owner) + `TargetFilter`.
+- **`limit`**: only `kind:'turn'` (n=1|2) is enforced for triggered. `kind:'game'` ⛔ NOT enforced for triggered abilities.
+- **`optional:true`**: special. For `evidence:remove-by-action` → routed to hirameki side-channel (fire/skip). For `effect:declared`+`scope:'on-hand'` → marks the ability as a **cut-in** (player-chosen via contact flow), NOT auto-queued.
+
+## CARD-TRIGGERABLE HOOKS (registered + emitted)
+
+- **`enter`** — char登場時 (【登場時】/【疾風 N】). Emitted by `atom-handlers` sceneEnter/sceneSwitch and `next-hint`/`hand-use-card` char登場.
+  - payload: `{ uid, viaEffect, enterOrder, enterOrderThisTurn }`. source: `ctx.source` (the entering char's source for atom paths). selfOnly: ✅ (`source.uid`). matcherCondition: `enterOrderEquals{n}` reads `enterOrderThisTurn` (疾風). ⛔ Disguise does NOT fire `enter` (rules/09); only `disguise:into`.
+
+- **`disguise:into`** — 【変装時】. Emitted by `flow/contact.ts` disguise.
+  - payload: `{ uid, fromCardId, newCardId }` (uid preserved, cardId swapped to disguise card). source: `{ player, uid: targetUid }`. selfOnly: ✅ (`source.uid`=disguised char uid). Reacting card is the post-disguise cardId (scene scan). selfOnly/triggerCharMatches supported.
+
+- **`leave:to-remove`** — 現場リムーブ時 (any cause). Emitted by `mutate/scene.ts` on removal.
+  - payload: `{ uid, cause }` (cause: `'contact-ap'|'effect'|'switch'|'cost'|'misplay-overflow'`). source: `{ player, uid: leavingUid, cardId: leavingCardId }`. Dual path: `handleLeaveToRemoveSelf` (the leaving card's own 【現場リムーブ時】, virtual scene location) + `handleHook` (other in-play cards reacting). selfOnly: ✅; matcher/matcherCondition/condition supported. ⛔ Misplay-overflow removal: rules/30 says such removals do NOT trigger 【現場リムーブ時】 — engine emits with `cause:'misplay-overflow'`; a card must self-gate via matcher if it must exclude this.
+
+- **`action:declare`** — アクション宣言時. Emitted by `flow/action/state-machine.ts` (after attacker sleeps).
+  - payload: `{ byUid, target, uid: byUid, player: byPlayer }` (`uid`/`player` added so triggerCharMatches works). source: `{ player: byPlayer, uid: byUid }`. selfOnly: ✅ (attacker). Shared 【ターンN】 with `reasoning:end` via `hooks:[...]`.
+
+- **`action:guarded`** — アクションがガードされたとき. Emitted by `state-machine.ts`.
+  - payload: `{ byUid, guardUid }`. source: `{ player: ax.byPlayer, uid: ax.byUid }` (= **attacker**, NOT guard). selfOnly matches the attacker. ⛔ "this card guarded" cannot use selfOnly (guardUid is only in payload) → must use `matcherCondition` (`guardedBySelf`) which reads payload.guardUid vs source.uid.
+
+- **`action:pre-target`** — attacker選択時、target列挙前 (target拡張用). NOTE: NOT processed by the generic `handleHook` queue path at enumeration time — `flow/action/target-expander.ts` does a **synchronous inline walk** of scene abilities with `trigger.hook==='action:pre-target'`.
+  - payload: `{ byUid }`. source: `{ uid, cardId, player }` (attacker). selfOnly: ✅ (inline: `sceneCard.uid===byUid`). Effect MUST be a single atom `expandActionTargets{ side, state[], levelMin, levelMax }`; args read directly. ⛔ Only `expandActionTargets` is consumed here; other effects on this hook via the generic listener fire too late to affect enumeration.
+
+- **`contact:start`** — コンタクト発生時. Emitted by `state-machine.ts`.
+  - payload: `{ aUid, bUid }`. source: `{ player: ax.byPlayer, uid: ax.byUid }`. selfOnly: ✅ (attacker uid). ⚠ payload has no `player` → `triggerCharMatches` (needs payload.player) won't match.
+
+- **`reasoning:end`** — 推理後 (証拠加算後). Emitted by `flow/main/reasoning.ts`.
+  - payload: `{ uid, player, gained }` (`gained`=evidence count). source: `{ player, uid }` (推理 char/partner). selfOnly: ✅. `$trigger.gained` usable in effect. triggerCharMatches supported. Shared 【ターンN】 with `action:declare`.
+
+- **`case:to-resolved`** — 事件編→解決編移行 (fires once per game, one-way). Emitted by `mutate/case.ts`.
+  - payload: `{ player }`. source: `{ player, uid: case:<p>, cardId }`. selfOnly: ✅ (case uid). ⚠ payload has no `uid` → triggerCharMatches won't match.
+
+- **`phase:end:start`** — エンドフェイズ開始時. Emitted by `flow/turn.ts`.
+  - payload: `{ player }`. source: `undefined`. ⛔ selfOnly cannot match (source is undefined → `source.uid` undefined); use `condition`/`matcherCondition` keyed on `payload.player` instead. Common for "ターン終了時にこのキャラをリムーブ"-style scheduled effects (gate by player, not selfOnly).
+
+- **`effect:declared`** — multi-purpose "card was used / ability declared". Emitted from **5 sites**, payload kind varies:
+  - hand-use-card: `{ kind:'event-use'|'character-use', cardId }`, source `{ player, cardId }` → **event card self-trigger** (e.g. `eventRemoveByAP`). scope `on-hand`, selfOnly matches `payload.cardId+source.player`.
+  - next-hint: `{ kind:'event-use'|'character-use', cardId }`, source `{ player, cardId }`.
+  - contact cut-in: `{ cardId, abilityId:'cutin' }`, source `{ player, cardId, bindings: contactBindings }` → **CUT-IN** (`scope:'on-hand'` + `optional:true`; `source.bindings` like `$contact.byUid` persisted into queued effect).
+  - declared-ability: `{ kind:'declaredAbility', uid, abilId }`, source `{ player, uid, cardId }`.
+  - partner-ability: `{ kind:'partnerAbility', abilId }`, source `{ player, cardId }`.
+  - ⚠ A card reacting to `effect:declared` MUST filter on `payload.kind`/`cardId`/`abilityId` (matcher/matcherCondition) — the hook is heavily overloaded.
+
+- **`evidence:remove-by-action`** — 証拠がアクション[事件]でリムーブされる時 (ヒラメキ). Special handler `handleEvidenceRemovedHook` (NOT in-play scan; def looked up from `payload.ev.cardId`).
+  - payload: `{ player, ev:{ cardId } }` (`player`=removed side = ヒラメキ holder). source may carry `bindings`. scope must allow `on-evidence` (virtual CardLocation). ⛔ `selfOnly` NOT evaluated here (handler skips selfOnly). matcher/matcherCondition/condition ✅.
+  - `optional:true` → pushes to `pendingHirameki` side-channel (`{player,cardId,abilityId}`), UI/AI decides fire/skip; only **first** optional match per event is queued. `optional:false/undefined` → forced queue (rules/15 必須効果).
+
+## ICON ABILITIES (special listeners / parsing)
+
+- **Cut-in** — NOT a distinct `AbilityType` (`icon-cutin` REMOVED). Encoded as `type:'triggered'` + `scope:'on-hand'` + `trigger:{hook:'effect:declared', optional:true}`. Detected by `read/keyword.ts abilityIsCutin`. Fired via contact flow `flow/contact.ts` (emit `effect:declared {cardId,abilityId:'cutin'}` then discard). Color-unrestricted (rules/09). Effect runs against contact via `source.bindings` (`$contact.*`).
+
+- **Hirameki** — NOT a distinct type (`icon-flash` REMOVED). Encoded as `type:'triggered'` + `trigger:{hook:'evidence:remove-by-action', optional:true}` (typically `scope:'on-evidence'`). `hirameki.ts` is now a **no-op shim** ⛔ (`registerHiramekiListener` intentionally empty; real handling in `triggered.ts handleEvidenceRemovedHook`). Exposes only side-channel helpers `pushPendingHirameki`/`_drainPendingHirameki`/`_resetPendingHirameki` and the `PendingHiramekiSide` type. Fire/skip resolved by UI (`useHiramekiFlowDriver`/`hiramekiResolve`) or AI.
+
+- **Disguise (`disguise:into`)** — see hook above. 【変装時】 = `type:'triggered'` + `trigger:{hook:'disguise:into', selfOnly:true}`. The disguise *capability gate* itself (`icon-disguise` AbilityType / `canDisguise`) is separate and condition-evaluated (not in these files).
+
+- **Misread (`icon-misread`)** — a REAL distinct `AbilityType`, handled ONLY by `misread.ts` on the **internal `reasoning:before-add` hook** (see internal list). Engine scans the **defender's active scene chars** for `type:'icon-misread'` abilities with `effect.args.x:number`. AI defender (opp): resolved synchronously — sleeps chosen misread chars (`mutate.scene.setState ...'sleep'`) and applies LP-X via `setOverrideLP` (one-shot; ⚠ partner uid skipped — partner LP cannot be reduced). Human defender (self): pushes `pendingMisread` side-channel `{reasoningUid,reasoningPlayer,candidates:[{uid,x}]}` for UI resolve. ⛔ Known caveats: LP-X override is NOT reverted at `reasoning:end` (TODO/Phase 5 cleanup missing); misread cannot reduce **partner** LP; `icon-misread` is reachable only via `reasoning:before-add` which cards CANNOT subscribe to as a `trigger.hook` (only this dedicated listener consumes it).
+
+## INTERNAL-ONLY HOOKS (in `HookName`, NOT in `TRIGGERED_HOOKS` — cards CANNOT use as `trigger.hook`/`trigger.hooks`) ⛔
+All of these are either unemitted, or consumed only by dedicated/internal listeners; placing them in a card's `trigger.hook` is a silent no-op:
+- Phase: `phase:auto:start`, `phase:auto:before-draw`, `phase:auto:after-draw`, `phase:auto:after-file`, `phase:main:start`, `phase:main:end`, `phase:end:cleanup`
+- Turn: `turn:start`, `turn:end`
+- Reasoning: `reasoning:declare`, `reasoning:before-add` (⛔ misread listener only — not a card trigger)
+- Action/contact: `action:guard-window`, `action:unguarded`, `action:end`, `contact:order-set`, `contact:before-judge`, `contact:judge`, `contact:end`
+- Movement: `leave:to-deck`, `leave:to-partner-area`, `mr:overwrite`
+- Effect: `effect:resolve:start`, `effect:resolve:end` (emitted by `resolve/stack.ts` but no triggered registration)
+- State: `state:change`, `state:tryActivate`, `keyword:granted`, `keyword:revoked`
+- Evidence: `evidence:gain`, `evidence:lose`
+- FILE/deck: `file:add`, `file:pop`, `deck:peek`, `deck:reveal`, `deck:shuffle`
+- Refresh/lose: `refresh:before`, `refresh:after`, `lose:by-deck-out`
+- Flags: `flag:assist:set`, `flag:hand-use:set`, `flag:next-hint:used`, `flag:declared-use:incr`
+
+## Cross-cutting limits / DEFER gates ⛔
+- Triggered `limit:{kind:'game'}` ⛔ NOT enforced (only `turn` is).
+- `phase:end:start` source is `undefined` → `selfOnly` unusable on this hook ⛔; gate via `condition`/`matcherCondition` on `payload.player`.
+- `action:guarded`/`contact:start`/`case:to-resolved` payloads lack the reacting card's identity in a way usable by `selfOnly` ("guarded by self") or `triggerCharMatches` (missing `uid`/`player`) — needs a declarative Condition kind (e.g. `guardedBySelf`).
+- `action:pre-target` only honors a single `expandActionTargets` atom via synchronous inline walk; arbitrary effects on this hook do NOT affect target enumeration ⛔.
+- Misread LP-X is one-shot, not reverted, and cannot target partner LP ⛔.
+- `hirameki.ts` `registerHiramekiListener` is an intentional no-op shim ⛔ (compat ABI only).
+
+Relevant files (absolute):
+- `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\listeners\triggered.ts`
+- `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\types\hooks.ts`
+- `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\types\card-def.ts` (`TriggerDef`/`AbilityDef`/`AbilityScope`/`AbilityLimit`)
+- `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\listeners\hirameki.ts`
+- `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\listeners\misread.ts`
+- Emit sites: `src\engine\effect\atom-handlers.ts` (enter, expandActionTargets), `src\engine\flow\turn.ts` (phase:end:start), `src\engine\flow\contact.ts` (effect:declared cutin, disguise:into), `src\engine\flow\action\state-machine.ts` (action:declare/guard-window/guarded, contact:start), `src\engine\flow\action\target-expander.ts` (action:pre-target inline consume), `src\engine\flow\main\reasoning.ts` (reasoning:before-add/end), `src\engine\flow\main\hand-use-card.ts` / `next-hint.ts` / `declared-ability.ts` / `partner-ability.ts` (effect:declared), `src\engine\mutate\case.ts` (case:to-resolved), `src\engine\mutate\scene.ts` (leave:to-remove)
+- `triggerCharMatches` eval: `src\engine\cond\eval.ts:230`
+
+### Engine capability: costdyn
+The spec file is stale (lists `icon-cutin`/`icon-flash` which were migrated away, and types `continuousModifier` as closures-only). The source-of-truth is the code I already read (`card-def.ts` shows the current 5 AbilityTypes; `read/char.ts` shows the actual `continuousModifier` resolution). I have everything needed. Producing the authoritative reference from the code.
+
+# Frozen Engine Capability Reference (CURRENT)
+
+> Source of truth: `src/engine/cost/{evaluate,pay}.ts`, `src/engine/dyn/eval.ts`, `src/engine/types/{card-def,effect}.ts`, `src/engine/read/char.ts`. The spec `engine-api-card-abilities.md` is STALE (lists removed `icon-cutin`/`icon-flash`, types `continuousModifier` as closures-only) — do NOT trust it; trust this.
+
+## 1. Declared-ability COST kinds (`Cost`)
+
+`canPay` (read-only feasibility) and `pay` (mutation) handle exactly these — both switches are exhaustive, no `default`. A cost kind not listed here cannot be expressed.
+
+- **`sleepSelf`** — sleeps `ctx.source.uid`. Payable ONLY if char is `active` (sleep/stun ⛔ unpayable; stun cannot be slept via cost).
+- **`sleepChar { target: TargetingRef }`** — sleeps picked/all candidate chars. Payable if ≥1 candidate is `active`. (Pays via `ctx.picked` if set, else ALL active candidates — no built-in count cap here; relies on caller's pick.)
+- **`removeFromHand { target, n }`** — discard n hand cards to remove area. Payable if candidates ≥ n.
+- **`removeFromScene { target, n }`** — remove n scene chars to remove area (reason `'cost'`). Payable if candidates ≥ n.
+- **`removeDeckTop { player: 'self'; n }`** — remove n from own deck top. `player` typed `'self'` ONLY (⛔ cannot target opponent deck). Payable if deck.length ≥ n.
+- **`discardEvidence { n }`** — remove n from TOP of own evidence (`ctx.source.player`). Payable if evidence.length ≥ n.
+- **`selfToDeckBottom`** — move `ctx.source.uid` char to deck bottom. Payable if char exists.
+- **`fileFrom { n }`** — pop n from top of own FILE. Payable if file.length ≥ n.
+- **`flipFaceUpEvidence { n: { min, max } }`** — flip facedown evidence face-up; player picks indices via `ctx.dyn.costParams.flipFaceUpEvidence.indices`. Payable if facedown count ≥ `n.min`. Records `ctx.costPaid.flipFaceUpEvidence.count` (consumable via `$cost.flipFaceUpEvidence.count`). ⛔ `pay` THROWS if picked count ∉ [min,max].
+- **`pay { items: Cost[] }`** — composite AND. Payable iff every item payable.
+- **`choice { items: Cost[] }`** — composite OR. Payable iff some item payable. Branch chosen via `ctx.dyn.costChoice` (number index), else first payable.
+- **`custom { check, pay }`** — ⛔ escape hatch: arbitrary closures. NOT JSON-serializable; violates DSL-first convention. Use only as last resort.
+
+### Cost gaps / DEFER gates ⛔
+- ⛔ No cost to remove/manipulate OPPONENT resources (all costs scoped to `ctx.source.player`; `removeDeckTop` typed self-only). "Self's"省略 per rules/21 is enforced structurally.
+- ⛔ No "reveal/look" cost, no "return to hand" cost, no "stun self" cost, no level/AP-threshold cost.
+- ⛔ `sleepChar` payment sleeps `ctx.picked ?? ALL active candidates` — there is no n-cap in the cost type itself; exact-count selection depends on the runner populating `ctx.picked`.
+
+## 2. DYN expressions (`evalDyn`) — for scaling/late-binding
+
+Evaluator: tokenizer + shunting-yard. Supports `+ - * / %`, parentheses, precedence, unary minus. NO `eval()`/`Function()`. Plain strings (no `$`) pass through literally. Booleans → stringified (not arithmetic-able). String operands in arithmetic ⛔ THROW.
+
+### `$self.*` (scaling source = the effect source)
+- **`$self.sceneTrait.<trait>`** — count of chars on `ctx.source.player` scene with trait `<trait>`. Works WITHOUT `ctx.source.uid` (player-based) → usable from hand-origin (cutin) effects.
+- **`$self.faceUpEvidence`** — count of face-up evidence on `ctx.source.player`. Player-based (no uid needed).
+- **`$self.ap`** — current effective AP of source uid (includes overrides + turnEffects + continuous). Requires `ctx.source.uid` (⛔ throws if absent).
+- **`$self.lp`** — current effective LP of source uid. Requires uid (⛔ throws if absent).
+- **`$self.uid`** — source uid (string). Requires uid.
+- **`$self.cardId`** — source cardId (`ctx.source.cardId ?? ''`).
+- ⛔ Any other `$self.<prop>` → THROWS (`unknown $self property`). No `$self.level`, `$self.traitCount` (only `sceneTrait.<x>`), no opponent-side `$self`.
+
+### `$contact.*` (requires `ctx.contact`, else ⛔ throws)
+- **`$contact.byUid`** — attacker uid.
+- **`$contact.targetUid`** — target uid.
+- **`$contact.guardUid`** — guard uid.
+- **`$contact.attackerSide`** — `'self'|'opp'`.
+- ⛔ Other `$contact.<prop>` → THROWS.
+
+### `$cost.<key>.<path>` (requires `ctx.costPaid`, else ⛔ throws)
+- Reads `ctx.costPaid[key]` then drills `<path>`. Currently only producer is `flipFaceUpEvidence` → `$cost.flipFaceUpEvidence.count`.
+- ⛔ Missing key / undefined entry → THROWS. Non-primitive leaf → THROWS.
+
+### `$dyn.<key>[.path]` (requires `ctx.dyn`, else ⛔ throws)
+- Reads `ctx.dyn[key]` (pre-computed by parent effect) then optional drill.
+- ⛔ Key not in `ctx.dyn` → THROWS.
+
+### `$pick`
+- ⛔ NOT evaluable in dyn — always THROWS. Pick results are resolved elsewhere (`resolve-picks`, per memory: `$`-prefixed, only in `resolveDynArgs`).
+
+### DYN gaps ⛔
+- ⛔ No `$opp.*`, no player/evidence-count except `$self.faceUpEvidence`, no FILE/deck/hand size placeholders, no `$turn`, no comparison/boolean operators (only arithmetic).
+
+## 3. AbilityDef TYPES (`AbilityType`) — CURRENT = 5 types
+
+`type AbilityType = 'continuous' | 'triggered' | 'declared' | 'icon-disguise' | 'icon-misread'`
+
+> `icon-cutin` and `icon-flash` were REMOVED (migrated to `triggered`). Cutin = `triggered` + `scope:'on-hand'` + `trigger.hook:'effect:declared'`. Flash/ヒラメキ = `triggered` + `trigger.hook:'evidence:remove-by-action'` + `optional:true`.
+
+| Type | Uses `effect`? | Uses `continuousModifier`? | Uses `trigger`? | Uses `cost`? |
+|------|---|---|---|---|
+| **continuous** | ⛔ NO (ignored) | YES (REQUIRED carrier) | no | no |
+| **triggered** | YES (DSL) | no | YES (TriggerDef) | no |
+| **declared** | YES (DSL) | no | no | YES (rules/21) |
+| **icon-disguise** | via disguise gate/hook | no | (disguise:into hook) | no |
+| **icon-misread** | YES (ミスリード LP-X) | no | (reasoning trigger) | no |
+
+### `continuous` — ⛔ OWNER($self)-ONLY, NO AURA
+- Effect carrier is `continuousModifier`, recomputed every read by `engine.read.char.ap/lp/keywords`. `effect` field is NOT run for continuous.
+- `ContinuousModifier` fields (CURRENT — note spec is wrong, dyn-form IS supported):
+  - **`apDelta`** / **`lpDelta`**: `number | { dyn: string } | (s, {uid}) => number`. dyn-form recommended; NaN/non-finite guarded (won't pollute AP). closure-form = last resort.
+  - **`grantKeywords`**: `(s, {uid}) => string[]`.
+  - **`customSelectorPatch`**: `(s, uid, base) => Partial<SceneCharacter>` ⛔ escape hatch.
+- `ability.condition` gated per-read (rules/24 §常時有効: active only while condition holds, fails instantly when false).
+- ⛔ **OWNER-ONLY**: resolver fixes `owner` = the side where the char's OWN uid sits, and `ctx.source.uid = uid` (the char itself). apDelta/lpDelta/grantKeywords therefore apply ONLY to the bearer character. There is NO mechanism for a continuous ability to modify OTHER characters (no aura / no "all your chars +X" via continuous). Aura-style buffs must use a triggered/declared `effect` with `charModifyAP` etc. (those are NOT continuous → not auto-recomputed; they snapshot into `turnEffects`).
+
+### `triggered`
+- Fires on `trigger.hook` (+ optional extra `trigger.hooks[]` sharing one `limit:{turn}` via `declaredUseCount` per ability.id).
+- Filtering: `matcher` (closure) and/or `matcherCondition` (declarative `Condition`, payload → `ctx.triggerPayload`). `selfOnly`, `ignoreCostInduced` (skip `viaCost`), `optional` (→ pendingHirameki fire/skip side-channel).
+- Runs `effect` (full DSL).
+
+### `declared`
+- Player-declared. `cost` paid via §1. Then runs `effect`. Limit `{turn:1|2}|{game:n}|null`. Usable from `scene` chars, own `case`, partner-area MR (declaredUseCount tracks per source).
+
+### `icon-disguise`
+- Disguise gate predicate = the icon-disguise ability's `condition` (evaluated by `canDisguise`, shared UI/AI/engine). 【変装時】 = `disguise:into` triggered hook (selfOnly, in-play scan). No `effect`/cost on the icon itself for the swap.
+
+### `icon-misread`
+- ミスリード LP-X on opponent reasoning (rules/13). Distinct type added Phase 8.
+
+## 4. Supporting structures (for completeness — what `effect`/`condition`/`target` can express)
+
+These bound what triggered/declared effects can DO (the verbs) and TARGET. Listed terse; downstream must still confirm each verb is wired in its resolver (per BUG-117/118 lesson: type/DSL presence ≠ engine evaluates it).
+
+### `AtomVerb` (Effect `atom`)
+`draw, discard, mill, fileAdd, filePopToHand, evidenceGain, evidenceLose, evidenceFlip, selfToEvidence, evidenceToDeck, evidenceToHand, handAddFromRemove, handAddFromDeck, sceneEnter, sceneSwitch, sceneRemove, sceneSetState, sceneDisguise, sceneToHand, charModifyAP, charModifyLP, charModifyLevel, charSetAP, charSetLP, charOverrideAP, charOverrideLP, charGrantKeyword, charRevokeKeyword, charDisableOriginal, charSetTurnEffect, charSetCard, charStackCard, charRemoveSetCard, partnerAssist, partnerSetState, partnerSolveCase, caseToResolved, startContact, endActionEarly, deckRevealUntil, deckToBottomBound, deckShuffle, souza, expandActionTargets, log, noop`
+- ⛔ `charModifyAP/LP/Level` write to `turnEffects` (`apMod_/lpMod_/lvlMod_` × `permanent/turn/contact`) — these are SNAPSHOTTED at apply time, NOT continuously recomputed (unlike continuousModifier). A condition that later changes does NOT retroactively adjust them.
+
+### Effect combinators
+`sequence, parallel, choice (chooser self/opp/owner), optional, conditional (if/then/else), forEach (over TargetingRef), replace (trigger→with), negate (trigger), atom, custom (⛔ closure), chain (「そうした場合」 no-op-stops-chain semantics)`
+
+### `Condition` kinds
+`true, false, not, and, or, turn, partnerColor, caseColor(or/and), caseTrait, fileAtLeast, caseStatus, bond, sceneHas, apAtLeast, lpAtLeast, evidenceAtLeast, fileTopType, scratchTrace, flag, declaredUseUnder, bound(exists/matched), removeColorAtLeast, removeTraitAtLeast, removeNameAtLeast, stackedCountAtLeast, contactOpponentApHigher, guardedBySelf, enterOrderEquals(疾風N), boundMatchesFilter, triggerCharMatches(side/filter), custom (⛔ closure)`
+
+### `TargetFilter` fields (honored on BOTH pick + deckReveal paths per BUG-118)
+`cardId, cardName, trait, color, keyword, kind('character'|'event'), apMin/apMax, lpMin/lpMax, levelMin/levelMax, hasSetCards, custom(⛔ closure)`
+
+### `TargetingRef` / `TargetQuery`
+- Ref: `self | pick{query,n:{min,max},chooser:owner|opp|self|opp-of-owner} | all{query} | fromBound{bindKey}`.
+- Query: `area(scene|partner-area|hand|deck|remove|evidence|file|case)`, `side(self|opp|either|owner|opp-of-owner)`, `filter`, `filterAny[]`, `excludeSelf`, `state[]`, `named`, `distinctNames`.
+
+### Known DEFER gates ⛔ (engine-structural, NOT expressible without engine change)
+- ⛔ Continuous AURA onto other characters (see §3 — owner-only).
+- ⛔ 2-color / isMR / color-count filters on candidate selection are NOT in `TargetFilter` (no `colorCount`, no `isMR` field) → cards keying on "2色MR" / "is MR" / number-of-colors cannot filter (B09047/B07045-class DEFER per repo notes).
+- ⛔ Partner-area MR enumeration lacks GameState slots (B07045-class).
+- ⛔ `custom`/closure escapes (`Cost.custom`, `Condition.custom`, `TargetFilter.custom`, `Effect.custom`, closure-form ContinuousDelta) work but break JSON-serializability and DSL-first convention — treat as "implementable but discouraged," not as clean coverage.
+
+Files: `c:\Users\MASAKI CHINAMI\OneDrive\デスクトップ\TCGApp\src\engine\cost\evaluate.ts`, `...\cost\pay.ts`, `...\dyn\eval.ts`, `...\types\card-def.ts`, `...\types\effect.ts`, `...\read\char.ts`.
+
+### Engine capability: patterns
+All new hooks confirmed wired and emitting. I have everything I need. Let me produce the authoritative reference.
+
+# Detective Conan TCG — Frozen Engine Capability Reference
+
+Verified against real engine code on 2026-06-06. Supersedes `card-impl-engine-gates.md` (2026-06-04), which is now partially STALE — discrepancies flagged inline.
+
+## A. Reusable `_shared` helper classes (`src/cards/_shared/`)
+
+Exported via `_shared/index.ts`.破壊的変更禁止; new patterns = new class.
+
+- **`partnerColorKeyword({color, kw, scope?, additionalCondition?})`** — continuous; 【パートナー(色)】条件下でキーワード付与 (`continuousModifier.grantKeywords`). condition = `partnerColor` AND optional extra. ⚠ owner($self) 専用 (aura不可).
+- **`misreadX({x})`** — `type:'icon-misread'`; 【ミスリードX】. effect は noop marker; 実行は `listeners/misread.ts` が `reasoning:before-add` で sleep+LP-X 適用.
+- **`souzaX({x, defender?})`** — triggered on `enter`(selfOnly); 【捜査X】= atom `souza` (defenderデッキ上X枚をデッキ下へ). ⛔ 「発見された」参照効果は未実装 (peek順そのまま戻すのみ).
+- **`caseTraitConditioned({trait, inner})`** — wrapper: inner.condition に `caseTrait` を AND 追加. 【事件特徴】ゲート.
+- **`caseResolvedHandRemove({n?})`** — triggered on `case:to-resolved`(matcher player==='self'); scope:'always'; 解決編移行時 手札N枚 discard. ゲーム中1回 (一方通行).
+- **`caseDeclaredEvidenceFlip({delta, targetFilter?, side?})`** — declared, scope:'always', limit turn1; cost `flipFaceUpEvidence{min1}`; effect `charModifyAP{dyn:'$cost.flipFaceUpEvidence.count * delta', scope:'turn'}`. 【解決編】【宣言】【ターン1】.
+- **`caseMonoColor(color)`** — Condition: `not(caseColor[他5色])` = 事件が指定色のみ. 全色集合=青赤黄緑白黒.
+- **`contactTargetMatches({names?, traits?, colors?})`** — custom Condition; `ctx.contact.targetUid` の名前/特徴/色一致判定 (`engine.read.char.*`). effect内 conditional{if} 用.
+- **`eventRemoveByAP({apMax, side?, state?, additionalCondition?})`** — triggered on `effect:declared`(selfOnly, matcher kind==='event-use'); scope:'on-hand'; choice→`sceneRemove{cause:'effect'}` AP≤apMax を0〜1枚 (コンタクト貫通).
+
+廃止 (各カードに inline atom で記述する方式へ移行): `cutinFixedAP` (D08007型), `hiramekiDraw`/`hiramekiCharStun` (D08013 a2型).
+
+## B. Card-triggerable hooks (13個) — `listeners/triggered.ts` `TRIGGERED_HOOKS`
+
+⚠ gates doc は「9個のみ」と記載 → **STALE**. 実際は13個:
+- `enter` (【登場時】/【疾風N】, selfOnly=source.uid一致)
+- `effect:declared` (自/他イベント・キャラ使用反応; payload `{kind:'event-use'|'character-use', cardId}`; on-hand は payloadCardId+player一致)
+- `action:pre-target` (attacker選択時・target列挙前; `expandActionTargets`用)
+- `action:declare` (アクション宣言時; payload `{byUid, target, uid, player}`)
+- `action:guarded`
+- `contact:start`
+- `case:to-resolved` (payload `{player}`)
+- `phase:end:start`
+- `leave:to-remove` ⚠ **NEW/STALE-fix** — 【現場リムーブ時】/「キャラがリムーブされたとき」反応が **実装済** (gate doc は「hook無し・DEFER」と記載、now FALSE). 離場カード自身は `handleLeaveToRemoveSelf` (virtual location), 在場カード反応は通常in-play scan. selfOnly対応.
+- `evidence:remove-by-action` (ヒラメキ; `trigger.optional:true`→`pendingHirameki`でUI委譲, false→強制発動)
+- `reasoning:end` ⚠ **NEW/STALE-fix** — 「推理したとき」を **別カード/自カードが反応可** (gate doc は「reasoning hook無し」と記載, now FALSE). `reasoning.ts` が emit (payload `{uid, player, gained}`, 証拠加算後). selfOnly=推理キャラuid一致.
+- `disguise:into` ⚠ **NEW** — 【変装時】triggered hook. `flow/contact.ts` が emit (payload `{uid, fromCardId, newCardId}`). 変装後キャラ scene残存・cardId差替で通常scanが変装カードdefを走査. enter hookは発火しない (変装≠登場).
+
+Hook機構共通: `scope`(always/on-scene/on-partner-area/on-hand/on-evidence) → `selfOnly` → `matcher`(closure) / `matcherCondition`(declarative, payload→`ctx.triggerPayload`) → `ability.condition` → `limit.turn`(【ターンN】, declaredUseCount流用) でgate. `trig.hook` 単一 OR `trig.hooks[]` (multi-hook, 共有【ターンN】) 対応.
+
+## C. Effect kinds — `types/effect.ts` `Effect`
+
+- `sequence` / `parallel` / `choice`(chooser self/opp/owner) / `conditional`(if/then/else) / `replace` / `negate` / `atom` / `custom`(TS closure)
+- `chain` — 「そうした場合」semantics (step N が実効果ありなら N+1 実行, no-op/no-candidate で以降skip)
+- `forEach`(over: TargetingRef) — `over.kind` ∈ {self, all, fromBound}. ⛔ `over:'pick'` は validate を通っても `target/resolve.ts:27` で **throw** (`picked` required, apply-pick はforEachにpicked非供給) → プレイヤー選択 forEach は使用不可. 「すべて/全員」= `over:{kind:'all'}` + atom `uid:'$each.uid'` (`$each`単体不可, `.uid`必須).
+- `optional`(effect) ⚠ **NEW/STALE-fix** — 「〜してもよい。そうした場合〜」が **実装済** (gate doc は「optional flag無し・参照実装無し」と記載, now FALSE). `resolve-picks.ts:643` で human surface (`pendingEffectOptional` side-channel, choice の boolean版) → `optionalResolve` dispatch で再walk. AI/non-human は既定skip (自己コスト想定). 内部効果は `$trigger.<field>` 参照可 (B03038 の `$trigger.gained`).
+
+## D. Atom verbs — `types/effect.ts` `AtomVerb` (全dispatch `atom-handlers.ts`)
+
+ドロー/FILE/証拠: `draw` `discard` `mill` `fileAdd` `filePopToHand` `evidenceGain` `evidenceLose` `evidenceFlip` `evidenceToHand` `handAddFromRemove` `handAddFromDeck`
+- `selfToEvidence{faceUp?}` ⚠ **NEW/STALE-fix** — 「このカードを表向きのまま証拠として得る」が **実装済** (gate doc は「event は必ずリムーブ行き・verb無し→DEFER」と記載, now FALSE). 使用イベント自身 (`ctx.source.cardId`) をリムーブ→証拠へ.
+- `evidenceToDeck{n}` ⚠ **NEW** — 証拠最上部 n 枚をデッキ上へ (B03038「この推理で証拠を得ない」, n は `$trigger.gained` 解決可).
+
+現場: `sceneEnter` (満杯時 switch対応, `from`/PA短縮形, `enterSleep`, `viaEffect`既定true=名乗り) `sceneSwitch` `sceneRemove`(cause: contact-ap/effect/switch/cost/misplay-overflow) `sceneSetState` `sceneDisguise`
+- `sceneToHand` ⚠ **NEW** — char→hand bounce (所有者の手札へ).
+
+キャラ修正: `charModifyAP` `charModifyLP` `charModifyLevel` (全てPA短縮形+dyn-delta対応) `charOverrideAP{val:number|null}` `charOverrideLP` (=「元のAPを0/Nにする」) `charGrantKeyword{kw, scope}` `charRevokeKeyword` `charDisableOriginal` `charSetTurnEffect{key, val}` `charSetCard{fromDeckTop?, faceUp}` `charStackCard`(multi-pick `$pick.cardIds`)
+- `charRemoveSetCard` ⚠ **NEW** — キャラの裏向きセットカードを1枚リムーブ (rules/16, B08034; PA短縮形 max1=「してもよい」).
+- ⛔ `charSetAP` / `charSetLP` — **throw stub** (`atom-handlers.ts:773-776`; 「APをXにする・上乗せ修正残す」型は `mutate.char.setExact` 未定義). `charOverrideAP/LP` (=0等) のみ可. **STILL TRUE**.
+
+パートナー/事件: `partnerAssist` `partnerSetState` `partnerSolveCase` `caseToResolved`
+デッキ: `deckRevealUntil{filter, maxN?, bind, bindMatch}` (上からN枚見る; ⚠ AP/LP/kind filter は BUG-117/118 で修正済=printed値判定) `deckToBottomBound` `deckShuffle` `souza`
+メタ/フロー: `expandActionTargets{side, state?, levelMin/Max?}` (action target拡張) `log` `noop`
+- ⛔ `startContact` / `endActionEarly` — **Phase 3 placeholder, log のみ** (本実装なし). ⛔
+
+## E. Condition kinds — `cond/eval.ts` / `types/effect.ts` `Condition`
+
+`true` `false` `not` `and` `or` `turn` `partnerColor` `caseColor{combine?}` `caseTrait` `fileAtLeast` `caseStatus` `bond` `sceneHas{query, nMin?}` `apAtLeast` `lpAtLeast` `evidenceAtLeast` `fileTopType` `scratchTrace`(痕跡) `flag` `declaredUseUnder` `bound{presence}` `removeColorAtLeast` `removeTraitAtLeast` `removeNameAtLeast` `stackedCountAtLeast` `contactOpponentApHigher` `guardedBySelf` `enterOrderEquals` `boundMatchesFilter{bindKey, filter}` `custom`
+- `triggerCharMatches{side?, filter?}` ⚠ **NEW** — トリガpayloadキャラ (例 reasoning:end の推理キャラ) を side+filter で判定 (declarative `$trigger` matcher). `$trigger.uid` (`payload.uid ?? payload.byUid`) も atom引数で参照可.
+
+⛔ **依然 condition 無し (custom{} TS のみ)**:
+- 手札枚数 (N枚以下/以上) — 専用condition無し. **STILL TRUE**.
+- リムーブエリア **総枚数** ≥N — color/trait/name 別はあるが総数無し. **STILL TRUE**.
+- 登場手段の source レベル — enter payload は viaEffect/順序のみ. **STILL TRUE**.
+
+## F. TargetFilter fields — `types/effect.ts`
+
+`cardId` `name` `trait` `color` `keyword` `kind`('character'|'event') `apMin/Max` `lpMin/Max` `levelMin/Max` `hasSetCards` `state[]` `side` `distinctNames` `named`.
+- ⛔ `keyword:'カットイン'` — cutin は ability であり `keywords:[]` に載らない → 不一致 (「カットイン保持で filter」不可). **STILL TRUE**.
+
+## G. Multi-target per-char effect — **STALE-fix (重要)**
+
+⚠ gate doc は「multi-target player-pick で各々に per-char効果 (0191/0528) は apply-pick Pattern A が単一pickedUidのみ→DEFER」と記載 → **now FALSE**. `apply-pick.ts:67-80` **engine-extension #3 (2026-06-05)**: `pickedUids` が複数なら各 uid に atom を per-char 適用する **sequence に自動展開**. `uid:'$pick'` を使う任意 atom (charModifyAP/LP/Level, sceneRemove, sceneSetState, charOverrideAP/LP 等) で「N枚まで選び各々に効果」が動作. AI は greedy に nMax まで取る. → **0191/0528 系は再評価対象** (forEach over:pick 不要、Pattern A multi-pick で代替).
+
+## H. 依然 DEFER のゲート (verified STILL TRUE)
+
+- ⛔ **continuous で他キャラを buff (aura)** — `continuousModifier` は owner($self)専用. 「現場の特徴X全員AP+N」「別名キャラAP+N」不可.
+- ⛔ **パートナーエリアの追加カード参照** (特徴[ビッグジュエル]等) — `candidates.ts:93` partner-area は `partner.cardId` 本体のみ走査 (GameState に追加partner-area枠なし). B07045 で実機検出. **STILL TRUE**.
+- ⛔ **イベントの「特徴」参照** — data上全イベント `traits:[]`. trait matcher 永久不発火 (0678). イベントの**色**は有り (色 matcher 可, B07016検証済).
+- ⛔ **非キーワード能力テキストの付与** (「『スリープでもガード可』を持つ」) — keyword/`expandActionTargets` 以外不可.
+- ⛔ **可変枚数「好きな枚数」discard→同数draw** — 可変 count atom 無し.
+- ⛔ **discard した札の inspect** (「リムーブしたカードが特徴Xの場合」) — discard に bind 無し.
+- ⛔ dyn: パートナーエリア特徴数の per-card scaling 無し (`$self.sceneTrait.<trait>`=現場のみ).
+- ⛔ 状態変化 active↔sleep を別カードが trigger に — `state:change` は internal, card不可.
+
+## I. 実装OK 検証済パターン (参照ファイル)
+
+- enter chain (任意 discard by trait/color/level → 効果, no-apply-break=「そうした場合」): `D08003.ts` a1
+- 条件付き enter (sceneHas/caseStatus): `D08019.ts` a1 / `B07021.ts` a2
+- `phase:end:start` + conditional (turn:self+sceneHas → draw/sceneRemove($self)/sceneSetState($self)): `D08003.ts` a2 / `B07021.ts` a1
+- continuous 自己 AP/LP (dyn `$self.sceneTrait.<trait>`): `D08005.ts` / `D08007.ts`; キーワード付与: `D08021.ts`
+- ヒラメキ (draw/char-pick): `D08013.ts` a2 / `D08019.ts` a2; 宣言+コスト: `D08026.ts` a2; カットイン AP+: `D02012.ts` (inline atom)
+- `effect:declared` 他イベント反応 (非selfOnly + matcher `engine.cards.get(payload.cardId).colors.includes(色)`): B07016 (色 matcher 可, 特徴 matcher 不可)
+- forEach over:all + `uid:'$each.uid'` (全体 sleep/stun): B06071/B02032
+- 自己リムーブ (cost: `pay[sleepSelf, removeFromScene{self}]` / effect先頭 `sceneRemove{uid:'$self'}` で後続effect継続): B03055/B07007/B03114
+- look-top-N-select / untargetable / 手札以外起点の登場 / 任意複数をデッキ下へ
+- matcher/custom から `engine.cards.get(cardId)` で任意カードdef参照可 (B02010); declared cost は move-enumerator `canPay` で gate
+- `sceneHas` は `query.area:'partner-area'` 可 (本体カードのみ); `caseStatus`(事件編/解決編) gate 可

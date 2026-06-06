@@ -9,7 +9,8 @@ import { AppTopBar } from '../shared/AppTopBar';
 import { SetupButton, SetupReadyButton } from '../shared/Button';
 import { MetaCard } from '../shared/MetaCard';
 import { useDecksStore } from '../state/decksStore';
-import { CARD_POOL } from '../data/cardPool';
+import { useMetaStore } from '../state/metaStore';
+import { CARD_POOL, cardIdOf } from '../data/cardPool';
 import type { Route } from '../router/routes';
 import type { DeckRecord } from '../data/types';
 import { useGameStateStore } from '@/ui/state/store';
@@ -22,10 +23,12 @@ interface Props {
 }
 
 type Mode = 'solo' | 'observe';
+type FirstChoice = 'random' | 'p1' | 'p2';
 
 export function SetupScreen({ onNav }: Props) {
   const decks = useDecksStore((s) => s.decks);
   const [mode, setMode] = useState<Mode>('solo');
+  const [firstChoice, setFirstChoice] = useState<FirstChoice>('random');
   const [selfDeckId, setSelfDeckId] = useState<string>(decks[0]?.id ?? '');
   const [oppDeckId, setOppDeckId] = useState<string>(decks[1]?.id ?? decks[0]?.id ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -37,15 +40,19 @@ export function SetupScreen({ onNav }: Props) {
   const handleReady = () => {
     if (!selfDeck || !oppDeck) return;
     if (!isPlayable(selfDeck) || !isPlayable(oppDeck)) {
-      setError('デッキ検証エラー: 40 枚ちょうど + 同 ID ≤ 3 + パートナー必須を満たす必要があります');
+      setError('デッキ検証エラー: 40 枚ちょうど + 同 ID ≤ 3 + パートナー1 + 事件1 を満たす必要があります');
       return;
     }
     setError(null);
     useGameStateStore.getState().setSpectatorMode(mode === 'observe');
+    // Phase 18: 対戦種別・デッキ名を ResultScreen の履歴記録用に控える
+    useMetaStore.getState().setMatchMeta({ mode, selfDeckName: selfDeck.name, oppDeckName: oppDeck.name });
     useTutorialStore.getState().exit(); // 通常対戦はガイド overlay を出さない (Phase 17-D)
     onNav('match');
     // Phase 14-A: customGameStart で任意 DeckRecord ペアから実機対戦を開始
-    customGameStart(selfDeck, oppDeck)
+    // 観戦モード (両者 AI) では人間マリガンを出さない。先攻は先攻トグルに従う。
+    const firstPlayer = firstChoice === 'p1' ? 'self' : firstChoice === 'p2' ? 'opp' : undefined;
+    customGameStart(selfDeck, oppDeck, { spectator: mode === 'observe', firstPlayer })
       .then((gs) => useGameStateStore.getState().setGameState(gs))
       .catch((err: unknown) => {
         console.error('[Phase 14] customGameStart failed:', err);
@@ -103,7 +110,7 @@ export function SetupScreen({ onNav }: Props) {
           deck={oppDeck} decks={decks} onSelectDeck={setOppDeckId} />
       </div>
 
-      <SetupMatchOptions />
+      <SetupMatchOptions firstChoice={firstChoice} onFirstChoice={setFirstChoice} />
 
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 48,
@@ -120,7 +127,7 @@ export function SetupScreen({ onNav }: Props) {
             border: `1px solid ${T.red}66`, borderRadius: 3,
             fontFamily: T.fontMono, fontSize: 11, letterSpacing: '0.12em',
           }}>
-            検証 NG · 40 枚 + ID ≤ 3 + パートナー必須
+            検証 NG · 40 枚 + ID ≤ 3 + パートナー1 + 事件1
           </div>
         )}
       </div>
@@ -263,7 +270,7 @@ function PlayerConfigPanel({ slot, label, mode, deck, decks, onSelectDeck }: {
         display: 'flex', gap: 18,
       }}>
         <MiniMetric label="枚数" value={`${deck?.cards.reduce((s, e) => s + e.count, 0) ?? 0}`} accent={T.neonBlue} />
-        <MiniMetric label="種類" value={`${deck?.cards.length ?? 0}`} accent={T.gold} />
+        <MiniMetric label="種類" value={`${deck ? new Set(deck.cards.map((e) => cardIdOf(e.num))).size : 0}`} accent={T.gold} />
         <MiniMetric label="モード" value={isHuman ? 'HUMAN' : 'CPU'} accent={accent} />
       </div>
     </div>
@@ -338,8 +345,11 @@ function SwapButton({ onClick }: { onClick: () => void }) {
 
 // ---- Match options ----
 
-function SetupMatchOptions() {
-  // 視覚のみ (実エンジン behavior は performGameStart の引数経由ではなく、将来カスタム options で対応)
+function SetupMatchOptions({ firstChoice, onFirstChoice }: {
+  firstChoice: FirstChoice; onFirstChoice: (c: FirstChoice) => void;
+}) {
+  // 先攻のみ実機に反映 (customGameStart の firstPlayer)。他は将来カスタム options で対応する視覚要素。
+  const firstIdx = firstChoice === 'p1' ? 0 : firstChoice === 'p2' ? 1 : 2;
   return (
     <div style={{
       position: 'absolute', left: '50%', bottom: 110, transform: 'translateX(-50%)',
@@ -347,7 +357,8 @@ function SetupMatchOptions() {
       padding: '12px 22px', background: 'rgba(0,0,0,0.5)',
       border: `1px solid rgba(78,195,255,0.25)`, borderRadius: 4,
     }}>
-      <OptionToggle label="先攻" options={['P1', 'P2', 'ランダム']} active={2} />
+      <OptionToggle label="先攻" options={['P1', 'P2', 'ランダム']} active={firstIdx}
+        onSelect={(i) => onFirstChoice(i === 0 ? 'p1' : i === 1 ? 'p2' : 'random')} />
       <OptionToggle label="演出速度" options={['0.5×', '1.0×', '1.5×', '2.0×']} active={1} />
       <OptionToggle label="自動進行" options={['ON', 'OFF']} active={0} />
       <OptionToggle label="効果ログ" options={['簡易', '詳細', '非表示']} active={1} />
@@ -355,19 +366,23 @@ function SetupMatchOptions() {
   );
 }
 
-function OptionToggle({ label, options, active }: { label: string; options: string[]; active: number }) {
+function OptionToggle({ label, options, active, onSelect }: {
+  label: string; options: string[]; active: number; onSelect?: (i: number) => void;
+}) {
   return (
     <div>
       <div style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.2em', marginBottom: 4 }}>{label}</div>
       <div style={{ display: 'flex', borderRadius: 2, overflow: 'hidden', border: `1px solid rgba(78,195,255,0.3)` }}>
         {options.map((o, i) => (
-          <span key={i} style={{
+          <button key={i} onClick={onSelect ? () => onSelect(i) : undefined} disabled={!onSelect} style={{
             padding: '4px 10px',
             background: i === active ? T.gold : 'rgba(0,0,0,0.3)',
             color: i === active ? '#1a1208' : T.textSecondary,
             fontFamily: T.fontJp, fontSize: 11, fontWeight: 700,
+            border: 'none',
             borderRight: i < options.length - 1 ? `1px solid rgba(78,195,255,0.2)` : 'none',
-          }}>{o}</span>
+            cursor: onSelect ? 'pointer' : 'default',
+          }}>{o}</button>
         ))}
       </div>
     </div>
