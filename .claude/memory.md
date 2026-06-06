@@ -21,6 +21,9 @@
   disguise:into を TRIGGERED_HOOKS 追加 (additive) + canDisguise に変装ゲート条件 (caseColor/fileAtLeast) 評価。
   カード D06012/B03129/B02045。ALL_CARDS 938。+ **BUG-124** (commit 9a36b166, review 水平展開検出): caseTrait が
   caseTraits 未参照の field-drop を union 修正。vitest 1818 pass 回帰0 / e2e (disguise 2 + case-trait 4) pass。
-  次は C 残 (event→evidence / reasoning 残 ~11) → A (engine変更0 大量) → D
+- [.claude/sessions/2026-06-06-5.md](sessions/2026-06-06-5.md) — C event→evidence 解禁 (commit f8526b97 + 8ba5fa28):
+  新 verb `selfToEvidence` (イベント自身を remove→evidence 表向き化) 追加 + B0401x 5色 + PR再録12枚 = 全17枚。
+  vitest 1822 pass 回帰0 / e2e 1 pass / review (4 agent) で additive・文言忠実確認。ALL_CARDS **955**。
+  次は C 残 (reasoning 残 ~11) → A (engine変更0 大量) → D
 
 次セッション kickoff: [.claude/NEXT-SESSION-PROMPT.md](NEXT-SESSION-PROMPT.md)

@@ -9,20 +9,21 @@
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md →
 .claude/auto/structure.md → .claude/sessions/2026-06-06.md を読んで状況を把握すること。
 
-## 現在地 (2026-06-06 #4 時点)
+## 現在地 (2026-06-06 #5 時点)
 
-- 最新コミット: 9a36b166 (BUG-124) / c15ad259 (disguise-hook)。origin/main 未 push (要 `git push`)
-- ALL_CARDS: 938 枚 (C disguise-hook batch で +3: D06012/B03129/B02045。前回 prompt の "938/+5" は誤記、実際は 935→938)
-- vitest: 1818 pass / 1 skip / 0 fail / e2e 含む / typecheck・lint errors=0 / docs:check 同期 / 回帰 0
+- 最新コミット: 8ba5fa28 (event→evidence PR再録) … c15ad259 (disguise-hook)。origin/main 未 push (要 `git push`)
+- ALL_CARDS: **955 枚** (disguise +3 / event→evidence +17)
+- vitest: 1822 pass / 1 skip / 0 fail / e2e 含む / typecheck・変更ファイル lint errors=0 / docs:check 同期 / 回帰 0
 - 未解決 BUG: BUG-064 (workflow図, doc) / BUG-111〜114 (DEFERRED, latent/非MVP)
   ※ BUG-083 (E) / BUG-122/123 (B) / BUG-124 (C review 水平展開) は修正済。
+- 既知 (本件無関係): src/engine/effect/validate.ts:68 に pre-existing eslint no-fallthrough (walk switch)。
 
-### 直近完了 (2026-06-06 #4)
-- **C disguise-hook 1ユニット** (commit c15ad259): engine additive 2点 — `disguise:into` を TRIGGERED_HOOKS 追加
-  (変装後キャラ in-play scan で【変装時】発火) + canDisguise に変装ゲート条件 (icon-disguise ability の condition
-  = caseColor/fileAtLeast) を evalCond 評価。カード D06012/B03129/B02045。詳細: .claude/sessions/2026-06-06-4.md
-- **BUG-124** (commit 9a36b166): disguise review 水平展開で検出。caseTrait condition が CardDef.traits を読み
-  事件特徴 caseTraits を未参照 → 古城系【事件特徴】永久 false。caseTraits+traits union で修正 (latent, 回帰0)。
+### 直近完了 (2026-06-06 #4-5) — C タスク
+- **disguise-hook** (c15ad259): `disguise:into` TRIGGERED_HOOKS 追加 + canDisguise 変装ゲート条件評価。
+  カード D06012/B03129/B02045。詳細: sessions/2026-06-06-4.md
+- **BUG-124** (9a36b166): caseTrait が caseTraits 未参照の field-drop を union 修正。
+- **event→evidence** (f8526b97 + 8ba5fa28): 新 verb `selfToEvidence` (イベント自身を remove→evidence 表向き化)。
+  B0401x 5色 + PR再録12枚 = 全17枚。詳細: sessions/2026-06-06-5.md
 
 ## 直近セッションで完了 (2026-06-06 #2/#3 — タスク B/E/C)
 
@@ -39,15 +40,13 @@
 
 1. ~~**B. text-faithfulness 監査**~~ → ✅ 完了 (BUG-122/123)。
 2. ~~**E. BUG-083**~~ → ✅ 完了 (throw 解消済確認)。
-3. **C. engine 拡張 中リスク** (進行中): reasoning hook ✅(#1/#2)・look-top-N ✅(#3)。
+3. **C. engine 拡張 中リスク**: reasoning hook ✅(#1/#2)・look-top-N ✅(#3)・disguise hook ✅・event→evidence ✅。
    **残**:
-   - **disguise hook(13枚)**: ①`disguise:into` を TRIGGERED_HOOKS 追加は clean・additive
-     (emit source={player,uid}・disguiseInto で uid 維持→ in-play scan で 【変装時】selfOnly 発火可、
-     contact.test.ts に disguise harness 有)。**ただし** 変装カード (例 B02045) は変装可否に
-     【事件白】【FILE4】等の **条件付き** (TSV col14 henso) があり、`canDisguise`/`isDisguiseCard` は
-     ability condition を見ない → **条件付き変装ゲーティングの engine 拡張も別途必要**。1 ユニットとして設計せよ。
-   - **event→evidence(7枚)**: remove/hand→evidence verb 要。
-   - **reasoning 残 ~11**: souza/発見・optional self-remove・multi-target・reasoner-binding 等の別機能ゲート。
+   - ~~**disguise hook**~~ → ✅ 完了 (c15ad259, D06012/B03129/B02045)。残 disguise 10枚 (replaced-char binding /
+     opponent-optional / 事件YAIBA DEFER / ビッグジュエル DEFER) は別機能ゲート。
+   - ~~**event→evidence (selfToEvidence)**~~ → ✅ 完了 (f8526b97+8ba5fa28, 全17枚)。残 hand→evidence(裏向き,
+     B06033等) / 相手証拠操作(B05103) / 証拠flip+ヒラメキ(B06034) は別 verb DEFER。
+   - **reasoning 残 ~11** (次): souza/発見・optional self-remove・multi-target・reasoner-binding 等の別機能ゲート。
    - 既存 `triggerCharMatches` condition は他の payload-char 反応 (action/leave 等) にも再利用可。
 4. **A. engine 変更0 カードバッチ** (大量・低リスク): deck-look-N 残 約50枚 (B03007/B03036/B05016
    /B07010 等 同型) + bounce/level-modify/set-card/multi-target 残 + 素のバニラカード。
