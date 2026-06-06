@@ -9,13 +9,19 @@
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md →
 .claude/auto/structure.md → .claude/sessions/2026-06-06.md を読んで状況を把握すること。
 
-## 現在地 (2026-06-06 #6 時点)
+## 現在地 (2026-06-06 #7 時点)
 
-- 最新コミット: optional 決定の配線 + B05019。origin/main 未 push (要 `git push`、17+ commit 未push)
-- ALL_CARDS: **958 枚** (reasoning-hook batch #3 +2 / optional B05019 +1)
-- vitest: **1834 pass** / 1 skip / 0 fail / e2e 含む / typecheck・変更ファイル lint errors=0 / docs:check 同期 / 回帰 0
-- 新 engine 機構: **pendingEffectOptional** (「〜してもよい」を human に「する/しない」surface、pendingEffectChoice 同型)。
-  optional は top-level のみ対応 / AI は常に skip (policy hook で将来 enhance 可)。
+- 最新コミット: evidence 抑制 + B03038 (43971c51)。origin/main 未 push (要 `git push`、22+ commit 未push)
+- ALL_CARDS: **967 枚** (reasoning new-feature シリーズ ①〜④ で +9)
+- vitest: **1851 pass** / 1 skip / 0 fail / typecheck・変更ファイル lint errors=0 / docs:check 同期 / 回帰 0
+- reasoning 残 new-feature 全実装完了 (お勧め順 ①〜④):
+  - ① **triggerChar→target** (`$trigger.uid/gained` を resolveBindRef で解決、B05080)
+  - ② **multi-hook 共有【ターン1】** (TriggerDef.hooks[] + action:declare payload uid/player、D03007/B04039/B02004系)
+  - ③ **set-card 除去 verb** (charRemoveSetCard、B08034/P)
+  - ④ **evidence 抑制** (evidenceToDeck + optional triggerPayload 引継ぎ、B03038)
+  - ⑤ B09047 のみ 2色MR データ無で DEFER。
+- 既存 engine 機構: pendingEffectOptional (「〜してもよい」surface) / pendingEffectChoice (BUG-121) /
+  pendingEffectPick。optional は top-level のみ / AI は常に skip。
 - 未解決 BUG: BUG-064 (workflow図, doc) / BUG-111〜114 (DEFERRED, latent/非MVP)
   ※ BUG-083 (E) / BUG-122/123 (B) / BUG-124 (C review 水平展開) は修正済。
 - 既知 (本件無関係): src/engine/effect/validate.ts:68 に pre-existing eslint no-fallthrough (walk switch)。
