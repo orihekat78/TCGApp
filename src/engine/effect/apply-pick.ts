@@ -12,14 +12,12 @@
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide } from './resolve-picks.js';
-import { resolveEffectPicks, _takePendingChoiceResume, _takePendingOptionalResume } from './resolve-picks.js';
+import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume } from './resolve-picks.js';
 
 type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
 import { runAllUntilEmpty } from '../resolve/index.js';
 import { event } from '../event/index.js';
-
-type ChainContEntry = { remainder: Effect[]; ctx: EffectCtx };
 
 /**
  * pick uid → cardId 逆引き。`evidence:side:idx` / `cardId#idx` / snapshot fallback に対応。
@@ -99,14 +97,14 @@ export function applyPickAndContinuation(
   }
 
   // ---- continuation (中断中 sequence/chain の残り step) を保存 ctx で実行 ----
-  const chainG = globalThis as { __pendingChainContinuation?: ChainContEntry[] };
-  const chainCont = chainG.__pendingChainContinuation?.[0]; // peek
+  // BUG-111: continuation は pick 本体 (pending.continuation) に同梱されている (別 FIFO peek を廃止)。
+  // これにより continuation を持たない pick が他 pick の continuation を誤消費する desync を排除。
+  const chainCont = pending.continuation;
   if (chainCont) {
     // BUG-107: resolved atom と remainder を同一保存 ctx で runEffect → plain bindings を共有
     // (event.queue 経由は entry.bindings が Immer draft に取り込まれ bind が消えるため不可)。
     runEffect(state, resolvedAtom as never, chainCont.ctx);
     runAllUntilEmpty(state);
-    chainG.__pendingChainContinuation!.shift();
     const remainderEffect: Effect = chainCont.remainder.length === 1
       ? chainCont.remainder[0]!
       : { kind: 'chain', steps: chainCont.remainder };
@@ -142,6 +140,8 @@ export function applyChoiceAndContinuation(
 ): void {
   const resumeEffect = _takePendingChoiceResume();
   if (!resumeEffect) return;
+  // BUG-114: choice surface 時の bindings (cutin の $contact.* 等) を resume ctx へ復元。
+  const resumeBindings = _takePendingChoiceBindings() ?? {};
   // 再 walk 用 ctx (triggered.ts の resolveCtx と同 shape の plain object、Immer draft 非由来)。
   // source.uid は option1 (charGrantKeyword uid:'$self') の $self 解決 + event.queue source に使用。
   const ctx: EffectCtx = {
@@ -152,7 +152,7 @@ export function applyChoiceAndContinuation(
       player: pending.player,
       area: 'scene',
     },
-    bindings: {},
+    bindings: resumeBindings as EffectCtx['bindings'],
     dyn: { choiceIndex },
   };
   const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
@@ -166,6 +166,9 @@ export function applyChoiceAndContinuation(
     { player: pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
     'effect:choice-resolved',
     { choiceIndex, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
+    // BUG-114: 復元した contact bindings を queue の bindings 引数 (6th) に渡し、entry → runtime ctx.bindings
+    // へ伝達する (選択 option の $contact.byUid 等が runAllUntilEmpty 実行時に解決される)。
+    resumeBindings as Record<string, unknown[]>,
   );
   runAllUntilEmpty(state);
 }
@@ -260,7 +263,6 @@ export function drainAiEffectPicks(
 ): void {
   const g = globalThis as {
     __pendingEffectPickQueue?: PendingEffectPickSide[];
-    __pendingChainContinuation?: ChainContEntry[];
   };
   let guard = 0;
   while ((g.__pendingEffectPickQueue?.length ?? 0) > 0) {
@@ -268,11 +270,8 @@ export function drainAiEffectPicks(
     const pending = g.__pendingEffectPickQueue!.shift()!; // 解決対象を queue から取り出す
     const { pickedUid, pickedUids } = chooseAiPick(state, pending, policy);
     if (pickedUid === null) {
-      // 候補 0 → skip (step が applied されないので対の continuation も drop)。
-      // 2026-06-04 review(#1): queue 済 pick は必ず候補≥1 で push される (resolve-picks の
-      // cardLikeCands.length>0 guard) ため本 path は実質到達不能。防御的に continuation が
-      // 存在する場合のみ shift する。pick↔continuation の厳密 1:1 化は BUG-111 (multi-step desync) で別途。
-      if ((g.__pendingChainContinuation?.length ?? 0) > 0) g.__pendingChainContinuation!.shift();
+      // 候補 0 → skip。BUG-111: continuation は pending 本体に同梱されるため、queue から
+      // shift した時点で対の continuation も一緒に drop される (別 FIFO の shift は不要)。
       continue;
     }
     applyPickAndContinuation(state, pending, pickedUid, pickedUids);

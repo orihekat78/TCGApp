@@ -1,0 +1,162 @@
+{
+ "note": "task D (engine 拡張) 優先度。wave2 = 本 session 決定的トリアージ (gate 別 sig/cards)。wave1 = session#8 の _buckets (cards 重み)。両者を合算して engine 機能の需要を見る。",
+ "wave2_gateDistribution": {
+  "FILE-zone effect verb": {
+   "sig": 18,
+   "cards": 30
+  },
+  "grant textual (non-keyword) ability": {
+   "sig": 14,
+   "cards": 23
+  },
+  "scene→deck verb": {
+   "sig": 9,
+   "cards": 14
+  },
+  "hand-count condition": {
+   "sig": 8,
+   "cards": 12
+  },
+  "non-icon ability-presence filter": {
+   "sig": 7,
+   "cards": 11
+  },
+  "action-subtype trigger": {
+   "sig": 8,
+   "cards": 8
+  },
+  "cutin-subtype filter": {
+   "sig": 6,
+   "cards": 7
+  },
+  "remove-area → deck-bottom verb": {
+   "sig": 5,
+   "cards": 7
+  },
+  "usage restriction": {
+   "sig": 6,
+   "cards": 7
+  },
+  "card-name rewrite verb": {
+   "sig": 3,
+   "cards": 6
+  },
+  "continuous-aura (implicit, no pick)": {
+   "sig": 4,
+   "cards": 5
+  },
+  "action-target restriction": {
+   "sig": 5,
+   "cards": 5
+  },
+  "evidence-gain-by-action trigger": {
+   "sig": 3,
+   "cards": 4
+  },
+  "untargetable grant": {
+   "sig": 3,
+   "cards": 4
+  },
+  "play-event-from-effect verb": {
+   "sig": 3,
+   "cards": 4
+  },
+  "action:end trigger (internal)": {
+   "sig": 3,
+   "cards": 4
+  },
+  "MR / color-count filter": {
+   "sig": 2,
+   "cards": 3
+  },
+  "continuous-aura (other chars)": {
+   "sig": 2,
+   "cards": 3
+  },
+  "loseGame/defeat verb": {
+   "sig": 2,
+   "cards": 3
+  },
+  "enter-source-level filter": {
+   "sig": 3,
+   "cards": 3
+  },
+  "hirameki/refresh suppression": {
+   "sig": 3,
+   "cards": 3
+  },
+  "dynamic stat-extremum compare": {
+   "sig": 1,
+   "cards": 2
+  },
+  "acted-this-turn filter": {
+   "sig": 1,
+   "cards": 2
+  },
+  "variable-reveal cost / dyn": {
+   "sig": 1,
+   "cards": 2
+  },
+  "targeted-by-opponent trigger": {
+   "sig": 1,
+   "cards": 2
+  },
+  "souza-discovered reference": {
+   "sig": 2,
+   "cards": 2
+  },
+  "deck top/bottom choose": {
+   "sig": 2,
+   "cards": 2
+  },
+  "evidence peek/move verb": {
+   "sig": 2,
+   "cards": 2
+  },
+  "variable count select": {
+   "sig": 2,
+   "cards": 2
+  },
+  "forced-target modifier": {
+   "sig": 2,
+   "cards": 2
+  },
+  "dynamic-AP/LP-relative filter": {
+   "sig": 2,
+   "cards": 2
+  },
+  "set-card confers ability to host": {
+   "sig": 1,
+   "cards": 1
+  },
+  "cross-side count compare": {
+   "sig": 1,
+   "cards": 1
+  },
+  "janken mechanic": {
+   "sig": 1,
+   "cards": 1
+  },
+  "enter-source-attribute filter": {
+   "sig": 1,
+   "cards": 1
+  },
+  "treat-as-additional-name": {
+   "sig": 1,
+   "cards": 1
+  }
+ },
+ "wave1_buckets_cards": {
+  "loseGame/defeat verb": 14,
+  "cutin-subtype filter": 44,
+  "continuous-aura (other chars)": 28,
+  "remove-area → deck-bottom verb": 51,
+  "MR / color-count filter": 11,
+  "hand-count condition": 66,
+  "other": 246,
+  "partner-area entity slot": 5,
+  "set-card confers ability to host": 14,
+  "grant turn-end-removal to char": 6,
+  "event traits (all empty)": 2
+ }
+}

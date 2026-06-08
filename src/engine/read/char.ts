@@ -6,6 +6,9 @@ import { scene } from './scene.js';
 import { def } from './def.js';
 import { evalCond } from '../cond/eval.js';
 import { evalDyn } from '../dyn/eval.js';
+// BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
+// candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
+import { registerContinuousDelta } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -207,7 +210,17 @@ function declaredUseCount(s: GameState, uid: string, abilityId: string): number 
     return s.players[p].case.declaredUseCount?.[abilityId] ?? 0;
   }
   const char = scene.byUid(s, uid);
-  return char?.declaredUseCount?.[abilityId] ?? 0;
+  if (char) return char.declaredUseCount?.[abilityId] ?? 0;
+  // BUG-112: off-board uid (selfToDeckBottom 等でコスト支払い時に scene 離脱) は
+  // player 単位 turnState.declaredAbilityUseCount[uid:abilId] に fallback 記録される。
+  // uid は両 player 通じて一意なので self/opp 双方を参照。
+  const key = `${uid}:${abilityId}`;
+  for (const p of ['self', 'opp'] as const) {
+    const rec = s.turnState[p].declaredAbilityUseCount as Record<string, number> | undefined;
+    const v = rec?.[key];
+    if (typeof v === 'number') return v;
+  }
+  return 0;
 }
 
 export const char = {
@@ -227,3 +240,6 @@ export const char = {
   turnEffect,
   declaredUseCount,
 };
+
+// BUG-113: module load 時に continuousDelta を candidates へ登録 (数値フィルタの有効値に反映)。
+registerContinuousDelta(continuousDelta);

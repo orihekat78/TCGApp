@@ -16,6 +16,7 @@
 import type { GameState } from '@/engine/types';
 import type { EffectCtx } from '@/engine/types';
 import { char as charRead } from '@/engine/read/char.js';
+import { def } from '@/engine/read/def.js'; // BUG-114: $discarded.level/ap で discard したカードの printed 値を参照
 
 type DynValue = number | string | boolean | undefined;
 
@@ -265,6 +266,8 @@ function resolvePlaceholder(state: GameState, placeholder: string, ctx: EffectCt
       return resolveCost(rest, ctx, placeholder);
     case 'dyn':
       return resolveDyn(rest, ctx, placeholder);
+    case 'discarded':
+      return resolveDiscarded(ctx, rest, placeholder);
     default:
       throw new Error(`dyn.eval: unknown placeholder root "$${root}" in "${placeholder}"`);
   }
@@ -330,6 +333,35 @@ function resolveContact(rest: string[], ctx: EffectCtx, original: string): DynVa
       return ctx.contact.attackerSide;
     default:
       throw new Error(`dyn.eval: unknown $contact property "${prop}" in "${original}"`);
+  }
+}
+
+// $discarded.<field>: discard{bind:'$discarded'} で除去した手札カードの printed 値 (BUG-114)。
+// 「リムーブしたカードのレベル/AP1000につきAP+1000」(B05040/B08055) のスケーリング用。
+// カードは既に remove へ移っているため CardDef の printed 値を参照する (手札カードに修飾は無い)。
+// 未 bind (discard していない / 0 枚) は 0 を返す = scaling 無効 (してもよい を skip した場合等)。
+function resolveDiscarded(ctx: EffectCtx, rest: string[], original: string): DynValue {
+  if (rest.length === 0) {
+    throw new Error(`dyn.eval: $discarded requires <field> (level/ap/lp) — got "${original}"`);
+  }
+  const field = rest[0];
+  const binding = (ctx.bindings as Record<string, unknown>)['$discarded'];
+  if (!Array.isArray(binding) || binding.length === 0) return 0;
+  // discard{bind} は除去全カードを array で書くが、本 root は先頭 1 枚を参照 (現用途は max:1 の
+  // B05040/B08055 のみ。複数枚 discard でのスケーリングが必要な card が出たら集計仕様を再定義する)。
+  const cardId = (binding[0] as { cardId?: string }).cardId;
+  if (typeof cardId !== 'string') return 0;
+  const d = def.card(cardId);
+  if (!d) return 0;
+  switch (field) {
+    case 'level':
+      return d.level ?? 0;
+    case 'ap':
+      return d.ap ?? 0;
+    case 'lp':
+      return d.lp ?? 0;
+    default:
+      throw new Error(`dyn.eval: unknown $discarded field "${field}" in "${original}"`);
   }
 }
 

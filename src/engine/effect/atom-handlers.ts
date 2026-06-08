@@ -19,6 +19,7 @@ import { event } from '../event/index.js';
 import { cards as engineCards } from '../cards/index.js';
 import { tryRePickFromAtom } from './resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick, isShortFormDelta } from './atom-pick-spec.js';
+import { evalDyn } from '../dyn/eval.js'; // BUG-114: explicit-uid charModifyAP/LP/Level の {dyn} delta を runtime 評価
 
 // user_request 20260522_01 #12 BUG-061: deckRevealUntil UI 演出側チャネル
 // (side-channel-pattern.md 4 点 checklist 準拠)
@@ -176,6 +177,22 @@ function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
 }
 
 /**
+ * BUG-114: explicit-uid の charModifyAP/LP/Level における delta 解決。
+ * 短縮形 (pick) 経路は resolveDynArgs で literal 化されるが、explicit-uid 経路 (uid='$contact.byUid' 等)
+ * は従来 number 専用だった (`a.delta as number`)。{dyn} delta を runtime に evalDyn で数値化する
+ * (B05040 '$discarded.level * 1000' / B08055 '$discarded.ap')。number はそのまま (既存挙動不変)。
+ * 非有限値は 0 (NaN ガード、AP/LP を汚染しない)。
+ */
+function resolveDeltaToNumber(delta: unknown, s: GameState, ctx: EffectCtx): number {
+  if (typeof delta === 'number') return delta;
+  if (delta !== null && typeof delta === 'object' && 'dyn' in delta) {
+    const v = evalDyn(s, (delta as { dyn: string }).dyn, ctx);
+    return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+  }
+  return 0;
+}
+
+/**
  * BUG-074: BUG-065 で resolve-picks が pattern B 解決時に target を array (`[cardId]`)
  * で構築するよう変更。一部 atom (evidenceToHand / handAddFromRemove) は元々 string を
  * 期待していたため、両形式から最初の cardId を取り出す正規化ヘルパー。
@@ -254,6 +271,11 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       }
       const target = dcArgs.target as string[];
       mutate.hand.discardToRemove(s, resolvePlayer(a.player, ctx), target);
+      // BUG-114: discard したカードを bind (リムーブしたカードの level/AP を $discarded dyn で参照)。
+      // 続く chain step (charModifyAP delta:{dyn:'$discarded.level*1000'}) が同一 ctx で読む (BUG-107)。
+      if (typeof a.bind === 'string' && target.length > 0) {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = target.map((cardId) => ({ cardId }));
+      }
       // BUG-072: effect 経由の discard 成功も log に残す
       mutate.log.append(s, {
         ts: Date.now(),
@@ -717,7 +739,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       }
       const maUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof maUid !== 'string' || maUid.startsWith('$')) return;
-      const maDelta = a.delta as number;
+      const maDelta = resolveDeltaToNumber(a.delta, s, ctx);
       const maScope = a.scope as 'turn' | 'contact' | 'permanent';
       mutate.char.modifyAP(s, maUid, maDelta, maScope);
       // BUG-073: effect log
@@ -734,9 +756,16 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP:awaiting-pick' });
         return;
       }
+      // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出。
+      // 機能的には下の startsWith('$') guard でも return するが、charModifyAP/Level と対称化し 'skipped' log を残す
+      // (2026-06-08 adversarial review でハンドラ非対称を指摘)。
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP', result: 'skipped' });
+        return;
+      }
       const mlUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof mlUid !== 'string' || mlUid.startsWith('$')) return;
-      const mlDelta = a.delta as number;
+      const mlDelta = resolveDeltaToNumber(a.delta, s, ctx);
       const mlScope = a.scope as 'turn' | 'contact' | 'permanent';
       mutate.char.modifyLP(s, mlUid, mlDelta, mlScope);
       // BUG-073: effect log
@@ -760,7 +789,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       }
       const mlvUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof mlvUid !== 'string' || mlvUid.startsWith('$')) return;
-      const mlvDelta = a.delta as number;
+      const mlvDelta = resolveDeltaToNumber(a.delta, s, ctx);
       const mlvScope = a.scope as 'turn' | 'contact' | 'permanent';
       mutate.char.modifyLevel(s, mlvUid, mlvDelta, mlvScope);
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLevel', target: mlvUid, result: `${mlvDelta >= 0 ? '+' : ''}${mlvDelta}/${mlvScope}` });

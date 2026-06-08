@@ -268,28 +268,25 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     const ctx: EffectCtx = { source: { player: 'self', area: 'scene', cardId: 'D08013', abilityId: 'a1' }, bindings: {} };
     const resolved = resolveEffectPicks(s, sequence, ctx, { humanChooser: true, byPlayer: 'self', source: { cardId: 'D08013', abilityId: 'a1' } });
 
-    // 前 test の continuation 残留を除去 (globalThis 共有のため test 分離)
-    (globalThis as { __pendingChainContinuation?: unknown[] }).__pendingChainContinuation = [];
-
     // 初回 drain (event.queue + runAllUntilEmpty 相当)
     runEffect(s, resolved, ctx);
 
     // BUG-105: sequence は step2 (evidenceToHand) の pick で pause → step3 は continuation に退避。
-    // よって初回 drain では queue=1 (step2 のみ)、step3 は __pendingChainContinuation に残る。
+    // BUG-111: continuation は別 FIFO ではなく step2 pick 本体 (first.continuation) に同梱される。
+    // よって初回 drain では queue=1 (step2 のみ)。
     expect(_peekPendingEffectPickQueueLength(), 'step2 のみ queue (step3 は continuation 退避)').toBe(1);
     const first = _drainPendingEffectPickSide();
     expect(first?.atomVerb, 'queue は step 2 evidenceToHand').toBe('evidenceToHand');
     expect(first?.candidates?.[0]?.cardId, 'step 1 で追加された evidence cardId (post-step1 盤面)').toBe('DECK1');
 
-    // continuation に step3 (discard) が退避されている
-    type Cont = { remainder: unknown[]; ctx: EffectCtx };
-    const contQ = (globalThis as { __pendingChainContinuation?: Cont[] }).__pendingChainContinuation;
-    expect(contQ?.length, 'step3 が continuation に退避').toBe(1);
+    // BUG-111: step3 (discard) は step2 pick 本体の continuation に同梱されている (旧 __pendingChainContinuation FIFO から移行)
+    const cont = first?.continuation as { remainder: unknown[]; ctx: EffectCtx } | undefined;
+    expect(cont, 'step3 が step2 pick の continuation に同梱').toBeDefined();
+    expect(cont?.remainder.length, 'step3 (discard) 1 step が continuation に退避').toBe(1);
 
-    // step2 解決後の continuation 消費 (useEngineDispatch:486-498 相当) → step3 discard が pick push
-    const cont = contQ!.shift()!;
-    const remEffect = cont.remainder.length === 1 ? cont.remainder[0] : { kind: 'chain', steps: cont.remainder };
-    runEffect(s, remEffect as never, cont.ctx);
+    // step2 解決後の continuation 消費 (applyPickAndContinuation 相当) → step3 discard が pick push
+    const remEffect = cont!.remainder.length === 1 ? cont!.remainder[0] : { kind: 'chain', steps: cont!.remainder };
+    runEffect(s, remEffect as never, cont!.ctx);
     expect(_peekPendingEffectPickQueueLength(), 'continuation 実行で step3 が queue').toBe(1);
     const second = _drainPendingEffectPickSide();
     expect(second?.atomVerb, 'step3 discard').toBe('discard');

@@ -402,10 +402,8 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       const picked = action.pickedUid;
       if (picked === null) {
         // skip (n.min === 0 の任意効果のみ可能、UI 側で gate される想定)
-        // 拡張 5 (chain): user skip 時は chain continuation も drop
-        // (step 1 が applied されなかったので step 2 を実行しない)
-        const chainG = globalThis as { __pendingChainContinuation?: unknown[] };
-        chainG.__pendingChainContinuation?.shift();
+        // BUG-111: continuation は pending 本体 (pending.continuation) に同梱されるため、
+        // user skip 時は pending を破棄すれば対の continuation も自動 drop される (別 FIFO shift 不要)。
         // クリアは produce 後の post-dispatch drain で行う (return のみ)
         return;
       }

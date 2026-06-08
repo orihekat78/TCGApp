@@ -54,11 +54,11 @@ const PLAN = {
   // MVP 実装済 (D11013) と同 cardId → spread
   '0940': { p: 'spreadMvp', base: 'D11013', basePkg: 'ct-d11' },
   // engine gap → vanilla stub + DEFERRED
-  '0291': { p: 'deferred', reason: '相手デッキ上のカードを裏向きセットする verb が未実装 (engine gap, BUG-114)' },
-  '0296': { p: 'deferred', reason: '裏向きセットカードを個別選択リムーブする verb が未実装 (engine gap, BUG-114)' },
-  '0544': { p: 'deferred', reason: 'リムーブした手札カードのレベルで AP スケールする dyn root が未実装 (BUG-114)' },
-  '0893': { p: 'deferred', reason: 'リムーブした手札キャラの AP で AP スケールする dyn root が未実装 (BUG-114)' },
-  '0671': { p: 'deferred', reason: '1カードの複数カットイン(択一)を engine が個別解決できない (BUG-114)' },
+  '0291': { p: 'manual', reason: 'カットイン実装済 (BUG-114, 2026-06-07) — 手書き ct-p03/B03034.ts。$contact.targetUid(BUG-104)+charSetCard{player:opp,fromDeckTop} で engine変更0' },
+  '0296': { p: 'manual', reason: 'カットイン実装済 (BUG-114, 2026-06-07) — 手書き ct-p03/B03039.ts。再生成で上書きしない (task-C charRemoveSetCard + side 分離で engine変更0 化)' },
+  '0544': { p: 'manual', reason: 'カットイン実装済 (BUG-114, 2026-06-07) — 手書き ct-p05/B05040.ts。discard-bind dyn ($discarded.level) primitive 追加で実装' },
+  '0893': { p: 'manual', reason: 'カットイン実装済 (BUG-114, 2026-06-07) — 手書き ct-p08/B08055(P).ts。discard-bind dyn ($discarded.ap) primitive 追加で実装' },
+  '0671': { p: 'manual', reason: 'カットイン実装済 (BUG-114, 2026-06-07) — 手書き ct-p06/B06050(P).ts。複数カットイン択一=1 ability+choice{[conditional]}、choice-binding fix で $contact 保持。opt_b は event-traits data gate' },
 };
 
 // ---- 複雑カットイン候補の再分類 (effect 空 / cutIn 有 / 単純固定AP でない) ----
@@ -363,6 +363,12 @@ function main() {
         emit(r.num, r.pkg, genSpread(r, plan.base, plan.basePkg, 'D')); // D11013 rarity='D'
         counts.spreadMvp++;
       }
+      continue;
+    }
+    if (plan.p === 'manual') {
+      // 手書き実装済 (BUG-114): ファイルは上書きせず barrel import にのみ含める。
+      for (const r of group) generated.push({ num: r.num, pkg: r.pkg });
+      counts.feasible++;
       continue;
     }
     const base = pickBase(group);

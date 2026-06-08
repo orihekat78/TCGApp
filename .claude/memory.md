@@ -52,3 +52,16 @@
 実装可能なカード」が増えた。まず残カタログを再サーベイ (実データ裏取り) → 🟢 を均質バッチで実装。詳細は NEXT-SESSION-PROMPT。
 
 次セッション kickoff: [.claude/NEXT-SESSION-PROMPT.md](NEXT-SESSION-PROMPT.md)
+
+## 2026-06-07 タスク A 再分類サーベイ 完走 (inline)
+- 残カタログ全 651 sig (1071枚) を inline で分類完走。決定的スクリプト `scripts/survey/{build-remaining,classify,finalize}.ts`。
+- 内訳: 🟢certified 4/8 + 🟢候補 266/348 + 🟡364/678 + ⚫17/31。green候補は要最終確認(card-addition-checklist)。
+- 成果: `.claude/specs/catalog-survey-2026-06-06/{classification-complete,task-d-priority-map}.json` + `batch2-green-shortlist.md`。
+- 詳細: [.claude/sessions/2026-06-07.md](sessions/2026-06-07.md)。未 commit (push は arumi 手動)。
+
+## 2026-06-07〜08 残存5バグ全解消 (BUG-064/111/112/113/114)
+- バグフォルダ未解決 5 件を全 TDD 修正。**full vitest 1874 pass / 0 fail / typecheck・lint errors 0 / docs:check 同期**。
+- BUG-064: D08015-workflow.md を engine-flow.md へ分離 (92行)。BUG-113: matchOneFilter に continuousDelta (late-bind+再帰guard)。
+- BUG-112: off-board declared-use を turnState fallback で追跡。BUG-111: continuation を pick 本体に同梱 (FIFO 廃止, 5箇所)。
+- BUG-114: 複雑カットイン5種実装。新 primitive = discard-bind dyn ($discarded.level/ap) + choice-binding fix。4/5 は stale gap。
+- バグフォルダ未解決 **0 件**。詳細: [.claude/sessions/2026-06-08.md](sessions/2026-06-08.md)。未 commit (push は arumi 手動)。

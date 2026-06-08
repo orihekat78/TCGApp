@@ -136,7 +136,9 @@ export function useDeclaredAbility(
   if (!found) {
     throw new Error(`useDeclaredAbility: card uid=${uid} not on board (scene/case/partner-area)`);
   }
-  mutate.flag.incrDeclaredUseCount(state, uid, abilId);
+  // BUG-112: found.player を渡すことで、selfToDeckBottom 等で source が場外へ出ている場合も
+  // player 単位 turnState fallback に【ターン①】カウントが記録される (off-board silent no-op 解消)。
+  mutate.flag.incrDeclaredUseCount(state, uid, abilId, found.player);
   mutate.log.append(state, {
     ts: Date.now(),
     player: found.player,

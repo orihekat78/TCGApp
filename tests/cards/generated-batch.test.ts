@@ -13,7 +13,7 @@ import { B05010 } from '@/cards/ct-p05/B05010'; // monoColorDraw
 import { B01098 } from '@/cards/ct-p01/B01098'; // removeAllContact
 import { B03017 } from '@/cards/ct-p03/B03017'; // activateTrait
 import { B09012 } from '@/cards/ct-p09/B09012'; // simple cut-in 自分ターン中 AP+3000
-import { B03034 } from '@/cards/ct-p03/B03034'; // deferred stub
+import { B03034 } from '@/cards/ct-p03/B03034'; // 旧 deferred stub → BUG-114 でカットイン実装済
 import { PR287 } from '@/cards/pr-01/PR287'; // spread of D11013
 
 const ALL_GEN = [...GENERATED_SIMPLE_CARDS, ...GENERATED_COMPLEX_CUTINS];
@@ -97,8 +97,10 @@ describe('generated complex cut-ins — shape', () => {
     });
   });
 
-  it('deferred stub (B03034): abilities=[] (engine gap)', () => {
-    expect(B03034.abilities).toEqual([]);
+  it('旧 deferred stub (B03034): BUG-114 で カットイン実装済 (abilities=1)', () => {
+    // 2026-06-07: BUG-114 で 5 種の複雑カットインを全実装。B03034 はもう deferred stub ではない。
+    expect(B03034.abilities.length).toBe(1);
+    expect(B03034.abilities[0]!.trigger?.hook).toBe('effect:declared');
     expect(B03034.kind).toBe('character');
   });
 

@@ -128,6 +128,11 @@ declare global {
   // {sequence:[choice, ...post-choice remainder]} に wrap して保持 → pre-choice step の二重実行を防ぐ。
   // eslint-disable-next-line no-var
   var __pendingEffectChoiceResume: Effect | null | undefined;
+  // BUG-114: cutin 等で choice を surface したときの ctx.bindings (例: $contact.byUid) を保持し、
+  // choiceResolve 再開時に resume ctx へ復元する (applyChoiceAndContinuation の bindings:{} で
+  // contact binding が落ち、選択 option の $contact.* が未解決になる問題を解消)。resume と対で set/clear。
+  // eslint-disable-next-line no-var
+  var __pendingEffectChoiceBindings: Record<string, unknown> | null | undefined;
   // 2026-06-06 タスクC: optional 決定の配線 (pendingEffectChoice と同型・別スロット)。
   // 「〜してもよい」effect (Effect kind:'optional') を human に「する/しない」で問う side-channel。
   // choice との違いは選択値が boolean (run) であること。drain で null クリア。
@@ -157,6 +162,12 @@ export type PendingEffectPickSide = {
    * 既選択カードと衝突する候補」を click 不可化する。
    */
   distinctNames?: boolean;
+  /**
+   * BUG-111: 中断した sequence/chain の残り step (continuation) を pick 本体に同梱し、
+   * 別 side-channel FIFO (__pendingChainContinuation) の index ずれ desync を排除する。
+   * remainder.length>0 の step で pick を await したときに resolver が set。pick と 1:1。
+   */
+  continuation?: { remainder: Effect[]; ctx: EffectCtx };
 };
 
 function getPendingQueue(): PendingEffectPickSide[] {
@@ -236,6 +247,19 @@ export function _drainPendingEffectChoiceSide(): PendingEffectChoiceSide | null 
 export function _clearPendingEffectChoiceSide(): void {
   (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide = null;
   (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = null;
+  (globalThis as { __pendingEffectChoiceBindings?: Record<string, unknown> | null }).__pendingEffectChoiceBindings = null;
+}
+
+// --- choice 再開 ctx の bindings 復元 (BUG-114: cutin の $contact.* 保持) ---
+function setPendingChoiceBindings(b: Record<string, unknown>): void {
+  (globalThis as { __pendingEffectChoiceBindings?: Record<string, unknown> | null }).__pendingEffectChoiceBindings = b;
+}
+/** choiceResolve 時に bindings を取り出してクリア (applyChoiceAndContinuation が resume ctx へ復元)。 */
+export function _takePendingChoiceBindings(): Record<string, unknown> | null {
+  const g = globalThis as { __pendingEffectChoiceBindings?: Record<string, unknown> | null };
+  const v = g.__pendingEffectChoiceBindings ?? null;
+  g.__pendingEffectChoiceBindings = null;
+  return v;
 }
 
 /** slot を peek (テスト用)。 */
@@ -632,6 +656,8 @@ export function resolveEffectPicks(
         // 再開 holder = この choice 効果そのもの (top-level)。sequence 内なら sequence case が
         // 後で {sequence:[choice, ...remainder]} に wrap する (pre-choice step 二重実行防止)。
         setPendingChoiceResume(effect);
+        // BUG-114: surface 時の ctx.bindings (cutin の $contact.byUid 等) を保持し、resume ctx へ復元する。
+        setPendingChoiceBindings({ ...(ctx.bindings as Record<string, unknown>) });
         return { kind: 'parallel', steps: [] };
       }
       return {

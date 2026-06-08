@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `980816e4fa82`
+> Source hash: `eec88a087e3f`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
@@ -413,10 +413,10 @@
 | [`src/cards/ct-p03/B03027P.ts`](../../../src/cards/ct-p03/B03027P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p03/B03032.ts`](../../../src/cards/ct-p03/B03032.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p03/B03032P.ts`](../../../src/cards/ct-p03/B03032P.ts) | _(参照なし)_ |
-| [`src/cards/ct-p03/B03034.ts`](../../../src/cards/ct-p03/B03034.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-p03/B03034.ts`](../../../src/cards/ct-p03/B03034.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p03/B03037.ts`](../../../src/cards/ct-p03/B03037.ts) | [`11-reasoning.md`](../../rules/11-reasoning.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p03/B03038.ts`](../../../src/cards/ct-p03/B03038.ts) | [`11-reasoning.md`](../../rules/11-reasoning.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
-| [`src/cards/ct-p03/B03039.ts`](../../../src/cards/ct-p03/B03039.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-p03/B03039.ts`](../../../src/cards/ct-p03/B03039.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p03/B03043.ts`](../../../src/cards/ct-p03/B03043.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/cards/ct-p03/B03044.ts`](../../../src/cards/ct-p03/B03044.ts) | _(参照なし)_ |
 | [`src/cards/ct-p03/B03045.ts`](../../../src/cards/ct-p03/B03045.ts) | _(参照なし)_ |
@@ -578,7 +578,7 @@
 | [`src/cards/ct-p05/B05037.ts`](../../../src/cards/ct-p05/B05037.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p05/B05038.ts`](../../../src/cards/ct-p05/B05038.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p05/B05039.ts`](../../../src/cards/ct-p05/B05039.ts) | [`11-reasoning.md`](../../rules/11-reasoning.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
-| [`src/cards/ct-p05/B05040.ts`](../../../src/cards/ct-p05/B05040.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-p05/B05040.ts`](../../../src/cards/ct-p05/B05040.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p05/B05043.ts`](../../../src/cards/ct-p05/B05043.ts) | _(参照なし)_ |
 | [`src/cards/ct-p05/B05043P.ts`](../../../src/cards/ct-p05/B05043P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p05/B05044.ts`](../../../src/cards/ct-p05/B05044.ts) | _(参照なし)_ |
@@ -651,7 +651,7 @@
 | [`src/cards/ct-p06/B06044Sec2.ts`](../../../src/cards/ct-p06/B06044Sec2.ts) | _(参照なし)_ |
 | [`src/cards/ct-p06/B06045.ts`](../../../src/cards/ct-p06/B06045.ts) | _(参照なし)_ |
 | [`src/cards/ct-p06/B06045P.ts`](../../../src/cards/ct-p06/B06045P.ts) | _(参照なし)_ |
-| [`src/cards/ct-p06/B06050.ts`](../../../src/cards/ct-p06/B06050.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-p06/B06050.ts`](../../../src/cards/ct-p06/B06050.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p06/B06050P.ts`](../../../src/cards/ct-p06/B06050P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p06/B06054.ts`](../../../src/cards/ct-p06/B06054.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-p06/B06055.ts`](../../../src/cards/ct-p06/B06055.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
@@ -757,7 +757,7 @@
 | [`src/cards/ct-p08/B08045P.ts`](../../../src/cards/ct-p08/B08045P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08053.ts`](../../../src/cards/ct-p08/B08053.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/ct-p08/B08054.ts`](../../../src/cards/ct-p08/B08054.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
-| [`src/cards/ct-p08/B08055.ts`](../../../src/cards/ct-p08/B08055.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/cards/ct-p08/B08055.ts`](../../../src/cards/ct-p08/B08055.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/cards/ct-p08/B08055P.ts`](../../../src/cards/ct-p08/B08055P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08056.ts`](../../../src/cards/ct-p08/B08056.ts) | [`12-next-hint.md`](../../rules/12-next-hint.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p08/B08061.ts`](../../../src/cards/ct-p08/B08061.ts) | _(参照なし)_ |

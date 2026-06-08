@@ -30,8 +30,10 @@ function setAssistedThisTurn(s: GameState, p: Player, v: boolean): void {
 /**
  * 宣言能力使用カウントをインクリメント (rules/21, 17 【ターン①】等)
  * uid: SceneCharacter の uid, abilId: 能力 ID
+ * player: BUG-112 — selfToDeckBottom 等で source が場外へ出ているとき (scene/case 不在) の
+ *   fallback 記録先 player。場上で見つかれば不要 (char object に記録)。
  */
-function incrDeclaredUseCount(s: GameState, uid: string, abilId: string): void {
+function incrDeclaredUseCount(s: GameState, uid: string, abilId: string, player?: Player): void {
   // BUG-067: 事件カード (case:self / case:opp) の declared ability にも対応
   if (uid === 'case:self' || uid === 'case:opp') {
     const p: Player = uid === 'case:self' ? 'self' : 'opp';
@@ -47,6 +49,15 @@ function incrDeclaredUseCount(s: GameState, uid: string, abilId: string): void {
       char.declaredUseCount[abilId] = current + 1;
       return;
     }
+  }
+  // BUG-112: off-board uid (コスト selfToDeckBottom 等で scene 離脱済) は char object が無いため、
+  // player 単位 turnState.declaredAbilityUseCount[uid:abilId] に fallback 記録する。
+  // per-instance (uid 単位) の意味は維持 (複数コピーは別 uid)。read.char.declaredUseCount が同 key を参照。
+  // turnState は resetTurnFlags でターン境界クリアされるため【ターン①】の turn-scope と整合。
+  if (player) {
+    const rec = s.turnState[player].declaredAbilityUseCount as Record<string, number>;
+    const key = `${uid}:${abilId}`;
+    rec[key] = (rec[key] ?? 0) + 1;
   }
 }
 

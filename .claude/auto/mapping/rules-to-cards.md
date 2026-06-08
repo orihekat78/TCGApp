@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `ca059fe8f127`
+> Source hash: `d9b2e8cdd1a4`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -27,9 +27,9 @@
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 11 | `ai/policies/heuristic.ts`, `cards/ct-p05/B05037.ts`, `cards/ct-p08/B08056.ts` ほか 8 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 139 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 136 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 67 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 64 件 |
-| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 406 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 403 件 |
+| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 409 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 406 件 |
 | [`15-workflow.md`](../../rules/15-workflow.md) | 2 | `cards/ct-d08/D08015.ts`, `cards/ct-d08/D08016.ts` |
-| [`16-card-set.md`](../../rules/16-card-set.md) | 14 | `cards/ct-d08/D08021.ts`, `cards/ct-p02/B02020.ts`, `cards/ct-p02/B02023.ts` ほか 11 件 |
+| [`16-card-set.md`](../../rules/16-card-set.md) | 16 | `cards/ct-d08/D08021.ts`, `cards/ct-p02/B02020.ts`, `cards/ct-p02/B02023.ts` ほか 13 件 |
 | [`17-icons.md`](../../rules/17-icons.md) | 416 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 413 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 5 | `cards/ct-p05/B05066.ts`, `cards/ct-p07/B07093.ts`, `engine/cond/eval.ts` ほか 2 件 |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 86 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 83 件 |

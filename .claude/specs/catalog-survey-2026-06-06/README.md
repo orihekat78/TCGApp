@@ -1,15 +1,26 @@
-# 残カタログ再分類サーベイ (2026-06-06, session #8 タスク A) — **部分完了**
+# 残カタログ再分類サーベイ (2026-06-06〜07, タスク A) — **完走**
 
-タスク A (engine 変更0 カードバッチ) の土台として、残カタログ 661 distinct signature
-(= 1071 枚をカバー) を **現行 engine** で 🟢実装可 / 🟡新機能要 / ⚫恒久 defer に再分類した
-多エージェント workflow の成果物。`card-impl-engine-gates.md` (2026-06-04) が stale なため実コードから再構築。
+タスク A (engine 変更0 カードバッチ) の土台として、残カタログ全 distinct signature
+(= 1071 枚をカバー) を **現行 engine** で 🟢実装可 / 🟡新機能要 / ⚫恒久 defer に分類。
+`card-impl-engine-gates.md` (2026-06-04) が stale なため実コードから再構築。
 
-## ⚠ 部分完了 (重要)
+## ✅ 完走 (2026-06-07, inline 分類)
 
-- **240 / 661 signature のみ分類済** (cluster size 降順 chunk 00–11)。
-- chunk 12–33 (残 421 sig) + verify 00–10 + synthesize は **API rate-limit + 「subscription access disabled」**
-  で失敗 (`workflow w0vazvhu4`、agent 53/~75、failures 参照)。**残りは次回 workflow 再実行が必要**。
-- synthesize agent も同事由で失敗 → バッチ計画は未生成 (本 README で手動代替)。
+- **wave1** (session #8, 多エージェント workflow): 大型 cluster 240 sig を verifyReason 付き
+  (engine file:line 裏取り) で分類。途中 rate-limit 中断。
+- **wave2** (2026-06-07 = 本完走): 残 411 sig を **決定的に** 完走 —
+  - `build-remaining.ts`: 実 ALL_CARDS(978) + TSV カタログ(2049) から残カードを再現、
+    保守的 signature でクラスタ化し、既存 240 verdict と突合して未分類 411 sig を確定 (再現可能)。
+  - `classify.ts`: capability-map の gate を**テキストパターン化**して決定的トリアージ
+    (138 yellow + 7 black、各 missing-feature ラベル付き)。実 verb list で gate を検証。
+  - 残 266 green候補は「**既知 gate 未検出**」= 実装時に card-addition-checklist +
+    text-faithfulness Playwright で最終確認する候補 (個別 certify 済ではない)。
+- 集約: **`classification-complete.json`** (全 651 sig)、**`task-d-priority-map.json`**、
+  **`batch2-green-shortlist.md`** (高信頼 green 手選別)。
+
+### 最終内訳 (651 sig / 1071 枚)
+- 🟢 certified green: 4 sig / 8 枚 (wave1 検証済) + 🟢 green候補: 266 sig / 348 枚 (wave2 要最終確認)
+- 🟡 yellow: 364 sig / 678 枚 ・ ⚫ black: 17 sig / 31 枚
 
 ## 成果物
 
@@ -46,6 +57,14 @@ loseGame verb 無 / partner-ability rewrite 無。
 
 ## 次の一手
 
-1. batch #2 = 🟢 4 sig を代表1枚ずつ手実装 → full vitest+e2e。
-2. 残 chunk 12–33 (421 sig) の分類 workflow を再実行 (rate-limit 回避のため小規模 or 逐次)。
-3. 🟡 不足機能マップを task D の優先度付けに使用。
+1. batch #2 = **`batch2-green-shortlist.md`** の高信頼 green を代表1枚ずつ手実装 → full vitest+e2e
+   (各カードは card-addition-checklist + text-faithfulness Playwright を必ず通す)。
+2. green候補 266 のうち shortlist 外は、実装着手時に個別に全句マッピング確認 (未 certify)。
+3. 🟡 不足機能マップ = **`task-d-priority-map.json`** を task D の優先度付けに使用。
+
+## 再生成コマンド (決定的・再現可能)
+```
+npx tsx scripts/survey/build-remaining.ts   # 残カード再現 → remaining-to-classify.json
+npx tsx scripts/survey/classify.ts          # gate トリアージ → classify-triage.json
+npx tsx scripts/survey/finalize.ts          # 集約 → classification-complete.json + task-d-priority-map.json
+```

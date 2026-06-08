@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `8e9eeb6200bd`
+> Source hash: `df76668aebe5`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,42 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## 残存 5 バグ (BUG-064/111/112/113/114) を全解消 — TDD で engine 修正 + 複雑カットイン5種実装
+
+**Round/Phase**: 2026-06-07 session — バグフォルダ唯一の未解決 5 件を全クローズ。
+
+バグ管理表で `修正済` でなかった 5 件 (BUG-064 対応中 / BUG-111〜114 DEFERRED) を、ユーザー指示で
+全て TDD (RED→GREEN→full suite) で解消。**full vitest 1874 pass / 0 fail / e2e green / typecheck・lint errors 0**。
+
+### BUG-064 (meta/doc) — workflow 図の抽象度漏れ + 100 行超過
+`D08015-workflow.md` (225 行に再肥大、engine 内部詳細が混入) を、engine トレース 2 節を
+`D08015-engine-flow.md` (70 行) へ分離 → workflow.md **92 行** (WORKFLOW-GUIDELINES 準拠)。
+
+### BUG-113 (engine) — 数値フィルタが継続効果 (continuousDelta) を含まない
+`candidates.ts matchOneFilter` の有効 AP/LP に `continuousModifier` の dyn delta を加算。
+**late-binding (register) で静的 import 循環を回避** + **`_inContinuousDelta` guard で無限再帰を遮断**
+(当初省略の本来理由)。継続 delta 持ち **24 枚**で filter=display 一致。
+
+### BUG-112 (engine) — off-board uid の【ターン①】未追跡
+`selfToDeckBottom` 等で場外へ出たキャラの宣言能力使用回数を、`turnState.declaredAbilityUseCount`
+への **player 単位 fallback** で追跡 (per-instance=uid 単位の意味は維持、複数コピー誤 enforcement 回避)。
+
+### BUG-111 (engine, severity 中) — pick↔continuation FIFO desync
+別 side-channel FIFO `__pendingChainContinuation` を廃止し、**continuation を pick 本体
+(`PendingEffectPickSide.continuation`) に同梱**して 1:1 化 (resolver/apply-pick/useEngineDispatch 5 箇所移行)。
+continuation を持たない pick が他 pick の continuation を誤消費する off-by-one を構造的に排除。
+
+### BUG-114 (card) — 複雑カットイン 5 種を全実装
+RCA の「engine gap」**4/5 は stale** と判明 (task-C/BUG-104/BUG-121 で解禁済):
+- **0296/0291**: `charRemoveSetCard{side:opp}` / `$contact.targetUid`+`charSetCard{player:opp,fromDeckTop}` で engine変更0。
+- **0544/0893**: 唯一の新 primitive = **discard-bind dyn** (`discard{bind}` + `$discarded.level/ap` root +
+  explicit-uid char-modify の `{dyn}` delta 評価)。
+- **0671**: 複数カットイン択一 = 1 ability + `choice{[conditional]}` (rules/09+17) + **choice-binding fix**
+  (`applyChoiceAndContinuation` が cutin の `$contact.*` を resume へ復元)。opt_b は event-traits data gate 残。
+generator PLAN を `pattern:'manual'` 化 (deferred stubs 5→0)。
+
+**結果**: バグフォルダ未解決 0 件 (BUG-001〜127 全 `修正済`)。
 
 ## タスク A: 残カタログ再分類サーベイ (多エージェント workflow、部分完了)
 

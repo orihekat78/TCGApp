@@ -14,6 +14,27 @@ import type {
 import { lookupCardDef, allCardNameComponentsForDef } from './card-def-registry.js';
 import { defHasKeyword } from '@/engine/read/keyword.js';
 
+// BUG-113: 数値フィルタの有効値に continuousModifier.apDelta/lpDelta (継続効果 dyn) を含める。
+// read/char.ts → cond/eval.ts → candidates.ts の静的 import 循環を避けるため late-binding (register) で注入。
+// read/char.ts が module load 時に registerContinuousDelta(continuousDelta) を呼ぶ。未登録なら 0 (旧挙動 = 無害)。
+// 再帰遮断: matchOneFilter → continuousDelta → evalCond(継続条件) → sceneHas → candidates → matchOneFilter …
+// の無限再帰を _inContinuousDelta フラグで防ぐ (再入時は 0 を返す = 旧挙動)。これが省略の本来の理由 (BUG-113 cycle 注記)。
+type ContinuousDeltaFn = (s: GameState, uid: string, which: 'apDelta' | 'lpDelta') => number;
+let continuousDeltaImpl: ContinuousDeltaFn | null = null;
+let _inContinuousDelta = false;
+export function registerContinuousDelta(fn: ContinuousDeltaFn): void {
+  continuousDeltaImpl = fn;
+}
+function continuousDeltaSafe(s: GameState, uid: string | undefined, which: 'apDelta' | 'lpDelta'): number {
+  if (continuousDeltaImpl === null || _inContinuousDelta || uid === undefined) return 0;
+  _inContinuousDelta = true;
+  try {
+    return continuousDeltaImpl(s, uid, which);
+  } finally {
+    _inContinuousDelta = false;
+  }
+}
+
 type Side = 'self' | 'opp';
 
 /**
@@ -252,13 +273,15 @@ export function matchOneFilter(
   // base(override?printed) に turnEffects の ±修正 (apMod/lpMod の permanent/turn/contact) を合算。
   // 旧実装は override?printed のみで turn 修正を無視 → 疾風(AP-1000)等で debuff されたキャラが
   // 「APX以下」リムーブ圏内に入っても対象外になる / D11012「LP0の警察」が buff 済キャラを誤って含む
-  // 不整合があった。read.char.ap/lp と同式 (継続効果 continuousDelta(dyn, D08005) のみ cycle 回避で
-  // 省略 — 残差は BUG-113)。c===null (非現場 candidate) は printed のまま。
+  // 不整合があった。read.char.ap/lp と同式 (継続効果 continuousDelta(dyn, D08005) を含む — BUG-113 修正、
+  // late-binding + 再帰 guard で cycle/無限再帰を回避)。c===null (非現場 candidate) は uid 無 → continuousDelta 0。
   const base = d ?? null;
   const te = (c?.turnEffects ?? {}) as Record<string, unknown>;
   const num = (k: string): number => (typeof te[k] === 'number' ? (te[k] as number) : 0);
-  const ap = (c?.apOverride ?? base?.ap ?? 0) + num('apMod_permanent') + num('apMod_turn') + num('apMod_contact');
-  const lp = (c?.lpOverride ?? base?.lp ?? 0) + num('lpMod_permanent') + num('lpMod_turn') + num('lpMod_contact');
+  const apContinuous = continuousDeltaSafe(state, c?.uid, 'apDelta');
+  const lpContinuous = continuousDeltaSafe(state, c?.uid, 'lpDelta');
+  const ap = (c?.apOverride ?? base?.ap ?? 0) + num('apMod_permanent') + num('apMod_turn') + num('apMod_contact') + apContinuous;
+  const lp = (c?.lpOverride ?? base?.lp ?? 0) + num('lpMod_permanent') + num('lpMod_turn') + num('lpMod_contact') + lpContinuous;
   // engine-extension #2 (2026-06-05): charModifyLevel に伴い filter level も 3 scope 合算
   // (旧は base のみ → modifyLevel 不使用時 = base + 0 + 0 + 0 で互換)
   const level = (base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact');
