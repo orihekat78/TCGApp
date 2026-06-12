@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 199
-- **ファイル数**: 3012
+- **ディレクトリ数**: 203
+- **ファイル数**: 3020
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -404,6 +404,7 @@
     - `2026-06-11-01-task-a-certify-workflow-harvest-wave3.md`
     - `2026-06-12-01-task-d-engine-extensions.md` — Task D — engine 拡張 高リスク wave#1 (E0〜E4) + 既存バグ3修正
     - `2026-06-12-02-task-d-card-batch.md` — Task D カードバッチ wave#1 — 解禁 35 枚 (敵対検証 workflow 通過、ALL_CARDS 1057)
+    - `2026-06-12-03-refactor-phase-1-2.md` — 全体リファクタ Phase 1a〜2c — 挙動不変の構造是正 6 フェーズ完了
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -654,6 +655,8 @@
     - `smoke-2026-06-12-6.md` — Smoke 1000戦レポート — smoke-2026-06-12-072348
     - `smoke-2026-06-12-7.json`
     - `smoke-2026-06-12-7.md` — Smoke 1000戦レポート — smoke-2026-06-12-074230
+    - `smoke-2026-06-12-8.json`
+    - `smoke-2026-06-12-8.md` — Smoke 1000戦レポート — smoke-2026-06-12-102922
     - `smoke-2026-06-12.json`
     - `smoke-2026-06-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-035822
     - `smoke-baseline.json`
@@ -1042,6 +1045,7 @@
     - **`refactor-plan/`**
       - `INDEX.md` — 全体リファクタリング計画 (2026-06-12 起案、ユーザー指示)
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
+      - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
       - `caseMonoColor.md` — caseMonoColor
@@ -1127,6 +1131,13 @@
   - `graph.json`
   - `page-preview.json`
   - `workspace.json`
+- **`.serena/`**
+  - **`cache/`**
+    - **`typescript/`**
+  - **`memories/`**
+  - `.gitignore`
+  - `project.local.yml`
+  - `project.yml`
 - **`design-mockups/`** — UI モックアップ HTML / 画像 (ブレスト成果物)
   - **`CaseArea/`**
     - `CaseArea-demo.html`
@@ -2627,6 +2638,7 @@
         - `state-machine.ts` — engine.flow.action — アクション状態機械 (Phase 4 Group B Task 4.4)
         - `target-expander.ts` — engine.flow.action target expander (G29) + mustBeTargeted (G28)
       - **`main/`**
+        - `ability-activate.ts` — engine.flow.main.activateAbility — 宣言/パートナー能力の dispatch 契約 (Phase 2c, BUG-116 構造…
         - `action.ts` — engine.flow.main.canAction* — アクション可否判定 (rules/05 06., rules/07)
         - `declared-ability.ts` — engine.flow.main.useDeclaredAbility — 宣言能力使用 (rules/05 04.)
         - `hand-use-card.ts` — engine.flow.main.handUseCard — 手札の使用 (rules/05 01.)

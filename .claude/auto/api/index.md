@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `1f74d01e36a5`
+> Source hash: `36960ef41a0a`
 
 `src/engine/index.ts` から公開されている 12 namespace の自動生成リファレンス。
 
@@ -18,7 +18,7 @@
 | [`cost`](cost.md) | 3 | コスト判定（canPay / pay）+ viaCost フラグ管理 |
 | [`cond`](cond.md) | 3 | 26 Condition variants 評価 |
 | [`resolve`](resolve.md) | 11 | Effect Stack（queue/next/runOne + cancel/replace/lock） |
-| [`flow`](flow.md) | 32 | フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard） |
+| [`flow`](flow.md) | 35 | フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard） |
 | [`cards`](cards.md) | 2 | カード定義レジストリ + TSV パーサ |
 
 ## 全体構造

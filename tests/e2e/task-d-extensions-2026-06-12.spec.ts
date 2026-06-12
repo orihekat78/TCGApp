@@ -57,12 +57,9 @@ test.describe('Task D engine拡張 wave#1 (2026-06-12) E2E', () => {
       gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
 
-    // 宣言 dispatch は UI 層契約に合わせ cost+ctx を併送 (raw dispatch は cost を払わない BUG-116 経路)
-    await dispatchAction(page, {
-      type: 'declaredAbility', uid: 'kogoro#1', abilId: 'a1',
-      cost: { kind: 'sceneToDeckBottom', target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { cardName: '江戸川コナン' } }, n: { min: 1, max: 1 }, chooser: 'owner' }, n: 1 },
-      ctx: { source: { player: 'self', uid: 'kogoro#1', cardId: 'B04011', abilityId: 'a1', area: 'scene' }, bindings: {}, dyn: {} },
-    });
+    // Phase 2c: cost (sceneToDeckBottom) は dispatcher (activateDeclaredAbility) が def から
+    // 自動支払い — raw dispatch でも BUG-116 の silent skip は構造的に発生しない
+    await dispatchAction(page, { type: 'declaredAbility', uid: 'kogoro#1', abilId: 'a1' });
 
     await expect
       .poll(async () => {
@@ -177,11 +174,8 @@ test.describe('Task D engine拡張 wave#1 (2026-06-12) E2E', () => {
       gs.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
 
-    await dispatchAction(page, {
-      type: 'declaredAbility', uid: 'sonoko#1', abilId: 'a1',
-      cost: { kind: 'sleepSelf' },
-      ctx: { source: { player: 'self', uid: 'sonoko#1', cardId: 'B08037', abilityId: 'a1', area: 'scene' }, bindings: {}, dyn: {} },
-    });
+    // Phase 2c: cost (sleepSelf) は dispatcher が def から自動支払い
+    await dispatchAction(page, { type: 'declaredAbility', uid: 'sonoko#1', abilId: 'a1' });
 
     await expect
       .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })

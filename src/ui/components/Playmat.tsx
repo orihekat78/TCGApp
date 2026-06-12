@@ -816,7 +816,14 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               pickNMin={isPickModeForThisArea ? pendingPickForArea?.nMin : undefined}
               pickNMax={isPickModeForThisArea ? pendingPickForArea?.nMax : undefined}
               onPickMulti={isPickModeForThisArea ? (uids) => {
-                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uids[0] ?? null, pickedUids: uids });
+                // Phase 2c union 化: 0 枚選択は skip 形態 (pickedUid:null 単独) で dispatch
+                // (旧実装でも pickedUid null 時は pickedUids が無視され skip 経路だった — 挙動同一)
+                const first = uids[0];
+                if (first === undefined) {
+                  dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+                } else {
+                  dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids });
+                }
               } : undefined}
               pickDistinctNames={isPickModeForThisArea ? (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames : undefined}
               pickComponents={isPickModeForThisArea && (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames

@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `90918f4f85f8`
+> Source hash: `6a1e43264329`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **106** ファイル（[全体 index](./index.md)）
+このグループ: **107** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (8)
 
@@ -21,7 +21,7 @@
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 
-## engine/flow (17)
+## engine/flow (18)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -33,6 +33,7 @@
 | [`src/engine/flow/contact.ts`](../../../src/engine/flow/contact.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) / [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) |
 | [`src/engine/flow/guard.ts`](../../../src/engine/flow/guard.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/engine/flow/index.ts`](../../../src/engine/flow/index.ts) | _(参照なし)_ |
+| [`src/engine/flow/main/ability-activate.ts`](../../../src/engine/flow/main/ability-activate.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/engine/flow/main/action.ts`](../../../src/engine/flow/main/action.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/declared-ability.ts`](../../../src/engine/flow/main/declared-ability.ts) | [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/engine/flow/main/hand-use-card.ts`](../../../src/engine/flow/main/hand-use-card.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |

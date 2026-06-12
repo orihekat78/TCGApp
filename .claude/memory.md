@@ -68,3 +68,11 @@
 ## 直近完了 (詳細は sessions/)
 - Task D engine拡張 wave#1 (sessions/2026-06-12.md) / Task A certify-harvest 254/254 (sessions/2026-06-11.md)
 - dev-knowhow-kit (31 files、Phase 0 で commit 済)
+
+## 2026-06-12 (夜) リファクタ Phase 2c — dispatch 契約是正 (BUG-116 構造解消)
+- 新設 engine/flow/main/ability-activate.ts に cost+ctx 構築 + pay を一元化。呼出元 (UI/AI/e2e) は
+  {type, uid, abilId, costParams?} のみ。effectPickResolve 4 形態 union 化。
+- silent-skip 依存 e2e 7 箇所を機械棚卸し (tsx で def cost 抽出) → assert 影響は B06069 のみ、実 assert 化。
+- ゲート: tsc 0 / vitest 1972 (baseline一致) / smoke baseline 完全一致 / e2e 6 spec 33 pass / lint 新規0。
+- レビュー: 決定論 + Fable 1 lens — BLOCKER/MAJOR 0。MINOR-2 (cost-not-paid 警告 false-positive 化) は
+  後続フェーズ項目として review-records.md §2c に記録。phases.md 100 行超過 → review-records.md 分割。

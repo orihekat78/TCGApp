@@ -32,7 +32,7 @@ function getHumanPlayerSide(): 'self' | 'opp' | null {
  * 事件カード (uid 'case:self'/'case:opp') の declared ability が canDeclaredAbility
  * で常に false 判定され UI から発動不可だった。case + partner も含める。
  */
-function findCardOnBoard(
+export function findCardOnBoard(
   state: GameState,
   uid: string,
 ): { player: 'self' | 'opp'; cardId: string; area: 'scene' | 'case' | 'partner-area' } | null {

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `99257b6de3fd`
+> Source hash: `bf665698e424`
 
 `src/engine/flow/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -38,7 +38,7 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
 
-## 📄 ソース (17)
+## 📄 ソース (18)
 
 - [`src/engine/flow/action-case.ts`](../../../../src/engine/flow/action-case.ts)
 - [`src/engine/flow/action/order.ts`](../../../../src/engine/flow/action/order.ts)
@@ -48,6 +48,7 @@
 - [`src/engine/flow/contact.ts`](../../../../src/engine/flow/contact.ts)
 - [`src/engine/flow/guard.ts`](../../../../src/engine/flow/guard.ts)
 - [`src/engine/flow/index.ts`](../../../../src/engine/flow/index.ts)
+- [`src/engine/flow/main/ability-activate.ts`](../../../../src/engine/flow/main/ability-activate.ts)
 - [`src/engine/flow/main/action.ts`](../../../../src/engine/flow/main/action.ts)
 - [`src/engine/flow/main/declared-ability.ts`](../../../../src/engine/flow/main/declared-ability.ts)
 - [`src/engine/flow/main/hand-use-card.ts`](../../../../src/engine/flow/main/hand-use-card.ts)

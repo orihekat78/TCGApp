@@ -17,7 +17,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import { registerAll } from '@/cards';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
-import type { GameState, EffectCtx } from '@/engine/types';
+import type { GameState } from '@/engine/types';
 import { sceneChar } from '../../helpers/fixtures';
 
 
@@ -31,13 +31,6 @@ function setupD11014a2(reanimateTarget: string): GameState {
     d.players.self.remove = [reanimateTarget]; // step2 reanimate 対象
     d.players.self.deck = ['D08014'];        // step3 draw 対象
   });
-}
-
-function declaredCtx(): EffectCtx {
-  return {
-    source: { cardId: 'D11014', uid: 'shigo', abilityId: 'a2', player: 'self', area: 'scene' },
-    bindings: {},
-  } as unknown as EffectCtx;
 }
 
 function pendingUidFor(cardId: string): string {
@@ -63,8 +56,9 @@ describe('D11014 a2 — human 経路の $entered bind 伝播 (BUG-107)', () => {
   it('萩原千速(D11011) を登場させた場合、step3 conditional が $entered を読んで 1 ドローする', () => {
     useGameStateStore.setState({ gameState: setupD11014a2('D11011') });
 
-    // 宣言能力 a2 (cost sleepSelf) → step1 discard pick が surface
-    const r1 = dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2', cost: { kind: 'sleepSelf' }, ctx: declaredCtx() });
+    // 宣言能力 a2 (cost sleepSelf は dispatcher が def から自動支払い — Phase 2c 契約)
+    // → step1 discard pick が surface
+    const r1 = dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2' });
     expect(r1.ok, 'declaredAbility 成功').toBe(true);
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb, 'step1 discard pick が surface').toBe('discard');
 
@@ -84,7 +78,7 @@ describe('D11014 a2 — human 経路の $entered bind 伝播 (BUG-107)', () => {
   it('萩原千速 以外(D11012, 警察 Lv4) を登場させた場合は 1 ドローしない (boundMatchesFilter 否定の確認)', () => {
     useGameStateStore.setState({ gameState: setupD11014a2('D11012') });
 
-    dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2', cost: { kind: 'sleepSelf' }, ctx: declaredCtx() });
+    dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2' });
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D11012') });
 

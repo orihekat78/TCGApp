@@ -4,6 +4,9 @@ export { canHandUseCard, canHandUseCardSwitch, handUseCard } from './hand-use-ca
 export { canStartNextHint, runNextHint } from './next-hint.js';
 export { canPartnerAbility, usePartnerAbility } from './partner-ability.js';
 export { canDeclaredAbility, useDeclaredAbility } from './declared-ability.js';
+// Phase 2c (BUG-116 構造解消): cost+ctx 構築 + pay を engine 側に一元化した activate 系
+export { activateDeclaredAbility, activatePartnerAbility } from './ability-activate.js';
+export type { AbilityCostParams } from './ability-activate.js';
 export { canReason, doReasoning } from './reasoning.js';
 export { canAction, canActionAgainstChar, canActionAgainstCase } from './action.js';
 
@@ -11,6 +14,7 @@ import { canHandUseCard, canHandUseCardSwitch, handUseCard } from './hand-use-ca
 import { canStartNextHint, runNextHint } from './next-hint.js';
 import { canPartnerAbility, usePartnerAbility } from './partner-ability.js';
 import { canDeclaredAbility, useDeclaredAbility } from './declared-ability.js';
+import { activateDeclaredAbility, activatePartnerAbility } from './ability-activate.js';
 import { canReason, doReasoning } from './reasoning.js';
 import { canAction, canActionAgainstChar, canActionAgainstCase } from './action.js';
 
@@ -24,6 +28,8 @@ export const main = {
   usePartnerAbility,
   canDeclaredAbility,
   useDeclaredAbility,
+  activateDeclaredAbility,
+  activatePartnerAbility,
   canReason,
   doReasoning,
   canAction,

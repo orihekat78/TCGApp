@@ -16,7 +16,8 @@ import { produce } from 'immer';
 import { enumerateMoves, type Move } from './move-enumerator.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-resolution.js';
 import { HeuristicPolicy } from './policies/heuristic.js';
-import { makePartnerAbilCtx, makeDeclaredAbilCtx } from './ability-ctx.js';
+import { makeDeclaredAbilCtx } from './ability-ctx.js';
+import type { AbilityCostParams } from '@/engine/flow/index.js';
 import { drainAiEffectPicks } from '@/engine/effect/apply-pick.js';
 
 type Player = 'self' | 'opp';
@@ -152,52 +153,48 @@ function makeCtx(p: Player): EffectCtx {
 }
 
 /**
- * populateCostParams — Phase 9-B (B3 fix): cost picker が必要なコストに対し、
- * `ctx.dyn.costParams` を AI が自動充填する。
+ * computeAiCostParams — Phase 9-B (B3 fix) 由来の greedy cost picker 充填。
+ * Phase 2c: 旧 populateCostParams (ctx.dyn 直接 mutate) を、engine.flow.activateXxx へ渡す
+ * AbilityCostParams の構築に置換 (充填値・順序は同一 = 挙動不変)。
  *
- * cost.pay (src/engine/cost/pay.ts:166) は `flipFaceUpEvidence` で
+ * cost.pay (src/engine/cost/pay.ts) は `flipFaceUpEvidence` で
  * `ctx.dyn.costParams.flipFaceUpEvidence.indices` を要求し、未供給だと
  * `picks 0 out of [min, max]` で throw する (Random vs Random 100戦で 34% 失敗)。
  *
- * AI 側 (move-enumerator の canPay は枚数だけを見るため列挙時には合格するが、
- * applyMove で pay 呼出時に indices が空) でこの値を greedy 供給することで解消。
- *
  * - `flipFaceUpEvidence`: face-down 証拠の先頭から `n.min` 枚を採用
- * - `pay` (composite): 全 items を再帰
- * - `choice`: cost.pay 側で「ctx.dyn.costChoice 未指定 → 最初に canPay する branch」に
- *   fallback するので明示的指定は不要。再帰だけ行う
+ * - `pay` / `choice` (composite): 全 items を再帰
+ * - `choice` の branch 選択: cost.pay 側が「costChoice 未指定 → 最初に canPay する branch」に
+ *   fallback するため明示指定は不要
  * - 他: picker 不要のためノーオペ
  */
-function populateCostParams(
+function computeAiCostParams(
   state: GameState,
   player: Player,
   cost: Cost,
-  ctx: EffectCtx,
-): void {
-  switch (cost.kind) {
-    case 'pay':
-      for (const item of cost.items) populateCostParams(state, player, item, ctx);
-      return;
-    case 'choice':
-      for (const item of cost.items) populateCostParams(state, player, item, ctx);
-      return;
-    case 'flipFaceUpEvidence': {
-      const evidence = state.players[player].evidence;
-      const indices: number[] = [];
-      for (let i = 0; i < evidence.length && indices.length < cost.n.min; i++) {
-        if (!evidence[i].faceUp) indices.push(i);
+): AbilityCostParams | undefined {
+  let flip: { indices: number[] } | undefined;
+  const walk = (c: Cost): void => {
+    switch (c.kind) {
+      case 'pay':
+      case 'choice':
+        for (const item of c.items) walk(item);
+        return;
+      case 'flipFaceUpEvidence': {
+        const evidence = state.players[player].evidence;
+        const indices: number[] = [];
+        for (let i = 0; i < evidence.length && indices.length < c.n.min; i++) {
+          if (!evidence[i].faceUp) indices.push(i);
+        }
+        flip = { indices };
+        return;
       }
-      const dyn = (ctx.dyn ?? {}) as Record<string, unknown>;
-      const params = (dyn['costParams'] ?? {}) as Record<string, unknown>;
-      params['flipFaceUpEvidence'] = { indices };
-      dyn['costParams'] = params;
-      ctx.dyn = dyn;
-      return;
+      default:
+        // Other cost kinds: no picker needed
+        return;
     }
-    default:
-      // Other cost kinds: no picker needed
-      return;
-  }
+  };
+  walk(cost);
+  return flip ? { flipFaceUpEvidence: flip } : undefined;
 }
 
 /**
@@ -226,33 +223,28 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       return;
     }
     case 'partnerAbility': {
-      // Phase 8.8d: cost があれば pay → flow.useXxx (UI 側と対称な atomic)
+      // Phase 2c (BUG-116 構造解消): cost+ctx 構築 + pay は engine.flow.activatePartnerAbility
+      // (UI dispatcher と共通の単一支払点) に委譲。AI は picker 値のみ greedy に事前計算して渡す。
       const partnerCardId = state.players[byPlayer].partner.cardId;
       const partnerDef = partnerCardId ? engine.cards.get(partnerCardId) : null;
       const ab = partnerDef?.abilities.find((a) => a.id === move.abilityId);
-      if (ab?.cost && partnerCardId) {
-        const ctx = makePartnerAbilCtx(byPlayer, partnerCardId, move.abilityId);
-        populateCostParams(state, byPlayer, ab.cost, ctx);
-        engine.cost.pay(state, ab.cost, ctx);
-      }
-      engine.flow.usePartnerAbility(state, byPlayer, move.abilityId, makeCtx(byPlayer));
+      const costParams = ab?.cost ? computeAiCostParams(state, byPlayer, ab.cost) : undefined;
+      engine.flow.activatePartnerAbility(state, byPlayer, move.abilityId, costParams);
       return;
     }
     case 'declaredAbility': {
-      // Phase 8.8d: 同じく cost あれば pay
-      const ctx = makeDeclaredAbilCtx(state, move.uid, move.abilityId);
-      if (ctx?.source.cardId) {
-        const def = engine.cards.get(ctx.source.cardId);
+      // Phase 2c: 同上。makeDeclaredAbilCtx は cost def 逆引きの probe としてのみ使用
+      // (ctx 構築・pay・BUG-085 の costPaid/dyn 伝播は activateDeclaredAbility 内)。
+      const probe = makeDeclaredAbilCtx(state, move.uid, move.abilityId);
+      let costParams: AbilityCostParams | undefined;
+      if (probe?.source.cardId) {
+        const def = engine.cards.get(probe.source.cardId);
         const ab = def?.abilities.find((a) => a.id === move.abilityId);
         if (ab?.cost) {
-          populateCostParams(state, ctx.source.player as Player, ab.cost, ctx);
-          engine.cost.pay(state, ab.cost, ctx);
+          costParams = computeAiCostParams(state, probe.source.player as Player, ab.cost);
         }
       }
-      // BUG-085: cost.pay 済み ctx (costPaid/dyn 付き) を useDeclaredAbility に渡し、
-      // `$cost.flipFaceUpEvidence.count` 等 cost 依存 dyn を effect 解決へ引き継ぐ。
-      // ctx が null (uid 解決失敗) のときのみ makeCtx fallback。
-      engine.flow.useDeclaredAbility(state, move.uid, move.abilityId, ctx ?? makeCtx(byPlayer));
+      engine.flow.activateDeclaredAbility(state, move.uid, move.abilityId, costParams);
       return;
     }
     case 'reasoning': {

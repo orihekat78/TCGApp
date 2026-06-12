@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `84132271d3e2`
+> Source hash: `6b8d21ba61a9`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -34,7 +34,7 @@
 | [`18-mr.md`](../../rules/18-mr.md) | 11 | `cards/ct-p05/B05066.ts`, `cards/ct-p07/B07079.ts`, `cards/ct-p07/B07079P.ts` ほか 8 件 |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 131 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 128 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 89 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01015.ts` ほか 86 件 |
-| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 166 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 163 件 |
+| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 167 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 164 件 |
 | [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) | 151 | `cards/_shared/contactTargetMatches.ts`, `cards/ct-d01/D01009.ts`, `cards/ct-d01/D01010.ts` ほか 148 件 |
 | [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) | 17 | `cards/ct-d11/D11013.ts`, `cards/ct-d11/D11017.ts`, `cards/ct-d11/D11018.ts` ほか 14 件 |
 | [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) | 67 | `cards/_shared/partnerColorKeyword.ts`, `cards/ct-d01/D01005.ts`, `cards/ct-d02/D02003.ts` ほか 64 件 |

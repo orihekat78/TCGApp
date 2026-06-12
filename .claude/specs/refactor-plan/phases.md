@@ -46,11 +46,14 @@
   cjs whitelist は「エンジンから JSON dump → cjs が読む」生成式 or 同期検証テスト (どちらか軽い方)
 - pay.ts payInner の void 戻り (case 追加漏れが TS で検知されない — Task D で実証) に exhaustive check 追加
 
-## 2c. dispatch 契約是正
+## 2c. dispatch 契約是正 (✅ 2026-06-12 実施)
 
-- `declaredAbility` の cost+ctx 構築を useEngineDispatch 内 (engine 側 API でも可) に移し、
+- `declaredAbility`/`partnerAbility` の cost+ctx 構築 + pay を engine 側
+  `flow/main/ability-activate.ts` (activateDeclaredAbility / activatePartnerAbility) に一元化。
   呼出元 (UI/AI/e2e) は `{type, uid, abilId, costParams?}` のみ渡す。BUG-116 経路の構造的解消
-- 同型契約 (effectPickResolve の optional 引数群) も union 型で required/optional を明示
+- costParams = picker 選択値 (flipFaceUpEvidence.indices / sceneToDeckBottom.uids / costChoice /
+  choiceIndex) のみの最小 payload — 人間選択値は engine 内で再現不可のため action 引数に残す
+- 同型契約 (effectPickResolve の optional 引数群) は 4 形態 union (skip/single/multi/switch) で明示
 
 ## 3a〜3d (高リスク群 — 着手前に個別設計レビュー必須)
 
@@ -67,37 +70,5 @@
 
 ## レビュー記録
 
-- **1a+1b (2026-06-12)** 厳格レビュー (反証観点の自己レビュー + 実コード裏取り) — 指摘 3 件、全て反映:
-  ① contact.ts:187 の置換先は scene.toDeckBottom では**ない** — それは scene から splice する primitive
-    で、変装はキャラが scene に残る (uid 維持 cardId 入替)。正は `mutate.deck.toBottom` (push と byte 同一)
-  ② expandActionTargets の verb 削除は不可 — 印字カード 3 枚 (D11007/B01028/B05071) の def を
-    target-expander が静的 walk で読むため verb は declarative marker として必要。dead なのは
-    handler の side-channel push のみ → push のみ除去し handler を log no-op 化 + stale コメント 2 箇所是正
-  ③ charSetAP/LP throw stub の削除を却下 (上記 1b 参照 — テストで仕様固定された意図的ガード)
-  検証: typecheck clean / full vitest **1961 pass / 0 fail** / smoke:1000 **baseline 完全一致**
-  (469/531, avg 10.86 — 挙動不変の直接証拠) / e2e 17 pass (engine-extensions + task-d-extensions)
-
-- **1c (2026-06-12)** 調査で計画前提を 2 点補正: ①70 定義は全コピーではなく 30 グループ
-  (md5 正規化分類) → Group A 38 定義=完全置換 / Group B ~26 file=既定値保存 wrapper (本文不変) /
-  Group C 5 定義=対象外 (CardDef factory・特殊 ctx)。②「旧スキーマ 4 ファイル」は triggered.test.ts
-  1 file のみ (他 3 は mutate.scene.enter の options API `named:` の誤検知)。
-  敵対レビュー (Workflow 4 観点: default-drift / exact-replace / schema-correction /
-  meaning-preservation、546k tok): pass 3 + 指摘 4 件全て同フェーズ内で解消 —
-  ① .tsx 3 file (OppTurnOverlay/SceneArea×2) の同名 fixture 取りこぼし → wrapper 化
-  ② bug-123 の makeCtx (正準と同値) → import 化 ③ fixtures.ts ヘッダ「byte 等価」→
-  「deep-equal (プロパティ順のみ相違)」に訂正 ④ commit 前 docs 再生成。
-  残課題 (Phase 4 候補として記録): 別名 factory (char()/mkChar()/インライン literal) が
-  unit ~14 + e2e ~13 file に残存 / 既存 eslint 46 err (HEAD 同値)。
-  検証: full vitest **1961 pass / 0 fail** ×3 回 / eslint **baseline 46 err と完全一致 (新規 0)** /
-  61 file +91/−800 行。tests/ は tsconfig 対象外 (typecheck はテストを検査しない) と判明 — 2b で考慮
-
-- **2b (2026-06-12)** 4 系統を実装: ①AtomVerb/Cost/Condition は `satisfies Record<…, true>` map で
-  union との両方向同期をコンパイル時強制 (value セットを export) ②canPay/payInner/evalCond/costToText
-  に exhaustive default (noImplicitReturns 無効による missing-case silent ギャップの封鎖 — payInner は
-  Task D で実証済の欠陥) ③TRIGGERED_HOOKS export 化 ④cjs whitelist との同期は新設
-  sync-taskA-whitelists.test.ts (4 テスト) が機械検証。
-  レビューは新トークンポリシー初適用: 決定論検証 (新旧 ATOM_VERBS 50/50 集合一致スクリプト +
-  fake verb 注入で同期テストの fail を実証) + **opus 1 lens** (94k tok、旧フルパネルの 1/3〜1/6) — pass。
-  指摘 0。検証: typecheck 0 / full vitest **1972 pass / 0 fail** (+4) / smoke:1000 baseline 完全一致 /
-  e2e 26 pass。教訓: Python subprocess は cp932 decode 例外で後続復元処理が飛ぶ —
-  一時改変→復元パターンは Bash 直列 (mutate && test; restore) で行う
+全フェーズのレビュー記録 (指摘・解消・検証結果) は [review-records.md](review-records.md) に分割
+(本ファイルの 100 行制約超過のため 2026-06-12 移設)。

@@ -22,6 +22,7 @@ import { useChoicePicker } from './useChoicePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Cost, Effect, EffectCtx } from '@/engine/types';
+import type { AbilityCostParams } from '@/engine/flow/index.js';
 
 /**
  * BUG-108: choice effect option を人間可読ラベルに変換 (ChoicePicker 表示用)。
@@ -335,20 +336,12 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
     chosenId = picked;
   }
 
-  // Phase 8.8c: cost 情報を取得 (modal 本文 + dispatch atomic payment 用)
+  // Phase 8.8c: cost 情報を取得 (modal 本文表示用)。
+  // Phase 2c: cost+ctx 構築 + pay は dispatcher (engine.flow.activatePartnerAbility) 側へ一元化。
   const partner = state.players[opts.player].partner;
   const partnerDef = partner.cardId ? engine.cards.get(partner.cardId) : null;
   const chosenAbil = partnerDef?.abilities.find((a) => a.id === chosenId);
   const cost = chosenAbil?.cost;
-  const ctx = partner.cardId
-    ? makeAbilityCtx({
-        player: opts.player,
-        uid: `partner:${opts.player}`,
-        cardId: partner.cardId,
-        abilityId: chosenId,
-        area: 'partner-area',
-      })
-    : undefined;
   const costText = cost ? costToText(cost) : '無し';
 
   // Round 2: partner cardId → 名前解決して "[江戸川コナン] の [ability] を発動します" 表示。
@@ -368,7 +361,6 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
     type: 'partnerAbility',
     player: opts.player,
     abilId: chosenId,
-    ...(cost && ctx ? { cost, ctx } : {}),
   });
 }
 
@@ -524,13 +516,13 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   }
 
   // 3) cost 情報を取得して confirm (user_request 20260522_01 #5: case 対応)
+  // Phase 2c: cost+ctx 構築 + pay は dispatcher (engine.flow.activateDeclaredAbility) 側へ
+  // 一元化。本フローは picker 選択値を costParams に集めて dispatch へ渡すのみ。
   let cardId: string | null = null;
   let owner: Player | null = null;
-  let area: 'scene' | 'case' = 'scene';
   if (sourceUid === 'case:self' || sourceUid === 'case:opp') {
     owner = sourceUid === 'case:self' ? 'self' : 'opp';
     cardId = stateAfterSrc.players[owner].case.cardId ?? null;
-    area = 'case';
   } else {
     for (const p of ['self', 'opp'] as const) {
       const c = stateAfterSrc.players[p].scene.find((x) => x.uid === sourceUid);
@@ -544,16 +536,8 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   const charDef = cardId ? engine.cards.get(cardId) : null;
   const chosenAbil = charDef?.abilities.find((a) => a.id === chosenAbilId);
   const cost = chosenAbil?.cost;
-  const ctx = cardId && owner
-    ? makeAbilityCtx({
-        player: owner,
-        uid: sourceUid,
-        cardId,
-        abilityId: chosenAbilId,
-        area,
-      })
-    : undefined;
   const costText = cost ? costToText(cost) : '無し';
+  let costParams: AbilityCostParams | undefined;
 
   // Round 2: sourceUid → 名前解決。declaredAbility は scene キャラ/事件の宣言能力。
   const sourceName = uidToDisplayName(stateAfterSrc, sourceUid);
@@ -575,7 +559,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //   「OK 押下後に何も起きない」症状になっていた (本バグの直接原因)。
   //   確認モーダル accept 後に証拠エリア拡大表示 (CardListModal) を流用した picker を出す。
   const flipCost = findFlipFaceUpCost(cost);
-  if (flipCost && owner === 'self' && ctx) {
+  if (flipCost && owner === 'self' && cardId) {
     const flipState = useGameStateStore.getState().gameState;
     if (flipState === null) return { ok: false, reason: 'no-state' };
     const evidence = flipState.players[owner].evidence;
@@ -595,13 +579,10 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       nMax: flipCost.n.max,
     });
     if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
-    // 選択 index を ctx.dyn.costParams.flipFaceUpEvidence.indices に積む (cost.pay が読む)。
-    // この ctx は下の dispatch にそのまま渡され、costPaid.count → effect の $cost dyn にも繋がる。
-    const dyn = (ctx.dyn ?? {}) as Record<string, unknown>;
-    const params = (dyn['costParams'] ?? {}) as Record<string, unknown>;
-    params['flipFaceUpEvidence'] = { indices: choice.indices };
-    dyn['costParams'] = params;
-    ctx.dyn = dyn;
+    // 選択 index を costParams に積む。dispatcher (activateDeclaredAbility) が
+    // ctx.dyn.costParams.flipFaceUpEvidence.indices へ詰め替え (cost.pay が読む)、
+    // costPaid.count → effect の $cost dyn にも繋がる (BUG-085 伝播)。
+    costParams = { ...(costParams ?? {}), flipFaceUpEvidence: { indices: choice.indices } };
   }
 
   // 3.7) BUG-108: 複数 option を持つ top-level choice effect (D11012 a1「LP＋1するか / AP＋2000する」)
@@ -610,23 +591,20 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //   単一 option の choice (D11014 a2 step2 等) は modal を出さない (choiceIndex 既定 0)。
   //   AI 経路の択一は BUG-109 (PA 短縮形 AI no-op) と併せて別途対応 (現状 default 0)。
   const effect = chosenAbil?.effect as Effect | undefined;
-  if (effect && effect.kind === 'choice' && effect.options.length > 1 && owner === 'self' && ctx) {
+  if (effect && effect.kind === 'choice' && effect.options.length > 1 && owner === 'self' && cardId) {
     const options = effect.options.map((o, index) => ({ index, label: choiceOptionLabel(o) }));
     const choice = await useChoicePicker().ask({ sourceName, options });
     if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
-    const dyn = (ctx.dyn ?? {}) as Record<string, unknown>;
-    dyn['choiceIndex'] = choice.index;
-    ctx.dyn = dyn;
+    costParams = { ...(costParams ?? {}), choiceIndex: choice.index };
   }
 
-  // 4) dispatch (cost あれば atomic に pay → use)。ctx は choiceIndex / costParams を運ぶため
-  //   cost 有無に関わらず渡す (cost.pay は dispatch 側で cost && ctx を guard 済)。
+  // 4) dispatch — Phase 2c: cost+ctx 構築 + pay (atomic) は dispatcher 内の
+  //   engine.flow.activateDeclaredAbility が行う。本フローは picker 選択値のみ渡す。
   return dispatchEngineAction({
     type: 'declaredAbility',
     uid: sourceUid,
     abilId: chosenAbilId,
-    ...(cost ? { cost } : {}),
-    ...(ctx ? { ctx } : {}),
+    ...(costParams ? { costParams } : {}),
   });
 }
 

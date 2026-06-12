@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `99caeab28c40`
+> Source hash: `9a3242de281e`
 
 フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard）
 
@@ -36,6 +36,8 @@
 | ---- | ---------- | ---- |
 | `_resetTargetExpanders` | `(): void` |  |
 | `actionCandidates` | `(state: GameState, byUid: string): TargetCandidate[]` | candidates — アクション対象候補を返す。 通常 (rules/07): 相手の現場 + state ∈ {sleep, stun} 拡張: registerTargetExpander で登録された expander の戻り値を追加 - 同一 uid は dedup (base 優先) / |
+| `activateDeclaredAbility` | `(state: GameState, uid: string, abilId: string, costParams?: AbilityCostParams): void` | activateDeclaredAbility — 宣言能力の cost 支払い + 使用宣言 (atomic)。 - uid から所有者/cardId/area を逆引きして EffectCtx を構築 (呼出元の ctx 構築は不要) - カード def に cost があれば必ず engine.cost.… |
+| `activatePartnerAbility` | `(state: GameState, player: Player, abilId: string, costParams?: AbilityCostParams): void` | activatePartnerAbility — パートナー能力の cost 支払い + 使用宣言 (atomic)。 usePartnerAbility は ctx を取らない (効果は effect:declared listener 側) ため、 ctx は pay にのみ使用する。 / |
 | `canAction` | `(state: GameState, byUid: string): boolean` | canAction — アクション宣言の汎用可否 (対象種別を問わない) - 主体が active - 名乗りなし、または名乗り例外 (迅速 / 突撃 / 突撃[キャラ] / 突撃[事件] のいずれか) 注意: partner はキャラと違い 名乗り状態の概念がない (rules/06)。 / |
 | `canActionAgainstCase` | `(state: GameState, byUid: string, targetPlayer: Player): boolean` | canActionAgainstCase — 相手事件へのアクション可否。 - 主体が canAction (target='case') - 相手の証拠 ≥ 1 (rules/07: 証拠が1つもない事件は対象不可) / |
 | `canActionAgainstChar` | `(state: GameState, byUid: string, targetUid: string): boolean` | canActionAgainstChar — 相手キャラへのアクション可否。 - 主体が canAction (target='char') - 対象が targetExpander.candidates() に含まれる - 通常 (rules/… |
@@ -59,6 +61,7 @@
 
 ## 型エクスポート
 
+- `AbilityCostParams`
 - `Deck`
 - `DeckPair`
 - `TargetCandidate`

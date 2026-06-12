@@ -230,7 +230,11 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     const after = await getGameState(page);
     expect((after.players.opp as { hand: string[] }).hand, 'opp 手札に D08013').toContain('D08013');
     expect((after.players.opp as { scene: { uid: string }[] }).scene.length, 'opp scene 空').toBe(0);
-    // sleepSelf コストの確認は declared-ability cost system 側の責務 — sceneToHand verb の検証範囲外
+    // Phase 2c (BUG-116 構造解消): sleepSelf cost は dispatcher (activateDeclaredAbility) が
+    // def から自動で支払う — raw dispatch でも cost が silent skip されないことの実証
+    const snoAfter = (after.players.self as { scene: { uid: string; state: string }[] }).scene
+      .find((c) => c.uid === 'sno#1');
+    expect(snoAfter?.state, 'sno#1 が sleepSelf cost で sleep').toBe('sleep');
     expect(errors).toEqual([]);
   });
 

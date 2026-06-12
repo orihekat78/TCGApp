@@ -12,7 +12,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import { registerAll } from '@/cards';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
-import type { GameState, EffectCtx } from '@/engine/types';
+import type { GameState } from '@/engine/types';
 import { sceneChar } from '../../helpers/fixtures';
 
 
@@ -30,13 +30,6 @@ function setupFull(reanimateTarget: string): GameState {
     d.players.self.remove = [reanimateTarget]; // step2 reanimate 対象
     d.players.self.deck = ['D08014'];        // step3 draw 対象
   });
-}
-
-function declaredCtx(): EffectCtx {
-  return {
-    source: { cardId: 'D11014', uid: 'shigo', abilityId: 'a2', player: 'self', area: 'scene' },
-    bindings: {},
-  } as unknown as EffectCtx;
 }
 
 function pendingUidFor(cardId: string): string {
@@ -60,8 +53,9 @@ describe('switch-on-effect-enter — 現場満杯の reanimate を switch で登
   it('満杯時、reanimate 対象を選び switchRemoveUid を渡すと退場キャラを退けて登場し step3 draw も発火', () => {
     useGameStateStore.setState({ gameState: setupFull('D11011') });
 
-    // 宣言能力 a2 → step1 discard pick surface
-    const r1 = dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2', cost: { kind: 'sleepSelf' }, ctx: declaredCtx() });
+    // 宣言能力 a2 (cost sleepSelf は dispatcher が def から自動支払い — Phase 2c 契約)
+    // → step1 discard pick surface
+    const r1 = dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2' });
     expect(r1.ok).toBe(true);
     // discard 解決 → step2 sceneEnter pick surface (満杯でも human は早期 skip されない)
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
@@ -80,7 +74,7 @@ describe('switch-on-effect-enter — 現場満杯の reanimate を switch で登
   it('満杯時、switch を辞退 (pickedUid:null) すると reanimate されず draw もしない', () => {
     useGameStateStore.setState({ gameState: setupFull('D11011') });
 
-    dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2', cost: { kind: 'sleepSelf' }, ctx: declaredCtx() });
+    dispatchEngineAction({ type: 'declaredAbility', uid: 'shigo', abilId: 'a2' });
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: pendingUidFor('D08013') });
     // 辞退 = pickedUid:null (Playmat: SceneSwitchPickerModal cancel 時の挙動)
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });

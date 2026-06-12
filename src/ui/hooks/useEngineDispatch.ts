@@ -16,11 +16,11 @@ import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { applyPickAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation } from '@/engine/effect/apply-pick.js';
-import { cost as engineCost } from '@/engine/cost/index.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
-import type { Cost, EffectCtx } from '@/engine/types';
+import type { EffectCtx } from '@/engine/types';
+import type { AbilityCostParams } from '@/engine/flow/index.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { event as engineEvent } from '@/engine/event/index.js';
@@ -57,8 +57,10 @@ export type EngineAction =
   // Phase 5 advance: SceneSwitch (rules/20) — scene 5 埋まり時のキャラ手札使用
   | { type: 'handUseCardSwitch'; player: Player; cardId: string; removeUid: string }
   | { type: 'nextHint'; player: Player; optionalCardId?: string }
-  | { type: 'partnerAbility'; player: Player; abilId: string; cost?: Cost; ctx?: EffectCtx }
-  | { type: 'declaredAbility'; uid: string; abilId: string; cost?: Cost; ctx?: EffectCtx }
+  // Phase 2c (BUG-116 構造解消): cost+ctx は dispatcher 内 (engine.flow.activateXxx) で構築する。
+  // 呼出元は picker 選択値 (costParams) のみ渡す — cost/ctx の caller 構築契約は廃止。
+  | { type: 'partnerAbility'; player: Player; abilId: string; costParams?: AbilityCostParams }
+  | { type: 'declaredAbility'; uid: string; abilId: string; costParams?: AbilityCostParams }
   | { type: 'assist'; player: Player }
   | { type: 'solveCase'; player: Player }
   | { type: 'actionAgainstChar'; byUid: string; targetUid: string }
@@ -77,12 +79,18 @@ export type EngineAction =
   // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択
   | { type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }
   // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択結果
-  // pickedUid=null は「選ばない」(skip、n.min===0 任意効果のみ可能)
-  // pickedUids は multi-pick (nMax>1) で複数選択を一括 resolve するため。
-  // D08021 charStackCard 等 multi-pick atom が cardIds:'$pick.cardIds' を resolved 配列で受ける。
-  // switchRemoveUid: 効果登場 (sceneEnter) が現場満杯のとき、UI が SceneSwitchPickerModal で
-  // 収集した退場キャラ uid。rules/20 スイッチで switchEnter させる (switch-on-effect-enter)。
-  | { type: 'effectPickResolve'; pickedUid: string | null; pickedUids?: string[]; switchRemoveUid?: string }
+  // Phase 2c: optional 引数群の required/optional を 4 形態の union で明示。
+  //   - skip:   pickedUid=null 単独 (「選ばない」— n.min===0 任意効果のみ。pending と対の
+  //             continuation も自動 drop (BUG-111)。他引数は同時指定しない)
+  //   - single: pickedUid のみ
+  //   - multi:  pickedUids 必須 (nMax>1 の一括 resolve。D08021 charStackCard 等 multi-pick atom が
+  //             cardIds:'$pick.cardIds' を resolved 配列で受ける。pickedUid は先頭要素)
+  //   - switch: switchRemoveUid 必須 (効果登場 sceneEnter が現場満杯のとき SceneSwitchPickerModal
+  //             で収集した退場キャラ uid。rules/20 スイッチで switchEnter — switch-on-effect-enter)
+  | { type: 'effectPickResolve'; pickedUid: null }
+  | { type: 'effectPickResolve'; pickedUid: string }
+  | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[] }
+  | { type: 'effectPickResolve'; pickedUid: string; switchRemoveUid: string }
   // BUG-121: human 複数 option choice の選択結果 (enter トリガ等)。pendingEffectChoice を解決する。
   | { type: 'choiceResolve'; choiceIndex: number }
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
@@ -227,19 +235,13 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       flow.runNextHint(draft, action.player, action.optionalCardId);
       return;
     case 'partnerAbility':
-      // Phase 8.8c: cost が指定されていれば canPay + pay (atomic: pay → use)
-      if (action.cost && action.ctx) {
-        engineCost.pay(draft, action.cost, action.ctx);
-      }
-      flow.usePartnerAbility(draft, action.player, action.abilId);
+      // Phase 2c (BUG-116 構造解消): cost+ctx 構築 + pay は engine 側 helper に一元化
+      // (旧: action.cost && action.ctx が両方渡されたときのみ pay → 渡し忘れで silent skip)。
+      flow.activatePartnerAbility(draft, action.player, action.abilId, action.costParams);
       return;
     case 'declaredAbility':
-      if (action.cost && action.ctx) {
-        engineCost.pay(draft, action.cost, action.ctx);
-      }
-      // BUG-085: cost.pay 済みの ctx を渡して costPaid / dyn を effect 解決へ引き継ぐ
-      // (caseDeclaredEvidenceFlip の `$cost.flipFaceUpEvidence.count` 数値化に必要)。
-      flow.useDeclaredAbility(draft, action.uid, action.abilId, action.ctx);
+      // BUG-085 の costPaid/dyn 伝播は activateDeclaredAbility 内で維持される。
+      flow.activateDeclaredAbility(draft, action.uid, action.abilId, action.costParams);
       return;
     case 'assist':
       // flow.assist 未提供のため mutate を直叩き (src/ai/policy.ts:117 と同じ)
@@ -400,8 +402,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       //   Pattern B (uid 不在):    target → [cardId of picked candidate]
       const pending = useGameStateStore.getState().pendingEffectPick;
       if (!pending) return;
-      const picked = action.pickedUid;
-      if (picked === null) {
+      if (action.pickedUid === null) {
         // skip (n.min === 0 の任意効果のみ可能、UI 側で gate される想定)
         // BUG-111: continuation は pending 本体 (pending.continuation) に同梱されるため、
         // user skip 時は pending を破棄すれば対の continuation も自動 drop される (別 FIFO shift 不要)。
@@ -411,7 +412,13 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // BUG-109: resolved atom の build (Pattern A/B) + continuation (BUG-107 の保存 ctx 共有) は
       // engine 共通 helper applyPickAndContinuation に集約 (AI drain drainAiEffectPicks と同実体)。
       // resolveCardIdFromPickUid の state は draft (produce 内最新) を渡す。
-      applyPickAndContinuation(draft, pending, picked, action.pickedUids, action.switchRemoveUid);
+      applyPickAndContinuation(
+        draft,
+        pending,
+        action.pickedUid,
+        'pickedUids' in action ? action.pickedUids : undefined,
+        'switchRemoveUid' in action ? action.switchRemoveUid : undefined,
+      );
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }

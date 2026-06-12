@@ -17,12 +17,15 @@ export {
   usePartnerAbility,
   canDeclaredAbility,
   useDeclaredAbility,
+  activateDeclaredAbility,
+  activatePartnerAbility,
   canReason,
   doReasoning,
   canAction,
   canActionAgainstChar,
   canActionAgainstCase,
 } from './main/index.js';
+export type { AbilityCostParams } from './main/index.js';
 export { action } from './action/state-machine.js';
 /** @deprecated Use `flow.action.candidates` or import directly from `./action/target-expander`. */
 export {

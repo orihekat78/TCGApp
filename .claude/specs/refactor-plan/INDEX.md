@@ -23,7 +23,7 @@
 | 1c | テスト fixture 統一 (makeChar/sceneChar/makeCtx 75 定義 → tests/helpers/ 3 本) | 低 | ✅ 2026-06-12 |
 | 2a | PA 短縮形 gate の共通 helper 化 (atom-handlers 内 ~7 コピペ → 1、~200 行減) | 中 | ✅ 2026-06-12 |
 | 2b | 手動同期ペアの単一ソース化 (AtomVerb/Cost/HOOKS の union ↔ Set ↔ whitelist) | 中 | ✅ 2026-06-12 |
-| 2c | dispatch 契約是正 (declaredAbility の cost+ctx を dispatcher 内で構築) | 中 | ⏳ |
+| 2c | dispatch 契約是正 (declaredAbility の cost+ctx を dispatcher 内で構築) | 中 | ✅ 2026-06-12 |
 | 3a | atom-handlers.ts 分割 (1391 行 → core/scene/char/picks) | 高 | ⏳ |
 | 3b | pick-resolution 再設計 (resolve-picks/apply-pick/resolver の BUG パッチ 15+ 件を意味整理) | 高 | ⏳ |
 | 3c | globalThis side-channel 縮減 (8 → continuation/EffectCtx 統合可能な 5 を移設) | 高 | ⏳ |
