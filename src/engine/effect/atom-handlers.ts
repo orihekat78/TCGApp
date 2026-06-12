@@ -227,6 +227,38 @@ function hasNorMax(a: Record<string, unknown>): boolean {
   return typeof a.n === 'number' || typeof a.max === 'number';
 }
 
+/**
+ * PA 短縮形 (uid-carrier) の awaiting-pick 共通処理 (refactor 2a, 2026-06-12)。
+ * 旧来 11 case にコピペされていた「pick query 構築 → uid:'$pick' carrier 化 →
+ * tryRePickFromAtom (side-channel set) → awaiting-pick log → return」を集約する。
+ *
+ * - gate 条件 (uid 不在 + verb 固有の前提 + hasNorMax) は **各 case 側に残す** (動作不変維持)
+ * - chooser (= byPlayer = log player): 「誰が選ぶか」。2 規約が併存する:
+ *     a) chooser = resolvePlayer(a.player) — `player`=操作者 規約 (sceneRemove/sceneToHand 等。
+ *        BUG-131 調査で正と裁定)
+ *     b) chooser = ctx.source.player (controller) — BUG-120 裁定 (charModify系/charSetCard/
+ *        charGrant系/sceneToDeck)。`player` は対象側 (side 既定) を表す
+ *   既存カードへの挙動影響を避けるため本 helper は規約を強制せず、呼出側が明示する。
+ * - side: buildShortFormPick の sideDefault (a.side 指定があればそちらが優先される)
+ */
+function paShortFormAwait(
+  s: GameState,
+  verb: AtomVerb,
+  a: Record<string, unknown>,
+  ctx: EffectCtx,
+  chooser: Player,
+  side: 'self' | 'opp' | 'either',
+  area = 'scene',
+): void {
+  const paTarget = buildShortFormPick(area, a, chooser, side);
+  const paArgs = { ...a, uid: '$pick', target: paTarget };
+  tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, {
+    byPlayer: chooser,
+    source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+  });
+  mutate.log.append(s, { ts: Date.now(), player: chooser, turn: s.turn.number, action: `effect:${verb}:awaiting-pick` });
+}
+
 export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: EffectCtx): void {
   const a = args as Record<string, unknown>;
   // Task D E0 (2026-06-12): pick-bind writeback。PA 短縮形 pick が解決済み (uid が実 uid) かつ
@@ -690,13 +722,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // の場合、PA pick query を構築 + tryRePickFromAtom で side-channel set + awaiting-pick log。
       // (D08003 a1 step 2 「現場 AP≤8000 を1枚まで選びリムーブ」等で使用)
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
-        // PA 短縮形: pick query 構築は buildShortFormPick に集約 (side 既定=srP, state 配列=状態フィルタ pass-through)。
-        // uid='$pick' を明示して PA branch に乗せる。byPlayer は従来どおり srP (= a.player) を維持。
+        // PA 短縮形 (refactor 2a): chooser=byPlayer は従来どおり srP (= a.player、操作者規約)。
         const srP = resolvePlayer(a.player, ctx);
-        const paTarget = buildShortFormPick('scene', a, srP, srP);
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: srP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: srP, turn: s.turn.number, action: 'effect:sceneRemove:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, srP, srP);
         return;
       }
       // 「$pick」placeholder のまま atom-handler 到達 = pick で 0 枚選択された場合
@@ -720,10 +748,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 「リムーブしてもよい」を表現。resolve 後に removeOneSetCard で末尾 1 枚をリムーブエリアへ。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
         const rsP = resolvePlayer(a.player, ctx);
-        const paTarget = buildShortFormPick('scene', a, rsP, rsP);
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: rsP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: rsP, turn: s.turn.number, action: 'effect:charRemoveSetCard:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, rsP, rsP);
         return;
       }
       // max:1 で 0 枚選択 (skip) は uid='$pick' のまま到達 → silent no-op (sceneRemove 同型)。
@@ -744,10 +769,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 「相手の現場のキャラを1枚まで選び、手札に移す」等で使用。所有者の手札に戻る点に注意。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
         const sthP = resolvePlayer(a.player, ctx);
-        const paTarget = buildShortFormPick('scene', a, sthP, sthP);
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: sthP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: sthP, turn: s.turn.number, action: 'effect:sceneToHand:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, sthP, sthP);
         return;
       }
       if (a.uid === '$pick') {
@@ -766,12 +788,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // rules: 09/23 (リムーブでない=現場リムーブ時不発動), 16 (set/stacked リムーブ)
       // pos:'top' で「デッキの上に移す」(B05092)。移動先は所有者のデッキ。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
-        const stdP = resolvePlayer(a.player, ctx);
-        const stdChooser = ctx.source.player as Player;
-        const paTarget = buildShortFormPick('scene', a, stdChooser, stdP);
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: stdChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: stdChooser, turn: s.turn.number, action: 'effect:sceneToDeck:awaiting-pick' });
+        // chooser=controller / side 既定=a.player (対象側) — BUG-120 系規約
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
         return;
       }
       if (a.uid === '$pick') {
@@ -789,11 +807,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // PA 短縮形: uid 不在 + player + state(設定する状態の文字列) + n|max → scene pick を構築。
       // a.state は「設定先の状態」なので候補 filter には載せない (buildShortFormPick は配列 state のみ拾う)。
       if (a.uid === undefined && typeof a.player === 'string' && typeof a.state === 'string' && hasNorMax(a)) {
-        const ssP = resolvePlayer(a.player, ctx);
-        const paTarget = buildShortFormPick('scene', a, ssP, 'either');
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: ssP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: ssP, turn: s.turn.number, action: 'effect:sceneSetState:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, resolvePlayer(a.player, ctx), 'either');
         return;
       }
       const ssUid = resolveBindRef(a.uid, ctx) as string;
@@ -821,13 +835,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // D11014 a1 driver: PA 短縮形 — uid 不在 + delta + n/max なら pick query 構築 + tryRePickFromAtom
       // (sceneRemove 短縮形と同 pattern。「キャラを1枚まで選び AP±N」を declarative に表現)
       if (a.uid === undefined && isShortFormDelta(a.delta) && hasNorMax(a)) {
-        // PA 短縮形 (dyn-delta 対応): side 既定='either', chooser/byPlayer=ctx.source.player を維持。
+        // PA 短縮形 (dyn-delta 対応): side 既定='either', chooser=controller。
         // delta:{dyn} は pushPendingEffectPickSide / AI 経路の resolveDynArgs で literal 化される (BUG-085)。
-        const maP = ctx.source.player as Player;
-        const paTarget = buildShortFormPick('scene', a, maP, 'either');
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: maP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyAP:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, 'either');
         return;
       }
       // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出
@@ -847,11 +857,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'charModifyLP': {
       // PA 短縮形 (charModifyAP と同型, dyn-delta 対応): chooser/byPlayer=ctx.source.player, side 既定='either'。
       if (a.uid === undefined && isShortFormDelta(a.delta) && hasNorMax(a)) {
-        const mlP = ctx.source.player as Player;
-        const paTarget = buildShortFormPick('scene', a, mlP, 'either');
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: mlP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, 'either');
         return;
       }
       // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出。
@@ -873,11 +879,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'charModifyLevel': {
       // engine-extension #2 (2026-06-05): PA 短縮形 (charModifyAP/LP と同型, dyn-delta 対応)
       if (a.uid === undefined && isShortFormDelta(a.delta) && hasNorMax(a)) {
-        const mlvP = ctx.source.player as Player;
-        const paTarget = buildShortFormPick('scene', a, mlvP, 'either');
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: mlvP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLevel:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, 'either');
         return;
       }
       // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出
@@ -926,12 +928,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // 明示 uid:'$pick'+target 形は初期 walk push となり human 経路で後続 step の bind が
       // 喪失するため、pick carrier に使う場合は短縮形 (runtime push) が必須。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
-        const cgkP = resolvePlayer(a.player, ctx);
-        const cgkChooser = ctx.source.player as Player;
-        const paTarget = buildShortFormPick('scene', a, cgkChooser, cgkP);
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: cgkChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: cgkChooser, turn: s.turn.number, action: 'effect:charGrantKeyword:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
         return;
       }
       if (a.uid === '$pick' && (a as { target?: unknown }).target === undefined) {
@@ -973,12 +970,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // def.abilities と合算走査。清掃は clearTurnEffects('turn')。validate.ts が JSON 性と
       // trigger.hook の許可リストを enforce (rules/15, 19)。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
-        const cgaP = resolvePlayer(a.player, ctx);
-        const cgaChooser = ctx.source.player as Player;
-        const paTarget = buildShortFormPick('scene', a, cgaChooser, cgaP);
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: cgaChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: cgaChooser, turn: s.turn.number, action: 'effect:charGrantAbility:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
         return;
       }
       if (a.uid === '$pick') {
@@ -1024,12 +1016,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         //   旧コードは byPlayer=scsP を渡し、player:'opp' (B02020/B03032) で『controller が相手キャラを
         //   選ぶ』が「相手が選ぶ」に化けていた (charModifyAP/LP/Level は byPlayer=ctx.source.player で正)。
         //   deck-source は後段 resolve (L798 resolvePlayer(a.player)) が a.player を別途参照するため不変。
-        const scsP = resolvePlayer(a.player, ctx);
-        const scsChooser = ctx.source.player as Player;
-        const paTarget = buildShortFormPick('scene', a, scsChooser, scsP);
-        const paArgs = { ...a, uid: '$pick', target: paTarget };
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: scsChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
-        mutate.log.append(s, { ts: Date.now(), player: scsChooser, turn: s.turn.number, action: 'effect:charSetCard:awaiting-pick' });
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
         return;
       }
       // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出

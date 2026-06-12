@@ -32,8 +32,19 @@
   (.tsx 3 file 取りこぼし wrapper 化 / bug-123 makeCtx import 化 / ヘッダ表現訂正 / docs 再生成)。
   詳細: refactor-plan/phases.md §レビュー記録。grep は *.ts だけでなく **.tsx も必ず含めること (教訓)。
 
+### ② リファクタ Phase 2a (PA短縮形 gate helper 化) — ✅完了
+- paShortFormAwait helper を atom-handlers に追加、uid-carrier 11 verb の awaiting-pick
+  コピペを置換 (+46/−59)。**計画の「chooser=controller 固定」は不採用** — a.player=操作者規約の
+  4 verb (BUG-131 裁定) の挙動を変えるため、chooser/side を明示引数化 (挙動完全不変)。
+- 敵対レビュー Workflow wf_5b2ed17f 3観点 **全 pass** (レビュアーが HEAD vs 現行の差分実行
+  13 probe deep-equal 一致を確認)。minor 指摘「awaiting-pick 恒久テスト 4/11 verb のみ」
+  → 残り 7 verb の characterization を同フェーズで追加 (vitest 1961→**1968** pass)。
+- ゲート: typecheck 0 / full vitest 1968/0fail / smoke:1000 baseline 完全一致 (469/531, 10.86) /
+  e2e 26 pass / eslint 新規 0。
+- 教訓: ブロックコメント内に `charModify*/` と書くと `*/` でコメント終端 → 構文エラー。`系` で代替。
+
 ### 残り
-- Phase 2a (PA短縮形 gate helper 化) / 2b (手動同期ペア機械検証) / 2c (dispatch 契約是正) → 各1commit。
+- Phase 2b (手動同期ペア機械検証) / 2c (dispatch 契約是正) → 各1commit。
 - ③ カード wave#2: green候補残 ~260 + engine拡張 wave#2 (task-d-priority-map.json 次ゲート群)。
 - ④ Phase 3〜4 は着手前に個別設計レビュー必須。
 

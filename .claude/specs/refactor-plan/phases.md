@@ -25,12 +25,18 @@
   スキーマに是正してから共通化 (stale 温存の共通化は禁止)
 - 機械的置換だが 60+ ファイル touch → 専用フェーズ。置換は import 追加 + ローカル定義削除のみ (本文不変)
 
-## 2a. PA 短縮形 gate 共通化
+## 2a. PA 短縮形 gate 共通化 (✅ 2026-06-12 実施)
 
 - `applyPaShortForm(s, verb, a, ctx, {sideDefault, chooser})` を atom-handlers 内 helper として抽出
   (sceneRemove/sceneSetState/sceneToHand/sceneToDeck/charModify*/charGrantKeyword/charGrantAbility/charSetCard)
 - 各 case は「helper 呼出 + verb 固有の実行部」のみに。BUG-120 の chooser 規約 (controller=ctx.source.player)
   を helper に固定し、side=a.player 解決の規約を一本化 (sceneToHand の chooser=資料側ズレもここで統一)
+- **実施時の計画補正**: chooser を controller に「固定」すると a.player=操作者 規約の 4 verb
+  (sceneRemove/charRemoveSetCard/sceneToHand/sceneSetState、BUG-131 で正と裁定) の挙動が
+  player:'opp' 系カードで変わるため不採用。helper は chooser/side を**明示引数**とし、
+  2 規約の併存を helper doc に明文化 (挙動完全不変を優先)。対象は uid-carrier 11 verb。
+  target-carrier 系 (discard/evidenceToHand/handAddFromRemove) と cardId-carrier (sceneEnter)、
+  $pick.cardIds (charStackCard) は構造が異なるため対象外 (3a で再評価)
 
 ## 2b. 手動同期ペアの単一ソース化
 
