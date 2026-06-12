@@ -38,7 +38,7 @@
   target-carrier 系 (discard/evidenceToHand/handAddFromRemove) と cardId-carrier (sceneEnter)、
   $pick.cardIds (charStackCard) は構造が異なるため対象外 (3a で再評価)
 
-## 2b. 手動同期ペアの単一ソース化
+## 2b. 手動同期ペアの単一ソース化 (✅ 2026-06-12 実施)
 
 - 対象 4 系統: AtomVerb union ↔ validate.ts ATOM_VERBS ↔ taskA-validate-specs VERBS /
   Cost union ↔ evaluate/pay/costToText ↔ COSTS / TRIGGERED_HOOKS ↔ HOOKS / Condition ↔ CONDS
@@ -90,3 +90,14 @@
   unit ~14 + e2e ~13 file に残存 / 既存 eslint 46 err (HEAD 同値)。
   検証: full vitest **1961 pass / 0 fail** ×3 回 / eslint **baseline 46 err と完全一致 (新規 0)** /
   61 file +91/−800 行。tests/ は tsconfig 対象外 (typecheck はテストを検査しない) と判明 — 2b で考慮
+
+- **2b (2026-06-12)** 4 系統を実装: ①AtomVerb/Cost/Condition は `satisfies Record<…, true>` map で
+  union との両方向同期をコンパイル時強制 (value セットを export) ②canPay/payInner/evalCond/costToText
+  に exhaustive default (noImplicitReturns 無効による missing-case silent ギャップの封鎖 — payInner は
+  Task D で実証済の欠陥) ③TRIGGERED_HOOKS export 化 ④cjs whitelist との同期は新設
+  sync-taskA-whitelists.test.ts (4 テスト) が機械検証。
+  レビューは新トークンポリシー初適用: 決定論検証 (新旧 ATOM_VERBS 50/50 集合一致スクリプト +
+  fake verb 注入で同期テストの fail を実証) + **opus 1 lens** (94k tok、旧フルパネルの 1/3〜1/6) — pass。
+  指摘 0。検証: typecheck 0 / full vitest **1972 pass / 0 fail** (+4) / smoke:1000 baseline 完全一致 /
+  e2e 26 pass。教訓: Python subprocess は cp932 decode 例外で後続復元処理が飛ぶ —
+  一時改変→復元パターンは Bash 直列 (mutate && test; restore) で行う

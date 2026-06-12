@@ -311,8 +311,33 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     }
     case 'custom':
       return cond.check(state, ctx);
+    // refactor 2b: case 追加漏れの compile-time 検出 (noImplicitReturns 無効のため明示 guard)。到達不能。
+    default: {
+      const _exhaustive: never = cond;
+      void _exhaustive;
+      return false;
+    }
   }
 }
+
+// refactor 2b (2026-06-12): Condition union の kind 一覧を value として単一ソース化
+// (`satisfies Record<Condition['kind'], true>` で両方向同期を強制)。
+// scripts/taskA-validate-specs.cjs CONDS との同期は tests/engine/sync-taskA-whitelists.test.ts。
+const CONDITION_KIND_MAP = {
+  true: true, false: true, not: true, and: true, or: true, turn: true,
+  partnerColor: true, caseColor: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
+  bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,
+  handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, // Task D E1 (2026-06-12)
+  fileTopType: true,
+  fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
+  scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
+  removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true,
+  stackedCountAtLeast: true, contactOpponentApHigher: true, guardedBySelf: true,
+  enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
+  charTurnEffect: true, // Task D E4 (2026-06-12)
+  custom: true,
+} as const satisfies Record<Condition['kind'], true>;
+export const CONDITION_KINDS: ReadonlySet<string> = new Set(Object.keys(CONDITION_KIND_MAP));
 
 export function evalAll(state: GameState, cs: Condition[], ctx: EffectCtx): boolean[] {
   return cs.map(c => evalCond(state, c, ctx));

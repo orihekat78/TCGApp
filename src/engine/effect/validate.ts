@@ -13,29 +13,34 @@
 //   - ruleRefs の実在チェックは `./validate-spec-files.ts` (Node 専用) に分離。
 //     ブラウザバンドルから node:fs 依存を切り離すため、ここでは行わない。
 
-import type { Effect, ValidationResult, CardDef } from '../types/index.js';
+import type { Effect, ValidationResult, CardDef, AtomVerb } from '../types/index.js';
 
-// 既知 AtomVerb の runtime リスト。Effect 型のリテラル union とズレないよう
-// 同期する必要がある (effect.ts AtomVerb)。
-const ATOM_VERBS = new Set<string>([
-  'draw', 'discard', 'mill', 'fileAdd', 'filePopToHand',
-  'fileRemoveTop', 'fileFlipTop', // Task D E3 (2026-06-12)
-  'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
-  'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
-  'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
-  'sceneToDeck', // Task D E2 (2026-06-12)
-  'charModifyAP', 'charModifyLP', 'charModifyLevel', 'charSetAP', 'charSetLP',
-  'charOverrideAP', 'charOverrideLP',
-  'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',
-  'charGrantAbility', // Task D E4 (2026-06-12)
-  'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
-  'partnerAssist', 'partnerSetState', 'partnerSolveCase',
-  'caseToResolved',
-  'startContact', 'endActionEarly',
-  'deckRevealUntil', 'deckToBottomBound', 'deckShuffle', 'souza',
-  'expandActionTargets', // D11007 v2 Phase 3
-  'log', 'noop',
-]);
+// refactor 2b (2026-06-12): AtomVerb union との同期を手動からコンパイル時強制に変更。
+// `satisfies Record<AtomVerb, true>` により、union への verb 追加漏れ・余剰 key の両方向を
+// tsc が検出する (旧: コメント頼みの手動同期)。
+const ATOM_VERB_MAP = {
+  draw: true, discard: true, mill: true, fileAdd: true, filePopToHand: true,
+  fileRemoveTop: true, fileFlipTop: true, // Task D E3 (2026-06-12)
+  evidenceGain: true, evidenceLose: true, evidenceFlip: true, selfToEvidence: true, evidenceToDeck: true,
+  evidenceToHand: true, handAddFromRemove: true, handAddFromDeck: true,
+  sceneEnter: true, sceneSwitch: true, sceneRemove: true, sceneSetState: true, sceneDisguise: true, sceneToHand: true,
+  sceneToDeck: true, // Task D E2 (2026-06-12)
+  charModifyAP: true, charModifyLP: true, charModifyLevel: true, charSetAP: true, charSetLP: true,
+  charOverrideAP: true, charOverrideLP: true,
+  charGrantKeyword: true, charRevokeKeyword: true, charDisableOriginal: true,
+  charGrantAbility: true, // Task D E4 (2026-06-12)
+  charSetTurnEffect: true, charSetCard: true, charStackCard: true, charRemoveSetCard: true,
+  partnerAssist: true, partnerSetState: true, partnerSolveCase: true,
+  caseToResolved: true,
+  startContact: true, endActionEarly: true,
+  deckRevealUntil: true, deckToBottomBound: true, deckShuffle: true, souza: true,
+  expandActionTargets: true, // D11007 v2 Phase 3
+  log: true, noop: true,
+} as const satisfies Record<AtomVerb, true>;
+
+// scripts/taskA-validate-specs.cjs の VERBS/FORBIDDEN_VERBS との同期は
+// tests/engine/sync-taskA-whitelists.test.ts が機械検証する (refactor 2b)
+export const ATOM_VERBS: ReadonlySet<string> = new Set(Object.keys(ATOM_VERB_MAP));
 
 const TARGETING_KINDS = new Set<string>(['self', 'pick', 'all', 'fromBound']);
 

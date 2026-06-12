@@ -7,6 +7,17 @@
 import type { GameState, Cost, EffectCtx, TargetingRef } from '@/engine/types';
 import { candidates } from '@/engine/target/candidates.js';
 
+// refactor 2b (2026-06-12): Cost union の kind 一覧を value として単一ソース化。
+// `satisfies Record<Cost['kind'], true>` で union との両方向同期をコンパイル時に強制。
+// scripts/taskA-validate-specs.cjs COSTS との同期は tests/engine/sync-taskA-whitelists.test.ts。
+const COST_KIND_MAP = {
+  sleepSelf: true, sleepChar: true, removeFromHand: true, removeFromScene: true,
+  removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
+  sceneToDeckBottom: true, // Task D E2 (2026-06-12)
+  pay: true, choice: true, fileFrom: true, flipFaceUpEvidence: true, custom: true,
+} as const satisfies Record<Cost['kind'], true>;
+export const COST_KINDS: ReadonlySet<string> = new Set(Object.keys(COST_KIND_MAP));
+
 /**
  * Check if a Cost is fully payable in the given state.
  */
@@ -76,6 +87,13 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     }
     case 'custom': {
       return cost.check(state, ctx);
+    }
+    // refactor 2b: case 追加漏れの compile-time 検出 (noImplicitReturns 無効のため明示 guard)。
+    // 到達不能 (union 網羅済)。万一 runtime で未知 kind が来た場合は旧挙動 (undefined=falsy) 同等の false。
+    default: {
+      const _exhaustive: never = cost;
+      void _exhaustive;
+      return false;
     }
   }
 }

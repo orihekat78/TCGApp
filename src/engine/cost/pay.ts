@@ -166,6 +166,13 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       acc.paidItems.push({ kind: 'custom', details: {} });
       return;
     }
+    // refactor 2b: payInner は void 戻りのため case 追加漏れが TS で検知されなかった
+    // (Task D wave#1 で実証)。never 代入で compile-time 検出する。到達不能。
+    default: {
+      const _exhaustive: never = cost;
+      void _exhaustive;
+      return;
+    }
   }
 }
 

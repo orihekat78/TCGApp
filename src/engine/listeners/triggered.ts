@@ -51,7 +51,9 @@ export function _setHumanPlayerSide(side: 'self' | 'opp' | null): void {
 
 type Player = 'self' | 'opp';
 
-const TRIGGERED_HOOKS = [
+// refactor 2b (2026-06-12): export 化 — scripts/taskA-validate-specs.cjs HOOKS との同期を
+// tests/engine/sync-taskA-whitelists.test.ts が機械検証するため。
+export const TRIGGERED_HOOKS = [
   'enter',
   'effect:declared',
   'action:pre-target', // D11007 v2 Phase 3: attacker 選択時、target 列挙前

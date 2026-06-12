@@ -62,6 +62,12 @@ function costToText(cost: Cost): string {
         ? `証拠 ${cost.n.min}〜${cost.n.max} 枚を表向きに`
         : `証拠 ${cost.n.min} 枚以上を表向きに`;
     case 'custom':            return '(独自コスト)';
+    // refactor 2b: case 追加漏れの compile-time 検出 (noImplicitReturns 無効のため明示 guard)。到達不能。
+    default: {
+      const _exhaustive: never = cost;
+      void _exhaustive;
+      return '';
+    }
   }
 }
 
