@@ -568,6 +568,43 @@ import { B06101 } from '../ct-p06/B06101.js';
 import { D10011 } from '../ct-d10/D10011.js';
 import { B09008 } from '../ct-p09/B09008.js';
 
+// Task D engine拡張 wave#1 batch (2026-06-12): 4 gate + pick-bind で解禁 35枚
+import { B09092 } from '../ct-p09/B09092.js';
+import { B09092P } from '../ct-p09/B09092P.js';
+import { B07081 } from '../ct-p07/B07081.js';
+import { B04064 } from '../ct-p04/B04064.js';
+import { B07080 } from '../ct-p07/B07080.js';
+import { B07080P } from '../ct-p07/B07080P.js';
+import { B04011 } from '../ct-p04/B04011.js';
+import { B08058 } from '../ct-p08/B08058.js';
+import { B08058P } from '../ct-p08/B08058P.js';
+import { B09021 } from '../ct-p09/B09021.js';
+import { B09021P } from '../ct-p09/B09021P.js';
+import { B04068 } from '../ct-p04/B04068.js';
+import { B04068P } from '../ct-p04/B04068P.js';
+import { B05050 } from '../ct-p05/B05050.js';
+import { PR100 } from '../pr-01/PR100.js';
+import { PR106 } from '../pr-01/PR106.js';
+import { B08037 } from '../ct-p08/B08037.js';
+import { B08037P } from '../ct-p08/B08037P.js';
+import { B09028 } from '../ct-p09/B09028.js';
+import { PR181 } from '../pr-01/PR181.js';
+import { PR187 } from '../pr-01/PR187.js';
+import { B09054 } from '../ct-p09/B09054.js';
+import { B09054P } from '../ct-p09/B09054P.js';
+import { B09041 } from '../ct-p09/B09041.js';
+import { B09041P } from '../ct-p09/B09041P.js';
+import { B07090 } from '../ct-p07/B07090.js';
+import { B07090P } from '../ct-p07/B07090P.js';
+import { B08029 } from '../ct-p08/B08029.js';
+import { B08029P } from '../ct-p08/B08029P.js';
+import { B08032 } from '../ct-p08/B08032.js';
+import { B08032P } from '../ct-p08/B08032P.js';
+import { B09032 } from '../ct-p09/B09032.js';
+import { B07079 } from '../ct-p07/B07079.js';
+import { B07079P } from '../ct-p07/B07079P.js';
+import { B02014 } from '../ct-p02/B02014.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -689,4 +726,7 @@ export const REUSE_CARDS: CardDef[] = [
   D09027, PR041, PR045, PR049, PR098, PR104, PR117, PR118, PR137, PR143, PR157, PR163, PR175, PR178, PR184, PR199, PR205, PR262, PR268, PR276,
   // Task A batch#2 certify-harvest needsManual 手書き3枚 (2026-06-12): B06101(cutin contactTargetMatches黒)/D10011(declared reanimate毛利蘭+cutin)/B09008(continuous apAtLeast突撃+opt charRemoveSetCard)。B07052=yellow(event-trait gate) / B08020=defer(色matcher要shared)
   B06101, D10011, B09008,
+  // Task D engine拡張 wave#1 (2026-06-12): hand-count/scene→deck/FILE-zone/textual-grant + pick-bind 解禁 35枚
+  // (敵対検証 workflow 通過。B09028/B09054系=sleepGuard+自己ガード除外、B09032=charGrantKeyword短縮形で解禁)
+  B09092, B09092P, B07081, B04064, B07080, B07080P, B04011, B08058, B08058P, B09021, B09021P, B04068, B04068P, B05050, PR100, PR106, B08037, B08037P, B09028, PR181, PR187, B09054, B09054P, B09041, B09041P, B07090, B07090P, B08029, B08029P, B08032, B08032P, B09032, B07079, B07079P, B02014,
 ];

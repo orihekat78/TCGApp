@@ -12,7 +12,8 @@
 // a2: declared + turn1 limit + 相手 1pick で turn-level-1 (B07103 a2 同型)
 //     ※「パートナーエリアでも宣言できる」は partial-impl (scope:on-scene のみ、partner-area での
 //     宣言は MR area 拡張要)
-// MR能力 (rules/18): 相手ターン中の現場離脱で partner-area へ — engine 側で対応済 (auto)
+// MR能力 (rules/18): 相手ターン中の現場離脱で partner-area へ — ⚠ engine 未実装 (isMR 配線なし、全カード共通の既存ギャップ)。
+// 旧記述「engine 側で対応済 (auto)」は誤り (2026-06-12 Task D 敵対検証で確認、grep で MR 処理は不存在)。partner-area 構造 wave で対応予定
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
