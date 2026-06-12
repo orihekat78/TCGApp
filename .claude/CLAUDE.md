@@ -149,6 +149,51 @@
 | 新カード追加時の修正行数 | 200 | 100 | 80 |
 | バグ修正 PR / 月 | 高 | 中 | 低 |
 
+## トークン運用ルール (2026-06-12 ユーザー指示 ①〜④)
+
+### モデル段階化 (workflow / subagent)
+
+- **基本作業は opus 主体**: 通常作業 (カード実装/調査/ドキュメント等) のオーケストレーションと
+  実作業は `model:'opus'` を明示。難判断 (ルール裁定の解釈、カードテキスト⇔DSL の意味等価判定、
+  敵対的反証) に限り `model:'fable'` を呼び出す
+- **リファクタリングレベルの作業は Fable 主体**: refactor-plan のフェーズ群・骨格 (engine) に
+  触れる変更は Fable がオーケストレーション・実作業を主導する
+  (セッション本体のモデルは /model で切替: リファクタ系セッション=fable / 通常セッション=opus 推奨)
+- **sonnet は慎重に選定した機械作業のみ**: grep/集合一致検証、diff の機械突合、whitelist 抽出、
+  lint/テスト実走系 lens。迷ったら opus
+- 適用対象: Workflow `agent()` の `opts.model` / Agent tool / `scripts/wf-*.mjs` 系パイプライン
+
+### 標準活用リソース (2026-06-12 採用)
+
+- **playwright MCP**: セルフレビュー必須項目の「1試合通し実機検証」「画面処理=カードテキスト文言検証」
+  は e2e spec 新作よりも playwright MCP の直接操作を第一選択にする
+- **obsidian MCP / obsidian-bases skill**: bugs/index.base の view 管理・月次 AUDIT 集計に使用
+- **schedule skill**: 月次 audit (bug:trend + lint 群 + AUDIT 雛形) の定期実行化
+- **deep-research skill**: 公式 Q&A (commmune) 新着裁定・カード個別 Q&A の体系的収集
+- **context7 MCP**: ライブラリ設定変更・バージョン更新時は推測せず現行ドキュメントを引く
+- **GitHub Actions CI** (.github/workflows/ci.yml): push/PR ごとに typecheck + vitest + lint 7本 +
+  smoke を GitHub 側で実行 (トークン消費ゼロの常時回帰ゲート)。merge 前に CI green を確認する
+- **Serena MCP** (.mcp.json): LSP ベースのシンボル単位ナビゲーション。大規模リファクタ
+  (Phase 3a/3b 等) でファイル全読みの代わりに find_symbol / find_referencing_symbols を優先
+- **firecrawl MCP** (.mcp.json、要 FIRECRAWL_API_KEY): JS レンダリングが必要な外部サイト
+  (commmune 等) の構造化取得。まず playwright MCP / defuddle で足りるか検討してから使う
+
+### レビューの right-sizing
+
+- レビュー深度はフェーズのリスクに連動させる (低リスク=決定論検証+1 lens / 高リスク=フルパネル)
+- ただし opus / Fable で行うほうが効果が見られる場面 (意味論・ルール整合の検証等) には積極的に使う
+- reviewer に full vitest 等を再実走させない (メインループの実行結果をプロンプトで渡す)
+
+### 決定論スクリプト優先
+
+- **エージェントに確認させる前に、スクリプト (grep / hash / diff / node) で機械的に検証できないか必ず検討する**。
+  機械で検証できるものはエージェントに依頼しない (例: fixture 統一は md5 分類 + one-shot script で実施)
+
+### コンテキスト衛生 (1フェーズ = 1commit = セッション境界)
+
+- フェーズ commit 後は NEXT-SESSION-PROMPT.md を再開可能な状態に更新し、
+  1〜2 フェーズ消化したセッションは `/clear` での新セッション再開を推奨してターンを終える
+
 ## 自動生成ドキュメント運用 (`.claude/auto/`)
 
 `.claude/auto/` 配下のファイルは `scripts/gen-docs/` により自動生成される。

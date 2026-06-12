@@ -43,8 +43,25 @@
   e2e 26 pass / eslint 新規 0。
 - 教訓: ブロックコメント内に `charModify*/` と書くと `*/` でコメント終端 → 構文エラー。`系` で代替。
 
+### ② リファクタ Phase 2b (手動同期ペア単一ソース化) — ✅完了
+- satisfies map ×3 (AtomVerb/Cost/Condition) + exhaustive default ×4 + TRIGGERED_HOOKS export
+  + sync-taskA-whitelists.test.ts (4 tests、偽陰性検出能力を fake verb 注入で実証)。
+- レビューは新トークンポリシー初適用: 決定論検証 + opus 1 lens (94k tok) → pass / 指摘0。
+- ゲート: typecheck 0 / vitest 1972/0 / smoke baseline一致 / e2e 26。
+- limit 枯渇 (16:45) で旧フルパネルレビューが一度失敗 → ポリシー策定の契機 (CLAUDE.md
+  「トークン運用ルール」+ settings.json hook ④ + memory feedback-token-economy 参照)。
+
+### 2026-06-12 (続々): トークン運用整備 + 外部リソース導入
+- CLAUDE.md「トークン運用ルール」「標準活用リソース」新設 / settings.json に phase-commit hook。
+- GitHub Actions CI (.github/workflows/ci.yml: tsc+vitest+lint7+smoke、ubuntu、docs:check除外) 導入。
+- .mcp.json 新設: Serena (uvx、次セッションから有効) + firecrawl (要 FIRECRAWL_API_KEY)。
+- **project skills 新設 (writing-skills TDD 準拠)**: `/refactor-phase` と `/card-wave`。
+  RED baseline で「push しない (stale)」「docs 再生成順序」「check:smoke-baseline 未使用」の
+  ギャップを確認 → skill で封鎖 → GREEN 検証 2 本とも合格 (card-wave は tool 13→2 回に減)。
+  以後、該当作業ではまず対応 skill を呼ぶこと。
+
 ### 残り
-- Phase 2b (手動同期ペア機械検証) / 2c (dispatch 契約是正) → 各1commit。
+- Phase 2c (dispatch 契約是正) → 1commit。その後 ③ カード wave#2 → ④ Phase 3〜4。
 - ③ カード wave#2: green候補残 ~260 + engine拡張 wave#2 (task-d-priority-map.json 次ゲート群)。
 - ④ Phase 3〜4 は着手前に個別設計レビュー必須。
 

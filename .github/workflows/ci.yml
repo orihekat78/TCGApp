@@ -1,0 +1,55 @@
+# CI — push/PR ごとの回帰ゲート (2026-06-12 導入、private repo 無料枠 2,000 min/月)
+#
+# ローカルの挙動不変ゲートのうち、トークンを消費せず GitHub 側で常時走らせられるものを実行する:
+#   typecheck / full vitest / lint 7本 / smoke:1000 (異常時 exit 1)
+# docs:check は除外 (Windows 開発環境で生成した hash が Linux checkout と一致しない可能性があるため。
+# ローカル pre-commit hook で引き続き強制される)。playwright e2e も v1 では除外 (要ブラウザ環境)。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests (vitest)
+        run: npx vitest run
+
+      - name: Lint chain (規約 7 本)
+        run: |
+          npm run lint:bugs
+          npm run lint:listener
+          npm run lint:card-addition
+          npm run lint:side-channel
+          npm run lint:component-testid
+          npm run lint:ok-false-pattern
+          npm run lint:test-pair
+
+      - name: Smoke 1000 games
+        run: npm run smoke:1000
+
+      - name: Upload smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: .claude/reports/smoke-*.json
+          if-no-files-found: ignore
+          retention-days: 14

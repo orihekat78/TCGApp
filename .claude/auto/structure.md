@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 194
-- **ファイル数**: 3005
+- **ディレクトリ数**: 199
+- **ファイル数**: 3012
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -652,6 +652,8 @@
     - `smoke-2026-06-12-5.md` — Smoke 1000戦レポート — smoke-2026-06-12-062343
     - `smoke-2026-06-12-6.json`
     - `smoke-2026-06-12-6.md` — Smoke 1000戦レポート — smoke-2026-06-12-072348
+    - `smoke-2026-06-12-7.json`
+    - `smoke-2026-06-12-7.md` — Smoke 1000戦レポート — smoke-2026-06-12-074230
     - `smoke-2026-06-12.json`
     - `smoke-2026-06-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-035822
     - `smoke-baseline.json`
@@ -830,6 +832,11 @@
     - `2026-06-12.md` — セッションログ — 2026-06-12 Task D engine拡張 高リスク wave#1
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
+  - **`skills/`** — プロジェクト固有のスキル定義
+    - **`card-wave/`**
+      - `SKILL.md` — card-wave — カード実装 wave 実行手順
+    - **`refactor-phase/`**
+      - `SKILL.md` — refactor-phase — リファクタフェーズ実行手順
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
     - **`cards-analysis/`**
       - `AUDIT-USER-REQUEST-18.md` — Card Audit — user_request 20260521_01 #18
@@ -1108,6 +1115,9 @@
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
   - `settings.json` — Claude Code 設定 (権限・hooks 等)
+- **`.github/`**
+  - **`workflows/`**
+    - `ci.yml`
 - **`.obsidian/`** — Obsidian Vault 設定 (ワークスペース / グラフ / プラグイン)
   - `app.json`
   - `appearance.json`
@@ -3101,6 +3111,7 @@
     - `produce.test.ts`
     - `rng.test.ts`
     - `state-factory.test.ts`
+    - `sync-taskA-whitelists.test.ts` — refactor 2b (2026-06-12): 手動同期ペアの機械検証
     - `types.test.ts`
   - **`helpers/`**
     - `fixtures.ts` — tests/helpers/fixtures.ts — テスト共通 fixture (refactor Phase 1c, 2026-06-12)
@@ -3195,6 +3206,7 @@
   - `20260521_01.txt`
   - `20260522_01.txt`
 - `.gitignore` — Git 除外パターン
+- `.mcp.json`
 - `.tmp-taskA-registered.json`
 - `analysis.txt`
 - `CHANGELOG.md` — フェーズ/Round 完了履歴 (Keep a Changelog 形式)
