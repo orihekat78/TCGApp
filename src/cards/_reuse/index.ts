@@ -51,6 +51,7 @@ import { D09026 } from '../ct-d09/D09026.js';
 import { D10012 } from '../ct-d10/D10012.js';
 import { D10025 } from '../ct-d10/D10025.js';
 import { B01008 } from '../ct-p01/B01008.js';
+import { B01011 } from '../ct-p01/B01011.js';
 import { B01027 } from '../ct-p01/B01027.js';
 import { B01028 } from '../ct-p01/B01028.js';
 import { B01028P } from '../ct-p01/B01028P.js';
@@ -458,6 +459,115 @@ import { B05029P } from '../ct-p05/B05029P.js';
 import { PR055 } from '../pr-01/PR055.js';
 import { PR057 } from '../pr-01/PR057.js';
 
+import { B04024 } from '../ct-p04/B04024.js';
+import { B05057 } from '../ct-p05/B05057.js';
+import { B06088 } from '../ct-p06/B06088.js';
+import { B05060 } from '../ct-p05/B05060.js';
+import { B03007 } from '../ct-p03/B03007.js';
+import { PR061 } from '../pr-01/PR061.js';
+import { PR065 } from '../pr-01/PR065.js';
+import { PR180 } from '../pr-01/PR180.js';
+import { PR186 } from '../pr-01/PR186.js';
+import { PR084 } from '../pr-01/PR084.js';
+import { PR090 } from '../pr-01/PR090.js';
+import { B05034 } from '../ct-p05/B05034.js';
+import { B07042 } from '../ct-p07/B07042.js';
+import { B09015 } from '../ct-p09/B09015.js';
+import { B04007 } from '../ct-p04/B04007.js';
+import { B03099 } from '../ct-p03/B03099.js';
+import { B03012 } from '../ct-p03/B03012.js';
+import { PR155 } from '../pr-01/PR155.js';
+import { PR161 } from '../pr-01/PR161.js';
+import { PR230 } from '../pr-01/PR230.js';
+import { B02053 } from '../ct-p02/B02053.js';
+import { B02083 } from '../ct-p02/B02083.js';
+import { D05006 } from '../ct-d05/D05006.js';
+import { B06052 } from '../ct-p06/B06052.js';
+import { PR138 } from '../pr-01/PR138.js';
+import { PR144 } from '../pr-01/PR144.js';
+import { B01050 } from '../ct-p01/B01050.js';
+import { B01069 } from '../ct-p01/B01069.js';
+import { B03014 } from '../ct-p03/B03014.js';
+import { B03018 } from '../ct-p03/B03018.js';
+import { B03069 } from '../ct-p03/B03069.js';
+import { B03081 } from '../ct-p03/B03081.js';
+import { B03101 } from '../ct-p03/B03101.js';
+import { B03120 } from '../ct-p03/B03120.js';
+import { B04023 } from '../ct-p04/B04023.js';
+import { B04049 } from '../ct-p04/B04049.js';
+import { B04082 } from '../ct-p04/B04082.js';
+import { B05017 } from '../ct-p05/B05017.js';
+import { B05073 } from '../ct-p05/B05073.js';
+import { B05074 } from '../ct-p05/B05074.js';
+import { B05090 } from '../ct-p05/B05090.js';
+import { B05094 } from '../ct-p05/B05094.js';
+import { B05098 } from '../ct-p05/B05098.js';
+import { B05076P } from '../ct-p05/B05076P.js';
+import { B06010 } from '../ct-p06/B06010.js';
+import { B06102 } from '../ct-p06/B06102.js';
+import { B07072 } from '../ct-p07/B07072.js';
+import { B07073 } from '../ct-p07/B07073.js';
+import { B07073P } from '../ct-p07/B07073P.js';
+import { B07075 } from '../ct-p07/B07075.js';
+import { B07077 } from '../ct-p07/B07077.js';
+import { B07077P } from '../ct-p07/B07077P.js';
+import { B07082 } from '../ct-p07/B07082.js';
+import { B07082P } from '../ct-p07/B07082P.js';
+import { B07089 } from '../ct-p07/B07089.js';
+import { B07094 } from '../ct-p07/B07094.js';
+import { B07094P } from '../ct-p07/B07094P.js';
+import { B08011 } from '../ct-p08/B08011.js';
+import { B08024 } from '../ct-p08/B08024.js';
+import { B08044 } from '../ct-p08/B08044.js';
+import { B08044P } from '../ct-p08/B08044P.js';
+import { B08052 } from '../ct-p08/B08052.js';
+import { B08070 } from '../ct-p08/B08070.js';
+import { B08088 } from '../ct-p08/B08088.js';
+import { B08090 } from '../ct-p08/B08090.js';
+import { B09013 } from '../ct-p09/B09013.js';
+import { B09057 } from '../ct-p09/B09057.js';
+import { B09058 } from '../ct-p09/B09058.js';
+import { B09058P } from '../ct-p09/B09058P.js';
+import { B09062 } from '../ct-p09/B09062.js';
+import { B09065 } from '../ct-p09/B09065.js';
+import { B09075 } from '../ct-p09/B09075.js';
+import { B09075P } from '../ct-p09/B09075P.js';
+import { B09082 } from '../ct-p09/B09082.js';
+import { B09084 } from '../ct-p09/B09084.js';
+import { B09102 } from '../ct-p09/B09102.js';
+import { B09106 } from '../ct-p09/B09106.js';
+import { B09106P } from '../ct-p09/B09106P.js';
+import { D02004 } from '../ct-d02/D02004.js';
+import { D05007 } from '../ct-d05/D05007.js';
+import { D07008 } from '../ct-d07/D07008.js';
+import { D07009 } from '../ct-d07/D07009.js';
+import { D07014 } from '../ct-d07/D07014.js';
+import { D07015 } from '../ct-d07/D07015.js';
+import { D09025 } from '../ct-d09/D09025.js';
+import { D09027 } from '../ct-d09/D09027.js';
+import { PR041 } from '../pr-01/PR041.js';
+import { PR045 } from '../pr-01/PR045.js';
+import { PR049 } from '../pr-01/PR049.js';
+import { PR098 } from '../pr-01/PR098.js';
+import { PR104 } from '../pr-01/PR104.js';
+import { PR117 } from '../pr-01/PR117.js';
+import { PR118 } from '../pr-01/PR118.js';
+import { PR137 } from '../pr-01/PR137.js';
+import { PR143 } from '../pr-01/PR143.js';
+import { PR157 } from '../pr-01/PR157.js';
+import { PR163 } from '../pr-01/PR163.js';
+import { PR175 } from '../pr-01/PR175.js';
+import { PR178 } from '../pr-01/PR178.js';
+import { PR184 } from '../pr-01/PR184.js';
+import { PR199 } from '../pr-01/PR199.js';
+import { PR205 } from '../pr-01/PR205.js';
+import { PR262 } from '../pr-01/PR262.js';
+import { PR268 } from '../pr-01/PR268.js';
+import { PR276 } from '../pr-01/PR276.js';
+import { B06101 } from '../ct-p06/B06101.js';
+import { D10011 } from '../ct-d10/D10011.js';
+import { B09008 } from '../ct-p09/B09008.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -555,4 +665,28 @@ export const REUSE_CARDS: CardDef[] = [
   PR012, PR013, PR014, PR015, PR016, PR017, PR018, PR019, PR020, PR021, PR062, PR066,
   // exact-reprint batch (2026-06-06 タスクA): 既存実装カードの色違い/パラレル/再録 11 枚 (engine 不変)
   B02004P, B02043, B03006, B03006P, B03122, B03129P, B04081, B04081P, B05029P, PR055, PR057,
+  // Task A batch#2 (2026-06-09): A.enter+hirameki クラスタ — 自己スリープ登場 (enter→sceneSetState{$self,sleep}) + ヒラメキdraw
+  B01011,
+  // Task A batch#2 wave1 (2026-06-10): look-N→hand クラスタ — deckRevealUntil+handAddFromDeck+deckToBottomBound (B01013/D01013 同型) + hirameki/enterSleep/leave-hook/cutin
+  B04024, B05057, B06088, B05060, B03007, PR061, PR065, PR180, PR186, PR084, PR090,
+  // Task A batch#2 wave2 (2026-06-10): leave→hand (handAddFromRemove) / reanimate (sceneEnter from:remove|hand ± enterSleep) / forEach-all sleep (B06071 同型) — B02004/D08024/B05112/D01012/D03013 同型
+  B05034, B07042, B09015, B04007, B03099, B03012, PR155, PR161, PR230,
+  // Task A batch#2 certify-harvest #1 (2026-06-11): adversarial-certify workflow verified greens — B01050 (enterSleep+look1白+hirameki) / B01069 (opt 相手証拠+draw) / B02053 (event reanimate白怪盗+hirameki, __eventUse closure)
+  B02053, B02083,
+  // Task A batch#2 wave3 (2026-06-11): opt-cost reanimate — optional{chain[(self-sleep,)discard1,sceneEnter from:remove]} (B05019 optional + D08003 chain 同型) — D05006/B06052(+cutin)/PR138/PR144(+hirameki sleep-pick)
+  D05006, B06052, PR138, PR144,
+  // Task A batch#2 certify-harvest #1b (2026-06-11): canary verified greens — B01050 (enterSleep+look1白→hand+hirameki draw) / B01069 (【登場時】opt 相手証拠1+draw)
+  B01050, B01069,
+  // Task A batch#2 certify-harvest #2 (2026-06-11): chunkB workflow verified greens 15枚 (B03014/B03018/B03069/B03081/B03101/B03120/B04023/B04049/B04082/B05017/B05073/B05074/B05090/B05094/B05098)
+  B03014, B03018, B03069, B03081, B03101, B03120, B04023, B04049, B04082, B05017, B05073, B05074, B05090, B05094, B05098,
+  // Task A batch#2 certify-harvest #3 (2026-06-11): chunkC workflow verified greens 3枚 (B05076P/B06010/B06102)
+  B05076P, B06010, B06102,
+  // Task A batch#2 certify-harvest #4 (2026-06-12): chunkD partial workflow verified greens 16枚 (B07072/B07073/P/B07075/B07077/P/B07082/P/B07089/B07094/P/B08011/B08024/B08044/P/B08052)
+  B07072, B07073, B07073P, B07075, B07077, B07077P, B07082, B07082P, B07089, B07094, B07094P, B08011, B08024, B08044, B08044P, B08052,
+  // Task A batch#2 certify-harvest #5 (2026-06-12): workflow verified greens 23枚 (B08070/B08088/B08090/B09013/B09057/B09058系/B09062/B09065/B09075系/B09082/B09084/B09102/B09106系/D02004/D05007/D07008/D07009/D07014/D07015/D09025)
+  B08070, B08088, B08090, B09013, B09057, B09058, B09058P, B09062, B09065, B09075, B09075P, B09082, B09084, B09102, B09106, B09106P, D02004, D05007, D07008, D07009, D07014, D07015, D09025,
+  // Task A batch#2 certify-harvest #6 final (2026-06-12): workflow verified greens 20枚 (D09027/PR041/PR045/PR049/PR098/PR104/PR117/PR118/PR137/PR143/PR157/PR163/PR175/PR178/PR184/PR199/PR205/PR262/PR268/PR276) — certify 254/254 完了
+  D09027, PR041, PR045, PR049, PR098, PR104, PR117, PR118, PR137, PR143, PR157, PR163, PR175, PR178, PR184, PR199, PR205, PR262, PR268, PR276,
+  // Task A batch#2 certify-harvest needsManual 手書き3枚 (2026-06-12): B06101(cutin contactTargetMatches黒)/D10011(declared reanimate毛利蘭+cutin)/B09008(continuous apAtLeast突撃+opt charRemoveSetCard)。B07052=yellow(event-trait gate) / B08020=defer(色matcher要shared)
+  B06101, D10011, B09008,
 ];
