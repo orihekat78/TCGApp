@@ -149,7 +149,7 @@ export type AtomVerb =
   | 'partnerAssist' | 'partnerSetState' | 'partnerSolveCase'
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
-  | 'deckRevealUntil' | 'deckToBottomBound' | 'deckShuffle' | 'souza'
+  | 'deckRevealUntil' | 'deckToBottomBound' | 'boundToRemove' | 'deckShuffle' | 'souza'
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
   | 'expandActionTargets'

@@ -1,9 +1,8 @@
-# 次セッション再開プロンプト (2026-06-12 engine拡張 wave#2 cluster1 完了時点)
+# 次セッション再開プロンプト (2026-06-13 engine拡張 wave#2 cluster2 完了時点)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
-**次も Fable 主体の engine 作業** (engine拡張 wave#2 後続クラスタ or リファクタ Phase 3〜4)。
 
-> モデル方針: engine/refactor 系は `/model fable`。CLAUDE.md「トークン運用ルール」参照。
+> モデル方針: engine/refactor 系は `/model fable`、カード補修系は opus 推奨。CLAUDE.md「トークン運用ルール」参照。
 
 ---
 
@@ -11,36 +10,40 @@
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md →
 .claude/memory.md → .claude/specs/refactor-plan/INDEX.md を読んで状況を把握すること。
 
-## 現在地 (2026-06-12 深夜)
+## 現在地 (2026-06-13)
 
 承認済作業順: ① Phase 0 → ② リファクタ 1c〜2c → ③ カード wave#2 → ④ リファクタ Phase 3〜4。
-ユーザー選択により ④ の前に **(B) engine拡張 wave#2** を開始済み。
+ユーザー選択で ④ の前に engine拡張 wave#2 を実施中。
 
-- **engine拡張 wave#2 cluster1 ✅完了** (commit d7c4a2e9): BUG-132 GAP-1/2 修正 +
-  B08020/B08020P 再採用 (ALL_CARDS 1128→1130)。詳細は
-  .claude/specs/engine-wave2-bug132-design.md + changelog-entries/2026-06-12-05。
-  全ゲート green (vitest 1979 / smoke baseline 完全一致 / e2e 119 / MCP 実機 decoy)。
-- 水平展開で BUG-133〜136 起票 (修正は defer、各 BUG-XXX.md に調査データ添付済)。
+- **cluster1 ✅** (BUG-132 + B08020/P 再採用、commit d7c4a2e9)
+- **cluster2 ✅完了** (ability-presence filter): 現リム時/疾風/カットイン presence filter (X1/X1b) +
+  boundToRemove (X6) + 骨格バグ3件修正 (BUG-137 mill refresh / BUG-138 pick横取り / BUG-139 必須pick黙殺) +
+  解禁10枚 (ALL_CARDS→1140)。詳細は .claude/specs/engine-wave2-ability-filter-design.md +
+  changelog-entries/2026-06-13-01。全ゲート green (vitest 2016 / smoke baseline 完全一致 / e2e 119 / MCP decoy)
+- 水平展開で **BUG-140 起票** (出荷済76枚の cutIn/hirameki 欠落、B04096/P のみ補修済・残74枚 defer。
+  監査: npx tsx scripts/audit-icon-abilities.mts)
 
-## 次にやること (どちらか、着手前にユーザーへ確認)
+## 次にやること (どれか、着手前にユーザーへ確認)
 
-**(A) engine拡張 wave#2 後続クラスタ**: task-d-priority-map.json の wave2 ゲート群
-  (FILE-zone verb 30枚 / grant-textual 23 / scene→deck 14 / hand-count 12 等 ~182 sig)。
-  /card-wave skill を呼び、gate 毎に設計レビュー必須。1 gate = 1 クラスタ = 1 commit 推奨。
+**(A) engine拡張 wave#2 後続クラスタ**: 残ゲートの機械再集計から選定 (cluster2 と同手順:
+  classify-triage.json yellow × git ls-files で pending sig を出す)。有力候補:
+  action-subtype trigger (8枚) / usage restriction (6枚) / name-designation (8枚) /
+  multi-card sceneEnter (6枚)。/card-wave skill + gate 毎設計レビュー必須。
 
-**(B) リファクタ Phase 3〜4** (承認済 work order ④): refactor-plan/INDEX.md の Phase 3a
-  (atom-handlers 1391行分割) から。/refactor-phase skill + 着手前個別設計レビュー必須。
+**(B) BUG-140 補修 wave**: 欠落 hirameki 63 + cutin 13 の一括補修 (定型テンプレ化可能、
+  D05007 a2 同型が大半)。完了後 audit script を lint 化して CI 組込み。opus 主体で安価。
+
+**(C) リファクタ Phase 3〜4** (承認済 work order ④): refactor-plan/INDEX.md の Phase 3a
+  (atom-handlers 分割 — cluster2 で +100行 増えており分割価値上昇) から。/refactor-phase skill。
 
 ## 状態 doc
-- defer 一覧: .claude/specs/DEFERRED-INDEX.md (B08020 再採用済 / B01048 identity 選択=確認待ち /
-  AI decline / カットイン反応ポイント / BUG-133〜136)
-- bug: .claude/bugs/index.base (BUG-132 修正済 d7c4a2e9 / BUG-133〜136 未着手)
-- 公式 Q&A 一次データ: cards-data TSV の qAndA 列 (rules/25・26 に主要裁定収載済)。
+- defer 一覧: .claude/specs/DEFERRED-INDEX.md (cluster2 defer 6種 + BUG-140 残74枚 + wave#1 繰越)
+- bug: .claude/bugs/index.base (BUG-137/138/139 修正済 / BUG-140 未着手・audit data 添付)
+- 公式 Q&A 一次データ: cards-data TSV qAndA 列 (rules/17 に presence 静的判定の裁定収載済)。
   カード個別裁定は web fetch 前に必ず TSV を見ること
 
-最初に (A)/(B) どちらに進むかをユーザーに確認し、対応 skill を呼んでから着手してください。
-engine 作業なので /model fable 推奨。
+最初に (A)/(B)/(C) どれに進むかをユーザーに確認し、対応 skill を呼んでから着手してください。
 ```
 
-engine拡張 wave#2 cluster1 (BUG-132) は完了済。次は上記プロンプトで (A) 後続ゲート群 か
-(B) リファクタ Phase 3〜4 を選択して再開してください。
+engine拡張 wave#2 cluster2 (ability-presence filter) は完了済。次は上記プロンプトで
+(A) 後続ゲート / (B) BUG-140 補修 / (C) リファクタ Phase 3〜4 を選択して再開してください。

@@ -33,7 +33,7 @@ const ATOM_VERB_MAP = {
   partnerAssist: true, partnerSetState: true, partnerSolveCase: true,
   caseToResolved: true,
   startContact: true, endActionEarly: true,
-  deckRevealUntil: true, deckToBottomBound: true, deckShuffle: true, souza: true,
+  deckRevealUntil: true, deckToBottomBound: true, boundToRemove: true, deckShuffle: true, souza: true,
   expandActionTargets: true, // D11007 v2 Phase 3
   log: true, noop: true,
 } as const satisfies Record<AtomVerb, true>;

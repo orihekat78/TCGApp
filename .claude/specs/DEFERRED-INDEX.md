@@ -22,27 +22,9 @@
 | BUG-006 | GuardPickerModal が active 状況で開かず E2E skipped | `tests/e2e/bug-006.spec.ts` skip 継続 |
 | BUG-036 | refresh ok:false 時 gameResult 未配線 | ✅ 修正済 (`1480465` / 2026-05-22) |
 
-## コード TODO grep 結果 (2026-05-21)
+## 2026-05 スナップショット (アーカイブ)
 
-| ファイル | 行 | 内容 |
-|---------|----|----|
-| `src/ai/policies/mcts.ts` | 10 | Phase 9-F.2 (deferred) |
-| `src/engine/effect/resolver.ts` | 17, 37 | Phase 4+ で並列セマンティクス検討 |
-| `src/engine/flow/setup.ts` | 14 | engine.rng singleton 化検討 |
-| `src/engine/flow/setup.ts` | 200 | PlayerState.faceUp when UI requires reveal() |
-| `src/engine/flow/action/state-machine.ts` | 44 | Phase 5: パートナー AP 修正効果対応 |
-| `src/engine/dyn/eval.ts` | 13, 145, 215 | Phase 5: 括弧 / turnEffect integration |
-| `src/engine/cards/tsv-loader.ts` | 70, 78, 148 | Phase 5: 『 』/ ( ) 分割、caseTraits 推定 |
-| `src/engine/listeners/misread.ts` | 121 | Phase 5: reasoning:end の cleanup listener |
-| `src/cards/ct-d11/D11005.ts` | 19 | Phase 5+: source uid 伝播 |
-| `src/cards/ct-d11/D11007.ts` | 13 | Phase 5+: action canActionAgainstChar selectorPatch |
-| `src/engine/cost/pay.ts` | 8 | Phase 3.10: viaCost wire |
-
-## user_request 20260521_01 由来 (本 plan 由来の繰越候補)
-
-| user_request # | 内容 | BUG ID 候補 |
-|---------------|------|------------|
-| #18 (umbrella) | カード個別実装が機能していない | BUG-043 (audit umbrella) |
+- コード TODO grep 結果 (2026-05-21) / user_request 20260521_01 繰越候補 → [DEFERRED-ARCHIVE-2026-05.md](DEFERRED-ARCHIVE-2026-05.md)
 
 ## カード実装 defer (engine ゲート起因)
 
@@ -90,3 +72,23 @@
 | AI の decline 判定 | chooseMatch の AI 経路は常に先頭取得 (合法手内固定戦略、baseline 安定優先)。「まで」=0枚可を AI が戦略判断する heuristic は未実装 | HeuristicPolicy 拡張 (BUG-132 防止策メモ参照) |
 | カットイン使用への第三者反応の解決ポイント | rules/09・22・23 に記載なし (自効果先行の不変条件のみ gate 実装済) | 公式 Q&A 照会後 |
 | BUG-133〜136 | drain player guard / queue時pick確定の他hook一般化 / skip-drop精査62件 / デッキ下順序選択 | 各 BUG-XXX.md 参照 (調査データ添付済) |
+
+## engine拡張 wave#2 cluster2 (ability-presence filter) defer (2026-06-12, engine/wave2-ability-filter)
+
+| rep | 理由 (支配 gate) | 解禁条件 |
+|-----|------------------|---------|
+| B08078/P | a2「リムーブしたカードの【現場リムーブ時】の効果を発動させてもよい」= 他カード hook 効果の外部発火機構が engine に不存在 (grep 0 hit、cluster2 最難)。a1 は X1+sceneHas で可能だが partial 出荷はしない | 外部発火機構の設計 (独立クラスタ) |
+| B08082 | a1 効果側 handReveal verb 不在 +「【黒】以外」color negation filter 不在 | handReveal verb + negation filter |
+| B03133 | handAddFromRemove が単一 target のみ (「2枚まで手札に加える」不可) | multi-target handAddFromRemove |
+| B06020 | **triage 誤分類** (cutin-subtype filter ではなく「手札 zone への continuous aura 付与」+ startContact stub)。a1 = hand aura (continuous は owner/scene 限定)、a2 = startContact placeholder | hand-zone aura + startContact 実装 (wave#1 繰越 auraGrant と同族) |
+| B07098/P | 「リムーブエリアにある【カットイン】を持つ【黒】のカード1枚につき AP+1000」の remove-area keyword-count dyn 不在 (cost/存在判定は X1 で可能) | remove-count dyn 拡張 |
+| B07102 | 「好きな枚数リムーブし、同じ枚数引く」= 可変枚数 select + count 結合 dyn 不在。0枚可否も一次資料なし (要公式照会) | variable-count select + $discarded.count dyn |
+
+### cluster2 で記録した既知ギャップ (カード defer ではない)
+
+| 項目 | 内容 | 状況 |
+|------|------|------|
+| 付与能力の presence | B07100 qAndA は「付与も持つ」だが defHasKeyword は CardDef 静的のみ (turnEffects 付与分は不参加)。cluster2 出荷 10枚には grant 源が共存しないため実害なし | B07100 (handReveal gate) 出荷時に state-aware reader へ拡張 |
+| 能力無効化中の presence | rules/19 文理は「持たない」だが既存 4 アイコンも static 判定 (無効化中も match)。直接 Q&A なし | 要公式照会 (talk002) |
+| 疾風×名乗り例外の rules 不整合 | rules/03・06 は疾風を名乗り例外に列挙、rules/13 は迅速/突撃のみ。engine は疾風の naming-exception 未実装 | 公式 PDF 再確認 (impl lens F9、独立タスク) |
+| BUG-140 残 74枚 | TSV cutIn/hirameki 列のアイコン能力欠落 (cluster2 MCP decoy 検証で発見、B04096/P のみ補修済) | 専用補修 wave (定型 hirameki テンプレ化)。監査: `npx tsx scripts/audit-icon-abilities.mts` → 完了後 lint 化 |

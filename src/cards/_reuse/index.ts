@@ -611,6 +611,17 @@ import { D09017 } from '../ct-d09/D09017.js';
 
 import { B08020 } from '../ct-p08/B08020.js';
 import { B08020P } from '../ct-p08/B08020P.js';
+// engine拡張 wave#2 cluster2 (2026-06-12): ability-presence filter (X1/X1b/X6/X7/X8) 解禁 10枚
+import { B03128 } from '../ct-p03/B03128.js';
+import { B03131 } from '../ct-p03/B03131.js';
+import { B08005 } from '../ct-p08/B08005.js';
+import { B08005P } from '../ct-p08/B08005P.js';
+import { B08016 } from '../ct-p08/B08016.js';
+import { B08094 } from '../ct-p08/B08094.js';
+import { B08094P } from '../ct-p08/B08094P.js';
+import { B09073 } from '../ct-p09/B09073.js';
+import { B09073P } from '../ct-p09/B09073P.js';
+import { B09104 } from '../ct-p09/B09104.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -740,4 +751,7 @@ export const REUSE_CARDS: CardDef[] = [
   B05076, D09016, D09017,
   // engine拡張 wave#2 — BUG-132 GAP-1/2 修正後の B08020/P 再採用
   B08020, B08020P,
+  // engine拡張 wave#2 cluster2 (2026-06-12): ability-presence filter 解禁 10枚
+  // (現場リムーブ時/疾風/カットイン presence — X1 述語 + X1b 窓/bound filter + X6 boundToRemove + X7/X8 骨格バグ修正)
+  B03128, B03131, B08005, B08005P, B08016, B08094, B08094P, B09073, B09073P, B09104,
 ];

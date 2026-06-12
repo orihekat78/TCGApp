@@ -10,6 +10,7 @@ import { candidates, matchOneFilter } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
+import { defHasKeyword } from '@/engine/read/keyword.js'; // wave#2 cluster2: boundMatchesFilter keyword 判定
 
 /** Type predicate: narrows a Candidate to the 'char' variant. */
 function isCharCandidate(c: Candidate): c is { kind: 'char'; uid: string; cardId: string; player: 'self' | 'opp' } {
@@ -263,6 +264,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       if (f.levelMin !== undefined && (d?.level ?? 0) < f.levelMin) return false;
       if (f.levelMax !== undefined && (d?.level ?? 0) > f.levelMax) return false;
+      // wave#2 cluster2 (2026-06-12): keyword/kind/ap/lp が silent drop されていた (BUG-117/118 同型、
+      // targetFilterToPredicate と並ぶ第3の drop サイト)。keyword は defHasKeyword (単一真実源)、
+      // 数値は printed 値判定 (bound カードは scene candidate を持たない — targetFilterToPredicate と同式)。
+      if (f.keyword !== undefined) {
+        const wants = Array.isArray(f.keyword) ? f.keyword : [f.keyword];
+        if (!wants.some(w => defHasKeyword(d, w))) return false;
+      }
+      if (f.kind !== undefined && d?.kind !== f.kind) return false;
+      const bmfAp = d?.ap ?? 0;
+      if (f.apMin !== undefined && bmfAp < f.apMin) return false;
+      if (f.apMax !== undefined && bmfAp > f.apMax) return false;
+      const bmfLp = d?.lp ?? 0;
+      if (f.lpMin !== undefined && bmfLp < f.lpMin) return false;
+      if (f.lpMax !== undefined && bmfLp > f.lpMax) return false;
       return true;
     }
     case 'triggerCharMatches': {

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `599c77f14860`
+> Source hash: `2f00d640b276`
 
 公式ルール [`14-refresh.md`](../../../rules/14-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -16,7 +16,7 @@
 - [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 - [`engine.types`](../by-engine/types.md)
 
-## 📄 参照ソース (124)
+## 📄 参照ソース (133)
 
 - [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
@@ -38,4 +38,4 @@
 - [`src/cards/ct-d08/D08016.ts`](../../../../src/cards/ct-d08/D08016.ts)
 - [`src/cards/ct-d08/D08024.ts`](../../../../src/cards/ct-d08/D08024.ts)
 - [`src/cards/ct-d09/D09025.ts`](../../../../src/cards/ct-d09/D09025.ts)
-- _...ほか 104 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 113 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

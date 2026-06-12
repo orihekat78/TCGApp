@@ -301,17 +301,72 @@ export function drainAiEffectPicks(
 ): void {
   const g = globalThis as {
     __pendingEffectPickQueue?: PendingEffectPickSide[];
+    __humanPlayerSide?: 'self' | 'opp' | null;
   };
+  // BUG-138 (wave#2 cluster2 X8): human 所有の pending は AI が横取り解決しない (rules/15
+  // 未解決効果は所有者が解決)。__humanPlayerSide (BUG-132 導入の human 検出 side-channel) が
+  // set のときのみ skip — smoke / spectator は null のため従来挙動 byte-equal。
+  // skip した human pending は queue に温存され、playTurn の humanPick pause →
+  // useOppTurnDriver.surfacePendingSideChannels が UI modal へ転送する。
+  const humanSide = g.__humanPlayerSide ?? null;
   let guard = 0;
-  while ((g.__pendingEffectPickQueue?.length ?? 0) > 0) {
+  let i = 0;
+  while (i < (g.__pendingEffectPickQueue?.length ?? 0)) {
     if (++guard > 64) break; // 安全弁 (1 ターンの pick 数が 64 を超えることは無い)
-    const pending = g.__pendingEffectPickQueue!.shift()!; // 解決対象を queue から取り出す
+    const q = g.__pendingEffectPickQueue!;
+    const pending = q[i]!;
+    if (humanSide !== null && pending.player === humanSide) {
+      i++; // human 所有 → 温存 (同一所有者内の FIFO 順は維持される)
+      continue;
+    }
+    q.splice(i, 1); // 解決対象を queue から取り出す (humanSide null なら i=0 のままで従来 shift と同一)
     const { pickedUid, pickedUids } = chooseAiPick(state, pending, policy);
     if (pickedUid === null) {
       // 候補 0 → skip。BUG-111: continuation は pending 本体に同梱されるため、queue から
-      // shift した時点で対の continuation も一緒に drop される (別 FIFO の shift は不要)。
+      // 取り出した時点で対の continuation も一緒に drop される (別 FIFO の shift は不要)。
       continue;
     }
     applyPickAndContinuation(state, pending, pickedUid, pickedUids);
   }
+}
+
+/**
+ * テスト/ツール用: 所有権 (__humanPlayerSide) を無視して全 pending を drain する。
+ * human modal の代行 (UI を介さず heuristic で確定) を行うテストハーネス専用 —
+ * production コードからは呼ばないこと (BUG-138: 横取りの再導入になる)。
+ */
+export function _drainAllEffectPicksForTest(
+  state: GameState,
+  policy?: { chooseAtomTarget?: AtomTargetChooser },
+): void {
+  const g = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+  const saved = g.__humanPlayerSide ?? null;
+  g.__humanPlayerSide = null;
+  try {
+    drainAiEffectPicks(state, policy);
+  } finally {
+    g.__humanPlayerSide = saved;
+  }
+}
+
+/**
+ * BUG-138 (X8): human 所有の未解決 decision (pick queue / optional / choice 各 side-channel) が
+ * engine 側に残っているか。playTurn が move 選択前に確認し、残っていれば
+ * paused:{humanPick:true} で停止する (rules/05 効果解決中は次の行動に移れない /
+ * rules/15 未解決効果は所有者が解決)。__humanPlayerSide 未設定 (null) なら常に false
+ * — smoke / spectator は従来挙動 byte-equal。
+ */
+export function hasPendingHumanPick(): boolean {
+  const g = globalThis as {
+    __pendingEffectPickQueue?: PendingEffectPickSide[];
+    __pendingEffectOptionalSide?: { player: 'self' | 'opp' } | null;
+    __pendingEffectChoiceSide?: { player: 'self' | 'opp' } | null;
+    __humanPlayerSide?: 'self' | 'opp' | null;
+  };
+  const humanSide = g.__humanPlayerSide ?? null;
+  if (humanSide === null) return false;
+  if ((g.__pendingEffectPickQueue ?? []).some(p => p.player === humanSide)) return true;
+  if (g.__pendingEffectOptionalSide?.player === humanSide) return true;
+  if (g.__pendingEffectChoiceSide?.player === humanSide) return true;
+  return false;
 }

@@ -20,6 +20,17 @@ import { ATOM_VERBS } from '@/engine/effect/validate';
 import { COST_KINDS } from '@/engine/cost/evaluate';
 import { CONDITION_KINDS } from '@/engine/cond/eval';
 import { TRIGGERED_HOOKS } from '@/engine/listeners/triggered';
+import type { TargetFilter } from '@/engine/types/effect';
+
+// wave#2 cluster2 (2026-06-12): FILTER_FIELDS の同期検証。TargetFilter は型のみで engine に
+// runtime キー一覧が無いため、ここで satisfies によりコンパイル時同期した value セットを定義する。
+// TargetFilter にキーを追加/削除するとこの literal が typecheck で落ち、cjs FILTER_FIELDS の
+// 更新を強制する (従来は同期テスト対象外で更新漏れを CI が検知できなかった)。
+const TARGET_FILTER_KEYS = {
+  cardId: true, cardName: true, trait: true, color: true, keyword: true,
+  kind: true, apMin: true, apMax: true, lpMin: true, lpMax: true,
+  levelMin: true, levelMax: true, hasSetCards: true,
+} as const satisfies Record<Exclude<keyof TargetFilter, 'custom'>, true>;
 
 const cjsSource = readFileSync(
   resolve(__dirname, '../../scripts/taskA-validate-specs.cjs'),
@@ -51,6 +62,11 @@ describe('taskA-validate-specs.cjs whitelist ↔ engine 単一ソースの同期
     }
     const union = new Set([...verbs, ...forbidden]);
     expect(sortedDiff(union, ATOM_VERBS)).toEqual({ onlyA: [], onlyB: [] });
+  });
+
+  it('FILTER_FIELDS = TargetFilter keys − {custom} (wave#2 cluster2)', () => {
+    const fields = extractSet('FILTER_FIELDS');
+    expect(sortedDiff(fields, new Set(Object.keys(TARGET_FILTER_KEYS)))).toEqual({ onlyA: [], onlyB: [] });
   });
 
   it('HOOKS = TRIGGERED_HOOKS (listeners/triggered.ts)', () => {

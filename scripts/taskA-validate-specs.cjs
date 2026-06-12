@@ -22,7 +22,7 @@ const VERBS = new Set([
   'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',
   'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
-  'caseToResolved', 'deckRevealUntil', 'deckToBottomBound', 'deckShuffle', 'souza',
+  'caseToResolved', 'deckRevealUntil', 'deckToBottomBound', 'boundToRemove', 'deckShuffle', 'souza',
   'expandActionTargets', 'log', 'noop',
 ]);
 const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly']);

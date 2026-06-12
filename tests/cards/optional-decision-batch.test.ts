@@ -14,7 +14,7 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { _resetRegistry as resetCardDefRegistry, register as registerCardDef } from '@/engine/read/def';
 import { doReasoning } from '@/engine/flow/main/reasoning';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { drainAiEffectPicks, applyOptionalAndContinuation } from '@/engine/effect/apply-pick';
+import { drainAiEffectPicks, applyOptionalAndContinuation, _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
 import {
   _peekPendingEffectOptionalSide,
   _clearPendingEffectOptionalSide,
@@ -106,7 +106,9 @@ describe('engine-extension optional-decision batch (2026-06-06)', () => {
       runAllUntilEmpty(d);
       const pending = _peekPendingEffectOptionalSide();
       applyOptionalAndContinuation(d, pending!, true);
-      drainAiEffectPicks(d, policy); // 内部 LP pick を解決
+      // BUG-138 (X8): drainAiEffectPicks は human 所有 pick を温存するようになったため、
+      // human modal の代行はテスト専用 helper で行う (内部 LP pick を解決)
+      _drainAllEffectPicksForTest(d, policy);
     });
     expect(s.players.self.scene.find((c) => c.uid === 'nakamichi#1'), '中道和志 はリムーブされた').toBeFalsy();
     expect(readChar.lp(s, 'lp0#1'), 'LP0キャラに LP+1 (0→1)').toBe(1);

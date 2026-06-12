@@ -46,6 +46,12 @@ export function driveOppTurn(): void {
   if (current.gameResult) return; // null or undefined はどちらも「未決着」扱い
   // Commit 2.5: action 進行中 (useContactFlowDriver が駆動) → 引き継ぎ。
   if (store.activeActionId) return;
+  // BUG-138 (X8): humanPick pause で surface した modal が未解決の間は再入しない
+  // (surface 済 = engine queue からは drain 済のため hasPendingHumanPick では検知できない)。
+  // ⚠ pendingDeckReveal は含めない — あれは数秒の演出 overlay で、CPU 自身の deck-reveal でも
+  // set される (含めると演出中に driver が止まり、再 fire 経路が無く永久 stall — e2e 1試合通しで実証)。
+  // 決定 modal は pick / choice / optional の 3 つ (awaitingPick hold 中は pendingEffectPick が同時に立つ)。
+  if (store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional) return;
   if (isDriving) return;
   isDriving = true;
   try {
@@ -57,10 +63,17 @@ export function driveOppTurn(): void {
 
     if (result.paused) {
       const m = result.paused.move;
-      if (m.kind === 'actionAgainstChar') {
+      if (m?.kind === 'actionAgainstChar') {
         dispatchEngineAction({ type: 'actionDeclareChar', byUid: m.byUid, targetUid: m.targetUid });
-      } else if (m.kind === 'actionAgainstCase') {
+      } else if (m?.kind === 'actionAgainstCase') {
         dispatchEngineAction({ type: 'actionDeclareCase', byUid: m.byUid, targetPlayer: m.targetPlayer });
+      } else if (result.paused.humanPick) {
+        // BUG-138 (X8): CPU ターン中に human 所有の triggered decision (pick / optional / choice)
+        // が発火 (例: CPU の効果で human の【相手ターン中】【現場リムーブ時】持ちがリムーブ)。
+        // drainAiEffectPicks は横取りせず温存しているので、ここで modal へ転送して停止する。
+        // human が解決 (effectPickResolve 等の dispatch) → gameState 更新 → useEffect 再 fire →
+        // driveOppTurn が続きの move から再開 (下の entry guard が modal open 中の再入を防ぐ)。
+        surfacePendingSideChannels();
       }
       // activeActionId が set される → useContactFlowDriver が駆動 → action-end で
       // activeActionId=null → useOppTurnDriver useEffect が再 fire → 続きの move へ。
@@ -133,8 +146,15 @@ export function useOppTurnDriver(): void {
   const aiSpeedMs = useGameStateStore((s) => s.aiSpeedMs);
   const isAiPaused = useGameStateStore((s) => s.isAiPaused);
   const aiStepCounter = useGameStateStore((s) => s.aiStepCounter);
+  // BUG-138 (X8): humanPick pause の再開トリガ。surface された決定 modal (pick/choice/optional) が
+  // 解決されると dispatchEngineAction が store field を null に戻す → deps 変化で再 fire →
+  // driveOppTurn が続きの move から再開する (modal open 中は driveOppTurn 冒頭 guard が return)。
+  const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
+  const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
+  const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
   useEffect(() => {
     if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
+    if (pendingEffectPick || pendingEffectChoice || pendingEffectOptional) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -146,5 +166,5 @@ export function useOppTurnDriver(): void {
     }
     Promise.resolve().then(driveOppTurn);
     return undefined;
-  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter]);
+  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional]);
 }

@@ -19,6 +19,8 @@ import { cards as engineCards } from '../cards/index.js';
 import { tryRePickFromAtom, pushPendingPickFromAtom, toPlainDeep } from './resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick, isShortFormDelta } from './atom-pick-spec.js';
 import { evalDyn } from '../dyn/eval.js'; // BUG-114: explicit-uid charModifyAP/LP/Level の {dyn} delta を runtime 評価
+import { defHasKeyword } from '../read/keyword.js'; // wave#2 cluster2: deck 窓 filter の keyword 判定 (matchOneFilter と単一真実源)
+import { allCardNameComponentsForDef } from '../target/card-def-registry.js'; // wave#2 cluster2: cardName 分割名判定 (rules/19)
 
 // user_request 20260522_01 #12 BUG-061: deckRevealUntil UI 演出側チャネル
 // (side-channel-pattern.md 4 点 checklist 準拠)
@@ -88,6 +90,19 @@ function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: str
     if (filter.levelMax !== undefined && (d.level ?? Infinity) > filter.levelMax) return false;
     // BUG-118: kind は TargetFilter 型に昇格済 (matchOneFilter と統一)
     if (filter.kind !== undefined && d.kind !== filter.kind) return false;
+    // wave#2 cluster2 (2026-06-12): keyword / cardName が silent drop されていた (BUG-117/118 同型
+    // ドリフト)。matchOneFilter と同じ単一真実源 (defHasKeyword / allCardNameComponentsForDef) に委譲。
+    // hasSetCards / custom は deck カードに state / closure が無く本質的に評価不能 → 非対応のまま
+    // (matchOneFilter の scene candidate 専用 semantics)。
+    if (filter.keyword !== undefined) {
+      const wants = Array.isArray(filter.keyword) ? filter.keyword : [filter.keyword];
+      if (!wants.some(w => defHasKeyword(d, w))) return false;
+    }
+    if (filter.cardName !== undefined) {
+      const wants = Array.isArray(filter.cardName) ? filter.cardName : [filter.cardName];
+      const components = allCardNameComponentsForDef(d);
+      if (!wants.some(w => components.includes(w))) return false;
+    }
     return true;
   };
 }
@@ -348,6 +363,16 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const millP = resolvePlayer(a.player, ctx);
       const millN = a.n as number;
       mutate.deck.removeFromTop(s, millP, millN);
+      // BUG-137 (wave#2 cluster2, 2026-06-12): デッキ枯渇時の refresh guard が欠落していた。
+      // rules/14 (デッキ 0 で即座に refresh) + rules/26 (可能な限りリムーブ → refresh →
+      // 残り分は追加リムーブしない)。B09104 qAndA「可能な限りリムーブし、その後リフレッシュを行います」。
+      if (s.players[millP].deck.length === 0) {
+        const r = mutate.deck.refresh(s, millP);
+        if (!r.ok && s.gameResult === undefined) {
+          const winner: Player = millP === 'self' ? 'opp' : 'self';
+          mutate.gameResult.set(s, winner, 'deck-out');
+        }
+      }
       mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: String(millN) });
       return;
     }
@@ -1379,6 +1404,41 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.deck.toBottom(s, p, splicedIds);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(splicedIds.length) });
+      return;
+    }
+    case 'boundToRemove': {
+      // wave#2 cluster2 (2026-06-12): bound window (deckRevealUntil 公開分) をリムーブエリアへ移す
+      // (B09073 a2「残りをリムーブエリアに移す」)。rules/26: 見ている間はデッキ扱い → 本 verb で
+      // 初めてデッキから出る。deckToBottomBound と同じ splice 防御 (BUG-132 窓侵食複製ガード):
+      // 実際に splice できた id のみ remove へ。移送完了後にデッキ 0 なら refresh
+      // (B09073 qAndA「残りをリムーブエリアに移す。まで解決したところでリフレッシュ」/ rules/14。
+      // 直前に remove へ移したカード自身も shuffle 対象 — rules/26 リムーブエリア遷移)。
+      const p = resolvePlayer(a.player, ctx);
+      const bindKey = a.bindKey as string;
+      const bound = ctx.bindings[bindKey];
+      if (!bound || bound.length === 0) return;
+      const ids = bound.map(c => {
+        const cAny = c as unknown as { cardId?: string };
+        return cAny.cardId ?? '';
+      }).filter(id => id !== '');
+      const deck = s.players[p].deck;
+      const splicedIds: string[] = [];
+      for (const id of ids) {
+        const idx = deck.indexOf(id);
+        if (idx !== -1) {
+          deck.splice(idx, 1);
+          splicedIds.push(id);
+        }
+      }
+      mutate.remove.add(s, p, splicedIds);
+      if (s.players[p].deck.length === 0) {
+        const r = mutate.deck.refresh(s, p);
+        if (!r.ok && s.gameResult === undefined) {
+          const winner: Player = p === 'self' ? 'opp' : 'self';
+          mutate.gameResult.set(s, winner, 'deck-out');
+        }
+      }
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:boundToRemove', result: String(splicedIds.length) });
       return;
     }
     case 'deckShuffle': {

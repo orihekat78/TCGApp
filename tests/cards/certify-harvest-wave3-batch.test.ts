@@ -15,7 +15,7 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { _resetRegistry as resetCardDefRegistry, register as registerCardDef } from '@/engine/read/def';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { drainAiEffectPicks, applyOptionalAndContinuation } from '@/engine/effect/apply-pick';
+import { drainAiEffectPicks, applyOptionalAndContinuation, _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
 import { _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards/index';
@@ -137,7 +137,8 @@ describe('Task A certify-harvest + wave3 — novel compositions', () => {
       const p = _peekPendingEffectOptionalSide();
       expect(p, 'opt surface').not.toBeNull();
       applyOptionalAndContinuation(d, p!, true);
-      drainAiEffectPicks(d, new HeuristicPolicy());
+      // BUG-138 (X8): human 所有 pick は drainAiEffectPicks が温存する → human modal 代行 helper で解決
+      _drainAllEffectPicksForTest(d, new HeuristicPolicy());
     });
     const yl4 = s.players.self.scene.find((c) => c.cardId === 'YL4');
     expect(yl4, '黄Lv4 が登場').toBeTruthy();
@@ -165,7 +166,8 @@ describe('Task A certify-harvest + wave3 — novel compositions', () => {
       const p = _peekPendingEffectOptionalSide();
       expect(p, 'opt surface').not.toBeNull();
       applyOptionalAndContinuation(d, p!, true);
-      drainAiEffectPicks(d, new HeuristicPolicy());
+      // BUG-138 (X8): human 所有 pick は drainAiEffectPicks が温存する → human modal 代行 helper で解決
+      _drainAllEffectPicksForTest(d, new HeuristicPolicy());
     });
     expect(s.players.self.scene.find((c) => c.cardId === 'PR138')?.state, '自身スリープ').toBe('sleep');
     expect(s.players.self.scene.some((c) => c.cardId === 'KZ6'), '黒ずくめLv6 登場').toBe(true);

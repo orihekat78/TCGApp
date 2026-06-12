@@ -39,10 +39,12 @@ function driveSelfTurn(): void {
     store.setGameState(result.finalState);
 
     if (result.paused) {
+      // BUG-138 (X8): 観戦モードは __humanPlayerSide=null のため humanPick pause は発生しない
+      // (move 同梱 pause のみ)。optional chaining は paused 型拡張 (move?: Move) への追従。
       const m = result.paused.move;
-      if (m.kind === 'actionAgainstChar') {
+      if (m?.kind === 'actionAgainstChar') {
         dispatchEngineAction({ type: 'actionDeclareChar', byUid: m.byUid, targetUid: m.targetUid });
-      } else if (m.kind === 'actionAgainstCase') {
+      } else if (m?.kind === 'actionAgainstCase') {
         dispatchEngineAction({ type: 'actionDeclareCase', byUid: m.byUid, targetPlayer: m.targetPlayer });
       }
       return;

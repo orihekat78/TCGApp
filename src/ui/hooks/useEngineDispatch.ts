@@ -211,9 +211,17 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
       if (!entry) return false;
       return entry.source.player === action.player;
     }
-    case 'endTurn':
+    case 'endTurn': {
       // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
-      return state.turn.player === action.player && state.turn.phase === 'main';
+      if (state.turn.player !== action.player || state.turn.phase !== 'main') return false;
+      // BUG-139 (wave#2 cluster2, 2026-06-12): 必須 pick (nMin>=1) 未解決中はターン終了不可
+      // (rules/05 効果解決中は次の行動に移れない)。従来は終了できてしまい、未解決の必須効果
+      // (例: D08026 t1 解決編化 discard) が黙って永久放置されていた (X8 導入で CPU 側 stall として顕在化)。
+      // 任意 pick (nMin=0) / optional / choice は modal が skip/decline を提供するため対象外 (narrow gate)。
+      const pendingPick = useGameStateStore.getState().pendingEffectPick;
+      if (pendingPick && pendingPick.player === action.player && pendingPick.nMin >= 1) return false;
+      return true;
+    }
   }
 }
 

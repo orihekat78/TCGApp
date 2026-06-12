@@ -18,7 +18,7 @@ import { resolveActionAgainstChar, resolveActionAgainstCase } from './action-res
 import { HeuristicPolicy } from './policies/heuristic.js';
 import { makeDeclaredAbilCtx } from './ability-ctx.js';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { drainAiEffectPicks } from '@/engine/effect/apply-pick.js';
+import { drainAiEffectPicks, hasPendingHumanPick } from '@/engine/effect/apply-pick.js';
 
 type Player = 'self' | 'opp';
 
@@ -324,8 +324,14 @@ export type PlayTurnOptions = {
 export type PlayTurnResult = {
   moves: Move[];
   finalState: GameState;
-  /** pauseOnAction 時、action move が選ばれた場合に set される */
-  paused?: { move: Move };
+  /**
+   * pauseOnAction 時、action move が選ばれた場合に set される (move 同梱)。
+   * BUG-138 (X8): human 所有の pending pick が queue に残っている場合は move を打たず
+   * humanPick:true で停止する (rules/05 効果解決中は次の行動に移れない)。
+   * caller (useOppTurnDriver) は surfacePendingSideChannels で modal へ転送し、
+   * 解決後の re-fire で続きの move から再開する。
+   */
+  paused?: { move?: Move; humanPick?: true };
 };
 
 export function playTurn(
@@ -338,6 +344,11 @@ export function playTurn(
   let s = state;
 
   for (let i = 0; i < PLAY_TURN_SAFETY_CAP; i++) {
+    // BUG-138 (X8): human 所有の未解決 pick が残っている間は次の move に移れない (rules/05)。
+    // __humanPlayerSide 未設定 (smoke / spectator) では常に false → 従来挙動不変。
+    if (hasPendingHumanPick()) {
+      return { moves, finalState: s, paused: { humanPick: true } };
+    }
     const candidates = enumerateMoves(s, byPlayer);
     const chosen = policy.choose(s, candidates, byPlayer);
     if (chosen === null) {

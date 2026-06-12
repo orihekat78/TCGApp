@@ -574,7 +574,10 @@ Hook機構共通: `scope`(always/on-scene/on-partner-area/on-hand/on-evidence) �
 ## F. TargetFilter fields — `types/effect.ts`
 
 `cardId` `name` `trait` `color` `keyword` `kind`('character'|'event') `apMin/Max` `lpMin/Max` `levelMin/Max` `hasSetCards` `state[]` `side` `distinctNames` `named`.
-- ⛔ `keyword:'カットイン'` — cutin は ability であり `keywords:[]` に載らない → 不一致 (「カットイン保持で filter」不可). **STILL TRUE**.
+- ~~⛔ `keyword:'カットイン'`~~ — **STALE-fix (2026-06-12 wave#2 cluster2)**: BUG-122 で `defHasKeyword` (read/keyword.ts) が
+  ability 構造を吸収済 → `filter.keyword:'カットイン'/'ヒラメキ'/'変装'/'ミスリード'` は全 matchOneFilter 経路で動作する。
+  さらに cluster2 (X1) で `'現場リムーブ時'` / `'疾風'` も追加 (印字静的判定、公式Q&A 8件)。
+  deckRevealUntil 窓 (targetFilterToPredicate) と boundMatchesFilter も X1b で keyword/cardName/kind/ap/lp を honor 化済。
 
 ## G. Multi-target per-char effect — **STALE-fix (重要)**
 

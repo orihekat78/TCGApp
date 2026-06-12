@@ -53,6 +53,47 @@ async function snapshot(page: Page): Promise<GameSnapshot | null> {
   });
 }
 
+/**
+ * BUG-139 (wave#2 cluster2): self 所有の pending pick (例: D08026 t1 解決編化 discard) を
+ * 実プレイヤーと同様に解決する。従来この prompt は放置でも進行できてしまい (必須効果の黙殺)、
+ * X8 (BUG-138) + endTurn gate (BUG-139) の正規化で「解決しないと進めない」ようになったため、
+ * robot も先頭候補 pick (nMin=0 なら skip) で応答する。1 回の呼出で最大 8 連鎖まで消化。
+ */
+async function resolvePendingPrompts(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __game: {
+        getState: () => {
+          pendingEffectPick: { player: string; nMin: number; candidates: { uid: string }[] } | null;
+          pendingEffectOptional: { player: string } | null;
+          pendingEffectChoice: { player: string } | null;
+        };
+        dispatch: (a: Record<string, unknown>) => unknown;
+      };
+    };
+    for (let i = 0; i < 8; i++) {
+      const st = w.__game.getState();
+      const pick = st.pendingEffectPick;
+      if (pick && pick.player === 'self') {
+        const picked = pick.nMin >= 1 ? (pick.candidates[0]?.uid ?? null) : null;
+        w.__game.dispatch({ type: 'effectPickResolve', pickedUid: picked });
+        continue;
+      }
+      const opt = st.pendingEffectOptional;
+      if (opt && opt.player === 'self') {
+        w.__game.dispatch({ type: 'optionalResolve', run: false }); // robot は「しない」固定 (合法手)
+        continue;
+      }
+      const choice = st.pendingEffectChoice;
+      if (choice && choice.player === 'self') {
+        w.__game.dispatch({ type: 'choiceResolve', choiceIndex: 0 });
+        continue;
+      }
+      break;
+    }
+  });
+}
+
 test.describe('1試合通し smoke (human vs CPU) — CLAUDE.md 6.3', () => {
   test('mulligan → 勝敗決定 or max 30 turn まで通して console error 0', async ({ page }) => {
     test.setTimeout(120_000);
@@ -100,6 +141,8 @@ test.describe('1試合通し smoke (human vs CPU) — CLAUDE.md 6.3', () => {
       if (snap.turnNumber >= maxTurns) break;
 
       if (snap.turnPlayer === 'self' && snap.phase === 'main') {
+        // BUG-139: 必須 pick 等の prompt が出ていたら実プレイヤーと同様に解決してからターン終了
+        await resolvePendingPrompts(page);
         // self ターン: end-turn ボタンを click → ConfirmModal で「ターン終了」を確定
         // runEndTurnFlow は useConfirmation.ask() で確認モーダルを出すため、UI 経由で確定が必要
         const beforeTurn = snap.turnNumber;
@@ -118,9 +161,14 @@ test.describe('1試合通し smoke (human vs CPU) — CLAUDE.md 6.3', () => {
           await page.waitForTimeout(500);
         }
       } else {
-        // opp ターン: useOppTurnDriver 自動進行 → player=self に戻るまで待つ
+        // opp ターン: useOppTurnDriver 自動進行 → player=self に戻るまで待つ。
+        // BUG-138 (X8): CPU ターン中に self 所有の triggered prompt が surface したら
+        // (CPU は横取りせず待つ)、実プレイヤーと同様に解決して CPU を再開させる。
         await expect
-          .poll(async () => (await snapshot(page))?.turnPlayer ?? null, { timeout: 20_000, intervals: [400, 500, 800] })
+          .poll(async () => {
+            await resolvePendingPrompts(page);
+            return (await snapshot(page))?.turnPlayer ?? null;
+          }, { timeout: 20_000, intervals: [400, 500, 800] })
           .toBe('self');
       }
 
