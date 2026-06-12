@@ -277,3 +277,67 @@ describe('engine.cost.pay', () => {
     });
   });
 });
+
+// Task D E2 (2026-06-12): sceneToDeckBottom cost
+// rules: 21 (コスト全部実行), 09/23 (デッキ下移動はリムーブでない)
+// ⚠ payInner は void 戻りで case 追加漏れが TS で検知されない (BUG-116 同型) — 実移動を必ず固定する
+describe('sceneToDeckBottom (Task D E2)', () => {
+  it('現場のキャラを n 枚デッキの下へ移す (filter 一致の先頭 fallback)', () => {
+    registerCardDef(defOf({ id: 'K1', traits: ['警視庁'], level: 4 }));
+    let s = createEmptyGameState();
+    s = withScene(s, 'self', [makeChar({ uid: 'k1', cardId: 'K1' })]);
+    s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['D1'] } } };
+    const cost: Cost = {
+      kind: 'sceneToDeckBottom',
+      target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { trait: '警視庁' } }, n: { min: 1, max: 1 }, chooser: 'owner' },
+      n: 1,
+    } as Cost;
+    const ctx = makeCtx({ source: { player: 'self', area: 'scene', cardId: 'SRC', uid: 'src-uid' } });
+    const result = produce(s, draft => {
+      pay(draft, cost, ctx);
+    });
+    expect(result.players.self.scene, '現場から消える').toHaveLength(0);
+    expect(result.players.self.deck, 'デッキ末尾へ').toEqual(['D1', 'K1']);
+    expect(result.players.self.remove, 'リムーブには行かない').not.toContain('K1');
+  });
+
+  it('ctx.dyn.costParams.sceneToDeckBottom.uids があればそれを優先する (UI 選択)', () => {
+    registerCardDef(defOf({ id: 'K2', traits: ['警視庁'] }));
+    let s = createEmptyGameState();
+    s = withScene(s, 'self', [
+      makeChar({ uid: 'k-a', cardId: 'K2' }),
+      makeChar({ uid: 'k-b', cardId: 'K2' }),
+    ]);
+    const cost: Cost = {
+      kind: 'sceneToDeckBottom',
+      target: { kind: 'pick', query: { area: 'scene', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'owner' },
+      n: 1,
+    } as Cost;
+    const ctx = makeCtx({
+      source: { player: 'self', area: 'scene', cardId: 'SRC', uid: 'src-uid' },
+      dyn: { costParams: { sceneToDeckBottom: { uids: ['k-b'] } } },
+    } as Partial<EffectCtx>);
+    const result = produce(s, draft => {
+      pay(draft, cost, ctx);
+    });
+    expect(result.players.self.scene.map(c => c.uid), 'k-b が選ばれ k-a は残る').toEqual(['k-a']);
+    expect(result.players.self.deck).toContain('K2');
+  });
+});
+
+// Task D E3 / BUG-129 (2026-06-12): fileFrom コストのカード消失修正
+describe('fileFrom BUG-129 (Task D E3)', () => {
+  it('支払った FILE カードはリムーブエリアへ行く (ゲームから消失しない)', () => {
+    let s = createEmptyGameState();
+    s = { ...s, players: { ...s.players, self: { ...s.players.self, file: [
+      { type: 'card-back', cardId: 'F1' },
+      { type: 'card-back', cardId: 'F2' },
+    ] } } } as GameState;
+    const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'src' } });
+    const result = produce(s, draft => {
+      pay(draft, { kind: 'fileFrom', n: 2 } as Cost, ctx);
+    });
+    expect(result.players.self.file).toHaveLength(0);
+    expect(result.players.self.remove, 'リフレッシュ母数に入る (rules/03/14)').toEqual(expect.arrayContaining(['F1', 'F2']));
+  });
+});

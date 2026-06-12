@@ -463,3 +463,140 @@ describe('engine.cond.eval', () => {
     });
   });
 });
+
+// Task D E1 (2026-06-12): hand-count conditions
+// rules: 15-abilities-effects.md §解決時参照, 21-declared-ability-cost.md §宣言ゲート
+describe('hand-count conditions (Task D E1)', () => {
+  function withHands(self: string[], opp: string[]): GameState {
+    const s = createEmptyGameState();
+    return {
+      ...s,
+      players: {
+        ...s.players,
+        self: { ...s.players.self, hand: self },
+        opp: { ...s.players.opp, hand: opp },
+      },
+    };
+  }
+
+  describe('handAtLeast', () => {
+    it('境界 n-1 / n / n+1', () => {
+      const s = withHands(['A', 'B', 'C'], []);
+      expect(evalCond(s, { kind: 'handAtLeast', player: 'self', n: 2 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'handAtLeast', player: 'self', n: 3 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'handAtLeast', player: 'self', n: 4 }, makeCtx())).toBe(false);
+    });
+    it('手札0枚: n:0 は恒真、n:1 は false', () => {
+      const s = withHands([], []);
+      expect(evalCond(s, { kind: 'handAtLeast', player: 'self', n: 0 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'handAtLeast', player: 'self', n: 1 }, makeCtx())).toBe(false);
+    });
+    it('owner-relative: opp 所有カードの player:"self" は opp 手札を読む', () => {
+      const s = withHands([], ['X', 'Y']);
+      const ctx = makeCtx({ source: { player: 'opp', area: 'scene' } });
+      expect(evalCond(s, { kind: 'handAtLeast', player: 'self', n: 2 }, ctx)).toBe(true);
+      expect(evalCond(s, { kind: 'handAtLeast', player: 'opp', n: 1 }, ctx)).toBe(false);
+    });
+  });
+
+  describe('handAtMost', () => {
+    it('境界 n-1 / n / n+1 (「N枚以下」B07070/B07067 形)', () => {
+      const s = withHands(['A', 'B'], []);
+      expect(evalCond(s, { kind: 'handAtMost', player: 'self', n: 1 }, makeCtx())).toBe(false);
+      expect(evalCond(s, { kind: 'handAtMost', player: 'self', n: 2 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'handAtMost', player: 'self', n: 3 }, makeCtx())).toBe(true);
+    });
+    it('手札0枚は任意の n>=0 で true', () => {
+      const s = withHands([], []);
+      expect(evalCond(s, { kind: 'handAtMost', player: 'self', n: 0 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'handAtMost', player: 'self', n: 2 }, makeCtx())).toBe(true);
+    });
+    it('相手手札 (B07100「相手の手札が4枚以下」形)', () => {
+      const s = withHands([], ['A', 'B', 'C', 'D']);
+      expect(evalCond(s, { kind: 'handAtMost', player: 'opp', n: 4 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'handAtMost', player: 'opp', n: 3 }, makeCtx())).toBe(false);
+    });
+  });
+
+  describe('handCountAtLeastOther', () => {
+    it('B07067 a1「相手の手札が自分の手札の枚数以上」= player:"opp"', () => {
+      expect(evalCond(withHands(['A'], ['X', 'Y']), { kind: 'handCountAtLeastOther', player: 'opp' }, makeCtx())).toBe(true);
+      expect(evalCond(withHands(['A', 'B', 'C'], ['X']), { kind: 'handCountAtLeastOther', player: 'opp' }, makeCtx())).toBe(false);
+    });
+    it('同数は true (「以上」、Q&A: 両者0枚でも発火)', () => {
+      expect(evalCond(withHands(['A'], ['X']), { kind: 'handCountAtLeastOther', player: 'opp' }, makeCtx())).toBe(true);
+      expect(evalCond(withHands([], []), { kind: 'handCountAtLeastOther', player: 'opp' }, makeCtx())).toBe(true);
+    });
+  });
+});
+
+// Task D E2 (2026-06-12): triggerCharMatches.excludeSource
+// rules: 19 (分割名で自己一致するカードの「このキャラ以外」除外、B09002 a1)
+describe('triggerCharMatches excludeSource (Task D E2)', () => {
+  it('payload.uid === ctx.source.uid のとき excludeSource:true なら false', () => {
+    registerCardDef(defOf({ id: 'B09002', names: ['工藤新一&毛利蘭', '工藤新一', '毛利蘭'] }));
+    let s = createEmptyGameState();
+    s = withScene(s, 'self', [makeChar({ uid: 'me', cardId: 'B09002' })]);
+    const ctx = makeCtx({
+      source: { player: 'self', area: 'scene', uid: 'me', cardId: 'B09002' },
+      triggerPayload: { uid: 'me', player: 'self' },
+    } as Partial<EffectCtx>);
+    const cond = { kind: 'triggerCharMatches', side: 'self', filter: { cardName: ['工藤新一', '毛利蘭'] }, excludeSource: true } as never;
+    expect(evalCond(s, cond, ctx), '自分自身の登場では発火しない').toBe(false);
+    const condNoEx = { kind: 'triggerCharMatches', side: 'self', filter: { cardName: ['工藤新一', '毛利蘭'] } } as never;
+    expect(evalCond(s, condNoEx, ctx), 'excludeSource 無しは従来通り true').toBe(true);
+  });
+
+  it('別キャラの登場なら excludeSource:true でも true', () => {
+    registerCardDef(defOf({ id: 'B09002', names: ['工藤新一&毛利蘭', '工藤新一', '毛利蘭'] }));
+    registerCardDef(defOf({ id: 'RAN', names: ['毛利蘭'] }));
+    let s = createEmptyGameState();
+    s = withScene(s, 'self', [makeChar({ uid: 'me', cardId: 'B09002' }), makeChar({ uid: 'other', cardId: 'RAN' })]);
+    const ctx = makeCtx({
+      source: { player: 'self', area: 'scene', uid: 'me', cardId: 'B09002' },
+      triggerPayload: { uid: 'other', player: 'self' },
+    } as Partial<EffectCtx>);
+    const cond = { kind: 'triggerCharMatches', side: 'self', filter: { cardName: ['工藤新一', '毛利蘭'] }, excludeSource: true } as never;
+    expect(evalCond(s, cond, ctx)).toBe(true);
+  });
+});
+
+// Task D E3 (2026-06-12): fileTopMatches / triggerPlayerIs
+describe('fileTopMatches (Task D E3)', () => {
+  it('FILE 最上位 (非パートナー) の kind を filter で判定 (B09021「1番上のカードがキャラの場合」)', () => {
+    registerCardDef(defOf({ id: 'CHAR1', kind: 'character' }));
+    registerCardDef(defOf({ id: 'EVT1', kind: 'event' }));
+    let s = createEmptyGameState();
+    s = { ...s, players: { ...s.players, opp: { ...s.players.opp, file: [
+      { type: 'card-back', cardId: 'EVT1' },
+      { type: 'card-back', cardId: 'CHAR1', faceUp: true },
+    ] } } };
+    expect(evalCond(s, { kind: 'fileTopMatches', side: 'opp', filter: { kind: 'character' } } as never, makeCtx())).toBe(true);
+    expect(evalCond(s, { kind: 'fileTopMatches', side: 'opp', filter: { kind: 'event' } } as never, makeCtx())).toBe(false);
+  });
+
+  it('FILE 空 / アシストパートナーのみ → false', () => {
+    let s = createEmptyGameState();
+    expect(evalCond(s, { kind: 'fileTopMatches', side: 'self', filter: { kind: 'character' } } as never, makeCtx())).toBe(false);
+    s = { ...s, players: { ...s.players, self: { ...s.players.self, file: [{ type: 'assisted-partner', cardId: 'P1' }] } } };
+    expect(evalCond(s, { kind: 'fileTopMatches', side: 'self', filter: { kind: 'character' } } as never, makeCtx())).toBe(false);
+  });
+});
+
+describe('triggerPlayerIs (Task D E3)', () => {
+  it('payload.player と source.player の一致/不一致 (B05050「FILEのカードを手札に加えたとき」)', () => {
+    const s = createEmptyGameState();
+    const ctxSelf = makeCtx({
+      source: { player: 'self', area: 'scene', uid: 'u1' },
+      triggerPayload: { player: 'self' },
+    } as Partial<EffectCtx>);
+    expect(evalCond(s, { kind: 'triggerPlayerIs', side: 'self' } as never, ctxSelf)).toBe(true);
+    expect(evalCond(s, { kind: 'triggerPlayerIs', side: 'opp' } as never, ctxSelf)).toBe(false);
+    const ctxOpp = makeCtx({
+      source: { player: 'self', area: 'scene', uid: 'u1' },
+      triggerPayload: { player: 'opp' },
+    } as Partial<EffectCtx>);
+    expect(evalCond(s, { kind: 'triggerPlayerIs', side: 'self' } as never, ctxOpp)).toBe(false);
+    expect(evalCond(s, { kind: 'triggerPlayerIs', side: 'opp' } as never, ctxOpp)).toBe(true);
+  });
+});

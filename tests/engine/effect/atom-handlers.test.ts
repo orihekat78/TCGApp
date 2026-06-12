@@ -97,21 +97,42 @@ describe('engine.effect.runAtom', () => {
   });
 
   describe('filePopToHand', () => {
-    it('FILE 最上部 (card-back) を pop し手札に "card-back" として加える', () => {
+    // BUG-128 (Task D E3, 2026-06-12): 旧実装は FILE_CARD_BACK_PLACEHOLDER ('card-back') を
+    // 手札に push していた (next-hint.ts は Round 3 で実 cardId 化済なのに verb 側が stale)。
+    // FileCard.card-back は cardId を保持しているので実 cardId を手札に加えるのが正。
+    it('FILE 最上部 (card-back) を pop し実 cardId を手札に加える (BUG-128)', () => {
       let s = createEmptyGameState();
       s = {
         ...s,
         players: {
           ...s.players,
-          self: { ...s.players.self, file: [{ type: 'card-back' }, { type: 'card-back' }] },
+          self: { ...s.players.self, file: [{ type: 'card-back', cardId: 'F1' }, { type: 'card-back', cardId: 'F2' }] },
         },
       };
       const result = produce(s, draft => {
         runAtom(draft, 'filePopToHand', { player: 'self' }, makeCtx());
       });
       expect(result.players.self.file).toHaveLength(1);
-      // card-back カードは手札に 'card-back' 文字列として加えられる
-      expect(result.players.self.hand[0]).toBe('card-back');
+      expect(result.players.self.hand[0], '最上部 (末尾) F2 の実 cardId が手札へ').toBe('F2');
+    });
+
+    it('FILE 空 (or アシストパートナーのみ) なら __chainStepNoApply を立てる (PR100/B04068 Q&A「そうした場合」不成立)', () => {
+      (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+      let s = createEmptyGameState();
+      s = {
+        ...s,
+        players: {
+          ...s.players,
+          self: { ...s.players.self, file: [{ type: 'assisted-partner', cardId: 'P1' }] },
+        },
+      };
+      const result = produce(s, draft => {
+        runAtom(draft, 'filePopToHand', { player: 'self' }, makeCtx());
+      });
+      expect(result.players.self.hand).toHaveLength(0);
+      expect(result.players.self.file, 'アシストパートナーは pop されない (rules/12)').toHaveLength(1);
+      expect((globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply, 'chain break 信号').toBe(true);
+      (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
     });
   });
 
@@ -915,5 +936,206 @@ describe('engine.effect.runAtom', () => {
         });
       }).toThrow(/unknown atom verb/i);
     });
+  });
+});
+
+// Task D E2 (2026-06-12): scene→deck verb
+// rules: 09/23 (デッキ下移動はリムーブでない), 16 (set/stacked リムーブ), 03 (所有者帰属)
+describe('sceneToDeck (Task D E2)', () => {
+  it('指定 uid のキャラを所有者のデッキの下へ移す (既定 pos=bottom)', () => {
+    const c = makeChar({ uid: 'std-uid', cardId: 'C400' });
+    let s = withScene(createEmptyGameState(), 'self', [c]);
+    s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['D1', 'D2'] } } };
+    const result = produce(s, draft => {
+      runAtom(draft, 'sceneToDeck', { uid: 'std-uid' }, makeCtx());
+    });
+    expect(result.players.self.scene).toHaveLength(0);
+    expect(result.players.self.deck, 'デッキの下 (末尾) に入る').toEqual(['D1', 'D2', 'C400']);
+  });
+
+  it("pos:'top' でデッキの上へ移す (B05092 形)", () => {
+    const c = makeChar({ uid: 'std-top', cardId: 'C401' });
+    let s = withScene(createEmptyGameState(), 'self', [c]);
+    s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['D1'] } } };
+    const result = produce(s, draft => {
+      runAtom(draft, 'sceneToDeck', { uid: 'std-top', pos: 'top' }, makeCtx());
+    });
+    expect(result.players.self.deck, 'デッキの上 (先頭) に入る').toEqual(['C401', 'D1']);
+  });
+
+  it('opp の現場キャラは opp のデッキへ (effect 発動側 self ではなく所有者)', () => {
+    const c = makeChar({ uid: 'std-opp', cardId: 'C402' });
+    const s = withScene(createEmptyGameState(), 'opp', [c]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'sceneToDeck', { uid: 'std-opp' }, makeCtx());
+    });
+    expect(result.players.opp.scene).toHaveLength(0);
+    expect(result.players.opp.deck).toContain('C402');
+    expect(result.players.self.deck).not.toContain('C402');
+  });
+
+  it('rules/16: setCards は表向きでリムーブエリアへ、本体はデッキへ', () => {
+    const c = makeChar({
+      uid: 'std-set',
+      cardId: 'C403',
+      setCards: [{ cardId: 'EV1', faceUp: false }],
+      stackedCards: 2,
+    });
+    const s = withScene(createEmptyGameState(), 'self', [c]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'sceneToDeck', { uid: 'std-set' }, makeCtx());
+    });
+    expect(result.players.self.deck, '本体はデッキ').toContain('C403');
+    expect(result.players.self.remove, 'setCards はリムーブ').toContain('EV1');
+    expect(result.players.self.remove.length, 'stackedCards 2 枚もリムーブ').toBeGreaterThanOrEqual(3);
+  });
+
+  it('leave:to-remove は emit されない (リムーブではない、rules/09/23)', () => {
+    const c = makeChar({ uid: 'std-leave', cardId: 'C404' });
+    const s = withScene(createEmptyGameState(), 'self', [c]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'sceneToDeck', { uid: 'std-leave' }, makeCtx());
+    });
+    expect(result.players.self.remove, '本体は remove へ行かない').not.toContain('C404');
+    expect(result.players.self.deck).toContain('C404');
+  });
+
+  it("'$pick' 未解決残存は silent no-op (skip)", () => {
+    const c = makeChar({ uid: 'std-skip', cardId: 'C405' });
+    const s = withScene(createEmptyGameState(), 'self', [c]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'sceneToDeck', { uid: '$pick' }, makeCtx());
+    });
+    expect(result.players.self.scene).toHaveLength(1);
+  });
+});
+
+// Task D E3 (2026-06-12): FILE-zone verbs
+// rules: 03 (リムーブエリア), 05 (FILE 積順=末尾が最上), 12 (アシストパートナー除外),
+//        14/26 (デッキ0→リフレッシュ後残り解決), 15 (可能な限り行う)
+describe('fileRemoveTop (Task D E3)', () => {
+  function withFile(s: ReturnType<typeof createEmptyGameState>, p: 'self' | 'opp', file: unknown[]) {
+    return { ...s, players: { ...s.players, [p]: { ...s.players[p], file } } } as typeof s;
+  }
+
+  it('FILE 上から n 枚を FILE 所有者のリムーブエリアへ (実 cardId)', () => {
+    let s = createEmptyGameState();
+    s = withFile(s, 'self', [
+      { type: 'card-back', cardId: 'F1' },
+      { type: 'card-back', cardId: 'F2' },
+      { type: 'card-back', cardId: 'F3' },
+    ]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'fileRemoveTop', { player: 'self', n: 2 }, makeCtx());
+    });
+    expect(result.players.self.file).toHaveLength(1);
+    expect(result.players.self.remove, '上 (末尾) から F3, F2 がリムーブへ').toEqual(expect.arrayContaining(['F3', 'F2']));
+    expect(result.players.self.remove).not.toContain('F1');
+  });
+
+  it('相手の FILE をリムーブ → 相手のリムーブエリアへ (B09003/B09108 形)', () => {
+    let s = createEmptyGameState();
+    s = withFile(s, 'opp', [{ type: 'card-back', cardId: 'OF1' }]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'fileRemoveTop', { player: 'opp', n: 1 }, makeCtx());
+    });
+    expect(result.players.opp.file).toHaveLength(0);
+    expect(result.players.opp.remove).toContain('OF1');
+    expect(result.players.self.remove).not.toContain('OF1');
+  });
+
+  it('アシストパートナーは skip される (B09010/B09108 Q&A「パートナーカードを除いて」)', () => {
+    let s = createEmptyGameState();
+    s = withFile(s, 'self', [
+      { type: 'card-back', cardId: 'F1' },
+      { type: 'assisted-partner', cardId: 'P1' },
+    ]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'fileRemoveTop', { player: 'self', n: 1 }, makeCtx());
+    });
+    expect(result.players.self.remove, '最上はパートナーだが除いて F1 がリムーブ').toContain('F1');
+    expect(result.players.self.file.map(f => (f as { type: string }).type), 'パートナーは FILE に残る').toEqual(['assisted-partner']);
+  });
+
+  it('1枚もリムーブできなければ __chainStepNoApply (B09105 Q&A「以降解決不可」)', () => {
+    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+    const s = createEmptyGameState();
+    produce(s, draft => {
+      runAtom(draft, 'fileRemoveTop', { player: 'self', n: 1 }, makeCtx());
+    });
+    expect((globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply).toBe(true);
+    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+  });
+
+  it('bind 指定でリムーブした cardId 群を ctx.bindings に書く (カード名指定系の布石)', () => {
+    let s = createEmptyGameState();
+    s = withFile(s, 'opp', [{ type: 'card-back', cardId: 'OF9' }]);
+    const ctx = makeCtx();
+    produce(s, draft => {
+      runAtom(draft, 'fileRemoveTop', { player: 'opp', n: 1, bind: '$fileRemoved' }, ctx);
+    });
+    const bound = (ctx.bindings as Record<string, { cardId?: string }[]>)['$fileRemoved'];
+    expect(bound).toHaveLength(1);
+    expect(bound![0]!.cardId).toBe('OF9');
+  });
+});
+
+describe('fileFlipTop (Task D E3)', () => {
+  function withFile(s: ReturnType<typeof createEmptyGameState>, p: 'self' | 'opp', file: unknown[]) {
+    return { ...s, players: { ...s.players, [p]: { ...s.players[p], file } } } as typeof s;
+  }
+
+  it('相手 FILE の最上位 (非パートナー) を表向きにする (B09021 形)', () => {
+    let s = createEmptyGameState();
+    s = withFile(s, 'opp', [
+      { type: 'card-back', cardId: 'OF1' },
+      { type: 'card-back', cardId: 'OF2' },
+    ]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'fileFlipTop', { player: 'opp' }, makeCtx());
+    });
+    const file = result.players.opp.file as { cardId: string; faceUp?: boolean }[];
+    expect(file[1]!.faceUp, '最上 (末尾) OF2 が表向き').toBe(true);
+    expect(file[0]!.faceUp ?? false, 'OF1 は裏のまま').toBe(false);
+  });
+
+  it('最上位が既に表向きなら何も起こらない — 下のカードへ降りない (B09021/B09108/B09023/B09005 Q&A)', () => {
+    let s = createEmptyGameState();
+    s = withFile(s, 'opp', [
+      { type: 'card-back', cardId: 'OF1' },
+      { type: 'card-back', cardId: 'OF2', faceUp: true },
+    ]);
+    const result = produce(s, draft => {
+      runAtom(draft, 'fileFlipTop', { player: 'opp' }, makeCtx());
+    });
+    const file = result.players.opp.file as { cardId: string; faceUp?: boolean }[];
+    expect(file[0]!.faceUp ?? false, 'OF1 は裏のまま (降りて表向きにしない)').toBe(false);
+  });
+
+  it('flip 不発でも __chainStepNoApply は立てない (B09021 Q&A: 後続効果は実行可、fileRemoveTop と非対称)', () => {
+    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+    const s = createEmptyGameState();
+    produce(s, draft => {
+      runAtom(draft, 'fileFlipTop', { player: 'opp' }, makeCtx());
+    });
+    expect((globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply).toBe(false);
+  });
+});
+
+describe('fileAdd デッキ0リフレッシュ (Task D E3)', () => {
+  it('デッキ不足時はリフレッシュして残りを FILE に置く (rules/14「FILEに置く」)', () => {
+    let s = createEmptyGameState();
+    s = {
+      ...s,
+      players: {
+        ...s.players,
+        opp: { ...s.players.opp, deck: ['D1'], remove: ['R1', 'R2'] },
+      },
+    };
+    const result = produce(s, draft => {
+      runAtom(draft, 'fileAdd', { player: 'opp', n: 2 }, makeCtx());
+    });
+    expect(result.players.opp.file, '1枚目=D1、リフレッシュ後に2枚目').toHaveLength(2);
+    expect(result.players.opp.remove, 'リムーブはデッキへシャッフルされ空').toHaveLength(0);
   });
 });

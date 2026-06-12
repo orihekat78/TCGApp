@@ -40,6 +40,12 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       const cands = candidates(state, cost.target, ctx);
       return cands.length >= cost.n;
     }
+    // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト。
+    // rules/21: 全部行えなければ使用不可 (candidates >= n)。デッキ枚数条件は無い。
+    case 'sceneToDeckBottom': {
+      const cands = candidates(state, cost.target, ctx);
+      return cands.length >= cost.n;
+    }
     case 'removeDeckTop': {
       return state.players[cost.player].deck.length >= cost.n;
     }
@@ -58,7 +64,11 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       return cost.items.some(item => canPay(state, item, ctx));
     }
     case 'fileFrom': {
-      return state.players[ctx.source.player].file.length >= cost.n;
+      // BUG-129 水平展開 (Task D E3): popTop はアシストパートナーを skip するため、
+      // 計数も非 assisted-partner のみで行う (rules/21: 全部行えなければ使用不可)。
+      const payable = state.players[ctx.source.player].file
+        .filter(f => f.type !== 'assisted-partner').length;
+      return payable >= cost.n;
     }
     case 'flipFaceUpEvidence': {
       const facedown = state.players[ctx.source.player].evidence.filter(e => !e.faceUp).length;

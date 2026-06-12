@@ -19,12 +19,15 @@ import type { Effect, ValidationResult, CardDef } from '../types/index.js';
 // 同期する必要がある (effect.ts AtomVerb)。
 const ATOM_VERBS = new Set<string>([
   'draw', 'discard', 'mill', 'fileAdd', 'filePopToHand',
+  'fileRemoveTop', 'fileFlipTop', // Task D E3 (2026-06-12)
   'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
   'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
+  'sceneToDeck', // Task D E2 (2026-06-12)
   'charModifyAP', 'charModifyLP', 'charModifyLevel', 'charSetAP', 'charSetLP',
   'charOverrideAP', 'charOverrideLP',
   'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',
+  'charGrantAbility', // Task D E4 (2026-06-12)
   'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
   'caseToResolved',
@@ -119,7 +122,21 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
       if (typeof verb !== 'string' || !ATOM_VERBS.has(verb)) {
         errors.push(`${path}.verb: unknown atom verb "${String(verb)}"`);
       }
-      // args is treated opaquely here; per-verb arg validation belongs to runAtom.
+      // Task D E4 (2026-06-12): charGrantAbility は ability descriptor を JSON で運ぶ規約
+      // (CLAUDE.md: Effect Descriptor の JSON シリアライズ可能性維持)。
+      //  - ability 必須 (object)
+      //  - ability 内に function 不可 (matcher closure / kind:'custom' effect 禁止)
+      //  - trigger.hook='leave:to-remove' は禁止 (virtual-location handler が granted を走査しないため発火不能)
+      if (verb === 'charGrantAbility') {
+        const args = obj['args'] as Record<string, unknown> | undefined;
+        const ability = args?.['ability'];
+        if (!ability || typeof ability !== 'object') {
+          errors.push(`${path}.args.ability: charGrantAbility requires ability descriptor object`);
+        } else {
+          validateGrantedAbility(ability as Record<string, unknown>, `${path}.args.ability`, errors);
+        }
+      }
+      // args is otherwise treated opaquely here; per-verb arg validation belongs to runAtom.
       return;
     }
     case 'custom': {
@@ -131,6 +148,38 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
     }
     default:
       errors.push(`${path}.kind: unknown Effect kind "${String(kind)}"`);
+  }
+}
+
+/**
+ * Task D E4 (2026-06-12): charGrantAbility の ability descriptor 検証。
+ * - 深層に function があれば error (JSON シリアライズ可能性)
+ * - trigger.hook / trigger.hooks[] に 'leave:to-remove' があれば error
+ * - effect があれば通常の Effect として walk
+ */
+function validateGrantedAbility(ability: Record<string, unknown>, path: string, errors: string[]): void {
+  const trig = ability['trigger'] as Record<string, unknown> | undefined;
+  if (!trig || typeof trig !== 'object') {
+    errors.push(`${path}.trigger: granted ability requires trigger`);
+  } else {
+    const hooks = [trig['hook'], ...(Array.isArray(trig['hooks']) ? trig['hooks'] : [])];
+    if (hooks.includes('leave:to-remove')) {
+      errors.push(`${path}.trigger: hook 'leave:to-remove' cannot be granted (virtual-location handler does not scan grantedAbilities)`);
+    }
+  }
+  // 深層 function 検査 (effect の kind:'custom' 例外も granted では認めない)
+  const stack: Array<{ v: unknown; p: string }> = [{ v: ability, p: path }];
+  while (stack.length > 0) {
+    const { v, p } = stack.pop()!;
+    if (typeof v === 'function') {
+      errors.push(`${p}: function value is not allowed inside granted ability (JSON-serializable required)`);
+      continue;
+    }
+    if (v && typeof v === 'object') {
+      for (const [k, child] of Object.entries(v as Record<string, unknown>)) {
+        stack.push({ v: child, p: `${p}.${k}` });
+      }
+    }
   }
 }
 

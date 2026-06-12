@@ -109,7 +109,8 @@ export function resolveActionAgainstChar(
   const ax = engine.flow.action.declare(state, byUid, { kind: 'char', uid: targetUid });
 
   // ガード判定 (Phase 8.7c)
-  const cands = engine.flow.guard.candidates(state, ax.byUid);
+  // Task D E4: アクション対象自身はガード候補から除外 (B09028/B09054 Q&A)
+  const cands = engine.flow.guard.candidates(state, ax.byUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
   const guardUid =
     cands.length > 0 && defenderPolicy.chooseGuard
       ? defenderPolicy.chooseGuard(state, ax, cands)
@@ -119,6 +120,10 @@ export function resolveActionAgainstChar(
   } else {
     engine.flow.action.passGuard(state, ax);
   }
+  // Task D E4 (2026-06-12): action:guarded / action:unguarded で queue された triggered effect
+  // (例: B09041 a2 がガードキャラへ contactImmune_action を grant) を judge 前に解決する。
+  // 従来 drain は cutin/disguise 成立時のみで、CPU 経路では judge 後まで未解決だった。
+  engine.resolve.runAllUntilEmpty(state);
 
   // FSM 進行 + カットイン判定 (Phase 8.7d)
   engine.flow.action.advance(state, ax); // leave-resolution → contact-pending

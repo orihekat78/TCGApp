@@ -106,6 +106,20 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
   // ここで直接 scene 上の triggered ability を walk して args を読む (sync inline)。
   applyPreTargetExpansion(state, byUid, actor, opp, seen, extra);
 
+  // Task D E4 (2026-06-12): actionTargetsActive token —
+  // 「このキャラは相手の現場にいるアクティブ状態のキャラを指定してアクションできる。」の **付与版**
+  // (B07090/B08029/B08032/B08037)。印字版は上の action:pre-target walk、付与版は攻撃キャラ自身の
+  // turnEffects/「text:」keyword を hasTextAbility で直読みする (flag 不在時は byte 等価)。
+  // 全消費者 (canActionAgainstChar / UI / AI) は candidates() 経由なので単一配線 (rules/07 対象拡張)。
+  if (readChar.hasTextAbility(state, byUid, 'actionTargetsActive')) {
+    for (const c of state.players[opp].scene) {
+      if (c.state !== 'active') continue;
+      if (seen.has(c.uid)) continue;
+      seen.add(c.uid);
+      extra.push({ uid: c.uid, cardId: c.cardId, player: opp });
+    }
+  }
+
   return [...baseList, ...extra];
 }
 

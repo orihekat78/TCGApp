@@ -61,6 +61,24 @@ export function endTurn(state: GameState, p: Player): void {
   // 呼出元はここで engine.resolve.runAllUntilEmpty を回す責務を持つ
   // (Phase 5 で「ターン終了時」trigger が積まれる)
   event.emit(state, 'phase:end:cleanup', { player: p }, undefined);
+  // Task D E4 (2026-06-12): removeOnTurnEnd / toDeckBottomOnTurnEnd の consume。
+  // typed flag removeOnTurnEnd は従来 writer/consumer ゼロ (コメントのみ) だった正規実装。
+  // 「ターン終了時、このキャラをリムーブする」(B09032) → removeToRemove (leave:to-remove 発火 ✓ rules/17)
+  // 「ターン終了時、このキャラを現場からデッキの下に移す」(PR181/B07079) → scene.toDeck (rules/16 清掃込み)
+  // 挿入位置: phase:end:start trigger (①能力発動) の後・clearTurnEffects (②効果切れ) の前 (rules/05)。
+  // iterate 中の splice を避けるため uid を snapshot してから処理する。
+  for (const player of ['self', 'opp'] as const) {
+    const consumed = state.players[player].scene
+      .filter(c => c.turnEffects.removeOnTurnEnd === true || c.turnEffects['toDeckBottomOnTurnEnd'] === true)
+      .map(c => ({ uid: c.uid, toRemove: c.turnEffects.removeOnTurnEnd === true }));
+    for (const { uid, toRemove } of consumed) {
+      if (toRemove) {
+        sceneMutator.removeToRemove(state, uid, 'effect');
+      } else {
+        sceneMutator.toDeck(state, uid, 'bottom');
+      }
+    }
+  }
   // 名乗り (isNamed) 解除: ターン p のオーナーの scene キャラに対して。
   // rules/11 (推理): 「同ターン内に登場したキャラ」 = 名乗り状態 → ターン終了で解除されるべき。
   // Phase 6 時点で clearNamed mutator は実装済だが呼出箇所が存在せず、結果として

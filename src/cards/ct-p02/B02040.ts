@@ -46,6 +46,8 @@ const a2: AbilityDef = {
               fromDeckTop: true,
               faceUp: false,
               player: 'self',
+              // BUG-130 (Task D E0, 2026-06-12): pick-bind — 選んだキャラを後続 atom と共有する
+              bind: '$picked',
               target: {
                 kind: 'pick',
                 query: { area: 'scene', side: 'self', filter: { color: '白' }, excludeSelf: true },
@@ -54,7 +56,9 @@ const a2: AbilityDef = {
               },
             },
           },
-          { kind: 'atom', verb: 'charModifyAP', args: { uid: '$pick', delta: 2000, scope: 'turn' } },
+          // BUG-130: 旧 uid:'$pick' は skip-unresolved guard で silent no-op だった
+          // (「セットし、ターン終了時まで AP+2000 する」の AP+2000 が不発)。pick-bind で同一キャラ参照。
+          { kind: 'atom', verb: 'charModifyAP', args: { uid: '$picked.uid', delta: 2000, scope: 'turn' } },
         ],
       },
     ],

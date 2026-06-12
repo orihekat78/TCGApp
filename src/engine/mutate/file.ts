@@ -71,9 +71,28 @@ function removeAssistedPartner(s: GameState, p: Player): void {
   }
 }
 
+/**
+ * FILE 最上位の非 assisted-partner カードを表向きにする (Task D E3, 2026-06-12)
+ * 「相手のFILEエリアにあるカードを上から1枚表向きにする」(B09021/B09108/B09023/B09005)。
+ * ⚠ 公式Q&A: 最上位が既に表向きの場合は **何も起こらない** (下のカードへ降りない)。
+ * 戻り値: 'flipped' = 表向き化した / 'noop' = 対象なし or 既に表向き。
+ */
+function flipTop(s: GameState, p: Player): 'flipped' | 'noop' {
+  const file = s.players[p].file;
+  for (let i = file.length - 1; i >= 0; i--) {
+    const card = file[i]!;
+    if (card.type === 'assisted-partner') continue;
+    if (card.faceUp === true) return 'noop'; // 既に表向き → 何も起こらない (Q&A)
+    card.faceUp = true;
+    return 'flipped';
+  }
+  return 'noop';
+}
+
 export const file = {
   addFromDeckTop,
   popTop,
+  flipTop,
   insertAssistedPartner,
   removeAssistedPartner,
 };

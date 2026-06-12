@@ -39,6 +39,12 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   charModifyLevel:   { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
   // engine-extension #4 (2026-06-05): char→hand bounce 短縮形
   sceneToHand:       { defaultArea: 'scene',    mode: 'PA' },
+  // Task D E2 (2026-06-12): scene→deck 短縮形 (pos:'bottom'|'top' は handler 側で解決)
+  sceneToDeck:       { defaultArea: 'scene',    mode: 'PA' },
+  // Task D E4 (2026-06-12): triggered ability 付与短縮形 (ability descriptor は handler 側で解決)
+  charGrantAbility:  { defaultArea: 'scene',    mode: 'PA' },
+  // Task D E0 addendum (2026-06-12): keyword 付与短縮形 (pick carrier 用。B09032 解禁)
+  charGrantKeyword:  { defaultArea: 'scene',    mode: 'PA' },
   // engine-extension #5b (2026-06-05): set-card 短縮形 (fromDeckTop と組合せ)
   charSetCard:       { defaultArea: 'scene',    mode: 'PA' },
   // 2026-06-06 タスクC: セット card を 1 枚外す短縮形 (hasSetCards filter で対象キャラを pick)

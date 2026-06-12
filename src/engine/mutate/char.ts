@@ -129,7 +129,7 @@ function setTurnEffect(s: GameState, uid: string, key: string, val: unknown): vo
  * scope='turn': turn 系エフェクト (apMod_turn, lpMod_turn, lvlMod_turn,
  *   apMod_contact, lpMod_contact, lvlMod_contact, grantedKeywords) を削除
  */
-function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn'): void {
+function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' | 'action'): void {
   const found = findChar(s, uid);
   if (!found) return;
   const te = found.char.turnEffects;
@@ -144,11 +144,52 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn')
     delete te['lvlMod_turn'];
     delete te['lvlMod_contact'];
     delete te['grantedKeywords'];
+    // Task D E4 (2026-06-12): textual-ability token / granted ability の清掃 (BUG-119 教訓:
+    // 新 turn キーは必ずここに列挙)。typed flag は delete でなく false リセット (型整合)。
+    delete te['actionTargetsActive'];
+    delete te['sleepGuard'];
+    delete te['mustGuard'];
+    delete te['toDeckBottomOnTurnEnd'];
+    delete te['wasGuardedThisTurn'];
+    delete te['grantedAbilities'];
+    te.contactImmune = false;
+    te.removeOnTurnEnd = false;
+    // _action suffix もターン終了で確実に切れる (アクション終了清掃の safety net)
+    for (const key of Object.keys(te)) {
+      if (key.endsWith('_action')) delete te[key];
+    }
   } else if (scope === 'opp-turn') {
     // BUG-101: D11005 挑発 (mustBeTargeted) は「相手のターン終了時まで」。
     // endTurn(p) が相手 (非p=設定者) scene を清掃する経路から呼ばれる。
     delete te['mustBeTargeted'];
+    // Task D E4: '_oppTurn' suffix の token (sleepGuard_oppTurn 等、B09054) も同タイミングで切れる
+    for (const key of Object.keys(te)) {
+      if (key.endsWith('_oppTurn')) delete te[key];
+    }
+  } else if (scope === 'action') {
+    // Task D E4 (2026-06-12): rules/08 §6-7 — アクション終了時に切れる効果 ('_action' suffix)。
+    // contact-end→action-end 遷移と abortIfMissing の両経路から呼ばれる
+    // (同一ターン 2 回目のアクションへ stale な contactImmune_action 等を持ち越さない)。
+    for (const key of Object.keys(te)) {
+      if (key.endsWith('_action')) delete te[key];
+    }
   }
+}
+
+/**
+ * Task D E4 (2026-06-12): triggered ability の動的付与 (charGrantAbility verb の primitive)。
+ * JSON descriptor を turnEffects.grantedAbilities[] に積む。走査は listeners/triggered.ts
+ * handleHook が def.abilities と合算して行い、清掃は clearTurnEffects('turn')。
+ * rules: 15 (付与元が離場しても効果は有効), 19 (元の能力無効は外部付与に及ばない)
+ */
+function grantAbility(s: GameState, uid: string, ability: object): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+  const te = found.char.turnEffects;
+  if (!Array.isArray(te['grantedAbilities'])) {
+    te['grantedAbilities'] = [];
+  }
+  (te['grantedAbilities'] as object[]).push(ability);
 }
 
 /**
@@ -237,6 +278,7 @@ export const char = {
   disableOriginalAbilities,
   setTurnEffect,
   clearTurnEffects,
+  grantAbility,
   setCard,
   stackCard,
   removeAllSetAndStacked,

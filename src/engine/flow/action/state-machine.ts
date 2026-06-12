@@ -209,7 +209,9 @@ export function declare(state: GameState, byUid: string, target: Target): Action
  * - phase → 'leave-resolution'
  */
 export function tryGuard(state: GameState, ax: ActionContext, guardUid: string): void {
-  if (!canGuard(state, ax.byUid, guardUid)) {
+  // Task D E4: アクション対象キャラ自身はガード不可 (B09028/B09054 Q&A、sleepGuard 重複領域)
+  const guardExclude = ax.target.kind === 'char' ? ax.target.uid : undefined;
+  if (!canGuard(state, ax.byUid, guardUid, guardExclude)) {
     throw new Error(`flow.action.tryGuard: invalid guard ${guardUid} for action by ${ax.byUid}`);
   }
 
@@ -276,6 +278,14 @@ export function snapshotAP(state: GameState, ax: ActionContext): void {
 
   ax.apSnapshot = { aUid, aAP, bUid, bAP };
 
+  // Task D E4 (2026-06-12): contactImmune の正規配線。judge (contact.ts) は従来から
+  // ax.contactImmune を読むが writer がゼロだった。防御側 (bUid) の turnEffects /
+  // 'text:' keyword を snapshot する。rules/22: AP 判定リムーブのみに適用 (カットイン等の
+  // 直接リムーブは貫通)。case target fallback (bUid===aUid) では攻撃者の flag を読まない。
+  if (bUid !== aUid) {
+    ax.contactImmune = readChar.hasTextAbility(state, bUid, 'contactImmune');
+  }
+
   event.emit(
     state,
     'contact:before-judge',
@@ -310,6 +320,12 @@ export function abortIfMissing(state: GameState, ax: ActionContext): void {
 
   if (byMissing || targetMissing) {
     ax.phase = 'action-end';
+    // Task D E4 (2026-06-12): 中断経路でも '_action' scope の効果を清掃 (rules/08 §6-7)
+    for (const p of ['self', 'opp'] as const) {
+      for (const c of state.players[p].scene) {
+        mutate.char.clearTurnEffects(state, c.uid, 'action');
+      }
+    }
     event.emit(
       state,
       'action:end',
@@ -416,6 +432,14 @@ export function advance(state: GameState, ax: ActionContext): void {
 
   if (phase === 'contact-end') {
     ax.phase = 'action-end';
+    // Task D E4 (2026-06-12): rules/08 §6-7 — アクション終了時に「アクション終了時まで」の
+    // 効果 ('_action' suffix turnEffects、例: B09041 contactImmune_action) が切れる。
+    // 両プレイヤーの scene を清掃 (同ターン 2 回目のアクションへの stale 免疫持ち越し防止)。
+    for (const p of ['self', 'opp'] as const) {
+      for (const c of state.players[p].scene) {
+        mutate.char.clearTurnEffects(state, c.uid, 'action');
+      }
+    }
     event.emit(
       state,
       'action:end',

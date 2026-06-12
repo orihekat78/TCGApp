@@ -66,7 +66,10 @@ export type EvidenceOrigin = {
 };
 
 export type FileCard =
-  | { type: 'card-back'; cardId: string }  // Round 3: 隠された cardId を保持 (ネクストヒント時に表向きで手札に渡すため)
+  // Round 3: 隠された cardId を保持 (ネクストヒント時に表向きで手札に渡すため)
+  // Task D E3 (2026-06-12): faceUp — fileFlipTop (「FILEの上から1枚表向きにする」B09021 等) で
+  // 表向き化された状態。optional (undefined=裏向き) なので既存 state と互換。
+  | { type: 'card-back'; cardId: string; faceUp?: boolean }
   | { type: 'assisted-partner'; cardId: string };
 
 /**

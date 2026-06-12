@@ -80,6 +80,10 @@ const TRIGGERED_HOOKS = [
   // selfOnly=「(変装した) このキャラが…」(source.uid=変装キャラ uid 一致)。rules/09: 変装は「登場」では
   // ないため enter hook は発火せず、disguise:into のみ発火する (登場時能力は別 hook で不発)。
   'disguise:into',
+  // Task D E3 (2026-06-12): 「FILEエリアにあるカードを手札に加えたとき」(B05050) を card-triggerable 化。
+  // emit 箇所: next-hint.ts:74 (既存) + filePopToHand (BUG-128 修正で追加)。payload={player, popped}。
+  // キャラ uid を持たない hook のため matcherCondition は triggerPlayerIs を使う (triggerCharMatches 不適合)。
+  'file:pop',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];
@@ -160,7 +164,16 @@ function handleHook(
   for (const card of collectCardsInPlay(state)) {
     const def = readDef.card(card.cardId);
     if (!def) continue;
-    for (const ability of def.abilities as AbilityDef[]) {
+    // Task D E4 (2026-06-12): granted triggered ability (charGrantAbility) の合算走査。
+    // scene のキャラのみ turnEffects.grantedAbilities を持ちうる。granted 配列が無ければ
+    // 追加コストほぼゼロ (def.abilities そのまま)。limit は granted id で declaredUseCount が機能。
+    const grantedRaw = card.area === 'scene'
+      ? state.players[card.player].scene.find(c => c.uid === card.uid)?.turnEffects?.['grantedAbilities']
+      : undefined;
+    const abilityList = Array.isArray(grantedRaw) && grantedRaw.length > 0
+      ? [...(def.abilities as AbilityDef[]), ...(grantedRaw as AbilityDef[])]
+      : (def.abilities as AbilityDef[]);
+    for (const ability of abilityList) {
       if (ability.type !== 'triggered') continue;
       const trig = ability.trigger;
       // multi-hook (2026-06-06 タスクC): trig.hook OR trig.hooks のいずれかが一致で発火。

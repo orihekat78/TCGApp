@@ -163,6 +163,26 @@ function hasKeyword(s: GameState, uid: string, kw: string): boolean {
   return keywords(s, uid).includes(kw);
 }
 
+/**
+ * Task D E4 (2026-06-12): 非キーワードテキスト能力 token の統一 reader。
+ * 「相手の現場にいるアクティブ状態のキャラを指定してアクションできる」(actionTargetsActive) /
+ * 「スリープ状態でもガードできる」(sleepGuard) / 「コンタクトによってリムーブされない」(contactImmune) 等を
+ * 2 チャネルで判定する:
+ *  1. turnEffects flag — charSetTurnEffect で付与 (素 / '_oppTurn' / '_action' duration suffix)
+ *  2. 'text:' 擬似キーワード — 印字常時条件型 (B09028) は continuousModifier.grantKeywords が
+ *     'text:<token>' を返す。keywords() 経由なので rules/19 (元の能力無効) と自動整合。
+ * rules: 13-keywords.md, 24-qa-naming-stun.md §常時有効型
+ */
+const TEXT_TOKEN_SUFFIXES = ['', '_oppTurn', '_action'] as const;
+function hasTextAbility(s: GameState, uid: string, token: string): boolean {
+  const c = scene.byUid(s, uid);
+  if (!c) return false;
+  for (const suf of TEXT_TOKEN_SUFFIXES) {
+    if (c.turnEffects[token + suf] === true) return true;
+  }
+  return keywords(s, uid).includes('text:' + token);
+}
+
 function state(s: GameState, uid: string): 'active' | 'sleep' | 'stun' {
   const char = scene.byUid(s, uid);
   return char?.state ?? 'sleep';
@@ -232,6 +252,7 @@ export const char = {
   traits,
   keywords,
   hasKeyword,
+  hasTextAbility,
   state,
   isNamed,
   setCards,

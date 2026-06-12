@@ -52,6 +52,7 @@ function costToText(cost: Cost): string {
     case 'removeDeckTop':     return `デッキ上 ${cost.n} 枚をリムーブ`;
     case 'discardEvidence':   return `証拠 ${cost.n} 枚をリムーブ`;
     case 'selfToDeckBottom':  return 'このキャラをデッキの下へ';
+    case 'sceneToDeckBottom': return `現場のキャラ ${cost.n} 枚をデッキの下へ`; // Task D E2
     case 'pay':               return cost.items.map(costToText).join(' + ');
     case 'choice':            return cost.items.map(costToText).join(' / ');
     case 'fileFrom':          return `FILE から ${cost.n} 枚`;

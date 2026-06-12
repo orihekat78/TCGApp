@@ -294,6 +294,12 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     const side = ctx.source.player;
     return state.players[side].evidence.filter(e => e.faceUp).length;
   }
+  // Task D E3 (2026-06-12): $self.fileCount — 所有者の FILE 枚数 (アシストパートナー含む、
+  // rules/17 §【FILE(X)】と同じ計数)。「FILEエリアの枚数以下のレベル」系 (B08060/B09052/B05102) の布石。
+  if (prop === 'fileCount') {
+    const side = ctx.source.player;
+    return state.players[side].file.length;
+  }
   const uid = ctx.source.uid;
   if (!uid) {
     throw new Error(`dyn.eval: $self.${prop} requires ctx.source.uid (none provided)`);

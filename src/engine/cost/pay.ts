@@ -72,6 +72,27 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       }
       return;
     }
+    // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト。
+    // UI 選択 (ctx.dyn.costParams.sceneToDeckBottom.uids) を優先し、無ければ
+    // pickCandidates (ctx.picked → 先頭 n) fallback。rules/09・23: リムーブではない
+    // ため leave:to-remove は発火しない (scene.toDeck 経由、rules/16 set/stacked 清掃込み)。
+    case 'sceneToDeckBottom': {
+      const explicit = readSceneToDeckUids(ctx);
+      const uids: string[] = [];
+      if (explicit.length >= cost.n) {
+        uids.push(...explicit.slice(0, cost.n));
+      } else {
+        const targets = pickCandidates(state, cost.target, ctx, cost.n);
+        for (const cand of targets) {
+          if (cand.kind === 'char') uids.push(cand.uid);
+        }
+      }
+      for (const uid of uids) {
+        mutate.scene.toDeck(state, uid, 'bottom');
+        acc.paidItems.push({ kind: 'sceneToDeckBottom', details: { uid } });
+      }
+      return;
+    }
     case 'removeDeckTop': {
       const removed = mutate.deck.removeFromTop(state, cost.player, cost.n);
       acc.paidItems.push({ kind: 'removeDeckTop', details: { removed } });
@@ -109,11 +130,18 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       return;
     }
     case 'fileFrom': {
+      // BUG-129 (Task D E3, 2026-06-12): 旧実装は popTop の戻り値を破棄しカードがゲームから
+      // 消失していた (リフレッシュ母数バグ、rules/03/14)。FILE 所有者のリムーブエリアへ移す。
       const p = ctx.source.player;
+      const ffIds: string[] = [];
       for (let i = 0; i < cost.n; i++) {
-        mutate.file.popTop(state, p);
+        const popped = mutate.file.popTop(state, p);
+        if (popped) ffIds.push(popped.cardId);
       }
-      acc.paidItems.push({ kind: 'fileFrom', details: { n: cost.n } });
+      if (ffIds.length > 0) {
+        mutate.remove.add(state, p, ffIds);
+      }
+      acc.paidItems.push({ kind: 'fileFrom', details: { n: cost.n, ids: ffIds } });
       return;
     }
     case 'flipFaceUpEvidence': {
@@ -153,6 +181,17 @@ function pickCandidates(
   }
   const all = candidates(state, ref, ctx);
   return all.slice(0, n);
+}
+
+// Task D E2 (2026-06-12): UI が選んだ sceneToDeckBottom コスト対象 (readFlipIndices と同型)
+function readSceneToDeckUids(ctx: EffectCtx): string[] {
+  const dyn = ctx.dyn;
+  const params = dyn && (dyn['costParams'] as Record<string, unknown> | undefined);
+  const std = params && (params['sceneToDeckBottom'] as { uids?: string[] } | undefined);
+  if (std && Array.isArray(std.uids)) {
+    return std.uids;
+  }
+  return [];
 }
 
 function readChosenIndex(ctx: EffectCtx): number | undefined {

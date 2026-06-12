@@ -36,6 +36,11 @@ function findActorPlayer(state: GameState, uid: string): Player | null {
 export function candidates(
   state: GameState,
   byUid: string,
+  // Task D E4 (2026-06-12): アクション対象キャラ自身はガード不可 (B09028/B09054 公式Q&A
+  // 「相手のアクションで指定された場合、そのキャラ自身でガードすることはできますか？→いいえ」)。
+  // sleepGuard 導入前は guard候補=active / 対象=sleep|stun で集合が排反のため暗黙成立していた。
+  // 省略時 (undefined) は従来挙動 (byte 等価)。
+  excludeUid?: string,
 ): { uid: string; cardId: string }[] {
   // 攻撃側ブレット判定 (rules/13)
   if (byUid !== 'partner:self' && byUid !== 'partner:opp') {
@@ -50,8 +55,12 @@ export function candidates(
   if (!attackerSide) return [];
   const defenderSide: Player = attackerSide === 'self' ? 'opp' : 'self';
 
+  // Task D E4 (2026-06-12): sleepGuard token — 「このキャラはスリープ状態でもガードできる。」
+  // (B09054/B09028)。スタンは flag があっても不可 (rules/03 行動不可)。flag 不在時は従来と byte 等価。
   return state.players[defenderSide].scene
-    .filter(c => c.state === 'active')
+    .filter(c => c.uid !== excludeUid)
+    .filter(c => c.state === 'active'
+      || (c.state === 'sleep' && readChar.hasTextAbility(state, c.uid, 'sleepGuard')))
     .map(c => ({ uid: c.uid, cardId: c.cardId }));
 }
 
@@ -61,8 +70,8 @@ export function candidates(
  * - 攻撃側がブレットなら false
  * - guardUid が候補リストに含まれていれば true
  */
-export function canGuard(state: GameState, byUid: string, guardUid: string): boolean {
-  const list = candidates(state, byUid);
+export function canGuard(state: GameState, byUid: string, guardUid: string, excludeUid?: string): boolean {
+  const list = candidates(state, byUid, excludeUid);
   return list.some(c => c.uid === guardUid);
 }
 

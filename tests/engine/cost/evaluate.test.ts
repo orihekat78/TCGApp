@@ -261,3 +261,35 @@ describe('engine.cost.canPay', () => {
     });
   });
 });
+
+// Task D E2 (2026-06-12): sceneToDeckBottom cost の canPay
+describe('sceneToDeckBottom canPay (Task D E2)', () => {
+  it('filter 一致キャラが n 枚未満なら false (rules/21)', () => {
+    registerCardDef(defOf({ id: 'K1', traits: ['警視庁'] }));
+    registerCardDef(defOf({ id: 'X1', traits: ['探偵'] }));
+    let s = createEmptyGameState();
+    s = withScene(s, 'self', [makeChar({ uid: 'x1', cardId: 'X1' })]);
+    const cost = {
+      kind: 'sceneToDeckBottom',
+      target: { kind: 'pick', query: { area: 'scene', side: 'self', filter: { trait: '警視庁' } }, n: { min: 1, max: 1 }, chooser: 'owner' },
+      n: 1,
+    } as never;
+    expect(canPay(s, cost, makeCtx())).toBe(false);
+    s = withScene(s, 'self', [makeChar({ uid: 'x1', cardId: 'X1' }), makeChar({ uid: 'k1', cardId: 'K1' })]);
+    expect(canPay(s, cost, makeCtx())).toBe(true);
+  });
+});
+
+// Task D E3 / BUG-129 水平展開: canPay fileFrom はアシストパートナーを数えない
+describe('fileFrom canPay BUG-129 (Task D E3)', () => {
+  it('FILE がアシストパートナーのみなら canPay false (rules/21)', () => {
+    let s = createEmptyGameState();
+    s = { ...s, players: { ...s.players, self: { ...s.players.self, file: [{ type: 'assisted-partner', cardId: 'P1' }] } } } as GameState;
+    expect(canPay(s, { kind: 'fileFrom', n: 1 } as never, makeCtx())).toBe(false);
+    s = { ...s, players: { ...s.players, self: { ...s.players.self, file: [
+      { type: 'assisted-partner', cardId: 'P1' },
+      { type: 'card-back', cardId: 'F1' },
+    ] } } } as GameState;
+    expect(canPay(s, { kind: 'fileFrom', n: 1 } as never, makeCtx())).toBe(true);
+  });
+});

@@ -104,12 +104,50 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const p = resolvePlayer(cond.player, ctx);
       return state.players[p].evidence.length >= cond.n;
     }
+    // Task D E1 (2026-06-12): 手札枚数条件 (evidenceAtLeast と同流儀の state 直読み。
+    // candidates() を経由しないため continuous 再帰 (BUG-113 系) に乗らない)
+    // rules: 15-abilities-effects.md, 21-declared-ability-cost.md
+    case 'handAtLeast': {
+      const p = resolvePlayer(cond.player, ctx);
+      return state.players[p].hand.length >= cond.n;
+    }
+    case 'handAtMost': {
+      const p = resolvePlayer(cond.player, ctx);
+      return state.players[p].hand.length <= cond.n;
+    }
+    case 'handCountAtLeastOther': {
+      const p = resolvePlayer(cond.player, ctx);
+      const other = p === 'self' ? 'opp' : 'self';
+      return state.players[p].hand.length >= state.players[other].hand.length;
+    }
     case 'fileTopType': {
       const owner = ctx.source.player;
       const file = state.players[owner].file;
       if (file.length === 0) return false;
       // "Top" = last pushed (per mutate.file.popTop semantics)
       return file[file.length - 1].type === cond.type;
+    }
+    // Task D E3 (2026-06-12): FILE 最上位の非 assisted-partner カードを TargetFilter で評価。
+    // fileFlipTop が公開する札と同一参照 (B09021「1番上のカードがキャラの場合」)。
+    // 空 / アシストパートナーのみ → false。
+    case 'fileTopMatches': {
+      const ftmSide = resolvePlayer(cond.side ?? 'self', ctx);
+      const ftmFile = state.players[ftmSide].file;
+      for (let i = ftmFile.length - 1; i >= 0; i--) {
+        const fc = ftmFile[i]!;
+        if (fc.type === 'assisted-partner') continue;
+        if (!cond.filter) return true;
+        const cand: Candidate = { kind: 'file', player: ftmSide, index: i };
+        return matchOneFilter(state, fc.cardId, cond.filter, null, cand);
+      }
+      return false;
+    }
+    // Task D E3 (2026-06-12): トリガ payload.player の側一致 (file:pop 等キャラ uid を持たない hook 用)
+    case 'triggerPlayerIs': {
+      const tpl = ctx.triggerPayload as { player?: 'self' | 'opp' } | undefined;
+      if (!tpl?.player) return false;
+      const sameSide = tpl.player === ctx.source.player;
+      return cond.side === 'self' ? sameSide : !sameSide;
     }
     case 'scratchTrace': {
       const p = resolvePlayer(cond.player, ctx);
@@ -229,19 +267,47 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     }
     case 'triggerCharMatches': {
       // 2026-06-06 タスクC: トリガ payload のキャラ (reasoning:end の推理キャラ等) を side+filter で評価。
-      const pl = ctx.triggerPayload as { uid?: string; player?: 'self' | 'opp' } | undefined;
-      if (!pl?.uid || !pl.player) return false;
+      // Task D E4 (2026-06-12): payloadKey — uid を payload[payloadKey] から取る (例: action:guarded の
+      // 'guardUid'、B09041)。payload に player が無い場合は scene 走査で side を導出する。
+      const pl = ctx.triggerPayload as Record<string, unknown> | undefined;
+      const tcmUid = (cond.payloadKey ? pl?.[cond.payloadKey] : pl?.['uid']) as string | undefined;
+      if (!pl || typeof tcmUid !== 'string') return false;
+      let tcmPlayer: 'self' | 'opp' | undefined;
+      if (cond.payloadKey) {
+        // payloadKey 指定時 payload.player は別キャラ (byUid 側) の可能性があるため走査で導出
+        tcmPlayer = state.players.self.scene.some(c => c.uid === tcmUid) ? 'self'
+          : state.players.opp.scene.some(c => c.uid === tcmUid) ? 'opp'
+          : undefined;
+      } else {
+        // 従来経路: payload.player 必須 (挙動不変)
+        tcmPlayer = pl['player'] as 'self' | 'opp' | undefined;
+      }
+      if (!tcmPlayer) return false;
+      // Task D E2 (2026-06-12): excludeSource — 「このキャラ以外の〚X〛が登場したとき」(B09002 a1)。
+      // rules/19 分割名で自カードが filter に自己一致するのを除外する。
+      if (cond.excludeSource && tcmUid === ctx.source.uid) return false;
       // side:'self' = トリガキャラが card 所有者と同じ側 (ctx.source.player)
-      const sameSide = pl.player === ctx.source.player;
+      const sameSide = tcmPlayer === ctx.source.player;
       if (cond.side === 'self' && !sameSide) return false;
       if (cond.side === 'opp' && sameSide) return false;
       if (cond.filter) {
-        const ch = state.players[pl.player].scene.find(c => c.uid === pl.uid);
+        const ch = state.players[tcmPlayer].scene.find(c => c.uid === tcmUid);
         if (!ch) return false;
-        const cand: Candidate = { kind: 'char', uid: ch.uid, cardId: ch.cardId, player: pl.player };
+        const cand: Candidate = { kind: 'char', uid: ch.uid, cardId: ch.cardId, player: tcmPlayer };
         if (!matchOneFilter(state, ch.cardId, cond.filter, ch, cand)) return false;
       }
       return true;
+    }
+    // Task D E4 (2026-06-12): ctx.source キャラ自身の turnEffects flag (B09041 a3
+    // 「このターン中にこのキャラのアクションがガードされていた場合に宣言できる」等)
+    case 'charTurnEffect': {
+      const cteUid = ctx.source.uid;
+      if (!cteUid) return false;
+      for (const p of ['self', 'opp'] as const) {
+        const ch = state.players[p].scene.find(c => c.uid === cteUid);
+        if (ch) return ch.turnEffects[cond.key] === true;
+      }
+      return false;
     }
     case 'custom':
       return cond.check(state, ctx);

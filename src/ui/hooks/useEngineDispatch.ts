@@ -154,7 +154,8 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
       if (!ax) return false;
       if (ax.phase !== 'guard-window') return false;
       if (action.guarderUid === null) return true; // pass はいつでも可
-      return flow.guard.canGuard(state, ax.byUid, action.guarderUid);
+      // Task D E4: アクション対象自身はガード不可 (B09028/B09054 Q&A)
+      return flow.guard.canGuard(state, ax.byUid, action.guarderUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
     }
     case 'actionContact': {
       const ax = flow.action._getContext(action.actionId);

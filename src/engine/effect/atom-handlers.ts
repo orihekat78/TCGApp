@@ -13,7 +13,6 @@
 
 import type { GameState, AtomVerb, EffectCtx, LogEntry, FileCard, Candidate } from '../types/index.js';
 import type { TargetFilter } from '../types/effect.js';
-import { FILE_CARD_BACK_PLACEHOLDER } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { cards as engineCards } from '../cards/index.js';
@@ -230,6 +229,25 @@ function hasNorMax(a: Record<string, unknown>): boolean {
 
 export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: EffectCtx): void {
   const a = args as Record<string, unknown>;
+  // Task D E0 (2026-06-12): pick-bind writeback。PA 短縮形 pick が解決済み (uid が実 uid) かつ
+  // `bind` が指定されていれば、ctx.bindings[bind] に {kind:'char',uid,cardId,player} を蓄積する。
+  // 後続 atom は `uid: '$<bind>.uid'` (resolveBindRef) で同一キャラを参照できる。
+  // human (applyPickAndContinuation の continuation ctx) / AI (初期 walk 同期解決 → runtime
+  // entryToCtx の ctx) の両経路を本 preamble 1 箇所でカバーする (rules/15 効果解決順)。
+  // multi-pick は per-uid atom が順に実行されるため重複を避けつつ全 picked が蓄積される。
+  if (typeof a.bind === 'string' && typeof a.uid === 'string' && !a.uid.startsWith('$')) {
+    const bindUid = a.uid;
+    const found = (['self', 'opp'] as const)
+      .flatMap(p => s.players[p].scene.map(c => ({ c, p })))
+      .find(({ c }) => c.uid === bindUid);
+    if (found) {
+      const bindings = ctx.bindings as Record<string, unknown[]>;
+      const arr = Array.isArray(bindings[a.bind]) ? bindings[a.bind]! : (bindings[a.bind] = []);
+      if (!arr.some(e => (e as { uid?: string }).uid === bindUid)) {
+        arr.push({ kind: 'char', uid: bindUid, cardId: found.c.cardId, player: found.p });
+      }
+    }
+  }
   switch (verb) {
     // --- ドロー / FILE / 証拠 ---
     case 'draw': {
@@ -298,21 +316,76 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-073: effect log
       const faP = resolvePlayer(a.player, ctx);
       const faN = a.n as number;
-      mutate.file.addFromDeckTop(s, faP, faN);
+      // Task D E3 (2026-06-12): rules/14「FILEに置く」効果はデッキ0でリフレッシュ後に残りを解決。
+      // addFromDeckTop 自体 (auto-phase 経路) は不変に保ち、effect 経路のみ 1 枚ずつ
+      // refresh guard を挟む (mutate.deck.draw と同じ敗北処理)。
+      for (let i = 0; i < faN; i++) {
+        if (s.players[faP].deck.length === 0) {
+          const r = mutate.deck.refresh(s, faP);
+          if (!r.ok) {
+            if (s.gameResult === undefined) {
+              const winner: Player = faP === 'self' ? 'opp' : 'self';
+              mutate.gameResult.set(s, winner, 'deck-out');
+            }
+            break;
+          }
+        }
+        mutate.file.addFromDeckTop(s, faP, 1);
+      }
       mutate.log.append(s, { ts: Date.now(), player: faP, turn: s.turn.number, action: 'effect:fileAdd', result: String(faN) });
       return;
     }
     case 'filePopToHand': {
       const p = resolvePlayer(a.player, ctx);
       const popped: FileCard | undefined = mutate.file.popTop(s, p);
-      // 裏向き card-back は手札に戻すとき "card-back" として加える (リバース不能なシリアライズ)
-      // assisted-partner は popTop が除外するためここでは card-back のみ
+      // BUG-128 (Task D E3, 2026-06-12): FileCard.card-back は Round 3 から実 cardId を保持して
+      // いる (next-hint.ts:66-74 は修正済) のに、本 verb は placeholder 'card-back' を手札に
+      // push する stale 実装だった。実 cardId を加え、next-hint と同じ 'file:pop' を emit する。
+      // popped 無し (FILE 空 or アシストパートナーのみ) は「そうした場合」不成立 = chain break
+      // (PR100/B04068 公式Q&A: FILE に無ければ以降の効果は解決できない)。
       if (popped) {
-        const cardId = popped.type === 'assisted-partner' ? popped.cardId : FILE_CARD_BACK_PLACEHOLDER;
-        mutate.hand.add(s, p, [cardId]);
+        mutate.hand.add(s, p, [popped.cardId]);
+        event.emit(s, 'file:pop', { player: p, popped }, { player: p });
+      } else {
+        (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
       }
       // BUG-073: effect log (popped が無い場合も log には残す)
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand' });
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: popped ? popped.cardId : 'none' });
+      return;
+    }
+    case 'fileRemoveTop': {
+      // Task D E3 (2026-06-12): FILE 上から n 枚を FILE 所有者のリムーブエリアへ。
+      // rules/03 (リムーブエリア) / rules/05 (末尾が最上)。アシストパートナーは popTop が
+      // 自動 skip (B09010/B09108/B09111 Q&A「パートナーカードを除いて」)。
+      // 1 枚もリムーブできなければ chain break (B09105 Q&A「以降の効果は解決できない」)。
+      // bind 指定でリムーブした cardId 群を ctx.bindings へ (discard a.bind と同流儀)。
+      const frP = resolvePlayer(a.player, ctx);
+      const frN = requireField<number>(a, 'n', 'number');
+      const removedIds: string[] = [];
+      for (let i = 0; i < frN; i++) {
+        const popped = mutate.file.popTop(s, frP);
+        if (!popped) break;
+        removedIds.push(popped.cardId);
+      }
+      if (removedIds.length > 0) {
+        mutate.remove.add(s, frP, removedIds);
+      } else {
+        (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+      }
+      if (typeof a.bind === 'string') {
+        (ctx.bindings as Record<string, unknown[]>)[a.bind] =
+          removedIds.map(cardId => ({ kind: 'card', cardId, area: 'remove', player: frP }));
+      }
+      mutate.log.append(s, { ts: Date.now(), player: frP, turn: s.turn.number, action: 'effect:fileRemoveTop', result: removedIds.join(',') || 'none' });
+      return;
+    }
+    case 'fileFlipTop': {
+      // Task D E3 (2026-06-12): FILE 最上位の非パートナーを表向き化 (B09021/B09108/B09023/B09005)。
+      // 既に表向き / FILE 空は no-op。⚠ flip 不発でも chain break しない
+      // (B09021 Q&A: 表向きにできなくても後続の AP+1000 は実行可 — fileRemoveTop と非対称)。
+      const ffP = resolvePlayer(a.player, ctx);
+      const ffResult = mutate.file.flipTop(s, ffP);
+      mutate.log.append(s, { ts: Date.now(), player: ffP, turn: s.turn.number, action: 'effect:fileFlipTop', result: ffResult });
       return;
     }
     case 'evidenceGain': {
@@ -687,6 +760,31 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToHand', target: sthUid });
       return;
     }
+    case 'sceneToDeck': {
+      // Task D E2 (2026-06-12): scene→deck verb。sceneToHand と同型の PA 短縮形。
+      // 「相手の現場のキャラを1枚まで選び、デッキの下に移す」(B07080/B08058/D10009 等)。
+      // rules: 09/23 (リムーブでない=現場リムーブ時不発動), 16 (set/stacked リムーブ)
+      // pos:'top' で「デッキの上に移す」(B05092)。移動先は所有者のデッキ。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        const stdP = resolvePlayer(a.player, ctx);
+        const stdChooser = ctx.source.player as Player;
+        const paTarget = buildShortFormPick('scene', a, stdChooser, stdP);
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: stdChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: stdChooser, turn: s.turn.number, action: 'effect:sceneToDeck:awaiting-pick' });
+        return;
+      }
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToDeck', result: 'skipped' });
+        return;
+      }
+      const stdUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof stdUid !== 'string' || stdUid.startsWith('$')) return;
+      const stdPos = a.pos === 'top' ? 'top' : 'bottom';
+      mutate.scene.toDeck(s, stdUid, stdPos);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToDeck', target: stdUid, result: stdPos });
+      return;
+    }
     case 'sceneSetState': {
       // PA 短縮形: uid 不在 + player + state(設定する状態の文字列) + n|max → scene pick を構築。
       // a.state は「設定先の状態」なので候補 filter には載せない (buildShortFormPick は配列 state のみ拾う)。
@@ -824,6 +922,22 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     }
     case 'charGrantKeyword': {
+      // Task D E0 addendum (2026-06-12): PA 短縮形対応 (B09032 解禁条件)。
+      // 明示 uid:'$pick'+target 形は初期 walk push となり human 経路で後続 step の bind が
+      // 喪失するため、pick carrier に使う場合は短縮形 (runtime push) が必須。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        const cgkP = resolvePlayer(a.player, ctx);
+        const cgkChooser = ctx.source.player as Player;
+        const paTarget = buildShortFormPick('scene', a, cgkChooser, cgkP);
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: cgkChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: cgkChooser, turn: s.turn.number, action: 'effect:charGrantKeyword:awaiting-pick' });
+        return;
+      }
+      if (a.uid === '$pick' && (a as { target?: unknown }).target === undefined) {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantKeyword', result: 'skipped' });
+        return;
+      }
       // user_request 20260522_01 #12 fix: $matched.uid 等の bind ref 解決
       const grantUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof grantUid !== 'string' || grantUid.startsWith('$')) return;
@@ -850,6 +964,45 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.char.disableOriginalAbilities(s, doUid);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charDisableOriginal', target: doUid });
+      return;
+    }
+    case 'charGrantAbility': {
+      // Task D E4 (2026-06-12): triggered ability の動的付与。args:
+      //   { uid|'$pick'+target, ability: { id?, trigger, condition?, limit?, effect }, scope:'turn' }
+      // descriptor は turnEffects.grantedAbilities[] に積まれ、triggered.ts handleHook が
+      // def.abilities と合算走査。清掃は clearTurnEffects('turn')。validate.ts が JSON 性と
+      // trigger.hook の許可リストを enforce (rules/15, 19)。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        const cgaP = resolvePlayer(a.player, ctx);
+        const cgaChooser = ctx.source.player as Player;
+        const paTarget = buildShortFormPick('scene', a, cgaChooser, cgaP);
+        const paArgs = { ...a, uid: '$pick', target: paTarget };
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: cgaChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: cgaChooser, turn: s.turn.number, action: 'effect:charGrantAbility:awaiting-pick' });
+        return;
+      }
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantAbility', result: 'skipped' });
+        return;
+      }
+      const cgaUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof cgaUid !== 'string' || cgaUid.startsWith('$')) return;
+      const abilitySpec = a.ability;
+      if (!abilitySpec || typeof abilitySpec !== 'object') return;
+      const spec = abilitySpec as Record<string, unknown>;
+      // granted id namespace (limit:{turn} の declaredUseCount キーとして機能する)
+      const grantedId = typeof spec.id === 'string'
+        ? spec.id
+        : `granted:${ctx.source.cardId ?? '?'}:${ctx.source.abilityId ?? '?'}`;
+      const grantedDef = {
+        ...spec,
+        id: grantedId,
+        type: 'triggered',
+        scope: 'on-scene',
+        description: typeof spec.description === 'string' ? spec.description : '(granted)',
+      };
+      mutate.char.grantAbility(s, cgaUid, grantedDef);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantAbility', target: cgaUid, result: grantedId });
       return;
     }
     case 'charSetTurnEffect': {

@@ -24,7 +24,21 @@ export type Condition =
   | { kind: 'apAtLeast'; ref: TargetingRef; n: number }
   | { kind: 'lpAtLeast'; ref: TargetingRef; n: number }
   | { kind: 'evidenceAtLeast'; player: 'self' | 'opp'; n: number }
+  // Task D E1 (2026-06-12): 手札枚数条件。player は resolvePlayer 規約 ('self'=カード所有者)。
+  // handAtMost を not(handAtLeast n+1) に畳まないのは公式テキスト「N枚以下」と 1:1 対応させるため。
+  // rules: 15-abilities-effects.md (「〜の場合」は effect 内 conditional で解決時評価),
+  //        21-declared-ability-cost.md (宣言ゲートは AbilityDef.condition)
+  | { kind: 'handAtLeast'; player: 'self' | 'opp'; n: number }
+  | { kind: 'handAtMost'; player: 'self' | 'opp'; n: number }
+  // 「player の手札枚数 >= 反対側の手札枚数」(B07067「相手の手札が自分の手札の枚数以上」= player:'opp')
+  | { kind: 'handCountAtLeastOther'; player: 'self' | 'opp' }
   | { kind: 'fileTopType'; type: 'card-back' | 'assisted-partner' }
+  // Task D E3 (2026-06-12): FILE 最上位の非 assisted-partner カードを TargetFilter で評価
+  // (「FILEエリアにある1番上のカードがキャラの場合」B09021。fileFlipTop が公開した札と同一参照)
+  | { kind: 'fileTopMatches'; side?: 'self' | 'opp'; filter?: TargetFilter }
+  // Task D E3 (2026-06-12): トリガ payload.player と source.player の側一致 (file:pop 等
+  // キャラ uid を持たない hook 用。triggerCharMatches は payload.uid 必須で不適合)
+  | { kind: 'triggerPlayerIs'; side: 'self' | 'opp' }
   | { kind: 'scratchTrace'; player: 'self' | 'opp'; v: '発見済' | '未発見' }
   | { kind: 'flag'; player: 'self' | 'opp'; key: keyof TurnScopedFlags; v: boolean }
   | { kind: 'declaredUseUnder'; uid: string; abilityId: string; max: number }
@@ -47,7 +61,14 @@ export type Condition =
   // 2026-06-06 タスクC: トリガ payload のキャラ (例: reasoning:end の推理キャラ payload.uid) を
   // side + TargetFilter で評価する。「自分/相手の現場にいる〚条件〛のキャラが推理したとき」を
   // matcherCondition で declarative 化。side:'self'=payload.player===source.player (= card 所有者側)。
-  | { kind: 'triggerCharMatches'; side?: 'self' | 'opp' | 'either'; filter?: TargetFilter }
+  // Task D E2 (2026-06-12): excludeSource — payload.uid === ctx.source.uid を除外。
+  // 「このキャラ以外の〚X〛が登場したとき」(B09002 a1) で rules/19 分割名の自己一致を防ぐ。
+  // Task D E4 (2026-06-12): payloadKey — payload の uid フィールド名を指定 (例: 'guardUid' で
+  // 「レベル6以下のキャラによってガードされたとき」B09041。player は scene 走査で導出)。
+  | { kind: 'triggerCharMatches'; side?: 'self' | 'opp' | 'either'; filter?: TargetFilter; excludeSource?: boolean; payloadKey?: string }
+  // Task D E4 (2026-06-12): ctx.source キャラ自身の turnEffects flag を読む
+  // (「この能力は、このターン中にこのキャラのアクションがガードされていた場合に宣言できる」B09041 a3)
+  | { kind: 'charTurnEffect'; key: string }
   | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean };
 
 // ---------- TargetFilter / TargetQuery / TargetingRef ----------
@@ -109,14 +130,22 @@ export type Scope = 'contact' | 'action' | 'turn' | 'opp-turn' | 'permanent' | '
 // ---------- AtomVerb ----------
 
 export type AtomVerb =
-  | 'draw' | 'discard' | 'mill' | 'fileAdd' | 'filePopToHand'
+  // Task D E3 (2026-06-12): fileRemoveTop (FILE 上から n 枚を所有者 remove へ、アシストパートナー除外) /
+  // fileFlipTop (FILE 最上位の非パートナーを表向き化、既に表向きなら no-op)
+  | 'draw' | 'discard' | 'mill' | 'fileAdd' | 'filePopToHand' | 'fileRemoveTop' | 'fileFlipTop'
   | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'selfToEvidence' | 'evidenceToDeck'
   | 'evidenceToHand' | 'handAddFromRemove' | 'handAddFromDeck'
   | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise' | 'sceneToHand'
+  // Task D E2 (2026-06-12): 現場キャラを所有者のデッキ下/上へ移す (sceneToHand 同型 PA 短縮形)。
+  // rules: 09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 16 (set/stacked はリムーブ)
+  | 'sceneToDeck'
   | 'charModifyAP' | 'charModifyLP' | 'charModifyLevel' | 'charSetAP' | 'charSetLP'
   | 'charOverrideAP' | 'charOverrideLP'
   | 'charGrantKeyword' | 'charRevokeKeyword' | 'charDisableOriginal'
   | 'charSetTurnEffect' | 'charSetCard' | 'charStackCard' | 'charRemoveSetCard'
+  // Task D E4 (2026-06-12): triggered ability の動的付与 (turnEffects.grantedAbilities へ JSON descriptor)。
+  // 「そのキャラに『このキャラがアクションしたとき、カードを1枚引く。』を与える」(B02014) 等。
+  | 'charGrantAbility'
   | 'partnerAssist' | 'partnerSetState' | 'partnerSolveCase'
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
@@ -136,6 +165,9 @@ export type Cost =
   | { kind: 'removeDeckTop'; player: 'self'; n: number }
   | { kind: 'discardEvidence'; n: number }
   | { kind: 'selfToDeckBottom' }
+  // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト (B04011/B07080/B08076)。
+  // rules: 21 (全部行えなければ使用不可), 09/23 (リムーブでない)
+  | { kind: 'sceneToDeckBottom'; target: TargetingRef; n: number }
   | { kind: 'pay'; items: Cost[] }
   | { kind: 'choice'; items: Cost[] }
   | { kind: 'fileFrom'; n: number }

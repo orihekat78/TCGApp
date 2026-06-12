@@ -64,8 +64,9 @@ function readApLp(state: GameState, uid: string): { ap: number; lp: number; card
 function buildGuardCandidates(
   state: GameState,
   byUid: string,
+  excludeUid?: string, // Task D E4: アクション対象自身は除外 (B09028/B09054 Q&A)
 ): GuardPickerCandidate[] {
-  return flow.guard.candidates(state, byUid).map((c) => {
+  return flow.guard.candidates(state, byUid, excludeUid).map((c) => {
     const { ap, lp, name } = readApLp(state, c.uid);
     return { uid: c.uid, cardId: c.cardId, name, ap, lp };
   });
@@ -150,7 +151,7 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
       return;
 
     case 'guard-window': {
-      const cands = buildGuardCandidates(state, ax.byUid);
+      const cands = buildGuardCandidates(state, ax.byUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
       if (cands.length === 0) {
         dispatchEngineAction({ type: 'actionGuard', actionId: ax.id, guarderUid: null });
         return;
@@ -169,7 +170,7 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
       }
       // opp defender OR spectator mode の self: AI
       const ai = new HeuristicPolicy();
-      const rawCands = flow.guard.candidates(state, ax.byUid);
+      const rawCands = flow.guard.candidates(state, ax.byUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
       const choice = ai.chooseGuard?.(state, ax, rawCands) ?? null;
       dispatchEngineAction({ type: 'actionGuard', actionId: ax.id, guarderUid: choice });
       return;

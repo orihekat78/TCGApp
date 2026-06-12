@@ -159,6 +159,37 @@ function toDeckBottom(s: GameState, uid: string): void {
 }
 
 /**
+ * 現場から所有者のデッキへ移す (Task D E2, 2026-06-12)
+ * rules/16: 現場を離れるとき set/stacked はリムーブ (toHand と同一処理)。
+ * rules/09・23: デッキ移動はリムーブではないため leave:to-remove は emit しない。
+ * - 変装専用の toDeckBottom (rules/16 処理なし・set/stacked は新キャラへ引継ぎ) とは別物。
+ * - 所有者のデッキ (char の所属プレイヤー) に入る。effect 発動側ではない点に注意。
+ */
+function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+
+  const { char, player } = found;
+  // rules/16 setCards / stackedCards は離場時にリムーブされる
+  if (char.setCards.length > 0) {
+    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+  }
+  for (let i = 0; i < char.stackedCards; i++) {
+    s.players[player].remove.push('back-card');
+  }
+
+  const idx = s.players[player].scene.findIndex(c => c.uid === uid);
+  if (idx !== -1) {
+    s.players[player].scene.splice(idx, 1);
+  }
+  if (pos === 'top') {
+    s.players[player].deck.unshift(char.cardId);
+  } else {
+    s.players[player].deck.push(char.cardId);
+  }
+}
+
+/**
  * 現場から所有者の手札へ戻す (rules/16: 現場を離れるとき set/stacked はリムーブ)
  * engine-extension #4 (2026-06-05): char→hand bounce verb の primitive.
  * - リムーブではないため leave:to-remove は emit しない (rules/17 と整合)
@@ -229,6 +260,7 @@ export const scene = {
   switchEnter,
   removeToRemove,
   toHand,
+  toDeck,
   toDeckBottom,
   setState,
   tryActivate,

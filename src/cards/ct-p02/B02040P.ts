@@ -35,6 +35,8 @@ const a2: AbilityDef = {
             args: {
               uid: '$pick',
               fromDeckTop: true,
+              // BUG-130 (Task D E0, 2026-06-12): pick-bind — 選んだキャラを後続 atom と共有
+              bind: '$picked',
               faceUp: false,
               player: 'self',
               target: {
@@ -45,7 +47,7 @@ const a2: AbilityDef = {
               },
             },
           },
-          { kind: 'atom', verb: 'charModifyAP', args: { uid: '$pick', delta: 2000, scope: 'turn' } },
+          { kind: 'atom', verb: 'charModifyAP', args: { uid: '$picked.uid', delta: 2000, scope: 'turn' } }, // BUG-130: 旧 '$pick' は silent no-op
         ],
       },
     ],
