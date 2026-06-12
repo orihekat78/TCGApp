@@ -140,9 +140,8 @@ export function handUseCard(
   // NextHint と同じパターン (flow/main/next-hint.ts L105-119) を踏襲。
   // 手札の使用とは異なり、効果による登場ではないので viaEffect:false。
   if (d?.kind === 'character') {
-    // 手札から除去
-    const handIdx = state.players[p].hand.indexOf(cardId);
-    if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+    // 手札から除去 (refactor 1a 2026-06-12: mutate 層経由。indexOf+splice と同一挙動)
+    mutate.hand.remove(state, p, [cardId]);
     // 現場登場 (名乗り状態 = rules/05 同ターン登場)。switch 経路では既存 1 枚を
     // 先にリムーブしてから enter (mutate.scene.switchEnter)。
     const newChar = isSwitch
@@ -165,8 +164,7 @@ export function handUseCard(
     // 旧実装は kind='character' 分岐のみで event 用処理が欠落、使用後も手札に残るバグだった。
     // 効果自体は 'effect:declared' hook の listener (Round 4b で整備予定) が
     // pendingEffects に積む設計。本 fix は「手札除去 + リムーブ移動」のみを保証する。
-    const handIdx = state.players[p].hand.indexOf(cardId);
-    if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+    mutate.hand.remove(state, p, [cardId]); // refactor 1a: mutate 層経由
     mutate.remove.add(state, p, [cardId]);
   }
 }

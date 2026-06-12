@@ -1348,36 +1348,19 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'noop':
       return;
 
-    // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
-    // candidates() (target-expander.ts) が emit する action:pre-target hook の listener が
-    // この atom を queue → resolver が drain → ここで __pendingActionExpansion に push →
-    // candidates() が pop して enumeration に merge
+    // D11007 v2 Phase 3 → refactor 1b (2026-06-12): declarative marker verb (下記コメント参照)
     case 'expandActionTargets': {
-      const g = globalThis as {
-        __pendingActionExpansion?: Array<{
-          byUid: string;
-          side: 'self' | 'opp' | 'either';
-          state?: ('active' | 'sleep' | 'stun')[];
-          levelMin?: number;
-          levelMax?: number;
-        }>;
-      };
-      if (!g.__pendingActionExpansion) g.__pendingActionExpansion = [];
-      const byUid = ctx.source.uid;
-      if (!byUid) return; // source.uid 不在ならスキップ (defensive)
-      g.__pendingActionExpansion.push({
-        byUid,
-        side: (a.side as 'self' | 'opp' | 'either' | undefined) ?? 'opp',
-        state: a.state as ('active' | 'sleep' | 'stun')[] | undefined,
-        levelMin: a.levelMin as number | undefined,
-        levelMax: a.levelMax as number | undefined,
-      });
+      // refactor 1b (2026-06-12): 旧実装は __pendingActionExpansion side-channel に push して
+      // いたが消費者ゼロの dead code だった (Task D E4 grounding で grep 確認)。実際の対象拡張は
+      // target-expander.ts applyPreTargetExpansion が **カード def の本 atom の args を静的 walk**
+      // して読む (D11007/B01028/B05071) ため、verb 自体は declarative marker として必要。
+      // handler は log のみの no-op とする (付与版は turnEffects.actionTargetsActive — Task D E4)。
       mutate.log.append(s, {
         ts: Date.now(),
         player: ctx.source.player,
         turn: s.turn.number,
         action: 'effect:expandActionTargets',
-        target: byUid,
+        target: ctx.source.uid ?? '',
       });
       return;
     }

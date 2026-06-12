@@ -183,8 +183,8 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
   }
   const fromCardId = targetChar.cardId;
 
-  // 元 cardId を デッキ下へ
-  state.players[p].deck.push(fromCardId);
+  // 元 cardId を デッキ下へ (refactor 1a 2026-06-12: mutate 層経由に統一。挙動は push と同一)
+  mutate.deck.toBottom(state, p, [fromCardId]);
   // uid 維持で cardId 入替
   mutate.char.disguiseInto(state, targetUid, cardId);
   // 手札から disguise カードを削除

@@ -103,9 +103,8 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     // 手札の使用とは異なり、ネクストヒントによる登場は **手動プレイ** = viaEffect:false。
     // rules/17 — enter Hook を emit して 【登場時】 listener を起動する。
     if (d && d.kind === 'character') {
-      // 手札から除去
-      const handIdx = state.players[p].hand.indexOf(optionalCardId);
-      if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+      // 手札から除去 (refactor 1a 2026-06-12: mutate 層経由。indexOf+splice と同一挙動)
+      mutate.hand.remove(state, p, [optionalCardId]);
       // 現場登場 (名乗り状態 = rules/12 同ターン登場)
       const newChar = mutate.scene.enter(state, p, optionalCardId, {
         named: true,
@@ -120,8 +119,7 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     } else if (d && d.kind === 'event') {
       // Round 4a (バグ D 水平展開): ネクストヒント経由でイベントカード使用時も
       // 手札除去 + リムーブ移動を保証 (rules/06 §使い切り)。hand-use-card.ts と同じ修正。
-      const handIdx = state.players[p].hand.indexOf(optionalCardId);
-      if (handIdx !== -1) state.players[p].hand.splice(handIdx, 1);
+      mutate.hand.remove(state, p, [optionalCardId]); // refactor 1a: mutate 層経由
       mutate.remove.add(state, p, [optionalCardId]);
     }
   }
