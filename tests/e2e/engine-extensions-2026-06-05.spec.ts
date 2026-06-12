@@ -263,6 +263,16 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     // D01013 を hand-use で登場 → enter a1 が走る
     await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'D01013' });
 
+    // BUG-132 GAP-1 (2026-06-12): 「1枚まで」型は先に deckRevealUntil の取得/decline pick が
+    // surface する (rules/15 「〜まで」=0枚可)。候補 D08013 を選んで取得する。
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('deckRevealUntil');
+    const revealPick = await getPendingEffectPick(page);
+    const d08013Cand = revealPick?.candidates.find((c) => c.cardId === 'D08013');
+    expect(d08013Cand, 'D08013 (青) が取得候補').toBeTruthy();
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: d08013Cand!.uid });
+
     // a1 step 2: handAddFromDeck で D08013 が手札に入る (deckRevealUntil maxN=4 で $matched=D08013)
     // a1 step 3: discard 1 — UI pick 待ち (humanChooser:self)
     await expect
@@ -413,6 +423,15 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
       }, { cardId, matchCardId, caseColor });
 
       await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId });
+
+      // BUG-132 GAP-1: 先に deckRevealUntil の取得/decline pick を解決 (match を取得)
+      await expect
+        .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+        .toBe('deckRevealUntil');
+      const revealPick = await getPendingEffectPick(page);
+      const matchCand = revealPick?.candidates.find((c) => c.cardId === matchCardId);
+      expect(matchCand, `${matchCardId} (${color}) が取得候補`).toBeTruthy();
+      await dispatchAction(page, { type: 'effectPickResolve', pickedUid: matchCand!.uid });
 
       await expect
         .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })

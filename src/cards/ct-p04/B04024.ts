@@ -22,6 +22,7 @@ const a1: AbilityDef = {
         kind: 'atom',
         verb: 'deckRevealUntil',
         args: {
+          chooseMatch: 'upTo',
           player: 'self',
           filter: {
             trait: '警察',

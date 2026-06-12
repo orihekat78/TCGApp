@@ -30,6 +30,13 @@ export function DeckRevealOverlay(): JSX.Element | null {
       return;
     }
     setPhase('reveal');
+    // BUG-132 GAP-1: chooseMatch (「1枚まで」) の human pick 未解決中は hold —
+    // 公開リストを表示したまま自動進行 (toBottom→shuffle→dismiss) を停止し、
+    // EffectPickerModal (z-index 9700 > overlay 9050) の選択/decline を待つ。
+    // pick 解決の再入で awaitingPick 無しの pending が再 set され通常演出で完了する。
+    if (pending.awaitingPick === true) {
+      return;
+    }
     // reveal: 1 枚 0.5 秒 + 余韻 / toBottom: 1.1 秒 / shuffle: 1.0 秒
     const revealMs = pending.revealed.length * 500 + 500;
     const toBottomMs = 1100;
@@ -48,11 +55,14 @@ export function DeckRevealOverlay(): JSX.Element | null {
 
   const playerLabel = pending.player === 'self' ? '自分' : '相手';
   const headerText =
-    phase === 'reveal'
-      ? `${playerLabel}のデッキを公開中…`
-      : phase === 'toBottom'
-        ? '残りのカードをデッキの下へ…'
-        : 'デッキをシャッフル中…';
+    pending.awaitingPick === true
+      ? // BUG-132 GAP-1: 「1枚まで」= 0枚可 (rules/15) — 選択待ちであることを明示
+        '公開したカードから選択中…（加えないことも選べます）'
+      : phase === 'reveal'
+        ? `${playerLabel}のデッキを公開中…`
+        : phase === 'toBottom'
+          ? '残りのカードをデッキの下へ…'
+          : 'デッキをシャッフル中…';
 
   return (
     <div className="deck-reveal-overlay" role="status" data-testid="deck-reveal-overlay">

@@ -123,6 +123,44 @@ export function applyPickAndContinuation(
 }
 
 /**
+ * BUG-132 GAP-1 (2026-06-12): skipResolvesAtom 付き pending の decline (pickedUid=null) 解決。
+ * 通常 skip (pending 破棄 = continuation も drop) と異なり、「0枚選択」を atom の解決として実行し、
+ * 残り step (デッキ下移動等の必須 step) を continuation で続行する (rules/15 「〜まで」=0枚可、
+ * B08020 公式Q&A「加えないことは可能」— 加えなければ全 reveal が「残り」としてデッキ下へ)。
+ * atom 側は args.__declined===true を見て空解決 ($matched=[] 等) を bind する。
+ */
+export function applyPickSkipAndContinuation(
+  state: GameState,
+  pending: PendingEffectPickSide,
+): void {
+  const resolvedAtom: Effect = {
+    kind: 'atom',
+    verb: pending.atomVerb as never,
+    args: { ...pending.atomArgs, __declined: true },
+  };
+  const chainCont = pending.continuation;
+  if (chainCont) {
+    // applyPickAndContinuation と同一の保存 ctx 共有 (BUG-107) — 空 bind が remainder から見える
+    runEffect(state, resolvedAtom as never, chainCont.ctx);
+    runAllUntilEmpty(state);
+    const remainderEffect: Effect = chainCont.remainder.length === 1
+      ? chainCont.remainder[0]!
+      : { kind: 'chain', steps: chainCont.remainder };
+    runEffect(state, remainderEffect as never, chainCont.ctx);
+    runAllUntilEmpty(state);
+  } else {
+    event.queue(
+      state,
+      resolvedAtom as never,
+      { player: pending.player, cardId: pending.source.cardId },
+      'effect:pick-resolved',
+      { picked: null, source: pending.source },
+    );
+    runAllUntilEmpty(state);
+  }
+}
+
+/**
  * BUG-121: pending choice を choiceIndex で解決し、選択 option を再開する。
  * applyPickAndContinuation の choice 版。再開すべき effect は resolve-picks の engine holder
  * (__pendingEffectChoiceResume) から取り出す:

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `b194a7fb72f7`
+> Source hash: `a524f957953c`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,56 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# engine拡張 wave#2 cluster1 — BUG-132 GAP-1/2 修正 + B08020/P 再採用 (ALL_CARDS +2)
+
+**Round/Phase**: 2026-06-12 engine拡張 wave#2 (`engine/wave2-bug132`)。骨格凍結例外 (骨格自体のバグ修正)。
+設計は Workflow 調査 6 lens (113万tok) → 敵対設計レビュー 3 lens (fable×2+opus、approve-with-fixes、
+fatal 0) を経て v2 確定 ([engine-wave2-bug132-design.md](../specs/engine-wave2-bug132-design.md))。
+一次根拠: cards-data TSV qAndA (B08020 ほか) — 「加えないことは可能」「使用したイベントの効果を先に解決」。
+
+### GAP-1: deckRevealUntil decline channel (「1枚まで」=0枚可, rules/15)
+
+- 新 optional arg `chooseMatch:'upTo'` — human owner は window 内**全 match** から取得/decline/
+  identity を pick (nMin=0 → 既存 skip 配線で「対象を選ばない」)。decline は新
+  `applyPickSkipAndContinuation` が「0枚選択の atom 解決」として必須 remainder (デッキ下移動) を続行
+- AI は従来 path 完全不変 (先頭 match 取得 = 合法手内固定戦略) → **smoke baseline 完全一致**
+  (469/531, avg 10.86, exc 0) が回帰証跡
+- 公式文「1枚まで」38枚に script 一括付与 (TSV 全文分類 + 除外13枚機械検証)。forced 10枚は
+  公式 Q&A「必ずそれ (最初に公開されたもの) を加えます」で現状実装が公式準拠と確定
+- UI: DeckRevealOverlay hold mode (awaitingPick) — pick 解決まで自動進行停止、確定後に完了演出
+- 防御: deckToBottomBound は splice 成功分のみ bottom へ (window 侵食複製) / `toPlainDeep` で
+  side-channel 保存値の draft proxy 混入 (revoked-proxy crash) を push 点で遮断
+
+### GAP-2: effect:declared 自効果先行 + 反応 pick の解決時確定 (rules/15 §未解決/解決時参照)
+
+- emit 後置案は rules/15 §発動済 と衝突するため**棄却** (敵対レビュー裁定) — 発動検出/limit/entry
+  構築は宣言時のまま、変更は 2 点のみ:
+  - declaredBatch (emit 毎連番) + declaredReaction (非 selfOnly) — stack.next() の pairwise gate
+    (同 batch own pending / own 由来の未解決 pick・choice・optional / follow-up entry の間ブロック。
+    ownerChosenOrder の所有者任意順は不変)
+  - declaredReaction は raw queue → stack.runOne() で遅延 substitute (resolver は listener 層から
+    注入、stack コアに AI 依存なし) — 候補がイベント解決後盤面で確定
+- payload に player 追加 (hand-use-card/next-hint、additive)。victim = B07016 (177枚中 selfOnly
+  無し唯一、機械確認) + B08020 a2
+
+### 出荷 (2枚、ALL_CARDS +2)
+
+- **B08020/B08020P 遠山和葉** (ct-p08 SR/SRP): a1 = deck-look-4 緑イベント chooseMatch:'upTo'、
+  a2 = B07016 同型 matcher (apMax:8000)。defer (cards/wave2-handauthor) からの再採用
+
+### 検証
+
+- 新規 pin 6本 (bug-132-gap-fixes.test.ts) + vitest full green + smoke baseline 完全一致 +
+  e2e 119 pass (human 経路 3 spec を pick 1段解決に更新) + validate-specs 70/0
+- playwright MCP 実機 decoy: a1 緑キャラ/青イベント decoy 候補除外・take/decline 両完走、
+  a2 除去済キャラ/AP9000 decoy 候補除外・ターン1消費、console error 0
+
+### 水平展開 (機械 scan → 起票)
+
+- BUG-133 (drain player guard) / BUG-134 (queue時pick確定の他hook、hook×pickデータ添付) /
+  BUG-135 (skip-drop×必須remainder 候補62件) / BUG-136 (デッキ下順序選択未surface)
+- 公式 Q&A 原文を rules/25 (イベント反応解決順) + rules/26 (deck-look 取得選択 4 型) に出典付き収載
 
 # Task A green候補 wave#2 — codegen 3枚出荷 (engine変更0) + 精度ゲートで2系統を DEFER
 

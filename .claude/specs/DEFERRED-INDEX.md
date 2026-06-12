@@ -75,9 +75,18 @@
 
 | rep | 理由 | 解禁条件 / 備考 |
 |-----|------|----------------|
-| B08020/P | 実装は green (a1=D01013 / a2=B07016 同型、実機で deck filter{色+kind} + 色matcher を decoy 検証済) だが、敵対レビューで **共有 engine gap 2件** 顕在化 (deckRevealUntil force-add / effect:declared 解決順序、**BUG-132**)。出荷済 D01013/B07016 と同一 gap で engine変更0 では修正不可 | engine拡張 wave#2 で BUG-132 GAP-1/2 修正後に再採用 (実装は cards/wave2-handauthor session log + .tmp/certify/B08020.json) |
+| ~~B08020/P~~ | **✅ 再採用済 (2026-06-12 engine拡張 wave#2)**: BUG-132 GAP-1/2 修正 (chooseMatch decline channel + declaredBatch gate/遅延 pick) 後に hand-author で出荷。実機 decoy 検証済 (a1 色+kind filter / decline / a2 解決順+AP filter) | 完了 — branch engine/wave2-bug132 |
 | B07052 | **data-gate**: 〚特徴［赤魔術］〛が全カード/事件の features に未投入。caseTrait 赤魔術 (【事件赤魔術】) も deckRevealUntil filter:{trait:'赤魔術'} も永久不一致 → 実装すると無音 no-op。certify は filter 機構のみ検証しデータ未確認 (harvest comment 'yellow event-trait gate' が正) | 赤魔術 を事件/イベント trait に投入後 (データ補完) 再 certify。**横展開: 出荷済 B07062 a2 の handAddFromRemove filter:{trait:'赤魔術'} も同 data-gate で latent no-op (解決編+bond小泉紅子+cost gate で発火稀)** |
 | B02026 | refuted(fatal): a1 triggerCharMatches {side:'opp'} filter 無し → 相手パートナーの action でも誤発火 | filter:{kind:'character'} 追加 + 再 certify |
 | B07104 | refuted(fatal): 【パートナー黒】を step1 のみ conditional 化 (全 ability gate が正) + PA pick 非終端 step で二重 grant desync | ability.condition 化 + PA ordering 対応 |
 | B09038 | refuted(fatal): chain が 0 候補時に強制 draw を誤抑制 (sequence が正) | chain→optional{sequence} 化で容易に green、次 wave |
 | B09097 | refuted(fatal): bare-chain optional が CPU で強制 discard 化 | {kind:'optional',effect:{chain}} ラップ + 再 certify |
+
+## engine拡張 wave#2 (BUG-132 修正) 繰越 (2026-06-12, engine/wave2-bug132)
+
+| 項目 | 内容 | 状況 |
+|------|------|------|
+| B01048/P identity 選択 | 「その中からカードを1枚手札に加え」(まで無し・filter無し maxN:3) — count は公式Q&Aで強制確定済だが「どの1枚か」の選択主体は明文なし。現状は先頭自動 | chooseMatch:'forced' 変種 (nMin=1) で同 infra 対応可。公式Q&A照会 or ユーザー確認後 |
+| AI の decline 判定 | chooseMatch の AI 経路は常に先頭取得 (合法手内固定戦略、baseline 安定優先)。「まで」=0枚可を AI が戦略判断する heuristic は未実装 | HeuristicPolicy 拡張 (BUG-132 防止策メモ参照) |
+| カットイン使用への第三者反応の解決ポイント | rules/09・22・23 に記載なし (自効果先行の不変条件のみ gate 実装済) | 公式 Q&A 照会後 |
+| BUG-133〜136 | drain player guard / queue時pick確定の他hook一般化 / skip-drop精査62件 / デッキ下順序選択 | 各 BUG-XXX.md 参照 (調査データ添付済) |

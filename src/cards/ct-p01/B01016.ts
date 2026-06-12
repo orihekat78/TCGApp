@@ -11,7 +11,7 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { color: '青' }, maxN: 4, bind: '$revealed', bindMatch: '$matched' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { chooseMatch: 'upTo', player: 'self', filter: { color: '青' }, maxN: 4, bind: '$revealed', bindMatch: '$matched' } },
       {
         kind: 'conditional',
         if: { kind: 'bound', key: '$matched', presence: 'matched' },

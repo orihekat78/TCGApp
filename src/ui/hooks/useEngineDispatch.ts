@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyPickAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation } from '@/engine/effect/apply-pick.js';
+import { applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation } from '@/engine/effect/apply-pick.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
@@ -403,6 +403,13 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       const pending = useGameStateStore.getState().pendingEffectPick;
       if (!pending) return;
       if (action.pickedUid === null) {
+        // BUG-132 GAP-1: skipResolvesAtom 付き pending (deckRevealUntil chooseMatch) の decline は
+        // 「0枚選択」を atom 解決として実行し、remainder (デッキ下移動等の必須 step) を続行する
+        // (rules/15 「〜まで」=0枚可)。破棄してしまうと全 reveal がデッキ上に残る。
+        if (pending.skipResolvesAtom === true) {
+          applyPickSkipAndContinuation(draft, pending);
+          return;
+        }
         // skip (n.min === 0 の任意効果のみ可能、UI 側で gate される想定)
         // BUG-111: continuation は pending 本体 (pending.continuation) に同梱されるため、
         // user skip 時は pending を破棄すれば対の continuation も自動 drop される (別 FIFO shift 不要)。

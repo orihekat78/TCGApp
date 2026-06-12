@@ -27,6 +27,17 @@ import { _getResolutionLock, _setResolutionLock, event } from '../event/registry
 
 const SAFETY_CAP = 1000;
 
+// BUG-132 GAP-2 (2026-06-12): declaredReaction entry の pick/dyn を解決時に substitute する
+// resolver。実体は listener 層 (listeners/triggered.ts resolveDeferredEntryPicks) が
+// _setDeferredEntryPickResolver で注入する — stack コアから @/ai への依存を作らないため
+// (敵対レビュー impl/regression lens 反映)。未注入時は raw effect をそのまま実行 (従来挙動)。
+type DeferredEntryPickResolver = (state: GameState, entry: EffectStackEntry) => Effect;
+let _deferredEntryPickResolver: DeferredEntryPickResolver | null = null;
+
+export function _setDeferredEntryPickResolver(fn: DeferredEntryPickResolver | null): void {
+  _deferredEntryPickResolver = fn;
+}
+
 /**
  * Build an EffectCtx from an entry's source + trigger payload. Resolver-only
  * helper. Card abilities that need richer context should pass their own
@@ -80,7 +91,47 @@ export function next(state: GameState): EffectStackEntry | null {
   });
   if (pending.length === 0) return null;
 
-  pending.sort((a, b) => {
+  // BUG-132 GAP-2: 第三者反応 (declaredReaction) は「使用したイベントの効果を先に解決します」
+  // (B08020 公式Q&A、rules/15 §未解決) を満たすまで選択不可。pairwise gate であり、それ以外の
+  // entry 間の所有者任意順 (ownerChosenOrder, rules/15 §未解決) には影響しない (敵対レビュー反映)。
+  // block 条件 (いずれか):
+  //   (i)  同 batch の own entry (非反応) が pending — 自効果がまだ解決されていない
+  //   (ii) own (イベント) 由来の未解決 pick/choice/optional が engine 側 channel に残存 —
+  //        human modal 解決前に反応の候補を確定させない (解決は次 dispatch の runAllUntilEmpty で再開)
+  //   (iii) own 由来の follow-up entry (choice-option 再開等、source.cardId 一致・非反応) が pending
+  // own が cancelled (無効化) になった場合は gate が外れ、発動済みの反応は解決される (rules/24 §発動済)。
+  const g = globalThis as {
+    __pendingEffectPickQueue?: { source?: { cardId?: string } }[];
+    __pendingEffectChoiceSide?: { source?: { cardId?: string } } | null;
+    __pendingEffectOptionalSide?: { source?: { cardId?: string } } | null;
+  };
+  const gated = pending.filter(({ entry }) => {
+    if (entry.declaredReaction === undefined) return true;
+    // (i) 同 batch の own entry が pending
+    if (entry.declaredBatch !== undefined
+      && pending.some(o =>
+        o.entry !== entry
+        && o.entry.declaredBatch === entry.declaredBatch
+        && o.entry.declaredReaction === undefined)) return false;
+    const evCardId = (entry.triggeredBy.payload as { cardId?: string } | undefined)?.cardId;
+    if (evCardId !== undefined) {
+      // (ii) own 由来の未解決 human pick/choice/optional (modal 解決待ち)
+      if ((g.__pendingEffectPickQueue ?? []).some(pk => pk.source?.cardId === evCardId)) return false;
+      if (g.__pendingEffectChoiceSide?.source?.cardId === evCardId) return false;
+      if (g.__pendingEffectOptionalSide?.source?.cardId === evCardId) return false;
+      // (iii) own 由来の follow-up entry が pending
+      if (pending.some(o =>
+        o.entry !== entry
+        && o.entry.declaredReaction === undefined
+        && o.entry.source.cardId === evCardId)) return false;
+    }
+    return true;
+  });
+  // 反応のみが残存 = own の modal 解決待ち。null を返して drain を終了し、modal 解決後の
+  // 次 dispatch (applyPick/Choice/OptionalAndContinuation → runAllUntilEmpty) で再評価される。
+  if (gated.length === 0) return null;
+
+  gated.sort((a, b) => {
     // 1. Turn player first.
     const ap = a.entry.source.player === turnPlayer ? 0 : 1;
     const bp = b.entry.source.player === turnPlayer ? 0 : 1;
@@ -92,7 +143,7 @@ export function next(state: GameState): EffectStackEntry | null {
     // 3. Tiebreaker: insertion order.
     return a.idx - b.idx;
   });
-  return pending[0].entry;
+  return gated[0].entry;
 }
 
 /**
@@ -120,7 +171,13 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
       return;
     }
   }
-  runEffect(state, entry.effect, ctx);
+  // BUG-132 GAP-2: 第三者反応は pick/dyn 候補を解決時に substitute する (rules/15 §解決時参照)。
+  // イベント自効果の解決後盤面で候補が確定する — queue 時確定だと B07016/B08020 a2 の
+  // sceneRemove 候補がイベント解決前の盤面で固定される乖離があった。
+  const effectToRun = entry.declaredReaction !== undefined && _deferredEntryPickResolver !== null
+    ? _deferredEntryPickResolver(state, entry)
+    : entry.effect;
+  runEffect(state, effectToRun, ctx);
   entry.state = 'resolved';
   event.emit(state, 'effect:resolve:end', { effectId: entry.id }, entry.source);
 }

@@ -26,8 +26,9 @@ import { char as readChar } from '../read/char.js'; // BUG-096: triggered abilit
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
+import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
-import type { GameState, AbilityDef, AbilityScope } from '../types/index.js';
+import type { GameState, AbilityDef, AbilityScope, Effect, EffectStackEntry } from '../types/index.js';
 // 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
 // として本 listener で処理。検出時は pendingHirameki side-channel に push して fire/skip を UI に委譲。
 import { pushPendingHirameki } from './hirameki.js';
@@ -157,12 +158,19 @@ function selfOnlyMatches(
   return sourceUid === card.uid;
 }
 
+// BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回 = 1 batch の連番カウンタ。
+// 同一 emit で queue される全 entry (自効果 + 第三者反応) に同じ番号を付与し、
+// stack.next() の pairwise gate で「自効果 → 反応」順 (rules/15 §未解決 + B08020 公式Q&A
+// 「使用したイベントの効果を先に解決します」) を保証する。
+let declaredBatchSeq = 0;
+
 function handleHook(
   hookName: TriggeredHook,
   state: GameState,
   payload: unknown,
   source: unknown,
 ): void {
+  const declaredBatch = hookName === 'effect:declared' ? ++declaredBatchSeq : undefined;
   for (const card of collectCardsInPlay(state)) {
     const def = readDef.card(card.cardId);
     if (!def) continue;
@@ -262,14 +270,22 @@ function handleHook(
       // 解決済み atom が単体で queue されて実行される。
       const humanSide = getHumanPlayerSide();
       const isHumanEffect = humanSide !== null && card.player === humanSide;
-      const resolvedEffect = resolveEffectPicks(state, ability.effect, resolveCtx, {
-        chooseAtomTarget: isHumanEffect
-          ? undefined
-          : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-        byPlayer: card.player,
-        humanChooser: isHumanEffect,
-        source: { cardId: card.cardId, abilityId: ability.id },
-      });
+      // BUG-132 GAP-2: 第三者反応 (own = trig.selfOnly===true 以外) は pick/dyn を queue 時に
+      // 確定せず raw のまま queue し、stack.runOne() の遅延 substitute (下の
+      // resolveDeferredEntryPicks) で解決時盤面の候補を参照する (rules/15 §解決時参照、
+      // B07016/B08020 a2「（イベントを解決してからキャラを選ぶ）」)。selfOnly entry
+      // (イベント自効果 / カットイン自効果 / scene rider) は従来通り queue 時解決。
+      const isDeclaredReaction = hookName === 'effect:declared' && trig.selfOnly !== true;
+      const resolvedEffect = isDeclaredReaction
+        ? ability.effect
+        : resolveEffectPicks(state, ability.effect, resolveCtx, {
+            chooseAtomTarget: isHumanEffect
+              ? undefined
+              : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+            byPlayer: card.player,
+            humanChooser: isHumanEffect,
+            source: { cardId: card.cardId, abilityId: ability.id },
+          });
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)
       // 2026-05-27 (Option C follow-up): emit source.bindings (例: cutin の contact bindings)
       // を event.queue 経由で entry に永続化、effect 実行時に $contact.byUid 等が解決可能に。
@@ -281,6 +297,13 @@ function handleHook(
         hookName,
         payload,
         sourceBindings,
+        // BUG-132 GAP-2: effect:declared のみ batch 連番 + 反応マーカーを entry に付与
+        declaredBatch !== undefined
+          ? {
+              declaredBatch,
+              ...(isDeclaredReaction ? { declaredReaction: { abilityId: ability.id } } : {}),
+            }
+          : undefined,
       );
       // BUG-096: 発火を記録 (limit:{turn} のカウント。limit 無しは no-op)
       if (ability.limit?.kind === 'turn') {
@@ -288,6 +311,35 @@ function handleHook(
       }
     }
   }
+}
+
+// BUG-132 GAP-2: declaredReaction entry の遅延 pick substitute (stack.runOne から呼ばれる)。
+// handleHook の queue 時 resolveEffectPicks と同じ contract を、解決時盤面に対して実行する。
+// stack コアに AI import を持ち込まないため、listener 層から関数注入する (敵対レビュー反映)。
+function resolveDeferredEntryPicks(state: GameState, entry: EffectStackEntry): Effect {
+  const abilityId = entry.declaredReaction?.abilityId ?? '';
+  const resolveCtx = {
+    source: {
+      cardId: entry.source.cardId ?? '',
+      uid: entry.source.uid ?? '',
+      abilityId,
+      player: entry.source.player,
+      // entryToCtx (stack.ts) と同じ近似。pick 解決に area は実質関与しない
+      area: 'scene' as const,
+    },
+    bindings: {},
+    triggerPayload: entry.triggeredBy.payload,
+  };
+  const humanSide = getHumanPlayerSide();
+  const isHumanEffect = humanSide !== null && entry.source.player === humanSide;
+  // handleHook と同じ lazy instantiate (module top では circular import 発生)
+  const aiPolicy = new HeuristicPolicy();
+  return resolveEffectPicks(state, entry.effect, resolveCtx, {
+    chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+    byPlayer: entry.source.player,
+    humanChooser: isHumanEffect,
+    source: { cardId: entry.source.cardId ?? '', abilityId },
+  });
 }
 
 let _registered = false;
@@ -299,6 +351,8 @@ export function _resetTriggeredRegistered(): void {
 export function registerTriggeredListener(): void {
   if (_registered) return;
   _registered = true;
+  // BUG-132 GAP-2: 遅延 pick resolver を stack へ注入 (登録は冪等)
+  _setDeferredEntryPickResolver(resolveDeferredEntryPicks);
   for (const hook of TRIGGERED_HOOKS) {
     if (hook === 'evidence:remove-by-action') {
       // 2026-05-27 Option C: ヒラメキ統合経路。in-play scan ではなく payload の cardId から

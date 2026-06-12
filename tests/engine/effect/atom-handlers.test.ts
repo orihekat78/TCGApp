@@ -821,7 +821,8 @@ describe('engine.effect.runAtom', () => {
   describe('deckToBottomBound', () => {
     it('ctx.bindings[bindKey] の cardId 群をデッキ下に移動', () => {
       let s = createEmptyGameState();
-      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['BASE'] } } };
+      // 実フロー通り: bound カード (deckRevealUntil で公開された分) は **まだデッキにある** (rules/26)
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'B', 'BASE'] } } };
       // Candidate の card バリアントに適合する shape — 型キャスト不要
       const cards: Candidate[] = [
         { kind: 'card', cardId: 'A', area: 'deck', player: 'self' },
@@ -832,6 +833,22 @@ describe('engine.effect.runAtom', () => {
         runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: 'rest' }, ctx);
       });
       expect(result.players.self.deck).toEqual(['BASE', 'A', 'B']);
+    });
+
+    it('BUG-132 GAP-1 防御: deck に無い id は bottom に複製しない (splice 成功分のみ移動)', () => {
+      // chooseMatch の pick await 中に他 entry が deck を消費した場合の window 侵食対策。
+      // 旧実装は splice 失敗でも無条件 push し、手札に移ったカードが deck にも複製されていた。
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, deck: ['A', 'BASE'] } } };
+      const cards: Candidate[] = [
+        { kind: 'card', cardId: 'A', area: 'deck', player: 'self' },
+        { kind: 'card', cardId: 'GONE', area: 'deck', player: 'self' }, // deck に存在しない
+      ];
+      const ctx = makeCtx({ bindings: { rest: cards } });
+      const result = produce(s, draft => {
+        runAtom(draft, 'deckToBottomBound', { player: 'self', bindKey: 'rest' }, ctx);
+      });
+      expect(result.players.self.deck).toEqual(['BASE', 'A']);
     });
   });
 

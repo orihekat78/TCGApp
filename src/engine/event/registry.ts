@@ -149,8 +149,12 @@ function queue(
   hook?: string,
   payload?: unknown,
   bindings?: Record<string, unknown[]>,
+  // BUG-132 GAP-2 (2026-06-12): effect:declared の batch gate / 遅延 pick 用 entry 追加 field。
+  // triggered.ts handleHook のみが渡す (他 caller は省略で従来挙動)。
+  entryExtras?: Pick<EffectStackEntry, 'declaredBatch' | 'declaredReaction'>,
 ): void {
   const entry = buildEntry(state, effect, { hook: hook ?? 'manual', payload, source, bindings });
+  if (entryExtras) Object.assign(entry, entryExtras);
   state.pendingEffects.push(entry);
 }
 

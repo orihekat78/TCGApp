@@ -13,6 +13,18 @@
 import { test, expect } from '@playwright/test';
 import { setupGamePage, buildGameState, getGameState, dispatchAction } from './helpers';
 
+// BUG-132 GAP-1 (2026-06-12): 「1枚まで」型は取得前に deckRevealUntil pick が surface する。
+// 候補列挙に LP filter が反映されるため、本 spec は「decoy が候補に出ない」ことも直接 assert できる。
+async function getPendingEffectPick(page: import('@playwright/test').Page): Promise<{
+  atomVerb: string;
+  candidates: { uid: string; cardId: string }[];
+} | null> {
+  return (await page.evaluate(() => {
+    const w = window as unknown as { __game: { getState: () => { pendingEffectPick: unknown } } };
+    return w.__game.getState().pendingEffectPick;
+  })) as { atomVerb: string; candidates: { uid: string; cardId: string }[] } | null;
+}
+
 async function prime(page: import('@playwright/test').Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
@@ -50,6 +62,16 @@ test.describe('BUG-117 deckRevealUntil ap/lp filter (2026-06-05)', () => {
 
     await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B01013' });
 
+    // BUG-132 GAP-1: 取得 pick が surface — 候補列挙の時点で LP filter を直接検証できる
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('deckRevealUntil');
+    const pick = await getPendingEffectPick(page);
+    const candIds = pick?.candidates.map((c) => c.cardId) ?? [];
+    expect(candIds, '候補は LP0【青】の D08009 のみ').toContain('D08009');
+    expect(candIds, 'LP1【青】の D08013 は候補に出ない (LP条件で除外)').not.toContain('D08013');
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: pick!.candidates.find((c) => c.cardId === 'D08009')!.uid });
+
     const after = await getGameState(page);
     const hand = (after.players.self as { hand: string[] }).hand;
     expect(hand, '手札に LP0【青】の D08009 (テキスト通り)').toContain('D08009');
@@ -82,6 +104,16 @@ test.describe('BUG-117 deckRevealUntil ap/lp filter (2026-06-05)', () => {
     });
 
     await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B01053' });
+
+    // BUG-132 GAP-1: 取得 pick が surface — 候補列挙の時点で LP filter を直接検証できる
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('deckRevealUntil');
+    const pick = await getPendingEffectPick(page);
+    const candIds = pick?.candidates.map((c) => c.cardId) ?? [];
+    expect(candIds, '候補は LP2以上【白】の D03002 のみ').toContain('D03002');
+    expect(candIds, 'LP1【白】の D03009 は候補に出ない (LP条件で除外)').not.toContain('D03009');
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: pick!.candidates.find((c) => c.cardId === 'D03002')!.uid });
 
     const after = await getGameState(page);
     const hand = (after.players.self as { hand: string[] }).hand;

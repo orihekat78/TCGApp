@@ -168,6 +168,14 @@ export type PendingEffectPickSide = {
    * remainder.length>0 の step で pick を await したときに resolver が set。pick と 1:1。
    */
   continuation?: { remainder: Effect[]; ctx: EffectCtx };
+  /**
+   * BUG-132 GAP-1 (2026-06-12): skip (pickedUid=null) を「破棄」ではなく「0枚選択の atom 解決」
+   * として処理するマーカー (rules/15 「〜まで」=0枚可)。deckRevealUntil chooseMatch が set する。
+   * true のとき useEngineDispatch は applyPickSkipAndContinuation を呼び、atom を __declined:true で
+   * 再実行 + continuation (デッキ下移動等の必須 remainder) を続行する。
+   * 従来 skip (破棄 = continuation も drop) は本 flag 無しの任意効果 pick の挙動として不変。
+   */
+  skipResolvesAtom?: boolean;
 };
 
 function getPendingQueue(): PendingEffectPickSide[] {
@@ -190,6 +198,35 @@ function pushPendingEffectPickSide(v: PendingEffectPickSide): void {
 /** test fixture / 内部 caller 用: queue に直接 push する公開ヘルパ */
 export function _pushPendingEffectPickSideForTest(v: PendingEffectPickSide): void {
   pushPendingEffectPickSide(v);
+}
+
+/**
+ * BUG-132 GAP-1: atom-handler (deckRevealUntil chooseMatch) が runtime に直接 pending pick を
+ * push する公開エントリポイント。tryRePickFromAtom と同じく「queue 長増加」を resolver の
+ * sequence/chain walker が検知し、残り step を continuation として本 pick に同梱する (BUG-105/111)。
+ */
+export function pushPendingPickFromAtom(v: PendingEffectPickSide): void {
+  pushPendingEffectPickSide(v);
+}
+
+/**
+ * BUG-132 (2026-06-12): produce 境界を跨いで global side-channel に保存する値の deep-plain 化。
+ * runtime (atom-handler / 遅延 substitute) で entry.effect (Immer draft) から読んだ args を
+ * そのまま pending に保存すると、nested object (filter 等) が draft proxy 参照のまま残り、
+ * 次の produce で event.queue 経路 (resolvedAtom → state) に入った時点で
+ * 「Cannot perform 'get' on a proxy that has been revoked」で finalize が落ちる。
+ * 関数値 (legacy filter 関数等) は参照のまま維持する (JSON round-trip と違い欠落しない)。
+ */
+export function toPlainDeep<T>(v: T): T {
+  if (Array.isArray(v)) return v.map((x) => toPlainDeep(x)) as unknown as T;
+  if (v !== null && typeof v === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const k of Object.keys(v as object)) {
+      out[k] = toPlainDeep((v as Record<string, unknown>)[k]);
+    }
+    return out as T;
+  }
+  return v;
 }
 
 /** dispatch 経由で UI 側 store に転送するための drain ヘルパ。FIFO 先頭を 1 件取り出す。 */
@@ -487,7 +524,9 @@ function substituteAtomPick(
       atomVerb: verb,
       // BUG-085: { dyn } 値 (例 delta) を costPaid を持つ ctx で literal 化してから
       // pendingEffectPick として human-pick 境界へ運ぶ。
-      atomArgs: resolveDynArgs(state, { ...args }, ctx),
+      // BUG-132: deep-plain 化 — runtime 経路 (drafted entry.effect 由来) の nested object が
+      // draft proxy のまま produce 境界を跨ぐと次 produce の finalize で revoked-proxy crash。
+      atomArgs: toPlainDeep(resolveDynArgs(state, { ...args }, ctx)),
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
       source: opts.source ?? { cardId: '', abilityId: '' },

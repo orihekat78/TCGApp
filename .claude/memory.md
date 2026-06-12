@@ -1,36 +1,32 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-> 80 行ルールで rotate 済。リファクタ Phase 0〜2c の詳細は changelog-entries/2026-06-12-03 +
-> refactor-plan/phases.md + review-records.md / sessions/2026-06-12.md を参照。
+> wave#2 (カード) までの経緯は sessions/2026-06-12.md + changelog-entries 参照。
 
-## 現在地 (2026-06-12 末)
+## 現在地 (2026-06-12 深夜)
 
-ユーザー承認の作業順: ① Phase 0 commit → ② リファクタ 1c〜2c → **③ カード wave#2 (完了)** →
-④ リファクタ Phase 3〜4。push 許可済。
+### engine拡張 wave#2 cluster1 — BUG-132 GAP-1/2 修正 + B08020/P 再採用 ✅ (branch engine/wave2-bug132)
 
-### ③ カード wave#2 — ✅完了 (branch `cards/wave2-handauthor`)
-- **重要発見**: green候補の pure-JSON codegen 経路は**枯渇** (`collect-greens`→0 adoptable)。
-  prompt の「残 ~260」は stale (30/254 当時)。実際は 105枚 certify-harvest (38b354a2) で吸収済、
-  certify-queue は 251/254 済。残りは yellow176 / already-impl63 / refuted4 / needsManual5 等。
-- **出荷 3枚** (engine変更0、ALL_CARDS +3): D09016(FILE6行動 諸伏高明)/D09017(clone)/B05076(解決編 ジョディ)。
-  D09016 は Fable 敵対 verify GREEN、B05076 は壊れた .verify.json を修復して採用。
-- **DEFER**:
-  - B08020/P (遠山和葉): 実装 green だが敵対レビューで**共有 engine gap 2件** (deckRevealUntil
-    force-add / effect:declared 解決順序) → **BUG-132** 起票、engine拡張 wave#2 へ。出荷済
-    D01013/B07016 と同一 gap。実機 (Playwright MCP) で deck filter + 色matcher は faithful 確認済。
-  - B07052: **data-gate** — 〚特徴［赤魔術］〛が全カード trait に未投入 (無音 no-op)。横展開:
-    出荷済 B07062 a2 も同 data-gate で latent no-op。
-  - refuted 4枚 (B02026/B07104/B09038/B09097) は fatal 乖離付き DEFER。全て DEFERRED-INDEX 記載。
-- **ゲート全 green**: validate-specs 70/0 / tsc 0 / vitest 1972 pass・1 skip (baseline) /
-  smoke:1000 baseline 完全一致 (469/531, 10.86, exc 0) / e2e 119 pass・1 skip。
-- **教訓**: certify green は filter/順序の**機構**を検証するが、**データ存在** (B07052 trait) や
-  **解決順序** (B08020) は別。実機 decoy 検証で踏むこと (BUG-117/118 教訓の拡張、BUG-132)。
+- **GAP-1**: deckRevealUntil `chooseMatch:'upTo'` (38枚+B08020/P) — human は全match から取得/decline/
+  identity 選択、decline は applyPickSkipAndContinuation で remainder (デッキ下) 続行。AI 不変 →
+  smoke baseline 完全一致。overlay hold (awaitingPick)。forced 10枚は TSV qAndA で現状=公式準拠と確定
+- **GAP-2**: declaredBatch pairwise gate (own→反応の順、ownerChosenOrder 不変) + declaredReaction の
+  runOne 遅延 substitute (解決時盤面で候補確定)。emit 後置は rules/15 §発動済と衝突で棄却 (敵対レビュー)
+- **検証**: pin 6本新設 / vitest full / smoke 一致 / e2e 119 (3 spec 更新: bug-117 / engine-extensions /
+  reasoning-hook — human 経路は pick 1段解決を挿入) / MCP 実機 decoy (a1 kind+色 decoy 除外・
+  take/decline、a2 除去済+AP9000 decoy 除外・ターン1消費)・console error 0
+- **水平展開**: BUG-133 (drain guard) / BUG-134 (他hook queue時pick、hook×pick データ) /
+  BUG-135 (skip-drop 62候補) / BUG-136 (デッキ下順序)。rules/25・26 に公式Q&A 収載 (TSV qAndA 一次)
+- **教訓**: (1) TSV qAndA 列は カード個別裁定の一次データ — web fetch 前に必ず見る。
+  (2) runtime push する side-channel 値は toPlainDeep 必須 (draft proxy → revoked crash)。
+  (3) 「まで」regex は「出るまで」に誤マッチする — 分類は公式全文で
 
-### 次セッション: ④ リファクタ Phase 3〜4 (or engine拡張 wave#2)
-- engine拡張 wave#2 = task-d-priority-map.json の次ゲート群 (FILE-zone verb 30 / grant-textual 23
-  等) + BUG-132 の GAP-1/2 修正 (修正後 B08020 再採用)。Fable 主体・gate毎に設計レビュー必須。
-- Phase 3〜4 は着手前に個別設計レビュー必須。
+### 残 (engine拡張 wave#2 後続クラスタ、未着手)
+
+task-d-priority-map wave2 ゲート群: FILE-zone verb 30 / grant-textual 23 / scene→deck 14 /
+hand-count 12 等 (~182 sig)。gate 毎に設計レビュー必須。
 
 ## ポインタ
-- defer 一覧: `.claude/specs/DEFERRED-INDEX.md` / bug: `.claude/bugs/index.base` (最新 BUG-132)
-- green候補マスタ: `.claude/specs/catalog-survey-2026-06-06/` / capability 正本: 同 capability-map.txt
+
+- 設計: `.claude/specs/engine-wave2-bug132-design.md` (v2、レビュー3lens反映)
+- defer: `.claude/specs/DEFERRED-INDEX.md` (B08020 再採用済 / B01048 identity / AI decline / cutin 反応)
+- bug: `.claude/bugs/index.base` (BUG-132 修正済、BUG-133〜136 新規)

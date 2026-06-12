@@ -140,6 +140,8 @@ export type PendingDeckReveal = {
   player: 'self' | 'opp';
   revealed: string[];
   matched: string | null;
+  /** BUG-132 GAP-1: chooseMatch pick 未解決中は overlay を hold (engine 側 PendingDeckRevealSide と同 shape) */
+  awaitingPick?: boolean;
 };
 
 export type PendingEffectPick = {
@@ -155,6 +157,11 @@ export type PendingEffectPick = {
    * CardListModal で同 name component (rules/19) の重複選択を click 不可化する。
    */
   distinctNames?: boolean;
+  /**
+   * BUG-132 GAP-1: decline (pickedUid=null) を「0枚選択の atom 解決 + remainder 続行」として
+   * 処理するマーカー (engine 側 PendingEffectPickSide.skipResolvesAtom と同 shape)。
+   */
+  skipResolvesAtom?: boolean;
 };
 
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */

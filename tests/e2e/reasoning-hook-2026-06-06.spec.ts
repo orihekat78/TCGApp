@@ -8,6 +8,17 @@
 import { test, expect, type Page } from '@playwright/test';
 import { setupGamePage, buildGameState, getGameState, dispatchAction } from './helpers';
 
+// BUG-132 GAP-1 (2026-06-12): B01017 は「1枚まで」型 → 取得/decline pick が先に surface する
+async function getPendingEffectPick(page: Page): Promise<{
+  atomVerb: string;
+  candidates: { uid: string; cardId: string }[];
+} | null> {
+  return (await page.evaluate(() => {
+    const w = window as unknown as { __game: { getState: () => { pendingEffectPick: unknown } } };
+    return w.__game.getState().pendingEffectPick;
+  })) as { atomVerb: string; candidates: { uid: string; cardId: string }[] } | null;
+}
+
 async function prime(page: Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
@@ -43,6 +54,16 @@ test.describe('reasoning-hook B01017 (2026-06-06)', () => {
     });
 
     await dispatchAction(page, { type: 'reasoning', uid: 'hnd#1' });
+
+    // BUG-132 GAP-1: 「まで」型は取得 pick が surface — 候補列挙で [探偵] filter を直接検証
+    await expect
+      .poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null, { timeout: 5000 })
+      .toBe('deckRevealUntil');
+    const pick = await getPendingEffectPick(page);
+    const candIds = pick?.candidates.map((c) => c.cardId) ?? [];
+    expect(candIds, '[探偵] D08003 のみ候補').toContain('D08003');
+    expect(candIds, '非[探偵] D08009 は候補に出ない').not.toContain('D08009');
+    await dispatchAction(page, { type: 'effectPickResolve', pickedUid: pick!.candidates.find((c) => c.cardId === 'D08003')!.uid });
 
     const after = await getGameState(page);
     const self = after.players.self as { hand: string[]; deck: string[]; scene: { uid: string; state: string }[] };

@@ -133,7 +133,11 @@ export function handUseCard(
   event.emit(
     state,
     'effect:declared',
-    { kind: emitKind, cardId },
+    // BUG-132 GAP-2 (2026-06-12): payload に player を追加 (additive)。「自分が〜使用したとき」の
+    // side 判定を将来 matcherCondition (triggerPlayerIs) で直接書けるようにする。既存 matcher は
+    // kind/cardId のみ参照するため無影響。現状の B07016/B08020 a2 は condition turn:self による
+    // 間接実装 (イベント使用は使用者ターンに限る) で side を遮蔽している。
+    { kind: emitKind, cardId, player: p },
     { player: p, cardId },
   );
   // キャラの場合: 現場へ登場 (rules/05 §01 + rules/06 + rules/12 §3 — アクティブ・名乗り状態で登場)

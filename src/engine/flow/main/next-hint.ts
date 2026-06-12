@@ -96,7 +96,8 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
       'effect:declared',
       // Round 4b: payload kind を event-use / character-use に分離。
       // hand-use-card.ts と同じ規約 (eventRemoveByAP matcher 'kind===event-use' との整合)。
-      { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId },
+      // BUG-132 GAP-2: payload に player を追加 (hand-use-card.ts と同一規約、additive)
+      { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId, player: p },
       { player: p, cardId: optionalCardId },
     );
     // キャラの場合: 現場へ登場 (rules/12 §3 — アクティブ・名乗り状態で登場)。

@@ -16,7 +16,7 @@ import type { TargetFilter } from '../types/effect.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { cards as engineCards } from '../cards/index.js';
-import { tryRePickFromAtom } from './resolve-picks.js';
+import { tryRePickFromAtom, pushPendingPickFromAtom, toPlainDeep } from './resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick, isShortFormDelta } from './atom-pick-spec.js';
 import { evalDyn } from '../dyn/eval.js'; // BUG-114: explicit-uid charModifyAP/LP/Level の {dyn} delta を runtime 評価
 
@@ -33,6 +33,13 @@ export type PendingDeckRevealSide = {
   revealed: string[];
   /** filter match した cardId、null なら全公開でも不一致 */
   matched: string | null;
+  /**
+   * BUG-132 GAP-1: chooseMatch (「1枚まで」) の human pick が未解決の間 true。
+   * DeckRevealOverlay は自動進行 (toBottom→shuffle→dismiss) を停止して公開リストを
+   * 表示し続け、EffectPickerModal (z-index 上位) の選択/decline を待つ。
+   * pick 解決の再入時に確定 matched で再 set される (awaitingPick 無し → 通常演出)。
+   */
+  awaitingPick?: boolean;
 };
 
 export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
@@ -1184,6 +1191,47 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         : targetFilterToPredicate(filterArg);
       const bindKey = a.bind as string | undefined;
       const bindMatchKey = a.bindMatch as string | undefined;
+      // ---- BUG-132 GAP-1 再入 path (chooseMatch pick 解決後) ----
+      // take: applyPickAndContinuation (Pattern B 無マーカー分岐) が target=[cardId] を載せる。
+      // decline: applyPickSkipAndContinuation が __declined:true を載せる (「〜まで」=0枚可、rules/15)。
+      // window は first-run の snapshot (__windowIds) を使う — pick await 中の deck 変動に影響されない。
+      if (a.__windowIds !== undefined) {
+        const windowIds = a.__windowIds as string[];
+        const declined = a.__declined === true;
+        const chosen = declined
+          ? null
+          : Array.isArray(a.target) ? ((a.target as string[])[0] ?? null) : null;
+        if (bindMatchKey) {
+          ctx.bindings[bindMatchKey] = chosen
+            ? [{ kind: 'card', cardId: chosen, area: 'deck', player: p }]
+            : [];
+        }
+        if (bindKey) {
+          // decline 時は全 reveal が「残り」(公式: 加えなければ全部デッキ下へ。B08020 公式Q&A)
+          let restIds: string[];
+          if (chosen === null) {
+            restIds = windowIds;
+          } else {
+            const idx = windowIds.indexOf(chosen);
+            restIds = idx === -1 ? windowIds : [...windowIds.slice(0, idx), ...windowIds.slice(idx + 1)];
+          }
+          ctx.bindings[bindKey] = restIds.map<Candidate>(id => ({
+            kind: 'card', cardId: id, area: 'deck', player: p,
+          }));
+        }
+        // overlay: 確定 matched で再 set (awaitingPick 無し → hold 解除、通常演出で完了)
+        (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
+          player: p,
+          revealed: [...windowIds],
+          matched: chosen,
+        };
+        mutate.log.append(s, {
+          ts: Date.now(), player: p, turn: s.turn.number,
+          action: 'effect:deckRevealUntil',
+          result: `revealed=${windowIds.length} matched=${chosen ?? (declined ? 'declined' : 'none')}`,
+        });
+        return;
+      }
       const deck = s.players[p].deck;
       const revealed: string[] = [];
       let matched: string | null = null;
@@ -1213,6 +1261,54 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
             matched = cardId;
             break;
           }
+        }
+      }
+      // ---- BUG-132 GAP-1: chooseMatch:'upTo' (「1枚まで」型) — human owner は取得/decline/identity を選択 ----
+      // rules/15 「〜枚まで」=0枚可 + B08020 公式Q&A「条件を満たすカードがあっても手札に加えないことは可能」。
+      // owner (効果所有者) が human のときのみ pick を surface。AI は従来 path (先頭 match 自動取得 =
+      // 合法手内の固定戦略、rules/15 の選択『権』であり義務でない。smoke baseline 不変)。
+      // 「まで」無し forced 型 (B01048 等 10枚) は chooseMatch を持たず本分岐に入らない (従来動作が正)。
+      if (a.chooseMatch === 'upTo' && maxN !== undefined) {
+        const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+        const owner = ctx.source.player;
+        if (humanSide !== null && owner === humanSide) {
+          // window 内の全 match を候補化 (従来は先頭 1 件のみ機械束縛 — identity 選択も surface)
+          const matchCands = revealed
+            .map((cardId, i) => ({ cardId, i }))
+            .filter(({ cardId }) => filter(cardId));
+          if (matchCands.length > 0) {
+            pushPendingPickFromAtom({
+              player: owner,
+              candidates: matchCands.map(({ cardId, i }) => ({ uid: `${cardId}#${i}`, cardId, player: p })),
+              atomVerb: 'deckRevealUntil',
+              // 再入用に window snapshot を同梱 (deck 再走査しない)。chooseMatch 等の元 args も保持。
+              // BUG-132: toPlainDeep — drafted entry.effect 由来の nested object (filter 等) を
+              // plain 化して produce 境界を安全に跨ぐ (revoked-proxy crash 防止)
+              atomArgs: toPlainDeep({ ...(a as Record<string, unknown>), __windowIds: [...revealed] }),
+              nMin: 0, // 「まで」= 0枚可 → EffectPickerModal が「対象を選ばない」を表示 (既存配線)
+              nMax: 1,
+              source: {
+                cardId: ctx.source.cardId ?? '',
+                abilityId: (ctx.source as { abilityId?: string }).abilityId ?? '',
+              },
+              skipResolvesAtom: true,
+            });
+            // overlay は hold mode — pick 解決まで公開リストを表示し続ける (自動進行しない)
+            (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
+              player: p,
+              revealed: [...revealed],
+              matched: null,
+              awaitingPick: true,
+            };
+            mutate.log.append(s, {
+              ts: Date.now(), player: p, turn: s.turn.number,
+              action: 'effect:deckRevealUntil',
+              result: `revealed=${revealed.length} awaiting-pick (matches=${matchCands.length})`,
+            });
+            // bind 未書込のまま return → resolver の queue 増加検知が残り step を pick に同梱して停止
+            return;
+          }
+          // match 0 件 → 従来 path へ fallthrough ($matched=[] bind、conditional 不発)
         }
       }
       // bindings に Candidate[] として保存
@@ -1268,14 +1364,21 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         return cAny.cardId ?? '';
       }).filter(id => id !== '');
       // 元のデッキから該当 ID を除去 (deckRevealUntil で公開された分はまだデッキにある)
+      // BUG-132 GAP-1 防御: 実際に splice できた id のみ bottom へ移す。chooseMatch の pick await 中に
+      // 他 pending entry が deck を消費した場合 (同時 trigger の window 侵食、低確率)、deck に無い id を
+      // 無条件 push すると複製が生まれるため (敵対レビュー impl lens 指摘)。
       const deck = s.players[p].deck;
+      const splicedIds: string[] = [];
       for (const id of ids) {
         const idx = deck.indexOf(id);
-        if (idx !== -1) deck.splice(idx, 1);
+        if (idx !== -1) {
+          deck.splice(idx, 1);
+          splicedIds.push(id);
+        }
       }
-      mutate.deck.toBottom(s, p, ids);
+      mutate.deck.toBottom(s, p, splicedIds);
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(ids.length) });
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(splicedIds.length) });
       return;
     }
     case 'deckShuffle': {

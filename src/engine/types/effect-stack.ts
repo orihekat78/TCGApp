@@ -52,4 +52,19 @@ export type EffectStackEntry = {
    * 復元する。
    */
   bindings?: Record<string, unknown[]>;
+  /**
+   * BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回ごとの batch 連番。
+   * 同一 emit で queue された entry 群 (イベント自効果 + 第三者反応) を結ぶ。
+   * rules/15 §未解決 — 反応は「現在の行動 (自効果) 完了後」に解決するための gate キー。
+   */
+  declaredBatch?: number;
+  /**
+   * BUG-132 GAP-2: 第三者反応マーカー (own = trigger.selfOnly===true 以外に付与)。
+   * - stack.next(): 同 batch の own entry が pending の間は選択不可 (pairwise gate。
+   *   他 entry との所有者任意順 rules/15 §未解決 は不変 — 敵対レビュー rules lens 反映)
+   * - stack.runOne(): pick/dyn 候補を解決時に substitute (rules/15 §解決時参照。
+   *   queue 時確定だとイベント解決前盤面で候補が固定される — B07016/B08020 a2 公式Q&A)
+   * abilityId は遅延 substitute の resolveCtx 再構築用。
+   */
+  declaredReaction?: { abilityId: string };
 };

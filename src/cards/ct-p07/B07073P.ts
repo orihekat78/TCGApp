@@ -47,6 +47,7 @@ const a2: AbilityDef = {
               kind: 'atom',
               verb: 'deckRevealUntil',
               args: {
+                chooseMatch: 'upTo',
                 player: 'self',
                 filter: {
                   color: '赤'
