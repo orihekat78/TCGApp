@@ -29,6 +29,18 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/26-qa-deck-refresh.md'],
 };
 
+// a2: 【ヒラメキ】カードを1枚引く (BUG-140 補修 2026-06-13: TSV hirameki 列の取りこぼし修正) — D03011 a2 同型
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  // カードを1枚引く
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  description: '【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+};
+
 export const B01016P: CardDef = {
   id: 'B01016P',
   no: '0012/B01016P',
@@ -39,6 +51,6 @@ export const B01016P: CardDef = {
   traits: ['少年探偵団', '科学者'], keywords: [],
   rarity: 'CP',
   imageUrl: '1714012985515913.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: ['rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/26-qa-deck-refresh.md'],
 };

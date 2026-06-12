@@ -31,6 +31,17 @@ const a2: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
 };
 
+// a3: 【カットイン】AP＋2000 (BUG-140 補修 2026-06-13: TSV cutIn 列の取りこぼし修正) — D08015 a2 同型
+const a3: AbilityDef = {
+  id: 'a3',
+  type: 'triggered',
+  scope: 'on-hand',
+  trigger: { hook: 'effect:declared', optional: true, selfOnly: true }, // 【カットイン】(コンタクト中に手札から使用)
+  effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 2000, scope: 'contact' } },
+  description: '【カットイン】AP＋2000',
+  ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'],
+};
+
 export const B05066: CardDef = {
   id: 'B05066',
   no: '0566/B05066',
@@ -41,6 +52,6 @@ export const B05066: CardDef = {
   traits: ['FBI', '赤井家', '大学院生'], keywords: [],
   rarity: 'MR',
   imageUrl: '1742972384125446.jpg',
-  abilities: [a2],
+  abilities: [a2, a3],
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/18-mr.md', 'rules/19-special-rules.md'],
 };

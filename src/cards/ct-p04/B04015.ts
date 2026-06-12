@@ -20,6 +20,18 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/06-card-types.md', 'rules/15-abilities-effects.md'],
 };
 
+// a2: 【ヒラメキ】自分は証拠を1つ得る (BUG-140 補修 2026-06-13) — D03011 a2 trigger + evidenceGain (D11003 a1 同 verb)
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  // 自分は証拠を1つ得る
+  effect: { kind: 'atom', verb: 'evidenceGain', args: { player: 'self', n: 1 } },
+  description: '【ヒラメキ】（証拠からリムーブされるときに発動する）自分は証拠を1つ得る。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+};
+
 export const B04015: CardDef = {
   id: 'B04015',
   no: '0162/B04015',
@@ -30,6 +42,6 @@ export const B04015: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1735287656277670.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/06-card-types.md', 'rules/15-abilities-effects.md'],
 };

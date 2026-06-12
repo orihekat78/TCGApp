@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-progress.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:progress`
-> Source hash: `58427c8530ee`
+> Source hash: `fcdb2ee3b8eb`
 
 `src/cards/` 配下のファイル数をデッキ別に集計。`_shared` 配下は別表に分離。
 

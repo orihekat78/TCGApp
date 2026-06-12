@@ -52,7 +52,7 @@ description: Use when implementing a batch/wave of cards (green候補刈り取�
 5. **playwright MCP で実機検証 (第一選択、e2e spec 新作はその後)**: 1試合通し +
    「画面処理 = カードテキスト文言」を **decoy を盤面に置いて** 1対1 確認 (BUG-117/118 教訓)、
    console error 0
-6. `npm run pre-commit` (docs:check + 規約 lint 7本)
+6. `npm run pre-commit` (docs:check + 規約 lint 8本)
 
 ## 6. 記録 → commit
 

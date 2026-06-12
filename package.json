@@ -30,6 +30,7 @@
     "lint:side-channel": "tsx scripts/lint-side-channel.ts",
     "lint:component-testid": "tsx scripts/lint-component-testid.ts",
     "lint:ok-false-pattern": "tsx scripts/lint-ok-false-pattern.ts",
+    "lint:icon-abilities": "tsx scripts/lint-icon-abilities.ts",
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",
     "benchmark": "tsx scripts/benchmark/run.ts",
     "test:e2e": "playwright test",
@@ -67,7 +68,7 @@
     "vitest": "^4.1.5"
   },
   "simple-git-hooks": {
-    "pre-commit": "npm run docs:check && npm run lint:bugs && npm run lint:listener && npm run lint:card-addition && npm run lint:side-channel && npm run lint:component-testid && npm run lint:ok-false-pattern && npm run lint:test-pair"
+    "pre-commit": "npm run docs:check && npm run lint:bugs && npm run lint:listener && npm run lint:card-addition && npm run lint:side-channel && npm run lint:component-testid && npm run lint:ok-false-pattern && npm run lint:test-pair && npm run lint:icon-abilities"
   },
   "dependencies": {
     "react": "^19.2.6",

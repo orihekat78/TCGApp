@@ -15,6 +15,13 @@ CLAUDE.md §骨格凍結原則 / §設計レビュー §水平展開 と連動�
 
 ## チェック項目
 
+### 0. TSV 全能力列の取り込み確認 (BUG-140)
+
+- [ ] `cutIn` / `hirameki` / `henso` 列 — 非空なら該当アイコン能力を実装したか?
+
+**教訓**: 旧 batch が effect 列のみ取り込み cutIn/hirameki 欠落 76 枚を出荷 (BUG-140)。
+機械検証: `npm run lint:icon-abilities` (CI 組込み済、欠落 = fail)。
+
 ### 1. カード kind ごとの dispatch 経路網羅
 
 カードの `kind` を確認:

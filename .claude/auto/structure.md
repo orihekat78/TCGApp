@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3069
+- **ファイル数**: 3075
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -418,6 +418,7 @@
     - `2026-06-12-04-task-a-wave2.md` — Task A green候補 wave#2 — codegen 3枚出荷 (engine変更0) + 精度ゲートで2系統を DEFER
     - `2026-06-12-05-engine-wave2-bug132.md` — engine拡張 wave#2 cluster1 — BUG-132 GAP-1/2 修正 + B08020/P 再採用 (ALL_CARDS +2)
     - `2026-06-13-01-engine-wave2-cluster2.md` — engine拡張 wave#2 cluster2 — ability-presence filter + 骨格バグ2件修正 + 解禁10枚 (ALL_CARDS…
+    - `2026-06-13-02-bug140-icon-abilities.md` — BUG-140 補修 wave — 出荷済 74 枚の cutIn/hirameki 欠落を一括補修 + lint 恒久化 (engine変更0)
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -666,6 +667,8 @@
     - `smoke-2026-06-12-13.md` — Smoke 1000戦レポート — smoke-2026-06-12-153720
     - `smoke-2026-06-12-14.json`
     - `smoke-2026-06-12-14.md` — Smoke 1000戦レポート — smoke-2026-06-12-160518
+    - `smoke-2026-06-12-15.json`
+    - `smoke-2026-06-12-15.md` — Smoke 1000戦レポート — smoke-2026-06-12-163425
     - `smoke-2026-06-12-2.json`
     - `smoke-2026-06-12-2.md` — Smoke 1000戦レポート — smoke-2026-06-12-044245
     - `smoke-2026-06-12-3.json`
@@ -1416,13 +1419,14 @@
     - `classify.ts` — Task A 再分類サーベイ — gate 検出トリアージ (2026-06-07, inline 分類)
     - `dump.ts`
     - `finalize.ts` — Task A 再分類サーベイ — 完走集約 (2026-06-07)
-  - `audit-icon-abilities.mts` — 一回性監査: TSV の cutIn / hirameki 列が非空なのに、出荷 def に該当アイコン能力が無いカードを列挙
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
   - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):
+  - `fix-bug140-icon-abilities.mts` — BUG-140 一括補修 (one-shot): TSV cutIn/hirameki 列が非空なのに def に該当アイコン能力が
   - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
   - `lint-card-addition.ts` — Phase 7-C (LESSONS-LEARNED 教訓 3 enforcement):
   - `lint-component-testid.ts` — Phase 8-4: data-testid 必須 lint
+  - `lint-icon-abilities.ts` — lint:icon-abilities — TSV の cutIn / hirameki 列が非空なのに、出荷 def に該当アイコン能力が
   - `lint-listener-scope.ts` — Phase 7-D (LESSONS-LEARNED 教訓 2 enforcement):
   - `lint-ok-false-pattern.ts` — Phase 8-5: ok:false caller heuristic check
   - `lint-side-channel.ts` — Phase 8-3: side-channel pattern 4 点配線 AST check
@@ -3113,6 +3117,7 @@
       - `action-case.test.ts` — Phase 4 Group B Task 4.6 — flow.actionCase
       - `auto-phase.test.ts` — Phase 4 Task 4.2 — engine.flow.runAutoPhase
       - `bug-112-offboard-declared-use.test.ts` — BUG-112: 「自身を場外へ移すコスト」(selfToDeckBottom 等) の宣言能力で incrDeclaredUseCount が
+      - `bug-140-cutin-batch.test.ts` — tests/engine/flow/bug-140-cutin-batch — BUG-140 補修 (2026-06-13) の cutin 挙動検証
       - `contact.judge-log.test.ts` — Phase 8.10e: contact.judge log integration tests
       - `contact.test.ts` — Phase 4 Group B Task 4.5 — flow.contact (cutIn/disguise/pass/judge/computeOrder)
       - `guard.test.ts` — Phase 4 Group B Task 4.7 — flow.guard
@@ -3179,6 +3184,7 @@
   - **`integration/`** — 統合テスト (engine + UI dispatch)
     - `.gitkeep`
     - `ai-vs-ai-smoke.test.ts` — tests/integration/ai-vs-ai-smoke — Phase 6 Group C Task 6.6
+    - `bug-140-hirameki-batch.test.ts` — tests/integration/bug-140-hirameki-batch — BUG-140 補修 (2026-06-13) の挙動検証
     - `dispatch-to-state.test.ts` — Round 4a Phase 6.1: end-to-end integration test
     - `hirameki-e2e.test.ts` — tests/integration/hirameki-e2e.test.ts — Phase 5 advance Hirameki E2E 結合検証
     - `human-vs-cpu-playthrough.test.ts` — Phase 8 完全クローズ Commit 6: human vs CPU 統合 E2E

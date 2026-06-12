@@ -32,6 +32,18 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/24-qa-naming-stun.md'],
 };
 
+// a2: 【ヒラメキ】カードを1枚引く (BUG-140 補修 2026-06-13: TSV hirameki 列の取りこぼし修正) — D03011 a2 同型
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  // カードを1枚引く
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  description: '【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+};
+
 export const D03004: CardDef = {
   id: 'D03004',
   no: '0121/D03004',
@@ -42,6 +54,6 @@ export const D03004: CardDef = {
   traits: ['怪盗'], keywords: [],
   rarity: 'D',
   imageUrl: '1714013117404423.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };

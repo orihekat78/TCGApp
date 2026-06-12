@@ -32,7 +32,7 @@ jobs:
       - name: Unit tests (vitest)
         run: npx vitest run
 
-      - name: Lint chain (規約 7 本)
+      - name: Lint chain (規約 8 本)
         run: |
           npm run lint:bugs
           npm run lint:listener
@@ -41,6 +41,7 @@ jobs:
           npm run lint:component-testid
           npm run lint:ok-false-pattern
           npm run lint:test-pair
+          npm run lint:icon-abilities
 
       - name: Smoke 1000 games
         run: npm run smoke:1000

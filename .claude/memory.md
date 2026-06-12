@@ -13,8 +13,16 @@
 - 全ゲート green (vitest 2016 / smoke baseline 完全一致 / e2e 119 / MCP decoy 3 / console err 0)
 - DEFER: B08078/P・B08082・B03133・B06020・B07098/P・B07102 (DEFERRED-INDEX) + BUG-140 残74枚
 
+### BUG-140 補修 wave ✅ (branch fix/bug-140-icon-abilities、2026-06-13)
+
+- 決定論パッチ `scripts/fix-bug140-icon-abilities.mts` で 76 行一括補修: 直接 52 ファイル
+  (7 テンプレ正準形) + spread 継承 22 (TSV 一致機械検証) + DEFER 2 (B05039/B06035)
+- `npm run lint:icon-abilities` 新設 (allowlist+stale 検知) → pre-commit + CI 規約 8 本目
+- 挙動テスト 8 件新設 (hirameki 4 テンプレ実 fire 経路 decoy 付 / cutin 3 テンプレ実 contact 経路)
+- 全ゲート green: tsc / vitest 2024 / smoke baseline 完全一致 / e2e 119 / lint 8 本
+
 ## ポインタ
 
 - 設計: `.claude/specs/engine-wave2-ability-filter-design.md` (v2)
 - 調査/レビュー: `.tmp/wave2-ability-filter/*.md`
-- bug: BUG-137〜140 (137/138/139 修正済、140 未着手・audit data 添付)
+- bug: BUG-137〜140 (全件修正済。140 は DEFER 2 枚を DEFERRED-INDEX に繰越)

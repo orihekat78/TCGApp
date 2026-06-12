@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `2f00d640b276`
+> Source hash: `d48dc35e69a3`
 
 公式ルール [`09-cutin-disguise.md`](../../../rules/09-cutin-disguise.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

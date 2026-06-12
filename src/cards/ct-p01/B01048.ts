@@ -42,6 +42,26 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
 };
 
+// a2: 【ヒラメキ】キャラを1枚まで選びスリープ (BUG-140 補修 2026-06-13) — D05007 a2 同型
+// (明示 $pick+target: hirameki fire は hiramekiResolve が chooseAtomTarget で auto-resolve するため短縮形不可)
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  effect: {
+    kind: 'atom',
+    verb: 'sceneSetState',
+    args: {
+      uid: '$pick',
+      state: 'sleep',
+      target: { kind: 'pick', query: { area: 'scene', side: 'either' }, n: { min: 0, max: 1 }, chooser: 'self' },
+    },
+  },
+  description: '【ヒラメキ】（証拠からリムーブされるときに発動する）キャラを1枚まで選び、スリープさせる。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/03-field-areas.md'],
+};
+
 export const B01048: CardDef = {
   id: 'B01048',
   no: '0040/B01048',
@@ -52,6 +72,6 @@ export const B01048: CardDef = {
   traits: ['高校生', '鈴木財閥'], keywords: [],
   rarity: 'R',
   imageUrl: '1714013020321565.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: ['rules/14-refresh.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
 };

@@ -37,6 +37,26 @@ const a2: AbilityDef = {
   ruleRefs: ['rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
+// a3: 【ヒラメキ】キャラを1枚まで選びスリープ (BUG-140 補修 2026-06-13) — D05007 a2 同型
+// (明示 $pick+target: hirameki fire は hiramekiResolve が chooseAtomTarget で auto-resolve するため短縮形不可)
+const a3: AbilityDef = {
+  id: 'a3',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  effect: {
+    kind: 'atom',
+    verb: 'sceneSetState',
+    args: {
+      uid: '$pick',
+      state: 'sleep',
+      target: { kind: 'pick', query: { area: 'scene', side: 'either' }, n: { min: 0, max: 1 }, chooser: 'self' },
+    },
+  },
+  description: '【ヒラメキ】（証拠からリムーブされるときに発動する）キャラを1枚まで選び、スリープさせる。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/03-field-areas.md'],
+};
+
 export const B02045: CardDef = {
   id: 'B02045',
   no: '0211/B02045',
@@ -50,6 +70,6 @@ export const B02045: CardDef = {
   keywords: [],
   rarity: 'C',
   imageUrl: '1721357230985593.jpg',
-  abilities: [a1, a2],
+  abilities: [a1, a2, a3],
   ruleRefs: ['rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/23-qa-disguise-cutin.md'],
 };

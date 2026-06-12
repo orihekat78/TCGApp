@@ -30,6 +30,17 @@ const a2: AbilityDef = {
   ruleRefs: ['rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
+// a3: 【カットイン】AP＋1000 (BUG-140 補修 2026-06-13: TSV cutIn 列の取りこぼし修正) — D08015 a2 同型
+const a3: AbilityDef = {
+  id: 'a3',
+  type: 'triggered',
+  scope: 'on-hand',
+  trigger: { hook: 'effect:declared', optional: true, selfOnly: true }, // 【カットイン】(コンタクト中に手札から使用)
+  effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
+  description: '【カットイン】AP＋1000（コンタクト中に手札からリムーブして使う）',
+  ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'],
+};
+
 export const B03129: CardDef = {
   id: 'B03129',
   no: '0378/B03129',
@@ -43,6 +54,6 @@ export const B03129: CardDef = {
   keywords: [],
   rarity: 'C',
   imageUrl: '1729133510413412.jpg',
-  abilities: [a1, a2],
+  abilities: [a1, a2, a3],
   ruleRefs: ['rules/09-cutin-disguise.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/23-qa-disguise-cutin.md'],
 };

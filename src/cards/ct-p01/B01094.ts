@@ -36,6 +36,18 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/28-errata.md'],
 };
 
+// a2: 【ヒラメキ】リムーブの【黄】キャラを1枚まで手札へ (BUG-140 補修 2026-06-13) — 自身 a1 step1 と同一 atom
+// BUG-123: テキストは「【黄】のキャラ」。kind:'character' が無いと remove の【黄】イベントも候補化する。
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { color: '黄', kind: 'character' } }, n: { min: 0, max: 1 }, chooser: 'self' } } },
+  description: '【ヒラメキ】（証拠からリムーブされるときに発動する）自分のリムーブエリアにある【黄】のキャラを1枚まで選び、手札に加える。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/15-abilities-effects.md'],
+};
+
 export const B01094: CardDef = {
   id: 'B01094',
   no: '0082/B01094',
@@ -46,7 +58,7 @@ export const B01094: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1714013082049447.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/13-keywords.md',
     'rules/15-abilities-effects.md',

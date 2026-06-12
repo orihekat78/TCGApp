@@ -171,7 +171,7 @@
 - **schedule skill**: 月次 audit (bug:trend + lint 群 + AUDIT 雛形) の定期実行化
 - **deep-research skill**: 公式 Q&A (commmune) 新着裁定・カード個別 Q&A の体系的収集
 - **context7 MCP**: ライブラリ設定変更・バージョン更新時は推測せず現行ドキュメントを引く
-- **GitHub Actions CI** (.github/workflows/ci.yml): push/PR ごとに typecheck + vitest + lint 7本 +
+- **GitHub Actions CI** (.github/workflows/ci.yml): push/PR ごとに typecheck + vitest + lint 8本 +
   smoke を GitHub 側で実行 (トークン消費ゼロの常時回帰ゲート)。merge 前に CI green を確認する
 - **Serena MCP** (.mcp.json): LSP ベースのシンボル単位ナビゲーション。大規模リファクタ
   (Phase 3a/3b 等) でファイル全読みの代わりに find_symbol / find_referencing_symbols を優先

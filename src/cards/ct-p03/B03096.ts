@@ -56,6 +56,18 @@ const a1: AbilityDef = {
   ],
 };
 
+// a2: 【ヒラメキ】カードを1枚引く (BUG-140 補修 2026-06-13: TSV hirameki 列の取りこぼし修正) — D03011 a2 同型
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  // カードを1枚引く
+  effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+  description: '【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。',
+  ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+};
+
 export const B03096: CardDef = {
   id: 'B03096',
   no: '0349/B03096',
@@ -69,7 +81,7 @@ export const B03096: CardDef = {
   keywords: [],
   rarity: 'C',
   imageUrl: '1729133463275783.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/11-reasoning.md',
     'rules/13-keywords.md',
