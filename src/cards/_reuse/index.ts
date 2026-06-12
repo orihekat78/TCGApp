@@ -605,6 +605,10 @@ import { B07079 } from '../ct-p07/B07079.js';
 import { B07079P } from '../ct-p07/B07079P.js';
 import { B02014 } from '../ct-p02/B02014.js';
 
+import { B05076 } from '../ct-p05/B05076.js';
+import { D09016 } from '../ct-d09/D09016.js';
+import { D09017 } from '../ct-d09/D09017.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -729,4 +733,6 @@ export const REUSE_CARDS: CardDef[] = [
   // Task D engine拡張 wave#1 (2026-06-12): hand-count/scene→deck/FILE-zone/textual-grant + pick-bind 解禁 35枚
   // (敵対検証 workflow 通過。B09028/B09054系=sleepGuard+自己ガード除外、B09032=charGrantKeyword短縮形で解禁)
   B09092, B09092P, B07081, B04064, B07080, B07080P, B04011, B08058, B08058P, B09021, B09021P, B04068, B04068P, B05050, PR100, PR106, B08037, B08037P, B09028, PR181, PR187, B09054, B09054P, B09041, B09041P, B07090, B07090P, B08029, B08029P, B08032, B08032P, B09032, B07079, B07079P, B02014,
+  // Task A wave#2 codegen3 (D09016/D09017 FILE6行動 / B05076 解決編)。B08020/P は共有 engine gap で defer (BUG-132)
+  B05076, D09016, D09017,
 ];

@@ -70,3 +70,14 @@
 | multi-card sceneEnter | 「2枚まで選び登場」(B09010) | sceneEnter の cardIds multi 契約対応 |
 | nested filter dyn | 「FILE枚数以下のレベル」filter 注入 (B08060/B05102/B09052) | resolveDynArgs の深掘り解決 |
 | until-N discard / reveal verb 等 | B07076/B07100/B08047 a2/B08093 a1 | 可変 count atom / hand-reveal verb |
+
+## Task A green候補 wave#2 defer (2026-06-12, cards/wave2-handauthor)
+
+| rep | 理由 | 解禁条件 / 備考 |
+|-----|------|----------------|
+| B08020/P | 実装は green (a1=D01013 / a2=B07016 同型、実機で deck filter{色+kind} + 色matcher を decoy 検証済) だが、敵対レビューで **共有 engine gap 2件** 顕在化 (deckRevealUntil force-add / effect:declared 解決順序、**BUG-132**)。出荷済 D01013/B07016 と同一 gap で engine変更0 では修正不可 | engine拡張 wave#2 で BUG-132 GAP-1/2 修正後に再採用 (実装は cards/wave2-handauthor session log + .tmp/certify/B08020.json) |
+| B07052 | **data-gate**: 〚特徴［赤魔術］〛が全カード/事件の features に未投入。caseTrait 赤魔術 (【事件赤魔術】) も deckRevealUntil filter:{trait:'赤魔術'} も永久不一致 → 実装すると無音 no-op。certify は filter 機構のみ検証しデータ未確認 (harvest comment 'yellow event-trait gate' が正) | 赤魔術 を事件/イベント trait に投入後 (データ補完) 再 certify。**横展開: 出荷済 B07062 a2 の handAddFromRemove filter:{trait:'赤魔術'} も同 data-gate で latent no-op (解決編+bond小泉紅子+cost gate で発火稀)** |
+| B02026 | refuted(fatal): a1 triggerCharMatches {side:'opp'} filter 無し → 相手パートナーの action でも誤発火 | filter:{kind:'character'} 追加 + 再 certify |
+| B07104 | refuted(fatal): 【パートナー黒】を step1 のみ conditional 化 (全 ability gate が正) + PA pick 非終端 step で二重 grant desync | ability.condition 化 + PA ordering 対応 |
+| B09038 | refuted(fatal): chain が 0 候補時に強制 draw を誤抑制 (sequence が正) | chain→optional{sequence} 化で容易に green、次 wave |
+| B09097 | refuted(fatal): bare-chain optional が CPU で強制 discard 化 | {kind:'optional',effect:{chain}} ラップ + 再 certify |
