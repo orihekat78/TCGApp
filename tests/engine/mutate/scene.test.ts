@@ -4,24 +4,8 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { scene } from '@/engine/mutate/scene';
 import type { GameState, SceneCharacter } from '@/engine/types';
+import { makeChar } from '../../helpers/fixtures';
 
-function makeChar(overrides: Partial<SceneCharacter> = {}): SceneCharacter {
-  return {
-    cardId: 'C001',
-    uid: 'uid-1',
-    state: 'active',
-    isNamed: false,
-    enterOrder: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...overrides,
-  };
-}
 
 function makeState(selfScene: SceneCharacter[] = [], oppScene: SceneCharacter[] = []): GameState {
   const s = createEmptyGameState();

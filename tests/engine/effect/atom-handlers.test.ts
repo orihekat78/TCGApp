@@ -7,34 +7,9 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { event } from '@/engine/event/index';
-import type { EffectCtx } from '@/engine/types';
 import type { GameState, SceneCharacter, Candidate } from '@/engine/types';
+import { makeChar, makeCtx } from '../../helpers/fixtures';
 
-function makeCtx(overrides: Partial<EffectCtx> = {}): EffectCtx {
-  return {
-    source: { player: 'self', area: 'scene' },
-    bindings: {},
-    ...overrides,
-  };
-}
-
-function makeChar(overrides: Partial<SceneCharacter> = {}): SceneCharacter {
-  return {
-    cardId: 'C001',
-    uid: 'uid-1',
-    state: 'active',
-    isNamed: false,
-    enterOrder: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...overrides,
-  };
-}
 
 function withScene(s: GameState, p: 'self' | 'opp', chars: SceneCharacter[]): GameState {
   return {

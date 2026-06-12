@@ -12,18 +12,9 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import { registerAll } from '@/cards';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
-import type { GameState, SceneCharacter, EffectCtx } from '@/engine/types';
+import type { GameState, EffectCtx } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 // shigo(D11014, source) + フィラー4枚 = 現場満杯(5枚)。reanimate 対象は remove。
 function setupFull(reanimateTarget: string): GameState {

@@ -15,6 +15,7 @@ import {
 import { register as registerCardDef, _resetRegistry as resetCardDefRegistry } from '@/engine/read/def';
 import type { CardDef, GameState } from '@/engine/types';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { makeChar as makeSceneChar } from '../../helpers/fixtures';
 
 function makeChar(id: string, abilities: CardDef['abilities']): CardDef {
   return {
@@ -38,33 +39,21 @@ function makeStateWith(cardDef: CardDef): { state: GameState; uid: string } {
   const state = createEmptyGameState();
   // scene に 1 体配置
   const uid = 'self-c1';
-  state.players.self.scene.push({
-    uid,
-    cardId: cardDef.id,
-    state: 'active',
-    named: false,
-    enterOrder: 0,
-    apOverride: undefined,
-    lpOverride: undefined,
-    sets: [],
-    stacked: [],
-  });
+  // refactor 1c (2026-06-12): 旧スキーマ literal (named/sets/stacked/caseLevel) を
+  // 現行 SceneCharacter / PartnerOnBoard / case スキーマへ是正 (旧 field は読み手ゼロ)
+  state.players.self.scene.push(makeSceneChar({ uid, cardId: cardDef.id, enterOrder: 0 }));
   state.players.self.partner = {
     cardId: 'partner-self',
     state: 'active',
     location: 'partner-area',
-    sets: [],
-    stacked: [],
   };
   state.players.opp.partner = {
     cardId: 'partner-opp',
     state: 'active',
     location: 'partner-area',
-    sets: [],
-    stacked: [],
   };
-  state.players.self.case = { cardId: 'case-self', status: '事件編', colors: ['赤'], caseLevel: 7 };
-  state.players.opp.case = { cardId: 'case-opp', status: '事件編', colors: ['赤'], caseLevel: 6 };
+  state.players.self.case = { cardId: 'case-self', status: '事件編', requiredEvidence: 7, colors: ['赤'], declaredUseCount: {} };
+  state.players.opp.case = { cardId: 'case-opp', status: '事件編', requiredEvidence: 6, colors: ['赤'], declaredUseCount: {} };
   return { state, uid };
 }
 

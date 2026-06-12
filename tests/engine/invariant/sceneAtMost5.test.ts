@@ -3,22 +3,10 @@ import { describe, it, expect } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { sceneAtMost5 } from '@/engine/invariant/sceneAtMost5';
 import type { SceneCharacter } from '@/engine/types';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 
 function makeChar(uid: string, cardId = 'C001'): SceneCharacter {
-  return {
-    cardId,
-    uid,
-    state: 'active',
-    isNamed: false,
-    enterOrder: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseChar({ uid, cardId });
 }
 
 describe('engine.invariant.sceneAtMost5', () => {

@@ -15,19 +15,10 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
-import type { SceneCharacter, Effect, EffectCtx, GameState } from '@/engine/types';
+import type { Effect, EffectCtx, GameState } from '@/engine/types';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 describe('BUG-111 — continuation を持たない pick は他 pick の continuation を実行しない', () => {
   beforeAll(() => registerAll());

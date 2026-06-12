@@ -6,7 +6,6 @@ import { candidates, legalCount } from '@/engine/target/candidates';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import type {
-  EffectCtx,
   GameState,
   SceneCharacter,
   CardDef,
@@ -15,32 +14,8 @@ import type {
   Candidate,
   AbilityDef,
 } from '@/engine/types';
+import { makeChar, makeCtx } from '../../helpers/fixtures';
 
-function makeCtx(overrides: Partial<EffectCtx> = {}): EffectCtx {
-  return {
-    source: { player: 'self', area: 'scene' },
-    bindings: {},
-    ...overrides,
-  };
-}
-
-function makeChar(overrides: Partial<SceneCharacter> = {}): SceneCharacter {
-  return {
-    cardId: 'C001',
-    uid: 'uid-1',
-    state: 'active',
-    isNamed: false,
-    enterOrder: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...overrides,
-  };
-}
 
 function defOf(overrides: Partial<CardDef> & { id: string }): CardDef {
   return {

@@ -26,18 +26,12 @@ import { B02053 } from '@/cards/ct-p02/B02053';
 import { B02083 } from '@/cards/ct-p02/B02083';
 import { D05006 } from '@/cards/ct-d05/D05006';
 import { PR138 } from '@/cards/pr-01/PR138';
+import { sceneChar as baseScene } from '../helpers/fixtures';
 
 const FB = { type: 'card-back' as const, cardId: 'D08017' };
 
 function sceneChar(cardId: string, uid: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter {
-  return {
-    cardId, uid, state, isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { state });
 }
 function def(id: string, colors: string[], traits: string[], level: number, kind: 'character' | 'event' = 'character'): CardDef {
   return { id, no: 'NO', kind, names: [id], colors, level, ap: 4000, lp: 1, traits, rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] };

@@ -13,18 +13,9 @@ import { mutate } from '@/engine/mutate/index';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards/index';
-import type { GameState, SceneCharacter } from '@/engine/types';
+import type { GameState } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 describe('look-top-N D01012 (enterSleep) — 2026-06-06', () => {
   beforeEach(() => {

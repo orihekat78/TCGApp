@@ -14,23 +14,10 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { D11016 } from '@/cards/ct-d11/D11016';
 import { D11007 } from '@/cards/ct-d11/D11007';
 import type { GameState } from '@/engine/types';
+import { sceneChar as baseScene } from '../../helpers/fixtures';
 
 function sceneChar(cardId: string, uid: string, apOverride: number | null = null) {
-  return {
-    cardId,
-    uid,
-    state: 'active' as const,
-    isNamed: false,
-    enterOrder: 1,
-    enterOrderThisTurn: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { apOverride });
 }
 
 // D11016 を self 現場に置き、相手ターン中 (a1 condition {turn,opp}) の state を作る

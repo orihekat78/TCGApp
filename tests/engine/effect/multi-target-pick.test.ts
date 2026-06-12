@@ -13,16 +13,10 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { char as readChar } from '@/engine/read/char';
 import type { GameState, SceneCharacter } from '@/engine/types';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
+import { sceneChar as baseScene } from '../../helpers/fixtures';
 
 function sceneChar(cardId: string, uid: string, ap = 5000): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: ap, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { apOverride: ap });
 }
 
 function setupState(): GameState {

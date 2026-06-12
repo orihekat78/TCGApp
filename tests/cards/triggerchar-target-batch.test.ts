@@ -19,18 +19,9 @@ import { registerAll } from '@/cards/index';
 import { char as readChar } from '@/engine/read/char';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B05080 } from '@/cards/ct-p05/B05080';
-import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import type { GameState, CardDef } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 // 相手の推理キャラ (lp:2 → LP-1 turn で 1 になる)
 const REASONER: CardDef = {

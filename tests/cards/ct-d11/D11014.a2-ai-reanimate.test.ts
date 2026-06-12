@@ -15,18 +15,9 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { D11014 } from '@/cards/ct-d11/D11014';
-import type { EffectCtx, SceneCharacter } from '@/engine/types';
+import type { EffectCtx } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 function aiCtx(): EffectCtx {
   return {

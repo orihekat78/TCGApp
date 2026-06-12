@@ -8,22 +8,10 @@ import { renderToString } from 'react-dom/server';
 import { SceneArea } from '@/ui/components/SceneArea';
 import type { SceneCharacter } from '@/engine/types/game-state';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 
 function makeChar(uid: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter {
-  return {
-    cardId: 'C1',
-    uid,
-    state,
-    isNamed: false,
-    enterOrder: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseChar({ cardId: 'C1', uid, state });
 }
 
 const resolveCard = (_cardId: string): ResolvedCardMeta => ({

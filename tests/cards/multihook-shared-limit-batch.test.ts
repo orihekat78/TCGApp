@@ -18,18 +18,9 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { D03007 } from '@/cards/ct-d03/D03007';
 import { B04039 } from '@/cards/ct-p04/B04039';
 import { B02004 } from '@/cards/ct-p02/B02004';
-import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import type { GameState, CardDef } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 function synth(id: string, names: string[], level: number, lp = 1): CardDef {
   return { id, no: `NO-${id}`, kind: 'character', names, colors: ['青'], level, ap: 3000, lp, traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] };
 }

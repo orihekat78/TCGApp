@@ -17,18 +17,9 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { produce } from '@/engine/produce';
 import { registerAll } from '@/cards';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
-import type { GameState, SceneCharacter, EffectCtx } from '@/engine/types';
+import type { GameState, EffectCtx } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 // 直接 push (mutate.scene.enter は 'enter' を emit して D11014 a1 疾風 を誤発火させるため)
 function setupD11014a2(reanimateTarget: string): GameState {

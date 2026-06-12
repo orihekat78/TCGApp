@@ -36,6 +36,7 @@ import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
+import { makeChar as baseChar } from '../helpers/fixtures';
 
 const TEST_REASONER: CardDef = {
   id: 'TEST_R',
@@ -68,20 +69,7 @@ const TEST_MISREADER_500: CardDef = {
 };
 
 function makeChar(uid: string, cardId: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter {
-  return {
-    cardId,
-    uid,
-    state,
-    isNamed: false,
-    enterOrder: 0,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseChar({ cardId, uid, state, enterOrder: 0 });
 }
 
 function fullReset(): void {

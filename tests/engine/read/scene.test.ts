@@ -2,23 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { scene } from '@/engine/read/scene';
 import type { GameState, SceneCharacter } from '@/engine/types';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 
 function makeChar(overrides: Partial<SceneCharacter> = {}): SceneCharacter {
-  return {
-    cardId: 'C001',
-    uid: 'uid-1',
-    state: 'active',
-    isNamed: false,
-    enterOrder: 0,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...overrides,
-  };
+  return baseChar({ enterOrder: 0, ...overrides });
 }
 
 function withScene(chars: SceneCharacter[], side: 'self' | 'opp' = 'self'): GameState {

@@ -10,16 +10,10 @@ import { mustTargetCandidates } from '@/engine/flow/action/target-expander';
 import { D08026 } from '@/cards/ct-d08/D08026';
 import { D11005 } from '@/cards/ct-d11/D11005';
 import type { GameState } from '@/engine/types';
+import { sceneChar as baseScene } from '../../helpers/fixtures';
 
 function sceneChar(cardId: string, uid: string, state: 'active' | 'sleep' = 'active') {
-  return {
-    cardId, uid, state, isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { state });
 }
 
 describe('A (BUG-099): canDeclaredAbility が ability.condition を gate する', () => {

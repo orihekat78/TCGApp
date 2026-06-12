@@ -25,18 +25,9 @@ import { char as readChar } from '@/engine/read/char';
 import { D06012 } from '@/cards/ct-d06/D06012';
 import { B03129 } from '@/cards/ct-p03/B03129';
 import { B02045 } from '@/cards/ct-p02/B02045';
-import type { GameState, ActionContext, SceneCharacter } from '@/engine/types';
+import type { GameState, ActionContext } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 const FB = { type: 'card-back' as const, cardId: 'D08017' };
 

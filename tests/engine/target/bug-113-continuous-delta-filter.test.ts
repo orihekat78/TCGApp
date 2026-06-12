@@ -12,18 +12,8 @@ import { char as charRead } from '@/engine/read/char';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
 import type { SceneCharacter, Candidate, GameState, EvidenceCard } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string, over?: Partial<SceneCharacter>): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...over,
-  };
-}
 const charCand = (uid: string, cardId: string): Candidate =>
   ({ kind: 'char', uid, cardId, player: 'self' } as unknown as Candidate);
 const ev = (i: number): EvidenceCard => ({ cardId: `ev${i}`, faceUp: true, origin: { turn: 0, via: 'effect' } });

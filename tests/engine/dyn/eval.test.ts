@@ -5,33 +5,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { evalDyn } from '@/engine/dyn/eval';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
-import type { EffectCtx, GameState, SceneCharacter, CardDef } from '@/engine/types';
+import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import { makeChar, makeCtx } from '../../helpers/fixtures';
 
-function makeCtx(overrides: Partial<EffectCtx> = {}): EffectCtx {
-  return {
-    source: { player: 'self', area: 'scene' },
-    bindings: {},
-    ...overrides,
-  };
-}
-
-function makeChar(overrides: Partial<SceneCharacter> = {}): SceneCharacter {
-  return {
-    cardId: 'C001',
-    uid: 'uid-1',
-    state: 'active',
-    isNamed: false,
-    enterOrder: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...overrides,
-  };
-}
 
 function withScene(s: GameState, p: 'self' | 'opp', chars: SceneCharacter[]): GameState {
   return {

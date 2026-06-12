@@ -17,16 +17,10 @@ import type { GameState, SceneCharacter, AbilityDef } from '@/engine/types';
 import { B06101 } from '@/cards/ct-p06/B06101';
 import { D10011 } from '@/cards/ct-d10/D10011';
 import { B09008 } from '@/cards/ct-p09/B09008';
+import { sceneChar as baseScene } from '../helpers/fixtures';
 
 function sceneChar(cardId: string, uid: string, apOverride: number | null = null): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { apOverride });
 }
 
 describe('Task A certify-harvest — needsManual 手書き 3枚', () => {

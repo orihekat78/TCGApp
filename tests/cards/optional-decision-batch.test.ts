@@ -25,18 +25,9 @@ import { registerAll } from '@/cards/index';
 import { char as readChar } from '@/engine/read/char';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B05019 } from '@/cards/ct-p05/B05019';
-import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import type { GameState, CardDef } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 const KOGORO: CardDef = {
   id: 'KOGORO_T', no: 'NO', kind: 'character', names: ['毛利小五郎'], colors: ['青'],

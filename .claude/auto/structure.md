@@ -9,13 +9,12 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 196
-- **ファイル数**: 3002
+- **ディレクトリ数**: 194
+- **ファイル数**: 3003
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
 - **`.claude/`** — Claude Code 用プロジェクトコンテキスト一式
-  - **`agents/`** — プロジェクト固有のサブエージェント定義
   - **`auto/`** — 自動生成ドキュメント (scripts/gen-docs/ 出力先・手書き禁止)
     - **`api/`**
       - `cards.md` — 🤖 engine.cards
@@ -406,7 +405,6 @@
     - `2026-06-12-01-task-d-engine-extensions.md` — Task D — engine 拡張 高リスク wave#1 (E0〜E4) + 既存バグ3修正
     - `2026-06-12-02-task-d-card-batch.md` — Task D カードバッチ wave#1 — 解禁 35 枚 (敵対検証 workflow 通過、ALL_CARDS 1057)
     - `README.md` — Changelog エントリ
-  - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
@@ -830,7 +828,6 @@
     - `2026-06-12.md` — セッションログ — 2026-06-12 Task D engine拡張 高リスク wave#1
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
-  - **`skills/`** — プロジェクト固有のスキル定義
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
     - **`cards-analysis/`**
       - `AUDIT-USER-REQUEST-18.md` — Card Audit — user_request 20260521_01 #18
@@ -3103,6 +3100,8 @@
     - `rng.test.ts`
     - `state-factory.test.ts`
     - `types.test.ts`
+  - **`helpers/`**
+    - `fixtures.ts` — tests/helpers/fixtures.ts — テスト共通 fixture (refactor Phase 1c, 2026-06-12)
   - **`integration/`** — 統合テスト (engine + UI dispatch)
     - `.gitkeep`
     - `ai-vs-ai-smoke.test.ts` — tests/integration/ai-vs-ai-smoke — Phase 6 Group C Task 6.6

@@ -16,18 +16,9 @@ import { run as runEffect } from '@/engine/effect/resolver';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
-import type { EffectCtx, SceneCharacter, GameState } from '@/engine/types';
+import type { EffectCtx, GameState } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 function ctx(): EffectCtx {
   return { source: { player: 'self', cardId: 'D08001', uid: 'src', abilityId: 'a1', area: 'scene' }, bindings: {} } as unknown as EffectCtx;

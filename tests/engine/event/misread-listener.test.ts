@@ -14,6 +14,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { misreadX } from '@/cards/_shared/misreadX';
 import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 
 // テスト用のミスリード持ちカード def を engine registry に投入
 const TEST_MISREAD_CARD: CardDef = {
@@ -47,20 +48,7 @@ const TEST_REASONING_CARD: CardDef = {
 };
 
 function makeChar(uid: string, cardId: string, state: 'active' | 'sleep' = 'active'): SceneCharacter {
-  return {
-    cardId,
-    uid,
-    state,
-    isNamed: false,
-    enterOrder: 0,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseChar({ cardId, uid, state, enterOrder: 0 });
 }
 
 describe('misread listener (Commit 3b)', () => {

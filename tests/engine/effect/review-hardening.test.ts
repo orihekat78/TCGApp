@@ -11,18 +11,9 @@ import { runAtom } from '@/engine/effect/atom-handlers';
 import { resolveEffectPicks, _clearPendingEffectPickQueue, _peekPendingEffectPickQueueLength, _clearPendingEffectChoiceSide, _peekPendingEffectChoiceSide } from '@/engine/effect/resolve-picks';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
-import type { EffectCtx, SceneCharacter } from '@/engine/types';
+import type { EffectCtx } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 function ctxSelf(): EffectCtx {
   return { source: { player: 'self', cardId: 'X', abilityId: 'a1', area: 'scene' }, bindings: {} } as unknown as EffectCtx;

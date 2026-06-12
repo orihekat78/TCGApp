@@ -20,7 +20,7 @@
 | 0 | 前提: Task A/D 未コミット分の commit (ユーザー操作、main なので branch first) | - | ⏳ ユーザー |
 | 1a | mutate 層バイパスの直書き排除 (contact/hand-use-card/next-hint の 5 箇所) | 低 | ✅ 2026-06-12 |
 | 1b | dead code 除去 (__pendingActionExpansion / charSetAP・charSetLP throw stub) | 低 | ✅ 2026-06-12 |
-| 1c | テスト fixture 統一 (makeChar/sceneChar/makeCtx 75 定義 → tests/helpers/ 3 本) | 低 | ⏳ |
+| 1c | テスト fixture 統一 (makeChar/sceneChar/makeCtx 75 定義 → tests/helpers/ 3 本) | 低 | ✅ 2026-06-12 |
 | 2a | PA 短縮形 gate の共通 helper 化 (atom-handlers 内 ~7 コピペ → 1、~200 行減) | 中 | ⏳ |
 | 2b | 手動同期ペアの単一ソース化 (AtomVerb/Cost/HOOKS の union ↔ Set ↔ whitelist) | 中 | ⏳ |
 | 2c | dispatch 契約是正 (declaredAbility の cost+ctx を dispatcher 内で構築) | 中 | ⏳ |

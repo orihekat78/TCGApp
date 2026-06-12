@@ -16,16 +16,10 @@ import { validate } from '@/engine/effect/validate';
 import { evalCond } from '@/engine/cond/eval';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { GameState, SceneCharacter, CardDef, EffectCtx, Effect } from '@/engine/types';
+import { makeCtx as baseCtx, sceneChar as baseScene } from '../../helpers/fixtures';
 
 function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: 5000, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { apOverride: 5000 });
 }
 
 function defOf(id: string): CardDef {
@@ -36,11 +30,7 @@ function defOf(id: string): CardDef {
 }
 
 function makeCtx(overrides: Partial<EffectCtx> = {}): EffectCtx {
-  return {
-    source: { player: 'self', area: 'scene', cardId: 'SRC', abilityId: 'a1' },
-    bindings: {},
-    ...overrides,
-  } as EffectCtx;
+  return baseCtx({ source: { player: 'self', area: 'scene', cardId: 'SRC', abilityId: 'a1' }, ...overrides } as Partial<EffectCtx>);
 }
 
 const GRANT_DRAW_ON_ACTION = {

@@ -31,18 +31,12 @@ import { B03012 } from '@/cards/ct-p03/B03012';
 import { PR155 } from '@/cards/pr-01/PR155';
 import { PR161 } from '@/cards/pr-01/PR161';
 import { PR230 } from '@/cards/pr-01/PR230';
+import { sceneChar as baseScene } from '../helpers/fixtures';
 
 const FB = { type: 'card-back' as const, cardId: 'D08017' };
 
 function sceneChar(cardId: string, uid: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter {
-  return {
-    cardId, uid, state, isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { state });
 }
 
 describe('Task A wave2 — leave→hand / reanimate / forEach-all cluster', () => {

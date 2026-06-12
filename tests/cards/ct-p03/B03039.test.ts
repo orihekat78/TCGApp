@@ -11,19 +11,9 @@ import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { char as charRead } from '@/engine/read/char';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
-import type { SceneCharacter, EffectCtx, GameState } from '@/engine/types';
+import type { EffectCtx, GameState } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string, over?: Partial<SceneCharacter>): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...over,
-  };
-}
 
 describe('B03039 長島茂雄 — カットイン (AP+1000 / 相手セット除去で+3000)', () => {
   beforeAll(() => registerAll());

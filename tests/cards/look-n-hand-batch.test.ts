@@ -20,7 +20,7 @@ import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards/index';
-import type { AbilityDef, CardDef, GameState, SceneCharacter } from '@/engine/types';
+import type { AbilityDef, CardDef, GameState } from '@/engine/types';
 import { B04024 } from '@/cards/ct-p04/B04024';
 import { B05057 } from '@/cards/ct-p05/B05057';
 import { B06088 } from '@/cards/ct-p06/B06088';
@@ -29,19 +29,10 @@ import { B03007 } from '@/cards/ct-p03/B03007';
 import { PR061 } from '@/cards/pr-01/PR061';
 import { PR180 } from '@/cards/pr-01/PR180';
 import { PR084 } from '@/cards/pr-01/PR084';
+import { sceneChar } from '../helpers/fixtures';
 
 const FB = { type: 'card-back' as const, cardId: 'D08017' };
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 const lookStep = (ab: AbilityDef) => (ab.effect as { steps: Array<{ verb?: string; args?: Record<string, unknown> }> }).steps;
 

@@ -7,7 +7,8 @@ import { B09044 } from '@/cards/ct-p09/B09044';
 import { candidates } from '@/engine/target/candidates';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
-import type { CardDef, EffectCtx, TargetFilter } from '@/engine/types';
+import type { CardDef, TargetFilter } from '@/engine/types';
+import { makeCtx } from '../helpers/fixtures';
 
 // 効果ツリーから args.filter / args.target.query.filter を取り出すゆるいヘルパ
 function filterOf(node: unknown): TargetFilter | undefined {
@@ -45,9 +46,6 @@ describe('BUG-123: behavioral — kind:character filter が remove の同色イ�
 
   function defOf(o: Partial<CardDef> & { id: string }): CardDef {
     return { id: o.id, no: 'NO', kind: 'character', names: ['x'], colors: [], traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [], ...o };
-  }
-  function makeCtx(): EffectCtx {
-    return { source: { player: 'self', area: 'scene' }, bindings: {} };
   }
 
   it('remove に【黄】キャラ + 【黄】イベント → キャラのみ候補', () => {

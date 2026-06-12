@@ -16,18 +16,9 @@ import { produce } from '@/engine/produce';
 import { registerAll } from '@/cards';
 import { char as readChar } from '@/engine/read/char';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
-import type { GameState, SceneCharacter } from '@/engine/types';
+import type { GameState } from '@/engine/types';
+import { sceneChar } from '../../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 // D11012 (横溝重悟, 警察 Lv4 LP0) を source ('shigo') + 効果対象 ('target') の 2 体置く。
 // cost selfToDeckBottom が source をデッキ下へ → 効果は残った 'target' (警察 LP0) を対象にする。

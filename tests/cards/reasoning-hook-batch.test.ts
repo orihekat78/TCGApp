@@ -19,18 +19,9 @@ import { B01017 } from '@/cards/ct-p01/B01017';
 import { B01074 } from '@/cards/ct-p01/B01074';
 import { B03102 } from '@/cards/ct-p03/B03102';
 import { B05011 } from '@/cards/ct-p05/B05011';
-import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import type { GameState, CardDef } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 describe('engine-extension reasoning-hook batch (2026-06-06)', () => {
   beforeEach(() => {

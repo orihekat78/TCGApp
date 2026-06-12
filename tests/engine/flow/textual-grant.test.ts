@@ -18,16 +18,10 @@ import { candidates as actionCandidates } from '@/engine/flow/action/target-expa
 import { snapshotAP } from '@/engine/flow/action/state-machine';
 import { endTurn } from '@/engine/flow/turn';
 import type { GameState, SceneCharacter, CardDef, ActionContext } from '@/engine/types';
+import { sceneChar as baseScene } from '../../helpers/fixtures';
 
 function sceneChar(cardId: string, uid: string, st: 'active' | 'sleep' | 'stun' = 'active', te: Record<string, unknown> = {}): SceneCharacter {
-  return {
-    cardId, uid, state: st, isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: 5000, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false, ...te },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { state: st, apOverride: 5000, turnEffects: { contactImmune: false, removeOnTurnEnd: false, ...te } });
 }
 
 function defOf(id: string, overrides: Partial<CardDef> = {}): CardDef {

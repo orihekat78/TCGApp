@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import type { SceneCharacter } from '@/engine/types/game-state.js';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 import {
   SceneArea,
   type ResolvedCardMeta,
@@ -30,19 +31,7 @@ function strip(html: string): string {
 }
 
 function makeChar(overrides: Partial<SceneCharacter> & Pick<SceneCharacter, 'cardId' | 'uid'>): SceneCharacter {
-  return {
-    state: 'active',
-    isNamed: false,
-    enterOrder: 0,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...overrides,
-  };
+  return baseChar({ enterOrder: 0, ...overrides });
 }
 
 // ---- tests ----

@@ -18,18 +18,9 @@ import { char as readChar } from '@/engine/read/char';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B05039 } from '@/cards/ct-p05/B05039';
 import { B03096 } from '@/cards/ct-p03/B03096';
-import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import type { GameState, CardDef } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 
 // level / ap を制御する合成キャラ def (filter 検証用 decoy 含む)
 function synthChar(id: string, level: number, ap: number): CardDef {

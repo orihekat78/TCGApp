@@ -3,23 +3,10 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { char } from '@/engine/read/char';
 import { register, _resetRegistry } from '@/engine/read/def';
 import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 
 function makeChar(overrides: Partial<SceneCharacter> = {}): SceneCharacter {
-  return {
-    cardId: 'CONAN001',
-    uid: 'uid-1',
-    state: 'active',
-    isNamed: false,
-    enterOrder: 1,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-    ...overrides,
-  };
+  return baseChar({ cardId: 'CONAN001', ...overrides });
 }
 
 function withChar(c: SceneCharacter): GameState {

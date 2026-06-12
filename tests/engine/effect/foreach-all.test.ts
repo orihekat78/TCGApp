@@ -7,14 +7,10 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { run } from '@/engine/effect/resolver';
 import type { EffectCtx, GameState, SceneCharacter, Effect } from '@/engine/types';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 
 function makeChar(o: Partial<SceneCharacter> = {}): SceneCharacter {
-  return {
-    cardId: 'C', uid: 'u', state: 'active', isNamed: false, enterOrder: 1, setCards: [],
-    stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {}, ...o,
-  };
+  return baseChar({ cardId: 'C', uid: 'u', ...o });
 }
 const ctx: EffectCtx = { source: { player: 'self', area: 'hand' }, bindings: {} };
 

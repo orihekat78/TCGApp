@@ -18,7 +18,7 @@
   (atom-handlers.test.ts:493-513 が throw を仕様として固定、survey が set-exact verb の将来需要を記録)。
   「実装されるまで throw で誤用検知」が設計意図のため存置
 
-## 1c. テスト fixture 統一
+## 1c. テスト fixture 統一 (✅ 2026-06-12 実施)
 
 - makeChar (32 定義/28 files) + sceneChar (33/33) + makeCtx (10/10) → `tests/helpers/fixtures.ts` に 3 関数
 - 旧スキーマ fixture (named/sets/stacked — triggered.test.ts:58-66 等 4 ファイル) は現行 SceneCharacter
@@ -70,3 +70,17 @@
   ③ charSetAP/LP throw stub の削除を却下 (上記 1b 参照 — テストで仕様固定された意図的ガード)
   検証: typecheck clean / full vitest **1961 pass / 0 fail** / smoke:1000 **baseline 完全一致**
   (469/531, avg 10.86 — 挙動不変の直接証拠) / e2e 17 pass (engine-extensions + task-d-extensions)
+
+- **1c (2026-06-12)** 調査で計画前提を 2 点補正: ①70 定義は全コピーではなく 30 グループ
+  (md5 正規化分類) → Group A 38 定義=完全置換 / Group B ~26 file=既定値保存 wrapper (本文不変) /
+  Group C 5 定義=対象外 (CardDef factory・特殊 ctx)。②「旧スキーマ 4 ファイル」は triggered.test.ts
+  1 file のみ (他 3 は mutate.scene.enter の options API `named:` の誤検知)。
+  敵対レビュー (Workflow 4 観点: default-drift / exact-replace / schema-correction /
+  meaning-preservation、546k tok): pass 3 + 指摘 4 件全て同フェーズ内で解消 —
+  ① .tsx 3 file (OppTurnOverlay/SceneArea×2) の同名 fixture 取りこぼし → wrapper 化
+  ② bug-123 の makeCtx (正準と同値) → import 化 ③ fixtures.ts ヘッダ「byte 等価」→
+  「deep-equal (プロパティ順のみ相違)」に訂正 ④ commit 前 docs 再生成。
+  残課題 (Phase 4 候補として記録): 別名 factory (char()/mkChar()/インライン literal) が
+  unit ~14 + e2e ~13 file に残存 / 既存 eslint 46 err (HEAD 同値)。
+  検証: full vitest **1961 pass / 0 fail** ×3 回 / eslint **baseline 46 err と完全一致 (新規 0)** /
+  61 file +91/−800 行。tests/ は tsconfig 対象外 (typecheck はテストを検査しない) と判明 — 2b で考慮

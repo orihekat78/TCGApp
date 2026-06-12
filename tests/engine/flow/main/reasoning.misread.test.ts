@@ -13,6 +13,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { misreadX } from '@/cards/_shared/misreadX';
 import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
+import { makeChar as baseChar } from '../../../helpers/fixtures';
 
 const TEST_REASONER: CardDef = {
   id: 'TEST_R',
@@ -38,20 +39,7 @@ const TEST_MISREADER: CardDef = {
 };
 
 function makeChar(uid: string, cardId: string): SceneCharacter {
-  return {
-    cardId,
-    uid,
-    state: 'active',
-    isNamed: false,
-    enterOrder: 0,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseChar({ cardId, uid, enterOrder: 0 });
 }
 
 describe('reasoning × misread integration (Commit 3b)', () => {

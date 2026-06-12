@@ -12,20 +12,10 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import * as flow from '@/engine/flow/index.js';
 import { produce } from '@/engine/produce';
 import type { SceneCharacter } from '@/engine/types/game-state';
+import { makeChar as baseChar } from '../../helpers/fixtures';
 
 function makeChar(uid: string, cardId: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter {
-  return {
-    cardId, uid, state,
-    isNamed: false,
-    enterOrder: 0,
-    setCards: [],
-    stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null,
-    lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseChar({ cardId, uid, state, enterOrder: 0 });
 }
 
 describe('OppTurnOverlay', () => {

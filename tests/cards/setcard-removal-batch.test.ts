@@ -18,16 +18,10 @@ import { registerAll } from '@/cards/index';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B08034 } from '@/cards/ct-p08/B08034';
 import type { GameState, SceneCharacter, SetCardEntry } from '@/engine/types';
+import { sceneChar as baseScene } from '../helpers/fixtures';
 
 function sceneChar(cardId: string, uid: string, setCards: SetCardEntry[] = []): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards, stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
+  return baseScene(cardId, uid, { setCards });
 }
 
 describe('engine-extension set-card 除去 batch (2026-06-06)', () => {

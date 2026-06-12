@@ -17,18 +17,9 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards/index';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { B03038 } from '@/cards/ct-p03/B03038';
-import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
+import type { GameState, CardDef } from '@/engine/types';
+import { sceneChar } from '../helpers/fixtures';
 
-function sceneChar(cardId: string, uid: string): SceneCharacter {
-  return {
-    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, enterOrderThisTurn: 1,
-    setCards: [], stackedCards: 0,
-    keywordOverrides: { granted: [], disabledOriginal: false },
-    apOverride: null, lpOverride: null,
-    turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-    declaredUseCount: {},
-  };
-}
 const REASONER: CardDef = {
   id: 'REASONER2', no: 'NO', kind: 'character', names: ['推理キャラ'], colors: ['緑'],
   level: 5, ap: 5000, lp: 2, traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
