@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d9b2e8cdd1a4`
+> Source hash: `52a35b5628c1`
 
 公式ルール [`05-turn-phases.md`](../../../rules/05-turn-phases.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (32)
+## 📄 参照ソース (51)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -29,18 +29,18 @@
 - [`src/ai/policy.ts`](../../../../src/ai/policy.ts)
 - [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
 - [`src/cards/ct-d06/D06010.ts`](../../../../src/cards/ct-d06/D06010.ts)
+- [`src/cards/ct-d07/D07014.ts`](../../../../src/cards/ct-d07/D07014.ts)
+- [`src/cards/ct-d07/D07015.ts`](../../../../src/cards/ct-d07/D07015.ts)
 - [`src/cards/ct-d08/D08003.ts`](../../../../src/cards/ct-d08/D08003.ts)
 - [`src/cards/ct-d08/D08004.ts`](../../../../src/cards/ct-d08/D08004.ts)
 - [`src/cards/ct-d11/D11015.ts`](../../../../src/cards/ct-d11/D11015.ts)
+- [`src/cards/ct-p01/B01011.ts`](../../../../src/cards/ct-p01/B01011.ts)
 - [`src/cards/ct-p01/B01032.ts`](../../../../src/cards/ct-p01/B01032.ts)
+- [`src/cards/ct-p03/B03014.ts`](../../../../src/cards/ct-p03/B03014.ts)
 - [`src/cards/ct-p03/B03087.ts`](../../../../src/cards/ct-p03/B03087.ts)
+- [`src/cards/ct-p04/B04023.ts`](../../../../src/cards/ct-p04/B04023.ts)
 - [`src/cards/ct-p04/B04080.ts`](../../../../src/cards/ct-p04/B04080.ts)
 - [`src/cards/ct-p05/B05067.ts`](../../../../src/cards/ct-p05/B05067.ts)
 - [`src/cards/ct-p05/B05067P.ts`](../../../../src/cards/ct-p05/B05067P.ts)
-- [`src/cards/ct-p07/B07016.ts`](../../../../src/cards/ct-p07/B07016.ts)
-- [`src/cards/ct-p07/B07021.ts`](../../../../src/cards/ct-p07/B07021.ts)
-- [`src/cards/ct-p08/B08015.ts`](../../../../src/cards/ct-p08/B08015.ts)
-- [`src/cards/ct-p09/B09049.ts`](../../../../src/cards/ct-p09/B09049.ts)
-- [`src/cards/pr-01/PR174.ts`](../../../../src/cards/pr-01/PR174.ts)
-- [`src/engine/flow/auto-phase.ts`](../../../../src/engine/flow/auto-phase.ts)
-- _...ほか 12 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- [`src/cards/ct-p05/B05076P.ts`](../../../../src/cards/ct-p05/B05076P.ts)
+- _...ほか 31 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

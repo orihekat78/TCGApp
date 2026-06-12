@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d9b2e8cdd1a4`
+> Source hash: `52a35b5628c1`
 
 公式ルール [`26-qa-deck-refresh.md`](../../../rules/26-qa-deck-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,7 +20,7 @@
 
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (27)
+## 📄 参照ソース (57)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
@@ -28,6 +28,7 @@
 - [`src/cards/ct-d02/D02011.ts`](../../../../src/cards/ct-d02/D02011.ts)
 - [`src/cards/ct-d03/D03009.ts`](../../../../src/cards/ct-d03/D03009.ts)
 - [`src/cards/ct-d04/D04011.ts`](../../../../src/cards/ct-d04/D04011.ts)
+- [`src/cards/ct-d05/D05007.ts`](../../../../src/cards/ct-d05/D05007.ts)
 - [`src/cards/ct-d05/D05012.ts`](../../../../src/cards/ct-d05/D05012.ts)
 - [`src/cards/ct-d07/D07019.ts`](../../../../src/cards/ct-d07/D07019.ts)
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
@@ -37,9 +38,8 @@
 - [`src/cards/ct-p01/B01016.ts`](../../../../src/cards/ct-p01/B01016.ts)
 - [`src/cards/ct-p01/B01017.ts`](../../../../src/cards/ct-p01/B01017.ts)
 - [`src/cards/ct-p01/B01048.ts`](../../../../src/cards/ct-p01/B01048.ts)
+- [`src/cards/ct-p01/B01050.ts`](../../../../src/cards/ct-p01/B01050.ts)
 - [`src/cards/ct-p01/B01053.ts`](../../../../src/cards/ct-p01/B01053.ts)
-- [`src/cards/ct-p03/B03096.ts`](../../../../src/cards/ct-p03/B03096.ts)
-- [`src/cards/ct-p05/B05083.ts`](../../../../src/cards/ct-p05/B05083.ts)
-- [`src/cards/ct-p07/B07062.ts`](../../../../src/cards/ct-p07/B07062.ts)
-- [`src/cards/ct-p07/B07091.ts`](../../../../src/cards/ct-p07/B07091.ts)
-- _...ほか 7 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- [`src/cards/ct-p03/B03007.ts`](../../../../src/cards/ct-p03/B03007.ts)
+- [`src/cards/ct-p03/B03018.ts`](../../../../src/cards/ct-p03/B03018.ts)
+- _...ほか 37 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

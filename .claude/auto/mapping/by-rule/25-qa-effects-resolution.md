@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d9b2e8cdd1a4`
+> Source hash: `52a35b5628c1`
 
 公式ルール [`25-qa-effects-resolution.md`](../../../rules/25-qa-effects-resolution.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -25,12 +25,15 @@
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 
-## 📄 参照ソース (10)
+## 📄 参照ソース (13)
 
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
 - [`src/cards/ct-d08/D08005.ts`](../../../../src/cards/ct-d08/D08005.ts)
 - [`src/cards/ct-d08/D08006.ts`](../../../../src/cards/ct-d08/D08006.ts)
 - [`src/cards/ct-p01/B01049.ts`](../../../../src/cards/ct-p01/B01049.ts)
+- [`src/cards/ct-p05/B05050.ts`](../../../../src/cards/ct-p05/B05050.ts)
+- [`src/cards/ct-p08/B08058.ts`](../../../../src/cards/ct-p08/B08058.ts)
+- [`src/cards/ct-p08/B08058P.ts`](../../../../src/cards/ct-p08/B08058P.ts)
 - [`src/engine/cond/eval.ts`](../../../../src/engine/cond/eval.ts)
 - [`src/engine/cost/pay.ts`](../../../../src/engine/cost/pay.ts)
 - [`src/engine/effect/resolver.ts`](../../../../src/engine/effect/resolver.ts)

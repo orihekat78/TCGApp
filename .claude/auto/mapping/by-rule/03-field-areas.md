@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d9b2e8cdd1a4`
+> Source hash: `52a35b5628c1`
 
 公式ルール [`03-field-areas.md`](../../../rules/03-field-areas.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,11 +22,17 @@
 
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (85)
+## 📄 参照ソース (148)
 
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
 - [`src/cards/ct-d03/D03002.ts`](../../../../src/cards/ct-d03/D03002.ts)
 - [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
+- [`src/cards/ct-d05/D05006.ts`](../../../../src/cards/ct-d05/D05006.ts)
+- [`src/cards/ct-d05/D05007.ts`](../../../../src/cards/ct-d05/D05007.ts)
+- [`src/cards/ct-d07/D07008.ts`](../../../../src/cards/ct-d07/D07008.ts)
+- [`src/cards/ct-d07/D07009.ts`](../../../../src/cards/ct-d07/D07009.ts)
+- [`src/cards/ct-d07/D07014.ts`](../../../../src/cards/ct-d07/D07014.ts)
+- [`src/cards/ct-d07/D07015.ts`](../../../../src/cards/ct-d07/D07015.ts)
 - [`src/cards/ct-d08/D08019.ts`](../../../../src/cards/ct-d08/D08019.ts)
 - [`src/cards/ct-d08/D08020.ts`](../../../../src/cards/ct-d08/D08020.ts)
 - [`src/cards/ct-d09/D09014.ts`](../../../../src/cards/ct-d09/D09014.ts)
@@ -36,12 +42,6 @@
 - [`src/cards/ct-d11/D11010.ts`](../../../../src/cards/ct-d11/D11010.ts)
 - [`src/cards/ct-d11/D11016.ts`](../../../../src/cards/ct-d11/D11016.ts)
 - [`src/cards/ct-d11/D11020.ts`](../../../../src/cards/ct-d11/D11020.ts)
+- [`src/cards/ct-p01/B01011.ts`](../../../../src/cards/ct-p01/B01011.ts)
 - [`src/cards/ct-p01/B01040.ts`](../../../../src/cards/ct-p01/B01040.ts)
-- [`src/cards/ct-p01/B01063.ts`](../../../../src/cards/ct-p01/B01063.ts)
-- [`src/cards/ct-p01/B01091.ts`](../../../../src/cards/ct-p01/B01091.ts)
-- [`src/cards/ct-p02/B02032.ts`](../../../../src/cards/ct-p02/B02032.ts)
-- [`src/cards/ct-p02/B02051.ts`](../../../../src/cards/ct-p02/B02051.ts)
-- [`src/cards/ct-p03/B03004.ts`](../../../../src/cards/ct-p03/B03004.ts)
-- [`src/cards/ct-p03/B03009.ts`](../../../../src/cards/ct-p03/B03009.ts)
-- [`src/cards/ct-p03/B03010.ts`](../../../../src/cards/ct-p03/B03010.ts)
-- _...ほか 65 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 128 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

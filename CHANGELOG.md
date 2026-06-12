@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `df76668aebe5`
+> Source hash: `2b7b57caa07f`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,249 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# Task D カードバッチ wave#1 — 解禁 35 枚 (敵対検証 workflow 通過、ALL_CARDS 1057)
+
+**Round/Phase**: 2026-06-12 session — Task D engine 拡張 (entry 2026-06-12-01) の対応カード。
+
+### 実装カード (35 枚 = 21 種 + P 版 14)
+
+| gate | カード |
+|------|--------|
+| E1 hand-count | B09092/P (キール)・B07081 (安室透)・B04064 (「消えろ!!」) |
+| E2 scene→deck | B07080/P (風見裕也)・B04011 (毛利小五郎)・B08058/P (宮野志保) |
+| E3 FILE-zone | B09021/P (服部平次)・B04068/P (安室透)・B05050 (大上祝善)・PR100/PR106 (宮野厚司) |
+| E4 grant | B08037/P (鈴木園子)・B09028 (大滝悟郎)・PR181/PR187 (目暮十三)・B09054/P (赤井秀一&世良真純)・B09041/P (京極真)・B07090/P (「えええええ!?」)・B08029/P (小も大を兼ねる)・B08032/P (鈴木園子&京極真)・B09032 (溝端理子)・B07079/P (佐藤美和子＆宮本由美)・B02014 (少年探偵団の活躍) |
+
+### authoring プロセス (6 クラスタ並列 workflow + 敵対検証)
+
+- author: 公式 api json (feature/q_a/スタッツ) から全句マッピング → 検証: 全句 1 対 1・実 engine args・
+  CardDef 整合・公式 Q&A 裁定との突合 (12 agents)。検証側は **vitest を実走して反証** し、
+  fix 9 枚 / block 4 枚を検出 → 修正版 fileContent で出荷
+- **検証が発見した必須パターン**: 明示 Pattern A (uid:'$pick'+target) を pick carrier にすると
+  human 経路 (初期 walk push) で後続 step の bind が喪失し恒久 no-op → **短縮形 carrier (runtime push →
+  continuation ctx 共有) が必須**。B07090/B09032/B07079/B02014/B08029 を是正。
+  card-authoring-convention の新規約として各カードヘッダに明記
+
+### バッチ中に追加した engine micro-fix (additive)
+
+- **guard 自己ガード除外**: アクション対象キャラ自身はガード不可 (B09028/B09054 公式 Q&A)。
+  sleepGuard 導入で「対象=sleep」と「ガード候補=sleep+flag」の集合が重なり顕在化 →
+  guard.candidates/canGuard に excludeUid 追加、呼出 4 箇所 (state-machine/AI/UI×2) に配線
+- **charGrantKeyword PA 短縮形** (B09032 解禁条件): ATOM_PICK_SPEC + handler push 分岐
+- B05066 の stale コメント修正 (「MR能力 engine 対応済」は誤り — isMR 配線は全体未実装)
+
+### DEFER (DEFERRED-INDEX.md に記録)
+
+mustGuard (B09040) / auraGrant (B09024) / partner-area 構造 (B07045/B09047/MR能力) /
+name-designation (B09003/B09108/B09111/B09052) / multi-card sceneEnter (B09010) /
+nested filter dyn (B08060/B05102) / until-N discard・reveal verb (B07076/B07100 等)。
+「パートナーエリアでも宣言できる」句は vacuous 出荷 (B07093 前例、今回 B07079/B08032/B09054 が追随)
+
+### 検証 (全 green)
+
+- full vitest **1961 pass / 1 skip / 0 fail** / typecheck clean / eslint errors 0
+- smoke:1000 exceptions=0 timeouts=0、baseline 一致 (avg 10.86)
+- e2e: 既存回帰 22 pass + 新規 `task-d-extensions-2026-06-12.spec.ts` 4 pass
+  (decoy 込み text-faithfulness: cost 対象 filter / FILE 表向き化の非降下 / fileTopMatches 分岐 / 分割名 pick filter)
+- ALL_CARDS: 1022 → **1057**
+
+# Task D — engine 拡張 高リスク wave#1 (E0〜E4) + 既存バグ3修正
+
+**Round/Phase**: 2026-06-12 session — Task D (骨格凍結の user 承認例外、engine-extension-plan 最終段)。
+🟡 678枚の優先度上位 4 gate + 横断 1 micro-extension を additive 実装。設計は 9-agent grounding
+workflow (全 file:line 実コード照合 + 敵対検証) → `.claude/specs/task-d/` 5 spec に確定後、全て TDD。
+
+### E1: hand-count condition (+3 condition)
+- `handAtLeast` / `handAtMost` / `handCountAtLeastOther` — 手札枚数の declarative 条件
+  (evidenceAtLeast 同流儀の state 直読み。「〜の場合」は effect 内 conditional、宣言ゲートは
+  AbilityDef.condition、常時系は continuous condition の 3 置き場を spec 化)
+
+### E0: pick-bind writeback (横断 pick-share 解消)
+- 任意の PA pick atom に `bind:'$picked'` → runAtom preamble が ctx.bindings へ writeback、
+  後続 atom が `uid:'$picked.uid'` で同一キャラ参照。human (continuation) / AI (初期 walk) 両経路を
+  単一 preamble でカバー。multi-pick は全 picked を蓄積
+- 「N枚まで選び、X し Y する」(1 pick 複数 atom) が DSL で表現可能に — B07093 型 DEFER の解消経路
+
+### E2: scene→deck (+1 verb, +1 cost, +1 condition 拡張)
+- `sceneToDeck` verb (PA短縮形、pos:'bottom'|'top'、rules/16 set/stacked 清掃、leave:to-remove 不発)
+- `mutate.scene.toDeck` 新設 (変装専用 toDeckBottom とは別 primitive、既存挙動不変)
+- cost `sceneToDeckBottom {target,n}` (canPay/pay/costToText、costParams.uids UI チャネル)
+- `triggerCharMatches.excludeSource` (「このキャラ以外の〜が登場」の分割名自己一致除外)
+
+### E3: FILE-zone (+2 verb, +2 condition, +1 hook, dyn +1)
+- `fileRemoveTop {player,n,bind?}` (アシストパートナー除外=Q&A 裁定、0枚で chain break) /
+  `fileFlipTop` (FileCard.faceUp 追加、既表向きは no-op=Q&A、chain 非 break の非対称を仕様化)
+- condition `fileTopMatches {side,filter}` / `triggerPlayerIs {side}`、hook `file:pop` card-triggerable 化
+- `fileAdd` にデッキ0リフレッシュ guard (rules/14)、dyn `$self.fileCount`
+
+### E4: textual-ability grant (非キーワードテキスト能力の付与)
+- 統一 reader `read.char.hasTextAbility` (turnEffects flag + 'text:' 擬似キーワードの 2 チャネル)
+- token 配線: `actionTargetsActive` (target-expander) / `sleepGuard` (guard.candidates、スタン不可) /
+  `contactImmune` (snapshotAP で正規配線 — **judge は既読・writer ゼロだった**) /
+  `removeOnTurnEnd` (**typed 済・consume 未実装だった**) + `toDeckBottomOnTurnEnd` を endTurn で consume
+- duration 拡張: '_oppTurn' / '_action' suffix + clearTurnEffects に 'action' scope 追加
+  (contact-end→action-end と abortIfMissing の両経路で清掃、rules/08 §6-7)
+- `charGrantAbility` verb — triggered ability の動的付与 (JSON descriptor、validate で closure/
+  leave:to-remove hook を拒否)。triggered.ts handleHook が def.abilities と合算走査
+- condition `charTurnEffect {key}` + `triggerCharMatches.payloadKey` (guardUid 評価)、
+  AI 経路に tryGuard/passGuard 直後 drain 追加 (granted 効果を judge 前に解決)
+- **DEFER**: mustGuard (ガード強制の AI/UI 同時追従が必要) / auraGrant (B09024) は次 wave
+
+### 既存バグ修正 (grounding 中に発見)
+- **BUG-128**: `filePopToHand` が placeholder 'card-back' を手札に push (next-hint と非対称の stale)
+- **BUG-129**: cost `fileFrom` がカードをゲームから消失させる (remove 行き欠落) + canPay の
+  アシストパートナー込み計数 (rules/21 違反)
+- **BUG-130**: B02040/B02040P/B02046/B02046P の sequence 後続 atom `uid:'$pick'` が silent no-op
+  (AP+ 不発)。E0 pick-bind で機構解消 + 4 カード修正 (全カード走査で他に同型なし)
+
+### 検証
+- 全拡張 TDD (新規 56 テスト)。full vitest **1955 pass / 1 skip / 0 fail** (回帰 0)。typecheck clean。
+- whitelist 同期: scripts/taskA-validate-specs.cjs (VERBS/CONDS/COSTS/HOOKS)
+- touched: engine 17 files (additive) / cards 4 (BUG-130) / tests 7 / specs 5 (新規 task-d/)
+
+## Task A batch#2 — 多エージェント certify workflow 確立 + harvest #1 + wave3 (opt-cost) 8枚
+
+**Round/Phase**: 2026-06-11 session — green候補 266 の一括 certify を多エージェント workflow 化し、検証済 green を収穫。
+
+### certify workflow (engine変更0 候補の grounded 判定基盤)
+- `scripts/wf-certify.mjs` — 各カードを **certify → adversarial verify** の 2 段で処理:
+  - certify agent: 全句を capability-map.txt + 実 engine code + exemplar で grounding → verdict(green/yellow) +
+    AbilityDef JSON + tier + clauseMap。⛔ gate / closure 必須は yellow / needsManual。
+  - verify agent (green のみ): 句マッピングを敵対的に refute (filter/hook/条件/枚数/optional の逸脱を fatal 判定)。
+  - サーバ request-rate throttle 回避のため **SUB=8 サブバッチ直列** で実効並列度を制限。
+- `scripts/taskA-{codegen,register,validate-specs,build-queue,next-chunk,collect-greens}.cjs` — spec→CardDef .ts 生成
+  (TSV から stats 補完、`__eventUse` closure / `__shared` 共通クラス / `needsManual` 対応)、_reuse 登録、
+  決定的 spec 検証 (verb/hook/condition/cost/filter whitelist + closure 禁止)、queue 分割、green 集約 + clone 展開。
+
+### harvest #1 (30 reps certify 済 → verified green 5 + 敵対 refute 1)
+- 実装 (engine変更0): **B01050** (enterSleep+look-1【白】→hand+ヒラメキdraw) / **B01069** (【登場時】optional 相手証拠+1→draw) /
+  **B02053** (event __eventUse → リムーブ【白】[怪盗]Lv7登場 + ヒラメキ handAddFromRemove) /
+  **B02083** (event【パートナー黄】→ forEach 相手スタン数 draw + conditional stun-pick)。
+- 敵対 verify が **B02026 を refute** (triggerCharMatches{side:opp} の no-filter が相手パートナーのアクションに誤発火 →
+  filter:{kind:'character'} 必須) — 誤 green を codegen 前に阻止。**B02073 は cost 解釈 (sleep+self-remove) 疑義で
+  e2e 確認まで DEFER** (adversarial verify は pass だが精度優先)。
+
+### wave3 (opt-cost reanimate, 手動 grounding 4枚)
+- **D05006 / B06052(+cutin) / PR138(+ヒラメキ sleep-pick) / PR144** — 「(自スリープ,)手札1リムーブしてもよい。
+  そうした場合、リムーブから〚X〛を(スリープ)登場」= `optional{ chain[ (sceneSetState$self sleep,) discard1,
+  sceneEnter from:remove ] }` (B05019 optional + D08003 chain + D01012 enterSleep 同型)。
+
+### harvest #2 (chunkB 59 reps certify → verified green 16 → 15 実装 / B02073 DEFER)
+- chunkB(B03014..B05115) を SUB=8 で完走 (usage cap 未到達)。verified green 16・refuted 0・yellow 43。
+- 実装 15枚 (全 tier2、settled パターン再録): B03014(phase:end:start) / B03018(leave look-5 event+ヒラメキsleep) /
+  B03069(continuous LP + leave optional + ヒラメキ handAddFromRemove) / B03081(event 相手キャラ手札+discard) /
+  B03101(enter sleep-pick + draw) / B03120(enterSleep+宣言 self-remove+ヒラメキ) / B04023 / B04049 / B04082(action:declare mc→handAddFromRemove) /
+  B05017(look-until 青event) / B05073(misreadX+宣言) / B05074(宣言×2) / B05090(手札からenterSleep+条件draw+cutin) /
+  B05094(leave look-until + draw) / B05098(宣言 selfToDeckBottom→handAddFromRemove)。
+- codegen 修正: character の ap/lp が TSV 空欄のデータ欠落を **0 default** (B03120 lp 空 → lp:0)。
+  collect-greens に **DEFER リスト** (.tmp/taskA/defer.json) を追加し B02073 を恒久除外。
+
+### 検証 (全グリーン / 回帰0)
+- 新規 `tests/cards/certify-harvest-wave3-batch.test.ts` (6) — optional 決定 (applyOptionalAndContinuation) +
+  opt-cost chain の discard→reanimate pick 連鎖 + event reanimate + forEach 実 flow。harvest #2 15枚は
+  adversarial verify (句単位 grounding) + reuse-batch 構造検証 + smoke + e2e でゲート (catalog-reuse 同流儀)。
+- full vitest **1899 pass / 1 skip / 0 fail**、typecheck・eslint clean、smoke:1000 **exceptions=0**、e2e **115 pass / 0 fail**。
+- ALL_CARDS **1084** (本 session: harvest#1+wave3 8 + harvest#2 15 + harvest#3 3 = 65枚 (harvest#5 +23)。**254/254 certify 完了** (green 70 auto + 5 needsManual / yellow 176)。
+- tier2 選択カードの text-faithfulness Playwright spot-check は follow-up (catalog-reuse 同様、batch ゲートで一次担保)。
+
+## Task A batch#2 wave2 — leave→hand / reanimate / forEach-all クラスタ 9 枚 (engine変更0)
+
+**Round/Phase**: 2026-06-10 session — engine変更0 カードバッチ (Task A) batch#2 wave2 (wave1 look-N 11 枚に続く)。
+
+green候補から settled パターンのみで 9 枚を実装。**engine 不変** (touched: cards/ 9新規 + _reuse/index.ts + tests 1新規)。
+spec(JSON) → `scripts/taskA-codegen.cjs` 生成、句マッピング (clause→DSL→実証元) をヘッダに記録。
+
+### 実装カード
+- **leave→hand 3 枚** — 【相手ターン中】【現場リムーブ時】handAddFromRemove (B02004 a2 同型):
+  B05034 (【緑】イベント + 同効果ヒラメキ) / B07042 ([白馬探]) /
+  B09015 ([円谷光彦] か Lv4[少年探偵団] = **filterAny OR**、buildShortFormPick L75 passthrough を実コード確認)
+- **reanimate 5 枚** — sceneEnter from:'remove'|'hand' ± enterSleep (B02004 a1 / D08024 / B05112 / D01012 同型):
+  B04007 (リムーブ→[白鳥任三郎]Lv6以下 enterSleep + ヒラメキ sleep-pick=D03013 a2 同型) /
+  B03099 (**action:declare selfOnly +【ターン1】**→リムーブ→[長野県警]Lv6以下 enterSleep) /
+  B03012 (leave 時 手札→[工藤新一]Lv6以下) / PR155・PR161 (登場時 手札→[灰原哀]Lv6以下 enterSleep + draw sequence)
+- **forEach-all 1 枚** — PR230 ジン: 【パートナー黒】登場時 +【相手ターン中】現場リムーブ時に
+  **すべてのキャラをスリープ** (B06071 同型 forEach over:{kind:'all'}→sceneSetState{$each.uid})。
+  スタン維持 (rules/03) は mutate/scene.ts setState L200 の enforce を実コード確認。
+
+### 検証 (全グリーン / 回帰0)
+- 新規 `tests/cards/leave-reanimate-foreach-batch.test.ts` **10 pass**: 実 flow (leave 発火 / decoy filter 除外 /
+  相手ターン gate 負例 / reanimate 0枚 no-op / from:hand enterSleep+draw / forEach 全 sleep + スタン維持 /
+  パートナー色 gate 負例) + 全 9 枚 descriptor 構造。
+- 学び: sceneEnter 短縮形の pick は `drainAiEffectPicks(d, new HeuristicPolicy())` を test で明示要
+  (multihook-shared-limit-batch.test.ts 同型; handAddFromRemove は walk substitution で不要)。
+- full vitest **1893 pass / 1 skip / 0 fail** (+10)、typecheck clean、eslint errors 0、docs 再生成済。
+- smoke:1000 **exceptions=0 / timeouts=0**。Playwright e2e **115 pass / 1 skip / 0 fail**。
+- ALL_CARDS: 990 → **999 枚** (batch#2 累計 21 枚、全て engine変更0)。
+
+### 水平展開 (見送り判断の記録)
+- reanimate 残 31 reps = opt-cost (「してもよい。そうした場合」) / 宣言 / multi-pick / cond-gate /
+  event カード (effect:declared matcher closure 必要 = JSON codegen 対象外: B02053/D09025 等) → 次バッチ。
+- vanilla / keyword-only green候補は **0** (全て実装済と確認)。
+
+## Task A batch#2 wave1 — look-N→手札 クラスタ 11 枚 (engine変更0)
+
+**Round/Phase**: 2026-06-10 session — engine変更0 カードバッチ (Task A) batch#2 wave1。
+
+Task A green候補 (266 sig / 348 枚) の刈り取り本体に着手。**「デッキ上から N 枚見て条件に合うカードを
+1 枚まで手札・残りをデッキ下」(look-N→hand)** クラスタの 6 rep / **11 枚** を、すべて **settled パターンの
+再録** として実装。**engine 不変** (touched: cards/ + _reuse/index.ts + tests のみ)。
+
+### 実装 11 枚 (6 rep + 色違い/パラレル member)
+- **pure look-N→hand**: B04024 (look-2 警察) / B05057 (look-2 鈴木財閥) / B06088 (look-3 警視庁) /
+  B05060 (look-2 怪盗 OR マジシャン)
+- **look-N→hand→discard + 【ヒラメキ】draw**: B03007 (look-4 イベント) / PR061・PR065 (look-4 警察 OR 怪盗)
+- **enterSleep + look-N→hand→discard**: PR180・PR186 (スリープ登場 + look-3 FBI)
+- **【相手ターン中】【現場リムーブ時】look-1→hand + 【カットイン】AP+1000**: PR084・PR090 (毛利探偵事務所)
+
+### 流用した settled パターン (engine変更0 の根拠)
+- look-N→1枚手札→残りデッキ下 = `deckRevealUntil` + `conditional(bound $matched)` + `handAddFromDeck` +
+  `deckToBottomBound` (**B01013/D01013 同型**)。trait 配列 = OR (`targetFilterToPredicate` `.some`)。
+- discard 連鎖「手札に加えた場合 手札1枚リムーブ」= conditional.then を `sequence[handAddFromDeck, discard]`
+  に (**D01013 同型**)。
+- 【ヒラメキ】draw = `evidence:remove-by-action`(optional) → `draw` (**B01011 a2 / D08013**)。
+- enterSleep = `enter`(selfOnly) → `sceneSetState{$self,sleep}` (**B01011 a1**)。
+- 【カットイン】AP+1000 = `effect:declared`(on-hand,optional,selfOnly) → `charModifyAP{$contact.byUid,+1000,contact}` (**D01010 a2**)。
+- 【相手ターン中】【現場リムーブ時】= `condition:{turn,opp}` + `leave:to-remove`(selfOnly) フック (**D01012 同型**)。
+
+### Task A 刈り取りインフラ (本 session 整備、今後の wave で再利用)
+- `green-candidates-enriched.json` (266 rep + 348 member + 全 stats、TSV join 済) /
+  `scripts/taskA-codegen.cjs` (certified spec → CardDef .ts、TSV から no/色/stat/trait 補完、trait `,|` 両 sep 分割) /
+  `scripts/taskA-register.cjs` (_reuse/index.ts へ import+配列 idempotent 登録) /
+  `.tmp/taskA/certify-brief.md` + `scripts/wf-certify.mjs` (clause grounding workflow、本 session は rate-limit で pilot 中断)。
+
+### 検証 (全グリーン / 回帰0)
+- typecheck clean / eslint errors 0 (変更ファイル) / full vitest **1883 pass / 1 skip / 0 fail** (前 1876 + 新規7) /
+  smoke:1000 **exceptions=0 / timeouts=0** (winsA=469/winsB=531) / Playwright e2e gate 回帰0。
+- 新規 flow test `tests/cards/look-n-hand-batch.test.ts`: 実 handUseCard で「登場→look-2→警察キャラ手札・非該当デッキ下」、
+  実 leave:to-remove で「相手ターン中のみ look-1→手札 (自分ターンは不発)」を assert + 全 11 枚 descriptor 構造検証。
+- ALL_CARDS: 979 → **990 枚** (本 wave +11。batch#2 累計 = B01011 + wave1 11枚 = 12 枚)。
+
+## Task A batch#2 着手 — 自己「スリープ状態で登場」パターン確立 (B01011 江戸川コナン)
+
+**Round/Phase**: 2026-06-09 session — engine変更0 カードバッチ (Task A) batch#2 の 1 枚目。
+
+Task A 再分類サーベイ (`catalog-survey-2026-06-06/`) の green候補から、`batch2-green-shortlist.md`
+A.enter+hirameki クラスタの代表として **B01011 江戸川コナン** を実装。**engine 不変** (touched: cards/ + _reuse/index.ts + tests のみ)。
+
+### 確立したパターン: 自己「スリープ状態で登場」(engine変更0)
+- 公式テキスト「このキャラはスリープ状態で登場する。」を、`enter` (selfOnly) トリガ →
+  `sceneSetState{ uid:'$self', state:'sleep' }` で表現 (D03011/D11016/B01028 a3 の `uid:'$self'` state変更パターンの sleep 版)。
+- `enter` hook は通常プレイ (handUseCard) / ネクストヒント / 効果登場 (sceneEnter) の **全経路で emit** されるため、
+  公式 Q&A「能力や効果によって登場する場合でもスリープ状態で登場しますか？→はい」を 1 つの selfOnly トリガで満たす。
+- 新 verb・新 hook・engine 変更は不要 (既存 `sceneSetState` + 配線済 `enter` listener)。
+
+### B01011 (青/Lv4/AP2000/LP2, 探偵・毛利探偵事務所・少年探偵団)
+- a1: 「このキャラはスリープ状態で登場する。」 = enter(selfOnly) → self sleep。
+- a2: 【ヒラメキ】カードを1枚引く (D08013 a2 同型)。
+- 完全同型 (純粋自己スリープ登場 + ヒラメキdraw のみ) はカタログ上 B01011 のみ。他の「スリープ状態で登場」カード
+  (B01050/B01052/D06016/B03120 等) は 【登場時】look-1 や 【宣言】が複合する別シグネチャ → 次以降の代表で扱う。
+
+### 検証 (全グリーン / 回帰0)
+- 新規機能テスト `tests/cards/enter-sleep-self-batch.test.ts`: handUseCard 実 flow で「現場にスリープ登場」を assert + def shape。
+- full vitest **1876 pass / 1 skip / 0 fail** (前回 1874 + 新規2)、typecheck clean、eslint errors 0 (変更ファイル)、docs:check 同期。
+- smoke:1000 **exceptions=0 / timeouts=0** (winsA=469/winsB=531)。Playwright e2e gate **115 pass / 1 skip / 0 fail**。
+- ALL_CARDS: 982 枚。
 
 ## 残存 5 バグ (BUG-064/111/112/113/114) を全解消 — TDD で engine 修正 + 複雑カットイン5種実装
 

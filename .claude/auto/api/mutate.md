@@ -29,17 +29,17 @@ Immer draft 上の primitive 変更操作
 | 名前 | メンバー |
 | ---- | -------- |
 | `case` _(internal: `caseOp`)_ | `init`, `toResolved` |
-| `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `grantKeyword`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `removeOneSetCard`, `revokeKeyword`, `setCard`, `setOverrideAP`, `setOverrideLP`, `setTurnEffect`, `stackCard` |
+| `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `grantAbility`, `grantKeyword`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `removeOneSetCard`, `revokeKeyword`, `setCard`, `setOverrideAP`, `setOverrideLP`, `setTurnEffect`, `stackCard` |
 | `deck` | `draw`, `peek`, `refresh`, `removeFromTop`, `reveal`, `shuffle`, `toBottom`, `toTop` |
 | `evidence` | `addFromDeck`, `flipFaceUp`, `gainCard`, `removeAt`, `removeTop`, `toDeckTop`, `toRemove` |
-| `file` | `addFromDeckTop`, `insertAssistedPartner`, `popTop`, `removeAssistedPartner` |
+| `file` | `addFromDeckTop`, `flipTop`, `insertAssistedPartner`, `popTop`, `removeAssistedPartner` |
 | `flag` | `incrDeclaredUseCount`, `resetTurnFlags`, `setAssistedThisTurn`, `setHandUseUsed`, `setNextHintUsed` |
 | `gameResult` | `clear`, `set` |
 | `hand` | `add`, `discardToRemove`, `remove`, `toDeckBottom` |
 | `log` | `append`, `clear` |
 | `partner` | `assist`, `init`, `returnFromFile`, `setLocation`, `setState`, `solveCase`, `toPartnerAreaFromScene`, `toRemovedByMR` |
 | `remove` | `add`, `removeFromHere` |
-| `scene` | `clearNamed`, `enter`, `removeToRemove`, `setState`, `switchEnter`, `toDeckBottom`, `toHand`, `tryActivate` |
+| `scene` | `clearNamed`, `enter`, `removeToRemove`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toHand`, `tryActivate` |
 | `scratchTrace` | `set` |
 
 ---

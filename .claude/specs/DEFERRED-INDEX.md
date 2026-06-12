@@ -57,3 +57,16 @@
   リンク
 - 月次 cleanup phase で本リストを見て解消可能項目を洗い出す
 - `.claude/auto/` の mapping/state docs と整合性確認は手動 (auto-gen 対象外)
+
+## Task D engine拡張 wave#1 繰越 (2026-06-12, session log 2026-06-12.md)
+
+| 項目 | 内容 | 解禁条件 |
+|------|------|---------|
+| mustGuard token | 「ガードできる場合、必ずガードする」(B09040 a2) | guard 強制の AI/UI 同時追従 (GuardPickerModal forced 化) |
+| auraGrant | 常時 aura で他キャラに triggered 付与 (B09024 a1) | continuous OWNER-ONLY 制約の解除 + 二重 queue 防止 |
+| partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | GameState slot + UI (次 wave 最終段) |
+| 「パートナーエリアでも宣言できる/発動する」句 | B07079/P・B08032/P・B09054/P (今回出荷分) + B07093/B05066 (前例) は句を vacuous 扱いで出荷 | partner-area キャラ slot 実装後に句を有効化 |
+| name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
+| multi-card sceneEnter | 「2枚まで選び登場」(B09010) | sceneEnter の cardIds multi 契約対応 |
+| nested filter dyn | 「FILE枚数以下のレベル」filter 注入 (B08060/B05102/B09052) | resolveDynArgs の深掘り解決 |
+| until-N discard / reveal verb 等 | B07076/B07100/B08047 a2/B08093 a1 | 可変 count atom / hand-reveal verb |

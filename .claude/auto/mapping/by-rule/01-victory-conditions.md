@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d9b2e8cdd1a4`
+> Source hash: `52a35b5628c1`
 
 公式ルール [`01-victory-conditions.md`](../../../rules/01-victory-conditions.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,7 +24,7 @@
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 
-## 📄 参照ソース (71)
+## 📄 参照ソース (79)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -40,10 +40,10 @@
 - [`src/cards/ct-d08/D08001.ts`](../../../../src/cards/ct-d08/D08001.ts)
 - [`src/cards/ct-d08/D08002.ts`](../../../../src/cards/ct-d08/D08002.ts)
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
+- [`src/cards/ct-d09/D09027.ts`](../../../../src/cards/ct-d09/D09027.ts)
 - [`src/cards/ct-d11/D11001.ts`](../../../../src/cards/ct-d11/D11001.ts)
 - [`src/cards/ct-d11/D11002.ts`](../../../../src/cards/ct-d11/D11002.ts)
 - [`src/cards/ct-d11/D11011.ts`](../../../../src/cards/ct-d11/D11011.ts)
 - [`src/cards/ct-d11/D11021.ts`](../../../../src/cards/ct-d11/D11021.ts)
 - [`src/cards/ct-p01/B01024.ts`](../../../../src/cards/ct-p01/B01024.ts)
-- [`src/cards/ct-p01/B01041.ts`](../../../../src/cards/ct-p01/B01041.ts)
-- _...ほか 51 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 59 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 186
-- **ファイル数**: 2758
+- **ディレクトリ数**: 196
+- **ファイル数**: 3002
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -267,6 +267,9 @@
     - `BUG-125.md`
     - `BUG-126.md`
     - `BUG-127.md`
+    - `BUG-128.md`
+    - `BUG-129.md`
+    - `BUG-130.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -396,6 +399,12 @@
     - `2026-06-06-17-task-a-exact-reprints.md`
     - `2026-06-06-18-task-a-catalog-reclassify-survey.md`
     - `2026-06-07-01-bugfix-064-111-114.md`
+    - `2026-06-09-01-task-a-batch2-self-enter-sleep.md`
+    - `2026-06-10-01-task-a-batch2-wave1-look-n-hand.md`
+    - `2026-06-10-02-task-a-batch2-wave2-leave-reanimate-foreach.md`
+    - `2026-06-11-01-task-a-certify-workflow-harvest-wave3.md`
+    - `2026-06-12-01-task-d-engine-extensions.md` — Task D — engine 拡張 高リスク wave#1 (E0〜E4) + 既存バグ3修正
+    - `2026-06-12-02-task-d-card-batch.md` — Task D カードバッチ wave#1 — 解禁 35 枚 (敵対検証 workflow 通過、ALL_CARDS 1057)
     - `README.md` — Changelog エントリ
   - **`commands/`** — Claude Code 用スラッシュコマンド定義
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -619,6 +628,32 @@
     - `smoke-2026-06-04-2.md` — Smoke 1000戦レポート — smoke-2026-06-04-012535
     - `smoke-2026-06-04.json`
     - `smoke-2026-06-04.md` — Smoke 1000戦レポート — smoke-2026-06-04-010419
+    - `smoke-2026-06-09.json`
+    - `smoke-2026-06-09.md` — Smoke 1000戦レポート — smoke-2026-06-09-095231
+    - `smoke-2026-06-10-2.json`
+    - `smoke-2026-06-10-2.md` — Smoke 1000戦レポート — smoke-2026-06-10-062652
+    - `smoke-2026-06-10.json`
+    - `smoke-2026-06-10.md` — Smoke 1000戦レポート — smoke-2026-06-10-004456
+    - `smoke-2026-06-11-2.json`
+    - `smoke-2026-06-11-2.md` — Smoke 1000戦レポート — smoke-2026-06-11-092725
+    - `smoke-2026-06-11-3.json`
+    - `smoke-2026-06-11-3.md` — Smoke 1000戦レポート — smoke-2026-06-11-103408
+    - `smoke-2026-06-11-4.json`
+    - `smoke-2026-06-11-4.md` — Smoke 1000戦レポート — smoke-2026-06-11-141135
+    - `smoke-2026-06-11-5.json`
+    - `smoke-2026-06-11-5.md` — Smoke 1000戦レポート — smoke-2026-06-11-230122
+    - `smoke-2026-06-11.json`
+    - `smoke-2026-06-11.md` — Smoke 1000戦レポート — smoke-2026-06-11-091943
+    - `smoke-2026-06-12-2.json`
+    - `smoke-2026-06-12-2.md` — Smoke 1000戦レポート — smoke-2026-06-12-044245
+    - `smoke-2026-06-12-3.json`
+    - `smoke-2026-06-12-3.md` — Smoke 1000戦レポート — smoke-2026-06-12-045711
+    - `smoke-2026-06-12-4.json`
+    - `smoke-2026-06-12-4.md` — Smoke 1000戦レポート — smoke-2026-06-12-060106
+    - `smoke-2026-06-12-5.json`
+    - `smoke-2026-06-12-5.md` — Smoke 1000戦レポート — smoke-2026-06-12-062343
+    - `smoke-2026-06-12.json`
+    - `smoke-2026-06-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-035822
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -789,6 +824,10 @@
     - `2026-06-06.md` — セッションログ — 2026-06-06 BUG-121 残課題の全解消 + 規約/教訓更新
     - `2026-06-07.md` — セッションログ — 2026-06-07 タスク A 再分類サーベイ **完走** (inline 分類)
     - `2026-06-08.md` — セッションログ — 2026-06-07〜08 残存5バグ全解消 (BUG-064/111/112/113/114)
+    - `2026-06-09.md` — セッションログ — 2026-06-09 Task A batch#2 着手 (自己スリープ登場パターン)
+    - `2026-06-10.md` — セッションログ — 2026-06-10 Task A batch#2 wave1+wave2 (計 20 枚, engine変更0)
+    - `2026-06-11.md` — セッションログ — 2026-06-11 Task A 多エージェント certify workflow 確立 + harvest #1 + wave3
+    - `2026-06-12.md` — セッションログ — 2026-06-12 Task D engine拡張 高リスク wave#1
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -971,6 +1010,7 @@
       - `classification-complete.json`
       - `classification-partial.json`
       - `classify-triage.json`
+      - `green-candidates-enriched.json`
       - `README.md` — 残カタログ再分類サーベイ (2026-06-06〜07, タスク A) — **完走**
       - `remaining-to-classify.json`
       - `task-d-priority-map.json`
@@ -993,6 +1033,9 @@
       - `15-tutorial-lesson-viewer.md` — 15 — Phase 16: チュートリアル lesson viewer (ステップ → 別画面)
       - `16-tutorial-real-board.md` — 16 — Phase 17: チュートリアル実対戦フォーマット流用 + ガイド付き実戦
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
+    - **`refactor-plan/`**
+      - `INDEX.md` — 全体リファクタリング計画 (2026-06-12 起案、ユーザー指示)
+      - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
       - `caseMonoColor.md` — caseMonoColor
@@ -1002,6 +1045,12 @@
       - `eventRemoveByAP.md` — eventRemoveByAP
       - `INDEX.md` — cards/_shared/ — 共通クラス INDEX (2026-05-11)
       - `partnerColorKeyword.md` — partnerColorKeyword
+    - **`task-d/`**
+      - `01-hand-count-condition.md` — Task D E1 — hand-count condition (手札枚数条件)
+      - `02-scene-to-deck.md` — Task D E0+E2 — pick-bind / sceneToDeck verb / sceneToDeckBottom cost
+      - `03-file-zone.md` — Task D E3 — FILE-zone verb 群 + 既存バグ2修正
+      - `04-textual-grant.md` — Task D E4 — textual ability grant (非キーワードテキスト能力の付与)
+      - `INDEX.md` — Task D — engine 拡張 (高リスク) 設計 INDEX (2026-06-12)
     - `2026-05-11-ui-action-flows.md` — 主要アクションフロー (2026-05-11)
     - `2026-05-11-ui-animation-specs.md` — アニメーション仕様 (2026-05-11)
     - `2026-05-11-ui-edge-cases.md` — エッジケース集 (2026-05-11)
@@ -1059,7 +1108,6 @@
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
-  - `scheduled_tasks.lock`
   - `settings.json` — Claude Code 設定 (権限・hooks 等)
 - **`.obsidian/`** — Obsidian Vault 設定 (ワークスペース / グラフ / プラグイン)
   - `app.json`
@@ -1149,6 +1197,47 @@
   - `match-board.html`
   - `memory.md` — memory.md — コナン TCG デザインモック プロジェクト履歴
   - `README.md` — コナン TCG メタゲーム デザインモック
+- **`dev-knowhow-kit/`**
+  - **`knowhow/`**
+    - `01-process-discipline.md` — 01. プロセス規律 — 精度 > 速度
+    - `02-knowledge-base.md` — 02. 外部一次資料のナレッジベース化（rules/ パターン）
+    - `03-bug-tracking.md` — 03. バグ管理 — 1 バグ 1 ファイル + Obsidian Base + 教訓の能動化
+    - `04-enforcement-scripts.md` — 04. 規約のスクリプト強制 — lint 群 + pre-commit
+    - `05-doc-automation.md` — 05. ドキュメント自動生成 — gen-docs + pre-commit 差分ゲート
+    - `06-verification.md` — 06. 実機検証の規律 — Playwright + decoy + 決定論 smoke
+    - `07-architecture-freeze.md` — 07. 骨格凍結原則 — コア凍結 + 周辺拡張で修正範囲を収束させる
+    - `08-agent-pipeline.md` — 08. マルチエージェント・バッチパイプライン
+    - `09-session-continuity.md` — 09. セッション継続・引き継ぎ — AI 長期プロジェクトの記憶設計
+  - **`mcp/`**
+    - `.mcp.json`
+    - `mcp-servers.md` — MCP サーバ構成（conan プロジェクトで使用中）
+  - **`scripts-portable/`**
+    - **`gen-docs/`**
+      - **`lib/`**
+        - `header.ts` — 決定論性のため絶対パスでソート
+        - `markdown.ts` — 1. 最後の文末記号で切れるか試す
+      - `gen-changelog.ts`
+      - `gen-structure.ts`
+      - `index.ts` — gen-docs dispatcher (portable 版) — conan プロジェクトから抽出
+      - `structure-dictionary.json`
+    - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
+    - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
+    - `README.md` — scripts-portable — そのまま流用できる実スクリプト
+    - `setup-and-run.ps1`
+    - `start.bat`
+    - `tsconfig.json`
+  - **`templates/`**
+    - **`changelog-entries/`**
+      - `_footer.md`
+      - `_unreleased.md`
+    - `AUDIT-template.md` — BUG フォルダ AUDIT (YYYY-MM-DD)
+    - `BUG-template.md`
+    - `CLAUDE-template.md` — CLAUDE.md — {{プロジェクト名}} プロジェクト規約（テンプレート）
+    - `index.base`
+    - `LESSONS-LEARNED-template.md` — LESSONS-LEARNED — 教訓集（テンプレート）
+    - `NEXT-SESSION-PROMPT-template.md` — 次セッション再開プロンプト（YYYY-MM-DD #N 末）— テンプレート
+  - `README.md` — dev-knowhow-kit — conan プロジェクト開発ノウハウ持ち出しキット
+  - `setup-checklist.md` — 新プロジェクト立ち上げチェックリスト
 - **`dist-meta/`**
   - **`assets/`**
     - `index-CSfC8djj.css`
@@ -1291,7 +1380,18 @@
   - `reuse-registry-check.ts` — full-registry duplicate id check
   - `reuse-validate.ts`
   - `setup-and-run.ps1`
+  - `taskA-build-queue.cjs`
+  - `taskA-codegen.cjs`
+  - `taskA-collect-greens.cjs`
+  - `taskA-enrich.cjs`
+  - `taskA-next-chunk.cjs`
+  - `taskA-register.cjs`
+  - `taskA-validate-specs.cjs`
+  - `taskA-wave1-specs.cjs`
+  - `taskA-wave2-specs.cjs`
+  - `taskA-wave3-specs.cjs`
   - `tsconfig.json`
+  - `wf-certify.mjs`
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)
     - **`policies/`**
@@ -1351,6 +1451,7 @@
       - `D02001.ts` — cards/ct-d02/D02001 服部平次 (パートナー) — auto-generated by scripts/gen-cards/…
       - `D02002.ts` — cards/ct-d02/D02002 服部平次 (キャラ) — catalog-reuse batch
       - `D02003.ts` — cards/ct-d02/D02003 服部平次 (キャラ) — auto-generated by scripts/gen-cards/…
+      - `D02004.ts` — cards/ct-d02/D02004 服部平次 (character) — Task A green候補 (engine変更0)
       - `D02006.ts` — cards/ct-d02/D02006 遠山和葉 (キャラ) — auto-generated by scripts/gen-cards/…
       - `D02007.ts` — cards/ct-d02/D02007 沖田総司 (キャラ) — auto-generated by scripts/gen-cards/…
       - `D02009.ts` — cards/ct-d02/D02009 遠山銀司郎 (キャラ) — catalog-reuse batch
@@ -1395,6 +1496,8 @@
       - `D05002.ts` — cards/ct-d05/D05002 降谷零 (キャラ) — catalog-reuse batch
       - `D05003.ts` — cards/ct-d05/D05003 降谷零 (キャラ) — auto-generated by scripts/gen-cards/…
       - `D05004.ts` — cards/ct-d05/D05004 降谷零 (キャラ) — catalog-reuse batch
+      - `D05006.ts` — cards/ct-d05/D05006 目暮十三 (character) — Task A green候補 (engine変更0)
+      - `D05007.ts` — cards/ct-d05/D05007 松田陣平 (character) — Task A green候補 (engine変更0)
       - `D05008.ts` — cards/ct-d05/D05008 松田陣平 (キャラ) — auto-generated by scripts/gen-cards/…
       - `D05009.ts` — cards/ct-d05/D05009 風見裕也 (キャラ) — auto-generated by scripts/gen-cards/…
       - `D05010.ts` — cards/ct-d05/D05010 風見裕也 (キャラ) — auto-generated by scripts/gen-cards/…
@@ -1429,8 +1532,12 @@
       - `D07005.ts` — cards/ct-d07/D07005 ジン (キャラ) — catalog-reuse batch; D07004 の絵柄違い (同 cardId)
       - `D07006.ts` — cards/ct-d07/D07006 バーボン (キャラ) — auto-generated by scripts/gen-cards/…
       - `D07007.ts` — cards/ct-d07/D07007 バーボン (キャラ) — auto-generated; D07006 の絵柄違い (同 cardId)
+      - `D07008.ts` — cards/ct-d07/D07008 ベルモット (character) — Task A green候補 (engine変更0)
+      - `D07009.ts` — cards/ct-d07/D07009 ベルモット (character) — Task A green候補 (engine変更0)
       - `D07012.ts` — cards/ct-d07/D07012 ウォッカ (キャラ) — auto-generated by scripts/gen-cards/…
       - `D07013.ts` — cards/ct-d07/D07013 ウォッカ (キャラ) — auto-generated; D07012 の絵柄違い (同 cardId)
+      - `D07014.ts` — cards/ct-d07/D07014 ライ (character) — Task A green候補 (engine変更0)
+      - `D07015.ts` — cards/ct-d07/D07015 ライ (character) — Task A green候補 (engine変更0)
       - `D07016.ts` — cards/ct-d07/D07016 キール (キャラ) — catalog-reuse batch
       - `D07017.ts` — cards/ct-d07/D07017 キール (キャラ) — catalog-reuse batch (D07016 絵柄違い /…
       - `D07019.ts` — cards/ct-d07/D07019 シェリー (キャラ) — engine-extension #5a batch (D01013 同型・黒)
@@ -1484,10 +1591,13 @@
       - `D09022.ts` — cards/ct-d09/D09022 高木渉 (キャラ) — catalog-reuse batch
       - `D09023.ts` — cards/ct-d09/D09023 高木渉 (キャラ) — catalog-reuse batch (D09022 絵柄違い /…
       - `D09024.ts` — cards/ct-d09/D09024 佐藤美和子 (キャラ) — auto-generated; D11018 の絵柄違い (同 cardId)
+      - `D09025.ts` — cards/ct-d09/D09025 空城の計 (event) — Task A green候補 (engine変更0)
       - `D09026.ts` — cards/ct-d09/D09026 安室の一撃 (イベント) — catalog-reuse batch; D05015 の絵柄違い (同 cardId)
+      - `D09027.ts` — cards/ct-d09/D09027 死亡の館、赤い壁 (case) — Task A green候補 (engine変更0)
     - **`ct-d10/`**
       - `D10001.ts` — cards/ct-d10/D10001 黒衣の騎士・スペイド（工藤新一） (パートナー) — auto-generated by scripts/…
       - `D10002.ts` — cards/ct-d10/D10002 ハート姫（毛利蘭） (パートナー) — auto-generated by scripts/gen-cards/…
+      - `D10011.ts` — cards/ct-d10/D10011 毛利小五郎 (character) — Task A certify-harvest needsManual (engi…
       - `D10012.ts` — cards/ct-d10/D10012 江戸川コナン (キャラ) — catalog-reuse batch (B04005 絵柄違い /…
       - `D10013.ts` — cards/ct-d10/D10013 江戸川コナン (キャラ) — auto-generated; B05010 の絵柄違い (同 cardId)
       - `D10014.ts` — cards/ct-d10/D10014 江戸川コナン (キャラ) — auto-generated; B05010 の絵柄違い (同 cardId)
@@ -1534,6 +1644,7 @@
       - `B01004.ts` — cards/ct-p01/B01004 毛利小五郎 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B01004P.ts` — cards/ct-p01/B01004P 毛利小五郎 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B01008.ts` — cards/ct-p01/B01008 江戸川コナン (キャラ) — catalog-reuse batch
+      - `B01011.ts` — cards/ct-p01/B01011 江戸川コナン (キャラ) — Task A batch#2 (engine変更0) A.…
       - `B01013.ts` — cards/ct-p01/B01013 妃英理 (キャラ C) — engine#5a deck-look-N batch #4
       - `B01013P.ts` — cards/ct-p01/B01013P 妃英理 (パラレル) — B01013 と同型
       - `B01016.ts` — cards/ct-p01/B01016 灰原哀 (キャラ C) — engine#5a deck-look-N batch #4 (D01013 完全同型)
@@ -1568,6 +1679,7 @@
       - `B01048.ts` — cards/ct-p01/B01048 鈴木園子 (キャラ R) — engine#5a deck-look-N batch #5 variant
       - `B01048P.ts` — cards/ct-p01/B01048P 鈴木園子 (パラレル) — B01048 と同型
       - `B01049.ts` — cards/ct-p01/B01049 怪盗キッド (キャラ) — catalog-reuse batch
+      - `B01050.ts` — cards/ct-p01/B01050 怪盗1412号 (character) — Task A green候補 (engine変更0)
       - `B01053.ts` — cards/ct-p01/B01053 工藤有希子 (キャラ C) — engine#5a deck-look-N batch #5 variant
       - `B01055.ts` — cards/ct-p01/B01055 鈴木園子 (キャラ C) — engine#5a deck-look-N batch #5 (D03009 完全同型・白…
       - `B01055P.ts` — cards/ct-p01/B01055P 鈴木園子 (パラレル) — B01055 と同型
@@ -1580,6 +1692,7 @@
       - `B01061P.ts` — cards/ct-p01/B01061P 世良真純 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B01063.ts` — cards/ct-p01/B01063 ジョディ・スターリング (キャラ) — catalog-reuse batch
       - `B01064.ts` — cards/ct-p01/B01064 赤井秀一 (キャラ) — catalog-reuse batch
+      - `B01069.ts` — cards/ct-p01/B01069 赤井務武 (character) — Task A green候補 (engine変更0)
       - `B01072.ts` — cards/ct-p01/B01072 ジョディ・スターリング (キャラ C) — engine#5a deck-look-N batch #5 (D04011…
       - `B01072P.ts` — cards/ct-p01/B01072P ジョディ・スターリング (パラレル) — B01072 と同型
       - `B01073.ts` — cards/ct-p01/B01073 世良真純 (キャラ) — auto-generated by scripts/gen-cards/…
@@ -1625,6 +1738,7 @@
       - `B02010.ts` — cards/ct-p02/B02010 灰原哀 (キャラ) — catalog-reuse batch
       - `B02011.ts` — cards/ct-p02/B02011 灰原哀 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B02011P.ts` — cards/ct-p02/B02011P 灰原哀 (キャラ) — auto-generated; B02011 の絵柄違い (同 cardId)
+      - `B02014.ts` — cards/ct-p02/B02014 少年探偵団の活躍 (イベント) — Task D batch (2026-06-12)
       - `B02015.ts` — cards/ct-p02/B02015 水色の想い出 (事件) — auto-generated by scripts/gen-cards/…
       - `B02015P.ts` — cards/ct-p02/B02015P 水色の想い出 (事件) — auto-generated; B02015 の絵柄違い (同 cardId)
       - `B02016.ts` — cards/ct-p02/B02016 服部平次 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1666,6 +1780,7 @@
       - `B02048.ts` — cards/ct-p02/B02048 鈴木園子 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B02048P.ts` — cards/ct-p02/B02048P 鈴木園子 (キャラ) — auto-generated; B02048 の絵柄違い (同 cardId)
       - `B02051.ts` — cards/ct-p02/B02051 レッドヘリング (イベント) — catalog-reuse batch
+      - `B02053.ts` — cards/ct-p02/B02053 「か、怪盗キッド!!!」 (event) — Task A green候補 (engine変更0)
       - `B02054.ts` — cards/ct-p02/B02054 怪盗キッドvs.最強金庫 (事件) — auto-generated by scripts/gen-cards/…
       - `B02054P.ts` — cards/ct-p02/B02054P 怪盗キッドvs.最強金庫 (事件) — auto-generated; B02054 の絵柄違い (同 cardId)
       - `B02055.ts` — cards/ct-p02/B02055 沖矢昴 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1691,6 +1806,7 @@
       - `B02078P.ts` — cards/ct-p02/B02078P 降谷零 (キャラ) — auto-generated; B02078 の絵柄違い (同 cardId)
       - `B02081.ts` — cards/ct-p02/B02081 宮本由美 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B02082.ts` — cards/ct-p02/B02082 山村ミサオ (キャラ) — catalog-reuse batch
+      - `B02083.ts` — cards/ct-p02/B02083 「いや、もうオトリはなしだ…」 (event) — Task A green候補 (engine変更0)
       - `B02085.ts` — cards/ct-p02/B02085 囚われた刑事 (事件) — auto-generated by scripts/gen-cards/…
       - `B02085P.ts` — cards/ct-p02/B02085P 囚われた刑事 (事件) — auto-generated; B02085 の絵柄違い (同 cardId)
       - `B02089.ts` — cards/ct-p02/B02089 探偵甲子園 (事件) — catalog-reuse batch
@@ -1703,14 +1819,18 @@
       - `B03004.ts` — cards/ct-p03/B03004 江戸川コナン (キャラ) — catalog-reuse batch
       - `B03006.ts` — cards/ct-p03/B03006 結成 少年探偵団 (キャラ) — exact-reprint batch (2026-06-06 タスクA)
       - `B03006P.ts` — cards/ct-p03/B03006P 結成 少年探偵団 (キャラ) — exact-reprint batch (2026-06-06 タスクA)
+      - `B03007.ts` — cards/ct-p03/B03007 赤木英雄 (character) — Task A green候補 (engine変更0)
       - `B03009.ts` — cards/ct-p03/B03009 栗山緑 (キャラ) — catalog-reuse batch
       - `B03010.ts` — cards/ct-p03/B03010 小嶋元太 (キャラ) — catalog-reuse batch
       - `B03010P.ts` — cards/ct-p03/B03010P 小嶋元太 (キャラ・パラレル) — catalog-reuse batch
       - `B03011.ts` — cards/ct-p03/B03011 ゴロ (キャラ) — catalog-reuse batch
+      - `B03012.ts` — cards/ct-p03/B03012 死羅神様 (character) — Task A green候補 (engine変更0)
       - `B03013.ts` — cards/ct-p03/B03013 大尉 (キャラ) — engine-extension #1 leave:to-remove batch
+      - `B03014.ts` — cards/ct-p03/B03014 塚本数美 (character) — Task A green候補 (engine変更0)
       - `B03015.ts` — cards/ct-p03/B03015 津川秀治 (キャラ) — catalog-reuse batch
       - `B03015P.ts` — cards/ct-p03/B03015P 津川秀治 (キャラ・パラレル) — catalog-reuse batch
       - `B03017.ts` — cards/ct-p03/B03017 東尾マリア (キャラ) — auto-generated by scripts/gen-cards/…
+      - `B03018.ts` — cards/ct-p03/B03018 比護隆佑 (character) — Task A green候補 (engine変更0)
       - `B03021.ts` — cards/ct-p03/B03021 吉田歩美 (キャラ) — catalog-reuse batch
       - `B03021P.ts` — cards/ct-p03/B03021P 吉田歩美 (キャラ・パラレル) — catalog-reuse batch
       - `B03022.ts` — cards/ct-p03/B03022 若狭留美 (キャラ) — catalog-reuse batch
@@ -1740,10 +1860,12 @@
       - `B03065P.ts` — cards/ct-p03/B03065P ジョディ・スターリング (パートナー) — auto-generated by scripts/gen-cards/…
       - `B03067.ts` — cards/ct-p03/B03067 沖矢昴 (キャラ) — catalog-reuse batch
       - `B03067P.ts` — cards/ct-p03/B03067P 沖矢昴 (キャラ) — catalog-reuse batch; B03067 の絵柄違い (同 cardId)
+      - `B03069.ts` — cards/ct-p03/B03069 羽田浩司 (character) — Task A green候補 (engine変更0)
       - `B03071.ts` — cards/ct-p03/B03071 新出智明 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B03071P.ts` — cards/ct-p03/B03071P 新出智明 (キャラ) — auto-generated; B03071 の絵柄違い (同 cardId)
       - `B03072.ts` — cards/ct-p03/B03072 アンドレ・キャメル (キャラ) — auto-generated by scripts/gen-cards/…
       - `B03074.ts` — cards/ct-p03/B03074 沖矢昴 (キャラ) — catalog-reuse batch
+      - `B03081.ts` — cards/ct-p03/B03081 「吹っ飛べェ!!」 (event) — Task A green候補 (engine変更0)
       - `B03082.ts` — cards/ct-p03/B03082 「彼女との約束なんでね…」 (イベント) — catalog-reuse batch
       - `B03083.ts` — cards/ct-p03/B03083 諸伏景光 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B03083P.ts` — cards/ct-p03/B03083P 諸伏景光 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1753,7 +1875,9 @@
       - `B03090P.ts` — cards/ct-p03/B03090P 佐藤美和子 (キャラ) — auto-generated; D11018 の絵柄違い (同 cardId)
       - `B03091.ts` — cards/ct-p03/B03091 高木長介 (キャラ) — engine-extension #1 leave:to-remove batch
       - `B03096.ts` — cards/ct-p03/B03096 目暮十三 (キャラ) — engine-extension reasoning-hook batch #3 (2026-…
+      - `B03099.ts` — cards/ct-p03/B03099 大和敢助 (character) — Task A green候補 (engine変更0)
       - `B03100.ts` — cards/ct-p03/B03100 弓長警部 (キャラ) — catalog-reuse batch
+      - `B03101.ts` — cards/ct-p03/B03101 横溝参悟 (character) — Task A green候補 (engine変更0)
       - `B03102.ts` — cards/ct-p03/B03102 横溝重悟 (キャラ) — engine-extension reasoning-hook batch #2 (2026-…
       - `B03103.ts` — cards/ct-p03/B03103 ヤンチャな5人組 (イベント) — catalog-reuse batch
       - `B03103P.ts` — cards/ct-p03/B03103P ヤンチャな5人組 (イベント・パラレル) — catalog-reuse batch
@@ -1769,6 +1893,7 @@
       - `B03114P.ts` — cards/ct-p03/B03114P スコッチ (キャラ, パラレル) — catalog-reuse batch
       - `B03117.ts` — cards/ct-p03/B03117 カルバドス (キャラ) — auto-generated by scripts/gen-cards/…
       - `B03119.ts` — cards/ct-p03/B03119 キャンティ (キャラ) — auto-generated by scripts/gen-cards/…
+      - `B03120.ts` — cards/ct-p03/B03120 楠田陸道 (character) — Task A green候補 (engine変更0)
       - `B03121.ts` — cards/ct-p03/B03121 コルン (キャラ) — auto-generated by scripts/gen-cards/…
       - `B03122.ts` — cards/ct-p03/B03122 シェリー (キャラ) — exact-reprint batch (2026-06-06 タスクA)
       - `B03123.ts` — cards/ct-p03/B03123 ジン (キャラ) — auto-generated by scripts/gen-cards/…
@@ -1798,9 +1923,11 @@
       - `B04005P.ts` — cards/ct-p04/B04005P 江戸川コナン (キャラ) — catalog-reuse batch (B04005 パラレル /…
       - `B04006.ts` — cards/ct-p04/B04006 工藤新一 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B04006P.ts` — cards/ct-p04/B04006P 工藤新一 (キャラ) — auto-generated; B04006 の絵柄違い (同 cardId)
+      - `B04007.ts` — cards/ct-p04/B04007 小林澄子 (character) — Task A green候補 (engine変更0)
       - `B04008.ts` — cards/ct-p04/B04008 灰原哀 (キャラ・宣言+ヒラメキ) — catalog-reuse batch
       - `B04009.ts` — cards/ct-p04/B04009 灰原哀 (キャラ) — catalog-reuse batch
       - `B04010.ts` — cards/ct-p04/B04010 本堂瑛祐 (キャラ) — engine-extension #1 leave:to-remove batch
+      - `B04011.ts` — cards/ct-p04/B04011 毛利小五郎 (キャラ) — Task D batch (2026-06-12)
       - `B04015.ts` — cards/ct-p04/B04015 ……なるほどな… (イベント) — engine-extension event→evidence batch (202…
       - `B04016.ts` — cards/ct-p04/B04016 遠山和葉 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04016P.ts` — cards/ct-p04/B04016P 遠山和葉 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1808,6 +1935,8 @@
       - `B04018P.ts` — cards/ct-p04/B04018P 遠山和葉 (パラレル) — B04018 と同型 (a2 only)
       - `B04020.ts` — cards/ct-p04/B04020 綾小路文麿 (キャラ・常時+ヒラメキ) — catalog-reuse batch
       - `B04021.ts` — cards/ct-p04/B04021 大滝悟郎 (キャラ) — auto-generated by scripts/gen-cards/…
+      - `B04023.ts` — cards/ct-p04/B04023 遠山銀司郎 (character) — Task A green候補 (engine変更0)
+      - `B04024.ts` — cards/ct-p04/B04024 服部静華 (character) — Task A green候補 (engine変更0)
       - `B04025.ts` — cards/ct-p04/B04025 マロちゃん (キャラ・カットイン+ヒラメキ) — catalog-reuse batch
       - `B04028.ts` — cards/ct-p04/B04028 そーいう事かいな… (イベント) — engine-extension event→evidence batch (20…
       - `B04029.ts` — cards/ct-p04/B04029 鈴木園子 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1828,6 +1957,7 @@
       - `B04045P.ts` — cards/ct-p04/B04045P 水無怜奈 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04047.ts` — cards/ct-p04/B04047 世良真純 (キャラ) — catalog-reuse batch
       - `B04047P.ts` — cards/ct-p04/B04047P 世良真純 (キャラ) — catalog-reuse batch; B04047 の絵柄違い (同 cardId)
+      - `B04049.ts` — cards/ct-p04/B04049 沖矢昴 (character) — Task A green候補 (engine変更0)
       - `B04050.ts` — cards/ct-p04/B04050 ジェイムズ・ブラック (キャラ) — catalog-reuse batch
       - `B04050P.ts` — cards/ct-p04/B04050P ジェイムズ・ブラック (キャラ) — catalog-reuse batch; B04050 の絵柄違い (同 car…
       - `B04052.ts` — cards/ct-p04/B04052 諸星大 (キャラ) — catalog-reuse batch
@@ -1841,12 +1971,15 @@
       - `B04059.ts` — cards/ct-p04/B04059 水無怜奈 (キャラ) — engine-extension #1 leave:to-remove batch #2 (a…
       - `B04060.ts` — cards/ct-p04/B04060 メアリー (キャラ) — catalog-reuse batch
       - `B04062.ts` — cards/ct-p04/B04062 なるほど… (イベント) — engine-extension event→evidence batch (2026-0…
+      - `B04064.ts` — cards/ct-p04/B04064 「消えろ!!」 (イベント) — Task D batch (2026-06-12)
       - `B04065.ts` — cards/ct-p04/B04065 高木渉 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04065P.ts` — cards/ct-p04/B04065P 高木渉 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04066.ts` — cards/ct-p04/B04066 松田陣平 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04066P.ts` — cards/ct-p04/B04066P 松田陣平 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04067.ts` — cards/ct-p04/B04067 目暮十三 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04067P.ts` — cards/ct-p04/B04067P 目暮十三 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B04068.ts` — cards/ct-p04/B04068 安室透 (キャラ) — Task D batch (2026-06-12)
+      - `B04068P.ts` — cards/ct-p04/B04068P 安室透 (キャラ・パラレル) — Task D batch (2026-06-12)
       - `B04070.ts` — cards/ct-p04/B04070 高木渉 (キャラ・突撃+宣言) — catalog-reuse batch
       - `B04070P.ts` — cards/ct-p04/B04070P 高木渉 (キャラ・variant) — catalog-reuse batch
       - `B04071.ts` — cards/ct-p04/B04071 風見裕也 (キャラ・登場時+ヒラメキ) — catalog-reuse batch
@@ -1857,6 +1990,7 @@
       - `B04080.ts` — cards/ct-p04/B04080 目暮十三 (キャラ・ターン終了時) — catalog-reuse batch
       - `B04081.ts` — cards/ct-p04/B04081 横溝重悟 (キャラ) — exact-reprint batch (2026-06-06 タスクA)
       - `B04081P.ts` — cards/ct-p04/B04081P 横溝重悟 (キャラ) — exact-reprint batch (2026-06-06 タスクA)
+      - `B04082.ts` — cards/ct-p04/B04082 米原桜子 (character) — Task A green候補 (engine変更0)
       - `B04086.ts` — cards/ct-p04/B04086 拳銃か！！ (イベント) — engine-extension event→evidence batch (2026-0…
       - `B04087.ts` — cards/ct-p04/B04087 ウォッカ (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04087P.ts` — cards/ct-p04/B04087P ウォッカ (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1874,6 +2008,7 @@
       - `B05004P.ts` — cards/ct-p05/B05004P 吉田歩美 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05010.ts` — cards/ct-p05/B05010 江戸川コナン (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05011.ts` — cards/ct-p05/B05011 雨城瑠璃 (キャラ) — engine-extension reasoning-hook batch #2 (2026-…
+      - `B05017.ts` — cards/ct-p05/B05017 円谷朝美 (character) — Task A green候補 (engine変更0)
       - `B05018.ts` — cards/ct-p05/B05018 円谷光彦 (キャラ) — catalog-reuse batch
       - `B05018P.ts` — cards/ct-p05/B05018P 円谷光彦 (キャラ, パラレル) — catalog-reuse batch
       - `B05019.ts` — cards/ct-p05/B05019 中道和志 (キャラ) — engine-extension optional-decision batch (2026-…
@@ -1883,6 +2018,7 @@
       - `B05026P.ts` — cards/ct-p05/B05026P 綾小路文麿 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05029.ts` — cards/ct-p05/B05029 大岡紅葉 (キャラ R) — engine#5b charSetCard batch #3 (a1 only)
       - `B05029P.ts` — cards/ct-p05/B05029P 大岡紅葉 (キャラ) — exact-reprint batch (2026-06-06 タスクA)
+      - `B05034.ts` — cards/ct-p05/B05034 国末照明 (character) — Task A green候補 (engine変更0)
       - `B05036.ts` — cards/ct-p05/B05036 服部平次 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05037.ts` — cards/ct-p05/B05037 桧原ひかる (キャラ) — catalog-reuse batch
       - `B05038.ts` — cards/ct-p05/B05038 魔犬 (キャラ) — catalog-reuse batch
@@ -1892,10 +2028,13 @@
       - `B05043P.ts` — cards/ct-p05/B05043P 黒羽快斗 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05044.ts` — cards/ct-p05/B05044 中森青子 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05044P.ts` — cards/ct-p05/B05044P 中森青子 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B05050.ts` — cards/ct-p05/B05050 大上祝善 (キャラ) — Task D batch (2026-06-12)
       - `B05053.ts` — cards/ct-p05/B05053 工藤有希子 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05054.ts` — cards/ct-p05/B05054 鈴木綾子 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05055.ts` — cards/ct-p05/B05055 鈴木史郎 (キャラ) — catalog-reuse batch
       - `B05056.ts` — cards/ct-p05/B05056 鈴木次郎吉 (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
+      - `B05057.ts` — cards/ct-p05/B05057 鈴木朋子 (character) — Task A green候補 (engine変更0)
+      - `B05060.ts` — cards/ct-p05/B05060 ファントム・レディ (character) — Task A green候補 (engine変更0)
       - `B05064.ts` — cards/ct-p05/B05064 ジェイムズ・ブラック (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05064P.ts` — cards/ct-p05/B05064P ジェイムズ・ブラック (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05065.ts` — cards/ct-p05/B05065 宮野明美 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1907,6 +2046,9 @@
       - `B05069.ts` — cards/ct-p05/B05069 ジェイムズ・ブラック (キャラ) — catalog-reuse batch
       - `B05070.ts` — cards/ct-p05/B05070 赤井秀一 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05071.ts` — cards/ct-p05/B05071 アンドレ・キャメル (キャラ) — catalog-reuse batch
+      - `B05073.ts` — cards/ct-p05/B05073 大橋彩代 (character) — Task A green候補 (engine変更0)
+      - `B05074.ts` — cards/ct-p05/B05074 小倉功雅 (character) — Task A green候補 (engine変更0)
+      - `B05076P.ts` — cards/ct-p05/B05076P ジョディ・スターリング (character) — Task A green候補 (engine変更0)
       - `B05080.ts` — cards/ct-p05/B05080 羽田秀吉 (キャラ) — engine-extension triggerChar→target batch (2026…
       - `B05083.ts` — cards/ct-p05/B05083 太閤名人の将棋盤 (事件) — catalog-reuse batch
       - `B05083P.ts` — cards/ct-p05/B05083P 太閤名人の将棋盤 (事件) — catalog-reuse batch (variant of B05083)
@@ -1921,9 +2063,12 @@
       - `B05089.ts` — cards/ct-p05/B05089 上原由衣 (キャラ) — catalog-reuse batch
       - `B05089P.ts` — cards/ct-p05/B05089P 上原由衣 (キャラ, パラレル) — catalog-reuse batch
       - `B05089P2.ts` — cards/ct-p05/B05089P2 上原由衣 (キャラ, パラレル2) — catalog-reuse batch
+      - `B05090.ts` — cards/ct-p05/B05090 安室透 (character) — Task A green候補 (engine変更0)
+      - `B05094.ts` — cards/ct-p05/B05094 甲斐玄人 (character) — Task A green候補 (engine変更0)
       - `B05095.ts` — cards/ct-p05/B05095 黒田兵衛 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05096.ts` — cards/ct-p05/B05096 佐藤美和子 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05096P.ts` — cards/ct-p05/B05096P 佐藤美和子 (キャラ) — auto-generated; B05096 の絵柄違い (同 cardId)
+      - `B05098.ts` — cards/ct-p05/B05098 白鳥任三郎 (character) — Task A green候補 (engine変更0)
       - `B05100.ts` — cards/ct-p05/B05100 千葉和伸 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B05104.ts` — cards/ct-p05/B05104 スコッチ (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05104P.ts` — cards/ct-p05/B05104P スコッチ (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1943,6 +2088,7 @@
       - `B06007.ts` — cards/ct-p06/B06007 灰原哀 (キャラ) — engine#4 sceneToHand batch #3 (a2 = enter choice…
       - `B06007P.ts` — cards/ct-p06/B06007P 灰原哀 (パラレル) — B06007 と同型
       - `B06009.ts` — cards/ct-p06/B06009 トラカゲ (キャラ) — engine-extension #1 leave:to-remove batch
+      - `B06010.ts` — cards/ct-p06/B06010 中道 (character) — Task A green候補 (engine変更0)
       - `B06014.ts` — cards/ct-p06/B06014 鬼丸猛 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B06014P.ts` — cards/ct-p06/B06014P 鬼丸猛 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B06015.ts` — cards/ct-p06/B06015 鬼丸猛 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -1963,6 +2109,7 @@
       - `B06045P.ts` — cards/ct-p06/B06045P 峰さやか (パートナー) — auto-generated by scripts/gen-cards/…
       - `B06050.ts` — cards/ct-p06/B06050 宮本武蔵 (キャラ) — カットイン実装 (BUG-114, 2026-06-07)
       - `B06050P.ts` — cards/ct-p06/B06050P 宮本武蔵 (キャラ) — auto-generated; B06050 の絵柄違い (同 cardId)
+      - `B06052.ts` — cards/ct-p06/B06052 鉄剣十郎 (character) — Task A green候補 (engine変更0)
       - `B06054.ts` — cards/ct-p06/B06054 鉄刃 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B06055.ts` — cards/ct-p06/B06055 カゲトラ (キャラ) — auto-generated by scripts/gen-cards/…
       - `B06056.ts` — cards/ct-p06/B06056 河童野ケロ吉 (キャラ) — catalog-reuse batch
@@ -1982,6 +2129,7 @@
       - `B06080.ts` — cards/ct-p06/B06080 世良真純 (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
       - `B06083.ts` — cards/ct-p06/B06083 白鳥任三郎 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B06083P.ts` — cards/ct-p06/B06083P 白鳥任三郎 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B06088.ts` — cards/ct-p06/B06088 宮本由美 (character) — Task A green候補 (engine変更0)
       - `B06089.ts` — cards/ct-p06/B06089 安室透 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B06089P.ts` — cards/ct-p06/B06089P 安室透 (キャラ) — auto-generated; B06089 の絵柄違い (同 cardId)
       - `B06091.ts` — cards/ct-p06/B06091 大江忍 (キャラ) — catalog-reuse batch
@@ -1995,6 +2143,8 @@
       - `B06097P.ts` — cards/ct-p06/B06097P コルン (パートナー) — auto-generated by scripts/gen-cards/…
       - `B06099.ts` — cards/ct-p06/B06099 ラム (キャラ) — catalog-reuse batch
       - `B06099P.ts` — cards/ct-p06/B06099P ラム (キャラ) — catalog-reuse batch
+      - `B06101.ts` — cards/ct-p06/B06101 キャンティ (character) — Task A certify-harvest needsManual (engi…
+      - `B06102.ts` — cards/ct-p06/B06102 コルン (character) — Task A green候補 (engine変更0)
     - **`ct-p07/`**
       - `B07006.ts` — cards/ct-p07/B07006 妃英理 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B07007.ts` — cards/ct-p07/B07007 沖野ヨーコ (キャラ) — catalog-reuse batch
@@ -2019,26 +2169,45 @@
       - `B07029.ts` — cards/ct-p07/B07029 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07029P.ts` — cards/ct-p07/B07029P 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07040.ts` — cards/ct-p07/B07040 黒羽千影 (キャラ) — catalog-reuse batch
+      - `B07042.ts` — cards/ct-p07/B07042 式部鹿紫子 (character) — Task A green候補 (engine変更0)
       - `B07056.ts` — cards/ct-p07/B07056 怪盗キッドと中森王女 (イベント) — catalog-reuse batch
       - `B07056P.ts` — cards/ct-p07/B07056P 怪盗キッドと中森王女 (イベント) — catalog-reuse batch
       - `B07062.ts` — cards/ct-p07/B07062 緋色の誘惑の巻 (事件) — catalog-reuse batch
       - `B07062P.ts` — cards/ct-p07/B07062P 緋色の誘惑の巻 (事件) — catalog-reuse batch
       - `B07071.ts` — cards/ct-p07/B07071 アンドレ・キャメル (キャラ) — catalog-reuse batch
+      - `B07072.ts` — cards/ct-p07/B07072 澁谷夏子 (character) — Task A green候補 (engine変更0)
+      - `B07073.ts` — cards/ct-p07/B07073 ジェイムズ・ブラック (character) — Task A green候補 (engine変更0)
+      - `B07073P.ts` — cards/ct-p07/B07073P ジェイムズ・ブラック (character) — Task A green候補 (engine変更0)
       - `B07074.ts` — cards/ct-p07/B07074 ジョディ・スターリング (キャラ) — catalog-reuse batch
+      - `B07075.ts` — cards/ct-p07/B07075 宮野エレーナ (character) — Task A green候補 (engine変更0)
+      - `B07077.ts` — cards/ct-p07/B07077 揺れる心 (case) — Task A green候補 (engine変更0)
+      - `B07077P.ts` — cards/ct-p07/B07077P 揺れる心 (case) — Task A green候補 (engine変更0)
       - `B07078.ts` — cards/ct-p07/B07078 目暮みどり (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07078P.ts` — cards/ct-p07/B07078P 目暮みどり (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B07079.ts` — cards/ct-p07/B07079 佐藤美和子＆宮本由美 (キャラ MR) — Task D batch (2026-06-12)
+      - `B07079P.ts` — cards/ct-p07/B07079P 佐藤美和子＆宮本由美 (キャラ MR・パラレル) — Task D batch (2026-06-12)
+      - `B07080.ts` — cards/ct-p07/B07080 風見裕也 (キャラ) — Task D batch (2026-06-12)
+      - `B07080P.ts` — cards/ct-p07/B07080P 風見裕也 (キャラ, パラレル SRP) — Task D batch (2026-06-12)
+      - `B07081.ts` — cards/ct-p07/B07081 安室透 (キャラ) — Task D batch (2026-06-12)
+      - `B07082.ts` — cards/ct-p07/B07082 高木渉 (character) — Task A green候補 (engine変更0)
+      - `B07082P.ts` — cards/ct-p07/B07082P 高木渉 (character) — Task A green候補 (engine変更0)
       - `B07083.ts` — cards/ct-p07/B07083 三池苗子 (キャラ) — catalog-reuse batch
       - `B07083P.ts` — cards/ct-p07/B07083P 三池苗子 (キャラ) — catalog-reuse batch; B07083 の絵柄違い (同 cardId)
       - `B07085.ts` — cards/ct-p07/B07085 榎本梓 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B07087.ts` — cards/ct-p07/B07087 白鳥任三郎 (キャラ) — catalog-reuse batch
       - `B07087P.ts` — cards/ct-p07/B07087P 白鳥任三郎 (キャラ) — catalog-reuse batch; B07087 の絵柄違い (同 cardId)
       - `B07088.ts` — cards/ct-p07/B07088 山村ミサオ (キャラ) — catalog-reuse batch
+      - `B07089.ts` — cards/ct-p07/B07089 米原桜子 (character) — Task A green候補 (engine変更0)
+      - `B07090.ts` — cards/ct-p07/B07090 「えええええ!?」 (イベント) — Task D batch (2026-06-12)
+      - `B07090P.ts` — cards/ct-p07/B07090P 「えええええ!?」 (イベント・パラレル) — Task D batch (2026-06-12)
       - `B07091.ts` — cards/ct-p07/B07091 閉ざされた秘密 (事件) — catalog-reuse batch
       - `B07091P.ts` — cards/ct-p07/B07091P 閉ざされた秘密 (事件) — catalog-reuse batch
       - `B07092.ts` — cards/ct-p07/B07092 ライ (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07092P.ts` — cards/ct-p07/B07092P ライ (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07093.ts` — cards/ct-p07/B07093 バーボン＆ライ (キャラ MR) — engine#2 charModifyLevel batch #2 (a2 onl…
       - `B07093P.ts` — cards/ct-p07/B07093P バーボン＆ライ (パラレル) — B07093 と同型
+      - `B07094.ts` — cards/ct-p07/B07094 ジン (character) — Task A green候補 (engine変更0)
+      - `B07094P.ts` — cards/ct-p07/B07094P ジン (character) — Task A green候補 (engine変更0)
       - `B07095.ts` — cards/ct-p07/B07095 ベルモット (キャラ) — catalog-reuse batch
       - `B07095P.ts` — cards/ct-p07/B07095P ベルモット (キャラ) — catalog-reuse batch; B07095 の絵柄違い (同 cardId)
       - `B07101.ts` — cards/ct-p07/B07101 テキーラ (キャラ) — catalog-reuse batch
@@ -2049,6 +2218,7 @@
       - `B08001Sec2.ts` — cards/ct-p08/B08001Sec2 灰原哀 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08007.ts` — cards/ct-p08/B08007 円谷光彦 (キャラ) — catalog-reuse batch
       - `B08009.ts` — cards/ct-p08/B08009 小林澄子 (キャラ) — catalog-reuse batch
+      - `B08011.ts` — cards/ct-p08/B08011 東尾マリア (character) — Task A green候補 (engine変更0)
       - `B08013.ts` — cards/ct-p08/B08013 毛利小五郎 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B08015.ts` — cards/ct-p08/B08015 若狭留美 (キャラ) — catalog-reuse batch
       - `B08018.ts` — cards/ct-p08/B08018 服部静華 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2056,26 +2226,39 @@
       - `B08021.ts` — cards/ct-p08/B08021 服部平次 (キャラ) — catalog-reuse batch
       - `B08021P.ts` — cards/ct-p08/B08021P 服部平次 (キャラ) — catalog-reuse batch
       - `B08022.ts` — cards/ct-p08/B08022 綾小路文麿 (キャラ) — catalog-reuse batch
+      - `B08024.ts` — cards/ct-p08/B08024 服部静華 (character) — Task A green候補 (engine変更0)
+      - `B08029.ts` — cards/ct-p08/B08029 小も大を兼ねる (イベント) — Task D batch (2026-06-12)
+      - `B08029P.ts` — cards/ct-p08/B08029P 小も大を兼ねる (イベント・パラレル) — Task D batch (2026-06-12)
       - `B08030.ts` — cards/ct-p08/B08030 執事になった理由 (事件) — catalog-reuse batch
       - `B08030P.ts` — cards/ct-p08/B08030P 執事になった理由 (事件) — catalog-reuse batch
       - `B08031.ts` — cards/ct-p08/B08031 工藤有希子 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08031P.ts` — cards/ct-p08/B08031P 工藤有希子 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B08032.ts` — cards/ct-p08/B08032 鈴木園子＆京極真 (キャラ MR) — Task D batch (2026-06-12)
+      - `B08032P.ts` — cards/ct-p08/B08032P 鈴木園子＆京極真 (キャラ MR・パラレル) — Task D batch (2026-06-12)
       - `B08034.ts` — cards/ct-p08/B08034 工藤優作 (キャラ) — engine-extension set-card 除去 batch (2026-06-06…
       - `B08034P.ts` — cards/ct-p08/B08034P 工藤優作 (キャラ, パラレル) — B08034 の再録 (set-card 除去, 2026-06-06 タスクC…
+      - `B08037.ts` — cards/ct-p08/B08037 鈴木園子 (キャラ) — Task D batch (2026-06-12)
+      - `B08037P.ts` — cards/ct-p08/B08037P 鈴木園子 (キャラ, パラレル RP) — Task D batch (2026-06-12)
       - `B08039.ts` — cards/ct-p08/B08039 鈴木綾子 (キャラ) — catalog-reuse batch
       - `B08040.ts` — cards/ct-p08/B08040 鈴木次郎吉 (キャラ) — catalog-reuse batch
       - `B08042.ts` — cards/ct-p08/B08042 メデューサ (キャラ) — engine-extension #1 leave:to-remove batch #2
+      - `B08044.ts` — cards/ct-p08/B08044 江戸川コナン誘拐事件 (case) — Task A green候補 (engine変更0)
+      - `B08044P.ts` — cards/ct-p08/B08044P 江戸川コナン誘拐事件 (case) — Task A green候補 (engine変更0)
       - `B08045.ts` — cards/ct-p08/B08045 宮野厚司 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08045P.ts` — cards/ct-p08/B08045P 宮野厚司 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B08052.ts` — cards/ct-p08/B08052 イーサン・本堂 (character) — Task A green候補 (engine変更0)
       - `B08053.ts` — cards/ct-p08/B08053 ジェイムズ・ブラック (キャラ) — auto-generated by scripts/gen-cards/…
       - `B08054.ts` — cards/ct-p08/B08054 広田正巳 (キャラ) — engine-extension #5b batch (set-card)
       - `B08055.ts` — cards/ct-p08/B08055 本堂瑛海 (キャラ) — カットイン実装 (BUG-114, 2026-06-07)
       - `B08055P.ts` — cards/ct-p08/B08055P 本堂瑛海 (キャラ) — auto-generated; B08055 の絵柄違い (同 cardId)
       - `B08056.ts` — cards/ct-p08/B08056 宮野厚司 (キャラ) — catalog-reuse batch
+      - `B08058.ts` — cards/ct-p08/B08058 宮野志保 (キャラ) — Task D batch (2026-06-12)
+      - `B08058P.ts` — cards/ct-p08/B08058P 宮野志保 (キャラ, パラレル CP) — Task D batch (2026-06-12)
       - `B08061.ts` — cards/ct-p08/B08061 黒田兵衛 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08061P.ts` — cards/ct-p08/B08061P 黒田兵衛 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08065.ts` — cards/ct-p08/B08065 大和敢助 (キャラ) — catalog-reuse batch
       - `B08065P.ts` — cards/ct-p08/B08065P 大和敢助 (キャラ) — catalog-reuse batch
+      - `B08070.ts` — cards/ct-p08/B08070 小橋葵 (character) — Task A green候補 (engine変更0)
       - `B08077Sec1.ts` — cards/ct-p08/B08077Sec1 ジン (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08077Sec2.ts` — cards/ct-p08/B08077Sec2 ジン (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08079.ts` — cards/ct-p08/B08079 ピンガ (キャラ) — engine#1 leave batch #3 + continuous AP (a1 + a2…
@@ -2084,7 +2267,9 @@
       - `B08080P.ts` — cards/ct-p08/B08080P キール (キャラ) — catalog-reuse batch
       - `B08083.ts` — cards/ct-p08/B08083 ラム (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
       - `B08084.ts` — cards/ct-p08/B08084 ウォッカ (キャラ) — engine-extension #1 leave:to-remove batch
+      - `B08088.ts` — cards/ct-p08/B08088 バーボン (character) — Task A green候補 (engine変更0)
       - `B08089.ts` — cards/ct-p08/B08089 ヘルエンジェル (キャラ) — engine-extension #1 leave:to-remove batch
+      - `B08090.ts` — cards/ct-p08/B08090 ベルモット (character) — Task A green候補 (engine変更0)
     - **`ct-p09/`**
       - `B09001.ts` — cards/ct-p09/B09001 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09001P.ts` — cards/ct-p09/B09001P 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2092,22 +2277,31 @@
       - `B09006P.ts` — cards/ct-p09/B09006P 毛利小五郎 (キャラ) — catalog-reuse batch
       - `B09007.ts` — cards/ct-p09/B09007 脇田兼則 (キャラ) — engine-extension #1 leave:to-remove batch #2 (a…
       - `B09007P.ts` — cards/ct-p09/B09007P 脇田兼則 (キャラ パラレル) — engine-extension #1 leave:to-remove batch…
+      - `B09008.ts` — cards/ct-p09/B09008 赤木英雄 (character) — Task A certify-harvest needsManual (engin…
       - `B09012.ts` — cards/ct-p09/B09012 江戸川コナン (キャラ) — auto-generated by scripts/gen-cards/…
       - `B09012P.ts` — cards/ct-p09/B09012P 江戸川コナン (キャラ) — auto-generated; B09012 の絵柄違い (同 cardId)
+      - `B09013.ts` — cards/ct-p09/B09013 妃英理 (character) — Task A green候補 (engine変更0)
       - `B09014.ts` — cards/ct-p09/B09014 小嶋元太 (キャラ) — catalog-reuse batch
+      - `B09015.ts` — cards/ct-p09/B09015 円谷朝美 (character) — Task A green候補 (engine変更0)
       - `B09018.ts` — cards/ct-p09/B09018 量子 (キャラ) — catalog-reuse batch
       - `B09020.ts` — cards/ct-p09/B09020 服部平次 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09020P.ts` — cards/ct-p09/B09020P 服部平次 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B09021.ts` — cards/ct-p09/B09021 服部平次 (キャラ) — Task D batch (2026-06-12)
+      - `B09021P.ts` — cards/ct-p09/B09021P 服部平次 (キャラ・パラレル) — Task D batch (2026-06-12)
       - `B09025.ts` — cards/ct-p09/B09025 綾小路文麿 (キャラ) — catalog-reuse batch
       - `B09025P.ts` — cards/ct-p09/B09025P 綾小路文麿 (キャラ・パラレル) — catalog-reuse batch
+      - `B09028.ts` — cards/ct-p09/B09028 大滝悟郎 (キャラ) — Task D batch (2026-06-12)
       - `B09029.ts` — cards/ct-p09/B09029 新名香保里 (キャラ) — catalog-reuse batch
       - `B09030.ts` — cards/ct-p09/B09030 服部平次 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B09030P.ts` — cards/ct-p09/B09030P 服部平次 (キャラ) — auto-generated; B09030 の絵柄違い (同 cardId)
       - `B09031.ts` — cards/ct-p09/B09031 松田左文字 (キャラ) — auto-generated by scripts/gen-cards/…
+      - `B09032.ts` — cards/ct-p09/B09032 溝端理子 (キャラ) — Task D batch (2026-06-12)
       - `B09035.ts` — cards/ct-p09/B09035 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09035P.ts` — cards/ct-p09/B09035P 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09037.ts` — cards/ct-p09/B09037 工藤優作 (キャラ) — catalog-reuse batch
       - `B09037P.ts` — cards/ct-p09/B09037P 工藤優作 (キャラ・パラレル) — catalog-reuse batch
+      - `B09041.ts` — cards/ct-p09/B09041 京極真 (キャラ) — Task D batch (2026-06-12)
+      - `B09041P.ts` — cards/ct-p09/B09041P 京極真 (キャラ・パラレル) — Task D batch (2026-06-12)
       - `B09042.ts` — cards/ct-p09/B09042 江戸川文代 (キャラ) — catalog-reuse batch
       - `B09043.ts` — cards/ct-p09/B09043 怪盗キッド (キャラ) — auto-generated by scripts/gen-cards/…
       - `B09043P.ts` — cards/ct-p09/B09043P 怪盗キッド (キャラ) — auto-generated; B09043 の絵柄違い (同 cardId)
@@ -2120,9 +2314,16 @@
       - `B09051.ts` — cards/ct-p09/B09051 ルパン (キャラ) — catalog-reuse batch
       - `B09053.ts` — cards/ct-p09/B09053 世良真純 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09053P.ts` — cards/ct-p09/B09053P 世良真純 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B09054.ts` — cards/ct-p09/B09054 赤井秀一&世良真純 (キャラ MR) — Task D batch (2026-06-12)
+      - `B09054P.ts` — cards/ct-p09/B09054P 赤井秀一&世良真純 (キャラ MR, パラレル MRP) — Task D batch (2026-06-12)
+      - `B09057.ts` — cards/ct-p09/B09057 アンドレ・キャメル (character) — Task A green候補 (engine変更0)
+      - `B09058.ts` — cards/ct-p09/B09058 羽田秀𠮷 (character) — Task A green候補 (engine変更0)
+      - `B09058P.ts` — cards/ct-p09/B09058P 羽田秀𠮷 (character) — Task A green候補 (engine変更0)
       - `B09059.ts` — cards/ct-p09/B09059 赤井秀一 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B09059P.ts` — cards/ct-p09/B09059P 赤井秀一 (キャラ) — auto-generated; B09059 の絵柄違い (同 cardId)
+      - `B09062.ts` — cards/ct-p09/B09062 ジョディ・スターリング (character) — Task A green候補 (engine変更0)
       - `B09064.ts` — cards/ct-p09/B09064 本堂瑛海 (キャラ) — catalog-reuse batch
+      - `B09065.ts` — cards/ct-p09/B09065 マーク (character) — Task A green候補 (engine変更0)
       - `B09068.ts` — cards/ct-p09/B09068 萩原千速 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09068P.ts` — cards/ct-p09/B09068P 萩原千速 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09068Sec1.ts` — cards/ct-p09/B09068Sec1 萩原千速 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2131,15 +2332,21 @@
       - `B09069P.ts` — cards/ct-p09/B09069P 横溝重悟 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09069Sec1.ts` — cards/ct-p09/B09069Sec1 横溝重悟 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09069Sec2.ts` — cards/ct-p09/B09069Sec2 横溝重悟 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B09075.ts` — cards/ct-p09/B09075 宮本由美 (character) — Task A green候補 (engine変更0)
+      - `B09075P.ts` — cards/ct-p09/B09075P 宮本由美 (character) — Task A green候補 (engine変更0)
       - `B09077.ts` — cards/ct-p09/B09077 安室透 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B09077P.ts` — cards/ct-p09/B09077P 安室透 (キャラ) — auto-generated; B09077 の絵柄違い (同 cardId)
+      - `B09082.ts` — cards/ct-p09/B09082 知苑禄江 (character) — Task A green候補 (engine変更0)
       - `B09083.ts` — cards/ct-p09/B09083 千葉和伸 (キャラ) — catalog-reuse batch
+      - `B09084.ts` — cards/ct-p09/B09084 羽鳥警部 (character) — Task A green候補 (engine変更0)
       - `B09085.ts` — cards/ct-p09/B09085 目暮十三 (キャラ) — catalog-reuse batch
       - `B09087.ts` — cards/ct-p09/B09087 諸伏景光 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B09087P.ts` — cards/ct-p09/B09087P 諸伏景光 (キャラ) — auto-generated; B09087 の絵柄違い (同 cardId)
       - `B09088.ts` — cards/ct-p09/B09088 横溝参悟 (キャラ) — catalog-reuse batch
       - `B09091.ts` — cards/ct-p09/B09091 ジン (パートナー) — auto-generated by scripts/gen-cards/…
       - `B09091P.ts` — cards/ct-p09/B09091P ジン (パートナー) — auto-generated by scripts/gen-cards/…
+      - `B09092.ts` — cards/ct-p09/B09092 キール (キャラ) — Task D batch (2026-06-12)
+      - `B09092P.ts` — cards/ct-p09/B09092P キール (キャラ パラレル) — Task D batch (2026-06-12)
       - `B09093.ts` — cards/ct-p09/B09093 ウォッカ (キャラ) — catalog-reuse batch
       - `B09093P.ts` — cards/ct-p09/B09093P ウォッカ (キャラ) — catalog-reuse batch; B09093 の絵柄違い (同 cardId)
       - `B09094.ts` — cards/ct-p09/B09094 ジン (キャラ) — catalog-reuse batch
@@ -2148,7 +2355,10 @@
       - `B09099.ts` — cards/ct-p09/B09099 バーボン (キャラ) — catalog-reuse batch
       - `B09100.ts` — cards/ct-p09/B09100 犯人 (キャラ) — catalog-reuse batch
       - `B09101.ts` — cards/ct-p09/B09101 犯人 (キャラ) — catalog-reuse batch
+      - `B09102.ts` — cards/ct-p09/B09102 毒島桐子 (character) — Task A green候補 (engine変更0)
       - `B09103.ts` — cards/ct-p09/B09103 ライ (キャラ) — catalog-reuse batch
+      - `B09106.ts` — cards/ct-p09/B09106 暗殺計画 (event) — Task A green候補 (engine変更0)
+      - `B09106P.ts` — cards/ct-p09/B09106P 暗殺計画 (event) — Task A green候補 (engine変更0)
     - **`pr-01/`**
       - `PR001.ts` — cards/pr-01/PR001 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
       - `PR002.ts` — cards/pr-01/PR002 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2180,10 +2390,13 @@
       - `PR037.ts` — cards/pr-01/PR037 平成のホームズ (事件) — auto-generated by scripts/gen-cards/…
       - `PR038.ts` — cards/pr-01/PR038 中森青子 (キャラ) — auto-generated; D03005 の絵柄違い (同 cardId)
       - `PR040.ts` — cards/pr-01/PR040 毛利蘭 (キャラ) — auto-generated; D08023 の絵柄違い (同 cardId)
+      - `PR041.ts` — cards/pr-01/PR041 大岡紅葉 (character) — Task A green候補 (engine変更0)
       - `PR043.ts` — cards/pr-01/PR043 世良真純 (キャラ) — catalog-reuse batch
       - `PR044.ts` — cards/pr-01/PR044 諸伏高明 (キャラ) — auto-generated by scripts/gen-cards/…
+      - `PR045.ts` — cards/pr-01/PR045 大岡紅葉 (character) — Task A green候補 (engine変更0)
       - `PR047.ts` — cards/pr-01/PR047 世良真純 (キャラ) — catalog-reuse batch; PR043 の絵柄違い (同 cardId 0401)
       - `PR048.ts` — cards/pr-01/PR048 諸伏高明 (キャラ) — auto-generated; PR044 の絵柄違い (同 cardId)
+      - `PR049.ts` — cards/pr-01/PR049 黒羽盗一 (character) — Task A green候補 (engine変更0)
       - `PR050.ts` — cards/pr-01/PR050 ウォッカ (キャラ) — auto-generated; B01097 の絵柄違い (同 cardId)
       - `PR051.ts` — cards/pr-01/PR051 ジン (キャラ) — auto-generated; B01098 の絵柄違い (同 cardId)
       - `PR052.ts` — cards/pr-01/PR052 江戸川コナン (キャラ) — auto-generated; B02007 の絵柄違い (同 cardId)
@@ -2194,8 +2407,10 @@
       - `PR057.ts` — cards/pr-01/PR057 灰原哀 (キャラ) — exact-reprint batch (2026-06-06 タスクA)
       - `PR058.ts` — cards/pr-01/PR058 高木渉 (キャラ) — auto-generated; D05013 の絵柄違い (同 cardId)
       - `PR059.ts` — cards/pr-01/PR059 毛利小五郎 (キャラ) — catalog-reuse batch
+      - `PR061.ts` — cards/pr-01/PR061 中森銀三 (character) — Task A green候補 (engine変更0)
       - `PR062.ts` — cards/pr-01/PR062 RUM!! (イベント) — event→evidence batch (黒)
       - `PR063.ts` — cards/pr-01/PR063 毛利小五郎 (キャラ) — catalog-reuse batch; PR059 の絵柄違い (同 cardId 0403)
+      - `PR065.ts` — cards/pr-01/PR065 中森銀三 (character) — Task A green候補 (engine変更0)
       - `PR066.ts` — cards/pr-01/PR066 RUM!! (イベント) — event→evidence batch reprint
       - `PR068.ts` — cards/pr-01/PR068 世良真純 (キャラ) — auto-generated; B01073 の絵柄違い (同 cardId)
       - `PR069.ts` — cards/pr-01/PR069 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2212,15 +2427,21 @@
       - `PR081.ts` — cards/pr-01/PR081 大岡紅葉 (キャラ) — auto-generated; B02028 の絵柄違い (同 cardId)
       - `PR082.ts` — cards/pr-01/PR082 遠山和葉 (キャラ) — auto-generated; D02006 の絵柄違い (同 cardId)
       - `PR083.ts` — cards/pr-01/PR083 中森青子 (キャラ) — auto-generated; D03005 の絵柄違い (同 cardId)
+      - `PR084.ts` — cards/pr-01/PR084 妃英理 (character) — Task A green候補 (engine変更0)
       - `PR087.ts` — cards/pr-01/PR087 バーボン (キャラ) — auto-generated by scripts/gen-cards/…
       - `PR088.ts` — cards/pr-01/PR088 遠山和葉 (キャラ) — auto-generated; D02006 の絵柄違い (同 cardId)
       - `PR089.ts` — cards/pr-01/PR089 中森青子 (キャラ) — auto-generated; D03005 の絵柄違い (同 cardId)
+      - `PR090.ts` — cards/pr-01/PR090 妃英理 (character) — Task A green候補 (engine変更0)
       - `PR093.ts` — cards/pr-01/PR093 バーボン (キャラ) — auto-generated; PR087 の絵柄違い (同 cardId)
       - `PR095.ts` — cards/pr-01/PR095 鈴木園子 (キャラ) — auto-generated; B02048 の絵柄違い (同 cardId)
       - `PR097.ts` — cards/pr-01/PR097 灰原哀 (キャラ) — auto-generated; B02011 の絵柄違い (同 cardId)
+      - `PR098.ts` — cards/pr-01/PR098 遠山和葉 (character) — Task A green候補 (engine変更0)
+      - `PR100.ts` — cards/pr-01/PR100 宮野厚司 (キャラ) — Task D batch (2026-06-12)
       - `PR101.ts` — cards/pr-01/PR101 萩原研二 (キャラ) — catalog-reuse batch
       - `PR102.ts` — cards/pr-01/PR102 毛利蘭 (キャラ) — auto-generated; D08023 の絵柄違い (同 cardId)
       - `PR103.ts` — cards/pr-01/PR103 ウォッカ (キャラ) — auto-generated; B01097 の絵柄違い (同 cardId)
+      - `PR104.ts` — cards/pr-01/PR104 遠山和葉 (character) — Task A green候補 (engine変更0)
+      - `PR106.ts` — cards/pr-01/PR106 宮野厚司 (キャラ) — Task D batch (2026-06-12)
       - `PR107.ts` — cards/pr-01/PR107 萩原研二 (キャラ) — catalog-reuse batch; PR101 の絵柄違い (同 cardId 0488)
       - `PR108.ts` — cards/pr-01/PR108 毛利蘭 (キャラ) — auto-generated; D08023 の絵柄違い (同 cardId)
       - `PR109.ts` — cards/pr-01/PR109 ウォッカ (キャラ) — auto-generated; B01097 の絵柄違い (同 cardId)
@@ -2231,6 +2452,8 @@
       - `PR114.ts` — cards/pr-01/PR114 諸伏高明 (キャラ) — auto-generated; PR044 の絵柄違い (同 cardId)
       - `PR115.ts` — cards/pr-01/PR115 隻眼の残像 (事件) — auto-generated by scripts/gen-cards/…
       - `PR116.ts` — cards/pr-01/PR116 上原由衣 (キャラ) — auto-generated; D09018 の絵柄違い (同 cardId)
+      - `PR117.ts` — cards/pr-01/PR117 江戸川コナン (character) — Task A green候補 (engine変更0)
+      - `PR118.ts` — cards/pr-01/PR118 江戸川コナン (character) — Task A green候補 (engine変更0)
       - `PR119.ts` — cards/pr-01/PR119 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
       - `PR120.ts` — cards/pr-01/PR120 工藤新一 (パートナー) — auto-generated by scripts/gen-cards/…
       - `PR121.ts` — cards/pr-01/PR121 毛利蘭 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2246,9 +2469,13 @@
       - `PR131.ts` — cards/pr-01/PR131 江戸川コナン (キャラ・プロモ) — catalog-reuse batch
       - `PR134.ts` — cards/pr-01/PR134 ベルモット (キャラ) — auto-generated; B05113 の絵柄違い (同 cardId)
       - `PR135.ts` — cards/pr-01/PR135 灰原哀 (PR) — bounce batch #2 (a1 only)
+      - `PR137.ts` — cards/pr-01/PR137 工藤優作 (character) — Task A green候補 (engine変更0)
+      - `PR138.ts` — cards/pr-01/PR138 ラム (character) — Task A green候補 (engine変更0)
       - `PR139.ts` — cards/pr-01/PR139 高木渉 (キャラ) — auto-generated; D05013 の絵柄違い (同 cardId)
       - `PR140.ts` — cards/pr-01/PR140 世良真純 (キャラ) — auto-generated; B01073 の絵柄違い (同 cardId)
       - `PR141.ts` — cards/pr-01/PR141 灰原哀 (PR variant) — bounce batch #2 (a1 only)
+      - `PR143.ts` — cards/pr-01/PR143 工藤優作 (character) — Task A green候補 (engine変更0)
+      - `PR144.ts` — cards/pr-01/PR144 ラム (character) — Task A green候補 (engine変更0)
       - `PR145.ts` — cards/pr-01/PR145 高木渉 (キャラ) — auto-generated; D05013 の絵柄違い (同 cardId)
       - `PR146.ts` — cards/pr-01/PR146 世良真純 (キャラ) — auto-generated; B01073 の絵柄違い (同 cardId)
       - `PR147.ts` — cards/pr-01/PR147 工藤新一 (キャラ) — catalog-reuse batch; D01004 の絵柄違い (同 cardId)
@@ -2258,10 +2485,14 @@
       - `PR151.ts` — cards/pr-01/PR151 降谷零 (キャラ) — catalog-reuse batch; D05002 の絵柄違い (同 cardId 0147)
       - `PR152.ts` — cards/pr-01/PR152 ジン (キャラ) — catalog-reuse batch; D07004 のプロモ (同 cardId)
       - `PR153.ts` — cards/pr-01/PR153 羽田秀𠮷 (キャラ) — auto-generated; B02064 の絵柄違い (同 cardId)
+      - `PR155.ts` — cards/pr-01/PR155 阿笠博士 (character) — Task A green候補 (engine変更0)
       - `PR156.ts` — cards/pr-01/PR156 「もう少し引き付けろ…」 (イベント) — catalog-reuse batch
+      - `PR157.ts` — cards/pr-01/PR157 安室透 (character) — Task A green候補 (engine変更0)
       - `PR159.ts` — cards/pr-01/PR159 大岡紅葉 (キャラ) — auto-generated; B02028 の絵柄違い (同 cardId)
       - `PR160.ts` — cards/pr-01/PR160 鈴木園子 (キャラ) — auto-generated; B02048 の絵柄違い (同 cardId)
+      - `PR161.ts` — cards/pr-01/PR161 阿笠博士 (character) — Task A green候補 (engine変更0)
       - `PR162.ts` — cards/pr-01/PR162 「もう少し引き付けろ…」 (イベント) — catalog-reuse batch
+      - `PR163.ts` — cards/pr-01/PR163 安室透 (character) — Task A green候補 (engine変更0)
       - `PR165.ts` — cards/pr-01/PR165 大岡紅葉 (キャラ) — auto-generated; B02028 の絵柄違い (同 cardId)
       - `PR166.ts` — cards/pr-01/PR166 鈴木園子 (キャラ) — auto-generated; B02048 の絵柄違い (同 cardId)
       - `PR167.ts` — cards/pr-01/PR167 怪盗キッド (キャラ) — auto-generated; B04033 の絵柄違い (同 cardId)
@@ -2271,10 +2502,17 @@
       - `PR172.ts` — cards/pr-01/PR172 諸伏高明 (キャラ) — auto-generated; PR044 の絵柄違い (同 cardId)
       - `PR173.ts` — cards/pr-01/PR173 毛利蘭 (キャラ) — B02004 の PR 再録 (multi-hook 共有【ターン1】, 2026-06-06 タス…
       - `PR174.ts` — cards/pr-01/PR174 毛利小五郎 (キャラ) — catalog-reuse batch
+      - `PR175.ts` — cards/pr-01/PR175 工藤新一 (character) — Task A green候補 (engine変更0)
       - `PR176.ts` — cards/pr-01/PR176 浪花の連続殺人事件 (事件) — auto-generated; B02034 の絵柄違い (同 cardId)
       - `PR177.ts` — cards/pr-01/PR177 上原由衣 (キャラ) — catalog-reuse batch (D09008 プロモ / 同 cardId 0502)
+      - `PR178.ts` — cards/pr-01/PR178 「助けて平次ィ!!!」 (event) — Task A green候補 (engine変更0)
+      - `PR180.ts` — cards/pr-01/PR180 アンドレ・キャメル (character) — Task A green候補 (engine変更0)
+      - `PR181.ts` — cards/pr-01/PR181 目暮十三 (キャラ) — Task D batch (2026-06-12)
       - `PR182.ts` — cards/pr-01/PR182 灰原哀 (キャラ) — auto-generated; B02011 の絵柄違い (同 cardId)
       - `PR183.ts` — cards/pr-01/PR183 上原由衣 (キャラ) — auto-generated; D09018 の絵柄違い (同 cardId)
+      - `PR184.ts` — cards/pr-01/PR184 「助けて平次ィ!!!」 (event) — Task A green候補 (engine変更0)
+      - `PR186.ts` — cards/pr-01/PR186 アンドレ・キャメル (character) — Task A green候補 (engine変更0)
+      - `PR187.ts` — cards/pr-01/PR187 目暮十三 (キャラ) — Task D batch (2026-06-12)
       - `PR188.ts` — cards/pr-01/PR188 灰原哀 (キャラ) — auto-generated; B02011 の絵柄違い (同 cardId)
       - `PR189.ts` — cards/pr-01/PR189 上原由衣 (キャラ) — auto-generated; D09018 の絵柄違い (同 cardId)
       - `PR190.ts` — cards/pr-01/PR190 毛利蘭 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2282,9 +2520,11 @@
       - `PR192.ts` — cards/pr-01/PR192 キャンティ (キャラ) — catalog-reuse batch
       - `PR197.ts` — cards/pr-01/PR197 怪盗キッド (キャラ) — catalog-reuse batch
       - `PR198.ts` — cards/pr-01/PR198 諸伏高明 (キャラ) — catalog-reuse batch (D09006 プロモ / 同 cardId 0501)
+      - `PR199.ts` — cards/pr-01/PR199 江戸川コナン (character) — Task A green候補 (engine変更0)
       - `PR202.ts` — cards/pr-01/PR202 キール (キャラ) — catalog-reuse batch
       - `PR203.ts` — cards/pr-01/PR203 ベルモット (キャラ) — auto-generated; B05113 の絵柄違い (同 cardId)
       - `PR204.ts` — cards/pr-01/PR204 羽田秀𠮷 (キャラ) — auto-generated; B02064 の絵柄違い (同 cardId)
+      - `PR205.ts` — cards/pr-01/PR205 江戸川コナン (character) — Task A green候補 (engine変更0)
       - `PR208.ts` — cards/pr-01/PR208 キール (キャラ) — catalog-reuse batch
       - `PR209.ts` — cards/pr-01/PR209 ベルモット (キャラ) — auto-generated; B05113 の絵柄違い (同 cardId)
       - `PR210.ts` — cards/pr-01/PR210 羽田秀𠮷 (キャラ) — auto-generated; B02064 の絵柄違い (同 cardId)
@@ -2306,6 +2546,7 @@
       - `PR227.ts` — cards/pr-01/PR227 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
       - `PR228.ts` — cards/pr-01/PR228 赤井秀一 (パートナー) — auto-generated by scripts/gen-cards/…
       - `PR229.ts` — cards/pr-01/PR229 安室透 (パートナー) — auto-generated by scripts/gen-cards/…
+      - `PR230.ts` — cards/pr-01/PR230 ジン (character) — Task A green候補 (engine変更0)
       - `PR232.ts` — cards/pr-01/PR232 中森青子 (キャラ) — auto-generated; D03005 の絵柄違い (同 cardId)
       - `PR233.ts` — cards/pr-01/PR233 赤井秀一 (キャラ) — auto-generated; B04053 の絵柄違い (同 cardId)
       - `PR235.ts` — cards/pr-01/PR235 メアリー (キャラ) — catalog-reuse batch
@@ -2330,10 +2571,13 @@
       - `PR259.ts` — cards/pr-01/PR259 萩原千速＆横溝重悟＆萩原研二＆松田陣平 (パートナー) — auto-generated by scripts/…
       - `PR260.ts` — cards/pr-01/PR260 江戸川コナン＆世良真純 (パートナー) — auto-generated by scripts/gen-cards/…
       - `PR261.ts` — cards/pr-01/PR261 萩原千速＆横溝重悟＆萩原研二＆松田陣平 (パートナー) — auto-generated by scripts/…
+      - `PR262.ts` — cards/pr-01/PR262 遠山銀司郎 (character) — Task A green候補 (engine変更0)
       - `PR266.ts` — cards/pr-01/PR266 毛利小五郎 (キャラ) — auto-generated; D01005 の絵柄違い (同 cardId)
       - `PR267.ts` — cards/pr-01/PR267 諸伏高明 (キャラ) — auto-generated; PR044 の絵柄違い (同 cardId)
+      - `PR268.ts` — cards/pr-01/PR268 遠山銀司郎 (character) — Task A green候補 (engine変更0)
       - `PR272.ts` — cards/pr-01/PR272 毛利小五郎 (キャラ) — auto-generated; D01005 の絵柄違い (同 cardId)
       - `PR273.ts` — cards/pr-01/PR273 諸伏高明 (キャラ) — auto-generated; PR044 の絵柄違い (同 cardId)
+      - `PR276.ts` — cards/pr-01/PR276 萩原千速 (character) — Task A green候補 (engine変更0)
       - `PR287.ts` — cards/pr-01/PR287 萩原千速 (キャラ) — auto-generated; D11013 の絵柄違い (同 cardId)
     - `index.ts` — cards/index — トップレベル barrel + registerAll()
   - **`engine/`** — Engine コア (React 非依存、純関数 + Immer)
@@ -2677,12 +2921,17 @@
     - `.gitkeep`
     - `bug-114-discard-scale-cutins.test.ts` — BUG-114: B05040 / B08055 カットイン — discard-bind dyn で「リムーブしたカードの level/…
     - `bug-123-character-kind.test.ts` — BUG-123: イベントを含むエリア (remove/hand) からの「キャラ」pick は kind:'character' 必須。
+    - `certify-harvest-manual-batch.test.ts` — Task A certify-harvest needsManual 手書き 3枚の検証。
+    - `certify-harvest-wave3-batch.test.ts` — Task A batch#2 — certify-harvest + wave3 (opt-cost reanimate) の novel compositio…
     - `charmodifylevel-batch.test.ts` — engine-extension #2 charModifyLevel batch — 実カード経由 sanity test
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
+    - `enter-sleep-self-batch.test.ts` — Task A batch#2 — A.enter+hirameki クラスタ: 自己「スリープ状態で登場」representative
     - `event-to-evidence-batch.test.ts` — engine-extension event→evidence batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `evidence-suppression-batch.test.ts` — engine-extension evidence 抑制 batch (2026-06-06 タスクC) — evidenceToDeck verb +
     - `generated-batch.test.ts` — tests/cards/generated-batch — 非MVP 単純カード + 複雑カットイン generator 出力の構造検証
+    - `leave-reanimate-foreach-batch.test.ts` — Task A batch#2 wave2 — leave→hand / reanimate / forEach-all クラスタ (engine変更0)
     - `leave-to-remove-batch.test.ts` — engine-extension #1 leave:to-remove batch — 実カード経由 sanity test
+    - `look-n-hand-batch.test.ts` — Task A batch#2 wave1 — look-N → 手札 クラスタ (engine変更0)
     - `look-top-n-enterSleep.test.ts` — engine-extension look-top-N batch (2026-06-06 タスクC) — D01012 灰原哀
     - `multihook-shared-limit-batch.test.ts` — engine-extension multi-hook 共有【ターン1】batch (2026-06-06 タスクC) —
     - `optional-decision-batch.test.ts` — engine-extension optional-decision batch (2026-06-06 タスクC) — 「〜してもよい」(Effect kin…
@@ -2738,6 +2987,7 @@
     - `reuse-cards-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 catalog-reuse cards (sequential hand-impl):
     - `setcard-removal-2026-06-06.spec.ts` — E2E: set-card 除去 (charRemoveSetCard) の実機 text-faithfulness 検証。
     - `spectator-speed.spec.ts` — user_request 20260521_01 #12: 観戦モード speed slider + pause/step E2E
+    - `task-d-extensions-2026-06-12.spec.ts` — E2E verification for Task D engine拡張 wave#1 (2026-06-12):
     - `triggerchar-target-2026-06-06.spec.ts` — E2E: triggerChar→target ($trigger.uid) の実機 text-faithfulness 検証。
   - **`engine/`** — Engine ユニットテスト
     - **`cards/`**
@@ -2766,6 +3016,7 @@
       - `lensf-batch2a.test.ts` — tests/engine/effect/lensf-batch2a — Lens F batch2a (BUG-102 D11019 deck splice /…
       - `multi-target-pick.test.ts` — engine-extension #3 (2026-06-05): multi-target Pattern A pick
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
+      - `pick-bind.test.ts` — Task D E0 (2026-06-12): pick-bind writeback — 1 つの pick を後続 atom で共有する機構。
       - `player-resolution-bug.test.ts` — tests/engine/effect/player-resolution-bug
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
@@ -2798,6 +3049,7 @@
       - `lensf-batch1.test.ts` — tests/engine/flow/lensf-batch1 — Lens F 監査 修正バッチ1 (BUG-099 / BUG-101)
       - `lensf-batch2b-cutin.test.ts` — tests/engine/flow/lensf-batch2b-cutin — Lens F batch2b (BUG-104 D11013 防御側カットイン)
       - `setup.test.ts` — Phase 4 Task 4.1 — engine.flow.setup
+      - `textual-grant.test.ts` — Task D E4 (2026-06-12): 非キーワードテキスト能力の付与 (textual ability token)
       - `turn.test.ts` — engine.flow.turn — Turn-level wrappers tests
     - **`integration/`**
       - `hook-queue-resolver.test.ts` — Integration: Hook → Queue → Resolver round-trip
@@ -2809,6 +3061,7 @@
       - `scratchTraceMonotonic.test.ts` — rules: 13-keywords.md, 26-qa-deck-refresh.md (一度発見済になるとずっと維持)
       - `stunSemantics.test.ts` — rules: 03-field-areas.md (スタン特殊挙動)
     - **`listeners/`**
+      - `granted-ability.test.ts` — Task D E4 (2026-06-12): charGrantAbility — triggered ability の動的付与
       - `leave-to-remove.test.ts` — Engine 拡張 #1: leave/現場リムーブ時 hook (engine-extension-plan.md step 1)
       - `triggered-limit-guard.test.ts` — tests/engine/listeners/triggered-limit-guard — BUG-096 / BUG-097
       - `triggered.test.ts` — Round 4b: triggered ability 汎用 listener テスト
@@ -2941,6 +3194,7 @@
   - `20260521_01.txt`
   - `20260522_01.txt`
 - `.gitignore` — Git 除外パターン
+- `.tmp-taskA-registered.json`
 - `analysis.txt`
 - `CHANGELOG.md` — フェーズ/Round 完了履歴 (Keep a Changelog 形式)
 - `ct-d08-cards.json` — CT-D08 デッキカードデータ (公式テキスト抽出)
