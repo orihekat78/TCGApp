@@ -1,0 +1,18 @@
+{
+  "directories": {
+    "src": "アプリケーション本体のソースコード",
+    "scripts": "規約 lint・ドキュメント生成などの開発支援スクリプト",
+    "tests": "自動テスト (unit / integration / e2e)",
+    ".claude": "Claude Code 用の規約・ナレッジベース・作業ログ",
+    ".claude/bugs": "リスク・バグ管理表 (1 バグ 1 ファイル + index.base)",
+    ".claude/rules": "外部一次資料のトピック別抜粋 (ナレッジベース)",
+    ".claude/sessions": "日次セッションログ (memory.md のローテート先)",
+    ".claude/auto": "自動生成ドキュメント (手で編集禁止)"
+  },
+  "files": {
+    "README.md": "プロジェクト紹介 + 起動方法 + 主要リンク集 (薄く保つ)",
+    "CHANGELOG.md": "マイルストーン完了履歴 (changelog-entries から自動集約)",
+    ".claude/CLAUDE.md": "プロジェクト規約 (セッション開始時に必読)",
+    ".claude/memory.md": "現セッションの作業ログ (80 行でローテート)"
+  }
+}
