@@ -47,6 +47,11 @@ export type Condition =
   | { kind: 'removeTraitAtLeast'; player: 'self' | 'opp'; trait: string | string[]; n: number }
   | { kind: 'removeNameAtLeast'; player: 'self' | 'opp'; cardName: string | string[]; n: number }
   | { kind: 'stackedCountAtLeast'; ref: TargetingRef; n: number }
+  // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態 (active/sleep/stun) 判定。
+  // 「このキャラをスリープさせ(…)てもよい。そうした場合…」を already-sleep で gate するための条件
+  // (公式qAndA PR138/PR144/B04049: 既にスリープなら「スリープさせることができないので行えません」)。
+  // ref 解決は apAtLeast/stackedCountAtLeast と同流儀 (resolveCharsForRef)。複数解決時は .some。
+  | { kind: 'charStateIs'; ref: TargetingRef; state: 'active' | 'sleep' | 'stun' }
   // D11007 a3: contact:start hook 発火時、attacker (aUid) より defender (bUid) の方が AP が高い場合
   // payload は ctx.triggerPayload に詰められ、listener から評価される (TriggerDef.matcherCondition 経由)
   | { kind: 'contactOpponentApHigher' }

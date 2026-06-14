@@ -1,39 +1,43 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-## 2026-06-15 セッション (BUG-143/144 + reanimate確認 + cluster8、local 5 commit)
+> 前セッション① (BUG-143/144 + cluster8、5 commit) は本セッション冒頭で push 済 → [sessions/2026-06-15.md](sessions/2026-06-15.md)。
 
-ユーザー要望「バグ修正 + 残り3件 + cluster8 を1セッションで」を実施。**push せず local のみ** (ユーザー指示)。
-main は origin より **5 commit 先行** (要手動 push)。各 commit は local ff-merge 済、全 gate green。
+## 2026-06-15 セッション② — BUG-145 self-sleep optional gate (self-state micro-cluster)
 
-### commit (古い順)
-1. `9911afe9` **BUG-143**: contact-scope 修正値 (apMod_contact等) を contact-end で清掃 (rules/08 §6)。
-   clearTurnEffects に scope 'contact' 新設 + state-machine contact-end で呼出。TDD red→green。smoke baseline 不変。
-2. `19cdaa23` **BUG-144**: AI のアクション[事件] ガード窓。resolveActionAgainstCase に defenderPolicy.chooseGuard
-   委譲 (ガード成立→AP判定/不成立→証拠操作)。policy.applyMove が HeuristicPolicy 渡す。smoke re-baseline
-   (avg 10.86→11.00, winsA 469→498)。
-3. `399e553d` **reanimate 確認 + BUG-145**: B06052/D05006/PR138 は前 batch で実装済 (certify-record gap のみ)。
-   certify queue 254/254 完走。B06052/D05006 正しい。**PR138 = certify false-green 検出** (a2 self-sleep optional が
-   already-sleep 時に chain break せず qAndA違反、sceneSetState 冪等) → BUG-145 起票 + DEFER (self-state condition 必要)。
-4. `764be98d` **cluster8 ヒラメキ抑止窓**: B06049 a2「アクション[事件]したとき相手の【ヒラメキ】発動しない」。
-   新機構 = TurnScopedFlags.hiramekiSuppressed + setHiramekiSuppress verb (3点同期) + handleEvidenceRemovedHook 抑止
-   + action-end 清掃 (cluster6 setEventUseBan の action-scoped 版)。敵対設計レビュー(opus)=sound 後実装。
-   B06049 解禁 (a1=D08011同型/a2=新機構/a3=PR138同型)。ALL_CARDS 1166。専用 behavioral test 4件 (制御込)。
-5. `521b7646` **BUG-144 follow-up**: bundled actionAgainstCase dispatch を passGuard に revert。playwright で
-   hirameki e2e 8件回帰検出 → bundled 経路は hirameki demo(App.tsx)/e2e 専用で防御 auto-guard が evidence 除去阻害。
-   実ゲーム防御窓は per-step (useContactFlowDriver) で対応済。BUG-144 本体 (policy.applyMove) は維持。
+origin/main は session① の 6 commit (5 + docs) を push 済 (CI green)。本セッションは BUG-145 を実装。
 
-### 全 gate (最終状態)
-- full vitest **2113 pass** (1 skip)。tsc clean。
-- smoke:1000 baseline **winsA=498/avg=11.0** (BUG-144 で re-baseline、cluster8 は no-op で不変)、timeouts/exceptions=0。
-- playwright **全 119 pass** (follow-up 後、hirameki 14/14 含む)。
-- validate-specs pass=73 fail=0。
+### やったこと
+- **BUG-145 起票時 PR138 1枚 → 水平展開で 11 能力**。「このキャラをスリープさせ(…)てもよい。そうした場合 X」型は
+  解決時 self が既スリープなら optional 自体不可 (公式qAndA PR138/PR144/B04049「スリープさせることが
+  できないので行えません」= 一般裁定)。`sceneSetState{$self,sleep}` 冪等で chain break せず違反していた。
+- **engine**: `Condition` union に `charStateIs{ref,state}` 追加 (effect.ts/eval.ts case/CONDITION_KIND_MAP/
+  taskA-validate-specs.cjs CONDS の **4点同期**)。ref 解決は apAtLeast 同流儀 (resolveCharsForRef→charRead.state)。
+- **gate は ability.condition で行う** (effect 側 `conditional` ラップは不可: resolveEffectPicks が両枝を walk →
+  optional **prompt** が surface してしまう。triggered.ts:226-238 は condition=false なら walk 前に continue =
+  非所持扱い rules/17)。最初 conditional ラップで実装→専用 test の sleep ケースで surface 検出→ability.condition に pivot。
+- 11 能力に `not{charStateIs(ref:self,state:'sleep')}` を AND マージ (codemod `.tmp/gate-codemod2.mjs`)。
+  既存 condition (B04049 partnerColor / B06102・B09065 turn / B08058・B08058P fileAtLeast) は and:[既存,gate] で維持。
+  B09013 は a2 のみ (limit turn1 別管理、a1 は他キャラ sleep で非対象)。
+- **sleep のみ gate** (active 案=DEFERRED当初案 は不採用)。⚠ 公式 **sleep/stun 非対称**: 自スタン PR157/PR163 は
+  already-sleep でも可 (qAndA「スリープ状態で登場した場合スタンさせることはできますか→はい」)。active gate なら誤阻害。
 
-### 教訓
-- **certify+adversarial-verify が green でも意味等価は自前で1対1突合** (PR138 false-green、B01011 同様)。
-- **engine 変更は playwright まで回す** — BUG-144 の bundled-path 過剰拡張は vitest/smoke を通過し playwright で初検出。
-- bundled `actionAgainstCase` (useEngineDispatch) は hirameki demo/e2e 専用 = 防御 auto-guard 禁止。
+### 対象 11 能力
+- enter 明示qAndA: PR138/PR144 (黒ずくめ reanimate) / B04049 (FBI remove)
+- enter 一般裁定: B09058/B09058P (赤井家) / B09057 (黒 summon) / B08058/B08058P (FILE8 deck-bottom)
+- ターン終了時 (到達性高): B06102 (キャンティ) / B09065 (FBI)
+- action:declare【ターン1】: B09013 a2
 
-### 未 push (要ユーザー手動 push) / 残課題
-- `git push origin main` 未実施 (5 commit)。push 後 CI 確認推奨。
-- BUG-145 (PR138 self-sleep gate) = self-state condition 追加の将来 micro-cluster。
-- bug hash 反映: BUG-143/144/145 の commit プロパティは placeholder/branch名 (要 real hash 反映、任意)。
+### gate (全 green)
+- tsc / validate-specs 73-0 / sync-whitelists 5 / **full vitest 2148** (+35 専用 test) /
+  smoke:1000 = **baseline 不変 winsA=498** (already-sleep は random play 不到達の証跡) / playwright 119 / eslint+card-lint clean。
+- 専用 test `tests/cards/bug-145-self-sleep-gate.test.ts` 35件 (primitive / 11能力 sleep→false・active→true /
+  AND-merge 非破壊 (B06102 turn) / 実パイプライン enter-hook emit で sleep→pendingEffects 空)。
+- **敵対 verify (opus×14)**: 11能力 全 CORRECT / 除外 13枚 MISS 0 / 自スタン PR157/PR163 除外確定。
+
+### 教訓 (BUG-145.md に詳細)
+- **effect 側 conditional ラップは optional prompt を gate しない** (walk が両枝を訪れる) → 状態 gate は ability.condition。
+- certify green でも意味等価は自前1対1突合 (B01011/PR138)。bug doc 1枚でも同構造を機械抽出して水平展開。
+
+### branch / 残課題
+- branch `fix/bug-145-self-sleep-gate` で commit → main ff-merge → push 予定。
+- BUG-143/144/145 の commit プロパティは branch名 placeholder (real hash 反映は任意)。

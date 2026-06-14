@@ -21,8 +21,15 @@ const a1: AbilityDef = {
     hook: 'phase:end:start'
   },
   condition: {
-    kind: 'turn',
-    player: 'self'
+    kind: 'and',
+    // BUG-145 (2026-06-15): 既存条件 AND not{charStateIs self sleep} (already-sleep gate, 公式qAndA B04049)
+    cs: [
+      {
+        kind: 'turn',
+        player: 'self'
+      },
+      { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
+    ],
   },
   effect: {
     kind: 'optional',

@@ -129,11 +129,13 @@
 | B08066 leave:remove-area 反応 | 公式Q&A は removeAreaToDeckBottom cost で《諸伏高明/0585》《大和敢助/0586》の「リムーブエリアから離れたとき」発動を要求。engine に `leave:remove-area` hook 不在 (TRIGGERED_HOOKS は leave:to-remove=現場→remove のみ) + 反応元 B05087/B05088 未実装のため安全に DEFER (盤面に反応カードなし) | それら実装時に leave:remove-area hook 追加 + removeAreaToDeckBottom pay の emit 再配線 (B05088 が同 cost 共有) |
 | removeAreaToDeckBottom UI picker | first-n fallback (sceneToDeckBottom 同 posture)。複数候補時に人間が選べない (UX 制限、rules 誤りではない) | costParams.removeAreaToDeckBottom.ids 配線済 → RemoveAreaCostPickerModal を drop-in 追加 (engine 変更不要) |
 
-## reanimate certify (2026-06-15, certify queue 254/254 完走) — PR138 latent bug
+## ✅ self-state micro-cluster (BUG-145, 2026-06-15 修正済) — self-sleep optional gate
 
-| rep | 理由 (支配 gate) | 解禁条件 |
-|-----|------------------|---------|
-| PR138 | **既に出荷済だが latent bug (BUG-145)**。a1 self-sleep optional が already-sleep 時に chain を break せず公式qAndA「できません」に違反。`sceneSetState{$self,sleep}` は冪等で no-apply を立てない。Condition union に self/source 状態条件が不在のため engine変更0 で gate 不能 | `charStateIs{ref,state}` 条件を追加し PR138 a1 を `condition:{charStateIs,ref:'$self',state:'active'}` で gate (将来 self-state micro-cluster)。B06052/D05006 は同 batch で出荷済かつ正しい (self-sleep cost なし) |
+PR138 latent bug (reanimate certify の self-1対1 レビューで検出した certify false-green) を起点に、
+「**このキャラをスリープさせ(…)てもよい。そうした場合、X**」型の self-sleep optional が already-sleep 時に
+gate されない問題を解決。`charStateIs{ref,state}` 条件を追加し (engine 4点同期)、対象 **11 能力**に
+`condition: not{charStateIs(ref:self, state:'sleep')}` を AND マージ。詳細・カード一覧は [BUG-145](../bugs/BUG-145.md)。
 
-> 注: reanimate 族 B06052 / D05006 / PR138 は前 batch で実装・_reuse 登録・ALL_CARDS live 済 (certify-record gap のみだった)。
-> 2026-06-15 に certify+adversarial-verify を通し 254/254 完走。B06052/D05006 は意味等価レビュー pass、PR138 のみ上記 latent bug。
+- gate は **sleep のみ** (active 案は不採用)。自スタン (PR157/PR163) は already-sleep でも可 = 公式 sleep/stun 非対称。
+- 敵対 verify (opus×14): 11 能力 全 CORRECT / 除外 13枚 MISS 0。
+- B06052 / D05006 は同 reanimate 族だが self-sleep cost なしのため正しく対象外 (前 batch 出荷済・意味等価 pass)。

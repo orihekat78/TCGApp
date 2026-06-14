@@ -50,6 +50,9 @@ const a2: AbilityDef = {
   id: 'a2',
   type: 'triggered',
   scope: 'on-scene',
+  // BUG-145 (2026-06-15): already-sleep なら「このキャラをスリープさせ…てもよい」は行えない (公式qAndA PR138/PR144/B04049)。
+  // ability.condition で gate → self が sleep のとき能力非所持扱い = optional surface も出さない (rules/17)。
+  condition: { kind: 'not', c: { kind: 'charStateIs', ref: { kind: 'self' }, state: 'sleep' } },
   limit: {
     kind: 'turn',
     n: 1

@@ -208,6 +208,14 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const uids = resolveCharsForRef(state, cond.ref, ctx);
       return uids.some(uid => charRead.stackedCount(state, uid) >= cond.n);
     }
+    // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態判定。
+    // 「このキャラをスリープさせ(…)てもよい」を already-sleep で gate する用途
+    // (PR138/PR144/B04049 等を conditional{if:not{charStateIs $self sleep}} でラップ)。
+    // resolveCharsForRef は scene の char uid のみ返す (空なら .some=false)。
+    case 'charStateIs': {
+      const uids = resolveCharsForRef(state, cond.ref, ctx);
+      return uids.some(uid => charRead.state(state, uid) === cond.state);
+    }
     case 'contactOpponentApHigher': {
       // D11007 a3: contact:start payload から aUid (attacker) / bUid (defender) を取得。
       // 自分 (ctx.source.uid) が攻撃者 (aUid) として、相手 (bUid) の AP が自分より高いコンタクトのみ true。
@@ -354,7 +362,8 @@ const CONDITION_KIND_MAP = {
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
   removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true,
-  stackedCountAtLeast: true, contactOpponentApHigher: true, guardedBySelf: true,
+  stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
+  contactOpponentApHigher: true, guardedBySelf: true,
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
   charTurnEffect: true, // Task D E4 (2026-06-12)
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)

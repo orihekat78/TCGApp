@@ -51,6 +51,8 @@ const CONDS = new Set([
   'fileTopMatches', 'triggerPlayerIs', 'charTurnEffect',
   // engine拡張 wave#2 cluster3 (2026-06-13)
   'triggerActionKind',
+  // BUG-145 self-state micro-cluster (2026-06-15)
+  'charStateIs',
 ]);
 
 const COSTS = new Set([

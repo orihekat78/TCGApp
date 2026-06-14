@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3150
+- **ファイル数**: 3155
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -432,6 +432,7 @@
     - `2026-06-14-05-cluster7-hand-count-cards.md` — cluster7 — engine変更0 card-authoring (hand-count condition 初消費) 2枚
     - `2026-06-15-01-engine-bugfixes-143-144.md` — engine bugfix — BUG-143 / BUG-144 (cluster3 敵対レビュー発見分の解消)
     - `2026-06-15-02-engine-wave2-cluster8.md` — cluster8 — ヒラメキ抑止窓 (action-scoped hirameki suppress) 1枚
+    - `2026-06-15-03-bug145-self-sleep-gate.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -702,6 +703,8 @@
     - `smoke-2026-06-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-035822
     - `smoke-2026-06-13.json`
     - `smoke-2026-06-13.md` — Smoke 1000戦レポート — smoke-2026-06-13-000954
+    - `smoke-2026-06-14-10.json`
+    - `smoke-2026-06-14-10.md` — Smoke 1000戦レポート — smoke-2026-06-14-231808
     - `smoke-2026-06-14-2.json`
     - `smoke-2026-06-14-2.md` — Smoke 1000戦レポート — smoke-2026-06-14-111026
     - `smoke-2026-06-14-3.json`
@@ -897,6 +900,7 @@
     - `2026-06-13.md` — 作業ログ — 名探偵コナンTCG プロジェクト
     - `2026-06-14-2.md` — 2026-06-14 (2) — engine拡張 wave#2 cluster4 (remove-area → deck-bottom)
     - `2026-06-14.md` — セッションログ 2026-06-14 — engine拡張 wave#2 cluster3 (action-lifecycle trigger)
+    - `2026-06-15.md` — 2026-06-15 セッション① — BUG-143/144 + reanimate確認 + cluster8 (local 5 commit)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -3058,6 +3062,7 @@
     - `.gitkeep`
     - `bug-114-discard-scale-cutins.test.ts` — BUG-114: B05040 / B08055 カットイン — discard-bind dyn で「リムーブしたカードの level/…
     - `bug-123-character-kind.test.ts` — BUG-123: イベントを含むエリア (remove/hand) からの「キャラ」pick は kind:'character' 必須。
+    - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15):
     - `certify-harvest-manual-batch.test.ts` — Task A certify-harvest needsManual 手書き 3枚の検証。
     - `certify-harvest-wave3-batch.test.ts` — Task A batch#2 — certify-harvest + wave3 (opt-cost reanimate) の novel compositio…
     - `charmodifylevel-batch.test.ts` — engine-extension #2 charModifyLevel batch — 実カード経由 sanity test
