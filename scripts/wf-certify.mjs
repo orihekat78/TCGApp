@@ -159,12 +159,16 @@ if (typeof recs === 'string') recs = JSON.parse(recs);
 if (!Array.isArray(recs)) throw new Error('args is not an array: ' + typeof recs);
 
 // 各 item: certify → green なら adversarial verify。
+// 2026-06-14: certify (実作業) も verify (難判断=敵対的反証) も `model:'opus'` を最初から明示する。
+// 理由: claude-fable-5 が agent で利用不可 (cluster3 で verify lens 全失敗)。本体モデル継承だと
+// セッションが fable のとき落ちるため、ここで opus を固定して「opus を最初から」を保証する
+// (CLAUDE.md トークン運用ルール / card-wave SKILL §2)。fable 再開時は 'fable' に戻す。
 async function certifyThenVerify(item) {
   const rep = repId(item);
-  const spec = await agent(certifyPrompt(item), { label: `certify:${rep}`, phase: 'Certify', schema: SCHEMA });
+  const spec = await agent(certifyPrompt(item), { label: `certify:${rep}`, phase: 'Certify', schema: SCHEMA, model: 'opus' });
   if (!spec) return null;
   if (spec.verdict !== 'green') return { spec, verify: null };
-  const verify = await agent(verifyPrompt(item, spec), { label: `verify:${rep}`, phase: 'Verify', schema: VERIFY_SCHEMA });
+  const verify = await agent(verifyPrompt(item, spec), { label: `verify:${rep}`, phase: 'Verify', schema: VERIFY_SCHEMA, model: 'opus' });
   return { spec, verify };
 }
 

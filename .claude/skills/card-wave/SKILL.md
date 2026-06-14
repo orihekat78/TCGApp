@@ -5,8 +5,10 @@ description: Use when implementing a batch/wave of cards (green候補刈り取�
 
 # card-wave — カード実装 wave 実行手順
 
-**opus 主体** (オーケストレーション・実作業)。fable は難判断のみ: certify の adversarial verify /
-カードテキスト⇔DSL の意味等価判定 / ルール裁定解釈。sonnet は機械 lens (whitelist 照合・diff 突合) のみ。
+**opus 主体** (オーケストレーション・実作業・難判断とも)。難判断 (certify の adversarial verify /
+カードテキスト⇔DSL の意味等価判定 / ルール裁定解釈) も **開始時点から `model:'opus'`** を指定する
+(2026-06-14 改定: `claude-fable-5` が agent で利用不可。fable を先に試さない)。
+sonnet は機械 lens (whitelist 照合・diff 突合) のみ。fable 再開時は難判断を fable に戻す。
 
 ## 1. 着手前
 
@@ -20,7 +22,9 @@ description: Use when implementing a batch/wave of cards (green候補刈り取�
 
 - **green候補は未certify なら信用しない** (実証元の誤り例: B01011)。全句を公式テキスト⇔
   `.claude/rules/` ⇔実 engine コードで裏取り。`scripts/wf-certify.mjs` (grounding→adversarial verify、
-  verify lens は `model:'fable'`)。verdict は `.tmp/certify/<rep>.json` に durable 保存
+  verify lens は `model:'opus'` ← fable 利用不可のため 2026-06-14 変更)。verdict は `.tmp/certify/<rep>.json` に durable 保存
+- **難判断 agent (certify / 意味等価突合 / 敵対設計レビュー) は最初から `model:'opus'`** で呼ぶ。
+  fable を先に試して失敗 → opus 再走 は無駄なので行わない (2026-06-14 cluster3: fable verify 全失敗 → opus 再 verify で 15/15 equivalent)
 - yellow / cost 解釈疑義は実装せず DEFER (DEFERRED-INDEX へ理由付き追記)
 - member ごとに TSV から実テキスト再取得 (signature は色/数/名を抽象化している)
 

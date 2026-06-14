@@ -5,8 +5,10 @@ description: Use when executing a phase of the refactor plan (.claude/specs/refa
 
 # refactor-phase — リファクタフェーズ実行手順
 
-挙動完全不変が大前提 (骨格凍結の例外「動作不変な内部最適化」)。**Fable 主体**で実施する
-(セッション本体 /model fable 推奨。subagent 規約: 実作業 opus / 難判断 fable / 機械 lens のみ sonnet)。
+挙動完全不変が大前提 (骨格凍結の例外「動作不変な内部最適化」)。
+subagent 規約: 実作業 opus / **難判断も当面 opus を最初から指定** (2026-06-14 改定: `claude-fable-5` が
+agent で利用不可。fable を先に試さない) / 機械 lens のみ sonnet。
+セッション本体は /model opus (fable 不安定のため当面)。fable 再開時は難判断・本体を fable に戻す。
 
 ## 1. 着手前
 
@@ -36,7 +38,7 @@ description: Use when executing a phase of the refactor plan (.claude/specs/refa
 
 ## 4. レビュー (right-sizing)
 
-- 低〜中リスク: 決定論検証 + **1 lens** (Agent tool、refactor は `model:'fable'` か opus)。
+- 低〜中リスク: 決定論検証 + **1 lens** (Agent tool、`model:'opus'`。fable 利用不可のため 2026-06-14 変更)。
   高リスク (Phase 3 系): フルパネル Workflow
 - reviewer に vitest 等を再実走させない — メインループの結果をプロンプトに書いて渡す
 - 指摘は同フェーズ内で全解消してから次へ

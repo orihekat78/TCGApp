@@ -154,8 +154,15 @@
 ### モデル段階化 (workflow / subagent)
 
 - **基本作業は opus 主体**: 通常作業 (カード実装/調査/ドキュメント等) のオーケストレーションと
-  実作業は `model:'opus'` を明示。難判断 (ルール裁定の解釈、カードテキスト⇔DSL の意味等価判定、
-  敵対的反証) に限り `model:'fable'` を呼び出す
+  実作業は `model:'opus'` を明示。
+- **難判断も当面 opus を最初から使う (fable は使わない)** (2026-06-14 改定): `claude-fable-5` が
+  workflow agent / subagent で利用不可になっている (2026-06-14 cluster3 で verify lens が
+  「model not available」で全失敗)。fable を先に試すのは呼び出し/レイテンシの無駄 + ワークフロー途中
+  失敗のリスクのため、難判断 (ルール裁定の解釈、カードテキスト⇔DSL の意味等価判定、敵対的反証) も
+  **開始時点から `model:'opus'`** を指定する。fable で行っていた「やり方・思考」(grounding→敵対的反証、
+  意味等価の 1対1 突合) はモデル非依存で opus でそのまま保たれる (cluster3 で opus 突合 15/15 equivalent を実証)。
+  最上位ティアの単発判断力の差は **冗長な opus パス** (multi-vote / perspective-diverse lens) で補償する。
+  fable が再び安定利用可能になったら難判断を fable に戻す
 - **リファクタリングレベルの作業は Fable 主体**: refactor-plan のフェーズ群・骨格 (engine) に
   触れる変更は Fable がオーケストレーション・実作業を主導する
   (セッション本体のモデルは /model で切替: リファクタ系セッション=fable / 通常セッション=opus 推奨)
