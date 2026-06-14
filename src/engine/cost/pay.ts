@@ -93,6 +93,29 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       }
       return;
     }
+    // cluster4 (2026-06-14): 〚リムーブエリアにある…を n 枚デッキの下に移す〛コスト。
+    // sceneToDeckBottom の area:'remove' 版。UI 選択 (ctx.dyn.costParams.removeAreaToDeckBottom.ids)
+    // 優先、無ければ pickCandidates (ctx.picked → 先頭 n) fallback。p は自分のリムーブエリアのみ
+    // (rules/21「自分の」省略 + cost.target は query.side:'self')。
+    // rules/09・23: デッキ下移動はリムーブではない (mutate.remove.removeFromHere は素の splice で
+    // leave hook を emit しない)。デッキは増えるだけなので refresh は起きない (rules/14/26)。
+    case 'removeAreaToDeckBottom': {
+      const p = ctx.source.player;
+      const explicit = readRemoveAreaToDeckIds(ctx);
+      const ids: string[] = [];
+      if (explicit.length >= cost.n) {
+        ids.push(...explicit.slice(0, cost.n));
+      } else {
+        const targets = pickCandidates(state, cost.target, ctx, cost.n);
+        for (const cand of targets) {
+          if (cand.kind === 'card') ids.push(cand.cardId);
+        }
+      }
+      mutate.remove.removeFromHere(state, p, ids);
+      mutate.deck.toBottom(state, p, ids);
+      for (const id of ids) acc.paidItems.push({ kind: 'removeAreaToDeckBottom', details: { id } });
+      return;
+    }
     case 'removeDeckTop': {
       const removed = mutate.deck.removeFromTop(state, cost.player, cost.n);
       acc.paidItems.push({ kind: 'removeDeckTop', details: { removed } });
@@ -197,6 +220,17 @@ function readSceneToDeckUids(ctx: EffectCtx): string[] {
   const std = params && (params['sceneToDeckBottom'] as { uids?: string[] } | undefined);
   if (std && Array.isArray(std.uids)) {
     return std.uids;
+  }
+  return [];
+}
+
+// cluster4 (2026-06-14): UI が選んだ removeAreaToDeckBottom コスト対象 cardId (readSceneToDeckUids と同型)
+function readRemoveAreaToDeckIds(ctx: EffectCtx): string[] {
+  const dyn = ctx.dyn;
+  const params = dyn && (dyn['costParams'] as Record<string, unknown> | undefined);
+  const r = params && (params['removeAreaToDeckBottom'] as { ids?: string[] } | undefined);
+  if (r && Array.isArray(r.ids)) {
+    return r.ids;
   }
   return [];
 }

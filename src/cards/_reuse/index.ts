@@ -639,6 +639,13 @@ import { B05108 } from '../ct-p05/B05108.js';
 import { PR086 } from '../pr-01/PR086.js';
 import { PR092 } from '../pr-01/PR092.js';
 
+import { B08051 } from '../ct-p08/B08051.js';
+import { B08051P } from '../ct-p08/B08051P.js';
+import { B08066 } from '../ct-p08/B08066.js';
+import { B08066P } from '../ct-p08/B08066P.js';
+import { B08027 } from '../ct-p08/B08027.js';
+import { B03059 } from '../ct-p03/B03059.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -772,4 +779,6 @@ export const REUSE_CARDS: CardDef[] = [
   B03128, B03131, B08005, B08005P, B08016, B08094, B08094P, B09073, B09073P, B09104,
   // engine拡張 wave#2 cluster3 — action-lifecycle trigger 15枚
   B01036, B01037, B01068, B01067, B02068, B03097, B03073, D04005, D04007, B08012, B08012P, B08048, B05108, PR086, PR092,
+  // engine拡張 wave#2 cluster4 (2026-06-14): remove-area → deck-bottom 解禁6枚 (B08051/P 赤井秀一・B08066/P 上原由衣・B03059 土井塔克樹・B08027 長門秀臣)
+  B08051, B08051P, B08066, B08066P, B08027, B03059,
 ];

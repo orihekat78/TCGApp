@@ -23,6 +23,7 @@ const VERBS = new Set([
   'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
   'caseToResolved', 'deckRevealUntil', 'deckToBottomBound', 'boundToRemove', 'deckShuffle', 'souza',
+  'removeAreaAllToDeckBottom', // cluster4 (2026-06-14)
   'expandActionTargets', 'log', 'noop',
 ]);
 const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly']);
@@ -54,6 +55,7 @@ const COSTS = new Set([
   'sleepSelf', 'sleepChar', 'removeFromHand', 'removeFromScene', 'removeDeckTop',
   'discardEvidence', 'selfToDeckBottom', 'pay', 'choice', 'fileFrom', 'flipFaceUpEvidence',
   'sceneToDeckBottom', // Task D E2 (2026-06-12)
+  'removeAreaToDeckBottom', // cluster4 (2026-06-14)
 ]);
 
 const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'conditional', 'forEach', 'atom', 'chain']);

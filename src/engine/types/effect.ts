@@ -155,6 +155,11 @@ export type AtomVerb =
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
   | 'deckRevealUntil' | 'deckToBottomBound' | 'boundToRemove' | 'deckShuffle' | 'souza'
+  // engine拡張 wave#2 cluster4 (2026-06-14): 自分と相手はリムーブエリアの「すべて」のカードを各自の
+  // デッキの下に移し、両者のデッキをシャッフルする (B08027【登場時】)。pick を持たない fixed verb。
+  // rules: 14/26 (デッキが増えるのみ → これは「リフレッシュ」ではない=証拠を得る手順なし、公式Q&A),
+  //   09/23 (リムーブでない=現場リムーブ時不発動)。
+  | 'removeAreaAllToDeckBottom'
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
   | 'expandActionTargets'
@@ -173,6 +178,11 @@ export type Cost =
   // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト (B04011/B07080/B08076)。
   // rules: 21 (全部行えなければ使用不可), 09/23 (リムーブでない)
   | { kind: 'sceneToDeckBottom'; target: TargetingRef; n: number }
+  // engine拡張 wave#2 cluster4 (2026-06-14): 〚リムーブエリアにある…を n 枚デッキの下に移す〛コスト
+  //   (B08051【宣言】/ B08066【宣言】/ B03059【宣言】)。sceneToDeckBottom の area:'remove' 版。
+  // rules: 21 (全部行えなければ使用不可 / 「自分の」省略 → query.side:'self' / 公式Q&A「相手のカードは移せない」),
+  //   09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 14/26 (デッキが増えるのみ → refresh は起きない)
+  | { kind: 'removeAreaToDeckBottom'; target: TargetingRef; n: number }
   | { kind: 'pay'; items: Cost[] }
   | { kind: 'choice'; items: Cost[] }
   | { kind: 'fileFrom'; n: number }

@@ -24,12 +24,14 @@ type Player = 'self' | 'opp';
  * 対応 channel は cost.pay / resolveEffectPicks が読む dyn キーと 1:1:
  *   - flipFaceUpEvidence → ctx.dyn.costParams.flipFaceUpEvidence.indices (pay.ts readFlipIndices)
  *   - sceneToDeckBottom  → ctx.dyn.costParams.sceneToDeckBottom.uids (pay.ts readSceneToDeckUids)
+ *   - removeAreaToDeckBottom → ctx.dyn.costParams.removeAreaToDeckBottom.ids (pay.ts readRemoveAreaToDeckIds, cluster4)
  *   - costChoice         → ctx.dyn.costChoice (choice cost の branch index)
  *   - choiceIndex        → ctx.dyn.choiceIndex (top-level choice effect の option index)
  */
 export interface AbilityCostParams {
   flipFaceUpEvidence?: { indices: number[] };
   sceneToDeckBottom?: { uids: string[] };
+  removeAreaToDeckBottom?: { ids: string[] }; // cluster4 (2026-06-14)
   costChoice?: number;
   choiceIndex?: number;
 }
@@ -40,6 +42,7 @@ function costParamsToDyn(costParams?: AbilityCostParams): Record<string, unknown
   const params: Record<string, unknown> = {};
   if (costParams.flipFaceUpEvidence) params['flipFaceUpEvidence'] = costParams.flipFaceUpEvidence;
   if (costParams.sceneToDeckBottom) params['sceneToDeckBottom'] = costParams.sceneToDeckBottom;
+  if (costParams.removeAreaToDeckBottom) params['removeAreaToDeckBottom'] = costParams.removeAreaToDeckBottom; // cluster4
   if (Object.keys(params).length > 0) dyn['costParams'] = params;
   if (costParams.costChoice !== undefined) dyn['costChoice'] = costParams.costChoice;
   if (costParams.choiceIndex !== undefined) dyn['choiceIndex'] = costParams.choiceIndex;

@@ -1466,6 +1466,29 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckShuffle' });
       return;
     }
+    case 'removeAreaAllToDeckBottom': {
+      // cluster4 (2026-06-14) B08027【登場時】: 自分と相手はリムーブエリアの「すべて」のカードを
+      //   各自のデッキの下に移し、両者のデッキをシャッフルする。
+      // ⚠ 'self'/'opp' は **絶対スロット** を意図的に走査する (resolvePlayer しない)。この verb は
+      //   両プレイヤーに対称な操作 (各自の remove → 各自の deck → 各自 shuffle) なので、所有者相対では
+      //   なく両スロット網羅で「自分と相手」を表現する。BUG-079 の owner-relative 規約とは別物。
+      // rules/14・26: デッキへ移すだけで 0 にならない → これは「リフレッシュ」ではない (証拠付与なし、
+      //   公式Q&A)。よって mutate.deck.refresh は呼ばず raw splice + toBottom + shuffle で行う。
+      // rules/09・23: デッキ下移動はリムーブでないため leave hook は発火しない (raw splice)。
+      // 公式テキスト通り、移動枚数 0 (remove 空) のプレイヤーも無条件でシャッフルする。
+      // shuffle は ctx.rng があれば使い、無ければ mutate.deck.shuffle 内の Math.random
+      //   (smoke では seeded RNG に global override されている) を使う (deckShuffle と同一契約)。
+      for (const pp of ['self', 'opp'] as const) {
+        const rem = s.players[pp].remove;
+        if (rem.length > 0) {
+          const ids = rem.splice(0, rem.length); // ALL — remove を drain
+          mutate.deck.toBottom(s, pp, ids);       // 各自のデッキ下へ
+        }
+        mutate.deck.shuffle(s, pp, ctx.rng);
+      }
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:removeAreaAllToDeckBottom' });
+      return;
+    }
     case 'souza': {
       // rules/13 §捜査X: defender (player) のデッキ上 X 枚を、defender の好きな順で
       // デッキの下に移す。Sub-task A (Phase 5 advance): peek 順そのまま (= defender が

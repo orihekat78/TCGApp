@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `edbd8e68d578`
+> Source hash: `b42e94b2e999`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,7 +22,7 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (131)
+## 📄 参照ソース (132)
 
 - [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
@@ -44,4 +44,4 @@
 - [`src/cards/ct-d08/D08020.ts`](../../../../src/cards/ct-d08/D08020.ts)
 - [`src/cards/ct-d08/D08024.ts`](../../../../src/cards/ct-d08/D08024.ts)
 - [`src/cards/ct-d09/D09016.ts`](../../../../src/cards/ct-d09/D09016.ts)
-- _...ほか 111 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 112 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -14,6 +14,7 @@ const COST_KIND_MAP = {
   sleepSelf: true, sleepChar: true, removeFromHand: true, removeFromScene: true,
   removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
+  removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
   pay: true, choice: true, fileFrom: true, flipFaceUpEvidence: true, custom: true,
 } as const satisfies Record<Cost['kind'], true>;
 export const COST_KINDS: ReadonlySet<string> = new Set(Object.keys(COST_KIND_MAP));
@@ -54,6 +55,13 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト。
     // rules/21: 全部行えなければ使用不可 (candidates >= n)。デッキ枚数条件は無い。
     case 'sceneToDeckBottom': {
+      const cands = candidates(state, cost.target, ctx);
+      return cands.length >= cost.n;
+    }
+    // cluster4 (2026-06-14): 〚リムーブエリアにある…を n 枚デッキの下に移す〛コスト。
+    // sceneToDeckBottom と同型 (cost.target は area:'remove' の pick)。
+    // rules/21: 全部行えなければ使用不可 (candidates >= n)。デッキへ「増やす」だけなのでデッキ枚数条件は無い。
+    case 'removeAreaToDeckBottom': {
       const cands = candidates(state, cost.target, ctx);
       return cands.length >= cost.n;
     }
