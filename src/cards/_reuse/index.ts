@@ -650,6 +650,8 @@ import { B04034 } from '../ct-p04/B04034.js';
 import { B09017 } from '../ct-p09/B09017.js';
 import { B09034 } from '../ct-p09/B09034.js';
 import { B09034P } from '../ct-p09/B09034P.js';
+import { B07067 } from '../ct-p07/B07067.js';
+import { B07070 } from '../ct-p07/B07070.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -790,4 +792,6 @@ export const REUSE_CARDS: CardDef[] = [
   B02063, B04034, B09017,
   // engine拡張 wave#2 cluster6 (2026-06-14): usage-restriction (event-use ban) 2枚 (B09034/B09034P「黄金千枚二千杯」緑イベント=リムーブのイベント2枚まで回収+このターン自分はイベント使用不可)
   B09034, B09034P,
+  // cluster7 (2026-06-14、engine変更0 card-authoring): hand-count condition 初消費 2枚 (B07067 沖矢昴=【パートナー赤】登場時 相手手札≥自分手札でレベル8以下リムーブ + 宣言 sleepChar-pick / B07070 新出智明=登場時 手札2枚以下でレベル7以上赤に AP+1000・突撃 + カットイン)
+  B07067, B07070,
 ];

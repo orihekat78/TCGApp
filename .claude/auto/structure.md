@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3130
+- **ファイル数**: 3134
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -428,6 +428,7 @@
     - `2026-06-14-02-engine-wave2-cluster4.md` — engine拡張 wave#2 cluster4 — remove-area → deck-bottom 解禁 6枚
     - `2026-06-14-03-engine-wave2-cluster5.md` — engine拡張 wave#2 cluster5 — usage-restriction aura 解禁 3枚
     - `2026-06-14-04-engine-wave2-cluster6.md` — engine拡張 wave#2 cluster6 — usage-restriction (event-use ban) 解禁 2枚
+    - `2026-06-14-05-cluster7-hand-count-cards.md` — cluster7 — engine変更0 card-authoring (hand-count condition 初消費) 2枚
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -2270,6 +2271,8 @@
       - `B07056P.ts` — cards/ct-p07/B07056P 怪盗キッドと中森王女 (イベント) — catalog-reuse batch
       - `B07062.ts` — cards/ct-p07/B07062 緋色の誘惑の巻 (事件) — catalog-reuse batch
       - `B07062P.ts` — cards/ct-p07/B07062P 緋色の誘惑の巻 (事件) — catalog-reuse batch
+      - `B07067.ts` — cards/ct-p07/B07067 沖矢昴 (キャラ) — engine変更0 (handCountAtLeastOther + sleepChar-pic…
+      - `B07070.ts` — cards/ct-p07/B07070 新出智明 (キャラ) — engine変更0 (handAtMost gate + pick-share buff +…
       - `B07071.ts` — cards/ct-p07/B07071 アンドレ・キャメル (キャラ) — catalog-reuse batch
       - `B07072.ts` — cards/ct-p07/B07072 澁谷夏子 (character) — Task A green候補 (engine変更0)
       - `B07073.ts` — cards/ct-p07/B07073 ジェイムズ・ブラック (character) — Task A green候補 (engine変更0)
@@ -3049,6 +3052,7 @@
     - `cluster4-remove-area-deckbottom.test.ts` — cluster4 — remove-area → deck-bottom 解禁6枚を実 engine 経路で駆動する挙動テスト
     - `cluster5-usage-restriction-behavioral.test.ts` — cluster5 — usage-restriction aura 3枚を実 engine 経路で駆動する挙動テスト
     - `cluster6-event-use-ban-behavioral.test.ts` — cluster6 — usage-restriction (event-use ban) を実 engine 経路で駆動する挙動テスト
+    - `cluster7-hand-count-cards-behavioral.test.ts` — cluster7 — engine変更0 card-authoring 2枚 (B07067 沖矢昴 /…
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `enter-sleep-self-batch.test.ts` — Task A batch#2 — A.enter+hirameki クラスタ: 自己「スリープ状態で登場」representative
     - `event-to-evidence-batch.test.ts` — engine-extension event→evidence batch (2026-06-06 タスクC) — 実カード経由 sanity test
