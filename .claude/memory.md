@@ -1,36 +1,39 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-> scratchpad (現セッション)。durable 記録は CHANGELOG.md / changelog-entries / 設計 doc / git。
+## 2026-06-15 セッション (BUG-143/144 + reanimate確認 + cluster8、local 5 commit)
 
-## 2026-06-14〜15 セッション: cluster6 + cluster7 完了 (branch `cards/wave2-cluster6`)
+ユーザー要望「バグ修正 + 残り3件 + cluster8 を1セッションで」を実施。**push せず local のみ** (ユーザー指示)。
+main は origin より **5 commit 先行** (要手動 push)。各 commit は local ff-merge 済、全 gate green。
 
-### cluster6 ✅ (commit 227aaa68) — engine拡張 wave#2、usage-restriction (event-use ban)
-- B09034/B09034P「黄金千枚二千杯」(緑イベント lv5、P=同文 reprint) 解禁。ALL_CARDS 1161→1163。
-- engine additive: 新 verb `setEventUseBan` (3点同期 effect.ts/validate.ts/taskA-validate-specs.cjs) +
-  `TurnScopedFlags.eventUseBanned` (game-state.ts、reset=mutate/flag.ts) +
-  hand-use-card.ts handUseGateCommon / next-hint.ts step2 / UI useActionsPanelFlow.ts toCandidate に
-  **event-only** gate (公式 Q&A: カットイン/ヒラメキは非ゲート)。
-  `handAddFromRemove` に複数pick path (`$pick.cardIds`、charStackCard 同型) 追加 (B09034「2枚まで」用)。
-- clause1→clause2 は **sequence** (chain でない → 0 pick でも ban 発火、resolver.ts は __chainStepNoApply break しない)。
+### commit (古い順)
+1. `9911afe9` **BUG-143**: contact-scope 修正値 (apMod_contact等) を contact-end で清掃 (rules/08 §6)。
+   clearTurnEffects に scope 'contact' 新設 + state-machine contact-end で呼出。TDD red→green。smoke baseline 不変。
+2. `19cdaa23` **BUG-144**: AI のアクション[事件] ガード窓。resolveActionAgainstCase に defenderPolicy.chooseGuard
+   委譲 (ガード成立→AP判定/不成立→証拠操作)。policy.applyMove が HeuristicPolicy 渡す。smoke re-baseline
+   (avg 10.86→11.00, winsA 469→498)。
+3. `399e553d` **reanimate 確認 + BUG-145**: B06052/D05006/PR138 は前 batch で実装済 (certify-record gap のみ)。
+   certify queue 254/254 完走。B06052/D05006 正しい。**PR138 = certify false-green 検出** (a2 self-sleep optional が
+   already-sleep 時に chain break せず qAndA違反、sceneSetState 冪等) → BUG-145 起票 + DEFER (self-state condition 必要)。
+4. `764be98d` **cluster8 ヒラメキ抑止窓**: B06049 a2「アクション[事件]したとき相手の【ヒラメキ】発動しない」。
+   新機構 = TurnScopedFlags.hiramekiSuppressed + setHiramekiSuppress verb (3点同期) + handleEvidenceRemovedHook 抑止
+   + action-end 清掃 (cluster6 setEventUseBan の action-scoped 版)。敵対設計レビュー(opus)=sound 後実装。
+   B06049 解禁 (a1=D08011同型/a2=新機構/a3=PR138同型)。ALL_CARDS 1166。専用 behavioral test 4件 (制御込)。
+5. `521b7646` **BUG-144 follow-up**: bundled actionAgainstCase dispatch を passGuard に revert。playwright で
+   hirameki e2e 8件回帰検出 → bundled 経路は hirameki demo(App.tsx)/e2e 専用で防御 auto-guard が evidence 除去阻害。
+   実ゲーム防御窓は per-step (useContactFlowDriver) で対応済。BUG-144 本体 (policy.applyMove) は維持。
 
-### cluster7 ✅ (commit 3f8f1a0e) — engine変更0 card-authoring (骨格凍結原則完全準拠)
-- B07067 沖矢昴 (R) / B07070 新出智明 (C)。ALL_CARDS 1163→1165。**handAtMost / handCountAtLeastOther の初消費者**
-  (triage の「B07081/B09092 が使用」は誤り、grep 0 hit)。
-- 全パターン既存カード実証済 (charModifyAP carrier bind:$picked=B07079 / charGrantKeyword $bound.uid=PR181/187 /
-  top-level custom=B07071 / sleepChar pick=B03060 / $contact.byUid cutin=B07006)。設計は 2 opus agent + 決定論 grep 再検証。
+### 全 gate (最終状態)
+- full vitest **2113 pass** (1 skip)。tsc clean。
+- smoke:1000 baseline **winsA=498/avg=11.0** (BUG-144 で re-baseline、cluster8 は no-op で不変)、timeouts/exceptions=0。
+- playwright **全 119 pass** (follow-up 後、hirameki 14/14 含む)。
+- validate-specs pass=73 fail=0。
 
-### 検証 (heavy gates、cluster6+7 合算で1回 ← ユーザー指示)
-- full vitest **2105 pass** (1 skip、2091+8+6) / smoke:1000 baseline **完全一致** (winsA469/avg10.863/timeouts0/exceptions0
-  = no-op 実証) / e2e playwright **119 passed** (1 skip) / tsc exit 0 / validate-specs 70 pass 0 fail。
-- 専用挙動 vitest: cluster6 8件 (gate/verb/reset/cutin・hirameki exempt/0・1・2 pick) /
-  cluster7 6件 (handAtMost・handCountAtLeastOther gate/pick-buff/declared self-state gate)。
-  - ⚠ test harness 教訓: PA 短縮形 (charModifyAP/sceneRemove) は実行時 atom-handler 解決 (resolve-picks.ts:438) →
-    runEffect 後に `_drainAllEffectPicksForTest` (AI drain) 必須 (cluster4 同型)。PB (handAddFromRemove) は resolveEffectPicks で pre-fill。
+### 教訓
+- **certify+adversarial-verify が green でも意味等価は自前で1対1突合** (PR138 false-green、B01011 同様)。
+- **engine 変更は playwright まで回す** — BUG-144 の bundled-path 過剰拡張は vitest/smoke を通過し playwright で初検出。
+- bundled `actionAgainstCase` (useEngineDispatch) は hirameki demo/e2e 専用 = 防御 auto-guard 禁止。
 
-### 残: main 反映 (ユーザー: push 失敗時はスキップ可)
-- branch `cards/wave2-cluster6` に 2 commit。main ff-merge + push + CI green 確認 (失敗時スキップ)。
-
-## ポインタ
-- 設計記録: `.claude/specs/engine-wave2-cluster5-usage-restriction-design.md` (§cluster6)
-- triage: `.tmp/cluster4-triage.json` (gate6種: usage-restriction/remove-area=済、他4はdefer。hand-count gate は vacuous だが B07067/B07070 が現行 engine 実装可と判明→cluster7)
-- 繰越 (DEFERRED-INDEX): BUG-143/144・hirameki抑止・action-restriction(B07005)・observer contact-removal(D02008/B05066)・external hook firing(B08078)
+### 未 push (要ユーザー手動 push) / 残課題
+- `git push origin main` 未実施 (5 commit)。push 後 CI 確認推奨。
+- BUG-145 (PR138 self-sleep gate) = self-state condition 追加の将来 micro-cluster。
+- bug hash 反映: BUG-143/144/145 の commit プロパティは placeholder/branch名 (要 real hash 反映、任意)。

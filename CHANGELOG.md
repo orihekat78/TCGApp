@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `b7b6e05e2881`
+> Source hash: `020f20b71ba0`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -84,9 +84,12 @@
   (rules/07-08 はガード可)。`defenderPolicy.chooseGuard` 委譲を追加し、ガード成立→AP判定 (証拠変動なし) /
   不成立→証拠リムーブ+獲得 に分岐。human 経路 `useEngineDispatch` の actionJudge 分岐と同型
   (user_request 20260522_01 #8 で確定済) を CPU 経路にミラー。
-- 呼出元 2 箇所 (`policy.applyMove` / `useEngineDispatch`) が `HeuristicPolicy` を渡す。
-- 検証: case-guard/passGuard テスト (red→green)、full vitest 回帰なし。smoke:1000 で期待 drift
-  (avg 10.86→11.00、winsA 469→498、timeouts/exceptions=0) を確認し `smoke-baseline.json` を re-baseline。
+- 呼出元は `policy.applyMove` (AI-vs-AI gameplay / smoke) のみ `HeuristicPolicy` を渡す。
+  当初 `useEngineDispatch` の bundled 経路にも渡したが、それは hirameki demo / e2e 専用で防御側 auto-guard が
+  evidence 除去を阻害したため **同セッションで passGuard へ revert** (playwright 回帰で検出)。実ゲームの
+  防御ガード窓は per-step (`useContactFlowDriver`) で別途対応済。
+- 検証: case-guard/passGuard テスト (red→green)、full vitest 回帰なし、hirameki e2e 14/14。smoke:1000 で
+  期待 drift (avg 10.86→11.00、winsA 469→498、timeouts/exceptions=0) を確認し `smoke-baseline.json` を re-baseline。
 
 # cluster7 — engine変更0 card-authoring (hand-count condition 初消費) 2枚
 
