@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3141
+- **ファイル数**: 3142
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -284,6 +284,7 @@
     - `BUG-142.md`
     - `BUG-143.md`
     - `BUG-144.md`
+    - `BUG-145.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
