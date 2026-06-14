@@ -14,10 +14,22 @@
 //   - actionAgainstCase は contact 省略 (rules/10: 証拠リムーブ + 自証拠獲得のみ)
 
 import { engine } from '@/engine';
+import { drainAiEffectPicks } from '@/engine/effect/apply-pick.js';
 import type { GameState, ActionContext } from '@/engine/types';
 import type { AIPolicy } from './policy.js';
 
 type Player = 'self' | 'opp';
+
+// engine拡張 wave#2 cluster3 (2026-06-13, BUG-141): 宣言時 trigger (action:declare) の効果は
+// 公式裁定「ガード判定より前に発動・解決される」(rules/22 + TSV qAndA B08048/B01036/B02068)。
+// CPU 経路は従来 chooseGuard の後にしか drain しておらず、B01036 (ガード候補をスリープで奪う) 等が
+// 逆順で機能しなかった。declare 直後に stack + AI pick を drain してガード判定前に解決を完了させる。
+function drainDeclareTriggers(state: GameState, policy?: AIPolicy): void {
+  engine.resolve.runAllUntilEmpty(state);
+  drainAiEffectPicks(state, policy);
+  // pick 解決後に continuation (chain/sequence の後続) が積まれる場合があるため再度 stack を流す。
+  engine.resolve.runAllUntilEmpty(state);
+}
 
 /**
  * uid のオーナープレイヤーを判定 (cutin 解決時の player 特定用)。
@@ -108,6 +120,10 @@ export function resolveActionAgainstChar(
 ): void {
   const ax = engine.flow.action.declare(state, byUid, { kind: 'char', uid: targetUid });
 
+  // BUG-141 (cluster3): 宣言時 trigger の効果をガード判定前に解決 (rules/22 R1)。
+  // attackerPolicy で drain (発火源は攻撃側カード。AI-vs-AI は humanSide null で全 pick が drain される)。
+  drainDeclareTriggers(state, attackerPolicy);
+
   // ガード判定 (Phase 8.7c)
   // Task D E4: アクション対象自身はガード候補から除外 (B09028/B09054 Q&A)
   const cands = engine.flow.guard.candidates(state, ax.byUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
@@ -161,8 +177,12 @@ export function resolveActionAgainstCase(
   state: GameState,
   byUid: string,
   targetPlayer: Player,
+  attackerPolicy?: AIPolicy,
 ): void {
   const ax = engine.flow.action.declare(state, byUid, { kind: 'case', player: targetPlayer });
+  // BUG-141 (cluster3, F3-i): case アクションの宣言時 trigger (B01068/B02068 のブレット付与等) も
+  // ガード判定前に解決する。なお case アクション自体の guard 窓が passGuard 固定である件は別 (BUG-144)。
+  drainDeclareTriggers(state, attackerPolicy);
   engine.flow.action.passGuard(state, ax);
   engine.flow.actionCase.removeOpponentEvidenceTop(state, ax);
   engine.flow.actionCase.gainSelfEvidence(state, ax);

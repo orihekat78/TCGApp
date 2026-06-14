@@ -455,9 +455,26 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'evidenceGain': {
       const p = resolvePlayer(a.player, ctx);
       const n = a.n as number;
-      mutate.evidence.addFromDeck(s, p, n, false, { turn: s.turn.number, via: 'effect' });
+      // engine拡張 wave#2 cluster3 (2026-06-13, BUG-142): rules/14「証拠を得る = リフレッシュ後に
+      // 残りを解決」。addFromDeck はデッキ0で silent break するため (mutate/evidence.ts)、
+      // fileAdd 同型の「1枚ごと事前 deck0→refresh→add」ループで refresh を挟む。remove0 なら敗北。
+      let egGained = 0;
+      for (let i = 0; i < n; i++) {
+        if (s.players[p].deck.length === 0) {
+          const r = mutate.deck.refresh(s, p);
+          if (!r.ok) {
+            if (s.gameResult === undefined) {
+              const winner: Player = p === 'self' ? 'opp' : 'self';
+              mutate.gameResult.set(s, winner, 'deck-out');
+            }
+            break;
+          }
+        }
+        mutate.evidence.addFromDeck(s, p, 1, false, { turn: s.turn.number, via: 'effect' });
+        egGained++;
+      }
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceGain', result: String(n) });
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceGain', result: String(egGained) });
       return;
     }
     case 'selfToEvidence': {
@@ -880,7 +897,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const maUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof maUid !== 'string' || maUid.startsWith('$')) return;
       const maDelta = resolveDeltaToNumber(a.delta, s, ctx);
-      const maScope = a.scope as 'turn' | 'contact' | 'permanent';
+      const maScope = a.scope as 'turn' | 'contact' | 'permanent' | 'action';
       mutate.char.modifyAP(s, maUid, maDelta, maScope);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyAP', target: maUid, result: `${maDelta >= 0 ? '+' : ''}${maDelta}/${maScope}` });
@@ -902,7 +919,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const mlUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof mlUid !== 'string' || mlUid.startsWith('$')) return;
       const mlDelta = resolveDeltaToNumber(a.delta, s, ctx);
-      const mlScope = a.scope as 'turn' | 'contact' | 'permanent';
+      const mlScope = a.scope as 'turn' | 'contact' | 'permanent' | 'action';
       mutate.char.modifyLP(s, mlUid, mlDelta, mlScope);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLP', target: mlUid, result: `${mlDelta >= 0 ? '+' : ''}${mlDelta}/${mlScope}` });
@@ -922,7 +939,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       const mlvUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof mlvUid !== 'string' || mlvUid.startsWith('$')) return;
       const mlvDelta = resolveDeltaToNumber(a.delta, s, ctx);
-      const mlvScope = a.scope as 'turn' | 'contact' | 'permanent';
+      const mlvScope = a.scope as 'turn' | 'contact' | 'permanent' | 'action';
       mutate.char.modifyLevel(s, mlvUid, mlvDelta, mlvScope);
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charModifyLevel', target: mlvUid, result: `${mlvDelta >= 0 ? '+' : ''}${mlvDelta}/${mlvScope}` });
       return;

@@ -33,6 +33,7 @@ const HOOKS = new Set([
   'action:pre-target', 'contact:start', 'reasoning:end', 'case:to-resolved',
   'phase:end:start', 'effect:declared', 'evidence:remove-by-action',
   'file:pop', // Task D E3 (2026-06-12)
+  'action:end', 'evidence:gain', // engine拡張 wave#2 cluster3 (2026-06-13)
 ]);
 
 const CONDS = new Set([
@@ -45,6 +46,8 @@ const CONDS = new Set([
   'handAtLeast', 'handAtMost', 'handCountAtLeastOther',
   // Task D E2/E3 (2026-06-12)
   'fileTopMatches', 'triggerPlayerIs', 'charTurnEffect',
+  // engine拡張 wave#2 cluster3 (2026-06-13)
+  'triggerActionKind',
 ]);
 
 const COSTS = new Set([

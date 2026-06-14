@@ -87,6 +87,16 @@ export const TRIGGERED_HOOKS = [
   // emit 箇所: next-hint.ts:74 (既存) + filePopToHand (BUG-128 修正で追加)。payload={player, popped}。
   // キャラ uid を持たない hook のため matcherCondition は triggerPlayerIs を使う (triggerCharMatches 不適合)。
   'file:pop',
+  // engine拡張 wave#2 cluster3 (2026-06-13): 「このキャラのアクション終了時」(PR086/B03073/B05108) を
+  // card-triggerable 化。emit は既存 (state-machine.ts completed/aborted、source={player,uid}=actor)。
+  // 公式 qAndA「アクション終了時に現場にいないキャラの能力は発動しない」は in-play scan
+  // (collectCardsInPlay) + selfOnly で自然成立 (離場 actor は走査対象外、rules/22)。
+  'action:end',
+  // engine拡張 wave#2 cluster3 (2026-06-13): 「〜のアクション[事件]によって証拠を得たとき」
+  // (B08012/B01067/D04007) を card-triggerable 化。emit は flow/action-case.ts gainSelfEvidence のみ
+  // (rules/10 手順3 = 実獲得時のみ。推理/効果/refresh 由来では emit しない — この排他性が
+  // 「アクション[事件]によって」の語義を構造的に保証する。pin: wave2-cluster3 test)。
+  'evidence:gain',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];

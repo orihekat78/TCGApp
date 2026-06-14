@@ -66,6 +66,11 @@ export type Condition =
   // Task D E4 (2026-06-12): payloadKey — payload の uid フィールド名を指定 (例: 'guardUid' で
   // 「レベル6以下のキャラによってガードされたとき」B09041。player は scene 走査で導出)。
   | { kind: 'triggerCharMatches'; side?: 'self' | 'opp' | 'either'; filter?: TargetFilter; excludeSource?: boolean; payloadKey?: string }
+  // engine拡張 wave#2 cluster3 (2026-06-13): action:declare payload の target.kind を読む。
+  // 「アクション[キャラ]したとき」(v:'char') / 「アクション[事件]したとき」(v:'case') の subtype gate を
+  // declarative 化 (matcher closure は granted descriptor で禁止 = validate.ts のため JSON cond が必須。
+  // B01036/B01068/B02068/B03097/B08048/D04005)。triggerCharMatches との複合は and で書く。
+  | { kind: 'triggerActionKind'; v: 'char' | 'case' }
   // Task D E4 (2026-06-12): ctx.source キャラ自身の turnEffects flag を読む
   // (「この能力は、このターン中にこのキャラのアクションがガードされていた場合に宣言できる」B09041 a3)
   | { kind: 'charTurnEffect'; key: string }

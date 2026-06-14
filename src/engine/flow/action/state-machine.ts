@@ -191,7 +191,14 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   // 2026-06-06 タスクC: triggerCharMatches が payload.uid/player を読めるよう uid/player を併記
   // (multi-hook trigger で「自分の現場の[X]がアクションしたとき」を gate するため、reasoning:end と統一)。
   // 既存 consumer は byUid/target / source.uid (selfOnly) のみ参照のため additive。
-  event.emit(state, 'action:declare', { byUid, target, uid: byUid, player: byPlayer }, { player: byPlayer, uid: byUid });
+  // engine拡張 wave#2 cluster3 (2026-06-13): targetUid を flat 併記 (char target 時のみ)。
+  // 「指定したキャラ」(B08048) を $trigger.targetUid / triggerCharMatches{payloadKey:'targetUid'} で
+  // 参照可能にする ($trigger.<field> は flat 一階解決のみのため。宣言時 snapshot — ガード成立後も
+  // guardUid に差し替えない、qAndA「ガードされてもレベル-1適用済」)。
+  event.emit(state, 'action:declare', {
+    byUid, target, uid: byUid, player: byPlayer,
+    targetUid: target.kind === 'char' ? target.uid : undefined,
+  }, { player: byPlayer, uid: byUid });
 
   // 即座に guard-window へ遷移
   ax.phase = 'guard-window';

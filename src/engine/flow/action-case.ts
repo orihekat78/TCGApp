@@ -86,10 +86,36 @@ export function flashWindow(
  */
 export function gainSelfEvidence(state: GameState, ax: ActionContext): void {
   const p: Player = ax.byPlayer;
+  // engine拡張 wave#2 cluster3 (2026-06-13, BUG-142): rules/14「証拠を得る = リフレッシュ後に残り解決」。
+  // 獲得前に deck0 なら refresh (fileAdd 同型の事前 guard)。remove0 なら敗北し、獲得も emit も行わない。
+  if (state.players[p].deck.length === 0) {
+    const r = mutate.deck.refresh(state, p);
+    if (!r.ok) {
+      if (state.gameResult === undefined) {
+        const winner: Player = p === 'self' ? 'opp' : 'self';
+        mutate.gameResult.set(state, winner, 'deck-out');
+      }
+      return;
+    }
+  }
+  const before = state.players[p].evidence.length;
   mutate.evidence.addFromDeck(state, p, 1, false, {
     turn: state.turn.number,
     via: 'action-case',
   });
+  // engine拡張 wave#2 cluster3 (2026-06-13): evidence:gain emit — rules/10 手順3。
+  // 実獲得時のみ emit (false-fire 防止)。本 emit が evidence:gain の唯一の emit 箇所であること
+  // (推理/効果/refresh 由来では発火しない) が「アクション[事件]によって」の語義を構造的に保証する。
+  // payload: uid/byUid = actor (selfOnly + triggerCharMatches{payloadKey:'byUid'} 両対応)。
+  if (state.players[p].evidence.length > before) {
+    event.emit(state, 'evidence:gain', {
+      player: p,
+      byUid: ax.byUid,
+      uid: ax.byUid,
+      via: 'action-case',
+      gained: 1,
+    }, { player: p, uid: ax.byUid });
+  }
   // ログ
   mutate.log.append(state, {
     ts: Date.now(),

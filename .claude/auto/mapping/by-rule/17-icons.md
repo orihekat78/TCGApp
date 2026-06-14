@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d48dc35e69a3`
+> Source hash: `7d5cff510030`
 
 公式ルール [`17-icons.md`](../../../rules/17-icons.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,12 +22,13 @@
 - [`2026-05-11-ui-action-flows`](../by-spec/2026-05-11-ui-action-flows.md)
 - [`card-condition-catalog`](../by-spec/card-condition-catalog.md)
 - [`engine-api-card-abilities`](../by-spec/engine-api-card-abilities.md)
+- [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseTraitConditioned`](../by-spec/shared-classes--caseTraitConditioned.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (564)
+## 📄 参照ソース (579)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseMonoColor.ts`](../../../../src/cards/_shared/caseMonoColor.ts)
@@ -49,4 +50,4 @@
 - [`src/cards/ct-d02/D02006.ts`](../../../../src/cards/ct-d02/D02006.ts)
 - [`src/cards/ct-d02/D02007.ts`](../../../../src/cards/ct-d02/D02007.ts)
 - [`src/cards/ct-d02/D02009.ts`](../../../../src/cards/ct-d02/D02009.ts)
-- _...ほか 544 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 559 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

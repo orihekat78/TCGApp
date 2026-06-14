@@ -112,6 +112,11 @@ export function useContactFlowDriver(): void {
   // 先に解決すべき。contact:start で queue された pendingEffectPick が解決されるまで
   // contact flow を pause する。
   const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
+  // engine拡張 wave#2 cluster3 (2026-06-13, BUG-141): optional/choice modal も同様に pause 対象。
+  // 宣言時 trigger の optional (例 B02068 granted「手札を1枚リムーブしてもよい→ブレット」) が解決される
+  // 前に driver が guard へ進むと、公式裁定「効果もガード判定前に解決」(rules/22 R1) に違反する。
+  const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
+  const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
 
   useEffect(() => {
     if (!activeActionId || !gameState) return;
@@ -126,6 +131,9 @@ export function useContactFlowDriver(): void {
     // が open 中は contact flow を進めない (rules/22 「コンタクトしたとき」が
     // 行動順確認の前に解決)
     if (pendingEffectPick !== null) return;
+    // BUG-141 (cluster3): optional/choice modal も解決待ち (宣言時 trigger の効果はガード判定前に解決)
+    if (pendingEffectOptional !== null) return;
+    if (pendingEffectChoice !== null) return;
 
     const ax = flow.action._getContext(activeActionId);
     if (!ax) {

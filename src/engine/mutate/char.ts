@@ -5,7 +5,10 @@
 import type { GameState } from '@/engine/types';
 
 type Player = 'self' | 'opp';
-type ModScope = 'turn' | 'contact' | 'permanent';
+// engine拡張 wave#2 cluster3 (2026-06-13): 'action' = 「アクション終了時まで」(rules/08 §6-7)。
+// '_action' suffix キーは clearTurnEffects('action') + turn-end safety net の 2 経路で清掃される。
+// ⚠ grantKeyword には 'action' を渡さないこと (grantedKeywords は suffix 無し格納で action 清掃対象外)。
+type ModScope = 'turn' | 'contact' | 'permanent' | 'action';
 
 /** uid でキャラを探す */
 function findChar(s: GameState, uid: string) {

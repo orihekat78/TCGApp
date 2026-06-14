@@ -59,8 +59,11 @@ function ap(s: GameState, uid: string): number {
   const modPermanent = (char.turnEffects['apMod_permanent'] as number | undefined) ?? 0;
   const modTurn      = (char.turnEffects['apMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['apMod_contact']   as number | undefined) ?? 0;
+  // engine拡張 wave#2 cluster3 (2026-06-13): scope:'action' (「アクション終了時まで」B03097/B08048)。
+  // 清掃は clearTurnEffects('action') (action-end 2経路) + turn-end safety net (rules/08 §6-7)。
+  const modAction    = (char.turnEffects['apMod_action']    as number | undefined) ?? 0;
   const modContinuous = continuousDelta(s, uid, 'apDelta');
-  return base + modPermanent + modTurn + modContact + modContinuous;
+  return base + modPermanent + modTurn + modContact + modAction + modContinuous;
 }
 
 // LP: lpOverride 優先 / 不在なら CardDef.lp、加えて turnEffects['lpMod_*'] を合算
@@ -72,8 +75,9 @@ function lp(s: GameState, uid: string): number {
   const modPermanent = (char.turnEffects['lpMod_permanent'] as number | undefined) ?? 0;
   const modTurn      = (char.turnEffects['lpMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
+  const modAction    = (char.turnEffects['lpMod_action']    as number | undefined) ?? 0;
   const modContinuous = continuousDelta(s, uid, 'lpDelta');
-  return base + modPermanent + modTurn + modContact + modContinuous;
+  return base + modPermanent + modTurn + modContact + modAction + modContinuous;
 }
 
 // Level: CardDef.level、加えて turnEffects['lvlMod_*'] を合算 (rules/19 下限なし)
@@ -87,7 +91,8 @@ function level(s: GameState, uid: string): number {
   const modPermanent = (char.turnEffects['lvlMod_permanent'] as number | undefined) ?? 0;
   const modTurn      = (char.turnEffects['lvlMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['lvlMod_contact']   as number | undefined) ?? 0;
-  return base + modPermanent + modTurn + modContact;
+  const modAction    = (char.turnEffects['lvlMod_action']    as number | undefined) ?? 0;
+  return base + modPermanent + modTurn + modContact + modAction;
 }
 
 function colors(s: GameState, uid: string): string[] {

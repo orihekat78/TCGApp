@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d48dc35e69a3`
+> Source hash: `7d5cff510030`
 
 公式ルール [`08-contact.md`](../../../rules/08-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (25)
+## 📄 参照ソース (31)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -31,16 +31,16 @@
 - [`src/cards/ct-d11/D11008.ts`](../../../../src/cards/ct-d11/D11008.ts)
 - [`src/cards/ct-d11/D11016.ts`](../../../../src/cards/ct-d11/D11016.ts)
 - [`src/cards/ct-p01/B01028.ts`](../../../../src/cards/ct-p01/B01028.ts)
+- [`src/cards/ct-p02/B02068.ts`](../../../../src/cards/ct-p02/B02068.ts)
+- [`src/cards/ct-p03/B03097.ts`](../../../../src/cards/ct-p03/B03097.ts)
+- [`src/cards/ct-p05/B05108.ts`](../../../../src/cards/ct-p05/B05108.ts)
 - [`src/cards/ct-p06/B06091.ts`](../../../../src/cards/ct-p06/B06091.ts)
+- [`src/cards/ct-p08/B08048.ts`](../../../../src/cards/ct-p08/B08048.ts)
 - [`src/cards/ct-p09/B09014.ts`](../../../../src/cards/ct-p09/B09014.ts)
 - [`src/cards/ct-p09/B09041.ts`](../../../../src/cards/ct-p09/B09041.ts)
 - [`src/cards/ct-p09/B09041P.ts`](../../../../src/cards/ct-p09/B09041P.ts)
 - [`src/cards/pr-01/PR006.ts`](../../../../src/cards/pr-01/PR006.ts)
+- [`src/cards/pr-01/PR086.ts`](../../../../src/cards/pr-01/PR086.ts)
+- [`src/cards/pr-01/PR092.ts`](../../../../src/cards/pr-01/PR092.ts)
 - [`src/engine/flow/action/order.ts`](../../../../src/engine/flow/action/order.ts)
-- [`src/engine/flow/action/state-machine.ts`](../../../../src/engine/flow/action/state-machine.ts)
-- [`src/engine/flow/contact.ts`](../../../../src/engine/flow/contact.ts)
-- [`src/engine/types/candidate.ts`](../../../../src/engine/types/candidate.ts)
-- [`src/engine/types/effect-ctx.ts`](../../../../src/engine/types/effect-ctx.ts)
-- [`src/engine/types/effect.ts`](../../../../src/engine/types/effect.ts)
-- [`src/engine/types/hooks.ts`](../../../../src/engine/types/hooks.ts)
-- _...ほか 5 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 11 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

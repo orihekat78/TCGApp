@@ -313,6 +313,13 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return true;
     }
+    // engine拡張 wave#2 cluster3 (2026-06-13): アクション種別 ([キャラ]/[事件]) gate。
+    // action:declare payload の target.kind ('char'|'case') を読む (state-machine.ts declare emit)。
+    // payload 不在 / target 不在は false (発火させない安全側)。rules/22 + TSV qAndA (B01036 等 6枚)。
+    case 'triggerActionKind': {
+      const tak = ctx.triggerPayload as { target?: { kind?: unknown } } | undefined;
+      return tak?.target?.kind === cond.v;
+    }
     // Task D E4 (2026-06-12): ctx.source キャラ自身の turnEffects flag (B09041 a3
     // 「このターン中にこのキャラのアクションがガードされていた場合に宣言できる」等)
     case 'charTurnEffect': {
@@ -350,6 +357,7 @@ const CONDITION_KIND_MAP = {
   stackedCountAtLeast: true, contactOpponentApHigher: true, guardedBySelf: true,
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
   charTurnEffect: true, // Task D E4 (2026-06-12)
+  triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)
   custom: true,
 } as const satisfies Record<Condition['kind'], true>;
 export const CONDITION_KINDS: ReadonlySet<string> = new Set(Object.keys(CONDITION_KIND_MAP));

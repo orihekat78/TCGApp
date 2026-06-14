@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d48dc35e69a3`
+> Source hash: `7d5cff510030`
 
 公式ルール [`05-turn-phases.md`](../../../rules/05-turn-phases.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,13 +21,14 @@
 
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (55)
+## 📄 参照ソース (57)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/random.ts`](../../../../src/ai/policies/random.ts)
 - [`src/ai/policy.ts`](../../../../src/ai/policy.ts)
 - [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
+- [`src/cards/ct-d04/D04005.ts`](../../../../src/cards/ct-d04/D04005.ts)
 - [`src/cards/ct-d06/D06010.ts`](../../../../src/cards/ct-d06/D06010.ts)
 - [`src/cards/ct-d07/D07014.ts`](../../../../src/cards/ct-d07/D07014.ts)
 - [`src/cards/ct-d07/D07015.ts`](../../../../src/cards/ct-d07/D07015.ts)
@@ -42,5 +43,4 @@
 - [`src/cards/ct-p04/B04080.ts`](../../../../src/cards/ct-p04/B04080.ts)
 - [`src/cards/ct-p05/B05067.ts`](../../../../src/cards/ct-p05/B05067.ts)
 - [`src/cards/ct-p05/B05067P.ts`](../../../../src/cards/ct-p05/B05067P.ts)
-- [`src/cards/ct-p05/B05076.ts`](../../../../src/cards/ct-p05/B05076.ts)
-- _...ほか 35 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 37 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

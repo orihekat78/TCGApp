@@ -623,6 +623,22 @@ import { B09073 } from '../ct-p09/B09073.js';
 import { B09073P } from '../ct-p09/B09073P.js';
 import { B09104 } from '../ct-p09/B09104.js';
 
+import { B01036 } from '../ct-p01/B01036.js';
+import { B01037 } from '../ct-p01/B01037.js';
+import { B01068 } from '../ct-p01/B01068.js';
+import { B01067 } from '../ct-p01/B01067.js';
+import { B02068 } from '../ct-p02/B02068.js';
+import { B03097 } from '../ct-p03/B03097.js';
+import { B03073 } from '../ct-p03/B03073.js';
+import { D04005 } from '../ct-d04/D04005.js';
+import { D04007 } from '../ct-d04/D04007.js';
+import { B08012 } from '../ct-p08/B08012.js';
+import { B08012P } from '../ct-p08/B08012P.js';
+import { B08048 } from '../ct-p08/B08048.js';
+import { B05108 } from '../ct-p05/B05108.js';
+import { PR086 } from '../pr-01/PR086.js';
+import { PR092 } from '../pr-01/PR092.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -754,4 +770,6 @@ export const REUSE_CARDS: CardDef[] = [
   // engine拡張 wave#2 cluster2 (2026-06-12): ability-presence filter 解禁 10枚
   // (現場リムーブ時/疾風/カットイン presence — X1 述語 + X1b 窓/bound filter + X6 boundToRemove + X7/X8 骨格バグ修正)
   B03128, B03131, B08005, B08005P, B08016, B08094, B08094P, B09073, B09073P, B09104,
+  // engine拡張 wave#2 cluster3 — action-lifecycle trigger 15枚
+  B01036, B01037, B01068, B01067, B02068, B03097, B03073, D04005, D04007, B08012, B08012P, B08048, B05108, PR086, PR092,
 ];
