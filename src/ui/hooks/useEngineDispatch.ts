@@ -266,8 +266,14 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'actionAgainstCase':
-      // BUG-144: CPU vs CPU の case アクションでも防御側に guard 窓を出す (char 経路と同型)。
-      resolveActionAgainstCase(draft, action.byUid, action.targetPlayer, new HeuristicPolicy());
+      // BUG-144 follow-up: この bundled 経路は **hirameki demo** (App.tsx: opp→self の case アクションで
+      // evidence 除去→相手[=self]の【ヒラメキ】発火) と e2e 専用。ここで防御側を auto-guard すると evidence が
+      // 除去されず demo / e2e が壊れる (8 hirameki spec 回帰) ため passGuard 固定のまま据え置く。
+      // 実ゲームの防御ガード窓は別経路で対応済: ①人間/CPU の case アクションは per-step
+      // (useActionsPanelFlow → actionDeclareCase) + useContactFlowDriver が guard-window を解決
+      // (opp 防御側は HeuristicPolicy、self は GuardPickerModal)。②AI-vs-AI gameplay は policy.applyMove
+      // (resolveActionAgainstCase に defenderPolicy を渡す) で解決 — BUG-144 本体はそちら。
+      resolveActionAgainstCase(draft, action.byUid, action.targetPlayer);
       return;
     // Phase 8 完全クローズ Commit 2: per-step action dispatch
     case 'actionDeclareChar': {
