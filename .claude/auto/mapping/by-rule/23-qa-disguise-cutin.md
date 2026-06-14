@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8092d69b01ea`
+> Source hash: `c1ddd872e828`
 
 公式ルール [`23-qa-disguise-cutin.md`](../../../rules/23-qa-disguise-cutin.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -18,7 +18,7 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (17)
+## 📄 参照ソース (18)
 
 - [`src/cards/ct-d11/D11013.ts`](../../../../src/cards/ct-d11/D11013.ts)
 - [`src/cards/ct-d11/D11017.ts`](../../../../src/cards/ct-d11/D11017.ts)
@@ -26,6 +26,7 @@
 - [`src/cards/ct-p02/B02045.ts`](../../../../src/cards/ct-p02/B02045.ts)
 - [`src/cards/ct-p03/B03129.ts`](../../../../src/cards/ct-p03/B03129.ts)
 - [`src/cards/ct-p04/B04011.ts`](../../../../src/cards/ct-p04/B04011.ts)
+- [`src/cards/ct-p04/B04034.ts`](../../../../src/cards/ct-p04/B04034.ts)
 - [`src/cards/ct-p07/B07079.ts`](../../../../src/cards/ct-p07/B07079.ts)
 - [`src/cards/ct-p07/B07079P.ts`](../../../../src/cards/ct-p07/B07079P.ts)
 - [`src/cards/ct-p07/B07080.ts`](../../../../src/cards/ct-p07/B07080.ts)

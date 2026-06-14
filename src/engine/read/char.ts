@@ -169,6 +169,30 @@ function hasKeyword(s: GameState, uid: string, kw: string): boolean {
 }
 
 /**
+ * engine拡張 wave#2 cluster5 (2026-06-14): 相手への使用制限 aura の board-scan reader。
+ * ownerSide の現場 (scene) にある type:'continuous' ability で continuousModifier.opponentRestrict が
+ * token を含み、かつ ability.condition を owner ctx で満たすものが1つでもあれば true。
+ * BUG-030 の grantKeywords walk (keywords() 上部) と同じ continuous + 条件評価経路を board-level に拡張
+ * (rules/24 §常時有効型: 条件成立中のみ有効・条件外で即失効 / rules/17 §条件未達=能力を持っていない扱い)。
+ * 不在時 false (既存カードは opponentRestrict 未宣言 → no-op、smoke baseline 不変)。
+ * @param ownerSide aura を所有する側 (= 制限される側の "相手")。canCutIn/disguise 側は other = opp-of-actor を渡す。
+ */
+function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger'): boolean {
+  for (const c of s.players[ownerSide].scene) {
+    const d = def.card(c.cardId);
+    if (!d) continue;
+    const ctx = { source: { player: ownerSide, uid: c.uid } } as Parameters<typeof evalCond>[2];
+    for (const ability of d.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (!ability.continuousModifier?.opponentRestrict?.includes(token)) continue;
+      if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Task D E4 (2026-06-12): 非キーワードテキスト能力 token の統一 reader。
  * 「相手の現場にいるアクティブ状態のキャラを指定してアクションできる」(actionTargetsActive) /
  * 「スリープ状態でもガードできる」(sleepGuard) / 「コンタクトによってリムーブされない」(contactImmune) 等を
@@ -257,6 +281,7 @@ export const char = {
   traits,
   keywords,
   hasKeyword,
+  restrictsOpponent,
   hasTextAbility,
   state,
   isNamed,

@@ -22,7 +22,7 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `char` | `ap`, `colors`, `declaredUseCount`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
+| `char` | `ap`, `colors`, `declaredUseCount`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `restrictsOpponent`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
 | `def` | `byColor`, `byTrait`, `card` |
 | `game` | `canWin`, `evidenceShortfall`, `refreshCount`, `result` |
 | `log` | `byPlayer`, `byTurn`, `search`, `tail` |

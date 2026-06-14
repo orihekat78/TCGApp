@@ -87,6 +87,13 @@ export type ContinuousModifier = {
   lpDelta?: ContinuousDelta;
   grantKeywords?: (s: GameState, ctx: { uid: string }) => string[];
   customSelectorPatch?: (s: GameState, uid: string, base: SceneCharacter) => Partial<SceneCharacter>;
+  // engine拡張 wave#2 cluster5 (2026-06-14): 相手への使用制限 aura (rules/09 §カットイン/変装, rules/24 §常時有効型)。
+  //   'cutin'          = 「相手は【カットイン】を使用できない」(B02063/B04034/B09017)。
+  //                      flow.contact.canCutIn が cut-in する側の相手盤面を read.char.restrictsOpponent で走査。
+  //   'disguiseTrigger'= 「相手のキャラの【変装時】は発動しない」(B04034)。
+  //                      flow.contact.disguise が disguise:into emit を抑止 (変装 swap 自体は成立)。
+  // ability.condition と併用し条件成立中のみ aura 有効。不在時 no-op (既存カードは未宣言 → restrictsOpponent=false)。
+  opponentRestrict?: ('cutin' | 'disguiseTrigger')[];
 };
 
 // ---------- AbilityDef ----------

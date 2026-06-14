@@ -3,37 +3,43 @@
 > 履歴: cluster2/BUG-140 → sessions/2026-06-13.md。cluster3 → sessions/2026-06-14.md +
 > changelog-entries/2026-06-14-01。cluster4 → sessions/2026-06-14-2.md + changelog-entries/2026-06-14-02。
 
-## 現在地 (2026-06-14) — engine拡張 wave#2 cluster4 ✅ (branch cards/wave2-cluster4、commit 前)
+## 現在地 (2026-06-14) — engine拡張 wave#2 cluster5 ✅ (branch cards/wave2-cluster5、commit 前)
 
-承認済 work order ④ の engine拡張 wave#2。cluster3 完了後、ユーザー選択で (A) cluster4 を実施。
+cluster4 完了 (commit 431b8eed) 後、ユーザー選択 (A) で cluster5 = usage-restriction aura を実施。
+cluster6 (M3 イベント使用不可) は同セッション内で cluster5 後に別 commit 実装の方針。
 
-### remove-area → deck-bottom 解禁 6枚 (4設計) / DEFER B07025
+### usage-restriction aura 解禁 3枚 (M1 相手カットイン不可 + M2 変装時不発動)
 
-- 比較 triage (6 gate × opus, 690k tok) で最高歩留り × 最低リスクと確定 (vs usage restriction 5枚/med risk)。
-- engine additive 2 プリミティブ: 新 Cost `removeAreaToDeckBottom` (sceneToDeckBottom の remove 版) +
-  新 AtomVerb `removeAreaAllToDeckBottom` (B08027、両者 remove 全部→各自 deck 下+両 shuffle、自己含む/refresh でない)。
-- 8 サイト additive (effect.ts / cost evaluate+pay / atom-handlers / validate.ts / cjs / useActionsPanelFlow / ability-activate)。
-- カード: B08051/P 赤井秀一・B08066/P 上原由衣・B03059 土井塔克樹・B08027 長門秀臣 (hand-authored full-def)。ALL_CARDS 1152→1158。
-- 敵対設計レビュー 3 lens: engine 設計 approve、全員 blocker = pick 短縮形誤り (n:{}+nested target は無音 no-op、BUG-130 系) → flat max:1+filter に全句修正。
+- 設計ゲート = Workflow (5 grounding → synthesis → 4 敵対レンズ, 全 opus, 1.3M tok)。**反証が 2 欠陥捕捉**:
+  M2 方向バグ (disguise:into 抑止が変装側盤面を走査 → `other`=相手側に修正、自分変装自爆も同根) /
+  B09017 custom 型エラー (cardId string を CardDef 要求 helper に渡す → lookupCardDef で解決)。両方修正反映。
+- engine additive (whitelist 3点同期 **不要** = verb でなく continuousModifier field):
+  新 field `ContinuousModifier.opponentRestrict?:('cutin'|'disguiseTrigger')[]` /
+  新 reader `read.char.restrictsOpponent(s,ownerSide,token)` (grantKeywords walk を board-level 拡張) /
+  `flow/contact.ts` canCutIn + disguise:into emit に other-side ガード 2 箇所。touched engine = 3 ファイル。
+- カード: B02063 羽田秀吉(無条件)・B04034 京極真(絆+ターン, M1+M2)・B09017 吉田歩美(相手ターン+board, NAME除外)。ALL_CARDS 1158→1161。
 
 ### 検証ゲート (全 green)
 
-tsc 0 / sync-whitelists 5/5 / 挙動テスト 12 新設 (cost/verb プリミティブ + 各カード decoy 付) /
-full vitest **2086** (+12, regression 0) / smoke:1000 baseline 完全一致 (avg 10.863≈10.86 / winsA 469 /
-timeouts0 / exceptions0) / playwright MCP 実機 1試合 (console err = favicon のみ)。
+tsc 0 / sync-whitelists / 挙動テスト 5 新設 (`tests/cards/cluster5-usage-restriction-behavioral.test.ts`:
+M1 cutin-ban×3 + 変装許可 + B09017 2枚目吉田歩美 NAME除外 / M2 抑止+swap成立 + 自分変装は発動=direction fix証跡) /
+full vitest **2091** (+5) / smoke:1000 baseline 完全一致 (avg10.863≈10.86/winsA469/timeouts0/exceptions0=no-op実証) /
+e2e playwright **119 passed** (1 skipped) / eslint + lint:card-addition/listener/icon-abilities。
+新カードは非MVP→実機「画面=文言」N/A、専用 vitest で代替 (BUG-132 教訓)。
 
 ### 残作業 (このセッション)
 
-npm run docs → pre-commit (docs:check + lint 8本) → commit → main ff-merge → push → CI green。
+npm run docs → commit → main ff-merge → push → CI green。その後 cluster6 (B09034/P) 着手。
 
-## 繰越 (DEFERRED-INDEX 記載)
+## cluster6 前提 (次工程)
 
-- DEFER B07025 (triage 誤分類、動的 levelMax-from-cost filter 不在)。
-- 既知 gap: B08066 cost の《諸伏高明/大和敢助》leave:remove-area 反応 (hook 不在 + 反応元 B05087/B05088 未実装で安全)。
-- cluster3 繰越: reasoning refresh / BUG-143 (contact-scope 清掃) / BUG-144 (case guard 窓) / U1/U2 (要公式照会)。
+M3 = 新 verb setEventUseBan + TurnScopedFlags.eventUseBanned (reset=mutate/flag.ts:68-71) +
+handUseGateCommon/next-hint の event-only gate。**B09034「2枚まで」は forEach over:pick が実行時 throw**
+(resolver.ts:122) / 素 handAddFromRemove は value[0] 1枚のみ → **handAddFromRemove に複数pick path
+($pick.cardIds、charStackCard 同型) を additive 追加が前提**。設計→実装→専用テスト。
 
 ## ポインタ
 
-- 設計記録: `.claude/specs/engine-wave2-cluster4-remove-area-design.md` / cluster3: `engine-wave2-action-triggers-design.md`
-- triage/設計レビュー出力: `.tmp/cluster4-triage.json` / `.tmp/cluster4-design.json` (再集計 `.tmp/cluster3-recount.cjs`)
-- bug: BUG-141/142 修正済、143/144 未着手 (.claude/bugs/index.base)
+- 設計記録: `.claude/specs/engine-wave2-cluster5-usage-restriction-design.md`
+- triage/設計レビュー出力: `.tmp/cluster4-triage.json` (usage-restriction gate 評価) / workflow run wf_8e2bf639-f25
+- 繰越 (DEFERRED-INDEX): B07025 / B08066 leave:remove-area gap / cluster3 reasoning-refresh・BUG-143/144・U1/U2

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8092d69b01ea`
+> Source hash: `c1ddd872e828`
 
 公式ルール [`24-qa-naming-stun.md`](../../../rules/24-qa-naming-stun.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -19,7 +19,7 @@
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (71)
+## 📄 参照ソース (73)
 
 - [`src/cards/_shared/partnerColorKeyword.ts`](../../../../src/cards/_shared/partnerColorKeyword.ts)
 - [`src/cards/ct-d01/D01005.ts`](../../../../src/cards/ct-d01/D01005.ts)
@@ -41,4 +41,4 @@
 - [`src/cards/ct-d08/D08020.ts`](../../../../src/cards/ct-d08/D08020.ts)
 - [`src/cards/ct-d08/D08022.ts`](../../../../src/cards/ct-d08/D08022.ts)
 - [`src/cards/ct-d09/D09006.ts`](../../../../src/cards/ct-d09/D09006.ts)
-- _...ほか 51 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 53 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

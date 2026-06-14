@@ -71,6 +71,11 @@ export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId:
   if (!state.players[p].hand.includes(cardId)) return false;
   if (!isCutInCard(cardId)) return false;
   if (ax.cutInUsed?.[p]) return false;
+  // engine拡張 wave#2 cluster5 (2026-06-14): cut-in する p の相手が「相手は【カットイン】を使用できない」
+  // aura を現場に展開している場合は不可 (B02063/B04034/B09017、rules/09 §カットイン)。
+  // other = aura 所有者側 = cut-in する p の相手。不在時 false → 既存挙動不変 (smoke baseline 不変)。
+  const other: Player = p === 'self' ? 'opp' : 'self';
+  if (readChar.restrictsOpponent(state, other, 'cutin')) return false;
   return true;
 }
 
@@ -191,13 +196,22 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
   mutate.hand.remove(state, p, [cardId]);
 
   // disguise:into emit (spec: { uid, fromCardId, newCardId })
-  event.emit(
-    state,
-    'disguise:into',
-    { uid: targetUid, fromCardId, newCardId: cardId },
-    { player: p, uid: targetUid },
-  );
-  // rules/23: 元キャラのデッキ下移動は「リムーブ扱いではない」→ leave:to-deck Hook を発火
+  // engine拡張 wave#2 cluster5 (2026-06-14): 変装する p の相手 (= other) が「相手のキャラの【変装時】は
+  // 発動しない」aura (B04034) を展開している場合、disguise:into を emit せず【変装時】trigger を抑止する
+  // (rules/23 §変装時 / 公式 qAndA「変装自体は可能だが変装時能力は不発動」)。変装 swap (deck.toBottom/
+  // disguiseInto/hand.remove) は emit より前に完了済 → 変装は成立し、変装時 ability のみ silenced。
+  // other = aura 所有者側 = 変装する p の相手 (自分が aura を持つ自分変装は other 側に無い → 変装時 発動)。
+  // 不在時は通常 emit (no-op、既存挙動不変)。
+  const disguiseOther: Player = p === 'self' ? 'opp' : 'self';
+  if (!readChar.restrictsOpponent(state, disguiseOther, 'disguiseTrigger')) {
+    event.emit(
+      state,
+      'disguise:into',
+      { uid: targetUid, fromCardId, newCardId: cardId },
+      { player: p, uid: targetUid },
+    );
+  }
+  // rules/23: 元キャラのデッキ下移動は「リムーブ扱いではない」→ leave:to-deck Hook を発火 (抑止対象外、常に発火)
   event.emit(state, 'leave:to-deck', { cardId: fromCardId }, { player: p });
 
   mutate.log.append(state, {
@@ -317,8 +331,6 @@ export function computeOrder(
   return _computeOrder(aAP, bAP, attackerSide);
 }
 
-// readChar は将来用 (Phase 5)
-void readChar;
 
 export const contact = {
   canCutIn,
