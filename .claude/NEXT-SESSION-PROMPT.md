@@ -1,52 +1,61 @@
-# 次セッション再開プロンプト (2026-06-14 engine拡張 wave#2 cluster4 完了時点)
+# 次セッション再開プロンプト (2026-06-14 engine拡張 wave#2 cluster5 完了時点 / cluster6 着手用)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
-> モデル方針 (2026-06-14 改定): `claude-fable-5` が agent で利用不可のため、本体も難判断も **当面 opus を最初から**
-> 使う (fable を先に試さない)。難判断 agent (certify / 意味等価突合 / 敵対レビュー) は `model:'opus'` を明示。
-> fable 再開時に難判断・本体を fable に戻す。詳細は CLAUDE.md「トークン運用ルール」。
+> モデル方針 (2026-06-14): `claude-fable-5` が agent で利用不可のため、本体も難判断も **当面 opus を最初から**
+> 使う。難判断 agent (certify / 意味等価突合 / 敵対レビュー) は `model:'opus'` 明示。詳細は CLAUDE.md「トークン運用ルール」。
+
+> ⚠ **cluster5 の main 反映が未完**: commit `6eec0047` は branch `cards/wave2-cluster5` 上。ユーザーが手動で
+> `git checkout main && git merge --ff-only cards/wave2-cluster5 && git push origin main` を実行する予定。
+> 新セッション開始時に `git log -1 origin/main` で cluster5 が main に乗ったか / CI green か確認すること。
 
 ---
 
 ```text
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md →
-.claude/memory.md → .claude/specs/refactor-plan/INDEX.md を読んで状況を把握すること。
+.claude/memory.md → .claude/specs/engine-wave2-cluster5-usage-restriction-design.md を読んで状況把握。
 
-## 現在地 (2026-06-14)
+## 現在地 (2026-06-14) — engine拡張 wave#2 (承認済 work order ③)
 
-承認済作業順: ① Phase 0 → ② リファクタ 1c〜2c → ③ カード wave#2 → ④ リファクタ Phase 3〜4。
-ユーザー選択で ④ の前に engine拡張 wave#2 を実施中。
+- cluster1〜4 ✅ (d7c4a2e9 / ec6c9780 / 3606f829 / ae934642 / 431b8eed)
+- **cluster5 ✅** (commit 6eec0047, branch cards/wave2-cluster5、main push はユーザー手動・要確認):
+  usage-restriction aura 3枚 (B02063/B04034/B09017)。新 field ContinuousModifier.opponentRestrict +
+  reader read.char.restrictsOpponent + contact.ts canCutIn/disguise:into ガード。whitelist 3点同期は不要。
+  ALL_CARDS 1158→1161。全ゲート green (vitest 2091 / smoke baseline 完全一致 / e2e 119)。
 
-- **cluster1 ✅** (BUG-132 + B08020/P、commit d7c4a2e9)
-- **cluster2 ✅** (ability-presence filter + BUG-137/138/139、commit ec6c9780)
-- **BUG-140 補修 wave ✅** (commit 3606f829)
-- **cluster3 ✅** (commit ae934642): action-lifecycle trigger 族 15枚 + 骨格バグ2件 (BUG-141/142)
-- **モデル方針改定 ✅** (commit be379294): fable→opus
-- **cluster4 ✅** (commit 431b8eed): remove-area → deck-bottom 解禁6枚 + engine additive 2プリミティブ
-  (新 Cost removeAreaToDeckBottom / 新 AtomVerb removeAreaAllToDeckBottom)。ALL_CARDS 1152→1158。
-  DEFER B07025。全ゲート green (full vitest 2086 / smoke baseline 完全一致 / playwright MCP / pre-commit)。CI green。
+## 次にやること: cluster6 = B09034/B09034P (M3 イベント使用不可)
 
-## 次にやること (どちらか、ユーザー確認推奨)
+cluster5 と同 work order ③ の続き。usage-restriction 族の残り。**/card-wave skill を呼ぶこと。**
 
-### (A) engine拡張 wave#2 cluster5 (残 yellow から次クラスタ)
-残ゲート機械再集計は `node .tmp/cluster3-recount.cjs` を流用 (classify-triage.json yellow ×
-git ls-files で pending sig)。cluster4 出荷後の残有力候補 (genuinely-new-engine):
-usage restriction (5枚、相手カットイン不可 aura + 変装抑止 + event-use ban、med risk) /
-card-name rewrite・untargetable grant は high risk で DEFER 済 (.tmp/cluster4-triage.json 参照)。
-scene→deck / hand-count は engine 実装済で「非 engine の通常 wave」(他句 block で pending)。
-**/card-wave skill を呼び、gate 毎の設計レビュー (Workflow 調査 + 敵対設計レビュー) 必須。**
+### 公式テキスト (緑イベント lv5、P は reprint で同文)
+「自分のリムーブエリアにあるイベントを2枚まで選び、手札に加える。このターン中、自分はイベントを使用できない。
+（能力や効果によっても使用できない）」/ 【ヒラメキ】リムーブのイベント1枚まで手札に加える。
+qAndA: ban = カードの使用/ネクストヒントでイベント使用不可 +「イベントを使用する」効果も不可。カットイン/ヒラメキは制限外。
 
-### (B) リファクタ Phase 3〜4 (承認済 work order ④)
-refactor-plan/INDEX.md Phase 3a から。engine 大規模リファクタ。/refactor-phase skill を呼ぶ。
+### engine 設計 (2部、grounding 済)
+1. **M3 verb (additive)**: 新 AtomVerb `setEventUseBan` (3点同期要: effect.ts union + atom-handlers map +
+   taskA-validate-specs.cjs VERBS Set、sync-taskA-whitelists.test が gate) + `TurnScopedFlags.eventUseBanned?:boolean`
+   (game-state.ts:82-93、reset は mutate/flag.ts:68-71 に追加) + gate を handUseGateCommon (hand-use-card.ts:56-68、
+   `d.kind==='event' && eventUseBanned` のみ) + next-hint.ts:120-125 (event 分岐) に追加。カットイン/ヒラメキは触れない。
+2. **前提エンジン拡張**: B09034「2枚まで」は `forEach over:{kind:'pick'}` が **実行時 throw**
+   (resolver.ts:122 が picked 無しで resolveTarget → target/resolve.ts:26 throw)。素 handAddFromRemove は value[0] 1枚のみ
+   (atom-handlers.ts:579-602)。→ **handAddFromRemove に複数pick path (`$pick.cardIds`、charStackCard:atom-handlers.ts:1104-
+   1159 + apply-pick.ts 同型) を additive 追加**。human+AI 両 path で 0/1/2枚取得を専用テストで実証。
+   clause1→clause2 は **sequence** (chain でない → 0 pick でも ban が走る)。
+
+### 必須プロセス
+- gate 毎の設計レビュー (Workflow 調査 + 敵対設計レビュー、全 opus)。
+- 新カードは非 MVP → smoke は no-op 回帰のみ。**新挙動は専用 vitest** で実証 (BUG-132 教訓):
+  event-ban が 手札使用/ネクストヒントの event を阻止 / character は阻止しない / カットイン・ヒラメキは阻止しない /
+  ban は turn reset で消える / B09034 2枚まで 0・1・2 取得。
 
 ## 状態 doc
-- defer 一覧: .claude/specs/DEFERRED-INDEX.md (cluster4 節 = B07025 + B08066 leave:remove-area gap + UI picker)
-- bug: .claude/bugs/index.base (BUG-141/142 修正済、143/144 未着手)
-- 設計記録: .claude/specs/engine-wave2-cluster4-remove-area-design.md / sessions/2026-06-14-2.md
-- triage 出力: .tmp/cluster4-triage.json (6 gate 評価) / .tmp/cluster4-design.json (設計+敵対レビュー)
+- 設計記録: .claude/specs/engine-wave2-cluster5-usage-restriction-design.md (cluster6 節に M3 詳細)
+- defer 一覧: .claude/specs/DEFERRED-INDEX.md / bug: .claude/bugs/index.base (BUG-143/144 未着手)
+- triage: .tmp/cluster4-triage.json (usage-restriction gate 評価、B07005/D02008 は別機構で DEFER)
 - 公式 Q&A 一次データ: cards-data TSV qAndA 列 (web fetch 前に必ず見る)
 
-/card-wave (A) または /refactor-phase (B) を呼んでから着手してください。
+/card-wave を呼んでから cluster6 に着手してください。
 ```
 
-cluster4 は完了済。次は上記 (A) cluster5 または (B) リファクタ Phase 3〜4 から開始してください。
+cluster5 は完了 (commit 済・main push 待ち)。次は cluster6 (B09034/P) から開始してください。
