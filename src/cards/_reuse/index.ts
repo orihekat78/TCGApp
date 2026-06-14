@@ -179,6 +179,7 @@ import { B06030P } from '../ct-p06/B06030P.js';
 import { B06035 } from '../ct-p06/B06035.js';
 import { B06040 } from '../ct-p06/B06040.js';
 import { B06040P } from '../ct-p06/B06040P.js';
+import { B06049 } from '../ct-p06/B06049.js';
 import { B06056 } from '../ct-p06/B06056.js';
 import { B06060 } from '../ct-p06/B06060.js';
 import { B06070 } from '../ct-p06/B06070.js';
@@ -792,6 +793,8 @@ export const REUSE_CARDS: CardDef[] = [
   B02063, B04034, B09017,
   // engine拡張 wave#2 cluster6 (2026-06-14): usage-restriction (event-use ban) 2枚 (B09034/B09034P「黄金千枚二千杯」緑イベント=リムーブのイベント2枚まで回収+このターン自分はイベント使用不可)
   B09034, B09034P,
+  // engine拡張 wave#2 cluster8 (2026-06-15): ヒラメキ抑止窓 1枚 (B06049 佐々木小次郎 a2「アクション[事件]したとき、アクション終了時まで相手の【ヒラメキ】は発動しない」= setHiramekiSuppress verb + turnState.hiramekiSuppressed + action-end 清掃)
+  B06049,
   // cluster7 (2026-06-14、engine変更0 card-authoring): hand-count condition 初消費 2枚 (B07067 沖矢昴=【パートナー赤】登場時 相手手札≥自分手札でレベル8以下リムーブ + 宣言 sleepChar-pick / B07070 新出智明=登場時 手札2枚以下でレベル7以上赤に AP+1000・突撃 + カットイン)
   B07067, B07070,
 ];

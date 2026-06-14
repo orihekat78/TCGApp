@@ -165,6 +165,7 @@ export type AtomVerb =
   // 手札の使用・ネクストヒントの event のみゲート (公式 Q&A: カットイン/ヒラメキは制限外)。
   // rules: 25 (公式 Q&A) / 12 (ネクストヒント) / 06 (イベント使い切り)
   | 'setEventUseBan'
+  | 'setHiramekiSuppress'
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
   | 'expandActionTargets'

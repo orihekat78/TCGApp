@@ -450,6 +450,10 @@ export function advance(state: GameState, ax: ActionContext): void {
         mutate.char.clearTurnEffects(state, c.uid, 'contact');
       }
     }
+    // B06049 cluster8 (2026-06-15): action-scoped ヒラメキ抑止 (turnState、player-level) を
+    // アクション終了で清掃。scene loop の外で両プレイヤー分を明示クリア (rules/10 「アクション終了時まで」)。
+    state.turnState.self.hiramekiSuppressed = false;
+    state.turnState.opp.hiramekiSuppressed = false;
     event.emit(
       state,
       'action:end',

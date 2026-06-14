@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `e7f46a7dd7a3`
+> Source hash: `450324eb9f60`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,61 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# cluster8 — ヒラメキ抑止窓 (action-scoped hirameki suppress) 1枚
+
+**Round/Phase**: 2026-06-15 engine拡張 wave#2 cluster8。cluster3 で DEFER した B06049 a2 を、新 engine 機構
+(action-scoped ヒラメキ抑止 flag) を追加して解禁。設計は敵対的設計レビュー (opus) で `sound` 判定後に実装。
+
+### 新 engine 機構 (cluster6 setEventUseBan の action-scoped 版)
+
+- `TurnScopedFlags.hiramekiSuppressed?: boolean` を追加 (player-level)。
+- 新 atom verb `setHiramekiSuppress` (3点 whitelist 同期: effect.ts union / validate.ts map / taskA cjs)。
+  `turnState[resolvePlayer(player)].hiramekiSuppressed=true` をセット。
+- `listeners/triggered.ts handleEvidenceRemovedHook` が payload.player (証拠を失う側) の flag を見て、
+  optional/forced 両経路の【ヒラメキ】発火を抑止。
+- 清掃: `flow/action/state-machine.ts` の contact-end→action-end 遷移で両プレイヤー分クリア (action-scoped、
+  player-level なので scene loop 外)。turn:start `resetTurnFlags` も backstop。
+
+### 解禁カード 1枚
+
+- **B06049 佐々木小次郎** (白 lv6/ap6000/lp0, YAIBA, R):
+  - a1【登場時】このキャラ以外の[YAIBA]がいれば、ターン終了時まで〚突撃〛 (D08011 a1 同型、trait=YAIBA)。
+  - a2 このキャラがアクション[事件]したとき、アクション終了時まで相手の【ヒラメキ】は発動しない
+    (`action:declare` + `selfOnly` + `matcherCondition triggerActionKind{case}` → `setHiramekiSuppress{opp}`)。新機構。
+  - a3【ヒラメキ】キャラ1枚までスリープ (PR138 a2 同型)。
+- ALL_CARDS 1165→1166。
+
+### 検証
+
+- 専用 behavioral テスト `tests/cards/cluster8-hirameki-suppress.test.ts` 4 件 (抑止の核 + 制御、verb、
+  trigger 配線 + action[char]/非このキャラ 制御、action-end 清掃) で新挙動を実証 (B06049 は非 MVP のため
+  smoke では踏めない、BUG-132 教訓)。full vitest 2113 pass、smoke:1000 baseline **不変** (engine 変更が
+  既存デッキに no-op = B06049 不在時は flag 未セットで check/clear が無影響) を証跡として確認。
+
+# engine bugfix — BUG-143 / BUG-144 (cluster3 敵対レビュー発見分の解消)
+
+**Round/Phase**: 2026-06-15。engine拡張 wave#2 cluster3 の設計敵対レビューで発見・記録した 2 件の engine
+バグ (rules 整合) を TDD で解消。骨格凍結原則の **例外 (バグ修正)** として実施。
+
+### BUG-143 — contact-scope 修正値を contact-end で清掃 (rules/08 §6)
+
+- `apMod_contact` / `lpMod_contact` / `lvlMod_contact` (カットイン AP+ 等) が turn-end でのみ清掃され、
+  同一ターン 2 回目以降のコンタクトに stale 残留していた。
+- `mutate/char.ts clearTurnEffects` に scope `'contact'` を新設し、`flow/action/state-machine.ts` の
+  contact-end 遷移で呼出。turn-end safety net は二重保険で残置。
+- 検証: 単体 + behavioral テスト (red→green)、full vitest 回帰なし、smoke:1000 baseline 不変
+  (稀ケースのため AI 勝敗に影響せず)。
+
+### BUG-144 — AI のアクション[事件] にガード窓 + smoke re-baseline
+
+- `resolveActionAgainstCase` が常に `passGuard` 固定で、CPU 防御側がアクション[事件] をガードできなかった
+  (rules/07-08 はガード可)。`defenderPolicy.chooseGuard` 委譲を追加し、ガード成立→AP判定 (証拠変動なし) /
+  不成立→証拠リムーブ+獲得 に分岐。human 経路 `useEngineDispatch` の actionJudge 分岐と同型
+  (user_request 20260522_01 #8 で確定済) を CPU 経路にミラー。
+- 呼出元 2 箇所 (`policy.applyMove` / `useEngineDispatch`) が `HeuristicPolicy` を渡す。
+- 検証: case-guard/passGuard テスト (red→green)、full vitest 回帰なし。smoke:1000 で期待 drift
+  (avg 10.86→11.00、winsA 469→498、timeouts/exceptions=0) を確認し `smoke-baseline.json` を re-baseline。
 
 # cluster7 — engine変更0 card-authoring (hand-count condition 初消費) 2枚
 

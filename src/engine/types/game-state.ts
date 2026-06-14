@@ -98,6 +98,15 @@ export type TurnScopedFlags = {
    * optional-flag 前例に倣い state-factory / fixtures では未初期化。
    */
   eventUseBanned?: boolean;
+  /**
+   * 「アクション[事件]終了時まで、このプレイヤーの【ヒラメキ】は発動しない」(B06049 a2、cluster8 2026-06-15)。
+   * setHiramekiSuppress verb が **相手** (アクション[事件]を行った側から見た相手 = 証拠を失う側) の slot に
+   * セットし、state-machine の action-end (contact-end→action-end 遷移) で両プレイヤー分クリアする
+   * (action-scoped。eventUseBanned の turn-scoped とは清掃タイミングが異なる)。turn:start の
+   * resetTurnFlags も backstop でクリア。listeners/triggered.ts handleEvidenceRemovedHook が
+   * payload.player の本フラグを見て hirameki の push/queue を抑止する。undefined/false = 抑止なし。
+   */
+  hiramekiSuppressed?: boolean;
 };
 
 export type LogEntry = {

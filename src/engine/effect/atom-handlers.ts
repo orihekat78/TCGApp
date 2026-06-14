@@ -1571,6 +1571,18 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: seubP, turn: s.turn.number, action: 'effect:setEventUseBan' });
       return;
     }
+    case 'setHiramekiSuppress': {
+      // cluster8 (2026-06-15) B06049 a2「このキャラがアクション[事件]したとき、アクション終了時まで
+      //   相手の【ヒラメキ】は発動しない」。turnState[p].hiramekiSuppressed=true をセットする
+      //   action-scoped flag verb。a2 は player:'opp' で呼ぶ (source=B06049 所有者 → 相手 = 証拠を失う側)。
+      // ゲート: listeners/triggered.ts handleEvidenceRemovedHook が payload.player の本フラグを見て抑止。
+      //   清掃: state-machine.ts contact-end→action-end で両プレイヤー分 false (主)、turn:start backstop。
+      // rules: 10 (アクション[事件]/ヒラメキ) / 13 (キーワード) / 22 (アクション宣言時に発動)
+      const shsP = resolvePlayer(a.player ?? 'self', ctx);
+      s.turnState[shsP].hiramekiSuppressed = true;
+      mutate.log.append(s, { ts: Date.now(), player: shsP, turn: s.turn.number, action: 'effect:setHiramekiSuppress' });
+      return;
+    }
 
     // --- メタ ---
     case 'log': {

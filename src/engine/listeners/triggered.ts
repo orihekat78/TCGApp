@@ -400,6 +400,10 @@ export function registerTriggeredListener(): void {
 function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: unknown): void {
   const p = payload as { player?: 'self' | 'opp'; ev?: { cardId?: string } } | undefined;
   if (!p || !p.player || !p.ev || !p.ev.cardId) return;
+  // B06049 cluster8 (2026-06-15): アクション[事件] を行った側が「相手の【ヒラメキ】は発動しない」を
+  // セットしている場合 (turnState[証拠を失う側].hiramekiSuppressed)、optional/forced 両経路の
+  // ヒラメキ発火をここで抑止する (action-scoped、action-end で清掃)。rules/10。
+  if (state.turnState[p.player]?.hiramekiSuppressed) return;
   const def = readDef.card(p.ev.cardId);
   if (!def) return;
   const card: CardLocation = {
