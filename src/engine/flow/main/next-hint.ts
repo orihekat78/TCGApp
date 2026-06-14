@@ -90,6 +90,12 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
         throw new Error(`runNextHint: ${optionalCardId} level ${d.level} > FILE ${state.players[p].file.length}`);
       }
     }
+    // イベント使用不可 (B09034 §M3): ネクストヒントの step2 でも event 使用は不可 (rules/25 公式 Q&A:
+    //   「ネクストヒントでイベントカードを使用することができ(ない)」)。step1 の FILE→手札は阻害しない
+    //   (本ガードは optionalCardId ブロック内 = step2 のみ)。UI 側 toCandidate でも事前除外する。
+    if (d?.kind === 'event' && state.turnState[p].eventUseBanned) {
+      throw new Error(`runNextHint: ${optionalCardId} event-use banned this turn`);
+    }
     // 効果発動 hook (Phase 5 で listener が pendingEffects に積む)
     event.emit(
       state,

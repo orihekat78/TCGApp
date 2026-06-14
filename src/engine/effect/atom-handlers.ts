@@ -581,6 +581,40 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const p = resolvePlayer(a.player, ctx);
+      // cluster6 (2026-06-14) B09034「リムーブのイベントを2枚まで選び、手札に加える」用 multi-pick path。
+      //   charStackCard (case 'charStackCard') と同型の cardIds:'$pick.cardIds' contract:
+      //     { player, cardIds:'$pick.cardIds', target:{kind:'pick', query:{area:'remove',side:'self',
+      //       filter:{kind:'event'}}, n:{min:0,max:2}, chooser:'self'} }
+      //   human 経路: apply-pick.ts が picked uid → cardIds 配列を充填して再 dispatch (hasCardIdsBind)。
+      //   AI 経路:   resolve-picks.ts が remove 候補から greedy に max 枚 cardIds を充填。
+      //   従来 single-card path (cardIds 未指定) は下段で従来通り処理 → additive・非干渉。
+      const rawCardIds = (a as { cardIds?: unknown }).cardIds;
+      if (rawCardIds === '$pick.cardIds') {
+        // 未解決 (human 経路の await): side-channel に pick を queue して return。
+        if (a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+            byPlayer: p,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });
+        }
+        return;
+      }
+      if (Array.isArray(rawCardIds)) {
+        // 解決済 (0〜max 枚): 各 cardId を remove → hand へ移す (rules/15「〜まで」= 0 枚可 → no-op + log)。
+        const cardIds = rawCardIds as string[];
+        const remM = s.players[p].remove;
+        const movedIds: string[] = [];
+        for (const cid of cardIds) {
+          const idx = remM.indexOf(cid);
+          if (idx !== -1) { remM.splice(idx, 1); mutate.hand.add(s, p, [cid]); movedIds.push(cid); }
+        }
+        mutate.log.append(s, {
+          ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove',
+          target: movedIds.join(','), result: cardIds.length === 0 ? '0' : (movedIds.length ? 'ok' : 'not-found'),
+        });
+        return;
+      }
       const hafrArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handAddFromRemove.defaultArea, a, p, p) }
         : a;
@@ -1519,6 +1553,22 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         target: '',
         result: `revealed ${count}`,
       });
+      return;
+    }
+
+    // --- ターンスコープ flag ---
+    case 'setEventUseBan': {
+      // cluster6 (2026-06-14) B09034/B09034P「このターン中、自分はイベントを使用できない。
+      //   （能力や効果によっても使用できない）」。turnState[p].eventUseBanned=true をセットする
+      //   turn-scoped flag verb。player 省略時は所有者 (resolvePlayer 規約: 'self'=ctx.source.player)。
+      // ゲート: hand-use-card.ts handUseGateCommon / next-hint.ts (いずれも d.kind==='event' のみ)。
+      //   turn:start の mutate.flag.resetTurnFlags が false に戻す。
+      // 公式 Q&A (rules/25): 【カットイン】【ヒラメキ】は本制限を受けない → contact.ts / hirameki は touch しない。
+      //   「イベントを使用する」効果 verb は engine に未実装 (どのカードも生成しない) → ゲート不要。
+      // rules: 25 (公式 Q&A) / 12 (ネクストヒント) / 06 (イベント使い切り)
+      const seubP = resolvePlayer(a.player ?? 'self', ctx);
+      s.turnState[seubP].eventUseBanned = true;
+      mutate.log.append(s, { ts: Date.now(), player: seubP, turn: s.turn.number, action: 'effect:setEventUseBan' });
       return;
     }
 

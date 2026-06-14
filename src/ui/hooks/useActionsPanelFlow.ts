@@ -244,6 +244,9 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
     const d = readDef.card(cardId);
     if (!d) return null;
     if (d.kind !== 'character' && d.kind !== 'event') return null;
+    // イベント使用不可 (B09034 §M3): ban 中の event は候補から除外 (engine runNextHint の throw と整合)。
+    //   rules/25 公式 Q&A: ネクストヒントの event 使用も不可。キャラは制限外。
+    if (d.kind === 'event' && state.turnState[p].eventUseBanned) return null;
     // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)
     if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))) return null;
     // レベル ≤ postPopCount (rules/12)

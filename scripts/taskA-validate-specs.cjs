@@ -24,6 +24,7 @@ const VERBS = new Set([
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
   'caseToResolved', 'deckRevealUntil', 'deckToBottomBound', 'boundToRemove', 'deckShuffle', 'souza',
   'removeAreaAllToDeckBottom', // cluster4 (2026-06-14)
+  'setEventUseBan', // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   'expandActionTargets', 'log', 'noop',
 ]);
 const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly']);

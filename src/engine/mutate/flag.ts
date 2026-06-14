@@ -69,6 +69,7 @@ function resetTurnFlags(s: GameState, p: Player): void {
   s.turnState[p].nextHintUsed = false;
   s.turnState[p].assistedThisTurn = false;
   s.turnState[p].enterCountThisTurn = 0; // rules/17 §【疾風 N】用 counter リセット
+  s.turnState[p].eventUseBanned = false; // B09034 §M3: 「このターン中イベント使用不可」をターン境界で解除
   s.turnState[p].declaredAbilityUseCount = {};
   // BUG-067 (2026-05-28): declared ability の【ターン①/②】 enforcement のため、
   // SceneCharacter / Case の declaredUseCount もターン境界でリセット。

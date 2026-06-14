@@ -90,6 +90,14 @@ export type TurnScopedFlags = {
    * SceneCharacter.enterOrder (cumulative 累積位置) とは別。
    */
   enterCountThisTurn?: number;
+  /**
+   * 「このターン中、自分はイベントを使用できない」(rules/25 §B08020 周辺 / B09034 公式 Q&A)。
+   * setEventUseBan verb がセットし、turn:start の resetTurnFlags でクリア。
+   * undefined/false = 制限なし。ゲート対象は「手札の使用」と「ネクストヒント」の event のみ
+   * (公式 Q&A: 【カットイン】【ヒラメキ】は本制限を受けない)。enterCountThisTurn と同じ
+   * optional-flag 前例に倣い state-factory / fixtures では未初期化。
+   */
+  eventUseBanned?: boolean;
 };
 
 export type LogEntry = {

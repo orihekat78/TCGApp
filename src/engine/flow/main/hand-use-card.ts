@@ -64,6 +64,11 @@ function handUseGateCommon(state: GameState, p: Player, cardId: string): boolean
   if (!colorAllowed(state, p, cardId)) return false;
   // レベル (rules/12)
   if (!levelAllowed(state, p, cardId)) return false;
+  // イベント使用不可 (B09034 §M3): このターン event 使用が ban されている場合は不可。
+  // rules/25 公式 Q&A:「手札の使用やネクストヒントでイベントカードを使用することができ(ない)」→
+  //   event のみ対象、キャラは制限外。【カットイン】【ヒラメキ】は別経路 (contact / hirameki) で対象外。
+  const def = readDef.card(cardId);
+  if (def?.kind === 'event' && state.turnState[p].eventUseBanned) return false;
   return true;
 }
 

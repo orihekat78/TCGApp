@@ -35,6 +35,7 @@ const ATOM_VERB_MAP = {
   startContact: true, endActionEarly: true,
   deckRevealUntil: true, deckToBottomBound: true, boundToRemove: true, deckShuffle: true, souza: true,
   removeAreaAllToDeckBottom: true, // cluster4 (2026-06-14)
+  setEventUseBan: true, // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   expandActionTargets: true, // D11007 v2 Phase 3
   log: true, noop: true,
 } as const satisfies Record<AtomVerb, true>;

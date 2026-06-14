@@ -160,6 +160,11 @@ export type AtomVerb =
   // rules: 14/26 (デッキが増えるのみ → これは「リフレッシュ」ではない=証拠を得る手順なし、公式Q&A),
   //   09/23 (リムーブでない=現場リムーブ時不発動)。
   | 'removeAreaAllToDeckBottom'
+  // engine拡張 wave#2 cluster6 (2026-06-14): 「このターン中、自分はイベントを使用できない」
+  // (B09034/B09034P)。turnState[p].eventUseBanned=true をセットする turn-scoped flag verb。
+  // 手札の使用・ネクストヒントの event のみゲート (公式 Q&A: カットイン/ヒラメキは制限外)。
+  // rules: 25 (公式 Q&A) / 12 (ネクストヒント) / 06 (イベント使い切り)
+  | 'setEventUseBan'
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
   | 'expandActionTargets'

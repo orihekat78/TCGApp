@@ -648,6 +648,8 @@ import { B03059 } from '../ct-p03/B03059.js';
 import { B02063 } from '../ct-p02/B02063.js';
 import { B04034 } from '../ct-p04/B04034.js';
 import { B09017 } from '../ct-p09/B09017.js';
+import { B09034 } from '../ct-p09/B09034.js';
+import { B09034P } from '../ct-p09/B09034P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -786,4 +788,6 @@ export const REUSE_CARDS: CardDef[] = [
   B08051, B08051P, B08066, B08066P, B08027, B03059,
   // engine拡張 wave#2 cluster5 (2026-06-14): usage-restriction aura 3枚 (B02063 羽田秀吉=相手カットイン不可・B04034 京極真=相手カットイン不可+変装時不発動・B09017 吉田歩美=条件付き相手カットイン不可)
   B02063, B04034, B09017,
+  // engine拡張 wave#2 cluster6 (2026-06-14): usage-restriction (event-use ban) 2枚 (B09034/B09034P「黄金千枚二千杯」緑イベント=リムーブのイベント2枚まで回収+このターン自分はイベント使用不可)
+  B09034, B09034P,
 ];
