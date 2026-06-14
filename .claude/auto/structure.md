@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3136
+- **ファイル数**: 3139
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -707,6 +707,8 @@
     - `smoke-2026-06-14-4.md` — Smoke 1000戦レポート — smoke-2026-06-14-135452
     - `smoke-2026-06-14-5.json`
     - `smoke-2026-06-14-5.md` — Smoke 1000戦レポート — smoke-2026-06-14-150542
+    - `smoke-2026-06-14-6.json`
+    - `smoke-2026-06-14-6.md` — Smoke 1000戦レポート — smoke-2026-06-14-153311
     - `smoke-2026-06-14.json`
     - `smoke-2026-06-14.md` — Smoke 1000戦レポート — smoke-2026-06-14-105433
     - `smoke-baseline.json`
@@ -3186,6 +3188,7 @@
       - `lensf-batch1.test.ts` — tests/engine/flow/lensf-batch1 — Lens F 監査 修正バッチ1 (BUG-099 / BUG-101)
       - `lensf-batch2b-cutin.test.ts` — tests/engine/flow/lensf-batch2b-cutin — Lens F batch2b (BUG-104 D11013 防御側カットイン)
       - `setup.test.ts` — Phase 4 Task 4.1 — engine.flow.setup
+      - `state-machine-contact-cleanup.test.ts` — BUG-143: contact-scope 修正値 (apMod_contact 等) は contact-end → action-end 遷移で清掃される
       - `textual-grant.test.ts` — Task D E4 (2026-06-12): 非キーワードテキスト能力の付与 (textual ability token)
       - `turn.test.ts` — engine.flow.turn — Turn-level wrappers tests
     - **`integration/`**

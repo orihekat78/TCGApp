@@ -228,6 +228,31 @@ describe('engine.mutate.char', () => {
       // contactImmune と removeOnTurnEnd は維持
       expect(te['contactImmune']).toBe(false);
     });
+
+    // BUG-143: rules/08 §6 — カットインによる効果 (apMod_contact 等) はコンタクト終了時に切れる。
+    // contact-scope のみ清掃し、turn-scope 修正は残すこと。
+    it('scope=contact で _contact 系のみクリア、turn 系は維持 (rules/08 §6 BUG-143)', () => {
+      const c = makeChar({
+        turnEffects: {
+          contactImmune: false,
+          removeOnTurnEnd: false,
+          apMod_contact: 2000,
+          lpMod_contact: 1,
+          lvlMod_contact: -1,
+          apMod_turn: 500,
+        },
+      });
+      const s = makeState(c);
+      const result = produce(s, draft => {
+        char.clearTurnEffects(draft, 'uid-1', 'contact');
+      });
+      const te = result.players.self.scene[0].turnEffects;
+      expect(te['apMod_contact']).toBeUndefined();
+      expect(te['lpMod_contact']).toBeUndefined();
+      expect(te['lvlMod_contact']).toBeUndefined();
+      // contact-scope 清掃は turn-scope 修正を消さない
+      expect(te['apMod_turn']).toBe(500);
+    });
   });
 
   describe('setCard', () => {

@@ -132,7 +132,7 @@ function setTurnEffect(s: GameState, uid: string, key: string, val: unknown): vo
  * scope='turn': turn 系エフェクト (apMod_turn, lpMod_turn, lvlMod_turn,
  *   apMod_contact, lpMod_contact, lvlMod_contact, grantedKeywords) を削除
  */
-function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' | 'action'): void {
+function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' | 'action' | 'contact'): void {
   const found = findChar(s, uid);
   if (!found) return;
   const te = found.char.turnEffects;
@@ -176,6 +176,13 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     for (const key of Object.keys(te)) {
       if (key.endsWith('_action')) delete te[key];
     }
+  } else if (scope === 'contact') {
+    // BUG-143: rules/08 §6 — カットインによる効果 (apMod_contact / lpMod_contact / lvlMod_contact) は
+    // コンタクト終了時に切れる。state-machine の contact-end 遷移から呼ばれ、同一ターン 2 回目以降の
+    // コンタクトへ stale な修正を持ち越さない。turn-end safety net (scope:'turn') は二重保険で残置。
+    delete te['apMod_contact'];
+    delete te['lpMod_contact'];
+    delete te['lvlMod_contact'];
   }
 }
 

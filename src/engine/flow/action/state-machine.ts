@@ -441,10 +441,13 @@ export function advance(state: GameState, ax: ActionContext): void {
     ax.phase = 'action-end';
     // Task D E4 (2026-06-12): rules/08 §6-7 — アクション終了時に「アクション終了時まで」の
     // 効果 ('_action' suffix turnEffects、例: B09041 contactImmune_action) が切れる。
-    // 両プレイヤーの scene を清掃 (同ターン 2 回目のアクションへの stale 免疫持ち越し防止)。
+    // BUG-143: rules/08 §6 — コンタクト終了時にカットイン由来の修正 (apMod_contact 等、'contact' scope)
+    // も切れる。判定 (judge) と contact:end emit は既に済んでいるためこの時点で清掃して安全。
+    // 両プレイヤーの scene を清掃 (同ターン 2 回目のアクション/コンタクトへの stale 持ち越し防止)。
     for (const p of ['self', 'opp'] as const) {
       for (const c of state.players[p].scene) {
         mutate.char.clearTurnEffects(state, c.uid, 'action');
+        mutate.char.clearTurnEffects(state, c.uid, 'contact');
       }
     }
     event.emit(
