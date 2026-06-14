@@ -167,25 +167,59 @@ export function resolveActionAgainstChar(
 }
 
 /**
- * アクション [事件] の完全解決 (rules/10)。
+ * アクション [事件] の完全解決 (rules/07 / rules/10)。
  *
- * - declare → passGuard (case ターゲットには guard 不可能、rules/08)
- * - removeOpponentEvidenceTop → gainSelfEvidence
- * - judge → contact-end → action-end へ advance × 2
+ * BUG-144 (2026-06-15): アクション[事件] も rules/07-08 でガード可能。defenderPolicy.chooseGuard に
+ * 委譲し、ガード成立時は contact AP 判定 (攻撃 vs ガード) のみ・証拠変動なし、不成立時のみ rules/10
+ * の証拠リムーブ + 自証拠獲得を行う。これは human 経路 useEngineDispatch actionJudge の分岐
+ * (`case && !guardUid` → 証拠操作 / else → snapshotAP+judge、user_request 20260522_01 #8 で確定) と同型。
+ * 注: FSM contact-pending は case のため cutin フェーズを省略し judge へ直行する (既存挙動、parity 維持)。
+ *
+ * - declare → drainDeclareTriggers (宣言時 trigger をガード判定前に解決、BUG-141)
+ * - defenderPolicy?.chooseGuard で guard 判定 (候補は scene の active キャラ、partner 不可)
+ * - guard 成立: snapshotAP → judge → advance × 2 (証拠変動なし)
+ * - guard 不成立: removeOpponentEvidenceTop → gainSelfEvidence → advance × 2
  */
 export function resolveActionAgainstCase(
   state: GameState,
   byUid: string,
   targetPlayer: Player,
+  defenderPolicy?: AIPolicy,
   attackerPolicy?: AIPolicy,
 ): void {
   const ax = engine.flow.action.declare(state, byUid, { kind: 'case', player: targetPlayer });
   // BUG-141 (cluster3, F3-i): case アクションの宣言時 trigger (B01068/B02068 のブレット付与等) も
-  // ガード判定前に解決する。なお case アクション自体の guard 窓が passGuard 固定である件は別 (BUG-144)。
+  // ガード判定前に解決する。drain 経路は従来挙動を維持 (attackerPolicy 未指定なら全 pick drain)。
   drainDeclareTriggers(state, attackerPolicy);
-  engine.flow.action.passGuard(state, ax);
-  engine.flow.actionCase.removeOpponentEvidenceTop(state, ax);
-  engine.flow.actionCase.gainSelfEvidence(state, ax);
-  engine.flow.action.advance(state, ax); // judge → contact-end
-  engine.flow.action.advance(state, ax); // contact-end → action-end
+
+  // BUG-144: ガード判定 (rules/07-08)。case target は対象自身の除外なし (guardExclude=undefined)。
+  const cands = engine.flow.guard.candidates(state, ax.byUid, undefined);
+  const guardUid =
+    cands.length > 0 && defenderPolicy?.chooseGuard
+      ? defenderPolicy.chooseGuard(state, ax, cands)
+      : null;
+  if (guardUid !== null) {
+    engine.flow.action.tryGuard(state, ax, guardUid);
+  } else {
+    engine.flow.action.passGuard(state, ax);
+  }
+  // action:guarded / action:unguarded で queue された triggered effect を judge/証拠操作の前に解決
+  // (resolveActionAgainstChar と同型)。
+  engine.resolve.runAllUntilEmpty(state);
+
+  if (ax.guardUid) {
+    // ガード成立 → 証拠変動なし、攻撃キャラ vs ガードキャラの AP 判定のみ (rules/07)。
+    engine.flow.action.advance(state, ax); // leave-resolution → contact-pending
+    engine.flow.action.advance(state, ax); // contact-pending → judge (case は contact 省略)
+    engine.flow.action.snapshotAP(state, ax);
+    engine.flow.contact.judge(state, ax);
+    engine.flow.action.advance(state, ax); // judge → contact-end
+    engine.flow.action.advance(state, ax); // contact-end → action-end
+  } else {
+    // ガード不成立 → rules/10: 相手証拠 -1 + 自証拠 +1 (passGuard は phase を judge に設定済)。
+    engine.flow.actionCase.removeOpponentEvidenceTop(state, ax);
+    engine.flow.actionCase.gainSelfEvidence(state, ax);
+    engine.flow.action.advance(state, ax); // judge → contact-end
+    engine.flow.action.advance(state, ax); // contact-end → action-end
+  }
 }

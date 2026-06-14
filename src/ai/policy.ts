@@ -258,7 +258,8 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       return;
     }
     case 'actionAgainstCase': {
-      resolveActionAgainstCase(state, move.byUid, move.targetPlayer);
+      // BUG-144: 防御側 (CPU) に guard 窓を出す (char 経路と同型に HeuristicPolicy を渡す)。
+      resolveActionAgainstCase(state, move.byUid, move.targetPlayer, new HeuristicPolicy());
       return;
     }
     case 'assist': {

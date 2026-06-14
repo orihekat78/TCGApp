@@ -115,3 +115,55 @@ describe('policy.applyMove — actionAgainstChar with chooseGuard (Phase 8.7c)',
     expect(after.players.self.scene.find((c) => c.uid === atkUid)?.state).toBe('sleep');
   });
 });
+
+// BUG-144: アクション[事件] も rules/07-08 でガード可能。AI 防御側に guard 窓を出す
+// (human 経路 useEngineDispatch actionJudge と同型: case+guard成立 → 証拠変動なし + contact AP判定)。
+describe('policy.applyMove — actionAgainstCase with chooseGuard (BUG-144)', () => {
+  function seedEvidence(draft: GameState, p: 'self' | 'opp', cardId: string): void {
+    draft.players[p].deck.push(cardId);
+    mutate.evidence.addFromDeck(draft, p, 1, false, { turn: 0, via: 'action-case' });
+  }
+
+  it('CPU guard on case-action: 高 AP active キャラでガード → 証拠は奪われない (rules/07)', () => {
+    registerCardDef(makeCard('Attacker', { ap: 1500, lp: 1 }));
+    registerCardDef(makeCard('Guardian', { ap: 2500, lp: 1 }));
+    const s = produce(makeBaseState(), (draft) => {
+      mutate.scene.enter(draft, 'self', 'Attacker', { active: true });
+      mutate.scene.enter(draft, 'opp', 'Guardian', { active: true });
+      seedEvidence(draft, 'opp', 'EV-OPP'); // opp 事件に証拠 1 (アクション[事件] の対象条件)
+      draft.players.self.deck.push('EV-SELF'); // gainSelfEvidence 用 (ガード時は引かれないはず)
+    });
+    const atkUid = s.players.self.scene.find((c) => c.cardId === 'Attacker')!.uid;
+    const guardUid = s.players.opp.scene.find((c) => c.cardId === 'Guardian')!.uid;
+
+    const after = produce(s, (draft) => {
+      applyMove(draft, { kind: 'actionAgainstCase', byUid: atkUid, targetPlayer: 'opp' }, 'self');
+    });
+
+    // Guardian がガード → スリープ化
+    expect(after.players.opp.scene.find((c) => c.uid === guardUid)?.state).toBe('sleep');
+    // rules/07+10: ガード成立 → 証拠変動なし (opp 証拠は奪われず、self 証拠も増えない)
+    expect(after.players.opp.evidence.length).toBe(1);
+    expect(after.players.self.evidence.length).toBe(0);
+    // Attacker (1500) < Guardian (2500) → judge で何も起こらない (Attacker 残存・スリープ)
+    expect(after.players.self.scene.find((c) => c.uid === atkUid)?.state).toBe('sleep');
+  });
+
+  it('CPU passGuard on case-action: ガード候補なし → 既存挙動 (証拠リムーブ + 自証拠獲得)', () => {
+    registerCardDef(makeCard('Attacker', { ap: 2000, lp: 1 }));
+    const s = produce(makeBaseState(), (draft) => {
+      mutate.scene.enter(draft, 'self', 'Attacker', { active: true });
+      seedEvidence(draft, 'opp', 'EV-OPP');
+      draft.players.self.deck.push('EV-SELF');
+    });
+    const atkUid = s.players.self.scene.find((c) => c.cardId === 'Attacker')!.uid;
+
+    const after = produce(s, (draft) => {
+      applyMove(draft, { kind: 'actionAgainstCase', byUid: atkUid, targetPlayer: 'opp' }, 'self');
+    });
+
+    // ガード候補なし → passGuard → rules/10: 相手証拠 -1 + 自証拠 +1
+    expect(after.players.opp.evidence.length).toBe(0);
+    expect(after.players.self.evidence.length).toBe(1);
+  });
+});

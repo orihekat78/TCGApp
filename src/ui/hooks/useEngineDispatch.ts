@@ -266,7 +266,8 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'actionAgainstCase':
-      resolveActionAgainstCase(draft, action.byUid, action.targetPlayer);
+      // BUG-144: CPU vs CPU の case アクションでも防御側に guard 窓を出す (char 経路と同型)。
+      resolveActionAgainstCase(draft, action.byUid, action.targetPlayer, new HeuristicPolicy());
       return;
     // Phase 8 完全クローズ Commit 2: per-step action dispatch
     case 'actionDeclareChar': {
