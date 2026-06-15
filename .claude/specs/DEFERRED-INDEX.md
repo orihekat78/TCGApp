@@ -149,6 +149,19 @@ family残 5枚を certify (opus adversarial)。3枚解禁 (B07031/B07038/B07047,
 |-----|------------------|------|
 | ~~B07034 / PR231 (小泉紅子, text 同一)~~ | a1「裏向きセットカードが1枚離れるたび引く」= set-card-leave per-occurrence hook が不在 | **✅ 解消 (cluster9, 2026-06-15)**: `setcard:leave` hook を additive 実装し B07034/B07034P/PR231 a1+a2 + B02020/B02020P a1 を出荷 |
 
+## loseGame/defeat verb — landscape の「低リスク 3枚」は誤り (2026-06-15 cluster10 certify で判明)
+
+cluster10 候補として triage landscape が「loseGame verb / low risk / 3枚 (B09107/D07024)」と分類したが、
+**実テキストを読むと loseGame verb 単体では 0 枚解禁**。全「相手はゲームに敗北する」カードが重い別 gate を伴う:
+
+| パターン | カード | 支配 gate (loseGame 以外) |
+|---------|--------|--------------------------|
+| 事件解決能力 書き換え型 | D07024 / B03135/P / B05118/P / B05119/P / B06105〜108/P (計14+) | **パートナーの【事件解決】能力を別能力に書き換える** (勝利条件ロジックに介入、high-risk) + 【証拠隠滅】alt-win keyword + 〚証拠を事件レベル数リムーブ〛cost |
+| 証拠 reveal+trait-count 型 | B09107/P | 【事件解決】disable + 証拠 全 reveal verb + 証拠の特徴[犯人]≥8 count condition |
+
+→ **loseGame は低リスク単発 verb ではなく high-risk multi-gate クラスタ**。landscape の未精読 gate の risk 評価は信用せず
+per-card certify が必須 (card-wave skill 教訓)。loseGame verb 追加 + 上記いずれかの gate 群を別途設計するクラスタとして DEFER。
+
 ## ✅ engine拡張 wave#2 cluster9 (setcard:leave hook, 2026-06-15, cards/wave2-cluster9-setcard-leave) — known-gap
 
 `setcard:leave` per-occurrence hook を additive 実装 (HookName union + TRIGGERED_HOOKS + scene.ts removeToRemove/toDeck/toHand emit-before-splice + char.ts removeOneSetCard emit + taskA whitelist)。
