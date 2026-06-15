@@ -59,3 +59,17 @@ ready-to-design は **0**、出荷可能全 gate が needs-more-design。multi-c
 ### ⚠ ユーザー依頼 (UX 対応後): トリアージ・スイープ
 未実装 ~540 base カードを全 certify (3〜4 窓) → 全 engine ゲートを列挙 → 「あと正確に N クラスタ」+ 共有プリミティブ先行で回帰最小の
 ロードマップ作成。目的=ゴール地点確定 + 大型ゲートの設計順序最適化。
+
+## 2026-06-15 セッション⑨ — UI picker Direct Manipulation 化 (engine 不変・UI 層のみ)
+
+cluster14 MCP でユーザー指摘の「ピッカー text-only で同名カード区別不能・現場直接選択不可」を解消 (memory `feedback-ui-direct-manipulation`)。
+設計 = `.claude/specs/ui-picker-direct-manipulation-2026-06-15.md`。決定論 scan で確定: EffectPickerModal に落ちる pick は
+**100% scene-char・全て n.max=1**、対象 verb = sceneRemove/charModifyAP(既存) + sceneSetState/charGrantKeyword/charSetCard/
+charSetTurnEffect/sceneToHand(旧 text-only)。**実装前 opus 3-lens 敵対設計レビュー** (全 GO-with-fixes、1 blocker=nMax>1 soft-lock + fix 群を v2 反映)。
+
+- 新規 `src/ui/services/scenePick.ts` `isSceneDirectPick(pending,gameState)` を Playmat+EffectPickerModal で共有 (二重UI/soft-lock 防止)。
+- Playmat: isScenePick を候補ベース述語に一般化 / switch victim を self 現場直接クリック化 (旧 SceneSwitchPickerModal 撤去・store 維持) /
+  banner verb 別 + switchSessionActive flicker gate。EffectPickerModal: scene pick は null + fallback に CardArt。
+- gate 全 green: tsc0 / eslint 0err / **vitest 2232** (+scenePick 8, −SSP test 2) / **smoke winsA=498 不動** /
+  **MCP 実機** (sceneRemove opp rotate180 同名 decoy / sceneSetState 新verb / hand-use switch 直接 / nMax>1 fallback 画像, console err0)。
+- out of scope: Guard/MisreadPicker (別フロー、follow-up 候補)。**次 = トリアージ・スイープ**。

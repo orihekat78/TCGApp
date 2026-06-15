@@ -15,7 +15,17 @@
 //   - resolve(uid) で commit / resolve(null) で cancel
 
 import { create } from 'zustand';
-import type { SceneSwitchCharView } from '../components/SceneSwitchPickerModal.js';
+
+// switch victim 候補の表示用 view。元は SceneSwitchPickerModal.tsx で定義していたが、
+// UI picker Direct Manipulation 化で同 modal を撤去 (現場直接クリックへ移行) したため
+// 本 store に移設。Playmat の handleSwitchVictim / banner overlay が参照する。
+export type SceneSwitchCharView = {
+  uid: string;
+  cardId: string;
+  name: string;
+  state: 'active' | 'sleep' | 'stun';
+  isNamed: boolean;
+};
 
 export type SceneSwitchPickerOpen = {
   cardId: string;

@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `72a727ba81d0`
+> Source hash: `35c88319c853`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **107** ファイル（[全体 index](./index.md)）
+このグループ: **108** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (8)
 
@@ -89,7 +89,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (46)
+## その他 (47)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -135,6 +135,7 @@
 | [`src/ui/services/deckBuilder.ts`](../../../src/ui/services/deckBuilder.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 | [`src/ui/services/gameStarter.ts`](../../../src/ui/services/gameStarter.ts) | [`04-game-setup.md`](../../rules/04-game-setup.md) |
 | [`src/ui/services/handUseReason.ts`](../../../src/ui/services/handUseReason.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/ui/services/scenePick.ts`](../../../src/ui/services/scenePick.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/ui/services/tutorialSteps.ts`](../../../src/ui/services/tutorialSteps.ts) | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) |
 | [`src/ui/services/uidNames.ts`](../../../src/ui/services/uidNames.ts) | _(参照なし)_ |
 | [`src/ui/state/store.ts`](../../../src/ui/state/store.ts) | _(参照なし)_ |

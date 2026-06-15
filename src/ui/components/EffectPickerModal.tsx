@@ -10,6 +10,8 @@ import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { isSceneDirectPick } from '@/ui/services/scenePick.js';
+import { CardArt } from './CardArt.js';
 import './EffectPickerModal.css';
 
 /**
@@ -29,6 +31,11 @@ export function EffectPickerModal(): JSX.Element | null {
   if (!pending || pending.player !== 'self') return null;
   // area pick は CardListModal に譲る (Playmat.tsx が auto-open する)
   if (AREA_PICK_VERBS.has(pending.atomVerb)) return null;
+  // UI picker Direct Manipulation 化: scene-char を 1 枚選ぶ pick は Playmat が
+  // 現場カード直接クリックで処理する (本 modal は出さない)。Playmat の isScenePick と
+  // **同一述語** を共有して二重 UI / soft-lock を防ぐ (設計 v2 BLOCKER)。
+  // 本 modal は n.max>1 や非scene混在 (現状0件・将来用) の画像付きフォールバックとして残る。
+  if (isSceneDirectPick(pending, gameState)) return null;
 
   const sourceName = pending.source.cardId
     ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
@@ -74,6 +81,9 @@ export function EffectPickerModal(): JSX.Element | null {
         <ul className="effect-picker-list">
           {pending.candidates.map((c) => {
             const name = candDisplayName(c);
+            // 同名カード識別のためカード画像を表示 (Recognition over Recall)。
+            // 裏向き証拠 ('(非公開)') は実画像を出さず placeholder にフォールバックさせる。
+            const hidden = name === '(非公開)';
             return (
               <li key={c.uid}>
                 <button
@@ -82,6 +92,7 @@ export function EffectPickerModal(): JSX.Element | null {
                   onClick={() => handlePick(c.uid)}
                   data-testid={`effect-pick-cand-${c.uid}`}
                 >
+                  <CardArt cardId={hidden ? null : c.cardId} alt={name} className="cand-art" />
                   <span className="cand-name">{name}</span>
                   <span className="cand-side">{c.player === 'self' ? '自' : '相'}</span>
                 </button>

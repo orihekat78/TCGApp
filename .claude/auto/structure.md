@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3232
+- **ファイル数**: 3235
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -441,6 +441,7 @@
     - `2026-06-15-08-engine-wave2-cluster12-nested-filter-dyn.md` — engine拡張 wave#2 cluster12 — nested-filter-dyn (FILEエリア枚数以下レベルの登場) 15枚解禁
     - `2026-06-15-09-engine-wave2-cluster13-aura-grant.md` — engine拡張 wave#2 cluster13 — aura-grant (他キャラへの AP buff) 11枚解禁
     - `2026-06-15-10-engine-wave2-cluster14-multi-sceneenter.md` — engine拡張 wave#2 cluster14 — multi-card sceneEnter (2枚まで登場) 4枚解禁
+    - `2026-06-15-11-ui-picker-direct-manipulation.md` — UI picker Direct Manipulation 化 — scene-char pick / switch victim を現場カード直接クリックに
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -743,6 +744,8 @@
     - `smoke-2026-06-15-6.md` — Smoke 1000戦レポート — smoke-2026-06-15-055858
     - `smoke-2026-06-15-7.json`
     - `smoke-2026-06-15-7.md` — Smoke 1000戦レポート — smoke-2026-06-15-062018
+    - `smoke-2026-06-15-8.json`
+    - `smoke-2026-06-15-8.md` — Smoke 1000戦レポート — smoke-2026-06-15-090452
     - `smoke-2026-06-15.json`
     - `smoke-2026-06-15.md` — Smoke 1000戦レポート — smoke-2026-06-15-002732
     - `smoke-baseline.json`
@@ -1214,6 +1217,7 @@
     - `round-4k-hirameki-char-stun-design.md` — Round 4k — hiramekiCharStun E2E spec 設計
     - `round-4l-ui-quad-design.md` — Round 4l — UI 4 課題一括対応 design
     - `side-channel-pattern.md` — Side-Channel Pattern — engine ↔ UI 通信規約
+    - `ui-picker-direct-manipulation-2026-06-15.md` — UI picker Direct Manipulation 化 — 設計 (2026-06-15)
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
@@ -2981,8 +2985,6 @@
       - `ReplayPanel.tsx` — Phase 9-G.2 (Cleanup 7-B): リプレイ playback UI panel
       - `SceneArea.css`
       - `SceneArea.tsx` — Phase 7 Task 7.4: SceneArea
-      - `SceneSwitchPickerModal.css`
-      - `SceneSwitchPickerModal.tsx` — Phase 8 完全クローズ Commit 4: SceneSwitchPickerModal (scaffold)
       - `SouzaReorderModal.css`
       - `SouzaReorderModal.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal (scaffold)
       - `SpectatorHUD.css`
@@ -3041,6 +3043,7 @@
       - `deckBuilder.ts` — Task 8.4b: MVP DeckPair builder
       - `gameStarter.ts` — Task 8.4b: 正規 turn-1 GameState 構築
       - `handUseReason.ts` — Round 2 — 手札カードが「使えない理由」を人間可読文字列で返すヘルパ
+      - `scenePick.ts` — scenePick — scene-char effect pick を「現場カード直接クリック」(Direct Manipulation) で
       - `tutorialSteps.ts` — Phase 9a-1 / 9a-2 / 9b / 9c: チュートリアル L0-L13 (MVP 全カバー)
       - `uidNames.ts` — UID → 表示名解決ユーティリティ (Round 2 で新設)
     - **`state/`**
@@ -3378,7 +3381,6 @@
       - `SceneArea.animation.test.tsx` — Phase 8.10c: SceneArea animation attributes test
       - `SceneArea.fadeout.test.ts` — Phase 8.10g-2: SceneArea ゴーストトラッカー (pickRemovedCharacters helper)
       - `SceneArea.test.tsx` — Phase 7 Task 7.4: SceneArea snapshot/behavior tests
-      - `SceneSwitchPickerModal.test.tsx` — Phase 8 完全クローズ Commit 4: SceneSwitchPickerModal SSR test
       - `SouzaReorderModal.test.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal SSR test
       - `SpectatorHUD.test.tsx` — user_request 20260521_01 #12: SpectatorHUD tests
       - `TopBar.test.tsx` — Phase 7 Task 7.12: TopBar tests
@@ -3419,6 +3421,7 @@
       - `cardResolvers.test.ts` — Demo wiring: cardResolvers tests
       - `deckBuilder.test.ts` — Task 8.4b: deckBuilder unit tests
       - `gameStarter.test.ts` — Task 8.4b: performGameStart integration test
+      - `scenePick.test.ts` — TDD: isSceneDirectPick 述語 (UI picker Direct Manipulation 化 設計 v2 BLOCKER)
       - `tutorialSteps.test.ts` — Phase 9a-1: tutorialSteps constants test
     - **`state/`**
       - `store.test.ts` — tests/ui/state/store.test.ts — Phase 7 Task 7.1 tests

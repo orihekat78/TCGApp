@@ -14,6 +14,7 @@
 import { useEffect, useState, type JSX } from 'react';
 import type { GameState } from '@/engine/types/game-state.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
+import { isSceneDirectPick } from '@/ui/services/scenePick.js';
 import { PartnerArea } from './PartnerArea.js';
 import { DeckArea } from './DeckArea.js';
 import { RemoveArea } from './RemoveArea.js';
@@ -60,7 +61,6 @@ import { GuardPickerModal } from './GuardPickerModal.js';
 import { CutInDisguisePickerModal } from './CutInDisguisePickerModal.js';
 import { HiramekiPickerModal } from './HiramekiPickerModal.js';
 import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHintPicker.js';
-import { SceneSwitchPickerModal } from './SceneSwitchPickerModal.js';
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
 import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.js';
@@ -119,6 +119,24 @@ type PlayerMatProps = CandidateProps & {
    */
   nextHintDrawPreview?: boolean;
 };
+
+// UI picker Direct Manipulation 化: switch 中の opp 現場 pick prop に渡す不変の空集合。
+const EMPTY_UID_SET: ReadonlySet<string> = new Set<string>();
+
+// scene 直接 pick の skip-overlay banner を verb 別に生成 (画面処理=カードテキスト文言、設計 v2)。
+// 新規5verb は全て nMin=0 のため overlay が常時表示される → 「リムーブ」固定文言だと語義不一致になる。
+function sceneVerbBanner(verb: string | undefined): string {
+  switch (verb) {
+    case 'sceneRemove':      return '現場のキャラを1枚選んでリムーブしてください';
+    case 'charModifyAP':     return '現場のキャラを1枚選んで効果を適用してください';
+    case 'sceneSetState':    return '現場のキャラを1枚選んで状態を変更してください';
+    case 'charGrantKeyword': return '現場のキャラを1枚選んで能力を付与してください';
+    case 'charSetCard':      return '現場のキャラを1枚選んでカードをセットしてください';
+    case 'charSetTurnEffect':return '現場のキャラを1枚選んで効果を付与してください';
+    case 'sceneToHand':      return '現場のキャラを1枚選んで手札に戻してください';
+    default:                 return '現場のキャラを1枚選んでください';
+  }
+}
 
 function PlayerMat({
   side, state, resolveCard, resolveCase,
@@ -249,6 +267,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const expandModal = useCardExpandModal();
   // Phase 8.5: log パネル開閉。ActionsPanel に LOG ボタンを集約、開時は overlay 表示。
   const [logOpen, setLogOpen] = useState(false);
+  // UI picker Direct Manipulation 化 (設計 v2 flicker gate): sceneEnter overflow の switch victim を
+  // 現場直接クリックで収集する間 true。area CardListModal を閉じ・auto-open を抑止して
+  // 盤面をクリック可能にする。dispatch と同 tick で false に戻し trailing 再表示 flicker を消す。
+  const [switchSessionActive, setSwitchSessionActive] = useState(false);
   // Round 2: FILE/証拠/リムーブ クリック → 内容モーダル表示の state。
   const [areaModal, setAreaModal] = useState<{ kind: CardListKind; side: 'self' | 'opp' } | null>(null);
   const handleAreaClick = (kind: CardListKind, side: 'self' | 'opp'): void => {
@@ -328,10 +350,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   })();
   useEffect(() => {
     if (pickAreaKind === null) return;
+    // switch victim 収集中 (sceneEnter overflow) は area modal を再 open しない (盤面を直接クリックさせる、設計 v2)
+    if (switchSessionActive) return;
     // すでに対応 area modal が開いていれば noop
     if (areaModal && areaModal.kind === pickAreaKind && areaModal.side === 'self') return;
     setAreaModal({ kind: pickAreaKind, side: 'self' });
-  }, [pickAreaKind, areaModal]);
+  }, [pickAreaKind, areaModal, switchSessionActive]);
   // pick 解決 (pending クリア) で modal 自動 close (ユーザーが × でも閉じれる)
   useEffect(() => {
     if (pickAreaKind !== null) return;
@@ -362,12 +386,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useEffect(() => {
     if (isCutinPick) setHandExpanded(true);
   }, [isCutinPick]);
-  // User vision (拡張 4): sceneRemove 等の scene キャラ pick mode 検出
-  // pendingEffectPick.atomVerb が scene 系で、candidates が scene キャラ uid を含むなら active
-  // D11014 a1 driver 2026-05-26: charModifyAP も scene pick (D08003 sceneRemove と同 UI 流用 — 黄色 highlight + click)
-  const isScenePick =
-    pendingPickForArea?.player === 'self' &&
-    (pendingPickForArea.atomVerb === 'sceneRemove' || pendingPickForArea.atomVerb === 'charModifyAP');
+  // UI picker Direct Manipulation 化 (設計 v2): scene-char を 1 枚選ぶ pick は現場カード直接クリックで処理。
+  // verb 白名簿 (旧: sceneRemove/charModifyAP) ではなく候補ベース述語 isSceneDirectPick を
+  // EffectPickerModal と **共有** し、sceneSetState/charGrantKeyword/charSetCard/charSetTurnEffect/sceneToHand
+  // + 将来 verb を自動被覆 (n.max>1 や非scene混在は false → EffectPickerModal フォールバック)。
+  const isScenePick = isSceneDirectPick(pendingPickForArea, gameState);
   const scenePickUidsSelf = new Set<string>();
   const scenePickUidsOpp = new Set<string>();
   if (isScenePick && pendingPickForArea) {
@@ -379,6 +402,31 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const handleScenePick = isScenePick ? (uid: string): void => {
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
   } : undefined;
+
+  // rules/20 §スイッチ: switch victim (常に self 現場) も現場直接クリックで収集 (旧 SceneSwitchPickerModal 廃止)。
+  // useSceneSwitchPickerStore.current が active な間、self 現場の候補を effect-pickable 化し
+  // click で resolve+close。辞退 (キャンセル) = resolve(null)。effect-pick とは構造的に排他
+  // (switch 中は pending=null or sceneEnter で isScenePick=false)。
+  const switchPicker = useSceneSwitchPickerStore((s) => s.current);
+  const switchActive = switchPicker !== null;
+  const switchVictimUidsSelf = new Set<string>(switchPicker?.candidates.map((c) => c.uid) ?? []);
+  const handleSwitchVictim = (uid: string): void => {
+    const c = useSceneSwitchPickerStore.getState().current;
+    if (!c) return;
+    useSceneSwitchPickerStore.getState()._close();
+    c.resolve(uid);
+  };
+  const handleSwitchCancel = (): void => {
+    const c = useSceneSwitchPickerStore.getState().current;
+    if (!c) return;
+    useSceneSwitchPickerStore.getState()._close();
+    c.resolve(null);
+  };
+  // MUX (設計 v2): self/opp 現場の pick prop は switch 中なら switch victim を優先 (victim は常に self)。
+  const selfScenePickUids = switchActive ? switchVictimUidsSelf : scenePickUidsSelf;
+  const oppScenePickUids = switchActive ? EMPTY_UID_SET : scenePickUidsOpp;
+  const selfOnPickChar = switchActive ? handleSwitchVictim : handleScenePick;
+  const oppOnPickChar = switchActive ? undefined : handleScenePick;
 
   // switch-on-effect-enter (rules/20 §スイッチ): リムーブ等からの効果登場 (sceneEnter) で現場が満杯
   // (5枚) のとき、reanimate 対象を選んだ後に SceneSwitchPickerModal で退場キャラを収集してから resolve。
@@ -399,13 +447,18 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         isNamed: c.isNamed,
       }));
       const newCardName = readDef.card(reanimateCardId)?.names?.[0] ?? reanimateCardId;
+      // area modal を閉じ・auto-open を抑止して self 現場を直接クリックさせる (設計 v2 flicker gate)
+      setAreaModal(null);
+      setSwitchSessionActive(true);
       const removeUid = await new Promise<string | null>((resolve) => {
         useSceneSwitchPickerStore.getState()._open({ cardId: reanimateCardId, newCardName, candidates: sceneChars, resolve });
       });
       if (removeUid === null) {
+        setSwitchSessionActive(false);
         dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
         return;
       }
+      setSwitchSessionActive(false);
       dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid, switchRemoveUid: removeUid });
       return;
     }
@@ -541,8 +594,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onCaseClick={() => pickAndConfirm(ACTION_CASE_TARGET_OPP)}
             onAreaClick={handleAreaClick}
             onExpand={expandModal.open}
-            pickCharUids={scenePickUidsOpp}
-            onPickChar={handleScenePick}
+            pickCharUids={oppScenePickUids}
+            onPickChar={oppOnPickChar}
           />
 
           {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
@@ -561,8 +614,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onCaseClick={() => pickAndConfirm('case:self')}
             onAreaClick={handleAreaClick}
             onExpand={expandModal.open}
-            pickCharUids={scenePickUidsSelf}
-            onPickChar={handleScenePick}
+            pickCharUids={selfScenePickUids}
+            onPickChar={selfOnPickChar}
             // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
             nextHintDrawPreview={isNextHintPick}
           />
@@ -727,8 +780,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* Phase 5 advance UI: ミスリードモーダル (相手推理時、自分の現場 misread 持ち候補から複数選択) */}
         <PlaymatMisreadPickerModal />
 
-        {/* Phase 5 advance: SceneSwitch UI (rules/20 §スイッチ) */}
-        <PlaymatSceneSwitchPickerModal />
+        {/* rules/20 §スイッチ: switch victim 選択は現場直接クリック (selfScenePickUids/handleSwitchVictim) +
+            下部の switch-victim overlay に統合 (旧 SceneSwitchPickerModal は撤去) */}
 
         {/* BUG-108: 複数 option choice effect (D11012 a1 LP＋1/AP＋2000) の択一 modal */}
         <PlaymatChoicePickerModal />
@@ -835,6 +888,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                   const room = 5 - gsE.players[pendE.player].scene.length;
                   const overflow = Math.max(0, uids.length - room);
                   if (overflow > 0) {
+                    // area modal を閉じ・auto-open を抑止して self 現場を直接クリックさせる (設計 v2 flicker gate)
+                    setAreaModal(null);
+                    setSwitchSessionActive(true);
                     const victims: string[] = [];
                     for (let i = 0; i < overflow; i++) {
                       const sceneChars = gsE.players[pendE.player].scene
@@ -847,11 +903,13 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                       });
                       if (v === null) {
                         // cancel = 全辞退。B09010 は skipResolvesAtom により後続 FILE上1リムーブは解決される。
+                        setSwitchSessionActive(false);
                         dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
                         return;
                       }
                       victims.push(v);
                     }
+                    setSwitchSessionActive(false);
                     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids, switchRemoveUids: victims });
                     return;
                   }
@@ -874,20 +932,37 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
         {/* User vision (拡張 5 chain): SceneArea pick mode で skip 可能 (max:N) の場合
             scene キャラを click せず「リムーブしない」できるよう overlay ボタン表示 */}
-        {isScenePick && (pendingPickForArea?.nMin ?? 1) === 0 && (
+        {isScenePick && (
           <div className="scene-pick-skip-overlay" role="status">
+            {/* banner は verb 別 (画面処理=カードテキスト文言、設計 v2)。新規5verb は全て nMin=0 → 常時表示 */}
             <span className="scene-pick-skip-banner">
-              {pendingPickForArea?.atomVerb === 'charModifyAP'
-                ? '現場キャラを 1 枚選んで効果を適用してください'
-                : '現場キャラを 1 枚選んでリムーブ してください'}
+              {sceneVerbBanner(pendingPickForArea?.atomVerb)}
+            </span>
+            {(pendingPickForArea?.nMin ?? 1) === 0 && (
+              <button
+                type="button"
+                className="scene-pick-skip-btn"
+                onClick={() => dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })}
+                data-testid="scene-pick-skip"
+              >
+                選ばない
+              </button>
+            )}
+          </div>
+        )}
+        {/* rules/20 §スイッチ: switch victim 選択 overlay (self 現場直接クリック + 辞退キャンセル、設計 v2 Part C) */}
+        {switchActive && (
+          <div className="scene-pick-skip-overlay" role="status" data-testid="switch-victim-overlay">
+            <span className="scene-pick-skip-banner">
+              {`${switchPicker?.newCardName ?? ''} — 退場キャラを現場から選んでください`}
             </span>
             <button
               type="button"
               className="scene-pick-skip-btn"
-              onClick={() => dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null })}
-              data-testid="scene-pick-skip"
+              onClick={handleSwitchCancel}
+              data-testid="switch-victim-cancel"
             >
-              リムーブしない
+              キャンセル
             </button>
           </div>
         )}
@@ -1081,39 +1156,6 @@ function PlaymatCutInDisguisePickerModal(): JSX.Element | null {
         });
         dispatchAdvance();
       }}
-    />
-  );
-}
-
-/**
- * Phase 5 advance: SceneSwitchPickerModal ラッパ (rules/20 §スイッチ)。
- * useSceneSwitchPickerStore.current を subscribe し、scene 5 埋まり時のキャラ手札
- * 使用で開く。pick / cancel で Promise resolver を呼んで runHandUseFlow を進める。
- *
- * 重要: React 19 fiber static flag invariant 違反を避けるため、early return せず
- *       常時同一 JSX (open={!!current} 切替) で返す (CaseArea L65 と同ポリシー)。
- */
-function PlaymatSceneSwitchPickerModal(): JSX.Element {
-  const current = useSceneSwitchPickerStore((s) => s.current);
-  const handlePick = (uid: string): void => {
-    const c = useSceneSwitchPickerStore.getState().current;
-    if (!c) return;
-    useSceneSwitchPickerStore.getState()._close();
-    c.resolve(uid);
-  };
-  const handleCancel = (): void => {
-    const c = useSceneSwitchPickerStore.getState().current;
-    if (!c) return;
-    useSceneSwitchPickerStore.getState()._close();
-    c.resolve(null);
-  };
-  return (
-    <SceneSwitchPickerModal
-      open={!!current}
-      sceneChars={current?.candidates ?? []}
-      newCardName={current?.newCardName ?? ''}
-      onPick={handlePick}
-      onCancel={handleCancel}
     />
   );
 }
