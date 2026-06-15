@@ -54,6 +54,8 @@ const CONDS = new Set([
   'triggerActionKind',
   // BUG-145 self-state micro-cluster (2026-06-15)
   'charStateIs',
+  // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled): 効果登場の原因カード評価
+  'enterSource',
 ]);
 
 const COSTS = new Set([

@@ -667,6 +667,11 @@ import { B07038 } from '../ct-p07/B07038.js';
 import { B07034 } from '../ct-p07/B07034.js';
 import { B07034P } from '../ct-p07/B07034P.js';
 import { PR231 } from '../pr-01/PR231.js';
+// engine拡張 wave#2 cluster11 (enter-source-level filter, BUG-146 coupled)
+import { B01014 } from '../ct-p01/B01014.js';
+import { B01015 } from '../ct-p01/B01015.js';
+import { B01021 } from '../ct-p01/B01021.js';
+import { B07019 } from '../ct-p07/B07019.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -817,4 +822,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07047, B07031, B07038,
   // engine拡張 wave#2 cluster9 (setcard:leave hook)
   B07034, B07034P, PR231,
+  // engine拡張 wave#2 cluster11 (enter-source-level filter, BUG-146 coupled)
+  B01014, B01015, B01021, B07019,
 ];

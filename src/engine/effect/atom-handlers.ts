@@ -765,12 +765,17 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter', target: cardId });
       // rules/17 — 現場登場時 Hook (【登場時】・【疾風 N】判定)
+      // BUG-146 (2026-06-15): enter emit の source は **登場キャラ** に統一する (hand-use-card / next-hint と同規約)。
+      // 旧実装は ctx.source (= 登場を起こした原因カード) を渡しており、selfOnlyMatches (source.uid===card.uid) で
+      // 効果/能力登場キャラ自身の【登場時】(selfOnly) が永久不発 + 原因カードの【登場時】が誤発火していた。
+      // 原因カード (cluster11 enterSource 用) は payload.sourceCardId へ移送 (additive、既存 listener は読まない)。
       event.emit(s, 'enter', {
         uid: newChar.uid,
         viaEffect,
         enterOrder: newChar.enterOrder,
         enterOrderThisTurn: newChar.enterOrderThisTurn,
-      }, ctx.source);
+        sourceCardId: (ctx.source as { cardId?: string }).cardId,
+      }, { player: enterPlayer, uid: newChar.uid, cardId });
       return;
     }
     case 'sceneSwitch': {
@@ -791,12 +796,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: swPlayer, turn: s.turn.number, action: 'effect:sceneSwitch', target: swCardId });
       // スイッチ登場も rules/17 上「登場」として enter Hook が発火する
+      // BUG-146 (2026-06-15): source を登場キャラに統一 + 原因カードを payload.sourceCardId へ (sceneEnter と同様)。
       event.emit(s, 'enter', {
         uid: newChar.uid,
         viaEffect,
         enterOrder: newChar.enterOrder,
         enterOrderThisTurn: newChar.enterOrderThisTurn,
-      }, ctx.source);
+        sourceCardId: (ctx.source as { cardId?: string }).cardId,
+      }, { player: swPlayer, uid: newChar.uid, cardId: swCardId });
       return;
     }
     case 'sceneRemove': {

@@ -79,6 +79,13 @@ export type Condition =
   // Task D E4 (2026-06-12): ctx.source キャラ自身の turnEffects flag を読む
   // (「この能力は、このターン中にこのキャラのアクションがガードされていた場合に宣言できる」B09041 a3)
   | { kind: 'charTurnEffect'; key: string }
+  // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled): 効果/能力による登場の「原因カード」を評価する。
+  // enter payload.viaEffect (効果登場か) + payload.sourceCardId (登場を起こした能力/効果の所有カード cardId) を読み、
+  // sourceFilter を CardDef-static (matchOneFilter c=null = 印字値、原因カードが盤面を離れていても可) で判定する。
+  // rules/17「【登場時】能力/効果による登場でも発動」。「レベル3以上のキャラの能力やレベル3以上のイベントの効果で
+  // 登場した場合」(B01014/15/21 = or([{kind:character,levelMin:3},{kind:event,levelMin:3}])) /
+  // 「【緑】のイベントの効果で登場した場合」(B07019 = {kind:event,color:緑})。sourceCardId 不在/non-effect は不一致。
+  | { kind: 'enterSource'; viaEffect?: boolean; sourceFilter?: TargetFilter }
   | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean };
 
 // ---------- TargetFilter / TargetQuery / TargetingRef ----------

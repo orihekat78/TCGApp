@@ -162,11 +162,26 @@ cluster10 候補として triage landscape が「loseGame verb / low risk / 3枚
 → **loseGame は低リスク単発 verb ではなく high-risk multi-gate クラスタ**。landscape の未精読 gate の risk 評価は信用せず
 per-card certify が必須 (card-wave skill 教訓)。loseGame verb 追加 + 上記いずれかの gate 群を別途設計するクラスタとして DEFER。
 
-## cluster11 (enter-source-level filter) — BUG-146 (効果登場の【登場時】不発火) に block (2026-06-15)
+## ✅ cluster11 (enter-source-level filter) — BUG-146 と coupled で出荷 (2026-06-15, engine/wave2-cluster11-enter-source)
 
-cluster11 候補 B01014/B01015/B01021 (【登場時】レベル3以上のキャラ能力/イベント効果で登場した場合〜) +
-B07019 (【緑】イベント効果で登場した場合〜) を実装着手。新 condition `enterSource` (payload.viaEffect +
-sourceCardId の def kind/level/color 判定) を設計・**条件ロジックは diag で正と確認**したが、出荷は **block**:
+**解禁 4枚** B01014/B01015/B01021 (【登場時】レベル3以上のキャラ能力/イベント効果で登場した場合〜) + B07019
+(【解決編】【緑】イベント効果で登場した場合〜)。ALL_CARDS 1177→1181。BUG-146 (効果登場の【登場時】不発火、enter emit
+source 統一) を同コミットで coupled 修正 + 新 condition `enterSource` (4点同期: types union / eval case / CONDITION_KIND_MAP /
+validate-specs CONDS)。opus 3-lens 敵対設計レビュー = 全 GO-with-fixes / 0 BLOCK。enter source consumer は
+selfOnlyMatches + sourceBindings のみ・非selfOnly listener は PR117/PR118 のみ (payload.uid 読み、source 不読) = 水平展開 clean。
+詳細は [BUG-146](../bugs/BUG-146.md) + changelog 2026-06-15-07 + cluster11-enter-source.test.ts (16本)。
+
+### enterSource の既知制約 (カード defer ではない)
+
+| 項目 | 内容 | 状況 |
+|------|------|------|
+| sourceFilter は CardDef-static 評価 | matchOneFilter c=null = **印字値** (level/ap/lp の continuous 修正は反映しない、原因カードが盤面を離れている可能性ありのため必然)。cluster11 4枚は level/kind/color のみ参照で実害なし | 文書化のみ。apMin/lpMin を sourceFilter で使う場合は注意 |
+| 原因カードが partner/case | enterSource sourceFilter は明示 `kind:'character'/'event'` を持つため partner/case 原因の登場は不一致 (テスト済)。「キャラ/イベント」以外の原因は仕様上対象外 | 設計どおり |
+| 手動登場 (hand-use/next-hint) に sourceCardId 無し | 2 atom emit のみ sourceCardId を運ぶ。enterSource{viaEffect:true} で手動登場は除外されるため整合 (cluster11 は効果登場専用) | 設計どおり |
+
+<details><summary>(旧 block 記録、参考)</summary>
+
+cluster11 候補 B01014/B01015/B01021 + B07019 を実装着手。新 condition `enterSource` を設計・**条件ロジックは diag で正と確認**したが、出荷は **block** だった:
 
 - **BUG-146**: 効果/能力による登場 (sceneEnter/sceneSwitch atom) で entered char の【登場時】(selfOnly) が
   **engine 全体で不発火** (atom が enter emit の source を ctx.source=原因カードにしており selfOnly 不一致)。
@@ -176,6 +191,8 @@ sourceCardId の def kind/level/color 判定) を設計・**条件ロジック�
 - **解禁条件**: BUG-146 修正 (登場 emit の source を登場キャラに統一 + 原因カードは payload。全 enter listener 水平展開 +
   smoke 再 bless が要る専用クラスタ) + enterSource condition (3点同期) + 4枚 を **同時出荷** (coupled)。未 commit の
   cluster11 partial work は破棄済 (main クリーン)。設計詳細は BUG-146.md。
+
+</details>
 
 ## ✅ engine拡張 wave#2 cluster9 (setcard:leave hook, 2026-06-15, cards/wave2-cluster9-setcard-leave) — known-gap
 

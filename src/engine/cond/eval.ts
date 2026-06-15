@@ -339,6 +339,22 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return false;
     }
+    // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled): 効果/能力による登場の「原因カード」評価。
+    // enter payload.viaEffect + payload.sourceCardId を読む (BUG-146 fix で atom 登場 emit が source を登場キャラに
+    // 統一し、原因カードを payload.sourceCardId へ移送)。sourceFilter は CardDef-static (matchOneFilter c=null = 印字値、
+    // 原因カードが既に盤面を離れていても可、fileTopMatches/boundMatchesFilter と同流儀)。
+    // sourceCardId 不在 (EffectStackEntrySource.cardId は optional) / non-effect 登場は不一致 (安全側 false)。
+    case 'enterSource': {
+      const esPayload = ctx.triggerPayload as { viaEffect?: boolean; sourceCardId?: string } | undefined;
+      if (cond.viaEffect !== undefined && (esPayload?.viaEffect ?? false) !== cond.viaEffect) return false;
+      if (cond.sourceFilter) {
+        const scId = esPayload?.sourceCardId;
+        if (typeof scId !== 'string') return false;
+        const cand: Candidate = { kind: 'char', uid: '', cardId: scId, player: ctx.source.player };
+        if (!matchOneFilter(state, scId, cond.sourceFilter, null, cand)) return false;
+      }
+      return true;
+    }
     case 'custom':
       return cond.check(state, ctx);
     // refactor 2b: case 追加漏れの compile-time 検出 (noImplicitReturns 無効のため明示 guard)。到達不能。
@@ -367,6 +383,7 @@ const CONDITION_KIND_MAP = {
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
   charTurnEffect: true, // Task D E4 (2026-06-12)
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)
+  enterSource: true, // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled)
   custom: true,
 } as const satisfies Record<Condition['kind'], true>;
 export const CONDITION_KINDS: ReadonlySet<string> = new Set(Object.keys(CONDITION_KIND_MAP));

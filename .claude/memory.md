@@ -38,3 +38,28 @@ batch「3 低リスク gate」の前提は certify/diag で崩れた (landscape 
   原因カードは payload。全 enter listener 水平展開 + smoke 再 bless + 敵対レビュー必須の高リスク広域変更)。
 - or backlog の別 gate (DEFERRED-INDEX landscape: name-designation 11/multi-card sceneEnter 6 等、いずれも needs-design)。
 - **教訓**: landscape の未精読 gate の「low risk」は信用せず per-card certify/diag で実証。A (setcard:leave) のみが真の ready-now だった。
+
+## 2026-06-15 セッション⑥ — engine拡張 wave#2 cluster11 (BUG-146 + enterSource、coupled 出荷)
+
+ユーザー選択: 「BUG-146修正 + cluster11」(高リスク広域 engine 変更)。branch `engine/wave2-cluster11-enter-source`。
+
+### 成果 (ALL_CARDS 1177→1181、全 gate green)
+
+- **BUG-146 修正**: atom-handlers sceneEnter:768/sceneSwitch:794 の enter emit source を `ctx.source`(原因カード)→
+  **登場キャラ** `{player,uid:newChar.uid,cardId}` に統一 + 原因カードを payload.sourceCardId へ additive 移送。
+  → 効果登場キャラの【登場時】/【疾風】が発火 (旧:永久不発) + 原因カードの誤発火を解消 (旧:28枚 spurious)。
+- **新 condition `enterSource`** (4点同期): payload.viaEffect + sourceCardId def の CardDef-static filter 評価。
+- **解禁4枚**: B01014/B01015/B01021 (or[char≥3,event≥3] viaEffect) + B07019 (解決編+緑event+BUG-145 self-sleep gate)。
+- **certify+敵対レビュー**: opus 7-agent wf (4 certify + 3-lens design review) = 全 GO-with-fixes / 0 BLOCK。
+  certify が B07019 の chain(not sequence)/sceneSetState(not sleepSelf)/event-level≥3 を検出 → 反映。
+  edge-case lens が scratch-apply で **回帰 2 test を実証** → look-top-n / leave-reanimate(PR155) を正挙動に更新。
+- **gate**: tsc0 / vitest 2197(+16, cluster11-enter-source.test.ts) / validate 73-0 / **smoke baseline 不動**
+  (winsA498/avg11.00→10.998/0例外、再bless不要) / playwright 119 / CI lint 全errors0 / lint:icon shipped=1181。
+
+### 次セッション候補
+
+- backlog の別 engine gate (DEFERRED-INDEX landscape: name-designation 11枚 / multi-card sceneEnter 6枚 等、needs-design)。
+- 低 urgency engine bug 群 (reasoning 由来 refresh = BUG-142 水平展開 等)。
+- **教訓**: certify は実装前に encoding の構造誤り (chain/cost-vs-atom/条件束縛) を捕捉する。敵対 edge-case lens に
+  scratch-apply で回帰 test を先取り発見させると後工程の手戻りが消える。高リスク広域 emit 変更でも consumer を
+  決定論 grep で全列挙 (今回 source consumer=2点・非selfOnly listener=PR117/118 のみ) すれば水平展開は収束する。

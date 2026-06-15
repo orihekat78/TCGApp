@@ -42,8 +42,14 @@ describe('look-top-N D01012 (enterSleep) — 2026-06-06', () => {
     expect(entered, '[青]Lv4 の D01013 が現場に登場').toBeTruthy();
     expect(entered?.state, 'スリープ状態で登場').toBe('sleep');
     expect(s.players.self.deck, 'D01013 はデッキから抜けた').not.toContain('D01013');
-    expect(s.players.self.deck, '青Lv5 decoy D08009 は登場せずデッキに残る').toContain('D08009');
-    expect(s.players.self.deck, '緑Lv3 decoy D02009 は登場せずデッキに残る').toContain('D02009');
+    // D01012 の filter (青Lv≤4) は decoy を **登場させない** (現場に出ないことで filter を実証)。
+    expect(s.players.self.scene.find((c) => c.cardId === 'D08009'), '青Lv5 decoy は D01012 に登場させられない').toBeFalsy();
+    expect(s.players.self.scene.find((c) => c.cardId === 'D02009'), '緑Lv3 decoy は D01012 に登場させられない').toBeFalsy();
+    // BUG-146 fix (2026-06-15): 効果登場した D01013 自身の【登場時】(deckRevealUntil color:青) が発火するように
+    // なった (旧挙動は selfOnly 不一致で不発)。残デッキ [D08009(青), D02009(緑)] のうち青の D08009 を手札へ回収
+    // → デッキから抜け、緑の D02009 はデッキ下へ残る。これは rules/17「能力/効果による登場でも【登場時】発動」に整合。
+    expect(s.players.self.deck, '青の D08009 は D01013 の登場時で回収されデッキから抜ける').not.toContain('D08009');
+    expect(s.players.self.deck, '緑の D02009 は D01013 の登場時でデッキ下へ残る').toContain('D02009');
   });
 
   it('turn:self では発火しない (【相手ターン中】gate)', () => {

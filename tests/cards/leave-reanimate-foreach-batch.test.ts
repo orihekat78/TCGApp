@@ -126,7 +126,10 @@ describe('Task A wave2 — leave→hand / reanimate / forEach-all cluster', () =
     s.players.self.hand = ['PR155', 'D01013'];
     s.players.self.case.colors = ['青']; // PR155=青 (色制限 rules/20)
     s.players.self.file = [FB, FB, FB, FB, FB, FB, FB]; // FILE7 ≥ level7
-    s.players.self.deck = ['B04006', FB.cardId]; // draw 対象
+    // BUG-146 fix (2026-06-15): 効果登場した D01013 の【登場時】(deckRevealUntil color:青) が発火するように
+    // なったため、デッキは **非青** にして D01013登場時 を no-op 化し、PR155 自身の draw のみを isolate する
+    // (旧 deck=['B04006'(青),FB(青)] は D01013登場時 に回収/discard され PR155 の draw 検証が汚染された)。
+    s.players.self.deck = ['D02009']; // 緑Lv3 = D01013登場時 の color:青 filter に掛からない draw 対象
 
     s = produce(s, (d) => {
       handUseCard(d, 'self', 'PR155');
@@ -138,7 +141,7 @@ describe('Task A wave2 — leave→hand / reanimate / forEach-all cluster', () =
     expect(hai, '手札の灰原哀 D01013 が現場に登場').toBeTruthy();
     expect(hai?.state, 'スリープ状態で登場 (enterSleep)').toBe('sleep');
     expect(s.players.self.hand, 'D01013 は手札から消費').not.toContain('D01013');
-    expect(s.players.self.hand, 'デッキ上 B04006 を 1 ドロー').toContain('B04006');
+    expect(s.players.self.hand, 'デッキ上 D02009 を 1 ドロー (D01013登場時 は非青 deck で no-op)').toContain('D02009');
   });
 
   // ---------- 実 flow 4: forEach over:all 全キャラスリープ (PR230) ----------
