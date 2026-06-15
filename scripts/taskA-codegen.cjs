@@ -175,7 +175,10 @@ function genFile(spec, cat) {
     if (ab.__shared) {
       body += `const ${nm} = ${ab.__shared}(${ser(ab.args || {}, 0)});\n\n`;
     } else {
-      body += `const ${nm}: AbilityDef = ${serAbility(ab, 0)};\n\n`;
+      // 各 ability は非空 ruleRefs 必須 (card-addition-checklist §5 / reuse-batch.test「全 ability に ruleRefs」)。
+      // certify spec が ability-level ruleRefs を欠く (top-level のみ) 場合は card-level を fallback で注入する。
+      const abOut = ab.ruleRefs && ab.ruleRefs.length ? ab : { ...ab, ruleRefs };
+      body += `const ${nm}: AbilityDef = ${serAbility(abOut, 0)};\n\n`;
     }
   });
 

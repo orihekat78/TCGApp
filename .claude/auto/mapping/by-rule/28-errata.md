@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `e6ac54eaa6e3`
+> Source hash: `40d01e593395`
 
 公式ルール [`28-errata.md`](../../../rules/28-errata.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

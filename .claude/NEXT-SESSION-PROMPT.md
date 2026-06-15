@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-15 トリアージ・スイープ 進行中 — window3 まで完了見込み)
+# 次セッション再開プロンプト (2026-06-15 トリアージ出荷バッチ#1 完了 — 確定green 56枚出荷)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
@@ -12,41 +12,35 @@
 ```text
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md → .claude/memory.md を読んで状況把握。
 
-## 現在地 (2026-06-15、トリアージ・スイープ multi-window 進行中)
+## 現在地 (2026-06-15、トリアージ出荷バッチ#1 完了)
 
-正本 doc = `.claude/specs/triage-sweep-2026-06-15.md` (全 universe スイープ + ロードマップ)。
-- engine wave#2 cluster1〜14 + UI DM 出荷済 (ALL_CARDS 1211)。未実装 838 cards / 485 distinct signature。
-- スイープ = 全未実装カードを gate 別分類し「あと N クラスタ」確定。決定論 sweep + per-card certify (loop-until-dry)。
-- **重大教訓**: certify grounding の capability-map.txt が 2026-06-06 stale → certify-brief.md を現行化済 (.tmp、都度再生成)。
-  決定論 green-candidate の **false-green 率 ≈ 65%** (信用不可、必ず certify)。
-- 決定論 landscape (NEW gate 還元後): 🟢 green-candidate 249sig/398cards / 🟡 yellow 221/413 / ⚫ black 15/27。
-- certify 済 (windows 1〜3): 確定 green は doc + `.tmp/certify/*.json` 参照。NEW gate ~19 発見→ sweep regex 還元済。
+正本 doc = `.claude/specs/triage-sweep-2026-06-15.md`。
+- engine wave#2 cluster1〜14 + UI DM 出荷済。**トリアージ出荷バッチ#1 = 確定 green 56枚 (25 distinct rep + byte同一clone 31) 出荷** (ALL_CARDS 1211→1267)。
+- 出荷パイプライン: certify済 spec (.tmp/certify/<rep>.json) → `verify-clone-identity.cjs` (clone byte同一性) → `build-verified-codegen-input.cjs` → `taskA-codegen.cjs --write` → `taskA-register.cjs`。
+- **gate5 実機検証を新規 `tests/cards/triage-greens-2026-06-15/` 25 files/172 tests で per-card 担保** (decoy + 負ケース、BUG-117/118 閉)。
+- B07098/P を DEFER 解除 (forEach-over-remove で count-dyn 回避)。`build-verified-codegen-input.cjs` に DEFER 照合ガード追加。
+- 重大教訓 (継続): certify grounding は `.tmp/taskA/certify-brief.md` (現行engine版、cap-map 2026-06-06 は stale)。決定論 green-candidate の **false-green 率 ≈ 55-65%** (必ず per-card certify)。
 
-## ★最優先: スイープ継続 (green bucket 収束 → N 確定 → 出荷開始)
+## ★最優先: 出荷バッチ#2 + スイープ継続
 
-1. **window 4+ で green bucket をさらにサンプル** (false-green 率が収束するまで loop-until-dry)。
-   - 抽出: `node scripts/survey/sweep-window2.cjs <greenN>` (done除外・green層化) → id配列を wf-certify に渡す。
-   - certify は 1rep≈200k tok・1窓~25-30rep・SUB=8 で throttle 回避。`.tmp/certify/` durable。
-   - 新 yellow が暴く gate を `scripts/survey/sweep-2026-06-15.ts` の GATES に regex 還元 → `npx tsx ...sweep-2026-06-15.ts` 再実行。
-2. **確定 green を card-wave バッチで出荷開始** (card-wave skill / taskA: certify済 spec → codegen → 全gate)。
-3. **ロードマップ確定** = doc の「ロードマップ」節を N 確定値で更新。
-
-## ロードマップ暫定 (doc 参照)
-- green-now ≈ 398cards の ~35% (要 per-card certify)。
-- 高yield中型クラスタ (共有プリミティブ先行): cutin-subtype filter(69) / contact-removal-by-self trigger(51) /
-  grant-textual+set-card-ability(60) / dynamic-count family(~45) / scene→deck+FILE残 / stacked-identity / remove→deck-selective。
-- 構造XL ×3 (最終段): partner-area(27) / name-designation(15) / loseGame-rewrite(17)。
-- 長尾 ~20 niche gate = 大半 defer。
+1. **window4 の確定 green を出荷** (バッチ#2): window4 certify済の green 4枚 (B01052/B04022/B02025/B04031、全 verify.ok) +
+   window4 残8 reps を再 certify (`.tmp/certify/` durable、無ければ wf-certify に id 配列) → clone検証 → codegen → 全gate。
+   - 抽出: `node scripts/survey/sweep-window2.cjs <greenN>` (done除外・green層化) → wf-certify。
+   - clone: `node scripts/survey/verify-clone-identity.cjs <rep...>` → `build-verified-codegen-input.cjs` → codegen。
+   - **gate5 必須**: 各 distinct rep を `tests/cards/triage-greens-<date>/<rep>.test.ts` で実機挙動検証 (decoy + 負ケース)。
+   - ⚠ Workflow 並列は **SUB=5 程度に throttle** (25並列 + 別workflow 同時で server rate-limit 実害あり)。1 workflow ずつ。
+2. **スイープ継続** (window5+、loop-until-dry): 新 yellow が暴く gate を `sweep-2026-06-15.ts` GATES に regex 還元 → 再実行。
+3. **中型 engine クラスタ着手も選択肢**: cutin-subtype filter (69枚) / contact-removal-by-self (51) / grant-textual+set-card (60) 等。
 
 ## プロセス必須
 - certify/難判断 agent は `model:'opus'`。engine 変更は骨格凍結例外 + opus 敵対設計レビュー + 全gate。
-- 1 タスク = 1 独立コミット。docs commit は `.tmp` を消さず (`.tmp/certify` durable) `npm run docs`。
-- push は main ff-merge (compound checkout&&merge&&push は分割実行)。
+- 出荷バッチは card-wave skill の全gate (validate-specs→tsc→vitest→smoke→playwright→gate5実機→pre-commit lint 9本)。
+- 1 タスク = 1 独立コミット。docs commit は `.tmp/certify` durable を消さず `npm run docs`。push は main ff-merge (compound checkout&&merge&&push は分割実行)。
 
 ## 状態 doc
-- スイープ正本: `.claude/specs/triage-sweep-2026-06-15.md` / 旧 gate ranking: engine-gate-triage-2026-06-15.md
-- bug: .claude/bugs/index.base / defer: .claude/specs/DEFERRED-INDEX.md / 詳細: memory.md セッション⑩ + sessions/2026-06-15-4.md
+- スイープ正本: `.claude/specs/triage-sweep-2026-06-15.md` / bug: .claude/bugs/index.base / defer: .claude/specs/DEFERRED-INDEX.md
+- 詳細: memory.md セッション⑪ + sessions/2026-06-15-*.md
 ```
 
-直近セッションはトリアージ・スイープ window 1〜3 を実施 (決定論 landscape + 56→88 rep certify + NEW gate ~19 発見)。
-**次セッションはスイープ継続 (green bucket 収束 → N 確定 → 出荷開始)。** `/clear` で新セッション推奨。
+直近セッションはトリアージ出荷バッチ#1 (確定green 56枚 + gate5 172tests) を完遂。
+**次セッションは出荷バッチ#2 (window4 green) + スイープ継続。** `/clear` で新セッション推奨。

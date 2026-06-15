@@ -42,3 +42,27 @@
 - 中型×4-5 (共有プリミティブ先行): cutin-subtype(ability-subtype filter 36sig) / grant-textual+set-card-ability(30) /
   dynamic-count family (hand-size dyn+variable+hand→deck) / usage-restriction family / scene+FILE 残。
 - 長尾 ~20 niche gate (各1-6枚) = 多くは defer or 機会的 bundle。
+
+## 2026-06-15 セッション⑪ — トリアージ出荷バッチ#1 (確定green 56枚) + window4 並行
+
+ユーザー選択「両方 (出荷 + window4並行)」。出荷トラックをメインに完遂。
+
+### 出荷 (ALL_CARDS 1211→1267、commit 予定)
+- windows1-3 の確定 green 25 distinct rep + **byte同一 clone 31** = **56枚**。新 engine クラスタ不要。
+- **clone 安全弁**: sweep signature() が lossy (色/数/特徴抽象化) → cloneTargets は別テキストの可能性。
+  新規 `scripts/survey/verify-clone-identity.cjs` で effect/cutIn/hirameki/henso byte 比較し同一のみ採用 → divergent 7除外
+  (B05016小嶋元太 of B03086伊達航 等)。`build-verified-codegen-input.cjs` で codegen 入力構築 (collect-greens の unsafe blind-clone 不使用)。
+- **codegen 修正** (`taskA-codegen.cjs`): certify spec の ability-level ruleRefs 欠如時に card-level fallback 注入 (reuse-batch.test fail 解消)。
+- **B07098/P DEFER 解除**: count-dyn 不在で defer 済 → `forEach over:{all,query:{area:'remove',filter:{keyword,color}}}` で回避。
+  engine candidates.ts:160 + BUG-122 が honor を静的確認 + runtime decoy 44 assert 実証。DEFERRED-INDEX 解禁マーク。build スクリプトに DEFER ガード追加。
+- **gate5 実機検証**: 新規 `tests/cards/triage-greens-2026-06-15/` 25 files / **172 tests** (各 decoy + 負ケース、BUG-117/118 per-card 閉)。
+  Workflow opus fan-out (1回目 25並列 + window4 同時 → server rate-limit で 22失敗、window4 停止 + SUB=5 で 22 retry → 全 clean-green)。
+- 検証: validate-specs 56/56 / tsc clean / vitest **2404 pass 0 fail** / smoke baseline 不変 / playwright 119 / lint errors=0。
+
+### window4 (並行スイープ、停止済)
+- greenN=22 + gate-sample 10 = 32 抽出 → 24 certify完了で停止 (rate-limit 回避のため retry 中に停止)。green 4 (B01052/B04022/B02025/B04031 全 verify.ok)。
+- false-green 率依然高く doc 結論再実証。残8 + 4新green は次セッション。`.tmp/certify/` durable。
+
+### 次セッション
+- バッチ#2: window4 の 4新green + 残8 certify → clone検証 → 出荷。スイープ継続 (window5+)。
+- 中型 engine クラスタ着手も選択肢 (cutin-subtype filter 69枚 等)。

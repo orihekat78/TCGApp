@@ -706,6 +706,63 @@ import { B09010P } from '../ct-p09/B09010P.js';
 import { PR042 } from '../pr-01/PR042.js';
 import { PR046 } from '../pr-01/PR046.js';
 
+import { B01018 } from '../ct-p01/B01018.js';
+import { B01062 } from '../ct-p01/B01062.js';
+import { B01062P } from '../ct-p01/B01062P.js';
+import { B01066 } from '../ct-p01/B01066.js';
+import { B01066P } from '../ct-p01/B01066P.js';
+import { B02003 } from '../ct-p02/B02003.js';
+import { B02003P } from '../ct-p02/B02003P.js';
+import { B02005 } from '../ct-p02/B02005.js';
+import { B02005P } from '../ct-p02/B02005P.js';
+import { B02019 } from '../ct-p02/B02019.js';
+import { B02019P } from '../ct-p02/B02019P.js';
+import { B02044 } from '../ct-p02/B02044.js';
+import { B02044P } from '../ct-p02/B02044P.js';
+import { B02077 } from '../ct-p02/B02077.js';
+import { B02077P } from '../ct-p02/B02077P.js';
+import { PR080 } from '../pr-01/PR080.js';
+import { B03005 } from '../ct-p03/B03005.js';
+import { D10020 } from '../ct-d10/D10020.js';
+import { D10021 } from '../ct-d10/D10021.js';
+import { B03025 } from '../ct-p03/B03025.js';
+import { B03086 } from '../ct-p03/B03086.js';
+import { B03086P } from '../ct-p03/B03086P.js';
+import { B03089 } from '../ct-p03/B03089.js';
+import { B03089P } from '../ct-p03/B03089P.js';
+import { D09020 } from '../ct-d09/D09020.js';
+import { B04014 } from '../ct-p04/B04014.js';
+import { B04014P } from '../ct-p04/B04014P.js';
+import { B04017 } from '../ct-p04/B04017.js';
+import { B04017P } from '../ct-p04/B04017P.js';
+import { B05006 } from '../ct-p05/B05006.js';
+import { B05006P } from '../ct-p05/B05006P.js';
+import { B05006P2 } from '../ct-p05/B05006P2.js';
+import { B05020 } from '../ct-p05/B05020.js';
+import { B05020P } from '../ct-p05/B05020P.js';
+import { B05046 } from '../ct-p05/B05046.js';
+import { B05046P } from '../ct-p05/B05046P.js';
+import { B05046P2 } from '../ct-p05/B05046P2.js';
+import { B06011 } from '../ct-p06/B06011.js';
+import { B06011P } from '../ct-p06/B06011P.js';
+import { B06013 } from '../ct-p06/B06013.js';
+import { B06013P } from '../ct-p06/B06013P.js';
+import { PR170 } from '../pr-01/PR170.js';
+import { B07004 } from '../ct-p07/B07004.js';
+import { B07004P } from '../ct-p07/B07004P.js';
+import { B07020 } from '../ct-p07/B07020.js';
+import { B07020P } from '../ct-p07/B07020P.js';
+import { B07023 } from '../ct-p07/B07023.js';
+import { B07023P } from '../ct-p07/B07023P.js';
+import { B07098 } from '../ct-p07/B07098.js';
+import { B07098P } from '../ct-p07/B07098P.js';
+import { D09004 } from '../ct-d09/D09004.js';
+import { D09005 } from '../ct-d09/D09005.js';
+import { PR193 } from '../pr-01/PR193.js';
+import { PR060 } from '../pr-01/PR060.js';
+import { PR064 } from '../pr-01/PR064.js';
+import { PR154 } from '../pr-01/PR154.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -863,4 +920,6 @@ export const REUSE_CARDS: CardDef[] = [
   D05005, D07010, D07011, B01038, B01038P, B02012, B03075, B07044, B09009, PR274, PR275,
   // engine拡張 wave#2 cluster14 — multi-card sceneEnter
   B09010, B09010P, PR042, PR046,
+  // Task A batch
+  B01018, B01062, B01062P, B01066, B01066P, B02003, B02003P, B02005, B02005P, B02019, B02019P, B02044, B02044P, B02077, B02077P, PR080, B03005, D10020, D10021, B03025, B03086, B03086P, B03089, B03089P, D09020, B04014, B04014P, B04017, B04017P, B05006, B05006P, B05006P2, B05020, B05020P, B05046, B05046P, B05046P2, B06011, B06011P, B06013, B06013P, PR170, B07004, B07004P, B07020, B07020P, B07023, B07023P, B07098, B07098P, D09004, D09005, PR193, PR060, PR064, PR154,
 ];
