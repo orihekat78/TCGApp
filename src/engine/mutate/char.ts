@@ -3,6 +3,7 @@
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
 import type { GameState } from '@/engine/types';
+import { event } from '../event/index.js'; // engine拡張 wave#2 cluster9: removeOneSetCard で setcard:leave emit
 
 type Player = 'self' | 'opp';
 // engine拡張 wave#2 cluster3 (2026-06-13): 'action' = 「アクション終了時まで」(rules/08 §6-7)。
@@ -255,6 +256,15 @@ function removeOneSetCard(s: GameState, uid: string): string | null {
   const entry = char.setCards.pop();
   if (!entry) return null;
   s.players[player].remove.push(entry.cardId);
+  // engine拡張 wave#2 cluster9: set card 1枚が現場から離れる (host は在場のまま) → setcard:leave emit。
+  // rules/16: B08034「セットされているカードを1枚リムーブ」= 現場から離れる。host が scene に残るため
+  // listener (host 自身 / 他キャラ) は collectCardsInPlay で捕捉される (splice 前後の懸念なし)。
+  event.emit(
+    s,
+    'setcard:leave',
+    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: entry.cardId, faceUp: entry.faceUp, cause: 'effect' },
+    { player, uid: char.uid, cardId: char.cardId },
+  );
   return entry.cardId;
 }
 

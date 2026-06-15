@@ -85,6 +85,35 @@ function switchEnter(
 }
 
 /**
+ * engine拡張 wave#2 cluster9 (2026-06-15): 離場するキャラの (裏向き/表向き)セットカード 1枚ごとに
+ * setcard:leave を emit する (rules/16 セット解除 = set card が現場から離れる)。per-occurrence
+ * (「1枚...離れるたび」公式Q&A)。
+ * ⚠ host を scene から splice する **前** に呼ぶこと。host が listener 自身 (B07034 a1 の self-leave、
+ *   公式Q&A「このキャラ自身が現場を離れた場合も発動」) のとき、collectCardsInPlay に host が残っている
+ *   必要がある。emit-after-splice にすると self-leave 反応が無音で壊れる + limit-increment が
+ *   off-board fallback に逃げる (cluster9 design-review FIX-1)。set card 自体は ability を持たないため
+ *   virtual-location handler (leave:to-remove の handleLeaveToRemoveSelf 相当) は不要。
+ * 既存カードは未購読 = additive (回帰0)。listener: src/engine/listeners/triggered.ts
+ */
+function emitSetCardLeaves(s: GameState, char: SceneCharacter, player: Player, cause: string): void {
+  for (const entry of char.setCards) {
+    event.emit(
+      s,
+      'setcard:leave',
+      {
+        player,
+        hostUid: char.uid,
+        hostCardId: char.cardId,
+        setCardId: entry.cardId,
+        faceUp: entry.faceUp,
+        cause,
+      },
+      { player, uid: char.uid, cardId: char.cardId },
+    );
+  }
+}
+
+/**
  * キャラをリムーブエリアへ移動 (rules/03, 16)
  * setCards → リムーブ、stackedCards → back-card でリムーブ
  */
@@ -107,6 +136,13 @@ function removeToRemove(s: GameState, uid: string, cause: RemoveCause): RemoveRe
   // setCards のカードをリムーブエリアへ (rules/16 セット解除: リムーブ時表向きに)
   const setCardsRemoved: string[] = char.setCards.map(e => e.cardId);
   s.players[player].remove.push(...setCardsRemoved);
+
+  // engine拡張 wave#2 cluster9: set card 離場 → setcard:leave emit (host splice 前)。
+  // rules/30: 現場6枚超過の修正処置 (misplay-overflow) はリムーブ発動能力 不発動 → 除外
+  // (leave:to-remove と同一 posture)。
+  if (cause !== 'misplay-overflow') {
+    emitSetCardLeaves(s, char, player, cause);
+  }
 
   // stackedCards 分も back-card としてリムーブ
   const stackedCardsRemoved = char.stackedCards;
@@ -178,6 +214,10 @@ function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): vo
     s.players[player].remove.push('back-card');
   }
 
+  // engine拡張 wave#2 cluster9: set card 離場 → setcard:leave emit (host splice 前)。
+  // デッキ移動自体は leave:to-remove ではないが、set card は rules/16 でリムーブされる = 現場から離れる。
+  emitSetCardLeaves(s, char, player, 'leave:to-deck');
+
   const idx = s.players[player].scene.findIndex(c => c.uid === uid);
   if (idx !== -1) {
     s.players[player].scene.splice(idx, 1);
@@ -207,6 +247,9 @@ function toHand(s: GameState, uid: string): void {
   for (let i = 0; i < char.stackedCards; i++) {
     s.players[player].remove.push('back-card');
   }
+
+  // engine拡張 wave#2 cluster9: set card 離場 → setcard:leave emit (host splice 前)。
+  emitSetCardLeaves(s, char, player, 'leave:to-hand');
 
   const idx = s.players[player].scene.findIndex(c => c.uid === uid);
   if (idx !== -1) {

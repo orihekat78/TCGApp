@@ -140,13 +140,26 @@ gate されない問題を解決。`charStateIs{ref,state}` 条件を追加し (
 - 敵対 verify (opus×14): 11 能力 全 CORRECT / 除外 13枚 MISS 0。
 - B06052 / D05006 は同 reanimate 族だが self-sleep cost なしのため正しく対象外 (前 batch 出荷済・意味等価 pass)。
 
-## 赤魔術 trait family 残 DEFER + known-gap (2026-06-15-2, cards/akamajutsu-family-2)
+## ✅ 赤魔術 trait family 残 (2026-06-15-2, cards/akamajutsu-family-2) — B07034/PR231 は cluster9 で解消済
 
 family残 5枚を certify (opus adversarial)。3枚解禁 (B07031/B07038/B07047, ALL_CARDS 1171→1174)、2枚 DEFER。
+**そのうち B07034 / PR231 は cluster9 (setcard:leave hook、下記) で解消** (ALL_CARDS 1174→1177、B02020 a1 も同時解禁)。
 
-| rep | 理由 (支配 gate) | 解禁条件 |
-|-----|------------------|---------|
-| B07034 / PR231 (小泉紅子, text 同一) | a1「自分の現場のキャラに裏向きでセットされているカードが1枚現場から離れるたび、カードを1枚引く」(【自分ターン中】【ターン2】) = **set-card-leave per-occurrence hook が engine に不存在** (certify 5点確認: HookName union/TRIGGERED_HOOKS に無し、char.ts removeAllSetAndStacked/removeOneSetCard・scene.ts toDeck/toHand は remove push のみで emit 無し)。a2 単体 (declared charSetCard $self + sceneRemove levelMax7) は実装可だが partial 出荷不可 (cluster方針) → カード全体 DEFER | `setcard:leave` hook 追加 (全 set-card クリア点で per-occurrence emit + ターン2 limit) の engine 拡張クラスタ。**同 hook が B02020 (大岡紅葉) a1 も解禁** (既存 a2-only 出荷・a1 DEFER 済の先例)。計3能力を unblock |
+| rep | 理由 (支配 gate) | 状況 |
+|-----|------------------|------|
+| ~~B07034 / PR231 (小泉紅子, text 同一)~~ | a1「裏向きセットカードが1枚離れるたび引く」= set-card-leave per-occurrence hook が不在 | **✅ 解消 (cluster9, 2026-06-15)**: `setcard:leave` hook を additive 実装し B07034/B07034P/PR231 a1+a2 + B02020/B02020P a1 を出荷 |
+
+## ✅ engine拡張 wave#2 cluster9 (setcard:leave hook, 2026-06-15, cards/wave2-cluster9-setcard-leave) — known-gap
+
+`setcard:leave` per-occurrence hook を additive 実装 (HookName union + TRIGGERED_HOOKS + scene.ts removeToRemove/toDeck/toHand emit-before-splice + char.ts removeOneSetCard emit + taskA whitelist)。
+**5枚解禁** (B07034/B07034P/PR231 a1+a2 + B02020/B02020P a1)。opus 3-lens 敵対設計レビュー = GO / 0 blockers。
+
+| 項目 | 内容 | 状況 |
+|------|------|------|
+| FIX-3 「裏向き」filter (B07034 a1) | text は「裏向きでセットされているカード」だが DSL に faceUp filter 無し。全 charSetCard atom が faceUp:false = face-up set card は現状 0 枚のため **vacuously 等価**。payload は faceUp を運ぶ (将来 matcherCondition 1 行で追加可・engine 変更不要) | 低 urgency。face-up set card 追加時に B07034 a1 へ faceUp filter 追加 |
+| FIX-2 cross-char 同時離場の順序依存 | engine は atomic な複数キャラ同時リムーブを持たず逐次 removeToRemove。listener (このキャラ) が sibling より **先に** splice されると sibling の set card 離場では発火しない (self-leave 単体 / 1キャラ複数 set card は正)。leave:to-remove と同じ engine-wide 性質 (公式Q&A「同時に離れた場合も発動」を厳密充足するには batch-aware removal API = 骨格解凍が必要) | 文書化のみ (engine-wide 既知制約)。batch-aware removal は不要不急 |
+| FIX-4 selfToDeckBottom コスト経路 | scene.toDeckBottom (変装 carry-over 用 + selfToDeckBottom コスト用の dual-use) には setcard:leave emit を意図的に付けない。selfToDeckBottom は真の離場だが、現状 selfToDeckBottom コスト 14枚に charSetCard 併用カードは 0 で実害なし。また toDeckBottom は set card 自体を清掃しない (pre-existing orphan、本変更とは独立) | 低 urgency。selfToDeckBottom コスト × set card 保持カードが将来出たら emit 追加 |
+| FIX-8 stacked-under 離場 (rules/16「別のキャラの下に重なる」) | 既存キャラ (set card 保持) を別キャラの下に重ねる engine path が無い (charStackCard は remove/hand/deck からのみ) ため unreachable | out of scope (path 不在) |
 
 | 項目 | 内容 | 状況 |
 |------|------|------|

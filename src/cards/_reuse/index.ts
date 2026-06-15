@@ -664,6 +664,10 @@ import { B07047 } from '../ct-p07/B07047.js';
 import { B07031 } from '../ct-p07/B07031.js';
 import { B07038 } from '../ct-p07/B07038.js';
 
+import { B07034 } from '../ct-p07/B07034.js';
+import { B07034P } from '../ct-p07/B07034P.js';
+import { PR231 } from '../pr-01/PR231.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -811,4 +815,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07052, B07055, B07055P, B07058, B07058P,
   // 赤魔術 family残 (B07031/B07038/B07047)
   B07047, B07031, B07038,
+  // engine拡張 wave#2 cluster9 (setcard:leave hook)
+  B07034, B07034P, PR231,
 ];

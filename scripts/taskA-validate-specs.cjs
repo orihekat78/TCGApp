@@ -37,6 +37,7 @@ const HOOKS = new Set([
   'phase:end:start', 'effect:declared', 'evidence:remove-by-action',
   'file:pop', // Task D E3 (2026-06-12)
   'action:end', 'evidence:gain', // engine拡張 wave#2 cluster3 (2026-06-13)
+  'setcard:leave', // engine拡張 wave#2 cluster9 (2026-06-15)
 ]);
 
 const CONDS = new Set([

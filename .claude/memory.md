@@ -1,28 +1,29 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-> 当日の詳細 (session①BUG-143/144+cluster8 / ②BUG-145 / ③赤魔術family / ④family残) は
-> [sessions/2026-06-15.md](sessions/2026-06-15.md)。changelog-entries 2026-06-15-01〜05 に各 Phase 記録済。
+> 当日の詳細 (session①cluster8 / ②BUG-145 / ③赤魔術family / ④family残 / ⑤cluster9) は
+> [sessions/2026-06-15.md](sessions/2026-06-15.md)。changelog-entries 2026-06-15-01〜06 に各 Phase 記録済。
 
-## 2026-06-15 セッション④ — 赤魔術 family残 (cards/akamajutsu-family-2)
+## 2026-06-15 セッション⑤ — engine拡張 wave#2 cluster9 (setcard:leave hook) ＋ batch 方針
 
-session③ で 赤魔術 caseTrait gate + trait データ解禁 → 本 session で family残【事件赤魔術】族を certify→実装。
+ユーザー方針: 残 backlog の engine gate を **1セッションで複数・別コミット**で進める (cluster9/10/11)。
+mega-commit は回帰切り分け不能のため禁止 = 1 gate=1 独立コミット。triage workflow で次クラスタ選定:
+landscape=残 **19 独立 engine gate** (name-designation 11/partner-area 9/aura 8… が高レバレッジだが needs-design)。
+A/B/C 比較で **A (setcard:leave) が唯一 ready-now・smoke 影響実証ほぼ0** → cluster9 に選定。
 
-### 成果 (全 gate green, ALL_CARDS 1171→1174)
+### cluster9 成果 (全 gate green, ALL_CARDS 1174→1177、branch cards/wave2-cluster9-setcard-leave)
 
-- **triage**: TSV category-drop の **実測 blast-radius を決定論 audit** で確定 (実装済 event 76/case 65 を
-  API category と全件突合 → dropped-trait は case 0 / event 1=B06035 既DEFER = **live 影響ほぼ0**)。systemic fix 低 urgency 化。
-- **certify (opus workflow)**: 5枚→3 equivalent/2 DEFER。certify が B07038 import build-break + 「このキャラ($self) vs pick」語義差を code 前に検出。
-- **解禁3枚**: B07031 (登場時 charSetCard$self + 宣言[caseTrait赤魔術, cost pay[sleepSelf,removeFromHand]] →
-  sceneRemove + optional{chain[charRemoveSetCard n:2, reanimate remove白L3]}) / B07038 (登場時 reveal-until
-  closure-OR[名前小泉紅子 OR 赤魔術event] → handAdd → デッキ下 shuffle → 加えたら discard1 + cutin AP+1000) /
-  B07047 (caseTrait突撃 + 登場時 charSetCard$self + hirameki sleep=D01012 byte等価)。
-- **DEFER 2枚**: B07034/PR231 (text同一)。a1「セットカードが現場を離れるたび1ドロー」= `setcard:leave` per-occurrence
-  hook が engine 不存在 (certify 5点確認)。partial 不可→engine拡張クラスタ。同 hook は B02020 a1 も unblock。
-- gate: tsc 0 / full vitest **2172**(+12) / smoke winsA=498 baseline不変 / playwright 119 / eslint 0 /
-  lint:icon-abilities OK (shipped=1174 deferred=2)。専用 test 24件総 (+12)。
+- engine 5点 additive: HookName `setcard:leave` / TRIGGERED_HOOKS / scene.ts emitSetCardLeaves helper を
+  removeToRemove・toDeck・toHand の **host splice 前** per-entry / char.ts removeOneSetCard emit / cjs whitelist。
+- opus 3-lens 敵対設計レビュー = **GO / 0 blockers**。emit-before-splice が self-leave Q&A (B07034 自身離場)
+  を支える load-bearing 不変条件 (FIX-1 = 専用 test でピン留め)。
+- 解禁5枚: B07034/B07034P/PR231 a1(setcard:leave side:self+caseTrait赤魔術+turn+limit2)+a2(declared) /
+  B02020/B02020P a1(side:opp+turn+limit1, charSetCard self+draw)。P 変種は spread。
+- gate: tsc0 / full vitest **2181**(+9) / smoke winsA=498 baseline完全一致 (MVP は charSetCard 0枚=no-op) /
+  eslint(変更分)0 / CI lint 8本 errors0 / lint:icon OK(shipped=1177) / playwright 回帰。
+- known-gap (DEFERRED-INDEX cluster9): faceUp vacuous / cross-char 同時離場 順序依存 / selfToDeckBottom コスト除外。
 
-### branch / 残
+### 残 (本セッション継続)
 
-- branch `cards/akamajutsu-family-2` で commit → main ff-merge → push → CI 確認。
-- 次候補: `setcard:leave` hook engine拡張クラスタ (B07034/PR231 + B02020 a1 解禁) / B07005 action-restriction /
-  observer contact-removal attribution (D02008/B05066) / B08078 外部 hook 発火。
+- 次: **cluster10 = loseGame/defeat verb** (3枚, low risk) → **cluster11 = enter-source-level filter** (4枚, low risk)。
+  各 certify→実装→全gate→独立コミット→push→CI。コンテキスト逼迫時は commit して /clear で継続。
+- 他の高レバレッジ gate (name-designation 等) は needs-design = 別途設計フェーズ。

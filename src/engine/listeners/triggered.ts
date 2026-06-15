@@ -97,6 +97,12 @@ export const TRIGGERED_HOOKS = [
   // (rules/10 手順3 = 実獲得時のみ。推理/効果/refresh 由来では emit しない — この排他性が
   // 「アクション[事件]によって」の語義を構造的に保証する。pin: wave2-cluster3 test)。
   'evidence:gain',
+  // engine拡張 wave#2 cluster9 (2026-06-15): 「(裏向き)セットカードが現場から離れたとき」(rules/16)。
+  // emit 元 = scene.ts removeToRemove/toDeck/toHand (host splice 前、per-entry) + char.ts removeOneSetCard。
+  // 離場するのは set card (ability を持たない) で、listener は in-play の B07034/B02020。
+  // host が listener 自身 (B07034 self-leave Q&A) の場合も emit-before-splice で collectCardsInPlay に残る
+  // → 特別 handler 不要、通常 in-play scan (handleHook) で処理。side 判定は triggerPlayerIs (file:pop 同様)。
+  'setcard:leave',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];
