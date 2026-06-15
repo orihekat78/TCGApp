@@ -654,6 +654,12 @@ import { B09034P } from '../ct-p09/B09034P.js';
 import { B07067 } from '../ct-p07/B07067.js';
 import { B07070 } from '../ct-p07/B07070.js';
 
+import { B07052 } from '../ct-p07/B07052.js';
+import { B07055 } from '../ct-p07/B07055.js';
+import { B07055P } from '../ct-p07/B07055P.js';
+import { B07058 } from '../ct-p07/B07058.js';
+import { B07058P } from '../ct-p07/B07058P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -797,4 +803,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06049,
   // cluster7 (2026-06-14、engine変更0 card-authoring): hand-count condition 初消費 2枚 (B07067 沖矢昴=【パートナー赤】登場時 相手手札≥自分手札でレベル8以下リムーブ + 宣言 sleepChar-pick / B07070 新出智明=登場時 手札2枚以下でレベル7以上赤に AP+1000・突撃 + カットイン)
   B07067, B07070,
+  // 赤魔術 trait family (B07052 ルシュファー + B07055/P 紅の盟約 + B07058/P 心を盗む + B07062/P caseTraits)
+  B07052, B07055, B07055P, B07058, B07058P,
 ];

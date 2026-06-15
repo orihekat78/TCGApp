@@ -50,7 +50,9 @@ export const B07062: CardDef = {
   rarity: 'C',
   imageUrl: '1762414010629346.jpg',
   caseLevel: 7,
-  caseTraits: [],
+  // 特徴 (公式 API category1/2 由来): まじっく快斗 / 赤魔術。TSV 抽出が case の category(特徴) を
+  // 全件 drop していたため従来 [] (field-drop, BUG-124 同族)。【事件赤魔術】(B07052 a1 等) の正本。
+  caseTraits: ['まじっく快斗', '赤魔術'],
   abilities: [a1, a2],
   ruleRefs: [
     'rules/01-victory-conditions.md',

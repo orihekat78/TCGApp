@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `6f31fabe5e2c`
+> Source hash: `04f6d1776939`
 
 公式ルール [`15-abilities-effects.md`](../../../rules/15-abilities-effects.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -35,7 +35,7 @@
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (587)
+## 📄 参照ソース (590)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
@@ -57,4 +57,4 @@
 - [`src/cards/ct-d02/D02013.ts`](../../../../src/cards/ct-d02/D02013.ts)
 - [`src/cards/ct-d02/D02015.ts`](../../../../src/cards/ct-d02/D02015.ts)
 - [`src/cards/ct-d03/D03002.ts`](../../../../src/cards/ct-d03/D03002.ts)
-- _...ほか 567 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 570 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

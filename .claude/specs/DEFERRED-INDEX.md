@@ -58,7 +58,7 @@
 | rep | 理由 | 解禁条件 / 備考 |
 |-----|------|----------------|
 | ~~B08020/P~~ | **✅ 再採用済 (2026-06-12 engine拡張 wave#2)**: BUG-132 GAP-1/2 修正 (chooseMatch decline channel + declaredBatch gate/遅延 pick) 後に hand-author で出荷。実機 decoy 検証済 (a1 色+kind filter / decline / a2 解決順+AP filter) | 完了 — branch engine/wave2-bug132 |
-| B07052 | **data-gate**: 〚特徴［赤魔術］〛が全カード/事件の features に未投入。caseTrait 赤魔術 (【事件赤魔術】) も deckRevealUntil filter:{trait:'赤魔術'} も永久不一致 → 実装すると無音 no-op。certify は filter 機構のみ検証しデータ未確認 (harvest comment 'yellow event-trait gate' が正) | 赤魔術 を事件/イベント trait に投入後 (データ補完) 再 certify。**横展開: 出荷済 B07062 a2 の handAddFromRemove filter:{trait:'赤魔術'} も同 data-gate で latent no-op (解決編+bond小泉紅子+cost gate で発火稀)** |
+| ~~B07052~~ | **✅ 解決済 (2026-06-15 赤魔術 family)**: 「赤魔術 はどのカードにも無い」は **stale 誤認**。一次 API の `category1/2/3` (特徴の正本) に 赤魔術 が実在 (B07055/B07058 event, B07062 case)。TSV 抽出が event/case の category-trait を全件 drop していたのが真因 (field-drop, BUG-124 同族)。per-card で trait 補完 → B07052 実装 + B07062 latent 解消 | 完了 — branch cards/akamajutsu-trait (changelog 2026-06-15-04)。残課題は下記 known-gap |
 | B02026 | refuted(fatal): a1 triggerCharMatches {side:'opp'} filter 無し → 相手パートナーの action でも誤発火 | filter:{kind:'character'} 追加 + 再 certify |
 | B07104 | refuted(fatal): 【パートナー黒】を step1 のみ conditional 化 (全 ability gate が正) + PA pick 非終端 step で二重 grant desync | ability.condition 化 + PA ordering 対応 |
 | B09038 | refuted(fatal): chain が 0 候補時に強制 draw を誤抑制 (sequence が正) | chain→optional{sequence} 化で容易に green、次 wave |
@@ -139,3 +139,10 @@ gate されない問題を解決。`charStateIs{ref,state}` 条件を追加し (
 - gate は **sleep のみ** (active 案は不採用)。自スタン (PR157/PR163) は already-sleep でも可 = 公式 sleep/stun 非対称。
 - 敵対 verify (opus×14): 11 能力 全 CORRECT / 除外 13枚 MISS 0。
 - B06052 / D05006 は同 reanimate 族だが self-sleep cost なしのため正しく対象外 (前 batch 出荷済・意味等価 pass)。
+
+## 赤魔術 trait family で記録した known-gap (2026-06-15, cards/akamajutsu-trait)
+
+| 項目 | 内容 | 状況 |
+|------|------|------|
+| TSV 抽出の event/case category-drop (systemic) | cards-data の TSV は **event/case の `category1/2/3` (= 特徴) を全件 drop** している (event.tsv/case.tsv に features 列が無い)。一次 API `_raw/*.json` の `category` が特徴の正本。赤魔術 family は per-card で trait/caseTraits を補完したが、**他の【事件(特徴)】条件・event-trait filter も同 field-drop で latent no-op の可能性**。例: 【事件まじっく快斗】参照カード、event-trait filter 全般 | 必要に応じ TSV gen 側で category→traits/caseTraits を carry する systemic fix を検討 (全 event/case def に影響するため smoke/挙動の広域確認が要る、別タスク) |
+| charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp (例: 「合わせて2枚」を set 1枚しか持たず opt-in すると 1枚除去+chain継続)。公式 Q&A 未裁定の edge | B07055 の主要ケース (2枚) は test で正。1枚 opt-in の strict 可否は公式照会後に判断 |

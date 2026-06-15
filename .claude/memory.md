@@ -1,43 +1,28 @@
 # 作業ログ — 名探偵コナンTCG プロジェクト
 
-> 前セッション① (BUG-143/144 + cluster8、5 commit) は本セッション冒頭で push 済 → [sessions/2026-06-15.md](sessions/2026-06-15.md)。
+> 当日の詳細 (session①BUG-143/144+cluster8 / ②BUG-145 / ③赤魔術family) は [sessions/2026-06-15.md](sessions/2026-06-15.md)。
+> changelog-entries 2026-06-15-01〜04 に各 Phase 記録済。
 
-## 2026-06-15 セッション② — BUG-145 self-sleep optional gate (self-state micro-cluster)
+## 2026-06-15 セッション③ — 赤魔術 trait データ補完 + family 実装 (cards/akamajutsu-trait)
 
-origin/main は session① の 6 commit (5 + docs) を push 済 (CI green)。本セッションは BUG-145 を実装。
+needsManual 5件 closure 起点。4枚(B06101/B08020/B09008/D10011)既出荷=1対1突合で意味等価確認。
+B07052 の data-gate は「赤魔術 がデータに無い」という **stale 誤認**で、真因は **TSV 抽出が event/case の
+category(=特徴)を全件 drop** (一次 API `_raw` の category が正本、赤魔術 は B07055/B07058/B07062 に実在)。
 
-### やったこと
-- **BUG-145 起票時 PR138 1枚 → 水平展開で 11 能力**。「このキャラをスリープさせ(…)てもよい。そうした場合 X」型は
-  解決時 self が既スリープなら optional 自体不可 (公式qAndA PR138/PR144/B04049「スリープさせることが
-  できないので行えません」= 一般裁定)。`sceneSetState{$self,sleep}` 冪等で chain break せず違反していた。
-- **engine**: `Condition` union に `charStateIs{ref,state}` 追加 (effect.ts/eval.ts case/CONDITION_KIND_MAP/
-  taskA-validate-specs.cjs CONDS の **4点同期**)。ref 解決は apAtLeast 同流儀 (resolveCharsForRef→charRead.state)。
-- **gate は ability.condition で行う** (effect 側 `conditional` ラップは不可: resolveEffectPicks が両枝を walk →
-  optional **prompt** が surface してしまう。triggered.ts:226-238 は condition=false なら walk 前に continue =
-  非所持扱い rules/17)。最初 conditional ラップで実装→専用 test の sleep ケースで surface 検出→ability.condition に pivot。
-- 11 能力に `not{charStateIs(ref:self,state:'sleep')}` を AND マージ (codemod `.tmp/gate-codemod2.mjs`)。
-  既存 condition (B04049 partnerColor / B06102・B09065 turn / B08058・B08058P fileAtLeast) は and:[既存,gate] で維持。
-  B09013 は a2 のみ (limit turn1 別管理、a1 は他キャラ sleep で非対象)。
-- **sleep のみ gate** (active 案=DEFERRED当初案 は不採用)。⚠ 公式 **sleep/stun 非対称**: 自スタン PR157/PR163 は
-  already-sleep でも可 (qAndA「スリープ状態で登場した場合スタンさせることはできますか→はい」)。active gate なら誤阻害。
+### 成果 (全 gate green)
 
-### 対象 11 能力
-- enter 明示qAndA: PR138/PR144 (黒ずくめ reanimate) / B04049 (FBI remove)
-- enter 一般裁定: B09058/B09058P (赤井家) / B09057 (黒 summon) / B08058/B08058P (FILE8 deck-bottom)
-- ターン終了時 (到達性高): B06102 (キャンティ) / B09065 (FBI)
-- action:declare【ターン1】: B09013 a2
+- per-card で trait 補完: B07062/P caseTraits:[まじっく快斗,赤魔術] / B07055/P・B07058/P traits:[赤魔術]。
+- family 5枚解禁: B07052 (caseTrait突撃 + reveal-until赤魔術+shuffle) / B07055/P (forced-2 set除去+bonus) /
+  B07058/P (reanimate→AP+3000・突撃[キャラ]・charSetCard)。ALL_CARDS 1166→**1171**。
+- **engine 契約発見**: PA短縮形 pick の強制ちょうどN枚=`n:N`(number)。`n:{min,max}`(object)は無音0枚。
+  B07055「合わせて2枚」は n:2 (test で n:{2,2}→0枚を検出し修正)。
+- gate: tsc / validate-specs 73-0 (engine変更0) / full vitest **2160**(+12) / smoke winsA=498 baseline不変 /
+  playwright 119。専用 test akamajutsu-trait-family.test.ts 12件。
+- known-gap (DEFERRED-INDEX 追記): TSV category-drop は他の【事件特徴】/event-trait filter にも波及 latent /
+  charRemoveSetCard n:N の候補<N clamp (1枚 opt-in strict 可否は公式未裁定)。
 
-### gate (全 green)
-- tsc / validate-specs 73-0 / sync-whitelists 5 / **full vitest 2148** (+35 専用 test) /
-  smoke:1000 = **baseline 不変 winsA=498** (already-sleep は random play 不到達の証跡) / playwright 119 / eslint+card-lint clean。
-- 専用 test `tests/cards/bug-145-self-sleep-gate.test.ts` 35件 (primitive / 11能力 sleep→false・active→true /
-  AND-merge 非破壊 (B06102 turn) / 実パイプライン enter-hook emit で sleep→pendingEffects 空)。
-- **敵対 verify (opus×14)**: 11能力 全 CORRECT / 除外 13枚 MISS 0 / 自スタン PR157/PR163 除外確定。
+### branch / 残
 
-### 教訓 (BUG-145.md に詳細)
-- **effect 側 conditional ラップは optional prompt を gate しない** (walk が両枝を訪れる) → 状態 gate は ability.condition。
-- certify green でも意味等価は自前1対1突合 (B01011/PR138)。bug doc 1枚でも同構造を機械抽出して水平展開。
-
-### branch / 残課題
-- branch `fix/bug-145-self-sleep-gate` で commit → main ff-merge → push 予定。
-- BUG-143/144/145 の commit プロパティは branch名 placeholder (real hash 反映は任意)。
+- branch `cards/akamajutsu-trait` で commit → main ff-merge → push 予定 → CI 確認。
+- 次候補: TSV category-drop の systemic fix (要広域確認) / 赤魔術 family 残 (小泉紅子B07031/B07034・中森銀三B07047等
+  【事件赤魔術】族) / NEXT-SESSION-PROMPT の候補群 (B07005 action-restriction 等)。
