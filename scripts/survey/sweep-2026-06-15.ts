@@ -332,7 +332,7 @@ function main() {
     effect: string; cutIn: string; hirameki: string; henso: string }
 
   const rows: Row[] = [];
-  for (const [sig, members] of clusters) {
+  for (const [, members] of clusters) {
     members.sort((a, b) => a.cardNum.localeCompare(b.cardNum));
     const rep = members[0];
     const text = [rep.effect, rep.cutIn, rep.hirameki, rep.henso].filter(Boolean).join(' / ');
