@@ -660,6 +660,10 @@ import { B07055P } from '../ct-p07/B07055P.js';
 import { B07058 } from '../ct-p07/B07058.js';
 import { B07058P } from '../ct-p07/B07058P.js';
 
+import { B07047 } from '../ct-p07/B07047.js';
+import { B07031 } from '../ct-p07/B07031.js';
+import { B07038 } from '../ct-p07/B07038.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -805,4 +809,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07067, B07070,
   // 赤魔術 trait family (B07052 ルシュファー + B07055/P 紅の盟約 + B07058/P 心を盗む + B07062/P caseTraits)
   B07052, B07055, B07055P, B07058, B07058P,
+  // 赤魔術 family残 (B07031/B07038/B07047)
+  B07047, B07031, B07038,
 ];

@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `07823e0292d0`
+> Source hash: `903db0e2b32c`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **1204** ファイル（[全体 index](./index.md)）
+このグループ: **1207** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (10)
 
@@ -82,7 +82,7 @@
 | [`src/cards/ct-d11/D11021.ts`](../../../src/cards/ct-d11/D11021.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-d11/index.ts`](../../../src/cards/ct-d11/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## cards (他) (1129)
+## cards (他) (1132)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -776,8 +776,11 @@
 | [`src/cards/ct-p07/B07028Sec2.ts`](../../../src/cards/ct-p07/B07028Sec2.ts) | _(参照なし)_ |
 | [`src/cards/ct-p07/B07029.ts`](../../../src/cards/ct-p07/B07029.ts) | _(参照なし)_ |
 | [`src/cards/ct-p07/B07029P.ts`](../../../src/cards/ct-p07/B07029P.ts) | _(参照なし)_ |
+| [`src/cards/ct-p07/B07031.ts`](../../../src/cards/ct-p07/B07031.ts) | [`11-reasoning.md`](../../rules/11-reasoning.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
+| [`src/cards/ct-p07/B07038.ts`](../../../src/cards/ct-p07/B07038.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-p07/B07040.ts`](../../../src/cards/ct-p07/B07040.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p07/B07042.ts`](../../../src/cards/ct-p07/B07042.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
+| [`src/cards/ct-p07/B07047.ts`](../../../src/cards/ct-p07/B07047.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
 | [`src/cards/ct-p07/B07052.ts`](../../../src/cards/ct-p07/B07052.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-p07/B07055.ts`](../../../src/cards/ct-p07/B07055.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`16-card-set.md`](../../rules/16-card-set.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/cards/ct-p07/B07055P.ts`](../../../src/cards/ct-p07/B07055P.ts) | _(参照なし)_ |

@@ -140,9 +140,15 @@ gate されない問題を解決。`charStateIs{ref,state}` 条件を追加し (
 - 敵対 verify (opus×14): 11 能力 全 CORRECT / 除外 13枚 MISS 0。
 - B06052 / D05006 は同 reanimate 族だが self-sleep cost なしのため正しく対象外 (前 batch 出荷済・意味等価 pass)。
 
-## 赤魔術 trait family で記録した known-gap (2026-06-15, cards/akamajutsu-trait)
+## 赤魔術 trait family 残 DEFER + known-gap (2026-06-15-2, cards/akamajutsu-family-2)
+
+family残 5枚を certify (opus adversarial)。3枚解禁 (B07031/B07038/B07047, ALL_CARDS 1171→1174)、2枚 DEFER。
+
+| rep | 理由 (支配 gate) | 解禁条件 |
+|-----|------------------|---------|
+| B07034 / PR231 (小泉紅子, text 同一) | a1「自分の現場のキャラに裏向きでセットされているカードが1枚現場から離れるたび、カードを1枚引く」(【自分ターン中】【ターン2】) = **set-card-leave per-occurrence hook が engine に不存在** (certify 5点確認: HookName union/TRIGGERED_HOOKS に無し、char.ts removeAllSetAndStacked/removeOneSetCard・scene.ts toDeck/toHand は remove push のみで emit 無し)。a2 単体 (declared charSetCard $self + sceneRemove levelMax7) は実装可だが partial 出荷不可 (cluster方針) → カード全体 DEFER | `setcard:leave` hook 追加 (全 set-card クリア点で per-occurrence emit + ターン2 limit) の engine 拡張クラスタ。**同 hook が B02020 (大岡紅葉) a1 も解禁** (既存 a2-only 出荷・a1 DEFER 済の先例)。計3能力を unblock |
 
 | 項目 | 内容 | 状況 |
 |------|------|------|
-| TSV 抽出の event/case category-drop (systemic) | cards-data の TSV は **event/case の `category1/2/3` (= 特徴) を全件 drop** している (event.tsv/case.tsv に features 列が無い)。一次 API `_raw/*.json` の `category` が特徴の正本。赤魔術 family は per-card で trait/caseTraits を補完したが、**他の【事件(特徴)】条件・event-trait filter も同 field-drop で latent no-op の可能性**。例: 【事件まじっく快斗】参照カード、event-trait filter 全般 | 必要に応じ TSV gen 側で category→traits/caseTraits を carry する systemic fix を検討 (全 event/case def に影響するため smoke/挙動の広域確認が要る、別タスク) |
-| charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp (例: 「合わせて2枚」を set 1枚しか持たず opt-in すると 1枚除去+chain継続)。公式 Q&A 未裁定の edge | B07055 の主要ケース (2枚) は test で正。1枚 opt-in の strict 可否は公式照会後に判断 |
+| TSV 抽出の event/case category-drop (systemic) | cards-data の TSV は **event/case の `category1/2/3` (= 特徴) を全件 drop** している (event.tsv/case.tsv に features 列が無い)。一次 API `_raw/*.json` の `category` が特徴の正本。**実測 blast-radius (2026-06-15-2 triage, 決定論 audit)**: 実装済 event 76 / case 65 を API category と全件突合 → dropped-trait は **case 0件 / event 1件 (B06035 の YAIBA、既に hirameki fire-path 理由で DEFER 済)**。MVP deck (D08/D11) は手書きで API 以前のため対象外 (D08026=古城/D11021=婚活 正常)。**= 現出荷カードへの live 影響ほぼ 0**。systemic fix は future-proof のみ (per-card certify が新規実装時に捕捉、赤魔術 family が実証) | **低 urgency に格下げ**。必要なら TSV gen 側で category→traits/caseTraits を carry (全 event/case def に影響→smoke/挙動の広域確認が要る、別タスク) |
+| charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp。さらに certify が **AI/CPU 経路 (resolve-picks Pattern A) は picked 1体のみ解決** し chain が reanimate/bonus へ進む点を指摘 (家族共通)。B07055 a1・**B07031 a2** が同構造 | HUMAN 経路 (apply-pick per-uid) と test (drain pickedUids) は計2枚で正。両カードとも非MVP=smoke/CPU 不在で live 影響なし。strict 化は engine backlog (公式 Q&A 未裁定) |
