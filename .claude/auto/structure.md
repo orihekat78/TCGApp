@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3221
+- **ファイル数**: 3222
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -920,6 +920,7 @@
     - `2026-06-14-2.md` — 2026-06-14 (2) — engine拡張 wave#2 cluster4 (remove-area → deck-bottom)
     - `2026-06-14.md` — セッションログ 2026-06-14 — engine拡張 wave#2 cluster3 (action-lifecycle trigger)
     - `2026-06-15-2.md` — 2026-06-15 (2) — engine gate batch (cluster9 出荷 / cluster10・11 defer)
+    - `2026-06-15-3.md` — 作業ログ — 名探偵コナンTCG プロジェクト
     - `2026-06-15.md` — 2026-06-15 セッション① — BUG-143/144 + reanimate確認 + cluster8 (local 5 commit)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
