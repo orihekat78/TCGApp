@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3235
+- **ファイル数**: 3240
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -927,6 +927,7 @@
     - `2026-06-14.md` — セッションログ 2026-06-14 — engine拡張 wave#2 cluster3 (action-lifecycle trigger)
     - `2026-06-15-2.md` — 2026-06-15 (2) — engine gate batch (cluster9 出荷 / cluster10・11 defer)
     - `2026-06-15-3.md` — 作業ログ — 名探偵コナンTCG プロジェクト
+    - `2026-06-15-4.md` — 作業ログ — 名探偵コナンTCG プロジェクト
     - `2026-06-15.md` — 2026-06-15 セッション① — BUG-143/144 + reanimate確認 + cluster8 (local 5 commit)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
@@ -1217,6 +1218,7 @@
     - `round-4k-hirameki-char-stun-design.md` — Round 4k — hiramekiCharStun E2E spec 設計
     - `round-4l-ui-quad-design.md` — Round 4l — UI 4 課題一括対応 design
     - `side-channel-pattern.md` — Side-Channel Pattern — engine ↔ UI 通信規約
+    - `triage-sweep-2026-06-15.md` — トリアージ・スイープ (2026-06-15) — 全未実装カードの現行engine再分類 + ゴール地点確定
     - `ui-picker-direct-manipulation-2026-06-15.md` — UI picker Direct Manipulation 化 — 設計 (2026-06-15)
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
@@ -1490,6 +1492,9 @@
     - `classify.ts` — Task A 再分類サーベイ — gate 検出トリアージ (2026-06-07, inline 分類)
     - `dump.ts`
     - `finalize.ts` — Task A 再分類サーベイ — 完走集約 (2026-06-07)
+    - `sweep-2026-06-15.ts` — トリアージ・スイープ (2026-06-15) — 全未実装カードの現行 engine 再分類
+    - `sweep-select-window.cjs`
+    - `sweep-window2.cjs`
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
   - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):

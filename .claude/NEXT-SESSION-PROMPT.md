@@ -1,50 +1,52 @@
-# 次セッション再開プロンプト (2026-06-15 UI picker DM 化 出荷 + triage sweep 待ち)
+# 次セッション再開プロンプト (2026-06-15 トリアージ・スイープ 進行中 — window3 まで完了見込み)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
 > モデル方針 (2026-06-14): `claude-fable-5` が agent で利用不可のため、本体も難判断も **当面 opus を最初から**。
-> 難判断 agent (設計レビュー / 意味等価突合 / 敵対反証) は `model:'opus'` 明示。詳細は CLAUDE.md。
+> 難判断 agent (設計レビュー / 意味等価突合 / 敵対反証 / certify) は `model:'opus'` 明示。詳細は CLAUDE.md。
 
-> ⚠️ **応答は日本語で** (memory feedback-respond-in-japanese)。**UI picker はエリアカード直接選択+画像必須** (feedback-ui-direct-manipulation)。
+> ⚠️ **応答は日本語で** (memory feedback-respond-in-japanese)。
 
 ---
 
 ```text
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md → .claude/memory.md を読んで状況把握。
 
-## 現在地 (2026-06-15、UI picker Direct Manipulation 化 出荷済 = origin/main d62fee69)
+## 現在地 (2026-06-15、トリアージ・スイープ multi-window 進行中)
 
-- engine拡張 wave#2 cluster1〜9/11/12/13/14 ✅ (ALL_CARDS 1211)。直近 = UI picker DM 化 (engine 不変・UI 層のみ)。
-- UI picker DM 化: scene-char pick (sceneSetState 等 7 verb) + switch victim を **現場カード直接クリック** に統一。
-  共有述語 `src/ui/services/scenePick.ts isSceneDirectPick`、EffectPickerModal は scene pick で null + fallback に画像。
-  旧 SceneSwitchPickerModal 撤去。opus 3-lens 敵対設計レビュー (全 GO-with-fixes、1 blocker 反映) → 実装 →
-  全 gate green (tsc0/eslint0err/vitest 2232/smoke winsA498 不動/MCP 実機 4 シナリオ err0)。
-- origin 同期確認: `git log origin/main..main` 空。
+正本 doc = `.claude/specs/triage-sweep-2026-06-15.md` (全 universe スイープ + ロードマップ)。
+- engine wave#2 cluster1〜14 + UI DM 出荷済 (ALL_CARDS 1211)。未実装 838 cards / 485 distinct signature。
+- スイープ = 全未実装カードを gate 別分類し「あと N クラスタ」確定。決定論 sweep + per-card certify (loop-until-dry)。
+- **重大教訓**: certify grounding の capability-map.txt が 2026-06-06 stale → certify-brief.md を現行化済 (.tmp、都度再生成)。
+  決定論 green-candidate の **false-green 率 ≈ 65%** (信用不可、必ず certify)。
+- 決定論 landscape (NEW gate 還元後): 🟢 green-candidate 249sig/398cards / 🟡 yellow 221/413 / ⚫ black 15/27。
+- certify 済 (windows 1〜3): 確定 green は doc + `.tmp/certify/*.json` 参照。NEW gate ~19 発見→ sweep regex 還元済。
 
-## ★最優先タスク = トリアージ・スイープ (ユーザー依頼、ゴール確定用)
+## ★最優先: スイープ継続 (green bucket 収束 → N 確定 → 出荷開始)
 
-未実装 ~540 base カード (842 printing) を全 certify (1窓 ~20rep、3〜4窓) → 全 engine ゲートを列挙 →
-「あと正確に N クラスタ」+ 共有プリミティブ先行で回帰最小のロードマップ作成。決定論 enum (gate 別候補を機械抽出) → per-card certify。
-目的=ゴール地点確定 + 大型ゲート (partner-area 17/name-designation 9 等) の設計順序最適化。
-- 既存 triage 結果 (残 gate landscape): `.claude/specs/engine-gate-triage-2026-06-15.md`
-- certify infra = card-wave skill / scripts/wf-certify.mjs (grounding→adversarial-verify、1rep≈200k tok・SUB=8 で throttle 回避)。
-- DEFERRED-INDEX (残 engine gate): `.claude/specs/DEFERRED-INDEX.md` (name-designation / partner-area 構造 / mustGuard /
-  auraGrant(triggered 付与) / loseGame 等、いずれも needs-design)。
+1. **window 4+ で green bucket をさらにサンプル** (false-green 率が収束するまで loop-until-dry)。
+   - 抽出: `node scripts/survey/sweep-window2.cjs <greenN>` (done除外・green層化) → id配列を wf-certify に渡す。
+   - certify は 1rep≈200k tok・1窓~25-30rep・SUB=8 で throttle 回避。`.tmp/certify/` durable。
+   - 新 yellow が暴く gate を `scripts/survey/sweep-2026-06-15.ts` の GATES に regex 還元 → `npx tsx ...sweep-2026-06-15.ts` 再実行。
+2. **確定 green を card-wave バッチで出荷開始** (card-wave skill / taskA: certify済 spec → codegen → 全gate)。
+3. **ロードマップ確定** = doc の「ロードマップ」節を N 確定値で更新。
 
-## ★follow-up 候補 (UI、低優先)
-- Guard/MisreadPicker も self 現場キャラを text-only 選択する同型 UX 問題 (今回 out of scope)。contact-guard /
-  相手推理防御の別フロー (pendingEffectPick 非経由・contact-store/Promise 駆動)。DM 化するなら別途設計レビュー。
+## ロードマップ暫定 (doc 参照)
+- green-now ≈ 398cards の ~35% (要 per-card certify)。
+- 高yield中型クラスタ (共有プリミティブ先行): cutin-subtype filter(69) / contact-removal-by-self trigger(51) /
+  grant-textual+set-card-ability(60) / dynamic-count family(~45) / scene→deck+FILE残 / stacked-identity / remove→deck-selective。
+- 構造XL ×3 (最終段): partner-area(27) / name-designation(15) / loseGame-rewrite(17)。
+- 長尾 ~20 niche gate = 大半 defer。
 
 ## プロセス必須
-- engine 変更は骨格凍結例外手続き + opus 敵対設計レビュー + 全 gate。UI 変更は MCP 実機検証 (第一選択) + 回帰。
-- 1 タスク = 1 独立コミット。docs commit は `.tmp` を消してから `npm run docs` (validate-specs 用に `.tmp/certify` は mkdir で残す)。
-- push は main ff-merge (compound `checkout&&merge&&push` は分割実行、classifier 拒否回避)。
-- MCP playwright が「Browser is already in use」で落ちたら mcp-chrome プロセス kill + SingletonLock 削除 → 再 navigate。
+- certify/難判断 agent は `model:'opus'`。engine 変更は骨格凍結例外 + opus 敵対設計レビュー + 全gate。
+- 1 タスク = 1 独立コミット。docs commit は `.tmp` を消さず (`.tmp/certify` durable) `npm run docs`。
+- push は main ff-merge (compound checkout&&merge&&push は分割実行)。
 
 ## 状態 doc
-- bug: .claude/bugs/index.base / defer: .claude/specs/DEFERRED-INDEX.md
-- 詳細: changelog-entries/2026-06-15-11 (UI picker DM 化) / memory.md セッション⑨
+- スイープ正本: `.claude/specs/triage-sweep-2026-06-15.md` / 旧 gate ranking: engine-gate-triage-2026-06-15.md
+- bug: .claude/bugs/index.base / defer: .claude/specs/DEFERRED-INDEX.md / 詳細: memory.md セッション⑩ + sessions/2026-06-15-4.md
 ```
 
-直近セッションは UI picker Direct Manipulation 化を出荷 (origin/main d62fee69)。
-**次セッションはトリアージ・スイープ (最優先)。** `/clear` で新セッション推奨。
+直近セッションはトリアージ・スイープ window 1〜3 を実施 (決定論 landscape + 56→88 rep certify + NEW gate ~19 発見)。
+**次セッションはスイープ継続 (green bucket 収束 → N 確定 → 出荷開始)。** `/clear` で新セッション推奨。
