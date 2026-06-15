@@ -701,6 +701,11 @@ import { B09009 } from '../ct-p09/B09009.js';
 import { PR274 } from '../pr-01/PR274.js';
 import { PR275 } from '../pr-01/PR275.js';
 
+import { B09010 } from '../ct-p09/B09010.js';
+import { B09010P } from '../ct-p09/B09010P.js';
+import { PR042 } from '../pr-01/PR042.js';
+import { PR046 } from '../pr-01/PR046.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -856,4 +861,6 @@ export const REUSE_CARDS: CardDef[] = [
   D01014, B04013, D02014, B04026, D03014, B04040, D04014, B04061, D05014, B04083, D07023, B03132, B03132P, B08060, B08060P,
   // engine拡張 wave#2 cluster13 — aura-grant (他キャラ AP buff)
   D05005, D07010, D07011, B01038, B01038P, B02012, B03075, B07044, B09009, PR274, PR275,
+  // engine拡張 wave#2 cluster14 — multi-card sceneEnter
+  B09010, B09010P, PR042, PR046,
 ];

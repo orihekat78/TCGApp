@@ -803,7 +803,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               pickCands={isPickModeForThisArea ? pendingPickForArea!.candidates : undefined}
               pickBannerText={
                 isPickModeForThisArea && pendingPickForArea?.atomVerb === 'sceneEnter'
-                  ? 'リムーブから1枚選んで現場に登場させてください'
+                  ? ((pendingPickForArea.nMax ?? 1) > 1
+                      ? `リムーブから${pendingPickForArea.nMax}枚まで選んで現場に登場させてください`
+                      : 'リムーブから1枚選んで現場に登場させてください')
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'charStackCard'
                   ? `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`
                   : undefined
@@ -815,15 +817,46 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               } : undefined}
               pickNMin={isPickModeForThisArea ? pendingPickForArea?.nMin : undefined}
               pickNMax={isPickModeForThisArea ? pendingPickForArea?.nMax : undefined}
-              onPickMulti={isPickModeForThisArea ? (uids) => {
+              onPickMulti={isPickModeForThisArea ? async (uids) => {
                 // Phase 2c union 化: 0 枚選択は skip 形態 (pickedUid:null 単独) で dispatch
                 // (旧実装でも pickedUid null 時は pickedUids が無視され skip 経路だった — 挙動同一)
                 const first = uids[0];
                 if (first === undefined) {
                   dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
-                } else {
-                  dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids });
+                  return;
                 }
+                // cluster14: multi-card sceneEnter (B09010「2枚まで登場」) が現場満杯を超える場合、
+                //   overflow 枚数 (= 登場枚数 − room) ぶん退場キャラを SceneSwitchPickerModal で収集する (rules/20 スイッチ)。
+                //   charStackCard 等 他 multi-pick verb は従来通り即 dispatch (sceneEnter 以外は分岐しない)。
+                const stE = useGameStateStore.getState();
+                const pendE = stE.pendingEffectPick;
+                const gsE = stE.gameState;
+                if (pendE && pendE.atomVerb === 'sceneEnter' && gsE) {
+                  const room = 5 - gsE.players[pendE.player].scene.length;
+                  const overflow = Math.max(0, uids.length - room);
+                  if (overflow > 0) {
+                    const victims: string[] = [];
+                    for (let i = 0; i < overflow; i++) {
+                      const sceneChars = gsE.players[pendE.player].scene
+                        .filter((c) => !victims.includes(c.uid))
+                        .map((c) => ({ uid: c.uid, cardId: c.cardId, name: readDef.card(c.cardId)?.names?.[0] ?? c.cardId, state: c.state, isNamed: c.isNamed }));
+                      const v = await new Promise<string | null>((resolve) => {
+                        useSceneSwitchPickerStore.getState()._open({
+                          cardId: '', newCardName: `登場${uids.length}枚 — 退場 ${i + 1}/${overflow}`, candidates: sceneChars, resolve,
+                        });
+                      });
+                      if (v === null) {
+                        // cancel = 全辞退。B09010 は skipResolvesAtom により後続 FILE上1リムーブは解決される。
+                        dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+                        return;
+                      }
+                      victims.push(v);
+                    }
+                    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids, switchRemoveUids: victims });
+                    return;
+                  }
+                }
+                dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids });
               } : undefined}
               pickDistinctNames={isPickModeForThisArea ? (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames : undefined}
               pickComponents={isPickModeForThisArea && (pendingPickForArea as { distinctNames?: boolean } | undefined)?.distinctNames

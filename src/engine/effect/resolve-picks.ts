@@ -600,6 +600,9 @@ function substituteAtomPick(
       // D08021 driver 2026-05-26: target.query.distinctNames を UI に伝える。
       // CardListModal multi-select で同 name component 衝突候補を click 不可化する。
       distinctNames: targetRef.query?.distinctNames === true,
+      // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、
+      //   0枚 decline を applyPickSkipAndContinuation で解決し remainder を実行する (deckRevealUntil と同契約)。
+      skipResolvesAtom: (args as { skipResolvesAtom?: boolean }).skipResolvesAtom === true,
     });
     return atom as Effect; // 未解決のまま返却
   }

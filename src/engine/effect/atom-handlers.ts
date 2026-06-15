@@ -639,6 +639,75 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
 
     // --- 現場 ---
     case 'sceneEnter': {
+      // cluster14 (2026-06-15) multi-card sceneEnter: 「…キャラを2枚まで選び、登場させる」(B09010/PR042 等)。
+      //   handAddFromRemove/charStackCard と同型の cardIds:'$pick.cardIds' 契約を sceneEnter に拡張する。
+      //   単一 cardId path は cardIds 不在時に従来通り (additive・非干渉。骨格凍結例外: rules/20 スイッチ + defer カード)。
+      //   現場満杯時の switch は switchRemoveUids[] (UI が overflow 枚数ぶん収集) を per-card に消費する。
+      {
+        const rawCardIdsM = (a as { cardIds?: unknown; __declined?: unknown }).cardIds;
+        if (rawCardIdsM === '$pick.cardIds') {
+          // FIX-B2: 0枚選択 (skipResolvesAtom decline) の再入。__declined → 0体登場 (continuation は
+          //   applyPickSkipAndContinuation が別途実行)。deckRevealUntil の __declined 契約と同型。
+          if ((a as { __declined?: unknown }).__declined === true) {
+            mutate.log.append(s, { ts: Date.now(), player: resolvePlayer(a.player, ctx), turn: s.turn.number, action: 'effect:sceneEnter:multi-declined' });
+            return;
+          }
+          // 未解決 await: side-channel に pick を queue (handAddFromRemove 同型)。
+          if (a.target && typeof a.target === 'object') {
+            const seMP = resolvePlayer(a.player, ctx);
+            tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: seMP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+            mutate.log.append(s, { ts: Date.now(), player: seMP, turn: s.turn.number, action: 'effect:sceneEnter:awaiting-pick' });
+          }
+          return;
+        }
+        if (Array.isArray(rawCardIdsM)) {
+          // 解決済 (0〜max 枚)。各 cardId を source area から splice → enter / switchEnter。
+          const cardIds = rawCardIdsM as string[];
+          const enterP = resolvePlayer(a.player, ctx);
+          const switchUids = Array.isArray((a as { switchRemoveUids?: unknown }).switchRemoveUids)
+            ? [...((a as { switchRemoveUids?: string[] }).switchRemoveUids as string[])]
+            : [];
+          const viaEffectM = (a.viaEffect as boolean | undefined) ?? true;
+          const enterOptsM = {
+            named: (a.named as boolean | undefined) ?? true,
+            viaEffect: viaEffectM,
+            active: a.enterSleep === true ? false : undefined,
+          };
+          const srcArea = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { area?: string } }).query?.area : undefined) as 'remove' | 'hand' | 'deck' | undefined;
+          const srcSide = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { side?: string } }).query?.side : undefined) as 'self' | 'opp' | undefined;
+          for (const cid of cardIds) {
+            // 単一 path と同じ inline splice (remove/hand/deck のみ)。これがないと remove に残り複製登場 (D11014 a2 class bug)。
+            const fp = srcSide === 'opp' ? 'opp' : enterP;
+            if (srcArea === 'remove' || srcArea === 'hand' || srcArea === 'deck') {
+              const arr = s.players[fp][srcArea];
+              const i = arr.indexOf(cid);
+              if (i !== -1) arr.splice(i, 1);
+            }
+            // FIX-B3a: full は **ループ内で都度再計算** (hoist 禁止。enter で scene が伸びるため)。
+            const full = s.players[enterP].scene.length >= 5;
+            let nc: ReturnType<typeof mutate.scene.enter>;
+            if (full) {
+              const v = switchUids.shift();
+              // FIX-B3b: victim が現 scene に存在するか検証 (stale/dup/illegal → skip、enter() の throw 防止)。
+              if (typeof v === 'string' && !v.startsWith('$') && s.players[enterP].scene.some((c) => c.uid === v)) {
+                nc = mutate.scene.switchEnter(s, enterP, cid, v, enterOptsM);
+              } else {
+                mutate.log.append(s, { ts: Date.now(), player: enterP, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip', target: cid });
+                continue;
+              }
+            } else {
+              nc = mutate.scene.enter(s, enterP, cid, enterOptsM);
+            }
+            // BUG-146: enter emit の source は登場キャラ・原因カードは payload.sourceCardId (単一 path と同規約)。
+            //   per-card emit で enterOrderThisTurn が 1 枚ずつ加算され【疾風 N】が正しく判定される (batch emit 禁止)。
+            event.emit(s, 'enter', {
+              uid: nc.uid, viaEffect: viaEffectM, enterOrder: nc.enterOrder,
+              enterOrderThisTurn: nc.enterOrderThisTurn, sourceCardId: (ctx.source as { cardId?: string }).cardId,
+            }, { player: enterP, uid: nc.uid, cardId: cid });
+          }
+          return;
+        }
+      }
       // 2026-06-04 switch-on-effect-enter (rules/20 スイッチ): 現場満杯 (5枚) の効果登場の早期分岐。
       //  - switchRemoveUid 指定済 (UI が満杯時に SceneSwitchPickerModal で退場キャラを収集) → skip せず
       //    下の解決済 path で switchEnter する。

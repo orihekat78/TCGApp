@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `316832075728`
+> Source hash: `000a1bbf2785`
 
 公式ルール [`20-color-and-switch.md`](../../../rules/20-color-and-switch.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,7 +22,7 @@
 - [`card-condition-catalog`](../by-spec/card-condition-catalog.md)
 - [`INDEX`](../by-spec/cards-data--INDEX.md)
 
-## 📄 参照ソース (122)
+## 📄 参照ソース (126)
 
 - [`src/cards/_shared/caseMonoColor.ts`](../../../../src/cards/_shared/caseMonoColor.ts)
 - [`src/cards/ct-d01/D01004.ts`](../../../../src/cards/ct-d01/D01004.ts)
@@ -44,4 +44,4 @@
 - [`src/cards/ct-d07/D07023.ts`](../../../../src/cards/ct-d07/D07023.ts)
 - [`src/cards/ct-d08/D08024.ts`](../../../../src/cards/ct-d08/D08024.ts)
 - [`src/cards/ct-d08/D08025.ts`](../../../../src/cards/ct-d08/D08025.ts)
-- _...ほか 102 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 106 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

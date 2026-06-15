@@ -91,6 +91,9 @@ export type EngineAction =
   | { type: 'effectPickResolve'; pickedUid: string }
   | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[] }
   | { type: 'effectPickResolve'; pickedUid: string; switchRemoveUid: string }
+  // cluster14: multi-card sceneEnter (B09010「2枚まで登場」) が現場満杯のとき、UI が overflow 枚数ぶん
+  //   集めた退場 uid 群を pickedUids と同時に運ぶ。switchRemoveUid (単数) は付けない → 既存 discrimination 不変。
+  | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[]; switchRemoveUids: string[] }
   // BUG-121: human 複数 option choice の選択結果 (enter トリガ等)。pendingEffectChoice を解決する。
   | { type: 'choiceResolve'; choiceIndex: number }
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
@@ -440,6 +443,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         action.pickedUid,
         'pickedUids' in action ? action.pickedUids : undefined,
         'switchRemoveUid' in action ? action.switchRemoveUid : undefined,
+        'switchRemoveUids' in action ? action.switchRemoveUids : undefined,
       );
       // クリアは produce 後に dispatchEngineAction が行う
       return;

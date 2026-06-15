@@ -37,3 +37,25 @@ certify→敵対 refute→synthesize) で nested-filter-dyn(yield7/low) と aura
   multi-card sceneEnter (switch-wiring)、partner-area 構造 (GameState slot+UI)、mustGuard (forced GuardPickerModal)、
   auraGrant(triggered 付与) (非キーワード能力テキスト付与)、loseGame (事件解決書換 high-risk multi-gate)。
 - **低 urgency engine bug**: BUG-142 (reasoning 由来 refresh 水平展開)、BUG-143 (contact-scope mod 清掃)。
+
+## 2026-06-15 セッション⑧ — engine拡張 wave#2 cluster14 (multi-card sceneEnter) + UX指摘 + sweep予定
+
+triage workflow (残6 needs-design gate を opus per-card certify→敵対 refute→synthesize) で全 gate を実証評価:
+ready-to-design は **0**、出荷可能全 gate が needs-more-design。multi-card-sceneEnter(4枚/L/med) を最良 risk-adjusted で選定。
+詳細 = `.claude/specs/engine-gate-triage-2026-06-15.md`。
+
+### cluster14 (multi-card sceneEnter) 実装・検証完了 (commit 前)
+- 「…2枚まで選び登場」型。sceneEnter に cardIds:'$pick.cardIds' 契約 + switchRemoveUids[] (現場満杯 switch) を additive 追加。
+- **実装前 opus 3-lens 敵対設計レビュー** が 3 blocker 検出 (0枚 decline で FILE リムーブ drop=skipResolvesAtom / `__declined` 未処理 /
+  scene-full crash=full 都度再計算+victim 存在検証) + distinctNames AI dedup 等 7 fix。全て設計に反映してから着手。
+- 変更: atom-handlers/apply-pick/resolve-picks (engine 3) + useEngineDispatch/Playmat (UI 2) + 4 cards (B09010/P, PR042/PR046)。
+- gate 全 green: tsc0 / vitest 2226(+12) / smoke winsA498 不動 / playwright 119 + **MCP 実機** (宣言→2枚 pick→switch→2体登場+灰原哀離場+FILE-1, err0)。
+
+### ⚠ ユーザー指摘 UX (cluster14 commit 後に別 pass で対応)
+1. **EffectPickerModal (効果対象を選択) に カード画像** — 同名カード (吉田歩美×3 等) が区別不能。画像追加で識別可能に。
+2. **SceneSwitchPickerModal を 現場カード直接選択に** — text-only は不適。switch=現場カードを選ぶ操作 → 既存 scene-area pick 機構を流用
+   ("この処理はどこかにあるはず" = sceneRemove pick 等のクリック選択を switch victim でも使う)。単一/複数 switch 両方が裨益。
+
+### ⚠ ユーザー依頼 (UX 対応後): トリアージ・スイープ
+未実装 ~540 base カードを全 certify (3〜4 窓) → 全 engine ゲートを列挙 → 「あと正確に N クラスタ」+ 共有プリミティブ先行で回帰最小の
+ロードマップ作成。目的=ゴール地点確定 + 大型ゲートの設計順序最適化。

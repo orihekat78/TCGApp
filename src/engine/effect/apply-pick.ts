@@ -18,6 +18,8 @@ type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
 import { runAllUntilEmpty } from '../resolve/index.js';
 import { event } from '../event/index.js';
+import { def } from '../read/def.js';
+import { allCardNameComponentsForDef } from '../target/card-def-registry.js';
 
 /**
  * pick uid → cardId 逆引き。`evidence:side:idx` / `cardId#idx` / snapshot fallback に対応。
@@ -54,6 +56,7 @@ export function applyPickAndContinuation(
   pickedUid: string,
   pickedUids?: string[],
   switchRemoveUid?: string,
+  switchRemoveUids?: string[],
 ): void {
   // ---- resolved atom を build (Pattern A: uid='$pick' → uid 置換 / Pattern B: cardId(s)/target 置換) ----
   const pendingArgs = pending.atomArgs as { uid?: unknown };
@@ -85,9 +88,13 @@ export function applyPickAndContinuation(
     const allCardIds: string[] = allUids
       .map((u) => resolveCardIdFromPickUid(u, state, pending))
       .filter((c): c is string => typeof c === 'string');
-    // switch-on-effect-enter: sceneEnter が現場満杯のとき UI が収集した switchRemoveUid を
+    // switch-on-effect-enter: sceneEnter が現場満杯のとき UI が収集した switch 退場 uid を
     // 解決済 atom args に載せる (handler が switchEnter する)。他 atom には影響しない (未指定なら付かない)。
-    const switchPart = switchRemoveUid ? { switchRemoveUid } : {};
+    // cluster14: multi-card sceneEnter は switchRemoveUids[] (plural, overflow 枚数ぶん) を優先。
+    //   順序維持 (plural→singular→{}) で単一 sceneEnter (switchRemoveUid) path は byte 不変。
+    const switchPart = (switchRemoveUids && switchRemoveUids.length > 0)
+      ? { switchRemoveUids }
+      : switchRemoveUid ? { switchRemoveUid } : {};
     const newArgs: Record<string, unknown> = hasCardIdsBind
       ? { ...pending.atomArgs, cardIds: allCardIds, ...switchPart } // target は元の pick query を保持
       : hasCardIdBind
@@ -284,6 +291,21 @@ function chooseAiPick(
   // chosen は kind:'char' (uid あり) のみ渡しているため uid を持つが、Candidate union 上は narrow 不能 → cast。
   const pickedUid = (chosen as { uid?: string } | null | undefined)?.uid ?? cands[0]!.uid;
   if (pending.nMax > 1) {
+    // cluster14: distinctNames (「それぞれカード名の異なる」B09010) 時は UI(CardListModal isDistinctNamesBlocked)
+    //   と同義 incremental dedup — 既選択候補の name component(rules/19 split-name) と1つでも衝突したら skip。
+    if (pending.distinctNames === true) {
+      const seen = new Set<string>();
+      const chosen: string[] = [];
+      for (const c of cands) {
+        if (chosen.length >= pending.nMax) break;
+        const d = def.card(c.cardId);
+        const comps = d ? allCardNameComponentsForDef(d) : [c.cardId];
+        if (comps.some((x) => seen.has(x))) continue;
+        comps.forEach((x) => seen.add(x));
+        chosen.push(c.uid);
+      }
+      return { pickedUid: chosen[0] ?? pickedUid, pickedUids: chosen };
+    }
     // multi-pick: greedy に nMax まで取る (取れるだけ取る heuristic、resolve-picks の cardIds 経路と整合)
     return { pickedUid, pickedUids: cands.slice(0, pending.nMax).map((c) => c.uid) };
   }
@@ -322,6 +344,13 @@ export function drainAiEffectPicks(
     q.splice(i, 1); // 解決対象を queue から取り出す (humanSide null なら i=0 のままで従来 shift と同一)
     const { pickedUid, pickedUids } = chooseAiPick(state, pending, policy);
     if (pickedUid === null) {
+      // cluster14: skipResolvesAtom 付き pending (0枚=「〜まで」で必須 continuation あり、B09010 の
+      //   FILE上1リムーブ等) は、human path (useEngineDispatch skipResolvesAtom 分岐) と対称に
+      //   applyPickSkipAndContinuation で remainder を実行する (rules/15 「〜まで」=0枚可 + 公式Q&A)。
+      if (pending.skipResolvesAtom === true) {
+        applyPickSkipAndContinuation(state, pending);
+        continue;
+      }
       // 候補 0 → skip。BUG-111: continuation は pending 本体に同梱されるため、queue から
       // 取り出した時点で対の continuation も一緒に drop される (別 FIFO の shift は不要)。
       continue;
