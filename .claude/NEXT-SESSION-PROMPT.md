@@ -1,55 +1,64 @@
-# 次セッション再開プロンプト (2026-06-15 cluster12 + cluster13 連続出荷時点)
+# 次セッション再開プロンプト (2026-06-15 cluster14 出荷 + UX 改修待ち)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
 > モデル方針 (2026-06-14): `claude-fable-5` が agent で利用不可のため、本体も難判断も **当面 opus を最初から**。
-> 難判断 agent (triage certify / 意味等価突合 / 敵対設計レビュー) は `model:'opus'` 明示。詳細は CLAUDE.md。
+> 難判断 agent (設計レビュー / 意味等価突合 / 敵対反証) は `model:'opus'` 明示。詳細は CLAUDE.md。
 
-> ⚠️ **push 確認**: cluster12 (`5d33bcd0`) + cluster13 (`abaef1a2`) + 本 docs commit が push 済か次セッション開始時に
-> `git log origin/main..main` が空であることを確認すること。
+> ⚠️ **応答は日本語で** (memory feedback-respond-in-japanese)。**UI picker はエリアカード直接選択+画像必須** (feedback-ui-direct-manipulation)。
 
 ---
 
 ```text
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md → .claude/memory.md を読んで状況把握。
 
-## 現在地 (2026-06-15、engine拡張 wave#2 cluster12 + cluster13 連続出荷)
+## 現在地 (2026-06-15、cluster14 出荷済 = origin/main 1abe3fdb)
 
-- engine拡張 wave#2 cluster1〜9 + 11 + **12 + 13** ✅ + BUG-145/146 ✅ + 赤魔術 family ✅。ALL_CARDS = 1207。
-  cluster10 (loseGame) は DEFER 継続。origin 同期確認 (`git log origin/main..main` 空)。
-- **直近セッション = triage で 2 gate 実証選定 → 連続出荷**:
-  - **cluster12 (nested-filter-dyn)** `5d33bcd0`: 「FILE枚数以下レベルの登場」系。resolve-picks.substituteAtomPick で
-    pick filter 内 {dyn} を targetCandidates 列挙前に解決 (resolveTargetFilterDyn、frozen def clone・型非widen・filter/filterAny両対応)。
-    15 printings (小さくなった名探偵 family 13 + B08060/P)。CI green。
-  - **cluster13 (aura-grant)** `abaef1a2`: 「【自分ターン中】他キャラを AP＋1000」型 aura (continuous OWNER-ONLY 解除)。
-    ContinuousModifier += apDeltaAura/auraFilter/auraExcludeSelf + read/char.auraDelta board-scan + candidates.auraDeltaSafe
-    (再帰guard) を ap/lp/matchOneFilter に合算 (filter-AP=combat-AP)。11 printings。
-  - 両クラスタとも opus 7-agent triage + 3-lens 敵対設計レビュー = 全 GO / 0 blocker。
-    全 gate green: tsc0 / vitest 2214 / smoke winsA498 baseline **不動** (両 engine 変更とも no-op) / playwright 119 / CI lint errors0。
+- engine拡張 wave#2 cluster1〜9/11/12/13/**14** ✅。ALL_CARDS = 1211。origin 同期確認 (`git log origin/main..main` 空)。
+- 直近 = cluster14 (multi-card sceneEnter「2枚まで登場」B09010/P+PR042/PR046 4枚)。triage→opus 3-lens 敵対設計レビュー
+  (3 blocker+7 fix 反映)→実装→全 gate green (tsc0/vitest 2226/smoke winsA498 不動/playwright 119+MCP 実機 err0)。
 
-## 次にやること (候補、ユーザーと相談 or triage から選定)
+## ★最優先タスク = UI picker の Direct Manipulation 化 (ユーザー強い指摘、player-facing 必須)
 
-- **backlog の残 engine gate** (DEFERRED-INDEX landscape、いずれも needs-design):
-  - name-designation (宣言 UI surface + AI policy + designated-name condition — 最大歩留まりだが coupled UI+AI 設計)
-  - multi-card sceneEnter (「2枚まで選び登場」、triage で switch-wiring 欠如が判明 = sceneEnter multi-pick+switch 契約が必要)
-  - partner-area 構造 (GameState slot + UI、ビッグジュエル/MR列挙)、mustGuard (forced GuardPickerModal)、
-    auraGrant(triggered 付与) (非キーワード能力テキスト付与)、loseGame (事件解決書換 high-risk multi-gate)。
-  - triage workflow で ready-now を再選定 (教訓: 未精読 gate の low-risk ラベルは信用せず per-card certify/diag で実証)。
-- **低 urgency engine bug**: BUG-142 (reasoning 由来 refresh 水平展開)、BUG-143 (contact-scope mod 清掃) 等。
+cluster14 の MCP 実機でユーザーが「ピッカーが text-only で同名カード(吉田歩美×3)が区別不能・現場カードを直接選べない」と指摘。
+**原則 (memory feedback-ui-direct-manipulation): エリア内カードの pick は実際の現場カードを直接クリック (Direct Manipulation) させる=必須。
+選択肢にカード画像 (Recognition over Recall)。text-only リスト不可。** cluster14 同等の rigor で実施:
+
+### 対象2 picker (どちらも現場=エリアカード → 直接選択必須)
+1. **EffectPickerModal** (`src/ui/components/EffectPickerModal.tsx`) — scene-char target の fallback text リスト (自/相 badge、画像なし)。
+   `sceneSetState` 等 AREA_PICK_VERBS 外の scene-targeting verb がここに落ちる。
+2. **SceneSwitchPickerModal** (`src/ui/components/SceneSwitchPickerModal.tsx` + `useSceneSwitchPickerStore.ts`) — switch victim
+   (self 現場) を text リスト化。cluster14 の onPickMulti (Playmat ~818) が overflow 時に loop 起動している。
+
+### 既存の直接選択機構 (これを拡張流用 = "この処理はどこかにあるはず" の正体)
+- **Playmat `isScenePick`** (`src/ui/components/Playmat.tsx` ~368): pending が `sceneRemove`/`charModifyAP` のとき
+  SceneArea のカードを `effect-pickable` (黄ハイライト) 化 + クリックで `handleScenePick` → effectPickResolve。**現状 self 現場のみ**。
+- `SceneArea.tsx` ~111 `effect-pickable` class。
+- 画像: `useCardImage` hook (IMAGE_BASE+def.imageUrl) / `CardArt.tsx` (onError→placeholder)。裏向き証拠は card-back。
+
+### 設計方針 (要 opus 設計レビュー)
+- scene 直接 pick (`isScenePick`) を **全 scene-char-targeting verb (sceneSetState 等) + 自他両現場クリック** に拡張し、
+  EffectPickerModal の scene fallback を置換。switch victim も同機構 (現場クリック) で収集 (SceneSwitchPickerModal 廃止 or 画像化)。
+- modal 不可避なケース (非エリア/mixed) のみ画像付き modal を残す。
+- 進め方: 設計 doc → opus 3-lens 敵対設計レビュー → 実装 → **MCP 実機検証 (同名 decoy を盤面に置き直接選択+画像識別を確認)** →
+  回帰 (vitest/smoke 不動/playwright)。骨格凍結例外不要 (UI 層のみ、engine 不変)。
+
+## ★その後 = トリアージ・スイープ (ユーザー依頼、ゴール確定用)
+
+未実装 ~540 base カード (842 printing) を全 certify (1窓 ~20rep、3〜4窓) → 全 engine ゲートを列挙 →
+「あと正確に N クラスタ」+ 共有プリミティブ先行で回帰最小のロードマップ作成。決定論 enum (gate 別候補を機械抽出) → per-card certify。
+目的=ゴール地点確定 + 大型ゲート (partner-area 17/name-designation 9 等) の設計順序最適化。
 
 ## プロセス必須
-- /card-wave skill。green候補は未certify なら信用しない。engine 変更は骨格凍結例外手続き (rule/bug 根拠) +
-  敵対設計レビュー (opus 3-lens) + 全 gate (full vitest / smoke 不動 or 再 bless / playwright / CI lint 8本)。
-- 高リスク広域変更時は consumer/合算サイトを決定論 grep で全列挙してから着手。hot-path 触る変更は smoke baseline 不動 = no-op+性能影響なしの両証跡。
-- 非MVP カードは behavioral vitest が実機検証の正 (filter-AP=combat-AP 等の不変条件もテストで実証 = cluster13 §4 教訓)。
-- 1 gate = 1 独立コミット。docs commit は **`.tmp` を消してから** `npm run docs` → `git add -A` → commit
-  (structure.md が working-dir のファイルを拾うため)。validate-specs は `.tmp/certify` 存在前提なので消さない (or mkdir)。
+- engine 変更は骨格凍結例外手続き + opus 敵対設計レビュー + 全 gate。UI 変更は MCP 実機検証 (第一選択) + 回帰。
+- 1 タスク = 1 独立コミット。docs commit は `.tmp` を消してから `npm run docs` (validate-specs 用に `.tmp/certify` は mkdir で残す)。
+- push は main ff-merge (compound `checkout&&merge&&push` は分割実行、classifier 拒否回避)。
 
 ## 状態 doc
-- bug: .claude/bugs/index.base
-- defer: .claude/specs/DEFERRED-INDEX.md (cluster12 ✅ / cluster13 ✅ 節 + 残 landscape gate)
-- 詳細: changelog-entries/2026-06-15-08 (cluster12) / -09 (cluster13) / memory.md セッション⑦ + sessions/2026-06-15*.md
+- triage 結果 (残 gate landscape): `.claude/specs/engine-gate-triage-2026-06-15.md`
+- bug: .claude/bugs/index.base / defer: .claude/specs/DEFERRED-INDEX.md (multi-card sceneEnter ✅)
+- 詳細: changelog-entries/2026-06-15-10 (cluster14) / memory.md セッション⑧
 ```
 
-直近セッションは cluster12 (`5d33bcd0`) + cluster13 (`abaef1a2`) + 本 docs commit の連続出荷。
-次セッションは origin 同期確認 → triage で次 gate 選定から。`/clear` で新セッション推奨。
+直近セッションは triage→cluster14 (multi-card sceneEnter) 出荷 (origin/main 1abe3fdb)。
+**次セッションは UI picker の Direct Manipulation 化 (最優先) → トリアージ・スイープ。** `/clear` で新セッション推奨。

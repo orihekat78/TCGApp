@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `48e81420cc83`
+> Source hash: `ca8c19784a23`
 
 仕様書 [`engine-wave2-action-triggers-design`](../../../specs/engine-wave2-action-triggers-design.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 
