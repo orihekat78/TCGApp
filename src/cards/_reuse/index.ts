@@ -673,6 +673,22 @@ import { B01015 } from '../ct-p01/B01015.js';
 import { B01021 } from '../ct-p01/B01021.js';
 import { B07019 } from '../ct-p07/B07019.js';
 
+import { D01014 } from '../ct-d01/D01014.js';
+import { B04013 } from '../ct-p04/B04013.js';
+import { D02014 } from '../ct-d02/D02014.js';
+import { B04026 } from '../ct-p04/B04026.js';
+import { D03014 } from '../ct-d03/D03014.js';
+import { B04040 } from '../ct-p04/B04040.js';
+import { D04014 } from '../ct-d04/D04014.js';
+import { B04061 } from '../ct-p04/B04061.js';
+import { D05014 } from '../ct-d05/D05014.js';
+import { B04083 } from '../ct-p04/B04083.js';
+import { D07023 } from '../ct-d07/D07023.js';
+import { B03132 } from '../ct-p03/B03132.js';
+import { B03132P } from '../ct-p03/B03132P.js';
+import { B08060 } from '../ct-p08/B08060.js';
+import { B08060P } from '../ct-p08/B08060P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -824,4 +840,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07034, B07034P, PR231,
   // engine拡張 wave#2 cluster11 (enter-source-level filter, BUG-146 coupled)
   B01014, B01015, B01021, B07019,
+  // engine拡張 wave#2 cluster12 — nested-filter-dyn (FILE-level enter events)
+  D01014, B04013, D02014, B04026, D03014, B04040, D04014, B04061, D05014, B04083, D07023, B03132, B03132P, B08060, B08060P,
 ];

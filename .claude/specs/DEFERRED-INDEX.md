@@ -50,7 +50,7 @@
 | 「パートナーエリアでも宣言できる/発動する」句 | B07079/P・B08032/P・B09054/P (今回出荷分) + B07093/B05066 (前例) は句を vacuous 扱いで出荷 | partner-area キャラ slot 実装後に句を有効化 |
 | name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
 | multi-card sceneEnter | 「2枚まで選び登場」(B09010) | sceneEnter の cardIds multi 契約対応 |
-| nested filter dyn | 「FILE枚数以下のレベル」filter 注入 (B08060/B05102/B09052) | resolveDynArgs の深掘り解決 |
+| ~~nested filter dyn~~ | **✅ 解消 (2026-06-15 cluster12)**: pick query filter 内の {dyn} (levelMax 等) を substituteAtomPick chokepoint で解決。B08060 + 「小さくなった名探偵」family 15 printings 出荷。残 B05102/B09052 は **別 gate** (B05102=hirameki self-to-hand / B09052=rename verb + name-designation) のため対象外 | 完了 — branch engine/wave2-cluster12-nested-filter-dyn |
 | until-N discard / reveal verb 等 | B07076/B07100/B08047 a2/B08093 a1 | 可変 count atom / hand-reveal verb |
 
 ## Task A green候補 wave#2 defer (2026-06-12, cards/wave2-handauthor)
@@ -210,3 +210,17 @@ cluster11 候補 B01014/B01015/B01021 + B07019 を実装着手。新 condition `
 |------|------|------|
 | TSV 抽出の event/case category-drop (systemic) | cards-data の TSV は **event/case の `category1/2/3` (= 特徴) を全件 drop** している (event.tsv/case.tsv に features 列が無い)。一次 API `_raw/*.json` の `category` が特徴の正本。**実測 blast-radius (2026-06-15-2 triage, 決定論 audit)**: 実装済 event 76 / case 65 を API category と全件突合 → dropped-trait は **case 0件 / event 1件 (B06035 の YAIBA、既に hirameki fire-path 理由で DEFER 済)**。MVP deck (D08/D11) は手書きで API 以前のため対象外 (D08026=古城/D11021=婚活 正常)。**= 現出荷カードへの live 影響ほぼ 0**。systemic fix は future-proof のみ (per-card certify が新規実装時に捕捉、赤魔術 family が実証) | **低 urgency に格下げ**。必要なら TSV gen 側で category→traits/caseTraits を carry (全 event/case def に影響→smoke/挙動の広域確認が要る、別タスク) |
 | charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp。さらに certify が **AI/CPU 経路 (resolve-picks Pattern A) は picked 1体のみ解決** し chain が reanimate/bonus へ進む点を指摘 (家族共通)。B07055 a1・**B07031 a2** が同構造 | HUMAN 経路 (apply-pick per-uid) と test (drain pickedUids) は計2枚で正。両カードとも非MVP=smoke/CPU 不在で live 影響なし。strict 化は engine backlog (公式 Q&A 未裁定) |
+
+## ✅ cluster12 (nested-filter-dyn) — FILE枚数以下レベルの登場 15枚 出荷 (2026-06-15, engine/wave2-cluster12-nested-filter-dyn)
+
+triage workflow で 6 gate を実証選定 → 最有力 `nested-filter-dyn` を出荷。`resolve-picks.substituteAtomPick` の
+`targetCandidates` 列挙直前で pick query `filter` 内の `{dyn}` (levelMax 等) を `evalDyn` で解決 (新ヘルパー
+`resolveTargetFilterDyn`、frozen def は clone して非破壊、dyn 不在は同一参照=no-op)。型 widen せず chokepoint 解決。
+**15 printings 解禁** (ALL_CARDS 1181→1196): 「小さくなった名探偵」family 13 + B08060/P。opus 3-lens 敵対設計レビュー GO。
+詳細: changelog 2026-06-15-08 + cluster12-nested-filter-dyn.test.ts (8本)。
+
+| 項目 | 内容 | 状況 |
+|------|------|------|
+| dispatch 後 filter の未解決 {dyn} | sceneEnter は確定 cardId で登場し再 filter しないため inert (列挙のみ cap 適用) | 文書化のみ |
+| deck-look predicate の dyn | 本 family の reveal filter は color/kind のみ (levelMax dyn は sceneEnter 側) のため `targetFilterToPredicate` 非該当 | 設計どおり |
+| apMin/apMax/lpMin/lpMax filter の dyn / filterAny+{dyn} | resolveTargetFilterDyn は filter / filterAny 両形の全 {dyn} 数値フィールドを汎用解決 (敵対レビュー指摘の filterAny latent gap も hardening 済)。現出荷は filter.levelMax のみ使用 | future-proof |

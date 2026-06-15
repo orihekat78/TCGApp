@@ -65,6 +65,66 @@ function resolveDynArgs(
   return mutated ? out : args;
 }
 
+/**
+ * engine拡張 wave#2 cluster12 (nested-filter-dyn, 2026-06-15): pick query の `filter` が
+ * 数値フィールドに `{dyn}` を持つ場合 (例: levelMax:{dyn:'$self.fileCount'} の「FILEエリアの
+ * 枚数以下のレベル」系イベント) に、列挙 (targetCandidates) の前で `{dyn}` を具体値へ解決する。
+ * 背景: buildShortFormPick は `query.filter = a.filter` を frozen card-def への **参照** で代入し、
+ * resolveDynArgs は top-level 引数しか歩かないため、未解決のまま candidates.matchOneFilter へ渡ると
+ * `level > {dyn-object}` = 常に false となり「レベル上限」が黙って消える (誤挙動・throw ではない)。
+ * frozen def を破壊しないよう filter を **clone** してから解決する (in-place mutation 禁止)。
+ * dyn を含まない filter は target を同一参照で返すため既存カードは no-op (smoke baseline 不変)。
+ * rules: 15-abilities-effects.md (動的値解決) / 17-icons.md §FILE(X) ($self.fileCount は実装済)。
+ */
+/** 1 つの filter object 内の `{dyn}` 数値フィールドを clone して解決。dyn 不在なら同一参照を返す (no-op)。 */
+function resolveFilterDynObj(state: GameState, f: unknown, ctx: EffectCtx): unknown {
+  if (f === null || typeof f !== 'object' || Array.isArray(f)) return f;
+  const fo = f as Record<string, unknown>;
+  let changed = false;
+  const nf: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(fo)) {
+    if (
+      v !== null &&
+      typeof v === 'object' &&
+      'dyn' in v &&
+      typeof (v as { dyn: unknown }).dyn === 'string'
+    ) {
+      nf[k] = evalDyn(state, (v as { dyn: string }).dyn, ctx);
+      changed = true;
+    } else {
+      nf[k] = v;
+    }
+  }
+  return changed ? nf : f;
+}
+
+function resolveTargetFilterDyn(
+  state: GameState,
+  target: { kind?: string; query?: unknown } & Record<string, unknown>,
+  ctx: EffectCtx,
+): { kind?: string; query?: unknown } & Record<string, unknown> {
+  const q = target.query as ({ filter?: unknown; filterAny?: unknown } & Record<string, unknown>) | undefined;
+  if (!q || typeof q !== 'object') return target;
+  let changed = false;
+  // query.filter (単一 TargetFilter)
+  let newFilter = q.filter;
+  const rf = resolveFilterDynObj(state, q.filter, ctx);
+  if (rf !== q.filter) { newFilter = rf; changed = true; }
+  // query.filterAny (TargetFilter[]、OR 群) — 各 sub-filter も同様に解決 (filterAny+{dyn} の latent gap 対策)
+  let newFilterAny = q.filterAny;
+  if (Array.isArray(q.filterAny)) {
+    let anyChanged = false;
+    const arr = q.filterAny.map((sf) => {
+      const rsf = resolveFilterDynObj(state, sf, ctx);
+      if (rsf !== sf) anyChanged = true;
+      return rsf;
+    });
+    if (anyChanged) { newFilterAny = arr; changed = true; }
+  }
+  if (!changed) return target; // dyn 不在 = 同一参照 (既存カード no-op / smoke baseline 不変)
+  return { ...target, query: { ...q, filter: newFilter, filterAny: newFilterAny } };
+}
+
 /** Phase 7-3: $pick 候補から best を選ぶ callback (AIPolicy.chooseAtomTarget に対応)。 */
 export type ChooseAtomTargetFn = (
   state: GameState,
@@ -467,7 +527,14 @@ function substituteAtomPick(
   const isPatternB = !isPatternA;
   if (!isPatternA && !isPatternB) return atom as Effect;
 
-  const cands = targetCandidates(state, target as TargetingRef, ctx);
+  // cluster12 (nested-filter-dyn): filter 内の {dyn} (levelMax:{dyn:'$self.fileCount'} 等) を
+  // 列挙前に具体値へ解決 (frozen def は clone して非破壊)。dyn 不在なら同一参照 = no-op。
+  const resolvedTarget = resolveTargetFilterDyn(
+    state,
+    target as { kind?: string; query?: unknown } & Record<string, unknown>,
+    ctx,
+  );
+  const cands = targetCandidates(state, resolvedTarget as TargetingRef, ctx);
   if (cands.length === 0) {
     // 拡張 5 (chain): no-candidate を chain break 信号として記録
     (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;

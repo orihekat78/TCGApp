@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `e43a8bbbb04b`
+> Source hash: `f4c451fd3a40`
 
 仕様書 [`2026-05-11-ui-action-flows`](../../../specs/2026-05-11-ui-action-flows.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 
