@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 203
-- **ファイル数**: 3165
+- **ファイル数**: 3164
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -3364,7 +3364,6 @@
   - `20260522_01.txt`
 - `.gitignore` — Git 除外パターン
 - `.mcp.json`
-- `.tmp-taskA-registered.json`
 - `analysis.txt`
 - `CHANGELOG.md` — フェーズ/Round 完了履歴 (Keep a Changelog 形式)
 - `ct-d08-cards.json` — CT-D08 デッキカードデータ (公式テキスト抽出)
