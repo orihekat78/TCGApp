@@ -1,57 +1,55 @@
-# 次セッション再開プロンプト (2026-06-15 赤魔術 family残 完了時点)
+# 次セッション再開プロンプト (2026-06-15 cluster9 出荷 / cluster10・11 defer 時点)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
 > モデル方針 (2026-06-14): `claude-fable-5` が agent で利用不可のため、本体も難判断も **当面 opus を最初から**。
 > 難判断 agent (certify / 意味等価突合 / 敵対設計レビュー) は `model:'opus'` 明示。詳細は CLAUDE.md。
 
-> ✅ **push 済**: family残 は branch→main ff-merge→push 済 (`a65b0cf4`)、CI green 確認済。次セッション開始時は
-> `git log origin/main..main` が空であることを確認。
+> ✅ **push 済**: cluster9 (`7a89c5dc`) + cluster10 defer 記録 (`197e1207`) は main に push 済・CI green。
+> 次セッション開始時は `git log origin/main..main` が空であることを確認。
 
 ---
 
 ```text
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md → .claude/memory.md を読んで状況把握。
 
-## 現在地 (2026-06-15)
+## 現在地 (2026-06-15、engine拡張 wave#2 cluster9 出荷時点)
 
-- engine拡張 wave#2 cluster1〜8 ✅ + BUG-145 ✅ + 赤魔術 trait family ✅ + 赤魔術 family残 ✅。ALL_CARDS = 1174。origin 同期済 (`a65b0cf4`, CI green)。
-- 本セッション④ = 赤魔術 family残【事件赤魔術】族 5枚を opus adversarial certify → 3枚解禁・2枚 DEFER:
-  - **解禁3枚**: B07031 小泉紅子(SR, 登場時 charSetCard$self + 宣言[caseTrait赤魔術, pay[sleepSelf,removeFromHand]]
-    → sceneRemove + optional{chain[charRemoveSetCard n:2, reanimate remove白L3]}) / B07038 紅子の執事(登場時
-    reveal-until closure-OR[名前小泉紅子 OR 赤魔術event] → handAdd → デッキ下shuffle → 加えたら discard1 + cutin AP+1000) /
-    B07047 中森銀三(caseTrait突撃 + 登場時 charSetCard$self + hirameki sleep=D01012 byte等価)。
-  - **DEFER2枚**: B07034/PR231 (text同一) — a1「セットカードが現場を離れるたび1ドロー」= `setcard:leave`
-    per-occurrence hook が engine 不存在 (certify 5点確認)。partial 不可でカード全体を engine拡張クラスタへ。
-  - **certify ROI**: build-break (B07038 import path: lookupCardDef は barrel 非export→card-def-registry.js 直import) +
-    「このキャラ($self) vs pick(PA短縮形)」語義差を code 前に検出。
-  - **triage 副産物**: TSV category-drop の **実測 blast-radius を決定論 audit** で確定 → dropped-trait は
-    case 0/event 1 (B06035 既DEFER) = **live 影響ほぼ0**。systemic fix を低 urgency に格下げ (DEFERRED-INDEX 記録)。
-- 全 gate green: tsc 0 / full vitest **2172**(+12) / smoke winsA=498 baseline不変 (engine変更0・非MVP) /
-  playwright 119 / eslint 0 / lint:icon-abilities OK (shipped=1174 deferred=2)。
+- engine拡張 wave#2 cluster1〜9 ✅ + BUG-145 ✅ + 赤魔術 family ✅。ALL_CARDS = 1177。origin 同期済 (`197e1207`, CI green)。
+- 直近セッション = 残 backlog engine gate の batch (1セッション複数・別コミット方針) を実施。triage workflow の
+  landscape = 残 **19 独立 engine gate** (詳細は DEFERRED-INDEX のランク表)。結果:
+  - **cluster9 = setcard:leave hook ✅ 出荷** (5枚: B07034/B07034P/PR231 a1+a2 + B02020/B02020P a1)。per-occurrence
+    emit (scene removeToRemove/toDeck/toHand の splice 前 + char removeOneSetCard)。emit-before-splice が self-leave
+    Q&A を支える load-bearing 不変条件 (専用 test でピン留め)。known-gap = faceUp vacuous / cross-char 同時離場 順序依存。
+  - **cluster10 = loseGame verb ⛔ defer**: landscape の「低リスク3枚」は certify で誤りと判明。全敗北カードは
+    事件解決能力 書き換え (勝利条件介入 high-risk) or 証拠reveal+特徴[犯人]≥8 の multi-gate。
+  - **cluster11 = enter-source-level ⛔ defer**: **BUG-146** に block。effect/能力登場で entered char の【登場時】
+    (selfOnly) が engine 全体で不発火 (atom が enter emit source を ctx.source=原因カードにしており selfOnly 不一致)。
+    enterSource 条件ロジック自体は diag で正と確認済 (partial work は破棄、main クリーン)。
 
-## 次にやること (候補、未確定 — ユーザーと相談 or triage から選定)
+## 次にやること (候補、ユーザーと相談 or triage から選定)
 
-- **`setcard:leave` hook engine拡張クラスタ** (本セッション発見): 全 set-card クリア点 (char.ts removeAllSetAndStacked/
-  removeOneSetCard, scene.ts toDeck/toHand) で per-occurrence emit + ターン2 limit を実装。**B07034/PR231 a1 +
-  B02020(大岡紅葉) a1 の計3能力を unblock**。engine 変更を伴うので骨格凍結原則の例外手続き (bug/rule 根拠) + 広域回帰要。
-- **B07005 action-restriction**「アクションできない」(self 行動禁止 + コンタクト中カットイン禁止、2 gate、新 engine 機構)。
-- **observer contact-removal attribution** (D02008 a2 / B05066、byUid 帰属トリガ)。
-- **B08078 外部 hook 発火** (最難、cluster2 DEFER)。
-- (低 urgency) TSV category-drop systemic fix — 実測で live 影響ほぼ0、future-proof のみ。
+- **BUG-146 修正 + enterSource + cluster11 (B01014/B01015/B01021/B07019) を coupled 専用クラスタ**で同時出荷:
+  sceneEnter/sceneSwitch atom の enter emit source を **登場キャラ** に統一 (原因カードは payload.sourceCardId へ) →
+  selfOnly【登場時】が効果登場でも発火 + enterSource condition が機能。**高リスク広域変更**: 全効果登場キャラの【登場時】が
+  新たに発火 → 既存挙動が広く変化 + smoke baseline 移動の可能性大。全 enter listener (非selfOnly/triggerCharMatches/疾風)
+  の水平展開 + 敵対設計レビュー (opus) + smoke 再 bless 必須。設計詳細は BUG-146.md / DEFERRED-INDEX cluster11 節。
+- or backlog の別 gate (DEFERRED-INDEX landscape: name-designation 11枚 / multi-card sceneEnter 6枚 等、いずれも needs-design)。
+- 低 urgency engine bug 群: reasoning 由来 refresh (BUG-142 水平展開) 等は DEFERRED-INDEX 参照。
 
 ## プロセス必須
-- /card-wave skill。green候補は未certify なら信用しない。**certify green でも意味等価は自前で1対1突合** (PR138/B01011 教訓)。
-- **certify は build-break/語義差を code 前に潰す ROI が高い** (本セッション: B07038 import / $self vs pick)。
-- 非MVPカードは playwright 不可達 = behavioral vitest が実機検証の正 (runEffect + _drainAllEffectPicksForTest)。
-  hirameki の `uid:'$pick'+target` carrier は hiramekiResolve 経路で解決される設計 → 直接 runEffect+drain では不解決、
-  verbatim 再利用は byte等価 structural test が正。
-- 状態 gate は ability.condition。heavy gates / engine拡張はフェーズ終端 (別クラスタ)。
+- /card-wave skill。**triage landscape の未精読 gate の「low risk」は信用しない** (cluster10/11 とも過小評価だった)。
+  per-card certify + 挙動 diag で実証してから着手。green候補は未certify なら信用しない (PR138/B01011 教訓)。
+- engine 変更は骨格凍結例外手続き (rule/bug 根拠) + 敵対設計レビュー (opus 3-lens) + 全 gate (full vitest / smoke 再 bless /
+  playwright / CI lint 8本)。非MVP カードは behavioral vitest が実機検証の正 (enter hook 経由 test も書く = BUG-146 教訓)。
+- 1 gate = 1 独立コミット (mega-commit 禁止 = 回帰切り分け不能)。docs commit は pre-commit docs:check の LF/CRLF churn 対策で
+  `npm run docs` → `git add -A` → commit。
 
 ## 状態 doc
-- bug: .claude/bugs/index.base / defer: .claude/specs/DEFERRED-INDEX.md (B07034/PR231 DEFER + 赤魔術 known-gap 更新)
-- 詳細: changelog-entries/2026-06-15-05 / session④: .claude/sessions/2026-06-15.md / memory.md
+- bug: .claude/bugs/index.base (**BUG-146 未修正 = 効果登場の【登場時】不発火、要対応**)
+- defer: .claude/specs/DEFERRED-INDEX.md (cluster10/11 defer 節 + cluster9 known-gap + landscape 19 gate ランク)
+- 詳細: changelog-entries/2026-06-15-06 (cluster9) / session: .claude/sessions/2026-06-15.md + 2026-06-15-2.md / memory.md
 ```
 
-本セッション④ は 赤魔術 family残 3枚解禁 + 2枚 DEFER 完了 (push 済 `a65b0cf4`、CI green)。
-次セッションは origin 同期確認 → `setcard:leave` hook engine拡張 or 次クラスタ選定から。`/clear` で新セッション推奨。
+直近セッションは cluster9 出荷 (push 済 `7a89c5dc`) + cluster10/11 defer + BUG-146 起票 (push 済 `197e1207` + 本 docs commit)。
+次セッションは origin 同期確認 → BUG-146+cluster11 専用クラスタ or 別 gate 選定から。`/clear` で新セッション推奨。

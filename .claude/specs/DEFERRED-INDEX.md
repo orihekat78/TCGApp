@@ -162,6 +162,21 @@ cluster10 候補として triage landscape が「loseGame verb / low risk / 3枚
 → **loseGame は低リスク単発 verb ではなく high-risk multi-gate クラスタ**。landscape の未精読 gate の risk 評価は信用せず
 per-card certify が必須 (card-wave skill 教訓)。loseGame verb 追加 + 上記いずれかの gate 群を別途設計するクラスタとして DEFER。
 
+## cluster11 (enter-source-level filter) — BUG-146 (効果登場の【登場時】不発火) に block (2026-06-15)
+
+cluster11 候補 B01014/B01015/B01021 (【登場時】レベル3以上のキャラ能力/イベント効果で登場した場合〜) +
+B07019 (【緑】イベント効果で登場した場合〜) を実装着手。新 condition `enterSource` (payload.viaEffect +
+sourceCardId の def kind/level/color 判定) を設計・**条件ロジックは diag で正と確認**したが、出荷は **block**:
+
+- **BUG-146**: 効果/能力による登場 (sceneEnter/sceneSwitch atom) で entered char の【登場時】(selfOnly) が
+  **engine 全体で不発火** (atom が enter emit の source を ctx.source=原因カードにしており selfOnly 不一致)。
+  cluster11 のカードは全て「効果登場」を必須要件とするため、本 bug 未修正では【登場時】が永久不発 = カードが機能しない。
+- landscape は「enter-source-level / low risk / 4枚」と分類したが、実体は **BUG-146 (高リスク広域 emit 修正) に依存**。
+  cluster10 (loseGame) と同様、landscape の未精読 gate の risk 評価が過小評価だった (certify/diag 必須の再実証)。
+- **解禁条件**: BUG-146 修正 (登場 emit の source を登場キャラに統一 + 原因カードは payload。全 enter listener 水平展開 +
+  smoke 再 bless が要る専用クラスタ) + enterSource condition (3点同期) + 4枚 を **同時出荷** (coupled)。未 commit の
+  cluster11 partial work は破棄済 (main クリーン)。設計詳細は BUG-146.md。
+
 ## ✅ engine拡張 wave#2 cluster9 (setcard:leave hook, 2026-06-15, cards/wave2-cluster9-setcard-leave) — known-gap
 
 `setcard:leave` per-occurrence hook を additive 実装 (HookName union + TRIGGERED_HOOKS + scene.ts removeToRemove/toDeck/toHand emit-before-splice + char.ts removeOneSetCard emit + taskA whitelist)。

@@ -22,8 +22,19 @@ A/B/C 比較で **A (setcard:leave) が唯一 ready-now・smoke 影響実証ほ�
   eslint(変更分)0 / CI lint 8本 errors0 / lint:icon OK(shipped=1177) / playwright 回帰。
 - known-gap (DEFERRED-INDEX cluster9): faceUp vacuous / cross-char 同時離場 順序依存 / selfToDeckBottom コスト除外。
 
-### 残 (本セッション継続)
+### batch 結果 (cluster9 出荷 + cluster10/11 は defer、findings 2件)
 
-- 次: **cluster10 = loseGame/defeat verb** (3枚, low risk) → **cluster11 = enter-source-level filter** (4枚, low risk)。
-  各 certify→実装→全gate→独立コミット→push→CI。コンテキスト逼迫時は commit して /clear で継続。
-- 他の高レバレッジ gate (name-designation 等) は needs-design = 別途設計フェーズ。
+batch「3 低リスク gate」の前提は certify/diag で崩れた (landscape の未精読 gate risk 評価は信用不可):
+- **cluster9 ✅ 出荷** (7a89c5dc, CI green)。
+- **cluster10 (loseGame) ⛔ defer** (197e1207 で記録): loseGame verb 単体は 0枚解禁。全敗北カードは
+  事件解決能力 書き換え (勝利条件介入 high-risk) or 証拠reveal+特徴[犯人]≥8 の重い別 gate を伴う multi-gate。
+- **cluster11 (enter-source-level) ⛔ defer**: **BUG-146** に block。effect/能力による登場 (sceneEnter/sceneSwitch atom)
+  で entered char の【登場時】(selfOnly) が **engine 全体で不発火** (atom が enter emit source を ctx.source=原因カード
+  にしており selfOnly 不一致)。diag で経験的確認 (enterSource 条件ロジック自体は正)。partial work は破棄 (main クリーン)。
+
+### 次セッション候補
+
+- **BUG-146 修正 + enterSource + cluster11 を専用クラスタ**で同時出荷 (登場 emit source を登場キャラに統一 +
+  原因カードは payload。全 enter listener 水平展開 + smoke 再 bless + 敵対レビュー必須の高リスク広域変更)。
+- or backlog の別 gate (DEFERRED-INDEX landscape: name-designation 11/multi-card sceneEnter 6 等、いずれも needs-design)。
+- **教訓**: landscape の未精読 gate の「low risk」は信用せず per-card certify/diag で実証。A (setcard:leave) のみが真の ready-now だった。
