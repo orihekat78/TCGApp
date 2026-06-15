@@ -689,6 +689,18 @@ import { B03132P } from '../ct-p03/B03132P.js';
 import { B08060 } from '../ct-p08/B08060.js';
 import { B08060P } from '../ct-p08/B08060P.js';
 
+import { D05005 } from '../ct-d05/D05005.js';
+import { D07010 } from '../ct-d07/D07010.js';
+import { D07011 } from '../ct-d07/D07011.js';
+import { B01038 } from '../ct-p01/B01038.js';
+import { B01038P } from '../ct-p01/B01038P.js';
+import { B02012 } from '../ct-p02/B02012.js';
+import { B03075 } from '../ct-p03/B03075.js';
+import { B07044 } from '../ct-p07/B07044.js';
+import { B09009 } from '../ct-p09/B09009.js';
+import { PR274 } from '../pr-01/PR274.js';
+import { PR275 } from '../pr-01/PR275.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -842,4 +854,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01014, B01015, B01021, B07019,
   // engine拡張 wave#2 cluster12 — nested-filter-dyn (FILE-level enter events)
   D01014, B04013, D02014, B04026, D03014, B04040, D04014, B04061, D05014, B04083, D07023, B03132, B03132P, B08060, B08060P,
+  // engine拡張 wave#2 cluster13 — aura-grant (他キャラ AP buff)
+  D05005, D07010, D07011, B01038, B01038P, B02012, B03075, B07044, B09009, PR274, PR275,
 ];

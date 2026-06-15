@@ -35,6 +35,27 @@ function continuousDeltaSafe(s: GameState, uid: string | undefined, which: 'apDe
   }
 }
 
+// engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura (continuousModifier.apDeltaAura/lpDeltaAura)。
+// continuousDelta と同じ late-binding + 再帰 guard。auraDelta 本体は read/char.ts (board-scan) に実装し register する。
+// matchOneFilter と read.char.ap/lp の両方が auraDeltaSafe 経由で合算する (filter-AP と combat-AP を一致させる = BUG-117 原則)。
+// 未登録 / 既存カード (aura 未宣言) は 0 = no-op (smoke baseline 不変)。auraDelta 内の matchOneFilter 再入は
+// _inAuraDelta で 0 化 (auraFilter の AP 判定が aura を二重計上しない)。_inContinuousDelta 中も 0 (BUG-113 cycle と同 posture)。
+type AuraDeltaFn = (s: GameState, uid: string, which: 'apDeltaAura' | 'lpDeltaAura') => number;
+let auraDeltaImpl: AuraDeltaFn | null = null;
+let _inAuraDelta = false;
+export function registerAuraDelta(fn: AuraDeltaFn): void {
+  auraDeltaImpl = fn;
+}
+export function auraDeltaSafe(s: GameState, uid: string | undefined, which: 'apDeltaAura' | 'lpDeltaAura'): number {
+  if (auraDeltaImpl === null || _inAuraDelta || _inContinuousDelta || uid === undefined) return 0;
+  _inAuraDelta = true;
+  try {
+    return auraDeltaImpl(s, uid, which);
+  } finally {
+    _inAuraDelta = false;
+  }
+}
+
 type Side = 'self' | 'opp';
 
 /**
@@ -280,10 +301,14 @@ export function matchOneFilter(
   const num = (k: string): number => (typeof te[k] === 'number' ? (te[k] as number) : 0);
   const apContinuous = continuousDeltaSafe(state, c?.uid, 'apDelta');
   const lpContinuous = continuousDeltaSafe(state, c?.uid, 'lpDelta');
+  // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラ aura (apDeltaAura/lpDeltaAura) も合算 (第5合算サイト)。
+  // read.char.ap/lp と同式を維持 — filter-AP と combat-AP を一致させる (BUG-117 原則)。既存カードは aura 不在 → 0。
+  const apAura = auraDeltaSafe(state, c?.uid, 'apDeltaAura');
+  const lpAura = auraDeltaSafe(state, c?.uid, 'lpDeltaAura');
   // engine拡張 wave#2 cluster3 (2026-06-13): *Mod_action を合算 (read.char と同式を維持 — 第4合算サイト。
   // 乖離すると BUG-117 型: filter 評価と表示/judge が食い違う)。pin: wave2-cluster3 test X12。
-  const ap = (c?.apOverride ?? base?.ap ?? 0) + num('apMod_permanent') + num('apMod_turn') + num('apMod_contact') + num('apMod_action') + apContinuous;
-  const lp = (c?.lpOverride ?? base?.lp ?? 0) + num('lpMod_permanent') + num('lpMod_turn') + num('lpMod_contact') + num('lpMod_action') + lpContinuous;
+  const ap = (c?.apOverride ?? base?.ap ?? 0) + num('apMod_permanent') + num('apMod_turn') + num('apMod_contact') + num('apMod_action') + apContinuous + apAura;
+  const lp = (c?.lpOverride ?? base?.lp ?? 0) + num('lpMod_permanent') + num('lpMod_turn') + num('lpMod_contact') + num('lpMod_action') + lpContinuous + lpAura;
   // engine-extension #2 (2026-06-05): charModifyLevel に伴い filter level も 3 scope 合算
   // (旧は base のみ → modifyLevel 不使用時 = base + 0 + 0 + 0 で互換)
   const level = (base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action');

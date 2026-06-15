@@ -3,7 +3,7 @@
 // spec: .claude/specs/engine-api-card-shape.md, engine-api-card-abilities.md
 
 import type { GameState, SceneCharacter } from './game-state.js';
-import type { Effect, Condition, Cost } from './effect.js';
+import type { Effect, Condition, Cost, TargetFilter } from './effect.js';
 import type { HookName } from './hooks.js';
 
 // ---------- AbilityType ----------
@@ -94,6 +94,16 @@ export type ContinuousModifier = {
   //                      flow.contact.disguise が disguise:into emit を抑止 (変装 swap 自体は成立)。
   // ability.condition と併用し条件成立中のみ aura 有効。不在時 no-op (既存カードは未宣言 → restrictsOpponent=false)。
   opponentRestrict?: ('cutin' | 'disguiseTrigger')[];
+  // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura (rules/15, 17 §【自分ターン中】, 24 §常時有効型)。
+  // 「【自分ターン中】自分の現場にいる [auraFilter] のキャラを AP±N」型。bearer の **同一 side の現場**の各キャラに対し、
+  //   auraFilter (matchOneFilter で 有効値=turnEffects 反映レベル を判定) が一致すれば apDeltaAura/lpDeltaAura を加算する。
+  //   auraExcludeSelf=true で「このキャラ以外」(bearer 自身を除外)。ability.condition (【自分ターン中】等) 成立中のみ有効。
+  // engine.read.char.ap/lp + candidates.matchOneFilter が auraDeltaSafe (再帰 guard 経由) で合算する
+  //   (filter-AP と combat-AP を一致させる — BUG-117 原則)。不在時 no-op (既存カードは未宣言 → auraDelta=0、smoke baseline 不変)。
+  apDeltaAura?: number;
+  lpDeltaAura?: number;
+  auraFilter?: TargetFilter;
+  auraExcludeSelf?: boolean;
 };
 
 // ---------- AbilityDef ----------

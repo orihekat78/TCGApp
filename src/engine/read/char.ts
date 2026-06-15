@@ -1,14 +1,15 @@
 // engine.read.char — キャラ単位派生情報セレクタ (純粋関数)
 // rules: 03-field-areas.md (状態), 11-reasoning.md (LP≤0), 13-keywords.md, 19-special-rules.md
 
-import type { GameState, CardId, SetCardEntry, EffectCtx } from '@/engine/types';
+import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter } from '@/engine/types';
 import { scene } from './scene.js';
 import { def } from './def.js';
 import { evalCond } from '../cond/eval.js';
 import { evalDyn } from '../dyn/eval.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
-import { registerContinuousDelta } from '../target/candidates.js';
+// cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
+import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, matchOneFilter } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -46,6 +47,42 @@ function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'
   return total;
 }
 
+// engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura の board-scan reader。
+// targetUid のキャラが受ける aura 合計を、**同一 side の現場**にいる continuousModifier.apDeltaAura/lpDeltaAura
+// 宣言キャラ (bearer) から集計する。各 bearer につき: ability.condition (【自分ターン中】等) 成立 +
+// auraExcludeSelf 時は bearer≠target + auraFilter が target に一致 (matchOneFilter = 有効値レベル/色/特徴) を満たせば加算。
+// restrictsOpponent (cluster5) と同じ board-scan を数値 aura へ拡張 (rules/24 §常時有効型)。
+// 不在時 0 (既存カードは aura 未宣言 → no-op、smoke baseline 不変)。再帰 guard は auraDeltaSafe (candidates.ts) が担う。
+function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDeltaAura'): number {
+  const target = scene.byUid(s, targetUid);
+  if (!target) return 0;
+  const ownerSide: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === targetUid)
+    ? 'self'
+    : s.players.opp.scene.some(c => c.uid === targetUid)
+      ? 'opp'
+      : null;
+  if (!ownerSide) return 0;
+  const targetCand = { kind: 'char', uid: target.uid, cardId: target.cardId, player: ownerSide } as Candidate;
+  let total = 0;
+  for (const bearer of s.players[ownerSide].scene) {
+    const bd = def.card(bearer.cardId);
+    if (!bd) continue;
+    const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: 'scene' }, bindings: {} } as EffectCtx;
+    for (const ability of bd.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      const cm = ability.continuousModifier;
+      const delta = cm?.[which];
+      if (typeof delta !== 'number') continue;
+      if (cm?.auraExcludeSelf && bearer.uid === targetUid) continue; // 「このキャラ以外」
+      if (ability.condition && !evalCond(s, ability.condition, bearerCtx)) continue; // 【自分ターン中】等の常時条件
+      const filter = cm?.auraFilter as TargetFilter | undefined;
+      if (filter && !matchOneFilter(s, target.cardId, filter, target, targetCand)) continue;
+      total += delta;
+    }
+  }
+  return total;
+}
+
 // AP: apOverride 優先 / 不在なら CardDef.ap、加えて turnEffects['apMod_*'] を合算
 // (charModifyAP verb は turnEffects に delta を蓄積する設計。permanent/turn/contact の
 // 3 scope を全て合算)
@@ -63,7 +100,8 @@ function ap(s: GameState, uid: string): number {
   // 清掃は clearTurnEffects('action') (action-end 2経路) + turn-end safety net (rules/08 §6-7)。
   const modAction    = (char.turnEffects['apMod_action']    as number | undefined) ?? 0;
   const modContinuous = continuousDelta(s, uid, 'apDelta');
-  return base + modPermanent + modTurn + modContact + modAction + modContinuous;
+  const modAura = auraDeltaSafe(s, uid, 'apDeltaAura'); // cluster13: 他キャラ aura (guard 付き)
+  return base + modPermanent + modTurn + modContact + modAction + modContinuous + modAura;
 }
 
 // LP: lpOverride 優先 / 不在なら CardDef.lp、加えて turnEffects['lpMod_*'] を合算
@@ -77,7 +115,8 @@ function lp(s: GameState, uid: string): number {
   const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
   const modAction    = (char.turnEffects['lpMod_action']    as number | undefined) ?? 0;
   const modContinuous = continuousDelta(s, uid, 'lpDelta');
-  return base + modPermanent + modTurn + modContact + modAction + modContinuous;
+  const modAura = auraDeltaSafe(s, uid, 'lpDeltaAura'); // cluster13: 他キャラ aura (guard 付き)
+  return base + modPermanent + modTurn + modContact + modAction + modContinuous + modAura;
 }
 
 // Level: CardDef.level、加えて turnEffects['lvlMod_*'] を合算 (rules/19 下限なし)
@@ -294,3 +333,4 @@ export const char = {
 
 // BUG-113: module load 時に continuousDelta を candidates へ登録 (数値フィルタの有効値に反映)。
 registerContinuousDelta(continuousDelta);
+registerAuraDelta(auraDelta); // cluster13: 他キャラ aura board-scan を candidates へ late-bind

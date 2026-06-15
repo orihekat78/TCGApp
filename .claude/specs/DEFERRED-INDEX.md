@@ -45,7 +45,8 @@
 | 項目 | 内容 | 解禁条件 |
 |------|------|---------|
 | mustGuard token | 「ガードできる場合、必ずガードする」(B09040 a2) | guard 強制の AI/UI 同時追従 (GuardPickerModal forced 化) |
-| auraGrant | 常時 aura で他キャラに triggered 付与 (B09024 a1) | continuous OWNER-ONLY 制約の解除 + 二重 queue 防止 |
+| auraGrant (AP/LP buff) | **✅ 解消 (2026-06-15 cluster13)**: continuous OWNER-ONLY 制約を解除し、他キャラへの数値 aura (apDeltaAura/lpDeltaAura + auraFilter + auraExcludeSelf) を board-scan reader で実装。11 printings 出荷 | 完了 — branch engine/wave2-cluster13-aura-grant |
+| auraGrant (triggered 付与) | 常時 aura で他キャラに **triggered 能力テキスト**を付与 (B09024 a1「他キャラに【現場リムーブ時】を与える」) | **別 gate 継続 DEFER**: 非キーワード能力テキストの付与 + 二重 queue 防止 (cluster13 の数値 aura とは別機構) |
 | partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | GameState slot + UI (次 wave 最終段) |
 | 「パートナーエリアでも宣言できる/発動する」句 | B07079/P・B08032/P・B09054/P (今回出荷分) + B07093/B05066 (前例) は句を vacuous 扱いで出荷 | partner-area キャラ slot 実装後に句を有効化 |
 | name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
@@ -224,3 +225,18 @@ triage workflow で 6 gate を実証選定 → 最有力 `nested-filter-dyn` を
 | dispatch 後 filter の未解決 {dyn} | sceneEnter は確定 cardId で登場し再 filter しないため inert (列挙のみ cap 適用) | 文書化のみ |
 | deck-look predicate の dyn | 本 family の reveal filter は color/kind のみ (levelMax dyn は sceneEnter 側) のため `targetFilterToPredicate` 非該当 | 設計どおり |
 | apMin/apMax/lpMin/lpMax filter の dyn / filterAny+{dyn} | resolveTargetFilterDyn は filter / filterAny 両形の全 {dyn} 数値フィールドを汎用解決 (敵対レビュー指摘の filterAny latent gap も hardening 済)。現出荷は filter.levelMax のみ使用 | future-proof |
+
+## ✅ cluster13 (aura-grant) — 他キャラへの AP buff aura 11枚 出荷 (2026-06-15, engine/wave2-cluster13-aura-grant)
+
+continuous の OWNER-ONLY 制約を解除し「【自分ターン中】自分の現場の [filter] キャラを AP＋1000」型を実装。
+`ContinuousModifier` に apDeltaAura/lpDeltaAura/auraFilter/auraExcludeSelf を additive 追加 + `read/char.auraDelta`
+board-scan reader + `candidates.auraDeltaSafe` (再帰 guard) を ap/lp/matchOneFilter の両方に合算 (filter-AP=combat-AP)。
+**11 printings** (ALL_CARDS 1196→1207): D05005/D07010/D07011/B01038/B01038P/B03075/B07044 (単純aura+hirameki) +
+B02012 (levelMax5 aura+action draw) + B09009 (trait aura+hirameki回収) + PR274/PR275 (conditional aura+宣言remove)。
+opus 3-lens 敵対設計レビュー GO。詳細: changelog 2026-06-15-09 + cluster13-aura-grant.test.ts (9本)。
+
+| 項目 | 内容 | 状況 |
+|------|------|------|
+| 両 side aura | auraDelta は target の同一 side のみ走査 (自陣 buff 専用)。現出荷 11枚は全て「自分の現場」aura のため十分 | 設計どおり (相手 buff/debuff aura が出たら ownerSide 走査を拡張) |
+| triggered 能力テキスト付与 aura | B09024「他キャラに【現場リムーブ時】を与える」は非キーワード能力テキスト付与 = 別 gate | 継続 DEFER (上表 auraGrant(triggered 付与)) |
+| auraFilter の AP/LP filter | auraFilter が apMin/apMax 等を使う場合、matchOneFilter 再入は _inAuraDelta で aura 抜き AP を見る (二重計上防止)。現出荷は color/trait/level のみ使用 | 文書化のみ |

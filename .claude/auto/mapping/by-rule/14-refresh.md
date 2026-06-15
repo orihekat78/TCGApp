@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `cc973a582b35`
+> Source hash: `6769a8a1cfef`
 
 公式ルール [`14-refresh.md`](../../../rules/14-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -16,7 +16,7 @@
 - [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 - [`engine.types`](../by-engine/types.md)
 
-## 📄 参照ソース (157)
+## 📄 参照ソース (165)
 
 - [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
@@ -35,7 +35,7 @@
 - [`src/cards/ct-d04/D04011.ts`](../../../../src/cards/ct-d04/D04011.ts)
 - [`src/cards/ct-d04/D04014.ts`](../../../../src/cards/ct-d04/D04014.ts)
 - [`src/cards/ct-d05/D05004.ts`](../../../../src/cards/ct-d05/D05004.ts)
+- [`src/cards/ct-d05/D05005.ts`](../../../../src/cards/ct-d05/D05005.ts)
 - [`src/cards/ct-d05/D05007.ts`](../../../../src/cards/ct-d05/D05007.ts)
 - [`src/cards/ct-d05/D05012.ts`](../../../../src/cards/ct-d05/D05012.ts)
-- [`src/cards/ct-d05/D05014.ts`](../../../../src/cards/ct-d05/D05014.ts)
-- _...ほか 137 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 145 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
