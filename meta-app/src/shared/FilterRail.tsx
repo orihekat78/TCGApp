@@ -8,7 +8,7 @@ import { FilterGroup } from './FilterGroup';
 import { CARD_POOL } from '../data/cardPool';
 import {
   ALL_FEATURES, ALL_KEYWORDS, ALL_RARITIES, COLOR_META, TYPE_META, COST_BUCKETS,
-  activeFilterCount, costBucket, rarityHex, toggleIn,
+  activeFilterCount, costBucket, rarityHex, toggleIn, matchesFilter,
   type CardFilterState, type MatchMode,
 } from '../data/cardFilter';
 import type { CardColor, CardDef, CardKind } from '../data/types';
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function FilterRail({ filter, onChange, onReset, pool = CARD_POOL, typeOptions }: Props) {
-  const counts = useMemo(() => computeCounts(pool), [pool]);
+  const counts = useMemo(() => computeCounts(pool, filter), [pool, filter]);
   const types = typeOptions ?? TYPE_META.map((t) => t.t);
   const active = activeFilterCount(filter);
 
@@ -52,6 +52,7 @@ export function FilterRail({ filter, onChange, onReset, pool = CARD_POOL, typeOp
         <FilterGroup label="種別" items={TYPE_META.filter((x) => types.includes(x.t)).map((x) => ({
           c: x.hex, label: x.label, active: filter.types.includes(x.t),
           n: counts.types.get(x.t) ?? 0,
+          disabled: !filter.types.includes(x.t) && (counts.types.get(x.t) ?? 0) === 0,
           onClick: () => onChange({ types: toggleIn(filter.types, x.t) }),
         }))} />
       )}
@@ -59,12 +60,14 @@ export function FilterRail({ filter, onChange, onReset, pool = CARD_POOL, typeOp
       <FilterGroup label="色" items={COLOR_META.map((x) => ({
         c: x.hex, label: x.label, active: filter.colors.includes(x.c),
         n: counts.colors.get(x.c) ?? 0,
+        disabled: !filter.colors.includes(x.c) && (counts.colors.get(x.c) ?? 0) === 0,
         onClick: () => onChange({ colors: toggleIn(filter.colors, x.c) }),
       }))} />
 
       <FilterGroup label="コスト" items={COST_BUCKETS.map((n) => ({
         c: T.neonBlue, label: n === 8 ? '8+' : String(n), active: filter.costs.includes(n),
         n: counts.costs.get(n) ?? 0,
+        disabled: !filter.costs.includes(n) && (counts.costs.get(n) ?? 0) === 0,
         onClick: () => onChange({ costs: toggleIn(filter.costs, n) }),
       }))} />
 
@@ -72,6 +75,7 @@ export function FilterRail({ filter, onChange, onReset, pool = CARD_POOL, typeOp
         <FilterGroup label="レアリティ" items={ALL_RARITIES.map((r) => ({
           c: rarityHex(r), label: r, active: filter.rarities.includes(r),
           n: counts.rarities.get(r) ?? 0,
+          disabled: !filter.rarities.includes(r) && (counts.rarities.get(r) ?? 0) === 0,
           onClick: () => onChange({ rarities: toggleIn(filter.rarities, r) }),
         }))} />
       )}
@@ -83,6 +87,7 @@ export function FilterRail({ filter, onChange, onReset, pool = CARD_POOL, typeOp
           items={ALL_FEATURES.map((f) => ({
             c: T.green, label: f, active: filter.features.includes(f),
             n: counts.features.get(f) ?? 0,
+            disabled: !filter.features.includes(f) && (counts.features.get(f) ?? 0) === 0,
             onClick: () => onChange({ features: toggleIn(filter.features, f) }),
           }))}
         />
@@ -95,6 +100,7 @@ export function FilterRail({ filter, onChange, onReset, pool = CARD_POOL, typeOp
           items={ALL_KEYWORDS.map((k) => ({
             c: T.gold, label: k, active: filter.keywords.includes(k),
             n: counts.keywords.get(k) ?? 0,
+            disabled: !filter.keywords.includes(k) && (counts.keywords.get(k) ?? 0) === 0,
             onClick: () => onChange({ keywords: toggleIn(filter.keywords, k) }),
           }))}
         />
@@ -116,7 +122,7 @@ export function FilterRail({ filter, onChange, onReset, pool = CARD_POOL, typeOp
 // 特徴/キーワードのような複数値 facet に OR/AND トグルを付けたグループ。
 function FacetWithMode({ label, mode, onMode, items }: {
   label: string; mode: MatchMode; onMode: (m: MatchMode) => void;
-  items: { c: string; label: string; active: boolean; n: number; onClick: () => void }[];
+  items: { c: string; label: string; active: boolean; n: number; disabled?: boolean; onClick: () => void }[];
 }) {
   return (
     <div>
@@ -148,7 +154,7 @@ interface Counts {
   keywords: Map<string, number>;
 }
 
-function computeCounts(pool: readonly CardDef[]): Counts {
+function computeCounts(pool: readonly CardDef[], filter: CardFilterState): Counts {
   const colors = new Map<CardColor, number>();
   const types = new Map<CardKind, number>();
   const costs = new Map<number, number>();
@@ -156,13 +162,16 @@ function computeCounts(pool: readonly CardDef[]): Counts {
   const features = new Map<string, number>();
   const keywords = new Map<string, number>();
   const inc = <K,>(m: Map<K, number>, k: K) => m.set(k, (m.get(k) ?? 0) + 1);
+  // 各 facet は「自分の group を除いた他フィルタで絞った母集団」で件数を数える (cross-filter)。
+  // → 他フィルタ適用後に 0 件になる option を FilterRail 側で disabled にできる
+  //   (例: 種別=パートナー 選択時、コストはどの値も 0 件 → 全 disabled)。混色は各色に計上。
   for (const c of pool) {
-    inc(colors, c.color);
-    inc(types, c.type);
-    inc(costs, costBucket(c));
-    if (c.rarity) inc(rarities, c.rarity);
-    for (const f of c.features ?? []) inc(features, f);
-    for (const k of c.keywords ?? []) inc(keywords, k);
+    if (matchesFilter(c, filter, 'colors')) for (const col of c.colors ?? [c.color]) inc(colors, col);
+    if (matchesFilter(c, filter, 'types')) inc(types, c.type);
+    if (matchesFilter(c, filter, 'costs')) inc(costs, costBucket(c));
+    if (matchesFilter(c, filter, 'rarities') && c.rarity) inc(rarities, c.rarity);
+    if (matchesFilter(c, filter, 'features')) for (const f of c.features ?? []) inc(features, f);
+    if (matchesFilter(c, filter, 'keywords')) for (const k of c.keywords ?? []) inc(keywords, k);
   }
   return { colors, types, costs, rarities, features, keywords };
 }

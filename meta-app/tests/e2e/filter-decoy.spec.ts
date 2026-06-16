@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 
 test('CARDS §7: 色 facet が decoy を除外し、条件内の漏れも無い', async ({ page }) => {
   await page.goto('/#cards');
-  await expect(page.getByText('34 種類').first()).toBeVisible({ timeout: 6000 });
+  await expect(page.getByText(/\d+ 種類/).first()).toBeVisible({ timeout: 6000 });
   // 名前が出るリスト表示へ
   await page.getByRole('button', { name: 'リスト' }).click();
 

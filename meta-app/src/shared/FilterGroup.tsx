@@ -9,6 +9,8 @@ export interface FilterItem {
   c: string;
   active?: boolean;
   n?: number;
+  /** 他フィルタ適用後に 0 件 = 選んでも結果が無い option。グレーアウト + クリック不可。 */
+  disabled?: boolean;
   onClick?: () => void;
 }
 
@@ -28,7 +30,8 @@ export function FilterGroup({ label, items, small = false }: Props) {
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {items.map((it, i) => (
           <button key={i}
-            onClick={it.onClick}
+            onClick={it.disabled ? undefined : it.onClick}
+            disabled={it.disabled}
             className="meta-chip"
             style={{
               padding: small ? '3px 7px' : '4px 8px',
@@ -36,7 +39,8 @@ export function FilterGroup({ label, items, small = false }: Props) {
               border: `1px solid ${it.active ? it.c : `${it.c}33`}`,
               borderRadius: 2,
               display: 'flex', alignItems: 'center', gap: 5,
-              cursor: 'pointer',
+              cursor: it.disabled ? 'not-allowed' : 'pointer',
+              opacity: it.disabled ? 0.3 : 1,
             }}>
             <div style={{
               fontSize: 11,

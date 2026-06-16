@@ -1,93 +1,75 @@
 // spec: .claude/specs/meta-ui/05-engine-stub.md + 11-cards-rebuild.md
-// Phase 12-A: CT-D08 (26 枚) + CT-D11 (21 枚) = 47 枚を JSON 直読
-// JSON は src/ と同じソース (../../../ct-d08-cards.json, ct-d11-cards.json)
-// 5173 は src/App.tsx で同じ JSON を resolveCard に渡す。5174 はメタ表示用に CardDef へ正規化
+// 2026-06-16: CARD_POOL の source を engine の ALL_CARDS に変更
+//   (旧: CT-D08/D11 の JSON 47枚 直読 → 新: 全実装カード ~1338枚を engine から自動導出)。
+// カードを engine の ALL_CARDS に追加するだけで、カードリスト/フィルタ/デッキ編集に自動的に出る。
+// 画像も解決される (main.tsx の registerAll() が全 CardDef を engine.cards に登録 →
+// useCardImage(num)→engine.cards.get(num).imageUrl)。
+//   - num = engine.id (画像 lookup キー)
+//   - id  = cardId: パラレル P サフィックスを除去し共有 = 「同じカード」(rules/02)
 
-import type { CardColor, CardDef, CardKind } from './types';
-import ctD08Raw from '../../../ct-d08-cards.json';
-import ctD11Raw from '../../../ct-d11-cards.json';
-
-interface RawCard {
-  cardId: string;
-  cardNum: string;
-  title: string;
-  type: string;
-  color: string;
-  cost: string | null;
-  ap: string | null;
-  lp: string | null;
-  rarity: string;
-  mainPath?: string;
-  features: string[];
-  effect: string;
-  cutIn?: string | null;
-  hirameki?: string | null;
-  henso?: string | null;
-  difficultyFirst?: string | null;
-  difficultySecond?: string | null;
-}
-
-const TYPE_MAP: Record<string, CardKind> = {
-  'パートナー': 'partner',
-  'キャラ':     'character',
-  'イベント':   'event',
-  '事件':       'case',
-};
+import type { CardColor, CardDef } from './types';
+import type { CardDef as EngineCardDef } from '@/engine/types';
+import { ALL_CARDS } from '@/cards/index';
 
 const COLOR_MAP: Record<string, CardColor> = {
-  '青': 'blue',
-  '黄': 'yellow',
-  '赤': 'red',
-  '緑': 'green',
-  '紫': 'purple',
+  '青': 'blue', '黄': 'yellow', '赤': 'red', '緑': 'green', '紫': 'purple', '黒': 'black', '白': 'white',
+  blue: 'blue', yellow: 'yellow', red: 'red', green: 'green', purple: 'purple', black: 'black', white: 'white',
 };
 
-function toNum(v: string | null | undefined): number | undefined {
-  if (v == null || v === '') return undefined;
-  const n = parseInt(v, 10);
-  return Number.isFinite(n) ? n : undefined;
+/** engine.id (印刷番号) から cardId を導出。パラレル (例 B08004P / B05005P1) は
+ *  base を共有し「同じカード」として扱う (rules/02-deck-construction.md)。 */
+function toCardId(engineId: string): string {
+  return engineId.replace(/P\d*$/, '');
 }
 
-function extractKeywords(raw: RawCard): string[] {
-  const ks = new Set<string>();
-  if (raw.cutIn)    ks.add('カットイン');
-  if (raw.hirameki) ks.add('ヒラメキ');
-  if (raw.henso)    ks.add('変装');
-  const e = raw.effect ?? '';
-  if (e.includes('突撃'))    ks.add('突撃');
-  if (e.includes('迅速'))    ks.add('迅速');
-  if (e.includes('【宣言】')) ks.add('宣言');
-  if (e.includes('疾風'))    ks.add('疾風');
-  if (e.includes('ミスリード')) ks.add('ミスリード');
-  if (e.includes('ブレット'))   ks.add('ブレット');
-  if (e.includes('捜査'))      ks.add('捜査');
-  if (e.includes('痕跡'))      ks.add('痕跡');
-  if (raw.type === 'パートナー') ks.add('アシスト');
+/** ability の公式テキスト + engine.keywords からデッキ編集フィルタ用キーワードを抽出。 */
+function deriveKeywords(e: EngineCardDef): string[] {
+  const ks = new Set<string>(e.keywords ?? []);
+  if (e.kind === 'partner') ks.add('アシスト');
+  const text = (e.abilities ?? []).map((a) => a.description ?? '').join(' ');
+  if (text.includes('カットイン')) ks.add('カットイン');
+  if (text.includes('ヒラメキ')) ks.add('ヒラメキ');
+  if (text.includes('変装')) ks.add('変装');
+  if (text.includes('突撃')) ks.add('突撃');
+  if (text.includes('迅速')) ks.add('迅速');
+  if (text.includes('【宣言】') || (e.abilities ?? []).some((a) => a.type === 'declared')) ks.add('宣言');
+  if (text.includes('疾風')) ks.add('疾風');
+  if (text.includes('ミスリード')) ks.add('ミスリード');
+  if (text.includes('ブレット')) ks.add('ブレット');
+  if (text.includes('捜査')) ks.add('捜査');
+  if (text.includes('痕跡')) ks.add('痕跡');
   return [...ks];
 }
 
-function toCardDef(raw: RawCard): CardDef {
+/** engine CardDef → meta CardDef へ正規化。 */
+function engineToMeta(e: EngineCardDef): CardDef {
+  // コスト = 手札から使う際の FILE レベル (rules/12)。character/event のみが持つ
+  // (rules/28-errata.md: カードの「コスト」表記は「レベル」の誤記)。
+  // partner は開始時から場に居る / case は勝利条件枠 = コスト概念なし (rules/06) →
+  // 種別=パートナー/事件 を選ぶとコスト facet は全 0 件 = disabled (ありえない選択肢)。
+  const playLevel = (e.kind === 'character' || e.kind === 'event') ? e.level : undefined;
+  // 混色カードは複数色を保持 (rules/20)。color は表示用の代表色 (= 先頭)。
+  const colors = [...new Set((e.colors ?? []).map((c) => COLOR_MAP[c] ?? 'blue'))];
+  const primary: CardColor = colors[0] ?? 'blue';
   return {
-    num: raw.cardNum,
-    id: raw.cardId,
-    name: raw.title,
-    type: TYPE_MAP[raw.type] ?? 'character',
-    color: COLOR_MAP[raw.color] ?? 'blue',
-    cost:  toNum(raw.cost),
-    ap:    toNum(raw.ap),
-    lp:    toNum(raw.lp),
-    level: toNum(raw.difficultyFirst),
-    rarity: raw.rarity,
-    features: raw.features ?? [],
-    keywords: extractKeywords(raw),
-    effectShort: raw.effect ?? '',
+    num: e.id,
+    id: toCardId(e.id),
+    name: e.names[0] ?? e.id,
+    type: e.kind,
+    color: primary,
+    colors: colors.length ? colors : [primary],
+    cost: playLevel,
+    ap: e.ap,
+    lp: e.lp,
+    level: playLevel,
+    rarity: e.rarity,
+    features: e.kind === 'case' ? (e.caseTraits ?? e.traits) : e.traits,
+    keywords: deriveKeywords(e),
+    effectShort: (e.abilities ?? []).map((a) => a.description).filter(Boolean).join('\n'),
   };
 }
 
-const D08: readonly CardDef[] = (ctD08Raw.cards as RawCard[]).map(toCardDef);
-const D11: readonly CardDef[] = (ctD11Raw.cards as RawCard[]).map(toCardDef);
-
-export const CARD_POOL: readonly CardDef[] = [...D08, ...D11];
+export const CARD_POOL: readonly CardDef[] = ALL_CARDS.map(engineToMeta);
 
 // cardNum → cardId 解決テーブル。パラレル (同 id・別 num) を「同じカード」として
 // 集計するために使う (3 枚上限 / 種類カウント)。rules/02-deck-construction.md。
@@ -159,7 +141,7 @@ export interface CardFilter {
 
 export function getCards(filter: CardFilter = {}): CardDef[] {
   return CARD_POOL.filter((c) => {
-    if (filter.color && c.color !== filter.color) return false;
+    if (filter.color && !(c.colors ?? [c.color]).includes(filter.color)) return false;
     if (filter.type && c.type !== filter.type) return false;
     if (filter.rarity && c.rarity !== filter.rarity) return false;
     if (filter.minCost != null && (c.cost ?? 0) < filter.minCost) return false;

@@ -14,6 +14,7 @@ import { T } from './tokens';
 import type { CardDef } from '../data/types';
 import { ensureInteractionStyles } from './interactionStyles';
 import { CardArt } from '@/ui/components/CardArt';
+import { useCardOrientation } from '@/ui/hooks/useCardOrientation';
 
 interface Props {
   card: CardDef;
@@ -43,7 +44,13 @@ export function MetaCard({
   hoverable = true, badge, isFavorited = false,
 }: Props) {
   ensureInteractionStyles();
-  const h = Math.round(w * 1.4);
+  // 事件カードは縦/横 (portrait/landscape) が混在する (rules/06 + Phase 9-D)。
+  // 画像の natural サイズで向きを検出し、横向き時はタイル比率を landscape (≈116:84) に切替。
+  // 検出は case カードのみ (非 case は null を渡して Image 読込を行わない = 大量カードでも軽量)。
+  const isCase = card.type === 'case';
+  const orient = useCardOrientation(isCase ? card.num : null);
+  const landscape = isCase && orient === 'landscape';
+  const h = landscape ? Math.round(w * 0.72) : Math.round(w * 1.4);
   const interactive = !!(onClick || onDoubleClick);
   const over = showMax && count != null && count > maxCount;
   return (
@@ -75,8 +82,13 @@ export function MetaCard({
         background: '#0a1a28',
       }}
     >
-      {/* 素の CardArt のみ。chrome (色枠/グラデ/ストライプ/フッター) は廃止 */}
-      <CardArt cardId={card.num} alt={card.name} className="meta-card-art" />
+      {/* 素の CardArt のみ。chrome (色枠/グラデ/ストライプ/フッター) は廃止。
+          事件カードは縦/横どちらも見切れないよう object-fit:contain (--contain)。 */}
+      <CardArt
+        cardId={card.num}
+        alt={card.name}
+        className={isCase ? 'meta-card-art meta-card-art--contain' : 'meta-card-art'}
+      />
 
       {/* ---- atMax: 上限到達のグレーアウト + MAX タグ ---- */}
       {atMax && !over && (

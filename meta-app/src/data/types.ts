@@ -1,7 +1,7 @@
 // spec: .claude/specs/meta-ui/02-design-system.md + 05-engine-stub.md
 // カード基本型 — design-mockups_v2/06-card-data.jsx の CARD_POOL 構造に対応
 
-export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
+export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple' | 'black' | 'white';
 export type CardKind = 'character' | 'event' | 'partner' | 'case';
 
 export interface CardDef {
@@ -11,7 +11,10 @@ export interface CardDef {
    *  rules/02-deck-construction.md「絵柄が違っても ID が同じであれば同じカード」。 */
   id: string;
   name: string;
+  /** 表示用の代表色 (= colors[0])。色フィルタ/集計は colors を使う。 */
   color: CardColor;
+  /** 全色 (混色カードは複数色)。色フィルタ・BY COLOR 集計はこちらを参照。 */
+  colors?: CardColor[];
   type: CardKind;
   cost?: number;
   ap?: number;

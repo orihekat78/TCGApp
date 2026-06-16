@@ -11,6 +11,7 @@ import { useMemo, useState } from 'react';
 import { T, COLOR_TOKEN } from '../shared/tokens';
 import { AppTopBar } from '../shared/AppTopBar';
 import { MetaCard } from '../shared/MetaCard';
+import { CardExpandModal } from '@/ui/components/CardExpandModal';
 import { FilterRail } from '../shared/FilterRail';
 import {
   CARD_POOL, DISTINCT_CARDS, DISTINCT_CARD_COUNT, cardIdOf, variantsOfId,
@@ -219,7 +220,7 @@ function computeCatalog(): Catalog {
   const byRarity = new Map<string, number>();
   const inc = <K,>(m: Map<K, number>, k: K) => m.set(k, (m.get(k) ?? 0) + 1);
   for (const c of DISTINCT_CARDS) {
-    inc(byColor, c.color);
+    for (const col of c.colors ?? [c.color]) inc(byColor, col); // 混色は各色に計上
     inc(byType, c.type);
     if (c.rarity) inc(byRarity, c.rarity);
   }
@@ -472,7 +473,10 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
 }) {
   const color = COLOR_TOKEN[card.color];
   const variants = variantsOfId(card.id);
+  // クリックで拡大表示 (対戦画面と同じ CardExpandModal を流用)。
+  const [expanded, setExpanded] = useState(false);
   return (
+    <>
     <div style={{
       width: '100%', height: '100%', padding: '18px 20px 20px',
       background: 'linear-gradient(180deg, rgba(13,38,64,0.95), rgba(13,38,64,0.75))',
@@ -480,9 +484,18 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
       boxShadow: `inset 0 0 40px ${color}15`,
       display: 'flex', flexDirection: 'column', overflow: 'auto', gap: 10,
     }}>
-      <div style={{ alignSelf: 'center', filter: `drop-shadow(0 0 24px ${color}66) drop-shadow(0 8px 16px rgba(0,0,0,0.7))` }}>
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        title="クリックで拡大表示"
+        aria-label={`${card.name} を拡大表示`}
+        style={{
+          alignSelf: 'center', padding: 0, border: 'none', background: 'transparent', cursor: 'zoom-in',
+          filter: `drop-shadow(0 0 24px ${color}66) drop-shadow(0 8px 16px rgba(0,0,0,0.7))`,
+        }}
+      >
         <MetaCard card={card} w={190} hoverable={false} />
-      </div>
+      </button>
 
       {variants.length > 1 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
@@ -571,6 +584,8 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
         </button>
       </div>
     </div>
+    <CardExpandModal cardId={expanded ? card.num : null} onClose={() => setExpanded(false)} />
+    </>
   );
 }
 

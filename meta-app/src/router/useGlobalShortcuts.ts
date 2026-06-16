@@ -43,6 +43,8 @@ export function useGlobalShortcuts({ route, onNav }: Options): {
       if (e.altKey || e.ctrlKey || e.metaKey) return;
 
       if (e.key === 'Escape' || e.key === 'Backspace') {
+        // カード拡大モーダル表示中は、その close (Esc) を優先しグローバル「戻る」を抑止する。
+        if (document.querySelector('.card-expand-modal-backdrop')) return;
         if (helpOpen) {
           setHelpOpen(false);
         } else if (route !== 'home') {

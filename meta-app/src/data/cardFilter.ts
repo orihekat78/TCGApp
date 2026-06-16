@@ -34,6 +34,8 @@ export const COLOR_META: { c: CardColor; label: string; hex: string }[] = [
   { c: 'red',    label: '赤', hex: T.red },
   { c: 'green',  label: '緑', hex: T.green },
   { c: 'purple', label: '紫', hex: T.purple },
+  { c: 'black',  label: '黒', hex: T.black },
+  { c: 'white',  label: '白', hex: T.white },
 ];
 
 export const TYPE_META: { t: CardKind; label: string; hex: string }[] = [
@@ -80,19 +82,24 @@ export function costBucket(c: CardDef): number {
   return c.cost == null ? -1 : Math.min(c.cost, 8);
 }
 
-export function matchesFilter(c: CardDef, f: CardFilterState): boolean {
-  if (f.colors.length && !f.colors.includes(c.color)) return false;
-  if (f.types.length && !f.types.includes(c.type)) return false;
-  if (f.rarities.length && !f.rarities.includes(c.rarity ?? '')) return false;
-  if (f.costs.length && !f.costs.includes(costBucket(c))) return false;
-  if (f.features.length) {
+/** facet グループ識別子。`except` に渡すとその group の条件を無視して一致判定する
+ *  (facet カウントの cross-filter 用: 他 group で絞った母集団に対する各 option の件数)。 */
+export type FacetGroup = 'colors' | 'types' | 'rarities' | 'costs' | 'features' | 'keywords';
+
+export function matchesFilter(c: CardDef, f: CardFilterState, except?: FacetGroup): boolean {
+  const cardColors = c.colors ?? [c.color];
+  if (except !== 'colors' && f.colors.length && !f.colors.some((x) => cardColors.includes(x))) return false;
+  if (except !== 'types' && f.types.length && !f.types.includes(c.type)) return false;
+  if (except !== 'rarities' && f.rarities.length && !f.rarities.includes(c.rarity ?? '')) return false;
+  if (except !== 'costs' && f.costs.length && !f.costs.includes(costBucket(c))) return false;
+  if (except !== 'features' && f.features.length) {
     const cf = c.features ?? [];
     const ok = f.featureMode === 'and'
       ? f.features.every((x) => cf.includes(x))
       : f.features.some((x) => cf.includes(x));
     if (!ok) return false;
   }
-  if (f.keywords.length) {
+  if (except !== 'keywords' && f.keywords.length) {
     const ck = c.keywords ?? [];
     const ok = f.keywordMode === 'and'
       ? f.keywords.every((x) => ck.includes(x))

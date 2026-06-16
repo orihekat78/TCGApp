@@ -45,3 +45,8 @@ button {
   display: block;
   pointer-events: none;
 }
+
+/* 事件カード等、縦/横が混在し見切れさせたくないカードは contain で全体表示 (BUG: 横向き事件のクリップ防止) */
+.meta-card-art--contain {
+  object-fit: contain;
+}

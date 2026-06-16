@@ -19,8 +19,8 @@ test('CARDS: 34 種類 (cardId 単位) + CATALOG + 詳細パネル + フィル�
 
   await page.goto('/#cards');
 
-  // 34 種類 · 全 47 種 (パラレルを cardId で畳む)
-  await expect(page.getByText('34 種類').first()).toBeVisible({ timeout: 6000 });
+  // 種類カウントが表示される (engine ALL_CARDS 由来。枚数はカード追加で増減するため数値固定しない)
+  await expect(page.getByText(/\d+ 種類/).first()).toBeVisible({ timeout: 6000 });
   // CATALOG 見出し (旧 COVERAGE)
   await expect(page.getByText('CATALOG')).toBeVisible();
   // BY COLOR / BY RARITY
@@ -37,10 +37,12 @@ test('CARDS: 34 種類 (cardId 単位) + CATALOG + 詳細パネル + フィル�
 
 test('CARDS: 検索ボックスで件数が変化する', async ({ page }) => {
   await page.goto('/#cards');
-  // パラレルまとめ ON 既定 → 34 件
-  await expect(page.locator('text=/CARDS · 34 件 一致/')).toBeVisible({ timeout: 6000 });
+  const heading = page.locator('text=/CARDS · \\d+ 件 一致/');
+  await expect(heading).toBeVisible({ timeout: 6000 });
+  const before = await heading.textContent();
   await page.getByPlaceholder('名前 / 効果 / 番号 / 特徴 で検索').fill('灰');
-  await expect(page.locator('text=/CARDS · [0-9]+ 件 一致/')).not.toContainText('34 件');
+  // 検索で一致件数が変化する (具体数はプールサイズに依存しないよう before と比較)
+  await expect(heading).not.toHaveText(before ?? '');
 });
 
 test('CARDS: ★ お気に入り toggle が localStorage に persist', async ({ page }) => {

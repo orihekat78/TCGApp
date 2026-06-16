@@ -32,6 +32,8 @@ export const T = {
   red:          '#c84040',
   green:        '#3aa67a',
   purple:       '#8a4cc0',
+  black:        '#7d8597',
+  white:        '#dfe5f0',
 
   // Stat colors
   apColor: '#ff9b6e',
@@ -72,6 +74,8 @@ export const COLOR_TOKEN: Record<CardColor, string> = {
   red:    T.red,
   green:  T.green,
   purple: T.purple,
+  black:  T.black,
+  white:  T.white,
 };
 
 // 色のブレンド (-1.0 = 黒, +1.0 = 白)
