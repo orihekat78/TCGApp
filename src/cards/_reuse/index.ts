@@ -775,6 +775,27 @@ import { B04031P } from '../ct-p04/B04031P.js';
 import { B03079 } from '../ct-p03/B03079.js';
 import { B03079P } from '../ct-p03/B03079P.js';
 
+import { B01065 } from '../ct-p01/B01065.js';
+import { B01065P } from '../ct-p01/B01065P.js';
+import { B02038 } from '../ct-p02/B02038.js';
+import { B02038P } from '../ct-p02/B02038P.js';
+import { B03031 } from '../ct-p03/B03031.js';
+import { B03031P } from '../ct-p03/B03031P.js';
+import { B05024 } from '../ct-p05/B05024.js';
+import { B05024P } from '../ct-p05/B05024P.js';
+import { B07041 } from '../ct-p07/B07041.js';
+import { B07041P } from '../ct-p07/B07041P.js';
+import { B01076 } from '../ct-p01/B01076.js';
+import { B01076P } from '../ct-p01/B01076P.js';
+import { B02041 } from '../ct-p02/B02041.js';
+import { B02041P } from '../ct-p02/B02041P.js';
+import { B04051 } from '../ct-p04/B04051.js';
+import { B04051P } from '../ct-p04/B04051P.js';
+import { B07057 } from '../ct-p07/B07057.js';
+import { B07057P } from '../ct-p07/B07057P.js';
+import { PR237 } from '../pr-01/PR237.js';
+import { PR243 } from '../pr-01/PR243.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -938,4 +959,7 @@ export const REUSE_CARDS: CardDef[] = [
   B01052, D06016, B02025, B02025P, B04022, B04022P, B04031, B04031P,
   // triage batch#3 (window4 verified green B03079 + clone)
   B03079, B03079P,
+  // トリアージ出荷バッチ#4 — window5 certify verified green 10 + clone 10 = 20枚 (engine変更0)
+  // (B05028/B05028P は gate5 で BUG-111 continuation-drop を踏み DEFER)
+  B01065, B01065P, B02038, B02038P, B03031, B03031P, B05024, B05024P, B07041, B07041P, B01076, B01076P, B02041, B02041P, B04051, B04051P, B07057, B07057P, PR237, PR243,
 ];

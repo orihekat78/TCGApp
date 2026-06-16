@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1e273620150c`
+> Source hash: `48210f918b2f`
 
 公式ルール [`23-qa-disguise-cutin.md`](../../../rules/23-qa-disguise-cutin.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -18,13 +18,17 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (22)
+## 📄 参照ソース (26)
 
 - [`src/cards/ct-d11/D11013.ts`](../../../../src/cards/ct-d11/D11013.ts)
 - [`src/cards/ct-d11/D11017.ts`](../../../../src/cards/ct-d11/D11017.ts)
 - [`src/cards/ct-d11/D11018.ts`](../../../../src/cards/ct-d11/D11018.ts)
 - [`src/cards/ct-p02/B02003.ts`](../../../../src/cards/ct-p02/B02003.ts)
 - [`src/cards/ct-p02/B02003P.ts`](../../../../src/cards/ct-p02/B02003P.ts)
+- [`src/cards/ct-p02/B02038.ts`](../../../../src/cards/ct-p02/B02038.ts)
+- [`src/cards/ct-p02/B02038P.ts`](../../../../src/cards/ct-p02/B02038P.ts)
+- [`src/cards/ct-p02/B02041.ts`](../../../../src/cards/ct-p02/B02041.ts)
+- [`src/cards/ct-p02/B02041P.ts`](../../../../src/cards/ct-p02/B02041P.ts)
 - [`src/cards/ct-p02/B02044.ts`](../../../../src/cards/ct-p02/B02044.ts)
 - [`src/cards/ct-p02/B02044P.ts`](../../../../src/cards/ct-p02/B02044P.ts)
 - [`src/cards/ct-p02/B02045.ts`](../../../../src/cards/ct-p02/B02045.ts)
@@ -36,8 +40,4 @@
 - [`src/cards/ct-p07/B07080.ts`](../../../../src/cards/ct-p07/B07080.ts)
 - [`src/cards/ct-p07/B07080P.ts`](../../../../src/cards/ct-p07/B07080P.ts)
 - [`src/cards/ct-p08/B08058.ts`](../../../../src/cards/ct-p08/B08058.ts)
-- [`src/cards/ct-p08/B08058P.ts`](../../../../src/cards/ct-p08/B08058P.ts)
-- [`src/cards/ct-p09/B09032.ts`](../../../../src/cards/ct-p09/B09032.ts)
-- [`src/cards/pr-01/PR181.ts`](../../../../src/cards/pr-01/PR181.ts)
-- [`src/cards/pr-01/PR187.ts`](../../../../src/cards/pr-01/PR187.ts)
-- _...ほか 2 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 6 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

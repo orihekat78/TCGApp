@@ -71,6 +71,13 @@
   yellow 26 + B03056 は既知 STILL-OPEN gate (set-card→host / partner-area / name-designation / set-card-cost /
   conditional-gated-optional) で DEFER (DEFERRED-INDEX「window4 certify yellow/refuted DEFER」に詳細)。
   → window4 は **完全消化** (残 certify 0)。次は window5+ を新規抽出。
+- ✅ window5 (20, green-only 抽出 `.tmp/sweep/window5-greens.json`, batch#4 で certify): green 13 / **verified-green 11**
+  → gate5 で B05028 BUG-111 検出 → **出荷 10** (+clone 10 = 20枚, ALL_CARDS 1277→1297)。
+  出荷: B01065/B02038/B03031/B05024/B07041/B01076/B02041/B04051/B07057/PR237 (+各clone)。
+  除外: refuted 2 (B09038/B09056 = BUG-111) / gate5-defer 1 (B05028 = BUG-111) / yellow 7 (DEFERRED-INDEX batch#4 節)。
+  ⚠ **重大教訓**: 決定論 green候補 20 → 出荷 10 (実効 ~50%)。**certify+敵対verify だけでは BUG-111 系
+  (candidate在+human-decline で chain-gated continuation drop) を見落とす — gate5 実機 decoy が最終ゲート** (B05028 で実証)。
+  なお gate サンプルは省略し green-only 20 を抽出 (既知 yellow 再確認の ROI 低、cost 上限内で ship yield 最大化)。
 - 次 window 抽出: `node scripts/survey/sweep-window2.cjs <greenN>` (done除外、green層化) → id配列を wf-certify に渡す。
   新 yellow が暴く gate を `sweep-2026-06-15.ts` の GATES に regex 還元 → 再実行で landscape 更新 (loop-until-dry)。
   **新規 gate (B03056 由来)**: `conditional-gated-optional surfacing` (conditional.then 内 optional が if 評価前に eager surface)。
