@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-16 BUG-111 #2 根本修正 + 解禁2枚出荷 完了 — ALL_CARDS 1301)
+# 次セッション再開プロンプト (2026-06-16 engine拡張 cluster15 removal-observer + 26枚出荷 完了 — ALL_CARDS 1327)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
@@ -12,47 +12,43 @@
 ```text
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md → .claude/memory.md を読んで状況把握。
 
-## 現在地 (2026-06-16、BUG-111 #2 修正 + 解禁2枚出荷 完了、HEAD≈8286f2c3、ALL_CARDS=1301)
+## 現在地 (2026-06-16、engine拡張 cluster15 完了、HEAD≈46a6fcd6、ALL_CARDS=1327)
 
-直近セッションで以下を完遂 (全 commit CI green):
-- **engine 修正 a682b20b**: BUG-111 #2 (human-decline 経路の sequence mandatory-tail drop) を根本修正。
-  continuation に origin `kind:'sequence'|'chain'` を付与し、decline 時に sequence-origin は remainder 実行・chain-origin は drop。
-  `applyPickSkipAndContinuation(.., runDeclinedAtom=false)` で declined head atom 非再実行。engine 4ファイル、骨格凍結例外。
-  **B05028 over-fire は誤診断**と判明 (再現せず、5 シナリオ独立検証)。spec: `.claude/specs/bug-111-human-decline-fix-design.md`。
-- **card 出荷 8286f2c3**: 解禁 2 rep + clones = 4枚 (B05028/B05028P/B09038/B09038P)、ALL_CARDS 1297→1301、engine変更0。
-  gate5 実機: B05028 11 pass (chain-gate decline=step2不発火) / B09038 9 pass (★0登場 decline で draw 発火 + falsification 実証)。
-- 全gate green: validate-specs pass=45 / tsc / full vitest 2560 / smoke baseline byte同一 / playwright 119 / lint:* 8本 / CI ×3 green。
-
-## 残: B09056 DEFER 継続
-B09056 の末尾は 2択 `choice`。choice-in-continuation の eager-surface (BUG-145 系、optional wrapper 未達でも surface する fragile 挙動) が
-未整備のため DEFER 継続 (BUG-111 #2 の underfire 自体は修正済)。
+直近セッションで以下を完遂 (commit 46a6fcd6、main push 済、CI 確認中):
+- **方針 (ユーザー判断、memory feedback-engine-cluster-over-green-tail)**: 残 green は 170 distinct の novel 裾なので
+  green候補刈り取りより **engine クラスタ拡張を優先**。当初候補 cutin-subtype は **sweep 誤ラベル**(真の subtype filter ~1枚) と
+  実証 → **contact-removal-observer (反撃カード一族, 53枚) にピボット**。
+- **engine 拡張 (骨格凍結例外、新 condition `removedCharMatches` 1個・全 additive)**: `removeToRemove` optional byUid +
+  `leave:to-remove` payload に side/byUid + `contact.judge` aUid 渡し。spec: `.claude/specs/engine-cluster15-contact-removal-observer-design.md`。
+  実装前 **opus 3-lens 敵対設計レビュー**で実害3件捕捉 (B09026 誤分類/excludeSource 欠落/level-ap 層越え) → v2 反映。
+- **28 rep certify → 26枚出荷** (verifiedOk green 14 rep + clone 12)。unit 11 + gate5 8 pass / 全 gate green (vitest 2579 /
+  smoke baseline winsA=498 不変 / playwright 119 / lint:* 8本 / validate-specs fail=0)。
+- **DEFER 14 rep** (反撃 ability は全 green、他句が別 gate): DEFERRED-INDEX 記載。
 
 ## ★最優先候補 (いずれか)
 
-1. **トリアージ出荷バッチ#5**: window6+ 抽出 (`node scripts/survey/sweep-window2.cjs <greenN>`、done 186 除外、green-only) →
-   certify (`Workflow scriptPath: scripts/wf-certify.mjs`, `model:'opus'`, SUB=5, **1 workflow ずつ**) → 出荷。
-   fresh green pool ≈ 170 sig。パイプライン = certify → `verify-clone-identity.cjs` → `build-verified-codegen-input.cjs` →
-   `taskA-codegen.cjs --write` → `taskA-register.cjs` → gate5 (`wf-gate5-batch4.mjs` 流用 or 手書き) → 全gate。
-2. **中型 engine クラスタ** (骨格凍結例外 + opus 敵対設計レビュー + 全gate): cutin-subtype filter (69枚) /
-   grant-textual+set-card→host (60) / contact-removal-by-self (51) / dynamic-count (~45)。
-3. **choice-in-continuation surface gap 修正** (B09056 等の解禁前提): sequence remainder の choice/optional を eager-surface でなく
-   正しく surface する engine 整備 (BUG-145 系)。要 opus 設計レビュー。
+1. **partnerColorKeyword needsManual follow-up (FAST)**: B06038/B06039/B08010/B09071 = certify verified green だが
+   `partnerColorKeyword` closure (continuousModifier.grantKeywords) で codegen 不可。`src/cards/_shared/partnerColorKeyword.ts` +
+   exemplar (B08007 / D11007) を見て **手書き出荷** (反撃 a2 は cluster15 で解禁済、B08010 の JSON twin は出荷済)。clone 込み ~8枚。
+2. **次の密 engine クラスタ** (cutin-subtype の教訓 = **着手前に実テキスト決定論分類で密度検証**):
+   候補 = cardName-EXCLUSION filter (B06087/PR280 + 全残スキャン、小) / grant-textual+set→host (~50、要 homogeneity 検証) /
+   dynamic-count family (~45)。`.tmp/sweep/landscape.json` の text を node で分類 → opus 3-lens 敵対設計レビュー → 全 gate。
+3. **トリアージ出荷バッチ#5** (green 裾、ユーザーが engine より green 収穫を望む場合): window6+ certify → 出荷。
 
 ## プロセス必須
-- certify/難判断/gate5-author agent は `model:'opus'`。engine 変更は骨格凍結例外 + opus 敵対設計レビュー + 全gate。
-- 1 タスク = 1 独立コミット。docs commit は `.tmp/certify` durable を消さず `npm run docs`。push は branch→main ff-merge (分割実行)。
-- ⚠ Workflow 並列は SUB=5 程度に throttle、1 workflow ずつ (高並列 + 別workflow 同時で server rate-limit 実害)。
-- smoke レポート (.claude/reports/smoke-*) は commit 対象外 (git add -A 後に `git reset .claude/reports/`)。
+- certify/難判断/gate5/設計レビュー agent は `model:'opus'`。engine 変更は骨格凍結例外 + **実装前 opus 3-lens 敵対設計レビュー** + 全gate。
+- 1 タスク = 1 独立コミット。⚠ ブランチ名と実内容が乖離しないよう注意 (cluster15 はブランチ名 cutin-subtype のまま pivot した)。
+- ⚠ Workflow 並列は SUB=5、1 workflow ずつ。smoke レポート (.claude/reports/smoke-*) は commit 対象外 (git add -A 後に `git reset .claude/reports/`)。
 - Read hook がファイルを line1 で切る → Bash `cat -n` で読む / Edit 前に Read 1 回で登録。
-- 出荷後の card-wave: codegen の罠 (case:to-resolved 等の closure matcher → 共有 factory 手動差替え)。
+- engine 拡張時: certify-brief.md (`.tmp/taskA/`) に新 capability の DSL レシピを追記してから certify (agent が新機構を知らないと yellow 誤判定)。
 
 ## 状態 doc
-- BUG-111: `.claude/bugs/BUG-111.md` (#2 = 修正済 + 誤診断訂正) / spec `.claude/specs/bug-111-human-decline-fix-design.md`
-- defer: `.claude/specs/DEFERRED-INDEX.md` (B05028/B09038 解禁済、B09056 DEFER 継続)
-- スイープ正本: `.claude/specs/triage-sweep-2026-06-15.md` / bug: .claude/bugs/index.base
-- 詳細: memory.md セッション⑮ + sessions/2026-06-16.md
+- cluster15 spec: `.claude/specs/engine-cluster15-contact-removal-observer-design.md` (§8 = v2 確定設計)
+- defer: `.claude/specs/DEFERRED-INDEX.md` (cluster15 DEFER 14 rep + 新 gate cardName-EXCLUSION)
+- スイープ正本: `.claude/specs/triage-sweep-2026-06-15.md` (gate ラベルは過剰グルーピング疑い、密度は実テキストで要検証)
+- 詳細: memory.md セッション⑯ + sessions/2026-06-16.md
 ```
 
-直近セッションは BUG-111 #2 を engine 根本修正 + 解禁2枚 (B05028/B09038 +clones=4枚) を card-wave 出荷まで完遂 (CI green ×3)。
-B05028 over-fire は誤診断、B09038 は修正で draw 発火、B09056 は choice-surface gap で DEFER 継続。
-**次セッションはトリアージ出荷バッチ#5 (window6+) or 中型 engine クラスタ or choice-surface gap 修正。** `/clear` で新セッション推奨。
+直近セッションは engine拡張 cluster15 (removal-observer 反撃カード一族) を実装前 opus 3-lens 敵対設計レビュー → 26枚出荷まで完遂 (全 gate green、push 済)。
+cutin-subtype は sweep 誤ラベルと判明し contact-removal-observer に pivot。
+**次セッションは partnerColorKeyword follow-up (FAST) / 次の密 engine クラスタ (要 homogeneity 検証) / batch#5 のいずれか。** `/clear` で新セッション推奨。

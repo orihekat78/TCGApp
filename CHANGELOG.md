@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `e5c39f5b34b1`
+> Source hash: `7eee2d3f2a19`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,215 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# engine拡張 wave#2 cluster15 — removal-observer (反撃カード一族) 解禁 + 26枚出荷
+
+**Round/Phase**: 2026-06-16 engine拡張 wave#2 cluster15 (`engine/wave2-cluster15-contact-removal-observer`)。
+ユーザー判断で green候補刈り取りより **engine クラスタ拡張を優先**（残 green は 170 distinct の novel 裾、密ファミリーは
+engine 拡張が製造する。memory `feedback-engine-cluster-over-green-tail`）。当初候補 cutin-subtype は sweep 誤ラベル
+（『テキストに【カットイン】含む』の過剰グルーピング、真の subtype filter は ~1枚）と実証 → **contact-removal-observer
+（反撃カード一族, 53枚）にピボット**。
+
+## engine 変更 (骨格凍結例外 = scoped engine-extension wave、新 condition 1個・全 additive)
+
+「相手の現場にいるキャラが…リムーブされたとき」を card-triggerable に。13198 の gap 分析を grounding。
+
+- **`mutate/scene.ts removeToRemove`**: optional `byUid?` 追加 (default undefined = 既存 5 caller 不変)。
+  `leave:to-remove` payload を `{uid,cause}` → `{uid,cause,side,byUid}` に additive 拡張 (side=除去キャラ所属 player、splice 前既取得)。
+- **`flow/contact.ts judge`**: `removeToRemove(state, bUid, 'contact-ap', aUid)` (aUid=winner=attacker、rules/08: 被除去は常に bUid)。
+- **`cond/eval.ts`**: 新 condition **`removedCharMatches{side,cause,by}`** — payload snapshot のみ読む (除去キャラは splice 済で
+  triggerCharMatches の scene 再取得が使えない)。`by:'self'`(このキャラ) / `{filter,excludeSource}`(自分の現場の filter 一致、winner=生存=再取得可)。
+- **3点同期**: Condition union + CONDITION_KIND_MAP + cjs CONDS (sync test + tsc satisfies が gate)。**atom-handlers/triggered.ts は不変**。
+
+## 実装前 opus 3-lens 敵対設計レビュー (実害3件を捕捉)
+
+`.claude/specs/engine-cluster15-contact-removal-observer-design.md`。全 GO-with-fixes。実装前に修正反映:
+1. **B09026 誤分類** (CONTACT-BARE→実は cardName[伊織無我] filter、BARE のままだと over-fire) → CONTACT-FILTER 再分類。
+2. **by に excludeSource 欠落** (B06067「このキャラ以外の警察」が表現不能) → `by:{filter,excludeSource}` 追加。
+3. **level/ap effective capture が mutate→read 層越え import** (前例ゼロ・循環リスク、53枚どれも未使用) → payload から DROP、`{uid,cause,side,byUid}` に確定。
+
+## 出荷 (26枚 = clean green 14 rep + byte同一 clone 12、ALL_CARDS 1301→1327)
+
+28 rep を opus certify (grounding→敵対verify) → **verifiedOk green 15 / refuted 3 / yellow 7**。pure-JSON 自動 codegen 可能な 14 rep を出荷:
+- CONTACT-SELF (10): D10007 B01007 B01010 B06031 B06051 B07017 B07084 B07097 B09023 (+clones)
+- CONTACT-FILTER (3): D09010(特徴警察) B06067(警察+excludeSource) B09026(cardName伊織無我)
+- CONTACT-BARE (2): B01030 B01031
+- B06038 は partnerColorKeyword closure 要 (certify 分類漏れ) → needsManual 群へ DEFER。
+
+## 検証 (全 green)
+
+- engine unit test (`tests/engine/cond/removed-char-matches.test.ts`) **11 pass**: side/cause/by 全分岐 + pin (self-not-firing /
+  excludeSource / cardName split-name rules/19 / partner-not-in-scene)。
+- gate5 実機 (`tests/cards/cluster15-removal-observer.test.ts`) **8 pass**: end-to-end contact (declare→judge→aUid→byUid→draw 発火) +
+  実カード全 variant + pin (cause filter / self-not-firing / CONTACT-BARE / trait / cardName)。
+- tsc 0 / sync-whitelists pass / **vitest 2579 pass** (+19) / **smoke baseline winsA=498 不変** (新カードは MVP デッキ外 = 回帰0証跡) /
+  playwright 119 pass / lint:* 8本 errors=0 / validate-specs pass=60 fail=0。
+
+## DEFER (14 rep、反撃 ability 自体は green、他句が別 gate)
+
+- **refuted 3**: B04004(a3 絆 reactive の actor-gate 欠落=over-fire) / B06087(cardName除外 filter + chain/optional 構造) / B09022(sceneSetState 自側限定 picked-sleep 不可)。
+- **needsManual 4** (partnerColorKeyword closure、fast follow-up): B06038 B06039 B08010 B09071。
+- **yellow 7** (secondary engine gate): D02008(action-scoped cutin-ban) B05009(own-side enterSource) B06068(turn-scoped keyword 剥奪) B07063(grant removal-observer ability) PR136(owner-deck-source charSetCard) PR280(cardName除外 filter) B05106(MR 未配線)。
+- 新 gate 発見: **cardName-EXCLUSION candidate filter** (B06087/PR280)。DEFERRED-INDEX に記載。
+
+## BUG-111 #2 解禁出荷 — B05028 (誤診断) + B09038 (修正で解禁) + clones = 4枚 (ALL_CARDS 1297→1301)
+
+BUG-111 #2 根本修正 (commit a682b20b) で解禁された 2 rep を card-wave 出荷。engine 変更 0 (修正は前 commit で完了済)。
+
+- **B05028 服部平蔵** (誤診断で誤って DEFER されていた): a1 chain[charRemoveSetCard, sceneRemove]「そうした場合」 +
+  a2 sequence[charSetCard(警察), charSetCard(opp)] (【スリープ】cost)。chain の human-decline は continuation-drop で正しく gate される
+  (over-fire は再現せず誤診断、5 シナリオ独立検証)。修正不要で出荷可能だった。
+- **B09038 工藤優作系** (BUG-111 #2 修正で解禁): a1【変装時】handAddFromRemove(工藤優作) + a2【登場時】optional[chain[自sleep,
+  sequence[sceneEnter(工藤優作 levelMax6), conditional charSetCard, **draw**]]] + a3【変装】【FILE7】。
+  末尾の無条件 draw が human-decline (0登場) でも発火するようになった (修正前は continuation-drop)。
+- clone: B05028P / B09038P (byte 同一、verify-clone-identity で確認、divergent 0)。
+
+### パイプライン
+certify spec (`.tmp/certify/`、B09038.verify を BUG-111 修正で ok=true に更新) → `verify-clone-identity.cjs B05028 B09038`
+(identicalClones 2/divergent 0) → `build-verified-codegen-input.cjs` (ADOPT 2 + clone 2) → `taskA-codegen.cjs --write` (4 files) →
+`taskA-register.cjs`。生成 DSL は certify spec と完全一致を確認。
+
+### gate5 実機検証 (`tests/cards/triage-greens-2026-06-16/{B05028,B09038}.test.ts`、opus author)
+- **B05028 a1 chain-gate**: set-card holder + AP≤8000 decoy 盤面で a1 発動 → step1 を 0枚 human-decline → step2 sceneRemove
+  **不発火** (decoy 残存)。resolve 時は step2 発火。partnerColor緑 条件 / hasSetCards・apMax filter を decoy で 1対1 検証。
+- **B09038 a2 (修正の主目的)**: 登場 → optional opt-in → 自sleep → sceneEnter pick を 0体 human-decline → **draw 発火** (hand+1)
+  かつ charSetCard 非発火 ($entered 空 → conditional skip)。resolve 時は enter+charSetCard+draw。levelMax6/cardName/kind filter を decoy 検証。
+
+### 検証
+- validate-specs pass=45 fail=0 (engine変更0) / tsc clean / full vitest green / smoke baseline byte 同一 / playwright 回帰 / pre-commit lint:* 8本。
+- DEFERRED-INDEX: B05028/B09038 を解禁済に更新。B09056 は choice-in-continuation gap で DEFER 継続。
+
+## BUG-111 #2 根本修正 — human-decline 経路の sequence mandatory-tail drop (骨格凍結例外: engine bug 修正)
+
+batch#4 gate5 が捕捉した「関連未解決」を再現テストで RCA 確定し、engine を修正。**B05028 over-fire は誤診断**と判明 (opus 敵対レビュー Lens 2 が 5 シナリオ独立検証)。
+
+### 確定した根本原因 (再現で実証: `tests/engine/effect/bug-111-human-decline-repro.test.ts`)
+- `sequence[optional-0-pick, ...mandatory-tail]` の 0-pick を **candidate在で human-decline** すると、pending 破棄とともに
+  continuation (= 中断 sequence の残り step) が **一律 drop** され、**mandatory 末尾 step が消える** (skipResolvesAtom=false の全 0-pick)。
+- 根本原因: continuation が **sequence / chain の origin を区別しない**こと。AI は greedy で decline しないため
+  smoke / certify / 敵対 verify をすり抜け、**human-decline 路のみ**が発火条件 (batch#4 で B09038/B09056 を refute、B05028 を gate5-defer)。
+
+### ⚠ batch#4 記録の訂正
+旧記録「chain-gate が効かず B05028 step2 が過剰発火」は **再現せず誤診断**。chain[charRemoveSetCard(0-pick), sceneRemove] を
+human-decline すると continuation(sceneRemove) が drop し step2 不発火 = 「そうした場合」gate として**正しく動作** →
+**B05028 は engine 修正なしで出荷可能** (誤って DEFER されていた)。
+
+### 修正 (TDD、engine 4 ファイル / 骨格凍結例外)
+continuation に origin `kind: 'sequence' | 'chain'` を付与:
+- **decline 時**: sequence-origin は remainder を実行 (mandatory 末尾発火、rules/15 独立 step) / chain-origin は drop (rules/25 gate)。
+- `applyPickSkipAndContinuation(state, pending, runDeclinedAtom=false)`: sequence-origin decline は declined head atom を
+  再実行せず remainder のみ実行 (declined 0-pick = 何もしない。head bind は unbound で後続 conditional が not-matched で正しく skip、
+  単数 sceneEnter の `__declined` 未対応による pick 再 push を回避)。
+- remainder の multi-step wrap も origin kind で行う (sequence に chain-gate を誤適用しない)。
+- 触る engine: `resolve-picks.ts` (continuation 型) / `resolver.ts` (kind 付与) / `apply-pick.ts` (wrap + decline 分岐) / `useEngineDispatch.ts` (human decline 分岐)。**atom-handlers.ts は不変**。
+
+### 水平展開 (blast radius)
+決定論 scan で `sequence[0-pick(i<len-1), ...tail]` 該当 = **79 ability (distinct ~49)**。高 severity (mandatory tail が silent drop) に
+**MVP D11014 a2 (→draw)** や draw/evidenceGain/mill 系多数。choice/optional-tail の 6 出荷カード (B04080/B07079/B07055/B07031) は
+choice が initial walk で eager surface するため my fix の remainder-run は no-op (probe で double-run 無しを実証 = 回帰なし)。
+
+### 解禁 / 残課題
+- **B05028 解禁** (修正不要、誤診断) / **B09038 解禁** (修正で sequence mandatory draw が発火) → 後続バッチで card-wave 出荷。
+- **B09056 は DEFER 継続**: 末尾が 2択 `choice`。choice-in-continuation の eager-surface (BUG-145 系) が fragile で
+  `optional[seq[..,choice]]` 構造の正しさ未検証。choice surface 整備は別 engine 課題。
+
+### 検証
+- repro **5/5 GREEN** (chain decline=不発火 2 経路 / sequence[0-pick,draw] decline=draw 発火 RED→GREEN / choice-tail 安全 / AI control)。
+- tsc clean (src+scripts) / **full vitest 2540 pass / 1 skip / 0 fail** / smoke:1000 baseline byte 同一 (winsA=498 avg=10.998 0 exception、AI 経路不変) / lint:* 8本 errors=0。
+- spec: [.claude/specs/bug-111-human-decline-fix-design.md](../specs/bug-111-human-decline-fix-design.md) / [BUG-111.md](../bugs/BUG-111.md)。
+
+## トリアージ・スイープ 出荷バッチ#4 — window5 certify → verified green 10 + clone 10 = 20枚 (engine変更0、ALL_CARDS 1277→1297)
+
+fresh green候補 **20 rep** (package 横断層化抽出 / done 120 除外) を per-card certify (opus grounding→敵対 verify)。
+green 13 / 敵対 verify 通過 11 → **gate5 実機テストで B05028 が BUG-111 を踏み追加 DEFER** → 出荷 **10 verified-green + byte同一 clone 10 = 20枚**。
+
+- **出荷カード (10 reps + 各 clone)**:
+  - B01065 沖矢昴 / B02038 怪盗キッド / B03031 大岡紅葉 / B05024 妃弁護士SOS(事件) / B07041 黒羽盗一 /
+    B01076 「開けるんだキャメル…」(event) / B02041 怪盗キッド / B04051 宮野明美 / B07057 「時価4億円！」(event) / PR237 犯人
+  - 句の構成は既存 certified-green exemplar の hybrid 再構成 (leave:to-remove×evidence-give×levelMax remove /
+    disguise:into draw+contact AP / deckRevealUntil cardName×levelMin / case:to-resolved 共有 factory / 宣言 charSetCard /
+    event-use enter-from-remove / enter+disguise sleep / 複数cardName reveal-until / optional{chain} grant / contact:start remove)。
+- **パイプライン** (バッチ#1〜#3 と同一): certify spec → `verify-clone-identity.cjs` (clone byte同一性、divergent 0 / impl 0) →
+  `build-verified-codegen-input.cjs` (ADOPT 11 + clone 11) → `taskA-codegen.cjs --write` → `taskA-register.cjs`。
+  - **B05024 codegen 修正**: a1「事件が解決編になったとき手札1リムーブ」を codegen が closure matcher 文字列で出力 →
+    validate-specs が `trigger.matcher closure forbidden` で検出 → 共有 factory `caseResolvedHandRemove({n:1})` (D09027 a1 と
+    byte同一) へ手動差替えで解消。
+- **certify 結果 (window5 20 rep)**: green 13 / 敵対 verify 通過 11 / refuted 2 (B09038/B09056) / yellow 7。
+- **出荷除外 (DEFERRED-INDEX batch#4 節へ記録)**:
+  - **B05028 gate5-defer (BUG-111)**: 宣言 a1 chain[charRemoveSetCard, sceneRemove] の「そうした場合」が **human-decline 経路**で破綻。
+    set-card holder 在 + step1 を 0枚 decline すると step2 sceneRemove が**発火してしまう** (`applyPickSkipAndContinuation` が
+    chain 残りを無条件実行、decline した charRemoveSetCard が `__chainStepNoApply` を立てない)。no-candidate 経路は正しく break するが
+    **candidate在+decline** が壊れる。AI は greedy で decline せず仮面化 → **certify+敵対verify は見落とし、gate5 実機 decoy テストが検出**。
+  - **B09038 refuted ×2 / B09056 refuted** (同 BUG-111): 0-pick decline 後の必須末尾 step (無条件 draw / 必須 choice) が continuation
+    ごと drop。reorder は意味論非等価のため不可。
+  - **yellow 7**: B04042 (レベル合計=aggregate-selection 制約) / B06032 (hirameki 経路の top-level optional skip) /
+    B08038 (removed-by-this-effect 条件) / PR236 (distinct-name count) / B03033 (相手側数値 aura) / B06033 (hand→evidence verb) /
+    B08050 (継続 self level 修飾)。いずれも既知/新規 STILL-OPEN gate。
+- **gate5 実機挙動検証** (`tests/cards/triage-greens-2026-06-16/` に 10 新規 test / **計 142 tests green**、workflow で opus 11 並列 author):
+  各 rep を実 engine flow (handUseCard / mutate.scene.removeToRemove / flow.contact.disguise / dispatchEngineAction hirameki /
+  contact state-machine 等) で駆動し、全 filter (color/level/AP/trait/cardName/kind/keyword/side) に **decoy** を置いて 1対1 評価実証
+  (BUG-117/118)。条件アイコン (turn:opp / partnerColor / caseStatus / fileAtLeast) は負ケース、「〜まで」は 0-pick 辞退路を検証。
+  この decoy×human-decline 検証が **B05028 の BUG-111 を捕捉** — certify と敵対 verify をすり抜けた実バグを gate5 が止めた実例。
+
+検証: validate-specs pass=45 fail=0 (engine変更0) / tsc clean / **vitest 2535 pass (+97) 0 fail** /
+smoke:1000 baseline 不変 (winsA=498, avg=10.998, 0 exception) / playwright 回帰 119 pass (1 skip) / 規約 lint errors=0。
+
+## トリアージ・スイープ 出荷バッチ#3 — window4 残8 certify → verified green B03079 + clone = 2枚 (engine変更0、ALL_CARDS 1275→1277)
+
+window4 (=window2-ids.json 32 rep) の残 8 rep を per-card certify (opus grounding→敵対 verify) し、
+window4 を **完全消化**。verified-green は **B03079 のみ** で、byte同一 clone B03079P と合わせ **2枚** 出荷。
+
+- **出荷カード**:
+  - B03079 レイチェル・浅香 (+B03079P): 【相手ターン中】【現場リムーブ時】デッキ上3枚を見て【赤】カードを1枚まで手札へ
+    (残りデッキ下) +【ヒラメキ】キャラを1枚まで選びスリープ。a1 は D05007/D01013/B01013 の certified-green 句を
+    hybrid 再構成 (leave:to-remove×turn:opp×color deck-look×chooseMatch:upTo)、a2 は D05007 a2 と byte同一。
+- **パイプライン** (バッチ#1/#2 と同一): certify spec → `verify-clone-identity.cjs` (clone byte同一性、divergent 0) →
+  `build-verified-codegen-input.cjs` (ADOPT 1 + clone 1) → `taskA-codegen.cjs --write` → `taskA-register.cjs`。
+- **certify 結果 (window4 残8)**: green 2 (B03056/B03079) / 敵対 verify 通過 1 (B03079) / yellow 6。
+  window4 累計: 32 certified / green 6 / **verified-green 5** (batch#2 4 + batch#3 1) / refuted 1 / yellow 26。
+- **出荷除外 (DEFERRED-INDEX へ記録)**:
+  - **B03056** REFUTED: a2 が `conditional{if: sceneHas(探偵 sleep nMin:3), then: optional{...}}` 構造で、engine の
+    resolveEffectPicks walk が conditional.if 評価**前**に optional を human へ eager surface し resume 時に conditional
+    ラッパを落とす → 3枚未満でも証拠獲得+自己リムーブが発火 (敵対 verifier が evidence 0→1, self removed を実証)。
+    **新規 gate: conditional-gated-optional surfacing**。
+  - yellow 6: B08033 (set-card-removal COST kind 不在) / B05027 (MR partner-area structure) / B01057・B02031
+    (set-card→host 能力付与) / PR263 (partner-area ビッグジュエル列挙) / PR099 (name-designation + card名書換 verb 不在)。
+    いずれも既知 STILL-OPEN gate。
+- **gate5 実機挙動検証** (新規 `tests/cards/triage-greens-2026-06-16/B03079.test.ts` / **7 tests**): a1 を実 engine flow
+  (`mutate.scene.removeToRemove` 相手ターン中) で発火させ、color:'赤' filter の **実評価** を decoy (上3枚先頭の青イベント・
+  青キャラ) で 1対1 検証 (filter 無視なら先頭 decoy が拾われる構図で、赤のみ採用＝honor 実証)。condition turn:opp は
+  自分ターン負ケースで、0-match 負ケースも検証。a2 は `evidence:remove-by-action` を実発火し pendingHirameki surface
+  (cardId/abilityId/player) + 負ケース、carrier 形は shipped byte-identical exemplar D05007 a2 との完全一致で担保
+  (carrier runtime は同一 sceneSetState pick を駆動する B02019 gate5 で human+AI 実証済)。BUG-117/118 リスクを per-card に閉じた。
+
+検証: validate-specs 32/32 pass (engine変更0) / tsc clean / **vitest 2438 pass (+7) 0 fail** /
+smoke:1000 baseline 不変 (winsA=498, avg=11.0, 0 exception) / playwright 回帰 119 pass (1 skip) / 規約 lint errors=0。
+
+## トリアージ・スイープ 出荷バッチ#2 — window4 確定 green 4 + clone 4 = 8枚 (engine変更0、ALL_CARDS 1267→1275)
+
+バッチ#1 (windows 1-3) に続き、window4 で certify+敵対verify 済みの確定 green **4 distinct rep** を
+byte同一テキストの clone 4 枚と合わせて **8枚** 出荷。新 engine クラスタ不要 (既存 verb/hook/filter のみ)。
+
+- **出荷カード**:
+  - B01052 工藤優作 (+clone D06016): スリープ登場 +【登場時】デッキ1枚公開→lv6以下キャラなら登場/それ以外手札
+  - B02025 遠山和葉 (+B02025P): 【相手ターン中】【現場リムーブ時】+【ヒラメキ】カットイン∧緑カードをリムーブエリアから回収
+  - B04022 光本兵我 (+B04022P): 【相手ターン中】【現場リムーブ時】手札からlv4以下〚カード名［服部平次］〛をスリープ登場
+  - B04031 中森青子 (+B04031P): 【宣言】【スリープ】〚カード名［黒羽快斗］〛にAP+1000 +〚突撃〛付与 (ターン終了時まで)
+- **パイプライン** (バッチ#1 と同一): certify spec → `verify-clone-identity.cjs` (clone byte同一性、divergent 0) →
+  `build-verified-codegen-input.cjs` (ADOPT 4 + clone 4) → `taskA-codegen.cjs --write` → `taskA-register.cjs`。
+  出荷前に 4枚とも公式テキスト⇔spec を源泉 (TSV recs) で1対1再確認。
+- **出荷除外** (window4 検証結果): B08023 は REFUTED (top-level choice 内の `uid:'$pick'+target` carrier が
+  human 経路で continuation 喪失 → 2段目 silent no-op、実機 probe で確認)。spec as-written は fatal のため出荷せず
+  (short-form carrier 書換で再挑戦余地)。D10003 は green だが needsManual (grantKeywords が JS closure) で別扱い。
+- **gate5 実機挙動検証** (新規 `tests/cards/triage-greens-2026-06-16/` 4 files / **27 tests**): 4 distinct rep を
+  すべて実 engine flow で発火 (enter hook / leave:to-remove / evidence:remove-by-action ヒラメキ / 宣言能力)、
+  decoy (filter圏外カード) が影響を受けないことと負ケース (turn:opp 未達 / selfOnly / 0-pick / hirameki skip /
+  declared cost / scope:turn 失効) を 1対1 assert。BUG-117/118 (型に書けても engine が評価しない) リスクを per-card に閉じた。
+  カットイン decoy は icon-ability 正準形状 (keywords:[] 不使用、BUG-122)、服部平次 は split-name (rules/19) 正方向も検証。
+  Workflow で opus エージェント 4並列 fan-out (1 workflow ずつ、rate-limit 回避)。
+
+検証: validate-specs 8/8 pass (engine変更0) / tsc clean / **vitest 2431 pass (+27) 0 fail** /
+smoke:1000 baseline 不変 (winsA=498, 0 exception) / playwright 回帰 119 pass / 規約 lint errors=0。
 
 ## トリアージ・スイープ 出荷バッチ#1 — certify確定 green 56枚 (engine変更0、ALL_CARDS 1211→1267)
 

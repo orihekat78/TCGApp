@@ -445,12 +445,12 @@
     - `2026-06-15-10-engine-wave2-cluster14-multi-sceneenter.md` — engine拡張 wave#2 cluster14 — multi-card sceneEnter (2枚まで登場) 4枚解禁
     - `2026-06-15-11-ui-picker-direct-manipulation.md` — UI picker Direct Manipulation 化 — scene-char pick / switch victim を現場カード直接クリックに
     - `2026-06-15-12-triage-greens-batch1.md`
-    - `2026-06-16-1-triage-batch2.md`
-    - `2026-06-16-2-triage-batch3.md`
-    - `2026-06-16-3-triage-batch4.md`
-    - `2026-06-16-4-bug-111-human-decline-fix.md`
-    - `2026-06-16-5-bug-111-unblock-ship.md`
-    - `2026-06-16-6-engine-cluster15-removal-observer.md` — engine拡張 wave#2 cluster15 — removal-observer (反撃カード一族) 解禁 + 26枚出荷
+    - `2026-06-16-01-triage-batch2.md`
+    - `2026-06-16-02-triage-batch3.md`
+    - `2026-06-16-03-triage-batch4.md`
+    - `2026-06-16-04-bug-111-human-decline-fix.md`
+    - `2026-06-16-05-bug-111-unblock-ship.md`
+    - `2026-06-16-06-engine-cluster15-removal-observer.md` — engine拡張 wave#2 cluster15 — removal-observer (反撃カード一族) 解禁 + 26枚出荷
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
