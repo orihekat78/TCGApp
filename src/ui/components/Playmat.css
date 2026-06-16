@@ -5,22 +5,36 @@
  * トークンは src/ui/styles/tokens.css に依存 (--bg-*, --keep-out, --neon-blue, etc.)
  */
 
-/* ---- Stage scaler (Cleanup #6: responsive scale) ---- */
+/* ---- Stage scaler (BUG-150: フルード化、旧 transform:scale(contain) を撤去) ---- */
 .scaler {
-  /* transform は inline style で動的設定 (useStageScale hook 経由) */
-  transform-origin: top left;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
 .stage {
-  width: 1920px;
-  height: 1080px;
+  width: 100%;
+  height: 100%;
   position: relative;
   flex-shrink: 0;
   background: var(--bg-deep);
   color: var(--text-primary);
   font-family: var(--font-jp);
   overflow: hidden;
+}
+
+/* BUG-150: 盤面コンテンツ層。width/height/zoom は Playmat.tsx の inline style
+ * (useStageScale) で動的設定。zoom で stage を viewport 全面に充填しつつ、内部の
+ * カード/chrome を比率維持スケールする (固定 px を触らず一括スケール)。
+ * absolute 子 (topbar/play-area/hand-zone/actions-panel) の配置基準にするため relative。
+ * modal/overlay は .stage 直下 (この層の外) に置き、非 zoom で viewport 基準を保つ。
+ * width/height は 100% で固定 (zoom が % 基準を W/s に拡大するため、100% で丁度
+ * viewport 全面に zoom-back される。`100/s%` だと % 基準が既に W/s で s 二重割りになり
+ * 盤面が W/s に拡大 → 右下が overflow して ActionsPanel/ターン終了が見切れる: BUG-150 再発修正)。 */
+.board-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 /* ---- Background (detective-noir 5層, mock 23-41 行) ---- */

@@ -529,19 +529,13 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // Cleanup #6: viewport に合わせて stage を縮小 (1920×1080 fixed → fit)
   const stageScale = useStageScale();
   return (
-    <div
-      className="scaler"
-      id="scaler"
-      style={{
-        transform: `scale(${stageScale})`,
-        // 縮小後のサイズに合わせて container を縮める (scrollbar 防止)
-        width: stageScale < 1 ? `${1920 * stageScale}px` : undefined,
-        height: stageScale < 1 ? `${1080 * stageScale}px` : undefined,
-      }}
-      data-stage-scale={stageScale}
-    >
+    <div className="scaler" id="scaler" data-stage-scale={stageScale}>
       <div className="stage">
-        <div className="bg" />
+        {/* BUG-150: board-content を zoom + width=100/scale% で stage 全面に充填し、
+            内部のカード/chrome を比率維持スケール (旧 .scaler transform:scale を撤去)。
+            以降の modal/overlay は board-content の外 (=.stage 直下) に置き非 zoom で viewport 基準。 */}
+        <div className="board-content" style={{ zoom: stageScale }}>
+          <div className="bg" />
         <div className="vignette" />
 
         {/* TopBar (Task 7.12) — Round 2 修正: firstPlayer を engine state から動的判定し
@@ -764,6 +758,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           logOpen={logOpen}
           onLogToggle={() => setLogOpen((v) => !v)}
         />
+        </div>
+        {/* /board-content (BUG-150): 以降の modal/overlay は非 zoom で viewport 基準を保つ */}
 
         {/* ConfirmModal — useConfirmation の state を全画面オーバーレイで描画 */}
         <PlaymatConfirmModal />

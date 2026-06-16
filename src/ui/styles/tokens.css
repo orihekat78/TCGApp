@@ -84,3 +84,22 @@
   --card-vs-w:           200px;  /* VS 演出時 */
   --card-vs-h:           280px;
 }
+
+/* ---- BUG-150: フルード盤面 — ルートをダーク化し viewport 全面化 ----
+ * 旧実装は html/body に背景指定が無く、固定 1920×1080 を transform:scale(contain)
+ * で縮小したため盤面外に白レターボックスが透けていた。ルートをダーク + 全面にし、
+ * Playmat 側の zoom フィルと併せて白帯を根絶する。 */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-deep);
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
