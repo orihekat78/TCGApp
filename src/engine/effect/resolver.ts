@@ -34,7 +34,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       // pick 解決前の盤面で評価される不具合 (D08024 step2 AP対象 / D11020 step2 条件 / D11014 step3 draw) を修正。
       // 注: pick を持たない step のみの sequence は queue 長が増えず従来通り一括実行 (動作不変)。
       const gSeq = globalThis as {
-        __pendingEffectPickQueue?: { continuation?: { remainder: Effect[]; ctx: EffectCtx } }[];
+        __pendingEffectPickQueue?: { continuation?: { remainder: Effect[]; ctx: EffectCtx; kind: 'sequence' | 'chain' } }[];
       };
       for (let i = 0; i < eff.steps.length; i++) {
         const qBefore = gSeq.__pendingEffectPickQueue?.length ?? 0;
@@ -45,7 +45,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           if (remainder.length > 0) {
             // BUG-111: continuation を「この step で enqueue された最初の pick」本体に同梱 (別 FIFO 廃止 → 1:1)。
             const firstNew = gSeq.__pendingEffectPickQueue?.[qBefore];
-            if (firstNew) firstNew.continuation = { remainder, ctx };
+            if (firstNew) firstNew.continuation = { remainder, ctx, kind: 'sequence' };
           }
           return; // sequence 一時停止 (pick 解決後に continuation で残り step が post-pick 盤面で実行)
         }
@@ -58,7 +58,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     // effectPickResolve / drainAiEffectPicks が pick 解決時に実行する。
     case 'chain': {
       const g = globalThis as {
-        __pendingEffectPickQueue?: { continuation?: { remainder: Effect[]; ctx: EffectCtx } }[];
+        __pendingEffectPickQueue?: { continuation?: { remainder: Effect[]; ctx: EffectCtx; kind: 'sequence' | 'chain' } }[];
         __chainStepNoApply?: boolean;
       };
       for (let i = 0; i < eff.steps.length; i++) {
@@ -72,7 +72,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           const remainder = eff.steps.slice(i + 1);
           if (remainder.length > 0) {
             const firstNew = g.__pendingEffectPickQueue?.[queueLenBefore];
-            if (firstNew) firstNew.continuation = { remainder, ctx };
+            if (firstNew) firstNew.continuation = { remainder, ctx, kind: 'chain' };
           }
           return; // chain 一時停止
         }

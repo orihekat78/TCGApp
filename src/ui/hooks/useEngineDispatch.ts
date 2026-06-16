@@ -428,7 +428,17 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           applyPickSkipAndContinuation(draft, pending);
           return;
         }
-        // skip (n.min === 0 の任意効果のみ可能、UI 側で gate される想定)
+        // BUG-111 #2 (2026-06-16): sequence-origin continuation の 0枚 decline は末尾 step (mandatory) を
+        //   実行する (rules/15 sequence の各 step は独立。「〜してもよい」は「〜する」を gate しない)。
+        //   chain-origin は drop = 「そうした場合」gate (rules/25)。declined head atom は再実行しない
+        //   (runDeclinedAtom=false): declined 0-pick=何もしない、head bind は unbound で後続 conditional が
+        //   not-matched で正しく skip。choice/optional の末尾は runEffect 経路では human surface しない既知 gap
+        //   (B09056 DEFER 根拠)。
+        if ((pending as { continuation?: { kind?: string } }).continuation?.kind === 'sequence') {
+          applyPickSkipAndContinuation(draft, pending, false);
+          return;
+        }
+        // skip (chain-origin gate / continuation 無しの任意効果)。
         // BUG-111: continuation は pending 本体 (pending.continuation) に同梱されるため、
         // user skip 時は pending を破棄すれば対の continuation も自動 drop される (別 FIFO shift 不要)。
         // クリアは produce 後の post-dispatch drain で行う (return のみ)

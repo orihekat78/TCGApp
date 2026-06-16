@@ -226,8 +226,12 @@ export type PendingEffectPickSide = {
    * BUG-111: 中断した sequence/chain の残り step (continuation) を pick 本体に同梱し、
    * 別 side-channel FIFO (__pendingChainContinuation) の index ずれ desync を排除する。
    * remainder.length>0 の step で pick を await したときに resolver が set。pick と 1:1。
+   *
+   * BUG-111 #2 (2026-06-16): `kind` で origin (sequence/chain) を記録する。decline (0枚選択) 時の扱いが
+   * origin で分岐する (sequence = 末尾 step は独立で常時実行 rules/15 / chain = 「そうした場合」gate で drop)。
+   * multi-step remainder の wrap も origin kind で行い、sequence に chain-gate を誤適用しない。
    */
-  continuation?: { remainder: Effect[]; ctx: EffectCtx };
+  continuation?: { remainder: Effect[]; ctx: EffectCtx; kind: 'sequence' | 'chain' };
   /**
    * BUG-132 GAP-1 (2026-06-12): skip (pickedUid=null) を「破棄」ではなく「0枚選択の atom 解決」
    * として処理するマーカー (rules/15 「〜まで」=0枚可)。deckRevealUntil chooseMatch が set する。

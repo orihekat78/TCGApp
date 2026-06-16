@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 205
-- **ファイル数**: 3383
+- **ファイル数**: 3388
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -446,6 +446,7 @@
     - `2026-06-16-1-triage-batch2.md`
     - `2026-06-16-2-triage-batch3.md`
     - `2026-06-16-3-triage-batch4.md`
+    - `2026-06-16-4-bug-111-human-decline-fix.md`
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -758,6 +759,8 @@
     - `smoke-2026-06-16-2.md` — Smoke 1000戦レポート — smoke-2026-06-16-011441
     - `smoke-2026-06-16-3.json`
     - `smoke-2026-06-16-3.md` — Smoke 1000戦レポート — smoke-2026-06-16-024605
+    - `smoke-2026-06-16-4.json`
+    - `smoke-2026-06-16-4.md` — Smoke 1000戦レポート — smoke-2026-06-16-044657
     - `smoke-2026-06-16.json`
     - `smoke-2026-06-16.md` — Smoke 1000戦レポート — smoke-2026-06-16-001302
     - `smoke-baseline.json`
@@ -1185,6 +1188,7 @@
     - `2026-05-11-ui-style-tokens.md` — 視覚スタイル・トークン (2026-05-11)
     - `2026-05-11-ui-turn-flags.md` — ターンスコープフラグ・スタン特殊挙動 (2026-05-11)
     - `2026-05-17-phase5-advance-guardrails.md` — Phase 5 Advance Guardrails
+    - `bug-111-human-decline-fix-design.md` — BUG-111 #2 修正設計 — human-decline 経路の continuation 取り扱い
     - `card-addition-checklist.md` — 新カード追加時のチェックリスト
     - `card-authoring-convention.md` — カード実装コーディング規約
     - `card-condition-catalog.md` — condition カタログ (カード実装早見表)
@@ -3388,6 +3392,7 @@
       - `bug-083-multi-entry-switch.test.ts` — BUG-083 characterization: 効果で複数キャラを同時登場させ現場上限 (5) を超える場合の挙動。
       - `bug-108-choice-index.test.ts` — BUG-108: choice effect の choiceIndex が production の人間/AI どちらでも set されず
       - `bug-109-ai-pa-drain.test.ts` — BUG-109: PA 短縮形 atom (charModifyAP/LP 等) が AI/CPU 経路で silent no-op になる問題の修正検証。
+      - `bug-111-human-decline-repro.test.ts` — BUG-111 manifestation #2 REPRO — human-decline 経路の chain-gate / 必須末尾。
       - `bug-111-pick-continuation-pairing.test.ts` — BUG-111: pick↔continuation の FIFO 対応が multi-step で desync しうる。
       - `bug-114-discard-bind-dyn.test.ts` — BUG-114 primitive: discard で除去した手札カードを bind し、その level/AP を dyn で参照する。
       - `bug-121-sequence-choice.test.ts` — BUG-121 残課題解消: sequence 内の human 複数択 choice が、pre-choice step を二重実行せず

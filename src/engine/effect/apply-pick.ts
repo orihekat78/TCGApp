@@ -112,9 +112,10 @@ export function applyPickAndContinuation(
     // (event.queue 経由は entry.bindings が Immer draft に取り込まれ bind が消えるため不可)。
     runEffect(state, resolvedAtom as never, chainCont.ctx);
     runAllUntilEmpty(state);
+    // BUG-111 #2: multi-step remainder の wrap は origin kind で行う (sequence は chain-gate を持たない)。
     const remainderEffect: Effect = chainCont.remainder.length === 1
       ? chainCont.remainder[0]!
-      : { kind: 'chain', steps: chainCont.remainder };
+      : { kind: chainCont.kind, steps: chainCont.remainder };
     runEffect(state, remainderEffect as never, chainCont.ctx);
     runAllUntilEmpty(state);
   } else {
@@ -139,30 +140,43 @@ export function applyPickAndContinuation(
 export function applyPickSkipAndContinuation(
   state: GameState,
   pending: PendingEffectPickSide,
+  runDeclinedAtom = true,
 ): void {
-  const resolvedAtom: Effect = {
-    kind: 'atom',
-    verb: pending.atomVerb as never,
-    args: { ...pending.atomArgs, __declined: true },
-  };
   const chainCont = pending.continuation;
+  // BUG-111 #2 (2026-06-16): runDeclinedAtom で declined head atom を再実行するか分岐する。
+  //   - true (deckRevealUntil skipResolvesAtom): atom を __declined で再実行 (公開カードのデッキ下移動等、
+  //     atom 側の必須 0枚解決を行う)。従来の唯一の挙動。
+  //   - false (sequence-origin decline): declined 0-pick = 何もしない (rules/15) ため head atom を再実行せず
+  //     remainder のみ実行する。単数 sceneEnter の __declined 未対応による pick 再 push を回避する。
+  //     head の bind は unbound のままで、後続 conditional は boundMatchesFilter not-matched で正しく skip する。
+  if (runDeclinedAtom) {
+    const resolvedAtom: Effect = {
+      kind: 'atom',
+      verb: pending.atomVerb as never,
+      args: { ...pending.atomArgs, __declined: true },
+    };
+    if (chainCont) {
+      // applyPickAndContinuation と同一の保存 ctx 共有 (BUG-107) — 空 bind が remainder から見える
+      runEffect(state, resolvedAtom as never, chainCont.ctx);
+      runAllUntilEmpty(state);
+    } else {
+      event.queue(
+        state,
+        resolvedAtom as never,
+        { player: pending.player, cardId: pending.source.cardId },
+        'effect:pick-resolved',
+        { picked: null, source: pending.source },
+      );
+      runAllUntilEmpty(state);
+      return;
+    }
+  }
   if (chainCont) {
-    // applyPickAndContinuation と同一の保存 ctx 共有 (BUG-107) — 空 bind が remainder から見える
-    runEffect(state, resolvedAtom as never, chainCont.ctx);
-    runAllUntilEmpty(state);
+    // BUG-111 #2: remainder は origin kind で wrap (sequence-origin は各 step 独立 = chain-gate を適用しない)。
     const remainderEffect: Effect = chainCont.remainder.length === 1
       ? chainCont.remainder[0]!
-      : { kind: 'chain', steps: chainCont.remainder };
+      : { kind: chainCont.kind, steps: chainCont.remainder };
     runEffect(state, remainderEffect as never, chainCont.ctx);
-    runAllUntilEmpty(state);
-  } else {
-    event.queue(
-      state,
-      resolvedAtom as never,
-      { player: pending.player, cardId: pending.source.cardId },
-      'effect:pick-resolved',
-      { picked: null, source: pending.source },
-    );
     runAllUntilEmpty(state);
   }
 }
@@ -351,8 +365,14 @@ export function drainAiEffectPicks(
         applyPickSkipAndContinuation(state, pending);
         continue;
       }
-      // 候補 0 → skip。BUG-111: continuation は pending 本体に同梱されるため、queue から
-      // 取り出した時点で対の continuation も一緒に drop される (別 FIFO の shift は不要)。
+      // BUG-111 #2: sequence-origin の 0枚解決は末尾 step (mandatory) を実行する (rules/15 独立 step)。
+      //   AI は通常 greedy で decline しない (chooseAiPick は候補空のときのみ null) ため本枝は防御的。
+      if (pending.continuation?.kind === 'sequence') {
+        applyPickSkipAndContinuation(state, pending, false);
+        continue;
+      }
+      // 候補 0 → skip (chain-origin gate / continuation 無し)。continuation は pending 本体に同梱されるため、
+      // queue から取り出した時点で対の continuation も一緒に drop される (別 FIFO の shift は不要)。
       continue;
     }
     applyPickAndContinuation(state, pending, pickedUid, pickedUids);
