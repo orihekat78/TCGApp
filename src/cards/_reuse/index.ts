@@ -796,6 +796,11 @@ import { B07057P } from '../ct-p07/B07057P.js';
 import { PR237 } from '../pr-01/PR237.js';
 import { PR243 } from '../pr-01/PR243.js';
 
+import { B05028 } from '../ct-p05/B05028.js';
+import { B05028P } from '../ct-p05/B05028P.js';
+import { B09038 } from '../ct-p09/B09038.js';
+import { B09038P } from '../ct-p09/B09038P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -960,6 +965,8 @@ export const REUSE_CARDS: CardDef[] = [
   // triage batch#3 (window4 verified green B03079 + clone)
   B03079, B03079P,
   // トリアージ出荷バッチ#4 — window5 certify verified green 10 + clone 10 = 20枚 (engine変更0)
-  // (B05028/B05028P は gate5 で BUG-111 continuation-drop を踏み DEFER)
+  // (B05028/B05028P/B09038/B09038P は BUG-111 #2 修正 commit a682b20b で解禁 — B05028=誤診断/B09038=修正で発火)
   B01065, B01065P, B02038, B02038P, B03031, B03031P, B05024, B05024P, B07041, B07041P, B01076, B01076P, B02041, B02041P, B04051, B04051P, B07057, B07057P, PR237, PR243,
+  // BUG-111 #2 修正で解禁 — B05028 (誤診断) + B09038 (修正) + clones
+  B05028, B05028P, B09038, B09038P,
 ];
