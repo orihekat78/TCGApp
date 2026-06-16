@@ -35,8 +35,15 @@
   (B04080/B07079/B07055/B07031) は double-run 無し (probe で実証 = 回帰なし)。
 - repro 5/5 / tsc clean / **full vitest 2540 pass 0 fail** / smoke baseline byte 同一 / lint:* 8本 errors=0 / CI green。
 
-### 次セッション最優先
+### 解禁 2 枚 card-wave 出荷 (同セッション、commit 8286f2c3、ALL_CARDS 1297→1301)
 
-- **解禁 2 枚 (B05028 修正不要 + B09038 修正で解禁) を card-wave 出荷** (certify DSL = `.tmp/certify/{B05028,B09038}.json`)。
-  gate5 で **B09038 a2 を human-decline (sceneEnter 0登場) して draw 発火**を必ず踏む (今回の修正点)。
-- 後続: 三角出荷バッチ#5 (window6+) / 中型 engine クラスタ / choice-in-continuation surface gap (B09056 前提)。
+- B05028/B05028P + B09038/B09038P = 4枚。codegen (certify DSL→.ts) → register。engine変更0 (validate-specs pass=45)。
+- B09038.verify を BUG-111 修正で ok=true に更新 (refutation 解消) → build-verified-codegen-input が ADOPT。
+- **gate5 実機 (opus 2並列)**: B05028 11 pass (a1 chain-gate decline=step2不発火 / resolve / filter decoy / partnerColor負 / a2) /
+  B09038 9 pass (★a2 0登場 decline で **draw 発火** + **falsification 実証** [fix 一時無効化→test FAIL→復元 byte同一] / 候補0 自動0-pick / filter / a1変装時 / a3 FILE7)。concerns 0。
+- 全gate: full vitest 2560 pass / smoke baseline byte同一 / playwright 119 pass / lint:* 8本 / CI green。
+
+### 次セッション最優先 (いずれか)
+
+- トリアージ出荷バッチ#5 (window6+, sweep-window2.cjs, done 186 除外) / 中型 engine クラスタ (cutin-subtype 69 等) /
+  choice-in-continuation surface gap 修正 (B09056 等の解禁前提、BUG-145 系)。
