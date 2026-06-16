@@ -117,7 +117,7 @@ function emitSetCardLeaves(s: GameState, char: SceneCharacter, player: Player, c
  * キャラをリムーブエリアへ移動 (rules/03, 16)
  * setCards → リムーブ、stackedCards → back-card でリムーブ
  */
-function removeToRemove(s: GameState, uid: string, cause: RemoveCause): RemoveResult {
+function removeToRemove(s: GameState, uid: string, cause: RemoveCause, byUid?: string): RemoveResult {
   const found = findChar(s, uid);
   if (!found) {
     return {
@@ -164,7 +164,10 @@ function removeToRemove(s: GameState, uid: string, cause: RemoveCause): RemoveRe
     event.emit(
       s,
       'leave:to-remove',
-      { uid: leavingUid, cause },
+      // cluster15 (2026-06-16): removal-observer (反撃カード一族) 用 attribution を additive 追加。
+      // side = 除去キャラ所属 player (splice 前既取得)、byUid = 除去者 (contact judge が aUid を渡す、
+      // 他 caller は undefined)。既存 consumer は全て selfOnly で source.uid 照合のため新フィールド無視 = 回帰0。
+      { uid: leavingUid, cause, side: player, byUid },
       { player, uid: leavingUid, cardId: leavingCardId },
     );
   }

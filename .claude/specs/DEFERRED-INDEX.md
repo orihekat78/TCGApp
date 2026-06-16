@@ -33,6 +33,27 @@
 | 2026-06-04 pilot | catalog-reuse「reusable 306」は過大評価。最易30枚中 実装可2枚のみ。残はevent→evidence/leave・reasoning hook無/continuous他者buff/手札数condition/カットインfilter等の engine ゲート | ゲート一覧: [card-impl-engine-gates.md](card-impl-engine-gates.md)。reusable+unclassified の **engine-gate 再分類** が必要 |
 | 2026-06-04 pilot | workflow harness: schema 付き subagent が StructuredOutput 未呼びで 0-token 即終了 (30/30 fail) | 量産 harness として要調査。pilot 2枚は手実装で代替 |
 
+## engine拡張 cluster15 (removal-observer 反撃カード一族, 2026-06-16) DEFER 14 rep
+
+28 rep certify のうち 14 rep を出荷 (verifiedOk green pure-JSON)、14 rep を DEFER。**反撃 ability 自体は全て green**
+(cluster15 で解禁済)、他句が別 gate のため card 全体を保留。spec: [engine-cluster15-contact-removal-observer-design.md](engine-cluster15-contact-removal-observer-design.md)。
+
+| rep | DEFER 理由 (反撃以外の句) | 種別 |
+|-----|--------------------------|------|
+| B06038 B06039 B08010 B09071 | `partnerColorKeyword` closure (continuousModifier.grantKeywords は (s,ctx)=>string[] で JSON 不能) → __shared 手書き要 | needsManual (**fast follow-up**、B08010 の cluster15 twin は本 wave で出荷済) |
+| B04004 | a3 (絆 reactive) の actor-gate 欠落 = over-fire。正解 `and[triggerCharMatches{side:opp,filter:{}}, …]` で再 author 要 | refuted (DSL fix) |
+| B06087 | 登場候補の **cardName-EXCLUSION** filter (「萩原千速以外」) が TargetFilter に無い + chain/optional 構造 | refuted (engine gate) |
+| B09022 | sceneSetState 自側限定 picked-sleep (short-form side hardcoded 'either' / explicit-$pick in chain no-op) | refuted (engine gate) |
+| D02008 | action-scoped opponent cutin-ban (continuous aura のみ対応、on-action 不可) | yellow |
+| B05009 | own-side enterSource (「自分のキャラの能力によって登場」の side qualifier 無) | yellow |
+| B06068 | turn-scoped で **印字キーワード剥奪** (突撃[キャラ]を失う) の subtractive turnEffect 無 | yellow |
+| B07063 | charGrantAbility で removal-observer ability 付与 (validate.ts が leave:to-remove grant を禁止) | yellow |
+| PR136 | charSetCard の owner-deck-source (either 側 1 枚選択の持ち主デッキ) | yellow |
+| PR280 | **cardName-EXCLUSION** candidate filter (「萩原千速以外」) | yellow |
+| B05106 | MR (rules/18 能力①② 未配線、isMR は display-only) | yellow |
+
+**新 gate 発見: cardName-EXCLUSION candidate filter** (B06087/PR280) — TargetFilter は positive inclusion のみ。将来の小 cluster 候補。
+
 ## 運用
 
 - 新規 defer が発生したら本ファイルに追加 + 該当 BUG-XXX.md または spec doc に

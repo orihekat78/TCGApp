@@ -801,6 +801,33 @@ import { B05028P } from '../ct-p05/B05028P.js';
 import { B09038 } from '../ct-p09/B09038.js';
 import { B09038P } from '../ct-p09/B09038P.js';
 
+import { D10007 } from '../ct-d10/D10007.js';
+import { D10008 } from '../ct-d10/D10008.js';
+import { B01007 } from '../ct-p01/B01007.js';
+import { B01010 } from '../ct-p01/B01010.js';
+import { B01010P } from '../ct-p01/B01010P.js';
+import { B06031 } from '../ct-p06/B06031.js';
+import { B06031P } from '../ct-p06/B06031P.js';
+import { B06051 } from '../ct-p06/B06051.js';
+import { B06051P } from '../ct-p06/B06051P.js';
+import { B07017 } from '../ct-p07/B07017.js';
+import { B07017P } from '../ct-p07/B07017P.js';
+import { B07084 } from '../ct-p07/B07084.js';
+import { B07084P } from '../ct-p07/B07084P.js';
+import { B07097 } from '../ct-p07/B07097.js';
+import { B07097P } from '../ct-p07/B07097P.js';
+import { B09023 } from '../ct-p09/B09023.js';
+import { B09023P } from '../ct-p09/B09023P.js';
+import { D09010 } from '../ct-d09/D09010.js';
+import { D09011 } from '../ct-d09/D09011.js';
+import { B06067 } from '../ct-p06/B06067.js';
+import { B06067P } from '../ct-p06/B06067P.js';
+import { B09026 } from '../ct-p09/B09026.js';
+import { B01030 } from '../ct-p01/B01030.js';
+import { B01030P } from '../ct-p01/B01030P.js';
+import { B01031 } from '../ct-p01/B01031.js';
+import { B01031P } from '../ct-p01/B01031P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -969,4 +996,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01065, B01065P, B02038, B02038P, B03031, B03031P, B05024, B05024P, B07041, B07041P, B01076, B01076P, B02041, B02041P, B04051, B04051P, B07057, B07057P, PR237, PR243,
   // BUG-111 #2 修正で解禁 — B05028 (誤診断) + B09038 (修正) + clones
   B05028, B05028P, B09038, B09038P,
+  // Task A batch
+  D10007, D10008, B01007, B01010, B01010P, B06031, B06031P, B06051, B06051P, B07017, B07017P, B07084, B07084P, B07097, B07097P, B09023, B09023P, D09010, D09011, B06067, B06067P, B09026, B01030, B01030P, B01031, B01031P,
 ];

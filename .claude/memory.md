@@ -2,6 +2,23 @@
 
 (過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-16.md = ⑫⑬。⑭ batch#4 = CHANGELOG + changelog-entries/2026-06-16-3 + DEFERRED-INDEX に記録)
 
+## 2026-06-16 セッション⑯ — engine拡張 cluster15 (removal-observer 反撃カード一族) + 26枚出荷
+
+ユーザー選択 = green裾刈り取りより **engine クラスタ拡張優先** (memory feedback-engine-cluster-over-green-tail)。
+当初候補 cutin-subtype は sweep 誤ラベル (真の subtype filter ~1枚) と実証 → **contact-removal-observer (53枚) にピボット**。
+
+- **engine 変更 (骨格凍結例外、新 condition 1個・全 additive)**: `removeToRemove` optional byUid + `leave:to-remove` payload
+  `{uid,cause}`→`{uid,cause,side,byUid}` + `contact.judge` が aUid 渡し + 新 cond **`removedCharMatches{side,cause,by}`** (payload-only、
+  splice 済キャラに triggerCharMatches 使えない 13198)。3点同期 (union/MAP/cjs CONDS)。scene/contact/eval/effect-types/cjs = 5ファイル。
+- **実装前 opus 3-lens 敵対設計レビュー** (実害3捕捉): B09026 誤分類(CONTACT-BARE→cardName filter, over-fire) / by に excludeSource 欠落(B06067) /
+  level-ap effective capture が mutate→read 層越え(53枚未使用) → 全て v2 反映。spec: `engine-cluster15-contact-removal-observer-design.md`。
+- **28 rep certify (opus)**: verifiedOk green 15 / refuted 3 / yellow 7。pure-JSON 14 rep + clone 12 = **26枚出荷** (ALL_CARDS 1301→1327)。
+  B06038 は partnerColorKeyword closure(certify分類漏れ)→needsManual 群へ DEFER。
+- **検証**: unit 11 (`removed-char-matches.test.ts`) + gate5 8 (`cluster15-removal-observer.test.ts`、end-to-end contact + 全 variant + 全 pin) /
+  tsc0 / sync / **vitest 2579** / **smoke baseline winsA=498 不変** / playwright 119 / lint:* 8本 errors0 / validate-specs pass=60 fail=0。
+- **DEFER 14 rep** (反撃 ability は全 green、他句が別 gate): refuted 3 + needsManual 4 + yellow 7。新 gate=**cardName-EXCLUSION filter** (B06087/PR280)。
+  DEFERRED-INDEX 記載。次の小 cluster 候補。
+
 ## 2026-06-16 セッション⑮ — BUG-111 #2 根本修正 (human-decline 経路の sequence mandatory-tail drop)
 
 ユーザー選択タスク = 「BUG-111 を根本修正」(batch#4 の ~50% yield 教訓を踏まえた再判断)。commit **a682b20b** (CI green)。

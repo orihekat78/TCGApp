@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `36809f63ca77`
+> Source hash: `bb282685e291`
 
 公式ルール [`19-special-rules.md`](../../../rules/19-special-rules.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,10 +23,11 @@
 
 - [`INDEX`](../by-spec/cards-data--INDEX.md)
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
+- [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (178)
+## 📄 参照ソース (179)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/eventRemoveByAP.ts`](../../../../src/cards/_shared/eventRemoveByAP.ts)
@@ -48,4 +49,4 @@
 - [`src/cards/ct-d09/D09004.ts`](../../../../src/cards/ct-d09/D09004.ts)
 - [`src/cards/ct-d09/D09005.ts`](../../../../src/cards/ct-d09/D09005.ts)
 - [`src/cards/ct-d09/D09016.ts`](../../../../src/cards/ct-d09/D09016.ts)
-- _...ほか 158 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 159 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

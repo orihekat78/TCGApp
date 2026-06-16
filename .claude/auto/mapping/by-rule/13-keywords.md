@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `36809f63ca77`
+> Source hash: `bb282685e291`
 
 公式ルール [`13-keywords.md`](../../../rules/13-keywords.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,10 +24,11 @@
 
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
+- [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 - [`phase-9-h-performance`](../by-spec/phase-9-h-performance.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (223)
+## 📄 参照ソース (238)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -49,4 +50,4 @@
 - [`src/cards/ct-d04/D04005.ts`](../../../../src/cards/ct-d04/D04005.ts)
 - [`src/cards/ct-d04/D04007.ts`](../../../../src/cards/ct-d04/D04007.ts)
 - [`src/cards/ct-d04/D04008.ts`](../../../../src/cards/ct-d04/D04008.ts)
-- _...ほか 203 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 218 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

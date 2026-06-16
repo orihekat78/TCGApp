@@ -259,7 +259,9 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
 
   let defenderRemoved = false;
   if (aAP >= bAP && !ax.contactImmune) {
-    mutate.scene.removeToRemove(state, bUid, 'contact-ap');
+    // cluster15 (2026-06-16): aUid (= winner = attacker) を removal-observer 用 byUid として渡す。
+    // rules/08: contact 被除去は常に bUid、除去者は aUid。
+    mutate.scene.removeToRemove(state, bUid, 'contact-ap', aUid);
     defenderRemoved = true;
   }
 

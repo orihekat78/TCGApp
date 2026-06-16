@@ -63,6 +63,12 @@ export type Condition =
   // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
   // (「〚カード名[X]〛を登場させた場合」を declarative 化、matchOneFilter 再利用)
   | { kind: 'boundMatchesFilter'; bindKey: string; filter: TargetFilter }
+  // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。leave:to-remove
+  // payload snapshot {uid,cause,side,byUid} を scene 再取得せず読む (triggerCharMatches は splice 済
+  // キャラに使えない、13198)。side=除去キャラ所属 (payload.side===owner→self、全 variant='opp')、
+  // cause=除去原因 (省略=方法問わず)、by=除去者(=contact winner aUid): 'self'=このキャラ /
+  // {filter,excludeSource}=自分の現場の filter 一致キャラ。spec: engine-cluster15-contact-removal-observer-design.md
+  | { kind: 'removedCharMatches'; side?: 'self' | 'opp' | 'either'; cause?: 'contact-ap' | 'effect' | 'switch' | 'cost'; by?: 'self' | { filter: TargetFilter; excludeSource?: boolean } }
   // 2026-06-06 タスクC: トリガ payload のキャラ (例: reasoning:end の推理キャラ payload.uid) を
   // side + TargetFilter で評価する。「自分/相手の現場にいる〚条件〛のキャラが推理したとき」を
   // matcherCondition で declarative 化。side:'self'=payload.player===source.player (= card 所有者側)。

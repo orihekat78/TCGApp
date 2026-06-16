@@ -321,6 +321,40 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return true;
     }
+    // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。
+    // leave:to-remove payload snapshot {uid,cause,side,byUid} を **scene 再取得せず** 読む
+    // (除去キャラは splice 済 = triggerCharMatches L298 の scene.find は使えない、13198)。
+    // side/cause/by を owner-relative に評価。rules/07-08/17/18/22。
+    // spec: .claude/specs/engine-cluster15-contact-removal-observer-design.md
+    case 'removedCharMatches': {
+      const pl = ctx.triggerPayload as
+        | { uid?: string; cause?: string; side?: 'self' | 'opp'; byUid?: string }
+        | undefined;
+      if (!pl || (pl.side !== 'self' && pl.side !== 'opp')) return false;
+      // side: payload.side === owner → 'self' (自分のキャラが除去された) / それ以外 → 'opp'。
+      const sameSide = pl.side === ctx.source.player;
+      if (cond.side === 'self' && !sameSide) return false;
+      if (cond.side === 'opp' && sameSide) return false;
+      // cause: 'contact-ap' 等で限定 (省略 = 方法問わず、rules/17)。
+      if (cond.cause !== undefined && pl.cause !== cond.cause) return false;
+      // by: 除去者 (= contact winner aUid)。winner は contact で除去されない (rules/08) = 生存 → 再取得可。
+      if (cond.by !== undefined) {
+        const byUid = pl.byUid;
+        if (typeof byUid !== 'string') return false;
+        if (cond.by === 'self') {
+          // 「このキャラとのコンタクトによって」= observer 自身が除去者。
+          if (byUid !== ctx.source.uid) return false;
+        } else {
+          // 「自分の現場にいる(このキャラ以外の)〚filter〛のキャラとのコンタクトによって」。
+          if (cond.by.excludeSource && byUid === ctx.source.uid) return false;
+          const ch = state.players[ctx.source.player].scene.find(c => c.uid === byUid);
+          if (!ch) return false;
+          const cand: Candidate = { kind: 'char', uid: ch.uid, cardId: ch.cardId, player: ctx.source.player };
+          if (!matchOneFilter(state, ch.cardId, cond.by.filter, ch, cand)) return false;
+        }
+      }
+      return true;
+    }
     // engine拡張 wave#2 cluster3 (2026-06-13): アクション種別 ([キャラ]/[事件]) gate。
     // action:declare payload の target.kind ('char'|'case') を読む (state-machine.ts declare emit)。
     // payload 不在 / target 不在は false (発火させない安全側)。rules/22 + TSV qAndA (B01036 等 6枚)。
@@ -384,6 +418,7 @@ const CONDITION_KIND_MAP = {
   charTurnEffect: true, // Task D E4 (2026-06-12)
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)
   enterSource: true, // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled)
+  removedCharMatches: true, // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)
   custom: true,
 } as const satisfies Record<Condition['kind'], true>;
 export const CONDITION_KINDS: ReadonlySet<string> = new Set(Object.keys(CONDITION_KIND_MAP));

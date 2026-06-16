@@ -56,6 +56,8 @@ const CONDS = new Set([
   'charStateIs',
   // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled): 効果登場の原因カード評価
   'enterSource',
+  // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)
+  'removedCharMatches',
 ]);
 
 const COSTS = new Set([
