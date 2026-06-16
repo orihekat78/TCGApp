@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-16 トリアージ出荷バッチ#4 完了 — window5 出荷 10+clone 10=20枚、gate5 が B05028 BUG-111 を捕捉)
+# 次セッション再開プロンプト (2026-06-16 BUG-111 #2 根本修正完了 — human-decline 経路の sequence mandatory-tail drop を engine 修正、B05028 誤診断判明)
 
 このファイルを次セッションの最初のメッセージとして **そのままコピペ** してください。
 
@@ -12,54 +12,47 @@
 ```text
 名探偵コナンTCG MVP の作業を継続してください。まず CLAUDE.md → CHANGELOG.md → .claude/memory.md を読んで状況把握。
 
-## 現在地 (2026-06-16、トリアージ出荷バッチ#4 完了、HEAD≈92660971 + docs commit)
+## 現在地 (2026-06-16、BUG-111 #2 engine 修正完了、HEAD≈a682b20b、ALL_CARDS=1297)
 
-正本 doc = `.claude/specs/triage-sweep-2026-06-15.md`。
-- engine wave#2 cluster1〜14 + UI DM + 出荷バッチ#1 (56) + #2 (8) + #3 (2) + **#4 (20)** 出荷済。
-- **バッチ#4 = window5 fresh green候補 20 を certify → green 13 / verified 11 → gate5 実機で B05028 の BUG-111 を捕捉 →
-  出荷 verified-green 10 + byte同一 clone 10 = 20枚** (ALL_CARDS 1277→1297、engine変更0)。CI green。
-  出荷: B01065/B02038/B03031/B05024/B07041/B01076/B02041/B04051/B07057/PR237 (+各clone)。
-- certify cache = **140 done** (120 + window5 20)。fresh green pool ≈ 170 (236 greenCandidate − done)。
-- **重大教訓 (今回の核心)**: 決定論 green候補 20 → 出荷 10 (実効 ~50%)。**certify + 敵対verify だけでは
-  BUG-111 系 (candidate在 + human-decline で chain-gated「そうした場合」continuation が drop/誤発火) を見落とす**。
-  AI は greedy で decline せず仮面化 → smoke/certify をすり抜け、**gate5 実機 decoy (human-decline 路) のみが検出**。
-  → gate5 で「0-pick 後に chain/必須末尾を持つ型」は必ず human-decline 路を踏むこと。
-- **DEFER (DEFERRED-INDEX batch#4 節)**: refuted B09038(再×2)/B09056 + gate5-defer B05028 = 全て **BUG-111**
-  (BUG-111.md に「関連未解決: human-decline 経路」節を追記、修正方針案あり)。yellow 7 = B04042(sum制約)/B06032(hirameki
-  top-optional skip)/B08038(removed-by-this-effect)/PR236(distinct-name count)/B03033(相手side aura)/B06033(hand→evidence)/B08050(継続self level)。
-- gate5: `tests/cards/triage-greens-2026-06-16/` に 10 新規 (計142 tests green、`scripts/wf-gate5-batch4.mjs` で opus 11並列 author)。
+直近セッションで **BUG-111 #2 (human-decline 経路の sequence mandatory-tail drop) を engine 根本修正** (commit a682b20b、CI green)。
+- 修正: continuation に origin `kind:'sequence'|'chain'` を付与。decline 時に sequence-origin は remainder 実行 (rules/15 独立 step)・
+  chain-origin は drop (rules/25 gate)。`applyPickSkipAndContinuation(.., runDeclinedAtom=false)` で declined head atom 非再実行。
+  engine 4 ファイル (resolve-picks/resolver/apply-pick/useEngineDispatch)、atom-handlers 不変。骨格凍結例外 (engine bug 修正)。
+- 検証: repro 5/5 (`tests/engine/effect/bug-111-human-decline-repro.test.ts`) / tsc clean / full vitest 2540 pass 0 fail /
+  smoke baseline byte 同一 (AI 経路不変) / lint:* 8本 errors=0。opus 敵対設計レビュー 3 lens 済 (spec: `.claude/specs/bug-111-human-decline-fix-design.md`)。
+- **重要判明**: **B05028 の chain over-fire は誤診断** (再現せず、5 シナリオ独立検証)。chain の continuation-drop が「そうした場合」gate として
+  正しく動作 → **B05028 は engine 修正なしで出荷可能**。**B09038 は本修正で解禁** (sequence mandatory draw)。
+- 水平展開: `sequence[0-pick, tail]` 該当 = 79 ability (MVP D11014 a2 含む、これも human-decline で draw が正しく発火するように)。
+  choice/optional-tail の 6 出荷カード (B04080/B07079/B07055/B07031) は double-run 無し (probe 実証)。
 
-## ★最優先: window6+ 抽出 → certify → 出荷バッチ#5 (loop-until-dry)
+## ★最優先: 解禁カード B05028 + B09038 の card-wave 出荷
 
-1. **新 window 抽出**: `node scripts/survey/sweep-window2.cjs <greenN>` (done 140 除外・green層化) → 出力 id 配列。
-   または batch#4 と同じ green-only 抽出 (gate サンプル省略で ship yield 最大化、cost 上限 ~20rep/窓)。
-   DEFERRED-INDEX 既載を除外。`.tmp/sweep/window6-greens.json` 等に保存。
-2. **certify**: `.tmp/certify/` は durable。新 id 配列を `Workflow({scriptPath:'.../scripts/wf-certify.mjs', args:[...ids]})` で
-   実行 (`model:'opus'` 固定、SUB=5、**1 workflow ずつ**)。1rep≈200k tok・窓毎~20rep が上限。
-3. **verified-green を出荷**: certify spec → `verify-clone-identity.cjs <rep...>` > `.tmp/clone-verify.json` →
-   `build-verified-codegen-input.cjs` → `taskA-codegen.cjs <input> --write` → `taskA-register.cjs "<label>"`。
-   **gate5 必須** (`scripts/wf-gate5-batch4.mjs` を再利用、args は `[{rep,pkg},...]`): 各 distinct rep を実機検証
-   (decoy + 負ケース + **0-pick 型は human-decline 路**)。vitest 実走 → 失敗/concern を triage (concern=実バグ疑い→当該カード DEFER)。
-4. **codegen の罠 (batch#4 教訓)**: case:to-resolved 等は codegen が closure matcher を文字列出力 → validate-specs で検出。
-   共有 factory (`caseResolvedHandRemove` 等) へ手動差替えで解消。build-verified-codegen-input は既実装を除外するので
-   出荷後の再生成は 0 files になる (修正は .ts 直編集)。
+certify DSL は `.tmp/certify/{B05028,B09038}.json` に在 (durable)。両者とも tier2 green。
+1. card .ts を生成: certify spec → `verify-clone-identity.cjs` → `build-verified-codegen-input.cjs` → `taskA-codegen.cjs --write` → `taskA-register.cjs`。
+   または小規模なので手書き (B05028=宣言a1 chain[charRemoveSetCard,sceneRemove]+宣言a2 charSetCard×2 / B09038=変装a1 handAddFromRemove + 登場a2 optional[chain[sleep, seq[sceneEnter,conditional charSetCard,draw]]] + 変装FILE7)。
+   **B05028 は P 版 (B05028P) も clone**。B09038 は P 版有無を catalog で確認。
+2. **gate5 必須** (`scripts/wf-gate5-batch4.mjs` 再利用 or 手書き、`model:'opus'`): 各 rep を実機検証 — **特に B09038 a2 を human-decline (sceneEnter 0登場) して draw が発火するか**を踏むこと (今回の修正点)。B05028 a1 は human-decline で step2 不発火 (chain gate) を確認。decoy + 負ケース。
+3. 全gate (card-wave skill): validate-specs → tsc → vitest → smoke → baseline → playwright → gate5 実機 → pre-commit lint 8本。1 commit。
 
-## 代替タスク (選択肢)
-- **中型 engine クラスタ着手** (骨格凍結例外 + opus 敵対設計レビュー + 全gate): cutin-subtype filter (69枚) /
-  grant-textual+set-card→host (60) / contact-removal-by-self (51) / dynamic-count family (~45)。
-  **+ BUG-111 修正** (human-decline で chain-gate/必須末尾を正しく扱う) で B05028/B09056/B09038 系の chain-decline カードを解禁。
+## 代替/後続タスク
+- **トリアージ出荷バッチ#5**: window6+ 抽出 (`scripts/survey/sweep-window2.cjs <greenN>`、done 186 除外、green-only) → certify (`wf-certify.mjs`, opus, SUB5, 1本ずつ) → 出荷。fresh green pool ≈ 170 sig。
+- **中型 engine クラスタ** (骨格凍結例外 + opus 敵対設計レビュー + 全gate): cutin-subtype filter (69枚) / grant-textual+set-card→host (60) / contact-removal-by-self (51) / dynamic-count (~45)。
+- **choice-in-continuation surface gap** (B09056 解禁の前提): sequence remainder の choice/optional を eager-surface でなく正しく surface する engine 整備 (BUG-145 系)。要 opus 設計レビュー。
 
 ## プロセス必須
 - certify/難判断/gate5-author agent は `model:'opus'`。engine 変更は骨格凍結例外 + opus 敵対設計レビュー + 全gate。
-- 出荷バッチは card-wave skill の全gate (validate-specs→tsc→vitest→smoke→baseline→playwright→gate5実機→pre-commit lint 9本)。
-- 1 タスク = 1 独立コミット。docs commit は `.tmp/certify` durable を消さず `npm run docs`。push は **branch→main ff-merge** (compound checkout&&merge&&push は分割実行)。
-- ⚠ Workflow 並列は **SUB=5 程度に throttle**、**1 workflow ずつ** (高並列 + 別workflow 同時で server rate-limit 実害あり)。
+- 1 タスク = 1 独立コミット。docs commit は `.tmp/certify` durable を消さず `npm run docs`。push は branch→main ff-merge (分割実行)。
+- ⚠ Workflow 並列は SUB=5 程度に throttle、1 workflow ずつ。
 - smoke レポート (.claude/reports/smoke-*) は commit 対象外 (git add -A 後に `git reset .claude/reports/`)。
+- Read hook がファイルを line1 で切る → Bash `cat -n` で読む / Edit 前に Read 1 回で登録 (memory project-claude-mem-read-hook-workaround)。
 
 ## 状態 doc
-- スイープ正本: `.claude/specs/triage-sweep-2026-06-15.md` / bug: .claude/bugs/index.base (BUG-111 = chain-decline gate) / defer: .claude/specs/DEFERRED-INDEX.md
-- 詳細: memory.md セッション⑭ + sessions/2026-06-16.md (⑫⑬)
+- BUG-111 修正: `.claude/bugs/BUG-111.md` (#2 節 = 修正済 + 誤診断訂正) / spec `.claude/specs/bug-111-human-decline-fix-design.md`
+- defer: `.claude/specs/DEFERRED-INDEX.md` (batch#4 節に解決バナー、B05028/B09038 解禁・B09056 DEFER 継続)
+- スイープ正本: `.claude/specs/triage-sweep-2026-06-15.md` / bug: .claude/bugs/index.base
+- 詳細: memory.md セッション⑮ + sessions/2026-06-16.md
 ```
 
-直近セッションはトリアージ出荷バッチ#4 (window5 certify → 出荷 10+clone 10=20枚、gate5 が B05028 BUG-111 を捕捉して DEFER) を完遂。
-**次セッションは window6+ 新規抽出 → certify → バッチ#5、or 中型 engine クラスタ着手 (+BUG-111 修正で chain-decline 系解禁)。** `/clear` で新セッション推奨。
+直近セッションは BUG-111 #2 (human-decline sequence mandatory-tail drop) を engine 根本修正 + opus 敵対レビュー + 全gate + CI green を完遂。
+B05028 over-fire は誤診断と判明 (修正不要で出荷可能)、B09038 は修正で解禁、B09056 は choice-surface gap で DEFER 継続。
+**次セッションは解禁 2 枚 (B05028/B09038) の card-wave 出荷が最優先。** `/clear` で新セッション推奨。

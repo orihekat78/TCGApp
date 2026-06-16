@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `09c7b663693d`
+> Source hash: `75137828cf47`
 
 公式ルール [`02-deck-construction.md`](../../../rules/02-deck-construction.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
