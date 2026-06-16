@@ -1,68 +1,49 @@
 # 作業ログ — 名探偵コナンプロジェクト
 
-(過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-15-4.md = セッション⑦⑧⑨)
+(過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-15-5.md = セッション⑩⑪)
 
-## 2026-06-15 セッション⑩ — トリアージ・スイープ (ゴール地点確定、multi-window)
+## 2026-06-16 セッション⑫ — トリアージ出荷バッチ#2 (window4 確定green 4 + clone 4 = 8枚)
 
-ユーザー依頼: 未実装カード全体を gate 別に分類し「あと正確に N クラスタ」+ ロードマップ確定。
 正本 doc = [.claude/specs/triage-sweep-2026-06-15.md](specs/triage-sweep-2026-06-15.md)。
+バッチ#1 (commit 7e3ce1de, ALL_CARDS 1267) を承けて window4 の確定 green を出荷。
 
-### 方法 (2層)
-- **決定論スイープ** `scripts/survey/sweep-2026-06-15.ts` (再現可能): catalog(TSV 2049) − live ALL_CARDS(1211) → 残838/485sig を
-  signature クラスタ化 → 現行 engine gate 一覧で再分類。出力 `.tmp/sweep/landscape.json` + `certify-queue.json`。
-- **per-card certify** `scripts/wf-certify.mjs` (opus grounding→敵対 refute) = 真の正本。決定論は HEURISTIC。
+### 出荷 (ALL_CARDS 1267→1275、engine変更0)
 
-### 重大発見 (基盤の stale)
-- certify が grounding する `capability-map.txt` が **2026-06-06 (ALL_CARDS=978) で stale**。cluster1-14 解消ゲートを誤判定する。
-- 対策: live src/engine から現行 capability を機械抽出 (verb54/cond15/filter14/hook/cost14/aura4) → **`.tmp/taskA/certify-brief.md` を現行版で新規作成**
-  (.tmp は gitignore のため都度再生成)。解消済ゲート一覧 + exemplar 付き、「cap-map の stale ⛔ を訂正・live grounding 必須」を明記。
+- window4 certify+verify 済の確定 green **4 distinct rep** + byte同一 clone 4 = **8枚**:
+  - B01052 工藤優作 (+clone D06016): スリープ登場 + 【登場時】デッキ1枚公開→lv6以下キャラなら登場/それ以外手札
+  - B02025 遠山和葉 (+B02025P): 【相手ターン中】【現場リムーブ時】+【ヒラメキ】カットイン∧緑カード回収
+  - B04022 光本兵我 (+B04022P): 【相手ターン中】【現場リムーブ時】手札からlv4以下〚服部平次〛をスリープ登場
+  - B04031 中森青子 (+B04031P): 【宣言】【スリープ】〚黒羽快斗〛にAP+1000+突撃付与
+- パイプライン: certify spec (`.tmp/certify/{rep}.json`) → `verify-clone-identity.cjs` (divergent 0、clone 4 全 byte同一) →
+  `build-verified-codegen-input.cjs` (ADOPT 4 + clone 4) → `taskA-codegen.cjs --write` → `taskA-register.cjs`。
+- 出荷前に 4枚とも **公式テキスト⇔spec を源泉 (`.tmp/taskA/recs`) で1対1再確認** (精度優先)。
 
-### 決定論 landscape (window1 反映後)
-- 残 838 cards / 485 sig: 🟢 **green-candidate 281 sig / 460 cards** (要 certify) / 🟡 yellow 189/351 / ⚫ black 15/27。
-- green-candidate 460 = **新engineクラスタ不要** (card-wave バッチで出荷)。残 engine クラスタ = yellow/black gate 群。
+### 除外 (出荷しない window4 検証結果)
 
-### certify 進捗 (windows 1-3 = 88 rep → green 26 / yellow 62)
-- **w1 (26, gate boundary)**: green4/yellow22。partial gate は大半が本物。NEW gate 14 発見。
-- **w2 (30, green20較正+gate10)**: green9/yellow21。**false-green 率 65%**。contact-removal-by-self trigger 等 NEW gate 発見。
-- **w3 (32, 改善分類器で green再サンプル)**: green14/yellow18。**false-green 率 55%** (改善も緩慢)。mill-bind/stunChar/setcard:enter 等 NEW gate。
-- 累計 **NEW gate ~27 発見** → `sweep-2026-06-15.ts` GATES に regex 還元 (green-candidate 299→236)。
-- 確定 green 25枚 (codegen可) + D10003 (needsManual)。一覧は triage-sweep doc。
+- **B08023 REFUTED** (verify ok:false): top-level multi-option choice 内の `uid:'$pick'+target` charSetCard carrier が
+  human 経路で continuation 喪失 → 2段目 (AP/grant/sleep) が silent no-op (実機 probe で確認)。正解は short-form carrier。
+  spec as-written は fatal → **出荷不可**。次回 spec 書換 (short-form) で再挑戦 or DEFER。
+- **D10003** green だが needsManual (grantKeywords が JS closure、B07052 手写経 + case D10026 の caseTraits 要、BUG-124 family) → 別扱い。
 
-### 結論 (ゴール地点)
-- **意味ある engine クラスタ ≈ 9-12** (高yield中型~6: cutin-subtype/contact-removal/grant-textual+set-card/dynamic-count/scene+FILE残/stacked-identity
-  + 構造XL×3: partner-area/name-designation/loseGame-rewrite) + 長尾 ~30 niche gate (大半 defer)。
-- green-now ≈ 170cards 規模。**毎窓で新 gate 発生し収束緩慢 → exhaustive 全certify より「出荷バッチ時の per-card certify」が実際的** (= スイープの結論)。
+### gate5 実機検証 (新規 `tests/cards/triage-greens-2026-06-16/` 4 files / **27 tests**)
 
-### 次セッション
-- スイープ継続 (window4+ で green 収束、loop-until-dry) or 確定 green 26枚を card-wave 出荷開始。
-- 再開: `node scripts/survey/sweep-window2.cjs <greenN>` → wf-certify に id 配列。`.tmp/certify/` durable (session 間で消える可能性、その場合 recs/queue から再 certify)。
+- Workflow opus 4並列 (1 workflow、SUB throttle 内)。各 rep を実 engine flow で発火 (verb 直呼び無し):
+  B01052=enter hook (handUseCard→enter) / B02025=removeToRemove→leave:to-remove + evidence:remove-by-action→hirameki /
+  B04022=removeToRemove→leave:to-remove→from-hand sceneEnter / B04031=useDeclaredAbility (sleepSelf cost)。
+- 全 filter を decoy で実評価実証 (BUG-117/118): カットイン decoy は icon-ability 正準形状 (keywords:[] 不使用、BUG-122)、
+  服部平次 split-name (rules/19) 正方向 + level/kind/cardName decoy、黒羽快斗 vs 工藤新一 decoy。
+  負ケース完備 (turn:opp 未達 / selfOnly / 0-pick / hirameki skip / declared cost negative / scope:turn 失効)。
+- 4本とも自分で vitest 実走 + 直接精読でレビュー (anti-pattern 0、実 engine 駆動確認)。
 
-### ロードマップ暫定 N
-- 大型×3: partner-area / name-designation / loseGame-rewrite。
-- 中型×4-5 (共有プリミティブ先行): cutin-subtype(ability-subtype filter 36sig) / grant-textual+set-card-ability(30) /
-  dynamic-count family (hand-size dyn+variable+hand→deck) / usage-restriction family / scene+FILE 残。
-- 長尾 ~20 niche gate (各1-6枚) = 多くは defer or 機会的 bundle。
+### 検証 (全 green)
 
-## 2026-06-15 セッション⑪ — トリアージ出荷バッチ#1 (確定green 56枚) + window4 並行
+- validate-specs 8/8 (engine変更0) / tsc clean / **vitest 2431 pass (+27) 0 fail** /
+  smoke:1000 baseline OK (winsA=498, exceptions=0) / playwright 回帰 **119 pass**。
+- UI gate: 8枚は _reuse (MVPデッキ非搭載=手動プレイ不可)。playwright 119 が新カード込み実アプリ起動・走行、
+  gate5 vitest が pick候補集合 (UI modal 描画元) を decoy で1対1検証 → batch#1 と同一プロセスで充足。
 
-ユーザー選択「両方 (出荷 + window4並行)」。出荷トラックをメインに完遂。
+### 次セッション (段B / バッチ#3 候補)
 
-### 出荷 (ALL_CARDS 1211→1267、commit 予定)
-- windows1-3 の確定 green 25 distinct rep + **byte同一 clone 31** = **56枚**。新 engine クラスタ不要。
-- **clone 安全弁**: sweep signature() が lossy (色/数/特徴抽象化) → cloneTargets は別テキストの可能性。
-  新規 `scripts/survey/verify-clone-identity.cjs` で effect/cutIn/hirameki/henso byte 比較し同一のみ採用 → divergent 7除外
-  (B05016小嶋元太 of B03086伊達航 等)。`build-verified-codegen-input.cjs` で codegen 入力構築 (collect-greens の unsafe blind-clone 不使用)。
-- **codegen 修正** (`taskA-codegen.cjs`): certify spec の ability-level ruleRefs 欠如時に card-level fallback 注入 (reuse-batch.test fail 解消)。
-- **B07098/P DEFER 解除**: count-dyn 不在で defer 済 → `forEach over:{all,query:{area:'remove',filter:{keyword,color}}}` で回避。
-  engine candidates.ts:160 + BUG-122 が honor を静的確認 + runtime decoy 44 assert 実証。DEFERRED-INDEX 解禁マーク。build スクリプトに DEFER ガード追加。
-- **gate5 実機検証**: 新規 `tests/cards/triage-greens-2026-06-15/` 25 files / **172 tests** (各 decoy + 負ケース、BUG-117/118 per-card 閉)。
-  Workflow opus fan-out (1回目 25並列 + window4 同時 → server rate-limit で 22失敗、window4 停止 + SUB=5 で 22 retry → 全 clean-green)。
-- 検証: validate-specs 56/56 / tsc clean / vitest **2404 pass 0 fail** / smoke baseline 不変 / playwright 119 / lint errors=0。
-
-### window4 (並行スイープ、停止済)
-- greenN=22 + gate-sample 10 = 32 抽出 → 24 certify完了で停止 (rate-limit 回避のため retry 中に停止)。green 4 (B01052/B04022/B02025/B04031 全 verify.ok)。
-- false-green 率依然高く doc 結論再実証。残8 + 4新green は次セッション。`.tmp/certify/` durable。
-
-### 次セッション
-- バッチ#2: window4 の 4新green + 残8 certify → clone検証 → 出荷。スイープ継続 (window5+)。
-- 中型 engine クラスタ着手も選択肢 (cutin-subtype filter 69枚 等)。
+- window4 残8 certify (B08033/B05027/B01057/B02031/B03056/B03079/PR263/PR099) → 新green収束 → バッチ#3。
+- スイープ継続 (window5+、loop-until-dry) or 中型 engine クラスタ着手 (cutin-subtype 69枚 等)。
+- B08023 short-form 書換 再挑戦も候補。

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `40d01e593395`
+> Source hash: `7887e7e9d821`
 
 公式ルール [`26-qa-deck-refresh.md`](../../../rules/26-qa-deck-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (104)
+## 📄 参照ソース (106)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
@@ -36,11 +36,11 @@
 - [`src/cards/ct-d05/D05007.ts`](../../../../src/cards/ct-d05/D05007.ts)
 - [`src/cards/ct-d05/D05012.ts`](../../../../src/cards/ct-d05/D05012.ts)
 - [`src/cards/ct-d05/D05014.ts`](../../../../src/cards/ct-d05/D05014.ts)
+- [`src/cards/ct-d06/D06016.ts`](../../../../src/cards/ct-d06/D06016.ts)
 - [`src/cards/ct-d07/D07019.ts`](../../../../src/cards/ct-d07/D07019.ts)
 - [`src/cards/ct-d07/D07023.ts`](../../../../src/cards/ct-d07/D07023.ts)
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
 - [`src/cards/ct-d11/D11019.ts`](../../../../src/cards/ct-d11/D11019.ts)
 - [`src/cards/ct-d11/D11021.ts`](../../../../src/cards/ct-d11/D11021.ts)
 - [`src/cards/ct-p01/B01013.ts`](../../../../src/cards/ct-p01/B01013.ts)
-- [`src/cards/ct-p01/B01016.ts`](../../../../src/cards/ct-p01/B01016.ts)
-- _...ほか 84 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 86 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
