@@ -33,6 +33,18 @@
 | 2026-06-04 pilot | catalog-reuse「reusable 306」は過大評価。最易30枚中 実装可2枚のみ。残はevent→evidence/leave・reasoning hook無/continuous他者buff/手札数condition/カットインfilter等の engine ゲート | ゲート一覧: [card-impl-engine-gates.md](card-impl-engine-gates.md)。reusable+unclassified の **engine-gate 再分類** が必要 |
 | 2026-06-04 pilot | workflow harness: schema 付き subagent が StructuredOutput 未呼びで 0-token 即終了 (30/30 fail) | 量産 harness として要調査。pilot 2枚は手実装で代替 |
 
+## engine拡張 cluster16 (filter-predicate, 2026-06-16) — 出荷 11枚 + DEFER
+
+cluster16 engine (cardNameNot + deckReveal filterAny、Commit1=2c0b492b) を使い 9 候補 certify → **6 reps + 5 clones = 11枚出荷**
+(B03113/B03053/B06081/B03016/B04012/B07035 + clones)。**cluster15 で記録した cardName-EXCLUSION gate (下記 B06087/PR280) は
+cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](../changelog-entries/2026-06-16-08-cluster16-filter-predicate-ship.md)。
+
+| rep | DEFER 理由 | 種別 |
+|-----|-----------|------|
+| PR280 / B06087 / B06087P (萩原千速) | **自己リムーブ removal-observer + cardNameNot summon**。GREEN だが (1) auto-spec a2 が存在しない `triggerCondition` フィールドで **over-fire バグ** (正解 `condition:and[fileAtLeast6, removedCharMatches{side:opp,cause:contact-ap,by:self}]`)、(2) a1 partnerColorKeyword closure の __shared 手書き、(3) 初の自己リムーブ observer の novel re-entrancy (engine トレースで安全確定済: handleHook が effect を event.queue で deferred 化、再emit cause:effect/side:own は条件再合致せず cascade 不能)。**次バッチで手 author 出荷** (fix 既知) | needsManual (**fast follow-up**) |
+| B09016 (円谷光彦) | 「**ミスリードしたとき**」反応 trigger が card-triggerable hook に無い (misread は内部 reasoning:before-add で同期処理、「自分が misread した」sign号無)。新 hook emit+register = engine change 必須 | yellow (engine gate) |
+| B07051 (桃井恵子) | sweep が B03016 clone に誤 grouping。実は別カード (怪盗キッド/高校生 reveal) で **同 G2 capability で出荷可能な未certify候補** | follow-up (未certify) |
+
 ## engine拡張 cluster15 (removal-observer 反撃カード一族, 2026-06-16) DEFER 14 rep
 
 28 rep certify のうち 14 rep を出荷 (verifiedOk green pure-JSON)、14 rep を DEFER。**反撃 ability 自体は全て green**

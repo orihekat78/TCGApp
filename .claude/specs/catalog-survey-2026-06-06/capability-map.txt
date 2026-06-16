@@ -64,7 +64,7 @@ All verbs registered (must stay in sync between `effect.ts AtomVerb`, `validate.
 - **endActionEarly** ⛔ — args `{}`. Logs `endActionEarly:placeholder` only. **Stub.**
 
 ### Deck ops
-- **deckRevealUntil** — args `{player, filter:TargetFilter|fn, bind?, bindMatch?, maxN?}`. Reveals deck top: if `maxN` set, reveals min(deck,maxN) all then first filter match; else reveals 1-by-1 until match/end. Binds remainder→`bind`, match→`bindMatch` (as Candidate `{kind:'card',area:'deck'}`). Sets `__pendingDeckRevealSide` UI channel. `filter` predicate via `targetFilterToPredicate` honoring **cardId/color/trait/apMin/apMax/lpMin/lpMax/levelMin/levelMax/kind** (printed values; BUG-117/118 fixed). cardName/keyword/hasSetCards/custom in this predicate path are **NOT** honored.
+- **deckRevealUntil** — args `{player, filter:TargetFilter|fn, filterAny?:TargetFilter[], bind?, bindMatch?, maxN?}`. Reveals deck top: if `maxN` set, reveals min(deck,maxN) all then first filter match; else reveals 1-by-1 until match/end. Binds remainder→`bind`, match→`bindMatch` (as Candidate `{kind:'card',area:'deck'}`). Sets `__pendingDeckRevealSide` UI channel. `filter` predicate via `targetFilterToPredicate` honoring **cardId/cardName/cardNameNot/color/trait/apMin/apMax/lpMin/lpMax/levelMin/levelMax/kind** (printed values; BUG-117/118 fixed; cardName via X1b; cardNameNot via cluster16). hasSetCards/custom remain unsupported here (deck cards have no state/closure). **cluster16 G2**: `filterAny` (OR-of-filters) IS now honored on this path — match = `AND-of(filter, OR(filterAny))`, identical to candidates.ts matchesFilters. Use filterAny for cross-field OR like 「公開カードが〚カード名[A]〛か〚特徴[B]〛のキャラ」 → `filter:{kind:'character'}, filterAny:[{cardName:'A'},{trait:'B'}]`.
 - **deckToBottomBound** — args `{player, bindKey}`. Moves bound cardIds (e.g. `$revealed`) from deck to bottom (`mutate.deck.toBottom`). Empty/absent binding → no-op.
 - **deckShuffle** — args `{player}`. `mutate.deck.shuffle(ctx.rng)`.
 - **souza** (捜査X, rules/13) — args `{player, x:number}`. Splices top min(x,deck) and moves to bottom (peek order preserved — **no defender reorder, no "発見された" reference effect**; AI `chooseSouzaOrder` not wired). Empty deck → no-op.
@@ -110,7 +110,7 @@ Choice/optional resumption (apply-pick): `applyChoiceAndContinuation(state,pendi
 `true`/`false`/`not`/`and`/`or`; `turn`(self/opp); `partnerColor`; `caseColor`(combine or/and); `caseTrait`; `fileAtLeast`; `caseStatus`(事件編/解決編); `bond`; `sceneHas`(query,nMin); `apAtLeast`/`lpAtLeast`(ref,n); `evidenceAtLeast`; `fileTopType`(card-back/assisted-partner); `scratchTrace`(痕跡 発見済/未発見); `flag`(TurnScopedFlags key); `declaredUseUnder`(uid,abilityId,max); `bound`(key,presence exists/matched); `removeColorAtLeast`/`removeTraitAtLeast`/`removeNameAtLeast`; `stackedCountAtLeast`; `contactOpponentApHigher`; `guardedBySelf`; `enterOrderEquals`(疾風N); `boundMatchesFilter`(bindKey,filter); `triggerCharMatches`(side,filter); `custom`(fn — non-serializable). (Evaluation logic is in `cond/eval.ts`, not in the read set — treat presence in union as "declared"; verify per-kind support there before trusting.)
 
 ## TargetFilter fields (pick-query `filter` / condition filters)
-`cardId`, `cardName`, `trait`, `color`, `keyword`, `kind`('character'|'event'), `apMin/apMax`, `lpMin/lpMax`, `levelMin/levelMax`, `hasSetCards`, `custom(fn)`. ⚠ In the **`deckRevealUntil` predicate path** only cardId/color/trait/ap/lp/level/kind are honored (cardName/keyword/hasSetCards/custom dropped there). The full set is honored by `matchOneFilter` (target/candidates.ts) for normal scene/area picks — but that file is outside this read set; do not assume parity for every area without checking `candidates.ts`.
+`cardId`, `cardName`, `cardNameNot`(cluster16, name-exclusion), `trait`, `color`, `keyword`, `kind`('character'|'event'), `apMin/apMax`, `lpMin/lpMax`, `levelMin/levelMax`, `hasSetCards`, `custom(fn)`. ⚠ In the **`deckRevealUntil` predicate path** cardId/cardName/cardNameNot/color/trait/ap/lp/level/kind are honored (keyword/hasSetCards/custom dropped — deck cards lack state/closure); plus `filterAny` OR-group honored there since cluster16. The full set is honored by `matchOneFilter` (target/candidates.ts) for normal scene/area picks.
 
 ## Known DEFER / unsupported summary (⛔)
 - `charSetAP`, `charSetLP` — throw; no `mutate.char.setExact` (use `charOverrideAP/LP` only for "元のAPをXにする").
@@ -174,7 +174,7 @@ Each filters the player's `remove` pile (array of cardIds) by CardDef attribute 
 
 ## Bindings
 - **`bound`** `{ key: string; presence?: 'exists'|'matched' }` — `ctx.bindings[key]`. `presence:'matched'` ⇒ is a non-empty array; default/`'exists'` ⇒ `!== undefined`.
-- **`boundMatchesFilter`** `{ bindKey: string; filter: TargetFilter }` — evaluates the cardId of `ctx.bindings[bindKey][0]` against a **CardDef-driven** filter. ⚠ Only these filter fields honored: `cardId`, `cardName`, `trait`, `color`, `levelMin`, `levelMax`. ⛔ `apMin/apMax/lpMin/lpMax/keyword/kind/hasSetCards/custom/state` are IGNORED here (SceneCharacter-state fields out of scope — only CardDef statics). (「〚カード名[X]〛を登場させた場合」)
+- **`boundMatchesFilter`** `{ bindKey: string; filter: TargetFilter }` — evaluates the cardId of `ctx.bindings[bindKey][0]` against a **CardDef-driven** filter. ⚠ Only these filter fields honored: `cardId`, `cardName`, `cardNameNot`(cluster16), `trait`, `color`, `levelMin`, `levelMax`. ⛔ `apMin/apMax/lpMin/lpMax/keyword/kind/hasSetCards/custom/state` are IGNORED here (SceneCharacter-state fields out of scope — only CardDef statics). (「〚カード名[X]〛を登場させた場合」)
 
 ## Trigger-payload-dependent (only valid inside a triggered hook with matching `ctx.triggerPayload`)
 These read `ctx.triggerPayload`; if the expected payload shape is absent ⇒ `false`. Only meaningful as `matcherCondition` on the corresponding hook.
@@ -232,11 +232,12 @@ Authoritative as of read of `src/engine/target/{candidates,resolve}.ts`, `src/en
 - `named` — `true` = only 名乗り(isNamed) chars; `false` = only non-named; `undefined` = no filter. ⛔ Scene-char only (uses `c.isNamed`); ignored elsewhere.
 - `distinctNames` — bool. Enforced at `resolve()` time only (rules/19 split-name): no two picks may share any card-name component. ⛔ Not a candidate filter — it rejects illegal multi-pick combos, throws on violation.
 - `filter` — single `TargetFilter`, ALL its fields ANDed.
-- `filterAny` — `TargetFilter[]`; passes if ANY one matches (OR group). Combined with `filter` as: `filter AND (any of filterAny)`.
+- `filterAny` — `TargetFilter[]`; passes if ANY one matches (OR group). Combined with `filter` as: `filter AND (any of filterAny)`. Honored by `matchOneFilter` (all pick paths) AND, since cluster16, by the `deckRevealUntil` reveal-filter path.
 
 ## TargetFilter predicates (each field ANDed within one filter object)
 - `cardId` — `string | string[]`. Exact match against candidate's `cardId` (membership if array).
 - `cardName` — `string | string[]`. Matches via `allCardNameComponentsForDef` → honors split-name cards (rules/19, e.g. 江戸川コナン&工藤新一 matches each component). Needs a registered CardDef; if def missing, components=[] → no match.
+- `cardNameNot` — `string | string[]` (cluster16). EXCLUSION dual of `cardName`: candidate is dropped if ANY of its name-components (split-name via `allCardNameComponentsForDef`) is in the list. Name-based (not uid), so it drops a 2nd same-named copy too (unlike `excludeSelf`). Honored on all 3 filter-eval sites: matchOneFilter / targetFilterToPredicate / boundMatchesFilter. (「〚カード名[X]〛以外」)
 - `trait` — `string | string[]`. True if def.traits intersects wants (OR within array). Empty traits if no def.
 - `color` — `string | string[]`. True if def.colors intersects wants (OR). 2-color card matches if it has ANY listed color. ⛔ No "must have ALL listed colors" mode; no color-count predicate.
 - `keyword` — `string | string[]`. Via `defHasKeyword`: checks `def.keywords[]` AND icon-abilities. Supported icon keywords: `カットイン`, `ヒラメキ`, `変装`, `ミスリード` (resolved from AbilityDef structure, BUG-122). Other keyword strings (迅速 / 突撃[X] / ブレット / 痕跡 etc.) matched only if literally present in `keywords[]`. OR within array.
@@ -481,7 +482,7 @@ These bound what triggered/declared effects can DO (the verbs) and TARGET. Liste
 `true, false, not, and, or, turn, partnerColor, caseColor(or/and), caseTrait, fileAtLeast, caseStatus, bond, sceneHas, apAtLeast, lpAtLeast, evidenceAtLeast, fileTopType, scratchTrace, flag, declaredUseUnder, bound(exists/matched), removeColorAtLeast, removeTraitAtLeast, removeNameAtLeast, stackedCountAtLeast, contactOpponentApHigher, guardedBySelf, enterOrderEquals(疾風N), boundMatchesFilter, triggerCharMatches(side/filter), custom (⛔ closure)`
 
 ### `TargetFilter` fields (honored on BOTH pick + deckReveal paths per BUG-118)
-`cardId, cardName, trait, color, keyword, kind('character'|'event'), apMin/apMax, lpMin/lpMax, levelMin/levelMax, hasSetCards, custom(⛔ closure)`
+`cardId, cardName, cardNameNot(cluster16, name-exclusion), trait, color, keyword, kind('character'|'event'), apMin/apMax, lpMin/lpMax, levelMin/levelMax, hasSetCards, custom(⛔ closure)`
 
 ### `TargetingRef` / `TargetQuery`
 - Ref: `self | pick{query,n:{min,max},chooser:owner|opp|self|opp-of-owner} | all{query} | fromBound{bindKey}`.
@@ -578,6 +579,7 @@ Hook機構共通: `scope`(always/on-scene/on-partner-area/on-hand/on-evidence) �
   ability 構造を吸収済 → `filter.keyword:'カットイン'/'ヒラメキ'/'変装'/'ミスリード'` は全 matchOneFilter 経路で動作する。
   さらに cluster2 (X1) で `'現場リムーブ時'` / `'疾風'` も追加 (印字静的判定、公式Q&A 8件)。
   deckRevealUntil 窓 (targetFilterToPredicate) と boundMatchesFilter も X1b で keyword/cardName/kind/ap/lp を honor 化済。
+  さらに cluster16 (X2) で `cardNameNot` (名前除外、3 filter-eval サイト全て) と deckRevealUntil `filterAny` (cross-field OR) を追加。
 
 ## G. Multi-target per-char effect — **STALE-fix (重要)**
 

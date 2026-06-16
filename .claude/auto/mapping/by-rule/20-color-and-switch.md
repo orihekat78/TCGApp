@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `726d8645ee02`
+> Source hash: `fb4b437fe94b`
 
 公式ルール [`20-color-and-switch.md`](../../../rules/20-color-and-switch.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,7 +23,7 @@
 - [`INDEX`](../by-spec/cards-data--INDEX.md)
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 
-## 📄 参照ソース (159)
+## 📄 参照ソース (163)
 
 - [`src/cards/_shared/caseMonoColor.ts`](../../../../src/cards/_shared/caseMonoColor.ts)
 - [`src/cards/ct-d01/D01004.ts`](../../../../src/cards/ct-d01/D01004.ts)
@@ -45,4 +45,4 @@
 - [`src/cards/ct-d07/D07022.ts`](../../../../src/cards/ct-d07/D07022.ts)
 - [`src/cards/ct-d07/D07023.ts`](../../../../src/cards/ct-d07/D07023.ts)
 - [`src/cards/ct-d08/D08024.ts`](../../../../src/cards/ct-d08/D08024.ts)
-- _...ほか 139 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 143 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

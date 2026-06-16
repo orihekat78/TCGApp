@@ -828,6 +828,18 @@ import { B01030P } from '../ct-p01/B01030P.js';
 import { B01031 } from '../ct-p01/B01031.js';
 import { B01031P } from '../ct-p01/B01031P.js';
 
+import { B03016 } from '../ct-p03/B03016.js';
+import { B03016P } from '../ct-p03/B03016P.js';
+import { B03053 } from '../ct-p03/B03053.js';
+import { B03113 } from '../ct-p03/B03113.js';
+import { B03113P } from '../ct-p03/B03113P.js';
+import { B04012 } from '../ct-p04/B04012.js';
+import { PR026 } from '../pr-01/PR026.js';
+import { PR030 } from '../pr-01/PR030.js';
+import { B06081 } from '../ct-p06/B06081.js';
+import { B07035 } from '../ct-p07/B07035.js';
+import { B07035P } from '../ct-p07/B07035P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -998,4 +1010,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05028, B05028P, B09038, B09038P,
   // Task A batch
   D10007, D10008, B01007, B01010, B01010P, B06031, B06031P, B06051, B06051P, B07017, B07017P, B07084, B07084P, B07097, B07097P, B09023, B09023P, D09010, D09011, B06067, B06067P, B09026, B01030, B01030P, B01031, B01031P,
+  // wave#2 cluster16 — filter-predicate ship (cardNameNot + deckReveal filterAny)
+  B03016, B03016P, B03053, B03113, B03113P, B04012, PR026, PR030, B06081, B07035, B07035P,
 ];

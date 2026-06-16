@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `726d8645ee02`
+> Source hash: `fb4b437fe94b`
 
 公式ルール [`05-turn-phases.md`](../../../rules/05-turn-phases.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (70)
+## 📄 参照ソース (71)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -43,4 +43,4 @@
 - [`src/cards/ct-p02/B02019.ts`](../../../../src/cards/ct-p02/B02019.ts)
 - [`src/cards/ct-p02/B02019P.ts`](../../../../src/cards/ct-p02/B02019P.ts)
 - [`src/cards/ct-p03/B03014.ts`](../../../../src/cards/ct-p03/B03014.ts)
-- _...ほか 50 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 51 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

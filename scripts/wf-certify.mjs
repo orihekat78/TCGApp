@@ -132,9 +132,13 @@ THE CLAIMED SPEC (also at .tmp/certify/${rep}.json):
 ${JSON.stringify(spec)}
 
 CHECK, clause by clause, against BOTH:
-1. .claude/specs/catalog-survey-2026-06-06/capability-map.txt (verb arg shapes, hooks, conditions,
-   filter fields honored per path — e.g. deckRevealUntil predicate honors only cardId/color/trait/ap/lp/level/kind;
-   boundMatchesFilter ignores dynamic fields; selfOnly semantics per hook; AI skips optional)
+1. .tmp/taskA/certify-brief.md (AUTHORITATIVE current-engine inventory — takes precedence over cap-map;
+   read its §cluster16 for cardNameNot + deckReveal filterAny) AND
+   .claude/specs/catalog-survey-2026-06-06/capability-map.txt (verb arg shapes, hooks, conditions,
+   filter fields honored per path. NOTE post-cluster16: deckRevealUntil predicate honors
+   cardId/cardName/cardNameNot/color/trait/ap/lp/level/kind AND filterAny OR-group [AND-of(filter,OR(filterAny))];
+   cardNameNot [name-exclusion] honored on matchOneFilter/targetFilterToPredicate/boundMatchesFilter;
+   boundMatchesFilter ignores ap/lp/keyword/kind/state; selfOnly semantics per hook; AI skips optional)
 2. .tmp/taskA/certify-brief.md (conventions: __eventUse, __shared arg shapes, tier definition)
 And where decisive, the real engine code under src/engine/** (Read it).
 
