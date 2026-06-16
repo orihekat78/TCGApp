@@ -240,3 +240,18 @@ opus 3-lens 敵対設計レビュー GO。詳細: changelog 2026-06-15-09 + clus
 | 両 side aura | auraDelta は target の同一 side のみ走査 (自陣 buff 専用)。現出荷 11枚は全て「自分の現場」aura のため十分 | 設計どおり (相手 buff/debuff aura が出たら ownerSide 走査を拡張) |
 | triggered 能力テキスト付与 aura | B09024「他キャラに【現場リムーブ時】を与える」は非キーワード能力テキスト付与 = 別 gate | 継続 DEFER (上表 auraGrant(triggered 付与)) |
 | auraFilter の AP/LP filter | auraFilter が apMin/apMax 等を使う場合、matchOneFilter 再入は _inAuraDelta で aura 抜き AP を見る (二重計上防止)。現出荷は color/trait/level のみ使用 | 文書化のみ |
+
+## トリアージ・スイープ window4 certify — yellow/refuted DEFER (2026-06-16, batch#3)
+
+window4 残 8 rep を per-card certify (opus grounding→敵対 verify)。green 2 / 敵対 verify 通過 (verified) 1。
+**出荷 = B03079 (+ B03079P clone) のみ**。残 7 は全て既知 STILL-OPEN gate で DEFER (再選定防止)。
+
+| rep | 理由 (支配 gate) | 解禁条件 |
+|------|------|------|
+| B03056 | **refuted(fatal)**: a2 が `conditional{if: sceneHas(探偵 sleep nMin:3), then: optional{...}}` 構造。engine の resolveEffectPicks walk が conditional.if 評価**前**に optional を human へ eager surface し、resume 時に conditional ラッパを落とすため、3枚未満でも証拠獲得+自己リムーブが発火 (敵対 verifier が実証: evidence 0→1, self removed, cond false)。**新規 gate: conditional-gated-optional surfacing**。a1 (登場時 deck-look) は green | optional surface の conditional 再ゲート (engine) or 条件を ability.condition / optional 自身の gate へ再構成 |
+| B08033 | yellow: ability2 のコスト「現場のキャラにセットされた裏向きカードを合わせて2枚リムーブ」= **set-card-removal COST kind 不在** (Cost union に該当なし、charRemoveSetCard は EFFECT verb のみ)。effect 化は意味論違反 (canPay gate 喪失)。a1 (登場時 set) は green | 新 Cost kind `removeSetCardFromScene{n}` を cost/evaluate+pay へ配線 (engine) |
+| B05027 | yellow: **MR partner-area structure** gate。ability2「この能力はパートナーエリアでも発動する」= 40枚デッキ MR が partner-area 常駐する GameState slot 不在 (collectCardsInPlay は scene+本体partnerのみ列挙)。MR能力①② (rules/18) も未配線 | partner-area card slot + MR enumeration (XL) |
+| B01057 | yellow: event-self-set (charSetCard は fromDeckTop のみ) + **set-card→host triggered 能力付与** gate + 付与する【現場リムーブ時】が granted-ability validator 棄却 (handleLeaveToRemoveSelf は turnEffects.grantedAbilities 非走査) | set-card→host 能力付与機構 (engine) |
+| B02031 | yellow: event-self-set + **set-card→host へ 突撃[キャラ]+action-target拡張の継続付与** gate (read/char は set card を ability/keyword 付与源に読まない) | set-card→host 付与 + action-eligibility 拡張 |
+| PR263 | yellow: **partner-area structure** gate (ビッグジュエル列挙)。PartnerOnBoard に追加 partner-area card slot 無 / candidates partner-area 枝は partner 1体のみ / `$self.partnerAreaTrait` dyn 不在 (per-card AP scaling 不可) | partner-area slot + candidate 列挙 + trait-count dyn (XL) |
+| PR099 | yellow: ability2「キャラのカード名を1つ指定し…カード名を書き換えてもよい」= **name-designation** gate (指定 UI/condition 不在) + **card-name rewrite** verb 不在 (names() は def 静的のみ)。a1 + AP+1000 半分は green | name-designation UI + card-name override verb (XL) |

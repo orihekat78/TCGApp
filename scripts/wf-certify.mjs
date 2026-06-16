@@ -174,7 +174,8 @@ async function certifyThenVerify(item) {
 
 // サーバ側 request-rate throttle (40件×16並列で発生) を避けるため、SUB 件ずつ直列のサブバッチで実行。
 // 各サブバッチ内は並列、バッチ間は barrier。実効並列度を SUB に抑える。
-const SUB = 8;
+// 2026-06-16: SUB 8→5 (memory feedback-workflow-concurrency-throttle: SUB≤5 で server rate-limit 回避)。
+const SUB = 5;
 const results = [];
 for (let i = 0; i < recs.length; i += SUB) {
   const batch = recs.slice(i, i + SUB);

@@ -38,7 +38,7 @@
 
 (完全データ `.tmp/sweep/landscape.json`、再生成 `npx tsx scripts/survey/sweep-2026-06-15.ts`)
 
-## certify 結果 (windows 1-3 = 88 rep → green 26 / yellow 62)
+## certify 結果 (windows 1-4 = 120 rep → green 32 / yellow 88)
 - **確定 green (即 codegen 可, 25枚)**: B01018 B01062 B01066 B02003 B02005 B02019 B02044 B02077 B03005 B03025 B03086 B03089 B04014 B04017 B05006 B05020 B05046 B06011 B06013 B07004 B07020 B07023 B07098 D09004 PR060
 - **green needsManual (closure要, 1枚)**: D10003
 - **certify が決定論で捕捉不能な NEW gate を ~27 発見** → sweep regex 還元済 (green 299→236):
@@ -66,5 +66,11 @@
 ## certify 進捗 / 再開
 - queue `.tmp/sweep/certify-queue.json` (485) / recs `.tmp/taskA/recs/<rep>.json` (485) / verdict `.tmp/certify/<rep>.json` (durable, .tmp は session間で消える可能性あり)
 - ✅ window1 (26, gate boundary) / ✅ window2 (30, false-green 65%) / ✅ window3 (32, false-green 55%) = 計 88 rep certified
+- ✅ window4 (32, =window2-ids.json, batch#2+#3 で完全 certify): green 6 / **verified-green 5** / refuted 1 (B03056) / yellow 26。
+  verified-green 出荷済: batch#2 = B01052/B04022/B02025/B04031 (+clone 計8枚), batch#3 = **B03079 (+B03079P)**。
+  yellow 26 + B03056 は既知 STILL-OPEN gate (set-card→host / partner-area / name-designation / set-card-cost /
+  conditional-gated-optional) で DEFER (DEFERRED-INDEX「window4 certify yellow/refuted DEFER」に詳細)。
+  → window4 は **完全消化** (残 certify 0)。次は window5+ を新規抽出。
 - 次 window 抽出: `node scripts/survey/sweep-window2.cjs <greenN>` (done除外、green層化) → id配列を wf-certify に渡す。
   新 yellow が暴く gate を `sweep-2026-06-15.ts` の GATES に regex 還元 → 再実行で landscape 更新 (loop-until-dry)。
+  **新規 gate (B03056 由来)**: `conditional-gated-optional surfacing` (conditional.then 内 optional が if 評価前に eager surface)。

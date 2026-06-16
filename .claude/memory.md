@@ -47,3 +47,24 @@
 - window4 残8 certify (B08033/B05027/B01057/B02031/B03056/B03079/PR263/PR099) → 新green収束 → バッチ#3。
 - スイープ継続 (window5+、loop-until-dry) or 中型 engine クラスタ着手 (cutin-subtype 69枚 等)。
 - B08023 short-form 書換 再挑戦も候補。
+
+## 2026-06-16 セッション⑬ — トリアージ出荷バッチ#3 (window4 残8 certify → verified green B03079 + clone)
+
+window4 残 8 rep を wf-certify (opus, SUB 8→5) → window4 **完全消化** (32 certified)。
+verified-green は **B03079 のみ** + byte同一 clone B03079P = **2枚出荷** (ALL_CARDS 1275→1277、engine変更0)。
+
+- **certify 結果 (残8)**: green 2 (B03056/B03079) / 敵対verify 通過 1 (B03079) / yellow 6。false-green 教訓再確認
+  (決定論 green候補でも per-card certify 必須)。
+- **B03079** (レイチェル・浅香 +P): a1【相手ターン中】【現場リムーブ時】deck-look3→【赤】1枚まで手札 (残デッキ下) +
+  a2【ヒラメキ】sleep pick。a1 = D05007/D01013/B01013 certified-green 句の hybrid、a2 = D05007 a2 と byte同一。
+  carrier `sceneSetState{uid:'$pick',target}` は resolve-picks Pattern A (BUG-130 非該当=単一atom)、B02019 gate5 で実証済。
+- **gate5** (`tests/cards/triage-greens-2026-06-16/B03079.test.ts` / **7 tests**): a1 を `removeToRemove` 相手ターンで
+  実発火し color:'赤' filter を decoy (青ev/青char) で実評価実証 + turn:opp/0-match 負ケース。a2 は
+  `evidence:remove-by-action` 実発火→pendingHirameki surface 検証 + D05007 構造等価。
+- **除外 (DEFERRED-INDEX 追記)**: B03056 REFUTED (**新規 gate: conditional-gated-optional surfacing** — conditional.then 内
+  optional が if 評価前に eager surface、3枚未満でも証拠+自己リムーブ発火を verifier 実証)。yellow 6 = set-card-cost
+  (B08033) / MR partner-area (B05027) / set-card→host (B01057/B02031) / partner-area (PR263) / name-designation (PR099)。
+- **検証**: validate-specs 32/32 (engine変更0) / tsc clean / vitest 2438 pass (+7) / smoke baseline 不変 (winsA=498) /
+  playwright 119 pass。commit → main ff-merge → push → CI。
+- **次**: window5+ 新規抽出 (sweep-window2.cjs) → certify、or 中型 engine クラスタ (cutin-subtype 69 等)。
+  scripts/wf-certify.mjs の SUB を 8→5 に恒久変更済 (memory throttle 教訓)。
