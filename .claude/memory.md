@@ -2,6 +2,25 @@
 
 (過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-16.md = ⑫⑬。⑭ batch#4 = CHANGELOG + changelog-entries/2026-06-16-3 + DEFERRED-INDEX に記録)
 
+## 2026-06-16 セッション⑰ — engine拡張 cluster16 (filter-predicate 表現力) Commit1 = engine 確定
+
+ユーザー選択「次の密 engine クラスタ」。**Phase 0 決定論検証** (cutin-subtype 教訓): prompt 3 候補 gate
+(grant-textual/dynamic-count/cutin-subtype) は全て過剰グルーピング、action-active-enemy は `actionTargetsActive` で既実装と実証。
+evidence-based に真 gap = **filter-predicate 表現力** = cluster16。spec `engine-cluster16-filter-predicate-expressiveness-design.md`。
+
+- **engine 変更 (全 additive、骨格凍結例外)**: G1 `cardNameNot` (TargetFilter 新 field、「〚名X〛以外」declarative化) を
+  **3 filter-eval サイト** (matchOneFilter / targetFilterToPredicate / **boundMatchesFilter** ←設計レビュー BLOCKER で発覚した第4経路) に配線。
+  G2 deckRevealUntil が既存 `filterAny` を reveal path で honor (AND-of(filter,OR(filterAny))、candidates.ts と同一意味論)。5点 sync。
+- **opus 3-lens 敵対設計レビュー (whiudba3c)**: BLOCKER2 (boundMatchesFilter 第4経路 / 未certify ship 候補) + MAJOR4 (framing: 除外は
+  custom で実装可=JSON化 ergonomic 改善であり capability unlock でない・B09017 前例 / B03113 過剰DEFER→ship昇格 / G2 意味論統一) を反映。
+- **Commit1 検証 (全 green、ship 0)**: unit test 14 pass (`tests/engine/filter/cluster16-filter-predicate.test.ts`、cardNameNot×3経路 +
+  split-name + filterAny OR + additive 安全) / tsc0 / **vitest 2588 pass 0 fail** / sync-test pass / **smoke baseline winsA=498 不変** /
+  lint:* 8本 errors=0 / validate-specs pass=60 fail=0。
+
+### 次 (Commit2 = certify→出荷)
+certify (opus) GREEN のみ pure-JSON codegen: PR280 / B03016 / B04012 / B07035 (cross-field OR) / B03113 (cardName除外、他句 grounded) /
+B06087 (custom→declarative 変換) / B03053・B06081・B09016 (**未certify 要全句確認**、B09016 はミスリード反応 hook 未配線疑い→yellow なら DEFER)。
+
 ## 2026-06-16 セッション⑯ — engine拡張 cluster15 (removal-observer 反撃カード一族) + 26枚出荷
 
 ユーザー選択 = green裾刈り取りより **engine クラスタ拡張優先** (memory feedback-engine-cluster-over-green-tail)。

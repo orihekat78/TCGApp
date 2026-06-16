@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 205
-- **ファイル数**: 3433
+- **ディレクトリ数**: 206
+- **ファイル数**: 3438
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -451,6 +451,7 @@
     - `2026-06-16-04-bug-111-human-decline-fix.md`
     - `2026-06-16-05-bug-111-unblock-ship.md`
     - `2026-06-16-06-engine-cluster15-removal-observer.md` — engine拡張 wave#2 cluster15 — removal-observer (反撃カード一族) 解禁 + 26枚出荷
+    - `2026-06-16-07-engine-cluster16-filter-predicate.md` — engine拡張 wave#2 cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckRe…
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -771,6 +772,8 @@
     - `smoke-2026-06-16-6.md` — Smoke 1000戦レポート — smoke-2026-06-16-063254
     - `smoke-2026-06-16-7.json`
     - `smoke-2026-06-16-7.md` — Smoke 1000戦レポート — smoke-2026-06-16-081437
+    - `smoke-2026-06-16-8.json`
+    - `smoke-2026-06-16-8.md` — Smoke 1000戦レポート — smoke-2026-06-16-092620
     - `smoke-2026-06-16.json`
     - `smoke-2026-06-16.md` — Smoke 1000戦レポート — smoke-2026-06-16-001302
     - `smoke-baseline.json`
@@ -1227,6 +1230,7 @@
     - `engine-api-types.md` — engine.types.* — 共通戻り値型・コンテキスト型カタログ
     - `engine-api.md` — 骨格 (Engine) API スペック INDEX (2026-05-11)
     - `engine-cluster15-contact-removal-observer-design.md` — engine拡張 wave#2 cluster15 — removal-observer (反撃カード一族) 設計
+    - `engine-cluster16-filter-predicate-expressiveness-design.md` — engine cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckReveal cros…
     - `engine-extension-plan.md` — Engine 拡張計画 (骨格凍結 解除 — 2026-06-05 user 承認 / 次セッション着手)
     - `engine-gate-triage-2026-06-15.md` — engine gate triage (2026-06-15, cluster12/13 出荷後)
     - `engine-wave2-ability-filter-design.md` — engine拡張 wave#2 cluster2 — ability-presence filter 設計 (v2、敵対レビュー3lens反映済)
@@ -3461,6 +3465,8 @@
       - `hirameki-listener.test.ts` — Phase 8 完全クローズ Commit 3a: Hirameki listener tests
       - `misread-listener.test.ts` — Phase 8 完全クローズ Commit 3b: misread listener tests
       - `registry.test.ts` — engine.event.* — Hook Registry tests
+    - **`filter/`**
+      - `cluster16-filter-predicate.test.ts` — engine cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckReveal cros…
     - **`flow/`**
       - **`action/`**
         - `state-machine.test.ts` — Phase 4 Group B Task 4.4 — flow.action state machine

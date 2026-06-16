@@ -103,6 +103,12 @@ function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: str
       const components = allCardNameComponentsForDef(d);
       if (!wants.some(w => components.includes(w))) return false;
     }
+    // cluster16: cardNameNot (「〚カード名[X]〛以外」) — matchOneFilter / boundMatchesFilter と同式。
+    if (filter.cardNameNot !== undefined) {
+      const nots = Array.isArray(filter.cardNameNot) ? filter.cardNameNot : [filter.cardNameNot];
+      const components = allCardNameComponentsForDef(d);
+      if (nots.some(w => components.includes(w))) return false;
+    }
     return true;
   };
 }
@@ -1338,9 +1344,22 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-045 fix: filter は declarative TargetFilter object として渡される
       // (D11019.ts 等)。predicate 関数化して使用 (旧コードは function を期待していて crash)。
       const filterArg = a.filter as TargetFilter | ((cardId: string) => boolean) | undefined;
-      const filter = typeof filterArg === 'function'
-        ? filterArg
-        : targetFilterToPredicate(filterArg);
+      // cluster16 G2: filterAny (OR-of-filters) を reveal-filter 経路でも honor (従来は candidates.ts
+      // のみ)。意味論は candidates.ts matchesFilters と同一の AND-of(filter, OR(filterAny))。
+      // a.filter が関数の場合 (legacy caller) は filterAny 非適用 (legacy は filterAny 不使用)。
+      const filterAnyArg = a.filterAny as TargetFilter[] | undefined;
+      let filter: (cardId: string) => boolean;
+      if (typeof filterArg === 'function') {
+        filter = filterArg;
+      } else {
+        const basePred = targetFilterToPredicate(filterArg);
+        if (Array.isArray(filterAnyArg) && filterAnyArg.length > 0) {
+          const anyPreds = filterAnyArg.map(f => targetFilterToPredicate(f));
+          filter = (cardId: string) => basePred(cardId) && anyPreds.some(p => p(cardId));
+        } else {
+          filter = basePred;
+        }
+      }
       const bindKey = a.bind as string | undefined;
       const bindMatchKey = a.bindMatch as string | undefined;
       // ---- BUG-132 GAP-1 再入 path (chooseMatch pick 解決後) ----

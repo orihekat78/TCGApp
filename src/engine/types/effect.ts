@@ -101,6 +101,11 @@ import type { Candidate } from './candidate.js';
 export type TargetFilter = {
   cardId?: string | string[];
   cardName?: string | string[];
+  // cluster16: カード名 NEGATION (「〚カード名[X]〛以外」)。positive cardName と対称で、split-name
+  // (rules/19) の component いずれかが一致したら **除外**。excludeSelf(uid) と異なり name 単位除外
+  // なので同名2枚目も除外する (B09017 が custom closure で実装していた前例の declarative 化)。
+  // honor 経路 = matchOneFilter / targetFilterToPredicate / boundMatchesFilter の3 filter-eval サイト。
+  cardNameNot?: string | string[];
   trait?: string | string[];
   color?: string | string[];
   keyword?: string | string[];

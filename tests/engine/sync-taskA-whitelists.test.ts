@@ -27,7 +27,7 @@ import type { TargetFilter } from '@/engine/types/effect';
 // TargetFilter にキーを追加/削除するとこの literal が typecheck で落ち、cjs FILTER_FIELDS の
 // 更新を強制する (従来は同期テスト対象外で更新漏れを CI が検知できなかった)。
 const TARGET_FILTER_KEYS = {
-  cardId: true, cardName: true, trait: true, color: true, keyword: true,
+  cardId: true, cardName: true, cardNameNot: true, trait: true, color: true, keyword: true,
   kind: true, apMin: true, apMax: true, lpMin: true, lpMax: true,
   levelMin: true, levelMax: true, hasSetCards: true,
 } as const satisfies Record<Exclude<keyof TargetFilter, 'custom'>, true>;

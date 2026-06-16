@@ -260,6 +260,13 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
         const components = d ? allCardNameComponentsForDef(d) : [];
         if (!wants.some(w => components.includes(w))) return false;
       }
+      // cluster16: cardNameNot (「〚カード名[X]〛以外」) — matchOneFilter / targetFilterToPredicate と同式。
+      // 第4の filter-eval サイト (本関数は matchOneFilter 非委譲の inline 評価)。3経路 sync 必須 (cluster2 教訓)。
+      if (f.cardNameNot !== undefined) {
+        const nots = Array.isArray(f.cardNameNot) ? f.cardNameNot : [f.cardNameNot];
+        const components = d ? allCardNameComponentsForDef(d) : [];
+        if (nots.some(w => components.includes(w))) return false;
+      }
       if (f.trait !== undefined) {
         const wants = Array.isArray(f.trait) ? f.trait : [f.trait];
         const traits = d?.traits ?? [];

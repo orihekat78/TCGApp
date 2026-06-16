@@ -71,7 +71,7 @@ const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'con
 const SHARED_FNS = new Set(['misreadX', 'souzaX', 'partnerColorKeyword', 'eventRemoveByAP', 'caseTraitConditioned', 'caseResolvedHandRemove', 'caseDeclaredEvidenceFlip']);
 const ABILITY_TYPES = new Set(['continuous', 'triggered', 'declared', 'icon-disguise', 'icon-misread']);
 const SCOPES = new Set(['on-scene', 'on-partner-area', 'on-hand', 'on-evidence', 'always']);
-const FILTER_FIELDS = new Set(['cardId', 'cardName', 'trait', 'color', 'keyword', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'hasSetCards']);
+const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'keyword', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'hasSetCards']);
 
 function walk(node, errs, ctx) {
   if (node === null || typeof node !== 'object') {

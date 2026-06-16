@@ -265,6 +265,14 @@ export function matchOneFilter(
     if (!ok) return false;
   }
 
+  // cluster16: cardNameNot (「〚カード名[X]〛以外」) — positive cardName と対称。split-name (rules/19)
+  // の component いずれかが nots に含まれたら除外。excludeSelf(uid) は同名2枚目を誤許容するため name 単位除外。
+  if (filter.cardNameNot !== undefined) {
+    const nots = Array.isArray(filter.cardNameNot) ? filter.cardNameNot : [filter.cardNameNot];
+    const components = d ? allCardNameComponentsForDef(d) : [];
+    if (nots.some(w => components.includes(w))) return false;
+  }
+
   if (filter.trait !== undefined) {
     const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
     const traits = d?.traits ?? [];
