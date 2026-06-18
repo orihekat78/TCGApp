@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 411
-- **ファイル数**: 6898
+- **ファイル数**: 6903
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -455,6 +455,7 @@
     - `2026-06-16-07-engine-cluster16-filter-predicate.md` — engine拡張 wave#2 cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckRe…
     - `2026-06-16-08-cluster16-filter-predicate-ship.md` — engine拡張 wave#2 cluster16 出荷 — filter-predicate カード 11枚 (cardNameNot + deckRevea…
     - `2026-06-18-01-hagiwara-self-remove-observer-ship.md` — engine拡張 wave#2 cluster16 fast-follow — 萩原千速 trio 出荷 (self-remove removal-observ…
+    - `2026-06-18-02-momoi-deckreveal-ship.md` — cluster16 G2 follow-up — 桃井恵子 (B07051) 出荷 (deckReveal filterAny)
     - `README.md` — Changelog エントリ
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
@@ -781,6 +782,8 @@
     - `smoke-2026-06-16-9.md` — Smoke 1000戦レポート — smoke-2026-06-16-103447
     - `smoke-2026-06-16.json`
     - `smoke-2026-06-16.md` — Smoke 1000戦レポート — smoke-2026-06-16-001302
+    - `smoke-2026-06-18-2.json`
+    - `smoke-2026-06-18-2.md` — Smoke 1000戦レポート — smoke-2026-06-18-141147
     - `smoke-2026-06-18.json`
     - `smoke-2026-06-18.md` — Smoke 1000戦レポート — smoke-2026-06-18-134144
     - `smoke-baseline.json`
@@ -6140,6 +6143,7 @@
       - `B07042.ts` — cards/ct-p07/B07042 式部鹿紫子 (character) — Task A green候補 (engine変更0)
       - `B07044.ts` — cards/ct-p07/B07044 ジョディ・ホッパー (キャラ) — engine拡張 wave#2 cluster13 (aura-grant, 202…
       - `B07047.ts` — cards/ct-p07/B07047 中森銀三 (character) — 赤魔術 trait family残 (engine変更0)
+      - `B07051.ts` — cards/ct-p07/B07051 桃井恵子 (character) — cluster16 G2 follow-up (engine変更0)
       - `B07052.ts` — cards/ct-p07/B07052 ルシュファー (character) — 赤魔術 trait family (engine変更0, 手書き closur…
       - `B07055.ts` — cards/ct-p07/B07055 紅の盟約 (イベント) — 赤魔術 trait family (engine変更0)
       - `B07055P.ts` — cards/ct-p07/B07055P 紅の盟約 (イベント) — 赤魔術 trait family
@@ -6998,6 +7002,7 @@
       - `PR237.test.ts` — gate5 RUNTIME behavior — PR237 犯人 (character, 黒, Lv3 AP0 LP0, 特徴[犯人])
     - `.gitkeep`
     - `akamajutsu-trait-family.test.ts` — 赤魔術 trait family — 構造 + 実 engine 挙動テスト。
+    - `B07051-momoi-deckreveal.test.ts` — gate5 RUNTIME behavior — B07051 桃井恵子 (character, 白/高校生, L4 AP4000 LP1)
     - `bug-114-discard-scale-cutins.test.ts` — BUG-114: B05040 / B08055 カットイン — discard-bind dyn で「リムーブしたカードの level/…
     - `bug-123-character-kind.test.ts` — BUG-123: イベントを含むエリア (remove/hand) からの「キャラ」pick は kind:'character' 必須。
     - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15):

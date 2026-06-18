@@ -43,7 +43,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 |-----|-----------|------|
 | ~~PR280 / B06087 / B06087P (萩原千速)~~ | ✅ **出荷済 (2026-06-18、`cards/wave2-cluster16-hagiwara-pair`)**。DEFER 3点を解消: (1) over-fire `triggerCondition` → `condition:and[fileAtLeast6, removedCharMatches{opp,contact-ap,self}]` で手 author、(2) a1 partnerColorKeyword __shared import、(3) 初の自己リムーブ observer 再入を専用 gate5 テスト `tests/cards/hagiwara-self-remove-observer.test.ts` (9 pass) + 敵対 Workflow (opus 4 lens pass / ship:true) で安全実証。changelog [2026-06-18-01](../changelog-entries/2026-06-18-01-hagiwara-self-remove-observer-ship.md) | ✅ 出荷済 |
 | B09016 (円谷光彦) | 「**ミスリードしたとき**」反応 trigger が card-triggerable hook に無い (misread は内部 reasoning:before-add で同期処理、「自分が misread した」sign号無)。新 hook emit+register = engine change 必須 | yellow (engine gate) |
-| B07051 (桃井恵子) | sweep が B03016 clone に誤 grouping。実は別カード (怪盗キッド/高校生 reveal) で **同 G2 capability で出荷可能な未certify候補** | follow-up (未certify) |
+| B07051 (桃井恵子) | ~~sweep が B03016 clone に誤 grouping。実は別カード (怪盗キッド/高校生 reveal)~~ → **✅ 出荷済** (2026-06-18 セッション⑳、B03016 文字単位 twin、ALL_CARDS 1341→1342) | ✅ 出荷済 |
 
 ## engine拡張 cluster15 (removal-observer 反撃カード一族, 2026-06-16) DEFER 14 rep
 

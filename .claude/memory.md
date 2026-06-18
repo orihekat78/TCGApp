@@ -48,3 +48,16 @@ branch `cards/wave2-cluster16-hagiwara-pair`。cluster16 ship で DEFER した P
 - 全ゲート: tsc0 / vitest 全pass(減なし) / smoke baseline winsA=498不変 / engine変更0。playwright は非MVPカードのため gate5 vitest で代替 (cluster15/16 と同方針)。
 - 残 follow-up: B07051(桃井恵子, deckReveal filterAny, 未certify)。
 - 教訓: certify auto-spec の `triggerCondition` over-fire は出荷前自己突合で捕捉 (verify透過)。novel re-entrancy は「再emit payload が condition leg を再合致できるか」を3 leg独立で確認すれば安全証明可。
+
+## セッション⑳ (2026-06-18) — 桃井恵子 B07051 出荷 (cluster16 G2 follow-up)
+branch `cards/wave2-cluster16-momoi-b07051`。⑲ 残 follow-up の B07051 を certify→出荷 (ALL_CARDS 1341→1342)。
+- a1 = `【宣言】【スリープ】：デッキ上1枚公開 → 〚カード名[怪盗キッド]〛か〚特徴[高校生]〛のキャラなら手札、それ以外デッキ下`。
+- certify = 出荷済 **B03016 円谷光彦 の文字単位 twin** (阿笠博士→怪盗キッド / 少年探偵団→高校生 の leaf literal 2箇所のみ)。DSL は B03016 a1 と byte-identical。
+- 手 author: card file (clone B03016) + `_reuse/index.ts` 登録 (taskA codegen 対象外 = green候補マスタ未生成のため)。
+- gate5 `tests/cards/B07051-momoi-deckreveal.test.ts` 9 pass: filter 実評価を **outcome (手札/デッキ下) で 1対1 証明** (kind:character 違反 event decoy 2 + 両枝非該当 decoy + split-name複合名 + only-top-1 reveal pin)。「のキャラ」= kind:character (B07035「のカード」= kind無し との違いを decoy で固定)。
+- 敵対 certify (opus 1 lens) equivalent:true/ship:true/blocker0。tsc0 / vitest 5222全pass / smoke baseline winsA=498不変 / engine変更0。
+- 学び: `canDeclaredAbility` は cost.canPay を gate しない (存在/limit/condition のみ。sleep cost gate は別 = `engine.cost.canPay`。docstring 明記)。gate5 で誤って canDeclaredAbility(sleep)=false を期待 → 修正。
+
+### 次セッション候補
+- partnerColorKeyword closure DEFER 群 (B06038/B06039/B08010/B09071/B04004) の __shared 手 author fast follow-up。
+- 次 engine クラスタ / トリアージ出荷バッチ#5 (triage-sweep-2026-06-15.md、gate ラベルは過剰グルーピング → 実テキスト決定論分類で密度検証)。

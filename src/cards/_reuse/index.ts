@@ -842,6 +842,7 @@ import { B07035P } from '../ct-p07/B07035P.js';
 import { PR280 } from '../pr-01/PR280.js';
 import { B06087 } from '../ct-p06/B06087.js';
 import { B06087P } from '../ct-p06/B06087P.js';
+import { B07051 } from '../ct-p07/B07051.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1017,4 +1018,6 @@ export const REUSE_CARDS: CardDef[] = [
   B03016, B03016P, B03053, B03113, B03113P, B04012, PR026, PR030, B06081, B07035, B07035P,
   // wave#2 cluster16 — self-remove removal-observer (萩原千速 trio: contact-self removal observer + cardNameNot summon)
   PR280, B06087, B06087P,
+  // wave#2 cluster16 G2 follow-up — deckReveal filterAny (桃井恵子: 怪盗キッド/高校生 reveal, B03016 exact twin)
+  B07051,
 ];
