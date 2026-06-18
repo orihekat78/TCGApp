@@ -839,6 +839,9 @@ import { PR030 } from '../pr-01/PR030.js';
 import { B06081 } from '../ct-p06/B06081.js';
 import { B07035 } from '../ct-p07/B07035.js';
 import { B07035P } from '../ct-p07/B07035P.js';
+import { PR280 } from '../pr-01/PR280.js';
+import { B06087 } from '../ct-p06/B06087.js';
+import { B06087P } from '../ct-p06/B06087P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1012,4 +1015,6 @@ export const REUSE_CARDS: CardDef[] = [
   D10007, D10008, B01007, B01010, B01010P, B06031, B06031P, B06051, B06051P, B07017, B07017P, B07084, B07084P, B07097, B07097P, B09023, B09023P, D09010, D09011, B06067, B06067P, B09026, B01030, B01030P, B01031, B01031P,
   // wave#2 cluster16 — filter-predicate ship (cardNameNot + deckReveal filterAny)
   B03016, B03016P, B03053, B03113, B03113P, B04012, PR026, PR030, B06081, B07035, B07035P,
+  // wave#2 cluster16 — self-remove removal-observer (萩原千速 trio: contact-self removal observer + cardNameNot summon)
+  PR280, B06087, B06087P,
 ];

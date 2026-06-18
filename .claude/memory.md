@@ -38,3 +38,13 @@ lint:* 8本 errors=0 (shipped=1338) / **gate5 `tests/cards/cluster16-ship.test.t
 - 萩原千速 pair 手 author 出荷 (a2=and[fileAtLeast6,removedCharMatches] / a1=partnerColorKeyword __shared / gate5 re-entrancy test) + B07051 同梱。
 - partnerColorKeyword closure DEFER 群 (B06038/B06039/B08010/B09071/B04004 等) の __shared 手 author fast follow-up。
 - 次 engine クラスタ / トリアージ出荷バッチ#5。
+
+## セッション⑲ (2026-06-18) — 萩原千速 trio 出荷 (cluster16 fast-follow)
+branch `cards/wave2-cluster16-hagiwara-pair`。cluster16 ship で DEFER した PR280/B06087/B06087P を手 author 出荷 (ALL_CARDS 1338→1341)。
+- a1 = partnerColorKeyword({color:'黄',kw:'突撃'}) __shared / a2 = removal-observer: condition and[fileAtLeast6, removedCharMatches{opp,contact-ap,self}] + trigger leave:to-remove + optional{sequence[sceneRemove $self, sceneEnter{cardNameNot:萩原千速,trait:警察,levelMax:7,kind:character,from:hand,max:1,viaEffect}]}。B05108(body)+D10007(observer)+B09023(and)の合成。
+- DEFER blocker 解消: over-fire `triggerCondition`(engine非実在)→`condition`へ / partnerColorKeyword closure→__shared / 初の「removal verb in effect + 【ターン1】無し」removal-observer→専用テスト。
+- gate5+安全テスト `tests/cards/hagiwara-self-remove-observer.test.ts` 9 pass (filter 1対1 decoy [cardNameNot/trait/levelMax/kind/split-name/近縁trait] + trigger gating + 自己cascade非再帰pin)。
+- ユーザー要望で **敵対 Workflow** (opus 4 lens 並列+synthesis): 意味等価/再入安全/gate5網羅/rules整合 全 pass、ship:true、blocker0。
+- 全ゲート: tsc0 / vitest 全pass(減なし) / smoke baseline winsA=498不変 / engine変更0。playwright は非MVPカードのため gate5 vitest で代替 (cluster15/16 と同方針)。
+- 残 follow-up: B07051(桃井恵子, deckReveal filterAny, 未certify)。
+- 教訓: certify auto-spec の `triggerCondition` over-fire は出荷前自己突合で捕捉 (verify透過)。novel re-entrancy は「再emit payload が condition leg を再合致できるか」を3 leg独立で確認すれば安全証明可。
