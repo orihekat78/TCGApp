@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 412
-- **ファイル数**: 6918
+- **ディレクトリ数**: 413
+- **ファイル数**: 6919
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1188,6 +1188,8 @@
       - `15-tutorial-lesson-viewer.md` — 15 — Phase 16: チュートリアル lesson viewer (ステップ → 別画面)
       - `16-tutorial-real-board.md` — 16 — Phase 17: チュートリアル実対戦フォーマット流用 + ガイド付き実戦
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
+    - **`plans/`**
+      - `2026-06-19-cpu-visualize-and-interrupt-lock-plan.md` — CPU逐次プレイ可視化 + 効果解決中ロック 実装計画
     - **`refactor-plan/`**
       - `INDEX.md` — 全体リファクタリング計画 (2026-06-12 起案、ユーザー指示)
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
