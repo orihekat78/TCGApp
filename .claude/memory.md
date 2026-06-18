@@ -61,3 +61,13 @@ branch `cards/wave2-cluster16-momoi-b07051`。⑲ 残 follow-up の B07051 を c
 ### 次セッション候補
 - partnerColorKeyword closure DEFER 群 (B06038/B06039/B08010/B09071/B04004) の __shared 手 author fast follow-up。
 - 次 engine クラスタ / トリアージ出荷バッチ#5 (triage-sweep-2026-06-15.md、gate ラベルは過剰グルーピング → 実テキスト決定論分類で密度検証)。
+
+## セッション㉑ (2026-06-18) — cluster15 follow-up removal-observer + keyword-grant 群 出荷 (4 rep/8 printings)
+branch `cards/wave2-cluster15-partnercolor`。⑳候補1 (partnerColorKeyword DEFER 群) を手 author 出荷 (ALL_CARDS 1342→1350)。
+- 4 rep: B06038 鬼丸猛(緑) / B06039 沖田総司(緑) / B08010 真田貴大(青) / B09071 萩原千速(黄)。parallels B06038P/B06039P/B09071P/B09071P2 = 8 printings。
+- DEFER blocker (keyword-grant closure) 解消: partnerColorKeyword __shared (B06038/B06039/B09071)。**B08010 のみ 【絆比護隆佑】gated** = partnerColor でなく B08012 a1 鏡像の inline bond+grantKeywords closure (TSV 実テキストで確認)。
+- removal-observer は bare `removedCharMatches{opp,contact-ap,self}` + `leave:to-remove`(selfOnly無)。cluster16 萩原で既出荷の同条件。effect は draw/draw+discard/sleep のみ = scene removal verb 非含 → cascade 懸念なし (萩原 self-remove より単純)。
+- gate5 `tests/cards/cluster15-followup-removal-observer.test.ts` 10 pass: end-to-end contact で発火 + decoy 1対1 (cause=effect/除去者=別キャラ/自分キャラ除去→非発火) + effect/grant 値 pin。
+- 全ゲート: tsc0 / vitest 5232 pass(+10) / smoke baseline winsA=498不変 / validate-specs engine変更0 / eslint0 / lint:listener+bugs errors=0。playwright は非MVP→gate5 代替。
+- 学び: certify auto-spec の group ラベルでなく **TSV 実テキストで条件 kind を決める** (B08010 は群ラベル上 partnerColor だが実は【絆】gated = 別 inline closure)。
+- 残: B04004 (絆 reactive over-fire DSL fix、別 gate)、B09016 (ミスリード反応 engine gate)。cluster15 keyword-grant 群は完了。

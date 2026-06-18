@@ -843,6 +843,14 @@ import { PR280 } from '../pr-01/PR280.js';
 import { B06087 } from '../ct-p06/B06087.js';
 import { B06087P } from '../ct-p06/B06087P.js';
 import { B07051 } from '../ct-p07/B07051.js';
+import { B06038 } from '../ct-p06/B06038.js';
+import { B06038P } from '../ct-p06/B06038P.js';
+import { B06039 } from '../ct-p06/B06039.js';
+import { B06039P } from '../ct-p06/B06039P.js';
+import { B08010 } from '../ct-p08/B08010.js';
+import { B09071 } from '../ct-p09/B09071.js';
+import { B09071P } from '../ct-p09/B09071P.js';
+import { B09071P2 } from '../ct-p09/B09071P2.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1020,4 +1028,6 @@ export const REUSE_CARDS: CardDef[] = [
   PR280, B06087, B06087P,
   // wave#2 cluster16 G2 follow-up — deckReveal filterAny (桃井恵子: 怪盗キッド/高校生 reveal, B03016 exact twin)
   B07051,
+  // wave#2 cluster15 follow-up — removal-observer + keyword-grant closure (partnerColorKeyword / 絆 bond grant + contact-self removal observer)
+  B06038, B06038P, B06039, B06039P, B08010, B09071, B09071P, B09071P2,
 ];

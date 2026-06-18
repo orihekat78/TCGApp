@@ -52,7 +52,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 
 | rep | DEFER 理由 (反撃以外の句) | 種別 |
 |-----|--------------------------|------|
-| B06038 B06039 B08010 B09071 | `partnerColorKeyword` closure (continuousModifier.grantKeywords は (s,ctx)=>string[] で JSON 不能) → __shared 手書き要 | needsManual (**fast follow-up**、B08010 の cluster15 twin は本 wave で出荷済) |
+| ~~B06038 B06039 B08010 B09071~~ | ✅ **出荷済 (2026-06-18、`cards/wave2-cluster15-partnercolor`)**。keyword-grant closure (partnerColorKeyword __shared / B08010 は絆 bond grant inline closure = B08012 鏡像) + removal-observer (bare `removedCharMatches{opp,contact-ap,self}`、cluster16 萩原で既出荷) を手 author。parallels 含め 8 printings (B06038/P, B06039/P, B08010, B09071/P/P2)。gate5 `tests/cards/cluster15-followup-removal-observer.test.ts` 10 pass (end-to-end contact gating decoy [cause/by/side] + effect/grant 1対1)。engine変更0 | ✅ 出荷済 |
 | B04004 | a3 (絆 reactive) の actor-gate 欠落 = over-fire。正解 `and[triggerCharMatches{side:opp,filter:{}}, …]` で再 author 要 | refuted (DSL fix) |
 | B06087 | 登場候補の **cardName-EXCLUSION** filter (「萩原千速以外」) が TargetFilter に無い + chain/optional 構造 | refuted (engine gate) |
 | B09022 | sceneSetState 自側限定 picked-sleep (short-form side hardcoded 'either' / explicit-$pick in chain no-op) | refuted (engine gate) |
