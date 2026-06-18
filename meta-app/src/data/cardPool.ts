@@ -16,10 +16,15 @@ const COLOR_MAP: Record<string, CardColor> = {
   blue: 'blue', yellow: 'yellow', red: 'red', green: 'green', purple: 'purple', black: 'black', white: 'white',
 };
 
-/** engine.id (印刷番号) から cardId を導出。パラレル (例 B08004P / B05005P1) は
- *  base を共有し「同じカード」として扱う (rules/02-deck-construction.md)。 */
-function toCardId(engineId: string): string {
-  return engineId.replace(/P\d*$/, '');
+/** engine.no ("<公式cardId>/<印刷番号>"、例 "0015/B01019") から公式 cardId を取り出す。
+ *  rules/02「絵柄が違っても ID が同じであれば同じカード」= 公式 cardId が一致すれば同一カード。
+ *  パラレル (B01019/B01019P) も別収録 (B01019/D10018/D10019、シェリー 0388=D07002/D07003) も
+ *  同じ公式 cardId を共有するため、印刷番号の P 接尾辞剥がしではなく no の公式 cardId で合算する
+ *  (旧 toCardId は P 接尾辞のみ剥がしていたため別収録を別カード扱いし、同一カードを 3 枚超
+ *   入れられるバグになっていた)。 */
+function officialCardId(no: string): string {
+  const slash = no.indexOf('/');
+  return slash > 0 ? no.slice(0, slash) : no;
 }
 
 /** ability の公式テキスト + engine.keywords からデッキ編集フィルタ用キーワードを抽出。 */
@@ -53,7 +58,7 @@ function engineToMeta(e: EngineCardDef): CardDef {
   const primary: CardColor = colors[0] ?? 'blue';
   return {
     num: e.id,
-    id: toCardId(e.id),
+    id: officialCardId(e.no),
     name: e.names[0] ?? e.id,
     type: e.kind,
     color: primary,
