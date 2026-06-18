@@ -1,0 +1,33 @@
+// src/ui/state/interactionLock — 効果解決中の入力ロック判定
+// rules: 05-turn-phases.md §割り込み禁止 (他の行動中や効果解決中は次の行動に移れない)、
+//        15-abilities-effects.md §未解決効果。
+//
+// カード効果の解決中、または人間の未解決 decision (pick/choice/optional/hirameki/misread/deck-reveal)
+// 待ち中は、新しいメインアクション (推理/アクション/手札使用/ネクストヒント/宣言/アシスト/事件解決) を
+// 開始できない。decision を解決する modal/overlay 自体や、盤面/手札の pick クリックはロック対象外
+// (それは「割り込み」でなく必要入力)。本 flag は ActionsPanel の main action 起点のみを塞ぐ。
+
+import type { GameStateStore } from './store';
+
+type LockSlice = Pick<
+  GameStateStore,
+  | 'gameState'
+  | 'pendingEffectPick'
+  | 'pendingEffectChoice'
+  | 'pendingEffectOptional'
+  | 'pendingHirameki'
+  | 'pendingMisread'
+  | 'pendingDeckReveal'
+>;
+
+export function selectInteractionLocked(s: LockSlice): boolean {
+  return (
+    (s.gameState?.pendingEffects.length ?? 0) > 0 ||
+    s.pendingEffectPick != null ||
+    s.pendingEffectChoice != null ||
+    s.pendingEffectOptional != null ||
+    s.pendingHirameki != null ||
+    s.pendingMisread != null ||
+    s.pendingDeckReveal != null
+  );
+}

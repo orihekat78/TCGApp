@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 413
-- **ファイル数**: 6919
+- **ファイル数**: 6922
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -6889,6 +6889,7 @@
       - `uidNames.ts` — UID → 表示名解決ユーティリティ (Round 2 で新設)
     - **`state/`**
       - `.gitkeep`
+      - `interactionLock.ts` — src/ui/state/interactionLock — 効果解決中の入力ロック判定
       - `store.ts` — src/ui/state/store.ts — Phase 7 Task 7.1
       - `tutorialStore.ts` — Phase 9a-1: チュートリアル進行ストア
     - **`styles/`**
@@ -7249,6 +7250,7 @@
     - `format-md.test.ts` — tests/smoke/format-md — Phase 9-A Markdown formatter tests
   - **`ui/`** — UI コンポーネント単体テスト
     - **`components/`**
+      - `ActionsPanel.lock.test.tsx` — tests/ui/components/ActionsPanel.lock — 効果解決中ロック (rules/05 割り込み禁止)
       - `area-animations.test.tsx` — Phase 8.10d: 各エリアの data-card-id 属性確認テスト
       - `CardArt.test.tsx` — tests/ui/components/CardArt — Phase 9-C: カード画像 img wrapper
       - `CaseArea.stamp.test.tsx` — Phase 8.10h: CaseArea stamp-flip class application
@@ -7318,6 +7320,7 @@
       - `scenePick.test.ts` — TDD: isSceneDirectPick 述語 (UI picker Direct Manipulation 化 設計 v2 BLOCKER)
       - `tutorialSteps.test.ts` — Phase 9a-1: tutorialSteps constants test
     - **`state/`**
+      - `interaction-lock.test.ts` — tests/ui/state/interaction-lock — 効果解決中の入力ロック判定 (rules/05 割り込み禁止 / rules/…
       - `store.test.ts` — tests/ui/state/store.test.ts — Phase 7 Task 7.1 tests
       - `tutorialStore.test.ts` — Phase 9a-1: tutorialStore behavior tests
     - **`styles/`**

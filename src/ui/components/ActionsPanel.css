@@ -271,3 +271,11 @@
 .end-turn-btn .end-turn-big {
   font-size: 16px;
 }
+
+/* 効果解決中ロック (rules/05 割り込み禁止): メインアクション一覧を視覚的に不可状態へ。
+   各 item は .disabled も付くが、ロック中であることをパネル全体で示す。 */
+.actions-panel.locked .actions-list {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}

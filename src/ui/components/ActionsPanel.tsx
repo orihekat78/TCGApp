@@ -38,6 +38,12 @@ export type ActionsPanelProps = {
   canAssist?: boolean;
   /** 事件解決可否 (move-enumerator.canSolveCase と同条件) */
   canSolveCase?: boolean;
+  /**
+   * 効果解決中ロック (rules/05 割り込み禁止 / rules/15 未解決効果)。
+   * true の間は全メインアクションを disabled にしてクリックを塞ぐ
+   * (必要 decision modal / 盤面 pick はロック対象外)。
+   */
+  interactionLocked?: boolean;
   /** アクション: 対象選択中等の現在モード ('idle' なら未選択) */
   actionMode: 'idle' | 'selecting-target' | 'in-progress';
   /** 現在の Phase (auto / main / end) */
@@ -89,6 +95,7 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
     reasoningTotalLP,
     canAssist = false,
     canSolveCase = false,
+    interactionLocked = false,
     actionMode,
     currentPhase,
     canEndTurn,
@@ -165,15 +172,18 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
   ];
 
   return (
-    <aside className="actions-panel" aria-label="操作パネル">
+    <aside className={`actions-panel${interactionLocked ? ' locked' : ''}`} aria-label="操作パネル" aria-busy={interactionLocked || undefined}>
       <div className="actions-header">ACTIONS</div>
 
       <ul className="actions-list" role="list">
         {items.map((item) => {
+          // 効果解決中ロック: 全項目を disabled 化 (rules/05 割り込み禁止)。active 表示も抑止。
+          const disabled = Boolean(item.disabled) || interactionLocked;
+          const active = Boolean(item.active) && !interactionLocked;
           const classes = [
             'action-item',
-            item.active && 'active',
-            item.disabled && 'disabled',
+            active && 'active',
+            disabled && 'disabled',
           ]
             .filter(Boolean)
             .join(' ');
@@ -182,13 +192,13 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
               key={item.id}
               className={classes}
               data-action-id={item.id}
-              aria-disabled={item.disabled || undefined}
+              aria-disabled={disabled || undefined}
               onClick={
-                item.disabled || !onActionItemClick
+                disabled || !onActionItemClick
                   ? undefined
                   : () => onActionItemClick(item.id as ActionItemId)
               }
-              style={item.disabled ? undefined : { cursor: 'pointer' }}
+              style={disabled ? undefined : { cursor: 'pointer' }}
             >
               <span className="action-icon" aria-hidden="true" />
               <span className="action-body">

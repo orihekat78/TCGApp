@@ -67,6 +67,7 @@ import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.
 import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useEvidenceFlipPicker.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
+import { selectInteractionLocked } from '../state/interactionLock.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readChar } from '@/engine/read/char.js';
 // D08021 driver 2026-05-26: distinctNames 制約 (rules/19) を multi-pick UI で
@@ -287,6 +288,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   //   handAddFromRemove → CardListModal kind='remove' を auto-open
   //   discard → HandZone を auto-expand (pick mode)
   const pendingPickForArea = useGameStateStore((s) => s.pendingEffectPick);
+  // 効果解決中ロック (rules/05 割り込み禁止): 効果スタック非空 or 人間の未解決 decision 待ち中は
+  // ActionsPanel の全メインアクションを塞ぐ。decision modal / 盤面 pick はロック対象外。
+  const interactionLocked = useGameStateStore(selectInteractionLocked);
   const isDiscardPick =
     pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'discard';
   // 2026-05-28: ネクストヒント step2 pick。useNextHintPicker store に current が
@@ -697,6 +701,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           }
           canAssist={gameState ? canAssistForUi(gameState, 'self') : false}
           canSolveCase={gameState ? canSolveCaseForUi(gameState, 'self') : false}
+          interactionLocked={interactionLocked}
           actionMode={
             pickerPhase.phase !== 'idle' &&
             typeof pickerPhase.purpose === 'string' &&
@@ -711,6 +716,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           }
           onEndTurn={() => { void runEndTurnFlow({ player: 'self' }); }}
           onActionItemClick={(id: ActionItemId) => {
+            // 効果解決中ロック (rules/05 割り込み禁止): 念のためハンドラ側でも弾く
+            // (ActionsPanel 側で disabled 済だが、プログラム経由の呼び出しを保険でブロック)。
+            if (interactionLocked) return;
             // Round 2: picker stack 整理 — 別 ACTIONS item を選んだら現在の picker は
             // キャンセル (ガイドラベル + outline glow 消す)。flow 内で再度 start() するなら
             // そこで再開始される (useTargetPicker.start は "既に picking 中" の自動 cancel
