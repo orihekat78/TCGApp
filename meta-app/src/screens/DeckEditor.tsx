@@ -1,20 +1,21 @@
-// spec: .claude/specs/meta-ui/07-screens-library.md + 12-screens-rebuild.md
-// Phase 18: Master Duel 風 全面リデザイン
-//   左: 検索 + 共有 FilterRail (色/種別/コスト/レアリティ/特徴/キーワード, OR/AND, sticky)
-//   中央上: プールグリッド (キャラ/イベントのみ。ダブルクリック/右クリック/＋で追加、
-//           同 ID 3 枚到達はグレーアウト+MAX 表示で追加不可 ← 同 ID 上限を UI で可視化)
-//   中央下: 選択カード詳細
-//   右: パートナー枠 + 事件枠 (クリックで選択) / n/40・種類 / コストカーブ /
-//       デッキリスト (自動グルーピング or 手動ドラッグ並べ替え、±) / 検証バナー
-//   ツールバー: デッキ名 / デッキ切替 / 新規・複製・削除 / デッキコード入出力 / テストハンド / 保存
+// spec: .claude/specs/meta-ui/07-screens-library.md + 12-screens-rebuild.md + 13-md-deck-editor.md
+// Phase 18 → MD 風 3 ペイン リデザイン (spec 13):
+//   左 (~290px) 詳細: 大カード(click→CardExpandModal) + 名前/種別/特徴 + C/AP/LP + 効果文 + [－][n/3][＋]
+//   中央 (flex) デッキ: パートナー/事件スロット + 40/40・種類 + cost曲線 + 種別内訳 + 検証バナー
+//                       + 40枚カード画像グリッド (1タイル+×nバッジ, type→cost→name 自動整列, ホバー－で除外)
+//   右 (flex) 手持ち POOL: 🔍検索 + 並べ替え(num/cost/ap/lp/name) + 「フィルタ N」(slide-over の FilterRail)
+//                          + プール画像グリッド (click=追加+詳細, 同 ID 上限到達は atMax で灰・追加不可)
+//   ツールバー: デッキ名 / 切替 / 新規・複製・削除 / コード入出力 / テストハンド / 保存 (現行 SubToolbar 流用)
+//   ロジック/state/ハンドラ/検証は全て現状流用・挙動不変。手動並べ替え(D&D)は廃止 (自動整列のみ)。
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { T, shade, COLOR_TOKEN } from '../shared/tokens';
 import { AppTopBar } from '../shared/AppTopBar';
 import { MetaCard } from '../shared/MetaCard';
 import { FilterRail } from '../shared/FilterRail';
 import { SetupButton } from '../shared/Button';
 import { WarningBanner } from '../shared/WarningBanner';
+import { CardExpandModal } from '@/ui/components/CardExpandModal';
 import { engineStub } from '../stubs/engineStub';
 import { useDecksStore } from '../state/decksStore';
 import { useFiltersStore } from '../state/filtersStore';
@@ -22,7 +23,7 @@ import {
   CARD_POOL, cardIdOf, countsByCardId, defaultCaseForPartner,
   PARTNER_CARDS, CASE_CARDS,
 } from '../data/cardPool';
-import { matchesFilter } from '../data/cardFilter';
+import { matchesFilter, sortCards, activeFilterCount, type SortKey, type SortDir } from '../data/cardFilter';
 import { encodeDeck, decodeDeck, type DecodedDeck } from '../util/deckCode';
 import type { CardDef, CardKind, DeckRecord } from '../data/types';
 import type { Route } from '../router/routes';
@@ -33,6 +34,19 @@ interface Props {
 
 const MAX_PER_ID = 3;
 const POOL_TYPES: CardKind[] = ['character', 'event'];
+
+const SORTS: { k: SortKey; label: string }[] = [
+  { k: 'num',  label: '番号' },
+  { k: 'cost', label: 'コスト' },
+  { k: 'ap',   label: 'AP' },
+  { k: 'lp',   label: 'LP' },
+  { k: 'name', label: '名前' },
+];
+
+const panelBg: React.CSSProperties = {
+  background: 'linear-gradient(180deg, rgba(13,38,64,0.85), rgba(13,38,64,0.55))',
+  border: `1px solid rgba(78,195,255,0.25)`, borderRadius: 4,
+};
 
 function emptyDeck(): DeckRecord {
   return { id: `deck-${Date.now()}`, name: '新しいデッキ', partner: '', case: '', cards: [], modified: Date.now() };
@@ -57,20 +71,21 @@ export function DeckEditor({ onNav }: Props) {
   });
   const [selectedNum, setSelectedNum] = useState<string>('');
   const [modal, setModal] = useState<ModalKind>(null);
-  const [manualOrder, setManualOrder] = useState(false);
+  // MD 風: プール並べ替えキー (新規 UI、render ローカル state)。手動 D&D 並べ替えは廃止。
+  const [poolSort, setPoolSort] = useState<SortKey>('cost');
+  const [poolSortDir, setPoolSortDir] = useState<SortDir>('asc');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const original = decks.find((d) => d.id === draft.id);
   const dirty = !original || JSON.stringify(original) !== JSON.stringify({ ...draft, modified: original.modified });
 
   const filteredPool = useMemo(() => {
-    return CARD_POOL
+    const base = CARD_POOL
       .filter((c) => POOL_TYPES.includes(c.type))
-      .filter((c) => matchesFilter(c, filter))
-      .sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'character' ? -1 : 1;
-        return (a.cost ?? 99) - (b.cost ?? 99) || a.num.localeCompare(b.num);
-      });
-  }, [filter]);
+      .filter((c) => matchesFilter(c, filter));
+    return sortCards(base, poolSort, poolSortDir);
+  }, [filter, poolSort, poolSortDir]);
   // FilterRail のカウントはプールに出るカード (キャラ/イベント) のみを母集団にする
   // (パートナー/事件を含めると 色/レアリティ/キーワード のカウントが実数と食い違う)。
   const poolForRail = useMemo(() => CARD_POOL.filter((c) => POOL_TYPES.includes(c.type)), []);
@@ -107,16 +122,6 @@ export function DeckEditor({ onNav }: Props) {
       if (cur.count <= 1) return { ...d, cards: d.cards.filter((e) => e.num !== num) };
       const next = [...d.cards];
       next[idx] = { ...cur, count: cur.count - 1 };
-      return { ...d, cards: next };
-    });
-  };
-
-  const reorder = (from: number, to: number) => {
-    setDraft((d) => {
-      if (from === to || from < 0 || to < 0 || from >= d.cards.length || to >= d.cards.length) return d;
-      const next = [...d.cards];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved!);
       return { ...d, cards: next };
     });
   };
@@ -172,45 +177,22 @@ export function DeckEditor({ onNav }: Props) {
       />
 
       <div style={{
-        position: 'absolute', left: 24, right: 24, top: 134, bottom: 16,
-        display: 'grid', gridTemplateColumns: '240px 1fr 380px', gap: 14,
+        position: 'absolute', left: 16, right: 16, top: 134, bottom: 14,
+        display: 'flex', gap: 12, minHeight: 0,
       }}>
-        {/* LEFT: search + filters */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
-          <SearchBox q={filter.q} onChange={(q) => setFilter({ q })} />
-          <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-            <FilterRail filter={filter} onChange={setFilter} onReset={resetFilter} pool={poolForRail} typeOptions={POOL_TYPES} />
-          </div>
-        </div>
-
-        {/* CENTER: pool + detail */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-          <PoolGrid
-            cards={filteredPool}
-            selectedNum={selectedNum}
-            idCounts={idCounts}
-            onSelect={setSelectedNum}
-            onAdd={addCard}
+        {/* LEFT: selected card detail (~290px) */}
+        <div style={{ width: 290, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <DetailPane
+            card={selectedCard}
+            count={selectedCard ? (idCounts.get(selectedCard.id) ?? 0) : 0}
+            onAdd={() => { if (selectedCard) addCard(selectedCard.num); }}
+            onRemove={() => { if (selectedCard) removeCard(selectedCard.num); }}
+            onExpand={() => setExpanded(true)}
           />
-          {selectedCard ? (
-            <CardDetailPanel
-              card={selectedCard}
-              count={idCounts.get(selectedCard.id) ?? 0}
-              onAdd={() => addCard(selectedCard.num)}
-              onRemove={() => removeCard(selectedCard.num)}
-            />
-          ) : (
-            <div style={{
-              padding: '14px', textAlign: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 11,
-              background: 'rgba(13,38,64,0.6)', border: `1px dashed rgba(78,195,255,0.25)`, borderRadius: 4,
-            }}>
-              カードを選択すると詳細が表示されます
-            </div>
-          )}
         </div>
 
-        {/* RIGHT: deck overview */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+        {/* CENTER: deck */}
+        <div style={{ flex: 1.35, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
           <SlotsRow
             partner={CARD_POOL.find((c) => c.num === draft.partner)}
             caseCard={CARD_POOL.find((c) => c.num === draft.case)}
@@ -218,11 +200,9 @@ export function DeckEditor({ onNav }: Props) {
             onPickPartner={() => setModal('partner')} onPickCase={() => setModal('case')}
           />
           <DeckStats deck={draft} />
-          <DeckList
-            deck={draft} highlightNum={selectedNum}
-            manualOrder={manualOrder} onToggleOrder={() => setManualOrder((v) => !v)}
-            onAdd={addCard} onRemove={removeCard} onSelect={setSelectedNum} onReorder={reorder}
-            idCounts={idCounts}
+          <DeckGrid
+            deck={draft} idCounts={idCounts} selectedNum={selectedNum} total={totalCards}
+            onSelect={setSelectedNum} onRemove={removeCard}
           />
           {validation.ok ? (
             <WarningBanner tone="info" title="検証 OK" body="40 枚 / 同 ID ≤ 3 / パートナー 1 / 事件 1 を満たしています" />
@@ -230,7 +210,27 @@ export function DeckEditor({ onNav }: Props) {
             <WarningBanner tone="error" title="検証エラー" items={validation.errors} />
           )}
         </div>
+
+        {/* RIGHT: card pool (手持ち) */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <PoolPane
+            cards={filteredPool}
+            selectedNum={selectedNum}
+            idCounts={idCounts}
+            onAdd={addCard}
+            q={filter.q}
+            onQ={(q) => setFilter({ q })}
+            sortKey={poolSort} sortDir={poolSortDir}
+            onSort={(k, d) => { setPoolSort(k); setPoolSortDir(d ?? 'asc'); }}
+            filterCount={activeFilterCount(filter)}
+            onOpenFilter={() => setFilterOpen(true)}
+          />
+        </div>
       </div>
+
+      <FilterSlideOver open={filterOpen} onClose={() => setFilterOpen(false)}>
+        <FilterRail filter={filter} onChange={setFilter} onReset={resetFilter} pool={poolForRail} typeOptions={POOL_TYPES} />
+      </FilterSlideOver>
 
       {modal === 'partner' && (
         <SlotPickerModal title="パートナーを選択" cards={PARTNER_CARDS} selected={draft.partner}
@@ -246,6 +246,8 @@ export function DeckEditor({ onNav }: Props) {
       {modal === 'testhand' && (
         <TestHandModal deck={draft} onClose={() => setModal(null)} />
       )}
+
+      <CardExpandModal cardId={expanded && selectedCard ? selectedCard.num : null} onClose={() => setExpanded(false)} />
     </div>
   );
 }
@@ -333,102 +335,91 @@ function SearchBox({ q, onChange }: { q: string; onChange: (q: string) => void }
   );
 }
 
-// ---- Pool grid ----
+// ---- LEFT: selected card detail ----
 
-function PoolGrid({ cards, selectedNum, idCounts, onSelect, onAdd }: {
-  cards: CardDef[]; selectedNum: string; idCounts: Map<string, number>;
-  onSelect: (n: string) => void; onAdd: (n: string) => void;
+function DetailPane({ card, count, onAdd, onRemove, onExpand }: {
+  card: CardDef | undefined; count: number; onAdd: () => void; onRemove: () => void; onExpand: () => void;
 }) {
-  return (
-    <div style={{
-      padding: '12px 14px', flex: 1,
-      background: 'linear-gradient(180deg, rgba(13,38,64,0.85), rgba(13,38,64,0.55))',
-      border: `1px solid rgba(78,195,255,0.25)`, borderRadius: 4,
-      display: 'flex', flexDirection: 'column', overflow: 'hidden',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 10 }}>
-        <span style={{ fontFamily: T.fontMono, fontSize: 11, fontWeight: 800, color: T.gold, letterSpacing: '0.28em' }}>
-          CARD POOL · {cards.length} 件
-        </span>
-        <span style={{ marginLeft: 'auto', fontFamily: T.fontMono, fontSize: 10, color: T.textMuted, letterSpacing: '0.1em' }}>
-          ダブルクリック / 右クリックで追加
-        </span>
-      </div>
+  if (!card) {
+    return (
       <div style={{
-        flex: 1, overflow: 'auto',
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))',
-        gap: 8, paddingRight: 4,
+        flex: 1, minHeight: 0, ...panelBg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+        border: `1px dashed rgba(78,195,255,0.25)`,
       }}>
-        {cards.map((card) => {
-          const cnt = idCounts.get(card.id) ?? 0;
-          const atMax = cnt >= MAX_PER_ID;
-          return (
-            <MetaCard key={card.num} card={card} w={82}
-              selected={card.num === selectedNum}
-              count={cnt || undefined} maxCount={MAX_PER_ID} showMax atMax={atMax}
-              onClick={() => onSelect(card.num)}
-              onDoubleClick={() => onAdd(card.num)}
-              onContextMenu={() => onAdd(card.num)}
-              hoverable
-            />
-          );
-        })}
-        {cards.length === 0 && (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 11, padding: 24 }}>
-            条件に一致するカードがありません
-          </div>
-        )}
+        <span style={{ color: T.textMuted, fontFamily: T.fontMono, fontSize: 11, lineHeight: 1.7, padding: 16 }}>
+          カードを選択すると<br />詳細が表示されます
+        </span>
       </div>
-    </div>
-  );
-}
-
-// ---- Card detail panel ----
-
-function CardDetailPanel({ card, count, onAdd, onRemove }: {
-  card: CardDef; count: number; onAdd: () => void; onRemove: () => void;
-}) {
+    );
+  }
   const c = COLOR_TOKEN[card.color] || T.blue;
   const atMax = count >= MAX_PER_ID;
   return (
     <div style={{
-      padding: '14px 16px',
-      background: 'linear-gradient(180deg, rgba(13,38,64,0.95), rgba(13,38,64,0.7))',
+      flex: 1, minHeight: 0, padding: '16px', overflow: 'auto',
+      background: 'linear-gradient(180deg, rgba(13,38,64,0.95), rgba(13,38,64,0.72))',
       border: `1px solid ${c}55`, borderRadius: 4, boxShadow: `inset 0 0 40px ${c}11`,
-      display: 'flex', gap: 16,
+      display: 'flex', flexDirection: 'column', gap: 10,
     }}>
-      <div style={{ filter: `drop-shadow(0 0 24px ${c}66) drop-shadow(0 8px 16px rgba(0,0,0,0.7))` }}>
-        <MetaCard card={card} w={140} hoverable={false} />
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
-          <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textMuted, letterSpacing: '0.18em' }}>{card.num}</span>
+      <button
+        type="button"
+        onClick={onExpand}
+        title="クリックで拡大表示"
+        aria-label={`${card.name} を拡大表示`}
+        style={{
+          alignSelf: 'center', padding: 0, border: 'none', background: 'transparent', cursor: 'zoom-in',
+          filter: `drop-shadow(0 0 24px ${c}66) drop-shadow(0 8px 16px rgba(0,0,0,0.7))`,
+        }}
+      >
+        <MetaCard card={card} w={170} hoverable={false} />
+      </button>
+
+      <div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textMuted, letterSpacing: '0.16em' }}>{card.num}</span>
           <Pill color={c} label={card.color.toUpperCase()} />
           {card.rarity && <Pill color={T.gold} label={card.rarity} />}
         </div>
         <div style={{ fontSize: 18, fontWeight: 800, color: T.textPrimary }}>{card.name}</div>
-        <div style={{ fontFamily: T.fontMono, fontSize: 10, color: T.textMuted, letterSpacing: '0.12em', marginBottom: 8 }}>
+        <div style={{ fontFamily: T.fontMono, fontSize: 10, color: T.textMuted, letterSpacing: '0.1em', marginTop: 2 }}>
           {typeLabel(card.type)}{(card.features ?? []).length > 0 && ` · ${(card.features ?? []).join(' / ')}`}
         </div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          <StatBox label="COST" value={card.cost ?? '—'} accent={T.neonBlue} />
-          <StatBox label="AP" value={card.ap ? card.ap.toLocaleString() : '—'} accent={T.apColor} />
-          <StatBox label="LP" value={card.lp ?? '—'} accent={T.lpColor} />
-        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <StatBox label="COST" value={card.cost ?? '—'} accent={T.neonBlue} />
+        <StatBox label="AP" value={card.ap ? card.ap.toLocaleString() : '—'} accent={T.apColor} />
+        <StatBox label="LP" value={card.lp ?? '—'} accent={T.lpColor} />
+      </div>
+
+      {card.effectShort && (
         <div style={{
-          padding: '8px 12px', flex: 1, background: 'rgba(0,0,0,0.45)',
+          padding: '8px 12px', background: 'rgba(0,0,0,0.45)',
           border: `1px solid ${c}33`, borderRadius: 3,
-          fontSize: 12, color: T.textPrimary, lineHeight: 1.5, whiteSpace: 'pre-wrap', maxHeight: 88, overflow: 'auto',
+          fontSize: 12, color: T.textPrimary, lineHeight: 1.5, whiteSpace: 'pre-wrap',
         }}>{card.effectShort}</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-          <button onClick={onRemove} disabled={count <= 0} aria-label="1枚減らす" style={stepBtn(count > 0)}>－</button>
-          <span style={{
-            fontFamily: T.fontMono, fontSize: 14, fontWeight: 800,
-            color: atMax ? T.gold : T.textPrimary, minWidth: 44, textAlign: 'center',
-          }}>{count} / {MAX_PER_ID}</span>
-          <button onClick={onAdd} disabled={atMax} aria-label="1枚追加" style={stepBtn(!atMax)}>＋</button>
-          {atMax && <span style={{ fontFamily: T.fontMono, fontSize: 10, color: T.gold, letterSpacing: '0.1em' }}>同 ID 上限</span>}
+      )}
+
+      {(card.keywords ?? []).length > 0 && (
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {(card.keywords ?? []).map((k) => (
+            <span key={k} style={{
+              padding: '2px 8px', background: 'rgba(255,215,0,0.15)', border: `1px solid ${T.gold}66`,
+              borderRadius: 2, fontFamily: T.fontJp, fontSize: 11, fontWeight: 700, color: T.gold,
+            }}>{k}</span>
+          ))}
         </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 'auto', paddingTop: 4 }}>
+        <button onClick={onRemove} disabled={count <= 0} aria-label="1枚減らす" style={stepBtn(count > 0)}>－</button>
+        <span style={{
+          fontFamily: T.fontMono, fontSize: 14, fontWeight: 800,
+          color: atMax ? T.gold : T.textPrimary, minWidth: 44, textAlign: 'center',
+        }}>{count} / {MAX_PER_ID}</span>
+        <button onClick={onAdd} disabled={atMax} aria-label="1枚追加" style={stepBtn(!atMax)}>＋</button>
+        {atMax && <span style={{ fontFamily: T.fontMono, fontSize: 10, color: T.gold, letterSpacing: '0.1em' }}>同 ID 上限</span>}
       </div>
     </div>
   );
@@ -546,54 +537,48 @@ function TypeRow({ label, value, max, color }: { label: string; value: number; m
   );
 }
 
-// ---- Deck list ----
+// ---- CENTER: deck card grid (自動整列 type→cost→name, ×n バッジ, ホバー－で除外) ----
 
-function DeckList({ deck, highlightNum, manualOrder, onToggleOrder, onAdd, onRemove, onSelect, onReorder, idCounts }: {
-  deck: DeckRecord; highlightNum: string; manualOrder: boolean; onToggleOrder: () => void;
-  onAdd: (n: string) => void; onRemove: (n: string) => void; onSelect: (n: string) => void;
-  onReorder: (from: number, to: number) => void; idCounts: Map<string, number>;
+function DeckGrid({ deck, idCounts, selectedNum, total, onSelect, onRemove }: {
+  deck: DeckRecord; idCounts: Map<string, number>; selectedNum: string; total: number;
+  onSelect: (n: string) => void; onRemove: (n: string) => void;
 }) {
-  const dragFrom = useRef<number | null>(null);
-  // 表示用の並び。自動 = 種別(キャラ→イベント)→コスト。手動 = deck.cards の配列順。
+  // 自動整列のみ: 種別(キャラ→イベント) → コスト → 名前。手動 D&D 並べ替えは廃止 (spec 13)。
   const rows = useMemo(() => {
-    const withIdx = deck.cards.map((e, idx) => ({ ...e, idx, card: CARD_POOL.find((c) => c.num === e.num) }))
+    const withCard = deck.cards
+      .map((e) => ({ ...e, card: CARD_POOL.find((c) => c.num === e.num) }))
       .filter((e): e is typeof e & { card: CardDef } => !!e.card);
-    if (manualOrder) return withIdx;
-    return withIdx.sort((a, b) => {
+    return withCard.sort((a, b) => {
       if (a.card.type !== b.card.type) return a.card.type === 'character' ? -1 : 1;
       return (a.card.cost ?? 99) - (b.card.cost ?? 99) || a.card.name.localeCompare(b.card.name, 'ja');
     });
-  }, [deck.cards, manualOrder]);
+  }, [deck.cards]);
 
   return (
     <div style={{
-      flex: 1, padding: '10px 12px',
-      background: 'linear-gradient(180deg, rgba(13,38,64,0.85), rgba(13,38,64,0.55))',
-      border: `1px solid rgba(78,195,255,0.25)`, borderRadius: 4,
+      flex: 1, padding: '10px 12px', ...panelBg,
       display: 'flex', flexDirection: 'column', overflow: 'hidden',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <span style={{ fontFamily: T.fontMono, fontSize: 10, fontWeight: 800, color: T.gold, letterSpacing: '0.28em' }}>DECK LIST</span>
-        <button onClick={onToggleOrder} className="meta-btn-small" style={{
-          marginLeft: 'auto', padding: '2px 8px', background: 'rgba(0,0,0,0.4)',
-          border: `1px solid ${T.neonBlue}55`, borderRadius: 2,
-          color: T.neonBlue, fontFamily: T.fontMono, fontSize: 9, cursor: 'pointer', letterSpacing: '0.1em',
-        }}>{manualOrder ? '手動並べ替え' : '自動整列'}</button>
+      <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 8 }}>
+        <span style={{ fontFamily: T.fontMono, fontSize: 11, fontWeight: 800, color: T.gold, letterSpacing: '0.28em' }}>
+          DECK · {total} / 40
+        </span>
+        <span style={{ marginLeft: 'auto', fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.1em' }}>
+          クリックで詳細 · ホバー － で除外
+        </span>
       </div>
-      <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {rows.map((e) => {
-          const idTotal = idCounts.get(e.card.id) ?? e.count;
-          return (
-            <DeckRow key={e.num} entry={e} idTotal={idTotal} highlight={e.num === highlightNum}
-              draggable={manualOrder}
-              onSelect={() => onSelect(e.num)} onAdd={() => onAdd(e.num)} onRemove={() => onRemove(e.num)}
-              onDragStart={() => { dragFrom.current = e.idx; }}
-              onDrop={() => { if (dragFrom.current != null) onReorder(dragFrom.current, e.idx); dragFrom.current = null; }}
-            />
-          );
-        })}
+      <div style={{
+        flex: 1, overflow: 'auto',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
+        gap: 8, alignContent: 'start', paddingRight: 4,
+      }}>
+        {rows.map((e) => (
+          <DeckTile key={e.num} entry={e} idTotal={idCounts.get(e.card.id) ?? e.count}
+            selected={e.num === selectedNum}
+            onSelect={() => onSelect(e.num)} onRemove={() => onRemove(e.num)} />
+        ))}
         {rows.length === 0 && (
-          <div style={{ textAlign: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 11, padding: 20 }}>
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 11, padding: 24 }}>
             プールからカードを追加してください
           </div>
         )}
@@ -602,66 +587,166 @@ function DeckList({ deck, highlightNum, manualOrder, onToggleOrder, onAdd, onRem
   );
 }
 
-function DeckRow({ entry, idTotal, highlight, draggable, onSelect, onAdd, onRemove, onDragStart, onDrop }: {
+function DeckTile({ entry, idTotal, selected, onSelect, onRemove }: {
   entry: { num: string; count: number; card: CardDef };
-  idTotal: number; highlight: boolean; draggable: boolean;
-  onSelect: () => void; onAdd: () => void; onRemove: () => void;
-  onDragStart: () => void; onDrop: () => void;
+  idTotal: number; selected: boolean; onSelect: () => void; onRemove: () => void;
 }) {
-  const c = COLOR_TOKEN[entry.card.color] || T.blue;
-  const over = idTotal > 3;
+  const [hover, setHover] = useState(false);
+  const over = idTotal > MAX_PER_ID;
   return (
     <div
-      draggable={draggable}
-      onDragStart={draggable ? onDragStart : undefined}
-      onDragOver={draggable ? (e) => e.preventDefault() : undefined}
-      onDrop={draggable ? onDrop : undefined}
-      className="meta-row"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px',
-        background: highlight ? `${T.gold}11` : 'transparent',
-        border: highlight ? `1px solid ${T.gold}55` : '1px solid transparent',
-        borderRadius: 2, cursor: draggable ? 'grab' : 'default', color: T.textPrimary,
-      }}
+      style={{ position: 'relative' }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
     >
-      <div style={{
-        width: 20, height: 20, flexShrink: 0,
-        background: `linear-gradient(180deg, ${c}, ${shade(c, -0.4)})`,
-        border: `1px solid ${shade(c, -0.5)}`, borderRadius: '50%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: T.fontMono, fontWeight: 800, fontSize: 10, color: '#fff',
-      }}>{entry.card.cost ?? '—'}</div>
-      <button onClick={onSelect} style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'inherit', padding: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {entry.card.name}
-          {entry.card.ap != null && (
-            <span style={{ marginLeft: 5, fontSize: 9, color: T.gold, fontFamily: T.fontMono, fontWeight: 700 }}>AP {entry.card.ap.toLocaleString()}</span>
-          )}
-        </div>
-        <div style={{ fontSize: 9, color: T.textMuted, fontFamily: T.fontMono }}>
-          {entry.num} · {(entry.card.features ?? []).join(' / ') || typeLabel(entry.card.type)}
-          {over && <span style={{ color: T.red, marginLeft: 6 }}>ID合計 {idTotal} ⚠</span>}
-        </div>
-      </button>
-      <button onClick={onRemove} className="meta-btn-small" style={miniBtn(T.textMuted)} aria-label="1枚減らす">－</button>
-      <div style={{
-        minWidth: 28, textAlign: 'center', padding: '1px 0',
-        background: over ? T.red : 'rgba(255,215,0,0.18)',
-        border: `1px solid ${over ? T.red : T.gold}66`, borderRadius: 2,
-        fontFamily: T.fontMono, fontSize: 11, fontWeight: 800, color: over ? '#fff' : T.gold,
-      }}>×{entry.count}</div>
-      <button onClick={onAdd} disabled={idTotal >= 3} className="meta-btn-small" style={miniBtn(idTotal >= 3 ? T.textDisabled : T.gold)} aria-label="1枚増やす">＋</button>
+      <MetaCard card={entry.card} w={72} selected={selected}
+        count={entry.count} maxCount={MAX_PER_ID}
+        onClick={onSelect} hoverable />
+      <button
+        onClick={(ev) => { ev.stopPropagation(); onRemove(); }}
+        aria-label={`${entry.card.name} を1枚減らす`}
+        style={{
+          position: 'absolute', left: -6, top: -6, width: 22, height: 22, borderRadius: '50%',
+          background: T.red, color: '#fff', border: `1.5px solid ${T.bgDeep}`,
+          fontFamily: T.fontMono, fontSize: 14, fontWeight: 800, lineHeight: 1, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          // hover で .meta-card-hover が card を z-index:5 に持ち上げるため、それより上に置く
+          // (これを下回ると hover した瞬間カードが － ボタンを覆い「減らせない」: BUG 修正)。
+          zIndex: 11,
+          boxShadow: '0 2px 5px rgba(0,0,0,0.6)',
+          opacity: hover ? 1 : 0, transition: 'opacity 0.12s',
+        }}
+      >－</button>
+      {over && (
+        <span style={{
+          position: 'absolute', left: '50%', bottom: 4, transform: 'translateX(-50%)',
+          padding: '1px 5px', background: T.red, color: '#fff', borderRadius: 2,
+          fontFamily: T.fontMono, fontSize: 8, fontWeight: 800, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 6,
+        }}>ID {idTotal} ⚠</span>
+      )}
     </div>
   );
 }
 
-function miniBtn(color: string): React.CSSProperties {
-  return {
-    width: 22, height: 22, flexShrink: 0, borderRadius: 2,
-    background: 'rgba(0,0,0,0.4)', border: `1px solid ${color}55`,
-    color, fontFamily: T.fontMono, fontSize: 13, fontWeight: 800, cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  };
+// ---- RIGHT: card pool ----
+
+function PoolPane({ cards, selectedNum, idCounts, onAdd, q, onQ, sortKey, sortDir, onSort, filterCount, onOpenFilter }: {
+  cards: CardDef[]; selectedNum: string; idCounts: Map<string, number>;
+  onAdd: (n: string) => void;
+  q: string; onQ: (q: string) => void;
+  sortKey: SortKey; sortDir: SortDir; onSort: (k: SortKey, d?: SortDir) => void;
+  filterCount: number; onOpenFilter: () => void;
+}) {
+  return (
+    <div style={{
+      flex: 1, minHeight: 0, padding: '10px 12px', ...panelBg,
+      display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontFamily: T.fontMono, fontSize: 11, fontWeight: 800, color: T.gold, letterSpacing: '0.24em' }}>
+          POOL · {cards.length} 件
+        </span>
+        <span style={{ marginLeft: 'auto', fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.1em' }}>
+          クリックで追加
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flex: 1, minWidth: 0 }}><SearchBox q={q} onChange={onQ} /></div>
+        <button onClick={onOpenFilter} aria-label="フィルタを開く" style={{
+          padding: '7px 12px', whiteSpace: 'nowrap', cursor: 'pointer',
+          background: filterCount > 0 ? `${T.gold}22` : 'rgba(0,0,0,0.4)',
+          border: `1px solid ${filterCount > 0 ? T.gold : T.neonBlue + '55'}`, borderRadius: 3,
+          color: filterCount > 0 ? T.gold : T.neonBlue, fontFamily: T.fontJp, fontSize: 12, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 5,
+        }}>
+          <svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true">
+            <path d="M1 2 h12 l-4.5 5.5 V12 l-3 1.5 V7.5 Z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+          </svg>
+          フィルタ{filterCount > 0 ? ` ${filterCount}` : ''}
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontFamily: T.fontMono, fontSize: 9, color: T.textMuted, letterSpacing: '0.12em' }}>並べ替え</span>
+        <PoolSortControl sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+      </div>
+
+      <div style={{
+        flex: 1, overflow: 'auto',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
+        gap: 8, alignContent: 'start', paddingRight: 4,
+      }}>
+        {cards.map((card) => {
+          const cnt = idCounts.get(card.id) ?? 0;
+          const atMax = cnt >= MAX_PER_ID;
+          return (
+            <MetaCard key={card.num} card={card} w={70}
+              selected={card.num === selectedNum}
+              count={cnt || undefined} maxCount={MAX_PER_ID} showMax atMax={atMax}
+              onClick={() => onAdd(card.num)}
+              hoverable />
+          );
+        })}
+        {cards.length === 0 && (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 11, padding: 24 }}>
+            条件に一致するカードがありません
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PoolSortControl({ sortKey, sortDir, onSort }: {
+  sortKey: SortKey; sortDir: SortDir; onSort: (k: SortKey, d?: SortDir) => void;
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
+      {SORTS.map((s) => {
+        const active = sortKey === s.k;
+        return (
+          <button key={s.k} onClick={() => onSort(s.k, active ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc')} style={{
+            padding: '3px 7px', borderRadius: 2, cursor: 'pointer',
+            background: active ? `${T.gold}22` : 'rgba(0,0,0,0.35)',
+            border: `1px solid ${active ? T.gold : T.neonBlue + '44'}`,
+            color: active ? T.gold : T.neonBlue,
+            fontFamily: T.fontJp, fontSize: 10, fontWeight: 700,
+            display: 'flex', alignItems: 'center', gap: 3,
+          }}>
+            {s.label}{active && <span style={{ fontFamily: T.fontMono, fontSize: 8 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---- Filter slide-over (右からスライドイン、既存 FilterRail を表示) ----
+
+function FilterSlideOver({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
+  if (!open) return null;
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 45, background: 'rgba(2,6,12,0.5)',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        position: 'absolute', top: 0, right: 0, bottom: 0, width: 320, maxWidth: '90vw',
+        background: 'linear-gradient(180deg, rgba(10,26,40,0.99), rgba(8,20,32,0.99))',
+        borderLeft: `1px solid ${T.gold}55`, boxShadow: '-12px 0 40px rgba(0,0,0,0.6)',
+        display: 'flex', flexDirection: 'column', padding: '14px', overflow: 'hidden',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ fontFamily: T.fontSerif, fontSize: 15, fontWeight: 800, color: T.textPrimary, letterSpacing: '0.06em' }}>フィルタ</span>
+          <button onClick={onClose} aria-label="フィルタを閉じる" style={{
+            marginLeft: 'auto', background: 'transparent', border: 'none', cursor: 'pointer',
+            color: T.textMuted, fontFamily: T.fontMono, fontSize: 18,
+          }}>×</button>
+        </div>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>{children}</div>
+      </div>
+    </div>
+  );
 }
 
 // ---- Modals ----

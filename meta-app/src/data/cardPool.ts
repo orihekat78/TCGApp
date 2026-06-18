@@ -7,7 +7,7 @@
 //   - num = engine.id (画像 lookup キー)
 //   - id  = cardId: パラレル P サフィックスを除去し共有 = 「同じカード」(rules/02)
 
-import type { CardColor, CardDef } from './types';
+import type { CardColor, CardDef, CardKind } from './types';
 import type { CardDef as EngineCardDef } from '@/engine/types';
 import { ALL_CARDS } from '@/cards/index';
 
