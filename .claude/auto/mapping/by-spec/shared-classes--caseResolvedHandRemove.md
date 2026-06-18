@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0b16499a6946`
+> Source hash: `e1b84be99715`
 
 仕様書 [`caseResolvedHandRemove`](../../../specs/shared-classes/caseResolvedHandRemove.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 411
-- **ファイル数**: 6915
+- **ディレクトリ数**: 412
+- **ファイル数**: 6918
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -458,6 +458,9 @@
     - `2026-06-18-02-momoi-deckreveal-ship.md` — cluster16 G2 follow-up — 桃井恵子 (B07051) 出荷 (deckReveal filterAny)
     - `2026-06-18-03-cluster15-partnercolor-removal-observer-ship.md` — cluster15 follow-up — removal-observer + keyword-grant closure 群 出荷 (4 rep /…
     - `README.md` — Changelog エントリ
+  - **`design/`**
+    - `research-findings.md` — デザイン刷新 — 研究知見 (2026-06-19, 2 workflow統合)
+    - `RESUME.md` — デザイン刷新 — 作業再開プロンプト (2026-06-19)
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
@@ -1218,6 +1221,7 @@
     - `2026-05-11-ui-style-tokens.md` — 視覚スタイル・トークン (2026-05-11)
     - `2026-05-11-ui-turn-flags.md` — ターンスコープフラグ・スタン特殊挙動 (2026-05-11)
     - `2026-05-17-phase5-advance-guardrails.md` — Phase 5 Advance Guardrails
+    - `2026-06-19-cpu-visualize-and-interrupt-lock-design.md` — 設計: CPU逐次プレイ可視化 + 効果解決中の入力ロック (2026-06-19)
     - `bug-111-human-decline-fix-design.md` — BUG-111 #2 修正設計 — human-decline 経路の continuation 取り扱い
     - `card-addition-checklist.md` — 新カード追加時のチェックリスト
     - `card-authoring-convention.md` — カード実装コーディング規約
