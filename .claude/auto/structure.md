@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 413
-- **ファイル数**: 6922
+- **ディレクトリ数**: 414
+- **ファイル数**: 6924
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -459,6 +459,8 @@
     - `2026-06-18-03-cluster15-partnercolor-removal-observer-ship.md` — cluster15 follow-up — removal-observer + keyword-grant closure 群 出荷 (4 rep /…
     - `README.md` — Changelog エントリ
   - **`design/`**
+    - **`mockups/`**
+      - `truth-web-v1.html`
     - `research-findings.md` — デザイン刷新 — 研究知見 (2026-06-19, 2 workflow統合)
     - `RESUME.md` — デザイン刷新 — 作業再開プロンプト (2026-06-19)
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
@@ -7274,6 +7276,7 @@
       - `Playmat.test.tsx` — Phase 7 Task 7.3: Playmat layout structure tests
       - `RefreshOverlay.test.tsx` — Phase 8.10i: RefreshOverlay tests
       - `RemoveArea.test.tsx` — Phase 7 Task 7.10: RemoveArea tests
+      - `SceneArea.activepop.test.tsx` — tests/ui/components/SceneArea.activepop — アクティブカード「ぴこんポップ」(Task2)
       - `SceneArea.animation.test.tsx` — Phase 8.10c: SceneArea animation attributes test
       - `SceneArea.fadeout.test.ts` — Phase 8.10g-2: SceneArea ゴーストトラッカー (pickRemovedCharacters helper)
       - `SceneArea.test.tsx` — Phase 7 Task 7.4: SceneArea snapshot/behavior tests

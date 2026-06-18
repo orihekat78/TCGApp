@@ -71,6 +71,13 @@ export type SceneAreaProps = {
    * 「AP＋XXXX / LP＋X が反映された有効値」で表示するため。省略時は ch.apOverride ?? meta.ap (旧挙動)。
    */
   resolveCharStats?: (uid: string) => { ap: number; lp: number } | undefined;
+  /**
+   * アクティブカード「ぴこんポップ」(Task2): 効果解決中 / CPU が今動かしているカードの uid。
+   * 一致する現場キャラをその場で軽く拡大+グロー (MasterDuel風) し、行動チップを表示する。
+   */
+  activeCardUid?: string | null;
+  /** activeCardUid のカードに表示する行動ラベル (例: 効果解決 / 登場 / 推理 / アクション) */
+  activeCardLabel?: string | null;
 };
 
 type SceneCharacterCardProps = {
@@ -90,9 +97,13 @@ type SceneCharacterCardProps = {
   chargeKeywords?: readonly string[];
   /** BUG-110: 修正反映後の有効 AP/LP (省略時は ch.apOverride ?? meta.ap) */
   stats?: { ap: number; lp: number };
+  /** Task2: このキャラがアクティブカード (効果解決中/CPU 操作中) のとき true → ぴこんポップ + チップ */
+  isActive?: boolean;
+  /** isActive 時にチップに出す行動ラベル */
+  activeLabel?: string | null;
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick, chargeKeywords, stats }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick, chargeKeywords, stats, isActive, activeLabel }: SceneCharacterCardProps): JSX.Element {
   const charges = CHARGE_BADGES.filter((b) => (chargeKeywords ?? []).includes(b.kw));
   // BUG-110: カード下の数値は「修正反映後の有効値」(read.char.ap/lp) を表示する。
   // base (印字値 meta.ap/lp) と異なれば .modified を付けて着色し、AP＋XXXX/LP＋X の反映を視認可能にする。
@@ -109,6 +120,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
     isCandidate && 'candidate',
     isGhost && 'removing',
     isPickable && 'effect-pickable',
+    isActive && 'is-active-pop',
   ]
     .filter(Boolean)
     .join(' ');
@@ -135,6 +147,9 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
       aria-hidden={isGhost ? 'true' : undefined}
     >
       <div className="color-stripe" />
+      {isActive && activeLabel ? (
+        <div className="card-activity-chip">{activeLabel}</div>
+      ) : null}
       <div className="art">
         <CardArt cardId={ch.cardId} alt={meta.name} />
       </div>
@@ -164,7 +179,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar, resolveKeywords, resolveCharStats } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar, resolveKeywords, resolveCharStats, activeCardUid, activeCardLabel } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -225,6 +240,8 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               onPickClick={isPickable && onPickChar ? () => onPickChar(ch.uid) : undefined}
               chargeKeywords={resolveKeywords?.(ch.uid)}
               stats={resolveCharStats?.(ch.uid)}
+              isActive={activeCardUid != null && ch.uid === activeCardUid}
+              activeLabel={activeCardLabel}
             />
           );
         })}

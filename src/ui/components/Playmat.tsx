@@ -119,6 +119,9 @@ type PlayerMatProps = CandidateProps & {
    * 「step1 で引いた後」の実効枚数を見せる (self のみ true)。
    */
   nextHintDrawPreview?: boolean;
+  /** Task2: アクティブカード (効果解決中/CPU 操作中) の uid + 行動ラベル → SceneArea ぴこんポップ */
+  activeCardUid?: string | null;
+  activeCardLabel?: string | null;
 };
 
 // UI picker Direct Manipulation 化: switch 中の opp 現場 pick prop に渡す不変の空集合。
@@ -144,6 +147,7 @@ function PlayerMat({
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
   isCaseCandidate, onCaseClick, onAreaClick, onExpand,
   pickCharUids, onPickChar, nextHintDrawPreview = false,
+  activeCardUid, activeCardLabel,
 }: PlayerMatProps & {
   isCaseCandidate?: boolean;
   onCaseClick?: () => void;
@@ -219,6 +223,8 @@ function PlayerMat({
           onPickChar={onPickChar}
           resolveKeywords={(uid) => (state ? readChar.keywords(state, uid) : [])}
           resolveCharStats={(uid) => (state ? { ap: readChar.ap(state, uid), lp: readChar.lp(state, uid) } : undefined)}
+          activeCardUid={activeCardUid}
+          activeCardLabel={activeCardLabel}
         />
         <div className="below-scene">
           <FileArea
@@ -291,6 +297,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // 効果解決中ロック (rules/05 割り込み禁止): 効果スタック非空 or 人間の未解決 decision 待ち中は
   // ActionsPanel の全メインアクションを塞ぐ。decision modal / 盤面 pick はロック対象外。
   const interactionLocked = useGameStateStore(selectInteractionLocked);
+  // Task2: 効果解決中のアクティブカード (該当カードをその場でぴこんポップ。中央全画面ポップは不採用)。
+  // pendingEffects の resolving エントリ優先、無ければ先頭の source.uid。Task4 で CPU 手番 uid も合流。
+  const activeEffectEntry =
+    (gameState?.pendingEffects ?? []).find((e) => e.state === 'resolving') ?? gameState?.pendingEffects[0];
+  const activeCardUid = activeEffectEntry?.source.uid ?? null;
+  const activeCardLabel = activeCardUid ? '効果解決' : null;
   const isDiscardPick =
     pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'discard';
   // 2026-05-28: ネクストヒント step2 pick。useNextHintPicker store に current が
@@ -594,6 +606,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onExpand={expandModal.open}
             pickCharUids={oppScenePickUids}
             onPickChar={oppOnPickChar}
+            activeCardUid={activeCardUid}
+            activeCardLabel={activeCardLabel}
           />
 
           {/* KEEP OUT divider removed — Phase 7.5 layout pivot per user feedback */}
@@ -616,6 +630,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onPickChar={selfOnPickChar}
             // 2026-05-30: ネクストヒント中は FILE 表示を引いた後の枚数 (-1) にして誤解を防ぐ
             nextHintDrawPreview={isNextHintPick}
+            activeCardUid={activeCardUid}
+            activeCardLabel={activeCardLabel}
           />
         </div>
 
