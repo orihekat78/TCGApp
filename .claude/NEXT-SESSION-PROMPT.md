@@ -5,8 +5,22 @@
 ---
 
 ```text
-名探偵コナンTCG MVP「人間vsCPU 操作可視化 + 割り込みロック」機能の残作業 (FLIP 移動アニメ) を実装。
+名探偵コナンTCG MVP「人間vsCPU 操作可視化 + 割り込みロック」機能。
 まず CLAUDE.md → 設計 spec → 実装計画 → memory.md を読む。
+
+## ★★最優先 BUG (2026-06-19 ユーザー報告、main 取込み保留中)
+**「毎ターン登場時(【登場時】)効果が発動している」** — 実機 (localhost:5173 人間vsCPU) で CPU の
+【登場時】効果が毎ターン発動して見える。スクショで opp の D08013 が effect:sceneSetState を毎ターン
+人間キャラ(吉田歩美)に適用。**core を main に取り込む前に要修正** (ff-merge 保留)。
+調査方針:
+- これが Task4 per-move 駆動の regression か、CPU 可視化で顕在化した既存 engine/AI バグかをまず切り分け。
+  per-move は「moveの適用タイミング」のみ変更 (enter hook ロジックは applyMove→runAllUntilEmpty で従来同一)。
+  smoke (playTurn byte等価/winsA不変) は緑なので headless AI-vs-AI では再現しない可能性 → 人間vsCPU 経路 (useOppTurnDriver) 固有を疑う。
+- 確認: driveOppTurn の oppMoveTick 再fire / isDriving guard で同一 enter move が二重適用されていないか
+  (二重なら【登場時】二重発火)。useOppTurnDriver の useEffect 多重発火 (setGameState/setActiveCard/bumpOppMoveTick の3 set による) も疑う。
+- D08013 のカード定義 (【登場時】sceneSetState) を確認し、CPU が毎ターン再登場しているのか
+  既存カードが再発火しているのかを live state + LOG で特定。
+- 修正後: tsc/vitest/smoke/実機再検証 → core(Task1-4)+fix をまとめて main 取込み。
 
 ## 現在地 (2026-06-19、main に core 取込み済 / branch feat/cpu-visualize-interrupt-lock)
 
