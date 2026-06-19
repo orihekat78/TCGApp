@@ -857,6 +857,10 @@ import { B05078P } from '../ct-p05/B05078P.js';
 import { B03056 } from '../ct-p03/B03056.js';
 import { B03056P } from '../ct-p03/B03056P.js';
 
+import { B07066 } from '../ct-p07/B07066.js';
+import { B07066P } from '../ct-p07/B07066P.js';
+import { PR194 } from '../pr-01/PR194.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1037,4 +1041,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06038, B06038P, B06039, B06039P, B08010, B09071, B09071P, B09071P2,
   // wave-deckLook-bottom: 上から見て手札+残りデッキ下 (engine変更0)
   B05078, B05078P, B03056, B03056P,
+  // Task A batch
+  B07066, B07066P, PR194,
 ];
