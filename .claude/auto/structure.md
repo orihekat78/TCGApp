@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 6924
+- **ファイル数**: 6925
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -6921,6 +6921,7 @@
     - `policy.action-guard.test.ts` — Phase 8.7c: policy.applyMove での actionAgainstChar ガード判定統合テスト。
     - `policy.pause-on-action.test.ts` — Phase 8 完全クローズ Commit 2.5: playTurn pauseOnAction tests
     - `policy.test.ts` — tests/ai/policy.test.ts — Phase 6 Group A Task 6.2 tests
+    - `step-turn.test.ts` — tests/ai/step-turn — Task3: stepTurn (playTurn の 1手駆動分解)
   - **`cards/`** — カード単体ユニットテスト
     - **`_shared/`**
       - `caseDeclaredEvidenceFlip.effect.test.ts` — BUG-085 Layer 2 end-to-end: caseDeclaredEvidenceFlip の

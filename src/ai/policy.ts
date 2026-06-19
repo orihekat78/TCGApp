@@ -345,44 +345,13 @@ export function playTurn(
   let s = state;
 
   for (let i = 0; i < PLAY_TURN_SAFETY_CAP; i++) {
-    // BUG-138 (X8): human 所有の未解決 pick が残っている間は次の move に移れない (rules/05)。
-    // __humanPlayerSide 未設定 (smoke / spectator) では常に false → 従来挙動不変。
-    if (hasPendingHumanPick()) {
-      return { moves, finalState: s, paused: { humanPick: true } };
-    }
-    const candidates = enumerateMoves(s, byPlayer);
-    const chosen = policy.choose(s, candidates, byPlayer);
-    if (chosen === null) {
-      // 候補が無い (起こり得ない — endTurn が常にある)。安全側で終了する。
-      return { moves, finalState: s };
-    }
-    if (chosen.kind === 'endTurn') {
-      moves.push(chosen);
-      return { moves, finalState: s };
-    }
-    // Commit 2.5: action move pause
-    if (
-      opts?.pauseOnAction &&
-      (chosen.kind === 'actionAgainstChar' || chosen.kind === 'actionAgainstCase')
-    ) {
-      return { moves, finalState: s, paused: { move: chosen } };
-    }
-    moves.push(chosen);
-    s = produce(s, draft => {
-      applyMove(draft, chosen, byPlayer);
-    });
-    // pendingEffects があれば解消する
-    s = produce(s, draft => {
-      engine.resolve.runAllUntilEmpty(draft);
-      // BUG-109: CPU には human modal が無いため、PA 短縮形 atom 等が runtime に
-      // __pendingEffectPickQueue へ積んだ pick が drain されず no-op になる。heuristic で順次解決する
-      // (chooseAtomTarget は walk と同じ HeuristicPolicy を使用。continuation も BUG-107 機構で進む)。
-      drainAiEffectPicks(draft, new HeuristicPolicy());
-    });
-    // gameResult が決まったら終了
-    if (s.gameResult) {
-      return { moves, finalState: s };
-    }
+    // Task3: 1手駆動を stepTurn に委譲。playTurn は「stepTurn ループ」として再構成
+    // (結果は従来 playTurn と byte 等価 / tests/ai/step-turn.test.ts)。
+    const step = stepTurn(s, policy, byPlayer, opts);
+    s = step.nextState;
+    if (step.paused) return { moves, finalState: s, paused: step.paused };
+    if (step.move) moves.push(step.move);
+    if (step.done) return { moves, finalState: s };
   }
 
   throw new Error(
@@ -391,4 +360,64 @@ export function playTurn(
       .map(m => m.kind)
       .join(', ')}`,
   );
+}
+
+/**
+ * StepTurnResult — stepTurn の戻り値。done / paused で停止判定する。
+ */
+export type StepTurnResult = {
+  /** 適用した move。pause / 候補なし のとき null。 */
+  move: Move | null;
+  /** この step 適用後の state (pause / 候補なし のときは入力 state のまま)。 */
+  nextState: GameState;
+  /** endTurn / 候補なし / gameResult 確定 で true (ターン終了)。 */
+  done: boolean;
+  /** pauseOnAction の action move、または human pending pick による停止。 */
+  paused?: { move?: Move; humanPick?: true };
+};
+
+/**
+ * stepTurn — playTurn ループの 1 反復 (Task3)。1 手だけ enumerate→choose→applyMove→runAllUntilEmpty する。
+ * UI (useOppTurnDriver) が 1 手ごとに間 (aiSpeedMs) を挟んで CPU を可視化するための entry point。
+ * 戻り値 nextState を次回 stepTurn に渡して反復し、done / paused で停止する。
+ */
+export function stepTurn(
+  state: GameState,
+  policy: AIPolicy,
+  byPlayer: Player,
+  opts?: PlayTurnOptions,
+): StepTurnResult {
+  // BUG-138 (X8): human 所有の未解決 pick が残っている間は次の move に移れない (rules/05)。
+  // __humanPlayerSide 未設定 (smoke / spectator) では常に false → 従来挙動不変。
+  if (hasPendingHumanPick()) {
+    return { move: null, nextState: state, done: false, paused: { humanPick: true } };
+  }
+  const candidates = enumerateMoves(state, byPlayer);
+  const chosen = policy.choose(state, candidates, byPlayer);
+  if (chosen === null) {
+    // 候補が無い (起こり得ない — endTurn が常にある)。安全側で終了する。
+    return { move: null, nextState: state, done: true };
+  }
+  if (chosen.kind === 'endTurn') {
+    return { move: chosen, nextState: state, done: true };
+  }
+  // Commit 2.5: action move pause — applyMove せず paused で返す (UI が contact FSM へ委譲)。
+  if (
+    opts?.pauseOnAction &&
+    (chosen.kind === 'actionAgainstChar' || chosen.kind === 'actionAgainstCase')
+  ) {
+    return { move: null, nextState: state, done: false, paused: { move: chosen } };
+  }
+  let s = produce(state, draft => {
+    applyMove(draft, chosen, byPlayer);
+  });
+  // pendingEffects があれば解消する
+  s = produce(s, draft => {
+    engine.resolve.runAllUntilEmpty(draft);
+    // BUG-109: CPU には human modal が無いため、PA 短縮形 atom 等が runtime に
+    // __pendingEffectPickQueue へ積んだ pick が drain されず no-op になる。heuristic で順次解決する
+    // (chooseAtomTarget は walk と同じ HeuristicPolicy を使用。continuation も BUG-107 機構で進む)。
+    drainAiEffectPicks(draft, new HeuristicPolicy());
+  });
+  return { move: chosen, nextState: s, done: Boolean(s.gameResult) };
 }
