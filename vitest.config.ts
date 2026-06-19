@@ -7,7 +7,10 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    exclude: ["**/node_modules/**", "**/tests/e2e/**"],
+    // .claude/worktrees: 過去の作業用 git worktree (リポジトリの別チェックアウト)。テストファイルの
+    // 重複コピーが存在し、`@/` alias は本リポジトリの src に解決されるため stale なコピーを実行すると
+    // 偽の失敗/重複になる。canonical な tests/ のみを対象にするため除外する。
+    exclude: ["**/node_modules/**", "**/tests/e2e/**", "**/.claude/worktrees/**"],
     // BUG-077 flaky 解消: 既定 5s では bug-077 の Phase I/K 等が `await import('@/cards/index')`
     // (933 カード) を全 suite 実行時に行うと、本環境 (OneDrive 同期パス・遅ディスク) で import が
     // 5s を超過し timeout flaky になっていた。テストロジックは正しく時間を与えれば確定 pass のため、

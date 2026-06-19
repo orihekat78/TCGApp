@@ -121,13 +121,18 @@ describe('human vs CPU integration E2E (Commit 6)', () => {
     s.players.opp.partner.state = 'sleep'; // partner は使わせない
     useGameStateStore.setState({ gameState: s });
 
-    driveOppTurn();
-    // CPU が何らかの move を取る (action / reasoning / endTurn のいずれか)
-    // pauseOnAction が action を捕まえた場合 activeActionId set
-    const axId = useGameStateStore.getState().activeActionId;
-    const turnPlayer = useGameStateStore.getState().gameState!.turn.player;
+    // Task4: driveOppTurn は 1 手ずつ進む (per-move 可視化)。action paused か turn 終了まで pump する
+    // (driveOppTurn は finally で isDriving を戻すので直接連続呼出で次手へ進める)。
+    let axId: string | null = null;
+    let turnPlayer = 'opp';
+    for (let i = 0; i < 60; i++) {
+      driveOppTurn();
+      axId = useGameStateStore.getState().activeActionId;
+      turnPlayer = useGameStateStore.getState().gameState!.turn.player;
+      if (axId !== null || turnPlayer === 'self') break;
+    }
     if (axId !== null) {
-      // action paused → turn opp のまま
+      // action paused → turn opp のまま (contact FSM へ委譲)
       expect(turnPlayer).toBe('opp');
     } else {
       // action なし → endTurn 経由で self へ

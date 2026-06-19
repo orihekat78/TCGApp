@@ -51,6 +51,21 @@ export type GameStateStore = {
   pendingMisread: PendingMisread | null;
   setPendingMisread: (p: PendingMisread | null) => void;
   /**
+   * Task2/4: アクティブカード信号 — 効果解決中 / CPU が今動かしているカードの uid + 行動ラベル。
+   * SceneArea がその場ぴこんポップ + チップ表示に使う (中央全画面ポップは不採用)。
+   * CPU 手番は useOppTurnDriver が 1 手ごとに set、ターン終了で null クリア。
+   */
+  activeCardUid: string | null;
+  activeCardLabel: string | null;
+  setActiveCard: (uid: string | null, label: string | null) => void;
+  /**
+   * Task4: CPU 1手駆動の再 fire トリガ。useOppTurnDriver が 1 手 (stepTurn) 適用するたび ++ し、
+   * useEffect の deps に含めることで「1手→aiSpeedMs 待ち→次の1手」のループを成立させる
+   * (turn.player は 'opp' のまま変わらないため、これが無いと 1 手で stall する)。
+   */
+  oppMoveTick: number;
+  bumpOppMoveTick: () => void;
+  /**
    * Round 4l (B5 観戦モード): true なら self ターンも AI が自動進行 (AI vs AI 観戦)。
    * - GameSetupModal の「観戦」button で true に
    * - useSpectatorTurnDriver が turnPlayer==='self' && spectatorMode==true で driveSelfTurn を実行
@@ -219,6 +234,11 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingHirameki: (p) => set({ pendingHirameki: p }),
   pendingMisread: null,
   setPendingMisread: (p) => set({ pendingMisread: p }),
+  activeCardUid: null,
+  activeCardLabel: null,
+  setActiveCard: (uid, label) => set({ activeCardUid: uid, activeCardLabel: label }),
+  oppMoveTick: 0,
+  bumpOppMoveTick: () => set((s) => ({ oppMoveTick: s.oppMoveTick + 1 })),
   spectatorMode: false,
   setSpectatorMode: (v) => set({ spectatorMode: v }),
   aiSpeedMs: 400,

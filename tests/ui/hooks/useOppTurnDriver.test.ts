@@ -13,7 +13,10 @@ import { driveOppTurn, _resetIsDriving } from '@/ui/hooks/useOppTurnDriver';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
+import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { makeChar } from '../../helpers/fixtures';
 import type { GameState } from '@/engine/types/game-state';
+import type { CardDef } from '@/engine/types';
 
 /**
  * opp が「endTurn を選ぶしかない」最小状態。
@@ -91,5 +94,28 @@ describe('driveOppTurn', () => {
     const afterSecond = useGameStateStore.getState().gameState;
     expect(afterSecond).toBe(afterFirst);
     expect(afterFirst).not.toBe(original);
+  });
+
+  it('per-move: 非終端手は1手だけ適用 — turn は opp 維持 + oppMoveTick++ + activeCard set', () => {
+    resetDefRegistry();
+    const rc: CardDef = {
+      id: 'RC', no: 'RC', kind: 'character', names: ['RC'], colors: ['青'],
+      level: 1, ap: 1000, lp: 2, traits: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
+    };
+    registerCardDef(rc);
+    const s = setupOppTurnMinimal();
+    // active な現場キャラ (LP2) → reasoning が選ばれる (証拠+2 = 正の手)
+    s.players.opp.scene = [makeChar({ cardId: 'RC', uid: 'oc1', state: 'active', enterOrder: 0 })];
+    useGameStateStore.setState({ gameState: s, oppMoveTick: 0, activeCardUid: null, activeCardLabel: null });
+
+    driveOppTurn();
+
+    const st = useGameStateStore.getState();
+    // 1手だけ適用 (turn は opp 維持 = whole-turn 一括ではない)
+    expect(st.gameState!.turn.player).toBe('opp');
+    expect(st.oppMoveTick).toBe(1);
+    // reasoning した現場キャラがアクティブカードとして set される
+    expect(st.activeCardUid).toBe('oc1');
+    expect(st.activeCardLabel).toBe('推理');
   });
 });

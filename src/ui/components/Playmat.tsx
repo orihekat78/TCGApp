@@ -297,12 +297,17 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // 効果解決中ロック (rules/05 割り込み禁止): 効果スタック非空 or 人間の未解決 decision 待ち中は
   // ActionsPanel の全メインアクションを塞ぐ。decision modal / 盤面 pick はロック対象外。
   const interactionLocked = useGameStateStore(selectInteractionLocked);
-  // Task2: 効果解決中のアクティブカード (該当カードをその場でぴこんポップ。中央全画面ポップは不採用)。
-  // pendingEffects の resolving エントリ優先、無ければ先頭の source.uid。Task4 で CPU 手番 uid も合流。
+  // Task2/4: アクティブカード (該当カードをその場でぴこんポップ。中央全画面ポップは不採用)。
+  // - CPU 手番中は useOppTurnDriver が store.activeCardUid を 1 手ごとに set (登場/推理/アクション等)。
+  // - 人間ターンの効果解決中は pendingEffects (resolving 優先) の source.uid を採用。
+  // CPU の store 信号を優先し、無ければ効果スタック由来にフォールバック。
+  const storeActiveCardUid = useGameStateStore((s) => s.activeCardUid);
+  const storeActiveCardLabel = useGameStateStore((s) => s.activeCardLabel);
   const activeEffectEntry =
     (gameState?.pendingEffects ?? []).find((e) => e.state === 'resolving') ?? gameState?.pendingEffects[0];
-  const activeCardUid = activeEffectEntry?.source.uid ?? null;
-  const activeCardLabel = activeCardUid ? '効果解決' : null;
+  const effectCardUid = activeEffectEntry?.source.uid ?? null;
+  const activeCardUid = storeActiveCardUid ?? effectCardUid;
+  const activeCardLabel = storeActiveCardUid ? storeActiveCardLabel : effectCardUid ? '効果解決' : null;
   const isDiscardPick =
     pendingPickForArea?.player === 'self' && pendingPickForArea.atomVerb === 'discard';
   // 2026-05-28: ネクストヒント step2 pick。useNextHintPicker store に current が

@@ -19,7 +19,9 @@
 import { produce } from 'immer';
 import { useEffect } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
-import { playTurn } from '@/ai/policy.js';
+import { stepTurn } from '@/ai/policy.js';
+import type { Move } from '@/ai/move-enumerator.js';
+import type { GameState } from '@/engine/types/game-state.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
 import { mutate as engineMutate } from '@/engine/mutate/index.js';
@@ -55,39 +57,47 @@ export function driveOppTurn(): void {
   if (isDriving) return;
   isDriving = true;
   try {
-    // Commit 2.5: pauseOnAction で action move を検出したら applyMove せず paused 返却。
-    // UI 側で actionDeclareChar/Case を dispatch → useContactFlowDriver に委譲する。
-    const result = playTurn(current, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
-    // 中間 state を store にコミット (action 直前の状態 / または通常 move 適用後の状態)
-    store.setGameState(result.finalState);
+    // Task4: 1 手だけ進める (stepTurn)。1 手ごとに setGameState + activeCard + oppMoveTick++ し、
+    // useEffect が aiSpeedMs 待ち後に再 fire → 次の 1 手。これで CPU の各手が人間ライクに可視化され、
+    // 速度スライダー / 一時停止 / 1 ステップ が全手に効く。pauseOnAction で action 手は従来どおり
+    // contact FSM (useContactFlowDriver) へ委譲する。
+    const step = stepTurn(current, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
+    // 中間 state を store にコミット (action 直前 / 通常 move 適用後 / pause 時は不変参照)
+    store.setGameState(step.nextState);
 
-    if (result.paused) {
-      const m = result.paused.move;
+    if (step.paused) {
+      const m = step.paused.move;
       if (m?.kind === 'actionAgainstChar') {
+        store.setActiveCard(m.byUid, 'アクション');
         dispatchEngineAction({ type: 'actionDeclareChar', byUid: m.byUid, targetUid: m.targetUid });
       } else if (m?.kind === 'actionAgainstCase') {
+        store.setActiveCard(m.byUid, 'アクション');
         dispatchEngineAction({ type: 'actionDeclareCase', byUid: m.byUid, targetPlayer: m.targetPlayer });
-      } else if (result.paused.humanPick) {
+      } else if (step.paused.humanPick) {
         // BUG-138 (X8): CPU ターン中に human 所有の triggered decision (pick / optional / choice)
-        // が発火 (例: CPU の効果で human の【相手ターン中】【現場リムーブ時】持ちがリムーブ)。
-        // drainAiEffectPicks は横取りせず温存しているので、ここで modal へ転送して停止する。
-        // human が解決 (effectPickResolve 等の dispatch) → gameState 更新 → useEffect 再 fire →
-        // driveOppTurn が続きの move から再開 (下の entry guard が modal open 中の再入を防ぐ)。
+        // が発火。drainAiEffectPicks は横取りせず温存しているので modal へ転送して停止する。
+        // human が解決 → gameState/pending* 更新 → useEffect 再 fire → 続きの手から再開。
         surfacePendingSideChannels();
       }
-      // activeActionId が set される → useContactFlowDriver が駆動 → action-end で
-      // activeActionId=null → useOppTurnDriver useEffect が再 fire → 続きの move へ。
+      // action: activeActionId set → useContactFlowDriver 駆動 → action-end で null → 再 fire。
       return;
     }
 
-    // 通常終了: playTurn は endTurn move を選んでも flow.endTurn を呼ばない
-    // (policy.ts コメント参照)。ここで明示的に呼んで turn.player を 'self' に戻し、
-    // ターン終了 listener が積んだ pendingEffects も解消する。
-    //
-    // Round 2 修正: 旧実装は endTurn(opp) のみで止まり、self の startTurn を呼ばなかった。
-    // 結果 self.turn 開始時に (a) auto-phase 未実行 (b) phase='end' のまま (c) ターン終了
-    // button 永続 disabled という連鎖バグが発生。useEngineDispatch.endTurn と対称的に
-    // resetTurnFlags + startTurn(self) を呼ぶ。
+    if (!step.done) {
+      // 通常の 1 手適用 → アクティブカードを set + tick で次手へ (turn.player は 'opp' のまま)。
+      const pa = primaryActiveCard(step.move, current, step.nextState);
+      store.setActiveCard(pa.uid, pa.label);
+      store.bumpOppMoveTick();
+      return;
+    }
+
+    // step.done: endTurn / 候補なし / gameResult。アクティブカードをクリアしターン終了処理へ。
+    store.setActiveCard(null, null);
+    if (step.nextState.gameResult) return; // ゲーム終了確定なら turn 遷移不要
+
+    // endTurn move は flow.endTurn を呼ばない (policy.ts コメント参照)。ここで明示的に呼んで
+    // turn.player を 'self' に戻し、ターン終了 listener が積んだ pendingEffects も解消する。
+    // useEngineDispatch.endTurn と対称的に resetTurnFlags + startTurn(self) を呼ぶ (Round 2)。
     store.dispatch((s) =>
       produce(s, (draft) => {
         if (draft.gameResult) return;
@@ -101,13 +111,46 @@ export function driveOppTurn(): void {
         runAllUntilEmpty(draft);
       }),
     );
-    // BUG-090: self の auto-phase (上の startTurn(self)+runAllUntilEmpty) で
-    // 事件編→解決編 になり case card a1 (case:to-resolved → discard) が発火すると、
-    // human の discard pick が side-channel queue に積まれる。dispatchEngineAction と
-    // 同様に store へ転送しないと EffectPickerModal が出ず「何も起きない」ため、ここで surface する。
+    // BUG-090: self auto-phase で 事件編→解決編 になり case a1 が human discard pick を積む場合、
+    // dispatchEngineAction と同様に store へ転送しないと modal が出ないため surface する。
     surfacePendingSideChannels();
   } finally {
     isDriving = false;
+  }
+}
+
+/**
+ * Task4: 適用した move の「主役カード」uid + 行動ラベル (SceneArea ぴこんポップ用)。
+ * 現場カードに紐づく手 (登場/推理/アクション/宣言) は uid を返し、パートナー系や非現場手は null
+ * (盤面更新で結果は見える)。登場手は before/after の opp 現場差分で新規 uid を特定する。
+ */
+function primaryActiveCard(
+  move: Move | null,
+  before: GameState,
+  after: GameState,
+): { uid: string | null; label: string | null } {
+  if (!move) return { uid: null, label: null };
+  switch (move.kind) {
+    case 'reasoning':
+      return { uid: move.uid, label: '推理' };
+    case 'declaredAbility':
+      return { uid: move.uid, label: '宣言能力' };
+    case 'handUseCard':
+    case 'handUseCardSwitch': {
+      const beforeUids = new Set(before.players.opp.scene.map((c) => c.uid));
+      const entered = after.players.opp.scene.find((c) => !beforeUids.has(c.uid));
+      return { uid: entered?.uid ?? null, label: '登場' };
+    }
+    case 'partnerAbility':
+      return { uid: null, label: 'パートナー能力' };
+    case 'startNextHint':
+      return { uid: null, label: 'ネクストヒント' };
+    case 'assist':
+      return { uid: null, label: 'アシスト' };
+    case 'solveCase':
+      return { uid: null, label: '事件解決' };
+    default:
+      return { uid: null, label: null };
   }
 }
 
@@ -152,6 +195,9 @@ export function useOppTurnDriver(): void {
   const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
   const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
   const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
+  // Task4: 1手駆動の再 fire トリガ。driveOppTurn が 1 手適用するたび bump され、turn.player が
+  // 'opp' のままでも useEffect が再 fire して次の手へ進む (これが無いと 1 手で stall)。
+  const oppMoveTick = useGameStateStore((s) => s.oppMoveTick);
   useEffect(() => {
     if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
     if (pendingEffectPick || pendingEffectChoice || pendingEffectOptional) return undefined;
@@ -166,5 +212,5 @@ export function useOppTurnDriver(): void {
     }
     Promise.resolve().then(driveOppTurn);
     return undefined;
-  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional]);
+  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, oppMoveTick]);
 }
