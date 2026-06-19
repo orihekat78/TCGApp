@@ -71,3 +71,12 @@ branch `cards/wave2-cluster15-partnercolor`。⑳候補1 (partnerColorKeyword DE
 - 全ゲート: tsc0 / vitest 5232 pass(+10) / smoke baseline winsA=498不変 / validate-specs engine変更0 / eslint0 / lint:listener+bugs errors=0。playwright は非MVP→gate5 代替。
 - 学び: certify auto-spec の group ラベルでなく **TSV 実テキストで条件 kind を決める** (B08010 は群ラベル上 partnerColor だが実は【絆】gated = 別 inline closure)。
 - 残: B04004 (絆 reactive over-fire DSL fix、別 gate)、B09016 (ミスリード反応 engine gate)。cluster15 keyword-grant 群は完了。
+
+## セッション㉒ (2026-06-19) — 人間vsCPU 操作可視化 + 割り込みロック (core Task1-4 出荷)
+ユーザー要望2点を brainstorming→spec→plan→TDD 実装。branch `feat/cpu-visualize-interrupt-lock`、core を main 取込み。
+- 課題1 (効果解決中に他操作可のバグ): Task1 `selectInteractionLocked` (pendingEffects + pending decision) → ActionsPanel 全項目 disabled + Playmat guard。rules/05 割り込み禁止。
+- 課題2 (CPU の手が見えない/速度無意味): Task3 `stepTurn` (playTurn 分解 byte等価) + Task4 useOppTurnDriver を per-move 駆動 (1手→activeCard set→oppMoveTick++ で再fire→aiSpeedMs 待ち)。Task2 発動カードを SceneArea でその場ぴこんポップ+チップ (全画面ポップは UIユーザー却下)。
+- UI 方針 (ユーザー確定): 全画面ポップ廃止→その場ぴこん (MasterDuel風) / CPU は実盤面でカード移動 / アニメ度=標準。
+- 検証: tsc0 / full vitest 2644 (vitest.config に .claude/worktrees exclude=stale重複除去で5234→2644 正規化) / smoke winsA=498不変 (playTurn byte等価) / 実機 Playwright (最遅で per-move 視認・高速で完走、speed slider 有効、clean round-trip、console error 0)。骨格 engine 不変。
+- 残: Task5 FLIP 移動アニメ (手札→現場スライド/推理タップ/アクション寄せ、polish、core と独立)。
+- 学び: 既存 driver test は最小opp状態(endTurn のみ)→per-move でも1手で完結し緑のまま。stale git worktree が vitest を二重カウント→config exclude で解消。eslint(`eslint .`)は CI/pre-commit ゲート非含 (規約 8 lint のみ)。
