@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 6927
+- **ファイル数**: 6929
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -289,6 +289,7 @@
     - `BUG-145.md`
     - `BUG-146.md`
     - `BUG-150.md`
+    - `BUG-151.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -7196,6 +7197,7 @@
       - `scratchTraceMonotonic.test.ts` — rules: 13-keywords.md, 26-qa-deck-refresh.md (一度発見済になるとずっと維持)
       - `stunSemantics.test.ts` — rules: 03-field-areas.md (スタン特殊挙動)
     - **`listeners/`**
+      - `cutin-summon-misfire.test.ts` — tests/engine/listeners/cutin-summon-misfire — 【カットイン】が召喚時に誤発火しないこと
       - `granted-ability.test.ts` — Task D E4 (2026-06-12): charGrantAbility — triggered ability の動的付与
       - `leave-to-remove.test.ts` — Engine 拡張 #1: leave/現場リムーブ時 hook (engine-extension-plan.md step 1)
       - `triggered-limit-guard.test.ts` — tests/engine/listeners/triggered-limit-guard — BUG-096 / BUG-097

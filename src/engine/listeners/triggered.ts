@@ -205,6 +205,19 @@ function handleHook(
       // multi-hook (2026-06-06 タスクC): trig.hook OR trig.hooks のいずれかが一致で発火。
       // 共有【ターンN】は limit が ability.id 単位のため自動成立 (下の limit check)。
       if (!trig || (trig.hook !== hookName && !(trig.hooks?.includes(hookName) ?? false))) continue;
+      // 【カットイン】(effect:declared + optional) はコンタクト中の cutin 起動経由
+      // (flow.contact.cutIn が emit する payload.abilityId==='cutin') でのみ発火する。
+      // handUseCard / next-hint のキャラ召喚・イベント使用 emit (payload.kind set / abilityId なし) では
+      // 発火させない — さもないと召喚毎に noop の charModifyAP($contact.byUid) entry が pendingEffects に
+      // 残留し続け、効果スタック counter が毎ターン増加 + 古い resolved entry が UI を汚す
+      // (CPU per-move 可視化で顕在化したバグ)。rules/09 §カットイン, rules/22。
+      if (
+        hookName === 'effect:declared'
+        && trig.optional === true
+        && (payload as { abilityId?: unknown } | undefined)?.abilityId !== 'cutin'
+      ) {
+        continue;
+      }
       // scope check
       if (!scopeAllowsArea(ability.scope, card.area)) continue;
       // selfOnly check

@@ -303,8 +303,13 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // CPU の store 信号を優先し、無ければ効果スタック由来にフォールバック。
   const storeActiveCardUid = useGameStateStore((s) => s.activeCardUid);
   const storeActiveCardLabel = useGameStateStore((s) => s.activeCardLabel);
+  // 効果解決中のカードを採用。resolving 優先、無ければ未解決 (pending) の先頭。
+  // ⚠ resolved / cancelled の entry は採用しない — pendingEffects は resolved entry を prune せず
+  // 蓄積し続けるため、`?? pendingEffects[0]` だと古い解決済み entry を拾って「効果解決」ポップが
+  // 毎ターン幻のように出続けるバグになる (CPU per-move 可視化で顕在化)。
   const activeEffectEntry =
-    (gameState?.pendingEffects ?? []).find((e) => e.state === 'resolving') ?? gameState?.pendingEffects[0];
+    (gameState?.pendingEffects ?? []).find((e) => e.state === 'resolving') ??
+    (gameState?.pendingEffects ?? []).find((e) => e.state === 'pending');
   const effectCardUid = activeEffectEntry?.source.uid ?? null;
   const activeCardUid = storeActiveCardUid ?? effectCardUid;
   const activeCardLabel = storeActiveCardUid ? storeActiveCardLabel : effectCardUid ? '効果解決' : null;
@@ -577,7 +582,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                 : 'opp'
           }
           scratchTrace={gameState?.scratchTrace ?? { self: '未発見', opp: '未発見' }}
-          effectStackCount={gameState?.pendingEffects.length ?? 0}
+          effectStackCount={
+            (gameState?.pendingEffects ?? []).filter(
+              (e) => e.state === 'pending' || e.state === 'resolving',
+            ).length
+          }
         />
 
         <div className="play-area">
