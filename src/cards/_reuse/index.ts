@@ -852,6 +852,11 @@ import { B09071 } from '../ct-p09/B09071.js';
 import { B09071P } from '../ct-p09/B09071P.js';
 import { B09071P2 } from '../ct-p09/B09071P2.js';
 
+import { B05078 } from '../ct-p05/B05078.js';
+import { B05078P } from '../ct-p05/B05078P.js';
+import { B03056 } from '../ct-p03/B03056.js';
+import { B03056P } from '../ct-p03/B03056P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1030,4 +1035,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07051,
   // wave#2 cluster15 follow-up — removal-observer + keyword-grant closure (partnerColorKeyword / 絆 bond grant + contact-self removal observer)
   B06038, B06038P, B06039, B06039P, B08010, B09071, B09071P, B09071P2,
+  // wave-deckLook-bottom: 上から見て手札+残りデッキ下 (engine変更0)
+  B05078, B05078P, B03056, B03056P,
 ];

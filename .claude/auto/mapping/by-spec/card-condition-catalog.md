@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b53e46684550`
+> Source hash: `07f375e19d31`
 
 仕様書 [`card-condition-catalog`](../../../specs/card-condition-catalog.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

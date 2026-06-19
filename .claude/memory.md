@@ -57,3 +57,18 @@ tsc 0 / vitest 2658 (+12) / 既存 scene・contact・reasoning e2e 6 回帰な�
 ### 学び (恒久)
 FLIP under CSS `zoom` は差分を zoom で割る。CSS transform 持ちカードは computed matrix を合成 (translate 外側) して
 clobber 回避。ゴースト等 React state 外のレイアウト変化を拾うには MutationObserver(childList) が dep より確実。
+
+## セッション㉕ (2026-06-19) — カード追加 wave: deck-look→手札+残りデッキ下 (engine変更0、4枚)
+ユーザー選択=カード追加 wave。standing certify queue 枯渇 (next-chunk=[]) を確認 → 残 backlog 再調査。
+**所見**: named-next の contact-removal-by-self 族 (21rep/39枚) は cluster15/16 で 28/39 出荷済 (gate 閉鎖済)、
+残5は別gate hard tail。sweep landscape の「hand→deck-bottom verb 無」note は **stale** = wave1 が
+`deckToBottomBound`+`deckRevealUntil{maxN,upTo}` 追加済で engine変更0 だった。
+**出荷4枚** (ALL_CARDS 1033→1037): B05078/B05078P 世良真純 (look-4 filterAny[赤井家|探偵] + 加えたら discard1 + ヒラメキ draw、B03007同型)、
+B03056/B03056P 千間降代 (look-1探偵 + ターン終了時 探偵sleep≥3→self-remove→証拠1、B04024+B06081同型)。
+**検証**: engine変更0 (git diff=カード+_reuse+test のみ) / tsc0 / 新 test `tests/cards/wave-decklook-bottom.test.ts` 15件
+(filterAny OR+kind を decoy で1対1実証 / B03056 a2 condition evalCond 直 + effect opt-in/out runtime) / vitest 2673(+15) /
+smoke exc=0・baseline 不変 (avg10.998/winsA498) / e2e 120pass (1 flake=ERR_NO_BUFFER_SPACE 環境、単独pass) / 敵対verify(opus) 0 blocker。
+**既知限界**: B03056 a2 Q&A②「解決前離脱→証拠なし」は厳密非充足 (sceneRemove uid:$self が __chainStepNoApply 立てず、chain でも不可) =
+全 uid:$self self-remove カード共通の frozen-engine 既知限界、骨格凍結下で許容・本カード固有でない。
+**DEFER** (DEFERRED-INDEX 追記): B03042(2-pick相対色+shuffle)/PR265(動的mill) / 次wave候補 B07066・PR194・B08075(composite、certifyで出荷可能性)。
+branch=cards/wave-deckLook-bottom。commit 後 main ff-merge + push 予定。

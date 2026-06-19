@@ -314,3 +314,20 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 | B03033 | yellow | 「相手の現場のセット済キャラを AP-1000」= **相手側の数値 aura**。cluster13 aura は target 同 side (自陣) のみ走査。相手 side 数値 aura 機構なし | cross-side numeric aura (engine) |
 | B06033 | yellow | 「手札からカードを1枚裏向きで証拠として得る」= **hand→evidence** verb 不在 (evidenceGain=deck top / selfToEvidence=event自身 / gainCard=remove のみ) | handToEvidence verb (engine) |
 | B08050 | yellow | 「【解決編】このキャラをレベル+3」= **継続 condition-gated self level 修飾**。ContinuousModifier は ap/lpDelta のみで levelDelta 不在 | continuous level modifier (engine) |
+
+## deck-look → 手札 + 残りデッキ下 族 (2026-06-19 wave、engine変更0 で 4枚出荷後の残)
+
+出荷 = B05078/B05078P (世良真純) + B03056/B03056P (千間降代) (changelog [2026-06-19-02](../changelog-entries/2026-06-19-02-wave-decklook-bottom.md))。
+sweep landscape の「hand→deck-bottom verb 無」note は **stale** (wave1 で `deckToBottomBound`+`deckRevealUntil{maxN,upTo}` 追加済 = この族は engine変更0)。残 rep:
+
+| rep | 種別 | 理由 (支配 gate) | 解禁条件 |
+|------|------|------|------|
+| B03042 | DEFER | look-5 で **探偵 2枚 (相対色「同じ色を持たない」) を同時 pick** + 「**シャッフル**してデッキ下」。deckRevealUntil は 1 match のみ / cross-pick 相対色 filter なし / shuffle-to-bottom variant 不在 | multi-match relative-filter pick + shuffle-bottom variant (engine) |
+| PR265 | DEFER | 登場時「加えたカードの**レベル分**デッキ上からリムーブ」= bound カードの level を動的 N とする mill。deckRemoveTop は静的 N のみ + 解決編宣言 mill-by-level | dynamic-count (bound-card-level) mill (engine) |
+| B07066 | 次wave候補 | 【宣言】cost(自/赤井家 sleep)→look-3 + 自分ターン登場 trigger remove。2 ability composite だが verb は既存 = certify で出荷可能性あり | certify (engine変更0 見込) |
+| PR194 | 次wave候補 | 【宣言】cost(自→リムーブエリア)→look-2 **forced-1** (filter 無)。forced-1-no-filter pick + 自己 remove cost を要 certify | certify (forced 型確認) |
+| B08075 | 次wave候補 | event「以下から**3つまで選んで行う** (上から順)」= ordered multi-select-3 (アクティブ/突撃付与/deck-look)。sequence-of-optionals で表現可能か要 certify | certify (3択構造確認) |
+
+> 補足 (再選定防止): named-next の **contact-removal-by-self 族 (21rep/39枚) は 28/39 出荷済**。残 5
+> (B04004/B09022/B05009/B06068/PR136) は contact trigger 以外の gate (action-react actor gate /
+> chain-pick resolve / deck-set verb / 突撃swap) で blocked。詳細は session log 2026-06-19。

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 6934
+- **ファイル数**: 6942
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -459,6 +459,7 @@
     - `2026-06-18-02-momoi-deckreveal-ship.md` — cluster16 G2 follow-up — 桃井恵子 (B07051) 出荷 (deckReveal filterAny)
     - `2026-06-18-03-cluster15-partnercolor-removal-observer-ship.md` — cluster15 follow-up — removal-observer + keyword-grant closure 群 出荷 (4 rep /…
     - `2026-06-19-01-task5-flip-move-anim.md` — Task5 — 現場カードの FLIP 移動アニメ (CPU可視化機能の polish 完了)
+    - `2026-06-19-02-wave-decklook-bottom.md` — カード追加 wave — deck-look → 手札 + 残りデッキ下 (engine 変更 0、4枚)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -796,6 +797,8 @@
     - `smoke-2026-06-18-3.md` — Smoke 1000戦レポート — smoke-2026-06-18-144028
     - `smoke-2026-06-18.json`
     - `smoke-2026-06-18.md` — Smoke 1000戦レポート — smoke-2026-06-18-134144
+    - `smoke-2026-06-19-2.json`
+    - `smoke-2026-06-19-2.md` — Smoke 1000戦レポート — smoke-2026-06-19-042126
     - `smoke-2026-06-19.json`
     - `smoke-2026-06-19.md` — Smoke 1000戦レポート — smoke-2026-06-19-002016
     - `smoke-baseline.json`
@@ -5761,6 +5764,8 @@
       - `B03054.ts` — cards/ct-p03/B03054 鈴木園子 (キャラ) — catalog-reuse batch
       - `B03054P.ts` — cards/ct-p03/B03054P 鈴木園子 (キャラ・パラレル) — catalog-reuse batch
       - `B03055.ts` — cards/ct-p03/B03055 瀬戸瑞紀 (キャラ) — catalog-reuse batch
+      - `B03056.ts` — cards/ct-p03/B03056 千間降代 (character) — Task A green候補 (engine変更0)
+      - `B03056P.ts` — cards/ct-p03/B03056P 千間降代 (character, パラレル) — Task A green候補 (engine変更0)
       - `B03059.ts` — cards/ct-p03/B03059 土井塔克樹 (キャラ) — engine拡張 wave#2 cluster4 (remove-area → deck-b…
       - `B03060.ts` — cards/ct-p03/B03060 茂木遥史 (キャラ) — catalog-reuse batch
       - `B03060P.ts` — cards/ct-p03/B03060P 茂木遥史 (キャラ) — catalog-reuse batch; B03060 の絵柄違い (同 cardId)
@@ -6004,6 +6009,8 @@
       - `B05074.ts` — cards/ct-p05/B05074 小倉功雅 (character) — Task A green候補 (engine変更0)
       - `B05076.ts` — cards/ct-p05/B05076 ジョディ・スターリング (character) — Task A green候補 (engine変更0)
       - `B05076P.ts` — cards/ct-p05/B05076P ジョディ・スターリング (character) — Task A green候補 (engine変更0)
+      - `B05078.ts` — cards/ct-p05/B05078 世良真純 (character) — Task A green候補 (engine変更0)
+      - `B05078P.ts` — cards/ct-p05/B05078P 世良真純 (character, パラレル) — Task A green候補 (engine変更0)
       - `B05080.ts` — cards/ct-p05/B05080 羽田秀吉 (キャラ) — engine-extension triggerChar→target batch (2026…
       - `B05083.ts` — cards/ct-p05/B05083 太閤名人の将棋盤 (事件) — catalog-reuse batch
       - `B05083P.ts` — cards/ct-p05/B05083P 太閤名人の将棋盤 (事件) — catalog-reuse batch (variant of B05083)
@@ -7070,6 +7077,7 @@
     - `setcard-removal-batch.test.ts` — engine-extension set-card 除去 batch (2026-06-06 タスクC) — charRemoveSetCard verb +…
     - `triggerchar-target-batch.test.ts` — engine-extension triggerChar→target batch (2026-06-06 タスクC) — $trigger.…
     - `validate-all.test.ts` — tests/cards/validate-all — Phase 5 Group F: 全 47 枚 validateAll
+    - `wave-decklook-bottom.test.ts` — wave-deckLook-bottom — B05078 世良真純 / B03056 千間降代 を実 engine 経路で駆動する挙動テスト。
     - `wave2-cluster2-batch.test.ts` — engine拡張 wave#2 cluster2 — ability-presence filter 解禁 10枚の実 flow 検証 (decoy 付き)
   - **`e2e/`** — Playwright E2E テスト (1 試合通し検証 + 共通パターン spec)
     - **`helpers/`** — E2E 共通ヘルパー (types / setup / state / assertions)
