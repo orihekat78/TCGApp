@@ -32,7 +32,28 @@ TDD `tests/engine/listeners/cutin-summon-misfire.test.ts` (character-use/event-u
 tsc 0 / vitest 2646 pass (+3) / smoke baseline winsA=498 不変・例外0 / cutin 回帰 (BUG-140, lensf-batch2b) green。
 
 ### 残 / 次アクション
-- **merge 未実施**: core(Task1-4)+fix の main 取込みはユーザー判断待ち (ff 可能、branch が main より 10 commit 先行)。
-- **Task5 FLIP 移動アニメ** (polish、core と独立) は未着手。
-- 学び: effect:declared は「カード使用」汎用 hook。kind/abilityId で必ず discriminate。pendingEffects は resolved を
-  prune しない → UI は必ず state でフィルタ。可視化機能は無害な内部残留を表面化させる。
+- core(Task1-4)+BUG-151 は main 取込み済 (`1e3dcc80`)。学び: effect:declared は「カード使用」汎用 hook。
+  kind/abilityId で必ず discriminate。pendingEffects は resolved を prune しない → UI は必ず state でフィルタ。
+
+## セッション㉔ (2026-06-19) — Task5 FLIP 移動アニメ (CPU可視化機能 polish 完了)
+
+commit `9facc5fa` (feat/task5-flip-anim → main FF-merge + push、CI run 27800793662 トリガー)。これで
+「人間vsCPU 操作可視化 + 割り込みロック」機能セット (Task1-5 + BUG-151) **完了**。
+
+### 実装 (engine 不変、UI 層のみ)
+- 新規 `src/ui/hooks/useFlipAnimation.ts`: 現場カードの reflow (追加/除去/スイッチ/ゴースト消滅) を FLIP で
+  移動トゥイーン。**MutationObserver(childList) 駆動** — 除去カードのゴースト消滅は SceneArea 内部 state で
+  起きるため dep=gameState では捕捉不能。Observer なら全構造変化を捕捉。
+- 補正: `.board-content` の CSS `zoom`(BUG-150) で差分を割る / sleep(rotate-90)・stun(rotate180)・pop(scale) の
+  computed matrix を `translate(dx,dy) <matrix>` で合成し回転保持 / 回転に強い中心点計測。
+- `SceneArea`: 実カードのみ `data-flip-id` (ゴーストは leave 専任で除外) / `Playmat`: boardRef + hook。
+- スコープ確認済 = reflow 移動のみ。タップ横向き/登場ポップは既存 CSS で動作済 (調査で判明)。
+
+### 検証
+TDD 純関数 12 (rectCenter/computeFlipMoves: zoom補正/threshold/新規退場skip) / e2e 2
+(`tests/e2e/task5-flip-reflow.spec.ts`: reflowスライド + **sleep回転保持の matrix合成** = 敵対レビュー指摘を実機で閉鎖) /
+tsc 0 / vitest 2658 (+12) / 既存 scene・contact・reasoning e2e 6 回帰なし / lint errors=0。
+
+### 学び (恒久)
+FLIP under CSS `zoom` は差分を zoom で割る。CSS transform 持ちカードは computed matrix を合成 (translate 外側) して
+clobber 回避。ゴースト等 React state 外のレイアウト変化を拾うには MutationObserver(childList) が dep より確実。
