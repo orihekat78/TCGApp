@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-19 — BUG-151 修正済、merge 判断待ち / 残 Task5 FLIP)
+# 次セッション再開プロンプト (2026-06-19 — core+BUG-151 main 取込み済・CI green / 残 Task5 FLIP)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。
 
@@ -8,16 +8,11 @@
 名探偵コナンTCG MVP「人間vsCPU 操作可視化 + 割り込みロック」機能。
 まず CLAUDE.md → 設計 spec → 実装計画 → memory.md を読む。
 
-## 現在地 (2026-06-19、branch feat/cpu-visualize-interrupt-lock)
-最優先 BUG (登場時効果が毎ターン発動して見える) は **修正済・実機検証 OK** (commit c4ec6448、BUG-151)。
-core (Task1-4) + fix が branch に揃い、main より 10 commit 先行。**main 取込みはユーザー判断待ち**
-(ff-merge 可能。push すると CI が走る)。詳細: .claude/sessions/2026-06-19.md セッション㉓ / .claude/bugs/BUG-151.md。
-
-## ★最初にやること: core+fix を main に取り込む
-- 方法: `git checkout main && git merge --ff-only feat/cpu-visualize-interrupt-lock`
-  (ユーザーが PR 経由を希望する場合は push → PR → CI green → merge)。
-- merge/push 前に CI green を確認 (CLAUDE.md)。CI は main push / PR でのみ走る。
-- 取込み後 branch を削除してよいか確認。
+## 現在地 (2026-06-19、main = 1e3dcc80)
+最優先 BUG (登場時効果が毎ターン発動して見える) は **修正済** (commit c4ec6448、BUG-151)。
+core (Task1-4) + fix を **main に ff-merge + push 済・CI green** (run 27799464439: tsc/vitest/lint8/smoke 全✓)。
+branch `feat/cpu-visualize-interrupt-lock` は merge 済 (削除してよいか必要なら確認)。
+詳細: .claude/sessions/2026-06-19.md セッション㉓ / .claude/bugs/BUG-151.md。
 
 ## BUG-151 修正サマリ (検証済: tsc0 / vitest 2646 / smoke winsA=498不変 / 実機Playwright)
 原因は Task4 regression ではなく「CPU per-move 可視化で顕在化した既存 engine バグ + Task4 UI fallback」の複合:
@@ -42,4 +37,4 @@ core (Task1-4) + fix が branch に揃い、main より 10 commit 先行。**mai
 - 実機確認は playwright MCP (localhost:5173)。window.__game.getState().gameState で live state 参照可。
 ```
 
-BUG-151 修正済・全ゲート green。**残は (a) core+fix の main 取込み (ユーザー判断) と (b) Task5 FLIP のみ。** `/clear` 後の新セッション推奨。
+BUG-151 修正済・main 取込み済・CI green。**残は Task5 FLIP のみ。** `/clear` 後の新セッション推奨。
