@@ -71,4 +71,4 @@ smoke exc=0・baseline 不変 (avg10.998/winsA498) / e2e 120pass (1 flake=ERR_NO
 **既知限界**: B03056 a2 Q&A②「解決前離脱→証拠なし」は厳密非充足 (sceneRemove uid:$self が __chainStepNoApply 立てず、chain でも不可) =
 全 uid:$self self-remove カード共通の frozen-engine 既知限界、骨格凍結下で許容・本カード固有でない。
 **DEFER** (DEFERRED-INDEX 追記): B03042(2-pick相対色+shuffle)/PR265(動的mill) / 次wave候補 B07066・PR194・B08075(composite、certifyで出荷可能性)。
-branch=cards/wave-deckLook-bottom。commit 後 main ff-merge + push 予定。
+branch=cards/wave-deckLook-bottom → commit `c608c756` → main ff-merge + push 済 (4d3b85f7..c608c756、ユーザー認可)。CI run 27805693259。
