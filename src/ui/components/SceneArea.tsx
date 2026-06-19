@@ -131,6 +131,9 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
     <div
       className={classes}
       data-uid={ch.uid}
+      // Task5 FLIP: 実カードのみに付与 (ゴーストは leave アニメ専任なので除外)。
+      // useFlipAnimation がこの属性を計測対象として reflow 移動をトゥイーンする。
+      data-flip-id={isGhost ? undefined : ch.uid}
       data-state={ch.state}
       onClick={
         isGhost

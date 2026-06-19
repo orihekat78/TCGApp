@@ -11,7 +11,7 @@
 // TopBar, HandZone, LogPanel) は Task 7.5-7.13 で実装するため placeholder。
 // 操作系 (クリック・DnD) は Phase 8。
 
-import { useEffect, useState, type JSX } from 'react';
+import { useEffect, useRef, useState, type JSX } from 'react';
 import type { GameState } from '@/engine/types/game-state.js';
 import { SceneArea, type ResolvedCardMeta } from './SceneArea.js';
 import { isSceneDirectPick } from '@/ui/services/scenePick.js';
@@ -53,6 +53,7 @@ import { useOppTurnDriver } from '../hooks/useOppTurnDriver.js';
 import { useSpectatorTurnDriver } from '../hooks/useSpectatorTurnDriver.js';
 import { useContactFlowDriver } from '../hooks/useContactFlowDriver.js';
 import { useStageScale } from '../hooks/useStageScale.js';
+import { useFlipAnimation } from '../hooks/useFlipAnimation.js';
 import { useContactModalStore } from '../hooks/useContactModalStore.js';
 import { useHiramekiFlowDriver } from '../hooks/useHiramekiFlowDriver.js';
 import { useMisreadFlowDriver } from '../hooks/useMisreadFlowDriver.js';
@@ -554,13 +555,17 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       : handCards;
   // Cleanup #6: viewport に合わせて stage を縮小 (1920×1080 fixed → fit)
   const stageScale = useStageScale();
+  // Task5 FLIP: 現場カードの reflow (追加/除去/スイッチ/ゴースト消滅) を移動トゥイーンする。
+  // board-content 配下の [data-flip-id] の構造変化を MutationObserver で監視し位置差分をスライド。
+  const boardRef = useRef<HTMLDivElement>(null);
+  useFlipAnimation(boardRef);
   return (
     <div className="scaler" id="scaler" data-stage-scale={stageScale}>
       <div className="stage">
         {/* BUG-150: board-content を zoom + width=100/scale% で stage 全面に充填し、
             内部のカード/chrome を比率維持スケール (旧 .scaler transform:scale を撤去)。
             以降の modal/overlay は board-content の外 (=.stage 直下) に置き非 zoom で viewport 基準。 */}
-        <div className="board-content" style={{ zoom: stageScale }}>
+        <div className="board-content" ref={boardRef} style={{ zoom: stageScale }}>
           <div className="bg" />
         <div className="vignette" />
 

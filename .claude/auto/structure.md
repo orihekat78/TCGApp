@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 6930
+- **ファイル数**: 6934
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -458,6 +458,7 @@
     - `2026-06-18-01-hagiwara-self-remove-observer-ship.md` — engine拡張 wave#2 cluster16 fast-follow — 萩原千速 trio 出荷 (self-remove removal-observ…
     - `2026-06-18-02-momoi-deckreveal-ship.md` — cluster16 G2 follow-up — 桃井恵子 (B07051) 出荷 (deckReveal filterAny)
     - `2026-06-18-03-cluster15-partnercolor-removal-observer-ship.md` — cluster15 follow-up — removal-observer + keyword-grant closure 群 出荷 (4 rep /…
+    - `2026-06-19-01-task5-flip-move-anim.md` — Task5 — 現場カードの FLIP 移動アニメ (CPU可視化機能の polish 完了)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -6867,6 +6868,7 @@
       - `useEvidence.ts` — Phase 7 Task 7.9: EvidenceArea selector hook
       - `useEvidenceFlipPicker.ts` — 2026-05-30 BUG-085: 宣言能力コスト〚裏向きの証拠を1つ以上表向きにする〛の
       - `useFile.ts` — Phase 7 Task 7.8: FileArea selector hook
+      - `useFlipAnimation.ts` — Task5: FLIP 移動アニメ (polish)。
       - `useHiramekiDemoDriver.ts` — 2026-05-26 ヒラメキ効果検証 demo の完了検知 driver
       - `useHiramekiFlowDriver.ts` — Phase 8 完全クローズ Commit 3a: Hirameki driver
       - `useLogEntries.ts` — Phase 7 Task 7.13: LogPanel selector hook
@@ -7115,6 +7117,7 @@
     - `setcard-removal-2026-06-06.spec.ts` — E2E: set-card 除去 (charRemoveSetCard) の実機 text-faithfulness 検証。
     - `spectator-speed.spec.ts` — user_request 20260521_01 #12: 観戦モード speed slider + pause/step E2E
     - `task-d-extensions-2026-06-12.spec.ts` — E2E verification for Task D engine拡張 wave#1 (2026-06-12):
+    - `task5-flip-reflow.spec.ts` — E2E (Task5): 現場カードの reflow 移動トゥイーン (FLIP) の実機検証。
     - `triggerchar-target-2026-06-06.spec.ts` — E2E: triggerChar→target ($trigger.uid) の実機 text-faithfulness 検証。
   - **`engine/`** — Engine ユニットテスト
     - **`cards/`**
@@ -7313,6 +7316,7 @@
       - `useEngineDispatch.hirameki.test.ts` — Phase 8 完全クローズ Commit 3a: hiramekiResolve dispatch tests
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
       - `useEvidenceFlipPicker.test.ts` — BUG-085: useEvidenceFlipPicker store + Promise hook の単体テスト
+      - `useFlipAnimation.test.ts` — Task5 FLIP 移動アニメ: pure な FLIP 計算 (rectCenter / computeFlipMoves) の単体テスト。
       - `useNextHintPicker.test.ts` — 2026-05-28: useNextHintPicker hook tests
       - `useOppTurnDriver.case-resolved-pick.test.ts` — BUG-090: human の auto-phase で 事件編→解決編 になり case card a1 (case:to-resolved →
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
