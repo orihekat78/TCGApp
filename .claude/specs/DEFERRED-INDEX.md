@@ -310,12 +310,31 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 | B04042 | yellow | 「レベルの合計が10以下になるようにキャラを2枚まで選び」= multi-pick の**集約(sum/budget)制約**。engine に sum 制約 pick 機構なし (per-candidate filter のみ、distinctNames 以外の cross-selection 制約不可) | aggregate-selection-budget 制約 (engine) |
 | B06032 | yellow | 【ヒラメキ】本体が top-level optional{chain[discard1, sceneEnter from:remove]} を要するが、hiramekiResolve 経路が humanChooser なしで resolveEffectPicks を呼ぶため top-level optional が常に skip → 再生効果が無音 no-op (BUG-145 同族) | hirameki 経路の top-level optional honor (engine) |
 | B08038 | yellow | 「この効果によって特徴[高校生]/[鈴木財閥]がリムーブされた場合」= **removed-by-this-effect** 条件。mill verb は bind せず、removeTraitAtLeast は remove パイル累積を見るため中盤で誤発火 (false-positive AP+1000) | mill bind + removed-by-this-effect condition (engine) |
-| PR236 | yellow | 宣言ゲート「カード名の異なる[長野県警]が3枚以上」= **distinct-name count** condition。sceneHas は length のみ、distinctNames は candidates 列挙で無視 (pick resolve でのみ honor) | distinct-name-count condition (engine) |
+| ~~PR236~~ | ✅ 出荷済 | **出荷済 (2026-06-21、`cards/wave-distinct-name-count`)**。`sceneHas` eval を `query.distinctNames` honor に拡張 (1分岐 additive、新 Condition kind 無)。PR236/PR242 (大和敢助 declared a2 宣言ゲート) + B08067/B08067P (諸伏高明 enter conditional) 計 **4 刷**。詳細下記「distinct-name-count cluster」 | — |
 | B03033 | yellow | 「相手の現場のセット済キャラを AP-1000」= **相手側の数値 aura**。cluster13 aura は target 同 side (自陣) のみ走査。相手 side 数値 aura 機構なし | cross-side numeric aura (engine) |
 | B06033 | yellow | 「手札からカードを1枚裏向きで証拠として得る」= **hand→evidence** verb 不在 (evidenceGain=deck top / selfToEvidence=event自身 / gainCard=remove のみ) | handToEvidence verb (engine) |
-| B08050 | yellow | 「【解決編】このキャラをレベル+3」= **継続 condition-gated self level 修飾**。ContinuousModifier は ap/lpDelta のみで levelDelta 不在 | continuous level modifier (engine) |
+| B08050 | yellow | 「【解決編】このキャラをレベル+3」= **継続 condition-gated self level 修飾**。ContinuousModifier は ap/lpDelta のみで levelDelta 不在 | continuous level modifier (engine、未着手 micro-cluster) |
 
-## deck-look → 手札 + 残りデッキ下 族 (2026-06-19 wave、engine変更0 で 4枚出荷後の残)
+## ✅ distinct-name-count cluster (sceneHas distinctNames 計数, 2026-06-21, cards/wave-distinct-name-count)
+
+standing green queue 枯渇 + engine変更0 残弾尽きを決定論スキャン (`.tmp/gate-yield-scan.cjs`、未実装 685 cardNum を
+実テキスト走査) で確証 → 最クリーンな単一 additive gate **distinct-name-count** を engine拡張 micro-cluster 化。
+`src/engine/cond/eval.ts` の `sceneHas` case に `query.distinctNames` honor 分岐 1 つ追加 (新 Condition kind 無、
+既存 flag を計数経路でも honor)。**回帰ゼロ**: sceneHas 内で distinctNames を使う既存カード 0 (D08021/B09010 は pick 内のみ)、
+smoke baseline 不変。**4 刷出荷** (ALL_CARDS 1362→1366): B08067/B08067P (諸伏高明 enter conditional) + PR236/PR242
+(大和敢助 declared a2 宣言ゲート)。decoy 10 pass (§2 同名 dedupe 1対1 witness) + 敵対verify opus OVERALL SHIP/refute0。
+changelog [2026-06-21-02](../changelog-entries/2026-06-21-02-cluster-distinct-name-count.md)。
+
+| rep | DEFER 理由 (残存 gate) | 解禁条件 |
+|-----|----------------------|---------|
+| B08063 (黒田兵衛) | a1「現場にいるこのキャラは〚特徴［長野県警］〛を持つ」= **self-trait-grant continuous** が engine 不在 (ContinuousModifier は ap/lpDelta/grantKeywords のみ、trait 付与機構なし)。a2 は distinct-name-count で解禁済だが partial 出荷せず | self-trait-grant (継続 trait 付与) 機構の追加 (別 micro-cluster) |
+
+### 同セッションで scope した未着手 micro-cluster (engine変更0 枯渇後の次弾候補、要別判断)
+
+| gate | 対象 (実未実装) | engine 追加内容 |
+|------|----------------|----------------|
+| handToEvidence (2 verb) | B03077 / B06029 / B06033 + 同型 | 証拠→手札 verb + 手札→証拠 verb (B06033 は event + hirameki selfToHand)。決定論 scan ~3 base |
+| continuous levelDelta | PR264 (clean) / B08059 (条件付) ほか | ContinuousModifier.levelDelta + 全 level-read site honor (effort 大・yield 小)。B08050/B09003/B04046 は二次 gate で別途 |
 
 出荷 = B05078/B05078P (世良真純) + B03056/B03056P (千間降代) (changelog [2026-06-19-02](../changelog-entries/2026-06-19-02-wave-decklook-bottom.md))。
 sweep landscape の「hand→deck-bottom verb 無」note は **stale** (wave1 で `deckToBottomBound`+`deckRevealUntil{maxN,upTo}` 追加済 = この族は engine変更0)。残 rep:

@@ -91,6 +91,22 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'sceneHas': {
       const cands = candidates(state, { kind: 'all', query: cond.query }, ctx);
       const need = cond.nMin ?? 1;
+      // 「それぞれカード名の異なる〚X〛のキャラがN枚以上」(B08067/PR236/PR242, rules/19): query.distinctNames=true
+      //   のとき、一致候補を **カード名で dedupe** して計数する (同名2枚目は数えない)。判定は def.names[0]
+      //   (印字カード名) — 現状この族 (長野県警) に分割名カード (rules/19 §「&」「『』」「()」) は無く、
+      //   分割名の component 単位 distinct は out-of-scope (将来カードは per-card 再 certify で捕捉)。
+      //   distinctNames は pick-resolve (target/resolve.ts) では既に honor 済だが sceneHas 計数では未評価
+      //   だった (candidates 列挙は name dedupe しない)。既存カードで sceneHas+distinctNames を使うものは
+      //   0 のため純 additive (smoke baseline 不変 = 回帰なし)。
+      if (cond.query.distinctNames) {
+        const names = new Set<string>();
+        for (const c of cands) {
+          if (c.kind !== 'char') continue;
+          const def = lookupCardDef(c.cardId);
+          if (def && def.names.length > 0) names.add(def.names[0]);
+        }
+        return names.size >= need;
+      }
       return cands.length >= need;
     }
     case 'apAtLeast': {

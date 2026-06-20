@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `988b957c31b7`
+> Source hash: `62334d4f53ed`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **1395** ファイル（[全体 index](./index.md)）
+このグループ: **1399** ファイル（[全体 index](./index.md)）
 
 ## cards/_shared (10)
 
@@ -82,7 +82,7 @@
 | [`src/cards/ct-d11/D11021.ts`](../../../src/cards/ct-d11/D11021.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/cards/ct-d11/index.ts`](../../../src/cards/ct-d11/index.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 
-## cards (他) (1320)
+## cards (他) (1324)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -1046,6 +1046,8 @@
 | [`src/cards/ct-p08/B08065P.ts`](../../../src/cards/ct-p08/B08065P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08066.ts`](../../../src/cards/ct-p08/B08066.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p08/B08066P.ts`](../../../src/cards/ct-p08/B08066P.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
+| [`src/cards/ct-p08/B08067.ts`](../../../src/cards/ct-p08/B08067.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
+| [`src/cards/ct-p08/B08067P.ts`](../../../src/cards/ct-p08/B08067P.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08070.ts`](../../../src/cards/ct-p08/B08070.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/ct-p08/B08077Sec1.ts`](../../../src/cards/ct-p08/B08077Sec1.ts) | _(参照なし)_ |
 | [`src/cards/ct-p08/B08077Sec2.ts`](../../../src/cards/ct-p08/B08077Sec2.ts) | _(参照なし)_ |
@@ -1372,10 +1374,12 @@
 | [`src/cards/pr-01/PR232.ts`](../../../src/cards/pr-01/PR232.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR233.ts`](../../../src/cards/pr-01/PR233.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR235.ts`](../../../src/cards/pr-01/PR235.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/cards/pr-01/PR236.ts`](../../../src/cards/pr-01/PR236.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/cards/pr-01/PR237.ts`](../../../src/cards/pr-01/PR237.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/pr-01/PR238.ts`](../../../src/cards/pr-01/PR238.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR239.ts`](../../../src/cards/pr-01/PR239.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR241.ts`](../../../src/cards/pr-01/PR241.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/cards/pr-01/PR242.ts`](../../../src/cards/pr-01/PR242.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR243.ts`](../../../src/cards/pr-01/PR243.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`17-icons.md`](../../rules/17-icons.md) / [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) |
 | [`src/cards/pr-01/PR244.ts`](../../../src/cards/pr-01/PR244.ts) | _(参照なし)_ |
 | [`src/cards/pr-01/PR245.ts`](../../../src/cards/pr-01/PR245.ts) | _(参照なし)_ |

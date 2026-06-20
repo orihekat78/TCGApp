@@ -867,6 +867,11 @@ import { B04004P } from '../ct-p04/B04004P.js';
 import { B09097 } from '../ct-p09/B09097.js';
 import { B09097P } from '../ct-p09/B09097P.js';
 
+import { B08067 } from '../ct-p08/B08067.js';
+import { B08067P } from '../ct-p08/B08067P.js';
+import { PR236 } from '../pr-01/PR236.js';
+import { PR242 } from '../pr-01/PR242.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1051,4 +1056,7 @@ export const REUSE_CARDS: CardDef[] = [
   B07066, B07066P, PR194,
   // wave dsl-reauthor — B02026 / B04004 / B09097 再author (engine変更0)
   B02026, B04004, B04004P, B09097, B09097P,
+  // distinct-name-count micro-cluster (2026-06-21): sceneHas query.distinctNames を計数 honor
+  //   (「それぞれカード名の異なる〚特徴X〛がN枚以上」rules/19)。諸伏高明 enter gate + 大和敢助 declared a2 gate。
+  B08067, B08067P, PR236, PR242,
 ];
