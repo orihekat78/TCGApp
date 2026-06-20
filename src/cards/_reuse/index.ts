@@ -861,6 +861,12 @@ import { B07066 } from '../ct-p07/B07066.js';
 import { B07066P } from '../ct-p07/B07066P.js';
 import { PR194 } from '../pr-01/PR194.js';
 
+import { B02026 } from '../ct-p02/B02026.js';
+import { B04004 } from '../ct-p04/B04004.js';
+import { B04004P } from '../ct-p04/B04004P.js';
+import { B09097 } from '../ct-p09/B09097.js';
+import { B09097P } from '../ct-p09/B09097P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1043,4 +1049,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05078, B05078P, B03056, B03056P,
   // Task A batch
   B07066, B07066P, PR194,
+  // wave dsl-reauthor — B02026 / B04004 / B09097 再author (engine変更0)
+  B02026, B04004, B04004P, B09097, B09097P,
 ];

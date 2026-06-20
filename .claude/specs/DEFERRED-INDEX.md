@@ -53,7 +53,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 | rep | DEFER 理由 (反撃以外の句) | 種別 |
 |-----|--------------------------|------|
 | ~~B06038 B06039 B08010 B09071~~ | ✅ **出荷済 (2026-06-18、`cards/wave2-cluster15-partnercolor`)**。keyword-grant closure (partnerColorKeyword __shared / B08010 は絆 bond grant inline closure = B08012 鏡像) + removal-observer (bare `removedCharMatches{opp,contact-ap,self}`、cluster16 萩原で既出荷) を手 author。parallels 含め 8 printings (B06038/P, B06039/P, B08010, B09071/P/P2)。gate5 `tests/cards/cluster15-followup-removal-observer.test.ts` 10 pass (end-to-end contact gating decoy [cause/by/side] + effect/grant 1対1)。engine変更0 | ✅ 出荷済 |
-| B04004 | a3 (絆 reactive) の actor-gate 欠落 = over-fire。正解 `and[triggerCharMatches{side:opp,filter:{}}, …]` で再 author 要 | refuted (DSL fix) |
+| ~~B04004 / B04004P~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。a3 を `matcherCondition and[triggerCharMatches{side:opp,filter:{}}, triggerCharMatches{payloadKey:targetUid,side:self,filter:{cardName:工藤新一}}]` (actor+target AND gate、B01062/B08048) で再author。敵対verify 2/2 ship・decoy test 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
 | B06087 | 登場候補の **cardName-EXCLUSION** filter (「萩原千速以外」) が TargetFilter に無い + chain/optional 構造 | refuted (engine gate) |
 | B09022 | sceneSetState 自側限定 picked-sleep (short-form side hardcoded 'either' / explicit-$pick in chain no-op) | refuted (engine gate) |
 | D02008 | action-scoped opponent cutin-ban (continuous aura のみ対応、on-action 不可) | yellow |
@@ -93,10 +93,10 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 |-----|------|----------------|
 | ~~B08020/P~~ | **✅ 再採用済 (2026-06-12 engine拡張 wave#2)**: BUG-132 GAP-1/2 修正 (chooseMatch decline channel + declaredBatch gate/遅延 pick) 後に hand-author で出荷。実機 decoy 検証済 (a1 色+kind filter / decline / a2 解決順+AP filter) | 完了 — branch engine/wave2-bug132 |
 | ~~B07052~~ | **✅ 解決済 (2026-06-15 赤魔術 family)**: 「赤魔術 はどのカードにも無い」は **stale 誤認**。一次 API の `category1/2/3` (特徴の正本) に 赤魔術 が実在 (B07055/B07058 event, B07062 case)。TSV 抽出が event/case の category-trait を全件 drop していたのが真因 (field-drop, BUG-124 同族)。per-card で trait 補完 → B07052 実装 + B07062 latent 解消 | 完了 — branch cards/akamajutsu-trait (changelog 2026-06-15-04)。残課題は下記 known-gap |
-| B02026 | refuted(fatal): a1 triggerCharMatches {side:'opp'} filter 無し → 相手パートナーの action でも誤発火 | filter:{kind:'character'} 追加 + 再 certify |
+| ~~B02026~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。a1 に空 `filter:{}` を付与 (eval.ts:298 が filter 存在時のみ scene 走査 → partner 除外、kind:character 不要)。敵対verify 2/2 ship・decoy 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
 | B07104 | refuted(fatal): 【パートナー黒】を step1 のみ conditional 化 (全 ability gate が正) + PA pick 非終端 step で二重 grant desync | ability.condition 化 + PA ordering 対応 |
 | B09038 | 🟢 **解禁 (BUG-111 #2 修正済)** — ~~refuted(fatal) ×2~~。a2 末尾の無条件 draw (「登場させ…セットし、カードを1枚引く」) が 0-enter human-decline で continuation [conditional,draw] ごと drop。draw を pick 前に reorder すると引いたカードが登場対象になり意味論非等価 → 不可 | BUG-111: 0-pick decline 時の必須末尾 step 保持 (engine) |
-| B09097 | refuted(fatal): bare-chain optional が CPU で強制 discard 化 | {kind:'optional',effect:{chain}} ラップ + 再 certify |
+| ~~B09097 / B09097P~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。bare-chain `discard{max:1}`(min:0=decline可、shipped twin B04056/D08003 と同型) で再author。DEFER note の optional ラップは不要 (敵対verify が「AI-policy divergence only / 有益効果の greedy-accept 妥当」と nit-ship 判定)。decoy 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
 
 ## engine拡張 wave#2 (BUG-132 修正) 繰越 (2026-06-12, engine/wave2-bug132)
 
@@ -328,6 +328,6 @@ sweep landscape の「hand→deck-bottom verb 無」note は **stale** (wave1 �
 | ~~PR194~~ | **出荷済** (㉖) | 宣言 removeFromScene{self} cost→look-2 forced-top (filter省略=match-all、B01048同型)。engine変更0 | — |
 | B08075 | DEFER | event「以下から**3つまで選んで行う** (上から順)」。bare `sequence[opt1,opt2,opt3]` 化は **opt3 (look-4→残りデッキ下) が 0-take でも deck並べ替え副作用 → unskippable (fatal)**。正しい model = sequence-of-`optional` だが (a) subset-of-options 前例なし (b) CPU 全 skip=完全no-op (c) optional+pick 合成 B09056系 fragility | multi-select-options engine 機構 or optional+pick 合成検証 |
 
-> 補足 (再選定防止): named-next の **contact-removal-by-self 族 (21rep/39枚) は 28/39 出荷済**。残 5
-> (B04004/B09022/B05009/B06068/PR136) は contact trigger 以外の gate (action-react actor gate /
-> chain-pick resolve / deck-set verb / 突撃swap) で blocked。詳細は session log 2026-06-19。
+> 補足 (再選定防止): named-next の **contact-removal-by-self 族は B04004/B04004P も 2026-06-21 出荷済** (a3 actor+target gate を
+> matcherCondition で再author、上表参照)。残 4 (B09022/B05009/B06068/PR136) は contact trigger 以外の gate
+> (chain-pick resolve / own-side enterSource / 突撃swap剥奪 / deck-set verb) で blocked。詳細は session log 2026-06-19 / 2026-06-21。
