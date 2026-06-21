@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `93b0f0a95d1f`
+> Source hash: `98fa2f4b5fe4`
 
 仕様書 [`partnerColorKeyword`](../../../specs/shared-classes/partnerColorKeyword.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

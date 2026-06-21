@@ -163,6 +163,10 @@ export type AtomVerb =
   | 'draw' | 'discard' | 'mill' | 'fileAdd' | 'filePopToHand' | 'fileRemoveTop' | 'fileFlipTop'
   | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'selfToEvidence' | 'evidenceToDeck'
   | 'evidenceToHand' | 'handAddFromRemove' | 'handAddFromDeck'
+  // engine拡張 wave (2026-06-21): handToEvidence — 手札から任意1枚を選び「裏向きで証拠として得る」
+  // (evidenceToHand の逆。push=証拠1番上、公式Q&A B06029「手札から裏向きで得る証拠は1番上」)。
+  // rules: 01-victory-conditions.md §証拠 / 06-card-types.md §イベント。PB pick (defaultArea 'hand')。
+  | 'handToEvidence'
   | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise' | 'sceneToHand'
   // Task D E2 (2026-06-12): 現場キャラを所有者のデッキ下/上へ移す (sceneToHand 同型 PA 短縮形)。
   // rules: 09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 16 (set/stacked はリムーブ)

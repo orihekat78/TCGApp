@@ -174,6 +174,8 @@ import { B05109 } from '../ct-p05/B05109.js';
 import { B05110 } from '../ct-p05/B05110.js';
 import { B05110P } from '../ct-p05/B05110P.js';
 import { B05112 } from '../ct-p05/B05112.js';
+import { B06029 } from '../ct-p06/B06029.js';
+import { B06029P } from '../ct-p06/B06029P.js';
 import { B06030 } from '../ct-p06/B06030.js';
 import { B06030P } from '../ct-p06/B06030P.js';
 import { B06035 } from '../ct-p06/B06035.js';
@@ -1059,4 +1061,7 @@ export const REUSE_CARDS: CardDef[] = [
   // distinct-name-count micro-cluster (2026-06-21): sceneHas query.distinctNames を計数 honor
   //   (「それぞれカード名の異なる〚特徴X〛がN枚以上」rules/19)。諸伏高明 enter gate + 大和敢助 declared a2 gate。
   B08067, B08067P, PR236, PR242,
+  // handToEvidence micro-cluster (2026-06-21): 手札⇔証拠 swap (「証拠1つ選び手札へ。そうした場合、手札1枚を
+  //   裏向きで証拠として得る」chain[evidenceToHand, handToEvidence])。ヘビ男 (新 verb handToEvidence)。
+  B06029, B06029P,
 ];

@@ -1,44 +1,47 @@
 # 作業ログ — 名探偵コナンプロジェクト
 
-(過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-19-3.md = ㉖ / 2026-06-21.md = ㉗。)
+(過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-21.md = ㉗ / 2026-06-21-2.md = ㉘。)
 
-## セッション㉘ (2026-06-21) — engine拡張 micro-cluster: distinct-name-count (4刷)
+## セッション㉙ (2026-06-21) — engine拡張 micro-cluster: handToEvidence (手札→裏向き証拠 verb, 2刷)
 
-ユーザー選択=カード追加 wave 継続 (A)。但し A=engine変更0 残弾尽きを **決定論スキャン**で確証してから着手。
-`taskA-next-chunk`=[] (standing green 枯渇) + `.tmp/gate-yield-scan.cjs` で未実装 685 cardNum を実テキスト走査 →
-単一 additive gate の最大実 yield=3-5 base と判明 (handoff「生産性尽きた」をハードデータで裏付け)。
-ユーザーに実数提示し「小型 additive バッチ」選択 → skill 規律「engine拡張は混ぜない/1phase=1commit」に従い
-最クリーン単一 **distinct-name-count** に絞って出荷。
+ユーザー選択=カード追加 wave 継続 (A、engine変更0 枯渇=非推奨を明示後も A 選択)。前 wave (distinct-name-count) の次弾
+として `.tmp/gate-yield-scan.cjs` で再 scan → **evidence⇔hand swap** (「証拠を1つ選び手札へ。そうした場合、手札1枚を
+裏向きで証拠として得る」) を選定。skill 規律「engine拡張は混ぜない/1phase=1commit」で最クリーン単一 verb に絞り出荷。
 
-### engine 変更 (1分岐、純 additive — 骨格解凍だが破壊変更なし)
-`src/engine/cond/eval.ts` の `case 'sceneHas'` に `query.distinctNames` honor 分岐追加。一致候補を
-`def.names[0]` (印字名) で dedupe して計数。**TargetQuery.distinctNames は既存 flag** (従来 pick-resolve のみ honor、
-sceneHas 計数では無視) → 新 Condition kind 無 = union/CONDITION_KIND_MAP/validate CONDS 同期不要。
+### engine 変更 (1 verb 追加、純 additive — 骨格解凍だが破壊変更なし)
+`src/engine/effect/atom-handlers.ts` に `case 'handToEvidence'` (PB pick、defaultArea 'hand') 追加。手札 pick 1枚を
+`evidence.gainCard(... 'none')` で証拠 push (裏向き既定 false、push=証拠1番上=公式Q&A B06029)。**4点同期**:
+AtomVerb union / ATOM_PICK_SPEC / validate ATOM_VERB_MAP / cjs VERBS (`sync-taskA-whitelists.test.ts` が機械保証)。
+- **「2 verb」見積りは誤り**: evidence→hand は既存 `evidenceToHand` で充足 → 新 verb は handToEvidence **1つのみ**。
+- **手札在庫ガード**: target が手札に無ければ no-op (証拠を湧かせない)。← decoy §3 が初版バグ「不在でも証拠湧き」を捕捉・修正。
+- **chain semantics**: 「〜してもよい。そうした場合〜」= `chain[evidenceToHand max:1, handToEvidence n:1]`
+  (exemplar D08003 a1)。step1 no-op (証拠0 / 0枚 decline) → `__chainStepNoApply` → step2 skip。verb-agnostic break で
+  出荷済 D08003 と同経路 = 動作確証。
 
-### 出荷 (ALL_CARDS 1362→1366)
-- **B08067/B08067P 諸伏高明** (黄L5): triggered{enter,selfOnly}+condition and[partnerColor黄,caseStatus解決編]+
-  effect conditional{if: sceneHas{distinctNames,trait:長野県警,nMin:3,side:self}→sceneRemove{max1,either,levelMax7}}。
-  自己包含 (excludeSelf無=qAndA)。exemplar D08003 a2 + PR101。
-- **PR236/PR242 大和敢助** (黄L7、byte同一): a1 declared+limit turn1+cost sleepSelf(【スリープ】=rules/21 コロン左)+
-  sceneRemove{apMax5000,state:['sleep']} (B09006 a1 byte一致) / a2 同cost+**宣言ゲート condition sceneHas{distinctNames,nMin3}**+
-  sceneRemove{apMax8000} (状態不問=state無、a1/a2 の state 非対称が原文一致)。PR242=PR236 spread。
+### 出荷 (ALL_CARDS 1366→1368)
+- **B06029/B06029P ヘビ男** (緑L3 AP3000 LP1 YAIBA、C/CP): a1 triggered{enter,selfOnly}+chain[evidenceToHand{max1},
+  handToEvidence{n1}] / a2 ヒラメキ{evidence:remove-by-action,optional}+sceneSetState{player:self,state:sleep,max1,
+  side:either} (PA短縮形 BUG-130、「1枚まで」=0可、side either=text無制限)。exemplar D03013/D08013 a2。P=spread。
 
 ### 検証 (全 green)
-- **回帰ゼロ確証**: 既存カードの distinctNames 使用は pick query 内のみ (D08021/B09010/B09010P)、sceneHas 内 0
-  → 既存挙動不変。smoke baseline 不変 (avg=10.998/winsA=498/exc=0) が証跡。tsc0。
-- vitest full **2724pass/1skip/0fail** (減なし)。新 `tests/cards/distinct-name-count.test.ts` **10件**:
-  実 evalCond 駆動。§2 ★同名2print+別1→distinct=2 false / raw(length3)=true の挙動差 1対1 witness。§3-7 各 gate + 出荷4構造突合。
-- playwright **121pass/1skip/0fail** (spectator-speed も pass)。4枚非MVP+engine inert で e2e 不変を実証。
-- **敵対verify (opus、過剰発火+水平展開+fidelity lens)= OVERALL SHIP/refute0**。engine A1-A4 全 ship、カード fidelity 全 ship、exemplar 整合 ship。
+- tsc0。vitest full **2731pass/1skip/0fail** (前2724から減なし)。smoke:1000 exc=0・baseline不変(avg10.998/winsA498)=
+  engine-additive 回帰ゼロ証跡。playwright **123pass/1skip** (spectator-speed 1fail→単独3/3pass=flaky確定、無関係)。
+- 新 `tests/cards/hand-to-evidence.test.ts` **12件** (実 engine 駆動): §1-3 handToEvidence runAtom (move/faceUp/top配置/
+  在庫ガード) / §4 swap net不変 / §5 ★chain break★ B06029 a1 を0証拠で駆動→step2 skip (「そうした場合」1対1 witness) /
+  §6 出荷2構造突合。
+- **敵対verify (opus、refute lens)= OVERALL SHIP/refute0**: chain break を **3経路** (no-candidate / human-decline
+  candidate在 `useEngineDispatch` chain-origin drop / AI `apply-pick`) で engine path 追跡し「step1 が card 移動時のみ
+  step2 発火」確証。faceUp/top配置/在庫ガード/ヒラメキ短縮形/DEFER妥当性 全 ship。
 
 ### 学び (恒久)
-- **standing green + engine変更0 枯渇後**: 残 DEFER は全 engine gate。着手前に **決定論 yield scan で実数確認**必須
-  (handoff の「生産性尽きた」は正、単一 additive gate=3-5 base が上限)。**engine拡張 cluster は別判断** (骨格解凍)、ユーザー承認下で実施。
-- **既存 TargetQuery flag の honor 経路拡張は最小コスト engine 追加**: distinctNames は pick-resolve のみ honor だったが
-  sceneHas 計数でも honor=1分岐。新 kind 不要・回帰ゼロ (使用カード 0 を grep で確証)。同様の「既存 flag を別経路で honor」は低リスク弾。
-- **DEFER の「distinct-name count」family**: B08067/PR236/PR242 出荷、B08063 は a1 self-trait-grant continuous (別 gate=ContinuousModifier に trait 付与無) で DEFER 継続。
-- 次弾 micro-cluster 候補 (engine変更0 後): handToEvidence (2 verb, ~3 base) / continuous levelDelta (effort大・yield小)。DEFERRED-INDEX に scope 記録済。
+- **engine拡張 micro-cluster の clean yield は handoff 見積りより小さいことがある**: handToEvidence は「2 verb/~3 base」
+  見積り → 深い grounding で「**1 verb/1 base**」と確定 (evidence→hand 既存 + 残3は各々別 gate)。決定論 scan に加え
+  **実テキスト全句 grounding で真の clean yield を確定**してから scope を絞る。
+- **decoy が実 engine バグ捕捉**: 境界 case (target不在/0枚/重複) を必ず含める。非MVP は decoy が唯一の engine 駆動証跡。
+- **DEFER 群** (各々別 engine 変更ゆえ混ぜず除外): B03077 (証拠「上から」=evidence-top→hand、evidenceToHand fromTop) /
+  B06033 (ヒラメキ「このカードを手札に」=evidence-self→hand verb) / B06016 (別登場時=deck-mill-gated chain)。
+  → DEFERRED-INDEX「handToEvidence cluster」に rep 別 DEFER 理由 + 解禁条件 記録済。
 
 ### branch / commit
-branch `cards/wave-distinct-name-count`。次=docs同期→pre-commit→commit→main ff-merge→push→CI green。
-DEFERRED-INDEX の PR236 行→出荷済化 + distinct-name-count cluster section + B08063 DEFER 理由 追記済。
+branch `cards/wave-hand-to-evidence`。docs同期→pre-commit→commit→main ff-merge→push→CI green。
+DEFERRED-INDEX: B06033 行更新 + handToEvidence cluster section 追加 + 次弾候補表で handToEvidence を一部出荷化。

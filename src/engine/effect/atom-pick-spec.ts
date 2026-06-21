@@ -30,6 +30,8 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   discard:           { defaultArea: 'hand',     mode: 'PB' },
   evidenceToHand:    { defaultArea: 'evidence', mode: 'PB' },
   handAddFromRemove: { defaultArea: 'remove',   mode: 'PB', sourceSplice: true },
+  // engine拡張 wave (2026-06-21): handToEvidence — 手札から1枚 pick → 裏向きで証拠へ (evidenceToHand の逆)。
+  handToEvidence:    { defaultArea: 'hand',     mode: 'PB' },
   sceneRemove:       { defaultArea: 'scene',    mode: 'PA' },
   charModifyAP:      { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
   // 新規

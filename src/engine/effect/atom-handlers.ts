@@ -560,6 +560,34 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target, result: moved ? 'ok' : 'not-found' });
       return;
     }
+    case 'handToEvidence': {
+      // engine拡張 wave (2026-06-21): 手札から1枚 pick → 「裏向きで証拠として得る」(evidenceToHand の逆)。
+      // discard と同型 PB pick (defaultArea 'hand')。公式Q&A B06029「手札から裏向きで得る証拠は1番上に
+      // 置かれます」→ evidence.gainCard が push (末尾=証拠の1番上、mutate/evidence.removeTop と整合)。
+      // fromArea:'none' = hand から先に remove 済なので remove エリアは触らない。
+      const hteP = resolvePlayer(a.player, ctx);
+      const hteArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToEvidence.defaultArea, a, hteP, hteP) }
+        : a;
+      if (!Array.isArray(hteArgs.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: hteArgs }, ctx, { byPlayer: hteP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: hteP, turn: s.turn.number, action: 'effect:handToEvidence:awaiting-pick' });
+        return;
+      }
+      const hteTargets = hteArgs.target as string[];
+      const hteFaceUp = a.faceUp === true; // 既定 false (「裏向きで証拠として得る」)
+      let hteMoved = 0;
+      for (const cardId of hteTargets) {
+        // 手札に実在する場合のみ証拠化 (手札→証拠なので、手札に無い cardId は no-op = 証拠に湧かせない)
+        const hIdx = s.players[hteP].hand.indexOf(cardId);
+        if (hIdx === -1) continue;
+        s.players[hteP].hand.splice(hIdx, 1);
+        mutate.evidence.gainCard(s, hteP, cardId, hteFaceUp, { turn: s.turn.number, via: 'effect' }, 'none');
+        hteMoved++;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hteP, turn: s.turn.number, action: 'effect:handToEvidence', result: String(hteMoved) });
+      return;
+    }
     case 'handAddFromDeck': {
       // engine-extension #5a (2026-06-05): deck-reorder 系の補助 — bind 済 cardId をデッキから抜き手札へ。
       // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).

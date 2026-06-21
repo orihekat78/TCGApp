@@ -13,6 +13,7 @@ const VERBS = new Set([
   'draw', 'discard', 'mill', 'fileAdd', 'filePopToHand',
   'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
   'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
+  'handToEvidence',
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'sceneToDeck', // Task D E2 (2026-06-12)
   'fileRemoveTop', 'fileFlipTop', // Task D E3 (2026-06-12)

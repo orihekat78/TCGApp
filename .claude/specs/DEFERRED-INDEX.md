@@ -312,7 +312,7 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 | B08038 | yellow | 「この効果によって特徴[高校生]/[鈴木財閥]がリムーブされた場合」= **removed-by-this-effect** 条件。mill verb は bind せず、removeTraitAtLeast は remove パイル累積を見るため中盤で誤発火 (false-positive AP+1000) | mill bind + removed-by-this-effect condition (engine) |
 | ~~PR236~~ | ✅ 出荷済 | **出荷済 (2026-06-21、`cards/wave-distinct-name-count`)**。`sceneHas` eval を `query.distinctNames` honor に拡張 (1分岐 additive、新 Condition kind 無)。PR236/PR242 (大和敢助 declared a2 宣言ゲート) + B08067/B08067P (諸伏高明 enter conditional) 計 **4 刷**。詳細下記「distinct-name-count cluster」 | — |
 | B03033 | yellow | 「相手の現場のセット済キャラを AP-1000」= **相手側の数値 aura**。cluster13 aura は target 同 side (自陣) のみ走査。相手 side 数値 aura 機構なし | cross-side numeric aura (engine) |
-| B06033 | yellow | 「手札からカードを1枚裏向きで証拠として得る」= **hand→evidence** verb 不在 (evidenceGain=deck top / selfToEvidence=event自身 / gainCard=remove のみ) | handToEvidence verb (engine) |
+| B06033 | yellow (verb 解禁・別 gate で DEFER) | a1 の evidence-swap (`handToEvidence`) は 2026-06-21 解禁。但し **ヒラメキ「このカードを手札に加える」= evidence-self→hand** verb が不在 (`evidenceToHand` は pick で target=自身を bind 不能) のため **card 単位では DEFER 継続** | evidence-self→hand verb (hirameki redirect、engine) |
 | B08050 | yellow | 「【解決編】このキャラをレベル+3」= **継続 condition-gated self level 修飾**。ContinuousModifier は ap/lpDelta のみで levelDelta 不在 | continuous level modifier (engine、未着手 micro-cluster) |
 
 ## ✅ distinct-name-count cluster (sceneHas distinctNames 計数, 2026-06-21, cards/wave-distinct-name-count)
@@ -333,8 +333,25 @@ changelog [2026-06-21-02](../changelog-entries/2026-06-21-02-cluster-distinct-na
 
 | gate | 対象 (実未実装) | engine 追加内容 |
 |------|----------------|----------------|
-| handToEvidence (2 verb) | B03077 / B06029 / B06033 + 同型 | 証拠→手札 verb + 手札→証拠 verb (B06033 は event + hirameki selfToHand)。決定論 scan ~3 base |
+| ~~handToEvidence~~ | ✅ 一部出荷 (B06029/B06029P)。下記「handToEvidence cluster」 | `handToEvidence` verb 1つ (evidence→hand は `evidenceToHand` 既存)。clean yield は **1 base のみ** (B03077/B06033/B06016 は各々別 engine 変更で DEFER) |
 | continuous levelDelta | PR264 (clean) / B08059 (条件付) ほか | ContinuousModifier.levelDelta + 全 level-read site honor (effort 大・yield 小)。B08050/B09003/B04046 は二次 gate で別途 |
+
+## ✅ handToEvidence cluster (手札→裏向き証拠 verb, 2026-06-21, cards/wave-hand-to-evidence)
+
+「証拠を1つ選び手札に加えてもよい。そうした場合、手札からカードを1枚裏向きで証拠として得る」(evidence⇔hand swap)。
+`evidence→hand` は既存 `evidenceToHand` で充足 → **新 verb は `handToEvidence` 1つのみ** (NEXT-SESSION の「2 verb」は誤り)。
+`src/engine/effect/atom-handlers.ts` に PB pick (defaultArea 'hand') handler 追加 + union/ATOM_PICK_SPEC/validate/cjs の 4点同期。
+手札在庫ガード (target が手札に無ければ no-op、証拠を湧かせない) + faceUp 既定 false + push=証拠1番上 (公式Q&A B06029)。
+**chain semantics** = `chain[evidenceToHand max:1, handToEvidence n:1]` (exemplar D08003)。step1 が no-op (証拠0 / 0枚 decline)
+なら step2 skip = 「そうした場合」。出荷 **B06029/B06029P** (ヘビ男、ALL_CARDS 1366→1368)。decoy 12 pass +
+敵対verify opus OVERALL SHIP/refute0 (human-decline/AI/no-candidate 3経路の chain break を engine path で確証)。
+changelog [2026-06-21-03](../changelog-entries/2026-06-21-03-wave-hand-to-evidence.md)。
+
+| rep | DEFER 理由 (残存 gate) | 解禁条件 |
+|-----|----------------------|---------|
+| B03077 | a1「自分の証拠を**上から**1つ手札に加え」= evidence-**top**→hand (deterministic top)。`evidenceToHand` は全証拠の自由 pick で top-only mode 無 → free pick 化は不忠実 | `evidenceToHand` に `fromTop` flag 追加 (別 additive 変更) |
+| B06033 | a1 evidence-swap は解禁済だが、event + ヒラメキ「このカードを手札に加える」= **evidence-self→hand** verb 不在 + 「YAIBA緑lv6以下を登場」は既存 sceneEnter で可。card 単位は hirameki gate で DEFER | evidence-self→hand verb (hirameki redirect) |
+| B06016 | 【宣言】【スリープ】 cost + swap は解禁済だが、別の【登場時】「デッキ上から3枚リムーブしてもよい。そうした場合…」= **deck-mill-gated chain** (pick-gate でなく mill-gate) が engine 不在 | deck-mill 実効果判定の chain-gate (engine) |
 
 出荷 = B05078/B05078P (世良真純) + B03056/B03056P (千間降代) (changelog [2026-06-19-02](../changelog-entries/2026-06-19-02-wave-decklook-bottom.md))。
 sweep landscape の「hand→deck-bottom verb 無」note は **stale** (wave1 で `deckToBottomBound`+`deckRevealUntil{maxN,upTo}` 追加済 = この族は engine変更0)。残 rep:
