@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 6978
+- **ファイル数**: 6984
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -464,6 +464,7 @@
     - `2026-06-21-01-wave-dsl-reauthor.md` — カード追加 wave — DSL 再author (engine 変更 0、3枚/5刷)
     - `2026-06-21-02-cluster-distinct-name-count.md` — engine拡張 micro-cluster — distinct-name-count (sceneHas distinctNames 計数、4刷)
     - `2026-06-21-03-wave-hand-to-evidence.md` — engine拡張 micro-cluster — handToEvidence (手札→裏向き証拠 verb, 2刷)
+    - `2026-06-21-04-wave-evidence-top-to-hand.md` — engine拡張 micro-cluster — evidence-top→hand (evidenceToHand fromTop フラグ, 1刷)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -813,6 +814,8 @@
     - `smoke-2026-06-20-2.md` — Smoke 1000戦レポート — smoke-2026-06-20-161801
     - `smoke-2026-06-20.json`
     - `smoke-2026-06-20.md` — Smoke 1000戦レポート — smoke-2026-06-20-161620
+    - `smoke-2026-06-21-2.json`
+    - `smoke-2026-06-21-2.md` — Smoke 1000戦レポート — smoke-2026-06-21-013208
     - `smoke-2026-06-21.json`
     - `smoke-2026-06-21.md` — Smoke 1000戦レポート — smoke-2026-06-21-003553
     - `smoke-baseline.json`
@@ -1003,6 +1006,7 @@
     - `2026-06-19-3.md` — セッションログ 2026-06-19 (続き) — ㉖
     - `2026-06-19.md` — 作業ログ — 名探偵コナンプロジェクト
     - `2026-06-21-2.md` — 作業ログ — 名探偵コナンプロジェクト
+    - `2026-06-21-3.md` — セッション㉙ (2026-06-21) — engine拡張 micro-cluster: handToEvidence (手札→裏向き証拠 verb, 2刷)
     - `2026-06-21.md` — セッションログ 2026-06-21 (㉗〜)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
@@ -5801,6 +5805,7 @@
       - `B03073.ts` — cards/ct-p03/B03073 イーサン・本堂 (character) — engine拡張 wave#2 cluster3 (action:end t…
       - `B03074.ts` — cards/ct-p03/B03074 沖矢昴 (キャラ) — catalog-reuse batch
       - `B03075.ts` — cards/ct-p03/B03075 ジェイムズ・ブラック (キャラ) — engine拡張 wave#2 cluster13 (aura-grant, 20…
+      - `B03077.ts` — cards/ct-p03/B03077 水無怜奈 (キャラ) — evidence-top→hand micro-cluster (2026-06-21)
       - `B03079.ts` — cards/ct-p03/B03079 レイチェル・浅香 (character) — Task A green候補 (engine変更0)
       - `B03079P.ts` — cards/ct-p03/B03079P レイチェル・浅香 (character) — Task A green候補 (engine変更0)
       - `B03081.ts` — cards/ct-p03/B03081 「吹っ飛べェ!!」 (event) — Task A green候補 (engine変更0)
@@ -7095,6 +7100,7 @@
     - `enter-sleep-self-batch.test.ts` — Task A batch#2 — A.enter+hirameki クラスタ: 自己「スリープ状態で登場」representative
     - `event-to-evidence-batch.test.ts` — engine-extension event→evidence batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `evidence-suppression-batch.test.ts` — engine-extension evidence 抑制 batch (2026-06-06 タスクC) — evidenceToDeck verb +
+    - `evidence-top-to-hand.test.ts` — evidence-top-to-hand — evidenceToHand の新 fromTop フラグ (「証拠を上から1つ」= deterministic…
     - `generated-batch.test.ts` — tests/cards/generated-batch — 非MVP 単純カード + 複雑カットイン generator 出力の構造検証
     - `hagiwara-self-remove-observer.test.ts` — engine拡張 wave#2 cluster16 — 萩原千速 (PR280/B06087/B06087P) gate5 実機検証
     - `hand-to-evidence.test.ts` — hand-to-evidence — 新 verb handToEvidence (手札→裏向き証拠) と evidence-swap chain の挙動テスト…

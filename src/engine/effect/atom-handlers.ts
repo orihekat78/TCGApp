@@ -539,6 +539,23 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // が順次 modal を出せる (D08013 a1 step 2 → step 3 の連鎖)。
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const p = resolvePlayer(a.player, ctx);
+      // engine拡張 wave (2026-06-21): fromTop = 「証拠を上から1つ手札に加え」(B03077) の deterministic top。
+      // pick path をスキップし証拠スタック最上 (末尾=1番上、mutate/evidence.removeTop と整合) を手札へ。
+      // 証拠0 なら no-op + __chainStepNoApply で chain break = 「そうした場合」不成立 (filePopToHand と同型)。
+      // removeTop は remove エリアへ送るため使わず、手動 pop + hand.add (リムーブではなく手札移動)。
+      if (a.fromTop === true) {
+        const evList = s.players[p].evidence;
+        if (evList.length === 0) {
+          (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', result: 'none' });
+          return;
+        }
+        const topId = evList[evList.length - 1]!.cardId;
+        evList.pop();
+        mutate.hand.add(s, p, [topId]);
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target: topId, result: 'ok' });
+        return;
+      }
       const ethArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceToHand.defaultArea, a, p, p) }
         : a;

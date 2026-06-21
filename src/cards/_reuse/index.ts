@@ -874,6 +874,8 @@ import { B08067P } from '../ct-p08/B08067P.js';
 import { PR236 } from '../pr-01/PR236.js';
 import { PR242 } from '../pr-01/PR242.js';
 
+import { B03077 } from '../ct-p03/B03077.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1064,4 +1066,6 @@ export const REUSE_CARDS: CardDef[] = [
   // handToEvidence micro-cluster (2026-06-21): 手札⇔証拠 swap (「証拠1つ選び手札へ。そうした場合、手札1枚を
   //   裏向きで証拠として得る」chain[evidenceToHand, handToEvidence])。ヘビ男 (新 verb handToEvidence)。
   B06029, B06029P,
+  // evidence-top-to-hand micro-cluster (2026-06-21)
+  B03077,
 ];

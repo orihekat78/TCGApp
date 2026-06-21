@@ -334,7 +334,21 @@ changelog [2026-06-21-02](../changelog-entries/2026-06-21-02-cluster-distinct-na
 | gate | 対象 (実未実装) | engine 追加内容 |
 |------|----------------|----------------|
 | ~~handToEvidence~~ | ✅ 一部出荷 (B06029/B06029P)。下記「handToEvidence cluster」 | `handToEvidence` verb 1つ (evidence→hand は `evidenceToHand` 既存)。clean yield は **1 base のみ** (B03077/B06033/B06016 は各々別 engine 変更で DEFER) |
+| ~~evidence-top→hand (fromTop)~~ | ✅ 出荷済 (B03077)。下記「evidence-top→hand cluster」 | `evidenceToHand` に `fromTop` flag 1つ。clean yield = **1 base のみ** (この族で「上から」型は B03077 単独) |
 | continuous levelDelta | PR264 (clean) / B08059 (条件付) ほか | ContinuousModifier.levelDelta + 全 level-read site honor (effort 大・yield 小)。B08050/B09003/B04046 は二次 gate で別途 |
+
+## ✅ evidence-top→hand cluster (evidenceToHand fromTop フラグ, 2026-06-21, cards/wave-evidence-top-to-hand)
+
+前 wave (handToEvidence) の DEFER 残 B03077 を解禁。「自分の証拠を**上から**1つ手札に加えてもよい。そうした場合、
+手札からカードを1枚裏向きで証拠として得る」= evidence-**top**→hand。`src/engine/effect/atom-handlers.ts` の
+`case 'evidenceToHand'` に **`fromTop` 分岐 1 つ**追加 (新 verb なし、`args:unknown` ゆえ型変更も同期も不要)。
+`fromTop===true` で pick をスキップし証拠最上 (末尾、`removeTop` と整合) を手動 pop + `hand.add`。証拠0 なら
+`__chainStepNoApply` で chain break (`filePopToHand` 同型)。a1 DSL = `optional{chain[evidenceToHand{fromTop:true},
+handToEvidence{n:1}]}` (exemplar D09010 a1)。`optional`=してもよい (fromTop は deterministic ゆえ pick-0 decline 不可 →
+optional が唯一の decline 経路)、`chain`=そうした場合、step2=得る(必須)。**出荷 B03077** (水無怜奈、赤L4、ALL_CARDS
+1368→1369、P変種なし)。decoy 8 pass (§1「上から=末尾」を E_BOTTOM/E_TOP 両端 decoy で 1対1 witness) +
+敵対verify opus OVERALL SHIP/9点ok/refute0。changelog
+[2026-06-21-04](../changelog-entries/2026-06-21-04-wave-evidence-top-to-hand.md)。
 
 ## ✅ handToEvidence cluster (手札→裏向き証拠 verb, 2026-06-21, cards/wave-hand-to-evidence)
 
@@ -349,7 +363,7 @@ changelog [2026-06-21-03](../changelog-entries/2026-06-21-03-wave-hand-to-eviden
 
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
-| B03077 | a1「自分の証拠を**上から**1つ手札に加え」= evidence-**top**→hand (deterministic top)。`evidenceToHand` は全証拠の自由 pick で top-only mode 無 → free pick 化は不忠実 | `evidenceToHand` に `fromTop` flag 追加 (別 additive 変更) |
+| ~~B03077~~ | ✅ **出荷済** (2026-06-21、下記「evidence-top→hand cluster」)。`evidenceToHand` に `fromTop` flag 追加で解禁 | — |
 | B06033 | a1 evidence-swap は解禁済だが、event + ヒラメキ「このカードを手札に加える」= **evidence-self→hand** verb 不在 + 「YAIBA緑lv6以下を登場」は既存 sceneEnter で可。card 単位は hirameki gate で DEFER | evidence-self→hand verb (hirameki redirect) |
 | B06016 | 【宣言】【スリープ】 cost + swap は解禁済だが、別の【登場時】「デッキ上から3枚リムーブしてもよい。そうした場合…」= **deck-mill-gated chain** (pick-gate でなく mill-gate) が engine 不在 | deck-mill 実効果判定の chain-gate (engine) |
 
