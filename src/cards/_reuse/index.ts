@@ -876,6 +876,9 @@ import { PR242 } from '../pr-01/PR242.js';
 
 import { B03077 } from '../ct-p03/B03077.js';
 
+import { PR085 } from '../pr-01/PR085.js';
+import { PR091 } from '../pr-01/PR091.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1068,4 +1071,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06029, B06029P,
   // evidence-top-to-hand micro-cluster (2026-06-21)
   B03077,
+  // evidence-self→hand wave (hirameki このカード手札に加える)
+  PR085, PR091,
 ];

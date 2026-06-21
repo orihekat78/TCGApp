@@ -632,6 +632,27 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const p = resolvePlayer(a.player, ctx);
+      // engine拡張 wave (2026-06-21): fromSelf = 【ヒラメキ】「このカードを手札に加える」(B06033/PR085/PR091)。
+      //   hirameki の source = リムーブされた証拠カード自身。triggered.ts handleEvidenceRemovedHook が
+      //   ctx.source.cardId = ev.cardId / ctx.source.player = 証拠所有者 で起動し、その直前に
+      //   action-case.ts removeOpponentEvidenceTop → mutate.evidence.removeTop が ev.cardId を
+      //   所有者の remove 末尾に push 済。よって pick せず ctx.source.cardId を remove から
+      //   lastIndexOf (直近 push 分 = まさにこのカード) で取得し手札へ移す。同 cardId の旧コピーが
+      //   remove にあっても末尾優先で正しい1枚を取る。見つからなければ no-op (防御的、通常は必ず存在)。
+      //   fromTop (evidenceToHand) 同型: args:unknown ゆえ型/whitelist 同期不要・純 additive。
+      if ((a as { fromSelf?: unknown }).fromSelf === true) {
+        const selfCid = ctx.source.cardId;
+        const remSelf = s.players[p].remove;
+        const sIdx = selfCid ? remSelf.lastIndexOf(selfCid) : -1;
+        if (!selfCid || sIdx === -1) {
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', result: 'none' });
+          return;
+        }
+        remSelf.splice(sIdx, 1);
+        mutate.hand.add(s, p, [selfCid]);
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target: selfCid, result: 'ok' });
+        return;
+      }
       // cluster6 (2026-06-14) B09034「リムーブのイベントを2枚まで選び、手札に加える」用 multi-pick path。
       //   charStackCard (case 'charStackCard') と同型の cardIds:'$pick.cardIds' contract:
       //     { player, cardIds:'$pick.cardIds', target:{kind:'pick', query:{area:'remove',side:'self',
