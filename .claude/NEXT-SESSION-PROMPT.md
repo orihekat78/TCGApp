@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-22 — 未解決 BUG-133〜136 一括解消 / 次タスク未定)
+# 次セッション再開プロンプト (2026-06-22 — refactor Phase 3a 完了 / 次フェーズ未定)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。
 
@@ -7,45 +7,44 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-06-22、セッション㊱ — branch `bugs/resolve-open-133-136`、main 未マージ・push 状態要確認)
-wave#2 audit 起票の未解決 4 バグ (BUG-133/134/135/136) を systematic-debugging で一括解消。
-- 開始時に `git ls-remote origin main` と `git log --oneline -3 main` で実取込みを確認。
-  **branch が main に ff-merge + push 済か** を必ず見る (push は per-session 認可、未マージで終わった可能性)。
-- 直前 ㉟ (continuation-nest + B06033) は main 取込み済 (f9b5d8be)。
+## 現在地 (2026-06-22、セッション㊲ — branch `refactor/phase-3a` を main へ ff-merge 済 (`8df034e2`)、push 認可待ち)
+refactor-plan Phase 3a (atom-handlers.ts 分割) を完了。
+- ★開始時に `git ls-remote origin main` で `8df034e2` が origin 取込み済か確認。
+  **push が未認可で終わった** ため、未取込みなら `git push origin main` (per-session 認可要求あり) を再実行し、
+  push 後 `git ls-remote origin main` + GitHub Actions CI (`gh run list -L1`) green を確認。
+- 直前 ㊱ (BUG-133〜136) は main 取込み済 (`9728c967`)。
 
-## ㊱ サマリ (検証済: vitest 2783 pass/1 skip/0 fail / tsc0 / lint群0err / e2e 2/2 green / console error0)
-branch commits: c9eeedbb (133/135) → e03bdbd5 (136 実装+134 close) → <この doc commit>。
-- BUG-133 (drainAi player guard): **BUG-138 X8 で既解消**を検証。新 fix なし、bug-138-drain-ownership.test が網羅。
-- BUG-135 (sequence 中間 skip-drop): **BUG-111 #2 で既解消**を検証。実カード回帰 bug-135-sequence-middle-skip.test 追加。
-- BUG-134 (triggered pick 発動時確定): scan → **rules 違反の実害なし**で見送り (害B=turn-end sceneEnter 0件で実在せず /
-  害A=splice 防御で rules-correct no-op)。機構を bug-134-cofire-pick-staleness.test で pin。
-- BUG-136 (deckToBottomBound 順序未surface): **reorder UI 実装**。__pendingDeckReorderSide side-channel +
-  pendingDeckReorder/deckReorderResolve + DeckReorderModalHost (drag+▲▼) + useOppTurnDriver 待機/再開。
-  水平展開で souza (捜査X) も同配線。human 所有&2枚以上のみ surface、AI/smoke byte-equal。
+## ㊲ サマリ (検証済: byte-identity 52/52 / tsc0 / vitest 2783 pass / smoke baseline winsA=498 一致 / e2e 26 / eslint delta0 / 規約lint8)
+atom-handlers.ts 1828 行 (単一 runAtom switch・55 verb) を **決定論 codemod** で extract-and-dispatch 分割:
+- barrel atom-handlers.ts (runAtom=preamble+dispatch switch + 外部API再export) + atom-handlers/_shared.ts +
+  atom-handlers/{core,scene,char,picks,misc}.ts。計画 4→5 補正 (misc 分離)。case body 無改変・外部API不変。
+- 着手前フルパネル設計レビュー (opus 4 lens、BLOCKER=log脱漏/MAJOR=import分配を着手前解消) + 実装後レビュー(opus) APPROVE。
+- 記録: refactor-plan/{INDEX(3a✅),phases,review-records,phase-3a-design}.md / memory.md。
+- 残: 新6ファイルに test pair 無し (lint:test-pair warn、純粋リファクタで既存 atom-handlers.test.ts が runAtom 経由網羅、新test不要)。
 
 ## 次にやること (要ユーザー選択)
-B) デザイン刷新 (memory: project-design-redesign-2026-06-19、再開=.claude/design/RESUME.md、frontend-design skill)。
-C) refactor-plan フェーズ (.claude/specs/refactor-plan/、engine 解凍 cluster 含む) / 残 bug は index.base 確認。
-   候補3 (continuous levelDelta、大規模 engine 解凍) は ㉟ handoff 参照。
-   候補4 (spectator self driver per-move 化、UI hook 小〜中) は ㉞ で発見の latent 非対称。
-A) カード追加継続 = 誤 DEFER 再評価 or engine拡張 micro-cluster (非推奨)。DEFERRED-INDEX 参照。
+C-refactor 継続 (推奨、骨格凍結の動作不変例外):
+  - **Phase 3b** = pick-resolution 再設計 (resolve-picks/apply-pick/resolver を walk/pending/continuation に 3分割 +
+    BUG-054〜121 の 15+ パッチを意味 group 化)。**3 系で最高リスク** (BUG パッチ済 core を触る)。着手前個別設計レビュー必須。
+  - Phase 3c (side-channel 8→5) / 3d (UI hooks 分割) / 4 (周辺整理、低リスク)。INDEX.md 状態列参照。
+B) デザイン刷新 (.claude/design/RESUME.md、frontend-design skill、project-design-redesign-2026-06-19)。
+A) カード追加 (engine-gate DEFER 多数、DEFERRED-INDEX)。
 → 開始時にユーザーへ方向確認。
 
-## プロセス必須
-- 骨格凍結: engine 変更は bug 修正 or 公式ルール変更 or engine拡張 cluster (明示判断) のみ。通常は AI/UI/カード層。TDD・1 task=1 commit=セッション境界。
-- バグ/制約は **systematic-debugging skill** で根因を repro で確定してから修正。仮説を反証する証拠を必ず取る
-  (㊱ で「起票後に別 work で既解消」を 2 件、「rules 違反の実害なし」を 1 件、実 probe/scan で確定)。
-- ★bug doc frontmatter: status=修正済 は `commit:` (hash) + `date_fixed:` 必須 (pre-commit lint:bugs)。
-  解消元 commit が別なら其方を指す (133→ec6c9780/BUG-138, 135→a682b20b/BUG-111#2)。見送りは hash 不要。
-- ★engine side-channel パターン: declare global + type + _drain helper (atom-handlers) + surfacePendingSideChannels +
-  post-dispatch sync (useEngineDispatch) + store field/setter の 5 点 (BUG-136 __pendingDeckReorderSide が手本)。
-- ★human-only engine 分岐は `__humanPlayerSide` で gate (App.tsx:73 で human play 時 set / spectator・smoke は null = byte-equal)。
-- Read hook が file を line1 で切る → Bash cat / sed で読む。Write/Edit は Read 1回で登録後に使える。
-- pre-commit = docs:check + 規約 lint 群。新 src/test で structure/mapping 変わる → npm run docs 同期後 commit。
-  auto docs の差分が source-hash のみは正常。lint-test-pair は新 src に warn (e2e のみテストは warn 許容)。
-- git add は対象ファイル + 再生成 auto docs。除外 .gitignore/.claude/design/.claude/reports(smoke)/.tmp-*。★`git reset`(空) は全 unstage 注意。
+## プロセス必須 (refactor-phase skill に従う)
+- 骨格凍結: refactor は「動作不変な内部最適化」例外。挙動完全不変が絶対。1 フェーズ=1 commit=セッション境界。
+- 着手前: working tree clean 確認 / branch first / INDEX 状態列更新 / baseline vitest 件数控える / Phase3系は個別設計レビュー必須。
+- ★大規模 byte-exact 分割は **決定論 codemod + per-body md5 自己検証** が王道 (string/comment/template-aware lexer)。
+  autocrlf で working tree=CRLF / git=LF のため byte 比較は **EOL 正規化必須**。
+- 挙動不変ゲート (全部、この順): tsc0 / full vitest (baseline 件数維持) / smoke:1000 + check:smoke-baseline 一致 /
+  e2e 3 spec / eslint (HEAD と delta 0、stash 比較) / 規約 lint (pre-commit 7本)。
+- tsconfig `noUnusedLocals/noUnusedParameters` が import/param 過不足を即検知。tsc は src のみ (tests/ は vitest が唯一 gate)。
+- Read hook が file を line1 で切る → Bash cat/sed で読む。Write/Edit は Read 1回で登録後に使える。
+- pre-commit = docs:check + 規約 lint 群。新 src で structure/mapping 変わる → `npm run docs` を全 .md 編集後に 1 回 → commit。
+  auto docs の差分が source-hash のみは正常。effect.md の「ソース (N)」増加は正当 (分割反映)。
+- git add は対象 + 再生成 auto docs。除外 .gitignore(.superpowers/)/.claude/design/.claude/reports(smoke)/c:\tmp。★`git reset`(空)は全unstage注意。
 - ★push to main は classifier が per-session 認可要求あり。push 後 `git ls-remote origin main` で実取込みを必ず確認。
 ```
 
-㊱ で BUG-133〜136 を全解消し branch `bugs/resolve-open-133-136` に 3 commit。main ff-merge → push 予定。
-次タスク未確定 — 開始時にユーザー確認 (B / C 推奨、A 非推奨)。`/clear` 後の新セッション推奨。
+㊲ で refactor Phase 3a を完了し main へ ff-merge (`8df034e2`)。push 認可待ち。
+次フェーズ未確定 — 開始時にユーザー確認 (C-refactor 3b 推奨)。`/clear` 後の新セッション推奨。
