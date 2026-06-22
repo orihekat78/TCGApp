@@ -1,44 +1,41 @@
 # 作業ログ — 名探偵コナンプロジェクト
 
-(過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-21-5.md = ㉛ / 2026-06-22.md = ㉝+㉞。)
+(過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-22.md = ㉝+㉞ / 2026-06-22-2.md = ㉟。)
 
-## セッション㉟ (2026-06-22) — continuation-nest engine 修正 + B06033/B06033P 解禁 (C 候補2)
+## セッション㊱ (2026-06-22) — 未解決 BUG-133〜136 一括解消
 
-開始時: remote main = `aeb1bf4d` (㉞ push 済を確認)。方向 = ユーザー選択で **C 候補2 (continuation-nest)**。
-branch `cards/continuation-nest-b06033`。
+開始時: remote main = `f9b5d8be` (㉟ continuation-nest push 済を確認)。ユーザー指示 = **未解決バグ全解消**。
+branch `bugs/resolve-open-133-136`。wave#2 audit (2026-06-12) 起票の未着手 4 件を systematic-debugging で処理。
 
-### 根因 (BUG-111 #3 / systematic-debugging で repro 確定)
-`sequence[chain[evidenceToHand{pick}, handToEvidence], sceneEnter]` (B06033 a1) で pick が chain と sequence の
-**2 重**に囲まれて pause すると、chain (内側) が `pick.continuation=[handToEvidence]` を同梱 (resolver L75) した直後、
-親 sequence (外側) が **同 slot を [sceneEnter] で上書き** (旧 L48) → handToEvidence 脱落。continuation が単一 slot で
-nest 不可だった。RED test (`bug-111-continuation-nest.test.ts`) で Case1=chain step2 脱落 / Case2=再 pause 時に
-outer 脱落 を実証。
+### 結論 (4 件すべて green で close)
+- **BUG-133** (drainAi player guard 欠如): 起票後の **BUG-138 X8** で guard 実装済を検証。新 fix なし。
+  既存 bug-138-drain-ownership.test (6) が網羅。commit 指す先 = ec6c9780。
+- **BUG-135** (sequence 中間 skip-drop): 起票後の **BUG-111 #2** で skip 経路が origin-kind gate に再設計済を検証。
+  決定論 scan で実出荷該当形 = PR155/PR161/D03002 のみと特定。実カード回帰 bug-135-sequence-middle-skip.test (3)
+  追加。commit 指す先 = a682b20b。
+- **BUG-134** (triggered pick 発動時確定): probe で機構確認 (effect:declared 以外の全 hook は queue 時確定) →
+  scan で **rules 違反の実害なし** (害B=追加候補→turn-end sceneEnter 0件で実在せず / 害A=削除 stale→splice
+  防御で rules-correct no-op、manifesting カードも MVP smoke 外)。engine全面 fix は骨格凍結 risk 過大 → **見送り**。
+  機構を bug-134-cofire-pick-staleness.test で pin。
+- **BUG-136** (deckToBottomBound 順序未surface): **reorder UI 実装**。side-channel `__pendingDeckReorderSide`
+  (human 所有&2枚以上のみ set、AI/smoke byte-equal) + store `pendingDeckReorder` + `deckReorderResolve`
+  (multiset 検証で底ブロック再配置) + `DeckReorderModalHost` (drag+▲▼、SouzaReorderModal.css 流用) +
+  useOppTurnDriver 待機/再開。**水平展開で souza (捜査X) も同配線** (defender が human&2枚以上)。
 
-### 修正 (engine、骨格解凍 = ユーザー明示の engine拡張 cluster)
-continuation を recursive `ContinuationFrame`(`+outer?`) の linked list 化:
-- `resolve-picks.ts`: 型を `ContinuationFrame` (recursive) に。
-- `resolver.ts attachContinuation`: 既存 continuation があれば**上書きせず** outer 末尾に append (head=内側→outer=外側 順)。
-- `apply-pick.ts runContinuationChain`: head→outer を順次実行。remainder 自身が再 pause したら残り outer を新 pick へ引継ぐ。
-- decline (`applyPickSkipAndContinuation` / drain / useEngineDispatch 経路): head が chain なら gate (remainder skip)
-  しつつ **outer は実行** (B06033 swap 辞退でも sceneEnter は走る、rules/15)。sequence head は従来通り remainder 実行。
-- **単一 frame (outer 無し) は byte 互換** — 既存全 continuation flow は無変更。
-
-### B06033/B06033P「わが味方となるべし!!」(緑 L6 event、ALL_CARDS 1372→1374)
-a1 = `sequence[ chain[evidenceToHand max:1, handToEvidence n:1], sceneEnter{from hand, max:1, viaEffect,
-filter{緑,character,levelMax:6,trait:YAIBA}} ]`。a2 = ヒラメキ `handAddFromRemove{fromSelf:true}`。
-公式Q&A「証拠から手札に加えたカードを登場できる」= swap を先に解決→post-swap 手札から sceneEnter 候補 (nest で実現)。
-exemplar: B06029(chain swap) / B05102(event+sceneEnter+hirameki)。手 author (taskA codegen 非対象)。
+### branch commits
+- `c9eeedbb` — BUG-133/135 検証 + 回帰ガード (bug-135 test、engine 変更なし)。
+- `e03bdbd5` — BUG-136 実装 (engine deckToBottomBound+souza / store / dispatch / DeckReorderModalHost / App /
+  useOppTurnDriver) + BUG-134 close (見送り + characterization test) + changelog entry。
+- `<この doc commit>` — BUG-136.md 修正済(commit:e03bdbd5) + NEXT-SESSION + memory rotate。
 
 ### 検証 (全 green)
-repro 2/2 GREEN / B06033 decoy 9/9 (swap+enter・Q&A・filter 1対1・nest-decline・hirameki・構造) /
-full vitest **2770pass 1skip 0fail** / tsc0 / eslint0 err / smoke 1000 **winsA=498 baseline 完全一致** (AI 経路不変) /
-pick·optional·choice·event e2e **7/7** / full-match human-vs-CPU + spectator **3/3** console error 0。
-(非MVP のため実機 deck-builder 不可 → engine decoy が §7 文言突合を担保。)
+vitest **2783 pass / 1 skip / 0 fail** / tsc0 / lint 群 0 err / e2e (bug-136 ▲▼+drag) **2/2** console error 0。
 
 ### 学び (恒久)
-- **continuation は 1 重とは限らない**: sequence[chain[pick],…] のように同 pick が複数構造に囲まれると
-  各構造が継続を付けたがる。単一 slot 設計は最外殻のみ残し内側を黙って捨てる。linked list (outer) で nest 化。
-- **B06033 chain swap 部は B06029 が既出荷** — 差分は外側 sequence の sceneEnter のみ。nest gate がそれを阻んでいた。
+- **「未解決バグ」が起票後の別 work で既解消なことがある** (133=BUG-138 / 135=BUG-111#2)。仮説 (=未解消) を
+  反証する証拠 (現コード読解 + 既存テスト) を取れ。修正前に「本当にまだ壊れてるか」を repro で確認。
+- **engine 全面 fix を要する narrow bug は scan で実害有無を確定してから判断** (134=見送り)。骨格凍結原則。
+- side-channel 追加は 5 点パターン (declare/type/_drain + surface + post-sync + store) を踏襲 (__pendingDeckReorderSide)。
 
-### branch / commit
-branch `cards/continuation-nest-b06033`。docs同期→commit→main ff-merge→push→CI green 予定。push 後 ls-remote 確認。
+### 次タスク
+未確定。NEXT-SESSION-PROMPT.md 参照 (B デザイン / C refactor / A カード)。branch を main ff-merge → push 予定。

@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-22 — continuation-nest 出荷 / 次は B か C候補3/4)
+# 次セッション再開プロンプト (2026-06-22 — 未解決 BUG-133〜136 一括解消 / 次タスク未定)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。
 
@@ -7,42 +7,45 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-06-22、セッション㉟ — local commit <この feature commit>、push 状態は要確認)
-C 候補2「continuation-nest engine 修正 + B06033/B06033P 解禁」を出荷 (engine 変更あり = 骨格解凍、ユーザー明示の engine拡張 cluster)。
-- 開始時に `git ls-remote origin main` で実取込みを確認。**㉟ commit が push 済か** を必ず見る
-  (push は per-session 認可。前セッション終了時に push 未認可で終わった可能性。handoff の取込み記述を鵜呑みにしない)。
-- 先行 ㉞ spectator-speed flake fix は main 取込み済 (aeb1bf4d)。
-詳細: memory.md ㉟。
+## 現在地 (2026-06-22、セッション㊱ — branch `bugs/resolve-open-133-136`、main 未マージ・push 状態要確認)
+wave#2 audit 起票の未解決 4 バグ (BUG-133/134/135/136) を systematic-debugging で一括解消。
+- 開始時に `git ls-remote origin main` と `git log --oneline -3 main` で実取込みを確認。
+  **branch が main に ff-merge + push 済か** を必ず見る (push は per-session 認可、未マージで終わった可能性)。
+- 直前 ㉟ (continuation-nest + B06033) は main 取込み済 (f9b5d8be)。
 
-## ㉟ サマリ (検証済: repro 2/2 / B06033 decoy 9/9 / vitest 2770pass 1skip 0fail / tsc0 / eslint0err / smoke winsA=498 baseline一致 / e2e pick系7/7 + full-match 3/3 console error0)
-- BUG-111 #3 (continuation-nest): `sequence[chain[pausing-pick, step2], step3]` で chain (内側) が pick.continuation を
-  同梱した直後、親 sequence (外側) が同 slot を上書き → 内側 step2 (handToEvidence) 脱落。continuation が単一 slot=nest 不可。
-- 修正: continuation を recursive `ContinuationFrame`(`+outer?`) の linked list 化。resolver attachContinuation は
-  上書きせず outer 末尾に append。apply-pick runContinuationChain が head(内側)→outer(外側) 順実行 + 再pause引継ぎ。
-  decline は chain head なら remainder gate しつつ outer 実行 (B06033 swap 辞退でも sceneEnter 走る)。単一 frame は byte 互換。
-- B06033/B06033P「わが味方となるべし!!」(緑L6 event) 出荷 (ALL_CARDS 1372→1374)。
-  a1=sequence[chain[evidenceToHand,handToEvidence], sceneEnter{緑YAIBA lv≤6}] / a2=ヒラメキ handAddFromRemove fromSelf。
+## ㊱ サマリ (検証済: vitest 2783 pass/1 skip/0 fail / tsc0 / lint群0err / e2e 2/2 green / console error0)
+branch commits: c9eeedbb (133/135) → e03bdbd5 (136 実装+134 close) → <この doc commit>。
+- BUG-133 (drainAi player guard): **BUG-138 X8 で既解消**を検証。新 fix なし、bug-138-drain-ownership.test が網羅。
+- BUG-135 (sequence 中間 skip-drop): **BUG-111 #2 で既解消**を検証。実カード回帰 bug-135-sequence-middle-skip.test 追加。
+- BUG-134 (triggered pick 発動時確定): scan → **rules 違反の実害なし**で見送り (害B=turn-end sceneEnter 0件で実在せず /
+  害A=splice 防御で rules-correct no-op)。機構を bug-134-cofire-pick-staleness.test で pin。
+- BUG-136 (deckToBottomBound 順序未surface): **reorder UI 実装**。__pendingDeckReorderSide side-channel +
+  pendingDeckReorder/deckReorderResolve + DeckReorderModalHost (drag+▲▼) + useOppTurnDriver 待機/再開。
+  水平展開で souza (捜査X) も同配線。human 所有&2枚以上のみ surface、AI/smoke byte-equal。
 
 ## 次にやること (要ユーザー選択)
 B) デザイン刷新 (memory: project-design-redesign-2026-06-19、再開=.claude/design/RESUME.md、frontend-design skill)。
-C) bug 対応 (.claude/bugs/index.base) / refactor-plan フェーズ (engine 解凍 cluster 含む)。
-   候補3: condition-gated continuous levelDelta (ContinuousModifier.levelDelta + 全 level-read site honor、
-           PR264/B08059/B08050 解禁)。大規模 engine 解凍。真の continuous (毎 read 再評価) gap。
-   候補4: spectator self driver の per-move 化 (㉞ で発見の latent 非対称 self=whole-turn/opp=per-move、UI hook、小〜中)。
-A) カード追加継続 = 誤 DEFER 再評価 or engine拡張 micro-cluster (1base/wave、非推奨)。残候補は DEFERRED-INDEX 参照。
-   ※㉟ で continuation-nest は解消済。DEFERRED-INDEX「continuation-nest」行は✅出荷で消し込み済。
+C) refactor-plan フェーズ (.claude/specs/refactor-plan/、engine 解凍 cluster 含む) / 残 bug は index.base 確認。
+   候補3 (continuous levelDelta、大規模 engine 解凍) は ㉟ handoff 参照。
+   候補4 (spectator self driver per-move 化、UI hook 小〜中) は ㉞ で発見の latent 非対称。
+A) カード追加継続 = 誤 DEFER 再評価 or engine拡張 micro-cluster (非推奨)。DEFERRED-INDEX 参照。
 → 開始時にユーザーへ方向確認。
 
 ## プロセス必須
 - 骨格凍結: engine 変更は bug 修正 or 公式ルール変更 or engine拡張 cluster (明示判断) のみ。通常は AI/UI/カード層。TDD・1 task=1 commit=セッション境界。
-- バグ/制約は **systematic-debugging skill** で根因を repro で確定してから修正 (㉟ で nest 上書きを RED test で実証→linked list 化)。仮説を反証する証拠を必ず取る。
-- ★engine continuation: pick は sequence/chain に **多重に囲まれうる**。continuation は単一 slot でなく `ContinuationFrame.outer` の
-  linked list。head=内側 (先実行) → outer=外側。新たに継続を付ける処理は **上書きでなく outer 末尾 append** (resolver attachContinuation)。
-- ★非MVP カードは実機 deck-builder 不可 → engine decoy test (実 engine 駆動 + filter/順序 decoy) が §7 文言突合を担保。
-- Read hook が file を line1 で切る → Bash cat で読む。Write/Edit は Read 1回で登録後に使える。
-- pre-commit = docs:check + 規約 lint。新 src/test + sessions/ rotate で structure/mapping/changelog 変わる → npm run docs 同期後 commit。auto docs の差分が source-hash のみなら正常。
-- git add は対象ファイル + 再生成 auto docs を stage、除外は .gitignore(現在 +.superpowers/ で M、コミット対象外)/.claude/design/.claude/reports(smoke含む)/.tmp-*。★`git reset`(空引数) は全 index を unstage するので注意。
-- ★push to main は classifier が per-session 認可を要求する場合あり。push 後 `git ls-remote origin main` で実取込みを必ず確認。
+- バグ/制約は **systematic-debugging skill** で根因を repro で確定してから修正。仮説を反証する証拠を必ず取る
+  (㊱ で「起票後に別 work で既解消」を 2 件、「rules 違反の実害なし」を 1 件、実 probe/scan で確定)。
+- ★bug doc frontmatter: status=修正済 は `commit:` (hash) + `date_fixed:` 必須 (pre-commit lint:bugs)。
+  解消元 commit が別なら其方を指す (133→ec6c9780/BUG-138, 135→a682b20b/BUG-111#2)。見送りは hash 不要。
+- ★engine side-channel パターン: declare global + type + _drain helper (atom-handlers) + surfacePendingSideChannels +
+  post-dispatch sync (useEngineDispatch) + store field/setter の 5 点 (BUG-136 __pendingDeckReorderSide が手本)。
+- ★human-only engine 分岐は `__humanPlayerSide` で gate (App.tsx:73 で human play 時 set / spectator・smoke は null = byte-equal)。
+- Read hook が file を line1 で切る → Bash cat / sed で読む。Write/Edit は Read 1回で登録後に使える。
+- pre-commit = docs:check + 規約 lint 群。新 src/test で structure/mapping 変わる → npm run docs 同期後 commit。
+  auto docs の差分が source-hash のみは正常。lint-test-pair は新 src に warn (e2e のみテストは warn 許容)。
+- git add は対象ファイル + 再生成 auto docs。除外 .gitignore/.claude/design/.claude/reports(smoke)/.tmp-*。★`git reset`(空) は全 unstage 注意。
+- ★push to main は classifier が per-session 認可要求あり。push 後 `git ls-remote origin main` で実取込みを必ず確認。
 ```
 
-C 候補2 (continuation-nest + B06033/B06033P) を branch `cards/continuation-nest-b06033` に commit → main ff-merge → push 予定。次タスク未確定 — 開始時にユーザー確認 (B / C候補3-4 推奨、A 非推奨)。`/clear` 後の新セッション推奨。
+㊱ で BUG-133〜136 を全解消し branch `bugs/resolve-open-133-136` に 3 commit。main ff-merge → push 予定。
+次タスク未確定 — 開始時にユーザー確認 (B / C 推奨、A 非推奨)。`/clear` 後の新セッション推奨。
