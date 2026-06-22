@@ -40,3 +40,22 @@ push → CI green。次: **Phase 3f** (engine applyMove ガード、骨格 touch
 ### commit㊷ / 次
 明示 add (1 src + 記録 md 群 + BUG-152 + auto docs、.gitignore/.superpowers/.claude/design/reports 除外) → 1 commit →
 main ff-merge → push → CI green。次: **Phase 3g** (resolve-picks chain guard、BUG-152) / Phase 4 (周辺整理) / デザイン刷新。`/clear` 推奨。
+
+## セッション㊸ (2026-06-22) — refactor Phase 3g 完了 (resolve-picks chain exhaustiveness ガード)
+Phase 3f は main 取込み済 (f8fd4b4d, CI green)。ユーザー選択で Phase 3g 着手。branch `refactor/phase-3g`。
+- **着手前 opus 3 lens 設計レビュー** (Workflow [invariance/骨格凍結+guard変種/活性バグ grounding] + synthesis、403k tok、
+  **BLOCKER 0**、**GO**、guard=**return**): ① invariance=invariant (chain/negate/custom は現 default と参照同一 effect 返却→
+  全 11 member runtime bit-identical、パッチ適用→vitest/smoke→git diff empty で実証)。② guard=return (resolveEffectPicks は
+  applyMove→declared-ability:199 経由で produce() try 外 [policy.ts:419-423] 到達、throw だと stepTurn 貫通。resolver.ts:174 が
+  throw なのは dispatch sink ゆえの正当な非対称)。③ 活性バグ=**無し** (ALL_CARDS 1374枚 object-walk: chain node 126、step が
+  choice/optional = subtree 含め **0件**。chain step の atom $pick は dispatch 時 tryRePickFromAtom で解決ゆえ passthrough で drop なし。
+  B02068/B04023 は optional が chain を wrap)。→ **Option A** (明示 passthrough + never)、Option B (walk 救済) は latent future-only。
+- **実装**: resolve-picks.ts:560-563 を `case 'chain': case 'negate': case 'custom': return effect` + `default: {const _exhaustive:never=effect; void _exhaustive; return effect}` に。
+- **ゲート全 GREEN**: tsc0(両) + 負テスト (case'chain'削除→TS2322@(574,13)→復元) / vitest 2783+1skip / smoke winsA=498(exc0/baselineOK) /
+  e2e 26 / eslint 125(added0) / 規約lint8本0 / numstat **16add/1del** (非 additive=default アーム再構成、挙動不変は実行差分で担保)。
+- **記録**: phase-3g-design.md 新規 / review-records (3a/3b を review-records-1.md へ退避[1a〜3b 化]、3g 追記) / phases(3g✅,§header 3a〜3g) /
+  INDEX(3g✅) / BUG-152(修正済・latent 化) / changelog 2026-06-22-08。
+
+### commit㊸ / 次
+明示 add (1 src + 記録 md 群 + auto docs、.gitignore/.superpowers/.claude/design/reports 除外) → 1 commit → main ff-merge → push → CI green。
+次: **Phase 4** (周辺整理: scripts archive / specs stale / _reuse 規約 / sessions アーカイブ、低リスク) / デザイン刷新 / カード追加。`/clear` 推奨。

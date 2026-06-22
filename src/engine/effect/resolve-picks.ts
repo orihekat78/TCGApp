@@ -557,9 +557,24 @@ export function resolveEffectPicks(
       return { kind: 'forEach', over: effect.over, do: resolveEffectPicks(state, effect.do, ctx, opts) };
     case 'replace':
       return { kind: 'replace', trigger: effect.trigger, with: resolveEffectPicks(state, effect.with, ctx, opts) };
+    case 'chain':
     case 'negate':
     case 'custom':
-    default:
+      // pre-walk passthrough (un-walked, 参照同一の effect をそのまま返す)。chain の step 内 atom $pick は
+      // dispatch 時 (resolver.ts:78 chain case → run(step) → atom-handler tryRePickFromAtom) に解決されるため、
+      // ここで pre-walk しなくても drop しない。出荷カードに choice/optional を step に持つ chain は 0 件
+      // (Phase 3g 設計レビュー: ALL_CARDS object-walk で実証)。negate/custom は walk 対象の sub-effect を持たない。
+      // ※将来 chain step に choice/optional を持つカードが出たら、ここを sequence と同様に walk する必要がある (BUG-152 latent)。
       return effect;
+    default: {
+      // Phase 3g: Effect union (11 member) の member 脱落を compile-time 検出 (noImplicitReturns 無効ゆえ
+      // silent passthrough を塞ぐ)。全 member を明示 case 化したため到達不能。throw ではなく void+return 変種 —
+      // 本関数は produce() try 外 (ai/policy.ts:419-423、applyMove→declared-ability:199 経由) から到達するため、
+      // 将来到達可能化した際に throw だと stepTurn を貫通する (Phase 3e/3f と同判断)。sibling の resolver.ts:174 が
+      // throw なのは run() が dispatch sink で未処理 kind = 実バグ (loud fail) ゆえの正当な非対称。
+      const _exhaustive: never = effect;
+      void _exhaustive;
+      return effect;
+    }
   }
 }

@@ -55,7 +55,7 @@
   choiceIndex) のみの最小 payload — 人間選択値は engine 内で再現不可のため action 引数に残す
 - 同型契約 (effectPickResolve の optional 引数群) は 4 形態 union (skip/single/multi/switch) で明示
 
-## 3a〜3f (高リスク群 — 着手前に個別設計レビュー必須)
+## 3a〜3g (高リスク群 — 着手前に個別設計レビュー必須)
 
 - 3a (✅ 2026-06-22): atom-handlers 1828 行を barrel + _shared + core/scene/char/picks/**misc** に分割
   (計画 4→5 に補正: core に lifecycle/control verb を含めると <500 超過のため misc 分離)。
@@ -86,7 +86,7 @@
   sub-goal のうち #4 (両 switch [runEngineAction/isAllowed] に default:never ガード) **のみ ADOPT** (additive/compile-time、tsc が
   24/24 網羅を formal proof)。#1 分割/#2 axId globalThis化=**DROP** (490<500・slot逆行・BUG-034)、#3 family型化=**SUBSUMED**。詳細 phase-3e-design.md / 下記。
 - 3f (✅ 2026-06-22): engine `applyMove` (policy.ts:209、Move 11-member) に default:never (void 変種) 追加。**着手前 opus 3 lens レビュー** (BLOCKER 0/GO)。負テスト TS2322 + numstat 8add/0del。水平展開で resolve-picks.ts:431 の同型 gap → Phase 3g 切出し。詳細 phase-3f-design.md。
-- 3g (⏳): resolve-picks.ts:431 `switch(effect.kind)` の silent passthrough + `case 'chain'` 欠落 (un-walked) を guard 化。default が reachable passthrough ゆえ real-logic 課題 ([BUG-152](../../bugs/BUG-152.md))。
+- 3g (✅ 2026-06-22): resolve-picks.ts:431 `switch(effect.kind)` に `case 'chain'` 追加 (negate/custom と明示 passthrough) + default を never 化。**着手前 opus 3 lens レビュー** (403k/BLOCKER 0/GO): invariance=invariant・guard=return (produce try 外、3f 同判断)・活性バグ **無し** (ALL_CARDS object-walk で chain step の choice/optional = 0 件)。chain step の atom $pick は dispatch 時 tryRePickFromAtom で解決ゆえ passthrough で drop なし。Option B (walk 救済) は latent future-only。負テスト TS2322@(574,13) / numstat 16add/1del (default アーム再構成=非 additive、実行差分で担保)。詳細 phase-3g-design.md / [BUG-152](../../bugs/BUG-152.md)。
 
 ## 4. 周辺整理
 

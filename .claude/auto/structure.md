@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 417
-- **ファイル数**: 7053
+- **ファイル数**: 7057
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -476,6 +476,7 @@
     - `2026-06-22-05-refactor-phase-3d-ui-hooks-split.md`
     - `2026-06-22-06-refactor-phase-3e-exhaustiveness-guards.md`
     - `2026-06-22-07-refactor-phase-3f-applymove-guard.md`
+    - `2026-06-22-08-refactor-phase-3g-resolve-picks-chain-guard.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -845,6 +846,8 @@
     - `smoke-2026-06-22-6.md` — Smoke 1000戦レポート — smoke-2026-06-22-111331
     - `smoke-2026-06-22-7.json`
     - `smoke-2026-06-22-7.md` — Smoke 1000戦レポート — smoke-2026-06-22-115036
+    - `smoke-2026-06-22-8.json`
+    - `smoke-2026-06-22-8.md` — Smoke 1000戦レポート — smoke-2026-06-22-123612
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1265,8 +1268,9 @@
       - `phase-3d-design.md` — Phase 3d 設計 — UI hooks 分割 (2026-06-22、着手前レビュー反映済)
       - `phase-3e-design.md` — Phase 3e 設計 — useEngineDispatch 続き / exhaustiveness ガード (2026-06-22、着手前フルパネルレビュー…
       - `phase-3f-design.md` — Phase 3f 設計 — engine applyMove exhaustiveness ガード (2026-06-22、着手前設計レビュー反映済)
+      - `phase-3g-design.md` — Phase 3g 設計 — resolve-picks chain-case exhaustiveness ガード (2026-06-22、着手前設計レビュー反…
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
-      - `review-records-1.md` — リファクタ レビュー記録 1 — Phase 1a〜2c (2026-06-12)
+      - `review-records-1.md` — リファクタ レビュー記録 1 — Phase 1a〜3b (2026-06-12)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
