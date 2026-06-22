@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 7005
+- **ファイル数**: 7006
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -7093,6 +7093,7 @@
     - `B07051-momoi-deckreveal.test.ts` — gate5 RUNTIME behavior — B07051 桃井恵子 (character, 白/高校生, L4 AP4000 LP1)
     - `bug-114-discard-scale-cutins.test.ts` — BUG-114: B05040 / B08055 カットイン — discard-bind dyn で「リムーブしたカードの level/…
     - `bug-123-character-kind.test.ts` — BUG-123: イベントを含むエリア (remove/hand) からの「キャラ」pick は kind:'character' 必須。
+    - `bug-135-sequence-middle-skip.test.ts` — BUG-135 回帰ガード — sequence 中間の nMin=0 pick を human-decline したとき、後続の必須 remainder が
     - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15):
     - `certify-harvest-manual-batch.test.ts` — Task A certify-harvest needsManual 手書き 3枚の検証。
     - `certify-harvest-wave3-batch.test.ts` — Task A batch#2 — certify-harvest + wave3 (opt-cost reanimate) の novel compositio…
