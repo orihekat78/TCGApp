@@ -342,6 +342,13 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       runAllUntilEmpty(draft);
       return;
     }
+    // refactor 3e: EngineAction の case 追加漏れを compile-time 検出 (noImplicitReturns 不在ゆえ
+    // member 脱落が silent fall-through する)。24 個の discriminant tag を全網羅で現状到達不能。
+    default: {
+      const _exhaustive: never = action;
+      void _exhaustive;
+      return;
+    }
   }
 }
 

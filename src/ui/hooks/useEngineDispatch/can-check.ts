@@ -116,5 +116,12 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       if (pendingPick && pendingPick.player === action.player && pendingPick.nMin >= 1) return false;
       return true;
     }
+    // refactor 3e: 同上。isAllowed は dispatchEngineAction の try 外で呼ばれるため throw 不可
+    // (uncaught 化で挙動破壊)。現状の falsy fall-through と等価な return false に固定。到達不能。
+    default: {
+      const _exhaustive: never = action;
+      void _exhaustive;
+      return false;
+    }
   }
 }

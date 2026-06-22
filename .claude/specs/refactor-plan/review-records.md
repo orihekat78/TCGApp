@@ -76,3 +76,18 @@
   教訓: ① 抽出先専用 import (AbilityCostParams/_getResolutionLock) は barrel から除去要 (noUnusedLocals が捕捉)。
   ② file-private の export 昇格は sub-file 限定・barrel 非公開で公開 surface を広げない (3b 方針)。
   ③ produce 境界越え module-let の cross-module 化は安全でも convention 逸脱 → 同居 KEEP が最小リスク。
+
+- **3e (2026-06-22)** useEngineDispatch exhaustiveness ガード (minimal)。**着手前フルパネル設計レビュー** (Workflow opus 4 lens
+  [invariance/ts-semantics/scope-rebuttal/completeness-critic] + synthesis、509k tok、**BLOCKER 0**、scopeVote **4/4 minimal**)。
+  当初 4 sub-goal を adversarial に裁定し sub-goal④ のみ ADOPT に純化: ①runEngineAction 分割=**DROP** (barrel 490<500 で size
+  動機ゼロ + axId cross-module化が BUG-034 category)、②axId globalThis化=**DROP** (slot 11→12 で headline ≤7 逆行・3c 打消し、
+  barrel module-let KEEP)、③EngineAction family型化=**SUBSUMED** (効くのは 2 switch のみ、full-union default:never が member-drop
+  全捕捉、family は net-negative)。実装: 両 switch (runEngineAction void / isAllowed boolean) 末尾に inline
+  `const _exhaustive: never = action; void _exhaustive;` + void/false。**throw 不使用** (isAllowed は dispatchEngineAction
+  try 外で呼ばれ throw だと uncaught 化で挙動破壊)。helper 不使用 (repo 既存 8 サイト全インライン)。挙動不変ゲート (全 GREEN):
+  tsc **0** (両 tsconfig) + **負テスト** (case 1 削除→TS2322 で guard 有効性実証、commit せず) / vitest **2783+1skip** (baseline 一致) /
+  smoke **winsA=498** (timeouts0/exceptions0/avg11.0) / e2e 3spec **26** / eslint **125** (added0) / 規約 lint 8 本 0 / slot **11 据置** /
+  numstat **additive-only** (各 7add/0del、追加行=default ブロックのみ)。教訓: ⓐ 骨格層 `applyMove` に同型 silent-gap
+  (policy.ts:209) → 骨格凍結ゆえ **Phase 3f** に trace (水平展開義務)。ⓑ scope 反証 lens が convergence hazard (deferred sub-goal
+  の phantom 化) を指摘 → DROP/SUBSUMED を doc 明記し phase を clean close。ⓒ additive 改変は byte-identity verifier 不適 →
+  `git diff --numstat` deletions=0 + 追加 hunk=default ブロックのみ で機械検証。

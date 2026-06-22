@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 418
-- **ファイル数**: 7055
+- **ディレクトリ数**: 417
+- **ファイル数**: 7048
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -473,6 +473,7 @@
     - `2026-06-22-03-refactor-phase-3ab-engine-split.md` — 全体リファクタ Phase 3a/3b — engine 内部の巨大ファイル分割 (挙動 byte-identical)
     - `2026-06-22-04-refactor-phase-3c-side-channel.md` — 全体リファクタ Phase 3c — globalThis side-channel 縮減 (挙動不変)
     - `2026-06-22-05-refactor-phase-3d-ui-hooks-split.md`
+    - `2026-06-22-06-refactor-phase-3e-exhaustiveness-guards.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -483,18 +484,6 @@
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
   - **`reports/`** — smoke (AI vs AI) 実行レポート・ベンチマーク結果
-    - **`_phase3d/`**
-      - `e2e-after.txt`
-      - `eslint-after-multiset.json`
-      - `eslint-after.json`
-      - `eslint-head-multiset.json`
-      - `eslint-head.json`
-      - `HEAD-useActionsPanelFlow.ts` — Phase 8 Task 8.5: ActionsPanel 操作フローのオーケストレーション
-      - `HEAD-useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
-      - `smoke-after.txt`
-      - `smoke-check.txt`
-      - `vitest-after.txt`
-    - `_phase3d-vitest-baseline.txt`
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
@@ -850,6 +839,8 @@
     - `smoke-2026-06-22-4.md` — Smoke 1000戦レポート — smoke-2026-06-22-063909
     - `smoke-2026-06-22-5.json`
     - `smoke-2026-06-22-5.md` — Smoke 1000戦レポート — smoke-2026-06-22-075613
+    - `smoke-2026-06-22-6.json`
+    - `smoke-2026-06-22-6.md` — Smoke 1000戦レポート — smoke-2026-06-22-111331
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1045,6 +1036,7 @@
     - `2026-06-21-5.md` — 作業ログ — 名探偵コナンプロジェクト
     - `2026-06-21.md` — セッションログ 2026-06-21 (㉗〜)
     - `2026-06-22-2.md` — セッション㉟ (2026-06-22) — continuation-nest engine 修正 + B06033/B06033P 解禁 (C 候補2)
+    - `2026-06-22-3.md` — セッション㊴・㊵ アーカイブ (2026-06-22、Phase 3c / 3d) — memory.md ローテート
     - `2026-06-22.md` — セッション ㉝・㉞ アーカイブ (2026-06-21〜22)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
@@ -1267,6 +1259,7 @@
       - `phase-3b-test-inventory.md` — Phase 3b 回帰テスト棚卸し: BUG-054〜121 を責務 3 group へ
       - `phase-3c-design.md` — Phase 3c 設計 — globalThis side-channel 縮減 (2026-06-22)
       - `phase-3d-design.md` — Phase 3d 設計 — UI hooks 分割 (2026-06-22、着手前レビュー反映済)
+      - `phase-3e-design.md` — Phase 3e 設計 — useEngineDispatch 続き / exhaustiveness ガード (2026-06-22、着手前フルパネルレビュー…
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
       - `review-records-1.md` — リファクタ レビュー記録 1 — Phase 1a〜2c (2026-06-12)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
@@ -5268,7 +5261,6 @@
     - `sweep-select-window.cjs`
     - `sweep-window2.cjs`
     - `verify-clone-identity.cjs`
-  - `_phase3d_codemod.mjs`
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
   - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):

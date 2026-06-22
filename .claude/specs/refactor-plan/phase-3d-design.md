@@ -76,7 +76,10 @@ eslint stash-diff で **added problem 0** (baseline 125) / 規約 lint 8 本 err
 5 sub-file + 2 barrel を再構築し、各 file が HEAD の対応 slice と diff=空 (EOL 正規化後)。③ 旧 export 集合 ⊆ barrel 再 export
 集合 を機械 parse で確認 (公開縮小 0)。④ git diff の touched file が想定集合のみ。
 
-## 本 phase スコープ外 → Phase 3e (新設) へ繰り延べ
+## 本 phase スコープ外 → Phase 3e (新設) へ繰り延べ → **3e で裁定済 (2026-06-22)**
 - useEngineDispatch の runEngineAction 分離 (+ `_justDeclaredAxId` の globalThis 化 or accessor 化)。
 - EngineAction の family サブ union 「型化」+ 両 switch への `default:never` exhaustiveness ガード追加
   (挙動隣接編集ゆえ switch 網羅性ゲートとセットで設計)。
+- **→ 3e 結論**: 着手前フルパネルレビュー (opus 4 lens, 4/4 minimal) で **default:never ガードのみ ADOPT**。
+  runEngineAction 分離=DROP (barrel 490<500 で size 動機ゼロ + axId cross-module 化 BUG-034 category)、
+  axId globalThis化=DROP (slot 逆行)、family 型化=SUBSUMED (full-union default:never が member-drop 全捕捉)。詳細 phase-3e-design.md。

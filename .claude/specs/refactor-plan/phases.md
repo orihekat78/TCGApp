@@ -82,9 +82,11 @@
   した category) ため barrel に **KEEP** ② EngineAction family「型化」は両 switch に default:never ガードが無く
   noImplicitReturns 不在で member 脱落を tsc が捕捉できない → ①② とも **新 Phase 3e へ繰り延べ**。決定論 codemod + 独立
   HEAD verifier (移送 body md5 突合)。詳細 phase-3d-design.md / 下記レビュー記録。
-- 3e: useEngineDispatch 続き (runEngineAction 分離 + `_justDeclaredAxId` の globalThis or accessor 化 + EngineAction を
-  family サブ union に「型化」 + 両 switch [isAllowed/runEngineAction] に default:never exhaustiveness ガード追加)。
-  ガード追加は body 改変ゆえ byte-identity 不可 → switch 網羅性ゲートとセットで設計。挙動隣接編集の敵対的反証必須。
+- 3e (✅ 2026-06-22): useEngineDispatch 続き → **着手前フルパネル (opus 4 lens, 4/4 一致 minimal)** で scope 純化。当初 4
+  sub-goal のうち #4 (両 switch [runEngineAction/isAllowed] に default:never ガード) **のみ ADOPT** (additive/compile-time、tsc が
+  24/24 網羅を formal proof)。#1 分割/#2 axId globalThis化=**DROP** (490<500・slot逆行・BUG-034)、#3 family型化=**SUBSUMED**。詳細 phase-3e-design.md / 下記。
+- 3f (⏳): engine `applyMove` (policy.ts:209、Move 11-member union、default 0) が UI と同型の silent-gap (3e 水平展開発見)。
+  骨格凍結ゆえ別 phase (engine touch 可 or 骨格バグ修正例外) で default:never 追加。
 
 ## 4. 周辺整理
 
