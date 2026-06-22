@@ -354,8 +354,26 @@ exemplar D02013/B03005)。decoy 8 pass (§4 e2e: removeOpponentEvidenceTop→rem
 |-----|----------------------|---------|
 | B06033 / B06033P | hirameki verb は本 cluster で解禁済。残 gate = a1 `sequence[chain[evidenceToHand{pick}, handToEvidence], sceneEnter{YAIBA}]` で evidenceToHand の pick pause 時に chain continuation を親 sequence が上書き (BUG-111 family、1:1 continuation nest 非対応) → handToEvidence 脱落。公式Q&A が swap→enter 順を強制し chain を末尾に移せない。decoy §8 検出 | continuation-nest (sequence[chain[pausing-pick], step2] 継続上書き、engine) |
 | B02013/P · B05041/P | event「キャラにセットする」+ host への継続付与 (突撃 grant / triple-protection)。set-event + host-continuous 機構が engine 不在 | set-event host-continuous (engine) |
-| B05102 | 「相手キャラを**ターン終了までレベル-1**」= continuous (temp) levelDelta が不在 (ContinuousModifier は ap/lpDelta のみ) | continuous levelDelta (engine、別 micro-cluster) |
+| ~~B05102~~ | ✅ **出荷済** (2026-06-21、下記「turn-scope levelDelta wave」)。誤 DEFER だった: 「**ターン終了まで**レベル-1」= turn-scope one-shot = 既存 `charModifyLevel{scope:'turn'}` で実装可能 (continuous condition-gated levelDelta = B08050 とは別物)。engine変更0 | — |
 | B03088/P | 【宣言】4名 bond gate (降谷零&諸伏景光&伊達航&萩原研二) + pick 1キャラに activate+AP+突撃 の **multi-atom-single-pick** + draw。多 atom を同一 pick に適用する carrier 検証が別途必要 | multi-atom-single-pick carrier 検証 (要確認) |
+
+## ✅ turn-scope levelDelta wave (誤 DEFER 是正、engine変更0、2026-06-21、cards/wave-turn-leveldown-b05102)
+
+上記 evidence-self cluster 表で「continuous (temp) levelDelta が不在」を理由に DEFER していた **B05102** が、
+実は **既存 `charModifyLevel{scope:'turn'}` で実装可能** (engine変更0) と判明 → 解禁・出荷。DEFER note が
+「**ターン終了まで**レベル-1」(turn-scope one-shot、turn end に `lvlMod_turn` を delete=BUG-119) を、毎 read
+再評価する **condition-gated continuous levelDelta** (B08050「【解決編】レベル+3」= 真の engine gap) と
+混同していた誤診断。決定論 scan (`ターン終了(時)?までレベル[＋－]\d`) で 3 候補抽出 → B05102 のみ clean。
+**出荷 B05102** (小五郎の弟子、黄 L1 event、P変種なし、ALL_CARDS 1371→1372)。a1 = event-use + 【パートナー黄】
+gate + `sequence[charModifyLevel{opp,turn,-1}, draw, sceneEnter{hand,黄,levelMax:fileCount}]` (BUG-111#2 で
+sequence-mandatory-tail 解禁済、相手0/decline でも draw 発火)。a2 = ヒラメキ self→hand (前 wave fromSelf)。
+decoy 12 pass (§2 mandatory-tail 境界=不在 / §3 level-down / §4 sceneEnter filter / §5 hirameki) +
+smoke baseline 不変。changelog [2026-06-21-06](../changelog-entries/2026-06-21-06-wave-turn-leveldown.md)。
+
+| rep | DEFER 理由 (残存 gate) | 解禁条件 |
+|-----|----------------------|---------|
+| B09078 | a1【事件編】【登場時】= deck-look 3 → **【白】か【黄】キャラ1枚まで + イベント1枚まで** (1 reveal から2種の dual-filter pick) + 残りをリムーブエリアへ (reveal-to-remove) + 「2枚加えた場合 手札1枚リムーブ」。a2 (turn-scope levelDelta) は解禁可だが card 単位は a1 gap で DEFER | dual-filter deck-look + reveal-to-remove (engine) |
+| PR096 | a1 (enter-observer 喫茶ポアロ + turn-scope levelDelta) は解禁可だが、a2 =【宣言】cost[sleep + デッキ上5リムーブ] +「**コストによって特徴[探偵]のキャラがリムーブされた場合**」レベル8以下リムーブ = cost-mill 結果を参照する conditional が engine 不在 | cost-mill-result 参照 conditional (engine) |
 
 ## ✅ evidence-top→hand cluster (evidenceToHand fromTop フラグ, 2026-06-21, cards/wave-evidence-top-to-hand)
 
