@@ -78,11 +78,13 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     case 'chain': {
       const g = globalThis as {
         __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
-        __chainStepNoApply?: boolean;
       };
       for (let i = 0; i < eff.steps.length; i++) {
         const step = eff.steps[i]!;
-        g.__chainStepNoApply = false;
+        // Phase 3c (2026-06-22): chain step の no-apply 信号を globalThis __chainStepNoApply から ctx.dyn へ移設。
+        // ctx は本 run() tree の全 child run()/runAtom に同一参照で素通しされるため、atom-handler /
+        // resolve-picks (tryRePickFromAtom 経由) が同一 ctx に立てた値を本ループが読む (intra-produce)。
+        (ctx.dyn ??= {}).chainStepNoApply = false;
         const queueLenBefore = g.__pendingEffectPickQueue?.length ?? 0;
         run(state, step, ctx);
         const queueLenAfter = g.__pendingEffectPickQueue?.length ?? 0;
@@ -96,7 +98,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           }
           return; // chain 一時停止
         }
-        if (g.__chainStepNoApply) {
+        if (ctx.dyn?.chainStepNoApply) {
           // step が no-candidate → chain break (以降 skip)
           return;
         }

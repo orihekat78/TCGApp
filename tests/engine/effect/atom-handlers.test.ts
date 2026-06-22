@@ -91,8 +91,8 @@ describe('engine.effect.runAtom', () => {
       expect(result.players.self.hand[0], '最上部 (末尾) F2 の実 cardId が手札へ').toBe('F2');
     });
 
-    it('FILE 空 (or アシストパートナーのみ) なら __chainStepNoApply を立てる (PR100/B04068 Q&A「そうした場合」不成立)', () => {
-      (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+    it('FILE 空 (or アシストパートナーのみ) なら chainStepNoApply を立てる (PR100/B04068 Q&A「そうした場合」不成立)', () => {
+      const ctx = makeCtx(); // Phase 3c: chain break 信号は ctx.dyn 経由 (旧 globalThis __chainStepNoApply)
       let s = createEmptyGameState();
       s = {
         ...s,
@@ -102,12 +102,11 @@ describe('engine.effect.runAtom', () => {
         },
       };
       const result = produce(s, draft => {
-        runAtom(draft, 'filePopToHand', { player: 'self' }, makeCtx());
+        runAtom(draft, 'filePopToHand', { player: 'self' }, ctx);
       });
       expect(result.players.self.hand).toHaveLength(0);
       expect(result.players.self.file, 'アシストパートナーは pop されない (rules/12)').toHaveLength(1);
-      expect((globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply, 'chain break 信号').toBe(true);
-      (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+      expect(ctx.dyn?.chainStepNoApply, 'chain break 信号 (Phase 3c: ctx.dyn)').toBe(true);
     });
   });
 
@@ -1049,14 +1048,13 @@ describe('fileRemoveTop (Task D E3)', () => {
     expect(result.players.self.file.map(f => (f as { type: string }).type), 'パートナーは FILE に残る').toEqual(['assisted-partner']);
   });
 
-  it('1枚もリムーブできなければ __chainStepNoApply (B09105 Q&A「以降解決不可」)', () => {
-    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+  it('1枚もリムーブできなければ chainStepNoApply (B09105 Q&A「以降解決不可」)', () => {
+    const ctx = makeCtx();
     const s = createEmptyGameState();
     produce(s, draft => {
-      runAtom(draft, 'fileRemoveTop', { player: 'self', n: 1 }, makeCtx());
+      runAtom(draft, 'fileRemoveTop', { player: 'self', n: 1 }, ctx);
     });
-    expect((globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply).toBe(true);
-    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+    expect(ctx.dyn?.chainStepNoApply).toBe(true);
   });
 
   it('bind 指定でリムーブした cardId 群を ctx.bindings に書く (カード名指定系の布石)', () => {
@@ -1104,13 +1102,13 @@ describe('fileFlipTop (Task D E3)', () => {
     expect(file[0]!.faceUp ?? false, 'OF1 は裏のまま (降りて表向きにしない)').toBe(false);
   });
 
-  it('flip 不発でも __chainStepNoApply は立てない (B09021 Q&A: 後続効果は実行可、fileRemoveTop と非対称)', () => {
-    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
+  it('flip 不発でも chainStepNoApply は立てない (B09021 Q&A: 後続効果は実行可、fileRemoveTop と非対称)', () => {
+    const ctx = makeCtx({ dyn: { chainStepNoApply: false } }); // Phase 3c: 書込み無し → pre-init false で .toBe(false) 維持
     const s = createEmptyGameState();
     produce(s, draft => {
-      runAtom(draft, 'fileFlipTop', { player: 'opp' }, makeCtx());
+      runAtom(draft, 'fileFlipTop', { player: 'opp' }, ctx);
     });
-    expect((globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply).toBe(false);
+    expect(ctx.dyn?.chainStepNoApply).toBe(false);
   });
 });
 

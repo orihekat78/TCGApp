@@ -65,9 +65,15 @@
   apply-pick=continuation に分離。旧 public pending API は barrel 再export で importer 改変0。BUG-054〜121 を
   walk/pending/continuation の 3 group に分類した回帰テスト棚卸し (phase-3b-test-inventory.md)。詳細
   phase-3b-design.md / 下記レビュー記録。決定論 codemod + 独立 byte-identity 検証 (vs git HEAD)。
-- 3c: __pendingEffectChoiceBindings / OptionalSide / OptionalResume / DeckRevealSide / chainStepNoApply
-  を continuation・EffectCtx へ (UI 境界 3 channel は存置)。3d: useActionsPanelFlow の enum/run 分離 +
-  cost-builder 抽出、useEngineDispatch の action union 型化
+- 3c (✅ 2026-06-22): globalThis side-channel 縮減。**調査補正** (read/write 全サイト直読み): 計画 5ch のうち 3ch
+  (ChoiceResume/OptionalResume=cross-dispatch holder [apply-pick が dispatch ごと新規 ctx 構築] /
+  OptionalSide=store-drain+cross-module read [stack.ts:121/apply-pick:454] / DeckReveal/Reorder=store-drain) は
+  globalThis が load-bearing → **KEEP**。安全 2ch のみ実施: ① __chainStepNoApply → ctx.dyn.chainStepNoApply
+  (intra-produce、resolver chain case のみ読む。同一 run-tree ctx 素通し)。② __pendingEffectChoiceBindings を
+  __pendingEffectChoiceResume holder の {effect,bindings} 格納形に統合 (pending-state.ts 内部のみ・export 不変・null-safe)。
+  declare-global slot 13→11 / side-channel lint 13→12。着手前フルパネル設計レビュー (opus 4 lens) で BLOCKER 1
+  (null-unsafe take/clear) + MAJOR 群を解消。詳細 phase-3c-design.md / 下記レビュー記録。
+- 3d: useActionsPanelFlow の enum/run 分離 + cost-builder 抽出、useEngineDispatch の action union 型化
 
 ## 4. 周辺整理
 

@@ -1,41 +1,42 @@
-# 作業ログ — 名探偵コナンプロジェクト
+# memory — 現セッション scratchpad
 
-## セッション ㊳ (2026-06-22) — refactor Phase 3b (pick-resolution 責務 3 分割)
+## セッション㊴ (2026-06-22) — refactor Phase 3c 完了 (globalThis side-channel 縮減 2ch)
 
-branch `refactor/phase-3b`。3a (atom-handlers 分割) は main `846109ec` 取込み済・CI green を起動時に確認。
+branch `refactor/phase-3c` (main `50ac6b0a` = 3b から分岐)。挙動完全不変 (骨格凍結の動作不変例外)。
 
-### 実装
-resolve-picks.ts (849行) の pending管理 = **連続ブロック L166-467** (declare global ×8 / Pending各型 /
-ContinuationFrame型 / toPlainDeep / queue・choice・optional の状態管理 fn) を **決定論 codemod**
-(`c:/tmp/phase3b-split.mjs`) で新 **pending-state.ts** へ verbatim 移送。
-- resolve-picks=**walk** (resolveEffectPicks/substituteAtomPick/tryRePickFromAtom/dyn helpers) +
-  旧 public pending API を pending-state から **barrel 再export** → **importer 改変0**。
-- pending-state=**pending** (leaf、Effect/EffectCtx のみ import + local Player 複製)。
-  private 7 fn (push/set/get 系) のみ export 昇格 (additive)、getPendingQueue/syncLegacyPickProperty は private 維持。
-- apply-pick=**continuation** (無改変)、resolver も無改変 (`git diff --quiet` 確認)。
-- 2nd 成果物: BUG-054〜121 を 3 group 化した回帰テスト棚卸し (phase-3b-test-inventory.md)。
-- 結果行数: resolve-picks 849→564 / pending-state 315 (新)。
+### 調査補正 — 計画 5ch → 安全 2ch
+read/write 全サイト直読みで 3ch は globalThis load-bearing と判明 → **KEEP**:
+- ChoiceResume/OptionalResume = cross-dispatch holder (apply-pick が dispatch ごと **新規 ctx 構築** して take)。
+- OptionalSide = store-drain + cross-module read (stack.ts:121 / apply-pick:454)。DeckReveal/Reorder = store-drain。
+ctx は dispatch 単位で再構築されるため dispatch 境界を跨ぐ値は globalThis が必須。**ユーザー承認後** 2ch に縮小。
 
-### レビュー
-- **着手前** Workflow opus 4 lens + critic (697k tok): BLOCKER 0。MAJOR 1 (Player 型欠落) +
-  MINOR 4 (GameState 過剰 / blanket regex / BUG-135 漏れ / overlap 書式) を設計 doc へ反映
-  (codemod は元から named-7 whitelist + Effect/EffectCtx-only + Player 複製で正しく実装済だった)。
-- **実装後** opus 1 agent: re-export 25=25 exact / pending-state 24fn+4type / apply-pick・resolver UNCHANGED /
-  移送 block diff = コメント移設+7 export 昇格のみ・**関数本体 0-byte 改変** → **APPROVE**。
+### 実装 (2 Change)
+- **A: `__chainStepNoApply` → `ctx.dyn.chainStepNoApply`** — reader=resolver chain case のみ、resolver.run が
+  全 child run()/runAtom へ同一 ctx 素通し→atom-handler(core ×3)/tryRePickFromAtom(resolve-picks ×2)が同一 ctx に立て
+  resolver:101 が読む (intra-produce)。touch: resolver/core/resolve-picks/scene(comment) + test 2 file (5 assert を
+  ctx 捕捉へ、`.toBe(false)` 2 件 dyn pre-init)。
+- **B: `__pendingEffectChoiceBindings` を `__pendingEffectChoiceResume` holder の {effect,bindings} 統合** —
+  pending-state.ts 内部のみ・export 不変 → importer 改変 0。take/clear は **null-safe** (`if(g)` ガード)。
+  lint allowlist から 'EffectChoiceBindings' 除去。
+
+### レビュー (フルパネル opus 4 lens 613k tok)
+- Lens1 INVARIANCE-HOLDS / Lens2 REFUTED → **BLOCKER** (統合 take/clear が null-unsafe → apply-pick:236 take が
+  desync guard 前に走り g=null で TypeError、現行 `?? null` graceful return を破る) を `if(g)` ガードで解消 /
+  Lens3 (test 移送 recipe: ctx 捕捉・pre-init・行番号) 解消 / Lens4 scope 妥当。実装後 opus 1 agent: APPROVE。
 
 ### 検証 (全 GREEN)
-- **独立 byte-identity verifier** (`c:/tmp/verify-3b.mjs`、git HEAD と part1/block(export-strip後)/part2 が md5 一致) = VERIFIED。
-- tsc **0** / full vitest **2783 pass / 1 skip** (baseline 完全一致) / smoke:1000 **winsA=498** (timeouts0/exceptions0、baseline OK) /
-  e2e 3 spec **26 pass** / eslint **127** (HEAD と delta0) / 規約 lint 8 本 errors=0 (side-channel 13ch/0warn)。
+- tsc **0** / full vitest **2783 pass / 1 skip** (baseline 一致) / smoke:1000 **winsA=498** (timeouts0/exceptions0) /
+  e2e 3 spec **26 pass** / eslint **127→125** (削除 declare-global 2 本の不要 eslint-disable directive warning -2、
+  **新規 0・error 77 不変**) / 規約 lint 8 本 errors=0 / declare-global slot **13→11** / side-channel lint **13→12**。
+- 決定論検証: `grep -E '^\s*var __' src` = 11 (anchored)。`__chainStepNoApply`/`__pendingEffectChoiceBindings` の
+  生 token が src に 0 (コメント含む)。eslint stash-diff で removed = pending-state の 2 unused-directive warning のみ・added 0。
 
 ### 学び (恒久)
-- codemod 自己 check は **「written-file vs HEAD」** で行う。slice を slice 自身と比較すると trailing-newline doubling
-  (`join(eol)+eol` の二重化) や挿入境界の double-blank を見逃す → **独立 verifier (git show HEAD から再構築) 必須**。
-- 「再設計」フェーズでも挙動不変が絶対なら **責務境界での verbatim 移送 + barrel 再export** が王道
-  (BUG パッチ済 core を 1 byte も触らず分離できる。3a の case-body 分割と同型)。
-- pending管理を単一 module (pending-state) に集約 → Phase 3c (side-channel 8→5 縮減) の前提が整った。
-  side-channel 直接 consumer = apply-pick / resolver / resolve/stack.ts / ai/policy (全て inline cast、移送無影響)。
+- side-channel 移設可否は **dispatch 境界を跨ぐか**で決まる。cross-dispatch holder は apply-pick が ctx 再構築 → ctx.dyn 不可。
+  intra-produce flag は ctx.dyn が globalThis と同一共有意味 (resolver が ctx 素通し)。
+- 2 channel→1 backing 統合は take/clear を null-safe に (desync guard 前に take が走る経路あり)。
+- 記録分割: review-records.md が 100 行制約超過 → Phase 1a〜2c を review-records-1.md へ分離。
 
 ### commit / 次
-branch `refactor/phase-3b`。docs 再生成 → 明示 add → 1 commit → main ff-merge → **push** (要認可、後 `git ls-remote origin main` 確認 + CI green)。
-次タスク未確定 — Phase 3c (side-channel 縮減) / 3d (UI hooks 分割) / 4 (周辺整理) / デザイン刷新。`/clear` 推奨。
+docs 再生成 → 明示 add (.gitignore/.superpowers/.claude/design/reports 除外) → 1 commit → main ff-merge → push (要認可、
+後 `git ls-remote origin main` + CI green 確認)。次: 3d (UI hooks 分割) / 4 (周辺整理) / デザイン刷新。`/clear` 推奨。

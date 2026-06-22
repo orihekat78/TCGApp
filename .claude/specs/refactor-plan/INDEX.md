@@ -26,7 +26,7 @@
 | 2c | dispatch 契約是正 (declaredAbility の cost+ctx を dispatcher 内で構築) | 中 | ✅ 2026-06-12 |
 | 3a | atom-handlers.ts 分割 (1828 行 → barrel + _shared + core/scene/char/picks/misc) | 高 | ✅ 2026-06-22 |
 | 3b | pick-resolution 責務 3 分割 (walk=resolve-picks / pending=pending-state / continuation=apply-pick) | 高 | ✅ 2026-06-22 |
-| 3c | globalThis side-channel 縮減 (8 → continuation/EffectCtx 統合可能な 5 を移設) | 高 | ⏳ |
+| 3c | globalThis side-channel 縮減 (調査補正: 計画 5ch のうち 3ch は cross-dispatch/store-drain で globalThis load-bearing→KEEP。安全 2ch=chainStepNoApply→ctx.dyn + choiceBindings→Resume統合。slot 13→11) | 高 | ✅ 2026-06-22 |
 | 3d | UI hooks 分割 (useActionsPanelFlow 921 行 / useEngineDispatch 29 case) | 高 | ⏳ |
 | 4 | 周辺整理 (scripts 棚卸し / specs stale 検証 / _reuse 規約統一 / sessions アーカイブ) | 低 | ⏳ |
 
@@ -38,7 +38,7 @@
 | PA 短縮形コピペ | ~7 箇所 | 1 helper |
 | 手動同期ペア | 4 系統 (AtomVerb/Cost/HOOKS/conds) | テスト or 生成で機械検証 |
 | テスト fixture 定義 | 75 (28+33+10 ファイル) | 3 (tests/helpers/) |
-| globalThis channel | 12 | ≤ 7 |
+| globalThis channel (declare-global slot) | 13 → 11 (3c で 2 減) | ≤ 7 |
 | mutate バイパス直書き | 5 箇所 | 0 |
 
 ## カード wave との挟み込み順 (ユーザー承認 2026-06-12)

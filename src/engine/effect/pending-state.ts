@@ -11,6 +11,11 @@ import type { Effect, EffectCtx } from '../types/index.js';
 
 type Player = 'self' | 'opp';
 
+// Phase 3c (2026-06-22): choice 再開 holder。旧 2 channel (Resume=Effect / 旧 ChoiceBindings=bindings) を
+// 1 globalThis slot (__pendingEffectChoiceResume) に統合した格納形。effect / bindings は
+// 個別に set/take/clear できる (現 API シグネチャ不変)。両 field とも null 可・holder 自体も null 可。
+type ChoiceResumeState = { effect: Effect | null; bindings: Record<string, unknown> | null };
+
 // user_request 20260522_01 #6 BUG-054 + BUG-078 (queue 化): human pick の側チャネル。
 // BUG-078 fix: 単一スロットから FIFO queue に変更。sequence 内に複数 PB pick atom がある
 // 場合 (D08013 a1 step 2 evidenceToHand → step 3 discard 等)、初回 drain で両方を push し、
@@ -23,10 +28,8 @@ declare global {
   // `_clearPendingEffectPickQueue()` を使うこと。
   // eslint-disable-next-line no-var
   var __pendingEffectPickSide: PendingEffectPickSide | null | undefined;
-  // 拡張 5 (chain): substituteAtomPick で humanChooser 候補 0 件のとき true を set。
-  // resolver chain case が step 後に check して、true なら chain break。
-  // eslint-disable-next-line no-var
-  var __chainStepNoApply: boolean | undefined;
+  // Phase 3c (2026-06-22): 旧 chain break 信号 slot (chainStepNoApply) は ctx.dyn.chainStepNoApply へ移設
+  // (intra-produce で resolver chain case のみ読む → globalThis 不要)。本 declare global は削除。
   // BUG-121: human の複数 option choice を pause/surface する side-channel (pick と同型・別スロット)。
   // deckReveal と同じ単一スロット (choice は 1 dispatch に高々 1 個想定)。drain で null クリア。
   // eslint-disable-next-line no-var
@@ -34,13 +37,12 @@ declare global {
   // BUG-121 (残課題解消): choiceResolve 再開時に再 walk すべき effect (engine holder、store へは drain しない)。
   // top-level choice なら choice 効果そのもの。sequence 内 choice なら sequence case が
   // {sequence:[choice, ...post-choice remainder]} に wrap して保持 → pre-choice step の二重実行を防ぐ。
+  // Phase 3c (2026-06-22): BUG-114 の choice bindings (旧 ChoiceBindings channel) を本 holder の
+  // bindings field に統合 (常にペアで set/take/clear されるため。globalThis side-channel -1)。bindings = cutin の
+  // ctx.bindings ($contact.byUid 等) を保持し、choiceResolve 再開時に resume ctx へ復元する
+  // (applyChoiceAndContinuation の bindings:{} で contact binding が落ち、option の $contact.* が未解決になる問題を解消)。
   // eslint-disable-next-line no-var
-  var __pendingEffectChoiceResume: Effect | null | undefined;
-  // BUG-114: cutin 等で choice を surface したときの ctx.bindings (例: $contact.byUid) を保持し、
-  // choiceResolve 再開時に resume ctx へ復元する (applyChoiceAndContinuation の bindings:{} で
-  // contact binding が落ち、選択 option の $contact.* が未解決になる問題を解消)。resume と対で set/clear。
-  // eslint-disable-next-line no-var
-  var __pendingEffectChoiceBindings: Record<string, unknown> | null | undefined;
+  var __pendingEffectChoiceResume: ChoiceResumeState | null | undefined;
   // 2026-06-06 タスクC: optional 決定の配線 (pendingEffectChoice と同型・別スロット)。
   // 「〜してもよい」effect (Effect kind:'optional') を human に「する/しない」で問う side-channel。
   // choice との違いは選択値が boolean (run) であること。drain で null クリア。
@@ -212,19 +214,20 @@ export function _drainPendingEffectChoiceSide(): PendingEffectChoiceSide | null 
 /** slot + 再開 holder をクリア (テスト用 / セッション初期化用。side-channel と holder はペア)。 */
 export function _clearPendingEffectChoiceSide(): void {
   (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide = null;
-  (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = null;
-  (globalThis as { __pendingEffectChoiceBindings?: Record<string, unknown> | null }).__pendingEffectChoiceBindings = null;
+  // Phase 3c: Resume holder を null 化 = effect + bindings 両 field を一括クリア (旧 Bindings channel 統合)。
+  (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume = null;
 }
 
-// --- choice 再開 ctx の bindings 復元 (BUG-114: cutin の $contact.* 保持) ---
+// --- choice 再開 ctx の bindings 復元 (BUG-114: cutin の $contact.* 保持。Phase 3c で Resume holder に統合) ---
 export function setPendingChoiceBindings(b: Record<string, unknown>): void {
-  (globalThis as { __pendingEffectChoiceBindings?: Record<string, unknown> | null }).__pendingEffectChoiceBindings = b;
+  const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
+  (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null }).bindings = b;
 }
 /** choiceResolve 時に bindings を取り出してクリア (applyChoiceAndContinuation が resume ctx へ復元)。 */
 export function _takePendingChoiceBindings(): Record<string, unknown> | null {
-  const g = globalThis as { __pendingEffectChoiceBindings?: Record<string, unknown> | null };
-  const v = g.__pendingEffectChoiceBindings ?? null;
-  g.__pendingEffectChoiceBindings = null;
+  const g = (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume;
+  const v = g?.bindings ?? null;
+  if (g) g.bindings = null; // null-safe: holder 未生成/clear 後でも crash しない (現行 top-level ?? null と byte 等価)
   return v;
 }
 
@@ -233,23 +236,25 @@ export function _peekPendingEffectChoiceSide(): PendingEffectChoiceSide | null {
   return (globalThis as { __pendingEffectChoiceSide?: PendingEffectChoiceSide | null }).__pendingEffectChoiceSide ?? null;
 }
 
-// --- choice 再開用 holder (engine 内のみ、store へ drain しない) ---
+// --- choice 再開用 holder (engine 内のみ、store へ drain しない。Phase 3c で bindings field を統合) ---
 export function setPendingChoiceResume(eff: Effect): void {
-  (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = eff;
+  const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
+  (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null }).effect = eff;
 }
 export function getPendingChoiceResume(): Effect | null {
-  return (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume ?? null;
+  return (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume?.effect ?? null;
 }
-/** choiceResolve 時に holder を取り出してクリア (apply-pick.applyChoiceAndContinuation が使用)。 */
+/** choiceResolve 時に holder (effect) を取り出してクリア (apply-pick.applyChoiceAndContinuation が使用)。 */
 export function _takePendingChoiceResume(): Effect | null {
-  const g = globalThis as { __pendingEffectChoiceResume?: Effect | null };
-  const v = g.__pendingEffectChoiceResume ?? null;
-  g.__pendingEffectChoiceResume = null;
+  const g = (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume;
+  const v = g?.effect ?? null;
+  if (g) g.effect = null; // null-safe: take は apply-pick:236 で desync guard(!resumeEffect)より先に走る→g=null でも graceful return
   return v;
 }
-/** holder をクリア (テスト用 / セッション初期化用)。 */
+/** holder (effect) をクリア (テスト用 / セッション初期化用。bindings は温存)。 */
 export function _clearPendingChoiceResume(): void {
-  (globalThis as { __pendingEffectChoiceResume?: Effect | null }).__pendingEffectChoiceResume = null;
+  const g = (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume;
+  if (g) g.effect = null;
 }
 
 // ===========================================================================

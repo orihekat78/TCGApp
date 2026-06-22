@@ -118,7 +118,7 @@ export function atomFilePopToHand(s: GameState, a: Record<string, unknown>, ctx:
         mutate.hand.add(s, p, [popped.cardId]);
         event.emit(s, 'file:pop', { player: p, popped }, { player: p });
       } else {
-        (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+        (ctx.dyn ??= {}).chainStepNoApply = true; // Phase 3c: chain break 信号を ctx.dyn へ (resolver chain case が読む)
       }
       // BUG-073: effect log (popped が無い場合も log には残す)
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: popped ? popped.cardId : 'none' });
@@ -142,7 +142,7 @@ export function atomFileRemoveTop(s: GameState, a: Record<string, unknown>, ctx:
       if (removedIds.length > 0) {
         mutate.remove.add(s, frP, removedIds);
       } else {
-        (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+        (ctx.dyn ??= {}).chainStepNoApply = true; // Phase 3c: chain break 信号を ctx.dyn へ (resolver chain case が読む)
       }
       if (typeof a.bind === 'string') {
         (ctx.bindings as Record<string, unknown[]>)[a.bind] =
@@ -254,7 +254,7 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
       if (a.fromTop === true) {
         const evList = s.players[p].evidence;
         if (evList.length === 0) {
-          (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+          (ctx.dyn ??= {}).chainStepNoApply = true; // Phase 3c: chain break 信号を ctx.dyn へ (resolver chain case が読む)
           mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', result: 'none' });
           return;
         }

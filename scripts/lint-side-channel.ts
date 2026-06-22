@@ -25,9 +25,8 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // 2026-06-06 タスクC: optional 再開 effect の holder (resolve-picks.ts) -
   // applyOptionalAndContinuation が consume (store/UI へは出ない。UI 露出は別チャネル EffectOptional 側)
   'EffectOptionalResume',
-  // 2026-06-07 BUG-114: cutin choice surface 時の ctx.bindings ($contact.*) 保持 (resolve-picks.ts) -
-  // applyChoiceAndContinuation が resume ctx/queue へ復元 (EffectChoiceResume と対の engine-internal holder。UI へは出ない)
-  'EffectChoiceBindings',
+  // Phase 3c (2026-06-22): 旧 'EffectChoiceBindings' channel は EffectChoiceResume holder の bindings field に
+  // 統合され消滅 (BUG-114 の cutin $contact.* 保持は EffectChoiceResume.bindings が担う)。allowlist entry も除去。
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

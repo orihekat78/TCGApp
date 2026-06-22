@@ -34,8 +34,10 @@ import { B03077 } from '@/cards/ct-p03/B03077';
 import type { EffectCtx, EvidenceCard, GameState } from '@/engine/types';
 
 const ev = (cardId: string, faceUp = false): EvidenceCard => ({ cardId, faceUp, origin: { turn: 1, via: 'effect' } });
-const ctx = (): EffectCtx => ({ source: { player: 'self', area: 'scene', cardId: 'B03077', abilityId: 'a1' }, bindings: {} } as unknown as EffectCtx);
-const chainFlag = () => (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply;
+// Phase 3c: chain break 信号は ctx.dyn 経由 (旧 globalThis __chainStepNoApply)。factory が dyn を pre-init し、
+// chainFlag は捕捉済 ctx の dyn を読む (書込み無しケースで .toBe(false) を維持するため pre-init false)。
+const ctx = (): EffectCtx => ({ source: { player: 'self', area: 'scene', cardId: 'B03077', abilityId: 'a1' }, bindings: {}, dyn: { chainStepNoApply: false } } as unknown as EffectCtx);
+const chainFlag = (c: EffectCtx) => (c.dyn as { chainStepNoApply?: boolean } | undefined)?.chainStepNoApply;
 
 beforeEach(() => {
   event._resetRegistry();
@@ -45,7 +47,6 @@ beforeEach(() => {
   resetDefRegistry();
   registerAll();
   registerTriggeredListener();
-  (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = false;
 });
 
 describe('evidenceToHand fromTop — runAtom 直接駆動 (§1-3)', () => {
@@ -54,25 +55,27 @@ describe('evidenceToHand fromTop — runAtom 直接駆動 (§1-3)', () => {
       d.players.self.hand = [];
       d.players.self.evidence = [ev('E_BOTTOM'), ev('E_TOP')]; // index0=下, 末尾=上
     });
+    const c = ctx();
     const after = produce(s0, (d) => {
-      runAtom(d, 'evidenceToHand', { player: 'self', fromTop: true }, ctx());
+      runAtom(d, 'evidenceToHand', { player: 'self', fromTop: true }, c);
     });
     expect(after.players.self.hand).toEqual(['E_TOP']);            // 最上 E_TOP のみ
     expect(after.players.self.evidence.map((e) => e.cardId)).toEqual(['E_BOTTOM']); // 下は残る
-    expect(chainFlag()).toBe(false);                              // 実効果あり → break しない
+    expect(chainFlag(c)).toBe(false);                            // 実効果あり → break しない (Phase 3c: ctx.dyn)
   });
 
-  it('§2 境界: 証拠0枚 → no-op + __chainStepNoApply=true', () => {
+  it('§2 境界: 証拠0枚 → no-op + chainStepNoApply=true', () => {
     const s0 = produce(createEmptyGameState(), (d) => {
       d.players.self.hand = ['HX'];
       d.players.self.evidence = [];
     });
+    const c = ctx();
     const after = produce(s0, (d) => {
-      runAtom(d, 'evidenceToHand', { player: 'self', fromTop: true }, ctx());
+      runAtom(d, 'evidenceToHand', { player: 'self', fromTop: true }, c);
     });
     expect(after.players.self.hand).toEqual(['HX']);              // 手札 unchanged
     expect(after.players.self.evidence).toHaveLength(0);          // 証拠 unchanged
-    expect(chainFlag()).toBe(true);                               // chain break シグナル
+    expect(chainFlag(c)).toBe(true);                             // chain break シグナル (Phase 3c: ctx.dyn)
   });
 
   it('§3 残り証拠の順序を保つ (top1枚のみ除去)', () => {

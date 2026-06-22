@@ -284,7 +284,7 @@ export function atomCharRemoveSetCard(s: GameState, a: Record<string, unknown>, 
       }
       // max:1 で 0 枚選択 (skip) は uid='$pick' のまま到達 → silent no-op (sceneRemove 同型)。
       // chain の「そうした場合」break は skip 時の continuation-drop / no-candidate 時の
-      // __chainStepNoApply (resolve-picks) が担うため、ここでは立てない。
+      // chainStepNoApply (resolve-picks → ctx.dyn、Phase 3c) が担うため、ここでは立てない。
       if (a.uid === '$pick') {
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRemoveSetCard', result: 'skipped' });
         return;

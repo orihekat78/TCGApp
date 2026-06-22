@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 415
-- **ファイル数**: 7028
+- **ファイル数**: 7033
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -471,6 +471,7 @@
     - `2026-06-22-01-engine-continuation-nest.md` — engine: continuation-nest 修正 (BUG-111 #3) + B06033/B06033P 解禁
     - `2026-06-22-02-open-bugs-resolution.md` — bugs: 未解決 BUG-133〜136 を一括解消 (検証 / 見送り / reorder UI)
     - `2026-06-22-03-refactor-phase-3ab-engine-split.md` — 全体リファクタ Phase 3a/3b — engine 内部の巨大ファイル分割 (挙動 byte-identical)
+    - `2026-06-22-04-refactor-phase-3c-side-channel.md` — 全体リファクタ Phase 3c — globalThis side-channel 縮減 (挙動不変)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -832,6 +833,8 @@
     - `smoke-2026-06-22-2.md` — Smoke 1000戦レポート — smoke-2026-06-22-042830
     - `smoke-2026-06-22-3.json`
     - `smoke-2026-06-22-3.md` — Smoke 1000戦レポート — smoke-2026-06-22-053242
+    - `smoke-2026-06-22-4.json`
+    - `smoke-2026-06-22-4.md` — Smoke 1000戦レポート — smoke-2026-06-22-063909
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1247,7 +1250,9 @@
       - `phase-3a-design.md` — Phase 3a 設計: atom-handlers.ts 分割 (着手前設計レビュー、2026-06-22)
       - `phase-3b-design.md` — Phase 3b 設計: pick-resolution 責務 3 分割 (walk / pending / continuation)
       - `phase-3b-test-inventory.md` — Phase 3b 回帰テスト棚卸し: BUG-054〜121 を責務 3 group へ
+      - `phase-3c-design.md` — Phase 3c 設計 — globalThis side-channel 縮減 (2026-06-22)
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
+      - `review-records-1.md` — リファクタ レビュー記録 1 — Phase 1a〜2c (2026-06-12)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
     - **`shared-classes/`**
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip

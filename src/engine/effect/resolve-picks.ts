@@ -272,8 +272,9 @@ function substituteAtomPick(
   );
   const cands = targetCandidates(state, resolvedTarget as TargetingRef, ctx);
   if (cands.length === 0) {
-    // 拡張 5 (chain): no-candidate を chain break 信号として記録
-    (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+    // 拡張 5 (chain): no-candidate を chain break 信号として記録 (Phase 3c: ctx.dyn 経由。runtime tryRePickFromAtom
+    // 経路では本 ctx = resolver chain ctx と同一参照ゆえ resolver chain case が読む。初期 walk 経路は dead write)
+    (ctx.dyn ??= {}).chainStepNoApply = true;
     return atom as Effect; // no-op fallback
   }
 
@@ -316,8 +317,8 @@ function substituteAtomPick(
       // file kind は face-down で cardId 不明のため skip (face-up にした後 separately 処理)
     }
     if (cardLikeCands.length === 0) {
-      // 拡張 5 (chain): cardLikeCands 0 = pick 不能 → chain break 信号
-      (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+      // 拡張 5 (chain): cardLikeCands 0 = pick 不能 → chain break 信号 (Phase 3c: ctx.dyn 経由、同上)
+      (ctx.dyn ??= {}).chainStepNoApply = true;
       return atom as Effect;
     }
     const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean } };
