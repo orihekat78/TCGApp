@@ -20,93 +20,19 @@ import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
 import type { EffectCtx } from '@/engine/types';
-import type { AbilityCostParams } from '@/engine/flow/index.js';
 import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-resolution.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { event as engineEvent } from '@/engine/event/index.js';
-import { _getResolutionLock } from '@/engine/event/registry.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
-
-type Player = 'self' | 'opp';
-
-/**
- * Phase 8.1+ で扱うメインフェイズ単発 action。
- * - action 宣言 / コンタクト 9 段階等は後続 task で別 dispatcher。
- * - assist / solveCase は flow に専用ラッパが無いため `mutate.partner.*` を直叩き
- *   (`src/ai/policy.ts` と同じ運用)。can-check は move-enumerator と同じ条件を inline。
- */
-/**
- * Phase 8 完全クローズ Commit 2: コンタクト 中の人間プレイヤーの選択肢。
- *  - 'cutin': 手札のカットイン能力カードを選択
- *  - 'disguise': 手札の変装能力カードを選択
- *  - 'pass': 行動しない
- */
-export type ContactChoice =
-  | { kind: 'cutin'; cardId: string }
-  | { kind: 'disguise'; cardId: string }
-  | { kind: 'pass' };
-
-export type EngineAction =
-  | { type: 'reasoning'; uid: string }
-  | { type: 'handUseCard'; player: Player; cardId: string }
-  // Phase 5 advance: SceneSwitch (rules/20) — scene 5 埋まり時のキャラ手札使用
-  | { type: 'handUseCardSwitch'; player: Player; cardId: string; removeUid: string }
-  | { type: 'nextHint'; player: Player; optionalCardId?: string }
-  // Phase 2c (BUG-116 構造解消): cost+ctx は dispatcher 内 (engine.flow.activateXxx) で構築する。
-  // 呼出元は picker 選択値 (costParams) のみ渡す — cost/ctx の caller 構築契約は廃止。
-  | { type: 'partnerAbility'; player: Player; abilId: string; costParams?: AbilityCostParams }
-  | { type: 'declaredAbility'; uid: string; abilId: string; costParams?: AbilityCostParams }
-  | { type: 'assist'; player: Player }
-  | { type: 'solveCase'; player: Player }
-  | { type: 'actionAgainstChar'; byUid: string; targetUid: string }
-  | { type: 'actionAgainstCase'; byUid: string; targetPlayer: Player }
-  // Phase 8 完全クローズ Commit 2: per-step action dispatch
-  // - 既存 actionAgainstChar / actionAgainstCase は CPU vs CPU 用に温存
-  // - 新 dispatch は useContactFlowDriver と組み合わせて人間プレイヤー介入を実現
-  | { type: 'actionDeclareChar'; byUid: string; targetUid: string }
-  | { type: 'actionDeclareCase'; byUid: string; targetPlayer: Player }
-  | { type: 'actionGuard'; actionId: string; guarderUid: string | null }
-  | { type: 'actionContact'; actionId: string; player: Player; choice: ContactChoice }
-  | { type: 'actionAdvance'; actionId: string }
-  | { type: 'actionJudge'; actionId: string }
-  // Phase 8 完全クローズ Commit 3a: ヒラメキ発動 / スキップ決定
-  | { type: 'hiramekiResolve'; choice: 'fire' | 'skip' }
-  // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択
-  | { type: 'misreadResolve'; picks: ReadonlyArray<{ uid: string; x: number }> }
-  // user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択結果
-  // Phase 2c: optional 引数群の required/optional を 4 形態の union で明示。
-  //   - skip:   pickedUid=null 単独 (「選ばない」— n.min===0 任意効果のみ。pending と対の
-  //             continuation も自動 drop (BUG-111)。他引数は同時指定しない)
-  //   - single: pickedUid のみ
-  //   - multi:  pickedUids 必須 (nMax>1 の一括 resolve。D08021 charStackCard 等 multi-pick atom が
-  //             cardIds:'$pick.cardIds' を resolved 配列で受ける。pickedUid は先頭要素)
-  //   - switch: switchRemoveUid 必須 (効果登場 sceneEnter が現場満杯のとき SceneSwitchPickerModal
-  //             で収集した退場キャラ uid。rules/20 スイッチで switchEnter — switch-on-effect-enter)
-  | { type: 'effectPickResolve'; pickedUid: null }
-  | { type: 'effectPickResolve'; pickedUid: string }
-  | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[] }
-  | { type: 'effectPickResolve'; pickedUid: string; switchRemoveUid: string }
-  // cluster14: multi-card sceneEnter (B09010「2枚まで登場」) が現場満杯のとき、UI が overflow 枚数ぶん
-  //   集めた退場 uid 群を pickedUids と同時に運ぶ。switchRemoveUid (単数) は付けない → 既存 discrimination 不変。
-  | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[]; switchRemoveUids: string[] }
-  // BUG-121: human 複数 option choice の選択結果 (enter トリガ等)。pendingEffectChoice を解決する。
-  | { type: 'choiceResolve'; choiceIndex: number }
-  // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
-  | { type: 'optionalResolve'; run: boolean }
-  // BUG-136: deckToBottomBound「好きな順番でデッキの下に移す」の順序確定。order = 底ブロックの新順 (cardId 列)。
-  | { type: 'deckReorderResolve'; order: string[] }
-  // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
-  | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
-  | { type: 'endTurn'; player: Player };
-
-export type DispatchResult =
-  | { ok: true }
-  | { ok: false; reason: 'no-state' | 'not-allowed' | 'engine-error'; detail?: string };
+import { isAllowed } from './useEngineDispatch/can-check.js';
+import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
+// Phase 3d: public 型 (ContactChoice/EngineAction/DispatchResult) は types.ts を barrel 再 export し importer 不変。
+export type { ContactChoice, EngineAction, DispatchResult } from './useEngineDispatch/types.js';
 
 /**
  * Phase 8 完全クローズ Commit 2: actionDeclareChar/Case 直後に
@@ -120,119 +46,6 @@ let _justDeclaredAxId: string | null = null;
 // BUG-109: resolveCardIdFromPickUid + pick build/continuation 実行は engine の
 // apply-pick.ts (applyPickAndContinuation) へ移設し human/AI で共有 (重複排除)。
 
-// ---- can-check (前段ガード) ----
-
-function isAllowed(state: GameState, action: EngineAction): boolean {
-  switch (action.type) {
-    case 'reasoning':
-      return flow.canReason(state, action.uid);
-    case 'handUseCard':
-      return flow.canHandUseCard(state, action.player, action.cardId);
-    case 'handUseCardSwitch':
-      return flow.canHandUseCardSwitch(state, action.player, action.cardId);
-    case 'nextHint':
-      return flow.canStartNextHint(state, action.player);
-    case 'partnerAbility':
-      return flow.canPartnerAbility(state, action.player, action.abilId);
-    case 'declaredAbility':
-      return flow.canDeclaredAbility(state, action.uid, action.abilId);
-    case 'assist': {
-      // src/ai/move-enumerator.ts canAssist と同条件
-      const ps = state.players[action.player];
-      if (ps.partner.state !== 'active') return false;
-      if (ps.partner.location !== 'partner-area') return false;
-      if (state.turnState[action.player].assistedThisTurn) return false;
-      return true;
-    }
-    case 'solveCase': {
-      // src/ai/move-enumerator.ts canSolveCase と同条件
-      const ps = state.players[action.player];
-      if (ps.case.status !== '解決編') return false;
-      if (ps.evidence.length < ps.case.requiredEvidence) return false;
-      if (ps.partner.state !== 'active') return false;
-      if (state.turnState[action.player].assistedThisTurn) return false;
-      return true;
-    }
-    case 'actionAgainstChar':
-      return flow.canActionAgainstChar(state, action.byUid, action.targetUid);
-    case 'actionAgainstCase':
-      return flow.canActionAgainstCase(state, action.byUid, action.targetPlayer);
-    // Phase 8 完全クローズ Commit 2: per-step action dispatch can-check
-    case 'actionDeclareChar':
-      return flow.canActionAgainstChar(state, action.byUid, action.targetUid);
-    case 'actionDeclareCase':
-      return flow.canActionAgainstCase(state, action.byUid, action.targetPlayer);
-    case 'actionGuard': {
-      const ax = flow.action._getContext(action.actionId);
-      if (!ax) return false;
-      if (ax.phase !== 'guard-window') return false;
-      if (action.guarderUid === null) return true; // pass はいつでも可
-      // Task D E4: アクション対象自身はガード不可 (B09028/B09054 Q&A)
-      return flow.guard.canGuard(state, ax.byUid, action.guarderUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
-    }
-    case 'actionContact': {
-      const ax = flow.action._getContext(action.actionId);
-      if (!ax) return false;
-      if (ax.phase !== 'action-1' && ax.phase !== 'action-2' && ax.phase !== 'action-1-redo') return false;
-      if (action.choice.kind === 'pass') return true;
-      if (action.choice.kind === 'cutin') return flow.contact.canCutIn(state, ax, action.player, action.choice.cardId);
-      if (action.choice.kind === 'disguise') return flow.contact.canDisguise(state, ax, action.player, action.choice.cardId);
-      return false;
-    }
-    case 'actionAdvance': {
-      const ax = flow.action._getContext(action.actionId);
-      return !!ax && ax.phase !== 'action-end';
-    }
-    case 'actionJudge': {
-      const ax = flow.action._getContext(action.actionId);
-      return !!ax && ax.phase === 'judge';
-    }
-    case 'hiramekiResolve': {
-      // pendingHirameki が set されているときのみ有効
-      return useGameStateStore.getState().pendingHirameki !== null;
-    }
-    case 'misreadResolve': {
-      // pendingMisread が set されているときのみ有効
-      return useGameStateStore.getState().pendingMisread !== null;
-    }
-    case 'optionalResolve': {
-      // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効
-      return useGameStateStore.getState().pendingEffectOptional !== null;
-    }
-    case 'deckReorderResolve': {
-      // BUG-136: pendingDeckReorder が set されているときのみ有効
-      return useGameStateStore.getState().pendingDeckReorder !== null;
-    }
-    case 'choiceResolve': {
-      // BUG-121: pendingEffectChoice が set されているときのみ有効
-      return useGameStateStore.getState().pendingEffectChoice !== null;
-    }
-    case 'effectPickResolve': {
-      // BUG-054: pendingEffectPick が set されているときのみ有効
-      return useGameStateStore.getState().pendingEffectPick !== null;
-    }
-    case 'setEffectOrder': {
-      // resolution lock 中は禁止
-      const lock = _getResolutionLock();
-      if (lock.locked) return false;
-      // entry が存在 + owner が action.player と一致する場合のみ
-      const entry = state.pendingEffects.find((e) => e.id === action.entryId);
-      if (!entry) return false;
-      return entry.source.player === action.player;
-    }
-    case 'endTurn': {
-      // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
-      if (state.turn.player !== action.player || state.turn.phase !== 'main') return false;
-      // BUG-139 (wave#2 cluster2, 2026-06-12): 必須 pick (nMin>=1) 未解決中はターン終了不可
-      // (rules/05 効果解決中は次の行動に移れない)。従来は終了できてしまい、未解決の必須効果
-      // (例: D08026 t1 解決編化 discard) が黙って永久放置されていた (X8 導入で CPU 側 stall として顕在化)。
-      // 任意 pick (nMin=0) / optional / choice は modal が skip/decline を提供するため対象外 (narrow gate)。
-      const pendingPick = useGameStateStore.getState().pendingEffectPick;
-      if (pendingPick && pendingPick.player === action.player && pendingPick.nMin >= 1) return false;
-      return true;
-    }
-  }
-}
 
 // ---- engine 呼出 (draft 上で in-place mutation) ----
 

@@ -40,3 +40,28 @@ ctx は dispatch 単位で再構築されるため dispatch 境界を跨ぐ値�
 ### commit / 次
 docs 再生成 → 明示 add (.gitignore/.superpowers/.claude/design/reports 除外) → 1 commit → main ff-merge → push (要認可、
 後 `git ls-remote origin main` + CI green 確認)。次: 3d (UI hooks 分割) / 4 (周辺整理) / デザイン刷新。`/clear` 推奨。
+
+---
+
+## セッション㊵ (2026-06-22) — refactor Phase 3d 完了 (UI hooks 分割)
+3c は main 取込み済 (d9223011, push + CI green 確認済)。ユーザー選択で Phase 3d (両ファイル 1 commit) に着手。
+- **実装** (100% byte-identity): useActionsPanelFlow.ts (909) → barrel + useActionsPanelFlow/{cost,enumerators,flows}.ts。
+  useEngineDispatch.ts (677) → barrel + useEngineDispatch/{types,can-check}.ts。runEngineAction + `_justDeclaredAxId` +
+  dispatchEngineAction は barrel KEEP。決定論 codemod (scripts/_phase3d_codemod.mjs、commit 除外) + 独立 HEAD verifier。
+- **着手前フルパネルレビュー** (opus 4 lens + critic, 690k, BLOCKER 0) で scope 補正 → runEngineAction 分離 + EngineAction
+  family 型化を **新 Phase 3e へ繰り延べ** (理由: `_justDeclaredAxId` の cross-module shared-mutable 化 [BUG-034 category] /
+  両 switch に default:never ガード無く tsc が型化 member 脱漏を捕捉不能)。本 phase は byte-identity に純化。
+- **ゲート全 GREEN**: tsc0 / vitest 2783+1skip / smoke winsA=498 / e2e 26 / eslint stash-diff added=0 removed=0 (125) /
+  規約 lint 8 errors=0 / slot 11 不変 / side-channel 12ch 不変。
+- 途中 **opus classifier の長時間障害** (~1h) で commit がブロック、ScheduleWakeup で再試行し復帰後に完了。
+
+### 学び㊵
+- module-let の produce 境界越え side-channel を cross-module 分離するのは挙動不変でも convention 逸脱 (BUG-034 は
+  そのカテゴリを globalThis 化で回避済) → writer/reader 同居 KEEP が最小リスク。分離する場合は globalThis 化 + lint 整合とセット。
+- family union「型化」は tsc 単独では member 脱漏を捕捉できない (switch に default:never 必須 / noImplicitReturns 不在)。
+  型化する phase では switch 網羅性ガードを同時導入する (3e)。
+- 抽出先専用 import は barrel から除去要 (noUnusedLocals が即捕捉)。file-private の export 昇格は sub-file 限定で barrel 非公開。
+
+### commit㊵ / 次
+明示 add (7 src + sub-files + auto docs + 記録 md、_phase3d_codemod.mjs と .claude/reports/_phase3d は除外) → 1 commit →
+main ff-merge → push → CI green。次: **Phase 3e** (useEngineDispatch 続き) / Phase 4 (周辺整理) / デザイン刷新。`/clear` 推奨。

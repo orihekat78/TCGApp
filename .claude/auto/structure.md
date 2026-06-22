@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 415
-- **ファイル数**: 7033
+- **ディレクトリ数**: 418
+- **ファイル数**: 7055
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -472,6 +472,7 @@
     - `2026-06-22-02-open-bugs-resolution.md` — bugs: 未解決 BUG-133〜136 を一括解消 (検証 / 見送り / reorder UI)
     - `2026-06-22-03-refactor-phase-3ab-engine-split.md` — 全体リファクタ Phase 3a/3b — engine 内部の巨大ファイル分割 (挙動 byte-identical)
     - `2026-06-22-04-refactor-phase-3c-side-channel.md` — 全体リファクタ Phase 3c — globalThis side-channel 縮減 (挙動不変)
+    - `2026-06-22-05-refactor-phase-3d-ui-hooks-split.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -482,6 +483,18 @@
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
   - **`reports/`** — smoke (AI vs AI) 実行レポート・ベンチマーク結果
+    - **`_phase3d/`**
+      - `e2e-after.txt`
+      - `eslint-after-multiset.json`
+      - `eslint-after.json`
+      - `eslint-head-multiset.json`
+      - `eslint-head.json`
+      - `HEAD-useActionsPanelFlow.ts` — Phase 8 Task 8.5: ActionsPanel 操作フローのオーケストレーション
+      - `HEAD-useEngineDispatch.ts` — Phase 8 Task 8.1: UI → engine action ディスパッチ基盤
+      - `smoke-after.txt`
+      - `smoke-check.txt`
+      - `vitest-after.txt`
+    - `_phase3d-vitest-baseline.txt`
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
@@ -835,6 +848,8 @@
     - `smoke-2026-06-22-3.md` — Smoke 1000戦レポート — smoke-2026-06-22-053242
     - `smoke-2026-06-22-4.json`
     - `smoke-2026-06-22-4.md` — Smoke 1000戦レポート — smoke-2026-06-22-063909
+    - `smoke-2026-06-22-5.json`
+    - `smoke-2026-06-22-5.md` — Smoke 1000戦レポート — smoke-2026-06-22-075613
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1251,6 +1266,7 @@
       - `phase-3b-design.md` — Phase 3b 設計: pick-resolution 責務 3 分割 (walk / pending / continuation)
       - `phase-3b-test-inventory.md` — Phase 3b 回帰テスト棚卸し: BUG-054〜121 を責務 3 group へ
       - `phase-3c-design.md` — Phase 3c 設計 — globalThis side-channel 縮減 (2026-06-22)
+      - `phase-3d-design.md` — Phase 3d 設計 — UI hooks 分割 (2026-06-22、着手前レビュー反映済)
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
       - `review-records-1.md` — リファクタ レビュー記録 1 — Phase 1a〜2c (2026-06-12)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
@@ -4977,6 +4993,7 @@
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
+  - `scheduled_tasks.lock`
   - `settings.json` — Claude Code 設定 (権限・hooks 等)
 - **`.github/`**
   - **`workflows/`**
@@ -5251,6 +5268,7 @@
     - `sweep-select-window.cjs`
     - `sweep-window2.cjs`
     - `verify-clone-identity.cjs`
+  - `_phase3d_codemod.mjs`
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
   - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):
@@ -6936,8 +6954,15 @@
       - `hiramekiDemoState.ts` — 2026-05-26 ヒラメキ効果検証 demo 用 GameState fixture
       - `sampleGameState.ts` — Phase 7 demo wiring: ブラウザ表示用サンプル GameState fixture
     - **`hooks/`**
+      - **`useActionsPanelFlow/`**
+        - `cost.ts` — useActionsPanelFlow/cost.ts — Phase 3d 分割 (cost-builder /…
+        - `enumerators.ts` — useActionsPanelFlow/enumerators.ts — Phase 3d 分割 (候補列挙 /…
+        - `flows.ts` — useActionsPanelFlow/flows.ts — Phase 3d 分割 (run*Flow オーケストレーション, body 無改変移送, 202…
+      - **`useEngineDispatch/`**
+        - `can-check.ts` — useEngineDispatch/can-check.ts — Phase 3d 分割 (isAllowed 前段ガード, body 無改変移送, 2026-…
+        - `types.ts` — useEngineDispatch/types.ts — Phase 3d 分割 (EngineAction / ContactChoice /…
       - `.gitkeep`
-      - `useActionsPanelFlow.ts` — Phase 8 Task 8.5: ActionsPanel 操作フローのオーケストレーション
+      - `useActionsPanelFlow.ts` — useActionsPanelFlow — Phase 3d barrel (cost / enumerators /…
       - `useCardExpandModal.ts` — Round 4l (BUG-001): カード拡大 modal の state 管理 hook
       - `useCardImage.ts` — useCardImage — cardId から公式 CDN 画像 URL を構築する React フック (Phase 9-C)
       - `useCardOrientation.ts` — useCardOrientation — cardId 画像の natural サイズから向きを自動判定するフック (Phase 9-D)

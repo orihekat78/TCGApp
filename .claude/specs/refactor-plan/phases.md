@@ -55,7 +55,7 @@
   choiceIndex) のみの最小 payload — 人間選択値は engine 内で再現不可のため action 引数に残す
 - 同型契約 (effectPickResolve の optional 引数群) は 4 形態 union (skip/single/multi/switch) で明示
 
-## 3a〜3d (高リスク群 — 着手前に個別設計レビュー必須)
+## 3a〜3e (高リスク群 — 着手前に個別設計レビュー必須)
 
 - 3a (✅ 2026-06-22): atom-handlers 1828 行を barrel + _shared + core/scene/char/picks/**misc** に分割
   (計画 4→5 に補正: core に lifecycle/control verb を含めると <500 超過のため misc 分離)。
@@ -73,7 +73,18 @@
   __pendingEffectChoiceResume holder の {effect,bindings} 格納形に統合 (pending-state.ts 内部のみ・export 不変・null-safe)。
   declare-global slot 13→11 / side-channel lint 13→12。着手前フルパネル設計レビュー (opus 4 lens) で BLOCKER 1
   (null-unsafe take/clear) + MAJOR 群を解消。詳細 phase-3c-design.md / 下記レビュー記録。
-- 3d: useActionsPanelFlow の enum/run 分離 + cost-builder 抽出、useEngineDispatch の action union 型化
+- 3d (✅ 2026-06-22): UI hooks 分割。**100% byte-identity** (関数 body 無改変移送、export 昇格のみ)。
+  useActionsPanelFlow.ts (909行) → barrel + useActionsPanelFlow/{cost(label/cost-builder),enumerators(enum*/can*),
+  flows(run* 9)}.ts。useEngineDispatch.ts (677行) → barrel + useEngineDispatch/{types(EngineAction/ContactChoice/
+  DispatchResult/Player),can-check(isAllowed)}.ts。旧 path を barrel として残し importer (Playmat + driver + modal +
+  ~30 test) 無改変。**着手前レビュー (opus 4 lens + critic, 690k, BLOCKER 0) で scope 補正**: ① runEngineAction 分離は
+  `_justDeclaredAxId` (produce 境界越え module-let) を cross-module shared-mutable 化する (BUG-034 が globalThis 化で回避
+  した category) ため barrel に **KEEP** ② EngineAction family「型化」は両 switch に default:never ガードが無く
+  noImplicitReturns 不在で member 脱落を tsc が捕捉できない → ①② とも **新 Phase 3e へ繰り延べ**。決定論 codemod + 独立
+  HEAD verifier (移送 body md5 突合)。詳細 phase-3d-design.md / 下記レビュー記録。
+- 3e: useEngineDispatch 続き (runEngineAction 分離 + `_justDeclaredAxId` の globalThis or accessor 化 + EngineAction を
+  family サブ union に「型化」 + 両 switch [isAllowed/runEngineAction] に default:never exhaustiveness ガード追加)。
+  ガード追加は body 改変ゆえ byte-identity 不可 → switch 網羅性ゲートとセットで設計。挙動隣接編集の敵対的反証必須。
 
 ## 4. 周辺整理
 

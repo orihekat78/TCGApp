@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `a1748001586e`
+> Source hash: `76576e9a1c4a`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **117** ファイル（[全体 index](./index.md)）
+このグループ: **122** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (15)
 
@@ -96,7 +96,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (49)
+## その他 (54)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -104,6 +104,9 @@
 | [`src/ui/fixtures/hiramekiDemoState.ts`](../../../src/ui/fixtures/hiramekiDemoState.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/fixtures/sampleGameState.ts`](../../../src/ui/fixtures/sampleGameState.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow.ts`](../../../src/ui/hooks/useActionsPanelFlow.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
+| [`src/ui/hooks/useActionsPanelFlow/cost.ts`](../../../src/ui/hooks/useActionsPanelFlow/cost.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useActionsPanelFlow/enumerators.ts`](../../../src/ui/hooks/useActionsPanelFlow/enumerators.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useActionsPanelFlow/flows.ts`](../../../src/ui/hooks/useActionsPanelFlow/flows.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCardExpandModal.ts`](../../../src/ui/hooks/useCardExpandModal.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCardImage.ts`](../../../src/ui/hooks/useCardImage.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCardOrientation.ts`](../../../src/ui/hooks/useCardOrientation.ts) | _(参照なし)_ |
@@ -117,6 +120,8 @@
 | [`src/ui/hooks/useEffectPickFlowDriver.ts`](../../../src/ui/hooks/useEffectPickFlowDriver.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEffectStack.ts`](../../../src/ui/hooks/useEffectStack.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEngineDispatch.ts`](../../../src/ui/hooks/useEngineDispatch.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
+| [`src/ui/hooks/useEngineDispatch/can-check.ts`](../../../src/ui/hooks/useEngineDispatch/can-check.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useEngineDispatch/types.ts`](../../../src/ui/hooks/useEngineDispatch/types.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEvidence.ts`](../../../src/ui/hooks/useEvidence.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useEvidenceFlipPicker.ts`](../../../src/ui/hooks/useEvidenceFlipPicker.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ui/hooks/useFile.ts`](../../../src/ui/hooks/useFile.ts) | _(参照なし)_ |

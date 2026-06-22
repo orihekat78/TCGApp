@@ -58,3 +58,21 @@
   declare-global slot **13→11** / side-channel lint **13→12**。
   教訓: side-channel を移設可能と判断する前に **dispatch 境界を跨ぐか** を reader の ctx-identity で確定する
   (cross-dispatch holder は ctx 再構築で ctx.dyn 不可)。intra-produce flag は ctx.dyn が globalThis と同一共有意味。
+
+- **3d (2026-06-22)** UI hooks 分割 (useActionsPanelFlow 909行 / useEngineDispatch 677行)。**決定論 codemod** で
+  barrel + サブファイル化、関数 body **無改変移送** (export 昇格のみ decl 行に `export ` 付加)。useActionsPanelFlow →
+  cost/enumerators/flows、useEngineDispatch → types/can-check (runEngineAction + `_justDeclaredAxId` + dispatch は barrel KEEP)。
+  **着手前フルパネル設計レビュー** (Workflow opus 4 lens + critic, 690k tok): **BLOCKER 0**。INVARIANCE=INVARIANCE-HOLDS
+  (accessor 案も挙動不変と実証) / SURFACE=APPROVE / CODEMOD・SCOPE・critic=CONCERNS。MAJOR 3 を受け **scope を安全側に補正**:
+  ① runEngineAction 分離は `_justDeclaredAxId` (produce 境界越え module-let) を cross-module shared-mutable 化し BUG-034
+  category に該当 → barrel KEEP ② EngineAction family 型化は両 switch に default:never ガード無く tsc が member 脱落を
+  捕捉不能 → ①② を **新 Phase 3e へ繰り延べ**、本 phase は **100% byte-identity** に純化。critic 指摘の検証ゲート格上げ
+  (独立 HEAD verifier) も反映。設計の誤根拠 (_drainPending* singleton 援用) は実態 (同期単一呼出局所性 + Zustand handoff) に訂正。
+  **実装後レビュー** (opus 1 agent): re-export surface / byte-identity / barrel-KEEP / import 配線 / private 漏れ の 5 観点。
+  決定論検証: 独立 verifier (HEAD slice md5 突合) **PASS** (全移送 body byte-identical) + surface 検証 (旧公開 17+5 漏れ 0 /
+  private 漏れ 0) + B 行被覆完全。挙動不変ゲート (全 GREEN): tsc **0** / full vitest **2783 pass+1skip** (baseline 一致) /
+  smoke:1000 **winsA=498** (timeouts0/exceptions0) / e2e 3spec **26 pass** / eslint **stash-diff added=0 removed=0** (125,77e/48w) /
+  規約 lint 8 本 errors=0 / slot **11 不変** / side-channel **12ch 不変** (_justDeclaredAxId は `__pending` 接頭辞外で非計数)。
+  教訓: ① 抽出先専用 import (AbilityCostParams/_getResolutionLock) は barrel から除去要 (noUnusedLocals が捕捉)。
+  ② file-private の export 昇格は sub-file 限定・barrel 非公開で公開 surface を広げない (3b 方針)。
+  ③ produce 境界越え module-let の cross-module 化は安全でも convention 逸脱 → 同居 KEEP が最小リスク。

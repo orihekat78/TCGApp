@@ -27,7 +27,8 @@
 | 3a | atom-handlers.ts 分割 (1828 行 → barrel + _shared + core/scene/char/picks/misc) | 高 | ✅ 2026-06-22 |
 | 3b | pick-resolution 責務 3 分割 (walk=resolve-picks / pending=pending-state / continuation=apply-pick) | 高 | ✅ 2026-06-22 |
 | 3c | globalThis side-channel 縮減 (調査補正: 計画 5ch のうち 3ch は cross-dispatch/store-drain で globalThis load-bearing→KEEP。安全 2ch=chainStepNoApply→ctx.dyn + choiceBindings→Resume統合。slot 13→11) | 高 | ✅ 2026-06-22 |
-| 3d | UI hooks 分割 (useActionsPanelFlow 921 行 / useEngineDispatch 29 case) | 高 | ⏳ |
+| 3d | UI hooks 分割 (useActionsPanelFlow→barrel+cost/enumerators/flows / useEngineDispatch→barrel+types/can-check、100% byte-identity) | 高 | ✅ 2026-06-22 |
+| 3e | useEngineDispatch 続き (runEngineAction 分離 + _justDeclaredAxId globalThis/accessor 化 + EngineAction family 型化 + 両 switch に default:never ガード追加) | 高 | ⏳ |
 | 4 | 周辺整理 (scripts 棚卸し / specs stale 検証 / _reuse 規約統一 / sessions アーカイブ) | 低 | ⏳ |
 
 ## 数値ターゲット
