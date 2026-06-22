@@ -277,6 +277,14 @@ export function applyMove(state: GameState, move: Move, byPlayer: Player): void 
       // caller (playTurn) がループを抜ける
       return;
     }
+    // Phase 3f: Move union の member 脱落を compile-time 検出 (noImplicitReturns 無効ゆえ silent fall-through を塞ぐ)。
+    // 11 member 全網羅で到達不能。throw ではなく void 変種 — 呼出 policy.ts:412 produce() は try 外であり
+    // (mcts/mcts-tree/replay の他 3 site は try 内)、将来到達可能化した際に throw だと stepTurn を貫通するため (Phase 3e と同判断)。
+    default: {
+      const _exhaustive: never = move;
+      void _exhaustive;
+      return;
+    }
   }
 }
 

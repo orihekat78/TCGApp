@@ -55,7 +55,7 @@
   choiceIndex) のみの最小 payload — 人間選択値は engine 内で再現不可のため action 引数に残す
 - 同型契約 (effectPickResolve の optional 引数群) は 4 形態 union (skip/single/multi/switch) で明示
 
-## 3a〜3e (高リスク群 — 着手前に個別設計レビュー必須)
+## 3a〜3f (高リスク群 — 着手前に個別設計レビュー必須)
 
 - 3a (✅ 2026-06-22): atom-handlers 1828 行を barrel + _shared + core/scene/char/picks/**misc** に分割
   (計画 4→5 に補正: core に lifecycle/control verb を含めると <500 超過のため misc 分離)。
@@ -85,8 +85,8 @@
 - 3e (✅ 2026-06-22): useEngineDispatch 続き → **着手前フルパネル (opus 4 lens, 4/4 一致 minimal)** で scope 純化。当初 4
   sub-goal のうち #4 (両 switch [runEngineAction/isAllowed] に default:never ガード) **のみ ADOPT** (additive/compile-time、tsc が
   24/24 網羅を formal proof)。#1 分割/#2 axId globalThis化=**DROP** (490<500・slot逆行・BUG-034)、#3 family型化=**SUBSUMED**。詳細 phase-3e-design.md / 下記。
-- 3f (⏳): engine `applyMove` (policy.ts:209、Move 11-member union、default 0) が UI と同型の silent-gap (3e 水平展開発見)。
-  骨格凍結ゆえ別 phase (engine touch 可 or 骨格バグ修正例外) で default:never 追加。
+- 3f (✅ 2026-06-22): engine `applyMove` (policy.ts:209、Move 11-member) に default:never (void 変種) 追加。**着手前 opus 3 lens レビュー** (BLOCKER 0/GO)。負テスト TS2322 + numstat 8add/0del。水平展開で resolve-picks.ts:431 の同型 gap → Phase 3g 切出し。詳細 phase-3f-design.md。
+- 3g (⏳): resolve-picks.ts:431 `switch(effect.kind)` の silent passthrough + `case 'chain'` 欠落 (un-walked) を guard 化。default が reachable passthrough ゆえ real-logic 課題 ([BUG-152](../../bugs/BUG-152.md))。
 
 ## 4. 周辺整理
 

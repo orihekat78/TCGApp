@@ -22,3 +22,21 @@
 ### commit㊶ / 次
 明示 add (2 src + 記録 md + auto docs、.gitignore/.superpowers/.claude/design/reports 除外) → 1 commit → main ff-merge →
 push → CI green。次: **Phase 3f** (engine applyMove ガード、骨格 touch) / Phase 4 (周辺整理) / デザイン刷新。`/clear` 推奨。
+
+## セッション㊷ (2026-06-22) — refactor Phase 3f 完了 (engine applyMove exhaustiveness ガード)
+㊶ (Phase 3e) は main 取込み済 (83d2542e、CI green)。ユーザー選択で Phase 3f に着手。branch `refactor/phase-3f`。
+- **着手前設計レビュー** (Workflow opus 3 lens [behavior-invariance / 骨格凍結 admissibility / 水平展開 completeness] + synthesis、
+  367k tok、**BLOCKER 0**、**GO**)。骨格 touch ゆえ「動作不変な内部最適化」例外を明示し挙動不変を敵対的反証。
+- **実装** (additive/compile-time-only): `applyMove` (src/ai/policy.ts:209、void) の switch 末尾 (endTurn case 後) に
+  `const _exhaustive: never = move; void _exhaustive; return;` を追加。Move 11-member 全網羅で default 到達不能=runtime 完全不変。
+  **throw 不使用** (呼出 4 site のうち policy.ts:412 が produce() 内 try 外、throw だと uncaught 化で挙動破壊。3e 同判断)。
+- **水平展開で新バグ発見**: resolve-picks.ts:431 `switch(effect.kind)` が `case 'chain'` を欠き top-level chain を
+  `default: return effect` で silent passthrough (un-walked)。resolver.ts:78 は handle。構造非対称は機械確認済・runtime 影響未確認
+  → **Phase 3g** (real-logic 課題) + **BUG-152** (status 未確認) に切出し。fold せず。
+- **ゲート全 GREEN**: tsc0 (両 tsconfig) + 負テスト (reasoning 削除→TS2322@policy.ts(280,13)→復元) / vitest 2783+1skip /
+  smoke winsA=498 OK / e2e 26 (初回 1fail は vitest+smoke 並走 CPU contention flake、単体+クリーン再走で green) /
+  eslint 125 (added0) / 規約 lint 8 errors=0 / numstat 8add/0del。
+
+### commit㊷ / 次
+明示 add (1 src + 記録 md 群 + BUG-152 + auto docs、.gitignore/.superpowers/.claude/design/reports 除外) → 1 commit →
+main ff-merge → push → CI green。次: **Phase 3g** (resolve-picks chain guard、BUG-152) / Phase 4 (周辺整理) / デザイン刷新。`/clear` 推奨。

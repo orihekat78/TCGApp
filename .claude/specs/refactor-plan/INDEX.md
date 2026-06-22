@@ -29,7 +29,8 @@
 | 3c | globalThis side-channel 縮減 (調査補正: 計画 5ch のうち 3ch は cross-dispatch/store-drain で globalThis load-bearing→KEEP。安全 2ch=chainStepNoApply→ctx.dyn + choiceBindings→Resume統合。slot 13→11) | 高 | ✅ 2026-06-22 |
 | 3d | UI hooks 分割 (useActionsPanelFlow→barrel+cost/enumerators/flows / useEngineDispatch→barrel+types/can-check、100% byte-identity) | 高 | ✅ 2026-06-22 |
 | 3e | useEngineDispatch exhaustiveness (着手前4lens一致 minimal。両 switch default:never ガード**のみ**採用[additive]。#1分割/#2 axId globalThis化=DROP[490<500/slot逆行/BUG-034]・#3 family型化=SUBSUMED) | 低 | ✅ 2026-06-22 |
-| 3f | engine applyMove (policy.ts:209/Move 11-member/default 0) 同型 silent-gap に default:never (3e 水平展開発見、骨格凍結ゆえ別phase) | 中 | ⏳ |
+| 3f | engine applyMove (policy.ts:209/Move 11-member) に default:never [void変種・additive]。着手前 opus 3 lens (BLOCKER0/GO)・負テストTS2322・numstat 8/0。水平展開で resolve-picks.ts:431 同型gap発見→3g | 中 | ✅ 2026-06-22 |
+| 3g | resolve-picks.ts:431 switch(effect.kind) silent passthrough + case'chain'欠落 (top-level chain un-walked) を guard化。default reachable ゆえ real-logic ([BUG-152](../../bugs/BUG-152.md)) | 中 | ⏳ |
 | 4 | 周辺整理 (scripts 棚卸し / specs stale 検証 / _reuse 規約統一 / sessions アーカイブ) | 低 | ⏳ |
 
 ## 数値ターゲット

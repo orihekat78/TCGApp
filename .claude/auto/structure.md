@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 417
-- **ファイル数**: 7048
+- **ファイル数**: 7053
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -291,6 +291,7 @@
     - `BUG-146.md`
     - `BUG-150.md`
     - `BUG-151.md`
+    - `BUG-152.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -474,6 +475,7 @@
     - `2026-06-22-04-refactor-phase-3c-side-channel.md` — 全体リファクタ Phase 3c — globalThis side-channel 縮減 (挙動不変)
     - `2026-06-22-05-refactor-phase-3d-ui-hooks-split.md`
     - `2026-06-22-06-refactor-phase-3e-exhaustiveness-guards.md`
+    - `2026-06-22-07-refactor-phase-3f-applymove-guard.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -841,6 +843,8 @@
     - `smoke-2026-06-22-5.md` — Smoke 1000戦レポート — smoke-2026-06-22-075613
     - `smoke-2026-06-22-6.json`
     - `smoke-2026-06-22-6.md` — Smoke 1000戦レポート — smoke-2026-06-22-111331
+    - `smoke-2026-06-22-7.json`
+    - `smoke-2026-06-22-7.md` — Smoke 1000戦レポート — smoke-2026-06-22-115036
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1260,6 +1264,7 @@
       - `phase-3c-design.md` — Phase 3c 設計 — globalThis side-channel 縮減 (2026-06-22)
       - `phase-3d-design.md` — Phase 3d 設計 — UI hooks 分割 (2026-06-22、着手前レビュー反映済)
       - `phase-3e-design.md` — Phase 3e 設計 — useEngineDispatch 続き / exhaustiveness ガード (2026-06-22、着手前フルパネルレビュー…
+      - `phase-3f-design.md` — Phase 3f 設計 — engine applyMove exhaustiveness ガード (2026-06-22、着手前設計レビュー反映済)
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
       - `review-records-1.md` — リファクタ レビュー記録 1 — Phase 1a〜2c (2026-06-12)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)

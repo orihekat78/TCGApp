@@ -91,3 +91,9 @@
   (policy.ts:209) → 骨格凍結ゆえ **Phase 3f** に trace (水平展開義務)。ⓑ scope 反証 lens が convergence hazard (deferred sub-goal
   の phantom 化) を指摘 → DROP/SUBSUMED を doc 明記し phase を clean close。ⓒ additive 改変は byte-identity verifier 不適 →
   `git diff --numstat` deletions=0 + 追加 hunk=default ブロックのみ で機械検証。
+
+- **3f (2026-06-22)** engine `applyMove` (policy.ts:209) に default:never (void 変種)。3e engine 同型 silent-gap の水平展開。
+  **着手前 opus 3 lens+synthesis** (367k、**BLOCKER 0**、GO): invariance/骨格凍結(例外3「動作不変な内部最適化」)=ADOPT-AS-IS、
+  completeness=ADOPT-WITH-CHANGES → resolve-picks.ts:431 同型未ガード switch (`case 'chain'` 欠落で top-level chain un-walked) を **Phase 3g/[BUG-152](../../bugs/BUG-152.md)** に切出し。
+  void 理由: 呼出 4 site のうち policy.ts:412 が try 外 (3e 同判断)。ゲート全 GREEN: tsc0(両)+負テスト(reasoning削除→TS2322@(280,13)→復元) /
+  vitest 2783+1skip / smoke winsA=498 / e2e 26 (初回 contention flake→再走 green) / eslint 125(added0) / 規約8本0 / numstat 8add/0del。詳細 phase-3f-design.md。
