@@ -73,3 +73,13 @@
   ゲート全 GREEN: tsc0(両)+負テスト(case'chain'削除→TS2322@(574,13)→復元) / vitest 2783+1skip / smoke winsA=498(exc0/baselineOK) /
   e2e 26 / eslint 125(added0) / 規約lint8本0 / numstat **16add/1del** (additive でなく default アーム再構成、挙動不変は実行差分で担保)。
   詳細 phase-3g-design.md / [BUG-152](../../bugs/BUG-152.md) (活性バグ無のため latent 化・status 据置)。
+
+- **4 (2026-06-22)** 周辺整理 (engine 不触・低リスク)。**着手前 grounded 調査 = Workflow opus 4 lens 並列** (scripts分類 /
+  specs staleness / _reuse comment / sessions・reports policy、358k tok)。**計画 stale を 2 点是正**: ① 「survey 4本」→ 実際は
+  one-off 14本 (survey9 + taskA-wave1/2/3-specs + wf-gate5-batch4 + fix-bug140) を grounded 無参照確認の上 `scripts/_archive/` へ git mv
+  (HARD-KEEP: taskA-validate-specs.cjs は tests/engine/sync-taskA-whitelists.test.ts:36 が読込)。scripts/tsconfig.json に `exclude:["_archive"]`。
+  ② 「specs 2026-05-11 stale 検証→archive」→ 13本は **全 CURRENT_KEEP** (live `// spec` 参照 + INDEX/HUB/tests) ゆえ **archive せず**。
+  `_reuse/index.ts` ヘッダ de-churn (294→「正準=REUSE_CARDS 配列長、現802枚」、コード不変)。reports=**policy E** (ユーザー裁定:
+  dated smoke を gitignore + baseline allowlist + 既存 298 を `reports/_archive/` へ git mv 履歴保持)、sessions=現状維持 (ユーザー裁定)。
+  **1 lens 敵対レビュー** (opus) で E (spec の移動 script パスリンク切れ 2件→`_archive/` パスに修正) + F (structure.md 再生成必須=docs で解消) を解消。
+  ゲート全 GREEN: tsc0(両) / vitest 2783+1skip / smoke winsA=498(exc0/baselineOK) / e2e 26 / eslint 125(added0) / 規約lint8本0。

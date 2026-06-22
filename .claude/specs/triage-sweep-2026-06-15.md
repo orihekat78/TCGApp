@@ -4,7 +4,7 @@
 旧 [engine-gate-triage-2026-06-15.md](engine-gate-triage-2026-06-15.md) は次クラスタ選定 ranking。本ファイルは **全 universe スイープ**。
 
 ## 方法 (2層 + loop-until-dry)
-1. **決定論スイープ** `scripts/survey/sweep-2026-06-15.ts` (再現可能): catalog(TSV) − live ALL_CARDS → 残カードを
+1. **決定論スイープ** `scripts/_archive/survey/sweep-2026-06-15.ts` (再現可能): catalog(TSV) − live ALL_CARDS → 残カードを
    signature クラスタ化 → 現行 engine gate 一覧で再分類。出力 `.tmp/sweep/landscape.json` + `certify-queue.json`。HEURISTIC。
 2. **per-card certify** `scripts/wf-certify.mjs` (opus grounding→敵対 refute) = 真の正本。grounding は **`.tmp/taskA/certify-brief.md`
    (現行engine版を新規作成、cap-map 2026-06-06 の stale ⛔ を訂正)**。
@@ -36,7 +36,7 @@
 | ★usage-restriction (cutin/変装/event ban) / untargetable / next-hint-source | ~20 | ~30 | S | continuous-aura以外のban機構無 等 |
 | 長尾 ~20 niche gate (各1-6sig) | ~60 | ~80 | mixed | evidence-peek/souza-discovered/play-event/deck-choose/mustGuard/janken/MR-filter/color-override 等 |
 
-(完全データ `.tmp/sweep/landscape.json`、再生成 `npx tsx scripts/survey/sweep-2026-06-15.ts`)
+(完全データ `.tmp/sweep/landscape.json`、再生成 `npx tsx scripts/_archive/survey/sweep-2026-06-15.ts`)
 
 ## certify 結果 (windows 1-4 = 120 rep → green 32 / yellow 88)
 - **確定 green (即 codegen 可, 25枚)**: B01018 B01062 B01066 B02003 B02005 B02019 B02044 B02077 B03005 B03025 B03086 B03089 B04014 B04017 B05006 B05020 B05046 B06011 B06013 B07004 B07020 B07023 B07098 D09004 PR060
@@ -78,6 +78,6 @@
   ⚠ **重大教訓**: 決定論 green候補 20 → 出荷 10 (実効 ~50%)。**certify+敵対verify だけでは BUG-111 系
   (candidate在+human-decline で chain-gated continuation drop) を見落とす — gate5 実機 decoy が最終ゲート** (B05028 で実証)。
   なお gate サンプルは省略し green-only 20 を抽出 (既知 yellow 再確認の ROI 低、cost 上限内で ship yield 最大化)。
-- 次 window 抽出: `node scripts/survey/sweep-window2.cjs <greenN>` (done除外、green層化) → id配列を wf-certify に渡す。
+- 次 window 抽出: `node scripts/_archive/survey/sweep-window2.cjs <greenN>` (done除外、green層化) → id配列を wf-certify に渡す。
   新 yellow が暴く gate を `sweep-2026-06-15.ts` の GATES に regex 還元 → 再実行で landscape 更新 (loop-until-dry)。
   **新規 gate (B03056 由来)**: `conditional-gated-optional surfacing` (conditional.then 内 optional が if 評価前に eager surface)。

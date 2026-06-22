@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 417
-- **ファイル数**: 7057
+- **ディレクトリ数**: 419
+- **ファイル数**: 7061
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -477,6 +477,7 @@
     - `2026-06-22-06-refactor-phase-3e-exhaustiveness-guards.md`
     - `2026-06-22-07-refactor-phase-3f-applymove-guard.md`
     - `2026-06-22-08-refactor-phase-3g-resolve-picks-chain-guard.md`
+    - `2026-06-22-09-refactor-phase-4-housekeeping.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -487,309 +488,310 @@
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
   - **`reports/`** — smoke (AI vs AI) 実行レポート・ベンチマーク結果
+    - **`_archive/`**
+      - `smoke-2026-05-17-2.json`
+      - `smoke-2026-05-17-2.md` — Smoke 1000戦レポート — smoke-2026-05-17-103950
+      - `smoke-2026-05-17-3.json`
+      - `smoke-2026-05-17-3.md` — Smoke 1000戦レポート — smoke-2026-05-17-141425
+      - `smoke-2026-05-17-4.json`
+      - `smoke-2026-05-17-4.md` — Smoke 1000戦レポート — smoke-2026-05-17-142343
+      - `smoke-2026-05-17-5.json`
+      - `smoke-2026-05-17-5.md` — Smoke 1000戦レポート — smoke-2026-05-17-143646
+      - `smoke-2026-05-17-phase9b.json`
+      - `smoke-2026-05-17-phase9b.md` — Smoke 1000戦レポート — smoke-2026-05-17-030453
+      - `smoke-2026-05-17.json`
+      - `smoke-2026-05-17.md` — Smoke 1000戦レポート — smoke-2026-05-17-020018
+      - `smoke-2026-05-18-10.json`
+      - `smoke-2026-05-18-10.md` — Smoke 1000戦レポート — smoke-2026-05-18-110009
+      - `smoke-2026-05-18-11.json`
+      - `smoke-2026-05-18-11.md` — Smoke 1000戦レポート — smoke-2026-05-18-115114
+      - `smoke-2026-05-18-12.json`
+      - `smoke-2026-05-18-12.md` — Smoke 1000戦レポート — smoke-2026-05-18-123409
+      - `smoke-2026-05-18-2.json`
+      - `smoke-2026-05-18-2.md` — Smoke 1000戦レポート — smoke-2026-05-18-005701
+      - `smoke-2026-05-18-3.json`
+      - `smoke-2026-05-18-3.md` — Smoke 1000戦レポート — smoke-2026-05-18-014018
+      - `smoke-2026-05-18-4.json`
+      - `smoke-2026-05-18-4.md` — Smoke 1000戦レポート — smoke-2026-05-18-045342
+      - `smoke-2026-05-18-5.json`
+      - `smoke-2026-05-18-5.md` — Smoke 1000戦レポート — smoke-2026-05-18-060214
+      - `smoke-2026-05-18-6.json`
+      - `smoke-2026-05-18-6.md` — Smoke 1000戦レポート — smoke-2026-05-18-063223
+      - `smoke-2026-05-18-7.json`
+      - `smoke-2026-05-18-7.md` — Smoke 1000戦レポート — smoke-2026-05-18-071145
+      - `smoke-2026-05-18-8.json`
+      - `smoke-2026-05-18-8.md` — Smoke 1000戦レポート — smoke-2026-05-18-072537
+      - `smoke-2026-05-18-9.json`
+      - `smoke-2026-05-18-9.md` — Smoke 1000戦レポート — smoke-2026-05-18-073450
+      - `smoke-2026-05-18.json`
+      - `smoke-2026-05-18.md` — Smoke 1000戦レポート — smoke-2026-05-18-002900
+      - `smoke-2026-05-19-2.json`
+      - `smoke-2026-05-19-2.md` — Smoke 1000戦レポート — smoke-2026-05-19-101836
+      - `smoke-2026-05-19-3.json`
+      - `smoke-2026-05-19-3.md` — Smoke 1000戦レポート — smoke-2026-05-19-104854
+      - `smoke-2026-05-19-4.json`
+      - `smoke-2026-05-19-4.md` — Smoke 1000戦レポート — smoke-2026-05-19-110159
+      - `smoke-2026-05-19-5.json`
+      - `smoke-2026-05-19-5.md` — Smoke 1000戦レポート — smoke-2026-05-19-111807
+      - `smoke-2026-05-19-6.json`
+      - `smoke-2026-05-19-6.md` — Smoke 1000戦レポート — smoke-2026-05-19-163048
+      - `smoke-2026-05-19-7.json`
+      - `smoke-2026-05-19-7.md` — Smoke 1000戦レポート — smoke-2026-05-19-225228
+      - `smoke-2026-05-19.json`
+      - `smoke-2026-05-19.md` — Smoke 1000戦レポート — smoke-2026-05-19-094229
+      - `smoke-2026-05-20-2.json`
+      - `smoke-2026-05-20-2.md` — Smoke 1000戦レポート — smoke-2026-05-20-110001
+      - `smoke-2026-05-20-3.json`
+      - `smoke-2026-05-20-3.md` — Smoke 1000戦レポート — smoke-2026-05-20-112425
+      - `smoke-2026-05-20-4.json`
+      - `smoke-2026-05-20-4.md` — Smoke 1000戦レポート — smoke-2026-05-20-113557
+      - `smoke-2026-05-20-5.json`
+      - `smoke-2026-05-20-5.md` — Smoke 1000戦レポート — smoke-2026-05-20-150537
+      - `smoke-2026-05-20-6.json`
+      - `smoke-2026-05-20-6.md` — Smoke 1000戦レポート — smoke-2026-05-20-152915
+      - `smoke-2026-05-20-7.json`
+      - `smoke-2026-05-20-7.md` — Smoke 1000戦レポート — smoke-2026-05-20-235843
+      - `smoke-2026-05-20.json`
+      - `smoke-2026-05-20.md` — Smoke 1000戦レポート — smoke-2026-05-20-100745
+      - `smoke-2026-05-21-10.json`
+      - `smoke-2026-05-21-10.md` — Smoke 1000戦レポート — smoke-2026-05-21-155336
+      - `smoke-2026-05-21-11.json`
+      - `smoke-2026-05-21-11.md` — Smoke 1000戦レポート — smoke-2026-05-21-161754
+      - `smoke-2026-05-21-2.json`
+      - `smoke-2026-05-21-2.md` — Smoke 1000戦レポート — smoke-2026-05-21-102145
+      - `smoke-2026-05-21-3.json`
+      - `smoke-2026-05-21-3.md` — Smoke 1000戦レポート — smoke-2026-05-21-103456
+      - `smoke-2026-05-21-4.json`
+      - `smoke-2026-05-21-4.md` — Smoke 1000戦レポート — smoke-2026-05-21-104750
+      - `smoke-2026-05-21-5.json`
+      - `smoke-2026-05-21-5.md` — Smoke 1000戦レポート — smoke-2026-05-21-105431
+      - `smoke-2026-05-21-6.json`
+      - `smoke-2026-05-21-6.md` — Smoke 1000戦レポート — smoke-2026-05-21-112328
+      - `smoke-2026-05-21-7.json`
+      - `smoke-2026-05-21-7.md` — Smoke 1000戦レポート — smoke-2026-05-21-154847
+      - `smoke-2026-05-21-8.json`
+      - `smoke-2026-05-21-8.md` — Smoke 1000戦レポート — smoke-2026-05-21-155134
+      - `smoke-2026-05-21-9.json`
+      - `smoke-2026-05-21-9.md` — Smoke 1000戦レポート — smoke-2026-05-21-155256
+      - `smoke-2026-05-21.json`
+      - `smoke-2026-05-21.md` — Smoke 1000戦レポート — smoke-2026-05-21-102103
+      - `smoke-2026-05-22-10.json`
+      - `smoke-2026-05-22-10.md` — Smoke 1000戦レポート — smoke-2026-05-22-111623
+      - `smoke-2026-05-22-11.json`
+      - `smoke-2026-05-22-11.md` — Smoke 1000戦レポート — smoke-2026-05-22-112334
+      - `smoke-2026-05-22-12.json`
+      - `smoke-2026-05-22-12.md` — Smoke 1000戦レポート — smoke-2026-05-22-115404
+      - `smoke-2026-05-22-13.json`
+      - `smoke-2026-05-22-13.md` — Smoke 1000戦レポート — smoke-2026-05-22-134037
+      - `smoke-2026-05-22-14.json`
+      - `smoke-2026-05-22-14.md` — Smoke 1000戦レポート — smoke-2026-05-22-164241
+      - `smoke-2026-05-22-2.json`
+      - `smoke-2026-05-22-2.md` — Smoke 1000戦レポート — smoke-2026-05-22-004100
+      - `smoke-2026-05-22-3.json`
+      - `smoke-2026-05-22-3.md` — Smoke 1000戦レポート — smoke-2026-05-22-011221
+      - `smoke-2026-05-22-4.json`
+      - `smoke-2026-05-22-4.md` — Smoke 1000戦レポート — smoke-2026-05-22-012307
+      - `smoke-2026-05-22-5.json`
+      - `smoke-2026-05-22-5.md` — Smoke 1000戦レポート — smoke-2026-05-22-012816
+      - `smoke-2026-05-22-6.json`
+      - `smoke-2026-05-22-6.md` — Smoke 1000戦レポート — smoke-2026-05-22-063625
+      - `smoke-2026-05-22-7.json`
+      - `smoke-2026-05-22-7.md` — Smoke 1000戦レポート — smoke-2026-05-22-064209
+      - `smoke-2026-05-22-8.json`
+      - `smoke-2026-05-22-8.md` — Smoke 1000戦レポート — smoke-2026-05-22-065231
+      - `smoke-2026-05-22-9.json`
+      - `smoke-2026-05-22-9.md` — Smoke 1000戦レポート — smoke-2026-05-22-070557
+      - `smoke-2026-05-22.json`
+      - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
+      - `smoke-2026-05-23-2.json`
+      - `smoke-2026-05-23-2.md` — Smoke 1000戦レポート — smoke-2026-05-23-005334
+      - `smoke-2026-05-23-3.json`
+      - `smoke-2026-05-23-3.md` — Smoke 1000戦レポート — smoke-2026-05-23-020302
+      - `smoke-2026-05-23-4.json`
+      - `smoke-2026-05-23-4.md` — Smoke 1000戦レポート — smoke-2026-05-23-023144
+      - `smoke-2026-05-23-5.json`
+      - `smoke-2026-05-23-5.md` — Smoke 1000戦レポート — smoke-2026-05-23-023546
+      - `smoke-2026-05-23-6.json`
+      - `smoke-2026-05-23-6.md` — Smoke 1000戦レポート — smoke-2026-05-23-032939
+      - `smoke-2026-05-23.json`
+      - `smoke-2026-05-23.md` — Smoke 1000戦レポート — smoke-2026-05-23-002544
+      - `smoke-2026-05-24-2.json`
+      - `smoke-2026-05-24-2.md` — Smoke 1000戦レポート — smoke-2026-05-24-150154
+      - `smoke-2026-05-24.json`
+      - `smoke-2026-05-24.md` — Smoke 1000戦レポート — smoke-2026-05-24-143431
+      - `smoke-2026-05-25-10.json`
+      - `smoke-2026-05-25-10.md` — Smoke 1000戦レポート — smoke-2026-05-25-113017
+      - `smoke-2026-05-25-11.json`
+      - `smoke-2026-05-25-11.md` — Smoke 1000戦レポート — smoke-2026-05-25-113843
+      - `smoke-2026-05-25-12.json`
+      - `smoke-2026-05-25-12.md` — Smoke 1000戦レポート — smoke-2026-05-25-115135
+      - `smoke-2026-05-25-13.json`
+      - `smoke-2026-05-25-13.md` — Smoke 1000戦レポート — smoke-2026-05-25-120422
+      - `smoke-2026-05-25-14.json`
+      - `smoke-2026-05-25-14.md` — Smoke 1000戦レポート — smoke-2026-05-25-121334
+      - `smoke-2026-05-25-15.json`
+      - `smoke-2026-05-25-15.md` — Smoke 1000戦レポート — smoke-2026-05-25-130455
+      - `smoke-2026-05-25-2.json`
+      - `smoke-2026-05-25-2.md` — Smoke 1000戦レポート — smoke-2026-05-25-061607
+      - `smoke-2026-05-25-3.json`
+      - `smoke-2026-05-25-3.md` — Smoke 1000戦レポート — smoke-2026-05-25-062119
+      - `smoke-2026-05-25-4.json`
+      - `smoke-2026-05-25-4.md` — Smoke 1000戦レポート — smoke-2026-05-25-062738
+      - `smoke-2026-05-25-5.json`
+      - `smoke-2026-05-25-5.md` — Smoke 1000戦レポート — smoke-2026-05-25-094917
+      - `smoke-2026-05-25-6.json`
+      - `smoke-2026-05-25-6.md` — Smoke 1000戦レポート — smoke-2026-05-25-101647
+      - `smoke-2026-05-25-7.json`
+      - `smoke-2026-05-25-7.md` — Smoke 1000戦レポート — smoke-2026-05-25-102843
+      - `smoke-2026-05-25-8.json`
+      - `smoke-2026-05-25-8.md` — Smoke 1000戦レポート — smoke-2026-05-25-105843
+      - `smoke-2026-05-25-9.json`
+      - `smoke-2026-05-25-9.md` — Smoke 1000戦レポート — smoke-2026-05-25-111141
+      - `smoke-2026-05-25.json`
+      - `smoke-2026-05-25.md` — Smoke 1000戦レポート — smoke-2026-05-25-055403
+      - `smoke-2026-05-26-2.json`
+      - `smoke-2026-05-26-2.md` — Smoke 1000戦レポート — smoke-2026-05-26-102003
+      - `smoke-2026-05-26-3.json`
+      - `smoke-2026-05-26-3.md` — Smoke 1000戦レポート — smoke-2026-05-26-102903
+      - `smoke-2026-05-26-4.json`
+      - `smoke-2026-05-26-4.md` — Smoke 1000戦レポート — smoke-2026-05-26-103648
+      - `smoke-2026-05-26-5.json`
+      - `smoke-2026-05-26-5.md` — Smoke 1000戦レポート — smoke-2026-05-26-104842
+      - `smoke-2026-05-26.json`
+      - `smoke-2026-05-26.md` — Smoke 1000戦レポート — smoke-2026-05-26-095757
+      - `smoke-2026-06-01-2.json`
+      - `smoke-2026-06-01-2.md` — Smoke 1000戦レポート — smoke-2026-06-01-081240
+      - `smoke-2026-06-01-3.json`
+      - `smoke-2026-06-01-3.md` — Smoke 1000戦レポート — smoke-2026-06-01-081854
+      - `smoke-2026-06-01-4.json`
+      - `smoke-2026-06-01-4.md` — Smoke 1000戦レポート — smoke-2026-06-01-102852
+      - `smoke-2026-06-01-5.json`
+      - `smoke-2026-06-01-5.md` — Smoke 1000戦レポート — smoke-2026-06-01-112654
+      - `smoke-2026-06-01-6.json`
+      - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
+      - `smoke-2026-06-01.json`
+      - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
+      - `smoke-2026-06-03-10.json`
+      - `smoke-2026-06-03-10.md` — Smoke 1000戦レポート — smoke-2026-06-03-094615
+      - `smoke-2026-06-03-11.json`
+      - `smoke-2026-06-03-11.md` — Smoke 1000戦レポート — smoke-2026-06-03-225821
+      - `smoke-2026-06-03-12.json`
+      - `smoke-2026-06-03-12.md` — Smoke 1000戦レポート — smoke-2026-06-03-233301
+      - `smoke-2026-06-03-13.json`
+      - `smoke-2026-06-03-13.md` — Smoke 1000戦レポート — smoke-2026-06-03-141256
+      - `smoke-2026-06-03-14.json`
+      - `smoke-2026-06-03-14.md` — Smoke 1000戦レポート — smoke-2026-06-03-235427
+      - `smoke-2026-06-03-2.json`
+      - `smoke-2026-06-03-2.md` — Smoke 1000戦レポート — smoke-2026-06-03-013320
+      - `smoke-2026-06-03-3.json`
+      - `smoke-2026-06-03-3.md` — Smoke 1000戦レポート — smoke-2026-06-03-014330
+      - `smoke-2026-06-03-4.json`
+      - `smoke-2026-06-03-4.md` — Smoke 1000戦レポート — smoke-2026-06-03-031240
+      - `smoke-2026-06-03-5.json`
+      - `smoke-2026-06-03-5.md` — Smoke 1000戦レポート — smoke-2026-06-03-031951
+      - `smoke-2026-06-03-6.json`
+      - `smoke-2026-06-03-6.md` — Smoke 1000戦レポート — smoke-2026-06-03-032211
+      - `smoke-2026-06-03-7.json`
+      - `smoke-2026-06-03-7.md` — Smoke 1000戦レポート — smoke-2026-06-03-084127
+      - `smoke-2026-06-03-8.json`
+      - `smoke-2026-06-03-8.md` — Smoke 1000戦レポート — smoke-2026-06-03-090738
+      - `smoke-2026-06-03-9.json`
+      - `smoke-2026-06-03-9.md` — Smoke 1000戦レポート — smoke-2026-06-03-091809
+      - `smoke-2026-06-03.json`
+      - `smoke-2026-06-03.md` — Smoke 1000戦レポート — smoke-2026-06-03-005826
+      - `smoke-2026-06-04-2.json`
+      - `smoke-2026-06-04-2.md` — Smoke 1000戦レポート — smoke-2026-06-04-012535
+      - `smoke-2026-06-04.json`
+      - `smoke-2026-06-04.md` — Smoke 1000戦レポート — smoke-2026-06-04-010419
+      - `smoke-2026-06-09.json`
+      - `smoke-2026-06-09.md` — Smoke 1000戦レポート — smoke-2026-06-09-095231
+      - `smoke-2026-06-10-2.json`
+      - `smoke-2026-06-10-2.md` — Smoke 1000戦レポート — smoke-2026-06-10-062652
+      - `smoke-2026-06-10.json`
+      - `smoke-2026-06-10.md` — Smoke 1000戦レポート — smoke-2026-06-10-004456
+      - `smoke-2026-06-11-2.json`
+      - `smoke-2026-06-11-2.md` — Smoke 1000戦レポート — smoke-2026-06-11-092725
+      - `smoke-2026-06-11-3.json`
+      - `smoke-2026-06-11-3.md` — Smoke 1000戦レポート — smoke-2026-06-11-103408
+      - `smoke-2026-06-11-4.json`
+      - `smoke-2026-06-11-4.md` — Smoke 1000戦レポート — smoke-2026-06-11-141135
+      - `smoke-2026-06-11-5.json`
+      - `smoke-2026-06-11-5.md` — Smoke 1000戦レポート — smoke-2026-06-11-230122
+      - `smoke-2026-06-11.json`
+      - `smoke-2026-06-11.md` — Smoke 1000戦レポート — smoke-2026-06-11-091943
+      - `smoke-2026-06-12-10.json`
+      - `smoke-2026-06-12-10.md` — Smoke 1000戦レポート — smoke-2026-06-12-114339
+      - `smoke-2026-06-12-11.json`
+      - `smoke-2026-06-12-11.md` — Smoke 1000戦レポート — smoke-2026-06-12-133748
+      - `smoke-2026-06-12-12.json`
+      - `smoke-2026-06-12-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-151849
+      - `smoke-2026-06-12-13.json`
+      - `smoke-2026-06-12-13.md` — Smoke 1000戦レポート — smoke-2026-06-12-153720
+      - `smoke-2026-06-12-14.json`
+      - `smoke-2026-06-12-14.md` — Smoke 1000戦レポート — smoke-2026-06-12-160518
+      - `smoke-2026-06-12-15.json`
+      - `smoke-2026-06-12-15.md` — Smoke 1000戦レポート — smoke-2026-06-12-163425
+      - `smoke-2026-06-12-2.json`
+      - `smoke-2026-06-12-2.md` — Smoke 1000戦レポート — smoke-2026-06-12-044245
+      - `smoke-2026-06-12-3.json`
+      - `smoke-2026-06-12-3.md` — Smoke 1000戦レポート — smoke-2026-06-12-045711
+      - `smoke-2026-06-12-4.json`
+      - `smoke-2026-06-12-4.md` — Smoke 1000戦レポート — smoke-2026-06-12-060106
+      - `smoke-2026-06-12-5.json`
+      - `smoke-2026-06-12-5.md` — Smoke 1000戦レポート — smoke-2026-06-12-062343
+      - `smoke-2026-06-12-6.json`
+      - `smoke-2026-06-12-6.md` — Smoke 1000戦レポート — smoke-2026-06-12-072348
+      - `smoke-2026-06-12-7.json`
+      - `smoke-2026-06-12-7.md` — Smoke 1000戦レポート — smoke-2026-06-12-074230
+      - `smoke-2026-06-12-8.json`
+      - `smoke-2026-06-12-8.md` — Smoke 1000戦レポート — smoke-2026-06-12-102922
+      - `smoke-2026-06-12-9.json`
+      - `smoke-2026-06-12-9.md` — Smoke 1000戦レポート — smoke-2026-06-12-111732
+      - `smoke-2026-06-12.json`
+      - `smoke-2026-06-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-035822
+      - `smoke-2026-06-13.json`
+      - `smoke-2026-06-13.md` — Smoke 1000戦レポート — smoke-2026-06-13-000954
+      - `smoke-2026-06-14-10.json`
+      - `smoke-2026-06-14-10.md` — Smoke 1000戦レポート — smoke-2026-06-14-231808
+      - `smoke-2026-06-14-2.json`
+      - `smoke-2026-06-14-2.md` — Smoke 1000戦レポート — smoke-2026-06-14-111026
+      - `smoke-2026-06-14-3.json`
+      - `smoke-2026-06-14-3.md` — Smoke 1000戦レポート — smoke-2026-06-14-123914
+      - `smoke-2026-06-14-4.json`
+      - `smoke-2026-06-14-4.md` — Smoke 1000戦レポート — smoke-2026-06-14-135452
+      - `smoke-2026-06-14-5.json`
+      - `smoke-2026-06-14-5.md` — Smoke 1000戦レポート — smoke-2026-06-14-150542
+      - `smoke-2026-06-14-6.json`
+      - `smoke-2026-06-14-6.md` — Smoke 1000戦レポート — smoke-2026-06-14-153311
+      - `smoke-2026-06-14-7.json`
+      - `smoke-2026-06-14-7.md` — Smoke 1000戦レポート — smoke-2026-06-14-155224
+      - `smoke-2026-06-14-8.json`
+      - `smoke-2026-06-14-8.md` — Smoke 1000戦レポート — smoke-2026-06-14-163334
+      - `smoke-2026-06-14-9.json`
+      - `smoke-2026-06-14-9.md` — Smoke 1000戦レポート — smoke-2026-06-14-164554
+      - `smoke-2026-06-14.json`
+      - `smoke-2026-06-14.md` — Smoke 1000戦レポート — smoke-2026-06-14-105433
+      - `smoke-2026-06-15-2.json`
+      - `smoke-2026-06-15-2.md` — Smoke 1000戦レポート — smoke-2026-06-15-012438
+      - `smoke-2026-06-15-3.json`
+      - `smoke-2026-06-15-3.md` — Smoke 1000戦レポート — smoke-2026-06-15-025631
+      - `smoke-2026-06-15-4.json`
+      - `smoke-2026-06-15-4.md` — Smoke 1000戦レポート — smoke-2026-06-15-043218
+      - `smoke-2026-06-15-5.json`
+      - `smoke-2026-06-15-5.md` — Smoke 1000戦レポート — smoke-2026-06-15-075116
+      - `smoke-2026-06-15-6.json`
+      - `smoke-2026-06-15-6.md` — Smoke 1000戦レポート — smoke-2026-06-15-055858
+      - `smoke-2026-06-15-7.json`
+      - `smoke-2026-06-15-7.md` — Smoke 1000戦レポート — smoke-2026-06-15-062018
+      - `smoke-2026-06-15-8.json`
+      - `smoke-2026-06-15-8.md` — Smoke 1000戦レポート — smoke-2026-06-15-090452
+      - `smoke-2026-06-15.json`
+      - `smoke-2026-06-15.md` — Smoke 1000戦レポート — smoke-2026-06-15-002732
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
-    - `smoke-2026-05-17-2.json`
-    - `smoke-2026-05-17-2.md` — Smoke 1000戦レポート — smoke-2026-05-17-103950
-    - `smoke-2026-05-17-3.json`
-    - `smoke-2026-05-17-3.md` — Smoke 1000戦レポート — smoke-2026-05-17-141425
-    - `smoke-2026-05-17-4.json`
-    - `smoke-2026-05-17-4.md` — Smoke 1000戦レポート — smoke-2026-05-17-142343
-    - `smoke-2026-05-17-5.json`
-    - `smoke-2026-05-17-5.md` — Smoke 1000戦レポート — smoke-2026-05-17-143646
-    - `smoke-2026-05-17-phase9b.json`
-    - `smoke-2026-05-17-phase9b.md` — Smoke 1000戦レポート — smoke-2026-05-17-030453
-    - `smoke-2026-05-17.json`
-    - `smoke-2026-05-17.md` — Smoke 1000戦レポート — smoke-2026-05-17-020018
-    - `smoke-2026-05-18-10.json`
-    - `smoke-2026-05-18-10.md` — Smoke 1000戦レポート — smoke-2026-05-18-110009
-    - `smoke-2026-05-18-11.json`
-    - `smoke-2026-05-18-11.md` — Smoke 1000戦レポート — smoke-2026-05-18-115114
-    - `smoke-2026-05-18-12.json`
-    - `smoke-2026-05-18-12.md` — Smoke 1000戦レポート — smoke-2026-05-18-123409
-    - `smoke-2026-05-18-2.json`
-    - `smoke-2026-05-18-2.md` — Smoke 1000戦レポート — smoke-2026-05-18-005701
-    - `smoke-2026-05-18-3.json`
-    - `smoke-2026-05-18-3.md` — Smoke 1000戦レポート — smoke-2026-05-18-014018
-    - `smoke-2026-05-18-4.json`
-    - `smoke-2026-05-18-4.md` — Smoke 1000戦レポート — smoke-2026-05-18-045342
-    - `smoke-2026-05-18-5.json`
-    - `smoke-2026-05-18-5.md` — Smoke 1000戦レポート — smoke-2026-05-18-060214
-    - `smoke-2026-05-18-6.json`
-    - `smoke-2026-05-18-6.md` — Smoke 1000戦レポート — smoke-2026-05-18-063223
-    - `smoke-2026-05-18-7.json`
-    - `smoke-2026-05-18-7.md` — Smoke 1000戦レポート — smoke-2026-05-18-071145
-    - `smoke-2026-05-18-8.json`
-    - `smoke-2026-05-18-8.md` — Smoke 1000戦レポート — smoke-2026-05-18-072537
-    - `smoke-2026-05-18-9.json`
-    - `smoke-2026-05-18-9.md` — Smoke 1000戦レポート — smoke-2026-05-18-073450
-    - `smoke-2026-05-18.json`
-    - `smoke-2026-05-18.md` — Smoke 1000戦レポート — smoke-2026-05-18-002900
-    - `smoke-2026-05-19-2.json`
-    - `smoke-2026-05-19-2.md` — Smoke 1000戦レポート — smoke-2026-05-19-101836
-    - `smoke-2026-05-19-3.json`
-    - `smoke-2026-05-19-3.md` — Smoke 1000戦レポート — smoke-2026-05-19-104854
-    - `smoke-2026-05-19-4.json`
-    - `smoke-2026-05-19-4.md` — Smoke 1000戦レポート — smoke-2026-05-19-110159
-    - `smoke-2026-05-19-5.json`
-    - `smoke-2026-05-19-5.md` — Smoke 1000戦レポート — smoke-2026-05-19-111807
-    - `smoke-2026-05-19-6.json`
-    - `smoke-2026-05-19-6.md` — Smoke 1000戦レポート — smoke-2026-05-19-163048
-    - `smoke-2026-05-19-7.json`
-    - `smoke-2026-05-19-7.md` — Smoke 1000戦レポート — smoke-2026-05-19-225228
-    - `smoke-2026-05-19.json`
-    - `smoke-2026-05-19.md` — Smoke 1000戦レポート — smoke-2026-05-19-094229
-    - `smoke-2026-05-20-2.json`
-    - `smoke-2026-05-20-2.md` — Smoke 1000戦レポート — smoke-2026-05-20-110001
-    - `smoke-2026-05-20-3.json`
-    - `smoke-2026-05-20-3.md` — Smoke 1000戦レポート — smoke-2026-05-20-112425
-    - `smoke-2026-05-20-4.json`
-    - `smoke-2026-05-20-4.md` — Smoke 1000戦レポート — smoke-2026-05-20-113557
-    - `smoke-2026-05-20-5.json`
-    - `smoke-2026-05-20-5.md` — Smoke 1000戦レポート — smoke-2026-05-20-150537
-    - `smoke-2026-05-20-6.json`
-    - `smoke-2026-05-20-6.md` — Smoke 1000戦レポート — smoke-2026-05-20-152915
-    - `smoke-2026-05-20-7.json`
-    - `smoke-2026-05-20-7.md` — Smoke 1000戦レポート — smoke-2026-05-20-235843
-    - `smoke-2026-05-20.json`
-    - `smoke-2026-05-20.md` — Smoke 1000戦レポート — smoke-2026-05-20-100745
-    - `smoke-2026-05-21-10.json`
-    - `smoke-2026-05-21-10.md` — Smoke 1000戦レポート — smoke-2026-05-21-155336
-    - `smoke-2026-05-21-11.json`
-    - `smoke-2026-05-21-11.md` — Smoke 1000戦レポート — smoke-2026-05-21-161754
-    - `smoke-2026-05-21-2.json`
-    - `smoke-2026-05-21-2.md` — Smoke 1000戦レポート — smoke-2026-05-21-102145
-    - `smoke-2026-05-21-3.json`
-    - `smoke-2026-05-21-3.md` — Smoke 1000戦レポート — smoke-2026-05-21-103456
-    - `smoke-2026-05-21-4.json`
-    - `smoke-2026-05-21-4.md` — Smoke 1000戦レポート — smoke-2026-05-21-104750
-    - `smoke-2026-05-21-5.json`
-    - `smoke-2026-05-21-5.md` — Smoke 1000戦レポート — smoke-2026-05-21-105431
-    - `smoke-2026-05-21-6.json`
-    - `smoke-2026-05-21-6.md` — Smoke 1000戦レポート — smoke-2026-05-21-112328
-    - `smoke-2026-05-21-7.json`
-    - `smoke-2026-05-21-7.md` — Smoke 1000戦レポート — smoke-2026-05-21-154847
-    - `smoke-2026-05-21-8.json`
-    - `smoke-2026-05-21-8.md` — Smoke 1000戦レポート — smoke-2026-05-21-155134
-    - `smoke-2026-05-21-9.json`
-    - `smoke-2026-05-21-9.md` — Smoke 1000戦レポート — smoke-2026-05-21-155256
-    - `smoke-2026-05-21.json`
-    - `smoke-2026-05-21.md` — Smoke 1000戦レポート — smoke-2026-05-21-102103
-    - `smoke-2026-05-22-10.json`
-    - `smoke-2026-05-22-10.md` — Smoke 1000戦レポート — smoke-2026-05-22-111623
-    - `smoke-2026-05-22-11.json`
-    - `smoke-2026-05-22-11.md` — Smoke 1000戦レポート — smoke-2026-05-22-112334
-    - `smoke-2026-05-22-12.json`
-    - `smoke-2026-05-22-12.md` — Smoke 1000戦レポート — smoke-2026-05-22-115404
-    - `smoke-2026-05-22-13.json`
-    - `smoke-2026-05-22-13.md` — Smoke 1000戦レポート — smoke-2026-05-22-134037
-    - `smoke-2026-05-22-14.json`
-    - `smoke-2026-05-22-14.md` — Smoke 1000戦レポート — smoke-2026-05-22-164241
-    - `smoke-2026-05-22-2.json`
-    - `smoke-2026-05-22-2.md` — Smoke 1000戦レポート — smoke-2026-05-22-004100
-    - `smoke-2026-05-22-3.json`
-    - `smoke-2026-05-22-3.md` — Smoke 1000戦レポート — smoke-2026-05-22-011221
-    - `smoke-2026-05-22-4.json`
-    - `smoke-2026-05-22-4.md` — Smoke 1000戦レポート — smoke-2026-05-22-012307
-    - `smoke-2026-05-22-5.json`
-    - `smoke-2026-05-22-5.md` — Smoke 1000戦レポート — smoke-2026-05-22-012816
-    - `smoke-2026-05-22-6.json`
-    - `smoke-2026-05-22-6.md` — Smoke 1000戦レポート — smoke-2026-05-22-063625
-    - `smoke-2026-05-22-7.json`
-    - `smoke-2026-05-22-7.md` — Smoke 1000戦レポート — smoke-2026-05-22-064209
-    - `smoke-2026-05-22-8.json`
-    - `smoke-2026-05-22-8.md` — Smoke 1000戦レポート — smoke-2026-05-22-065231
-    - `smoke-2026-05-22-9.json`
-    - `smoke-2026-05-22-9.md` — Smoke 1000戦レポート — smoke-2026-05-22-070557
-    - `smoke-2026-05-22.json`
-    - `smoke-2026-05-22.md` — Smoke 1000戦レポート — smoke-2026-05-22-004001
-    - `smoke-2026-05-23-2.json`
-    - `smoke-2026-05-23-2.md` — Smoke 1000戦レポート — smoke-2026-05-23-005334
-    - `smoke-2026-05-23-3.json`
-    - `smoke-2026-05-23-3.md` — Smoke 1000戦レポート — smoke-2026-05-23-020302
-    - `smoke-2026-05-23-4.json`
-    - `smoke-2026-05-23-4.md` — Smoke 1000戦レポート — smoke-2026-05-23-023144
-    - `smoke-2026-05-23-5.json`
-    - `smoke-2026-05-23-5.md` — Smoke 1000戦レポート — smoke-2026-05-23-023546
-    - `smoke-2026-05-23-6.json`
-    - `smoke-2026-05-23-6.md` — Smoke 1000戦レポート — smoke-2026-05-23-032939
-    - `smoke-2026-05-23.json`
-    - `smoke-2026-05-23.md` — Smoke 1000戦レポート — smoke-2026-05-23-002544
-    - `smoke-2026-05-24-2.json`
-    - `smoke-2026-05-24-2.md` — Smoke 1000戦レポート — smoke-2026-05-24-150154
-    - `smoke-2026-05-24.json`
-    - `smoke-2026-05-24.md` — Smoke 1000戦レポート — smoke-2026-05-24-143431
-    - `smoke-2026-05-25-10.json`
-    - `smoke-2026-05-25-10.md` — Smoke 1000戦レポート — smoke-2026-05-25-113017
-    - `smoke-2026-05-25-11.json`
-    - `smoke-2026-05-25-11.md` — Smoke 1000戦レポート — smoke-2026-05-25-113843
-    - `smoke-2026-05-25-12.json`
-    - `smoke-2026-05-25-12.md` — Smoke 1000戦レポート — smoke-2026-05-25-115135
-    - `smoke-2026-05-25-13.json`
-    - `smoke-2026-05-25-13.md` — Smoke 1000戦レポート — smoke-2026-05-25-120422
-    - `smoke-2026-05-25-14.json`
-    - `smoke-2026-05-25-14.md` — Smoke 1000戦レポート — smoke-2026-05-25-121334
-    - `smoke-2026-05-25-15.json`
-    - `smoke-2026-05-25-15.md` — Smoke 1000戦レポート — smoke-2026-05-25-130455
-    - `smoke-2026-05-25-2.json`
-    - `smoke-2026-05-25-2.md` — Smoke 1000戦レポート — smoke-2026-05-25-061607
-    - `smoke-2026-05-25-3.json`
-    - `smoke-2026-05-25-3.md` — Smoke 1000戦レポート — smoke-2026-05-25-062119
-    - `smoke-2026-05-25-4.json`
-    - `smoke-2026-05-25-4.md` — Smoke 1000戦レポート — smoke-2026-05-25-062738
-    - `smoke-2026-05-25-5.json`
-    - `smoke-2026-05-25-5.md` — Smoke 1000戦レポート — smoke-2026-05-25-094917
-    - `smoke-2026-05-25-6.json`
-    - `smoke-2026-05-25-6.md` — Smoke 1000戦レポート — smoke-2026-05-25-101647
-    - `smoke-2026-05-25-7.json`
-    - `smoke-2026-05-25-7.md` — Smoke 1000戦レポート — smoke-2026-05-25-102843
-    - `smoke-2026-05-25-8.json`
-    - `smoke-2026-05-25-8.md` — Smoke 1000戦レポート — smoke-2026-05-25-105843
-    - `smoke-2026-05-25-9.json`
-    - `smoke-2026-05-25-9.md` — Smoke 1000戦レポート — smoke-2026-05-25-111141
-    - `smoke-2026-05-25.json`
-    - `smoke-2026-05-25.md` — Smoke 1000戦レポート — smoke-2026-05-25-055403
-    - `smoke-2026-05-26-2.json`
-    - `smoke-2026-05-26-2.md` — Smoke 1000戦レポート — smoke-2026-05-26-102003
-    - `smoke-2026-05-26-3.json`
-    - `smoke-2026-05-26-3.md` — Smoke 1000戦レポート — smoke-2026-05-26-102903
-    - `smoke-2026-05-26-4.json`
-    - `smoke-2026-05-26-4.md` — Smoke 1000戦レポート — smoke-2026-05-26-103648
-    - `smoke-2026-05-26-5.json`
-    - `smoke-2026-05-26-5.md` — Smoke 1000戦レポート — smoke-2026-05-26-104842
-    - `smoke-2026-05-26.json`
-    - `smoke-2026-05-26.md` — Smoke 1000戦レポート — smoke-2026-05-26-095757
-    - `smoke-2026-06-01-2.json`
-    - `smoke-2026-06-01-2.md` — Smoke 1000戦レポート — smoke-2026-06-01-081240
-    - `smoke-2026-06-01-3.json`
-    - `smoke-2026-06-01-3.md` — Smoke 1000戦レポート — smoke-2026-06-01-081854
-    - `smoke-2026-06-01-4.json`
-    - `smoke-2026-06-01-4.md` — Smoke 1000戦レポート — smoke-2026-06-01-102852
-    - `smoke-2026-06-01-5.json`
-    - `smoke-2026-06-01-5.md` — Smoke 1000戦レポート — smoke-2026-06-01-112654
-    - `smoke-2026-06-01-6.json`
-    - `smoke-2026-06-01-6.md` — Smoke 1000戦レポート — smoke-2026-06-01-124552
-    - `smoke-2026-06-01.json`
-    - `smoke-2026-06-01.md` — Smoke 1000戦レポート — smoke-2026-06-01-081011
-    - `smoke-2026-06-03-10.json`
-    - `smoke-2026-06-03-10.md` — Smoke 1000戦レポート — smoke-2026-06-03-094615
-    - `smoke-2026-06-03-11.json`
-    - `smoke-2026-06-03-11.md` — Smoke 1000戦レポート — smoke-2026-06-03-225821
-    - `smoke-2026-06-03-12.json`
-    - `smoke-2026-06-03-12.md` — Smoke 1000戦レポート — smoke-2026-06-03-233301
-    - `smoke-2026-06-03-13.json`
-    - `smoke-2026-06-03-13.md` — Smoke 1000戦レポート — smoke-2026-06-03-141256
-    - `smoke-2026-06-03-14.json`
-    - `smoke-2026-06-03-14.md` — Smoke 1000戦レポート — smoke-2026-06-03-235427
-    - `smoke-2026-06-03-2.json`
-    - `smoke-2026-06-03-2.md` — Smoke 1000戦レポート — smoke-2026-06-03-013320
-    - `smoke-2026-06-03-3.json`
-    - `smoke-2026-06-03-3.md` — Smoke 1000戦レポート — smoke-2026-06-03-014330
-    - `smoke-2026-06-03-4.json`
-    - `smoke-2026-06-03-4.md` — Smoke 1000戦レポート — smoke-2026-06-03-031240
-    - `smoke-2026-06-03-5.json`
-    - `smoke-2026-06-03-5.md` — Smoke 1000戦レポート — smoke-2026-06-03-031951
-    - `smoke-2026-06-03-6.json`
-    - `smoke-2026-06-03-6.md` — Smoke 1000戦レポート — smoke-2026-06-03-032211
-    - `smoke-2026-06-03-7.json`
-    - `smoke-2026-06-03-7.md` — Smoke 1000戦レポート — smoke-2026-06-03-084127
-    - `smoke-2026-06-03-8.json`
-    - `smoke-2026-06-03-8.md` — Smoke 1000戦レポート — smoke-2026-06-03-090738
-    - `smoke-2026-06-03-9.json`
-    - `smoke-2026-06-03-9.md` — Smoke 1000戦レポート — smoke-2026-06-03-091809
-    - `smoke-2026-06-03.json`
-    - `smoke-2026-06-03.md` — Smoke 1000戦レポート — smoke-2026-06-03-005826
-    - `smoke-2026-06-04-2.json`
-    - `smoke-2026-06-04-2.md` — Smoke 1000戦レポート — smoke-2026-06-04-012535
-    - `smoke-2026-06-04.json`
-    - `smoke-2026-06-04.md` — Smoke 1000戦レポート — smoke-2026-06-04-010419
-    - `smoke-2026-06-09.json`
-    - `smoke-2026-06-09.md` — Smoke 1000戦レポート — smoke-2026-06-09-095231
-    - `smoke-2026-06-10-2.json`
-    - `smoke-2026-06-10-2.md` — Smoke 1000戦レポート — smoke-2026-06-10-062652
-    - `smoke-2026-06-10.json`
-    - `smoke-2026-06-10.md` — Smoke 1000戦レポート — smoke-2026-06-10-004456
-    - `smoke-2026-06-11-2.json`
-    - `smoke-2026-06-11-2.md` — Smoke 1000戦レポート — smoke-2026-06-11-092725
-    - `smoke-2026-06-11-3.json`
-    - `smoke-2026-06-11-3.md` — Smoke 1000戦レポート — smoke-2026-06-11-103408
-    - `smoke-2026-06-11-4.json`
-    - `smoke-2026-06-11-4.md` — Smoke 1000戦レポート — smoke-2026-06-11-141135
-    - `smoke-2026-06-11-5.json`
-    - `smoke-2026-06-11-5.md` — Smoke 1000戦レポート — smoke-2026-06-11-230122
-    - `smoke-2026-06-11.json`
-    - `smoke-2026-06-11.md` — Smoke 1000戦レポート — smoke-2026-06-11-091943
-    - `smoke-2026-06-12-10.json`
-    - `smoke-2026-06-12-10.md` — Smoke 1000戦レポート — smoke-2026-06-12-114339
-    - `smoke-2026-06-12-11.json`
-    - `smoke-2026-06-12-11.md` — Smoke 1000戦レポート — smoke-2026-06-12-133748
-    - `smoke-2026-06-12-12.json`
-    - `smoke-2026-06-12-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-151849
-    - `smoke-2026-06-12-13.json`
-    - `smoke-2026-06-12-13.md` — Smoke 1000戦レポート — smoke-2026-06-12-153720
-    - `smoke-2026-06-12-14.json`
-    - `smoke-2026-06-12-14.md` — Smoke 1000戦レポート — smoke-2026-06-12-160518
-    - `smoke-2026-06-12-15.json`
-    - `smoke-2026-06-12-15.md` — Smoke 1000戦レポート — smoke-2026-06-12-163425
-    - `smoke-2026-06-12-2.json`
-    - `smoke-2026-06-12-2.md` — Smoke 1000戦レポート — smoke-2026-06-12-044245
-    - `smoke-2026-06-12-3.json`
-    - `smoke-2026-06-12-3.md` — Smoke 1000戦レポート — smoke-2026-06-12-045711
-    - `smoke-2026-06-12-4.json`
-    - `smoke-2026-06-12-4.md` — Smoke 1000戦レポート — smoke-2026-06-12-060106
-    - `smoke-2026-06-12-5.json`
-    - `smoke-2026-06-12-5.md` — Smoke 1000戦レポート — smoke-2026-06-12-062343
-    - `smoke-2026-06-12-6.json`
-    - `smoke-2026-06-12-6.md` — Smoke 1000戦レポート — smoke-2026-06-12-072348
-    - `smoke-2026-06-12-7.json`
-    - `smoke-2026-06-12-7.md` — Smoke 1000戦レポート — smoke-2026-06-12-074230
-    - `smoke-2026-06-12-8.json`
-    - `smoke-2026-06-12-8.md` — Smoke 1000戦レポート — smoke-2026-06-12-102922
-    - `smoke-2026-06-12-9.json`
-    - `smoke-2026-06-12-9.md` — Smoke 1000戦レポート — smoke-2026-06-12-111732
-    - `smoke-2026-06-12.json`
-    - `smoke-2026-06-12.md` — Smoke 1000戦レポート — smoke-2026-06-12-035822
-    - `smoke-2026-06-13.json`
-    - `smoke-2026-06-13.md` — Smoke 1000戦レポート — smoke-2026-06-13-000954
-    - `smoke-2026-06-14-10.json`
-    - `smoke-2026-06-14-10.md` — Smoke 1000戦レポート — smoke-2026-06-14-231808
-    - `smoke-2026-06-14-2.json`
-    - `smoke-2026-06-14-2.md` — Smoke 1000戦レポート — smoke-2026-06-14-111026
-    - `smoke-2026-06-14-3.json`
-    - `smoke-2026-06-14-3.md` — Smoke 1000戦レポート — smoke-2026-06-14-123914
-    - `smoke-2026-06-14-4.json`
-    - `smoke-2026-06-14-4.md` — Smoke 1000戦レポート — smoke-2026-06-14-135452
-    - `smoke-2026-06-14-5.json`
-    - `smoke-2026-06-14-5.md` — Smoke 1000戦レポート — smoke-2026-06-14-150542
-    - `smoke-2026-06-14-6.json`
-    - `smoke-2026-06-14-6.md` — Smoke 1000戦レポート — smoke-2026-06-14-153311
-    - `smoke-2026-06-14-7.json`
-    - `smoke-2026-06-14-7.md` — Smoke 1000戦レポート — smoke-2026-06-14-155224
-    - `smoke-2026-06-14-8.json`
-    - `smoke-2026-06-14-8.md` — Smoke 1000戦レポート — smoke-2026-06-14-163334
-    - `smoke-2026-06-14-9.json`
-    - `smoke-2026-06-14-9.md` — Smoke 1000戦レポート — smoke-2026-06-14-164554
-    - `smoke-2026-06-14.json`
-    - `smoke-2026-06-14.md` — Smoke 1000戦レポート — smoke-2026-06-14-105433
-    - `smoke-2026-06-15-2.json`
-    - `smoke-2026-06-15-2.md` — Smoke 1000戦レポート — smoke-2026-06-15-012438
-    - `smoke-2026-06-15-3.json`
-    - `smoke-2026-06-15-3.md` — Smoke 1000戦レポート — smoke-2026-06-15-025631
-    - `smoke-2026-06-15-4.json`
-    - `smoke-2026-06-15-4.md` — Smoke 1000戦レポート — smoke-2026-06-15-043218
-    - `smoke-2026-06-15-5.json`
-    - `smoke-2026-06-15-5.md` — Smoke 1000戦レポート — smoke-2026-06-15-075116
-    - `smoke-2026-06-15-6.json`
-    - `smoke-2026-06-15-6.md` — Smoke 1000戦レポート — smoke-2026-06-15-055858
-    - `smoke-2026-06-15-7.json`
-    - `smoke-2026-06-15-7.md` — Smoke 1000戦レポート — smoke-2026-06-15-062018
-    - `smoke-2026-06-15-8.json`
-    - `smoke-2026-06-15-8.md` — Smoke 1000戦レポート — smoke-2026-06-15-090452
     - `smoke-2026-06-15-9.json`
     - `smoke-2026-06-15-9.md` — Smoke 1000戦レポート — smoke-2026-06-15-135329
-    - `smoke-2026-06-15.json`
-    - `smoke-2026-06-15.md` — Smoke 1000戦レポート — smoke-2026-06-15-002732
     - `smoke-2026-06-16-2.json`
     - `smoke-2026-06-16-2.md` — Smoke 1000戦レポート — smoke-2026-06-16-011441
     - `smoke-2026-06-16-3.json`
@@ -848,6 +850,8 @@
     - `smoke-2026-06-22-7.md` — Smoke 1000戦レポート — smoke-2026-06-22-115036
     - `smoke-2026-06-22-8.json`
     - `smoke-2026-06-22-8.md` — Smoke 1000戦レポート — smoke-2026-06-22-123612
+    - `smoke-2026-06-22-9.json`
+    - `smoke-2026-06-22-9.md` — Smoke 1000戦レポート — smoke-2026-06-22-132417
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1044,6 +1048,7 @@
     - `2026-06-21.md` — セッションログ 2026-06-21 (㉗〜)
     - `2026-06-22-2.md` — セッション㉟ (2026-06-22) — continuation-nest engine 修正 + B06033/B06033P 解禁 (C 候補2)
     - `2026-06-22-3.md` — セッション㊴・㊵ アーカイブ (2026-06-22、Phase 3c / 3d) — memory.md ローテート
+    - `2026-06-22-4.md` — セッションログ 2026-06-22 (㊶〜㊸) — refactor Phase 3e/3f/3g
     - `2026-06-22.md` — セッション ㉝・㉞ アーカイブ (2026-06-21〜22)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
@@ -5236,6 +5241,22 @@
   - `tsconfig.node.json`
   - `vite.config.meta.ts` — spec: .claude/specs/meta-ui/01-project-setup.md
 - **`scripts/`** — ビルド・メンテナンスツール
+  - **`_archive/`**
+    - **`survey/`**
+      - `build-remaining.ts` — Task A 再分類サーベイ — 残カタログの決定的再構築 (2026-06-07)
+      - `build-verified-codegen-input.cjs`
+      - `classify.ts` — Task A 再分類サーベイ — gate 検出トリアージ (2026-06-07, inline 分類)
+      - `dump.ts`
+      - `finalize.ts` — Task A 再分類サーベイ — 完走集約 (2026-06-07)
+      - `sweep-2026-06-15.ts` — トリアージ・スイープ (2026-06-15) — 全未実装カードの現行 engine 再分類
+      - `sweep-select-window.cjs`
+      - `sweep-window2.cjs`
+      - `verify-clone-identity.cjs`
+    - `fix-bug140-icon-abilities.mts` — BUG-140 一括補修 (one-shot): TSV cutIn/hirameki 列が非空なのに def に該当アイコン能力が
+    - `taskA-wave1-specs.cjs`
+    - `taskA-wave2-specs.cjs`
+    - `taskA-wave3-specs.cjs`
+    - `wf-gate5-batch4.mjs`
   - **`benchmark/`**
     - `mcts-vs-heuristic.ts` — scripts/benchmark/mcts-vs-heuristic — Phase 9-F: MCTS vs Heuristic 100 戦比較
     - `run.ts` — scripts/benchmark/run — Phase 9-H パフォーマンス計測ランナー
@@ -5260,20 +5281,9 @@
     - `aggregate.ts` — scripts/smoke/aggregate — Phase 9-A smoke aggregation (pure)
     - `format-md.ts` — scripts/smoke/format-md — Phase 9-A smoke Markdown formatter (pure)
     - `run-1000.ts` — scripts/smoke/run-1000 — Phase 9-A 1000-game AI vs AI smoke runner
-  - **`survey/`**
-    - `build-remaining.ts` — Task A 再分類サーベイ — 残カタログの決定的再構築 (2026-06-07)
-    - `build-verified-codegen-input.cjs`
-    - `classify.ts` — Task A 再分類サーベイ — gate 検出トリアージ (2026-06-07, inline 分類)
-    - `dump.ts`
-    - `finalize.ts` — Task A 再分類サーベイ — 完走集約 (2026-06-07)
-    - `sweep-2026-06-15.ts` — トリアージ・スイープ (2026-06-15) — 全未実装カードの現行 engine 再分類
-    - `sweep-select-window.cjs`
-    - `sweep-window2.cjs`
-    - `verify-clone-identity.cjs`
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
   - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):
-  - `fix-bug140-icon-abilities.mts` — BUG-140 一括補修 (one-shot): TSV cutIn/hirameki 列が非空なのに def に該当アイコン能力が
   - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
   - `lint-card-addition.ts` — Phase 7-C (LESSONS-LEARNED 教訓 3 enforcement):
   - `lint-component-testid.ts` — Phase 8-4: data-testid 必須 lint
@@ -5292,12 +5302,8 @@
   - `taskA-next-chunk.cjs`
   - `taskA-register.cjs`
   - `taskA-validate-specs.cjs`
-  - `taskA-wave1-specs.cjs`
-  - `taskA-wave2-specs.cjs`
-  - `taskA-wave3-specs.cjs`
   - `tsconfig.json`
   - `wf-certify.mjs`
-  - `wf-gate5-batch4.mjs`
 - **`src/`** — TypeScript ソース
   - **`ai/`** — AI policies (Random / Heuristic / MCTS / リプレイ)
     - **`policies/`**
@@ -5325,7 +5331,7 @@
       - `partners.ts` — cards/_generated/partners — auto-generated by scripts/gen-cards/gen-partners.cjs
       - `simple-cards.ts` — cards/_generated/simple-cards — auto-generated by scripts/gen-cards/…
     - **`_reuse/`**
-      - `index.ts` — cards/_reuse — catalog-reuse バッチ (手書き, card-condition-catalog 流用) + engine-exten…
+      - `index.ts` — cards/_reuse — エンジン既存機能を流用するカード群の barrel (手書き集約)。
     - **`_shared/`** — カード共通クラス (cutinFixedAP / partnerColorKeyword / eventRemoveByAP 等)
       - `.gitkeep`
       - `caseDeclaredEvidenceFlip.ts` — cards/_shared/caseDeclaredEvidenceFlip

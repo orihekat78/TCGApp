@@ -53,3 +53,10 @@ phase8.5-hand-expanded.png
 phase8.5-narrator-log-moved.png
 phase8.6-reasoning-flow.png
 analysis.txt
+
+.superpowers/
+
+# Phase 4: 日次 smoke レポートは再生成可・追跡しない (smoke-baseline.json は例外で tracked)。
+# 既存の dated smoke は .claude/reports/_archive/ へ退避済 (履歴保持)。
+/.claude/reports/smoke-*
+!/.claude/reports/smoke-baseline.json

@@ -1,7 +1,7 @@
-// cards/_reuse — catalog-reuse バッチ (手書き, card-condition-catalog 流用) + engine-extension #1 batch
-// 284 件 catalog-reuse + 10 件 engine-extension #1 (leave:to-remove batch) = 294 件。
-// catalog-reuse はスキャン生成 (.tmp/reuse/build-barrel.cjs)、engine-extension #1 batch は手書き。
-// 各カードは header に "catalog-reuse batch" または "engine-extension #1 leave:to-remove batch" マーカ。
+// cards/_reuse — エンジン既存機能を流用するカード群の barrel (手書き集約)。
+// 構成: catalog-reuse 基底バッチ (card-condition-catalog 流用、.tmp/reuse/build-barrel.cjs でスキャン生成) +
+//   以降に追記された engine-extension / Task / cluster / wave / micro-cluster 各バッチ (すべて手書き)。
+// 正準枚数は末尾 REUSE_CARDS 配列の長さ (現 802 枚、wave 追加で増える)。各バッチの内訳は配列ゾーンの section マーカ参照。
 import type { CardDef } from '@/engine/types';
 
 import { D01003 } from '../ct-d01/D01003.js';

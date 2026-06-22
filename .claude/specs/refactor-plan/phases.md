@@ -88,10 +88,10 @@
 - 3f (✅ 2026-06-22): engine `applyMove` (policy.ts:209、Move 11-member) に default:never (void 変種) 追加。**着手前 opus 3 lens レビュー** (BLOCKER 0/GO)。負テスト TS2322 + numstat 8add/0del。水平展開で resolve-picks.ts:431 の同型 gap → Phase 3g 切出し。詳細 phase-3f-design.md。
 - 3g (✅ 2026-06-22): resolve-picks.ts:431 `switch(effect.kind)` に `case 'chain'` 追加 (negate/custom と明示 passthrough) + default を never 化。**着手前 opus 3 lens レビュー** (403k/BLOCKER 0/GO): invariance=invariant・guard=return (produce try 外、3f 同判断)・活性バグ **無し** (ALL_CARDS object-walk で chain step の choice/optional = 0 件)。chain step の atom $pick は dispatch 時 tryRePickFromAtom で解決ゆえ passthrough で drop なし。Option B (walk 救済) は latent future-only。負テスト TS2322@(574,13) / numstat 16add/1del (default アーム再構成=非 additive、実行差分で担保)。詳細 phase-3g-design.md / [BUG-152](../../bugs/BUG-152.md)。
 
-## 4. 周辺整理
+## 4. 周辺整理 (✅ 2026-06-22)
 
-- scripts/survey 4 本を `scripts/_archive/` へ / specs 2026-05-11 系 13 本の現行性検証 → stale は
-  `specs/_archive/` / `_reuse/index.ts` のコメント規約統一 / sessions・reports のアーカイブ方針決定
+- scripts 14本→`scripts/_archive/` (survey9+taskA-wave1/2/3-specs+wf-gate5-batch4+fix-bug140、無参照を grounded確認+tsconfig exclude)。
+  specs 2026-05-11-ui 13本=**全 CURRENT_KEEP** (live `// spec`参照で計画の stale前提を是正・archiveせず)。`_reuse/index.ts` ヘッダ de-churn (294→正準=配列長) / reports=policy E (dated smoke gitignore + 既存298→`reports/_archive/`) / sessions=維持。詳細 review-records.md §4。
 
 ## レビュー記録
 

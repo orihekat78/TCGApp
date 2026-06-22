@@ -31,7 +31,7 @@
 | 3e | useEngineDispatch exhaustiveness (着手前4lens一致 minimal。両 switch default:never ガード**のみ**採用[additive]。#1分割/#2 axId globalThis化=DROP[490<500/slot逆行/BUG-034]・#3 family型化=SUBSUMED) | 低 | ✅ 2026-06-22 |
 | 3f | engine applyMove (policy.ts:209/Move 11-member) に default:never [void変種・additive]。着手前 opus 3 lens (BLOCKER0/GO)・負テストTS2322・numstat 8/0。水平展開で resolve-picks.ts:431 同型gap発見→3g | 中 | ✅ 2026-06-22 |
 | 3g | resolve-picks.ts:431 switch(effect.kind) に case'chain' 追加 (negate/custom 明示 passthrough) + default never化。着手前 opus 3 lens (403k/GO/活性バグ無)。chain step の atom $pick は dispatch 解決ゆえ passthrough で drop なし ([BUG-152](../../bugs/BUG-152.md) latent化) | 中 | ✅ 2026-06-22 |
-| 4 | 周辺整理 (scripts 棚卸し / specs stale 検証 / _reuse 規約統一 / sessions アーカイブ) | 低 | ⏳ |
+| 4 | 周辺整理 (scripts 14本→_archive / specs 2026-05-11 系は全 CURRENT_KEEP=非archive / _reuse ヘッダ de-churn / reports=E archive+gitignore / sessions=維持) | 低 | ✅ 2026-06-22 |
 
 ## 数値ターゲット
 

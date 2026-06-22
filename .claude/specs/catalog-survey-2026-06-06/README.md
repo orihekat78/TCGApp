@@ -64,7 +64,7 @@ loseGame verb 無 / partner-ability rewrite 無。
 
 ## 再生成コマンド (決定的・再現可能)
 ```
-npx tsx scripts/survey/build-remaining.ts   # 残カード再現 → remaining-to-classify.json
-npx tsx scripts/survey/classify.ts          # gate トリアージ → classify-triage.json
-npx tsx scripts/survey/finalize.ts          # 集約 → classification-complete.json + task-d-priority-map.json
+npx tsx scripts/_archive/survey/build-remaining.ts   # 残カード再現 → remaining-to-classify.json
+npx tsx scripts/_archive/survey/classify.ts          # gate トリアージ → classify-triage.json
+npx tsx scripts/_archive/survey/finalize.ts          # 集約 → classification-complete.json + task-d-priority-map.json
 ```
