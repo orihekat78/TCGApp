@@ -7,19 +7,20 @@ import { setupGamePage } from './helpers/setup.js';
 //   1. 観戦モードで SpectatorHUD が表示される (slider + pause + step ボタン)
 //   2. 速度 preset 切替で store.aiSpeedMs / DOM が反映
 //   3. pause で AI が止まる (turn 数が進まない)
-//   4. step button で 1 cycle (opp + self) 進む
+//   4. step button で AI が 1 手ずつ進む (design: per-move / 1ステップ。turn が進むまで繰り返せる)
 //   5. resume で連続進行に復帰
 
 type GameWindow = {
   __game: {
     getState: () => {
-      gameState: { turn: { number: number; player: 'self' | 'opp' }; gameResult?: unknown } | null;
+      gameState: { turn: { number: number; player: 'self' | 'opp' }; gameResult?: unknown; log: unknown[] } | null;
       activeActionId: string | null;
       spectatorMode: boolean;
       aiSpeedMs: number;
       isAiPaused: boolean;
       aiStepCounter: number;
       setAiPaused: (v: boolean) => void;
+      setAiSpeedMs: (ms: number) => void;
     };
   };
 };
@@ -76,7 +77,7 @@ test.describe('user_request #12: SpectatorHUD speed + pause/step', () => {
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 
-  test('pause → step → resume の連携 (turn が止まる / 1 step で進む / resume で連続)', async ({ page }) => {
+  test('pause → step → resume の連携 (turn が止まる / step で進む / resume で連続)', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     // Pre-pause
     await page.evaluate(() => {
@@ -94,12 +95,40 @@ test.describe('user_request #12: SpectatorHUD speed + pause/step', () => {
     const turn2 = await page.evaluate(() => (window as unknown as GameWindow).__game.getState().gameState!.turn.number);
     expect(turn2, '1 秒待っても paused なので turn 不変').toBe(turn1);
 
-    // step を 1 回押す → turn が進む (両 driver が consume するので opp+self 1 cycle)
-    await page.locator('[data-testid="spectator-step"]').click();
-    // step 反映に短い wait
-    await page.waitForTimeout(500);
-    const turn3 = await page.evaluate(() => (window as unknown as GameWindow).__game.getState().gameState!.turn.number);
-    expect(turn3, 'step 後は turn が進む').toBeGreaterThan(turn2);
+    // step button は design 上 per-move (= 1 手) 進行 (aiStepCounter は per-move / 1ステップ)。
+    // 先攻が self なら self driver が playTurn で 1 ターンを丸ごと進めるため 1 step で turn が
+    // 進むが、先攻が opp の場合 opp driver は stepTurn で 1 手ずつ進むため 1 step では turn 番号が
+    // 進まない。旧版は単一 step + fixed wait で「turn が進む」を期待しており、先攻の coin flip
+    // (約 50%) で flake していた。よって step ごとに 1 手前進することを確認しつつ、turn が進むまで
+    // 繰り返す形に変更する (先攻に依らず決定的)。
+    // 各 step を確実に消費させるため speed を最速 (0=即時 microtask) にし、連打による
+    // aiStepCounter collapse を避けて 1 手ずつ進行を待つ。
+    await page.evaluate(() => (window as unknown as GameWindow).__game.getState().setAiSpeedMs(0));
+    let turn3 = turn2;
+    let progressed = false;
+    for (let clicks = 0; clicks < 30 && turn3 <= turn2; clicks++) {
+      const before = await page.evaluate(() => {
+        const gs = (window as unknown as GameWindow).__game.getState().gameState!;
+        return { len: gs.log.length, turn: gs.turn.number };
+      });
+      await page.locator('[data-testid="spectator-step"]').click();
+      // この step が driver に消費される (log 追記 or turn 進行 = 1 手前進) のを待ってから次を押す
+      const moved = await page
+        .waitForFunction(
+          (b) => {
+            const gs = (window as unknown as GameWindow).__game.getState().gameState;
+            return !!gs && (gs.log.length > b.len || gs.turn.number > b.turn);
+          },
+          before,
+          { timeout: 5_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+      if (moved) progressed = true;
+      turn3 = await page.evaluate(() => (window as unknown as GameWindow).__game.getState().gameState!.turn.number);
+    }
+    expect(progressed, 'step で AI が 1 手以上前進する').toBe(true);
+    expect(turn3, 'step を繰り返すと turn が進む').toBeGreaterThan(turn2);
 
     // resume (pause toggle) → 連続進行
     await page.locator('[data-testid="spectator-pause-toggle"]').click();
