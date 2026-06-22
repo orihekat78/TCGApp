@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3770a42fb0c7`
+> Source hash: `90f4ad66eeef`
 
 engine namespace と仕様書の参照関係を Mermaid flowchart で表示。`cards-analysis/` 配下は 1:1 で量が多いため除外。Obsidian グラフビュー連携は [by-spec/](./by-spec/) / [by-engine/](./by-engine/) を参照。
 
@@ -29,6 +29,7 @@ flowchart LR
     S_engine_api_flow_control_md["engine-api-flow-control"]
     S_engine_api_flow_setup_md["engine-api-flow-setup"]
     S_engine_api_resolver_md["engine-api-resolver"]
+    S_refactor_plan_phase_3b_design_md["phase-3b-design"]
   end
   NS_cards -.-> S_cards_data_INDEX_md
   NS_cards -.-> S_engine_api_card_shape_md
@@ -36,6 +37,7 @@ flowchart LR
   NS_effect -.-> S_engine_api_atom_verbs_md
   NS_effect -.-> S_engine_api_effect_descriptor_md
   NS_effect -.-> S_engine_api_resolver_md
+  NS_effect -.-> S_refactor_plan_phase_3b_design_md
   NS_event -.-> S_engine_api_events_md
   NS_flow -.-> S_engine_api_flow_contact_md
   NS_flow -.-> S_engine_api_flow_control_md

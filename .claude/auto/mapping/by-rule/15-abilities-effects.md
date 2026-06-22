@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `2d5e936bc4e5`
+> Source hash: `d2251b2cad8f`
 
 公式ルール [`15-abilities-effects.md`](../../../rules/15-abilities-effects.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -32,11 +32,12 @@
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
+- [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (774)
+## 📄 参照ソース (775)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
@@ -58,4 +59,4 @@
 - [`src/cards/ct-d02/D02012.ts`](../../../../src/cards/ct-d02/D02012.ts)
 - [`src/cards/ct-d02/D02013.ts`](../../../../src/cards/ct-d02/D02013.ts)
 - [`src/cards/ct-d02/D02014.ts`](../../../../src/cards/ct-d02/D02014.ts)
-- _...ほか 754 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 755 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `2e5c7ca5d474`
+> Source hash: `f8fe14efa48d`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -17,14 +17,15 @@
 - [`21-declared-ability-cost.md`](../by-rule/21-declared-ability-cost.md)
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 
-## 📐 参照 Spec (4)
+## 📐 参照 Spec (5)
 
 - [`card-authoring-convention`](../by-spec/card-authoring-convention.md)
 - [`engine-api-atom-verbs`](../by-spec/engine-api-atom-verbs.md)
 - [`engine-api-effect-descriptor`](../by-spec/engine-api-effect-descriptor.md)
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
+- [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 
-## 📄 ソース (14)
+## 📄 ソース (15)
 
 - [`src/engine/effect/apply-pick.ts`](../../../../src/engine/effect/apply-pick.ts)
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
@@ -36,6 +37,7 @@
 - [`src/engine/effect/atom-handlers/scene.ts`](../../../../src/engine/effect/atom-handlers/scene.ts)
 - [`src/engine/effect/atom-pick-spec.ts`](../../../../src/engine/effect/atom-pick-spec.ts)
 - [`src/engine/effect/index.ts`](../../../../src/engine/effect/index.ts)
+- [`src/engine/effect/pending-state.ts`](../../../../src/engine/effect/pending-state.ts)
 - [`src/engine/effect/resolve-picks.ts`](../../../../src/engine/effect/resolve-picks.ts)
 - [`src/engine/effect/resolver.ts`](../../../../src/engine/effect/resolver.ts)
 - [`src/engine/effect/validate-spec-files.ts`](../../../../src/engine/effect/validate-spec-files.ts)

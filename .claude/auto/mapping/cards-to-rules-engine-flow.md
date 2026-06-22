@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0bc6504b3ac0`
+> Source hash: `9f29849d3506`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **116** ファイル（[全体 index](./index.md)）
+このグループ: **117** ファイル（[全体 index](./index.md)）
 
-## engine/effect (14)
+## engine/effect (15)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -22,6 +22,7 @@
 | [`src/engine/effect/atom-handlers/scene.ts`](../../../src/engine/effect/atom-handlers/scene.ts) | _(参照なし)_ |
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
+| [`src/engine/effect/pending-state.ts`](../../../src/engine/effect/pending-state.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/effect/resolve-picks.ts`](../../../src/engine/effect/resolve-picks.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/resolver.ts`](../../../src/engine/effect/resolver.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |

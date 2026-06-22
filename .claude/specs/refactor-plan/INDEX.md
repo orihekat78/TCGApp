@@ -25,7 +25,7 @@
 | 2b | 手動同期ペアの単一ソース化 (AtomVerb/Cost/HOOKS の union ↔ Set ↔ whitelist) | 中 | ✅ 2026-06-12 |
 | 2c | dispatch 契約是正 (declaredAbility の cost+ctx を dispatcher 内で構築) | 中 | ✅ 2026-06-12 |
 | 3a | atom-handlers.ts 分割 (1828 行 → barrel + _shared + core/scene/char/picks/misc) | 高 | ✅ 2026-06-22 |
-| 3b | pick-resolution 再設計 (resolve-picks/apply-pick/resolver の BUG パッチ 15+ 件を意味整理) | 高 | ⏳ |
+| 3b | pick-resolution 責務 3 分割 (walk=resolve-picks / pending=pending-state / continuation=apply-pick) | 高 | ✅ 2026-06-22 |
 | 3c | globalThis side-channel 縮減 (8 → continuation/EffectCtx 統合可能な 5 を移設) | 高 | ⏳ |
 | 3d | UI hooks 分割 (useActionsPanelFlow 921 行 / useEngineDispatch 29 case) | 高 | ⏳ |
 | 4 | 周辺整理 (scripts 棚卸し / specs stale 検証 / _reuse 規約統一 / sessions アーカイブ) | 低 | ⏳ |

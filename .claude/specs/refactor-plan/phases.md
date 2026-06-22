@@ -60,8 +60,11 @@
 - 3a (✅ 2026-06-22): atom-handlers 1828 行を barrel + _shared + core/scene/char/picks/**misc** に分割
   (計画 4→5 に補正: core に lifecycle/control verb を含めると <500 超過のため misc 分離)。
   extract-and-dispatch (case body 無改変・決定論 codemod)。byte-identity 52/52 検証。詳細 phase-3a-design.md / 下記レビュー記録。
-- 3b: pick-resolution の責務 3 分割
-  (walk / pending管理 / continuation) + BUG-054〜121 を意味 group 化した回帰テスト棚卸し。
+- 3b (✅ 2026-06-22): pick-resolution の責務 3 分割 — resolve-picks.ts (849行) の pending管理 (連続ブロック
+  L166-467) を新 pending-state.ts へ verbatim 移送し、resolve-picks=walk / pending-state=pending /
+  apply-pick=continuation に分離。旧 public pending API は barrel 再export で importer 改変0。BUG-054〜121 を
+  walk/pending/continuation の 3 group に分類した回帰テスト棚卸し (phase-3b-test-inventory.md)。詳細
+  phase-3b-design.md / 下記レビュー記録。決定論 codemod + 独立 byte-identity 検証 (vs git HEAD)。
 - 3c: __pendingEffectChoiceBindings / OptionalSide / OptionalResume / DeckRevealSide / chainStepNoApply
   を continuation・EffectCtx へ (UI 境界 3 channel は存置)。3d: useActionsPanelFlow の enum/run 分離 +
   cost-builder 抽出、useEngineDispatch の action union 型化

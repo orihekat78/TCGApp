@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 414
-- **ファイル数**: 7021
+- **ディレクトリ数**: 415
+- **ファイル数**: 7028
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -112,6 +112,7 @@
         - `phase-9-f-mcts.md` — 🤖 Spec 参照ハブ: phase-9-f-mcts
         - `phase-9-g-replay.md` — 🤖 Spec 参照ハブ: phase-9-g-replay
         - `phase-9-h-performance.md` — 🤖 Spec 参照ハブ: phase-9-h-performance
+        - `refactor-plan--phase-3b-design.md` — 🤖 Spec 参照ハブ: phase-3b-design
         - `shared-classes--caseDeclaredEvidenceFlip.md` — 🤖 Spec 参照ハブ: caseDeclaredEvidenceFlip
         - `shared-classes--caseResolvedHandRemove.md` — 🤖 Spec 参照ハブ: caseResolvedHandRemove
         - `shared-classes--caseTraitConditioned.md` — 🤖 Spec 参照ハブ: caseTraitConditioned
@@ -469,6 +470,7 @@
     - `2026-06-21-06-wave-turn-leveldown.md` — カード追加 — turn-scope levelDelta (誤 DEFER の engine変更0 カード解禁, 1 base)
     - `2026-06-22-01-engine-continuation-nest.md` — engine: continuation-nest 修正 (BUG-111 #3) + B06033/B06033P 解禁
     - `2026-06-22-02-open-bugs-resolution.md` — bugs: 未解決 BUG-133〜136 を一括解消 (検証 / 見送り / reorder UI)
+    - `2026-06-22-03-refactor-phase-3ab-engine-split.md` — 全体リファクタ Phase 3a/3b — engine 内部の巨大ファイル分割 (挙動 byte-identical)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -828,6 +830,8 @@
     - `smoke-2026-06-21.md` — Smoke 1000戦レポート — smoke-2026-06-21-003553
     - `smoke-2026-06-22-2.json`
     - `smoke-2026-06-22-2.md` — Smoke 1000戦レポート — smoke-2026-06-22-042830
+    - `smoke-2026-06-22-3.json`
+    - `smoke-2026-06-22-3.md` — Smoke 1000戦レポート — smoke-2026-06-22-053242
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1241,6 +1245,8 @@
     - **`refactor-plan/`**
       - `INDEX.md` — 全体リファクタリング計画 (2026-06-12 起案、ユーザー指示)
       - `phase-3a-design.md` — Phase 3a 設計: atom-handlers.ts 分割 (着手前設計レビュー、2026-06-22)
+      - `phase-3b-design.md` — Phase 3b 設計: pick-resolution 責務 3 分割 (walk / pending / continuation)
+      - `phase-3b-test-inventory.md` — Phase 3b 回帰テスト棚卸し: BUG-054〜121 を責務 3 group へ
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
     - **`shared-classes/`**
@@ -4982,6 +4988,7 @@
 - **`.serena/`**
   - **`cache/`**
     - **`typescript/`**
+  - **`memories/`**
   - `.gitignore`
   - `project.local.yml`
   - `project.yml`
@@ -6738,6 +6745,7 @@
       - `atom-handlers.ts` — engine.effect.runAtom — Atom Verb dispatcher
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
       - `index.ts` — engine.effect namespace barrel
+      - `pending-state.ts` — engine.effect.pending-state — pick/choice/…
       - `resolve-picks.ts` — engine.effect.resolveEffectPicks — Phase 7-2 (BUG-035 fix) + Phase 7-3 (AI polic…
       - `resolver.ts` — engine.effect.run — Effect Descriptor 解釈器 (resolver)
       - `validate-spec-files.ts` — engine.effect.validate-spec-files — Node 専用 ruleRefs 実在チェック
