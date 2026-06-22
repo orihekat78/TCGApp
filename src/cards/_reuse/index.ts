@@ -176,6 +176,8 @@ import { B05110P } from '../ct-p05/B05110P.js';
 import { B05112 } from '../ct-p05/B05112.js';
 import { B06029 } from '../ct-p06/B06029.js';
 import { B06029P } from '../ct-p06/B06029P.js';
+import { B06033 } from '../ct-p06/B06033.js';
+import { B06033P } from '../ct-p06/B06033P.js';
 import { B06030 } from '../ct-p06/B06030.js';
 import { B06030P } from '../ct-p06/B06030P.js';
 import { B06035 } from '../ct-p06/B06035.js';
@@ -1071,6 +1073,7 @@ export const REUSE_CARDS: CardDef[] = [
   // handToEvidence micro-cluster (2026-06-21): 手札⇔証拠 swap (「証拠1つ選び手札へ。そうした場合、手札1枚を
   //   裏向きで証拠として得る」chain[evidenceToHand, handToEvidence])。ヘビ男 (新 verb handToEvidence)。
   B06029, B06029P,
+  B06033, B06033P,
   // evidence-top-to-hand micro-cluster (2026-06-21)
   B03077,
   // evidence-self→hand wave (hirameki このカード手札に加える)

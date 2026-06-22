@@ -17,9 +17,27 @@
 //     なれば再検討する (TODO: phase 4 以降)。
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
+import type { ContinuationFrame } from './resolve-picks.js';
 import { runAtom } from './atom-handlers.js';
 import { evalCond } from '../cond/eval.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
+
+/**
+ * BUG-111 family (continuation-nest, 2026-06-22): 中断 pick に continuation frame を連結する。
+ * 既存 continuation があれば **上書きせず** outer 連結の末尾に append する。
+ * これにより `sequence[chain[pausing-pick, step2], step3]` で chain (内側) が step2 を同梱した後、
+ * 親 sequence (外側) が step3 を append でき、head=内側 → outer=外側 の順に実行される。
+ * 単一 frame (outer 無し) は従来 (BUG-111 #1/#2) と byte 互換。
+ */
+function attachContinuation(pick: { continuation?: ContinuationFrame }, frame: ContinuationFrame): void {
+  if (!pick.continuation) {
+    pick.continuation = frame;
+    return;
+  }
+  let tail = pick.continuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = frame;
+}
 
 /**
  * Effect Descriptor を解釈・実行する。
@@ -34,7 +52,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       // pick 解決前の盤面で評価される不具合 (D08024 step2 AP対象 / D11020 step2 条件 / D11014 step3 draw) を修正。
       // 注: pick を持たない step のみの sequence は queue 長が増えず従来通り一括実行 (動作不変)。
       const gSeq = globalThis as {
-        __pendingEffectPickQueue?: { continuation?: { remainder: Effect[]; ctx: EffectCtx; kind: 'sequence' | 'chain' } }[];
+        __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
       };
       for (let i = 0; i < eff.steps.length; i++) {
         const qBefore = gSeq.__pendingEffectPickQueue?.length ?? 0;
@@ -44,8 +62,9 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           const remainder = eff.steps.slice(i + 1);
           if (remainder.length > 0) {
             // BUG-111: continuation を「この step で enqueue された最初の pick」本体に同梱 (別 FIFO 廃止 → 1:1)。
+            // BUG-111 family (nest): 内側 (chain) が既に同梱済なら上書きせず outer に append する。
             const firstNew = gSeq.__pendingEffectPickQueue?.[qBefore];
-            if (firstNew) firstNew.continuation = { remainder, ctx, kind: 'sequence' };
+            if (firstNew) attachContinuation(firstNew, { remainder, ctx, kind: 'sequence' });
           }
           return; // sequence 一時停止 (pick 解決後に continuation で残り step が post-pick 盤面で実行)
         }
@@ -58,7 +77,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     // effectPickResolve / drainAiEffectPicks が pick 解決時に実行する。
     case 'chain': {
       const g = globalThis as {
-        __pendingEffectPickQueue?: { continuation?: { remainder: Effect[]; ctx: EffectCtx; kind: 'sequence' | 'chain' } }[];
+        __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
         __chainStepNoApply?: boolean;
       };
       for (let i = 0; i < eff.steps.length; i++) {
@@ -69,10 +88,11 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const queueLenAfter = g.__pendingEffectPickQueue?.length ?? 0;
         if (queueLenAfter > queueLenBefore) {
           // step が pick await → 残り step を「この step で enqueue された最初の pick」本体に同梱 (BUG-111)
+          // BUG-111 family (nest): 既存 continuation があれば上書きせず outer に append する。
           const remainder = eff.steps.slice(i + 1);
           if (remainder.length > 0) {
             const firstNew = g.__pendingEffectPickQueue?.[queueLenBefore];
-            if (firstNew) firstNew.continuation = { remainder, ctx, kind: 'chain' };
+            if (firstNew) attachContinuation(firstNew, { remainder, ctx, kind: 'chain' });
           }
           return; // chain 一時停止
         }

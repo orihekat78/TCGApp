@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 6997
+- **ファイル数**: 7005
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -467,6 +467,7 @@
     - `2026-06-21-04-wave-evidence-top-to-hand.md` — engine拡張 micro-cluster — evidence-top→hand (evidenceToHand fromTop フラグ, 1刷)
     - `2026-06-21-05-wave-evidence-self-to-hand.md` — engine拡張 micro-cluster — evidence-self→hand (handAddFromRemove fromSelf フラグ, 1 b…
     - `2026-06-21-06-wave-turn-leveldown.md` — カード追加 — turn-scope levelDelta (誤 DEFER の engine変更0 カード解禁, 1 base)
+    - `2026-06-22-01-engine-continuation-nest.md` — engine: continuation-nest 修正 (BUG-111 #3) + B06033/B06033P 解禁
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -824,6 +825,8 @@
     - `smoke-2026-06-21-4.md` — Smoke 1000戦レポート — smoke-2026-06-21-120249
     - `smoke-2026-06-21.json`
     - `smoke-2026-06-21.md` — Smoke 1000戦レポート — smoke-2026-06-21-003553
+    - `smoke-2026-06-22.json`
+    - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -1016,6 +1019,7 @@
     - `2026-06-21-4.md` — 作業ログ — 名探偵コナンプロジェクト
     - `2026-06-21-5.md` — 作業ログ — 名探偵コナンプロジェクト
     - `2026-06-21.md` — セッションログ 2026-06-21 (㉗〜)
+    - `2026-06-22.md` — セッション ㉝・㉞ アーカイブ (2026-06-21〜22)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -6103,6 +6107,8 @@
       - `B06030P.ts` — cards/ct-p06/B06030P 松尾芭蕉 (キャラ) — catalog-reuse batch (variant of B06030)
       - `B06031.ts` — cards/ct-p06/B06031 三好清海入道 (character) — Task A green候補 (engine変更0)
       - `B06031P.ts` — cards/ct-p06/B06031P 三好清海入道 (character) — Task A green候補 (engine変更0)
+      - `B06033.ts` — cards/ct-p06/B06033 「わが味方となるべし!!」 (イベント) — continuation-nest cluster (2026-06-22…
+      - `B06033P.ts` — cards/ct-p06/B06033P 「わが味方となるべし!!」 (イベント) — continuation-nest cluster (2026-06-2…
       - `B06035.ts` — cards/ct-p06/B06035 風神剣 (イベント) — catalog-reuse batch
       - `B06038.ts` — cards/ct-p06/B06038 鬼丸猛 (character) — engine拡張 wave#2 cluster15 follow-up (remov…
       - `B06038P.ts` — cards/ct-p06/B06038P 鬼丸猛 (character, パラレル) — engine拡張 wave#2 cluster15 follow-up…
@@ -7106,6 +7112,7 @@
     - `cluster7-hand-count-cards-behavioral.test.ts` — cluster7 — engine変更0 card-authoring 2枚 (B07067 沖矢昴 /…
     - `cluster8-hirameki-suppress.test.ts` — cluster8 — ヒラメキ抑止窓 (B06049 a2) を実 engine 経路で駆動する挙動テスト
     - `cluster9-setcard-leave.test.ts` — cluster9 — setcard:leave hook を実 engine 経路で駆動する挙動テスト (engine拡張 wave#2 cluster9,…
+    - `continuation-nest-b06033.test.ts` — continuation-nest cluster — B06033/B06033P「わが味方となるべし!!」(緑 L6 event) の挙動テスト。
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `distinct-name-count.test.ts` — distinct-name-count — sceneHas が query.distinctNames を honor して「それぞれカード名の異なる
     - `enter-sleep-self-batch.test.ts` — Task A batch#2 — A.enter+hirameki クラスタ: 自己「スリープ状態で登場」representative
@@ -7203,6 +7210,7 @@
       - `bug-083-multi-entry-switch.test.ts` — BUG-083 characterization: 効果で複数キャラを同時登場させ現場上限 (5) を超える場合の挙動。
       - `bug-108-choice-index.test.ts` — BUG-108: choice effect の choiceIndex が production の人間/AI どちらでも set されず
       - `bug-109-ai-pa-drain.test.ts` — BUG-109: PA 短縮形 atom (charModifyAP/LP 等) が AI/CPU 経路で silent no-op になる問題の修正検証。
+      - `bug-111-continuation-nest.test.ts` — BUG-111 family (continuation-nest): pick が `sequence[chain[pausing-pick, step2],…
       - `bug-111-human-decline-repro.test.ts` — BUG-111 manifestation #2 REPRO — human-decline 経路の chain-gate / 必須末尾。
       - `bug-111-pick-continuation-pairing.test.ts` — BUG-111: pick↔continuation の FIFO 対応が multi-step で desync しうる。
       - `bug-114-discard-bind-dyn.test.ts` — BUG-114 primitive: discard で除去した手札カードを bind し、その level/AP を dyn で参照する。

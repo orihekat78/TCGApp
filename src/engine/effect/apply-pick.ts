@@ -11,7 +11,7 @@
 //     human modal が無いため、PA 短縮形 atom の pick が drain されず no-op になる BUG-109 を解消)。
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
-import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide } from './resolve-picks.js';
+import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume } from './resolve-picks.js';
 
 type Player = 'self' | 'opp';
@@ -43,6 +43,39 @@ export function resolveCardIdFromPickUid(
   const ch = uid.match(/^([^#]+)#\d+$/);
   if (ch) return ch[1] ?? null;
   return pending.candidates.find((c) => c.uid === uid)?.cardId ?? null;
+}
+
+/**
+ * BUG-111 family (continuation-nest, 2026-06-22): continuation frame 連鎖 (head → outer) を順に実行する。
+ * 各 frame の remainder を保存 ctx で runEffect → runAllUntilEmpty。
+ * ある frame の remainder 実行中に **再 pause** (新 pick enqueue) したら、残りの outer frames を
+ * その新 pick に引き継いで停止する (外側 remainder は新 pick の解決時に実行される)。
+ * 単一 frame (outer 無し) は従来の「remainder を 1 回 runEffect + runAllUntilEmpty」と byte 互換。
+ */
+function runContinuationChain(state: GameState, head: ContinuationFrame | undefined): void {
+  const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };
+  let f: ContinuationFrame | undefined = head;
+  while (f) {
+    const qBefore = g.__pendingEffectPickQueue?.length ?? 0;
+    const remainderEffect: Effect = f.remainder.length === 1
+      ? f.remainder[0]!
+      : { kind: f.kind, steps: f.remainder };
+    runEffect(state, remainderEffect as never, f.ctx);
+    const qAfter = g.__pendingEffectPickQueue?.length ?? 0;
+    if (qAfter > qBefore && f.outer) {
+      // remainder 自身が再 pause → 残り outer frames を新 pick (queue[qBefore]) の continuation 末尾に append。
+      // (resolver が intra-frame remainder を既に同梱していれば、その outer 末尾に連結される。)
+      const firstNew = g.__pendingEffectPickQueue?.[qBefore];
+      if (firstNew) {
+        if (!firstNew.continuation) firstNew.continuation = f.outer;
+        else { let t = firstNew.continuation; while (t.outer) t = t.outer; t.outer = f.outer; }
+      }
+      runAllUntilEmpty(state);
+      return;
+    }
+    runAllUntilEmpty(state);
+    f = f.outer;
+  }
 }
 
 /**
@@ -113,11 +146,8 @@ export function applyPickAndContinuation(
     runEffect(state, resolvedAtom as never, chainCont.ctx);
     runAllUntilEmpty(state);
     // BUG-111 #2: multi-step remainder の wrap は origin kind で行う (sequence は chain-gate を持たない)。
-    const remainderEffect: Effect = chainCont.remainder.length === 1
-      ? chainCont.remainder[0]!
-      : { kind: chainCont.kind, steps: chainCont.remainder };
-    runEffect(state, remainderEffect as never, chainCont.ctx);
-    runAllUntilEmpty(state);
+    // BUG-111 family (nest): head → outer の順に frame 連鎖を実行 (再 pause は新 pick へ引継ぎ)。
+    runContinuationChain(state, chainCont);
   } else {
     event.queue(
       state,
@@ -142,12 +172,12 @@ export function applyPickSkipAndContinuation(
   pending: PendingEffectPickSide,
   runDeclinedAtom = true,
 ): void {
-  const chainCont = pending.continuation;
+  const head = pending.continuation;
   // BUG-111 #2 (2026-06-16): runDeclinedAtom で declined head atom を再実行するか分岐する。
   //   - true (deckRevealUntil skipResolvesAtom): atom を __declined で再実行 (公開カードのデッキ下移動等、
   //     atom 側の必須 0枚解決を行う)。従来の唯一の挙動。
-  //   - false (sequence-origin decline): declined 0-pick = 何もしない (rules/15) ため head atom を再実行せず
-  //     remainder のみ実行する。単数 sceneEnter の __declined 未対応による pick 再 push を回避する。
+  //   - false (sequence-origin / chain-origin decline): declined 0-pick = 何もしない (rules/15) ため head atom を
+  //     再実行せず remainder のみ実行する。単数 sceneEnter の __declined 未対応による pick 再 push を回避する。
   //     head の bind は unbound のままで、後続 conditional は boundMatchesFilter not-matched で正しく skip する。
   if (runDeclinedAtom) {
     const resolvedAtom: Effect = {
@@ -155,9 +185,9 @@ export function applyPickSkipAndContinuation(
       verb: pending.atomVerb as never,
       args: { ...pending.atomArgs, __declined: true },
     };
-    if (chainCont) {
+    if (head) {
       // applyPickAndContinuation と同一の保存 ctx 共有 (BUG-107) — 空 bind が remainder から見える
-      runEffect(state, resolvedAtom as never, chainCont.ctx);
+      runEffect(state, resolvedAtom as never, head.ctx);
       runAllUntilEmpty(state);
     } else {
       event.queue(
@@ -170,14 +200,19 @@ export function applyPickSkipAndContinuation(
       runAllUntilEmpty(state);
       return;
     }
+    // deckRevealUntil: head.remainder (デッキ下移動等の必須 step) + outer を実行 (head から連鎖)。
+    runContinuationChain(state, head);
+    return;
   }
-  if (chainCont) {
-    // BUG-111 #2: remainder は origin kind で wrap (sequence-origin は各 step 独立 = chain-gate を適用しない)。
-    const remainderEffect: Effect = chainCont.remainder.length === 1
-      ? chainCont.remainder[0]!
-      : { kind: chainCont.kind, steps: chainCont.remainder };
-    runEffect(state, remainderEffect as never, chainCont.ctx);
-    runAllUntilEmpty(state);
+  // runDeclinedAtom === false: 「〜してもよい」decline。
+  //   - sequence-origin head: head.remainder は独立 step (mandatory) → 実行 (rules/15) + outer。
+  //   - chain-origin head: head.remainder は「そうした場合」gate → skip。BUG-111 family (nest) では
+  //     outer (= 外側 sequence の remainder。例 B06033 sceneEnter) のみ実行する (rules/25 gate は内側のみ)。
+  if (!head) return;
+  if (head.kind === 'sequence') {
+    runContinuationChain(state, head);
+  } else {
+    runContinuationChain(state, head.outer);
   }
 }
 
@@ -365,14 +400,15 @@ export function drainAiEffectPicks(
         applyPickSkipAndContinuation(state, pending);
         continue;
       }
-      // BUG-111 #2: sequence-origin の 0枚解決は末尾 step (mandatory) を実行する (rules/15 独立 step)。
-      //   AI は通常 greedy で decline しない (chooseAiPick は候補空のときのみ null) ため本枝は防御的。
-      if (pending.continuation?.kind === 'sequence') {
+      // BUG-111 #2 / family (nest): continuation があれば head の kind で gate しつつ実行する。
+      //   sequence-origin → head.remainder (mandatory) + outer / chain-origin → outer のみ (「そうした場合」gate)。
+      //   chain-origin で outer 無し (standalone chain) は no-op = 従来の drop と同一。
+      //   AI は通常 greedy で decline しない (chooseAiPick は候補空のときのみ null) ため本枝は主に防御的。
+      if (pending.continuation) {
         applyPickSkipAndContinuation(state, pending, false);
         continue;
       }
-      // 候補 0 → skip (chain-origin gate / continuation 無し)。continuation は pending 本体に同梱されるため、
-      // queue から取り出した時点で対の continuation も一緒に drop される (別 FIFO の shift は不要)。
+      // 候補 0 + continuation 無し → 純粋 skip。
       continue;
     }
     applyPickAndContinuation(state, pending, pickedUid, pickedUids);

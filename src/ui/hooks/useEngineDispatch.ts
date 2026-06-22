@@ -428,19 +428,21 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           applyPickSkipAndContinuation(draft, pending);
           return;
         }
-        // BUG-111 #2 (2026-06-16): sequence-origin continuation の 0枚 decline は末尾 step (mandatory) を
-        //   実行する (rules/15 sequence の各 step は独立。「〜してもよい」は「〜する」を gate しない)。
-        //   chain-origin は drop = 「そうした場合」gate (rules/25)。declined head atom は再実行しない
-        //   (runDeclinedAtom=false): declined 0-pick=何もしない、head bind は unbound で後続 conditional が
-        //   not-matched で正しく skip。choice/optional の末尾は runEffect 経路では human surface しない既知 gap
-        //   (B09056 DEFER 根拠)。
-        if ((pending as { continuation?: { kind?: string } }).continuation?.kind === 'sequence') {
+        // BUG-111 #2 (2026-06-16) / family (nest, 2026-06-22): continuation があれば head の kind で gate しつつ
+        //   実行する (applyPickSkipAndContinuation 内で分岐)。
+        //   - sequence-origin head: 末尾 step (mandatory) を実行 (rules/15 sequence の各 step は独立。
+        //     「〜してもよい」は「〜する」を gate しない) + outer。
+        //   - chain-origin head: head.remainder は「そうした場合」gate で drop (rules/25) するが、外側 (outer)
+        //     sequence の remainder (例 B06033 sceneEnter) は実行する (nest)。outer 無しの standalone chain は no-op。
+        //   declined head atom は再実行しない (runDeclinedAtom=false): declined 0-pick=何もしない、head bind は
+        //   unbound で後続 conditional が not-matched で正しく skip。choice/optional の末尾は runEffect 経路では
+        //   human surface しない既知 gap (B09056 DEFER 根拠)。
+        if ((pending as { continuation?: unknown }).continuation) {
           applyPickSkipAndContinuation(draft, pending, false);
           return;
         }
-        // skip (chain-origin gate / continuation 無しの任意効果)。
-        // BUG-111: continuation は pending 本体 (pending.continuation) に同梱されるため、
-        // user skip 時は pending を破棄すれば対の continuation も自動 drop される (別 FIFO shift 不要)。
+        // continuation 無しの任意効果 → 純粋 skip。
+        // BUG-111: continuation は pending 本体に同梱されるため pending 破棄で対の continuation も drop。
         // クリアは produce 後の post-dispatch drain で行う (return のみ)
         return;
       }

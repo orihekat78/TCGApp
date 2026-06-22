@@ -203,6 +203,19 @@ declare global {
   var __pendingEffectOptionalResume: Effect | null | undefined;
 }
 
+/**
+ * BUG-111 family (continuation-nest, 2026-06-22): 中断 pick の残り step を表す frame。
+ * `outer` で外側の囲い (sequence/chain) の remainder を連結する linked list。
+ * 内側 (head) が先に実行され、その後 `outer` を辿って外側 remainder を実行する。
+ * 単一 frame (outer 無し) は BUG-111 (#1/#2) 以前と byte 互換。
+ */
+export type ContinuationFrame = {
+  remainder: Effect[];
+  ctx: EffectCtx;
+  kind: 'sequence' | 'chain';
+  outer?: ContinuationFrame;
+};
+
 export type PendingEffectPickSide = {
   player: Player;
   /** 候補 uid 配列 (Candidate.kind === 'char' のみ抽出) */
@@ -230,8 +243,12 @@ export type PendingEffectPickSide = {
    * BUG-111 #2 (2026-06-16): `kind` で origin (sequence/chain) を記録する。decline (0枚選択) 時の扱いが
    * origin で分岐する (sequence = 末尾 step は独立で常時実行 rules/15 / chain = 「そうした場合」gate で drop)。
    * multi-step remainder の wrap も origin kind で行い、sequence に chain-gate を誤適用しない。
+   *
+   * BUG-111 family (continuation-nest, 2026-06-22): `sequence[chain[pausing-pick, step2], step3]` のように
+   * pick が 2 重に囲まれて pause したとき、内側 (chain) の frame に外側 (sequence) を `outer` として連結する
+   * (上書きせず nest)。head=内側が先に実行され、後で `outer` を辿って外側 remainder を実行する。
    */
-  continuation?: { remainder: Effect[]; ctx: EffectCtx; kind: 'sequence' | 'chain' };
+  continuation?: ContinuationFrame;
   /**
    * BUG-132 GAP-1 (2026-06-12): skip (pickedUid=null) を「破棄」ではなく「0枚選択の atom 解決」
    * として処理するマーカー (rules/15 「〜まで」=0枚可)。deckRevealUntil chooseMatch が set する。

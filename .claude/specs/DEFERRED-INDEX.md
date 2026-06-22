@@ -312,7 +312,7 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 | B08038 | yellow | 「この効果によって特徴[高校生]/[鈴木財閥]がリムーブされた場合」= **removed-by-this-effect** 条件。mill verb は bind せず、removeTraitAtLeast は remove パイル累積を見るため中盤で誤発火 (false-positive AP+1000) | mill bind + removed-by-this-effect condition (engine) |
 | ~~PR236~~ | ✅ 出荷済 | **出荷済 (2026-06-21、`cards/wave-distinct-name-count`)**。`sceneHas` eval を `query.distinctNames` honor に拡張 (1分岐 additive、新 Condition kind 無)。PR236/PR242 (大和敢助 declared a2 宣言ゲート) + B08067/B08067P (諸伏高明 enter conditional) 計 **4 刷**。詳細下記「distinct-name-count cluster」 | — |
 | B03033 | yellow | 「相手の現場のセット済キャラを AP-1000」= **相手側の数値 aura**。cluster13 aura は target 同 side (自陣) のみ走査。相手 side 数値 aura 機構なし | cross-side numeric aura (engine) |
-| B06033 | yellow (hirameki verb 解禁・別 gate で DEFER 継続) | ヒラメキ「このカードを手札に加える」= evidence-self→hand は 2026-06-21 解禁 (`handAddFromRemove fromSelf`、下記 cluster)。**残 gate**: a1 = `sequence[chain[evidenceToHand{pick}, handToEvidence], sceneEnter{YAIBA}]`。公式Q&A が swap→enter 順を強制 (swap で手札に来た札を enter 候補化) → chain を sequence 末尾に移せず、evidenceToHand の pick pause で **chain continuation を親 sequence が上書き** (BUG-111 family、1:1 continuation の nest 非対応) → handToEvidence 脱落。decoy §8 検出 | continuation-nest (sequence[chain[pausing-pick], step2] の継続上書き、engine) |
+| ~~B06033~~ | **✅ 出荷 (2026-06-22 continuation-nest)** | continuation を linked list 化 (`ContinuationFrame.outer?`) して chain (内側)→sequence (外側) の継続上書きを解消 (BUG-111 #3、resolver attachContinuation + apply-pick runContinuationChain)。B06033/B06033P 出荷 (ALL_CARDS→1374)。decoy `continuation-nest-b06033.test.ts` (9) | ~~continuation-nest~~ ✅ 解消 |
 | B08050 | yellow | 「【解決編】このキャラをレベル+3」= **継続 condition-gated self level 修飾**。ContinuousModifier は ap/lpDelta のみで levelDelta 不在 | continuous level modifier (engine、未着手 micro-cluster) |
 
 ## ✅ distinct-name-count cluster (sceneHas distinctNames 計数, 2026-06-21, cards/wave-distinct-name-count)
@@ -352,7 +352,7 @@ exemplar D02013/B03005)。decoy 8 pass (§4 e2e: removeOpponentEvidenceTop→rem
 
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
-| B06033 / B06033P | hirameki verb は本 cluster で解禁済。残 gate = a1 `sequence[chain[evidenceToHand{pick}, handToEvidence], sceneEnter{YAIBA}]` で evidenceToHand の pick pause 時に chain continuation を親 sequence が上書き (BUG-111 family、1:1 continuation nest 非対応) → handToEvidence 脱落。公式Q&A が swap→enter 順を強制し chain を末尾に移せない。decoy §8 検出 | continuation-nest (sequence[chain[pausing-pick], step2] 継続上書き、engine) |
+| ~~B06033 / B06033P~~ | **✅ 出荷 (2026-06-22)**: BUG-111 #3 で continuation の nest 上書きを解消 (linked list 化)。a1 `sequence[chain[evidenceToHand, handToEvidence], sceneEnter{緑YAIBA lv≤6}]` 出荷。公式Q&A の swap→enter 順も nest で正しく解決 (decoy §2)。 | ~~continuation-nest~~ ✅ 解消 |
 | B02013/P · B05041/P | event「キャラにセットする」+ host への継続付与 (突撃 grant / triple-protection)。set-event + host-continuous 機構が engine 不在 | set-event host-continuous (engine) |
 | ~~B05102~~ | ✅ **出荷済** (2026-06-21、下記「turn-scope levelDelta wave」)。誤 DEFER だった: 「**ターン終了まで**レベル-1」= turn-scope one-shot = 既存 `charModifyLevel{scope:'turn'}` で実装可能 (continuous condition-gated levelDelta = B08050 とは別物)。engine変更0 | — |
 | B03088/P | 【宣言】4名 bond gate (降谷零&諸伏景光&伊達航&萩原研二) + pick 1キャラに activate+AP+突撃 の **multi-atom-single-pick** + draw。多 atom を同一 pick に適用する carrier 検証が別途必要 | multi-atom-single-pick carrier 検証 (要確認) |
@@ -402,7 +402,7 @@ changelog [2026-06-21-03](../changelog-entries/2026-06-21-03-wave-hand-to-eviden
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
 | ~~B03077~~ | ✅ **出荷済** (2026-06-21、下記「evidence-top→hand cluster」)。`evidenceToHand` に `fromTop` flag 追加で解禁 | — |
-| B06033 | a1 evidence-swap は解禁済だが、event + ヒラメキ「このカードを手札に加える」= **evidence-self→hand** verb 不在 + 「YAIBA緑lv6以下を登場」は既存 sceneEnter で可。card 単位は hirameki gate で DEFER | evidence-self→hand verb (hirameki redirect) |
+| ~~B06033~~ | **✅ 出荷 (2026-06-22)**: hirameki verb (handAddFromRemove fromSelf) は㉛で解禁、残 continuation-nest gate も BUG-111 #3 で解消し B06033/B06033P 出荷。 | ~~evidence-self→hand verb (hirameki redirect)~~ ✅ 解消 |
 | B06016 | 【宣言】【スリープ】 cost + swap は解禁済だが、別の【登場時】「デッキ上から3枚リムーブしてもよい。そうした場合…」= **deck-mill-gated chain** (pick-gate でなく mill-gate) が engine 不在 | deck-mill 実効果判定の chain-gate (engine) |
 
 出荷 = B05078/B05078P (世良真純) + B03056/B03056P (千間降代) (changelog [2026-06-19-02](../changelog-entries/2026-06-19-02-wave-decklook-bottom.md))。
