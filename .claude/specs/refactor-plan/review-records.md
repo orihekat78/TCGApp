@@ -55,3 +55,17 @@
   検証: typecheck 0 / full vitest **1972 pass (baseline 完全一致)** / smoke:1000 **baseline 完全一致**
   (469/531, avg 10.86, exceptions 0) / e2e 6 spec **33 pass** / eslint 46err = baseline (新規 0) /
   規約 lint 7 本 errors=0
+
+- **3a (2026-06-22)** atom-handlers.ts 1828 行 (単一 runAtom switch・55 verb) を **決定論 codemod** で
+  barrel + _shared(8 helper/Player/Pending*Side 2型/_drain*2/declare global 2) + core/scene/char/picks/misc に
+  extract-and-dispatch 分割 (case body 無改変移送)。計画 4→5 補正 (misc 分離、各 <500 行)。
+  **着手前フルパネル設計レビュー** (Workflow opus 4 lens, 507k tok): BLOCKER 1 (`log` verb が mapping 脱漏 →
+  exhaustiveness `never` compile 不能) + MAJOR (per-file import 分配) を着手前に解消。
+  **実装後レビュー** (opus 1 agent, 111k tok): dispatch 配線/re-export/preamble/exhaustiveness/未テスト verb の
+  5 観点 PASS・BLOCKER/MAJOR/MINOR 0 (APPROVE)。
+  決定論検証: **byte-identity 52/52** (抽出 body の md5 が元 case body と EOL 正規化後一致) +
+  preamble が HEAD と byte 一致 (diff 空) + 55-case↔55-union 完全 bijection。
+  挙動不変ゲート: typecheck **0** / full vitest **2783 pass / 1 skip / 0 fail (baseline 完全一致)** /
+  smoke:1000 **baseline 一致** (winsA=498 exact, avg 10.998, timeouts 0, exceptions 0) /
+  e2e 3 spec **26 pass** / eslint 問題数 HEAD と完全一致 (**delta 0**、新規 0) / 規約 lint 8 本 errors=0。
+  教訓: autocrlf で working tree=CRLF / git store=LF のため byte 比較は EOL 正規化必須 (skill 罠表通り)。

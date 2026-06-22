@@ -1,0 +1,454 @@
+// engine.effect.atom-handlers/core — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
+import { mutate } from '../../mutate/index.js';
+import { event } from '../../event/index.js';
+import { tryRePickFromAtom } from '../resolve-picks.js';
+import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
+import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax } from './_shared.js';
+import type { Player } from './_shared.js';
+import type { GameState, AtomVerb, EffectCtx, FileCard } from '../../types/index.js';
+
+export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // BUG-072: deck.draw が手札への push まで内部で行う + effect 経由の draw を log に残す
+      const drawPlayer = resolvePlayer(a.player, ctx);
+      const drawN = requireField<number>(a, 'n', 'number');
+      mutate.deck.draw(s, drawPlayer, drawN);
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player: drawPlayer,
+        turn: s.turn.number,
+        action: 'effect:draw',
+        result: String(drawN),
+      });
+      return;
+    }
+
+export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // BUG-065 (本格対応) で resolve-picks.ts が pattern B (uid なし + target.kind='pick')
+      // の解決をサポート。ここに到達した時点で a.target は string[] のはず。
+      // BUG-071: pre-pick step (例: D08015 a1 step 1 draw) 実行のため、triggered
+      // listener の queue skip を廃止 → human pick 待ちの atom はここで no-op skip。
+      // BUG-072: skip 時の action 名を 'effect:discard:awaiting-pick' に変更し
+      // UI で「効果: 手札選択待ち」と日本語表示できるよう mapping 追加。
+      // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set (連続 pick)
+      // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
+      const dcP = resolvePlayer(a.player, ctx);
+      const dcArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.discard.defaultArea, a, dcP, dcP) }
+        : a;
+      if (!Array.isArray(dcArgs.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: dcArgs }, ctx, { byPlayer: dcP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, {
+          ts: Date.now(),
+          player: dcP,
+          turn: s.turn.number,
+          action: 'effect:discard:awaiting-pick',
+        });
+        return;
+      }
+      const target = dcArgs.target as string[];
+      mutate.hand.discardToRemove(s, resolvePlayer(a.player, ctx), target);
+      // BUG-114: discard したカードを bind (リムーブしたカードの level/AP を $discarded dyn で参照)。
+      // 続く chain step (charModifyAP delta:{dyn:'$discarded.level*1000'}) が同一 ctx で読む (BUG-107)。
+      if (typeof a.bind === 'string' && target.length > 0) {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = target.map((cardId) => ({ cardId }));
+      }
+      // BUG-072: effect 経由の discard 成功も log に残す
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player: resolvePlayer(a.player, ctx),
+        turn: s.turn.number,
+        action: 'effect:discard',
+        result: String(target.length),
+      });
+      return;
+    }
+
+export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // BUG-073: effect log
+      const millP = resolvePlayer(a.player, ctx);
+      const millN = a.n as number;
+      mutate.deck.removeFromTop(s, millP, millN);
+      // BUG-137 (wave#2 cluster2, 2026-06-12): デッキ枯渇時の refresh guard が欠落していた。
+      // rules/14 (デッキ 0 で即座に refresh) + rules/26 (可能な限りリムーブ → refresh →
+      // 残り分は追加リムーブしない)。B09104 qAndA「可能な限りリムーブし、その後リフレッシュを行います」。
+      if (s.players[millP].deck.length === 0) {
+        const r = mutate.deck.refresh(s, millP);
+        if (!r.ok && s.gameResult === undefined) {
+          const winner: Player = millP === 'self' ? 'opp' : 'self';
+          mutate.gameResult.set(s, winner, 'deck-out');
+        }
+      }
+      mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: String(millN) });
+      return;
+    }
+
+export function atomFileAdd(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // BUG-073: effect log
+      const faP = resolvePlayer(a.player, ctx);
+      const faN = a.n as number;
+      // Task D E3 (2026-06-12): rules/14「FILEに置く」効果はデッキ0でリフレッシュ後に残りを解決。
+      // addFromDeckTop 自体 (auto-phase 経路) は不変に保ち、effect 経路のみ 1 枚ずつ
+      // refresh guard を挟む (mutate.deck.draw と同じ敗北処理)。
+      for (let i = 0; i < faN; i++) {
+        if (s.players[faP].deck.length === 0) {
+          const r = mutate.deck.refresh(s, faP);
+          if (!r.ok) {
+            if (s.gameResult === undefined) {
+              const winner: Player = faP === 'self' ? 'opp' : 'self';
+              mutate.gameResult.set(s, winner, 'deck-out');
+            }
+            break;
+          }
+        }
+        mutate.file.addFromDeckTop(s, faP, 1);
+      }
+      mutate.log.append(s, { ts: Date.now(), player: faP, turn: s.turn.number, action: 'effect:fileAdd', result: String(faN) });
+      return;
+    }
+
+export function atomFilePopToHand(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const p = resolvePlayer(a.player, ctx);
+      const popped: FileCard | undefined = mutate.file.popTop(s, p);
+      // BUG-128 (Task D E3, 2026-06-12): FileCard.card-back は Round 3 から実 cardId を保持して
+      // いる (next-hint.ts:66-74 は修正済) のに、本 verb は placeholder 'card-back' を手札に
+      // push する stale 実装だった。実 cardId を加え、next-hint と同じ 'file:pop' を emit する。
+      // popped 無し (FILE 空 or アシストパートナーのみ) は「そうした場合」不成立 = chain break
+      // (PR100/B04068 公式Q&A: FILE に無ければ以降の効果は解決できない)。
+      if (popped) {
+        mutate.hand.add(s, p, [popped.cardId]);
+        event.emit(s, 'file:pop', { player: p, popped }, { player: p });
+      } else {
+        (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+      }
+      // BUG-073: effect log (popped が無い場合も log には残す)
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: popped ? popped.cardId : 'none' });
+      return;
+    }
+
+export function atomFileRemoveTop(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // Task D E3 (2026-06-12): FILE 上から n 枚を FILE 所有者のリムーブエリアへ。
+      // rules/03 (リムーブエリア) / rules/05 (末尾が最上)。アシストパートナーは popTop が
+      // 自動 skip (B09010/B09108/B09111 Q&A「パートナーカードを除いて」)。
+      // 1 枚もリムーブできなければ chain break (B09105 Q&A「以降の効果は解決できない」)。
+      // bind 指定でリムーブした cardId 群を ctx.bindings へ (discard a.bind と同流儀)。
+      const frP = resolvePlayer(a.player, ctx);
+      const frN = requireField<number>(a, 'n', 'number');
+      const removedIds: string[] = [];
+      for (let i = 0; i < frN; i++) {
+        const popped = mutate.file.popTop(s, frP);
+        if (!popped) break;
+        removedIds.push(popped.cardId);
+      }
+      if (removedIds.length > 0) {
+        mutate.remove.add(s, frP, removedIds);
+      } else {
+        (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+      }
+      if (typeof a.bind === 'string') {
+        (ctx.bindings as Record<string, unknown[]>)[a.bind] =
+          removedIds.map(cardId => ({ kind: 'card', cardId, area: 'remove', player: frP }));
+      }
+      mutate.log.append(s, { ts: Date.now(), player: frP, turn: s.turn.number, action: 'effect:fileRemoveTop', result: removedIds.join(',') || 'none' });
+      return;
+    }
+
+export function atomFileFlipTop(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // Task D E3 (2026-06-12): FILE 最上位の非パートナーを表向き化 (B09021/B09108/B09023/B09005)。
+      // 既に表向き / FILE 空は no-op。⚠ flip 不発でも chain break しない
+      // (B09021 Q&A: 表向きにできなくても後続の AP+1000 は実行可 — fileRemoveTop と非対称)。
+      const ffP = resolvePlayer(a.player, ctx);
+      const ffResult = mutate.file.flipTop(s, ffP);
+      mutate.log.append(s, { ts: Date.now(), player: ffP, turn: s.turn.number, action: 'effect:fileFlipTop', result: ffResult });
+      return;
+    }
+
+export function atomEvidenceGain(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const p = resolvePlayer(a.player, ctx);
+      const n = a.n as number;
+      // engine拡張 wave#2 cluster3 (2026-06-13, BUG-142): rules/14「証拠を得る = リフレッシュ後に
+      // 残りを解決」。addFromDeck はデッキ0で silent break するため (mutate/evidence.ts)、
+      // fileAdd 同型の「1枚ごと事前 deck0→refresh→add」ループで refresh を挟む。remove0 なら敗北。
+      let egGained = 0;
+      for (let i = 0; i < n; i++) {
+        if (s.players[p].deck.length === 0) {
+          const r = mutate.deck.refresh(s, p);
+          if (!r.ok) {
+            if (s.gameResult === undefined) {
+              const winner: Player = p === 'self' ? 'opp' : 'self';
+              mutate.gameResult.set(s, winner, 'deck-out');
+            }
+            break;
+          }
+        }
+        mutate.evidence.addFromDeck(s, p, 1, false, { turn: s.turn.number, via: 'effect' });
+        egGained++;
+      }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceGain', result: String(egGained) });
+      return;
+    }
+
+export function atomSelfToEvidence(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // 「このカードを表向きのまま証拠として得る」(rules/01 §必要証拠数 / rules/06 §イベント)。
+      // イベント使用後 handUseCard が当該カードをリムーブへ置くので、リムーブ→証拠 へ移す。
+      // ctx.source.cardId = 使用したイベント自身、ctx.source.player = 使用者。
+      const steP = resolvePlayer((a.player as 'self' | 'opp' | undefined) ?? 'self', ctx);
+      const steCardId = ctx.source.cardId;
+      if (typeof steCardId !== 'string' || steCardId.length === 0) return;
+      const steFaceUp = a.faceUp === undefined ? true : a.faceUp === true;
+      mutate.evidence.gainCard(s, steP, steCardId, steFaceUp, {
+        turn: s.turn.number, via: 'effect', sourceCardId: steCardId,
+      });
+      mutate.log.append(s, { ts: Date.now(), player: steP, turn: s.turn.number, action: 'effect:selfToEvidence', target: steCardId, result: steFaceUp ? '表向き' : '裏向き' });
+      return;
+    }
+
+export function atomEvidenceLose(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const p = resolvePlayer(a.player, ctx);
+      const n = a.n as number;
+      let lost = 0;
+      for (let i = 0; i < n; i++) {
+        const removed = mutate.evidence.removeTop(s, p);
+        if (!removed) break;
+        lost++;
+      }
+      // BUG-073: effect log (実際にロストした枚数を記録)
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceLose', result: String(lost) });
+      return;
+    }
+
+export function atomEvidenceToDeck(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // 2026-06-06 タスクC: 証拠最上部 n 枚をデッキ上へ戻す (B03038「この推理によって証拠を得ない」)。
+      // net で「証拠 0・デッキ復元」(rules/11 §LP≤0 と同じ状態)。n は number か $trigger.gained
+      // (= 推理で得た枚数 payload.gained) を resolveBindRef で解決。
+      const etdP = resolvePlayer(a.player, ctx);
+      const nRaw = resolveBindRef(a.n, ctx);
+      const etdN = typeof nRaw === 'number' ? nRaw : 0;
+      const moved = mutate.evidence.toDeckTop(s, etdP, etdN);
+      mutate.log.append(s, { ts: Date.now(), player: etdP, turn: s.turn.number, action: 'effect:evidenceToDeck', result: String(moved) });
+      return;
+    }
+
+export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const efP = resolvePlayer(a.player, ctx);
+      const efIdx = a.idx as number;
+      mutate.evidence.flipFaceUp(s, efP, efIdx);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: efP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(efIdx) });
+      return;
+    }
+
+export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // BUG-074: BUG-065 で resolve-picks が target を array 化 (`[cardId]`) する設計に
+      // 変更されたため、string|array 両対応に正規化。未解決の pick query object の場合は
+      // awaiting-pick として skip + log (D08013 a1 step 2 等で発覚)。
+      // BUG-076: awaiting-pick 時に resolve-picks の tryRePickFromAtom を呼んで、
+      // 残り atom 用に side-channel を再 set。これで sequence 内の連続 pattern B atom
+      // が順次 modal を出せる (D08013 a1 step 2 → step 3 の連鎖)。
+      // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
+      const p = resolvePlayer(a.player, ctx);
+      // engine拡張 wave (2026-06-21): fromTop = 「証拠を上から1つ手札に加え」(B03077) の deterministic top。
+      // pick path をスキップし証拠スタック最上 (末尾=1番上、mutate/evidence.removeTop と整合) を手札へ。
+      // 証拠0 なら no-op + __chainStepNoApply で chain break = 「そうした場合」不成立 (filePopToHand と同型)。
+      // removeTop は remove エリアへ送るため使わず、手動 pop + hand.add (リムーブではなく手札移動)。
+      if (a.fromTop === true) {
+        const evList = s.players[p].evidence;
+        if (evList.length === 0) {
+          (globalThis as { __chainStepNoApply?: boolean }).__chainStepNoApply = true;
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', result: 'none' });
+          return;
+        }
+        const topId = evList[evList.length - 1]!.cardId;
+        evList.pop();
+        mutate.hand.add(s, p, [topId]);
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target: topId, result: 'ok' });
+        return;
+      }
+      const ethArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceToHand.defaultArea, a, p, p) }
+        : a;
+      const target = normalizeTargetToString(ethArgs.target);
+      if (!target) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: ethArgs }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand:awaiting-pick' });
+        return;
+      }
+      const list = s.players[p].evidence;
+      const idx = list.findIndex(e => e.cardId === target);
+      let moved = false;
+      if (idx !== -1) {
+        list.splice(idx, 1);
+        mutate.hand.add(s, p, [target]);
+        moved = true;
+      }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceToHand', target, result: moved ? 'ok' : 'not-found' });
+      return;
+    }
+
+export function atomHandToEvidence(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // engine拡張 wave (2026-06-21): 手札から1枚 pick → 「裏向きで証拠として得る」(evidenceToHand の逆)。
+      // discard と同型 PB pick (defaultArea 'hand')。公式Q&A B06029「手札から裏向きで得る証拠は1番上に
+      // 置かれます」→ evidence.gainCard が push (末尾=証拠の1番上、mutate/evidence.removeTop と整合)。
+      // fromArea:'none' = hand から先に remove 済なので remove エリアは触らない。
+      const hteP = resolvePlayer(a.player, ctx);
+      const hteArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToEvidence.defaultArea, a, hteP, hteP) }
+        : a;
+      if (!Array.isArray(hteArgs.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: hteArgs }, ctx, { byPlayer: hteP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: hteP, turn: s.turn.number, action: 'effect:handToEvidence:awaiting-pick' });
+        return;
+      }
+      const hteTargets = hteArgs.target as string[];
+      const hteFaceUp = a.faceUp === true; // 既定 false (「裏向きで証拠として得る」)
+      let hteMoved = 0;
+      for (const cardId of hteTargets) {
+        // 手札に実在する場合のみ証拠化 (手札→証拠なので、手札に無い cardId は no-op = 証拠に湧かせない)
+        const hIdx = s.players[hteP].hand.indexOf(cardId);
+        if (hIdx === -1) continue;
+        s.players[hteP].hand.splice(hIdx, 1);
+        mutate.evidence.gainCard(s, hteP, cardId, hteFaceUp, { turn: s.turn.number, via: 'effect' }, 'none');
+        hteMoved++;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hteP, turn: s.turn.number, action: 'effect:handToEvidence', result: String(hteMoved) });
+      return;
+    }
+
+export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // engine-extension #5a (2026-06-05): deck-reorder 系の補助 — bind 済 cardId をデッキから抜き手札へ。
+      // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).
+      // 通常 a.cardId='$matched.cardId' で bind 解決 → デッキから splice → hand.add。
+      const hadP = resolvePlayer(a.player, ctx);
+      const hadCardId = resolveBindRef(a.cardId, ctx) as string;
+      if (typeof hadCardId !== 'string' || hadCardId.startsWith('$')) {
+        // 未解決 (bind 不在) は silent no-op
+        mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: 'no-bind' });
+        return;
+      }
+      const deck = s.players[hadP].deck;
+      const idx = deck.indexOf(hadCardId);
+      let moved = false;
+      if (idx !== -1) {
+        deck.splice(idx, 1);
+        mutate.hand.add(s, hadP, [hadCardId]);
+        moved = true;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: hadCardId, result: moved ? 'ok' : 'not-found' });
+      return;
+    }
+
+export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // BUG-074: 同じく string|array 両対応に正規化
+      // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set
+      // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
+      const p = resolvePlayer(a.player, ctx);
+      // engine拡張 wave (2026-06-21): fromSelf = 【ヒラメキ】「このカードを手札に加える」(B06033/PR085/PR091)。
+      //   hirameki の source = リムーブされた証拠カード自身。triggered.ts handleEvidenceRemovedHook が
+      //   ctx.source.cardId = ev.cardId / ctx.source.player = 証拠所有者 で起動し、その直前に
+      //   action-case.ts removeOpponentEvidenceTop → mutate.evidence.removeTop が ev.cardId を
+      //   所有者の remove 末尾に push 済。よって pick せず ctx.source.cardId を remove から
+      //   lastIndexOf (直近 push 分 = まさにこのカード) で取得し手札へ移す。同 cardId の旧コピーが
+      //   remove にあっても末尾優先で正しい1枚を取る。見つからなければ no-op (防御的、通常は必ず存在)。
+      //   fromTop (evidenceToHand) 同型: args:unknown ゆえ型/whitelist 同期不要・純 additive。
+      if ((a as { fromSelf?: unknown }).fromSelf === true) {
+        const selfCid = ctx.source.cardId;
+        const remSelf = s.players[p].remove;
+        const sIdx = selfCid ? remSelf.lastIndexOf(selfCid) : -1;
+        if (!selfCid || sIdx === -1) {
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', result: 'none' });
+          return;
+        }
+        remSelf.splice(sIdx, 1);
+        mutate.hand.add(s, p, [selfCid]);
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target: selfCid, result: 'ok' });
+        return;
+      }
+      // cluster6 (2026-06-14) B09034「リムーブのイベントを2枚まで選び、手札に加える」用 multi-pick path。
+      //   charStackCard (case 'charStackCard') と同型の cardIds:'$pick.cardIds' contract:
+      //     { player, cardIds:'$pick.cardIds', target:{kind:'pick', query:{area:'remove',side:'self',
+      //       filter:{kind:'event'}}, n:{min:0,max:2}, chooser:'self'} }
+      //   human 経路: apply-pick.ts が picked uid → cardIds 配列を充填して再 dispatch (hasCardIdsBind)。
+      //   AI 経路:   resolve-picks.ts が remove 候補から greedy に max 枚 cardIds を充填。
+      //   従来 single-card path (cardIds 未指定) は下段で従来通り処理 → additive・非干渉。
+      const rawCardIds = (a as { cardIds?: unknown }).cardIds;
+      if (rawCardIds === '$pick.cardIds') {
+        // 未解決 (human 経路の await): side-channel に pick を queue して return。
+        if (a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+            byPlayer: p,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });
+        }
+        return;
+      }
+      if (Array.isArray(rawCardIds)) {
+        // 解決済 (0〜max 枚): 各 cardId を remove → hand へ移す (rules/15「〜まで」= 0 枚可 → no-op + log)。
+        const cardIds = rawCardIds as string[];
+        const remM = s.players[p].remove;
+        const movedIds: string[] = [];
+        for (const cid of cardIds) {
+          const idx = remM.indexOf(cid);
+          if (idx !== -1) { remM.splice(idx, 1); mutate.hand.add(s, p, [cid]); movedIds.push(cid); }
+        }
+        mutate.log.append(s, {
+          ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove',
+          target: movedIds.join(','), result: cardIds.length === 0 ? '0' : (movedIds.length ? 'ok' : 'not-found'),
+        });
+        return;
+      }
+      const hafrArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handAddFromRemove.defaultArea, a, p, p) }
+        : a;
+      const target = normalizeTargetToString(hafrArgs.target);
+      if (!target) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: hafrArgs }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });
+        return;
+      }
+      const rem = s.players[p].remove;
+      const idx = rem.indexOf(target);
+      let moved = false;
+      if (idx !== -1) {
+        rem.splice(idx, 1);
+        mutate.hand.add(s, p, [target]);
+        moved = true;
+      }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target, result: moved ? 'ok' : 'not-found' });
+      return;
+    }
+
+export function atomDeckShuffle(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // rules/04, 14, 26 — デッキ基本シャッフル (D11019 等で使用)
+      const p = resolvePlayer(a.player, ctx);
+      mutate.deck.shuffle(s, p, ctx.rng);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckShuffle' });
+      return;
+    }
+
+export function atomRemoveAreaAllToDeckBottom(s: GameState, _a: Record<string, unknown>, ctx: EffectCtx): void {
+      // cluster4 (2026-06-14) B08027【登場時】: 自分と相手はリムーブエリアの「すべて」のカードを
+      //   各自のデッキの下に移し、両者のデッキをシャッフルする。
+      // ⚠ 'self'/'opp' は **絶対スロット** を意図的に走査する (resolvePlayer しない)。この verb は
+      //   両プレイヤーに対称な操作 (各自の remove → 各自の deck → 各自 shuffle) なので、所有者相対では
+      //   なく両スロット網羅で「自分と相手」を表現する。BUG-079 の owner-relative 規約とは別物。
+      // rules/14・26: デッキへ移すだけで 0 にならない → これは「リフレッシュ」ではない (証拠付与なし、
+      //   公式Q&A)。よって mutate.deck.refresh は呼ばず raw splice + toBottom + shuffle で行う。
+      // rules/09・23: デッキ下移動はリムーブでないため leave hook は発火しない (raw splice)。
+      // 公式テキスト通り、移動枚数 0 (remove 空) のプレイヤーも無条件でシャッフルする。
+      // shuffle は ctx.rng があれば使い、無ければ mutate.deck.shuffle 内の Math.random
+      //   (smoke では seeded RNG に global override されている) を使う (deckShuffle と同一契約)。
+      for (const pp of ['self', 'opp'] as const) {
+        const rem = s.players[pp].remove;
+        if (rem.length > 0) {
+          const ids = rem.splice(0, rem.length); // ALL — remove を drain
+          mutate.deck.toBottom(s, pp, ids);       // 各自のデッキ下へ
+        }
+        mutate.deck.shuffle(s, pp, ctx.rng);
+      }
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:removeAreaAllToDeckBottom' });
+      return;
+    }

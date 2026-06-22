@@ -1,41 +1,41 @@
 # 作業ログ — 名探偵コナンプロジェクト
 
-(過去セッションは `.claude/sessions/` にローテート。直近 = 2026-06-22.md = ㉝+㉞ / 2026-06-22-2.md = ㉟。)
+## セッション㊲ (2026-06-22) — refactor Phase 3a: atom-handlers.ts 分割
 
-## セッション㊱ (2026-06-22) — 未解決 BUG-133〜136 一括解消
+branch `refactor/phase-3a`。挙動完全不変リファクタ (骨格凍結の「動作不変な内部最適化」例外)。
 
-開始時: remote main = `f9b5d8be` (㉟ continuation-nest push 済を確認)。ユーザー指示 = **未解決バグ全解消**。
-branch `bugs/resolve-open-133-136`。wave#2 audit (2026-06-12) 起票の未着手 4 件を systematic-debugging で処理。
+### 開始時確認
+- ㊱ (BUG-133〜136) は main 取込み済 (remote=local=`9728c967`)。残 bug = 真の open 0 / 見送り1(BUG-134) /
+  partial 3 (083 latent該当0・105 D11014継続・108 AI fan-out DEFERRED)。カード DEFER は engine-gate 由来で多数 (DEFERRED-INDEX)。
+- ユーザー選択: refactor → Phase 3a (推奨)。
 
-### 結論 (4 件すべて green で close)
-- **BUG-133** (drainAi player guard 欠如): 起票後の **BUG-138 X8** で guard 実装済を検証。新 fix なし。
-  既存 bug-138-drain-ownership.test (6) が網羅。commit 指す先 = ec6c9780。
-- **BUG-135** (sequence 中間 skip-drop): 起票後の **BUG-111 #2** で skip 経路が origin-kind gate に再設計済を検証。
-  決定論 scan で実出荷該当形 = PR155/PR161/D03002 のみと特定。実カード回帰 bug-135-sequence-middle-skip.test (3)
-  追加。commit 指す先 = a682b20b。
-- **BUG-134** (triggered pick 発動時確定): probe で機構確認 (effect:declared 以外の全 hook は queue 時確定) →
-  scan で **rules 違反の実害なし** (害B=追加候補→turn-end sceneEnter 0件で実在せず / 害A=削除 stale→splice
-  防御で rules-correct no-op、manifesting カードも MVP smoke 外)。engine全面 fix は骨格凍結 risk 過大 → **見送り**。
-  機構を bug-134-cofire-pick-staleness.test で pin。
-- **BUG-136** (deckToBottomBound 順序未surface): **reorder UI 実装**。side-channel `__pendingDeckReorderSide`
-  (human 所有&2枚以上のみ set、AI/smoke byte-equal) + store `pendingDeckReorder` + `deckReorderResolve`
-  (multiset 検証で底ブロック再配置) + `DeckReorderModalHost` (drag+▲▼、SouzaReorderModal.css 流用) +
-  useOppTurnDriver 待機/再開。**水平展開で souza (捜査X) も同配線** (defender が human&2枚以上)。
+### 実装
+`src/engine/effect/atom-handlers.ts` 1828 行 (単一 runAtom switch・55 verb) を **決定論 codemod** (c:/tmp/phase3a-split.mjs、
+string/comment/template-aware lexer) で extract-and-dispatch 分割:
+- barrel `atom-handlers.ts` (225 行): runAtom (preamble + dispatch switch) + 外部 API 再export
+- `atom-handlers/_shared.ts` (296): 8 helper + Player + Pending*Side 2型 + _drain*2 + declare global 2
+- `atom-handlers/{core(454),scene(366),char(297),picks(311),misc(119)}.ts`: case body **無改変**移送
+- 計画 4→5 補正 (misc 分離、各 <500)。verb 参照 17 handler のみ `verb: AtomVerb` param。`a` 非参照 4 handler は `_a`。
+- inline 3 (charSetAP/charSetLP throw, noop) は barrel 据置。
 
-### branch commits
-- `c9eeedbb` — BUG-133/135 検証 + 回帰ガード (bug-135 test、engine 変更なし)。
-- `e03bdbd5` — BUG-136 実装 (engine deckToBottomBound+souza / store / dispatch / DeckReorderModalHost / App /
-  useOppTurnDriver) + BUG-134 close (見送り + characterization test) + changelog entry。
-- `<この doc commit>` — BUG-136.md 修正済(commit:e03bdbd5) + NEXT-SESSION + memory rotate。
+### レビュー (高リスク Phase 3 = フルパネル)
+- **着手前** Workflow opus 4 lens (507k tok): BLOCKER `log` verb 脱漏 (exhaustiveness `never` compile 不能) +
+  MAJOR per-file import 分配 を着手前に解消。behavior-invariance 5 罠 clear 確認。
+- **実装後** opus 1 agent (111k tok): dispatch配線/re-export/preamble/exhaustiveness/未テストverb 5観点 APPROVE (0 指摘)。
 
-### 検証 (全 green)
-vitest **2783 pass / 1 skip / 0 fail** / tsc0 / lint 群 0 err / e2e (bug-136 ▲▼+drag) **2/2** console error 0。
+### 検証 (全 GREEN)
+- **byte-identity 52/52** (抽出 body の md5 が元 case body と EOL 正規化後一致、独立 verify script)。
+- preamble は HEAD と byte 一致 (diff 空)。55-case ↔ 55-AtomVerb 完全 bijection。
+- tsc **0** / full vitest **2783 pass / 1 skip / 0 fail** (着手前 baseline 完全一致) /
+  smoke:1000 **baseline 一致** (winsA=498 exact, avg 10.998, timeouts 0, exceptions 0) /
+  e2e 3 spec **26 pass** / eslint 問題数 HEAD と完全一致 (**delta 0**) / 規約 lint 8 本 errors 0。
 
 ### 学び (恒久)
-- **「未解決バグ」が起票後の別 work で既解消なことがある** (133=BUG-138 / 135=BUG-111#2)。仮説 (=未解消) を
-  反証する証拠 (現コード読解 + 既存テスト) を取れ。修正前に「本当にまだ壊れてるか」を repro で確認。
-- **engine 全面 fix を要する narrow bug は scan で実害有無を確定してから判断** (134=見送り)。骨格凍結原則。
-- side-channel 追加は 5 点パターン (declare/type/_drain + surface + post-sync + store) を踏襲 (__pendingDeckReorderSide)。
+- 大規模 byte-exact 分割は **決定論 codemod + per-body md5 自己検証** が王道 (エージェント手作業より安全・速い)。
+- autocrlf: working tree=CRLF / git store=LF。byte 比較は **EOL 正規化必須** (skill 罠表通り)。
+- tsc `noUnusedLocals/noUnusedParameters` が import/param の過不足を即検知 → codemod の auto-import + `_`prefix と相性良い。
+- smoke:1000 winsA exact 一致 = 挙動不変の最強証拠 (1000 戦の AI 経路決定論)。
 
-### 次タスク
-未確定。NEXT-SESSION-PROMPT.md 参照 (B デザイン / C refactor / A カード)。branch を main ff-merge → push 予定。
+### commit / 次
+branch commits: <codemod 分割 commit>。main ff-merge → push 予定 (push 後 `git ls-remote origin main` 確認)。
+次タスク未確定 — Phase 3b (pick-resolution 再設計、3系で最高リスク) / 3c / 3d / 4 / デザイン刷新。

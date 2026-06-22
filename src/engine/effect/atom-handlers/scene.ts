@@ -1,0 +1,366 @@
+// engine.effect.atom-handlers/scene — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
+import { mutate } from '../../mutate/index.js';
+import { event } from '../../event/index.js';
+import { tryRePickFromAtom } from '../resolve-picks.js';
+import { buildShortFormPick } from '../atom-pick-spec.js';
+import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
+import type { Player } from './_shared.js';
+import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
+
+export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // cluster14 (2026-06-15) multi-card sceneEnter: 「…キャラを2枚まで選び、登場させる」(B09010/PR042 等)。
+      //   handAddFromRemove/charStackCard と同型の cardIds:'$pick.cardIds' 契約を sceneEnter に拡張する。
+      //   単一 cardId path は cardIds 不在時に従来通り (additive・非干渉。骨格凍結例外: rules/20 スイッチ + defer カード)。
+      //   現場満杯時の switch は switchRemoveUids[] (UI が overflow 枚数ぶん収集) を per-card に消費する。
+      {
+        const rawCardIdsM = (a as { cardIds?: unknown; __declined?: unknown }).cardIds;
+        if (rawCardIdsM === '$pick.cardIds') {
+          // FIX-B2: 0枚選択 (skipResolvesAtom decline) の再入。__declined → 0体登場 (continuation は
+          //   applyPickSkipAndContinuation が別途実行)。deckRevealUntil の __declined 契約と同型。
+          if ((a as { __declined?: unknown }).__declined === true) {
+            mutate.log.append(s, { ts: Date.now(), player: resolvePlayer(a.player, ctx), turn: s.turn.number, action: 'effect:sceneEnter:multi-declined' });
+            return;
+          }
+          // 未解決 await: side-channel に pick を queue (handAddFromRemove 同型)。
+          if (a.target && typeof a.target === 'object') {
+            const seMP = resolvePlayer(a.player, ctx);
+            tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: seMP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+            mutate.log.append(s, { ts: Date.now(), player: seMP, turn: s.turn.number, action: 'effect:sceneEnter:awaiting-pick' });
+          }
+          return;
+        }
+        if (Array.isArray(rawCardIdsM)) {
+          // 解決済 (0〜max 枚)。各 cardId を source area から splice → enter / switchEnter。
+          const cardIds = rawCardIdsM as string[];
+          const enterP = resolvePlayer(a.player, ctx);
+          const switchUids = Array.isArray((a as { switchRemoveUids?: unknown }).switchRemoveUids)
+            ? [...((a as { switchRemoveUids?: string[] }).switchRemoveUids as string[])]
+            : [];
+          const viaEffectM = (a.viaEffect as boolean | undefined) ?? true;
+          const enterOptsM = {
+            named: (a.named as boolean | undefined) ?? true,
+            viaEffect: viaEffectM,
+            active: a.enterSleep === true ? false : undefined,
+          };
+          const srcArea = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { area?: string } }).query?.area : undefined) as 'remove' | 'hand' | 'deck' | undefined;
+          const srcSide = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { side?: string } }).query?.side : undefined) as 'self' | 'opp' | undefined;
+          for (const cid of cardIds) {
+            // 単一 path と同じ inline splice (remove/hand/deck のみ)。これがないと remove に残り複製登場 (D11014 a2 class bug)。
+            const fp = srcSide === 'opp' ? 'opp' : enterP;
+            if (srcArea === 'remove' || srcArea === 'hand' || srcArea === 'deck') {
+              const arr = s.players[fp][srcArea];
+              const i = arr.indexOf(cid);
+              if (i !== -1) arr.splice(i, 1);
+            }
+            // FIX-B3a: full は **ループ内で都度再計算** (hoist 禁止。enter で scene が伸びるため)。
+            const full = s.players[enterP].scene.length >= 5;
+            let nc: ReturnType<typeof mutate.scene.enter>;
+            if (full) {
+              const v = switchUids.shift();
+              // FIX-B3b: victim が現 scene に存在するか検証 (stale/dup/illegal → skip、enter() の throw 防止)。
+              if (typeof v === 'string' && !v.startsWith('$') && s.players[enterP].scene.some((c) => c.uid === v)) {
+                nc = mutate.scene.switchEnter(s, enterP, cid, v, enterOptsM);
+              } else {
+                mutate.log.append(s, { ts: Date.now(), player: enterP, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip', target: cid });
+                continue;
+              }
+            } else {
+              nc = mutate.scene.enter(s, enterP, cid, enterOptsM);
+            }
+            // BUG-146: enter emit の source は登場キャラ・原因カードは payload.sourceCardId (単一 path と同規約)。
+            //   per-card emit で enterOrderThisTurn が 1 枚ずつ加算され【疾風 N】が正しく判定される (batch emit 禁止)。
+            event.emit(s, 'enter', {
+              uid: nc.uid, viaEffect: viaEffectM, enterOrder: nc.enterOrder,
+              enterOrderThisTurn: nc.enterOrderThisTurn, sourceCardId: (ctx.source as { cardId?: string }).cardId,
+            }, { player: enterP, uid: nc.uid, cardId: cid });
+          }
+          return;
+        }
+      }
+      // 2026-06-04 switch-on-effect-enter (rules/20 スイッチ): 現場満杯 (5枚) の効果登場の早期分岐。
+      //  - switchRemoveUid 指定済 (UI が満杯時に SceneSwitchPickerModal で退場キャラを収集) → skip せず
+      //    下の解決済 path で switchEnter する。
+      //  - 未指定の AI 経路 (humanSide でない側) → スイッチ選択 UI/heuristic 無しなので skip する
+      //    (rules: 0枚選択=合法な辞退。modal も無駄 pick cycle も出さない、smoke 不変)。
+      //  - 未指定の human 経路 → ここでは skip せず短縮形/await pick を通し、reanimate 対象を選ばせる。
+      //    解決時に UI が現場満杯を検知して switch 対象を収集 → switchRemoveUid 付きで再解決される。
+      {
+        const seFullP = resolvePlayer(a.player, ctx);
+        const seHasSwitch = typeof a.switchRemoveUid === 'string' && !(a.switchRemoveUid as string).startsWith('$');
+        const seHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+        if (s.players[seFullP].scene.length >= 5 && !seHasSwitch && seFullP !== seHumanSide) {
+          mutate.log.append(s, { ts: Date.now(), player: seFullP, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip' });
+          return;
+        }
+      }
+      // PA 短縮形 (area からの登場): cardId 不在 + from + n|max で source area pick を構築し、
+      // cardId='$pick.cardId' + target を付与して下記 $pick.cardId awaiting-pick 経路に合流させる。
+      // sourceSplice (remove/evidence から実体除去) は解決後の本処理が target.query.area を見て行う。
+      if (a.cardId === undefined && typeof a.from === 'string' && hasNorMax(a)) {
+        const seP0 = resolvePlayer(a.player, ctx);
+        const seTarget = buildShortFormPick(a.from, a, seP0, seP0);
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: { ...a, cardId: '$pick.cardId', target: seTarget } }, ctx, { byPlayer: seP0, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: seP0, turn: s.turn.number, action: 'effect:sceneEnter:awaiting-pick' });
+        return;
+      }
+      // 効果による登場 (atom verb 駆動) は viaEffect=true がデフォルト。
+      // ただし args に明示があれば尊重する (テスト・特殊呼出用)。
+      const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
+      // user_request 20260522_01 #12 fix: $matched.cardId 等の bind ref を解決
+      // (D11019 deckRevealUntil → sceneEnter sequence で必要)
+      const rawCardId = requireField<string>(a, 'cardId', 'string');
+      const cardId = resolveBindRef(rawCardId, ctx) as string;
+      // D11014 a2 driver 2026-05-26: cardId が `$pick.*` で未解決かつ target に
+      // pick query があれば tryRePickFromAtom で side-channel set (Pattern A 同型)。
+      // handAddFromRemove と同 pattern。これがないと sceneEnter は silent no-op で
+      // modal が出ない長年バグ (D08024 / D11014 a2 等が影響)。
+      if (typeof cardId !== 'string' || cardId.startsWith('$')) {
+        if (rawCardId === '$pick.cardId' && a.target && typeof a.target === 'object') {
+          const sePlayer = resolvePlayer(a.player, ctx);
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+            byPlayer: sePlayer,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, {
+            ts: Date.now(), player: sePlayer, turn: s.turn.number,
+            action: 'effect:sceneEnter:awaiting-pick',
+          });
+          return;
+        }
+        // それ以外の未解決 bind ref は従来通り silent no-op (BUG-048 と同 pattern)
+        return;
+      }
+      const enterPlayer = resolvePlayer(a.player, ctx);
+      // switch-on-effect-enter (rules/20): 現場満杯時は既存キャラを除去 (switchEnter) して登場する。
+      // switchRemoveUid (UI が SceneSwitchPickerModal で収集した退場キャラ uid) があれば switchEnter、
+      // 無ければ skip (human が switch を辞退 / AI 経路)。room があれば通常 enter。
+      const seSwitchRemoveUid = resolveBindRef(a.switchRemoveUid, ctx) as string | undefined;
+      const seIsFull = s.players[enterPlayer].scene.length >= 5;
+      const seHasValidSwitch = typeof seSwitchRemoveUid === 'string' && !seSwitchRemoveUid.startsWith('$');
+      if (seIsFull && !seHasValidSwitch) {
+        mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip', target: cardId });
+        return;
+      }
+      // D11014 a2 driver 2026-05-26: pick query で source area が指定されていれば、
+      // そこから cardId 1 枚を取り除いてから scene へ。これがないと「リムーブから
+      // 登場」が「リムーブに残ったまま scene にコピー登場」になる duplication bug。
+      // handAddFromRemove と同 pattern (line 360-367)。
+      const sourceArea = ((a.target && typeof a.target === 'object')
+        ? ((a.target as { query?: { area?: string; side?: string } }).query?.area)
+        : undefined) as 'remove' | 'evidence' | 'file' | 'deck' | 'hand' | undefined;
+      const sourceSide = ((a.target && typeof a.target === 'object')
+        ? ((a.target as { query?: { side?: string } }).query?.side)
+        : undefined) as 'self' | 'opp' | undefined;
+      if (sourceArea === 'remove') {
+        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const arr = s.players[fromPlayer].remove;
+        const idx = arr.indexOf(cardId);
+        if (idx !== -1) arr.splice(idx, 1);
+      } else if (sourceArea === 'hand') {
+        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const arr = s.players[fromPlayer].hand;
+        const idx = arr.indexOf(cardId);
+        if (idx !== -1) arr.splice(idx, 1);
+      } else if (sourceArea === 'deck') {
+        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const arr = s.players[fromPlayer].deck;
+        const idx = arr.indexOf(cardId);
+        if (idx !== -1) arr.splice(idx, 1);
+      }
+      const enterOpts = {
+        // BUG-093: 効果/能力による登場も「同ターン登場」= 名乗り状態 (rules/06, 17)。
+        // 既定 false だと効果登場キャラが名乗りにならず、名乗り例外 (突撃/迅速) 無しでも
+        // action/推理できてしまっていた。明示 false を渡さない限り名乗りで登場させる。
+        named: (a.named as boolean | undefined) ?? true,
+        viaEffect,
+        // look-top-N (2026-06-06 タスクC, D01012): enterSleep:true で「スリープ状態で登場」(rules/03)。
+        // mutate.scene.enter が active===false → 'sleep' で生成する。既定 (undefined) は従来通り active。
+        active: a.enterSleep === true ? false : undefined,
+      };
+      // 満杯なら switchEnter (退場キャラを除去してから登場、rules/20)、room あれば通常 enter。
+      const newChar = seIsFull
+        ? mutate.scene.switchEnter(s, enterPlayer, cardId, seSwitchRemoveUid as string, enterOpts)
+        : mutate.scene.enter(s, enterPlayer, cardId, enterOpts);
+      // user_request 20260522_01 #12 fix: 新 uid を $matched に書き戻し、
+      // 後続 atom (charGrantKeyword 等) が `$matched.uid` で参照できるよう
+      // する。元 binding の cardId は維持しつつ uid を上書き。
+      // BUG-091: deckRevealUntil は $込みキー ('$matched') で格納するため、$無し ('matched') と
+      // 両方を試して登場キャラの新 uid を書き戻す (後続 $matched.uid = charGrantKeyword 参照のため)。
+      const existing = ((ctx.bindings as Record<string, unknown>)['matched']
+        ?? (ctx.bindings as Record<string, unknown>)['$matched']) as Record<string, unknown>[] | undefined;
+      if (Array.isArray(existing) && existing.length > 0) {
+        existing[0].uid = newChar.uid;
+      }
+      // D11014 a2 driver (2026-05-25): args.bind が指定されていれば、登場したキャラ情報
+      // ({ cardId, uid }) を `ctx.bindings[bind]` に格納。後続 condition (boundMatchesFilter 等)
+      // が「〚カード名[X]〛を登場させた場合」を declarative に判定できる。
+      const enteredBindKey = a.bind as string | undefined;
+      if (enteredBindKey) {
+        ctx.bindings[enteredBindKey] = [{
+          kind: 'card', cardId, area: 'scene', player: enterPlayer, uid: newChar.uid,
+        } as unknown as Candidate];
+      }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter', target: cardId });
+      // rules/17 — 現場登場時 Hook (【登場時】・【疾風 N】判定)
+      // BUG-146 (2026-06-15): enter emit の source は **登場キャラ** に統一する (hand-use-card / next-hint と同規約)。
+      // 旧実装は ctx.source (= 登場を起こした原因カード) を渡しており、selfOnlyMatches (source.uid===card.uid) で
+      // 効果/能力登場キャラ自身の【登場時】(selfOnly) が永久不発 + 原因カードの【登場時】が誤発火していた。
+      // 原因カード (cluster11 enterSource 用) は payload.sourceCardId へ移送 (additive、既存 listener は読まない)。
+      event.emit(s, 'enter', {
+        uid: newChar.uid,
+        viaEffect,
+        enterOrder: newChar.enterOrder,
+        enterOrderThisTurn: newChar.enterOrderThisTurn,
+        sourceCardId: (ctx.source as { cardId?: string }).cardId,
+      }, { player: enterPlayer, uid: newChar.uid, cardId });
+      return;
+    }
+
+export function atomSceneSwitch(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const viaEffect = (a.viaEffect as boolean | undefined) ?? true;
+      const swPlayer = resolvePlayer(a.player, ctx);
+      // BUG-068: bind ref ($matched.cardId / $entered.uid 等) 解決を配線
+      const swCardId = resolveBindRef(a.cardId, ctx) as string;
+      if (typeof swCardId !== 'string' || swCardId.startsWith('$')) return;
+      const swRemoveUid = resolveBindRef(a.removeUid, ctx) as string;
+      if (typeof swRemoveUid !== 'string' || swRemoveUid.startsWith('$')) return;
+      const newChar = mutate.scene.switchEnter(s, swPlayer, swCardId, swRemoveUid, {
+        // BUG-093: 効果/能力による登場も「同ターン登場」= 名乗り状態 (rules/06, 17)。
+        // 既定 false だと効果登場キャラが名乗りにならず、名乗り例外 (突撃/迅速) 無しでも
+        // action/推理できてしまっていた。明示 false を渡さない限り名乗りで登場させる。
+        named: (a.named as boolean | undefined) ?? true,
+        viaEffect,
+      });
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: swPlayer, turn: s.turn.number, action: 'effect:sceneSwitch', target: swCardId });
+      // スイッチ登場も rules/17 上「登場」として enter Hook が発火する
+      // BUG-146 (2026-06-15): source を登場キャラに統一 + 原因カードを payload.sourceCardId へ (sceneEnter と同様)。
+      event.emit(s, 'enter', {
+        uid: newChar.uid,
+        viaEffect,
+        enterOrder: newChar.enterOrder,
+        enterOrderThisTurn: newChar.enterOrderThisTurn,
+        sourceCardId: (ctx.source as { cardId?: string }).cardId,
+      }, { player: swPlayer, uid: newChar.uid, cardId: swCardId });
+      return;
+    }
+
+export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      type RemoveCause = 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+      // 物理動作 atom 化 (拡張 3): 短縮形 { player, n or max, side, filter } で uid 不在
+      // の場合、PA pick query を構築 + tryRePickFromAtom で side-channel set + awaiting-pick log。
+      // (D08003 a1 step 2 「現場 AP≤8000 を1枚まで選びリムーブ」等で使用)
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        // PA 短縮形 (refactor 2a): chooser=byPlayer は従来どおり srP (= a.player、操作者規約)。
+        const srP = resolvePlayer(a.player, ctx);
+        paShortFormAwait(s, verb, a, ctx, srP, srP);
+        return;
+      }
+      // 「$pick」placeholder のまま atom-handler 到達 = pick で 0 枚選択された場合
+      // (max: N で min=0 だと user が skip 可能)。silent no-op (log のみ)。
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', result: 'skipped' });
+        return;
+      }
+      // BUG-068: bind ref ($matched.uid 等) 解決を配線
+      const srUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof srUid !== 'string' || srUid.startsWith('$')) return;
+      mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect');
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
+      return;
+    }
+
+export function atomCharRemoveSetCard(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // 2026-06-06 タスクC: キャラに裏向きでセットされたカードを1枚リムーブ (rules/16, B08034)。
+      // PA 短縮形 (sceneRemove と同型): uid 不在 + n/max → pick query (filter hasSetCards:true で
+      // セット card を持つキャラのみ候補化) を構築 + tryRePickFromAtom。max:1 は skip 可 → chain break で
+      // 「リムーブしてもよい」を表現。resolve 後に removeOneSetCard で末尾 1 枚をリムーブエリアへ。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        const rsP = resolvePlayer(a.player, ctx);
+        paShortFormAwait(s, verb, a, ctx, rsP, rsP);
+        return;
+      }
+      // max:1 で 0 枚選択 (skip) は uid='$pick' のまま到達 → silent no-op (sceneRemove 同型)。
+      // chain の「そうした場合」break は skip 時の continuation-drop / no-candidate 時の
+      // __chainStepNoApply (resolve-picks) が担うため、ここでは立てない。
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRemoveSetCard', result: 'skipped' });
+        return;
+      }
+      const rsUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof rsUid !== 'string' || rsUid.startsWith('$')) return;
+      const removed = mutate.char.removeOneSetCard(s, rsUid);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRemoveSetCard', target: rsUid, result: removed ?? 'none' });
+      return;
+    }
+
+export function atomSceneToHand(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // engine-extension #4 (2026-06-05): char→hand bounce verb. PA 短縮形 (sceneRemove と同型)。
+      // 「相手の現場のキャラを1枚まで選び、手札に移す」等で使用。所有者の手札に戻る点に注意。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        const sthP = resolvePlayer(a.player, ctx);
+        paShortFormAwait(s, verb, a, ctx, sthP, sthP);
+        return;
+      }
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToHand', result: 'skipped' });
+        return;
+      }
+      const sthUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof sthUid !== 'string' || sthUid.startsWith('$')) return;
+      mutate.scene.toHand(s, sthUid);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToHand', target: sthUid });
+      return;
+    }
+
+export function atomSceneToDeck(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // Task D E2 (2026-06-12): scene→deck verb。sceneToHand と同型の PA 短縮形。
+      // 「相手の現場のキャラを1枚まで選び、デッキの下に移す」(B07080/B08058/D10009 等)。
+      // rules: 09/23 (リムーブでない=現場リムーブ時不発動), 16 (set/stacked リムーブ)
+      // pos:'top' で「デッキの上に移す」(B05092)。移動先は所有者のデッキ。
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        // chooser=controller / side 既定=a.player (対象側) — BUG-120 系規約
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+        return;
+      }
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToDeck', result: 'skipped' });
+        return;
+      }
+      const stdUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof stdUid !== 'string' || stdUid.startsWith('$')) return;
+      const stdPos = a.pos === 'top' ? 'top' : 'bottom';
+      mutate.scene.toDeck(s, stdUid, stdPos);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToDeck', target: stdUid, result: stdPos });
+      return;
+    }
+
+export function atomSceneSetState(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // PA 短縮形: uid 不在 + player + state(設定する状態の文字列) + n|max → scene pick を構築。
+      // a.state は「設定先の状態」なので候補 filter には載せない (buildShortFormPick は配列 state のみ拾う)。
+      if (a.uid === undefined && typeof a.player === 'string' && typeof a.state === 'string' && hasNorMax(a)) {
+        paShortFormAwait(s, verb, a, ctx, resolvePlayer(a.player, ctx), 'either');
+        return;
+      }
+      const ssUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof ssUid !== 'string' || ssUid.startsWith('$')) return;
+      const ssState = a.state as 'active' | 'sleep' | 'stun';
+      mutate.scene.setState(s, ssUid, ssState);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneSetState', target: ssUid, result: ssState });
+      return;
+    }
+
+export function atomSceneDisguise(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // BUG-068: bind ref 解決を配線
+      const dgUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof dgUid !== 'string' || dgUid.startsWith('$')) return;
+      const dgNewCardId = resolveBindRef(a.newCardId, ctx) as string;
+      if (typeof dgNewCardId !== 'string' || dgNewCardId.startsWith('$')) return;
+      mutate.char.disguiseInto(s, dgUid, dgNewCardId);
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneDisguise', target: dgUid, result: dgNewCardId });
+      return;
+    }

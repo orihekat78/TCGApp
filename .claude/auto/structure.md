@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 7012
+- **ファイル数**: 7021
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -826,6 +826,8 @@
     - `smoke-2026-06-21-4.md` — Smoke 1000戦レポート — smoke-2026-06-21-120249
     - `smoke-2026-06-21.json`
     - `smoke-2026-06-21.md` — Smoke 1000戦レポート — smoke-2026-06-21-003553
+    - `smoke-2026-06-22-2.json`
+    - `smoke-2026-06-22-2.md` — Smoke 1000戦レポート — smoke-2026-06-22-042830
     - `smoke-2026-06-22.json`
     - `smoke-2026-06-22.md` — Smoke 1000戦レポート — smoke-2026-06-22-012156
     - `smoke-baseline.json`
@@ -1238,6 +1240,7 @@
       - `2026-06-19-cpu-visualize-and-interrupt-lock-plan.md` — CPU逐次プレイ可視化 + 効果解決中ロック 実装計画
     - **`refactor-plan/`**
       - `INDEX.md` — 全体リファクタリング計画 (2026-06-12 起案、ユーザー指示)
+      - `phase-3a-design.md` — Phase 3a 設計: atom-handlers.ts 分割 (着手前設計レビュー、2026-06-22)
       - `phases.md` — リファクタリング各フェーズ詳細 (根拠 = 2026-06-12 棚卸し調査)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
     - **`shared-classes/`**
@@ -4979,7 +4982,6 @@
 - **`.serena/`**
   - **`cache/`**
     - **`typescript/`**
-  - **`memories/`**
   - `.gitignore`
   - `project.local.yml`
   - `project.yml`
@@ -6724,6 +6726,13 @@
       - `eval.ts` — engine.dyn.eval — Dyn (late-bound) expression evaluator
       - `index.ts` — engine.dyn — Dyn (late-bound) expression evaluator
     - **`effect/`**
+      - **`atom-handlers/`**
+        - `_shared.ts` — engine.effect.atom-handlers/_shared — Phase 3a: 共有 helper / 型 / side-channel
+        - `char.ts` — engine.effect.atom-handlers/char — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
+        - `core.ts` — engine.effect.atom-handlers/core — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
+        - `misc.ts` — engine.effect.atom-handlers/misc — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
+        - `picks.ts` — engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
+        - `scene.ts` — engine.effect.atom-handlers/scene — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
       - `.gitkeep`
       - `apply-pick.ts` — engine.effect.apply-pick — pending effect-pick の解決 + continuation 実行を一箇所に集約。
       - `atom-handlers.ts` — engine.effect.runAtom — Atom Verb dispatcher

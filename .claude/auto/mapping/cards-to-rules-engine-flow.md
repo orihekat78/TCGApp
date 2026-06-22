@@ -2,18 +2,24 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `a9a4832c8956`
+> Source hash: `0bc6504b3ac0`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **110** ファイル（[全体 index](./index.md)）
+このグループ: **116** ファイル（[全体 index](./index.md)）
 
-## engine/effect (8)
+## engine/effect (14)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/engine/effect/apply-pick.ts`](../../../src/engine/effect/apply-pick.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/engine/effect/atom-handlers.ts`](../../../src/engine/effect/atom-handlers.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
+| [`src/engine/effect/atom-handlers/_shared.ts`](../../../src/engine/effect/atom-handlers/_shared.ts) | _(参照なし)_ |
+| [`src/engine/effect/atom-handlers/char.ts`](../../../src/engine/effect/atom-handlers/char.ts) | _(参照なし)_ |
+| [`src/engine/effect/atom-handlers/core.ts`](../../../src/engine/effect/atom-handlers/core.ts) | _(参照なし)_ |
+| [`src/engine/effect/atom-handlers/misc.ts`](../../../src/engine/effect/atom-handlers/misc.ts) | _(参照なし)_ |
+| [`src/engine/effect/atom-handlers/picks.ts`](../../../src/engine/effect/atom-handlers/picks.ts) | _(参照なし)_ |
+| [`src/engine/effect/atom-handlers/scene.ts`](../../../src/engine/effect/atom-handlers/scene.ts) | _(参照なし)_ |
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
 | [`src/engine/effect/resolve-picks.ts`](../../../src/engine/effect/resolve-picks.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
