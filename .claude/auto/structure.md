@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 414
-- **ファイル数**: 7006
+- **ファイル数**: 7011
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -468,6 +468,7 @@
     - `2026-06-21-05-wave-evidence-self-to-hand.md` — engine拡張 micro-cluster — evidence-self→hand (handAddFromRemove fromSelf フラグ, 1 b…
     - `2026-06-21-06-wave-turn-leveldown.md` — カード追加 — turn-scope levelDelta (誤 DEFER の engine変更0 カード解禁, 1 base)
     - `2026-06-22-01-engine-continuation-nest.md` — engine: continuation-nest 修正 (BUG-111 #3) + B06033/B06033P 解禁
+    - `2026-06-22-02-open-bugs-resolution.md` — bugs: 未解決 BUG-133〜136 を一括解消 (検証 / 見送り / reorder UI)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -6848,6 +6849,7 @@
       - `CutInDisguisePickerModal.tsx` — Phase 8.6β: CutInDisguisePickerModal
       - `DeckArea.css`
       - `DeckArea.tsx` — Phase 7 Task 7.7: DeckArea
+      - `DeckReorderModalHost.tsx` — BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 modal。
       - `DeckRevealOverlay.css`
       - `DeckRevealOverlay.tsx` — user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出 overlay
       - `EffectChoiceModalHost.tsx` — BUG-121: enter トリガ等の human 複数 option choice を surface する store 駆動 modal。
@@ -7167,6 +7169,7 @@
     - `bug-117-deckreveal-lp-filter.spec.ts` — E2E: BUG-117 — deckRevealUntil の ap/lp filter が黙って無視されるバグの実機検証。
     - `bug-118-120-audit-fixes.spec.ts` — E2E: 2026-06-05 engine 拡張バッチ監査 (workflow audit-engine-extension-batches) で検出した
     - `bug-122-cutin-keyword-filter.spec.ts` — E2E: BUG-122 — matchOneFilter の filter.keyword がアイコン能力 (カットイン) を未検出だったバグの実機検証。
+    - `bug-136-deck-reorder.spec.ts` — E2E regression: BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」順序選択 modal
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
@@ -7217,6 +7220,8 @@
       - `bug-114-discard-bind-dyn.test.ts` — BUG-114 primitive: discard で除去した手札カードを bind し、その level/AP を dyn で参照する。
       - `bug-121-sequence-choice.test.ts` — BUG-121 残課題解消: sequence 内の human 複数択 choice が、pre-choice step を二重実行せず
       - `bug-132-gap-fixes.test.ts` — BUG-132 GAP-1/2 修正の pin test (engine拡張 wave#2, 2026-06-12)
+      - `bug-134-cofire-pick-staleness.test.ts` — BUG-134 characterization / guard — 同一 hook (phase:end:start 等) で複数 triggered ent…
+      - `bug-136-deck-reorder.test.ts` — BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択。
       - `bug-138-drain-ownership.test.ts` — BUG-138 (engine拡張 wave#2 cluster2 X8): drainAiEffectPicks の pick 所有権
       - `foreach-all.test.ts` — forEach over:{kind:'all'} primitive verification — applies an atom to EACH match…
       - `lensf-batch2a.test.ts` — tests/engine/effect/lensf-batch2a — Lens F batch2a (BUG-102 D11019 deck splice /…

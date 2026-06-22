@@ -50,6 +50,27 @@ export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
   return v;
 }
 
+// BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 side-channel
+// (side-channel-pattern.md 準拠)。human 所有 & 2 枚以上を底へ移したときのみ set し、UI の
+// DeckReorderModal が並べ替えを surface する。AI / spectator / smoke (__humanPlayerSide が
+// 当該 player でない) では set しないため従来挙動 byte-equal (公開順固定 = 合法な一choice)。
+declare global {
+  // eslint-disable-next-line no-var
+  var __pendingDeckReorderSide: PendingDeckReorderSide | null | undefined;
+}
+
+export type PendingDeckReorderSide = {
+  player: 'self' | 'opp';
+  /** デッキ底へ移した cardId 群 (現在の底ブロック、公開順)。human が任意順に並べ替える対象 */
+  cardIds: string[];
+};
+
+export function _drainPendingDeckReorderSide(): PendingDeckReorderSide | null {
+  const v = (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide ?? null;
+  (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = null;
+  return v;
+}
+
 /**
  * BUG-045 (#9 spectator stall fix の副産物): deckRevealUntil 等で
  * TargetFilter (declarative object) を predicate に変換するヘルパ。
@@ -1616,6 +1637,17 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       mutate.deck.toBottom(s, p, splicedIds);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(splicedIds.length) });
+      // BUG-136: 「残りを好きな順番でデッキの下に移す」の順序選択を human に surface。
+      // 公開順 (splicedIds 順) は既に合法な一choice として底へ置かれている。human 所有 & 2 枚以上のときのみ
+      // 並べ替え modal を出す (1 枚以下は順序が無意味、AI/spectator/smoke は __humanPlayerSide が当該 player
+      // でないため byte-equal)。底ブロック = deck 末尾 splicedIds.length 件。
+      const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (splicedIds.length >= 2 && p === humanSide) {
+        (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
+          player: p,
+          cardIds: [...splicedIds],
+        };
+      }
       return;
     }
     case 'boundToRemove': {
@@ -1714,6 +1746,15 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
         target: '',
         result: `revealed ${count}`,
       });
+      // BUG-136 水平展開: 捜査X も「(defender の)好きな順番でデッキの下に移す」(rules/13)。
+      // deckToBottomBound と同じく defender が human & 2 枚以上のとき順序選択 modal を surface。
+      const humanSideS = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (count >= 2 && player === humanSideS) {
+        (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
+          player,
+          cardIds: [...top],
+        };
+      }
       return;
     }
 

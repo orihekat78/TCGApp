@@ -17,6 +17,7 @@ import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
 import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
 import { EffectChoiceModalHost } from '@/ui/components/EffectChoiceModalHost';
 import { EffectOptionalModalHost } from '@/ui/components/EffectOptionalModalHost';
+import { DeckReorderModalHost } from '@/ui/components/DeckReorderModalHost';
 import { HiramekiDemoPickerModal } from '@/ui/components/HiramekiDemoPickerModal';
 import { HiramekiDemoBanner } from '@/ui/components/HiramekiDemoBanner';
 import { useHiramekiDemoDriver } from '@/ui/hooks/useHiramekiDemoDriver';
@@ -145,6 +146,7 @@ export default function App() {
       <EffectPickerModal />
       <EffectChoiceModalHost />
       <EffectOptionalModalHost />
+      <DeckReorderModalHost />
       <DeckRevealOverlay />
       <RecentActionToast />
       <ContactFlash />

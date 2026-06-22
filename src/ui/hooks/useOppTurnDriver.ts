@@ -53,7 +53,8 @@ export function driveOppTurn(): void {
   // ⚠ pendingDeckReveal は含めない — あれは数秒の演出 overlay で、CPU 自身の deck-reveal でも
   // set される (含めると演出中に driver が止まり、再 fire 経路が無く永久 stall — e2e 1試合通しで実証)。
   // 決定 modal は pick / choice / optional の 3 つ (awaitingPick hold 中は pendingEffectPick が同時に立つ)。
-  if (store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional) return;
+  // BUG-136: deckToBottomBound 順序選択 modal (【相手ターン中】deckToBottomBound が human 所有で発火しうる)。
+  if (store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional || store.pendingDeckReorder) return;
   if (isDriving) return;
   isDriving = true;
   try {
@@ -195,12 +196,13 @@ export function useOppTurnDriver(): void {
   const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
   const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
   const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
+  const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
   // Task4: 1手駆動の再 fire トリガ。driveOppTurn が 1 手適用するたび bump され、turn.player が
   // 'opp' のままでも useEffect が再 fire して次の手へ進む (これが無いと 1 手で stall)。
   const oppMoveTick = useGameStateStore((s) => s.oppMoveTick);
   useEffect(() => {
     if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
-    if (pendingEffectPick || pendingEffectChoice || pendingEffectOptional) return undefined;
+    if (pendingEffectPick || pendingEffectChoice || pendingEffectOptional || pendingDeckReorder) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -212,5 +214,5 @@ export function useOppTurnDriver(): void {
     }
     Promise.resolve().then(driveOppTurn);
     return undefined;
-  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, oppMoveTick]);
+  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, pendingDeckReorder, oppMoveTick]);
 }

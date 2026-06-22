@@ -128,6 +128,13 @@ export type GameStateStore = {
   pendingDeckReveal: PendingDeckReveal | null;
   setPendingDeckReveal: (p: PendingDeckReveal | null) => void;
   /**
+   * BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択待ち。
+   * engine 側 PendingDeckReorderSide と同 shape。human 所有 & 2 枚以上を底へ移したときだけ set され
+   * DeckReorderModal で並べ替える。deckReorderResolve dispatch で底ブロックを再配置して null へ。
+   */
+  pendingDeckReorder: PendingDeckReorder | null;
+  setPendingDeckReorder: (p: PendingDeckReorder | null) => void;
+  /**
    * 2026-05-26 ヒラメキ効果検証 demo モード。
    * 'idle'      … 未使用 (通常ゲーム)
    * 'picking'   … HiramekiDemoPickerModal 表示中、ユーザが icon-flash カード選択待ち
@@ -157,6 +164,12 @@ export type PendingDeckReveal = {
   matched: string | null;
   /** BUG-132 GAP-1: chooseMatch pick 未解決中は overlay を hold (engine 側 PendingDeckRevealSide と同 shape) */
   awaitingPick?: boolean;
+};
+
+export type PendingDeckReorder = {
+  player: 'self' | 'opp';
+  /** デッキ底へ移したカード群 (公開順)。並べ替え対象 */
+  cardIds: string[];
 };
 
 export type PendingEffectPick = {
@@ -255,6 +268,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingEffectOptional: (p) => set({ pendingEffectOptional: p }),
   pendingDeckReveal: null,
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
+  pendingDeckReorder: null,
+  setPendingDeckReorder: (p) => set({ pendingDeckReorder: p }),
   hiramekiDemoMode: 'idle',
   setHiramekiDemoMode: (m) => set({ hiramekiDemoMode: m }),
   hiramekiDemoSelectedCardId: null,

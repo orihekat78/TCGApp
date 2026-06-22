@@ -30,7 +30,7 @@ import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
-import { _drainPendingDeckRevealSide } from '@/engine/effect/atom-handlers';
+import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 
 type Player = 'self' | 'opp';
 
@@ -98,6 +98,8 @@ export type EngineAction =
   | { type: 'choiceResolve'; choiceIndex: number }
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
   | { type: 'optionalResolve'; run: boolean }
+  // BUG-136: deckToBottomBound「好きな順番でデッキの下に移す」の順序確定。order = 底ブロックの新順 (cardId 列)。
+  | { type: 'deckReorderResolve'; order: string[] }
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   | { type: 'endTurn'; player: Player };
@@ -196,6 +198,10 @@ function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'optionalResolve': {
       // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効
       return useGameStateStore.getState().pendingEffectOptional !== null;
+    }
+    case 'deckReorderResolve': {
+      // BUG-136: pendingDeckReorder が set されているときのみ有効
+      return useGameStateStore.getState().pendingDeckReorder !== null;
     }
     case 'choiceResolve': {
       // BUG-121: pendingEffectChoice が set されているときのみ有効
@@ -479,6 +485,33 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
+    case 'deckReorderResolve': {
+      // BUG-136: deckToBottomBound で底へ移したブロックを human が選んだ順に並べ替える。
+      // 底ブロック = deck 末尾 n 件 (deck[0]=top / push=bottom)。action.order が現底ブロックの
+      // 並べ替え (同一 multiset) であることを検証してから差し替える (防御: 不一致なら何もしない)。
+      const pendingR = useGameStateStore.getState().pendingDeckReorder;
+      if (!pendingR) return;
+      const deck = draft.players[pendingR.player].deck;
+      const n = pendingR.cardIds.length;
+      if (n < 2 || deck.length < n) return;
+      const order = action.order;
+      const bottom = deck.slice(deck.length - n);
+      // multiset 一致検証 (cardId の出現回数が一致するか)
+      const tally = (xs: string[]): Map<string, number> => {
+        const m = new Map<string, number>();
+        for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1);
+        return m;
+      };
+      if (order.length !== n) return;
+      const tb = tally(bottom);
+      const to = tally(order);
+      if (tb.size !== to.size) return;
+      for (const [k, v] of tb) if (to.get(k) !== v) return;
+      // 検証 OK → 底ブロックを order で差し替え (deck 末尾 n 件を上書き)
+      for (let i = 0; i < n; i++) deck[deck.length - n + i] = order[i]!;
+      // クリアは produce 後に dispatchEngineAction が行う
+      return;
+    }
     case 'endTurn': {
       // Round 2 修正: 旧実装は endTurn のみで、次プレイヤーの startTurn を呼ばなかった。
       // 結果 (a) opp.turn 開始時に auto-phase 走らず、(b) opp.endTurn 後 self.turn でも
@@ -532,6 +565,9 @@ export function surfacePendingSideChannels(): void {
   if (effectOptionalSide) store.setPendingEffectOptional(effectOptionalSide);
   const deckRevealSide = _drainPendingDeckRevealSide();
   if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
+  // BUG-136: deckToBottomBound 順序選択の取り残し防止 (auto-phase / ターンドライバ経路)
+  const deckReorderSide = _drainPendingDeckReorderSide();
+  if (deckReorderSide) store.setPendingDeckReorder(deckReorderSide);
 }
 
 /**
@@ -614,6 +650,13 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     const deckRevealSide = _drainPendingDeckRevealSide();
     if (deckRevealSide) {
       store.setPendingDeckReveal(deckRevealSide);
+    }
+    // BUG-136: deckToBottomBound 順序選択チャネル drain。deckReorderResolve は解決で消化 → 次 (通常 null)。
+    const deckReorderSide = _drainPendingDeckReorderSide();
+    if (action.type === 'deckReorderResolve') {
+      store.setPendingDeckReorder(deckReorderSide);
+    } else if (deckReorderSide) {
+      store.setPendingDeckReorder(deckReorderSide);
     }
     return { ok: true };
   } catch (e) {
