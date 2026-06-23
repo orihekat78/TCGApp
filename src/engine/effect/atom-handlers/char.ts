@@ -1,5 +1,6 @@
 // engine.effect.atom-handlers/char — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
+import { scene as readScene } from '../../read/scene.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { isShortFormDelta } from '../atom-pick-spec.js';
 import { resolvePlayer, resolveBindRef, resolveDeltaToNumber, hasNorMax, paShortFormAwait } from './_shared.js';
@@ -210,6 +211,15 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
       // (cardId 引数は無視、自動補完される)
       let scCardId: string;
       if (a.fromDeckTop) {
+        // BUG-153: host (scUid) が現場不在なら deck を消費しない。
+        // setCard は host 不在で no-op (mutate/char.ts findChar) なので、shift を先に走らせると
+        // 上端カードが deck からも setCards からも消える (カード消失)。
+        // 公式Q&A (B05035): 離場時は公開した/上端のカードを「そのままデッキの上に戻す」=ここで shift せず return。
+        // readScene.byUid は setCard の findChar と同一の scene scan ゆえ host 存在時は従来と完全に同挙動 (回帰0)。
+        if (!readScene.byUid(s, scUid)) {
+          mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'host-absent' });
+          return;
+        }
         const sscP = resolvePlayer(a.player ?? 'self', ctx);
         const sscDeck = s.players[sscP].deck;
         if (sscDeck.length === 0) {

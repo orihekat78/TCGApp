@@ -55,3 +55,26 @@ B05058 富沢 (a2 handAddFromRemove, a1 DEFER) / B05116 火傷の男 (a2 sceneEn
 validate-specs FAIL PR280 は既存・無関係 (CI gate でない)。engine diff 0 = engine変更0 確証。
 
 水平展開: 残 leave-trigger 群 (D/E/F/A 観測者型 = 真の engine 投資先、cause/actor binding 拡張で次弾)。
+
+---
+
+## セッション51 (2026-06-23) — BUG-153 修正 + B05035 解禁 (engine additive 小 wave、cards/wave-bug153-setcard-host-check)
+
+ユーザー選択: A「BUG-153 修正 → B05035 解禁」。前 wave (㊿) で敵対 review が起票した
+**BUG-153** (charSetCard{fromDeckTop} の host-absent カード消失) を engine additive 修正し DEFER 解禁。
+
+**engine 修正** (char.ts 10行 additive): fromDeckTop explicit-uid 分岐で `sscDeck.shift()` の前に
+`readScene.byUid(s, scUid)` で host 存在確認、不在なら shift せず return。byUid は setCard の findChar と
+byte-identical (self+opp scene のみ) ゆえ host-present 完全不変=回帰0。既存行の変更ゼロ。
+
+**出荷 1** (ALL_CARDS 1409→1410): B05035 遠山和葉 (緑5/高校生) — 【登場時】reveal-1 (cardName OR
+[服部平次/遠山和葉]) → 任意手札追加 (chooseMatch:'upTo') → 加えねば裏向きセット (charSetCard fromDeckTop)。
+DSL = B01050+B02019+B03061 合成。
+
+**敵対 review** (opus 3 lens): 3/3 PASS、0 BLOCKER。concern 1 = BUG-153.md 影響範囲が ~30枚へ過少申告
+(host≠$self の B03034/$contact・B07058/$entered・PR049/$pick・B02020/opp PA短縮形 が真の host-absent 経路、
+全件 faithfulness 改善方向・回帰なし) → BUG-153.md に反映済。
+
+**検証**: tsc0両 / vitest 2888→2896(+8) / smoke winsA=498 exc0 baselineOK (MVPデッキは charSetCard 不使用=
+新branch未到達=baseline完全不変が回帰0証跡) / e2e 123pass+1skip / engine diff=char.ts 10行のみ。
+記録: BUG-153.md status→修正済+影響範囲拡張 / DEFERRED-INDEX B05035 解禁 / changelog 07。
