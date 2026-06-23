@@ -935,6 +935,14 @@ import { B06048P } from '../ct-p06/B06048P.js';
 import { B06053 } from '../ct-p06/B06053.js';
 import { B06053P } from '../ct-p06/B06053P.js';
 
+import { B05021 } from '../ct-p05/B05021.js';
+import { B03019 } from '../ct-p03/B03019.js';
+import { B05077 } from '../ct-p05/B05077.js';
+import { B07086 } from '../ct-p07/B07086.js';
+import { B07043 } from '../ct-p07/B07043.js';
+import { B02058 } from '../ct-p02/B02058.js';
+import { B02058P } from '../ct-p02/B02058P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1152,4 +1160,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05016, B05016P, B09079, B06048, B06048P,
   // wave decklook-enter-handadd — B06053/P 追加 (YAIBA event trait backfill 解禁)
   B06053, B06053P,
+  // wave leave-reveal-until 2026-06-23 (7 cards, engine変更0)
+  B05021, B03019, B05077, B07086, B07043, B02058, B02058P,
 ];

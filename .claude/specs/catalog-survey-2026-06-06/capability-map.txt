@@ -189,7 +189,7 @@ These read `ctx.triggerPayload`; if the expected payload shape is absent ⇒ `fa
 ---
 
 ## NOT expressible as a condition (⛔ — require engine/new-condition work; do NOT assume implementable)
-- ⛔ **Hand count** — no `handAtLeast`/`handCount` condition. `TargetQuery.area:'hand'` exists for `sceneHas`, so **hand-card-by-filter presence IS expressible** via `sceneHas{query:{area:'hand',...}}`, but a raw "hand size ≥ N" (any card) is only reachable by `sceneHas` with an empty/match-all filter.
+- ⚠ **Hand count** — STALE as of 2026-06-23: this snapshot predates Task D E1 (2026-06-12). `src/engine/cond/eval.ts` NOW HAS `handAtLeast{player,n}` (eval.ts:129, self/opp hand >= n), `handAtMost{player,n}` (:133, <= n), and `handCountAtLeastOther{player}` (:135, player.hand >= other.hand — i.e. 「相手の手札が自分の手札の枚数以上」). All three are in the Condition union (types/effect.ts) + cjs whitelist (eval.ts:433). Exemplars: B07067 a1 / B02058 a1 (handCountAtLeastOther). Always cross-check eval.ts/effect.ts directly — do NOT trust ⛔ negative claims in this 2026-06-06 snapshot. (`TargetQuery.area:'hand'` for `sceneHas` also still works for hand-card-by-filter presence.)
 - ⛔ **Total remove-area count** (any card, ignoring color/trait/name) — only attribute-filtered `removeXAtLeast` exist. A plain "リムーブ N枚以上" needs a new condition (or a match-all attribute, which the three predicates don't provide).
 - ⛔ **Deck count / deck-top attribute** — no condition reads deck size or deck-top card (only `fileTopType` for FILE). Deck inspection is verb-side (`deckRevealUntil`), not condition-side.
 - ⛔ **Evidence by attribute / evidence-top** — only `evidenceAtLeast` (raw count). No "top evidence is X", no flipped-evidence count condition.
@@ -568,7 +568,7 @@ Hook機構共通: `scope`(always/on-scene/on-partner-area/on-hand/on-evidence) �
 - `triggerCharMatches{side?, filter?}` ⚠ **NEW** — トリガpayloadキャラ (例 reasoning:end の推理キャラ) を side+filter で判定 (declarative `$trigger` matcher). `$trigger.uid` (`payload.uid ?? payload.byUid`) も atom引数で参照可.
 
 ⛔ **依然 condition 無し (custom{} TS のみ)**:
-- 手札枚数 (N枚以下/以上) — 専用condition無し. **STILL TRUE**.
+- 手札枚数 (N枚以下/以上) — ⚠ STALE (2026-06-23 訂正): Task D E1 (2026-06-12) で `handAtLeast`/`handAtMost`/`handCountAtLeastOther` が eval.ts に追加済 (L127-138)。専用condition **あり**。L192 参照。
 - リムーブエリア **総枚数** ≥N — color/trait/name 別はあるが総数無し. **STILL TRUE**.
 - 登場手段の source レベル — enter payload は viaEffect/順序のみ. **STILL TRUE**.
 
