@@ -80,7 +80,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 | mustGuard token | 「ガードできる場合、必ずガードする」(B09040 a2) | guard 強制の AI/UI 同時追従 (GuardPickerModal forced 化) |
 | auraGrant (AP/LP buff) | **✅ 解消 (2026-06-15 cluster13)**: continuous OWNER-ONLY 制約を解除し、他キャラへの数値 aura (apDeltaAura/lpDeltaAura + auraFilter + auraExcludeSelf) を board-scan reader で実装。11 printings 出荷 | 完了 — branch engine/wave2-cluster13-aura-grant |
 | auraGrant (triggered 付与) | 常時 aura で他キャラに **triggered 能力テキスト**を付与 (B09024 a1「他キャラに【現場リムーブ時】を与える」) | **別 gate 継続 DEFER**: 非キーワード能力テキストの付与 + 二重 queue 防止 (cluster13 の数値 aura とは別機構) |
-| partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | GameState slot + UI (次 wave 最終段) |
+| partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | **設計済 (2026-06-23)**: [engine-mr-partner-area-design.md](engine-mr-partner-area-design.md) + [cohort](engine-mr-partner-area-cohort.md)。MR①② additive slot、SOLE 15枚 / MULTI 10。3-lens 敵対review済。実装は別 engine session (Phase1=core/2=UI/3=AI/4=card wave) |
 | 「パートナーエリアでも宣言できる/発動する」句 | B07079/P・B08032/P・B09054/P (今回出荷分) + B07093/B05066 (前例) は句を vacuous 扱いで出荷 | partner-area キャラ slot 実装後に句を有効化 |
 | name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
 | ~~multi-card sceneEnter~~ | **✅ 解消 (2026-06-15 cluster14)**: sceneEnter に cardIds:'$pick.cardIds' 契約 + switchRemoveUids[] (現場満杯 switch) を additive 拡張。distinctNames AI dedup + skipResolvesAtom (0枚でも後続 step 解決)。B09010/P + PR042/PR046 計 4 printings 出荷 | 完了 — branch engine/wave2-cluster14-multi-sceneenter。残 B01022 (multi-match deckRevealUntil) / B05117 (persistent set-granted leave ability) は別 gate |

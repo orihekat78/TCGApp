@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 419
-- **ファイル数**: 7162
+- **ファイル数**: 7166
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -871,6 +871,8 @@
     - `smoke-2026-06-23-11.md` — Smoke 1000戦レポート — smoke-2026-06-23-094045
     - `smoke-2026-06-23-12.json`
     - `smoke-2026-06-23-12.md` — Smoke 1000戦レポート — smoke-2026-06-23-104741
+    - `smoke-2026-06-23-13.json`
+    - `smoke-2026-06-23-13.md` — Smoke 1000戦レポート — smoke-2026-06-23-124338
     - `smoke-2026-06-23-2.json`
     - `smoke-2026-06-23-2.md` — Smoke 1000戦レポート — smoke-2026-06-23-015303
     - `smoke-2026-06-23-3.json`
@@ -1374,6 +1376,8 @@
     - `engine-cluster16-filter-predicate-expressiveness-design.md` — engine cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckReveal cros…
     - `engine-extension-plan.md` — Engine 拡張計画 (骨格凍結 解除 — 2026-06-05 user 承認 / 次セッション着手)
     - `engine-gate-triage-2026-06-15.md` — engine gate triage (2026-06-15, cluster12/13 出荷後)
+    - `engine-mr-partner-area-cohort.md` — engine: MR partner-area cohort yield 表 (2026-06-23 grounding, 敵対review反映 v2)
+    - `engine-mr-partner-area-design.md` — engine: MR partner-area 構造 設計 (design-first, 2026-06-23, 敵対review反映 v2)
     - `engine-wave2-ability-filter-design.md` — engine拡張 wave#2 cluster2 — ability-presence filter 設計 (v2、敵対レビュー3lens反映済)
     - `engine-wave2-action-triggers-design.md` — engine拡張 wave#2 cluster3 — action-lifecycle trigger 族 設計 (v2、敵対レビュー3lens反映済)
     - `engine-wave2-bug132-design.md` — engine拡張 wave#2: BUG-132 GAP-1/2 修正設計 v2 (2026-06-12, 敵対レビュー3lens反映済)
