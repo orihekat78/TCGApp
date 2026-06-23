@@ -32,6 +32,9 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   handAddFromRemove: { defaultArea: 'remove',   mode: 'PB', sourceSplice: true },
   // engine拡張 wave (2026-06-21): handToEvidence — 手札から1枚 pick → 裏向きで証拠へ (evidenceToHand の逆)。
   handToEvidence:    { defaultArea: 'hand',     mode: 'PB' },
+  // engine拡張 wave (2026-06-23): evidenceFlip pick-form — 「(相手の)裏向きの証拠を1つまで選び、表向きにする」。
+  // PB pick (evidenceToHand と同型)。chooser=controller / side=証拠 owner / faceDown 限定は handler 側で構築。
+  evidenceFlip:      { defaultArea: 'evidence', mode: 'PB' },
   sceneRemove:       { defaultArea: 'scene',    mode: 'PA' },
   charModifyAP:      { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
   // 新規
@@ -83,6 +86,8 @@ export function buildShortFormPick(
   if (Array.isArray(a.filterAny)) query.filterAny = a.filterAny;
   if (Array.isArray(a.state)) query.state = a.state;
   if (a.distinctNames === true) query.distinctNames = true;
+  // engine拡張 wave (2026-06-23): evidenceFlip 用 — 裏向き(未公開)の証拠のみ候補化。
+  if (a.faceDown === true) query.faceDown = true;
   return { kind: 'pick', query, n: { min: nMin, max: nMax }, chooser };
 }
 

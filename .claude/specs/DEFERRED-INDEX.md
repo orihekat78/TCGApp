@@ -432,3 +432,24 @@ changelog [2026-06-23-01](../changelog-entries/2026-06-23-01-wave-trigdraw.md)) 
 | B01089 | 佐藤美和子 | 同上 (【黄】色絞り) + 「このキャラ か 〚黄〛のキャラ」= self-uid と filtered-other の **OR trigger 合成** も不能 | 同上 + removed-char OR(self, filtered) |
 | B02062 | 世良真純 | 【自分ターン中】「相手の証拠がリムーブされたとき」= **相手証拠除去を観測する card-triggerable hook 不在**。`evidence:lose` は internal-only、`evidence:remove-by-action` は除去された**証拠カード自身**の ability のみ (in-play scan 経路でない) + action[事件] 限定 | opp-evidence-removed observer hook (新 hook + listener) |
 | B03008 | 阿笠博士 | 【自分ターン中】「アクティブ状態の〚少年探偵団〛がスリープになったとき」= **active→sleep STATE-TRANSITION hook**。`state:change` は宣言のみで never emit (capability-map ⛔)。`reasoning:end` のみ sleep を card-trigger 化だが推理限定で action/guard/cost/effect sleep を漏らす (語義 mismatch) | 汎用 becomes-sleep hook (state:change emit + listener) |
+
+## engine拡張 wave evidence-flip-faceup (証拠を表向きにする, 2026-06-23, cards/wave-evidence-flip)
+
+死 atom だった `evidenceFlip` (idx 固定形のみ=実文言で使えず shipped 0) を additive 有効化 (pick-form +
+fromTop + candidates faceDown filter、4 files、回帰0)。**出荷 5** (ALL_CARDS 1378→1383): B07064 ワトソン
+(登場時 pick) / B03076 世良真純 (登場時 fromTop+ヒラメキ) / B08085 シェリー (現場リムーブ時 pick+cutin) /
+B09076・B09076P 三池苗子 (疾風 pick+cutin)。decoy test 20件 + 敵対 faithfulness review (opus) 全 faithful。
+changelog [2026-06-23-02](../changelog-entries/2026-06-23-02-wave-evidence-flip.md)。同 evidence-flip 族の残 DEFER:
+
+| rep | DEFER 理由 (残存 gate) | 解禁条件 |
+|-----|----------------------|---------|
+| B05013 / B06017P / B06019 / B06026 / B07099 / B08087 / B08091 | **facedown** 「表向きの証拠を裏向きにする」= flipFaceUp の逆 mutate verb 不在 (B05013 は main+hira 共に clean、他は hira 側 or 二次 gate)。次弾候補 | `flipFaceDown` mutate verb + pick (本 wave faceup と対称の additive、別 micro-cluster) |
+| B06086 / B06086P | 萩原研二: action-trigger で自+相の証拠を各1 pick faceup + 「**合わせて2つ表向きにした場合** AP+1000」= flip 実行枚数を数える count-flipped conditional が engine 不在 | flipped-count 参照 conditional (engine) |
+| B08028 | 日向幸: 宣言 cost[このキャラ以外をリムーブエリアへ] + 「自分の裏向き証拠を**好きな数**選び表向き、**表向きにした枚数と同じ数まで**相手の裏向き証拠を選び表向き」= variable-count pick + dynamic-linked second pick + cost closure | variable-count pick + flip-count-linked pick (engine) |
+| B05079 | 世良真純: hira は pick-faceup で green だが main「相手は【ヒラメキ】を発動できない」= continuous opp-ability-deny gate ゆえ全体 DEFER | opp-ability-deny continuous (engine) |
+| B06034 | 鬼丸城: pick-faceup + 「【ヒラメキ】持ち〚YAIBA〛が表向きになった場合 その【ヒラメキ】を発動」= hirameki-cascade gate | reveal-triggered hirameki cascade (engine) |
+| PR279 | 萩原千速: 疾風 pick-faceup は green だが「相手のイベントの効果によってリムーブされない」= continuous removal-immunity gate ゆえ全体 DEFER | event-effect removal-immunity continuous (engine) |
+
+> 注: 事件カードの【宣言】cost「〚裏向きの証拠をN つ表向きにする〛」(B05063/B06036/B06043/B06065/B06095/B06105/
+> B09111/B09112/D10026/B06023 等 ~20件) は **既存の flipFaceUpEvidence cost** (cost/pay.ts) で対応済 =
+> evidenceFlip effect とは別。各 declared の効果側が個別 gate のため card 単位は別途判定 (本 wave 対象外)。

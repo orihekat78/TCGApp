@@ -229,12 +229,48 @@ export function atomEvidenceToDeck(s: GameState, a: Record<string, unknown>, ctx
       return;
     }
 
-export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
-      const efP = resolvePlayer(a.player, ctx);
-      const efIdx = a.idx as number;
-      mutate.evidence.flipFaceUp(s, efP, efIdx);
-      // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: efP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(efIdx) });
+export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // ① 旧 idx 固定形 (後方互換): { player, idx } を直接 flip。
+      if (typeof a.idx === 'number') {
+        const efP = resolvePlayer(a.player, ctx);
+        mutate.evidence.flipFaceUp(s, efP, a.idx);
+        // BUG-073: effect log
+        mutate.log.append(s, { ts: Date.now(), player: efP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(a.idx) });
+        return;
+      }
+      // engine拡張 wave (2026-06-23): evidence-flip-faceup 有効化。a.player = 表向きにする証拠の owner
+      // ('opp'=相手の証拠 をスカウト)。chooser/picker は常に controller (ctx.source.player)。
+      const flipP = resolvePlayer(a.player, ctx);
+      // ② fromTop = 「(相手の)証拠を上から1つ表向きにする」(B03076)。上から=末尾 (removeTop と整合)、選択なし。
+      if (a.fromTop === true) {
+        const evList = s.players[flipP].evidence;
+        if (evList.length === 0) {
+          mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', result: 'none' });
+          return;
+        }
+        const topIdx = evList.length - 1;
+        mutate.evidence.flipFaceUp(s, flipP, topIdx);
+        mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(topIdx), result: 'ok' });
+        return;
+      }
+      // ③ pick 形 = 「(相手の)裏向きの証拠を N つまで選び、表向きにする」。chooser=controller、
+      //    candidate area side = a.side(既定は a.player) で証拠 owner を指す、faceDown=裏向き限定。
+      const ctrl = ctx.source.player;
+      const efArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceFlip.defaultArea, a, ctrl, (a.player as Player) ?? 'opp') }
+        : a;
+      const target = normalizeTargetToString(efArgs.target);
+      if (!target) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: efArgs }, ctx, { byPlayer: ctrl, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: ctrl, turn: s.turn.number, action: 'effect:evidenceFlip:awaiting-pick' });
+        return;
+      }
+      // pick で選ばれた cardId に対応する裏向き証拠を表向きに (同 cardId 複数は等価、evidenceToHand と同型)。
+      const list = s.players[flipP].evidence;
+      const idx = list.findIndex(e => e.cardId === target && !e.faceUp);
+      let flipped = false;
+      if (idx !== -1) { mutate.evidence.flipFaceUp(s, flipP, idx); flipped = true; }
+      mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target, result: flipped ? 'ok' : 'not-found' });
       return;
     }
 

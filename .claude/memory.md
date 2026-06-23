@@ -34,3 +34,16 @@ Phase 3g は main 取込み済 (841cfbc0, CI green)。ユーザー選択で Phas
 ### 学び㊺
 - 残 green master の effect 列は **truncate されている** (PR265 は「レベル分リムーブ」隠れ gate で既 DEFER だった)。member ごとに repRecord 全文 + ヒラメキ列を再取得必須 (6枚に隠れヒラメキ判明)。
 - 非 deck カード (MVP 外) の「画面処理=文言」検証は playwright 不可 → **実 hook emit + decoy の engine test** が等価 (BUG-117/118 教訓を engine 層で踏む)。hirameki は pendingHirameki 側チャネル (pendingEffects でない)。
+
+## セッション㊻ (2026-06-23) — engine拡張 wave evidence-flip-faceup (カード追加 A 継続)
+ユーザー選択=A 継続 + 「evidence-flip 拡張」(engine 拡張クラスタ)。残 unimplemented (671) 密度検証で engine 不触 clean は薄く散在 (残弾枯渇) と確認 → 最密 yield=evidence-flip 族。`evidenceFlip` は engine 存在も **idx 固定形のみ=死 atom** (shipped 0) と判明。branch `cards/wave-evidence-flip`。
+- **engine 拡張** (additive 4 files、回帰0=使用カード0): core.ts atomEvidenceFlip に ② fromTop(上から=末尾) ③ pick-form(chooser=controller/side=証拠owner/faceDown限定) 追加 (① legacy idx 維持) / atom-pick-spec.ts evidenceFlip PB + buildShortFormPick faceDown pass / candidates.ts evidence で query.faceDown honor / effect.ts TargetQuery.faceDown (TargetFilter でなく Query 直下=sync test 対象外)。
+- **出荷 5** (ALL_CARDS 1378→1383、touched 各1): B07064(登場時pick) / B03076(登場時fromTop+ヒラメキ) / B08085(現場リムーブ時pick+cutin、事件青&黒+相手ターン中gate) / B09076・B09076P(疾風pick+cutin)。hand-author (engine拡張カードは新capability ゆえ codegen でなく手書き、exemplar B02007/D11009/D01012/B07050 照合)。
+- **decoy test** (tests/cards/wave-evidence-flip-2026-06-23.test.ts、20件): candidates() faceDown filter + side解決 (face-up/自証拠 decoy) / runAtom fromTop・pick-resolved (bottom/自証拠 decoy) / leave caseColor・turn・疾風enterOrder gate / legacy idx 後方互換 / end-to-end (enter emit→runAllUntilEmpty→drainAiEffectPicks)。
+- **敵対 faithfulness review** (opus workflow、5カード lens): 全 faithful:true / blocker 0。
+- **ゲート全 green**: typecheck 0(両) / vitest 2802→2822(+20) / smoke winsA=498 exc0 baselineOK (MVP挙動不変=回帰0証跡) / e2e 123pass+1skip。
+
+### 学び㊻
+- sweep bucket label は過剰グルーピング (feedback-engine-cluster-over-green-tail 実証): 「TOP-flip 21」の大半は事件カードの **【宣言】cost「証拠N つ表向きにする」= 既存 flipFaceUpEvidence cost** で effect でない誤検出。cost bracket 〚〛 を strip して effect だけ再 scan が必須。
+- engine に **存在するが実カード文言で使えない死 atom** がある (evidenceFlip idx固定形)。capability-map に列挙されていても「実カードが使える形か」を実 handler で確認要。additive 有効化で dense family 解禁。
+- 新 query field は **TargetFilter でなく TargetQuery 直下** に置けば sync-taskA-whitelists.test (TargetFilter キーを Exclude<custom> で強制) を回避でき 3点同期不要。

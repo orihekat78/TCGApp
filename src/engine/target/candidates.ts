@@ -169,6 +169,9 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
       case 'evidence': {
         const ev = state.players[side].evidence;
         for (let i = 0; i < ev.length; i++) {
+          // engine拡張 wave (2026-06-23): faceDown=true は裏向き(未公開)の証拠のみ候補化。
+          // 「裏向きの証拠を選び、表向きにする」(evidenceFlip pick) で既に表向きの証拠を除外。
+          if (query.faceDown === true && ev[i].faceUp) continue;
           const cand: Candidate = { kind: 'evidence', player: side, index: i };
           if (matchesFiltersByCardId(state, ev[i].cardId, query, cand)) out.push(cand);
         }

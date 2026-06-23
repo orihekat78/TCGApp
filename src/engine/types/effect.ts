@@ -131,6 +131,10 @@ export type TargetQuery = {
   state?: ('active' | 'sleep' | 'stun')[];
   named?: boolean;
   distinctNames?: boolean;
+  // engine拡張 wave (2026-06-23): evidence area の pick を裏向き(未公開)のみに限定する。
+  // 「(相手の)裏向きの証拠を1つまで選び、表向きにする」(evidenceFlip pick-form) 用。
+  // 既存カードは未使用 (= no-op、smoke baseline 不変)。candidates.ts evidence case が honor。
+  faceDown?: boolean;
 };
 
 export type TargetingRef =
