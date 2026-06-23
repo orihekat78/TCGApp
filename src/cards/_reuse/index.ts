@@ -926,6 +926,15 @@ import { B05030 } from '../ct-p05/B05030.js';
 
 import { B05035 } from '../ct-p05/B05035.js';
 
+import { B05016 } from '../ct-p05/B05016.js';
+import { B05016P } from '../ct-p05/B05016P.js';
+import { B09079 } from '../ct-p09/B09079.js';
+import { B06048 } from '../ct-p06/B06048.js';
+import { B06048P } from '../ct-p06/B06048P.js';
+
+import { B06053 } from '../ct-p06/B06053.js';
+import { B06053P } from '../ct-p06/B06053P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1139,4 +1148,8 @@ export const REUSE_CARDS: CardDef[] = [
   B07069, B07069P, PR099, B05030,
   // BUG-153 解禁 B05035 (set-facedown host-check)
   B05035,
+  // wave decklook-enter-handadd — deck-look→hand-add 7枚 (engine変更0、B06053/P は YAIBA event trait backfill で解禁)
+  B05016, B05016P, B09079, B06048, B06048P,
+  // wave decklook-enter-handadd — B06053/P 追加 (YAIBA event trait backfill 解禁)
+  B06053, B06053P,
 ];

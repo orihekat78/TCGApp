@@ -77,7 +77,9 @@ export const B06033: CardDef = {
   names: ['「わが味方となるべし!!」'],
   colors: ['緑'],
   level: 6,
-  traits: [],
+  // 特徴 (公式 category1 由来): YAIBA。event.tsv に features 列が無く抽出が drop していたため明示
+  // (一次 API _raw/ct-p06-api.json category1=YAIBA が正本。先例 ef29f608 赤魔術 trait 補完と同根)。
+  traits: ['YAIBA'],
   rarity: 'C',
   imageUrl: '1754285189451959.jpg',
   abilities: [a1, a2],
