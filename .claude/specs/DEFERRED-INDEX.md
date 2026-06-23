@@ -499,3 +499,26 @@ B05058/B05116 は **partial-ship** (継続 passive a1 を DEFER + a2 leave 出�
 | B05111 (ゾンビ, 全体) | a1 leave→cardNameウォッカ登場 は clean だが a2「【ヒラメキ】【解決編】**アクション中のキャラ**を1枚まで選びスタン」= ヒラメキ解決時に actor を指す binding が engine 不在 (evidence:remove-by-action hirameki ctx に attacker uid 不在)。汎用 pick だと over-fire=不誠実ゆえ全体 DEFER | hirameki ctx に acting-char($actor)binding 追加 (engine) |
 | B05058 a1 | 「現場にいるこのキャラは〚特徴[鈴木財閥]〛を持つ」= 現場限定 継続 self-trait 付与。trait 付与機構が engine 不在 (read/char.ts readTraits は d.traits 静的のみ / charGrantTrait atom なし / ContinuousModifier に grantTraits なし)。静的 traits[] は「現場限定」公式Q&A 違反ゆえ不可。a2 のみ出荷 | continuous self-trait grant (engine) |
 | B05116 a1 | 「相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ」= 相手の対象選択を強制する forced-target passive。強制対象機構が engine 不在 (必ず選ぶ/mustSelect/forcedTarget 共にゼロ)。a2 のみ出荷 | forced-target 強制選択 (engine) |
+
+## ✅ wave codegen-handcount-setevent (hand-count declared + set-facedown, 2026-06-23, cards/wave-codegen-handcount-setevent)
+
+棚卸「codegen 即出荷 hand-count-cond + set-event-to-char (7+P)」ラベルを member 毎 full-text grounding した結果、
+**多くが MR/opp-hand/entered-binding/setCount-dyn/任意rename の engine gap を含む**と判明 (process の「ラベル不可信」を実証)。
+**engine変更0** (charSetCard{fromDeckTop} B03061 / sceneEnter from:remove B01076 / deckRevealUntil maxN:1 upTo + conditional
+then/else B02019/B01050 / charGrantKeyword 突撃[キャラ] scope:turn D09027 / fileFrom cost B05037 / handAtMost gate B07067 の再録)。
+**出荷 4** (ALL_CARDS 1405→1409): B07069/P 本堂瑛海 (a1 declared lv≤8 remove gate handAtMost2 + a2【FILE8】declared
+pay[sleepSelf,removeFromHand,fileFrom]→remove から lv≤7赤キャラ登場) / PR099 工藤有希子 (a1 登場時 set-facedown + 突撃[キャラ]EOT,
+a2 DEFER) / B05030 遠山銀司郎 (印字 突撃[キャラ] + a1 登場時 set-facedown, a2 DEFER)。decoy test 7件 (revive color/level/kind decoy +
+sceneRemove level decoy + set-facedown host検証 + 突撃[キャラ]付与/印字 + 全 descriptor)
++ 敵対 faithfulness review (opus 4カード lens + engine-0 lens)。PR099/B05030 は **partial-ship** (先例 B04059 同型)。
+B05035 遠山和葉 は当初出荷候補だったが、敵対 review が else-set 経路の **charSetCard host-absent 共有 engine 順序バグ (BUG-153)** =
+公式Q&A『離場時はデッキ上に戻す』違反を検出 → engine変更0 では DSL 修正不可ゆえ DEFER (下表)。
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B07065 (世良真純＆メアリー, 全体) | MR カード (rules/18 §MR①② が engine 未配線) + 複数名カード名 (rules/19 split-name)。両 hard gap | MR①②配線 (rules/18) + 複数名ルール |
+| B07068 (羽田秀吉, 全体) | a1「登場させたキャラ…をアクティブにする」= sceneEnter で登場した $entered キャラを後続 step で参照する binding token が engine 不在 (実装0件)。主能力ゆえ a2 ヒラメキ単体では薄く全体 DEFER | sceneEnter に entered-char binding ($entered) 追加 (engine) |
+| B07100 (コルン, 全体) | 【登場時】「相手は手札を公開…カットイン持ち lv≤8 を1枚選び相手がリムーブ」= 相手手札の reveal + filter 選択 + 相手手札からの removal 機構が engine 不在 (opponentHand/handReveal verb ゼロ、S12456 確認済) | opp-hand reveal + filtered removal verb (engine) |
+| PR099 a2 | 「キャラのカード名を1つ指定し…書き換えてもよい」= 全カードプールから任意 card 名を指定する rename 機構が engine 不在 (renameCardName 系 verb ゼロ)。汎用 verb で不誠実ゆえ a1 のみ出荷 | 任意 card名 rewrite verb (engine) |
+| B05030 a2 | 【自分ターン中】「セットされているカード1枚につき AP+1000」= set-card 枚数スケールの継続 AP 修飾。$self.setCardCount 相当 dyn token が engine 不在 (resolveSelf は sceneTrait/faceUpEvidence/fileCount のみ)。主眼能力だが additive engine 拡張ゆえ a1 のみ出荷 | resolveSelf に setCardCount dyn 分岐追加 (engine additive) |
+| B05035 (遠山和葉, 全体) | 【登場時】reveal-1 + cardName[服部平次/遠山和葉] OR + 任意手札追加 / 加えねば裏向きセット。DSL 自体は B01050/B02019 同型で表現可だが、else-set の `charSetCard{fromDeckTop}` が **host 離場時に公開カードを deck から先に shift→setCard no-op で消失** (**BUG-153** 共有 engine 順序バグ)。B05035 のみ公式Q&A『離場時はデッキ上に戻す』を明示するため faithfulness 違反が documented → engine変更0 では DSL 修正不可ゆえ全体 DEFER | BUG-153 修正 (charSetCard を host 存在チェック→shift 順に、engine additive)。修正後 再出荷可 |

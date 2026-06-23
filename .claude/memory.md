@@ -1,5 +1,31 @@
 # memory — 現セッション scratchpad
 
+## セッション㊿ (2026-06-23) — wave codegen-handcount-setevent (engine変更0、出荷4)
+
+方向: ユーザー A-codegen 軽量wave 選択。棚卸ラベル「codegen 即出荷 hand-count-cond + set-event-to-char (7+P)」を
+member 毎 full-text TSV grounding → **ラベル誤り**判明 (process 警告通り): 7枚は MR/複数名/opp-hand/entered-binding/
+setCount-dyn/任意rename の engine gap を含み手書き。決定論で engine-fact 確認 (charSetCard fromDeckTop / sceneEnter from:remove /
+fileFrom cost / $self.setCardCount 不在 / cardName array=OR / charGrantKeyword 突撃[キャラ] / handAtMost gate)。
+ユーザー再確認 (scope 訂正) → 「subset + B05030 partial」選択。
+
+**出荷 4** (ALL_CARDS 1405→1409、engine変更0、手書き): B07069/P 本堂瑛海 (a1 declared and[partnerColor赤,handAtMost2]
+lv≤8 remove + a2【FILE8】declared pay[sleepSelf,removeFromHand,fileFrom]→remove lv≤7赤 revive) / PR099 工藤有希子
+(a1 set-facedown + 突撃[キャラ]EOT, a2 DEFER) / B05030 遠山銀司郎 (印字突撃[キャラ] + a1 set-facedown, a2 DEFER)。
+
+**DEFER**: B07065(MR+複数名) / B07068(entered-char binding gap) / B07100(opp-hand reveal/removal gap) /
+PR099-a2(任意rename verb無) / B05030-a2(setCardCount dyn無)。
+
+**敵対 review が B05035 を BLOCKER 検出 → DEFER 移行**: else-set の `charSetCard{fromDeckTop}` は host 解決→deck.shift→
+setCard。host 不在時 setCard no-op で公開カード消失 = 公式Q&A『離場時はデッキ上に戻す』違反。**charSetCard 共有 engine の
+順序バグ** (B03061/B07034/PR099/B05030 等 set-facedown 一族全て、shift-before-host-check)。BUG-153 起票。
+B05035 のみ Q&A が host-absent 明示ゆえ DEFER (engine変更0 で DSL 修正不可)、他一族は Q&A 非言及で従来 faithful 維持。
+BUG-153 修正 (host-check→shift 順、additive) 後に B05035 再出荷可。
+
+**検証**: tsc0両 / vitest 2881→2888(+7) / smoke winsA=498 exc0 baselineOK / e2e 123+1skip / 規約lint8本errors0 /
+engine diff 0。decoy test 7件 (revive color/level/kind decoy + sceneRemove level decoy + set-facedown host + 突撃[キャラ] + descriptor)。
+
+水平展開: charSetCard host-absent エッジは set-facedown 一族共通 (BUG-153)。将来 engine-fix wave で一括解禁。
+
 ## セッション㊾ (2026-06-23) — wave leave-from-remove (engine変更0、10枚出荷)
 
 方向: ユーザー A2「engine投資」選択 → leave-trigger クラスタ (棚卸57) を grounding 精査。
