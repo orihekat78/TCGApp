@@ -949,6 +949,16 @@ import { B07086 } from '../ct-p07/B07086.js';
 import { B07043 } from '../ct-p07/B07043.js';
 import { B02058 } from '../ct-p02/B02058.js';
 import { B02058P } from '../ct-p02/B02058P.js';
+import { B02050 } from '../ct-p02/B02050.js';
+import { B05114 } from '../ct-p05/B05114.js';
+import { B05082 } from '../ct-p05/B05082.js';
+import { B05082P } from '../ct-p05/B05082P.js';
+import { B07010 } from '../ct-p07/B07010.js';
+import { B09074 } from '../ct-p09/B09074.js';
+import { B09074P } from '../ct-p09/B09074P.js';
+import { B09074P2 } from '../ct-p09/B09074P2.js';
+import { D10003 } from '../ct-d10/D10003.js';
+import { D10004 } from '../ct-d10/D10004.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1171,4 +1181,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01075, B01089, B03092, B03092P, B05059, B05059P,
   // wave leave-reveal-until 2026-06-23 (7 cards, engine変更0)
   B05021, B03019, B05077, B07086, B07043, B02058, B02058P,
+  // wave reveal-handadd — reveal/deck-look→hand-add 10枚 (engine変更0)
+  B02050, B05114, B05082, B05082P, B07010, B09074, B09074P, B09074P2, D10003, D10004,
 ];
