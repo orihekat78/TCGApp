@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 419
-- **ファイル数**: 7179
+- **ディレクトリ数**: 420
+- **ファイル数**: 7188
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -293,6 +293,7 @@
     - `BUG-151.md`
     - `BUG-152.md`
     - `BUG-153.md`
+    - `BUG-154.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -490,6 +491,7 @@
     - `2026-06-23-09-wave-engine-removed-char-filter.md` — wave engine-removed-char-filter — removedCharMatches.…
     - `2026-06-23-09-wave-leave-reveal-until.md` — wave — leave-reveal-until (現場リムーブ時/登場時 → デッキ reveal-until-X → 手札/…
     - `2026-06-23-10-wave-reveal-handadd.md` — wave — reveal-handadd (reveal/deck-look → 手札追加 family 10枚、engine変更0)
+    - `2026-06-23-11-engine-mr-partner-area-core.md` — engine — MR partner-area core (rules/18 MR能力①② 配線、Phase 1 engine core)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -874,6 +876,10 @@
     - `smoke-2026-06-23-12.md` — Smoke 1000戦レポート — smoke-2026-06-23-104741
     - `smoke-2026-06-23-13.json`
     - `smoke-2026-06-23-13.md` — Smoke 1000戦レポート — smoke-2026-06-23-124338
+    - `smoke-2026-06-23-14.json`
+    - `smoke-2026-06-23-14.md` — Smoke 1000戦レポート — smoke-2026-06-23-134045
+    - `smoke-2026-06-23-15.json`
+    - `smoke-2026-06-23-15.md` — Smoke 1000戦レポート — smoke-2026-06-23-134916
     - `smoke-2026-06-23-2.json`
     - `smoke-2026-06-23-2.md` — Smoke 1000戦レポート — smoke-2026-06-23-015303
     - `smoke-2026-06-23-3.json`
@@ -7456,6 +7462,10 @@
       - `leave-to-remove.test.ts` — Engine 拡張 #1: leave/現場リムーブ時 hook (engine-extension-plan.md step 1)
       - `triggered-limit-guard.test.ts` — tests/engine/listeners/triggered-limit-guard — BUG-096 / BUG-097
       - `triggered.test.ts` — Round 4b: triggered ability 汎用 listener テスト
+    - **`mr-partner-area/`**
+      - `mr1-redirect.test.ts` — MR能力① (rules/18:14-23): 相手ターン中に現場を離れる MR キャラは partnerAreaMR slot へ移動する。
+      - `mr2-enter-removal.test.ts` — MR能力② (rules/18:25-33): 自分の現場に MR が登場する場合、(現場 or パートナーエリアの)既存 MR を
+      - `pa-mr-readers.test.ts` — PA-MR (partnerAreaMR) reader spine (rules/18:35-39, 21:10): パートナーエリア常駐 MR の
     - **`mutate/`**
       - `case.test.ts` — rules: 01-victory-conditions.md, 06-card-types.md
       - `char.test.ts` — rules: 03-field-areas.md, 09-cutin-disguise.md, 13-keywords.…

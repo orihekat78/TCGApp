@@ -48,6 +48,13 @@ export function findCardOnBoard(
     if (cardId) return { player: p, cardId, area: 'partner-area' };
     return null;
   }
+  // MR partner-area (rules/18/21:10): PA 常駐 MR の宣言能力を resolve (area='partner-area')。
+  if (uid === 'partnerMR:self' || uid === 'partnerMR:opp') {
+    const p: 'self' | 'opp' = uid === 'partnerMR:self' ? 'self' : 'opp';
+    const slot = state.players[p].partnerAreaMR;
+    if (slot) return { player: p, cardId: slot.cardId, area: 'partner-area' };
+    return null;
+  }
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((c) => c.uid === uid);
     if (c) return { player: p, cardId: c.cardId, area: 'scene' };
@@ -80,6 +87,12 @@ export function canDeclaredAbility(state: GameState, uid: string, abilId: string
   // ability.limit enforcement
   const cardDef = readDef.card(found.cardId);
   const ability = cardDef?.abilities?.find((a: AbilityDef) => a.id === abilId);
+  // MR partner-area (rules/18:38, engine/mr-partner-area-core 2026-06-23): PA 常駐カード (PA-MR) の宣言能力は
+  // scope on-partner-area / always のみ使用可。現場前提の on-scene 宣言能力は PA からは使えない。
+  // scene/case の宣言能力 (area≠'partner-area') は不変。real partner (partner:self) は DSL 宣言能力を持たない。
+  if (ability && found.area === 'partner-area' && ability.scope !== 'on-partner-area' && ability.scope !== 'always') {
+    return false;
+  }
   if (ability?.limit?.kind === 'turn') {
     const used = readChar.declaredUseCount(state, uid, abilId);
     if (used >= ability.limit.n) return false;

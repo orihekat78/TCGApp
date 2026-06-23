@@ -132,6 +132,13 @@ function collectCardsInPlay(state: GameState): CardLocation[] {
     if (ps.case.cardId) {
       result.push({ player: p, uid: `case:${p}`, cardId: ps.case.cardId, area: 'case' });
     }
+    // MR partner-area (rules/18, engine/mr-partner-area-core 2026-06-23): PA 常駐 MR を別 uid
+    // `partnerMR:p` + area 'partner-area' で登録 (real partner の `partner:p` と別文字列 = double-fire 防止)。
+    // scope on-partner-area / always の triggered・declared ability がここから拾われる。slot の uid は
+    // 既に `partnerMR:p` sentinel に書換済 (mutate/scene.placeMrInPA) なので selfOnly source.uid 照合と整合。
+    if (ps.partnerAreaMR) {
+      result.push({ player: p, uid: `partnerMR:${p}`, cardId: ps.partnerAreaMR.cardId, area: 'partner-area' });
+    }
     // hand card (event card の on-hand ability 用)
     for (const cardId of ps.hand) {
       result.push({ player: p, uid: `hand:${p}:${cardId}`, cardId, area: 'hand' });

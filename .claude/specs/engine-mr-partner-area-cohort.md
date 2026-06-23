@@ -6,7 +6,10 @@
 ## 検算 (universe → 25 unique)
 
 cards-data rarity^=MR = **30 unique num** (B05005 B05027 B05045 **B05066** B05086 B05106 B06003 B06037 B06066 B06074 B06084 B06098 B07001 B07015 B07030 B07065 **B07079** **B07093** B08002 B08019 **B08032** B08046 B08062 B08093 B09002 B09070 B09108 B09109 **B09110** **B09054**)。
-うち **既出荷 (PA 句 vacuous) 5件 = B05066/B07079/B07093/B08032/B09054** を除外 → 残 **25 unique** (parallels 込 53 printings、MR/MRP/MRCP)。
+うち **既出荷 5件 = B05066/B07079/B07093/B08032/B09054** (各P 込 10 printing) を card-wave 対象から除外 → 残 **25 unique** (parallels 込 53 printings、MR/MRP/MRCP)。
+> ⚠ 訂正 (2026-06-23 engine/mr-partner-area-core 出荷後、敵対review MAJOR-1): この5枚は「PA 句 vacuous / 挙動不変」ではない。
+> `def.isMR`=rarity 消費により **MR①②(相手ターン離脱→PA / MR重複リムーブ) は本5枚で有効化された** (rules/18 準拠の意図的有効化)。
+> 除外理由は「card固有の PA-declared 句 (scope 補正等) のみ未対応で card-wave の主対象でない」へ訂正。BUG-154 参照。
 
 ## SOLE-blocked = 15 (PA-slot + read/char PA-MR 走査だけで到達 → card wave 対象)
 
@@ -29,6 +32,12 @@ cards-data rarity^=MR = **30 unique num** (B05005 B05027 B05045 **B05066** B0508
 | B08062 | 佐藤美和子＆高木渉 | 登場時 remove / 全員佐藤高木なら AP+1000 aura。**条件付き SOLE**: aura は「PA でも有効」→ read/char.ts auraDelta が PA-MR 走査する前提 (design 変更#6)。未拡張なら MULTI |
 
 (SOLE は planning 見積。各カードの二次節は wave 着手時に per-card full-text 再 grounding で最終 gating。)
+
+> ⚠ read/mutate 非対称 (engine-core 出荷後判明、BUG-154): read.scene.byUid は PA-MR を解決するが mutate/char・mutate/scene
+> の findChar は scene-only。**B06066** 「このキャラ自身を sleep する宣言コスト」が **scope on-partner-area** で PA 発動する
+> 場合、self-sleep (mutate) が no-op → コスト不成立 (rules/21 違反) で **MULTI 降格** (mutate 層 PA-MR 解決 gate 併発)。
+> ただし当該宣言が **scope on-scene** なら canDeclaredAbility の PA scope gate が PA 使用を弾く (現場でのみ使用=SOLE のまま)。
+> → B06066 の SOLE/MULTI は wave 着手時に「PA-declared か否か × self-mutate cost か否か」で最終判定する。
 
 ## MULTI-gate = 10 (PA-slot に **加えて** 別 engine gate 要 → 各 gate 解禁後)
 

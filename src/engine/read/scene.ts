@@ -16,6 +16,13 @@ function byUid(s: GameState, uid: string): SceneCharacter | null {
     const found = s.players[side].scene.find(c => c.uid === uid);
     if (found) return found;
   }
+  // MR partner-area (rules/18, engine/mr-partner-area-core 2026-06-23): パートナーエリア常駐 MR を
+  // sentinel uid で解決する。これにより read.char.ap/lp/level/state/keywords/declaredUseCount 等が
+  // PA-MR にも uniform に効く。additive — partnerAreaMR は既存フローで常に null なので回帰0。
+  // ⚠ mutate 層 (mutate/char.findChar / mutate/scene.findChar) は scene array のみ走査するため
+  // PA-MR を mutate target にしても no-op (PA-MR は推理/アクション/被 mutate 対象外。rules/18:35-39)。
+  if (uid === 'partnerMR:self') return s.players.self.partnerAreaMR ?? null;
+  if (uid === 'partnerMR:opp') return s.players.opp.partnerAreaMR ?? null;
   return null;
 }
 

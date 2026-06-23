@@ -50,6 +50,15 @@ function incrDeclaredUseCount(s: GameState, uid: string, abilId: string, player?
       return;
     }
   }
+  // MR partner-area (rules/18/21): PA 常駐 MR の宣言能力【ターン①】カウントは slot object に載せる
+  // (read.char.declaredUseCount が scene.byUid 経由で同 slot を読む)。これ無しだと once-per-game 化。
+  for (const p of ['self', 'opp'] as const) {
+    const slot = s.players[p].partnerAreaMR;
+    if (slot && slot.uid === uid) {
+      slot.declaredUseCount[abilId] = (slot.declaredUseCount[abilId] ?? 0) + 1;
+      return;
+    }
+  }
   // BUG-112: off-board uid (コスト selfToDeckBottom 等で scene 離脱済) は char object が無いため、
   // player 単位 turnState.declaredAbilityUseCount[uid:abilId] に fallback 記録する。
   // per-instance (uid 単位) の意味は維持 (複数コピーは別 uid)。read.char.declaredUseCount が同 key を参照。
@@ -79,6 +88,8 @@ function resetTurnFlags(s: GameState, p: Player): void {
     ch.declaredUseCount = {};
   }
   s.players[p].case.declaredUseCount = {};
+  // MR partner-area (rules/18): PA 常駐 MR の【ターン①】カウントもターン境界でリセット。
+  if (s.players[p].partnerAreaMR) s.players[p].partnerAreaMR.declaredUseCount = {};
 }
 
 export const flag = {

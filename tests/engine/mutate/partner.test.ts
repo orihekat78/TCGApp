@@ -113,39 +113,7 @@ describe('engine.mutate.partner', () => {
     });
   });
 
-  describe('toRemovedByMR', () => {
-    it('MR能力②: パートナーを mr-removed 状態へ (rules/18)', () => {
-      const s = makeState({ partner: { cardId: 'P001', state: 'active', location: 'partner-area' } });
-      const result = produce(s, draft => {
-        partner.toRemovedByMR(draft, 'self');
-      });
-      expect(result.players.self.partner.location).toBe('mr-removed');
-      expect(result.players.self.partner.state).toBe('sleep');
-    });
-  });
-
-  describe('toPartnerAreaFromScene', () => {
-    it('MR能力①: 現場からパートナーエリアへ移動 (rules/18)', () => {
-      const char = {
-        cardId: 'MR001',
-        uid: 'mr-uid-1',
-        state: 'active' as const,
-        isNamed: false,
-        enterOrder: 1,
-        setCards: [],
-        stackedCards: 0,
-        keywordOverrides: { granted: [], disabledOriginal: false },
-        apOverride: null,
-        lpOverride: null,
-        turnEffects: { contactImmune: false, removeOnTurnEnd: false },
-        declaredUseCount: {},
-      };
-      const s = makeState({ scene: [char] });
-      const result = produce(s, draft => {
-        partner.toPartnerAreaFromScene(draft, 'mr-uid-1');
-      });
-      expect(result.players.self.partner.cardId).toBe('MR001');
-      expect(result.players.self.partner.location).toBe('partner-area');
-    });
-  });
+  // MR能力①② は real partner singleton を破壊しない別 slot 設計 (partnerAreaMR) へ再実装された
+  // (engine/mr-partner-area-core, 2026-06-23)。旧 dead stub (toRemovedByMR/toPartnerAreaFromScene、
+  // real partner 上書き) は削除。新 spec test: tests/engine/mr-partner-area/。
 });

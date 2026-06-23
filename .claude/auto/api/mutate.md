@@ -37,7 +37,7 @@ Immer draft 上の primitive 変更操作
 | `gameResult` | `clear`, `set` |
 | `hand` | `add`, `discardToRemove`, `remove`, `toDeckBottom` |
 | `log` | `append`, `clear` |
-| `partner` | `assist`, `init`, `returnFromFile`, `setLocation`, `setState`, `solveCase`, `toPartnerAreaFromScene`, `toRemovedByMR` |
+| `partner` | `assist`, `init`, `returnFromFile`, `setLocation`, `setState`, `solveCase` |
 | `remove` | `add`, `removeFromHere` |
 | `scene` | `clearNamed`, `enter`, `removeToRemove`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toHand`, `tryActivate` |
 | `scratchTrace` | `set` |

@@ -4,6 +4,13 @@ rules/18 MR能力①② を配線する additive engine 拡張設計。**実装�
 cohort/yield 表 = [engine-mr-partner-area-cohort.md](engine-mr-partner-area-cohort.md)。
 3-lens 敵対 review (regression/rules/completeness) を反映済 (BLOCKER×3 + MAJOR fold-in)。
 
+> ✅ **実装済 (engine/mr-partner-area-core, 2026-06-23, Phase 1 engine core)**。本設計から一部簡素化:
+> ① MR②×switch は 3-caller 変更でなく **switchEnter self-correct** (freedSceneSlot) で実現 (非MR完全不変)。
+> ② PA-MR reader は **read.scene.byUid に sentinel 解決を追加** (read.char.* が uniform に効く)。
+> ③ **candidates.ts 未変更** (PA-MR targetability=未解決#3 DEFER)。④ **canDeclaredAbility に PA scope gate 追加**
+> (on-scene 宣言は PA 不可)。⑤ 訂正: 既登録 MR 5枚で MR①② が **有効化** (「byte-identical/MR0枚」は誤、非MRのみ不変)。
+> 4-lens 敵対review = REVISE (挙動バグ無)。残課題・暫定解は [BUG-154](../bugs/BUG-154.md) + cohort.md。
+
 ## 歩留まり (なぜやる)
 
 - 残 MR 53 printings / **25 unique** (既出荷 vacuous 5 件除外後、cohort.md 検算節)。
