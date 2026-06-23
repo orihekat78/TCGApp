@@ -908,6 +908,17 @@ import { B05061P } from '../ct-p05/B05061P.js';
 import { B06016 } from '../ct-p06/B06016.js';
 import { B06016P } from '../ct-p06/B06016P.js';
 
+import { B02075 } from '../ct-p02/B02075.js';
+import { B02075P } from '../ct-p02/B02075P.js';
+import { B02066 } from '../ct-p02/B02066.js';
+import { B02066P } from '../ct-p02/B02066P.js';
+import { B05091 } from '../ct-p05/B05091.js';
+import { B05091P } from '../ct-p05/B05091P.js';
+import { B05099 } from '../ct-p05/B05099.js';
+import { B05099P } from '../ct-p05/B05099P.js';
+import { B05058 } from '../ct-p05/B05058.js';
+import { B05116 } from '../ct-p05/B05116.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1115,4 +1126,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05013, B06017, B06017P, B06019,
   // wave deck-mill-gated-chain (2026-06-23)
   B01044, B01044P, B03094, B03094P, B05061, B05061P, B06016, B06016P,
+  // wave leave-from-remove — 現場リムーブ時→リムーブエリアから登場/手札 10枚
+  B02075, B02075P, B02066, B02066P, B05091, B05091P, B05099, B05099P, B05058, B05116,
 ];

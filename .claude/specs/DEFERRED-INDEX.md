@@ -482,3 +482,20 @@ B06016 鬼丸猛 (登場時 gated-mill3→AP8000以下 remove + 宣言 証拠⇄
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
 | B02052 / B02052P | トランプ銃: set-event (怪盗にセット) → ①付与する「ターン終了時 gated-mill3→stun」を **permanent grant** で持続 (未検証) ②【相手ターン中】【ターン1】「セット札がリムーブされるとき**代わりに**別の怪盗に再セット」= **replace-on-set-card-removal** point が engine 不在 (setcard:leave は除去後 observer のみ) | permanent grantedAbility + set-card-removal replace hook (engine) |
+
+## ✅ wave leave-from-remove (【現場リムーブ時】→リムーブエリアから登場/手札, 2026-06-23, cards/wave-leave-from-remove)
+
+leave-trigger クラスタ (棚卸 57) を機械分類し均質 clean slice **group B (self-leave→リムーブエリアから pick)** を出荷。
+**engine変更0** (既存 leave:to-remove + sceneEnter{from:remove} + handAddFromRemove path 再録、B03113 verbatim exemplar)。
+**出荷 10** (ALL_CARDS 1395→1405): B02075/P 諸伏高明 (trait長野県警Lv≤6 sleep登場) / B02066/P メアリー (登場時draw+discard +
+cardNameメアリーLv≤5 sleep登場) / B05091/P 風見裕也 (絆降谷零 突撃[キャラ] + cardName降谷零Lv≤6 sleep登場 + ヒラメキsleep) /
+B05099/P 高木渉 (and[partnerColor黄,turn opp] trait警察Lv≤4 sleep登場) / B05058 富沢雄三 (a2 trait鈴木財閥→手札, a1 DEFER) /
+B05116 火傷の男 (a2 color黒Lv≤4 sleep登場, a1 DEFER)。decoy test 13件 (positive登場/手札 + level/trait/cardName/color/kind decoy除外 +
+turn opp gate + partnerColor gate + 自身removeへ移動後の自己再登場除外) + 敵対 faithfulness review (opus 6 lens + engine-0 lens)。
+B05058/B05116 は **partial-ship** (継続 passive a1 を DEFER + a2 leave 出荷 = 先例 ct-p04/B04059 同型)。
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B05111 (ゾンビ, 全体) | a1 leave→cardNameウォッカ登場 は clean だが a2「【ヒラメキ】【解決編】**アクション中のキャラ**を1枚まで選びスタン」= ヒラメキ解決時に actor を指す binding が engine 不在 (evidence:remove-by-action hirameki ctx に attacker uid 不在)。汎用 pick だと over-fire=不誠実ゆえ全体 DEFER | hirameki ctx に acting-char($actor)binding 追加 (engine) |
+| B05058 a1 | 「現場にいるこのキャラは〚特徴[鈴木財閥]〛を持つ」= 現場限定 継続 self-trait 付与。trait 付与機構が engine 不在 (read/char.ts readTraits は d.traits 静的のみ / charGrantTrait atom なし / ContinuousModifier に grantTraits なし)。静的 traits[] は「現場限定」公式Q&A 違反ゆえ不可。a2 のみ出荷 | continuous self-trait grant (engine) |
+| B05116 a1 | 「相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ」= 相手の対象選択を強制する forced-target passive。強制対象機構が engine 不在 (必ず選ぶ/mustSelect/forcedTarget 共にゼロ)。a2 のみ出荷 | forced-target 強制選択 (engine) |
