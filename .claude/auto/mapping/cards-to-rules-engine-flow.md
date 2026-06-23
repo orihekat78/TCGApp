@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b6233f6bcc67`
+> Source hash: `5eabb83abc21`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
