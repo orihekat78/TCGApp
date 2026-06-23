@@ -33,6 +33,7 @@ import {
   atomEvidenceLose,
   atomEvidenceToDeck,
   atomEvidenceFlip,
+  atomEvidenceFlipDown,
   atomEvidenceToHand,
   atomHandToEvidence,
   atomHandAddFromDeck,
@@ -129,6 +130,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomEvidenceToDeck(s, a, ctx);
     case 'evidenceFlip':
       return atomEvidenceFlip(s, a, ctx, verb);
+    case 'evidenceFlipDown':
+      return atomEvidenceFlipDown(s, a, ctx, verb);
     case 'evidenceToHand':
       return atomEvidenceToHand(s, a, ctx, verb);
     case 'handToEvidence':

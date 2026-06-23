@@ -61,6 +61,17 @@ function flipFaceUp(s: GameState, p: Player, idx: number): void {
 }
 
 /**
+ * 証拠カードを裏向きにする (flipFaceUp の逆)。
+ * engine拡張 wave (2026-06-23): 「自分の表向きの証拠を N つまで選び、裏向きにする」(B05013/B06017/B06019)。
+ * 順番 (位置) は変えない (B05013 Q&A) — faceUp フラグのみ false 化、配列位置は不変。
+ */
+function flipFaceDown(s: GameState, p: Player, idx: number): void {
+  const ev = s.players[p].evidence;
+  if (idx < 0 || idx >= ev.length) return;
+  ev[idx].faceUp = false;
+}
+
+/**
  * 証拠カードをリムーブエリアへ移動 (ヒラメキ解決後等)
  * EvidenceCard を受け取り、同 cardId の最初の証拠を削除してリムーブへ
  */
@@ -127,6 +138,7 @@ export const evidence = {
   removeTop,
   removeAt,
   flipFaceUp,
+  flipFaceDown,
   toRemove,
   toDeckTop,
 };

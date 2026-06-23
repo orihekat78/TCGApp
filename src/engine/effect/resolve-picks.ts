@@ -374,10 +374,17 @@ function substituteAtomPick(
   // card 候補から最大 max 枚を greedy 選択し cardIds 配列に詰める (heuristic: 取れるだけ取る)。
   if (args.cardIds === '$pick.cardIds') {
     const nMaxC = (target as { n?: { max?: number } } | undefined)?.n?.max ?? cands.length;
+    // engine拡張 wave (2026-06-23): evidence kind も AI multi-pick 対象に含める (human path は
+    //   BUG-076 で対応済、CPU 側は 'card' kind 限定だった)。evidenceFlipDown「自分の表向き証拠を
+    //   N つまで選び裏向き」(B05013) の CPU 解決用。既存 multi-pick (D08021/B09034) は remove/hand
+    //   = 'card' kind ゆえ evidence 追加は純 additive (回帰0)。greedy max 枚 (取れるだけ取る)。
     const chosenIds = cands
-      .filter((c) => c.kind === 'card')
+      .filter((c) => c.kind === 'card' || c.kind === 'evidence')
       .slice(0, nMaxC)
-      .map((c) => (c as { cardId: string }).cardId);
+      .map((c) => c.kind === 'evidence'
+        ? (state.players[c.player].evidence[c.index]?.cardId ?? '')
+        : (c as { cardId: string }).cardId)
+      .filter((id) => id !== '');
     // target (pick query) は残す: handler が target.query.area を見て source area (remove 等) から
     // 各 cardId を splice する (落とすと stackedCards は増えるが source に残り複製になる)。
     return {

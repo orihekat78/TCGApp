@@ -47,3 +47,16 @@ Phase 3g は main 取込み済 (841cfbc0, CI green)。ユーザー選択で Phas
 - sweep bucket label は過剰グルーピング (feedback-engine-cluster-over-green-tail 実証): 「TOP-flip 21」の大半は事件カードの **【宣言】cost「証拠N つ表向きにする」= 既存 flipFaceUpEvidence cost** で effect でない誤検出。cost bracket 〚〛 を strip して effect だけ再 scan が必須。
 - engine に **存在するが実カード文言で使えない死 atom** がある (evidenceFlip idx固定形)。capability-map に列挙されていても「実カードが使える形か」を実 handler で確認要。additive 有効化で dense family 解禁。
 - 新 query field は **TargetFilter でなく TargetQuery 直下** に置けば sync-taskA-whitelists.test (TargetFilter キーを Exclude<custom> で強制) を回避でき 3点同期不要。
+
+## セッション㊼ (2026-06-23) — engine拡張 wave evidence-flip-facedown (㊻ の対称)
+ユーザー指示「あと何枚?」→ 棚卸 (scripts/inventory-remaining.cjs 新規、決定論クラスタ): 残 **666** 未実装。粗 regex の「clean 520」は **信用不可** (reusable-306 過大評価の罠を再現、sceneHas タグだけで clean 判定 + sole-gate 帰属が harder gate 見逃しで壊れる、サンプルで実証)。真 yield は positively-matched gate のみ信頼。facedown 真 clean=4枚と確定 → ユーザー「facedown wave 進行」。branch `cards/wave-facedown`。
+- **engine 拡張** (additive 9 files、回帰0=使用カード0): 新 verb `evidenceFlipDown`。core.ts atomEvidenceFlipDown=handAddFromRemove 鏡像 3-path (cardIds await / cardIds resolved multi loop / single short-form) / mutate/evidence.ts flipFaceDown(faceUp false のみ=順番不変) / candidates.ts evidence faceUp filter / effect.ts TargetQuery.faceUp + AtomVerb union / pick-spec + validate + cjs whitelist (3点同期) / **resolve-picks.ts CPU multi-pick 分岐に evidence kind 追加** (隠れバグ: 従来 `c.kind==='card'` 限定で evidence 候補除外 → cardIds 空 → flip されず。human path は BUG-076 対応済、CPU 欠落)。
+- **出荷 4** (ALL_CARDS 1383→1387、touched 各1): B05013 灰原哀(登場時 2まで multi-pick + ヒラメキ) / B06017・B06017P 天草四郎時定(登場時 sceneHas YAIBA excludeSelf→draw + ヒラメキ + 変装[caseTrait YAIBA/fileAtLeast5]) / B06019 クモ男(【事件編】caseStatus gate + chain[discard 緑YAIBA, draw2] + ヒラメキ)。hand-author、exemplar B07064/B03076(faceup) + B02038(変装) + B02077(conditional sceneHas) + D08003(discard chain) 照合。
+- **decoy test** (tests/cards/wave-evidence-flip-facedown-2026-06-23.test.ts、23件): candidates faceUp filter / runAtom single・multi(cardIds)・同cardId2件・0枚・裏向きtarget-noop / 順番不変 / pick-await enqueue / B05013 enter multi-pick e2e / B06017 excludeSelf gate fire-skip / B06019 caseStatus fire-skip + chain / legacy faceup 回帰。
+- **敵対 faithfulness review** (opus 4 lens): 全 faithful:true / blocker 0。engine lens で D08021 既存 multi-pick 回帰 5/5 pass 確認。
+- **ゲート全 green**: tsc 0(両) / vitest 2822→2845(+23) / smoke winsA=498 exc0 baselineOK / e2e 123pass+1skip / 規約 lint 8本 errors=0。
+
+### 学び㊼
+- **棚卸の「clean」過大評価は再発する罠** (project-reuse-recalibration 同型): 粗 regex は ~25 mechanic しか見ず、trigger hook タグだけで clean 判定 → 実 effect が codeable とは限らない + sole-gate 帰属が見逃し harder gate で壊れる。**真 yield は positively-matched gate のみ信頼、member ごと certify 必須**。
+- **multi-pick (cardIds:'$pick.cardIds') の CPU 解決は area kind 依存**: resolve-picks の CPU 分岐は `c.kind==='card'` 限定だった (D08021/B09034 が remove area=card kind ゆえ顕在化せず)。新 area (evidence) の multi-pick は CPU path に kind 追加が必須。human path (BUG-076) とは別経路。**新 area で multi-pick するなら CPU 分岐も確認せよ**。
+- evidence pick uid=`evidence:<side>:<idx>` (index-based) → 同 cardId 複数も別 uid で選択可。handler は findIndex(cardId && faceUp) loop で flipFaceDown が次個体を拾い正しく区別。

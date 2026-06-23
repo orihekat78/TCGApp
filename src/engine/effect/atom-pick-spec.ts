@@ -35,6 +35,9 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   // engine拡張 wave (2026-06-23): evidenceFlip pick-form — 「(相手の)裏向きの証拠を1つまで選び、表向きにする」。
   // PB pick (evidenceToHand と同型)。chooser=controller / side=証拠 owner / faceDown 限定は handler 側で構築。
   evidenceFlip:      { defaultArea: 'evidence', mode: 'PB' },
+  // engine拡張 wave (2026-06-23): evidenceFlipDown pick-form — 「自分の表向きの証拠を N つまで選び、裏向きにする」
+  // (evidenceFlip の逆)。PB pick。chooser=controller / side=証拠 owner / faceUp 限定。multi (max>1) は cardIds 契約。
+  evidenceFlipDown:  { defaultArea: 'evidence', mode: 'PB' },
   sceneRemove:       { defaultArea: 'scene',    mode: 'PA' },
   charModifyAP:      { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
   // 新規
@@ -88,6 +91,8 @@ export function buildShortFormPick(
   if (a.distinctNames === true) query.distinctNames = true;
   // engine拡張 wave (2026-06-23): evidenceFlip 用 — 裏向き(未公開)の証拠のみ候補化。
   if (a.faceDown === true) query.faceDown = true;
+  // engine拡張 wave (2026-06-23): evidenceFlipDown 用 — 表向き(公開済)の証拠のみ候補化。
+  if (a.faceUp === true) query.faceUp = true;
   return { kind: 'pick', query, n: { min: nMin, max: nMax }, chooser };
 }
 

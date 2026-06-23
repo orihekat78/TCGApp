@@ -894,6 +894,11 @@ import { B08085 } from '../ct-p08/B08085.js';
 import { B09076 } from '../ct-p09/B09076.js';
 import { B09076P } from '../ct-p09/B09076P.js';
 
+import { B05013 } from '../ct-p05/B05013.js';
+import { B06017 } from '../ct-p06/B06017.js';
+import { B06017P } from '../ct-p06/B06017P.js';
+import { B06019 } from '../ct-p06/B06019.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1097,4 +1102,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07050,
   // engine拡張 wave evidence-flip-faceup (2026-06-23)
   B07064, B03076, B08085, B09076, B09076P,
+  // wave evidence-flip-facedown — 表向き証拠を裏向き 4枚
+  B05013, B06017, B06017P, B06019,
 ];

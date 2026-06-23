@@ -135,6 +135,10 @@ export type TargetQuery = {
   // 「(相手の)裏向きの証拠を1つまで選び、表向きにする」(evidenceFlip pick-form) 用。
   // 既存カードは未使用 (= no-op、smoke baseline 不変)。candidates.ts evidence case が honor。
   faceDown?: boolean;
+  // engine拡張 wave (2026-06-23): evidence area の pick を表向き(公開済)のみに限定する (faceDown の逆)。
+  // 「自分の表向きの証拠を N つまで選び、裏向きにする」(evidenceFlipDown pick-form, B05013/B06017/B06019) 用。
+  // 既存カードは未使用 (= no-op、smoke baseline 不変)。candidates.ts evidence case が honor。
+  faceUp?: boolean;
 };
 
 export type TargetingRef =
@@ -165,7 +169,10 @@ export type AtomVerb =
   // Task D E3 (2026-06-12): fileRemoveTop (FILE 上から n 枚を所有者 remove へ、アシストパートナー除外) /
   // fileFlipTop (FILE 最上位の非パートナーを表向き化、既に表向きなら no-op)
   | 'draw' | 'discard' | 'mill' | 'fileAdd' | 'filePopToHand' | 'fileRemoveTop' | 'fileFlipTop'
-  | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'selfToEvidence' | 'evidenceToDeck'
+  // engine拡張 wave (2026-06-23): evidenceFlipDown — 「自分の表向きの証拠を N つまで選び、裏向きにする」
+  // (evidenceFlip=表向き化 の逆 mutate)。PB pick (defaultArea 'evidence', faceUp 候補限定)。
+  // rules: 03-field-areas.md §状態 / 15-abilities-effects.md。B05013/B06017/B06019 で使用。
+  | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'evidenceFlipDown' | 'selfToEvidence' | 'evidenceToDeck'
   | 'evidenceToHand' | 'handAddFromRemove' | 'handAddFromDeck'
   // engine拡張 wave (2026-06-21): handToEvidence — 手札から任意1枚を選び「裏向きで証拠として得る」
   // (evidenceToHand の逆。push=証拠1番上、公式Q&A B06029「手札から裏向きで得る証拠は1番上」)。

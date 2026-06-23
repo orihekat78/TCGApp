@@ -274,6 +274,62 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       return;
     }
 
+// engine拡張 wave (2026-06-23): evidenceFlipDown — 「自分の表向きの証拠を N つまで選び、裏向きにする」
+// (evidenceFlip=表向き化 の逆 mutate)。atomHandAddFromRemove と同型の 3-path:
+//   ① cardIds:'$pick.cardIds' 未解決 (await) → tryRePickFromAtom で side-channel pick を enqueue
+//   ② cardIds 配列 (resolved multi) → 各 cardId の表向き証拠を 1 枚ずつ裏向きに (B05013 enter「2つまで」)
+//   ③ 単一 short-form (max:1) → buildShortFormPick (faceUp 候補限定) → 1 枚裏向きに (各 hira「1つまで」)
+// flipP = 裏向きにする証拠の owner (a.player 既定 self、全 4 枚「自分の」)。chooser/picker は controller。
+// 順番不変 (B05013 Q&A): flipFaceDown は faceUp フラグのみ false 化 (配列位置は不変)。
+export function atomEvidenceFlipDown(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      const flipP = resolvePlayer(a.player, ctx); // 既定 self
+      const ctrl = ctx.source.player ?? 'self';
+      const rawCardIds = (a as { cardIds?: unknown }).cardIds;
+      // ① multi-pick contract 未解決 (human await): side-channel に pick を queue して return。
+      if (rawCardIds === '$pick.cardIds') {
+        if (a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+            byPlayer: ctrl,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: ctrl, turn: s.turn.number, action: 'effect:evidenceFlipDown:awaiting-pick' });
+        }
+        return;
+      }
+      // ② multi-pick 解決済 (0〜max 枚): 各 cardId の表向き証拠を 1 枚ずつ裏向きに。
+      //   同 cardId 複数の場合も flipFaceDown で faceUp=false 化されるため次 findIndex が別個体を拾う (index-based uid と整合)。
+      if (Array.isArray(rawCardIds)) {
+        const list = s.players[flipP].evidence;
+        const flippedIds: string[] = [];
+        for (const cid of rawCardIds as string[]) {
+          if (typeof cid !== 'string') continue;
+          const i = list.findIndex(e => e.cardId === cid && e.faceUp);
+          if (i !== -1) { mutate.evidence.flipFaceDown(s, flipP, i); flippedIds.push(cid); }
+        }
+        mutate.log.append(s, {
+          ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlipDown',
+          target: flippedIds.join(','), result: rawCardIds.length === 0 ? '0' : (flippedIds.length ? 'ok' : 'not-found'),
+        });
+        return;
+      }
+      // ③ 単一 short-form (max:1): target 未指定なら verb 既定 area (evidence) で faceUp 候補 pick を構築。
+      const efArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceFlipDown.defaultArea, a, ctrl, (a.player as Player) ?? 'self') }
+        : a;
+      const target = normalizeTargetToString(efArgs.target);
+      if (!target) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: efArgs }, ctx, { byPlayer: ctrl, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: ctrl, turn: s.turn.number, action: 'effect:evidenceFlipDown:awaiting-pick' });
+        return;
+      }
+      const list = s.players[flipP].evidence;
+      const idx = list.findIndex(e => e.cardId === target && e.faceUp);
+      let flipped = false;
+      if (idx !== -1) { mutate.evidence.flipFaceDown(s, flipP, idx); flipped = true; }
+      mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlipDown', target, result: flipped ? 'ok' : 'not-found' });
+      return;
+    }
+
 export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // BUG-074: BUG-065 で resolve-picks が target を array 化 (`[cardId]`) する設計に
       // 変更されたため、string|array 両対応に正規化。未解決の pick query object の場合は

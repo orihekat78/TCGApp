@@ -14,6 +14,7 @@ const VERBS = new Set([
   'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
   'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
   'handToEvidence',
+  'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'sceneToDeck', // Task D E2 (2026-06-12)
   'fileRemoveTop', 'fileFlipTop', // Task D E3 (2026-06-12)

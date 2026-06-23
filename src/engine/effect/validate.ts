@@ -24,6 +24,7 @@ const ATOM_VERB_MAP = {
   evidenceGain: true, evidenceLose: true, evidenceFlip: true, selfToEvidence: true, evidenceToDeck: true,
   evidenceToHand: true, handAddFromRemove: true, handAddFromDeck: true,
   handToEvidence: true,
+  evidenceFlipDown: true, // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   sceneEnter: true, sceneSwitch: true, sceneRemove: true, sceneSetState: true, sceneDisguise: true, sceneToHand: true,
   sceneToDeck: true, // Task D E2 (2026-06-12)
   charModifyAP: true, charModifyLP: true, charModifyLevel: true, charSetAP: true, charSetLP: true,

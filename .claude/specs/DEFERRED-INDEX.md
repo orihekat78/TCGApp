@@ -443,7 +443,8 @@ changelog [2026-06-23-02](../changelog-entries/2026-06-23-02-wave-evidence-flip.
 
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
-| B05013 / B06017P / B06019 / B06026 / B07099 / B08087 / B08091 | **facedown** 「表向きの証拠を裏向きにする」= flipFaceUp の逆 mutate verb 不在 (B05013 は main+hira 共に clean、他は hira 側 or 二次 gate)。次弾候補 | `flipFaceDown` mutate verb + pick (本 wave faceup と対称の additive、別 micro-cluster) |
+| ~~B05013 / B06017 / B06017P / B06019~~ | ✅ **出荷済 (2026-06-23、下記「evidence-flip-facedown wave」)**。`evidenceFlipDown` verb 追加で解禁 | — |
+| B06026 / B07099 / B08087 / B08091 | facedown hira は green だが二次 gate で全体 DEFER: B06026=【現場リムーブ時】event-as-evidence / B07099=自己 effect-leave trigger / B08087=【現場リムーブ時】+ 強制選択 / B08091=recruit (facedown 無し、誤グルーピング) | 各二次 gate (leave hook / event→証拠 / forced-target) |
 | B06086 / B06086P | 萩原研二: action-trigger で自+相の証拠を各1 pick faceup + 「**合わせて2つ表向きにした場合** AP+1000」= flip 実行枚数を数える count-flipped conditional が engine 不在 | flipped-count 参照 conditional (engine) |
 | B08028 | 日向幸: 宣言 cost[このキャラ以外をリムーブエリアへ] + 「自分の裏向き証拠を**好きな数**選び表向き、**表向きにした枚数と同じ数まで**相手の裏向き証拠を選び表向き」= variable-count pick + dynamic-linked second pick + cost closure | variable-count pick + flip-count-linked pick (engine) |
 | B05079 | 世良真純: hira は pick-faceup で green だが main「相手は【ヒラメキ】を発動できない」= continuous opp-ability-deny gate ゆえ全体 DEFER | opp-ability-deny continuous (engine) |
@@ -453,3 +454,18 @@ changelog [2026-06-23-02](../changelog-entries/2026-06-23-02-wave-evidence-flip.
 > 注: 事件カードの【宣言】cost「〚裏向きの証拠をN つ表向きにする〛」(B05063/B06036/B06043/B06065/B06095/B06105/
 > B09111/B09112/D10026/B06023 等 ~20件) は **既存の flipFaceUpEvidence cost** (cost/pay.ts) で対応済 =
 > evidenceFlip effect とは別。各 declared の効果側が個別 gate のため card 単位は別途判定 (本 wave 対象外)。
+
+## engine拡張 wave evidence-flip-facedown (証拠を裏向きにする, 2026-06-23, cards/wave-facedown)
+
+faceup wave の対称。新 verb `evidenceFlipDown`「自分の表向きの証拠を N つまで選び、裏向きにする」を additive 追加
+(9 files、使用カード従来0=回帰0)。core.ts atomEvidenceFlipDown = handAddFromRemove 同型 3-path (cardIds await /
+cardIds resolved multi / single short-form) / mutate.evidence.flipFaceDown (faceUp フラグのみ false=順番不変) /
+candidates.ts evidence faceUp filter / types/effect.ts TargetQuery.faceUp / pick-spec / validate / cjs whitelist /
+**resolve-picks.ts CPU multi-pick 分岐に evidence kind 追加** (従来 'card' kind 限定で evidence 除外していたバグ修正、
+human path は BUG-076 で対応済)。**出荷 4** (ALL_CARDS 1383→1387): B05013 灰原哀 (登場時 2まで multi-pick +
+ヒラメキ) / B06017・B06017P 天草四郎時定 (登場時 sceneHas YAIBA excludeSelf→draw + ヒラメキ + 変装[事件YAIBA/FILE5]) /
+B06019 クモ男 (【事件編】discard 緑YAIBA→draw2 chain + ヒラメキ)。decoy test 23件 (candidates faceUp filter /
+single・multi・dup-cardId・0枚・裏向きtarget-noop / 順番不変 / enter multi-pick e2e / conditional・caseStatus gate /
+legacy faceup 回帰) + 敵対 faithfulness review (opus 4 lens)。changelog
+[2026-06-23-03](../changelog-entries/2026-06-23-03-wave-evidence-flip-facedown.md)。残 facedown 族 (B06026/B07099/
+B08087/B08091) は上記 faceup section の表参照 (二次 gate で DEFER)。
