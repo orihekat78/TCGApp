@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `e15aec5aad13`
+> Source hash: `529399d075ef`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
-9 型・8 関係を抽出。`«object×N»` は匿名 object 型（N フィールド）の省略表記。
+9 型・9 関係を抽出。`«object×N»` は匿名 object 型（N フィールド）の省略表記。
 
 ## Mermaid classDiagram
 
@@ -24,6 +24,7 @@ classDiagram
   }
   class PlayerState {
     +partner: PartnerOnBoard
+    +partnerAreaMR?: SceneCharacter | null
     +case: «object×5»
     +scene: SceneCharacter[]
     +hand: CardId[]
@@ -88,6 +89,7 @@ classDiagram
   GameState --> TurnScopedFlags : turnState
   GameState --> LogEntry : log
   PlayerState --> PartnerOnBoard : partner
+  PlayerState --> SceneCharacter : partnerAreaMR
   PlayerState --> SceneCharacter : scene
   PlayerState --> EvidenceCard : evidence
   SceneCharacter --> SetCardEntry : setCards

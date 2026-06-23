@@ -28,3 +28,17 @@ no-match over-fire guard、解決編/事件編 discard 分岐、caseTrait gate (
 **DEFER 据え置き**: PR265 (mill 動的count) / B09078 (dual-pick from one window) / B08026・B03028 (event-use closure/hook) / B04063 (動的level-sum)。
 
 記録: changelog-entries/2026-06-23-10 / 教訓=NEXT-SESSION/capability-map の DEFER・⛔negative は engine 直grep で裏取り (stale 化しうる)。
+
+## セッション55 (2026-06-23) — engine/mr-partner-area-core (rules/18 MR能力①② Phase1、branch=engine/mr-partner-area-core)
+
+ユーザー選択: A「MR partner-area 実装 Phase1 engine core」。spec 2本を全読み→TDD (RED-GREEN)→4-lens 敵対review→fold-in。
+
+**設計→実装の簡素化**: ①MR②×switch=3-caller 変更でなく switchEnter self-correct (freedSceneSlot、非MR完全不変) ②PA-MR reader=read.scene.byUid に sentinel 解決追加 (read.char.* uniform) ③candidates.ts 未変更 (targetability=DEFER) ④canDeclaredAbility に PA scope gate 追加。
+
+**実装 (touched src/engine 10 file、additive)**: 新 slot partnerAreaMR (partner singleton 非破壊) / MR①=全 leave verb redirect (leave hook→redirect 順、dest から cardId 除去で refresh 単一計上、set は rules16 で remove) / MR②=applyMrEntryRemoval (cause:effect+noMrRedirect) / PA-MR reader spine (byUid/collectCardsInPlay/continuous±scope gate/flag/auto活性/declared) / isMR=rarity.startsWith('MR') / dead stub 2本削除。
+
+**敵対review (opus 4-lens) = REVISE (BLOCK 無、rules lens=SHIP)**。fold-in: MAJOR-1=「byte-identical/MR0枚」claim 誤り訂正 (既登録 MR 5枚 B05066/B07079/B07093/B08032/B09054 は def.isMR=true で **MR①②有効化**、非MRのみ byte-identical) → 全 doc/card-comment 訂正。MAJOR-2=hook∧PA両立 test 追加。MINOR×4 (switch PA-slot test / set-stack per-verb + toDeckBottom set 欠落修正 + コメント訂正 / triggered scope decoy / canDeclaredAbility PA scope gate)。
+
+**検証 (全green)**: tsc0両 / vitest 2969→2999 (+30 decoy、1skip) / smoke winsA=498 baselineOK (非MR=MVPデッキ) / e2e 123+1skip / eslint 0err。
+
+**暫定保守解5件 + read/mutate非対称 = BUG-154**。残: Phase2=UI / 3=AI / 4=card wave SOLE 15。記録: changelog-entries/2026-06-23-11。**未push (commit 後 push は要ユーザー承認)**。

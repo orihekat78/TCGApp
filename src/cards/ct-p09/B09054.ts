@@ -37,7 +37,8 @@
 //   - パートナーエリアで使用後、再登場で再使用可 → 【ターン1】counter は uid 単位 (declaredUseCount) で
 //     再登場時に新 uid となるため整合 (現状パートナーエリア宣言自体が vacuous)
 //   - MR能力 (rules/18 ①相手ターン中離場→パートナーエリア ②MR重複登場リムーブ) はカードテキスト外の
-//     フレームルール。現 engine 未実装 (既存 MR カード B07093/B05066 と同前例、CardDef.isMR は未消費)
+//     フレームルール。engine/mr-partner-area-core (2026-06-23) で配線済 (isMR=rarity 消費 + partnerAreaMR slot)。
+//     本カードを含むデッキでは MR①②が実発火する (BUG-154 / engine-mr-partner-area-design.md)
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

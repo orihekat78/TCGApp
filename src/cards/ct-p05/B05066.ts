@@ -12,8 +12,9 @@
 // a2: declared + turn1 limit + 相手 1pick で turn-level-1 (B07103 a2 同型)
 //     ※「パートナーエリアでも宣言できる」は partial-impl (scope:on-scene のみ、partner-area での
 //     宣言は MR area 拡張要)
-// MR能力 (rules/18): 相手ターン中の現場離脱で partner-area へ — ⚠ engine 未実装 (isMR 配線なし、全カード共通の既存ギャップ)。
-// 旧記述「engine 側で対応済 (auto)」は誤り (2026-06-12 Task D 敵対検証で確認、grep で MR 処理は不存在)。partner-area 構造 wave で対応予定
+// MR能力①② (rules/18): engine/mr-partner-area-core (2026-06-23) で配線済 (isMR=rarity 消費 + partnerAreaMR slot)。
+// 本カードを含むデッキでは MR①(相手ターン離脱→PA)/②(MR重複リムーブ) が実発火する。card固有の「PAでも宣言」句の
+// scope 補正 (on-scene→on-partner-area) は Phase 4 card wave で対応。BUG-154 / engine-mr-partner-area-design.md 参照。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

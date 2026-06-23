@@ -21,8 +21,9 @@
 //       ⚠「この能力はパートナーエリアでも宣言できる」句は partner-area キャラ slot 不存在で vacuous
 //         (B07093 a2 出荷前例に従い本体句のみ実装。DEFERRED-INDEX 注記対象)
 //   a3: 【カットイン】AP＋2000 = D01011 同型 inline atom ($contact.byUid + contact scope)
-//   ※ MR能力 (rules/18: 相手ターン離場→パートナーエリア / MR重複リムーブ) は engine 全体の
-//     既存ギャップ (isMR 配線なし、B07093/B05066 前例) を継承 — 本カードでは未実装
+//   ※ MR能力①② (rules/18: 相手ターン離場→パートナーエリア / MR重複リムーブ) は
+//     engine/mr-partner-area-core (2026-06-23) で配線済 (isMR=rarity 消費)。本カードを含むデッキでは実発火。
+//     card固有「PAでも宣言」句の scope 補正は Phase 4 wave で対応 (BUG-154)
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

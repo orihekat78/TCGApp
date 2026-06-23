@@ -1,7 +1,7 @@
 // engine.read.char — キャラ単位派生情報セレクタ (純粋関数)
 // rules: 03-field-areas.md (状態), 11-reasoning.md (LP≤0), 13-keywords.md, 19-special-rules.md
 
-import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter } from '@/engine/types';
+import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter, AbilityScope } from '@/engine/types';
 import { scene } from './scene.js';
 import { def } from './def.js';
 import { evalCond } from '../cond/eval.js';
@@ -15,22 +15,38 @@ import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, matchOneFilt
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
 // rules/24 §常時有効型: condition 成立中のみ加算、条件外で即失効 → read 毎に evalCond 判定。
 // delta は dyn 式 {dyn} (evalDyn) / 定数 / closure の3形 (card-def.ts ContinuousDelta)。
+// MR partner-area (rules/18, engine/mr-partner-area-core 2026-06-23): uid の所属 side を返す。
+// scene + partnerAreaMR slot を走査。continuous/keyword reader は side ctx を要するため共通化。
+function ownerSideOf(s: GameState, uid: string): 'self' | 'opp' | null {
+  if (s.players.self.scene.some(c => c.uid === uid)) return 'self';
+  if (s.players.opp.scene.some(c => c.uid === uid)) return 'opp';
+  if (uid === 'partnerMR:self' && s.players.self.partnerAreaMR) return 'self';
+  if (uid === 'partnerMR:opp' && s.players.opp.partnerAreaMR) return 'opp';
+  return null;
+}
+/** uid が PA-MR sentinel か (area=partner-area)。 */
+function isPartnerMrUid(uid: string): boolean {
+  return uid === 'partnerMR:self' || uid === 'partnerMR:opp';
+}
+/** PA 常駐 (area=partner-area) で有効な scope か (rules/18: on-partner-area=PA+現場、always=どこでも)。 */
+function scopeActiveInPartnerArea(scope: AbilityScope | undefined): boolean {
+  return scope === 'on-partner-area' || scope === 'always';
+}
+
 function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
   const d = def.card(char.cardId);
   if (!d) return 0;
-  // owner side 解決 (scene.byUid は side を返さないので inline、keywords() と同じ)
-  const owner: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === uid)
-    ? 'self'
-    : s.players.opp.scene.some(c => c.uid === uid)
-      ? 'opp'
-      : null;
+  // owner side 解決 (scene + PA-MR slot)。PA-MR は scope on-partner-area/always のみ有効。
+  const owner = ownerSideOf(s, uid);
   if (!owner) return 0;
-  const ctx = { source: { player: owner, uid, area: 'scene' }, bindings: {} } as EffectCtx;
+  const inPA = isPartnerMrUid(uid);
+  const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
   let total = 0;
   for (const ability of d.abilities ?? []) {
     if (ability.type !== 'continuous') continue;
+    if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
     const delta = ability.continuousModifier?.[which];
     if (delta === undefined) continue;
     if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
@@ -64,12 +80,19 @@ function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDe
   if (!ownerSide) return 0;
   const targetCand = { kind: 'char', uid: target.uid, cardId: target.cardId, player: ownerSide } as Candidate;
   let total = 0;
-  for (const bearer of s.players[ownerSide].scene) {
+  // bearer = 同 side の現場キャラ + PA 常駐 MR (rules/18 「パートナーエリアでも有効」= B08062 型 aura)。
+  // PA-MR bearer は scope on-partner-area/always のみ (現場 bearer は従来どおり gate 無し = 回帰0)。
+  const bearers: Array<{ char: typeof target; inPA: boolean }> =
+    s.players[ownerSide].scene.map(c => ({ char: c, inPA: false }));
+  const slotMr = s.players[ownerSide].partnerAreaMR;
+  if (slotMr) bearers.push({ char: slotMr, inPA: true });
+  for (const { char: bearer, inPA } of bearers) {
     const bd = def.card(bearer.cardId);
     if (!bd) continue;
-    const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: 'scene' }, bindings: {} } as EffectCtx;
+    const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
     for (const ability of bd.abilities ?? []) {
       if (ability.type !== 'continuous') continue;
+      if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       const cm = ability.continuousModifier;
       const delta = cm?.[which];
       if (typeof delta !== 'number') continue;
@@ -180,17 +203,15 @@ function keywords(s: GameState, uid: string): string[] {
   // rules/13 §キーワード能力 + rules/17 §条件を満たしていない場合 → 能力を持っていない扱い
   const fromContinuous: string[] = [];
   if (d) {
-    // owner side を解決 (scene.byUid は side を返さないので inline)
-    const owner: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === uid)
-      ? 'self'
-      : s.players.opp.scene.some(c => c.uid === uid)
-        ? 'opp'
-        : null;
+    // owner side を解決 (scene + PA-MR slot)。PA-MR は scope on-partner-area/always のみ有効。
+    const owner = ownerSideOf(s, uid);
+    const inPA = isPartnerMrUid(uid);
 
     if (owner) {
       const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
       for (const ability of d.abilities ?? []) {
         if (ability.type !== 'continuous') continue;
+        if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
         const grantFn = ability.continuousModifier?.grantKeywords;
         if (!grantFn) continue;
         if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
@@ -217,12 +238,18 @@ function hasKeyword(s: GameState, uid: string, kw: string): boolean {
  * @param ownerSide aura を所有する側 (= 制限される側の "相手")。canCutIn/disguise 側は other = opp-of-actor を渡す。
  */
 function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger'): boolean {
-  for (const c of s.players[ownerSide].scene) {
+  // bearer = 現場キャラ + PA 常駐 MR (rules/18 PA でも有効)。PA-MR は scope on-partner-area/always のみ。
+  const bearers: Array<{ char: { cardId: string; uid: string }; inPA: boolean }> =
+    s.players[ownerSide].scene.map(c => ({ char: c, inPA: false }));
+  const slotMr = s.players[ownerSide].partnerAreaMR;
+  if (slotMr) bearers.push({ char: slotMr, inPA: true });
+  for (const { char: c, inPA } of bearers) {
     const d = def.card(c.cardId);
     if (!d) continue;
     const ctx = { source: { player: ownerSide, uid: c.uid } } as Parameters<typeof evalCond>[2];
     for (const ability of d.abilities ?? []) {
       if (ability.type !== 'continuous') continue;
+      if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       if (!ability.continuousModifier?.opponentRestrict?.includes(token)) continue;
       if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
       return true;

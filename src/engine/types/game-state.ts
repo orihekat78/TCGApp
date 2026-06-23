@@ -5,6 +5,14 @@ export type CardId = string;
 
 export type PlayerState = {
   partner: PartnerOnBoard;
+  // MR partner-area (rules/18, 2026-06-23 engine/mr-partner-area-core):
+  // MR能力①で相手ターン中に現場を離れた MR キャラ、または MR能力②で別の現場 MR を退かせた後に
+  // パートナーエリアに常駐する MR キャラを保持する optional slot。real `partner` (strict singleton)
+  // とは別枠 (rules/03:8 PA 枚数上限なし)。MR能力②により MR は player 毎 常に ≤1 → 単一 optional で十分。
+  // SceneCharacter を流用 (declaredUseCount で PA-MR の【ターン①】を保持)。uid は sentinel
+  // `partnerMR:self`/`partnerMR:opp` に書き換える (collectCardsInPlay / scene.byUid 解決用)。
+  // 不在 (undefined/null) が既定 — state-factory / fixtures は未初期化 (additive, 回帰0)。
+  partnerAreaMR?: SceneCharacter | null;
   // BUG-067 (2026-05-28): declaredUseCount を case にも追加して ターン① enforcement を可能に
   case: { cardId: string; status: '事件編' | '解決編'; requiredEvidence: number; colors: string[]; declaredUseCount: Record<string, number> };
   scene: SceneCharacter[];

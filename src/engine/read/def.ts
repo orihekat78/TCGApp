@@ -34,8 +34,21 @@ function byColor(color: string): CardDef[] {
   return Array.from(_registry.values()).filter(d => d.colors.includes(color));
 }
 
+/**
+ * MR 判定 (rules/18)。MR/MRP/MRCP 全 printing を含むため rarity の前方一致で判定する
+ * (engine/mr-partner-area-core, 2026-06-23)。CardDef.isMR が明示 true ならそれも尊重する
+ * (将来 loader が直接 set する場合の前方互換)。未登録 cardId / 'back-card' 等は false。
+ */
+function isMR(cardId: string): boolean {
+  const d = _registry.get(cardId);
+  if (!d) return false;
+  if (d.isMR) return true;
+  return d.rarity?.startsWith('MR') ?? false;
+}
+
 export const def = {
   card,
   byTrait,
   byColor,
+  isMR,
 };

@@ -80,34 +80,12 @@ function solveCase(s: GameState, p: Player): void {
   s.gameResult = { winner: p, reason: 'evidence' };
 }
 
-/**
- * MR能力②: パートナーを mr-removed 状態へ (rules/18)
- * 既存MRをリムーブ + Hook は Phase 3で
- */
-function toRemovedByMR(s: GameState, p: Player): void {
-  s.players[p].partner.location = 'mr-removed';
-  s.players[p].partner.state = 'sleep';
-}
-
-/**
- * MR能力①: 現場からパートナーエリアへ移動 (rules/18 相手ターン中の現場離場)
- * SceneCharacter の uid を受け取り、パートナーエリアへ移動
- * 実際の現場からの削除は scene.removeToRemove が行う (リムーブ発火してから即座にPA移動)
- */
-function toPartnerAreaFromScene(s: GameState, uid: string): void {
-  // MRキャラのパートナー化: どちらのプレイヤーか探す
-  for (const p of ['self', 'opp'] as const) {
-    const charIdx = s.players[p].scene.findIndex(c => c.uid === uid);
-    if (charIdx !== -1) {
-      const char = s.players[p].scene[charIdx];
-      // パートナーエリアに MR キャラを格納 (partner を上書き)
-      s.players[p].partner.cardId = char.cardId;
-      s.players[p].partner.state = char.state;
-      s.players[p].partner.location = 'partner-area';
-      return;
-    }
-  }
-}
+// MR能力①② (rules/18) は real partner singleton を破壊しない別 slot `PlayerState.partnerAreaMR`
+// に再実装された (engine/mr-partner-area-core, 2026-06-23):
+//   - MR①: mutate/scene.ts placeMrInPA (相手ターン中の全 leave verb から PA へ redirect)
+//   - MR②: mutate/scene.ts applyMrEntryRemoval (enter/switchEnter 冒頭で既存 MR を除去)
+// 旧 dead stub toRemovedByMR / toPartnerAreaFromScene (real partner.cardId/location を上書きしていた・
+// caller 0) は削除した。partner は引き続き strict singleton。
 
 export const partner = {
   init,
@@ -116,6 +94,4 @@ export const partner = {
   assist,
   returnFromFile,
   solveCase,
-  toRemovedByMR,
-  toPartnerAreaFromScene,
 };

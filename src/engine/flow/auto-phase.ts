@@ -61,6 +61,14 @@ export function runAutoPhase(state: GameState, p: Player): void {
   for (const uid of sceneUids) {
     mutate.scene.tryActivate(state, uid);
   }
+  // 2b. MR partner-area (rules/18): PA 常駐 MR も活性化する。setState helper は slot 非対応のため
+  //   bespoke 実装 (rules/03 スタン特殊挙動: stun はアクティブにする代わりに sleep)。
+  //   暫定 (未解決 #5 要公式Q&A): rules/05① は明示的に「パートナー + 現場キャラ」のみ列挙するため
+  //   PA-MR の auto 活性は推定。保守側 (有効化) を採り、宣言能力 (非 sleep-cost) を翌ターン使えるようにする。
+  const slotMr = state.players[p].partnerAreaMR;
+  if (slotMr) {
+    slotMr.state = slotMr.state === 'stun' ? 'sleep' : 'active';
+  }
 
   event.emit(state, 'phase:auto:before-draw', { player: p });
 
