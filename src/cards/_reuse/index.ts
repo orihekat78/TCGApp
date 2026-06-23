@@ -899,6 +899,15 @@ import { B06017 } from '../ct-p06/B06017.js';
 import { B06017P } from '../ct-p06/B06017P.js';
 import { B06019 } from '../ct-p06/B06019.js';
 
+import { B01044 } from '../ct-p01/B01044.js';
+import { B01044P } from '../ct-p01/B01044P.js';
+import { B03094 } from '../ct-p03/B03094.js';
+import { B03094P } from '../ct-p03/B03094P.js';
+import { B05061 } from '../ct-p05/B05061.js';
+import { B05061P } from '../ct-p05/B05061P.js';
+import { B06016 } from '../ct-p06/B06016.js';
+import { B06016P } from '../ct-p06/B06016P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1104,4 +1113,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07064, B03076, B08085, B09076, B09076P,
   // wave evidence-flip-facedown — 表向き証拠を裏向き 4枚
   B05013, B06017, B06017P, B06019,
+  // wave deck-mill-gated-chain (2026-06-23)
+  B01044, B01044P, B03094, B03094P, B05061, B05061P, B06016, B06016P,
 ];

@@ -60,3 +60,16 @@ Phase 3g は main 取込み済 (841cfbc0, CI green)。ユーザー選択で Phas
 - **棚卸の「clean」過大評価は再発する罠** (project-reuse-recalibration 同型): 粗 regex は ~25 mechanic しか見ず、trigger hook タグだけで clean 判定 → 実 effect が codeable とは限らない + sole-gate 帰属が見逃し harder gate で壊れる。**真 yield は positively-matched gate のみ信頼、member ごと certify 必須**。
 - **multi-pick (cardIds:'$pick.cardIds') の CPU 解決は area kind 依存**: resolve-picks の CPU 分岐は `c.kind==='card'` 限定だった (D08021/B09034 が remove area=card kind ゆえ顕在化せず)。新 area (evidence) の multi-pick は CPU path に kind 追加が必須。human path (BUG-076) とは別経路。**新 area で multi-pick するなら CPU 分岐も確認せよ**。
 - evidence pick uid=`evidence:<side>:<idx>` (index-based) → 同 cardId 複数も別 uid で選択可。handler は findIndex(cardId && faceUp) loop で flipFaceDown が次個体を拾い正しく区別。
+
+## セッション㊽ (2026-06-23) — engine拡張 wave deck-mill-gated-chain (カード追加 A 継続)
+ユーザー選択=A 継続。残未実装を 4候補クラスタ (deck-mill / set-event / opp-evidence / hand-count) で opus grounding 棚卸 (Workflow 並列) → deck-mill-gated-chain が最小 additive (engine 1 file) ×真 clean 4枚 ×low risk と確定。branch `cards/wave-deck-mill-gated-chain`。
+- **engine 拡張** (additive 1 file=core.ts atomMill、回帰0=gate 使用カード従来0): `mill{gate:true}` 分岐。deck<N で何もリムーブせず chainStepNoApply→chain break = 公式Q&A all-or-nothing (filePopToHand/evidenceToHand 同型)。gate 未指定/false は従来挙動 (可能な限り mill+refresh、B09064/B09104) 完全保持。args=unknown 型ゆえ union/validate/whitelist 3点同期不要。
+- **出荷 4+P4** (ALL_CARDS 1387→1395、touched 各1): B01044 怪盗キッド (登場時 gated-mill7→キャラ deck下、condition partnerColor白) / B03094 萩原千速 (突撃 partnerColorKeyword + 無条件 action:declare gated-mill2→AP+1000 action-scope、【ターン1】無) / B05061 終極 event (event-use + partnerColor白 + gated-mill7→相手キャラ deck下) / B06016 鬼丸猛 (登場時 partnerColor緑 gated-mill3→AP8000以下 remove + 宣言 turn1 sleepSelf 証拠⇄手札 swap=B06029 同型 bare chain)。hand-author、exemplar B02003(partnerColor+登場時+sceneToDeck)/D01005(partnerColorKeyword)/D01014(event-use)/D04007(optional chain)/D02004(charModifyAP $self)/B06029(evidence swap) 照合。
+- **DEFER**: B02052/P トランプ銃 (set-event の permanent grant 未検証 + replace-on-set-card-removal hook 不在)。DEFERRED-INDEX §deck-mill-gated-chain。
+- **decoy test** (tests/cards/wave-deck-mill-gated-chain-2026-06-23.test.ts、23件): runAtom mill gate (deck≥N/deck<N/境界 deck==N) / legacy gate-less 回帰 (B09104 shape) / chain[mill(gate),draw] consequence decoy で chain-break witness / optional gating / per-card 固有 N / B03094 a2 golden full (gate+AP両 deterministic) / DSL 構造断言 / parallel 同一性。
+- **敵対 faithfulness review** (opus 5 lens=engine+4カード): 全 faithful (blocker 0)。B05061 色制限(rules/20)は engine 汎用 hand-use-card.ts colorAllowed (CardDef.colors⊆case.colors) 処理=descriptor 非記載が全 event と同一規約で正と確認。
+- **ゲート全 green**: tsc0(両) / vitest 2845→2868(+23) / smoke winsA=498 exc0 baselineOK / e2e 123pass+1skip / 規約 lint 8本 errors=0。
+
+### 学び㊽
+- scoping (grounding workflow) の DSL sketch は **exemplar 誤認・rules 誤適用を含む** (certify/exemplar照合が必須の理由): ① B06029 を「optional{chain}」と誤citation (実は bare chain、max:1 で「してもよい」表現) → B06016 a2/B03094 で訂正 ② B01044 の【パートナー白】を「装飾的」と誤判断 (rules/17 = 実条件、character は自身でなくプレイヤーのパートナー札の色を参照) → condition partnerColor白 を全 mill カードに付与。
+- **mill の gate は既存 atom への opt-in flag が最小 additive**: 新 verb 不要 (verb名不変=3点同期不要)、args=unknown 型ゆえ TargetQuery 拡張すら不要。「死 atom 有効化」でなく「既存挙動を壊さず新分岐追加」。最も収束的な engine 拡張パターン。

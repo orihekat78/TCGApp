@@ -67,6 +67,16 @@ export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCt
       // BUG-073: effect log
       const millP = resolvePlayer(a.player, ctx);
       const millN = a.n as number;
+      // deck-mill-gated-chain wave (2026-06-23): gate:true は「上からN枚リムーブする」が実行不能
+      // (deck<N) のとき何もリムーブせず chainStepNoApply を立て、chain (「そうした場合」) を break する。
+      // 公式Q&A (B01044/B03094/B05061/B06016): 「N枚リムーブが実行できない場合、それ以降の効果は
+      // 解決できません」= all-or-nothing gate。filePopToHand / evidenceToHand と同型の chain-break パターン。
+      // gate 未指定/false は従来挙動 (可能な限りリムーブ + refresh、B09064/B09104) を完全保持 = 回帰0。
+      if (a.gate === true && s.players[millP].deck.length < millN) {
+        (ctx.dyn ??= {}).chainStepNoApply = true; // Phase 3c: chain break 信号を ctx.dyn へ (resolver chain case が読む)
+        mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: 'gate-skip' });
+        return;
+      }
       mutate.deck.removeFromTop(s, millP, millN);
       // BUG-137 (wave#2 cluster2, 2026-06-12): デッキ枯渇時の refresh guard が欠落していた。
       // rules/14 (デッキ 0 で即座に refresh) + rules/26 (可能な限りリムーブ → refresh →

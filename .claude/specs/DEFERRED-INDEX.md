@@ -469,3 +469,16 @@ single・multi・dup-cardId・0枚・裏向きtarget-noop / 順番不変 / enter
 legacy faceup 回帰) + 敵対 faithfulness review (opus 4 lens)。changelog
 [2026-06-23-03](../changelog-entries/2026-06-23-03-wave-evidence-flip-facedown.md)。残 facedown 族 (B06026/B07099/
 B08087/B08091) は上記 faceup section の表参照 (二次 gate で DEFER)。
+
+## engine拡張 wave deck-mill-gated-chain (gated-mill chain, 2026-06-23, cards/wave-deck-mill-gated-chain)
+
+「自分のデッキを上からN枚リムーブ**してもよい**。**そうした場合**〜」型。新 flag `mill{gate:true}` を additive 追加
+(1 file=core.ts atomMill、回帰0: gate 使用カード従来0)。deck<N で何もリムーブせず chainStepNoApply→chain break =
+公式Q&A の all-or-nothing。**出荷 4+P4** (ALL_CARDS 1387→1395): B01044 怪盗キッド (登場時 gated-mill7→キャラ deck下) /
+B03094 萩原千速 (突撃 + action gated-mill2→AP+1000) / B05061 終極 event (gated-mill7→相手キャラ deck下) /
+B06016 鬼丸猛 (登場時 gated-mill3→AP8000以下 remove + 宣言 証拠⇄手札 swap)。changelog
+[2026-06-23-04](../changelog-entries/2026-06-23-04-wave-deck-mill-gated-chain.md)。
+
+| rep | DEFER 理由 (残存 gate) | 解禁条件 |
+|-----|----------------------|---------|
+| B02052 / B02052P | トランプ銃: set-event (怪盗にセット) → ①付与する「ターン終了時 gated-mill3→stun」を **permanent grant** で持続 (未検証) ②【相手ターン中】【ターン1】「セット札がリムーブされるとき**代わりに**別の怪盗に再セット」= **replace-on-set-card-removal** point が engine 不在 (setcard:leave は除去後 observer のみ) | permanent grantedAbility + set-card-removal replace hook (engine) |

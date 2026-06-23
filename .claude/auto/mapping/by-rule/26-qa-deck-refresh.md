@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `83e4b3206a34`
+> Source hash: `8d650dab92b6`
 
 公式ルール [`26-qa-deck-refresh.md`](../../../rules/26-qa-deck-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (129)
+## 📄 参照ソース (133)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
@@ -43,4 +43,4 @@
 - [`src/cards/ct-d11/D11019.ts`](../../../../src/cards/ct-d11/D11019.ts)
 - [`src/cards/ct-d11/D11021.ts`](../../../../src/cards/ct-d11/D11021.ts)
 - [`src/cards/ct-p01/B01013.ts`](../../../../src/cards/ct-p01/B01013.ts)
-- _...ほか 109 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 113 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
