@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-23 — セッション54: MR partner-area 設計完了 / 次=MR実装 or 他)
+# 次セッション再開プロンプト (2026-06-23 — 54-card: reveal-handadd wave 出荷 + 54-engine: MR設計 / 次=MR実装 or カード継続)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効 (実作業は Workflow オーケストレーション、token 制約なし)。
 
@@ -7,13 +7,32 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-06-23、セッション54 — MR partner-area 構造 設計 spec を main へ push = b8a48a12)
-- ★開始時に `git ls-remote origin main` で HEAD 確認 + CI (`gh run list -L1`) green を確認。
-  ⚠ **並行 card session が wave-reveal-handadd を進行中だった** (D10003/D10004/B02050/B05082±P/B05114/B07010/B09074±P±P2 計11カード、未追跡)。
-  → 私の push 時点では未 commit だったが、次 session 開始時には HEAD が進んでいる可能性大。実 HEAD を採用すること。
-- 54 は **engine code 変更0 の design-first session**。出荷物 = MR partner-area 設計 spec 2本 + DEFERRED-INDEX 更新 + auto-docs。
+## 現在地 (2026-06-23、HEAD=05103039 — 54-card reveal-handadd wave 出荷済 / 4e31facd MR設計 の上に積層)
+- ★開始時に `git ls-remote origin main` で HEAD=05103039 確認 + CI green を確認 (本 wave CI green 実証済)。
+- **2並行 session が同時進行・両方 main へ push 済** (協調プロトコル再実証):
+  - **54-card (本サマリ下段)**: reveal-handadd wave 10枚 engine変更0 出荷 = **05103039** (ALL_CARDS 1430→1440)。
+  - **54-engine (本サマリ上段)**: MR partner-area 構造 **設計のみ** (engine code 変更0) = b8a48a12/4e31facd。実装は未着手。
+  - card session の push は engine session の 4e31facd の上に clean ff (集合 disjoint: 別 card files + 別 spec)。
 
-## 54 サマリ (engine投資 wave のスコーピング)
+## 54-card サマリ (reveal-handadd wave、検証済: tsc0 / vitest 2951→2969(+18) / smoke winsA=498 exc0 baselineOK / e2e 123+1skip / lint8本errors0)
+- **engine変更0** (git diff src/engine 空)。出荷10 (ALL_CARDS 1430→1440): B02050 中森銀三 (reveal-until keyword変装) /
+  B05114 弁崎桐平 (declared selfToDeckBottom + reveal-until cardNameバーボン) / B05082+P 「FBI…」(event-use: reveal5 FBI→hand→remove→sceneEnter from hand) /
+  B07010 円谷光彦 (reveal2 少年探偵団 + 解決編&加えた discard / 宣言AP+3000) / B09074+P+P2 松田陣平 (疾風draw + reveal4 keyword疾風 + 加えた discard) /
+  D10003+D10004 黒衣の騎士・スペイド (caseTrait突撃 continuous + reveal-until cardName)。
+- **手法 = CLAUDE.md 決定論優先**: agent 前に engine capability を grep 確定 (deckRevealUntil.filter は defHasKeyword で 変装/疾風 印字判定 + filterAny(OR) /
+  sceneEnter source∈{hand,remove,deck} / caseTraitConditioned continuous grantKeywords / mill 静的count)。
+  → NEXT-SESSION の DEFER フラグ (B02050 keyword-filter / D10003 突撃+caseTrait) が **保守的すぎ=実装可** と判明 (capability-map stale 同型)。
+- **敵対 review が実バグ検出**: D10003/D10004 a1 inner.description prefix 込み → caseTraitConditioned 再付与で二重prefix (表示のみ) → prefix削除+回帰assertion で close。
+- exemplar: B05016/B02019 (deck-look) / B06053/B07052 (reveal-until) / D07008 (sceneEnter from hand) / B01076 (event-use wrapper) / D11003 (疾風) / partnerColorKeyword (continuous keyword)。
+- 同クラスタ DEFER 据置: PR265 (mill動的count) / B09078 (dual-pick) / B08026・B03028 (event-use closure/hook) / B04063 (動的level-sum)。
+
+---
+（以下は 54-engine session の MR partner-area 設計サマリ。実装は未着手＝次 session の候補A/B）
+
+## 54-engine サマリ (MR partner-area 構造 設計、engine code 変更0 の design-first session、push=b8a48a12)
+- 出荷物 = MR partner-area 設計 spec 2本 + DEFERRED-INDEX 更新 + auto-docs。
+
+## 54-engine スコーピング詳細 (MR investment 選定経緯)
 - ユーザー選択 C「engine投資 wave」→ scout で名前候補 (leave-trigger/set-event/opp-evidence/hand-count/flipFaceDown) は
   **全部 low-yield** と判明 (hand-count は既に engine変更0=capability-map stale、他は 0〜1枚)。**MR partner-area が唯一の大投資**。
 - → ユーザー選択「MR (設計先行)」。grounding 3lens (cohort/touchpoint/rules) → 設計 → **敵対review 3lens** で BLOCKER×3 fold-in。
