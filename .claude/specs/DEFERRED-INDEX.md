@@ -522,3 +522,18 @@ B05035 遠山和葉 は当初出荷候補だったが、敵対 review が else-s
 | PR099 a2 | 「キャラのカード名を1つ指定し…書き換えてもよい」= 全カードプールから任意 card 名を指定する rename 機構が engine 不在 (renameCardName 系 verb ゼロ)。汎用 verb で不誠実ゆえ a1 のみ出荷 | 任意 card名 rewrite verb (engine) |
 | B05030 a2 | 【自分ターン中】「セットされているカード1枚につき AP+1000」= set-card 枚数スケールの継続 AP 修飾。$self.setCardCount 相当 dyn token が engine 不在 (resolveSelf は sceneTrait/faceUpEvidence/fileCount のみ)。主眼能力だが additive engine 拡張ゆえ a1 のみ出荷 | resolveSelf に setCardCount dyn 分岐追加 (engine additive) |
 | ~~B05035 (遠山和葉, 全体)~~ **✅出荷済 (2026-06-23 wave bug153-setcard-host-check)** | 【登場時】reveal-1 + cardName[服部平次/遠山和葉] OR + 任意手札追加 / 加えねば裏向きセット。当初は else-set の `charSetCard{fromDeckTop}` が host 離場時に公開カード消失 (**BUG-153** 共有 engine 順序バグ、公式Q&A『離場時はデッキ上に戻す』違反) で DEFER していたが、**BUG-153 を engine additive 修正** (host 存在チェック→shift 順) し再出荷。ALL_CARDS 1409→1410 | ✅完了 (BUG-153 修正済) |
+
+## ✅ wave engine-removed-char-filter (removedCharMatches.removedFilter, 2026-06-23, engine/wave-removed-char-filter)
+
+棚卸「leave-trigger soleGate 57」を全 member full-text grounding した結果、大半が既に engine 対応済 (leave:to-remove hook +
+removedCharMatches side/cause/by = cluster15)。真の engine gap = **離場キャラ自身を色/特徴/レベル/状態で gate する observer** (8枚)。
+`removedCharMatches` に `removedFilter?:TargetFilter` + `removedState?` を additive 追加 (payload に離場 char snapshot を運び、
+matchOneFilter が char.turnEffects 由来の effective level を読む = rules/19 faithful)。cluster15 D2/D3 の forward 予約を実装。
+**出荷 6** (ALL_CARDS 1417→1423): B01075 宮野明美 (【赤】observer)・B01089 佐藤美和子 (【黄】)・B03092/P 高木渉
+(Lv6+警察→stun)・B05059/P 白馬探 (sleep探偵→draw + 宣言 sleep-cost remove)。decoy test 21件 (color/trait/level/state/side
+各軸 1対1 + effective-level via snapshot witness + turn-gate decoy + 実カード integration)。下表 2枚は別 engine gap で DEFER。
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B04055 (アマンダ・ヒューズ, 全体) | a1 trigger (このキャラ以外の【赤】除去 + self sleep条件) は removedFilter{color:赤}+excludeSource で表現可だが、**effect が「公開カードがリムーブされたキャラのいずれかと同じ特徴を持つ場合手札に加える」= 公開カードの filter を離場キャラの動的特徴集合でパラメタ化**する機構が engine 不在 (filter は静的指定のみ、trigger payload の trait 集合を reveal filter に注入する verb ゼロ)。主能力ゆえ全体 DEFER | reveal-then-conditional-by-removed-char-trait 機構 (engine) |
+| B07096 (ウォッカ, 全体) | a1 (相手 Lv4以下除去→draw) は removedFilter{levelMax:4} side:'opp' で clean だが、innate keyword **〚突撃［レベル4以下のキャラ］〛= 条件付きターゲット突撃**が engine 未対応 (flow/main/action.ts は '突撃[キャラ]' string-match のみ、名乗り状態例外を target レベルで gate する機構なし)。印字 keyword の silent no-op は不誠実ゆえ全体 DEFER | 条件付target 突撃 (突撃[レベルN以下のキャラ]) の naming-state 例外 gate (engine) |

@@ -167,7 +167,10 @@ function removeToRemove(s: GameState, uid: string, cause: RemoveCause, byUid?: s
       // cluster15 (2026-06-16): removal-observer (反撃カード一族) 用 attribution を additive 追加。
       // side = 除去キャラ所属 player (splice 前既取得)、byUid = 除去者 (contact judge が aUid を渡す、
       // 他 caller は undefined)。既存 consumer は全て selfOnly で source.uid 照合のため新フィールド無視 = 回帰0。
-      { uid: leavingUid, cause, side: player, byUid },
+      // removedChar (2026-06-23): 離場キャラ snapshot (splice 前の char ref)。removedCharMatches.removedFilter が
+      // 色/特徴/レベル/状態を判定する用 (rules/17/19)。matchOneFilter は char.turnEffects から effective level を読む
+      // ため splice 後も同期 eval 中は修正後レベルが正しい。既存 consumer は本フィールドを無視 = 回帰0。
+      { uid: leavingUid, cause, side: player, byUid, removedChar: char },
       { player, uid: leavingUid, cardId: leavingCardId },
     );
   }

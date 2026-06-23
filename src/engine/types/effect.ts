@@ -68,7 +68,18 @@ export type Condition =
   // キャラに使えない、13198)。side=除去キャラ所属 (payload.side===owner→self、全 variant='opp')、
   // cause=除去原因 (省略=方法問わず)、by=除去者(=contact winner aUid): 'self'=このキャラ /
   // {filter,excludeSource}=自分の現場の filter 一致キャラ。spec: engine-cluster15-contact-removal-observer-design.md
-  | { kind: 'removedCharMatches'; side?: 'self' | 'opp' | 'either'; cause?: 'contact-ap' | 'effect' | 'switch' | 'cost'; by?: 'self' | { filter: TargetFilter; excludeSource?: boolean } }
+  // removedFilter (engine拡張 wave 2026-06-23): 離場キャラ **自身** を色/特徴/レベルで絞る observer
+  // (B01075「自分の現場の【赤】がリムーブされたとき」/ B03092「レベル6以上の〚警察〛」)。payload の
+  // removedChar snapshot に matchOneFilter。snapshot は char.turnEffects を保持するため effective level (rules/19) が
+  // 同期 eval 中は正しい (level mod は c.turnEffects から読むため splice 後も有効)。removedState は離場直前の状態
+  // (active/sleep/stun) で絞る (B05059「スリープ状態の〚探偵〛」)。matchOneFilter は state を見ない (TargetFilter に
+  // state 無し) ため独立フィールドにする。cluster15 D2/D3 が forward 予約済。
+  // ⚠ 既知 latent gap: removedFilter の **apMin/apMax/lpMin/lpMax** 軸は信頼不可。matchOneFilter の AP/LP は
+  // continuousDelta/auraDelta を board-scan (state.players[*].scene) で合算するが、離場キャラは splice 済で scan に
+  // 出ず continuous/aura 分が 0 化する (静的 apMod_* は turnEffects から正しく読む)。現出荷カードは removed char の
+  // AP/LP filter を使わないため未踏。将来 AP/LP 軸の removedFilter を要するカードは snapshot に effective AP/LP を
+  // 事前計算して載せる additive 拡張が必要 (DEFER 対象)。
+  | { kind: 'removedCharMatches'; side?: 'self' | 'opp' | 'either'; cause?: 'contact-ap' | 'effect' | 'switch' | 'cost'; by?: 'self' | { filter: TargetFilter; excludeSource?: boolean }; removedFilter?: TargetFilter; removedState?: ('active' | 'sleep' | 'stun')[] }
   // 2026-06-06 タスクC: トリガ payload のキャラ (例: reasoning:end の推理キャラ payload.uid) を
   // side + TargetFilter で評価する。「自分/相手の現場にいる〚条件〛のキャラが推理したとき」を
   // matcherCondition で declarative 化。side:'self'=payload.player===source.player (= card 所有者側)。

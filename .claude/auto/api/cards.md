@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `4b65facad8a4`
+> Source hash: `b45de353aea9`
 
 カード定義レジストリ + TSV パーサ
 

@@ -935,6 +935,13 @@ import { B06048P } from '../ct-p06/B06048P.js';
 import { B06053 } from '../ct-p06/B06053.js';
 import { B06053P } from '../ct-p06/B06053P.js';
 
+import { B01075 } from '../ct-p01/B01075.js';
+import { B01089 } from '../ct-p01/B01089.js';
+import { B03092 } from '../ct-p03/B03092.js';
+import { B03092P } from '../ct-p03/B03092P.js';
+import { B05059 } from '../ct-p05/B05059.js';
+import { B05059P } from '../ct-p05/B05059P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1152,4 +1159,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05016, B05016P, B09079, B06048, B06048P,
   // wave decklook-enter-handadd — B06053/P 追加 (YAIBA event trait backfill 解禁)
   B06053, B06053P,
+  // engine拡張 wave removedFilter (removedCharMatches.removedFilter) — 離場キャラ属性 observer 6枚
+  B01075, B01089, B03092, B03092P, B05059, B05059P,
 ];

@@ -5,7 +5,7 @@
 //
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
-import type { GameState, Condition, EffectCtx, Candidate } from '@/engine/types';
+import type { GameState, Condition, EffectCtx, Candidate, SceneCharacter } from '@/engine/types';
 import { candidates, matchOneFilter } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
@@ -351,7 +351,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     // spec: .claude/specs/engine-cluster15-contact-removal-observer-design.md
     case 'removedCharMatches': {
       const pl = ctx.triggerPayload as
-        | { uid?: string; cause?: string; side?: 'self' | 'opp'; byUid?: string }
+        | { uid?: string; cause?: string; side?: 'self' | 'opp'; byUid?: string; removedChar?: SceneCharacter }
         | undefined;
       if (!pl || (pl.side !== 'self' && pl.side !== 'opp')) return false;
       // side: payload.side === owner → 'self' (自分のキャラが除去された) / それ以外 → 'opp'。
@@ -375,6 +375,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
           const cand: Candidate = { kind: 'char', uid: ch.uid, cardId: ch.cardId, player: ctx.source.player };
           if (!matchOneFilter(state, ch.cardId, cond.by.filter, ch, cand)) return false;
         }
+      }
+      // removedFilter/removedState (2026-06-23): 離場キャラ **自身** を色/特徴/レベル/状態で gate
+      // (B01075/B03092/B05059 等)。payload.removedChar (splice 前 snapshot) を評価。snapshot は char.turnEffects を
+      // 保持するため effective level (rules/19) が同期 eval 中は正しい。state は TargetFilter に無く matchOneFilter が
+      // 見ないため removedState で独立判定する (snapshot の除去直前状態、B05059「スリープ状態の〚探偵〛」)。
+      if (cond.removedState !== undefined && cond.removedState.length > 0) {
+        const rc = pl.removedChar;
+        if (!rc || !cond.removedState.includes(rc.state)) return false;
+      }
+      if (cond.removedFilter !== undefined) {
+        const rc = pl.removedChar;
+        if (!rc) return false;
+        const cand: Candidate = { kind: 'char', uid: rc.uid, cardId: rc.cardId, player: pl.side };
+        if (!matchOneFilter(state, rc.cardId, cond.removedFilter, rc, cand)) return false;
       }
       return true;
     }
