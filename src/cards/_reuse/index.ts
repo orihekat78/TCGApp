@@ -942,6 +942,14 @@ import { B03092P } from '../ct-p03/B03092P.js';
 import { B05059 } from '../ct-p05/B05059.js';
 import { B05059P } from '../ct-p05/B05059P.js';
 
+import { B05021 } from '../ct-p05/B05021.js';
+import { B03019 } from '../ct-p03/B03019.js';
+import { B05077 } from '../ct-p05/B05077.js';
+import { B07086 } from '../ct-p07/B07086.js';
+import { B07043 } from '../ct-p07/B07043.js';
+import { B02058 } from '../ct-p02/B02058.js';
+import { B02058P } from '../ct-p02/B02058P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1161,4 +1169,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06053, B06053P,
   // engine拡張 wave removedFilter (removedCharMatches.removedFilter) — 離場キャラ属性 observer 6枚
   B01075, B01089, B03092, B03092P, B05059, B05059P,
+  // wave leave-reveal-until 2026-06-23 (7 cards, engine変更0)
+  B05021, B03019, B05077, B07086, B07043, B02058, B02058P,
 ];
