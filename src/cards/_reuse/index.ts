@@ -883,6 +883,11 @@ import { PR091 } from '../pr-01/PR091.js';
 
 import { B05102 } from '../ct-p05/B05102.js';
 
+import { B01071 } from '../ct-p01/B01071.js';
+import { B02079 } from '../ct-p02/B02079.js';
+import { B03058 } from '../ct-p03/B03058.js';
+import { B07050 } from '../ct-p07/B07050.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1080,4 +1085,8 @@ export const REUSE_CARDS: CardDef[] = [
   PR085, PR091,
   // turn-scope levelDelta wave — 小五郎の弟子 (engine変更0)
   B05102,
+  // Task A batch
+  B01071, B02079, B03058,
+  // wave-trigdraw — triggered-draw 4枚
+  B07050,
 ];

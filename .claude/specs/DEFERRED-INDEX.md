@@ -419,3 +419,16 @@ sweep landscape の「hand→deck-bottom verb 無」note は **stale** (wave1 �
 > 補足 (再選定防止): named-next の **contact-removal-by-self 族は B04004/B04004P も 2026-06-21 出荷済** (a3 actor+target gate を
 > matcherCondition で再author、上表参照)。残 4 (B09022/B05009/B06068/PR136) は contact trigger 以外の gate
 > (chain-pick resolve / own-side enterSource / 突撃swap剥奪 / deck-set verb) で blocked。詳細は session log 2026-06-19 / 2026-06-21。
+
+## triggered-draw wave (2026-06-23) — yellow 4枚 (DEFER, engine-gate 起因)
+
+triggered-draw 8 候補を certify (opus grounding→敵対verify) → **green 4 出荷** (B01071/B02079/B03058/B07050、
+changelog [2026-06-23-01](../changelog-entries/2026-06-23-01-wave-trigdraw.md)) + **yellow 4 を以下 gate で DEFER**。
+各 yellow は ヒラメキ等の副 ability は単独 green だが **main trigger が engine-gate** ゆえ部分出荷=faithless で全体 DEFER。
+
+| rep | カード | DEFER 理由 (支配 gate) | 解禁条件 |
+|-----|--------|----------------------|---------|
+| B01075 | 宮野明美 | 【相手ターン中】「このキャラか自分の現場の【赤】キャラがリムーブされたとき」= **除去キャラ自身を色で絞る** trigger。`leave:to-remove` payload `{uid,cause,side,byUid}` に除去キャラ cardId/color 無く、`removedCharMatches.by` は除去**者**を絞る (除去キャラ自身の属性 filter 不在) | removed-char-attribute filter (leave payload に除去キャラ stat carry + 新 condition field) |
+| B01089 | 佐藤美和子 | 同上 (【黄】色絞り) + 「このキャラ か 〚黄〛のキャラ」= self-uid と filtered-other の **OR trigger 合成** も不能 | 同上 + removed-char OR(self, filtered) |
+| B02062 | 世良真純 | 【自分ターン中】「相手の証拠がリムーブされたとき」= **相手証拠除去を観測する card-triggerable hook 不在**。`evidence:lose` は internal-only、`evidence:remove-by-action` は除去された**証拠カード自身**の ability のみ (in-play scan 経路でない) + action[事件] 限定 | opp-evidence-removed observer hook (新 hook + listener) |
+| B03008 | 阿笠博士 | 【自分ターン中】「アクティブ状態の〚少年探偵団〛がスリープになったとき」= **active→sleep STATE-TRANSITION hook**。`state:change` は宣言のみで never emit (capability-map ⛔)。`reasoning:end` のみ sleep を card-trigger 化だが推理限定で action/guard/cost/effect sleep を漏らす (語義 mismatch) | 汎用 becomes-sleep hook (state:change emit + listener) |

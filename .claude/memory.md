@@ -21,3 +21,16 @@ Phase 3g は main 取込み済 (841cfbc0, CI green)。ユーザー選択で Phas
 ### commit㊹ / 次
 明示 add (3 src/config[.gitignore/scripts tsconfig/_reuse] + 移動群[scripts/_archive・reports/_archive] + 記録 md + auto docs、.claude/design 除外) → 1 commit → main ff-merge → push → CI green。
 **refactor-plan (1a〜4) 全完了。** 次: デザイン刷新 (.claude/design/RESUME.md) / カード追加 (DEFERRED-INDEX) を要ユーザー選択。`/clear` 推奨。
+
+## セッション㊺ (2026-06-23) — triggered-draw wave (カード追加 A、engine変更0)
+ユーザー選択=カード追加(A)。残 green 154 を実テキストで密度検証 → **triggered-draw** 族 (反応型【ターン1】「〜したとき引く」) を engine 不触クラスタに選定 (feedback-engine-cluster-over-green-tail: 残 green は novel 裾ゆえ実テキストで密度検証してから選ぶ)。branch `cards/wave-trigdraw`。
+- **certify** 8候補 `wf-certify.mjs` (opus grounding→敵対verify、1.5M tok) → **green 4 / yellow 4**。
+- **spec 自己精査** (certify-spec-self-review): green 4 が使う `payloadKey`/`excludeSource`/`matcherCondition` が実 engine field (effect.ts:79 / eval.ts:316,332 / card-def.ts:61、Task D E2/E4) かつ shipped exemplar (B04004 a3 dual-gate / D04007 / B08048) で exercise 済を全句確認 → 捏造フィールド無し確証。enter-observer (B07050 a1) は shipped twin 無いが handleHook が in-play 全走査ゆえ非selfOnly enter は任意登場で発火 (triggered.ts:223/227) を engine code で確認。
+- **出荷 4** (ALL_CARDS 1374→1378): B01071/B02079/B03058 = codegen 自動 / B07050 = needsManual (cutin contactTargetMatches closure、D10011同型 手書き)。touched=各1。
+- **decoy 検証 test** (tests/cards/wave-trigdraw-2026-06-23.test.ts、19件 pass): 実 hook を grounded payload で emit → pendingEffects/pendingHirameki で発火を decoy 込み検証。trait/色/excludeSource/cardName/turn-gate/action[事件]除外 全て語義通り gate。
+- **yellow 4 DEFER** (DEFERRED-INDEX §triggered-draw wave): B01075/B01089 (除去キャラ自身を色で絞る trigger=leave payload に除去キャラ stat 無), B02062 (opp-evidence-removed observer hook 不在), B03008 (active→sleep state:change hook internal-only)。各 ヒラメキ等副 ability は green だが main trigger gate ゆえ部分出荷=faithless で全体 DEFER。
+- **ゲート**: tsc0(両) / vitest 2783→2802(+19) / smoke winsA=498(exc0/baselineOK、4枚 MVPデッキ外ゆえ不変=engine変更0証跡) / e2e / 規約lint。engine 不触 (`git status src/engine` clean)。
+
+### 学び㊺
+- 残 green master の effect 列は **truncate されている** (PR265 は「レベル分リムーブ」隠れ gate で既 DEFER だった)。member ごとに repRecord 全文 + ヒラメキ列を再取得必須 (6枚に隠れヒラメキ判明)。
+- 非 deck カード (MVP 外) の「画面処理=文言」検証は playwright 不可 → **実 hook emit + decoy の engine test** が等価 (BUG-117/118 教訓を engine 層で踏む)。hirameki は pendingHirameki 側チャネル (pendingEffects でない)。
