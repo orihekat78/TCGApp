@@ -47,7 +47,7 @@ const a2: AbilityDef = {
   limit: { kind: 'turn', n: 1 },
   cost: { kind: 'flipFaceUpEvidence', n: { min: 3, max: 3 } }, // 〚裏向きの証拠を3つ表向きにする〛
   // 自分のリムーブエリアにある[赤井家]のキャラを1枚まで選び、手札に加える。
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { trait: '赤井家' } } },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '赤井家' } } },
   description: '【解決編】【宣言】【ターン1】〚裏向き証拠3つ表向き〛: リムーブの[赤井家]を1枚まで手札に加える (FILE5以下 & 現場[赤井家]3+)。',
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/17-icons.md', 'rules/19-special-rules.md', 'rules/21-declared-ability-cost.md', 'rules/26-qa-deck-refresh.md'],
 };

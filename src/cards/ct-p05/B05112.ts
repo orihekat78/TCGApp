@@ -14,7 +14,7 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   cost: { kind: 'sleepSelf' }, // 【宣言】【スリープ】 (もともと sleep / stun なら canPay=false で宣言不可)
   // 手札から【カットイン】を持つレベル5以下の【黒】のキャラを1枚まで登場させる (from:'hand' 短縮形 / 候補0件なら skip)
-  effect: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', from: 'hand', max: 1, viaEffect: true, filter: { keyword: 'カットイン', levelMax: 5, color: '黒' } } },
+  effect: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', from: 'hand', max: 1, viaEffect: true, filter: { kind: 'character', keyword: 'カットイン', levelMax: 5, color: '黒' } } },
   description: '【宣言】【スリープ】：手札から【カットイン】を持つレベル5以下の【黒】のキャラを1枚まで登場させる。',
   ruleRefs: ['rules/20-color-and-switch.md', 'rules/21-declared-ability-cost.md'],
 };

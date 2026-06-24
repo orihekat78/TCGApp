@@ -51,7 +51,7 @@ const a2: AbilityDef = {
         options: [{ kind: 'atom', verb: 'sceneEnter',
           args: {
             player: 'self', cardId: '$pick.cardId', viaEffect: true, bind: '$entered',
-            target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { trait: '警察', levelMax: 5 } }, n: { min: 0, max: 1 }, chooser: 'self' },
+            target: { kind: 'pick', query: { area: 'remove', side: 'self', filter: { kind: 'character', trait: '警察', levelMax: 5 } }, n: { min: 0, max: 1 }, chooser: 'self' },
           },
         }],
       },

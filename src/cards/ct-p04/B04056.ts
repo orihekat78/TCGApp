@@ -22,7 +22,7 @@ const a1: AbilityDef = {
     kind: 'chain',
     steps: [
       // 手札から[FBI]のキャラを1枚リムーブしてもよい
-      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { trait: 'FBI' } } },
+      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { kind: 'character', trait: 'FBI' } } },
       // そうした場合、カードを2枚引く (step1 実効果あり時のみ)
       { kind: 'atom', verb: 'draw', args: { player: 'self', n: 2 } },
     ],

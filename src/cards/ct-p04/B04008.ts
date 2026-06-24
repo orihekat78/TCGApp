@@ -22,7 +22,7 @@ const a1: AbilityDef = {
     kind: 'pay',
     items: [
       { kind: 'sleepSelf' },
-      { kind: 'removeFromHand', target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { trait: '少年探偵団' } }, n: { min: 2, max: 2 }, chooser: 'self' }, n: 2 },
+      { kind: 'removeFromHand', target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { kind: 'character', trait: '少年探偵団' } }, n: { min: 2, max: 2 }, chooser: 'self' }, n: 2 },
     ],
   },
   // レベル7以下のキャラを1枚まで選び、リムーブする

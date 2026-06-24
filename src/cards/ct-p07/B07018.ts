@@ -20,7 +20,7 @@ const a1: AbilityDef = {
     kind: 'chain',
     steps: [
       // 手札から[探偵]のキャラを1枚リムーブしてもよい (max:1 で skip 可能、skip 時は chain break)
-      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { trait: '探偵' } } },
+      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '探偵' } } },
       // そうした場合、カードを2枚引く
       { kind: 'atom', verb: 'draw',    args: { player: 'self', n: 2 } },
     ],

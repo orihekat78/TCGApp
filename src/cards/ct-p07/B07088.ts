@@ -43,7 +43,7 @@ const a2: AbilityDef = {
     ],
   },
   // 自分のリムーブエリアにある〚特徴［警察］〛のキャラを1枚まで選び、手札に加える。
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { trait: '警察' } } },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '警察' } } },
   description: '【宣言】【スリープ】〚手札を1枚リムーブ〛: リムーブエリアの[警察]のキャラを1枚まで選び、手札に加える。',
   ruleRefs: ['rules/19-special-rules.md', 'rules/21-declared-ability-cost.md'],
 };

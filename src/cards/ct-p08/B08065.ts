@@ -41,7 +41,7 @@ const a2: AbilityDef = {
     kind: 'chain',
     steps: [
       // 手札から[長野県警]のキャラを1枚までリムーブ
-      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { trait: '長野県警' } } },
+      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '長野県警' } } },
       // そうした場合、カードを2枚引く (step 1 applied 時のみ)
       { kind: 'atom', verb: 'draw', args: { player: 'self', n: 2 } },
     ],

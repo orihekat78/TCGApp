@@ -18,7 +18,7 @@ const a1: AbilityDef = {
     kind: 'chain',
     steps: [
       // 手札から[高校生]のキャラを1枚リムーブしてもよい
-      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { trait: '高校生' } } },
+      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '高校生' } } },
       // そうした場合、カードを2枚引く
       { kind: 'atom', verb: 'draw', args: { player: 'self', n: 2 } },
     ],

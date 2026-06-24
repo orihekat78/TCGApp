@@ -35,7 +35,7 @@ const a2: AbilityDef = {
   // 〚裏向きの証拠を2つ表向きにする〛
   cost: { kind: 'flipFaceUpEvidence', n: { min: 2, max: 2 } },
   // 自分のリムーブエリアにある[赤魔術]のイベントを1枚まで選び、手札に加える
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { trait: '赤魔術' } } },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { kind: 'event', trait: '赤魔術' } } },
   description: '【解決編】【宣言】【ターン1】〚裏向き証拠を2つ表向きにする〛: リムーブの[赤魔術]イベントを1枚手札に加える ([小泉紅子]在場時のみ宣言可)。',
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/17-icons.md', 'rules/19-special-rules.md', 'rules/21-declared-ability-cost.md', 'rules/26-qa-deck-refresh.md'],
 };

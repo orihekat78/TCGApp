@@ -27,7 +27,7 @@ const a2: AbilityDef = {
   scope: 'on-evidence',
   trigger: { hook: 'evidence:remove-by-action', optional: true },
   // 自分のリムーブエリアにある[少年探偵団]のキャラを1枚まで選び、手札に加える
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { trait: '少年探偵団' } } },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '少年探偵団' } } },
   description: '【ヒラメキ】リムーブの[少年探偵団]を1枚まで選び、手札に加える。',
   ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md', 'rules/19-special-rules.md'],
 };

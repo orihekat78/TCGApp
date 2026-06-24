@@ -23,7 +23,7 @@ const a1: AbilityDef = {
     kind: 'chain',
     steps: [
       // 手札から[鈴木財閥]のキャラを1枚リムーブしてもよい (max:1 で skip 可能、skip 時は chain break)
-      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { trait: '鈴木財閥' } } },
+      { kind: 'atom', verb: 'discard', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '鈴木財閥' } } },
       // そうした場合、カードを2枚引く (step1 実効果あり時のみ)
       { kind: 'atom', verb: 'draw', args: { player: 'self', n: 2 } },
     ],

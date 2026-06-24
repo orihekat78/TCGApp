@@ -21,7 +21,7 @@ const a1: AbilityDef = {
     kind: 'chain',
     steps: [
       // 手札から[少年探偵団]を1枚までリムーブ
-      { kind: 'atom', verb: 'discard',     args: { player: 'self', max: 1, filter: { trait: '少年探偵団' } } }, 
+      { kind: 'atom', verb: 'discard',     args: { player: 'self', max: 1, filter: { kind: 'character', trait: '少年探偵団' } } }, 
       // 現場(味方/相手)のAP≤8000を1枚までリムーブ (step 1 applied 時のみ)
       { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', filter: { apMax: 8000 } } }, 
     ],

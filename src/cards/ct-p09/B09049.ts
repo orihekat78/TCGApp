@@ -43,7 +43,7 @@ const a2: AbilityDef = {
   // 【スリープ】〚手札を1枚リムーブする〛 (両方を支払う / もともと sleep / stun なら canPay=false で宣言不可)
   cost: { kind: 'pay', items: [{ kind: 'sleepSelf' }, { kind: 'removeFromHand', target: { kind: 'pick', query: { area: 'hand', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'self' }, n: 1 }] },
   // 自分のリムーブエリアにある[鈴木財閥]のキャラを1枚まで選び、手札に加える
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { trait: '鈴木財閥' } } },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '鈴木財閥' } } },
   description: '【宣言】【スリープ】〚手札を1枚リムーブする〛：自分のリムーブエリアの[鈴木財閥]を1枚まで選び、手札に加える。',
   ruleRefs: ['rules/21-declared-ability-cost.md', 'rules/10-action-event.md', 'rules/19-special-rules.md'],
 };

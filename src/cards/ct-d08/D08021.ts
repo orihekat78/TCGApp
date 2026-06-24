@@ -32,7 +32,7 @@ const a1: AbilityDef = {
         query: {
           area: 'remove',
           side: 'self',
-          filter: { trait: '少年探偵団' },
+          filter: { kind: 'character', trait: '少年探偵団' },
           distinctNames: true,
         },
         n: { min: 0, max: 5 },

@@ -16,7 +16,7 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
   // 自分のリムーブエリアにある[探偵]のキャラを1枚まで選び、手札に加える
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { trait: '探偵' } } },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '探偵' } } },
   description: '【登場時】自分のリムーブエリアにある[探偵]のキャラを1枚まで選び、手札に加える。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/19-special-rules.md'],
 };
@@ -27,7 +27,7 @@ const a2: AbilityDef = {
   scope: 'on-evidence',
   trigger: { hook: 'evidence:remove-by-action', optional: true }, // 任意発動
   // 自分のリムーブエリアにある[探偵]のキャラを1枚まで選び、手札に加える
-  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { trait: '探偵' } } },
+  effect: { kind: 'atom', verb: 'handAddFromRemove', args: { player: 'self', max: 1, filter: { kind: 'character', trait: '探偵' } } },
   description: '【ヒラメキ】自分のリムーブエリアにある[探偵]のキャラを1枚まで選び、手札に加える。',
   ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md', 'rules/19-special-rules.md'],
 };
