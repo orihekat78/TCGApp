@@ -51,3 +51,17 @@ no-match over-fire guard、解決編/事件編 discard 分岐、caseTrait gate (
 - **#2** 原則整合 / **#4** 公式裁定なし据え置き。
 - **#5 修正**: 公式裁定なしだが rules/05①(活性化=パートナー+現場のみ)+事務局 sticky-state → **auto-phase の PA-MR 活性化を削除** (推測補完を撤回)。test も unchanged へ。記録=changelog 2026-06-24-01。
 - ⚠ **並行 session collision**: engine/mr-partner-area-qa-followup を 2 session が共有 → 相手が c6e31c27 (越水/ラム 4枚) を commit + 私の作業を clobber。**git worktree (/c/tmp/mr-qa-wt、branch engine/mr-pa-qa-v2 off bef3adad) で隔離して commit**。教訓: 共有 working tree で別 branch 作業は worktree 必須。
+
+## セッション56 (2026-06-24) — orphan reg 修正 + wave decsolved-pvariants 出荷
+
+ユーザー選択: ①orphan修正→main直push ②消失wave再生成。両方完了・**main CI 2本 green**。
+- **① orphan バグ (main e5a→3613efb1)**: c6e31c27 (decklook 4枚) が card file 出荷も **_reuse 登録漏れ**=死蔵。
+  登録+6行を main へ rebase→FF push。横展開教訓: 手編集 wave は file生成と register 分離コミットされ得る→両方確認。
+- **② wave decsolved-pvariants (main e0ef2803)**: 消失「12-15枚」を full-text 再棚卸 → **真の新規 B06100/B06100P のみ**。
+  10枚は catalog-reuse batch で既出荷 (敵対verify bonus QA で全 faithful)。**白馬探 trio (B04038/PR027/PR031) DEFER**
+  (self-only remove-area drain verb 不在、`removeAreaAllToDeckBottom`=両者固定)。
+  B06100=登場時 chain[discard(filter keyword:カットイン+color:黒,max1)→draw2]。
+  gate: validate-specs(engine変更0)/tsc0/vitest 3000pass/smoke winsA=498/敵対verify 9verdict。
+- **BUG-155 起票**: PR241/PR235 discard filter の kind:character 欠落 (latent MAJOR、赤×赤井家イベント0件)。
+  完全横展開 sweep は **parser ベース必須** (grep は複数行 filter 取りこぼし) → 別途。
+- ⚠ 残: auto-docs (structure.md/mapping) は 2 新カード分 **未再生成** (precedent 通り、CI除外)。次回 full `npm run docs` で sync。
