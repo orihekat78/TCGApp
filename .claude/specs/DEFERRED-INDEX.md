@@ -554,3 +554,15 @@ cards/wave-decsolved-pvariants で候補化したが engine gate により DEFER
 | rep | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
 | B04038 / PR027 / PR031 (白馬探, 全体) | 【登場時】「自分のリムーブエリア全部→デッキ下+シャッフル」の **self-only** drain verb が engine 不在 (既存 `removeAreaAllToDeckBottom` は両プレイヤー固定)。主能力ゆえ全体 DEFER | `removeAreaAllToDeckBottom` に player/side scope param 追加 (engine、additive) |
+
+## wave event-choose3 由来 engine gate (2026-06-24)
+
+classify workflow GREEN候補のうち、実 engine 型直読で false-green と判明し DEFER した 3 gate + 6 rep。
+(出荷は B08075/B08075P のみ。changelog 2026-06-24-06。)
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B08059 / B08050 (継続レベル+N) | `ContinuousModifier` に **level field 不在** (apDelta/lpDelta/grantKeywords のみ)。「【自分ターン中】…レベル+1」「【解決編】…レベル+3」の継続レベル修正を表現する継続機構なし (charModifyLevel は一回 atom で継続条件喪失時失効を表せない) | continuousModifier に lvlDelta 追加 (engine、additive) |
+| B08023 / B08033 (1pick→2atom 同キャラ) | 「[X]を1枚選び、A し、B する」= 1 pick を carrier に2 atom が同一キャラへ作用。**carrier-reuse exemplar 0件** (`uid:'$pick'` を target なしで後続 atom が再利用する出荷形が皆無、BUG-130 の bind 脆弱性) → 未証明パターンゆえ DEFER | carrier-reuse ($pick bind の sequence 跨ぎ再利用) の engine 保証 + 実証 exemplar |
+| B08004 (stun cost) | cost「アクティブ状態の[灰原哀]を1枚スタンさせる」= **stun を cost にする kind 不在** (cost は sleepChar/removeFromHand/removeFromScene/removeAreaToDeckBottom のみ)。加えて errata 2026-03-02 (現場条件追記) 反映要 | cost に stunChar 追加 (engine) + errata 後テキスト確定 |
+| B08019 (partner-area declare, 非MR) | a2「この能力はパートナーエリアでも宣言できる」だが `scope` 単値で `on-scene`+`on-partner-area` 併記不可。非MR char は partner-area 不達 → on-scene のみでは under-faithful。加えて「&」名・cutin の複合 | scope 複数値 (array) 対応 or 該当 char の partner-area 到達経路確定 |
