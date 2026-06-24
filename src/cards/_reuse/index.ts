@@ -964,6 +964,9 @@ import { B03115P } from '../ct-p03/B03115P.js';
 import { B03036 } from '../ct-p03/B03036.js';
 import { B03036P } from '../ct-p03/B03036P.js';
 
+import { B06100 } from '../ct-p06/B06100.js';
+import { B06100P } from '../ct-p06/B06100P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1189,4 +1192,6 @@ export const REUSE_CARDS: CardDef[] = [
   B02050, B05114, B05082, B05082P, B07010, B09074, B09074P, B09074P2, D10003, D10004,
   // wave decklook-remove-discard — 越水七槻/ラム 4枚 (engine変更0)
   B03115, B03115P, B03036, B03036P,
+  // .tmp/wave-new.json
+  B06100, B06100P,
 ];

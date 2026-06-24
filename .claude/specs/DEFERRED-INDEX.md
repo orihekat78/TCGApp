@@ -537,3 +537,20 @@ matchOneFilter が char.turnEffects 由来の effective level を読む = rules/
 |-----|----------------------|---------|
 | B04055 (アマンダ・ヒューズ, 全体) | a1 trigger (このキャラ以外の【赤】除去 + self sleep条件) は removedFilter{color:赤}+excludeSource で表現可だが、**effect が「公開カードがリムーブされたキャラのいずれかと同じ特徴を持つ場合手札に加える」= 公開カードの filter を離場キャラの動的特徴集合でパラメタ化**する機構が engine 不在 (filter は静的指定のみ、trigger payload の trait 集合を reveal filter に注入する verb ゼロ)。主能力ゆえ全体 DEFER | reveal-then-conditional-by-removed-char-trait 機構 (engine) |
 | B07096 (ウォッカ, 全体) | a1 (相手 Lv4以下除去→draw) は removedFilter{levelMax:4} side:'opp' で clean だが、innate keyword **〚突撃［レベル4以下のキャラ］〛= 条件付きターゲット突撃**が engine 未対応 (flow/main/action.ts は '突撃[キャラ]' string-match のみ、名乗り状態例外を target レベルで gate する機構なし)。印字 keyword の silent no-op は不誠実ゆえ全体 DEFER | 条件付target 突撃 (突撃[レベルN以下のキャラ]) の naming-state 例外 gate (engine) |
+
+## 白馬探 トリオ (B04038 / PR027 / PR031) — self-only remove-area drain 機構不在 (2026-06-24)
+
+cards/wave-decsolved-pvariants で候補化したが engine gate により DEFER。3枚は同一テキスト
+(白馬探, 白 lv6/6000/1, 探偵|高校生):
+
+> 〚ミスリード1〛 / 【登場時】**自分の**リムーブエリアにあるすべてのカードをデッキの下に移し、デッキをシャッフルする。
+
+- ミスリード1 部分は misreadX 共通クラスで表現可。問題は【登場時】の **自分のみ** remove-area drain。
+- engine の `removeAreaAllToDeckBottom` (atom-handlers/core.ts) は **`['self','opp']` 両プレイヤー**を
+  無条件 drain する hard-coded 実装 (B08027「自分と相手は…」専用、player/scope param なし)。
+- self-only に相当する verb は存在せず (verb 棚卸で `remove` 単体と両者 drain の2種のみ確認)。
+  両者 drain を使うと相手の remove も空にし shuffle するため公式テキスト「自分の」と乖離 = 不誠実。
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B04038 / PR027 / PR031 (白馬探, 全体) | 【登場時】「自分のリムーブエリア全部→デッキ下+シャッフル」の **self-only** drain verb が engine 不在 (既存 `removeAreaAllToDeckBottom` は両プレイヤー固定)。主能力ゆえ全体 DEFER | `removeAreaAllToDeckBottom` に player/side scope param 追加 (engine、additive) |

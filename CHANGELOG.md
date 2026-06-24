@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `f5dde2776b18`
+> Source hash: `761b0abc5575`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,65 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# cards — wave decsolved-pvariants: ベルモット B06100/B06100P 出荷 (engine変更0)
+
+**Round/Phase**: 2026-06-24 cards/wave-decsolved-pvariants。消失した「12〜15枚 wave」候補
+(B01099P–B01102P / B04038 / PR027 / PR031 / D07017 / PR023 / D09023 / D09009 / PR177 / B06100+P / PR241)
+を full-text grounding で再棚卸した結果、**真の新規は B06100/B06100P の2枚のみ**と判明。
+
+## 棚卸結果
+
+- **既出荷 10枚** (B01099P–B01102P / D07017 / PR023 / D09023 / D09009 / PR177 / PR241): catalog-reuse
+  batch で既に commit + REUSE_CARDS 登録済。codegen は existsSync skip。本 wave で再実装せず、
+  敵対 verify の bonus QA 対象に回し **全件 faithful 確認**。
+- **engine-gate 3枚 DEFER** (B04038 / PR027 / PR031 白馬探): 【登場時】「**自分の**リムーブエリア全部→
+  デッキ下+シャッフル」の self-only drain verb が engine 不在 (`removeAreaAllToDeckBottom` は両プレイヤー
+  固定)。DEFERRED-INDEX に追記。
+- **新規 2枚** B06100/B06100P (ベルモット, 黒 lv4/3000/1)。
+
+## 実装 (B06100/B06100P)
+
+> 【登場時】手札から【カットイン】を持つ【黒】のカードを1枚リムーブしてもよい。そうした場合、カードを2枚引く。
+
+- a1: triggered enter → `chain[ discard(self, max:1, filter{keyword:カットイン, color:黒}), draw(self, n:2) ]`。
+- 「カード」= 種別非限定 → filter に kind なし (正)。「してもよい」= max:1 (0可)。「そうした場合」= chain semantics
+  (step1 が実リムーブした時のみ step2 draw)。filter.keyword は defHasKeyword で ability 構造判定 (BUG-122 回避)。
+- taskA-codegen path: validate-specs(engine変更0) → 敵対 verify(faithful, high) → codegen --write → register。
+
+## 検証 (全 green)
+
+validate-specs pass=2 / tsc0 / eslint0 / vitest **3000 pass 1skip 0fail** / smoke:1000 **winsA=498 baseline OK**
+(engine変更0 証跡) / 敵対 faithfulness verify 9 verdict (B06100 含む8件 faithful)。
+
+## 派生発見 → BUG-155
+
+敵対 verify で **PR241 (既出荷, PR235 spread)** が mismatch (MAJOR, latent): discard filter が公式の
+「キャラ」種別明示に対し `kind:'character'` 欠落。実害なし (赤×〚赤井家〛イベント 0件) だが faithfulness gap。
+**完全 sweep は parser ベースが必須** (grep は複数行 filter を取りこぼす) のため BUG-155 起票・本 wave 不修正。
+
+# cards — decklook wave 登録漏れ修正 (orphaned card files → REUSE_CARDS)
+
+**Round/Phase**: 2026-06-24 (main 直 FF push、commit 3613efb1)。
+
+## 問題
+
+wave decklook-remove-discard (commit c6e31c27) が **カードファイル4枚を出荷したが `_reuse/index.ts` の
+REUSE_CARDS 登録を欠いた**。結果、main 5352c470 上で B03036/B03036P/B03115/B03115P (越水七槻・ラム) は
+ファイル存在するが **どの index.ts にも未登録 = ゲームにロードされない死蔵** 状態だった。
+
+## 修正
+
+`src/cards/_reuse/index.ts` に4枚の import + REUSE_CARDS 配列エントリを追加 (+6行)。
+
+- 検証: typecheck0 / pre-commit lint 8本 green / 登録は main の index.ts blob base に一致しクリーン適用。
+- main へ rebase → FF push (3613efb1) → CI green (3m50s)。
+
+## 教訓
+
+codegen/register パイプラインを経由しない手編集 wave では、カードファイル生成と `_reuse` 登録が
+分離コミットされ得る。**出荷前に「ファイル存在 ∧ REUSE_CARDS 登録」両方を確認**すること
+(register 漏れの silent 死蔵を防ぐ)。
 
 # engine — MR partner-area 公式Q&A 照会 反映 (#5 auto-phase 活性 修正)
 
@@ -66,6 +125,35 @@
 
 非MR byte-identical (PA-MR 活性化ブロックは slot!=null 時のみ動作 = MVP デッキ不在 → smoke 不変)。
 tsc0 / vitest (MR+auto-phase 45 pass) / smoke winsA=498 / e2e 123+1skip / eslint 0err。
+
+# cards — wave decklook-remove-discard (越水七槻 / ラム 4枚、engine変更0)
+
+**Round/Phase**: 2026-06-23 カード追加 wave (engine変更0、並行 MR engine session と協調)。
+既存 DSL パターン (deck-look-select + sceneRemove + conditional discard + 宣言複合コスト) のみで実装。
+全句を公式テキスト⇔shipped exemplar⇔engine コードで決定論 grounding。
+
+## 出荷 (ALL_CARDS +4、engine変更0)
+
+- **B03036 / B03036P 越水七槻** (緑 lv7 探偵):
+  - a1【登場時】= deck-look-4 → 探偵キャラ1枚まで→手札 → 残りデッキ下 (deckRevealUntil upTo / handAddFromDeck / deckToBottomBound)。
+  - a2【宣言】【ターン1】【スリープ】〚手札から探偵1枚リムーブ〛= 複合コスト pay[sleepSelf, removeFromHand探偵] →
+    このキャラ以外 lv7以下 を1枚まで remove (excludeSelf) → このキャラをデッキ下 (sceneToDeck uid:'$self')。
+- **B03115 / B03115P ラム** (黒 lv8 黒ずくめの組織):
+  - a1【登場時】= lv7以下を1枚まで remove → deck-look-3 →【カットイン】持つ【黒】カード1枚まで→手札 → 残りデッキ下 →
+    加えた場合 手札1枚 discard (bound $matched matched gate で over-fire 防止、B07010 教訓)。
+
+## 検証 (engine変更0 ゲート)
+
+- `taskA-validate-specs`: 私の4カード clean (唯一 FAIL=PR280 は既存・無関係)。
+- `tsc --noEmit` 0 errors / `vitest` 2998 pass 0 fail / `smoke:1000` winsA=498 exceptions=0 baseline OK (**byte-identical** = engine変更0 証跡)。
+- 敵対 faithfulness review (opus): 量指定子 / filter AND / deck-look semantics / conditional discard over-fire / 複合コスト / excludeSelf / sceneToDeck self を句単位突合。
+
+## exemplar / DEFER
+
+- exemplar: B05016・B07010 (deck-look upTo→handAdd→conditional discard) / B01063 (sceneRemove levelMax) /
+  B07098 a2 (removeFromHand cost + keyword+color filter) / B05067 (explicit-target sceneRemove) / PR086 (sceneToDeck uid:'$self')。
+- 同探索クラスタ DEFER 据置: B08050 (「【解決編】レベル+3」= continuous levelDelta gate、DEFERRED-INDEX L316 既存) /
+  B04085 (stun verb 不在) / 各種 count-cond・cutin-use-reaction。
 
 # engine — MR partner-area core (rules/18 MR能力①② 配線、Phase 1 engine core)
 
