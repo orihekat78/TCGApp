@@ -974,6 +974,15 @@ import { PR094 } from '../pr-01/PR094.js';
 
 import { B08075 } from '../ct-p08/B08075.js';
 import { B08075P } from '../ct-p08/B08075P.js';
+import { B08092 } from '../ct-p08/B08092.js';
+import { B02033 } from '../ct-p02/B02033.js';
+import { B03095 } from '../ct-p03/B03095.js';
+import { B04019 } from '../ct-p04/B04019.js';
+import { B04079 } from '../ct-p04/B04079.js';
+import { B05014 } from '../ct-p05/B05014.js';
+import { B09063 } from '../ct-p09/B09063.js';
+import { B09066 } from '../ct-p09/B09066.js';
+import { D01008 } from '../ct-d01/D01008.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1206,4 +1215,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06079, B03124, B03068, PR094,
   // wave event-choose3 — B08075 ブライダルは女が主役 2枚 (engine変更0)
   B08075, B08075P,
+  // Task A batch
+  B08092, B02033, B03095, B04019, B04079, B05014, B09063, B09066, D01008,
 ];

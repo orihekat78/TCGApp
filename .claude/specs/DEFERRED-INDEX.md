@@ -566,3 +566,17 @@ classify workflow GREEN候補のうち、実 engine 型直読で false-green と
 | ~~B08023~~ / B08033 (1pick→2atom 同キャラ) | ⚠ **stale 訂正** (engine変更0): carrier-reuse 機構は **2026-06-12 出荷済** (BUG-130 修正 / Task D E0)。`bind:'$picked'` + `uid:'$picked.uid'` で 1 pick を後続 atom が再利用。出荷 exemplar [B02040.ts](../../src/cards/ct-p02/B02040.ts) a2 (choice→optional≤1 pick→setCard+AP+) が B08023 と同一 shape。engine test [pick-bind.test.ts](../../tests/engine/effect/pick-bind.test.ts)。**B08023 解放** (card-session 出荷可)。⚠ **B08033 a2 は別 gate (set-card-removal COST kind, 下記) 併発で依然 DEFER** | (B08023) ✅ 既存機構で実装可 / (B08033 a2) set-card-removal cost 待ち |
 | ~~B08004 (stun cost)~~ | ✅ **解禁済** (engine additive wave **a206e9dc**, 2026-06-24): Cost `stunChar` 追加 (sleepChar 対称、canPay=active 要求 / pay=active のみ stun + n.max honor)。card-session が errata 2026-03-02 (現場条件追記) 反映の上 B08004 出荷可。cost over-pay 一般課題= [BUG-156](../bugs/BUG-156.md) | — (errata 反映は card 側) |
 | B08019 (partner-area declare, 非MR) | a2「この能力はパートナーエリアでも宣言できる」だが `scope` 単値で `on-scene`+`on-partner-area` 併記不可。非MR char は partner-area 不達 → on-scene のみでは under-faithful。加えて「&」名・cutin の複合 | scope 複数値 (array) 対応 or 該当 char の partner-area 到達経路確定 |
+
+## wave novel-0624 由来 (2026-06-24)
+
+classify(59)→certify+adversarial-verify(15) で **refuted 3 + yellow 3** を DEFER。
+(出荷は verified-ok green 9枚。changelog 2026-06-24-08。)
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B05062 (event, 全体) | 【事件黒&黄】イベント。conditional の `else` 枝に **`choice`** を持つため resolveEffectPicks 初期 pre-walk が両枝を walk し human choice prompt が if 条件と独立に eager-surface (= BUG-145 over-fire の choice 版、同 gate で refute)。加えて remove-area の UNION≥4 計数 gate | effect 側 conditional 枝の choice/optional/Pattern-A pick を if 評価後まで遅延させる pre-walk 改修 (engine) |
+| B01012 (char, 全体) | 「(能力で)〚少年探偵団〛のキャラが登場したとき、**その中から1枚**をアクティブにし〚迅速〛を与える」= 同一解決で同時登場したキャラ集合からの **group-scoped 1-of-N choice** が engine 不在 (enter hook は登場キャラ毎に独立発火、multiset 選択 primitive なし)。主能力ゆえ全体 DEFER | same-resolution 同時登場 char 集合からの 1-of-N pick primitive (engine) |
+| B02002 (char, 全体) | a1/a2 の filter「【青】以外の色」= **color-not (色除外) filter** が engine 不在 (TargetFilter は cardNameNot のみ、colorNot 無)。certify spec が捏造 key `__custom_color_not` を埋め込み adversarial verify が fatal 検出。主能力ゆえ全体 DEFER | TargetFilter に colorNot (色除外) 追加 (engine) |
+| B09050 (char, 全体) | 【宣言】cost「手札を1枚リムーブ」で除去したカードの **レベルを後続 pick の levelMax へ渡す cost-relative dynamic filter** が不在。removeFromHand cost は costPaid を書かず (flipFaceUpEvidence のみ)、$cost.removeFromHand.level は undefined→throw。主能力ゆえ全体 DEFER | removeFromHand cost の costPaid 記録 + filter への relative-level 注入 (engine) |
+| B09096 (char, 全体) | 対象 filter「このキャラと同じAPのキャラ」= self の実効AP に等しい **relative AP filter**。TargetFilter.apMin/apMax は number 静的のみ ({dyn:'$self.ap'} 不可、matchOneFilter で literalize する経路なし)。主能力ゆえ全体 DEFER | TargetFilter.apMin/apMax の {dyn} 受理 + matchOneFilter での $self.ap literalize (engine) |
+| B08035 (char, 全体) | a1【解決編】【登場時】「相手キャラ1枚選び、sleep→stun / active→sleep」= **pick した そのキャラの現状態で適用 state を分岐**する per-picked-target conditional state transform が不在 (sceneSetState 短縮は全 pick に固定 state、charStateIs ref:'pick' は .some で全候補判定=「そのキャラ」不成立、decoy 誤路)。a2 は green。a1 ゆえ全体 DEFER | pick-then-branch-on-picked-state primitive (engine) |
