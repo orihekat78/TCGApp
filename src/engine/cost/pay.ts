@@ -137,6 +137,36 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       for (const id of ids) acc.paidItems.push({ kind: 'removeAreaToDeckBottom', details: { id } });
       return;
     }
+    // engine additive wave (2026-06-24): 〚現場にいるキャラに裏向きでセットされているカードを合わせて n 枚
+    //   リムーブする〛コスト (B08033 a2)。UI 選択 (ctx.dyn.costParams.removeSetCard.hostUids — 1 removal=1
+    //   entry、repeat で同一 host から複数枚=2-from-1) を優先、無ければ self scene 順に face-down set card を
+    //   n 枚 fallback (AI/smoke)。p は自分のみ (rules/21「自分の」省略、canPay も ctx.source.player 限定)。
+    // 各 removal は removeOneSetCard(faceDownOnly:true, cause:'cost') 経由で表向きリムーブ + setcard:leave emit
+    //   → B07034 等「離れるたび」observer が発火 (faithful: 当該 observer に ability/effect gate 無)。
+    case 'removeSetCard': {
+      const p = ctx.source.player;
+      // rules/21「自分の」省略 → コストで使えるのは自分のカードのみ。removeOneSetCard→findChar は
+      // self/opp 両 scene を探索するため、explicit hostUids を **自陣 scene の uid に filter** して
+      // 相手 set card の誤リムーブを防ぐ (self-only 不変条件を engine 側で担保、review concern #3)。
+      const selfUids = new Set(state.players[p].scene.map(c => c.uid));
+      const explicit = readRemoveSetCardUids(ctx).filter(u => selfUids.has(u));
+      const uids: string[] = [];
+      if (explicit.length >= cost.n) {
+        uids.push(...explicit.slice(0, cost.n));
+      } else {
+        let need = cost.n;
+        for (const c of state.players[p].scene) {
+          let fd = c.setCards.filter(e => !e.faceUp).length;
+          while (fd > 0 && need > 0) { uids.push(c.uid); fd--; need--; }
+          if (need === 0) break;
+        }
+      }
+      for (const uid of uids) {
+        const removed = mutate.char.removeOneSetCard(state, uid, { faceDownOnly: true, cause: 'cost' });
+        if (removed) acc.paidItems.push({ kind: 'removeSetCard', details: { hostUid: uid, setCardId: removed } });
+      }
+      return;
+    }
     case 'removeDeckTop': {
       const removed = mutate.deck.removeFromTop(state, cost.player, cost.n);
       acc.paidItems.push({ kind: 'removeDeckTop', details: { removed } });
@@ -252,6 +282,18 @@ function readRemoveAreaToDeckIds(ctx: EffectCtx): string[] {
   const r = params && (params['removeAreaToDeckBottom'] as { ids?: string[] } | undefined);
   if (r && Array.isArray(r.ids)) {
     return r.ids;
+  }
+  return [];
+}
+
+// engine additive wave (2026-06-24): UI が選んだ removeSetCard コスト対象の host uid 列
+//   (readSceneToDeckUids と同型)。1 removal=1 entry、同一 uid の repeat で 2-from-1-char を表す。
+function readRemoveSetCardUids(ctx: EffectCtx): string[] {
+  const dyn = ctx.dyn;
+  const params = dyn && (dyn['costParams'] as Record<string, unknown> | undefined);
+  const r = params && (params['removeSetCard'] as { hostUids?: string[] } | undefined);
+  if (r && Array.isArray(r.hostUids)) {
+    return r.hostUids;
   }
   return [];
 }

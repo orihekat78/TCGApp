@@ -241,6 +241,12 @@ export type Cost =
   // rules: 21 (全部行えなければ使用不可 / 「自分の」省略 → query.side:'self' / 公式Q&A「相手のカードは移せない」),
   //   09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 14/26 (デッキが増えるのみ → refresh は起きない)
   | { kind: 'removeAreaToDeckBottom'; target: TargetingRef; n: number }
+  // engine additive wave (2026-06-24): 〚現場にいるキャラに裏向きでセットされているカードを合わせて n 枚
+  //   リムーブする〛コスト (B08033 工藤有希子 a2)。count-based の self-pool コスト (TargetingRef 不使用 —
+  //   candidates() は set card を Candidate 列挙しない sub-entity ゆえ。discardEvidence/removeDeckTop と同型)。
+  // rules: 16 (set/離場時表向きリムーブ), 21 (コスト「自分の」省略 → self-only / 全部行えなければ不可)。
+  //   公式Q&A (B08033): 相手カード不可・host 自身も数える・「裏向き」(faceUp:false) のみ対象・分割可。
+  | { kind: 'removeSetCard'; n: number }
   | { kind: 'pay'; items: Cost[] }
   | { kind: 'choice'; items: Cost[] }
   | { kind: 'fileFrom'; n: number }

@@ -249,11 +249,31 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
  * removeAllSetAndStacked (離場時の全クリーンアップ) と異なり、在場キャラから 1 枚だけ外す用途
  * (B08034「セットされているカードを1枚リムーブ」)。戻り値 = リムーブした cardId (無ければ null)。
  */
-function removeOneSetCard(s: GameState, uid: string): string | null {
+// engine additive wave (2026-06-24): opts 拡張 (faceDownOnly / cause)。
+//   default {faceDownOnly:false, cause:'effect'} = 従来 B08034 path 挙動を完全保存 (回帰0)。
+//   removeSetCard コスト (B08033 a2) は {faceDownOnly:true, cause:'cost'} で呼び、faceUp:false の
+//   末尾 entry を1枚 splice する (裏向きは情報を持たず識別不可ゆえ末尾選択は任意・公平)。
+function removeOneSetCard(
+  s: GameState,
+  uid: string,
+  opts?: { faceDownOnly?: boolean; cause?: 'effect' | 'cost' },
+): string | null {
   const found = findChar(s, uid);
   if (!found) return null;
   const { char, player } = found;
-  const entry = char.setCards.pop();
+  const faceDownOnly = opts?.faceDownOnly ?? false;
+  const cause = opts?.cause ?? 'effect';
+  let entry: { cardId: string; faceUp: boolean } | undefined;
+  if (faceDownOnly) {
+    let idx = -1;
+    for (let i = char.setCards.length - 1; i >= 0; i--) {
+      if (!char.setCards[i].faceUp) { idx = i; break; }
+    }
+    if (idx < 0) return null;
+    entry = char.setCards.splice(idx, 1)[0];
+  } else {
+    entry = char.setCards.pop();
+  }
   if (!entry) return null;
   s.players[player].remove.push(entry.cardId);
   // engine拡張 wave#2 cluster9: set card 1枚が現場から離れる (host は在場のまま) → setcard:leave emit。
@@ -262,7 +282,7 @@ function removeOneSetCard(s: GameState, uid: string): string | null {
   event.emit(
     s,
     'setcard:leave',
-    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: entry.cardId, faceUp: entry.faceUp, cause: 'effect' },
+    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: entry.cardId, faceUp: entry.faceUp, cause },
     { player, uid: char.uid, cardId: char.cardId },
   );
   return entry.cardId;

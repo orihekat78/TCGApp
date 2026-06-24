@@ -29,7 +29,8 @@ TargetingRef 不使用。`discardEvidence`/`removeDeckTop`/`fileFrom` と同型�
 |------|------|
 | `types/effect.ts` Cost union | 上記 kind 追加 |
 | `cost/evaluate.ts` canPay | self 全 scene の **faceUp:false set card 総数 ≥ n** / COST_KIND_MAP 追加 |
-| `cost/pay.ts` payInner | `ctx.dyn.costParams.removeSetCard.hostUids:string[]` (1 removal=1 entry、repeat で 2-from-1 可) 優先 → 無ければ scene 順 fallback。各 removal は mutator 経由 |
+| `cost/pay.ts` payInner | `ctx.dyn.costParams.removeSetCard.hostUids:string[]` (1 removal=1 entry、repeat で 2-from-1 可) 優先 → 無ければ scene 順 fallback。各 removal は mutator 経由。**explicit は自陣 scene uid に filter** (self-only guard、review concern #3) |
+| `flow/ability-activate.ts` | `AbilityCostParams.removeSetCard` + `costParamsToDyn` passthrough (cost-param channel) |
 | `ui/hooks/useActionsPanelFlow/cost.ts` costToText | `裏向きセットされたカードを N 枚リムーブ` (tsc never-guard 強制) |
 | `scripts/taskA-validate-specs.cjs` COSTS | `'removeSetCard'` 追加 + sync-test |
 | `mutate/char.ts` removeOneSetCard | **opts 拡張** (下記) |

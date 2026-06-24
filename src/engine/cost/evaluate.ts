@@ -15,6 +15,7 @@ const COST_KIND_MAP = {
   removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
+  removeSetCard: true, // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
   pay: true, choice: true, fileFrom: true, flipFaceUpEvidence: true, custom: true,
 } as const satisfies Record<Cost['kind'], true>;
 export const COST_KINDS: ReadonlySet<string> = new Set(Object.keys(COST_KIND_MAP));
@@ -75,6 +76,17 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     case 'removeAreaToDeckBottom': {
       const cands = candidates(state, cost.target, ctx);
       return cands.length >= cost.n;
+    }
+    // engine additive wave (2026-06-24): 〚現場にいるキャラに裏向きでセットされているカードを合わせて n 枚
+    //   リムーブする〛コスト (B08033 a2)。self 全 scene の faceUp:false set card 総数 ≥ n。
+    // rules/21: 全部行えなければ使用不可 / コスト「自分の」省略 → ctx.source.player の scene のみ (self-only)。
+    // テキスト「裏向きで」ゆえ faceUp:true (表向きセット) は数えない。
+    case 'removeSetCard': {
+      let count = 0;
+      for (const c of state.players[ctx.source.player].scene) {
+        count += c.setCards.filter(e => !e.faceUp).length;
+      }
+      return count >= cost.n;
     }
     case 'removeDeckTop': {
       return state.players[cost.player].deck.length >= cost.n;
