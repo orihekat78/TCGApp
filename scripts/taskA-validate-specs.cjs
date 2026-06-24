@@ -63,7 +63,7 @@ const CONDS = new Set([
 ]);
 
 const COSTS = new Set([
-  'sleepSelf', 'sleepChar', 'removeFromHand', 'removeFromScene', 'removeDeckTop',
+  'sleepSelf', 'sleepChar', 'stunChar', 'removeFromHand', 'removeFromScene', 'removeDeckTop',
   'discardEvidence', 'selfToDeckBottom', 'pay', 'choice', 'fileFrom', 'flipFaceUpEvidence',
   'sceneToDeckBottom', // Task D E2 (2026-06-12)
   'removeAreaToDeckBottom', // cluster4 (2026-06-14)

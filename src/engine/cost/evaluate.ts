@@ -11,7 +11,7 @@ import { candidates } from '@/engine/target/candidates.js';
 // `satisfies Record<Cost['kind'], true>` で union との両方向同期をコンパイル時に強制。
 // scripts/taskA-validate-specs.cjs COSTS との同期は tests/engine/sync-taskA-whitelists.test.ts。
 const COST_KIND_MAP = {
-  sleepSelf: true, sleepChar: true, removeFromHand: true, removeFromScene: true,
+  sleepSelf: true, sleepChar: true, stunChar: true, removeFromHand: true, removeFromScene: true,
   removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
@@ -38,6 +38,17 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       const cands = candidates(state, cost.target, ctx);
       if (cands.length === 0) return false;
       // At least one candidate must be in a state we can sleep (active)
+      return cands.some(cand => {
+        if (cand.kind !== 'char') return false;
+        const c = findChar(state, cand.uid);
+        return !!c && c.state === 'active';
+      });
+    }
+    // engine additive wave (2026-06-24): stunChar — sleepChar と同形。コスト文「アクティブ状態の[X]」より
+    // active 候補が最低1枚必要 (sleep/stun は対象不可、rules/03 スタン特殊挙動)。
+    case 'stunChar': {
+      const cands = candidates(state, cost.target, ctx);
+      if (cands.length === 0) return false;
       return cands.some(cand => {
         if (cand.kind !== 'char') return false;
         const c = findChar(state, cand.uid);

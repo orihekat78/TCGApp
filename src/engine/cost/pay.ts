@@ -54,6 +54,27 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       }
       return;
     }
+    // engine additive wave (2026-06-24): stunChar — sleepChar と対称だが新規ゆえ「N枚」counts を faithful に守る。
+    //   (1) active なターゲットのみ stun 化 (コスト文「アクティブ状態の[X]」、mixed-state で非active を誤らない)。
+    //   (2) ctx.picked 未配線 (sleepChar 由来の over-pay = BUG-156) の現状で、pick の n.max ぶんだけ stun し
+    //       複数 active 候補の全スタン (「1枚」違反) を防ぐ。ctx.picked 配線後はその選択を優先 (maxN=∞)。
+    case 'stunChar': {
+      const cands = candidates(state, cost.target, ctx);
+      const targets = ctx.picked ?? cands;
+      const maxN = ctx.picked ? Infinity : (cost.target.kind === 'pick' ? cost.target.n.max : Infinity);
+      let stunned = 0;
+      for (const cand of targets) {
+        if (stunned >= maxN) break;
+        if (cand.kind !== 'char') continue;
+        const c = state.players.self.scene.find(x => x.uid === cand.uid)
+          ?? state.players.opp.scene.find(x => x.uid === cand.uid);
+        if (!c || c.state !== 'active') continue;
+        mutate.scene.setState(state, cand.uid, 'stun');
+        acc.paidItems.push({ kind: 'stunChar', details: { uid: cand.uid } });
+        stunned++;
+      }
+      return;
+    }
     case 'removeFromHand': {
       const targets = pickCandidates(state, cost.target, ctx, cost.n);
       const ids = targets

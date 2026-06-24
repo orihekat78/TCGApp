@@ -225,6 +225,9 @@ export type AtomVerb =
 export type Cost =
   | { kind: 'sleepSelf' }
   | { kind: 'sleepChar'; target: TargetingRef }
+  // engine additive wave (2026-06-24): 〚アクティブ状態の[X]を1枚スタンさせる〛コスト (B08004)。
+  // sleepChar と対称。canPay は active 候補存在を要求、pay は mutate.scene.setState(stun) で active のみスタン化。
+  | { kind: 'stunChar'; target: TargetingRef }
   | { kind: 'removeFromHand'; target: TargetingRef; n: number }
   | { kind: 'removeFromScene'; target: TargetingRef; n: number }
   | { kind: 'removeDeckTop'; player: 'self'; n: number }

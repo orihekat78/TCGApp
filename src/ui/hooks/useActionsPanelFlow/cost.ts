@@ -26,6 +26,7 @@ export function costToText(cost: Cost): string {
   switch (cost.kind) {
     case 'sleepSelf':         return 'このキャラをスリープ';
     case 'sleepChar':         return 'キャラ 1 枚をスリープ';
+    case 'stunChar':          return 'キャラ 1 枚をスタン'; // engine additive wave (2026-06-24)
     case 'removeFromHand':    return `手札 ${cost.n} 枚をリムーブ`;
     case 'removeFromScene':   return `現場 ${cost.n} 枚をリムーブ`;
     case 'removeDeckTop':     return `デッキ上 ${cost.n} 枚をリムーブ`;

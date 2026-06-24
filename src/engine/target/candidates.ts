@@ -19,13 +19,13 @@ import { defHasKeyword } from '@/engine/read/keyword.js';
 // read/char.ts が module load 時に registerContinuousDelta(continuousDelta) を呼ぶ。未登録なら 0 (旧挙動 = 無害)。
 // 再帰遮断: matchOneFilter → continuousDelta → evalCond(継続条件) → sceneHas → candidates → matchOneFilter …
 // の無限再帰を _inContinuousDelta フラグで防ぐ (再入時は 0 を返す = 旧挙動)。これが省略の本来の理由 (BUG-113 cycle 注記)。
-type ContinuousDeltaFn = (s: GameState, uid: string, which: 'apDelta' | 'lpDelta') => number;
+type ContinuousDeltaFn = (s: GameState, uid: string, which: 'apDelta' | 'lpDelta' | 'lvlDelta') => number;
 let continuousDeltaImpl: ContinuousDeltaFn | null = null;
 let _inContinuousDelta = false;
 export function registerContinuousDelta(fn: ContinuousDeltaFn): void {
   continuousDeltaImpl = fn;
 }
-function continuousDeltaSafe(s: GameState, uid: string | undefined, which: 'apDelta' | 'lpDelta'): number {
+function continuousDeltaSafe(s: GameState, uid: string | undefined, which: 'apDelta' | 'lpDelta' | 'lvlDelta'): number {
   if (continuousDeltaImpl === null || _inContinuousDelta || uid === undefined) return 0;
   _inContinuousDelta = true;
   try {
@@ -325,7 +325,9 @@ export function matchOneFilter(
   const lp = (c?.lpOverride ?? base?.lp ?? 0) + num('lpMod_permanent') + num('lpMod_turn') + num('lpMod_contact') + num('lpMod_action') + lpContinuous + lpAura;
   // engine-extension #2 (2026-06-05): charModifyLevel に伴い filter level も 3 scope 合算
   // (旧は base のみ → modifyLevel 不使用時 = base + 0 + 0 + 0 で互換)
-  const level = (base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action');
+  // engine additive wave (2026-06-24): continuous lvlDelta も合算 (read.char.level と同式 = BUG-117 原則)。既存カードは未宣言 → 0。
+  const lvlContinuous = continuousDeltaSafe(state, c?.uid, 'lvlDelta');
+  const level = (base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action') + lvlContinuous;
 
   if (filter.apMin !== undefined && ap < filter.apMin) return false;
   if (filter.apMax !== undefined && ap > filter.apMax) return false;

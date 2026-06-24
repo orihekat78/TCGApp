@@ -33,7 +33,7 @@ function scopeActiveInPartnerArea(scope: AbilityScope | undefined): boolean {
   return scope === 'on-partner-area' || scope === 'always';
 }
 
-function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'): number {
+function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta' | 'lvlDelta'): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
   const d = def.card(char.cardId);
@@ -154,7 +154,10 @@ function level(s: GameState, uid: string): number {
   const modTurn      = (char.turnEffects['lvlMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['lvlMod_contact']   as number | undefined) ?? 0;
   const modAction    = (char.turnEffects['lvlMod_action']    as number | undefined) ?? 0;
-  return base + modPermanent + modTurn + modContact + modAction;
+  // engine additive wave (2026-06-24): continuous lvlDelta (条件付き継続レベル修正) を合算 (ap/lp と対称)。
+  // 不在時 +0。再帰は continuousDeltaSafe (candidates) の _inContinuousDelta guard が depth-2 で 0 化し終端。
+  const modContinuous = continuousDelta(s, uid, 'lvlDelta');
+  return base + modPermanent + modTurn + modContact + modAction + modContinuous;
 }
 
 function colors(s: GameState, uid: string): string[] {

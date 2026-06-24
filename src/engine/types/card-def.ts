@@ -85,6 +85,12 @@ export type ContinuousDelta =
 export type ContinuousModifier = {
   apDelta?: ContinuousDelta;
   lpDelta?: ContinuousDelta;
+  // engine additive wave (2026-06-24): 条件付き継続レベル修正 (「【自分ターン中】レベル+1」B08059 /
+  // 「【解決編】レベル+3」B08050)。apDelta/lpDelta と完全対称に read.char.level +
+  // candidates.matchOneFilter の2 site が continuousDelta(which:'lvlDelta') で honor する
+  // (BUG-117: filter-level==combat-level)。不在時 +0 (既存カードは未宣言 → 回帰0)。
+  // self-only (aura 版 lvlDeltaAura は未導入 = YAGNI、対象カードは全て self-buff)。
+  lvlDelta?: ContinuousDelta;
   grantKeywords?: (s: GameState, ctx: { uid: string }) => string[];
   customSelectorPatch?: (s: GameState, uid: string, base: SceneCharacter) => Partial<SceneCharacter>;
   // engine拡張 wave#2 cluster5 (2026-06-14): 相手への使用制限 aura (rules/09 §カットイン/変装, rules/24 §常時有効型)。
