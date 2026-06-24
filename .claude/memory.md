@@ -26,3 +26,33 @@
 
 A) engine additive 続き (scope array B08019 / set-card-removal cost B08033a2 / BUG-156/157 unified) /
 B) MR Phase2-4 / C) カード追加 (B08023/B08050/B08059/B08004 解放済) / D) auto-docs sync。
+
+## ⊕ 並行 card session: wave novel-0624 出荷 (engine変更0、commit 8808e549)
+
+- 別 session が card wave を engine HEAD 上に積んで main に FF push (8808e549、engine変更0)。
+  classify(59)→certify+adversarial-verify(15)→verified-ok green **9枚出荷** (B08092/B02033/B03095/
+  B04019/B04079/B05014/B09063/B09066/D01008)、refuted3+yellow3 を DEFERRED-INDEX へ。
+- ⚠ shared-workdir hazard 実体験: 作業中に共有 HEAD が engine branch へ切替わった。card 側は engine
+  ファイル非 stage を確認し HEAD(=remote main) 上に commit→`git push origin HEAD:main` FF で衝突回避。
+- gate は engine additive wave + 9枚の **合成 state** で実行 (vitest 3068 = 3054+14)、全 green。
+- 新 reference memory: BUG-145 conditional 枝は Pattern-B 短縮形 atom なら安全 (over-fire は optional/choice/$pick のみ)。
+
+## ⊕ card wave engine-unlocked-0624 (engine変更0、本 session)
+
+- a206e9dc 解放分 4枚 (B08023/B08050/B08059/B08004) を全句 engine 実測で再 certify → **2枚出荷 / 2枚再 DEFER**。
+- **出荷 B08023/P** (登場時 choice×3 carrier-reuse: 伊織無我 setCard+AP/突撃 / 相手 setCard+sleep) +
+  **B08050/P** (解決編 lvlDelta+3 + 登場時 deck-look: deckRevealUntil match-all→handAdd→boundToRemove+cardNameNot discard)。
+- **再 DEFER** (engine wave の「解禁」over-claim を訂正): **B08059** = self-counting latch (vitest probe 実測で
+  諸星+他lv7×1→read.char.level=6、QA要求7。`_inContinuousDelta` guard が depth-2 で自己 delta を base化) /
+  **B08004** = 宣言ゲート「リムーブに黒の**キャラ**3枚」が remove色+種別count を要求、removeColorAtLeast は色のみ。
+- gate 全 green: tsc0 / vitest 3091(+12) / smoke winsA=498 不変 / 8lint+eslint 0。opus 4-lens 敵対 review 実施。
+- 新 reference memory: [[reference-engine-unlocked-second-gate]] (解放表記を信用せず全句 probe で再 certify)。
+
+### ⚠ 敵対 review で BLOCKER 2件検出→修正 (出荷前)
+- B08023 初版 = exemplar B02040 踏襲の明示 uid:'$pick'+target carrier → **human 経路で rider 不発** (実機 AP=3000)。
+  **短縮形** charSetCard{player,max,filter,bind:'$picked'} へ変換で修正。出荷済 B02040/P・B02046/P・PR049 も
+  同症状 → **BUG-158** 起票 (別 session で短縮形変換 or engine 両経路統一)。
+- B08050 step 順 handAdd→discard→boundToRemove は deck≤3 で refresh が discard 札を巻き戻す →
+  公式順 handAdd→**boundToRemove→discard** に修正 (deck=3 回帰 test 追加)。
+- 教訓: 2 lens が「B02040 同形ゆえ CLEAN」と code-comment 推論で誤判定。**empirical probe を回した lens のみ正答**。
+  carrier-reuse は **human 経路実測必須**。最終 gate: tsc0 / vitest 3095 / smoke winsA=498 / 8lint+eslint 0。

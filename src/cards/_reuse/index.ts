@@ -616,6 +616,11 @@ import { D09017 } from '../ct-d09/D09017.js';
 
 import { B08020 } from '../ct-p08/B08020.js';
 import { B08020P } from '../ct-p08/B08020P.js';
+// engine変更0 wave (2026-06-24): engine additive wave a206e9dc で解放された DEFER を card-session が出荷
+import { B08023 } from '../ct-p08/B08023.js';
+import { B08023P } from '../ct-p08/B08023P.js';
+import { B08050 } from '../ct-p08/B08050.js';
+import { B08050P } from '../ct-p08/B08050P.js';
 // engine拡張 wave#2 cluster2 (2026-06-12): ability-presence filter (X1/X1b/X6/X7/X8) 解禁 10枚
 import { B03128 } from '../ct-p03/B03128.js';
 import { B03131 } from '../ct-p03/B03131.js';
@@ -1112,6 +1117,9 @@ export const REUSE_CARDS: CardDef[] = [
   B05076, D09016, D09017,
   // engine拡張 wave#2 — BUG-132 GAP-1/2 修正後の B08020/P 再採用
   B08020, B08020P,
+  // engine変更0 wave (2026-06-24): engine additive wave a206e9dc 解放分。B08023/P=carrier-reuse×3 choice /
+  // B08050/P=【解決編】lvlDelta+3 + 登場時 deck-look(boundToRemove + cardNameNot discard)
+  B08023, B08023P, B08050, B08050P,
   // engine拡張 wave#2 cluster2 (2026-06-12): ability-presence filter 解禁 10枚
   // (現場リムーブ時/疾風/カットイン presence — X1 述語 + X1b 窓/bound filter + X6 boundToRemove + X7/X8 骨格バグ修正)
   B03128, B03131, B08005, B08005P, B08016, B08094, B08094P, B09073, B09073P, B09104,
