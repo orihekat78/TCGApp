@@ -967,6 +967,11 @@ import { B03036P } from '../ct-p03/B03036P.js';
 import { B06100 } from '../ct-p06/B06100.js';
 import { B06100P } from '../ct-p06/B06100P.js';
 
+import { B06079 } from '../ct-p06/B06079.js';
+import { B03124 } from '../ct-p03/B03124.js';
+import { B03068 } from '../ct-p03/B03068.js';
+import { PR094 } from '../pr-01/PR094.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1194,4 +1199,6 @@ export const REUSE_CARDS: CardDef[] = [
   B03115, B03115P, B03036, B03036P,
   // .tmp/wave-new.json
   B06100, B06100P,
+  // .tmp/final-specs-v2.json
+  B06079, B03124, B03068, PR094,
 ];
