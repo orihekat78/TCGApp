@@ -61,14 +61,11 @@ export function runAutoPhase(state: GameState, p: Player): void {
   for (const uid of sceneUids) {
     mutate.scene.tryActivate(state, uid);
   }
-  // 2b. MR partner-area (rules/18): PA 常駐 MR も活性化する。setState helper は slot 非対応のため
-  //   bespoke 実装 (rules/03 スタン特殊挙動: stun はアクティブにする代わりに sleep)。
-  //   暫定 (未解決 #5 要公式Q&A): rules/05① は明示的に「パートナー + 現場キャラ」のみ列挙するため
-  //   PA-MR の auto 活性は推定。保守側 (有効化) を採り、宣言能力 (非 sleep-cost) を翌ターン使えるようにする。
-  const slotMr = state.players[p].partnerAreaMR;
-  if (slotMr) {
-    slotMr.state = slotMr.state === 'stun' ? 'sleep' : 'active';
-  }
+  // 2b. MR partner-area (rules/18 + 公式Q&A 反映 2026-06-24): PA 常駐 MR は auto-phase で活性化しない。
+  //   rules/05① のアクティブ化対象は「自分のパートナー」と「自分の現場のキャラ」のみで PA-MR はどちらでもない。
+  //   さらに事務局裁定 (commmune post/1690545、@DCCG_admin_bk 2025-05-23) は「パートナーエリアにある MR の
+  //   状態を変更したり (MR能力以外で) 移動させる方法は存在しない」= PA-MR の state は sticky と明言。
+  //   よって PA-MR は移動時の snapshot 状態を保持する (推測でルール補完しない、CLAUDE.md)。slotMr には触れない。
 
   event.emit(state, 'phase:auto:before-draw', { player: p });
 

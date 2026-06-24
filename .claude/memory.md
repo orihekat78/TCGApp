@@ -41,4 +41,13 @@ no-match over-fire guard、解決編/事件編 discard 分岐、caseTrait gate (
 
 **検証 (全green)**: tsc0両 / vitest 2969→2999 (+30 decoy、1skip) / smoke winsA=498 baselineOK (非MR=MVPデッキ) / e2e 123+1skip / eslint 0err。
 
-**暫定保守解5件 + read/mutate非対称 = BUG-154**。残: Phase2=UI / 3=AI / 4=card wave SOLE 15。記録: changelog-entries/2026-06-23-11。**未push (commit 後 push は要ユーザー承認)**。
+**暫定保守解5件 + read/mutate非対称 = BUG-154**。残: Phase2=UI / 3=AI / 4=card wave SOLE 15。記録: changelog-entries/2026-06-23-11。
+
+## セッション55 続 (2026-06-24) — A: Phase1 出荷 / E: 公式Q&A 照会 (branch=engine/mr-pa-qa-v2、worktree 経由)
+
+ユーザー指示「A→E」。**A**: PR#3 を main へ rebase-merge (bef3adad、CI green)。**E**: deep-research workflow (verify は server rate-limit で全 fail) + firecrawl で commmune 事務局 Q&A 直接確認。
+- **#1 MR① 中間状態 = 公式裁定あり** (post/2099836 事務局2025-10-08「リムーブエリアへ一度置かれてから PA へ移動 / リムーブ発動能力は発動 / デッキ下は【現場リムーブ時】非発火」) → 実装通り **確定**。
+- **#3 PA-MR targetability = 公式裁定あり** (post/1690545 事務局2025-05-23「PA-MR の状態変更/移動は MR能力以外で不可」) → candidates 未変更 **確定**。
+- **#2** 原則整合 / **#4** 公式裁定なし据え置き。
+- **#5 修正**: 公式裁定なしだが rules/05①(活性化=パートナー+現場のみ)+事務局 sticky-state → **auto-phase の PA-MR 活性化を削除** (推測補完を撤回)。test も unchanged へ。記録=changelog 2026-06-24-01。
+- ⚠ **並行 session collision**: engine/mr-partner-area-qa-followup を 2 session が共有 → 相手が c6e31c27 (越水/ラム 4枚) を commit + 私の作業を clobber。**git worktree (/c/tmp/mr-qa-wt、branch engine/mr-pa-qa-v2 off bef3adad) で隔離して commit**。教訓: 共有 working tree で別 branch 作業は worktree 必須。
