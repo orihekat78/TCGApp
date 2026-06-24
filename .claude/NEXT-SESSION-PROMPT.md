@@ -9,11 +9,11 @@
 
 ## 現在地 (2026-06-24、セッション57 完了)
 - ★開始時に `git ls-remote origin main` で remote HEAD 確認 + `gh run list -L1` で CI green 確認。
-- **main = 542feac5 (BUG-155 pick-filter-kind sweep)**。系譜: 542feac5 ← 877ad627 (並行session) ← 3538e052 ← e0ef2803 (session56)。
-  ⚠ 542feac5 の CI は push 時点 in_progress だった → **開始時に green 確定を確認** (赤なら要対応)。
-- working tree: 並行 session の WIP (`src/cards/ct-p08/B08075.ts` / `B08075P.ts` / `_reuse/index.ts` M / `tests/cards/wave-event-choose3-2026-06-24.test.ts`) + `.claude/design/` ?? → **全て commit しない** (自分の作業のみ明示 add)。
-- branch `cards/bug155-pick-filter-kind` = main に一致。
-- ⚠ 共有 working tree ハザード継続: 別 branch 作業は git worktree 必須。明示 add で他 session WIP を除外。
+- **main = 8c3001a2** (event-choose3 docs) ← 5c275922 (chore + B08075 cards 混入) ← 542feac5 (BUG-155 sweep) ← 877ad627 (newbase)。
+  全て engine変更0 (`git diff 877ad627..HEAD -- src/engine` 空)。⚠ 5c275922/8c3001a2 の CI は push 時点 in_progress → **開始時に green 確定を確認**。
+- **B08075/B08075P ブライダルは女が主役** (event-choose3 wave、engine変更0) は shared-index 経由で **5c275922 に意図せず混入出荷済**。docs(changelog-06 + DEFER 6rep) は 8c3001a2。working tree clean (`.claude/design/` ?? のみ除外)。
+- branch `cards/bug155-pick-filter-kind` = main に一致。worktree `C:/tmp/conan-cards-w` (branch cards/engine0-wave-0624 @877ad627) も存在。
+- ⚠ 共有 working tree ハザード継続: 別 session の commit/branch切替が共有 HEAD/index を動かす (今回 docs commit が並行 WIP を巻込)。別 branch 作業は git worktree 必須。`git add <file>` で明示、`git commit` 前に `git diff --cached --name-only` で混入確認。
 
 ## セッション57 サマリ (BUG-155 完全横展開 sweep)
 - ユーザー選択 B。ALL_CARDS の全 pick filter を決定論 walk → mixed-area (手札/リムーブ/デッキ) で trait/color/keyword
@@ -35,7 +35,10 @@ A) **auto-docs sync** (軽作業): structure.md/mapping が複数 wave 分未再
 B) **MR Phase 2/3/4** (session55 設計から継続): Phase2=UI (PartnerArea PA-MR render+選択)、Phase3=AI (move-enumerator PA-MR 列挙)、
    Phase4=card wave (SOLE 15、B06066 read/mutate 非対称 再判定)。BUG-154 #4 (MR②×switch) は実カード遭遇時に公式Q&A 照会。
 C) **カード追加 継続** (engine変更0): taskA pipeline で green候補刈り取り (card-wave skill)。残実数は inventory-remaining.cjs で再棚卸。
-   ※並行 session が B08075 wave を進行中の可能性 → 開始時に working tree と相手の commit を確認し衝突回避。
+   ※B08075 wave (event-choose3) は出荷済。残 green候補は **novel 裾** (easy clone 枯渇 = clone-scan 0件) で 1枚ずつ certify 要。
+   classify workflow の結果 (.tmp/fresh-127.json + tasks/wx7kuuzol.output) に GREEN 9/GATED 21/RISKY 8 の仕分けあり (38/127 のみ、session limit 中断)。
+D) **engine 解禁 (additive)** で上記 6 DEFER を製造化: continuousModifier に lvlDelta 追加 (B08059/B08050) /
+   carrier-reuse ($pick の sequence 跨ぎ bind) 保証+exemplar (B08023/B08033) / cost stunChar 追加 (B08004) / scope array 化 (B08019)。骨格凍結原則に注意。
 → 開始時にユーザーへ方向確認。
 
 ## プロセス共通 (実証済の運用)
