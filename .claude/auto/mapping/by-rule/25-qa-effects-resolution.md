@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1792d9a8fb85`
+> Source hash: `bbf998144396`
 
 公式ルール [`25-qa-effects-resolution.md`](../../../rules/25-qa-effects-resolution.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

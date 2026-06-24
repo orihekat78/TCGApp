@@ -120,26 +120,30 @@ describe('PA-MR reader spine (rules/18)', () => {
     });
   });
 
-  describe('オートフェイズ活性 (PA-MR 活性分岐 + stun 特殊)', () => {
+  // 公式Q&A 反映 (2026-06-24, commmune post/1690545 + rules/05①): PA-MR は auto-phase で活性化されない。
+  // 活性化対象は「パートナー + 現場キャラ」のみ、かつ事務局裁定で PA-MR の状態は変更不可 (sticky)。
+  describe('オートフェイズ: PA-MR は活性化されず snapshot 状態を保持 (rules/05① + 公式Q&A)', () => {
     function deckState(): GameState {
       const s = createEmptyGameState();
       s.players.self.partner = { cardId: 'P', state: 'active', location: 'partner-area' };
       s.players.self.deck = ['d1', 'd2', 'd3', 'd4', 'd5'];
       return s;
     }
-    it('sleep PA-MR → active', () => {
-      register(mkDef('PA_MR', { rarity: 'MR' }));
+    for (const st of ['sleep', 'stun', 'active'] as const) {
+      it(`${st} PA-MR は ${st} のまま (auto-phase は触れない)`, () => {
+        register(mkDef('PA_MR', { rarity: 'MR' }));
+        const s = deckState();
+        s.players.self.partnerAreaMR = makeChar({ cardId: 'PA_MR', uid: 'partnerMR:self', state: st });
+        const r = produce(s, d => { runAutoPhase(d, 'self'); });
+        expect(r.players.self.partnerAreaMR?.state).toBe(st);
+      });
+    }
+    it('現場キャラは従来どおり活性化される (回帰確認: PA-MR 不活性化が現場活性を壊さない)', () => {
+      register(mkDef('SC', { rarity: 'R' }));
       const s = deckState();
-      s.players.self.partnerAreaMR = makeChar({ cardId: 'PA_MR', uid: 'partnerMR:self', state: 'sleep' });
+      s.players.self.scene = [makeChar({ cardId: 'SC', uid: 'SC#1', state: 'sleep' })];
       const r = produce(s, d => { runAutoPhase(d, 'self'); });
-      expect(r.players.self.partnerAreaMR?.state).toBe('active');
-    });
-    it('stun PA-MR → sleep (rules/03 特殊挙動)', () => {
-      register(mkDef('PA_MR', { rarity: 'MR' }));
-      const s = deckState();
-      s.players.self.partnerAreaMR = makeChar({ cardId: 'PA_MR', uid: 'partnerMR:self', state: 'stun' });
-      const r = produce(s, d => { runAutoPhase(d, 'self'); });
-      expect(r.players.self.partnerAreaMR?.state).toBe('sleep');
+      expect(r.players.self.scene[0].state).toBe('active');
     });
   });
 
