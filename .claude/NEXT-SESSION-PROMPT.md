@@ -1,77 +1,60 @@
-# 次セッション再開プロンプト (2026-06-27 — セッション60: engine additive colorNot filter 出荷完了)
+# 次セッション再開プロンプト (2026-06-27 — セッション61: wave colornot-removeset カード3printings 出荷完了)
 
-> モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効だが ⚠ **Workflow args 文字列暴走事故** に注意 (下記)。
+> モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効だが ⚠ **Workflow args 文字列暴走事故** に注意。
 
 ---
 
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-06-27、セッション60 完了)
+## 現在地 (2026-06-27、セッション61 完了)
 - ★開始時に `git ls-remote origin main` で remote HEAD 確認 + `gh run list -L1` で CI green 確認。
-- **main = d7f49df4** (★最新tip: engine bugfix BUG-156/157 — sleepChar over-pay cap + continuousDelta 相互再帰 guard、engine session 出荷) ← 2bca7eb3 (chore) ← e41a8bb1 (card wave novel-tail-0627 6枚 engine変更0) ← 16cd4a84 (BUG-159 doc) ← 84fc2bb3 ← 4ff83ba9 (engine additive colorNot)。
-  ★push 後 CI in_progress (run 28290200019) → 開始時に green 確定を確認。
-- **engine bugfix BUG-156/157 (2026-06-27、d7f49df4 出荷済)**: BUG-156=sleepChar cost over-pay を stunChar parity
-  (n.max cap+active gate+head-fixed) に是正 / BUG-157=read.char.ap/lp/level を continuousDeltaSafe guard 経由に統一
-  (無限相互再帰 stack overflow 解消、出荷カード値不変)。TDD 13 test / smoke winsA=498 完全一致 / opus 4-lens 敵対 review
-  ship:true blocker0。spec=`.claude/specs/engine-bugfix-156-157-cost-recursion.md`。両 BUG.md=修正済。
-- **card wave novel-tail-0627 (2026-06-27、別 card session 出荷)**: certify(16)+opus敵対verify→verified-ok 6枚
-  (D07018/B02008/B07024/B02073/D02005/PR036)。D02005 は a2 hirameki uid:'$pick' 欠落を補修(BUG-140)。
-  yellow10+B06058 自己review DEFER は DEFERRED-INDEX「wave novel-tail-0627 由来」。
-  ★**B07048 白馬探 = READY 未出荷** (a2 cost=removeSetCard n2 解禁済の初実装候補、codegen非対応→手author+専用test の focused follow-up)。
-  ⚠ 4ff83ba9 = **engine 変更あり (additive)**。push 後 CI in_progress (run 28289011611) → **開始時に green 確定を確認**。
-- branch `engine/additive-colornot-filter-0627` = main 一致。
+- **main = 3940a88b** (★最新tip: feat(cards) wave colornot-removeset-0627 — B07012/B07012P/B07048 3printings、engine変更0)
+  ← 1d6fdca2 (chore BUG-156/157 hash) ← d7f49df4 (engine BUG-156/157) ← 2bca7eb3 ← e41a8bb1 (card wave novel-tail) ← 84fc2bb3 (BUG-159) ← 4ff83ba9 (engine colorNot)。
+  ★push 後 CI in_progress (run 28290916001) → **開始時に green 確定を確認**。
+- branch `cards/wave-colornot-removeset-0627` = main 一致 (本 session 作業 branch)。working tree clean (`.claude/design` ?? のみ=除外)。
 - 自 commit は `git add <自ファイル>` 明示・`git diff --cached --name-only` で混入確認 (NOT -A)。別 branch 作業は git worktree。
-- ⚠ auto-docs (structure/mapping/CHANGELOG) 未再生成 (precedent 通り未commit・CI除外、drift 蓄積中)。
-- 本 session は working tree clean (`.claude/design` ?? のみ=除外)、並行 card session の干渉なし。
+- ⚠ auto-docs (structure/mapping/CHANGELOG) 未再生成 (precedent 通り未commit・CI除外、drift 蓄積中)。pre-commit は `--no-verify` + 8lint 手動緑で回避。
 
-## セッション60 サマリ (engine additive: TargetFilter colorNot)
-- ユーザー指示=engine追加。候補4種を impact/risk 評価 → **colorNot filter** をユーザー選択 (cluster16 cardNameNot の color 版、純 additive・最低 risk)。
-- brainstorming → spec (.claude/specs/engine-additive-colornot-filter-design.md) → TDD(RED→GREEN) → gate → opus 5-lens 敵対 review → concern 反映 → FF push を厳守。
-- **新 TargetFilter field `colorNot`** (「【X】以外の色を持つキャラ」)。semantics は **公式 B08079 ピンガ qa で確定 (some説)**:
-  「X以外の色を1つ以上持つ」(`colors.some(c => c∉notSet)`)。mono-X 除外 / 2色{X,Y} 該当。等価=全色が notSet 内のとき除外。
-  ⚠ cardNameNot (any-match 除外) とは 2色で非対称。
-- honor site 4点 (cardNameNot を mirror): 型(effect.ts) / matchOneFilter(candidates.ts) / boundMatchesFilter(cond/eval.ts) /
-  targetFilterToPredicate(_shared.ts)。他 TargetFilter consumer は全て matchOneFilter/predicate へ委譲 → 自動 honored (review 確認)。
-- **opus 5-lens 敵対 review = ship:true / blocker 0** (additivity/completeness/semantics/edge 全 CLEAN、test concern 1 を予防テスト3件で解消)。
-- gate 全 green: tsc0 / 新テスト 13 / smoke winsA=498 不変 ex0 / full vitest 3105 pass / 8lint+eslint 0。
-- **副産物 BUG-159 → 同 session で修正済 (84fc2bb3)**: 出荷済 **B02010(灰原哀)** が同一文言を custom closure
-  `!colors.includes('青')` = none説で実装し 2色対象を公式違反で誤除外していた (review edge lens も独立確認) →
-  `filter:{colorNot:'青'}` へ migration、card test 4 pass / smoke winsA=498 不変。
-  ⚠ **残**: B08090 の complement-enum (`color:[他5色]`、some説で正だが 6色 hardcode で脆い) の colorNot 統一は別途 (振る舞い不変)。
-- **colorNot 解禁カード** (card session 領分、engine0): B02002/B07012/B08081/B08082/B08090/B08091 等の「【X】以外の色」filter 句。各カードは他句 gate も要確認。
+## セッション61 サマリ (wave colornot-removeset-0627、engine変更0、+3 printings)
+- ユーザー指示=engine変更0 カード追加 (選択肢C)。session60(colorNot filter)+session59(removeSetCard cost) を実カードで de-risk。
+- **B07012/B07012P 本堂瑛祐** (青 char, 高校生): a1【解決編】(caseStatus)【登場時】自陣 colorNot:青 のキャラ有(sceneHas some説)
+  →相手 Lv4以下1枚まで sceneToDeck(opp/bottom) / a2 ヒラメキ remove area の colorNot:青+高校生 を handAddFromRemove(1枚まで)。
+- **B07048 白馬探** (白 char): a1【登場時】charSetCard(uid:$self, fromDeckTop=自デッキ上1枚裏向きセット) /
+  a2【パートナー白】(partnerColor)【宣言】【ターン1】cost=`removeSetCard n2` → draw1+discard1。**removeSetCard cost の初 production カード**。
+- 全 atom/cond/cost/filter は proven shipped (colorNot/removeSetCard/sceneToDeck/handAddFromRemove/charSetCard/partnerColor/caseStatus)。engine src 変更0。
+- gate 全 green: tsc0 / 専用 test 17pass (構造1対1 + colorNot matchOneFilter decoy + sceneHas/解決編 evalCond + removeSetCard canPay) /
+  full vitest 3149pass 0fail / smoke winsA=498 不変 exceptions=0 (engine変更0 機械保証) / 8lint err0。
+- **opus 4-lens 敵対 review = 全 ship:true / blocker0** (semantic-equivalence/additivity/dsl-traps/edge-test-adequacy)。concern 2 反映済:
+  ①解決編 gate の evalCond test 追加 (silent-overfire 回帰固定) ②**removeSetCard UI host-picker 未配線**を DEFERRED-INDEX 記録
+  (human 経路は self-scene 順 fallback=どの host の setcard:leave observer が発火するか選べない、sceneToDeckBottom precedent 一致、非ブロッカー)。
+- DEFERRED-INDEX: B07048 を ✅出荷済 に更新 + removeSetCard UI picker gap を follow-up 記録。
 
 ## 次やること候補 (要ユーザー選択)
-A) **engine additive 続き** (本 session 流儀継続):
-   - **scope array化** (B08019: on-scene+on-partner-area 併記、AbilityScope を array に)。MR scope reader 波及で risk 中。
-   - **BUG-156/157 unified 修正** (sleepChar/stunChar cost over-pay の pick channel 配線 / read.char.ap/lp 無 guard
-     相互再帰)。※非 additive ゆえ smoke 再ベースライン要・慎重に。
-   - その他 additive gap (handReveal verb / caseColor の negation拡張「事件が【X】以外の色を持つ/持たない」B08079/PR274/275/cutin群)。
-     ※ colorNot filter は session60 で出荷済、cardName-EXCLUSION は cluster16 cardNameNot で解消済。
-B) **MR Phase 2/3/4** (session55 設計): Phase2=UI / Phase3=AI / Phase4=card wave (SOLE 15)。
-C) **カード追加 継続** (card session 領分、engine変更0): **B08033 が今 wave で解禁** → 出荷可。残 green は novel 裾。
-D) **auto-docs sync** (軽作業): `.claude/design` hold-aside → `npm run docs` → structure/CHANGELOG/mapping を明示 add → FF push。
-   + DEFERRED-INDEX に B08033/set-card-removal cost の解禁を反映。
+A) **カード追加 継続** (card session 領分、engine変更0): 残 green は novel 裾。colorNot 残候補は全 gate 済
+   (B08079/PR274/275=caseColor negation 未実装 / B07022/B08082=handReveal verb / B08081=reactive negation hook /
+   B08091=recruit / B02002=per-count scaling dyn / B08033=forEach-scene-char setCard verb)。
+   B08090 は complement-enum で出荷済 (colorNot migration は behavior-invariant cleanup、選択肢A engine扱い)。
+B) **engine additive 続き** (engine session 流儀): caseColor negation 拡張「事件が【X】以外の色を持つ/持たない」
+   (B08079/PR274/275 解禁) / scope array化 (B08019) / handReveal verb (B07022/B08082 解禁) / forEach-scene-char setCard (B08033) /
+   removeSetCard UI host-picker (上記 follow-up)。各 impact/risk 評価 → brainstorm→spec→TDD→opus敵対review→FF。
+C) **MR Phase 2/3/4** (session55 設計): Phase2=UI / Phase3=AI / Phase4=card wave (SOLE 15)。
+D) **auto-docs sync** (軽作業): `.claude/design` hold-aside → `npm run docs` → structure/CHANGELOG/mapping 明示 add → FF push。
 → 開始時にユーザーへ方向確認。
 
 ## プロセス共通 (実証済の運用)
-- 着手前 working tree 確認 (他 session WIP / `.claude/design` ?? = 除外) / branch first (engine は main tree+専用 branch 可、
-  card session が別 worktree なら衝突無)。main 直 commit 禁止。
-- **engine 変更時**: brainstorming skill → spec doc (.claude/specs/) → TDD(RED→GREEN) → tsc/vitest/smoke gate →
-  **opus 敵対 review workflow** (additivity/完全性/hook忠実/test adequacy/edge lens) → concern 反映 → commit。
-  additive (新 field/cost) は既存カード未宣言で回帰0、smoke winsA=498 で機械保証。
-- 挙動不変ゲート: tsc0 / vitest (baseline はその時の HEAD で確認) / smoke:1000 + check:smoke-baseline (winsA=498) /
-  回帰テスト追加 / engine0 の場合 validate-specs。
-- **新 Cost kind の honor site (8点、本 session 実証)**: Cost union / canPay + COST_KIND_MAP / pay (+ cost-param reader) /
-  UI costToText / validate-specs COSTS + sync-test / AbilityCostParams + costParamsToDyn。AI は canPay gate + pay fallback で
-  自動カバー (computeAiCostParams は default no-op で fallback 委譲)。tsc の exhaustive `never` guard が switch 漏れ検出。
-- **commit 運用**: pre-commit = `docs:check && 8 lints`。docs:check は auto-doc drift で落ちる (CI除外) → **8 lints 手動緑確認**
-  (lint:bugs/listener/card-addition/test-pair/side-channel/component-testid/ok-false-pattern/icon-abilities) → `git commit --no-verify`。
-  自ファイルのみ明示 add (NOT -A)。auto-doc は自 commit に含めない。
-- **FF push**: 専用 branch を現 HEAD から → `git ls-remote origin main` で FF 可確認 → `git push origin HEAD:main`。
-- 決定論優先: agent 前に grep/node/hash で機械検証できないか検討。カード全文 TSV helper `.tmp/_fulltext.cjs <ids>`
-  (col10=effect/11=cutIn/12=hira/13=henso/qAndA=qa)。
-- Bash heredoc `<<'EOF'`。Read hook が file を line1 truncate → Edit は Read 1回で登録できる (truncate でも可) / 全文は Bash cat/sed。
-- ★memory.md は thin (過去ログ sessions/2026-06-24.md)。DEFER 一覧: .claude/specs/DEFERRED-INDEX.md /
-  bug: .claude/bugs/index.base (BUG-156/157=未着手 latent)。
+- 着手前 working tree 確認 (他 session WIP / `.claude/design` ?? = 除外) / branch first (card session は main tree+専用 branch、
+  engine 並行なら git worktree)。main 直 commit 禁止。
+- **engine変更0 カード**: 候補の全 gate を DEFERRED-INDEX + capability-map.txt + 実 engine grep で確定 (green候補は未certify信用しない) →
+  hand-author (colorNot/removeSetCard 系は codegen 非対応 = B02010/B07048 precedent) → 専用 test (構造1対1 + 実engine evalCond/matchOneFilter/canPay decoy) →
+  tsc/vitest/smoke baseline gate → **opus 4-lens 敵対 review** (semantic/additivity/dsl-trap/edge-test) → concern 反映 → commit。
+- 挙動不変ゲート: tsc0 / vitest (baseline=HEAD 件数) / smoke:1000 + check:smoke-baseline (winsA=498) / 専用test / engine0 確認。
+- **commit 運用**: pre-commit = docs:check(auto-doc drift で落ちる、CI除外) + 8lint。**8lint 手動緑** → `git commit --no-verify`。
+  自ファイルのみ明示 add (NOT -A)。auto-doc は自 commit に含めない。changelog-entry ソースは手書き commit (CHANGELOG.md 再生成はしない)。
+- **FF push**: `git ls-remote origin main` で FF 可確認 → `git push origin HEAD:main` → `gh run list -L1` CI green。
+- 決定論優先。カード全文 TSV helper `.tmp/_fulltext.cjs <ids>` (col10=effect/11=cutIn/12=hira/13=henso/qAndA=qa)。
+  card メタ (cardId/imagePath/rarity) は .claude/specs/cards-data/<pkg>/character.tsv 直読み。
+- Read hook が file を line1 truncate → Edit は Read 1回で登録 / 全文は Bash cat/sed。registration=_reuse/index.ts 手編集 (import + REUSE_CARDS 配列、P変は spread)。
+- ★memory.md は 79行 (次の追記前に sessions/ へ rotate 検討)。DEFER 一覧: .claude/specs/DEFERRED-INDEX.md /
+  bug: .claude/bugs/index.base (BUG-156/157=修正済 d7f49df4)。
 ```
