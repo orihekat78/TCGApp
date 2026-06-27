@@ -55,6 +55,19 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return want.some(c => have.includes(c));
     }
+    case 'caseColorNot': {
+      // engine additive (2026-06-27 session62): 「事件が【X】以外の色を持つ場合」。
+      // some説 (公式 B08079 ピンガ qa): 事件色のうち notSet に無い色が1つ以上で true。
+      // 色解決は caseColor と同一 (CardDef primary / caseInfo.colors fallback)。
+      // false ⟺ 全事件色が notSet ⊆ (事件色が空集合の場合も含む)。
+      // ⚠ 素の not(caseColor X)=none説 とは 2色で非対称。「持たない」side は _shared caseMonoColor。
+      const owner = ctx.source.player;
+      const caseInfo = state.players[owner].case;
+      const d = lookupCardDef(caseInfo.cardId);
+      const have = d?.colors ?? caseInfo.colors ?? [];
+      const notSet = Array.isArray(cond.color) ? cond.color : [cond.color];
+      return have.some(c => !notSet.includes(c));
+    }
     case 'caseTrait': {
       const owner = ctx.source.player;
       const caseInfo = state.players[owner].case;
@@ -449,7 +462,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
 // scripts/taskA-validate-specs.cjs CONDS との同期は tests/engine/sync-taskA-whitelists.test.ts。
 const CONDITION_KIND_MAP = {
   true: true, false: true, not: true, and: true, or: true, turn: true,
-  partnerColor: true, caseColor: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
+  partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
   bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,
   handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, // Task D E1 (2026-06-12)
   fileTopType: true,

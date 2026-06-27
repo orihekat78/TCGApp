@@ -16,6 +16,12 @@ export type Condition =
   | { kind: 'turn'; player: 'self' | 'opp' }
   | { kind: 'partnerColor'; color: string | string[] }
   | { kind: 'caseColor'; color: string | string[]; combine?: 'or' | 'and' }
+  // engine additive (2026-06-27 session62): 事件の色 NEGATION 「持つ」side (「事件が【X】以外の色を持つ場合」)。
+  // 公式 B08079 裁定で some説確定: caseColors.some(c => c∉notSet) (X以外の色を1つ以上持つ)。
+  // mono-X→false / 2色{X,Y}→true / 空→false。⚠ 素の not(caseColor X) (= Xを持たない、none説) とは 2色で非対称。
+  // 「持たない」side (= 事件 ⊆ {X}) は既存 _shared `caseMonoColor` (= not(caseColorNot(X)) と等価)。
+  // honor: cond/eval.ts case 'caseColorNot' + CONDITION_KIND_MAP + validate-specs CONDS。
+  | { kind: 'caseColorNot'; color: string | string[] }
   | { kind: 'caseTrait'; trait: string }
   | { kind: 'fileAtLeast'; n: number }
   | { kind: 'caseStatus'; status: '事件編' | '解決編' }

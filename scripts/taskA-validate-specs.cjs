@@ -43,7 +43,7 @@ const HOOKS = new Set([
 ]);
 
 const CONDS = new Set([
-  'true', 'false', 'not', 'and', 'or', 'turn', 'partnerColor', 'caseColor', 'caseTrait',
+  'true', 'false', 'not', 'and', 'or', 'turn', 'partnerColor', 'caseColor', 'caseColorNot', 'caseTrait',
   'fileAtLeast', 'caseStatus', 'bond', 'sceneHas', 'apAtLeast', 'lpAtLeast', 'evidenceAtLeast',
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
