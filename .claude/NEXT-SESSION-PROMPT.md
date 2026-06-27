@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-27 — セッション61: wave colornot-removeset カード3printings 出荷完了)
+# 次セッション再開プロンプト (2026-06-27 — セッション62: engine additive caseColorNot condition 出荷完了)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効だが ⚠ **Workflow args 文字列暴走事故** に注意。
 
@@ -7,37 +7,42 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-06-27、セッション61 完了)
+## 現在地 (2026-06-27、セッション62 完了)
 - ★開始時に `git ls-remote origin main` で remote HEAD 確認 + `gh run list -L1` で CI green 確認。
-- **main = 3940a88b** (★最新tip: feat(cards) wave colornot-removeset-0627 — B07012/B07012P/B07048 3printings、engine変更0)
-  ← 1d6fdca2 (chore BUG-156/157 hash) ← d7f49df4 (engine BUG-156/157) ← 2bca7eb3 ← e41a8bb1 (card wave novel-tail) ← 84fc2bb3 (BUG-159) ← 4ff83ba9 (engine colorNot)。
-  ★push 後 CI in_progress (run 28290916001) → **開始時に green 確定を確認**。
-- branch `cards/wave-colornot-removeset-0627` = main 一致 (本 session 作業 branch)。working tree clean (`.claude/design` ?? のみ=除外)。
+- **main = 8dcdfcea** (★最新tip: feat(engine) caseColorNot condition — 「事件が【X】以外の色を持つ場合」 additive、CI green 確定済 run 28291430471)
+  ← 98810921 (caseColorNot spec) ← fbe215fd (chore) ← 3940a88b (card wave colornot-removeset B07012/P+B07048) ← 1d6fdca2 ← d7f49df4 (engine BUG-156/157) ← 4ff83ba9 (engine colorNot)。
+- branch `engine/additive-casecolornot-0627` (worktree `C:/tmp/conan-wt-casecolornot`) = main 一致。並行 card session の wave (3940a88b) と重複ゼロで FF rebase 出荷。
+- ⚠ session62 と並行で **card session が wave colornot-removeset (3940a88b) を別 push** 済。両者 additive・重複無で衝突解決済 (engine vs card files)。
 - 自 commit は `git add <自ファイル>` 明示・`git diff --cached --name-only` で混入確認 (NOT -A)。別 branch 作業は git worktree。
 - ⚠ auto-docs (structure/mapping/CHANGELOG) 未再生成 (precedent 通り未commit・CI除外、drift 蓄積中)。pre-commit は `--no-verify` + 8lint 手動緑で回避。
 
-## セッション61 サマリ (wave colornot-removeset-0627、engine変更0、+3 printings)
-- ユーザー指示=engine変更0 カード追加 (選択肢C)。session60(colorNot filter)+session59(removeSetCard cost) を実カードで de-risk。
-- **B07012/B07012P 本堂瑛祐** (青 char, 高校生): a1【解決編】(caseStatus)【登場時】自陣 colorNot:青 のキャラ有(sceneHas some説)
-  →相手 Lv4以下1枚まで sceneToDeck(opp/bottom) / a2 ヒラメキ remove area の colorNot:青+高校生 を handAddFromRemove(1枚まで)。
-- **B07048 白馬探** (白 char): a1【登場時】charSetCard(uid:$self, fromDeckTop=自デッキ上1枚裏向きセット) /
-  a2【パートナー白】(partnerColor)【宣言】【ターン1】cost=`removeSetCard n2` → draw1+discard1。**removeSetCard cost の初 production カード**。
-- 全 atom/cond/cost/filter は proven shipped (colorNot/removeSetCard/sceneToDeck/handAddFromRemove/charSetCard/partnerColor/caseStatus)。engine src 変更0。
-- gate 全 green: tsc0 / 専用 test 17pass (構造1対1 + colorNot matchOneFilter decoy + sceneHas/解決編 evalCond + removeSetCard canPay) /
-  full vitest 3149pass 0fail / smoke winsA=498 不変 exceptions=0 (engine変更0 機械保証) / 8lint err0。
-- **opus 4-lens 敵対 review = 全 ship:true / blocker0** (semantic-equivalence/additivity/dsl-traps/edge-test-adequacy)。concern 2 反映済:
-  ①解決編 gate の evalCond test 追加 (silent-overfire 回帰固定) ②**removeSetCard UI host-picker 未配線**を DEFERRED-INDEX 記録
-  (human 経路は self-scene 順 fallback=どの host の setcard:leave observer が発火するか選べない、sceneToDeckBottom precedent 一致、非ブロッカー)。
-- DEFERRED-INDEX: B07048 を ✅出荷済 に更新 + removeSetCard UI picker gap を follow-up 記録。
+## セッション62 サマリ (engine additive: Condition caseColorNot、新 kind 1つの純加算)
+- ユーザー指示=engine追加 (選択肢B)。候補3 (caseColorNot / scope array化 / handReveal) を impact/risk 評価 → **caseColorNot** をユーザー選択。
+- **新 Condition kind `caseColorNot`** 「自分の事件が【X】以外の色を持つ場合」。session60 colorNot (TargetFilter) の Condition 版。
+  some説 (公式 B08079 ピンガ qa): `caseColors.some(c => c∉notSet)`、2色{X,Y}該当 / mono-X 除外 / 空 false。色解決は caseColor と同一式。
+- honor 4点 (Condition 中央集権ゆえ filter より単純): effect.ts union / eval.ts case + CONDITION_KIND_MAP / validate-specs CONDS
+  (sync-test が CONDITION_KINDS⇔CONDS 強制)。`satisfies Record<kind,true>` + `_exhaustive:never` で honor 漏れを tsc 強制。
+- ⚠ 素の `not(caseColor X)`=none説 とは 2色で非対称。「持たない」side (事件⊆{X}) は既存 _shared **`caseMonoColor`** が担当
+  (= `not(caseColor[他5色])`、6色 hardcode)。**`caseColorNot(X) ≡ not(caseMonoColor(X))`** 双方向 →
+  将来 caseMonoColor を `not(caseColorNot)` へ簡約で 6色 hardcode 除去可 (振る舞い不変だが要 smoke gate、別 wave)。
+- gate 全 green: tsc0 / 専用 test 13pass (fallback/primary path/vs-not 非対称/additivity/hardening: opp-owner・color=[]退化・d?.colors=[]優先順) /
+  full vitest 3144pass 0fail / smoke winsA=498 完全一致 (既存カード未宣言→回帰0 機械保証) / 8lint PASS。
+- **opus 5-lens 敵対 review = 全 ship:true / blocker0** (additivity/completeness/semantics/edge/test-adequacy)。
+  completeness lens は satisfies/exhaustive guard を実削除し TS1360/TS2322 観測で honor 強制を実証。
+  semantics lens の nit (spec の「none説カード無し」事実誤認) を反映: caseMonoColor cross-ref を spec/コメントに追記済。
+- spec: `.claude/specs/engine-additive-casecolornot-design.md`。memory: reference-casecolornot-condition。
+- **解禁** (card session 領分、engine0): PR274/PR275 工藤新一 (continuous AP+1000 gate)、B08079 ピンガ (宣言 gate) が即出荷可。
 
 ## 次やること候補 (要ユーザー選択)
-A) **カード追加 継続** (card session 領分、engine変更0): 残 green は novel 裾。colorNot 残候補は全 gate 済
-   (B08079/PR274/275=caseColor negation 未実装 / B07022/B08082=handReveal verb / B08081=reactive negation hook /
-   B08091=recruit / B02002=per-count scaling dyn / B08033=forEach-scene-char setCard verb)。
-   B08090 は complement-enum で出荷済 (colorNot migration は behavior-invariant cleanup、選択肢A engine扱い)。
-B) **engine additive 続き** (engine session 流儀): caseColor negation 拡張「事件が【X】以外の色を持つ/持たない」
-   (B08079/PR274/275 解禁) / scope array化 (B08019) / handReveal verb (B07022/B08082 解禁) / forEach-scene-char setCard (B08033) /
-   removeSetCard UI host-picker (上記 follow-up)。各 impact/risk 評価 → brainstorm→spec→TDD→opus敵対review→FF。
+A) **カード追加 継続** (card session 領分、engine変更0): ★**session62 解禁の PR274/PR275 工藤新一 + B08079 ピンガ
+   (caseColorNot gate) が即出荷可**。他 colorNot 残候補も gate 済 (B07022/B08082=handReveal verb / B08081=reactive
+   negation hook / B08091=recruit / B02002=per-count scaling dyn / B08033=forEach-scene-char setCard verb)。
+   B08090 は complement-enum で出荷済 (caseColorNot/colorNot migration は behavior-invariant cleanup、選択肢B engine扱い)。
+B) **engine additive 続き** (engine session 流儀): scope array化 (B08019) / handReveal verb (B07022/B08082 解禁) /
+   forEach-scene-char setCard (B08033) / removeSetCard UI host-picker (session61 follow-up) /
+   **caseMonoColor の not(caseColorNot) 簡約** (6色 hardcode 除去、振る舞い不変だが shipped 4枚経路ゆえ要 smoke 再gate)。
+   各 impact/risk 評価 → brainstorm→spec→TDD→opus敵対review→FF。
+   ※ caseColor negation「持つ」side は session62 で出荷済 (caseColorNot)。「持たない」side は既存 caseMonoColor。
 C) **MR Phase 2/3/4** (session55 設計): Phase2=UI / Phase3=AI / Phase4=card wave (SOLE 15)。
 D) **auto-docs sync** (軽作業): `.claude/design` hold-aside → `npm run docs` → structure/CHANGELOG/mapping 明示 add → FF push。
 → 開始時にユーザーへ方向確認。
