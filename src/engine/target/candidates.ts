@@ -25,7 +25,11 @@ let _inContinuousDelta = false;
 export function registerContinuousDelta(fn: ContinuousDeltaFn): void {
   continuousDeltaImpl = fn;
 }
-function continuousDeltaSafe(s: GameState, uid: string | undefined, which: 'apDelta' | 'lpDelta' | 'lvlDelta'): number {
+// BUG-157 (2026-06-27): read.char.ap/lp/level も本 guarded wrapper 経由で continuousDelta を読むため export。
+// read.char は従来 local continuousDelta を直呼びしていた (無 guard entry) → continuous apDelta(gated lpAtLeast)
+// ⇄ lpDelta(gated apAtLeast) 等で無限相互再帰 (stack overflow)。本 wrapper 経由で matchOneFilter と同 posture
+// (再入時 base 0 で depth-2 終端) に統一する。
+export function continuousDeltaSafe(s: GameState, uid: string | undefined, which: 'apDelta' | 'lpDelta' | 'lvlDelta'): number {
   if (continuousDeltaImpl === null || _inContinuousDelta || uid === undefined) return 0;
   _inContinuousDelta = true;
   try {

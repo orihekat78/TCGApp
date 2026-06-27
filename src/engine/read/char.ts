@@ -9,7 +9,7 @@ import { evalDyn } from '../dyn/eval.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
 // cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
-import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, matchOneFilter } from '../target/candidates.js';
+import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -122,7 +122,7 @@ function ap(s: GameState, uid: string): number {
   // engine拡張 wave#2 cluster3 (2026-06-13): scope:'action' (「アクション終了時まで」B03097/B08048)。
   // 清掃は clearTurnEffects('action') (action-end 2経路) + turn-end safety net (rules/08 §6-7)。
   const modAction    = (char.turnEffects['apMod_action']    as number | undefined) ?? 0;
-  const modContinuous = continuousDelta(s, uid, 'apDelta');
+  const modContinuous = continuousDeltaSafe(s, uid, 'apDelta'); // BUG-157: 再入 guard 経由 (無限相互再帰防止)
   const modAura = auraDeltaSafe(s, uid, 'apDeltaAura'); // cluster13: 他キャラ aura (guard 付き)
   return base + modPermanent + modTurn + modContact + modAction + modContinuous + modAura;
 }
@@ -137,7 +137,7 @@ function lp(s: GameState, uid: string): number {
   const modTurn      = (char.turnEffects['lpMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
   const modAction    = (char.turnEffects['lpMod_action']    as number | undefined) ?? 0;
-  const modContinuous = continuousDelta(s, uid, 'lpDelta');
+  const modContinuous = continuousDeltaSafe(s, uid, 'lpDelta'); // BUG-157: 再入 guard 経由 (無限相互再帰防止)
   const modAura = auraDeltaSafe(s, uid, 'lpDeltaAura'); // cluster13: 他キャラ aura (guard 付き)
   return base + modPermanent + modTurn + modContact + modAction + modContinuous + modAura;
 }
@@ -156,7 +156,8 @@ function level(s: GameState, uid: string): number {
   const modAction    = (char.turnEffects['lvlMod_action']    as number | undefined) ?? 0;
   // engine additive wave (2026-06-24): continuous lvlDelta (条件付き継続レベル修正) を合算 (ap/lp と対称)。
   // 不在時 +0。再帰は continuousDeltaSafe (candidates) の _inContinuousDelta guard が depth-2 で 0 化し終端。
-  const modContinuous = continuousDelta(s, uid, 'lvlDelta');
+  // BUG-157 (2026-06-27): ap/lp と対称に guard 経由へ統一 (旧 local 直呼びは無 guard entry だった)。
+  const modContinuous = continuousDeltaSafe(s, uid, 'lvlDelta');
   return base + modPermanent + modTurn + modContact + modAction + modContinuous;
 }
 

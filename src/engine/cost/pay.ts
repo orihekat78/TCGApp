@@ -40,17 +40,29 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       acc.paidItems.push({ kind: 'sleepSelf', details: { uid } });
       return;
     }
+    // BUG-156 修正 (2026-06-27): 旧実装は `targets = ctx.picked ?? cands` を全件 sleep していた。
+    //   ctx.picked は cost 経路で production 未配線 (UI/AI が surface する cost picker は flipFaceUpEvidence
+    //   のみ、ctx.picked は全 cost で dead) → cands=候補全 active 一致を sleep し、cost.target.n.max を
+    //   honor せず 2+ active 候補で全 sleep (rules/15「1枚」違反 = over-pay)。
+    //   stunChar (下記 case) と完全同形に是正: n.max cap + active gate + head-fixed。
+    //   (1) active gate — canPay が ≥1 active を要求 (evaluate.ts sleepChar) ゆえ pay 時 active 保証。
+    //       非 active cand は元々 setState(sleep) が no-op (sleep=同状態 / stun=rules/03 でスタン維持) → skip しても挙動不変。
+    //   (2) maxN — ctx.picked 配線後はその選択を優先 (Infinity)、未配線時は pick の n.max ぶんだけ sleep。
+    //   「どの active を sleep するか」の player-choice は全 target-pick cost 共通の pre-existing 制約 (別 initiative)。
     case 'sleepChar': {
       const cands = candidates(state, cost.target, ctx);
-      // Sleep all (or per pick semantics — caller supplies picked via ctx.picked
-      // for pick refs; for simplicity here we sleep all available active ones if
-      // no explicit picked override. In practice, the Effect runner sets ctx.picked
-      // before invoking cost.pay; we honor it when present.)
       const targets = ctx.picked ?? cands;
+      const maxN = ctx.picked ? Infinity : (cost.target.kind === 'pick' ? cost.target.n.max : Infinity);
+      let slept = 0;
       for (const cand of targets) {
+        if (slept >= maxN) break;
         if (cand.kind !== 'char') continue;
+        const c = state.players.self.scene.find(x => x.uid === cand.uid)
+          ?? state.players.opp.scene.find(x => x.uid === cand.uid);
+        if (!c || c.state !== 'active') continue;
         mutate.scene.setState(state, cand.uid, 'sleep');
         acc.paidItems.push({ kind: 'sleepChar', details: { uid: cand.uid } });
+        slept++;
       }
       return;
     }
