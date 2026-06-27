@@ -9,7 +9,12 @@
 
 ## 現在地 (2026-06-27、セッション60 完了)
 - ★開始時に `git ls-remote origin main` で remote HEAD 確認 + `gh run list -L1` で CI green 確認。
-- **main = 4ff83ba9** (engine additive colorNot filter、★最新tip) ← f935f505 (chore NEXT-PROMPT) ← 93eaef93 (card wave engine-unlocked-0624) ← dbbf434e (engine removeSetCard cost)。
+- **main = e41a8bb1** (★最新tip: card wave novel-tail-0627 — green候補 6枚 engine変更0、並行 card session が出荷) ← 16cd4a84 (BUG-159 doc) ← 84fc2bb3 (BUG-159 B02010 colorNot) ← 4ff83ba9 (engine additive colorNot filter) ← f935f505。
+  ⚠ 並行 **engine session** が BUG-156/157 cost recursion を WIP 中 (src/engine/cost/pay.ts・read/char.ts・target/candidates.ts が working tree で M、未 commit)。別 branch 作業は git worktree 必須。
+- **card wave novel-tail-0627 (2026-06-27、別 card session 出荷)**: certify(16)+opus敵対verify→verified-ok 6枚
+  (D07018/B02008/B07024/B02073/D02005/PR036)。D02005 は a2 hirameki uid:'$pick' 欠落を補修(BUG-140)。
+  yellow10+B06058 自己review DEFER は DEFERRED-INDEX「wave novel-tail-0627 由来」。
+  ★**B07048 白馬探 = READY 未出荷** (a2 cost=removeSetCard n2 解禁済の初実装候補、codegen非対応→手author+専用test の focused follow-up)。
   ⚠ 4ff83ba9 = **engine 変更あり (additive)**。push 後 CI in_progress (run 28289011611) → **開始時に green 確定を確認**。
 - branch `engine/additive-colornot-filter-0627` = main 一致。
 - 自 commit は `git add <自ファイル>` 明示・`git diff --cached --name-only` で混入確認 (NOT -A)。別 branch 作業は git worktree。
