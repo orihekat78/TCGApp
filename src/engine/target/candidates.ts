@@ -291,6 +291,15 @@ export function matchOneFilter(
     if (!wants.some(w => colors.includes(w))) return false;
   }
 
+  // engine additive (2026-06-27): colorNot (「【X】以外の色を持つ」) — 公式 B08079 裁定で some説。
+  // X以外の色を1つでも持てば該当 (mono-X のみ除外、2色{X,Y} は Y を持つので該当)。等価: 全色が
+  // notSet 内のとき除外。cardNameNot の any-match 除外とは非対称 — boundMatchesFilter / predicate と同式。
+  if (filter.colorNot !== undefined) {
+    const nots = Array.isArray(filter.colorNot) ? filter.colorNot : [filter.colorNot];
+    const colors = d?.colors ?? [];
+    if (!colors.some(c => !nots.includes(c))) return false;
+  }
+
   if (filter.keyword !== undefined) {
     const wants = Array.isArray(filter.keyword) ? filter.keyword : [filter.keyword];
     // BUG-122: keyword は通常 keywords[] に入るが、アイコン能力 (カットイン / 変装 / ヒラメキ /

@@ -293,6 +293,13 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
         const colors = d?.colors ?? [];
         if (!wants.some(w => colors.includes(w))) return false;
       }
+      // engine additive (2026-06-27): colorNot (「【X】以外の色を持つ」) — matchOneFilter /
+      // targetFilterToPredicate と同式 (3経路 sync)。some説 (公式 B08079): 全色が notSet 内のとき除外。
+      if (f.colorNot !== undefined) {
+        const nots = Array.isArray(f.colorNot) ? f.colorNot : [f.colorNot];
+        const colors = d?.colors ?? [];
+        if (!colors.some(c => !nots.includes(c))) return false;
+      }
       if (f.levelMin !== undefined && (d?.level ?? 0) < f.levelMin) return false;
       if (f.levelMax !== undefined && (d?.level ?? 0) > f.levelMax) return false;
       // wave#2 cluster2 (2026-06-12): keyword/kind/ap/lp が silent drop されていた (BUG-117/118 同型、

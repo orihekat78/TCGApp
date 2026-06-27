@@ -119,6 +119,11 @@ export type TargetFilter = {
   cardNameNot?: string | string[];
   trait?: string | string[];
   color?: string | string[];
+  // engine additive (2026-06-27): 色 NEGATION (「【X】以外の色を持つ」)。公式 B08079 裁定で some説確定:
+  // 「X以外の色を1つ以上持つ」(= colors.some(c => c∉notSet))。mono-X は除外、2色{X,Y} は該当 (Y を持つ)。
+  // 等価: 全色が notSet 内のとき除外。⚠ cardNameNot (any-match 除外) とは非対称 — 2色で分岐する。
+  // honor 経路 = matchOneFilter / boundMatchesFilter / targetFilterToPredicate の3 filter-eval サイト。
+  colorNot?: string | string[];
   keyword?: string | string[];
   // BUG-118: カード種別 filter ('character' | 'event')。deckRevealUntil (targetFilterToPredicate) は
   // 元から評価していたが matchOneFilter (target pick 経路) が未評価だったため型に昇格して両経路で honored 化。

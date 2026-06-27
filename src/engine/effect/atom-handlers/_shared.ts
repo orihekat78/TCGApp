@@ -82,6 +82,12 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
       const wants = Array.isArray(filter.color) ? filter.color : [filter.color];
       if (!wants.some(w => d.colors.includes(w))) return false;
     }
+    // engine additive (2026-06-27): colorNot (「【X】以外の色を持つ」) — matchOneFilter /
+    // boundMatchesFilter と同式 (3経路 sync)。some説 (公式 B08079): 全色が notSet 内のとき除外。
+    if (filter.colorNot !== undefined) {
+      const nots = Array.isArray(filter.colorNot) ? filter.colorNot : [filter.colorNot];
+      if (!d.colors.some(c => !nots.includes(c))) return false;
+    }
     if (filter.trait !== undefined) {
       const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
       if (!wants.some(w => d.traits?.includes(w))) return false;
