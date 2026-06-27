@@ -6,19 +6,18 @@
 //   【ヒラメキ】（証拠からリムーブされるときに発動する）カードを1枚引く。
 //
 // a1: 【宣言】【ターン1】(cost なし) → 【青】以外の色を持つキャラを1枚まで選び AP＋2000 (ターン終了まで)
-//     「【青】以外の色を持つ」= 青 を含まない色構成 → TargetFilter.custom で colors.includes('青')===false を判定 (D11005 同型 engine read)。
+//     「【青】以外の色を持つ」= some説 (公式 B08079: 2色{青,X}も「青以外の色を持つ」を満たす) → TargetFilter.colorNot:'青'
+//     (2026-06-27 engine 追加)。旧 custom closure `!colors.includes('青')` は none説で 2色対象を誤除外していた (BUG-159 修正)。
 // a2: 【ヒラメキ】(evidence:remove-by-action optional) → 1ドロー — D08013 a2 同型
 
-import type { AbilityDef, CardDef, GameState } from '@/engine/types';
-import type { Candidate } from '@/engine/types';
-import { engine } from '@/engine';
+import type { AbilityDef, CardDef } from '@/engine/types';
 
 const a1: AbilityDef = {
   id: 'a1',
   type: 'declared',
   scope: 'on-scene',
   limit: { kind: 'turn', n: 1 },
-  // 【青】以外の色を持つキャラを1枚まで選び、ターン終了時までAP＋2000する (青 を含まないキャラに限定)
+  // 【青】以外の色を持つキャラを1枚まで選び、ターン終了時までAP＋2000する (青以外の色を1つ以上持つ = some説)
   effect: {
     kind: 'atom',
     verb: 'charModifyAP',
@@ -27,13 +26,7 @@ const a1: AbilityDef = {
       max: 1,
       side: 'either',
       scope: 'turn',
-      filter: {
-        custom: (_s: GameState, cand: Candidate) => {
-          if (cand.kind !== 'char') return false;
-          const def = engine.cards.get(cand.cardId);
-          return !!def && !def.colors.includes('青');
-        },
-      },
+      filter: { colorNot: '青' },
     },
   },
   description: '【宣言】【ターン1】[青]以外の色を持つキャラを1枚まで選び、ターン終了時までAP＋2000。',
