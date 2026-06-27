@@ -70,3 +70,10 @@ B) MR Phase2-4 / C) カード追加 (B08023/B08050/B08059/B08004 解放済) / D)
 - **B07048 白馬探 = READY 未出荷**: a2 cost=removeSetCard n2 (session59 解禁) の初実装候補。codegen 非対応→手author要。
 - gate: tsc0 / wave test 9pass (構造1対1 6枚 + B02008 enter decoy gating) / smoke winsA=498 不変 / 8lint 0 /
   playwright app-load console err 0。⚠ 並行 session BUG-156/157 WIP (char.ts/pay.ts/candidates.ts M + 偽fail test) は orthogonal、自commit不含。
+
+## 2026-06-27 セッション61 — wave colornot-removeset-0627 (engine変更0、3 printings)
+- 出荷: **B07012/B07012P** (本堂瑛祐, colorNot を sceneHas条件+hirameki filter で使用、sceneToDeck opp Lv4以下 / handAddFromRemove 高校生+青以外) +
+  **B07048** (白馬探, charSetCard $self + **removeSetCard cost 初 production**, draw1+discard1)。session60(colorNot)+session59(removeSetCard) を実カードで de-risk。
+- 全 atom/cond/cost/filter は proven shipped。engine src 変更0 (smoke winsA=498 不変で機械保証)。
+- gate: tsc0 / wave test 17pass (構造1対1 + colorNot matchOneFilter decoy + sceneHas/解決編 evalCond + removeSetCard canPay) / vitest 3149 / 8lint err0。
+- opus 4-lens 敵対 review **全 ship:true blocker0**。concern 2 反映: ①解決編 gate の evalCond test 追加 ②removeSetCard UI host-picker gap を DEFERRED-INDEX 記録 (human=self-scene順fallback、sceneToDeckBottom precedent一致、非ブロッカー)。
