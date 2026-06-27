@@ -989,6 +989,13 @@ import { B09063 } from '../ct-p09/B09063.js';
 import { B09066 } from '../ct-p09/B09066.js';
 import { D01008 } from '../ct-d01/D01008.js';
 
+import { B02008 } from '../ct-p02/B02008.js';
+import { B02073 } from '../ct-p02/B02073.js';
+import { B07024 } from '../ct-p07/B07024.js';
+import { D07018 } from '../ct-d07/D07018.js';
+import { D02005 } from '../ct-d02/D02005.js';
+import { PR036 } from '../pr-01/PR036.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1225,4 +1232,8 @@ export const REUSE_CARDS: CardDef[] = [
   B08075, B08075P,
   // Task A batch
   B08092, B02033, B03095, B04019, B04079, B05014, B09063, B09066, D01008,
+  // Task A batch
+  B02008, B02073, B07024, D07018,
+  // Task A batch
+  D02005, PR036,
 ];

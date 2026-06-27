@@ -581,3 +581,28 @@ classify(59)→certify+adversarial-verify(15) で **refuted 3 + yellow 3** を D
 | B09050 (char, 全体) | 【宣言】cost「手札を1枚リムーブ」で除去したカードの **レベルを後続 pick の levelMax へ渡す cost-relative dynamic filter** が不在。removeFromHand cost は costPaid を書かず (flipFaceUpEvidence のみ)、$cost.removeFromHand.level は undefined→throw。主能力ゆえ全体 DEFER | removeFromHand cost の costPaid 記録 + filter への relative-level 注入 (engine) |
 | B09096 (char, 全体) | 対象 filter「このキャラと同じAPのキャラ」= self の実効AP に等しい **relative AP filter**。TargetFilter.apMin/apMax は number 静的のみ ({dyn:'$self.ap'} 不可、matchOneFilter で literalize する経路なし)。主能力ゆえ全体 DEFER | TargetFilter.apMin/apMax の {dyn} 受理 + matchOneFilter での $self.ap literalize (engine) |
 | B08035 (char, 全体) | a1【解決編】【登場時】「相手キャラ1枚選び、sleep→stun / active→sleep」= **pick した そのキャラの現状態で適用 state を分岐**する per-picked-target conditional state transform が不在 (sceneSetState 短縮は全 pick に固定 state、charStateIs ref:'pick' は .some で全候補判定=「そのキャラ」不成立、decoy 誤路)。a2 は green。a1 ゆえ全体 DEFER | pick-then-branch-on-picked-state primitive (engine) |
+
+## wave novel-tail-0627 由来 (2026-06-27)
+
+certify(16) + opus 敵対verify → verified-ok green **6枚出荷** (D07018/B02008/B07024/B02073/D02005/PR036、changelog 2026-06-27-04)。
+yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep>.json`。
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B05015 (小嶋元次) | 「相手が〚ミスリード〛したとき」反応 trigger が card-triggerable hook に無い (misread は内部 reasoning:before-add で消費、emit 無)。B09016 と同一 gate | misread-performed hook emit (engine) |
+| B02062 (世良真純) | 「相手の証拠がリムーブされたとき」を in-play char が観測する hook 不在 (evidence:remove-by-action は除去証拠自身の hirameki 専用、evidence:lose は死hook、evidence:gain は自actor視点) | opponent-evidence-removal observer hook (engine) |
+| B03051 (怪盗キッド) | 「デッキの下から1枚手札に加える」= deck-BOTTOM→hand primitive 不在 (deck verb は全て top 側) | deck-bottom retrieval verb (engine) |
+| B09061 (ジェイムズ) / B07022 (沖田総司) | 「手札からN枚公開してもよい(手札に残す)」= hand-reveal-as-gate primitive 不在 (reveal は deckRevealUntil=deck専用)。B07022 は加えて公開手札カードの色分岐 | hand-reveal verb + revealed-hand-card 参照 (engine) |
+| B06025 (ケロ介) | ヒラメキ「リムーブした場合このキャラを登場」= 証拠リムーブ中の自身を現場再登場する primitive 不在 (ctx.source.uid=virtual evidence、sceneEnter は cardId 要求・area:evidence splice 未実装) | evidence-transient self-reenter (engine) |
+| B02002 (江戸川コナン) | 既知 color-not filter gate (wave novel-0624 で既出) + per-非青char AP scaling dyn ($self.sceneColor 不在) | colorNot filter + sceneColor dyn (engine) |
+| B09081 / B05111 / B07099 | revive-from-remove (discard→removeから登場) / 【相手ターン中】現場リムーブ時 revive / 自能力リムーブ時 evidence-flip 各 hook・verb gap (詳細は cache) | 各 hook/verb 追加 (engine) |
+| **B06058 (庄之介)** | certify+verify は green-ok だが**自己review で DEFER**: a1「discardしてもよい。そうした場合 activate」が `chain[discard max1, sceneSetState max1]` で optional gate 喪失 (discard 0 でも activate 発火) + sceneSetState 短縮形 side:'self' が hardcoded 'either' で無視疑い (verify lens 間で判断割れ) | optional+chain 再author + sceneSetState 短縮形 side honor 確認後に再 certify |
+
+### set-card 一族 (removeSetCard cost 解禁 session59 後の直 grounding)
+
+| rep | 状況 / 解禁条件 |
+|-----|------|
+| **B07048 (白馬探)** | ✅ **READY (未出荷)**: a1 charSetCard($self, proven) + a2【パートナー白】【宣言】【ターン1】cost=`removeSetCard n2` (session59 解禁・初実装カード候補) → draw1+discard1。codegen 非対応(新cost)ゆえ手author + 専用test 推奨の focused follow-up |
+| B08033/P (工藤有希子) | DEFER 継続: a2 cost は解禁したが **登場時「現場キャラ1枚につき setCard」= forEach-own-scene-char loop verb 不在** (単一 charSetCard $self のみ proven)。両句 unlock 要 → forEach-char setCard verb (engine) |
+| B08041/P (高橋良一) | 登場時 charSetCard($self, proven) だが a2 が **cost で除去した set card の kind(char/event) で分岐** = cost-removed-card-kind conditional 不在 (裏向きカード kind 参照) → cost-removed-card-kind branch (engine) |
+| PR200/B05075 等 | set-card-count aura (合計2枚以上→突撃) / pick-target setCard / main-phase-start hook 等 別 gate → 各機構追加 (engine) |

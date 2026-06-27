@@ -56,3 +56,17 @@ B) MR Phase2-4 / C) カード追加 (B08023/B08050/B08059/B08004 解放済) / D)
   公式順 handAdd→**boundToRemove→discard** に修正 (deck=3 回帰 test 追加)。
 - 教訓: 2 lens が「B02040 同形ゆえ CLEAN」と code-comment 推論で誤判定。**empirical probe を回した lens のみ正答**。
   carrier-reuse は **human 経路実測必須**。最終 gate: tsc0 / vitest 3095 / smoke winsA=498 / 8lint+eslint 0。
+
+## 2026-06-27 card wave novel-tail-0627 (engine変更0、6枚出荷)
+- 残 green候補 154 を機構別分類 → clean homogeneous クラスタ枯渇 (易 deck-look 出荷済) 確認。
+- single-mechanism 16 rep を wf-certify (opus, SUB=5): green6/verify-ok5/refuted1/yellow10。
+- 出荷6 = D07018 ジン / B02008 阿笠博士 / B07024 ハチ / B02073 上原由衣 / D02005 遠山和葉 / PR036(clone)。
+  全て a2=ヒラメキ (recs の hira 列、certify が拾う)。
+- D02005 refuted→**a2 sceneSetState に uid:'$pick' 追加** (BUG-140、短縮形は hiramekiResolve auto-resolve で no-op、
+  ground truth B03038/D05007 a2 が両方 uid:'$pick' 保持) → opus 再 verify ok → 出荷。
+- **B06058 = 自己review で DEFER** (certify+verify は ok だったが a1 `chain[discard max1, sceneSetState max1]` で
+  「そうした場合」optional gate 喪失 = discard 0 でも activate 発火 + 短縮形 side:'self' hardcode 'either' 疑い)。
+  → certify green-ok でも codegen 前の自己 review が捕捉した好例 ([[feedback-certify-spec-self-review]])。
+- **B07048 白馬探 = READY 未出荷**: a2 cost=removeSetCard n2 (session59 解禁) の初実装候補。codegen 非対応→手author要。
+- gate: tsc0 / wave test 9pass (構造1対1 6枚 + B02008 enter decoy gating) / smoke winsA=498 不変 / 8lint 0 /
+  playwright app-load console err 0。⚠ 並行 session BUG-156/157 WIP (char.ts/pay.ts/candidates.ts M + 偽fail test) は orthogonal、自commit不含。
