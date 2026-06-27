@@ -26,8 +26,10 @@
   targetFilterToPredicate(_shared.ts)。他 TargetFilter consumer は全て matchOneFilter/predicate へ委譲 → 自動 honored (review 確認)。
 - **opus 5-lens 敵対 review = ship:true / blocker 0** (additivity/completeness/semantics/edge 全 CLEAN、test concern 1 を予防テスト3件で解消)。
 - gate 全 green: tsc0 / 新テスト 13 / smoke winsA=498 不変 ex0 / full vitest 3105 pass / 8lint+eslint 0。
-- **副産物 BUG-159 起票**: 出荷済 **B02010(灰原哀)** が同一文言を custom closure `!colors.includes('青')` = **none説**で実装し
-  2色対象を公式違反で誤除外 (review edge lens も独立確認)。migration は別 card-session (behavior変更ゆえ test/smoke 要)。
+- **副産物 BUG-159 → 同 session で修正済 (84fc2bb3)**: 出荷済 **B02010(灰原哀)** が同一文言を custom closure
+  `!colors.includes('青')` = none説で実装し 2色対象を公式違反で誤除外していた (review edge lens も独立確認) →
+  `filter:{colorNot:'青'}` へ migration、card test 4 pass / smoke winsA=498 不変。
+  ⚠ **残**: B08090 の complement-enum (`color:[他5色]`、some説で正だが 6色 hardcode で脆い) の colorNot 統一は別途 (振る舞い不変)。
 - **colorNot 解禁カード** (card session 領分、engine0): B02002/B07012/B08081/B08082/B08090/B08091 等の「【X】以外の色」filter 句。各カードは他句 gate も要確認。
 
 ## 次やること候補 (要ユーザー選択)
