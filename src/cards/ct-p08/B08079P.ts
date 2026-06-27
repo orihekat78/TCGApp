@@ -1,4 +1,4 @@
-// cards/ct-p08/B08079P ピンガ (パラレル) — B08079 と同型 (a3 DEFER)
+// cards/ct-p08/B08079P ピンガ (パラレル) — B08079 と同型 (a1 + a2 + a3、a3 = caseColorNot 宣言remove)
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -29,6 +29,18 @@ const a2: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
+// a3 = B08079 と同型 (絵柄違い・テキスト同一)。caseColorNot:黒 宣言ゲート + sleepSelf + AP8000以下 sceneRemove。
+const a3: AbilityDef = {
+  id: 'a3',
+  type: 'declared',
+  scope: 'on-scene',
+  condition: { kind: 'caseColorNot', color: '黒' },
+  cost: { kind: 'sleepSelf' },
+  effect: { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect', filter: { apMax: 8000 } } },
+  description: '【宣言】【スリープ】：AP8000以下のキャラを1枚まで選び、リムーブする。この能力は自分の事件が【黒】以外の色を持つ場合に宣言できる。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/20-color-and-switch.md', 'rules/21-declared-ability-cost.md'],
+};
+
 export const B08079P: CardDef = {
   id: 'B08079P',
   no: '0915/B08079P',
@@ -39,6 +51,6 @@ export const B08079P: CardDef = {
   traits: ['黒ずくめの組織'], keywords: [],
   rarity: 'SRP',
   imageUrl: '1770878999157246.jpg',
-  abilities: [a1, a2],
+  abilities: [a1, a2, a3],
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
