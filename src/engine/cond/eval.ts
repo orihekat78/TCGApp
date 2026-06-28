@@ -233,6 +233,13 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }).length;
       return count >= cond.n;
     }
+    // engine additive: removeCountAtLeast — リムーブエリアの総枚数 (filter 無し) が n 以上か (B03104)。
+    // removeColor/Trait/NameAtLeast の unfiltered 版。使用中イベント自身は未だ remove に無いため
+    // 数えない (B03104 qAndA と整合 — 効果解決時点で remove に置かれていない)。
+    case 'removeCountAtLeast': {
+      const p = resolvePlayer(cond.player, ctx);
+      return state.players[p].remove.length >= cond.n;
+    }
     case 'stackedCountAtLeast': {
       const uids = resolveCharsForRef(state, cond.ref, ctx);
       return uids.some(uid => charRead.stackedCount(state, uid) >= cond.n);
@@ -468,7 +475,7 @@ const CONDITION_KIND_MAP = {
   fileTopType: true,
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
-  removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true,
+  removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true, removeCountAtLeast: true,
   stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,

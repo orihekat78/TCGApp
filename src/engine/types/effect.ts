@@ -52,6 +52,9 @@ export type Condition =
   | { kind: 'removeColorAtLeast'; player: 'self' | 'opp'; color: string | string[]; n: number }
   | { kind: 'removeTraitAtLeast'; player: 'self' | 'opp'; trait: string | string[]; n: number }
   | { kind: 'removeNameAtLeast'; player: 'self' | 'opp'; cardName: string | string[]; n: number }
+  // engine additive: removeCountAtLeast — リムーブエリアの **総枚数** (filter 無し) が n 以上か (B03104
+  // 「リムーブエリアにカードが15枚以上ある場合」)。removeColor/Trait/NameAtLeast の unfiltered 版。
+  | { kind: 'removeCountAtLeast'; player: 'self' | 'opp'; n: number }
   | { kind: 'stackedCountAtLeast'; ref: TargetingRef; n: number }
   // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態 (active/sleep/stun) 判定。
   // 「このキャラをスリープさせ(…)てもよい。そうした場合…」を already-sleep で gate するための条件
@@ -205,6 +208,10 @@ export type AtomVerb =
   // atomDiscard の clone から mutate.hand.discardToRemove を除去したもの。0枚 reveal で chainStepNoApply を
   // 立て「そうした場合」を gate (mill gate と同型、reveal は他効果ゼロゆえ無条件 gate-on-0)。PB pick (defaultArea 'hand')。
   | 'handReveal'
+  // engine additive: discardRandom — 手札からランダムに n 枚リムーブする (B01077「相手は手札を1枚
+  // ランダムにリムーブする」)。公式 QA: 相手が選べず確率均等な方法。pick を持たない (ランダム選択 =
+  // プレイヤー choice 不要)。ctx.rng で決定的 (smoke 再現性)。既存カードは未使用 → baseline 不変。
+  | 'discardRandom'
   | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise' | 'sceneToHand'
   // Task D E2 (2026-06-12): 現場キャラを所有者のデッキ下/上へ移す (sceneToHand 同型 PA 短縮形)。
   // rules: 09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 16 (set/stacked はリムーブ)

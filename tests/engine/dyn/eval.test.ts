@@ -157,6 +157,42 @@ describe('engine.dyn.eval', () => {
       const s = createEmptyGameState();
       expect(() => evalDyn(s, '$self.setCardCount', makeCtx())).toThrow(/source\.uid/);
     });
+
+    // engine additive: $self.stackedCount — このキャラの下に重なっているカード枚数 (rules/16)。
+    // B06006 a2「【自分ターン中】このキャラの下に重なっているカード1枚につき AP+1000」用。
+    // ⚠ stackedCards は number field (setCards: SetCardEntry[] とは別フィールド = 重ね≠セット rules/16)。
+    it('$self.stackedCount counts this char\'s stacked cards (B06006 a2)', () => {
+      registerCardDef(defOf({ id: 'C001', ap: 4000 }));
+      const s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 'u1', cardId: 'C001', stackedCards: 2 }),
+      ]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      expect(evalDyn(s, '$self.stackedCount', ctx)).toBe(2);
+      expect(evalDyn(s, '$self.stackedCount * 1000', ctx)).toBe(2000);
+    });
+
+    it('$self.stackedCount is 0 when the char has no stacked cards', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      const s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'u1', cardId: 'C001' })]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      expect(evalDyn(s, '$self.stackedCount', ctx)).toBe(0);
+    });
+
+    it('$self.stackedCount counts only the source char (not other chars, not setCards)', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      const s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 'u1', cardId: 'C001', stackedCards: 1, setCards: [{ cardId: 'x', faceUp: false }, { cardId: 'y', faceUp: false }] }),
+        makeChar({ uid: 'u2', cardId: 'C001', stackedCards: 5 }),
+      ]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      // u1 has 1 stacked card; u2's 5 stackedCards + u1's 2 setCards must NOT count.
+      expect(evalDyn(s, '$self.stackedCount', ctx)).toBe(1);
+    });
+
+    it('throws when $self.stackedCount requested with no uid', () => {
+      const s = createEmptyGameState();
+      expect(() => evalDyn(s, '$self.stackedCount', makeCtx())).toThrow(/source\.uid/);
+    });
   });
 
   describe('$contact', () => {

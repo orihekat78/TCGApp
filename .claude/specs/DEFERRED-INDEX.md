@@ -98,6 +98,29 @@ mechanical 等価。opus 3-lens 敵対 review (worktree 直読) = 全 ship。cor
 (2) 明示 target 配列 + n:N (a.target!==undefined ゆえ gate 素通り) / (3) `n≥2 + bind` (AI drain collapse で bind 1枚) /
 (4) filter 内 `{dyn}` + n:N (gate は resolveTargetFilterDyn を通さず raw filter で count、availN 誤算)。
 
+## §engine-additive-trio — 小粒 additive 3件 出荷 (2026-06-28, engine/relative-ap-random-removal)
+
+colorNot/handReveal と同方針 (挙動不変・既存カード未使用) の純 additive 3件を engine-only 出荷。
+各々 1カードの blocked 句を完全解禁。opus 3-lens 敵対 review (semantic/additivity/edge、worktree 直読)。
+tsc0 / vitest 3305 / smoke winsA=498 不変 / 8lint errors=0。
+
+| additive | 機構 | 解禁カード (card session で出荷) |
+|----------|------|------------------------------|
+| `$self.stackedCount` dyn | resolveSelf に case 追加 (`scene.byUid(uid)?.stackedCards ?? 0`、static field) | B06006 a2「下に重なるカード1枚につき AP+1000」 |
+| `discardRandom` atom verb | ctx.rng で hand を Fisher-Yates → 先頭 k=min(n,len) を discardToRemove。pick 無し (ランダム=選択不要) | B01077「相手は手札を1枚ランダムにリムーブする」 |
+| `removeCountAtLeast` condition | `remove.length >= n` (filter 無し total)。removeColor/Trait/NameAtLeast の unfiltered 版 | B03104「リムーブエリアにカードが15枚以上ある場合」 |
+
+⚠ **B03104 card 出荷時の既知 off-by-one** (semantic lens 指摘、engine additive 由来でない): event は
+`hand-use-card.ts` で effect 解決 **前** に remove へ移される (`mutate.remove.add`) ため、効果解決中の
+`removeCountAtLeast` 評価で **使用中イベント自身が +1 カウント**される (B03104 qAndA「使用中イベントは数えない」に
++1 違反)。これは event-lifecycle の **pre-existing** 挙動で、既存出荷 D11019 (removeColorAtLeast{黄,n:20}) が
+同型露出を持つ。removeCountAtLeast 単体の語義 (total count) は正しい。B03104 card session では D11019 precedent に
+従うか、event-lifecycle 補正 (解決中イベントを count 除外 / remove.add を効果解決後へ遅延) を engine-wide で検討。
+
+⚠ 出荷したのは **engine 機構のみ**。各カード本体は別 card session で authoring + Playwright human-path probe
+(discardRandom は AI/human 経路の実機確認、[[feedback-carrier-reuse-human-path-empirical]]) を経て出荷する。
+relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判明、上記カード defer 表参照)。
+
 ## 運用
 
 - 新規 defer が発生したら本ファイルに追加 + 該当 BUG-XXX.md または spec doc に
@@ -611,7 +634,7 @@ classify(59)→certify+adversarial-verify(15) で **refuted 3 + yellow 3** を D
 | B01012 (char, 全体) | 「(能力で)〚少年探偵団〛のキャラが登場したとき、**その中から1枚**をアクティブにし〚迅速〛を与える」= 同一解決で同時登場したキャラ集合からの **group-scoped 1-of-N choice** が engine 不在 (enter hook は登場キャラ毎に独立発火、multiset 選択 primitive なし)。主能力ゆえ全体 DEFER | same-resolution 同時登場 char 集合からの 1-of-N pick primitive (engine) |
 | B02002 (char, 全体) | a1/a2 の filter「【青】以外の色」= **color-not (色除外) filter** が engine 不在 (TargetFilter は cardNameNot のみ、colorNot 無)。certify spec が捏造 key `__custom_color_not` を埋め込み adversarial verify が fatal 検出。主能力ゆえ全体 DEFER | TargetFilter に colorNot (色除外) 追加 (engine) |
 | B09050 (char, 全体) | 【宣言】cost「手札を1枚リムーブ」で除去したカードの **レベルを後続 pick の levelMax へ渡す cost-relative dynamic filter** が不在。removeFromHand cost は costPaid を書かず (flipFaceUpEvidence のみ)、$cost.removeFromHand.level は undefined→throw。主能力ゆえ全体 DEFER | removeFromHand cost の costPaid 記録 + filter への relative-level 注入 (engine) |
-| B09096 (char, 全体) | 対象 filter「このキャラと同じAPのキャラ」= self の実効AP に等しい **relative AP filter**。TargetFilter.apMin/apMax は number 静的のみ ({dyn:'$self.ap'} 不可、matchOneFilter で literalize する経路なし)。主能力ゆえ全体 DEFER | TargetFilter.apMin/apMax の {dyn} 受理 + matchOneFilter での $self.ap literalize (engine) |
+| ~~B09096 (char, 全体)~~ | ✅ **stale 訂正 (2026-06-28): engine変更0 で出荷可能 (card task)**。「matchOneFilter で literalize 経路なし」は誤り — pick query filter の `{dyn}` は `resolve-picks.ts:108 resolveFilterDynObj` (**field-agnostic**: filter 全 key を walk し `{dyn:string}` を evalDyn) が列挙前に解決する (cluster12 で levelMax 用に追加、apMin/apMax も同経路で被覆)。`$self.ap` dyn は実効AP (continuous-aware)、候補 AP も matchOneFilter で実効値 → 解決時点で一致 (B09096 qAndA 整合)。probe (sceneRemove filter:{apMin/apMax:{dyn:'$self.ap'}}) で同AP除去/非一致残存を実機確認済。**残 = カード authoring のみ** (filter は atom args=untyped 経由で {dyn} 記述可) | engine変更0 (card session で出荷) |
 | B08035 (char, 全体) | a1【解決編】【登場時】「相手キャラ1枚選び、sleep→stun / active→sleep」= **pick した そのキャラの現状態で適用 state を分岐**する per-picked-target conditional state transform が不在 (sceneSetState 短縮は全 pick に固定 state、charStateIs ref:'pick' は .some で全候補判定=「そのキャラ」不成立、decoy 誤路)。a2 は green。a1 ゆえ全体 DEFER | pick-then-branch-on-picked-state primitive (engine) |
 
 ## wave novel-tail-0627 由来 (2026-06-27)
@@ -646,7 +669,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 
 | rep | DEFER 理由 (engine gap、実コード grounded) | 解禁条件 |
 |-----|----------------------|---------|
-| B06006 (江戸川コナン) | **a1(突撃@解決編)+a3(登場時deck-remove+stack from remove)=GREEN**, a2「下に重なるカード1枚につき AP+1000」のみ `$self.stackedCount` dyn 欠 (resolveSelf props に stackedCount 無、setCardCount は別フィールド=セット≠重ね rules/16)。**最有望 near-miss** | `$self.stackedCount` dyn token 追加 (session64 `$self.setCardCount` 同型、scene.byUid(uid).stackedCards 読み) |
+| ~~B06006 (江戸川コナン)~~ | ✅ **engine 解禁 (2026-06-28、engine/relative-ap-random-removal)**: `$self.stackedCount` dyn token を resolveSelf に追加 (`scene.byUid(uid)?.stackedCards ?? 0`、session64 `$self.setCardCount` 同型・static field 読み)。a2「下に重なるカード1枚につき AP+1000」= `continuousModifier{apDelta:{dyn:'$self.stackedCount * 1000'}}` で表現可。a1+a3 既GREEN → **全句 buildable (card session で出荷)** | engine変更0 (card session で出荷) |
 | B05115 (弁崎素江) | 「相手の能力/効果で手札からこのカードがリムーブされたとき」= hand-leave 反応 hook 不在 (HookName に leave:from-hand 無、hand discard は silent mutation、手札カードは collectCardsInPlay 非走査) | hand-removal observer hook + source-attribution (engine) |
 | B06023 / B06034 (金棒博士/鬼丸城) | hirameki-trigger-from-flip: cost flipFaceUpEvidence は count のみ記録 (flipカード identity 破棄)、flip契機 hook 不在、別カードの【ヒラメキ】効果を起動する verb 不在 (hirameki は evidence:remove-by-action 専属) | flip-evidence hook + cross-card hirameki invoke verb (engine) |
 | B06026 (コウモリ男) | a1/a3 green。a2 selfToEvidence の character-leave 経路が gainCard idx===-1 で push-anyway → カード自身 Q&A「解決前にリムーブエリアを離れたら証拠化不可」に反する (全 shipped selfToEvidence は event=同期解決でこの分岐未踏) | gainCard idx===-1 で gain しない harden (engine) |

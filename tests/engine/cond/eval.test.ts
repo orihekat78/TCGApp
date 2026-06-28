@@ -308,6 +308,29 @@ describe('engine.cond.eval', () => {
     });
   });
 
+  describe('removeCountAtLeast', () => {
+    it('counts the whole remove pile regardless of card identity (B03104)', () => {
+      registerCardDef(defOf({ id: 'A', colors: ['黄'] }));
+      registerCardDef(defOf({ id: 'B', colors: ['青'], traits: ['探偵'] }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, remove: ['A', 'B', 'A', 'B', 'A'] } } };
+      expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'self', n: 5 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'self', n: 6 }, makeCtx())).toBe(false);
+    });
+    it('is false when the pile is short; n:0 is vacuously true', () => {
+      const s = createEmptyGameState();
+      expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'self', n: 1 }, makeCtx())).toBe(false);
+      expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'self', n: 0 }, makeCtx())).toBe(true);
+    });
+    it('reads the specified player side (opp)', () => {
+      registerCardDef(defOf({ id: 'A' }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, opp: { ...s.players.opp, remove: ['A', 'A'] } } };
+      expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'opp', n: 2 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'self', n: 1 }, makeCtx())).toBe(false);
+    });
+  });
+
   describe('stackedCountAtLeast', () => {
     it('checks stacked card count', () => {
       let s = createEmptyGameState();

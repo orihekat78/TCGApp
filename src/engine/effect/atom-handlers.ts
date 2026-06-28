@@ -23,6 +23,7 @@ export {
 import {
   atomDraw,
   atomDiscard,
+  atomDiscardRandom,
   atomHandReveal,
   atomMill,
   atomFileAdd,
@@ -111,6 +112,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomDraw(s, a, ctx);
     case 'discard':
       return atomDiscard(s, a, ctx, verb);
+    case 'discardRandom':
+      return atomDiscardRandom(s, a, ctx);
     case 'handReveal':
       return atomHandReveal(s, a, ctx, verb);
     case 'mill':

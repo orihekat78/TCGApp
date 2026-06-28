@@ -15,6 +15,7 @@ const VERBS = new Set([
   'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
   'handToEvidence',
   'handReveal', // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
+  'discardRandom', // engine additive (2026-06-28) — 手札ランダムリムーブ (B01077)
   'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'sceneToDeck', // Task D E2 (2026-06-12)
@@ -47,7 +48,7 @@ const CONDS = new Set([
   'true', 'false', 'not', 'and', 'or', 'turn', 'partnerColor', 'caseColor', 'caseColorNot', 'caseTrait',
   'fileAtLeast', 'caseStatus', 'bond', 'sceneHas', 'apAtLeast', 'lpAtLeast', 'evidenceAtLeast',
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
-  'removeTraitAtLeast', 'removeNameAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
+  'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
   'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'triggerCharMatches',
   // Task D E1 (2026-06-12): hand-count conditions
   'handAtLeast', 'handAtMost', 'handCountAtLeastOther',

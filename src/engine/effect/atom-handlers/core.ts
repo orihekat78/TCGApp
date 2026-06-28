@@ -64,6 +64,38 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       return;
     }
 
+// engine additive: discardRandom — 手札からランダムに n 枚リムーブする (B01077「相手は手札を1枚ランダムに
+// リムーブする」, 公式 QA = 相手が選べず確率均等)。atomDiscard と異なり **pick を持たない** (ランダム =
+// プレイヤー choice 不要) → awaiting-pick 経路なし。ctx.rng (無ければ Math.random) で決定的に選ぶ (deck.shuffle
+// と同式、smoke 再現性)。手札 < n なら可能な限り (rules/15)。zone = hand → remove (discardToRemove)。
+export function atomDiscardRandom(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+  const drP = resolvePlayer(a.player, ctx);
+  const n = requireField<number>(a, 'n', 'number');
+  const hand = s.players[drP].hand;
+  const k = Math.min(n, hand.length);
+  if (k <= 0) {
+    mutate.log.append(s, { ts: Date.now(), player: drP, turn: s.turn.number, action: 'effect:discardRandom', result: '0' });
+    return;
+  }
+  // 手札 cardId 配列のコピーを Fisher-Yates shuffle し先頭 k 枚を選ぶ (均等確率)。重複 cardId は
+  // discardToRemove (hand.remove = indexOf+splice) が1要素につき1インスタンス除去 → count は正確に k。
+  const rand = ctx.rng ?? Math.random;
+  const pool = hand.slice();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const tmp = pool[i];
+    pool[i] = pool[j];
+    pool[j] = tmp;
+  }
+  const picked = pool.slice(0, k);
+  mutate.hand.discardToRemove(s, drP, picked);
+  // BUG-114 同型: リムーブした cardId を bind ($discarded dyn で後続 chain step が参照可能)。
+  if (typeof a.bind === 'string' && picked.length > 0) {
+    (ctx.bindings as Record<string, unknown>)[a.bind] = picked.map((cardId) => ({ cardId }));
+  }
+  mutate.log.append(s, { ts: Date.now(), player: drP, turn: s.turn.number, action: 'effect:discardRandom', result: String(picked.length) });
+}
+
 // engine additive wave (2026-06-28): handReveal — 「手札から filter 一致を1枚公開してもよい。そうした場合〜」
 // (B08082 a1 / B07022)。atomDiscard の clone から mutate.hand.discardToRemove を除去 = zone 変化なし (公開のみ、
 // 公式Q&A: 解決後に手札へ戻してよい)。短縮形 ({player, max, filter}) は discard と同一 pick path
