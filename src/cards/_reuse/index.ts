@@ -1010,6 +1010,9 @@ import { D07018 } from '../ct-d07/D07018.js';
 import { D02005 } from '../ct-d02/D02005.js';
 import { PR036 } from '../pr-01/PR036.js';
 
+import { B03035 } from '../ct-p03/B03035.js';
+import { B04037 } from '../ct-p04/B04037.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1258,4 +1261,6 @@ export const REUSE_CARDS: CardDef[] = [
   //   B09080 高木渉(絆佐藤美和子 突撃grant + aura cardName AP+1000) / PR264/PR270 宮野明美(突撃[キャラ]印字 + 解決編lvlDelta+2 + enter突撃[事件]grant) /
   //   B07104/P ミステリーコースター(sceneRemove + 突撃grant短縮形(BUG-158 fix) + forEach mill) / B03020 毛利蘭(action blind-mill3 → AP+1000)
   B03020, B03023, B06057, B07104, B07104P, B08071, B08091, B09080, PR264, PR270,
+  // Task A batch
+  B03035, B04037,
 ];
