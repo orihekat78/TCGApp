@@ -638,3 +638,26 @@ yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep
 | B08033/P (工藤有希子) | DEFER 継続: a2 cost は解禁したが **登場時「現場キャラ1枚につき setCard」= forEach-own-scene-char loop verb 不在** (単一 charSetCard $self のみ proven)。両句 unlock 要 → forEach-char setCard verb (engine) |
 | B08041/P (高橋良一) | 登場時 charSetCard($self, proven) だが a2 が **cost で除去した set card の kind(char/event) で分岐** = cost-removed-card-kind conditional 不在 (裏向きカード kind 参照) → cost-removed-card-kind branch (engine) |
 | PR200/B05075 等 | set-card-count aura (合計2枚以上→突撃) / pick-target setCard / main-phase-start hook 等 別 gate → 各機構追加 (engine) |
+
+## wave certify-engine0-0628b 由来 (2026-06-28, session66)
+
+certify queue 先頭 15 + 強候補 B05052 を opus grounding→敵対verify。**16/16 全 yellow** (engine変更0 出荷 0)。
+full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到達 (= factory Task6 T0=0 と一致)。
+
+| rep | DEFER 理由 (engine gap、実コード grounded) | 解禁条件 |
+|-----|----------------------|---------|
+| B06006 (江戸川コナン) | **a1(突撃@解決編)+a3(登場時deck-remove+stack from remove)=GREEN**, a2「下に重なるカード1枚につき AP+1000」のみ `$self.stackedCount` dyn 欠 (resolveSelf props に stackedCount 無、setCardCount は別フィールド=セット≠重ね rules/16)。**最有望 near-miss** | `$self.stackedCount` dyn token 追加 (session64 `$self.setCardCount` 同型、scene.byUid(uid).stackedCards 読み) |
+| B05115 (弁崎素江) | 「相手の能力/効果で手札からこのカードがリムーブされたとき」= hand-leave 反応 hook 不在 (HookName に leave:from-hand 無、hand discard は silent mutation、手札カードは collectCardsInPlay 非走査) | hand-removal observer hook + source-attribution (engine) |
+| B06023 / B06034 (金棒博士/鬼丸城) | hirameki-trigger-from-flip: cost flipFaceUpEvidence は count のみ記録 (flipカード identity 破棄)、flip契機 hook 不在、別カードの【ヒラメキ】効果を起動する verb 不在 (hirameki は evidence:remove-by-action 専属) | flip-evidence hook + cross-card hirameki invoke verb (engine) |
+| B06026 (コウモリ男) | a1/a3 green。a2 selfToEvidence の character-leave 経路が gainCard idx===-1 で push-anyway → カード自身 Q&A「解決前にリムーブエリアを離れたら証拠化不可」に反する (全 shipped selfToEvidence は event=同期解決でこの分岐未踏) | gainCard idx===-1 で gain しない harden (engine) |
+| B06027 (カマキリ男等) | hirameki「このキャラをスリープ状態で登場」= 証拠リムーブ中の自身を現場再登場 primitive 不在 (evidence→scene verb 無、replacement 意味論) | evidence-transient self-reenter (engine、B06025 と同族) |
+| B06047 (鉄刃) | (1) 手札カードのレベル-1修正 (hand-use level gate は静的 def.level 読み、ContinuousModifier.lvlDelta は scene-char 専用) (2)「このキャラにカードがセットされたとき」= set-onto-host trigger hook 不在 (setcard:leave のみ) | hand-level modifier + setcard:enter hook (engine) |
+| B07008 (小嶋元太) | (1) 手札カードの per-count level 減 (cross-field UNION count[cardName 阿笠博士 + trait 少年探偵団] dyn 無、$self.sceneCardName 無) (2) in-hand level modifier (同上) | per-count union dyn + hand-level modifier (engine) |
+| B07013 (event 予告状) | sequence の chain-gate continuation 内 $picked carrier-reuse (un-stun を同一 picked stun-char に2回) = 最深 nesting。human dispatch path で rider 喪失の既知 false-green class (BUG-130/158)、要 human-path probe (+ event closure) | carrier-reuse human-path 実証 or event closure |
+| B07096 (ウォッカ) | 突撃[レベル4以下のキャラ] = filtered-突撃 variant (namedExceptionAllowed は exact-string only、組込み target filter付き突撃 grant 不可) + removed-char level filter trigger | filtered-keyword grant (engine) |
+| B08002 (コナン&灰原) | 「リムーブしたキャラのレベルと同じ枚数 mill」= removed-char-stat 動的 mill count (mill は静的 n、evalDyn placeholder に sceneRemove-char level root 無) | removed-char-level dyn (engine) |
+| B08006 (小嶋元太) | (1) cost「手札公開+選んだ青キャラの下に重ねる」= reveal+stack-under-chosen-host cost 不在 (2) hirameki「アクション中のキャラ」= action-context candidate filter 不在 | stack-cost + action-context targeting (engine) |
+| B08019 (大岡紅葉&伊織無我) | cross-side set-card removal の per-side quota (合わせて2枚・各side1枚) + aggregate-conditional draw primitive 不在 | per-side-quota scope-array (engine) |
+| B08041 (高橋良一) | a2 cost で除去した裏向きセットカードの kind(char/event) 分岐 = cost-removed-card-kind conditional 不在 (PayResult を effect ctx に渡さない) | cost-removed-card-kind branch (engine) |
+| B08046 (赤井&ジョディ) | a2「コストでレベル8以上のキャラをリムーブした場合 draw」= cost-removed-card level condition 不在 (removeFromHand は costPaid 不記録) | cost-removed-card-stat condition (engine) |
+| B05052 (工藤優作) | cost-level choice「手札 か セットカード を1枚リムーブ」の human-path branch 選択が UI 非対応 (cost.pay は costChoice 不在時 first-payable auto-pick、人間は set-card branch を選べない) | cost-level choice picker modal (UI/engine) |
