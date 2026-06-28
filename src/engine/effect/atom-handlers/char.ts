@@ -221,12 +221,21 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           return;
         }
         const sscP = resolvePlayer(a.player ?? 'self', ctx);
-        const sscDeck = s.players[sscP].deck;
-        if (sscDeck.length === 0) {
-          mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'empty-deck' });
-          return;
+        // session64 (rules/14, 26 + BUG-142 同族): デッキ0 で「上からセット」する場合、silent no-op ではなく
+        // リフレッシュ後に残りを解決する (公式Q&A B08033「残り全部セット→リフレッシュ→残り分セット」)。
+        // host 存在は上で確認済 → ここで refresh して安全に shift できる (draw/fileAdd/evidenceGain と同型)。
+        // remove も 0 なら refresh 失敗 = deck-out 敗北 (rules/14)。
+        if (s.players[sscP].deck.length === 0) {
+          const r = mutate.deck.refresh(s, sscP);
+          if (!r.ok) {
+            if (s.gameResult === undefined) {
+              mutate.gameResult.set(s, sscP === 'self' ? 'opp' : 'self', 'deck-out');
+            }
+            mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'empty-deck-refresh-fail' });
+            return;
+          }
         }
-        scCardId = sscDeck.shift()!;
+        scCardId = s.players[sscP].deck.shift()!;
       } else {
         scCardId = resolveBindRef(a.cardId, ctx) as string;
         if (typeof scCardId !== 'string' || scCardId.startsWith('$')) return;

@@ -14,7 +14,6 @@ import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { run as runEffect } from '@/engine/effect/resolver';
-import { read } from '@/engine/read/index';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { registerAll } from '@/cards/index';
@@ -99,14 +98,18 @@ describe('wave bug153 — charSetCard host-check 修正 + B05035 解禁', () => 
     expect(s.players.self.deck, '上端は deck から抜けた').toEqual([OTHER]);
   });
 
-  it('BUG-153 empty-deck: host 存在 + deck 空なら何も起きない (従来 empty-deck guard)', () => {
+  it('empty-deck (host 存在 + deck空 + remove空): session64 で refresh 失敗 → deck-out 敗北 (旧 silent no-op を rules/14 faithful 化)', () => {
     let s = selfTurn();
     s.players.self.scene = [sceneChar('B05035', 'present#1')];
     s.players.self.deck = [];
+    s.players.self.remove = [];
     s = produce(s, (d) => {
       runEffect(d, setFromDeckTop('present#1'), ctxFor('B05035', 'present#1'));
     });
-    expect(s.players.self.scene.find((c) => c.uid === 'present#1')!.setCards.length).toBe(0);
+    expect(s.players.self.scene.find((c) => c.uid === 'present#1')!.setCards.length, 'set 不発').toBe(0);
+    // session64: deck0 で refresh を試行 → remove も0 で失敗 → deck-out 敗北 (詳細は
+    // tests/engine/effect/charsetcard-fromdecktop-refresh.test.ts)。
+    expect(s.gameResult?.winner, 'remove も空 → deck-out 敗北 (opp 勝利)').toBe('opp');
   });
 
   // ============================================================
