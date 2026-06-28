@@ -81,12 +81,22 @@ opus 4-lens 敵対 review = 全 ship:true / blocker 0。
 
 ※ handReveal 単独ではカード出荷不可。各カードは上記 companion が残 gate。
 
-⚠ **B09061 は handReveal atom 単独では出荷不可** (2026-06-28 probe で stale 訂正)。a1「FBI キャラを **3枚**公開してもよい。
-そうした場合、引く」=「まで」なしの固定数 (rules/15) だが、handReveal 短縮形 `n:3` (= pick `n:{min:3,max:3}`) は
-**候補 <3 のとき pick が min を all-or-nothing で gate せず、available 全部 (1〜2枚) を公開して count>0 → 後続 draw を over-fire** する
-(probe 再現: `chain[handReveal{player:'self',n:3,filter:{kind:'character',trait:'FBI'}}, draw]` を FBI 2枚 hand で AI drain → draw 発火を確認)。`chainStepNoApply` gate は
-**reveal=0 のときだけ**立つため「<3 でも 1 以上なら draw」になる。trait-filtered hand-count condition も不在 (`handAtLeast` は filter 無し) で
-engine変更0 の回避不能。→ **handReveal exact-N gate** (revealed count < n のとき 0 と同じく chainStepNoApply、e.g. atom arg `exactN:true`) が残 gate。
+### handReveal exact-N gate — ✅ 出荷 (2026-06-28)
+
+短縮形 `n:N` (= pick `{min:N,max:N}`、「N枚公開する」固定数 rules/15「まで」なし=all-or-nothing) で
+手札の filter 一致候補が N 枚未満なら公開不可と判定し `chainStepNoApply` で「そうした場合」後続を gate。
+旧 over-fire (候補<N でも available を公開し count>0 → 後続発火) を塞いだ。判定は **短縮形 entry の候補数**
+(targetCandidates) で行う: drain 経路 (apply-pick generic Pattern B) が resolved target を単一 collapse するため
+resolved length では「<N」検出不可。reveal は zone 不変ゆえ availability さえ満たせば後段の単一 collapse でも
+mechanical 等価。opus 3-lens 敵対 review (worktree 直読) = 全 ship。core.ts atomHandReveal + test §10a-g。
+
+→ **B09061 a1「FBI を3枚公開してもよい。そうした場合引く」は engine変更0 で出荷可能化** (handReveal exact-N + draw
++ 既存 handAddFromRemove ヒラメキ)。「単独解禁可」誤認 → exact-N gate が真の残 gate だった。
+
+⚠ **exact-N gate 未対応 4 組合せ** (B09061=trait filter 単独・bind無・distinctNames無・短縮形ゆえ全て無害、
+将来カードで gate 拡張要): (1) `distinctNames:true + n:N` (候補列挙が distinct 無視で availN 過大計数) /
+(2) 明示 target 配列 + n:N (a.target!==undefined ゆえ gate 素通り) / (3) `n≥2 + bind` (AI drain collapse で bind 1枚) /
+(4) filter 内 `{dyn}` + n:N (gate は resolveTargetFilterDyn を通さず raw filter で count、availN 誤算)。
 
 ## 運用
 

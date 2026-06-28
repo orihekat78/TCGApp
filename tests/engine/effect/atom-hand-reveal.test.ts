@@ -197,3 +197,120 @@ describe('handReveal §9 — 短縮形 → AI pick drain → continuation 下流
     expect(after.players.self.deck).toEqual(['DK2']);
   });
 });
+
+// engine additive (exact-N gate, 2026-06-28): 短縮形 n:N (= pick {min:N,max:N}) は「N枚公開する」=
+// 固定数 (rules/15「N枚」、「まで」なし) = all-or-nothing。手札の filter 一致が N 枚未満なら公開不可 →
+// chainStepNoApply で「そうした場合」を gate する。B09061 a1「FBIキャラを3枚公開してもよい。そうした場合、引く」が
+// 候補<3 で draw を over-fire していた gap を塞ぐ。max:N (「N枚まで」、n.min=0) は従来どおり gate されない。
+// gate は **短縮形 entry の候補数** で判定 (drain 経路は target を単一に collapse するため resolved length 不可信)。
+function fbi(id: string): CardDef { return pchar(id, ['青'], ['FBI']); }
+describe('handReveal §10 — exact-N gate (n:N all-or-nothing, B09061)', () => {
+  const chainN = (n: number): Effect => ({
+    kind: 'chain',
+    steps: [
+      { kind: 'atom', verb: 'handReveal' as never, args: { player: 'self', n, filter: { trait: 'FBI' } } },
+      { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+    ],
+  } as Effect);
+
+  it('§10a 候補2 < n:3 → 公開不可 → 後続 draw skip (over-fire 修正)', () => {
+    const g = globalThis as { __pendingEffectPickQueue?: unknown[] };
+    g.__pendingEffectPickQueue = [];
+    registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2'));
+    const s: GameState = createEmptyGameState();
+    s.players.self.hand = ['FBI1', 'FBI2', 'RED1'];
+    s.players.self.deck = ['DK1', 'DK2'];
+    const after = produce(s, (d) => { runEffect(d, chainN(3), ctxBare()); _drainAllEffectPicksForTest(d); });
+    g.__pendingEffectPickQueue = [];
+    expect(after.players.self.hand).not.toContain('DK1'); // draw されない
+    expect(after.players.self.deck).toEqual(['DK1', 'DK2']);
+  });
+
+  it('§10b 候補3 = n:3 → 公開成立 → 後続 draw 実行 (happy path 保持)', () => {
+    const g = globalThis as { __pendingEffectPickQueue?: unknown[] };
+    g.__pendingEffectPickQueue = [];
+    registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2')); registerCardDef(fbi('FBI3'));
+    const s: GameState = createEmptyGameState();
+    s.players.self.hand = ['FBI1', 'FBI2', 'FBI3'];
+    s.players.self.deck = ['DK1', 'DK2'];
+    const after = produce(s, (d) => { runEffect(d, chainN(3), ctxBare()); _drainAllEffectPicksForTest(d); });
+    g.__pendingEffectPickQueue = [];
+    expect(after.players.self.hand).toContain('DK1'); // 3枚公開可 → draw
+    expect(after.players.self.hand).toContain('FBI1'); // 公開カードは zone 不変で残存
+    expect(after.players.self.deck).toEqual(['DK2']);
+  });
+
+  it('§10c 候補2 < n:3 → 短縮形 entry で chainStepNoApply 即立て + pick enqueue せず', () => {
+    const g = globalThis as { __pendingEffectPickQueue?: unknown[] };
+    g.__pendingEffectPickQueue = [];
+    registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2'));
+    const s: GameState = createEmptyGameState();
+    s.players.self.hand = ['FBI1', 'FBI2', 'RED1'];
+    const ctx = ctxBare();
+    runEffect(s, { kind: 'atom', verb: 'handReveal' as never, args: { player: 'self', n: 3, filter: { trait: 'FBI' } } }, ctx);
+    expect(ctx.dyn?.chainStepNoApply).toBe(true);
+    expect(g.__pendingEffectPickQueue!.length).toBe(0); // 公開不可 = pick 不要
+    expect(s.players.self.hand).toEqual(['FBI1', 'FBI2', 'RED1']); // zone 変化なし
+    g.__pendingEffectPickQueue = [];
+  });
+
+  it('§10e 候補4 > n:3 (super-set) → 公開成立 → draw 実行 (候補>N でも gate されない)', () => {
+    const g = globalThis as { __pendingEffectPickQueue?: unknown[] };
+    g.__pendingEffectPickQueue = [];
+    registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2')); registerCardDef(fbi('FBI3')); registerCardDef(fbi('FBI4'));
+    const s: GameState = createEmptyGameState();
+    s.players.self.hand = ['FBI1', 'FBI2', 'FBI3', 'FBI4'];
+    s.players.self.deck = ['DK1', 'DK2'];
+    const after = produce(s, (d) => { runEffect(d, chainN(3), ctxBare()); _drainAllEffectPicksForTest(d); });
+    g.__pendingEffectPickQueue = [];
+    expect(after.players.self.hand).toContain('DK1'); // 候補4≥3 → 公開可 → draw
+    expect(after.players.self.deck).toEqual(['DK2']);
+  });
+
+  it('§10f 候補0 (手札に FBI なし) で n:3 → gate (chainStepNoApply, draw skip)', () => {
+    const g = globalThis as { __pendingEffectPickQueue?: unknown[] };
+    g.__pendingEffectPickQueue = [];
+    const s: GameState = createEmptyGameState();
+    s.players.self.hand = ['RED1']; // FBI 0枚
+    s.players.self.deck = ['DK1', 'DK2'];
+    const ctx = ctxBare();
+    runEffect(s, chainN(3), ctx);
+    _drainAllEffectPicksForTest(s);
+    expect(ctx.dyn?.chainStepNoApply).toBe(true);
+    expect(g.__pendingEffectPickQueue!.length).toBe(0);
+    expect(s.players.self.hand).not.toContain('DK1'); // draw skip
+    g.__pendingEffectPickQueue = [];
+  });
+
+  it('§10g player:opp — gate は opp 手札を数え self decoy を誤算しない (side 解決)', () => {
+    registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2')); registerCardDef(fbi('FBI3'));
+    const s: GameState = createEmptyGameState();
+    s.players.opp.hand = ['FBI1', 'FBI2', 'RED1'];     // opp FBI 2枚 (< n:3)
+    s.players.self.hand = ['FBI1', 'FBI2', 'FBI3'];    // self FBI 3枚 (decoy、数えてはいけない)
+    const ctx = ctxBare();
+    runEffect(s, { kind: 'atom', verb: 'handReveal' as never, args: { player: 'opp', n: 3, filter: { trait: 'FBI' } } }, ctx);
+    expect(ctx.dyn?.chainStepNoApply).toBe(true); // opp 側 2<3 → gate (self decoy 非カウント)
+  });
+
+  it('§10d 回帰: max:5 (「まで」) は候補<5 でも gate されず (候補2を公開 → draw 実行)', () => {
+    const g = globalThis as { __pendingEffectPickQueue?: unknown[] };
+    g.__pendingEffectPickQueue = [];
+    registerCardDef(fbi('FBI1')); registerCardDef(fbi('FBI2'));
+    const s: GameState = createEmptyGameState();
+    s.players.self.hand = ['FBI1', 'FBI2', 'RED1'];
+    s.players.self.deck = ['DK1', 'DK2'];
+    const after = produce(s, (d) => {
+      runEffect(d, {
+        kind: 'chain',
+        steps: [
+          { kind: 'atom', verb: 'handReveal' as never, args: { player: 'self', max: 5, filter: { trait: 'FBI' } } },
+          { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+        ],
+      } as Effect, ctxBare());
+      _drainAllEffectPicksForTest(d);
+    });
+    g.__pendingEffectPickQueue = [];
+    expect(after.players.self.hand).toContain('DK1'); // max-form は候補<max でも公開成立 → draw
+    expect(after.players.self.deck).toEqual(['DK2']);
+  });
+});

@@ -3,9 +3,10 @@ import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
+import { candidates as targetCandidates } from '../../target/candidates.js';
 import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax } from './_shared.js';
 import type { Player } from './_shared.js';
-import type { GameState, AtomVerb, EffectCtx, FileCard } from '../../types/index.js';
+import type { GameState, AtomVerb, EffectCtx, FileCard, TargetingRef } from '../../types/index.js';
 
 export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // BUG-072: deck.draw が手札への push まで内部で行う + effect 経由の draw を log に残す
@@ -73,6 +74,27 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
       const hrArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handReveal.defaultArea, a, hrP, hrP) }
         : a;
+      // exact-N gate (2026-06-28, B09061 a1): 短縮形 n:N (= pick {min:N,max:N}) は「N枚公開する」=
+      // 固定数 (rules/15「N枚」、「まで」なし) = all-or-nothing。手札の filter 一致が N 枚未満なら
+      // 公開不可 → chainStepNoApply で「そうした場合」を gate。max:N (a.n 不在、n.min=0「N枚まで」) は
+      // 0..N 可ゆえ gate しない (従来の resolved 0枚 gate-on-0 のみ)。
+      // 判定は **短縮形 entry の候補数** で行う: drain 経路 (apply-pick generic Pattern B) は resolved
+      // target を単一に collapse するため resolved length では「<N」を検出できない。reveal は zone 不変
+      // ゆえ availability さえ満たせば後段は単一 collapse でも mechanical に等価 (bind は n:1 のみ load-bearing)。
+      // ★未対応 (B09061=trait filter 単独ゆえ無害、将来カードで注意): (1) distinctNames:true + n:N は
+      //   候補列挙が distinct を無視するため availN を過大計数する (列挙時 distinct enforce 無し)。(2) 明示
+      //   target 配列 + n:N は a.target!==undefined ゆえ本 gate を素通り (resolved gate-on-0 のみ)。(3) n≥2 + bind は
+      //   AI drain collapse で bind が1枚しか入らない。(4) filter 内 {dyn} (levelMax:{dyn} 等) + n:N は本 gate が
+      //   resolveTargetFilterDyn を通さず raw filter で count するため availN が誤算 (実 pick 経路は dyn 解決済)。
+      //   これら 4 組合せのカードは authoring 前に本 gate 拡張が必要。
+      if (a.target === undefined && typeof a.n === 'number') {
+        const availN = targetCandidates(s, hrArgs.target as TargetingRef, ctx).length;
+        if (availN < (a.n as number)) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          mutate.log.append(s, { ts: Date.now(), player: hrP, turn: s.turn.number, action: 'effect:handReveal', result: 'gate-skip' });
+          return;
+        }
+      }
       if (!Array.isArray(hrArgs.target)) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: hrArgs }, ctx, { byPlayer: hrP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: hrP, turn: s.turn.number, action: 'effect:handReveal:awaiting-pick' });
