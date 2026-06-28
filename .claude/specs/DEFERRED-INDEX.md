@@ -79,7 +79,14 @@ opus 4-lens 敵対 review = 全 ship:true / blocker 0。
 | **$revealed 色読み condition** (公開カードの色分岐。bound は {cardId}[] 足場済、boundMatchesFilter は bound[0] のみ) | B07022 第2句 |
 | **UI awaiting-pick label + AI pick heuristic** (非ブロッカー、removeSetCard UI picker と同じ defer) | B08082/B07022 (atom pick) / B08093 (cost pick) — カード出荷 session で **Playwright 実機 probe 必須** (memory: carrier-reuse human-path-empirical、AI-pass=false-green) |
 
-※ handReveal 単独ではカード出荷不可。各カードは上記 companion が残 gate。B09061 は handReveal atom のみで解禁可。
+※ handReveal 単独ではカード出荷不可。各カードは上記 companion が残 gate。
+
+⚠ **B09061 は handReveal atom 単独では出荷不可** (2026-06-28 probe で stale 訂正)。a1「FBI キャラを **3枚**公開してもよい。
+そうした場合、引く」=「まで」なしの固定数 (rules/15) だが、handReveal 短縮形 `n:3` (= pick `n:{min:3,max:3}`) は
+**候補 <3 のとき pick が min を all-or-nothing で gate せず、available 全部 (1〜2枚) を公開して count>0 → 後続 draw を over-fire** する
+(probe 再現: `chain[handReveal{player:'self',n:3,filter:{kind:'character',trait:'FBI'}}, draw]` を FBI 2枚 hand で AI drain → draw 発火を確認)。`chainStepNoApply` gate は
+**reveal=0 のときだけ**立つため「<3 でも 1 以上なら draw」になる。trait-filtered hand-count condition も不在 (`handAtLeast` は filter 無し) で
+engine変更0 の回避不能。→ **handReveal exact-N gate** (revealed count < n のとき 0 と同じく chainStepNoApply、e.g. atom arg `exactN:true`) が残 gate。
 
 ## 運用
 
@@ -607,7 +614,7 @@ yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep
 | B05015 (小嶋元次) | 「相手が〚ミスリード〛したとき」反応 trigger が card-triggerable hook に無い (misread は内部 reasoning:before-add で消費、emit 無)。B09016 と同一 gate | misread-performed hook emit (engine) |
 | B02062 (世良真純) | 「相手の証拠がリムーブされたとき」を in-play char が観測する hook 不在 (evidence:remove-by-action は除去証拠自身の hirameki 専用、evidence:lose は死hook、evidence:gain は自actor視点) | opponent-evidence-removal observer hook (engine) |
 | B03051 (怪盗キッド) | 「デッキの下から1枚手札に加える」= deck-BOTTOM→hand primitive 不在 (deck verb は全て top 側) | deck-bottom retrieval verb (engine) |
-| B09061 (ジェイムズ) / B07022 (沖田総司) | **hand-reveal-as-gate primitive = 出荷済 (2026-06-28、handReveal atom + revealFromHand cost)**。B09061 は handReveal atom で解禁可。B07022 は加えて公開手札カードの **色分岐 = $revealed 色読み condition (boundMatchesFilter は bound[0] のみ、handReveal の bind は {cardId}[] 足場済)** が残 gate | $revealed 色読み companion (B07022) / B09061 は handReveal で解禁可 |
+| B09061 (ジェイムズ) / B07022 (沖田総司) | **hand-reveal-as-gate primitive = 出荷済 (2026-06-28)** だが両者とも残 gate あり。**B09061 a1 =「FBI を3枚公開」固定数** → handReveal 短縮形 `n:3` は候補 <3 のとき all-or-nothing で gate せず over-fire (2026-06-28 probe で実証、§handReveal 参照)。B07022 は公開手札カードの **色分岐 = $revealed 色読み condition** が残 gate | **handReveal exact-N gate (engine, B09061)** / $revealed 色読み companion (B07022) |
 | B06025 (ケロ介) | ヒラメキ「リムーブした場合このキャラを登場」= 証拠リムーブ中の自身を現場再登場する primitive 不在 (ctx.source.uid=virtual evidence、sceneEnter は cardId 要求・area:evidence splice 未実装) | evidence-transient self-reenter (engine) |
 | B02002 (江戸川コナン) | 既知 color-not filter gate (wave novel-0624 で既出) + per-非青char AP scaling dyn ($self.sceneColor 不在) | colorNot filter + sceneColor dyn (engine) |
 | B09081 / B05111 / B07099 | revive-from-remove (discard→removeから登場) / 【相手ターン中】現場リムーブ時 revive / 自能力リムーブ時 evidence-flip 各 hook・verb gap (詳細は cache) | 各 hook/verb 追加 (engine) |
