@@ -618,7 +618,7 @@ yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep
 | B06025 (ケロ介) | ヒラメキ「リムーブした場合このキャラを登場」= 証拠リムーブ中の自身を現場再登場する primitive 不在 (ctx.source.uid=virtual evidence、sceneEnter は cardId 要求・area:evidence splice 未実装) | evidence-transient self-reenter (engine) |
 | B02002 (江戸川コナン) | 既知 color-not filter gate (wave novel-0624 で既出) + per-非青char AP scaling dyn ($self.sceneColor 不在) | colorNot filter + sceneColor dyn (engine) |
 | B09081 / B05111 / B07099 | revive-from-remove (discard→removeから登場) / 【相手ターン中】現場リムーブ時 revive / 自能力リムーブ時 evidence-flip 各 hook・verb gap (詳細は cache) | 各 hook/verb 追加 (engine) |
-| **B06058 (庄之介)** | certify+verify は green-ok だが**自己review で DEFER**: a1「discardしてもよい。そうした場合 activate」が `chain[discard max1, sceneSetState max1]` で optional gate 喪失 (discard 0 でも activate 発火) + sceneSetState 短縮形 side:'self' が hardcoded 'either' で無視疑い (verify lens 間で判断割れ) | optional+chain 再author + sceneSetState 短縮形 side honor 確認後に再 certify |
+| ~~**B06058 (庄之介)**~~ | ✅ **出荷済 (2026-06-28、session65、engine変更0)**。旧 DEFER 理由は両方 STALE/誤り: (1)「sceneSetState 短縮形 side hardcoded either で無視」= 誤り、`side ?? sideDefault` で side:'self' は honored (真の必須は **`player`**: scene.ts:348 短縮形gate `typeof a.player==='string'`、欠落で silent no-op)。(2)「optional gate 喪失」= authoring 不備、正しい形 `optional{chain[discard{n:1}, sceneSetState{player:'self',side:'self',...}]}` (PR199 option1 と byte-identical、cardName 鉄刃のみ差)。gate5 probe 8/8 + opus 2-lens ship/0-blocker。詳細 [[reference-scenesetstate-shortform-player-required]] | ✅ 出荷済 |
 
 ### set-card 一族 (removeSetCard cost 解禁 session59 後の直 grounding)
 
