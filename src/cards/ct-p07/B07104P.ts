@@ -1,5 +1,6 @@
 // cards/ct-p07/B07104P ミステリーコースター (パラレル) — B07104 と同型 (絵柄違い・テキスト同一)。engine変更0 wave (2026-06-28)
 // rules: rules/13-keywords.md, rules/14-refresh.md, rules/15-abilities-effects.md, rules/17-icons.md, rules/20-color-and-switch.md, rules/26-qa-deck-refresh.md
+// ⚠ KNOWN-EDGE: B07104 と同じく forEach+mill のループ途中 refresh 停止が表現できない (deck 枯渇時のみ divergence、engine変更0 範囲外)。詳細は B07104.ts ヘッダ参照。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 

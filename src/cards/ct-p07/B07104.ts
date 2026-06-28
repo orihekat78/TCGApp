@@ -14,7 +14,11 @@
 //      = 印字順逆転 BUG-158)。短縮形は paShortFormAwait の runtime push で clause1→clause2→clause3 の正順 surface。
 //   - clause3「自分と相手の現場のキャラ1枚につきデッキ上2枚リムーブ」= forEach{over:{kind:'all', query:{area:'scene', side:'either'}},
 //     do: atom mill{player:'self', n:2}} (B02083 forEach over:all 同型)。clause1 のリムーブ後の盤面を execution-time に計数 (印字順)。
-//     ※公式Q&A: デッキ残数 < リムーブ枚数 → 可能な限りリムーブ→リフレッシュ→残りはリムーブしない (mill = removeFromTop min + refresh)。
+//   ⚠ KNOWN-EDGE (敵対 review 検出、shipped-with-DEFER): mill は per-atom で min(n, deck) + deck0 で refresh するが、
+//     forEach ループ "途中" でデッキが枯渇 → refresh された後、後続キャラ分が refresh 済デッキから追加 mill される。
+//     公式Q&A「可能な限りリムーブ→リフレッシュ→残りはリムーブしない」= 合計 (キャラ数×2) を一括 mill して中途 refresh で停止、が正。
+//     forEach+mill では中途 refresh 停止が表現できない (engine変更0 範囲外。faithful 化には mill-total-with-refresh-stop primitive が必要)。
+//     通常域 (deck ≥ キャラ数×2) は正。divergence は late-game の deck 枯渇時のみ。→ 将来 engine additive wave で修正。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
