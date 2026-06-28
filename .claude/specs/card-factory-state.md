@@ -1,49 +1,46 @@
 # Card Factory State (session 開始時に読む — 再導出を省く)
 
-> 生成: 2026-06-28 session64 (card-factory-plan Task 1〜5 出荷時)。tooling は main。
+> 生成: 2026-06-28 session64 (card-factory-plan Task 1〜6)。tooling は main 出荷済。
 
-## EXEMPLAR-SET (出荷済 ALL_CARDS fingerprint)
+## EXEMPLAR-SET (出荷済 ALL_CARDS fingerprint + grounded-spec corpus union)
 
-- **1484 cards / 152 tokens / 544 skeletons**
+- **1484 cards + 104 spec-corpus / 157 tokens / 558 skeletons**
 - 再生成: `npx vitest run tests/factory/dump-shipped.test.ts` → `node scripts/build-exemplar-set.cjs`
-  (`.tmp/card-factory/{shipped-abilities,exemplar-set}.json` は gitignore = 生成手順がソース)
+  (corpus = `.tmp/certify/*.json` + `_wave-novel-specs.json` の **shipped rep のみ**。`.tmp/` は gitignore = 生成手順がソース)
+- ⚠ corpus union は必須: 無いと `__shared`/`__eventUse` 候補が false-T2 (spec は annotation 保持、runtime は codegen 後で消失)。
 
-## 直近 classify 分布 (`.tmp/certify`, green 98 / 206 specs)
+## classify 分布 (`.tmp/certify` green 98、corpus 修正後)
 
-- **T0=76  T1=9  T2=13** (`node scripts/card-classify.cjs .tmp/certify`)
-- ⚠ **T0 unshipped = 0**: 76 T0 は **全て出荷済** (exemplar が ALL_CARDS 由来 → 出荷済カードは skeleton 同型で必ず T0)。
-  当 certify pool の「易しい同型カード」は前 session 群で出荷済 = **T0 枯渇**。
-- unshipped green candidates:
-  - **T1 ×4**: B01012, B06058, B09022, B09056 (token 既出・構造新規 → grounding + 1-lens opus 経路)
-  - **T2 ×1 green**: B05062 (novel-token → engine 拡張 or フルゲート)
-  - T0 ×0
-- 残 108 specs は verdict=yellow (未 certify green) = batch 不適格。
+- **T0=93  T1=5  T2=0** (修正前 T0=76 T1=9 T2=13、false-T2 を corpus union で解消)
+- **unshipped green = T1×5 のみ / T0=0 / T2=0**
+- ⚠⚠ **5 T1 は全て engine-gated DEFER** (classify T1 ≠ engine0-shippable):
+  - B01012 = group-scoped 1-of-N pick 不在 / B05062 = conditional else枝 choice eager-surface + UNION≥4
+  - B06058 = optional-gate 喪失 + sceneSetState side hardcoded / B09022 = sceneSetState side hardcoded (refuted)
+  - B09056 = choice-in-continuation surface gap (BUG-111系)
+  - → adversarial verify が 4/5 で fatal 検出。**token 存在では engine gap を検出できない** (DEFERRED-INDEX/verify が gate)。
 
-## 次に新 T0 を得る方法 (重要)
+## 残カード universe (cards-data TSV、id=col0 cardNum)
 
-T0 の節約は「**敵対 opus / 4-lens / playwright を省略**」であって **grounding 省略ではない**。
-新 T0 候補を作るには:
-1. 未実装カード (universe−実装、memory: 残 ~632) のチャンクを選定 (`taskA-next-chunk.cjs` / catalog-survey)
-2. grounding certify で abilities を起こし `.tmp/certify` に green spec を追加
-3. `card-classify.cjs` で T0 を抽出 → crosscheck → validate-specs → tsc → codegen → register
-4. batch 末尾に full vitest + smoke + 代表1枚 playwright
+- **total 2049 / shipped 1484 / unimplemented 565**。**565 は全て effect text あり = vanilla(無効果) freebie は 0**。
+  易しい同型カードは全出荷済 = 現 tail は一様に非自明。
 
-→ 当 certify pool は枯渇のため、**初回 live batch は fresh grounding pass が前提** (Task 6 ブロッカー、要方針決定)。
+## 効果検証 (Task 6 結論)
 
-## engine gate ROI 表 (DEFERRED-INDEX gate 別、design 見積、低コスト順)
+- factory tooling は **正しく動作** (positive): classify 正確 (修正後) / crosscheck **93/93 ok** (実 T0、false-fail 0)。
+- だが **現 pool に engine0-shippable T0/T1 は 0**: grounded-unshipped は 5 T1 (全 DEFER)、unimpl 565 は全て要 grounding。
+- → **30+/session の T0 batch は現 tail では不可**。factory の T0 throughput は (a) 新カードセット発売
+  (同型多数→T0 batch) (b) engine 拡張で DEFER 解禁、のいずれかで実現する。盲目 grounding (cluster16 12rep≈2.4M tok)
+  は tail が engine-gated ゆえ T0 yield ほぼ0 と予測され ROI 低 → 実行せず。
 
-| gate | 解禁枚数 | コスト |
+## engine gate ROI (DEFER 解禁が次の T0 母数を作る、低コスト順)
+
+| gate | 解禁(現pool) | コスト |
 |---|---|---|
-| continuous level-delta read site | 2+ | 低 |
-| ability-presence filter | 1 | 低 |
-| removed-by-this-effect condition | 1 | 低〜中 |
-| set-card→host 付与 | 4 | 中 |
-| partner-area 構造 | 4 | XL |
-
-> 数値は card-factory-risk-tiered-design.md の見積。正確な解禁枚数は DEFERRED-INDEX.md 再集計で更新。
+| sceneSetState 短縮形 side honor | B06058/B09022 | 低 |
+| choice-in-continuation surface (BUG-111系) | B09056/B05062 | 中 |
+| group-scoped 1-of-N pick | B01012 | 中〜大 |
 
 ## 運用
 
-- T0 batch を回すたび dump 再生成 → exemplar-set 更新 (新 skeleton が次回 T0 母数を増やす)。
-- classifier は出荷済を T0 と判定する (exemplar が出荷由来)。**新規性は rep ∉ shipped-set で判定**:
-  `shipped-abilities.json` の id 集合に rep が無いものだけが live batch 候補。
+- classifier T0/T1 は **engine0 を保証しない**。必ず `validate-specs` + adversarial verify (T1) / DEFERRED-INDEX 突合で gate。
+- 新規性は `rep ∉ shipped-set` で判定 (`shipped-abilities.json` id 集合)。T0 batch 後 dump 再生成 → exemplar 更新。
