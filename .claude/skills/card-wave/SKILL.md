@@ -18,6 +18,19 @@ sonnet は機械 lens (whitelist 照合・diff 突合) のみ。fable 再開時�
 - 同一 engine パターン 5〜10 枚を 1 クラスタに。engine 拡張が要るものは混ぜない (別クラスタ)
 - capability の正本は `capability-map.txt` (card-impl-engine-gates.md は stale)
 
+## 0. 階層判定 (最初に必ず実行 — 出荷経路を決める)
+
+1. 出荷済 dump 再生成: `npx vitest run tests/factory/dump-shipped.test.ts` → `node scripts/build-exemplar-set.cjs`
+2. 候補を分類: `node scripts/card-classify.cjs <certify-dir|greens.json>`
+3. 経路:
+   - **T0 (skeleton 同型 = 新規性ゼロ)**: certify 敵対 / opus 4-lens / playwright を **省略**。
+     ゲート = ① crosscheck (`node scripts/card-text-crosscheck.cjs`) ② validate-specs ③ tsc。
+     30〜50枚を 1 batch。full vitest/smoke は **batch 末尾 1回**。代表 1枚のみ playwright 1試合。
+   - **T1 (token 既出・構造新規)**: T0 ゲート + grounding certify (敵対 panel 無) + **batch 末尾 1-lens opus**
+     (semantic-equivalence、batch 一括)。10〜20枚。
+   - **T2 (novel token / closure / hand-author)**: §2〜§5 の **現行フルゲート** (certify 敵対 + opus 4-lens + playwright 実機)。
+4. crosscheck FAIL のカードは T0 から外し T2 経路へ (fail-closed)。
+
 ## 2. 根拠確定 (certify) — 最重要
 
 - **green候補は未certify なら信用しない** (実証元の誤り例: B01011)。全句を公式テキスト⇔
@@ -48,6 +61,8 @@ sonnet は機械 lens (whitelist 照合・diff 突合) のみ。fable 再開時�
 | event-use closure 必須のイベント | codegen 対象外 — DEFER (JSON シリアライズ維持) |
 
 ## 5. 検証ゲート (全部、この順)
+
+> T0/T1 batch: 下記 2〜4 は **batch 末尾 1回**。5 (playwright) は T0 は代表1枚、T1 は全数任意、T2 は全数。
 
 1. `node scripts/taskA-validate-specs.cjs` (engine変更0 の機械保証)
 2. `npx tsc --noEmit` → `npx vitest run` (full、baseline から件数減なし)
