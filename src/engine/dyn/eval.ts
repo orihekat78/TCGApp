@@ -16,6 +16,7 @@
 import type { GameState } from '@/engine/types';
 import type { EffectCtx } from '@/engine/types';
 import { char as charRead } from '@/engine/read/char.js';
+import { scene } from '@/engine/read/scene.js'; // session64: $self.setCardCount (このキャラの setCards 枚数)
 import { def } from '@/engine/read/def.js'; // BUG-114: $discarded.level/ap で discard したカードの printed 値を参照
 
 type DynValue = number | string | boolean | undefined;
@@ -315,6 +316,11 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
       return uid;
     case 'cardId':
       return ctx.source.cardId ?? '';
+    // session64: $self.setCardCount — このキャラに (裏向き/表向き) セットされたカード枚数 (rules/16)。
+    // B05030 主眼「セットされているカード1枚につき AP+1000」継続修飾の dyn 足場。setCards.length は
+    // 静的 state field → ap/lp の continuousDelta 再帰経路を踏まない (BUG-156/157 と無縁)。
+    case 'setCardCount':
+      return scene.byUid(state, uid)?.setCards.length ?? 0;
     default:
       throw new Error(`dyn.eval: unknown $self property "${prop}" in "${original}"`);
   }

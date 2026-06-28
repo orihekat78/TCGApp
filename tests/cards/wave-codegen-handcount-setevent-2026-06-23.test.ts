@@ -177,9 +177,10 @@ describe('wave codegen-handcount-setevent — engine変更0 / 手書き5枚', ()
     expect(read.char.keywords(s, 'ginshiro#1'), '印字 突撃[キャラ] を持つ').toContain('突撃[キャラ]');
   });
 
-  it('B05030 descriptor: 印字 keywords=[突撃[キャラ]] / a1 のみ (a2 setCount DEFER) / enter charSetCard', () => {
+  it('B05030 descriptor: 印字 keywords=[突撃[キャラ]] / a1 enter charSetCard + a2 setCount AP (session64 解禁)', () => {
     expect(B05030.keywords, '無条件印字 突撃[キャラ]').toEqual(['突撃[キャラ]']);
-    expect(B05030.abilities.length, 'a2 (setCount AP) は DEFER → a1 のみ').toBe(1);
+    // session64: a2 (setCardCount dyn) を additive 解禁 → fully faithful (a1 enter-set + a2 継続 AP)。
+    expect(B05030.abilities.length, 'a1 enter-set + a2 setCount AP').toBe(2);
     const a1 = B05030.abilities[0];
     expect(a1.trigger).toEqual({ hook: 'enter', selfOnly: true });
     expect((a1.effect as any)).toMatchObject({ verb: 'charSetCard', args: { uid: '$self', fromDeckTop: true, faceUp: false } });

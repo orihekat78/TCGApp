@@ -112,6 +112,51 @@ describe('engine.dyn.eval', () => {
       const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
       expect(evalDyn(s, '$self.ap', ctx)).toBe(9999);
     });
+
+    // engine additive (session64): $self.setCardCount — このキャラに裏向き/表向きセットされた
+    // カード枚数 (rules/16)。B05030 主眼「セットされているカード1枚につき AP+1000」用。
+    it('$self.setCardCount counts this char\'s set cards (B05030 main ability)', () => {
+      registerCardDef(defOf({ id: 'C001', ap: 5000 }));
+      const s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 'u1', cardId: 'C001', setCards: [{ cardId: 'x', faceUp: false }, { cardId: 'y', faceUp: false }] }),
+      ]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      expect(evalDyn(s, '$self.setCardCount', ctx)).toBe(2);
+      expect(evalDyn(s, '$self.setCardCount * 1000', ctx)).toBe(2000);
+    });
+
+    it('$self.setCardCount is 0 when the char has no set cards', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      const s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'u1', cardId: 'C001' })]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      expect(evalDyn(s, '$self.setCardCount', ctx)).toBe(0);
+    });
+
+    it('$self.setCardCount counts only the source char (not other chars, not stackedCards)', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      const s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 'u1', cardId: 'C001', setCards: [{ cardId: 'x', faceUp: false }], stackedCards: 3 }),
+        makeChar({ uid: 'u2', cardId: 'C001', setCards: [{ cardId: 'a', faceUp: false }, { cardId: 'b', faceUp: false }] }),
+      ]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      // u1 has 1 set card; u2's 2 set cards + u1's 3 stackedCards must NOT count.
+      expect(evalDyn(s, '$self.setCardCount', ctx)).toBe(1);
+    });
+
+    it('$self.setCardCount counts set cards regardless of faceUp (表向き/裏向き両方)', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      const s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 'u1', cardId: 'C001', setCards: [{ cardId: 'a', faceUp: true }, { cardId: 'b', faceUp: false }, { cardId: 'c', faceUp: true }] }),
+      ]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      // 「セットされているカード」は表向き/裏向きを問わず全て数える (rules/16)。
+      expect(evalDyn(s, '$self.setCardCount', ctx)).toBe(3);
+    });
+
+    it('throws when $self.setCardCount requested with no uid', () => {
+      const s = createEmptyGameState();
+      expect(() => evalDyn(s, '$self.setCardCount', makeCtx())).toThrow(/source\.uid/);
+    });
   });
 
   describe('$contact', () => {
