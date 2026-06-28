@@ -96,6 +96,16 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       acc.paidItems.push({ kind: 'removeFromHand', details: { ids } });
       return;
     }
+    // engine additive wave (2026-06-28): revealFromHand — 手札公開 presence-check cost (B08093 a1)。
+    // pay() は no-op: 公開のみでカードは手札に残る (mutate しない、消費なし)。paidItems に log のみ。
+    case 'revealFromHand': {
+      const targets = pickCandidates(state, cost.target, ctx, cost.n);
+      const ids = targets
+        .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
+        .map(c => c.cardId);
+      acc.paidItems.push({ kind: 'revealFromHand', details: { ids } });
+      return;
+    }
     case 'removeFromScene': {
       const targets = pickCandidates(state, cost.target, ctx, cost.n);
       for (const cand of targets) {

@@ -200,6 +200,11 @@ export type AtomVerb =
   // (evidenceToHand の逆。push=証拠1番上、公式Q&A B06029「手札から裏向きで得る証拠は1番上」)。
   // rules: 01-victory-conditions.md §証拠 / 06-card-types.md §イベント。PB pick (defaultArea 'hand')。
   | 'handToEvidence'
+  // engine additive wave (2026-06-28): handReveal — 「手札から filter 一致カードを1枚公開してもよい。
+  // そうした場合〜」(B08082 a1 / B07022)。公開は zone 変化なし (公式Q&A: 解決後に手札へ戻してよい)。
+  // atomDiscard の clone から mutate.hand.discardToRemove を除去したもの。0枚 reveal で chainStepNoApply を
+  // 立て「そうした場合」を gate (mill gate と同型、reveal は他効果ゼロゆえ無条件 gate-on-0)。PB pick (defaultArea 'hand')。
+  | 'handReveal'
   | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise' | 'sceneToHand'
   // Task D E2 (2026-06-12): 現場キャラを所有者のデッキ下/上へ移す (sceneToHand 同型 PA 短縮形)。
   // rules: 09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 16 (set/stacked はリムーブ)
@@ -240,6 +245,11 @@ export type Cost =
   // sleepChar と対称。canPay は active 候補存在を要求、pay は mutate.scene.setState(stun) で active のみスタン化。
   | { kind: 'stunChar'; target: TargetingRef }
   | { kind: 'removeFromHand'; target: TargetingRef; n: number }
+  // engine additive wave (2026-06-28): 〚手札から filter 一致カードを n 枚公開する〛コスト (B08093 a1)。
+  // removeFromHand と同型の canPay (candidates ≥ n) だが pay() は no-op = presence-check cost
+  // (公開のみ、リムーブしない)。公式Q&A (B08093): コスト支払い完了→効果解決時に手札へ戻してよい。
+  // rules: 21 (コスト「自分の」省略 → query.side:'self' / 全部行えなければ使用不可)。
+  | { kind: 'revealFromHand'; target: TargetingRef; n: number }
   | { kind: 'removeFromScene'; target: TargetingRef; n: number }
   | { kind: 'removeDeckTop'; player: 'self'; n: number }
   | { kind: 'discardEvidence'; n: number }

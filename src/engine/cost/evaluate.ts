@@ -12,6 +12,7 @@ import { candidates } from '@/engine/target/candidates.js';
 // scripts/taskA-validate-specs.cjs COSTS との同期は tests/engine/sync-taskA-whitelists.test.ts。
 const COST_KIND_MAP = {
   sleepSelf: true, sleepChar: true, stunChar: true, removeFromHand: true, removeFromScene: true,
+  revealFromHand: true, // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
   removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
@@ -57,6 +58,12 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       });
     }
     case 'removeFromHand': {
+      const cands = candidates(state, cost.target, ctx);
+      return cands.length >= cost.n;
+    }
+    // engine additive wave (2026-06-28): revealFromHand — 手札公開 presence-check cost (B08093 a1)。
+    // removeFromHand と同型 (filter 一致 ≥ n) だが pay() は no-op (公開のみ、消費なし)。
+    case 'revealFromHand': {
       const cands = candidates(state, cost.target, ctx);
       return cands.length >= cost.n;
     }

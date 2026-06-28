@@ -32,6 +32,8 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   handAddFromRemove: { defaultArea: 'remove',   mode: 'PB', sourceSplice: true },
   // engine拡張 wave (2026-06-21): handToEvidence — 手札から1枚 pick → 裏向きで証拠へ (evidenceToHand の逆)。
   handToEvidence:    { defaultArea: 'hand',     mode: 'PB' },
+  // engine additive wave (2026-06-28): handReveal — 手札から1枚 pick → 公開 (zone 変化なし)。discard と同型 PB pick。
+  handReveal:        { defaultArea: 'hand',     mode: 'PB' },
   // engine拡張 wave (2026-06-23): evidenceFlip pick-form — 「(相手の)裏向きの証拠を1つまで選び、表向きにする」。
   // PB pick (evidenceToHand と同型)。chooser=controller / side=証拠 owner / faceDown 限定は handler 側で構築。
   evidenceFlip:      { defaultArea: 'evidence', mode: 'PB' },

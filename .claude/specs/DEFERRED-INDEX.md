@@ -66,6 +66,21 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 
 **新 gate 発見: cardName-EXCLUSION candidate filter** (B06087/PR280) — TargetFilter は positive inclusion のみ。将来の小 cluster 候補。
 
+## §handReveal — engine additive 出荷 (2026-06-28) + companion defer
+
+handReveal atom (「手札から filter 一致を1枚公開してもよい。そうした場合〜」、zone 変化なし) +
+revealFromHand cost (〚手札から filter 一致を n 枚公開する〛presence-check、pay no-op) を engine-only 出荷。
+colorNot/caseColorNot と同方針 (挙動不変・既存カード未使用)。spec: `engine-additive-handreveal-design.md`。
+opus 4-lens 敵対 review = 全 ship:true / blocker 0。
+
+| companion (未実装、follow-up wave) | 解禁待ちカード |
+|------|------|
+| **ability-presence filter** (TargetFilter「【現場リムーブ時】を持つ」) | B08082 a1 / B08093 a1 |
+| **$revealed 色読み condition** (公開カードの色分岐。bound は {cardId}[] 足場済、boundMatchesFilter は bound[0] のみ) | B07022 第2句 |
+| **UI awaiting-pick label + AI pick heuristic** (非ブロッカー、removeSetCard UI picker と同じ defer) | B08082/B07022 (atom pick) / B08093 (cost pick) — カード出荷 session で **Playwright 実機 probe 必須** (memory: carrier-reuse human-path-empirical、AI-pass=false-green) |
+
+※ handReveal 単独ではカード出荷不可。各カードは上記 companion が残 gate。B09061 は handReveal atom のみで解禁可。
+
 ## 運用
 
 - 新規 defer が発生したら本ファイルに追加 + 該当 BUG-XXX.md または spec doc に
@@ -85,7 +100,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 | name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
 | ~~multi-card sceneEnter~~ | **✅ 解消 (2026-06-15 cluster14)**: sceneEnter に cardIds:'$pick.cardIds' 契約 + switchRemoveUids[] (現場満杯 switch) を additive 拡張。distinctNames AI dedup + skipResolvesAtom (0枚でも後続 step 解決)。B09010/P + PR042/PR046 計 4 printings 出荷 | 完了 — branch engine/wave2-cluster14-multi-sceneenter。残 B01022 (multi-match deckRevealUntil) / B05117 (persistent set-granted leave ability) は別 gate |
 | ~~nested filter dyn~~ | **✅ 解消 (2026-06-15 cluster12)**: pick query filter 内の {dyn} (levelMax 等) を substituteAtomPick chokepoint で解決。B08060 + 「小さくなった名探偵」family 15 printings 出荷。残 B05102/B09052 は **別 gate** (B05102=hirameki self-to-hand / B09052=rename verb + name-designation) のため対象外 | 完了 — branch engine/wave2-cluster12-nested-filter-dyn |
-| until-N discard / reveal verb 等 | B07076/B07100/B08047 a2/B08093 a1 | 可変 count atom / hand-reveal verb |
+| until-N discard / reveal verb 等 | B07076/B07100/B08047 a2/B08093 a1 | **hand-reveal verb = 出荷済 (2026-06-28、下記 §handReveal)**。残 = 可変 count atom (B07076/B07100/B08047 a2) / B08093 a1 は ability-presence filter 待ち |
 
 ## Task A green候補 wave#2 defer (2026-06-12, cards/wave2-handauthor)
 
@@ -112,7 +127,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 | rep | 理由 (支配 gate) | 解禁条件 |
 |-----|------------------|---------|
 | B08078/P | a2「リムーブしたカードの【現場リムーブ時】の効果を発動させてもよい」= 他カード hook 効果の外部発火機構が engine に不存在 (grep 0 hit、cluster2 最難)。a1 は X1+sceneHas で可能だが partial 出荷はしない | 外部発火機構の設計 (独立クラスタ) |
-| B08082 | a1 効果側 handReveal verb 不在 +「【黒】以外」color negation filter 不在 | handReveal verb + negation filter |
+| B08082 | a1 = **handReveal verb 出荷済 (2026-06-28) + colorNot 出荷済 (session60)** → 残 gate は **ability-presence filter (「【現場リムーブ時】を持つ」)** のみ。a2 (discard+colorNot+chain) は既に buildable | ability-presence filter |
 | B03133 | handAddFromRemove が単一 target のみ (「2枚まで手札に加える」不可) | multi-target handAddFromRemove |
 | B06020 | **triage 誤分類** (cutin-subtype filter ではなく「手札 zone への continuous aura 付与」+ startContact stub)。a1 = hand aura (continuous は owner/scene 限定)、a2 = startContact placeholder | hand-zone aura + startContact 実装 (wave#1 繰越 auraGrant と同族) |
 | ~~B07098/P~~ | ~~「リムーブエリアにある【カットイン】を持つ【黒】のカード1枚につき AP+1000」の remove-area keyword-count dyn 不在~~ | ✅ **解禁** (2026-06-15 triage-greens batch): count-dyn ではなく `forEach over:{all, query:{area:'remove', filter:{keyword:'カットイン', color:'黒'}}}` で per-card AP+1000 (engine `target/candidates.ts:160` remove 列挙 + color/keyword filter + BUG-122)。runtime decoy test 44 assertions green |
@@ -592,7 +607,7 @@ yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep
 | B05015 (小嶋元次) | 「相手が〚ミスリード〛したとき」反応 trigger が card-triggerable hook に無い (misread は内部 reasoning:before-add で消費、emit 無)。B09016 と同一 gate | misread-performed hook emit (engine) |
 | B02062 (世良真純) | 「相手の証拠がリムーブされたとき」を in-play char が観測する hook 不在 (evidence:remove-by-action は除去証拠自身の hirameki 専用、evidence:lose は死hook、evidence:gain は自actor視点) | opponent-evidence-removal observer hook (engine) |
 | B03051 (怪盗キッド) | 「デッキの下から1枚手札に加える」= deck-BOTTOM→hand primitive 不在 (deck verb は全て top 側) | deck-bottom retrieval verb (engine) |
-| B09061 (ジェイムズ) / B07022 (沖田総司) | 「手札からN枚公開してもよい(手札に残す)」= hand-reveal-as-gate primitive 不在 (reveal は deckRevealUntil=deck専用)。B07022 は加えて公開手札カードの色分岐 | hand-reveal verb + revealed-hand-card 参照 (engine) |
+| B09061 (ジェイムズ) / B07022 (沖田総司) | **hand-reveal-as-gate primitive = 出荷済 (2026-06-28、handReveal atom + revealFromHand cost)**。B09061 は handReveal atom で解禁可。B07022 は加えて公開手札カードの **色分岐 = $revealed 色読み condition (boundMatchesFilter は bound[0] のみ、handReveal の bind は {cardId}[] 足場済)** が残 gate | $revealed 色読み companion (B07022) / B09061 は handReveal で解禁可 |
 | B06025 (ケロ介) | ヒラメキ「リムーブした場合このキャラを登場」= 証拠リムーブ中の自身を現場再登場する primitive 不在 (ctx.source.uid=virtual evidence、sceneEnter は cardId 要求・area:evidence splice 未実装) | evidence-transient self-reenter (engine) |
 | B02002 (江戸川コナン) | 既知 color-not filter gate (wave novel-0624 で既出) + per-非青char AP scaling dyn ($self.sceneColor 不在) | colorNot filter + sceneColor dyn (engine) |
 | B09081 / B05111 / B07099 | revive-from-remove (discard→removeから登場) / 【相手ターン中】現場リムーブ時 revive / 自能力リムーブ時 evidence-flip 各 hook・verb gap (詳細は cache) | 各 hook/verb 追加 (engine) |

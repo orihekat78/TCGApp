@@ -28,6 +28,7 @@ export function costToText(cost: Cost): string {
     case 'sleepChar':         return 'キャラ 1 枚をスリープ';
     case 'stunChar':          return 'キャラ 1 枚をスタン'; // engine additive wave (2026-06-24)
     case 'removeFromHand':    return `手札 ${cost.n} 枚をリムーブ`;
+    case 'revealFromHand':    return `手札から ${cost.n} 枚を公開`; // engine additive wave (2026-06-28)
     case 'removeFromScene':   return `現場 ${cost.n} 枚をリムーブ`;
     case 'removeDeckTop':     return `デッキ上 ${cost.n} 枚をリムーブ`;
     case 'discardEvidence':   return `証拠 ${cost.n} 枚をリムーブ`;

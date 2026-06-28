@@ -14,6 +14,7 @@ const VERBS = new Set([
   'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
   'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
   'handToEvidence',
+  'handReveal', // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
   'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'sceneToDeck', // Task D E2 (2026-06-12)
@@ -68,6 +69,7 @@ const COSTS = new Set([
   'sceneToDeckBottom', // Task D E2 (2026-06-12)
   'removeAreaToDeckBottom', // cluster4 (2026-06-14)
   'removeSetCard', // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
+  'revealFromHand', // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
 ]);
 
 const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'conditional', 'forEach', 'atom', 'chain']);

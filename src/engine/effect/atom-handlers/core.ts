@@ -63,6 +63,35 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       return;
     }
 
+// engine additive wave (2026-06-28): handReveal — 「手札から filter 一致を1枚公開してもよい。そうした場合〜」
+// (B08082 a1 / B07022)。atomDiscard の clone から mutate.hand.discardToRemove を除去 = zone 変化なし (公開のみ、
+// 公式Q&A: 解決後に手札へ戻してよい)。短縮形 ({player, max, filter}) は discard と同一 pick path
+// (buildShortFormPick → tryRePickFromAtom)。resolve-picks が 0候補時に chainStepNoApply を自動設定するため
+// 短縮形 0候補の gate は infra 任せ。resolved target が 0枚 (辞退) のときは本 handler で chainStepNoApply を立てる。
+export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      const hrP = resolvePlayer(a.player, ctx);
+      const hrArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handReveal.defaultArea, a, hrP, hrP) }
+        : a;
+      if (!Array.isArray(hrArgs.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: hrArgs }, ctx, { byPlayer: hrP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: hrP, turn: s.turn.number, action: 'effect:handReveal:awaiting-pick' });
+        return;
+      }
+      const target = hrArgs.target as string[];
+      // 公開のみ = zone 変化なし (mutate を呼ばない、カードは手札に残る)。
+      // discard の bind と同型: 公開した cardId を ctx.bindings に格納 ($revealed 色読み companion の足場)。
+      if (typeof a.bind === 'string' && target.length > 0) {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = target.map((cardId) => ({ cardId }));
+      }
+      // 0枚公開 (候補無し or 辞退) → chainStepNoApply で「そうした場合」を gate (mill gate と同型)。
+      if (target.length === 0) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hrP, turn: s.turn.number, action: 'effect:handReveal', result: String(target.length) });
+      return;
+    }
+
 export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // BUG-073: effect log
       const millP = resolvePlayer(a.player, ctx);
