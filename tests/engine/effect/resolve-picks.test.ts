@@ -71,7 +71,9 @@ describe('engine.effect.resolveEffectPicks', () => {
     expect(resolved.steps[1]?.args.uid).toBe('self-1');
   });
 
-  it('conditional: then と else を再帰的に処理', () => {
+  it('conditional (stable if=true): TAKEN branch のみ walk、非taken は raw のまま (BUG-145 over-fire 防止)', () => {
+    // BUG-145: stable な if (binding 非依存) は pre-walk で taken branch のみ解決し、非taken の $pick/
+    // choice/optional が eager-surface しないようにする。runtime resolver が if を再評価し taken のみ実行。
     const s = stateWithSelfChar('self-1');
     const effect: Effect = {
       kind: 'conditional',
@@ -81,8 +83,36 @@ describe('engine.effect.resolveEffectPicks', () => {
     };
     const resolved = resolveEffectPicks(s, effect, ctxSelf()) as { kind: string; then: { args: { uid: string } }; else: { args: { uid: string } } };
     expect(resolved.kind).toBe('conditional');
-    expect(resolved.then.args.uid).toBe('self-1');
-    expect(resolved.else.args.uid).toBe('self-1');
+    expect(resolved.then.args.uid, 'taken(then) は substitute される').toBe('self-1');
+    expect(resolved.else.args.uid, '非taken(else) は raw $pick のまま (surface しない)').toBe('$pick');
+  });
+
+  it('conditional (stable if=false): else のみ walk、then は raw のまま', () => {
+    const s = stateWithSelfChar('self-1');
+    const effect: Effect = {
+      kind: 'conditional',
+      if: { kind: 'false' },
+      then: PICK_ATOM,
+      else: PICK_ATOM,
+    };
+    const resolved = resolveEffectPicks(s, effect, ctxSelf()) as { kind: string; then: { args: { uid: string } }; else: { args: { uid: string } } };
+    expect(resolved.then.args.uid, '非taken(then) は raw のまま').toBe('$pick');
+    expect(resolved.else.args.uid, 'taken(else) は substitute される').toBe('self-1');
+  });
+
+  it('conditional (binding-dependent if): stale 回避のため BOTH branch を walk (deck-look family 保護)', () => {
+    // if が bound を読む場合、初期 walk 時点で binding 未設定 → evalCond が stale。両 branch walk して
+    // runtime resolver の再評価に委ねる (B06048/B01048/B08020 等 「公開→$matched→…の場合」を壊さない)。
+    const s = stateWithSelfChar('self-1');
+    const effect: Effect = {
+      kind: 'conditional',
+      if: { kind: 'bound', key: '$matched', presence: 'matched' },
+      then: PICK_ATOM,
+      else: PICK_ATOM,
+    };
+    const resolved = resolveEffectPicks(s, effect, ctxSelf()) as { kind: string; then: { args: { uid: string } }; else: { args: { uid: string } } };
+    expect(resolved.then.args.uid, 'binding if → then も walk').toBe('self-1');
+    expect(resolved.else.args.uid, 'binding if → else も walk').toBe('self-1');
   });
 
   // 2026-06-06 タスクC: optional 決定の配線。旧「inner を再帰 passthrough」から

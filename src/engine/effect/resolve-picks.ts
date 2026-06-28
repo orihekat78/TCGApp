@@ -21,11 +21,38 @@
 
 import { candidates as targetCandidates } from '../target/candidates.js';
 import { evalDyn } from '../dyn/eval.js';
-import type { GameState, Effect, EffectCtx, TargetingRef } from '../types/index.js';
+import { evalCond } from '../cond/eval.js';
+import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
 
 type Player = 'self' | 'opp';
+
+/**
+ * BUG-161 (fixes the BUG-145 §2-documented over-fire): conditional pre-walk gate guard. A condition is "stable" at initial-walk time iff it does
+ * NOT read a binding (ctx.bindings) — i.e. it depends only on board/turn state that exists before the
+ * effect runs. Binding-dependent ifs (`bound`/`boundMatchesFilter`, or any $-token nested in args)
+ * are set by a prior sequence/chain step (deck-look 「公開→$matched」family), so evalCond would be
+ * stale (the binding is undefined during the walk). We recurse through and/or/not so a composite if is
+ * stable only if EVERY leaf is stable. Serialized $-token scan catches nested arg refs defensively.
+ */
+function conditionIfIsStable(cond: Condition): boolean {
+  if (!cond || typeof cond !== 'object') return true;
+  switch (cond.kind) {
+    case 'bound':
+    case 'boundMatchesFilter':
+      return false;
+    case 'not':
+      return conditionIfIsStable(cond.c);
+    case 'and':
+    case 'or':
+      return cond.cs.every((c) => conditionIfIsStable(c));
+    default: {
+      // Defensive: any nested $-token (e.g. a filter referencing $matched.cardId) marks it unstable.
+      return !JSON.stringify(cond).includes('$');
+    }
+  }
+}
 
 /**
  * 2026-05-30 BUG-085: atom args の `{ dyn: <expr> }` 値を late-bound 評価して
@@ -551,13 +578,35 @@ export function resolveEffectPicks(
       // AI / non-human: skip (resolver の optionalRun 未設定 default と同じ。surface しない)
       return { kind: 'parallel', steps: [] };
     }
-    case 'conditional':
+    case 'conditional': {
+      // BUG-161 fix (binding-aware, BUG-145 §2 の over-fire 根治): a choice/optional/$pick in the NON-taken branch must not
+      // eager-surface a pendingEffectChoice/Optional/Pick. We gate the pre-walk on evalCond and walk
+      // ONLY the taken branch — BUT ONLY when `if` is STABLE at pre-walk time (does not depend on a
+      // binding set by a prior sequence/chain step). For binding-dependent `if` (deck-look 「公開→
+      // $matched→…の場合」family: B06048/B01048/B08020/… steps[N>0]), `$matched`/`$revealed` are not
+      // yet bound during the initial walk, so evalCond would be stale-FALSE and wrongly suppress a
+      // then-branch that runtime WILL execute (regression: discard/handAdd never resolves). For those
+      // we keep walking BOTH branches (current behavior, byte-compatible). Runtime resolver.ts re-evals
+      // `if` against the live state and runs only the correct branch either way (double-eval safe:
+      // same state+ctx for stable `if`; for binding `if` runtime is the source of truth).
+      if (conditionIfIsStable(effect.if)) {
+        const taken = evalCond(state, effect.if, ctx);
+        return {
+          kind: 'conditional',
+          if: effect.if,
+          then: taken ? resolveEffectPicks(state, effect.then, ctx, opts) : effect.then,
+          else: effect.else
+            ? (taken ? effect.else : resolveEffectPicks(state, effect.else, ctx, opts))
+            : undefined,
+        };
+      }
       return {
         kind: 'conditional',
         if: effect.if,
         then: resolveEffectPicks(state, effect.then, ctx, opts),
         else: effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : undefined,
       };
+    }
     case 'forEach':
       // forEach は over の各候補で do を実行する dynamic 構造。$pick は do 内に出ない想定だが
       // 念のため再帰 (do 自体が atom-with-$pick になることはないが、ネスト構造はあり得る)
