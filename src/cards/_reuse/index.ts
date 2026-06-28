@@ -373,6 +373,17 @@ import { B06080 } from '../ct-p06/B06080.js';
 import { B08079 } from '../ct-p08/B08079.js';
 import { B08079P } from '../ct-p08/B08079P.js';
 import { B08083 } from '../ct-p08/B08083.js';
+// wave engine0-triage-0628 (engine変更0、triage→adversarial-verify 通過)
+import { B03020 } from '../ct-p03/B03020.js';
+import { B03023 } from '../ct-p03/B03023.js';
+import { B06057 } from '../ct-p06/B06057.js';
+import { B07104 } from '../ct-p07/B07104.js';
+import { B07104P } from '../ct-p07/B07104P.js';
+import { B08071 } from '../ct-p08/B08071.js';
+import { B08091 } from '../ct-p08/B08091.js';
+import { B09080 } from '../ct-p09/B09080.js';
+import { PR264 } from '../pr-01/PR264.js';
+import { PR270 } from '../pr-01/PR270.js';
 
 // engine-extension #4 sceneToHand batch #3 (2026-06-05 残課題)
 import { B06007 } from '../ct-p06/B06007.js';
@@ -1240,4 +1251,11 @@ export const REUSE_CARDS: CardDef[] = [
   B02008, B02073, B07024, D07018,
   // Task A batch
   D02005, PR036,
+  // wave engine0-triage-0628 — 70 未certify候補を triage(9 GREEN)→敵対verify(6 CONFIRMED+2 NEEDS_FIX, 1 REFUTED=B08059)。engine変更0
+  //   B03023 脇田兼則(enter観測 log no-op + hirameki) / B06057 ゲロ田(白YAIBAイベント使用reaction draw + hirameki) /
+  //   B08071 佐藤正義(宣言 removeFromScene self + deck-look佐藤美和子 + cutin contactTargetMatches) /
+  //   B08091 マッドサイエンティスト(事件青&黒 enter conditional colorNot→現場リムーブ時revive + leave evidenceFlipDown) /
+  //   B09080 高木渉(絆佐藤美和子 突撃grant + aura cardName AP+1000) / PR264/PR270 宮野明美(突撃[キャラ]印字 + 解決編lvlDelta+2 + enter突撃[事件]grant) /
+  //   B07104/P ミステリーコースター(sceneRemove + 突撃grant短縮形(BUG-158 fix) + forEach mill) / B03020 毛利蘭(action blind-mill3 → AP+1000)
+  B03020, B03023, B06057, B07104, B07104P, B08071, B08091, B09080, PR264, PR270,
 ];
