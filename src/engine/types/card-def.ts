@@ -110,6 +110,17 @@ export type ContinuousModifier = {
   lpDeltaAura?: number;
   auraFilter?: TargetFilter;
   auraExcludeSelf?: boolean;
+  // engine additive (2026-06-29): cross-side 数値 aura (「【自分ターン中】相手の現場にいる [auraFilterOpp] の
+  // キャラを AP±N」B03033 遠山和葉)。apDeltaAura/lpDeltaAura (同 side bearer→同 side target) と対称だが、bearer の
+  //   **反対 side の現場**の各キャラに対し auraFilterOpp が一致すれば apDeltaAuraOpp/lpDeltaAuraOpp を加算する。
+  //   cluster13 aura は同 side 限定で相手盤面に届かなかった (「相手の現場の…を AP-1000」型が未対応だった)。
+  // read.char.auraDelta が同一呼出内で反対 side bearer も走査する (honor 経路は apDeltaAura と共有 =
+  //   read.char.ap/lp + candidates.matchOneFilter、新 honor site 無し)。ability.condition (【自分ターン中】等) 成立中のみ有効。
+  //   auraExcludeSelf は cross-side では無意味 (bearer≠target が常に成立) ゆえ非適用。不在時 no-op
+  //   (既存カードは未宣言 → 反対 side 走査の加算 0、smoke baseline 不変)。
+  apDeltaAuraOpp?: number;
+  lpDeltaAuraOpp?: number;
+  auraFilterOpp?: TargetFilter;
 };
 
 // ---------- AbilityDef ----------

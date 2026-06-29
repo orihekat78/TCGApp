@@ -58,7 +58,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 | B09022 | sceneSetState 自側限定 picked-sleep (short-form side hardcoded 'either' / explicit-$pick in chain no-op) | refuted (engine gate) |
 | D02008 | action-scoped opponent cutin-ban (continuous aura のみ対応、on-action 不可) | yellow |
 | B05009 | own-side enterSource (「自分のキャラの能力によって登場」の side qualifier 無) | yellow |
-| B06068 | turn-scoped で **印字キーワード剥奪** (突撃[キャラ]を失う) の subtractive turnEffect 無 | yellow |
+| ~~B06068~~ | ~~turn-scoped で **印字キーワード剥奪** (突撃[キャラ]を失う) の subtractive turnEffect 無~~ | ✅ **engine 解禁** (2026-06-29、`revokedKeywords` turnEffect + charRevokeKeyword scope:'turn'、`engine/bulk-additive-0629b`)。カードは card-wave で出荷 |
 | B07063 | charGrantAbility で removal-observer ability 付与 (validate.ts が leave:to-remove grant を禁止) | yellow |
 | PR136 | charSetCard の owner-deck-source (either 側 1 枚選択の持ち主デッキ) | yellow |
 | PR280 | **cardName-EXCLUSION** candidate filter (「萩原千速以外」) | yellow |
@@ -394,7 +394,7 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 | B06032 | yellow | 【ヒラメキ】本体が top-level optional{chain[discard1, sceneEnter from:remove]} を要するが、hiramekiResolve 経路が humanChooser なしで resolveEffectPicks を呼ぶため top-level optional が常に skip → 再生効果が無音 no-op (BUG-145 同族) | hirameki 経路の top-level optional honor (engine) |
 | B08038 | yellow | 「この効果によって特徴[高校生]/[鈴木財閥]がリムーブされた場合」= **removed-by-this-effect** 条件。mill verb は bind せず、removeTraitAtLeast は remove パイル累積を見るため中盤で誤発火 (false-positive AP+1000) | mill bind + removed-by-this-effect condition (engine) |
 | ~~PR236~~ | ✅ 出荷済 | **出荷済 (2026-06-21、`cards/wave-distinct-name-count`)**。`sceneHas` eval を `query.distinctNames` honor に拡張 (1分岐 additive、新 Condition kind 無)。PR236/PR242 (大和敢助 declared a2 宣言ゲート) + B08067/B08067P (諸伏高明 enter conditional) 計 **4 刷**。詳細下記「distinct-name-count cluster」 | — |
-| B03033 | yellow | 「相手の現場のセット済キャラを AP-1000」= **相手側の数値 aura**。cluster13 aura は target 同 side (自陣) のみ走査。相手 side 数値 aura 機構なし | cross-side numeric aura (engine) |
+| ~~B03033~~ | ✅ **engine 解禁** | 「相手の現場のセット済キャラを AP-1000」= cross-side 数値 aura。2026-06-29 `apDeltaAuraOpp`/`lpDeltaAuraOpp`/`auraFilterOpp` で解決 (`engine/bulk-additive-0629b`)。カードは card-wave で出荷 |
 | ~~B06033~~ | **✅ 出荷 (2026-06-22 continuation-nest)** | continuation を linked list 化 (`ContinuationFrame.outer?`) して chain (内側)→sequence (外側) の継続上書きを解消 (BUG-111 #3、resolver attachContinuation + apply-pick runContinuationChain)。B06033/B06033P 出荷 (ALL_CARDS→1374)。decoy `continuation-nest-b06033.test.ts` (9) | ~~continuation-nest~~ ✅ 解消 |
 | B08050 | yellow | 「【解決編】このキャラをレベル+3」= **継続 condition-gated self level 修飾**。ContinuousModifier は ap/lpDelta のみで levelDelta 不在 | continuous level modifier (engine、未着手 micro-cluster) |
 
@@ -713,3 +713,19 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | B08041 (高橋良一) | a2 cost で除去した裏向きセットカードの kind(char/event) 分岐 = cost-removed-card-kind conditional 不在 (PayResult を effect ctx に渡さない) | cost-removed-card-kind branch (engine) |
 | B08046 (赤井&ジョディ) | a2「コストでレベル8以上のキャラをリムーブした場合 draw」= cost-removed-card level condition 不在 (removeFromHand は costPaid 不記録) | cost-removed-card-stat condition (engine) |
 | B05052 (工藤優作) | cost-level choice「手札 か セットカード を1枚リムーブ」の human-path branch 選択が UI 非対応 (cost.pay は costChoice 不在時 first-payable auto-pick、人間は set-card branch を選べない) | cost-level choice picker modal (UI/engine) |
+
+## engine additive wave 0629b — cross-side aura / printed-keyword turn-revoke (2026-06-29)
+
+`engine/bulk-additive-0629b` で純 additive 2 件出荷 (engine 足場のみ、カードは card-wave)。詳細 changelog
+[2026-06-29-03](../changelog-entries/2026-06-29-03-engine-additive-cross-side-aura-revoke.md)。
+
+| primitive | 解禁 | 形 |
+|-----------|------|----|
+| cross-side 数値 aura (`apDeltaAuraOpp`/`lpDeltaAuraOpp`/`auraFilterOpp`) | B03033 | read.char.auraDelta が反対 side bearer も走査。honor site 共有・再帰 guard 同一 |
+| 印字キーワード turn-revoke (`revokedKeywords` + charRevokeKeyword scope:'turn') | B06068 | read.char.keywords が減算、clearTurnEffects('turn') 清掃。charRevokeKeyword 既存 caller 0 |
+
+⚠ **DEFERRED-INDEX stale 監査 (本 wave で確認)**: 旧 yellow gate の多くが既に出荷済 → card-wave 案件に格下げ:
+- `removeSetCard` cost (B08033) / `lvlDelta` 継続レベル (B08050) / `handReveal` + `revealFromHand` cost /
+  ability-presence filter `defHasKeyword('【現場リムーブ時】')` (B08082/B08093) / `boundMatchesFilter` cond + handReveal `bind` (B07022 $revealed 色読み) /
+  `enterSource` cond (viaEffect+sourceFilter) は **全て engine 実装済**。これら参照の DEFER 行は engine ではなく card 出荷で解消する。
+- 本 wave で **不採用 (後続 engine)**: PR136 charSetCard owner-deck (pick 後 deck-source 解決要) / B05009 enterSource side-qualifier (enter payload に sourcePlayer emit 要)。

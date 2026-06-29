@@ -114,6 +114,21 @@ function revokeKeyword(s: GameState, uid: string, kw: string): void {
   }
 }
 
+/**
+ * キーワードを「ターン終了時まで失う」(engine additive 2026-06-29、B06068 京極真)。
+ * permanent な revokeKeyword (granted-splice) と異なり、印字 (CardDef.keywords) / continuous 由来も含めて
+ * 失わせるため turnEffects['revokedKeywords'] へ積む (read.char.keywords が最終集合から減算)。
+ * grantedKeywords (付与) の鏡像。clearTurnEffects('turn') で清掃される (rules/19 §「失う」効果はターン scope)。
+ */
+function revokeKeywordTurn(s: GameState, uid: string, kw: string): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+  const te = found.char.turnEffects;
+  const cur = (te['revokedKeywords'] as string[] | undefined) ?? [];
+  if (!cur.includes(kw)) cur.push(kw);
+  te['revokedKeywords'] = cur;
+}
+
 /** 元の能力を無効にする (rules/19) MR能力は無効にならない */
 function disableOriginalAbilities(s: GameState, uid: string): void {
   const found = findChar(s, uid);
@@ -148,6 +163,8 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     delete te['lvlMod_turn'];
     delete te['lvlMod_contact'];
     delete te['grantedKeywords'];
+    // engine additive (2026-06-29): revokeKeywordTurn が積んだ「ターン終了時まで失う」キーワード (B06068)。
+    delete te['revokedKeywords'];
     // Task D E4 (2026-06-12): textual-ability token / granted ability の清掃 (BUG-119 教訓:
     // 新 turn キーは必ずここに列挙)。typed flag は delete でなく false リセット (型整合)。
     delete te['actionTargetsActive'];
@@ -327,6 +344,7 @@ export const char = {
   setOverrideLP,
   grantKeyword,
   revokeKeyword,
+  revokeKeywordTurn,
   disableOriginalAbilities,
   setTurnEffect,
   clearTurnEffects,

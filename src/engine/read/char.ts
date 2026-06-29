@@ -103,6 +103,32 @@ function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDe
       total += delta;
     }
   }
+  // engine additive (2026-06-29): cross-side aura — 反対 side の bearer が宣言した *Opp aura を加算する
+  // (「【自分ターン中】相手の現場にいる…を AP-1000」B03033)。bearer の **target と反対 side** の現場 + PA-MR を走査し、
+  // ability.condition を bearer 自身の side で評価、auraFilterOpp が target に一致すれば apDeltaAuraOpp/lpDeltaAuraOpp を加算。
+  // auraExcludeSelf は cross-side では常に bearer≠target ゆえ非適用。同 side 走査と完全対称 (honor site 共有)。不在時 0 (回帰0)。
+  const oppSide: 'self' | 'opp' = ownerSide === 'self' ? 'opp' : 'self';
+  const whichOpp = which === 'apDeltaAura' ? 'apDeltaAuraOpp' : 'lpDeltaAuraOpp';
+  const oppBearers: Array<{ char: typeof target; inPA: boolean }> =
+    s.players[oppSide].scene.map(c => ({ char: c, inPA: false }));
+  const oppSlotMr = s.players[oppSide].partnerAreaMR;
+  if (oppSlotMr) oppBearers.push({ char: oppSlotMr, inPA: true });
+  for (const { char: bearer, inPA } of oppBearers) {
+    const bd = def.card(bearer.cardId);
+    if (!bd) continue;
+    const bearerCtx = { source: { player: oppSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+    for (const ability of bd.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+      const cm = ability.continuousModifier;
+      const delta = cm?.[whichOpp];
+      if (typeof delta !== 'number') continue;
+      if (ability.condition && !evalCond(s, ability.condition, bearerCtx)) continue; // 【自分ターン中】等 (bearer 側で評価)
+      const filter = cm?.auraFilterOpp as TargetFilter | undefined;
+      if (filter && !matchOneFilter(s, target.cardId, filter, target, targetCand)) continue;
+      total += delta;
+    }
+  }
   return total;
 }
 
@@ -194,13 +220,22 @@ function keywords(s: GameState, uid: string): string[] {
   // namedExceptionAllowed (突撃/迅速 の名乗り例外判定) 等で読まれず無効だった。
   // turn-scope の付与も「外部から与えられた能力」なので disabledOriginal でも残す (rules/19)。
   const turnGranted = (char.turnEffects['grantedKeywords'] as string[] | undefined) ?? [];
+  // engine additive (2026-06-29): ターン終了時まで印字キーワードを失う (「ターン終了時までこのキャラは
+  // 〚突撃[キャラ]〛を失う」B06068)。charRevokeKeyword scope:'turn' が turnEffects['revokedKeywords'] へ積む。
+  // ⚠ 減算対象は **印字 (base CardDef.keywords) + continuous (自身の grantKeywords) のみ**。granted / turnGranted
+  // (外部カードからの付与) は減算しない — 公式 B06068 Q&A「失った後に他カードの能力/効果で 突撃[キャラ] を
+  // 再付与された場合はアクション[キャラ]を行える」= 外部付与は「失う」効果と独立に重なる (再付与で復活)。
+  // 不在時 [] = 減算なし (既存カードは未宣言 → 回帰0)。clearTurnEffects('turn') で清掃。rules/19 §「失う」効果。
+  const revoked = (char.turnEffects['revokedKeywords'] as string[] | undefined) ?? [];
   if (char.keywordOverrides.disabledOriginal) {
     // 元の CardDef キーワードと continuous ability の grantKeywords は除外 (rules/19)
-    // granted は外部から与えられたキーワードなので残る (rules/19 §他のカード能力/効果による付与は無効にならない)
+    // granted は外部から与えられたキーワードなので残る (rules/19 §他のカード能力/効果による付与は無効にならない)。
+    // disabledOriginal では base/continuous (= 減算対象) が既に除外済 → external grant に revoke は及ばない (再付与は独立)。
     return [...new Set([...granted, ...turnGranted])];
   }
   const d = def.card(char.cardId);
-  const base: string[] = (d as { keywords?: string[] } | undefined)?.keywords ?? [];
+  // 印字キーワードから revoked を減算 (「失う」効果。外部 grant は下段で union するため独立に復活しうる)。
+  const base: string[] = ((d as { keywords?: string[] } | undefined)?.keywords ?? []).filter(kw => !revoked.includes(kw));
 
   // BUG-030 修正: scene 上の continuous + grantKeywords ability を resolve
   // rules/24 §常時有効型: 条件成立中は自動的に効果あり / 条件外で即失効
@@ -225,7 +260,9 @@ function keywords(s: GameState, uid: string): string[] {
     }
   }
 
-  return [...new Set([...base, ...granted, ...turnGranted, ...fromContinuous])];
+  // continuous (自身の grantKeywords) も revoked を減算 (印字と同じ「自前」由来)。granted/turnGranted は外部付与ゆえ非減算。
+  const fromContinuousKept = fromContinuous.filter(kw => !revoked.includes(kw));
+  return [...new Set([...base, ...granted, ...turnGranted, ...fromContinuousKept])];
 }
 
 function hasKeyword(s: GameState, uid: string, kw: string): boolean {

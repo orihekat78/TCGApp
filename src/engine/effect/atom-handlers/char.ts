@@ -123,9 +123,17 @@ export function atomCharRevokeKeyword(s: GameState, a: Record<string, unknown>, 
       const revokeUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof revokeUid !== 'string' || revokeUid.startsWith('$')) return;
       const revokeKw = a.kw as string;
-      mutate.char.revokeKeyword(s, revokeUid, revokeKw);
+      // engine additive (2026-06-29): scope:'turn' = 印字キーワードを「ターン終了時まで失う」(B06068 京極真)。
+      // 既定 'permanent' は従来どおり granted-splice (外部付与キーワードの恒久除去)。現出荷カードに
+      // charRevokeKeyword 使用は0件ゆえ既定挙動は不変 (回帰0)。turn は revokedKeywords へ積み read.char.keywords が減算。
+      const revokeScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      if (revokeScope === 'turn') {
+        mutate.char.revokeKeywordTurn(s, revokeUid, revokeKw);
+      } else {
+        mutate.char.revokeKeyword(s, revokeUid, revokeKw);
+      }
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRevokeKeyword', target: revokeUid, result: revokeKw });
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRevokeKeyword', target: revokeUid, result: `${revokeKw}/${revokeScope}` });
       return;
     }
 
