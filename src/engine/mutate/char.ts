@@ -210,7 +210,19 @@ function grantAbility(s: GameState, uid: string, ability: object): void {
 function setCard(s: GameState, uid: string, cardId: string, faceUp: boolean): void {
   const found = findChar(s, uid);
   if (!found) return;
-  found.char.setCards.push({ cardId, faceUp });
+  const { char, player } = found;
+  char.setCards.push({ cardId, faceUp });
+  // engine additive (2026-06-29): カード1枚が host にセットされた → setcard:enter emit (setcard:leave の対)。
+  // push 後 (host は在場) に emit するため listener (host 自身 selfOnly) は collectCardsInPlay で捕捉される。
+  // payload/source は setcard:leave と同形。cause:'effect' (本関数は atomCharSetCard 経由のみ)。
+  // 既存カードは誰も setcard:enter を購読しない (setCardMatches/該当 hook を持つ印字 ability は 0 件) ため、
+  // emit しても handleHook が一致 ability を見つけず pendingEffects に何も積まない = 挙動不変 (smoke byte-identical)。
+  event.emit(
+    s,
+    'setcard:enter',
+    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: cardId, faceUp, cause: 'effect' },
+    { player, uid: char.uid, cardId: char.cardId },
+  );
 }
 
 /** キャラの下に重ねる (stackedCards 加算) (rules/16) */

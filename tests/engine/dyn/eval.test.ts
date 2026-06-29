@@ -193,6 +193,38 @@ describe('engine.dyn.eval', () => {
       const s = createEmptyGameState();
       expect(() => evalDyn(s, '$self.stackedCount', makeCtx())).toThrow(/source\.uid/);
     });
+
+    // engine additive (2026-06-29): $self.oppSceneCount — 相手の現場キャラ枚数 (B08086 テキーラ)。
+    // player ベース (uid 要件より前)、フィルタ無し総数、現場のみ。
+    it('$self.oppSceneCount counts opponent scene chars, NOT own scene (B08086)', () => {
+      registerCardDef(defOf({ id: 'C001', ap: 0 }));
+      let s = withScene(createEmptyGameState(), 'self', [
+        makeChar({ uid: 'u1', cardId: 'C001' }),
+        makeChar({ uid: 'u2', cardId: 'C001' }),
+        makeChar({ uid: 'u3', cardId: 'C001' }),
+      ]);
+      s = withScene(s, 'opp', [makeChar({ uid: 'o1', cardId: 'C001' }), makeChar({ uid: 'o2', cardId: 'C001' })]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } });
+      // DECOY: bearer's own 3 chars must NOT count (the false-green a naive $self.sceneCount would produce)
+      expect(evalDyn(s, '$self.oppSceneCount', ctx)).toBe(2);
+      expect(evalDyn(s, '$self.oppSceneCount * 2000', ctx)).toBe(4000);
+    });
+
+    it('$self.oppSceneCount resolves opponent relative to source.player (not hardcoded opp)', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      let s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'u1', cardId: 'C001' }), makeChar({ uid: 'u2', cardId: 'C001' })]);
+      s = withScene(s, 'opp', [makeChar({ uid: 'o1', cardId: 'C001' })]);
+      // bearer on opp scene → opponent = self → counts self.scene (2)
+      expect(evalDyn(s, '$self.oppSceneCount', makeCtx({ source: { player: 'opp', area: 'scene', uid: 'o1' } }))).toBe(2);
+      // bearer on self scene → opponent = opp → counts opp.scene (1)
+      expect(evalDyn(s, '$self.oppSceneCount', makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } }))).toBe(1);
+    });
+
+    it('$self.oppSceneCount is 0 when opponent scene is empty', () => {
+      registerCardDef(defOf({ id: 'C001' }));
+      const s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'u1', cardId: 'C001' })]);
+      expect(evalDyn(s, '$self.oppSceneCount', makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } }))).toBe(0);
+    });
   });
 
   describe('$contact', () => {

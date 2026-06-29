@@ -523,6 +523,38 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       return;
     }
 
+export function atomHandAddFromDeckBottom(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // engine additive (2026-06-29, B03051): デッキの下から1枚を手札に加える。atomHandAddFromDeck の
+      // positional 下から版 (bind ではなくデッキ末尾=「下」を1枚)。pick を持たない fixed verb (draw/souza 同型)。
+      // 「下」=末尾: mutate.deck.toBottom が push する側 (deck.ts:62) → deck[length-1] / deck.pop()。
+      // rules/14+26: 最後の1枚を取りデッキ0になったら即リフレッシュ (B03051 Q&A「それを手札に→リフレッシュ」)。
+      const hadbP = resolvePlayer(a.player, ctx);
+      // 事前0 (chain で先行効果が空にした等): take の前に refresh (atomEvidenceGain と同流儀)。
+      if (s.players[hadbP].deck.length === 0) {
+        const r = mutate.deck.refresh(s, hadbP);
+        if (!r.ok) {
+          if (s.gameResult === undefined) mutate.gameResult.set(s, hadbP === 'self' ? 'opp' : 'self', 'deck-out');
+          mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', result: 'empty-deck-refresh-fail' });
+          return;
+        }
+      }
+      const deck = s.players[hadbP].deck;
+      const bottomId = deck[deck.length - 1];
+      if (bottomId === undefined) {
+        mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', result: 'none' });
+        return;
+      }
+      deck.pop();
+      mutate.hand.add(s, hadbP, [bottomId]);
+      // take でデッキが空になったら即リフレッシュ (rules/14 即座 / B03051 Q&A: 残1枚→手札→リフレッシュ)。
+      if (s.players[hadbP].deck.length === 0 && s.gameResult === undefined) {
+        const r2 = mutate.deck.refresh(s, hadbP);
+        if (!r2.ok && s.gameResult === undefined) mutate.gameResult.set(s, hadbP === 'self' ? 'opp' : 'self', 'deck-out');
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', target: bottomId, result: 'ok' });
+      return;
+    }
+
 export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // BUG-074: 同じく string|array 両対応に正規化
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set

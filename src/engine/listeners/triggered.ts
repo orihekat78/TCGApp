@@ -103,6 +103,10 @@ export const TRIGGERED_HOOKS = [
   // host が listener 自身 (B07034 self-leave Q&A) の場合も emit-before-splice で collectCardsInPlay に残る
   // → 特別 handler 不要、通常 in-play scan (handleHook) で処理。side 判定は triggerPlayerIs (file:pop 同様)。
   'setcard:leave',
+  // engine additive (2026-06-29): 「このキャラにカードがセットされたとき」(rules/16)。
+  // emit 元 = mutate/char.ts setCard (push 後、host 在場)。listener = host 自身 (selfOnly source.uid===host.uid)。
+  // set card 自体は ability を持たない。通常 in-play scan (handleHook) で処理 = 特別 handler 不要。
+  'setcard:enter',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];

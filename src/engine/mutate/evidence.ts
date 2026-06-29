@@ -94,8 +94,9 @@ function toRemove(s: GameState, ev: EvidenceCard): void {
 /**
  * 指定 cardId を証拠エリアに追加する (rules: イベント自身を証拠化「このカードを表向きのまま証拠として得る」)。
  * イベント使用後は handUseCard が当該カードを **リムーブエリア** へ置くため、リムーブから当該 cardId を
- * 1 枚 (最後の出現) 取り除いてから証拠へ移す。リムーブに無い場合も証拠へは追加する (「得る」semantics)。
- * fromArea で取り除き元を切替 (既定 'remove' = イベント自身経路)。
+ * 1 枚 (最後の出現) 取り除いてから証拠へ移す。fromArea==='remove' で当該 cardId がリムーブに **無い**
+ * 場合は証拠化しない (B06026 Q&A: 解決時にリムーブエリアを離れていたら「得られない」, rules/14)。
+ * fromArea で取り除き元を切替 (既定 'remove' = イベント自身経路 / 'none' = handToEvidence 直接付与)。
  */
 function gainCard(
   s: GameState,
@@ -108,7 +109,12 @@ function gainCard(
   if (fromArea === 'remove') {
     const list = s.players[p].remove;
     const idx = list.lastIndexOf(cardId);
-    if (idx !== -1) list.splice(idx, 1);
+    // B06026 Q&A (rules/14): 効果解決までにリフレッシュ等で当該カードがリムーブエリアを離れていた場合、
+    // 証拠として得られない。idx===-1 = source 不在 → 証拠化せず no-op で返す。
+    // イベント自身経路 (handUseCard が remove へ置いた直後の同期解決) は常に idx!==-1 のため挙動不変。
+    // 非同期 (キャラの【現場リムーブ時】等、B06026) でのみ idx===-1 が起こりうる。
+    if (idx === -1) return;
+    list.splice(idx, 1);
   }
   s.players[p].evidence.push({ cardId, faceUp, origin });
 }

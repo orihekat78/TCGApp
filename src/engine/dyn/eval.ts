@@ -301,6 +301,15 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     const side = ctx.source.player;
     return state.players[side].file.length;
   }
+  // engine additive (2026-06-29): $self.oppSceneCount — 相手 (ctx.source.player の対戦相手) の現場キャラ枚数。
+  // B08086 テキーラ「相手の現場にいるキャラ1枚につき AP+2000」継続修飾の dyn 足場 (rules/15 §常時有効型)。
+  // sceneTrait/faceUpEvidence/fileCount と同じ player ベース (uid 要件より前)、フィルタ無し総数。静的
+  // state.players[opp].scene.length 読み → continuousDelta 再帰経路 (BUG-156/157) を踏まない。現場のみ
+  // (相手パートナーエリアの MR は数えない、rules/03 §現場=scene)。
+  if (prop === 'oppSceneCount') {
+    const opp = ctx.source.player === 'self' ? 'opp' : 'self';
+    return state.players[opp].scene.length;
+  }
   const uid = ctx.source.uid;
   if (!uid) {
     throw new Error(`dyn.eval: $self.${prop} requires ctx.source.uid (none provided)`);

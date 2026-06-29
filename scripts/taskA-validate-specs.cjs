@@ -12,7 +12,7 @@ const path = require('path');
 const VERBS = new Set([
   'draw', 'discard', 'mill', 'fileAdd', 'filePopToHand',
   'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
-  'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck',
+  'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck', 'handAddFromDeckBottom',
   'handToEvidence',
   'handReveal', // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
   'discardRandom', // engine additive (2026-06-28) — 手札ランダムリムーブ (B01077)
@@ -42,6 +42,7 @@ const HOOKS = new Set([
   'file:pop', // Task D E3 (2026-06-12)
   'action:end', 'evidence:gain', // engine拡張 wave#2 cluster3 (2026-06-13)
   'setcard:leave', // engine拡張 wave#2 cluster9 (2026-06-15)
+  'setcard:enter', // engine additive (2026-06-29, B02018/B06046)
 ]);
 
 const CONDS = new Set([
@@ -62,6 +63,10 @@ const CONDS = new Set([
   'enterSource',
   // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)
   'removedCharMatches',
+  // engine additive (2026-06-29, B09089): このターンの登場枚数 n 以下か
+  'enterCountAtMost',
+  // engine additive (2026-06-29, B06046): setcard:enter payload の set card filter 評価
+  'setCardMatches',
 ]);
 
 const COSTS = new Set([

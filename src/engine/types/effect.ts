@@ -55,6 +55,12 @@ export type Condition =
   // engine additive: removeCountAtLeast — リムーブエリアの **総枚数** (filter 無し) が n 以上か (B03104
   // 「リムーブエリアにカードが15枚以上ある場合」)。removeColor/Trait/NameAtLeast の unfiltered 版。
   | { kind: 'removeCountAtLeast'; player: 'self' | 'opp'; n: number }
+  // engine additive (2026-06-29, B09089 刑事だらけの店): 「このターン中、自分の現場にキャラが
+  // 登場していない場合」= turnState[p].enterCountThisTurn が n 以下か。player は resolvePlayer 規約
+  // ('self'=カード所有者)。enterCountThisTurn は mutate/scene.ts enter() のみが increment、turn:start で
+  // 0 リセット。未初期化は 0 扱い。リムーブ/推理/アクションは increment しないので effect 解決途中で
+  // 読んでも prior-enter 数を正しく反映 (handAtMost/removeCountAtLeast と同じ player-resolved 数値比較)。
+  | { kind: 'enterCountAtMost'; player: 'self' | 'opp'; n: number }
   | { kind: 'stackedCountAtLeast'; ref: TargetingRef; n: number }
   // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態 (active/sleep/stun) 判定。
   // 「このキャラをスリープさせ(…)てもよい。そうした場合…」を already-sleep で gate するための条件
@@ -97,6 +103,11 @@ export type Condition =
   // Task D E4 (2026-06-12): payloadKey — payload の uid フィールド名を指定 (例: 'guardUid' で
   // 「レベル6以下のキャラによってガードされたとき」B09041。player は scene 走査で導出)。
   | { kind: 'triggerCharMatches'; side?: 'self' | 'opp' | 'either'; filter?: TargetFilter; excludeSource?: boolean; payloadKey?: string }
+  // engine additive (2026-06-29): setcard:enter payload の set card を filter 評価。
+  // 「このキャラに〚特徴[YAIBA]〛のカードがセットされたとき」(B06046)。matcherCondition として使う。
+  // 裏向きセット (faceUp!==true) は情報を持たない (rules/16) → 必ず false。set card は scene char では
+  // ないため matchOneFilter の char 引数は null (CardDef の印字属性のみ評価)。
+  | { kind: 'setCardMatches'; filter: TargetFilter }
   // engine拡張 wave#2 cluster3 (2026-06-13): action:declare payload の target.kind を読む。
   // 「アクション[キャラ]したとき」(v:'char') / 「アクション[事件]したとき」(v:'case') の subtype gate を
   // declarative 化 (matcher closure は granted descriptor で禁止 = validate.ts のため JSON cond が必須。
@@ -199,6 +210,10 @@ export type AtomVerb =
   // rules: 03-field-areas.md §状態 / 15-abilities-effects.md。B05013/B06017/B06019 で使用。
   | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'evidenceFlipDown' | 'selfToEvidence' | 'evidenceToDeck'
   | 'evidenceToHand' | 'handAddFromRemove' | 'handAddFromDeck'
+  // engine additive (2026-06-29): handAddFromDeckBottom — 「デッキのカードを下から1枚手札に加える」
+  // (B03051 怪盗キッド)。handAddFromDeck (上から、bind 解決) の positional 下から版。pick 無しの fixed verb
+  // (draw/souza 同型)。最後の1枚を取りデッキ0なら即リフレッシュ (rules/14 / B03051 Q&A)。args.player 明示。
+  | 'handAddFromDeckBottom'
   // engine拡張 wave (2026-06-21): handToEvidence — 手札から任意1枚を選び「裏向きで証拠として得る」
   // (evidenceToHand の逆。push=証拠1番上、公式Q&A B06029「手札から裏向きで得る証拠は1番上」)。
   // rules: 01-victory-conditions.md §証拠 / 06-card-types.md §イベント。PB pick (defaultArea 'hand')。

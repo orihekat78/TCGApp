@@ -39,6 +39,7 @@ import {
   atomEvidenceToHand,
   atomHandToEvidence,
   atomHandAddFromDeck,
+  atomHandAddFromDeckBottom,
   atomHandAddFromRemove,
   atomDeckShuffle,
   atomRemoveAreaAllToDeckBottom,
@@ -144,6 +145,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomHandToEvidence(s, a, ctx, verb);
     case 'handAddFromDeck':
       return atomHandAddFromDeck(s, a, ctx);
+    case 'handAddFromDeckBottom':
+      return atomHandAddFromDeckBottom(s, a, ctx);
     case 'handAddFromRemove':
       return atomHandAddFromRemove(s, a, ctx, verb);
     case 'sceneEnter':

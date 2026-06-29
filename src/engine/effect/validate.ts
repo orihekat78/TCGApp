@@ -22,7 +22,7 @@ const ATOM_VERB_MAP = {
   draw: true, discard: true, discardRandom: true, mill: true, fileAdd: true, filePopToHand: true,
   fileRemoveTop: true, fileFlipTop: true, // Task D E3 (2026-06-12)
   evidenceGain: true, evidenceLose: true, evidenceFlip: true, selfToEvidence: true, evidenceToDeck: true,
-  evidenceToHand: true, handAddFromRemove: true, handAddFromDeck: true,
+  evidenceToHand: true, handAddFromRemove: true, handAddFromDeck: true, handAddFromDeckBottom: true,
   handToEvidence: true,
   handReveal: true, // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
   evidenceFlipDown: true, // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)

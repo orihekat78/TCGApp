@@ -240,6 +240,17 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const p = resolvePlayer(cond.player, ctx);
       return state.players[p].remove.length >= cond.n;
     }
+    // engine additive (2026-06-29, B09089): このターン中の登場枚数 (enterCountThisTurn) が n 以下か。
+    // 「登場していない場合」= n:0。removeCountAtLeast/handAtMost と同型の player-resolved 数値直読
+    // (candidates()/continuous 再帰なし → BUG-113 safe)。未初期化は 0 扱い (scene.ts:111 と同流儀)。
+    // ⚠ latent (現状 unhit): STABLE cond ゆえ resolveEffectPicks が pre-walk eval する。同一 sequence 内で
+    //   sceneEnter の **後** に pick 含む conditional{if:enterCountAtMost} を置くと pre-walk が enter 前 count
+    //   で eager-surface し over-fire しうる (BUG-161 同型)。B09089 は [sceneRemove, conditional] で remove は
+    //   enter を起こさないため pre-walk/runtime 同値 = 安全。将来カードは enter→gate 順を避けること。
+    case 'enterCountAtMost': {
+      const p = resolvePlayer(cond.player, ctx);
+      return (state.turnState[p].enterCountThisTurn ?? 0) <= cond.n;
+    }
     case 'stackedCountAtLeast': {
       const uids = resolveCharsForRef(state, cond.ref, ctx);
       return uids.some(uid => charRead.stackedCount(state, uid) >= cond.n);
@@ -371,6 +382,16 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return true;
     }
+    // engine additive (2026-06-29): setcard:enter payload の set card を filter 評価 (B06046)。
+    // 「このキャラに〚特徴[YAIBA]〛のカードがセットされたとき」。matcherCondition として host-self gate と and。
+    // 裏向きセット (faceUp!==true) は情報を持たない (rules/16) → 必ず false。set card は scene char では
+    // ないため matchOneFilter の char 引数は null (CardDef 印字属性のみ、triggerCharMatches L171 と同式)。
+    case 'setCardMatches': {
+      const pl = ctx.triggerPayload as { setCardId?: string; faceUp?: boolean } | undefined;
+      if (!pl || typeof pl.setCardId !== 'string' || pl.faceUp !== true) return false;
+      const cand: Candidate = { kind: 'char', uid: pl.setCardId, cardId: pl.setCardId, player: ctx.source.player };
+      return matchOneFilter(state, pl.setCardId, cond.filter, null, cand);
+    }
     // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。
     // leave:to-remove payload snapshot {uid,cause,side,byUid} を **scene 再取得せず** 読む
     // (除去キャラは splice 済 = triggerCharMatches L298 の scene.find は使えない、13198)。
@@ -476,9 +497,11 @@ const CONDITION_KIND_MAP = {
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
   removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true, removeCountAtLeast: true,
+  enterCountAtMost: true, // engine additive (2026-06-29, B09089)
   stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
+  setCardMatches: true, // engine additive (2026-06-29, B06046)
   charTurnEffect: true, // Task D E4 (2026-06-12)
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)
   enterSource: true, // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled)

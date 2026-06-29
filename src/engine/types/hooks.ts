@@ -48,6 +48,14 @@ export type HookName =
   // listener は triggerPlayerIs で自/相手側を判定 (host uid を持つが set card 自体に ability は無い)。
   // B07034/B07034P/PR231 a1 (side:self) + B02020/B02020P a1 (side:opp) が購読。
   | 'setcard:leave'
+  // engine additive (2026-06-29): カード1枚が host キャラにセットされたとき (rules/16 セット)。
+  // setcard:leave の対。mutate/char.ts setCard (=set-card-add の唯一の書込点) が push 後に per-occurrence emit。
+  //   payload: { player(=host owner), hostUid, hostCardId, setCardId, faceUp, cause }
+  //   source : { player, uid(=hostUid), cardId(=hostCardId) }
+  // host が listener (selfOnly: source.uid===host.uid)。set card 自体に ability は無い。裏向きセット
+  // (faceUp:false) は情報を持たない (rules/16) → setCardMatches 条件は faceUp!==true を弾く。
+  // B02018「このキャラにカードがセットされるたび」/ B06046「〚特徴[YAIBA]〛のカードがセットされるたび」用。
+  | 'setcard:enter'
   | 'mr:overwrite'
   // 効果解決関連 (rules: 15-abilities-effects.md)
   | 'effect:declared'

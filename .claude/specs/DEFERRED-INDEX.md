@@ -66,6 +66,31 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 
 **新 gate 発見: cardName-EXCLUSION candidate filter** (B06087/PR280) — TargetFilter は positive inclusion のみ。将来の小 cluster 候補。
 
+## ✅ engine additive wave 2026-06-29 (5 primitives 出荷, engine/bulk-additive-0629)
+
+純 additive 5 件をまとめて出荷 (tsc 0 / vitest 3305→3326 / smoke winsA=498・avgTurns 11.00 byte-identical /
+8 lint OK / opus 7-agent 敵対 review = 7 ship・0 blocker)。全て新 symbol = 既存カード未参照 → 挙動不変。
+カード自身は別 card session で出荷 (本 wave は engine 足場 + 専用 unit test のみ)。
+
+| primitive | 機構 | 解禁カード (要 card-author) |
+|-----------|------|------|
+| `setcard:enter` hook + `setCardMatches` cond | mutate/char.ts setCard が push 後 emit (set-card-add の唯一書込点)。host-self=selfOnly。set card filter は faceUp===true のみ (rules/16 裏向き=情報無) | B02018 (host-self, face-down) / B06046・B06046P (〚特徴YAIBA〛filter, face-up set) |
+| `enterCountAtMost` cond | turnState[p].enterCountThisTurn ≤ n の player-resolved 直読 (removeCountAtLeast 同型) | B09089 (「このターン自分の現場に登場していない場合」, sole gate) |
+| `handAddFromDeckBottom` verb | デッキ末尾 (=下) 1枚を手札へ。take 前後で deck0 refresh (rules/14, B03051 Q&A) | B03051 (sole gate) |
+| `$self.oppSceneCount` dyn | resolveSelf に opp 現場枚数 prop (continuous AP aura 足場、static length 読み) | B08086 (sole gate) |
+| selfToEvidence gainCard idx===-1 harden | fromArea='remove' で source 不在なら証拠化せず return (B06026 Q&A / rules/14)。全 shipped selfToEvidence=event 同期解決で分岐未踏=挙動不変 | B06026 (a2 の必要条件、char-leave 経路は card session で要検証) |
+
+**latent 概念 (review 記録、現状 unhit)**: (1) enterCountAtMost は STABLE cond ゆえ pre-walk eval → 同一 sequence で
+sceneEnter の後に pick 含む conditional を置くと over-fire (BUG-161 同型)。B09089 は [sceneRemove,conditional] で安全。
+将来カードは enter→gate 順を避ける。(2) handAddFromDeckBottom の deck+remove 合計1枚エッジ (§4b test) は二重 refresh →
+deck-out 敗北 (rules/14 literal)。(3) setCardMatches を AP/LP/level で絞ると c=null=印字値のみ (fileTopMatches と同式)。
+(4) selfToEvidence harden の MR PA-redirect ケース (host が PA へ) は idx===-1 で no-gain = MR 期に要再裁定 (B06026 は非MR)。
+(5) $self.oppSceneCount は dyn ゆえ sync-taskA-whitelists 非対象 (tsc + dyn/eval.test.ts decoy で担保)。
+
+**本 wave で DEFER 継続 (engine 足場を作らなかった)**: 同名 scene-count dyn ($self.sameNameCount, B09036) — 0-card net
+unlock かつ B09036 は threshold-branch (condition 要) + rename + 【FILE5】の三重 gate。grounding agent も「dyn では不足、
+condition が必要」と指摘 → speculative ゆえ見送り (骨格凍結・収束方針)。
+
 ## §handReveal — engine additive 出荷 (2026-06-28) + companion defer
 
 handReveal atom (「手札から filter 一致を1枚公開してもよい。そうした場合〜」、zone 変化なし) +
@@ -646,7 +671,7 @@ yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep
 |-----|----------------------|---------|
 | B05015 (小嶋元次) | 「相手が〚ミスリード〛したとき」反応 trigger が card-triggerable hook に無い (misread は内部 reasoning:before-add で消費、emit 無)。B09016 と同一 gate | misread-performed hook emit (engine) |
 | B02062 (世良真純) | 「相手の証拠がリムーブされたとき」を in-play char が観測する hook 不在 (evidence:remove-by-action は除去証拠自身の hirameki 専用、evidence:lose は死hook、evidence:gain は自actor視点) | opponent-evidence-removal observer hook (engine) |
-| B03051 (怪盗キッド) | 「デッキの下から1枚手札に加える」= deck-BOTTOM→hand primitive 不在 (deck verb は全て top 側) | deck-bottom retrieval verb (engine) |
+| ~~B03051 (怪盗キッド)~~ | ✅ **engine 解禁 (2026-06-29, engine/bulk-additive-0629)**: `handAddFromDeckBottom` verb 追加 (デッキ末尾→手札 + refresh)。sole gate ゆえ **card session で出荷可** | engine変更0 (card session で出荷) |
 | B09061 (ジェイムズ) / B07022 (沖田総司) | **hand-reveal-as-gate primitive = 出荷済 (2026-06-28)** だが両者とも残 gate あり。**B09061 a1 =「FBI を3枚公開」固定数** → handReveal 短縮形 `n:3` は候補 <3 のとき all-or-nothing で gate せず over-fire (2026-06-28 probe で実証、§handReveal 参照)。B07022 は公開手札カードの **色分岐 = $revealed 色読み condition** が残 gate | **handReveal exact-N gate (engine, B09061)** / $revealed 色読み companion (B07022) |
 | B06025 (ケロ介) | ヒラメキ「リムーブした場合このキャラを登場」= 証拠リムーブ中の自身を現場再登場する primitive 不在 (ctx.source.uid=virtual evidence、sceneEnter は cardId 要求・area:evidence splice 未実装) | evidence-transient self-reenter (engine) |
 | B02002 (江戸川コナン) | 既知 color-not filter gate (wave novel-0624 で既出) + per-非青char AP scaling dyn ($self.sceneColor 不在) | colorNot filter + sceneColor dyn (engine) |
@@ -672,9 +697,9 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | ~~B06006 (江戸川コナン)~~ | ✅ **engine 解禁 (2026-06-28、engine/relative-ap-random-removal)**: `$self.stackedCount` dyn token を resolveSelf に追加 (`scene.byUid(uid)?.stackedCards ?? 0`、session64 `$self.setCardCount` 同型・static field 読み)。a2「下に重なるカード1枚につき AP+1000」= `continuousModifier{apDelta:{dyn:'$self.stackedCount * 1000'}}` で表現可。a1+a3 既GREEN → **全句 buildable (card session で出荷)** | engine変更0 (card session で出荷) |
 | B05115 (弁崎素江) | 「相手の能力/効果で手札からこのカードがリムーブされたとき」= hand-leave 反応 hook 不在 (HookName に leave:from-hand 無、hand discard は silent mutation、手札カードは collectCardsInPlay 非走査) | hand-removal observer hook + source-attribution (engine) |
 | B06023 / B06034 (金棒博士/鬼丸城) | hirameki-trigger-from-flip: cost flipFaceUpEvidence は count のみ記録 (flipカード identity 破棄)、flip契機 hook 不在、別カードの【ヒラメキ】効果を起動する verb 不在 (hirameki は evidence:remove-by-action 専属) | flip-evidence hook + cross-card hirameki invoke verb (engine) |
-| B06026 (コウモリ男) | a1/a3 green。a2 selfToEvidence の character-leave 経路が gainCard idx===-1 で push-anyway → カード自身 Q&A「解決前にリムーブエリアを離れたら証拠化不可」に反する (全 shipped selfToEvidence は event=同期解決でこの分岐未踏) | gainCard idx===-1 で gain しない harden (engine) |
+| B06026 (コウモリ男) | a1/a3 green。a2 = **✅ gainCard idx===-1 harden 出荷 (2026-06-29, engine/bulk-additive-0629)** (source 不在で証拠化せず return)。残: a2 の character-scoped 【現場リムーブ時】→selfToEvidence 経路 (leave:to-remove self-trigger) を card session で実機検証 (handleLeaveToRemoveSelf は配線済の見込み、未実証) | 残: char-leave selfToEvidence の card-author 検証 |
 | B06027 (カマキリ男等) | hirameki「このキャラをスリープ状態で登場」= 証拠リムーブ中の自身を現場再登場 primitive 不在 (evidence→scene verb 無、replacement 意味論) | evidence-transient self-reenter (engine、B06025 と同族) |
-| B06047 (鉄刃) | (1) 手札カードのレベル-1修正 (hand-use level gate は静的 def.level 読み、ContinuousModifier.lvlDelta は scene-char 専用) (2)「このキャラにカードがセットされたとき」= set-onto-host trigger hook 不在 (setcard:leave のみ) | hand-level modifier + setcard:enter hook (engine) |
+| B06047 (鉄刃) | (2)「このキャラにカードがセットされたとき」= **✅ setcard:enter hook 出荷 (2026-06-29, engine/bulk-additive-0629)**。残 (1) 手札カードのレベル-1修正 (hand-use level gate は静的 def.level 読み、ContinuousModifier.lvlDelta は scene-char 専用) のため **継続 DEFER** | 残: hand-level modifier (engine) |
 | B07008 (小嶋元太) | (1) 手札カードの per-count level 減 (cross-field UNION count[cardName 阿笠博士 + trait 少年探偵団] dyn 無、$self.sceneCardName 無) (2) in-hand level modifier (同上) | per-count union dyn + hand-level modifier (engine) |
 | B07013 (event 予告状) | sequence の chain-gate continuation 内 $picked carrier-reuse (un-stun を同一 picked stun-char に2回) = 最深 nesting。human dispatch path で rider 喪失の既知 false-green class (BUG-130/158)、要 human-path probe (+ event closure) | carrier-reuse human-path 実証 or event closure |
 | B07096 (ウォッカ) | 突撃[レベル4以下のキャラ] = filtered-突撃 variant (namedExceptionAllowed は exact-string only、組込み target filter付き突撃 grant 不可) + removed-char level filter trigger | filtered-keyword grant (engine) |

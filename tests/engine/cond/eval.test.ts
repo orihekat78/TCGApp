@@ -331,6 +331,30 @@ describe('engine.cond.eval', () => {
     });
   });
 
+  describe('enterCountAtMost (B09089)', () => {
+    it('fresh turn (field undefined) reads as 0 → atMost:0 is true', () => {
+      // createEmptyTurnFlags does not initialize enterCountThisTurn → ?? 0 default
+      expect(evalCond(createEmptyGameState(), { kind: 'enterCountAtMost', player: 'self', n: 0 }, makeCtx())).toBe(true);
+    });
+    it('decoy: a char entered this turn (count=1) flips n:0 to false but n>=1 stays true', () => {
+      let s = createEmptyGameState();
+      s = { ...s, turnState: { ...s.turnState, self: { ...s.turnState.self, enterCountThisTurn: 1 } } };
+      // false-green guard: an impl ignoring the field, or hard-returning true, would fail the n:0===false line
+      expect(evalCond(s, { kind: 'enterCountAtMost', player: 'self', n: 0 }, makeCtx())).toBe(false);
+      expect(evalCond(s, { kind: 'enterCountAtMost', player: 'self', n: 1 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'enterCountAtMost', player: 'self', n: 2 }, makeCtx())).toBe(true);
+    });
+    it('reads the specified player side independently (opp vs self)', () => {
+      let s = createEmptyGameState();
+      s = { ...s, turnState: { ...s.turnState,
+        self: { ...s.turnState.self, enterCountThisTurn: 2 },
+        opp: { ...s.turnState.opp, enterCountThisTurn: 0 } } };
+      expect(evalCond(s, { kind: 'enterCountAtMost', player: 'opp', n: 0 }, makeCtx())).toBe(true);
+      expect(evalCond(s, { kind: 'enterCountAtMost', player: 'self', n: 0 }, makeCtx())).toBe(false);
+      expect(evalCond(s, { kind: 'enterCountAtMost', player: 'self', n: 2 }, makeCtx())).toBe(true);
+    });
+  });
+
   describe('stackedCountAtLeast', () => {
     it('checks stacked card count', () => {
       let s = createEmptyGameState();
