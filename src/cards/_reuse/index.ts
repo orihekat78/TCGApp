@@ -1015,6 +1015,9 @@ import { B03088 } from '../ct-p03/B03088.js';
 import { B04037 } from '../ct-p04/B04037.js';
 import { B06058 } from '../ct-p06/B06058.js';
 
+import { B09096 } from '../ct-p09/B09096.js';
+import { B09096P } from '../ct-p09/B09096P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1265,4 +1268,8 @@ export const REUSE_CARDS: CardDef[] = [
   B03020, B03023, B06057, B07104, B07104P, B08071, B08091, B09080, PR264, PR270,
   // Task A batch
   B03035, B04037, B06058, B03088,
+  // wave engine0 tierA (2026-06-29) — G15 relative-AP filter: certify-yellow が cluster12 nested-filter-dyn
+  //   解禁前の stale だった。apMin/apMax:{dyn:'$self.ap'} で「このキャラと同じAP」を pick 列挙前 literalize
+  //   (probe 3/3 pass、engine変更0)。B09096/P キャンティ。
+  B09096, B09096P,
 ];
