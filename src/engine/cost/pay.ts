@@ -192,6 +192,12 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     case 'removeDeckTop': {
       const removed = mutate.deck.removeFromTop(state, cost.player, cost.n);
       acc.paidItems.push({ kind: 'removeDeckTop', details: { removed } });
+      // engine additive wave (2026-06-29d): costRemovedMatches cond (B03003/B04077/B06078
+      // 「コストによって〚X〛がリムーブされた場合」) が参照する除去 cardId を ctx.costPaid へ記録。
+      // flipFaceUpEvidence の count 記録と同型。複数 removeDeckTop コストは ids を accumulate (rare)。
+      if (!ctx.costPaid) ctx.costPaid = {};
+      const prior = (ctx.costPaid['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
+      ctx.costPaid['removeDeckTop'] = { ids: [...prior, ...removed] };
       return;
     }
     case 'discardEvidence': {

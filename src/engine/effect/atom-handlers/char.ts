@@ -196,7 +196,10 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
       // engine-extension #5b PA短縮形 (2026-06-05 残課題解消):
       // uid 未指定 + fromDeckTop + n/max で「キャラを N 枚まで選び、デッキ上端を裏向きでセット」
       // を declarative に表現できる (B02020/B02023/B02030 系)。sceneRemove/sceneToHand と同型。
-      if (a.uid === undefined && a.fromDeckTop && typeof a.player === 'string' && hasNorMax(a)) {
+      // engine additive wave (2026-06-29d): fromSelf も短縮形 pick (host 選択) を起動する。
+      // host 候補 side は resolvePlayer(a.player='self')、filter (色/レベル) は a.filter (B01023 無条件 /
+      // B01057【白】 / B02013 レベル7以下【青】)。再 dispatch 時 uid 解決済 → 下の fromSelf branch がセット。
+      if (a.uid === undefined && (a.fromDeckTop || a.fromSelf) && typeof a.player === 'string' && hasNorMax(a)) {
         // scsP = deck-source / 既定 side (a.player 側、'opp' なら相手の現場/デッキを対象)。
         // BUG-120: 選択者 (chooser/byPlayer) は a.player ではなく **controller** (ctx.source.player)。
         //   旧コードは byPlayer=scsP を渡し、player:'opp' (B02020/B03032) で『controller が相手キャラを
@@ -213,6 +216,28 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
       // BUG-068: bind ref 解決を配線
       const scUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof scUid !== 'string' || scUid.startsWith('$')) return;
+      // engine additive wave (2026-06-29d): fromSelf — 使用イベント自身 (ctx.source.cardId) を所有者の
+      // remove から引き、host へ **faceUp** でセットする WRITE 経路 (B01023/B01057/B02013、session70
+      // on-set-host READ の end-to-end 化)。hand-use はイベントを remove へ着地させてから効果解決するため
+      // remove に在る (lastIndexOf で末尾=直近着地分を1枚)。faceUp 固定 (on-set-host rider は faceUp のみ
+      // READ、rules/16)。host 不在 (現場0) は「セットできるキャラがいなければ解決後リムーブ」(公式Q&A
+      // B01023) ＝ remove から引かず no-op。readScene.byUid は setCard の findChar と同一 scan (fromDeckTop
+      // BUG-153 と同流儀)。faceDown 引数 (a.faceUp) は読まない — self-event set は常に faceUp。
+      if (a.fromSelf === true) {
+        if (!readScene.byUid(s, scUid)) {
+          mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'host-absent' });
+          return;
+        }
+        const selfCid = ctx.source.cardId;
+        if (typeof selfCid !== 'string' || selfCid === '') return;
+        const ownerP = resolvePlayer((a.player as string | undefined) ?? 'self', ctx);
+        const removeArr = s.players[ownerP].remove;
+        const ridx = removeArr.lastIndexOf(selfCid);
+        if (ridx >= 0) removeArr.splice(ridx, 1);
+        mutate.char.setCard(s, scUid, selfCid, true);
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: selfCid });
+        return;
+      }
       // engine-extension #5b (2026-06-05): fromDeckTop オプション。
       // 「自分のデッキのカードを上から1枚裏向きでセットする」(B02018/B02020/B02023/B02030/B08054)
       // 系で使用。a.player (既定 'self') の deck.shift で 1 枚 splice → そのまま setCard。

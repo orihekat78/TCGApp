@@ -64,6 +64,10 @@ function entryToCtx(entry: EffectStackEntry): EffectCtx {
     // で読み出される。型レベルでは Record<string, Candidate[]> として渡す (cast 必要)。
     bindings: (entry.bindings ?? {}) as EffectCtx['bindings'],
     triggerPayload: entry.triggeredBy.payload,
+    // engine additive wave (2026-06-29d): queue 時点の costPaid を復元 (bindings と同型)。
+    // costRemovedMatches cond (宣言能力 conditional の STABLE `if` runtime 再評価) が cost 除去カード
+    // snapshot を読むため。不在時は省略 (従来挙動)。
+    ...(entry.costPaid ? { costPaid: entry.costPaid } : {}),
     ...(cb
       ? { contact: { byUid: cb.byUid ?? '', targetUid: cb.targetUid, guardUid: cb.guardUid, attackerSide: cb.attackerSide ?? 'self' } }
       : {}),

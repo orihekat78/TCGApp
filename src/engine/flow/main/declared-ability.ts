@@ -221,5 +221,9 @@ export function useDeclaredAbility(
     { player: found.player, uid, cardId: found.cardId, abilityId: abilId, area: found.area },
     'declaredAbility',
     { kind: 'declaredAbility', uid, abilId },
+    undefined,
+    // engine additive wave (2026-06-29d): cost で積んだ costPaid を entry へ永続化 (entryToCtx が復元)。
+    // costRemovedMatches cond (conditional STABLE `if` の runtime 再評価) が除去カード snapshot を読むため。
+    resolveCtx.costPaid ? { costPaid: resolveCtx.costPaid } : undefined,
   );
 }

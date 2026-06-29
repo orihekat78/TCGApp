@@ -53,6 +53,17 @@ export type EffectStackEntry = {
    */
   bindings?: Record<string, unknown[]>;
   /**
+   * engine additive wave (2026-06-29d): queue 時点の ctx.costPaid を保持し entryToCtx で復元する。
+   * bindings (BUG-082) と同型の queue-boundary 永続化。宣言能力の effect が conditional{if:costRemovedMatches}
+   * を持つ場合、`if` は STABLE 扱い (conditionIfIsStable) で runtime resolver が再評価するが、entryToCtx は
+   * 従来 costPaid を復元しなかったため再評価が常に false 化していた (cost 解決時にしか costPaid が無い)。
+   * 本フィールドで cost の除去カード snapshot を runtime まで運ぶ。$cost.* dyn は pre-walk inline 済ゆえ非依存。
+   * ⚠ 適用範囲: useDeclaredAbility (キャラ/事件の宣言能力) の effect のみ。partner-ability の effect:declared
+   *   → triggered listener queue 経路は costPaid 未伝播 (現需要 0 — costRemovedMatches を要する 3 枚
+   *   B03003/B04077/B06078 は全てキャラ宣言能力)。パートナー版が出た際は triggered.ts queue にも要伝播。
+   */
+  costPaid?: Record<string, unknown>;
+  /**
    * BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回ごとの batch 連番。
    * 同一 emit で queue された entry 群 (イベント自効果 + 第三者反応) を結ぶ。
    * rules/15 §未解決 — 反応は「現在の行動 (自効果) 完了後」に解決するための gate キー。

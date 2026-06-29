@@ -289,6 +289,15 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
         return;
       }
       const top = deck.splice(0, count);
+      // engine additive wave (2026-06-29d): souza bind — 「発見された」(=公開した) カードを ctx.bindings へ
+      // 束ねる (B01084「レベル5以上のカードが発見された場合」等)。consumer は既存 boundMatchesFilter
+      // (bound[0]、捜査1=X1 で単一)。bind 未指定なら従来通り束ねない (回帰0)。card area の Candidate
+      // (cardId のみ参照、deckToBottomBound と同型)。⚠ X>1 の「いずれか発見」は boundMatchesFilter が
+      // bound[0] のみ評価するため未対応 (将来 any-match cond の follow-up、現需要 B01084/B01095 は X=1)。
+      const souzaBindKey = a.bind as string | undefined;
+      if (souzaBindKey) {
+        ctx.bindings[souzaBindKey] = top.map<Candidate>(id => ({ kind: 'card', cardId: id, area: 'deck', player }));
+      }
       mutate.deck.toBottom(s, player, top);
       mutate.log.append(s, {
         ts: Date.now(),

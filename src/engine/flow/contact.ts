@@ -76,7 +76,18 @@ export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId:
   // other = aura 所有者側 = cut-in する p の相手。不在時 false → 既存挙動不変 (smoke baseline 不変)。
   const other: Player = p === 'self' ? 'opp' : 'self';
   if (readChar.restrictsOpponent(state, other, 'cutin')) return false;
+  // engine additive wave (2026-06-29d): action-scoped cutin ban (D02008/B05007「このキャラがアクション
+  // したとき、アクション終了時まで相手は【カットイン】を使用できない」)。継続 aura (restrictsOpponent) ではなく
+  // actor に立つ _action turnEffect フラグ。write は既存 charSetTurnEffect(uid:'$self', key:'cutinBanOpp_action',
+  // val:true)、清掃は clearTurnEffects('action') (アクション終了時) + turn-end safety net。p のカットインは、
+  // 相手側 (other = action 宣言側) のいずれかのキャラが本フラグを持つとき不可。既存カードは本キー未使用 → 回帰0。
+  if (sideHasActionCutinBan(state, other)) return false;
   return true;
+}
+
+/** other 側の現場に cutinBanOpp_action フラグ (action-scoped、相手のカットイン禁止) を持つキャラが居るか。 */
+function sideHasActionCutinBan(state: GameState, side: Player): boolean {
+  return state.players[side].scene.some(c => c.turnEffects['cutinBanOpp_action'] === true);
 }
 
 /**

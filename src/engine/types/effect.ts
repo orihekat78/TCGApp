@@ -29,6 +29,11 @@ export type Condition =
   | { kind: 'sceneHas'; query: TargetQuery; nMin?: number }
   | { kind: 'apAtLeast'; ref: TargetingRef; n: number }
   | { kind: 'lpAtLeast'; ref: TargetingRef; n: number }
+  // engine additive wave (2026-06-29d): 現場キャラの LP **合計** を min/max 比較 (B06003 a2
+  // 「自分の現場にキャラが3枚以上いて、全員のLPの合計が2以下の場合」= and[sceneHas{nMin:3}, sceneLpSum{max:2}])。
+  // lpAtLeast(per-char .some)/sceneHas(枚数) では合算不可。負 LP も合計対象 (公式Q&A B06003、charRead.lp が honor)。
+  // query は candidates() で列挙 (side/filter/state)。min/max いずれか/両方で範囲指定。honor: cond/eval.ts case + MAP + CONDS。
+  | { kind: 'sceneLpSum'; query: TargetQuery; min?: number; max?: number }
   | { kind: 'evidenceAtLeast'; player: 'self' | 'opp'; n: number }
   // Task D E1 (2026-06-12): 手札枚数条件。player は resolvePlayer 規約 ('self'=カード所有者)。
   // handAtMost を not(handAtLeast n+1) に畳まないのは公式テキスト「N枚以下」と 1:1 対応させるため。
@@ -55,6 +60,15 @@ export type Condition =
   // engine additive: removeCountAtLeast — リムーブエリアの **総枚数** (filter 無し) が n 以上か (B03104
   // 「リムーブエリアにカードが15枚以上ある場合」)。removeColor/Trait/NameAtLeast の unfiltered 版。
   | { kind: 'removeCountAtLeast'; player: 'self' | 'opp'; n: number }
+  // engine additive wave (2026-06-29d): 直前に支払った **コストによって除去されたカード** の素性で分岐
+  // (B03003/B04077/B06078「この【宣言】能力のコストによって〚X〛がリムーブされた場合」)。remove*AtLeast は
+  // リムーブエリア全体を読むため per-cost スコープでは誤り。removeDeckTop コストが除去 cardId を ctx.costPaid
+  // ['removeDeckTop'].ids に記録し、本 cond が matchOneFilter(c=null = 印字値、除去済で盤面不在) で判定。
+  // n=必要一致数 (既定1)。cost 未払い時 ids 不在 → false。honor: cost/pay.ts removeDeckTop + cond/eval.ts case + MAP + CONDS。
+  // ⚠ filter は単一 TargetFilter = AND セマンティクス。OR が要るカード (B03003「〚阿笠博士〛か〚少年探偵団〛」) は
+  //   Condition-level `or[costRemovedMatches{cardName:阿笠博士}, costRemovedMatches{trait:少年探偵団}]` で合成すること。
+  //   B04077(警察)/B06078(赤井家) は単一 trait ゆえそのまま可。
+  | { kind: 'costRemovedMatches'; filter: TargetFilter; n?: number }
   // engine additive (2026-06-29, B09089 刑事だらけの店): 「このターン中、自分の現場にキャラが
   // 登場していない場合」= turnState[p].enterCountThisTurn が n 以下か。player は resolvePlayer 規約
   // ('self'=カード所有者)。enterCountThisTurn は mutate/scene.ts enter() のみが increment、turn:start で

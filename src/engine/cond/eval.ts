@@ -130,6 +130,17 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const resolved = resolveCharsForRef(state, cond.ref, ctx);
       return resolved.some(uid => charRead.lp(state, uid) >= cond.n);
     }
+    // engine additive wave (2026-06-29d): 現場キャラの LP 合計を min/max 比較 (B06003 a2)。
+    // candidates() で query を列挙し char のみ charRead.lp で合算 (sceneHas と同じ列挙経路、
+    // lpAtLeast と同じ charRead.lp = lpOverride/turnEffects/continuous 反映 + 負値も honor)。
+    case 'sceneLpSum': {
+      const cands = candidates(state, { kind: 'all', query: cond.query }, ctx);
+      let sum = 0;
+      for (const c of cands) if (isCharCandidate(c)) sum += charRead.lp(state, c.uid);
+      if (cond.min !== undefined && sum < cond.min) return false;
+      if (cond.max !== undefined && sum > cond.max) return false;
+      return true;
+    }
     case 'evidenceAtLeast': {
       const p = resolvePlayer(cond.player, ctx);
       return state.players[p].evidence.length >= cond.n;
@@ -239,6 +250,23 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'removeCountAtLeast': {
       const p = resolvePlayer(cond.player, ctx);
       return state.players[p].remove.length >= cond.n;
+    }
+    // engine additive wave (2026-06-29d): 直前に支払ったコストで除去されたカードの素性で分岐 (B03003/B04077/B06078)。
+    // removeDeckTop コストが ctx.costPaid['removeDeckTop'].ids へ除去 cardId を記録 (cost/pay.ts)。除去済カードは
+    // 盤面不在ゆえ matchOneFilter(c=null = CardDef 印字値、boundMatchesFilter/enterSource と同流儀) で判定。
+    // n=必要一致数 (既定1)。ids 不在 (cost 未払い/別 cost のみ) → 0 一致 → false。
+    case 'costRemovedMatches': {
+      const rec = ctx.costPaid?.['removeDeckTop'] as { ids?: string[] } | undefined;
+      const ids = rec?.ids ?? [];
+      if (ids.length === 0) return false;
+      const need = cond.n ?? 1;
+      const player = ctx.source.player ?? 'self';
+      let cnt = 0;
+      for (const id of ids) {
+        const cand: Candidate = { kind: 'card', cardId: id, area: 'remove', player };
+        if (matchOneFilter(state, id, cond.filter, null, cand)) cnt++;
+      }
+      return cnt >= need;
     }
     // engine additive (2026-06-29, B09089): このターン中の登場枚数 (enterCountThisTurn) が n 以下か。
     // 「登場していない場合」= n:0。removeCountAtLeast/handAtMost と同型の player-resolved 数値直読
@@ -497,6 +525,7 @@ const CONDITION_KIND_MAP = {
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
   removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true, removeCountAtLeast: true,
+  sceneLpSum: true, costRemovedMatches: true, // engine additive wave (2026-06-29d)
   enterCountAtMost: true, // engine additive (2026-06-29, B09089)
   stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
