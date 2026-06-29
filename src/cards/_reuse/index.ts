@@ -1015,6 +1015,8 @@ import { B03088 } from '../ct-p03/B03088.js';
 import { B04037 } from '../ct-p04/B04037.js';
 import { B06058 } from '../ct-p06/B06058.js';
 
+import { B03066 } from '../ct-p03/B03066.js';
+import { B03066P } from '../ct-p03/B03066P.js';
 import { B09061 } from '../ct-p09/B09061.js';
 import { B09096 } from '../ct-p09/B09096.js';
 import { B09096P } from '../ct-p09/B09096P.js';
@@ -1277,4 +1279,7 @@ export const REUSE_CARDS: CardDef[] = [
   //   (n:3 FBI 候補<3 で chainStepNoApply→draw skip、core.ts atomHandReveal、本カードのために 2026-06-28 導入) + draw。
   //   a2 ヒラメキ = handAddFromRemove(max:1 trait FBI) → 加えた場合 discard 1 (chain gating、B03053 a2 同型)。engine変更0。
   B09061,
+  // ENGINE0 wave (2026-06-29) — B03066/P 赤井秀一。a1=partnerColorKeyword(赤,突撃[事件]) /
+  //   a2 登場時=optional[evidenceGain opp, sceneRemove lv7以下 1まで either] (B01069+B07080 twin)。engine変更0。
+  B03066, B03066P,
 ];
