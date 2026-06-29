@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-06-29 — engine0 clean-shortlist wave: B09061+B03066/P 出荷 + 決定論 backbone 構築)
+# 次セッション再開プロンプト (2026-06-29 — engine0 certify wave: 16枚出荷 + 歩留り40%確定)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。
 > Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効だが ⚠ **Workflow args 文字列暴走事故** に注意。
@@ -10,24 +10,24 @@
 
 ## 現在地 (2026-06-29)
 - ★開始時に `git ls-remote origin main` で remote HEAD 確認 + `gh run list -L1` で CI green 確認。
-- **main = b34d33cc** (engine on-set-host scope READ infra tip、CI green)。直近 card commit = B09061/e3d4bddd(B03066/P)。
-  engine 群 = **b34d33cc(on-set-host scope)**/d03fa913(aura/turn-revoke)/2dd2e701/29ebc443/37000546 出荷済。
+- **main = 26b6b94b** (engine0 certify wave 16枚 tip、CI 確認)。engine 群 = b34d33cc(on-set-host)/d03fa913(aura/turn-revoke)/2dd2e701/29ebc443/37000546 出荷済。
 - ⚠ **並行 session 複数稼働・同一 working tree 共有**。git status は他 session WIP (auto-docs drift / NEXT-PROMPT /
   card-factory specs / `.claude/design` / `_probe_*.test.ts` / cards/wave-engine0-0628 等 divergent local branch) で汚れる →
   自分のファイルだけ明示 add (NOT -A)。**local cwd は stale branch ゆえ card/engine とも worktree off origin/main で作業**
   (本 session 中 main は 62eaf331→1a304d59→e3d4bddd と3回進んだ)。push 前 fetch→rebase→FF。vitest は `--exclude "**/_probe_*"`。
 
-## 直近セッション (card、私) — engine0 clean-shortlist wave
-- ユーザー指示「engine変更0 で clean を全数掘る」(systematic certify wave、engine 拡張せず)。
-- 出荷2件: **B09061** ジェイムズ・ブラック (handReveal exact-N + handAddFromRemove ヒラメキ、初 handReveal 実利用カード) /
-  **B03066/P** 赤井秀一 (partnerColorKeyword(赤,突撃[事件]) + optional[evidenceGain opp, sceneRemove lv7以下])。両 opus 敵対review CLEAN。
-- ★**重要実測**: `engine0-vs-extension` の **211 ENGINE0 は分類器の楽観値**。5 cluster サンプルで残カード大半は
-  engine 拡張要の複雑裾 (base-override/deck-look/untargetable/ability-presence/捜査/アクション中/declared-cost…)。
-  簡単な純パターンは過去 wave で出荷済 → **clean engine変更0 は散発的、各1枚が per-card certify を要する。一度に大量は不可能**。
-- ★**backbone 構築**: 決定論 gap-marker classifier (`scratchpad/clean-classifier.cjs`、registered.txt 除外) で
-  **211→133 clean shortlist**。driver spec = **[engine0-clean-shortlist-2026-06-29.md](specs/engine0-clean-shortlist-2026-06-29.md)**
-  (triage 表 + 次手順)。⚠ 0-marker でも false-positive 残る (例 B08092P=ability-presence 取りこぼし) → 各 certify 必須。
-- ★handReveal human path 教訓: handReveal pick は UI verb-routing 外 → EffectPickerModal generic fallback (nMax>1 初例)。
+## 直近セッション (card、私) — engine0 certify wave (16枚出荷)
+- ユーザー指示「engine変更0 のカード追加をまとめて」。worktree off origin/main (`cards/wave-engine0-0629`) で隔離作業。
+- **出荷16枚** (main 26b6b94b): 15 base certify (wf-certify.mjs、SUB=5) = **6 verified-green / 2 refuted / 7 yellow = 40% 歩留り**。
+  green = B06021(石川五右衛門)/B02057/B06004(工藤新一)/B06077/B03062/B04085 + 既 green B09056(赤井秀一) + 各 P-clone + 既出荷base の standalone P (B03088P/B07047P)。
+- ★**歩留り確定**: 未certify150 は決定論 pre-screen で**全て複雑裾** (hirameki/keyword-grant cluster も各カードに重い主節)。
+  clean uniform cluster は無い→ **一度に大量は不可能、per-card certify 必須**。adversarial verify(opus) が false-green 2件捕捉 (B03098/B06090)。
+- ★**最大 lever = P-variant clone** (parallel=effect同一)。double-value base (base+P 両方未certify) を certify→各 green が2枚解禁。
+  P-clone codegen = greens-for-codegen に rep=P 複製 append→`taskA-codegen --write` (metadata は cards-data TSV 自動取得、effect-text identity を col10-13 で機械照合)。
+- ★**tooling fix**: `taskA-validate-specs.cjs` L163 の continuousModifier 許可キーが stale (apDelta/lpDelta のみ) →
+  pure-JSON aura 群追加 (apDeltaAura/auraFilter/auraExcludeSelf/apDeltaAuraOpp 等)。B06004 = revealFromHand/apDeltaAura 初実利用カード。
+- ⚠ **Workflow agent は main-repo cwd で grounding** (worktree 非対応、5-commit stale でも under-ship のみ=安全、worktree validate-specs が authoritative)。
+  `.tmp` を worktree へ Copy-Item -Recurse は dest 既存だと入れ子→ Remove 後 clean copy。test の hand は `string[]`。詳細 [[reference-engine0-certify-wave-0629]]。
 
 ## 直近セッション (engine、別 session70) — on-set-host scope (set-card→host rider) READ infra
 - 「engine拡張をできるだけ多く」指示 → 全561未実装中**最大の単一クラスタ**(装備イベント rider14+conferred8=22枚)の基盤を出荷 (**b34d33cc**, branch engine/bulk-additive-0629c, CI green)。
