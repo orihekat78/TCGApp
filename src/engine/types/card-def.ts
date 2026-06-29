@@ -28,6 +28,23 @@ export type AbilityScope =
   | 'on-partner-area'    // パートナーエリアでも (MR系 rules/18)
   | 'on-hand'            // 手札時 (例: 一部カットイン)
   | 'on-evidence'        // 証拠時 (ヒラメキ rules/10)
+  // engine additive (2026-06-29c): 装備イベント等が「セットされているキャラ」(host) に付与するライダー能力。
+  // セットカード def 上に書かれるが、効果対象は **セット先の host キャラ**。faceUp でセットされている間のみ有効
+  // (rules/16: 裏向きセットは情報を持たない / セット先が現場を離れたらリムーブ → 自動失効)。
+  //   continuous (apDelta/lpDelta/lvlDelta/grantKeywords) → read.char.* が faceUp set card を走査し host に合算。
+  //   triggered → listeners.triggered.handleHook が host (card.uid) の能力として発火 (selfOnly は host uid 照合)。
+  // B02013 ターボエンジン付きスケートボード (〚突撃〛付与) / B06063 せんぷう剣 (【自分ターン中】AP+2000) /
+  // B05117 コンコン (triggered 付与) 等、14 rider + 8 conferred-ability の最大未実装クラスタの **read 半分** を担う。
+  // ⚠ 本 scope は READ 側 infra (host が rider を読む) のみ。以下は **未対応 = 後続 gate** (DEFERRED-INDEX §on-set-host):
+  //   (1) WRITE 側: 使用イベントを host.setCards へ faceUp で載せる verb が未実装 (hand-use はイベントを必ず remove へ送る。
+  //       かつ event 効果は remove 着地 **後** に解決 → 「set-from-remove」型 verb が要)。これが無いと rider カードは end-to-end 不可。
+  //   (2) leave:to-remove conferral: host が splice **後** に leave:to-remove emit されるため、conferred leave trigger は不発
+  //       (B05117 等)。handleLeaveToRemoveSelf が removedChar snapshot の setCards を走査する追加修正が要。
+  //   (3) aura (apDeltaAura*/auraFilter*) / opponentRestrict を rider で付与する形は未 honor (read.char.auraDelta/restrictsOpponent は
+  //       setCards を走査しない) → silent no-op。現リダーカードは全て self-buff ゆえ未踏。
+  //   (4) authoring hazard: rider triggered の limit{turn} は (hostUid, ability.id) でキー。host 印字能力や同名 rider 2枚と
+  //       id 衝突するとカウンタ共有。rider ability.id は card-unique に命名すること (例 'set_t1')。
+  | 'on-set-host'        // セットされているキャラ (host) に付与 (rules/16, 装備イベント) — READ 側 infra のみ
   | 'always';            // どこでも (デバッグ用)
 
 // ---------- AbilityLimit ----------

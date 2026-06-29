@@ -163,6 +163,10 @@ function scopeAllowsArea(scope: AbilityScope | undefined, area: CardLocation['ar
   // handleEvidenceRemovedHook の VIRTUAL CardLocation 経由でのみ渡る (collectCardsInPlay
   // は通常 evidence を返さない)。これで scope 整合性 check が通る。
   if (s === 'on-evidence') return area === 'evidence';
+  // engine additive (2026-06-29c): on-set-host rider — set card def 上の triggered ability は
+  // host (現場のセット先キャラ) の能力として発火する。riderAbilities として host CardLocation
+  // (area='scene') に attribute 済なので scene を許可する (装備イベント、B05117 コンコン等)。
+  if (s === 'on-set-host') return area === 'scene';
   return false;
 }
 
@@ -207,8 +211,25 @@ function handleHook(
     const grantedRaw = card.area === 'scene'
       ? state.players[card.player].scene.find(c => c.uid === card.uid)?.turnEffects?.['grantedAbilities']
       : undefined;
-    const abilityList = Array.isArray(grantedRaw) && grantedRaw.length > 0
-      ? [...(def.abilities as AbilityDef[]), ...(grantedRaw as AbilityDef[])]
+    // engine additive (2026-06-29c): on-set-host rider triggered — host の faceUp set card def 上の
+    // scope:'on-set-host' triggered を host (card.uid) の能力として合算する (装備イベント、B05117 コンコン
+    // 「セットされているキャラが…したとき」)。裏向き (faceUp:false) は情報を持たない (rules/16) → 除外。
+    // selfOnly は host uid 照合 (selfOnlyMatches が card.uid を使う)。card.area==='scene' のみ (set 先は現場)。
+    // gate=scope==='on-set-host' (新 scope、既存カード未宣言 → 回帰0)。set card の on-scene triggered は漏れない。
+    const riderAbilities: AbilityDef[] = [];
+    if (card.area === 'scene') {
+      const hostChar = state.players[card.player].scene.find(c => c.uid === card.uid);
+      for (const entry of hostChar?.setCards ?? []) {
+        if (!entry.faceUp) continue;
+        const sd = readDef.card(entry.cardId);
+        if (!sd) continue;
+        for (const ability of (sd.abilities ?? []) as AbilityDef[]) {
+          if (ability.type === 'triggered' && ability.scope === 'on-set-host') riderAbilities.push(ability);
+        }
+      }
+    }
+    const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0)
+      ? [...(def.abilities as AbilityDef[]), ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]) : []), ...riderAbilities]
       : (def.abilities as AbilityDef[]);
     for (const ability of abilityList) {
       if (ability.type !== 'triggered') continue;

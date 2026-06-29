@@ -436,7 +436,15 @@ exemplar D02013/B03005)。decoy 8 pass (§4 e2e: removeOpponentEvidenceTop→rem
 | rep | DEFER 理由 (残存 gate) | 解禁条件 |
 |-----|----------------------|---------|
 | ~~B06033 / B06033P~~ | **✅ 出荷 (2026-06-22)**: BUG-111 #3 で continuation の nest 上書きを解消 (linked list 化)。a1 `sequence[chain[evidenceToHand, handToEvidence], sceneEnter{緑YAIBA lv≤6}]` 出荷。公式Q&A の swap→enter 順も nest で正しく解決 (decoy §2)。 | ~~continuation-nest~~ ✅ 解消 |
-| B02013/P · B05041/P | event「キャラにセットする」+ host への継続付与 (突撃 grant / triple-protection)。set-event + host-continuous 機構が engine 不在 | set-event host-continuous (engine) |
+| B02013/P · B05041/P | event「キャラにセットする」+ host への継続付与 (突撃 grant / triple-protection)。**READ 側 = ✅ 出荷 (2026-06-29c, engine/bulk-additive-0629c, scope `on-set-host`)**: faceUp set card def の継続 (apDelta/lpDelta/lvlDelta/grantKeywords) + triggered を host に honor。**残 WRITE 側 gate**: 使用イベントを host.setCards へ faceUp 載せる verb (set-from-remove 型、event は remove 着地後に効果解決) が要 → これ揃えば end-to-end 解禁 | (READ) ✅ on-set-host scope 出荷 / (WRITE) set-from-remove verb 待ち |
+
+> **§on-set-host (2026-06-29c, engine/bulk-additive-0629c)**: 装備イベントの set-card→host ライダー機構の **READ 半分** を出荷
+> (新 AbilityScope `'on-set-host'`、card-def.ts + read/char.ts continuousDelta/keywords + listeners/triggered.ts handleHook + lint whitelist)。
+> 継続 rider 14 枚 + conferred-ability 8 枚 = 22 枚クラスタの基盤。**単独では実カード 0 枚** (write 側 verb が別 gate)。残 gate:
+> (1) **WRITE verb** (使用 event を host へ faceUp set、set-from-remove 型) = 最重要 next。
+> (2) **leave:to-remove conferral** (B05117): host splice 後 emit ゆえ conferred leave 不発 → `handleLeaveToRemoveSelf` が removedChar snapshot の setCards を走査する修正が要。
+> (3) **aura/restrictsOpponent rider** 未 honor (silent no-op、現リダー全 self-buff ゆえ未踏)。
+> (4) **limit collision**: rider triggered の limit{turn} は (hostUid, ability.id) キー → rider ability.id は card-unique 命名 (authoring 注意)。
 | ~~B05102~~ | ✅ **出荷済** (2026-06-21、下記「turn-scope levelDelta wave」)。誤 DEFER だった: 「**ターン終了まで**レベル-1」= turn-scope one-shot = 既存 `charModifyLevel{scope:'turn'}` で実装可能 (continuous condition-gated levelDelta = B08050 とは別物)。engine変更0 | — |
 | B03088/P | 【宣言】4名 bond gate (降谷零&諸伏景光&伊達航&萩原研二) + pick 1キャラに activate+AP+突撃 の **multi-atom-single-pick** + draw。多 atom を同一 pick に適用する carrier 検証が別途必要 | multi-atom-single-pick carrier 検証 (要確認) |
 

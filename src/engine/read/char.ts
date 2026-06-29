@@ -60,6 +60,31 @@ function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'
       if (typeof v === 'number' && Number.isFinite(v)) total += v;
     }
   }
+  // engine additive (2026-06-29c): on-set-host rider — faceUp でセットされたカード def の
+  // scope:'on-set-host' continuous を host に合算する (装備イベント、B06063 せんぷう剣【自分ターン中】AP+2000)。
+  // 裏向きセット (faceUp:false) は情報を持たない (rules/16) → 除外。ctx は host uid で構築済なので rider の
+  // dyn/condition は host を参照する (【自分ターン中】等)。host 自身の walk と同じ accumulation。
+  // gate=scope==='on-set-host' (新 scope、既存カード未宣言 → 回帰0)。set card の on-scene 能力は漏れない。
+  for (const entry of char.setCards ?? []) {
+    if (!entry.faceUp) continue;
+    const sd = def.card(entry.cardId);
+    if (!sd) continue;
+    for (const ability of sd.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (ability.scope !== 'on-set-host') continue;
+      const delta = ability.continuousModifier?.[which];
+      if (delta === undefined) continue;
+      if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+      if (typeof delta === 'number') {
+        total += delta;
+      } else if (typeof delta === 'function') {
+        total += delta(s, { uid }) || 0;
+      } else if (typeof delta === 'object' && 'dyn' in delta) {
+        const v = evalDyn(s, delta.dyn, ctx);
+        if (typeof v === 'number' && Number.isFinite(v)) total += v;
+      }
+    }
+  }
   return total;
 }
 
@@ -227,11 +252,37 @@ function keywords(s: GameState, uid: string): string[] {
   // 再付与された場合はアクション[キャラ]を行える」= 外部付与は「失う」効果と独立に重なる (再付与で復活)。
   // 不在時 [] = 減算なし (既存カードは未宣言 → 回帰0)。clearTurnEffects('turn') で清掃。rules/19 §「失う」効果。
   const revoked = (char.turnEffects['revokedKeywords'] as string[] | undefined) ?? [];
+  // engine additive (2026-06-29c): on-set-host rider keyword grant (装備イベント、B02013 〚突撃〛付与)。
+  // faceUp でセットされたカード def の scope:'on-set-host' continuous grantKeywords を host に付与する。
+  // rider は **他カードによる付与** = 外部 grant 扱い → disabledOriginal でも残り (rules/19 §他カードの付与は無効化されない)、
+  // revoked (印字/自前 continuous の「失う」) の減算対象外 (granted/turnGranted と同じ外部由来)。faceDown は除外 (rules/16)。
+  const fromSetHost: string[] = [];
+  {
+    const ownerForSet = ownerSideOf(s, uid);
+    if (ownerForSet) {
+      const setCtx = { source: { player: ownerForSet, uid } } as Parameters<typeof evalCond>[2];
+      for (const entry of char.setCards ?? []) {
+        if (!entry.faceUp) continue;
+        const sd = def.card(entry.cardId);
+        if (!sd) continue;
+        for (const ability of sd.abilities ?? []) {
+          if (ability.type !== 'continuous') continue;
+          if (ability.scope !== 'on-set-host') continue;
+          const grantFn = ability.continuousModifier?.grantKeywords;
+          if (!grantFn) continue;
+          if (ability.condition && !evalCond(s, ability.condition, setCtx)) continue;
+          const kws = grantFn(s, { uid });
+          if (Array.isArray(kws)) fromSetHost.push(...kws);
+        }
+      }
+    }
+  }
   if (char.keywordOverrides.disabledOriginal) {
     // 元の CardDef キーワードと continuous ability の grantKeywords は除外 (rules/19)
     // granted は外部から与えられたキーワードなので残る (rules/19 §他のカード能力/効果による付与は無効にならない)。
     // disabledOriginal では base/continuous (= 減算対象) が既に除外済 → external grant に revoke は及ばない (再付与は独立)。
-    return [...new Set([...granted, ...turnGranted])];
+    // fromSetHost (装備リダー) も外部付与ゆえ残す。
+    return [...new Set([...granted, ...turnGranted, ...fromSetHost])];
   }
   const d = def.card(char.cardId);
   // 印字キーワードから revoked を減算 (「失う」効果。外部 grant は下段で union するため独立に復活しうる)。
@@ -260,9 +311,9 @@ function keywords(s: GameState, uid: string): string[] {
     }
   }
 
-  // continuous (自身の grantKeywords) も revoked を減算 (印字と同じ「自前」由来)。granted/turnGranted は外部付与ゆえ非減算。
+  // continuous (自身の grantKeywords) も revoked を減算 (印字と同じ「自前」由来)。granted/turnGranted/fromSetHost は外部付与ゆえ非減算。
   const fromContinuousKept = fromContinuous.filter(kw => !revoked.includes(kw));
-  return [...new Set([...base, ...granted, ...turnGranted, ...fromContinuousKept])];
+  return [...new Set([...base, ...granted, ...turnGranted, ...fromContinuousKept, ...fromSetHost])];
 }
 
 function hasKeyword(s: GameState, uid: string, kw: string): boolean {
