@@ -10,8 +10,8 @@
 
 ## 現在地 (2026-06-29)
 - ★開始時に `git ls-remote origin main` で remote HEAD 確認 + `gh run list -L1` で CI green 確認。
-- **main = e3d4bddd** (B03066/P 赤井秀一 tip)。直近 card commit = B09061(handReveal exact-N初実利用)/e3d4bddd(B03066/P)。
-  engine 群 = d03fa913(aura/turn-revoke)/2dd2e701/29ebc443/37000546 出荷済。
+- **main = b34d33cc** (engine on-set-host scope READ infra tip、CI green)。直近 card commit = B09061/e3d4bddd(B03066/P)。
+  engine 群 = **b34d33cc(on-set-host scope)**/d03fa913(aura/turn-revoke)/2dd2e701/29ebc443/37000546 出荷済。
 - ⚠ **並行 session 複数稼働・同一 working tree 共有**。git status は他 session WIP (auto-docs drift / NEXT-PROMPT /
   card-factory specs / `.claude/design` / `_probe_*.test.ts` / cards/wave-engine0-0628 等 divergent local branch) で汚れる →
   自分のファイルだけ明示 add (NOT -A)。**local cwd は stale branch ゆえ card/engine とも worktree off origin/main で作業**
@@ -28,6 +28,12 @@
   **211→133 clean shortlist**。driver spec = **[engine0-clean-shortlist-2026-06-29.md](specs/engine0-clean-shortlist-2026-06-29.md)**
   (triage 表 + 次手順)。⚠ 0-marker でも false-positive 残る (例 B08092P=ability-presence 取りこぼし) → 各 certify 必須。
 - ★handReveal human path 教訓: handReveal pick は UI verb-routing 外 → EffectPickerModal generic fallback (nMax>1 初例)。
+
+## 直近セッション (engine、別 session70) — on-set-host scope (set-card→host rider) READ infra
+- 「engine拡張をできるだけ多く」指示 → 全561未実装中**最大の単一クラスタ**(装備イベント rider14+conferred8=22枚)の基盤を出荷 (**b34d33cc**, branch engine/bulk-additive-0629c, CI green)。
+- 新 **AbilityScope `'on-set-host'`**: セットカード def の能力を faceUp セット中の host に適用。3 honor site = read/char.ts continuousDelta+keywords (継続 AP/LP/level/keyword、rider keyword=外部grant扱い) + listeners/triggered.ts handleHook (in-scene hook の triggered conferral) + lint-listener-scope ALLOWED_SCOPE。candidates 自動 honor (BUG-117)。挙動不変 (新scope grep0/faceDown除外/decoy実証、smoke winsA=498)。opus 4-lens (semantic+additivity=ship)。
+- ★**READ infra ≠ end-to-end 解禁** (edge-test lens BLOCKER): **単独では実カード0枚**。残**最重要 WRITE side gate** = 使用 event を host.setCards へ faceUp 載せる **set-from-remove verb** (hand-use は event を必ず remove へ、かつ効果は remove 着地後解決)。これ揃えば継続 rider 14枚 (B02013/B06063 等) が end-to-end author 可。
+- 残 DEFER (DEFERRED-INDEX §on-set-host): WRITE verb / leave:to-remove conferral (B05117、host splice 後 emit) / aura・restrictsOpponent rider 未 honor / rider triggered limit 衝突 (id card-unique 命名)。詳細 [[reference-engine-additive-on-set-host-0629c]]。
   「してもよい」+exact-N(n:{min,max}=3) は decline 非提示 = forced-reveal 容認 (strictly dominant、optional{}は AI後退)
   ([[reference-handreveal-human-path-and-b09061]] / [[project-engine0-clean-shortlist-wave]])。
 
