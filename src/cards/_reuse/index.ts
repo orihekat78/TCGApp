@@ -1015,6 +1015,7 @@ import { B03088 } from '../ct-p03/B03088.js';
 import { B04037 } from '../ct-p04/B04037.js';
 import { B06058 } from '../ct-p06/B06058.js';
 
+import { B09061 } from '../ct-p09/B09061.js';
 import { B09096 } from '../ct-p09/B09096.js';
 import { B09096P } from '../ct-p09/B09096P.js';
 
@@ -1272,4 +1273,8 @@ export const REUSE_CARDS: CardDef[] = [
   //   解禁前の stale だった。apMin/apMax:{dyn:'$self.ap'} で「このキャラと同じAP」を pick 列挙前 literalize
   //   (probe 3/3 pass、engine変更0)。B09096/P キャンティ。
   B09096, B09096P,
+  // ENGINE0 wave (2026-06-29) — B09061 ジェイムズ・ブラック (FBI)。a1 登場時 = handReveal exact-N gate
+  //   (n:3 FBI 候補<3 で chainStepNoApply→draw skip、core.ts atomHandReveal、本カードのために 2026-06-28 導入) + draw。
+  //   a2 ヒラメキ = handAddFromRemove(max:1 trait FBI) → 加えた場合 discard 1 (chain gating、B03053 a2 同型)。engine変更0。
+  B09061,
 ];

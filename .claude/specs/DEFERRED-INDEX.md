@@ -115,8 +115,11 @@ opus 4-lens 敵対 review = 全 ship:true / blocker 0。
 resolved length では「<N」検出不可。reveal は zone 不変ゆえ availability さえ満たせば後段の単一 collapse でも
 mechanical 等価。opus 3-lens 敵対 review (worktree 直読) = 全 ship。core.ts atomHandReveal + test §10a-g。
 
-→ **B09061 a1「FBI を3枚公開してもよい。そうした場合引く」は engine変更0 で出荷可能化** (handReveal exact-N + draw
-+ 既存 handAddFromRemove ヒラメキ)。「単独解禁可」誤認 → exact-N gate が真の残 gate だった。
+→ **B09061 ジェイムズ・ブラック ✅ 出荷済 (2026-06-29、engine変更0)**: a1=handReveal exact-N (n:3 FBI char) + draw、
+a2 ヒラメキ=handAddFromRemove(max:1 FBI char)→加えた場合 discard (chain gating、B03053 a2 同型)。opus 4-lens 敵対 review
+= ship (0 BLOCKER)。human pick 経路を apply-pick 直叩き test で empirical 固定 (a1 reveal→draw / a2 辞退→discard 不発火)。
+★a1「してもよい」decline は exact-N=n:{min:3,max:3} ゆえ人間に提示されない (optional{} wrap は AI が optionalRun 未設定で
+skip→draw 取り逃すため不採用)。forced-reveal は無害 (公開=zone不変+draw=strictly dominant、AI は hand-info 不使用)。
 
 ⚠ **exact-N gate 未対応 4 組合せ** (B09061=trait filter 単独・bind無・distinctNames無・短縮形ゆえ全て無害、
 将来カードで gate 拡張要): (1) `distinctNames:true + n:N` (候補列挙が distinct 無視で availN 過大計数) /
