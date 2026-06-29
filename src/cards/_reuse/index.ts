@@ -1021,6 +1021,23 @@ import { B09061 } from '../ct-p09/B09061.js';
 import { B09096 } from '../ct-p09/B09096.js';
 import { B09096P } from '../ct-p09/B09096P.js';
 
+import { B02057 } from '../ct-p02/B02057.js';
+import { B02057P } from '../ct-p02/B02057P.js';
+import { B03062 } from '../ct-p03/B03062.js';
+import { B03062P } from '../ct-p03/B03062P.js';
+import { B03088P } from '../ct-p03/B03088P.js';
+import { B04085 } from '../ct-p04/B04085.js';
+import { B04085P } from '../ct-p04/B04085P.js';
+import { B06004 } from '../ct-p06/B06004.js';
+import { B06004P } from '../ct-p06/B06004P.js';
+import { B06021 } from '../ct-p06/B06021.js';
+import { B06021P } from '../ct-p06/B06021P.js';
+import { B06077 } from '../ct-p06/B06077.js';
+import { B06077P } from '../ct-p06/B06077P.js';
+import { B07047P } from '../ct-p07/B07047P.js';
+import { B09056 } from '../ct-p09/B09056.js';
+import { B09056P } from '../ct-p09/B09056P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1282,4 +1299,6 @@ export const REUSE_CARDS: CardDef[] = [
   // ENGINE0 wave (2026-06-29) — B03066/P 赤井秀一。a1=partnerColorKeyword(赤,突撃[事件]) /
   //   a2 登場時=optional[evidenceGain opp, sceneRemove lv7以下 1まで either] (B01069+B07080 twin)。engine変更0。
   B03066, B03066P,
+  // wave engine0 0629 — certify greens + P-clones (engine変更0)
+  B02057, B02057P, B03062, B03062P, B03088P, B04085, B04085P, B06004, B06004P, B06021, B06021P, B06077, B06077P, B07047P, B09056, B09056P,
 ];

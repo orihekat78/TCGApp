@@ -159,8 +159,10 @@ function validateSpec(spec) {
     if (ab.type === 'continuous') {
       if (!ab.continuousModifier) errs.push(`${c}: continuous without continuousModifier`);
       else {
+        // pure-JSON continuousModifier fields (card-def.ts). closure-only: grantKeywords / customSelectorPatch → needsManual.
+        const JSON_CONT_KEYS = ['apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp'];
         for (const k of Object.keys(ab.continuousModifier)) {
-          if (!['apDelta', 'lpDelta'].includes(k)) errs.push(`${c}: continuousModifier.${k} not JSON-expressible (grantKeywords/customSelectorPatch need closure → needsManual)`);
+          if (!JSON_CONT_KEYS.includes(k)) errs.push(`${c}: continuousModifier.${k} not JSON-expressible (grantKeywords/customSelectorPatch need closure → needsManual)`);
         }
       }
       if (ab.effect) errs.push(`${c}: continuous must not have effect`);

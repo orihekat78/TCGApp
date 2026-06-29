@@ -737,3 +737,19 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
   ability-presence filter `defHasKeyword('【現場リムーブ時】')` (B08082/B08093) / `boundMatchesFilter` cond + handReveal `bind` (B07022 $revealed 色読み) /
   `enterSource` cond (viaEffect+sourceFilter) は **全て engine 実装済**。これら参照の DEFER 行は engine ではなく card 出荷で解消する。
 - 本 wave で **不採用 (後続 engine)**: PR136 charSetCard owner-deck (pick 後 deck-source 解決要) / B05009 enterSource side-qualifier (enter payload に sourcePlayer emit 要)。
+
+## wave engine0 0629 certify — yellow/refuted 9枚 (2026-06-29)
+
+15 base certify のうち 6 verified-green を出荷 (changelog [2026-06-29-05](../changelog-entries/2026-06-29-05-card-wave-engine0-certify-greens.md))。
+以下 9枚 (+各 P) は engine 拡張要 or spec defect で DEFER。
+
+| id | 分類 | gate (STILL-OPEN) |
+|----|------|-------------------|
+| B04091 / B04094 | yellow | effect-controller attribution: 「自分の能力や効果によって相手キャラをリムーブしたとき」= leave:to-remove payload に effect-cause removal の acting-player 属性が無い (byUid は contact-ap のみ)。{side:opp,cause:effect} は相手の自己除去で過剰発火 |
+| B05107 | yellow | 同 cause-attribution (self【現場リムーブ時】「自分の能力や効果によって」) + 自個体 resurrection (「このキャラを remove からスリープ登場」= leave payload の removedChar を sceneEnter source に bind する経路無し) |
+| B03029 | yellow | play-event-from-effect (「手札から【緑】イベントを1枚まで使用する」= 効果でイベント使用の verb 未実装) |
+| B05063 | yellow | turn-end→手札 (「ターン終了時このキャラを現場から手札に移す」= toHandOnTurnEnd flag / turn.ts branch 無し) + grant 非キーワード ability |
+| B09033 | yellow | reveal-window 反復登場 (4枚公開窓から繰り返し1枚ずつ登場 = deckRevealUntil は単一 $matched bind、reveal 窓を pick ソース化不能) |
+| B05093 | yellow | opp-as-chooser of beneficial deck-reveal pick (公開3枚から【相手】が1枚選び【自分】が手札に = chooser:opp の deck-look pick 未対応) |
+| B03098 | refuted | hirameki-fire 時 sceneSetState PA-mode pick が hiramekiRes 経路で surface しない (敵対 verify fatal) |
+| B06090 | refuted | spec が BUG-145 self-sleep gate (not charStateIs self sleep) を欠落 → 既 sleep で過剰再発火 (再 certify で gate 追加すれば green 化可、shipped PR144/B09058 同型) |
