@@ -445,6 +445,14 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const cand: Candidate = { kind: 'char', uid: pl.setCardId, cardId: pl.setCardId, player: ctx.source.player };
       return matchOneFilter(state, pl.setCardId, cond.filter, null, cand);
     }
+    // engine additive wave-3 (2026-06-30): cutin:used payload の使用カットイン (cardId) を filter 評価 (B09086)。
+    // setCardMatches と同式 — set card 同様 cutin カードは scene char ではないため matchOneFilter の char 引数は null。
+    case 'triggerCutinMatches': {
+      const pl = ctx.triggerPayload as { cardId?: string } | undefined;
+      if (!pl || typeof pl.cardId !== 'string') return false;
+      const cand: Candidate = { kind: 'char', uid: pl.cardId, cardId: pl.cardId, player: ctx.source.player };
+      return matchOneFilter(state, pl.cardId, cond.filter, null, cand);
+    }
     // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。
     // leave:to-remove payload snapshot {uid,cause,side,byUid} を **scene 再取得せず** 読む
     // (除去キャラは splice 済 = triggerCharMatches L298 の scene.find は使えない、13198)。
@@ -557,6 +565,7 @@ const CONDITION_KIND_MAP = {
   contactOpponentApHigher: true, guardedBySelf: true,
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
   setCardMatches: true, // engine additive (2026-06-29, B06046)
+  triggerCutinMatches: true, // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用cutin filter
   charTurnEffect: true, // Task D E4 (2026-06-12)
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)
   enterSource: true, // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled)

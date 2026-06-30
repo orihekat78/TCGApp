@@ -135,6 +135,10 @@ export type Condition =
   // 裏向きセット (faceUp!==true) は情報を持たない (rules/16) → 必ず false。set card は scene char では
   // ないため matchOneFilter の char 引数は null (CardDef の印字属性のみ評価)。
   | { kind: 'setCardMatches'; filter: TargetFilter }
+  // engine additive wave-3 (2026-06-30): cutin:used payload の使用カットイン (cardId) を filter 評価。
+  // 「(使用した)〚カード名/特徴〛のカットインのとき」(B09086 = [諸伏景光]/[長野県警] で分岐)。setCardMatches と
+  // 同式で matchOneFilter の char 引数は null (CardDef 印字属性のみ)。triggerPlayerIs(側) との複合は and で書く。
+  | { kind: 'triggerCutinMatches'; filter: TargetFilter }
   // engine拡張 wave#2 cluster3 (2026-06-13): action:declare payload の target.kind を読む。
   // 「アクション[キャラ]したとき」(v:'char') / 「アクション[事件]したとき」(v:'case') の subtype gate を
   // declarative 化 (matcher closure は granted descriptor で禁止 = validate.ts のため JSON cond が必須。

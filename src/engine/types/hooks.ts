@@ -19,6 +19,12 @@ export type HookName =
   | 'reasoning:declare'
   | 'reasoning:before-add'
   | 'reasoning:end'
+  // engine additive wave-3 (2026-06-30): ミスリードが実行されたとき (rules/13 §ミスリード)。
+  // listeners/misread の AI defender 経路 + UI useEngineDispatch.misreadResolve(人間 defender) が、
+  // misread した各キャラごとに per-trigger emit (公式Q&A=1枚ごとに発動)。観測 = B05015「相手がミスリード
+  // したとき」/ B09016「このキャラがミスリードしたとき」。
+  //   payload: { player(=misread 実行側) }   source: { player, uid(=misread キャラ uid、selfOnly 用) }
+  | 'misread:performed'
   // アクション関連 (rules: 07-action-flow.md)
   // D11007 v2 Phase 3: action:pre-target — attacker 選択時、target 候補列挙の前に fire
   //   payload: { byUid }、source: { uid, cardId, player } (attacker)
@@ -35,6 +41,13 @@ export type HookName =
   | 'contact:before-judge'
   | 'contact:judge'
   | 'contact:end'
+  // engine additive wave-3 (2026-06-30): カットインを使用したとき (rules/09 §カットイン)。
+  // flow/contact.cutIn が effect:declared(自効果) の直後に per-use emit。第三者キャラ (在場 observer) が
+  // 「(自分/相手が)カットインを使用したとき」を観測する用 (B02080/B09086/B04090)。
+  //   payload: { player(=cutin 使用側), cardId(=使用カットイン) }
+  //   source : { player, cardId, bindings(=contact bindings、$contact.byUid 用) }
+  // 既存 effect:declared(optional=cutin 自効果ゲート) とは別 hook = 自効果と第三者観測を分離。
+  | 'cutin:used'
   // キャラ移動関連 (rules: 09-cutin-disguise.md, 18-mr.md)
   | 'enter'
   | 'disguise:into'
@@ -73,6 +86,12 @@ export type HookName =
   | 'evidence:gain'
   | 'evidence:lose'
   | 'evidence:remove-by-action'
+  // engine additive wave-3 (2026-06-30): 証拠がリムーブエリアへ移ったとき (原因非依存、rules/10/14)。
+  // mutate/evidence の removeTop/removeAt/toRemove (=証拠→remove の全出口) が remove へ push 後に emit。
+  // 既存 evidence:remove-by-action(ヒラメキ、remove 前・原因限定) とは別タイミング・別原因範囲。
+  // 観測 = B02062「相手の証拠がリムーブされたとき、1枚引く」(公式Q&A: 原因問わず)。
+  //   payload: { player(=リムーブされた証拠の持ち主) }
+  | 'evidence:removed'
   // FILE・デッキ関連 (rules: 12-next-hint.md, 14-refresh.md)
   | 'file:add'
   | 'file:pop'

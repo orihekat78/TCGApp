@@ -44,6 +44,8 @@ const HOOKS = new Set([
   'action:end', 'evidence:gain', // engine拡張 wave#2 cluster3 (2026-06-13)
   'setcard:leave', // engine拡張 wave#2 cluster9 (2026-06-15)
   'setcard:enter', // engine additive (2026-06-29, B02018/B06046)
+  // engine additive wave-3 (2026-06-30): observer-hook 群 (B02080/B09086/B05015/B09016/B02062)
+  'cutin:used', 'misread:performed', 'evidence:removed',
 ]);
 
 const CONDS = new Set([
@@ -70,6 +72,8 @@ const CONDS = new Set([
   'enterCountAtMost',
   // engine additive (2026-06-29, B06046): setcard:enter payload の set card filter 評価
   'setCardMatches',
+  // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用カットインの cardName/特徴 filter
+  'triggerCutinMatches',
 ]);
 
 const COSTS = new Set([

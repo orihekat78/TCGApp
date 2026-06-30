@@ -753,3 +753,19 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | B05093 | yellow | opp-as-chooser of beneficial deck-reveal pick (公開3枚から【相手】が1枚選び【自分】が手札に = chooser:opp の deck-look pick 未対応) |
 | B03098 | refuted | hirameki-fire 時 sceneSetState PA-mode pick が hiramekiRes 経路で surface しない (敵対 verify fatal) |
 | B06090 | refuted | spec が BUG-145 self-sleep gate (not charStateIs self sleep) を欠落 → 既 sleep で過剰再発火 (再 certify で gate 追加すれば green 化可、shipped PR144/B09058 同型) |
+
+## wave engine/observer-wave3 — observer-hook 群 出荷 + latent risk (2026-06-30)
+
+`engine/observer-wave3` で純 additive 観測 hook 3 件 + matcher 1 件出荷 (engine 足場のみ、カードは card-wave)。
+詳細 changelog [2026-06-30-03](../changelog-entries/2026-06-30-03-engine-additive-wave3-observer-hooks.md)。
+
+| primitive | 解禁 (card-wave) | 形 |
+|-----------|------------------|----|
+| `cutin:used` hook + `triggerCutinMatches` matcher | B02080/B09086/B04090 | contact.cutIn emit、第三者 observer。使用cutin名/特徴 filter |
+| `misread:performed` hook | B05015/B09016 | misread AI+人間両経路 emit。per-pick。triggerPlayerIs/selfOnly |
+| `evidence:removed` hook | B02062 | mutate/evidence removeTop/removeAt/toRemove emit。原因問わず |
+
+⚠ **card-wave 実装時に要対応の latent risk** (4-lens review 指摘、現 consumer 0 で挙動無害):
+- **B02062 (evidence:removed) × ヒラメキ発火順**: action-case.ts は `removeTop`(=evidence:removed emit) → `evidence:remove-by-action`(ヒラメキ窓) の順。B02062 公式Q&A は「ヒラメキ解決 → リムーブエリアに置かれたとき世良発動」= ヒラメキ先。B02062 実装時は実機 test で『ヒラメキ→世良 draw』順を確認し、必要なら action-case の emit 順を入替える。
+- **evidence:removed のコスト由来発火**: `cost/pay.ts` discardEvidence (自証拠リムーブ) でも emit する。rules/21「コストで行ったこと ≠ 〜したとき」。B02062 は「相手の証拠」= side:opp でコスト(自証拠)では発火せず無害だが、将来「自分の証拠がリムーブされたとき」(side:self) observer を実装する際は matcher で cost 由来を除外する設計判断が要る。
+- **P20 remove:exit (リムーブエリア離脱 observer、B05088)** は本 wave 不採用 → wave-4。離場 snapshot + refresh per-card emit の別 sub-pattern。

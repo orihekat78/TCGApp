@@ -115,6 +115,10 @@ export function registerMisreadListener(): void {
       for (const pick of picks) {
         mutate.scene.setState(state, pick.uid, 'sleep');
         totalReduction += pick.x;
+        // engine additive wave-3 (2026-06-30): ミスリード実行を card-triggerable 化 (rules/13)。
+        // 公式Q&A = ミスリードしたキャラ1枚ごとに発動 → per-pick emit。payload.player=実行側(defender)、
+        // source.uid=misread キャラ uid (selfOnly「このキャラがミスリードしたとき」B09016 用)。新 hook = 挙動不変。
+        event.emit(state, 'misread:performed', { player: defender }, { player: defender, uid: pick.uid });
       }
       // LP-X は推理中だけ参照されるため lpOverride で 1 回適用 (reasoning.ts は emit 後に
       // 再読みする実装になっている)。partner uid は scene にないため skip。

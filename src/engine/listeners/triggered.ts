@@ -107,6 +107,18 @@ export const TRIGGERED_HOOKS = [
   // emit 元 = mutate/char.ts setCard (push 後、host 在場)。listener = host 自身 (selfOnly source.uid===host.uid)。
   // set card 自体は ability を持たない。通常 in-play scan (handleHook) で処理 = 特別 handler 不要。
   'setcard:enter',
+  // engine additive wave-3 (2026-06-30): observer-hook 群 (在場の第三者キャラが観測)。3 hook とも
+  // listener = 在場キャラ → 通常 in-play scan (handleHook) で処理 = 特別 handler 不要 (leave:to-remove /
+  // evidence:remove-by-action のような virtual location handler は不要)。挙動不変の機序: 本ループが
+  // 全 TRIGGERED_HOOKS に handleHook を登録するため emit は early-return せず in-play scan を行うが、
+  // 既存カードは新 hook を trigger.hook/hooks に宣言しないため handleHook が一致 ability を見つけず
+  // effect を一切 queue しない (= pendingEffects 不変、setcard:enter と同論拠)。
+  //   cutin:used        — flow/contact.cutIn emit。matcher = triggerPlayerIs(側) + triggerCutinMatches(名/特徴)。
+  //   misread:performed — listeners/misread + UI misreadResolve emit。matcher = triggerPlayerIs / selfOnly。
+  //   evidence:removed  — mutate/evidence emit。matcher = triggerPlayerIs(持ち主側)。
+  'cutin:used',
+  'misread:performed',
+  'evidence:removed',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];

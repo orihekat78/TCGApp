@@ -133,6 +133,13 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, {
     player: p, cardId, bindings: contactBindings,
   });
+  // engine additive wave-3 (2026-06-30): カットイン使用を第三者キャラが観測する専用 hook (rules/09)。
+  // effect:declared(自効果ゲート) とは別 hook = 自効果と第三者観測を分離。payload.player で側、payload.cardId で
+  // 使用カットインの名/特徴 (triggerCutinMatches) を判定。source.bindings に contact を渡し observer effect の
+  // $contact.byUid 解決を可能にする (B02080「そのキャラを AP+1000」)。新 hook = 既存カード未宣言 → 挙動不変。
+  event.emit(state, 'cutin:used', { player: p, cardId }, {
+    player: p, cardId, bindings: contactBindings,
+  });
   mutate.hand.discardToRemove(state, p, [cardId]);
   if (!ax.cutInUsed) ax.cutInUsed = {};
   ax.cutInUsed[p] = true;

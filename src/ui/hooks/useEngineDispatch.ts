@@ -213,6 +213,11 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       for (const pick of action.picks) {
         mutate.scene.setState(draft, pick.uid, 'sleep');
         totalReduction += pick.x;
+        // engine additive wave-3 (2026-06-30): misread:performed を人間 defender 経路でも emit
+        // (listeners/misread の AI 経路と対。両経路で発火しないと観測カードが片側で false-green になる)。
+        // payload.player=misread 実行側 (= pick.uid のキャラ所有者)、source.uid=misread キャラ uid (selfOnly 用)。
+        const side: Player = draft.players.self.scene.some((c) => c.uid === pick.uid) ? 'self' : 'opp';
+        engineEvent.emit(draft, 'misread:performed', { player: side }, { player: side, uid: pick.uid });
       }
       // listener と同じパターン: lpOverride で 1 回適用 (partner uid は対象外)
       if (

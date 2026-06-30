@@ -3,6 +3,7 @@
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
 import { current } from '@/engine/produce';
+import { event } from '../event/index.js'; // engine additive wave-3: evidence:removed emit (mutate/char.ts setcard:enter と同パターン)
 import type { GameState, EvidenceCard, EvidenceOrigin } from '@/engine/types';
 
 type Player = 'self' | 'opp';
@@ -36,6 +37,8 @@ function removeTop(s: GameState, p: Player): EvidenceCard | undefined {
   const snapshot = current(ev[ev.length - 1]) as EvidenceCard;
   ev.pop();
   s.players[p].remove.push(snapshot.cardId);
+  // engine additive wave-3 (2026-06-30): 証拠リムーブ observer (原因非依存、rules/10/14)。push 後に emit。
+  event.emit(s, 'evidence:removed', { player: p });
   return snapshot;
 }
 
@@ -48,6 +51,8 @@ function removeAt(s: GameState, p: Player, idx: number): EvidenceCard | undefine
   const snapshot = current(ev[idx]) as EvidenceCard;
   ev.splice(idx, 1);
   s.players[p].remove.push(snapshot.cardId);
+  // engine additive wave-3 (2026-06-30): 証拠リムーブ observer (removeTop と同観測)。
+  event.emit(s, 'evidence:removed', { player: p });
   return snapshot;
 }
 
@@ -84,6 +89,8 @@ function toRemove(s: GameState, ev: EvidenceCard): void {
     if (idx !== -1) {
       list.splice(idx, 1);
       s.players[p].remove.push(ev.cardId);
+      // engine additive wave-3 (2026-06-30): 証拠リムーブ observer (ヒラメキ解決後等の remove も観測)。
+      event.emit(s, 'evidence:removed', { player: p });
       return;
     }
   }
