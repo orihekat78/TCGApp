@@ -76,6 +76,19 @@ export function atomSetEventUseBan(s: GameState, a: Record<string, unknown>, ctx
       return;
     }
 
+export function atomSetNextHintBan(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // wave use-restrict (2026-06-30) B06104/P・B09019/P・B09105/P「このターン中、自分はネクストヒントできない」。
+      //   turnState[p].nextHintBanned=true をセットする turn-scoped flag verb。player 省略時は所有者
+      //   (resolvePlayer 規約: 'self'=ctx.source.player)。setEventUseBan を mirror。
+      // ゲート: next-hint.ts canStartNextHint がネクストヒント全体 (step1 FILE→手札 含む) を不可にする。
+      //   turn:start の mutate.flag.resetTurnFlags が false に戻す。手札の使用 (rules/05 01.) は別行動ゆえ阻害しない。
+      // rules: 12 (ネクストヒント) / 15 (「〜できない」継続制限) / 05 (メインフェイズ行動)
+      const snhbP = resolvePlayer(a.player ?? 'self', ctx);
+      s.turnState[snhbP].nextHintBanned = true;
+      mutate.log.append(s, { ts: Date.now(), player: snhbP, turn: s.turn.number, action: 'effect:setNextHintBan' });
+      return;
+    }
+
 export function atomSetHiramekiSuppress(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // cluster8 (2026-06-15) B06049 a2「このキャラがアクション[事件]したとき、アクション終了時まで
       //   相手の【ヒラメキ】は発動しない」。turnState[p].hiramekiSuppressed=true をセットする

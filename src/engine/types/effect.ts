@@ -266,6 +266,10 @@ export type AtomVerb =
   // 手札の使用・ネクストヒントの event のみゲート (公式 Q&A: カットイン/ヒラメキは制限外)。
   // rules: 25 (公式 Q&A) / 12 (ネクストヒント) / 06 (イベント使い切り)
   | 'setEventUseBan'
+  // wave use-restrict (2026-06-30): 「このターン中、自分はネクストヒントできない」(B06104/P・B09019/P・B09105/P)。
+  // turnState[p].nextHintBanned=true をセットする turn-scoped flag verb。canStartNextHint が gate (ネクストヒント全体)。
+  // resetTurnFlags でクリア。rules: 12 (ネクストヒント) / 15 (「〜できない」継続制限)
+  | 'setNextHintBan'
   | 'setHiramekiSuppress'
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)

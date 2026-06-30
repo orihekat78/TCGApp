@@ -82,6 +82,7 @@ import {
   atomStartContact,
   atomEndActionEarly,
   atomSetEventUseBan,
+  atomSetNextHintBan,
   atomSetHiramekiSuppress,
   atomLog,
   atomExpandActionTargets,
@@ -219,6 +220,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomSouza(s, a, ctx);
     case 'setEventUseBan':
       return atomSetEventUseBan(s, a, ctx);
+    case 'setNextHintBan':
+      return atomSetNextHintBan(s, a, ctx);
     case 'setHiramekiSuppress':
       return atomSetHiramekiSuppress(s, a, ctx);
     case 'log':

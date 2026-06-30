@@ -107,6 +107,14 @@ export type TurnScopedFlags = {
    */
   eventUseBanned?: boolean;
   /**
+   * 「このターン中、自分はネクストヒントできない」(B06104/P・B09019/P・B09105/P、wave use-restrict 2026-06-30)。
+   * setNextHintBan verb がセットし、turn:start の resetTurnFlags でクリア。undefined/false = 制限なし。
+   * eventUseBanned は手札使用/ネクストヒントの **event のみ** を gate するのに対し、本フラグは
+   * **ネクストヒント全体** (step1 FILE→手札 含む) を canStartNextHint で不可にする (rules/12 §「ネクストヒントできない」)。
+   * 手札の使用 (rules/05 01.) は別行動なので阻害しない。enterCountThisTurn と同じ optional-flag 前例に倣い未初期化。
+   */
+  nextHintBanned?: boolean;
+  /**
    * 「アクション[事件]終了時まで、このプレイヤーの【ヒラメキ】は発動しない」(B06049 a2、cluster8 2026-06-15)。
    * setHiramekiSuppress verb が **相手** (アクション[事件]を行った側から見た相手 = 証拠を失う側) の slot に
    * セットし、state-machine の action-end (contact-end→action-end 遷移) で両プレイヤー分クリアする

@@ -26,6 +26,10 @@ type Player = 'self' | 'opp';
  * - FILE 最上部 (アシストパートナー以外) が 1 枚以上必要 (= 実質 FILE ≥ 1 + 非アシスト)
  */
 export function canStartNextHint(state: GameState, p: Player): boolean {
+  // wave use-restrict (2026-06-30): 「このターン中、自分はネクストヒントできない」(B06104/P・B09019/P・B09105/P)。
+  // setNextHintBan verb がセット、resetTurnFlags でクリア。ネクストヒント全体 (step1 FILE→手札 含む) を不可にする
+  // (eventUseBanned が step2 の event のみ gate するのと異なる)。手札の使用 (rules/05 01.) は別経路ゆえ無影響。
+  if (state.turnState[p].nextHintBanned) return false;
   const file = state.players[p].file;
   if (file.length === 0) return false;
   // アシストパートナー以外のカードが 1 枚以上あれば OK

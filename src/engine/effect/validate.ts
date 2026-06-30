@@ -39,6 +39,7 @@ const ATOM_VERB_MAP = {
   deckRevealUntil: true, deckToBottomBound: true, boundToRemove: true, deckShuffle: true, souza: true,
   removeAreaAllToDeckBottom: true, // cluster4 (2026-06-14)
   setEventUseBan: true, // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
+  setNextHintBan: true, // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)
   setHiramekiSuppress: true, // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
   expandActionTargets: true, // D11007 v2 Phase 3
   log: true, noop: true,
