@@ -5,6 +5,7 @@
 import type { GameState, CardId, RefreshResult } from '@/engine/types';
 import { log as logMut } from './log.js';
 import { gameResult as gameResultMut } from './gameResult.js';
+import { remove as removeMut } from './remove.js'; // engine additive wave-4: remove:exit emit (リフレッシュで remove→deck)
 
 type Player = 'self' | 'opp';
 type OrderMode = 'given' | 'reverse';
@@ -108,11 +109,21 @@ function refresh(s: GameState, p: Player): RefreshResult {
   }
 
   const reshuffled = remove.length;
+  // engine additive wave-4 (2026-07-01): 離脱カード snapshot (clear 前)。リフレッシュで remove→deck へ
+  // 移ったカード毎に remove:exit を emit (rules/14、公式Q&A「シャッフルされデッキへ移った場合に発動」)。
+  const exiting: CardId[] = [...remove];
 
   // リムーブ → デッキへ移動してシャッフル
   s.players[p].deck.push(...remove);
   s.players[p].remove = [];
   shuffle(s, p);
+
+  // engine additive wave-4: 離脱カード毎に remove:exit emit (移動完了後)。観測 = B05087/B05088 (在場キャラ)。
+  // 既存カードは本 hook を宣言しないため queue 0 (= 挙動不変)。emit は handleHook を同期実行するが
+  // pendingEffects へ queue するのみ (再帰なし)。evidence:removed と同パターン (mutate 内 emit)。
+  for (const cardId of exiting) {
+    removeMut.emitExit(s, p, cardId);
+  }
 
   // refreshCount インクリメント
   s.refreshCount[p] = (s.refreshCount[p] ?? 0) + 1;

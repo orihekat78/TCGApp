@@ -102,6 +102,17 @@ export type HookName =
   | 'refresh:before'
   | 'refresh:after'
   | 'lose:by-deck-out'
+  // engine additive wave-4 (2026-07-01): カードがリムーブエリアから離れたとき (離脱カード毎、**原因非依存**
+  // = rules/17 【現場リムーブ時】類推「リムーブ方法問わず」)。emit は mutate.remove.emitExit (payload 単一ソース)
+  // 経由で全離脱経路を網羅: ① deck.refresh (リフレッシュ=remove→deck、公式Q&A 発動確認) ②
+  // remove.removeFromHere (removeAreaToDeckBottom コスト経路) ③ handAddFromRemove (remove→手札、B05087 第2能力)
+  // ④ removeAreaAllToDeckBottom (B08027、remove→deck下) ⑤ evidence.gainCard fromArea=remove (remove→証拠)
+  // ⑥ charSetCard fromSelf (使用イベント自身を remove→set-card) ⑦ sceneEnter sourceArea=remove (remove→登場)。
+  // 除外 = scene.ts MR→PA redirect pop (在場→PA 転送中の transient、leave:to-remove 既 emit、rules/18①)。
+  // 観測 = B05087 諸伏高明 / B05088 大和敢助「自分のリムーブエリアにある〚特徴[長野県警]〛のキャラが
+  // リムーブエリアから離れたとき〜」。⚠ コスト由来 (②) 発火を card 側が拾うべきか (rules/21) は card-wave 時 Q&A 確定。
+  //   payload: { player(=リムーブエリア所有者), cardId(=離脱したカード) }
+  | 'remove:exit'
   // フラグ関連 (rules: 05-turn-phases.md, 13-keywords.md)
   | 'flag:assist:set'
   | 'flag:hand-use:set'

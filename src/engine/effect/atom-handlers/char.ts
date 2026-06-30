@@ -233,7 +233,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
         const ownerP = resolvePlayer((a.player as string | undefined) ?? 'self', ctx);
         const removeArr = s.players[ownerP].remove;
         const ridx = removeArr.lastIndexOf(selfCid);
-        if (ridx >= 0) removeArr.splice(ridx, 1);
+        if (ridx >= 0) { removeArr.splice(ridx, 1); mutate.remove.emitExit(s, ownerP, selfCid); } // wave-4: remove→set-card 離脱 (原因非依存 remove:exit)
         mutate.char.setCard(s, scUid, selfCid, true);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: selfCid });
         return;

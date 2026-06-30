@@ -769,3 +769,20 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 - **B02062 (evidence:removed) × ヒラメキ発火順**: action-case.ts は `removeTop`(=evidence:removed emit) → `evidence:remove-by-action`(ヒラメキ窓) の順。B02062 公式Q&A は「ヒラメキ解決 → リムーブエリアに置かれたとき世良発動」= ヒラメキ先。B02062 実装時は実機 test で『ヒラメキ→世良 draw』順を確認し、必要なら action-case の emit 順を入替える。
 - **evidence:removed のコスト由来発火**: `cost/pay.ts` discardEvidence (自証拠リムーブ) でも emit する。rules/21「コストで行ったこと ≠ 〜したとき」。B02062 は「相手の証拠」= side:opp でコスト(自証拠)では発火せず無害だが、将来「自分の証拠がリムーブされたとき」(side:self) observer を実装する際は matcher で cost 由来を除外する設計判断が要る。
 - **P20 remove:exit (リムーブエリア離脱 observer、B05088)** は本 wave 不採用 → wave-4。離場 snapshot + refresh per-card emit の別 sub-pattern。
+
+## wave engine/wave4-0701 — additive 3件 出荷 ($self.level / drawUpToHandSize / remove:exit) + latent (2026-07-01)
+
+`engine/wave4-0701` で純 additive 3 件出荷 (engine 足場のみ、カードは card-wave)。詳細 changelog
+[2026-07-01-01](../changelog-entries/2026-07-01-01-engine-additive-wave4.md)。
+
+| primitive | 解禁 (card-wave) | 形 |
+|-----------|------------------|----|
+| `$self.level` dyn | 相対 level filter 系 (printedより少) | dyn/eval.ts resolveSelf case。filter {levelMin/levelMax:{dyn:'$self.level'}}。相対LP は既出荷 |
+| `drawUpToHandSize` verb | B08047 | 「手札 N 枚まで引く」draw(max(0,n−hand))。discard-down(B07076)/枚数return(B04048)は別 variant DEFER |
+| `remove:exit` hook + `removeExitMatches` matcher | B05087/B05088 | リムーブエリア離脱 observer。全離脱経路 emit (emitExit 単一ソース)。原因非依存 |
+
+⚠ **card-wave 実装時に要対応の latent risk** (4-lens review 指摘、現 consumer 0 で挙動無害):
+- **B05087/B05088 (remove:exit) のコスト由来発火**: `remove.removeFromHere` の唯一の呼出は `removeAreaToDeckBottom` **コスト**経路 (cost/pay.ts)。engine は原因非依存に emit するが (rules/17 【現場リムーブ時】類推 = 方法問わず)、rules/21「コストで行ったこと ≠ 〜したとき」との関係で B05087/B05088 がコスト由来離脱を拾うべきかは **官報 Q&A で確定**してから出荷する。拾わない裁定なら matcher に cost-cause 除外 field を additive 追加。
+- **複数枚同時離脱の発火回数**: refresh で N 枚一致カードがデッキへ戻る場合、deck.refresh は離脱カード毎に remove:exit emit (per-card)。B05087/B05088 は【ターン1】のため実解決は1回だが、emit 回数と【ターン1】カウントの整合 (rules/24「発動したが解決できない場合もカウント」) を実機 test で確認。
+- **G16 相対 level の残カード**: `$self.level` は「このキャラのレベル(以下/同じ)」を解禁するが、B04074 (発見カードと同 level = $revealed-level-any、G17 と複合) / B08043 (現場最大LP以下 = sceneMaxLp dyn 不在) は別 dyn を要し本 wave 対象外 (genuine-absent、別 primitive)。
+- **drawUpToHandSize の discard-down 方向**: B07076「手札が N 枚になるまでリムーブ」は hand-pick を要する別 variant (本 verb は draw-up のみ)。B04048「引いた枚数と同じ数をデッキ下」は引いた枚数の bind-return が必要 → 別 variant DEFER。

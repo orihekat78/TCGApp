@@ -119,6 +119,14 @@ export const TRIGGERED_HOOKS = [
   'cutin:used',
   'misread:performed',
   'evidence:removed',
+  // engine additive wave-4 (2026-07-01): remove:exit — カードがリムーブエリアから離れたとき (離脱カード毎、
+  // 原因非依存)。emit 元 = mutate.remove.emitExit 経由で全離脱経路網羅 (refresh / removeFromHere /
+  // handAddFromRemove / removeAreaAllToDeckBottom / evidence.gainCard fromArea=remove。hooks.ts 参照)。
+  // listener = 在場キャラ (B05087/B05088) → 通常 in-play scan (handleHook) で処理 = 特別 handler 不要。
+  // 挙動不変の機序 (wave-3 と同論拠): 本ループが全 TRIGGERED_HOOKS に handleHook を登録するため emit は
+  // in-play scan を行うが、既存カードが remove:exit を trigger.hook に宣言しないため effect を queue しない
+  // (= pendingEffects 不変)。matcher = removeExitMatches (離脱カードの cardId→CardDef を filter 評価)。
+  'remove:exit',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];

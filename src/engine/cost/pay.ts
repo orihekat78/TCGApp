@@ -140,8 +140,12 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     // sceneToDeckBottom の area:'remove' 版。UI 選択 (ctx.dyn.costParams.removeAreaToDeckBottom.ids)
     // 優先、無ければ pickCandidates (ctx.picked → 先頭 n) fallback。p は自分のリムーブエリアのみ
     // (rules/21「自分の」省略 + cost.target は query.side:'self')。
-    // rules/09・23: デッキ下移動はリムーブではない (mutate.remove.removeFromHere は素の splice で
-    // leave hook を emit しない)。デッキは増えるだけなので refresh は起きない (rules/14/26)。
+    // rules/09・23: (現場からの) デッキ下移動は scene-removal ではない (leave:to-remove /【現場リムーブ時】
+    // hook は発火しない)。デッキは増えるだけなので refresh は起きない (rules/14/26)。
+    // ⚠ engine additive wave-4 (2026-07-01): mutate.remove.removeFromHere は **リムーブエリアからの離脱** に
+    // 対し remove:exit hook を emit する (B05087/B05088、原因非依存 rules/17 類推)。本コスト経路もコストで
+    // remove→deck下 へ移すため remove:exit が発火する。コスト由来発火を card 側が拾うべきか (rules/21 コスト
+    // 免除) は B05087/B05088 出荷時に官報 Q&A で確定 (engine 側は method-agnostic に発火 = 正しい既定)。
     case 'removeAreaToDeckBottom': {
       const p = ctx.source.player;
       const explicit = readRemoveAreaToDeckIds(ctx);

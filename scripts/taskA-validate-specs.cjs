@@ -15,6 +15,7 @@ const VERBS = new Set([
   'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck', 'handAddFromDeckBottom',
   'handToEvidence',
   'handReveal', // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
+  'drawUpToHandSize', // engine additive wave-4 (2026-07-01) — 手札が N 枚になるまで引く (B08047)
   'discardRandom', // engine additive (2026-06-28) — 手札ランダムリムーブ (B01077)
   'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
@@ -46,6 +47,7 @@ const HOOKS = new Set([
   'setcard:enter', // engine additive (2026-06-29, B02018/B06046)
   // engine additive wave-3 (2026-06-30): observer-hook 群 (B02080/B09086/B05015/B09016/B02062)
   'cutin:used', 'misread:performed', 'evidence:removed',
+  'remove:exit', // engine additive wave-4 (2026-07-01) — リムーブエリア離脱 observer (B05087/B05088)
 ]);
 
 const CONDS = new Set([
@@ -74,6 +76,8 @@ const CONDS = new Set([
   'setCardMatches',
   // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用カットインの cardName/特徴 filter
   'triggerCutinMatches',
+  // engine additive wave-4 (2026-07-01, B05087/B05088): remove:exit 離脱カードの filter 評価
+  'removeExitMatches',
 ]);
 
 const COSTS = new Set([

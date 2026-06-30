@@ -19,7 +19,8 @@ import type { Effect, ValidationResult, CardDef, AtomVerb } from '../types/index
 // `satisfies Record<AtomVerb, true>` により、union への verb 追加漏れ・余剰 key の両方向を
 // tsc が検出する (旧: コメント頼みの手動同期)。
 const ATOM_VERB_MAP = {
-  draw: true, discard: true, discardRandom: true, mill: true, fileAdd: true, filePopToHand: true,
+  draw: true, drawUpToHandSize: true, // drawUpToHandSize: engine additive wave-4 (2026-07-01) — 手札 N 枚まで引く (B08047)
+  discard: true, discardRandom: true, mill: true, fileAdd: true, filePopToHand: true,
   fileRemoveTop: true, fileFlipTop: true, // Task D E3 (2026-06-12)
   evidenceGain: true, evidenceLose: true, evidenceFlip: true, selfToEvidence: true, evidenceToDeck: true,
   evidenceToHand: true, handAddFromRemove: true, handAddFromDeck: true, handAddFromDeckBottom: true,

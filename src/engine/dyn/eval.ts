@@ -335,6 +335,13 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
       return charRead.ap(state, uid);
     case 'lp':
       return charRead.lp(state, uid);
+    // engine additive wave-4 (2026-07-01): $self.level — このキャラの有効レベル (rules/11/19)。
+    // 「このキャラのレベル以下/同じレベルの〜」相対 level フィルタの dyn 足場 (filter の levelMin/levelMax に
+    // {dyn:'$self.level'} を置くと resolveFilterDynObj が field-agnostic に解決 → matchOneFilter が effective
+    // level を honor、両方既出荷)。charRead.level は base + 各 lvlMod + continuous (ap/lp と対称、B09096 相対AP
+    // 先例)。continuousDeltaSafe 経由で BUG-156/157 の再帰を踏まない。level は下限なし (rules/19、マイナス可)。
+    case 'level':
+      return charRead.level(state, uid);
     case 'uid':
       return uid;
     case 'cardId':

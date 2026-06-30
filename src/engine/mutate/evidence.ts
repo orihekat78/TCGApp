@@ -4,6 +4,7 @@
 
 import { current } from '@/engine/produce';
 import { event } from '../event/index.js'; // engine additive wave-3: evidence:removed emit (mutate/char.ts setcard:enter と同パターン)
+import { remove as removeMut } from './remove.js'; // engine additive wave-4: remove:exit emit (remove→証拠 離脱)
 import type { GameState, EvidenceCard, EvidenceOrigin } from '@/engine/types';
 
 type Player = 'self' | 'opp';
@@ -122,6 +123,7 @@ function gainCard(
     // 非同期 (キャラの【現場リムーブ時】等、B06026) でのみ idx===-1 が起こりうる。
     if (idx === -1) return;
     list.splice(idx, 1);
+    removeMut.emitExit(s, p, cardId); // wave-4: remove→証拠 離脱 (原因非依存 remove:exit)
   }
   s.players[p].evidence.push({ cardId, faceUp, origin });
 }

@@ -23,6 +23,26 @@ export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCt
       return;
     }
 
+// engine additive wave-4 (2026-07-01): drawUpToHandSize — 「手札が N 枚になるまでカードを引く」
+// (B08047 沖矢昴「ターン終了時、手札が2枚になるまで引く」)。draw(max(0, n − 現手札)) の決定論 verb。
+// 手札が既に N 枚以上なら draw 0 (draw-up 方向のみ、捨てない)。mutate.deck.draw は内部で手札 push +
+// デッキ0時リフレッシュ (rules/14、足りなければ可能な限り) を担うため atomDraw と同じ薄いラッパー。
+// discard-down 版 (B07076「N枚になるまでリムーブ」= pick 要) / 引いた枚数 return (B04048) は別 variant で DEFER。
+export function atomDrawUpToHandSize(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const drawPlayer = resolvePlayer(a.player, ctx);
+      const target = requireField<number>(a, 'n', 'number');
+      const need = Math.max(0, target - s.players[drawPlayer].hand.length);
+      if (need > 0) mutate.deck.draw(s, drawPlayer, need);
+      mutate.log.append(s, {
+        ts: Date.now(),
+        player: drawPlayer,
+        turn: s.turn.number,
+        action: 'effect:drawUpToHandSize',
+        result: `${need}→${target}`,
+      });
+      return;
+    }
+
 export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // BUG-065 (本格対応) で resolve-picks.ts が pattern B (uid なし + target.kind='pick')
       // の解決をサポート。ここに到達した時点で a.target は string[] のはず。
@@ -577,6 +597,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
           return;
         }
         remSelf.splice(sIdx, 1);
+        mutate.remove.emitExit(s, p, selfCid); // wave-4: remove→hand 離脱 (原因非依存 remove:exit)
         mutate.hand.add(s, p, [selfCid]);
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove', target: selfCid, result: 'ok' });
         return;
@@ -607,7 +628,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
         const movedIds: string[] = [];
         for (const cid of cardIds) {
           const idx = remM.indexOf(cid);
-          if (idx !== -1) { remM.splice(idx, 1); mutate.hand.add(s, p, [cid]); movedIds.push(cid); }
+          if (idx !== -1) { remM.splice(idx, 1); mutate.remove.emitExit(s, p, cid); mutate.hand.add(s, p, [cid]); movedIds.push(cid); }
         }
         mutate.log.append(s, {
           ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove',
@@ -629,6 +650,7 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
       let moved = false;
       if (idx !== -1) {
         rem.splice(idx, 1);
+        mutate.remove.emitExit(s, p, target); // wave-4: remove→hand 離脱 (原因非依存 remove:exit)
         mutate.hand.add(s, p, [target]);
         moved = true;
       }
@@ -654,7 +676,9 @@ export function atomRemoveAreaAllToDeckBottom(s: GameState, _a: Record<string, u
       //   なく両スロット網羅で「自分と相手」を表現する。BUG-079 の owner-relative 規約とは別物。
       // rules/14・26: デッキへ移すだけで 0 にならない → これは「リフレッシュ」ではない (証拠付与なし、
       //   公式Q&A)。よって mutate.deck.refresh は呼ばず raw splice + toBottom + shuffle で行う。
-      // rules/09・23: デッキ下移動はリムーブでないため leave hook は発火しない (raw splice)。
+      // rules/09・23: (現場からの) デッキ下移動はリムーブでないため scene-removal hook (leave:to-remove /
+      //   【現場リムーブ時】) は発火しない。一方ここは **リムーブエリアからの** 離脱なので wave-4 の
+      //   remove:exit (原因非依存、rules/17 類推) は離脱カード毎に発火する (refresh / handAddFromRemove と同契約)。
       // 公式テキスト通り、移動枚数 0 (remove 空) のプレイヤーも無条件でシャッフルする。
       // shuffle は ctx.rng があれば使い、無ければ mutate.deck.shuffle 内の Math.random
       //   (smoke では seeded RNG に global override されている) を使う (deckShuffle と同一契約)。
@@ -663,6 +687,7 @@ export function atomRemoveAreaAllToDeckBottom(s: GameState, _a: Record<string, u
         if (rem.length > 0) {
           const ids = rem.splice(0, rem.length); // ALL — remove を drain
           mutate.deck.toBottom(s, pp, ids);       // 各自のデッキ下へ
+          for (const cid of ids) mutate.remove.emitExit(s, pp, cid); // wave-4: remove→deck下 離脱 emit
         }
         mutate.deck.shuffle(s, pp, ctx.rng);
       }

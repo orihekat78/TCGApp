@@ -139,6 +139,14 @@ export type Condition =
   // 「(使用した)〚カード名/特徴〛のカットインのとき」(B09086 = [諸伏景光]/[長野県警] で分岐)。setCardMatches と
   // 同式で matchOneFilter の char 引数は null (CardDef 印字属性のみ)。triggerPlayerIs(側) との複合は and で書く。
   | { kind: 'triggerCutinMatches'; filter: TargetFilter }
+  // engine additive wave-4 (2026-07-01): remove:exit payload の離脱カードを filter 評価。「自分の
+  // リムーブエリアにある〚特徴/種別〛のカードがリムーブエリアから離れたとき」(B05087 諸伏高明 /
+  // B05088 大和敢助)。emit 元 = mutate/deck.refresh (リフレッシュ=remove→deck、公式Q&A 発動) +
+  // mutate/remove.removeFromHere (効果回収)、離脱カード毎。payload={player(=リムーブエリア所有者), cardId}。
+  // removeFilter は離脱カードの cardId→CardDef を matchOneFilter(c=null = 印字値) で評価 (remove-area card は
+  // turnEffects 無 = 静的 def、setCardMatches/triggerCutinMatches と同流儀)。side='self'=payload.player===
+  // source.player (「自分の」)。side 省略時 'self' (B05087/B05088 は全て自分のリムーブエリア)。
+  | { kind: 'removeExitMatches'; side?: 'self' | 'opp' | 'either'; removeFilter?: TargetFilter }
   // engine拡張 wave#2 cluster3 (2026-06-13): action:declare payload の target.kind を読む。
   // 「アクション[キャラ]したとき」(v:'char') / 「アクション[事件]したとき」(v:'case') の subtype gate を
   // declarative 化 (matcher closure は granted descriptor で禁止 = validate.ts のため JSON cond が必須。
@@ -236,6 +244,10 @@ export type AtomVerb =
   // Task D E3 (2026-06-12): fileRemoveTop (FILE 上から n 枚を所有者 remove へ、アシストパートナー除外) /
   // fileFlipTop (FILE 最上位の非パートナーを表向き化、既に表向きなら no-op)
   | 'draw' | 'discard' | 'mill' | 'fileAdd' | 'filePopToHand' | 'fileRemoveTop' | 'fileFlipTop'
+  // engine additive wave-4 (2026-07-01): drawUpToHandSize — 「手札が N 枚になるまで引く」(B08047 沖矢昴)。
+  // draw(max(0, n − 現手札)) の決定論 verb (atomDraw の薄いラッパー、pick 無し)。手札 ≥ N なら no-op
+  // (draw-up 方向のみ)。discard-down (B07076) / 引いた枚数 return (B04048) は別 variant で DEFER。args.player 明示。
+  | 'drawUpToHandSize'
   // engine拡張 wave (2026-06-23): evidenceFlipDown — 「自分の表向きの証拠を N つまで選び、裏向きにする」
   // (evidenceFlip=表向き化 の逆 mutate)。PB pick (defaultArea 'evidence', faceUp 候補限定)。
   // rules: 03-field-areas.md §状態 / 15-abilities-effects.md。B05013/B06017/B06019 で使用。

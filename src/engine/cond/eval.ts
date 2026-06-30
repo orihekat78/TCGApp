@@ -501,6 +501,26 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return true;
     }
+    case 'removeExitMatches': {
+      // engine additive wave-4 (2026-07-01): remove:exit payload (リムーブエリアから離脱したカード) を評価。
+      // 「自分のリムーブエリアにある〚特徴/種別〛のカードがリムーブエリアから離れたとき」(B05087/B05088)。
+      // payload={player(=リムーブエリア所有者), cardId(=離脱カード)}。離脱は cardId のみ (remove は CardId[] で
+      // scene char ではない) → matchOneFilter の char 引数は null = CardDef 印字値判定 (setCardMatches/
+      // triggerCutinMatches/boundMatchesFilter と同流儀)。remove-area card は turnEffects を持たないため
+      // effective level/AP/LP も静的 def 値で正しい (continuousDelta は uid=null → 0)。
+      const pl = ctx.triggerPayload as { player?: 'self' | 'opp'; cardId?: string } | undefined;
+      if (!pl || (pl.player !== 'self' && pl.player !== 'opp') || typeof pl.cardId !== 'string') return false;
+      // side: payload.player === source.player → 'self' (自分のリムーブエリア)。省略時 'self'。
+      const reqSide = cond.side ?? 'self';
+      const sameSide = pl.player === ctx.source.player;
+      if (reqSide === 'self' && !sameSide) return false;
+      if (reqSide === 'opp' && sameSide) return false;
+      if (cond.removeFilter !== undefined) {
+        const cand: Candidate = { kind: 'card', cardId: pl.cardId, area: 'remove', player: pl.player };
+        if (!matchOneFilter(state, pl.cardId, cond.removeFilter, null, cand)) return false;
+      }
+      return true;
+    }
     // engine拡張 wave#2 cluster3 (2026-06-13): アクション種別 ([キャラ]/[事件]) gate。
     // action:declare payload の target.kind ('char'|'case') を読む (state-machine.ts declare emit)。
     // payload 不在 / target 不在は false (発火させない安全側)。rules/22 + TSV qAndA (B01036 等 6枚)。
@@ -570,6 +590,7 @@ const CONDITION_KIND_MAP = {
   triggerActionKind: true, // engine拡張 wave#2 cluster3 (2026-06-13)
   enterSource: true, // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled)
   removedCharMatches: true, // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)
+  removeExitMatches: true, // engine additive wave-4 (2026-07-01): remove:exit observer (B05087/B05088)
   custom: true,
 } as const satisfies Record<Condition['kind'], true>;
 export const CONDITION_KINDS: ReadonlySet<string> = new Set(Object.keys(CONDITION_KIND_MAP));

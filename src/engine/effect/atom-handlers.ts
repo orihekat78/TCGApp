@@ -22,6 +22,7 @@ export {
 } from './atom-handlers/_shared.js';
 import {
   atomDraw,
+  atomDrawUpToHandSize,
   atomDiscard,
   atomDiscardRandom,
   atomHandReveal,
@@ -112,6 +113,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
   switch (verb) {
     case 'draw':
       return atomDraw(s, a, ctx);
+    case 'drawUpToHandSize':
+      return atomDrawUpToHandSize(s, a, ctx);
     case 'discard':
       return atomDiscard(s, a, ctx, verb);
     case 'discardRandom':

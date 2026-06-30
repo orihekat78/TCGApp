@@ -155,7 +155,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].remove;
         const idx = arr.indexOf(cardId);
-        if (idx !== -1) arr.splice(idx, 1);
+        if (idx !== -1) { arr.splice(idx, 1); mutate.remove.emitExit(s, fromPlayer, cardId); } // wave-4: remove→登場 離脱 (原因非依存 remove:exit、B05087 1st 能力が観測しうる)
       } else if (sourceArea === 'hand') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].hand;
