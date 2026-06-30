@@ -310,6 +310,20 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     const opp = ctx.source.player === 'self' ? 'opp' : 'self';
     return state.players[opp].scene.length;
   }
+  // engine additive wave (2026-06-30): $self.sceneColorNot.<color>[.<color>...] — ctx.source.player の
+  // 現場で「指定色以外の色を持つ」キャラ数 (B02002 江戸川コナン「自分の現場にいる【青】以外の色を持つ
+  // キャラ1枚につき AP+1000」)。colorNot は some説 (公式 B08079, cond/eval.ts matchOneFilter と同式:
+  // いずれかの色が除外集合外なら該当)。sceneTrait/oppSceneCount と同じく player ベース (uid 要件より前)。
+  // 複数色は dotted で除外集合に追加 (青.赤 = {青,赤} を両方持たないキャラ以外、= {青,赤}以外の色を持つ)。
+  // charRead.colors は scene char の現 cardId 参照 ⇒ 変装後の色を honor (rules/19)。
+  if (prop === 'sceneColorNot') {
+    const nots = rest.slice(1).filter(x => typeof x === 'string' && x.length > 0);
+    if (nots.length === 0) {
+      throw new Error(`dyn.eval: $self.sceneColorNot requires at least one color (e.g. $self.sceneColorNot.青) — got "${original}"`);
+    }
+    const side = ctx.source.player;
+    return state.players[side].scene.filter(c => charRead.colors(state, c.uid).some(x => !nots.includes(x))).length;
+  }
   const uid = ctx.source.uid;
   if (!uid) {
     throw new Error(`dyn.eval: $self.${prop} requires ctx.source.uid (none provided)`);

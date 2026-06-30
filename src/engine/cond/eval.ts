@@ -145,6 +145,14 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const p = resolvePlayer(cond.player, ctx);
       return state.players[p].evidence.length >= cond.n;
     }
+    // engine additive wave (2026-06-30): 証拠枚数の差で分岐 (B05103「相手の証拠が自分の証拠より N 以上
+    // 多い場合」)。players[player].evidence − players[other].evidence >= n。state 直読みのみ (ctx 非依存)
+    // なので queue 境界を跨いでも安全 (costRemovedMatches 系の risk 無)。
+    case 'evidenceDiff': {
+      const a = resolvePlayer(cond.player, ctx);
+      const b = resolvePlayer(cond.other, ctx);
+      return state.players[a].evidence.length - state.players[b].evidence.length >= cond.n;
+    }
     // Task D E1 (2026-06-12): 手札枚数条件 (evidenceAtLeast と同流儀の state 直読み。
     // candidates() を経由しないため continuous 再帰 (BUG-113 系) に乗らない)
     // rules: 15-abilities-effects.md, 21-declared-ability-cost.md
@@ -160,6 +168,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const p = resolvePlayer(cond.player, ctx);
       const other = p === 'self' ? 'opp' : 'self';
       return state.players[p].hand.length >= state.players[other].hand.length;
+    }
+    // engine additive wave (2026-06-30): 自他現場キャラ枚数の比較 (B05081「自分の現場…が相手の現場…
+    // より少ない場合」= cmp:'lt')。.scene.length = キャラ枚数 (oppSceneCount 同流儀)。state 直読みのみ。
+    case 'sceneCountCompare': {
+      const a = state.players[resolvePlayer(cond.player, ctx)].scene.length;
+      const b = state.players[resolvePlayer(cond.other, ctx)].scene.length;
+      switch (cond.cmp) {
+        case 'lt': return a < b;
+        case 'le': return a <= b;
+        case 'gt': return a > b;
+        case 'ge': return a >= b;
+        case 'eq': return a === b;
+      }
+      return false; // unreachable (cmp は 5 リテラル union)
     }
     case 'fileTopType': {
       const owner = ctx.source.player;
@@ -218,6 +240,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const wants = Array.isArray(cond.color) ? cond.color : [cond.color];
       const count = state.players[p].remove.filter(id => {
         const d = lookupCardDef(id);
+        // engine additive wave (2026-06-30): cardKind 指定時はカード種別で先に弾く (B08004「黒のキャラ」=
+        // 黒イベントを数えない)。未指定は従来通り全種別 (回帰0)。
+        if (cond.cardKind && d?.kind !== cond.cardKind) return false;
         const colors = d?.colors ?? [];
         return wants.some(w => colors.includes(w));
       }).length;
@@ -520,6 +545,7 @@ const CONDITION_KIND_MAP = {
   true: true, false: true, not: true, and: true, or: true, turn: true,
   partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
   bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,
+  evidenceDiff: true, sceneCountCompare: true, // engine additive wave (2026-06-30, B05103/B05081)
   handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, // Task D E1 (2026-06-12)
   fileTopType: true,
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)

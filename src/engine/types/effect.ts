@@ -35,6 +35,11 @@ export type Condition =
   // query は candidates() で列挙 (side/filter/state)。min/max いずれか/両方で範囲指定。honor: cond/eval.ts case + MAP + CONDS。
   | { kind: 'sceneLpSum'; query: TargetQuery; min?: number; max?: number }
   | { kind: 'evidenceAtLeast'; player: 'self' | 'opp'; n: number }
+  // engine additive wave (2026-06-30): 証拠枚数の **差** で分岐 (B05103「籌を帷幄の中に運らし…」
+  // 「相手の証拠が自分の証拠より2つ以上多い場合」= player:'opp', other:'self', n:2 →
+  // players[opp].evidence − players[self].evidence >= n)。evidenceAtLeast(片側閾値)では差を表現できない。
+  // player/other は resolvePlayer 規約 ('self'=カード所有者)。honor: cond/eval.ts case + MAP + CONDS。
+  | { kind: 'evidenceDiff'; player: 'self' | 'opp'; other: 'self' | 'opp'; n: number }
   // Task D E1 (2026-06-12): 手札枚数条件。player は resolvePlayer 規約 ('self'=カード所有者)。
   // handAtMost を not(handAtLeast n+1) に畳まないのは公式テキスト「N枚以下」と 1:1 対応させるため。
   // rules: 15-abilities-effects.md (「〜の場合」は effect 内 conditional で解決時評価),
@@ -43,6 +48,11 @@ export type Condition =
   | { kind: 'handAtMost'; player: 'self' | 'opp'; n: number }
   // 「player の手札枚数 >= 反対側の手札枚数」(B07067「相手の手札が自分の手札の枚数以上」= player:'opp')
   | { kind: 'handCountAtLeastOther'; player: 'self' | 'opp' }
+  // engine additive wave (2026-06-30): 自他 **現場キャラ枚数** の比較 (B05081 威嚇射撃「自分の現場に
+  // いるキャラが相手の現場にいるキャラより少ない場合」= player:'self', other:'opp', cmp:'lt')。
+  // handCountAtLeastOther の scene 版だが cmp で 5 比較子 (lt/le/gt/ge/eq) を一般化。
+  // .scene.length = キャラ枚数 ($self.oppSceneCount と同流儀、rules/03 §現場=scene)。player/other は resolvePlayer 規約。
+  | { kind: 'sceneCountCompare'; player: 'self' | 'opp'; other: 'self' | 'opp'; cmp: 'lt' | 'le' | 'gt' | 'ge' | 'eq' }
   | { kind: 'fileTopType'; type: 'card-back' | 'assisted-partner' }
   // Task D E3 (2026-06-12): FILE 最上位の非 assisted-partner カードを TargetFilter で評価
   // (「FILEエリアにある1番上のカードがキャラの場合」B09021。fileFlipTop が公開した札と同一参照)
@@ -54,7 +64,10 @@ export type Condition =
   | { kind: 'flag'; player: 'self' | 'opp'; key: keyof TurnScopedFlags; v: boolean }
   | { kind: 'declaredUseUnder'; uid: string; abilityId: string; max: number }
   | { kind: 'bound'; key: string; presence?: 'exists' | 'matched' }
-  | { kind: 'removeColorAtLeast'; player: 'self' | 'opp'; color: string | string[]; n: number }
+  // engine additive wave (2026-06-30): cardKind を追加し色 AND **カード種別** で計数 (B08004 江戸川コナン
+  // 「リムーブエリアに【黒】の**キャラ**が3枚以上ある場合」= 黒イベントを数えない)。cardKind 省略時は
+  // 従来通り全種別計数 (回帰0)。field 名は discriminant `kind` と衝突するため cardKind (TargetFilter.kind 同値)。
+  | { kind: 'removeColorAtLeast'; player: 'self' | 'opp'; color: string | string[]; n: number; cardKind?: 'character' | 'event' }
   | { kind: 'removeTraitAtLeast'; player: 'self' | 'opp'; trait: string | string[]; n: number }
   | { kind: 'removeNameAtLeast'; player: 'self' | 'opp'; cardName: string | string[]; n: number }
   // engine additive: removeCountAtLeast — リムーブエリアの **総枚数** (filter 無し) が n 以上か (B03104

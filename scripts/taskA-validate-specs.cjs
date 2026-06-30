@@ -49,6 +49,7 @@ const HOOKS = new Set([
 const CONDS = new Set([
   'true', 'false', 'not', 'and', 'or', 'turn', 'partnerColor', 'caseColor', 'caseColorNot', 'caseTrait',
   'fileAtLeast', 'caseStatus', 'bond', 'sceneHas', 'apAtLeast', 'lpAtLeast', 'sceneLpSum', 'evidenceAtLeast',
+  'evidenceDiff', 'sceneCountCompare', // engine additive wave (2026-06-30, B05103/B05081)
   'costRemovedMatches', // engine additive wave (2026-06-29d)
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
