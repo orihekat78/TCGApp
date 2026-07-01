@@ -17,6 +17,7 @@ import type { GameState } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
+import { handUseCharRestrictAllows } from './hand-use-card.js';
 
 type Player = 'self' | 'opp';
 
@@ -99,6 +100,13 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     //   (本ガードは optionalCardId ブロック内 = step2 のみ)。UI 側 toCandidate でも事前除外する。
     if (d?.kind === 'event' && state.turnState[p].eventUseBanned) {
       throw new Error(`runNextHint: ${optionalCardId} event-use banned this turn`);
+    }
+    // P05 (wave-5): case card 継続の character 手札使用制限 (「特徴[X]以外のキャラを手札から使用できない」)。
+    //   公式 Q&A:「ネクストヒントでの使用も『手札から使用』に含まれる」→ 手札の使用 (canHandUseCard) と同じ
+    //   gate を character に課す。event/効果登場/カットイン/変装/ヒラメキ は対象外 (handUseCharRestrictAllows
+    //   が非 character を素通り)。UI toCandidate 側の事前除外は card-wave で配線 (現状 consumer カード無)。
+    if (d?.kind === 'character' && !handUseCharRestrictAllows(state, p, optionalCardId)) {
+      throw new Error(`runNextHint: ${optionalCardId} hand-use restricted by case`);
     }
     // 効果発動 hook (Phase 5 で listener が pendingEffects に積む)
     event.emit(

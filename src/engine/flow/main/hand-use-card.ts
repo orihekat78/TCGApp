@@ -14,12 +14,44 @@
 //   - handUseCard は effect:declared hook を emit して、Phase 5 のカード登録経由で
 //     pendingEffects に積まれる設計。
 
-import type { GameState } from '../../types/index.js';
+import type { GameState, Candidate, TargetFilter, EffectCtx } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
+import { matchOneFilter } from '../../target/candidates.js';
+import { evalCond } from '../../cond/eval.js';
 
 type Player = 'self' | 'opp';
+
+/**
+ * handUseCharRestrictAllows — P05 (wave-5): case card 継続能力
+ *   「自分は〚特徴[X]〛以外のキャラを手札から使用できない」(B05120 探偵 / B06109 高校生) の許可判定。
+ * 自分の case card def の abilities[].continuousModifier.handUseRestrictFilter を走査し、character の
+ *   cardId が **全** restrict filter に一致すれば許可。非 character (event 等) / restrict 不在は常に許可
+ *   (効果登場・カットイン・変装・ヒラメキ は本 gate を通らない別経路ゆえ対象外 — 公式 Q&A)。
+ * 手札の使用 (canHandUseCard/Switch) と ネクストヒント (runNextHint) の **単一ソース**。
+ * 不在時 no-op: 既存 case は未宣言 → 全 character 許可 (smoke baseline 不変)。
+ */
+export function handUseCharRestrictAllows(state: GameState, p: Player, cardId: string): boolean {
+  const d = readDef.card(cardId);
+  if (d?.kind !== 'character') return true; // event 等は種別対象外 (rules/06, 公式 Q&A)
+  const caseId = state.players[p].case.cardId;
+  const caseDef = readDef.card(caseId);
+  // read/char.ts continuousDelta と同流儀: type==='continuous' のみ + ability.condition 成立中のみ有効
+  //   (B05120/B06109 は無条件だが、将来 [解決編] 等で gate される restrict を正しく扱うため)。
+  const ctx = { source: { player: p, area: 'case', cardId: caseId }, bindings: {} } as EffectCtx;
+  const filters: TargetFilter[] = [];
+  for (const ab of caseDef?.abilities ?? []) {
+    if (ab.type !== 'continuous') continue;
+    const f = ab.continuousModifier?.handUseRestrictFilter;
+    if (!f) continue;
+    if (ab.condition && !evalCond(state, ab.condition, ctx)) continue;
+    filters.push(f);
+  }
+  if (filters.length === 0) return true; // 制限 case 無し → 許可 (baseline 不変)
+  const cand: Candidate = { kind: 'card', cardId, area: 'hand', player: p };
+  return filters.every(f => matchOneFilter(state, cardId, f, null, cand));
+}
 
 /**
  * 色制限チェック: カードの全色が事件の色に含まれているか (rules/20)
@@ -69,6 +101,9 @@ function handUseGateCommon(state: GameState, p: Player, cardId: string): boolean
   //   event のみ対象、キャラは制限外。【カットイン】【ヒラメキ】は別経路 (contact / hirameki) で対象外。
   const def = readDef.card(cardId);
   if (def?.kind === 'event' && state.turnState[p].eventUseBanned) return false;
+  // P05 (wave-5): case card 継続の character 手札使用制限 (「特徴[X]以外のキャラを使用できない」)。
+  //   非 character / 制限 case 無しは素通り (baseline 不変)。
+  if (!handUseCharRestrictAllows(state, p, cardId)) return false;
   return true;
 }
 

@@ -57,7 +57,7 @@ const CONDS = new Set([
   'costRemovedMatches', // engine additive wave (2026-06-29d)
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
-  'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'triggerCharMatches',
+  'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'triggerCharMatches',
   // Task D E1 (2026-06-12): hand-count conditions
   'handAtLeast', 'handAtMost', 'handCountAtLeastOther',
   // Task D E2/E3 (2026-06-12)

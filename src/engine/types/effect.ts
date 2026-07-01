@@ -105,6 +105,10 @@ export type Condition =
   // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
   // (「〚カード名[X]〛を登場させた場合」を declarative 化、matchOneFilter 再利用)
   | { kind: 'boundMatchesFilter'; bindKey: string; filter: TargetFilter }
+  // engine additive wave-5 (2026-07-01, G17): boundMatchesFilter は bound[0] のみだが、公開/リムーブ
+  // した **N 枚集合のいずれか** が filter に一致するか (PR132「特徴[警察]がリムーブされた場合」/
+  // D06013「【緑】と【白】が1枚以上」= and[boundAny{緑}, boundAny{白}])。各要素は matchOneFilter に委譲。
+  | { kind: 'boundAnyMatchesFilter'; bindKey: string; filter: TargetFilter }
   // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。leave:to-remove
   // payload snapshot {uid,cause,side,byUid} を scene 再取得せず読む (triggerCharMatches は splice 済
   // キャラに使えない、13198)。side=除去キャラ所属 (payload.side===owner→self、全 variant='opp')、

@@ -138,6 +138,13 @@ export type ContinuousModifier = {
   apDeltaAuraOpp?: number;
   lpDeltaAuraOpp?: number;
   auraFilterOpp?: TargetFilter;
+  // engine additive wave-5 (2026-07-01, P05): case card 継続能力「自分は [handUseRestrictFilter] 以外の
+  //   キャラを手札から使用できない」(B05120 特徴[探偵] / B06109 特徴[高校生])。allow-filter = 使用を
+  //   許可する character の TargetFilter。flow.main.hand-use-card.handUseCharRestrictAllows が自分の case
+  //   card def の abilities[].continuousModifier.handUseRestrictFilter を走査し、手札の使用 (canHandUseCard/
+  //   Switch) + ネクストヒント (runNextHint) の両経路で character のみ gate する (event/効果登場/カットイン/
+  //   変装/ヒラメキ は対象外 — 公式 Q&A)。不在時 no-op (既存 case は未宣言 → 全 character 許可、baseline 不変)。
+  handUseRestrictFilter?: TargetFilter;
 };
 
 // ---------- AbilityDef ----------

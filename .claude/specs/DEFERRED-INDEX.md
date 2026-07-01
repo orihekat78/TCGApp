@@ -786,3 +786,22 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 - **複数枚同時離脱の発火回数**: refresh で N 枚一致カードがデッキへ戻る場合、deck.refresh は離脱カード毎に remove:exit emit (per-card)。B05087/B05088 は【ターン1】のため実解決は1回だが、emit 回数と【ターン1】カウントの整合 (rules/24「発動したが解決できない場合もカウント」) を実機 test で確認。
 - **G16 相対 level の残カード**: `$self.level` は「このキャラのレベル(以下/同じ)」を解禁するが、B04074 (発見カードと同 level = $revealed-level-any、G17 と複合) / B08043 (現場最大LP以下 = sceneMaxLp dyn 不在) は別 dyn を要し本 wave 対象外 (genuine-absent、別 primitive)。
 - **drawUpToHandSize の discard-down 方向**: B07076「手札が N 枚になるまでリムーブ」は hand-pick を要する別 variant (本 verb は draw-up のみ)。B04048「引いた枚数と同じ数をデッキ下」は引いた枚数の bind-return が必要 → 別 variant DEFER。
+
+## wave engine/wave5-bound-handrestrict — additive 2件 出荷 (boundAnyMatchesFilter / handUseRestrictFilter) + DEFER (2026-07-01)
+
+`engine/wave5-bound-handrestrict` で純 additive 2 件出荷 (engine 足場のみ、カードは card-wave)。詳細 changelog
+[2026-07-01-02](../changelog-entries/2026-07-01-02-engine-additive-wave5.md)。
+
+| primitive | 解禁 (card-wave) | 形 |
+|-----------|------------------|----|
+| `boundAnyMatchesFilter` cond (G17) | PR132 / D06013 | ctx.bindings[bindKey] 全枚数 any-match。boundMatchesFilter(bound[0]) の N>1 版。各要素 matchOneFilter 委譲 |
+| `handUseRestrictFilter` ContinuousModifier (P05) | B05120 / B06109 | case 継続「特徴[X]以外のキャラを手札から使用できない」。手札の使用 + ネクストヒント両経路 character-only gate |
+
+⚠ **card-wave 実装時に要対応の DEFER** (本 wave 対象外):
+- **B07002 (G17 distinct-color pair)**: 「それぞれ色の異なる(同じ色を持たない)特徴[探偵]のキャラを2枚リムーブした場合」= bound 集合内の
+  trait[探偵] メンバーの **相互 distinct-color 数 ≥2**。boundAnyMatchesFilter (any) では表現不可 → 別 Condition (例 `boundDistinctColorCount`) が要。
+- **B06103 ジン (P05 重量版)**: 「このターン中、自分はカード名[ジン]を使用できず、登場させることができない」= 手札使用 ban に加え
+  **effect-登場 ban** (turn-scoped カード名集合) が要る。handUseRestrictFilter (case 継続 character-filter) とは別 mechanism → DEFER。
+- **UI toCandidate next-hint 候補事前除外**: [flows.ts](../../src/ui/hooks/useActionsPanelFlow/flows.ts) の next-hint 候補列挙は現状
+  restrict を見ない。engine gate (canHandUseCard / runNextHint throw) で server-side に enforce 済のため機能上は正しいが、B05120/B06109
+  出荷時に UI 側でも `handUseCharRestrictAllows` を呼んで restricted character を候補から除外する (playwright 「画面処理=カードテキスト文言」検証込み)。

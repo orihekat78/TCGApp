@@ -341,6 +341,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const payload = ctx.triggerPayload as { enterOrderThisTurn?: number } | undefined;
       return payload?.enterOrderThisTurn === cond.n;
     }
+    case 'boundAnyMatchesFilter': {
+      // engine additive wave-5 (2026-07-01, G17): bound 集合の **いずれか** が filter に一致するか。
+      // boundMatchesFilter (bound[0] のみ) の N>1 版。各要素を matchOneFilter(c=null=CardDef 印字値、
+      // remove-area cand は removeColorAtLeast L291 と同流儀) に委譲。空/未設定 binding は false。
+      const boundSet = ctx.bindings?.[cond.bindKey];
+      if (!Array.isArray(boundSet) || boundSet.length === 0) return false;
+      for (const b of boundSet) {
+        const bId = (b as { cardId?: string }).cardId;
+        if (typeof bId !== 'string') continue;
+        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: ctx.source.player };
+        if (matchOneFilter(state, bId, cond.filter, null, cand)) return true;
+      }
+      return false;
+    }
     case 'boundMatchesFilter': {
       // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
       // (「〚カード名[X]〛を登場させた場合」を declarative 化)
@@ -584,6 +598,7 @@ const CONDITION_KIND_MAP = {
   stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
+  boundAnyMatchesFilter: true, // engine additive wave-5 (2026-07-01, G17): bound 集合 any-match (PR132/D06013)
   setCardMatches: true, // engine additive (2026-06-29, B06046)
   triggerCutinMatches: true, // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用cutin filter
   charTurnEffect: true, // Task D E4 (2026-06-12)
