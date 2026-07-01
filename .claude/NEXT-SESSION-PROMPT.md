@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト (2026-07-01 — engine-first E1 / additive wave-5 出荷: boundAnyMatchesFilter + handUseRestrictFilter)
+# 次セッション再開プロンプト (2026-07-01 — engine-first E1 / additive wave-6 出荷: grantTraits/grantNames 継続付与)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。
 > Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効。
@@ -14,7 +14,7 @@
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
-- **main = 7d1e0be2** (E1 additive **wave-5**: boundAnyMatchesFilter cond / handUseRestrictFilter。直前=8d76aeb3 wave-4)。vitest baseline=**3504 pass +1 skip**。
+- **main = 9f9ea043** (E1 additive **wave-6**: grantTraits/grantNames 継続 trait/name 付与。直前=2099dda1 docs / 7d1e0be2 wave-5)。vitest baseline=**3522 pass +1 skip**。
 - ⚠ 並行 session 複数稼働・同一 working tree 共有 → 自分のファイルだけ明示 add。engine 並行は `git worktree add` 隔離。
 
 ## ★driver: engine 拡張 実行計画
@@ -29,6 +29,20 @@
 - **TSV の pure-additive ラベルも要検証**: wave-5 で **P37 (trait/name grant aura) は TSV では pure-additive だが実際は matchOneFilter (BUG-117 hot path) の trait/color/name 読みに late-bind aura を差す=filter-core 変更**。「read.char.traits だけ足す」は半端解 (matchOneFilter 経由の filter/bond が granted trait を見ない、on-set-host session70 の READ≠解禁 教訓)。→ **P37 は wave-5 から分離し wave-6 で単独・全 lens review** に回した。
 
 ## 直近 wave 出荷済 (engine-only、card 未追加)
+- **wave-6 (9f9ea043)** — 純 additive 1件 (P37 継続 trait/name grant、**単独隔離 + opus 4-lens** 済):
+  `grantTraits` / `grantNames` ContinuousModifier field ([card-def.ts](../src/engine/types/card-def.ts))。self-scope 継続
+  「現場にいるこのキャラは〚特徴/カード名[X]〛を持つ/としても扱う」。[read/char.ts](../src/engine/read/char.ts) `grantWalk`
+  (自身 continuous ability を condition + inPA gate 走査、grantKeywords 対称) → `traits()`/`names()` が **印字∪granted** を返す。
+  [candidates.ts](../src/engine/target/candidates.ts) `traitNameGrantSafe` late-bind + `_inTraitNameGrant` 再帰 guard
+  (continuousDeltaSafe 同 posture、depth-2 終端)。**matchOneFilter trait/cardName/cardNameNot** + read.char.traits/names +
+  **cond/eval bond** の 5 honor site が **board char (c?.uid 既知) のみ** effective 集合を honor。c===null (hand/deck/remove/
+  bound=cardId) は印字のまま (公式 Q&A「現場にいなければ有効でない」B07053/B08063)。`effectiveNameComponents` export で bond と
+  matchOneFilter が同一 name 解決 (BUG-117 一貫性)。→ 解禁 (card-wave): **B05012 恩田遼平 / B07053 ロボット黒羽快斗 /
+  B08063 黒田兵衛** (self trait/name、B08063 は自己計数)。★grounding で sole=7 は clean 3 枚に収束。
+  **DEFER**: B06095 (全8エリア turn aura=別機構) / B05101 (permanent applied trait 変更+変装引継=mutate verb 要、removeTraits 未追加)。
+  opus 4-lens=semantic/edge SHIP_WITH_NITS + additivity/dsl SHIP (**0 blocker**、NIT は opp-side/co-grant/stacking テスト追加で対処)。
+  詳細 changelog [2026-07-01-03](changelog-entries/2026-07-01-03-engine-additive-wave6-trait-name-grant.md) /
+  DEFERRED-INDEX「wave engine/p37-trait-name-aura」節 (latent 4件記録) / [[reference-engine-additive-wave6-p37-trait-name]]。
 - **wave-5 (7d1e0be2)** — 純 additive 2件:
   `boundAnyMatchesFilter` cond(G17、[cond/eval.ts](../src/engine/cond/eval.ts))=ctx.bindings[bindKey] **全枚数 any-match**。
   既存 boundMatchesFilter は bound[0] のみ→N>1 の公開/リムーブ集合を評価不可だった。各要素を matchOneFilter(c=null=CardDef 印字値、
@@ -47,19 +61,22 @@
 - **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
 - **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
 
-## 次やること: E1 wave-6 (P37 単独 隔離 + 続き)
-- ★着手前: 各 primitive を origin/main (7d1e0be2) で実 grep (stale 排除)。**wave-5 で G17 any-match(boundAnyMatchesFilter) / P05 hand-use restrict 出荷済**。
-- **最優先 = P37 継続 trait/name grant aura (7枚、要隔離 review)**:「自分の現場のキャラは特徴[X]を持つ」(B06095 全自軍)/「このキャラは特徴[探偵]を持つ」(B05012 self)/
-  「特徴[警察]を失い特徴[探偵]を持つ」(B05101 trait変更)。★実装方針 (wave-5 で調査済): apDeltaAura/continuousDelta の **late-bind aura template を trait/name に適用** —
-  ContinuousModifier に grantTraits/grantNames field 追加 + read/char.ts に board-scan(recursion guard、auraDeltaSafe 同流儀) + **candidates.matchOneFilter の
-  trait/color/cardName 読みを late-bound registerTraitGrant 経由に**(filter-AP=combat-AP と同原則で filter-trait=board-trait)。既存カード未宣言→空→無害。
-  ⚠ matchOneFilter は c=null(CardDef only、boundMatchesFilter/removed-area 経由) 呼出が多い→granted trait は board char(uid 既知)時のみ適用。★filter 核心変更ゆえ **opus 4-lens + 専用 decoy test 必須**。
-- 他 wave-6 候補 (impact 降順、全 pure-additive、★per-card sole 要 certify、着手前 origin/main grep):
-  - **G17 distinct-color pair (B07002)**: bound 集合内 trait[探偵] メンバーの相互 distinct-color 数≥2 = 新 Condition `boundDistinctColorCount`(boundAnyMatchesFilter では表現不可)。
-  - TSV E2 structural 群 (batch 一覧参照) は E1 additive 枯渇後。
-- genuine-absent E1 残: G16 相対-LP/level は既出荷($self.lp/$self.level)。B04074($revealed-level-any=G17複合)/B08043(sceneMaxLp dyn 不在) は別 primitive / S-tail (TSV 参照)。
-- ⚠ wave-5 latent (card-wave 時): B05120/B06109 出荷時に UI toCandidate 配線 + playwright「画面処理=カードテキスト文言」検証。DEFERRED-INDEX「wave5」節 参照。
-- ⚠ wave-4/3 latent: remove:exit コスト由来発火裁定 / evidence:removed×ヒラメキ順。DEFERRED-INDEX 参照。
+## 次やること: E1 wave-7 (E1 additive 末端 → E2 structural へ移行)
+- ★着手前: 各 primitive を origin/main (9f9ea043) で実 grep (stale 排除)。**wave-6 で P37 grantTraits/grantNames 出荷済**
+  (matchOneFilter trait/cardName/cardNameNot + read.char.traits/names + bond の 5 honor site)。**E1 additive の大物 P-item は wave-1〜6 でほぼ枯渇**。
+- **wave-7 = E1 additive 末端の小物 + E2 structural の起点**:
+  - **G17 distinct-color pair (B07002)** [E1 additive 残]: 「それぞれ色の異なる(同じ色を持たない)特徴[探偵]のキャラを2枚リムーブした場合」=
+    bound 集合内 trait[探偵] メンバーの **相互 distinct-color 数 ≥2** = 新 Condition `boundDistinctColorCount`
+    (boundAnyMatchesFilter の any では表現不可)。cond/eval.ts 自己完結 evaluator = wave-2/5 の cond 追加テンプレ (KIND_MAP + cjs CONDS 両登録)。
+  - **E2 structural 群** (TSV batch=keyword-trait-turn-tracking-grant 等、E1 additive 枯渇後の本命): 影響降順で
+    **P15 疾風-発動済 per-turn tracking** (B09072/B09070、TurnScopedFlags に shippuFiredUids + reset + Condition/TargetFilter 軸) /
+    **P17 acted-this-turn char filter** (B08049、SceneCharacter.turnEffects に actedCharThisTurn + action:declare 書込 + TargetFilter 軸) /
+    **P16 疾風条件 override** (B09090、one-shot armed flag)。structural は state-shape 追加ゆえ additive でなく **挙動不変 gate 設計 + reset 配線**が要点。
+  - ★per-card sole 要 certify (`.tmp/_fulltext.cjs`)、TSV の sole/effort は上振れ。
+- genuine-absent E1 残: G16 相対 LP/level は既出荷 ($self.lp/$self.level)。B04074 ($revealed-level-any=G17 複合) / B08043 (sceneMaxLp dyn 不在) は別 primitive / S-tail (TSV)。
+- ⚠ wave-6 latent (card-wave 時): B08063 自己計数 (継続付与ゆえ latch 不要、matchOneFilter.trait effective 化で成立) / 変装は cardId 変わり印字 continuous 非引継 (Q&A) /
+  distinctNames dedup は印字名基準 / read.char.names raw union (非展開) / removedFilter snapshot に grant 非適用。DEFERRED-INDEX「wave engine/p37-trait-name-aura」節 latent 4件 参照。
+- ⚠ wave-5 latent: B05120/B06109 出荷時に UI toCandidate 配線 + playwright 検証。wave-4/3 latent: remove:exit コスト由来発火 / evidence:removed×ヒラメキ順。DEFERRED-INDEX 参照。
 
 ## プロセス共通 (実証済)
 - engine 並行 worktree: `git worktree add -b engine/<name> /c/tmp/<dir> origin/main` → PowerShell `New-Item -ItemType Junction`
