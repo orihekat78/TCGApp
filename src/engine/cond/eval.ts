@@ -6,7 +6,7 @@
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
 import type { GameState, Condition, EffectCtx, Candidate, SceneCharacter } from '@/engine/types';
-import { candidates, matchOneFilter } from '@/engine/target/candidates.js';
+import { candidates, matchOneFilter, effectiveNameComponents } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
@@ -91,12 +91,14 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     }
     case 'bond': {
       // rules/17: パートナーでは条件を満たさない — scene only
+      // wave-6 (P37): effectiveNameComponents で granted 名 (「〚カード名[X]〛としても扱う」) も絆を満たす。
+      //   matchOneFilter と同一の name 解決 (BUG-117 一貫性)。既存カード未宣言 → 印字のみ (回帰0)。
       const owner = ctx.source.player;
       const wants = Array.isArray(cond.cardName) ? cond.cardName : [cond.cardName];
       for (const c of state.players[owner].scene) {
         const d = lookupCardDef(c.cardId);
         if (!d) continue;
-        const components = allCardNameComponentsForDef(d);
+        const components = effectiveNameComponents(state, d, c);
         if (wants.some(w => components.includes(w))) return true;
       }
       return false;

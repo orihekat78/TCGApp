@@ -10,8 +10,9 @@ import type {
   Candidate,
   SceneCharacter,
   EffectCtx,
+  CardDef,
 } from '@/engine/types';
-import { lookupCardDef, allCardNameComponentsForDef } from './card-def-registry.js';
+import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from './card-def-registry.js';
 import { defHasKeyword } from '@/engine/read/keyword.js';
 
 // BUG-113: 数値フィルタの有効値に continuousModifier.apDelta/lpDelta (継続効果 dyn) を含める。
@@ -58,6 +59,47 @@ export function auraDeltaSafe(s: GameState, uid: string | undefined, which: 'apD
   } finally {
     _inAuraDelta = false;
   }
+}
+
+// engine additive wave-6 (2026-07-01, P37): 継続的 trait/name 付与 (continuousModifier.grantTraits/grantNames)。
+// continuousDelta/auraDelta と同じ late-binding + 再帰 guard。effectiveGrant 本体は read/char.ts (自身の continuous
+// ability walk) に実装し register する。matchOneFilter (trait/cardName/cardNameNot) + read.char.traits/names +
+// cond/eval bond が本 safe wrapper 経由で **印字 ∪ granted** を評価する (BUG-117 原則: filter値==board値)。
+// 付与は board char (uid 既知) のみ — c===null (hand/deck/remove/bound=cardId) は uid 無 → [] = 印字のまま
+// (公式 Q&A「現場にいなければ有効でない」B07053/B08063)。再帰 guard: matchOneFilter → traitNameGrantSafe →
+// grantWalk → evalCond(継続条件) → candidates → matchOneFilter … を _inTraitNameGrant で depth-2 終端
+// (再入時 [] = 印字のみ。continuousDelta/auraDelta と同一機序)。未登録 / 既存カード (未宣言) は [] = no-op。
+const NO_GRANT: string[] = [];
+type TraitNameGrantFn = (s: GameState, uid: string, which: 'grantTraits' | 'grantNames') => string[];
+let traitNameGrantImpl: TraitNameGrantFn | null = null;
+let _inTraitNameGrant = false;
+export function registerTraitNameGrant(fn: TraitNameGrantFn): void {
+  traitNameGrantImpl = fn;
+}
+export function traitNameGrantSafe(s: GameState, uid: string | undefined, which: 'grantTraits' | 'grantNames'): string[] {
+  if (traitNameGrantImpl === null || _inTraitNameGrant || uid === undefined) return NO_GRANT;
+  _inTraitNameGrant = true;
+  try {
+    return traitNameGrantImpl(s, uid, which);
+  } finally {
+    _inTraitNameGrant = false;
+  }
+}
+
+// 有効カード名 component 集合 = allCardNameComponentsForDef(印字) ∪ (granted 名を rules/19 分割展開したもの)。
+// board char (c?.uid 既知) のみ granted を合流。c===null は印字のみ (deck/remove/bound=cardId)。
+// export: cond/eval bond が matchOneFilter と同一の name 解決を使う (BUG-117 一貫性)。
+export function effectiveNameComponents(state: GameState, d: CardDef | undefined, c: SceneCharacter | null): string[] {
+  const base = d ? allCardNameComponentsForDef(d) : [];
+  if (c?.uid === undefined) return base;
+  const granted = traitNameGrantSafe(state, c.uid, 'grantNames');
+  if (granted.length === 0) return base;
+  const out = [...base];
+  for (const gn of granted) {
+    out.push(gn);
+    for (const comp of cardNameComponents(gn)) out.push(comp);
+  }
+  return out;
 }
 
 type Side = 'self' | 'opp';
@@ -268,24 +310,29 @@ export function matchOneFilter(
   }
 
   // cardName (rules/19: split-name matching)
+  // wave-6 (P37): board char は effectiveNameComponents = 印字 ∪ granted (grantNames、分割展開込)。
   if (filter.cardName !== undefined) {
     const wants = Array.isArray(filter.cardName) ? filter.cardName : [filter.cardName];
-    const components = d ? allCardNameComponentsForDef(d) : [];
+    const components = effectiveNameComponents(state, d, c);
     const ok = wants.some(w => components.includes(w));
     if (!ok) return false;
   }
 
   // cluster16: cardNameNot (「〚カード名[X]〛以外」) — positive cardName と対称。split-name (rules/19)
   // の component いずれかが nots に含まれたら除外。excludeSelf(uid) は同名2枚目を誤許容するため name 単位除外。
+  // wave-6 (P37): granted 名 (「〚カード名[X]〛としても扱い」) も除外対象に含む (effectiveNameComponents)。
   if (filter.cardNameNot !== undefined) {
     const nots = Array.isArray(filter.cardNameNot) ? filter.cardNameNot : [filter.cardNameNot];
-    const components = d ? allCardNameComponentsForDef(d) : [];
+    const components = effectiveNameComponents(state, d, c);
     if (nots.some(w => components.includes(w))) return false;
   }
 
+  // wave-6 (P37): board char は 印字 ∪ granted (grantTraits)。c===null は印字のみ (deck/remove)。
   if (filter.trait !== undefined) {
     const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
-    const traits = d?.traits ?? [];
+    const printed = d?.traits ?? [];
+    const granted = c?.uid !== undefined ? traitNameGrantSafe(state, c.uid, 'grantTraits') : NO_GRANT;
+    const traits = granted.length > 0 ? [...printed, ...granted] : printed;
     if (!wants.some(w => traits.includes(w))) return false;
   }
 

@@ -109,6 +109,20 @@ export type ContinuousModifier = {
   // self-only (aura 版 lvlDeltaAura は未導入 = YAGNI、対象カードは全て self-buff)。
   lvlDelta?: ContinuousDelta;
   grantKeywords?: (s: GameState, ctx: { uid: string }) => string[];
+  // engine additive wave-6 (2026-07-01, P37): 継続的な特徴/カード名の付与 (self-scope continuous)。
+  //   「現場にいるこのキャラは〚特徴[探偵]〛を持つ」(B08063 長野県警 / B05012 探偵) /
+  //   「現場にいるこのキャラは〚カード名[怪盗キッド]〛としても扱う」(B07053 / B05012 毛利小五郎)。
+  // grantKeywords と完全対称の continuous 経路: read.char.traits/names + candidates.matchOneFilter
+  //   (trait/cardName/cardNameNot) + cond/eval bond が effective 集合 = 印字 ∪ granted を honor する
+  //   (BUG-117 原則: filter 値 == board 値)。付与は **現場の board char (uid 既知) のみ** — deck/remove の
+  //   同 cardId には及ばない (公式 Q&A「現場にいなければ有効でない」B07053/B08063) → matchOneFilter は
+  //   c?.uid 既知時のみ granted を合流し、c===null (hand/deck/remove/bound=cardId) は印字のまま。
+  //   ability.condition (【自分ターン中】等) 成立中のみ有効 (rules/24 §常時有効型)。grantNames は
+  //   rules/19 の分割名展開 (cardNameComponents) を経て component 単位で照合される。
+  // 不在時 no-op (既存カードは未宣言 → grantWalk 空集合 → 印字のみ、smoke baseline 不変)。
+  // aura 版 (全自軍付与 B06095) / removeTraits (「失う」B05101 の permanent applied 変更) は別 primitive で DEFER。
+  grantTraits?: string[];
+  grantNames?: string[];
   customSelectorPatch?: (s: GameState, uid: string, base: SceneCharacter) => Partial<SceneCharacter>;
   // engine拡張 wave#2 cluster5 (2026-06-14): 相手への使用制限 aura (rules/09 §カットイン/変装, rules/24 §常時有効型)。
   //   'cutin'          = 「相手は【カットイン】を使用できない」(B02063/B04034/B09017)。

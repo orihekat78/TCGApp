@@ -805,3 +805,36 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 - **UI toCandidate next-hint 候補事前除外**: [flows.ts](../../src/ui/hooks/useActionsPanelFlow/flows.ts) の next-hint 候補列挙は現状
   restrict を見ない。engine gate (canHandUseCard / runNextHint throw) で server-side に enforce 済のため機能上は正しいが、B05120/B06109
   出荷時に UI 側でも `handUseCharRestrictAllows` を呼んで restricted character を候補から除外する (playwright 「画面処理=カードテキスト文言」検証込み)。
+
+## wave engine/p37-trait-name-aura — additive 1件 出荷 (grantTraits/grantNames 継続付与) + DEFER (2026-07-01)
+
+`engine/p37-trait-name-aura` で純 additive 出荷 (engine 足場のみ、カードは card-wave)。詳細 changelog
+[2026-07-01-03](../changelog-entries/2026-07-01-03-engine-additive-wave6-trait-name-grant.md)。P37 の sole=7 は実採寸で
+**継続 self-grant で clean な 3 枚** (B05012 / B07053 / B08063) に収束。
+
+| primitive | 解禁 (card-wave) | 形 |
+|-----------|------------------|----|
+| `grantTraits` / `grantNames` ContinuousModifier (P37) | B05012 / B07053 / B08063 | self 継続「現場にいるこのキャラは〚特徴/カード名[X]〛を持つ/としても扱う」。board char (uid 既知) 限定、印字∪granted を matchOneFilter trait/cardName/cardNameNot + read.char.traits/names + bond が honor |
+
+⚠ **別 primitive で DEFER** (P37 だが本 wave 対象外):
+- **B06095 榎本梓誘拐事件 (全エリア turn aura)**: 【宣言】「ターン終了時まで、自分のすべての(8)エリアにあるキャラは〚特徴［喫茶ポアロ］〛を持つ」=
+  現場外(手札/デッキ/リムーブ等)含む全 8 エリア + turn-scoped + declared。非現場カードは uid を持たず per-uid 付与不可 →
+  turn-flag gated aura + area-wide 適用の別機構が要る。ContinuousModifier.grantTraits (self 継続) では表現不可。
+- **B05101 毛利小五郎 (permanent applied trait 変更)**: 「〚特徴［警察］〛と〚［警視庁］〛を失い、〚特徴［探偵］〛を持つ (ターン終了時に切れない)」=
+  effect 適用の **permanent** な trait remove+grant + **変装引継** (Q&A)。継続 ability ではなく mutate verb (charModifyTraits) +
+  永続 per-char store (apMod_permanent 相当の traitMod チャネル) が要る。ゆえに `removeTraits` field は本 wave では **未追加**。
+- **card-wave 実装時の共通留意**: B08063 は自己付与した特徴を自身の end-turn sceneHas(distinctNames) が計数する **自己計数**型
+  (継続付与ゆえ latch 不要、matchOneFilter.trait の effective 化で成立)。変装したキャラは cardId が変わるため印字 continuous 付与は
+  引き継がれない (Q&A と整合) — card-wave の playwright で decoy 込み検証。
+
+⚠ **latent 一貫性 note** (opus 4-lens INFO、grantNames 付き card 出荷時に要 certify — 現状 grantNames 宣言カード 0 で全 moot):
+- **distinctNames dedup は印字名基準**: sceneHas distinctNames (cond/eval `def.names[0]`) / target/resolve `componentsForCandidate` /
+  apply-pick greedy dedup は印字名で dedupe する。**granted 名**でのみ一致する 2 体は distinctNames 上「別カード名」扱いになる
+  (rules/19 的にはむしろ印字 identity dedup が妥当解の可能性)。grantNames + distinctNames 併用カード出荷時に要 certify。
+- **read.char.names は raw union (分割展開せず)**: matchOneFilter/bond は effectiveNameComponents で分割展開するが、read.char.names は
+  印字と同様 raw 名を返す (contactTargetMatches は `.includes` で非展開消費 = 印字契約と consistent)。**複合 granted 名** (「A&B」型) を
+  contactTargetMatches 経由で sub-component 照合するカード出荷時に names() 側の展開要否を再判定。
+- **removedFilter は snapshot に grant 非適用**: removedCharMatches.removedFilter は離場 snapshot (scene.byUid=undefined) を評価するため
+  granted trait/name は載らず印字のみ (「現場にいなければ有効でない」と整合)。grant 一致を removedFilter で参照するカードは再 certify。
+- **cross-grant condition の depth-2 truncation**: 継続付与の condition が **他キャラの granted** trait/name に依存する場合、再帰 guard で
+  under-fire する (continuousDelta/auraDelta と同 semantics)。P37 対象カードは全て無条件付与ゆえ非該当。

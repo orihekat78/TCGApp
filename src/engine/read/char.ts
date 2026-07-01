@@ -9,7 +9,7 @@ import { evalDyn } from '../dyn/eval.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
 // cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
-import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter } from '../target/candidates.js';
+import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerTraitNameGrant, traitNameGrantSafe } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -219,19 +219,50 @@ function colors(s: GameState, uid: string): string[] {
   return d?.colors ?? [];
 }
 
+// engine additive wave-6 (2026-07-01, P37): 継続的 trait/name 付与の board reader (self-scope)。
+// 自身の type:'continuous' ability の continuousModifier.grantTraits/grantNames を、ability.condition
+// (【自分ターン中】等) 成立 + (PA-MR は scope on-partner-area/always のみ) の下で集める。grantKeywords の
+// continuous walk (keywords() 上部 fromContinuous) と同経路。付与は現場/PA の board char のみ (owner 不在時 [])。
+// re-entry guard は traitNameGrantSafe (candidates.ts) が担う (継続 condition が candidates を呼んでも depth-2 終端)。
+// 既存カード未宣言 → [] (回帰0)。matchOneFilter/traits/names/bond の全 honor が本関数の結果を印字に union する。
+function grantWalk(s: GameState, uid: string, which: 'grantTraits' | 'grantNames'): string[] {
+  const char = scene.byUid(s, uid);
+  if (!char) return [];
+  const d = def.card(char.cardId);
+  if (!d) return [];
+  const owner = ownerSideOf(s, uid);
+  if (!owner) return [];
+  const inPA = isPartnerMrUid(uid);
+  const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+  const out: string[] = [];
+  for (const ability of d.abilities ?? []) {
+    if (ability.type !== 'continuous') continue;
+    if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+    const g = ability.continuousModifier?.[which];
+    if (!g || g.length === 0) continue;
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    out.push(...g);
+  }
+  return out;
+}
+
 // 複数名カード対応 (rules: 19-special-rules.md — &, 『』, () で分割名を持つ)
+// wave-6 (P37): 印字 ∪ granted (grantNames、「〚カード名[X]〛としても扱う」B07053/B05012)。
 function names(s: GameState, uid: string): string[] {
   const char = scene.byUid(s, uid);
   if (!char) return [];
-  const d = def.card(char.cardId);
-  return d?.names ?? [];
+  const printed = def.card(char.cardId)?.names ?? [];
+  const granted = traitNameGrantSafe(s, uid, 'grantNames');
+  return granted.length > 0 ? [...new Set([...printed, ...granted])] : printed;
 }
 
+// wave-6 (P37): 印字 ∪ granted (grantTraits、「〚特徴[X]〛を持つ」B08063/B05012)。
 function traits(s: GameState, uid: string): string[] {
   const char = scene.byUid(s, uid);
   if (!char) return [];
-  const d = def.card(char.cardId);
-  return d?.traits ?? [];
+  const printed = def.card(char.cardId)?.traits ?? [];
+  const granted = traitNameGrantSafe(s, uid, 'grantTraits');
+  return granted.length > 0 ? [...new Set([...printed, ...granted])] : printed;
 }
 
 // keywords: granted + 元能力 (disabledOriginal の場合は元抜き)
@@ -453,3 +484,4 @@ export const char = {
 // BUG-113: module load 時に continuousDelta を candidates へ登録 (数値フィルタの有効値に反映)。
 registerContinuousDelta(continuousDelta);
 registerAuraDelta(auraDelta); // cluster13: 他キャラ aura board-scan を candidates へ late-bind
+registerTraitNameGrant(grantWalk); // wave-6 (P37): 継続 trait/name 付与 board reader を candidates へ late-bind
