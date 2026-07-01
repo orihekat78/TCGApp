@@ -1,76 +1,83 @@
-# 次セッション再開プロンプト (2026-06-29 — engine0 certify wave: 16枚出荷 + 歩留り40%確定)
+# 次セッション再開プロンプト (2026-07-01 — engine-first E1 / additive wave-5 出荷: boundAnyMatchesFilter + handUseRestrictFilter)
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。
-> Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効だが ⚠ **Workflow args 文字列暴走事故** に注意。
+> Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効。
 
 ---
 
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-06-29)
-- ★開始時に `git ls-remote origin main` で remote HEAD 確認 + `gh run list -L1` で CI green 確認。
-- **main = 26b6b94b** (engine0 certify wave 16枚 tip、CI 確認)。engine 群 = b34d33cc(on-set-host)/d03fa913(aura/turn-revoke)/2dd2e701/29ebc443/37000546 出荷済。
-- ⚠ **並行 session 複数稼働・同一 working tree 共有**。git status は他 session WIP (auto-docs drift / NEXT-PROMPT /
-  card-factory specs / `.claude/design` / `_probe_*.test.ts` / cards/wave-engine0-0628 等 divergent local branch) で汚れる →
-  自分のファイルだけ明示 add (NOT -A)。**local cwd は stale branch ゆえ card/engine とも worktree off origin/main で作業**
-  (本 session 中 main は 62eaf331→1a304d59→e3d4bddd と3回進んだ)。push 前 fetch→rebase→FF。vitest は `--exclude "**/_probe_*"`。
+## 方針 (2026-06-30、ユーザー決定)
+- **engine 拡張のみ先に全部 → 完了後にカード追加フェーズ** (engine-first)。骨格凍結到達が目標。
+- 認識合意: 計画 (E1+E2+E3+MR) 完了 = 現561枚に対しエンジン拡張完了。±5/軽微touch-up/将来セットは別。
 
-## 直近セッション (card、私) — engine0 certify wave (16枚出荷)
-- ユーザー指示「engine変更0 のカード追加をまとめて」。worktree off origin/main (`cards/wave-engine0-0629`) で隔離作業。
-- **出荷16枚** (main 26b6b94b): 15 base certify (wf-certify.mjs、SUB=5) = **6 verified-green / 2 refuted / 7 yellow = 40% 歩留り**。
-  green = B06021(石川五右衛門)/B02057/B06004(工藤新一)/B06077/B03062/B04085 + 既 green B09056(赤井秀一) + 各 P-clone + 既出荷base の standalone P (B03088P/B07047P)。
-- ★**歩留り確定**: 未certify150 は決定論 pre-screen で**全て複雑裾** (hirameki/keyword-grant cluster も各カードに重い主節)。
-  clean uniform cluster は無い→ **一度に大量は不可能、per-card certify 必須**。adversarial verify(opus) が false-green 2件捕捉 (B03098/B06090)。
-- ★**最大 lever = P-variant clone** (parallel=effect同一)。double-value base (base+P 両方未certify) を certify→各 green が2枚解禁。
-  P-clone codegen = greens-for-codegen に rep=P 複製 append→`taskA-codegen --write` (metadata は cards-data TSV 自動取得、effect-text identity を col10-13 で機械照合)。
-- ★**tooling fix**: `taskA-validate-specs.cjs` L163 の continuousModifier 許可キーが stale (apDelta/lpDelta のみ) →
-  pure-JSON aura 群追加 (apDeltaAura/auraFilter/auraExcludeSelf/apDeltaAuraOpp 等)。B06004 = revealFromHand/apDeltaAura 初実利用カード。
-- ⚠ **Workflow agent は main-repo cwd で grounding** (worktree 非対応、5-commit stale でも under-ship のみ=安全、worktree validate-specs が authoritative)。
-  `.tmp` を worktree へ Copy-Item -Recurse は dest 既存だと入れ子→ Remove 後 clean copy。test の hand は `string[]`。詳細 [[reference-engine0-certify-wave-0629]]。
+## 現在地
+- ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
+- **main = 7d1e0be2** (E1 additive **wave-5**: boundAnyMatchesFilter cond / handUseRestrictFilter。直前=8d76aeb3 wave-4)。vitest baseline=**3504 pass +1 skip**。
+- ⚠ 並行 session 複数稼働・同一 working tree 共有 → 自分のファイルだけ明示 add。engine 並行は `git worktree add` 隔離。
 
-## 直近セッション (engine、別 session70) — on-set-host scope (set-card→host rider) READ infra
-- 「engine拡張をできるだけ多く」指示 → 全561未実装中**最大の単一クラスタ**(装備イベント rider14+conferred8=22枚)の基盤を出荷 (**b34d33cc**, branch engine/bulk-additive-0629c, CI green)。
-- 新 **AbilityScope `'on-set-host'`**: セットカード def の能力を faceUp セット中の host に適用。3 honor site = read/char.ts continuousDelta+keywords (継続 AP/LP/level/keyword、rider keyword=外部grant扱い) + listeners/triggered.ts handleHook (in-scene hook の triggered conferral) + lint-listener-scope ALLOWED_SCOPE。candidates 自動 honor (BUG-117)。挙動不変 (新scope grep0/faceDown除外/decoy実証、smoke winsA=498)。opus 4-lens (semantic+additivity=ship)。
-- ★**READ infra ≠ end-to-end 解禁** (edge-test lens BLOCKER): **単独では実カード0枚**。残**最重要 WRITE side gate** = 使用 event を host.setCards へ faceUp 載せる **set-from-remove verb** (hand-use は event を必ず remove へ、かつ効果は remove 着地後解決)。これ揃えば継続 rider 14枚 (B02013/B06063 等) が end-to-end author 可。
-- 残 DEFER (DEFERRED-INDEX §on-set-host): WRITE verb / leave:to-remove conferral (B05117、host splice 後 emit) / aura・restrictsOpponent rider 未 honor / rider triggered limit 衝突 (id card-unique 命名)。詳細 [[reference-engine-additive-on-set-host-0629c]]。
-  「してもよい」+exact-N(n:{min,max}=3) は decline 非提示 = forced-reveal 容認 (strictly dominant、optional{}は AI後退)
-  ([[reference-handreveal-human-path-and-b09061]] / [[project-engine0-clean-shortlist-wave]])。
+## ★driver: engine 拡張 実行計画
+- **[engine-extension-plan-2026-06-30.md](specs/engine-extension-plan-2026-06-30.md)** + per-primitive 全データ
+  [.tsv](specs/engine-extension-plan-2026-06-30.tsv) (batch/label/member/sole/additive/effort/stale/vocab/plug/**cardTextPattern**)。
+- 85 primitive grounding (opus 11agent workflow)。**50 pure-additive / 32 structural / 3 risky / 10 stale既出荷**。総 sole≈278。
+- 実行順 = **E1(additive)→E2(structural)→E3(risky)→MR(G42)**。各 phase 内 impact降順。
 
-## ★最優先候補: engine0 clean-shortlist wave 続行 (engine変更0、ユーザー指示)
-- driver = [engine0-clean-shortlist-2026-06-29.md](specs/engine0-clean-shortlist-2026-06-29.md)。手順:
-  1. shortlist「要 certify」3群の gate を engine 実測 → clean なら出荷:
-     - **B02049/PR039 中森青子** = ally-action→**actioning-ally(そのキャラ)** buff の trigger-actor binding 有無
-     - **B01035/D06009 大滝悟郎** = 【現場リムーブ時】**cause:contact** filter 有無
-     - **B04092/B04093 キャンティ/コルン** = contact-trigger + self-sleep optional + AP buff (B03039 系か)
-  2. 残 133 の未読 (~90枚) を `node .tmp/_fulltext.cjs <id>` で本文確認しつつ certify (SUB=8 直列)。
-  3. 出荷ごとに spec triage 表更新 + registered.txt 再生成。
+## ⚠⚠ 最重要 process 教訓 (継続)
+- grounding TSV の sole/effort/stale は **上振れ**。**各 primitive 着手前に origin/main で実 grep 必須** (vocab token を `git grep origin/main -- src/engine`)。
+- **sole-count も per-card 要 certify**。card-wave 同様、wave の対象カードは個別確認。
+- **TSV の pure-additive ラベルも要検証**: wave-5 で **P37 (trait/name grant aura) は TSV では pure-additive だが実際は matchOneFilter (BUG-117 hot path) の trait/color/name 読みに late-bind aura を差す=filter-core 変更**。「read.char.traits だけ足す」は半端解 (matchOneFilter 経由の filter/bond が granted trait を見ない、on-set-host session70 の READ≠解禁 教訓)。→ **P37 は wave-5 から分離し wave-6 で単独・全 lens review** に回した。
 
-## 次やること候補 (要ユーザー選択)
-A) **engine0 clean-shortlist wave 続行** (上記、最有力・ユーザー指示)。
-B) **card-wave: stale-gate 解消済カード** (session69 由来、engine 既存で出荷可): B03033/B06068 + B08033/B08082/B08093/B07022。
-   ★certify 必須 + ★Playwright human 経路 probe (carrier-reuse/pick-modal は AI-pass=false-green、[[feedback-carrier-reuse-human-path-empirical]])。
-C) **engine additive gap** (薄い vein、worktree 隔離): PR136 charSetCard owner-deck / B05009 enterSource side-qualifier。
-   他は DEFERRED-INDEX を origin/main 直読で再採寸してから。
-D) **MR Phase 2/3/4** (session55 設計、Phase2=UI/3=AI/4=card SOLE15)。 E) **auto-docs sync** (drift hold-aside → docs → 明示 add → FF)。
-→ 開始時にユーザーへ方向確認。
+## 直近 wave 出荷済 (engine-only、card 未追加)
+- **wave-5 (7d1e0be2)** — 純 additive 2件:
+  `boundAnyMatchesFilter` cond(G17、[cond/eval.ts](../src/engine/cond/eval.ts))=ctx.bindings[bindKey] **全枚数 any-match**。
+  既存 boundMatchesFilter は bound[0] のみ→N>1 の公開/リムーブ集合を評価不可だった。各要素を matchOneFilter(c=null=CardDef 印字値、
+  remove-area cand は removeColorAtLeast L291 同流儀) に委譲。PR132「特徴[警察]がリムーブされた場合」(any) / D06013「【緑】と【白】が1枚以上」
+  = and[boundAny{緑},boundAny{白}] で合成。CONDITION_KIND_MAP + cjs CONDS 両登録。 /
+  `handUseRestrictFilter` ContinuousModifier field(P05、[card-def.ts](../src/engine/types/card-def.ts))=case card 継続能力
+  「自分は〚特徴[X]〛以外のキャラを手札から使用できない」(B05120 探偵/B06109 高校生)。新 helper `handUseCharRestrictAllows`
+  ([hand-use-card.ts](../src/engine/flow/main/hand-use-card.ts)) が自 case def の abilities[].continuousModifier.handUseRestrictFilter を
+  走査(**type==='continuous' + ability.condition honor**、read/char.ts 同流儀)、**手札の使用 + ネクストヒント両経路**で character-only gate。
+  event/効果登場/カットイン/変装/ヒラメキ は別経路ゆえ対象外(公式 Q&A)。★opus 4-lens=**SHIP_WITH_NITS(0 blocker)**。
+  NIT対応済=type/condition guard 追加。DEFER=B07002 distinct-color-pair(別 Condition 要) / B06103 カード名+効果登場ban(別 mechanism) /
+  UI toCandidate next-hint 候補除外(consumer カード出荷時=card-wave 配線、現状 engine gate+runNextHint throw で server-side enforce 済)。
+  詳細 changelog [2026-07-01-02](changelog-entries/2026-07-01-02-engine-additive-wave5.md) / DEFERRED-INDEX「wave engine/wave5-bound-handrestrict」節。
+- **wave-4 (8d76aeb3)** — `$self.level` dyn / `drawUpToHandSize` verb / `remove:exit` observer+`removeExitMatches`。詳細 [[reference-engine-additive-wave4-0701]]。
+- **wave-3 (80621194)** — 観測 hook `cutin:used`/`misread:performed`/`evidence:removed` + `triggerCutinMatches`。詳細 [[reference-engine-additive-wave3-observer]]。
+- **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
+- **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
+
+## 次やること: E1 wave-6 (P37 単独 隔離 + 続き)
+- ★着手前: 各 primitive を origin/main (7d1e0be2) で実 grep (stale 排除)。**wave-5 で G17 any-match(boundAnyMatchesFilter) / P05 hand-use restrict 出荷済**。
+- **最優先 = P37 継続 trait/name grant aura (7枚、要隔離 review)**:「自分の現場のキャラは特徴[X]を持つ」(B06095 全自軍)/「このキャラは特徴[探偵]を持つ」(B05012 self)/
+  「特徴[警察]を失い特徴[探偵]を持つ」(B05101 trait変更)。★実装方針 (wave-5 で調査済): apDeltaAura/continuousDelta の **late-bind aura template を trait/name に適用** —
+  ContinuousModifier に grantTraits/grantNames field 追加 + read/char.ts に board-scan(recursion guard、auraDeltaSafe 同流儀) + **candidates.matchOneFilter の
+  trait/color/cardName 読みを late-bound registerTraitGrant 経由に**(filter-AP=combat-AP と同原則で filter-trait=board-trait)。既存カード未宣言→空→無害。
+  ⚠ matchOneFilter は c=null(CardDef only、boundMatchesFilter/removed-area 経由) 呼出が多い→granted trait は board char(uid 既知)時のみ適用。★filter 核心変更ゆえ **opus 4-lens + 専用 decoy test 必須**。
+- 他 wave-6 候補 (impact 降順、全 pure-additive、★per-card sole 要 certify、着手前 origin/main grep):
+  - **G17 distinct-color pair (B07002)**: bound 集合内 trait[探偵] メンバーの相互 distinct-color 数≥2 = 新 Condition `boundDistinctColorCount`(boundAnyMatchesFilter では表現不可)。
+  - TSV E2 structural 群 (batch 一覧参照) は E1 additive 枯渇後。
+- genuine-absent E1 残: G16 相対-LP/level は既出荷($self.lp/$self.level)。B04074($revealed-level-any=G17複合)/B08043(sceneMaxLp dyn 不在) は別 primitive / S-tail (TSV 参照)。
+- ⚠ wave-5 latent (card-wave 時): B05120/B06109 出荷時に UI toCandidate 配線 + playwright「画面処理=カードテキスト文言」検証。DEFERRED-INDEX「wave5」節 参照。
+- ⚠ wave-4/3 latent: remove:exit コスト由来発火裁定 / evidence:removed×ヒラメキ順。DEFERRED-INDEX 参照。
 
 ## プロセス共通 (実証済)
-- 着手前 working tree 確認 / branch first (card も engine も **worktree off origin/main**、main 直 commit 禁止)。
-  worktree= `git worktree add -b <br> /c/tmp/<dir> origin/main` + node_modules junction (engine/test 要時)。撤去は junction を rmdir → worktree remove (rm -rf 厳禁)。
-- **「解禁」表記/DEFERRED-INDEX/分類器ラベルは stale 化しうる** → 候補の全 gate を実 engine grep (eval.ts/effect.ts/candidates.ts/read.char 直読)
-  + `git grep '<ID>' src/cards` (origin/main) で既出荷確認。clean 判定は **shipped twin との全句突合**。
-- TDD: 専用 test (構造1対1 + 実engine decoy、AI-drain だけでなく **human 経路 (applyPickAndContinuation / applyPickSkipAndContinuation /
-  applyOptionalAndContinuation)** も踏む — AI-pass/comment 推論=false-green、[[feedback-carrier-reuse-human-path-empirical]]) →
-  **opus 4-lens 敵対 review** (semantic/additivity/dsl-trap/edge)。worktree 絶対パス明示 ([[feedback-workflow-review-reads-cwd-not-worktree]]) → 反映 → commit。
-- 挙動不変ゲート: tsc0 / vitest (baseline=HEAD 件数 `--exclude _probe_`) / smoke:1000 (winsA=498 不変=engine変更0 証跡) / 8lint+eslint。
-- **commit**: 8lint 手動緑 → `git commit --no-verify -m "..." -- <自ファイル明示pathspec>`。auto-doc/CHANGELOG.md は自 commit に含めない。
-  changelog-entry 手書き (`.claude/changelog-entries/<date>-NN-slug.md`、seq は既存と衝突回避)。P-variant は base test に meta assert で被覆 (test-pair WARN 容認)。
-- **FF push**: `git fetch origin` → `git rebase origin/main` → `git push origin HEAD:main` → `gh run list -L1` CI green (~4min)。
-- 決定論優先。カード全文 TSV helper `.tmp/_fulltext.cjs <ids>`。Read hook line1 truncate → Edit は Read1回で登録/全文は cat。OneDrive stale-read 警戒 ([[reference-onedrive-stale-read]])。
-- DEFER 一覧: .claude/specs/DEFERRED-INDEX.md / shortlist: specs/engine0-clean-shortlist-2026-06-29.md / bug: .claude/bugs/index.base / memory: MEMORY.md。
+- engine 並行 worktree: `git worktree add -b engine/<name> /c/tmp/<dir> origin/main` → PowerShell `New-Item -ItemType Junction`
+  で node_modules を main から junction → 作業 → FF push → worktree remove。
+- TDD: RED(専用 test、feature-missing fail) → GREEN(最小配線) → 実カード使用形は drain/produce 経路で検証。
+  turn-flag 系は `tests/cards/cluster6-event-use-ban-behavioral.test.ts`、条件評価器/dyn は `engine-additive-wave-0630.test.ts`、
+  gate 系は wave5 の `engine-additive-wave5.test.ts` が template。⚠ runNextHint は `produce(draft)` 内駆動 (popTop が Immer current() 使用)。
+- **opus 4-lens 敵対 review** (semantic/additivity/dsl-trap/edge-test)。⚠ **worktree 絶対パス明示 + `git -C` 裏取り強制 + 埋め込み diff**
+  (reviewer は default で main cwd を grep し「未実装」誤 block ([[feedback-workflow-review-reads-cwd-not-worktree]]))。SHIP_WITH_NITS の NIT は card-wave に持ち越すか即対応か判断。
+- 6ゲート: tsc0(両 tsconfig) / vitest(baseline=HEAD件数、現3504pass+1skip、`--exclude _probe_`) / smoke:1000 winsA=498 不変 / 8lint err0。eslint=CI非対象。
+  engine-only primitive は card consumer 無 → playwright N/A。
+- cond 追加は **CONDITION_KIND_MAP + scripts/taskA-validate-specs.cjs CONDS 両登録必須**(satisfies Record で tsc 強制)。
+- **commit**: 自ファイル明示 pathspec + `--no-verify` (pre-commit docs:check は CI除外)。changelog-entry 手書き (`.claude/changelog-entries/<date>-NN-slug.md`)。
+- **FF push**: `git fetch origin` → `git rebase origin/main` → `git push origin HEAD:main` → `gh run list -L1` CI green。
+- カード全文 helper `.tmp/_fulltext.cjs <ids>`。grounding 中間データ: `.tmp/_grounded.json`(85prim) / `.tmp/_label_to_ids.json` / `.tmp/_consolidated_primitives.json`(P01-55) / `.tmp/_engine_ref.md`(G## taxonomy)。
+- Read hook が line1 truncate → Edit は Read 1回で登録 / 全文は Bash cat/sed。OneDrive stale-read 警戒 ([[reference-onedrive-stale-read]])。
 
-## アーカイブ (過去セッション詳細)
-- session69 additive2件(d03fa913 aura/turn-revoke、[[reference-engine-additive-wave-0629b]]) / session68 additive5件(2dd2e701) /
-  session67 additive3件(37000546) / handReveal exact-N(30228a13) / B09096 tierA(29ebc443) は .claude/sessions/ + changelog-entries + git log 参照。
+## アーカイブ
+- 上限調査 [engine-extension-upper-bound-2026-06-29.md](specs/engine-extension-upper-bound-2026-06-29.md) / DEFER [DEFERRED-INDEX.md](specs/DEFERRED-INDEX.md) / bug index.base / memory MEMORY.md。
+- 旧 wave (handReveal/setCardCount/certify wave 等) は git log + .claude/sessions/ 参照。
 ```
