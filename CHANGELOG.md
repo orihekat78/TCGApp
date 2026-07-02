@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `3603d004f2f7`
+> Source hash: `5b8147c7a91a`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,119 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# engine additive wave-8 (P15 部分) — shippuFiredThisTurn flag + 推理不可付与 (canReason gate)
+
+**Round/Phase**: 2026-07-02 engine-first フェーズ E2 structural wave-8。engine-extension-plan-2026-06-30 の
+**P15 (疾風-発動済 per-turn tracking)** の Condition 消費部 + **推理不可付与** (B09072 a2 の第2 engine gate) を
+origin/main (16b5bf98) 実 grep で genuine-absent 確認後に出荷。★grounding で **P05-P09 (カットイン抑止窓) は
+stale-shipped** (wave-0629d `cutinBanOpp_action` turnEffect、TSV proposed 名 `cutinSuppress` と不一致で name-grep が誤検出)
+と判明 → 着手対象から除外。**engine-only 出荷** (consumer カード B09072 は a2 の pick-bind carrier 不在で DEFER、下記)。
+
+## engine 拡張 (pure-additive、既存カード write-only-inert / read-gate-inert = 挙動不変)
+
+### [A] P15 `shippuFiredThisTurn` — 「このターン中 疾風が発動していたか」per-turn flag
+
+「このターン中、自分のキャラの【疾風】が発動していた場合」(B09072 横溝重悟 a1) を可能にする per-turn 記録。
+
+1. **`TurnScopedFlags.shippuFiredThisTurn?: boolean`** — [game-state.ts](../../src/engine/types/game-state.ts)。per-side turnState boolean
+   (per-char turnEffect ではない) ゆえ **発動疾風キャラが離場後も履歴として残る** (「発動していた」= 歴史的事実、rules/17)。
+2. **記録** — [triggered.ts `handleHook`](../../src/engine/listeners/triggered.ts): 全 gate (selfOnly / matcher /
+   matcherCondition=enterOrderEquals / ability.condition / `!effect` / limit turn) 通過後・queue 到達点で `abilityIsShippu(ability)`
+   なら発動キャラ owner (`card.player`) 側を true。rules/24 に従い **発動時点** (効果解決不能でも「発動した」扱い) で記録 =
+   到達点が正しい定義 (insertion 後に skip する gate は無く必ず queue される。opus semantic lens 実証)。`abilityIsShippu` =
+   enter + selfOnly + enterOrderEquals で **【登場時】(matcherCondition 無し) と区別**。付与 (grantedAbilities) 由来の疾風も該当。
+3. **消費** — 汎用 Condition `{kind:'flag', player:'self', key:'shippuFiredThisTurn', v:true}` で読む
+   (`flag.key: keyof TurnScopedFlags` ゆえ field 追加のみで型 valid、**新 Condition kind 不要**)。
+4. **清掃** — [turn.ts `endTurn`](../../src/engine/flow/turn.ts) の両プレイヤー loop で `= false` (primary、driver 非依存) +
+   [flag.ts `resetTurnFlags`](../../src/engine/mutate/flag.ts) backstop (hiramekiSuppressed と同 posture)。両プレイヤー清掃ゆえ
+   相手ターン発動 → 次自ターンで stale 化しない (cross-turn 閉鎖、opus lifecycle lens 実証)。
+
+### [B] 推理不可付与 (`cannotReason` turnEffect + canReason gate)
+
+「このキャラは推理できない。」(B09072 a2、ターン終了時まで) を可能にする reason-ban。
+
+1. **[reasoning.ts `canReason`](../../src/engine/flow/main/reasoning.ts)**: char 分岐の active-state check 後・isNamed/迅速 分岐
+   **前**に `if (turnEffects['cannotReason']===true) return false` = 名乗り/迅速に優先する絶対制限 (rules/11)。
+2. 付与は **既存 `charSetTurnEffect` verb** (key:'cannotReason') を流用 (新 verb 不要)。清掃は
+   [char.ts `clearTurnEffects('turn')`](../../src/engine/mutate/char.ts) の delete list に追加 (actedCharThisTurn 同様の boolean flag key)。
+
+## 検証 (セルフレビュー + 水平展開 + opus 4-lens 敵対 review)
+
+- **opus 4-lens 敵対 review (semantic / additivity / lifecycle / edge-coverage) = 全 SHIP・blocker 0**。反映 nit:
+  ① semantic/edge: cannotReason が名乗り+迅速 char にも優先する絶対制限であることを test で pin (gate 配置の load-bearing 性)。
+  ② edge: 疾風発動キャラの離場後も記録が残る departed-history test 追加。
+  ③ lifecycle: endTurn 清掃が phase:end:cleanup (turn-end trigger queue の後) ゆえ将来「ターン終了時 疾風〜」consumer は
+     queue 時評価の `ability.condition` で読むこと、を field doc に明記。opp-side record (card.player='opp') は collectCardsInPlay
+     構築で保証ゆえ test は self-side + departed で担保 (opp 召喚は sceneEnter の相対解決で test が脆く不採用)。
+- tsc 0 (両 tsconfig) / vitest baseline (16b5bf98=3589) **→ 3602 pass** +1 skip (新規 13: record 4 [self/departed/非疾風decoy/2番目未成立]
+  / flag-cond 3 [true/undefined/opp 分離] / reset 2 [endTurn 両者・resetTurnFlags] / cannotReason 4 [unset可・set不可・迅速優先・clear復帰])。
+- smoke:1000 **winsA=498・winsB=502・timeouts/exceptions 0** = baseline 不変 (疾風 write は全 1000 戦で発火するが reader 皆無 =
+  write-only-inert / cannotReason は既存カード未設定 = gate-inert)。8 CI lint errors=0。
+- playwright: engine-only (consumer カード無) ゆえ N/A。picker 経路検証は consumer カード出荷時 (card-wave)。
+
+## DEFER (別 wave / card-wave)
+
+- **B09072 横溝重悟 (consumer カード)**: a2「〚特徴[神奈川県警]〛のキャラを1枚まで選び、アクティブにし、ターン終了時まで
+  推理できないを与える」= **pick-bind carrier を要する** (sceneSetState / charSetTurnEffect は bind 非対応、pure-pick-bind verb 不在)。
+  「select 1 char → 2 rider (activate + reason-ban)」の共有 pick 機構が現 primitive に無いため card-wave (要新 picker or 実機経路 empirical)。
+- **P15 TargetFilter 軸** (B09070 萩原千速&研二 ターン終了時「疾風発動した全キャラを active化」): per-char turnEffect + matchOneFilter honor +
+  turn-end queue-time timing 検証が要 + B09070 は removeArea-filtered-select / PA-declared の第2・第3 gate 併存 = 非 sole。
+  Condition 消費で十分な本 wave では見送り。
+- boundDistinctColorCount (B07002、G17 残) / P16 疾風条件 override (B09090) は engine-extension-plan の別 primitive。
+
+engine-extension-plan-2026-06-30 進捗: E2 structural P15 (Condition 消費部 + 推理不可付与) 出荷、TargetFilter 軸は DEFER。
+
+# engine additive wave-7 (P17) — actedCharThisTurn TargetFilter 軸 + exemplar B08049 ジョディ
+
+**Round/Phase**: 2026-07-02 engine-first フェーズ E1→E2 移行 wave-7。engine-extension-plan-2026-06-30 の
+**P17 (acted-this-turn char filter)** を origin/main (8a4e6444) 実 grep で genuine-absent 確認後、structural 1 件を
+**exemplar カード B08049 同梱**で出荷 (2026-07-02 速度リバランス方針: engine wave に生きた E2E test + clone 原器を同梱)。
+
+## engine 拡張: P17 acted-this-turn char filter (structural、新 optional field + hot-path additive write)
+
+「このターン中にアクション［キャラ］した」自軍キャラを per-char で記録し、TargetFilter で参照する軸。
+
+1. **`actedCharThisTurn?: boolean` TargetFilter フィールド** — [effect.ts](../../src/engine/types/effect.ts)。board char のみ該当する
+   軸 (deck/remove/hand の印字 candidate = c===null は「アクションした」概念が無く必ず不一致)。
+2. **記録 (hot-path additive write)** — [state-machine.ts `declare`](../../src/engine/flow/action/state-machine.ts): `action:declare` emit 後、
+   `target.kind==='char'` の時のみ actor へ `mutate.char.setTurnEffect('actedCharThisTurn', true)`。アクション[事件]
+   (`target.kind==='case'`) では立てない。rules/22 に従い **宣言時点** (ガード判定前) で確定 — ガード有無・AP 判定結果・
+   対象離脱による abort に依らず「アクションした」に該当。partner actor (`uid='partner:*'`) は `setTurnEffect` が findChar 不在で no-op。
+3. **参照** — [candidates.ts `matchOneFilter`](../../src/engine/target/candidates.ts): `filter.actedCharThisTurn===true` の時、
+   board char の `turnEffects['actedCharThisTurn']===true` を要求 (hasSetCards と同流儀の board-only 軸)。
+4. **清掃** — [char.ts `clearTurnEffects('turn')`](../../src/engine/mutate/char.ts): 該当 flag を delete (ターン終了で失効)。
+   `'action'`/`'contact'` scope では残す (同一ターン内、アクション終了後の【宣言】が候補列挙できるように)。
+5. **3-way whitelist sync**: TargetFilter 型 + `FILTER_FIELDS` (validate-specs.cjs) + `TARGET_FILTER_KEYS` (sync-taskA-whitelists.test.ts)
+   の 3 サイトに登録 (sync test が両方向強制)。ついでに **pre-existing sync 漏れ `colorNot`** も両サイトに追加し
+   `satisfies Record<Exclude<keyof TargetFilter,'custom'>,true>` を honest 化 (runtime 比較は両 mirror が同集合ゆえ従来 green だったが型契約は不完全だった)。
+
+## exemplar カード: B08049 ジョディ・スターリング (ct-p08、REUSE_CARDS)
+
+- a1: 自分のターン終了時、自分の現場に〚特徴[FBI]〛が4枚以上いる場合、カードを1枚引く
+  (`phase:end:start`+`turn:self` → conditional `sceneHas{trait:FBI, nMin:4}` → draw、既存機構、公式Q&A「解決時判定・自身も数える」)。
+- a2: 【宣言】【ターン1】【スリープ】: 今ターン アクション[キャラ]した〚特徴[FBI]〛を1枚まで active化
+  (`sleepSelf` cost + `sceneSetState{side:self, max:1, state:active, filter:{trait:FBI, actedCharThisTurn:true}}`)。← P17 初実利用。
+- B08049P (RP clone、同効果) は card-wave へ (本 wave は exemplar 1 枚に focus)。
+
+## 検証 (セルフレビュー + 水平展開 + opus 4-lens 敵対 review)
+
+- **opus 4-lens 敵対 review (semantic / additivity / dsl-trap / edge-test) = 全 SHIP_WITH_NITS・blocker 0**。反映した nit:
+  ① dsl-trap/semantic: `_shared.ts targetFilterToPredicate` は board-only 軸 (hasSetCards 前例) ゆえ actedCharThisTurn を
+     コメントで「非対応」明記 (deck-path は c=null で評価不能、既存慣行と一致)。
+  ② additivity: matchOneFilter を hasSetCards と同 `!== undefined` symmetric 化 (`false`=未アクション char 選択も honor) + false-case test。
+  ③ edge-test: B08049 a2 の cost.canPay gate (active-only) + production `candidates()` による pick 候補 1対1 test を追加。
+- tsc 0 (両 tsconfig) / vitest **3522 → 3537 pass** +1 skip (新規 15: filter honor 4 [true×3+false] / declare write 3 / reset scope 2 / B08049 exemplar 3 / a2 dispatch 2 [pick 候補 + cost gate])。
+- smoke:1000 **winsA=498・winsB=502・timeouts/exceptions 0** = baseline 不変 (declare の新 write が全 1000 戦の全アクションで発火して 0 例外 =
+  additive hot-path の実証。新 flag を読む既存 consumer が無いため候補列挙も不変)。
+- 8 CI lint errors=0 (icon-abilities shipped 1509→1510 = B08049 登録)。
+- playwright: 開発サーバ起動 → 対戦開始まで browser boot + game-init クリーン (favicon 404 のみ、game-logic error 0)。
+  B08049 は MVP デッキ (CT-D08/D11) 未収録ゆえ in-app の 宣言 decoy は不可 → **production `candidates()` 経路を vitest #4 で
+  decoy 込み 1対1 検証** (acted FBI のみ候補 / 未アクション FBI・acted 非FBI を除外) で BUG-117/118 の「DSL に書けても engine 評価保証なし」を担保。
+- DEFER: boundDistinctColorCount (B07002 は distinct-color-pair + turn-scoped カットイン/変装 ban の 2-gate ゆえ本軸単独で 0 解禁) /
+  P15 疾風 per-turn tracking (B09072/B09070 は推理不可付与・キーワード presence filter の第2 gate 併存で非 sole) は別 wave。
+
+engine-extension-plan-2026-06-30 進捗: E1 additive 完了、**E2 structural 起点 (P17) 出荷**。
 
 # Track B B1 — 文法 core: mined 行 rule 651 本で shipped 77% 再現 (G1 mismatch 0)
 
