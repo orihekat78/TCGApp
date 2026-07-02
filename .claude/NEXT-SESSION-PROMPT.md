@@ -31,7 +31,7 @@
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
-- **main = 985732f0** (**wave-9**: card B09072 横溝重悟 — wave-8 flag 初 consumer + carrier-reuse、**engine変更0**。直前=8ae3f56f BUG-162「アクション終了時まで」+Track B audit / 8ef34c0d wave-8)。vitest baseline=**3612 pass +1 skip** (985732f0、Track B test 込み。wave-9 分は +6)。
+- **main = 8a3e4f18** (**wave-10**: BUG-165 PB multi-pick collapse fix (engine+UI) + boundDistinctColorCount + setCutinBan/setDisguiseBan + exemplar B07002/B07002P。直前=bdefd69c Track B BUG-163 B08079 追補+B3-2 certify / 29999a8a demand-signal)。vitest baseline=**3642 pass +1 skip** (8a3e4f18。wave-10 分 +28 / Track B B3-2 分 +2)。
 - ⚠ 並行 session 複数稼働・同一 working tree 共有 → 自分のファイルだけ明示 add。engine 並行は `git worktree add` 隔離。
 
 ## ★driver: engine 拡張 実行計画
@@ -46,6 +46,11 @@
 - **TSV の pure-additive ラベルも要検証**: wave-5 で **P37 (trait/name grant aura) は TSV では pure-additive だが実際は matchOneFilter (BUG-117 hot path) の trait/color/name 読みに late-bind aura を差す=filter-core 変更**。「read.char.traits だけ足す」は半端解 (matchOneFilter 経由の filter/bond が granted trait を見ない、on-set-host session70 の READ≠解禁 教訓)。→ **P37 は wave-5 から分離し wave-6 で単独・全 lens review** に回した。
 
 ## 直近 wave 出荷済
+- **wave-10 (8a3e4f18)** — **BUG-165 修正 (hot-path、engine+UI 2層) + 2 primitive + exemplar B07002/B07002P 江戸川コナン**:
+  **BUG-165** = PB generic multi-pick collapse。n≥2 の Pattern B pick が human apply / AI drain / AI 同期 walk **全経路で先頭1枚に collapse** (apply-pick `target:[resolvedCardId]` 単数 / resolve-picks heuristic 単一)。さらに **UI (HandZone discard pick) も単発 dispatch で collapse** — playwright 実機で発見し HandZone multi-select (pickNMin/pickNMax/onPickMulti、CardListModal contract mirror + 完了ボタン) を追加。shipped 実バグ **B04005/D10012/PR137/PR143** (discard n:2 が1枚しか落ちていなかった、behavioral test 無し) を解禁。n:1 は byte 不変。handReveal ★未対応(3) 解消 (残 (1)(2)(4) は DEFERRED-INDEX)。
+  **新 primitive** = `boundDistinctColorCount` cond (bound 集合内 filter一致+相互色disjoint n枚、DFS subset、G17 残) / `setCutinBan`・`setDisguiseBan` verb + `TurnScopedFlags.cutinBanned/disguiseBanned` (side-level turn flag、canCutIn/canDisguise gate、公式Q&A「離場後も有効」担保、setNextHintBan template)。
+  **exemplar B07002** = a1 draw2→discard2(bind $discarded)→conditional(boundDistinctColorCount{trait:探偵,n:2})→sceneRemove apMax8000 (D02002 VERBATIM 節、conditional.then 内 PA 短縮形 = BUG-145 裁定通り安全) / a2 cost sleepChar(探偵、self包含・excludeSelf 無し、head-fixed は engine-wide 既知)→両 ban (opp)。
+  ★★教訓: **「N枚 pick」atom は engine 3経路 probe + playwright 実機 UI の4層で踏む** — engine probe green でも UI 層が pickedUids を集めない collapse があった ([[reference-engine-wave10-multipick-cutinban]])。catalog-reuse バッチは descriptor test のみで behavioral 空洞がありうる。opus 4-lens 全 SHIP_WITH_NITS 0-blocker (nits は DEFERRED-INDEX「wave10-b07002」節に latent 記録: 無色 disjoint / conditionIfIsStable $-prefix 規約 / AI greedy 非最適 / HandZone multi は discard のみ配線)。gates: vitest 3642+1skip / smoke winsA=498 不変 exceptions=0 / playwright E2E console err0。changelog [2026-07-02-06](changelog-entries/2026-07-02-06-engine-wave10-b07002-multipick.md) / [[BUG-165]]。
 - **wave-9 (985732f0)** — card **B09072 横溝重悟** (+ parallels B09072P/B09072P2) 出荷、**engine変更0**。wave-8 `shippuFiredThisTurn` flag / `cannotReason` gate の **初 live consumer** (E2E 検証兼) + carrier-reuse。
   a1=【登場時】conditional(flag shippuFiredThisTurn)→[mill n:2, draw 1] / a2=【宣言】cost[sleepSelf,removeFromHand]→carrier-reuse `sequence[sceneSetState carrier{player:self,max:1,**side:either**,filter{trait:神奈川県警},state:active,bind:$picked}, charSetTurnEffect rider{$picked.uid,cannotReason}]` / a3=【ヒラメキ】draw (D01003 byte等価)。
   ★★教訓: wave-8 DEFER「sceneSetState/charSetTurnEffect は bind 非対応」は **false-DEFER**。実機 probe (AI/human/decline 3経路) で carrier-reuse 成立を確認し訂正出荷。**sceneSetState は carrier 可** (短縮形に `player` 必須) / **charSetTurnEffect は rider 可** (resolveBindRef) / bind 書込は verb 非依存。resolveEffectPicks 初期 walk は **PB のみ** surface・PA は runtime paShortFormAwait 解決 → 「PA carrier は resolveEffectPicks で見えない=carrier 不可」は誤結論。[[reference-scenesetstate-charsetturneffect-carrier-reuse]] / DEFER 否定は code-reasoning でなく実機 probe で ([[feedback-carrier-reuse-human-path-empirical]])。
@@ -96,23 +101,18 @@
 - **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
 - **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
 
-## 次やること: wave-10 (E2 structural 継続)
-- ★着手前: `git ls-remote origin main` で HEAD 確認 → 各 primitive を origin/main (**985732f0** 以降) で **semantic (機構) grep** で実 grep (stale 排除)。
-  ★★教訓: **TSV proposed 名で grep すると stale 見落とす** (P05-P09 は `cutinBanOpp_action` で既出荷なのに提案名 `cutinSuppress` の name-grep が 0-hit で誤「未実装」判定)。**機構キーワードで grep** せよ。
-  ★★wave-9 教訓: **DEFER の「機構が無い/bind 非対応」等の否定は code-reasoning で誤りうる** — 着手前に実機 probe (AI/human/decline) で反証せよ ([[reference-scenesetstate-charsetturneffect-carrier-reuse]])。B09072 は「carrier 不在」DEFER が false だった。
-  **wave-7 P17 / wave-8 P15 Condition部+推理不可 / wave-9 B09072 (flag consumer) 出荷済**。**E1 additive は wave-1〜6 で枯渇、E2 structural 継続中**。
-- **wave-10 = E2 structural 継続** (以下 影響降順、★per-card sole 要 certify・非 sole 多数注意):
-  - ⚠ **E2 structural 残は多くが非 sole** (DEFERRED-INDEX「wave7/wave8」節参照)。単独 exemplar が出せる item or pure-additive を優先。
-  - **P16 疾風条件 override (B09090 風の女神)**: 「次に登場したキャラ1体の【疾風】登場順条件を無視」= `TurnScopedFlags.shippuConditionWaiveNextEnter`
-    one-shot armed flag + [cond/eval.ts enterOrderEquals](../src/engine/cond/eval.ts) の waive 分岐 + 次 enter で consume。★B09090 は他 gate も要: case-triggered discard「解決編になったとき」(未出荷) + 【解決編】declared + cost「手札から神奈川県警か疾風持ちリムーブ」= **keyword-presence cost filter (hasKeyword 未実装)** が併存 → 単独 exemplar 不可、複数 primitive 要。
-  - **G17 distinct-color pair (B07002)**: 新 Condition `boundDistinctColorCount` (bound 集合内 trait[探偵] の相互 distinct-color 数 ≥2)。cond/eval.ts 自己完結 evaluator=wave-2/5 テンプレ。
-    ★B07002 は **turn-scoped cutin+変装 ban** (別句) と 2-gate = 単独 0 解禁。turn-scoped ban (canCutIn/canDisguise の turn-flag、action-scoped は既出荷) とペアで → 2 primitive + exemplar B07002 が wave-10 の最有力 (pure-additive cond + turn-flag)。
-  - **P15 TargetFilter 軸 (B09070)**: 「疾風発動した全キャラを active化」= per-char turnEffect + matchOneFilter honor。★endTurn 清掃は turn-end trigger queue の**後**ゆえ queue時 `ability.condition` で読む consumer 前提。B09070 は removeArea-filtered-select/PA-declared 併存=非sole。
-  - ★per-card sole 要 certify (`.tmp/_fulltext.cjs`)、TSV の sole/effort は上振れ。
-- genuine-absent E1 残: G16 相対 LP/level は既出荷 ($self.lp/$self.level)。B04074 ($revealed-level-any=G17 複合) / B08043 (sceneMaxLp dyn 不在) は別 primitive / S-tail (TSV)。
-- ⚠ wave-6 latent (card-wave 時): B08063 自己計数 (継続付与ゆえ latch 不要、matchOneFilter.trait effective 化で成立) / 変装は cardId 変わり印字 continuous 非引継 (Q&A) /
-  distinctNames dedup は印字名基準 / read.char.names raw union (非展開) / removedFilter snapshot に grant 非適用。DEFERRED-INDEX「wave engine/p37-trait-name-aura」節 latent 4件 参照。
-- ⚠ wave-5 latent: B05120/B06109 出荷時に UI toCandidate 配線 + playwright 検証。wave-4/3 latent: remove:exit コスト由来発火 / evidence:removed×ヒラメキ順。DEFERRED-INDEX 参照。
+## 次やること: wave-11 (E2 structural 継続 + demand-signal 4 family)
+- ★着手前: `git ls-remote origin main` で HEAD 確認 → 各 primitive を origin/main (**8a3e4f18** 以降) で **semantic (機構) grep** (stale 排除)。DEFER 否定は実機 probe で反証 (wave-9 教訓)。「N枚 pick」を含む場合は **4層検証** (engine 3経路 + playwright UI、wave-10 教訓)。
+  **wave-7 P17 / wave-8 P15 Condition部 / wave-9 B09072 / wave-10 G17+turn-ban+BUG-165+B07002 出荷済**。
+- **wave-11 候補** (影響降順、★per-card sole 要 certify):
+  - **G39 PA 移動 + PA〚ビッグジュエル〛計数 aura (demand-signal #2、4+3枚)**: 非MR カードの PA 移動 verb (toPartnerArea は dead stub = 未実装) + PA slot 計数。B07059/B07060/PR195/PR196 (+計数3)。mr-partner-area core (bef3adad+5352c470) の slot 流用可能性を先に実測。
+  - **「アクション中のキャラ」TargetFilter 軸 (demand-signal #3、4枚)**: B03085/B05032/B05111/B08006 (【ヒラメキ】【解決編】K枚スタン)。stun verb (sceneSetState) は有、filter 軸のみ novel。actedCharThisTurn (wave-7) と同型の挿入面。
+  - **「以下からKつ選んで行う」N-of-M multi-select choice (G34、demand-signal #4、4枚)**: B05023/B05062/B07013/B09067。choice atom は 1択のみ — resolver/UI 両面 = T3 想定。
+  - **P16 疾風条件 override (B09090)**: 単独 exemplar 不可 (case-triggered discard + keyword-presence cost filter 併存) — 複数 primitive 同 wave でのみ。
+  - **P15 TargetFilter 軸 (B09070)**: 非sole (removeArea-filtered-select/PA-declared 併存)。
+  - **勝敗系 rewrite (P10/E3、demand-signal #1、8枚)**: 【事件解決】書き換え+代替勝利【証拠隠滅】。E3 risky = 計画順で最後 (E1→E2→E3)。
+- genuine-absent E1 残: B04074 ($revealed-level-any=G17 複合) / B08043 (sceneMaxLp dyn) は別 primitive / S-tail (TSV)。
+- ⚠ wave-10 latent (card-wave 時): B04005/D10012/PR137/PR143 は BUG-165 fix で human/AI とも 2枚 discard になった (挙動変化=正しい方向、behavioral test は bug-165 test が B04005 を cover)。B07002 a2 のコンタクト実機通し (相手 cutin 候補が出ないこと) は human 実戦投入時に 1回踏む。HandZone multi-select は discard verb のみ配線 — nMax>1 の他 hand-pick verb 出荷時に Playmat 配線追加。
 
 ## プロセス共通 (実証済)
 - engine 並行 worktree: `git worktree add -b engine/<name> /c/tmp/<dir> origin/main` → PowerShell `New-Item -ItemType Junction`
