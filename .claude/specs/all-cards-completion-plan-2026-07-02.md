@@ -19,19 +19,24 @@ engine-first 方針 (2026-06-30 ユーザー決定) は維持。ただし各 eng
 | **3** | E2 data-model 大物: G39 partner-area カード枠 (24) / G37 scope 配列 (15) | T3 | 単独 wave × 2 | sole ~39 | **2** |
 | **4** | E3 risky: P10 alt勝敗 (15) / P11 partner全色+cap / G14 | T3 | 単独 wave × 2-3 | sole ~20 | **2** |
 | **5** | MR partner-area (G42、spec 済 4 フェーズ) | T3 | spec 通り | ~15 | **2** |
-| **6** | **カード大量 author**: family clustering → exemplar フル certify → clone 決定表 diff。engine 解禁分 + 複数 gate 複合 + ENGINE0 複雑裾 | T1/T2 | 30-60 枚 / session | **~535 全部** | **9-13** |
+| **6-0** | **text→DSL compiler 構築**: whitelist 文法 (句形→DSL 断片 production、未知句 refuse) + **oracle 実測** (実装済 1514 枚 compile⇔shipped DSL diff、535 への適用率計測) | T1/T2 | tool + 文法 review 1回 | - | **1-2** |
+| **6** | **カード大量 author**: compiler 一括変換 → refuse 分のみ手動 certify (family exemplar + clone 決定表 diff) | T1/T2 | 一括 + refuse 裾 | **~535 全部** | **2-4** (oracle 実測で確定) |
 | **7** | tail 精算: Q&A 依存 (公式裁定待ち) / DEFERRED-INDEX 残 / 既知エッジ受容リスト化 → 「全カード実装完了 (except リスト付き)」宣言 | - | - | - | **1-2** |
 
-**合計 ≈ 20-27 session** (現行ペース比 ~1/3。現行: 1 session = 1-5 prim or 10-16 card → 50+ session 相当)。
+**合計 ≈ 14-19 session** (compiler 成功時。oracle 実測前の保守値 = 20-27。現行ペース 50+ session 相当比 ~1/3〜1/4)。
 
-## Phase 6 (カード大量 author) の実行形
+## Phase 6 の実行形 — text→DSL compiler (2026-07-02 ユーザー提案で改定)
 
-1. 解禁カードを **pattern family に機械分類** (既存 gap-marker classifier + engine-extension TSV の label→ids)。
-2. family ごとに exemplar 1 枚フル certify (grounding 全列 + probe test) — engine wave 同梱分は既済。
-3. 残 clone を codegen → **決定表 diff スクリプト** (DSL フィールド ⇔ TSV 印字列) で全数機械照合 + 10 枚に 1 枚 spot-check。
-4. 6 ゲート → 1 commit 20-40 枚 → CI green → 次 family。
-5. UI 新部品「型」が生えた family のみ playwright 1 回。
-6. ルール裁定不明カードは即 DEFER (公式 Q&A 送り) — 止まらない。
+誤訳の源 = AI の即興翻訳 → **whitelist 文法 compiler** で構造排除 (一致句のみ変換、**未知句は refuse → DEFER queue**。silent 誤訳が構造的に不可能になり、裁定は文法に 1 回だけエンコード)。
+
+1. **production rule の漸進登録**: Ph1-5 の各 engine wave が自 primitive の cardTextPattern→DSL 断片 rule を
+   exemplar カードと同 commit で lexicon 登録 (文法構築コストを wave に償却、Ph6-0 到達時にほぼ完成)。
+2. **Ph6-0 = compiler 組立 + oracle 実測**: 実装済 **1514 枚**の印字テキストを compile → shipped DSL と正規化 diff
+   (ground-truth oracle)。一致率 + 残 535 適用率を計測してから以降の session 数を確定。文法自体に敵対 review 1 回 (T2)。
+3. **一括 compile**: 生成 DSL は validate-specs whitelist + 決定表 diff で機械検証。1 commit 60-80 枚。
+4. refuse queue のみ手動 certify (family exemplar + T2)。UI 新部品「型」が生えた family のみ playwright 1 回。
+5. engine honor gap (BUG-117 型: DSL 正しくても engine が未評価) は compiler 守備範囲外 → exemplar probe test が担保。
+6. 真の裁定不明カードは即 DEFER (公式 Q&A 送り) — 止まらない。
 
 ## 並行セッション運用
 
@@ -42,6 +47,7 @@ engine-first 方針 (2026-06-30 ユーザー決定) は維持。ただし各 eng
 
 - **clone 照合の見逃し** → 決定表 diff は捏造フィールド検出 (whitelist 外 key で fail) を含める ([[feedback-certify-spec-self-review]] 教訓)。
 - **sole 数の上振れ** → 着手前 origin/main 実 grep は継続 (安い)。目安値は毎 phase 末に burn-down で補正。
+- **決定論 classifier の楽観前科** (reusable 306→実2 / green 211→歩留 40%) → compiler は **oracle 一致率の実測を通過するまで** session 数を確定しない。
 - **G39/G37/P10 の regress** → T3 フルゲート据置。smoke baseline + probe が床。
 - **Q&A 依存カード** → 完了宣言は「except リスト付き」を正とする。公式裁定が出次第、個別解禁。
 

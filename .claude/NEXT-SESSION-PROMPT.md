@@ -17,8 +17,11 @@
   T1 (pure-additive/clone)=機械ゲート+probe のみ・review 0-1 lens / T2=2 lens / T3 (hot-path/core/MR)=従来フル。
 - wave 大型化: T1 は 10-15 prim or 20-40 card / 1 commit、1 session 複数 wave 可 (context 60% まで)。
 - **全カード完了計画** = [specs/all-cards-completion-plan-2026-07-02.md](specs/all-cards-completion-plan-2026-07-02.md)
-  (残535枚、Ph1 E1裾→Ph2-3 E2→Ph4 E3→Ph5 MR→Ph6 カード大量author 30-60枚/session→Ph7 tail、計~20-27 session)。
+  (残535枚、Ph1 E1裾→Ph2-3 E2→Ph4 E3→Ph5 MR→Ph6-0 compiler→Ph6 一括変換→Ph7 tail、計 **~14-19 session** (oracle 実測前保守値 20-27))。
 - engine wave には **exemplar カード 1-2 枚を同 commit 同梱** (E2E 生きたテスト + clone 原器、再certify 二度手間排除)。
+- **text→DSL compiler 採用 (2026-07-02 ユーザー決定)**: silent 誤訳の源=AI 即興翻訳を whitelist 文法で構造排除。
+  **Ph1-5 の各 wave は自 primitive の production rule (cardTextPattern→DSL 断片) を exemplar と同 commit で lexicon 登録**すること。
+  Ph6-0 で compiler 組立 + oracle 実測 (実装済 1514 枚 compile⇔shipped DSL diff)。未知句 refuse→DEFER。Ph6 は 9-13→**2-4** 見込み (実測で確定)。
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
