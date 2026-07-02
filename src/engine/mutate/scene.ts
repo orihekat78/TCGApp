@@ -5,6 +5,7 @@
 import type { GameState, SceneCharacter, RemoveResult } from '@/engine/types';
 import { event } from '../event/index.js';
 import { def } from '../read/def.js'; // MR partner-area (rules/18): isMR 判定 (def → types のみ依存、循環なし)
+import { sceneCap } from '../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 
 type Player = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
@@ -102,8 +103,8 @@ function enter(s: GameState, p: Player, cardId: string, opts: EnterOpts): SceneC
   // MR能力② (rules/18): MR 登場時は fullness 判定の前に既存 MR を除去 (空きが生まれ得る)。
   // 非 MR / 既除去なら no-op。
   applyMrEntryRemoval(s, p, cardId);
-  if (s.players[p].scene.length >= 5) {
-    throw new Error(`scene full: cannot enter ${cardId} for ${p} (scene has ${s.players[p].scene.length} chars)`);
+  if (s.players[p].scene.length >= sceneCap(s, p)) {
+    throw new Error(`scene full: cannot enter ${cardId} for ${p} (scene has ${s.players[p].scene.length} chars, cap ${sceneCap(s, p)})`);
   }
 
   const currentCount = s.players[p].scene.length;
@@ -149,6 +150,12 @@ function switchEnter(
     // 現場の MR 除去で空きが生まれなかった → switch victim を除去 (5枚制限をバイパスするため先に除去)
     removeToRemove(s, removeUid, 'switch');
   }
+  // ⚠ engine E3 P11 latent (2026-07-02、敵対 review): victim 除去は length を 1 減らすため、
+  // length===cap の通常 switch では enter() の cap gate を必ず下回る。だが **条件付き** sceneCapOverride が
+  // cap を現 scene 数より下へ落とした状態 (length > cap) で switch すると、除去後 length===cap のまま enter()
+  // が throw しうる。現状 unreachable (全 override カードは無条件 cap ゆえ scene が cap を超えない / card 凍結中)。
+  // 条件付き cap の consumer 出荷時に「switch は net-neutral ゆえ cap throw を bypass」guard を追加すること
+  // (over-cap 時の裁定は公式未定 → 実カード + 裁定確定後に解決)。DEFERRED-INDEX / e3-altwin-decomposition 参照。
   // 新キャラ登場 (enter() 内の applyMrEntryRemoval は idempotent = ここでは no-op)
   return enter(s, p, cardId, opts);
 }

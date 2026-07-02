@@ -159,6 +159,23 @@ export type ContinuousModifier = {
   //   Switch) + ネクストヒント (runNextHint) の両経路で character のみ gate する (event/効果登場/カットイン/
   //   変装/ヒラメキ は対象外 — 公式 Q&A)。不在時 no-op (既存 case は未宣言 → 全 character 許可、baseline 不変)。
   handUseRestrictFilter?: TargetFilter;
+  // engine E3 P11 (2026-07-02): case card 継続能力「自分の現場に置けるキャラの枚数は〚最大N枚まで〛になる」
+  //   (PR067 探偵の目、5→4)。read.sceneCap が自 case def の abilities[].continuousModifier.sceneCapOverride を
+  //   走査し (type==='continuous' + ability.condition honor)、現場**登場ゲート** (mutate.scene.enter throw /
+  //   effect sceneEnter の switch 判定 / canHandUseCard/Switch) の閾値を override する。不在時 5 (baseline 不変)。
+  //   ⚠ 登場閾値のみ変更 — 絶対 invariant (sceneAtMost5) は 5 のまま (既存 5 枚 + cap4 でも強制リムーブしない、
+  //   rules/19 §下限なし に準じた非強制解釈。公式は 5→4 で既存超過時の裁定を明示せず → 保守的に非除去)。
+  sceneCapOverride?: number;
+  // engine E3 P11 (2026-07-02): case card 継続能力「自分のパートナーの色は【青】…【黒】になる」
+  //   (PR067 探偵の目、全6色化)。cond/eval.ts partnerColor が自 case def の
+  //   abilities[].continuousModifier.partnerColorsOverride を走査 (type==='continuous' + ability.condition honor)
+  //   し、パートナー印字色の**代わりに**この色集合で【パートナー(色)】条件を評価する。不在時は印字色 (baseline 不変)。
+  //   ⚠ authoring footgun (latent、現 frozen card では不発): (a) この ability の condition.kind に
+  //   'partnerColor' を使うと partnerColor→partnerColorsOverride→evalCond(partnerColor) で無限再帰 (stack overflow) →
+  //   partnerColorsOverride ability の condition には partnerColor を使わないこと。(b) condition が ctx.bindings を
+  //   読む kind (boundMatchesFilter 等) は caseCtx.bindings={} で undefined になり得る (case 継続能力は bindings 非依存 kind のみ想定)。
+  //   PR067 は unconditional ゆえ両者非該当。consumer 拡張時に guard 追加を検討。
+  partnerColorsOverride?: string[];
 };
 
 // ---------- AbilityDef ----------

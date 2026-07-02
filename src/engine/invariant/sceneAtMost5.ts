@@ -8,6 +8,12 @@ type Player = 'self' | 'opp';
 /**
  * 現場のキャラ数が5枚以下であることを確認する
  * 5枚超で throw Error
+ *
+ * ⚠ engine E3 P11 (2026-07-02): これは **絶対エンジン天井** (5 固定)。
+ * case override による現場上限 (read.sceneCap、PR067 で 4 等) は **登場ゲート** にのみ効き、
+ * 本 invariant は下げない。理由: cap4 が既存 5 枚に乗っても強制リムーブしない非強制解釈のため
+ * (rules/19 §下限なし 準拠、公式は超過時裁定を明示せず)。登場は sceneCap でブロックされるので
+ * 通常 5 を超えることはなく、本 invariant は「6 以上=エンジンバグ」の paranoia ガードとして 5 固定で残す。
  */
 export function sceneAtMost5(s: GameState, p: Player): void {
   const count = s.players[p].scene.length;

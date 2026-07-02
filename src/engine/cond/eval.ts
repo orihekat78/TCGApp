@@ -18,6 +18,28 @@ function isCharCandidate(c: Candidate): c is { kind: 'char'; uid: string; cardId
 }
 
 /**
+ * engine E3 P11 (2026-07-02): 自プレイヤーの case card 継続能力 partnerColorsOverride を走査。
+ * 成立中 (type==='continuous' + ability.condition honor) の override 色集合を返す。不在時 undefined
+ * (呼び出し側で partner 印字色にフォールバック)。scene-cap.ts sceneCap と同流儀の case-def-continuous read。
+ * module-local (read/ に切り出すと read→cond/eval 逆依存で循環) — 同 module の evalCond/lookupCardDef を直接利用。
+ */
+function partnerColorsOverride(state: GameState, owner: 'self' | 'opp'): string[] | undefined {
+  const caseId = state.players[owner].case.cardId;
+  if (!caseId) return undefined;
+  const caseDef = lookupCardDef(caseId);
+  if (!caseDef) return undefined;
+  const caseCtx = { source: { player: owner, area: 'case', cardId: caseId }, bindings: {} } as unknown as EffectCtx;
+  for (const ab of caseDef.abilities ?? []) {
+    if (ab.type !== 'continuous') continue;
+    const ov = ab.continuousModifier?.partnerColorsOverride;
+    if (ov === undefined) continue;
+    if (ab.condition && !evalCond(state, ab.condition, caseCtx)) continue;
+    return ov;
+  }
+  return undefined;
+}
+
+/**
  * Evaluate a Condition to boolean using current state + ctx.
  */
 export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boolean {
@@ -39,7 +61,10 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const partner = state.players[owner].partner;
       const d = lookupCardDef(partner.cardId);
       const want = Array.isArray(cond.color) ? cond.color : [cond.color];
-      const have = d?.colors ?? [];
+      // engine E3 P11 (2026-07-02): 自 case card の継続能力 partnerColorsOverride (PR067 探偵の目 全6色化) が
+      // 成立中なら印字色の**代わりに**その色集合で評価する。scene-cap 同流儀 (type==='continuous' + ability.condition honor)。
+      // inline (cond/eval 内) — 別 helper に切り出すと read→cond/eval 逆依存で循環するため。不在時は印字色 (baseline 不変)。
+      const have = partnerColorsOverride(state, owner) ?? d?.colors ?? [];
       return want.some(c => have.includes(c));
     }
     case 'caseColor': {

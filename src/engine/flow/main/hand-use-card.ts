@@ -20,6 +20,7 @@ import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
 import { matchOneFilter } from '../../target/candidates.js';
 import { evalCond } from '../../cond/eval.js';
+import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 
 type Player = 'self' | 'opp';
 
@@ -115,7 +116,7 @@ export function canHandUseCard(state: GameState, p: Player, cardId: string): boo
   if (!handUseGateCommon(state, p, cardId)) return false;
   // キャラの場合: 現場上限 5 (rules/20) — スイッチ経路は canHandUseCardSwitch
   const d = readDef.card(cardId);
-  if (d?.kind === 'character' && state.players[p].scene.length >= 5) return false;
+  if (d?.kind === 'character' && state.players[p].scene.length >= sceneCap(state, p)) return false;
   return true;
 }
 
@@ -128,7 +129,7 @@ export function canHandUseCardSwitch(state: GameState, p: Player, cardId: string
   if (!handUseGateCommon(state, p, cardId)) return false;
   const d = readDef.card(cardId);
   if (d?.kind !== 'character') return false;
-  if (state.players[p].scene.length < 5) return false;
+  if (state.players[p].scene.length < sceneCap(state, p)) return false;
   return true;
 }
 

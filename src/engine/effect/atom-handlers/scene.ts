@@ -3,6 +3,7 @@ import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { buildShortFormPick } from '../atom-pick-spec.js';
+import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
@@ -53,7 +54,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
               if (i !== -1) arr.splice(i, 1);
             }
             // FIX-B3a: full は **ループ内で都度再計算** (hoist 禁止。enter で scene が伸びるため)。
-            const full = s.players[enterP].scene.length >= 5;
+            const full = s.players[enterP].scene.length >= sceneCap(s, enterP);
             let nc: ReturnType<typeof mutate.scene.enter>;
             if (full) {
               const v = switchUids.shift();
@@ -88,7 +89,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         const seFullP = resolvePlayer(a.player, ctx);
         const seHasSwitch = typeof a.switchRemoveUid === 'string' && !(a.switchRemoveUid as string).startsWith('$');
         const seHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-        if (s.players[seFullP].scene.length >= 5 && !seHasSwitch && seFullP !== seHumanSide) {
+        if (s.players[seFullP].scene.length >= sceneCap(s, seFullP) && !seHasSwitch && seFullP !== seHumanSide) {
           mutate.log.append(s, { ts: Date.now(), player: seFullP, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip' });
           return;
         }
@@ -135,7 +136,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       // switchRemoveUid (UI が SceneSwitchPickerModal で収集した退場キャラ uid) があれば switchEnter、
       // 無ければ skip (human が switch を辞退 / AI 経路)。room があれば通常 enter。
       const seSwitchRemoveUid = resolveBindRef(a.switchRemoveUid, ctx) as string | undefined;
-      const seIsFull = s.players[enterPlayer].scene.length >= 5;
+      const seIsFull = s.players[enterPlayer].scene.length >= sceneCap(s, enterPlayer);
       const seHasValidSwitch = typeof seSwitchRemoveUid === 'string' && !seSwitchRemoveUid.startsWith('$');
       if (seIsFull && !seHasValidSwitch) {
         mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:scene-full-skip', target: cardId });

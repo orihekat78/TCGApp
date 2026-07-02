@@ -71,6 +71,7 @@ import { useGameStateStore } from '../state/store.js';
 import { selectInteractionLocked } from '../state/interactionLock.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readChar } from '@/engine/read/char.js';
+import { sceneCap } from '@/engine/read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 // D08021 driver 2026-05-26: distinctNames 制約 (rules/19) を multi-pick UI で
 // 適用するため、name component 計算 helper を import。
 import { allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
@@ -468,7 +469,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     const st = useGameStateStore.getState();
     const pend = st.pendingEffectPick;
     const gs = st.gameState;
-    if (pend && pend.atomVerb === 'sceneEnter' && gs && gs.players[pend.player].scene.length >= 5) {
+    if (pend && pend.atomVerb === 'sceneEnter' && gs && gs.players[pend.player].scene.length >= sceneCap(gs, pend.player)) {
       const reanimateCardId = pend.candidates.find((c) => c.uid === uid)?.cardId ?? '';
       const sceneChars = gs.players[pend.player].scene.map((c) => ({
         uid: c.uid,
@@ -949,7 +950,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                 const pendE = stE.pendingEffectPick;
                 const gsE = stE.gameState;
                 if (pendE && pendE.atomVerb === 'sceneEnter' && gsE) {
-                  const room = 5 - gsE.players[pendE.player].scene.length;
+                  const room = sceneCap(gsE, pendE.player) - gsE.players[pendE.player].scene.length; // engine E3 P11: 現場登場上限 (case override 可)
+
                   const overflow = Math.max(0, uids.length - room);
                   if (overflow > 0) {
                     // area modal を閉じ・auto-open を抑止して self 現場を直接クリックさせる (設計 v2 flicker gate)
