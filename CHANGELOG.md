@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `985fb4a21205`
+> Source hash: `78b3b37bfbf7`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,1174 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# Track B B0 — text→DSL compiler harness (corpus / shipped-DSL dump / oracle diff runner)
+
+**Round/Phase**: 2026-07-02 二 Track 並行体制の Track B (カード追加ツール専任) 初回 session。
+[compiler-track-plan-2026-07-02.md](../specs/compiler-track-plan-2026-07-02.md) の **B0 (harness、全部決定論 script、T1)** を出荷。
+`src/engine/**` 変更 0 (骨格凍結 / Track A 衝突回避)。作業領域 = `scripts/compiler/**` + `tests/compiler/**` のみ。
+
+## 成果物 (scripts/compiler/ 6 file)
+
+1. **tsv-corpus.cjs** — `.claude/specs/cards-data/**/*.tsv` (83 file) → 印字全列の正規化 corpus。
+   col10 effect + **col11/12/13 cutIn/hirameki/henso 必須** (ヒラメキ漏れ前科 B01075/B01089 のガード)。
+   kind 別列構成 (character/event/partner/case) を header 名で吸収。CLI で `.tmp/compiler/corpus.json`。
+2. **canonical.cjs** — 正規化 (key 昇順 / undefined 除去 / 関数→`<closure>` marker / keywords 順序吸収、
+   abilities 順序は保持)。oracle 比較対象 = **abilities + keywords のみ** (stat 系は codegen 機械転記の守備範囲)。
+3. **productions.cjs** — whitelist 文法 rule 集 (B0 = 空)。rule 契約 (`match`/`emit` + 出典コメント義務) を明文化。
+4. **compile.cjs** — compiler 本体 skeleton。核心不変条件 = **未知句 1 つでも card 全体 refuse (partial 変換禁止)**。
+   B0 の句分割は「非空テキスト列 = 1 句」の最粗粒度 (B1 で 【】〚〛/コスト境界/節 分割に置換)。
+5. **dump-shipped.ts** — ALL_CARDS → canonical JSON (`.tmp/compiler/shipped-dsl.json`)。dup id は throw。
+6. **oracle.cjs** — 3 値判定 (match / refuse / **mismatch** = silent 誤訳) + refuse 列別ヒストグラム +
+   未実装分の compile 可能率 + `--gate` (G1: mismatch>0 → exit 1)。P variant (`B08004P`) は base printing へ写像。
+
+## B0 受入実測 (production 0 件の素通し)
+
+- corpus **2049 printings** (character 1441 / partner 280 / event 212 / case 116)、dup id 0、vanilla (全列空) 52。
+- shipped **1509** (ALL_CARDS unique、closure 含み 249) — 計画値 1514 は約 5 枚過大 (棚卸手法差)。**残 540**。
+- oracle: **judged 1509/1509 (noCorpus 0)** / mismatch 0 / match 52 = **vanilla のみ** /
+  **text-bearing 1457 全 refuse (refuse 率 100%)** = 正常動作確認 ✔。
+
+## 検証 (T1 = 機械ゲートのみ)
+
+- tests/compiler **5 file / 30 test** (canonical 6 / compile 6 / oracle 7 / corpus 実 data 7 / oracle 実 data 4)。
+  受入条件 (noCorpus=0 / mismatch=0 / match⊆vanilla) を `.tmp` 非依存の回帰テストとして固定 (CI 実行可)。
+- gate: tsc 0 (both tsconfig) / vitest **3522 → 3552 pass** +1 skip / smoke:1000 **winsA=498** 不変・
+  timeouts/exceptions 0 / 8 lint errors 0。
+- 次: **B1** (句分割 + production rule 集 + 裁定テーブル → G1 = 1509 oracle で silent mismatch 0)。
+
+# engine additive wave-6 (P37) — 継続 trait/name grant (grantTraits / grantNames)
+
+**Round/Phase**: 2026-07-01 engine-first フェーズ E1 wave-6 (engine/p37-trait-name-aura)。engine-extension-plan-2026-06-30 の
+**P37 (continuous trait/name grant aura)** を origin/main (2099dda1) 実 grep で genuine-absent 確認後に出荷。TSV では pure-additive だが
+「filter 核心 (matchOneFilter) の trait/name 読みに継続付与を差す」ため wave-5 から分離し **単独隔離 + opus 4-lens review** に回した item。
+本 wave は engine 足場 + 専用 unit test のみ (engine-only、カード自身は別 card phase)。
+
+## grounding: sole=7 の実採寸 → clean 3 のみ
+
+`.tmp/_fulltext.cjs` で P37 全候補を精査した結果、**継続 self-scope 付与**で clean に解禁できるのは **3 枚**:
+- **B05012 恩田遼平**「現場にいるこのキャラは〚カード名［毛利小五郎］〛としても扱い、〚特徴［探偵］〛を持つ」(self trait+name)
+- **B07053 ロボット黒羽快斗**「現場にいるこのキャラは〚カード名［怪盗キッド］〛としても扱う」(self name)
+- **B08063 黒田兵衛**「現場にいるこのキャラは〚特徴［長野県警］〛を持つ」(self trait、自身の end-turn 条件を **自己計数**)
+
+いずれも公式 Q&A で「現場にいなければ有効でない (デッキ/リムーブで参照不可)」= **board char (uid 既知) 限定**、
+「変装で引き継がれない (元の能力)」= 印字 continuous ability であることを確認。
+
+**DEFER** (別 primitive、DEFERRED-INDEX 記録):
+- **B06095 榎本梓誘拐事件**: 【宣言】「ターン終了時まで、自分のすべての(8)エリアにあるキャラは〚特徴［喫茶ポアロ］〛を持つ」=
+  全 8 エリア (非現場含む) + turn-scoped + declared。非現場カードに per-uid 付与できず別機構。
+- **B05101 毛利小五郎**: 「〚特徴［警察］〛と〚［警視庁］〛を失い、〚特徴［探偵］〛を持つ (ターン終了時に切れない)」=
+  **permanent applied** な trait 変更 (remove+grant) + 変装引継 → mutate verb + 永続 per-char store 要 (ContinuousModifier ではない)。
+  ゆえに `removeTraits` は本 wave では **意図的に未追加**。
+
+## engine 拡張: 純 additive (新 optional field + 新 late-bind、既存カード未宣言 → grantWalk 空 → 挙動不変)
+
+1. **`grantTraits` / `grantNames` ContinuousModifier field** — [card-def.ts](../../src/engine/types/card-def.ts)。
+   `grantKeywords` と完全対称の self-scope continuous 経路。
+2. **`grantWalk` board reader** — [read/char.ts](../../src/engine/read/char.ts)。自身の `type:'continuous'` ability の
+   `continuousModifier.grantTraits/grantNames` を、`ability.condition` 成立 + inPA gate (PA-MR は scope on-partner-area/always のみ) の下で集める
+   (keywords() の `fromContinuous` walk と同経路)。`traits()`/`names()` が **印字 ∪ granted** を返す。
+3. **`traitNameGrantSafe` late-bind + `_inTraitNameGrant` 再帰 guard** — [candidates.ts](../../src/engine/target/candidates.ts)。
+   `continuousDeltaSafe`/`auraDeltaSafe` と同 posture (再入時 `[]` = 印字のみで depth-2 終端)。
+   `matchOneFilter` の **`.trait` / `.cardName` / `.cardNameNot`** が board char (`c?.uid` 既知) のみ effective 集合を honor。
+   `c===null` (hand/deck/remove/bound=cardId) は印字のまま (公式 Q&A「現場にいなければ有効でない」と 1 対 1)。`effectiveNameComponents` を export。
+4. **`bond` 条件の name honor** — [cond/eval.ts](../../src/engine/cond/eval.ts)。granted 名 (「〚カード名[X]〛としても扱う」) が絆を満たす
+   (`effectiveNameComponents` で matchOneFilter と同一 name 解決 = BUG-117 一貫性)。
+
+honor site 完備性 (BUG-117): board-char で trait/name を読む site は上記 5 箇所 (matchOneFilter trait/cardName/cardNameNot +
+read.char.traits/names + bond)。`dyn/eval` の trait カウンタは read.char.traits 経由で自動追従。
+`removeTraitAtLeast`/`removeNameAtLeast`/`boundMatchesFilter`/`_shared` targetFilterToPredicate は **bare cardId (uid 無)** を扱うため
+印字のまま (matchOneFilter 自身の c===null→印字 と consistent、divergence なし)。
+
+## 検証 (セルフレビュー + 水平展開 + opus 4-lens 敵対 review)
+
+- tsc 0 (both tsconfig) / vitest **3504 → 3522 pass** +1 skip (新規 18: self trait read+filter / 印字 union / deck-copy NOT granted /
+  cardName / cardNameNot / 分割名展開 / bond honor+decoy / B08063 self-count +/− / condition-gated grant +/− [再帰 guard 実走] /
+  opp-side grant (side-agnostic) / B05012 同一 ability trait+name / 複数 ability stacking / 印字==granted dedup)。
+  ※ 末尾 4 件は opus 4-lens edge-test lens の指摘 (opp-side / co-grant / stacking) を出荷前に追加。
+- smoke:1000 **winsA=498・winsB=502・avgTurns=11.0・timeouts/exceptions 0** = baseline 完全一致 (= 既存カードのパス不変の実証 = 純 additive)。
+- 8 lint errors=0。engine-only (card consumer 無) ⇒ playwright N/A (0629d/wave2-5 同方針)。
+
+# engine additive wave-5 (2 pure-additive) — boundAnyMatchesFilter cond / handUseRestrictFilter (case 継続手札使用制限)
+
+**Round/Phase**: 2026-07-01 engine-first フェーズ E1 wave-5 (engine/wave5-bound-handrestrict)。engine-extension-plan-2026-06-30 の
+G17 (relative-filter-revealed-color) + P05 (restriction-flags 手札使用禁止) を origin/main (8d76aeb3) 実 grep で genuine-absent 確認後、
+純 additive 2 件を **まとめて** 出荷 (wave-2/3/4 方式)。カード自身は別 card phase で出荷 (本 wave は engine 足場 + 専用 unit test のみ、engine-only)。
+
+## engine 拡張: 純 additive 2 件 (新 symbol / optional field = 既存カード未参照 → 挙動不変)
+
+1. **`boundAnyMatchesFilter` cond** (G17) — [cond/eval.ts](../../src/engine/cond/eval.ts) `ctx.bindings[bindKey]` の
+   **全枚数のいずれか** が TargetFilter に一致するか。既存 `boundMatchesFilter` は `bound[0]` のみ読むため N>1 の
+   公開/リムーブ集合を評価できなかった。各要素を `matchOneFilter`(c=null=CardDef 印字値、remove-area cand は
+   removeColorAtLeast L291 と同流儀) に委譲。→ PR132「上から3枚リムーブ…特徴[警察]のキャラがリムーブされた場合…突撃を持つ」(any) /
+   D06013「上から4枚公開…【緑】と【白】が1枚以上」= `and[boundAny{color:緑}, boundAny{color:白}]` で合成。
+   ※ B07002「色の異なる特徴[探偵]を2枚リムーブした場合」(distinct-color pair) は別 Condition が要るため **本 wave 対象外 (DEFER)**。
+2. **`handUseRestrictFilter` ContinuousModifier field** (P05) — [card-def.ts](../../src/engine/types/card-def.ts) に allow-filter を追加。
+   case card 継続能力「自分は〚特徴[X]〛以外のキャラを手札から使用できない」。新 helper
+   [`handUseCharRestrictAllows`](../../src/engine/flow/main/hand-use-card.ts) が自分の case def の
+   `abilities[].continuousModifier.handUseRestrictFilter` を走査し、**手札の使用** (`handUseGateCommon` → canHandUseCard/Switch) +
+   **ネクストヒント** ([`runNextHint`](../../src/engine/flow/main/next-hint.ts)) の両経路で **character のみ** gate。
+   event / 効果登場 / カットイン / 変装 / ヒラメキ は本 gate を通らない別経路ゆえ対象外 (公式 Q&A と 1 対 1)。
+   → B05120 集められた名探偵 (特徴[探偵]) / B06109 紅の修学旅行 (特徴[高校生])。不在時 no-op (既存 case は未宣言 → 全 character 許可)。
+   ※ B06103 ジン (カード名 + effect-登場 ban) / UI toCandidate 側の next-hint 候補事前除外は consumer カード出荷時 (card-wave) に配線 = **DEFER**。
+
+## 検証 (セルフレビュー + 水平展開 + opus 4-lens 敵対 review)
+
+- tsc 0 (both tsconfig) / vitest **3489 → 3502 pass** +1 skip (新規 13: boundAnyMatchesFilter 6 [any/no-match/空/未設定/D06013 and 2] +
+  handUseRestrictFilter 7 [allow 探偵/block 警察/event 免除/no-restrict allow/switch block/predicate 直呼/next-hint throw+ok])。
+- CONDITION_KIND_MAP ⇔ scripts/taskA-validate-specs.cjs CONDS 両方に boundAnyMatchesFilter 登録 (satisfies Record 完全性で tsc 強制)。
+- smoke:1000 **winsA=498・winsB=502・timeouts/exceptions 0** = baseline 不変 (= 既存カードのパス不変の実証)。
+- 8 lint errors=0。engine-only (card consumer 無) ⇒ playwright N/A (0629d 同方針)。
+
+# engine additive wave-4 (3 pure-additive primitive) — $self.level dyn / drawUpToHandSize verb / remove:exit observer
+
+**Round/Phase**: 2026-07-01 engine-first フェーズ E1 wave-4 (engine/wave4-0701)。engine-extension-plan-2026-06-30 の
+wave-4 候補を origin/main (80621194) 実 grep で stale 解消後、純 additive な primitive 3 件を **まとめて** 出荷 (0629d/wave-2/wave-3 方式)。
+カード自身は別 card phase で出荷 (本 wave は engine 足場 + 専用 unit test のみ、engine-only)。
+
+## engine 拡張: 純 additive 3 件 (新 symbol = 既存カード未参照 → 挙動不変)
+
+1. **`$self.level` dyn** (G16-partial) — [dyn/eval.ts](../../src/engine/dyn/eval.ts) resolveSelf に `case 'level'` 追加
+   (charRead.level = effective level = base+各 lvlMod+continuous、$self.ap/lp と対称)。「このキャラのレベル以下/同じレベルの〜」
+   相対 level フィルタの dyn 足場。filter の `levelMin/levelMax` に `{dyn:'$self.level'}` を置くと resolveFilterDynObj
+   (field-agnostic、既出荷) が具体値へ解決し matchOneFilter (effective level honor、既出荷) が評価 → dyn 1 case 追加で解禁。
+   先例 = `$self.ap` (B09096 相対AP、既出荷)。continuousDeltaSafe 経由で BUG-156/157 の再帰を踏まない。level 下限なし (rules/19)。
+   ★G16 の相対-LP は既出荷 (`$self.lp` + field-agnostic resolve で完結)、相対-level のみが残 gap だった。
+   ★B04074 (発見カードと同 level)・B08043 (現場最大LP以下) は別 dyn ($revealed-level-any / sceneMaxLp) を要し本 wave 対象外。
+
+2. **`drawUpToHandSize` verb** (P44-partial) — [atom-handlers/core.ts](../../src/engine/effect/atom-handlers/core.ts)
+   「手札が N 枚になるまでカードを引く」(B08047 沖矢昴「ターン終了時、手札が2枚になるまで引く」)。`draw(max(0, n − 現手札))`
+   の決定論 verb (atomDraw の薄いラッパー、pick 無し)。手札 ≥ N なら draw 0 (draw-up 方向のみ、捨てない)。デッキ不足時は
+   mutate.deck.draw が rules/14 のリフレッシュ (可能な限り) を担う。discard-down 版 (B07076「N枚になるまでリムーブ」=pick 要) /
+   引いた枚数 return (B04048) は別 variant で意図的に DEFER。
+
+3. **`remove:exit` observer hook + `removeExitMatches` matcher** (P20) — 「自分のリムーブエリアにある〚特徴/種別〛の
+   カードがリムーブエリアから離れたとき」(B05087 諸伏高明 / B05088 大和敢助)。**原因非依存** (リムーブ方法問わず、
+   rules/17 【現場リムーブ時】類推)。emit は [mutate/remove.emitExit](../../src/engine/mutate/remove.ts) で payload
+   {player, cardId} を単一ソース化し、**全 7 離脱経路を網羅** (離脱カード毎): ① deck.refresh (リフレッシュ remove→deck) ②
+   remove.removeFromHere (removeAreaToDeckBottom コスト経路) ③ handAddFromRemove (remove→手札、B05087 第2能力) ④
+   removeAreaAllToDeckBottom (B08027) ⑤ evidence.gainCard fromArea=remove (remove→証拠) ⑥ charSetCard fromSelf (使用イベント
+   自身を remove→set-card) ⑦ sceneEnter sourceArea=remove (remove→登場、B05087 1st 能力経路)。除外 = scene.ts MR→PA redirect
+   pop (在場→PA 転送中の transient、leave:to-remove 既 emit、rules/18①)。matcher [cond/eval.ts](../../src/engine/cond/eval.ts)
+   `removeExitMatches` は離脱カードの cardId→CardDef を matchOneFilter(c=null = 印字値) 評価 (remove-area card は turnEffects 無
+   = 静的 def、setCardMatches/triggerCutinMatches/boundMatchesFilter と同流儀)。side='self' (省略時) = payload.player===source.player。
+   listener = 在場キャラ → 通常 in-play scan (handleHook) で処理 = 特別 handler 不要 (wave-3 と同論拠)。
+   ★初版は emit を refresh+removeFromHere のみに限定していたが、opus 4-lens SEMANTIC review が「契約は『原因非依存』を主張するのに
+   主要効果経路 handAddFromRemove (=B05087 自身の能力) が emit せず B05087/B05088 の自己相互作用が壊れる」を BLOCKER 検出 →
+   全離脱経路へ emit 拡張 + emitExit 単一ソース化 + stale コメント (cost/pay.ts「removeFromHere は emit しない」) 是正で対処。
+
+## 検証 (セルフレビュー + 水平展開 + opus 4-lens 敵対 review)
+
+- tsc 0 / vitest **3462 → 3489 pass** +1 skip (新規 27: $self.level 5 + drawUpToHandSize 5 + remove:exit 17。
+  false-green 防止 decoy: lvlMod 合算 / マイナス level / 算術 / uid 不在 throw / 手札超過 no-op / デッキ不足リフレッシュ /
+  opp 不変 / matcher 特徴・kind gate 不一致 / opp-side pin / removeFromHere id 不在 / 全 5 離脱経路 emit / 複数枚 partial /
+  side=opp / removeFilter 省略 全一致 / 不正 payload 防御)。
+- sync-taskA-whitelists green (VERBS+ATOM_VERB_MAP に drawUpToHandSize、HOOKS+TRIGGERED_HOOKS に remove:exit、
+  CONDS+CONDITION_KIND_MAP に removeExitMatches を両方登録)。tsc `satisfies Record<AtomVerb/Condition, true>` が登録漏れ検出。
+- smoke:1000 **winsA=498・winsB=502・timeouts/exceptions 0** = baseline 不変 (= 既存カードのパス不変の実証。
+  refresh shuffle / handAddFromRemove / evidence.gainCard 等 hot-path に emit を挿入したが listener 0 で
+  pendingEffects 不変 → 決定論不変。hot-path 拡張後に full vitest + smoke 再実走で回帰0 確認)。
+- 8 lint errors=0。opus 4-lens 敵対 review = ADDITIVITY SHIP / DSL-TRAP・EDGE-TEST SHIP_WITH_NITS (全 NIT 対処) /
+  SEMANTIC は初版 BLOCKER (emit 経路不足) を全離脱経路 emit 拡張で解消。engine-only (card consumer 無) ⇒ playwright N/A。
+
+## card-wave 時の latent (要 DEFERRED 記録)
+
+- remove:exit の **複数枚同時離脱** (refresh で N 枚一致) 時の発火回数は per-card emit。実カードの公式裁定 (1回 or 一致枚数分) は
+  card-wave 時に B05087/B05088 個別 Q&A で確認。
+- drawUpToHandSize でデッキ不足→リフレッシュ発火時の相手証拠+1 副作用は rules/14 通り (verb の責務外、deck.draw 内)。
+
+# engine additive wave-3 (observer-hook 群) — cutin:used / misread:performed / evidence:removed + triggerCutinMatches
+
+**Round/Phase**: 2026-06-30 engine-first フェーズ E1 wave-3 (engine/observer-wave3)。engine-extension-plan-2026-06-30 の
+「observer-hook 群」を origin/main (3c0bc702) 実 grep で stale 排除 (5 token 全て genuine-absent を確認) 後、純 additive な
+3 TRIGGERED_HOOK + 1 matcher を **まとめて** 出荷 (0629d/wave-2 方式)。カード自身は別 card phase で出荷 (本 wave は engine 足場 +
+専用 unit test のみ、engine-only)。P20(remove:exit、離場 snapshot + refresh per-card emit の別 sub-pattern) は wave-4 へ。
+
+## engine 拡張: 純 additive 観測 hook 3 件 + matcher 1 件 (新 hook = 既存カードが trigger.hook 未宣言 → handleHook が queue せず挙動不変)
+
+設計共通: 3 hook とも listener = **在場の第三者キャラ** → 既存 `handleHook` (in-play scan) で処理 = 特別 handler 不要
+(leave:to-remove / evidence:remove-by-action のような virtual-location handler は不要)。挙動不変の機序:
+registerTriggeredListener が全 TRIGGERED_HOOKS に handleHook を登録するため emit は in-play scan を行うが、既存カードは
+新 hook を trigger.hook に宣言しないため一致 ability 無し → effect を一切 queue しない (= pendingEffects 不変、smoke winsA=498 で実証)。
+
+1. **`cutin:used` hook** — [flow/contact.ts](../../src/engine/flow/contact.ts) `cutIn` が既存 effect:declared(cutin 自効果ゲート)
+   の直後に per-use emit。payload={player(使用側),cardId}, source.bindings に contact を渡す。自効果(effect:declared+optional)と
+   第三者観測を **別 hook** で分離。→ B02080 三池苗子「コンタクト中に自分が【カットイン】を使用したとき、そのキャラを AP+1000」
+   / B09086(使用カットインの名/特徴で分岐) / B04090(自カットイン使用でリムーブから登場)。
+2. **`misread:performed` hook** — [listeners/misread.ts](../../src/engine/listeners/misread.ts) の AI defender 経路 +
+   [ui/hooks/useEngineDispatch.ts](../../src/ui/hooks/useEngineDispatch.ts) misreadResolve(人間 defender) が、misread した各キャラ
+   **1枚ごとに** emit (公式Q&A=1枚ごとに発動)。payload={player(実行側)}, source.uid=misread キャラ uid。→ B05015 小嶋元次
+   「相手が〚ミスリード〛したとき、ターン終了時まで AP+3000」(side:opp) / B09016 円谷光彦「このキャラが〚ミスリード〛したとき…
+   アクティブにする」(selfOnly)。両 defender 経路で emit しないと観測カードが片側 false-green になるため双方に配線。
+3. **`evidence:removed` hook** — [mutate/evidence.ts](../../src/engine/mutate/evidence.ts) removeTop/removeAt/toRemove
+   (=証拠→リムーブの全出口) が remove へ push 後に emit。payload={player(持ち主)}。toDeckTop(=デッキへ戻す) は「リムーブ」では
+   ないため除外。既存 evidence:remove-by-action(ヒラメキ、remove 前・原因限定) とは別タイミング・別原因範囲 = 原因非依存
+   (公式Q&A: アクション以外の効果リムーブでも発動)。→ B02062 世良真純「相手の証拠がリムーブされたとき、カードを1枚引く」(side:opp)。
+4. **`triggerCutinMatches` matcher** — [cond/eval.ts](../../src/engine/cond/eval.ts) cutin:used payload の使用カットイン(cardId)を
+   TargetFilter で評価 (setCardMatches と同式、cutin カードは scene char でないため matchOneFilter の char 引数=null = CardDef 印字
+   属性のみ)。cutin に faceUp 概念は無いため setCardMatches の faceUp gate は不要。→ B09086([諸伏景光]/[長野県警] で分岐)。
+
+## 検証 (セルフレビュー + 水平展開 + opus 4-lens 敵対 review)
+
+- tsc 0 / vitest **3453 → 3461 pass** +1 skip (新規 8: P23 cutin:used 3[self発火/opp非発火pin/triggerCutinMatches一致不一致] +
+  G04 misread 1[AI defender→side:opp観測 & selfOnly自己観測] + G05 evidence 4[removeTop/removeAt/toRemove + 自証拠pin非発火])。
+  全 test は実 emit 経路 (contact.cutIn / misread listener / mutate.evidence) を produce+drain で踏む (event.emit 直叩きの false-green 回避)。
+- sync-taskA-whitelists green (HookName ⇔ TRIGGERED_HOOKS ⇔ scripts/taskA-validate-specs.cjs HOOKS に 3 hook、CONDITION_KIND_MAP ⇔
+  CONDS に triggerCutinMatches、4箇所登録)。
+- smoke:1000 **winsA=498・winsB=502・timeouts/exceptions 0** = baseline 不変 (= 新 hook を購読する既存カード 0 件・emit no-op の実証)。
+- 8 lint errors=0。engine-only (card consumer 無) ⇒ playwright N/A (0629d/wave-2 同方針)。
+
+# engine additive wave 0630 (4 pure-additive 評価器) — evidenceDiff / sceneCountCompare / removeColorAtLeast.cardKind / sceneColorNot dyn
+
+**Round/Phase**: 2026-06-30 engine-first フェーズ E1 wave-2 (engine/eval-wave2)。engine-extension-plan-2026-06-30 の
+「new-Condition/dyn 群」を origin/main (8f715c92) 実 grep で stale 解消後、純 additive な自己完結評価器 4 件を **まとめて** 出荷
+(0629d 方式)。カード自身は別 card phase で出荷 (本 wave は engine 足場 + 専用 unit test のみ、engine-only)。
+
+## engine 拡張: 純 additive 4 件 (新 symbol / optional field = 既存カード未参照 → 挙動不変)
+
+1. **`evidenceDiff` cond** — [cond/eval.ts](../../src/engine/cond/eval.ts) `players[player].evidence − players[other].evidence >= n`
+   の state 直読 (ctx 非依存 ⇒ queue 境界安全)。evidenceAtLeast (片側閾値) では差を表現できない。→ B05103「籌を帷幄の中に運らし…」
+   「相手の証拠が自分の証拠より2つ以上多い場合」(player:'opp', other:'self', n:2)。
+2. **`sceneCountCompare` cond** — 自他現場キャラ枚数を 5 比較子 (lt/le/gt/ge/eq) で比較 (`.scene.length`、oppSceneCount 同流儀)。
+   handCountAtLeastOther の scene 一般化版。→ B05081 威嚇射撃「自分の現場にいるキャラが相手の現場にいるキャラより少ない場合」(cmp:'lt')。
+3. **`removeColorAtLeast.cardKind`** — 既存 removeColorAtLeast に optional cardKind を追加し色 AND カード種別で計数。
+   未指定は従来通り全種別 (回帰0)。field 名は discriminant `kind` と衝突するため `cardKind` (TargetFilter.kind 同値)。
+   → B08004 江戸川コナン「リムーブエリアに【黒】の**キャラ**が3枚以上ある場合」(黒イベントを数えない)。
+4. **`$self.sceneColorNot.<color>` dyn** — [dyn/eval.ts](../../src/engine/dyn/eval.ts) resolveSelf に現場の「指定色以外の色を持つ」
+   キャラ計数 prop (colorNot some説、公式 B08079 = `colors.some(x => !nots.includes(x))`)。sceneTrait/oppSceneCount と同じ player ベース
+   (uid 要件前)、continuousDelta 再帰非経由。→ B02002 江戸川コナン「自分の現場にいる【青】以外の色を持つキャラ1枚につき AP+1000」。
+
+## 検証 (セルフレビュー + 水平展開 + opus 4-lens 敵対 review)
+
+- tsc 0 / vitest **3433 → 3452 pass** +1 skip (新規 19: evidenceDiff 5 + sceneCountCompare 5 + removeColorAtLeast.cardKind 4 +
+  sceneColorNot 5。各 test に false-green 防止 decoy: 負の差 / 全 cmp / 黒イベ除外 / 単色青非該当 / opp-side 解決 / AP read 経路到達)。
+- sync-taskA-whitelists green (CONDITION_KIND_MAP ⇔ scripts/taskA-validate-specs.cjs CONDS 両方に evidenceDiff/sceneCountCompare 登録)。
+- smoke:1000 **winsA=498・winsB=502・timeouts/exceptions 0** = baseline 不変 (= 既存カードのパス不変の実証)。
+- 8 lint errors=0。engine-only (card consumer 無) ⇒ playwright N/A (0629d 同方針)。
+
+### engine additive — `setNextHintBan` / `nextHintBanned` turn-flag (engine-only)
+
+engine-first フェーズ wave-1。全 561 未実装カードの distinct エンジン拡張需要を grounding 再採寸
+([engine-extension-plan-2026-06-30.md](../specs/engine-extension-plan-2026-06-30.md)) → 真に未実装かつ
+pure-additive な **self use-restriction turn-flag** を追加。
+
+- **`setNextHintBan` verb + `nextHintBanned` turn-flag** — 「このターン中、自分はネクストヒントできない」
+  (B06104/P・B09019/P・B09105/P)。cluster6 `setEventUseBan`/`eventUseBanned` の完全 mirror。
+  `eventUseBanned` が手札使用/ネクストヒントの **event のみ** (step2) を gate するのに対し、本フラグは
+  `canStartNextHint` で **ネクストヒント行動全体** (step1 FILE→手札 含む) を不可にする (rules/12「ネクストヒント
+  できない」)。手札の使用 (rules/05 01.、別行動) は無影響。`resetTurnFlags` がターン境界でクリア。
+
+配線 7点 (setEventUseBan mirror): AtomVerb union / TurnScopedFlags field / `atomSetNextHintBan` handler /
+dispatch case / validate.ts ATOM_VERB_MAP / scripts/taskA-validate-specs.cjs VERBS (sync-whitelist 機械検証) /
+canStartNextHint gate / resetTurnFlags clear。
+
+既存登録カード未使用 (engine-only、card 追加は別 phase) ⇒ smoke baseline 不変
+(winsA=498/timeouts0/exceptions0、決定論一致)。tsc0 / vitest 3433 (baseline+専用テスト4) /
+sync-whitelist green / 8lint err0。opus 4-lens 敵対 review。
+
+### engine additive wave 0629d — 5 純 additive primitive (engine-only)
+
+未実装カードの distinct エンジン拡張需要 (full backlog 561枚、firm 上限 ~75) を再採寸し、
+**真に未実装かつ pure-additive (挙動不変)** な 5 primitive をまとめて 1 commit で追加 (カード追加は別 session)。
+12 候補を opus workflow で再採寸 → 7 は stale-shipped/YAGNI/L-subsystem で除外、5 を確定:
+
+- **`sceneLpSum` Condition** (`{query, min?, max?}`) — 現場キャラの LP **合計** を範囲比較。`lpAtLeast`(per-char) /
+  `sceneHas`(枚数) では合算不可。負 LP も合計 (公式Q&A B06003)。需要 B06003 a2「現場3枚以上かつ LP合計2以下」。
+- **`souza` `bind` arg** — 捜査の「発見された」カードを `ctx.bindings` へ束ね、既存 `boundMatchesFilter` で参照
+  (consumer 0 新規)。需要 B01084「レベル5以上が発見された場合」(捜査1=X1、bound[0])。X>1 の any-match は follow-up。
+- **`charSetCard` `fromSelf` arg** — 使用イベント自身 (`ctx.source.cardId`) を remove から引き、自分の現場の
+  キャラ1枚へ **faceUp** セットする WRITE 経路。session70 の on-set-host READ infra を end-to-end 化。
+  需要 B01023/B01057/B02013 (装備イベント)。
+- **`canCutIn` action-scoped cutin ban** — actor の `cutinBanOpp_action` turnEffect (`_action` suffix=アクション
+  終了時清掃) を honor。継続 aura でなく窓限定。write は既存 `charSetTurnEffect`。需要 D02008/B05007。
+- **`costRemovedMatches` Condition** (`{filter, n?}`) — `removeDeckTop` コストで除去したカードの素性で分岐。
+  cost が除去 cardId を `ctx.costPaid` へ記録、`matchOneFilter(c=null)` で印字判定。需要 B03003/B04077/B06078。
+  cost-path のみ (effect-path「これによって」B05068 は follow-up)。
+
+付随 engine fix (敵対 review major 起因): 宣言能力の `conditional{if:costRemovedMatches}` は STABLE 扱いで runtime
+resolver が `if` を再評価するが、`entryToCtx` が `costPaid` を queue 境界で落とすため常に false 化していた。
+`EffectStackEntry.costPaid` を追加し declared-ability の `event.queue` で entry へ載せ `entryToCtx` で復元
+(bindings BUG-082 と同型)。E2E テスト (activateDeclaredAbility→runAllUntilEmpty) で then-branch 発火を実証。
+
+全 5 とも既存登録カード未使用 ⇒ smoke baseline 不変 (winsA=498/avgTurns=11/0 timeouts/exceptions、決定論一致)。
+tsc0 / vitest 3392 (baseline 3370 + 専用テスト 22) / sync-whitelist 5/5 / 8lint err0。
+opus 4-lens 敵対 review。新 Condition 2種は union + CONDITION_KIND_MAP + validate-specs CONDS の 3点同期。
+
+## feat(cards): wave engine0 0629 — certify greens 7枚 + P-clone 9枚 = 16枚 (engine変更0)
+
+ENGINE0 まとめ追加 wave。未実装 150 候補を certify (grounding→opus 敵対 verify) で篩い、verified-green のみ出荷。
+15 base certify = 6 verified-green / 2 refuted / 7 yellow (歩留り ~40%、calibration 通り)。
+
+**出荷 16枚** (engine変更0):
+
+| base | カード | 主構成 |
+|------|--------|--------|
+| B06021/P | 石川五右衛門 | innate 突撃[事件] + evidence:gain selfOnly draw + ヒラメキ draw |
+| B02057/P | (赤) | phase:end:start + 【パートナー赤】自ターン + conditional(self sleep/stun)→AP8000以下 remove |
+| B06004/P | 工藤新一 | 【絆毛利蘭】【相手ターン中】毛利蘭 AP+1000 aura + 宣言[sleep+毛利蘭公開]→opp Lv7以下 deck下 |
+| B06077/P | (赤) | 【パートナー赤】突撃[キャラ] + 【FILE6】action終了時 自己remove→手札FBI登場 |
+| B09056/P | 赤井秀一 | 【事件赤&黒】【登場時】自sleep→Lv8以下remove→痕跡分岐(発見済=黒Lv3 revive / 未発見=opp mill) |
+| B03062/P | (白) | 白イベント使用 reaction → deck4公開 Lv8登場 |
+| B04085/P | (白) | 白イベント使用 reaction → 警察stun + remove + draw |
+| B03088P | 松田陣平 | 出荷済 base のパラレル (no/rarity/imageUrl のみ差) |
+| B07047P | 中森銀三 | 同上 |
+
+- B06004 = `revealFromHand` cost / `apDeltaAura` の初の実カード利用 (engine 既出荷の primitive)。
+- B09056 continuation (optional→sequence→declinable sceneRemove→conditional sceneEnter pick) は B07104 既出荷パターン + BUG-161 binding-aware gate で安全。
+- 副次: `taskA-validate-specs.cjs` の continuousModifier 許可キーが `apDelta/lpDelta` のみで stale → pure-JSON aura 群 (`apDeltaAura`/`auraFilter`/`auraExcludeSelf`/`apDeltaAuraOpp` 等) を追加 (tooling、engine変更0)。
+
+engine変更0。tsc0 / vitest 3405 pass (+35 decoy) / smoke winsA=498 不変 / 8lint errors=0。
+却下 9枚は DEFERRED-INDEX へ (effect-controller attribution / play-event-from-effect / turn-end→手札 / reveal-window 反復登場 / opp-as-chooser / 自個体 resurrection)。
+
+# engine additive wave (on-set-host scope) — set-card rider 継続付与 + triggered conferral の READ 側 infra
+
+**Round/Phase**: 2026-06-29c engine 拡張 wave (engine/bulk-additive-0629c)。ユーザー指示「エンジン拡張をできるだけ多く」。
+全 561 未実装の意味分類 ([engine0-vs-extension-2026-06-29.tsv]) で **最大の単一クラスタ** =「イベント自己セット継続rider付与」14 枚 +
+「set-card付与能力 (conferred ability)」8 枚 = 計 **22 枚** が依存する基盤機構。装備イベント (B02013 ターボエンジン付きスケートボード /
+B06063 せんぷう剣 / B05117 コンコン 等)「このイベントを…キャラ1枚にセットする。セットされているキャラは〚突撃〛/「【自分ターン中】AP+2000」/
+「…したとき…」を持つ。」型。origin/main (1a304d59) ソース直読で再採寸 (DEFERRED-INDEX L378「set-event host-continuous 機構が engine 不在」が一次裏付け)。
+
+⚠ **本 wave は READ 側 infra のみ** (host が rider を読む)。敵対 review edge-test lens の指摘どおり **単独では実カード 0 枚**を解禁する
+infra 投資 (write 側 verb が別 gate)。下記 DEFER 参照。
+
+## engine 拡張: 新 AbilityScope `'on-set-host'` (新 symbol = 既存カード未宣言 → 挙動不変)
+
+セットカード def 上に書かれるが効果対象は **セット先の host キャラ**。faceUp でセットされている間のみ有効
+(rules/16: 裏向きセット=情報なし → 除外 / host が現場を離れたら set card リムーブ → 自動失効)。3 honor site:
+
+1. **継続ライダー** ([read/char.ts](../../src/engine/read/char.ts)) — `continuousDelta` が host の faceUp setCards def を走査し
+   `scope:'on-set-host'` の continuous (`apDelta`/`lpDelta`/`lvlDelta`) を host に合算。`keywords()` は同走査で `grantKeywords` を
+   `fromSetHost` として付与。**rider keyword は他カード由来の外部 grant 扱い** → `disabledOriginal` でも残し (rules/19 §他カード付与は
+   無効化されない、semantic lens 確認)、`revoked` (「失う」効果) の減算対象外。ctx は host uid で構築 → rider の dyn/condition
+   (【自分ターン中】等) は host を参照。**candidates.matchOneFilter は registered continuousDelta 経由で rider AP/LP/level を自動反映**
+   (BUG-117 filter-AP==combat-AP、新 honor site 無し)。再帰安全 = `continuousDeltaSafe` の `_inContinuousDelta` guard 配下。
+2. **triggered conferral** ([listeners/triggered.ts](../../src/engine/listeners/triggered.ts)) — `handleHook` が scene char の faceUp
+   setCards def の `scope:'on-set-host'` triggered を `riderAbilities` として host (`card.uid`) の能力に合算。`scopeAllowsArea('on-set-host','scene')=true`。
+   selfOnly は host uid 照合。granted-ability 不在 + rider 不在時は従来の `def.abilities` fast-path = 不変。**in-scene hook** (reasoning:end /
+   action:declare / phase:end:start / contact:start 等) で発火 (leave:to-remove は下記 DEFER)。
+3. **lint contract** ([scripts/lint-listener-scope.ts](../../scripts/lint-listener-scope.ts)) — `ALLOWED_SCOPE` に `'on-set-host'` を追加
+   (honor-completeness lens 指摘: 未追加だと最初の rider カードで CI lint:listener が red)。
+
+## 検証 (セルフレビュー + 水平展開 + 4-lens 敵対 review)
+
+- tsc 0 / vitest **0 fail** (新規 13: 継続 AP/LP/level rider + faceDown 除外 + keyword rider + conditional(【自分ターン中】) +
+  複数 stack + matchOneFilter parity (BUG-117) + on-scene decoy 漏れ防止 + disabledOriginal/revoked で rider keyword 残存 +
+  triggered conferral faceUp/faceDown/selfOnly/on-scene-decoy)。既存 fixture が setCards 未定義のケースを `?? []` で guard。
+- smoke:1000 **winsA=498 / avgTurns 11.00 / timeouts=exceptions=0** = baseline 全項目一致 (on-set-host カード 0 枚 → パス不変)。
+- 8 規約 lint OK + eslint (changed files) 0-error。opus 4-lens 敵対 review (semantic=ship / additivity=ship / honor-completeness=concern /
+  edge-test=concern)。concern は全て **後続 gate の文書化** で解消 (下記)、READ 側 infra 自体の correctness/additivity は全 lens 一致で健全。
+
+## DEFER (後続 engine / card-wave へ — DEFERRED-INDEX §on-set-host に記録)
+
+- **WRITE 側 verb (最重要 next gate)**: 使用イベントを host.setCards へ faceUp 載せる verb が未実装。hand-use はイベントを必ず remove へ送り、
+  かつ event 効果は remove 着地 **後** に解決 → 「set-from-remove」型 verb (event 自身を remove から host へ移し faceUp set) が要。
+  これが揃うと継続 rider 14 枚 (B02013/B06063 等) が end-to-end author 可能になる。
+- **leave:to-remove conferral**: host splice 後に leave:to-remove emit → conferred leave trigger 不発 (B05117)。
+  `handleLeaveToRemoveSelf` が `removedChar` snapshot の setCards を走査する追加修正が要。
+- **aura/restrictsOpponent rider**: `apDeltaAura*`/`opponentRestrict` を set card から付与する形は未 honor (silent no-op)。現リダー全て self-buff ゆえ未踏。
+- **rider triggered limit collision**: limit{turn} は (hostUid, ability.id) キー。rider ability.id は card-unique 命名で回避 (card-addition 注意)。
+- **rules/17 by-print keyword filter**: `{keyword:X}` 対象 filter は `defHasKeyword` (静的) で rider 付与キーワードを見ない (0 枚で未踏)。
+
+## feat(cards): B03066/P 赤井秀一 出荷 (engine変更0)
+
+ENGINE0 wave — 3つの出荷済 twin の合成。
+
+- **a1【パートナー赤】〚突撃[事件]〛** = `partnerColorKeyword({color:'赤', kw:'突撃[事件]'})` (共通クラス、B08007 同型)。
+- **a2【登場時】**「相手に証拠を1つ与えてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブ」
+  = enter + `optional[sequence[evidenceGain opp, sceneRemove lv7以下 1まで either]]` (B01069 + B07080 twin)。
+- B03066P = 同効果のパラレル印刷 (no/rarity/imageUrl のみ差)。
+
+engine変更0。opus 敵対 review。tsc0 / vitest +5 / smoke winsA=498 不変 / 8lint+eslint 0。
+test = 構造 + a1 partner-red→突撃[事件]/partner-green→無効 + a2 する→相手証拠+1&lv7除去(lv8 decoy残) / しない→無変化。
+
+# engine additive wave (2 primitives) — cross-side numeric aura / printed-keyword turn-revoke
+
+**Round/Phase**: 2026-06-29 engine 拡張 wave (engine/bulk-additive-0629b)。NEXT-PROMPT option-B「certify yellow の engine gate」群を
+現 origin/main (62eaf331) ソースで再採寸。**DEFERRED-INDEX が大量に stale** と判明 (removeSetCard cost / lvlDelta / handReveal /
+ability-presence filter via defHasKeyword / boundMatchesFilter / enterSource cond は全て出荷済 → 旧 yellow 群は card-wave 案件に格下げ)。
+真に未実装かつ純 additive な 2 件のみを **まとめて** 出荷。カード自身は別 card session (session67/68 と同方針、本 wave は engine 足場 + 専用 unit test のみ)。
+
+## engine 拡張: 純 additive 2 件 (新 symbol = 既存カード未参照 → 挙動不変)
+
+1. **cross-side 数値 aura** (`continuousModifier.apDeltaAuraOpp` / `lpDeltaAuraOpp` / `auraFilterOpp`)
+   — [read/char.ts](../../src/engine/read/char.ts) `auraDelta` が **target と反対 side** の bearer も走査し、bearer の
+   `ability.condition` を bearer 自身の side で評価、`auraFilterOpp` 一致時に `*Opp` を加算する。cluster13 aura (同 side 限定)
+   と完全対称・**honor site 共有** (read.char.ap/lp + candidates.matchOneFilter は従来どおり `auraDeltaSafe('apDeltaAura')` を呼び、
+   内部で cross-side も合算 = 新 honor site 無し、再帰 guard も同一)。auraExcludeSelf は cross-side で bearer≠target 常成立ゆえ非適用。
+   → **B03033 遠山和葉**「【自分ターン中】相手の現場にいるカードがセットされているキャラをAP-1000」を解禁
+   (`apDeltaAuraOpp:-1000, auraFilterOpp:{hasSetCards:true}`、sole gate)。
+2. **ターン終了時まで印字キーワードを失う** (`turnEffects['revokedKeywords']` + `mutate.char.revokeKeywordTurn` +
+   `charRevokeKeyword scope:'turn'`) — [read/char.ts](../../src/engine/read/char.ts) `keywords()` が **印字 (base) + 自身の
+   continuous grantKeywords のみ** から減算。granted / turnGranted (外部カード付与) は減算しない → 公式 B06068 Q&A
+   「失った後に他カードの能力/効果で 突撃[キャラ] を再付与されたらアクション[キャラ]を行える」(再付与は「失う」効果と独立に復活) を満たす
+   (敵対 review semantic lens の指摘を反映)。[mutate/char.ts](../../src/engine/mutate/char.ts) `clearTurnEffects('turn')` で清掃。
+   既定 scope `permanent` は従来の granted-splice = 不変。**現出荷カードに charRevokeKeyword 使用は0件**。
+   → **B06068 京極真**「ターン終了時までこのキャラは〚突撃[キャラ]〛を失い、〚突撃[事件]〛を持つ」を解禁 (sole gate、他句は既存機構)。
+
+## 検証 (セルフレビュー + 水平展開 + 4-lens 敵対 review)
+
+- tsc 0 / vitest **0 fail** (新規 11: cross-side aura 5 [AP-1000 / LP-1 / 同side不変 / opp-turn gate / matchOneFilter parity] +
+  printed-keyword revoke 6 [turn消滅+復活 / 再付与で復活 (Q&A) / verb経路 / permanent非適用 / granted従来挙動 / 不変])。false-green 防止 decoy 込み。
+- smoke:1000 **winsA=498 / winsB=502 / avgTurns 11.00 / p50=11 / p95=13 / max=16 / timeouts=exceptions=0** = baseline 全項目一致
+  (check:smoke-baseline OK) = 既存カードのパス不変の実証。
+- 8 規約 lint + eslint (changed files) green。opus 4-lens 敵対 review (semantic / additivity / recursion-perf / dsl-edge) = **全 ship・blocker/major 0**。
+  semantic lens の re-grant 復活指摘を refine で反映 (revoke は printed/continuous のみ減算)。
+
+## DEFER (本 wave 不採用、card-wave / 後続 engine へ回送)
+
+- **PR136** charSetCard owner-deck-source: 反対側 pick + 持ち主デッキ source は **pick 解決後** の deck-source 解決が要 (短縮形は
+  await 前に resolvePlayer 確定) ゆえ非 clean-additive。後続。
+- **B05009** enterSource side-qualifier: enter payload に sourcePlayer emit 追加が要 (cond 単独では不可)。後続。
+- **card-wave 案件** (engine 既存で解禁可、本 wave 対象外): B08033 (removeSetCard cost 済) / B08082・B08093 (ability-presence filter 済) /
+  B07022 (handReveal bind + boundMatchesFilter 済)。
+
+## feat(cards): B09061 ジェイムズ・ブラック 出荷 (engine変更0)
+
+ENGINE0 wave — handReveal exact-N gate を実利用する初のカード。
+
+- **a1【登場時】**「手札から特徴[FBI]のキャラを3枚公開してもよい。そうした場合、カードを1枚引く」
+  = chain[handReveal{n:3, filter FBI char}, draw{1}]。handReveal exact-N gate (候補<3 で chainStepNoApply
+  → draw skip) を利用。handReveal を採用する最初の出荷カード。
+- **a2【ヒラメキ】**「リムーブの特徴[FBI]のキャラを1枚まで選び手札に加える。加えた場合、手札を1枚リムーブ」
+  = chain[handAddFromRemove{max:1, filter FBI char}, discard{1}]。B03053 a2 の構造ツイン (chain gating で
+  「加えた場合」を正しく gate)。
+
+engine変更0 (handReveal/draw/handAddFromRemove/discard は全て出荷済 verb)。opus 4-lens 敵対 review = ship
+(0 BLOCKER)。human pick 経路を apply-pick 直叩き test で empirical 固定 (a1 reveal→draw / a2 辞退→discard 不発火 /
+discard-just-added)。tsc0 / vitest 3341 pass / smoke winsA=498 (baseline 不変) / 8lint+eslint 0。
+
+### feat(cards): engine0 wave tierA — B09096/P キャンティ G15 relative-AP (engine変更0)
+
+- **B09096 / B09096P キャンティ** (ct-p09) 出荷。【解決編】【宣言】【スリープ】このキャラと同じAPのキャラを1枚まで選びリムーブ。
+- G15 relative-AP filter を **engine変更0** で解禁: `filter:{apMin:{dyn:'$self.ap'},apMax:{dyn:'$self.ap'}}` を
+  resolve-picks.resolveTargetFilterDyn が pick 列挙前に self の実効AP へ literalize (cluster12 nested-filter-dyn と同経路)。
+- certify-yellow (「apMin/apMax は number 静的のみ、{dyn} 不可」) は cluster12 解禁**前**の stale 判定だった。
+  probe 4/4 pass (SAME-AP除去 / DIFF-AP残存 / 0候補 / dyn-liveness override)。
+
+# engine additive wave (5 primitives) — setcard:enter / enterCountAtMost / handAddFromDeckBottom / oppSceneCount dyn / selfToEvidence harden
+
+**Round/Phase**: 2026-06-29 engine 拡張 wave (engine/bulk-additive-0629)。NEXT-PROMPT option-B「certify yellow の engine gate」群を
+grounding→敵対verify で再採寸し、純 additive かつ demand-backed な 5 件を **まとめて** 出荷。stale ラベル排除のため各 gate を
+現 HEAD (37000546) ソースで再確認 (DEFERRED-INDEX の B09096 relative-AP は session67 で既出荷=対象外、ability-presence は実装済=対象外)。
+カード自身は別 card session で出荷 (本 wave は engine 足場 + 専用 unit test のみ、session67 engine-additive-trio と同方針)。
+
+## engine 拡張: 純 additive 5 件 (新 symbol = 既存カード未参照 → 挙動不変)
+
+1. **`setcard:enter` hook + `setCardMatches` cond** — [mutate/char.ts](../../src/engine/mutate/char.ts) `setCard`
+   (set-card-add の唯一書込点) が push 後に per-occurrence emit (setcard:leave の対)。host が listener = `selfOnly`
+   (source.uid===host.uid)。set card の trait/色 filter は新 cond `setCardMatches{filter}` ([cond/eval.ts](../../src/engine/cond/eval.ts))
+   で評価し、**faceUp===true のみ** 通す (rules/16 裏向きは情報を持たない)。→ B02018 (host-self, face-down set) /
+   B06046・B06046P (〚特徴YAIBA〛filter, face-up set) を解禁。
+2. **`enterCountAtMost` cond** — `turnState[p].enterCountThisTurn ≤ n` の player-resolved 直読 (removeCountAtLeast 同型、
+   candidates()/continuous 非経由)。→ B09089「このターン中、自分の現場にキャラが登場していない場合」(sole gate)。
+3. **`handAddFromDeckBottom` verb** — デッキ末尾 (=「下」、toBottom が push する側) 1枚を手札へ。take 前後の deck0 で
+   即リフレッシュ (rules/14 + B03051 Q&A「残1枚→手札→リフレッシュ」)。→ B03051 (sole gate)。
+4. **`$self.oppSceneCount` dyn** — resolveSelf に相手現場枚数 prop (static `scene.length` 読み、continuousDelta 再帰非経由)。
+   continuous AP aura が opp 現場数に live スケールする足場。→ B08086 テキーラ (sole gate)。
+5. **selfToEvidence `gainCard` idx===-1 harden** — fromArea='remove' で source cardId が解決時に remove を離れていたら
+   証拠化せず return (B06026 Q&A / rules/14)。全 shipped selfToEvidence は event=同期解決ゆえ分岐未踏 = 挙動不変。
+   → B06026 a2 の必要条件 (char-leave 経路は card session で実機検証)。
+
+## 検証 (セルフレビュー + 水平展開 + 敵対 review)
+
+- tsc 0 (src + scripts) / vitest **3305 → 3326 pass** (新規 21: enterCountAtMost 3 + oppSceneCount 3 + gainCard guard 3 +
+  deck-bottom 6 + setcard-enter 6)。各 test に false-green 防止 decoy (host-self gate / opp-only / 裏向き trait / bottom≠top /
+  fromArea='none' 不変)。sync-taskA-whitelists (HOOKS/VERBS/CONDS 3way) green。
+- smoke:1000 **winsA=498・avgTurns 11.00・timeouts/exceptions 0** = baseline byte-identical (= 既存カードのパス不変の実証)。
+  8 project lint OK。
+- **opus 7-agent 敵対 review** (5 per-primitive lens + additivity 監査 + rules-fidelity 懐疑) = **7 ship / 0 blocker**。
+  指摘の latent 概念 (enterCountAtMost pre-walk / deck+remove=1 二重refresh / setCardMatches c=null / MR PA-redirect /
+  oppSceneCount sync非対象) は全て現状 unhit、DEFERRED-INDEX に記録。doc コメント 2件を反映。
+
+## 本 wave で見送り (骨格凍結・収束方針)
+
+- 同名 scene-count dyn ($self.sameNameCount, B09036): 0-card net unlock、かつ B09036 は threshold-branch (condition 要) +
+  rename + 【FILE5】の三重 gate。grounding でも「dyn では不足」と判明 → speculative ゆえ DEFER。
+
+### feat(engine): 小粒 additive 3件 — $self.stackedCount / discardRandom / removeCountAtLeast
+
+- colorNot/handReveal と同方針 (純 additive・挙動不変・既存カード未使用) の engine 拡張 3件を engine-only 出荷。
+  各々 1カードの blocked 句を完全解禁する。branch `engine/relative-ap-random-removal`。
+- **`$self.stackedCount` dyn token** (`engine/dyn/eval.ts` resolveSelf): `scene.byUid(uid)?.stackedCards ?? 0`。
+  session64 `$self.setCardCount` 同型の static field 読み (continuousDelta 再帰経路を踏まない)。
+  → B06006 江戸川コナン a2「下に重なるカード1枚につき AP+1000」= `continuousModifier{apDelta:{dyn:'$self.stackedCount * 1000'}}`。
+- **`discardRandom` atom verb** (`engine/effect/atom-handlers/core.ts` atomDiscardRandom): 手札を ctx.rng
+  (無ければ Math.random、deck.shuffle と同式) で Fisher-Yates shuffle し先頭 k=min(n,len) を discardToRemove。
+  **pick を持たない** (ランダム=プレイヤー選択不要) → awaiting-pick 経路なし。bind は discard 同型 (BUG-114)。
+  → B01077「相手は手札を1枚ランダムにリムーブする」(公式QA=相手が選べず確率均等)。
+- **`removeCountAtLeast` condition** (`engine/cond/eval.ts`): `remove.length >= n` (filter 無し total)。
+  既存 removeColor/Trait/NameAtLeast の unfiltered 版。→ B03104「リムーブエリアにカードが15枚以上ある場合」
+  (公式QA: 使用中イベント自身は remove 未配置で不算入 — 効果解決時点の盤面を読むため整合)。
+- honor site 同期: AtomVerb union / validate.ts ATOM_VERB_MAP / atom-handlers dispatch / taskA-validate-specs.cjs VERBS
+  (discardRandom)、Condition union / CONDITION_KIND_MAP / CONDS (removeCountAtLeast)。tsc exhaustive + sync-test が全 gate。
+- 検証: 専用 test 13件 (stackedCount 4 / discardRandom 6 [境界・RNG決定性・重複cardId・player相対・空手札] / removeCountAtLeast 3) /
+  tsc0 / full vitest 3305-pass-0-fail / smoke winsA=498 不変 (engine0) / 8lint errors=0 / opus 3-lens 敵対 review (worktree 直読)。
+- stale 訂正: **B09096「同じAPのキャラ」relative-AP filter は engine変更0 と判明** (旧 DEFER「matchOneFilter literalize 経路なし」は誤り
+  — `resolve-picks.ts resolveFilterDynObj` が field-agnostic で apMin/apMax {dyn:'$self.ap'} を列挙前に解決、probe 実証)。card session で出荷。
+- ⚠ 出荷は engine 機構のみ。各カード本体 (B06006/B01077/B03104/B09096) は別 card session で authoring + Playwright human-path probe を経て出荷。
+
+### feat(cards): stale-DEFER 再検査 — B03088 松田陣平 出荷 (engine変更0)
+
+- **B03088 松田陣平** (黄/警察|警視庁, Lv5) を engine変更0 で出荷。stale-DEFER 再検査 vein で発掘
+  (旧 DEFER 理由「multi-atom-single-pick carrier 未検証」が現 engine で解消済を実証)。
+- a1【宣言】【ターン1】: 4名 bond gate (降谷零&諸伏景光&伊達航&萩原研二) → レベル7以下キャラ1枚まで選び
+  **carrier-reuse** で activate + AP+1000(permanent) + 突撃(turn) を同一 pick に適用、カードを1枚引く。
+  carrier=charModifyAP 短縮形 (bind:'$picked', BUG-158 罠回避)、rider=sceneSetState/charGrantKeyword ($picked.uid)。
+- a2【ヒラメキ】: handAddFromRemove{fromSelf:true} (このカードを手札に、PR085/B06033/B05102 と byte-identical)。
+- 検証: 専用 test 8/8 (bond gate 3/4·4/4 / carrier human-path 3atom→1pick / AP permanent turn越え持続·突撃失効 /
+  0-pick decline でも draw 必発 [B09056 continuation-drop 非該当] / side:'either' opp候補 / levelMax:7 decoy / hirameki runtime) /
+  tsc0 / full vitest 0-fail / smoke winsA=498 不変 (engine0) / certify ground→verify green / opus 4-lens 敵対 review 全 ship。
+- 同 session の網羅調査: certify queue 50枚 (16 deep-ground + 34 triage) は **全 yellow** = queue は engine-gated tail で engine0 枯渇。
+  未実装カード残 **553枚** (universe 1999 − 実装 1446)。詳細 DEFERRED-INDEX §wave certify-engine0-0628b。
+
+## fix(engine): BUG-161 conditional pre-walk over-fire 根治 (binding-aware gate)
+
+- `resolveEffectPicks` の `case 'conditional'` が then/else **両枝を無条件 walk** → `if` を無視して非taken 枝の
+  choice/optional/$pick が eager-surface (= human 経路で余計な modal)。runtime は正しく taken 枝のみ実行するので
+  **pre-walk 専属の surface バグ**。shipped **B06094 高木君のおごり** 等 8 family で if=TRUE 時に else-choice が出る。
+- BUG-145 §修正方針2 が「effect 側 conditional は optional prompt を gate しない」と既に記録し ability.condition で
+  回避していた制約の **根治**。
+- ★naive な `evalCond(if)?walk(then):walk(else)` は **deck-look family 約150枚を regress** (B06048 解決編 red、
+  discard 不発火: conditional が非先頭 step で `if` が前 step の `$matched`/`$revealed` binding 依存 → pre-walk で
+  binding 未設定 → stale-FALSE)。
+- **正解 = binding-aware gate**: helper `conditionIfIsStable` (bound/boundMatchesFilter→unstable、not/and/or 再帰、
+  default `!JSON.stringify(cond).includes('$')`)。**stable な if のみ** taken 枝 walk (非taken RAW)、**unstable は両枝 walk**
+  (byte-compatible、deck-look 保護)。runtime 再評価で double-eval safe。
+- 検証: TDD red→green (unit resolve-picks.test.ts +stable-true/false/binding 3例、card-level B06094 +2例) /
+  tsc0 / full vitest 3275 pass 0 fail / smoke winsA=498 exceptions=0 baseline 不変 / opus 敵対 review。
+- 触touched engine = resolve-picks.ts のみ (1 helper + conditional case)。骨格凍結 例外「engine 自体のバグ修正」。
+- B05062 の gate#2 として依存 (残 gate#1 removeUnionAtLeast condition + gate#3 TargetFilter.anyOf は Part B、別 session 予定)。
+
+# engine — additive: handReveal exact-N gate (2026-06-28)
+
+**Round/Phase**: 2026-06-28 engine additive。`handReveal` atom (2026-06-28 出荷) の
+**exact-N over-fire** を塞ぐ additive gate。短縮形 `n:N` (=「N枚公開する」固定数、rules/15
+「N枚」=「まで」なし=all-or-nothing) のとき、手札の filter 一致候補が N 枚未満なら公開不可と判定し
+`chainStepNoApply` で「そうした場合」の後続を gate する。全変更 additive (handReveal を使うカードは
+現状ゼロ → 回帰0、smoke winsA=498 不変)。spec: `.claude/specs/engine-additive-handreveal-design.md`。
+
+## バグ (over-fire)
+
+B09061 ジェイムズ・ブラック a1「手札から〚特徴［FBI］〛のキャラを **3枚**公開してもよい。
+そうした場合、カードを1枚引く」を probe したところ、手札の FBI が 3枚未満 (例 2枚) でも
+後続 draw が発火していた。短縮形 `n:3` (pick {min:3,max:3}) は候補<3 のとき all-or-nothing で
+gate されず、available 全部を公開して count>0 → 後続を実行していた (既存 gate は resolved 0枚のみ)。
+
+## 修正
+
+`atomHandReveal` の短縮形 entry に exact-N gate を追加:
+
+- `a.target===undefined && typeof a.n==='number'` (= 短縮形 exact-N) のとき
+  `candidates(builtPick).length < a.n` なら `chainStepNoApply` + log `gate-skip` + return (pick を enqueue しない)。
+- `max:N` (`a.n` 不在、pick.min=0「N枚まで」) は 0..N 可ゆえ **gate しない** (従来の resolved gate-on-0 のみ)。
+- 判定は **短縮形 entry の候補数** で行う: drain 経路 (apply-pick generic Pattern B) は resolved target を
+  単一に collapse するため resolved length では「<N」を検出できない。reveal は zone 不変ゆえ availability
+  さえ満たせば後段の単一 collapse でも mechanical に等価 (bind が load-bearing なのは n:1 のみ)。
+
+## 「してもよい」optionality との整合
+
+- **公開不可** (候補<N): 新 gate が後続を skip。
+- **辞退** (候補≥N だが skip): 既存の chain-origin decline (`applyPickSkipAndContinuation` runDeclinedAtom=false)
+  が remainder を skip。エンジン経路は揃う (skip UI affordance は companion defer)。
+- **公開成立** (候補≥N で N 枚 pick): 後続 draw 実行。
+
+## 解禁
+
+**B09061 a1 が engine 変更0 で出荷可能化** (handReveal exact-N + draw + 既存 handAddFromRemove ヒラメキ)。
+旧「単独解禁可」誤認 → exact-N gate が真の残 gate だった (DEFERRED-INDEX §handReveal)。
+
+## テスト / ゲート
+
+§10a-d 追加 (over-fire 修正 / happy-path 保持 / entry-gate / max-form 非 gate 回帰)。
+tsc 0 / vitest 3269 pass / 8 custom lint errors=0 / smoke:1000 winsA=498・avgTurns=11.00・timeouts=0・exceptions=0 (baseline 一致)。
+
+## feat(cards): B06058 庄之介 出荷 — 誤分類 DEFER の解禁 (engine変更0)
+
+- **B06058 庄之介** (ct-p06, 白/YAIBA): a1【解決編】【登場時】optional{chain[手札1リムーブ,
+  自現場LP0〚鉄刃〛を1枚まで active化]} + a2【ヒラメキ】リムーブの〚YAIBA〛イベントを1枚まで手札へ。
+- **旧 DEFER 理由は両方 STALE/誤りと判明** (DEFERRED-INDEX:621 訂正):
+  - 「sceneSetState 短縮形 side が hardcoded 'either' で無視」= 誤り。`buildShortFormPick` が
+    `side ?? sideDefault` で authored `side:'self'` を honor。真の必須は **`player`**
+    (atom-handlers/scene.ts:348 短縮形 gate `typeof a.player==='string'`、欠落で silent no-op)。
+  - 「optional gate 喪失 (discard0 でも activate)」= authoring 不備。正しい形
+    `optional{chain[discard{n:1}, sceneSetState{player:'self',side:'self',...}]}` は PR199 option1 と
+    byte-identical で出荷済 (cardName 毛利小五郎→鉄刃 のみ差)。
+- gate5 behavioral probe 8/8 (side:self / 有効LP0-exact / cardName / chain「そうした場合」gate /
+  スタン→sleep / discard空振り / hirameki kind:event+trait)。opus 2-lens 敵対 review = ship/0-blocker。
+- 検証: tsc0 / full vitest 3271 pass 0 fail / smoke winsA=498 exceptions=0 (engine変更0 機械保証) /
+  engine diff 空。
+- ★教訓: 「clone exemplar」型 grounding は OneDrive stale read で exemplar の player 欠落版を写経
+  しうる → gate5 probe (実 runEffect+drain + decoy) が no-op を検出 (BUG-117/118 原則)。
+
+---
+date: 2026-06-28
+category: cards
+title: certify wave 0628 — B03035 大滝悟郎 / B04037 鈴木園子 出荷 (engine変更0)
+---
+
+Task A green候補の certify wave (15枚 grounding→敵対verify, opus) から verified-green 2枚を出荷。
+
+- **B03035 大滝悟郎** (緑/L3): 【宣言】【スリープ】〚現場のキャラにセットされたカードを1枚リムーブ〛→カード1枚引く + 【ヒラメキ】引く。declared cost `pay[sleepSelf, removeSetCard]` (B07048 同型) + draw。
+- **B04037 鈴木園子** (白/L5): 【相手ターン中】【ターン1】自分の〚京極真〛がコンタクトしたとき手札の〚鈴木園子〛を1枚リムーブしてもよい→そのキャラはコンタクトでリムーブされない + 【ヒラメキ】リムーブの〚京極真〛1枚まで手札へ。third-party `contact:start` trigger (triggerCharMatches payloadKey:'bUid') + chain-gate `[discard, charSetTurnEffect contactImmune_action]`。
+
+検証: 全15枚 certify (green=2/yellow=13/refuted=0)。gate5 behavioral probe で B04037 a1 の contactImmune が `read.char.hasTextAbility` で読めること + 鈴木園子不在時の chain-break (over-fire防止) を実 engine で実証。vitest 3263 pass / tsc0 / smoke:1000 winsA=498=baseline exc=0 / Playwright full-match + opp-turn-contact (console error 0)。
+
+残 13枚は yellow (engine gate: set-card→証拠 / random-discard / turn-scope base-override / 遅延one-shot trigger / target==self gate / relative-color filter 等) で DEFER。
+
+# cards — wave engine0-triage-0628 (engine変更0、未certify候補の triage→敵対verify 刈り取り)
+
+**Round/Phase**: 2026-06-28 カード追加 wave (engine変更0)。catalog-survey の **未 certify 候補 70 枚** を
+triage(9 GREEN/61 YELLOW)→ 敵対 verify(6 CONFIRMED + 2 NEEDS_FIX + 1 REFUTED)→ 実装の3段で刈り取り。
+engine src 変更 0 (既存 primitive のみ)。
+
+## 出荷 (10 printings、engine変更0)
+
+| printing | カード | 主能力 |
+|----------|--------|--------|
+| B03023 | 脇田兼則 (青 char) | 毛利探偵事務所 enter 観測 → 相手 deck-top 公開(log no-op) + ヒラメキ draw |
+| B06057 | ゲロ田ゲロ左エ門 (白 char) | 自分が【白】〚YAIBA〛イベント使用時 draw + ヒラメキ draw |
+| B08071 | 佐藤正義 (黄 char) | 宣言〚リムーブエリアに移す〛: deck-look 佐藤美和子 / カットイン AP+1000 + 佐藤美和子 で draw |
+| B08091 | マッドサイエンティスト (黒 char) | 【事件青&黒】登場時 黒以外色キャラ在で 現場リムーブ時 Lv6以下 を sleep 登場 / 相手ターン現場リムーブ時 証拠裏返し |
+| B09080 | 高木渉 (黄 char) | 【絆佐藤美和子】突撃 / 相手ターン中 佐藤美和子 を AP+1000 (aura) |
+| PR264 / PR270 | 宮野明美 (赤 char) | 印字〚突撃[キャラ]〛 / 解決編 Lv+2 / 登場時 現場 Lv7×3 で 突撃[事件] (★自己計数 latch) |
+| B07104 / B07104P | ミステリーコースター (黒 event) | sceneRemove + 突撃 付与 + 両現場キャラ1枚につき deck 2枚 mill |
+| B03020 | 毛利蘭 (青 char) | アクション時 deck上3枚 blind-mill → 妃英理/工藤新一/毛利探偵事務所 で AP+1000 |
+
+## プロセス (3段刈り取り、全 opus)
+
+- **Triage** (5並列 opus): 70 候補を frozen-engine capability + 公式テキスト + rules で classify。
+  9 GREEN (shipped 全 primitive + twin 証拠付き) / 61 YELLOW (gate 明示)。
+- **敵対 Verify** (opus, human 経路 node probe): GREEN 9 を「engine変更0 を反証せよ」で精査。
+  6 CONFIRMED / 2 NEEDS_FIX (修正 DSL 付き) / 1 REFUTED。
+  - REFUTED = **B08059 諸星大**: 公式Q&A が「自身を Lv7 に数える」self-count latch を要求するが、
+    lvlDelta の gate が sceneHas(level) ゆえ continuousDelta 再入 guard が self を 0 計数 → 反証 (engine 必要、DEFER 維持)。
+  - NEEDS_FIX = **B07104** (clause2 を charGrantKeyword 短縮形に変更 = BUG-158 human 経路 pick 順逆転回避) /
+    **B03020** (boundToRemove を $matched にも適用 = 3枚 mill 担保)。
+- **実装後 敵対 review** (opus 4 lens: semantic/additivity/dsl-traps/edge-test): card semantic は全 ship。
+  PR264 self-count latch は engine 実測で成立確認 (lvlDelta gate=caseStatus で level 非参照 → 再入 guard 非作動、B08059 と対照)。
+
+## ★ PR264 self-count latch (B08059 との対照)
+
+- 宮野明美は base Lv5、解決編で a1 lvlDelta+2 → effective Lv7。登場時 a2「現場に Lv7 が3枚以上」に **自身も数える** (公式Q&A)。
+- B08059 (REFUTED) は lvlDelta の gate 自体が sceneHas(Lv7) で level を再読み → continuousDelta 再入 guard が self を 0 計数。
+- PR264 は lvlDelta の gate が caseStatus(解決編) で **level 非参照** → 再入 guard 非作動 → self が effective Lv7 で計数成立。
+- 専用 test で 解決編=3枚 true / 事件編=2枚 false / Lv8 decoy(levelMax7境界)除外 を evalCond+continuousDelta 実測。
+
+## ⚠ KNOWN-EDGE (shipped-with-DEFER、敵対 review CONCERN)
+
+- **B07104/P**: clause3 forEach+mill は、ループ途中で deck 枯渇 → refresh 後も後続キャラ分を mill し過剰。
+  公式Q&A は「合計を一括 mill→中途 refresh で停止」。通常域 (deck ≥ キャラ数×2) は正、divergence は late-game deck 枯渇時のみ。
+  faithful 化には mill-total-with-refresh-stop primitive (engine additive) が必要 → 将来 wave で修正。
+- **B03020**: deck<3 + opt-in 時、公式Q&A は「3枚 mill 不能なら全不発」を要求するが、deckRevealUntil は可能分のみ実行。
+  「してもよい」ゆえプレイヤー選択で回避可。deckRevealUntil 全 twin 共通の極端 edge (engine変更0 範囲外)。
+
+## 検証ゲート
+
+- tsc 0 / 専用 test `wave-engine0-triage-0628.test.ts` 28 pass (構造1対1 + evalCond/matchOneFilter/canPay/matcher decoy + PR264 self-count 実測) /
+  full vitest 0 fail / smoke:1000 winsA=498 不変・exceptions=0 (engine変更0 機械保証) / eslint + 8lint err0 / engine diff 0。
+
+## fix(engine): charSetCard{fromDeckTop} deck0 リフレッシュ配線 (BUG-160, BUG-142 同族)
+
+- `src/engine/effect/atom-handlers/char.ts` の `charSetCard{fromDeckTop}` が deck0 時に silent no-op
+  していた latent bug (rules/14・26 + 公式Q&A B08033「残り全部セット→リフレッシュ→残り分セット」違反)
+  を修正。draw/fileAdd/evidenceGain (BUG-142) と同型の **deck0→refresh→set / remove0→deck-out 敗北** に置換。
+- BUG-153 の host-absent 早期 return は refresh より前に維持 (host 不在なら deck/remove 不消費)。
+- 単一 site 修正で fromDeckTop 使用 36 カードを被覆 (短縮形 path も resolve 後この explicit-uid 分岐へ再 dispatch)。
+- 挙動不変ゲート: tsc0 / vitest 0 fail / smoke:1000 winsA=498 exceptions=0 (deck0-during-set edge は
+  11-turn MVP smoke で発生せず baseline 不変) / 8 custom lint OK / eslint clean。
+  専用 test: deck>0 回帰 / deck0+remove>0 → refresh+set+相手evidence+1+痕跡 / deck0+remove0 → deck-out /
+  host-absent 不変 / player:opp deck-source (opp refresh + self penalty + self 勝利)。
+- opus 4-lens 敵対 review: regression/edge/ordering = ship、blocker0 (rules-faithfulness は独立検証)。
+  edge-lens concern (player:opp 経路) を test 追加で解消。BUG-160 記録。
+
+## engine additive: `$self.setCardCount` dyn token (B05030 fully faithful)
+
+- `src/engine/dyn/eval.ts` の `resolveSelf` に **`$self.setCardCount`** 分岐を additive 追加
+  (`scene.byUid(state, uid)?.setCards.length ?? 0`)。このキャラに (裏向き/表向き) セットされた
+  カード枚数を読む dyn token。`setCards.length` は静的 state field ゆえ ap/lp の continuousDelta
+  再帰経路を踏まない (BUG-156/157 と無縁)。dyn token は sync registry を持たないため honor site は
+  resolveSelf 単一。
+- **B05030 遠山銀司郎** の主眼 a2「【自分ターン中】このキャラにセットされているカード1枚につき AP+1000」を
+  解禁し fully faithful 化 (従来は dyn token 不在で a1 のみの partial-ship)。D08005 a1 (faceUpEvidence)
+  同型の継続修飾 (`continuousModifier.apDelta = { dyn: '$self.setCardCount * 1000' }`, condition `turn:self`)。
+- 挙動不変ゲート: tsc0 / vitest 0 fail / smoke:1000 winsA=498 exceptions=0 (既存カードは本 token 未使用 =
+  機械保証) / 8 custom lint OK。専用 test: dyn eval (set 0/1/N + decoy: 他 char / stackedCards 非計数) +
+  B05030 integration (自ターン AP=5000+set×1000 / 相手ターン bonus 0 / stacked 非計数)。
+
+# engine — additive wave: handReveal atom + revealFromHand cost (2026-06-28)
+
+**Round/Phase**: 2026-06-28 engine additive wave。骨格凍結原則の **additive 例外** で
+「手札から filter 一致カードを公開する」(zone 変化なし) を effect atom と宣言コストの両形で追加。
+colorNot(session60)/caseColorNot(session62) と同じ **engine-only 出荷** (カードは companion 揃い次第 後 session)。
+全変更 additive (既存カードは新 verb/cost 未使用 → 回帰0、smoke winsA=498 不変)。
+spec: `.claude/specs/engine-additive-handreveal-design.md`。
+
+## 新 effect atom `handReveal`
+
+- 「手札から filter 一致を1枚公開してもよい。そうした場合〜」(B08082 a1 / B07022)。
+- `atomDiscard` の clone から `mutate.hand.discardToRemove` を除去 = **zone 変化なし** (公式Q&A B08082:
+  「効果を解決した時点で元に戻してかまいません」)。短縮形 `{player,max,filter}` は discard と同一 pick path。
+- **0枚 reveal → `chainStepNoApply`** で「そうした場合」を gate (mill gate と同型、reveal は他効果ゼロゆえ無条件 gate-on-0)。
+- `bind` で公開 cardId を `ctx.bindings` に格納 (`{cardId}[]` 形、$revealed 色読み companion の足場)。
+
+## 新 cost kind `revealFromHand`
+
+- 〚手札から filter 一致を n 枚公開する〛宣言コスト (B08093 a1)。
+- `removeFromHand` と同型 canPay (`candidates ≥ n`) だが `pay()` は **no-op** = presence-check cost
+  (公開のみ、消費なし)。公式Q&A B08093:「コスト支払い完了→効果解決に入る時点で元に戻してかまいません」。
+- 再宣言可能 (消費されない)。回数制限は ability 側 gate の責務 (rules/21)。
+
+## honor site (atom 5 + cost 5)
+
+- atom: `types/effect.ts` AtomVerb / `atom-handlers/core.ts` atomHandReveal / `atom-handlers.ts` dispatch (never guard) /
+  `effect/validate.ts` ATOM_VERB_MAP (satisfies) / `atom-pick-spec.ts` (defaultArea 'hand') / `taskA-validate-specs.cjs` VERBS (sync test)。
+- cost: `types/effect.ts` Cost / `cost/evaluate.ts` COST_KIND_MAP + canPay / `cost/pay.ts` payInner (never guard) /
+  `ui/.../cost.ts` costToText (never guard) / `taskA-validate-specs.cjs` COSTS (sync test)。
+
+## 検証
+
+- TDD (RED→GREEN)。新 test `tests/engine/effect/atom-hand-reveal.test.ts` (9) + `tests/engine/cost-reveal-from-hand.test.ts` (11) = 20 pass。
+  atom: zone不変/bind/gate-on-0 (resolved+短縮形0候補2経路) / chain gate / **bind downstream = boundMatchesFilter $revealed (B07022第2句ミニ再現、fire+skip)** / max>1 / 短縮形→AI drain→continuation 統合。
+  cost: canPay gating / pay no-op (hand不変・再宣言可) / pay-nest / n=2 multi + paidItems / trait filter。
+- gate: tsc0 / full vitest **3199 pass 0 fail** (sync-taskA 含む) / smoke:1000 **winsA=498 ex=0 baseline 完全一致** / 8 custom lint errors=0 / 既存カード grep 0 hit。
+- **opus 4-lens 敵対 review = 全 ship:true / blocker 0** (semantic-equivalence/additivity-invariance/dsl-traps/edge-test-adequacy)。
+  反映した concern: ①doc「唯一の差」→「2点差 (discardToRemove除去 + gate-on-0)」訂正 ②bind downstream 統合テスト追加 (最重要) ③max>1 + paidItems + trait filter + continuation テスト追加。
+
+## companion defer (別 follow-up wave、DEFERRED-INDEX §handReveal)
+
+- ability-presence filter (「【現場リムーブ時】を持つ」) → B08082/B08093 解禁待ち。
+- $revealed 色読み condition (「公開が【緑】以外」) → B07022 解禁待ち。
+- handReveal/revealFromHand UI awaiting-pick label + AI heuristic → カード出荷 session で Playwright 実機検証 (removeSetCard UI picker と同じ非ブロッカー defer)。
+- B09061 は handReveal atom 単独で解禁可。
+
+# cards — wave casecolornot-b08079-0627 (engine変更0、caseColorNot 初投入)
+
+**Round/Phase**: 2026-06-27 カード追加 wave (engine変更0)。session62 解禁の **caseColorNot Condition**
+(「事件が【X】以外の色を持つ場合」) を production で初投入し、engine 追加を実カードで de-risk。
+
+## 出荷 (printings +0 / 既存カード完成 +2 printings、engine変更0)
+
+| printing | カード | 完成した能力 (a3) |
+|----------|--------|---------------|
+| B08079 / B08079P | ピンガ (黒 char, 黒ずくめの組織) | a3=【宣言】【スリープ】AP8000以下のキャラを1枚まで選びリムーブ。宣言ゲート=事件が【黒】以外の色を持つ場合 |
+
+- B08079/B08079P は a1 (継続AP+1000) + a2 (【相手ターン中】【現場リムーブ時】draw1+discard1) が既出荷で、
+  a3 のみ `// a3: DEFERRED (custom condition: 事件 not 黒)` として保留されていた。
+  session62 の caseColorNot により a3 を engine変更0 で完成。
+
+## 機構
+
+- **caseColorNot (some説) を宣言ゲートに初投入**: 「この能力は自分の事件が【黒】以外の色を持つ場合に宣言できる」
+  = `condition:{kind:'caseColorNot',color:'黒'}`。`AbilityDef.condition` は declared-ability の使用可否を gate
+  (BUG-099, rules/17 §条件未達=能力を持たない扱い)。some説 (公式 B08079 qa: 事件《裏切りの街角》=黒+他色 → 宣言可 /
+  mono-黒 → 宣言不可) を evalCond decoy test で 1対1 固定。
+- **declared + condition + cost + apMax filter の複合**: 全て出荷済 proven 機能のみ —
+  declared+condition+cost は B07048 a2 (session61) 同型 / declared+sleepSelf+sceneRemove は PR274 a2 同型
+  (levelMax→apMax 差替のみ) / apMax target filter は 62 printings 出荷済 (BUG-117 silent-drop 修正済、
+  effective-AP=combat-AP で判定)。effect=`sceneRemove{side:'either',max:1,cause:'effect',filter:{apMax:8000}}`
+  (エリア指定なし=両現場・自己可 rules/15 / 「1枚まで」=max:1 0枚可 / 能力リムーブ=cause:'effect' ヒラメキ不発 rules/22)。
+- engine src 変更 0 (caseColorNot/sleepSelf/sceneRemove/apMax は全て既存)。
+
+## 検証ゲート
+
+- tsc0 / 専用 test 15 pass (構造 1対1 + caseColorNot 宣言ゲート evalCond decoy + apMax matchOneFilter 境界/effective-AP +
+  sleepSelf canPay active/sleep/stun) / full vitest 3178 pass 0 fail / smoke winsA=498 不変 exceptions=0 (engine変更0 の機械保証) /
+  validate-specs B08079P=pass / 8 lints errors=0 / eslint clean。
+- **opus 4-lens 敵対 review = 全 ship:true / blocker0** (semantic-equivalence / additivity / dsl-traps / edge-test-adequacy)。
+  edge-lens concern (sleepSelf スタン時不可 未 pin) を反映し test 1 ケース追加。self-target (rules/15 自己選択可、
+  PR274 a2 / D08003 a1 と同 side:either) は仕様準拠で非ブロッカー。
+
+# cards — wave colornot-removeset-0627 (engine変更0、recent-unlock 初投入 3枚)
+
+**Round/Phase**: 2026-06-27 カード追加 wave (engine変更0)。session60 解禁の **colorNot filter** と
+session59 解禁の **removeSetCard cost** を production で初投入し、両 engine 追加を実カードで de-risk。
+
+## 出荷 (printings +3、engine変更0)
+
+| printing | カード | 要点マッピング |
+|----------|--------|---------------|
+| B07012 / B07012P | 本堂瑛祐 (青 char, 高校生) | a1=【解決編】【登場時】自陣に colorNot:青 のキャラ有(sceneHas some説)→相手 Lv4以下1枚まで sceneToDeck(bottom) / a2=ヒラメキ remove area の colorNot:青+高校生 を1枚まで handAddFromRemove |
+| B07048 | 白馬探 (白 char, 探偵/高校生) | a1=【登場時】自デッキ上1枚を裏向きで自身に charSetCard($self, fromDeckTop) / a2=【パートナー白】【宣言】【ターン1】cost=removeSetCard n2 → draw1+discard1 |
+
+## 機構
+
+- **colorNot (some説)**: 「【X】以外の色を持つキャラ」= X以外の色を1つ以上持つ (公式 B08079)。B07012 は
+  colorNot を **条件 (sceneHas)** と **target filter (hirameki handAddFromRemove)** の両方で使用。production 実証は
+  B02010 a1 (BUG-159 fix) に続く 2例目。mono-青除外 / 2色{青,X}該当を decoy test で 1対1 固定。
+- **removeSetCard cost (初実用カード)**: session59 で COST union/canPay/pay へ配線済の新 cost kind を、
+  B07048 a2 が初めて production で使用 (codegen 非対応 → 手 author + 専用 test)。canPay=自陣裏向きセット合計≥2、
+  「合わせて」= 複数 host 跨ぎ可 (公式 qa)、表向きセットは非計上 (「裏向きで」)。
+- 全 atom/cond/cost/filter は出荷済 engine の proven 機能のみ (sceneToDeck/handAddFromRemove/charSetCard/
+  partnerColor/caseStatus/sequence/conditional)。engine src 変更 0。
+
+## 検証ゲート
+
+- tsc0 / 専用 test 15 pass (構造 1対1 + colorNot matchOneFilter decoy + sceneHas evalCond + removeSetCard canPay) /
+  full vitest 3149 pass 0 fail / smoke winsA=498 不変 exceptions=0 (engine変更0 の機械保証) / 8 lints errors=0。
+- opus 4-lens 敵対 review (semantic-equivalence / additivity / dsl-traps / edge-test-adequacy)。
+
+# cards — wave novel-tail-0627 (green候補 6枚、engine変更0)
+
+**Round/Phase**: 2026-06-27 カード追加 wave (engine変更0)。残 green候補 novel-tail を
+certify → opus 敵対 verify の 2 層で仕分け、verified-ok のみ codegen 品質で出荷。
+
+## パイプライン
+
+- 残 unshipped green候補 154 を機構別に分類 → clean homogeneous クラスタは枯渇 (易 deck-look 系は出荷済) を確認。
+- single-mechanism 候補 **16 rep** を certify+adversarial-verify (wf-certify.mjs, opus, SUB=5):
+  **green 6 / verify-ok 5 / refuted 1 / yellow 10**。yellow 10 は全て真の engine gap
+  (misread hook / opp-evidence-removal observer / deck-bottom verb / hand-reveal verb / evidence-transient
+  self-reenter / colorNot filter 等) → DEFERRED-INDEX 記録。
+- refuted 1 (D02005) は a2 ヒラメキ sceneSetState が `uid:'$pick'` 欠落 (BUG-140、短縮形は hiramekiResolve
+  auto-resolve で no-op) → explicit form に補修 → 再 verify ok。clone PR036 同梱。
+
+## 出荷 (ALL_CARDS +6、engine変更0)
+
+| rep | カード | 要点マッピング |
+|-----|--------|---------------|
+| D07018 | ジン (黒 char) | a1=【自分ターン中】contact:start(selfOnly, bUid Lv6以下)→sceneRemove / a2=ヒラメキ draw1 |
+| B02008 | 阿笠博士 (青 char) | a1=【ターン1】少年探偵団 enter(side:self)→キャラ1枚まで AP-1000(turn) / a2=ヒラメキ remove少年探偵団→hand |
+| B07024 | ハチ (緑 char) | a1=【相手ターン中】opp Lv8 enter→optional{chain[draw1→discard1]} / a2=ヒラメキ remove高校生→hand |
+| B02073 | 上原由衣 (黄 char) | a1=【宣言】cost[sleepSelf+removeSelf]→長野県警1枚まで迅速付与(turn) / a2=ヒラメキ draw1 |
+| D02005 | 遠山和葉 (緑 char) | a1=【ターン1】このキャラ/服部平次 enter→キャラ1枚まで sleep(短縮形) / a2=ヒラメキ sleep(uid:$pick explicit, BUG-140 補修) |
+| PR036 | 遠山和葉 (緑 char) | D02005 と byte-identical clone |
+
+- codegen (taskA-codegen、grounding コメント付) → register。touched = src/cards のみ。
+- wave test `tests/cards/wave-novel-tail-0627.test.ts` (9 pass): 構造 1対1 全6枚 + B02008 enter trigger
+  gating の decoy 1対1 (trait filter / side:self gate)。
+
+## DEFER (DEFERRED-INDEX 「wave novel-tail-0627 由来」参照)
+
+- yellow 10 + 自己review DEFER 1 (B06058: certify-ok だが optional gate 喪失 + 短縮形 side hardcode 疑い)。
+- set-card 一族 直 grounding: **B07048 白馬探 = READY 未出荷** (a2 cost=removeSetCard n2 解禁済、初実装候補、手author要)。
+  B08033 は登場時 forEach-setCard gate / B08041 は cost-removed-kind 分岐 gate で継続 DEFER。
+
+## 検証
+
+tsc 0 / wave test 9 pass / smoke winsA=498 ex=0 baseline不変 (engine変更0) / 8 lint errors=0 /
+playwright app-load console error 0 (favicon404 のみ cosmetic)。非MVPカードゆえ decoy 1対1 は unit test で決定論カバー。
+
+# engine bugfix — BUG-156 sleepChar over-pay + BUG-157 continuousDelta 相互再帰 (2026-06-27)
+
+**Round/Phase**: 2026-06-27 engine bugfix。骨格凍結原則の **「骨格自体のバグ修正」例外**。
+2件とも latent (出荷カード非該当の局面でのみ顕在)。挙動不変ゲートで additive 同等の安全性を担保。
+spec: `.claude/specs/engine-bugfix-156-157-cost-recursion.md`。
+
+## BUG-156 — sleepChar コスト over-pay
+
+`cost/pay.ts` の `sleepChar` は `ctx.picked ?? cands` を**全件** sleep していた。`ctx.picked` は cost 経路で
+production 未配線 (調査: UI/AI が surface する cost picker は `flipFaceUpEvidence` のみ、`ctx.picked` は
+全 cost で dead) → `cost.target.n.max` を honor せず 2+ active 候補で**全 sleep** (rules/15「1枚」違反)。
+→ `stunChar` と**完全同形**に是正 (n.max cap + active gate + head-fixed)。「どの active を選ぶか」の
+player-choice 欠如は全 target-pick cost 共通の pre-existing 制約 (別 initiative、out of scope)。
+
+## BUG-157 — read.char.ap/lp/level の continuousDelta 無 guard 相互再帰
+
+`read/char.ts` の `ap`/`lp`/`level` は local `continuousDelta` を直呼びしていた (再入 guard
+`_inContinuousDelta` は candidates.ts の `continuousDeltaSafe` のみが set/clear)。`cond/eval.ts` の
+`apAtLeast`/`lpAtLeast`/`compareAP` も `charRead.ap/lp` 委譲 → continuous apDelta(gated lpAtLeast)⇄
+lpDelta(gated apAtLeast) 等で無限相互再帰 (stack overflow)。
+→ `continuousDeltaSafe` を export し ap/lp/level を guard 経由に統一 (3軸対称)。再入時 base 0 で depth-2 終端
+(matchOneFilter と同 posture = BUG-113)。**出荷カードに「numeric-delta ability + ap/lp 読み condition」は
+皆無**ゆえ guard 不発火 = 全出荷カード値不変 (B09008 は grantKeywords+apAtLeast で numeric delta ではない)。
+
+## 検証
+
+- TDD (RED→GREEN)。新 test 2本 10 pass: `engine-cost-sleepchar-bug156-2026-06-27` (§6 over-pay cap が RED→GREEN) /
+  `bug-157-continuous-delta-recursion-guard` (§1 相互循環・§2 自己循環が stack overflow→no-throw、§3 非循環回帰)。
+- gate: tsc0 / full vitest 3122 pass 1 skip / smoke:1000 winsA=498 timeouts0 exceptions0 (baseline 完全一致) /
+  8 custom lint + 自ファイル eslint 0。
+- **opus 4-lens 敵対 review** (invariance/completeness/bug156-correctness/test-adequacy)。
+
+# fix(cards) — BUG-159: B02010 灰原哀「【青】以外の色を持つ」を colorNot へ (none説→some説)
+
+**Round/Phase**: 2026-06-27 engine additive colorNot wave の後続 (BUG-159 即修正)。engine 変更0。
+
+出荷済 B02010 a1 が「【青】以外の色を持つキャラ」を custom closure `!def.colors.includes('青')` (none説) で
+実装し、2色{青,X} 対象を公式違反で誤除外していた (公式 B08079 = some説)。session60 で追加した
+TargetFilter `colorNot` で正準化:
+
+- a1 `filter:{custom:...}` → **`filter:{colorNot:'青'}`** (some説、公式準拠)。closure 専用 import 除去。
+- card test `tests/cards/bug159-b02010-colornot-2026-06-27.test.ts` 4 pass: 出荷 filter を matchOneFilter で
+  評価し mono-青除外 / mono-赤該当 / **2色{青,赤}該当** (= fix の核心、旧 none説は誤除外) を 1対1 検証。
+- gate: tsc0 / smoke winsA=498 不変 ex0 / 8 lint + eslint 0。BUG-159 → 修正済。
+
+残: B08090 の complement-enum (some説で正だが 6色 hardcode で脆い) の colorNot 統一は別途 (振る舞い不変)。
+
+# engine — additive wave: TargetFilter `colorNot` (2026-06-27)
+
+**Round/Phase**: 2026-06-27 engine additive wave。骨格凍結原則の **additive 例外** で
+色 NEGATION filter (「【X】以外の色を持つ」) の正準 declarative 形を追加。cluster16 `cardNameNot` の
+color 版。全変更 additive (既存カードは新 field 未宣言 → 回帰0、smoke winsA=498 不変)。
+spec: `.claude/specs/engine-additive-colornot-filter-design.md`。
+
+## 新 TargetFilter field `colorNot`
+
+- 〚【X】以外の色を持つキャラ〛(キャラ TargetFilter / sceneHas 条件) を表現する `colorNot?: string | string[]`。
+- **semantics は公式 B08079 ピンガ qa で確定 (some説)**: 「X以外の色を1つ以上持つ」
+  (= `colors.some(c => c∉notSet)`)。mono-X 除外 / 2色{X,Y} 該当 (Y を持つ) / mono-Y 該当。
+  等価: 全色が notSet 内のとき除外。⚠ `cardNameNot` (any-match 除外) とは **2色で非対称**。
+
+## honor site (filter-predicate 4 点、`cardNameNot` を mirror)
+
+- 型 (`types/effect.ts`) / `matchOneFilter` (`target/candidates.ts`: target pick・sceneHas cond・auraDelta 再入) /
+  `boundMatchesFilter` (`cond/eval.ts`: bound card inline eval) /
+  `targetFilterToPredicate` (`effect/atom-handlers/_shared.ts`: deckRevealUntil path)。
+- 他の TargetFilter consumer (fileTopMatches/triggerCharMatches/removedCharMatches/enterSource/auraFilter/
+  deckReveal) は全て matchOneFilter / predicate へ委譲 → 自動 honored (敵対 review completeness lens で確認)。
+
+## 検証
+
+- TDD (RED→GREEN)。新 test `tests/cards/engine-colornot-filter-2026-06-27.test.ts` 13 pass
+  (3 eval site × {mono除外/mono該当/2色該当(公式)/array} + additivity + color AND + 色なし edge)。
+- gate: tsc0 / smoke:1000 winsA=498 不変 ex=0 / full vitest 3105 pass 0 fail / 8 lint + eslint 0。
+- **opus 5-lens 敵対 review = ship:true / blocker 0** (additivity/completeness/semantics/edge 全 CLEAN、
+  test concern 1 は array@§3・AND@§2・色なし edge を予防テスト追加で解消)。
+
+## 副産物: BUG-159 起票
+
+- 設計 grounding 中、出荷済 **B02010 (灰原哀)** が同一文言「【青】以外の色を持つ」を custom closure
+  `!colors.includes('青')` = **none説**で実装し、2色対象を公式違反で誤除外していることを発見
+  (敵対 review edge lens も独立確認)。BUG-159 起票。migration (colorNot 採用) は別 card-session。
+- 水平展開 audit: shipped「以外の色を持つ」は B02010(none説 bug) / B08090(complement-enum some説 正) の
+  2手法。colorNot が唯一の公式準拠 declarative 形を与え、両者を統一可能。
+
+## 解禁カード (card-session 領分、別途 certify)
+
+- B02002 / B07012 / B08081 / B08082 / B08090 / B08091 等の「【X】以外の色を持つキャラ」filter 句
+  (engine0 で colorNot 採用可。各カードは他句の gate も要確認)。
+
+# engine — additive wave: Cost `removeSetCard` (2026-06-24)
+
+**Round/Phase**: 2026-06-24 engine additive wave (続)。骨格凍結原則の **additive 例外** で
+set-card-removal COST gate を解禁。前 wave (lvlDelta/stunChar、a206e9dc) と同流儀。全変更 additive
+(既存カードは新 cost 未宣言 → 回帰0、smoke winsA=498 不変)。並行 card-session と engine/card 分離。
+spec: `.claude/specs/engine-additive-removeset-cost-design.md`。
+
+## 新 Cost kind `removeSetCard`
+
+- 〚現場にいるキャラに裏向きでセットされているカードを合わせて n 枚リムーブする〛コスト
+  (**B08033 工藤有希子** a2)。count-based の self-pool コスト (TargetingRef 不使用 — `candidates()` は
+  set card を Candidate 列挙しない sub-entity ゆえ。`discardEvidence`/`removeDeckTop` と同型)。
+- 公式 QA (B08033) を 1対1 反映: 相手カード不可 (self-only) / host 自身も数える / 「裏向き」(faceUp:false)
+  のみ対象 / 分割可 (2キャラから1枚ずつ / 1キャラから2枚)。
+
+## honor site (新 Cost kind の sync point)
+
+- Cost union (`types/effect.ts`) / `canPay` (`cost/evaluate.ts`: self 全 scene の faceUp:false 総数 ≥ n +
+  `COST_KIND_MAP`) / `pay` (`cost/pay.ts`: `costParams.removeSetCard.hostUids` 優先 → scene 順 fallback) /
+  UI `costToText` / validate-specs `COSTS` whitelist + sync-test。
+- cost-param channel: `AbilityCostParams.removeSetCard` + `costParamsToDyn` passthrough (`ability-activate.ts`)。
+  AI/smoke は costParams 無 → pay の fallback (scene 順) で payable。interactive UI picker modal は
+  card-session 出荷時の per-card 配線 (fallback で正しさ担保)。
+- **self-only guard** (review concern #3): `pay` の explicit hostUids を自陣 scene の uid に filter
+  (removeOneSetCard→findChar は両 scene 探索のため、誤って opp uid を渡しても相手 set card を外さない不変条件)。
+
+## mutate `removeOneSetCard` opts 拡張 (additive)
+
+- `opts?: { faceDownOnly?: boolean; cause?: 'effect'|'cost' }` を追加。default `{false,'effect'}` =
+  既存 B08034 path 挙動を **完全保存** (回帰0、唯一の従来呼出元)。cost は `{faceDownOnly:true, cause:'cost'}`
+  で faceUp:false の末尾 entry を splice、表向きでリムーブエリアへ + `setcard:leave` emit。
+
+## hook 相互作用 (faithful)
+
+- cost で自 set card 離場 → **B07034** 小泉紅子 (self側「裏向き set card が離れるたび draw」純 observer、
+  ability/effect gate 無) が発火するのが正 (rules/21 の「自分の能力/効果」gate は当該 observer に無い、
+  B07034 qa が多様な leave cause での発火を確認)。**B02020** 大岡紅葉 (opp側 trigger) は自 set card 離場では
+  非発火。precedent: `removeFromScene` cost も `cause:'cost'` で leave hook emit。
+
+## 検証 (additive ゲート)
+
+- `tsc` 0 / 新テスト `tests/engine/cost-remove-set-card.test.ts` **14 pass** (canPay 4経路 + pay split/fallback/
+  2-from-1/face-up除外 + B07034 E2E + pay-nest + mixed-pool canPay + opp-source + self-only guard) /
+  `smoke:1000` winsA=498 不変 ex=0 baseline OK / eslint・8 lint 0err / validate-specs pass (PR280 fail は pre-existing 既知)。
+- **opus 5 lens 敵対 review** (additivity / 完全性 / hook 忠実性 / test adequacy / edge-correctness) = **ship=true / BLOCKER 0**
+  (4 no-blocker / 1 concern-only)。test-adequacy の medium concern 3件 (mixed-pool / opp-source / explicit self-ownership) を
+  予防テスト + self-only guard で反映。残 concern は全て先行 sibling コスト共有の既知制約 or UI picker 未配線 (card-session 責務)。
+- **B08033 a2 のコスト gate 解禁** (full ship は card-session certify: 登場時セット + a2 AP/突撃[キャラ]付与と併せ)。
+
+# cards — wave engine-unlocked-0624 (a206e9dc 解放分の出荷、engine変更0)
+
+**Round/Phase**: 2026-06-24 カード追加 wave (engine変更0)。engine additive wave **a206e9dc**
+(ContinuousModifier.lvlDelta + Cost stunChar) と carrier-reuse stale 訂正で解放された 4 DEFER を
+card-session が clause 単位で精査 → faithful な 2 枚 (×parallel = 4 cards) のみ出荷、残 2 枚は
+**第2 engine gap** を発見し再 DEFER。
+
+## 出荷 (REUSE_CARDS +4、engine変更0)
+
+| rep | カード | 句マッピング |
+|-----|--------|-------------|
+| B08023 / B08023P | 大岡紅葉 (緑 char R/RP) | 【登場時】choice×3 **短縮形** carrier-reuse: ① 伊織無我1枚まで→自deck裏向きセット+ターン終了時まで AP+2000 / ② 同→突撃付与 / ③ 相手現場キャラ1枚まで→相手deck裏向きセット(charSetCard{player:'opp'}=B02020/B05028 同型)+スリープ。「1枚まで」=0可で bind 未解決→silent no-op。⚠ 明示 uid:'$pick'+target 形は human 経路で rider 不発 ([BUG-158](../bugs/BUG-158.md)) のため **短縮形必須** |
+| B08050 / B08050P | 宮野明美 (赤 char R/RP) | a1=【解決編】lvlDelta+3 (continuous, condition=caseStatus解決編、自己参照なし。read.char.level のみ反映 / play-level 静的=QA「現場以外はLv4」) / a2=【登場時】deckRevealUntil(upTo,maxN:3,filter無=任意)→handAdd→**boundToRemove→discard** 順 + conditional{boundMatchesFilter cardNameNot:[諸星大/宮野志保/宮野エレーナ/宮野厚司]}。boundMatchesFilter は bound空(0枚add)で false=「加えた場合」gate を内包 |
+
+- B08004 errata 2026-03-02「現場にいる」追記は B08004 が DEFER のため未出荷 (下記)。
+
+## 敵対 review で検出した BLOCKER 2件 (出荷前に修正済)
+
+opus 4-lens 敵対 review (うち defer-soundness lens と B08050-fidelity lens が empirical probe で検出):
+
+1. **B08023 carrier human 経路 no-op → [BUG-158](../bugs/BUG-158.md)**: 初版は exemplar B02040 を踏襲し明示
+   `uid:'$pick'+target` 形で書いたが、これは **human 経路で bind 喪失** → rider (AP/突撃/sleep) が silent
+   no-op (実機: AP=3000、AI 経路のみ 5000)。**短縮形** carrier へ変換して修正。出荷済 B02040/P・B02046/P・PR049
+   も同形で該当 → BUG-158 に水平展開記録 (別 session で短縮形変換 or engine 統一修正)。
+2. **B08050 step 順序**: 初版は handAdd→discard→boundToRemove だったが、deck≤3 で boundToRemove の
+   リフレッシュが discard 済み札を deck へ巻き戻す。公式テキスト順 **handAdd→boundToRemove→discard** に修正
+   (deck=3 回帰 test で discard 札が remove に残ることを pin)。
+
+> 2 lens (B08023-fidelity / dsl-trap) は「B02040 と同形ゆえ CLEAN」と **誤判定** (human 経路を実測せず)。
+> empirical probe を回した lens のみ正答 → carrier-reuse は **human 経路実測** が必須 (BUG-158 防止策)。
+
+## 再 DEFER (engine wave の over-claim 訂正)
+
+| rep | 第2 engine gap (出荷不可の理由) |
+|-----|------------------------------|
+| **B08059 / B08059P** 諸星大 | 「現場にレベル7のキャラ2枚以上」が **このキャラ自身(lv6+1=7)を含める latch** (公式QA「このキャラを含め2枚」)。`_inContinuousDelta` guard (candidates.ts:24) が depth-2 で全 delta を base 化 → 自己条件評価中 諸星=6。**engine 実測**: 諸星+他lv7×1 で read.char.level=6 (QA要求7)。lvlDelta 機構は a206e9dc で追加済だが self-counting 条件は未対応 → recursion guard の自己 delta 例外 (要 engine 変更) |
+| **B08004 / B08004P** 江戸川コナン | stunChar コスト自体は a206e9dc で表現可。だが宣言ゲート「リムーブエリアに【黒】の**キャラ**3枚以上」は remove-area を **色AND種別(character)** で数える必要があり、removeColorAtLeast (cond/eval.ts:192) は色のみ (黒イベント誤計上) → remove-area の kind 付き count 条件が未対応 (要 engine 変更、additive) |
+
+- engine wave の敵対 review は lvlDelta の「無限ループ無し」のみ検証し、B08059 の QA self-counting fidelity を見落としていた (本 wave が empirical test で surfacing)。
+
+## 検証 (engine変更0 ゲート)
+
+- **engine変更0 証跡**: `git diff src/engine` 空。
+- `tsc` 0 / `vitest` 3091 pass +1 skip (本 wave +12 behavioral+structural) / 0 fail。
+- `smoke:1000` winsA=498 / avg=10.998 / timeouts=exceptions=0、baseline OK (engine変更0 機械保証)。
+- 8 lint + eslint errors=0。
+- opus 4-lens 敵対 review (fidelity B08023 / fidelity B08050 / DSL-trap+engine0 / DEFER-soundness)。
+
+## テスト (wave-engine-unlocked-0624.test.ts、12 件)
+
+- structural: 4枚登録 + B08023 choice×3 carrier bind / B08050 lvlDelta+deck-look 構造 + parallel 共有。
+- behavioral: B08023 opt1/2/3 carrier-reuse 実 mutation + 0-pick no-op / B08050 解決編Lv7・事件編Lv4 +
+  deck-look (in-set 保持=net+1 / not-in-set=discard=net0 / rest→remove)。
+
+# cards — wave novel-0624 (novel-tail 9枚、engine変更0)
+
+**Round/Phase**: 2026-06-24 カード追加 wave (engine変更0)。novel-tail green候補を classify→certify→
+adversarial-verify の 3 層パイプラインで仕分け、verified-ok のみ手書き品質で出荷。
+
+## パイプライン
+
+- 残 unshipped green候補 154 → fresh 127 → DEFER/出荷済を機械除外 → **clean 95**。
+- 高歩留り subset (single-clause・cutin/hira/henso 列なし) **59 rep** を classify workflow (opus, 59 agent,
+  live engine code grounding) で仕分け: **GREEN 11 / GATED 44 / RISKY 4**。GATED 44 は全て真の engine gap
+  (set-card-removal COST kind 不在 / mill-with-bind 不在 / hand-reveal hook 不在 / continuousModifier lvlDelta /
+  relative filter 等) で false-gate 0 を確認。
+- GREEN∪RISKY **15 rep** を certify+adversarial-verify (wf-certify.mjs, opus, SUB=5):
+  **green 12 / verify-ok 9 / refuted 3 / yellow 3**。
+
+## 出荷 (ALL_CARDS +9、engine変更0)
+
+| rep | カード | 要点マッピング |
+|-----|--------|---------------|
+| B08092 | 出来損ないの名探偵 (黒 event) | event-use, 【事件青&黒】caseColor gate → draw + 手札から【現場リムーブ時】Lv4- enter(sleep) + 絆[シェリー/灰原哀] conditional Lv7- remove。現場リムーブ時 filter は live (read/keyword.ts, 出荷 B09104) |
+| B02033 | 死力を尽くして (緑 event) | optional{chain[charRemoveSetCard n:2 (合わせて2枚) → sceneRemove max:1]}。「してもよい」=optional / 「そうした場合」=chain |
+| B03095 | 松本清長 (青 char) | 【ターン1】action:declare observer(triggerCharMatches opp) + 自スリープ gate(charStateIs) → 警察 reactivate (sceneSetState active, 自身選択可) |
+| B04019 | 服部平蔵 (青 char) | 【宣言】【ターン1】cost sceneToDeckBottom(filterAny: 服部平次 OR 警察, Lv7+) → AP8000- remove + remove から 警察Lv5- revive(sleep) |
+| B04079 | 高木渉 (青 char) | a1=ミスリード1 (shared) / a2=【登場時】scry1 (deckRevealUntil maxN:1 + optional deckToBottom) |
+| B05014 | 工藤新一 (青 char) | 突撃 innate / phase-end 自スリープ gate → self bounce(sceneToHand) + remove から コナンLv3- revive(sleep) |
+| B09063 | 谷森棋士 (赤 char) | a1=ミスリード1 / a2=【自分ターン中】【ターン1】Lv8 enter observer + 相手Lv7不在 → draw |
+| B09066 | メアリー (赤 char) | a1=【登場時】絆(赤井家 excludeSelf) conditional sleep / a2=【パートナー赤】phase-end 自スリープ → draw+discard |
+| D01008 | 阿笠博士 (青 char) | 【登場時】手札から少年探偵団Lv4- を 0-1枚 enter(してもよい) → 未登場(not bound) なら キャラ AP+1000(turn) |
+
+- 全て手書き品質の codegen (taskA-codegen、grounding コメント付) → register。touched = src/cards のみ。
+
+## BUG-145 over-fire 検証 (最重要)
+
+effect 側 `conditional` の枝に pick を持つ 3枚 (B09066/B08092/D01008) が、refuted の B05062 と同じ
+over-fire gate (BUG-145) に該当しないことを engine code 直読で確定:
+- resolveEffectPicks は conditional の両枝を pre-walk するが、**Pattern-B short-form atom pick**
+  (sceneSetState/sceneRemove/charModifyAP の max/filter 形, uid/target 無) は初期 walk で
+  push 抑止 (`isPatternB && !_fromAtomHandler → return`) され dispatch 時のみ surface。
+- 一方 B05062 は枝に **`choice`** (else) を持つため pre-walk で eager-surface → 正しく refuted。
+- 回帰 test (wave-novel-0624.test.ts) に over-fire guard を追加: 3枚の conditional を humanChooser
+  pre-walk して pick/choice/optional surface=0 を機械実証。
+
+## 検証 (engine変更0 ゲート)
+
+- **engine変更0 証跡**: `git diff src/engine` 空。validate-specs pass=9/9。
+- `tsc` 0 / `vitest` 3068 pass +1 skip (本 wave +14: structural 9 + over-fire guard 5) / 0 fail。
+- `smoke:1000` winsA=498 / avg=11.00 / timeouts=exceptions=0、baseline OK (engine変更0)。
+- 8 lint errors=0 (card-addition/test-pair は wave test で WARN のみ)。
+
+## DEFER 追記 (6 rep)
+
+DEFERRED-INDEX へ refuted 3 + yellow 3 を engine gap 付きで記録 (BUG-145 choice over-fire /
+group-scoped 1-of-N choice / colorNot filter / cost-relative dynamic filter / relative AP filter /
+pick-then-branch-on-picked-state)。
+
+# engine — additive wave: continuous lvlDelta + stunChar cost (2026-06-24)
+
+**Round/Phase**: 2026-06-24 engine additive wave。骨格凍結原則の **additive 例外** で wave event-choose3 由来 DEFER
+(continuous level / stun cost) の engine gate を解禁。並行 card-session と engine/card 分離。全変更 additive
+(既存カードは新 field/cost 未宣言 → 回帰0)。spec: `.claude/specs/engine-additive-wave-2026-06-24.md`。commit a206e9dc。
+
+## Gap1 — `ContinuousModifier.lvlDelta` (継続レベル修正)
+
+- `apDelta`/`lpDelta` と完全対称に `lvlDelta?: ContinuousDelta` を1 field 追加 (`card-def.ts`)。
+- honor site は **2つだけ** (BUG-117 原則 filter-level==combat-level): `read.char.level()` +
+  `candidates.matchOneFilter()`。`continuousDelta`/`continuousDeltaSafe` の `which` union を拡張。
+- 再帰は既存 module-level `_inContinuousDelta` guard が which 非依存で depth-2 終端 (B08059 自己参照条件でも無限ループ無し)。
+- out of scope: play-level (`hand-use-card`/`next-hint` の静的 `d.level`) は不変 (B08050 QA「現場以外はレベル4」と一致)。
+- 「【自分ターン中】レベル+1」(B08059) / 「【解決編】レベル+3」(B08050) 型を card-session へ解放。
+
+## Gap3 — Cost `stunChar`
+
+- `sleepChar` 対称の新 Cost kind 〚アクティブ状態の[X]を1枚スタンさせる〛(B08004)。
+- honor site: Cost union (`effect.ts`) / `canPay` (active 候補要求) / `pay` (active のみ stun + **n.max honor**) /
+  UI `costToText` / validate-specs COSTS whitelist。AI は `canPay` で generic gate 済。
+- n.max honor で「1枚」を faithful に守る (sleepChar 由来の over-pay を新規側で回避)。B08004 を card-session へ解放
+  (errata 2026-03-02 現場条件追記は card 側)。
+
+## Gap2 — carrier-reuse は **stale DEFER 訂正** (engine変更0)
+
+- B08023/B08033 の「1 pick→2 atom 同キャラ」は **2026-06-12 出荷済** の `bind:'$picked'`+`uid:'$picked.uid'`
+  機構 (BUG-130 / Task D E0) で実装可能。出荷 exemplar B02040 が同一 shape、test pick-bind.test.ts 有り。
+- DEFERRED-INDEX を訂正し **B08023 を解放**。⚠ B08033 a2 は別 gate (set-card-removal COST) 併発で依然 DEFER。
+
+## 検証 (additive ゲート)
+
+- `tsc` 0 / `vitest` **3054 pass** (+exemplar test 2: lvldelta 9 / stunchar 6) / `smoke:1000` winsA=498 不変
+  exceptions=0 baseline OK / eslint・8 lint 群 0err。
+- 各 gap を **opus 4 lens / 3 lens 敵対 review**。no-blocker。review が surfacing した pre-existing 欠陥を
+  [BUG-156](../bugs/BUG-156.md) (sleepChar/stunChar cost over-pay) / [BUG-157](../bugs/BUG-157.md)
+  (read.char.ap/lp 無 guard 相互再帰) として記録 (本 wave 非起因、別 commit で unified 修正予定)。
+
+# cards — wave event-choose3 (B08075/B08075P、engine変更0)
+
+**Round/Phase**: 2026-06-24 カード追加 wave (engine変更0)。novel-template green候補を classify workflow で
+仕分け → 実 engine 型を直読して false-green を排除 → 真に出荷可能な 1 rep (+P) を手書き出荷。
+
+## 出荷 (ALL_CARDS +2、engine変更0)
+
+- **B08075 / B08075P ブライダルは女が主役** (黄 lv5 event): 「以下から3つまで選んで行う（上から順に）」=
+  `triggered scope:on-hand trigger{effect:declared, selfOnly, matcher kind==='event-use'}` (exemplar B08029) →
+  `seq[optional①, optional②, optional③]`。
+  - ① 〚佐藤美和子〛1枚まで→active = `sceneSetState{uid:$pick, state:active, target pick scene/self cardName n{0,1}}` (B06060/D04010)
+  - ② 〚高木渉〛1枚まで→ターン終了まで〚突撃[キャラ]〛 = `charGrantKeyword{uid:$pick, kw:'突撃[キャラ]', scope:turn, target pick}` (D02013/D09027)
+  - ③ デッキ上4枚→〚佐藤美和子/高木渉〛1枚まで手札, 残りデッキ下 = `deckRevealUntil{upTo, filterAny[2名 kind:character], maxN:4, bind/$matched}` → `conditional(bound $matched → handAddFromDeck)` → `deckToBottomBound` (B08020 / filterAny B03016・B07020)
+  - **各 option を `optional` 包装** (B09065)。③は take-0 でも deck 並び替えの副作用 → option 単位 skip 必須 (「3つまで選んで」忠実)。
+
+## 候補仕分け (classify workflow + engine 型直読)
+
+- 残 green候補を full-text 棚卸 → **127 novel rep** (既出荷の絵柄違いクローンは 0 = easy twins 枯渇)。
+- classify workflow (7 scout, opus high) で 38 rep 仕分け (session limit で 5 agent 中断、GREEN 9/GATED 21/RISKY 8)。
+- GREEN 9 のうち **7 を engine 型直読で reject** (classify agent の false-green を排除):
+  - `ContinuousModifier` に **level field 無し** (apDelta/lpDelta/grantKeywords のみ) → B08059/B08050 の継続「レベル+N」は GATED。
+  - **「1 pick → 2 atom(同キャラ)」の carrier-reuse exemplar 0件** (BUG-130 由来の bind 脆弱性) → B08023/B08033 (set+buff 同一 pick) DEFER。
+  - **stun cost kind 無し** (sleepChar のみ) → B08004 の cost「スタンさせる」GATED。加えて B08004 は errata (2026-03-02 現場条件追記) リスク。
+  - B08019: `scope` 単値で `on-scene`+`on-partner-area` 併記不可 (非MR char は partner-area 不達=under-faithful) + 「&」名/cutin → DEFER。
+  - B08092/B09004: classify agent が「exemplar=自身(出荷済)」と循環誤認 (実際は未出荷、reveal-trigger/【現場リムーブ時】filter 依存) → reject。
+
+## 検証 (engine変更0 ゲート)
+
+- **engine変更0 証跡**: `git diff src/engine` 空 (手書きカードのため validate-specs 非対象、git diff で機械保証)。touched = src/cards のみ。
+- `tsc` 0 / `vitest` 全 green (+構造忠実 decoy test 2、本 wave) / `smoke:1000` winsA=498 exceptions=0 baseline OK / eslint・lint 群 0err。
+- decoy test: event-use matcher 実評価 (event-use→true / declared・undefined→false) + 3-optional 構造 + filterAny 2名 + B08075P=B08075 ability 一致 (matcher 除く骨格)。
+- ※ B08075 は MVP デッキ外で smoke 非経由 → runtime は matcher 評価 + atom 各 exemplar の既存テストで担保 (BUG-132 教訓)。
+
+## DEFER 追記
+
+- DEFERRED-INDEX へ: 継続レベル修正 (continuousModifier level 不在) / 1pick→2atom carrier-reuse / stun-cost の 3 engine gate を記録予定。
 
 # cards — BUG-155 水平展開 sweep: pick filter の kind 種別制約を全カード忠実化 (engine変更0)
 
