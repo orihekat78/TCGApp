@@ -200,6 +200,15 @@ export function declare(state: GameState, byUid: string, target: Target): Action
     targetUid: target.kind === 'char' ? target.uid : undefined,
   }, { player: byPlayer, uid: byUid });
 
+  // engine additive wave-7 (2026-07-02, P17): アクション[キャラ]宣言時、actor へ「今ターン アクション[キャラ]
+  // した」flag を立てる (rules/22: 宣言=ガード判定前に確定、ガード有無・成否に依らず「アクションした」)。
+  // アクション[事件] (target.kind==='case') では立てない。actor が partner (uid='partner:*') の場合
+  // setTurnEffect は findChar 不在で no-op。清掃は clearTurnEffects('turn') (ターン終了)。TargetFilter.
+  // actedCharThisTurn が honor。B08049「このターン中にアクション[キャラ]していた〚特徴[FBI]〛のキャラ」。
+  if (target.kind === 'char') {
+    mutate.char.setTurnEffect(state, byUid, 'actedCharThisTurn', true);
+  }
+
   // 即座に guard-window へ遷移
   ax.phase = 'guard-window';
   event.emit(state, 'action:guard-window', { byUid, target }, { player: byPlayer, uid: byUid });

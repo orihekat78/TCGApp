@@ -198,6 +198,13 @@ export type TargetFilter = {
   levelMin?: number;
   levelMax?: number;
   hasSetCards?: boolean;
+  // engine additive wave-7 (2026-07-02, P17): 「このターン中にアクション[キャラ]した」board char のみ該当。
+  // 記録 = flow/action/state-machine.ts declare が action:declare (target.kind==='char') 時に actor へ
+  // setTurnEffect('actedCharThisTurn', true)。清掃 = clearTurnEffects('turn') (ターン終了)。読取は
+  // matchOneFilter が board char (c 有) の turnEffects flag を honor。c===null (deck/remove/hand の印字
+  // candidate) は「アクションした」概念が無い → 必ず不一致 (現場に居ないため)。B08049 ジョディ【宣言】
+  // 「このターン中にアクション[キャラ]していた〚特徴[FBI]〛のキャラを…アクティブにする」。
+  actedCharThisTurn?: boolean;
   custom?: (s: GameState, candidate: Candidate) => boolean;
 };
 

@@ -173,6 +173,9 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     delete te['toDeckBottomOnTurnEnd'];
     delete te['wasGuardedThisTurn'];
     delete te['grantedAbilities'];
+    // engine additive wave-7 (2026-07-02, P17): 「このターン中にアクション[キャラ]した」flag
+    // (declare が立て、TargetFilter.actedCharThisTurn が honor)。ターン終了で失効 (B08049)。
+    delete te['actedCharThisTurn'];
     te.contactImmune = false;
     te.removeOnTurnEnd = false;
     // _action suffix もターン終了で確実に切れる (アクション終了清掃の safety net)

@@ -401,6 +401,17 @@ export function matchOneFilter(
     if (has !== filter.hasSetCards) return false;
   }
 
+  // engine additive wave-7 (2026-07-02, P17): actedCharThisTurn — 「このターン中にアクション[キャラ]した」
+  // board char のみ該当。記録は flow/action/state-machine.declare が target.kind==='char' 時に actor へ
+  // setTurnEffect('actedCharThisTurn', true)、清掃は clearTurnEffects('turn')。hasSetCards と同じ boolean 軸
+  // semantics (true/false 両対応): c===null (deck/remove/hand の印字 candidate) は現場に居らず「アクションした」
+  // 概念が無いため acted=false 扱い → true 指定で除外・false 指定で一致。B08049 ジョディ【宣言】
+  // 「このターン中にアクション[キャラ]していた〚特徴[FBI]〛のキャラ」。
+  if (filter.actedCharThisTurn !== undefined) {
+    const acted = c?.turnEffects['actedCharThisTurn'] === true;
+    if (acted !== filter.actedCharThisTurn) return false;
+  }
+
   if (filter.custom !== undefined) {
     if (!filter.custom(state, cand)) return false;
   }

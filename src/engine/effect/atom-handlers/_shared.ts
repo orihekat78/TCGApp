@@ -105,8 +105,9 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
     if (filter.kind !== undefined && d.kind !== filter.kind) return false;
     // wave#2 cluster2 (2026-06-12): keyword / cardName が silent drop されていた (BUG-117/118 同型
     // ドリフト)。matchOneFilter と同じ単一真実源 (defHasKeyword / allCardNameComponentsForDef) に委譲。
-    // hasSetCards / custom は deck カードに state / closure が無く本質的に評価不能 → 非対応のまま
-    // (matchOneFilter の scene candidate 専用 semantics)。
+    // hasSetCards / custom / actedCharThisTurn (wave-7 P17) は deck カードに state / closure / turnEffects が
+    // 無く本質的に評価不能 → 非対応のまま (matchOneFilter の scene candidate 専用 semantics)。deck-look/reveal
+    // 経路 (picks.ts) の filter でこれら board-only 軸を使うカードは想定外 (現状 0)。
     if (filter.keyword !== undefined) {
       const wants = Array.isArray(filter.keyword) ? filter.keyword : [filter.keyword];
       if (!wants.some(w => defHasKeyword(d, w))) return false;

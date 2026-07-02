@@ -236,6 +236,7 @@ import { B08030 } from '../ct-p08/B08030.js';
 import { B08030P } from '../ct-p08/B08030P.js';
 import { B08039 } from '../ct-p08/B08039.js';
 import { B08040 } from '../ct-p08/B08040.js';
+import { B08049 } from '../ct-p08/B08049.js';
 import { B08056 } from '../ct-p08/B08056.js';
 import { B08065 } from '../ct-p08/B08065.js';
 import { B08065P } from '../ct-p08/B08065P.js';
@@ -1301,4 +1302,8 @@ export const REUSE_CARDS: CardDef[] = [
   B03066, B03066P,
   // wave engine0 0629 — certify greens + P-clones (engine変更0)
   B02057, B02057P, B03062, B03062P, B03088P, B04085, B04085P, B06004, B06004P, B06021, B06021P, B06077, B06077P, B07047P, B09056, B09056P,
+  // engine additive wave-7 exemplar (2026-07-02, P17 actedCharThisTurn) — B08049 ジョディ・スターリング
+  //   (a1 turn-end FBI≥4 draw = 既存 sceneHas / a2 宣言 sleepSelf → 今ターン アクション[キャラ]した FBI を activate)。
+  //   B08049P は同効果 clone → card-wave へ。
+  B08049,
 ];

@@ -838,3 +838,27 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
   granted trait/name は載らず印字のみ (「現場にいなければ有効でない」と整合)。grant 一致を removedFilter で参照するカードは再 certify。
 - **cross-grant condition の depth-2 truncation**: 継続付与の condition が **他キャラの granted** trait/name に依存する場合、再帰 guard で
   under-fire する (continuousDelta/auraDelta と同 semantics)。P37 対象カードは全て無条件付与ゆえ非該当。
+
+## wave engine / wave7-acted-this-turn (P17、2026-07-02 出荷)
+
+**出荷済** (engine additive wave-7): `actedCharThisTurn` TargetFilter 軸 — このターン アクション[キャラ]した board char。
+記録=state-machine.declare (target.kind==='char')、参照=matchOneFilter、清掃=clearTurnEffects('turn')。exemplar=B08049 ジョディ。
+
+⚠ **本 wave で DEFER (別 primitive / 別 wave)**:
+- **boundDistinctColorCount (G17 残、B07002 江戸川コナン)**: 「それぞれ色の異なる〚特徴[探偵]〛のキャラを2枚リムーブした場合」=
+  bound 集合内 trait[探偵] メンバーの **pairwise distinct-color 数 ≥2** (boundAnyMatchesFilter の any では表現不可、集合被覆型 evaluator)。
+  ★ただし B07002 は **本軸単独で 0 解禁** — 別句「【宣言】このターン中、相手は【カットイン】と【変装】を使用できない」(turn-scoped
+  cutin/disguise ban = P05-P09 batch の restriction-flags) が第2 gate。boundDistinctColorCount は cutin/変装 ban wave と **ペアで**出す。
+- **P15 疾風 per-turn tracking (B09072 横溝重悟 / B09070 萩原千速&研二)**: TurnScopedFlags に shippuFiredUids + 疾風発火 hook 記録 +
+  reset + Condition/TargetFilter 軸。★sole=3 だが **両カードとも非 sole** — B09072 は【宣言】「推理できない」付与 (reason-ban grant) を、
+  B09070 は【疾風】の「〚神奈川県警〛lv6以下 **か【疾風】を持つ**lv6以下」= keyword-presence filter (ability-presence 一族) を第2 gate に持つ。
+  P15 単独では exemplar が出せないため、reason-ban grant / keyword-presence filter と束ねた wave で。
+- **P16 疾風条件 override (B09090 風の女神)**: 「次に登場したキャラ1体の【疾風】登場順条件を無視」= one-shot armed flag +
+  enterOrderEquals waive 分岐。B09090 も【宣言】cost「手札から〚神奈川県警〛か【疾風】を持つキャラをリムーブ」= keyword-presence cost filter が併存。
+- **B08049P (RP clone)**: 同効果パラレル。card-wave で double-value 出荷 (本 wave は exemplar 1 枚に focus)。
+
+⚠ **latent note** (card-wave / 将来カード出荷時に要留意):
+- actedCharThisTurn は **matchOneFilter のみ**が honor (board-char 軸)。targetFilterToPredicate / boundMatchesFilter (c=null) では
+  常に不一致 (deck/remove/公開集合の印字 card は「アクションした」概念が無い)。これらの site で actedCharThisTurn を使うカードは想定外。
+- flag は **declare 時点**で立つ (rules/22)。ガードされた / AP不足でリムーブ不発 / 対象離脱で abort されたアクションも「アクションした」に該当
+  (公式裁定と整合)。もし将来「リムーブに成功したアクション限定」の軸が要るなら別 flag (actedAndRemoved 等) を新設する。
