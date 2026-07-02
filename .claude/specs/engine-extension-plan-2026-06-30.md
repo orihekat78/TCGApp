@@ -86,6 +86,14 @@ P14 同名deckReveal / P45 auto-phase aura / P49 遅延登場 / P53 全証拠特
 - 各 primitive の真の remaining は origin/main 再検証後に確定 (top3 は既出荷で目減り見込み)。
 - 全 phase 完了 → 骨格凍結 → card phase で 561 を均一 author。
 
+## compiler demand-signal 反映 (2026-07-02 Track B、origin/main 8ae3f56f 再採寸済)
+
+真の engine gap は 4 family のみ (ids・降格根拠 = [compiler-demand-signal-2026-07-02.md](compiler-demand-signal-2026-07-02.md)):
+**P10 事件解決 rewrite+証拠隠滅 = 同一8枚** (E3 最大単一 family) / **G39 PA card slot 4+3** /
+**「アクション中のキャラ」TargetFilter 軸 4** (小 additive、E1 相当で先行可) / **G34 multi-select 4**。
+降格 (出荷済→card-phase): MR PA 宣言/発動 24 (mr-partner-area core は bef3adad で出荷済、TSV/auto-mem の「未実装」stale) /
+set-event family ~15 (fromSelf+on-set-host) / keyword turn-grant ~13 / 事件緑＆白 4。
+
 ## 関連
 - 上限調査: [engine-extension-upper-bound-2026-06-29.md](engine-extension-upper-bound-2026-06-29.md)
 - per-card verdict: [engine0-vs-extension-2026-06-29.tsv](engine0-vs-extension-2026-06-29.tsv)

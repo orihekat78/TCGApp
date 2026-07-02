@@ -45,3 +45,15 @@
   上位=ability/kw grant(30)/MR partner-area 宣言(19)/event→char セット WRITE(9)/partner 事件解決 rewrite(8)/証拠隠滅敗北(8)。
 - gate: tsc0 / vitest (mill-gate に ⑨ 追加 4test・G1 pin 維持・colornot green) / smoke winsA=498 不変 / 8lint 0err。
   main repo 直作業 (worktree 不使用、開始時 clean・並行 Track A は別 workdir)。commit --no-verify + FF push。
+
+## 2026-07-02 Track B session — demand-signal 正式化 + origin/main 再採寸 (engine 変更 0)
+
+- **demand-signal.cjs 出荷** (scripts/compiler/、決定論): 前 session の ad-hoc 生成をツール化。rule 未被覆行を
+  {lines, subclauses} 2 粒度で抽象 (K/LvN/【色】/⟨カード名⟩/⟨特徴⟩/「⟨能力⟩」、quote-aware 「。」split) + **ids 付き**。
+  539 unshipped → lines 500 / subclauses 711。
+- **再採寸 (origin/main 8ae3f56f 直 grep、honor-site まで確認)**: 真の Track A gap は **4 family のみ** —
+  P10 事件解決 rewrite+証拠隠滅 (**同一8枚**、初版 8+8 は二重計上) / G39 PA card slot 4+3 / 「アクション中のキャラ」
+  TargetFilter 軸 4 / G34 multi-select 4。**降格 (既出荷)**: MR PA 宣言19+発動5 (mr-partner-area core bef3adad、
+  auto-mem「未実装」stale) / set-event ~15 (fromSelf WRITE+on-set-host READ) / keyword turn-grant ~13
+  (charGrantKeyword verb+scope 露出確認) / 事件緑＆白 4 (caseColor combine:'and' eval 実装確認) / charGrantAbility (turn)。
+- 反映: engine-extension-plan 末尾節 + compiler-demand-signal spec (a) 全面差替 + NEXT-PROMPT-TRACK-B #1 完了化。

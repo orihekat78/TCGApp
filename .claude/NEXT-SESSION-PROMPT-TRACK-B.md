@@ -31,13 +31,15 @@ silent 誤訳排除の原則 (一致句のみ変換・未知句 1 つで refuse)
   誤訳 2 件修正 ([[BUG-162]] PR276/D02004 「アクション終了時まで」scope + PR276 gated-chain、水平展開で D02004 発見)。
   conflict 6→5。demand-signal spec 出力。
 - 再現手順: node scripts/compiler/tsv-corpus.cjs → npx tsx scripts/compiler/dump-shipped.ts →
-  node scripts/compiler/mine.cjs → node scripts/compiler/oracle.cjs [--gate]。demand-signal: node scripts/... (下記 spec)。
+  node scripts/compiler/mine.cjs → node scripts/compiler/oracle.cjs [--gate] →
+  node scripts/compiler/demand-signal.cjs ({lines, subclauses} 2 粒度・ids 付き)。
 - B3 queue (未着手): conflicts 5 (benign encoding drift、canonical 化で conflict-blocked 行 unlock 可)、
   shipped-gap-suspect 27 (部分実装疑い、要 certify)、exceptions 9 (composition 不能)、align-ambiguous 2。詳細 .tmp/compiler/mine-report.json。
 
 ## 次やること (優先度順、bulk author は行わない)
-1. **demand-signal を Track A へ**: [specs/compiler-demand-signal-2026-07-02.md](specs/compiler-demand-signal-2026-07-02.md)
-   の需要ランクを engine-extension-plan に反映 (or Track A session に直接手渡し)。着手前 origin/main 直読で stale 再採寸。
+1. ~~demand-signal を Track A へ~~ **完了 (2026-07-02 本 session)**: demand-signal.cjs 正式化 + origin/main 再採寸 →
+   真の engine gap は 4 family のみ (P10 同一8枚 / G39 4+3 / アクション中 filter 4 / G34 4)。MR PA 24・set-event 15・
+   turn-grant 13・事件緑&白 4 は既出荷で card-phase 降格。engine-extension-plan 末尾 + demand-signal spec (a) に反映済。
 2. **B3-2 shipped-gap-suspect 27 の certify**: 印字全列 ⇔ DSL で per-card 裁定 → 真の部分実装は BUG-XXX + 修正。
 3. **B3-1 conflict canonical 化 (要 tier 判断)**: benign 5 key を 1 encoding に統一すれば conflict-blocked 行が unlock。
    多数 shipped card 再編集ゆえ ROI と risk を見てから。

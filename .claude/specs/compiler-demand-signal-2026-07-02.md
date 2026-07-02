@@ -13,23 +13,26 @@ Track B (text→DSL compiler) の B1.5/B2 実測が空振り (下記) → 用途
 
 結論: 残 539 枚は shipped の**組み替えでなく新規複雑文**。whole-line 文法は飽和。実 throughput lever は Track A engine 拡張。
 
-## (a) Track A 拡張 需要ランク (unshipped 未知行の抽象クローズ、影響カード数順)
+## (a) Track A 拡張 需要ランク (**再採寸済 2026-07-02**、origin/main 8ae3f56f 直 grep)
 
-⚠ 各項目は**候補**。Track A は着手前に origin/main を直読し既出荷か再採寸すること ([[project-engine-first-plan-wave1]] の stale 教訓)。全リスト = `.tmp/compiler/demand-signal.json` (demand-signal.cjs で再生成)。
+再生成: `node scripts/compiler/demand-signal.cjs` → `.tmp/compiler/demand-signal.json` ({lines, subclauses} 2 粒度・ids 付き)。
+初版候補を engine 直読で再採寸 → **真の Track A 需要は 4 family のみ**。残りは既出荷で card-phase 送り:
 
-| # cards | 需要クローズ (抽象) | 候補 primitive / 備考 |
+| # cards | 需要 (真の engine gap) | ids / 備考 |
 |---|---|---|
-| 30 | 「〜を与える」(16) / 「〜を持つ」(14) | 任意 ability/keyword grant。keyword grant は既存 (grantKeywords)、**ability 文字列 grant** は novel |
-| 19 | この能力はパートナーエリアでも宣言できる | MR partner-area declared ([[project-mr-partner-area-design-2026-06-23]] spec 済、未実装) |
-| 9 | このイベントを自分の現場の【色】のキャラ N 枚にセットする | event→char セット WRITE。on-set-host READ 済 ([[reference-engine-additive-on-set-host-0629c]])、**使用イベントを host へ載せる verb** が残 |
-| 8 | 自分の【色】パートナーの【事件解決】能力を書き換える | partner win-ability rewrite。novel・複雑 (勝利条件系) |
-| 8 | 【証拠隠滅】〚証拠を事件レベル数リムーブ〛：相手は敗北 | 代替勝利 keyword「証拠隠滅」。novel |
-| 5 | この能力はパートナーエリアでも発動する | MR partner-area triggered (同上 spec) |
-| 4 | 以下から N つ選んで行う | multi-select modal (choice の N 択版) |
-| 4 | 【ヒラメキ】【解決編】アクション中のキャラを N 枚スタン | contact-scoped stun + caseStatus gate |
-| 3-4 | このカードをパートナーエリアに移す (hirameki 含) / このターン中ネクストヒント不可 / 突撃付与 turn-scope | 単発 verb 群 (self→partner-area move / nextHintBan は既出荷? 要確認 / grantKeyword turn) |
+| 8 | partner【事件解決】書き換え + 代替勝利【証拠隠滅】= **同一 8 枚** (初版 8+8 は二重計上) | B03135/B05118/B05119/B06105-108/D07024。P10/E3 (勝敗系 rewrite) |
+| 4+3 | 非MR カードの PA 移動 + PA〚ビッグジュエル〛計数 aura (G39 PA card slot) | B07059/B07060/PR195/PR196 (+計数 3)。mutate/partner.ts 旧 stub は dead 化済 = 未実装 |
+| 4 | 「アクション中のキャラ」TargetFilter 軸 (【ヒラメキ】【解決編】K枚スタン) | B03085/B05032/B05111/B08006。stun verb (sceneSetState) は有、filter 軸のみ novel |
+| 4 | 「以下からKつ選んで行う」multi-select (G34) | B05023/B05062/B07013/B09067。choice atom は 1 択のみ |
 
-**conflict-blocked (Track A ではなく B3)**: 「【ヒラメキ】キャラを N 枚スリープ」(10)・「リムーブエリアの〚名/特徴〛を手札に加える」(5+4) 等は**既に shipped 済**だが mine の conflict (同文言異 DSL) で key が refuse され unshipped も compile 不可。canonical 化すれば unlock (下記 B3-2)。
+**降格 = engine 出荷済 (card-phase authoring へ)**:
+- **MR PA 宣言 19 + PA 発動 5**: mr-partner-area core **出荷済** (bef3adad+5352c470 = on-partner-area scope declared/triggered + partnerAreaMR slot)。auto-mem「未実装」は stale。per-card 残 gate は要実測
+- **set-event family ~15**: charSetCard fromSelf WRITE (0629d) + on-set-host rider READ (b34d33cc) 両出荷 → B01023/B01039/B01057/B02052/B02067/B03041/B03080/B05041/B05117/B06012/B06063/B06064/B07014/B08017/D10024
+- **keyword turn-grant 散発 ~13** (突撃等): grantKeyword(scope turn/permanent) 出荷済
+- **ability grant (turn)**: charGrantAbility (Task D E4) 出荷済。turn 清掃のみ = permanent 形は per-card 確認
+- **【事件緑＆白】〚突撃〛4**: caseColor color[]+combine:'and' 出荷済 → ENGINE0 (D06003/04/21/23)
+
+**conflict-blocked (Track A ではなく B3-1)**: 「【ヒラメキ】キャラをK枚スリープ」(10: B01020/B02076/B04073/B05008/B05097/B06078/B06085/B08008/B08036/PR133)・「リムーブエリアの〚名/特徴〛手札回収」(5+4) は engine/文法とも被覆済だが conflict で key refuse。canonical 化で unlock = B3-1 の ROI 根拠。
 
 ## (b) B3 監査 queue (compiler 副産物)
 
