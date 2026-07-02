@@ -36,15 +36,17 @@ wave-13 (commit 2a1e0678) で **P54 removeNameCount dyn** 出荷 (犯人 PR158/P
   auraFilterOpp{hasSetCards} + ヒラメキdraw、全 primitive 出荷済) → これは **card-wave lane** の仕事 (engine 変更 0)。
 
 ### ⇒ 次 A2 session の推奨: lane を **card-authoring へ pivot** するか、A1/card-wave に統合。
-残る engine-additive の候補は G16 (対公開カード/対現場最大LP filter、M effort) と G17 ($revealed N>1 色読み、M effort、
-boundMatchesFilter が bound[0] のみ) の 2 件のみ。両者とも「純追加」だが複雑 (filter 経路拡張)、要 semantic grep + 慎重検証。
+残る engine-additive の候補: G16 **対現場最大LP は wave-14 出荷済** ($self.sceneMaxLp dyn + exemplar B08043、main f687d978)。
+残 = G16 対公開カード (B04074 souza-bind「公開集合内に同Lv」= structurally complex、A1/DEFER 寄り) と
+G17 $revealed N>1 色読み (D06013/PR132、boundMatchesFilter が bound[0] のみ → boundAnyMatchesFilter は wave-5 出荷済、要再 grep)。
 
 ## queue (旧、参考。各行は着手前に origin/main semantic grep で stale 検証必須 — 上記所見で大半 stale)
 1. ~~condition-dyn-absent-group~~ **枯渇** (P54 で最後の additive 出荷、他全て stale/structural)
 2. ~~verbs-effects~~ **clean unlock 不可** (exemplar が structural 前提、上記所見)
 3. ~~restriction-flags~~ 残 (P05/P08/P09) は **structural→A1 送り**
-4. **relative-filter 残 = G16 / G17 のみ** (M effort、唯一の生きた additive vein):
-   G16 relative-LP/level (B04074/B08043 対公開カード/対現場最大LP) / G17 $revealed N>1 色読み (D06013/PR132)
+4. **relative-filter 残 = G16 対公開カード / G17 のみ** (M effort):
+   ~~G16 対現場最大LP (B08043)~~ 出荷済 (wave-14、$self.sceneMaxLp) / G16 対公開カード (B04074、souza-bind 複雑=A1寄り) /
+   G17 $revealed N>1 色読み (D06013/PR132) ※boundAnyMatchesFilter/boundDistinctColorCount は wave-5/10 出荷済 → 要再 grep
 5. ~~setcard-stack~~ P27/P28/P43 = cost/set-card structural → A1。
 
 ## プロセス
