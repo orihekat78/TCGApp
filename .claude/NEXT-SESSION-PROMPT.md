@@ -1,7 +1,7 @@
 # 次セッション再開プロンプト — Track A: engine 拡張 (2026-07-02 二Track化)
 
 > ★Track B (カード追加ツール = text→DSL compiler) は **別 session・別プロンプト** → [NEXT-SESSION-PROMPT-TRACK-B.md](NEXT-SESSION-PROMPT-TRACK-B.md)。
-> 本 session は engine 拡張専任 (直近: additive wave-6 出荷 grantTraits/grantNames)。
+> 本 session は engine 拡張専任 (直近: E2 structural **起点** wave-7 出荷 actedCharThisTurn + exemplar B08049 ジョディ)。
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。
 > Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効。
@@ -31,7 +31,7 @@
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
-- **main = 9f9ea043** (E1 additive **wave-6**: grantTraits/grantNames 継続 trait/name 付与。直前=2099dda1 docs / 7d1e0be2 wave-5)。vitest baseline=**3522 pass +1 skip**。
+- **main = ef63cd9b** (E2 structural **wave-7**: P17 actedCharThisTurn char filter + exemplar B08049。直前=df9460d0 Track B compiler B0 / 9f9ea043 wave-6)。vitest baseline=**3567 pass +1 skip** (ef63cd9b、Track B B0 test 込み。自 wave 分は +15)。
 - ⚠ 並行 session 複数稼働・同一 working tree 共有 → 自分のファイルだけ明示 add。engine 並行は `git worktree add` 隔離。
 
 ## ★driver: engine 拡張 実行計画
@@ -45,7 +45,10 @@
 - **sole-count も per-card 要 certify**。card-wave 同様、wave の対象カードは個別確認。
 - **TSV の pure-additive ラベルも要検証**: wave-5 で **P37 (trait/name grant aura) は TSV では pure-additive だが実際は matchOneFilter (BUG-117 hot path) の trait/color/name 読みに late-bind aura を差す=filter-core 変更**。「read.char.traits だけ足す」は半端解 (matchOneFilter 経由の filter/bond が granted trait を見ない、on-set-host session70 の READ≠解禁 教訓)。→ **P37 は wave-5 から分離し wave-6 で単独・全 lens review** に回した。
 
-## 直近 wave 出荷済 (engine-only、card 未追加)
+## 直近 wave 出荷済
+- **wave-7 (ef63cd9b)** — E2 structural **起点** P17 (actedCharThisTurn char filter) + exemplar **B08049 ジョディ** 同梱 (新方針の生きた E2E):
+  `actedCharThisTurn?: boolean` TargetFilter 軸 = 「このターン中にアクション[キャラ]した」board char。**記録**=[state-machine.declare](../src/engine/flow/action/state-machine.ts) が `action:declare` emit 後 `target.kind==='char'` の時 actor へ `setTurnEffect`(アクション[事件] は除外、rules/22 宣言時確定)。**参照**=[matchOneFilter](../src/engine/target/candidates.ts) が board char の turnEffects flag を honor (**全 filter-eval site が委譲**→単一挿入で全 site honor、c=null fail-closed、hasSetCards と同 `!== undefined` symmetric)。**清掃**=[clearTurnEffects('turn')](../src/engine/mutate/char.ts)('action'/'contact' は残す)。**3-way sync**(型/FILTER_FIELDS/TARGET_FILTER_KEYS)+ pre-existing `colorNot` 漏れ修正。exemplar B08049: a1=ターン終了 FBI≥4 draw / a2=宣言 sleepSelf→今ターン acted FBI を active化。
+  ★sceneSetState PA 短縮形の宣言 dispatch は `resolveEffectPicks` 不可 (bespoke await-path)→ test は production `candidates()` + `cost.canPay` で検証。opus 4-lens 全 SHIP・0 blocker。詳細 [[reference-engine-additive-wave7-acted-this-turn]] / changelog [2026-07-02-02](changelog-entries/2026-07-02-02-engine-additive-wave7-acted-this-turn.md) / DEFERRED-INDEX「wave7-acted-this-turn」節。
 - **wave-6 (9f9ea043)** — 純 additive 1件 (P37 継続 trait/name grant、**単独隔離 + opus 4-lens** 済):
   `grantTraits` / `grantNames` ContinuousModifier field ([card-def.ts](../src/engine/types/card-def.ts))。self-scope 継続
   「現場にいるこのキャラは〚特徴/カード名[X]〛を持つ/としても扱う」。[read/char.ts](../src/engine/read/char.ts) `grantWalk`
@@ -78,13 +81,13 @@
 - **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
 - **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
 
-## 次やること: E1 wave-7 (E1 additive 末端 → E2 structural へ移行)
-- ★着手前: 各 primitive を origin/main (9f9ea043) で実 grep (stale 排除)。**wave-6 で P37 grantTraits/grantNames 出荷済**
-  (matchOneFilter trait/cardName/cardNameNot + read.char.traits/names + bond の 5 honor site)。**E1 additive の大物 P-item は wave-1〜6 でほぼ枯渇**。
-- **wave-7 = E1 additive 末端の小物 + E2 structural の起点**:
-  - **G17 distinct-color pair (B07002)** [E1 additive 残]: 「それぞれ色の異なる(同じ色を持たない)特徴[探偵]のキャラを2枚リムーブした場合」=
-    bound 集合内 trait[探偵] メンバーの **相互 distinct-color 数 ≥2** = 新 Condition `boundDistinctColorCount`
-    (boundAnyMatchesFilter の any では表現不可)。cond/eval.ts 自己完結 evaluator = wave-2/5 の cond 追加テンプレ (KIND_MAP + cjs CONDS 両登録)。
+## 次やること: wave-8 (E2 structural 継続)
+- ★着手前: 各 primitive を origin/main (**ef63cd9b**) で実 grep (stale 排除)。**wave-7 で P17 actedCharThisTurn 出荷済**
+  (TargetFilter 軸 + declare write + clearTurnEffects + 3-way sync)。**E1 additive は wave-1〜6 で枯渇、E2 structural に移行済**。
+- **wave-8 = E2 structural 継続** (wave-7 P17 済。以下 影響降順、★per-card sole 要 certify・非 sole 多数注意):
+  - ⚠ **E2 structural の残 P-item は多くが非 sole** (DEFERRED-INDEX「wave7-acted-this-turn」節参照)。単独 exemplar が出せる item を優先。
+  - **G17 distinct-color pair (B07002)** [E1 additive 残・0解禁]: 新 Condition `boundDistinctColorCount` (bound 集合内 trait[探偵] の相互 distinct-color 数 ≥2)。
+    ★B07002 は **cutin/変装 turn-scoped ban** (P05-P09) と 2-gate ゆえ **その ban primitive とペア**で出す (単独では 0 解禁)。cond/eval.ts 自己完結 evaluator = wave-2/5 テンプレ。
   - **E2 structural 群** (TSV batch=keyword-trait-turn-tracking-grant 等、E1 additive 枯渇後の本命): 影響降順で
     **P15 疾風-発動済 per-turn tracking** (B09072/B09070、TurnScopedFlags に shippuFiredUids + reset + Condition/TargetFilter 軸) /
     **P17 acted-this-turn char filter** (B08049、SceneCharacter.turnEffects に actedCharThisTurn + action:declare 書込 + TargetFilter 軸) /
