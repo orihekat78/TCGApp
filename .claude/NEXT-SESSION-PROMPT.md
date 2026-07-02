@@ -12,6 +12,14 @@
 - **engine 拡張のみ先に全部 → 完了後にカード追加フェーズ** (engine-first)。骨格凍結到達が目標。
 - 認識合意: 計画 (E1+E2+E3+MR) 完了 = 現561枚に対しエンジン拡張完了。±5/軽微touch-up/将来セットは別。
 
+## ★★方針改定 (2026-07-02、ユーザー決定 — 速度リバランス)
+- 「速度<精度 一律」撤回 → **リスク連動 3-tier ゲート** ([specs/speed-rebalance-2026-07-02.md](specs/speed-rebalance-2026-07-02.md))。
+  T1 (pure-additive/clone)=機械ゲート+probe のみ・review 0-1 lens / T2=2 lens / T3 (hot-path/core/MR)=従来フル。
+- wave 大型化: T1 は 10-15 prim or 20-40 card / 1 commit、1 session 複数 wave 可 (context 60% まで)。
+- **全カード完了計画** = [specs/all-cards-completion-plan-2026-07-02.md](specs/all-cards-completion-plan-2026-07-02.md)
+  (残535枚、Ph1 E1裾→Ph2-3 E2→Ph4 E3→Ph5 MR→Ph6 カード大量author 30-60枚/session→Ph7 tail、計~20-27 session)。
+- engine wave には **exemplar カード 1-2 枚を同 commit 同梱** (E2E 生きたテスト + clone 原器、再certify 二度手間排除)。
+
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
 - **main = 9f9ea043** (E1 additive **wave-6**: grantTraits/grantNames 継続 trait/name 付与。直前=2099dda1 docs / 7d1e0be2 wave-5)。vitest baseline=**3522 pass +1 skip**。

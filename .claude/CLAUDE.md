@@ -30,12 +30,19 @@
 
 ## 開発時の厳格レビュー手順
 
-### 最優先方針: 効率より精度
+### 最優先方針: リスク連動の精度 (2026-07-02 user_request で改定)
 
-実装の確認・調査は **省略せず網羅的に** 行う。"おそらく" "多分" で進めず、
-必ずコード / 公式ルール / E2E ログを直接参照して根拠を確定させること。
-時短のための短絡 (sample 数縮小・水平展開省略・推測でのバグ判定) は禁止。
-**速度 < 精度** を全フェーズで優先する (2026-05-21 user_request #2 反映)。
+2026-05-21 の「速度 < 精度 一律」は **撤回**。精度の床は機械ゲート
+(tsc / vitest baseline / smoke:1000 / 8 lint / CI + TDD probe test) が全変更で担保し、
+トークンを食うエージェント検証は変更リスクに連動させる (詳細・tier 表:
+[speed-rebalance-2026-07-02.md](specs/speed-rebalance-2026-07-02.md))。
+
+- **T1 (pure-additive evaluator / 出荷済 exemplar の clone)**: 機械ゲート + probe test のみ。敵対 review 0-1 lens。
+- **T2 (新 verb / emit 多点配線 / WRITE 側)**: 2 lens (semantic + edge-test)。
+- **T3 (hot-path / resolver / flow core / GameState 形状 / MR)**: 従来フル (4 lens + Playwright)。
+
+変わらないもの: 推測でのルール補完禁止 / grounding (印字テキスト全列 ⇔ DSL 突合) /
+骨格凍結原則。post-ship バグは BUG-XXX 運用で回収する (bug budget 容認)。
 
 ユーザーレビュー(RV)を依頼する **前** に、Claude自身が必ず以下を実施：
 
@@ -46,12 +53,12 @@
 - [ ] エッジケース（手札0枚、デッキ0枚、リフレッシュ、同時アクション、変装中の効果引継ぎ等）を考慮しているか
 - [ ] テストが通るか
 - [ ] 型エラー・lintエラーがないか
-- [ ] **Playwright 1 試合通し検証** (機能変更を含む round の場合、Round 4a Phase 6.3 導入)
+- [ ] **Playwright 1 試合通し検証** (T3 変更 or 新 UI 部品「型」が生えた round のみ。2026-07-02 tier 化)
   - 静的 screenshot だけでなく、click → effect resolution → state 反映を実機で確認
   - 人間 vs CPU を mulligan → 勝敗決定 (or max 30 turn) まで通して操作
   - 各 step で console error 0 確認
   - **「画面表示確認 ≠ 機能確認」**、両方必要
-- [ ] **Playwright で「画面処理 = カードテキスト文言」検証** (2026-06-06 追加、BUG-117〜121 教訓)
+- [ ] **Playwright で「画面処理 = カードテキスト文言」検証** (family exemplar のみ。clone は決定表 diff で代替、2026-07-02 tier 化)
   - ゲーム画面上の処理 (候補列挙 / 選択 / 結果) が、カードの **公式テキストの文言と語義通り**に
     一致するかを実機で確認する。表示が出るだけでは不十分。条件外の decoy を盤面に置き、
     対象範囲・filter 条件 (LP/レベル/色/特徴/種別/状態)・枚数・選択者・持続・複数択 modal が
