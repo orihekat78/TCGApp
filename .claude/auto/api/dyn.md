@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `e67db8315af3`
+> Source hash: `06cce71b19e5`
 
 動的式評価（$self.ap / $contact.X / $cost.X / $dyn.X）
 
