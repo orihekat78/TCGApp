@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 428
-- **ファイル数**: 7495
+- **ファイル数**: 7501
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -553,6 +553,7 @@
     - `2026-07-02-05-compiler-b3-demand-certify.md` — Track B — demand-signal 正式化 + B3-2 gap-suspect 27 certify (BUG-163 修正 /…
     - `2026-07-02-06-compiler-b3-1-canonical.md` — Track B — B3-1 conflict canonical 化 (射影正規化 N1-N5) + B3-3 exceptions 監査完了
     - `2026-07-02-06-engine-wave10-b07002-multipick.md` — wave-10: B07002 exemplar + boundDistinctColorCount + turn-scoped cutin/…
+    - `2026-07-02-07-cards-sync-batch.md` — Track B — cards:sync バッチ自動化 (公式 API → TSV → compiler gate を 1 コマンド化)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -1017,6 +1018,8 @@
     - `smoke-2026-07-02-4.md` — Smoke 1000戦レポート — smoke-2026-07-02-045122
     - `smoke-2026-07-02-5.json`
     - `smoke-2026-07-02-5.md` — Smoke 1000戦レポート — smoke-2026-07-02-052712
+    - `smoke-2026-07-02-6.json`
+    - `smoke-2026-07-02-6.md` — Smoke 1000戦レポート — smoke-2026-07-02-092325
     - `smoke-2026-07-02.json`
     - `smoke-2026-07-02.md` — Smoke 1000戦レポート — smoke-2026-07-02-012634
     - `smoke-baseline.json`
@@ -1289,8 +1292,10 @@
         - `ct-d05-api.json`
         - `ct-d06-api.json`
         - `ct-d07-api.json`
+        - `ct-d08-api.json`
         - `ct-d09-api.json`
         - `ct-d10-api.json`
+        - `ct-d11-api.json`
         - `ct-p01-api.json`
         - `ct-p02-api.json`
         - `ct-p03-api.json`
@@ -5202,6 +5207,7 @@
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT-TRACK-B.md` — 次セッション再開プロンプト — Track B: カード追加ツール (text→DSL compiler) (2026-07-02 新設)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
+  - `scheduled_tasks.lock`
   - `settings.json` — Claude Code 設定 (権限・hooks 等)
 - **`.github/`**
   - **`workflows/`**

@@ -33,6 +33,8 @@
     "lint:icon-abilities": "tsx scripts/lint-icon-abilities.ts",
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",
     "benchmark": "tsx scripts/benchmark/run.ts",
+    "cards:fetch": "node .claude/specs/cards-data/_raw/_fetch_all.cjs && node .claude/specs/cards-data/_regen_all.cjs",
+    "cards:sync": "npm run cards:fetch && node scripts/compiler/tsv-corpus.cjs && tsx scripts/compiler/dump-shipped.ts && node scripts/compiler/mine.cjs && node scripts/compiler/oracle.cjs --gate",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "dev:meta": "vite --config meta-app/vite.config.meta.ts",

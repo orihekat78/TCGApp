@@ -44,12 +44,19 @@ silent 誤訳排除の原則 (一致句のみ変換・未知句 1 つで refuse)
   unlock 実測 = P printing 2 枚のみ → **B07031P/B08049P 出荷** (ALL_CARDS 1515)。exceptions 7 + align-ambiguous 2 は
   opus workflow 監査で**全 FULL_CORRECT (誤訳ゼロ・恒久 exception 枠)**。★教訓: 初版 ROI「10+5+4 枚 unlock」は
   行 unlock と card unlock の混同 — ヒラメキ 10 枚は各々別の新規複雑文を持つ。
+- **cards:sync バッチ出荷 (2026-07-02 #3)**: 公式 API 取得を全自動化 — `npm run cards:sync` 1 発で
+  crawl (auto-discovery、新セット無変更検出) → TSV 再生成 (d08/d11 統一) → corpus → mine → oracle --gate。
+  初回実走で **新 PR 25 枚** (PR277〜304) 取込、既存セル変更 0、**unshipped compile 可 0→10**
+  (PR281/282/283 + vanilla 7) = card-wave 出荷候補 signal。corpus 2074 / unshipped 557。
 
 ## 次やること (B3 queue 完遂 → steady-state 運用)
 1. ~~demand-signal を Track A へ~~ / ~~B3-2~~ / ~~B3-1 conflict canonical 化~~ / ~~B3-3 exceptions 監査~~ — **全完了 (2026-07-02)**。
-2. **compiler は steady-state**: 新カード追加/変更時に tsv-corpus → dump-shipped → mine → oracle --gate を再実行し
-   conflict/mismatch を surface (vitest mined-rules.test が G1 恒常 pin)。正規化 rule の追加は
+2. **compiler は steady-state**: 新カード追加/変更/新セット投入時は **`npm run cards:sync` 1 発**
+   (公式 API crawl → TSV → corpus → mine → oracle --gate) で conflict/mismatch を surface
+   (vitest mined-rules.test が G1 恒常 pin)。正規化 rule の追加は
    「engine 直読の証明脚注必須」原則を維持 (canonical.cjs 冒頭)。
+   ★compile 可 10 枚 (PR281/282/283 + vanilla 7、oracle-report.json unshippedCompiledIds) の
+   刈り取りは card-wave (Track A) へ。
 3. 残り着手候補 (Track B 固有の queue は空):
    - gap-suspect 残 25 = B09100 系 (BUG-164 Track A 送り済) + P variant — 新規性なし、B09100 解決時に自然減。
    - card-phase 降格分 (MR PA 24 / set-event 15 / turn-grant 13 / B05058 grantTraits stale-defer 等) の刈り取りは
