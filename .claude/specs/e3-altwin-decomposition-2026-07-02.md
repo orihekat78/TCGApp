@@ -17,7 +17,10 @@ grounding = engine-extension-plan-2026-06-30.tsv 行 `rule-rewrite-altwin-delay`
 ## 増分順 (小 → 大、各 engine-only + probe、consumer は card phase)
 
 1. ✅ **opponentLoses verb** (増分1、出荷済 2026-07-02) — alt-lose 勝利ルート。reason 'alt-lose' + first-writer guard。純 additive。
-2. **P11 データモデル** (次、中): `PlayerState.sceneCapOverride?: number` (5 のハードコード 6サイト集約 → 参照点1本化) +
+2. ✅ **P11** (増分2、出荷済 2026-07-02 main 3ec88935): `sceneCapOverride` + `partnerColorsOverride` ContinuousModifier field。
+   read/scene-cap.ts sceneCap(s,p) が登場ゲート7サイト集約 (既定5、絶対 invariant は5固定=非強制) / cond/eval.ts partnerColor が override 色で評価。
+   latent (全 unreachable、code comment 記録): switchEnter 条件付きcap crash / partnerColor 自己再帰 / bindings依存condition / candidates partner-target。
+   ~~旧計画~~ `PlayerState.sceneCapOverride?: number` (5 のハードコード 6サイト集約 → 参照点1本化) +
    `PartnerOnBoard.colorsOverride?: Color[]` (cond/eval.ts partnerColor が読む)。case 在場中 continuous。
    ハードコード集約が本体 = structural だが挙動不変リファクタ寄り。単独 exemplar 可 (PR067)。
 3. **P53 evidence 機構** (中): `evidenceFlip` に all モード + `evidenceTraitAtLeast` Condition (証拠を特徴計数) +
