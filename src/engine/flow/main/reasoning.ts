@@ -60,6 +60,11 @@ export function canReason(state: GameState, uid: string): boolean {
   }
   // char
   if (t.char.state !== 'active') return false;
+  // engine additive wave-8 (2026-07-02, P15): 「このキャラは推理できない。」付与 (B09072 a2、
+  // ターン終了時まで)。charSetTurnEffect verb が turnEffects['cannotReason']=true を立て、
+  // clearTurnEffects('turn') が endTurn で削除。付与は名乗り/迅速に優先する絶対制限 (rules/11:
+  // 推理は名乗り/状態と独立の行動可否)。既存カードは本キーを立てない → 挙動不変。
+  if (t.char.turnEffects['cannotReason'] === true) return false;
   if (t.char.isNamed) {
     // 名乗り状態: 迅速持ちのみ可
     return readChar.hasKeyword(state, uid, '迅速');

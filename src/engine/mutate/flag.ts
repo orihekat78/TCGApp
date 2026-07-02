@@ -81,6 +81,7 @@ function resetTurnFlags(s: GameState, p: Player): void {
   s.turnState[p].eventUseBanned = false; // B09034 §M3: 「このターン中イベント使用不可」をターン境界で解除
   s.turnState[p].nextHintBanned = false; // wave use-restrict: 「このターン中ネクストヒント不可」(B06104/B09019/B09105) をターン境界で解除
   s.turnState[p].hiramekiSuppressed = false; // B06049 cluster8: action-scoped ヒラメキ抑止の backstop (主清掃は action-end)
+  s.turnState[p].shippuFiredThisTurn = false; // wave-8 P15: 疾風発動記録の backstop (主清掃は endTurn 両プレイヤー)
   s.turnState[p].declaredAbilityUseCount = {};
   // BUG-067 (2026-05-28): declared ability の【ターン①/②】 enforcement のため、
   // SceneCharacter / Case の declaredUseCount もターン境界でリセット。

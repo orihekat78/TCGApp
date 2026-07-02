@@ -176,6 +176,9 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     // engine additive wave-7 (2026-07-02, P17): 「このターン中にアクション[キャラ]した」flag
     // (declare が立て、TargetFilter.actedCharThisTurn が honor)。ターン終了で失効 (B08049)。
     delete te['actedCharThisTurn'];
+    // engine additive wave-8 (2026-07-02, P15): 「このキャラは推理できない。」(B09072 a2、ターン終了時まで)
+    // 付与を解除。canReason が本キーを読む (reason-ban)。actedCharThisTurn 同様 boolean flag key。
+    delete te['cannotReason'];
     te.contactImmune = false;
     te.removeOnTurnEnd = false;
     // _action suffix もターン終了で確実に切れる (アクション終了清掃の safety net)

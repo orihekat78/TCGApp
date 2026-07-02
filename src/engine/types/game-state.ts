@@ -123,6 +123,23 @@ export type TurnScopedFlags = {
    * payload.player の本フラグを見て hirameki の push/queue を抑止する。undefined/false = 抑止なし。
    */
   hiramekiSuppressed?: boolean;
+  /**
+   * 「このターン中、(このプレイヤーの) キャラの【疾風】が発動していたか」(B09072 横溝重悟、
+   * engine additive wave-8 2026-07-02 P15)。listeners/triggered.ts の in-play scan で疾風 ability
+   * (abilityIsShippu = enter + enterOrderEquals) が全 gate 通過 = 実際に発動した時点で発動キャラの
+   * owner 側を true にする。「このターン中、自分のキャラの【疾風】が発動していた場合」は汎用
+   * Condition {kind:'flag', player:'self', key:'shippuFiredThisTurn', v:true} で読む (新 Condition kind 不要)。
+   * 清掃は endTurn (phase:end:cleanup、両プレイヤー) が primary + resetTurnFlags が backstop。
+   * キャラ離場後も履歴として残る (boolean、per-char turnEffect ではない) ため「発動した疾風キャラが
+   * その後リムーブされても条件成立」を満たす。undefined/false = 未発動。既存カードは本 flag を
+   * 読まない (write-only) → 挙動不変 (smoke baseline 不変)。付与 (grantedAbilities) 由来の【疾風】も
+   * abilityIsShippu 一致で記録する (rules/17 §「〜を持つ」= 付与も該当)。
+   * ⚠ endTurn 清掃は phase:end:cleanup (phase:end:start の「ターン終了時」trigger queue より **後**)。
+   *   将来「ターン終了時、疾風発動キャラが〜」型の consumer は queue 時評価の `ability.condition` で本 flag を
+   *   読むこと (in-effect の resolve-time `conditional` は清掃後で false になる。本 wave の consumer B09072 a1 は
+   *   【登場時】= main-phase reader なので無関係)。
+   */
+  shippuFiredThisTurn?: boolean;
 };
 
 export type LogEntry = {

@@ -23,6 +23,7 @@
 import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js'; // BUG-096: triggered ability の limit enforcement
+import { abilityIsShippu } from '../read/keyword.js'; // wave-8 P15: 疾風発動 per-turn 記録
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
@@ -315,6 +316,16 @@ function handleHook(
       // (SceneCharacter.declaredUseCount、resetTurnFlags がターン境界で reset、rules/17)。
       if (ability.limit?.kind === 'turn') {
         if (readChar.declaredUseCount(state, card.uid, ability.id) >= ability.limit.n) continue;
+      }
+      // engine additive wave-8 (2026-07-02, P15): 疾風 (enter + enterOrderEquals) が発動した時点で、
+      // 発動キャラの owner 側 turnState.shippuFiredThisTurn を立てる。全 gate (selfOnly/matcher/
+      // matcherCondition=enterOrderEquals/ability.condition/limit) 通過後に記録 = 実際に発動した時のみ
+      // (rules/24: 効果が解決できなくても「発動した」扱い → queue 到達点で記録するのが正しい)。
+      // abilityIsShippu で【登場時】(matcherCondition 無し) と区別。「このターン中、自分のキャラの
+      // 【疾風】が発動していた場合」(B09072) を Condition {kind:'flag', key:'shippuFiredThisTurn'} が読む。
+      // 既存カードは本 flag を読まない (write-only) → 挙動不変。清掃は endTurn (両プレイヤー) + resetTurnFlags backstop。
+      if (abilityIsShippu(ability)) {
+        state.turnState[card.player].shippuFiredThisTurn = true;
       }
       // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を候補から substitute してから queue
       // recursive utility が atom / choice / sequence / conditional / optional 等を walk

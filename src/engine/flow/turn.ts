@@ -94,6 +94,10 @@ export function endTurn(state: GameState, p: Player): void {
     for (const c of state.players[player].scene) {
       charMutator.clearTurnEffects(state, c.uid, 'turn');
     }
+    // engine additive wave-8 (2026-07-02, P15): 「このターン中に【疾風】発動」記録をターン境界で解除。
+    // primary 清掃 (両プレイヤー分)。resetTurnFlags は driver 層で backstop。turnState 直リセットは
+    // hiramekiSuppressed が state-machine action-end で直接クリアするのと同じ posture (driver 非依存)。
+    state.turnState[player].shippuFiredThisTurn = false;
   }
   // BUG-101: 'opp-turn' scope (D11005 挑発 mustBeTargeted) は「相手のターン終了時まで」。
   // p のターン終了時、相手 (非p=設定者) の scene の opp-turn 効果を清掃する

@@ -862,3 +862,24 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
   常に不一致 (deck/remove/公開集合の印字 card は「アクションした」概念が無い)。これらの site で actedCharThisTurn を使うカードは想定外。
 - flag は **declare 時点**で立つ (rules/22)。ガードされた / AP不足でリムーブ不発 / 対象離脱で abort されたアクションも「アクションした」に該当
   (公式裁定と整合)。もし将来「リムーブに成功したアクション限定」の軸が要るなら別 flag (actedAndRemoved 等) を新設する。
+
+## wave engine / wave8-shippu-fired-reasonban (P15 部分、2026-07-02 出荷)
+
+**出荷済** (engine additive wave-8、engine-only): `shippuFiredThisTurn` per-turn flag (Condition 消費部) + 推理不可付与 (canReason gate)。
+- `TurnScopedFlags.shippuFiredThisTurn?: boolean` — 疾風発動 (abilityIsShippu) 時 triggered.ts が発動キャラ owner 側に記録、
+  汎用 Condition `{kind:'flag', key:'shippuFiredThisTurn'}` で消費 (新 Condition kind 不要)、清掃 endTurn 両者 + resetTurnFlags backstop。
+- `cannotReason` turnEffect + canReason gate (絶対制限、既存 charSetTurnEffect verb 流用、clearTurnEffects('turn') 清掃)。
+
+⚠ **本 wave で DEFER**:
+- **B09072 横溝重悟 (consumer カード)**: a1 は shippuFiredThisTurn flag-condition で解禁済だが、a2「〚特徴[神奈川県警]〛のキャラを
+  1枚まで選び、アクティブにし、ターン終了時まで推理できないを与える」= **pick-bind carrier 不在**で出せない。sceneSetState /
+  charSetTurnEffect は共に bind 非対応、pure-pick-bind verb も無いため「select 1 char → 2 rider (activate + reason-ban)」の共有 pick が
+  組めない。→ card-wave で (要 新 picker mechanism、または carrier-reuse の実機経路 empirical 検証 [[feedback-carrier-reuse-human-path-empirical]])。
+- **P15 TargetFilter 軸** (B09070 萩原千速&研二 ターン終了時「疾風発動した全キャラを active化」): per-char turnEffect + matchOneFilter honor +
+  turn-end queue-time timing 検証が必要。かつ B09070 は【疾風】の removeArea-filtered-select + PA-declared が第2・第3 gate = 非 sole。
+  → Condition 消費で足りる本 wave では未実装。TargetFilter 軸出荷時は endTurn 清掃 (phase:end:cleanup) が turn-end trigger queue の
+  **後**である点に注意 (queue 時 `ability.condition` で読むこと。in-effect resolve-time `conditional` は清掃後で false)。
+- **P16 疾風条件 override (B09090)** / **boundDistinctColorCount (B07002、G17 残)** は別 primitive (wave7-acted-this-turn 節参照)。
+
+⚠ **latent note**: 疾風 record は付与 (grantedAbilities) 由来の【疾風】でも発火する (rules/17 §「〜を持つ」= 付与も該当、意図通り)。
+`abilityIsShippu` は enterOrderEquals の N 値を問わない (任意 N の疾風発動で「発動していた」成立、意図通り)。
