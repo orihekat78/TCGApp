@@ -1,0 +1,562 @@
+num	kind	verdict	gates	title
+B01006	character	ENGINE0	ENGINE0	灰原哀
+B01006P	character	ENGINE0	ENGINE0	灰原哀
+B01022	event	ENGINE0	ENGINE0	少年探偵団
+B01035	character	ENGINE0	ENGINE0	大滝悟郎
+B01045	character	ENGINE0	ENGINE0	中森青子
+B01047	character	ENGINE0	ENGINE0	黒羽快斗
+B01047P	character	ENGINE0	ENGINE0	黒羽快斗
+B01051	character	ENGINE0	ENGINE0	京極真
+B01054	character	ENGINE0	ENGINE0	寺井黄之助
+B01054P	character	ENGINE0	ENGINE0	寺井黄之助
+B01070	character	ENGINE0	ENGINE0	アンドレ・キャメル
+B02006	character	ENGINE0	ENGINE0	仮面ヤイバー
+B02006P	character	ENGINE0	ENGINE0	仮面ヤイバー
+B02022	character	ENGINE0	ENGINE0	鬼丸猛
+B02022P	character	ENGINE0	ENGINE0	鬼丸猛
+B02049	character	ENGINE0	ENGINE0	中森青子
+B02057	character	ENGINE0	ENGINE0	沖矢昴
+B02057P	character	ENGINE0	ENGINE0	沖矢昴
+B02076	character	ENGINE0	ENGINE0	大和敢助
+B02076P	character	ENGINE0	ENGINE0	大和敢助
+B02086	character	ENGINE0	ENGINE0	ベルモット
+B02086P	character	ENGINE0	ENGINE0	ベルモット
+B02087	character	ENGINE0	ENGINE0	キール
+B02087P	character	ENGINE0	ENGINE0	キール
+B03002	character	ENGINE0	ENGINE0	江戸川コナン
+B03002P	character	ENGINE0	ENGINE0	江戸川コナン
+B03024	event	ENGINE0	ENGINE0	「新一!!!」
+B03024P	event	ENGINE0	ENGINE0	「新一!!!」
+B03028	character	ENGINE0	ENGINE0	服部平次
+B03028P	character	ENGINE0	ENGINE0	服部平次
+B03029	character	ENGINE0	ENGINE0	遠山和葉
+B03029P	character	ENGINE0	ENGINE0	遠山和葉
+B03030	character	ENGINE0	NEW:untargetable continuous「選ばれない」	伊織無我
+B03030P	character	ENGINE0	NEW:untargetable continuous「選ばれない」	伊織無我
+B03040	character	ENGINE0	ENGINE0	和田進一
+B03041	event	ENGINE0	ENGINE0	直球勝負
+B03041P	event	ENGINE0	ENGINE0	直球勝負
+B03042	event	ENGINE0	ENGINE0	「ボクは好きだな… 君みたいな熱い探偵…」
+B03047	character	ENGINE0	ENGINE0	京極真
+B03047P	character	ENGINE0	ENGINE0	京極真
+B03050	character	ENGINE0	ENGINE0	怪盗キッド
+B03062	event	ENGINE0	ENGINE0	私はもう貴方のそばに…
+B03062P	event	ENGINE0	ENGINE0	私はもう貴方のそばに…
+B03063	event	ENGINE0	ENGINE0	死闘
+B03066	character	ENGINE0	ENGINE0	赤井秀一
+B03066P	character	ENGINE0	ENGINE0	赤井秀一
+B03070	character	ENGINE0	ENGINE0	メアリー
+B03070P	character	ENGINE0	ENGINE0	メアリー
+B03078	character	ENGINE0	ENGINE0	宮野明美
+B03078P	character	ENGINE0	ENGINE0	宮野明美
+B03080	event	ENGINE0	ENGINE0	BANG
+B03080P	event	ENGINE0	ENGINE0	BANG
+B03085	character	ENGINE0	ENGINE0	諸伏景光
+B03085P	character	ENGINE0	ENGINE0	諸伏景光
+B03088P	character	ENGINE0	ENGINE0	松田陣平
+B03093	character	ENGINE0	NEW:untargetable continuous「選ばれない」	西村京兵
+B03098	character	ENGINE0	ENGINE0	諸伏高明
+B03098P	character	ENGINE0	ENGINE0	諸伏高明
+B03110	character	ENGINE0	ENGINE0	ジン
+B03110P	character	ENGINE0	ENGINE0	ジン
+B03111	character	ENGINE0	ENGINE0	バーボン
+B03111P	character	ENGINE0	ENGINE0	バーボン
+B03112	character	ENGINE0	ENGINE0	ライ
+B03112P	character	ENGINE0	ENGINE0	ライ
+B03118	character	ENGINE0	ENGINE0	キール
+B03133	event	ENGINE0	ENGINE0	「見ィーつけた♪」
+B03134	event	ENGINE0	ENGINE0	ジンの眼光
+B04027	event	ENGINE0	ENGINE0	「後ろの女に一言遺したろ思てなァ…」
+B04027P	event	ENGINE0	ENGINE0	「後ろの女に一言遺したろ思てなァ…」
+B04032	character	ENGINE0	ENGINE0	白馬探
+B04032P	character	ENGINE0	ENGINE0	白馬探
+B04042	event	ENGINE0	ENGINE0	「よォ名探偵…」
+B04042P	event	ENGINE0	ENGINE0	「よォ名探偵…」
+B04055	character	ENGINE0	G17	アマンダ・ヒューズ
+B04074	character	ENGINE0	G16	降谷零
+B04074P	character	ENGINE0	G16	降谷零
+B04085	event	ENGINE0	ENGINE0	「わかってくれますよね…」
+B04085P	event	ENGINE0	ENGINE0	「わかってくれますよね…」
+B04089	character	ENGINE0	ENGINE0	ベルモット
+B04089P	character	ENGINE0	ENGINE0	ベルモット
+B04091	character	ENGINE0	ENGINE0	ウォッカ
+B04091P	character	ENGINE0	ENGINE0	ウォッカ
+B04092	character	ENGINE0	ENGINE0	キャンティ
+B04093	character	ENGINE0	ENGINE0	コルン
+B04094	character	ENGINE0	ENGINE0	ジン
+B04094P	character	ENGINE0	ENGINE0	ジン
+B05008	character	ENGINE0	NEW:相手効果による untargetable	灰原哀
+B05008P	character	ENGINE0	NEW:相手効果による untargetable	灰原哀
+B05009	character	ENGINE0	ENGINE0	毛利蘭
+B05009P	character	ENGINE0	ENGINE0	毛利蘭
+B05022	event	ENGINE0	ENGINE0	「オレがついてる!!」
+B05023	event	ENGINE0	ENGINE0	「探偵の毛利小五郎でございます…」
+B05023P	event	ENGINE0	ENGINE0	「探偵の毛利小五郎でございます…」
+B05027	character	ENGINE0	ENGINE0	服部平次＆遠山和葉
+B05027P	character	ENGINE0	ENGINE0	服部平次＆遠山和葉
+B05032	character	ENGINE0	ENGINE0	大滝悟郎
+B05047	character	ENGINE0	ENGINE0	怪盗キッド
+B05048	character	ENGINE0	NEW:相手効果による untargetable	黒羽快斗
+B05052	character	ENGINE0	ENGINE0	工藤優作
+B05063	case	ENGINE0	ENGINE0	園子のアブない夏物語
+B05063P	case	ENGINE0	ENGINE0	園子のアブない夏物語
+B05072	character	ENGINE0	ENGINE0	沖矢昴
+B05075	character	ENGINE0	ENGINE0	勝又力
+B05086	character	ENGINE0	ENGINE0	安室透＆降谷零
+B05092	character	ENGINE0	ENGINE0	諸伏景光
+B05093	character	ENGINE0	ENGINE0	榎本梓
+B05093P	character	ENGINE0	ENGINE0	榎本梓
+B05107	character	ENGINE0	ENGINE0	ウォッカ
+B05107P	character	ENGINE0	ENGINE0	ウォッカ
+B05111	character	ENGINE0	ENGINE0	ゾンビ
+B06004	character	ENGINE0	ENGINE0	工藤新一
+B06004P	character	ENGINE0	ENGINE0	工藤新一
+B06018	character	ENGINE0	ENGINE0	鬼丸猛
+B06018P	character	ENGINE0	ENGINE0	鬼丸猛
+B06021	character	ENGINE0	ENGINE0	石川五右衛門
+B06021P	character	ENGINE0	ENGINE0	石川五右衛門
+B06025	character	ENGINE0	ENGINE0	ケロ介
+B06026	character	ENGINE0	ENGINE0	コウモリ男（バットマン）
+B06027	character	ENGINE0	ENGINE0	カマキリ男＆ナマコ男＆ヒトデ男
+B06028	character	ENGINE0	ENGINE0	風魔の小太郎
+B06028P	character	ENGINE0	ENGINE0	風魔の小太郎
+B06032	character	ENGINE0	ENGINE0	弁慶
+B06032P	character	ENGINE0	ENGINE0	弁慶
+B06043	case	ENGINE0	ENGINE0	恋と推理の剣道大会
+B06043P	case	ENGINE0	ENGINE0	恋と推理の剣道大会
+B06062	event	ENGINE0	ENGINE0	かみなり斬り
+B06062P	event	ENGINE0	ENGINE0	かみなり斬り
+B06065	case	ENGINE0	ENGINE0	伝説の玉探し
+B06068	character	ENGINE0	ENGINE0	京極真
+B06068P	character	ENGINE0	ENGINE0	京極真
+B06077	character	ENGINE0	ENGINE0	ジョディ・スターリング
+B06077P	character	ENGINE0	ENGINE0	ジョディ・スターリング
+B06082	event	ENGINE0	ENGINE0	「説得するよりこの方が早い…」
+B06082P	event	ENGINE0	ENGINE0	「説得するよりこの方が早い…」
+B06086	character	ENGINE0	ENGINE0	萩原研二
+B06086P	character	ENGINE0	ENGINE0	萩原研二
+B06090	character	ENGINE0	ENGINE0	榎本梓
+B06090P	character	ENGINE0	ENGINE0	榎本梓
+B07013	event	ENGINE0	ENGINE0	「今時、予告状を送りつける、レトロな泥棒さんの面をな…」
+B07022	character	ENGINE0	G17	沖田総司
+B07036	character	ENGINE0	ENGINE0	中森青子
+B07036P	character	ENGINE0	ENGINE0	中森青子
+B07047P	character	ENGINE0	ENGINE0	中森銀三
+B07054	event	ENGINE0	ENGINE0	「アイスクリームは……甘いんだぜ!!」
+B07054P	event	ENGINE0	ENGINE0	「アイスクリームは……甘いんだぜ!!」
+B07063	character	ENGINE0	ENGINE0	鈴木園子
+B07063P	character	ENGINE0	ENGINE0	鈴木園子
+B07065	character	ENGINE0	ENGINE0	世良真純＆メアリー
+B07065P	character	ENGINE0	ENGINE0	世良真純＆メアリー
+B07068	character	ENGINE0	ENGINE0	羽田秀𠮷
+B07068P	character	ENGINE0	ENGINE0	羽田秀𠮷
+B07099	character	ENGINE0	ENGINE0	板倉卓
+B07100	character	ENGINE0	ENGINE0	コルン
+B07102	character	ENGINE0	ENGINE0	犯人
+B08008	character	ENGINE0	ENGINE0	吉田歩美
+B08038	character	ENGINE0	ENGINE0	京極真
+B08038P	character	ENGINE0	ENGINE0	京極真
+B08043	event	ENGINE0	G16	手のこんだ悪巧み
+B08043P	event	ENGINE0	G16	手のこんだ悪巧み
+B08057	character	ENGINE0	ENGINE0	宮野エレーナ
+B08064	character	ENGINE0	ENGINE0	白鳥任三郎
+B08072	character	ENGINE0	G15	佐藤美和子
+B08073	character	ENGINE0	G15	高木渉
+B08076	case	ENGINE0	ENGINE0	揺れる警視庁 1200万人の人質
+B08076P	case	ENGINE0	ENGINE0	揺れる警視庁 1200万人の人質
+B08082	character	ENGINE0	ENGINE0	ピスコ
+B08092P	event	ENGINE0	ENGINE0	出来損ないの名探偵
+B09022	character	ENGINE0	ENGINE0	遠山和葉
+B09022P	character	ENGINE0	ENGINE0	遠山和葉
+B09024	character	ENGINE0	ENGINE0	服部平蔵
+B09027	character	ENGINE0	ENGINE0	大岡紅葉
+B09027P	character	ENGINE0	ENGINE0	大岡紅葉
+B09033	event	ENGINE0	ENGINE0	「ひょっとしたら…」
+B09033P	event	ENGINE0	ENGINE0	「ひょっとしたら…」
+B09056	character	ENGINE0	ENGINE0	赤井秀一
+B09056P	character	ENGINE0	ENGINE0	赤井秀一
+B09061	character	ENGINE0	ENGINE0	ジェイムズ・ブラック
+B09067	event	ENGINE0	ENGINE0	「よしキャメル…走れ!!」
+B09067P	event	ENGINE0	ENGINE0	「よしキャメル…走れ!!」
+B09078	character	ENGINE0	ENGINE0	榎本梓
+B09081	character	ENGINE0	ENGINE0	知苑大哉
+B09096	character	ENGINE0	G15	キャンティ
+B09096P	character	ENGINE0	G15	キャンティ
+B09113	case	ENGINE0	ENGINE0	「愛しい愛しい…宿敵さん？」
+B09113P	case	ENGINE0	ENGINE0	「愛しい愛しい…宿敵さん？」
+D06003	character	ENGINE0	ENGINE0	服部平次
+D06004	character	ENGINE0	ENGINE0	服部平次
+D06009	character	ENGINE0	ENGINE0	大滝悟郎
+D06013	character	ENGINE0	G17	白馬探
+D06021	character	ENGINE0	ENGINE0	服部平次
+D06023	character	ENGINE0	ENGINE0	服部平次
+D10009	character	ENGINE0	ENGINE0	工藤新一
+D10010	character	ENGINE0	ENGINE0	工藤新一
+D10022	character	ENGINE0	ENGINE0	毛利蘭
+D10024	event	ENGINE0	ENGINE0	シャッフルロマンス
+PR027	character	ENGINE0	ENGINE0	白馬探
+PR028	character	ENGINE0	ENGINE0	ジョディ・スターリング
+PR031	character	ENGINE0	ENGINE0	白馬探
+PR032	character	ENGINE0	ENGINE0	ジョディ・スターリング
+PR039	character	ENGINE0	ENGINE0	中森青子
+PR132	character	ENGINE0	G17	諸伏景光
+PR133	character	ENGINE0	ENGINE0	大和敢助
+PR179	character	ENGINE0	ENGINE0	京極真
+PR185	character	ENGINE0	ENGINE0	京極真
+PR200	character	ENGINE0	ENGINE0	大滝悟郎
+PR201	character	ENGINE0	G17	鈴木次郎吉
+PR206	character	ENGINE0	ENGINE0	大滝悟郎
+PR207	character	ENGINE0	G17	鈴木次郎吉
+PR213	character	ENGINE0	G17	諸伏景光
+PR234	character	ENGINE0	ENGINE0	毛利蘭
+PR240	character	ENGINE0	ENGINE0	毛利蘭
+B01005	character	NEEDS-ENGINE	NEW:ネクストヒント使用カードのレベル参照filter	江戸川コナン
+B01005P	character	NEEDS-ENGINE	NEW:ネクストヒント使用カードのレベル参照filter	江戸川コナン
+B01009	character	NEEDS-ENGINE	G20	工藤新一
+B01009P	character	NEEDS-ENGINE	G20	工藤新一
+B01012	character	NEEDS-ENGINE	G34	阿笠博士
+B01020	character	NEEDS-ENGINE	NEW:アクション対象不可aura	毛利小五郎
+B01023	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	シャッフルロマンス
+B01023P	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	シャッフルロマンス
+B01039	event	NEEDS-ENGINE	NEW:離場を代わりに残す置換	「かっ…和葉ァ!!!」
+B01057	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	「最も出会いたくない…恋人ってトコロかな？」
+B01057P	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	「最も出会いたくない…恋人ってトコロかな？」
+B01058	event	NEEDS-ENGINE	NEW:遅延armed-trigger	トッ
+B01077	event	NEEDS-ENGINE	G27	「赤井…秀一!?」
+B01081	character	NEEDS-ENGINE	NEW:対象選択後デッキ上下choice	安室透
+B01081P	character	NEEDS-ENGINE	NEW:対象選択後デッキ上下choice	安室透
+B01082	character	NEEDS-ENGINE	NEW:オートフェイズ非アクティブ化付与	榎本梓
+B01084	character	NEEDS-ENGINE	NEW:捜査の発見カード参照/条件	降谷零
+B01084P	character	NEEDS-ENGINE	NEW:捜査の発見カード参照/条件	降谷零
+B01085	character	NEEDS-ENGINE	NEW:捜査の発見カード参照/条件	安室透
+B01092	character	NEEDS-ENGINE	NEW:離場を代わりに手札へ置換	松田陣平
+B01092P	character	NEEDS-ENGINE	NEW:離場を代わりに手札へ置換	松田陣平
+B01093	character	NEEDS-ENGINE	NEW:対象選択後デッキ上下choice	目暮十三
+B01095	event	NEEDS-ENGINE	NEW:捜査の発見カード参照/条件	「僕の日本から…」
+B02002	character	NEEDS-ENGINE	G19	江戸川コナン
+B02013	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	ターボエンジン付きスケートボード
+B02013P	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	ターボエンジン付きスケートボード
+B02018	character	NEEDS-ENGINE	G08	服部平次
+B02018P	character	NEEDS-ENGINE	G08	服部平次
+B02031	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	平次のバイク
+B02031P	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	平次のバイク
+B02039	character	NEEDS-ENGINE	G22	工藤優作
+B02047	character	NEEDS-ENGINE	NEW:変装で入替えた相手キャラの条件参照	工藤有希子
+B02052	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	トランプ銃
+B02052P	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	トランプ銃
+B02062	character	NEEDS-ENGINE	G05	世良真純
+B02067	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	チョーカー型変声機
+B02067P	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	チョーカー型変声機
+B02072	character	NEEDS-ENGINE	NEW:捜査の発見カード参照/条件	降谷零
+B02072P	character	NEEDS-ENGINE	NEW:捜査の発見カード参照/条件	降谷零
+B02080	character	NEEDS-ENGINE	NEW:カットイン使用observer	三池苗子
+B02084	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	安室の愛車
+B02084P	event	NEEDS-ENGINE	NEW:イベント自己セット継続rider付与	安室の愛車
+B02088	character	NEEDS-ENGINE	NEW:アクション証拠獲得阻止 + カットイン自己登場	犯人
+B02088P	character	NEEDS-ENGINE	NEW:アクション証拠獲得阻止 + カットイン自己登場	犯人
+B03003	character	NEEDS-ENGINE	G36	灰原哀
+B03003P	character	NEEDS-ENGINE	G36	灰原哀
+B03008	character	NEEDS-ENGINE	G03	阿笠博士
+B03033	character	NEEDS-ENGINE	NEW:opp-side AP-debuff aura	遠山和葉
+B03033P	character	NEEDS-ENGINE	NEW:opp-side AP-debuff aura	遠山和葉
+B03046	character	NEEDS-ENGINE	NEW:stun-lock aura over opp auto-phase	怪盗キッド
+B03046P	character	NEEDS-ENGINE	NEW:stun-lock aura over opp auto-phase	怪盗キッド
+B03049	character	NEEDS-ENGINE	G25	黒羽盗一
+B03049P	character	NEEDS-ENGINE	G25	黒羽盗一
+B03051	character	NEEDS-ENGINE	G25	怪盗キッド
+B03052	character	NEEDS-ENGINE	NEW:pre-disguise card reacts to being replaced	シャロン・ヴィンヤード
+B03052P	character	NEEDS-ENGINE	NEW:pre-disguise card reacts to being replaced	シャロン・ヴィンヤード
+B03057	character	NEEDS-ENGINE	NEW:action-target exclusion「指定してアクションできない」	槍田郁美
+B03057P	character	NEEDS-ENGINE	NEW:action-target exclusion「指定してアクションできない」	槍田郁美
+B03084	character	NEEDS-ENGINE	NEW:picked-scene-char→owner evidence verb|G42	降谷零
+B03084P	character	NEEDS-ENGINE	NEW:picked-scene-char→owner evidence verb	降谷零
+B03104	event	NEEDS-ENGINE	G12	24時間、年中無休
+B03116	character	NEEDS-ENGINE	G31	ウォッカ
+B03116P	character	NEEDS-ENGINE	G31	ウォッカ
+B03126	character	NEEDS-ENGINE	NEW:hand-use color-restriction bypass	犯人
+B03135	case	NEEDS-ENGINE	NEW:rewrite partner事件解決→alt-win「相手敗北」	あばよ…名探偵!!
+B03135P	case	NEEDS-ENGINE	NEW:rewrite partner事件解決→alt-win「相手敗北」	あばよ…名探偵!!
+B04003	character	NEEDS-ENGINE	G02|NEW:react to own char being chosen by opp	工藤新一
+B04003P	character	NEEDS-ENGINE	G02|NEW:react to own char being chosen by opp	工藤新一
+B04038	character	NEEDS-ENGINE	G24	白馬探
+B04046	character	NEEDS-ENGINE	G10	赤井秀一
+B04046P	character	NEEDS-ENGINE	G10	赤井秀一
+B04048	character	NEEDS-ENGINE	NEW:draw-to-hand-size + 引いた枚数 return	羽田秀𠮷
+B04048P	character	NEEDS-ENGINE	NEW:draw-to-hand-size + 引いた枚数 return	羽田秀𠮷
+B04058	character	NEEDS-ENGINE	NEW:action[事件]自証拠獲得 observer	ジョディ・スターリング
+B04063	event	NEEDS-ENGINE	G28	「諦めるなよ瑛海!!」
+B04063P	event	NEEDS-ENGINE	G28	「諦めるなよ瑛海!!」
+B04069	character	NEEDS-ENGINE	G14	佐藤美和子
+B04069P	character	NEEDS-ENGINE	G14	佐藤美和子
+B04072	character	NEEDS-ENGINE	NEW:相手攻撃者を色+Lvで制限	白鳥任三郎
+B04073	character	NEEDS-ENGINE	NEW:guard観測+アクション対象名分岐	千葉和伸
+B04075	character	NEEDS-ENGINE	NEW:相手カットイン/変装使用 reaction	白鳥任三郎
+B04077	character	NEEDS-ENGINE	G36	松田陣平
+B04077P	character	NEEDS-ENGINE	G36	松田陣平
+B04084	event	NEEDS-ENGINE	G28	バカな作戦
+B04088	character	NEEDS-ENGINE	NEW:相手現場枚数 scaled cost	スコッチ
+B04088P	character	NEEDS-ENGINE	NEW:相手現場枚数 scaled cost	スコッチ
+B04090	character	NEEDS-ENGINE	NEW:自カットイン使用 reaction	ライ
+B05005	character	NEEDS-ENGINE	NEW:ネクストヒント色カード使用 reaction	江戸川コナン＆工藤新一
+B05005P	character	NEEDS-ENGINE	NEW:ネクストヒント色カード使用 reaction	江戸川コナン＆工藤新一
+B05005P2	character	NEEDS-ENGINE	NEW:ネクストヒント色カード使用 reaction	江戸川コナン＆工藤新一
+B05007	character	NEEDS-ENGINE	NEW:カットイン抑止窓	妃英理
+B05007P	character	NEEDS-ENGINE	NEW:カットイン抑止窓	妃英理
+B05012	character	NEEDS-ENGINE	NEW:現場継続 self-trait/name付与	恩田遼平
+B05015	character	NEEDS-ENGINE	G04	小嶋元次
+B05031	character	NEEDS-ENGINE	NEW:相手キャラに相手デッキからセット	伊織無我
+B05031P	character	NEEDS-ENGINE	NEW:相手キャラに相手デッキからセット	伊織無我
+B05033	character	NEEDS-ENGINE	NEW:コスト代替リムーブで宣言	楠川探偵
+B05041	event	NEEDS-ENGINE	NEW:セットカードによる host 保護継続	「オレのそばから離れんなや…」
+B05041P	event	NEEDS-ENGINE	NEW:セットカードによる host 保護継続	「オレのそばから離れんなや…」
+B05042	event	NEEDS-ENGINE	NEW:手札からイベントを使用する効果	ラブリースポット
+B05045	character	NEEDS-ENGINE	NEW:FILE上→手札+手札→FILE底表向き	怪盗キッド＆黒羽快斗
+B05045P	character	NEEDS-ENGINE	NEW:FILE上→手札+手札→FILE底表向き	怪盗キッド＆黒羽快斗
+B05049	character	NEEDS-ENGINE	NEW:手札公開してデッキ上に移すコスト	中森青子
+B05049P	character	NEEDS-ENGINE	NEW:手札公開してデッキ上に移すコスト	中森青子
+B05051	character	NEEDS-ENGINE	NEW:self事件アクション禁止	京極真
+B05062	event	NEEDS-ENGINE	NEW:リムーブ名+特徴 union count	鈴木家と京極真
+B05068	character	NEEDS-ENGINE	G36	赤井務武
+B05079	character	NEEDS-ENGINE	G09	世良真純
+B05081	event	NEEDS-ENGINE	NEW:自他現場枚数比較で使用可	威嚇射撃
+B05086P	character	NEEDS-ENGINE	G37	安室透＆降谷零
+B05087	character	NEEDS-ENGINE	NEW:リムーブエリア離脱observer|G11	諸伏高明
+B05087P	character	NEEDS-ENGINE	NEW:リムーブエリア離脱observer|G11	諸伏高明
+B05087P2	character	NEEDS-ENGINE	NEW:リムーブエリア離脱observer|G11	諸伏高明
+B05088	character	NEEDS-ENGINE	NEW:リムーブエリア離脱observer	大和敢助
+B05088P	character	NEEDS-ENGINE	NEW:リムーブエリア離脱observer	大和敢助
+B05088P2	character	NEEDS-ENGINE	NEW:リムーブエリア離脱observer	大和敢助
+B05097	character	NEEDS-ENGINE	NEW:相手リフレッシュ証拠獲得抑止flag	鮫崎島治
+B05101	character	NEEDS-ENGINE	NEW:継続特徴変更verb	毛利小五郎
+B05103	event	NEEDS-ENGINE	NEW:証拠差分condition	「籌を帷幄の中に運らし…勝ちを千里の外に決す…」
+B05103P	event	NEEDS-ENGINE	NEW:証拠差分condition	「籌を帷幄の中に運らし…勝ちを千里の外に決す…」
+B05106	character	NEEDS-ENGINE	G37	ジン＆ウォッカ
+B05106P	character	NEEDS-ENGINE	G37	ジン＆ウォッカ
+B05115	character	NEEDS-ENGINE	G06	弁崎素江
+B05117	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	コンコン
+B05117P	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	コンコン
+B05118	case	NEEDS-ENGINE	NEW:パートナー事件解決能力書換+alt-lose	裏切りの制裁
+B05118P	case	NEEDS-ENGINE	NEW:パートナー事件解決能力書換+alt-lose	裏切りの制裁
+B05119	case	NEEDS-ENGINE	NEW:パートナー事件解決能力書換+alt-lose	裏切りの矛先
+B05119P	case	NEEDS-ENGINE	NEW:パートナー事件解決能力書換+alt-lose	裏切りの矛先
+B05120	case	NEEDS-ENGINE	NEW:特徴filter手札使用禁止	集められた名探偵
+B05120P	case	NEEDS-ENGINE	NEW:特徴filter手札使用禁止	集められた名探偵
+B06003	character	NEEDS-ENGINE	NEW:現場LP合計condition|G37	毛利蘭＆江戸川コナン
+B06003P	character	NEEDS-ENGINE	NEW:現場LP合計condition|G37	毛利蘭＆江戸川コナン
+B06005	character	NEEDS-ENGINE	G28|NEW:scene-source stack(現場キャラを別キャラ下に)	阿笠博士
+B06005P	character	NEEDS-ENGINE	G28|NEW:scene-source stack(現場キャラを別キャラ下に)	阿笠博士
+B06006	character	NEEDS-ENGINE	G18	江戸川コナン
+B06008	character	NEEDS-ENGINE	NEW:scene-source stack(self を別キャラ下に)	仮面ヤイバー
+B06008P	character	NEEDS-ENGINE	NEW:scene-source stack(self を別キャラ下に)	仮面ヤイバー
+B06012	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	石川五右衛門人形
+B06012P	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	石川五右衛門人形
+B06020	character	NEEDS-ENGINE	NEW:コンタクト発生verb(startContact未実装)	佐々木小次郎
+B06023	character	NEEDS-ENGINE	G30	金棒博士
+B06034	event	NEEDS-ENGINE	G30	鬼丸城
+B06036	case	NEEDS-ENGINE	G30	鬼丸天下統一プロジェクト
+B06036P	case	NEEDS-ENGINE	G30	鬼丸天下統一プロジェクト
+B06037	character	NEEDS-ENGINE	G37	服部平次＆沖田総司
+B06037P	character	NEEDS-ENGINE	G37	服部平次＆沖田総司
+B06042	event	NEEDS-ENGINE	NEW:コンタクト発生verb(startContact未実装)	ここで会うたが百年目
+B06042P	event	NEEDS-ENGINE	NEW:コンタクト発生verb(startContact未実装)	ここで会うたが百年目
+B06046	character	NEEDS-ENGINE	G08	鉄刃
+B06046P	character	NEEDS-ENGINE	G08	鉄刃
+B06047	character	NEEDS-ENGINE	G08|G20	鉄刃
+B06063	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	せんぷう剣
+B06063P	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	せんぷう剣
+B06064	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	刃新陰流風車
+B06064P	event	NEEDS-ENGINE	NEW:set-card付与能力(conferred ability)	刃新陰流風車
+B06065P	case	NEEDS-ENGINE	G40	伝説の玉探し
+B06066	character	NEEDS-ENGINE	G37	怪盗キッド＆白馬探
+B06066P	character	NEEDS-ENGINE	G37	怪盗キッド＆白馬探
+B06072	character	NEEDS-ENGINE	G24|NEW:手札使用の事件色制限バイパス	かぐや
+B06072P	character	NEEDS-ENGINE	G24|NEW:手札使用の事件色制限バイパス	かぐや
+B06074	character	NEEDS-ENGINE	G37	沖矢昴＆世良真純
+B06074P	character	NEEDS-ENGINE	G37	沖矢昴＆世良真純
+B06078	character	NEEDS-ENGINE	G36	羽田秀𠮷
+B06078P	character	NEEDS-ENGINE	G36	羽田秀𠮷
+B06084	character	NEEDS-ENGINE	NEW:捜査の発見されたカード参照|G37	安室透＆榎本梓
+B06084P	character	NEEDS-ENGINE	NEW:捜査の発見されたカード参照|G37	安室透＆榎本梓
+B06085	character	NEEDS-ENGINE	NEW:現場キャラを相手の表向き証拠化	松田陣平
+B06085P	character	NEEDS-ENGINE	NEW:現場キャラを相手の表向き証拠化	松田陣平
+B06095	case	NEEDS-ENGINE	NEW:全自軍キャラへ継続特徴付与	榎本梓誘拐事件
+B06095P	case	NEEDS-ENGINE	NEW:全自軍キャラへ継続特徴付与	榎本梓誘拐事件
+B06098	character	NEEDS-ENGINE	G37	ベルモット＆シェリー
+B06098P	character	NEEDS-ENGINE	G37	ベルモット＆シェリー
+B06103	character	NEEDS-ENGINE	NEW:カード名指定の使用/登場禁止フラグ	ジン
+B06103P	character	NEEDS-ENGINE	NEW:カード名指定の使用/登場禁止フラグ	ジン
+B06104	event	NEEDS-ENGINE	NEW:ネクストヒント禁止フラグ	カッ
+B06104P	event	NEEDS-ENGINE	NEW:ネクストヒント禁止フラグ	カッ
+B06105	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	ブラックインパクト！
+B06105P	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	ブラックインパクト！
+B06106	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	白の世界
+B06106P	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	白の世界
+B06107	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	満月の夜の二元ミステリー
+B06107P	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	満月の夜の二元ミステリー
+B06108	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	漆黒の特急
+B06108P	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+敗北勝利条件	漆黒の特急
+B06109	case	NEEDS-ENGINE	NEW:特徴限定の手札使用禁止フラグ	紅の修学旅行
+B06109P	case	NEEDS-ENGINE	NEW:特徴限定の手札使用禁止フラグ	紅の修学旅行
+B07001	character	NEEDS-ENGINE	G36	毛利蘭＆灰原哀
+B07001P	character	NEEDS-ENGINE	G36	毛利蘭＆灰原哀
+B07001P2	character	NEEDS-ENGINE	G36	毛利蘭＆灰原哀
+B07002	character	NEEDS-ENGINE	NEW:相手のカットイン/変装使用禁止フラグ|G17	江戸川コナン
+B07002P	character	NEEDS-ENGINE	NEW:相手のカットイン/変装使用禁止フラグ|G17	江戸川コナン
+B07003	character	NEEDS-ENGINE	G20	工藤新一
+B07003P	character	NEEDS-ENGINE	G20	工藤新一
+B07005	character	NEEDS-ENGINE	NEW:自キャラのアクション禁止/コンタクト中カットイン禁止	毛利小五郎
+B07008	character	NEEDS-ENGINE	G20	小嶋元太
+B07011	character	NEEDS-ENGINE	NEW:じゃんけん(RNG勝敗)	福井柚嬉
+B07014	event	NEEDS-ENGINE	NEW:リムーブエリアからデッキ上へ移すverb	弁当型携帯FAX
+B07014P	event	NEEDS-ENGINE	NEW:リムーブエリアからデッキ上へ移すverb	弁当型携帯FAX
+B07015	character	NEEDS-ENGINE	NEW:効果で手札からイベント使用|G37	遠山和葉＆大岡紅葉
+B07015P	character	NEEDS-ENGINE	NEW:効果で手札からイベント使用|G37	遠山和葉＆大岡紅葉
+B07025	character	NEEDS-ENGINE	G16|G36	星河童吾
+B07026	event	NEEDS-ENGINE	NEW:イベントが能力効果で使用された場合の分岐	相応しいお方
+B07026P	event	NEEDS-ENGINE	NEW:イベントが能力効果で使用された場合の分岐	相応しいお方
+B07030	character	NEEDS-ENGINE	G39|G37	黒羽快斗＆中森青子
+B07030P	character	NEEDS-ENGINE	G39|G37	黒羽快斗＆中森青子
+B07030P2	character	NEEDS-ENGINE	G39|G37	黒羽快斗＆中森青子
+B07031P	character	NEEDS-ENGINE	NEW:効果での合算セットカード除去+分岐	小泉紅子
+B07032	character	NEEDS-ENGINE	G39	白馬探
+B07032P	character	NEEDS-ENGINE	G39	白馬探
+B07033	character	NEEDS-ENGINE	G39	怪盗キッド
+B07033P	character	NEEDS-ENGINE	G39	怪盗キッド
+B07033P2	character	NEEDS-ENGINE	G39	怪盗キッド
+B07037	character	NEEDS-ENGINE	G39	黒羽快斗
+B07039	character	NEEDS-ENGINE	G39	アン王女
+B07039P	character	NEEDS-ENGINE	G39	アン王女
+B07045	character	NEEDS-ENGINE	G39	セリザベス女王
+B07046	character	NEEDS-ENGINE	G39	ドロン刑事
+B07049	character	NEEDS-ENGINE	G39	フィリップ王子
+B07053	character	NEEDS-ENGINE	NEW:continuous-name/trait-grant	ロボット黒羽快斗
+B07059	event	NEEDS-ENGINE	G39	赤い涙
+B07059P	event	NEEDS-ENGINE	G39	赤い涙
+B07060	event	NEEDS-ENGINE	G39	クリスタル・マザー
+B07060P	event	NEEDS-ENGINE	G39	クリスタル・マザー
+B07061	case	NEEDS-ENGINE	G39	日輪の後光の巻
+B07061P	case	NEEDS-ENGINE	G39	日輪の後光の巻
+B07076	event	NEEDS-ENGINE	NEW:draw/discard-to-hand-size|G28	「君は思ったより手強いって事がね！」
+B07076P	event	NEEDS-ENGINE	NEW:draw/discard-to-hand-size|G28	「君は思ったより手強いって事がね！」
+B07096	character	NEEDS-ENGINE	G32	ウォッカ
+B08002	character	NEEDS-ENGINE	G28	江戸川コナン＆灰原哀
+B08002P	character	NEEDS-ENGINE	G28	江戸川コナン＆灰原哀
+B08003	character	NEEDS-ENGINE	G34|G36	阿笠博士
+B08003P	character	NEEDS-ENGINE	G34|G36	阿笠博士
+B08004	character	NEEDS-ENGINE	G13	江戸川コナン
+B08004P	character	NEEDS-ENGINE	G13	江戸川コナン
+B08006	character	NEEDS-ENGINE	NEW:hand-stack-under-as-cost	小嶋元太
+B08014	character	NEEDS-ENGINE	G42	毛利蘭
+B08014P	character	NEEDS-ENGINE	G42	毛利蘭
+B08017	event	NEEDS-ENGINE	NEW:setcard-confers-conditional-ability	「どうしてお姉ちゃんを…助けてくれなかったの？」
+B08017P	event	NEEDS-ENGINE	NEW:setcard-confers-conditional-ability	「どうしてお姉ちゃんを…助けてくれなかったの？」
+B08019	character	NEEDS-ENGINE	G38	大岡紅葉＆伊織無我
+B08019P	character	NEEDS-ENGINE	G38	大岡紅葉＆伊織無我
+B08025	character	NEEDS-ENGINE	G36	伊織無我
+B08025P	character	NEEDS-ENGINE	G36	伊織無我
+B08026	character	NEEDS-ENGINE	NEW:play-event-from-hand-as-effect	大滝悟郎
+B08028	character	NEEDS-ENGINE	NEW:evidence-flip-count-mirror	日向幸
+B08033	character	NEEDS-ENGINE	G29	工藤有希子
+B08033P	character	NEEDS-ENGINE	G29	工藤有希子
+B08035	character	NEEDS-ENGINE	G33	怪盗キッド
+B08036	character	NEEDS-ENGINE	NEW:setcard-source-from-remove	クリス・ヴィンヤード
+B08041	character	NEEDS-ENGINE	G36	高橋良一
+B08046	character	NEEDS-ENGINE	G36	赤井秀一＆ジョディ・スターリング
+B08046P	character	NEEDS-ENGINE	G36	赤井秀一＆ジョディ・スターリング
+B08047	character	NEEDS-ENGINE	NEW:draw/discard-to-hand-size	沖矢昴
+B08047P	character	NEEDS-ENGINE	NEW:draw/discard-to-hand-size	沖矢昴
+B08049	character	NEEDS-ENGINE	NEW:acted-this-turn-char-filter	ジョディ・スターリング
+B08049P	character	NEEDS-ENGINE	NEW:acted-this-turn-char-filter	ジョディ・スターリング
+B08059	character	NEEDS-ENGINE	G14	諸星大
+B08059P	character	NEEDS-ENGINE	G14	諸星大
+B08062	character	NEEDS-ENGINE	NEW:all-scene-homogeneous-condition	佐藤美和子＆高木渉
+B08062P	character	NEEDS-ENGINE	NEW:all-scene-homogeneous-condition	佐藤美和子＆高木渉
+B08063	character	NEEDS-ENGINE	NEW:continuous-name/trait-grant	黒田兵衛
+B08063P	character	NEEDS-ENGINE	NEW:continuous-name/trait-grant	黒田兵衛
+B08068	character	NEEDS-ENGINE	G21	安室透
+B08068P	character	NEEDS-ENGINE	G21	安室透
+B08069	character	NEEDS-ENGINE	NEW:宣言で予約しターン終了時に登場する遅延効果	風見裕也
+B08074	character	NEEDS-ENGINE	NEW:捜査の発見枚数につきキーワード付与	降谷零
+B08078	character	NEEDS-ENGINE	NEW:手札リムーブカードの現場リムーブ時効果を再起動	ジン
+B08078P	character	NEEDS-ENGINE	NEW:手札リムーブカードの現場リムーブ時効果を再起動	ジン
+B08081	character	NEEDS-ENGINE	NEW:味方が相手効果で選ばれたとき反応する観測者	広田雅美
+B08081P	character	NEEDS-ENGINE	NEW:味方が相手効果で選ばれたとき反応する観測者	広田雅美
+B08086	character	NEEDS-ENGINE	NEW:相手現場枚数につき自身APスケール	テキーラ
+B08087	character	NEEDS-ENGINE	NEW:相手のイベント効果対象選択を強制	吞口重彦
+B08093	character	NEEDS-ENGINE	G37	灰原哀＆シェリー
+B08093P	character	NEEDS-ENGINE	G37	灰原哀＆シェリー
+B09002	character	NEEDS-ENGINE	G37	工藤新一&毛利蘭
+B09002P	character	NEEDS-ENGINE	G37	工藤新一&毛利蘭
+B09003	character	NEEDS-ENGINE	NEW:カード名指定し相手FILE除去カードと名前一致分岐	江戸川コナン
+B09003P	character	NEEDS-ENGINE	NEW:カード名指定し相手FILE除去カードと名前一致分岐	江戸川コナン
+B09004	character	NEEDS-ENGINE	NEW:自分が手札から特定名を公開したとき反応する観測者	毛利蘭
+B09004P	character	NEEDS-ENGINE	NEW:自分が手札から特定名を公開したとき反応する観測者	毛利蘭
+B09005	character	NEEDS-ENGINE	G36	本堂瑛祐
+B09011	character	NEEDS-ENGINE	G23	灰原哀
+B09011P	character	NEEDS-ENGINE	G23	灰原哀
+B09016	character	NEEDS-ENGINE	G04	円谷光彦
+B09019	event	NEEDS-ENGINE	NEW:ネクストヒント禁止フラグ付与	「くさるなよ！」
+B09019P	event	NEEDS-ENGINE	NEW:ネクストヒント禁止フラグ付与	「くさるなよ！」
+B09036	character	NEEDS-ENGINE	G21	怪盗キッド
+B09036P	character	NEEDS-ENGINE	G21	怪盗キッド
+B09039	character	NEEDS-ENGINE	G39|G40	中森青子
+B09040	character	NEEDS-ENGINE	NEW:必ずガードする能力を付与し強制実行	鈴木園子
+B09040P	character	NEEDS-ENGINE	NEW:必ずガードする能力を付与し強制実行	鈴木園子
+B09047	character	NEEDS-ENGINE	G39|G42	闇の男爵
+B09048	character	NEEDS-ENGINE	NEW:現場キャラを自身の下に重ねるコスト	中森銀三
+B09050	character	NEEDS-ENGINE	G36	白馬探
+B09052	event	NEEDS-ENGINE	G21	「い、いつの間に!?」
+B09052P	event	NEEDS-ENGINE	G21	「い、いつの間に!?」
+B09055	character	NEEDS-ENGINE	G39	世良真純
+B09055P	character	NEEDS-ENGINE	G39	世良真純
+B09055P2	character	NEEDS-ENGINE	G39	世良真純
+B09060	character	NEEDS-ENGINE	G36	沖矢昴
+B09070	character	NEEDS-ENGINE	G37|NEW:疾風発動済キャラ追跡で一括アクティブ	萩原千速&萩原研二
+B09070P	character	NEEDS-ENGINE	G37|NEW:疾風発動済キャラ追跡で一括アクティブ	萩原千速&萩原研二
+B09072	character	NEEDS-ENGINE	NEW:このターン疾風発動済フラグ+推理不可付与	横溝重悟
+B09072P	character	NEEDS-ENGINE	NEW:このターン疾風発動済フラグ+推理不可付与	横溝重悟
+B09072P2	character	NEEDS-ENGINE	NEW:このターン疾風発動済フラグ+推理不可付与	横溝重悟
+B09086	character	NEEDS-ENGINE	NEW:自身コンタクト中の名前特徴指定カットイン使用を観測	諸伏高明
+B09086P	character	NEEDS-ENGINE	NEW:自身コンタクト中の名前特徴指定カットイン使用を観測	諸伏高明
+B09089	event	NEEDS-ENGINE	NEW:このターン現場にキャラ未登場のConditiont	刑事だらけの店
+B09089P	event	NEEDS-ENGINE	NEW:このターン現場にキャラ未登場のCondition	刑事だらけの店
+B09090	case	NEEDS-ENGINE	NEW:次に登場するキャラの疾風条件を無視させる	風の女神
+B09090P	case	NEEDS-ENGINE	NEW:次に登場するキャラの疾風条件を無視させる	風の女神
+B09090P2	case	NEEDS-ENGINE	NEW:次に登場するキャラの疾風条件を無視させる	風の女神
+B09095	character	NEEDS-ENGINE	G20	ベルモット
+B09095P	character	NEEDS-ENGINE	G20	ベルモット
+B09105	event	NEEDS-ENGINE	NEW:ネクストヒント禁止フラグ+異レベル複数選択	キッ
+B09105P	event	NEEDS-ENGINE	NEW:ネクストヒント禁止フラグ+異レベル複数選択	キッ
+B09107	case	NEEDS-ENGINE	NEW:全証拠表向き化+証拠特徴計数で敗北	犯人たちの犯行
+B09107P	case	NEEDS-ENGINE	NEW:全証拠表向き化+証拠特徴計数で敗北	犯人たちの犯行
+B09108	character	NEEDS-ENGINE	NEW:カード名指定+除去札の名前一致分岐	工藤新一&服部平次
+B09108P	character	NEEDS-ENGINE	NEW:カード名指定+除去札の名前一致分岐	工藤新一&服部平次
+B09109	character	NEEDS-ENGINE	G16|G37|NEW:同名相対一致deckReveal	怪盗キッド&安室透
+B09109P	character	NEEDS-ENGINE	G16|G37|NEW:同名相対一致deckReveal	怪盗キッド&安室透
+B09110	character	NEEDS-ENGINE	G37|NEW:同名相対一致deckReveal	赤井秀一&ジン
+B09110P	character	NEEDS-ENGINE	G37|NEW:同名相対一致deckReveal	赤井秀一&ジン
+B09111	case	NEEDS-ENGINE	NEW:カード名指定+除去札の名前一致分岐	外交官殺人事件
+B09111P	case	NEEDS-ENGINE	NEW:カード名指定+除去札の名前一致分岐	外交官殺人事件
+B09112	case	NEEDS-ENGINE	G29|NEW:カード名指定+指定名キャラ数forEach	キッドVS安室 王妃の前髪
+B09112P	case	NEEDS-ENGINE	G29|NEW:カード名指定+指定名キャラ数forEach	キッドVS安室 王妃の前髪
+D02008	character	NEEDS-ENGINE	NEW:カットイン抑止窓	服部平蔵
+D07024	case	NEEDS-ENGINE	NEW:パートナー事件解決能力の書換+証拠隠滅keyword	コードネーム・シェリー
+D10005	character	NEEDS-ENGINE	NEW:手札からイベント使用verb	ハート姫（毛利蘭）
+D10006	character	NEEDS-ENGINE	NEW:手札からイベント使用verb	ハート姫（毛利蘭）
+D10026	case	NEEDS-ENGINE	NEW:手札からイベント使用verb	The Black Knight
+PR029	character	NEEDS-ENGINE	NEW:カットイン使用観測フック	白鳥任三郎
+PR033	character	NEEDS-ENGINE	NEW:カットイン使用観測フック	白鳥任三郎
+PR067	case	NEEDS-ENGINE	NEW:パートナー全色化+現場上限4枚化	探偵の目
+PR096	character	NEEDS-ENGINE	G36	安室透
+PR105	character	NEEDS-ENGINE	NEW:カード名自由指定rename	工藤有希子
+PR136	character	NEEDS-ENGINE	NEW:両側選択キャラへ持ち主デッキからセット	伊織無我
+PR142	character	NEEDS-ENGINE	NEW:両側選択キャラへ持ち主デッキからセット	伊織無我
+PR158	character	NEEDS-ENGINE	NEW:リムーブエリア名カウントdyn(自己含む)	犯人
+PR164	character	NEEDS-ENGINE	NEW:リムーブエリア名カウントdyn(自己含む)	犯人
+PR195	event	NEEDS-ENGINE	G39	ブルーサファイア
+PR196	event	NEEDS-ENGINE	G39	ブルーサファイア
+PR263	character	NEEDS-ENGINE	G39	怪盗キッド
+PR265	character	NEEDS-ENGINE	G28	風見裕也
+PR269	character	NEEDS-ENGINE	G39	怪盗キッド
+PR271	character	NEEDS-ENGINE	G28	風見裕也
+PR279	character	NEEDS-ENGINE	NEW:相手イベント効果リムーブ免疫	萩原千速

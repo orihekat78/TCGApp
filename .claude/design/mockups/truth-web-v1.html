@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>名探偵コナンTCG — 署名: 真実の網 (Deduction Board)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* --- tokens (署名: 真実の網) --- */
+  --navy-900:#040c1d;          /* stage floor */
+  --navy-800:#071632;
+  --navy-700:#0b2350;
+  --navy-600:#123166;
+  --blue-conan:#1a4fb3;        /* コナンブルー (base accent) */
+  --blue-bright:#2f7be0;       /* legal-zone glow */
+  --red-string:#ed2328;        /* 捜査線 = ロゴ赤の正統な再利用 */
+  --gold:#e8b84b;              /* 証拠/価値 */
+  --gold-soft:#f4d588;
+  --ink:#eaf0fb;               /* primary text */
+  --ink-mute:#8ea4c8;          /* captions */
+  --line:rgba(143,163,200,.18);
+  --shadow:0 18px 50px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:"Noto Sans JP",system-ui,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 700px at 50% -8%, #163a78 0%, transparent 55%),
+    radial-gradient(900px 600px at 50% 120%, #0c1f47 0%, transparent 60%),
+    linear-gradient(180deg,#06122b 0%, var(--navy-900) 100%);
+  min-height:100vh;
+  /* faint case-file grid texture (公式OG hero に倣う) */
+  background-attachment:fixed;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;
+  background-image:linear-gradient(var(--ink) 1px,transparent 1px),linear-gradient(90deg,var(--ink) 1px,transparent 1px);
+  background-size:46px 46px;mask-image:radial-gradient(900px 600px at 50% 30%,#000 0%,transparent 75%);
+}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 28px 60px}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:6px}
+.brand{display:flex;align-items:center;gap:14px}
+.keyhole{
+  width:42px;height:42px;border-radius:50%;position:relative;flex:0 0 auto;
+  background:radial-gradient(circle at 50% 38%, #0a1c3e 0 33%, transparent 34%),
+             conic-gradient(from 210deg,var(--red-string),#b3171b 50%,var(--red-string));
+  box-shadow:0 0 0 2px rgba(237,35,40,.35),0 0 22px rgba(237,35,40,.35);
+}
+.keyhole::after{content:"";position:absolute;left:50%;top:52%;transform:translateX(-50%);
+  width:7px;height:15px;background:#0a1c3e;border-radius:0 0 3px 3px}
+.title{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:900;letter-spacing:.04em;font-size:23px;line-height:1}
+.title b{color:var(--red-string)}
+.tagline{font-size:11px;color:var(--ink-mute);letter-spacing:.34em;margin-top:6px}
+.turn{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-mute);
+  border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:rgba(8,20,45,.6)}
+.turn b{color:var(--gold-soft)}
+
+/* ---------- board grid ---------- */
+.board{display:grid;grid-template-columns:230px 1fr;gap:18px;margin-top:18px}
+
+.panel{background:linear-gradient(180deg,rgba(12,26,56,.82),rgba(7,17,40,.82));
+  border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.ph{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;font-size:12px;letter-spacing:.18em;
+  color:var(--ink-mute);padding:13px 16px 0}
+
+/* ---- 事件 + partner (left rail) ---- */
+.rail{display:flex;flex-direction:column;gap:16px}
+.case{padding:16px}
+.case-card{border-radius:12px;padding:14px;background:
+  linear-gradient(160deg,#13316a,#0a1f49);border:1px solid rgba(47,123,224,.4);position:relative;overflow:hidden}
+.case-card::before{content:"FILE";position:absolute;right:10px;top:8px;font-family:"JetBrains Mono",monospace;
+  font-size:36px;font-weight:700;color:rgba(232,184,75,.12);letter-spacing:.05em}
+.case-lv{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--gold)}
+.case-name{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:900;font-size:16px;margin:6px 0 2px}
+.case-state{display:inline-block;margin-top:8px;font-size:10px;letter-spacing:.2em;color:#bcd0f2;
+  border:1px solid rgba(47,123,224,.5);border-radius:6px;padding:3px 8px}
+.partner{padding:16px;display:flex;gap:12px;align-items:center}
+.pav{width:52px;height:70px;border-radius:9px;background:
+  linear-gradient(160deg,#1a4fb3,#0c2a63);border:1px solid rgba(47,123,224,.6);position:relative;flex:0 0 auto;
+  box-shadow:0 0 0 2px rgba(47,123,224,.18),0 0 18px rgba(47,123,224,.3)}
+.pav::after{content:"";position:absolute;inset:7px;border-radius:6px;
+  background:radial-gradient(circle at 50% 35%,rgba(244,213,136,.5),transparent 60%)}
+.pname{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:700;font-size:14px}
+.lp-badge{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-family:"JetBrains Mono",monospace;
+  font-weight:700;font-size:13px;color:#1c1303;background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  border-radius:7px;padding:3px 9px;box-shadow:0 2px 0 #9c7a1e}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 2px rgba(47,123,224,.18),0 0 14px rgba(47,123,224,.25)}
+  50%{box-shadow:0 0 0 2px rgba(47,123,224,.5),0 0 26px rgba(47,123,224,.55)}}
+
+/* ---- main stage ---- */
+.stage{padding:16px 18px 20px;display:flex;flex-direction:column;gap:18px}
+
+/* ===== SIGNATURE: 真実の網 (truth web victory tracker) ===== */
+.web{position:relative;border-radius:14px;padding:16px 16px 10px;
+  background:radial-gradient(700px 240px at 50% 0,rgba(26,79,179,.18),transparent 70%);
+  border:1px solid var(--line)}
+.web-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.web-title{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:900;font-size:14px;letter-spacing:.12em}
+.web-title span{color:var(--gold)}
+.web-count{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-mute)}
+.web-count b{color:var(--gold-soft);font-size:15px}
+.web-stage{position:relative;height:150px}
+.web-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.node{position:absolute;width:42px;height:42px;border-radius:50%;transform:translate(-50%,-50%);
+  display:grid;place-items:center;font-family:"JetBrains Mono",monospace;font-size:11px;
+  border:1px solid var(--line);background:rgba(8,20,45,.85);color:var(--ink-mute)}
+.node.got{border-color:var(--gold);color:#1c1303;
+  background:radial-gradient(circle at 40% 35%,var(--gold-soft),var(--gold));
+  box-shadow:0 0 16px rgba(232,184,75,.55)}
+.node.next{border-color:var(--blue-bright);color:#cfe3ff;
+  box-shadow:0 0 0 3px rgba(47,123,224,.18);animation:pulse 2s infinite}
+.draw{stroke:var(--red-string);stroke-width:2.2;fill:none;filter:drop-shadow(0 0 4px rgba(237,35,40,.6));
+  stroke-dasharray:300;stroke-dashoffset:0;animation:draw 2.6s ease forwards}
+.dim{stroke:var(--line);stroke-width:1.4;stroke-dasharray:4 5;fill:none}
+@keyframes draw{from{stroke-dashoffset:300}to{stroke-dashoffset:0}}
+
+/* ---- 現場 row (cards) ---- */
+.row-h{display:flex;justify-content:space-between;align-items:baseline}
+.scene{display:flex;gap:12px}
+.card{width:104px;height:146px;border-radius:11px;position:relative;flex:0 0 auto;cursor:pointer;
+  background:linear-gradient(165deg,#1d2c4e,#0c1834);border:1px solid var(--line);
+  box-shadow:var(--shadow);transition:transform .25s;overflow:hidden}
+.card .art{position:absolute;inset:6px 6px 42px;border-radius:7px;
+  background:linear-gradient(160deg,var(--blue-conan),#0a1f49)}
+.card .nm{position:absolute;left:8px;right:8px;bottom:22px;font-family:"Zen Kaku Gothic New",sans-serif;
+  font-weight:700;font-size:11px}
+.card .stat{position:absolute;left:8px;bottom:6px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-mute)}
+.card .stat .ap{color:#ff8b6b}.card .stat .lp{color:var(--gold-soft)}
+.card .lvl{position:absolute;right:7px;top:6px;width:20px;height:20px;border-radius:5px;display:grid;place-items:center;
+  font-family:"JetBrains Mono",monospace;font-size:11px;background:rgba(8,20,45,.8);border:1px solid var(--line)}
+/* focused card = 3D tilt + glare (premium juice) */
+.card.focus{transform:perspective(800px) rotateX(7deg) rotateY(-11deg) translateY(-6px) scale(1.04);
+  border-color:var(--blue-bright);box-shadow:0 26px 60px rgba(0,0,0,.6),0 0 30px rgba(47,123,224,.45)}
+.card.focus::after{content:"";position:absolute;inset:0;border-radius:11px;mix-blend-mode:screen;
+  background:radial-gradient(160px 160px at 30% 18%,rgba(255,255,255,.45),transparent 60%)}
+.zone{outline:2px dashed rgba(47,123,224,.45);outline-offset:4px;border-radius:14px;animation:pulse 2.2s infinite}
+
+/* ---- climax cut-in overlay ---- */
+.cutin{margin-top:6px;border-radius:14px;border:1px solid rgba(237,35,40,.35);overflow:hidden;
+  background:radial-gradient(600px 200px at 50% 50%,rgba(26,79,179,.35),rgba(4,12,29,.95));position:relative;padding:22px}
+.cutin::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(115deg,transparent 0 22px,rgba(255,255,255,.04) 22px 23px)}
+.cut-jp{font-family:"Zen Kaku Gothic New",sans-serif;font-weight:900;font-size:30px;letter-spacing:.04em;
+  text-shadow:0 2px 18px rgba(47,123,224,.6);position:relative}
+.cut-jp b{color:var(--gold)}
+.cut-sub{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-mute);letter-spacing:.3em;margin-top:8px;position:relative}
+
+.legend{margin-top:26px;font-size:11px;color:var(--ink-mute);line-height:1.9;border-top:1px solid var(--line);padding-top:14px}
+.legend b{color:var(--ink)}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- masthead -->
+  <div class="mast">
+    <div class="brand">
+      <div class="keyhole" title="ロゴの O = 鍵穴"></div>
+      <div>
+        <div class="title">名探偵<b>コナン</b> TCG</div>
+        <div class="tagline">真実へ先にたどり着け</div>
+      </div>
+    </div>
+    <div class="turn">TURN <b>04</b> · 自分のメインフェイズ</div>
+  </div>
+
+  <div class="board">
+    <!-- left rail -->
+    <div class="rail">
+      <div class="panel case">
+        <div class="ph">事件</div>
+        <div class="case-card">
+          <div class="case-lv">事件レベル 7</div>
+          <div class="case-name">青の古城探索事件</div>
+          <div class="case-state">事件編</div>
+        </div>
+      </div>
+      <div class="panel partner">
+        <div class="pav pulse"></div>
+        <div>
+          <div class="ph" style="padding:0">パートナー</div>
+          <div class="pname">江戸川コナン</div>
+          <div class="lp-badge">★ LP 4</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- main stage -->
+    <div class="panel stage">
+
+      <!-- ====== SIGNATURE ====== -->
+      <div class="web">
+        <div class="web-head">
+          <div class="web-title">真実の<span>網</span> — 推理進捗</div>
+          <div class="web-count">証拠 <b>4</b> / 7</div>
+        </div>
+        <div class="web-stage">
+          <svg class="web-svg" viewBox="0 0 600 150" preserveAspectRatio="none">
+            <!-- drawn 捜査線 between collected evidence -->
+            <path class="draw" d="M60,75 L160,40 L260,95 L360,55"/>
+            <!-- pending faint connections -->
+            <path class="dim" d="M360,55 L460,100 L540,45 L470,120"/>
+          </svg>
+          <div class="node got"  style="left:10%;top:50%">1</div>
+          <div class="node got"  style="left:27%;top:27%">2</div>
+          <div class="node got"  style="left:43%;top:63%">3</div>
+          <div class="node got"  style="left:60%;top:37%">4</div>
+          <div class="node next" style="left:77%;top:67%">5</div>
+          <div class="node"      style="left:90%;top:30%">6</div>
+          <div class="node"      style="left:78%;top:80%">7</div>
+        </div>
+      </div>
+
+      <!-- 現場 row -->
+      <div>
+        <div class="row-h"><div class="ph" style="padding:0 0 8px">現場（合法ターゲット＝発光）</div></div>
+        <div class="scene zone">
+          <div class="card focus">
+            <div class="art"></div><div class="lvl">3</div>
+            <div class="nm">毛利 蘭</div>
+            <div class="stat"><span class="ap">AP 5</span> · <span class="lp">LP 3</span></div>
+          </div>
+          <div class="card">
+            <div class="art"></div><div class="lvl">2</div>
+            <div class="nm">服部 平次</div>
+            <div class="stat"><span class="ap">AP 4</span> · <span class="lp">LP 2</span></div>
+          </div>
+          <div class="card">
+            <div class="art"></div><div class="lvl">1</div>
+            <div class="nm">灰原 哀</div>
+            <div class="stat"><span class="ap">AP 2</span> · <span class="lp">LP 4</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- climax cut-in (事件解決の瞬間 = 段階化ジュースの頂点) -->
+      <div class="cutin">
+        <div class="cut-jp">真実は<b>いつもひとつ</b>。</div>
+        <div class="cut-sub">CASE SOLVED — 事件解決 · 証拠 7/7</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <b>署名 = 真実の網</b>：証拠を集めるほど赤い<b>捜査線</b>でノードが繋がり、事件解決へ収束する勝利トラッカー（飾りでなく勝敗進捗を可視化）。<br>
+    <span class="sw" style="background:#06122b;border:1px solid #2f7be0"></span>コナンネイビー（土台）
+    <span class="sw" style="background:#1a4fb3"></span>コナンブルー（操作・合法zone）
+    <span class="sw" style="background:#ed2328"></span>赤＝捜査線/ロゴ keystone のみ
+    <span class="sw" style="background:#e8b84b"></span>金＝証拠・価値・LP
+  </div>
+
+</div>
+</body>
+</html>

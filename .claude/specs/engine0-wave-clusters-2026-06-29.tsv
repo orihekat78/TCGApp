@@ -1,0 +1,212 @@
+tier	cluster	num	kind	stale_gate	title
+A	C04_untargetable	B01006	character		灰原哀
+A	C04_untargetable	B01006P	character		灰原哀
+A	C04_untargetable	B03030	character	NEW:untargetable continuous「選ばれない」	伊織無我
+A	C04_untargetable	B03030P	character	NEW:untargetable continuous「選ばれない」	伊織無我
+A	C04_untargetable	B03093	character	NEW:untargetable continuous「選ばれない」	西村京兵
+A	C04_untargetable	B05008	character	NEW:相手効果による untargetable	灰原哀
+A	C04_untargetable	B05008P	character	NEW:相手効果による untargetable	灰原哀
+A	C04_untargetable	B05048	character	NEW:相手効果による untargetable	黒羽快斗
+A	C01_relAP_filter(G15)	B09096	character	G15	キャンティ
+A	C01_relAP_filter(G15)	B09096P	character	G15	キャンティ
+B	C07_hirameki	B01035	character		大滝悟郎
+B	C07_hirameki	B01054	character		寺井黄之助
+B	C07_hirameki	B01054P	character		寺井黄之助
+B	C07_hirameki	B01070	character		アンドレ・キャメル
+B	C07_hirameki	B02022	character		鬼丸猛
+B	C07_hirameki	B02022P	character		鬼丸猛
+B	C07_hirameki	B02049	character		中森青子
+B	C07_hirameki	B02076	character		大和敢助
+B	C07_hirameki	B02076P	character		大和敢助
+B	C07_hirameki	B03042	event		「ボクは好きだな… 君みたいな熱い探偵…」
+B	C07_hirameki	B03063	event		死闘
+B	C07_hirameki	B03078	character		宮野明美
+B	C07_hirameki	B03078P	character		宮野明美
+B	C07_hirameki	B03085	character		諸伏景光
+B	C07_hirameki	B03085P	character		諸伏景光
+B	C07_hirameki	B03088P	character		松田陣平
+B	C07_hirameki	B03098	character		諸伏高明
+B	C07_hirameki	B03098P	character		諸伏高明
+B	C07_hirameki	B04091	character		ウォッカ
+B	C07_hirameki	B04091P	character		ウォッカ
+B	C07_hirameki	B05009	character		毛利蘭
+B	C07_hirameki	B05009P	character		毛利蘭
+B	C07_hirameki	B05032	character		大滝悟郎
+B	C07_hirameki	B05111	character		ゾンビ
+B	C07_hirameki	B06021	character		石川五右衛門
+B	C07_hirameki	B06021P	character		石川五右衛門
+B	C07_hirameki	B06025	character		ケロ介
+B	C07_hirameki	B06026	character		コウモリ男（バットマン）
+B	C07_hirameki	B06028	character		風魔の小太郎
+B	C07_hirameki	B06028P	character		風魔の小太郎
+B	C07_hirameki	B06032	character		弁慶
+B	C07_hirameki	B06032P	character		弁慶
+B	C07_hirameki	B06082	event		「説得するよりこの方が早い…」
+B	C07_hirameki	B06082P	event		「説得するよりこの方が早い…」
+B	C07_hirameki	B06086	character		萩原研二
+B	C07_hirameki	B06086P	character		萩原研二
+B	C07_hirameki	B06090	character		榎本梓
+B	C07_hirameki	B06090P	character		榎本梓
+B	C07_hirameki	B07047P	character		中森銀三
+B	C07_hirameki	B07068	character		羽田秀𠮷
+B	C07_hirameki	B07068P	character		羽田秀𠮷
+B	C07_hirameki	B07099	character		板倉卓
+B	C07_hirameki	B08008	character		吉田歩美
+B	C07_hirameki	B08072	character	G15	佐藤美和子
+B	C07_hirameki	B09061	character		ジェイムズ・ブラック
+B	C07_hirameki	B09081	character		知苑大哉
+B	C07_hirameki	D06009	character		大滝悟郎
+B	C07_hirameki	D10022	character		毛利蘭
+B	C07_hirameki	D10024	event		シャッフルロマンス
+B	C07_hirameki	PR028	character		ジョディ・スターリング
+B	C07_hirameki	PR032	character		ジョディ・スターリング
+B	C07_hirameki	PR039	character		中森青子
+B	C07_hirameki	PR133	character		大和敢助
+B	C07_hirameki	PR200	character		大滝悟郎
+B	C07_hirameki	PR206	character		大滝悟郎
+B	C09_keyword_grant	B01047	character		黒羽快斗
+B	C09_keyword_grant	B01047P	character		黒羽快斗
+B	C09_keyword_grant	B01051	character		京極真
+B	C09_keyword_grant	B02057	character		沖矢昴
+B	C09_keyword_grant	B02057P	character		沖矢昴
+B	C09_keyword_grant	B02087	character		キール
+B	C09_keyword_grant	B02087P	character		キール
+B	C09_keyword_grant	B03002	character		江戸川コナン
+B	C09_keyword_grant	B03002P	character		江戸川コナン
+B	C09_keyword_grant	B03047	character		京極真
+B	C09_keyword_grant	B03047P	character		京極真
+B	C09_keyword_grant	B03066	character		赤井秀一
+B	C09_keyword_grant	B03066P	character		赤井秀一
+B	C09_keyword_grant	B04032	character		白馬探
+B	C09_keyword_grant	B04032P	character		白馬探
+B	C09_keyword_grant	B04094	character		ジン
+B	C09_keyword_grant	B04094P	character		ジン
+B	C09_keyword_grant	B05023	event		「探偵の毛利小五郎でございます…」
+B	C09_keyword_grant	B05023P	event		「探偵の毛利小五郎でございます…」
+B	C09_keyword_grant	B05052	character		工藤優作
+B	C09_keyword_grant	B05107	character		ウォッカ
+B	C09_keyword_grant	B05107P	character		ウォッカ
+B	C09_keyword_grant	B06018	character		鬼丸猛
+B	C09_keyword_grant	B06018P	character		鬼丸猛
+B	C09_keyword_grant	B06068	character		京極真
+B	C09_keyword_grant	B06068P	character		京極真
+B	C09_keyword_grant	B06077	character		ジョディ・スターリング
+B	C09_keyword_grant	B06077P	character		ジョディ・スターリング
+B	C09_keyword_grant	B07022	character	G17	沖田総司
+B	C09_keyword_grant	B07054	event		「アイスクリームは……甘いんだぜ!!」
+B	C09_keyword_grant	B07054P	event		「アイスクリームは……甘いんだぜ!!」
+B	C09_keyword_grant	B08082	character		ピスコ
+B	C09_keyword_grant	B09067	event		「よしキャメル…走れ!!」
+B	C09_keyword_grant	B09067P	event		「よしキャメル…走れ!!」
+B	C09_keyword_grant	D10009	character		工藤新一
+B	C09_keyword_grant	D10010	character		工藤新一
+B	C09_keyword_grant	PR132	character	G17	諸伏景光
+B	C09_keyword_grant	PR179	character		京極真
+B	C09_keyword_grant	PR185	character		京極真
+B	C09_keyword_grant	PR201	character	G17	鈴木次郎吉
+B	C09_keyword_grant	PR207	character	G17	鈴木次郎吉
+B	C09_keyword_grant	PR213	character	G17	諸伏景光
+B	C09_keyword_grant	PR234	character		毛利蘭
+B	C09_keyword_grant	PR240	character		毛利蘭
+B	C10_declared_cost	B03029	character		遠山和葉
+B	C10_declared_cost	B03029P	character		遠山和葉
+B	C10_declared_cost	B05063	case		園子のアブない夏物語
+B	C10_declared_cost	B05063P	case		園子のアブない夏物語
+B	C10_declared_cost	B05075	character		勝又力
+B	C10_declared_cost	B06004	character		工藤新一
+B	C10_declared_cost	B06004P	character		工藤新一
+B	C10_declared_cost	B06043	case		恋と推理の剣道大会
+B	C10_declared_cost	B06043P	case		恋と推理の剣道大会
+B	C10_declared_cost	B06065	case		伝説の玉探し
+B	C10_declared_cost	B07063	character		鈴木園子
+B	C10_declared_cost	B07063P	character		鈴木園子
+B	C10_declared_cost	B08057	character		宮野エレーナ
+B	C10_declared_cost	B08064	character		白鳥任三郎
+B	C10_declared_cost	B08073	character	G15	高木渉
+B	C10_declared_cost	B08076	case		揺れる警視庁 1200万人の人質
+B	C10_declared_cost	B08076P	case		揺れる警視庁 1200万人の人質
+B	C10_declared_cost	B09024	character		服部平蔵
+B	C10_declared_cost	B09027	character		大岡紅葉
+B	C10_declared_cost	B09027P	character		大岡紅葉
+B	C10_declared_cost	B09113	case		「愛しい愛しい…宿敵さん？」
+B	C10_declared_cost	B09113P	case		「愛しい愛しい…宿敵さん？」
+B	C06_cutin	B02006	character		仮面ヤイバー
+B	C06_cutin	B02006P	character		仮面ヤイバー
+B	C06_cutin	B03040	character		和田進一
+B	C06_cutin	B03112	character		ライ
+B	C06_cutin	B03112P	character		ライ
+B	C06_cutin	B03118	character		キール
+B	C06_cutin	B03133	event		「見ィーつけた♪」
+B	C06_cutin	B05027	character		服部平次＆遠山和葉
+B	C06_cutin	B05027P	character		服部平次＆遠山和葉
+B	C06_cutin	B05086	character		安室透＆降谷零
+B	C06_cutin	B06027	character		カマキリ男＆ナマコ男＆ヒトデ男
+B	C06_cutin	B07065	character		世良真純＆メアリー
+B	C06_cutin	B07065P	character		世良真純＆メアリー
+B	C06_cutin	B07100	character		コルン
+B	C06_cutin	B07102	character		犯人
+B	C06_cutin	D06003	character		服部平次
+B	C06_cutin	D06004	character		服部平次
+B	C06_cutin	D06021	character		服部平次
+B	C06_cutin	D06023	character		服部平次
+B	C11_enter_effect	B03028	character		服部平次
+B	C11_enter_effect	B03028P	character		服部平次
+B	C11_enter_effect	B03111	character		バーボン
+B	C11_enter_effect	B03111P	character		バーボン
+B	C11_enter_effect	B05092	character		諸伏景光
+B	C11_enter_effect	B05093	character		榎本梓
+B	C11_enter_effect	B05093P	character		榎本梓
+B	C11_enter_effect	B07036	character		中森青子
+B	C11_enter_effect	B07036P	character		中森青子
+B	C11_enter_effect	B09022	character		遠山和葉
+B	C11_enter_effect	B09022P	character		遠山和葉
+B	C11_enter_effect	B09056	character		赤井秀一
+B	C11_enter_effect	B09056P	character		赤井秀一
+B	C11_enter_effect	B09078	character		榎本梓
+B	C11_enter_effect	D06013	character	G17	白馬探
+B	C16_draw_search	B01022	event		少年探偵団
+B	C16_draw_search	B03024	event		「新一!!!」
+B	C16_draw_search	B03024P	event		「新一!!!」
+B	C16_draw_search	B03062	event		私はもう貴方のそばに…
+B	C16_draw_search	B03062P	event		私はもう貴方のそばに…
+B	C16_draw_search	B04055	character	G17	アマンダ・ヒューズ
+B	C16_draw_search	B04085	event		「わかってくれますよね…」
+B	C16_draw_search	B04085P	event		「わかってくれますよね…」
+B	C16_draw_search	B05072	character		沖矢昴
+B	C16_draw_search	B07013	event		「今時、予告状を送りつける、レトロな泥棒さんの面をな…」
+B	C16_draw_search	B08092P	event		出来損ないの名探偵
+B	C16_draw_search	B09033	event		「ひょっとしたら…」
+B	C16_draw_search	B09033P	event		「ひょっとしたら…」
+B	C15_evidence_op	B03070	character		メアリー
+B	C15_evidence_op	B03070P	character		メアリー
+B	C15_evidence_op	B03080	event		BANG
+B	C15_evidence_op	B03080P	event		BANG
+B	C15_evidence_op	B03134	event		ジンの眼光
+B	C08_henso	B02086	character		ベルモット
+B	C08_henso	B02086P	character		ベルモット
+B	C08_henso	B03050	character		怪盗キッド
+B	C08_henso	B05047	character		怪盗キッド
+B	C05_misread	B01045	character		中森青子
+B	C05_misread	PR027	character		白馬探
+B	C05_misread	PR031	character		白馬探
+B	C12_turnend	B03110	character		ジン
+B	C12_turnend	B03110P	character		ジン
+B	C12_turnend	B05022	event		「オレがついてる!!」
+C	C99_other	B03041	event		直球勝負
+C	C99_other	B03041P	event		直球勝負
+C	C99_other	B04027	event		「後ろの女に一言遺したろ思てなァ…」
+C	C99_other	B04027P	event		「後ろの女に一言遺したろ思てなァ…」
+C	C99_other	B04042	event		「よォ名探偵…」
+C	C99_other	B04042P	event		「よォ名探偵…」
+C	C99_other	B04089	character		ベルモット
+C	C99_other	B04089P	character		ベルモット
+C	C99_other	B04092	character		キャンティ
+C	C99_other	B04093	character		コルン
+C	C99_other	B06062	event		かみなり斬り
+C	C99_other	B06062P	event		かみなり斬り
+C	C99_other	B08038	character		京極真
+C	C99_other	B08038P	character		京極真
+C	C99_other	B08043	event	G16	手のこんだ悪巧み
+C	C99_other	B08043P	event	G16	手のこんだ悪巧み
+C	C02_relLevel_filter(G16)	B04074	character	G16	降谷零
+C	C02_relLevel_filter(G16)	B04074P	character	G16	降谷零
