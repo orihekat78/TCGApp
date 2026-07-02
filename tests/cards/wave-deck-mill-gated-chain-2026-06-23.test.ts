@@ -39,6 +39,8 @@ import { B05061 } from '@/cards/ct-p05/B05061';
 import { B05061P } from '@/cards/ct-p05/B05061P';
 import { B06016 } from '@/cards/ct-p06/B06016';
 import { B06016P } from '@/cards/ct-p06/B06016P';
+import { PR276 } from '@/cards/pr-01/PR276';
+import { D02004 } from '@/cards/ct-d02/D02004';
 import type { GameState, EffectCtx, Effect } from '@/engine/types';
 
 function deckOf(n: number, prefix = 'D'): string[] {
@@ -322,4 +324,58 @@ describe('⑧ parallel 同一性 (abilities 継承 / id・no・rarity・imageUrl
       expect(p.kind).toBe(b.kind);
     });
   }
+});
+
+// ============================================================
+// ⑨ BUG-162 監査修正 — 「アクション終了時まで」= scope:'action' / 「そうした場合」= gated chain
+//   compiler oracle の conflict 検出 (同文言 shipped が異 DSL) で判明した誤訳:
+//   PR276 (萩原千速 promo) が同一カード B03094 と divergence: sequence(ungated)+scope:'turn' の 3 誤り。
+//   水平展開で D02004 (服部平次) も同型 scope:'turn' bug を保持していた (PR276 が precedent に誤引用)。
+// ============================================================
+describe('⑨ BUG-162: PR276 ≡ B03094 a2 / D02004 scope:action', () => {
+  it('PR276 a2 は B03094 a2 と構造完全一致 (optional{chain[mill2 gate, charModifyAP $self +1000 action]})', () => {
+    const pr = PR276.abilities[1]!; // a1=partnerColorKeyword, a2=mill→AP
+    const b94 = B03094.abilities[1]!;
+    expect(pr.trigger).toEqual({ hook: 'action:declare', selfOnly: true });
+    const ch = (pr.effect as Extract<Effect, { kind: 'optional' }>).effect as Extract<Effect, { kind: 'chain' }>;
+    expect(ch.kind, '「そうした場合」= chain (旧 sequence は誤り)').toBe('chain');
+    expect(ch.steps[0]).toEqual({ kind: 'atom', verb: 'mill', args: { player: 'self', n: 2, gate: true } });
+    expect(ch.steps[1]).toEqual({ kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 1000, scope: 'action' } });
+    // effect 意味論が B03094 と一致 (同一カード) — 描画順・args 完全同形
+    expect(pr.effect).toEqual(b94.effect);
+  });
+
+  it('PR276 a2 挙動: deck≥2 → mill2 + apMod_action=1000 / deck<2 → 無 (gate)', () => {
+    const runPR = (deckN: number) => {
+      const s = base();
+      s.players.self.deck = deckOf(deckN);
+      s.players.self.scene = [sceneChar('PR276', 'p#1', { apOverride: null })];
+      const ctx = makeCtx({ source: { player: 'self', uid: 'p#1', cardId: 'PR276', area: 'scene' }, dyn: { optionalRun: true } });
+      return produce(s, d => { run(d, PR276.abilities[1]!.effect, ctx); });
+    };
+    const ok = runPR(5);
+    expect(ok.players.self.deck.length, 'mill2 → 3').toBe(3);
+    expect(ok.players.self.scene[0]!.turnEffects['apMod_action'], 'AP+1000 action-scope (turn ではない)').toBe(1000);
+    expect(ok.players.self.scene[0]!.turnEffects['apMod_turn'] ?? 0, 'apMod_turn は積まれない').toBe(0);
+    const no = runPR(1);
+    expect(no.players.self.deck.length, 'gate 阻止 → deck 不変').toBe(1);
+    expect(no.players.self.scene[0]!.turnEffects['apMod_action'] ?? 0, 'AP 修飾なし').toBe(0);
+  });
+
+  it('D02004 a1: forEach do の charModifyAP は scope:action (旧 turn は誤り)', () => {
+    const a1 = D02004.abilities[0]!;
+    const fe = a1.effect as Extract<Effect, { kind: 'forEach' }>;
+    expect(fe.kind).toBe('forEach');
+    expect(fe.do).toEqual({ kind: 'atom', verb: 'charModifyAP', args: { uid: '$self', delta: 1000, scope: 'action' } });
+  });
+
+  it('D02004 a1 挙動: 相手 sleep/stun 2枚 → apMod_action=2000 (action-scope で集計)', () => {
+    const s = base();
+    s.players.self.scene = [sceneChar('D02004', 'd#1', { apOverride: null })];
+    s.players.opp.scene = [sceneChar('X', 'o#1', { state: 'sleep' }), sceneChar('Y', 'o#2', { state: 'stun' }), sceneChar('Z', 'o#3', { state: 'active' })];
+    const ctx = makeCtx({ source: { player: 'self', uid: 'd#1', cardId: 'D02004', area: 'scene' }, dyn: {} });
+    const r = produce(s, d => { run(d, D02004.abilities[0]!.effect, ctx); });
+    expect(r.players.self.scene[0]!.turnEffects['apMod_action'], 'sleep+stun 2枚 → +2000 (active は除外)').toBe(2000);
+    expect(r.players.self.scene[0]!.turnEffects['apMod_turn'] ?? 0).toBe(0);
+  });
 });

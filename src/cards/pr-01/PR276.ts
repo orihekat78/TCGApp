@@ -6,8 +6,8 @@
 //   - 【パートナー黄】 => partnerColorKeyword shared helper → continuous ability with condition {kind:'partnerColor', color:'黄'} [Condition partnerColor (cond/eval.ts; capability-map.txt 'Case/partner color' §) honored. Shared helper src/cards/_shared/partnerColorKeyword.ts builds {type:'continuous', condition:{kind:'partnerColor',color}}. Codegen supports {__shared:'partnerColorKeyword'} (scripts/taskA-codegen.cjs SHARED_FNS line 108).]
 //   - 〚突撃〛（名乗り状態でもアクションできる） => partnerColorKeyword args kw:'突撃' → continuousModifier.grantKeywords:['突撃'] (granted, conditional) [continuous grantKeywords keyword grant exemplar src/cards/ct-d08/D08021.ts a2 (grantKeywords:()=>['突撃'] under condition). partnerColorKeyword helper (src/cards/_shared/partnerColorKeyword.ts line 30-32) emits grantKeywords:()=>[opts.kw]. Capability-map §3 continuous = owner-only keyword grant on bearer (this card) — correct for 'このキャラ'. 突撃 is GRANTED (conditional on partner colour), not innate → keywords:[] at top level.]
 //   - このキャラがアクションしたとき => trigger {hook:'action:declare', selfOnly:true}, scope:'on-scene' [Hook action:declare registered + emitted (capability-map §B; listeners/triggered.ts; emit flow/action/state-machine.ts). selfOnly matches attacker source.uid. Exact exemplar src/cards/ct-d02/D02004.ts a1 + src/cards/ct-d08/D08021.ts a3 ('このキャラがアクションしたとき' = trigger{hook:'action:declare',selfOnly:true}).]
-//   - 自分のデッキのカードを上から2枚リムーブしてもよい => {kind:'optional', effect:{sequence:[ atom mill {player:'self', n:2}, ... ]}} [atom mill {player,n} = mutate.deck.removeFromTop (atom-handlers.ts case 'mill' line 307-313; capability-map §D). optional wrapper exemplar src/cards/ct-p03/B03038.ts a1 ('…してもよい。そうした場合…' = {kind:'optional', effect:{kind:'sequence',...}}). NOTE: AI/CPU always skips optional (capability-map §wrappers optional; known accepted behavior, not a blocker).]
-//   - そうした場合、アクション終了時までこのキャラをAP＋1000する => second sequence step under same optional: atom charModifyAP {uid:'$self', delta:1000, scope:'turn'} [atom charModifyAP {uid:'$self',delta,scope} accumulates via mutate.char.modifyAP (atom-handlers.ts; capability-map §D). EXACT green-certified precedent src/cards/ct-d02/D02004.ts a1 maps the IDENTICAL phrase 'アクション終了時までこのキャラをAP＋1000する' to charModifyAP {uid:'$self',delta:1000,scope:'turn'}. 'そうした場合' is captured by co-membership in the single optional opt-in (both steps run iff player opts in), modeled on B03038 optional+sequence.]
+//   - 自分のデッキのカードを上から2枚リムーブしてもよい => {kind:'optional', effect:{chain:[ atom mill {player:'self', n:2, gate:true}, ... ]}} [BUG-162 修正: 「そうした場合」= gated chain。mill gate:true (atom-handlers mill gate 分岐、wave-deck-mill-gated-chain 2026-06-23) で deck<2 なら chain break → 後続の AP+1000 不成立。公式Q&A「デッキ1枚で全リムーブしてAP+1000できるか→いいえ」。同一カード src/cards/ct-p03/B03094.ts a2 と一致。NOTE: AI/CPU always skips optional。]
+//   - そうした場合、アクション終了時までこのキャラをAP＋1000する => chain 第2 step: atom charModifyAP {uid:'$self', delta:1000, scope:'action'} [BUG-162 修正: 「アクション終了時まで」= scope:'action' (mutate/char.ts ModScope 'action'、apMod_action、state-machine action-end + turn-end net で清掃)。旧 scope:'turn' はターン終了まで残り誤り (rules/22: 「アクション終了時まで」と「ターン終了時まで」は別 scope)。以前の precedent 主張 ct-d02/D02004.ts a1 も同じ scope:'turn' bug を持っていた → 本 commit で同時修正。]
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 import { partnerColorKeyword } from '@/cards/_shared';
@@ -29,14 +29,19 @@ const a2: AbilityDef = {
   effect: {
     kind: 'optional',
     effect: {
-      kind: 'sequence',
+      // BUG-162: 「2枚リムーブしてもよい。そうした場合〜」= optional + gated chain。
+      // deck<2 で mill gate:true が chain を break → AP+1000 不成立 (公式Q&A「デッキ1枚で全リムーブしてAP+1000できるか→いいえ」)。
+      // charModifyAP scope:'action' = 「アクション終了時まで」(rules/22: action-end で失効、turn とは別 scope)。
+      // ct-p03/B03094 (同一カード 萩原千速、Q&A grounded 出荷済) の a2 と完全一致させる。
+      kind: 'chain',
       steps: [
         {
           kind: 'atom',
           verb: 'mill',
           args: {
             player: 'self',
-            n: 2
+            n: 2,
+            gate: true
           }
         },
         {
@@ -45,7 +50,7 @@ const a2: AbilityDef = {
           args: {
             uid: '$self',
             delta: 1000,
-            scope: 'turn'
+            scope: 'action'
           }
         }
       ]
@@ -55,7 +60,9 @@ const a2: AbilityDef = {
   ruleRefs: [
     'rules/07-action-flow.md',
     'rules/14-refresh.md',
-    'rules/15-abilities-effects.md'
+    'rules/15-abilities-effects.md',
+    'rules/22-qa-action-contact.md',
+    'rules/26-qa-deck-refresh.md'
   ]
 };
 

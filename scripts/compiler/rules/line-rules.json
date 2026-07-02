@@ -1,7 +1,7 @@
 {
  "generatedBy": "scripts/compiler/mine.cjs",
- "minedFromShipped": 1509,
- "ruleCount": 623,
+ "minedFromShipped": 1510,
+ "ruleCount": 626,
  "rules": [
   {
    "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を1つ以上表向きにする〛：〚特徴［少年探偵団］〛のキャラを1枚まで選び、この【宣言】能力のコストで表向きにした証拠1つにつき、ターン終了時までAP＋1000する。",
@@ -12550,6 +12550,47 @@
    },
    "exemplars": [
     "B04023"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】【スリープ】：自分の現場にいる、このターン中にアクション［キャラ］していた〚特徴［FBI］〛のキャラを1枚まで選び、アクティブにする。",
+   "ability": {
+    "cost": {
+     "kind": "sleepSelf"
+    },
+    "effect": {
+     "args": {
+      "filter": {
+       "actedCharThisTurn": true,
+       "trait": "FBI"
+      },
+      "max": 1,
+      "player": "self",
+      "side": "self",
+      "state": "active"
+     },
+     "kind": "atom",
+     "verb": "sceneSetState"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B08049"
    ],
    "origins": [
     "desc"
@@ -29322,7 +29363,7 @@
      "do": {
       "args": {
        "delta": 1000,
-       "scope": "turn",
+       "scope": "action",
        "uid": "$self"
       },
       "kind": "atom",
@@ -29360,6 +29401,59 @@
     "desc"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|このキャラがアクションしたとき、自分のデッキのカードを上から2枚リムーブしてもよい。そうした場合、アクション終了時までこのキャラをAP＋1000する。",
+   "ability": {
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "gate": true,
+         "n": 2,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "mill"
+       },
+       {
+        "args": {
+         "delta": 1000,
+         "scope": "action",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "charModifyAP"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/14-refresh.md",
+     "rules/15-abilities-effects.md",
+     "rules/22-qa-action-contact.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:declare",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B03094",
+    "B03094P",
+    "PR276"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 3
   },
   {
    "key": "character|effect|このキャラがアクションしたとき、自分のデッキのカードを上から3枚リムーブしてもよい。この効果によって〚カード名［妃英理］〛か〚カード名［工藤新一］〛か〚特徴［毛利探偵事務所］〛のキャラがリムーブされた場合、アクション終了時までこのキャラをAP＋1000する。",
@@ -31262,6 +31356,56 @@
    ],
    "origins": [
     "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|自分のターン終了時、自分の現場に〚特徴［FBI］〛のキャラが4枚以上いる場合、カードを1枚引く。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "if": {
+      "kind": "sceneHas",
+      "nMin": 4,
+      "query": {
+       "area": "scene",
+       "filter": {
+        "trait": [
+         "FBI"
+        ]
+       },
+       "side": "self"
+      }
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "n": 1,
+       "player": "self"
+      },
+      "kind": "atom",
+      "verb": "draw"
+     }
+    },
+    "ruleRefs": [
+     "rules/05-turn-phases.md",
+     "rules/15-abilities-effects.md",
+     "rules/25-qa-effects-resolution.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "phase:end:start"
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08049"
+   ],
+   "origins": [
+    "desc"
    ],
    "count": 1
   },

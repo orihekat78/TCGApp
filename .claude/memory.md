@@ -29,3 +29,19 @@
 - gate: tsc0 / vitest 3552→**3574** / smoke winsA=498 不変 / 8lint errors=0 / 敵対 review 2 lens (opus) — semantic lens が真 BLOCKER 検出 (refuse card 由来 elim rule 未検証 → B08007 幻 AP+1000)、purge 強化 (30 rule 除去、match 無影響) + 合成 fixture 回帰で封止。
 - worktree /c/tmp/conan-compiler-b1 (tool/compiler-2)。次 = B1.5 parametric rule → B2 emit (詳細
   NEXT-SESSION-PROMPT-TRACK-B.md)。
+
+## 2026-07-02 Track B session — audit pivot (bulk 空振り実測 + BUG-162)
+
+- **B1.5/B2 実測空振り → pivot** (ユーザー承認): parametric collapse safe template 12・unshipped unlock **+0枚** /
+  whole-line full-compile **1/539** / 節分割(「。」)上限 **9/539** (節 63.5% 新規・DSL 節合成不能)。残 539 は新規複雑文=
+  whole-line 文法飽和。compiler 用途を **回帰ゲート(G1 oracle)+監査+Track A demand-signal** に転換 (bulk author 廃止)。
+- **成果1 [[BUG-162]]**: mine conflict 6 key 裁定 → 誤訳2件修正。**PR276 萩原千速** (promo、正版=B03094): sequence→chain /
+  mill gate:true 追加 / charModifyAP scope:'turn'→'action' (「アクション終了時まで」rules/22)。**水平展開**で **D02004** も
+  同型 scope bug (PR276 が誤 precedent 引用=carrier-reuse false-green)。「アクション終了時まで」全 shipped 走査で該当2件のみ。
+  B07048 (faceUp省略) は benign (読取 falsy 判定で挙動同一・意図的省略テスト有) → 変更せず。conflict 6→5。
+  ★engine 確認: scope:'action' は honor 済 (ModScope union・apMod_action・action-end clearTurnEffects L342/458)。auto-mem に
+  「未対応」stale 観測あったが直読+golden test で否定。
+- **成果2 demand-signal** ([specs/compiler-demand-signal-2026-07-02.md]): 未被覆節を影響カード数でランク→Track A 優先度。
+  上位=ability/kw grant(30)/MR partner-area 宣言(19)/event→char セット WRITE(9)/partner 事件解決 rewrite(8)/証拠隠滅敗北(8)。
+- gate: tsc0 / vitest (mill-gate に ⑨ 追加 4test・G1 pin 維持・colornot green) / smoke winsA=498 不変 / 8lint 0err。
+  main repo 直作業 (worktree 不使用、開始時 clean・並行 Track A は別 workdir)。commit --no-verify + FF push。
