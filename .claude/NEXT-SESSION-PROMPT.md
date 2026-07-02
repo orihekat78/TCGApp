@@ -1,6 +1,12 @@
-# 次セッション再開プロンプト — Track A: engine 拡張 (2026-07-02 二Track化)
+# 次セッション再開プロンプト — Track A1: engine 拡張 structural lane (2026-07-02 二Track化 → 2レーン化)
 
-> ★Track B (カード追加ツール = text→DSL compiler) は **別 session・別プロンプト** → [NEXT-SESSION-PROMPT-TRACK-B.md](NEXT-SESSION-PROMPT-TRACK-B.md)。
+> ★Track B (compiler 監査) = [NEXT-SESSION-PROMPT-TRACK-B.md](NEXT-SESSION-PROMPT-TRACK-B.md) /
+> ★**Track A2 (additive lane、並行 engine session)** = [NEXT-SESSION-PROMPT-TRACK-A2.md](NEXT-SESSION-PROMPT-TRACK-A2.md)。
+> **2 レーン排他 rule** ([specs/engine-parallel-2lane-2026-07-02.md](specs/engine-parallel-2lane-2026-07-02.md) 必読):
+> 本 lane (A1) = structural 専任 — hook 新設 / flow / resolver 構造 / GameState 形状 / UI / cost union。
+> **純 additive (評価器/dyn/verb 追加/turn-flag) は A2 の管轄** — 本 lane では触らず DEFERRED-INDEX 経由で A2 へ送る。
+> push は先着 FF、後発は rebase 後**全ゲート再走**。重い review workflow は A2 と同時起動しない。
+> **wave 着手時に /engine-wave skill を起動** (model opus/sonnet/fable + effort 判断表。fable agent 復活実測済 2026-07-02)。
 > 本 session は engine 拡張専任 (直近: E2 structural wave-8 出荷 shippuFiredThisTurn flag + 推理不可付与 canReason gate、engine-only)。
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。

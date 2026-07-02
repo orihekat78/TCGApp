@@ -170,6 +170,12 @@
   意味等価の 1対1 突合) はモデル非依存で opus でそのまま保たれる (cluster3 で opus 突合 15/15 equivalent を実証)。
   最上位ティアの単発判断力の差は **冗長な opus パス** (multi-vote / perspective-diverse lens) で補償する。
   fable が再び安定利用可能になったら難判断を fable に戻す
+- **★2026-07-02 改定: fable agent 復活を実測確認 → 難判断 escalate 先に復帰**: Agent tool / Workflow の
+  `model:'fable'` が応答することを smoke test で確認。運用 = **基本 opus / 機械作業 sonnet /
+  opus で担えない難判断 (lens 分裂の裁定・ルール解釈 2 通り成立・G1 conflict 裁定・E3 semantic verify) のみ
+  fable に escalate**。effort も作業 tier で自動選択 (low/継承/high/xhigh)。判断表 =
+  [.claude/skills/engine-wave/SKILL.md](skills/engine-wave/SKILL.md)。「model not available」再発時のみ
+  上記 2026-06-14 手順 (opus multi-vote 代替) に一時復帰
 - **リファクタリングレベルの作業は Fable 主体**: refactor-plan のフェーズ群・骨格 (engine) に
   触れる変更は Fable がオーケストレーション・実作業を主導する
   (セッション本体のモデルは /model で切替: リファクタ系セッション=fable / 通常セッション=opus 推奨)

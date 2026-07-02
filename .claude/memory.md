@@ -47,3 +47,14 @@
   d08/d11 統一経路で byte-identical (冪等)。**compile 可 0→10** (PR281/282/283 効果持ち + vanilla 7)
   = card-wave 出荷候補 signal。
 - gate: tsc0 / vitest 3658+1skip / smoke winsA=498 / compiler 68/68 / rules 655 不変 / G1 mismatch 0。
+
+## 2026-07-02 Track B session #3 続々 — engine 2レーン並行体制 + engine-wave skill (ユーザー指示)
+
+- **2レーン化**: specs/engine-parallel-2lane-2026-07-02.md (A1=structural/A2=additive、batch 割当・
+  排他ファイルマップ・FF push protocol・review throttle) + NEXT-SESSION-PROMPT-TRACK-A2.md 新設
+  (additive queue、既知消化済み取り消し線付き) + A1 prompt header 2レーン宣言。
+- **engine-wave skill 新設** (.claude/skills/engine-wave/): model オーケストレーション表
+  (基本 opus / 機械 sonnet / opus で担えない難判断のみ fable escalate) + effort 自動選択表
+  (low/継承/high/xhigh)。★**fable agent 復活を実測確認** (Agent tool smoke test FABLE-OK、
+  2026-06-14「不可」は stale) → CLAUDE.md モデル段階化に 07-02 改定を追記。
+  skill は retrieval test 3/3 正答で GREEN 検証済。

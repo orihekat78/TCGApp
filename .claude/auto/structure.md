@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 428
-- **ファイル数**: 7501
+- **ディレクトリ数**: 429
+- **ファイル数**: 7504
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1229,6 +1229,8 @@
   - **`skills/`** — プロジェクト固有のスキル定義
     - **`card-wave/`**
       - `SKILL.md` — card-wave — カード実装 wave 実行手順
+    - **`engine-wave/`**
+      - `SKILL.md` — engine-wave — engine 拡張 wave 実行 + model/effort オーケストレーション
     - **`refactor-phase/`**
       - `SKILL.md` — refactor-phase — リファクタフェーズ実行手順
   - **`specs/`** — 設計ドキュメント (Engine API / UI / カード分析 / Round 仕様)
@@ -1540,6 +1542,7 @@
     - `engine-gate-triage-2026-06-15.md` — engine gate triage (2026-06-15, cluster12/13 出荷後)
     - `engine-mr-partner-area-cohort.md` — engine: MR partner-area cohort yield 表 (2026-06-23 grounding, 敵対review反映 v2)
     - `engine-mr-partner-area-design.md` — engine: MR partner-area 構造 設計 (design-first, 2026-06-23, 敵対review反映 v2)
+    - `engine-parallel-2lane-2026-07-02.md` — engine 拡張 2 レーン並行体制 (2026-07-02 ユーザー承認)
     - `engine-wave2-ability-filter-design.md` — engine拡張 wave#2 cluster2 — ability-presence filter 設計 (v2、敵対レビュー3lens反映済)
     - `engine-wave2-action-triggers-design.md` — engine拡張 wave#2 cluster3 — action-lifecycle trigger 族 設計 (v2、敵対レビュー3lens反映済)
     - `engine-wave2-bug132-design.md` — engine拡張 wave#2: BUG-132 GAP-1/2 修正設計 v2 (2026-06-12, 敵対レビュー3lens反映済)
@@ -5205,6 +5208,7 @@
       - `vitest.config.ts` — BUG-077 flaky 解消: 既定 5s では bug-077 の Phase I/K 等が `await import(…
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
+  - `NEXT-SESSION-PROMPT-TRACK-A2.md` — 次セッション再開プロンプト — Track A2: engine 拡張 additive lane (2026-07-02 新設)
   - `NEXT-SESSION-PROMPT-TRACK-B.md` — 次セッション再開プロンプト — Track B: カード追加ツール (text→DSL compiler) (2026-07-02 新設)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
   - `scheduled_tasks.lock`
