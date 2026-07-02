@@ -1,4 +1,7 @@
-# 次セッション再開プロンプト (2026-07-01 — engine-first E1 / additive wave-6 出荷: grantTraits/grantNames 継続付与)
+# 次セッション再開プロンプト — Track A: engine 拡張 (2026-07-02 二Track化)
+
+> ★Track B (カード追加ツール = text→DSL compiler) は **別 session・別プロンプト** → [NEXT-SESSION-PROMPT-TRACK-B.md](NEXT-SESSION-PROMPT-TRACK-B.md)。
+> 本 session は engine 拡張専任 (直近: additive wave-6 出荷 grantTraits/grantNames)。
 
 > モデル方針: `claude-fable-5` agent 不可 → 本体・難判断とも **opus 最初から**。⚠ 応答は日本語。
 > Caveman mode 有効 (出力簡潔、コード/コミットは通常文)。Ultracode 有効。
@@ -17,11 +20,14 @@
   T1 (pure-additive/clone)=機械ゲート+probe のみ・review 0-1 lens / T2=2 lens / T3 (hot-path/core/MR)=従来フル。
 - wave 大型化: T1 は 10-15 prim or 20-40 card / 1 commit、1 session 複数 wave 可 (context 60% まで)。
 - **全カード完了計画** = [specs/all-cards-completion-plan-2026-07-02.md](specs/all-cards-completion-plan-2026-07-02.md)
-  (残535枚、Ph1 E1裾→Ph2-3 E2→Ph4 E3→Ph5 MR→Ph6-0 compiler→Ph6 一括変換→Ph7 tail、計 **~14-19 session** (oracle 実測前保守値 20-27))。
+  (残535枚。**Track A** = engine A1-A5 10-12 session / **Track B** = compiler B0-B3 5-9 session、計 ~15-21・並行で暦上 ~10-13 slot)。
 - engine wave には **exemplar カード 1-2 枚を同 commit 同梱** (E2E 生きたテスト + clone 原器、再certify 二度手間排除)。
-- **text→DSL compiler 採用 (2026-07-02 ユーザー決定)**: silent 誤訳の源=AI 即興翻訳を whitelist 文法で構造排除。
-  **Ph1-5 の各 wave は自 primitive の production rule (cardTextPattern→DSL 断片) を exemplar と同 commit で lexicon 登録**すること。
-  Ph6-0 で compiler 組立 + oracle 実測 (実装済 1514 枚 compile⇔shipped DSL diff)。未知句 refuse→DEFER。Ph6 は 9-13→**2-4** 見込み (実測で確定)。
+- **text→DSL compiler 採用 (2026-07-02 ユーザー決定)**: silent 誤訳の源=AI 即興翻訳を whitelist 文法で構造排除。未知句 refuse→DEFER。
+- **★二 Track 並行 (2026-07-02 ユーザー決定)**: 本 prompt = **Track A (engine 拡張専任)**。compiler/文法/oracle/bulk author は
+  **Track B 専任** ([NEXT-SESSION-PROMPT-TRACK-B.md](NEXT-SESSION-PROMPT-TRACK-B.md) / driver [specs/compiler-track-plan-2026-07-02.md](specs/compiler-track-plan-2026-07-02.md))。
+  Track A の対 B 義務 = **exemplar カード 1-2 枚を wave 同 commit 同梱のみ** (B の oracle 入力 + 新 primitive の機械可読 spec。
+  production rule 登録は B へ移管、A は書かない)。A は src/engine+exemplar / B は scripts/compiler+bulk のみ。
+  B の bulk は「1 wave 以上前に出荷済 primitive の family」限定 (barrel 衝突なし)。
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
