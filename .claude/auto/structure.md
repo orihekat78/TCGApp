@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/tmp/conan-wt-a2-14`)
 - **ディレクトリ数**: 221
-- **ファイル数**: 3937
+- **ファイル数**: 3936
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -558,7 +558,6 @@
     - `2026-07-02-08-engine-wave11-hirameki-actor.md`
     - `2026-07-02-08-engine-wave12-pa-cards.md` — wave-12 (A1): G39 PA 一般カード枠 — partnerAreaCards + toPartnerArea + ビッグジュエル移動4テキスト全…
     - `2026-07-02-09-engine-wave13-removenamecount.md` — wave-13 (A2 additive lane): $self.removeNameCount dyn — 犯人 カットイン (PR158/…
-    - `2026-07-02-09-engine-wave14-scenemaxlp.md`
     - `2026-07-02-10-engine-wave14-scenemaxlp.md`
     - `README.md` — Changelog エントリ
   - **`design/`**

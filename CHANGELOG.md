@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `aef9c340e546`
+> Source hash: `a45e8d35fba5`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -46,20 +46,6 @@
   engine 変更は dyn case 追加のみ (filter dyn 解決は resolveFilterDynObj が field-agnostic に既対応)。
 - **gates**: tsc0 / vitest 3696 pass +1 skip (新 probe 8 件) / smoke:1000 winsA=498 不変 / 8 lint green。
 - tier T1 (pure-additive evaluator + 出荷済 G15 パターンの clone)。
-
-## engine wave-14 (A2) — $self.sceneMaxLp dyn + exemplar B08043 相対LPリムーブ
-
-- **新 dyn `$self.sceneMaxLp`** ([src/engine/dyn/eval.ts](../../src/engine/dyn/eval.ts)) — `ctx.source.player`
-  の現場キャラの **実効 LP 最大値** (`charRead.lp`)。現場0枚 → `-Infinity`。player ベース (uid 不要 =
-  イベントから使用可、uid null-check より前に分岐)。G15 の `apMin/apMax:{dyn:'$self.ap'}` と同経路の相対 LP 版。
-- **exemplar B08043 / B08043P 手のこんだ悪巧み** (event, lv5, 白) — 初 consumer。
-  「相手の現場にいるキャラを1枚まで選ぶ。そのキャラが自分の現場にいるLPがもっとも高いキャラのLP以下のLPの場合、リムーブする」
-  = `sceneRemove {player:self, max:1, side:opp, cause:effect, filter:{lpMax:{dyn:'$self.sceneMaxLp'}}}`。
-  `resolveFilterDynObj` が pick 列挙前に literalize → `matchOneFilter` が対象の実効 LP と突合。
-  現場0枚 → `lpMax:-Infinity` で全候補除外 (公式 Q&A「自分の現場にキャラがいない場合はリムーブ不可」と整合)。
-- **純 additive** (dyn case 追加のみ、engine 挙動不変)。tier T1。
-- gates: tsc 両config 0 / vitest 3703 pass +1 skip (+8) / smoke winsA=498 exceptions=0 不変 / 8 lint err=0。
-- 公式 Q&A: 参照 LP は解決時点の実効値 (増減後) / 自分の現場0枚でリムーブ不可 — 両方 impl で担保。
 
 # wave-13 (A2 additive lane): $self.removeNameCount dyn — 犯人 カットイン (PR158/PR164) 出荷
 
