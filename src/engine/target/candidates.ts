@@ -183,6 +183,20 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
         if (matchesFiltersByCardId(state, state.players[side].partner.cardId, query, cand)) {
           out.push(cand);
         }
+        // engine wave-12 (2026-07-02 G39): PA 一般カード枠 (partnerAreaCards) の列挙。
+        // 「このカードをパートナーエリアに移す」で PA 常駐したカード (B07059 等) を
+        // {kind:'card', area:'partner-area'} として filter 適用の上で候補化する。
+        // 全出荷カードは本 field 未使用 (undefined) → 既存カードの候補集合は不変。
+        // ※ partnerAreaMR (MR slot) の targetability は公式 Q&A 未解決 (BUG-154 #3) のため列挙しない。
+        const paCards = state.players[side].partnerAreaCards;
+        if (paCards) {
+          for (let i = 0; i < paCards.length; i++) {
+            const c: Candidate = { kind: 'card', cardId: paCards[i], area: 'partner-area', player: side, index: i };
+            if (matchesFiltersByCardId(state, paCards[i], query, c)) {
+              out.push(c);
+            }
+          }
+        }
         break;
       }
       case 'hand': {

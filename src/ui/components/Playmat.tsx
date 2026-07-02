@@ -239,6 +239,7 @@ function PlayerMat({
             partner={state?.players[side].partner ?? null}
             side={side}
             resolveCard={resolveCard}
+            paCards={state?.players[side].partnerAreaCards}
             isCandidate={isPartnerCandidate}
             onClick={onPartnerClick}
             onExpand={onExpand}

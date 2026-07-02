@@ -14,6 +14,9 @@ export type PartnerAreaProps = {
   partner: PartnerOnBoard | null;
   side: 'self' | 'opp';
   resolveCard: (cardId: string) => ResolvedCardMeta;
+  /** engine wave-12 (G39): PA 一般カード枠 (「このカードをパートナーエリアに移す」で常駐したカード)。
+   *  rules/03 §パートナーエリア — 枚数上限なし。undefined/空 = 非表示 (既存表示不変)。 */
+  paCards?: string[];
   /** Phase 8.5: 推理/宣言能力/アシスト 対象選択中のハイライト */
   isCandidate?: boolean;
   /** Phase 8.5: 候補としてクリックされたとき。uid は親が知っている (`partner:self` 等)。 */
@@ -47,7 +50,7 @@ const COLOR_LABEL: Record<ResolvedCardMeta['color'], string> = {
  * 'file-area' (アシスト中) / 'mr-removed' (MR リムーブ) のときは
  * キーホール透かしのみ + 状態ラベルを表示する。
  */
-export function PartnerArea({ partner, side, resolveCard, isCandidate, onClick, onExpand }: PartnerAreaProps): JSX.Element {
+export function PartnerArea({ partner, side, resolveCard, paCards, isCandidate, onClick, onExpand }: PartnerAreaProps): JSX.Element {
   const isOnBoard = partner !== null && partner.location === 'partner-area';
   const assisted  = partner !== null && partner.location === 'file-area';
   const mrRemoved = partner !== null && partner.location === 'mr-removed';
@@ -110,6 +113,26 @@ export function PartnerArea({ partner, side, resolveCard, isCandidate, onClick, 
           </>
         )}
       </div>
+
+      {/* engine wave-12 (G39): PA 一般カード枠 — 「このカードをパートナーエリアに移す」常駐カード (上限なし) */}
+      {paCards !== undefined && paCards.length > 0 && (
+        <div className="pa-cards" data-testid={`pa-cards-${side}`}>
+          {paCards.map((cardId, i) => {
+            const m = resolveCard(cardId);
+            return (
+              <div
+                key={`${cardId}#${i}`}
+                className={`pa-card color-${m.color}`}
+                data-card-id={cardId}
+                onClick={onExpand ? () => onExpand(cardId) : undefined}
+                style={onExpand ? { cursor: 'pointer' } : undefined}
+              >
+                <span className="pa-card-name">{m.name}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

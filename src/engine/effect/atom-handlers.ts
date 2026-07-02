@@ -33,6 +33,7 @@ import {
   atomFileFlipTop,
   atomEvidenceGain,
   atomSelfToEvidence,
+  atomToPartnerArea,
   atomEvidenceLose,
   atomEvidenceToDeck,
   atomEvidenceFlip,
@@ -137,6 +138,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomEvidenceGain(s, a, ctx);
     case 'selfToEvidence':
       return atomSelfToEvidence(s, a, ctx);
+    case 'toPartnerArea':
+      return atomToPartnerArea(s, a, ctx);
     case 'evidenceLose':
       return atomEvidenceLose(s, a, ctx);
     case 'evidenceToDeck':

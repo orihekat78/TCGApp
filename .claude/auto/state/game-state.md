@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `d258b0a0371d`
+> Source hash: `6979bac65bf9`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -25,6 +25,7 @@ classDiagram
   class PlayerState {
     +partner: PartnerOnBoard
     +partnerAreaMR?: SceneCharacter | null
+    +partnerAreaCards?: CardId[]
     +case: «object×5»
     +scene: SceneCharacter[]
     +hand: CardId[]

@@ -23,6 +23,7 @@ const ATOM_VERB_MAP = {
   discard: true, discardRandom: true, mill: true, fileAdd: true, filePopToHand: true,
   fileRemoveTop: true, fileFlipTop: true, // Task D E3 (2026-06-12)
   evidenceGain: true, evidenceLose: true, evidenceFlip: true, selfToEvidence: true, evidenceToDeck: true,
+  toPartnerArea: true, // engine wave-12 (G39): このカードを PA へ (selfToEvidence 同型)
   evidenceToHand: true, handAddFromRemove: true, handAddFromDeck: true, handAddFromDeckBottom: true,
   handToEvidence: true,
   handReveal: true, // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)

@@ -163,7 +163,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 | mustGuard token | 「ガードできる場合、必ずガードする」(B09040 a2) | guard 強制の AI/UI 同時追従 (GuardPickerModal forced 化) |
 | auraGrant (AP/LP buff) | **✅ 解消 (2026-06-15 cluster13)**: continuous OWNER-ONLY 制約を解除し、他キャラへの数値 aura (apDeltaAura/lpDeltaAura + auraFilter + auraExcludeSelf) を board-scan reader で実装。11 printings 出荷 | 完了 — branch engine/wave2-cluster13-aura-grant |
 | auraGrant (triggered 付与) | 常時 aura で他キャラに **triggered 能力テキスト**を付与 (B09024 a1「他キャラに【現場リムーブ時】を与える」) | **別 gate 継続 DEFER**: 非キーワード能力テキストの付与 + 二重 queue 防止 (cluster13 の数値 aura とは別機構) |
-| partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | **Phase1 engine core 実装済 (2026-06-23, engine/mr-partner-area-core)**: partnerAreaMR slot + MR①②(全 leave verb / enter-removal) + PA-MR reader spine (byUid/continuous/declared/auto活性) + canDeclaredAbility PA scope gate。4-lens 敵対review=REVISE 反映。残: Phase2=UI / 3=AI / 4=card wave (SOLE 15)。未解決4件+暫定5件=[BUG-154](../bugs/BUG-154.md)。設計=[design](engine-mr-partner-area-design.md)+[cohort](engine-mr-partner-area-cohort.md)。**ビッグジュエル列挙 (B07045/PR263) は別 gate=未対応** |
+| partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | **Phase1 engine core 実装済 (2026-06-23, engine/mr-partner-area-core)**: partnerAreaMR slot + MR①②(全 leave verb / enter-removal) + PA-MR reader spine (byUid/continuous/declared/auto活性) + canDeclaredAbility PA scope gate。4-lens 敵対review=REVISE 反映。残: Phase2=UI / 3=AI / 4=card wave (SOLE 15)。未解決4件+暫定5件=[BUG-154](../bugs/BUG-154.md)。設計=[design](engine-mr-partner-area-design.md)+[cohort](engine-mr-partner-area-cohort.md)。**ビッグジュエル列挙: wave-12 (2026-07-02) で PA 一般カード枠 spine (partnerAreaCards + toPartnerArea + candidates 列挙) 出荷済** — 残 = PA→remove 移動 verb (B07037) + PA 読み Condition (B07045/PR263)、下段 wave12-pa-cards 節参照 |
 | 「パートナーエリアでも宣言できる/発動する」句 | B07079/P・B08032/P・B09054/P + B07093/B05066 | **engine 配線済 (2026-06-23)**: MR①② は本5枚で有効化。PA 常駐 MR の宣言能力 (scope on-partner-area) は使用可。card固有 scope 補正は Phase 4 wave で per-card 対応 |
 | name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
 | ~~multi-card sceneEnter~~ | **✅ 解消 (2026-06-15 cluster14)**: sceneEnter に cardIds:'$pick.cardIds' 契約 + switchRemoveUids[] (現場満杯 switch) を additive 拡張。distinctNames AI dedup + skipResolvesAtom (0枚でも後続 step 解決)。B09010/P + PR042/PR046 計 4 printings 出荷 | 完了 — branch engine/wave2-cluster14-multi-sceneenter。残 B01022 (multi-match deckRevealUntil) / B05117 (persistent set-granted leave ability) は別 gate |
@@ -914,3 +914,15 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (2) conditionIfIsStable は boundDistinctColorCount を明示 case せず default の `$`-token scan で unstable 判定 — bindKey が `$` prefix である規約に依存 (boundAnyMatchesFilter と同 posture)。新 bound-系 cond 追加時は bindKey `$` prefix を守るか case 追加。
   (3) AI multi-pick (nMax>1 generic) は greedy 先頭 N 枚 (heuristic 非使用、cardIds contract と同流儀) — B07002 a1 で CPU が異色探偵ペアを意図的に選ばない = AI 品質 gap (正しさは非依存)。
   (4) HandZone multi-select は discard verb のみ配線 (nMax>1 の他 hand-pick verb が出たら Playmat 側で同様に pickNMin/pickNMax/onPickMulti を渡す)。
+
+## wave engine / wave12-pa-cards (A1: G39 partnerAreaCards + toPartnerArea、2026-07-02 出荷)
+
+出荷済 = `PlayerState.partnerAreaCards?: CardId[]` (PA 一般カード枠) / verb `toPartnerArea` (mutate.partner.addAreaCardFromRemove、evidence.gainCard 同型) / candidates partner-area 列挙 / UI PartnerArea PA list / exemplar **B07059/P・B07060/P・PR195/196** (移動4テキスト全数、traits ビッグジュエル = 公式 API category1)。
+
+- **G39 計数・消費側 DEFER (次 A1 wave 候補)**: B07037 (【登場時】PA の ビッグジュエル 2枚リムーブ cost → 中森青子 蘇生) = **PA→remove 移動 verb 不在** / B07045 (ターン終了時 PA に ビッグジュエル があれば self active) = **PA カード読み Condition 評価器 不在**。いずれも spine (storage+列挙) は本 wave で出荷済、traits も event 明示で解決済 (G40 の TSV features 列 data gap は hand-author 経路では非 blocker と判明 — 公式 API category1 を card ファイルに明示する B07055 運用)。PR263 も同族。
+- **[[BUG-166]]** (latent、低): 解決中イベントが refresh shuffle に巻き込まれる rules/26 乖離 — B07060 deck0 draw で初到達可能 (graceful no-op、§F2 pinning test 有)。修正は resolving-card 隔離 = engine-wide T3 専用 wave。
+- **敵対 review nits (wave-12、4/4 SHIP_WITH_NITS 0-blocker、latent 記録)**:
+  (1) remove:exit が remove→PA 遷移でも emit (gainCard 慣行通り・consumer 現状 0)。remove:exit consumer カード出荷時に「PA 移動も『リムーブエリアから離れた』か」を公式 Q&A で再確認。
+  (2) partnerAreaCards は collectCardsInPlay 走査外 (意図的 additive) — PA 常駐カードは in-play 系 observer/計数から不可視。PA 参照カード出荷時に明示配線要。
+  (3) candidates の PA 列挙は現状 production consumer 0 (test §D のみ) — 初 consumer (B07037 等) が実運用初回。無 filter pick が PA jewel を予期せず対象化しないか filter 設計を再確認。
+  (4) 白色 UI 未対応 (CardColor union に white 無し、'白'→fallback blue) — PA 表示は name 主体で影響小、既存 engine-wide gap。非 MVP カードの name "???" 表示 (UI resolveCard catalog が MVP deck のみ) も既存 gap。

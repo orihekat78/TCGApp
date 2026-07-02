@@ -317,6 +317,23 @@ export function atomSelfToEvidence(s: GameState, a: Record<string, unknown>, ctx
       return;
     }
 
+export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // 「このカードをパートナーエリアに移す」(rules/03 §パートナーエリア、engine wave-12 G39)。
+      // selfToEvidence と同型の deterministic self 経路 (pick 不要): イベント使用後 handUseCard /
+      // next-hint が当該カードをリムーブへ置き、hirameki も evidence.removeTop が remove へ移動済 →
+      // どちらの経路でも解決時カードは owner の remove 内。mutate.partner.addAreaCardFromRemove が
+      // lastIndexOf splice + 不在 no-op (B06026 Q&A 同型) + remove:exit emit + PA push (上限なし) を行う。
+      // ctx.source.cardId = 当該カード自身、ctx.source.player = 使用者/証拠所有者。
+      const tpaP = resolvePlayer((a.player as 'self' | 'opp' | undefined) ?? 'self', ctx);
+      const tpaCardId = ctx.source.cardId;
+      if (typeof tpaCardId !== 'string' || tpaCardId.length === 0) return;
+      const moved = mutate.partner.addAreaCardFromRemove(s, tpaP, tpaCardId);
+      if (moved) {
+        mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea', target: tpaCardId });
+      }
+      return;
+    }
+
 export function atomEvidenceLose(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
       const n = a.n as number;

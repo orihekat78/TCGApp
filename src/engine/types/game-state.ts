@@ -13,6 +13,14 @@ export type PlayerState = {
   // `partnerMR:self`/`partnerMR:opp` に書き換える (collectCardsInPlay / scene.byUid 解決用)。
   // 不在 (undefined/null) が既定 — state-factory / fixtures は未初期化 (additive, 回帰0)。
   partnerAreaMR?: SceneCharacter | null;
+  // PA 一般カード枠 (rules/03 §パートナーエリア、engine wave-12 2026-07-02 G39):
+  // 「このカードをパートナーエリアに移す」効果 (B07059/B07060/PR195 等のイベント) で PA に常駐する
+  // 一般カードの配列。公式 Q&A (B07059 ほか): PA に置けるカードの枚数に **上限なし** → 配列・cap なし。
+  // partner (strict singleton) / partnerAreaMR (MR 専用 slot) とは別枠。移動元は常に remove
+  // (event は使用時に remove へ置かれてから効果解決 / hirameki も removeTop で remove 移動後に hook)。
+  // 参照は candidates.ts case 'partner-area' が {kind:'card', area:'partner-area'} で列挙。
+  // 不在 (undefined) が既定 — state-factory / fixtures は未初期化 (additive, 回帰0)。
+  partnerAreaCards?: CardId[];
   // BUG-067 (2026-05-28): declaredUseCount を case にも追加して ターン① enforcement を可能に
   case: { cardId: string; status: '事件編' | '解決編'; requiredEvidence: number; colors: string[]; declaredUseCount: Record<string, number> };
   scene: SceneCharacter[];

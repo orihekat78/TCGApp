@@ -5,6 +5,7 @@
 import type { GameState } from '@/engine/types';
 import { file as fileMutate } from './file.js';
 import { caseOp } from './case.js';
+import { remove as removeMut } from './remove.js'; // engine wave-12: remove:exit emit (remove→PA 離脱)
 
 type Player = 'self' | 'opp';
 type PartnerState = 'active' | 'sleep' | 'stun';
@@ -80,6 +81,27 @@ function solveCase(s: GameState, p: Player): void {
   s.gameResult = { winner: p, reason: 'evidence' };
 }
 
+/**
+ * PA 一般カード枠へ remove から移す (engine wave-12 2026-07-02 G39、rules/03 §パートナーエリア)
+ * 「このカードをパートナーエリアに移す」(B07059/B07060/PR195 等)。
+ * evidence.gainCard (mutate/evidence.ts) と同型:
+ * - remove から lastIndexOf で splice (同 cardId 複数時は直近 push 分 = 当該カード自身)
+ * - 不在 (idx===-1) は no-op (B06026 Q&A 同型: 効果解決までに refresh 等で remove を離れていたら移せない)
+ * - remove 離脱として remove:exit を emit (wave-4 observer 一貫性)
+ * - PA は枚数上限なし (公式 Q&A) → 配列 push、cap なし
+ * real partner singleton / partnerAreaMR には一切触れない。
+ * @returns 移動が実行されたか
+ */
+function addAreaCardFromRemove(s: GameState, p: Player, cardId: string): boolean {
+  const list = s.players[p].remove;
+  const idx = list.lastIndexOf(cardId);
+  if (idx === -1) return false;
+  list.splice(idx, 1);
+  removeMut.emitExit(s, p, cardId);
+  (s.players[p].partnerAreaCards ??= []).push(cardId);
+  return true;
+}
+
 // MR能力①② (rules/18) は real partner singleton を破壊しない別 slot `PlayerState.partnerAreaMR`
 // に再実装された (engine/mr-partner-area-core, 2026-06-23):
 //   - MR①: mutate/scene.ts placeMrInPA (相手ターン中の全 leave verb から PA へ redirect)
@@ -94,4 +116,5 @@ export const partner = {
   assist,
   returnFromFile,
   solveCase,
+  addAreaCardFromRemove,
 };

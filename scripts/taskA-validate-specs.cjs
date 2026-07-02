@@ -12,6 +12,7 @@ const path = require('path');
 const VERBS = new Set([
   'draw', 'discard', 'mill', 'fileAdd', 'filePopToHand',
   'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
+  'toPartnerArea', // engine wave-12 (G39)
   'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck', 'handAddFromDeckBottom',
   'handToEvidence',
   'handReveal', // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)

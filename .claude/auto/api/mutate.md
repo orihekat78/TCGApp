@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `20920a4daccb`
+> Source hash: `f6138d34ccd8`
 
 Immer draft 上の primitive 変更操作
 
@@ -37,7 +37,7 @@ Immer draft 上の primitive 変更操作
 | `gameResult` | `clear`, `set` |
 | `hand` | `add`, `discardToRemove`, `remove`, `toDeckBottom` |
 | `log` | `append`, `clear` |
-| `partner` | `assist`, `init`, `returnFromFile`, `setLocation`, `setState`, `solveCase` |
+| `partner` | `addAreaCardFromRemove`, `assist`, `init`, `returnFromFile`, `setLocation`, `setState`, `solveCase` |
 | `remove` | `add`, `emitExit`, `removeFromHere` |
 | `scene` | `clearNamed`, `enter`, `removeToRemove`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toHand`, `tryActivate` |
 | `scratchTrace` | `set` |

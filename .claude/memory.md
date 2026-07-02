@@ -58,3 +58,16 @@
   (low/継承/high/xhigh)。★**fable agent 復活を実測確認** (Agent tool smoke test FABLE-OK、
   2026-06-14「不可」は stale) → CLAUDE.md モデル段階化に 07-02 改定を追記。
   skill は retrieval test 3/3 正答で GREEN 検証済。
+
+## 2026-07-02 Track A (A1) wave-12 — G39 PA 一般カード枠 出荷
+
+- **engine**: `PlayerState.partnerAreaCards?: CardId[]` + verb `toPartnerArea` (mutate.partner.addAreaCardFromRemove =
+  evidence.gainCard 同型: lastIndexOf splice + 不在 no-op + remove:exit emit) + candidates partner-area 列挙 +
+  UI PartnerArea PA list。event 即-remove.add / evidence.removeTop の両経路で「解決時 remove 内」不変条件成立 → 単一実装。
+- **exemplar 6 printings**: B07059/P・B07060/P・PR195/196 (移動4テキスト全数)。traits ビッグジュエル =
+  公式 API category1 一次確認 (TSV drop、B07055 明示運用 — **G40 は hand-author 経路では非 blocker と判明**)。
+- **検証**: certify wf (grounding3+verify3+設計監査、誤訳0・blocker0) → 4-lens 4/4 SHIP_WITH_NITS 0-blocker
+  (NIT test 6本 fold-in、23/23) → playwright 実機 (★human 0-skip→toPartnerArea 発火 / apMax8000 境界+decoy 除外 /
+  PA UI render / console err0)。gates: tsc0 / vitest 3675+1skip fail0 / smoke winsA=498 不変 / 8lint err0。
+- **latent**: [[BUG-166]] (解決中イベント refresh 巻き込み rules/26 乖離、B07060 deck0 で初到達、F2 pin) /
+  DEFERRED-INDEX wave12 節 4件。次 A1 = PA 計数・消費 (B07037 PA-remove verb / B07045 PA 読み Condition)。

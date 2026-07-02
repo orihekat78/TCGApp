@@ -287,3 +287,43 @@
 .partner-area.side-opp .zone-watermark-keyhole {
   transform: rotate(180deg);
 }
+
+/* ---- engine wave-12 (G39): PA 一般カード枠 ---- */
+/* 「このカードをパートナーエリアに移す」で常駐したカードの縦積みリスト。
+   枚数上限なし (rules/03) のため可変・スクロールなしの compact 表示。 */
+.pa-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  max-width: 100%;
+}
+.pa-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pa-card::before {
+  content: '◆';
+  font-size: 8px;
+  opacity: 0.8;
+}
+.pa-card.color-white::before { color: #e8e8e8; }
+.pa-card.color-blue::before { color: var(--neon-blue, #4ea8ff); }
+.pa-card.color-red::before { color: #ff5e5e; }
+.pa-card.color-green::before { color: #58c96b; }
+.pa-card.color-yellow::before { color: #ffd75e; }
+.pa-card.color-purple::before { color: #b97eff; }
+.pa-card-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

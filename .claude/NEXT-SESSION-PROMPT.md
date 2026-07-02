@@ -52,6 +52,17 @@
 - **TSV の pure-additive ラベルも要検証**: wave-5 で **P37 (trait/name grant aura) は TSV では pure-additive だが実際は matchOneFilter (BUG-117 hot path) の trait/color/name 読みに late-bind aura を差す=filter-core 変更**。「read.char.traits だけ足す」は半端解 (matchOneFilter 経由の filter/bond が granted trait を見ない、on-set-host session70 の READ≠解禁 教訓)。→ **P37 は wave-5 から分離し wave-6 で単独・全 lens review** に回した。
 
 ## 直近 wave 出荷済
+- **wave-12 (A1、2026-07-02)** — **G39 PA 一般カード枠**: `PlayerState.partnerAreaCards?: CardId[]` +
+  verb `toPartnerArea` (mutate.partner.addAreaCardFromRemove = evidence.gainCard 同型: lastIndexOf splice +
+  不在 no-op B06026 + remove:exit emit) + candidates partner-area 列挙 ({kind:'card'}、consumer 0 = 挙動不変) +
+  UI PartnerArea PA list。exemplar **6 printings = 移動4テキスト全数** (B07059/P 赤い涙・B07060/P クリスタル・
+  マザー・PR195/196 ブルーサファイア、全 a2 ヒラメキ toPartnerArea)。**plain sequence 必須** (chain だと
+  0-skip 時 PA 移動 drop = Q&A 違反、certify 敵対指摘)。traits ビッグジュエル = **公式 API category1 一次確認**
+  (★G40「event traits 全空」は hand-author 経路では非 blocker — B07055 明示運用で計数側 filter 成立可)。
+  certify wf 誤訳0/blocker0 → 4-lens 4/4 SHIP_WITH_NITS 0-blocker → playwright 実機 (★human 0-skip →
+  toPartnerArea 発火 / apMax8000 境界+AP9000 decoy 除外 / PA render / err0)。tests +23 (F2 = BUG-166 pin 含む)。
+  latent = [[BUG-166]] (解決中イベント refresh 巻き込み rules/26 乖離、B07060 deck0 で初到達、graceful) +
+  DEFERRED-INDEX「wave12-pa-cards」節 4件。session log = sessions/2026-07-02-wave12.md。
 - **wave-10 (8a3e4f18)** — **BUG-165 修正 (hot-path、engine+UI 2層) + 2 primitive + exemplar B07002/B07002P 江戸川コナン**:
   **BUG-165** = PB generic multi-pick collapse。n≥2 の Pattern B pick が human apply / AI drain / AI 同期 walk **全経路で先頭1枚に collapse** (apply-pick `target:[resolvedCardId]` 単数 / resolve-picks heuristic 単一)。さらに **UI (HandZone discard pick) も単発 dispatch で collapse** — playwright 実機で発見し HandZone multi-select (pickNMin/pickNMax/onPickMulti、CardListModal contract mirror + 完了ボタン) を追加。shipped 実バグ **B04005/D10012/PR137/PR143** (discard n:2 が1枚しか落ちていなかった、behavioral test 無し) を解禁。n:1 は byte 不変。handReveal ★未対応(3) 解消 (残 (1)(2)(4) は DEFERRED-INDEX)。
   **新 primitive** = `boundDistinctColorCount` cond (bound 集合内 filter一致+相互色disjoint n枚、DFS subset、G17 残) / `setCutinBan`・`setDisguiseBan` verb + `TurnScopedFlags.cutinBanned/disguiseBanned` (side-level turn flag、canCutIn/canDisguise gate、公式Q&A「離場後も有効」担保、setNextHintBan template)。
@@ -107,7 +118,17 @@
 - **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
 - **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
 
-## 次やること: wave-11 (E2 structural 継続 + demand-signal 4 family)
+## 次やること: wave-13 (A1 structural 継続)
+
+- **最有力: G39 残 = PA 計数・消費 (wave-12 の直接継続、spine 出荷済)**:
+  B07037 (【登場時】PA の ビッグジュエル 2枚リムーブ cost → 中森青子 蘇生) = **PA→remove 移動 verb** /
+  B07045・PR263 (PA に ビッグジュエル ある場合) = **PA 読み Condition 評価器**。traits は card 明示で解決済。
+  candidates PA 列挙の初 production consumer になる — 無 filter pick が PA jewel を対象化しないか filter 設計再確認
+  (DEFERRED-INDEX wave12 節 nit(3))。
+- ⚠ 「アクション中のキャラ」TargetFilter 軸 (demand-signal #3) は **並行 A2 session が wave-11 で進行中**
+  (isActingChar + B03085/B05032/B05111) — 重複着手禁止、origin/main 確認。
+
+## 旧 wave-11 候補メモ (参考、着手前に必ず origin/main semantic grep)
 - ★着手前: `git ls-remote origin main` で HEAD 確認 → 各 primitive を origin/main (**8a3e4f18** 以降) で **semantic (機構) grep** (stale 排除)。DEFER 否定は実機 probe で反証 (wave-9 教訓)。「N枚 pick」を含む場合は **4層検証** (engine 3経路 + playwright UI、wave-10 教訓)。
   **wave-7 P17 / wave-8 P15 Condition部 / wave-9 B09072 / wave-10 G17+turn-ban+BUG-165+B07002 出荷済**。
 - **wave-11 候補** (影響降順、★per-card sole 要 certify):

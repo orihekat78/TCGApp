@@ -728,6 +728,12 @@ import { B09072P } from '../ct-p09/B09072P.js';
 import { B09072P2 } from '../ct-p09/B09072P2.js';
 import { B07002 } from '../ct-p07/B07002.js';
 import { B07002P } from '../ct-p07/B07002P.js';
+import { B07059 } from '../ct-p07/B07059.js';
+import { B07059P } from '../ct-p07/B07059P.js';
+import { B07060 } from '../ct-p07/B07060.js';
+import { B07060P } from '../ct-p07/B07060P.js';
+import { PR195 } from '../pr-01/PR195.js';
+import { PR196 } from '../pr-01/PR196.js';
 import { PR274 } from '../pr-01/PR274.js';
 import { PR275 } from '../pr-01/PR275.js';
 
@@ -1322,4 +1328,10 @@ export const REUSE_CARDS: CardDef[] = [
   // B3-1 conflict canonical 化 unlock (2026-07-02) — P printing clone 2枚 (base 出荷済・同テキスト、engine変更0):
   //   B07031P (小泉紅子 SRP、faceUp:false 行の conflict 解消で compile 可化) / B08049P (ジョディ RP、DEFERRED-INDEX 予告分)。
   B07031P, B08049P,
+  // engine wave-12 exemplar (2026-07-02, G39 PA 一般カード枠) — 「このカードをパートナーエリアに移す」族
+  //   6 printings (移動4テキスト全数): B07059/P 赤い涙 (【パートナー白】sceneRemove apMax8000 → toPartnerArea) /
+  //   B07060/P クリスタル・マザー (draw + sceneEnter levelMax dyn fileCount → toPartnerArea) /
+  //   PR195/196 ブルーサファイア (deckRevealUntil 中森青子 → toPartnerArea)。全カード a2 ヒラメキ = toPartnerArea。
+  //   新 verb toPartnerArea + PlayerState.partnerAreaCards の初 consumer。特徴[ビッグジュエル] は公式 API category1 由来。
+  B07059, B07059P, B07060, B07060P, PR195, PR196,
 ];

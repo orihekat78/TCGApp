@@ -270,6 +270,9 @@ export type AtomVerb =
   // (evidenceFlip=表向き化 の逆 mutate)。PB pick (defaultArea 'evidence', faceUp 候補限定)。
   // rules: 03-field-areas.md §状態 / 15-abilities-effects.md。B05013/B06017/B06019 で使用。
   | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'evidenceFlipDown' | 'selfToEvidence' | 'evidenceToDeck'
+  // engine wave-12 (2026-07-02 G39): 「このカードをパートナーエリアに移す」— ctx.source card を
+  // owner の remove から PlayerState.partnerAreaCards へ (selfToEvidence 同型の deterministic self 経路)
+  | 'toPartnerArea'
   | 'evidenceToHand' | 'handAddFromRemove' | 'handAddFromDeck'
   // engine additive (2026-06-29): handAddFromDeckBottom — 「デッキのカードを下から1枚手札に加える」
   // (B03051 怪盗キッド)。handAddFromDeck (上から、bind 解決) の positional 下から版。pick 無しの fixed verb
