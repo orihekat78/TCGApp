@@ -33,4 +33,18 @@ describe('compiler/canonical', () => {
     expect(c.keywords).toEqual([]);
     expect(c.abilities).toEqual([]);
   });
+
+  it('semanticCard: id/name/description/ruleRefs は非意味 metadata として比較から落ちる (a1/a2 揺れ吸収)', () => {
+    const { semanticCard } = require('../../scripts/compiler/canonical.cjs');
+    const a = semanticCard({ abilities: [{ id: 'a1', name: 'N', description: 'D。', ruleRefs: ['rules/x'], type: 'triggered', scope: 'on-scene' }] });
+    const b = semanticCard({ abilities: [{ id: 'a2', description: 'D', type: 'triggered', scope: 'on-scene' }] });
+    expect(stableStringify(a)).toBe(stableStringify(b));
+  });
+
+  it('semanticCard: type/scope/trigger/condition/effect の差は意味差として保持される', () => {
+    const { semanticCard } = require('../../scripts/compiler/canonical.cjs');
+    const a = semanticCard({ abilities: [{ id: 'a1', type: 'triggered' }] });
+    const b = semanticCard({ abilities: [{ id: 'a1', type: 'continuous' }] });
+    expect(stableStringify(a)).not.toBe(stableStringify(b));
+  });
 });

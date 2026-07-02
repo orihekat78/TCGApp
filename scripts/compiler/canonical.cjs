@@ -34,4 +34,27 @@ function hasClosure(v) {
   return stableStringify(v).includes('"<closure>"');
 }
 
-module.exports = { canonicalize, canonicalCard, stableStringify, hasClosure };
+// ---- 意味射影 (B1) ----
+// oracle 比較は「意味を持つ field」のみ。以下は非意味 metadata として落とす:
+//   id          — カード内通し名 (a1/a2)。shipped で同一テキストでも a1/a2 が揺れる実測 (B01008=a2 / B01029=a1)
+//   name        — 表示名のみ
+//   description — 公式テキスト転記。shipped で注釈除去・文末「。」付加の揺れがある
+//   ruleRefs    — ドキュメント参照
+// それ以外 (type/scope/trigger/condition/cost/limit/effect/continuousModifier) は全て比較対象。
+// abilities の配列順は意味を持ちうる (rules/15 同時発動の既定解決順・UI 表示順) — 保持して比較する。
+const NON_SEMANTIC_ABILITY_KEYS = ['id', 'name', 'description', 'ruleRefs'];
+
+function semanticAbility(a) {
+  const o = { ...a };
+  for (const k of NON_SEMANTIC_ABILITY_KEYS) delete o[k];
+  return canonicalize(o);
+}
+
+function semanticCard(card) {
+  return canonicalize({
+    keywords: [...(card.keywords || [])].sort(),
+    abilities: (card.abilities || []).map(semanticAbility),
+  });
+}
+
+module.exports = { canonicalize, canonicalCard, stableStringify, hasClosure, semanticAbility, semanticCard };

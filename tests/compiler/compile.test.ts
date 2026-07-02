@@ -50,4 +50,40 @@ describe('compiler/compile (B0 skeleton)', () => {
   it('segment は空白のみの列を句にしない', () => {
     expect(segment({ effect: '  ', cutIn: 'X' })).toEqual([{ col: 'cutIn', text: 'X' }]);
   });
+
+  it('segment は列を印字行 (literal \\n) に分割する', () => {
+    expect(segment({ effect: 'A。\\nB。' })).toEqual([
+      { col: 'effect', text: 'A。' },
+      { col: 'effect', text: 'B。' },
+    ]);
+  });
+
+  it('colspan rule (列全体 = 複数行 1 能力) は行 rule より先に試される', () => {
+    const colRule = {
+      name: 'span',
+      match: (s: { col: string; colSpan?: boolean }) => !!s.colSpan && s.col === 'cutIn',
+      emit: () => ({ abilities: [{ type: 'triggered', note: 'span' }] }),
+    };
+    const r = compileCard(entry({ cutIn: '【カットイン】A\\n【相手ターン中】B' }), [colRule]);
+    expect(r.status).toBe('compiled');
+    expect(r.abilities).toEqual([{ type: 'triggered', note: 'span' }]);
+  });
+
+  it('colspan rule が無い列は行単位で照合され、未知行は card 全体 refuse', () => {
+    const lineRule = {
+      name: 'line-a',
+      match: (s: { text: string; colSpan?: boolean }) => !s.colSpan && s.text === 'A。',
+      emit: () => ({ abilities: [{ type: 'triggered' }] }),
+    };
+    const r = compileCard(entry({ effect: 'A。\\n未知行。' }), [lineRule]);
+    expect(r.status).toBe('refused');
+    expect(r.refusals).toEqual([{ col: 'effect', text: '未知行。', reason: 'unknown-phrase' }]);
+  });
+
+  it('refuseEntry rule は card 単位で恒久 refuse する (例外リスト)', () => {
+    const exc = { name: 'exc', refuseEntry: (e: { id: string }) => (e.id === 'T001' ? '理由X' : false) };
+    const r = compileCard(entry({ effect: 'A。' }), [exc]);
+    expect(r.status).toBe('refused');
+    expect(r.refusals[0].reason).toBe('理由X');
+  });
 });

@@ -10,18 +10,21 @@ const fs = require('fs');
 const path = require('path');
 const { compileCard } = require('./compile.cjs');
 const { loadProductions } = require('./productions.cjs');
-const { stableStringify } = require('./canonical.cjs');
+const { stableStringify, semanticCard } = require('./canonical.cjs');
 
 // P variant (B08004P / B05005P 等) は印字テキスト同一の別 printing — corpus は base id のみ持つ。
 function baseId(id) {
   return id.replace(/P\d*$/, '');
 }
 
+// 比較は意味射影 (canonical.semanticCard): ability の id/name/description/ruleRefs は非意味 metadata として
+// 除外し、type/scope/trigger/condition/cost/limit/effect/continuousModifier + keywords を厳密比較する。
+// abilities の配列順は保持比較 (rules/15 同時発動の既定解決順)。
 function judge(entry, shippedCard, productions) {
   const res = compileCard(entry, productions);
   if (res.status === 'refused') return { verdict: 'refuse', refusals: res.refusals };
-  const got = stableStringify({ abilities: res.abilities, keywords: [...res.keywords].sort() });
-  const want = stableStringify({ abilities: shippedCard.abilities, keywords: [...(shippedCard.keywords || [])].sort() });
+  const got = stableStringify(semanticCard({ abilities: res.abilities, keywords: res.keywords }));
+  const want = stableStringify(semanticCard(shippedCard));
   if (got === want) return { verdict: 'match' };
   return { verdict: 'mismatch', got, want };
 }
