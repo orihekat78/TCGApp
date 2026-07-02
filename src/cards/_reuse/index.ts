@@ -1062,6 +1062,8 @@ import { B07047P } from '../ct-p07/B07047P.js';
 import { B09056 } from '../ct-p09/B09056.js';
 import { B09056P } from '../ct-p09/B09056P.js';
 
+import { B03051 } from '../ct-p03/B03051.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1360,4 +1362,6 @@ export const REUSE_CARDS: CardDef[] = [
   //   B07045 セリザベス女王 (engine0: ミスリード1 + ターン終了時 PA に[ビッグジュエル]あれば自身 active、
   //   conditional{sceneHas area:'partner-area'})。
   B07037, B07045,
+  // card-authoring wave15 — stale-DEFER 解禁 (handAddFromDeckBottom sole-gate)
+  B03051,
 ];

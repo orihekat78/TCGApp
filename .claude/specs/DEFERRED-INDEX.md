@@ -683,7 +683,7 @@ yellow 10 + 自己review DEFER 1 を記録。full blocker は `.tmp/certify/<rep
 |-----|----------------------|---------|
 | B05015 (小嶋元次) | 「相手が〚ミスリード〛したとき」反応 trigger が card-triggerable hook に無い (misread は内部 reasoning:before-add で消費、emit 無)。B09016 と同一 gate | misread-performed hook emit (engine) |
 | B02062 (世良真純) | 「相手の証拠がリムーブされたとき」を in-play char が観測する hook 不在 (evidence:remove-by-action は除去証拠自身の hirameki 専用、evidence:lose は死hook、evidence:gain は自actor視点) | opponent-evidence-removal observer hook (engine) |
-| ~~B03051 (怪盗キッド)~~ | ✅ **engine 解禁 (2026-06-29, engine/bulk-additive-0629)**: `handAddFromDeckBottom` verb 追加 (デッキ末尾→手札 + refresh)。sole gate ゆえ **card session で出荷可** | engine変更0 (card session で出荷) |
+| ~~B03051 (怪盗キッド)~~ | ✅ **engine 解禁 (2026-06-29, engine/bulk-additive-0629)**: `handAddFromDeckBottom` verb 追加 (デッキ末尾→手札 + refresh)。sole gate ゆえ **✅ 出荷済** (card-authoring wave15, 2026-07-02) | engine変更0 ✅ |
 | B09061 (ジェイムズ) / B07022 (沖田総司) | **hand-reveal-as-gate primitive = 出荷済 (2026-06-28)** だが両者とも残 gate あり。**B09061 a1 =「FBI を3枚公開」固定数** → handReveal 短縮形 `n:3` は候補 <3 のとき all-or-nothing で gate せず over-fire (2026-06-28 probe で実証、§handReveal 参照)。B07022 は公開手札カードの **色分岐 = $revealed 色読み condition** が残 gate | **handReveal exact-N gate (engine, B09061)** / $revealed 色読み companion (B07022) |
 | B06025 (ケロ介) | ヒラメキ「リムーブした場合このキャラを登場」= 証拠リムーブ中の自身を現場再登場する primitive 不在 (ctx.source.uid=virtual evidence、sceneEnter は cardId 要求・area:evidence splice 未実装) | evidence-transient self-reenter (engine) |
 | B02002 (江戸川コナン) | 既知 color-not filter gate (wave novel-0624 で既出) + per-非青char AP scaling dyn ($self.sceneColor 不在) | colorNot filter + sceneColor dyn (engine) |
@@ -926,3 +926,14 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (2) partnerAreaCards は collectCardsInPlay 走査外 (意図的 additive) — PA 常駐カードは in-play 系 observer/計数から不可視。PA 参照カード出荷時に明示配線要。
   (3) candidates の PA 列挙は現状 production consumer 0 (test §D のみ) — 初 consumer (B07037 等) が実運用初回。無 filter pick が PA jewel を予期せず対象化しないか filter 設計を再確認。
   (4) 白色 UI 未対応 (CardColor union に white 無し、'白'→fallback blue) — PA 表示は name 主体で影響小、既存 engine-wide gap。非 MVP カードの name "???" 表示 (UI resolveCard catalog が MVP deck のみ) も既存 gap。
+
+## wave engine / wave-a1-pa-consume (A1: G39 PA 計数・消費、2026-07-02 出荷 037fb39c)
+
+出荷済 = verb `partnerAreaRemove` (PA 一般カード枠から filter 一致 N 枚 pick→remove、atomHandReveal clone + exact-N gate + gate-on-0 + bind、mutate.partner.removeAreaCardsToRemove) / PA-read = **engine0** (既存 sceneHas が candidates area:'partner-area' 経由で PA 列挙、B07045 で実証) / UI 配線 (CardListKind 'partner-area' + Playmat auto-open が CardListModal multi-pick で開く、charStackCard と同一 generic 経路 = onPickMulti→pickedUids) / exemplar **B07037 黒羽快斗**・**B07045 セリザベス女王**。opus 2-lens 敵対 review 両 CLEAN・0 blocker。
+
+- ★**DEFER: PR263 怪盗キッド** — 3 能力: (a)【自分ターン中】PA の ビッグジュエル 1枚につき AP+1000 = **count-dyn ×1000 (per-unit 倍率) の apDelta{dyn} が novel** (sceneMaxLp 系 dyn の延長だが count×N の倍率 dyn は未実装、A2 寄りの純 additive) / (b) PA→remove n:1 = 本 wave の partnerAreaRemove で被覆済 (n:1) / (c) レベル7以下 sleep/stun 1枚まで remove = 既存 sceneRemove。→ (a) の count-dyn を A2 lane で追加すれば PR263 は card-wave で解禁可能。
+- ⚠ **B07037 human 2-pick の live playwright 未実施**: 新 UI (CardListModal 'partner-area' multi-pick) は charStackCard と同一 generic 経路の再利用 + tsc + render 分岐で検証済だが、B07037 が deck-builder で選択可能になった実戦で human が PA から 2 枚 pick する経路を 1 回踏むこと (wave-10 B07002 a2 コンタクト実機と同様の後追い verify、wave-10 の「N枚 pick は 4層検証」教訓)。
+- **敵対 review nits (wave-a1、両 lens CLEAN、latent 記録)**:
+  (1) exact-N gate の availN は candidates 列挙数 (partner singleton 含むが trait filter で除外) — ビッグジュエル-trait を持つ **partner** が将来出れば over-count 可能性 (現プールに不在、かつ removeAreaCardsToRemove は partnerAreaCards のみ splice ゆえ real partner は構造的に保護)。
+  (2) onPick 単発 handler は partnerAreaRemove でも resolveSceneEnterPick を指すが n:2 = multi mode ゆえ dormant (CardListModal は pickNMax>1 で onPickMulti を使う)。n:1 partnerAreaRemove (PR263 (b)) 出荷時は onPick 単発経路が sceneEnter-specific にならないよう分岐要。
+  (3) ATOM_PICK_SPEC.partnerAreaRemove の `sourceSplice:true` は inert metadata (コード未消費、handAddFromRemove と同記載) — 実 splice は handler の removeAreaCardsToRemove が担う。

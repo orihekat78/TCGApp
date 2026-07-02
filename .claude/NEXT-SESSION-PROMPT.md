@@ -37,7 +37,7 @@
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
-- **main = 8a3e4f18** (**wave-10**: BUG-165 PB multi-pick collapse fix (engine+UI) + boundDistinctColorCount + setCutinBan/setDisguiseBan + exemplar B07002/B07002P。直前=bdefd69c Track B BUG-163 B08079 追補+B3-2 certify / 29999a8a demand-signal)。vitest baseline=**3642 pass +1 skip** (8a3e4f18。wave-10 分 +28 / Track B B3-2 分 +2)。
+- **main = 037fb39c** (**wave A1 PA 計数・消費**: `partnerAreaRemove` verb + PA-read (engine0 sceneHas) + UI pick 配線 + exemplar B07037/B07045。直前 = e140aa8c wave-14 A2 sceneMaxLp / e7512f8f wave-11 A1 hirameki-actor / e607caf5 wave-12 A1 PA spine / 2a1e0678 wave-13 A2 removeNameCount。waves 11-14 は前 prompt 執筆後に出荷済)。vitest baseline=**3722 pass +1 skip** (037fb39c。wave A1 分 +19)。
 - ⚠ 並行 session 複数稼働・同一 working tree 共有 → 自分のファイルだけ明示 add。engine 並行は `git worktree add` 隔離。
 
 ## ★driver: engine 拡張 実行計画
@@ -118,13 +118,23 @@
 - **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
 - **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
 
-## 次やること: wave-13 (A1 structural 継続)
+## 次やること: 次の A1 structural wave
 
-- **最有力: G39 残 = PA 計数・消費 (wave-12 の直接継続、spine 出荷済)**:
-  B07037 (【登場時】PA の ビッグジュエル 2枚リムーブ cost → 中森青子 蘇生) = **PA→remove 移動 verb** /
-  B07045・PR263 (PA に ビッグジュエル ある場合) = **PA 読み Condition 評価器**。traits は card 明示で解決済。
-  candidates PA 列挙の初 production consumer になる — 無 filter pick が PA jewel を対象化しないか filter 設計再確認
-  (DEFERRED-INDEX wave12 節 nit(3))。
+- ✅ **G39 PA 計数・消費 = 出荷済 (main 037fb39c、CI green)**。wave A1「PA 計数・消費」:
+  新 verb `partnerAreaRemove` (PA 一般カード枠から filter 一致 N 枚 pick→remove、atomHandReveal clone +
+  exact-N gate) + PA-read = engine0 (既存 sceneHas が candidates area:'partner-area' 経由で PA 列挙) +
+  UI 配線 (CardListKind 'partner-area'、Playmat auto-open が CardListModal multi-pick で開く、charStackCard 同経路)。
+  exemplar B07037 黒羽快斗 (optional{chain[partnerAreaRemove n:2, sceneEnter revive]}) / B07045 セリザベス女王
+  (engine0 PA-read + turn-end self-active)。opus 2-lens 敵対 review 両 CLEAN・0 blocker。詳細 [[reference-engine-wave-a1-pa-consume]]。
+  ⚠ **B07037 human 2-pick の live playwright は未実施** (card が deck-builder で選択可能になった時に1回踏む、wave-10 B07002 同様)。
+  ★DEFER: **PR263 怪盗キッド** (PA jewel 計数 AP+1000 aura = count-dyn ×1000 別 primitive + PA→remove n:1 + remove-target)。
+  DEFERRED-INDEX「wave-a1-pa-consume」節参照。
+- **次候補** (影響降順、★per-card sole 要 certify、着手前 origin/main semantic grep):
+  - **G34「以下からKつ選んで行う」N-of-M multi-select choice (demand-signal #4、4枚)**: B05023/B05062/B07013/B09067。
+    choice atom は現状1択のみ — resolver/UI 両面 = **T3**。
+  - **勝敗系 rewrite (P10/E3、demand-signal #1、8枚)**: 【事件解決】書き換え+代替勝利【証拠隠滅】。E3 risky = 計画順で最後。
+  - **PR263 count-dyn** (上記 DEFER、PA jewel 計数 aura。sceneMaxLp 系 dyn の延長だが ×N 倍率が novel = A2 寄りの純 additive、A2 lane 候補)。
+  - P16 疾風条件 override (B09090、複数 primitive 同 wave のみ) / P15 TargetFilter 軸 (B09070 非sole)。
 - ✅ 「アクション中のキャラ」= **wave-11 出荷済 (main e7512f8f、CI green)**。実装 = `$trigger.byUid`
   (アクション[事件] actor を evidence:remove-by-action payload で貫通) + consumer B03085/B03085P/B05032/B05111。
   ※ isActingChar TargetFilter 軸ではなく payload 直参照 (候補=actor singleton)。DEFER: B08006 (a1【宣言】下に重ね が別 primitive)。
