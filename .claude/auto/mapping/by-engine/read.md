@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5ccf11b0854e`
+> Source hash: `a75d62e2835e`
 
 `src/engine/read/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -10,7 +10,7 @@
 
 - [`auto/api/read.md`](../../api/read.md)
 
-## 📜 参照 Rule (14)
+## 📜 参照 Rule (15)
 
 - [`01-victory-conditions.md`](../by-rule/01-victory-conditions.md)
 - [`02-deck-construction.md`](../by-rule/02-deck-construction.md)
@@ -26,8 +26,9 @@
 - [`14-refresh.md`](../by-rule/14-refresh.md)
 - [`17-icons.md`](../by-rule/17-icons.md)
 - [`19-special-rules.md`](../by-rule/19-special-rules.md)
+- [`26-07-02.md`](../by-rule/26-07-02.md)
 
-## 📄 ソース (9)
+## 📄 ソース (10)
 
 - [`src/engine/read/char.ts`](../../../../src/engine/read/char.ts)
 - [`src/engine/read/def.ts`](../../../../src/engine/read/def.ts)
@@ -36,5 +37,6 @@
 - [`src/engine/read/keyword.ts`](../../../../src/engine/read/keyword.ts)
 - [`src/engine/read/log.ts`](../../../../src/engine/read/log.ts)
 - [`src/engine/read/player.ts`](../../../../src/engine/read/player.ts)
+- [`src/engine/read/scene-cap.ts`](../../../../src/engine/read/scene-cap.ts)
 - [`src/engine/read/scene.ts`](../../../../src/engine/read/scene.ts)
 - [`src/engine/read/turn.ts`](../../../../src/engine/read/turn.ts)

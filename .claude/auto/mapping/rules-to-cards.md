@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3dc875ff941f`
+> Source hash: `a2373d626a0b`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
-**32/35** ルールが少なくとも1ファイルから参照されている。
+**33/36** ルールが少なくとも1ファイルから参照されている。
 
 ## 参照あり
 
@@ -42,6 +42,7 @@
 | [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) | 19 | `cards/_shared/caseResolvedHandRemove.ts`, `cards/ct-d08/D08005.ts`, `cards/ct-d08/D08006.ts` ほか 16 件 |
 | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) | 4 | `ui/hooks/useActionsPanelFlow.ts`, `ui/hooks/useConfirmation.ts`, `ui/hooks/useOppTurnDriver.ts`, `ui/hooks/useTargetPicker.ts` |
 | [`26-05-11-ui-game-setup-flows.md`](../../rules/26-05-11-ui-game-setup-flows.md) | 1 | `ui/hooks/useMulligan.ts` |
+| [`26-07-02.md`](../../rules/26-07-02.md) | 1 | `engine/read/scene-cap.ts` |
 | [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) | 178 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01012.ts`, `cards/ct-d01/D01013.ts` ほか 175 件 |
 | [`28-errata.md`](../../rules/28-errata.md) | 2 | `cards/ct-p01/B01094.ts`, `cards/ct-p01/B01094P.ts` |
 

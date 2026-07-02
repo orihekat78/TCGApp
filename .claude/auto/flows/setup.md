@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-flows.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:flows`
-> Source hash: `471c7427b903`
+> Source hash: `a6af83e2aa52`
 
 `flow.setup` の 6 ステップ。各ステップは GameState を Immer draft で変更し、 最終的に `gameStart` 状態（turn.number=1, phase=auto, isFirstPlayerFirstTurn=true）へ到達する。
 

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3dc875ff941f`
+> Source hash: `a2373d626a0b`
 
 engine namespace types / read / mutate / event / cards と公式ルールの参照関係を Mermaid flowchart で表示。Obsidian グラフビュー連携は [by-rule/](./by-rule/) / [by-engine/](./by-engine/) を参照。
 
@@ -39,6 +39,7 @@ flowchart LR
     R_21_declared_ability_cost_md["21-declared-ability-cost"]
     R_22_qa_action_contact_md["22-qa-action-contact"]
     R_25_qa_effects_resolution_md["25-qa-effects-resolution"]
+    R_26_07_02_md["26-07-02"]
     R_26_qa_deck_refresh_md["26-qa-deck-refresh"]
   end
   NS_cards --> R_02_deck_construction_md
@@ -76,6 +77,7 @@ flowchart LR
   NS_read --> R_14_refresh_md
   NS_read --> R_17_icons_md
   NS_read --> R_19_special_rules_md
+  NS_read --> R_26_07_02_md
   NS_types --> R_01_victory_conditions_md
   NS_types --> R_02_deck_construction_md
   NS_types --> R_03_field_areas_md

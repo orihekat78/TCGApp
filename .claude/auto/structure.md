@@ -2,15 +2,15 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `33d807a6c74e`
+> Source hash: `3f021f215a49`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/tmp/conan-wt-e3altlose`)
+- **対象ルート**: `.` (`C:/tmp/conan-wt-e3p11`)
 - **ディレクトリ数**: 221
-- **ファイル数**: 3944
+- **ファイル数**: 3952
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -82,6 +82,7 @@
         - `25-qa-effects-resolution.md` — 🤖 ルール参照ハブ: 25-qa-effects-resolution.md
         - `26-05-11-ui-action-flows.md` — 🤖 ルール参照ハブ: 26-05-11-ui-action-flows.md
         - `26-05-11-ui-game-setup-flows.md` — 🤖 ルール参照ハブ: 26-05-11-ui-game-setup-flows.md
+        - `26-07-02.md` — 🤖 ルール参照ハブ: 26-07-02.md
         - `26-qa-deck-refresh.md` — 🤖 ルール参照ハブ: 26-qa-deck-refresh.md
         - `28-errata.md` — 🤖 ルール参照ハブ: 28-errata.md
       - **`by-spec/`**
@@ -562,6 +563,7 @@
     - `2026-07-02-11-engine-wave-a1-pa-consume.md`
     - `2026-07-02-12-cards-b03051-deck-bottom.md`
     - `2026-07-02-13-engine-e3-opponentloses.md`
+    - `2026-07-02-14-engine-e3-p11-scene-cap-partner-colors.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -874,8 +876,12 @@
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
+    - `smoke-2026-07-02-2.json`
+    - `smoke-2026-07-02-2.md` — Smoke 1000戦レポート — smoke-2026-07-02-150008
+    - `smoke-2026-07-02-3.json`
+    - `smoke-2026-07-02-3.md` — Smoke 1000戦レポート — smoke-2026-07-02-150017
     - `smoke-2026-07-02.json`
-    - `smoke-2026-07-02.md` — Smoke 1000戦レポート — smoke-2026-07-02-123653
+    - `smoke-2026-07-02.md` — Smoke 1000戦レポート — smoke-2026-07-02-144921
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -3441,6 +3447,7 @@
       - `keyword.ts` — engine.read.keyword — CardDef がキーワード / アイコン能力を「持つ」かを判定する純粋述語。
       - `log.ts` — engine.read.log — ログセレクタ (純粋関数)
       - `player.ts` — engine.read.player — プレイヤー情報セレクタ (純粋関数)
+      - `scene-cap.ts` — engine.read.sceneCap — 現場登場キャラ枚数の上限 (rules/03 §現場5枚, rules/20 §スイッチ)
       - `scene.ts` — engine.read.scene — 現場セレクタ (純粋関数)
       - `turn.ts` — engine.read.turn — ターン情報セレクタ (純粋関数)
     - **`resolve/`**
@@ -3788,6 +3795,7 @@
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `distinct-name-count.test.ts` — distinct-name-count — sceneHas が query.distinctNames を honor して「それぞれカード名の異なる
     - `e3-alt-lose.test.ts` — engine E3 (2026-07-02) — opponentLoses verb「相手はゲームに敗北する」(alt-lose 勝利ルート)
+    - `e3-p11-scene-cap.test.ts` — engine E3 P11 (2026-07-02) — sceneCapOverride: case card 継続能力で現場登場上限を override
     - `engine-additive-wave-0629b.test.ts` — engine additive wave (2026-06-29b) — 2 つの純 additive primitive の挙動テスト。
     - `engine-additive-wave-0629c-setcard-rider.test.ts` — engine additive wave (2026-06-29c) — on-set-host scope: セットカードが host にライダー能力を付与す…
     - `engine-additive-wave-0629d.test.ts` — engine additive wave (2026-06-29d) — 5 つの純 additive primitive の挙動テスト。

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `a36f881ab33c`
+> Source hash: `1ae4c8315b20`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 

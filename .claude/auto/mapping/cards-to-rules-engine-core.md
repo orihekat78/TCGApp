@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `7dcf3fea1b22`
+> Source hash: `a11a3d6af504`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **32** ファイル（[全体 index](./index.md)）
+このグループ: **33** ファイル（[全体 index](./index.md)）
 
 ## engine/types (9)
 
@@ -22,7 +22,7 @@
 | [`src/engine/types/index.ts`](../../../src/engine/types/index.ts) | _(参照なし)_ |
 | [`src/engine/types/results.ts`](../../../src/engine/types/results.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`08-contact.md`](../../rules/08-contact.md) / [`14-refresh.md`](../../rules/14-refresh.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 
-## engine/read (9)
+## engine/read (10)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -33,6 +33,7 @@
 | [`src/engine/read/keyword.ts`](../../../src/engine/read/keyword.ts) | [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) / [`10-action-event.md`](../../rules/10-action-event.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/read/log.ts`](../../../src/engine/read/log.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/engine/read/player.ts`](../../../src/engine/read/player.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`13-keywords.md`](../../rules/13-keywords.md) / [`17-icons.md`](../../rules/17-icons.md) |
+| [`src/engine/read/scene-cap.ts`](../../../src/engine/read/scene-cap.ts) | [`26-07-02.md`](../../rules/26-07-02.md) |
 | [`src/engine/read/scene.ts`](../../../src/engine/read/scene.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`13-keywords.md`](../../rules/13-keywords.md) |
 | [`src/engine/read/turn.ts`](../../../src/engine/read/turn.ts) | [`04-game-setup.md`](../../rules/04-game-setup.md) / [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 

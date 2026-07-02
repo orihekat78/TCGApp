@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `6d9238e69509`
+> Source hash: `17ff44d44d6d`
 
 コスト判定（canPay / pay）+ viaCost フラグ管理
 

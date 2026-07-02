@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `8853a6f9bf51`
+> Source hash: `13613a9c722d`
 
 純粋セレクタ（GameState を読むのみ、副作用なし）
 

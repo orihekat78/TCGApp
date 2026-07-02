@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `fe7ec580c191`
+> Source hash: `0e68a1eb602b`
 
 フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard）
 
