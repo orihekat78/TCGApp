@@ -344,6 +344,23 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
       return wants.some(w => allCardNameComponentsForDef(d).includes(w));
     }).length;
   }
+  // engine additive wave-14 (2026-07-02, G16 残): $self.sceneMaxLp — ctx.source.player の現場キャラの
+  // 「実効 LP の最大値」。B08043「手のこんだ悪巧み」(相手の現場のキャラが自分の現場で LP がもっとも高い
+  // キャラの LP 以下の場合リムーブ) の相対 LP フィルタ足場。filter に lpMax:{dyn:'$self.sceneMaxLp'} を
+  // 置くと resolveFilterDynObj が field-agnostic に literalize、matchOneFilter が対象の実効 LP と突合
+  // (G15 の apMin/apMax:{dyn:'$self.ap'} と同経路、B09096 先例)。実効 LP = charRead.lp (override?base +
+  // lpMod各scope + continuous + aura。公式 Q&A: 参照 LP は解決時点の増減後の実効値 → filter-LP と表示 LP
+  // 一致 BUG-117 原則)。現場 0 枚 = 「もっとも高いキャラ」不在 → max of ∅ = -Infinity を返す (公式 Q&A:
+  // 自分の現場にキャラがいない場合はリムーブ不可。lpMax:-Infinity は matchOneFilter で lp > -Infinity が
+  // 恒真ゆえ全候補を除外)。sceneTrait/oppSceneCount と同じく player ベース (uid 要件より前 — イベントは
+  // ctx.source.uid を持たない)。集計は他キャラの LP を charRead.lp で読むが、B08043 は継続修飾ではなく
+  // pick filter で消費するため apDelta/lpDelta の continuousDelta 再帰経路 (BUG-156/157) を踏まない。
+  if (prop === 'sceneMaxLp') {
+    const side = ctx.source.player;
+    const scene = state.players[side].scene;
+    if (scene.length === 0) return Number.NEGATIVE_INFINITY;
+    return Math.max(...scene.map(c => charRead.lp(state, c.uid)));
+  }
   const uid = ctx.source.uid;
   if (!uid) {
     throw new Error(`dyn.eval: $self.${prop} requires ctx.source.uid (none provided)`);

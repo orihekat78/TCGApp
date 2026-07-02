@@ -1013,6 +1013,8 @@ import { PR094 } from '../pr-01/PR094.js';
 import { B08075 } from '../ct-p08/B08075.js';
 import { B08075P } from '../ct-p08/B08075P.js';
 import { B08092 } from '../ct-p08/B08092.js';
+import { B08043 } from '../ct-p08/B08043.js';
+import { B08043P } from '../ct-p08/B08043P.js';
 import { B02033 } from '../ct-p02/B02033.js';
 import { B03095 } from '../ct-p03/B03095.js';
 import { B04019 } from '../ct-p04/B04019.js';
@@ -1346,4 +1348,8 @@ export const REUSE_CARDS: CardDef[] = [
   //   犯人 PR158/PR164 (同一 0627・別アート) カットイン「自分のリムーブエリアの[犯人]1枚につき AP+2000
   //   （このカードも含める）」= D08007 sceneTrait dyn カットインと同型。自身は resolve 時点で remove 内 (計数される)。
   PR158, PR164,
+  // engine additive wave-14 exemplar (2026-07-02, A2 lane) — $self.sceneMaxLp dyn 初 consumer。
+  //   B08043/B08043P 手のこんだ悪巧み (イベント) 「相手の現場のキャラが自分の現場で LP がもっとも高い
+  //   キャラの LP 以下の場合リムーブ」= lpMax:{dyn:'$self.sceneMaxLp'} (G15 相対AP と同経路の相対LP filter)。
+  B08043, B08043P,
 ];
