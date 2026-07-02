@@ -730,6 +730,10 @@ import { B09072P } from '../ct-p09/B09072P.js';
 import { B09072P2 } from '../ct-p09/B09072P2.js';
 import { B07002 } from '../ct-p07/B07002.js';
 import { B07002P } from '../ct-p07/B07002P.js';
+import { B03085 } from '../ct-p03/B03085.js';
+import { B03085P } from '../ct-p03/B03085P.js';
+import { B05032 } from '../ct-p05/B05032.js';
+import { B05111 } from '../ct-p05/B05111.js';
 import { B07059 } from '../ct-p07/B07059.js';
 import { B07059P } from '../ct-p07/B07059P.js';
 import { B07060 } from '../ct-p07/B07060.js';
@@ -1217,6 +1221,8 @@ export const REUSE_CARDS: CardDef[] = [
   B09010, B09010P, PR042, PR046,
   // engine拡張 wave-9 (2026-07-02) — wave-8 shippuFiredThisTurn flag 初 consumer + carrier-reuse (engine変更0)
   B09072, B09072P, B09072P2,
+  // engine拡張 wave-11 (2026-07-02) — hirameki actor payload ($trigger.byUid「アクション中のキャラ」) consumer
+  B03085, B03085P, B05032, B05111,
   // Task A batch
   B01018, B01062, B01062P, B01066, B01066P, B02003, B02003P, B02005, B02005P, B02019, B02019P, B02044, B02044P, B02077, B02077P, PR080, B03005, D10020, D10021, B03025, B03086, B03086P, B03089, B03089P, D09020, B04014, B04014P, B04017, B04017P, B05006, B05006P, B05006P2, B05020, B05020P, B05046, B05046P, B05046P2, B06011, B06011P, B06013, B06013P, PR170, B07004, B07004P, B07020, B07020P, B07023, B07023P, B07098, B07098P, D09004, D09005, PR193, PR060, PR064, PR154,
   // triage-batch2 (window4 confirmed greens: B01052/B02025/B04022/B04031 + byte-identical clones)

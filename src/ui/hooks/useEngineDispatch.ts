@@ -187,18 +187,24 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           const ctx: EffectCtx = {
             source: { player: pending.player, cardId: pending.cardId, area: 'evidence' },
             bindings: {},
+            // wave-11: pick 解決段でも $trigger.<field> を参照可能に (queue payload と同内容。
+            // atom 実行時は entryToCtx の triggerPayload が使われるため両段で一致させる)
+            triggerPayload: { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
           };
           const aiPolicy = new HeuristicPolicy();
           const resolved = resolveEffectPicks(draft, ability.effect as never, ctx, {
             chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
             byPlayer: pending.player,
           });
+          // engine wave-11 (2026-07-02): byUid = pendingHirameki.actorUid を trigger payload に
+          // 復元 — 効果内 '$trigger.byUid' (「アクション中のキャラ」= アクション[事件] actor、公式Q&A B05111)
+          // が atom 実行時 (entryToCtx の triggerPayload) に解決される。
           engineEvent.queue(
             draft,
             resolved as never,
             { player: pending.player, cardId: pending.cardId },
             'evidence:remove-by-action',
-            { player: pending.player, ev: { cardId: pending.cardId } },
+            { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
           );
         }
       }

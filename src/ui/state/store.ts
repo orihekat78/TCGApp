@@ -215,6 +215,8 @@ export type PendingHirameki = {
   cardId: string;
   /** 発動対象 ability id */
   abilityId: string;
+  /** wave-11: アクション[事件] actor uid snapshot ('$trigger.byUid' =「アクション中のキャラ」解決用) */
+  actorUid?: string;
 };
 
 /** ミスリード保留 (Commit 3b) */

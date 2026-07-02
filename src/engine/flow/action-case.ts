@@ -39,10 +39,15 @@ export function removeOpponentEvidenceTop(
   if (!ev) return undefined;
 
   // evidence:remove-by-action emit (spec: { player, ev })
+  // engine wave-11 (2026-07-02): byUid = アクション[事件] actor の snapshot を payload に併記。
+  // 「アクション中のキャラ」hirameki (B03085/B05032/B05111) が effect 内 '$trigger.byUid' で参照する
+  // (公式Q&A B05111: ヒラメキを発動させた=アクション[事件]した キャラが該当)。既存 consumer
+  // (triggered.ts handleEvidenceRemovedHook) は player/ev のみ参照 → additive。source の uid と
+  // 同値だが、payload flat 一階解決 (resolveBindRef $trigger.<field>) は source を見ないため payload に併記。
   event.emit(
     state,
     'evidence:remove-by-action',
-    { player, ev },
+    { player, ev, byUid: ax.byUid },
     { player: ax.byPlayer, uid: ax.byUid },
   );
 

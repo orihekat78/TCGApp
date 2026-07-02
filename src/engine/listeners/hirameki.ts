@@ -21,6 +21,11 @@ export type PendingHiramekiSide = {
   player: 'self' | 'opp';
   cardId: string;
   abilityId: string;
+  // engine wave-11 (2026-07-02): アクション[事件] actor uid の snapshot。
+  // 「アクション中のキャラ」(B03085/B05032/B05111 hirameki) を effect 内 '$trigger.byUid' で参照する
+  // ための payload 貫通 (公式Q&A B05111: ヒラメキを発動させたキャラが該当)。optional 経路で
+  // pendingHirameki に持ち越し、hiramekiResolve が queue payload に復元する。
+  actorUid?: string;
 };
 
 // Round 4j-fix (BUG-034): vite dev mode の module instance 分離回避のため globalThis 経由で

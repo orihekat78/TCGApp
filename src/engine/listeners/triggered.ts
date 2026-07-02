@@ -480,7 +480,7 @@ export function registerTriggeredListener(): void {
  * - trigger.optional=false なら従来の triggered と同じく強制発動 (effect queue)
  */
 function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: unknown): void {
-  const p = payload as { player?: 'self' | 'opp'; ev?: { cardId?: string } } | undefined;
+  const p = payload as { player?: 'self' | 'opp'; ev?: { cardId?: string }; byUid?: string } | undefined;
   if (!p || !p.player || !p.ev || !p.ev.cardId) return;
   // B06049 cluster8 (2026-06-15): アクション[事件] を行った側が「相手の【ヒラメキ】は発動しない」を
   // セットしている場合 (turnState[証拠を失う側].hiramekiSuppressed)、optional/forced 両経路の
@@ -522,6 +522,10 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
         player: card.player,
         cardId: card.cardId,
         abilityId: ability.id,
+        // engine wave-11 (2026-07-02): actor uid snapshot を optional 経路にも貫通
+        // (forced 経路は baseCtx.triggerPayload=payload に byUid が既に載る)。hiramekiResolve が
+        // queue payload に復元し '$trigger.byUid' (「アクション中のキャラ」) を解決可能にする。
+        actorUid: p.byUid,
       });
       return; // 1 イベントで複数 optional は想定せず、最初の 1 件のみ
     }
