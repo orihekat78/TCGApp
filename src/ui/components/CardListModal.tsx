@@ -17,18 +17,20 @@ import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 import './CardListModal.css';
 
-export type CardListKind = 'file' | 'evidence' | 'remove';
+export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area';
 
 const TITLE: Record<CardListKind, string> = {
-  file:     'FILE エリア',
-  evidence: '証拠エリア',
-  remove:   'リムーブエリア',
+  file:            'FILE エリア',
+  evidence:        '証拠エリア',
+  remove:          'リムーブエリア',
+  'partner-area':  'パートナーエリア', // engine wave A1 (G39): PA 一般カード枠 pick (partnerAreaRemove)
 };
 
 const HINT: Record<CardListKind, string> = {
   file:     'デッキ上から裏向きで配置されたカード (rules/05 オートフェイズ)。アシスト中パートナーが含まれる場合があります。',
   evidence: '推理やアクション[事件] で集めた証拠カード (裏向き)。ヒラメキ付きが含まれる可能性があります。',
   remove:   '使用済イベント / リムーブされたキャラ。リフレッシュでデッキに戻る対象 (rules/14)。',
+  'partner-area': 'パートナーエリアに常駐するカード (特徴[ビッグジュエル]等、rules/03)。', // engine wave A1 (G39)
 };
 
 /**
@@ -39,6 +41,7 @@ const PICK_BANNER_TEXT: Record<CardListKind, string> = {
   file:     'FILE から1枚選んでください',
   evidence: '証拠から1枚選んで手札に加えてください',
   remove:   'リムーブから1枚選んで手札に加えてください',
+  'partner-area': 'パートナーエリアから選んでリムーブしてください', // engine wave A1 (G39)
 };
 
 export type CardListModalProps = {

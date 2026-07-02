@@ -167,6 +167,46 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
       return;
     }
 
+// engine wave A1 (2026-07-02 G39 継続): partnerAreaRemove — 「自分のパートナーエリアにある
+// 〚特徴[ビッグジュエル]〛のカードを N 枚リムーブ」(B07037 n:2 /PR263 n:1)。atomHandReveal の clone
+// (短縮形 pick + exact-N gate + gate-on-0 + bind) に **実 zone 変化** (mutate.partner.removeAreaCardsToRemove)
+// を足したもの。defaultArea='partner-area' (candidates case 'partner-area' が partnerAreaCards を列挙、
+// wave-12)。「N枚リムーブしてもよい」の optional/「そうした場合」はカード側 (optional{chain[…]}) が担い、
+// 本 verb は exact-N (n:N) all-or-nothing: PA 候補 < N なら chainStepNoApply で chain break (B07055/B03094 同型)。
+export function atomPartnerAreaRemove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      const paP = resolvePlayer(a.player, ctx);
+      const paArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.partnerAreaRemove.defaultArea, a, paP, paP) }
+        : a;
+      // exact-N gate (handReveal 同型): 短縮形 n:N は「N枚リムーブ」= 固定数 (rules/15「N枚」、「まで」なし)。
+      // PA の filter 一致が N 枚未満なら実行不可 → chainStepNoApply で「そうした場合」を gate。
+      if (a.target === undefined && typeof a.n === 'number') {
+        const availN = targetCandidates(s, paArgs.target as TargetingRef, ctx).length;
+        if (availN < (a.n as number)) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          mutate.log.append(s, { ts: Date.now(), player: paP, turn: s.turn.number, action: 'effect:partnerAreaRemove', result: 'gate-skip' });
+          return;
+        }
+      }
+      if (!Array.isArray(paArgs.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: paArgs }, ctx, { byPlayer: paP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: paP, turn: s.turn.number, action: 'effect:partnerAreaRemove:awaiting-pick' });
+        return;
+      }
+      const target = paArgs.target as string[];
+      mutate.partner.removeAreaCardsToRemove(s, paP, target);
+      // discard/handReveal と同型: リムーブした cardId を bind (後続 chain step が $removed 等で参照可)。
+      if (typeof a.bind === 'string' && target.length > 0) {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = target.map((cardId) => ({ cardId }));
+      }
+      // 0枚 (候補無し or 辞退) → chainStepNoApply で「そうした場合」を gate (mill/handReveal 同型)。
+      if (target.length === 0) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: paP, turn: s.turn.number, action: 'effect:partnerAreaRemove', result: String(target.length) });
+      return;
+    }
+
 export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // BUG-073: effect log
       const millP = resolvePlayer(a.player, ctx);

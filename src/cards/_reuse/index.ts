@@ -1015,6 +1015,8 @@ import { B08075P } from '../ct-p08/B08075P.js';
 import { B08092 } from '../ct-p08/B08092.js';
 import { B08043 } from '../ct-p08/B08043.js';
 import { B08043P } from '../ct-p08/B08043P.js';
+import { B07037 } from '../ct-p07/B07037.js';
+import { B07045 } from '../ct-p07/B07045.js';
 import { B02033 } from '../ct-p02/B02033.js';
 import { B03095 } from '../ct-p03/B03095.js';
 import { B04019 } from '../ct-p04/B04019.js';
@@ -1352,4 +1354,10 @@ export const REUSE_CARDS: CardDef[] = [
   //   B08043/B08043P 手のこんだ悪巧み (イベント) 「相手の現場のキャラが自分の現場で LP がもっとも高い
   //   キャラの LP 以下の場合リムーブ」= lpMax:{dyn:'$self.sceneMaxLp'} (G15 相対AP と同経路の相対LP filter)。
   B08043, B08043P,
+  // engine wave A1 exemplar (2026-07-02, G39 PA 計数・消費) — 新 verb partnerAreaRemove + PA-read sceneHas。
+  //   B07037 黒羽快斗 (【登場時】PA の[ビッグジュエル]2枚リムーブしてもよい→そうした場合 remove の中森青子
+  //   を1枚までスリープ登場、optional{chain[partnerAreaRemove n:2, sceneEnter from:remove]}) /
+  //   B07045 セリザベス女王 (engine0: ミスリード1 + ターン終了時 PA に[ビッグジュエル]あれば自身 active、
+  //   conditional{sceneHas area:'partner-area'})。
+  B07037, B07045,
 ];

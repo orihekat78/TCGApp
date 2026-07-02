@@ -16,7 +16,7 @@ export type AtomPickMode = 'PA' | 'PB';
 
 export interface AtomPickSpec {
   /** 既定 pick area。'from' は実行時 args.from を参照 (sceneEnter)。 */
-  defaultArea: 'scene' | 'hand' | 'evidence' | 'remove' | 'from';
+  defaultArea: 'scene' | 'hand' | 'evidence' | 'remove' | 'from' | 'partner-area';
   /** PA: uid='$pick' 置換型 (sceneRemove 等) / PB: target=cardId 配列型 (discard 等)。 */
   mode: AtomPickMode;
   /** 短縮形成立に必須の追加 arg。'delta'=number|{dyn} / 'state'=文字列。 */
@@ -41,6 +41,9 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   // (evidenceFlip の逆)。PB pick。chooser=controller / side=証拠 owner / faceUp 限定。multi (max>1) は cardIds 契約。
   evidenceFlipDown:  { defaultArea: 'evidence', mode: 'PB' },
   sceneRemove:       { defaultArea: 'scene',    mode: 'PA' },
+  // engine wave A1 (2026-07-02 G39 継続): PA 一般カード枠から N 枚選びリムーブ (B07037/PR263)。
+  // PB pick (discard/handReveal 同型、target=cardId 配列)。sourceSplice=partnerAreaCards から実体除去。
+  partnerAreaRemove: { defaultArea: 'partner-area', mode: 'PB', sourceSplice: true },
   charModifyAP:      { defaultArea: 'scene',    mode: 'PA', needs: 'delta' },
   // 新規
   sceneSetState:     { defaultArea: 'scene',    mode: 'PA', needs: 'state' },

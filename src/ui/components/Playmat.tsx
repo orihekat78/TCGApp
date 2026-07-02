@@ -356,6 +356,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     if (!pendingPickForArea || pendingPickForArea.player !== 'self') return null;
     if (pendingPickForArea.atomVerb === 'evidenceToHand') return 'evidence';
     if (pendingPickForArea.atomVerb === 'handAddFromRemove') return 'remove';
+    // engine wave A1 (G39 継続): partnerAreaRemove — PA 一般カード枠から pick (B07037 n:2 multi)。
+    // charStackCard と同型の area multi-pick を CardListModal kind='partner-area' で流用。
+    if (pendingPickForArea.atomVerb === 'partnerAreaRemove') return 'partner-area';
     // D11014 a2 driver 2026-05-26: sceneEnter (D08024/D11014 reanimate) は area: remove
     // CardListModal pick mode で D08013 evidenceToHand と同 UI を流用
     if (pendingPickForArea.atomVerb === 'sceneEnter') {
@@ -388,7 +391,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useEffect(() => {
     if (pickAreaKind !== null) return;
     // area pick が無くなり、area modal が pick 用に開いていた場合は閉じる
-    if (areaModal && areaModal.side === 'self' && (areaModal.kind === 'evidence' || areaModal.kind === 'remove')) {
+    if (areaModal && areaModal.side === 'self' && (areaModal.kind === 'evidence' || areaModal.kind === 'remove' || areaModal.kind === 'partner-area')) {
       // pendingEffectPick が消えた → pick 完了 or skip
       // (手動で開いた閲覧モーダルも閉じてしまうが、pick 関連の自然な挙動として許容)
       setAreaModal(null);
@@ -867,6 +870,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           let faceUpEvidence: { index: number; cardId: string }[] | undefined;
           if (areaModal.kind === 'remove') {
             cards = player.remove as string[];
+          } else if (areaModal.kind === 'partner-area') {
+            // engine wave A1 (G39): PA 一般カード枠 (全カード表向き、リムーブ同様)
+            cards = (player.partnerAreaCards ?? []) as string[];
           } else if (areaModal.kind === 'file') {
             const partnerInFile: string[] = [];
             let backCount = 0;
@@ -897,7 +903,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               // pickAreaKind が決まる (remove / evidence / file)。area kind を一致確認。
               (pendingPickForArea.atomVerb === 'sceneEnter' && areaModal.kind === pickAreaKind) ||
               // D08021 driver 2026-05-26: charStackCard multi-pick (0-5 枚) も同パターン
-              (pendingPickForArea.atomVerb === 'charStackCard' && areaModal.kind === pickAreaKind));
+              (pendingPickForArea.atomVerb === 'charStackCard' && areaModal.kind === pickAreaKind) ||
+              // engine wave A1 (G39): partnerAreaRemove multi-pick も同パターン (kind='partner-area')
+              (pendingPickForArea.atomVerb === 'partnerAreaRemove' && areaModal.kind === 'partner-area'));
           return (
             <CardListModal
               kind={areaModal.kind}
@@ -915,6 +923,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                       : 'リムーブから1枚選んで現場に登場させてください')
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'charStackCard'
                   ? `リムーブから${pendingPickForArea.nMax}枚まで選んでこのキャラの下に重ねてください`
+                  : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'partnerAreaRemove'
+                  ? `パートナーエリアから${pendingPickForArea.nMax}枚選んでリムーブしてください`
                   : undefined
               }
               onPick={isPickModeForThisArea ? (uid) => { void resolveSceneEnterPick(uid); } : undefined}

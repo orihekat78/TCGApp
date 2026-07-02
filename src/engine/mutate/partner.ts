@@ -102,6 +102,26 @@ function addAreaCardFromRemove(s: GameState, p: Player, cardId: string): boolean
   return true;
 }
 
+/**
+ * PA 一般カード枠から cardIds をリムーブする (engine wave A1 2026-07-02 G39 継続、rules/03)。
+ * 「自分のパートナーエリアにある〚特徴[ビッグジュエル]〛のカードを N 枚リムーブ」(B07037/PR263)。
+ * - partnerAreaCards から各 cardId を lastIndexOf で splice (同 cardId 複数時は直近分)、remove へ push。
+ * - PA→remove は「remove エリアへ入る」= discardToRemove 同型 (remove:exit emit は不要、離脱でなく流入)。
+ * - PA は現場ではないため【現場リムーブ時】hook は対象外 (rules/03: PA≠現場)。
+ * - 不在 cardId は skip (defensive、通常 pick は列挙済 cardId のみ渡す)。
+ * real partner singleton / partnerAreaMR には一切触れない。
+ */
+function removeAreaCardsToRemove(s: GameState, p: Player, cardIds: string[]): void {
+  const list = s.players[p].partnerAreaCards;
+  if (!list) return;
+  for (const cardId of cardIds) {
+    const idx = list.lastIndexOf(cardId);
+    if (idx === -1) continue;
+    list.splice(idx, 1);
+    s.players[p].remove.push(cardId);
+  }
+}
+
 // MR能力①② (rules/18) は real partner singleton を破壊しない別 slot `PlayerState.partnerAreaMR`
 // に再実装された (engine/mr-partner-area-core, 2026-06-23):
 //   - MR①: mutate/scene.ts placeMrInPA (相手ターン中の全 leave verb から PA へ redirect)
@@ -117,4 +137,5 @@ export const partner = {
   returnFromFile,
   solveCase,
   addAreaCardFromRemove,
+  removeAreaCardsToRemove,
 };

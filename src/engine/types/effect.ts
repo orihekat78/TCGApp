@@ -273,6 +273,12 @@ export type AtomVerb =
   // engine wave-12 (2026-07-02 G39): 「このカードをパートナーエリアに移す」— ctx.source card を
   // owner の remove から PlayerState.partnerAreaCards へ (selfToEvidence 同型の deterministic self 経路)
   | 'toPartnerArea'
+  // engine wave A1 (2026-07-02 G39 継続): PA 一般カード枠から filter 一致カードを N 枚選びリムーブ
+  // (「自分のパートナーエリアにある〚特徴[ビッグジュエル]〛のカードを2枚リムーブしてもよい」B07037 /
+  // PR263)。PB pick (defaultArea 'partner-area')。atomHandReveal と同型の短縮形 pick + exact-N gate
+  // (n:N で PA 候補 < N なら chainStepNoApply→「そうした場合」gate)。resolved cardIds を partnerAreaCards
+  // から splice → remove へ (mutate.partner.removeAreaCardsToRemove)。handReveal と違い zone 変化あり。
+  | 'partnerAreaRemove'
   | 'evidenceToHand' | 'handAddFromRemove' | 'handAddFromDeck'
   // engine additive (2026-06-29): handAddFromDeckBottom — 「デッキのカードを下から1枚手札に加える」
   // (B03051 怪盗キッド)。handAddFromDeck (上から、bind 解決) の positional 下から版。pick 無しの fixed verb

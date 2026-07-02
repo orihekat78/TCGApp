@@ -26,6 +26,7 @@ import {
   atomDiscard,
   atomDiscardRandom,
   atomHandReveal,
+  atomPartnerAreaRemove,
   atomMill,
   atomFileAdd,
   atomFilePopToHand,
@@ -124,6 +125,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomDiscardRandom(s, a, ctx);
     case 'handReveal':
       return atomHandReveal(s, a, ctx, verb);
+    case 'partnerAreaRemove':
+      return atomPartnerAreaRemove(s, a, ctx, verb);
     case 'mill':
       return atomMill(s, a, ctx);
     case 'fileAdd':
