@@ -21,24 +21,31 @@ plan TSV ([specs/engine-extension-plan-2026-06-30.tsv]) の additive [A] 行を 
 - **禁止: listeners (hook 新設) / flow / resolver 構造 / GameState 形状 / UI / cost union** → 必要になったら
   その primitive を DEFERRED-INDEX に記録して A1 へ送り、次の候補に進む。迷ったら structural 扱い = A1 送り。
 
-## queue (batch 順、各行は着手前に origin/main semantic grep で stale 検証必須 — TSV は 06-30 snapshot)
-1. **condition-dyn-absent-group 残** ([A] 12 中、消化済み多数に注意):
-   ~~P30 sceneLpSum~~ ~~P31 evidenceDiff~~ ~~P34 sceneCountCompare~~ ~~G18 stackedCount~~ (出荷済) /
-   G11 (hand-count は既存説 — 要 grep) / P32 all-scene-homogeneous (B08062) / P33 enterCountAtMost (B09089) /
-   P35 oppSceneCount dyn (B08086) / P54 removeNameCount (PR158/164) / G12 removeCountAtLeast (B03104) /
-   G13 removeColorAtLeast.kind (B08004) / G19 $self.sceneColor (B02002)
-2. **verbs-effects [A] 6**: P44 draw-up-to-hand-size (B08047) / P38 scene-char→owner 証拠化 (B03084) /
-   P39 scene-char→opp 表向き証拠化 (B06085) / P41 FILE↔手札 表向き (B05045) / P12 rename verb (PR105) /
-   P48 じゃんけん RNG (B07011)
-3. **restriction-flags [A] 6**: P05 手札使用禁止 flag (B05120) / P06 ネクストヒント禁止 (B06104、
-   wave-1 setNextHintBan と重複疑い — 要 grep) / P08 リフレッシュ証拠抑止 (B05097) / P09 色制限 bypass (B03126) /
-   G09 ヒラメキ抑止 continuous (B05079) / ~~カットイン・変装禁止 flag~~ (wave-10 出荷済)
-4. **relative-filter [A] 4**: ~~P55/G15 relative-AP~~ (stale=既存、B09096 出荷済) / G16 relative-LP/level 残
-   (B04074/B08043 — $self.level dyn は wave-4 出荷済、残は対公開カード/対現場最大LP) /
-   G17 $revealed N>1 色読み残 (D06013/PR132) / P03-family 変装入替キャラ参照 (B02047)
-5. **setcard-stack [A] 残**: ~~P01 on-set-host~~ (出荷済) / P27 持ち主デッキセット (PR136/142) /
-   host=opp source=opp deck (B05031) / P28 setcard-source=remove-area (B08036) / P43 合算セット除去+枚数分岐 (B07031P)
-   ※P25/P26 の cost 形は cost union = A1 送り。
+## ⚠ wave-13 所見 (2026-07-02、A2 additive-primitive well ほぼ枯渇 — 次 session 必読)
+wave-13 (commit 2a1e0678) で **P54 removeNameCount dyn** 出荷 (犯人 PR158/PR164)。全 batch semantic grep 実施の結果:
+- **batch-1/4/5 の additive [A] は事実上枯渇**: P30/P31/P34/G18/G19(=sceneColorNot)/G11-G13/P33/P35/P46(aura=apDeltaAuraOpp)/
+  P55/G15/$self.level は **wave 0630/2/4/6/0629b で出荷済** (TSV「未実装」は 06-30 snapshot で stale)。P32 は
+  cardNameNot+not+sceneHas で被覆済 (真 gate=G37 aura partner-area scope=structural→A1)。
+- **verb 群 (P38/39/41/42) は clean unlock 不可**: exemplar が全て他の structural 前提を要する —
+  P38/P39=降谷零/松田陣平 (MR-select + evidence→deck-bottom + 捜査) / P41=B05045 (MR partner-area) /
+  P42=B07014 (set-card-granted **declared** ability)。verb 単独では出荷不可 (YAGNI + exemplar-backed 原則)。
+- **restriction-flags 残 (P05/P08/P09) は structural→A1 送り**: P05/P09=flow/main/hand-use-card.ts・next-hint.ts /
+  P08=mutate/deck.ts refresh() 分岐。P06/G09 は出荷済 (nextHintBanned/hiramekiSuppress)。
+- **P12 rename=state-shape (turnEffects.nameOverride)→A1、P48 janken=resolver+rng 配線→A1**。
+- 既存 primitive で **card-authoring のみ** で解禁できるカードは残る (例 B03033 遠山和葉 = apDeltaAuraOpp -1000 +
+  auraFilterOpp{hasSetCards} + ヒラメキdraw、全 primitive 出荷済) → これは **card-wave lane** の仕事 (engine 変更 0)。
+
+### ⇒ 次 A2 session の推奨: lane を **card-authoring へ pivot** するか、A1/card-wave に統合。
+残る engine-additive の候補は G16 (対公開カード/対現場最大LP filter、M effort) と G17 ($revealed N>1 色読み、M effort、
+boundMatchesFilter が bound[0] のみ) の 2 件のみ。両者とも「純追加」だが複雑 (filter 経路拡張)、要 semantic grep + 慎重検証。
+
+## queue (旧、参考。各行は着手前に origin/main semantic grep で stale 検証必須 — 上記所見で大半 stale)
+1. ~~condition-dyn-absent-group~~ **枯渇** (P54 で最後の additive 出荷、他全て stale/structural)
+2. ~~verbs-effects~~ **clean unlock 不可** (exemplar が structural 前提、上記所見)
+3. ~~restriction-flags~~ 残 (P05/P08/P09) は **structural→A1 送り**
+4. **relative-filter 残 = G16 / G17 のみ** (M effort、唯一の生きた additive vein):
+   G16 relative-LP/level (B04074/B08043 対公開カード/対現場最大LP) / G17 $revealed N>1 色読み (D06013/PR132)
+5. ~~setcard-stack~~ P27/P28/P43 = cost/set-card structural → A1。
 
 ## プロセス
 - **wave 着手時に /engine-wave skill を起動** (model opus/sonnet/fable + effort の判断表に従う)。
