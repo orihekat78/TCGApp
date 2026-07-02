@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `744ca40b74dd`
+> Source hash: `7200b0f9c8f5`
 
 公式ルール [`24-qa-naming-stun.md`](../../../rules/24-qa-naming-stun.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,7 +20,7 @@
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (121)
+## 📄 参照ソース (125)
 
 - [`src/cards/_shared/partnerColorKeyword.ts`](../../../../src/cards/_shared/partnerColorKeyword.ts)
 - [`src/cards/ct-d01/D01005.ts`](../../../../src/cards/ct-d01/D01005.ts)
@@ -42,4 +42,4 @@
 - [`src/cards/ct-d07/D07012.ts`](../../../../src/cards/ct-d07/D07012.ts)
 - [`src/cards/ct-d08/D08009.ts`](../../../../src/cards/ct-d08/D08009.ts)
 - [`src/cards/ct-d08/D08010.ts`](../../../../src/cards/ct-d08/D08010.ts)
-- _...ほか 101 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 105 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

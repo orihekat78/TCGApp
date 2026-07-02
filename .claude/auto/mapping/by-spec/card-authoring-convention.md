@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3c190acd271e`
+> Source hash: `5eef1fab0f1e`
 
 仕様書 [`card-authoring-convention`](../../../specs/card-authoring-convention.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

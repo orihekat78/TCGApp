@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `3966dc0352cc`
+> Source hash: `aef9c340e546`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,34 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+### engine additive wave-14 (A2 lane) — `$self.sceneMaxLp` dyn + 手のこんだ悪巧み (B08043/B08043P)
+
+- **primitive**: `src/engine/dyn/eval.ts` resolveSelf に `$self.sceneMaxLp` case 追加 — `ctx.source.player`
+  の現場キャラの **実効 LP 最大値** (`charRead.lp`、override?base + lpMod各scope + continuous + aura)。
+  player ベース (uid 不要、oppSceneCount/sceneColorNot と同じ pre-switch 分岐 → イベントから利用可)。
+  現場 0 枚 = max of ∅ = `-Infinity` (公式 Q&A: 自分の現場にキャラがいない場合リムーブ不可 → `lpMax:-Infinity`
+  が matchOneFilter で全候補除外)。G16 残の relative-LP filter 足場 (G15 相対AP `$self.ap` と同経路)。
+- **exemplar**: B08043 / B08043P「手のこんだ悪巧み」(イベント・白・Lv5) 初 consumer —
+  「相手の現場のキャラが自分の現場で LP がもっとも高いキャラの LP 以下の場合リムーブ」=
+  sceneRemove 短縮形 `{side:'opp', max:1, cause:'effect', filter:{lpMax:{dyn:'$self.sceneMaxLp'}}}`。
+  engine 変更は dyn case 追加のみ (filter dyn 解決は resolveFilterDynObj が field-agnostic に既対応)。
+- **gates**: tsc0 / vitest 3696 pass +1 skip (新 probe 8 件) / smoke:1000 winsA=498 不変 / 8 lint green。
+- tier T1 (pure-additive evaluator + 出荷済 G15 パターンの clone)。
+
+## engine wave-14 (A2) — $self.sceneMaxLp dyn + exemplar B08043 相対LPリムーブ
+
+- **新 dyn `$self.sceneMaxLp`** ([src/engine/dyn/eval.ts](../../src/engine/dyn/eval.ts)) — `ctx.source.player`
+  の現場キャラの **実効 LP 最大値** (`charRead.lp`)。現場0枚 → `-Infinity`。player ベース (uid 不要 =
+  イベントから使用可、uid null-check より前に分岐)。G15 の `apMin/apMax:{dyn:'$self.ap'}` と同経路の相対 LP 版。
+- **exemplar B08043 / B08043P 手のこんだ悪巧み** (event, lv5, 白) — 初 consumer。
+  「相手の現場にいるキャラを1枚まで選ぶ。そのキャラが自分の現場にいるLPがもっとも高いキャラのLP以下のLPの場合、リムーブする」
+  = `sceneRemove {player:self, max:1, side:opp, cause:effect, filter:{lpMax:{dyn:'$self.sceneMaxLp'}}}`。
+  `resolveFilterDynObj` が pick 列挙前に literalize → `matchOneFilter` が対象の実効 LP と突合。
+  現場0枚 → `lpMax:-Infinity` で全候補除外 (公式 Q&A「自分の現場にキャラがいない場合はリムーブ不可」と整合)。
+- **純 additive** (dyn case 追加のみ、engine 挙動不変)。tier T1。
+- gates: tsc 両config 0 / vitest 3703 pass +1 skip (+8) / smoke winsA=498 exceptions=0 不変 / 8 lint err=0。
+- 公式 Q&A: 参照 LP は解決時点の実効値 (増減後) / 自分の現場0枚でリムーブ不可 — 両方 impl で担保。
 
 # wave-13 (A2 additive lane): $self.removeNameCount dyn — 犯人 カットイン (PR158/PR164) 出荷
 
@@ -87,6 +115,45 @@
 - **latent 記録** (DEFERRED-INDEX wave12 節 + BUG-166): B07060 deck0 draw→refresh が解決中の自身を
   shuffle に巻き込み PA 不達 (rules/26 乖離の顕在化、graceful no-op、F2 で現状 pin) / 白色 UI CardColor
   未対応 (既存 gap) / PA 計数・消費側 (B07037/B07045) は PA-remove verb + PA condition 評価器が別途要。
+
+---
+date: 2026-07-02
+phase: engine拡張 wave-11 (Track A1 structural)
+kind: feat
+---
+
+## engine 拡張 wave-11 — hirameki actor payload (`$trigger.byUid`「アクション中のキャラ」) + consumer 4枚
+
+「アクション中のキャラ」= アクション[事件] した actor を【ヒラメキ】が解決するための payload 貫通を追加。
+公式Q&A (B05111): 「アクション中のキャラ」=「現時点でのアクションを行っているキャラ。【ヒラメキ】に
+おいてはアクション［事件］でこのカードの【ヒラメキ】を発動させたキャラが該当する」= actor 単独。
+
+### engine/UI (additive payload threading)
+- `action-case.ts` removeOpponentEvidenceTop: `evidence:remove-by-action` emit payload に
+  `byUid: ax.byUid` (actor uid snapshot) を併記。既存 consumer は player/ev のみ参照 → additive。
+- `triggered.ts` handleEvidenceRemovedHook: payload 型に `byUid?`、optional 経路 pushPendingHirameki に
+  `actorUid: p.byUid` 貫通 (forced 経路は baseCtx.triggerPayload=payload に既載)。
+- `hirameki.ts` PendingHiramekiSide / `store.ts` PendingHirameki: `actorUid?: string` field 追加。
+- `useEngineDispatch.ts` hiramekiResolve: pick 解決段 ctx.triggerPayload + queue payload に
+  `byUid: pending.actorUid` 復元 → atom 実行時 (entryToCtx triggerPayload) に `$trigger.byUid` が解決。
+
+### consumer カード 4枚 (REUSE_CARDS)
+B03085 諸伏景光 / B03085P / B05032 大滝悟郎 / B05111 ゾンビ。全 a2 =
+【ヒラメキ】【解決編】アクション中のキャラを1枚まで選び、スタンさせる =
+`sceneSetState{uid:'$trigger.byUid', state:'stun'}` (optional trigger + caseStatus 解決編 condition)。
+候補 = actor 単独 singleton → optional fire/skip が「1枚まで(0可)」の決定空間と一致。
+a1 群 (登場時 remove-enter / 現場リムーブ時 contact-gated stun 等) は既存 verb reuse。
+
+### gates
+tsc0 (app+scripts) / vitest 3688 pass +1skip (新 behavioral test 7、`engine-wave11-hirameki-actor.test.ts`) /
+smoke:1000 winsA=498 exceptions=0 不変 (4枚非MVP+additive) / 8 lint errors=0。
+
+### additivity 根拠
+既存 evidence:remove-by-action の a2 effect で `$trigger.*` を参照するカードは 0
+(既存 $trigger 使用は contact:start/reasoning:end hook のみ、a2 は draw/mill/handAddFromRemove/
+sceneSetState-$pick)。resolveEffectPicks は triggerPayload を preserve のみ (candidate filter 不使用)。
+
+DEFER: B08006 (a2 同機構だが a1【宣言】下に重ねる が別 primitive 要)。
 
 # Track B — cards:sync バッチ自動化 (公式 API → TSV → compiler gate を 1 コマンド化)
 
