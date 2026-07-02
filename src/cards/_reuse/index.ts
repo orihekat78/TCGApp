@@ -576,6 +576,8 @@ import { PR118 } from '../pr-01/PR118.js';
 import { PR137 } from '../pr-01/PR137.js';
 import { PR143 } from '../pr-01/PR143.js';
 import { PR157 } from '../pr-01/PR157.js';
+import { PR158 } from '../pr-01/PR158.js';
+import { PR164 } from '../pr-01/PR164.js';
 import { PR163 } from '../pr-01/PR163.js';
 import { PR175 } from '../pr-01/PR175.js';
 import { PR178 } from '../pr-01/PR178.js';
@@ -1334,4 +1336,8 @@ export const REUSE_CARDS: CardDef[] = [
   //   PR195/196 ブルーサファイア (deckRevealUntil 中森青子 → toPartnerArea)。全カード a2 ヒラメキ = toPartnerArea。
   //   新 verb toPartnerArea + PlayerState.partnerAreaCards の初 consumer。特徴[ビッグジュエル] は公式 API category1 由来。
   B07059, B07059P, B07060, B07060P, PR195, PR196,
+  // engine additive wave-13 exemplar (2026-07-02, A2 lane) — $self.removeNameCount dyn 初 consumer。
+  //   犯人 PR158/PR164 (同一 0627・別アート) カットイン「自分のリムーブエリアの[犯人]1枚につき AP+2000
+  //   （このカードも含める）」= D08007 sceneTrait dyn カットインと同型。自身は resolve 時点で remove 内 (計数される)。
+  PR158, PR164,
 ];

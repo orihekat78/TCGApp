@@ -18,6 +18,7 @@ import type { EffectCtx } from '@/engine/types';
 import { char as charRead } from '@/engine/read/char.js';
 import { scene } from '@/engine/read/scene.js'; // session64: $self.setCardCount (このキャラの setCards 枚数)
 import { def } from '@/engine/read/def.js'; // BUG-114: $discarded.level/ap で discard したカードの printed 値を参照
+import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js'; // wave (2026-07-02): $self.removeNameCount の分割名一致 (removeNameAtLeast cond と同式)
 
 type DynValue = number | string | boolean | undefined;
 
@@ -323,6 +324,25 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     }
     const side = ctx.source.player;
     return state.players[side].scene.filter(c => charRead.colors(state, c.uid).some(x => !nots.includes(x))).length;
+  }
+  // engine additive wave (2026-07-02): $self.removeNameCount.<name>[.<name>...] — ctx.source.player の
+  // リムーブエリアで「指定カード名 (分割名component いずれか) を持つ」カード数 (PR158/PR164 犯人 カットイン
+  // 「自分のリムーブエリアにある〚カード名［犯人］〛1枚につき AP+2000（このカードも含める）」)。
+  // 「このカードも含める」: カットインは resolve 時点で既に remove 内 (contact.ts: effect:declared emit →
+  // discardToRemove → resolve.runAllUntilEmpty の順、遅延解決) のため自然に自身も計数される (特別扱い不要)。
+  // 名前一致は removeNameAtLeast cond (cond/eval.ts) と同式 (allCardNameComponentsForDef、rules/19 分割名)。
+  // sceneTrait/oppSceneCount と同じ player ベース (uid 要件より前、カットインは ctx.source.uid を持たない)。
+  if (prop === 'removeNameCount') {
+    const wants = rest.slice(1).filter(x => typeof x === 'string' && x.length > 0);
+    if (wants.length === 0) {
+      throw new Error(`dyn.eval: $self.removeNameCount requires at least one card name (e.g. $self.removeNameCount.犯人) — got "${original}"`);
+    }
+    const side = ctx.source.player;
+    return state.players[side].remove.filter(id => {
+      const d = lookupCardDef(id);
+      if (!d) return false;
+      return wants.some(w => allCardNameComponentsForDef(d).includes(w));
+    }).length;
   }
   const uid = ctx.source.uid;
   if (!uid) {

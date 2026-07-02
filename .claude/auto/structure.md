@@ -2,15 +2,15 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `e0714f7e363b`
+> Source hash: `7355208cd192`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/tmp/wave12`)
-- **ディレクトリ数**: 220
-- **ファイル数**: 3918
+- **対象ルート**: `.` (`C:/tmp/a2-1`)
+- **ディレクトリ数**: 221
+- **ファイル数**: 3924
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -556,6 +556,7 @@
     - `2026-07-02-06-engine-wave10-b07002-multipick.md` — wave-10: B07002 exemplar + boundDistinctColorCount + turn-scoped cutin/…
     - `2026-07-02-07-cards-sync-batch.md` — Track B — cards:sync バッチ自動化 (公式 API → TSV → compiler gate を 1 コマンド化)
     - `2026-07-02-08-engine-wave12-pa-cards.md` — wave-12 (A1): G39 PA 一般カード枠 — partnerAreaCards + toPartnerArea + ビッグジュエル移動4テキスト全…
+    - `2026-07-02-09-engine-wave13-removenamecount.md` — wave-13 (A2 additive lane): $self.removeNameCount dyn — 犯人 カットイン (PR158/…
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -868,6 +869,8 @@
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
+    - `smoke-2026-07-02.json`
+    - `smoke-2026-07-02.md` — Smoke 1000戦レポート — smoke-2026-07-02-104551
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -3213,11 +3216,13 @@
       - `PR155.ts` — cards/pr-01/PR155 阿笠博士 (character) — Task A green候補 (engine変更0)
       - `PR156.ts` — cards/pr-01/PR156 「もう少し引き付けろ…」 (イベント) — catalog-reuse batch
       - `PR157.ts` — cards/pr-01/PR157 安室透 (character) — Task A green候補 (engine変更0)
+      - `PR158.ts` — cards/pr-01/PR158 犯人 (キャラ)
       - `PR159.ts` — cards/pr-01/PR159 大岡紅葉 (キャラ) — auto-generated; B02028 の絵柄違い (同 cardId)
       - `PR160.ts` — cards/pr-01/PR160 鈴木園子 (キャラ) — auto-generated; B02048 の絵柄違い (同 cardId)
       - `PR161.ts` — cards/pr-01/PR161 阿笠博士 (character) — Task A green候補 (engine変更0)
       - `PR162.ts` — cards/pr-01/PR162 「もう少し引き付けろ…」 (イベント) — catalog-reuse batch
       - `PR163.ts` — cards/pr-01/PR163 安室透 (character) — Task A green候補 (engine変更0)
+      - `PR164.ts` — cards/pr-01/PR164 犯人 (キャラ) — PR158 と同一テキスト・別アート (ID 0627)
       - `PR165.ts` — cards/pr-01/PR165 大岡紅葉 (キャラ) — auto-generated; B02028 の絵柄違い (同 cardId)
       - `PR166.ts` — cards/pr-01/PR166 鈴木園子 (キャラ) — auto-generated; B02048 の絵柄違い (同 cardId)
       - `PR167.ts` — cards/pr-01/PR167 怪盗キッド (キャラ) — auto-generated; B04033 の絵柄違い (同 cardId)
@@ -3684,6 +3689,8 @@
       - `B06094-conditional-prewalk.test.ts` — B06094 高木君のおごり — conditional pre-walk over-fire 回帰テスト (BUG-145、card-level)。
     - **`ct-p09/`**
       - `B09061.test.ts` — B09061 ジェイムズ・ブラック (ct-p09) — ENGINE0 wave 専用 test。
+    - **`pr-01/`**
+      - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
     - **`triage-greens-2026-06-15/`**
       - `B01018.test.ts` — gate5 RUNTIME behavior verification — B01018 宮野志保 (character, 青/…
       - `B01062.test.ts` — gate5 RUNTIME behavior — B01062 赤井秀一 (character, 赤/FBI・赤井家, L8 AP7000 LP2)

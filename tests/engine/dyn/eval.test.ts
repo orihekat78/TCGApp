@@ -225,6 +225,39 @@ describe('engine.dyn.eval', () => {
       const s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'u1', cardId: 'C001' })]);
       expect(evalDyn(s, '$self.oppSceneCount', makeCtx({ source: { player: 'self', area: 'scene', uid: 'u1' } }))).toBe(0);
     });
+
+    // engine additive wave (2026-07-02): $self.removeNameCount.<name> — ctx.source.player の
+    // リムーブエリアで指定カード名を持つカード数 (PR158/PR164 犯人 カットイン「〚カード名［犯人］〛1枚につき AP+2000
+    // （このカードも含める）」)。カットイン自身は resolve 時点で既に remove 内 (contact.ts emit→discardToRemove→resolve)
+    // ゆえ自然に計数される。名前一致は分割名component (rules/19)。カットインは ctx.source.uid 無 → player ベース。
+    it('$self.removeNameCount counts named cards in own remove area (PR158 犯人, includes self already in remove)', () => {
+      registerCardDef(defOf({ id: '0627', names: ['犯人'] }));
+      registerCardDef(defOf({ id: 'DECOY', names: ['灰原哀'] }));
+      const s = createEmptyGameState();
+      // 犯人 ×3 (使用中カットイン自身が remove へ移動済 を含む), 別名 decoy ×2 は数えない
+      s.players.self.remove = ['0627', 'DECOY', '0627', 'DECOY', '0627'];
+      s.players.opp.remove = ['0627', '0627']; // 相手の remove は数えない (自分の限定)
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene' } }); // カットインは uid 無
+      expect(evalDyn(s, '$self.removeNameCount.犯人', ctx)).toBe(3);
+      expect(evalDyn(s, '$self.removeNameCount.犯人 * 2000', ctx)).toBe(6000);
+    });
+
+    it('$self.removeNameCount resolves side relative to source.player + name-component match (rules/19)', () => {
+      registerCardDef(defOf({ id: 'SPLIT', names: ['江戸川コナン&工藤新一', '江戸川コナン', '工藤新一'] }));
+      const s = createEmptyGameState();
+      s.players.opp.remove = ['SPLIT', 'SPLIT'];
+      // bearer on opp side → 自分の remove = opp.remove、分割名 [工藤新一] で一致
+      expect(evalDyn(s, '$self.removeNameCount.工藤新一', makeCtx({ source: { player: 'opp', area: 'scene' } }))).toBe(2);
+      // self side は remove 空 → 0
+      expect(evalDyn(s, '$self.removeNameCount.工藤新一', makeCtx({ source: { player: 'self', area: 'scene' } }))).toBe(0);
+    });
+
+    it('$self.removeNameCount is 0 when remove area has no matching name', () => {
+      registerCardDef(defOf({ id: 'DECOY', names: ['灰原哀'] }));
+      const s = createEmptyGameState();
+      s.players.self.remove = ['DECOY'];
+      expect(evalDyn(s, '$self.removeNameCount.犯人', makeCtx({ source: { player: 'self', area: 'scene' } }))).toBe(0);
+    });
   });
 
   describe('$contact', () => {

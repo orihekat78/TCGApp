@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `9effbe65cff0`
+> Source hash: `744ca40b74dd`
 
 公式ルール [`02-deck-construction.md`](../../../rules/02-deck-construction.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,12 +23,14 @@
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
 
-## 📄 参照ソース (11)
+## 📄 参照ソース (13)
 
 - [`src/cards/ct-d08/index.ts`](../../../../src/cards/ct-d08/index.ts)
 - [`src/cards/ct-d11/index.ts`](../../../../src/cards/ct-d11/index.ts)
 - [`src/cards/ct-p09/B09100.ts`](../../../../src/cards/ct-p09/B09100.ts)
 - [`src/cards/index.ts`](../../../../src/cards/index.ts)
+- [`src/cards/pr-01/PR158.ts`](../../../../src/cards/pr-01/PR158.ts)
+- [`src/cards/pr-01/PR164.ts`](../../../../src/cards/pr-01/PR164.ts)
 - [`src/engine/cards/registry.ts`](../../../../src/engine/cards/registry.ts)
 - [`src/engine/cards/tsv-loader-fs.ts`](../../../../src/engine/cards/tsv-loader-fs.ts)
 - [`src/engine/cards/tsv-loader.ts`](../../../../src/engine/cards/tsv-loader.ts)

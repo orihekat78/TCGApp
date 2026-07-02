@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `0a0ec08770e9`
+> Source hash: `4f5b1e1c6636`
 
 26 Condition variants 評価
 
