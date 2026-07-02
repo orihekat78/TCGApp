@@ -21,6 +21,22 @@ plan TSV ([specs/engine-extension-plan-2026-06-30.tsv]) の additive [A] 行を 
 - **禁止: listeners (hook 新設) / flow / resolver 構造 / GameState 形状 / UI / cost union** → 必要になったら
   その primitive を DEFERRED-INDEX に記録して A1 へ送り、次の候補に進む。迷ったら structural 扱い = A1 送り。
 
+## ★ wave-15 所見 (2026-07-02、下記 wave-13「枯渇」結論を部分的に覆す — 最優先で読む)
+card-authoring pivot を実施し **B03051 怪盗キッド出荷** (main **0e3fe8c4**、handAddFromDeckBottom 初 consumer、
+engine 変更 0)。探索で判明した 2 点:
+- **A2 well は完全枯渇ではない — contact-participant vein が live**: contact-AP cluster **5 枚**
+  (B02080/B03118/B04075/PR029/B04092) は全て同じ **1 つの additive** 欠落でブロック。追加すべき primitive =
+  ① `selfInContact` condition ② cutin:used payload に contact-char uid+trait を載せ bindings を filter 評価する
+  condition (現 triggerCharMatches は payload.uid のみ、cutin:used payload に uid 無し)。根拠 = `read/char.ts ap()` が
+  **apMod_contact を無条件合算** (contact 文脈非依存) ゆえ「self が participant の時だけ AP+」を不可視論法で近似できない
+  (非participant付与を他カードの AP-read が観測)。この 1 additive で 5 枚同時解禁 = 高 ROI A2 wave。
+- **card-authoring 真 vein = engine コメント名指し・未登録 exemplar** (dormant primitive、44 枚/28 DEFERRED)。
+  DEFERRED-INDEX で「sole gate = <verb>」かつ verb 出荷済なら engine0-exact by construction。B03051 がその実証。
+  但し**第2 gate 検査必須** (B02080 は cutin:used 出荷後も contact-char trait gate が live で DEFER 継続)。
+  手順・grep 法 = memory [[reference-card-authoring-stale-defer-vein]]。
+- ⚠ **background-autocommit-race 再発** (memory [[feedback-background-autocommit-race]] 参照): 自動化が work を
+  origin に取り込んだ後 mapping docs-hash が不整合になりうる → 出荷後 origin HEAD で `npm run docs:check` 必走。
+
 ## ⚠ wave-13 所見 (2026-07-02、A2 additive-primitive well ほぼ枯渇 — 次 session 必読)
 wave-13 (commit 2a1e0678) で **P54 removeNameCount dyn** 出荷 (犯人 PR158/PR164)。全 batch semantic grep 実施の結果:
 - **batch-1/4/5 の additive [A] は事実上枯渇**: P30/P31/P34/G18/G19(=sceneColorNot)/G11-G13/P33/P35/P46(aura=apDeltaAuraOpp)/
