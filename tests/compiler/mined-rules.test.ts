@@ -31,9 +31,9 @@ describe('compiler/mined-rules (real data)', () => {
   });
 
   it('文法が実際に発火している (match は vanilla 52 を大きく超える)', () => {
-    // 2026-07-02 B1 実測: match 1161/1509 (非 closure 1260 の 92%)。Track A のカード追加で match は
+    // 2026-07-02 B1 実測 1161/1509 → B3-1 意味射影正規化 (N1-N5) 後 1244/1515。Track A のカード追加で match は
     // 増えることはあっても既存 match が消えることはない (rules/exceptions は static、既存カードも static)。
-    expect(report.totals.match).toBeGreaterThanOrEqual(1161);
+    expect(report.totals.match).toBeGreaterThanOrEqual(1244);
   });
 
   it('全 shipped が判定される (match+refuse+mismatch = judged, noCorpus=0)', () => {

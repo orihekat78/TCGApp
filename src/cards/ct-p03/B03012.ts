@@ -61,9 +61,11 @@ const a2: AbilityDef = {
     args: {
       player: 'self',
       max: 1,
+      // B3-1 C2 fidelity fix (2026-07-02): a2 の印字は「〚カード名［工藤新一］〛を1枚まで」でキャラ限定なし
+      // (a1 と違い「のキャラ」句が無い。B03004 exemplar と同形へ)。kind:'character' は過剰制約 —
+      // 工藤新一名の非キャラは partner のみでリムーブエリアに入り得ないため挙動不変 (corpus 全数確認済)。
       filter: {
-        cardName: '工藤新一',
-        kind: 'character'
+        cardName: '工藤新一'
       }
     }
   },

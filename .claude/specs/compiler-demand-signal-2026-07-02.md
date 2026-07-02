@@ -36,10 +36,25 @@ Track B (text→DSL compiler) の B1.5/B2 実測が空振り (下記) → 用途
 
 ## (b) B3 監査 queue (compiler 副産物)
 
-1. **conflicts 残 5 key** (benign encoding drift と裁定、`.tmp/compiler/mine-report.json` conflicts): 単一 option `choice` vs bare atom (C1 hirameki-sleep / C5 grant-突撃) / `condition` vs `trigger.matcherCondition` (C4 contact→draw) / filter `kind:character` 有無 (C2 工藤新一) / set-card `faceUp:false` 明示 vs 省略 (C3 B05030 vs B07048、読取 falsy で挙動同一・B07048 は意図的省略テスト有り)。いずれも意味等価。**canonical 化すれば conflict-blocked 行が unlock** するが多数 shipped card の再編集を要す (要 tier 判断)。
-2. **shipped-gap-suspect 27 枚** (印字行 > 実装 ability、`.tmp/compiler/mine-report.json` skipped): 部分実装疑い。B08079 等含む。要 per-card certify (印字全列 ⇔ DSL)。
-3. **exceptions 9 枚** (composition-mismatch、`scripts/compiler/rules/exceptions.json`): B03129/B05024/B08044 (+P)・D04004・D09027・PR055。文法で shipped 再現不能 = 構造逸脱 (chain 越境 binding 等)。要調査。
-4. **align-ambiguous 2 枚** (B09041/P): mine の行↔ability 対応が曖昧。
+★**B3-1 / B3-3 とも完了 (2026-07-02 後続 session)**。結果:
+
+1. ~~conflicts 5 key~~ → **0 (B3-1 完了)**。shipped card 再編集ではなく **canonical.cjs 意味射影の正規化 N1-N5** で解消
+   (engine 直読で結果同値を証明した encoding 揺れのみ吸収、根拠脚注は canonical.cjs 冒頭): N1 singleton-choice
+   unwrap / N2 matcherCondition(removedCharMatches)→condition lift / N3 charSetCard faceUp:false drop /
+   N4 sceneSetState PA 短縮形展開 (effect-root 限定) / N5 icon-disguise 配列位置 stable-move。
+   唯一の真 fidelity drift = **C2 B03012 a2 の filter kind:'character' 過剰制約** (印字にキャラ限定なし) → card 修正
+   (挙動不変: 工藤新一名の非キャラは partner のみでリムーブ不可)。効果: G1 match 1167→**1244** (+77)、
+   conflict-blocked 行が rule 化。unshipped unlock は **P printing 2 枚のみ** (B07031P/B08049P、出荷済) —
+   ヒラメキ sleep 10 枚は各々**別の新規複雑文**を持ち card 単位 unlock はゼロ (『残 539 は新規複雑文』結論を再確認。
+   初版 ROI 根拠の『10+5+4 枚 unlock』は行 unlock と card unlock の混同 — 訂正)。
+2. shipped-gap-suspect 25 枚 — B3-2 certify 済 (BUG-163 修正 / BUG-164 起票)。残 25 は B09100 系 + P variant。
+3. ~~exceptions 9 枚~~ → **監査完了 (B3-3、opus workflow 7 agent + 敵対 verify)**: **7/7 家系 FULL_CORRECT** —
+   全て benign 構造逸脱で誤訳ゼロ。内訳: B03129/P + PR055 (disguise+cutin 多能力構造 → **N5 で match 昇格**) /
+   B05024/P・B08044/P・D09027 (shared factory caseResolvedHandRemove の closure matcher) / D04004 (grantKeywords
+   closure)。現 exceptions **7** = 上記 closure 系 5 + B05030 (ability 配列順 drift: triggered/continuous 間 —
+   非 disguise 間の順序は意味保持のため正規化対象外、benign 裁定のみ記録) — いずれも**恒久 exception 枠**。
+4. ~~align-ambiguous 2 枚 (B09041/P)~~ → **FULL_CORRECT (B3-3)**。曖昧根因 = 印字行を持たない合成 helper ability
+   (a2 action:guarded 記録) で benign。恒久 skip 枠。
 
 ## 修正済 (本セッション)
 

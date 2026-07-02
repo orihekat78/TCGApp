@@ -2,16 +2,6 @@
  "generatedBy": "scripts/compiler/mine.cjs",
  "cards": [
   {
-   "id": "B03129",
-   "shippedId": "B03129",
-   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
-  },
-  {
-   "id": "B03129P",
-   "shippedId": "B03129P",
-   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
-  },
-  {
    "id": "B05024",
    "shippedId": "B05024",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
@@ -19,6 +9,11 @@
   {
    "id": "B05024P",
    "shippedId": "B05024P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B05030",
+   "shippedId": "B05030",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {
@@ -39,11 +34,6 @@
   {
    "id": "D09027",
    "shippedId": "D09027",
-   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
-  },
-  {
-   "id": "PR055",
-   "shippedId": "PR055",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   }
  ]

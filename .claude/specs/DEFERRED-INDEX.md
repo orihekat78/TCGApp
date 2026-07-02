@@ -326,7 +326,7 @@ cluster11 候補 B01014/B01015/B01021 + B07019 を実装着手。新 condition `
 | 項目 | 内容 | 状況 |
 |------|------|------|
 | TSV 抽出の event/case category-drop (systemic) | cards-data の TSV は **event/case の `category1/2/3` (= 特徴) を全件 drop** している (event.tsv/case.tsv に features 列が無い)。一次 API `_raw/*.json` の `category` が特徴の正本。**実測 blast-radius (2026-06-15-2 triage, 決定論 audit)**: 実装済 event 76 / case 65 を API category と全件突合 → dropped-trait は **case 0件 / event 1件 (B06035 の YAIBA、既に hirameki fire-path 理由で DEFER 済)**。MVP deck (D08/D11) は手書きで API 以前のため対象外 (D08026=古城/D11021=婚活 正常)。**= 現出荷カードへの live 影響ほぼ 0**。systemic fix は future-proof のみ (per-card certify が新規実装時に捕捉、赤魔術 family が実証) | **低 urgency に格下げ**。必要なら TSV gen 側で category→traits/caseTraits を carry (全 event/case def に影響→smoke/挙動の広域確認が要る、別タスク) |
-| charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp。さらに certify が **AI/CPU 経路 (resolve-picks Pattern A) は picked 1体のみ解決** し chain が reanimate/bonus へ進む点を指摘 (家族共通)。B07055 a1・**B07031 a2** が同構造 | HUMAN 経路 (apply-pick per-uid) と test (drain pickedUids) は計2枚で正。両カードとも非MVP=smoke/CPU 不在で live 影響なし。strict 化は engine backlog (公式 Q&A 未裁定) |
+| charRemoveSetCard `n:N` の候補不足時 clamp | PA短縮形 pick の **強制ちょうど N 枚は `n:N` (number)**、`max:N` は 0..N。候補が N 未満のとき `n:N` は available 数へ clamp。さらに certify が **AI/CPU 経路 (resolve-picks Pattern A) は picked 1体のみ解決** し chain が reanimate/bonus へ進む点を指摘 (家族共通)。B07055 a1・**B07031 a2 (B07031P 同、2026-07-02 P clone 出荷)** が同構造 | HUMAN 経路 (apply-pick per-uid) と test (drain pickedUids) は計2枚で正。両カードとも非MVP=smoke/CPU 不在で live 影響なし。strict 化は engine backlog (公式 Q&A 未裁定) |
 
 ## ✅ cluster12 (nested-filter-dyn) — FILE枚数以下レベルの登場 15枚 出荷 (2026-06-15, engine/wave2-cluster12-nested-filter-dyn)
 
@@ -855,7 +855,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
   P15 単独では exemplar が出せないため、reason-ban grant / keyword-presence filter と束ねた wave で。
 - **P16 疾風条件 override (B09090 風の女神)**: 「次に登場したキャラ1体の【疾風】登場順条件を無視」= one-shot armed flag +
   enterOrderEquals waive 分岐。B09090 も【宣言】cost「手札から〚神奈川県警〛か【疾風】を持つキャラをリムーブ」= keyword-presence cost filter が併存。
-- **B08049P (RP clone)**: 同効果パラレル。card-wave で double-value 出荷 (本 wave は exemplar 1 枚に focus)。
+- ~~B08049P (RP clone)~~: **出荷済 (2026-07-02 Track B B3-1)** — conflict canonical 化で compile 可化し emit (B07031P と同時、≡base probe green)。
 
 ⚠ **latent note** (card-wave / 将来カード出荷時に要留意):
 - actedCharThisTurn は **matchOneFilter のみ**が honor (board-char 軸)。targetFilterToPredicate / boundMatchesFilter (c=null) では

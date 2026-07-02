@@ -237,6 +237,7 @@ import { B08030P } from '../ct-p08/B08030P.js';
 import { B08039 } from '../ct-p08/B08039.js';
 import { B08040 } from '../ct-p08/B08040.js';
 import { B08049 } from '../ct-p08/B08049.js';
+import { B08049P } from '../ct-p08/B08049P.js';
 import { B08056 } from '../ct-p08/B08056.js';
 import { B08065 } from '../ct-p08/B08065.js';
 import { B08065P } from '../ct-p08/B08065P.js';
@@ -1040,6 +1041,7 @@ import { B06021 } from '../ct-p06/B06021.js';
 import { B06021P } from '../ct-p06/B06021P.js';
 import { B06077 } from '../ct-p06/B06077.js';
 import { B06077P } from '../ct-p06/B06077P.js';
+import { B07031P } from '../ct-p07/B07031P.js';
 import { B07047P } from '../ct-p07/B07047P.js';
 import { B09056 } from '../ct-p09/B09056.js';
 import { B09056P } from '../ct-p09/B09056P.js';
@@ -1311,10 +1313,13 @@ export const REUSE_CARDS: CardDef[] = [
   B02057, B02057P, B03062, B03062P, B03088P, B04085, B04085P, B06004, B06004P, B06021, B06021P, B06077, B06077P, B07047P, B09056, B09056P,
   // engine additive wave-7 exemplar (2026-07-02, P17 actedCharThisTurn) — B08049 ジョディ・スターリング
   //   (a1 turn-end FBI≥4 draw = 既存 sceneHas / a2 宣言 sleepSelf → 今ターン アクション[キャラ]した FBI を activate)。
-  //   B08049P は同効果 clone → card-wave へ。
+  //   B08049P は同効果 clone → 2026-07-02 B3-1 で出荷済 (下記)。
   B08049,
   // engine additive wave-10 exemplar (2026-07-02) — B07002/P 江戸川コナン
   //   (a1 draw2→discard2 bind→boundDistinctColorCount→sceneRemove apMax8000 / a2 宣言 cost sleepChar 探偵 →
   //   setCutinBan+setDisguiseBan opp)。boundDistinctColorCount + turn-scoped cutin/変装 ban + BUG-165 fix の初 consumer。
   B07002, B07002P,
+  // B3-1 conflict canonical 化 unlock (2026-07-02) — P printing clone 2枚 (base 出荷済・同テキスト、engine変更0):
+  //   B07031P (小泉紅子 SRP、faceUp:false 行の conflict 解消で compile 可化) / B08049P (ジョディ RP、DEFERRED-INDEX 予告分)。
+  B07031P, B08049P,
 ];
