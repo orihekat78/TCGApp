@@ -125,8 +125,10 @@
   B07045・PR263 (PA に ビッグジュエル ある場合) = **PA 読み Condition 評価器**。traits は card 明示で解決済。
   candidates PA 列挙の初 production consumer になる — 無 filter pick が PA jewel を対象化しないか filter 設計再確認
   (DEFERRED-INDEX wave12 節 nit(3))。
-- ⚠ 「アクション中のキャラ」TargetFilter 軸 (demand-signal #3) は **並行 A2 session が wave-11 で進行中**
-  (isActingChar + B03085/B05032/B05111) — 重複着手禁止、origin/main 確認。
+- ✅ 「アクション中のキャラ」= **wave-11 出荷済 (main e7512f8f、CI green)**。実装 = `$trigger.byUid`
+  (アクション[事件] actor を evidence:remove-by-action payload で貫通) + consumer B03085/B03085P/B05032/B05111。
+  ※ isActingChar TargetFilter 軸ではなく payload 直参照 (候補=actor singleton)。DEFER: B08006 (a1【宣言】下に重ね が別 primitive)。
+  vitest baseline は e7512f8f で **3695 pass +1 skip** (wave-11 分 +7、wave-13 分 +7 込み)。詳細 [[reference-engine-wave11-hirameki-actor]]。
 
 ## 旧 wave-11 候補メモ (参考、着手前に必ず origin/main semantic grep)
 - ★着手前: `git ls-remote origin main` で HEAD 確認 → 各 primitive を origin/main (**8a3e4f18** 以降) で **semantic (機構) grep** (stale 排除)。DEFER 否定は実機 probe で反証 (wave-9 教訓)。「N枚 pick」を含む場合は **4層検証** (engine 3経路 + playwright UI、wave-10 教訓)。
