@@ -722,6 +722,9 @@ import { B02012 } from '../ct-p02/B02012.js';
 import { B03075 } from '../ct-p03/B03075.js';
 import { B07044 } from '../ct-p07/B07044.js';
 import { B09009 } from '../ct-p09/B09009.js';
+import { B09072 } from '../ct-p09/B09072.js';
+import { B09072P } from '../ct-p09/B09072P.js';
+import { B09072P2 } from '../ct-p09/B09072P2.js';
 import { PR274 } from '../pr-01/PR274.js';
 import { PR275 } from '../pr-01/PR275.js';
 
@@ -1200,6 +1203,8 @@ export const REUSE_CARDS: CardDef[] = [
   D05005, D07010, D07011, B01038, B01038P, B02012, B03075, B07044, B09009, PR274, PR275,
   // engine拡張 wave#2 cluster14 — multi-card sceneEnter
   B09010, B09010P, PR042, PR046,
+  // engine拡張 wave-9 (2026-07-02) — wave-8 shippuFiredThisTurn flag 初 consumer + carrier-reuse (engine変更0)
+  B09072, B09072P, B09072P2,
   // Task A batch
   B01018, B01062, B01062P, B01066, B01066P, B02003, B02003P, B02005, B02005P, B02019, B02019P, B02044, B02044P, B02077, B02077P, PR080, B03005, D10020, D10021, B03025, B03086, B03086P, B03089, B03089P, D09020, B04014, B04014P, B04017, B04017P, B05006, B05006P, B05006P2, B05020, B05020P, B05046, B05046P, B05046P2, B06011, B06011P, B06013, B06013P, PR170, B07004, B07004P, B07020, B07020P, B07023, B07023P, B07098, B07098P, D09004, D09005, PR193, PR060, PR064, PR154,
   // triage-batch2 (window4 confirmed greens: B01052/B02025/B04022/B04031 + byte-identical clones)

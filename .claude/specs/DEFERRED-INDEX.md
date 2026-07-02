@@ -871,10 +871,12 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 - `cannotReason` turnEffect + canReason gate (絶対制限、既存 charSetTurnEffect verb 流用、clearTurnEffects('turn') 清掃)。
 
 ⚠ **本 wave で DEFER**:
-- **B09072 横溝重悟 (consumer カード)**: a1 は shippuFiredThisTurn flag-condition で解禁済だが、a2「〚特徴[神奈川県警]〛のキャラを
-  1枚まで選び、アクティブにし、ターン終了時まで推理できないを与える」= **pick-bind carrier 不在**で出せない。sceneSetState /
-  charSetTurnEffect は共に bind 非対応、pure-pick-bind verb も無いため「select 1 char → 2 rider (activate + reason-ban)」の共有 pick が
-  組めない。→ card-wave で (要 新 picker mechanism、または carrier-reuse の実機経路 empirical 検証 [[feedback-carrier-reuse-human-path-empirical]])。
+- ~~**B09072 横溝重悟 (consumer カード)**: a2 = pick-bind carrier 不在で出せない~~ → **✅ 出荷済 (wave-9、2026-07-02、engine変更0)**。
+  上記「bind 非対応」は **false-DEFER だった**: 実機 probe (AI / human pick / 0-pick decline の 3 経路) で
+  a2 = carrier-reuse `sequence[ sceneSetState 短縮形 carrier{player:self,max:1,filter{trait:神奈川県警},state:active,bind:$picked},
+  charSetTurnEffect rider{uid:$picked.uid,cannotReason} ]` が **既存 engine で完全成立**することを確認 (sceneSetState は ATOM_PICK_SPEC
+  PA 短縮形 = player 必須 / runAtom preamble の bind 書込は verb 非依存 / charSetTurnEffect handler は resolveBindRef で $picked.uid 解決)。
+  → [[feedback-carrier-reuse-human-path-empirical]] に従い code-reasoning でなく実機 probe で判定したことで false-DEFER を発見・訂正出荷。
 - **P15 TargetFilter 軸** (B09070 萩原千速&研二 ターン終了時「疾風発動した全キャラを active化」): per-char turnEffect + matchOneFilter honor +
   turn-end queue-time timing 検証が必要。かつ B09070 は【疾風】の removeArea-filtered-select + PA-declared が第2・第3 gate = 非 sole。
   → Condition 消費で足りる本 wave では未実装。TargetFilter 軸出荷時は endTurn 清掃 (phase:end:cleanup) が turn-end trigger queue の
