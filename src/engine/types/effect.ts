@@ -109,6 +109,13 @@ export type Condition =
   // した **N 枚集合のいずれか** が filter に一致するか (PR132「特徴[警察]がリムーブされた場合」/
   // D06013「【緑】と【白】が1枚以上」= and[boundAny{緑}, boundAny{白}])。各要素は matchOneFilter に委譲。
   | { kind: 'boundAnyMatchesFilter'; bindKey: string; filter: TargetFilter }
+  // engine additive wave-10 (2026-07-02, G17 残): bound 集合内に「filter 一致 かつ 相互に同じ色を
+  // 持たない (色集合の pairwise 交差が空)」カードが n 枚以上存在するか。B07002 江戸川コナン a1
+  // 「この効果によってそれぞれ色の異なる（同じ色を持たない）〚特徴［探偵］〛のキャラを2枚リムーブした場合」。
+  // 2色カード (rules/20) は色集合全体で交差判定 (1色でも共有 =「同じ色を持つ」= 不成立、公式括弧書き)。
+  // 各要素は matchOneFilter(c=null=CardDef 印字値) に委譲 (boundAnyMatchesFilter と同流儀)。
+  // honor: cond/eval.ts case + CONDITION_KIND_MAP + validate-specs CONDS。
+  | { kind: 'boundDistinctColorCount'; bindKey: string; filter?: TargetFilter; n: number }
   // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。leave:to-remove
   // payload snapshot {uid,cause,side,byUid} を scene 再取得せず読む (triggerCharMatches は splice 済
   // キャラに使えない、13198)。side=除去キャラ所属 (payload.side===owner→self、全 variant='opp')、
@@ -310,6 +317,12 @@ export type AtomVerb =
   // turnState[p].nextHintBanned=true をセットする turn-scoped flag verb。canStartNextHint が gate (ネクストヒント全体)。
   // resetTurnFlags でクリア。rules: 12 (ネクストヒント) / 15 (「〜できない」継続制限)
   | 'setNextHintBan'
+  // engine additive wave-10 (2026-07-02): 「このターン中、相手は【カットイン】/【変装】を使用できない」
+  // (B07002 江戸川コナン a2)。turnState[p].cutinBanned / disguiseBanned をセットする turn-scoped flag verb
+  // (setNextHintBan mirror)。ゲートは flow/contact.ts canCutIn / canDisguise。side-level flag ゆえ
+  // 発動キャラ離場後も有効 (公式 Q&A B07002)。resetTurnFlags でクリア。rules: 09 / 15 / 25
+  | 'setCutinBan'
+  | 'setDisguiseBan'
   | 'setHiramekiSuppress'
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)

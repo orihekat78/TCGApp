@@ -31,6 +31,8 @@ const VERBS = new Set([
   'removeAreaAllToDeckBottom', // cluster4 (2026-06-14)
   'setEventUseBan', // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   'setNextHintBan', // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)
+  'setCutinBan', // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
+  'setDisguiseBan', // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   'setHiramekiSuppress', // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
   'expandActionTargets', 'log', 'noop',
 ]);
@@ -57,7 +59,7 @@ const CONDS = new Set([
   'costRemovedMatches', // engine additive wave (2026-06-29d)
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
-  'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'triggerCharMatches',
+  'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundDistinctColorCount', 'triggerCharMatches',
   // Task D E1 (2026-06-12): hand-count conditions
   'handAtLeast', 'handAtMost', 'handCountAtLeastOther',
   // Task D E2/E3 (2026-06-12)

@@ -5,6 +5,7 @@
 // rules: 05-turn-phases.md §手札の使用 / 12-next-hint.md / 20-color-and-switch.md
 
 import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import { CardArt } from './CardArt.js';
 import './HandZone.css';
 
@@ -73,6 +74,15 @@ export type HandZoneProps = {
   pickBannerText?: string;
   pickableCardIds?: ReadonlySet<string>;
   pickSkipLabel?: string;
+  /**
+   * BUG-165 UI 側 (wave-10 2026-07-02): nMax > 1 の discard pick (B04005/B07002「手札を2枚リムーブする」)
+   * を単発 click 即 dispatch ではなく multi-select (toggle → 完了ボタン) で収集する。
+   * CardListModal の pickNMin/pickNMax/onPickMulti と同 contract。
+   * pickNMax が無い or 1 の場合は既存 single-pick (onPickCard) 挙動 byte 不変。
+   */
+  pickNMin?: number;
+  pickNMax?: number;
+  onPickMulti?: (uids: string[]) => void;
   onPickCancel?: () => void;
   pickCancelLabel?: string;
   pickHideBanner?: boolean;
@@ -92,6 +102,8 @@ type HandCardProps = {
   onExpand?: (cardId: string) => void;
   /** Pick mode 中の cell: 黄色ハイライト + cursor pointer */
   pickable?: boolean;
+  /** BUG-165 UI 側: multi-select pick で選択済み (toggle on) の cell 強調 */
+  pickSelected?: boolean;
 };
 
 function HandCard({
@@ -102,6 +114,7 @@ function HandCard({
   onClick,
   onExpand,
   pickable,
+  pickSelected,
 }: HandCardProps): JSX.Element {
   const classes = [
     'hand-card',
@@ -110,6 +123,7 @@ function HandCard({
     disabled && 'disabled',
     onClick && !disabled && 'clickable',
     pickable && 'hand-card--pickable',
+    pickSelected && 'hand-card--pick-selected',
   ]
     .filter(Boolean)
     .join(' ');
@@ -262,7 +276,25 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     onPickCancel,
     pickCancelLabel,
     pickHideBanner = false,
+    pickNMin,
+    pickNMax,
+    onPickMulti,
   } = props;
+
+  // BUG-165 UI 側: multi-select discard pick (nMax>1)。CardListModal isMultiPick と同 contract。
+  // hooks は early return (手札0) より前に置く (rules of hooks)。
+  const isMultiPick = pickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
+  const [pickSelected, setPickSelected] = useState<string[]>([]);
+  useEffect(() => {
+    if (!pickMode) setPickSelected([]);
+  }, [pickMode]);
+  const togglePickSelected = (uid: string): void => {
+    setPickSelected((prev) => {
+      if (prev.includes(uid)) return prev.filter((u) => u !== uid);
+      if (typeof pickNMax === 'number' && prev.length >= pickNMax) return prev; // 上限ガード
+      return [...prev, uid];
+    });
+  };
 
   if (cards.length === 0) {
     return (
@@ -337,8 +369,29 @@ export function HandZone(props: HandZoneProps): JSX.Element {
         >
           {!pickHideBanner && (
             <div className="hand-zone-pick-banner" role="status">
-              {pickBannerText ?? '手札から1枚選んでリムーブしてください'}
+              {pickBannerText ??
+                (isMultiPick
+                  // BUG-165 UI 側: 枚数を印字テキスト通りに表示 (「2枚リムーブする」= nMin===nMax)
+                  ? (pickNMin === pickNMax
+                      ? `手札から${pickNMax}枚選んでリムーブしてください`
+                      : `手札から${pickNMax}枚まで選んでリムーブしてください`)
+                  : '手札から1枚選んでリムーブしてください')}
             </div>
+          )}
+          {isMultiPick && (
+            <button
+              type="button"
+              className="hand-zone-pick-confirm-btn"
+              disabled={pickSelected.length < (pickNMin ?? 0)}
+              onClick={() => {
+                const uids = pickSelected;
+                setPickSelected([]);
+                onPickMulti!(uids);
+              }}
+              data-testid="hand-zone-pick-confirm"
+            >
+              {`完了 (${pickSelected.length}/${pickNMax}枚)`}
+            </button>
           )}
           {/* compact モード (ネクストヒント): 大きい banner ではなく短いヒント caption のみ。
               step2 (黄枠カードをクリックで使用) の操作方法を 1 行で示す。 */}
@@ -374,10 +427,13 @@ export function HandZone(props: HandZoneProps): JSX.Element {
           // Pick mode (User vision): 全 card cell が pick 対象、click → onPickCard
           // (`<cardId>#<idx>` 形式 uid)。onCardClick は suppress。
           // pickable=true で黄色ハイライト + cursor pointer。
-          if (pickMode && onPickCard) {
+          if (pickMode && (onPickCard || isMultiPick)) {
             // 2026-05-28: pickableCardIds 指定時は該当カードのみ pickable (黄色枠+click)。
             // 非該当は disabled (dimmed, click 無効)。未指定なら全 pickable (discard 既存挙動)。
             const canPick = pickableCardIds ? pickableCardIds.has(c.cardId) : true;
+            const pickUid = `${c.cardId}#${index}`;
+            // BUG-165 UI 側: multi-select は click = toggle (即 dispatch しない)、完了ボタンで確定。
+            const isSelected = isMultiPick && pickSelected.includes(pickUid);
             return (
               <HandCard
                 key={`${c.cardId}-${index}`}
@@ -385,9 +441,12 @@ export function HandZone(props: HandZoneProps): JSX.Element {
                 featured={false}
                 disabled={!canPick}
                 disabledTitle={!canPick ? 'レベル / 色制限で使用不可' : undefined}
-                onClick={canPick ? () => onPickCard(`${c.cardId}#${index}`) : undefined}
+                onClick={canPick
+                  ? () => (isMultiPick ? togglePickSelected(pickUid) : onPickCard!(pickUid))
+                  : undefined}
                 onExpand={onCardExpand}
                 pickable={canPick}
+                pickSelected={isSelected}
               />
             );
           }

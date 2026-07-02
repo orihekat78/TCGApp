@@ -900,3 +900,17 @@ gap-suspect 27 枚 (base 20) の per-card certify (opus workflow + 敵対 verify
 certify 全体裁定: FULL 7 (B03006/B06007/B09092/D08021/PR022/PR192/PR197 = mine alignment 副作用) /
 DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、同 commit 修正) + [[BUG-164]]。
 軽微: B06035/B05039 は INDEX 記録ありだが in-file コメント無し (逆パターン、実害なし)。
+
+## wave engine / wave10-b07002 (boundDistinctColorCount + cutin/変装 turn-ban + BUG-165、2026-07-02 出荷)
+
+出荷済 = `boundDistinctColorCount` cond / `setCutinBan`・`setDisguiseBan` verb (+`TurnScopedFlags.cutinBanned/disguiseBanned` + canCutIn/canDisguise gate) / **BUG-165** PB generic multi-pick collapse fix (apply-pick + resolve-picks、B04005 実バグ修正) / exemplar **B07002/B07002P**。
+
+- **handReveal ★未対応 残 (1)(2)(4)** ([core.ts](../../src/engine/effect/atom-handlers/core.ts) コメント): (1) distinctNames+n:N の availN 過大計数 / (2) 明示 target 配列+n:N の gate 素通り / (4) filter 内 {dyn}+n:N の availN 誤算。(3) は BUG-165 で解消済。該当組合せのカード authoring 前に gate 拡張要。
+- **cost target-pick の player-choice 不在 (head-fixed)**: B07002 a2 cost「このキャラか、特徴[探偵]のキャラを1枚スリープ」は canPay/n.max cap は正しいが「どの探偵を寝せるか」を UI/AI が選べない (candidates 先頭固定、BUG-156 注記の engine-wide 既知制約)。全 sleepChar/stunChar cost 共通の別 initiative — B07002 固有 DEFER ではない。
+- **latent note (boundDistinctColorCount)**: filter 判定は c=null (CardDef 印字値) — bind 元が手札由来 cardId のため board-effective (granted trait 等) は評価不能で正しい (rules/17 Q&A「現場にいなければ有効でない」)。色は CardDef.colors 全集合の pairwise 交差空 = 「同じ色を持たない」(公式括弧書き)。無色 (colors:[]) は常に disjoint (現行カードプールに無色は不在)。
+- **latent note (turn-ban)**: 「このターン中」= resetTurnFlags (turn:start) 清掃。相手ターン中に相手が宣言する形の consumer が将来出た場合も side-level flag + turn 境界清掃で正しい (rules/15)。UI 側は canCutIn/canDisguise 単一 choke point 経由のため追加配線不要。a2 の「相手カットイン/変装不可」の**コンタクト実機通し** (アクション宣言→guard→cutin 候補が出ないこと) は未踏 — engine gate は vitest 網羅済 + UI は canCutIn 経由 (単一 choke)。B07002 が human 実戦投入されたら 1 回踏むこと。
+- **敵対 review nits (wave-10、全 SHIP_WITH_NITS 0-blocker、latent 記録)**:
+  (1) boundDistinctColorCount は colors:[] (無色) を全てと disjoint 扱い — 現カードプールに無色不在で無害、無色 filter 集合で再利用する場合は要再考。
+  (2) conditionIfIsStable は boundDistinctColorCount を明示 case せず default の `$`-token scan で unstable 判定 — bindKey が `$` prefix である規約に依存 (boundAnyMatchesFilter と同 posture)。新 bound-系 cond 追加時は bindKey `$` prefix を守るか case 追加。
+  (3) AI multi-pick (nMax>1 generic) は greedy 先頭 N 枚 (heuristic 非使用、cardIds contract と同流儀) — B07002 a1 で CPU が異色探偵ペアを意図的に選ばない = AI 品質 gap (正しさは非依存)。
+  (4) HandZone multi-select は discard verb のみ配線 (nMax>1 の他 hand-pick verb が出たら Playmat 側で同様に pickNMin/pickNMax/onPickMulti を渡す)。

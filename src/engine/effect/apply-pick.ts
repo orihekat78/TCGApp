@@ -132,7 +132,11 @@ export function applyPickAndContinuation(
       ? { ...pending.atomArgs, cardIds: allCardIds, ...switchPart } // target は元の pick query を保持
       : hasCardIdBind
         ? { ...pending.atomArgs, cardId: resolvedCardId, ...switchPart } // target は元の pick query を保持
-        : { ...pending.atomArgs, target: [resolvedCardId], ...switchPart }; // 従来 pattern (handAddFromRemove 等)
+        // BUG-165 (wave-10 2026-07-02): 旧 target:[resolvedCardId] は pickedUids (nMax>1 の複数選択、
+        // UI Playmat multi-select / AI chooseAiPick が渡す) を握り潰し先頭 1枚に collapse していた
+        // (B04005「手札を2枚リムーブする」が全経路 1枚しか落ちない / handReveal ★未対応(3) の bind 1枚問題)。
+        // allCardIds = pickedUids ?? [pickedUid] の解決済全件 → n:1 は [resolvedCardId] と byte 同一。
+        : { ...pending.atomArgs, target: allCardIds, ...switchPart }; // 従来 pattern (handAddFromRemove 等)
     resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: newArgs };
   }
 

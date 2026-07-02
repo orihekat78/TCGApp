@@ -725,6 +725,8 @@ import { B09009 } from '../ct-p09/B09009.js';
 import { B09072 } from '../ct-p09/B09072.js';
 import { B09072P } from '../ct-p09/B09072P.js';
 import { B09072P2 } from '../ct-p09/B09072P2.js';
+import { B07002 } from '../ct-p07/B07002.js';
+import { B07002P } from '../ct-p07/B07002P.js';
 import { PR274 } from '../pr-01/PR274.js';
 import { PR275 } from '../pr-01/PR275.js';
 
@@ -1311,4 +1313,8 @@ export const REUSE_CARDS: CardDef[] = [
   //   (a1 turn-end FBI≥4 draw = 既存 sceneHas / a2 宣言 sleepSelf → 今ターン アクション[キャラ]した FBI を activate)。
   //   B08049P は同効果 clone → card-wave へ。
   B08049,
+  // engine additive wave-10 exemplar (2026-07-02) — B07002/P 江戸川コナン
+  //   (a1 draw2→discard2 bind→boundDistinctColorCount→sceneRemove apMax8000 / a2 宣言 cost sleepChar 探偵 →
+  //   setCutinBan+setDisguiseBan opp)。boundDistinctColorCount + turn-scoped cutin/変装 ban + BUG-165 fix の初 consumer。
+  B07002, B07002P,
 ];

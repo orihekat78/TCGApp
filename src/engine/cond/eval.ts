@@ -357,6 +357,36 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return false;
     }
+    case 'boundDistinctColorCount': {
+      // engine additive wave-10 (2026-07-02, G17 残): bound 集合内に「filter 一致 かつ 相互に同じ色を
+      // 持たない」カードが n 枚以上存在するか。B07002 a1「この効果によってそれぞれ色の異なる
+      // （同じ色を持たない）〚特徴［探偵］〛のキャラを2枚リムーブした場合」。
+      // - filter 判定は boundAnyMatchesFilter と同流儀 (matchOneFilter c=null = CardDef 印字値)。
+      // - 「同じ色を持たない」= 色集合の pairwise 交差が空 (公式括弧書き、2色カードは rules/20 の
+      //   「どちらの色としても扱う」ゆえ 1色でも共有すれば不成立)。
+      // - subset 探索は DFS 全列挙 (bound は discard n:2 等の小集合、色6種ゆえ交差判定も定数)。
+      //   「N枚リムーブした場合」の一般読み = 除去集合中に条件を満たす N 枚が存在 (removeTraitAtLeast 系と同型)。
+      const bdcSet = ctx.bindings?.[cond.bindKey];
+      if (!Array.isArray(bdcSet) || bdcSet.length === 0) return false;
+      const bdcColorSets: string[][] = [];
+      for (const b of bdcSet) {
+        const bId = (b as { cardId?: string }).cardId;
+        if (typeof bId !== 'string') continue;
+        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: ctx.source.player };
+        if (cond.filter && !matchOneFilter(state, bId, cond.filter, null, cand)) continue;
+        bdcColorSets.push(lookupCardDef(bId)?.colors ?? []);
+      }
+      if (bdcColorSets.length < cond.n) return false;
+      const bdcDisjoint = (a: string[], b: string[]): boolean => !a.some((c) => b.includes(c));
+      const bdcDfs = (start: number, chosen: string[][]): boolean => {
+        if (chosen.length >= cond.n) return true;
+        for (let i = start; i < bdcColorSets.length; i++) {
+          if (chosen.every((cs) => bdcDisjoint(cs, bdcColorSets[i]!)) && bdcDfs(i + 1, [...chosen, bdcColorSets[i]!])) return true;
+        }
+        return false;
+      };
+      return bdcDfs(0, []);
+    }
     case 'boundMatchesFilter': {
       // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
       // (「〚カード名[X]〛を登場させた場合」を declarative 化)
@@ -601,6 +631,7 @@ const CONDITION_KIND_MAP = {
   contactOpponentApHigher: true, guardedBySelf: true,
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
   boundAnyMatchesFilter: true, // engine additive wave-5 (2026-07-01, G17): bound 集合 any-match (PR132/D06013)
+  boundDistinctColorCount: true, // engine additive wave-10 (2026-07-02, G17 残): bound 集合内 相互異色 n 枚 (B07002)
   setCardMatches: true, // engine additive (2026-06-29, B06046)
   triggerCutinMatches: true, // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用cutin filter
   charTurnEffect: true, // Task D E4 (2026-06-12)

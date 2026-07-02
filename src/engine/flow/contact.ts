@@ -82,6 +82,11 @@ export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId:
   // val:true)、清掃は clearTurnEffects('action') (アクション終了時) + turn-end safety net。p のカットインは、
   // 相手側 (other = action 宣言側) のいずれかのキャラが本フラグを持つとき不可。既存カードは本キー未使用 → 回帰0。
   if (sideHasActionCutinBan(state, other)) return false;
+  // engine additive wave-10 (2026-07-02): turn-scoped cutin ban (B07002 a2「このターン中、相手は
+  // 【カットイン】と【変装】を使用できない」)。setCutinBan verb が turnState[p].cutinBanned を書込、
+  // resetTurnFlags (turn:start) が清掃。side-level flag ゆえ発動キャラ離場後も有効 (公式 Q&A B07002)。
+  // 既存カードは本 flag 未使用 → 回帰0。
+  if (state.turnState[p].cutinBanned) return false;
   return true;
 }
 
@@ -164,6 +169,9 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
  */
 export function canDisguise(state: GameState, ax: ActionContext, p: Player, cardId: string): boolean {
   if (!state.players[p].hand.includes(cardId)) return false;
+  // engine additive wave-10 (2026-07-02): turn-scoped disguise ban (B07002 a2)。canCutIn の
+  // cutinBanned gate と mirror (setDisguiseBan verb 書込 / resetTurnFlags 清掃 / side-level)。
+  if (state.turnState[p].disguiseBanned) return false;
   const ability = disguiseAbility(cardId);
   if (!ability) return false;
   const targetUid = contactCharUidOf(ax, p);

@@ -713,6 +713,20 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               ? () => { dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }); }
               : undefined
           }
+          // BUG-165 UI 側 (wave-10 2026-07-02): nMax>1 の discard pick (B04005/B07002
+          // 「手札を2枚リムーブする」) は multi-select で収集し pickedUids を dispatch。
+          // 旧実装は単発 pickedUid 即 dispatch → engine 側 (旧 collapse) と合わせ 1枚しか
+          // リムーブされなかった。nMax<=1 は onPickCard 経路 byte 不変 (HandZone 側で gate)。
+          pickNMin={isDiscardPick ? pendingPickForArea?.nMin : undefined}
+          pickNMax={isDiscardPick ? pendingPickForArea?.nMax : undefined}
+          onPickMulti={isDiscardPick ? (uids) => {
+            const first = uids[0];
+            if (first === undefined) {
+              dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+              return;
+            }
+            dispatchEngineAction({ type: 'effectPickResolve', pickedUid: first, pickedUids: uids });
+          } : undefined}
         />
 
         {/* ActionsPanel (Phase 8.5 で endTurn 配線開始、他は 8.6+) */}

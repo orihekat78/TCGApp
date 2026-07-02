@@ -140,6 +140,20 @@ export type TurnScopedFlags = {
    *   【登場時】= main-phase reader なので無関係)。
    */
   shippuFiredThisTurn?: boolean;
+  /**
+   * 「このターン中、このプレイヤーは【カットイン】を使用できない」(B07002 江戸川コナン a2、wave-10 2026-07-02)。
+   * setCutinBan verb がセット (B07002 は player:'opp' = 相手側 slot へ)、turn:start の resetTurnFlags でクリア。
+   * ゲート: flow/contact.ts canCutIn。side-level flag ゆえ発動キャラが現場を離れても有効
+   * (公式 Q&A B07002「使用した後でこのキャラが現場を離れても有効ですか？→はい。能力を使用したターン中は有効」)。
+   * per-char の cutinBanOpp_action (action-scoped turnEffect、wave-0629d) とは別 axis。
+   * undefined/false = 制限なし。既存カードは未使用 (write は B07002 のみ) → 挙動不変。
+   */
+  cutinBanned?: boolean;
+  /**
+   * 同上の【変装】版 —「このターン中、このプレイヤーは【変装】を使用できない」(B07002 a2)。
+   * setDisguiseBan verb がセット、ゲートは flow/contact.ts canDisguise、清掃は resetTurnFlags。
+   */
+  disguiseBanned?: boolean;
 };
 
 export type LogEntry = {

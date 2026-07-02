@@ -442,11 +442,29 @@ function substituteAtomPick(
       args: resolveDynArgs(state, { ...args, cardId: pickedCardId }, ctx),
     } as Effect;
   }
-  const pickValue =
-    picked.kind === 'card' ? picked.cardId :
-    picked.kind === 'char' ? picked.uid :
-    picked.kind === 'evidence' ? (state.players[picked.player].evidence[picked.index]?.cardId ?? null) :
+  const pickValueOf = (c: (typeof cands)[number]): string | null =>
+    c.kind === 'card' ? c.cardId :
+    c.kind === 'char' ? c.uid :
+    c.kind === 'evidence' ? (state.players[c.player].evidence[c.index]?.cardId ?? null) :
     null;
+  // BUG-165 (wave-10 2026-07-02): nMax>1 の generic Pattern B は旧実装が heuristic 先頭 1枚に collapse
+  // していた (B04005「手札を2枚リムーブする」が AI 同期 walk で 1枚しか落ちない)。cardIds:'$pick.cardIds'
+  // contract (BUG-103) と同流儀で greedy に nMax 枚を target に詰める (「取れるだけ取る」、heuristic の
+  // 単一選好は multi では cardIds contract 同様不使用)。nMax<=1 は従来 path byte 不変。
+  const nMaxG = (target as { n?: { max?: number } } | undefined)?.n?.max ?? 1;
+  if (nMaxG > 1) {
+    const pickValues = cands
+      .map(pickValueOf)
+      .filter((v): v is string => v !== null)
+      .slice(0, nMaxG);
+    if (pickValues.length === 0) return atom as Effect;
+    return {
+      kind: 'atom',
+      verb: atom.verb as never,
+      args: resolveDynArgs(state, { ...args, target: pickValues }, ctx),
+    } as Effect;
+  }
+  const pickValue = pickValueOf(picked);
   if (pickValue === null) return atom as Effect;
   return {
     kind: 'atom',
