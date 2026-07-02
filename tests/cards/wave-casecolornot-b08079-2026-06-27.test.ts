@@ -95,9 +95,11 @@ describe('B08079 ピンガ a3 — 構造 1対1 (DSL args = カードテキスト
     expect(B08079P.id).toBe('B08079P');
     expect(B08079P.rarity).toBe('SRP');
     expect(B08079P.imageUrl).not.toBe(B08079.imageUrl);
-    expect(B08079P.abilities.map((a) => a.id)).toEqual(['a1', 'a2', 'a3']);
-    // a3 deep-equal (絵柄違いで text 同一)
+    // a4 = 【変装】【事件黒】【FILE7】 (BUG-163 で henso 列 grounding 漏れを追補、2026-07-02)
+    expect(B08079P.abilities.map((a) => a.id)).toEqual(['a1', 'a2', 'a3', 'a4']);
+    // a3/a4 deep-equal (絵柄違いで text 同一)
     expect(ab(B08079P, 'a3')).toEqual(ab(B08079, 'a3'));
+    expect(ab(B08079P, 'a4')).toEqual(ab(B08079, 'a4'));
     expect(B08079P.colors).toEqual(B08079.colors);
     expect(B08079P.ap).toBe(B08079.ap);
     expect(B08079P.traits).toEqual(B08079.traits);

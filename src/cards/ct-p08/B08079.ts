@@ -1,11 +1,12 @@
-// cards/ct-p08/B08079 ピンガ (キャラ) — engine#1 leave batch #3 + continuous AP + 宣言remove (a1 + a2 + a3)
-// rules: 15-abilities-effects.md, 17-icons.md, 21-declared-ability-cost.md
+// cards/ct-p08/B08079 ピンガ (キャラ) — engine#1 leave batch #3 + continuous AP + 宣言remove + 変装 (a1 + a2 + a3 + a4)
+// rules: 09-cutin-disguise.md, 15-abilities-effects.md, 17-icons.md, 21-declared-ability-cost.md
 //
 // 公式テキスト:
 //   【自分ターン中】AP＋1000
 //   【相手ターン中】【現場リムーブ時】カードを1枚引き、手札を1枚リムーブする。
 //   【宣言】【スリープ】：AP8000以下のキャラを1枚まで選び、リムーブする。
 //     この能力は自分の事件が【黒】以外の色を持つ場合に宣言できる。
+//   【変装】【事件黒】【FILE7】 (henso 列。BUG-163: 出荷時 col13 grounding 漏れ → a4 追補)
 //
 // a1: 【自分ターン中】continuous self AP+1000 (D08005 同型)
 // a2: 【相手ターン中】【現場リムーブ時】draw 1 → discard 1 chain (B06080 a1 同型)
@@ -58,6 +59,22 @@ const a3: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/20-color-and-switch.md', 'rules/21-declared-ability-cost.md'],
 };
 
+// a4: 【変装】。ゲート【事件黒】【FILE7】は icon-disguise の condition として canDisguise が評価
+//     (B02038 a3 / D06012 a1 同型)。括弧内リマインダは boilerplate。
+const a4: AbilityDef = {
+  id: 'a4',
+  type: 'icon-disguise',
+  condition: {
+    kind: 'and',
+    cs: [
+      { kind: 'caseColor', color: '黒' },
+      { kind: 'fileAtLeast', n: 7 },
+    ],
+  },
+  description: '【変装】【事件黒】【FILE7】（コンタクト中のキャラと入れ替わって手札から出る。入れ替わったキャラはデッキの下に移す）',
+  ruleRefs: ['rules/09-cutin-disguise.md', 'rules/17-icons.md'],
+};
+
 export const B08079: CardDef = {
   id: 'B08079',
   no: '0915/B08079',
@@ -68,6 +85,6 @@ export const B08079: CardDef = {
   traits: ['黒ずくめの組織'], keywords: [],
   rarity: 'SR',
   imageUrl: '1770731255806019.jpg',
-  abilities: [a1, a2, a3],
+  abilities: [a1, a2, a3, a4],
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };

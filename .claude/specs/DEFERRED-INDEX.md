@@ -588,7 +588,7 @@ B05058/B05116 は **partial-ship** (継続 passive a1 を DEFER + a2 leave 出�
 | rep | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
 | B05111 (ゾンビ, 全体) | a1 leave→cardNameウォッカ登場 は clean だが a2「【ヒラメキ】【解決編】**アクション中のキャラ**を1枚まで選びスタン」= ヒラメキ解決時に actor を指す binding が engine 不在 (evidence:remove-by-action hirameki ctx に attacker uid 不在)。汎用 pick だと over-fire=不誠実ゆえ全体 DEFER | hirameki ctx に acting-char($actor)binding 追加 (engine) |
-| B05058 a1 | 「現場にいるこのキャラは〚特徴[鈴木財閥]〛を持つ」= 現場限定 継続 self-trait 付与。trait 付与機構が engine 不在 (read/char.ts readTraits は d.traits 静的のみ / charGrantTrait atom なし / ContinuousModifier に grantTraits なし)。静的 traits[] は「現場限定」公式Q&A 違反ゆえ不可。a2 のみ出荷 | continuous self-trait grant (engine) |
+| B05058 a1 | 「現場にいるこのキャラは〚特徴[鈴木財閥]〛を持つ」= 現場限定 継続 self-trait 付与。trait 付与機構が engine 不在 (read/char.ts readTraits は d.traits 静的のみ / charGrantTrait atom なし / ContinuousModifier に grantTraits なし)。静的 traits[] は「現場限定」公式Q&A 違反ゆえ不可。a2 のみ出荷 | ~~continuous self-trait grant (engine)~~ **⚠ 解禁済 (2026-07-02 B3-2 certify で stale 判明)**: wave-6 (9f9ea043) `continuousModifier.grantTraits` がまさにこれ (B05012/B07053/B08063 exemplar)。card-phase で a1 追補可 |
 | B05116 a1 | 「相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ」= 相手の対象選択を強制する forced-target passive。強制対象機構が engine 不在 (必ず選ぶ/mustSelect/forcedTarget 共にゼロ)。a2 のみ出荷 | forced-target 強制選択 (engine) |
 
 ## ✅ wave codegen-handcount-setevent (hand-count declared + set-facedown, 2026-06-23, cards/wave-codegen-handcount-setevent)
@@ -885,3 +885,18 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 
 ⚠ **latent note**: 疾風 record は付与 (grantedAbilities) 由来の【疾風】でも発火する (rules/17 §「〜を持つ」= 付与も該当、意図通り)。
 `abilityIsShippu` は enterOrderEquals の N 値を問わない (任意 N の疾風発動で「発動していた」成立、意図通り)。
+
+## 📋 B3-2 gap-suspect certify 台帳補完 (2026-07-02 Track B、BUG-163/164 と同 commit)
+
+gap-suspect 27 枚 (base 20) の per-card certify (opus workflow + 敵対 verify) で判明した **in-file DEFERRED
+コメントのみで本 INDEX 未登録**だった 2 枚を追記 + engine gap 1 件を Track A へ登録:
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B03032 a2 (服部平次) | 「相手の現場にいる**カードがセットされている**アクティブ状態のキャラを指定してアクションできる」= rules/07『アクティブは対象不可』を上書きする action-target 拡張。engine の action target 候補 (state-machine declare) に card 固有拡張点が不在 | action-target 拡張 hook (engine、P-新規) |
+| B04018 a1/a3 (遠山和葉) | a1=「このキャラか〚服部平次〛が自分の現場に登場したとき」self-or-cardname enter matcher + 「ターン終了時まで元の能力を無効にする」charDisableOriginal の turn-scope 版 / a3=【宣言】discardSelf cost + remove から cardName filter で sceneEnter。a2 のみ出荷 | enter matcher 拡張 + disableOriginal turn-scope (engine) |
+| B09100 line1 (犯人) | 「デッキに何枚でも入れられる」— validateDeck MAX_SAME_ID=3 一律で CardDef に copy-limit field 不在。**[[BUG-164]]** 起票済 (latent、MVP 非影響)。additive 案 = `CardDef.deckLimit` + validateDeck/deck-builder 2 honor site | CardDef.deckLimit (engine、Track A) |
+
+certify 全体裁定: FULL 7 (B03006/B06007/B09092/D08021/PR022/PR192/PR197 = mine alignment 副作用) /
+DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、同 commit 修正) + [[BUG-164]]。
+軽微: B06035/B05039 は INDEX 記録ありだが in-file コメント無し (逆パターン、実害なし)。

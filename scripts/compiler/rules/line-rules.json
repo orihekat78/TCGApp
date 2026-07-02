@@ -1,7 +1,7 @@
 {
  "generatedBy": "scripts/compiler/mine.cjs",
- "minedFromShipped": 1510,
- "ruleCount": 626,
+ "minedFromShipped": 1513,
+ "ruleCount": 630,
  "rules": [
   {
    "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を1つ以上表向きにする〛：〚特徴［少年探偵団］〛のキャラを1枚まで選び、この【宣言】能力のコストで表向きにした証拠1つにつき、ターン終了時までAP＋1000する。",
@@ -11075,6 +11075,47 @@
    "count": 1
   },
   {
+   "key": "character|effect|【宣言】【スリープ】：AP8000以下のキャラを1枚まで選び、リムーブする。この能力は自分の事件が【黒】以外の色を持つ場合に宣言できる。",
+   "ability": {
+    "condition": {
+     "color": "黒",
+     "kind": "caseColorNot"
+    },
+    "cost": {
+     "kind": "sleepSelf"
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "apMax": 8000
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B08079",
+    "B08079P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【宣言】【スリープ】：AP8000以下のキャラを1枚まで選び、リムーブする。この能力は自分の現場に【疾風】を持つキャラがいる場合に宣言できる。",
    "ability": {
     "condition": {
@@ -12141,6 +12182,84 @@
     "desc"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】【スリープ】〚手札を1枚リムーブする〛：〚特徴［神奈川県警］〛のキャラを1枚まで選び、アクティブにし、ターン終了時まで「このキャラは推理できない。」を与える。",
+   "ability": {
+    "cost": {
+     "items": [
+      {
+       "kind": "sleepSelf"
+      },
+      {
+       "kind": "removeFromHand",
+       "n": 1,
+       "target": {
+        "chooser": "self",
+        "kind": "pick",
+        "n": {
+         "max": 1,
+         "min": 1
+        },
+        "query": {
+         "area": "hand",
+         "side": "self"
+        }
+       }
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "bind": "$picked",
+        "filter": {
+         "trait": "神奈川県警"
+        },
+        "max": 1,
+        "player": "self",
+        "side": "either",
+        "state": "active"
+       },
+       "kind": "atom",
+       "verb": "sceneSetState"
+      },
+      {
+       "args": {
+        "key": "cannotReason",
+        "uid": "$picked.uid",
+        "val": true
+       },
+       "kind": "atom",
+       "verb": "charSetTurnEffect"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/11-reasoning.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B09072",
+    "B09072P",
+    "B09072P2"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 3
   },
   {
    "key": "character|effect|【宣言】【ターン1】【スリープ】〚手札を1枚リムーブする〛：このキャラ以外のレベル8以下の【黄】のキャラを1枚まで選び、ターン終了時まで〚突撃［キャラ］〛を与える。",
@@ -16249,6 +16368,62 @@
     "desc"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|【登場時】このターン中、自分のキャラの【疾風】が発動していた場合、自分のデッキのカードを上から2枚リムーブし、カードを1枚引く。",
+   "ability": {
+    "effect": {
+     "if": {
+      "key": "shippuFiredThisTurn",
+      "kind": "flag",
+      "player": "self",
+      "v": true
+     },
+     "kind": "conditional",
+     "then": {
+      "kind": "sequence",
+      "steps": [
+       {
+        "args": {
+         "n": 2,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "mill"
+       },
+       {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "draw"
+       }
+      ]
+     }
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/14-refresh.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B09072",
+    "B09072P",
+    "B09072P2"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 3
   },
   {
    "key": "character|effect|【登場時】カードを1枚引き、手札を1枚リムーブする。",
@@ -23821,12 +23996,13 @@
    },
    "exemplars": [
     "B06009",
-    "B08084"
+    "B08079",
+    "B08079P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 2
+   "count": 4
   },
   {
    "key": "character|effect|【相手ターン中】【現場リムーブ時】カードを1枚引く。",
@@ -26986,12 +27162,13 @@
    },
    "exemplars": [
     "B06039",
-    "B06039P"
+    "B06039P",
+    "B08079"
    ],
    "origins": [
     "desc"
    ],
-   "count": 2
+   "count": 4
   },
   {
    "key": "character|effect|【自分ターン中】【ターン1】〚特徴［毛利探偵事務所］〛のキャラが自分の現場に登場したとき、相手はデッキのカードを上から1枚公開する。",
@@ -32145,6 +32322,37 @@
    "count": 4
   },
   {
+   "key": "character|henso|【変装】【事件黒】【FILE7】",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "color": "黒",
+       "kind": "caseColor"
+      },
+      {
+       "kind": "fileAtLeast",
+       "n": 7
+      }
+     ],
+     "kind": "and"
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md"
+    ],
+    "type": "icon-disguise"
+   },
+   "exemplars": [
+    "B08079",
+    "B08079P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|hirameki|【ヒラメキ】AP5000以下のキャラを1枚まで選び、スリープさせる。",
    "ability": {
     "effect": {
@@ -32259,7 +32467,7 @@
    "origins": [
     "desc"
    ],
-   "count": 98
+   "count": 101
   },
   {
    "key": "character|hirameki|【ヒラメキ】キャラを1枚まで選び、アクティブにする。",

@@ -57,3 +57,16 @@
   auto-mem「未実装」stale) / set-event ~15 (fromSelf WRITE+on-set-host READ) / keyword turn-grant ~13
   (charGrantKeyword verb+scope 露出確認) / 事件緑＆白 4 (caseColor combine:'and' eval 実装確認) / charGrantAbility (turn)。
 - 反映: engine-extension-plan 末尾節 + compiler-demand-signal spec (a) 全面差替 + NEXT-PROMPT-TRACK-B #1 完了化。
+
+## 2026-07-02 Track B session — B3-2 gap-suspect 27 certify (BUG-163 修正 + BUG-164 起票)
+
+- **opus workflow 22 agent** (certify 20 + 敵対 verify 2、chunk 5 throttle、2.0M tok): 印字全列⇔DSL per-card 裁定。
+  **FULL 7 / DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2**。
+- **[[BUG-163]] B08079/P ピンガ**: henso 列【変装】【事件黒】【FILE7】丸ごと未収載 (col13 grounding 漏れ、BUG-117 col12 同型)
+  → a4 追補 (icon-disguise + and[caseColor黒, fileAtLeast7]、B02038 同型、engine 変更 0) + probe + stale pin test 更新。
+- **[[BUG-164]] B09100 犯人**: 「デッキに何枚でも」が validateDeck MAX_SAME_ID=3 未例外 (CardDef copy-limit field 不在)。
+  latent (MVP 非影響)。additive 案 = CardDef.deckLimit → Track A 送り (DEFERRED-INDEX 登録)。
+- 台帳補完: B03032 a2 / B04018 a1+a3 (in-file DEFERRED のみで INDEX 漏れ) 追記。**B05058 defer 理由 stale**
+  (grantTraits wave-6 出荷済 = card-phase 解禁候補) 注記。
+- gate: tsc0 / vitest 3614+1skip / smoke winsA=498 / lint 0err / mine gap-suspect 27→**25**・G1 mismatch=0・rules 630。
+- B3 queue 残: conflicts 5 (canonical 化=B3-1、ヒラメキ sleep 10 枚 unlock の ROI 根拠あり) / exceptions 9 / align-ambiguous 2。

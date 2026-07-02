@@ -25,24 +25,27 @@ silent 誤訳排除の原則 (一致句のみ変換・未知句 1 つで refuse)
 ## 現在地 (2026-07-02 pivot 完了)
 - ★開始時 `git ls-remote origin main` で remote HEAD 確認 (並行 Track A 前提、origin/main 基準 worktree)。
 - **B0/B1 出荷済** (harness + 文法 core): tsv-corpus / canonical / productions / compile / dump-shipped / oracle /
-  mine.cjs (desc突合+消去法+colspan+purge loop、全決定論)。rules/line-rules.json (**626 rules**) + exceptions.json (9枚)。
-  **G1: shipped 1510 で match 1162 / mismatch 0**。vitest mined-rules.test.ts が G1 恒常 pin + mine.test.ts が purge 回帰 pin。
+  mine.cjs (desc突合+消去法+colspan+purge loop、全決定論) / demand-signal.cjs。rules/line-rules.json (**630 rules**) +
+  exceptions.json (9枚)。**G1: shipped 1513 で match 1167 / mismatch 0**。vitest mined-rules.test.ts が G1 恒常 pin。
 - **audit pivot 出荷済** (本 session): compiler の bulk 空振り実測 → 用途転換。conflict 6 key を裁定 →
   誤訳 2 件修正 ([[BUG-162]] PR276/D02004 「アクション終了時まで」scope + PR276 gated-chain、水平展開で D02004 発見)。
   conflict 6→5。demand-signal spec 出力。
 - 再現手順: node scripts/compiler/tsv-corpus.cjs → npx tsx scripts/compiler/dump-shipped.ts →
   node scripts/compiler/mine.cjs → node scripts/compiler/oracle.cjs [--gate] →
   node scripts/compiler/demand-signal.cjs ({lines, subclauses} 2 粒度・ids 付き)。
-- B3 queue (未着手): conflicts 5 (benign encoding drift、canonical 化で conflict-blocked 行 unlock 可)、
-  shipped-gap-suspect 27 (部分実装疑い、要 certify)、exceptions 9 (composition 不能)、align-ambiguous 2。詳細 .tmp/compiler/mine-report.json。
+- **B3-2 完了 (2026-07-02)**: gap-suspect 27 (base 20) を opus workflow で全数 certify → FULL 7 / DEFER 11 /
+  真の欠落 2 = [[BUG-163]] B08079 変装 (修正済) + [[BUG-164]] B09100 deckLimit (engine → Track A 送り)。
+  台帳補完 B03032/B04018、B05058 stale (grantTraits 出荷済=解禁候補)。gap-suspect 27→25 (残 25 は B09100 系 + P variant)。
+- B3 queue 残: **B3-1** conflicts 5 (benign encoding drift、canonical 化でヒラメキ sleep 10 枚等 unlock、要 tier 判断)、
+  **B3-3** exceptions 9 (composition 不能) + align-ambiguous 2 (B09041/P)。詳細 .tmp/compiler/mine-report.json。
 
 ## 次やること (優先度順、bulk author は行わない)
 1. ~~demand-signal を Track A へ~~ **完了 (2026-07-02 本 session)**: demand-signal.cjs 正式化 + origin/main 再採寸 →
    真の engine gap は 4 family のみ (P10 同一8枚 / G39 4+3 / アクション中 filter 4 / G34 4)。MR PA 24・set-event 15・
    turn-grant 13・事件緑&白 4 は既出荷で card-phase 降格。engine-extension-plan 末尾 + demand-signal spec (a) に反映済。
-2. **B3-2 shipped-gap-suspect 27 の certify**: 印字全列 ⇔ DSL で per-card 裁定 → 真の部分実装は BUG-XXX + 修正。
-3. **B3-1 conflict canonical 化 (要 tier 判断)**: benign 5 key を 1 encoding に統一すれば conflict-blocked 行が unlock。
-   多数 shipped card 再編集ゆえ ROI と risk を見てから。
+2. ~~B3-2 shipped-gap-suspect certify~~ **完了 (2026-07-02)**: BUG-163 修正 + BUG-164 起票 (上記)。
+3. **B3-1 conflict canonical 化 (要 tier 判断)**: benign 5 key を 1 encoding に統一すれば conflict-blocked 行が unlock
+   (ヒラメキ sleep 10 枚 + リムーブ回収 5+4 の ROI 根拠は demand-signal spec (a) 末尾)。多数 shipped card 再編集ゆえ ROI と risk を見てから。
 4. **B3-3 exceptions 9 + align-ambiguous 2 の調査**、closure 249 は恒久 refuse 枠として据え置き。
 - ※ compiler は今後「回帰ゲート + 監査」として使う。新カード大量投入時は mine 再実行で conflict/mismatch を CI surface。
 
