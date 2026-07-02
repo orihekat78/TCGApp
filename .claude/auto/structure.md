@@ -2,15 +2,15 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `d8490cd16d51`
+> Source hash: `80f867f3bd68`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/tmp/conan-wt-a2-14`)
+- **対象ルート**: `.` (`C:/tmp/conan-wt-a1-pa`)
 - **ディレクトリ数**: 221
-- **ファイル数**: 3936
+- **ファイル数**: 3940
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -559,6 +559,7 @@
     - `2026-07-02-08-engine-wave12-pa-cards.md` — wave-12 (A1): G39 PA 一般カード枠 — partnerAreaCards + toPartnerArea + ビッグジュエル移動4テキスト全…
     - `2026-07-02-09-engine-wave13-removenamecount.md` — wave-13 (A2 additive lane): $self.removeNameCount dyn — 犯人 カットイン (PR158/…
     - `2026-07-02-10-engine-wave14-scenemaxlp.md`
+    - `2026-07-02-11-engine-wave-a1-pa-consume.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -872,9 +873,9 @@
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
     - `smoke-2026-07-02-2.json`
-    - `smoke-2026-07-02-2.md` — Smoke 1000戦レポート — smoke-2026-07-02-111655
+    - `smoke-2026-07-02-2.md` — Smoke 1000戦レポート — smoke-2026-07-02-120719
     - `smoke-2026-07-02.json`
-    - `smoke-2026-07-02.md` — Smoke 1000戦レポート — smoke-2026-07-02-111436
+    - `smoke-2026-07-02.md` — Smoke 1000戦レポート — smoke-2026-07-02-115434
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -2784,6 +2785,7 @@
       - `B07034P.ts` — cards/ct-p07/B07034P 小泉紅子 (パラレル) — B07034 と同型 (同一 cardId 0763、絵柄違い)。
       - `B07035.ts` — cards/ct-p07/B07035 古畑恵 (character) — Task A green候補 (engine変更0)
       - `B07035P.ts` — cards/ct-p07/B07035P 古畑恵 (character) — Task A green候補 (engine変更0)
+      - `B07037.ts` — cards/ct-p07/B07037 黒羽快斗 (character) — engine wave A1 exemplar (G39 PA 計数・消費)
       - `B07038.ts` — cards/ct-p07/B07038 紅子の執事 (character) — 赤魔術 trait family残 (engine変更0, 手書き closur…
       - `B07040.ts` — cards/ct-p07/B07040 黒羽千影 (キャラ) — catalog-reuse batch
       - `B07041.ts` — cards/ct-p07/B07041 黒羽盗一 (character) — Task A green候補 (engine変更0)
@@ -2791,6 +2793,7 @@
       - `B07042.ts` — cards/ct-p07/B07042 式部鹿紫子 (character) — Task A green候補 (engine変更0)
       - `B07043.ts` — cards/ct-p07/B07043 寺井黄之助 (character) — wave leave-reveal-until (engine変更0)
       - `B07044.ts` — cards/ct-p07/B07044 ジョディ・ホッパー (キャラ) — engine拡張 wave#2 cluster13 (aura-grant, 202…
+      - `B07045.ts` — cards/ct-p07/B07045 セリザベス女王 (character) — engine wave A1 exemplar (G39 PA-read、e…
       - `B07047.ts` — cards/ct-p07/B07047 中森銀三 (character) — 赤魔術 trait family残 (engine変更0)
       - `B07047P.ts` — cards/ct-p07/B07047P 中森銀三 (character・パラレル) — ENGINE0 wave (engine変更0)
       - `B07048.ts` — cards/ct-p07/B07048 白馬探 (character) — engine変更0 (removeSetCard cost, session59 解…
@@ -3798,6 +3801,7 @@
     - `engine-continuous-lvldelta-2026-06-24.test.ts` — Gap1 — ContinuousModifier.lvlDelta (engine additive wave 2026-06-24)。
     - `engine-cost-sleepchar-bug156-2026-06-27.test.ts` — BUG-156 — Cost `sleepChar` over-pay 修正 (2026-06-27)。
     - `engine-cost-stunchar-2026-06-24.test.ts` — Gap3 — Cost `stunChar` (engine additive wave 2026-06-24)。
+    - `engine-wave-a1-pa-consume.test.ts` — engine wave A1 — partnerAreaRemove verb + PA-read sceneHas (G39 PA 計数・消費、wave-12…
     - `engine-wave12-partner-area-cards.test.ts` — engine wave-12 — partnerAreaCards + toPartnerArea (G39 PA 一般カード枠、demand-signal #…
     - `enter-sleep-self-batch.test.ts` — Task A batch#2 — A.enter+hirameki クラスタ: 自己「スリープ状態で登場」representative
     - `event-to-evidence-batch.test.ts` — engine-extension event→evidence batch (2026-06-06 タスクC) — 実カード経由 sanity test

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `4b66120f8578`
+> Source hash: `f3cc5b8e9c51`
 
 不変条件チェック（case/partner/stun semantics 等）
 
