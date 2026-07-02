@@ -38,6 +38,9 @@ silent 誤訳排除の原則 (一致句のみ変換・未知句 1 つで refuse)
   台帳補完 B03032/B04018、B05058 stale (grantTraits 出荷済=解禁候補)。gap-suspect 27→25 (残 25 は B09100 系 + P variant)。
 - **B3-1/B3-3 完了 (2026-07-02)**: conflicts 5→**0** — shipped 再編集ゼロの**意味射影正規化 N1-N5** (canonical.cjs、
   engine 証明脚注付き + unit test 14) + C2 B03012 fidelity fix。G1 match 1167→**1244**・exceptions 9→**7**。
+- **steady-state 初回転 (2026-07-02)**: Track A wave-10 exemplar **B07002/B07002P** を再採掘で G1 pin 化 —
+  shipped 1515→**1517** / rules 630→**655** / match **1246** / mismatch 0 / conflicts 0 / exceptions 7 不変。
+  compiler suite 68/68 green。demand-signal ランキング実質不変 (降格表と一致)。
   unlock 実測 = P printing 2 枚のみ → **B07031P/B08049P 出荷** (ALL_CARDS 1515)。exceptions 7 + align-ambiguous 2 は
   opus workflow 監査で**全 FULL_CORRECT (誤訳ゼロ・恒久 exception 枠)**。★教訓: 初版 ROI「10+5+4 枚 unlock」は
   行 unlock と card unlock の混同 — ヒラメキ 10 枚は各々別の新規複雑文を持つ。

@@ -20,3 +20,12 @@
   B05030 は配列順 drift (非 disguise 間 = 意味保持のため正規化対象外) の benign exception。
 - gate: tsc0 / vitest **3628+1skip** / smoke winsA=498 timeouts=0 / 8lint 0err / eslint 0 / G1 mismatch=0。
   T2 2-lens 敵対 review (opus semantic + edge-test)。main repo 直作業 (Track A は別 worktree 並行)。
+
+## 2026-07-02 Track B session #2 — steady-state 初回転 (B3 queue 空確認 + 再採掘)
+
+- 開始時 origin/main = local = 9670f2f1。Track B queue 空 → steady-state 手順を初回転。
+- pipeline 再実行: corpus 2049 / shipped **1517** (+2 = wave-10 exemplar B07002/B07002P) →
+  mine: rules 630→**655**・conflicts 0 → oracle --gate: match 1244→**1246** / mismatch 0 / exceptions 7 不変。
+- gap-suspect 25 / align-ambiguous 2 不変。demand-signal ランキング実質不変 (MR PA 19 / set-event / 事件解決書換 top、降格表と一致 — Track A 再送不要)。
+- gate: compiler suite 68/68 green (mined-rules pin 含む)。exceptions.json は EOL のみ (content 不変)。
+- 判断: line-rules.json 更新は wave-10 exemplar の回帰 pin 化 (放置すると次の同文言カードで conflict 検出できない) → commit。

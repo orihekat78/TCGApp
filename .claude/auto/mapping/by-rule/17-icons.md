@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bbf998144396`
+> Source hash: `7b7a7aeebc46`
 
 公式ルール [`17-icons.md`](../../../rules/17-icons.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -29,7 +29,7 @@
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (850)
+## 📄 参照ソース (921)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseMonoColor.ts`](../../../../src/cards/_shared/caseMonoColor.ts)
@@ -40,6 +40,7 @@
 - [`src/cards/ct-d01/D01004.ts`](../../../../src/cards/ct-d01/D01004.ts)
 - [`src/cards/ct-d01/D01005.ts`](../../../../src/cards/ct-d01/D01005.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
+- [`src/cards/ct-d01/D01008.ts`](../../../../src/cards/ct-d01/D01008.ts)
 - [`src/cards/ct-d01/D01009.ts`](../../../../src/cards/ct-d01/D01009.ts)
 - [`src/cards/ct-d01/D01010.ts`](../../../../src/cards/ct-d01/D01010.ts)
 - [`src/cards/ct-d01/D01011.ts`](../../../../src/cards/ct-d01/D01011.ts)
@@ -49,6 +50,5 @@
 - [`src/cards/ct-d01/D01015.ts`](../../../../src/cards/ct-d01/D01015.ts)
 - [`src/cards/ct-d02/D02002.ts`](../../../../src/cards/ct-d02/D02002.ts)
 - [`src/cards/ct-d02/D02003.ts`](../../../../src/cards/ct-d02/D02003.ts)
-- [`src/cards/ct-d02/D02006.ts`](../../../../src/cards/ct-d02/D02006.ts)
-- [`src/cards/ct-d02/D02007.ts`](../../../../src/cards/ct-d02/D02007.ts)
-- _...ほか 830 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- [`src/cards/ct-d02/D02005.ts`](../../../../src/cards/ct-d02/D02005.ts)
+- _...ほか 901 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

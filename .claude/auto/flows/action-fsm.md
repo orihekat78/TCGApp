@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-flows.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:flows`
-> Source hash: `678e77d86267`
+> Source hash: `e5b577d74b63`
 
 `flow.action.declare → advance` の 10 フェーズ状態機械（abort 経路含む）。 `flow.action.tryGuard` / `passGuard` で初期分岐し、 `snapshotAP` で AP スナップショットを取って `judge` 段階で勝敗を確定する。
 

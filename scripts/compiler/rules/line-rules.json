@@ -1,7 +1,7 @@
 {
  "generatedBy": "scripts/compiler/mine.cjs",
- "minedFromShipped": 1515,
- "ruleCount": 653,
+ "minedFromShipped": 1517,
+ "ruleCount": 655,
  "rules": [
   {
    "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を1つ以上表向きにする〛：〚特徴［少年探偵団］〛のキャラを1枚まで選び、この【宣言】能力のコストで表向きにした証拠1つにつき、ターン終了時までAP＋1000する。",
@@ -15119,6 +15119,69 @@
    "count": 1
   },
   {
+   "key": "character|effect|【宣言】〚このキャラか、特徴［探偵］のキャラを1枚スリープさせる〛：このターン中、相手は【カットイン】と【変装】を使用できない。",
+   "ability": {
+    "cost": {
+     "items": [
+      {
+       "kind": "sleepChar",
+       "target": {
+        "chooser": "self",
+        "kind": "pick",
+        "n": {
+         "max": 1,
+         "min": 1
+        },
+        "query": {
+         "area": "scene",
+         "filter": {
+          "trait": "探偵"
+         },
+         "side": "self"
+        }
+       }
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "setCutinBan"
+      },
+      {
+       "args": {
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "setDisguiseBan"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/15-abilities-effects.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/25-qa-effects-resolution.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B07002",
+    "B07002P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【宣言】〚デッキの下に移す〛：LP0の【青】のキャラを1枚まで選び、ターン終了時までLP＋1する。",
    "ability": {
     "cost": {
@@ -17233,6 +17296,76 @@
     "desc"
    ],
    "count": 3
+  },
+  {
+   "key": "character|effect|【登場時】カードを2枚引き、手札を2枚リムーブする。この効果によってそれぞれ色の異なる〚特徴［探偵］〛のキャラを2枚リムーブした場合、AP8000以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "n": 2,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "draw"
+      },
+      {
+       "args": {
+        "bind": "$discarded",
+        "n": 2,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "discard"
+      },
+      {
+       "if": {
+        "bindKey": "$discarded",
+        "filter": {
+         "kind": "character",
+         "trait": "探偵"
+        },
+        "kind": "boundDistinctColorCount",
+        "n": 2
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "filter": {
+          "apMax": 8000
+         },
+         "max": 1,
+         "player": "self",
+         "side": "either"
+        },
+        "kind": "atom",
+        "verb": "sceneRemove"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B07002",
+    "B07002P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "character|effect|【登場時】キャラを1枚まで選び、スリープさせる。",

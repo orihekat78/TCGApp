@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bbf998144396`
+> Source hash: `7b7a7aeebc46`
 
 公式ルール [`08-contact.md`](../../../rules/08-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,12 +22,13 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 
-## 📄 参照ソース (71)
+## 📄 参照ソース (73)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
 - [`src/cards/_shared/contactTargetMatches.ts`](../../../../src/cards/_shared/contactTargetMatches.ts)
 - [`src/cards/ct-d02/D02004.ts`](../../../../src/cards/ct-d02/D02004.ts)
+- [`src/cards/ct-d07/D07018.ts`](../../../../src/cards/ct-d07/D07018.ts)
 - [`src/cards/ct-d09/D09010.ts`](../../../../src/cards/ct-d09/D09010.ts)
 - [`src/cards/ct-d09/D09011.ts`](../../../../src/cards/ct-d09/D09011.ts)
 - [`src/cards/ct-d10/D10007.ts`](../../../../src/cards/ct-d10/D10007.ts)
@@ -43,5 +44,4 @@
 - [`src/cards/ct-p01/B01030P.ts`](../../../../src/cards/ct-p01/B01030P.ts)
 - [`src/cards/ct-p01/B01031.ts`](../../../../src/cards/ct-p01/B01031.ts)
 - [`src/cards/ct-p01/B01031P.ts`](../../../../src/cards/ct-p01/B01031P.ts)
-- [`src/cards/ct-p02/B02068.ts`](../../../../src/cards/ct-p02/B02068.ts)
-- _...ほか 51 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 53 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

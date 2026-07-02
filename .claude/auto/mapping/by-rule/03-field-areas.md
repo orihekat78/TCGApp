@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `bbf998144396`
+> Source hash: `7b7a7aeebc46`
 
 公式ルール [`03-field-areas.md`](../../../rules/03-field-areas.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,8 +23,9 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 
-## 📄 参照ソース (246)
+## 📄 参照ソース (265)
 
+- [`src/cards/ct-d01/D01008.ts`](../../../../src/cards/ct-d01/D01008.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
 - [`src/cards/ct-d03/D03002.ts`](../../../../src/cards/ct-d03/D03002.ts)
 - [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
@@ -44,5 +45,4 @@
 - [`src/cards/ct-d11/D11006.ts`](../../../../src/cards/ct-d11/D11006.ts)
 - [`src/cards/ct-d11/D11009.ts`](../../../../src/cards/ct-d11/D11009.ts)
 - [`src/cards/ct-d11/D11010.ts`](../../../../src/cards/ct-d11/D11010.ts)
-- [`src/cards/ct-d11/D11016.ts`](../../../../src/cards/ct-d11/D11016.ts)
-- _...ほか 226 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 245 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
