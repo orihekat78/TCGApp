@@ -29,6 +29,19 @@ export function atomPartnerSolveCase(s: GameState, a: Record<string, unknown>, c
       return;
     }
 
+export function atomOpponentLoses(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // engine E3 (2026-07-02): 「相手はゲームに敗北する」alt-lose 勝利ルート (P10/P53 family)。
+      // winner = 効果所有者 (args.player、既定 self)。deck-out 系と同じ first-writer guard:
+      // 既に gameResult があれば no-op (先着の決着を上書きしない、rules/15 即時解決)。
+      const olP = resolvePlayer(a.player, ctx);
+      if (s.gameResult === undefined) {
+        mutate.gameResult.set(s, olP, 'alt-lose');
+      }
+      // BUG-073: effect log
+      mutate.log.append(s, { ts: Date.now(), player: olP, turn: s.turn.number, action: 'effect:opponentLoses' });
+      return;
+    }
+
 export function atomCaseToResolved(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
       // BUG-089: case:to-resolved hook emit は mutate.case.toResolved に集約

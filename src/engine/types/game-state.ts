@@ -191,5 +191,5 @@ export type GameState = {
   turnState: { self: TurnScopedFlags; opp: TurnScopedFlags };
   refreshCount: { self: number; opp: number };
   log: LogEntry[];
-  gameResult?: { winner: 'self' | 'opp'; reason: 'evidence' | 'deck-out' | 'concede' };
+  gameResult?: { winner: 'self' | 'opp'; reason: 'evidence' | 'deck-out' | 'concede' | 'alt-lose' };
 };

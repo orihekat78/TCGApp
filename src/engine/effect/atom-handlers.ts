@@ -81,6 +81,7 @@ import {
   atomPartnerAssist,
   atomPartnerSetState,
   atomPartnerSolveCase,
+  atomOpponentLoses,
   atomCaseToResolved,
   atomStartContact,
   atomEndActionEarly,
@@ -211,6 +212,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomPartnerSetState(s, a, ctx);
     case 'partnerSolveCase':
       return atomPartnerSolveCase(s, a, ctx);
+    case 'opponentLoses':
+      return atomOpponentLoses(s, a, ctx);
     case 'caseToResolved':
       return atomCaseToResolved(s, a, ctx);
     case 'startContact':

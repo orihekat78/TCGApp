@@ -37,7 +37,7 @@ export type ValidationResult =
   | { ok: true; warnings?: string[] }
   | { ok: false; errors: string[] };
 
-export type GameResult = { winner: 'self' | 'opp'; reason: 'evidence' | 'deck-out' | 'concede' };
+export type GameResult = { winner: 'self' | 'opp'; reason: 'evidence' | 'deck-out' | 'concede' | 'alt-lose' };
 
 export type ActionPhase =
   | 'declared' | 'guard-window' | 'leave-resolution' | 'contact-pending'

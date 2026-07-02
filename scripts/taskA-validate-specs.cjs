@@ -29,6 +29,7 @@ const VERBS = new Set([
   'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',
   'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
+  'opponentLoses', // engine E3 (2026-07-02) — alt-lose 勝利ルート
   'caseToResolved', 'deckRevealUntil', 'deckToBottomBound', 'boundToRemove', 'deckShuffle', 'souza',
   'removeAreaAllToDeckBottom', // cluster4 (2026-06-14)
   'setEventUseBan', // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)

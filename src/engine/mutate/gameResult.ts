@@ -4,7 +4,8 @@
 
 import type { GameState } from '@/engine/types';
 
-type WinReason = 'evidence' | 'deck-out' | 'concede';
+// 'alt-lose': engine E3 (2026-07-02) — 「相手はゲームに敗北する」カード効果決着 (opponentLoses verb)
+type WinReason = 'evidence' | 'deck-out' | 'concede' | 'alt-lose';
 
 /**
  * ゲーム結果を設定する

@@ -16,6 +16,7 @@ const REASON_LABEL: Record<string, string> = {
   evidence: '事件解決!',
   'deck-out': 'デッキ切れ',
   concede: '投了',
+  'alt-lose': '証拠隠滅', // engine E3 (2026-07-02) — 「相手はゲームに敗北する」alt-lose 勝利ルート
 };
 
 export function VictoryOverlay(): JSX.Element | null {

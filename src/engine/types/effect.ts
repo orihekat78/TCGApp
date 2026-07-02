@@ -309,6 +309,12 @@ export type AtomVerb =
   // 「そのキャラに『このキャラがアクションしたとき、カードを1枚引く。』を与える」(B02014) 等。
   | 'charGrantAbility'
   | 'partnerAssist' | 'partnerSetState' | 'partnerSolveCase'
+  // engine E3 (2026-07-02): opponentLoses —「相手はゲームに敗北する」alt-lose 勝利ルート
+  // (P10/P53 family: B03135/B06105/B05118/B09107)。パートナー【事件解決】固定ルート (partnerSolveCase /
+  // mutate.partner.solveCase) とは別に、カード効果から決着させる。winner = 効果所有者 (args.player)、
+  // reason='alt-lose'。deck-out 系と同じ first-writer guard (既に gameResult があれば no-op)。
+  // rules: 01-victory-conditions.md / 15-abilities-effects.md (即時解決)
+  | 'opponentLoses'
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
   | 'deckRevealUntil' | 'deckToBottomBound' | 'boundToRemove' | 'deckShuffle' | 'souza'

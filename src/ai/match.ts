@@ -147,9 +147,13 @@ export function runMatch(opts: MatchOpts): MatchResult {
   if (state.gameResult) {
     return {
       winner: state.gameResult.winner,
-      // 'concede' (現状 partner.solveCase 経由は 'evidence') / 'deck-out' / 'evidence'
-      // MatchResult.reason は 'evidence' | 'deck-out' | 'turn-cap' | 'invariant' に絞る
-      reason: state.gameResult.reason === 'concede' ? 'evidence' : state.gameResult.reason,
+      // 'concede' (現状 partner.solveCase 経由は 'evidence') / 'deck-out' / 'evidence' / 'alt-lose'
+      // MatchResult.reason は 'evidence' | 'deck-out' | 'turn-cap' | 'invariant' に絞る。
+      // 'alt-lose' (engine E3「相手はゲームに敗北する」) は勝敗結果としては証拠勝利と同区分 → 'evidence' に写す。
+      reason:
+        state.gameResult.reason === 'concede' || state.gameResult.reason === 'alt-lose'
+          ? 'evidence'
+          : state.gameResult.reason,
       turns: state.turn.number,
       movesPerTurn,
       finalState: state,

@@ -37,6 +37,7 @@ const ATOM_VERB_MAP = {
   charGrantAbility: true, // Task D E4 (2026-06-12)
   charSetTurnEffect: true, charSetCard: true, charStackCard: true, charRemoveSetCard: true,
   partnerAssist: true, partnerSetState: true, partnerSolveCase: true,
+  opponentLoses: true, // engine E3 (2026-07-02) — alt-lose 勝利ルート「相手はゲームに敗北する」(B03135/B09107)
   caseToResolved: true,
   startContact: true, endActionEarly: true,
   deckRevealUntil: true, deckToBottomBound: true, boundToRemove: true, deckShuffle: true, souza: true,
