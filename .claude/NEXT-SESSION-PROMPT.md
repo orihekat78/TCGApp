@@ -1,13 +1,15 @@
 > ## ★2026-07-03 現況: engine-first 完了 → **CARD PHASE 進行中** (下の A1 prompt は engine 再開時のみ)
 > - engine 骨格凍結到達 (E3 P10 partnerSolveOverride bf33786d が最終 engine wave)。以降は **card-authoring lane** が主。
 > - 出荷済: CARD PHASE #1 B03033 (3ed71dcc) / #2 **B06006 江戸川コナン (63000bc6、engine変更0)**。
-> - **CARD PHASE #3 の進め方**: `/card-wave` skill 起動 → DEFERRED-INDEX の dormant-exemplar から次1枚。
->   次候補 = **B06068** (revokedKeywords) / **B06026** (char-leave selfToEvidence、実機 verify 要) / B05028 / B09038。
->   手順: ① 未登録確認 (`git grep <ID> src/cards` = 空) + engine token 出荷確認 (`git grep <token> src/engine`)
->   ② 全句 exemplar clone (D08021 stack / B05030 apDelta-dyn / caseStatus grant 等) で第2gate 実測
->   ③ 手author + register (`.tmp-taskA-registered.json` → `node scripts/taskA-register.cjs`) ④ probe test
->   ⑤ 6ゲート (tsc/vitest/smoke winsA=498/8lint/docs) ⑥ **smoke json/md を rm してから docs regen** (structure.md 汚染回避) ⑦ FF push。
->   詳細教訓 = memory [[reference-card-authoring-stale-defer-vein]] + 直近 session [2026-07-03-cardphase.md](sessions/2026-07-03-cardphase.md)。
+> - **CARD PHASE #3 = cutin:used ペア batch** (2026-07-03 棚卸しで決定、driver = [specs/card-phase-dormant-inventory-2026-07-03.md](specs/card-phase-dormant-inventory-2026-07-03.md))。
+>   dormant 15枚 UNLOCKED / 120 BLOCKED を triage 済。**exemplar 有りは cutin:used クラスタのみ** (B03118 キール) → 最安全ゆえ先頭。
+>   - **今batch: B09086 + B04090** (cutin:used observer、`triggerCutinMatches`)。B04090 は cutin中 revive `sceneEnter area:'remove'`。
+>   - 次以降の安全順 = misread ペア(B05015/B09016) → grantTraits ペア(B05012/B07053) → G17(PR132/D06013) → handUseRestrict(B05120/B06109、UI重) → 単発(B06068/B02018/B03104/B01077/B09089、⚠一部 TSV空=公式text 再fetch)。
+>   - ⚠ **大半 first-consumer (exemplar 無)** → 各カード grounding + **human-path playwright probe 必須** ([[reference-carrier-reuse-human-path-empirical]])。B06006 型の楽な clone ではない。
+>   手順: ① 未登録 (`git grep <ID> src/cards`=空) + engine token 出荷 (`git grep <token> src/engine`) ② 第2gate 実測
+>   ③ author + register (`.tmp-taskA-registered.json` → `node scripts/taskA-register.cjs`) ④ probe test ⑤ 6ゲート (tsc/vitest/smoke winsA=498/8lint/docs)
+>   ⑥ **smoke json/md を rm してから docs regen** (structure.md 汚染回避、B03033/B06006 実踏) ⑦ FF push → CI green。
+>   詳細 = [[reference-card-authoring-stale-defer-vein]] + [[reference-cutin-used-observer-contact-guard]] + session [2026-07-03-cardphase.md](sessions/2026-07-03-cardphase.md)。
 >
 ---
 

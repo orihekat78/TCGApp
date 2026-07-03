@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 428
-- **ファイル数**: 7568
+- **ファイル数**: 7569
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1526,6 +1526,7 @@
     - `card-factory-risk-tiered-design.md` — Card Factory — リスク階層化 batch 設計 (2026-06-28)
     - `card-factory-state.md` — Card Factory State (session 開始時に読む — 再導出を省く)
     - `card-impl-engine-gates.md` — カード実装 engine ゲート早見表 (frozen engine 検証済)
+    - `card-phase-dormant-inventory-2026-07-03.md` — CARD PHASE dormant 棚卸し (2026-07-03)
     - `compiler-demand-signal-2026-07-02.md` — Track B compiler — demand-signal + audit queue (2026-07-02)
     - `compiler-track-plan-2026-07-02.md` — Track B: カード追加ツール (text→DSL compiler) 計画 (2026-07-02)
     - `cpu-visibility-options.md` — CPU 行動可視化 — 解決案候補 (BUG-059 / user_request 20260522_01 #15)
