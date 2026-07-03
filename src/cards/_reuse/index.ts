@@ -1072,6 +1072,9 @@ import { B08086 } from '../ct-p08/B08086.js';
 
 import { B06006 } from '../ct-p06/B06006.js';
 
+import { B09086 } from '../ct-p09/B09086.js';
+import { B04090 } from '../ct-p04/B04090.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1384,4 +1387,6 @@ export const REUSE_CARDS: CardDef[] = [
   //   B04092 キャンティ (自分の他キャラ contact:start → optional self-sleep → コンタクト中キャラ1枚 AP+2000、or payloadKey + inContact pick)。
   //   parked inContact 軸 land + disguise:into/contact:start emit に player/contactBindings 追加。残 clone (PR029/PR033/B04093) は card-phase。
   B04075, B04092,
+  // CARD PHASE #3 — cutin:used ペア (B09086 諸伏高明 / B04090 ライ、engine変更0)
+  B09086, B04090,
 ];

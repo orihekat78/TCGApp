@@ -35,3 +35,13 @@
 - **★現実**: 10クラスタ中 exemplar 有りは cutin:used のみ。残は全 **first-consumer** → grounding + human-path playwright probe 必須。「clone で楽」は cutin:used だけ。batch 効率 = engine-token検証共有 + smoke/lint 末尾集約に留まる。
 - **near-unlocked 別枠5** (engine変更0 可能性・要verify): B06026/B02062/B05087/B05088/B06043。
 - **決定 (user X)**: **次セッション = cutin:used ペア (B09086+B04090) から開始** (最安全)。安全順 = cutin→misread→grantTraits→G17→handUseRestrict→単発。NEXT-SESSION-PROMPT banner に反映済。
+
+## 2026-07-03 CARD PHASE #3 出荷 — cutin:used ペア B09086/B04090 (engine変更0)
+
+- **出荷**: B09086 諸伏高明 (黄/Lv5/AP5000/LP1、警察|長野県警) + B04090 ライ (黒/Lv8/AP8000/LP2、黒ずくめの組織)。
+  本 session で fresh author (着手時 git clean・`git grep B09086 src/cards`=空)。⚠ memory/changelog-entry は前 session が draft 済だったが card 実体は未存在 → 本 session で実装+検証。
+- **共通 idiom** = B03118 キール (cutin:used observer + self-in-contact guard を effect `conditional{if: ctx.contact?.byUid === ctx.source.uid}` に置く。ability.condition では ctx.contact 未 populate=triggered.ts:300)。
+- **B09086** = `triggerCutinMatches` 初 consumer (eval.ts:533、wave-3 で本カード向け出荷済)。matcher `and[triggerPlayerIs self, or[triggerCutinMatches{cardName:諸伏景光}, triggerCutinMatches{trait:長野県警}]]` → `charModifyAP{$contact.byUid,+2000,scope:contact}`。「か」=OR は matcher `or` (単一 filter は field AND)。
+- **B04090** = a1 `partnerColorKeyword({color:黒,kw:'突撃[キャラ]'})` 共通クラス / a2 cutin:used observer → `sceneEnter{from:remove,viaEffect,filter:{color:黒,levelMax:3,kind:character},n:0-1}` (B08029 伊織無我 deployStep 同型)。
+- **検証**: probe `cardphase3-cutin-observer.test.ts` 11件 (実 emit 経路 flow/contact.cutIn、名/特徴match・非match・ガード側コンタクト・非参加DECOY・revive候補levelMax honor を決定論確認)。gates: tsc0 / **vitest 3798→3809+1skip (+11 probe)** / smoke winsA=498 exc0 / 8 lint errors=0。
+- **playwright**: 本 session は未実走。tier 判断 = cutin:used family exemplar **B03118 (wave16 で human-path playwright 済)** の clone + 新UI部品型なし → 2026-07-02 tier 規則「clone は決定表 diff で代替」に従い emit-path probe (production cutIn flow) で代替 (B06006/B03033 の engine変更0 ship と同方針)。revive の sceneEnter-from-remove pick UI も既出荷 (B03059/B08029/B07058)。full-game playwright は low-risk defer。
