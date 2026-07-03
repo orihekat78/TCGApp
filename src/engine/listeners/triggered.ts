@@ -24,6 +24,7 @@ import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js'; // BUG-096: triggered ability の limit enforcement
 import { abilityIsShippu } from '../read/keyword.js'; // wave-8 P15: 疾風発動 per-turn 記録
+import { char as charMutator } from '../mutate/char.js'; // W6 step4 (r58/B09090): per-char 疾風 flag + waive 消費
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
@@ -236,6 +237,23 @@ function handleHook(
   source: unknown,
 ): void {
   const declaredBatch = hookName === 'effect:declared' ? ++declaredBatchSeq : undefined;
+  // mega-wave W6 step4 (2026-07-04, B09090/P16): 疾風条件 waive の消費。
+  // 「このターン中、**次に**自分の現場に登場したキャラは【疾風】の条件を無視できる」— armed 中の
+  // owner 側へ登場した**次の 1 体**が、疾風の有無を問わず arm を消費する (公式Q&A: 疾風を持たない
+  // キャラが次に登場した場合も消費され、その次に登場した疾風は条件を無視できない)。消費痕跡は
+  // per-char turnEffects['shippuWaived']=true — 下の matcherCondition gate が疾風 ability に限り
+  // enterOrderEquals を bypass する根拠。ability 走査より前 (= 同一 emit 内の自分の疾風にも効く)。
+  // enter emit は登場 1 体につき 1 回 (sceneEnter atom / hand-use / next-hint / switchEnter 全経路)。
+  if (hookName === 'enter') {
+    const enterUid = (payload as { uid?: unknown } | undefined)?.uid;
+    if (typeof enterUid === 'string') {
+      const enterOwner = (['self', 'opp'] as const).find(p => state.players[p].scene.some(c => c.uid === enterUid));
+      if (enterOwner && state.turnState[enterOwner].shippuWaiveArmed) {
+        state.turnState[enterOwner].shippuWaiveArmed = false;
+        charMutator.setTurnEffect(state, enterUid, 'shippuWaived', true);
+      }
+    }
+  }
   for (const card of collectCardsInPlay(state)) {
     const def = readDef.card(card.cardId);
     if (!def) continue;
@@ -298,18 +316,27 @@ function handleHook(
       // D11007 v2 (Phase 2): matcherCondition (declarative 版 matcher)
       // payload を ctx.triggerPayload に詰めて evalCond に渡す
       if (trig.matcherCondition) {
-        const ctxMc = {
-          source: {
-            cardId: card.cardId,
-            uid: card.uid,
-            abilityId: ability.id,
-            player: card.player,
-            area: card.area,
-          },
-          bindings: gateBindings,
-          triggerPayload: payload,
-        };
-        if (!evalCond(state, trig.matcherCondition, ctxMc)) continue;
+        // mega-wave W6 step4 (2026-07-04, B09090/P16): waive 消費済みキャラ (turnEffects['shippuWaived'])
+        // の**疾風 ability に限り** matcherCondition (enterOrderEquals) を bypass =「条件を無視できる」。
+        // selfOnly gate 通過済みゆえ card.uid = 登場キャラ自身。疾風以外の matcherCondition 持ち
+        // (【疾風 N】でない enter 反応等) は bypass しない (abilityIsShippu gate)。
+        const w6ShippuWaived = hookName === 'enter'
+          && abilityIsShippu(ability)
+          && state.players[card.player].scene.find(c => c.uid === card.uid)?.turnEffects?.['shippuWaived'] === true;
+        if (!w6ShippuWaived) {
+          const ctxMc = {
+            source: {
+              cardId: card.cardId,
+              uid: card.uid,
+              abilityId: ability.id,
+              player: card.player,
+              area: card.area,
+            },
+            bindings: gateBindings,
+            triggerPayload: payload,
+          };
+          if (!evalCond(state, trig.matcherCondition, ctxMc)) continue;
+        }
       }
       // Round 4i-fix: ability.condition の 6 stage gate (BUG-033)
       // partnerColor / caseTrait 等の condition が未達なら queue しない (rules/17 §条件アイコン)
@@ -344,6 +371,10 @@ function handleHook(
       // 既存カードは本 flag を読まない (write-only) → 挙動不変。清掃は endTurn (両プレイヤー) + resetTurnFlags backstop。
       if (abilityIsShippu(ability)) {
         state.turnState[card.player].shippuFiredThisTurn = true;
+        // mega-wave W6 step4 (2026-07-04, r58): per-char 発動標識も同一 gate で記録
+        // (per-player = turnState 履歴 / per-char = turnEffects 標識、B09070 a3 一括アクティブが
+        // TargetFilter.shippuFiredCharThisTurn で読む)。清掃は clearTurnEffects('turn')。
+        charMutator.setTurnEffect(state, card.uid, 'shippuFiredCharThisTurn', true);
       }
       // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を候補から substitute してから queue
       // recursive utility が atom / choice / sequence / conditional / optional 等を walk

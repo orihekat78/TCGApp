@@ -204,6 +204,14 @@ export function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
     if (tfield === 'uid') return (tp['uid'] ?? tp['byUid']) ?? value;
     return tp[tfield] ?? value;
   }
+  // mega-wave W6 step2 (2026-07-04, rows 74/999 統合): $dyn.<key> → ctx.dyn[<key>]。
+  // charSetTurnEffect val:'$dyn.declaredName' (PR105 nameOverride) 等が使う。既存 prefix 分岐は
+  // 無変更の additive ブランチ。未供給 key は元値 passthrough (caller 側 defensive、他 prefix と同 posture)。
+  if (value.startsWith('$dyn.')) {
+    const dkey = value.slice('$dyn.'.length);
+    const dynObj = ctx.dyn as Record<string, unknown> | undefined;
+    return dynObj && dkey in dynObj ? dynObj[dkey] : value;
+  }
   const dot = value.indexOf('.');
   if (dot < 0) return value;
   const key = value.slice(1, dot);

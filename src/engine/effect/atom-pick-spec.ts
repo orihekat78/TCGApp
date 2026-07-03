@@ -36,6 +36,9 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   handReveal:        { defaultArea: 'hand',     mode: 'PB' },
   // engine mega-wave W1 (2026-07-03, P41): handToFileBottom — 手札から1枚 pick → FILE 1番下に表向き (B05045)。
   handToFileBottom:  { defaultArea: 'hand',     mode: 'PB' },
+  // engine mega-wave W6 step3 (2026-07-04, r63 P18): useEventFromHand — 手札からイベントを pick → 即時使用。
+  // filter の kind:'event' 指定はカード側 DSL に委ねる (暗黙フィルタなし)。handToFileBottom と同型 PB。
+  useEventFromHand:  { defaultArea: 'hand',     mode: 'PB' },
   // engine mega-wave W1 (2026-07-03): evidenceToDeckBottom — 証拠 pick → 持ち主デッキ下 (B03084 a1 前段)。
   evidenceToDeckBottom: { defaultArea: 'evidence', mode: 'PB' },
   // engine拡張 wave (2026-06-23): evidenceFlip pick-form — 「(相手の)裏向きの証拠を1つまで選び、表向きにする」。

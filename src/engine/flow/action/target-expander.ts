@@ -131,8 +131,19 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
     const d = readDef.card(c.cardId);
     return d?.abilities?.some(a => a.type === 'continuous' && a.continuousModifier?.untargetableByAction === true) ?? false;
   });
-  if (!anyUntargetableDef) return merged;
-  return merged.filter(c => !readChar.selfContinuousFlag(state, c.uid, 'untargetableByAction'));
+  const filtered = anyUntargetableDef
+    ? merged.filter(c => !readChar.selfContinuousFlag(state, c.uid, 'untargetableByAction'))
+    : merged;
+  // engine mega-wave W6 step5 (2026-07-04, r50/B04072): untargetableByActionAura — 同 side bearer が
+  // filter 越しに他キャラを対象除外する aura 版。self bool 版と同じ静的 pre-check (候補側現場に aura
+  // 宣言 def が 1 枚も無ければ per-candidate walk を丸ごと skip = no-token 経路素通し)。
+  // ガード経路 (state-machine tryGuard) は candidates() 非経由 → 無改修で Q&A「ガード可能」と整合。
+  const anyAuraDef = state.players[opp].scene.some(c => {
+    const d = readDef.card(c.cardId);
+    return d?.abilities?.some(a => a.type === 'continuous' && a.continuousModifier?.untargetableByActionAura !== undefined) ?? false;
+  });
+  if (!anyAuraDef) return filtered;
+  return filtered.filter(c => !readChar.auraUntargetableByAction(state, c.uid));
 }
 
 function applyPreTargetExpansion(

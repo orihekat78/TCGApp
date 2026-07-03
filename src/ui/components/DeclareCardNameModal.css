@@ -1,0 +1,88 @@
+/* mega-wave W6 step1: DeclareCardNameModal (scaffold) — EffectPickerModal 系と同 overlay 慣習 */
+.declare-card-name-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.declare-card-name-modal {
+  background: #1c2733;
+  color: #e8eef4;
+  border: 1px solid #3b4d61;
+  border-radius: 8px;
+  padding: 20px 24px;
+  min-width: 320px;
+  max-width: 480px;
+}
+
+.declare-card-name-modal h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.declare-card-name-prompt {
+  font-size: 13px;
+  color: #a9bccd;
+  margin: 0 0 12px;
+}
+
+.declare-card-name-modal input[type='text'] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #3b4d61;
+  background: #10171f;
+  color: #e8eef4;
+}
+
+.declare-card-name-suggestions {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #3b4d61;
+  border-radius: 4px;
+}
+
+.declare-card-name-suggestions li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: #e8eef4;
+  cursor: pointer;
+}
+
+.declare-card-name-suggestions li button:hover {
+  background: #2a3a4c;
+}
+
+.declare-card-name-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+.declare-card-name-actions button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid #3b4d61;
+  background: #2e4257;
+  color: #e8eef4;
+  cursor: pointer;
+}
+
+.declare-card-name-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -140,7 +140,24 @@ function disableOriginalAbilities(s: GameState, uid: string): void {
 function setTurnEffect(s: GameState, uid: string, key: string, val: unknown): void {
   const found = findChar(s, uid);
   if (!found) return;
+  // W6 step4 (2026-07-04): defensive init — 型上 turnEffects は必須だが、古い test fixture 等が
+  // raw object を scene に push するケースで undefined になりうる (triggered.ts の per-char 疾風
+  // 記録が全 enter で本関数を通るようになったため顕在化)。実ゲーム経路 (mutate.scene.enter) は常に初期化済。
+  found.char.turnEffects ??= { contactImmune: false, removeOnTurnEnd: false };
   found.char.turnEffects[key] = val;
+}
+
+/**
+ * mega-wave W6 step6 (2026-07-04, r79/B08014): 「このターン中に自分のMRの能力によって選ばれた」標識。
+ * resolver.ts の atom dispatch 前 guard (_mrSelectCharUids) が呼ぶ。ownerMustBe = MR 能力の所有側 —
+ * 「**自分の**MRの能力」なので選ばれたキャラが MR と同じ side の現場に居る場合のみ true を書く
+ * (相手の MR に選ばれても B08014 の条件は満たさない)。不在/相手側 uid は defensive no-op。
+ * 清掃 = clearTurnEffects('turn')。
+ */
+function tagSelectedByOwnMr(s: GameState, uid: string, ownerMustBe: 'self' | 'opp'): void {
+  const c = s.players[ownerMustBe].scene.find(x => x.uid === uid);
+  if (!c) return;
+  c.turnEffects['selectedByOwnMr'] = true;
 }
 
 /**
@@ -176,9 +193,23 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     // engine additive wave-7 (2026-07-02, P17): 「このターン中にアクション[キャラ]した」flag
     // (declare が立て、TargetFilter.actedCharThisTurn が honor)。ターン終了で失効 (B08049)。
     delete te['actedCharThisTurn'];
+    // mega-wave W6 step4 (2026-07-04, r58/B09090): 疾風 per-char 発動標識 + waive 消費痕跡
+    // (どちらも「このターン中」scope、wave-7 教訓: 新 turn キーは必ずここに列挙)。
+    delete te['shippuFiredCharThisTurn'];
+    delete te['shippuWaived'];
+    // mega-wave W6 step6 (2026-07-04, r79/B08014): 「このターン中に自分のMRの能力によって選ばれた」
+    // 標識。phase:end:start の granted ability (not selectedByOwnMr) 評価は本清掃より **前** に走る
+    // (turn.ts: trigger queue → clearTurnEffects の順) ため読取と衝突しない。
+    delete te['selectedByOwnMr'];
     // engine additive wave-8 (2026-07-02, P15): 「このキャラは推理できない。」(B09072 a2、ターン終了時まで)
     // 付与を解除。canReason が本キーを読む (reason-ban)。actedCharThisTurn 同様 boolean flag key。
     delete te['cannotReason'];
+    // mega-wave W6 step2 (2026-07-04, PR105): カード名書き換え「ターン終了時まで」の清掃
+    // (read.char.names が完全置換 read、BUG-119 教訓: 新 turn キーは必ずここに列挙)。
+    // ⚠ row 74 の noAutoActivateBySourceUid (step5) は **意図的にここへ追加しない** —
+    // 「次の自分のオートフェイズでアクティブにならない」はターンを跨いで持続する lock のため
+    // turn-end 清掃すると効果が消える (消費側 auto-phase が読み捨て時に自前で解除する設計)。
+    delete te['nameOverride'];
     te.contactImmune = false;
     te.removeOnTurnEnd = false;
     // _action suffix もターン終了で確実に切れる (アクション終了清掃の safety net)
@@ -353,6 +384,7 @@ export const char = {
   revokeKeywordTurn,
   disableOriginalAbilities,
   setTurnEffect,
+  tagSelectedByOwnMr,
   clearTurnEffects,
   grantAbility,
   setCard,

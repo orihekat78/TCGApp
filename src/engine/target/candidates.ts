@@ -92,6 +92,13 @@ export function traitNameGrantSafe(s: GameState, uid: string | undefined, which:
 export function effectiveNameComponents(state: GameState, d: CardDef | undefined, c: SceneCharacter | null): string[] {
   const base = d ? allCardNameComponentsForDef(d) : [];
   if (c?.uid === undefined) return base;
+  // mega-wave W6 step2 追補 (2026-07-04, 混成 review 指摘): nameOverride (PR105「カード名を指定した
+  // カード名に書き換える」) は **完全置換** (rules/19 Q&A「元のカード名は持っていない扱い」) —
+  // read/char.names() と同一解決を bond / matchOneFilter cardName/cardNameNot にも届ける
+  // (BUG-117 一貫性)。置換時は印字 base も granted も落とし、override の分割 component のみ返す
+  // (granted 名が書換えを生き残るかは公式Q&A 未確認 → names() と同じ全置換で統一、要再照会)。
+  const override = c.turnEffects?.['nameOverride'] as string | undefined;
+  if (override) return cardNameComponents(override);
   const granted = traitNameGrantSafe(state, c.uid, 'grantNames');
   if (granted.length === 0) return base;
   const out = [...base];
@@ -486,6 +493,15 @@ export function matchOneFilter(
   if (filter.actedCharThisTurn !== undefined) {
     const acted = c?.turnEffects['actedCharThisTurn'] === true;
     if (acted !== filter.actedCharThisTurn) return false;
+  }
+
+  // engine mega-wave W6 step4 (2026-07-04, r58): shippuFiredCharThisTurn — 「このターン中に【疾風】を
+  // 発動していた」board char のみ該当 (actedCharThisTurn と一言一句同型の per-char boolean 軸)。
+  // 記録は listeners/triggered.ts abilityIsShippu gate (per-player shippuFiredThisTurn と同一 site)、
+  // 清掃は clearTurnEffects('turn')。c===null は fired=false 扱い。B09070 a3 一括アクティブ。
+  if (filter.shippuFiredCharThisTurn !== undefined) {
+    const fired = c?.turnEffects['shippuFiredCharThisTurn'] === true;
+    if (fired !== filter.shippuFiredCharThisTurn) return false;
   }
 
   if (filter.custom !== undefined) {

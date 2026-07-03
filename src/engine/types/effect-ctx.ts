@@ -19,6 +19,11 @@ export type EffectCtx = {
     area: 'scene' | 'partner-area' | 'hand' | 'evidence' | 'file' | 'remove' | 'case';
   };
   bindings: Record<string, Candidate[]>;
+  // mega-wave W6 step1 (2026-07-04): declareName verb が書き込む「プレイヤーが宣言した任意カード名」。
+  // 盤面実体を持たない自由文字列は Candidate として表現できない (cardId/area 不在) ため、
+  // ctx.bindings とは別の軽量チャネル (rows 49/53/999 の 3-way storage を本形に統一、Candidate 汚染案は棄却)。
+  // 読み手: cond boundNameMatchesDeclared / dyn $declared.<key>[.sceneNameCount]。
+  declaredNames?: Record<string, string>;
   picked?: Candidate[];
   viaCost?: boolean;
   costPaid?: Record<string, unknown>;

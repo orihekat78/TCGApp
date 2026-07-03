@@ -2,6 +2,7 @@
 import { mutate } from '../../mutate/index.js';
 import { invokeLeaveToRemoveOfCard } from '../invoke-leave-to-remove.js';
 import { event } from '../../event/index.js';
+import { def as readDef } from '../../read/def.js'; // W6 step3 (r63): useEventFromHand の kind guard
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
@@ -672,6 +673,60 @@ export function atomHandToFileBottom(s: GameState, a: Record<string, unknown>, c
         hfbMoved++;
       }
       mutate.log.append(s, { ts: Date.now(), player: hfbP, turn: s.turn.number, action: 'effect:handToFileBottom', result: String(hfbMoved) });
+      return;
+    }
+
+export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // engine mega-wave W6 step3 (2026-07-04, r63 P18): 効果内から手札のイベントを filter 一致で
+      // pick (0..1) して即時使用 (「手札からレベル6以下のイベントを1枚まで使用する」B08026/D10005/B05042)。
+      // atomHandToFileBottom clone (PB pick defaultArea 'hand')。使用手順は hand-use-card.ts の event
+      // 分岐と**同順序厳守**: ① effect:declared emit (viaEffect:true) ② hand.remove ③ remove.add —
+      // emit が先でないと on-hand scope 判定 (collectCardsInPlay の hand sentinel) が使用イベント自身の
+      // 効果を見つけられない。公式Q&A: 効果による使用は FILE 枚数・事件色制限をバイパス (canHandUseCard
+      // 非経由がそのままバイパスの実装形)。
+      const uefP = resolvePlayer(a.player, ctx);
+      // B09034「能力や効果によっても使用できない」の防御的再ゲート (candidates は ban を見ないため
+      // pick 構築より前に落とす — human に無意味な pick を出させない)。
+      if (s.turnState[uefP].eventUseBanned) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand:banned' });
+        return;
+      }
+      const uefArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.useEventFromHand!.defaultArea, a, uefP, uefP) }
+        : a;
+      const uefT = uefArgs.target;
+      if (!Array.isArray(uefT) && typeof uefT !== 'string') {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: uefArgs }, ctx, { byPlayer: uefP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand:awaiting-pick' });
+        return;
+      }
+      const uefIds = Array.isArray(uefT) ? (uefT as string[]) : [uefT as string];
+      let uefUsed = 0;
+      for (const cardId of uefIds) {
+        // 手札に実在する場合のみ使用 (無い cardId は no-op)
+        if (!s.players[uefP].hand.includes(cardId)) continue;
+        // 混成 review NIT 対応 (2026-07-04): イベント以外は使用しない (author が filter:{kind:'event'}
+        // を書き漏らした時にキャラカードが silent にリムーブ行きになる footgun の防御 1 行)。
+        if (readDef.card(cardId)?.kind !== 'event') {
+          mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand:not-event', target: cardId });
+          continue;
+        }
+        event.emit(
+          s,
+          'effect:declared',
+          { kind: 'event-use', cardId, player: uefP, viaEffect: true },
+          { player: uefP, cardId },
+        );
+        mutate.hand.remove(s, uefP, [cardId]);
+        mutate.remove.add(s, uefP, [cardId]);
+        uefUsed++;
+      }
+      if (uefUsed === 0) {
+        // 0枚 (辞退/候補なし) → 「そうした場合」gate (handReveal gate-on-0 と同型)
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand', result: String(uefUsed) });
       return;
     }
 

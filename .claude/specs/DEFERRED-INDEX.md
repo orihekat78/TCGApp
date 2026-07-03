@@ -1015,3 +1015,21 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (3) dyn-resolved max≤0 gate は literal max:0 に非適用 (pre-W5 挙動 byte 維持、意図的非対称)。
   (4) costToText partner-area resolve ctx は uid/cardId 無し — $self.uid/level 参照 dyn が PA 宣言コストに載ったら汎用文言 fallback (表示のみ、pay は実 ctx)。
   (5) activateDeclaredAbility/activatePartnerAbility は canPay 再チェックせず pay() 直呼び (pre-existing) — UI enumerator gate を経ない呼出経路が将来できたら dyn cost の silent under-delivery リスク (観測継続)。
+
+## wave engine / megaw6 前半 (structural step1-6、2026-07-04 出荷)
+
+出荷済 = **step1** declareName verb + EffectCtx.declaredNames + boundNameMatchesDeclared/boundIsMr cond + $declared dyn + DeclareCardNameModal scaffold / **step2** charSetTurnEffect val→resolveBindRef ($dyn branch) + names()/effectiveNameComponents nameOverride 完全置換 / **step3** useEventFromHand (emit→remove 順序 + kind guard) + eventUseSource / **step4** shippuFiredCharThisTurn TargetFilter + setShippuWaive/shippuWaiveArmed (次登場1体消費) / **step5** untargetableByActionAura + noAutoActivateBySourceUid lock + opponentRestrict 'stunAutoActivate' (partner-bearer) + auto-phase skip gate / **step6** selectedByOwnMr dual-path tagging + selfSelectedByOwnMrThisTurn/paMrColorCountMin。engine-only (consumer は card-phase step12)。
+
+- ★**残 = W6 後半 (step7-11)**: r70 evidence-gain suppress (gainSelfEvidence の async hirameki 越え defer 再順序化) / r75 reservedEffects queue / r65 startContact 本実装 / r9 leave:intercept / step11 findDeclaredAbility 5-site + removeAreaToDeckTop + hand-declared scope gate。
+- **混成 review nits (megaw6 前半、sonnet5 BLOCK / opus SHIP_WITH_NITS → fable 裁定 SHIP_WITH_NITS。BLOCKER 降格分は即修正済)**:
+  (1) ✅**即対応済**: effectiveNameComponents が nameOverride を無視 (bond / matchOneFilter cardName が旧印字名で判定) → 完全置換分岐 + probe 3 件追加。
+  (2) ✅**即対応済**: useEventFromHand に kind guard (author が filter:{kind:'event'} 漏れでキャラが silent リムーブ行きになる footgun) + probe。
+  (3) restrictsOpponent partner-bearer は sentinel uid (`partner:<side>`) + bindings/area 欠落 ctx で evalCond — **conditional partner aura を card-phase で出荷する時に sentinel 前提を再 certify** (生存条件 location==='partner-area' は公式Q&A 未確認の設計判断も同時に)。現行 partner def は opponentRestrict 全 token 未宣言 = live 影響 0 実証済。
+  (4) auraUntargetableByAction bearerCtx は bindings:{} 固定 — bindings 依存 condition (boundNameMatchesDeclared 等) を aura condition に使う exemplar は不可 (常に false 側)。
+  (5) B08087 mustBeSelectedByOppEvent の forced-inclusion 判定 (resolve-picks) は payload.viaEffect を見ない — useEventFromHand 経由の効果起源イベント使用にも engage しうる (現 pool で共存カード 0 = latent)。consumer 出荷時に公式Q&A 突合して viaEffect 分岐の要否を判断。
+  (6) names()/effectiveNameComponents の nameOverride は grantNames も落とす全置換 — 外部付与名が書き換えを生き残るかは公式Q&A 未確認 (PR105 出荷時に再照会)。
+  (7) selectedByOwnMr の「MRの能力」判定は def.isMR(ctx.source.cardId) のみ — 変装で MR が名前を変えた場合 / charGrantAbility で非 MR に「選ぶ」を後付けした場合の境界は公式Q&A 未照会 (遭遇時に再照会、推測補完しない)。
+  (8) noAutoActivateBySourceUid は単一 sourceUid 上書き — 複数 bearer 同時 lock は後勝ち (現 exemplar B01082 のみ = 非該当。複数 locker カード出荷時に配列化)。
+- ★**DEFER: B01082 榎本梓 全句** — a1「ガードできない」= cannotGuard primitive 不在 (r74 スコープ外)。a2 (lock) は本 wave で出荷済。cannotGuard 出荷まで partial 禁止で author 不可。
+- ★**DEFER: B09047 闇の男爵 選択肢 gating** — 「以下から1つ選んで行う」で条件未成立選択肢が消える (rules/17) 挙動を choice+conditional 合成がどう表現するか未 grounding (card-phase で実測してから)。
+- **row53 の altCostProvider (B05033「コストを支払う代わりに」) は synthesis implOrder 外 = 未実装** — ability-activate cost dispatch への分岐追加 (T3)。将来 wave or card-phase 前の touch-up で。

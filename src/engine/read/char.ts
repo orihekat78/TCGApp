@@ -189,6 +189,60 @@ function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDe
   return total;
 }
 
+// mega-wave W6 step5 (2026-07-04, r50/B04072): 「相手は自分の現場にいる[filter]のキャラを指定して
+// アクションできない」aura の per-target 判定。auraDelta と同型の **同 side** board-scan:
+// targetUid の side の scene + PA-MR bearer を走査し、continuousModifier.untargetableByActionAura
+// (TargetFilter) 宣言 + ability.condition 成立 + filter が target に一致すれば true (= 対象除外)。
+// cross-side 版・auraExcludeSelf は現 exemplar で不要のため未実装 (YAGNI、auraDelta 同様に拡張可)。
+// 消費 = target-expander.candidates() の負 filter のみ (ガード/guard 経路は candidates() 非経由 =
+// 公式Q&A「ガードは可能」と自動整合)。再帰 guard 不要 (matchOneFilter 内部は本関数を呼び返さない)。
+function auraUntargetableByAction(s: GameState, targetUid: string): boolean {
+  const target = scene.byUid(s, targetUid);
+  if (!target) return false;
+  const ownerSide: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === targetUid)
+    ? 'self'
+    : s.players.opp.scene.some(c => c.uid === targetUid)
+      ? 'opp'
+      : null;
+  if (!ownerSide) return false;
+  const targetCand = { kind: 'char', uid: target.uid, cardId: target.cardId, player: ownerSide } as Candidate;
+  const bearers: Array<{ char: typeof target; inPA: boolean }> =
+    s.players[ownerSide].scene.map(c => ({ char: c, inPA: false }));
+  const slotMr = s.players[ownerSide].partnerAreaMR;
+  if (slotMr) bearers.push({ char: slotMr, inPA: true });
+  for (const { char: bearer, inPA } of bearers) {
+    const bd = def.card(bearer.cardId);
+    if (!bd) continue;
+    const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+    for (const ability of bd.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+      const filter = ability.continuousModifier?.untargetableByActionAura as TargetFilter | undefined;
+      if (!filter) continue;
+      if (ability.condition && !evalCond(s, ability.condition, bearerCtx)) continue;
+      if (!matchOneFilter(s, target.cardId, filter, target, targetCand)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+// mega-wave W6 step5 (2026-07-04, r74/B01082): 「このキャラが現場にいるかぎり、選んだキャラは
+// オートフェイズにアクティブにならない」の per-target lock 判定。turnEffects['noAutoActivateBySourceUid']
+// (charSetTurnEffect val:'$self' が bearer uid を書く) を読み、**bearer が現場に生存している時のみ**
+// true (live 再評価 = rules/24 常時有効型と同 posture、bearer 離脱で自動解錠 — キー残置でも無効)。
+// ⚠ 本キーは clearTurnEffects のどの scope でも delete しない (ターン跨ぎ永続が要件、mutate/char.ts
+// の警告コメント参照)。消費 = flow/auto-phase.ts ステップ2 のみ。
+// 制約: 単一 sourceUid 上書き方式 — 複数 bearer の同時 lock は後勝ち (現 exemplar B01082 のみで非該当、
+// 複数 locker カードが出たら配列化)。
+function noAutoActivateLocked(s: GameState, uid: string): boolean {
+  const c = scene.byUid(s, uid);
+  if (!c) return false;
+  const src = c.turnEffects['noAutoActivateBySourceUid'];
+  if (typeof src !== 'string') return false;
+  return !!scene.byUid(s, src); // byUid は不在時 null (undefined でない) — truthy 判定
+}
+
 // AP: apOverride 優先 / 不在なら CardDef.ap、加えて turnEffects['apMod_*'] を合算
 // (charModifyAP verb は turnEffects に delta を蓄積する設計。permanent/turn/contact の
 // 3 scope を全て合算)
@@ -283,6 +337,11 @@ function grantWalk(s: GameState, uid: string, which: 'grantTraits' | 'grantNames
 function names(s: GameState, uid: string): string[] {
   const char = scene.byUid(s, uid);
   if (!char) return [];
+  // mega-wave W6 step2 (2026-07-04, row 999 item2 / PR105): nameOverride turnEffect は **完全置換**
+  // (rules/19 Q&A「元のカード名は持っていない扱い」— grantNames の union 方式とは意図的に別ロジック)。
+  // 空文字は未設定扱い (DeclareCardNameModal 空 submit 防御)。clearTurnEffects('turn') で失効。
+  const override = char.turnEffects['nameOverride'] as string | undefined;
+  if (override) return [override];
   const printed = def.card(char.cardId)?.names ?? [];
   const granted = traitNameGrantSafe(s, uid, 'grantNames');
   return granted.length > 0 ? [...new Set([...printed, ...granted])] : printed;
@@ -392,12 +451,22 @@ function hasKeyword(s: GameState, uid: string, kw: string): boolean {
  * 不在時 false (既存カードは opponentRestrict 未宣言 → no-op、smoke baseline 不変)。
  * @param ownerSide aura を所有する側 (= 制限される側の "相手")。canCutIn/disguise 側は other = opp-of-actor を渡す。
  */
-function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki'): boolean {
+function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'stunAutoActivate'): boolean {
   // bearer = 現場キャラ + PA 常駐 MR (rules/18 PA でも有効)。PA-MR は scope on-partner-area/always のみ。
   const bearers: Array<{ char: { cardId: string; uid: string }; inPA: boolean }> =
     s.players[ownerSide].scene.map(c => ({ char: c, inPA: false }));
   const slotMr = s.players[ownerSide].partnerAreaMR;
   if (slotMr) bearers.push({ char: slotMr, inPA: true });
+  // mega-wave W6 step5 (2026-07-04, r74/B03046): パートナーカード自身の印字 continuous も bearer に
+  // 合成する (「相手の現場にいるスタン状態のキャラはオートフェイズにアクティブにならない」= パートナー
+  // 印字 aura)。生存条件 = location==='partner-area' かつ cardId 設定済 (アシスト中 file-area /
+  // mr-removed は不成立 — scene-bearer の「in-play zone に居る限り有効」からの類推、公式Q&A 未確認の
+  // 設計判断)。uid は sentinel (condition kind は ctx.source.player のみ参照、cond/eval 確認済)。
+  // 既存 4 token は現行出荷済 partner def が opponentRestrict 未宣言のため回帰 0。
+  const partnerCard = s.players[ownerSide].partner;
+  if (partnerCard.cardId && partnerCard.location === 'partner-area') {
+    bearers.push({ char: { cardId: partnerCard.cardId, uid: `partner:${ownerSide}` }, inPA: false });
+  }
   for (const { char: c, inPA } of bearers) {
     const d = def.card(c.cardId);
     if (!d) continue;
@@ -567,6 +636,8 @@ export const char = {
   filteredAssaultKeywords,
   charProtectedFrom,
   restrictsOpponent,
+  auraUntargetableByAction,
+  noAutoActivateLocked,
   selfContinuousFlag,
   hasTextAbility,
   state,

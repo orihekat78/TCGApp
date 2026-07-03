@@ -82,6 +82,7 @@ function resetTurnFlags(s: GameState, p: Player): void {
   s.turnState[p].nextHintBanned = false; // wave use-restrict: 「このターン中ネクストヒント不可」(B06104/B09019/B09105) をターン境界で解除
   s.turnState[p].hiramekiSuppressed = false; // B06049 cluster8: action-scoped ヒラメキ抑止の backstop (主清掃は action-end)
   s.turnState[p].shippuFiredThisTurn = false; // wave-8 P15: 疾風発動記録の backstop (主清掃は endTurn 両プレイヤー)
+  s.turnState[p].shippuWaiveArmed = false; // W6 step4 B09090: 疾風条件 waive 予約の backstop (主清掃は endTurn 両プレイヤー)
   s.turnState[p].cutinBanned = false; // wave-10 B07002: 「このターン中カットイン使用不可」をターン境界で解除
   s.turnState[p].disguiseBanned = false; // wave-10 B07002: 「このターン中変装使用不可」をターン境界で解除
   s.turnState[p].declaredAbilityUseCount = {};

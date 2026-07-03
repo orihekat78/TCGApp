@@ -11,6 +11,7 @@ import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
 import { defHasKeyword } from '@/engine/read/keyword.js'; // wave#2 cluster2: boundMatchesFilter keyword 判定
+import { def as readDef } from '@/engine/read/def.js'; // mega-wave W6 step1: boundIsMr の MR 判定 (循環なし — read/def は types のみ import)
 
 /** Type predicate: narrows a Candidate to the 'char' variant. */
 function isCharCandidate(c: Candidate): c is { kind: 'char'; uid: string; cardId: string; player: 'self' | 'opp' } {
@@ -424,6 +425,34 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       };
       return bdcDfs(0, []);
     }
+    case 'boundNameMatchesDeclared': {
+      // engine mega-wave W6 step1 (2026-07-04, row 53): bound 集合のいずれかのカード名が
+      // ctx.declaredNames[declareKey] (declareName verb の宣言名) と一致するか (「この効果によって
+      // 指定したカード名のカードがリムーブされた場合」B09108/B09003)。分割名 (rules/19) は
+      // allCardNameComponentsForDef で component any-match。bindings snapshot 参照 = 盤面再照会しない
+      // (costRemovedMatches と同 posture — リフレッシュで remove から消えても判定不変)。
+      // 宣言名 空/未設定・binding 空/不在 → false (「してもよい」skip 経路 defensive)。
+      const declared = ctx.declaredNames?.[cond.declareKey];
+      if (typeof declared !== 'string' || declared === '') return false;
+      const bnSet = ctx.bindings?.[cond.bindKey];
+      if (!Array.isArray(bnSet) || bnSet.length === 0) return false;
+      for (const b of bnSet) {
+        const bId = (b as { cardId?: string }).cardId;
+        if (typeof bId !== 'string') continue;
+        const d = lookupCardDef(bId);
+        if (d && allCardNameComponentsForDef(d).includes(declared)) return true;
+      }
+      return false;
+    }
+    case 'boundIsMr': {
+      // engine mega-wave W6 step1 (2026-07-04, row 999 item1): bound[0] が MR カードか
+      // (「相手の現場にいるMRのキャラを選んだ場合」B06085)。read/def.isMR (rarity 前方一致 +
+      // CardDef.isMR 明示 flag、mutate/scene.ts MR①② と同一判定) へ委譲。空/不在 → false。
+      const bound = ctx.bindings?.[cond.bindKey];
+      if (!Array.isArray(bound) || bound.length === 0) return false;
+      const cardId = (bound[0] as { cardId?: string }).cardId;
+      return typeof cardId === 'string' && readDef.isMR(cardId);
+    }
     case 'boundMatchesFilter': {
       // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
       // (「〚カード名[X]〛を登場させた場合」を declarative 化)
@@ -691,6 +720,32 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return true;
     }
+    // mega-wave W6 step3 (2026-07-04, r63 P19): 「このイベントが能力や効果によって使用されていた場合」
+    // (B07026)。effect:declared payload の kind==='event-use' 明示ガード必須 — cutin ({abilityId:'cutin'}) /
+    // hirameki 等 別 shape の triggerPayload で誤発火させない (resolve-picks forcedInclusionUids の既知
+    // 落とし穴と同型)。viaEffect 無指定 emit (hand-use-card/next-hint = player-action 起源) は
+    // undefined??false=false で「手札の使用/ネクストヒント」起源として自然判別 (既存2 emit 無改修)。
+    case 'eventUseSource': {
+      const eus = ctx.triggerPayload as { kind?: unknown; viaEffect?: boolean } | undefined;
+      if (eus?.kind !== 'event-use') return false;
+      return (eus.viaEffect ?? false) === cond.viaEffect;
+    }
+    // mega-wave W6 step6 (2026-07-04, r79/B08014): 「このターン中にこのキャラが自分のMRの能力に
+    // よって選ばれていた」。書き手 = resolver.ts atom dispatch 前 guard → mutate.char.tagSelectedByOwnMr。
+    // 読取は ctx.source 自身の turnEffects snapshot (発動前後を問わず turn 内 monotonic、B08014 Q&A)。
+    case 'selfSelectedByOwnMrThisTurn': {
+      const ssUid = ctx.source.uid;
+      if (typeof ssUid !== 'string') return false;
+      return state.players[ctx.source.player].scene.find(c => c.uid === ssUid)?.turnEffects['selectedByOwnMr'] === true;
+    }
+    // mega-wave W6 step6 (2026-07-04, r79/B09047): PA-MR slot の存在 + printed colors 数
+    // (partner (strict singleton) の色とは別物 — partnerAreaMR slot を読む。誤読 typo 注意)。
+    case 'paMrColorCountMin': {
+      const pmSide = resolvePlayer(cond.side, ctx);
+      const pmMr = state.players[pmSide].partnerAreaMR;
+      if (!pmMr) return false;
+      return (lookupCardDef(pmMr.cardId)?.colors ?? []).length >= cond.min;
+    }
     case 'custom':
       return cond.check(state, ctx);
     // refactor 2b: case 追加漏れの compile-time 検出 (noImplicitReturns 無効のため明示 guard)。到達不能。
@@ -723,6 +778,11 @@ const CONDITION_KIND_MAP = {
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
   boundAnyMatchesFilter: true, // engine additive wave-5 (2026-07-01, G17): bound 集合 any-match (PR132/D06013)
   boundDistinctColorCount: true, // engine additive wave-10 (2026-07-02, G17 残): bound 集合内 相互異色 n 枚 (B07002)
+  boundNameMatchesDeclared: true, // engine mega-wave W6 step1 (2026-07-04): declareName 宣言名 ⇔ bound 集合 any-match (B09108)
+  boundIsMr: true, // engine mega-wave W6 step1 (2026-07-04): bound[0] MR 判定 (B06085)
+  eventUseSource: true, // engine mega-wave W6 step3 (2026-07-04, P19): イベント使用の起源判別 (B07026)
+  selfSelectedByOwnMrThisTurn: true, // engine mega-wave W6 step6 (2026-07-04, r79): MR 選択追跡 (B08014)
+  paMrColorCountMin: true, // engine mega-wave W6 step6 (2026-07-04, r79): PA-MR 色数 gate (B09047)
   setCardMatches: true, // engine additive (2026-06-29, B06046)
   triggerCutinMatches: true, // engine additive wave-3 (2026-06-30, B09086): cutin:used 使用cutin filter
   charTurnEffect: true, // Task D E4 (2026-06-12)

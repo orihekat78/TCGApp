@@ -53,6 +53,9 @@ const ATOM_VERB_MAP = {
   expandActionTargets: true, // D11007 v2 Phase 3
   invokeLeaveToRemoveOfCard: true, // engine mega-wave W3 (2026-07-03, r12)
   bindPick: true, // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
+  declareName: true, // engine mega-wave W6 step1 (2026-07-04) — 任意カード名宣言 → ctx.declaredNames (B09112/B09108)
+  useEventFromHand: true, // engine mega-wave W6 step3 (2026-07-04, r63 P18) — 効果内イベント使用 (B08026/D10005/B05042)
+  setShippuWaive: true, // engine mega-wave W6 step4 (2026-07-04, B09090/P16) — 疾風条件 waive 予約
   log: true, noop: true,
 } as const satisfies Record<AtomVerb, true>;
 

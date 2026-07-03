@@ -149,6 +149,17 @@ export type TurnScopedFlags = {
    */
   shippuFiredThisTurn?: boolean;
   /**
+   * mega-wave W6 step4 (2026-07-04, B09090/P16): 「このターン中、次に自分の現場に登場したキャラは
+   * 【疾風】の条件を無視できる」の armed flag。setShippuWaive verb がセット。消費 = **次に登場した
+   * キャラ 1 体** (疾風の有無を問わない、公式Q&A: 疾風を持たないキャラが次に登場したら arm は無駄に
+   * 消費され、その次の疾風は発動しない)。listeners/triggered.ts handleHook の enter 前処理が
+   * owner 側 armed を消費し、登場キャラへ per-char turnEffects['shippuWaived']=true を移す
+   * (matcherCondition=enterOrderEquals の bypass 根拠)。清掃: resetTurnFlags + endTurn 両プレイヤー。
+   * ⚠ per-player `shippuFiredThisTurn` (turnState=発動履歴) / per-char `shippuFiredCharThisTurn`
+   * (turnEffects=発動キャラ標識、r58) / 本 flag (turnState=waive 予約) の 3 軸は別物 — 取り違え注意。
+   */
+  shippuWaiveArmed?: boolean;
+  /**
    * 「このターン中、このプレイヤーは【カットイン】を使用できない」(B07002 江戸川コナン a2、wave-10 2026-07-02)。
    * setCutinBan verb がセット (B07002 は player:'opp' = 相手側 slot へ)、turn:start の resetTurnFlags でクリア。
    * ゲート: flow/contact.ts canCutIn。side-level flag ゆえ発動キャラが現場を離れても有効

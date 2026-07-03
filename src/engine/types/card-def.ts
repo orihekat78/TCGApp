@@ -152,7 +152,12 @@ export type ContinuousModifier = {
   // contact-ap 除去・switch・cost・自分の効果・デッキ下移動等は対象外 (公式Q&A B05041)。読取は
   // read.char.charProtectedFrom (per-target: 自身の abilities + faceUp setCards の on-set-host rider)。
   // 既存 4 token (cutin 等) は player-level 制限で restrictsOpponent (board-wide) が読む — 別経路。
-  opponentRestrict?: ('cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'remove' | 'sleep' | 'stun')[];
+  // engine mega-wave W6 step5 (2026-07-04, r74/B03046): 'stunAutoActivate' = 「相手の現場にいる
+  //   スタン状態のキャラはオートフェイズにアクティブにならない」(パートナー印字 continuous)。
+  //   read.char.restrictsOpponent (partner-bearer 拡張済) が読み、flow/auto-phase.ts ステップ2 が
+  //   stun キャラの tryActivate を丸ごと skip (rules/03 の stun→sleep 変換も起きない = 公式Q&A
+  //   「アクティブになる代わりにスリープになることもありません」)。
+  opponentRestrict?: ('cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'remove' | 'sleep' | 'stun' | 'stunAutoActivate')[];
   // engine mega-wave W2 (2026-07-03, P07/r24): 継続アクション制限 token 群 (bearer 自身に係る)。
   //   read.char.selfContinuousFlag(s, uid, token) が bearer の continuous ability を walk
   //   (condition honor、restrictsOpponent と同流儀) して boolean を返す。不在時 false = 挙動不変。
@@ -164,6 +169,13 @@ export type ContinuousModifier = {
   //   selfCutinBanInContact   = 「このキャラのコンタクト中、自分は【カットイン】を使用できない」(B07005)。
   //                             canCutIn が p 側コンタクト参加キャラの flag を gate。
   untargetableByAction?: boolean;
+  // engine mega-wave W6 step5 (2026-07-04, r50/B04072): 「相手は自分の現場にいる[filter]のキャラを
+  //   指定してアクションできない」— bearer (現場/PA-MR) が **同 side の他キャラ群** を filter 越しに
+  //   対象除外へ投影する aura 版 (untargetableByAction = 自身 bool とは別フィールド、混同注意)。
+  //   ability.condition (charStateIs self sleep 等) で成立 gate。読取 = read.char.auraUntargetableByAction
+  //   (auraDelta 同型 board-scan)、配線 = target-expander.candidates() の負 filter (ガードは非対象 =
+  //   公式Q&A B04072「ガードは可能」、guard 経路は candidates() 非経由で自動整合)。
+  untargetableByActionAura?: TargetFilter;
   caseActionBan?: boolean;
   selfActionBan?: boolean;
   selfCutinBanInContact?: boolean;

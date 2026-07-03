@@ -121,6 +121,27 @@ export type Condition =
   // 各要素は matchOneFilter(c=null=CardDef 印字値) に委譲 (boundAnyMatchesFilter と同流儀)。
   // honor: cond/eval.ts case + CONDITION_KIND_MAP + validate-specs CONDS。
   | { kind: 'boundDistinctColorCount'; bindKey: string; filter?: TargetFilter; n: number }
+  // engine mega-wave W6 step1 (2026-07-04, row 53): ctx.bindings[bindKey] の **いずれか** のカード名が
+  // ctx.declaredNames[declareKey] (declareName verb の宣言名) と一致するか (「この効果によって指定した
+  // カード名のカードがリムーブされた場合」B09108/B09003)。分割名 (rules/19) は component any-match。
+  // bindings snapshot 参照 (盤面再照会しない = costRemovedMatches と同 posture、リフレッシュ後も判定不変)。
+  // 宣言名 空/未設定・binding 空 → false (「してもよい」skip 経路で throw しない)。
+  | { kind: 'boundNameMatchesDeclared'; bindKey: string; declareKey: string }
+  // engine mega-wave W6 step1 (2026-07-04, row 999 item1): ctx.bindings[bindKey][0] が MR カードか
+  // (「相手の現場にいるMRのキャラを選んだ場合」B06085)。read/def.isMR (rarity 前方一致 + 明示 flag) 委譲。
+  | { kind: 'boundIsMr'; bindKey: string }
+  // engine mega-wave W6 step3 (2026-07-04, r63 P19): 「このイベントが能力や効果によって使用されていた場合」
+  // (B07026)。effect:declared payload (kind==='event-use') の viaEffect を判定 — true=useEventFromHand 等の
+  // 効果起源 / false=手札の使用・ネクストヒント (player-action、emit は viaEffect 無指定=false 扱い)。
+  | { kind: 'eventUseSource'; viaEffect: boolean }
+  // engine mega-wave W6 step6 (2026-07-04, r79/B08014): 「このターン中にこのキャラが自分のMRの能力に
+  // よって選ばれていた」— ctx.source 自身の turnEffects['selectedByOwnMr'] を読む zero-arg leaf。
+  // B08014 は {not, c:{selfSelectedByOwnMrThisTurn}} で「選ばれていなかった場合」を表現。
+  | { kind: 'selfSelectedByOwnMrThisTurn' }
+  // engine mega-wave W6 step6 (2026-07-04, r79/B09047): 「自分のパートナーエリアに色を N つ以上持つ
+  // MRのキャラがいる場合」— partnerAreaMR slot の存在 + printed colors 数の pure read
+  // (candidates 非関与、BUG-154 #3 targetability と無関係)。
+  | { kind: 'paMrColorCountMin'; side: 'self' | 'opp'; min: number }
   // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。leave:to-remove
   // payload snapshot {uid,cause,side,byUid} を scene 再取得せず読む (triggerCharMatches は splice 済
   // キャラに使えない、13198)。side=除去キャラ所属 (payload.side===owner→self、全 variant='opp')、
@@ -248,6 +269,12 @@ export type TargetFilter = {
   // candidate) は「アクションした」概念が無い → 必ず不一致 (現場に居ないため)。B08049 ジョディ【宣言】
   // 「このターン中にアクション[キャラ]していた〚特徴[FBI]〛のキャラを…アクティブにする」。
   actedCharThisTurn?: boolean;
+  // mega-wave W6 step4 (2026-07-04, r58): 「このターン中に【疾風】を発動していた」board char のみ該当。
+  // 記録 = listeners/triggered.ts の abilityIsShippu 全 gate 通過時 (per-player shippuFiredThisTurn と
+  // 同一 gate・同一 timing、発動=解決不能でも発動扱い rules/24)。清掃 = clearTurnEffects('turn')。
+  // c===null (deck/remove/hand) は必ず不一致 (actedCharThisTurn と同 posture)。B09070 a3
+  // 「自分のターン終了時、このターン中に【疾風】を発動していたすべてのキャラをアクティブにする」。
+  shippuFiredCharThisTurn?: boolean;
   custom?: (s: GameState, candidate: Candidate) => boolean;
 };
 
@@ -352,6 +379,14 @@ export type AtomVerb =
   // conditional{charStateIs fromBound} 等が同一 pick を排他分岐で共有する (B08035「そのキャラが
   // スリープ状態の場合スタン/アクティブ状態の場合スリープ」)。PA 短縮形 (sceneSetState 同型、state 不要)。
   | 'bindPick'
+  // engine mega-wave W6 step1 (2026-07-04, rows 49/53/999 統合): declareName — プレイヤーが任意の
+  // カード名 (自由文字列) を1つ宣言し ctx.declaredNames[args.bind] へ書く (「カード名を1つ指定し」
+  // B09112/B09108/B09003)。名前の供給は ctx.dyn.declaredName (UI= DeclareCardNameModal → AbilityCostParams
+  // .declaredName → costParamsToDyn / AI= 未供給なら空文字 fallback で条件 false に落ちる、smoke 安全)。
+  // engine は名前の実在性を検証しない (公式Q&A: 曖昧/誤記は対人ルール領域 — UI オートコンプリートで実務担保)。
+  // 消費: cond boundNameMatchesDeclared / dyn $declared.<key>[.sceneNameCount] / (step2) charSetTurnEffect
+  // nameOverride。状態変化なし (bindPick 同様 pick-only 系、zone/char 不変)。
+  | 'declareName'
   | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise' | 'sceneToHand'
   // Task D E2 (2026-06-12): 現場キャラを所有者のデッキ下/上へ移す (sceneToHand 同型 PA 短縮形)。
   // rules: 09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 16 (set/stacked はリムーブ)
@@ -394,6 +429,17 @@ export type AtomVerb =
   // (B09034/B09034P)。turnState[p].eventUseBanned=true をセットする turn-scoped flag verb。
   // 手札の使用・ネクストヒントの event のみゲート (公式 Q&A: カットイン/ヒラメキは制限外)。
   // rules: 25 (公式 Q&A) / 12 (ネクストヒント) / 06 (イベント使い切り)
+  // engine mega-wave W6 step3 (2026-07-04, r63 P18): 効果内から手札のイベントを filter 一致で pick
+  // (0..1) して**即時使用**する (「手札からレベル6以下のイベントを1枚まで使用する」B08026/D10005/B05042)。
+  // hand-use-card.ts の event 分岐と同順序 (effect:declared emit → hand.remove → remove.add、emit が
+  // 先 = on-hand scope がまだ手札に居るカードを見つける契約)。payload に viaEffect:true を付与
+  // (eventUseSource cond の判別根拠、公式Q&A: FILE 枚数・事件色制限をバイパス)。
+  // eventUseBanned 中は防御的 no-op (B09034「能力や効果によっても使用できない」)。
+  | 'useEventFromHand'
+  // engine mega-wave W6 step4 (2026-07-04, B09090/P16): 「このターン中、次に自分の現場に登場した
+  // キャラは【疾風】の条件を無視できる」— turnState[p].shippuWaiveArmed=true をセットする turn-scoped
+  // flag verb (setNextHintBan mirror)。消費は enter 時に triggered.ts が行う (次登場 1 体、疾風有無不問)。
+  | 'setShippuWaive'
   | 'setEventUseBan'
   // wave use-restrict (2026-06-30): 「このターン中、自分はネクストヒントできない」(B06104/P・B09019/P・B09105/P)。
   // turnState[p].nextHintBanned=true をセットする turn-scoped flag verb。canStartNextHint が gate (ネクストヒント全体)。

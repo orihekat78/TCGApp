@@ -42,6 +42,7 @@ import {
   atomEvidenceToHand,
   atomHandToEvidence,
   atomHandToFileBottom,
+  atomUseEventFromHand,
   atomEvidenceToDeckBottom,
   atomHandAddFromDeck,
   atomInvokeLeaveToRemoveOfCard,
@@ -92,11 +93,13 @@ import {
   atomEndActionEarly,
   atomSetEventUseBan,
   atomSetNextHintBan,
+  atomSetShippuWaive,
   atomSetCutinBan,
   atomSetDisguiseBan,
   atomSetHiramekiSuppress,
   atomLog,
   atomExpandActionTargets,
+  atomDeclareName,
 } from './atom-handlers/misc.js';
 
 export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: EffectCtx): void {
@@ -243,8 +246,12 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomRemoveAreaAllToDeckBottom(s, a, ctx);
     case 'souza':
       return atomSouza(s, a, ctx);
+    case 'useEventFromHand':
+      return atomUseEventFromHand(s, a, ctx, verb); // engine mega-wave W6 step3 (2026-07-04, r63 P18)
     case 'setEventUseBan':
       return atomSetEventUseBan(s, a, ctx);
+    case 'setShippuWaive':
+      return atomSetShippuWaive(s, a, ctx); // engine mega-wave W6 step4 (2026-07-04, B09090/P16)
     case 'setNextHintBan':
       return atomSetNextHintBan(s, a, ctx);
     case 'setCutinBan':
@@ -257,6 +264,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomInvokeLeaveToRemoveOfCard(s, a, ctx);
     case 'bindPick':
       return atomBindPick(s, a, ctx, verb);
+    case 'declareName':
+      return atomDeclareName(s, a, ctx);
     case 'log':
       return atomLog(s, a, ctx);
     case 'noop':

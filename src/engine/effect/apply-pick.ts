@@ -94,6 +94,18 @@ export function applyPickAndContinuation(
   // ---- resolved atom を build (Pattern A: uid='$pick' → uid 置換 / Pattern B: cardId(s)/target 置換) ----
   const pendingArgs = pending.atomArgs as { uid?: unknown };
   const isPatternA = pendingArgs.uid === '$pick';
+  // mega-wave W6 step6 (2026-07-04, r79/B08014): human+AI 共有継続経路の MR 選択タグ —
+  // resolve-picks.ts substituteAtomPick (AI 同期 walk) と対称実装 (BUG-158 型 両経路罠)。
+  // source card = MR の時のみ、解決済み現場キャラ uid を `_mrSelectCharUids` として args に同梱
+  // (turnEffects 書込は resolver.ts atom dispatch 前 guard)。非 MR は完全素通し。
+  const w6IsMrSource = def.isMR(pending.source.cardId);
+  const w6CharUidsOf = (uids: string[]): string[] =>
+    uids.filter(u => state.players.self.scene.some(c => c.uid === u) || state.players.opp.scene.some(c => c.uid === u));
+  const w6TagMr = (a: Record<string, unknown>, uids: string[]): Record<string, unknown> => {
+    if (!w6IsMrSource) return a;
+    const charUids = w6CharUidsOf(uids);
+    return charUids.length > 0 ? { ...a, _mrSelectCharUids: charUids } : a;
+  };
   let resolvedAtom: Effect;
   if (isPatternA) {
     const { target: _omit, ...restArgs } = pending.atomArgs;
@@ -103,12 +115,12 @@ export function applyPickAndContinuation(
     // 単一なら従来通り (sequence wrap せずに atom のまま runEffect / event.queue)。
     const uids = (pickedUids && pickedUids.length > 1) ? pickedUids : [pickedUid];
     if (uids.length === 1) {
-      resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: { ...restArgs, uid: uids[0]! } };
+      resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: w6TagMr({ ...restArgs, uid: uids[0]! }, [uids[0]!]) };
     } else {
       const atoms: Effect[] = uids.map((u) => ({
         kind: 'atom' as const,
         verb: pending.atomVerb as never,
-        args: { ...restArgs, uid: u },
+        args: w6TagMr({ ...restArgs, uid: u }, [u]),
       }));
       resolvedAtom = { kind: 'sequence', steps: atoms };
     }
@@ -137,7 +149,8 @@ export function applyPickAndContinuation(
         // (B04005「手札を2枚リムーブする」が全経路 1枚しか落ちない / handReveal ★未対応(3) の bind 1枚問題)。
         // allCardIds = pickedUids ?? [pickedUid] の解決済全件 → n:1 は [resolvedCardId] と byte 同一。
         : { ...pending.atomArgs, target: allCardIds, ...switchPart }; // 従来 pattern (handAddFromRemove 等)
-    resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: newArgs };
+    // W6 step6 (r79): Pattern B でも現場キャラ uid が選ばれた場合はタグ (scene 照合で char-kind 判別)
+    resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: w6TagMr(newArgs, allUids) };
   }
 
   // ---- continuation (中断中 sequence/chain の残り step) を保存 ctx で実行 ----

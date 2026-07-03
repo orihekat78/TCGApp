@@ -18,7 +18,7 @@ import type { EffectCtx } from '@/engine/types';
 import { char as charRead } from '@/engine/read/char.js';
 import { scene } from '@/engine/read/scene.js'; // session64: $self.setCardCount (このキャラの setCards 枚数)
 import { def } from '@/engine/read/def.js'; // BUG-114: $discarded.level/ap で discard したカードの printed 値を参照
-import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js'; // wave (2026-07-02): $self.removeNameCount の分割名一致 (removeNameAtLeast cond と同式)
+import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from '@/engine/target/card-def-registry.js'; // wave (2026-07-02): $self.removeNameCount の分割名一致 (removeNameAtLeast cond と同式) / W6 step1: $declared.*.sceneNameCount
 
 type DynValue = number | string | boolean | undefined;
 
@@ -290,6 +290,8 @@ function resolvePlaceholder(state: GameState, placeholder: string, ctx: EffectCt
       return resolveDiscarded(ctx, rest, placeholder);
     case 'bound':
       return resolveBound(state, rest, ctx, placeholder);
+    case 'declared':
+      return resolveDeclared(state, rest, ctx, placeholder);
     default:
       throw new Error(`dyn.eval: unknown placeholder root "$${root}" in "${placeholder}"`);
   }
@@ -515,6 +517,37 @@ function resolveBound(state: GameState, rest: string[], ctx: EffectCtx, original
     }
     default:
       throw new Error(`dyn.eval: unknown $bound field "${field}" in "${original}"`);
+  }
+}
+
+// mega-wave W6 step1 (2026-07-04): $declared.<key>[.<field>] — declareName verb が ctx.declaredNames へ
+// 書いた宣言カード名の遅延参照。
+//   $declared.<key>                = 宣言名文字列そのもの (filter dyn `cardName:{dyn:'$declared.named'}` 用。
+//                                    resolveFilterDynObj が field-agnostic に literalize → matchOneFilter 突合)
+//   $declared.<key>.sceneNameCount = ctx.source.player の現場で宣言名を名前に持つキャラ数 (B09112
+//                                    「指定したカード名のキャラ1枚につき」)。実効 names (wave-6 grantNames /
+//                                    step2 nameOverride honor = charRead.names) の各要素を rules/19 分割
+//                                    component 化して any-match ($self.removeNameCount と同式)。
+// 欠損 key / 空宣言は defensive ('' / 0) — 「してもよい」skip・AI 未供給経路で throw しない
+// (resolveBound と同 posture)。未知 field は throw (author typo fail-fast)。
+function resolveDeclared(state: GameState, rest: string[], ctx: EffectCtx, original: string): DynValue {
+  if (rest.length === 0) {
+    throw new Error(`dyn.eval: $declared requires a key (e.g. $declared.named) — got "${original}"`);
+  }
+  const key = rest[0];
+  const declared = ctx.declaredNames?.[key] ?? '';
+  if (rest.length === 1) return declared;
+  const field = rest[1];
+  switch (field) {
+    case 'sceneNameCount': {
+      if (declared === '') return 0;
+      const side = ctx.source.player;
+      return state.players[side].scene.filter(c =>
+        charRead.names(state, c.uid).some(n => cardNameComponents(n).includes(declared)),
+      ).length;
+    }
+    default:
+      throw new Error(`dyn.eval: unknown $declared field "${field}" in "${original}"`);
   }
 }
 

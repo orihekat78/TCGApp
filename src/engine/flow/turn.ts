@@ -98,6 +98,8 @@ export function endTurn(state: GameState, p: Player): void {
     // primary 清掃 (両プレイヤー分)。resetTurnFlags は driver 層で backstop。turnState 直リセットは
     // hiramekiSuppressed が state-machine action-end で直接クリアするのと同じ posture (driver 非依存)。
     state.turnState[player].shippuFiredThisTurn = false;
+    // W6 step4 (B09090): 「このターン中、次に登場したキャラは〜」の未消費 arm もターン境界で失効。
+    state.turnState[player].shippuWaiveArmed = false;
   }
   // BUG-101: 'opp-turn' scope (D11005 挑発 mustBeTargeted) は「相手のターン終了時まで」。
   // p のターン終了時、相手 (非p=設定者) の scene の opp-turn 効果を清掃する

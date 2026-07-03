@@ -186,9 +186,13 @@ export function atomCharSetTurnEffect(s: GameState, a: Record<string, unknown>, 
       const teUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof teUid !== 'string' || teUid.startsWith('$')) return;
       const teKey = a.key as string;
-      mutate.char.setTurnEffect(s, teUid, teKey, a.val);
+      // mega-wave W6 step2 (2026-07-04, rows 74/999 HARD merge): val を resolveBindRef へ通す
+      // ($dyn.declaredName = PR105 nameOverride / $<bind>.uid 系)。リテラル (boolean/number/非$文字列)
+      // は resolveBindRef が素通しするため既存カード回帰 0。
+      const teVal = resolveBindRef(a.val, ctx);
+      mutate.char.setTurnEffect(s, teUid, teKey, teVal);
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetTurnEffect', target: teUid, result: `${teKey}=${String(a.val)}` });
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetTurnEffect', target: teUid, result: `${teKey}=${String(teVal)}` });
       return;
     }
 

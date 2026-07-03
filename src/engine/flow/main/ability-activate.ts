@@ -35,6 +35,9 @@ export interface AbilityCostParams {
   removeSetCard?: { hostUids: string[] }; // engine additive wave (2026-06-24): 裏向きセットリムーブの host 選択 (B08033 a2)
   costChoice?: number;
   choiceIndex?: number;
+  // mega-wave W6 step1 (2026-07-04): declareName verb への宣言カード名供給 (UI= DeclareCardNameModal /
+  // AI= 省略可、未供給は atom 側で空文字 fallback)。ctx.dyn.declaredName として effect 解決へ伝播。
+  declaredName?: string;
 }
 
 function costParamsToDyn(costParams?: AbilityCostParams): Record<string, unknown> | undefined {
@@ -48,6 +51,7 @@ function costParamsToDyn(costParams?: AbilityCostParams): Record<string, unknown
   if (Object.keys(params).length > 0) dyn['costParams'] = params;
   if (costParams.costChoice !== undefined) dyn['costChoice'] = costParams.costChoice;
   if (costParams.choiceIndex !== undefined) dyn['choiceIndex'] = costParams.choiceIndex;
+  if (costParams.declaredName !== undefined) dyn['declaredName'] = costParams.declaredName; // W6 step1
   return Object.keys(dyn).length > 0 ? dyn : undefined;
 }
 

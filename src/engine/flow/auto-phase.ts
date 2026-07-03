@@ -23,6 +23,7 @@
 import type { GameState } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
+import { char as readChar } from '../read/char.js'; // W6 step5 (r74): auto-phase アクティブ化 skip gate
 
 type Player = 'self' | 'opp';
 
@@ -57,8 +58,19 @@ export function runAutoPhase(state: GameState, p: Player): void {
 
   // 2. 現場キャラのアクティブ化
   //    setState/tryActivate は stun 特殊挙動 (active → sleep) を内包
+  //    mega-wave W6 step5 (2026-07-04, r74) の 2 skip gate (どちらも本ステップのみ、①パートナーには非適用):
+  //    (a) noAutoActivateLocked — B01082「このキャラが現場にいるかぎり、選んだキャラはオートフェイズに
+  //        アクティブにならない」(bearer 生存中の per-target lock、ターン跨ぎ永続)。
+  //    (b) stunAutoActivate aura — B03046「相手の現場にいるスタン状態のキャラはオートフェイズに
+  //        アクティブにならない」(相手側 partner/盤面の opponentRestrict aura)。stun キャラの
+  //        tryActivate を丸ごと skip = stun→sleep 変換も起きない (公式Q&A「アクティブになる代わりに
+  //        スリープになることもありません」)。
+  const w6OppSide = p === 'self' ? 'opp' : 'self';
+  const w6StunAura = readChar.restrictsOpponent(state, w6OppSide, 'stunAutoActivate');
   const sceneUids = state.players[p].scene.map(c => c.uid);
   for (const uid of sceneUids) {
+    if (readChar.noAutoActivateLocked(state, uid)) continue;
+    if (w6StunAura && state.players[p].scene.find(c => c.uid === uid)?.state === 'stun') continue;
     mutate.scene.tryActivate(state, uid);
   }
   // 2b. MR partner-area (rules/18 + 公式Q&A 反映 2026-06-24): PA 常駐 MR は auto-phase で活性化しない。

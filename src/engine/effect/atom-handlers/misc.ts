@@ -81,11 +81,25 @@ export function atomSetEventUseBan(s: GameState, a: Record<string, unknown>, ctx
       // ゲート: hand-use-card.ts handUseGateCommon / next-hint.ts (いずれも d.kind==='event' のみ)。
       //   turn:start の mutate.flag.resetTurnFlags が false に戻す。
       // 公式 Q&A (rules/25): 【カットイン】【ヒラメキ】は本制限を受けない → contact.ts / hirameki は touch しない。
-      //   「イベントを使用する」効果 verb は engine に未実装 (どのカードも生成しない) → ゲート不要。
+      //   「イベントを使用する」効果 verb = useEventFromHand (mega-wave W6 step3) — atom 側が
+      //   turnState.eventUseBanned を防御的に再ゲートする (core.ts atomUseEventFromHand 冒頭)。
       // rules: 25 (公式 Q&A) / 12 (ネクストヒント) / 06 (イベント使い切り)
       const seubP = resolvePlayer(a.player ?? 'self', ctx);
       s.turnState[seubP].eventUseBanned = true;
       mutate.log.append(s, { ts: Date.now(), player: seubP, turn: s.turn.number, action: 'effect:setEventUseBan' });
+      return;
+    }
+
+export function atomSetShippuWaive(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // mega-wave W6 step4 (2026-07-04, B09090/P16) 「このターン中、次に自分の現場に登場したキャラは
+      //   【疾風】の条件を無視できる。（2番目以降に登場しても発動する）」。turnState[p].shippuWaiveArmed=true
+      //   をセットする turn-scoped flag verb (setNextHintBan mirror)。player 省略時は所有者。
+      // 消費: listeners/triggered.ts handleHook の enter 前処理 (次登場 1 体、疾風有無不問 = 公式Q&A)。
+      // 清掃: resetTurnFlags backstop + endTurn 両プレイヤー primary。
+      // rules: 13/17 (疾風 = enter + enterOrderEquals) / 15 (「〜できる」)
+      const sswP = resolvePlayer(a.player ?? 'self', ctx);
+      s.turnState[sswP].shippuWaiveArmed = true;
+      mutate.log.append(s, { ts: Date.now(), player: sswP, turn: s.turn.number, action: 'effect:setShippuWaive' });
       return;
     }
 
@@ -164,5 +178,30 @@ export function atomExpandActionTargets(s: GameState, _a: Record<string, unknown
         action: 'effect:expandActionTargets',
         target: ctx.source.uid ?? '',
       });
+      return;
+    }
+
+export function atomDeclareName(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // engine mega-wave W6 step1 (2026-07-04, rows 49/53/999 統合): プレイヤーが任意カード名を宣言し
+      // ctx.declaredNames[a.bind] へ書く (「カード名を1つ指定し」)。供給チャネルは ctx.dyn.declaredName
+      // (costChoice/choiceIndex と同じ dyn 経路、UI = AbilityCostParams.declaredName → costParamsToDyn)。
+      // 未供給/空白のみ = 空文字 fallback + warn log (BUG-116 cost-not-paid warning と同型) —
+      // 消費側 (boundNameMatchesDeclared / $declared.*.sceneNameCount) が false/0 に落ちるだけで throw しない
+      // (AI 未対応・smoke 経路の defensive 契約)。状態変化なし (zone/char 不変)。
+      const bindKey = a.bind as string;
+      const raw = ctx.dyn?.['declaredName'];
+      const name = typeof raw === 'string' ? raw.trim() : '';
+      if (name === '') {
+        mutate.log.append(s, {
+          ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
+          action: 'effect:declareName:unsupplied', target: bindKey,
+        });
+      } else {
+        mutate.log.append(s, {
+          ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
+          action: 'effect:declareName', target: bindKey, result: name,
+        });
+      }
+      (ctx.declaredNames ??= {})[bindKey] = name;
       return;
     }

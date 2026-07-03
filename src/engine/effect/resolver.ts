@@ -19,6 +19,7 @@
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
 import type { ContinuationFrame } from './resolve-picks.js';
 import { runAtom } from './atom-handlers.js';
+import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrSelectCharUids タグ書込
 import { evalCond } from '../cond/eval.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
 
@@ -164,6 +165,18 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         'replace/negate are immediate-resolution; not runnable via effect.run — see resolver stack handling',
       );
     case 'atom': {
+      // mega-wave W6 step6 (2026-07-04, r79/B08014): MR の「選ぶ」効果で解決された現場キャラへ
+      // selectedByOwnMr を実行 **前** に記録する (atom 自体が対象を移動/除去しても標識は先に立つ)。
+      // _mrSelectCharUids は resolve-picks (AI 同期 walk) / apply-pick (human 継続) の両 pick 経路が
+      // source card = MR の時のみ付与する informational field — 既存カードには存在しない → property
+      // 不在 1 判定のみのゼロコスト素通し (全 atom 共有 dispatch ゆえ blast radius 最小化)。
+      // owner guard = ctx.source.player (「**自分の**MRの能力」— 相手 MR による選択は数えない)。
+      const w6MrUids = (eff.args as Record<string, unknown> | undefined)?.['_mrSelectCharUids'];
+      if (Array.isArray(w6MrUids) && w6MrUids.length > 0) {
+        for (const u of w6MrUids) {
+          if (typeof u === 'string') charMutator.tagSelectedByOwnMr(state, u, ctx.source.player);
+        }
+      }
       runAtom(state, eff.verb, eff.args, ctx);
       return;
     }

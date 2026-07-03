@@ -42,6 +42,9 @@ const VERBS = new Set([
   'setHiramekiSuppress', // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
   'expandActionTargets', 'log', 'invokeLeaveToRemoveOfCard', 'noop',
   'bindPick', // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
+  'declareName', // engine mega-wave W6 step1 (2026-07-04) — 任意カード名宣言 → ctx.declaredNames (B09112/B09108)
+  'useEventFromHand', // engine mega-wave W6 step3 (2026-07-04, r63 P18) — 効果内イベント使用 (B08026/D10005/B05042)
+  'setShippuWaive', // engine mega-wave W6 step4 (2026-07-04, B09090/P16) — 疾風条件 waive 予約
 ]);
 const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly']);
 
@@ -70,6 +73,9 @@ const CONDS = new Set([
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
   'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundDistinctColorCount', 'triggerCharMatches',
+  'boundNameMatchesDeclared', 'boundIsMr', // engine mega-wave W6 step1 (2026-07-04): 宣言名一致 / MR 判定 (B09108/B06085)
+  'eventUseSource', // engine mega-wave W6 step3 (2026-07-04, P19): イベント使用の起源判別 (B07026)
+  'selfSelectedByOwnMrThisTurn', 'paMrColorCountMin', // engine mega-wave W6 step6 (2026-07-04, r79): MR 選択追跡 / PA-MR 色数 (B08014/B09047)
   // Task D E1 (2026-06-12): hand-count conditions
   'handAtLeast', 'handAtMost', 'handCountAtLeastOther',
   // Task D E2/E3 (2026-06-12)
@@ -109,7 +115,7 @@ const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'con
 const SHARED_FNS = new Set(['misreadX', 'souzaX', 'partnerColorKeyword', 'eventRemoveByAP', 'caseTraitConditioned', 'caseResolvedHandRemove', 'caseDeclaredEvidenceFlip']);
 const ABILITY_TYPES = new Set(['continuous', 'triggered', 'declared', 'icon-disguise', 'icon-misread']);
 const SCOPES = new Set(['on-scene', 'on-partner-area', 'on-hand', 'on-evidence', 'always']);
-const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn']);
+const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn', 'shippuFiredCharThisTurn']);
 
 function walk(node, errs, ctx) {
   if (node === null || typeof node !== 'object') {

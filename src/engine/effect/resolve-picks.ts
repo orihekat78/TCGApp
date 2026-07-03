@@ -354,6 +354,16 @@ function substituteAtomPick(
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
   const byPlayer: Player = opts.byPlayer ?? 'self';
 
+  // mega-wave W6 step6 (2026-07-04, r79/B08014): source card が MR の「選ぶ」効果 — 解決済み現場
+  // キャラ uid を informational field `_mrSelectCharUids` として args に同梱する (turnEffects への
+  // 書込自体は resolver.ts atom dispatch 前 guard が行う = pure walk の純度契約を保つ)。
+  // ⚠ human 継続経路 (apply-pick.ts applyPickAndContinuation) と対称実装必須 — 片翼だと CPU 対戦
+  // でだけ動く BUG-158 型死角。非 MR source は完全素通し (既存カード byte 不変)。
+  const w6MrCardId = ctx.source.cardId ?? opts.source?.cardId;
+  const w6IsMrSource = typeof w6MrCardId === 'string' && readDef.isMR(w6MrCardId);
+  const w6TagMr = (a: Record<string, unknown>, uids: string[]): Record<string, unknown> =>
+    (w6IsMrSource && uids.length > 0) ? { ...a, _mrSelectCharUids: uids } : a;
+
   // engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) の forced 集合。
   // pick が「イベント使用の自効果」(ctx.triggerPayload kind==='event-use' + cardId 一致) のとき、
   // chooser の相手側 board char で flag が成立しているものを候補集合から抽出する。
@@ -452,7 +462,7 @@ function substituteAtomPick(
       kind: 'atom',
       verb: atom.verb as never,
       // BUG-085: AI / heuristic 経路 (human-pick 境界なし) でも { dyn } を literal 化する。
-      args: resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx),
+      args: w6TagMr(resolveDynArgs(state, { ...restArgs, uid: picked.uid }, ctx) as Record<string, unknown>, [picked.uid]),
     } as Effect;
   }
 
@@ -527,10 +537,16 @@ function substituteAtomPick(
       .filter((v): v is string => v !== null)
       .slice(0, nMaxG);
     if (pickValues.length === 0) return atom as Effect;
+    // W6 step6 (r79): 選択集合中の char-kind uid のみを MR タグ対象にする (card/evidence は対象外)
+    const w6CharUidsG = orderedCands
+      .filter((c) => pickValueOf(c) !== null)
+      .slice(0, nMaxG)
+      .filter((c): c is Extract<typeof c, { kind: 'char' }> => c.kind === 'char')
+      .map((c) => c.uid);
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: resolveDynArgs(state, { ...args, target: pickValues }, ctx),
+      args: w6TagMr(resolveDynArgs(state, { ...args, target: pickValues }, ctx) as Record<string, unknown>, w6CharUidsG),
     } as Effect;
   }
   const pickValue = pickValueOf(picked);
@@ -538,7 +554,10 @@ function substituteAtomPick(
   return {
     kind: 'atom',
     verb: atom.verb as never,
-    args: resolveDynArgs(state, { ...args, target: [pickValue] }, ctx),
+    args: w6TagMr(
+      resolveDynArgs(state, { ...args, target: [pickValue] }, ctx) as Record<string, unknown>,
+      picked.kind === 'char' ? [picked.uid] : [],
+    ),
   } as Effect;
 }
 
