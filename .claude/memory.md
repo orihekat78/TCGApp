@@ -54,3 +54,30 @@
 - **★sonnet5 昇格 A/B 実測→CLAUDE.md 改定**: grounding/設計/意味等価=sonnet5、review=sonnet5+opus 混成。W2 初運用で sonnet lens が実 blocker (ability:declared が宣言効果より先に解決=公式Q&A違反) を検出→emit を effect queue 後へ移動+順序 probe で修正。
 - **教訓**: spec の「既存」主張は W1/W2 計5件偽 (ability:declared hook 不在/action-evidence-deny 不在/可変数cost 不在/r56 on-set-host gate/r67 boundIsMr) → 着手前実測必須は wave 単位でも不変。partial card 禁止 → engine-only + DEFER (B05097/B03126)。
 - 設計 pipeline: W3 (sonnet5、5 feasible) 済 `.tmp/_w3_specs.json`。backlog 正本 `.tmp/_engine_backlog.json`。
+
+## 2026-07-03 夕 mega-wave W2b session (engine/mega-w2b → main 2f9d86ce)
+- W2b 出荷: r27 mustBeSelectedByOppEvent (B08087) + r28 mustGuard enforce (B09040/P)。
+  probe 24 / tsc0 / vitest 3847→3871 / smoke 498 exc0 / 8lint0 / playwright 4 scenario (__game seam)。
+- 混成 review: sonnet lens が実 blocker (event-kind 判定→イベント印字ヒラメキ pick 誤 forced) 検出、
+  ctx.triggerPayload event-use gate に修正 + 回帰 probe 2件。opus lens SHIP_WITH_NITS (nit 対応済)。
+- W4 設計 workflow (sonnet5 ×6 agent 背景) 完了 → .tmp/_w4_specs.json 8/8 feasible。
+- 水平展開: 「イベントの効果によって」型の制限は B09034 (event-use ban) と同線引き —
+  今後の同型 primitive は event-use payload gate を最初から使う (memory reference 化済)。
+- 次 session = W3 (observer hooks、.tmp/_w3_specs.json) + W4 (.tmp/_w4_specs.json)。
+
+## 2026-07-03 夜 mega-wave W3 (同 session 続行、engine/mega-w3 → main cfe57dba)
+- W3 出荷: observer hook 5 primitive + B03052/P・B02047・B05115・B09004 (5 printings)。probe 23 /
+  vitest 3871→3894 / smoke 498 exc0 / 混成 review 両 SHIP_WITH_NITS 0-blocker (nit 3件即応)。
+- B08078 DEFER (a1 remove-area ability-presence 計数 Condition 不在、partial 禁止)。
+- ★latent: cross-side 短縮形 pick side/chooser 不整合 (targetCandidates side は source 相対 /
+  buildShortFormPick は絶対 chooser を literal 代入)。相手手札リムーブの出荷実態は discardRandom のみ。
+- 教訓: atom args の player/side は **ctx.source.player 相対** — probe を書く時は shipped 実態経路
+  (B01077 discardRandom 型) に合わせる。optional は AI auto-skip → human dispatch 駆動が必須。
+- 残 = W4 (.tmp/_w4_specs.json 8/8 feasible 設計済) → W5 → W6。
+
+## 2026-07-03 夜 session (mega-wave W4)
+- **W4 出荷 (origin/main a93897ec)**: stack/scope 8 primitive + 9 printings (B08035/B01012/B06008+P/B09048/B08006/B07096/B05041+P)。詳細 = NEXT-SESSION-PROMPT + DEFERRED-INDEX「megaw4」節 + changelog 2026-07-03-05。
+- BUG-168 (canAction 変種 latent、修正済・smoke re-baseline 472) / BUG-169 (faceDownOnly 未移行 3枚、起票のみ)。
+- 水平展開: B05028/B08034/B03039「裏向きで」印字 vs DSL 突合 (BUG-169) / B02033 は限定なしで現状維持が正 / 突撃[キャラ] 持ち既出荷カードの actor 列挙は BUG-168 fix で回復。
+- 混成 review 初の lens 割れ → fable 裁定 (棄却 1 blocker、指示 2 件反映)。sonnet5 設計 spec 誤り 2 件を実装前検出 (セット≠重ね混同 / board-wide vs per-target)。
+- 見積り更新: 残 ~24 row (W5 dyn/cost 4 + W6 structural ~15-20)。あと 2 session = W5+W6 前半 / W6 後半 で完了見込み。
