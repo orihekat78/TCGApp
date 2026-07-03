@@ -37,7 +37,10 @@
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
-- **main = bf33786d** (**E3 増分4 P10 = E3 最終 → engine-first 計画 完了**。partnerSolveOverride: パートナー【事件解決】per-game 書換 + alt-lose。engine-only、opus 3-lens 全 SHIP_WITH_NITS・0 blocker。設計最小化 = UI/AI/Cost-union/keyword enum 全て不要と実証、3 file only。直前 = 4ba5957c wave17 テキーラ / 5effb6a9 wave16 キール / 8c326afb E3 増分3 P53)。vitest baseline=**3772 pass +1 skip** (bf33786d。P10 probe +11)。
+- **main = fea03799** (**CARD PHASE 初弾: B03033/B03033P 遠山和葉** = apDeltaAuraOpp 初 live consumer、engine変更0、T1。
+  a1【自分ターン中】相手のセット済キャラ AP-1000 (cross-side aura) + a2【ヒラメキ】draw。D07010 の Opp 版。
+  + docs 決定論化: gen-structure.ts に `.serena/cache` EXCLUDE 追加 ([[feedback-parallel-docs-contamination]] 第2汚染源)。
+  直前 = 0b4025e6 card-phase 移行 docs / bf33786d E3 増分4 P10 = engine-first 完了)。vitest baseline=**3775 pass +1 skip** (fea03799。B03033 probe +3)。
 - ★★★**engine-first 計画 (E1+E2+E3+MR core) 完了 = 骨格凍結到達**。A1 structural / A2 additive 両 well 枯渇。**次フェーズ = CARD PHASE** (card 凍結解除、consumer authoring)。engine 拡張は今後 ±5/軽微 touch-up のみ。
 - ★★**方針更新 (2026-07-02、ユーザー)**: **カード拡張は engine 拡張完了まで凍結**。engine wave は engine-only (consumer カードは card phase)。exemplar 同梱も card 扱いゆえ当面なし (probe test で検証)。
 - ★★**2026-07-03 実測: A2 additive の clean sole-unlock は完全枯渇** ([[reference-a2-additive-sole-unlock-dry]])。決定論 grep (41候補中29 SHIPPED) + 8-agent grounding workflow で **CLEAN_AUTHOR=0/8**。残 additive verb は全て真absent だが consumer に structural gate 残 (on-set-host WRITE/PA-declaration/MR-cond)→0 unlock=dead code。**「まとめて additive batch」は不可能。再sweep 不要**。残 engine = structural cluster のみ (逐次 T2/T3、並列著作不可)。
@@ -129,6 +132,8 @@
 - **card phase = /card-wave skill 起動**。engine 解禁済み consumer を DSL authoring (engine 変更0、card-addition-checklist 通す)。
   即着手可能 vein (engine-unlocked, authoring 待ち):
   - **E3 consumer**: B03135/B05118/B06105 (partnerSolveOverride case、黒 gate= condition partnerColor) / B09107 (P53 cannotSolveCase+evidenceFlip all+evidenceTraitAtLeast)。⚠ B06105 は加えて【宣言】evidenceFlip pick-3 効果。⚠ authoring 時 `opponentLoses` の args.player=**勝者=self**。
+  - **dormant exemplar 残** (card-authoring vein、engine 済・authoring 待ち、各 singleton): **B06006** 江戸川コナン ($self.stackedCount AP aura + 【解決編】突撃 + 【登場時】deck-remove→remove-area pick(探偵/少年探偵団)2枚→下重ね、moderate) / **B06068** 京極真 (contact-removal-observer + 絆 + ターン1 + revoke突撃[キャラ]/grant突撃[事件]、複雑・多gate) / **B06026** コウモリ男 (【現場リムーブ時】selfToEvidence faceUp 未実証 + 【ヒラメキ】表向き証拠を裏向き flip verb 疑わしい = DEFER risk、先に probe)。✅ **B03033 遠山和葉 = 出荷済 (fea03799)**。
+  - ⚠ **contact-participant vein (B04093/PR033/B03034) は engine-blocked**: enabler `inContact` primitive が origin/main に未出荷 (wave-18 探索は未 land)。card phase でなく engine touch-up が要る → 当面 skip。
   - **card-authoring vein** (memory [[reference-card-authoring-stale-defer-vein]] / [[project-engine0-queue-dry-stale-defer-vein]]): DEFERRED-INDEX の engine 名指し・未登録 exemplar (dormant) を第2gate 検査して解禁。contact-participant vein (B04037 系) も live。
   - **PA 宣言19+発動5** (MR partner-area、memory [[project-mr-partner-area-design-2026-06-23]])。
 - ⚠ card phase 着手前: `git grep '<ID>' src/cards` で登録確認 (spec の「解禁/即出荷可」は stale 化しうる、memory [[reference-unlocked-label-stale-grep-srccards]])。全句 engine 実測 (probe) で第2gate 再certify ([[reference-engine-unlocked-second-gate]])。
