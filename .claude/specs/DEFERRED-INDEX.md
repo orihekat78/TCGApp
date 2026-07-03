@@ -761,13 +761,31 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 
 | primitive | 解禁 (card-wave) | 形 |
 |-----------|------------------|----|
-| `cutin:used` hook + `triggerCutinMatches` matcher | B02080/B09086/B04090 | contact.cutIn emit、第三者 observer。使用cutin名/特徴 filter |
+| `cutin:used` hook + `triggerCutinMatches` matcher | ~~B03118 出荷済~~ / B02080→A1 / B09086/B04090 | contact.cutIn emit、第三者 observer。使用cutin名/特徴 filter |
 | `misread:performed` hook | B05015/B09016 | misread AI+人間両経路 emit。per-pick。triggerPlayerIs/selfOnly |
 | `evidence:removed` hook | B02062 | mutate/evidence removeTop/removeAt/toRemove emit。原因問わず |
 
 ⚠ **card-wave 実装時に要対応の latent risk** (4-lens review 指摘、現 consumer 0 で挙動無害):
 - **B02062 (evidence:removed) × ヒラメキ発火順**: action-case.ts は `removeTop`(=evidence:removed emit) → `evidence:remove-by-action`(ヒラメキ窓) の順。B02062 公式Q&A は「ヒラメキ解決 → リムーブエリアに置かれたとき世良発動」= ヒラメキ先。B02062 実装時は実機 test で『ヒラメキ→世良 draw』順を確認し、必要なら action-case の emit 順を入替える。
 - **evidence:removed のコスト由来発火**: `cost/pay.ts` discardEvidence (自証拠リムーブ) でも emit する。rules/21「コストで行ったこと ≠ 〜したとき」。B02062 は「相手の証拠」= side:opp でコスト(自証拠)では発火せず無害だが、将来「自分の証拠がリムーブされたとき」(side:self) observer を実装する際は matcher で cost 由来を除外する設計判断が要る。
+
+### ★ cutin:used observer の contact-依存 **trigger 条件** → A1 (2026-07-03 wave16 発見)
+
+**B03118 キール は出荷済** (wave16、`_reuse` REUSE_CARDS、engine 変更0)。contact 依存 guard を **effect の
+conditional{if}** に置くことで実現 (D11013 同型、runtime ctx = `resolve/stack.entryToCtx` で ctx.contact が
+populate される)。B03118 は limit を持たないため guard を trigger→effect に移しても発動回数の観測差ゼロ。
+
+**gap (A1 送り)**: `listeners/triggered.ts` の handleHook **condition-eval ctx** (L300 付近、`bindings:{}` で
+`.contact` 未設定) が sourceBindings の contact を展開しないため、**ability.condition / trigger.matcherCondition で
+ctx.contact を読めない** (常時 undefined→false)。「contact 相手/参加者が〚filter〛」を **trigger 条件**として
+gate し、かつ **【ターン1】等 limit を持つ** カードは effect-conditional で代替できない (rules/24: 効果不成立でも
+発動扱い = limit を誤消費する)。修正 = handleHook の condition-eval ctx (と resolveCtx) に entryToCtx 同式で
+`.contact` + `bindings.contact` を sourceBindings から展開 (純 additive、既存カードは ability.condition で
+ctx.contact を読まない = 挙動不変)。
+
+| カード | 形 | 送り先 |
+|--------|----|-------|
+| B02080 三池苗子 | 【自分ターン中】【ターン1】[警察]参加者のコンタクト中に自 cutin → その[警察] AP+1000。警察-in-contact が **trigger 条件** かつ turn1 limit → effect-conditional 不可 | A1 (handleHook condition-eval ctx.contact) |
 - **P20 remove:exit (リムーブエリア離脱 observer、B05088)** は本 wave 不採用 → wave-4。離場 snapshot + refresh per-card emit の別 sub-pattern。
 
 ## wave engine/wave4-0701 — additive 3件 出荷 ($self.level / drawUpToHandSize / remove:exit) + latent (2026-07-01)
