@@ -1095,6 +1095,15 @@ import { B03052P } from '../ct-p03/B03052P.js';
 import { B02047 } from '../ct-p02/B02047.js';
 import { B05115 } from '../ct-p05/B05115.js';
 import { B09004 } from '../ct-p09/B09004.js';
+import { B08035 } from '../ct-p08/B08035.js';
+import { B01012 } from '../ct-p01/B01012.js';
+import { B06008 } from '../ct-p06/B06008.js';
+import { B06008P } from '../ct-p06/B06008P.js';
+import { B09048 } from '../ct-p09/B09048.js';
+import { B08006 } from '../ct-p08/B08006.js';
+import { B07096 } from '../ct-p07/B07096.js';
+import { B05041 } from '../ct-p05/B05041.js';
+import { B05041P } from '../ct-p05/B05041P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1419,4 +1428,22 @@ export const REUSE_CARDS: CardDef[] = [
   // engine mega-wave W3 — observer hook exemplar (B03052+P disguise:replaced / B02047 disguiseReplacedMatches /
   // B05115 hand:removed / B09004 hand:reveal)
   B03052, B03052P, B02047, B05115, B09004,
+  // engine mega-wave W4 step1 — r82 bindPick exemplar (B08035 怪盗キッド: 共有 pick → 排他 conditional
+  // sleep→stun/active→sleep + 裏向きセット限定 charRemoveSetCard faceDownOnly)
+  B08035,
+  // engine mega-wave W4 step2 — r83 enter:group + fromGroup exemplar (B01012 阿笠博士:
+  // 効果登場 batch 集約 →「その中から1枚」active + 迅速 rider。B08003 は stacked-identity 不在で DEFER)
+  B01012,
+  // engine mega-wave W4 step3 — r5 charStackCard fromSelf exemplar (B06008+P 仮面ヤイバー:
+  // アクション終了時 self を host の下に重ねる = mutate.scene.toStack 非リムーブ離場 + chain draw)
+  B06008, B06008P,
+  // engine mega-wave W4 step4 — r6/r7 stack-under cost exemplar (B09048 中森銀三 sceneStackUnderSelf /
+  // B08006 小嶋元太 handStackUnder + ヒラメキ $trigger.byUid スタン)
+  B09048, B08006,
+  // engine mega-wave W4 step6 — r62 filtered-突撃 exemplar (B07096 ウォッカ: partnerColorFilteredAssault
+  // 突撃[レベル4以下のキャラ] + removedCharMatches observer + cutin。B08074 は trait-declare 未実装で DEFER)
+  B07096,
+  // engine mega-wave W4 step7 — r1 P01 protection rider exemplar (B05041+P「オレのそばから離れんなや…」:
+  // charSetCard fromSelf + on-set-host opponentRestrict[remove,sleep,stun] + ヒラメキ self-to-hand)
+  B05041, B05041P,
 ];

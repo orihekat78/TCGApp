@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `5f439a843f99`
+> Source hash: `ab00de637962`
 
 純粋セレクタ（GameState を読むのみ、副作用なし）
 
@@ -22,7 +22,7 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `char` | `ap`, `colors`, `declaredUseCount`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `restrictsOpponent`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
+| `char` | `ap`, `charProtectedFrom`, `colors`, `declaredUseCount`, `filteredAssaultKeywords`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `restrictsOpponent`, `selfContinuousFlag`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
 | `def` | `byColor`, `byTrait`, `card`, `isMR` |
 | `game` | `canWin`, `cannotSolveCase`, `evidenceShortfall`, `partnerSolveOverride`, `refreshCount`, `result` |
 | `log` | `byPlayer`, `byTurn`, `search`, `tail` |

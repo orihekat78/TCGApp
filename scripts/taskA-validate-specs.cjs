@@ -41,12 +41,13 @@ const VERBS = new Set([
   'setDisguiseBan', // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   'setHiramekiSuppress', // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
   'expandActionTargets', 'log', 'invokeLeaveToRemoveOfCard', 'noop',
+  'bindPick', // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
 ]);
 const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly']);
 
 // listeners/triggered.ts TRIGGERED_HOOKS (card-triggerable のみ)
 const HOOKS = new Set([
-  'enter', 'disguise:into', 'leave:to-remove', 'action:declare', 'action:guarded',
+  'enter', 'enter:group', 'disguise:into', 'leave:to-remove', 'action:declare', 'action:guarded',
   'action:pre-target', 'contact:start', 'reasoning:end', 'case:to-resolved',
   'phase:end:start', 'effect:declared', 'evidence:remove-by-action',
   'file:pop', // Task D E3 (2026-06-12)
@@ -98,6 +99,8 @@ const COSTS = new Set([
   'sceneToDeckBottom', // Task D E2 (2026-06-12)
   'removeAreaToDeckBottom', // cluster4 (2026-06-14)
   'removeSetCard', // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
+  'sceneStackUnderSelf', // engine mega-wave W4 (2026-07-03, r6): 現場キャラを自身の下に重ねる (B09048 a2)
+  'handStackUnder', // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる (B08006 a1)
   'revealFromHand', // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
   'revealHandToDeckTop', // engine mega-wave W1 (2026-07-03, P29): 手札公開→デッキ上 cost (B05049 a1)
 ]);
@@ -106,7 +109,7 @@ const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'con
 const SHARED_FNS = new Set(['misreadX', 'souzaX', 'partnerColorKeyword', 'eventRemoveByAP', 'caseTraitConditioned', 'caseResolvedHandRemove', 'caseDeclaredEvidenceFlip']);
 const ABILITY_TYPES = new Set(['continuous', 'triggered', 'declared', 'icon-disguise', 'icon-misread']);
 const SCOPES = new Set(['on-scene', 'on-partner-area', 'on-hand', 'on-evidence', 'always']);
-const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'hasSetCards', 'actedCharThisTurn']);
+const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn']);
 
 function walk(node, errs, ctx) {
   if (node === null || typeof node !== 'object') {

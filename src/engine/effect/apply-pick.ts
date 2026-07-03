@@ -364,15 +364,28 @@ function chooseAiPick(
     const orderedCands = forced.length > 0
       ? [...cands.filter((c) => forced.includes(c.uid)), ...cands.filter((c) => !forced.includes(c.uid))]
       : cands;
-    if (pending.distinctNames === true) {
+    // engine mega-wave W4 (2026-07-03, r84): perSideMax (「自分と相手で1枚ずつ」B08019 a2) — distinctNames
+    // と同型の greedy walk (side 別 counter)。両 flag 併用時は perSideMax gate → name-dedup の順で複合。
+    if (pending.distinctNames === true || typeof pending.perSideMax === 'number') {
       const seen = new Set<string>();
+      const bySide: Record<string, number> = {};
       const chosen: string[] = [];
       for (const c of orderedCands) {
         if (chosen.length >= pending.nMax) break;
-        const d = def.card(c.cardId);
-        const comps = d ? allCardNameComponentsForDef(d) : [c.cardId];
-        if (comps.some((x) => seen.has(x))) continue;
-        comps.forEach((x) => seen.add(x));
+        if (typeof pending.perSideMax === 'number') {
+          const side = (c as { player?: string }).player ?? '?';
+          if ((bySide[side] ?? 0) >= pending.perSideMax) continue;
+        }
+        if (pending.distinctNames === true) {
+          const d = def.card(c.cardId);
+          const comps = d ? allCardNameComponentsForDef(d) : [c.cardId];
+          if (comps.some((x) => seen.has(x))) continue;
+          comps.forEach((x) => seen.add(x));
+        }
+        if (typeof pending.perSideMax === 'number') {
+          const side = (c as { player?: string }).player ?? '?';
+          bySide[side] = (bySide[side] ?? 0) + 1;
+        }
         chosen.push(c.uid);
       }
       return { pickedUid: chosen[0] ?? pickedUid, pickedUids: chosen };

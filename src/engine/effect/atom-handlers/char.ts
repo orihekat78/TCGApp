@@ -354,6 +354,24 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
       //       stack count=cardIds.length + 各 cardId を source area から splice
       //   - multi-pick (n>1) は UI 側 (CardListModal nMax>1 multi-select) と
       //     useEngineDispatch.ts effectPickResolve dispatcher の協調で実装。
+      //   - engine mega-wave W4 (2026-07-03, r5): fromSelf contract — host を pick し **自分自身** を
+      //     その下に重ねる (B06008「このキャラをそのキャラの下に重ねる」)。PA 短縮形 (sceneSetState 同型)。
+      //     scene→stack は非リムーブ離場 (mutate.scene.toStack、rules/16 + B09048 Q&A MR 非redirect)。
+      //     ※ scene-source 一般方向 (「現場のキャラを選び host の下に重ねる」B06005 a2) は
+      //       stacked 転送 verb が別途要るため未対応 (DEFERRED-INDEX 参照)。
+      if (a.fromSelf === true) {
+        if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+          paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+          return;
+        }
+        const hostUid = resolveBindRef(a.uid, ctx) as string;
+        if (typeof hostUid !== 'string' || hostUid.startsWith('$')) return; // decline/未解決 → no-op (chain gate は skip 側が担う)
+        const selfUid = ctx.source.uid;
+        if (typeof selfUid !== 'string') return;
+        mutate.scene.toStack(s, selfUid, hostUid);
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:self-under', target: hostUid, result: selfUid });
+        return;
+      }
       const stUid = resolveBindRef(a.uid, ctx) as string;
       const rawCardIds = a.cardIds;
       // 新 multi-pick contract: cardIds が array (resolved) or '$pick.cardIds' (await)

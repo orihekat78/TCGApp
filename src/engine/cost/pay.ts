@@ -135,6 +135,34 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       }
       return;
     }
+    // engine mega-wave W4 (2026-07-03, r6): 現場キャラを能力使用キャラ自身の下に重ねる cost (B09048 a2)。
+    // mutate.scene.toStack = 非リムーブ離場 (rules/16 cascade + B09048 Q&A MR 非redirect)。
+    case 'sceneStackUnderSelf': {
+      const hostUid = ctx.source.uid;
+      if (typeof hostUid !== 'string') return;
+      const targets = pickCandidates(state, cost.target, ctx, cost.n);
+      for (const cand of targets) {
+        if (cand.kind !== 'char') continue;
+        mutate.scene.toStack(state, cand.uid, hostUid);
+        acc.paidItems.push({ kind: 'sceneStackUnderSelf', details: { uid: cand.uid, hostUid } });
+      }
+      return;
+    }
+    // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる cost (B08006 a1)。
+    // 公開 emit は移動前 (revealHandToDeckTop と同契約、hand:reveal on-hand scan)。
+    // host 選択も cost pick (現状 deterministic first-candidate = 出荷済 cost 群と同じ既知 gap)。
+    case 'handStackUnder': {
+      const cardCands = pickCandidates(state, cost.cardTarget, ctx, 1);
+      const hostCands = pickCandidates(state, cost.hostTarget, ctx, 1);
+      const cardCand = cardCands.find((c): c is Candidate & { kind: 'card' } => c.kind === 'card');
+      const hostCand = hostCands.find((c): c is Candidate & { kind: 'char' } => c.kind === 'char');
+      if (!cardCand || !hostCand) return;
+      mutate.hand.emitReveal(state, ctx.source.player, [cardCand.cardId]);
+      mutate.hand.remove(state, ctx.source.player, [cardCand.cardId]);
+      mutate.char.stackCard(state, hostCand.uid, 1);
+      acc.paidItems.push({ kind: 'handStackUnder', details: { cardId: cardCand.cardId, hostUid: hostCand.uid } });
+      return;
+    }
     // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト。
     // UI 選択 (ctx.dyn.costParams.sceneToDeckBottom.uids) を優先し、無ければ
     // pickCandidates (ctx.picked → 先頭 n) fallback。rules/09・23: リムーブではない

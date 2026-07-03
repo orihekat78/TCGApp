@@ -57,6 +57,8 @@ type Player = 'self' | 'opp';
 // tests/engine/sync-taskA-whitelists.test.ts が機械検証するため。
 export const TRIGGERED_HOOKS = [
   'enter',
+  'enter:group', // engine mega-wave W4 (2026-07-03, r83): 効果登場 batch 集約 (B01012)
+
   'effect:declared',
   'action:pre-target', // D11007 v2 Phase 3: attacker 選択時、target 列挙前
   'action:declare',
@@ -288,6 +290,11 @@ function handleHook(
       if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
       // matcher check (カード側で custom 判定)
       if (trig.matcher && !trig.matcher(payload, state)) continue;
+      // engine mega-wave W4 (2026-07-03, r83): emit source.bindings を gate 評価 ctx にも貫通する。
+      // enter:group の boundAnyMatchesFilter{bindKey:'enterGroup'} を ability.condition (=発動条件、
+      // rules/24: 条件不成立なら「発動」自体しない=【ターン1】未消費) で評価するため。
+      // 既存 emit は bindings を渡さない → {} で従来と byte 同一。
+      const gateBindings = ((source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings ?? {}) as EffectCtx['bindings'];
       // D11007 v2 (Phase 2): matcherCondition (declarative 版 matcher)
       // payload を ctx.triggerPayload に詰めて evalCond に渡す
       if (trig.matcherCondition) {
@@ -299,7 +306,7 @@ function handleHook(
             player: card.player,
             area: card.area,
           },
-          bindings: {},
+          bindings: gateBindings,
           triggerPayload: payload,
         };
         if (!evalCond(state, trig.matcherCondition, ctxMc)) continue;
@@ -315,7 +322,7 @@ function handleHook(
             player: card.player,
             area: card.area,
           },
-          bindings: {},
+          bindings: gateBindings,
           triggerPayload: payload,
         };
         if (!evalCond(state, ability.condition, ctx)) continue;
@@ -356,7 +363,8 @@ function handleHook(
           area: card.area,
         },
         // entryToCtx (stack.ts) と同型の cast (contact bindings は Candidate[] とは限らない任意 object array)。
-        bindings: (sourceBindings ?? {}) as EffectCtx['bindings'],
+        // W4 r83: shallow-copy (emit bindings は凍結されうる — runAtom preamble 書込に備える、stack.ts 同型)。
+        bindings: { ...(sourceBindings ?? {}) } as EffectCtx['bindings'],
         // 2026-06-06 タスクC: optional surface 時に $trigger.<field> 用 payload を引き継ぐ
         // (B03038 の $trigger.gained = reasoning:end payload.gained)。
         triggerPayload: payload,

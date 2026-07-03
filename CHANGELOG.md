@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `41ae7e0c5607`
+> Source hash: `c5f8c1b24061`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,123 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+# engine mega-wave W3 — observer hook 5 primitive + exemplar 5 printings
+
+- **r10 `disguise:replaced` hook + `disguiseReplacedByMatches`** (B03052/P シャロン・ヴィンヤード
+  「〚カード名［ベルモット］〛が【変装】によってこのキャラと入れ替わったとき」): flow/contact.disguise
+  が leave:to-deck 後に無条件 emit (B04034 の disguiseTrigger aura は【変装時】のみ対象)。退場カードは
+  既にデッキ下 → virtual-location handler `handleDisguiseReplacedSelf` (handleLeaveToRemoveSelf 同構造)。
+  第三者 in-play scan は意図的に無し (observer 変種カード不在)。
+- **r51 `disguise:into` payload.replacedChar + `disguiseReplacedMatches`** (B02047 工藤有希子
+  「【変装時】LP2以上の【白】のキャラと入れ替わった場合、コンタクトによってリムーブされない」):
+  disguiseInto 直前の toPlainDeep snapshot (uid sentinel `::disguise-replaced` — 新カード自身の
+  continuous/aura 混入防止)。contactImmune は既存配線の初 live consumer。
+- **r12 `invokeLeaveToRemoveOfCard` verb (engine-only)**: リムーブ中カードの【現場リムーブ時】明示発動
+  (B08078 a2 用)。emit 非経由 = 対象 CardDef 直接走査 → 盤面 observer 波及なし (新 leaf
+  effect/invoke-leave-to-remove.ts、import cycle 回避)。B08078 カードは a1 の remove-area
+  ability-presence 計数 Condition 不在で **DEFER** (partial 禁止、DEFERRED-INDEX 記録)。
+- **r17 `hand:removed` hook + `triggerByPlayerIs` + sceneEnter `sourceRequired`** (B05115 弁崎素江
+  「【相手ターン中】相手の能力や効果によって手札からこのカードをリムーブしたとき、リムーブエリアから
+  登場させてもよい」): discardToRemove が splice 前 emit + attribution{byPlayer, viaCost} (viaCost=
+  宣言コスト emit 抑止 rules/21、call site 4 同期)。sourceRequired = 公式Q&A「解決までにリムーブエリアを
+  離れていたら登場できない」の opt-in gate。
+- **r18 `hand:reveal` hook + `triggerRevealMatches`** (B09004 毛利蘭 SR): mutate.hand.emitReveal
+  単一ソース (atomHandReveal 効果経路 + revealFromHand コスト経路 — 印字「【宣言】能力のコストによって」
+  がコスト由来を明記)。revealed[] の cardName any-match (「か」= 配列、rules/19 分割名)。
+- 検証: probe 23 tests (emit 形状 / matcher on-off / 第三者非波及 / sentinel 汚染防止 / Q&A edge /
+  human optional 経路 dispatch 駆動) / tsc 両0 / vitest 3871→3894 回帰0 (契約更新 1: disguise:into
+  payload の additive field 対応) / smoke winsA=498 exc0 不変 / 8lint err0 / 混成 review sonnet5+opus。
+- latent (DEFERRED-INDEX「megaw3」節): cross-side 短縮形 pick の side/chooser 不整合 (現出荷カード未踏、
+  相手選択型 discard 出荷時に buildShortFormPick 修正要) / B08078 DEFER / cutin discard も hand:removed emit。
+
+# engine mega-wave W2b — UI重 restriction 2 primitive (mustBeSelectedByOppEvent / mustGuard enforce) + exemplar 3 printings
+
+- **r27 P50 `mustBeSelectedByOppEvent`** (B08087 吞口重彦「相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ」):
+  ContinuousModifier flag + `read.char.selfContinuousFlag` union 追加。`forcedInclusionUids`
+  (resolve-picks、source `def.kind==='event'` gate + chooser 相手側 + 候補内のみ「選べる場合」) を
+  effect-pick 全 selection site が honor — human push は `pending.forcedUids` (UI enforce)、
+  AI 同期 walk は picked override + generic multi 先頭合流、drain は `chooseAiPick`。
+  forced > nMax は min clamp (公式Q&A「1枚まで×2枚→どちらか1枚」)。
+- **r28 `mustGuard` enforce 層** (B09040 鈴木園子 a2「このキャラはガードできる場合、必ずガードする。」):
+  `guard.mustGuardCandidates` (candidates() ∩ hasTextAbility、スリープ/ブレット/対象自身は候補外=
+  強制免除が公式Q&A と自動整合) + `passGuard`/`tryGuard` fail-safe throw (義務 char 自身必須) +
+  AI 2 site policy override + UI (useContactFlowDriver 候補絞り + GuardPickerModal pass 封じ banner)。
+- **UI (human enforce 層)**: CardListModal forced auto-select+lock+完了 gate / Playmat scene 直接
+  クリック restrict + skip 封じ / EffectPickerModal restrict + skip 封じ。
+- **exemplar**: B08087 (a1 新 flag / a2 B08091 byte 同型 clone) + B09040/B09040P (a1 optional chain
+  sleepSelf→discard bind→sceneRemove `levelMax:{dyn:'$discarded.level'}`、全部品出荷済 / a2
+  charSetTurnEffect Pattern A pick + 絆京極真 + ターン1)。
+- 検証: probe 22 tests (forced 全経路 on/off + Q&A edge 5種 + guard 義務 8種 + AI 2種 + exemplar) /
+  tsc 両0 / vitest 3847→3869 回帰0 / smoke winsA=498 exc0 不変 / 8lint err0 /
+  **playwright 実機 4 scenario** (①D11020 イベント使用→forced 以外 click 不可+skip 消滅+吞口解決
+  ②human GuardPicker=義務 char のみ+「ガードしない」封じ banner ③B09040 a2 human 宣言 full path
+  (levelMax6 filter で lv7 decoy 候補外) ④CPU defender 義務ガード強制) console err0 /
+  敵対 review = sonnet5+opus 混成 2 lens。
+
+### engine mega-wave W2: restriction/observer 6 primitive + hook + exemplar 3 printings (2026-07-03)
+
+全カード実装計画 第2弾 (W1 = additive verb/cost に続く restriction flags クラスタ)。
+
+**新 primitive (engine):**
+- ContinuousModifier 4 token (P07/r24): `untargetableByAction` (target-expander.candidates 負 filter) /
+  `caseActionBan` (canActionAgainstCase gate) / `selfActionBan` (_canAction gate) /
+  `selfCutinBanInContact` (canCutIn 参加キャラ gate)。reader = `read.char.selfContinuousFlag`
+  (continuousDelta の boolean 版、condition honor rules/24)。
+- `opponentRestrict` union += **'refreshEvidence'** (P08/r25: deck.refresh の penalty 証拠 push のみ抑止、
+  reshuffle/痕跡/remove:exit 不変 rules/14) + **'hirameki'** (G09/r29: handleEvidenceRemovedHook aura gate、
+  証拠リムーブは継続・ヒラメキ効果のみ不発 rules/10)。
+- `colorIgnoreOnHandUse` (P09/r26): 「手札から使用する場合、事件カードの色を無視できる」。
+  `handUseColorIgnoreAllowed` 単一ソース helper — colorAllowed の subset 失敗時のみ委譲 (通常カード
+  ゼロコスト)。engine 2 site (hand-use-card/next-hint) + UI 2 site (flows.toCandidate/handUseReason) 鏡像。
+- 新 hook **'ability:declared'** (宣言能力使用の第三者観測、B03057)。emit = declared-ability
+  宣言成立時 (コスト支払後)。matcher = triggerCharMatches/triggerPlayerIs。
+
+**exemplar 3 printings (dormant 解禁):**
+- B05079 世良真純 — 突撃[事件] printed + 「相手は【ヒラメキ】を発動できない」(opponentRestrict:'hirameki'
+  初 consumer) + ヒラメキ evidenceFlip max2 faceDown。
+- B03057/B03057P 槍田郁美 — 「スリープ状態の場合…指定してアクションできない」(condition{charStateIs sleep}
+  + untargetableByAction、スタン時は不成立 = 公式Q&A) + 「[探偵]が【宣言】能力を使用したとき draw+discard」
+  (ability:declared hook 初 consumer)。
+
+**engine-only (consumer は co-primitive 待ち、DEFER):** refreshEvidence の B05097 (可変数 removeDeckTop cost
+待ち)、colorIgnoreOnHandUse の B03126 (P40 action-evidence-deny 待ち)。W2 spec の「既存」主張 2 件
+(ability:declared hook / action-evidence-deny) は実測で偽と判明 → hook は本 wave で追加、deny は defer。
+
+**検証:** TDD probe 11 tests (RED→GREEN、on/off 両 assert + 方向逆 assert + スタン/スリープ区別)。
+gates: tsc0 / vitest 3831→3845 / smoke:1000 winsA=498 exceptions=0 不変 / lint errors=0 /
+敵対 review = **sonnet5+opus 混成 2 lens** (2026-07-03 モデル規約改定の初運用)。
+
+### engine mega-wave W1: additive verb/cost 5 primitive + exemplar 9 printings (2026-07-03)
+
+**全カード実装計画 (2026-07-03 ユーザー決定: blocked 全解禁まで engine 拡張続行) の第1弾。**
+85-primitive TSV を origin/main 実測で再 grounding (34 SHIPPED / 51 未出荷、workflow 6-agent) →
+additive クラスタ W1 を一括出荷。
+
+**新 primitive (engine):**
+- `charSetCard deckOwner:'picked-host'` (field) — セット元デッキを picked host の持ち主側に。
+- `charSetCard cardIds` remove-source 分岐 — remove pick → host 裏向きセット、0枚 = chainStepNoApply
+  (「セットした場合」gate)。remove:exit emit 付き。
+- cost `revealHandToDeckTop` — 手札公開→デッキ上 (canPay=candidates≥n、pay=hand.remove+deck.toTop)。
+- verb `sceneToEvidence` — 現場キャラ→**所有者の**証拠 (faceUp 指定、rules/16 set リムーブ + MR① redirect parity、
+  mutate.scene.toEvidence 新設)。
+- verb `handToFileBottom` — 手札→FILE **1番下** に表向き (mutate.file.insertBottomFaceUp = unshift、rules/05)。
+- verb `evidenceToDeckBottom` — 証拠 pick→持ち主デッキ下 (リムーブでない=ヒラメキ不発動 rules/10)。
+
+**exemplar 9 printings (dormant 解禁):**
+- PR136/PR142 伊織無我 — 絆LP+1 + パートナー緑突撃 + コンタクト除去 observer→持ち主デッキセット
+  (removedCharMatches by:'self' + deckOwner:'picked-host')。
+- B08036 クリス・ヴィンヤード — 宣言スリープ: remove 工藤有希子セット→「セットした場合」sceneToDeck + ヒラメキ sleep。
+- B05049/B05049P 中森青子 — cost revealHandToDeckTop(怪盗キッド) + 黒羽快斗へ突撃 turn 付与 (rules/19 分割名 Q&A 準拠) + ヒラメキ。
+- B03084/B03084P 降谷零 — 登場時 sequence[evidenceToDeckBottom, sceneToEvidence Lv7↓ 表向き] + 宣言 捜査1
+  bind $found → boundAnyMatchesFilter{levelMin:5} → AP+2000。
+- B05045/B05045P 怪盗キッド＆黒羽快斗 (MR/MRP) — removeDeckTop5 cost + sceneToDeck apMax8000 +
+  chain[filePopToHand, handToFileBottom] + カットイン AP+2000。PA宣言句は B05066 前例の partial (BUG-154)。
+
+**検証:** TDD probe 22 tests (atom 11 + card 11、RED→GREEN、human 経路 applyPickAndContinuation +
+production trigger 経路 removeToRemove 実 emit + chain gating + decoy filter)。
+gates: tsc0 / vitest 3809→3831 (+22) / smoke:1000 winsA=498 exceptions=0 不変 / eslint 0 / 8 lint errors=0 /
+opus 2-lens 敵対 review (semantic + edge)。
 
 ### CARD PHASE #3: cutin:used observer ペア B09086 諸伏高明 / B04090 ライ (2026-07-03)
 
@@ -88,6 +205,18 @@ inner bind 書込 ($entered 等) が queue 6th arg を汚染し、既存の空 o
 (full vitest で検出)。修正 = ctx.bindings は fresh `{}`、contact は 6th arg のみで伝達 (runtime entryToCtx で解決)。
 
 gates: tsc0 (両 config) / vitest 3775→3788 pass +1skip (+13: axis 5 + consumers 8) / smoke:1000 winsA=498 exceptions=0 (挙動不変) / 8 lint errors=0 (side-channel allowlist に EffectOptionalBindings 追加)。
+
+# feat(engine): mega-wave W4 — stack/scope 8 primitive + exemplar 9 printings
+
+- **r82 bindPick** — pick-only bind atom (共有 pick → 排他 conditional 分岐)。+ `hasFaceDownSetCards` filter / charRemoveSetCard `faceDownOnly` (「裏向きで」の DSL 化)。exemplar **B08035 怪盗キッド**。
+- **r83 enter:group** — 効果登場 batch 単位 hook (viaEffect gate) + TargetQuery `fromGroup` (「その中から1枚」母集合限定) + emit bindings の gate ctx 貫通 + 凍結 bindings shallow-copy。exemplar **B01012 阿笠博士**。B08003 は stacked-identity 不在で DEFER。
+- **r5 scene→stack** — `mutate.scene.toStack` (非リムーブ離場、rules/16 cascade、**MR 非redirect** = B09048 公式Q&A) + charStackCard `fromSelf`。exemplar **B06008/P 仮面ヤイバー**。
+- **r6/r7 stack-under cost** — `sceneStackUnderSelf` / `handStackUnder` (公開 emit 込み) Cost 2種。exemplar **B09048 中森銀三 / B08006 小嶋元太**。
+- **r84 perSideMax** — TargetQuery side 毎 quota (resolve validate + chooseAiPick greedy + pending 伝播)。B08019 は scene multi-pick human UI gap (pre-existing B02033 同型) で DEFER = engine-only。
+- **r62 filtered-突撃** — `grantFilteredAssault` (「突撃[レベル4以下のキャラ]」per-target evaluated level) + **BUG-168 bundled fix**: canAction('any') が 突撃[キャラ]/[事件] 変種持ちを許可 (AI/UI actor 列挙から合法手が消える latent bug、分離実測で smoke re-baseline winsA 498→472)。exemplar **B07096 ウォッカ** + 共通クラス partnerColorFilteredAssault。B08074 は trait-declare 未実装で DEFER。
+- **r1 protection rider** — opponentRestrict `remove|sleep|stun` + `read.char.charProtectedFrom` (per-target、faceUp setCards on-set-host rider walk = P01 gate#3 解禁) + atomSceneRemove/SetState narrow-gate (相手発 effect のみ)。exemplar **B05041/P イベント**。
+- 混成 review (sonnet5+opus → lens 割れ → **fable 裁定 SHIP_WITH_NITS 0-blocker**)。スタン×相手 activate 貫通は公式Q&A 整合で棄却 → 解釈 pin test + comment 収録。BUG-169 (既出荷 3 枚の faceDownOnly 未移行) 起票。
+- gates: tsc0 / vitest 3938+1skip (probe 46) / smoke 1000 exceptions=0 (re-baseline 472) / 8lint OK。
 
 ### card-authoring vein — B03033/B03033P 遠山和葉 (apDeltaAuraOpp 初 consumer, engine変更0)
 

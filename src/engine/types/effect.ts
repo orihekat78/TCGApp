@@ -228,6 +228,9 @@ export type TargetFilter = {
   levelMin?: number;
   levelMax?: number;
   hasSetCards?: boolean;
+  // engine mega-wave W4 (2026-07-03, r82 同梱): 裏向きセット card を持つキャラのみ (B08035 a2
+  // 「裏向きでセットされているカードを1枚リムーブ」)。hasSetCards は表裏不問 (B02033 は裏向き限定なし)。
+  hasFaceDownSetCards?: boolean;
   // engine additive wave-7 (2026-07-02, P17): 「このターン中にアクション[キャラ]した」board char のみ該当。
   // 記録 = flow/action/state-machine.ts declare が action:declare (target.kind==='char') 時に actor へ
   // setTurnEffect('actedCharThisTurn', true)。清掃 = clearTurnEffects('turn') (ターン終了)。読取は
@@ -262,6 +265,13 @@ export type TargetQuery = {
   // ctx.contact は resolve 時 (entryToCtx, BUG-104) にのみ populate される → pick 実行は必ずコンタクト中。
   // ctx.contact 不在時 (コンタクト外の誤用) は全 char 不一致 = 候補0 (安全側)。既存カード未使用 = baseline 不変。
   inContact?: boolean;
+  // engine mega-wave W4 (2026-07-03, r83 G34): pick 母集合を ctx.bindings[fromGroup] の uid 集合に限定。
+  // enter:group hook の '$enterGroup' 相当 (「同時に登場したキャラの中から1枚」B01012)。binding 不在/空 = 候補0。
+  fromGroup?: string;
+  // engine mega-wave W4 (2026-07-03, r84 G38): side 毎の選択上限 quota (「自分と相手で1枚ずつ」B08019 a2)。
+  // distinctNames と同型の 3経路 enforcement (resolve validate / chooseAiPick greedy / UI disabled)。
+  // partner candidate (player 概念が side でない) では使用不可。
+  perSideMax?: number;
 };
 
 export type TargetingRef =
@@ -327,6 +337,11 @@ export type AtomVerb =
   // ランダムにリムーブする」)。公式 QA: 相手が選べず確率均等な方法。pick を持たない (ランダム選択 =
   // プレイヤー choice 不要)。ctx.rng で決定的 (smoke 再現性)。既存カードは未使用 → baseline 不変。
   | 'discardRandom'
+  // engine mega-wave W4 (2026-07-03, r82 G33): bindPick — 状態変化なしの pick-only atom。選択を
+  // ctx.bindings[args.bind] へ蓄積するだけ (書込は runAtom の pick-bind writeback preamble)。後続の
+  // conditional{charStateIs fromBound} 等が同一 pick を排他分岐で共有する (B08035「そのキャラが
+  // スリープ状態の場合スタン/アクティブ状態の場合スリープ」)。PA 短縮形 (sceneSetState 同型、state 不要)。
+  | 'bindPick'
   | 'sceneEnter' | 'sceneSwitch' | 'sceneRemove' | 'sceneSetState' | 'sceneDisguise' | 'sceneToHand'
   // Task D E2 (2026-06-12): 現場キャラを所有者のデッキ下/上へ移す (sceneToHand 同型 PA 短縮形)。
   // rules: 09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 16 (set/stacked はリムーブ)
@@ -428,6 +443,17 @@ export type Cost =
   // rules: 16 (set/離場時表向きリムーブ), 21 (コスト「自分の」省略 → self-only / 全部行えなければ不可)。
   //   公式Q&A (B08033): 相手カード不可・host 自身も数える・「裏向き」(faceUp:false) のみ対象・分割可。
   | { kind: 'removeSetCard'; n: number }
+  // engine mega-wave W4 (2026-07-03, r6): 〚現場にいる…のキャラを n 枚このキャラの下に重ねる〛コスト
+  //   (B09048 中森銀三 a2)。mutate.scene.toStack (非リムーブ離場、rules/16 情報喪失・cascade) を
+  //   cost 経路から呼ぶ。host = 能力使用キャラ自身 (ctx.source.uid)。
+  // rules: 16 (重ねる — state 前提なし、stun/sleep も可), 21 (「自分の」省略 → query.side:'self')。
+  //   公式Q&A (B09048): MR を重ねても MR能力は有効でない (PA redirect なし)。
+  | { kind: 'sceneStackUnderSelf'; target: TargetingRef; n: number }
+  // engine mega-wave W4 (2026-07-03, r7): 〚手札から…のキャラを1枚公開し、現場にいる…のキャラ1枚の
+  //   下に重ねる〛コスト (B08006 小嶋元太 a1)。cardTarget = hand pick / hostTarget = own-scene pick。
+  //   公開 = hand:reveal emit (移動前、revealHandToDeckTop と同契約) → 手札から抜き host.stackedCards+1。
+  // rules: 16 (重ねる), 21。公式Q&A (B08006): コストで公開したカードを自身の下に重ねることも可。
+  | { kind: 'handStackUnder'; cardTarget: TargetingRef; hostTarget: TargetingRef }
   | { kind: 'pay'; items: Cost[] }
   | { kind: 'choice'; items: Cost[] }
   | { kind: 'fileFrom'; n: number }

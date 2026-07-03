@@ -461,6 +461,39 @@ function clearNamed(s: GameState, uid: string): void {
   found.char.isNamed = false;
 }
 
+/**
+ * 現場キャラを別の現場キャラの下に「重ねる」(engine mega-wave W4 r5/r6, 2026-07-03)。
+ * rules/16: 重なっているカードは情報を持たない (枚数のみ) / 現場キャラ数に数えない。
+ * - リムーブではない → leave:to-remove は emit しない (rules/17【現場リムーブ時】不発動、
+ *   rules/23 の「デッキ下移動はリムーブでない」類推 + B06008/B06005 Q&A)。
+ * - 自身の set/stacked は離場時リムーブ (rules/16、toHand/toDeck 同型 cascade)。
+ * - **MR① redirect は行わない** — 公式Q&A (B09048):「現場にいるMRのキャラを重ねることは
+ *   できますか？ → はい。…重なっているカードは情報を持たないので、MR能力は有効ではありません」
+ *   = PA 移動なしでそのまま重なる (toHand/toDeck の redirect parity をあえて外す唯一の離場 verb)。
+ * - host 側は stackedCards += 1。host 不在 (解決前に離場) は no-op fizzle (rules/15)。
+ */
+function toStack(s: GameState, uid: string, hostUid: string): void {
+  if (uid === hostUid) return; // 自己対象縮退 (防御、B06008 filter cardNameNot が通常排除)
+  const found = findChar(s, uid);
+  if (!found) return;
+  const hostFound = findChar(s, hostUid);
+  if (!hostFound) return;
+  const { char, player } = found;
+  // rules/16 setCards / stackedCards は離場時にリムーブされる
+  if (char.setCards.length > 0) {
+    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+  }
+  for (let i = 0; i < char.stackedCards; i++) {
+    s.players[player].remove.push('back-card');
+  }
+  emitSetCardLeaves(s, char, player, 'leave:to-stack');
+  const idx = s.players[player].scene.findIndex(c => c.uid === uid);
+  if (idx !== -1) {
+    s.players[player].scene.splice(idx, 1);
+  }
+  hostFound.char.stackedCards += 1;
+}
+
 export const scene = {
   enter,
   switchEnter,
@@ -469,6 +502,7 @@ export const scene = {
   toDeck,
   toDeckBottom,
   toEvidence,
+  toStack,
   setState,
   tryActivate,
   clearNamed,

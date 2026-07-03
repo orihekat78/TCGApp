@@ -1,9 +1,9 @@
 // engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { pushPendingPickFromAtom, toPlainDeep } from '../resolve-picks.js';
-import { targetFilterToPredicate, resolvePlayer } from './_shared.js';
+import { targetFilterToPredicate, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
 import type { Player, PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
-import type { GameState, EffectCtx, Candidate } from '../../types/index.js';
+import type { GameState, EffectCtx, Candidate, AtomVerb } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
 
 export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
@@ -318,3 +318,20 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
       }
       return;
     }
+
+// engine mega-wave W4 (2026-07-03, r82 G33): bindPick — 状態変化なしの pick-only atom。
+// 「キャラを1枚まで選ぶ。そのキャラが〜の場合…/〜の場合…」(B08035) の共有 pick を担う。
+// bind 書込は atom-handlers.ts runAtom 冒頭の pick-bind writeback preamble (Task D E0) が行うため、
+// 本 handler は PA 短縮形 await と log のみ (二重書込しない)。preamble との結合は意図的 — preamble を
+// 変更する場合は本 atom も必ず回帰確認すること。decline ('$pick' 残置) は bind 無し = 後続
+// conditional{fromBound} が not-matched で正しく no-op (rules/15「まで」=0枚可)。
+export function atomBindPick(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+  if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+    paShortFormAwait(s, verb, a, ctx, resolvePlayer(a.player, ctx), 'either');
+    return;
+  }
+  const bpUid = resolveBindRef(a.uid, ctx) as string;
+  if (typeof bpUid !== 'string' || bpUid.startsWith('$')) return;
+  // binding は preamble で書込済。可観測性のため log のみ残す。
+  mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:bindPick', target: bpUid });
+}

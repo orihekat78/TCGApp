@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5187c6e91172`
+> Source hash: `56fbd5f574ce`
 
 公式ルール [`19-special-rules.md`](../../../rules/19-special-rules.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -27,7 +27,7 @@
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (243)
+## 📄 参照ソース (248)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/eventRemoveByAP.ts`](../../../../src/cards/_shared/eventRemoveByAP.ts)
@@ -49,4 +49,4 @@
 - [`src/cards/ct-d08/D08025.ts`](../../../../src/cards/ct-d08/D08025.ts)
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
 - [`src/cards/ct-d09/D09004.ts`](../../../../src/cards/ct-d09/D09004.ts)
-- _...ほか 223 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 228 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

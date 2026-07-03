@@ -979,3 +979,22 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (1) invokeLeaveToRemoveOfCard の fabricated payload は {uid, cardId, player, invoked:true} のみ — removedCharMatches 系 matcherCondition (side/byUid 要求) を持つ【現場リムーブ時】は invoke 経由で常に false (現4カード B04004/B05032/B07097/B09071 は全て cause:'contact-ap' 要求 = 手札 invoke シナリオでは文言上も正しく不発)。B08078 author 時に対象候補カードの condition が payload field 依存でないか手動確認。
   (2) discardToRemove の emit ガード (splice 前 includes) は ids に手札実在数超の重複 cardId が来ると emit 過剰 — 現 call site は全て実在カード由来で未踏 (防御的)。
   (3) revealHandToDeckTop cost の emitReveal 配線は nit 対応で追加済 (公開→デッキ上移動の前、on-hand 時点 emit)。
+
+## wave engine / megaw4 (stack/scope 8 primitive、2026-07-03 出荷)
+
+出荷済 = atom `bindPick` (pick-only bind、preamble writeback 依存) + filter `hasFaceDownSetCards` + charRemoveSetCard `faceDownOnly` arg / hook `enter:group` + TargetQuery `fromGroup` + gate ctx への emit bindings 貫通 + 凍結 bindings shallow-copy (stack.ts/triggered.ts) / mutate.scene `toStack` (非リムーブ離場、**MR 非redirect** = B09048 公式Q&A) + charStackCard `fromSelf` / cost `sceneStackUnderSelf`・`handStackUnder` / TargetQuery `perSideMax` (resolve validate + chooseAiPick greedy + pending 伝播) / ContinuousModifier `grantFilteredAssault` + read.char.filteredAssaultKeywords + action.ts namedExceptionAllowed 橋渡し (**bundled fix = BUG-168**、smoke re-baseline winsA 472) / opponentRestrict `remove|sleep|stun` + read.char.charProtectedFrom (per-target、on-set-host rider walk) + atomSceneRemove/SetState narrow-gate。exemplar **B08035・B01012・B06008/P・B09048・B08006・B07096・B05041/P** (9 printings)。
+
+- ★**DEFER: B08003 阿笠博士** (r83 第2 exemplar) — cost「このキャラの下に重なっているカードを3枚リムーブする」+ effect「相手はこのコストによってリムーブされたキャラの中から1枚選ぶ」は **stacked card の identity 不在** (SceneCharacter.stackedCards = number のみ、離場時 'back-card' placeholder) で表現不可。stacked-identity 化 = GameState 形状変更 (W6 級)。加えて opp-chooser pick + cost bind 伝播も未配線。設計 workflow の「removeSetCard cost に bind」案は **セット≠重ね (rules/16) の混同で誤り** — 採用しなかった。
+- ★**DEFER: B08019 大岡紅葉＆伊織無我** (r84 exemplar) — perSideMax engine 3経路は出荷済だが、**scene PA multi-pick の human UI が単発 dispatch collapse** (B02033/B07031/B07055 の「合わせて2枚」と同型の pre-existing gap — SceneArea は multi 収集を持たない)。partial 禁止 → UI multi 収集 + perSideMax disabled-state 配線と同時に card-phase で author。CardListModal への perSideMax disabled 配線も consumer 不在につき同時期へ。
+- ★**DEFER: B08074 降谷零** (r62 第2候補) — 「〚特徴〛を1つ指定し」の trait-declare 宣言機構 + 捜査 bind 集合の指定特徴一致 **枚数** count evaluator (boundAnyMatchesFilter は bool) が不在。backlog の soleUnlock=2 は誤り (実質1)。新規 row「trait-declare + revealed-count carrier」として W5/W6 で起票。
+- ★**DEFER: B06005 阿笠博士 a1後段/a2** (r5 第2候補) — a1「重ねたキャラのレベルの合計以下」= bound 集合 levelSum dyn 不在 / a2「重なっているカードを2枚までそのキャラの下に重ねる」= host 間 stackedCards 転送 verb 不在 (scene-source とは別操作)。
+- **case 側 filtered-突撃** (grantFilteredAssault targetKind:'case') は type 上存在するが namedExceptionAllowed の case 分岐 dispatch 未実装 (consumer 未出現、「対応済」と誤記しないこと)。
+- **水平 latent (W4 で発見、既出荷カード)**: B05028/B08034/B03039 の印字「**裏向きで**セットされているカードを1枚リムーブ」が DSL では faceDownOnly 無し (hasSetCards + 末尾1枚 pop) — 表向きセット (B05041 型) と共存する盤面で表向きを誤 pop しうる。B05041 出荷で共存が現実化 → card-phase で faceDownOnly + hasFaceDownSetCards へ移行推奨 (B02033 は「裏向き」限定なしゆえ現状維持)。
+- **charStackCard sourceArea:'scene' 一般方向** (host 固定・scene 複数 pick) は cardIds=cardId 曖昧性 (同名重複) のため未実装 — fromSelf 方向のみ出荷。
+- **混成 review nits (megaw4、fable 裁定 SHIP_WITH_NITS 0-blocker、latent 記録)**:
+  (1) charProtectedFrom の消費 gate は atomSceneRemove/atomSceneSetState の2箇所のみ — 相手発の別 atom 経由離場 (boundToRemove/invokeLeaveToRemoveOfCard 等) は素通り。現 pool に該当 consumer 不在 = narrow-gate 妥当、該当カード出荷時に gate 追加。
+  (2) mutate.scene.toStack は host と離場キャラの同一 owner 検証なし (uid===hostUid のみ) — 現 consumer は query side:'self' 固定で到達不能。side:'either' 再利用時に owner check 追加。
+  (3) 保護中スタンキャラ × 相手 activate = rules/03 代替 sleep が貫通 (fable 裁定: 効果種別列挙に整合 = 現挙動維持、解釈 pin test + B05041 comment 済。公式裁定で反転可)。
+  (4) 「裏向きで」faceDownOnly 未移行の既出荷 3 枚 = BUG-169 起票済 (card-phase で移行)。
+  (5) enter:group × 疾風 (同一 batch で両 observer) の直接 probe 無し (per-cid enter 維持ゆえ低リスク)。
+  (6) stack-under cost 2種の cost-pick は deterministic first-candidate (pay.ts 既知 gap の継承)。

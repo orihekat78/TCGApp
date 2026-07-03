@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `2985ceb0a602`
+> Source hash: `b0aa553a8adf`
 
 フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard）
 
@@ -27,7 +27,7 @@
 | `action` | `_deleteContext`, `_getContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `tryGuard` |
 | `actionCase` | `flashWindow`, `gainSelfEvidence`, `removeOpponentEvidenceTop` |
 | `contact` | `canCutIn`, `canDisguise`, `computeOrder`, `cutIn`, `disguise`, `judge`, `pass` |
-| `guard` | `canGuard`, `candidates` |
+| `guard` | `canGuard`, `candidates`, `mustGuardCandidates` |
 | `setup` | `canMulligan`, `dealOpeningHand`, `decideFirstPlayer`, `init`, `mulligan`, `reveal`, `startGame` |
 
 ## 関数

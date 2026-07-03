@@ -18,6 +18,8 @@ const COST_KIND_MAP = {
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
   removeSetCard: true, // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
+  sceneStackUnderSelf: true, // engine mega-wave W4 (2026-07-03, r6): 現場キャラを自身の下に重ねる (B09048 a2)
+  handStackUnder: true, // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる (B08006 a1)
   pay: true, choice: true, fileFrom: true, flipFaceUpEvidence: true, custom: true,
 } as const satisfies Record<Cost['kind'], true>;
 export const COST_KINDS: ReadonlySet<string> = new Set(Object.keys(COST_KIND_MAP));
@@ -77,6 +79,19 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     case 'removeFromScene': {
       const cands = candidates(state, cost.target, ctx);
       return cands.length >= cost.n;
+    }
+    // engine mega-wave W4 (2026-07-03, r6): 〚現場にいる…を n 枚このキャラの下に重ねる〛コスト (B09048 a2)。
+    // removeFromScene と同型の count check。rules/16: 重ねるに state 前提なし (sleepChar/stunChar の
+    // active gate を **付けない** こと — 敵対 review 指摘済の誤 clone ポイント)。
+    case 'sceneStackUnderSelf': {
+      const cands = candidates(state, cost.target, ctx);
+      return cands.length >= cost.n;
+    }
+    // engine mega-wave W4 (2026-07-03, r7): 〚手札から…1枚公開し、現場の…1枚の下に重ねる〛コスト (B08006 a1)。
+    // 両 pick の候補が各1以上 (rules/21 全部行えなければ使用不可)。host 側も state gate なし (rules/16)。
+    case 'handStackUnder': {
+      return candidates(state, cost.cardTarget, ctx).length >= 1
+        && candidates(state, cost.hostTarget, ctx).length >= 1;
     }
     // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト。
     // rules/21: 全部行えなければ使用不可 (candidates >= n)。デッキ枚数条件は無い。

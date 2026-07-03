@@ -68,4 +68,5 @@ export type {
   AbilityLimit,
   TriggerDef,
   ContinuousModifier,
+  FilteredAssaultGrant, // engine mega-wave W4 (2026-07-03, r62)
 } from './card-def.js';

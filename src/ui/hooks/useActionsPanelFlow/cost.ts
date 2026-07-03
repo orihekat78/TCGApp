@@ -37,6 +37,8 @@ export function costToText(cost: Cost): string {
     case 'sceneToDeckBottom': return `現場のキャラ ${cost.n} 枚をデッキの下へ`; // Task D E2
     case 'removeAreaToDeckBottom': return `リムーブエリアの ${cost.n} 枚をデッキの下へ`; // cluster4 (2026-06-14)
     case 'removeSetCard':     return `裏向きセットされたカードを ${cost.n} 枚リムーブ`; // engine additive wave (2026-06-24)
+    case 'sceneStackUnderSelf': return `現場のキャラ ${cost.n} 枚をこのキャラの下に重ねる`; // engine mega-wave W4 r6 (B09048)
+    case 'handStackUnder':    return '手札のカード1枚を公開して現場のキャラの下に重ねる'; // engine mega-wave W4 r7 (B08006)
     case 'pay':               return cost.items.map(costToText).join(' + ');
     case 'choice':            return cost.items.map(costToText).join(' / ');
     case 'fileFrom':          return `FILE から ${cost.n} 枚`;

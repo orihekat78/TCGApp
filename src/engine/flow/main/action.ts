@@ -11,8 +11,9 @@
 //   - アクション[キャラ]: 相手の現場の sleep / stun キャラ
 //   - アクション[事件]: 相手の事件 (相手証拠 ≥ 1 が必要)
 
-import type { GameState } from '../../types/index.js';
+import type { GameState, Candidate } from '../../types/index.js';
 import { char as readChar } from '../../read/char.js';
+import { matchOneFilter } from '../../target/candidates.js';
 import { candidates as targetCandidates, mustTargetCandidates } from '../action/target-expander.js';
 
 type Player = 'self' | 'opp';
@@ -48,12 +49,37 @@ function findActor(
  */
 type ActionTargetKind = 'any' | 'char' | 'case';
 
-function namedExceptionAllowed(state: GameState, uid: string, targetKind: ActionTargetKind): boolean {
+function namedExceptionAllowed(state: GameState, uid: string, targetKind: ActionTargetKind, targetUid?: string): boolean {
   const kws = readChar.keywords(state, uid);
   if (kws.includes('迅速')) return true;
   if (kws.includes('突撃')) return true;
   if (targetKind === 'char' && kws.includes('突撃[キャラ]')) return true;
   if (targetKind === 'case' && kws.includes('突撃[事件]')) return true;
+  // engine mega-wave W4 (2026-07-03, r62 bundled fix): 'any' (= canAction、UI actor 列挙) は
+  // 突撃[キャラ]/[事件] 変種所持でも許可 — 旧実装は 'any' で false になり、変種のみ持ちの名乗り
+  // キャラが actor として一切列挙されない latent gap があった (対象種別の絞りは char/case 側で行う)。
+  // 挙動変化は本分岐のみ由来と分離実測済 (branch 無効時 smoke winsA=498 復元 / 有効時 472 —
+  // CT-D08/D11 デッキの 突撃[キャラ] 系が名乗りターンに合法手として列挙されるようになった正方向修正)。
+  if (targetKind === 'any' && (kws.includes('突撃[キャラ]') || kws.includes('突撃[事件]'))) return true;
+  // engine mega-wave W4 (2026-07-03, r62 G32): filter 付き突撃 (「突撃[レベル4以下のキャラ]」B07096)。
+  // targetUid 指定時は per-target で matchOneFilter 評価 (effective level 込み — 公式Q&A「効果で
+  // レベル4以下になっているキャラを指定可」)。targetUid 未指定 (宣言前の actor 列挙) は entry 存在で
+  // 許可し、対象確定時に canActionAgainstChar → ここへ targetUid 付きで再評価される。
+  // filter は名乗り例外のみを縛る — 非名乗り時は本関数に到達せず無制限 (公式Q&A「名乗り状態でない
+  // 場合、レベル5以上のキャラを指定できますか？ → はい」)。case 側 filtered は consumer 未出現 = 未実装。
+  const fas = readChar.filteredAssaultKeywords(state, uid);
+  for (const fa of fas) {
+    if (targetKind === 'any') return true;
+    if (targetKind === 'char' && fa.targetKind === 'char') {
+      if (targetUid === undefined) return true;
+      for (const p of ['self', 'opp'] as const) {
+        const tc = state.players[p].scene.find(c => c.uid === targetUid);
+        if (!tc) continue;
+        const cand: Candidate = { kind: 'char', uid: tc.uid, cardId: tc.cardId, player: p };
+        if (matchOneFilter(state, tc.cardId, fa.filter, tc, cand)) return true;
+      }
+    }
+  }
   return false;
 }
 
@@ -69,7 +95,7 @@ export function canAction(state: GameState, byUid: string): boolean {
   return _canAction(state, byUid, 'any');
 }
 
-function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKind): boolean {
+function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKind, targetUid?: string): boolean {
   const actor = findActor(state, byUid);
   if (!actor) return false;
   if (actor.kind === 'partner') {
@@ -83,8 +109,8 @@ function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKin
   // 失っても継続 (rules/22/24、state-machine は再評価しない)。不在時 false = 挙動不変。
   if (readChar.selfContinuousFlag(state, byUid, 'selfActionBan')) return false;
   if (!c.isNamed) return true;
-  // 名乗り中: 例外キーワード判定
-  return namedExceptionAllowed(state, byUid, targetKind);
+  // 名乗り中: 例外キーワード判定 (W4 r62: filtered-突撃 は targetUid 付きで per-target 評価)
+  return namedExceptionAllowed(state, byUid, targetKind, targetUid);
 }
 
 /**
@@ -99,7 +125,7 @@ function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKin
  * before candidates() is called, so candidates() returning [] is unreachable here.
  */
 export function canActionAgainstChar(state: GameState, byUid: string, targetUid: string): boolean {
-  if (!_canAction(state, byUid, 'char')) return false;
+  if (!_canAction(state, byUid, 'char', targetUid)) return false;
   const cands = targetCandidates(state, byUid);
   if (!cands.some(c => c.uid === targetUid)) return false;
   // BUG-101: mustBeTargeted (D11005 挑発) — 強制対象 (legal な must-target) がいる場合、

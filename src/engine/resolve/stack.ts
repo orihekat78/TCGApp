@@ -62,7 +62,10 @@ function entryToCtx(entry: EffectStackEntry): EffectCtx {
     // entry.bindings の値は Candidate[] とは限らない (例: contact bindings は
     // 任意 object array) ため、resolveBindRef 内の `as Record<string, unknown>` cast
     // で読み出される。型レベルでは Record<string, Candidate[]> として渡す (cast 必要)。
-    bindings: (entry.bindings ?? {}) as EffectCtx['bindings'],
+    // engine mega-wave W4 (2026-07-03, r83): shallow-copy — entry は state.pendingEffects 内 =
+    // Immer 凍結。runAtom preamble の pick-bind writeback (ctx.bindings[bind] 書込) が
+    // "object is not extensible" で落ちるため、runtime ctx はコピーに切り離す (読取は従来同値)。
+    bindings: { ...(entry.bindings ?? {}) } as EffectCtx['bindings'],
     triggerPayload: entry.triggeredBy.payload,
     // engine additive wave (2026-06-29d): queue 時点の costPaid を復元 (bindings と同型)。
     // costRemovedMatches cond (宣言能力 conditional の STABLE `if` runtime 再評価) が cost 除去カード

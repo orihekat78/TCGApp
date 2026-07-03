@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5187c6e91172`
+> Source hash: `56fbd5f574ce`
 
 公式ルール [`13-keywords.md`](../../../rules/13-keywords.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -28,12 +28,13 @@
 - [`phase-9-h-performance`](../by-spec/phase-9-h-performance.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (305)
+## 📄 参照ソース (317)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
 - [`src/ai/policy.ts`](../../../../src/ai/policy.ts)
 - [`src/cards/_shared/misreadX.ts`](../../../../src/cards/_shared/misreadX.ts)
+- [`src/cards/_shared/partnerColorFilteredAssault.ts`](../../../../src/cards/_shared/partnerColorFilteredAssault.ts)
 - [`src/cards/_shared/partnerColorKeyword.ts`](../../../../src/cards/_shared/partnerColorKeyword.ts)
 - [`src/cards/_shared/souzaX.ts`](../../../../src/cards/_shared/souzaX.ts)
 - [`src/cards/ct-d01/D01005.ts`](../../../../src/cards/ct-d01/D01005.ts)
@@ -49,5 +50,4 @@
 - [`src/cards/ct-d04/D04003.ts`](../../../../src/cards/ct-d04/D04003.ts)
 - [`src/cards/ct-d04/D04004.ts`](../../../../src/cards/ct-d04/D04004.ts)
 - [`src/cards/ct-d04/D04005.ts`](../../../../src/cards/ct-d04/D04005.ts)
-- [`src/cards/ct-d04/D04007.ts`](../../../../src/cards/ct-d04/D04007.ts)
-- _...ほか 285 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 297 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

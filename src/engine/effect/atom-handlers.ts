@@ -80,6 +80,7 @@ import {
   atomDeckToBottomBound,
   atomBoundToRemove,
   atomSouza,
+  atomBindPick,
 } from './atom-handlers/picks.js';
 import {
   atomPartnerAssist,
@@ -254,6 +255,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomSetHiramekiSuppress(s, a, ctx);
     case 'invokeLeaveToRemoveOfCard':
       return atomInvokeLeaveToRemoveOfCard(s, a, ctx);
+    case 'bindPick':
+      return atomBindPick(s, a, ctx, verb);
     case 'log':
       return atomLog(s, a, ctx);
     case 'noop':

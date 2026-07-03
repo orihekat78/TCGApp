@@ -1,7 +1,7 @@
 // engine.read.char — キャラ単位派生情報セレクタ (純粋関数)
 // rules: 03-field-areas.md (状態), 11-reasoning.md (LP≤0), 13-keywords.md, 19-special-rules.md
 
-import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter, AbilityScope } from '@/engine/types';
+import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter, AbilityScope, FilteredAssaultGrant } from '@/engine/types';
 import { scene } from './scene.js';
 import { def } from './def.js';
 import { evalCond } from '../cond/eval.js';
@@ -493,6 +493,68 @@ function declaredUseCount(s: GameState, uid: string, abilityId: string): number 
   return 0;
 }
 
+// engine mega-wave W4 (2026-07-03, r62 G32): filter 付き突撃 grant の走査 (B07096「突撃[レベル4以下の
+// キャラ]」)。keywords() の fromContinuous walk と同型 (continuous + inPA scope gate + ability.condition
+// honor、rules/24 常時型)。fromSetHost/revoked/turnGranted 相当は consumer 無し = YAGNI 省略 (rider 型の
+// filtered-突撃 が出たら追加)。消費は flow/main/action.ts namedExceptionAllowed。
+function filteredAssaultKeywords(s: GameState, uid: string): FilteredAssaultGrant[] {
+  const char = scene.byUid(s, uid);
+  if (!char) return [];
+  const d = def.card(char.cardId);
+  if (!d) return [];
+  const owner = ownerSideOf(s, uid);
+  if (!owner) return [];
+  const inPA = isPartnerMrUid(uid);
+  const out: FilteredAssaultGrant[] = [];
+  const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
+  for (const ability of d.abilities ?? []) {
+    if (ability.type !== 'continuous') continue;
+    if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+    const grants = ability.continuousModifier?.grantFilteredAssault;
+    if (!Array.isArray(grants) || grants.length === 0) continue;
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    out.push(...grants);
+  }
+  return out;
+}
+
+// engine mega-wave W4 (2026-07-03, r1 P01 protection rider): 対象キャラ自身が token の対キャラ保護を
+// 持つか (B05041「このイベントがセットされているキャラは、相手の能力や効果によってリムーブされず、
+// スリープされず、スタンされない」)。per-target — restrictsOpponent (board-wide、player-level 制限) と
+// 別経路。走査 = ①自身の continuous abilities ②faceUp setCards の scope 'on-set-host' rider
+// (P01 gate#3 解禁: continuousDelta/keywords rider と同型の setCards walk)。ability.condition honor。
+// 消費は atomSceneRemove/atomSceneSetState の相手発 effect gate のみ (公式Q&A: 選ぶことは妨げない /
+// コンタクト除去・スイッチ・デッキ下移動は妨げない → mutation 直前 narrow-gate)。
+function charProtectedFrom(s: GameState, uid: string, token: 'remove' | 'sleep' | 'stun'): boolean {
+  const c = scene.byUid(s, uid);
+  if (!c) return false;
+  const owner = ownerSideOf(s, uid);
+  if (!owner) return false;
+  const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
+  // ① 自身の印字 continuous
+  const d = def.card(c.cardId);
+  for (const ability of d?.abilities ?? []) {
+    if (ability.type !== 'continuous') continue;
+    if (ability.scope === 'on-set-host') continue; // 自身に印字された rider 定義は host 用 — 自分では無効
+    if (!ability.continuousModifier?.opponentRestrict?.includes(token)) continue;
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    return true;
+  }
+  // ② faceUp setCards の on-set-host rider (rules/16: 裏向きセットは能力を持たない)
+  for (const entry of c.setCards) {
+    if (!entry.faceUp) continue;
+    const sd = def.card(entry.cardId);
+    for (const ability of sd?.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (ability.scope !== 'on-set-host') continue;
+      if (!ability.continuousModifier?.opponentRestrict?.includes(token)) continue;
+      if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
 export const char = {
   ap,
   lp,
@@ -502,6 +564,8 @@ export const char = {
   traits,
   keywords,
   hasKeyword,
+  filteredAssaultKeywords,
+  charProtectedFrom,
   restrictsOpponent,
   selfContinuousFlag,
   hasTextAbility,

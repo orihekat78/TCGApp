@@ -31,6 +31,7 @@ const TARGET_FILTER_KEYS = {
   kind: true, apMin: true, apMax: true, lpMin: true, lpMax: true,
   levelMin: true, levelMax: true, hasSetCards: true,
   actedCharThisTurn: true, // engine additive wave-7 (2026-07-02, P17)
+  hasFaceDownSetCards: true, // engine mega-wave W4 (2026-07-03, r82 同梱): 裏向きセット保持軸 (B08035 a2)
 } as const satisfies Record<Exclude<keyof TargetFilter, 'custom'>, true>;
 
 const cjsSource = readFileSync(

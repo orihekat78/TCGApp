@@ -66,6 +66,8 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   charSetCard:       { defaultArea: 'scene',    mode: 'PA' },
   // 2026-06-06 タスクC: セット card を 1 枚外す短縮形 (hasSetCards filter で対象キャラを pick)
   charRemoveSetCard: { defaultArea: 'scene',    mode: 'PA' },
+  // engine mega-wave W4 (2026-07-03, r82 G33): bindPick — pick-only bind (B08035)。state/delta 不要。
+  bindPick:          { defaultArea: 'scene',    mode: 'PA' },
   sceneEnter:        { defaultArea: 'from',     mode: 'PA', sourceSplice: true },
 };
 
@@ -104,6 +106,10 @@ export function buildShortFormPick(
   if (a.faceUp === true) query.faceUp = true;
   // engine additive wave-18 (2026-07-03): inContact 用 — pick を現コンタクト参加者に限定 (B04075/PR029)。
   if (a.inContact === true) query.inContact = true;
+  // engine mega-wave W4 (2026-07-03, r83): fromGroup — pick 母集合を bound 集合に限定 (enter:group、B01012)。
+  if (typeof a.fromGroup === 'string') query.fromGroup = a.fromGroup;
+  // engine mega-wave W4 (2026-07-03, r84): perSideMax — side 毎 quota (「自分と相手で1枚ずつ」B08019)。
+  if (typeof a.perSideMax === 'number') query.perSideMax = a.perSideMax;
   return { kind: 'pick', query, n: { min: nMin, max: nMax }, chooser };
 }
 

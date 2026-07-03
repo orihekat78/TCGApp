@@ -1,14 +1,14 @@
 {
   "_comment": "Phase 7-E (LESSONS-LEARNED 教訓 enforcement): smoke 1000 戦の baseline 値。check-smoke-baseline.ts が最新 smoke report と比較し、閾値超過時に exit 1。",
-  "_updated": "2026-06-15",
-  "_source_commit": "BUG-144 (AI case-action guard 窓) で CPU 防御側が アクション[事件] をガードするようになり re-baseline (avg 10.86→11.00、winsA 469→498)。smoke は決定論的 (engine 挙動変更で RNG パスが変わる)。winsA/winsB は informational (check 対象外)。check は avgTurns delta / timeouts / exceptions のみ。直前: BUG-109 re-baseline。",
+  "_updated": "2026-07-03",
+  "_source_commit": "engine mega-wave W4 r62 bundled fix (canAction 'any' が 突撃[キャラ]/[事件] 変種持ちを許可 — AI/UI actor 列挙から合法手が消える latent bug 修正、rules/13) で re-baseline (winsA 498→472, avg 11.0→11.16)。分離実測: 本分岐無効時 498 復元 = 他 W4 変更は挙動不変。直前: BUG-144 re-baseline。",
   "expectations": {
     "matches": 1000,
-    "winsA": 498,
-    "winsB": 502,
-    "avgTurns": 11.0,
+    "winsA": 472,
+    "winsB": 528,
+    "avgTurns": 11.16,
     "p50Turns": 11.0,
-    "p95Turns": 13.0,
+    "p95Turns": 14.0,
     "maxTurns": 16
   },
   "thresholds": {

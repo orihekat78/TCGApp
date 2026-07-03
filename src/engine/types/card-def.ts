@@ -99,6 +99,9 @@ export type ContinuousDelta =
   | { dyn: string }
   | ((s: GameState, ctx: { uid: string }) => number);
 
+// engine mega-wave W4 (2026-07-03, r62 G32): filter 付き突撃 grant の 1 entry (B07096「突撃[レベル4以下のキャラ]」)。
+export type FilteredAssaultGrant = { targetKind: 'char' | 'case'; filter: TargetFilter };
+
 export type ContinuousModifier = {
   apDelta?: ContinuousDelta;
   lpDelta?: ContinuousDelta;
@@ -109,6 +112,13 @@ export type ContinuousModifier = {
   // self-only (aura 版 lvlDeltaAura は未導入 = YAGNI、対象カードは全て self-buff)。
   lvlDelta?: ContinuousDelta;
   grantKeywords?: (s: GameState, ctx: { uid: string }) => string[];
+  // engine mega-wave W4 (2026-07-03, r62 G32): filter 付き突撃の継続付与 —「〚突撃［レベル4以下の
+  // キャラ］〛」(B07096 ウォッカ)。plain grantKeywords と違い対象 filter を伴うため、read.char.
+  // filteredAssaultKeywords が走査し flow/main/action.ts namedExceptionAllowed が per-target で
+  // matchOneFilter 評価する (effective level 込み — 公式Q&A「効果でレベル4以下になったキャラも指定可」)。
+  // plain data (JSON シリアライズ可能維持)。targetKind:'case' 側 consumer は未出現 = namedException の
+  // case 側 filter dispatch は未実装 (DEFERRED-INDEX 参照、「対応済」と誤記しないこと)。
+  grantFilteredAssault?: FilteredAssaultGrant[];
   // engine additive wave-6 (2026-07-01, P37): 継続的な特徴/カード名の付与 (self-scope continuous)。
   //   「現場にいるこのキャラは〚特徴[探偵]〛を持つ」(B08063 長野県警 / B05012 探偵) /
   //   「現場にいるこのキャラは〚カード名[怪盗キッド]〛としても扱う」(B07053 / B05012 毛利小五郎)。
@@ -136,7 +146,13 @@ export type ContinuousModifier = {
   //   'hirameki'       = 「相手は【ヒラメキ】を発動できない」(B05079、W2 2026-07-03)。
   //                      listeners/triggered.handleEvidenceRemovedHook が発火前に aura gate (rules/10、
   //                      証拠リムーブ自体は継続・ヒラメキ効果のみ不発 = 公式Q&A)。
-  opponentRestrict?: ('cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki')[];
+  // engine mega-wave W4 (2026-07-03, r1 P01 protection rider): 'remove'|'sleep'|'stun' = 保持キャラ自身の
+  // 対キャラ保護 (「相手の能力や効果によってリムーブされず、スリープされず、スタンされない」B05041)。
+  // 適用は cause==='effect' の atom 経路 (atomSceneRemove/atomSceneSetState) の **相手発** のみ —
+  // contact-ap 除去・switch・cost・自分の効果・デッキ下移動等は対象外 (公式Q&A B05041)。読取は
+  // read.char.charProtectedFrom (per-target: 自身の abilities + faceUp setCards の on-set-host rider)。
+  // 既存 4 token (cutin 等) は player-level 制限で restrictsOpponent (board-wide) が読む — 別経路。
+  opponentRestrict?: ('cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'remove' | 'sleep' | 'stun')[];
   // engine mega-wave W2 (2026-07-03, P07/r24): 継続アクション制限 token 群 (bearer 自身に係る)。
   //   read.char.selfContinuousFlag(s, uid, token) が bearer の continuous ability を walk
   //   (condition honor、restrictsOpponent と同流儀) して boolean を返す。不在時 false = 挙動不変。

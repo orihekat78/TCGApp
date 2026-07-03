@@ -4,6 +4,7 @@ import { event } from '../../event/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { buildShortFormPick } from '../atom-pick-spec.js';
 import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
+import { char as readChar } from '../../read/char.js'; // engine mega-wave W4 (2026-07-03, r1): 保護 rider gate
 import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
@@ -45,6 +46,8 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           };
           const srcArea = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { area?: string } }).query?.area : undefined) as 'remove' | 'hand' | 'deck' | undefined;
           const srcSide = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { side?: string } }).query?.side : undefined) as 'self' | 'opp' | undefined;
+          // engine mega-wave W4 (2026-07-03, r83): 同一解決で登場した全キャラを集約 (enter:group 用)
+          const enteredGroup: Array<{ kind: 'char'; uid: string; cardId: string; player: Player }> = [];
           for (const cid of cardIds) {
             // 単一 path と同じ inline splice (remove/hand/deck のみ)。これがないと remove に残り複製登場 (D11014 a2 class bug)。
             const fp = srcSide === 'opp' ? 'opp' : enterP;
@@ -74,6 +77,15 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
               uid: nc.uid, viaEffect: viaEffectM, enterOrder: nc.enterOrder,
               enterOrderThisTurn: nc.enterOrderThisTurn, sourceCardId: (ctx.source as { cardId?: string }).cardId,
             }, { player: enterP, uid: nc.uid, cardId: cid });
+            enteredGroup.push({ kind: 'char', uid: nc.uid, cardId: cid, player: enterP });
+          }
+          // engine mega-wave W4 (2026-07-03, r83 G34): batch 単位の enter:group を 1 回だけ emit
+          // (per-cid でなく呼出単位、「その中から1枚」の母集合)。viaEffect=true のみ (「能力や効果によって」)。
+          if (viaEffectM && enteredGroup.length > 0) {
+            event.emit(s, 'enter:group', {
+              player: enterP, uids: enteredGroup.map(e => e.uid),
+              sourceCardId: (ctx.source as { cardId?: string }).cardId,
+            }, { player: enterP, bindings: { enterGroup: enteredGroup } });
           }
           return;
         }
@@ -222,6 +234,13 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         enterOrderThisTurn: newChar.enterOrderThisTurn,
         sourceCardId: (ctx.source as { cardId?: string }).cardId,
       }, { player: enterPlayer, uid: newChar.uid, cardId });
+      // engine mega-wave W4 (2026-07-03, r83): 単一登場も group-of-1 として emit (B01012 は 1枚登場でも発動)
+      if (viaEffect) {
+        event.emit(s, 'enter:group', {
+          player: enterPlayer, uids: [newChar.uid],
+          sourceCardId: (ctx.source as { cardId?: string }).cardId,
+        }, { player: enterPlayer, bindings: { enterGroup: [{ kind: 'char', uid: newChar.uid, cardId, player: enterPlayer }] } });
+      }
       return;
     }
 
@@ -251,6 +270,13 @@ export function atomSceneSwitch(s: GameState, a: Record<string, unknown>, ctx: E
         enterOrderThisTurn: newChar.enterOrderThisTurn,
         sourceCardId: (ctx.source as { cardId?: string }).cardId,
       }, { player: swPlayer, uid: newChar.uid, cardId: swCardId });
+      // engine mega-wave W4 (2026-07-03, r83): スイッチ登場も「登場」(rules/17) → group-of-1 emit
+      if (viaEffect) {
+        event.emit(s, 'enter:group', {
+          player: swPlayer, uids: [newChar.uid],
+          sourceCardId: (ctx.source as { cardId?: string }).cardId,
+        }, { player: swPlayer, bindings: { enterGroup: [{ kind: 'char', uid: newChar.uid, cardId: swCardId, player: swPlayer }] } });
+      }
       return;
     }
 
@@ -274,6 +300,19 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       // BUG-068: bind ref ($matched.uid 等) 解決を配線
       const srUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof srUid !== 'string' || srUid.startsWith('$')) return;
+      // engine mega-wave W4 (2026-07-03, r1 P01): 保護 rider gate —「相手の能力や効果によって
+      // リムーブされず」(B05041)。cause 'effect' の **相手発** のみ block (公式Q&A: 選ぶことは可 /
+      // コンタクト除去・スイッチ・コストは別経路ゆえ自然に対象外)。既存カードは未宣言 → false 短絡。
+      {
+        const srCause = (a.cause as RemoveCause) ?? 'effect';
+        if (srCause === 'effect') {
+          const srOwner: Player = s.players.self.scene.some(c => c.uid === srUid) ? 'self' : 'opp';
+          if (ctx.source.player !== srOwner && readChar.charProtectedFrom(s, srUid, 'remove')) {
+            mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid, result: 'blocked-protected' });
+            return;
+          }
+        }
+      }
       mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect');
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
@@ -299,7 +338,9 @@ export function atomCharRemoveSetCard(s: GameState, a: Record<string, unknown>, 
       }
       const rsUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof rsUid !== 'string' || rsUid.startsWith('$')) return;
-      const removed = mutate.char.removeOneSetCard(s, rsUid);
+      // engine mega-wave W4 (2026-07-03, r82 同梱): faceDownOnly opt-in 転送 (B08035 a2「裏向きで
+      // セットされているカード」)。未指定は従来通り末尾1枚 (B02033 は裏向き限定なし = 挙動不変)。
+      const removed = mutate.char.removeOneSetCard(s, rsUid, a.faceDownOnly === true ? { faceDownOnly: true } : undefined);
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRemoveSetCard', target: rsUid, result: removed ?? 'none' });
       return;
     }
@@ -377,6 +418,16 @@ export function atomSceneSetState(s: GameState, a: Record<string, unknown>, ctx:
       const ssUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof ssUid !== 'string' || ssUid.startsWith('$')) return;
       const ssState = a.state as 'active' | 'sleep' | 'stun';
+      // engine mega-wave W4 (2026-07-03, r1 P01): 保護 rider gate —「相手の能力や効果によって
+      // スリープされず、スタンされない」(B05041)。相手発の sleep/stun のみ block ('active' 化は
+      // 不利益でないため対象外)。既存カードは未宣言 → false 短絡。
+      if (ssState === 'sleep' || ssState === 'stun') {
+        const ssOwner: Player = s.players.self.scene.some(c => c.uid === ssUid) ? 'self' : 'opp';
+        if (ctx.source.player !== ssOwner && readChar.charProtectedFrom(s, ssUid, ssState)) {
+          mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneSetState', target: ssUid, result: 'blocked-protected' });
+          return;
+        }
+      }
       mutate.scene.setState(s, ssUid, ssState);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneSetState', target: ssUid, result: ssState });

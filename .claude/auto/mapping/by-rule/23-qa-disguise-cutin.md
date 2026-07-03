@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `5187c6e91172`
+> Source hash: `56fbd5f574ce`
 
 公式ルール [`23-qa-disguise-cutin.md`](../../../rules/23-qa-disguise-cutin.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -18,7 +18,7 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (35)
+## 📄 参照ソース (37)
 
 - [`src/cards/ct-d11/D11013.ts`](../../../../src/cards/ct-d11/D11013.ts)
 - [`src/cards/ct-d11/D11017.ts`](../../../../src/cards/ct-d11/D11017.ts)
@@ -33,11 +33,11 @@
 - [`src/cards/ct-p02/B02044.ts`](../../../../src/cards/ct-p02/B02044.ts)
 - [`src/cards/ct-p02/B02044P.ts`](../../../../src/cards/ct-p02/B02044P.ts)
 - [`src/cards/ct-p02/B02045.ts`](../../../../src/cards/ct-p02/B02045.ts)
+- [`src/cards/ct-p02/B02047.ts`](../../../../src/cards/ct-p02/B02047.ts)
+- [`src/cards/ct-p03/B03052.ts`](../../../../src/cards/ct-p03/B03052.ts)
 - [`src/cards/ct-p03/B03058.ts`](../../../../src/cards/ct-p03/B03058.ts)
 - [`src/cards/ct-p03/B03062.ts`](../../../../src/cards/ct-p03/B03062.ts)
 - [`src/cards/ct-p03/B03062P.ts`](../../../../src/cards/ct-p03/B03062P.ts)
 - [`src/cards/ct-p03/B03129.ts`](../../../../src/cards/ct-p03/B03129.ts)
 - [`src/cards/ct-p04/B04011.ts`](../../../../src/cards/ct-p04/B04011.ts)
-- [`src/cards/ct-p04/B04034.ts`](../../../../src/cards/ct-p04/B04034.ts)
-- [`src/cards/ct-p05/B05061.ts`](../../../../src/cards/ct-p05/B05061.ts)
-- _...ほか 15 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 17 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

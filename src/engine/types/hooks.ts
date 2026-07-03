@@ -56,6 +56,10 @@ export type HookName =
   | 'ability:declared'
   // キャラ移動関連 (rules: 09-cutin-disguise.md, 18-mr.md)
   | 'enter'
+  // engine mega-wave W4 (2026-07-03, r83 G34): 効果/能力による登場 batch 単位の集約 emit
+  // (per-card 'enter' の後に atomSceneEnter/atomSceneSwitch 呼出 1回につき1回、viaEffect=true のみ)。
+  // source.bindings.enterGroup = 同一解決で登場した全キャラ。「その中から1枚」(B01012) の母集合。
+  | 'enter:group'
   | 'disguise:into'
   | 'leave:to-remove'
   | 'leave:to-deck'

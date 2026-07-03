@@ -105,16 +105,22 @@ describe('engine.flow.main.canAction', () => {
     expect(canAction(s, selfUid)).toBe(true);
   });
 
-  it('名乗り中 + 突撃[キャラ] → canAction(generic)=false / canActionAgainstChar=true (rules/13)', () => {
+  it('名乗り中 + 突撃[キャラ] → canAction(generic)=true / char OK / case NG (rules/13、W4 r62 bundled fix)', () => {
     const { s, selfUid, oppUid } = makeScene({
       selfNamed: true,
       selfKeywords: ['突撃[キャラ]'],
       oppState: 'sleep',
+      oppEvidence: 1,
     });
-    // canAction (any) は突撃[キャラ] では成立しない (any キーワード判定)
-    expect(canAction(s, selfUid)).toBe(false);
+    // engine mega-wave W4 (2026-07-03, r62 bundled fix): canAction (any) は「何らかのアクションが可能か」
+    // = actor 列挙 gate (AI move-enumerator / UI enumActionSourceCandidates が唯一の呼出元)。旧 false は
+    // 突撃[キャラ] のみ持ちの合法手 (アクション[キャラ]) が一切列挙されない latent bug だった。
+    // 対象種別の絞りは canActionAgainstChar/Case が担う (rules/13: 突撃[キャラ]=アクション[キャラ]のみ可)。
+    expect(canAction(s, selfUid)).toBe(true);
     // 対 char では成立
     expect(canActionAgainstChar(s, selfUid, oppUid)).toBe(true);
+    // 対 case は不成立のまま (突撃[キャラ] はアクション[事件] を許可しない)
+    expect(canActionAgainstCase(s, selfUid, 'opp')).toBe(false);
   });
 
   it('名乗り中 + 突撃[事件] → canActionAgainstCase=true / canActionAgainstChar=false', () => {

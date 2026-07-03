@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `00bb0a2b9613`
+> Source hash: `154ab196f546`
 
 Immer draft 上の primitive 変更操作
 
@@ -32,14 +32,14 @@ Immer draft 上の primitive 変更操作
 | `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `grantAbility`, `grantKeyword`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `removeOneSetCard`, `revokeKeyword`, `revokeKeywordTurn`, `setCard`, `setOverrideAP`, `setOverrideLP`, `setTurnEffect`, `stackCard` |
 | `deck` | `draw`, `peek`, `refresh`, `removeFromTop`, `reveal`, `shuffle`, `toBottom`, `toTop` |
 | `evidence` | `addFromDeck`, `flipFaceDown`, `flipFaceUp`, `gainCard`, `removeAt`, `removeTop`, `toDeckTop`, `toRemove` |
-| `file` | `addFromDeckTop`, `flipTop`, `insertAssistedPartner`, `popTop`, `removeAssistedPartner` |
+| `file` | `addFromDeckTop`, `flipTop`, `insertAssistedPartner`, `insertBottomFaceUp`, `popTop`, `removeAssistedPartner` |
 | `flag` | `incrDeclaredUseCount`, `resetTurnFlags`, `setAssistedThisTurn`, `setHandUseUsed`, `setNextHintUsed` |
 | `gameResult` | `clear`, `set` |
-| `hand` | `add`, `discardToRemove`, `remove`, `toDeckBottom` |
+| `hand` | `add`, `discardToRemove`, `emitReveal`, `remove`, `toDeckBottom` |
 | `log` | `append`, `clear` |
 | `partner` | `addAreaCardFromRemove`, `assist`, `init`, `removeAreaCardsToRemove`, `returnFromFile`, `setLocation`, `setState`, `solveCase` |
 | `remove` | `add`, `emitExit`, `removeFromHere` |
-| `scene` | `clearNamed`, `enter`, `removeToRemove`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toHand`, `tryActivate` |
+| `scene` | `clearNamed`, `enter`, `removeToRemove`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toEvidence`, `toHand`, `toStack`, `tryActivate` |
 | `scratchTrace` | `set` |
 
 ---

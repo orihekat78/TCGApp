@@ -169,6 +169,17 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
   const sides = sidesForQuery(query, ctx);
   const out: Candidate[] = [];
 
+  // engine mega-wave W4 (2026-07-03, r83 G34): fromGroup — 母集合を ctx.bindings[fromGroup] の
+  // uid 集合に限定 (「その中から1枚」B01012)。binding 不在/空 = 候補0 (fail-closed)。
+  // 通常列挙を走らせた後の post-filter (filter/state/side 等の既存判定を全て共有)。
+  const fromGroupUids: Set<string> | null = (() => {
+    if (typeof query.fromGroup !== 'string') return null;
+    const bound = ctx.bindings?.[query.fromGroup];
+    if (!Array.isArray(bound) || bound.length === 0) return new Set<string>();
+    return new Set(bound.map(b => (b as { uid?: string }).uid).filter((u): u is string => typeof u === 'string'));
+  })();
+  if (fromGroupUids !== null && fromGroupUids.size === 0) return out;
+
   for (const side of sides) {
     switch (area) {
       case 'scene': {
@@ -257,6 +268,10 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
     }
   }
 
+  // W4 r83: fromGroup post-filter (uid を持つ candidate のみ通す = scene char 前提)
+  if (fromGroupUids !== null) {
+    return out.filter(cand => cand.kind === 'char' && typeof cand.uid === 'string' && fromGroupUids.has(cand.uid));
+  }
   return out;
 }
 
@@ -424,6 +439,13 @@ export function matchOneFilter(
   if (filter.hasSetCards !== undefined) {
     const has = !!(c && c.setCards.length > 0);
     if (has !== filter.hasSetCards) return false;
+  }
+
+  // engine mega-wave W4 (2026-07-03, r82 同梱): 裏向きセット card 保持キャラ軸 (B08035 a2)。
+  // hasSetCards と同 posture (c===null は保持なし扱い、boolean 両対応)。
+  if (filter.hasFaceDownSetCards !== undefined) {
+    const hasFd = !!(c && c.setCards.some(sc => !sc.faceUp));
+    if (hasFd !== filter.hasFaceDownSetCards) return false;
   }
 
   // engine additive wave-7 (2026-07-02, P17): actedCharThisTurn — 「このターン中にアクション[キャラ]した」

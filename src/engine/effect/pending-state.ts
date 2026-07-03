@@ -91,6 +91,11 @@ export type PendingEffectPickSide = {
    */
   distinctNames?: boolean;
   /**
+   * engine mega-wave W4 (2026-07-03, r84 G38): side 毎の選択上限 (「自分と相手で1枚ずつ」B08019 a2)。
+   * UI multi-select は quota 到達 side の残候補を click 不可化 / chooseAiPick は greedy walk で skip。
+   */
+  perSideMax?: number;
+  /**
    * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) の
    * forced-inclusion 集合。resolve-picks の human push site が算出して載せ、UI (CardListModal
    * auto-select+lock / Playmat 直接クリック restrict / EffectPickerModal restrict) と
