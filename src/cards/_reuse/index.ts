@@ -1063,6 +1063,8 @@ import { B09056 } from '../ct-p09/B09056.js';
 import { B09056P } from '../ct-p09/B09056P.js';
 
 import { B03051 } from '../ct-p03/B03051.js';
+import { B03033 } from '../ct-p03/B03033.js';
+import { B03033P } from '../ct-p03/B03033P.js';
 import { B03118 } from '../ct-p03/B03118.js';
 import { B08086 } from '../ct-p08/B08086.js';
 
@@ -1366,6 +1368,7 @@ export const REUSE_CARDS: CardDef[] = [
   B07037, B07045,
   // card-authoring wave15 — stale-DEFER 解禁 (handAddFromDeckBottom sole-gate)
   B03051,
+  B03033, B03033P,
   // card-authoring wave16 — cutin:used observer 初 consumer ($contact.byUid AP+, engine変更0)
   B03118,
   // card-authoring wave17 — $self.oppSceneCount aura + D11013型cutin (engine変更0)

@@ -54,6 +54,7 @@ const EXCLUDE_REL_PATHS = new Set<string>([
   '.obsidian/plugins',
   '.claude/settings.local.json',
   'playwright/.cache',
+  '.serena/cache', // gitignored env 固有 LSP cache — CI (fresh checkout) との差分を防ぐため除外
 ]);
 
 const EXCLUDE_FILE_PATTERNS: RegExp[] = [

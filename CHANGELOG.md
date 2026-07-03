@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `e0e1646afe00`
+> Source hash: `aa3052c785c5`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,19 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+### card-authoring vein — B03033/B03033P 遠山和葉 (apDeltaAuraOpp 初 consumer, engine変更0)
+
+CARD PHASE 初弾。DEFERRED-INDEX の dormant exemplar (engine 名指し・未登録) を第2gate 検査して解禁。
+
+- **B03033 / B03033P 遠山和葉** (ct-p03, character, 緑 Lv4 AP4000 LP1 高校生):
+  - a1【自分ターン中】相手の現場のカードがセット済キャラを AP-1000 = `continuousModifier{apDeltaAuraOpp:-1000, auraFilterOpp:{hasSetCards:true, kind:'character'}}` + `condition{turn:self}`。
+    cross-side 数値 aura (engine additive 2026-06-29 出荷済) の**初 live consumer**。D07010 の自 side apDeltaAura を Opp 版に。
+    公式 QA (「選ばれない能力持ちも対象」「枚数不問で -1000、bearer 複数で重複」) が select 不介在=aura を裏づけ。
+  - a2【ヒラメキ】draw1 = D07010 a2 完全同型 (evidence:remove-by-action optional)。
+- tier = **T1** (D07010 clone + engine primitive は wave-0629b で 4-review 済 + passive aura で UI 相互作用なし)。
+- 検証: tsc0 / vitest 3772→3775 (+3 probe `b03033-toyama-aura.test.ts`: aura -1000 / 自分ターン gate / bearer2枚 stack) /
+  smoke winsA=498 exceptions=0 (baseline 不変、engine変更0) / playwright N/A (passive aura, 未 deck-playable)。
 
 ### engine E3 増分4 (P10) — パートナー【事件解決】書き換え (あばよ…名探偵!! B03135 ほか、E3 最終)
 
