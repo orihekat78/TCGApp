@@ -1,3 +1,16 @@
+> ## ★2026-07-03 現況: engine-first 完了 → **CARD PHASE 進行中** (下の A1 prompt は engine 再開時のみ)
+> - engine 骨格凍結到達 (E3 P10 partnerSolveOverride bf33786d が最終 engine wave)。以降は **card-authoring lane** が主。
+> - 出荷済: CARD PHASE #1 B03033 (3ed71dcc) / #2 **B06006 江戸川コナン (63000bc6、engine変更0)**。
+> - **CARD PHASE #3 の進め方**: `/card-wave` skill 起動 → DEFERRED-INDEX の dormant-exemplar から次1枚。
+>   次候補 = **B06068** (revokedKeywords) / **B06026** (char-leave selfToEvidence、実機 verify 要) / B05028 / B09038。
+>   手順: ① 未登録確認 (`git grep <ID> src/cards` = 空) + engine token 出荷確認 (`git grep <token> src/engine`)
+>   ② 全句 exemplar clone (D08021 stack / B05030 apDelta-dyn / caseStatus grant 等) で第2gate 実測
+>   ③ 手author + register (`.tmp-taskA-registered.json` → `node scripts/taskA-register.cjs`) ④ probe test
+>   ⑤ 6ゲート (tsc/vitest/smoke winsA=498/8lint/docs) ⑥ **smoke json/md を rm してから docs regen** (structure.md 汚染回避) ⑦ FF push。
+>   詳細教訓 = memory [[reference-card-authoring-stale-defer-vein]] + 直近 session [2026-07-03-cardphase.md](sessions/2026-07-03-cardphase.md)。
+>
+---
+
 # 次セッション再開プロンプト — Track A1: engine 拡張 structural lane (2026-07-02 二Track化 → 2レーン化)
 
 > ★Track B (compiler 監査) = [NEXT-SESSION-PROMPT-TRACK-B.md](NEXT-SESSION-PROMPT-TRACK-B.md) /

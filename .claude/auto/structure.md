@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 428
-- **ファイル数**: 7567
+- **ファイル数**: 7568
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1249,6 +1249,7 @@
     - `2026-07-02-track-b.md` — 2026-07-02 Track B sessions (B0 → B1 → audit pivot → demand-signal → B3-2)
     - `2026-07-02-wave10.md` — 2026-07-02 Track A session — wave-10 出荷 (BUG-165 + B07002)
     - `2026-07-02-wave12.md` — 2026-07-02 Track A (A1) wave-12 — G39 PA 一般カード枠 (partnerAreaCards + toPartnerAre…
+    - `2026-07-03-cardphase.md` — session 2026-07-02 → 07-03 archive (memory.md rotate)
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
