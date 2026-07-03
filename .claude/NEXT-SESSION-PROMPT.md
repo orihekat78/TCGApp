@@ -1,11 +1,12 @@
 > ## ★2026-07-03 現況: engine-first 完了 → **CARD PHASE 進行中** (下の A1 prompt は engine 再開時のみ)
 > - engine 骨格凍結到達 (E3 P10 partnerSolveOverride bf33786d が最終 engine wave)。以降は **card-authoring lane** が主。
-> - 出荷済: CARD PHASE #1 B03033 (3ed71dcc) / #2 **B06006 江戸川コナン (63000bc6、engine変更0)**。
+> - 出荷済: CARD PHASE #1 B03033 (3ed71dcc) / #2 **B06006 江戸川コナン (63000bc6、engine変更0)** / #3 **cutin:used ペア B09086 諸伏高明 + B04090 ライ (origin 11c9e526、engine変更0)**。
 > - ★2026-07-03 **engine wave-18 inContact 出荷 (origin 6b6437b1、A1 structural)**: 前 session parked を verify→ship。inContact TargetQuery + contact emit enrichment + optional-bindings holder。exemplar B04075 白鳥/B04092 キャンティ (playwright human-path 実機検証済)。詳細 [[reference-incontact-vein-a1-blocked]] (RESOLVED)。⇒ **inContact clone (PR029/PR033 白鳥・B04093 コルン・B03034 稲尾) が card-authoring で解禁** (primitive 出荷済、engine変更0)。BUG-167 defer (低)。
-> - **CARD PHASE #3 = cutin:used ペア batch** (2026-07-03 棚卸しで決定、driver = [specs/card-phase-dormant-inventory-2026-07-03.md](specs/card-phase-dormant-inventory-2026-07-03.md))。
->   dormant 15枚 UNLOCKED / 120 BLOCKED を triage 済。**exemplar 有りは cutin:used クラスタのみ** (B03118 キール) → 最安全ゆえ先頭。
->   - **今batch: B09086 + B04090** (cutin:used observer、`triggerCutinMatches`)。B04090 は cutin中 revive `sceneEnter area:'remove'`。
->   - 次以降の安全順 = misread ペア(B05015/B09016) → grantTraits ペア(B05012/B07053) → G17(PR132/D06013) → handUseRestrict(B05120/B06109、UI重) → 単発(B06068/B02018/B03104/B01077/B09089、⚠一部 TSV空=公式text 再fetch)。
+> - **CARD PHASE #3 = cutin:used ペア batch 出荷済** (origin 11c9e526、engine変更0)。dormant triage driver = [specs/card-phase-dormant-inventory-2026-07-03.md](specs/card-phase-dormant-inventory-2026-07-03.md)。
+>   B09086 諸伏高明 (triggerCutinMatches 初 consumer、名/特徴 filter AP+2000) + B04090 ライ (partnerColorKeyword 突撃[キャラ] + cutin中 sceneEnter from:remove) を B03118 idiom で解禁。probe cardphase3-cutin-observer.test.ts。
+>   - **次 batch = misread ペア (B05015 / B09016)** (`misread:performed` observer、first-consumer → grounding + human-path playwright probe 必須)。
+>   - 以降の安全順 = misread → grantTraits ペア(B05012/B07053) → G17(PR132/D06013) → handUseRestrict(B05120/B06109、UI重) → 単発(B06068/B02018/B03104/B01077/B09089、⚠一部 TSV空=公式text 再fetch)。
+>   - 残 inContact clone (PR029/PR033 白鳥・B04093 コルン・B03034 稲尾) も card-authoring で解禁可 (primitive 出荷済)。
 >   - ⚠ **大半 first-consumer (exemplar 無)** → 各カード grounding + **human-path playwright probe 必須** ([[reference-carrier-reuse-human-path-empirical]])。B06006 型の楽な clone ではない。
 >   手順: ① 未登録 (`git grep <ID> src/cards`=空) + engine token 出荷 (`git grep <token> src/engine`) ② 第2gate 実測
 >   ③ author + register (`.tmp-taskA-registered.json` → `node scripts/taskA-register.cjs`) ④ probe test ⑤ 6ゲート (tsc/vitest/smoke winsA=498/8lint/docs)
