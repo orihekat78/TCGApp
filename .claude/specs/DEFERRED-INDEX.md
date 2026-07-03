@@ -1072,3 +1072,12 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   live 影響 0。card author 時に UI 配線 + playwright)。
 - **B07014 は full 解禁** (a1 charSetCard fromSelf / a2 grantKeywords on-set-host / a3 rider declared +
   removeAreaToDeckTop 全部品出荷済) — card-phase step12 の即 author 候補。
+- **混成 review nits (megaw6b、sonnet5 SHIP / opus SHIP_WITH_NITS、blocker 0、fable 裁定不要)**:
+  (1) ✅**即対応済**: hand-redirect の hand.push を splice 成功 guard 内へ (病的 cascade の phantom 手札防止)。
+  (2) contact:judge emit の winner/loser は intercept (hand redirect) 時も AP 判定基準のまま —
+  「コンタクトで相手をリムーブしたとき」観測型カード出荷時に「実際に除去できた側」との定義差を公式Q&A 突合。
+  (3) per-step hirameki の gain 再順序は suppress 以外の全ヒラメキに適用 (gain が fire/skip 後へ移動、
+  rules/10 順序的にはより正確)。effect 内で自証拠数を読むヒラメキが出たら挙動差 — B02088/B03126
+  card author 時の playwright で non-suppress ヒラメキも 1 件通し確認。
+  (4) startFromEffect は mustTargetCandidates (G28 挑発) を素通し — 効果コンタクトに挑発が及ぶかの
+  公式裁定なし (遭遇時に照会、推測補完しない)。

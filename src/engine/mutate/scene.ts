@@ -271,9 +271,13 @@ function removeToRemove(
       emitSetCardLeaves(s, char, player, cause); // set-card 自身は正規に離れる (row9 risks(a))
       const hStacked = char.stackedCards;
       for (let i = 0; i < hStacked; i++) s.players[player].remove.push('back-card');
+      // hand.push は splice 成功時のみ (混成 review opus NIT: interceptor cost 除去の
+      // 【現場リムーブ時】cascade が対象 char を先に除去した病的ケースで phantom 手札を作らない)
       const hIdx = s.players[player].scene.findIndex(c => c.uid === uid);
-      if (hIdx !== -1) s.players[player].scene.splice(hIdx, 1);
-      s.players[player].hand.push(char.cardId);
+      if (hIdx !== -1) {
+        s.players[player].scene.splice(hIdx, 1);
+        s.players[player].hand.push(char.cardId);
+      }
       mutate_logInterceptNote(s, player, 'hand', leavingUid);
       return {
         removed: { uid: leavingUid, cardId: leavingCardId },
