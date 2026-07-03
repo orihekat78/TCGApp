@@ -37,7 +37,7 @@
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
-- **main = ad754407** (**E3 増分1 opponentLoses verb**「相手はゲームに敗北する」alt-lose 勝利ルート + docs。engine-only、純 additive。直前 = 271ac9a8 E3 verb / 0e3fe8c4 B03051 docs-resync / f0752154 wave A1 PA 計数・消費 (partnerAreaRemove verb + PA-read + UI))。vitest baseline=**3729 pass +1 skip** (271ac9a8。E3 増分1 分 +4)。
+- **main = 8c326afb** (**E3 増分3 P53** — 証拠 alt-lose 機構 3 primitive: evidenceFlip all-mode + evidenceTraitAtLeast Condition + cannotSolveCase flag (canWin/AI/UI/dispatch の 4 gate)。engine-only、純 additive、consumer B09107 は card phase (card 凍結)。opus 2-lens: semantic SHIP / additivity SHIP_WITH_NITS → can-check.ts 4th gate 折込済。直前 = cf7b2f77 E3 増分2 P11 (sceneCapOverride+partnerColorsOverride) / ad754407 E3 増分1 opponentLoses)。vitest baseline=**3750 pass +1 skip** (8c326afb。P53 probe +12)。
 - ★★**方針更新 (2026-07-02、ユーザー)**: **カード拡張は engine 拡張完了まで凍結**。engine wave は engine-only (consumer カードは card phase)。exemplar 同梱も card 扱いゆえ当面なし (probe test で検証)。
 - ★★**A1 structural queue 状況**: G34「以下から1つ選んで行う。〜の場合、代わりに全部」は grounding の結果 **大半カード作業と判明** (choice atom は既存・成熟、1-of-M は動く。novelty=escalation の条件/コスト分岐のみ、condition-variant は既存 conditional/choice/sequence で authorable)。→ A1 structural の残本命 = **E3 (rule-rewrite/alt勝敗)**。分解計画 = [specs/e3-altwin-decomposition-2026-07-02.md](specs/e3-altwin-decomposition-2026-07-02.md)。
 - ⚠ 並行 session 複数稼働・同一 working tree 共有 → 自分のファイルだけ明示 add。engine 並行は `git worktree add` 隔離。
@@ -120,20 +120,23 @@
 - **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
 - **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
 
-## 次やること: E3 (rule-rewrite/alt勝敗) 増分2 — driver [specs/e3-altwin-decomposition-2026-07-02.md](specs/e3-altwin-decomposition-2026-07-02.md)
+## 次やること: E3 (rule-rewrite/alt勝敗) 増分4 (P10、最後) — driver [specs/e3-altwin-decomposition-2026-07-02.md](specs/e3-altwin-decomposition-2026-07-02.md)
 
-- ✅ **E3 増分1 opponentLoses verb = 出荷済 (main 271ac9a8/ad754407、CI green 確認)**。alt-lose 勝利ルート
-  「相手はゲームに敗北する」= 新 AtomVerb (winner=resolvePlayer(args.player)、first-writer guard、reason 'alt-lose')。
-  P10/P53 共有コア。engine-only・純 additive (既存 game-over 経路無変更、smoke winsA=498 不変)。opus 2-lens 両 SHIP・0 defect。
-  ⚠ **authoring 契約**: `opponentLoses` の `args.player` は**勝者** (=効果所有者)、敗者ではない。カードは `player:'self'`。
-  詳細 = 分解 spec。
-- **次 = E3 増分2 (P11 データモデル、中リスク)**: `PlayerState.sceneCapOverride?:number` (現場上限5 の 6サイトハードコード集約→参照1本化) +
-  `PartnerOnBoard.colorsOverride?:Color[]` (cond/eval.ts partnerColor が読む)。PR067 が単独 exemplar (だが card 凍結中ゆえ probe のみ)。
-  着手前に 6 ハードコードサイトを origin/main grep で再確認 (scene.ts:105 / atom-handlers/scene.ts:56,138 / hand-use-card.ts:83,96 / invariant/sceneAtMost5.ts:14)。
-- **増分3 (P53 evidence 機構、中)**: evidenceFlip all モード + evidenceTraitAtLeast Condition + canWin「事件解決不可」flag。
-- **増分4 (P10 partner-solve override、最大・最難・最後 = T3 フル review + Playwright)**: partnerSolveOverride field +
-  canWin/solveCase/UI solveCase override 分岐 + 【証拠隠滅】keyword + cost「証拠を事件レベル数リムーブ」(Cost union=A1)。
+- ✅ **E3 増分1 opponentLoses verb = 出荷済 (ad754407)**。alt-lose「相手はゲームに敗北する」= AtomVerb
+  (winner=resolvePlayer(args.player)、first-writer guard、reason 'alt-lose')。P10/P53 共有コア。
+  ⚠ authoring 契約: `opponentLoses` の `args.player` は**勝者** (=効果所有者)。カードは `player:'self'`。
+- ✅ **E3 増分2 P11 = 出荷済 (cf7b2f77)**。sceneCapOverride (現場上限 override) + partnerColorsOverride (case→partner 色上書き) ContinuousModifier。
+- ✅ **E3 増分3 P53 = 出荷済 (8c326afb)**。evidenceFlip all-mode (a.all=true→全証拠 faceUp) +
+  evidenceTraitAtLeast Condition (証拠特徴計数、removeTraitAtLeast 同型) + cannotSolveCase flag
+  (case 継続能力「自分は【事件解決】できない」→ canWin/AI canSolveCase/UI canSolveCaseForUi/dispatch isAllowed の **4 gate**)。
+  consumer B09107 犯人たちの犯行 は card phase。probe = tests/cards/e3-p53-evidence-altwin.test.ts。
+- **次 = E3 増分4 (P10 partner-solve override、最大・最難・最後 = T3 フル review + Playwright)**: `partnerSolveOverride` field
+  (パートナー【事件解決】の per-game 書換) + canWin/mutate.partner.solveCase/UI solveCase アクションの override 分岐 +
+  【証拠隠滅】keyword (表示 tag) + **新 cost「証拠を事件レベル数リムーブ」(Cost union 追加=A1 structural)**。
+  cards B03135/B06105/B05118 (計15、demand-signal #1)。P53 の cannotSolveCase (通常勝利封鎖) と対で、P10 は勝利ルート**差替**。
+  着手前: mutate.partner.solveCase (partner.ts:79) / UI flows.ts:585 solveCase dispatch / AI policy.ts:272 を origin/main grep。
 - P48 じゃんけん RNG は **pure-additive → A2 lane** (本 A1 では扱わない、DEFERRED-INDEX 経由で送る)。
+- ★ E3 増分4 完了 = A1 structural lane の E3 phase 完了 (engine-first 計画の最重ブロック終了)。
 
 ### 参考: 旧 A1 候補 (E3 完了後 or card phase 送り)
 - **G34 escalation** (B05023/B05062 = condition-variant は card authorable / B07013/B09067 = cost-variant は
