@@ -586,6 +586,65 @@ export function atomHandToEvidence(s: GameState, a: Record<string, unknown>, ctx
       return;
     }
 
+export function atomHandToFileBottom(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // engine mega-wave W1 (2026-07-03, P41): 手札1枚を FILE の1番下に **表向き** で移す (B05045 a2
+      // 「手札を1枚FILEエリアにあるカードの1番下に表向きで移す」)。handToEvidence の exact-clone
+      // (PB pick defaultArea 'hand')。FILE 1番下 = mutate.file.insertBottomFaceUp (unshift、rules/05)。
+      const hfbP = resolvePlayer(a.player, ctx);
+      const hfbArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToFileBottom!.defaultArea, a, hfbP, hfbP) }
+        : a;
+      const hfbT = hfbArgs.target;
+      if (!Array.isArray(hfbT) && typeof hfbT !== 'string') {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: hfbArgs }, ctx, { byPlayer: hfbP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: hfbP, turn: s.turn.number, action: 'effect:handToFileBottom:awaiting-pick' });
+        return;
+      }
+      const hfbIds = Array.isArray(hfbT) ? (hfbT as string[]) : [hfbT as string];
+      let hfbMoved = 0;
+      for (const cardId of hfbIds) {
+        // 手札に実在する場合のみ移動 (無い cardId は no-op = FILE に湧かせない)
+        const hIdx = s.players[hfbP].hand.indexOf(cardId);
+        if (hIdx === -1) continue;
+        s.players[hfbP].hand.splice(hIdx, 1);
+        mutate.file.insertBottomFaceUp(s, hfbP, cardId);
+        hfbMoved++;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hfbP, turn: s.turn.number, action: 'effect:handToFileBottom', result: String(hfbMoved) });
+      return;
+    }
+
+export function atomEvidenceToDeckBottom(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // engine mega-wave W1 (2026-07-03): 証拠を pick して **持ち主の** デッキの下へ移す
+      // (「相手の証拠を1つまで選び、デッキの下に移す」B03084 a1 前段)。evidenceToHand の clone
+      // (PB pick defaultArea 'evidence')。公式Q&A: どの位置の証拠でも選べる / 裏向きは確認できず
+      // 裏向きのままデッキ下へ (deck は CardId[] で不可視ゆえ表現済)。リムーブではない (ヒラメキ不発動、
+      // rules/10: ヒラメキは「証拠からリムーブされるとき」のみ)。
+      // chooser=controller (自分が相手の証拠を選ぶ) / side=a.player (証拠の持ち主)。
+      const edbP = resolvePlayer(a.player, ctx);
+      const edbArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceToDeckBottom!.defaultArea, a, ctx.source.player as Player, edbP) }
+        : a;
+      const edbT = edbArgs.target;
+      if (!Array.isArray(edbT) && typeof edbT !== 'string') {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: edbArgs }, ctx, { byPlayer: ctx.source.player as Player, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: edbP, turn: s.turn.number, action: 'effect:evidenceToDeckBottom:awaiting-pick' });
+        return;
+      }
+      const edbIds = Array.isArray(edbT) ? (edbT as string[]) : [edbT as string];
+      let edbMoved = 0;
+      for (const cardId of edbIds) {
+        const evList = s.players[edbP].evidence;
+        const eIdx = evList.findIndex(e => e.cardId === cardId);
+        if (eIdx === -1) continue; // 証拠に無い cardId は no-op
+        evList.splice(eIdx, 1);
+        mutate.deck.toBottom(s, edbP, [cardId]); // 持ち主のデッキの下 (裏向き)
+        edbMoved++;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: edbP, turn: s.turn.number, action: 'effect:evidenceToDeckBottom', result: String(edbMoved) });
+      return;
+    }
+
 export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // engine-extension #5a (2026-06-05): deck-reorder 系の補助 — bind 済 cardId をデッキから抜き手札へ。
       // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).

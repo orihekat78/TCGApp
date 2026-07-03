@@ -216,6 +216,67 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
       // BUG-068: bind ref 解決を配線
       const scUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof scUid !== 'string' || scUid.startsWith('$')) return;
+      // engine mega-wave W1 (2026-07-03, P28/r4): remove-area source-pick 分岐 — 「自分のリムーブエリアに
+      // ある〚カード名[X]〛を1枚まで選び、裏向きでこのキャラにセットする」(B08036)。charStackCard の
+      // `cardIds:'$pick.cardIds'` + source-splice 契約 (下 atomCharStackCard) を同型移植し、
+      // stackCard(count) の代わりに setCard(host, cid, faceUp=false) を呼ぶ。0枚 pick は
+      // chainStepNoApply を立て「セットした場合」後続を gate (rules/15 / handReveal gate-on-0 と同型)。
+      if (a.cardIds !== undefined) {
+        const rawSetIds = a.cardIds;
+        if (rawSetIds === '$pick.cardIds') {
+          if (a.target && typeof a.target === 'object') {
+            const ctxP = ctx.source.player ?? 'self';
+            const argsWithResolvedUid = { ...a, uid: scUid };
+            tryRePickFromAtom(s, { kind: 'atom', verb, args: argsWithResolvedUid }, ctx, {
+              byPlayer: ctxP,
+              source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+            });
+            mutate.log.append(s, { ts: Date.now(), player: ctxP, turn: s.turn.number, action: 'effect:charSetCard:awaiting-pick' });
+          }
+          return;
+        }
+        if (Array.isArray(rawSetIds)) {
+          const setIds = rawSetIds as string[];
+          if (setIds.length === 0) {
+            (ctx.dyn ??= {}).chainStepNoApply = true; // 「セットした場合」不成立 → chain break
+            mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: '0' });
+            return;
+          }
+          // host 不在なら source を消費しない (BUG-153 と同流儀)
+          if (!readScene.byUid(s, scUid)) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
+            mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'host-absent' });
+            return;
+          }
+          const setSrcArea = ((a.target && typeof a.target === 'object')
+            ? ((a.target as { query?: { area?: string } }).query?.area)
+            : undefined) as 'remove' | 'hand' | 'deck' | undefined;
+          const setSrcSide = ((a.target && typeof a.target === 'object')
+            ? ((a.target as { query?: { side?: string } }).query?.side)
+            : undefined) as 'self' | 'opp' | undefined;
+          const setOwnerP = ctx.source.player ?? 'self';
+          // ⚠ latent (W1 review NIT): side:'opp' は絶対 opp (charStackCard L330 と同流儀の踏襲)。
+          // controller が opp の場合に相対化されない — 現 consumer (B08036) は side:'self' のみで非到達。
+          // opp-side source の consumer 追加時は resolvePlayer 相対化を検討 (DEFERRED-INDEX megaw1)。
+          const fromPlayer = setSrcSide === 'opp' ? 'opp' : setOwnerP;
+          if (setSrcArea === 'remove' || setSrcArea === 'hand' || setSrcArea === 'deck') {
+            const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[setSrcArea];
+            for (const cid of setIds) {
+              const idx = arr?.indexOf(cid) ?? -1;
+              if (idx !== -1) {
+                arr.splice(idx, 1);
+                if (setSrcArea === 'remove') mutate.remove.emitExit(s, fromPlayer, cid); // remove→set-card 離脱 (wave-4 流儀)
+              }
+            }
+          }
+          for (const cid of setIds) {
+            mutate.char.setCard(s, scUid, cid, false); // 裏向きでセット (rules/16)
+          }
+          mutate.log.append(s, { ts: Date.now(), player: setOwnerP, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: setIds.join(',') });
+          return;
+        }
+        return;
+      }
       // engine additive wave (2026-06-29d): fromSelf — 使用イベント自身 (ctx.source.cardId) を所有者の
       // remove から引き、host へ **faceUp** でセットする WRITE 経路 (B01023/B01057/B02013、session70
       // on-set-host READ の end-to-end 化)。hand-use はイベントを remove へ着地させてから効果解決するため
@@ -253,7 +314,13 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'host-absent' });
           return;
         }
-        const sscP = resolvePlayer(a.player ?? 'self', ctx);
+        // engine mega-wave W1 (2026-07-03, P27/r2): deckOwner:'picked-host' — セット元デッキを
+        // pick した host キャラの **持ち主側** にする (PR136/PR142 伊織無我「持ち主のデッキのカードを
+        // 上から1枚裏向きでセット」)。host 存在は直前 guard で保証済 → scene scan は決定的にヒット。
+        // 既定枝 (deckOwner 無指定) は従来 resolvePlayer のまま byte 等価 (既存カード回帰 0)。
+        const sscP = a.deckOwner === 'picked-host'
+          ? (s.players.self.scene.some(c => c.uid === scUid) ? 'self' as const : 'opp' as const)
+          : resolvePlayer(a.player ?? 'self', ctx);
         // session64 (rules/14, 26 + BUG-142 同族): デッキ0 で「上からセット」する場合、silent no-op ではなく
         // リフレッシュ後に残りを解決する (公式Q&A B08033「残り全部セット→リフレッシュ→残り分セット」)。
         // host 存在は上で確認済 → ここで refresh して安全に shift できる (draw/fileAdd/evidenceGain と同型)。

@@ -22,6 +22,9 @@ const VERBS = new Set([
   'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'sceneToDeck', // Task D E2 (2026-06-12)
+  'sceneToEvidence', // engine mega-wave W1 (2026-07-03, P38): 現場キャラ→所有者の証拠 (B03084)
+  'handToFileBottom', // engine mega-wave W1 (2026-07-03, P41): 手札→FILE 1番下 表向き (B05045)
+  'evidenceToDeckBottom', // engine mega-wave W1 (2026-07-03): 証拠 pick→持ち主デッキ下 (B03084 a1 前段)
   'fileRemoveTop', 'fileFlipTop', // Task D E3 (2026-06-12)
   'charGrantAbility', // Task D E4 (2026-06-12)
   'charModifyAP', 'charModifyLP', 'charModifyLevel',
@@ -93,6 +96,7 @@ const COSTS = new Set([
   'removeAreaToDeckBottom', // cluster4 (2026-06-14)
   'removeSetCard', // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
   'revealFromHand', // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
+  'revealHandToDeckTop', // engine mega-wave W1 (2026-07-03, P29): 手札公開→デッキ上 cost (B05049 a1)
 ]);
 
 const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'conditional', 'forEach', 'atom', 'chain']);

@@ -338,6 +338,28 @@ export function atomSceneToDeck(s: GameState, a: Record<string, unknown>, ctx: E
       return;
     }
 
+export function atomSceneToEvidence(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // engine mega-wave W1 (2026-07-03, P38): scene→owner-evidence verb。sceneToDeck と同型の PA 短縮形。
+      // 「相手の現場にいるレベル7以下のキャラを1枚まで選び、相手はそのカードを表向きのまま証拠として得る」
+      // (B03084)。移動先は **キャラ所有者** の証拠 (mutate.scene.toEvidence が owner を解決)。
+      // rules: 01 (証拠), 09/23 (リムーブでない=現場リムーブ時不発動), 16 (set/stacked リムーブ), 18 (MR① parity)
+      if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+        // chooser=controller / side 既定=a.player (対象側) — BUG-120 系規約 (sceneToDeck と同一)
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+        return;
+      }
+      if (a.uid === '$pick') {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToEvidence', result: 'skipped' });
+        return;
+      }
+      const steUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof steUid !== 'string' || steUid.startsWith('$')) return;
+      const steFaceUp = a.faceUp !== false; // 既定 true (「表向きのまま証拠として得る」)
+      mutate.scene.toEvidence(s, steUid, steFaceUp, ctx.source.cardId);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToEvidence', target: steUid, result: steFaceUp ? 'faceUp' : 'faceDown' });
+      return;
+    }
+
 export function atomSceneSetState(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // PA 短縮形: uid 不在 + player + state(設定する状態の文字列) + n|max → scene pick を構築。
       // a.state は「設定先の状態」なので候補 filter には載せない (buildShortFormPick は配列 state のみ拾う)。

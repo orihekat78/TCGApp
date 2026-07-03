@@ -31,6 +31,9 @@ const ATOM_VERB_MAP = {
   evidenceFlipDown: true, // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   sceneEnter: true, sceneSwitch: true, sceneRemove: true, sceneSetState: true, sceneDisguise: true, sceneToHand: true,
   sceneToDeck: true, // Task D E2 (2026-06-12)
+  sceneToEvidence: true, // engine mega-wave W1 (2026-07-03, P38): 現場キャラ→所有者の証拠 (B03084)
+  handToFileBottom: true, // engine mega-wave W1 (2026-07-03, P41): 手札→FILE 1番下 表向き (B05045)
+  evidenceToDeckBottom: true, // engine mega-wave W1 (2026-07-03): 証拠 pick→持ち主デッキ下 (B03084 a1 前段)
   charModifyAP: true, charModifyLP: true, charModifyLevel: true, charSetAP: true, charSetLP: true,
   charOverrideAP: true, charOverrideLP: true,
   charGrantKeyword: true, charRevokeKeyword: true, charDisableOriginal: true,

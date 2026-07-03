@@ -382,6 +382,47 @@ function toHand(s: GameState, uid: string): void {
 }
 
 /**
+ * 現場から **所有者の** 証拠へ移す (engine mega-wave W1 2026-07-03, P38)。
+ * 「相手はそのカードを表向きのまま証拠として得る」(B03084)。toHand/toDeck の isolated clone。
+ * - リムーブではないため leave:to-remove は emit しない (rules/17 と整合)
+ * - set/stacked は離場時リムーブ (rules/16)
+ * - MR能力① redirect は toHand/toDeck と parity (rules/18: 相手ターン中の離場は PA へ、証拠化されない)
+ * - 証拠は push = 末尾 = 1番上 (mutate/evidence.removeTop と整合、公式Q&A B03084「1番上に置かれます」)
+ */
+function toEvidence(s: GameState, uid: string, faceUp: boolean, sourceCardId?: string): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+
+  const { char, player } = found;
+  // rules/16 setCards / stackedCards は離場時にリムーブされる
+  if (char.setCards.length > 0) {
+    s.players[player].remove.push(...char.setCards.map(e => e.cardId));
+  }
+  for (let i = 0; i < char.stackedCards; i++) {
+    s.players[player].remove.push('back-card');
+  }
+
+  // set card 離場 → setcard:leave emit (host splice 前、toHand/toDeck と同流儀)
+  emitSetCardLeaves(s, char, player, 'leave:to-evidence');
+
+  const idx = s.players[player].scene.findIndex(c => c.uid === uid);
+  if (idx !== -1) {
+    s.players[player].scene.splice(idx, 1);
+  }
+  // MR能力① (rules/18): 相手ターン中なら証拠ではなく PA へ (離脱方法不問)
+  if (shouldRedirectMrToPA(s, char, player)) {
+    placeMrInPA(s, char, player);
+    return;
+  }
+  // キャラ本体は所有者の証拠へ (表裏はカードテキスト指定)
+  s.players[player].evidence.push({
+    cardId: char.cardId,
+    faceUp,
+    origin: { turn: s.turn.number, via: 'effect', ...(sourceCardId ? { sourceCardId } : {}) },
+  });
+}
+
+/**
  * キャラの状態を直接設定 (rules/03)
  * ⚠ active を渡したとき、現在 stun なら sleep に変換 (スタン特殊挙動)
  * ⚠ stun 状態で sleep/stun を渡してもスタンのまま
@@ -427,6 +468,7 @@ export const scene = {
   toHand,
   toDeck,
   toDeckBottom,
+  toEvidence,
   setState,
   tryActivate,
   clearNamed,

@@ -955,3 +955,14 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (1) exact-N gate の availN は candidates 列挙数 (partner singleton 含むが trait filter で除外) — ビッグジュエル-trait を持つ **partner** が将来出れば over-count 可能性 (現プールに不在、かつ removeAreaCardsToRemove は partnerAreaCards のみ splice ゆえ real partner は構造的に保護)。
   (2) onPick 単発 handler は partnerAreaRemove でも resolveSceneEnterPick を指すが n:2 = multi mode ゆえ dormant (CardListModal は pickNMax>1 で onPickMulti を使う)。n:1 partnerAreaRemove (PR263 (b)) 出荷時は onPick 単発経路が sceneEnter-specific にならないよう分岐要。
   (3) ATOM_PICK_SPEC.partnerAreaRemove の `sourceSplice:true` は inert metadata (コード未消費、handAddFromRemove と同記載) — 実 splice は handler の removeAreaCardsToRemove が担う。
+
+## wave engine / megaw1 (additive verb/cost 5+1 primitive、2026-07-03 出荷)
+
+出荷済 = charSetCard `deckOwner:'picked-host'` field + `cardIds` remove-source 分岐 (chainStepNoApply gate-on-0) / cost `revealHandToDeckTop` / verb `sceneToEvidence` (mutate.scene.toEvidence、MR① redirect parity) / verb `handToFileBottom` (mutate.file.insertBottomFaceUp) / verb `evidenceToDeckBottom`。exemplar **PR136/PR142・B08036・B05049/P・B03084/P・B05045/P** (9 printings)。opus 2-lens 敵対 review 両 SHIP_WITH_NITS・0 blocker。
+
+- **敵対 review nits (megaw1、latent 記録)**:
+  (1) buildShortFormPick が a.faceUp を無条件に query.faceUp へ copy — sceneToEvidence は faceUp を「証拠の表裏」flag として使うため scene-area pick query に spurious faceUp が混入 (現状 candidates は evidence branch のみ honor = 無害。scene-area faceUp filter を将来足す時に要 scope 分離)。
+  (2) handToFileBottom は FILE≥7 解決編 auto-transition check を持たない (addFromDeckTop のみ)。B05045 a2 は net-zero で非到達。net-positive FILE-add verb 追加時に共有 check 経由へ。
+  (3) charSetCard cardIds 分岐の `setSrcSide==='opp'` は絶対 opp (charStackCard 同流儀踏襲、controller-relative でない)。現 consumer B08036 は side:'self' のみ。opp-side source consumer 出荷時に resolvePlayer 相対化検討 (char.ts guard comment 有)。
+  (4) evidenceToDeckBottom / evidenceToHand は cardId findIndex = 同一 cardId 重複証拠では先頭 (最下) のみ移動 — 裏向き不可識別カードでは同値、表向き証拠の個体指定が要る将来カードで entry-identity 化検討。
+- **W1 blocked 3件 (verb は additive 可だが consumer に co-gate)**: r56 removeAreaToDeckTop (B07014 = on-set-host WRITE + declared-grant 待ち) / r67 sceneToEvidence-opp票 B06085 (= boundIsMr cond + 本 wave の evidenceToDeckBottom で半解消、残 boundIsMr) / r69 charSetName (PR105 = free-string name 指定 channel = T3 UI)。

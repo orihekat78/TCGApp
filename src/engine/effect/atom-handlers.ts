@@ -41,6 +41,8 @@ import {
   atomEvidenceFlipDown,
   atomEvidenceToHand,
   atomHandToEvidence,
+  atomHandToFileBottom,
+  atomEvidenceToDeckBottom,
   atomHandAddFromDeck,
   atomHandAddFromDeckBottom,
   atomHandAddFromRemove,
@@ -54,6 +56,7 @@ import {
   atomCharRemoveSetCard,
   atomSceneToHand,
   atomSceneToDeck,
+  atomSceneToEvidence,
   atomSceneSetState,
   atomSceneDisguise,
 } from './atom-handlers/scene.js';
@@ -156,6 +159,10 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomEvidenceToHand(s, a, ctx, verb);
     case 'handToEvidence':
       return atomHandToEvidence(s, a, ctx, verb);
+    case 'handToFileBottom':
+      return atomHandToFileBottom(s, a, ctx, verb); // engine mega-wave W1 (2026-07-03, P41)
+    case 'evidenceToDeckBottom':
+      return atomEvidenceToDeckBottom(s, a, ctx, verb); // engine mega-wave W1 (2026-07-03, B03084 a1 前段)
     case 'handAddFromDeck':
       return atomHandAddFromDeck(s, a, ctx);
     case 'handAddFromDeckBottom':
@@ -174,6 +181,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomSceneToHand(s, a, ctx, verb);
     case 'sceneToDeck':
       return atomSceneToDeck(s, a, ctx, verb);
+    case 'sceneToEvidence':
+      return atomSceneToEvidence(s, a, ctx, verb); // engine mega-wave W1 (2026-07-03, P38)
     case 'sceneSetState':
       return atomSceneSetState(s, a, ctx, verb);
     case 'sceneDisguise':

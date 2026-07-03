@@ -13,6 +13,7 @@ import { candidates } from '@/engine/target/candidates.js';
 const COST_KIND_MAP = {
   sleepSelf: true, sleepChar: true, stunChar: true, removeFromHand: true, removeFromScene: true,
   revealFromHand: true, // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
+  revealHandToDeckTop: true, // engine mega-wave W1 (2026-07-03, P29): 手札公開→デッキ上 cost (B05049 a1)
   removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
@@ -64,6 +65,12 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     // engine additive wave (2026-06-28): revealFromHand — 手札公開 presence-check cost (B08093 a1)。
     // removeFromHand と同型 (filter 一致 ≥ n) だが pay() は no-op (公開のみ、消費なし)。
     case 'revealFromHand': {
+      const cands = candidates(state, cost.target, ctx);
+      return cands.length >= cost.n;
+    }
+    // engine mega-wave W1 (2026-07-03, P29): revealHandToDeckTop — 手札公開→デッキ上 cost (B05049 a1)。
+    // canPay は removeFromHand/revealFromHand と完全同型 (rules/21 全部行えなければ使用不可)。
+    case 'revealHandToDeckTop': {
       const cands = candidates(state, cost.target, ctx);
       return cands.length >= cost.n;
     }

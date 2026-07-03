@@ -89,10 +89,22 @@ function flipTop(s: GameState, p: Player): 'flipped' | 'noop' {
   return 'noop';
 }
 
+/**
+ * 手札等から来た cardId を FILE の **1番下** に **表向き** で置く (engine mega-wave W1 2026-07-03, P41)。
+ * 「手札を1枚FILEエリアにあるカードの1番下に表向きで移す」(B05045 a2)。
+ * rules/05: push=末尾=最上部 → 1番下 = 配列先頭 = unshift。faceUp=true 固定 (テキスト「表向きで」)。
+ * ⚠ FILE≥7 解決編 auto-transition check は addFromDeckTop のみ保持 (アシスト時判定 rules/13 —
+ *   本 verb は「7枚以上で移行」トリガーではない。latent: 効果で 7枚到達しても即移行しない現行モデル踏襲)。
+ */
+function insertBottomFaceUp(s: GameState, p: Player, cardId: string): void {
+  s.players[p].file.unshift({ type: 'card-back', cardId, faceUp: true });
+}
+
 export const file = {
   addFromDeckTop,
   popTop,
   flipTop,
+  insertBottomFaceUp,
   insertAssistedPartner,
   removeAssistedPartner,
 };

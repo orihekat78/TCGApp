@@ -1075,6 +1075,16 @@ import { B06006 } from '../ct-p06/B06006.js';
 import { B09086 } from '../ct-p09/B09086.js';
 import { B04090 } from '../ct-p04/B04090.js';
 
+import { PR136 } from '../pr-01/PR136.js';
+import { PR142 } from '../pr-01/PR142.js';
+import { B08036 } from '../ct-p08/B08036.js';
+import { B05049 } from '../ct-p05/B05049.js';
+import { B05049P } from '../ct-p05/B05049P.js';
+import { B03084 } from '../ct-p03/B03084.js';
+import { B03084P } from '../ct-p03/B03084P.js';
+import { B05045 } from '../ct-p05/B05045.js';
+import { B05045P } from '../ct-p05/B05045P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1389,4 +1399,6 @@ export const REUSE_CARDS: CardDef[] = [
   B04075, B04092,
   // CARD PHASE #3 — cutin:used ペア (B09086 諸伏高明 / B04090 ライ、engine変更0)
   B09086, B04090,
+  // engine mega-wave W1 — 5 primitive exemplar (PR136/PR142 deckOwner / B08036 setCard-remove-src / B05049/P revealHandToDeckTop / B03084/P sceneToEvidence+evidenceToDeckBottom / B05045/P handToFileBottom)
+  PR136, PR142, B08036, B05049, B05049P, B03084, B03084P, B05045, B05045P,
 ];

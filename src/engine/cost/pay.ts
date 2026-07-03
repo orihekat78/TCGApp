@@ -106,6 +106,19 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       acc.paidItems.push({ kind: 'revealFromHand', details: { ids } });
       return;
     }
+    // engine mega-wave W1 (2026-07-03, P29): revealHandToDeckTop — 手札公開→デッキ上 cost (B05049 a1)。
+    // revealFromHand との差 = 手札から抜いてデッキ上へ移す 2 mutate のみ (公式Q&A B05049:
+    // 「裏向きでデッキの上に移す」= deck は CardId[] で不可視ゆえ表現済)。
+    case 'revealHandToDeckTop': {
+      const targets = pickCandidates(state, cost.target, ctx, cost.n);
+      const ids = targets
+        .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
+        .map(c => c.cardId);
+      mutate.hand.remove(state, ctx.source.player, ids);
+      mutate.deck.toTop(state, ctx.source.player, ids);
+      acc.paidItems.push({ kind: 'revealHandToDeckTop', details: { ids } });
+      return;
+    }
     case 'removeFromScene': {
       const targets = pickCandidates(state, cost.target, ctx, cost.n);
       for (const cand of targets) {

@@ -313,6 +313,18 @@ export type AtomVerb =
   // Task D E2 (2026-06-12): 現場キャラを所有者のデッキ下/上へ移す (sceneToHand 同型 PA 短縮形)。
   // rules: 09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 16 (set/stacked はリムーブ)
   | 'sceneToDeck'
+  // engine mega-wave W1 (2026-07-03, P38): 現場キャラを **所有者の** 証拠へ移す (「相手はそのカードを
+  // 表向きのまま証拠として得る」B03084)。sceneToDeck 同型 PA 短縮形。リムーブではない (rules/17 不発動)。
+  // set/stacked は離場時リムーブ (rules/16)。MR① redirect は toDeck/toHand と parity (rules/18)。
+  | 'sceneToEvidence'
+  // engine mega-wave W1 (2026-07-03, P41): 手札1枚を FILE の1番下に **表向き** で移す (B05045 a2
+  // 「手札を1枚FILEエリアにあるカードの1番下に表向きで移す」)。handToEvidence 同型 PB pick (defaultArea 'hand')。
+  // FILE 1番下 = 配列先頭 unshift (rules/05: push=末尾=最上部)。
+  | 'handToFileBottom'
+  // engine mega-wave W1 (2026-07-03, B03084 a1 前段): 証拠を pick して **持ち主の** デッキの下へ移す
+  // (「相手の証拠を1つまで選び、デッキの下に移す」)。evidenceToHand 同型 PB pick (defaultArea 'evidence')。
+  // 公式Q&A (B03084): どの位置の証拠でも選べる / 裏向き証拠は確認できず裏向きのままデッキ下へ。
+  | 'evidenceToDeckBottom'
   | 'charModifyAP' | 'charModifyLP' | 'charModifyLevel' | 'charSetAP' | 'charSetLP'
   | 'charOverrideAP' | 'charOverrideLP'
   | 'charGrantKeyword' | 'charRevokeKeyword' | 'charDisableOriginal'
@@ -370,6 +382,11 @@ export type Cost =
   // (公開のみ、リムーブしない)。公式Q&A (B08093): コスト支払い完了→効果解決時に手札へ戻してよい。
   // rules: 21 (コスト「自分の」省略 → query.side:'self' / 全部行えなければ使用不可)。
   | { kind: 'revealFromHand'; target: TargetingRef; n: number }
+  // engine mega-wave W1 (2026-07-03, P29): 〚手札から filter 一致カードを n 枚公開してデッキの上に移す〛
+  // コスト (B05049 a1)。canPay = removeFromHand/revealFromHand と同型 (candidates ≥ n)。pay = 手札から
+  // 抜いてデッキ上へ (公式Q&A B05049: 裏向きでデッキの上に移す = deck は CardId[] で不可視)。
+  // rules: 21 (「自分の」省略 → query.side:'self' / 全部行えなければ使用不可)。
+  | { kind: 'revealHandToDeckTop'; target: TargetingRef; n: number }
   | { kind: 'removeFromScene'; target: TargetingRef; n: number }
   | { kind: 'removeDeckTop'; player: 'self'; n: number }
   | { kind: 'discardEvidence'; n: number }
