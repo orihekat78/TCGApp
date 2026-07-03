@@ -40,7 +40,9 @@ export function EffectPickerModal(): JSX.Element | null {
   const sourceName = pending.source.cardId
     ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
     : '効果';
-  const canSkip = pending.nMin === 0;
+  // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合 — forced 以外は click 不可、skip 封じ。
+  const forced = (pending.forcedUids ?? []).filter((u) => pending.candidates.some((c) => c.uid === u));
+  const canSkip = pending.nMin === 0 && forced.length === 0;
 
   const handlePick = (uid: string): void => {
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: uid });
@@ -84,11 +86,15 @@ export function EffectPickerModal(): JSX.Element | null {
             // 同名カード識別のためカード画像を表示 (Recognition over Recall)。
             // 裏向き証拠 ('(非公開)') は実画像を出さず placeholder にフォールバックさせる。
             const hidden = name === '(非公開)';
+            // W2b (P50/r27): forced が居るとき forced 以外は選択不可 (「必ず選ぶ」)
+            const forcedBlocked = forced.length > 0 && !forced.includes(c.uid);
             return (
               <li key={c.uid}>
                 <button
                   type="button"
-                  className="effect-picker-cand"
+                  className={`effect-picker-cand${forcedBlocked ? ' effect-picker-cand--blocked' : ''}`}
+                  disabled={forcedBlocked}
+                  title={forcedBlocked ? '必ず選ぶキャラが優先されます' : undefined}
                   onClick={() => handlePick(c.uid)}
                   data-testid={`effect-pick-cand-${c.uid}`}
                 >

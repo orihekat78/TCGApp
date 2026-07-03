@@ -106,3 +106,9 @@
 .effect-picker-skip:hover {
   background: #3a4070;
 }
+
+/* W2b (P50/r27): forced 以外の候補を選択不可化 (必ず選ぶ) */
+.effect-picker-cand--blocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

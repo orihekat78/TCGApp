@@ -17,6 +17,12 @@ export type GuardPickerOpen = {
   actionId: string;
   candidates: readonly GuardPickerCandidate[];
   attackerName?: string;
+  /**
+   * engine mega-wave W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。true のとき
+   * candidates は義務 char のみに絞られており、「ガードしない」は封じる (engine passGuard
+   * throw が backstop だが UI で pass を提示すると throw で UX 破綻するため事前抑止)。
+   */
+  mustGuard?: boolean;
 };
 
 export type CutInDisguisePickerOpen = {

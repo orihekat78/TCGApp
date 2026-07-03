@@ -20,7 +20,7 @@ import { event } from '../../event/index.js';
 import { char as readChar } from '../../read/char.js';
 import { def as readDef } from '../../read/def.js';
 import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
-import { canGuard } from '../guard.js';
+import { canGuard, mustGuardCandidates } from '../guard.js';
 import { buildContactBindings } from '../contact.js';
 import { computeOrder } from './order.js';
 import {
@@ -231,6 +231,17 @@ export function tryGuard(state: GameState, ax: ActionContext, guardUid: string):
   if (!canGuard(state, ax.byUid, guardUid, guardExclude)) {
     throw new Error(`flow.action.tryGuard: invalid guard ${guardUid} for action by ${ax.byUid}`);
   }
+  // W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。義務 char が存在する場合、ガードは
+  // **義務 char 自身** で行わねばならない (公式Q&A「このキャラがガードできる場合は必ずガード」/
+  // 義務複数は「その中から持ち主が1枚選択」)。通常 char での代替ガードは throw (fail-safe、
+  // mustBeTargeted declare と同型)。義務 0 件は従来挙動 byte 等価。
+  const mustListT = mustGuardCandidates(state, ax.byUid, guardExclude);
+  if (mustListT.length > 0 && !mustListT.some(c => c.uid === guardUid)) {
+    const uids = mustListT.map(c => c.uid).join(', ');
+    throw new Error(
+      `flow.action.tryGuard: must guard with one of [${uids}] (mustGuard enforced)`,
+    );
+  }
 
   ax.guardUid = guardUid;
   ax.guarded = { guardUid };
@@ -254,6 +265,18 @@ export function tryGuard(state: GameState, ax: ActionContext, guardUid: string):
  * - phase: char target → 'leave-resolution', case target → 'judge' (actionCase 側で処理)
  */
 export function passGuard(state: GameState, ax: ActionContext): void {
+  // W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。ガード可能な義務 char が居る限り
+  // pass 不可 (公式Q&A)。スリープ/ブレット/対象自身は candidates() 除外で義務から自動免除。
+  // AI (action-resolution) / UI (useContactFlowDriver) は事前に義務 char へ誘導するため、
+  // ここは fail-safe backstop (mustBeTargeted declare:159 と同型)。義務 0 件は byte 等価。
+  const guardExcludeP = ax.target.kind === 'char' ? ax.target.uid : undefined;
+  const mustListP = mustGuardCandidates(state, ax.byUid, guardExcludeP);
+  if (mustListP.length > 0) {
+    const uids = mustListP.map(c => c.uid).join(', ');
+    throw new Error(
+      `flow.action.passGuard: must guard with one of [${uids}] (mustGuard enforced)`,
+    );
+  }
   event.emit(
     state,
     'action:unguarded',

@@ -351,15 +351,23 @@ function chooseAiPick(
     (c) => ({ kind: 'char', uid: c.uid, cardId: c.cardId, player: c.player }) as unknown as Candidate,
   );
   const chosen = policy?.chooseAtomTarget?.(state, pending.atomVerb, pending.atomArgs, charCands, pending.player);
+  // W2b (P50/r27): mustBeSelectedByOppEvent の forced 集合 (pending.forcedUids、push 時算出) を honor。
+  // 「必ず選ぶ」— 単一 pick は forced 先頭が heuristic を上書き、multi は forced を先頭合流して
+  // nMax clamp (min(forced, nMax) 枚、公式Q&A)。forced 不在は従来 byte 等価。
+  const forced = (pending.forcedUids ?? []).filter((u) => cands.some((c) => c.uid === u));
   // chosen は kind:'char' (uid あり) のみ渡しているため uid を持つが、Candidate union 上は narrow 不能 → cast。
-  const pickedUid = (chosen as { uid?: string } | null | undefined)?.uid ?? cands[0]!.uid;
+  const pickedUid = forced[0] ?? (chosen as { uid?: string } | null | undefined)?.uid ?? cands[0]!.uid;
   if (pending.nMax > 1) {
     // cluster14: distinctNames (「それぞれカード名の異なる」B09010) 時は UI(CardListModal isDistinctNamesBlocked)
     //   と同義 incremental dedup — 既選択候補の name component(rules/19 split-name) と1つでも衝突したら skip。
+    // forced は dedup walk / greedy の先頭に来るよう並べ替える (forced 0 件は元順 = byte 等価)。
+    const orderedCands = forced.length > 0
+      ? [...cands.filter((c) => forced.includes(c.uid)), ...cands.filter((c) => !forced.includes(c.uid))]
+      : cands;
     if (pending.distinctNames === true) {
       const seen = new Set<string>();
       const chosen: string[] = [];
-      for (const c of cands) {
+      for (const c of orderedCands) {
         if (chosen.length >= pending.nMax) break;
         const d = def.card(c.cardId);
         const comps = d ? allCardNameComponentsForDef(d) : [c.cardId];
@@ -370,7 +378,7 @@ function chooseAiPick(
       return { pickedUid: chosen[0] ?? pickedUid, pickedUids: chosen };
     }
     // multi-pick: greedy に nMax まで取る (取れるだけ取る heuristic、resolve-picks の cardIds 経路と整合)
-    return { pickedUid, pickedUids: cands.slice(0, pending.nMax).map((c) => c.uid) };
+    return { pickedUid, pickedUids: orderedCands.slice(0, pending.nMax).map((c) => c.uid) };
   }
   return { pickedUid };
 }

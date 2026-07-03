@@ -43,7 +43,9 @@ function scopeActiveInPartnerArea(scope: AbilityScope | undefined): boolean {
 function selfContinuousFlag(
   s: GameState,
   uid: string,
-  token: 'untargetableByAction' | 'caseActionBan' | 'selfActionBan' | 'selfCutinBanInContact',
+  // W2b (2026-07-03, r27): mustBeSelectedByOppEvent (B08087) — effect-pick forced-inclusion flag。
+  // scene.byUid のみ走査 = 「現場にいる場合に有効」(公式Q&A) が自動整合。
+  token: 'untargetableByAction' | 'caseActionBan' | 'selfActionBan' | 'selfCutinBanInContact' | 'mustBeSelectedByOppEvent',
 ): boolean {
   const char = scene.byUid(s, uid);
   if (!char) return false;

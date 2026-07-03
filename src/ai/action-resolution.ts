@@ -126,11 +126,19 @@ export function resolveActionAgainstChar(
 
   // ガード判定 (Phase 8.7c)
   // Task D E4: アクション対象自身はガード候補から除外 (B09028/B09054 Q&A)
-  const cands = engine.flow.guard.candidates(state, ax.byUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
-  const guardUid =
+  const guardExclude = ax.target.kind === 'char' ? ax.target.uid : undefined;
+  const cands = engine.flow.guard.candidates(state, ax.byUid, guardExclude);
+  // W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。義務 char が居れば policy 判断を上書きして
+  // 必ずその中からガードさせる (passGuard/tryGuard の throw fail-safe を踏ませない)。
+  // policy が義務 char を選んでいればそれを尊重、そうでなければ義務先頭。義務 0 件は従来挙動。
+  const mustCands = engine.flow.guard.mustGuardCandidates(state, ax.byUid, guardExclude);
+  const policyChoice =
     cands.length > 0 && defenderPolicy.chooseGuard
       ? defenderPolicy.chooseGuard(state, ax, cands)
       : null;
+  const guardUid = mustCands.length > 0
+    ? (policyChoice !== null && mustCands.some(c => c.uid === policyChoice) ? policyChoice : mustCands[0]!.uid)
+    : policyChoice;
   if (guardUid !== null) {
     engine.flow.action.tryGuard(state, ax, guardUid);
   } else {
@@ -194,10 +202,15 @@ export function resolveActionAgainstCase(
 
   // BUG-144: ガード判定 (rules/07-08)。case target は対象自身の除外なし (guardExclude=undefined)。
   const cands = engine.flow.guard.candidates(state, ax.byUid, undefined);
-  const guardUid =
+  // W2b (2026-07-03, r28): mustGuard 義務 — char アクション側と同型の policy 上書き。
+  const mustCands = engine.flow.guard.mustGuardCandidates(state, ax.byUid, undefined);
+  const policyChoice =
     cands.length > 0 && defenderPolicy?.chooseGuard
       ? defenderPolicy.chooseGuard(state, ax, cands)
       : null;
+  const guardUid = mustCands.length > 0
+    ? (policyChoice !== null && mustCands.some(c => c.uid === policyChoice) ? policyChoice : mustCands[0]!.uid)
+    : policyChoice;
   if (guardUid !== null) {
     engine.flow.action.tryGuard(state, ax, guardUid);
   } else {

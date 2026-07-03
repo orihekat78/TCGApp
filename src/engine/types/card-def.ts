@@ -151,6 +151,16 @@ export type ContinuousModifier = {
   caseActionBan?: boolean;
   selfActionBan?: boolean;
   selfCutinBanInContact?: boolean;
+  // engine mega-wave W2b (2026-07-03, P50/r27): 「相手はイベントの効果によってこのキャラを選べる場合、
+  //   必ず選ぶ」(B08087 吞口重彦)。G28 mustBeTargeted (action-target 強制) の effect-pick 版。
+  //   reader = read.char.selfContinuousFlag (同 union)。enforce = effect-pick の selection 境界 3 site
+  //   (resolve-picks.forcedInclusionUids: human push が pending.forcedUids に載せ UI が lock、
+  //   AI 同期 walk は picked/greedy へ強制合流、apply-pick.chooseAiPick は pending.forcedUids honor)。
+  //   gate = イベント使用の自効果のみ (ctx.triggerPayload kind==='event-use' + cardId 一致。
+  //   キャラ能力/カットイン/ヒラメキ/第三者 reaction の pick は非該当、公式Q&A「相手が使用した
+  //   イベントの効果で」) + 候補集合在中 (「選べる場合」) + c.player !== chooser (「相手は」の方向)。
+  //   forced > nMax は min(forced, nMax) 枚に clamp (公式Q&A「1枚まで×2枚→どちらか1枚」)。
+  mustBeSelectedByOppEvent?: boolean;
   // engine mega-wave W2 (2026-07-03, P09/r26): 「手札から使用する場合、このキャラは事件カードの色を
   //   無視できる」(B03126 犯人。ネクストヒントも「手札から使用」に含む — 印字括弧書き)。
   //   hand-use-card.handUseColorIgnoreAllowed (単一ソース helper) が hand 在中カード自身の def を walk。

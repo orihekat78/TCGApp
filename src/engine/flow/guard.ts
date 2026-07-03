@@ -75,7 +75,32 @@ export function canGuard(state: GameState, byUid: string, guardUid: string, excl
   return list.some(c => c.uid === guardUid);
 }
 
+/**
+ * mustGuardCandidates — ガード義務のある候補 (engine mega-wave W2b 2026-07-03, r28)
+ *
+ * 「このキャラはガードできる場合、必ずガードする。」(B09040 a2 が charSetTurnEffect で付与) の
+ * enforce 用。candidates() の legal 集合のうち、防御側キャラの mustGuard token
+ * (turnEffects flag / 'text:' 擬似キーワード、hasTextAbility 2チャネル) が立っているものだけ返す。
+ *
+ * candidates() を legal 集合とすることで公式Q&A が自動成立:
+ *  - スリープ等でガードできない義務 char は候補外 → 強制されない
+ *  - 攻撃側ブレット → 候補 [] → 義務なし
+ *  - アクション対象自身 (excludeUid) → 候補外 → 義務なし
+ * 非空のとき passGuard は throw (pass 不可) / tryGuard は本リスト内 uid のみ許可
+ * (義務 char 複数は「その中から持ち主が1枚選択」公式Q&A)。
+ * consumer 0 (flag 未 set) なら常に [] = 既存挙動 byte 等価。
+ */
+export function mustGuardCandidates(
+  state: GameState,
+  byUid: string,
+  excludeUid?: string,
+): { uid: string; cardId: string }[] {
+  return candidates(state, byUid, excludeUid)
+    .filter(c => readChar.hasTextAbility(state, c.uid, 'mustGuard'));
+}
+
 export const guard = {
   candidates,
   canGuard,
+  mustGuardCandidates,
 };

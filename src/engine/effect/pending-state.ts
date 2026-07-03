@@ -91,6 +91,15 @@ export type PendingEffectPickSide = {
    */
   distinctNames?: boolean;
   /**
+   * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) の
+   * forced-inclusion 集合。resolve-picks の human push site が算出して載せ、UI (CardListModal
+   * auto-select+lock / Playmat 直接クリック restrict / EffectPickerModal restrict) と
+   * apply-pick.chooseAiPick (AI drain) が honor する。**unclamped** — forced.length > nMax の
+   * 場合は min(forced.length, nMax) 枚を選ぶ (どれを選ぶかは chooser、公式Q&A)。
+   * 不在/空 = 従来挙動 byte 等価。
+   */
+  forcedUids?: string[];
+  /**
    * BUG-111: 中断した sequence/chain の残り step (continuation) を pick 本体に同梱し、
    * 別 side-channel FIFO (__pendingChainContinuation) の index ずれ desync を排除する。
    * remainder.length>0 の step で pick を await したときに resolver が set。pick と 1:1。

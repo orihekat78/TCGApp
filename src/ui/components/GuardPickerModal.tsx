@@ -32,10 +32,15 @@ export type GuardPickerModalProps = {
   onPick: (uid: string) => void;
   /** 「ガードしない」選択時 */
   onSkip: () => void;
+  /**
+   * W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。true のとき「ガードしない」を封じ、
+   * 候補 (親側で義務 char のみに絞済) から必ず選ばせる (公式Q&A)。
+   */
+  mustGuard?: boolean;
 };
 
 export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | null {
-  const { open, candidates, attackerName, onPick, onSkip } = props;
+  const { open, candidates, attackerName, onPick, onSkip, mustGuard } = props;
   if (!open) return null;
 
   return (
@@ -78,14 +83,20 @@ export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | nu
         </div>
 
         <div className="guard-picker-actions">
-          <button
-            type="button"
-            className="guard-picker-skip"
-            onClick={onSkip}
-            data-testid="guard-picker-skip"
-          >
-            ガードしない
-          </button>
+          {mustGuard === true ? (
+            <p className="guard-picker-must" data-testid="guard-picker-must">
+              「このキャラはガードできる場合、必ずガードする。」— ガードしない選択はできません
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="guard-picker-skip"
+              onClick={onSkip}
+              data-testid="guard-picker-skip"
+            >
+              ガードしない
+            </button>
+          )}
         </div>
       </div>
     </div>

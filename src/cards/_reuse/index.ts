@@ -1087,6 +1087,9 @@ import { B05045P } from '../ct-p05/B05045P.js';
 import { B05079 } from '../ct-p05/B05079.js';
 import { B03057 } from '../ct-p03/B03057.js';
 import { B03057P } from '../ct-p03/B03057P.js';
+import { B08087 } from '../ct-p08/B08087.js';
+import { B09040 } from '../ct-p09/B09040.js';
+import { B09040P } from '../ct-p09/B09040P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1406,4 +1409,6 @@ export const REUSE_CARDS: CardDef[] = [
   PR136, PR142, B08036, B05049, B05049P, B03084, B03084P, B05045, B05045P,
   // engine mega-wave W2 — restriction/observer exemplar (B05079 hirameki-deny / B03057+P untargetable+ability:declared)
   B05079, B03057, B03057P,
+  // engine mega-wave W2b — UI重 restriction exemplar (B08087 mustBeSelectedByOppEvent / B09040+P mustGuard)
+  B08087, B09040, B09040P,
 ];

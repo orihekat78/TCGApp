@@ -22,6 +22,8 @@
 import { candidates as targetCandidates } from '../target/candidates.js';
 import { evalDyn } from '../dyn/eval.js';
 import { evalCond } from '../cond/eval.js';
+import { def as readDef } from '../read/def.js';
+import { char as readChar } from '../read/char.js';
 import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
@@ -220,6 +222,50 @@ export type {
  *
  * 呼び出し場所: src/engine/effect/atom-handlers.ts の各 case の awaiting-pick path。
  */
+/**
+ * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087 吞口重彦) の
+ * forced-inclusion 集合算出。「相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ」。
+ *
+ * 条件 (公式Q&A 準拠):
+ *  1. pick が **イベントの使用自効果** であること: ctx.triggerPayload が effect:declared の
+ *     event-use payload ({kind:'event-use', cardId}) で、かつ source.cardId === payload.cardId。
+ *     - 混成 review blocker (2026-07-03): 旧実装の「source def.kind==='event'」だけでは、イベント
+ *       カードに印字された【ヒラメキ】(hook evidence:remove-by-action) や【カットイン】由来の
+ *       pick まで誤って強制していた。公式Q&A「**相手が使用した**イベントの効果で」= 手札の使用/
+ *       ネクストヒント経路のみ (B09034 の類似制限と同じ線引き)。
+ *     - cardId 一致で「イベント使用に反応した第三者キャラの効果」(B08020 型 reaction、同 hook・
+ *       同 payload) も除外 — それは「イベントの効果」でなくキャラ能力の効果。
+ *     - def.kind==='event' は belt (character-use は emitKind 分岐で来ない)。
+ *  2. 候補が chooser の **相手側** board char (c.player !== chooserPlayer)。「相手は…選ぶ」の方向。
+ *  3. read.char.selfContinuousFlag が true (continuous + condition honor、現場 board char のみ)。
+ *  4. 候補集合に入っていること (「選べる場合」) — cands を走査するので自動成立。filter 不一致で
+ *     候補外の flag char は強制しない。
+ *
+ * 返り値は unclamped。nMax を超える場合 (吞口2枚 × 「1枚まで」) は消費側が min(forced, nMax) 枚
+ * を enforce (どれを選ぶかは chooser の自由、公式Q&A「どちらか1枚を相手が選びます」)。
+ */
+function forcedInclusionUids(
+  state: GameState,
+  cands: readonly Candidate[],
+  chooserPlayer: Player,
+  sourceCardId: string | undefined,
+  ctx: EffectCtx,
+): string[] {
+  if (!sourceCardId) return [];
+  const tp = (ctx as { triggerPayload?: { kind?: unknown; cardId?: unknown } }).triggerPayload;
+  if (tp?.kind !== 'event-use') return [];
+  if (tp.cardId !== sourceCardId) return [];
+  const d = readDef.card(sourceCardId);
+  if (!d || d.kind !== 'event') return [];
+  const out: string[] = [];
+  for (const c of cands) {
+    if (c.kind !== 'char') continue;
+    if (c.player === chooserPlayer) continue;
+    if (readChar.selfContinuousFlag(state, c.uid, 'mustBeSelectedByOppEvent')) out.push(c.uid);
+  }
+  return out;
+}
+
 export function tryRePickFromAtom(
   state: GameState,
   atom: { kind: 'atom'; verb: unknown; args: unknown },
@@ -308,6 +354,13 @@ function substituteAtomPick(
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
   const byPlayer: Player = opts.byPlayer ?? 'self';
 
+  // engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) の forced 集合。
+  // pick が「イベント使用の自効果」(ctx.triggerPayload kind==='event-use' + cardId 一致) のとき、
+  // chooser の相手側 board char で flag が成立しているものを候補集合から抽出する。
+  // ヒラメキ/カットイン/第三者 reaction/キャラ能力は helper 冒頭 gate で即 [] (hot-path 素通し)。
+  // unclamped — 消費側が min(forced, nMax) を enforce。
+  const forcedUids = forcedInclusionUids(state, cands, byPlayer, opts.source?.cardId, ctx);
+
   // user_request 20260522_01 #2/#6 BUG-054 + BUG-065 + BUG-075 + BUG-076: human player の
   // ときは side-channel に候補を set して atom を未解決のまま返却 (caller が queue 抑止)。
   //
@@ -367,6 +420,9 @@ function substituteAtomPick(
       // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、
       //   0枚 decline を applyPickSkipAndContinuation で解決し remainder を実行する (deckRevealUntil と同契約)。
       skipResolvesAtom: (args as { skipResolvesAtom?: boolean }).skipResolvesAtom === true,
+      // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合。UI (auto-select+lock/restrict) と
+      // chooseAiPick が honor。空なら undefined (従来 pending と byte 等価)。
+      ...(forcedUids.length > 0 ? { forcedUids } : {}),
     });
     return atom as Effect; // 未解決のまま返却
   }
@@ -378,7 +434,12 @@ function substituteAtomPick(
     cands,
     byPlayer,
   );
-  const picked = heuristicPick ?? cands[0];
+  // W2b (P50/r27): 単一 pick (Pattern A / cardId contract / generic single) は forced が heuristic を
+  // 上書きする (「必ず選ぶ」)。forced 複数 × 単一 pick は先頭 1枚 (min(forced,nMax) clamp、公式Q&A)。
+  const forcedFirst = forcedUids.length > 0
+    ? cands.find((c) => c.kind === 'char' && c.uid === forcedUids[0])
+    : undefined;
+  const picked = forcedFirst ?? heuristicPick ?? cands[0];
   if (!picked) return atom as Effect;
 
   if (isPatternA) {
@@ -453,7 +514,13 @@ function substituteAtomPick(
   // 単一選好は multi では cardIds contract 同様不使用)。nMax<=1 は従来 path byte 不変。
   const nMaxG = (target as { n?: { max?: number } } | undefined)?.n?.max ?? 1;
   if (nMaxG > 1) {
-    const pickValues = cands
+    // W2b (P50/r27): forced (mustBeSelectedByOppEvent) を greedy 先頭に合流してから nMaxG で clamp
+    // (「2枚以上/好きな数 → 必ず全部選ぶ」公式Q&A。forced 0 件なら従来順 byte 等価)。
+    const orderedCands = forcedUids.length > 0
+      ? [...cands.filter((c) => c.kind === 'char' && forcedUids.includes(c.uid)),
+         ...cands.filter((c) => !(c.kind === 'char' && forcedUids.includes(c.uid)))]
+      : cands;
+    const pickValues = orderedCands
       .map(pickValueOf)
       .filter((v): v is string => v !== null)
       .slice(0, nMaxG);

@@ -112,18 +112,32 @@ export type CardListModalProps = {
    * pickDistinctNames=true のとき、選択済との重複検査に使用する。
    */
   pickComponents?: Record<string, string[]>;
+  /**
+   * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) forced 集合。
+   * multi-select では auto-select + deselect 不可 + 完了 gate (forced ⊆ selected)、
+   * single-select では forced 以外を click 不可化。skip (選ばない) は Playmat 側で封じる。
+   * forced.length > nMax のときは lock せず「min(forced, nMax) 枚選択」を完了 gate のみで enforce。
+   */
+  pickForcedUids?: string[];
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents } = props;
+  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickForcedUids } = props;
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
   const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
   // D08021 driver: multi-pick mode (nMax > 1) で local selection state を保持
   const isMultiPick = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
-  // pending pick が切り替わった (kind change) で local selection reset
-  useEffect(() => { setSelectedUids([]); }, [kind, pickCands]);
+  // W2b (P50/r27): forced 集合 (候補内のみ)。forced.length <= nMax なら auto-select + lock、
+  // 超過時 (吞口2枚 × 1枚まで) はどれを選ぶか自由 → lock せず完了 gate のみ。
+  const forcedInCands = (pickForcedUids ?? []).filter((u) => (pickCands ?? []).some((c) => c.uid === u));
+  const forcedLockable = forcedInCands.length > 0 && forcedInCands.length <= (pickNMax ?? 1);
+  const forcedRequired = Math.min(forcedInCands.length, pickNMax ?? Number.POSITIVE_INFINITY);
+  // pending pick が切り替わった (kind change) で local selection reset (forced は auto-select)
+  const isMultiPickInit = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- forcedInCands は render 毎に再生成の派生値のため prop (pickForcedUids/pickNMax) を dep にする
+  useEffect(() => { setSelectedUids(isMultiPickInit && forcedLockable ? forcedInCands : []); }, [kind, pickCands, pickForcedUids, pickNMax]);
   // D08021 driver 2026-05-26: 選択済 uid → 集計済 name component Set (rules/19)
   const selectedComponents = new Set<string>();
   if (pickDistinctNames && pickComponents) {
@@ -140,14 +154,23 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
   };
   const toggleSelect = (uid: string): void => {
     setSelectedUids((prev) => {
-      if (prev.includes(uid)) return prev.filter((u) => u !== uid);
+      // W2b (P50/r27): lock された forced は deselect 不可 (「必ず選ぶ」)
+      if (prev.includes(uid)) {
+        if (forcedLockable && forcedInCands.includes(uid)) return prev;
+        return prev.filter((u) => u !== uid);
+      }
       if (typeof pickNMax === 'number' && prev.length >= pickNMax) return prev; // 上限ガード
       // distinctNames 衝突は click 不可なので click 経路に到達しないが、念のため防御
       if (isDistinctNamesBlocked(uid)) return prev;
       return [...prev, uid];
     });
   };
-  const canConfirm = isMultiPick && (selectedUids.length >= (pickNMin ?? 0));
+  /** W2b (P50/r27): single-select で forced 以外を click 不可化する述語 */
+  const isForcedBlocked = (uid: string): boolean =>
+    !isMultiPick && forcedInCands.length > 0 && !forcedInCands.includes(uid);
+  const selectedForcedCount = forcedInCands.filter((u) => selectedUids.includes(u)).length;
+  const canConfirm = isMultiPick && (selectedUids.length >= (pickNMin ?? 0))
+    && selectedForcedCount >= forcedRequired;
 
   /** 裏向き cell の idx (= evidence の index) から候補 uid を逆引き。pick mode 外では undefined。 */
   const findFaceDownPickUid = (idx: number): string | undefined => {
@@ -277,8 +300,9 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 const pickUid = findFaceUpPickUid(cardId, idx);
                 if (pickUid !== undefined) {
                   const isSelected = isMultiPick && selectedUids.includes(pickUid);
-                  const isBlocked = isMultiPick && isDistinctNamesBlocked(pickUid);
-                  const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}`;
+                  const isForcedLocked = forcedLockable && forcedInCands.includes(pickUid);
+                  const isBlocked = (isMultiPick && isDistinctNamesBlocked(pickUid)) || isForcedBlocked(pickUid);
+                  const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                   return (
                     <button
                       type="button"
@@ -287,9 +311,9 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                       disabled={isBlocked}
                       onClick={() => isMultiPick ? toggleSelect(pickUid) : onPick!(pickUid)}
                       data-testid={`card-list-pick-${pickUid}`}
-                      aria-label={`${cardIdToDisplayName(cardId)} を${isBlocked ? '選択不可 (同名重複)' : isSelected ? '選択解除' : '選択'}`}
+                      aria-label={`${cardIdToDisplayName(cardId)} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       aria-pressed={isMultiPick ? isSelected : undefined}
-                      title={isBlocked ? '同じカード名は1枚まで (rules/19)' : undefined}
+                      title={isForcedLocked ? '必ず選ぶ (相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(pickUid) ? '同じカード名は1枚まで (rules/19)' : isBlocked ? '必ず選ぶキャラが優先されます' : undefined}
                     >
                       {itemContent}
                     </button>

@@ -159,11 +159,20 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
       return;
 
     case 'guard-window': {
-      const cands = buildGuardCandidates(state, ax.byUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
+      const guardExclude = ax.target.kind === 'char' ? ax.target.uid : undefined;
+      const cands = buildGuardCandidates(state, ax.byUid, guardExclude);
       if (cands.length === 0) {
         dispatchEngineAction({ type: 'actionGuard', actionId: ax.id, guarderUid: null });
         return;
       }
+      // W2b (2026-07-03, r28): mustGuard 義務 (B09040 a2)。義務 char が居れば候補を義務 char のみに
+      // 絞り、pass (ガードしない) を封じる (公式Q&A「ガードできる場合は必ずガード」。
+      // engine passGuard/tryGuard の throw は backstop、UI が事前抑止する)。
+      const mustCands = flow.guard.mustGuardCandidates(state, ax.byUid, guardExclude);
+      const mustGuard = mustCands.length > 0;
+      const effCands = mustGuard
+        ? cands.filter((c) => mustCands.some((m) => m.uid === c.uid))
+        : cands;
       const defender: Player = ax.byPlayer === 'self' ? 'opp' : 'self';
       // BUG-045 (#9 spectator stall fix): spectator mode では self も AI 委譲
       if (defender === 'self' && !spectatorMode) {
@@ -171,15 +180,19 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
         const attackerName = readApLp(state, ax.byUid).name;
         useContactModalStore.getState()._setGuardPicker({
           actionId: ax.id,
-          candidates: cands,
+          candidates: effCands,
           attackerName,
+          mustGuard,
         });
         return;
       }
-      // opp defender OR spectator mode の self: AI
+      // opp defender OR spectator mode の self: AI (義務あれば義務 char へ強制)
       const ai = new HeuristicPolicy();
-      const rawCands = flow.guard.candidates(state, ax.byUid, ax.target.kind === 'char' ? ax.target.uid : undefined);
-      const choice = ai.chooseGuard?.(state, ax, rawCands) ?? null;
+      const rawCands = flow.guard.candidates(state, ax.byUid, guardExclude);
+      const aiChoice = ai.chooseGuard?.(state, ax, rawCands) ?? null;
+      const choice = mustGuard
+        ? (aiChoice !== null && mustCands.some((m) => m.uid === aiChoice) ? aiChoice : mustCands[0]!.uid)
+        : aiChoice;
       dispatchEngineAction({ type: 'actionGuard', actionId: ax.id, guarderUid: choice });
       return;
     }

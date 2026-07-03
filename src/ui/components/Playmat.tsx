@@ -423,10 +423,16 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // EffectPickerModal と **共有** し、sceneSetState/charGrantKeyword/charSetCard/charSetTurnEffect/sceneToHand
   // + 将来 verb を自動被覆 (n.max>1 や非scene混在は false → EffectPickerModal フォールバック)。
   const isScenePick = isSceneDirectPick(pendingPickForArea, gameState);
+  // W2b (P50/r27): mustBeSelectedByOppEvent forced 集合 — forced が居る pick では
+  // forced 以外を click 不可化し (「必ず選ぶ」)、skip (選ばない) も封じる。
+  const scenePickForced = (pendingPickForArea?.forcedUids ?? []).filter(
+    (u) => pendingPickForArea?.candidates.some((c) => c.uid === u),
+  );
   const scenePickUidsSelf = new Set<string>();
   const scenePickUidsOpp = new Set<string>();
   if (isScenePick && pendingPickForArea) {
     for (const c of pendingPickForArea.candidates) {
+      if (scenePickForced.length > 0 && !scenePickForced.includes(c.uid)) continue;
       if (c.player === 'self') scenePickUidsSelf.add(c.uid);
       else scenePickUidsOpp.add(c.uid);
     }
@@ -929,7 +935,8 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                   : undefined
               }
               onPick={isPickModeForThisArea ? (uid) => { void resolveSceneEnterPick(uid); } : undefined}
-              pickCanSkip={isPickModeForThisArea && (pendingPickForArea?.nMin ?? 1) === 0}
+              pickCanSkip={isPickModeForThisArea && (pendingPickForArea?.nMin ?? 1) === 0 && scenePickForced.length === 0}
+              pickForcedUids={isPickModeForThisArea ? pendingPickForArea?.forcedUids : undefined}
               onPickSkip={isPickModeForThisArea ? () => {
                 dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
               } : undefined}
@@ -1004,7 +1011,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             <span className="scene-pick-skip-banner">
               {sceneVerbBanner(pendingPickForArea?.atomVerb)}
             </span>
-            {(pendingPickForArea?.nMin ?? 1) === 0 && (
+            {(pendingPickForArea?.nMin ?? 1) === 0 && scenePickForced.length === 0 && (
               <button
                 type="button"
                 className="scene-pick-skip-btn"
@@ -1061,6 +1068,7 @@ function PlaymatGuardPickerModal(): JSX.Element | null {
       open={true}
       candidates={current.candidates}
       attackerName={current.attackerName}
+      mustGuard={current.mustGuard}
       onPick={(uid) => {
         close();
         dispatchEngineAction({ type: 'actionGuard', actionId: current.actionId, guarderUid: uid });

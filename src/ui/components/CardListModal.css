@@ -250,3 +250,10 @@
   border-color: #ccc;
   color: #fff;
 }
+
+/* W2b (P50/r27): mustBeSelectedByOppEvent forced-lock cell (auto-select + deselect 不可) */
+.card-list-item--forced {
+  outline: 2px solid #d4a017;
+  outline-offset: -2px;
+  cursor: not-allowed;
+}

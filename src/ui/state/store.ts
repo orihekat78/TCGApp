@@ -190,6 +190,12 @@ export type PendingEffectPick = {
    * 処理するマーカー (engine 側 PendingEffectPickSide.skipResolvesAtom と同 shape)。
    */
   skipResolvesAtom?: boolean;
+  /**
+   * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) forced 集合
+   * (engine 側 PendingEffectPickSide.forcedUids と同 shape)。UI は forced 以外を pick 不可化し
+   * skip を封じる (human enforce は UI が唯一の層)。unclamped — min(forced.length, nMax) 枚必須。
+   */
+  forcedUids?: string[];
 };
 
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */
