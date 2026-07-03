@@ -108,6 +108,15 @@ export function endTurn(state: GameState, p: Player): void {
   for (const c of state.players[oppOfP].scene) {
     charMutator.clearTurnEffects(state, c.uid, 'opp-turn');
   }
+  // mega-wave W6 step8 (2026-07-04, row75): 未消費の next-match 予約はターン境界で失効
+  // (B01058「このターン中、次に〜したとき」— arm したターン限り)。mode==='turn-end' は触らない:
+  // phase:end:start emit (上) の時点で listener が消費済み。player 不一致等で不発の turn-end 残骸は
+  // armedTurn guard (listeners/reserved-effects.ts) で永久 inert (害なし・turn-crossing しない)。
+  if (state.reservedEffects && state.reservedEffects.length > 0) {
+    state.reservedEffects = state.reservedEffects.filter(
+      (e) => !(e.trigger.mode === 'next-match' && e.trigger.armedTurn === state.turn.number),
+    );
+  }
   event.emit(state, 'turn:end', { player: p }, undefined);
   // ターン情報の繰上げ
   state.turn.number += 1;

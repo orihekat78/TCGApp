@@ -132,6 +132,16 @@ export type TurnScopedFlags = {
    */
   hiramekiSuppressed?: boolean;
   /**
+   * 「相手はこのアクションによって証拠を得られない」(B02088/B03126 ヒラメキ、mega-wave W6 step7
+   * row70)。setEvidenceGainSuppress verb が **アクション[事件]を行った側** (ヒラメキ所有者 =
+   * 証拠を失った側から見た相手) の slot にセットし、flow/action-case.ts gainSelfEvidence が
+   * consume-on-read (読んだら即 false) で単発消費する。清掃は turn:start の resetTurnFlags
+   * backstop **のみ** — hiramekiSuppressed と違い action-end 清掃は書かない (本フラグはヒラメキ解決
+   * = 当該アクションの action-end が同期発火し終わった後にセットされるため、action-end 清掃は
+   * 「セット前に走る dead code」になる)。undefined/false = 抑止なし。
+   */
+  evidenceGainSuppressed?: boolean;
+  /**
    * 「このターン中、(このプレイヤーの) キャラの【疾風】が発動していたか」(B09072 横溝重悟、
    * engine additive wave-8 2026-07-02 P15)。listeners/triggered.ts の in-play scan で疾風 ability
    * (abilityIsShippu = enter + enterOrderEquals) が全 gate 通過 = 実際に発動した時点で発動キャラの
@@ -188,6 +198,7 @@ export type LogEntry = {
 // 単なる Effect ではなく、発火元・発火タイミング・解決状態を含むラッパー。
 // spec: .claude/specs/engine-api-resolver.md
 import type { EffectStackEntry } from './effect-stack.js';
+import type { ReservedEffectEntry } from './reserved-effect.js';
 
 export type GameState = {
   turn: {
@@ -198,6 +209,13 @@ export type GameState = {
   };
   players: { self: PlayerState; opp: PlayerState };
   pendingEffects: EffectStackEntry[];
+  /**
+   * 離場後予約効果 queue (mega-wave W6 step8, row75)。コストで源カードが盤面を離れる
+   * 「ターン終了時〜」(B08069) /「このターン中、次に〜したとき」(B01058) をカード位置非依存で保持。
+   * arm = reserveEffect atom / 発火 = listeners/reserved-effects.ts (single-fire) /
+   * 失効 = flow/turn.ts endTurn (next-match 未消費分)。pendingEffects と違い turn 内 hold される。
+   */
+  reservedEffects: ReservedEffectEntry[];
   scratchTrace: { self: '未発見' | '発見済'; opp: '未発見' | '発見済' };
   turnState: { self: TurnScopedFlags; opp: TurnScopedFlags };
   refreshCount: { self: number; opp: number };

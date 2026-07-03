@@ -1033,3 +1033,42 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 - ★**DEFER: B01082 榎本梓 全句** — a1「ガードできない」= cannotGuard primitive 不在 (r74 スコープ外)。a2 (lock) は本 wave で出荷済。cannotGuard 出荷まで partial 禁止で author 不可。
 - ★**DEFER: B09047 闇の男爵 選択肢 gating** — 「以下から1つ選んで行う」で条件未成立選択肢が消える (rules/17) 挙動を choice+conditional 合成がどう表現するか未 grounding (card-phase で実測してから)。
 - **row53 の altCostProvider (B05033「コストを支払う代わりに」) は synthesis implOrder 外 = 未実装** — ability-activate cost dispatch への分岐追加 (T3)。将来 wave or card-phase 前の touch-up で。
+
+## wave engine / megaw6 後半 (structural step7-11、2026-07-04 出荷)
+
+出荷済 = **step7** setEvidenceGainSuppress verb + gainSelfEvidence consume-on-read gate + hirameki defer 再順序化 (actionJudge peek→mark / hiramekiResolve deferred gain、B02088/B03126) / **step8** GameState.reservedEffects queue + reserveEffect verb + listeners/reserved-effects.ts (turn-end / next-match、B08069/B01058) / **step9** startContact 本実装 (action.startFromEffect + generatedByEffect action:end 抑止 + __pendingContactStartAxId drain、B06020/B06042) / **step10** leave:intercept pre-splice consult (consultLeaveIntercept 純関数 + removeToRemove redirect 分岐 + leaveCauseIn/leaveOwnerIs cond + leaveInterceptRedirect marker、B01092/B01039、**AI-only**) / **step11** findCardOnBoard hand sentinel + hand-declared scope gate + findDeclaredAbility 共有 helper (rider on-set-host declared) + removeAreaToDeckTop verb (B06103 基盤/B07014)。engine-only (consumer は card-phase step12)。
+
+- ★★**DEFER (最重要・LOUD): step10 human-defender window** — B01092「【相手ターン中】〜してもよい」は
+  **human 防御 vs CPU 攻撃がまさに主用途** (相手ターン中 = 非ターン側 = human)。本 wave は AI 所有
+  interceptor のみ accept、human 所有は素通し (通常リムーブ、silent double-remove しない probe §10-6 pin)。
+  human 経路 = state-machine 'leave-intercept-window' phase + dispatch 'actionLeaveIntercept'
+  (guard-window 前例と対称) を **B01092 card author 前に必須実装** (row9 design plugPoint 6 参照)。
+- **step10 cause='effect' の byPlayer threading は sceneRemove atom のみ** — turn.ts removeOnTurnEnd /
+  MR② / switch 内部の removeToRemove は byPlayer 未伝搬 → fail-closed で intercept なし。相手が付与した
+  removeOnTurnEnd rider 由来の離場は「相手の効果」だが intercept 対象にならない (honest partial、
+  他 effect-removal caller に ctx が届いた時点で threading 追加)。
+- **step10 AI always-accept heuristic** — コスト支払可能なら常に accept (interceptor 価値評価なし)。
+  戦略品質 gap (row9 risks(d))、正しさ gap ではない。
+- **step10 kept-in-scene の消費 set-card は setcard:leave 非 emit** — host と一緒に離れる場合の
+  emitSetCardLeaves と違い単独離場。観測カードが現 pool 0 = latent nit。
+- **step8 同 hook 複数 entry の pick は queue 時 pre-resolve** — 2 entry が同一 char を選びうる
+  (probe §8-7 で pin)。triggered.ts と同じ engine-wide posture。解決時盤面 pick への一般化は
+  declaredReaction 限定 deferred resolver (resolve/stack.ts) の拡張が要る。
+- **step8 listener hook は 2 本 hard-code** (phase:end:start / evidence:removed) — 将来の
+  「次に〜したとき」カードが別 hook を要求したら listeners/reserved-effects.ts に追加 (grow-as-needed、
+  TRIGGERED_HOOKS と同運用)。player 不一致で不発の turn-end 残骸 entry は armedTurn guard で永久 inert (無害)。
+- **step9 __pendingContactStartAxId は scalar** — 同一 chain 内複数 startContact は後勝ち (現 exemplar
+  0-1 pick 単発で到達不能。複数発火カード出荷時に queue 化、row65 risks(4))。
+- **step9 「相手の能力や効果によって選ばれない」capability は engine 全体に不在** (pre-existing gap、
+  row65 risks(3)) — startContact も他 pick 系と同じ非対応。
+- **step7 headless AI self-play は hirameki 未解決** (pre-existing) — suppression は smoke で踏めない。
+  playwright human-path 実機は B02088/B03126 card author 時に必須 (「画面処理=カードテキスト文言」検証)。
+- **step7 bundled 経路 (actionAgainstCase → resolveActionAgainstCase) は eager gain のまま** —
+  pendingHirameki.gainDeferred flag が double-gain の唯一の guard (refactor 時に両 producer 再監査)。
+- **step11 canDeclaredAbility fail-closed 化** — 不明 abilId / faceDown rider は false (旧実装は
+  「不明 abilId → true 素通り」)。既存カードは実在 abilId のみ使用 = full vitest green で回帰 0 実証。
+- **step11 hand-declared の UI surface は enumerators のみ** — ActionsPanel の hand: uid 表示 label /
+  クリック起点は未配線 (B06103 自体が sceneEnter fromSelfHand + 名指し使用ban 不在で DEFER のため
+  live 影響 0。card author 時に UI 配線 + playwright)。
+- **B07014 は full 解禁** (a1 charSetCard fromSelf / a2 grantKeywords on-set-host / a3 rider declared +
+  removeAreaToDeckTop 全部品出荷済) — card-phase step12 の即 author 候補。

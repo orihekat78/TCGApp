@@ -62,6 +62,11 @@ export type HookName =
   | 'enter:group'
   | 'disguise:into'
   | 'leave:to-remove'
+  // mega-wave W6 step10 (2026-07-04, row9): 現場離脱の pre-splice consult (B01092/B01039)。
+  // emit されない consult 専用 hook 名 — mutate/scene.removeToRemove が effect/consult-leave-intercept.ts
+  // 経由で trigger.hook==='leave:intercept' の ability def を直接走査する (in-play scan の第三者
+  // observer 誤発火を避けるため event registry を通さない。post-hoc の leave:to-remove とは別物)。
+  | 'leave:intercept'
   | 'leave:to-deck'
   | 'leave:to-partner-area'
   // engine拡張 wave#2 cluster9 (2026-06-15): 裏向き/表向きセットカードが現場から離れたとき

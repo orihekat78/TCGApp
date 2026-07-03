@@ -15,6 +15,7 @@ import { cards } from './cards/index.js';
 import { registerHiramekiListener } from './listeners/hirameki.js';
 import { registerMisreadListener } from './listeners/misread.js';
 import { registerTriggeredListener } from './listeners/triggered.js';
+import { registerReservedEffectListener } from './listeners/reserved-effects.js';
 
 const effect = { runAtom, run: effectRun, validate: effectValidate };
 
@@ -24,6 +25,9 @@ const effect = { runAtom, run: effectRun, validate: effectValidate };
 registerHiramekiListener();
 registerMisreadListener();
 registerTriggeredListener();
+// mega-wave W6 step8 (row75): 離場後予約効果 listener。triggered との登録順は無関係 (対象 domain が
+// 排他 — reservedEffects field のみを見る)。
+registerReservedEffectListener();
 
 export const engine = { read, mutate, invariant, event, effect, dyn, target, cost, cond, resolve, flow, cards };
 
@@ -52,6 +56,9 @@ export {
   _drainPendingHirameki,
   _resetPendingHirameki,
   _resetHiramekiRegistered,
+  // mega-wave W6 step7 (row70): actionJudge の defer 判定用 (peek = 非消費 / mark = gainDeferred 焼込)
+  _peekPendingHirameki,
+  _markPendingHiramekiGainDeferred,
 } from './listeners/hirameki.js';
 export {
   _drainPendingMisread,

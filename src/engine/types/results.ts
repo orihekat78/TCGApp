@@ -9,6 +9,14 @@ export type RemoveResult = {
   setCardsRemoved: CardId[];
   stackedCardsRemoved: number;
   triggeredHooks: HookName[];
+  /**
+   * mega-wave W6 step10 (row9): leave:intercept でリムーブが「代わりに〜」へ差し替わった。
+   * 'hand' = B01092 型 (キャラは手札へ、interceptor がコストでリムーブ) /
+   * 'kept-in-scene' = B01039 型 (キャラは現場に残り、set-card rider のみ消費)。
+   * undefined = 通常リムーブ (既存 4 call site は無視で back-compat)。
+   */
+  prevented?: boolean;
+  redirectedTo?: 'hand' | 'kept-in-scene';
 };
 
 export type RefreshResult =
@@ -63,6 +71,14 @@ export type ActionContext = {
   cutInUsed?: { self?: boolean; opp?: boolean };
   /** 防御側のコンタクト免疫 (turnEffects から snapshot) */
   contactImmune?: boolean;
+  /**
+   * mega-wave W6 step9 (2026-07-04, row65): 「コンタクトを発生させる」効果 (B06020/B06042) 由来の
+   * ax。true のとき contact-end→action-end 遷移で **action:end を emit しない** (公式Q&A
+   * 「これはアクションではないので、アクションによって発動する能力や『アクション終了時』の能力は
+   * 発動しません」)。declare/guard-window/sleepActor/actedCharThisTurn も一切通らない
+   * (startFromEffect が bootstrap)。undefined = 通常アクション (既存挙動 byte 等価)。
+   */
+  generatedByEffect?: boolean;
   startedAt: { turn: number; nano: number };
 };
 

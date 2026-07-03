@@ -14,6 +14,13 @@ import type { GameState, CardDef } from '@/engine/types';
 
 function makeStateWithChar(opts: { named?: boolean; state?: 'active' | 'sleep' | 'stun' } = {}): { s: GameState; uid: string } {
   _resetUidCounter();
+  // W6 step11 (row999 item4): canDeclaredAbility は不明 abilId を fail-closed (false) 化。
+  // 旧「def 未登録でも true 素通り」pin を、実カード同様 declared ability 'A' を持つ def 登録に更新。
+  registerCardDef({
+    id: 'C1', no: 'C1', kind: 'character', names: ['C1'], colors: ['赤'], level: 3, ap: 3000, lp: 1,
+    traits: [], keywords: [], rarity: 'C', imageUrl: '', ruleRefs: [],
+    abilities: [{ id: 'A', type: 'declared', scope: 'on-scene', effect: { kind: 'atom', verb: 'noop', args: {} }, description: 'test', ruleRefs: [] }],
+  } as unknown as CardDef);
   const initial = createEmptyGameState();
   let uid = '';
   const s = produce(initial, draft => {

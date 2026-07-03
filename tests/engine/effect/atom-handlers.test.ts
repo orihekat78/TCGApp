@@ -679,14 +679,15 @@ describe('engine.effect.runAtom', () => {
     });
   });
 
-  // --- フロー (Phase 3 では noop+log) ---
+  // --- フロー (W6 step9 で本実装 — 詳細 probe は tests/cards/engine-mega-w6b.test.ts §9) ---
   describe('startContact', () => {
-    it('Phase 3: noop + log のみ', () => {
+    it('W6 step9: targetUid 未解決 / 対象不在は no-op (盤面・log 無変化)', () => {
       const s = createEmptyGameState();
       const result = produce(s, draft => {
-        runAtom(draft, 'startContact', { aUid: 'A', bUid: 'B' }, makeCtx());
+        runAtom(draft, 'startContact', { targetUid: 'no-such-uid' }, makeCtx());
+        runAtom(draft, 'startContact', { targetUid: '$target.uid' }, makeCtx());
       });
-      expect(result.log.length).toBeGreaterThan(0);
+      expect(result.log.length).toBe(0); // fail-closed no-op (rules/15 0枚選択と同 posture)
     });
   });
 

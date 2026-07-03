@@ -6,6 +6,7 @@ import type { GameState, SceneCharacter, RemoveResult } from '@/engine/types';
 import { event } from '../event/index.js';
 import { def } from '../read/def.js'; // MR partner-area (rules/18): isMR 判定 (def → types のみ依存、循環なし)
 import { sceneCap } from '../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
+import { consultLeaveIntercept } from '../effect/consult-leave-intercept.js'; // W6 step10 (row9): pre-splice consult (純関数 leaf、循環なし)
 
 type Player = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
@@ -171,6 +172,18 @@ function switchEnter(
  *   virtual-location handler (leave:to-remove の handleLeaveToRemoveSelf 相当) は不要。
  * 既存カードは未購読 = additive (回帰0)。listener: src/engine/listeners/triggered.ts
  */
+// W6 step10 (row9): leave:intercept 成立の log note (UI RecentActionToast / LogPanel 用)
+function mutate_logInterceptNote(s: GameState, player: Player, dest: 'hand' | 'kept-in-scene', uid: string): void {
+  s.log.push({
+    ts: Date.now(),
+    player,
+    turn: s.turn.number,
+    action: 'leave-intercept',
+    target: uid,
+    result: dest,
+  });
+}
+
 function emitSetCardLeaves(s: GameState, char: SceneCharacter, player: Player, cause: string): void {
   for (const entry of char.setCards) {
     event.emit(
@@ -201,7 +214,10 @@ function removeToRemove(
   // MR partner-area (rules/18②): noMrRedirect=true で MR能力① の PA redirect を抑止する
   // (MR能力② による既存 MR 除去は「能力によるリムーブ」= remove へ残す。未解決 #2)。既存 caller は
   // 未指定 → redirect 有効 (相手ターン中の通常リムーブは PA へ。回帰0: MR rarity カードは現 0 枚)。
-  opts?: { noMrRedirect?: boolean },
+  // W6 step10 (row9): byPlayer = cause='effect' の効果 source 側 (atom-handlers/scene.ts が
+  // ctx.source.player を渡す)。leave:intercept の「相手の能力や効果」帰属判定に使う。
+  // 未指定 (legacy caller: turn.ts removeOnTurnEnd / MR②/switch 内部) は fail-closed = intercept なし。
+  opts?: { noMrRedirect?: boolean; byPlayer?: Player },
 ): RemoveResult {
   const found = findChar(s, uid);
   if (!found) {
@@ -217,6 +233,58 @@ function removeToRemove(
   // rules/17 §【現場リムーブ時】 emit 用に離場カードの識別子を splice 前に捕捉
   const leavingUid = char.uid;
   const leavingCardId = char.cardId;
+
+  // mega-wave W6 step10 (2026-07-04, row9): pre-splice leave:intercept consult (B01092/B01039)。
+  // 「相手の能力や効果、コンタクトによって現場から離れるとき、代わりに〜」— splice 前に判定し、
+  // 成立時は leave:to-remove emit も MR-PA redirect も**通らない** (B01092P Q&A「現場から離れる
+  // 行為そのものを行わなかったことにする」— 相互排他は early return で構造保証)。
+  // consult は純関数 (mutation はここで一元適用)。cost/switch/misplay-overflow は帰属外 (gate 内)。
+  if (cause === 'contact-ap' || cause === 'effect') {
+    const intercept = consultLeaveIntercept(s, char, player, cause, byUid, opts?.byPlayer);
+    if (intercept && intercept.kind === 'kept-in-scene') {
+      // B01039: rider set-card をコストとしてリムーブ (faceUp 先頭一致順)、キャラは現場に残る
+      const kConsumed: string[] = [];
+      for (const cid of intercept.consumedSetCards) {
+        const ki = char.setCards.findIndex(e => e.cardId === cid && e.faceUp);
+        if (ki === -1) continue;
+        char.setCards.splice(ki, 1);
+        s.players[player].remove.push(cid);
+        kConsumed.push(cid);
+      }
+      mutate_logInterceptNote(s, player, 'kept-in-scene', leavingUid);
+      return {
+        removed: { uid: '', cardId: '' },
+        setCardsRemoved: kConsumed,
+        stackedCardsRemoved: 0,
+        triggeredHooks: [],
+        prevented: true,
+        redirectedTo: 'kept-in-scene',
+      };
+    }
+    if (intercept && intercept.kind === 'hand') {
+      // B01092: interceptor 自身をコストでリムーブ (rules/17「リムーブ方法は問わない」→ 通常経路 =
+      // 【現場リムーブ時】発火。cause='cost' は consult 帰属外なので再入しない)
+      removeToRemove(s, intercept.interceptorUid, 'cost');
+      // 対象キャラ: set/stacked は remove へ (rules/16 — redirect されるのはキャラ本体のみ)、本体は手札へ
+      const hSetCardsRemoved: string[] = char.setCards.map(e => e.cardId);
+      s.players[player].remove.push(...hSetCardsRemoved);
+      emitSetCardLeaves(s, char, player, cause); // set-card 自身は正規に離れる (row9 risks(a))
+      const hStacked = char.stackedCards;
+      for (let i = 0; i < hStacked; i++) s.players[player].remove.push('back-card');
+      const hIdx = s.players[player].scene.findIndex(c => c.uid === uid);
+      if (hIdx !== -1) s.players[player].scene.splice(hIdx, 1);
+      s.players[player].hand.push(char.cardId);
+      mutate_logInterceptNote(s, player, 'hand', leavingUid);
+      return {
+        removed: { uid: leavingUid, cardId: leavingCardId },
+        setCardsRemoved: hSetCardsRemoved,
+        stackedCardsRemoved: hStacked,
+        triggeredHooks: [],
+        prevented: true,
+        redirectedTo: 'hand',
+      };
+    }
+  }
 
   // setCards のカードをリムーブエリアへ (rules/16 セット解除: リムーブ時表向きに)
   const setCardsRemoved: string[] = char.setCards.map(e => e.cardId);

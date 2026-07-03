@@ -31,6 +31,10 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // setPendingOptionalBindings で set、applyOptionalAndContinuation が queue 6th arg で consume (store/UI へ出ない、
   // EffectOptionalResume と同種の engine-internal)。B04092 キャンティ optional{chain[sleep, inContact pick]} 用。
   'EffectOptionalBindings',
+  // mega-wave W6 step9 (2026-07-04, row65): startContact atom → ActionContext.id の片道通知。
+  // 専用 store field を持たず dispatch drain → store.setActiveActionId(id) 直結 (useContactFlowDriver が
+  // 既存の activeActionId 監視で拾う = 専用 Modal/Overlay 不要)。標準 4 点配線の対象外。
+  'ContactStartAxId',
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

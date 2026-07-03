@@ -35,7 +35,17 @@ function getHumanPlayerSide(): 'self' | 'opp' | null {
 export function findCardOnBoard(
   state: GameState,
   uid: string,
-): { player: 'self' | 'opp'; cardId: string; area: 'scene' | 'case' | 'partner-area' } | null {
+): { player: 'self' | 'opp'; cardId: string; area: 'scene' | 'case' | 'partner-area' | 'hand' } | null {
+  // mega-wave W6 step11 (2026-07-04, row999 item3): hand sentinel uid (`hand:${p}:${cardId}` —
+  // listeners/triggered.ts collectCardsInPlay の生成規約と 1:1 対称)。B06103 ジン
+  // 「この能力はこのカードが手札にある場合に宣言できる」(scope:'on-hand' declared) の resolve 用。
+  if (uid.startsWith('hand:')) {
+    const [, hp, ...rest] = uid.split(':');
+    const cardId = rest.join(':');
+    if ((hp !== 'self' && hp !== 'opp') || !cardId) return null;
+    if (state.players[hp].hand.includes(cardId)) return { player: hp, cardId, area: 'hand' };
+    return null;
+  }
   if (uid === 'case:self' || uid === 'case:opp') {
     const p: 'self' | 'opp' = uid === 'case:self' ? 'self' : 'opp';
     const cardId = state.players[p].case.cardId;
@@ -72,6 +82,47 @@ export function findCardOnBoard(
  */
 
 /**
+ * findDeclaredAbility — uid/area を考慮した宣言能力 lookup の共有 helper
+ * (mega-wave W6 step11, row999 item4)。
+ *
+ * ① カード自身の印字 abilities を優先。
+ * ② area='scene' の場合のみ、host キャラの **faceUp** setCards (rules/16 — 裏向きセットは
+ *    イベントとして扱われない) を走査し、type:'declared' + scope:'on-set-host' の rider を探す
+ *    (listeners/triggered.ts の riderAbilities walk と同型を declared 用に再利用)。
+ *    B07014 弁当型携帯FAX「このイベントがセットされているキャラは『【宣言】【ターン1】〜』を持つ」。
+ *
+ * canDeclaredAbility / useDeclaredAbility / activateDeclaredAbility / UI enumerators の
+ * 呼出点は必ず本関数を共有すること — 個別複製は triggered 側 walk との 2 経路 non-sync
+ * drift を生む (cluster2「filter-eval 3経路 sync」教訓と同種)。
+ * ⚠ rider の ability.id は host 印字 abilities や他 rider と衝突しうる (card-def.ts の
+ * authoring hazard 注記と同じ — rider 側 id は card-unique 命名を徹底)。先勝ち。
+ */
+export function findDeclaredAbility(
+  state: GameState,
+  uid: string,
+  cardId: string,
+  area: 'scene' | 'case' | 'partner-area' | 'hand',
+  abilId: string,
+): AbilityDef | undefined {
+  const printed = readDef.card(cardId)?.abilities?.find((a: AbilityDef) => a.id === abilId);
+  if (printed) return printed;
+  if (area !== 'scene') return undefined;
+  for (const p of ['self', 'opp'] as const) {
+    const host = state.players[p].scene.find((c) => c.uid === uid);
+    if (!host) continue;
+    for (const entry of host.setCards) {
+      if (!entry.faceUp) continue;
+      const rider = readDef.card(entry.cardId)?.abilities?.find(
+        (a: AbilityDef) => a.id === abilId && a.type === 'declared' && a.scope === 'on-set-host',
+      );
+      if (rider) return rider;
+    }
+    return undefined;
+  }
+  return undefined;
+}
+
+/**
  * canDeclaredAbility — 宣言能力使用可能か判定する。
  *
  * - 対象キャラが存在する
@@ -85,14 +136,23 @@ export function canDeclaredAbility(state: GameState, uid: string, abilId: string
   const found = findCardOnBoard(state, uid);
   if (!found) return false;
   // ability.limit enforcement
-  const cardDef = readDef.card(found.cardId);
-  const ability = cardDef?.abilities?.find((a: AbilityDef) => a.id === abilId);
+  // W6 step11 (row999 item4): 印字 abilities → faceUp set-card rider (on-set-host declared) の順で解決。
+  // 解決不能 (存在しない abilId / faceDown rider) は使用不可 — 旧実装は「不明 abilId → true 素通り」
+  // だったが、rider 導入で faceDown セットの宣言が誤って許可されるため fail-closed 化 (rules/16)。
+  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
+  if (!ability) return false;
   // MR partner-area (rules/18:38, engine/mr-partner-area-core 2026-06-23): PA 常駐カード (PA-MR) の宣言能力は
   // scope on-partner-area / always のみ使用可。現場前提の on-scene 宣言能力は PA からは使えない。
   // scene/case の宣言能力 (area≠'partner-area') は不変。real partner (partner:self) は DSL 宣言能力を持たない。
   if (ability && found.area === 'partner-area' && ability.scope !== 'on-partner-area' && ability.scope !== 'always') {
     return false;
   }
+  // W6 step11 (row999 item3): hand-declared 対称 gate (B06103「この能力はこのカードが手札にある
+  // 場合に宣言できる」)。hand uid からは scope:'on-hand' のみ / on-hand は hand 以外から使用不可
+  // (現場に出た後は同 abilId を宣言できない対称制約)。scope 未設定 (既定 on-scene 扱い) の既存
+  // カードが hand uid から誤って呼ばれないことも本 gate が保証する (fail-closed)。
+  if (ability && found.area === 'hand' && ability.scope !== 'on-hand') return false;
+  if (ability && ability.scope === 'on-hand' && found.area !== 'hand') return false;
   if (ability?.limit?.kind === 'turn') {
     const used = readChar.declaredUseCount(state, uid, abilId);
     if (used >= ability.limit.n) return false;
@@ -143,11 +203,11 @@ export function useDeclaredAbility(
     found = {
       player: src.player,
       cardId: src.cardId,
-      area: (src.area as 'scene' | 'case' | 'partner-area') ?? 'scene',
+      area: (src.area as 'scene' | 'case' | 'partner-area' | 'hand') ?? 'scene',
     };
   }
   if (!found) {
-    throw new Error(`useDeclaredAbility: card uid=${uid} not on board (scene/case/partner-area)`);
+    throw new Error(`useDeclaredAbility: card uid=${uid} not on board (scene/case/partner-area/hand)`);
   }
   // BUG-112: found.player を渡すことで、selfToDeckBottom 等で source が場外へ出ている場合も
   // player 単位 turnState fallback に【ターン①】カウントが記録される (off-board silent no-op 解消)。
@@ -170,8 +230,8 @@ export function useDeclaredAbility(
   // triggered.ts listener は `type === 'triggered'` のみ処理するため、宣言能力の
   // effect は engine 側のどこにも実行 path がなかった (D11014 a2 / D11003 a2 /
   // D11012 a1 / D08005 a2 等が silent no-op していた長年バグの根本対応)。
-  const def = readDef.card(found.cardId);
-  const ability = def?.abilities?.find((a: AbilityDef) => a.id === abilId);
+  // W6 step11 (row999 item4): rider declared (on-set-host) もここで初めて実行キューに積める
+  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
   if (!ability) return;
   if (ability.type !== 'declared' || !ability.effect) return;
 

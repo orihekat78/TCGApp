@@ -453,6 +453,21 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const cardId = (bound[0] as { cardId?: string }).cardId;
       return typeof cardId === 'string' && readDef.isMR(cardId);
     }
+    case 'leaveCauseIn': {
+      // mega-wave W6 step10 (2026-07-04, row9): leave:intercept 帰属 gate
+      // (「相手の能力や効果、コンタクトによって」= causes:['contact-ap','effect'])。
+      // triggerPayload は consult-leave-intercept.ts が組み立てる { uid, cause, byUid, ownerPlayer }。
+      const lcPayload = ctx.triggerPayload as { cause?: string } | undefined;
+      return typeof lcPayload?.cause === 'string' && cond.causes.includes(lcPayload.cause);
+    }
+    case 'leaveOwnerIs': {
+      // mega-wave W6 step10 (row9): 離場キャラ owner が ability owner 視点で self/opp
+      // (「自分の現場にいる〜キャラ1枚が〜離れるとき」B01092)。
+      const loPayload = ctx.triggerPayload as { ownerPlayer?: 'self' | 'opp' } | undefined;
+      if (!loPayload?.ownerPlayer) return false;
+      const loSame = loPayload.ownerPlayer === ctx.source.player;
+      return cond.player === 'self' ? loSame : !loSame;
+    }
     case 'boundMatchesFilter': {
       // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
       // (「〚カード名[X]〛を登場させた場合」を declarative 化)
@@ -780,6 +795,8 @@ const CONDITION_KIND_MAP = {
   boundDistinctColorCount: true, // engine additive wave-10 (2026-07-02, G17 残): bound 集合内 相互異色 n 枚 (B07002)
   boundNameMatchesDeclared: true, // engine mega-wave W6 step1 (2026-07-04): declareName 宣言名 ⇔ bound 集合 any-match (B09108)
   boundIsMr: true, // engine mega-wave W6 step1 (2026-07-04): bound[0] MR 判定 (B06085)
+  leaveCauseIn: true, // engine mega-wave W6 step10 (2026-07-04, row9): 離脱 cause 帰属 gate (B01092/B01039)
+  leaveOwnerIs: true, // engine mega-wave W6 step10 (2026-07-04, row9): 離場キャラ owner 判定 (B01092)
   eventUseSource: true, // engine mega-wave W6 step3 (2026-07-04, P19): イベント使用の起源判別 (B07026)
   selfSelectedByOwnMrThisTurn: true, // engine mega-wave W6 step6 (2026-07-04, r79): MR 選択追跡 (B08014)
   paMrColorCountMin: true, // engine mega-wave W6 step6 (2026-07-04, r79): PA-MR 色数 gate (B09047)

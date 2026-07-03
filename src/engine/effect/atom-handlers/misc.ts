@@ -1,8 +1,9 @@
 // engine.effect.atom-handlers/misc — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
-import { resolvePlayer } from './_shared.js';
+import { action as flowAction } from '../../flow/action/state-machine.js'; // W6 step9 (row65): startContact 本実装 (effect→flow 初辺、循環なし)
+import { resolvePlayer, resolveBindRef, _setPendingContactStartAxId } from './_shared.js';
 import type { Player } from './_shared.js';
-import type { GameState, EffectCtx, LogEntry } from '../../types/index.js';
+import type { GameState, EffectCtx, LogEntry, Effect, Condition } from '../../types/index.js';
 
 export function atomPartnerAssist(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const paP = resolvePlayer(a.player, ctx);
@@ -52,12 +53,31 @@ export function atomCaseToResolved(s: GameState, a: Record<string, unknown>, ctx
       return;
     }
 
-export function atomStartContact(s: GameState, _a: Record<string, unknown>, ctx: EffectCtx): void {
+export function atomStartContact(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // mega-wave W6 step9 (2026-07-04, row65): 本実装 (旧 placeholder log stub)。
+      //   B06020 佐々木小次郎 a2 / B06042 (付与宣言能力)「相手の現場にいるキャラを1枚まで選び、
+      //   このキャラとのコンタクトを発生させる（このキャラがアクションした側のキャラになる）」。
+      //   「このキャラ」= ability owner = ctx.source.uid (args 不要)。a.targetUid は pick chain の
+      //   bind 参照 ('$target.uid' 等) or literal uid。
+      // 0枚選択 (rules/15「1枚まで」) = bind 未解決 ($ 前置のまま返る) → no-op。
+      //   対象不在/actor 不在 → startFromEffect が null → no-op (fail-closed)。
+      // import 経路: effect/ → flow/ の辺は本 atom が初 (逆辺は flow/contact → effect/pending-state
+      //   leaf のみ。直接循環なし — tsc/vitest で検証済)。
+      // rules: 07/08 (コンタクト処理) / 22 (Q&A アクションではない) / 15 (0枚選択)
+      const scByUid = ctx.source.uid;
+      if (!scByUid) return;
+      const scTarget = resolveBindRef(a.targetUid, ctx);
+      if (typeof scTarget !== 'string' || scTarget.startsWith('$')) return; // 0枚選択 / 未解決 bind
+      const scAx = flowAction.startFromEffect(s, scByUid, scTarget);
+      if (!scAx) return;
+      _setPendingContactStartAxId(scAx.id);
       const entry: LogEntry = {
         ts: Date.now(),
         player: ctx.source.player,
         turn: s.turn.number,
-        action: 'startContact:placeholder',
+        action: 'effect:startContact',
+        target: scTarget,
+        result: scAx.id,
       };
       mutate.log.append(s, entry);
       return;
@@ -149,6 +169,59 @@ export function atomSetHiramekiSuppress(s: GameState, a: Record<string, unknown>
       const shsP = resolvePlayer(a.player ?? 'self', ctx);
       s.turnState[shsP].hiramekiSuppressed = true;
       mutate.log.append(s, { ts: Date.now(), player: shsP, turn: s.turn.number, action: 'effect:setHiramekiSuppress' });
+      return;
+    }
+
+export function atomSetEvidenceGainSuppress(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // mega-wave W6 step7 (2026-07-04, row70) B02088/B03126 ヒラメキ「相手はこのアクションによって
+      //   証拠を得られない」。turnState[p].evidenceGainSuppressed=true をセットする単発 flag verb
+      //   (setHiramekiSuppress mirror)。カードは player:'opp' で呼ぶ (source=証拠を失った側 → 相手 =
+      //   アクション[事件] actor 側)。
+      // ゲート: flow/action-case.ts gainSelfEvidence が consume-on-read で単発消費 — 獲得も
+      //   evidence:gain emit も行わない (依存 trigger 不発、公式Q&A)。清掃: resetTurnFlags backstop のみ
+      //   (action-end はセット前に同期発火済ゆえ清掃サイトにならない — game-state.ts doc 参照)。
+      // rules: 10 (アクション[事件]/ヒラメキ) / 14 (refresh とは独立) / 25 (公式 Q&A)
+      const segP = resolvePlayer(a.player ?? 'self', ctx);
+      s.turnState[segP].evidenceGainSuppressed = true;
+      mutate.log.append(s, { ts: Date.now(), player: segP, turn: s.turn.number, action: 'effect:setEvidenceGainSuppress' });
+      return;
+    }
+
+// mega-wave W6 step8 (row75) 用の module-level id counter (event/registry.ts nextEntryId と同 posture)
+let _reservedIdCounter = 0;
+
+export function atomReserveEffect(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // mega-wave W6 step8 (2026-07-04, row75): 離場後予約。args.effect (nested Effect JSON) を
+      //   GameState.reservedEffects へ積むだけの pure append (即時解決しない — setCutinBan 同 posture)。
+      //   コストで源カードが盤面を離れる「ターン終了時〜」(B08069) /「このターン中、次に〜したとき」
+      //   (B01058) が、in-play scan (triggered.ts) に依存せず後段発火できるようにする。
+      // 発火: listeners/reserved-effects.ts (single-fire、armedTurn 同ターン限り)。
+      //   失効: flow/turn.ts endTurn (next-match 未消費分)。
+      // rules: 15 (未解決効果) / 21 (コストで自身離場) / 25 (同時発動)
+      const reHook = a.hook as string | undefined;
+      const reMode = a.mode as 'turn-end' | 'next-match' | undefined;
+      const reEffect = a.effect as Effect | undefined;
+      if (!reHook || (reMode !== 'turn-end' && reMode !== 'next-match') || !reEffect) return; // fail-closed
+      if (!s.reservedEffects) s.reservedEffects = []; // 旧 state 防御 (W6 step6 turnEffects init と同型)
+      _reservedIdCounter += 1;
+      const reP = ctx.source.player as Player;
+      s.reservedEffects.push({
+        id: `re_${_reservedIdCounter}`,
+        trigger: {
+          hook: reHook,
+          mode: reMode,
+          player: reP,
+          armedTurn: s.turn.number,
+          ...(a.condition !== undefined ? { condition: a.condition as Condition } : {}),
+        },
+        effect: reEffect,
+        source: {
+          player: reP,
+          ...(ctx.source.uid !== undefined ? { uid: ctx.source.uid } : {}),
+          ...(ctx.source.cardId !== undefined ? { cardId: ctx.source.cardId } : {}),
+        },
+      });
+      mutate.log.append(s, { ts: Date.now(), player: reP, turn: s.turn.number, action: 'effect:reserveEffect', target: reHook });
       return;
     }
 

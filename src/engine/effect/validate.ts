@@ -50,6 +50,10 @@ const ATOM_VERB_MAP = {
   setCutinBan: true, // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
   setDisguiseBan: true, // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   setHiramekiSuppress: true, // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
+  setEvidenceGainSuppress: true, // mega-wave W6 step7 (2026-07-04, row70) — action[事件] gain suppress (B02088/B03126 ヒラメキ)
+  reserveEffect: true, // mega-wave W6 step8 (2026-07-04, row75) — 離場後予約効果 queue (B08069/B01058)
+  leaveInterceptRedirect: true, // mega-wave W6 step10 (2026-07-04, row9) — leave:intercept 宣言的 marker (B01092/B01039)
+  removeAreaToDeckTop: true, // mega-wave W6 step11 (2026-07-04, row999 item4 / P42) — remove→deck top pick (B07014 rider)
   expandActionTargets: true, // D11007 v2 Phase 3
   invokeLeaveToRemoveOfCard: true, // engine mega-wave W3 (2026-07-03, r12)
   bindPick: true, // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)

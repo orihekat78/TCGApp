@@ -313,7 +313,8 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
           }
         }
       }
-      mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect');
+      // W6 step10 (row9): byPlayer = 効果 source 側 — leave:intercept の「相手の能力や効果」帰属判定用
+      mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect', undefined, { byPlayer: ctx.source.player });
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid });
       return;

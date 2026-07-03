@@ -40,6 +40,10 @@ const VERBS = new Set([
   'setCutinBan', // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
   'setDisguiseBan', // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   'setHiramekiSuppress', // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
+  'setEvidenceGainSuppress', // mega-wave W6 step7 (2026-07-04, row70) — action[事件] gain suppress (B02088/B03126)
+  'reserveEffect', // mega-wave W6 step8 (2026-07-04, row75) — 離場後予約効果 queue (B08069/B01058)
+  'leaveInterceptRedirect', // mega-wave W6 step10 (2026-07-04, row9) — leave:intercept 宣言的 marker (B01092/B01039)
+  'removeAreaToDeckTop', // mega-wave W6 step11 (2026-07-04, row999 item4 / P42) — remove→deck top pick (B07014 rider)
   'expandActionTargets', 'log', 'invokeLeaveToRemoveOfCard', 'noop',
   'bindPick', // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
   'declareName', // engine mega-wave W6 step1 (2026-07-04) — 任意カード名宣言 → ctx.declaredNames (B09112/B09108)
@@ -74,6 +78,7 @@ const CONDS = new Set([
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
   'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundDistinctColorCount', 'triggerCharMatches',
   'boundNameMatchesDeclared', 'boundIsMr', // engine mega-wave W6 step1 (2026-07-04): 宣言名一致 / MR 判定 (B09108/B06085)
+  'leaveCauseIn', 'leaveOwnerIs', // engine mega-wave W6 step10 (2026-07-04, row9): leave:intercept matcher (B01092/B01039)
   'eventUseSource', // engine mega-wave W6 step3 (2026-07-04, P19): イベント使用の起源判別 (B07026)
   'selfSelectedByOwnMrThisTurn', 'paMrColorCountMin', // engine mega-wave W6 step6 (2026-07-04, r79): MR 選択追跡 / PA-MR 色数 (B08014/B09047)
   // Task D E1 (2026-06-12): hand-count conditions

@@ -67,11 +67,13 @@ export function enumDeclaredAbilitySources(
   player: Player,
 ): string[] {
   const sources: string[] = [];
-  // 1. scene chars
+  // 1. scene chars (W6 step11 row999 item4: faceUp set-card rider の on-set-host declared も列挙 —
+  //    B07014「セットされているキャラは『【宣言】〜』を持つ」)
   for (const c of state.players[player].scene) {
     const def = engine.cards.get(c.cardId);
     if (!def) continue;
-    const hasUsable = def.abilities.some((a) => {
+    const abilities = [...def.abilities, ...riderDeclaredAbilities(state, c)];
+    const hasUsable = abilities.some((a) => {
       if (a.type !== 'declared') return false;
       if (!flow.canDeclaredAbility(state, c.uid, a.id)) return false;
       // Phase 8.8c: cost 支払不能なら使用不可
@@ -113,7 +115,45 @@ export function enumDeclaredAbilitySources(
       if (hasUsable) sources.push(caseUid);
     }
   }
+  // 3. hand cards (W6 step11 row999 item3: scope:'on-hand' declared — B06103「この能力はこのカードが
+  //    手札にある場合に宣言できる」)。同 cardId 複数コピーは Set で 1 uid に重複排除。
+  for (const cardId of new Set(state.players[player].hand)) {
+    const def = engine.cards.get(cardId);
+    if (!def) continue;
+    const uid = `hand:${player}:${cardId}`;
+    const hasUsable = def.abilities.some((a) => {
+      if (a.type !== 'declared') return false;
+      if (!flow.canDeclaredAbility(state, uid, a.id)) return false; // scope gate は engine 側
+      if (a.cost) {
+        const ctx = makeAbilityCtx({ player, uid, cardId, abilityId: a.id, area: 'hand' });
+        if (!engine.cost.canPay(state, a.cost, ctx)) return false;
+      }
+      return true;
+    });
+    if (hasUsable) sources.push(uid);
+  }
   return sources;
+}
+
+/**
+ * W6 step11 (row999 item4): host キャラの faceUp setCards から type:'declared' + scope:'on-set-host'
+ * の rider abilities を列挙 (engine 側 findDeclaredAbility と同じ walk の enumerator 版)。
+ */
+function riderDeclaredAbilities(
+  state: import('@/engine/types/game-state.js').GameState,
+  c: { setCards: { cardId: string; faceUp: boolean }[] },
+): import('@/engine/types/card-def.js').AbilityDef[] {
+  void state;
+  const out: import('@/engine/types/card-def.js').AbilityDef[] = [];
+  for (const entry of c.setCards) {
+    if (!entry.faceUp) continue;
+    const rdef = engine.cards.get(entry.cardId);
+    if (!rdef) continue;
+    for (const a of rdef.abilities) {
+      if (a.type === 'declared' && a.scope === 'on-set-host') out.push(a);
+    }
+  }
+  return out;
 }
 
 /**
@@ -126,17 +166,28 @@ export function enumDeclaredAbilityIdsFor(
   // uid から cardId / owner player / area を引く (user_request 20260522_01 #5: case 対応)
   let cardId: string | null = null;
   let owner: Player | null = null;
-  let area: 'scene' | 'case' = 'scene';
+  let area: 'scene' | 'case' | 'hand' = 'scene';
+  let riderAbilities: import('@/engine/types/card-def.js').AbilityDef[] = [];
   if (uid === 'case:self' || uid === 'case:opp') {
     owner = uid === 'case:self' ? 'self' : 'opp';
     cardId = state.players[owner].case.cardId ?? null;
     area = 'case';
+  } else if (uid.startsWith('hand:')) {
+    // W6 step11 (row999 item3): hand sentinel uid — findCardOnBoard と同じ split 規約
+    const [, hp, ...rest] = uid.split(':');
+    const hCardId = rest.join(':');
+    if ((hp === 'self' || hp === 'opp') && state.players[hp].hand.includes(hCardId)) {
+      owner = hp;
+      cardId = hCardId;
+      area = 'hand';
+    }
   } else {
     for (const p of ['self', 'opp'] as const) {
       const c = state.players[p].scene.find((x) => x.uid === uid);
       if (c) {
         cardId = c.cardId;
         owner = p;
+        riderAbilities = riderDeclaredAbilities(state, c); // W6 step11 item4: on-set-host rider 込み
         break;
       }
     }
@@ -144,7 +195,7 @@ export function enumDeclaredAbilityIdsFor(
   if (!cardId || !owner) return [];
   const def = engine.cards.get(cardId);
   if (!def) return [];
-  return def.abilities
+  return [...def.abilities, ...riderAbilities]
     .filter((a) => a.type === 'declared')
     .filter((a) => flow.canDeclaredAbility(state, uid, a.id))
     .filter((a) => {

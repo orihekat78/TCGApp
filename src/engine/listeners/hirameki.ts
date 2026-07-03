@@ -26,6 +26,13 @@ export type PendingHiramekiSide = {
   // ための payload 貫通 (公式Q&A B05111: ヒラメキを発動させたキャラが該当)。optional 経路で
   // pendingHirameki に持ち越し、hiramekiResolve が queue payload に復元する。
   actorUid?: string;
+  /**
+   * mega-wave W6 step7 (2026-07-04, row70): actionJudge (per-step 経路) が「このヒラメキの
+   * fire/skip が決まるまで gainSelfEvidence を保留した」印。hiramekiResolve が fire/skip 決定後に
+   * deferred gain を実行する。bundled 経路 (actionAgainstCase → resolveActionAgainstCase) は eager gain
+   * のまま本フラグを立てない — これが double-gain の唯一のガード (row70 risks(2)、外すな)。
+   */
+  gainDeferred?: boolean;
 };
 
 // Round 4j-fix (BUG-034): vite dev mode の module instance 分離回避のため globalThis 経由で
@@ -64,6 +71,24 @@ export function _drainPendingHirameki(): PendingHiramekiSide | null {
 /** テスト用: 側チャネルを直接リセット */
 export function _resetPendingHirameki(): void {
   _writeSide(null);
+}
+
+/**
+ * mega-wave W6 step7 (row70): 非消費 peek。actionJudge (per-step) が「直前の
+ * removeOpponentEvidenceTop でヒラメキが queue されたか」を判定するために使う
+ * (_drain と違い side-channel を消さない — 消すと UI へ転送されなくなる)。
+ */
+export function _peekPendingHirameki(): PendingHiramekiSide | null {
+  return _readSide();
+}
+
+/**
+ * mega-wave W6 step7 (row70): pending に gainDeferred=true を焼き込む。
+ * actionJudge per-step 経路のみが呼ぶ (bundled 経路は eager gain のまま)。
+ */
+export function _markPendingHiramekiGainDeferred(): void {
+  const v = _readSide();
+  if (v) _writeSide({ ...v, gainDeferred: true });
 }
 
 let _registered = false;

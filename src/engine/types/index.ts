@@ -41,6 +41,9 @@ export type {
 
 export type { EffectCtx, ContactCtx } from './effect-ctx.js';
 
+// mega-wave W6 step8 (2026-07-04, row75): 離場後予約効果 queue
+export type { ReservedEffectEntry, ReservedEffectTrigger } from './reserved-effect.js';
+
 export type {
   RemoveResult,
   RefreshResult,

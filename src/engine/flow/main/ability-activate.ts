@@ -14,7 +14,7 @@
 import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { cost as engineCost } from '../../cost/index.js';
 import { def as readDef } from '../../read/def.js';
-import { findCardOnBoard, useDeclaredAbility } from './declared-ability.js';
+import { findCardOnBoard, useDeclaredAbility, findDeclaredAbility } from './declared-ability.js';
 import { usePartnerAbility } from './partner-ability.js';
 
 type Player = 'self' | 'opp';
@@ -92,7 +92,8 @@ export function activateDeclaredAbility(
     bindings: {},
     ...(dyn ? { dyn } : {}),
   };
-  const ability = findAbility(found.cardId, abilId);
+  // W6 step11 (row999 item4): rider declared (on-set-host) の cost も解決できるよう共有 helper 経由
+  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
   if (ability?.cost) {
     engineCost.pay(state, ability.cost, ctx);
   }

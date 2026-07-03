@@ -57,6 +57,27 @@ export function _drainPendingDeckReorderSide(): PendingDeckReorderSide | null {
   return v;
 }
 
+// mega-wave W6 step9 (2026-07-04, row65): startContact atom が生成した ActionContext.id の
+// 片道通知 (effect atom → React store の produce 境界越え、hirameki/misread/deckReveal と同型)。
+// UI 側は drain → store.setActiveActionId(id) で useContactFlowDriver が拾う。
+// ⚠ scalar なので同一 effect chain 内で startContact が複数回発火すると後勝ち上書き —
+// 現 exemplar (B06020/B06042) は 0-1 pick 単発なので到達しない。複数発火カードが出たら
+// pendingEffectPick 同様の queue 化が要る (row65 risks(4))。
+declare global {
+  // eslint-disable-next-line no-var
+  var __pendingContactStartAxId: string | null | undefined;
+}
+
+export function _setPendingContactStartAxId(id: string): void {
+  (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId = id;
+}
+
+export function _drainPendingContactStartAxId(): string | null {
+  const v = (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId ?? null;
+  (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId = null;
+  return v;
+}
+
 /**
  * BUG-045 (#9 spectator stall fix の副産物): deckRevealUntil 等で
  * TargetFilter (declarative object) を predicate に変換するヘルパ。

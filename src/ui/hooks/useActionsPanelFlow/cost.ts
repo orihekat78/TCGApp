@@ -91,7 +91,7 @@ export function makeAbilityCtx(opts: {
   uid: string;
   cardId: string;
   abilityId: string;
-  area: 'scene' | 'partner-area' | 'case';
+  area: 'scene' | 'partner-area' | 'case' | 'hand'; // W6 step11 (row999 item3): hand-declared (B06103)
 }): EffectCtx {
   return {
     source: {

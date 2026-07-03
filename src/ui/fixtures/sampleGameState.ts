@@ -138,6 +138,7 @@ export function createSampleGameState(): GameState {
     turn: { number: 4, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false },
     players: { self: selfPlayer(), opp: oppPlayer() },
     pendingEffects: pendingEffects(),
+    reservedEffects: [], // W6 step8 (row75)
     scratchTrace: { self: '発見済', opp: '未発見' },
     turnState: { self: emptyTurnFlags(), opp: emptyTurnFlags() },
     refreshCount: { self: 0, opp: 0 },

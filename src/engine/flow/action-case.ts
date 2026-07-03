@@ -84,13 +84,38 @@ export function flashWindow(
 }
 
 /**
+ * ActionGainCtx — gainSelfEvidence が必要とする ActionContext の構造的部分集合。
+ * mega-wave W6 step7 (row70): ヒラメキ解決後の deferred gain 経路 (useEngineDispatch
+ * hiramekiResolve) は元の ActionContext を _getContext で再取得できない (contact-end→action-end
+ * 同期 auto-advance が _deleteContext 済) ため、pendingHirameki の snapshot から
+ * { byPlayer, byUid } を構成して呼ぶ。ActionContext はこの型を満たすので既存呼び出しは無変更。
+ * ⚠ ここを ActionContext に「簡約」して _getContext 依存に戻すと deferred 経路が intermittent に
+ * 壊れる (row70 risks(1)) — 戻さないこと。
+ */
+export type ActionGainCtx = { byPlayer: Player; byUid: string };
+
+/**
  * gainSelfEvidence — 自分のデッキから1枚を裏向きで証拠エリアに追加 (rules/10)
  *
  * - 1枚固定 (攻撃キャラの LP に依存しない)
  * - byUid が現場を離れていても、ここまでは進める (rules/10)
  */
-export function gainSelfEvidence(state: GameState, ax: ActionContext): void {
+export function gainSelfEvidence(state: GameState, ax: ActionGainCtx): void {
   const p: Player = ax.byPlayer;
+  // mega-wave W6 step7 (2026-07-04, row70): 「相手はこのアクションによって証拠を得られない」
+  // (B02088/B03126 ヒラメキ)。単発 consume-on-read — 獲得も evidence:gain emit も行わない
+  // (依存 trigger も不発、公式Q&A)。deck-empty refresh 判定より前に置く (獲得自体が無いので
+  // refresh も起こさない — rules/14 は「証拠を得る」解決時のみ)。
+  if (state.turnState[p].evidenceGainSuppressed) {
+    state.turnState[p].evidenceGainSuppressed = false;
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player: p,
+      turn: state.turn.number,
+      action: 'action-case-gain-suppressed',
+    });
+    return;
+  }
   // engine拡張 wave#2 cluster3 (2026-06-13, BUG-142): rules/14「証拠を得る = リフレッシュ後に残り解決」。
   // 獲得前に deck0 なら refresh (fileAdd 同型の事前 guard)。remove0 なら敗北し、獲得も emit も行わない。
   if (state.players[p].deck.length === 0) {

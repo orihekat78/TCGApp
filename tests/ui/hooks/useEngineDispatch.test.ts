@@ -25,6 +25,7 @@ import type {
   SceneCharacter,
 } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../../helpers/fixtures';
+import { register as engineRegisterCardDef } from '@/engine/read/def';
 
 // ---- fixtures ----
 
@@ -117,6 +118,13 @@ describe('dispatchEngineAction (pure function)', () => {
     });
 
     it('declaredAbility: increments declaredUseCount and appends log', () => {
+      // W6 step11: canDeclaredAbility の fail-closed 化に伴い、実カード同様 declared ability を持つ
+      // def を登録する (旧「def 未登録でも true 素通り」前提の pin を更新)。
+      engineRegisterCardDef({
+        id: 'cX', no: 'cX', kind: 'character', names: ['cX'], colors: ['赤'], level: 3, ap: 3000, lp: 1,
+        traits: [], keywords: [], rarity: 'C', imageUrl: '', ruleRefs: [],
+        abilities: [{ id: 'A1', type: 'declared', scope: 'on-scene', effect: { kind: 'atom', verb: 'noop', args: {} }, description: 'test', ruleRefs: [] }],
+      } as never);
       const init = withMainPhase(createEmptyGameState());
       init.players.self.scene = [makeChar('c1')];
       useGameStateStore.setState({ gameState: init });

@@ -330,8 +330,11 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
   if (aAP >= bAP && !ax.contactImmune) {
     // cluster15 (2026-06-16): aUid (= winner = attacker) を removal-observer 用 byUid として渡す。
     // rules/08: contact 被除去は常に bUid、除去者は aUid。
-    mutate.scene.removeToRemove(state, bUid, 'contact-ap', aUid);
-    defenderRemoved = true;
+    // W6 step10 (row9): leave:intercept (B01092/B01039) が成立した場合 prevented=true —
+    // defender は現場を離れていない (kept-in-scene) or 手札へ redirect。contact:judge の
+    // winner/loser 導出は defenderRemoved を見るため、ここで反転を反映する。
+    const rr = mutate.scene.removeToRemove(state, bUid, 'contact-ap', aUid);
+    defenderRemoved = !rr.prevented;
   }
 
   const result: JudgeResult = {

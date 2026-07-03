@@ -26,9 +26,9 @@ import { event as engineEvent } from '@/engine/event/index.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
-import { _drainPendingHirameki, _drainPendingMisread } from '@/engine';
+import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
-import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
+import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import { isAllowed } from './useEngineDispatch/can-check.js';
 import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
 // Phase 3d: public 型 (ContactChoice/EngineAction/DispatchResult) は types.ts を barrel 再 export し importer 不変。
@@ -152,7 +152,16 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       if (ax.target.kind === 'case' && !ax.guardUid) {
         // rules/10: 相手証拠リムーブ + 自証拠獲得 (unguarded のみ)
         flow.actionCase.removeOpponentEvidenceTop(draft, ax);
-        flow.actionCase.gainSelfEvidence(draft, ax);
+        // mega-wave W6 step7 (2026-07-04, row70): 直前の emit でヒラメキが queue された場合のみ
+        // gain を defer する (fire/skip 決定後に hiramekiResolve が実行)。「相手はこのアクションに
+        // よって証拠を得られない」ヒラメキ (B02088/B03126) が fire された場合に、既に走った gain を
+        // 巻き戻せないため — Q&A: fire なら依存 trigger (evidence:gain) ごと不発が要件。
+        // ヒラメキ無しの fast path は従来通り即時 gain (挙動不変)。
+        if (_peekPendingHirameki()) {
+          _markPendingHiramekiGainDeferred();
+        } else {
+          flow.actionCase.gainSelfEvidence(draft, ax);
+        }
       } else {
         // char target OR case target + guard 成立 → contact AP 判定
         flow.action.snapshotAP(draft, ax);
@@ -207,6 +216,16 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
             { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
           );
         }
+      }
+      // mega-wave W6 step7 (2026-07-04, row70): actionJudge が defer した gain をここで実行。
+      // fire の場合は queue 済のヒラメキ効果を先に解決する (runAllUntilEmpty) —
+      // setEvidenceGainSuppress が gain より先に着地しないと抑止が効かない。
+      // gainDeferred guard は load-bearing: bundled 経路 (actionAgainstCase → eager gain) 由来の
+      // pendingHirameki では立たない → double-gain しない (row70 risks(2))。
+      if ((pending as { gainDeferred?: boolean }).gainDeferred && pending.actorUid) {
+        runAllUntilEmpty(draft);
+        const gainSide: Player = pending.player === 'self' ? 'opp' : 'self';
+        flow.actionCase.gainSelfEvidence(draft, { byPlayer: gainSide, byUid: pending.actorUid });
       }
       // クリアは produce 後に dispatchEngineAction が行う
       return;
@@ -432,6 +451,15 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     if (_justDeclaredAxId) {
       store.setActiveActionId(_justDeclaredAxId);
       _justDeclaredAxId = null;
+    }
+    // mega-wave W6 step9 (row65): 効果内 startContact が生成した ax を driver に渡す。
+    // _justDeclaredAxId と違い「どの EngineAction type から呼ばれたか」を問わない汎用 drain
+    // (宣言能力起動・カットイン解決・chain 内 startContact も同じ穴を通る) — effect 内から
+    // 新規 ActionContext が生まれる唯一の合流点。useContactFlowDriver は activeActionId →
+    // _getContext → phase 汎用処理なので無改造で 'action-1' 以降を駆動できる。
+    const contactStartAxId = _drainPendingContactStartAxId();
+    if (contactStartAxId) {
+      store.setActiveActionId(contactStartAxId);
     }
     // Commit 3a: evidence:remove-by-action listener が側チャネルにセットしていれば
     // Zustand pendingHirameki に転送。

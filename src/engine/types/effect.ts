@@ -130,6 +130,12 @@ export type Condition =
   // engine mega-wave W6 step1 (2026-07-04, row 999 item1): ctx.bindings[bindKey][0] が MR カードか
   // (「相手の現場にいるMRのキャラを選んだ場合」B06085)。read/def.isMR (rarity 前方一致 + 明示 flag) 委譲。
   | { kind: 'boundIsMr'; bindKey: string }
+  // mega-wave W6 step10 (2026-07-04, row9): leave:intercept matcher 用。triggerPayload
+  // { uid, cause, byUid, ownerPlayer } を読む (consult-leave-intercept.ts が組み立てる)。
+  // leaveCauseIn = 離脱 cause が列挙内 (「相手の能力や効果、コンタクトによって」= contact-ap/effect)。
+  // leaveOwnerIs = 離場キャラ owner が ability owner から見て self/opp (「自分の現場にいる〜キャラ」)。
+  | { kind: 'leaveCauseIn'; causes: string[] }
+  | { kind: 'leaveOwnerIs'; player: 'self' | 'opp' }
   // engine mega-wave W6 step3 (2026-07-04, r63 P19): 「このイベントが能力や効果によって使用されていた場合」
   // (B07026)。effect:declared payload (kind==='event-use') の viaEffect を判定 — true=useEventFromHand 等の
   // 効果起源 / false=手札の使用・ネクストヒント (player-action、emit は viaEffect 無指定=false 扱い)。
@@ -425,6 +431,10 @@ export type AtomVerb =
   // rules: 14/26 (デッキが増えるのみ → これは「リフレッシュ」ではない=証拠を得る手順なし、公式Q&A),
   //   09/23 (リムーブでない=現場リムーブ時不発動)。
   | 'removeAreaAllToDeckBottom'
+  // mega-wave W6 step11 (2026-07-04, row999 item4 / P42): 「自分のリムーブエリアにあるキャラを
+  // 1枚まで選び、デッキの上に移す」(B07014 rider)。PB pick (handAddFromRemove 同型)、dest=deck top。
+  // ⚠ removeAreaAllToDeckBottom (全件・bottom 固定) と紛らわしい — pick 型・top はこちら。
+  | 'removeAreaToDeckTop'
   // engine拡張 wave#2 cluster6 (2026-06-14): 「このターン中、自分はイベントを使用できない」
   // (B09034/B09034P)。turnState[p].eventUseBanned=true をセットする turn-scoped flag verb。
   // 手札の使用・ネクストヒントの event のみゲート (公式 Q&A: カットイン/ヒラメキは制限外)。
@@ -452,6 +462,19 @@ export type AtomVerb =
   | 'setCutinBan'
   | 'setDisguiseBan'
   | 'setHiramekiSuppress'
+  // mega-wave W6 step7 (2026-07-04, row70): 「相手はこのアクションによって証拠を得られない」
+  // (B02088/B03126 ヒラメキ)。turnState[p].evidenceGainSuppressed をセットし、gainSelfEvidence が
+  // consume-on-read で単発消費 (獲得も evidence:gain emit も行わない = 依存 trigger も不発、公式Q&A)。
+  | 'setEvidenceGainSuppress'
+  // mega-wave W6 step8 (2026-07-04, row75): 離場後予約 — args { hook, mode:'turn-end'|'next-match',
+  // effect: Effect (nested JSON descriptor、charGrantAbility 前例), condition?: Condition } を
+  // GameState.reservedEffects に積む。発火は listeners/reserved-effects.ts (B08069/B01058)。
+  | 'reserveEffect'
+  // mega-wave W6 step10 (2026-07-04, row9): leave:intercept ability の宣言的 destination marker
+  // (args.destination: 'hand' | 'kept-in-scene')。runAtom 経由では実行されない (no-op) —
+  // consult-leave-intercept.ts が def 走査時に args.destination を読み、redirect 適用は
+  // mutate/scene.removeToRemove が行う (B01092/B01039)。
+  | 'leaveInterceptRedirect'
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
   | 'expandActionTargets'

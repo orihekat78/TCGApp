@@ -17,6 +17,7 @@ import type { GameState, AtomVerb, EffectCtx } from '../types/index.js';
 export {
   _drainPendingDeckRevealSide,
   _drainPendingDeckReorderSide,
+  _drainPendingContactStartAxId, // W6 step9 (row65): startContact 生成 ax.id の drain
   type PendingDeckRevealSide,
   type PendingDeckReorderSide,
 } from './atom-handlers/_shared.js';
@@ -50,6 +51,7 @@ import {
   atomHandAddFromRemove,
   atomDeckShuffle,
   atomRemoveAreaAllToDeckBottom,
+  atomRemoveAreaToDeckTop,
 } from './atom-handlers/core.js';
 import {
   atomSceneEnter,
@@ -97,6 +99,8 @@ import {
   atomSetCutinBan,
   atomSetDisguiseBan,
   atomSetHiramekiSuppress,
+  atomSetEvidenceGainSuppress,
+  atomReserveEffect,
   atomLog,
   atomExpandActionTargets,
   atomDeclareName,
@@ -244,6 +248,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomDeckShuffle(s, a, ctx);
     case 'removeAreaAllToDeckBottom':
       return atomRemoveAreaAllToDeckBottom(s, a, ctx);
+    case 'removeAreaToDeckTop':
+      return atomRemoveAreaToDeckTop(s, a, ctx, verb);
     case 'souza':
       return atomSouza(s, a, ctx);
     case 'useEventFromHand':
@@ -260,6 +266,14 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomSetDisguiseBan(s, a, ctx);
     case 'setHiramekiSuppress':
       return atomSetHiramekiSuppress(s, a, ctx);
+    case 'setEvidenceGainSuppress':
+      return atomSetEvidenceGainSuppress(s, a, ctx);
+    case 'reserveEffect':
+      return atomReserveEffect(s, a, ctx);
+    case 'leaveInterceptRedirect':
+      // W6 step10 (row9): 宣言的 marker — 実行経路なし (consult-leave-intercept.ts が def 走査時に
+      // args.destination を読む)。誤って runAtom に到達しても盤面無変化 (fail-safe no-op)。
+      return;
     case 'invokeLeaveToRemoveOfCard':
       return atomInvokeLeaveToRemoveOfCard(s, a, ctx);
     case 'bindPick':

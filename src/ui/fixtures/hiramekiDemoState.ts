@@ -97,6 +97,7 @@ export function createHiramekiDemoState(pickedCardId: string): GameState {
     turn: { number: 1, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false },
     players: { self: selfSide(pickedCardId), opp: oppSide() },
     pendingEffects: [],
+    reservedEffects: [], // W6 step8 (row75)
     scratchTrace: { self: '未発見', opp: '未発見' },
     turnState: {
       self: { handUseUsed: false, nextHintUsed: false, assistedThisTurn: false, declaredAbilityUseCount: {} },

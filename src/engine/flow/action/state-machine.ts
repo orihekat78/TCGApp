@@ -218,6 +218,51 @@ export function declare(state: GameState, byUid: string, target: Target): Action
 }
 
 /**
+ * startFromEffect — 「コンタクトを発生させる」効果の bootstrap (mega-wave W6 step9, row65)
+ *
+ * B06020 佐々木小次郎 a2 / B06042 ここで会うたが百年目 (付与宣言能力):
+ * 「相手の現場にいるキャラを1枚まで選び、このキャラとのコンタクトを発生させる。
+ *  （このキャラがアクションした側のキャラになる）」
+ *
+ * 通常アクションとの差分 (すべて公式Q&A B06020/B06042/B07017 pin):
+ *   - declare を通らない: canActionAgainstChar は呼ばない (スリープ/スタン限定 gate を迂回 —
+ *     「アクティブ状態のキャラともコンタクトを発生させられます」)
+ *   - sleepActor しない (「キャラはスリープ状態になりません」)
+ *   - action:declare / action:guard-window / action:guarded / action:unguarded を emit しない
+ *     (「ガードすることはできません」= ガード窓自体が存在しない)
+ *   - actedCharThisTurn を立てない (「アクションによって発動する能力は発動しない」— P17 は
+ *     『アクションした』の代理フラグ)
+ *   - generatedByEffect=true → advance() の contact-end 分岐が action:end を emit しない
+ * contact-pending 以降 (contact:start emit / buildContactBindings / computeOrder / cutin / 変装 /
+ * AP 判定) は既存 advance を無改造で再利用 (「【カットイン】や【変装】も使用できます」)。
+ *
+ * @returns 生成した ax ('action-1' 着地済)。actor/target 不在は null (rules/15 0枚選択と同 posture)
+ */
+export function startFromEffect(state: GameState, byUid: string, targetUid: string): ActionContext | null {
+  const byPlayer = findActorPlayer(state, byUid);
+  if (!byPlayer) return null;
+  // 対象は相手の現場のキャラ (両 exemplar とも「相手の現場にいるキャラ」印字。fail-closed)
+  const targetSide: Player = byPlayer === 'self' ? 'opp' : 'self';
+  if (!state.players[targetSide].scene.some((c) => c.uid === targetUid)) return null;
+
+  const id = nextId();
+  const ax: ActionContext = {
+    id,
+    byUid,
+    byPlayer,
+    target: { kind: 'char', uid: targetUid },
+    phase: 'contact-pending',
+    startedAt: { turn: state.turn.number, nano: Date.now() },
+    cutInUsed: {},
+    generatedByEffect: true,
+  };
+  _contexts.set(id, ax);
+  // contact-pending → action-1 (contact:start emit + order 計算は既存分岐を再利用)
+  advance(state, ax);
+  return ax;
+}
+
+/**
  * tryGuard — ガード成立
  *
  * - canGuard で確認 (引数で guardUid)
@@ -493,12 +538,18 @@ export function advance(state: GameState, ax: ActionContext): void {
     // アクション終了で清掃。scene loop の外で両プレイヤー分を明示クリア (rules/10 「アクション終了時まで」)。
     state.turnState.self.hiramekiSuppressed = false;
     state.turnState.opp.hiramekiSuppressed = false;
-    event.emit(
-      state,
-      'action:end',
-      { byUid: ax.byUid, result: 'completed' },
-      { player: ax.byPlayer, uid: ax.byUid },
-    );
+    // mega-wave W6 step9 (row65): 効果生成コンタクト (startFromEffect) は「アクションではない」—
+    // action:end を emit しない (公式Q&A「アクションによって発動する能力や『アクション終了時』の
+    // 能力は発動しません」を実現する唯一の分岐点)。turnEffects clear (上) と _deleteContext (下) は
+    // 無条件維持 — effect-contact 経路では 'action' scope turnEffect が立たないので clear は no-op で安全。
+    if (!ax.generatedByEffect) {
+      event.emit(
+        state,
+        'action:end',
+        { byUid: ax.byUid, result: 'completed' },
+        { player: ax.byPlayer, uid: ax.byUid },
+      );
+    }
     // メモリ管理: action-end に到達した Context は不要なので削除 (長いゲーム対策)
     _deleteContext(ax.id);
     return;
@@ -510,6 +561,7 @@ export function advance(state: GameState, ax: ActionContext): void {
 // flow.action namespace
 export const action = {
   declare,
+  startFromEffect, // W6 step9 (row65): 効果生成コンタクト bootstrap
   tryGuard,
   passGuard,
   advance,

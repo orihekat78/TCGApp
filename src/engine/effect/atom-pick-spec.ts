@@ -30,6 +30,9 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   discard:           { defaultArea: 'hand',     mode: 'PB' },
   evidenceToHand:    { defaultArea: 'evidence', mode: 'PB' },
   handAddFromRemove: { defaultArea: 'remove',   mode: 'PB', sourceSplice: true },
+  // engine mega-wave W6 step11 (2026-07-04, row999 item4 / P42): removeAreaToDeckTop —
+  // remove から pick → デッキの上へ (B07014 rider)。handAddFromRemove と同型 PB + sourceSplice。
+  removeAreaToDeckTop: { defaultArea: 'remove', mode: 'PB', sourceSplice: true },
   // engine拡張 wave (2026-06-21): handToEvidence — 手札から1枚 pick → 裏向きで証拠へ (evidenceToHand の逆)。
   handToEvidence:    { defaultArea: 'hand',     mode: 'PB' },
   // engine additive wave (2026-06-28): handReveal — 手札から1枚 pick → 公開 (zone 変化なし)。discard と同型 PB pick。

@@ -921,6 +921,35 @@ export function atomDeckShuffle(s: GameState, a: Record<string, unknown>, ctx: E
       return;
     }
 
+export function atomRemoveAreaToDeckTop(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // mega-wave W6 step11 (2026-07-04, row999 item4 / P42): 「自分のリムーブエリアにあるキャラを
+      //   1枚まで選び、デッキの上に移す」(B07014 rider)。handAddFromRemove 単一 path clone、
+      //   dest = deck top (mutate.deck.toTop)。rules/15「まで」= 0枚可 (pick 型は n 未満可)。
+      //   remove からの離脱なので remove:exit emit (wave-4 契約、handAddFromRemove と同じ)。
+      // ⚠ removeAreaAllToDeckBottom (全件 bottom + shuffle) とは別 verb — 命名衝突注意 (row999 risks④)。
+      const rtdP = resolvePlayer(a.player, ctx);
+      const rtdArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.removeAreaToDeckTop!.defaultArea, a, rtdP, rtdP) }
+        : a;
+      const rtdTarget = normalizeTargetToString(rtdArgs.target);
+      if (!rtdTarget) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: rtdArgs }, ctx, { byPlayer: rtdP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: rtdP, turn: s.turn.number, action: 'effect:removeAreaToDeckTop:awaiting-pick' });
+        return;
+      }
+      const rtdRem = s.players[rtdP].remove;
+      const rtdIdx = rtdRem.indexOf(rtdTarget);
+      let rtdMoved = false;
+      if (rtdIdx !== -1) {
+        rtdRem.splice(rtdIdx, 1);
+        mutate.remove.emitExit(s, rtdP, rtdTarget); // remove→deck top 離脱 (原因非依存 remove:exit)
+        mutate.deck.toTop(s, rtdP, [rtdTarget]);
+        rtdMoved = true;
+      }
+      mutate.log.append(s, { ts: Date.now(), player: rtdP, turn: s.turn.number, action: 'effect:removeAreaToDeckTop', target: rtdTarget, result: rtdMoved ? 'ok' : 'not-found' });
+      return;
+    }
+
 export function atomRemoveAreaAllToDeckBottom(s: GameState, _a: Record<string, unknown>, ctx: EffectCtx): void {
       // cluster4 (2026-06-14) B08027【登場時】: 自分と相手はリムーブエリアの「すべて」のカードを
       //   各自のデッキの下に移し、両者のデッキをシャッフルする。
