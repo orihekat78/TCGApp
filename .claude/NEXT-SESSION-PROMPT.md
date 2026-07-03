@@ -37,7 +37,8 @@
 
 ## 現在地
 - ★開始時 `git ls-remote origin main` + `gh run list -L1` で remote HEAD / CI 確認。
-- **main = 8c326afb** (**E3 増分3 P53** — 証拠 alt-lose 機構 3 primitive: evidenceFlip all-mode + evidenceTraitAtLeast Condition + cannotSolveCase flag (canWin/AI/UI/dispatch の 4 gate)。engine-only、純 additive、consumer B09107 は card phase (card 凍結)。opus 2-lens: semantic SHIP / additivity SHIP_WITH_NITS → can-check.ts 4th gate 折込済。直前 = cf7b2f77 E3 増分2 P11 (sceneCapOverride+partnerColorsOverride) / ad754407 E3 増分1 opponentLoses)。vitest baseline=**3750 pass +1 skip** (8c326afb。P53 probe +12)。
+- **main = bf33786d** (**E3 増分4 P10 = E3 最終 → engine-first 計画 完了**。partnerSolveOverride: パートナー【事件解決】per-game 書換 + alt-lose。engine-only、opus 3-lens 全 SHIP_WITH_NITS・0 blocker。設計最小化 = UI/AI/Cost-union/keyword enum 全て不要と実証、3 file only。直前 = 4ba5957c wave17 テキーラ / 5effb6a9 wave16 キール / 8c326afb E3 増分3 P53)。vitest baseline=**3772 pass +1 skip** (bf33786d。P10 probe +11)。
+- ★★★**engine-first 計画 (E1+E2+E3+MR core) 完了 = 骨格凍結到達**。A1 structural / A2 additive 両 well 枯渇。**次フェーズ = CARD PHASE** (card 凍結解除、consumer authoring)。engine 拡張は今後 ±5/軽微 touch-up のみ。
 - ★★**方針更新 (2026-07-02、ユーザー)**: **カード拡張は engine 拡張完了まで凍結**。engine wave は engine-only (consumer カードは card phase)。exemplar 同梱も card 扱いゆえ当面なし (probe test で検証)。
 - ★★**2026-07-03 実測: A2 additive の clean sole-unlock は完全枯渇** ([[reference-a2-additive-sole-unlock-dry]])。決定論 grep (41候補中29 SHIPPED) + 8-agent grounding workflow で **CLEAN_AUTHOR=0/8**。残 additive verb は全て真absent だが consumer に structural gate 残 (on-set-host WRITE/PA-declaration/MR-cond)→0 unlock=dead code。**「まとめて additive batch」は不可能。再sweep 不要**。残 engine = structural cluster のみ (逐次 T2/T3、並列著作不可)。
 - ★★**A1 structural queue 状況**: G34「以下から1つ選んで行う。〜の場合、代わりに全部」は grounding の結果 **大半カード作業と判明** (choice atom は既存・成熟、1-of-M は動く。novelty=escalation の条件/コスト分岐のみ、condition-variant は既存 conditional/choice/sequence で authorable)。→ A1 structural の残本命 = **E3 (rule-rewrite/alt勝敗)**。分解計画 = [specs/e3-altwin-decomposition-2026-07-02.md](specs/e3-altwin-decomposition-2026-07-02.md)。
@@ -121,23 +122,26 @@
 - **wave-2 (3c0bc702)** — 評価器 `evidenceDiff`/`sceneCountCompare`/`removeColorAtLeast.cardKind`/`$self.sceneColorNot` dyn。詳細 [[reference-engine-additive-wave-0630]]。
 - **wave-1 (8f715c92)** — `setNextHintBan`/`nextHintBanned` (turn-flag テンプレ)。
 
-## 次やること: E3 (rule-rewrite/alt勝敗) 増分4 (P10、最後) — driver [specs/e3-altwin-decomposition-2026-07-02.md](specs/e3-altwin-decomposition-2026-07-02.md)
+## 次やること: ★CARD PHASE (engine-first 完了 → card 凍結解除)
 
-- ✅ **E3 増分1 opponentLoses verb = 出荷済 (ad754407)**。alt-lose「相手はゲームに敗北する」= AtomVerb
-  (winner=resolvePlayer(args.player)、first-writer guard、reason 'alt-lose')。P10/P53 共有コア。
-  ⚠ authoring 契約: `opponentLoses` の `args.player` は**勝者** (=効果所有者)。カードは `player:'self'`。
-- ✅ **E3 増分2 P11 = 出荷済 (cf7b2f77)**。sceneCapOverride (現場上限 override) + partnerColorsOverride (case→partner 色上書き) ContinuousModifier。
-- ✅ **E3 増分3 P53 = 出荷済 (8c326afb)**。evidenceFlip all-mode (a.all=true→全証拠 faceUp) +
-  evidenceTraitAtLeast Condition (証拠特徴計数、removeTraitAtLeast 同型) + cannotSolveCase flag
-  (case 継続能力「自分は【事件解決】できない」→ canWin/AI canSolveCase/UI canSolveCaseForUi/dispatch isAllowed の **4 gate**)。
-  consumer B09107 犯人たちの犯行 は card phase。probe = tests/cards/e3-p53-evidence-altwin.test.ts。
-- **次 = E3 増分4 (P10 partner-solve override、最大・最難・最後 = T3 フル review + Playwright)**: `partnerSolveOverride` field
-  (パートナー【事件解決】の per-game 書換) + canWin/mutate.partner.solveCase/UI solveCase アクションの override 分岐 +
-  【証拠隠滅】keyword (表示 tag) + **新 cost「証拠を事件レベル数リムーブ」(Cost union 追加=A1 structural)**。
-  cards B03135/B06105/B05118 (計15、demand-signal #1)。P53 の cannotSolveCase (通常勝利封鎖) と対で、P10 は勝利ルート**差替**。
-  着手前: mutate.partner.solveCase (partner.ts:79) / UI flows.ts:585 solveCase dispatch / AI policy.ts:272 を origin/main grep。
-- P48 じゃんけん RNG は **pure-additive → A2 lane** (本 A1 では扱わない、DEFERRED-INDEX 経由で送る)。
-- ★ E3 増分4 完了 = A1 structural lane の E3 phase 完了 (engine-first 計画の最重ブロック終了)。
+- ★★**engine 拡張 (E1+E2+E3+MR core) 全完了**。A1 structural / A2 additive 両 well 枯渇 (2026-07-03)。
+  以後 engine は「骨格凍結」= ±5/軽微 touch-up/将来セットのみ。**メイン作業 = カード追加 (consumer authoring)**。
+- **card phase = /card-wave skill 起動**。engine 解禁済み consumer を DSL authoring (engine 変更0、card-addition-checklist 通す)。
+  即着手可能 vein (engine-unlocked, authoring 待ち):
+  - **E3 consumer**: B03135/B05118/B06105 (partnerSolveOverride case、黒 gate= condition partnerColor) / B09107 (P53 cannotSolveCase+evidenceFlip all+evidenceTraitAtLeast)。⚠ B06105 は加えて【宣言】evidenceFlip pick-3 効果。⚠ authoring 時 `opponentLoses` の args.player=**勝者=self**。
+  - **card-authoring vein** (memory [[reference-card-authoring-stale-defer-vein]] / [[project-engine0-queue-dry-stale-defer-vein]]): DEFERRED-INDEX の engine 名指し・未登録 exemplar (dormant) を第2gate 検査して解禁。contact-participant vein (B04037 系) も live。
+  - **PA 宣言19+発動5** (MR partner-area、memory [[project-mr-partner-area-design-2026-06-23]])。
+- ⚠ card phase 着手前: `git grep '<ID>' src/cards` で登録確認 (spec の「解禁/即出荷可」は stale 化しうる、memory [[reference-unlocked-label-stale-grep-srccards]])。全句 engine 実測 (probe) で第2gate 再certify ([[reference-engine-unlocked-second-gate]])。
+- **Track B (compiler)** は別 lane 継続 ([NEXT-SESSION-PROMPT-TRACK-B.md](NEXT-SESSION-PROMPT-TRACK-B.md))。bulk card authoring は B の compiler 経由も選択肢。
+
+### 参考: 残 engine (万一の ±5 touch-up、原則やらない)
+- P48 じゃんけん RNG (B07011、pure-additive) — 需要低・単発。card phase で consumer 出た時のみ。
+- PR263 count-dyn (PA jewel 計数 ×N aura) — 単発 dyn、card 出荷時に。
+
+### 参考: 旧 A1 候補 (E3 完了後 or card phase 送り)
+- **G34 escalation** (B05023/B05062 = condition-variant は card authorable / B07013/B09067 = cost-variant は
+  「optional-cost→escalate」narrow idiom が要検討)。**card 凍結解除後に card phase で** author。
+- **G39 PA 計数・消費 = 出荷済 (main f0752154)**。wave A1「PA 計数・消費」: 
 
 ### 参考: 旧 A1 候補 (E3 完了後 or card phase 送り)
 - **G34 escalation** (B05023/B05062 = condition-variant は card authorable / B07013/B09067 = cost-variant は

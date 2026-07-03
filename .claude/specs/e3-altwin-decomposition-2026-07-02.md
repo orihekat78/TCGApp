@@ -25,9 +25,14 @@ grounding = engine-extension-plan-2026-06-30.tsv 行 `rule-rewrite-altwin-delay`
    ハードコード集約が本体 = structural だが挙動不変リファクタ寄り。単独 exemplar 可 (PR067)。
 3. **P53 evidence 機構** (中): `evidenceFlip` に all モード + `evidenceTraitAtLeast` Condition (証拠を特徴計数) +
    `canWin` に「事件解決不可」override フラグ。alt-lose は増分1で済。
-4. **P10 partner-solve override** (最大・最難、最後): `PlayerState.partnerSolveOverride?` (per-game 書換) +
-   canWin/solveCase/UI solveCase アクションの override 分岐 + 【証拠隠滅】keyword (表示 tag) +
-   新 cost「証拠を事件レベル数リムーブ」(Cost union 追加 = A1)。**T3 フル review + Playwright 必須**。
+4. ✅ **P10 partner-solve override** (増分4、出荷済 2026-07-03 main bf33786d) — **E3 完了 = engine-first 計画 完了**。
+   実装 = `ContinuousModifier.partnerSolveOverride?: boolean` (case 継続能力、黒 gate は ability.condition partnerColor) +
+   `read.game.partnerSolveOverride` scan (cannotSolveCase clone) + `mutate.partner.solveCase` execution 分岐
+   (override 時 証拠を requiredEvidence 数リムーブ + gameResult.set alt-lose)。
+   **設計最小化 (spec 当初案を縮小・実証)**: override は canWin availability 不変・execution のみ差替 → **UI/AI/dispatch 無改変**
+   (T3 最大リスク面を回避)。cost は solveCase に bake-in → **Cost-union 追加不要**。【証拠隠滅】は display-only → keyword enum 不要。
+   「事件レベル数」= `requiredEvidence` (印字 level 非保持、後攻6 が払える唯一整合値)。opus 3-lens 全 SHIP_WITH_NITS・0 blocker。
+   probe = `tests/cards/e3-p10-partner-solve-override.test.ts` (11)。consumer B03135/B05118/B06105 authoring は **card phase**。
 
 ## データモデル方針
 
