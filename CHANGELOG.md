@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `ee93149c1b17`
+> Source hash: `b2f290dd23f1`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,26 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+### card-authoring wave17 — テキーラ B08086 出荷 ($self.oppSceneCount aura + cutin、engine 変更 0)
+
+- **card**: B08086 テキーラ (キャラ・黒・Lv5・AP0・LP0・特徴[黒ずくめの組織]、ct-p08 非MVP)。
+  「【パートナー黒】【自分ターン中】相手の現場にいるキャラ1枚につき、このキャラをAP＋2000する。」
+  +「【カットイン】【自分ターン中】【黒】のキャラに【カットイン】する場合、AP＋2000」
+- **dormant-primitive 解禁** (engine 変更 0): 両句とも既存 primitive で表現可 (DEFERRED-INDEX line 80 sole-gate
+  `$self.oppSceneCount` は 2026-06-29 engine additive で出荷済、dyn/eval.ts:305 / dyn test で `*2000=4000` 実証済)。
+- **句マッピング**:
+  - a1 = continuous + condition `and[partnerColor:黒, turn:self]` + `continuousModifier.apDelta{dyn:'$self.oppSceneCount * 2000'}`
+    (B05030 a2 の apDelta{dyn} 同型、相手現場キャラ数でスケール)。
+  - a2 = triggered `effect:declared`(optional,selfOnly)/scope on-hand (icon-cutin) + condition `turn:self` +
+    effect `conditional{ if: contactTargetMatches({colors:['黒']}), then: charModifyAP{uid:'$contact.byUid', delta:2000, scope:'contact'} }`
+    (D11013 同型の cutin、コンタクト相手 $contact.targetUid が黒の時のみ自 cutin 側 AP+2000)。
+- **検証**: 新 test `tests/cards/wave17-b08086-tequila.test.ts` (7件):
+  §a1 aura = partner黒+自ターン+opp2枚→AP 4000 / opp0枚→0 / DECOY partner青→0 / DECOY 相手ターン→0。
+  §a2 cutin = 実 `cutIn` emit → 黒相手→attacker AP+2000 / DECOY 非黒相手→据置。実 emit + `runAllUntilEmpty` 駆動。
+- **gates**: tsc0 / vitest 3761 pass +1 skip (新 7件) / smoke:1000 winsA=498 exceptions=0 不変 (engine 変更 0 証跡) /
+  eslint (changed files) errors=0。playwright は非MVP ゆえ統合 test の decoy 駆動で代替。
+- tier T1 (既存 primitive のみ、$self.oppSceneCount は dyn unit test 済、cutin は D11013 で実証済パターン)。
 
 ### engine E3 増分3 (P53) — 証拠 alt-lose 機構 3 primitive (犯人たちの犯行 B09107)
 

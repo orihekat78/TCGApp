@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `74496fb9f543`
+> Source hash: `e8886054a31d`
 
 `src/engine/index.ts` から公開されている 12 namespace の自動生成リファレンス。
 

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `bab8f63aebc4`
+> Source hash: `5d06d854e23e`
 
 Atom dispatcher / DSL Resolver / Validator
 

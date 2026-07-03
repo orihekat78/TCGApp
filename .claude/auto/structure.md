@@ -2,15 +2,15 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `4fb4079da3f3`
+> Source hash: `e800cb99724b`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/tmp/a2-16`)
+- **対象ルート**: `.` (`C:/tmp/a2-17`)
 - **ディレクトリ数**: 221
-- **ファイル数**: 3953
+- **ファイル数**: 3956
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -566,6 +566,7 @@
     - `2026-07-02-14-engine-e3-p11-scene-cap-partner-colors.md`
     - `2026-07-03-01-cards-wave16-cutin-observer.md`
     - `2026-07-03-01-engine-e3-p53-evidence-altwin.md`
+    - `2026-07-03-02-cards-wave17-b08086-tequila.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -879,7 +880,7 @@
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
     - `smoke-2026-07-03.json`
-    - `smoke-2026-07-03.md` — Smoke 1000戦レポート — smoke-2026-07-03-001933
+    - `smoke-2026-07-03.md` — Smoke 1000戦レポート — smoke-2026-07-03-004714
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -2960,6 +2961,7 @@
       - `B08083.ts` — cards/ct-p08/B08083 ラム (キャラ) — engine#1 leave:to-remove batch #3 (a1 only)
       - `B08084.ts` — cards/ct-p08/B08084 ウォッカ (キャラ) — engine-extension #1 leave:to-remove batch
       - `B08085.ts` — cards/ct-p08/B08085 シェリー (character) — engine拡張 wave (evidence-flip-faceup 有効化,…
+      - `B08086.ts` — cards/ct-p08/B08086 テキーラ (character) — card-authoring wave17 ($self.…
       - `B08088.ts` — cards/ct-p08/B08088 バーボン (character) — Task A green候補 (engine変更0)
       - `B08089.ts` — cards/ct-p08/B08089 ヘルエンジェル (キャラ) — engine-extension #1 leave:to-remove batch
       - `B08090.ts` — cards/ct-p08/B08090 ベルモット (character) — Task A green候補 (engine変更0)
@@ -3865,6 +3867,7 @@
     - `wave-reveal-handadd-2026-06-23.test.ts` — wave reveal-handadd (2026-06-23, cards/wave-reveal-handadd) — engine変更0
     - `wave-trigdraw-2026-06-23.test.ts` — wave-trigdraw (2026-06-23) — triggered-draw 4枚 runtime + 構造アサーション (engine変更0)
     - `wave16-cutin-observer.test.ts` — tests/cards/wave16-cutin-observer
+    - `wave17-b08086-tequila.test.ts` — tests/cards/wave17-b08086-tequila
     - `wave2-cluster2-batch.test.ts` — engine拡張 wave#2 cluster2 — ability-presence filter 解禁 10枚の実 flow 検証 (decoy 付き)
   - **`compiler/`**
     - `canonical.test.ts` — Track B compiler — canonical 正規化の単体テスト。
