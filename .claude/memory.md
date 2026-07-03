@@ -13,6 +13,17 @@
 - **第2gate 実測** (green 鵜呑みせず全 primitive を engine コード直参照): trait 配列 any-match = candidates.ts:345 `wants.some(w=>traits.includes(w))` / caseStatus = eval.ts:113 switch + CONDITION_KIND_MAP / mill gate = core.ts:219 (`gate===true && deck<n` skip、必須は gate:false) / stackedCount dyn = dyn/eval.ts:393。
 - **probe test 10件** (tests/cards/ct-p06/B06006.test.ts): shape 4 + 実機 6 (a2 AP スケール 6000/4000/opp-turn非加算/setCards非計上, a1 突撃 は解決編のみ)。engine 実評価を裏取り。
 - **ゲート**: tsc0 / vitest 442files 3775+10probe pass / smoke:1000 winsA=498 不変・exceptions0 (engine変更0 証跡) / 8 CI lint errors=0。CI push 済 (run 28638331871、要 green 確認)。
+
+## 2026-07-03 engine wave-18 — inContact 出荷 (A1 structural、parked 継続を verify→ship)
+
+- 前 session が /c/tmp/wave18-incontact に **未commit で parked** した inContact primitive + B04075/B04092 を検証して出荷。
+  memory [[reference-incontact-vein-a1-blocked]] は当時 parked 記録 (この wave が A1 gap を解消)。origin/main **6b6437b1**。
+- **engine (全 additive、既存挙動不変)**: ① `inContact?` TargetQuery 軸 (parked 463730af land、candidates.matchesQueryForChar が ctx.contact.{byUid,targetUid,guardUid} で限定) ② contact emit enrichment (`buildContactBindings`: disguise:into に player+bindings.contact / contact:start source に bindings.contact) ③ triggered.ts `resolveCtx.bindings = source.bindings ?? {}` ④ `__pendingEffectOptionalBindings` holder (optional 内 inContact pick 用、BUG-114 choice の対称、queue 6th arg のみ・ctx.bindings は fresh {} で aliasing 回避)。
+- **exemplar**: B04075 白鳥 (【ターン1】相手cutin/変装→コンタクト中1枚AP-1000、multi-hook cutin:used+disguise:into + triggerPlayerIs opp) / B04092 キャンティ (自他contact:start→optional self-sleep→コンタクト中1枚AP+2000、payloadKey aUid/bUid or + excludeSource + optional{chain})。
+- **★T3 実機検証** (playwright MCP、:5176): 任意効果 modal に B04092 文言 verbatim→する→self-3 sleep→inContact pick が **participant2枚 (self-2/opp-2) のみ・decoy self-1 除外**→AP+2000。console err 0 (favicon 404 のみ)。binding-carrying optional の human-path (resolve-picks/pending-state/apply-pick 改) を実踏。
+- **BUG-167 起票** (低、pre-existing): sceneSetState($self,sleep) が stun 状態で no-op でも chainStepNoApply 未立て→「そうした場合」後続誤適用。shipped B07019 と同挙動、非 regression。engine fix は defer。
+- **ゲート**: tsc0 / vitest 3798 pass+1skip / smoke winsA=498 不変・exceptions0 / 8 lint errors=0 / docs:check 0/101。rebase (main の B06006 wave 取込、_reuse/index.ts union 解決) 後 全ゲート再走。
+- ⚠ **main divergence 注意**: local `main` ref が古い e140aa8c で stale (Jul2)。真の origin = `git ls-remote` で確認必須 (`origin/main..main` は tracking ref stale で誤判定)。FF push は `git ls-remote` 実測→rebase→`push origin <sha>:main`。
 - **★教訓 (B03033 latent gap 実踏)**: smoke report は gitignored だが `docs:structure` が `.claude/reports/smoke-*` を拾って structure.md に +2行 (762→764)。**docs regen 前に今回生成の smoke json/md を rm** して 762 維持 → clean checkout と一致。gen-structure EXCLUDE_DIRS 未収録の gap は別 commit 案件。
 - **card-authoring vein 生存**: 手順 = 第2gate (未登録 + engine token 出荷 grep) → D08021/B05030 型 clone → probe → 6ゲート → FF。
 

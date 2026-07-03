@@ -1,6 +1,7 @@
 > ## ★2026-07-03 現況: engine-first 完了 → **CARD PHASE 進行中** (下の A1 prompt は engine 再開時のみ)
 > - engine 骨格凍結到達 (E3 P10 partnerSolveOverride bf33786d が最終 engine wave)。以降は **card-authoring lane** が主。
 > - 出荷済: CARD PHASE #1 B03033 (3ed71dcc) / #2 **B06006 江戸川コナン (63000bc6、engine変更0)**。
+> - ★2026-07-03 **engine wave-18 inContact 出荷 (origin 6b6437b1、A1 structural)**: 前 session parked を verify→ship。inContact TargetQuery + contact emit enrichment + optional-bindings holder。exemplar B04075 白鳥/B04092 キャンティ (playwright human-path 実機検証済)。詳細 [[reference-incontact-vein-a1-blocked]] (RESOLVED)。⇒ **inContact clone (PR029/PR033 白鳥・B04093 コルン・B03034 稲尾) が card-authoring で解禁** (primitive 出荷済、engine変更0)。BUG-167 defer (低)。
 > - **CARD PHASE #3 = cutin:used ペア batch** (2026-07-03 棚卸しで決定、driver = [specs/card-phase-dormant-inventory-2026-07-03.md](specs/card-phase-dormant-inventory-2026-07-03.md))。
 >   dormant 15枚 UNLOCKED / 120 BLOCKED を triage 済。**exemplar 有りは cutin:used クラスタのみ** (B03118 キール) → 最安全ゆえ先頭。
 >   - **今batch: B09086 + B04090** (cutin:used observer、`triggerCutinMatches`)。B04090 は cutin中 revive `sceneEnter area:'remove'`。
