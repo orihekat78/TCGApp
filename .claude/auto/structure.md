@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/tmp/megaw1`)
 - **ディレクトリ数**: 221
-- **ファイル数**: 4033
+- **ファイル数**: 4037
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -580,7 +580,9 @@
     - `2026-07-03-09-engine-megawave-w2b.md` — engine mega-wave W2b — UI重 restriction 2 primitive (mustBeSelectedByOppEvent /…
     - `2026-07-03-10-engine-megawave-w3.md` — engine mega-wave W3 — observer hook 5 primitive + exemplar 5 printings
     - `2026-07-03-2-card-b06006-conan.md`
+    - `2026-07-04-01-engine-megaw6-first-half.md` — feat(engine): mega-wave W6 前半 — structural 6 step (declareName 統合 / 再入イベント使用 /…
     - `2026-07-04-01-engine-megawave-w5.md` — engine mega-wave W5 — dyn/cost 3 primitive + exemplar 5 printings
+    - `2026-07-04-02-engine-megaw6-second-half.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -893,12 +895,6 @@
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
-    - `smoke-2026-07-03-2.json`
-    - `smoke-2026-07-03-2.md` — Smoke 1000戦レポート — smoke-2026-07-03-090502
-    - `smoke-2026-07-03-3.json`
-    - `smoke-2026-07-03-3.md` — Smoke 1000戦レポート — smoke-2026-07-03-105044
-    - `smoke-2026-07-03-4.json`
-    - `smoke-2026-07-03-4.md` — Smoke 1000戦レポート — smoke-2026-07-03-125332
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -1103,6 +1099,7 @@
     - `2026-07-02-wave10.md` — 2026-07-02 Track A session — wave-10 出荷 (BUG-165 + B07002)
     - `2026-07-02-wave12.md` — 2026-07-02 Track A (A1) wave-12 — G39 PA 一般カード枠 (partnerAreaCards + toPartnerAre…
     - `2026-07-03-cardphase.md` — session 2026-07-02 → 07-03 archive (memory.md rotate)
+    - `2026-07-03-megawave.md` — memory — 現セッション scratchpad
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -3439,6 +3436,7 @@
       - `apply-pick.ts` — engine.effect.apply-pick — pending effect-pick の解決 + continuation 実行を一箇所に集約。
       - `atom-handlers.ts` — engine.effect.runAtom — Atom Verb dispatcher
       - `atom-pick-spec.ts` — engine.effect.ATOM_PICK_SPEC — pick系 atom 短縮形の唯一の権威ソース。
+      - `consult-leave-intercept.ts` — engine.effect.consult-leave-intercept — 現場離脱の pre-splice consult (mega-wave W6 s…
       - `index.ts` — engine.effect namespace barrel
       - `invoke-leave-to-remove.ts` — engine.effect.invoke-leave-to-remove — リムーブエリア在中カードの【現場リムーブ時】明示発動
       - `pending-state.ts` — engine.effect.pending-state — pick/choice/…
@@ -3485,6 +3483,7 @@
     - **`listeners/`**
       - `hirameki.ts` — Phase 8 完全クローズ Commit 3a: ヒラメキ listener
       - `misread.ts` — Phase 8 完全クローズ Commit 3b: ミスリード listener
+      - `reserved-effects.ts` — reserved-effects listener — 離場後予約効果の発火 (mega-wave W6 step8, 2026-07-04, row75)
       - `triggered.ts` — Round 4b: triggered ability の汎用 listener
     - **`mutate/`**
       - `.gitkeep`
@@ -3534,6 +3533,7 @@
       - `game-state.ts` — GameState 型定義
       - `hooks.ts` — HookName union 型定義
       - `index.ts` — engine/types barrel export
+      - `reserved-effect.ts` — ReservedEffectEntry — 離場後予約効果 (mega-wave W6 step8, 2026-07-04, row75)
       - `results.ts` — 戻り値型定義
     - `index.ts` — engine — エンジン public API
     - `produce.ts` — Immer produce wrapper
@@ -3567,6 +3567,8 @@
       - `DeckReorderModalHost.tsx` — BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 modal。
       - `DeckRevealOverlay.css`
       - `DeckRevealOverlay.tsx` — user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出 overlay
+      - `DeclareCardNameModal.css`
+      - `DeclareCardNameModal.tsx` — mega-wave W6 step1 (2026-07-04): DeclareCardNameModal (scaffold)
       - `EffectChoiceModalHost.tsx` — BUG-121: enter トリガ等の human 複数 option choice を surface する store 駆動 modal。
       - `EffectOptionalModalHost.tsx` — 2026-06-06 タスクC: optional (「〜してもよい」) を surface する store 駆動 modal。
       - `EffectPickerModal.css`
@@ -3889,6 +3891,8 @@
     - `engine-mega-w2b.test.ts` — tests/cards/engine-mega-w2b
     - `engine-mega-w3.test.ts` — tests/cards/engine-mega-w3
     - `engine-mega-w4.test.ts` — tests/cards/engine-mega-w4
+    - `engine-mega-w6.test.ts` — engine mega-wave W6 — structural probe (step1: declareName 統合)
+    - `engine-mega-w6b.test.ts` — tests/cards/engine-mega-w6b
     - `engine-megaw5-dyn-cost.test.ts` — engine mega-wave W5 — dyn/cost probe (r37/r38/r47)
     - `engine-wave-a1-pa-consume.test.ts` — engine wave A1 — partnerAreaRemove verb + PA-read sceneHas (G39 PA 計数・消費、wave-12…
     - `engine-wave12-partner-area-cards.test.ts` — engine wave-12 — partnerAreaCards + toPartnerArea (G39 PA 一般カード枠、demand-signal #…

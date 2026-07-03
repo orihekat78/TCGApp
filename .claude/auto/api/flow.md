@@ -24,7 +24,7 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `action` | `_deleteContext`, `_getContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `tryGuard` |
+| `action` | `_deleteContext`, `_getContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `startFromEffect`, `tryGuard` |
 | `actionCase` | `flashWindow`, `gainSelfEvidence`, `removeOpponentEvidenceTop` |
 | `contact` | `canCutIn`, `canDisguise`, `computeOrder`, `cutIn`, `disguise`, `judge`, `pass` |
 | `guard` | `canGuard`, `candidates`, `mustGuardCandidates` |
@@ -41,7 +41,7 @@
 | `canAction` | `(state: GameState, byUid: string): boolean` | canAction — アクション宣言の汎用可否 (対象種別を問わない) - 主体が active - 名乗りなし、または名乗り例外 (迅速 / 突撃 / 突撃[キャラ] / 突撃[事件] のいずれか) 注意: partner はキャラと違い 名乗り状態の概念がない (rules/06)。 / |
 | `canActionAgainstCase` | `(state: GameState, byUid: string, targetPlayer: Player): boolean` | canActionAgainstCase — 相手事件へのアクション可否。 - 主体が canAction (target='case') - 相手の証拠 ≥ 1 (rules/07: 証拠が1つもない事件は対象不可) / |
 | `canActionAgainstChar` | `(state: GameState, byUid: string, targetUid: string): boolean` | canActionAgainstChar — 相手キャラへのアクション可否。 - 主体が canAction (target='char') - 対象が targetExpander.candidates() に含まれる - 通常 (rules/… |
-| `canDeclaredAbility` | `(state: GameState, uid: string, abilId: string): boolean` | 宣言能力の【ターン①/②】判定。 - Phase 4 では maxPerTurn を引数で受けず、abilId が登録時に持つ前提で エンジン側はカウントの読み取りのみ提供する。 - 呼出元 (UI / カードリスナ) が `engine.read.char.declaredUseCount` を見て 上限超過なら canDeclaredAbility=false を返すよう拡張可能。… |
+| `canDeclaredAbility` | `(state: GameState, uid: string, abilId: string): boolean` | canDeclaredAbility — 宣言能力使用可能か判定する。 - 対象キャラが存在する - 名乗り状態でも OK (rules/24) - active でなくても OK (ただし sleep コストは支払不可なため別途 engine.cost.canPay 判定が必要) - 【ターン①/②】 ability.… |
 | `canHandUseCard` | `(state: GameState, p: Player, cardId: string): boolean` | canHandUseCard — 通常の手札使用が可能か (scene 上限 5 未満)。 scene が 5 でキャラ登場するときは canHandUseCardSwitch を使う (rules/20 §スイッチ)。 / |
 | `canHandUseCardSwitch` | `(state: GameState, p: Player, cardId: string): boolean` | canHandUseCardSwitch — 手札使用 + スイッチ (rules/20 §スイッチ) が可能か判定。 条件: 通常ゲート ∧ cardId がキャラ ∧ 現場が満員 (5 枚)。 リムーブ対象 removeUid の検証 (scene に存在するか) は呼出側 / mutate.scene.switchEnter 側。 / |
 | `canPartnerAbility` | `(state: GameState, p: Player, _abilId: string): boolean` | canPartnerAbility — パートナー能力使用可能か判定する。 - パートナーがアクティブ状態 - パートナーが partner-area にいる (file-area / mr-removed は不可) abilId 単位の細かい条件 (【ターン①】等) はカード固有 listener で判定する想定。 / |

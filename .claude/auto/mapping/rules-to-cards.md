@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `72aa31c2b7b9`
+> Source hash: `f5ca4ec7e959`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -27,7 +27,7 @@
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 18 | `ai/policies/heuristic.ts`, `cards/ct-p02/B02063.ts`, `cards/ct-p03/B03051.ts` ほか 15 件 |
 | [`13-keywords.md`](../../rules/13-keywords.md) | 319 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 316 件 |
 | [`14-refresh.md`](../../rules/14-refresh.md) | 289 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 286 件 |
-| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 937 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 934 件 |
+| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 939 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 936 件 |
 | [`15-contact-removal-observer-design.md`](../../rules/15-contact-removal-observer-design.md) | 4 | `cards/ct-d10/D10007.ts`, `cards/ct-d10/D10008.ts`, `cards/ct-p01/B01007.ts`, `cards/ct-p09/B09026.ts` |
 | [`15-workflow.md`](../../rules/15-workflow.md) | 2 | `cards/ct-d08/D08015.ts`, `cards/ct-d08/D08016.ts` |
 | [`16-card-set.md`](../../rules/16-card-set.md) | 56 | `cards/ct-d08/D08021.ts`, `cards/ct-p02/B02019.ts`, `cards/ct-p02/B02019P.ts` ほか 53 件 |
@@ -35,7 +35,7 @@
 | [`18-mr.md`](../../rules/18-mr.md) | 12 | `cards/ct-p05/B05045.ts`, `cards/ct-p05/B05066.ts`, `cards/ct-p07/B07079.ts` ほか 9 件 |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 248 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 245 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 220 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01008.ts` ほか 217 件 |
-| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 271 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 268 件 |
+| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 272 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 269 件 |
 | [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) | 235 | `cards/_shared/contactTargetMatches.ts`, `cards/ct-d01/D01009.ts`, `cards/ct-d01/D01010.ts` ほか 232 件 |
 | [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) | 37 | `cards/ct-d11/D11013.ts`, `cards/ct-d11/D11017.ts`, `cards/ct-d11/D11018.ts` ほか 34 件 |
 | [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) | 136 | `cards/_shared/partnerColorFilteredAssault.ts`, `cards/_shared/partnerColorKeyword.ts`, `cards/ct-d01/D01005.ts` ほか 133 件 |

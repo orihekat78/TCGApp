@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `8a3f18b9b86f`
+> Source hash: `b60ee52eee16`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -16,6 +16,7 @@ classDiagram
     +turn: «object×4»
     +players: «object×2»
     +pendingEffects: EffectStackEntry[]
+    +reservedEffects: ReservedEffectEntry[]
     +scratchTrace: «object×2»
     +turnState: «object×2»
     +refreshCount: «object×2»
@@ -44,7 +45,9 @@ classDiagram
     +eventUseBanned?: boolean
     +nextHintBanned?: boolean
     +hiramekiSuppressed?: boolean
+    +evidenceGainSuppressed?: boolean
     +shippuFiredThisTurn?: boolean
+    +shippuWaiveArmed?: boolean
     +cutinBanned?: boolean
     +disguiseBanned?: boolean
   }
