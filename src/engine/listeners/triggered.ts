@@ -120,6 +120,10 @@ export const TRIGGERED_HOOKS = [
   'cutin:used',
   'misread:performed',
   'evidence:removed',
+  // engine mega-wave W2 (2026-07-03): ability:declared — 宣言能力使用の第三者観測 (B03057)。
+  //   emit = flow/main/declared-ability (宣言成立時)。matcher = triggerCharMatches (payload.uid+player 既定) /
+  //   triggerPlayerIs。listener = 在場キャラ → 通常 in-play scan (handleHook)。既存カード未宣言 = 挙動不変 (wave-3 同論拠)。
+  'ability:declared',
   // engine additive wave-4 (2026-07-01): remove:exit — カードがリムーブエリアから離れたとき (離脱カード毎、
   // 原因非依存)。emit 元 = mutate.remove.emitExit 経由で全離脱経路網羅 (refresh / removeFromHere /
   // handAddFromRemove / removeAreaAllToDeckBottom / evidence.gainCard fromArea=remove。hooks.ts 参照)。
@@ -491,6 +495,11 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
   // セットしている場合 (turnState[証拠を失う側].hiramekiSuppressed)、optional/forced 両経路の
   // ヒラメキ発火をここで抑止する (action-scoped、action-end で清掃)。rules/10。
   if (state.turnState[p.player]?.hiramekiSuppressed) return;
+  // engine mega-wave W2 (2026-07-03, G09/r29): 継続 aura「相手は【ヒラメキ】を発動できない」(B05079)。
+  // aura 所有者 = ヒラメキ権利者 (p.player = 証拠を失う側) の **相手**。restrictsOpponent(s, banSide, ..) の
+  // 語義「banSide の盤面 aura が banSide の相手を制限」(cluster5 canCutIn と同流儀)。証拠リムーブ自体は
+  // 継続、ヒラメキ効果のみ不発 (rules/10 / 公式Q&A)。不在時 false = 挙動不変。
+  if (readChar.restrictsOpponent(state, p.player === 'self' ? 'opp' : 'self', 'hirameki')) return;
   const def = readDef.card(p.ev.cardId);
   if (!def) return;
   const card: CardLocation = {

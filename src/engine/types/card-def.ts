@@ -130,7 +130,33 @@ export type ContinuousModifier = {
   //   'disguiseTrigger'= 「相手のキャラの【変装時】は発動しない」(B04034)。
   //                      flow.contact.disguise が disguise:into emit を抑止 (変装 swap 自体は成立)。
   // ability.condition と併用し条件成立中のみ aura 有効。不在時 no-op (既存カードは未宣言 → restrictsOpponent=false)。
-  opponentRestrict?: ('cutin' | 'disguiseTrigger')[];
+  //   'refreshEvidence' = 「相手はリフレッシュによって証拠を得られない」(B05097、W2 2026-07-03)。
+  //                      mutate.deck.refresh が **リフレッシュ実行側 p** の盤面 aura を restrictsOpponent(s,p,..)
+  //                      で走査し、成立時は相手への penalty 証拠 push のみ抑止 (reshuffle/痕跡/remove:exit は不変、rules/14)。
+  //   'hirameki'       = 「相手は【ヒラメキ】を発動できない」(B05079、W2 2026-07-03)。
+  //                      listeners/triggered.handleEvidenceRemovedHook が発火前に aura gate (rules/10、
+  //                      証拠リムーブ自体は継続・ヒラメキ効果のみ不発 = 公式Q&A)。
+  opponentRestrict?: ('cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki')[];
+  // engine mega-wave W2 (2026-07-03, P07/r24): 継続アクション制限 token 群 (bearer 自身に係る)。
+  //   read.char.selfContinuousFlag(s, uid, token) が bearer の continuous ability を walk
+  //   (condition honor、restrictsOpponent と同流儀) して boolean を返す。不在時 false = 挙動不変。
+  //   untargetableByAction    = 「相手の現場にいるキャラはこのキャラを指定してアクションできない」(B03057
+  //                             「スリープ状態の場合」等は ability.condition で gate)。
+  //                             target-expander.candidates() の負 filter で除外 (全消費者単一配線)。
+  //   caseActionBan           = 「このキャラはアクション[事件]できない」(B05051)。canActionAgainstCase gate。
+  //   selfActionBan           = 「このキャラはアクションできない」(B07005)。_canAction gate。
+  //   selfCutinBanInContact   = 「このキャラのコンタクト中、自分は【カットイン】を使用できない」(B07005)。
+  //                             canCutIn が p 側コンタクト参加キャラの flag を gate。
+  untargetableByAction?: boolean;
+  caseActionBan?: boolean;
+  selfActionBan?: boolean;
+  selfCutinBanInContact?: boolean;
+  // engine mega-wave W2 (2026-07-03, P09/r26): 「手札から使用する場合、このキャラは事件カードの色を
+  //   無視できる」(B03126 犯人。ネクストヒントも「手札から使用」に含む — 印字括弧書き)。
+  //   hand-use-card.handUseColorIgnoreAllowed (単一ソース helper) が hand 在中カード自身の def を walk。
+  //   色 subset 判定が失敗した時のみ委譲 = 通常カードはゼロコスト。効果登場/カットイン/ヒラメキは元々
+  //   色制限外 (rules/20) のため対象外。
+  colorIgnoreOnHandUse?: boolean;
   // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura (rules/15, 17 §【自分ターン中】, 24 §常時有効型)。
   // 「【自分ターン中】自分の現場にいる [auraFilter] のキャラを AP±N」型。bearer の **同一 side の現場**の各キャラに対し、
   //   auraFilter (matchOneFilter で 有効値=turnEffects 反映レベル を判定) が一致すれば apDeltaAura/lpDeltaAura を加算する。

@@ -78,6 +78,10 @@ function _canAction(state: GameState, byUid: string, targetKind: ActionTargetKin
   // char
   const c = state.players[actor.player].scene.find(c => c.uid === byUid)!;
   if (c.state !== 'active') return false;
+  // engine mega-wave W2 (2026-07-03, P07/r24): 継続 selfActionBan「このキャラはアクションできない」
+  // (B07005、condition は ability.condition で gate)。宣言時 gate のみ — 開始済みアクションは条件を
+  // 失っても継続 (rules/22/24、state-machine は再評価しない)。不在時 false = 挙動不変。
+  if (readChar.selfContinuousFlag(state, byUid, 'selfActionBan')) return false;
   if (!c.isNamed) return true;
   // 名乗り中: 例外キーワード判定
   return namedExceptionAllowed(state, byUid, targetKind);
@@ -118,6 +122,9 @@ export function canActionAgainstCase(state: GameState, byUid: string, targetPlay
   // 自分の事件は対象にできない (rules/07)
   if (actor.player === targetPlayer) return false;
   if (!_canAction(state, byUid, 'case')) return false;
+  // engine mega-wave W2 (2026-07-03, P07/r24): 継続 caseActionBan「このキャラはアクション[事件]できない」
+  // (B05051)。partner actor は def walk 対象外 (selfContinuousFlag は scene/PA-MR uid のみ true になりうる)。
+  if (readChar.selfContinuousFlag(state, byUid, 'caseActionBan')) return false;
   if (state.players[targetPlayer].evidence.length < 1) return false;
   return true;
 }

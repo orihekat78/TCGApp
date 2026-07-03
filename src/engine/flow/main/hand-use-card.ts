@@ -59,13 +59,35 @@ export function handUseCharRestrictAllows(state: GameState, p: Player, cardId: s
  *   - 2色カードは両方とも事件が持つ必要あり
  *   - CardDef が未登録なら true (Phase 5 で TSV 登録時に強制される設計)
  */
+/**
+ * engine mega-wave W2 (2026-07-03, P09/r26): 「手札から使用する場合、このキャラは事件カードの色を
+ * 無視できる」(B03126 犯人、ネクストヒントも「手札から使用」に含む — 印字括弧書き) の単一ソース helper。
+ * hand 在中カード**自身**の def の continuous ability を walk (handUseCharRestrictAllows と同流儀、
+ * condition honor — 【事件YAIBA】等は case 直読ゆえ hand 在中でも評価可)。
+ * 呼出規約: colorAllowed の色 subset 判定が**失敗した時のみ**委譲 → 通常カードはゼロコスト。
+ * consumer: 本ファイル colorAllowed / next-hint.ts colorAllowed / UI flows.ts toCandidate / handUseReason.ts。
+ */
+export function handUseColorIgnoreAllowed(state: GameState, p: Player, cardId: string): boolean {
+  const d = readDef.card(cardId);
+  if (!d) return false;
+  const ctx = { source: { player: p, area: 'hand', cardId }, bindings: {} } as EffectCtx;
+  for (const ab of d.abilities ?? []) {
+    if (ab.type !== 'continuous') continue;
+    if (!ab.continuousModifier?.colorIgnoreOnHandUse) continue;
+    if (ab.condition && !evalCond(state, ab.condition, ctx)) continue;
+    return true;
+  }
+  return false;
+}
+
 function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
   const d = readDef.card(cardId);
   if (!d) return true; // 未登録は寛容
   const caseColors = state.players[p].case.colors;
   if (d.colors.length === 0) return true; // 色なしカードは制限なし
   for (const c of d.colors) {
-    if (!caseColors.includes(c)) return false;
+    // subset 失敗時のみ bypass helper に委譲 (W2 P09/r26。通常カードはゼロコスト、rules/20)
+    if (!caseColors.includes(c)) return handUseColorIgnoreAllowed(state, p, cardId);
   }
   return true;
 }

@@ -6,6 +6,9 @@ import type { GameState, CardId, RefreshResult } from '@/engine/types';
 import { log as logMut } from './log.js';
 import { gameResult as gameResultMut } from './gameResult.js';
 import { remove as removeMut } from './remove.js'; // engine additive wave-4: remove:exit emit (リフレッシュで remove→deck)
+// engine mega-wave W2 (2026-07-03, P08/r25): refreshEvidence 抑止 aura の read。read→mutate 片方向 import
+// (mutate/partner.ts→read/game・mutate/scene.ts→read/def と同流儀、cycle なし)。
+import { char as readChar } from '../read/char.js';
 
 type Player = 'self' | 'opp';
 type OrderMode = 'given' | 'reverse';
@@ -129,12 +132,19 @@ function refresh(s: GameState, p: Player): RefreshResult {
   s.refreshCount[p] = (s.refreshCount[p] ?? 0) + 1;
 
   // 相手 evidence +1 (rules/14)
+  // engine mega-wave W2 (2026-07-03, P08/r25): refreshEvidence 抑止 aura —
+  // 「相手はリフレッシュによって証拠を得られない」(B05097)。aura 所有者 = **リフレッシュ実行側 p**
+  // (自分がリフレッシュした時に相手が得る penalty を消す = rules/14 の方向)。restrictsOpponent(s, p, ..)
+  // の語義「p の盤面 aura が p の相手を制限」と一致。抑止は penalty push のみ — reshuffle / 痕跡 /
+  // remove:exit / refreshCount は不変 (公式Q&A: 証拠獲得のみを消す、リフレッシュ自体は成立)。
   const opp: Player = p === 'self' ? 'opp' : 'self';
-  s.players[opp].evidence.push({
-    cardId: 'penalty-card',
-    faceUp: false,
-    origin: { turn: s.turn.number, via: 'refresh-penalty' },
-  });
+  if (!readChar.restrictsOpponent(s, p, 'refreshEvidence')) {
+    s.players[opp].evidence.push({
+      cardId: 'penalty-card',
+      faceUp: false,
+      origin: { turn: s.turn.number, via: 'refresh-penalty' },
+    });
+  }
 
   // 相手 scratchTrace = '発見済' (rules/13, 26)
   s.scratchTrace[opp] = '発見済';

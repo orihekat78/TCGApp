@@ -226,4 +226,18 @@ export function useDeclaredAbility(
     // costRemovedMatches cond (conditional STABLE `if` の runtime 再評価) が除去カード snapshot を読むため。
     resolveCtx.costPaid ? { costPaid: resolveCtx.costPaid } : undefined,
   );
+  // engine mega-wave W2 (2026-07-03, hook): ability:declared — 宣言能力使用の第三者観測 hook
+  // (B03057「自分の現場にいる〚特徴[探偵]〛のキャラが【宣言】能力を使用したとき」)。
+  // ★emit は宣言者自身の effect queue の **後** (W2 混成 review sonnet-lens blocker 対応):
+  // handleHook が queue する observer effect は pendingEffects の挿入順 tiebreak で宣言効果の後に解決
+  // される = B03057 公式Q&A「【宣言】能力の効果を先に解決します」(rules/25 / B08020 と同旨) を担保。
+  // (effect:declared の declaredBatch gate と同じ意味論を挿入順で実現。degenerate な effect 無し宣言は
+  // 上の early-return で emit されないが、該当カードは現プール 0。)
+  // payload.uid/player は triggerCharMatches の既定経路に一致。既存カードは本 hook 未宣言 = 挙動不変。
+  event.emit(
+    state,
+    'ability:declared',
+    { uid, cardId: found.cardId, abilityId: abilId, player: found.player },
+    { player: found.player, uid, cardId: found.cardId },
+  );
 }

@@ -48,6 +48,12 @@ export type HookName =
   //   source : { player, cardId, bindings(=contact bindings、$contact.byUid 用) }
   // 既存 effect:declared(optional=cutin 自効果ゲート) とは別 hook = 自効果と第三者観測を分離。
   | 'cutin:used'
+  // engine mega-wave W2 (2026-07-03): 宣言能力使用の第三者観測 hook (B03057「〚特徴[探偵]〛のキャラが
+  //   【宣言】能力を使用したとき」)。emit = flow/main/declared-ability.useDeclaredAbility (宣言成立時 =
+  //   コスト支払後・effect queue 前)。payload: { uid(=宣言キャラ), cardId, abilityId, player(=宣言側) }。
+  //   matcher = triggerCharMatches (payload.uid + player 既定経路) / triggerPlayerIs。
+  //   既存 effect:declared(kind:'declaredAbility') は cutin 自効果ゲート併用のため観測に不適 → 分離 (cutin:used と同論拠)。
+  | 'ability:declared'
   // キャラ移動関連 (rules: 09-cutin-disguise.md, 18-mr.md)
   | 'enter'
   | 'disguise:into'

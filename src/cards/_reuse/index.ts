@@ -1084,6 +1084,9 @@ import { B03084 } from '../ct-p03/B03084.js';
 import { B03084P } from '../ct-p03/B03084P.js';
 import { B05045 } from '../ct-p05/B05045.js';
 import { B05045P } from '../ct-p05/B05045P.js';
+import { B05079 } from '../ct-p05/B05079.js';
+import { B03057 } from '../ct-p03/B03057.js';
+import { B03057P } from '../ct-p03/B03057P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1401,4 +1404,6 @@ export const REUSE_CARDS: CardDef[] = [
   B09086, B04090,
   // engine mega-wave W1 — 5 primitive exemplar (PR136/PR142 deckOwner / B08036 setCard-remove-src / B05049/P revealHandToDeckTop / B03084/P sceneToEvidence+evidenceToDeckBottom / B05045/P handToFileBottom)
   PR136, PR142, B08036, B05049, B05049P, B03084, B03084P, B05045, B05045P,
+  // engine mega-wave W2 — restriction/observer exemplar (B05079 hirameki-deny / B03057+P untargetable+ability:declared)
+  B05079, B03057, B03057P,
 ];

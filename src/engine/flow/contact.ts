@@ -107,6 +107,11 @@ export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId:
   // resetTurnFlags (turn:start) が清掃。side-level flag ゆえ発動キャラ離場後も有効 (公式 Q&A B07002)。
   // 既存カードは本 flag 未使用 → 回帰0。
   if (state.turnState[p].cutinBanned) return false;
+  // engine mega-wave W2 (2026-07-03, P07/r24): selfCutinBanInContact — p 側のコンタクト参加キャラ自身が
+  // 「このキャラのコンタクト中、自分は【カットイン】を使用できない」継続 aura を持つ場合、p は cutin 不可
+  // (B07005)。参加キャラは contactCharUidOf(ax, p)。不在時 false = 挙動不変。
+  const pContactUid = contactCharUidOf(ax, p);
+  if (pContactUid && readChar.selfContinuousFlag(state, pContactUid, 'selfCutinBanInContact')) return false;
   return true;
 }
 

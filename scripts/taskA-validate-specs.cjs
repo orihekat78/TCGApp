@@ -55,6 +55,7 @@ const HOOKS = new Set([
   'setcard:enter', // engine additive (2026-06-29, B02018/B06046)
   // engine additive wave-3 (2026-06-30): observer-hook 群 (B02080/B09086/B05015/B09016/B02062)
   'cutin:used', 'misread:performed', 'evidence:removed',
+  'ability:declared', // engine mega-wave W2 (2026-07-03): 宣言能力使用の第三者観測 (B03057)
   'remove:exit', // engine additive wave-4 (2026-07-01) — リムーブエリア離脱 observer (B05087/B05088)
 ]);
 

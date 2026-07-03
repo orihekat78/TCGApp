@@ -10,6 +10,7 @@ import { useSceneSwitchPickerStore } from '../useSceneSwitchPickerStore.js';
 import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { handUseColorIgnoreAllowed } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Effect } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
@@ -142,8 +143,10 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
     // イベント使用不可 (B09034 §M3): ban 中の event は候補から除外 (engine runNextHint の throw と整合)。
     //   rules/25 公式 Q&A: ネクストヒントの event 使用も不可。キャラは制限外。
     if (d.kind === 'event' && state.turnState[p].eventUseBanned) return null;
-    // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)
-    if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))) return null;
+    // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)。
+    // W2 P09/r26: colorIgnoreOnHandUse bypass (B03126) — engine (next-hint colorAllowed) と鏡像。
+    if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))
+      && !handUseColorIgnoreAllowed(state, p, cardId)) return null;
     // レベル ≤ postPopCount (rules/12)
     if (d.level !== undefined && d.level > postPopCount) return null;
     return {

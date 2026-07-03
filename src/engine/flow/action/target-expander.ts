@@ -120,7 +120,19 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
     }
   }
 
-  return [...baseList, ...extra];
+  // engine mega-wave W2 (2026-07-03, P07/r24): untargetableByAction — 対象キャラ自身の継続 aura
+  // 「相手の現場にいるキャラはこのキャラを指定してアクションできない」(B03057「スリープ状態の場合」等は
+  // ability.condition で gate)。最終集合への負 filter = base/expander/pre-target 全経路を単一配線で除外
+  // (rules/07)。hot-path guard (W2 review opus-lens nit): 候補側 (opp) の現場に token を **印字 def 上**
+  // 持つキャラが 1 枚も居なければ per-candidate walk (evalCond 含む) を丸ごと skip — AI move-enum /
+  // smoke の ~99% no-token 経路を素通し (静的 def 走査のみ、evalCond なし = 安価)。
+  const merged = [...baseList, ...extra];
+  const anyUntargetableDef = state.players[opp].scene.some(c => {
+    const d = readDef.card(c.cardId);
+    return d?.abilities?.some(a => a.type === 'continuous' && a.continuousModifier?.untargetableByAction === true) ?? false;
+  });
+  if (!anyUntargetableDef) return merged;
+  return merged.filter(c => !readChar.selfContinuousFlag(state, c.uid, 'untargetableByAction'));
 }
 
 function applyPreTargetExpansion(

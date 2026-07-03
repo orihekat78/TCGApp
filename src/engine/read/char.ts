@@ -33,6 +33,36 @@ function scopeActiveInPartnerArea(scope: AbilityScope | undefined): boolean {
   return scope === 'on-partner-area' || scope === 'always';
 }
 
+/**
+ * engine mega-wave W2 (2026-07-03, P07/r24): bearer 自身の continuous boolean token reader。
+ * continuousDelta の boolean 版 — bearer (現場 or PA-MR) の continuous ability を walk し、
+ * continuousModifier[token]===true かつ ability.condition 成立 (rules/24 常時有効型: 条件成立中のみ) で true。
+ * 不在時 false = 挙動不変 (既存カードは未宣言)。consumer: target-expander.candidates (untargetableByAction) /
+ * _canAction (selfActionBan) / canActionAgainstCase (caseActionBan) / canCutIn (selfCutinBanInContact)。
+ */
+function selfContinuousFlag(
+  s: GameState,
+  uid: string,
+  token: 'untargetableByAction' | 'caseActionBan' | 'selfActionBan' | 'selfCutinBanInContact',
+): boolean {
+  const char = scene.byUid(s, uid);
+  if (!char) return false;
+  const d = def.card(char.cardId);
+  if (!d) return false;
+  const owner = ownerSideOf(s, uid);
+  if (!owner) return false;
+  const inPA = isPartnerMrUid(uid);
+  const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+  for (const ability of d.abilities ?? []) {
+    if (ability.type !== 'continuous') continue;
+    if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+    if (ability.continuousModifier?.[token] !== true) continue;
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    return true;
+  }
+  return false;
+}
+
 function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta' | 'lvlDelta'): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
@@ -360,7 +390,7 @@ function hasKeyword(s: GameState, uid: string, kw: string): boolean {
  * 不在時 false (既存カードは opponentRestrict 未宣言 → no-op、smoke baseline 不変)。
  * @param ownerSide aura を所有する側 (= 制限される側の "相手")。canCutIn/disguise 側は other = opp-of-actor を渡す。
  */
-function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger'): boolean {
+function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki'): boolean {
   // bearer = 現場キャラ + PA 常駐 MR (rules/18 PA でも有効)。PA-MR は scope on-partner-area/always のみ。
   const bearers: Array<{ char: { cardId: string; uid: string }; inPA: boolean }> =
     s.players[ownerSide].scene.map(c => ({ char: c, inPA: false }));
@@ -471,6 +501,7 @@ export const char = {
   keywords,
   hasKeyword,
   restrictsOpponent,
+  selfContinuousFlag,
   hasTextAbility,
   state,
   isNamed,

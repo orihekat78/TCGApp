@@ -11,6 +11,7 @@
 
 import type { GameState } from '@/engine/types/game-state.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { handUseColorIgnoreAllowed } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像
 
 type Player = 'self' | 'opp';
 
@@ -49,9 +50,9 @@ export function getHandUseDisabledReason(
   const d = readDef.card(cardId);
   if (!d) return null; // 未登録は寛容 (使用可能扱い)
 
-  // 4. 色制限
+  // 4. 色制限 (W2 P09/r26: colorIgnoreOnHandUse bypass — engine colorAllowed と鏡像。B03126)
   const caseColors = state.players[player].case.colors;
-  if (d.colors.length > 0) {
+  if (d.colors.length > 0 && !handUseColorIgnoreAllowed(state, player, cardId)) {
     for (const c of d.colors) {
       if (!caseColors.includes(c)) {
         return `カードの色 (${d.colors.join('/')}) が事件の色 (${caseColors.join('/')}) と一致しません`;
