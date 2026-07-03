@@ -177,7 +177,9 @@ function validateSpec(spec) {
       if (!ab.continuousModifier) errs.push(`${c}: continuous without continuousModifier`);
       else {
         // pure-JSON continuousModifier fields (card-def.ts). closure-only: grantKeywords / customSelectorPatch → needsManual.
-        const JSON_CONT_KEYS = ['apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp'];
+        const JSON_CONT_KEYS = ['apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp',
+          // pure-JSON case-continuous overrides (P05/E3 P11/P53/P10): TargetFilter/number/string[]/boolean、closure なし
+          'handUseRestrictFilter', 'sceneCapOverride', 'partnerColorsOverride', 'cannotSolveCase', 'partnerSolveOverride'];
         for (const k of Object.keys(ab.continuousModifier)) {
           if (!JSON_CONT_KEYS.includes(k)) errs.push(`${c}: continuousModifier.${k} not JSON-expressible (grantKeywords/customSelectorPatch need closure → needsManual)`);
         }

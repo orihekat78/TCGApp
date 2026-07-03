@@ -182,6 +182,14 @@ export type ContinuousModifier = {
   //   通常勝利ルート (【事件解決】) を封鎖し alt-lose (opponentLoses) のみ残す設計 (E3 分解 spec P53)。
   //   不在時 false (既存 case は未宣言 → baseline 不変)。sceneCapOverride と同流儀。
   cannotSolveCase?: boolean;
+  // engine E3 P10 (2026-07-03): 自 case card の継続能力「自分の【黒】のパートナーの【事件解決】能力を
+  //   〚【解決編】【証拠隠滅】【スリープ】証拠を事件レベルの数だけリムーブ：相手はゲームに敗北する〛に書き換える」
+  //   (B03135/B05118/B06105)。partnerColor 黒 gate は ability.condition ({kind:'partnerColor',color:'黒'}) で表現。
+  //   read.game.partnerSolveOverride が cannotSolveCase と同流儀で走査。有効時、mutate.partner.solveCase は
+  //   通常勝利 (reason:'evidence') の代わりに 証拠を requiredEvidence(=事件レベル) 数リムーブ + alt-lose 決着へ差し替える。
+  //   前提条件 (解決編/active partner/evidence>=required/!assisted) は通常 solve と同一 → canWin/AI/UI 列挙は不変。
+  //   【証拠隠滅】keyword は display-only (参照 consumer 0) → engine repr なし。不在時 no-op (baseline 不変)。
+  partnerSolveOverride?: boolean;
 };
 
 // ---------- AbilityDef ----------

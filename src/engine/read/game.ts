@@ -24,6 +24,28 @@ function cannotSolveCase(s: GameState, p: 'self' | 'opp'): boolean {
   return false;
 }
 
+// engine E3 P10 (2026-07-03): 「自分の【黒】のパートナーの【事件解決】を書き換える」(B03135/B05118/B06105)。
+// 自 case card の継続能力 continuousModifier.partnerSolveOverride を走査 (type==='continuous' + ability.condition honor)。
+// partnerColor 黒 gate は ability.condition ({kind:'partnerColor',color:'黒'}) で表現 → evalCond が honor (cannotSolveCase 同型)。
+// ※ partnerColor eval は partnerColorsOverride (別 field) を読むが、その scan は partnerColorsOverride 宣言 ability のみ
+//    走査 (cond/eval.ts) → partnerSolveOverride とは disjoint、相互再帰なし。両 field 併存 case は黒 gate を override 色で
+//    評価 (無害)。現 3 card (B03135/B05118/B06105) は黒単色・override なしで非該当。
+// 有効時、mutate.partner.solveCase が 証拠リムーブ + alt-lose 決着へ差し替わる。不在時 false (baseline 不変)。
+function partnerSolveOverride(s: GameState, p: 'self' | 'opp'): boolean {
+  const caseId = s.players[p].case.cardId;
+  if (!caseId) return false;
+  const caseDef = def.card(caseId);
+  if (!caseDef) return false;
+  const ctx = { source: { player: p, area: 'case', cardId: caseId }, bindings: {} } as unknown as EffectCtx;
+  for (const ab of caseDef.abilities ?? []) {
+    if (ab.type !== 'continuous') continue;
+    if (ab.continuousModifier?.partnerSolveOverride !== true) continue;
+    if (ab.condition && !evalCond(s, ab.condition, ctx)) continue;
+    return true;
+  }
+  return false;
+}
+
 // 勝利可能かどうか:
 // - 解決編であること
 // - 必要証拠数を満たしていること
@@ -64,6 +86,7 @@ function result(s: GameState): GameResult | null {
 export const game = {
   canWin,
   cannotSolveCase,
+  partnerSolveOverride,
   evidenceShortfall,
   refreshCount,
   result,

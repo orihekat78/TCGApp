@@ -6,6 +6,9 @@ import type { GameState } from '@/engine/types';
 import { file as fileMutate } from './file.js';
 import { caseOp } from './case.js';
 import { remove as removeMut } from './remove.js'; // engine wave-12: remove:exit emit (remove→PA 離脱)
+import { evidence as evidenceMut } from './evidence.js'; // engine E3 P10: 【証拠隠滅】override の証拠リムーブ
+import { gameResult as gameResultMut } from './gameResult.js'; // engine E3 P10: alt-lose 決着 (無条件 set、旧 evidence 直代入と対称)
+import { game as readGame } from '../read/game.js'; // engine E3 P10: partnerSolveOverride 走査 (read→mutate 片方向、cycle なし)
 
 type Player = 'self' | 'opp';
 type PartnerState = 'active' | 'sleep' | 'stun';
@@ -75,9 +78,24 @@ function returnFromFile(s: GameState, p: Player): void {
 
 /**
  * 事件解決: パートナーをスリープ化してゲーム勝利 (rules/01)
+ *
+ * engine E3 P10 (2026-07-03): 自 case card が【事件解決】を書き換えている場合 (partnerSolveOverride、
+ * B03135/B05118/B06105「相手はゲームに敗北する」) は、通常勝利 (reason:'evidence') の代わりに
+ * 〚証拠を事件レベル(=requiredEvidence)数リムーブ〛(=【証拠隠滅】cost) を行い alt-lose で決着させる。
+ * 前提条件 (解決編/active partner/evidence>=required) は canWin で既に担保済 (列挙は通常 solve と同一)。
+ * 全 caller (UI dispatch / AI policy / effect atomPartnerSolveCase) が引数不変ゆえ自動で分岐に乗る。
  */
 function solveCase(s: GameState, p: Player): void {
   s.players[p].partner.state = 'sleep';
+  if (readGame.partnerSolveOverride(s, p)) {
+    // 【証拠隠滅】: 証拠を事件レベル(=requiredEvidence)数だけ最上部から順にリムーブ (rules/10/21)。
+    // removeTop は evidence:removed observer を emit するが event.emit は pendingEffects へ push のみ
+    // (inline 解決なし) ゆえ勝利前に横取り不可。terminal win なので cause-independent observer を意図的に再利用。
+    const n = s.players[p].case.requiredEvidence;
+    for (let i = 0; i < n; i++) evidenceMut.removeTop(s, p);
+    gameResultMut.set(s, p, 'alt-lose'); // 相手はゲームに敗北する (winner = 効果所有者 p、旧 evidence 直代入と同じ無条件 set)
+    return;
+  }
   s.gameResult = { winner: p, reason: 'evidence' };
 }
 
