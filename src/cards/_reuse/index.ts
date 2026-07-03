@@ -1066,6 +1066,8 @@ import { B03051 } from '../ct-p03/B03051.js';
 import { B03033 } from '../ct-p03/B03033.js';
 import { B03033P } from '../ct-p03/B03033P.js';
 import { B03118 } from '../ct-p03/B03118.js';
+import { B04075 } from '../ct-p04/B04075.js';
+import { B04092 } from '../ct-p04/B04092.js';
 import { B08086 } from '../ct-p08/B08086.js';
 
 import { B06006 } from '../ct-p06/B06006.js';
@@ -1377,4 +1379,9 @@ export const REUSE_CARDS: CardDef[] = [
   B08086,
   // CARD PHASE #2 B06006 江戸川コナン
   B06006,
+  // engine wave-18 exemplar (2026-07-03, inContact TargetQuery + contact emit enrichment) — contact-participant pick 初 consumer:
+  //   B04075 白鳥任三郎 (【ターン1】相手 cutin/変装 → コンタクト中キャラ1枚 AP-1000、multi-hook + triggerPlayerIs opp + inContact pick) /
+  //   B04092 キャンティ (自分の他キャラ contact:start → optional self-sleep → コンタクト中キャラ1枚 AP+2000、or payloadKey + inContact pick)。
+  //   parked inContact 軸 land + disguise:into/contact:start emit に player/contactBindings 追加。残 clone (PR029/PR033/B04093) は card-phase。
+  B04075, B04092,
 ];

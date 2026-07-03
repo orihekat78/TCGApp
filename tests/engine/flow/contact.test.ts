@@ -156,8 +156,9 @@ describe('engine.flow.contact.disguise', () => {
     expect(out.players.self.hand).not.toContain('DisCard');
   });
 
-  it('disguise emits disguise:into with { uid, fromCardId, newCardId }', () => {
-    const captured: { uid: string; fromCardId: string; newCardId: string }[] = [];
+  it('disguise emits disguise:into with { uid, fromCardId, newCardId, player }', () => {
+    // engine additive wave-18 (2026-07-03): payload に player を追加 (白鳥 triggerPlayerIs 用、cutin:used と同型)。
+    const captured: { uid: string; fromCardId: string; newCardId: string; player: string }[] = [];
     event.on('disguise:into', (_s, payload) => {
       captured.push(payload as typeof captured[number]);
     });
@@ -166,7 +167,7 @@ describe('engine.flow.contact.disguise', () => {
       disguise(draft, ax, 'self', 'DisCard');
     });
     expect(captured.length).toBe(1);
-    expect(captured[0]).toEqual({ uid: selfUid, fromCardId: 'Atk', newCardId: 'DisCard' });
+    expect(captured[0]).toEqual({ uid: selfUid, fromCardId: 'Atk', newCardId: 'DisCard', player: 'self' });
   });
 
   it('canDisguise false if cardId not in hand', () => {

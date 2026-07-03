@@ -270,6 +270,17 @@ function matchesQueryForChar(
   // excludeSelf
   if (query.excludeSelf && cand.kind === 'char' && cand.uid === ctx.source.uid) return false;
 
+  // engine additive wave-18 (2026-07-03): inContact — pick を現コンタクト参加者に限定 (B04075/PR029/B04092)。
+  // 参加者 = ctx.contact.{byUid,targetUid,guardUid}。ctx.contact は resolve 時のみ populate (BUG-104) →
+  // コンタクト外の誤用や non-char 候補は不一致 = drop (安全側)。excludeSelf と同じ ctx 依存 char 述語サイト。
+  if (query.inContact) {
+    if (cand.kind !== 'char') return false;
+    const ct = ctx.contact;
+    if (!ct) return false;
+    const uids = [ct.byUid, ct.targetUid, ct.guardUid];
+    if (!uids.includes(cand.uid)) return false;
+  }
+
   // state filter
   if (query.state && query.state.length > 0) {
     if (!query.state.includes(c.state)) return false;

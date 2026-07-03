@@ -237,6 +237,13 @@ export type TargetQuery = {
   // 「自分の表向きの証拠を N つまで選び、裏向きにする」(evidenceFlipDown pick-form, B05013/B06017/B06019) 用。
   // 既存カードは未使用 (= no-op、smoke baseline 不変)。candidates.ts evidence case が honor。
   faceUp?: boolean;
+  // engine additive wave-18 (2026-07-03): pick を現コンタクトの参加者に限定する。
+  // 「コンタクト中のキャラを1枚まで選び、AP±N」(B04075/PR029 白鳥任三郎, B04092 キャンティ) 用。
+  // 参加者 = ctx.contact.{byUid,targetUid,guardUid}。excludeSelf と同型の ctx 依存 char 述語のため
+  // matchesQueryForChar (ctx 有) で honor する (matchOneFilter は ctx 無し = filter 側には置けない)。
+  // ctx.contact は resolve 時 (entryToCtx, BUG-104) にのみ populate される → pick 実行は必ずコンタクト中。
+  // ctx.contact 不在時 (コンタクト外の誤用) は全 char 不一致 = 候補0 (安全側)。既存カード未使用 = baseline 不変。
+  inContact?: boolean;
 };
 
 export type TargetingRef =

@@ -51,6 +51,11 @@ declare global {
   // optionalResolve 再開時に再 walk すべき optional 効果の holder (engine 内のみ、store へは drain しない)。
   // eslint-disable-next-line no-var
   var __pendingEffectOptionalResume: Effect | null | undefined;
+  // engine wave-18 (2026-07-03): optional 再開 ctx の bindings 復元 (BUG-114 の choice-bindings 対称)。
+  // optional{...} 内効果が $contact.* / ctx.contact (inContact pick, B04092 キャンティ) を参照する場合、
+  // surface 時の ctx.bindings を保持しないと resume ctx で contact が失われ pick 候補0になる。
+  // eslint-disable-next-line no-var
+  var __pendingEffectOptionalBindings: Record<string, unknown> | null | undefined;
 }
 
 /**
@@ -317,4 +322,17 @@ export function _takePendingOptionalResume(): Effect | null {
 /** holder をクリア (テスト用 / セッション初期化用)。 */
 export function _clearPendingOptionalResume(): void {
   (globalThis as { __pendingEffectOptionalResume?: Effect | null }).__pendingEffectOptionalResume = null;
+  (globalThis as { __pendingEffectOptionalBindings?: Record<string, unknown> | null }).__pendingEffectOptionalBindings = null;
+}
+
+// --- optional 再開 ctx の bindings 復元 (engine wave-18: BUG-114 choice-bindings の対称、$contact.* / ctx.contact 保持) ---
+export function setPendingOptionalBindings(b: Record<string, unknown>): void {
+  (globalThis as { __pendingEffectOptionalBindings?: Record<string, unknown> | null }).__pendingEffectOptionalBindings = b;
+}
+/** optionalResolve 時に bindings を取り出してクリア (applyOptionalAndContinuation が resume ctx へ復元)。 */
+export function _takePendingOptionalBindings(): Record<string, unknown> | null {
+  const g = globalThis as { __pendingEffectOptionalBindings?: Record<string, unknown> | null };
+  const v = g.__pendingEffectOptionalBindings ?? null;
+  g.__pendingEffectOptionalBindings = null;
+  return v;
 }

@@ -60,6 +60,26 @@ function contactCharUidOf(ax: ActionContext, p: Player): string | undefined {
 }
 
 /**
+ * engine additive wave-18 (2026-07-03): contact bindings を組む共通 helper。
+ *
+ * source.bindings.contact に載せると triggered listener が entry.bindings → entryToCtx →
+ * ctx.contact と渡し、observer effect の inContact pick / `$contact.*` 解決を可能にする
+ * (cutin:used が先例、BUG-104)。p 視点で byUid=自コンタクトキャラ / targetUid=相手コンタクトキャラ。
+ * contact:start では p=ax.byPlayer で呼ぶと byUid=攻撃側 aUid / targetUid=防御側 bUid の客観 contact になる。
+ */
+export function buildContactBindings(ax: ActionContext, p: Player): Record<string, unknown[]> {
+  return {
+    contact: [{
+      byUid: contactCharUidOf(ax, p) ?? ax.byUid,
+      byPlayer: p,
+      targetUid: contactCharUidOf(ax, p === 'self' ? 'opp' : 'self'),
+      guardUid: ax.guardUid,
+      attackerSide: ax.byPlayer,
+    }],
+  };
+}
+
+/**
  * canCutIn — カットイン可否
  *
  * - cardId が p の手札にある
@@ -123,18 +143,8 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   // 2026-05-27 (Option C follow-up): source.bindings.contact に当該 ax 情報を詰めて emit。
   // triggered listener が event.queue に伝達し、entry.bindings → entryToCtx → ctx.bindings
   // と渡り、atom-handler の resolveBindRef が `$contact.byUid` を解決できる。
-  const contactBindings: Record<string, unknown[]> = {
-    contact: [{
-      // BUG-104: カットインした側 (p) のコンタクト中キャラ。攻撃側 cutin (p===byPlayer) では ax.byUid 不変、
-      // 防御側 cutin (D11013 等 turn 制限なし) では p 自身のキャラを指す ($contact.byUid の AP+X 対象が正しくなる)。
-      byUid: contactCharUidOf(ax, p) ?? ax.byUid,
-      byPlayer: p,
-      // p から見たコンタクト相手 (D11013 の警察判定 / ctx.contact.targetUid 用)。ガード時はガードキャラ。
-      targetUid: contactCharUidOf(ax, p === 'self' ? 'opp' : 'self'),
-      guardUid: ax.guardUid,
-      attackerSide: ax.byPlayer, // ctx.contact 用 (実際の攻撃側)
-    }],
-  };
+  // BUG-104: p 視点の contact bindings (攻撃側/防御側 cutin で $contact.byUid が正しく解決)。
+  const contactBindings = buildContactBindings(ax, p);
   event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, {
     player: p, cardId, bindings: contactBindings,
   });
@@ -230,11 +240,16 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
   // 不在時は通常 emit (no-op、既存挙動不変)。
   const disguiseOther: Player = p === 'self' ? 'opp' : 'self';
   if (!readChar.restrictsOpponent(state, disguiseOther, 'disguiseTrigger')) {
+    // engine additive wave-18 (2026-07-03): payload に player、source に contact bindings を付与。
+    // 白鳥任三郎 (B04075/PR029) の「相手が【変装】を使用したとき」= matcherCondition triggerPlayerIs で
+    // side 判定するため payload.player 必須 (cutin:used は既に持つ)。source.bindings.contact は observer
+    // effect の inContact pick ($contact 参加者) 解決用。既存 disguise:into consumer (selfOnly の【変装時】系
+    // B02038/B02044 等) は player/bindings を読まない → 挙動不変 (baseline smoke 不変)。
     event.emit(
       state,
       'disguise:into',
-      { uid: targetUid, fromCardId, newCardId: cardId },
-      { player: p, uid: targetUid },
+      { uid: targetUid, fromCardId, newCardId: cardId, player: p },
+      { player: p, uid: targetUid, bindings: buildContactBindings(ax, p) },
     );
   }
   // rules/23: 元キャラのデッキ下移動は「リムーブ扱いではない」→ leave:to-deck Hook を発火 (抑止対象外、常に発火)

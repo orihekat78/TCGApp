@@ -193,7 +193,7 @@ export interface ResolveEffectPicksOpts {
 import {
   pushPendingEffectPickSide, toPlainDeep, _peekPendingEffectChoiceSide, getPendingChoiceResume,
   setPendingChoiceResume, pushPendingEffectChoiceSide, setPendingChoiceBindings,
-  pushPendingEffectOptionalSide, setPendingOptionalResume,
+  pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings,
 } from './pending-state.js';
 // Phase 3b: pending管理は pending-state.ts へ分離。旧 public API は barrel 再export で不変 (importer 改変0)。
 export {
@@ -202,7 +202,7 @@ export {
   _drainPendingEffectChoiceSide, _clearPendingEffectChoiceSide, _takePendingChoiceBindings,
   _peekPendingEffectChoiceSide, _takePendingChoiceResume, _clearPendingChoiceResume,
   _drainPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _peekPendingEffectOptionalSide,
-  _takePendingOptionalResume, _clearPendingOptionalResume,
+  _takePendingOptionalResume, _clearPendingOptionalResume, _takePendingOptionalBindings,
 } from './pending-state.js';
 export type {
   ContinuationFrame, PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide,
@@ -591,6 +591,9 @@ export function resolveEffectPicks(
         });
         // 再開 holder = この optional 効果そのもの (optionalResolve 後に再 walk)。
         setPendingOptionalResume(effect);
+        // engine wave-18: surface 時の ctx.bindings ($contact.* / ctx.contact) を保持し resume ctx へ復元
+        // (BUG-114 choice-bindings の対称。B04092 キャンティ optional{chain[sleep, inContact pick]})。
+        setPendingOptionalBindings({ ...(ctx.bindings as Record<string, unknown>) });
         return { kind: 'parallel', steps: [] };
       }
       // AI / non-human: skip (resolver の optionalRun 未設定 default と同じ。surface しない)

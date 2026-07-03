@@ -27,6 +27,10 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   'EffectOptionalResume',
   // Phase 3c (2026-06-22): 旧 'EffectChoiceBindings' channel は EffectChoiceResume holder の bindings field に
   // 統合され消滅 (BUG-114 の cutin $contact.* 保持は EffectChoiceResume.bindings が担う)。allowlist entry も除去。
+  // engine wave-18 (2026-07-03): optional 再開 ctx の contact bindings holder (pending-state.ts)。
+  // setPendingOptionalBindings で set、applyOptionalAndContinuation が queue 6th arg で consume (store/UI へ出ない、
+  // EffectOptionalResume と同種の engine-internal)。B04092 キャンティ optional{chain[sleep, inContact pick]} 用。
+  'EffectOptionalBindings',
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

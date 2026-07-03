@@ -98,6 +98,8 @@ export function buildShortFormPick(
   if (a.faceDown === true) query.faceDown = true;
   // engine拡張 wave (2026-06-23): evidenceFlipDown 用 — 表向き(公開済)の証拠のみ候補化。
   if (a.faceUp === true) query.faceUp = true;
+  // engine additive wave-18 (2026-07-03): inContact 用 — pick を現コンタクト参加者に限定 (B04075/PR029)。
+  if (a.inContact === true) query.inContact = true;
   return { kind: 'pick', query, n: { min: nMin, max: nMax }, chooser };
 }
 

@@ -29,7 +29,7 @@ import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
 import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
-import type { GameState, AbilityDef, AbilityScope, Effect, EffectStackEntry } from '../types/index.js';
+import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectStackEntry } from '../types/index.js';
 // 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
 // として本 listener で処理。検出時は pendingHirameki side-channel に push して fire/skip を UI に委譲。
 import { pushPendingHirameki } from './hirameki.js';
@@ -330,6 +330,12 @@ function handleHook(
       // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を候補から substitute してから queue
       // recursive utility が atom / choice / sequence / conditional / optional 等を walk
       // Phase 7-3: chooseAtomTarget callback で verb 別ヒューリスティック選択 (敵 highest AP 等)
+      // 2026-05-27 (Option C follow-up): emit source.bindings (例: cutin/contact の contact bindings)。
+      // event.queue 6th arg で entry へ永続化 (runtime $contact.byUid 解決)。加えて engine wave-18:
+      // walk 時 (resolveEffectPicks) の resolveCtx.bindings にも載せる — optional{...} が $contact.* /
+      // ctx.contact (inContact pick, B04092 キャンティ) を surface 時に captur するため (choice の BUG-114 対称、
+      // setPendingOptionalBindings)。既存 non-optional 効果の pick/$contact は従来通り runtime (entryToCtx) 解決。
+      const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
       const resolveCtx = {
         source: {
           cardId: card.cardId,
@@ -338,7 +344,8 @@ function handleHook(
           player: card.player,
           area: card.area,
         },
-        bindings: {},
+        // entryToCtx (stack.ts) と同型の cast (contact bindings は Candidate[] とは限らない任意 object array)。
+        bindings: (sourceBindings ?? {}) as EffectCtx['bindings'],
         // 2026-06-06 タスクC: optional surface 時に $trigger.<field> 用 payload を引き継ぐ
         // (B03038 の $trigger.gained = reasoning:end payload.gained)。
         triggerPayload: payload,
@@ -378,10 +385,8 @@ function handleHook(
             humanChooser: isHumanEffect,
             source: { cardId: card.cardId, abilityId: ability.id },
           });
-      // queue (side-channel set されていても skip しない、pre-pick step 実行のため)
-      // 2026-05-27 (Option C follow-up): emit source.bindings (例: cutin の contact bindings)
-      // を event.queue 経由で entry に永続化、effect 実行時に $contact.byUid 等が解決可能に。
-      const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
+      // queue (side-channel set されていても skip しない、pre-pick step 実行のため)。
+      // sourceBindings (contact bindings) は上で算出済 → entry に永続化 (runtime $contact.byUid 解決)。
       event.queue(
         state,
         resolvedEffect,

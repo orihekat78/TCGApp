@@ -12,7 +12,7 @@
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
-import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume } from './resolve-picks.js';
+import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings } from './resolve-picks.js';
 
 type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
@@ -287,6 +287,12 @@ export function applyOptionalAndContinuation(
 ): void {
   const resumeEffect = _takePendingOptionalResume();
   if (!resumeEffect) return;
+  // engine wave-18: surface 時の contact bindings を復元。ctx.bindings 自体は fresh {} のままにする —
+  // resume walk は contact を必要とせず (optional 内 inContact pick / $contact.* は queue → runtime entryToCtx で
+  // 解決)、resumeBindings を ctx.bindings に alias すると inner の bind 書込 ($entered 等) が下の queue 6th arg
+  // (entry.bindings) を汚染し既存 optional (B09038 sceneEnter 等) を壊す。よって contact は 6th arg 経由でのみ伝達。
+  const resumeBindings = _takePendingOptionalBindings();
+  const hasResumeBindings = resumeBindings != null && Object.keys(resumeBindings).length > 0;
   const ctx: EffectCtx = {
     source: {
       cardId: pending.source.cardId,
@@ -315,6 +321,10 @@ export function applyOptionalAndContinuation(
     { player: pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
     'effect:optional-resolved',
     optTriggerPayload ?? { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
+    // engine wave-18: 復元した contact bindings を queue 6th arg で entry → runtime ctx.contact へ伝達
+    // (optional 内 $contact.* / inContact pick が runAllUntilEmpty 実行時に entryToCtx で解決される)。
+    // 非空 (contact 有) のときのみ渡す — 空 optional (B09038 等) は従来通り bindings 省略 = 挙動不変。
+    hasResumeBindings ? (resumeBindings as Record<string, unknown[]>) : undefined,
   );
   runAllUntilEmpty(state);
 }

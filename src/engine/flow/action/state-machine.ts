@@ -21,6 +21,7 @@ import { char as readChar } from '../../read/char.js';
 import { def as readDef } from '../../read/def.js';
 import { canActionAgainstChar, canActionAgainstCase } from '../main/action.js';
 import { canGuard } from '../guard.js';
+import { buildContactBindings } from '../contact.js';
 import { computeOrder } from './order.js';
 import {
   candidates as targetCandidates,
@@ -398,7 +399,13 @@ export function advance(state: GameState, ax: ActionContext): void {
       result: contactDetail,
     });
 
-    event.emit(state, 'contact:start', { aUid, bUid }, { player: ax.byPlayer, uid: ax.byUid });
+    // engine additive wave-18 (2026-07-03): source に contact bindings (byUid=aUid/targetUid=bUid の客観 contact)。
+    // キャンティ (B04092)「自分の他キャラがコンタクトしたとき…コンタクト中のキャラを選び AP+」の observer effect が
+    // inContact pick で $contact 参加者を解決するため。matcher は payloadKey aUid/bUid (triggerCharMatches) で
+    // 別途判定。既存 contact:start consumer (B02079/D07018 等 payloadKey 系) は bindings を読まない → 挙動不変。
+    event.emit(state, 'contact:start', { aUid, bUid }, {
+      player: ax.byPlayer, uid: ax.byUid, bindings: buildContactBindings(ax, ax.byPlayer),
+    });
 
     // 行動順 (AP は snapshot 後だが、ここでは未スナップショットでも先に order を計算)
     // -> snapshotAP は judge 直前。ここでは即時 AP 参照で十分
