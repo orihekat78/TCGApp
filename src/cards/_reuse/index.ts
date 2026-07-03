@@ -1104,6 +1104,11 @@ import { B08006 } from '../ct-p08/B08006.js';
 import { B07096 } from '../ct-p07/B07096.js';
 import { B05041 } from '../ct-p05/B05041.js';
 import { B05041P } from '../ct-p05/B05041P.js';
+import { B08028 } from '../ct-p08/B08028.js';
+import { B04074 } from '../ct-p04/B04074.js';
+import { B04074P } from '../ct-p04/B04074P.js';
+import { B04088 } from '../ct-p04/B04088.js';
+import { B04088P } from '../ct-p04/B04088P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1446,4 +1451,10 @@ export const REUSE_CARDS: CardDef[] = [
   // engine mega-wave W4 step7 — r1 P01 protection rider exemplar (B05041+P「オレのそばから離れんなや…」:
   // charSetCard fromSelf + on-set-host opponentRestrict[remove,sleep,stun] + ヒラメキ self-to-hand)
   B05041, B05041P,
+  // engine mega-wave W5 — r38 evidenceFlip mirror-count bind exemplar (B08028 日向幸)
+  B08028,
+  // engine mega-wave W5 — r47 levelInBound exemplar (B04074/P 降谷零)
+  B04074, B04074P,
+  // engine mega-wave W5 — r37 removeDeckTop.n dyn exemplar (B04088/P スコッチ)
+  B04088, B04088P,
 ];

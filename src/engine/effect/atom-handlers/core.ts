@@ -6,6 +6,7 @@ import { tryRePickFromAtom } from '../resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax } from './_shared.js';
+import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, TargetingRef } from '../../types/index.js';
 
@@ -436,12 +437,68 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
         mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target: String(topIdx), result: 'ok' });
         return;
       }
+      // mega-wave W5 (2026-07-03, r38): max の {dyn} 短縮形を handler local で literalize
+      // (B08028「この効果によって表向きにした枚数と同じ数まで」= max:{dyn:'$bound.$flipped.count'})。
+      // 共有 helper (hasNorMax/buildShortFormPick) は byte 不変 — 未解決 {dyn} が他 atom へ漏れる
+      // footgun を封じ込め (本 handler だけが dyn-max を知る)。解決後 max<=0 は「0枚まで選ぶ」= no-op
+      // (mirror-count 0 で pick を出さない、rules/15「〜まで」0可)。
+      const ctrl = ctx.source.player;
+      const aResolved = isDynObject(a.max) ? { ...a, max: resolveDynNumber(a.max, s, ctx) } : a;
+      if (isDynObject(a.max) && (aResolved.max as number) <= 0) {
+        mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target: 'dyn-max-0', result: 'none' });
+        return;
+      }
+      // ③-multi (r38): cardIds 契約 = evidenceFlipDown ①② の faceDown/flipFaceUp 版 clone。
+      //   ① cardIds:'$pick.cardIds' 未解決 → short-form なら target を構築して side-channel enqueue
+      //   ② cardIds 配列 (resolved) → 各 cardId の裏向き証拠を 1 枚ずつ表向き + bind writeback
+      const rawCardIds = (aResolved as { cardIds?: unknown }).cardIds;
+      if (rawCardIds === '$pick.cardIds') {
+        // decline (0枚 skip、applyPickSkipAndContinuation runDeclinedAtom=true 経路): flip 0 で解決。
+        // bind は空配列を書く — $bound.<key>.count が 0 を返し、後続 mirror step (B08028 step2) が
+        // 正しく no-op になる (unbound のままだと defensive 0 だが、明示 [] で「0枚 flip した」を記録)。
+        if ((aResolved as { __declined?: unknown }).__declined === true) {
+          if (typeof aResolved.bind === 'string') {
+            (ctx.bindings as Record<string, unknown>)[aResolved.bind] = [];
+          }
+          mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target: 'declined', result: '0' });
+          return;
+        }
+        const mTarget = (aResolved.target && typeof aResolved.target === 'object')
+          ? aResolved.target
+          : (hasNorMax(aResolved) ? buildShortFormPick(ATOM_PICK_SPEC.evidenceFlip.defaultArea, aResolved, ctrl, (aResolved.player as Player) ?? 'opp') : undefined);
+        if (mTarget) {
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: { ...aResolved, target: mTarget } }, ctx, {
+            byPlayer: ctrl,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: ctrl, turn: s.turn.number, action: 'effect:evidenceFlip:awaiting-pick' });
+        }
+        return;
+      }
+      if (Array.isArray(rawCardIds)) {
+        const evl = s.players[flipP].evidence;
+        const flippedIds: string[] = [];
+        for (const cid of rawCardIds as string[]) {
+          if (typeof cid !== 'string') continue;
+          const i = evl.findIndex(e => e.cardId === cid && !e.faceUp);
+          if (i !== -1) { mutate.evidence.flipFaceUp(s, flipP, i); flippedIds.push(cid); }
+        }
+        // bind writeback (core.ts 他 atom の a.bind idiom と同一行形): 実際に flip した分のみ。
+        // $bound.<key>.count が「この効果によって表向きにした枚数」を正確に映す (B08028)。
+        if (typeof aResolved.bind === 'string') {
+          (ctx.bindings as Record<string, unknown>)[aResolved.bind] = flippedIds.map(cardId => ({ cardId }));
+        }
+        mutate.log.append(s, {
+          ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip',
+          target: flippedIds.join(','), result: rawCardIds.length === 0 ? '0' : (flippedIds.length ? 'ok' : 'not-found'),
+        });
+        return;
+      }
       // ③ pick 形 = 「(相手の)裏向きの証拠を N つまで選び、表向きにする」。chooser=controller、
       //    candidate area side = a.side(既定は a.player) で証拠 owner を指す、faceDown=裏向き限定。
-      const ctrl = ctx.source.player;
-      const efArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceFlip.defaultArea, a, ctrl, (a.player as Player) ?? 'opp') }
-        : a;
+      const efArgs = (aResolved.target === undefined && hasNorMax(aResolved))
+        ? { ...aResolved, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceFlip.defaultArea, aResolved, ctrl, (aResolved.player as Player) ?? 'opp') }
+        : aResolved;
       const target = normalizeTargetToString(efArgs.target);
       if (!target) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: efArgs }, ctx, { byPlayer: ctrl, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });

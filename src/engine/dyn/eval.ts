@@ -44,6 +44,24 @@ export function evalDyn(state: GameState, expr: string | number | boolean, ctx: 
   return evaluateExpression(state, expr, ctx);
 }
 
+// mega-wave W5 (2026-07-03, r37/r38): number | {dyn:string} → number の汎用 literalizer。
+// atom-handlers/_shared.ts resolveDeltaToNumber と同 guard (number 短絡 / {dyn}→evalDyn / 非有限→0) だが、
+// cost/ (r37 removeDeckTop.n) と effect/atom-handlers (r38 evidenceFlip max) の両層から使うため
+// dyn/eval.ts に置く (cost→atom-handlers の層違反 import を避ける)。resolveDeltaToNumber は非改変。
+export function resolveDynNumber(v: unknown, state: GameState, ctx: EffectCtx): number {
+  if (typeof v === 'number') return v;
+  if (v !== null && typeof v === 'object' && typeof (v as { dyn?: unknown }).dyn === 'string') {
+    const r = evalDyn(state, (v as { dyn: string }).dyn, ctx);
+    return typeof r === 'number' && Number.isFinite(r) ? r : 0;
+  }
+  return 0;
+}
+
+/** v が number か {dyn:string} 短縮形か (isShortFormDelta と同式、max/n 用)。 */
+export function isDynObject(v: unknown): boolean {
+  return typeof v === 'object' && v !== null && typeof (v as { dyn?: unknown }).dyn === 'string';
+}
+
 const OPERATORS = new Set(['+', '-', '*', '/', '%']);
 const PARENS = new Set(['(', ')']);
 // Cleanup Phase #1 (2026-05-22): 演算子優先度 (precedence) と括弧 (parens) 対応
@@ -270,6 +288,8 @@ function resolvePlaceholder(state: GameState, placeholder: string, ctx: EffectCt
       return resolveDyn(rest, ctx, placeholder);
     case 'discarded':
       return resolveDiscarded(ctx, rest, placeholder);
+    case 'bound':
+      return resolveBound(state, rest, ctx, placeholder);
     default:
       throw new Error(`dyn.eval: unknown placeholder root "$${root}" in "${placeholder}"`);
   }
@@ -447,6 +467,54 @@ function resolveDiscarded(ctx: EffectCtx, rest: string[], original: string): Dyn
       return d.lp ?? 0;
     default:
       throw new Error(`dyn.eval: unknown $discarded field "${field}" in "${original}"`);
+  }
+}
+
+// mega-wave W5 (2026-07-03): $bound.<key>.<field> — bind 済み Candidate 集合の遅延参照 (r38/r47 統合 root)。
+// field: count    = 集合枚数 (evidenceFlip bind → 「表向きにした枚数と同じ数まで」B08028)
+//        level    = 先頭要素の実効レベル。uid あり board char = charRead.level (rules/19 実効値、B09109 QA1
+//                   「解決時点の増減後レベルを参照」)。uid 無し (souza 等 deck bound、cardId のみ) = printed
+//                   CardDef.level (B04074、盤面外に修飾は乗らない)
+//        cardName = 先頭要素のカード名。uid あり = 実効 names 先頭 (wave-6 grantNames honor)、無し = printed names[0]。
+//                   ⚠ 複数名カード (rules/19) は先頭 (複合名) のみ返す — 分割名 any-match が要る consumer が
+//                   出たら配列対応を別途設計 (DEFERRED-INDEX megaw5 節)
+// 欠損 binding は defensive (count=0 / level=NaN / cardName='') — 「してもよい」skip 経路で throw しない
+// ($discarded の 0-fallback と同 posture。NaN filter は matchOneFilter/predicate で不一致に落ちる)。
+// 未知 field は throw (author typo を fail-fast)。key は ctx.bindings を verbatim 参照 ('$flipped' 等 $ 込み可)。
+function resolveBound(state: GameState, rest: string[], ctx: EffectCtx, original: string): DynValue {
+  if (rest.length < 2) {
+    throw new Error(`dyn.eval: $bound requires <key>.<field> (count/level/cardName) — got "${original}"`);
+  }
+  const key = rest[0];
+  const field = rest[1];
+  const binding = (ctx.bindings as Record<string, unknown>)[key];
+  const arr = Array.isArray(binding) ? binding : [];
+  const first = arr[0] as { uid?: string; cardId?: string } | undefined;
+  switch (field) {
+    case 'count':
+      return arr.length;
+    case 'level': {
+      if (!first) return NaN;
+      if (typeof first.uid === 'string' && scene.byUid(state, first.uid)) {
+        return charRead.level(state, first.uid);
+      }
+      if (typeof first.cardId === 'string') {
+        return def.card(first.cardId)?.level ?? NaN;
+      }
+      return NaN;
+    }
+    case 'cardName': {
+      if (!first) return '';
+      if (typeof first.uid === 'string' && scene.byUid(state, first.uid)) {
+        return charRead.names(state, first.uid)[0] ?? '';
+      }
+      if (typeof first.cardId === 'string') {
+        return def.card(first.cardId)?.names[0] ?? '';
+      }
+      return '';
+    }
+    default:
+      throw new Error(`dyn.eval: unknown $bound field "${field}" in "${original}"`);
   }
 }
 

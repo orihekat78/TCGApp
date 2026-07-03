@@ -211,7 +211,10 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
   const partnerDef = partner.cardId ? engine.cards.get(partner.cardId) : null;
   const chosenAbil = partnerDef?.abilities.find((a) => a.id === chosenId);
   const cost = chosenAbil?.cost;
-  const costText = cost ? costToText(cost) : '無し';
+  // mega-wave W5 (r37): {dyn} n コスト (removeDeckTop 等) を confirm modal で実数表示するための resolve。
+  const costText = cost
+    ? costToText(cost, { state, ctx: { source: { player: opts.player, area: 'partner-area' }, bindings: {} } })
+    : '無し';
 
   // Round 2: partner cardId → 名前解決して "[江戸川コナン] の [ability] を発動します" 表示。
   const partnerName = partner.cardId
@@ -298,7 +301,14 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   const charDef = cardId ? engine.cards.get(cardId) : null;
   const chosenAbil = charDef?.abilities.find((a) => a.id === chosenAbilId);
   const cost = chosenAbil?.cost;
-  const costText = cost ? costToText(cost) : '無し';
+  // mega-wave W5 (r37): {dyn} n コスト (B04088 removeDeckTop $self.oppSceneCount*2) を実数表示。
+  // evalDyn の oppSceneCount は ctx.source.player のみ参照 (uid 不要な dyn でも source 完備で渡す)。
+  const costText = cost
+    ? costToText(cost, {
+        state: stateAfterSrc,
+        ctx: { source: { player: owner ?? 'self', uid: sourceUid, cardId: cardId ?? undefined, area: 'scene' }, bindings: {} },
+      })
+    : '無し';
   let costParams: AbilityCostParams | undefined;
 
   // Round 2: sourceUid → 名前解決。declaredAbility は scene キャラ/事件の宣言能力。

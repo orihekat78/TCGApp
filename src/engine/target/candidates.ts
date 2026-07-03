@@ -169,6 +169,28 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
   const sides = sidesForQuery(query, ctx);
   const out: Candidate[] = [];
 
+  // engine mega-wave W5 (2026-07-03, r47): levelInBound — bound 集合 (souza 等の cardId Candidate、
+  // uid 無し) の printed level 集合を levelIn へ literalize してから列挙する (B04074「発見された
+  // カードのいずれかと同じレベル」)。matchOneFilter は ctx を持たないため ctx 依存の解決をここに
+  // hoist する (~20 call site 不変の設計)。binding 不在/空 = levelIn:[] → 全キャラ不一致 (fail-closed)。
+  // printed 値なのは deck-bound カードに修飾が乗らないため (targetFilterToPredicate と同 convention)。
+  if (query.filter?.levelInBound) {
+    const bound = ctx.bindings?.[query.filter.levelInBound.bindKey];
+    const levels = Array.isArray(bound)
+      ? bound
+        .map(b => {
+          const cid = (b as { cardId?: string }).cardId;
+          return typeof cid === 'string' ? (lookupCardDef(cid)?.level ?? 0) : null;
+        })
+        .filter((v): v is number => v !== null)
+      : [];
+    // levelInBound は解決済 clone から除去する — matchOneFilter / targetFilterToPredicate の
+    // 未解決 fail-closed guard (levelInBound 残存 = 全不一致) を誤発火させないため (W5 混成 review nit)。
+    const { levelInBound: _resolved, ...restFilter } = query.filter;
+    void _resolved;
+    query = { ...query, filter: { ...restFilter, levelIn: levels } };
+  }
+
   // engine mega-wave W4 (2026-07-03, r83 G34): fromGroup — 母集合を ctx.bindings[fromGroup] の
   // uid 集合に限定 (「その中から1枚」B01012)。binding 不在/空 = 候補0 (fail-closed)。
   // 通常列挙を走らせた後の post-filter (filter/state/side 等の既存判定を全て共有)。
@@ -435,6 +457,13 @@ export function matchOneFilter(
   if (filter.lpMax !== undefined && lp > filter.lpMax) return false;
   if (filter.levelMin !== undefined && level < filter.levelMin) return false;
   if (filter.levelMax !== undefined && level > filter.levelMax) return false;
+  // engine mega-wave W5 (2026-07-03, r47): levelIn — 実効 level が集合内 (B04074)。levelInBound は
+  // enumerateByQuery が levelIn へ literalize 済 (本関数は ctx 非依存を維持)。空配列 = 全不一致。
+  if (filter.levelIn !== undefined && !filter.levelIn.includes(level)) return false;
+  // 未解決 levelInBound の fail-closed guard (W5 混成 review nit): enumerateByQuery を経ない filter 評価
+  // (filterAny 内 / cond boundMatchesFilter 等) に levelInBound が書かれた場合、silent drop で全一致に
+  // ならないよう常に不一致にする。正規経路 (enumerateByQuery) は解決時に levelInBound を除去済み。
+  if (filter.levelInBound !== undefined) return false;
 
   if (filter.hasSetCards !== undefined) {
     const has = !!(c && c.setCards.length > 0);

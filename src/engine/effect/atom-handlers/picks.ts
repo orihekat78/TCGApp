@@ -1,6 +1,6 @@
 // engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
-import { pushPendingPickFromAtom, toPlainDeep } from '../resolve-picks.js';
+import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj } from '../resolve-picks.js';
 import { targetFilterToPredicate, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
 import type { Player, PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
 import type { GameState, EffectCtx, Candidate, AtomVerb } from '../../types/index.js';
@@ -8,9 +8,18 @@ import type { TargetFilter } from '../../types/effect.js';
 
 export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
+      // mega-wave W5 (2026-07-03, r47): filter 内の {dyn} nested field を **dispatch 時** に解決
+      // (B09109 a1「そのキャラと同じレベルで同じカード名」= levelMin/levelMax/cardName:{dyn:'$bound...'})。
+      // resolveEffectPicks の generic 事前 walk は top-level 引数しか解決せず、また bind (chain 前段の
+      // pick 結果) は実行時にしか確定しないため、handler 冒頭での解決が load-bearing。dyn 不在の filter は
+      // resolveFilterDynObj が同一参照を返す = 既存カード no-op。関数 filter (legacy) は非対象。
+      const rawFilter = a.filter;
+      const resolvedFilter = (rawFilter !== null && typeof rawFilter === 'object')
+        ? resolveFilterDynObj(s, rawFilter, ctx)
+        : rawFilter;
       // BUG-045 fix: filter は declarative TargetFilter object として渡される
       // (D11019.ts 等)。predicate 関数化して使用 (旧コードは function を期待していて crash)。
-      const filterArg = a.filter as TargetFilter | ((cardId: string) => boolean) | undefined;
+      const filterArg = resolvedFilter as TargetFilter | ((cardId: string) => boolean) | undefined;
       // cluster16 G2: filterAny (OR-of-filters) を reveal-filter 経路でも honor (従来は candidates.ts
       // のみ)。意味論は candidates.ts matchesFilters と同一の AND-of(filter, OR(filterAny))。
       // a.filter が関数の場合 (legacy caller) は filterAny 非適用 (legacy は filterAny 不使用)。

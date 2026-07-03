@@ -227,6 +227,16 @@ export type TargetFilter = {
   lpMax?: number;
   levelMin?: number;
   levelMax?: number;
+  // engine mega-wave W5 (2026-07-03, r47): 実効 level が集合内のキャラのみ。「発見されたカードの
+  // いずれかと同じレベル」(B04074) の literal 形。通常 author は levelInBound を書き、candidates()
+  // (enumerateByQuery) が bound 集合の printed level へ literalize してから本 field に写す —
+  // matchOneFilter は ctx 非依存を維持 (~20 call site 不変)。
+  levelIn?: number[];
+  // r47 DSL-facing: bound 集合 (souza 等 cardId Candidate) の printed level 集合と一致。
+  // 解決は candidates() (enumerateByQuery) のみ — levelIn へ変換して本 field は clone から除去。
+  // binding 不在/空 = levelIn:[] = 候補0。未解決のまま matchOneFilter / targetFilterToPredicate に
+  // 届いた場合 (filterAny 内等の誤用) は fail-closed で常に不一致 (silent drop しない、W5 review nit)。
+  levelInBound?: { bindKey: string };
   hasSetCards?: boolean;
   // engine mega-wave W4 (2026-07-03, r82 同梱): 裏向きセット card を持つキャラのみ (B08035 a2
   // 「裏向きでセットされているカードを1枚リムーブ」)。hasSetCards は表裏不問 (B02033 は裏向き限定なし)。
@@ -426,7 +436,12 @@ export type Cost =
   // rules: 21 (「自分の」省略 → query.side:'self' / 全部行えなければ使用不可)。
   | { kind: 'revealHandToDeckTop'; target: TargetingRef; n: number }
   | { kind: 'removeFromScene'; target: TargetingRef; n: number }
-  | { kind: 'removeDeckTop'; player: 'self'; n: number }
+  // engine mega-wave W5 (2026-07-03, r37): n は number | {dyn} (B04088「相手の現場にいるキャラ1枚に
+  // つき、デッキのカードを上から2枚リムーブ」= {dyn:'$self.oppSceneCount*2'})。player:'self' 固定は
+  // 公式Q&A「コストでは自分のカードしか使えない (相手デッキはリムーブ不可)」の型レベル担保 —
+  // cross-side 化しないこと。canPay/pay が resolveDynNumber (dyn/eval.ts) で dispatch 時に解決。
+  // 他 Cost kind への {dyn} 展開は consumer 出現時に個別判断 (YAGNI)。JSON シリアライズ可能維持。
+  | { kind: 'removeDeckTop'; player: 'self'; n: number | { dyn: string } }
   | { kind: 'discardEvidence'; n: number }
   | { kind: 'selfToDeckBottom' }
   // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト (B04011/B07080/B08076)。

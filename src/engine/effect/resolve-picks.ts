@@ -106,7 +106,7 @@ function resolveDynArgs(
  * rules: 15-abilities-effects.md (動的値解決) / 17-icons.md §FILE(X) ($self.fileCount は実装済)。
  */
 /** 1 つの filter object 内の `{dyn}` 数値フィールドを clone して解決。dyn 不在なら同一参照を返す (no-op)。 */
-function resolveFilterDynObj(state: GameState, f: unknown, ctx: EffectCtx): unknown {
+export function resolveFilterDynObj(state: GameState, f: unknown, ctx: EffectCtx): unknown {
   if (f === null || typeof f !== 'object' || Array.isArray(f)) return f;
   const fo = f as Record<string, unknown>;
   let changed = false;

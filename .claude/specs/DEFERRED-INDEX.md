@@ -998,3 +998,20 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (4) 「裏向きで」faceDownOnly 未移行の既出荷 3 枚 = BUG-169 起票済 (card-phase で移行)。
   (5) enter:group × 疾風 (同一 batch で両 observer) の直接 probe 無し (per-cid enter 維持ゆえ低リスク)。
   (6) stack-under cost 2種の cost-pick は deterministic first-candidate (pay.ts 既知 gap の継承)。
+
+## wave engine / megaw5 (dyn/cost 3 primitive、2026-07-04 出荷)
+
+出荷済 = dyn root `$bound.<key>.count/level/cardName` (統合 resolveBound、uid=実効値/cardId=printed) + `resolveDynNumber`/`isDynObject` export (dyn/eval.ts、cost 層から使うため _shared でなくここ) / atomEvidenceFlip **multi (cardIds 契約) + bind writeback + dyn-max local literalize + __declined 空 bind** (r38、evidenceFlipDown clone) / TargetFilter `levelIn`+`levelInBound` (enumerateByQuery hoist、matchOneFilter は ctx 非依存維持) + atomDeckRevealUntil **dispatch-time filter dyn 解決** + resolveFilterDynObj export (r47) / Cost `removeDeckTop.n: number|{dyn}` + canPay/pay 解決 + costToText resolve 拡張 (r37)。exemplar **B08028・B04074/P・B04088/P** (5 printings)。
+
+- ★**DEFER: r43 self-latch (B08059 諸星大)** — 設計 workflow 自身が DEFER 推奨 (T3 / sole-unlock 1枚 / touched 6+ files = 骨格凍結「touched>3 見直し」抵触 / 持続 state selfLatch は mutate/scene 全 8 メソッド網羅 + turn 境界 safety net 要)。類似カード 3 枚未満のため保留。B04069 は再スコープで engine0 判明 (既存 sceneHas で card-phase authorable)。
+- ★**DEFER: B09109 怪盗キッド&安室透** (r47 第2 exemplar) — a1 は本 wave で全部品出荷済 (chain[bindPick → deckRevealUntil dyn → sceneEnter $matched + toDeckBottomOnTurnEnd rider → deckToBottomBound → shuffle] を probe test で実機検証済、設計 spec の「rider 不在」主張は**偽** = B07079/PR181 出荷済)。**a2「カード名を公開したキャラのカード名に書き換える」= P12 charSetName 不在**で partial 禁止 → P12 出荷後に一括 author。cutIn AP+2000 は既存 idiom。
+- **$bound.<key>.cardName の複数名カード** (rules/19): 先頭 (複合名) のみ返す — 分割名 any-match が要る consumer (複合名キャラを chosen にした「同じカード名」) は配列対応を別途設計。B09109 QA に該当裁定なし (公式裁定が出たら再訪)。
+- **r38 の「好きな数」= max:99 リテラル** (B08028): 候補=裏向き証拠で自然 cap。max:'all' 表記は未導入 (evidenceFlip 系のみの需要で YAGNI)。
+- **negative control 実測 (r47 risk①)**: AI 経路では bindPick (PA 短縮形) が dispatch 時に即時解決されるため **sequence でも bind は次 atom より先に確定** (probe で pin 済)。human 経路も r38 mirror sequence (short-form + cardIds 契約) で bind 貫通を実測。「chain 必須」は明示 target の eager pre-walk 形にのみ適用 — short-form dispatch-time 解決なら sequence も安全。B04074 は chain で author (保守的)。
+- **r49/r54 (P14 相対 name deckReveal) は本 wave の $bound + dispatch-time filter 解決で実質被覆** — W6 設計で差分 (forEach-name-count G29 / G37 scope 配列) のみ扱う。
+- **混成 review nits (megaw5、sonnet5 SHIP / opus SHIP_WITH_NITS、blocker 0、latent 記録)**:
+  (1) levelInBound fail-OPEN → **即対応済**: matchOneFilter / targetFilterToPredicate に未解決 fail-closed guard 追加 + enumerateByQuery の解決 clone から levelInBound 除去。
+  (2) canPay('pay') は全 item を pre-pay state で評価 / pay は逐次 mutate — scene 変異 item の**後**に dyn-n removeDeckTop が来る将来コストで canPay↔pay の n 不一致 window (B04088 は sleepSelf 先行 = oppSceneCount 不変で無害。removeFromTop は Math.min clamp で crash なし)。multi-item dyn cost 出荷時に canPay の逐次 simulate 化を検討。
+  (3) dyn-resolved max≤0 gate は literal max:0 に非適用 (pre-W5 挙動 byte 維持、意図的非対称)。
+  (4) costToText partner-area resolve ctx は uid/cardId 無し — $self.uid/level 参照 dyn が PA 宣言コストに載ったら汎用文言 fallback (表示のみ、pay は実 ctx)。
+  (5) activateDeclaredAbility/activatePartnerAbility は canPay 再チェックせず pay() 直呼び (pre-existing) — UI enumerator gate を経ない呼出経路が将来できたら dyn cost の silent under-delivery リスク (観測継続)。

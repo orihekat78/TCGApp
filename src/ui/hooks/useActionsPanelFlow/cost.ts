@@ -1,5 +1,6 @@
 // useActionsPanelFlow/cost.ts — Phase 3d 分割 (cost-builder / label helpers, body 無改変移送, 2026-06-22)
-import type { Cost, Effect, EffectCtx } from '@/engine/types';
+import type { Cost, Effect, EffectCtx, GameState } from '@/engine/types';
+import { resolveDynNumber } from '@/engine/dyn/eval.js';
 
 
 /**
@@ -22,7 +23,9 @@ export function choiceOptionLabel(opt: Effect): string {
 /**
  * Phase 8.8c: cost を人間可読なテキストに変換 (confirm modal body 表示用)。
  */
-export function costToText(cost: Cost): string {
+// mega-wave W5 (2026-07-03, r37): resolve (state+ctx) を渡すと removeDeckTop の {dyn} n を実数表示。
+// optional param = 既存呼出は無変更で後方互換。未渡し時は汎用フォールバック文言 (誤数値を出さない安全側)。
+export function costToText(cost: Cost, resolve?: { state: GameState; ctx: EffectCtx }): string {
   switch (cost.kind) {
     case 'sleepSelf':         return 'このキャラをスリープ';
     case 'sleepChar':         return 'キャラ 1 枚をスリープ';
@@ -31,7 +34,12 @@ export function costToText(cost: Cost): string {
     case 'revealFromHand':    return `手札から ${cost.n} 枚を公開`; // engine additive wave (2026-06-28)
     case 'revealHandToDeckTop': return `手札から ${cost.n} 枚を公開してデッキの上へ`; // engine mega-wave W1 (2026-07-03)
     case 'removeFromScene':   return `現場 ${cost.n} 枚をリムーブ`;
-    case 'removeDeckTop':     return `デッキ上 ${cost.n} 枚をリムーブ`;
+    case 'removeDeckTop': {
+      if (typeof cost.n === 'number') return `デッキ上 ${cost.n} 枚をリムーブ`;
+      // {dyn} n (B04088「相手の現場のキャラ1枚につき2枚」): resolve があれば実数、無ければ汎用文言。
+      if (resolve) return `デッキ上 ${resolveDynNumber(cost.n, resolve.state, resolve.ctx)} 枚をリムーブ`;
+      return 'デッキ上のカードをリムーブ (枚数は盤面で決まる)';
+    }
     case 'discardEvidence':   return `証拠 ${cost.n} 枚をリムーブ`;
     case 'selfToDeckBottom':  return 'このキャラをデッキの下へ';
     case 'sceneToDeckBottom': return `現場のキャラ ${cost.n} 枚をデッキの下へ`; // Task D E2
@@ -39,8 +47,8 @@ export function costToText(cost: Cost): string {
     case 'removeSetCard':     return `裏向きセットされたカードを ${cost.n} 枚リムーブ`; // engine additive wave (2026-06-24)
     case 'sceneStackUnderSelf': return `現場のキャラ ${cost.n} 枚をこのキャラの下に重ねる`; // engine mega-wave W4 r6 (B09048)
     case 'handStackUnder':    return '手札のカード1枚を公開して現場のキャラの下に重ねる'; // engine mega-wave W4 r7 (B08006)
-    case 'pay':               return cost.items.map(costToText).join(' + ');
-    case 'choice':            return cost.items.map(costToText).join(' / ');
+    case 'pay':               return cost.items.map(i => costToText(i, resolve)).join(' + ');
+    case 'choice':            return cost.items.map(i => costToText(i, resolve)).join(' / ');
     case 'fileFrom':          return `FILE から ${cost.n} 枚`;
     case 'flipFaceUpEvidence':
       // 2026-05-30 user_request: max が Infinity (上限なし) のとき "Infinity" 表示を回避。

@@ -101,6 +101,11 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
     if (filter.lpMax !== undefined && lp > filter.lpMax) return false;
     if (filter.levelMin !== undefined && (d.level ?? 0) < filter.levelMin) return false;
     if (filter.levelMax !== undefined && (d.level ?? Infinity) > filter.levelMax) return false;
+    // mega-wave W5 (2026-07-04, r47 review nit): levelIn / 未解決 levelInBound。levelIn は printed 判定
+    // (deck/remove カードに修飾は乗らない)。levelInBound は本経路 (deckRevealUntil 等 cardId-based) では
+    // 解決機構が無い = fail-closed で全不一致 (silent drop 防止)。ctx 付き解決は candidates() 経由のみ。
+    if (filter.levelIn !== undefined && !filter.levelIn.includes(d.level ?? 0)) return false;
+    if (filter.levelInBound !== undefined) return false;
     // BUG-118: kind は TargetFilter 型に昇格済 (matchOneFilter と統一)
     if (filter.kind !== undefined && d.kind !== filter.kind) return false;
     // wave#2 cluster2 (2026-06-12): keyword / cardName が silent drop されていた (BUG-117/118 同型

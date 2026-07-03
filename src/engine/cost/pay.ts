@@ -13,6 +13,7 @@ import type { GameState, Cost, EffectCtx, PayResult, Candidate } from '@/engine/
 import { candidates } from '@/engine/target/candidates.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { canPay } from './evaluate.js';
+import { resolveDynNumber } from '@/engine/dyn/eval.js';
 
 /**
  * Pay a Cost. Mutates the draft in place.
@@ -242,7 +243,9 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       return;
     }
     case 'removeDeckTop': {
-      const removed = mutate.deck.removeFromTop(state, cost.player, cost.n);
+      // mega-wave W5 (r37): n は number | {dyn} — canPay と同一式で解決 (evaluate.ts と対)。
+      const rdN = resolveDynNumber(cost.n, state, ctx);
+      const removed = mutate.deck.removeFromTop(state, cost.player, rdN);
       acc.paidItems.push({ kind: 'removeDeckTop', details: { removed } });
       // engine additive wave (2026-06-29d): costRemovedMatches cond (B03003/B04077/B06078
       // 「コストによって〚X〛がリムーブされた場合」) が参照する除去 cardId を ctx.costPaid へ記録。

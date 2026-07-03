@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `56fbd5f574ce`
+> Source hash: `72aa31c2b7b9`
 
 公式ルール [`15-contact-removal-observer-design.md`](../../../rules/15-contact-removal-observer-design.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

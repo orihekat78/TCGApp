@@ -6,6 +6,7 @@
 
 import type { GameState, Cost, EffectCtx, TargetingRef } from '@/engine/types';
 import { candidates } from '@/engine/target/candidates.js';
+import { resolveDynNumber } from '@/engine/dyn/eval.js';
 
 // refactor 2b (2026-06-12): Cost union の kind 一覧を value として単一ソース化。
 // `satisfies Record<Cost['kind'], true>` で union との両方向同期をコンパイル時に強制。
@@ -118,7 +119,10 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       return count >= cost.n;
     }
     case 'removeDeckTop': {
-      return state.players[cost.player].deck.length >= cost.n;
+      // mega-wave W5 (r37): n は number | {dyn} — dispatch 時に解決 (B04088 .oppSceneCount*2)。
+      // 非有限/非数値は 0 扱い (resolveDynNumber guard) = deck.length >= 0 (n=0 コストは vacuous に true)。
+      const rdN = resolveDynNumber(cost.n, state, ctx);
+      return state.players[cost.player].deck.length >= rdN;
     }
     case 'discardEvidence': {
       return state.players[ctx.source.player].evidence.length >= cost.n;
