@@ -40,7 +40,7 @@ const VERBS = new Set([
   'setCutinBan', // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
   'setDisguiseBan', // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   'setHiramekiSuppress', // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
-  'expandActionTargets', 'log', 'noop',
+  'expandActionTargets', 'log', 'invokeLeaveToRemoveOfCard', 'noop',
 ]);
 const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly']);
 
@@ -56,6 +56,7 @@ const HOOKS = new Set([
   // engine additive wave-3 (2026-06-30): observer-hook 群 (B02080/B09086/B05015/B09016/B02062)
   'cutin:used', 'misread:performed', 'evidence:removed',
   'ability:declared', // engine mega-wave W2 (2026-07-03): 宣言能力使用の第三者観測 (B03057)
+  'disguise:replaced', 'hand:removed', 'hand:reveal', // engine mega-wave W3 (2026-07-03): observer hooks // engine mega-wave W2 (2026-07-03): 宣言能力使用の第三者観測 (B03057)
   'remove:exit', // engine additive wave-4 (2026-07-01) — リムーブエリア離脱 observer (B05087/B05088)
 ]);
 
@@ -80,6 +81,7 @@ const CONDS = new Set([
   'enterSource',
   // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)
   'removedCharMatches',
+  'disguiseReplacedByMatches', 'disguiseReplacedMatches', 'triggerByPlayerIs', 'triggerRevealMatches', // W3
   // engine additive (2026-06-29, B09089): このターンの登場枚数 n 以下か
   'enterCountAtMost',
   // engine additive (2026-06-29, B06046): setcard:enter payload の set card filter 評価

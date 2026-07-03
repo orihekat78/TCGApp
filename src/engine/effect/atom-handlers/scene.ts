@@ -156,6 +156,13 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].remove;
         const idx = arr.indexOf(cardId);
+        // engine mega-wave W3 (2026-07-03, r17): sourceRequired:true (opt-in) — 対象カードが source area に
+        // 無ければ登場自体を中止 (B05115 公式Q&A「解決までにリムーブエリアを離れていた場合、登場できません」)。
+        // 既存カードは未宣言 → 従来挙動 (idx===-1 でも enter 続行) byte 等価。
+        if (idx === -1 && (a as { sourceRequired?: boolean }).sourceRequired === true) {
+          mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:source-missing-skip', target: cardId });
+          return;
+        }
         if (idx !== -1) { arr.splice(idx, 1); mutate.remove.emitExit(s, fromPlayer, cardId); } // wave-4: remove→登場 離脱 (原因非依存 remove:exit、B05087 1st 能力が観測しうる)
       } else if (sourceArea === 'hand') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;

@@ -167,7 +167,12 @@ describe('engine.flow.contact.disguise', () => {
       disguise(draft, ax, 'self', 'DisCard');
     });
     expect(captured.length).toBe(1);
-    expect(captured[0]).toEqual({ uid: selfUid, fromCardId: 'Atk', newCardId: 'DisCard', player: 'self' });
+    // engine mega-wave W3 (2026-07-03, r51): payload に replacedChar (入替え元 snapshot、sentinel uid) が
+    // additive 追加 → 基本 4 field は toMatchObject で不変 pin、replacedChar は cardId/sentinel を確認。
+    expect(captured[0]).toMatchObject({ uid: selfUid, fromCardId: 'Atk', newCardId: 'DisCard', player: 'self' });
+    const rc = (captured[0] as unknown as { replacedChar?: { cardId: string; uid: string } }).replacedChar;
+    expect(rc?.cardId).toBe('Atk');
+    expect(rc?.uid).toBe(`${selfUid}::disguise-replaced`);
   });
 
   it('canDisguise false if cardId not in hand', () => {

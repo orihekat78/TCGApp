@@ -163,6 +163,24 @@ export type Condition =
   // turnEffects 無 = 静的 def、setCardMatches/triggerCutinMatches と同流儀)。side='self'=payload.player===
   // source.player (「自分の」)。side 省略時 'self' (B05087/B05088 は全て自分のリムーブエリア)。
   | { kind: 'removeExitMatches'; side?: 'self' | 'opp' | 'either'; removeFilter?: TargetFilter }
+  // engine mega-wave W3 (2026-07-03, r10): disguise:replaced payload の「入れ替わりで出てきた側」
+  // (newCardId) を filter 評価。「〚カード名［ベルモット］〛が【変装】によってこのキャラと入れ替わったとき」
+  // (B03052)。matchOneFilter char=null = CardDef 印字値 (triggerCutinMatches 同流儀、rules/19 分割名対応)。
+  | { kind: 'disguiseReplacedByMatches'; filter: TargetFilter }
+  // engine mega-wave W3 (2026-07-03, r51): disguise:into payload.replacedChar (入れ替わりで退場した
+  // 元キャラの disguiseInto 直前 snapshot) を filter 評価。「【変装時】LP2以上の【白】のキャラと
+  // 入れ替わった場合」(B02047)。snapshot uid は sentinel 化 (`::disguise-replaced` suffix) —
+  // scene.byUid が必ず miss し、入替え後の新カード自身の continuous/aura が混入しない
+  // (removedCharMatches.removedFilter と同じ既知 limitation: continuous 軸 0 / turnEffects 軸は正確)。
+  | { kind: 'disguiseReplacedMatches'; side?: 'self' | 'opp' | 'either'; filter: TargetFilter }
+  // engine mega-wave W3 (2026-07-03, r17): hand:removed payload.byPlayer (リムーブを起こした効果の
+  // 起動側) を side 判定。「相手の能力や効果によって手札からこのカードをリムーブしたとき」(B05115)。
+  // side:'opp' = byPlayer !== ctx.source.player (第三者視点でなくカード所有者視点)。
+  | { kind: 'triggerByPlayerIs'; side: 'self' | 'opp' }
+  // engine mega-wave W3 (2026-07-03, r18): hand:reveal payload.revealed (公開 CardId[]) の
+  // cardName any-match。「手札から〚カード名［工藤新一］〛か〚［毛利蘭］〛を公開したとき」(B09004)。
+  // 複数公開のうち 1枚でも一致で true。rules/19 分割名は matchOneFilter cardName 経由で対応。
+  | { kind: 'triggerRevealMatches'; side?: 'self' | 'opp' | 'either'; cardName?: string | string[] }
   // engine拡張 wave#2 cluster3 (2026-06-13): action:declare payload の target.kind を読む。
   // 「アクション[キャラ]したとき」(v:'char') / 「アクション[事件]したとき」(v:'case') の subtype gate を
   // declarative 化 (matcher closure は granted descriptor で禁止 = validate.ts のため JSON cond が必須。
@@ -366,6 +384,11 @@ export type AtomVerb =
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
   | 'expandActionTargets'
+  // engine mega-wave W3 (2026-07-03, r12): リムーブエリア在中カードの【現場リムーブ時】selfOnly 効果を
+  // 明示発動させる (B08078 a2「この効果によってリムーブしたカードの【現場リムーブ時】の効果を発動させてもよい」)。
+  // event.emit('leave:to-remove') は使わない — 盤面 observer (第三者反応) が誤発火するため、対象 CardDef の
+  // abilities を直接走査して queue する (effect/invoke-leave-to-remove.ts leaf)。
+  | 'invokeLeaveToRemoveOfCard'
   | 'log' | 'noop';
 
 // ---------- Cost ----------

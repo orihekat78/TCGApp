@@ -966,3 +966,16 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   (3) charSetCard cardIds 分岐の `setSrcSide==='opp'` は絶対 opp (charStackCard 同流儀踏襲、controller-relative でない)。現 consumer B08036 は side:'self' のみ。opp-side source consumer 出荷時に resolvePlayer 相対化検討 (char.ts guard comment 有)。
   (4) evidenceToDeckBottom / evidenceToHand は cardId findIndex = 同一 cardId 重複証拠では先頭 (最下) のみ移動 — 裏向き不可識別カードでは同値、表向き証拠の個体指定が要る将来カードで entry-identity 化検討。
 - **W1 blocked 3件 (verb は additive 可だが consumer に co-gate)**: r56 removeAreaToDeckTop (B07014 = on-set-host WRITE + declared-grant 待ち) / r67 sceneToEvidence-opp票 B06085 (= boundIsMr cond + 本 wave の evidenceToDeckBottom で半解消、残 boundIsMr) / r69 charSetName (PR105 = free-string name 指定 channel = T3 UI)。
+
+## wave engine / megaw3 (observer hooks 5 primitive、2026-07-03 出荷)
+
+出荷済 = hook `disguise:replaced` + cond `disguiseReplacedByMatches` (B03052/P 被置換側反応、virtual-location handler `handleDisguiseReplacedSelf`) / `disguise:into` payload.replacedChar (sentinel uid snapshot) + cond `disguiseReplacedMatches` (B02047) / verb `invokeLeaveToRemoveOfCard` (effect/invoke-leave-to-remove.ts leaf、emit 非経由 = observer 波及なし、**engine-only**) / hook `hand:removed` (discardToRemove splice 前 emit + attribution{byPlayer,viaCost}) + cond `triggerByPlayerIs` (B05115) + sceneEnter `sourceRequired` arg / hook `hand:reveal` (mutate.hand.emitReveal 単一ソース、atomHandReveal + cost revealFromHand 両経路) + cond `triggerRevealMatches` (B09004)。
+
+- ★**DEFER: B08078 ジン** (r12 の実 consumer、engine-only 出荷) — a1【宣言】の宣言前提「自分のリムーブエリアに【現場リムーブ時】を持つキャラが2枚以上」= **remove-area の ability-presence 計数 Condition 不在** (removeTraitAtLeast の keyword/hook 版が要る)。a2 は本 wave の invokeLeaveToRemoveOfCard + keyword filter (`{keyword:'現場リムーブ時'}` B08016 precedent) + color 配列 any-match で部品は揃ったが、「発動させてもよい」= chain 内 optional の nested surface (BUG-161 系 pre-walk 過剰 surface) の実機検証が未踏。**partial 禁止 → カードは a1 Condition 追加後に一括 author**。
+- ★**latent gap (engine-wide、W3 で実測発見)**: **cross-side 短縮形 pick の side/chooser 不整合** — buildShortFormPick は chooser (resolvePlayer 済の絶対値) を query.side に literal 代入するが、sidesForQuery は side を **ctx.source.player 相対**で解釈する。source と手札所有者が異なる短縮形 pick (「相手は手札から1枚選んでリムーブ」型) では候補が source 側に化ける / pending 適用時の再解釈でも反転。**現出荷カードは全て source=owner の同側 pick で未踏** (相手手札リムーブは B01077 discardRandom = pick 無し)。相手選択型 discard カード出荷時に buildShortFormPick の side を相対値で渡すよう要修正。
+- **B09004 a1 の「（現在の効果を解決してからリムーブする）」**は rules/25 未解決効果 queue の確認的注記として実装 (専用機構なし)。公開→即 discard の同一効果内 timing を厳密に問う裁定が将来出たら再確認。
+- **hand:removed は cutin 使用 discard でも emit** (byPlayer=使用者)。「イベント/カットインの使用によるリムーブ」を区別する将来カードは attribution 拡張 (viaUse marker) で対応。
+- **混成 review nits (megaw3、両 lens SHIP_WITH_NITS 0-blocker、latent 記録)**:
+  (1) invokeLeaveToRemoveOfCard の fabricated payload は {uid, cardId, player, invoked:true} のみ — removedCharMatches 系 matcherCondition (side/byUid 要求) を持つ【現場リムーブ時】は invoke 経由で常に false (現4カード B04004/B05032/B07097/B09071 は全て cause:'contact-ap' 要求 = 手札 invoke シナリオでは文言上も正しく不発)。B08078 author 時に対象候補カードの condition が payload field 依存でないか手動確認。
+  (2) discardToRemove の emit ガード (splice 前 includes) は ids に手札実在数超の重複 cardId が来ると emit 過剰 — 現 call site は全て実在カード由来で未踏 (防御的)。
+  (3) revealHandToDeckTop cost の emitReveal 配線は nit 対応で追加済 (公開→デッキ上移動の前、on-hand 時点 emit)。

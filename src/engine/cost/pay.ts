@@ -92,7 +92,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const ids = targets
         .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
         .map(c => c.cardId);
-      mutate.hand.discardToRemove(state, ctx.source.player, ids);
+      // W3 (r17): 宣言コスト由来は hand:removed を emit しない (rules/21)
+      mutate.hand.discardToRemove(state, ctx.source.player, ids, { viaCost: true });
       acc.paidItems.push({ kind: 'removeFromHand', details: { ids } });
       return;
     }
@@ -103,6 +104,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const ids = targets
         .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
         .map(c => c.cardId);
+      // W3 (r18): コスト経路の公開も hand:reveal を emit (B09004「【宣言】能力のコストによって」)
+      mutate.hand.emitReveal(state, ctx.source.player, ids);
       acc.paidItems.push({ kind: 'revealFromHand', details: { ids } });
       return;
     }
@@ -114,6 +117,10 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const ids = targets
         .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
         .map(c => c.cardId);
+      // W3 (r18) 混成 review nit 反映: 「公開して…移す」cost も手札公開 — emit は移動前 (カードが
+      // 手札に在る時点、hand:reveal の on-hand scan 契約)。B09004「【宣言】能力のコストによって」を
+      // method-agnostic に被覆する (emitReveal 単一ソースの残 site)。
+      mutate.hand.emitReveal(state, ctx.source.player, ids);
       mutate.hand.remove(state, ctx.source.player, ids);
       mutate.deck.toTop(state, ctx.source.player, ids);
       acc.paidItems.push({ kind: 'revealHandToDeckTop', details: { ids } });

@@ -44,6 +44,7 @@ import {
   atomHandToFileBottom,
   atomEvidenceToDeckBottom,
   atomHandAddFromDeck,
+  atomInvokeLeaveToRemoveOfCard,
   atomHandAddFromDeckBottom,
   atomHandAddFromRemove,
   atomDeckShuffle,
@@ -251,6 +252,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomSetDisguiseBan(s, a, ctx);
     case 'setHiramekiSuppress':
       return atomSetHiramekiSuppress(s, a, ctx);
+    case 'invokeLeaveToRemoveOfCard':
+      return atomInvokeLeaveToRemoveOfCard(s, a, ctx);
     case 'log':
       return atomLog(s, a, ctx);
     case 'noop':

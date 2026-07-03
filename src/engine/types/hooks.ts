@@ -119,6 +119,19 @@ export type HookName =
   // リムーブエリアから離れたとき〜」。⚠ コスト由来 (②) 発火を card 側が拾うべきか (rules/21) は card-wave 時 Q&A 確定。
   //   payload: { player(=リムーブエリア所有者), cardId(=離脱したカード) }
   | 'remove:exit'
+  // engine mega-wave W3 (2026-07-03, r10): 変装で退場した「元キャラ」側の被置換反応 (B03052)。
+  // payload={uid(現場slot), fromCardId(退場カード), newCardId(変装カード), player} /
+  // source={player, uid, cardId(=fromCardId)}。emit は flow/contact.disguise (leave:to-deck の後、無条件 —
+  // B04034 の disguiseTrigger aura は【変装時】アイコンのみ対象で本 hook は抑止されない)。
+  | 'disguise:replaced'
+  // engine mega-wave W3 (2026-07-03, r17): 手札からリムーブエリアへ移動 (B05115)。emit は
+  // mutate/hand.discardToRemove (splice 前 = on-hand scan がカードを見つけられる、cutIn の順序原則)。
+  // payload={player(手札所有者), cardId, byPlayer(起動側)}。viaCost (宣言コスト) は emit しない (rules/21)。
+  | 'hand:removed'
+  // engine mega-wave W3 (2026-07-03, r18): 手札公開 (B09004)。emit は mutate/hand.emitReveal 単一ソース
+  // (atomHandReveal + cost revealFromHand の両経路、コスト由来も無条件 emit — B09004 印字が明記)。
+  // payload={player(手札所有者), revealed: CardId[]}。zone 不変。
+  | 'hand:reveal'
   // フラグ関連 (rules: 05-turn-phases.md, 13-keywords.md)
   | 'flag:assist:set'
   | 'flag:hand-use:set'

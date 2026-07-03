@@ -1090,6 +1090,11 @@ import { B03057P } from '../ct-p03/B03057P.js';
 import { B08087 } from '../ct-p08/B08087.js';
 import { B09040 } from '../ct-p09/B09040.js';
 import { B09040P } from '../ct-p09/B09040P.js';
+import { B03052 } from '../ct-p03/B03052.js';
+import { B03052P } from '../ct-p03/B03052P.js';
+import { B02047 } from '../ct-p02/B02047.js';
+import { B05115 } from '../ct-p05/B05115.js';
+import { B09004 } from '../ct-p09/B09004.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1411,4 +1416,7 @@ export const REUSE_CARDS: CardDef[] = [
   B05079, B03057, B03057P,
   // engine mega-wave W2b — UI重 restriction exemplar (B08087 mustBeSelectedByOppEvent / B09040+P mustGuard)
   B08087, B09040, B09040P,
+  // engine mega-wave W3 — observer hook exemplar (B03052+P disguise:replaced / B02047 disguiseReplacedMatches /
+  // B05115 hand:removed / B09004 hand:reveal)
+  B03052, B03052P, B02047, B05115, B09004,
 ];

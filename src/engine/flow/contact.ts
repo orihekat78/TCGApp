@@ -9,11 +9,12 @@
 //   - judge                    (AP判定。同値もリムーブ。攻撃側はリムーブされない)
 //   - computeOrder             (低AP先、同値→防御側先)
 
-import type { GameState, ActionContext, JudgeResult, AbilityDef, EffectCtx } from '../types/index.js';
+import type { GameState, ActionContext, JudgeResult, AbilityDef, EffectCtx, SceneCharacter } from '../types/index.js';
 import { mutate } from '../mutate/index.js';
 import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
+import { toPlainDeep } from '../effect/pending-state.js';
 import { abilityIsCutin } from '../read/keyword.js';
 import { evalCond } from '../cond/eval.js';
 import { computeOrder as _computeOrder } from './action/order.js';
@@ -160,7 +161,7 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   event.emit(state, 'cutin:used', { player: p, cardId }, {
     player: p, cardId, bindings: contactBindings,
   });
-  mutate.hand.discardToRemove(state, p, [cardId]);
+  mutate.hand.discardToRemove(state, p, [cardId], { byPlayer: p }); // W3 (r17): 自己起因を明示
   if (!ax.cutInUsed) ax.cutInUsed = {};
   ax.cutInUsed[p] = true;
 
@@ -228,6 +229,15 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
     throw new Error(`flow.contact.disguise: target char not found uid=${targetUid}`);
   }
   const fromCardId = targetChar.cardId;
+  // engine mega-wave W3 (2026-07-03, r51): 入替え元キャラの snapshot (disguiseInto は同一オブジェクトの
+  // cardId を書換えるため shallow copy で凍結)。uid は sentinel 化 — targetUid slot はこの後も同 uid の
+  // まま新カードが residence するため、素の uid だと disguiseReplacedMatches の filter 評価
+  // (matchOneFilter → continuousDeltaSafe 等が scene.byUid) が「新カード自身の継続効果」を誤参照する。
+  // sentinel は scene に実在しない → continuous/aura 軸 0 (removedCharMatches と同じ既知 limitation、
+  // turnEffects/override 軸は snapshot が保持し正確)。
+  // toPlainDeep (BUG-132 posture): shallow copy だと nested field (setCards/turnEffects/keywordOverrides)
+  // が Immer draft proxy のまま emit payload に残り、produce finalize 後に revoked-proxy crash する。
+  const replacedChar: SceneCharacter = toPlainDeep({ ...targetChar, uid: `${targetUid}::disguise-replaced` });
 
   // 元 cardId を デッキ下へ (refactor 1a 2026-06-12: mutate 層経由に統一。挙動は push と同一)
   mutate.deck.toBottom(state, p, [fromCardId]);
@@ -250,15 +260,28 @@ export function disguise(state: GameState, ax: ActionContext, p: Player, cardId:
     // side 判定するため payload.player 必須 (cutin:used は既に持つ)。source.bindings.contact は observer
     // effect の inContact pick ($contact 参加者) 解決用。既存 disguise:into consumer (selfOnly の【変装時】系
     // B02038/B02044 等) は player/bindings を読まない → 挙動不変 (baseline smoke 不変)。
+    // W3 (r51): payload に replacedChar (入替え元 snapshot) を追加。既存 consumer は未読 → 挙動不変。
     event.emit(
       state,
       'disguise:into',
-      { uid: targetUid, fromCardId, newCardId: cardId, player: p },
+      { uid: targetUid, fromCardId, newCardId: cardId, player: p, replacedChar },
       { player: p, uid: targetUid, bindings: buildContactBindings(ax, p) },
     );
   }
   // rules/23: 元キャラのデッキ下移動は「リムーブ扱いではない」→ leave:to-deck Hook を発火 (抑止対象外、常に発火)
   event.emit(state, 'leave:to-deck', { cardId: fromCardId }, { player: p });
+  // engine mega-wave W3 (2026-07-03, r10): 被置換側 (退場した元キャラ) の自己反応 hook (B03052
+  // 「〚カード名［ベルモット］〛が【変装】によってこのキャラと入れ替わったとき」)。無条件 emit —
+  // B04034 の disguiseTrigger aura は【変装時】アイコン (disguise:into) のみを抑止し、被置換側の
+  // 無アイコン反応には及ばない (B04034 印字「相手のキャラの【変装時】は発動しない」)。
+  // source.cardId = fromCardId (退場カード) — listener は virtual location で当該 def を走査する
+  // (退場カードは既にデッキ下 = in-play scan 不可、handleLeaveToRemoveSelf と同構造)。
+  event.emit(
+    state,
+    'disguise:replaced',
+    { uid: targetUid, fromCardId, newCardId: cardId, player: p },
+    { player: p, uid: targetUid, cardId: fromCardId },
+  );
 
   mutate.log.append(state, {
     ts: Date.now(),

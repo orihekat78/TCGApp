@@ -132,6 +132,13 @@ export const TRIGGERED_HOOKS = [
   // in-play scan を行うが、既存カードが remove:exit を trigger.hook に宣言しないため effect を queue しない
   // (= pendingEffects 不変)。matcher = removeExitMatches (離脱カードの cardId→CardDef を filter 評価)。
   'remove:exit',
+  // engine mega-wave W3 (2026-07-03): observer hook 3種。
+  //   disguise:replaced = 被置換側自己反応 (B03052、virtual-location handler = handleDisguiseReplacedSelf)
+  //   hand:removed      = 手札→リムーブ観測 (B05115、splice 前 emit ゆえ通常 in-play scan で可)
+  //   hand:reveal       = 手札公開観測 (B09004、zone 不変 = 通常 in-play scan)
+  'disguise:replaced',
+  'hand:removed',
+  'hand:reveal',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];
@@ -474,6 +481,16 @@ export function registerTriggeredListener(): void {
       });
       continue;
     }
+    if (hook === 'disguise:replaced') {
+      // engine mega-wave W3 (2026-07-03, r10): 被置換側自己反応 (B03052)。退場カードは emit 時点で
+      // 既にデッキ下 = collectCardsInPlay に出ない → virtual location 専用 handler のみ。
+      // 第三者 observer 型の実カードが存在しない (memberCount=2 は同カードの parallel) ため
+      // handleHook の in-play scan は意図的に併走させない — 将来 observer 変種が来たら別 row で追加。
+      event.on(hook, (state, payload, source) => {
+        handleDisguiseReplacedSelf(state, payload, source);
+      });
+      continue;
+    }
     event.on(hook, (state, payload, source) => {
       handleHook(hook, state, payload, source);
     });
@@ -622,6 +639,68 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
       resolvedEffect,
       { player: card.player, uid: card.uid, cardId: card.cardId },
       'leave:to-remove',
+      payload,
+      sourceBindings,
+    );
+  }
+}
+
+/**
+ * engine mega-wave W3 (2026-07-03, r10): disguise:replaced (被置換側自己反応) の virtual-location
+ * handler。handleLeaveToRemoveSelf と同構造 — 退場カード (fromCardId) は emit 時点で既にデッキ下 =
+ * scene/collectCardsInPlay から見えないため、source={player,uid,cardId(=fromCardId)} から仮想
+ * CardLocation (area:'scene' — 現場にいた、rules/17) を組み立てて def.abilities を直接走査する。
+ * matcherCondition (disguiseReplacedByMatches 等) / ability.condition は evalCond で honor。
+ * 既存カードは本 hook 未宣言 → 一致 0 件 = 挙動不変。
+ */
+function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: unknown): void {
+  const s = source as { player?: Player; uid?: string; cardId?: string } | undefined;
+  if (!s || !s.player || !s.uid || !s.cardId) return;
+  const def = readDef.card(s.cardId);
+  if (!def) return;
+  const card: CardLocation = {
+    player: s.player,
+    uid: s.uid,
+    cardId: s.cardId,
+    area: 'scene', // 現場にいた → on-scene scope を通す (rules/17)
+  };
+  for (const ability of def.abilities as AbilityDef[]) {
+    if (ability.type !== 'triggered') continue;
+    const trig = ability.trigger;
+    if (!trig || trig.hook !== 'disguise:replaced') continue;
+    if (!scopeAllowsArea(ability.scope, card.area)) continue;
+    if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
+    if (trig.matcher && !trig.matcher(payload, state)) continue;
+    const baseCtx = {
+      source: {
+        cardId: card.cardId,
+        uid: card.uid,
+        abilityId: ability.id,
+        player: card.player,
+        area: card.area,
+      },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
+    if (!ability.effect) continue;
+
+    const humanSide = getHumanPlayerSide();
+    const isHumanEffect = humanSide !== null && card.player === humanSide;
+    const aiPolicy = new HeuristicPolicy();
+    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
+      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+      byPlayer: card.player,
+      humanChooser: isHumanEffect,
+      source: { cardId: card.cardId, abilityId: ability.id },
+    });
+    const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
+    event.queue(
+      state,
+      resolvedEffect,
+      { player: card.player, uid: card.uid, cardId: card.cardId },
+      'disguise:replaced',
       payload,
       sourceBindings,
     );

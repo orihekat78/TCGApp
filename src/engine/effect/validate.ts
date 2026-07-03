@@ -51,6 +51,7 @@ const ATOM_VERB_MAP = {
   setDisguiseBan: true, // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   setHiramekiSuppress: true, // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
   expandActionTargets: true, // D11007 v2 Phase 3
+  invokeLeaveToRemoveOfCard: true, // engine mega-wave W3 (2026-07-03, r12)
   log: true, noop: true,
 } as const satisfies Record<AtomVerb, true>;
 

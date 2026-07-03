@@ -1,5 +1,6 @@
 // engine.effect.atom-handlers/core — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
+import { invokeLeaveToRemoveOfCard } from '../invoke-leave-to-remove.js';
 import { event } from '../../event/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
@@ -67,7 +68,8 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
         return;
       }
       const target = dcArgs.target as string[];
-      mutate.hand.discardToRemove(s, resolvePlayer(a.player, ctx), target);
+      // W3 (r17): byPlayer = 効果起動側 (相対 player と乖離しうる — 「相手の効果によって」判定用)
+      mutate.hand.discardToRemove(s, resolvePlayer(a.player, ctx), target, { byPlayer: ctx.source.player });
       // BUG-114: discard したカードを bind (リムーブしたカードの level/AP を $discarded dyn で参照)。
       // 続く chain step (charModifyAP delta:{dyn:'$discarded.level*1000'}) が同一 ctx で読む (BUG-107)。
       if (typeof a.bind === 'string' && target.length > 0) {
@@ -108,7 +110,7 @@ export function atomDiscardRandom(s: GameState, a: Record<string, unknown>, ctx:
     pool[j] = tmp;
   }
   const picked = pool.slice(0, k);
-  mutate.hand.discardToRemove(s, drP, picked);
+  mutate.hand.discardToRemove(s, drP, picked, { byPlayer: ctx.source.player }); // W3 (r17)
   // BUG-114 同型: リムーブした cardId を bind ($discarded dyn で後続 chain step が参照可能)。
   if (typeof a.bind === 'string' && picked.length > 0) {
     (ctx.bindings as Record<string, unknown>)[a.bind] = picked.map((cardId) => ({ cardId }));
@@ -154,6 +156,8 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
         return;
       }
       const target = hrArgs.target as string[];
+      // W3 (r18): 公開 observer hook (B09004)。zone 不変のまま emit のみ (mutate.hand.emitReveal 単一ソース)。
+      mutate.hand.emitReveal(s, hrP, target);
       // 公開のみ = zone 変化なし (mutate を呼ばない、カードは手札に残る)。
       // discard の bind と同型: 公開した cardId を ctx.bindings に格納 ($revealed 色読み companion の足場)。
       if (typeof a.bind === 'string' && target.length > 0) {
@@ -642,6 +646,18 @@ export function atomEvidenceToDeckBottom(s: GameState, a: Record<string, unknown
         edbMoved++;
       }
       mutate.log.append(s, { ts: Date.now(), player: edbP, turn: s.turn.number, action: 'effect:evidenceToDeckBottom', result: String(edbMoved) });
+      return;
+    }
+
+// engine mega-wave W3 (2026-07-03, r12): リムーブ中カードの【現場リムーブ時】明示発動 (B08078 a2)。
+// 実体は effect/invoke-leave-to-remove.ts leaf (emit 非経由 = 盤面 observer 波及なし)。
+// args: { cardId | '$bind.ref', player? ('self' 相対、省略時効果起動側のカード所有 = self) }
+export function atomInvokeLeaveToRemoveOfCard(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const ilCardId = resolveBindRef(a.cardId, ctx) as string;
+      if (typeof ilCardId !== 'string' || ilCardId.startsWith('$')) return;
+      const ilP = resolvePlayer(a.player ?? 'self', ctx);
+      invokeLeaveToRemoveOfCard(s, ilCardId, ilP);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:invokeLeaveToRemoveOfCard', target: ilCardId });
       return;
     }
 

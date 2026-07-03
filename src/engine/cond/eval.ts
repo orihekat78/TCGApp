@@ -536,6 +536,59 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const cand: Candidate = { kind: 'char', uid: pl.cardId, cardId: pl.cardId, player: ctx.source.player };
       return matchOneFilter(state, pl.cardId, cond.filter, null, cand);
     }
+    // engine mega-wave W3 (2026-07-03, r10): disguise:replaced payload の入替わり側 (newCardId) を
+    // filter 評価 (B03052「〚カード名［ベルモット］〛が【変装】によって…入れ替わったとき」)。
+    // triggerCutinMatches と同型 — char=null = CardDef 印字値、rules/19 分割名は cardName 経由。
+    case 'disguiseReplacedByMatches': {
+      const pl = ctx.triggerPayload as { newCardId?: string } | undefined;
+      if (!pl || typeof pl.newCardId !== 'string') return false;
+      const cand: Candidate = { kind: 'char', uid: pl.newCardId, cardId: pl.newCardId, player: ctx.source.player };
+      return matchOneFilter(state, pl.newCardId, cond.filter, null, cand);
+    }
+    // engine mega-wave W3 (2026-07-03, r51): disguise:into payload.replacedChar (入替え元 snapshot) を
+    // filter 評価 (B02047「【変装時】LP2以上の【白】のキャラと入れ替わった場合」)。removedCharMatches の
+    // removedFilter と同型 — snapshot は turnEffects を保持 (effective 値判定、公式Q&A「効果を解決する
+    // 時点の増減した状態」)。uid は sentinel (`::disguise-replaced`) で scene 不在 → 新カード自身の
+    // continuous/aura が混入しない。
+    case 'disguiseReplacedMatches': {
+      const pl = ctx.triggerPayload as
+        | { player?: 'self' | 'opp'; replacedChar?: SceneCharacter }
+        | undefined;
+      if (!pl?.replacedChar || (pl.player !== 'self' && pl.player !== 'opp')) return false;
+      const sameSide = pl.player === ctx.source.player;
+      if (cond.side === 'self' && !sameSide) return false;
+      if (cond.side === 'opp' && sameSide) return false;
+      const rc = pl.replacedChar;
+      const cand: Candidate = { kind: 'char', uid: rc.uid, cardId: rc.cardId, player: pl.player };
+      return matchOneFilter(state, rc.cardId, cond.filter, rc, cand);
+    }
+    // engine mega-wave W3 (2026-07-03, r17): hand:removed payload.byPlayer (リムーブを起こした側) を
+    // カード所有者 (ctx.source.player) 視点で side 判定 (B05115「相手の能力や効果によって」= side:'opp')。
+    case 'triggerByPlayerIs': {
+      const pl = ctx.triggerPayload as { byPlayer?: 'self' | 'opp' } | undefined;
+      if (!pl || (pl.byPlayer !== 'self' && pl.byPlayer !== 'opp')) return false;
+      const same = pl.byPlayer === ctx.source.player;
+      return cond.side === 'self' ? same : !same;
+    }
+    // engine mega-wave W3 (2026-07-03, r18): hand:reveal payload.revealed (公開 CardId[]) の cardName
+    // any-match (B09004「〚カード名［工藤新一］〛か〚［毛利蘭］〛を公開したとき」)。1枚でも一致で true。
+    // removeExitMatches と同じ side 規約 (省略時 'self' = 自分の手札公開)。
+    case 'triggerRevealMatches': {
+      const pl = ctx.triggerPayload as { player?: 'self' | 'opp'; revealed?: string[] } | undefined;
+      if (!pl || (pl.player !== 'self' && pl.player !== 'opp') || !Array.isArray(pl.revealed)) return false;
+      const reqSide = cond.side ?? 'self';
+      const sameSide = pl.player === ctx.source.player;
+      if (reqSide === 'self' && !sameSide) return false;
+      if (reqSide === 'opp' && sameSide) return false;
+      if (cond.cardName !== undefined) {
+        const nameFilter = { cardName: cond.cardName };
+        return pl.revealed.some((id) => {
+          const cand: Candidate = { kind: 'card', cardId: id, area: 'hand', player: pl.player! } as Candidate;
+          return matchOneFilter(state, id, nameFilter, null, cand);
+        });
+      }
+      return true;
+    }
     // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)。
     // leave:to-remove payload snapshot {uid,cause,side,byUid} を **scene 再取得せず** 読む
     // (除去キャラは splice 済 = triggerCharMatches L298 の scene.find は使えない、13198)。
@@ -677,6 +730,10 @@ const CONDITION_KIND_MAP = {
   enterSource: true, // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled)
   removedCharMatches: true, // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)
   removeExitMatches: true, // engine additive wave-4 (2026-07-01): remove:exit observer (B05087/B05088)
+  disguiseReplacedByMatches: true, // engine mega-wave W3 (2026-07-03, r10): 被置換反応の入替わり側 filter (B03052)
+  disguiseReplacedMatches: true, // engine mega-wave W3 (2026-07-03, r51): 入替え元 snapshot filter (B02047)
+  triggerByPlayerIs: true, // engine mega-wave W3 (2026-07-03, r17): hand:removed 起動側 side 判定 (B05115)
+  triggerRevealMatches: true, // engine mega-wave W3 (2026-07-03, r18): hand:reveal cardName any-match (B09004)
   custom: true,
 } as const satisfies Record<Condition['kind'], true>;
 export const CONDITION_KINDS: ReadonlySet<string> = new Set(Object.keys(CONDITION_KIND_MAP));
