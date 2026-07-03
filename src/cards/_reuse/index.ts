@@ -1068,6 +1068,8 @@ import { B03033P } from '../ct-p03/B03033P.js';
 import { B03118 } from '../ct-p03/B03118.js';
 import { B08086 } from '../ct-p08/B08086.js';
 
+import { B06006 } from '../ct-p06/B06006.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1373,4 +1375,6 @@ export const REUSE_CARDS: CardDef[] = [
   B03118,
   // card-authoring wave17 — $self.oppSceneCount aura + D11013型cutin (engine変更0)
   B08086,
+  // CARD PHASE #2 B06006 江戸川コナン
+  B06006,
 ];
