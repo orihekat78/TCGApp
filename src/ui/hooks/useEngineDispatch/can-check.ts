@@ -1,5 +1,6 @@
 // useEngineDispatch/can-check.ts — Phase 3d 分割 (isAllowed 前段ガード, body 無改変移送, 2026-06-22)
 import * as flow from '@/engine/flow/index.js';
+import { game as readGame } from '@/engine/read/game.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { _getResolutionLock } from '@/engine/event/registry.js';
 import type { GameState } from '@/engine/types/game-state.js';
@@ -36,6 +37,8 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       if (ps.evidence.length < ps.case.requiredEvidence) return false;
       if (ps.partner.state !== 'active') return false;
       if (state.turnState[action.player].assistedThisTurn) return false;
+      // E3 P53: 「自分は【事件解決】できない」case (B09107) は事件解決不可 (canWin/canSolveCase(UI/AI) と同 gate)
+      if (readGame.cannotSolveCase(state, action.player)) return false;
       return true;
     }
     case 'actionAgainstChar':

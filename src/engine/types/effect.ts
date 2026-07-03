@@ -40,6 +40,11 @@ export type Condition =
   // players[opp].evidence − players[self].evidence >= n)。evidenceAtLeast(片側閾値)では差を表現できない。
   // player/other は resolvePlayer 規約 ('self'=カード所有者)。honor: cond/eval.ts case + MAP + CONDS。
   | { kind: 'evidenceDiff'; player: 'self' | 'opp'; other: 'self' | 'opp'; n: number }
+  // engine E3 P53 (2026-07-03): 証拠エリアの特徴計数 (B09107「自分の証拠に〚特徴［犯人］〛のカードが8枚以上ある場合」)。
+  // players[player].evidence を lookupCardDef で特徴解決し、trait (単一 or 配列 any-match) 一致枚数 >= n。
+  // faceUp/faceDown 問わず全証拠を計数 (evidenceFlip all で全表向き化した後に評価する運用だが計数自体は状態非依存)。
+  // state 直読み (ctx 非依存) → removeTraitAtLeast と同型。honor: cond/eval.ts case + MAP + CONDS。
+  | { kind: 'evidenceTraitAtLeast'; player: 'self' | 'opp'; trait: string | string[]; n: number }
   // Task D E1 (2026-06-12): 手札枚数条件。player は resolvePlayer 規約 ('self'=カード所有者)。
   // handAtMost を not(handAtLeast n+1) に畳まないのは公式テキスト「N枚以下」と 1:1 対応させるため。
   // rules: 15-abilities-effects.md (「〜の場合」は effect 内 conditional で解決時評価),

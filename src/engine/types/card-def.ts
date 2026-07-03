@@ -176,6 +176,12 @@ export type ContinuousModifier = {
   //   読む kind (boundMatchesFilter 等) は caseCtx.bindings={} で undefined になり得る (case 継続能力は bindings 非依存 kind のみ想定)。
   //   PR067 は unconditional ゆえ両者非該当。consumer 拡張時に guard 追加を検討。
   partnerColorsOverride?: string[];
+  // engine E3 P53 (2026-07-03): 自 case card の継続能力「自分は【事件解決】できない」(B09107 犯人たちの犯行)。
+  //   read.game.cannotSolveCase が自 case def の abilities[].continuousModifier.cannotSolveCase を走査
+  //   (type==='continuous' + ability.condition honor)。canWin / ai.canSolveCase / ui.canSolveCaseForUi が gate。
+  //   通常勝利ルート (【事件解決】) を封鎖し alt-lose (opponentLoses) のみ残す設計 (E3 分解 spec P53)。
+  //   不在時 false (既存 case は未宣言 → baseline 不変)。sceneCapOverride と同流儀。
+  cannotSolveCase?: boolean;
 };
 
 // ---------- AbilityDef ----------

@@ -61,6 +61,8 @@ export function canSolveCase(state: GameState, p: Player): boolean {
   if (ps.evidence.length < ps.case.requiredEvidence) return false;
   if (ps.partner.state !== 'active') return false;
   if (state.turnState[p].assistedThisTurn) return false;
+  // E3 P53: 「自分は【事件解決】できない」case (B09107) は事件解決不可 (read.game.canWin と同 gate)
+  if (engine.read.game.cannotSolveCase(state, p)) return false;
   return true;
 }
 

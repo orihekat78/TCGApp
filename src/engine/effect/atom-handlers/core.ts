@@ -412,6 +412,14 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       // engine拡張 wave (2026-06-23): evidence-flip-faceup 有効化。a.player = 表向きにする証拠の owner
       // ('opp'=相手の証拠 をスカウト)。chooser/picker は常に controller (ctx.source.player)。
       const flipP = resolvePlayer(a.player, ctx);
+      // engine E3 P53 (2026-07-03): all = 「(自分の)証拠をすべて表向きにする」(B09107)。選択なし、全 idx faceUp 化。
+      // 順序不変 (flipFaceUp は faceUp フラグのみ true 化)。証拠 0 枚は no-op。
+      if (a.all === true) {
+        const evList = s.players[flipP].evidence;
+        for (let i = 0; i < evList.length; i++) mutate.evidence.flipFaceUp(s, flipP, i);
+        mutate.log.append(s, { ts: Date.now(), player: flipP, turn: s.turn.number, action: 'effect:evidenceFlip', target: 'all', result: evList.length === 0 ? 'none' : 'ok' });
+        return;
+      }
       // ② fromTop = 「(相手の)証拠を上から1つ表向きにする」(B03076)。上から=末尾 (removeTop と整合)、選択なし。
       if (a.fromTop === true) {
         const evList = s.players[flipP].evidence;

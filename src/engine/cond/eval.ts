@@ -180,6 +180,18 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const b = resolvePlayer(cond.other, ctx);
       return state.players[a].evidence.length - state.players[b].evidence.length >= cond.n;
     }
+    // engine E3 P53 (2026-07-03): 証拠エリアの特徴計数 (B09107「証拠に〚特徴［犯人］〛が8枚以上」)。
+    // removeTraitAtLeast と同型 (remove → evidence に読替)。trait 単一/配列 any-match、cardId→lookupCardDef.traits。
+    case 'evidenceTraitAtLeast': {
+      const p = resolvePlayer(cond.player, ctx);
+      const wants = Array.isArray(cond.trait) ? cond.trait : [cond.trait];
+      const count = state.players[p].evidence.filter(e => {
+        const d = lookupCardDef(e.cardId);
+        const traits = d?.traits ?? [];
+        return wants.some(w => traits.includes(w));
+      }).length;
+      return count >= cond.n;
+    }
     // Task D E1 (2026-06-12): 手札枚数条件 (evidenceAtLeast と同流儀の state 直読み。
     // candidates() を経由しないため continuous 再帰 (BUG-113 系) に乗らない)
     // rules: 15-abilities-effects.md, 21-declared-ability-cost.md
@@ -645,6 +657,7 @@ const CONDITION_KIND_MAP = {
   partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
   bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,
   evidenceDiff: true, sceneCountCompare: true, // engine additive wave (2026-06-30, B05103/B05081)
+  evidenceTraitAtLeast: true, // engine E3 P53 (2026-07-03, B09107 証拠特徴計数)
   handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, // Task D E1 (2026-06-12)
   fileTopType: true,
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
