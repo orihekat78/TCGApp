@@ -2,15 +2,15 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `e800cb99724b`
+> Source hash: `676ee8c2b783`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/tmp/a2-17`)
+- **対象ルート**: `.` (`C:/tmp/e3-p10`)
 - **ディレクトリ数**: 221
-- **ファイル数**: 3956
+- **ファイル数**: 3958
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -567,6 +567,7 @@
     - `2026-07-03-01-cards-wave16-cutin-observer.md`
     - `2026-07-03-01-engine-e3-p53-evidence-altwin.md`
     - `2026-07-03-02-cards-wave17-b08086-tequila.md`
+    - `2026-07-03-03-engine-e3-p10-partner-solve-override.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -880,7 +881,7 @@
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
     - `smoke-2026-07-03.json`
-    - `smoke-2026-07-03.md` — Smoke 1000戦レポート — smoke-2026-07-03-004714
+    - `smoke-2026-07-03.md` — Smoke 1000戦レポート — smoke-2026-07-03-010738
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -3796,6 +3797,7 @@
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
     - `distinct-name-count.test.ts` — distinct-name-count — sceneHas が query.distinctNames を honor して「それぞれカード名の異なる
     - `e3-alt-lose.test.ts` — engine E3 (2026-07-02) — opponentLoses verb「相手はゲームに敗北する」(alt-lose 勝利ルート)
+    - `e3-p10-partner-solve-override.test.ts` — engine E3 P10 (2026-07-03) — パートナー【事件解決】書き換え (B03135/B05118/B06105):
     - `e3-p11-scene-cap.test.ts` — engine E3 P11 (2026-07-02) — sceneCapOverride: case card 継続能力で現場登場上限を override
     - `e3-p53-evidence-altwin.test.ts` — engine E3 P53 (2026-07-03) — 犯人たちの犯行 (B09107) の 3 primitive:
     - `engine-additive-wave-0629b.test.ts` — engine additive wave (2026-06-29b) — 2 つの純 additive primitive の挙動テスト。
