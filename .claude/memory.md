@@ -18,3 +18,10 @@
 - ゲート: tsc 両0 / vitest **4035+1skip** (+60) / smoke winsA=472 不変 exc0 / 8lint err0 / CI green。
 - 教訓: scene.byUid 不在=null (truthy判定) / Pattern A atom は walk 前提 (直接 runEffect で $pick no-op) / shell cwd 永続 → worktree 作業中の cd は絶対 path 徹底 / 新 name 機構は names() + effectiveNameComponents 両 honor (BUG-117)。
 - 次 = W6 後半 (step7-11) + step12 card-phase。
+
+## 2026-07-04 朝 session: mega-wave W6 後半 (step7-11) 出荷 → engine 骨格凍結到達
+- **W6b 出荷 (origin af5b580c = feat 8beaf75a + fix d65076e5 + docs)**: step7 evidenceGainSuppress + hirameki defer 再順序化 (B02088/B03126) / step8 GameState.reservedEffects queue (B08069/B01058) / step9 startContact 本実装 + generatedByEffect (B06020/B06042) / step10 leave:intercept pre-splice consult AI-only (B01092/B01039) / step11 hand-declared gate + findDeclaredAbility rider + removeAreaToDeckTop (B07014 full 解禁)。engine-only、probe 32 tests。
+- **混成 review**: sonnet5 SHIP / opus SHIP_WITH_NITS、**blocker 0・split なし (fable 不要)**。opus NIT phantom 手札 guard 即修正。nits = DEFERRED-INDEX「megaw6b」節 (human-defender window LOUD DEFER 最重要)。
+- ゲート: tsc 両0 / vitest **4067+1skip** (+32) / smoke winsA=472 不変 exc0 / 8lint err0 (side-channel allowlist に ContactStartAxId 追加)。
+- 教訓: (1) hirameki は scope 'on-evidence' (probe def の on-scene は listener 素通り) (2) PA短縮形の候補 state filter は query.state **配列** (a.state scalar は to-state — filter は明示 PB target で書く) (3) reservedEffects 発火の AI pick は drainAiEffectPicks 必須 (4) canDeclaredAbility fail-closed 化は pin 3 file 更新を伴う挙動変更 — 既存 pin grep が先 (W4 教訓の再確認)。
+- **次 = step12 CARD PHASE 一括刈り取り** (engine 凍結、B01092 の human-defender window のみ残 engine 必須 touch-up)。
