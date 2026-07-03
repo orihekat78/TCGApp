@@ -181,6 +181,13 @@
   (セッション本体のモデルは /model で切替: リファクタ系セッション=fable / 通常セッション=opus 推奨)
 - **sonnet は慎重に選定した機械作業のみ**: grep/集合一致検証、diff の機械突合、whitelist 抽出、
   lint/テスト実走系 lens。迷ったら opus
+- **★2026-07-03 改定: Sonnet 5 を grounding/設計/意味等価 lens に昇格** (ユーザー指示で A/B 実測。
+  既知正解 3 タスク — grounding 罠 2種 (name-grep 偽陽性/union 登録済 stub)・contact-guard 配置罠・
+  意味等価 誤り2件仕込み — を **sonnet5 が全問 opus 級で通過**)。新運用: grounding 判定/設計 spec/
+  意味等価 lens = **sonnet5 (effort high)** / 敵対 review = **sonnet5+opus 各1 lens、割れたら fable 裁定** /
+  T3 最終 verify・ルール裁定 = fable escalate (不変) / 機械 harvest = sonnet low (不変)。
+  subagent 費 ~50-60% 減 (Sonnet5 intro $2/$10 per MTok、〜2026-08-31)。旧「機械作業のみ」制限は
+  sonnet 4.x 前提で stale。
 - 適用対象: Workflow `agent()` の `opts.model` / Agent tool / `scripts/wf-*.mjs` 系パイプライン
 
 ### 標準活用リソース (2026-06-12 採用)

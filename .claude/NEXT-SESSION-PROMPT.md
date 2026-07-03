@@ -1,4 +1,18 @@
-> ## ★2026-07-03 現況: engine-first 完了 → **CARD PHASE 進行中** (下の A1 prompt は engine 再開時のみ)
+> ## ★★2026-07-03 夕 方針転換 (ユーザー決定): **全カード実装エンジン完成まで engine 拡張再開** (mega-wave program)
+> - 目標 = **残 51+α 未出荷 primitive を全部出荷** (bespoke 尾含む、見積 3-4 セッション)。CARD PHASE は engine 完成後に一括刈り取り。
+> - **ワークフロー必須運用** (ユーザー opt-in 済): 設計 = workflow 並列 (次 wave 設計を実装中に背景 pipeline) / 実装 = 本 loop 逐次 (union file 衝突回避) / review = workflow 混成 2 lens。
+> - **★モデル規約改定 (A/B 実測済、CLAUDE.md 反映済)**: grounding/設計/意味等価 lens = **sonnet5 (effort high)** / 敵対 review = **sonnet5+opus 各1 lens** (割れたら fable 裁定) / T3 verify・ルール裁定 = fable。W2 で初運用 → **sonnet lens が実 blocker (ability:declared 解決順の公式Q&A違反) を検出**、実証済。
+> - 出荷済 (本日、順): CARD PHASE #3 (11c9e526) → **mega-W1** additive verb/cost 6 primitive + 9 printings (9fa32ed6: deckOwner:picked-host / charSetCard cardIds / revealHandToDeckTop / sceneToEvidence / handToFileBottom / evidenceToDeckBottom。PR136/142・B08036・B05049/P・B03084/P・B05045/P) → **mega-W2** restriction 6 primitive + hook + 3 printings (**aa08dfbe**: untargetableByAction 等 4 token + opponentRestrict refreshEvidence/hirameki + colorIgnoreOnHandUse + **ability:declared hook**。B05079・B03057/P)。
+> - **次セッション = W2b + W3 + W4 (+W5)**:
+>   - **W2b (UI重 T3、playwright 必須)**: r27 mustBeSelectedByOppEvent + r28 mustGuard — 設計済 `.tmp/_w2_specs.json` (specs[r27/r28] に plug/UI 詳細)。
+>   - **W3 (observer hooks、設計済 `.tmp/_w3_specs.json`)**: r10 disguise:replaced / r12 invokeLeave verb / r17 hand:removed / r18 hand:reveal / r51 disguiseReplacedMatches (5 feasible。blocked: r13 char:chosen ↔ r19 event-use-source は co-req 整理後 W4+)。
+>   - **W4 stack/scope**: r5/6/7 (charStackCard scene-source + 2 cost) / r62 G32 filtered-kw grant / r83 G34 group-choice / r84 G38 per-side quota / r82 G33 / r1 P01 残 — 設計 workflow を sonnet5 で背景起動してから実装。
+>   - **W5 dyn/cost**: r37 可変数 cost (→B05097 解禁) / r38 P52 / r47 残 / r43 risky latch。
+>   - **W6 (最終、big structural T3)**: r9 leave-prevent / r53 P13 / r63+19 play-event / r65 startContact 本実装 / r70 P40 (→B03126 解禁) / r74 P45 / r75 P49 / r79 G42 MR残 / r49+54 P14 / r50 / r58 P15残 / r59 P16 + **W1/W2 で湧いた co-primitive** (boundIsMr / free-string name UI / hand-declared 宣言 / on-set-host WRITE)。
+> - **backlog 正本** = `.tmp/_engine_backlog.json` (51 rows、origin/main 実測 grounding 済)。⚠ 各 wave 着手時に該当 row を再 grep (spec の「既存」主張は W1/W2 で計5件偽と実証 — 実測必須)。
+> - **手順 (確立済)**: worktree (C:/tmp/megaw1 再利用可、node_modules junction 済) → 新 branch → RED probe → 実装 → GREEN → exemplar 同梱 (全列突合、partial 禁止 → engine-only + DEFER) → 6ゲート → 混成 review → blocker 修正 → FF push → CI。smoke json は rm してから docs。
+>
+> ## (旧) 2026-07-03 昼 現況: engine-first 完了 → CARD PHASE (mega-wave 完了後に再開、下記は当時の記録)
 > - engine 骨格凍結到達 (E3 P10 partnerSolveOverride bf33786d が最終 engine wave)。以降は **card-authoring lane** が主。
 > - 出荷済: CARD PHASE #1 B03033 (3ed71dcc) / #2 **B06006 江戸川コナン (63000bc6、engine変更0)** / #3 **cutin:used ペア B09086 諸伏高明 + B04090 ライ (origin 11c9e526、engine変更0)**。
 > - ★2026-07-03 **engine wave-18 inContact 出荷 (origin 6b6437b1、A1 structural)**: 前 session parked を verify→ship。inContact TargetQuery + contact emit enrichment + optional-bindings holder。exemplar B04075 白鳥/B04092 キャンティ (playwright human-path 実機検証済)。詳細 [[reference-incontact-vein-a1-blocked]] (RESOLVED)。⇒ **inContact clone (PR029/PR033 白鳥・B04093 コルン・B03034 稲尾) が card-authoring で解禁** (primitive 出荷済、engine変更0)。BUG-167 defer (低)。

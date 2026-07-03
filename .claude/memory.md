@@ -45,3 +45,12 @@
 - **B04090** = a1 `partnerColorKeyword({color:黒,kw:'突撃[キャラ]'})` 共通クラス / a2 cutin:used observer → `sceneEnter{from:remove,viaEffect,filter:{color:黒,levelMax:3,kind:character},n:0-1}` (B08029 伊織無我 deployStep 同型)。
 - **検証**: probe `cardphase3-cutin-observer.test.ts` 11件 (実 emit 経路 flow/contact.cutIn、名/特徴match・非match・ガード側コンタクト・非参加DECOY・revive候補levelMax honor を決定論確認)。gates: tsc0 / **vitest 3798→3809+1skip (+11 probe)** / smoke winsA=498 exc0 / 8 lint errors=0。
 - **playwright**: 本 session は未実走。tier 判断 = cutin:used family exemplar **B03118 (wave16 で human-path playwright 済)** の clone + 新UI部品型なし → 2026-07-02 tier 規則「clone は決定表 diff で代替」に従い emit-path probe (production cutIn flow) で代替 (B06006/B03033 の engine変更0 ship と同方針)。revive の sceneEnter-from-remove pick UI も既出荷 (B03059/B08029/B07058)。full-game playwright は low-risk defer。
+
+## 2026-07-03 夕 mega-wave program 開始 — W1+W2 出荷 (engine 拡張再開、ユーザー決定)
+
+- **方針転換**: 目標=全カード実装エンジン (bespoke 尾含む、3-4 session 見積)。ワークフロー必須運用 opt-in。
+- **W1 (9fa32ed6)**: additive 6 primitive (deckOwner:picked-host/charSetCard cardIds/revealHandToDeckTop/sceneToEvidence/handToFileBottom/evidenceToDeckBottom) + 9 printings (PR136/142・B08036・B05049/P・B03084/P・B05045/P MR)。probe 25。
+- **W2 (aa08dfbe)**: restriction 6 primitive (selfContinuousFlag 4 token + opponentRestrict refreshEvidence/hirameki + colorIgnoreOnHandUse) + **ability:declared hook** + 3 printings (B05079・B03057/P)。probe 13。
+- **★sonnet5 昇格 A/B 実測→CLAUDE.md 改定**: grounding/設計/意味等価=sonnet5、review=sonnet5+opus 混成。W2 初運用で sonnet lens が実 blocker (ability:declared が宣言効果より先に解決=公式Q&A違反) を検出→emit を effect queue 後へ移動+順序 probe で修正。
+- **教訓**: spec の「既存」主張は W1/W2 計5件偽 (ability:declared hook 不在/action-evidence-deny 不在/可変数cost 不在/r56 on-set-host gate/r67 boundIsMr) → 着手前実測必須は wave 単位でも不変。partial card 禁止 → engine-only + DEFER (B05097/B03126)。
+- 設計 pipeline: W3 (sonnet5、5 feasible) 済 `.tmp/_w3_specs.json`。backlog 正本 `.tmp/_engine_backlog.json`。
