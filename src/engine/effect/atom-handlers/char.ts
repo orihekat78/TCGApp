@@ -101,7 +101,7 @@ export function atomCharGrantKeyword(s: GameState, a: Record<string, unknown>, c
       // 明示 uid:'$pick'+target 形は初期 walk push となり human 経路で後続 step の bind が
       // 喪失するため、pick carrier に使う場合は短縮形 (runtime push) が必須。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
-        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す (sidesForQuery が owner 相対解釈 — 絶対値だと owner='opp' で反転)
         return;
       }
       if (a.uid === '$pick' && (a as { target?: unknown }).target === undefined) {
@@ -154,7 +154,7 @@ export function atomCharGrantAbility(s: GameState, a: Record<string, unknown>, c
       // def.abilities と合算走査。清掃は clearTurnEffects('turn')。validate.ts が JSON 性と
       // trigger.hook の許可リストを enforce (rules/15, 19)。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
-        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す (sidesForQuery が owner 相対解釈 — 絶対値だと owner='opp' で反転)
         return;
       }
       if (a.uid === '$pick') {
@@ -218,7 +218,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
         //   旧コードは byPlayer=scsP を渡し、player:'opp' (B02020/B03032) で『controller が相手キャラを
         //   選ぶ』が「相手が選ぶ」に化けていた (charModifyAP/LP/Level は byPlayer=ctx.source.player で正)。
         //   deck-source は後段 resolve (L798 resolvePlayer(a.player)) が a.player を別途参照するため不変。
-        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す (sidesForQuery が owner 相対解釈 — 絶対値だと owner='opp' で反転)
         return;
       }
       // skip-unresolved: max:N の pick が user skip (pickedUid=null) で resolve された後の handler 呼出
@@ -374,7 +374,7 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
       //       stacked 転送 verb が別途要るため未対応 (DEFERRED-INDEX 参照)。
       if (a.fromSelf === true) {
         if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
-          paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+          paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す (sidesForQuery が owner 相対解釈 — 絶対値だと owner='opp' で反転)
           return;
         }
         const hostUid = resolveBindRef(a.uid, ctx) as string;

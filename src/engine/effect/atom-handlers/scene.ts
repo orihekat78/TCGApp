@@ -288,7 +288,7 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
         // PA 短縮形 (refactor 2a): chooser=byPlayer は従来どおり srP (= a.player、操作者規約)。
         const srP = resolvePlayer(a.player, ctx);
-        paShortFormAwait(s, verb, a, ctx, srP, srP);
+        paShortFormAwait(s, verb, a, ctx, srP, a.player as Player); // BUG-174: side は相対値のまま (sidesForQuery が owner 相対解釈)
         return;
       }
       // 「$pick」placeholder のまま atom-handler 到達 = pick で 0 枚選択された場合
@@ -327,7 +327,7 @@ export function atomCharRemoveSetCard(s: GameState, a: Record<string, unknown>, 
       // 「リムーブしてもよい」を表現。resolve 後に removeOneSetCard で末尾 1 枚をリムーブエリアへ。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
         const rsP = resolvePlayer(a.player, ctx);
-        paShortFormAwait(s, verb, a, ctx, rsP, rsP);
+        paShortFormAwait(s, verb, a, ctx, rsP, a.player as Player); // BUG-174: 同上
         return;
       }
       // max:1 で 0 枚選択 (skip) は uid='$pick' のまま到達 → silent no-op (sceneRemove 同型)。
@@ -351,7 +351,7 @@ export function atomSceneToHand(s: GameState, a: Record<string, unknown>, ctx: E
       // 「相手の現場のキャラを1枚まで選び、手札に移す」等で使用。所有者の手札に戻る点に注意。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
         const sthP = resolvePlayer(a.player, ctx);
-        paShortFormAwait(s, verb, a, ctx, sthP, sthP);
+        paShortFormAwait(s, verb, a, ctx, sthP, a.player as Player); // BUG-174: 同上
         return;
       }
       if (a.uid === '$pick') {
@@ -372,7 +372,7 @@ export function atomSceneToDeck(s: GameState, a: Record<string, unknown>, ctx: E
       // pos:'top' で「デッキの上に移す」(B05092)。移動先は所有者のデッキ。
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
         // chooser=controller / side 既定=a.player (対象側) — BUG-120 系規約
-        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す (sidesForQuery が owner 相対解釈 — 絶対値だと owner='opp' で反転)
         return;
       }
       if (a.uid === '$pick') {
@@ -394,7 +394,7 @@ export function atomSceneToEvidence(s: GameState, a: Record<string, unknown>, ct
       // rules: 01 (証拠), 09/23 (リムーブでない=現場リムーブ時不発動), 16 (set/stacked リムーブ), 18 (MR① parity)
       if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
         // chooser=controller / side 既定=a.player (対象側) — BUG-120 系規約 (sceneToDeck と同一)
-        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, resolvePlayer(a.player, ctx));
+        paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す (sidesForQuery が owner 相対解釈 — 絶対値だと owner='opp' で反転)
         return;
       }
       if (a.uid === '$pick') {
@@ -403,6 +403,8 @@ export function atomSceneToEvidence(s: GameState, a: Record<string, unknown>, ct
       }
       const steUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof steUid !== 'string' || steUid.startsWith('$')) return;
+      // a.bind ('$picked' 等) はハンドラ内で書かず、pick 解決層 (apply-pick/picks.ts) が chosen を
+      // Candidate[] で bindings に書く (短縮形共通配線、B06085 boundIsMr が後段で参照)。
       const steFaceUp = a.faceUp !== false; // 既定 true (「表向きのまま証拠として得る」)
       mutate.scene.toEvidence(s, steUid, steFaceUp, ctx.source.cardId);
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneToEvidence', target: steUid, result: steFaceUp ? 'faceUp' : 'faceDown' });

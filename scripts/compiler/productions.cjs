@@ -54,8 +54,12 @@ function loadMinedLineRules() {
     emit: (seg, entry) => {
       const r = map.get(keyOf(seg, entry));
       if (r.keywords) return { keywords: r.keywords };
-      if (r.abilities) return { abilities: r.abilities }; // 1 行複数能力 (icon 併記行、B02044 型)
-      return { abilities: [r.ability] };
+      // description は mine 時に削除済 (mine.cjs:130「emit 時に対象 card の印字行から転記」) —
+      // ここで印字行 raw (注釈込み) を転記する (param.cjs instantiate と同 posture、
+      // step12 batch3 で validate-specs「missing description」として顕在化した gap の修正)。
+      const withDesc = (ab) => (ab.description ? ab : { ...ab, description: seg.text });
+      if (r.abilities) return { abilities: r.abilities.map(withDesc) }; // 1 行複数能力 (icon 併記行、B02044 型)
+      return { abilities: [withDesc(r.ability)] };
     },
   };
 }

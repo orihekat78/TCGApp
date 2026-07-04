@@ -340,7 +340,9 @@ export function atomEvidenceGain(s: GameState, a: Record<string, unknown>, ctx: 
             break;
           }
         }
-        mutate.evidence.addFromDeck(s, p, 1, false, { turn: s.turn.number, via: 'effect' });
+        // step12 batch3 (2026-07-04, B06085 第3句): faceUp arg 素通し — 「デッキのカードを上から
+        // 1枚**表向き**で証拠として得る」。未指定は従来通り裏向き (rules/01)。
+        mutate.evidence.addFromDeck(s, p, 1, a.faceUp === true, { turn: s.turn.number, via: 'effect' });
         egGained++;
       }
       // BUG-073: effect log

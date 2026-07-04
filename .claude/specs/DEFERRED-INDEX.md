@@ -1089,7 +1089,7 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 
 - ★**B06020 佐々木小次郎** — a1「自分の手札にある【緑】〚特徴[YAIBA]〛のキャラは【カットイン】AP+2000を持つ」= **hand-zone への継続能力付与 aura 機構不在** (ContinuousModifier は board char 前提、hand-scope grant consumer 皆無)。a2 (startContact declared) は全部品出荷済で CLEAN — partial 禁止で a1 解消後に一括。
 - ★**B06042 ここで会うたが百年目** — 「【宣言】能力を与える」経路不在: (1) atomCharGrantAbility が grantedDef.type を無条件 'triggered' 強制 (char.ts:172) — spec の type:'declared' が反映されない。(2) findDeclaredAbility (canDeclared/useDeclared/UI 列挙の共有 helper) が turnEffects.grantedAbilities を非走査。(3) 同一対象へ複数回付与時の grantedId (`granted:${cardId}:${abilityId}`) が【ターン1】独立カウント (公式Q&A) を満たせない。→ engine touch-up 3 点が前提。
-- ★**B06085 松田陣平** — 第3句「MRを選んだ場合、相手はデッキ上から1枚**表向き**で証拠として得る」= evidenceGain atom に faceUp arg 不在 (mutate.evidence.addFromDeck は faceUp 受取可 = **1-arg 素通しの軽微 additive**)。他 4/5 句 (sceneToEvidence/boundIsMr/evidenceToDeckBottom/hirameki sleep) は全部品出荷済。次の軽微 touch-up 候補筆頭。
+- ✅**B06085 松田陣平 — batch3 で出荷済 (2026-07-04、evidenceGain faceUp 1-arg 素通し追加 + probe 8件)**。以下は当時の記録: 第3句「MRを選んだ場合、相手はデッキ上から1枚**表向き**で証拠として得る」= evidenceGain atom に faceUp arg 不在 → atom-handlers/core.ts で `a.faceUp === true` 素通しに変更 (既定 false 不変)。MR① redirect (証拠→相手PA、公式Q&A) は mutate.scene.toEvidence 既存実装で probe 実測。
 - ★**B09112 キッドVS安室** — 核心句「指定名キャラ1枚につきデッキ上から1枚見る」= **resolveEffectPicks pre-walk が {dyn} を declareName 実行前に literal 化** (sequence 経路: maxN=0 baked / chain 経路: raw {dyn} が Math.min に渡り NaN)。grounding agent が vitest scratch probe で両経路とも revealed=0 を実測。deckRevealUntil maxN への dispatch-time dyn 解決 (filter は W5 で対応済、maxN は未対応) が要る。
 - ✅**B09108 / PR105 / B09003 — batch2 で出荷済 (2026-07-04、DeclareCardNameModal 配線 + BUG-171/172/173)**。以下は当時の記録: DSL 部品 (declareName/boundNameMatchesDeclared/nameOverride/fileRemoveTop/fileFlipTop/fileAdd) は全出荷済・PR105 は megaw5 の「P12 charSetName 不在」DEFER が **stale** (W6 step1/2 の nameOverride で解消済、engine コメントが PR105 名指し)。残 gap = DeclareCardNameModal.tsx が unmounted scaffold (import 0 件) — 宣言 flow が declareName 依存を検出して modal を開き AbilityCostParams.declaredName へ橋渡しする配線 (MisreadPickerModal 前例) を batch2 で実装し 3 枚一括 author。playwright 必須 (新 UI 部品「型」)。
 - **batch1 latent nits (出荷済分)**:
@@ -1125,3 +1125,20 @@ pick / B05042 useEventFromHand human pick (lv7 decoy 除外・自身除外・ski
 - **DeclareCardNameModal 候補は全登録カード名** (kind filter なし): PR105 の「キャラのカード名」でもイベント名が
   suggest に出る (自由入力ゆえ engine 無検証と同 posture、公式 Q&A の対人ルール領域)。気になるなら
   findDeclareNameAtom に kind hint arg を足して filter (優先度低)。
+
+## CARD PHASE step12 batch3 (2026-07-04 出荷) — compiler T0/T1 harvest + B06085
+
+- **PR302 (TVアニメ30周年、vanilla case) DEFER**: abilities 0 のため REUSE_CARDS 規約 test (abilities>0) 対象外。
+  正規経路 = `scripts/gen-cards/gen-simple-cards.cjs` rerun (case no-ability を _generated/simple-cards.ts に収載)。
+  compile 自体は成功 (crosscheck OK) — rerun 時に自動収載される。
+- **B09090P/B09090P2 は compiler exceptions 恒久登録**: base B09090 が closure matcher 持ち = compile 非再現。
+  parallel は spread 形で出荷済 (compile 経路禁止)。同型の「closure 持ち base の parallel」が今後
+  param-compilable に出たら同処置 (spread + exceptions)。
+- **compiler 教訓 (Track B 持ち帰り)**: (1) exact line rule の emit に description 転記が無かった
+  (productions.cjs 修正済、param rule 側は元から有)。(2) compile 出力 abilities は id 無し + key 順
+  alphabetical — codegen spec 化時に a1..aN 付与 + 規約 key 順 (type→scope→trigger→…) への正規化が必須
+  (lint-listener-scope は type:'triggered' 後方 800 字 text-scan で scope を探すため)。
+  ⇒ 恒久化するなら harvest script (.tmp/_batch3_harvest.cjs) の spec 正規化を Track B の公式 emit 段に昇格。
+- **B06085 human 実機 (declared flow) は未踏**: AI 経路 probe + 生成 UI は全て既存部品
+  (EffectPickerModal / BUG-172/173 修正済 declared flow)。MVP デッキ外のため通常プレイ不可 —
+  deck-builder で選択可能になった時に 1 回踏む (B07037 と同扱い)。

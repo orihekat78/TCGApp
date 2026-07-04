@@ -52,3 +52,21 @@
 - DEFER: B09108 PA 発 human 宣言 UI (PA-MR 描画すら無し) = PA宣言19 batch へ / rider description fallback /
   conditional×boundNameMatchesDeclared then 内は短縮形 pick のみ規約 (DEFERRED-INDEX batch2 節)。
 - gates: vitest 4130+1skip / smoke 472 exc0 / 8lint0 / 混成 review sonnet5+opus。
+
+## 2026-07-04 午後 CARD PHASE step12 batch3 (B06085 + compiler T0/T1 harvest 22枚)
+- **B06085 松田陣平 出荷**: engine touch-up = evidenceGain faceUp 1-arg 素通し (core.ts、既定 false 不変)。
+  a1 宣言 sequence[evidenceToDeckBottom→sceneToEvidence apMax8000 bind→conditional boundIsMr→
+  evidenceGain{opp,1,faceUp}] (B03084 clone + MR 句) / a2 ヒラメキ sleep (PR144 clone)。probe 8 (MR①
+  redirect→相手PA + bonus gain を production dispatch で実測)。
+- **compiler harvest 21枚**: P variant 7 = **spread 生成** (B09090 closure matcher 非再現 → compile 経路禁止裁定、
+  exceptions.json 恒久登録) / 同文 twin 8 = canonical deep-equal 決定論裏取り / NO_TWIN 6 = sonnet5 lens。
+  PR302 vanilla case は gen-simple-cards 管轄で DEFER。
+- **compiler gap 2 件検出→修正**: productions.cjs exact rule emit の description 転記漏れ / spec 化時の
+  id 付与 + key 順正規化 (lint-listener-scope が text-scan 順序依存)。詳細 DEFERRED-INDEX batch3 節。
+- 水平展開: 「解決編になったとき手札1リムーブ」は shipped 2 形 (plain discard 6枚 / choice-wrap 8枚) が
+  併存 — 挙動同値。closure 持ち base の parallel は今後も spread + exceptions で処置。
+- **BUG-174 (骨格修正 exception)**: PA短縮形 side の二重相対化 — sidesForQuery は owner 相対解釈なのに
+  9 site が resolvePlayer 絶対値を渡し owner='opp' で対象反転 (CPU が自陣を「相手」pick)。**lens 割れ
+  (sonnet BLOCK runtime再現 / opus SHIP) → probe 実測で sonnet 採択**。owner='self' 恒等 = smoke 同値。
+  教訓: 新 pick 経路は owner='opp' probe 必須 (probe 既定 ctx の 'self' 偏り)。
+- gates: vitest 4140+1skip / smoke 472 exc0 / 8lint0 / NO_TWIN 6 = sonnet5 lens 全SHIP。

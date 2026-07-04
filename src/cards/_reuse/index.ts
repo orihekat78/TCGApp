@@ -1129,6 +1129,28 @@ import { B09108P } from '../ct-p09/B09108P.js';
 import { B09003 } from '../ct-p09/B09003.js';
 import { B09003P } from '../ct-p09/B09003P.js';
 import { PR105 } from '../pr-01/PR105.js';
+import { B06085 } from '../ct-p06/B06085.js';
+import { B04093 } from '../ct-p04/B04093.js';
+import { D10006 } from '../ct-d10/D10006.js';
+import { PR029 } from '../pr-01/PR029.js';
+import { PR033 } from '../pr-01/PR033.js';
+import { PR281 } from '../pr-01/PR281.js';
+import { PR282 } from '../pr-01/PR282.js';
+import { PR283 } from '../pr-01/PR283.js';
+import { PR286 } from '../pr-01/PR286.js';
+import { PR293 } from '../pr-01/PR293.js';
+import { PR294 } from '../pr-01/PR294.js';
+import { PR299 } from '../pr-01/PR299.js';
+import { PR300 } from '../pr-01/PR300.js';
+import { PR301 } from '../pr-01/PR301.js';
+import { PR303 } from '../pr-01/PR303.js';
+import { B02088P } from '../ct-p02/B02088P.js';
+import { B03046P } from '../ct-p03/B03046P.js';
+import { B08014P } from '../ct-p08/B08014P.js';
+import { B09004P } from '../ct-p09/B09004P.js';
+import { B09070P } from '../ct-p09/B09070P.js';
+import { B09090P } from '../ct-p09/B09090P.js';
+import { B09090P2 } from '../ct-p09/B09090P2.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1485,4 +1507,8 @@ export const REUSE_CARDS: CardDef[] = [
   B09070,
   // CARD PHASE step12 batch2 — declareName family (B09108/B09003/PR105、DeclareCardNameModal 配線と同 commit)
   B09108, B09108P, B09003, B09003P, PR105,
+  // CARD PHASE step12 batch3 (2026-07-04): B06085 松田陣平 — evidenceGain faceUp 初 consumer
+  B06085,
+  // CARD PHASE step12 batch3 (2026-07-04): compiler T0/T1 batch 15枚 + parallel spread 7枚
+  B04093, D10006, PR029, PR033, PR281, PR282, PR283, PR286, PR293, PR294, PR299, PR300, PR301, PR303, B02088P, B03046P, B08014P, B09004P, B09070P, B09090P, B09090P2,
 ];

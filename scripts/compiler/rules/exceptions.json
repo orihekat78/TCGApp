@@ -56,6 +56,14 @@
   {
    "id": "B05056",
    "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B09090P",
+   "reason": "param-g1: shipped 非再現 (base B09090 closure matcher — spread variant は compile 対象外、step12 batch3)"
+  },
+  {
+   "id": "B09090P2",
+   "reason": "param-g1: shipped 非再現 (base B09090 closure matcher — spread variant は compile 対象外、step12 batch3)"
   }
  ]
 }
