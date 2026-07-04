@@ -74,6 +74,36 @@ function loadExceptions() {
   };
 }
 
+// ---- B4 param 行 rule (param-rules.json) ----
+// exact 行 rule の slot 汎化 (数値/色/カード名/特徴)。exemplar 間の共変 path 積集合を根拠に持ち、
+// param-mine.cjs の検証 pass (全 exact rule の再現 + purge) を通過した rule のみ収載。
+// loadProductions 順で mined-line-rules の **後** に置く = exact 一致が常に優先、param は
+// 「既知 template × 未知 slot 値の組」のみ担当する。
+function loadParamRules() {
+  const file = path.join(RULES_DIR, 'param-rules.json');
+  if (!fs.existsSync(file)) return null;
+  const { extractSlots, instantiate } = require('./param.cjs');
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const map = new Map(data.rules.map((r) => [`${r.kind}|${r.col}|${r.template}`, r]));
+  const lookup = (seg, entry) => {
+    if (seg.colSpan) return null;
+    const { template, slots } = extractSlots(lineKey(seg.text));
+    const r = map.get(`${entry.kind}|${seg.col}|${template}`);
+    if (!r) return null;
+    if (slots.length !== r.slotTypes.length) return null;
+    if (!slots.every((s, j) => s.type === r.slotTypes[j])) return null;
+    return { r, slots };
+  };
+  return {
+    name: 'param-line-rules',
+    match: (seg, entry) => lookup(seg, entry) !== null,
+    emit: (seg, entry) => {
+      const { r, slots } = lookup(seg, entry);
+      return { abilities: [instantiate(r, slots, seg.text)] };
+    },
+  };
+}
+
 function loadProductions() {
   const rules = [];
   const exceptions = loadExceptions();
@@ -81,6 +111,8 @@ function loadProductions() {
   rules.push(partnerBoilerplateRule);
   const mined = loadMinedLineRules();
   if (mined) rules.push(mined);
+  const param = loadParamRules();
+  if (param) rules.push(param);
   return rules;
 }
 

@@ -32,3 +32,8 @@
 - DEFER: B06020 (hand-scope aura 不在) / B06042 (charGrantAbility declared 経路 3 gap) / B06085 (evidenceGain faceUp 軽微 additive) / B09112 (pre-walk dyn literal 化、実測) / B09108+PR105+B09003 (DeclareCardNameModal 配線待ち = **batch2**)。詳細 DEFERRED-INDEX「step12-batch1」節。
 - 教訓: (1) **lint:icon-abilities が B09070 の cutIn 列実装漏れを検出** — grounding 通過後も col11/12/13 は lint が最終防波堤 (2) canDeclaredAbility/useDeclaredAbility は (state, uid, abilId) — player 引数なし (3) charGrantKeyword 短縮形は player 必須 (charModifyAP と非対称) (4) caseTrait cond は CardDef.caseTraits 読み (state.case.traits でない) (5) useDeclaredAbility は cost を支払わない (caller が pay 先行) (6) 「〜まで」持続効果 = endTurn 清掃 / 「このターン中に〜した」履歴 = startTurn 清掃 (BUG-170 区別基準)。
 - playwright 実機は未実施 → batch2 冒頭で一括 (hirameki suppress / useEventFromHand / rider / reserve / 候補除外 UI)。
+
+## 2026-07-04 (追記: Track B B4 param rules)
+- ユーザー指示「ツールでカード実装できないか」→ **B4 parametric rule 出荷** (slot 汎化 + 共変 path 積集合、refuse-first 維持)。re-mine で exact rule 4→717、param 569 本、G1 mismatch 0 (partial-shipped 4枚は exceptions 自動登録)。
+- **実測: 自動 compile 可 = 15→22/482 のみ** — ボトルネックは slot 値でなく句の構造多様性。**near-miss (未知 1 行だけ) = 205/482** が最大レバー → hybrid pipeline (compiler N-1 行 + agent 1 行) を次設計。
+- compile 可 22 枚 (B04093 コルン含む) は codegen T0 batch 候補 (.tmp/compiler/param-compilable.json)。

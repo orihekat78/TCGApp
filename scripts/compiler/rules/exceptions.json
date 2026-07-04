@@ -27,6 +27,11 @@
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {
+   "id": "B09090",
+   "shippedId": "B09090",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
    "id": "D04004",
    "shippedId": "D04004",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
@@ -35,6 +40,22 @@
    "id": "D09027",
    "shippedId": "D09027",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B02047",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B05045",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B05045P",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B05056",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
   }
  ]
 }

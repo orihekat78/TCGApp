@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/tmp/megaw1`)
 - **ディレクトリ数**: 221
-- **ファイル数**: 4056
+- **ファイル数**: 4061
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -586,6 +586,7 @@
     - `2026-07-04-01-engine-megawave-w5.md` — engine mega-wave W5 — dyn/cost 3 primitive + exemplar 5 printings
     - `2026-07-04-02-cardphase-step12-batch1.md` — feat(cards): CARD PHASE step12 batch1 — mega-wave 解禁 consumer 15枚 + BUG-170 修正
     - `2026-07-04-02-engine-megaw6-second-half.md`
+    - `2026-07-04-03-compiler-b4-param-rules.md` — feat(compiler): Track B B4 — parametric rule (slot 汎化) + engine 完成後の re-mine
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -1707,6 +1708,7 @@
     - **`rules/`**
       - `exceptions.json`
       - `line-rules.json`
+      - `param-rules.json`
     - `canonical.cjs`
     - `compile.cjs`
     - `demand-signal.cjs`
@@ -1714,6 +1716,8 @@
     - `mine.cjs`
     - `norm.cjs`
     - `oracle.cjs`
+    - `param-mine.cjs`
+    - `param.cjs`
     - `productions.cjs`
     - `tsv-corpus.cjs`
   - **`gen-cards/`**
@@ -3977,6 +3981,7 @@
     - `norm.test.ts` — Track B compiler — norm (共有正規化) の単体テスト。
     - `oracle-realdata.test.ts` — Track B compiler — oracle の実 data 受入テスト (B0 完了条件を回帰化)。
     - `oracle.test.ts` — Track B compiler — oracle 3 値判定の単体テスト。
+    - `param.test.ts` — Track B compiler — B4 param rule (slot 汎化) 単体テスト。
   - **`e2e/`** — Playwright E2E テスト (1 試合通し検証 + 共通パターン spec)
     - **`helpers/`** — E2E 共通ヘルパー (types / setup / state / assertions)
       - `assertions.ts` — E2E test assertion helpers — engine state + DOM の両層を確認
