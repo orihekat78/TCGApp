@@ -1151,6 +1151,25 @@ import { B09004P } from '../ct-p09/B09004P.js';
 import { B09070P } from '../ct-p09/B09070P.js';
 import { B09090P } from '../ct-p09/B09090P.js';
 import { B09090P2 } from '../ct-p09/B09090P2.js';
+import { B04058 } from '../ct-p04/B04058.js';
+import { PR028 } from '../pr-01/PR028.js';
+import { PR032 } from '../pr-01/PR032.js';
+import { B01035 } from '../ct-p01/B01035.js';
+import { D06009 } from '../ct-d06/D06009.js';
+import { B02049 } from '../ct-p02/B02049.js';
+import { PR039 } from '../pr-01/PR039.js';
+import { B06086 } from '../ct-p06/B06086.js';
+import { PR288 } from '../pr-01/PR288.js';
+import { PR179 } from '../pr-01/PR179.js';
+import { PR185 } from '../pr-01/PR185.js';
+import { PR291 } from '../pr-01/PR291.js';
+import { PR297 } from '../pr-01/PR297.js';
+import { PR277 } from '../pr-01/PR277.js';
+import { D02008 } from '../ct-d02/D02008.js';
+import { B03104 } from '../ct-p03/B03104.js';
+import { B03098 } from '../ct-p03/B03098.js';
+import { B06086P } from '../ct-p06/B06086P.js';
+import { B03098P } from '../ct-p03/B03098P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1511,4 +1530,8 @@ export const REUSE_CARDS: CardDef[] = [
   B06085,
   // CARD PHASE step12 batch3 (2026-07-04): compiler T0/T1 batch 15枚 + parallel spread 7枚
   B04093, D10006, PR029, PR033, PR281, PR282, PR283, PR286, PR293, PR294, PR299, PR300, PR301, PR303, B02088P, B03046P, B08014P, B09004P, B09070P, B09090P, B09090P2,
+  // .tmp/_hybrid_specs.json
+  B04058, PR028, PR032, B01035, D06009, B02049, PR039, B06086, PR288, PR179, PR185, PR291, PR297, PR277, D02008, B03104, B03098,
+  // hybrid-pilot-1 P variants
+  B06086P, B03098P,
 ];

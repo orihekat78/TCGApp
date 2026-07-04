@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `74eef62bbfd9`
+> Source hash: `c5cbded62475`
 
 公式ルール [`10-action-event.md`](../../../rules/10-action-event.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,13 +22,14 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (238)
+## 📄 参照ソース (246)
 
 - [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
 - [`src/cards/ct-d02/D02004.ts`](../../../../src/cards/ct-d02/D02004.ts)
 - [`src/cards/ct-d02/D02005.ts`](../../../../src/cards/ct-d02/D02005.ts)
+- [`src/cards/ct-d02/D02008.ts`](../../../../src/cards/ct-d02/D02008.ts)
 - [`src/cards/ct-d03/D03011.ts`](../../../../src/cards/ct-d03/D03011.ts)
 - [`src/cards/ct-d03/D03013.ts`](../../../../src/cards/ct-d03/D03013.ts)
 - [`src/cards/ct-d04/D04004.ts`](../../../../src/cards/ct-d04/D04004.ts)
@@ -43,5 +44,4 @@
 - [`src/cards/ct-d07/D07010.ts`](../../../../src/cards/ct-d07/D07010.ts)
 - [`src/cards/ct-d07/D07011.ts`](../../../../src/cards/ct-d07/D07011.ts)
 - [`src/cards/ct-d07/D07018.ts`](../../../../src/cards/ct-d07/D07018.ts)
-- [`src/cards/ct-d08/D08013.ts`](../../../../src/cards/ct-d08/D08013.ts)
-- _...ほか 218 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 226 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

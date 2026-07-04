@@ -126,6 +126,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           if (matchCands.length > 0) {
             pushPendingPickFromAtom({
               player: owner,
+              ownerPlayer: owner, // BUG-175: 座標系明示 (本 site は chooser==owner ゆえ挙動不変)
               candidates: matchCands.map(({ cardId, i }) => ({ uid: `${cardId}#${i}`, cardId, player: p })),
               atomVerb: 'deckRevealUntil',
               // 再入用に window snapshot を同梱 (deck 再走査しない)。chooseMatch 等の元 args も保持。

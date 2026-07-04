@@ -56,7 +56,7 @@ cluster16 G1 `cardNameNot` で解消済**。出荷 changelog: [2026-06-16-08](..
 | ~~B04004 / B04004P~~ | ✅ **出荷済 (2026-06-21、`cards/wave-dsl-reauthor`)**。a3 を `matcherCondition and[triggerCharMatches{side:opp,filter:{}}, triggerCharMatches{payloadKey:targetUid,side:self,filter:{cardName:工藤新一}}]` (actor+target AND gate、B01062/B08048) で再author。敵対verify 2/2 ship・decoy test 1対1。changelog 2026-06-21-01 | ✅ 出荷済 |
 | B06087 | 登場候補の **cardName-EXCLUSION** filter (「萩原千速以外」) が TargetFilter に無い + chain/optional 構造 | refuted (engine gate) |
 | B09022 | sceneSetState 自側限定 picked-sleep (short-form side hardcoded 'either' / explicit-$pick in chain no-op) | refuted (engine gate) |
-| D02008 | action-scoped opponent cutin-ban (continuous aura のみ対応、on-action 不可) | yellow |
+| ~~D02008~~ | ✅ **出荷済 (2026-07-04 hybrid-pilot-1)**。engine wave-0629d の `cutinBanOpp_action` turnEffect (contact.ts:121 honor + `_action` 清掃) が本カードを想定 consumer として名指し済 — 旧 yellow は stale だった | ✅ 出荷済 |
 | B05009 | own-side enterSource (「自分のキャラの能力によって登場」の side qualifier 無) | yellow |
 | ~~B06068~~ | ~~turn-scoped で **印字キーワード剥奪** (突撃[キャラ]を失う) の subtractive turnEffect 無~~ | ✅ **engine 解禁** (2026-06-29、`revokedKeywords` turnEffect + charRevokeKeyword scope:'turn'、`engine/bulk-additive-0629b`)。カードは card-wave で出荷 |
 | B07063 | charGrantAbility で removal-observer ability 付与 (validate.ts が leave:to-remove grant を禁止) | yellow |
@@ -536,7 +536,7 @@ changelog [2026-06-23-02](../changelog-entries/2026-06-23-02-wave-evidence-flip.
 |-----|----------------------|---------|
 | ~~B05013 / B06017 / B06017P / B06019~~ | ✅ **出荷済 (2026-06-23、下記「evidence-flip-facedown wave」)**。`evidenceFlipDown` verb 追加で解禁 | — |
 | B06026 / B07099 / B08087 / B08091 | facedown hira は green だが二次 gate で全体 DEFER: B06026=【現場リムーブ時】event-as-evidence / B07099=自己 effect-leave trigger / B08087=【現場リムーブ時】+ 強制選択 / B08091=recruit (facedown 無し、誤グルーピング) | 各二次 gate (leave hook / event→証拠 / forced-target) |
-| B06086 / B06086P | 萩原研二: action-trigger で自+相の証拠を各1 pick faceup + 「**合わせて2つ表向きにした場合** AP+1000」= flip 実行枚数を数える count-flipped conditional が engine 不在 | flipped-count 参照 conditional (engine) |
+| ~~B06086 / B06086P~~ | ✅ **出荷済 (2026-07-04 hybrid-pilot-1)**。W5 evidenceFlip cardIds+bind (declined=[] 書込) + `and[bound{$flipSelf,matched}, bound{$flipOpp,matched}]` conditional で count-flipped を表現 — 旧 gap は W5 で解消済だった | ✅ 出荷済 |
 | B08028 | 日向幸: 宣言 cost[このキャラ以外をリムーブエリアへ] + 「自分の裏向き証拠を**好きな数**選び表向き、**表向きにした枚数と同じ数まで**相手の裏向き証拠を選び表向き」= variable-count pick + dynamic-linked second pick + cost closure | variable-count pick + flip-count-linked pick (engine) |
 | B05079 | 世良真純: hira は pick-faceup で green だが main「相手は【ヒラメキ】を発動できない」= continuous opp-ability-deny gate ゆえ全体 DEFER | opp-ability-deny continuous (engine) |
 | B06034 | 鬼丸城: pick-faceup + 「【ヒラメキ】持ち〚YAIBA〛が表向きになった場合 その【ヒラメキ】を発動」= hirameki-cascade gate | reveal-triggered hirameki cascade (engine) |
@@ -751,7 +751,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | B05063 | yellow | turn-end→手札 (「ターン終了時このキャラを現場から手札に移す」= toHandOnTurnEnd flag / turn.ts branch 無し) + grant 非キーワード ability |
 | B09033 | yellow | reveal-window 反復登場 (4枚公開窓から繰り返し1枚ずつ登場 = deckRevealUntil は単一 $matched bind、reveal 窓を pick ソース化不能) |
 | B05093 | yellow | opp-as-chooser of beneficial deck-reveal pick (公開3枚から【相手】が1枚選び【自分】が手札に = chooser:opp の deck-look pick 未対応) |
-| B03098 | refuted | hirameki-fire 時 sceneSetState PA-mode pick が hiramekiRes 経路で surface しない (敵対 verify fatal) |
+| ~~B03098~~ | ✅ 出荷済 (2026-07-04 hybrid-pilot-1、B03098P 含む)。a1=enter+charStateIs{sleep} gate、a2 hirameki は compiler mined rule (shipped exemplar 由来)。旧 refuted の hiraRes pick surface は BUG-171 系修正後の現行経路で解消済 | (解消) |
 | B06090 | refuted | spec が BUG-145 self-sleep gate (not charStateIs self sleep) を欠落 → 既 sleep で過剰再発火 (再 certify で gate 追加すれば green 化可、shipped PR144/B09058 同型) |
 
 ## wave engine/observer-wave3 — observer-hook 群 出荷 + latent risk (2026-06-30)
@@ -1142,3 +1142,18 @@ pick / B05042 useEventFromHand human pick (lv7 decoy 除外・自身除外・ski
 - **B06085 human 実機 (declared flow) は未踏**: AI 経路 probe + 生成 UI は全て既存部品
   (EffectPickerModal / BUG-172/173 修正済 declared flow)。MVP デッキ外のため通常プレイ不可 —
   deck-builder で選択可能になった時に 1 回踏む (B07037 と同扱い)。
+
+## hybrid-pilot-1 由来 engine gate (2026-07-04、agent grounding + 本体実測で確定)
+
+refuse-1行 hybrid pipeline pilot 15 unit 中 5 unit が engine gap で DEFER。全て src/engine 直参照の
+file:line 根拠つき (誤 DEFER でない)。解禁は additive wave 1 本で 5 unit → 9 printings 分が開く。
+
+| rep (twins) | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| PR132 (PR213/PR285) + PR201 (PR207) | 「デッキ上3枚リムーブ→**これによって**〚X〛がリムーブされた場合」— atomMill (core.ts:216) に `a.bind` writeback 無し (discard:77/handReveal:165 等は有り、mill だけ欠落)。removeName/TraitAtLeast は remove 全体計数で「これによって」に非等価、costRemovedMatches は宣言 cost 専用 | mill verb に bind capture 追加 (discard と同一行形) → boundAnyMatchesFilter |
+| B02076 (PR133) | 「リムーブの〚長野県警〛1枚選び**デッキの下**」— removeAreaToDeckTop は dest=TOP 固定 (直後 draw で自引きしてしまい非等価)。removeAreaToDeckBottom は cost 型 | removeAreaToDeckTop に dest:'bottom' param or 新 verb |
+| B05022 | 「ターン終了時まで**元のAPを0**」— charOverrideAP は apOverride 恒久設定のみ (scope 無し、endTurn の clearTurnEffects('turn') は turnEffects キーのみ清掃) | charOverrideAP scope:'turn' + turn-end reset (turnEffects ベース化) |
+| B04038 (PR027/PR031) | self-only remove 全件→デッキ下+shuffle (既存 §「白馬探トリオ」節と同一、2026-07-04 再実測で不変を確認: core.ts:955 両者固定のまま) | removeAreaAllToDeckBottom に player scope param |
+
+補足: B03104 は出荷したが removeCountAtLeast 境界 (他14枚+使用中イベント自身=15 誤成立) は
+[[BUG-176]] (event-lifecycle pre-existing、D11019 precedent)。境界 probe は BUG-176 解消後に追加。

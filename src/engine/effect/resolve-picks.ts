@@ -414,6 +414,8 @@ function substituteAtomPick(
     const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; perSideMax?: number } };
     pushPendingEffectPickSide({
       player: byPlayer,
+      // BUG-175: 能力所有者を同梱 — chooser≠owner の cross-side pick で解決後 ctx の座標系を保つ
+      ownerPlayer: ctx.source.player,
       candidates: cardLikeCands,
       atomVerb: verb,
       // BUG-085: { dyn } 値 (例 delta) を costPaid を持つ ctx で literal 化してから

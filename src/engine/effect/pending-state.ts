@@ -73,6 +73,13 @@ export type ContinuationFrame = {
 
 export type PendingEffectPickSide = {
   player: Player;
+  /**
+   * BUG-175 (2026-07-04): 能力所有者 (ctx.source.player)。chooser (player) と所有者が異なる
+   * cross-side pick (「相手は手札を1枚リムーブする」= owner self / chooser opp、B04058) で、
+   * 解決後 event.queue の source.player に chooser を渡すと相対 arg (player:'opp') が二重反転する
+   * (BUG-174 family 第3経路)。再実行 ctx は所有者を保つ。省略時は player (既存 pending と互換)。
+   */
+  ownerPlayer?: Player;
   /** 候補 uid 配列 (Candidate.kind === 'char' のみ抽出) */
   candidates: { uid: string; cardId: string; player: Player }[];
   /** 元 atom の verb (例: 'sceneRemove') */

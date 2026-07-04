@@ -169,7 +169,10 @@ export function applyPickAndContinuation(
     event.queue(
       state,
       resolvedAtom as never,
-      { player: pending.player, cardId: pending.source.cardId },
+      // BUG-175: source.player は能力所有者 (chooser を渡すと相対 arg が二重反転 — B04058
+      // 「相手は手札を1枚リムーブする」で self 手札を discard する誤り)。ownerPlayer 不在の
+      // 旧 pending は player と同値 (chooser==owner) のため fallback で byte 等価。
+      { player: pending.ownerPlayer ?? pending.player, cardId: pending.source.cardId },
       'effect:pick-resolved',
       { picked: pickedUid, source: pending.source },
     );
@@ -210,7 +213,8 @@ export function applyPickSkipAndContinuation(
       event.queue(
         state,
         resolvedAtom as never,
-        { player: pending.player, cardId: pending.source.cardId },
+        // BUG-175: decline 経路も同一座標系 (所有者) で再実行する
+        { player: pending.ownerPlayer ?? pending.player, cardId: pending.source.cardId },
         'effect:pick-resolved',
         { picked: null, source: pending.source },
       );

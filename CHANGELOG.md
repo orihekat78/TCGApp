@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `2803f4a2fb28`
+> Source hash: `b2c5690c8c0c`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,39 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+### CARD PHASE hybrid-pilot-1: refuse-1行 hybrid 穴埋め pipeline 実証 — 19枚出荷 + BUG-175 修正 (2026-07-04)
+
+**hybrid pipeline 初実証 (NEXT-SESSION-PROMPT 計画 #1)**。compiler が 1 行だけ変換拒否する未出荷 base
+(132枚) から 15 unit (twin 10 group + 単発 5) を pilot 選定し、**refuse 行のみ** を workflow agent
+(author=opus / verify=sonnet5 意味等価 lens) で DSL 化 → compiler 出力と決定論合成
+(compiledRest verbatim deep-equal 照合 + twin 同文 compile 機械証明)。
+
+**歩留まり実測: 15 unit 中 10 GREEN (67%) → 17枚 + P-variant spread 2枚 = 19 printings**:
+- B04058/PR028/PR032 (evidence:gain observer + optional self-sleep→opp discard)
+- B01035/D06009 (現場リムーブ時 contact-ap 限定→sleep pick) / B02049/PR039 (怪盗 action 観測 AP+1000)
+- B06086/PR288/B06086P (両者証拠 forced flip + bound-count conditional — W5 evidenceFlip bind で旧 DEFER 解消)
+- PR179/PR185 (FILE7 宣言 revealFromHand cost) / PR291/PR297 (解決編 event: AP7000+ remove→self PA→絆登場)
+- PR277 (partner黄×解決編 迅速) / D02008 (action-scoped cutin ban — wave-0629d 想定 consumer、stale yellow 解消)
+- B03104 (removeCountAtLeast 15 分岐、BUG-176 境界注記) / B03098/B03098P (sleep 登場→アクティブ)
+
+**DEFER 5 unit** (agent が engine 直参照で file:line 根拠、DEFERRED-INDEX 新節): mill bind 欠落
+(PR132/PR201 系 5枚) / remove→deck-bottom pick verb 不在 (B02076系) / charOverrideAP turn-scope 不在
+(B05022) / self-only remove drain (B04038 trio、既知再確認)。
+
+**BUG-175 (高、修正済)**: pick 解決後の `event.queue` source.player が chooser — cross-side pick
+(owner≠chooser、B04058「相手は手札を1枚リムーブ」) で相対 arg が二重反転し self 手札を対象化。
+BUG-174 family 第3経路 (候補列挙側は 174 で修正済、再実行側が未修正)。`PendingEffectPickSide.ownerPlayer`
+追加 + queue 2 site fallback (`?? player`) で既出荷 byte 等価。probe が実測検出 → W3 latent 記録の顕在化。
+
+**検証**: probe suite hybrid-pilot-1.test.ts 32件 (production 経路: handUseCard / activateDeclaredAbility /
+実 emit 形 + twin canonical deep-equal + BUG-174 owner=opp pin + decoy)。
+gates: tsc0 / vitest **4172 pass +1skip** (4140+32) / smoke:1000 winsA=472 不変 exc0 / 8 lint err0 /
+crosscheck 14/14 / validate-specs 17/17。
+
+**pipeline 教訓**: verify lens は意味論のみで plumbing 罠 (BUG-130 explicit-$pick 等) を見ない →
+本体の shipped-idiom 突合で 2 spec 修正 (B01035 sceneSetState 短縮形化 / B03104 player 補強)。
+codegen key 順 (scope が type より後) は lint-listener 前提 — spec 正規化を合成 script に組込み済。
 
 # CARD PHASE step12 batch3 — B06085 touch-up + compiler T0/T1 harvest 22枚 (2026-07-04)
 
