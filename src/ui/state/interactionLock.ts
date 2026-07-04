@@ -21,8 +21,12 @@ type LockSlice = Pick<
 >;
 
 export function selectInteractionLocked(s: LockSlice): boolean {
+  // BUG-173 (2026-07-04, step12 batch2 playwright 検出): pendingEffects は resolved/cancelled entry を
+  // prune せず累積する (resolve/stack.ts 設計、BUG-151 と同根) — length>0 判定だと最初の効果解決後
+  // パネルが永久ロックされる (B01058 手札使用→以降 main action 不可を実機で踏んだ)。
+  // TopBar の効果スタック表示と同じ state フィルタ (pending|resolving のみ) で判定する。
   return (
-    (s.gameState?.pendingEffects.length ?? 0) > 0 ||
+    (s.gameState?.pendingEffects.some((e) => e.state === 'pending' || e.state === 'resolving') ?? false) ||
     s.pendingEffectPick != null ||
     s.pendingEffectChoice != null ||
     s.pendingEffectOptional != null ||

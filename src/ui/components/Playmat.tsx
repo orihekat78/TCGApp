@@ -65,6 +65,8 @@ import { useNextHintPickerStore, useNextHintPicker } from '@/ui/hooks/useNextHin
 import { useSceneSwitchPickerStore } from '../hooks/useSceneSwitchPickerStore.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
 import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.js';
+import { DeclareCardNameModal } from './DeclareCardNameModal.js';
+import { useDeclareNamePicker, useDeclareNamePickerStore } from '../hooks/useDeclareNamePicker.js';
 import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useEvidenceFlipPicker.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
@@ -850,6 +852,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* BUG-108: 複数 option choice effect (D11012 a1 LP＋1/AP＋2000) の択一 modal */}
         <PlaymatChoicePickerModal />
 
+        {/* CARD PHASE step12 batch2: declareName atom (「カード名を1つ指定し」B09108/B09003/PR105) の
+            宣言名入力 modal (runDeclaredAbilityFlow 3.8 が ask() した間だけ open) */}
+        <PlaymatDeclareNameModal />
+
         {/* BUG-085: 宣言能力コスト〚裏向きの証拠を表向きにする〛の証拠選択 picker
             (証拠エリア拡大表示 CardListModal を pick mode で流用) */}
         <PlaymatEvidenceFlipPickerModal />
@@ -1249,6 +1255,32 @@ function PlaymatChoicePickerModal(): JSX.Element {
       options={current?.options ?? []}
       onPick={(index) => picker.choose(index)}
       onCancel={() => picker.cancel()}
+    />
+  );
+}
+
+/**
+ * CARD PHASE step12 batch2 (2026-07-04): DeclareCardNameModal ラッパ。
+ * useDeclareNamePickerStore.current を subscribe し、runDeclaredAbilityFlow (3.8) が ask() した
+ * 間だけ宣言名入力モーダルを開く。確定名 → costParams.declaredName → ctx.dyn.declaredName →
+ * atomDeclareName (engine W6 step1 配線)。
+ * - 「してもよい」句 (optional) のみ skip (指定しない) を表示 — skip = declaredName 未供給 =
+ *   engine 空文字 fallback の decline 経路。
+ * - 必須句 (「〜する」) では skip 無し。取り消しは confirm 済フローの中断になるため
+ *   modal 上では提供しない (× 相当なし、DeclareCardNameModal は確定/任意 skip のみ)。
+ */
+function PlaymatDeclareNameModal(): JSX.Element | null {
+  const current = useDeclareNamePickerStore((s) => s.current);
+  const picker = useDeclareNamePicker();
+  if (!current) return null;
+  return (
+    <DeclareCardNameModal
+      open
+      prompt={current.prompt}
+      candidateNames={current.candidateNames}
+      onConfirm={(name) => picker.declare(name)}
+      onCancel={() => picker.cancel()}
+      {...(current.optional ? { onSkip: () => picker.skip() } : {})}
     />
   );
 }

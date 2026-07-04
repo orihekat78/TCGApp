@@ -16,6 +16,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { runDeclaredAbilityFlow } from '@/ui/hooks/useActionsPanelFlow';
 import { useGameStateStore } from '@/ui/state/store';
 import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
+import { useChoicePickerStore } from '@/ui/hooks/useChoicePicker';
 import { useConfirmationStore } from '@/ui/hooks/useConfirmation';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { mutate } from '@/engine/mutate/index';
@@ -62,6 +63,26 @@ async function cancelPicker(): Promise<void> {
   useTargetPickerStore.getState()._setPhase({ phase: 'idle' });
   useTargetPickerStore.getState()._setResolver(null);
   r(null);
+  await new Promise<void>((r2) => setTimeout(r2, 0));
+}
+
+// BUG-172 (2026-07-04): 複数宣言能力の ability 択は picker.start (クリック面なし = hang) から
+// ChoicePickerModal (useChoicePicker) に差し替え。ability 択の駆動 helper も choice store 経由へ。
+async function chooseAbilityOption(index: number): Promise<void> {
+  const st = useChoicePickerStore.getState();
+  const r = st._resolver!;
+  st._setCurrent(null);
+  st._setResolver(null);
+  r({ kind: 'choose', index });
+  await new Promise<void>((r2) => setTimeout(r2, 0));
+}
+
+async function cancelAbilityChoice(): Promise<void> {
+  const st = useChoicePickerStore.getState();
+  const r = st._resolver!;
+  st._setCurrent(null);
+  st._setResolver(null);
+  r({ kind: 'cancel' });
   await new Promise<void>((r2) => setTimeout(r2, 0));
 }
 
@@ -153,14 +174,11 @@ describe('runDeclaredAbilityFlow', () => {
     }
     await pickAndConfirmPicker(bUid);
 
-    // ability picker (B has 2 abilities)
-    phase = useTargetPickerStore.getState().phase;
-    expect(phase.phase).toBe('picking');
-    if (phase.phase === 'picking') {
-      expect(phase.purpose).toBe('declared-ability:ability');
-      expect(phase.candidates).toEqual(['b1', 'b2']);
-    }
-    await pickAndConfirmPicker('b2');
+    // ability picker (B has 2 abilities) — BUG-172: ChoicePickerModal (能力説明の択一) に差替
+    const choice = useChoicePickerStore.getState().current;
+    expect(choice).not.toBeNull();
+    expect(choice!.options.map((o) => o.index)).toEqual([0, 1]);
+    await chooseAbilityOption(1); // = b2
 
     // confirm
     expect(useConfirmationStore.getState().current).not.toBeNull();
@@ -197,10 +215,11 @@ describe('runDeclaredAbilityFlow', () => {
     useGameStateStore.setState({ gameState: s });
     const mUid = s.players.self.scene.find((c) => c.cardId === 'M')!.uid;
     const promise = runDeclaredAbilityFlow({ player: 'self' });
-    // 2026-05-30: source picker (1 source) を通してから ability picker (2 abilities) を cancel
+    // 2026-05-30: source picker (1 source) を通してから ability 択 (2 abilities) を cancel
+    // BUG-172: ability 択は ChoicePickerModal 経由
     await pickAndConfirmPicker(mUid);
-    expect(useTargetPickerStore.getState().phase.phase).toBe('picking');
-    await cancelPicker();
+    expect(useChoicePickerStore.getState().current).not.toBeNull();
+    await cancelAbilityChoice();
     const result = await promise;
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('cancelled');

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `4fea8a1cad8d`
+> Source hash: `f1ebb8798a2f`
 
 公式ルール [`11-reasoning.md`](../../../rules/11-reasoning.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -20,7 +20,7 @@
 
 - [`2026-05-11-ui-action-flows`](../by-spec/2026-05-11-ui-action-flows.md)
 
-## 📄 参照ソース (61)
+## 📄 参照ソース (62)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -42,4 +42,4 @@
 - [`src/cards/ct-p03/B03038.ts`](../../../../src/cards/ct-p03/B03038.ts)
 - [`src/cards/ct-p03/B03053.ts`](../../../../src/cards/ct-p03/B03053.ts)
 - [`src/cards/ct-p03/B03055.ts`](../../../../src/cards/ct-p03/B03055.ts)
-- _...ほか 41 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 42 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

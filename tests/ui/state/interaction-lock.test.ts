@@ -29,9 +29,20 @@ describe('selectInteractionLocked', () => {
     expect(selectInteractionLocked(base({ gameState: null }))).toBe(false);
   });
 
-  it('pendingEffects が1件以上 → ロック (効果解決中)', () => {
-    const gs = { pendingEffects: [{ id: 'e1' }] } as unknown as GameState;
-    expect(selectInteractionLocked(base({ gameState: gs }))).toBe(true);
+  // BUG-173 (2026-07-04): pendingEffects は resolved/cancelled を prune しない累積配列 (BUG-151 規約)
+  // → 判定は pending|resolving の state フィルタ。旧 length>0 判定は効果解決後の永久ロックだった。
+  it('pending / resolving entry がある → ロック (効果解決中)', () => {
+    for (const state of ['pending', 'resolving'] as const) {
+      const gs = { pendingEffects: [{ id: 'e1', state }] } as unknown as GameState;
+      expect(selectInteractionLocked(base({ gameState: gs })), state).toBe(true);
+    }
+  });
+
+  it('resolved / cancelled 残留 entry のみ → ロックしない (BUG-173)', () => {
+    const gs = {
+      pendingEffects: [{ id: 'e1', state: 'resolved' }, { id: 'e2', state: 'cancelled' }],
+    } as unknown as GameState;
+    expect(selectInteractionLocked(base({ gameState: gs }))).toBe(false);
   });
 
   it('各 decision 待ち (pick/choice/optional/hirameki/misread/deck-reveal) で個別にロック', () => {

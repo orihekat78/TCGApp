@@ -1124,6 +1124,11 @@ import { D10005 } from '../ct-d10/D10005.js';
 import { B07014 } from '../ct-p07/B07014.js';
 import { B01039 } from '../ct-p01/B01039.js';
 import { B09070 } from '../ct-p09/B09070.js';
+import { B09108 } from '../ct-p09/B09108.js';
+import { B09108P } from '../ct-p09/B09108P.js';
+import { B09003 } from '../ct-p09/B09003.js';
+import { B09003P } from '../ct-p09/B09003P.js';
+import { PR105 } from '../pr-01/PR105.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1478,4 +1483,6 @@ export const REUSE_CARDS: CardDef[] = [
   B03046, B08014, B09090, B01058, B08069, B03126, B02088, B07026, B05042, B08026, D10005, B07014, B01039,
   // CARD PHASE step12 batch1 (B09070)
   B09070,
+  // CARD PHASE step12 batch2 — declareName family (B09108/B09003/PR105、DeclareCardNameModal 配線と同 commit)
+  B09108, B09108P, B09003, B09003P, PR105,
 ];

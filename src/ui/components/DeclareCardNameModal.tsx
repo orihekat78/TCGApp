@@ -26,10 +26,12 @@ export type DeclareCardNameModalProps = {
   onConfirm: (name: string) => void;
   /** 「してもよい」系のみ供給 (未指定なら宣言必須 = 確定のみ) */
   onSkip?: () => void;
+  /** 能力使用全体の取り消し (dispatch 前 = cost 未払い、state 不変)。batch2 配線で追加 */
+  onCancel?: () => void;
 };
 
 export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Element | null {
-  const { open, prompt, candidateNames, onConfirm, onSkip } = props;
+  const { open, prompt, candidateNames, onConfirm, onSkip, onCancel } = props;
   const [name, setName] = useState('');
   if (!open) return null;
 
@@ -78,6 +80,11 @@ export function DeclareCardNameModal(props: DeclareCardNameModalProps): JSX.Elem
           {onSkip && (
             <button type="button" onClick={onSkip} data-testid="declare-card-name-skip">
               指定しない
+            </button>
+          )}
+          {onCancel && (
+            <button type="button" onClick={onCancel} data-testid="declare-card-name-cancel">
+              キャンセル
             </button>
           )}
         </div>

@@ -84,6 +84,57 @@ export function findFlipFaceUpCost(cost: Cost | undefined): FlipFaceUpCost | nul
 }
 
 /**
+ * CARD PHASE step12 batch2 (2026-07-04): effect ツリーから declareName atom (「カード名を1つ指定し」
+ * B09108/B09003/PR105) を探す。runDeclaredAbilityFlow が dispatch **前** に DeclareCardNameModal で
+ * 宣言名を集め costParams.declaredName へ積むための検出器 (atom は効果解決中に ctx.dyn を読むのみで
+ * pause しない = 事前供給が唯一のチャネル、engine W6 step1 の設計)。
+ * optional = args.optional === true (「してもよい」句、modal に skip を出す)。カードは高々 1 atom 前提
+ * (現 consumer 全 3 枚) — 最初の 1 件を返す。
+ */
+export function findDeclareNameAtom(
+  effect: Effect | undefined,
+): { bind: string; optional: boolean } | null {
+  if (!effect) return null;
+  switch (effect.kind) {
+    case 'atom': {
+      if (effect.verb !== 'declareName') return null;
+      const args = (effect.args ?? {}) as { bind?: unknown; optional?: unknown };
+      return {
+        bind: typeof args.bind === 'string' ? args.bind : '',
+        optional: args.optional === true,
+      };
+    }
+    case 'sequence':
+    case 'chain': {
+      for (const step of effect.steps) {
+        const found = findDeclareNameAtom(step);
+        if (found) return found;
+      }
+      return null;
+    }
+    case 'conditional': {
+      return findDeclareNameAtom(effect.then) ?? (effect.else ? findDeclareNameAtom(effect.else) : null);
+    }
+    case 'optional': {
+      const found = findDeclareNameAtom(effect.effect);
+      // optional ラッパ内の declareName は「してもよい」扱い (args.optional 未指定でも skip 可)
+      return found ? { ...found, optional: true } : null;
+    }
+    case 'choice': {
+      for (const opt of effect.options) {
+        const found = findDeclareNameAtom(opt);
+        if (found) return found;
+      }
+      return null;
+    }
+    case 'forEach':
+      return findDeclareNameAtom(effect.do);
+    default:
+      return null;
+  }
+}
+
+/**
  * EffectCtx を能力 cost.pay / canPay 用に構築。
  */
 export function makeAbilityCtx(opts: {

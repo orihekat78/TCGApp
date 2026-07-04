@@ -9,12 +9,13 @@ import { useNextHintPicker, type NextHintCandidate } from '../useNextHintPicker.
 import { useSceneSwitchPickerStore } from '../useSceneSwitchPickerStore.js';
 import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
+import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { handUseColorIgnoreAllowed } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
-import type { Effect } from '@/engine/types';
+import type { Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, choiceOptionLabel } from './cost.js';
+import { costToText, findFlipFaceUpCost, findDeclareNameAtom, choiceOptionLabel } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
@@ -250,6 +251,22 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
  * Phase 8.8b スコープ外: case 由来の declared ability (engine 未対応) /
  * パートナーエリアの MR (rules/18) — 8.8a partnerAbility 経由なので別フロー
  */
+/**
+ * BUG-172: 宣言能力 source uid → cardId 解決 (scene / case)。ability 択一 modal (複数宣言能力持ち)
+ * の説明文表示と、後段の cost/confirm 表示が同じ解決を使う。
+ * hand:/ partnerMR: uid は現状 enumDeclaredAbilitySources が返さない (B06103 / PA宣言19 で配線予定)。
+ */
+function resolveDeclaredSourceCardId(state: GameState, sourceUid: string): string | null {
+  if (sourceUid === 'case:self' || sourceUid === 'case:opp') {
+    return state.players[sourceUid === 'case:self' ? 'self' : 'opp'].case.cardId ?? null;
+  }
+  for (const p of ['self', 'opp'] as const) {
+    const c = state.players[p].scene.find((x) => x.uid === sourceUid);
+    if (c) return c.cardId;
+  }
+  return null;
+}
+
 export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<FlowResult> {
   const state0 = useGameStateStore.getState().gameState;
   if (state0 === null) return { ok: false, reason: 'no-state' };
@@ -275,9 +292,21 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   if (abilIds.length === 1) {
     chosenAbilId = abilIds[0];
   } else {
-    const picked = await picker.start({ candidates: abilIds, purpose: 'declared-ability:ability' });
-    if (picked === null) return { ok: false, reason: 'cancelled' };
-    chosenAbilId = picked;
+    // BUG-172 (2026-07-04, step12 batch2): 旧実装は picker.start({candidates: abilIds,
+    // purpose:'declared-ability:ability'}) だったが、Playmat の picking UI は盤面 uid の
+    // 強調のみで ability id ('a1'/'a2') にはクリック面が存在せず、flow が永久 await で hang
+    // していた (宣言能力 2 つ持ちの human 経路は B09108 が初実戦 — 既出荷 B05028/B05045/B06069
+    // も同 latent)。ChoicePickerModal (BUG-108 の択一 modal) を能力説明文で流用する。
+    const srcName = uidToDisplayName(useGameStateStore.getState().gameState!, sourceUid);
+    const srcCardId = resolveDeclaredSourceCardId(useGameStateStore.getState().gameState!, sourceUid);
+    const srcDef = srcCardId ? engine.cards.get(srcCardId) : null;
+    const options = abilIds.map((id, index) => {
+      const ab = srcDef?.abilities.find((a) => a.id === id);
+      return { index, label: ab?.description ?? `能力 (${id})` };
+    });
+    const choice = await useChoicePicker().ask({ sourceName: srcName, options });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    chosenAbilId = abilIds[choice.index];
   }
 
   // 3) cost 情報を取得して confirm (user_request 20260522_01 #5: case 対応)
@@ -368,6 +397,29 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     const choice = await useChoicePicker().ask({ sourceName, options });
     if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
     costParams = { ...(costParams ?? {}), choiceIndex: choice.index };
+  }
+
+  // 3.8) CARD PHASE step12 batch2 (2026-07-04): declareName atom (「カード名を1つ指定し」
+  //   B09108/B09003/PR105)。atom は効果解決中に ctx.dyn.declaredName を読むのみで pause しない
+  //   (engine W6 step1 設計) → dispatch **前** に DeclareCardNameModal で宣言名を集め
+  //   costParams.declaredName に積む (dispatcher が ctx.dyn へ詰め替え)。
+  //   - 「〜する」句 (optional=false): 確定のみ。× / 背景 = 能力使用全体の取り消し。
+  //   - 「してもよい」句 (optional=true): skip = declaredName 未供給 → atom 空文字 fallback →
+  //     消費側 (nameOverride / boundNameMatchesDeclared) が no-op/false に落ちる decline 経路。
+  const declareSpec = findDeclareNameAtom(effect);
+  if (declareSpec && owner === 'self' && cardId) {
+    const candidateNames = [...new Set(engine.cards.all().flatMap((d) => d.names ?? []))];
+    const declared = await useDeclareNamePicker().ask({
+      sourceName,
+      prompt: abilityText,
+      candidateNames,
+      optional: declareSpec.optional,
+    });
+    if (declared.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    if (declared.kind === 'declare') {
+      costParams = { ...(costParams ?? {}), declaredName: declared.name };
+    }
+    // skip → declaredName 未供給のまま dispatch (decline)
   }
 
   // 4) dispatch — Phase 2c: cost+ctx 構築 + pay (atomic) は dispatcher 内の

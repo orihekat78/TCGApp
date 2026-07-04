@@ -37,3 +37,18 @@
 - ユーザー指示「ツールでカード実装できないか」→ **B4 parametric rule 出荷** (slot 汎化 + 共変 path 積集合、refuse-first 維持)。re-mine で exact rule 4→717、param 569 本、G1 mismatch 0 (partial-shipped 4枚は exceptions 自動登録)。
 - **実測: 自動 compile 可 = 15→22/482 のみ** — ボトルネックは slot 値でなく句の構造多様性。**near-miss (未知 1 行だけ) = 205/482** が最大レバー → hybrid pipeline (compiler N-1 行 + agent 1 行) を次設計。
 - compile 可 22 枚 (B04093 コルン含む) は codegen T0 batch 候補 (.tmp/compiler/param-compilable.json)。
+
+## 2026-07-04 昼 CARD PHASE step12 batch2 (worktree C:/tmp/megaw1 branch cards/step12-batch2)
+- **出荷**: declareName family 5 printings (B09108/P MR・B09003/P・PR105) + DeclareCardNameModal 配線
+  (useDeclareNamePicker + Playmat mount + flows 3.8 + findDeclareNameAtom、optional=skip ボタン)。
+- **BUG-171 (engine 骨格修正)**: entry.dyn queue 永続化 (costPaid 同型) + charSetTurnEffect '$' guard。
+  W6 probe は runAtom 直駆動で queue 境界未踏 → first-consumer の production 経路 probe が検出
+  (obs 13661 が 6/15 に同 gap 指摘済だった)。教訓 = probe は activateDeclaredAbility+runAllUntilEmpty で。
+- **BUG-172 (UI)**: 宣言 2 つ持ちの ability 択 picker にクリック面なし = human hang → ChoicePickerModal 差替
+  (既出荷 B05028/B05045/B06069 の latent も解消)。**BUG-173 (UI)**: interactionLock が resolved 残留で
+  永久ロック → pending|resolving filter (BUG-151 規約)。両方 playwright 実機で発見。
+- **batch1 playwright 一括実施済** (suppress+non-suppress ヒラメキ/B01058 reserve pick/B07014 rider/
+  B05042 useEventFromHand decoy 検証/B04072 候補除外)。DEFERRED-INDEX batch1 (3) ✅。
+- DEFER: B09108 PA 発 human 宣言 UI (PA-MR 描画すら無し) = PA宣言19 batch へ / rider description fallback /
+  conditional×boundNameMatchesDeclared then 内は短縮形 pick のみ規約 (DEFERRED-INDEX batch2 節)。
+- gates: vitest 4130+1skip / smoke 472 exc0 / 8lint0 / 混成 review sonnet5+opus。

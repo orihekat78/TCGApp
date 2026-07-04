@@ -64,6 +64,15 @@ export type EffectStackEntry = {
    */
   costPaid?: Record<string, unknown>;
   /**
+   * BUG-171 (2026-07-04, step12 batch2): queue 時点の ctx.dyn を保持し entryToCtx で復元する。
+   * costPaid (2026-06-29d) と同型の queue-boundary 永続化。宣言能力の declaredName 供給チャネル
+   * (AbilityCostParams.declaredName → costParamsToDyn → ctx.dyn) は W6 step1 で設計されたが、
+   * useDeclaredAbility → event.queue が dyn を entry に載せず、runtime の atomDeclareName /
+   * resolveBindRef('$dyn.*') が常に未供給扱いになっていた (first-consumer B09108/B09003/PR105 の
+   * probe が検出。W6 probe は runAtom 直駆動で queue 境界を踏んでいなかった)。
+   */
+  dyn?: Record<string, unknown>;
+  /**
    * BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回ごとの batch 連番。
    * 同一 emit で queue された entry 群 (イベント自効果 + 第三者反応) を結ぶ。
    * rules/15 §未解決 — 反応は「現在の行動 (自効果) 完了後」に解決するための gate キー。

@@ -152,7 +152,8 @@ function queue(
   // BUG-132 GAP-2 (2026-06-12): effect:declared の batch gate / 遅延 pick 用 entry 追加 field。
   // triggered.ts handleHook のみが渡す (他 caller は省略で従来挙動)。
   // engine additive wave (2026-06-29d): costPaid も同経路で entry へ載せる (declared-ability.ts が渡す)。
-  entryExtras?: Pick<EffectStackEntry, 'declaredBatch' | 'declaredReaction' | 'costPaid'>,
+  // BUG-171 (2026-07-04): dyn も同型永続化 (declaredName 供給チャネルの queue-boundary 喪失修正)。
+  entryExtras?: Pick<EffectStackEntry, 'declaredBatch' | 'declaredReaction' | 'costPaid' | 'dyn'>,
 ): void {
   const entry = buildEntry(state, effect, { hook: hook ?? 'manual', payload, source, bindings });
   if (entryExtras) Object.assign(entry, entryExtras);

@@ -284,7 +284,19 @@ export function useDeclaredAbility(
     undefined,
     // engine additive wave (2026-06-29d): cost で積んだ costPaid を entry へ永続化 (entryToCtx が復元)。
     // costRemovedMatches cond (conditional STABLE `if` の runtime 再評価) が除去カード snapshot を読むため。
-    resolveCtx.costPaid ? { costPaid: resolveCtx.costPaid } : undefined,
+    // BUG-171 (2026-07-04): dyn も同型永続化。declaredName (AbilityCostParams → ctx.dyn) を runtime の
+    // atomDeclareName / resolveBindRef('$dyn.*') まで運ぶ (B09108/B09003/PR105 first-consumer probe が検出)。
+    // ⚠ pre-walk (resolveEffectPicks) が 0-candidate 短縮形 pick で書く chainStepNoApply は
+    // 「queue 境界で捨てられる dead write」前提だった — persist 対象から除外して焼込を防ぐ
+    // (現 reader は runtime step 冒頭 reset で inert だが、将来 reader への落とし穴予防。review NIT)。
+    resolveCtx.costPaid || resolveCtx.dyn
+      ? {
+          ...(resolveCtx.costPaid ? { costPaid: resolveCtx.costPaid } : {}),
+          ...(resolveCtx.dyn
+            ? { dyn: (({ chainStepNoApply: _drop, ...rest }) => rest)(resolveCtx.dyn) }
+            : {}),
+        }
+      : undefined,
   );
   // engine mega-wave W2 (2026-07-03, hook): ability:declared — 宣言能力使用の第三者観測 hook
   // (B03057「自分の現場にいる〚特徴[探偵]〛のキャラが【宣言】能力を使用したとき」)。

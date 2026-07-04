@@ -190,6 +190,15 @@ export function atomCharSetTurnEffect(s: GameState, a: Record<string, unknown>, 
       // ($dyn.declaredName = PR105 nameOverride / $<bind>.uid 系)。リテラル (boolean/number/非$文字列)
       // は resolveBindRef が素通しするため既存カード回帰 0。
       const teVal = resolveBindRef(a.val, ctx);
+      // BUG-171 (2026-07-04): 未解決 $ 参照 (供給 decline 時の '$dyn.declaredName' 等) は passthrough で
+      // 返るため、そのまま書くと turnEffects が bind-ref 文字列で汚染される (PR105 skip 時に names() が
+      // '$dyn.declaredName' を返した first-consumer probe 検出)。uid の startsWith('$') guard と同 posture で no-op。
+      // 空文字も抑止 (review NIT: costParamsToDyn は '' でも積む → guard 素通りで無用な
+      // turnEffects key が残る。read 側は falsy-guard 済で benign だが write 側で閉じる)。
+      if (typeof teVal === 'string' && (teVal === '' || teVal.startsWith('$'))) {
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetTurnEffect', target: teUid, result: `${teKey}=unresolved:skip` });
+        return;
+      }
       mutate.char.setTurnEffect(s, teUid, teKey, teVal);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetTurnEffect', target: teUid, result: `${teKey}=${String(teVal)}` });

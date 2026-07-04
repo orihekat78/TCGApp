@@ -71,6 +71,10 @@ function entryToCtx(entry: EffectStackEntry): EffectCtx {
     // costRemovedMatches cond (宣言能力 conditional の STABLE `if` runtime 再評価) が cost 除去カード
     // snapshot を読むため。不在時は省略 (従来挙動)。
     ...(entry.costPaid ? { costPaid: entry.costPaid } : {}),
+    // BUG-171 (2026-07-04): queue 時点の dyn を復元 (costPaid と同型)。declaredName 供給チャネル
+    // (atomDeclareName / resolveBindRef '$dyn.*') の queue-boundary 喪失修正。entry は Immer 凍結 =
+    // runtime の (ctx.dyn ??= {}) 書込 (chainStepNoApply 等) が落ちないよう shallow-copy (bindings 同 posture)。
+    ...(entry.dyn ? { dyn: { ...entry.dyn } } : {}),
     ...(cb
       ? { contact: { byUid: cb.byUid ?? '', targetUid: cb.targetUid, guardUid: cb.guardUid, attackerSide: cb.attackerSide ?? 'self' } }
       : {}),

@@ -1091,11 +1091,37 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
 - ★**B06042 ここで会うたが百年目** — 「【宣言】能力を与える」経路不在: (1) atomCharGrantAbility が grantedDef.type を無条件 'triggered' 強制 (char.ts:172) — spec の type:'declared' が反映されない。(2) findDeclaredAbility (canDeclared/useDeclared/UI 列挙の共有 helper) が turnEffects.grantedAbilities を非走査。(3) 同一対象へ複数回付与時の grantedId (`granted:${cardId}:${abilityId}`) が【ターン1】独立カウント (公式Q&A) を満たせない。→ engine touch-up 3 点が前提。
 - ★**B06085 松田陣平** — 第3句「MRを選んだ場合、相手はデッキ上から1枚**表向き**で証拠として得る」= evidenceGain atom に faceUp arg 不在 (mutate.evidence.addFromDeck は faceUp 受取可 = **1-arg 素通しの軽微 additive**)。他 4/5 句 (sceneToEvidence/boundIsMr/evidenceToDeckBottom/hirameki sleep) は全部品出荷済。次の軽微 touch-up 候補筆頭。
 - ★**B09112 キッドVS安室** — 核心句「指定名キャラ1枚につきデッキ上から1枚見る」= **resolveEffectPicks pre-walk が {dyn} を declareName 実行前に literal 化** (sequence 経路: maxN=0 baked / chain 経路: raw {dyn} が Math.min に渡り NaN)。grounding agent が vitest scratch probe で両経路とも revealed=0 を実測。deckRevealUntil maxN への dispatch-time dyn 解決 (filter は W5 で対応済、maxN は未対応) が要る。
-- ★**B09108 / PR105 / B09003 — DeclareCardNameModal UI 配線待ち (batch2 予定)**: DSL 部品 (declareName/boundNameMatchesDeclared/nameOverride/fileRemoveTop/fileFlipTop/fileAdd) は全出荷済・PR105 は megaw5 の「P12 charSetName 不在」DEFER が **stale** (W6 step1/2 の nameOverride で解消済、engine コメントが PR105 名指し)。残 gap = DeclareCardNameModal.tsx が unmounted scaffold (import 0 件) — 宣言 flow が declareName 依存を検出して modal を開き AbilityCostParams.declaredName へ橋渡しする配線 (MisreadPickerModal 前例) を batch2 で実装し 3 枚一括 author。playwright 必須 (新 UI 部品「型」)。
+- ✅**B09108 / PR105 / B09003 — batch2 で出荷済 (2026-07-04、DeclareCardNameModal 配線 + BUG-171/172/173)**。以下は当時の記録: DSL 部品 (declareName/boundNameMatchesDeclared/nameOverride/fileRemoveTop/fileFlipTop/fileAdd) は全出荷済・PR105 は megaw5 の「P12 charSetName 不在」DEFER が **stale** (W6 step1/2 の nameOverride で解消済、engine コメントが PR105 名指し)。残 gap = DeclareCardNameModal.tsx が unmounted scaffold (import 0 件) — 宣言 flow が declareName 依存を検出して modal を開き AbilityCostParams.declaredName へ橋渡しする配線 (MisreadPickerModal 前例) を batch2 で実装し 3 枚一括 author。playwright 必須 (新 UI 部品「型」)。
 - **batch1 latent nits (出荷済分)**:
   (1) B08026 a1「残りをシャッフルしてデッキの下に移す」= deckToBottomBound→deckShuffle (B03018/D11019 出荷済 convention) — 厳密には「残りのみ shuffle して bottom へ」でなく全デッキ shuffle。既存 convention 踏襲 (盤面情報同値だが順序厳密性は Q&A 未照会)。
   (2) B02088 a2 の「自分か相手のターン終了時」= phase:end:start matcher 無し (両ターン発火、B05014 裁定と整合)。
-  (3) batch1 の playwright 実機は未実施 (engine probe 49 tests + AI 経路のみ) — ヒラメキ suppress (B02088/B03126、DEFERRED-INDEX megaw6b 節 LOUD) / useEventFromHand human pick (B05042/B08026/D10005) / B07014 rider ActionsPanel 列挙 / B01058 reserve fire 時 human pick / B04072 候補除外 UI は **human 実戦投入前に必須**。次 session 冒頭で一括実施推奨。
+  (3) batch1 の playwright 実機は未実施 (engine probe 49 tests + AI 経路のみ) — ヒラメキ suppress (B02088/B03126、DEFERRED-INDEX megaw6b 節 LOUD) / useEventFromHand human pick (B05042/B08026/D10005) / B07014 rider ActionsPanel 列挙 / B01058 reserve fire 時 human pick / B04072 候補除外 UI は **human 実戦投入前に必須**。→ ✅ batch2 で一括実施済 (2026-07-04、本 file batch2 節)。
 - **混成 review nits (step12-batch1、sonnet5 SHIP / opus SHIP_WITH_NITS、blocker 0)**:
   (1) target-expander.candidates() の静的 pre-check `anyAuraDef` は相手 scene のみ走査 — partnerAreaMR は非走査。MR が untargetableByActionAura を持つカード出荷時に pre-check が false で aura 全 skip (latent、現 pool 非該当)。該当 MR 出荷時に pre-check へ PA-MR slot 追加。
   (2) `actedCharThisTurn` は endTurn 清掃リストに残留 (turn-end 読者なし) — phase:end:start から読む consumer 出荷時に BUG-170 と同 race → startTurn 境界へ移動要 (BUG-170 水平展開節と同記)。
+
+## CARD PHASE step12 batch2 (2026-07-04 出荷) — declareName family + DeclareCardNameModal 配線
+
+出荷 5 printings = B09108/B09108P (MR) / B09003/B09003P / PR105 + UI 配線 (useDeclareNamePicker +
+Playmat mount + flows 3.8 + findDeclareNameAtom) + BUG-171 (entry.dyn 永続化 + charSetTurnEffect '$' guard、
+engine 骨格バグ修正) + BUG-172 (宣言 2 つ持ち ability 択 = ChoicePickerModal 差替) + BUG-173
+(interactionLock resolved 残留の永久ロック)。batch1 節 (3) の playwright 実機一括は **本 batch で実施済**
+(suppress + non-suppress ヒラメキ / B01058 reserve human pick→stun / B07014 rider 列挙+removeAreaToDeckTop
+pick / B05042 useEventFromHand human pick (lv7 decoy 除外・自身除外・skip) / B04072 候補除外 UI)。
+
+- ★**B09108 a2 の PA 発 human 宣言 UI は未配線 (PA宣言19 batch へ)**: engine 側は scope:'on-partner-area' +
+  canDeclaredAbility(partnerMR:uid) 対応済 (probe pin あり)。UI 側は (1) PartnerArea が partnerAreaMR slot を
+  **描画すらしない** (2) enumDeclaredAbilitySources に partnerMR source 無し (3) flows の source cardId 解決も
+  partnerMR: 未対応 — PA宣言19 batch で PA-MR 表示 + source 列挙 + tile pick を一括配線する (batch1 の
+  B09070 (MR) 出荷時と同じ既知 gap、新規 gap 増加なし)。現場からの宣言 (主経路) は playwright 実機済。
+- **conditional×boundNameMatchesDeclared の card-author 規約**: 本 cond は conditionIfIsStable で stable 扱い
+  (bindings/declaredNames を読むのに unstable list 未登録) → pre-walk が dispatch 時 (bind 空) に false 評価し
+  then を raw のまま残す。**then 内は短縮形/runtime pick (discard / charModifyAP 短縮形等) のみ可、
+  eager $pick (明示 target) は不可** (raw のまま runtime に入ると Pattern A no-op)。B09108/B09003 は準拠済。
+  unstable list へ足すと逆に BUG-161 型 over-surface (then の pick が dispatch 時に前倒し) になるため現状維持が正。
+- **rider ability の択一/confirm 文言 fallback** (BUG-172 残 nit): on-set-host rider は host def に無く
+  「能力 (a3)」表示になる (機能正常、B07014 実機確認)。PA宣言19 batch で findDeclaredAbility 経由の
+  description 解決に統一。
+- **DeclareCardNameModal 候補は全登録カード名** (kind filter なし): PR105 の「キャラのカード名」でもイベント名が
+  suggest に出る (自由入力ゆえ engine 無検証と同 posture、公式 Q&A の対人ルール領域)。気になるなら
+  findDeclareNameAtom に kind hint arg を足して filter (優先度低)。
