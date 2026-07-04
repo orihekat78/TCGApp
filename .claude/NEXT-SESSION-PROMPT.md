@@ -1,3 +1,12 @@
+> ## ★★★2026-07-04 昼 CARD PHASE step12 batch1 出荷済 (origin/main = 514440b5 系列、6458f95f = 本体)
+> - **15枚出荷**: B04072/B03046/B08014/B09090/B01058/B08069/B03126/B02088/B07026/B05042/B08026/D10005/B07014/B01039/B09070(MR) — mega-wave W1-W6 first-consumer 一括。vitest baseline = **4104+1skip**。smoke winsA=472 不変。
+> - **BUG-170 修正 (骨格バグ修正 exception)**: 「このターン中に〜した」履歴 flag (selectedByOwnMr/shippuFiredCharThisTurn) の endTurn 清掃 vs turn-end queue 解決時参照 (rules/25) の race → 清掃を startTurn 境界へ移動。区別基準 =「〜まで」持続効果は endTurn 清掃 / 履歴 flag は startTurn 清掃 (BUG-170.md 水平展開節)。
+> - **手順実証**: grounding = sonnet5 workflow per-card 全句突合 (⚠ 22 並列は rate-limit 全滅 → chunk 4 並列で成功)。lint:icon-abilities が B09070 cutIn 列漏れを検出 (col11-13 の最終防波堤)。混成 review sonnet5 SHIP / opus SHIP_WITH_NITS blocker 0。
+> - **★次 session = batch2**: ① **DeclareCardNameModal UI 配線** (unmounted scaffold → 宣言 flow が declareName 依存検出で modal 表示 → AbilityCostParams.declaredName 橋渡し、MisreadPickerModal 前例) → **B09108(MR)/PR105/B09003 の 3枚一括 author** (DSL 部品は全出荷済、megaw5 の「P12 不在」DEFER は stale)。playwright 必須 (新 UI 部品型)。
+>   ② **batch1 の playwright 実機一括** (未実施、DEFERRED-INDEX step12-batch1 節 (3)): hirameki suppress (B02088/B03126、megaw6b LOUD) / useEventFromHand human pick (B05042/B08026/D10005) / B07014 rider ActionsPanel / B01058 reserve human pick / B04072 候補除外 UI。
+>   ③ 残 DEFER: B06085 (evidenceGain faceUp 軽微 additive、touch-up 筆頭) / B09112 (pre-walk dyn literal 化 = maxN の dispatch-time 解決) / B06042 (charGrantAbility declared 経路 3 gap) / B06020 (hand-scope aura) / B01092 (human-defender window)。
+> - grounding 中間データ: /c/tmp/megaw1/.tmp/_g_<ID>.json (22 records) + _step12_ground_ok.json/_step12_ground_p2.json。
+>
 > ## ★★2026-07-03 夕 方針転換 (ユーザー決定): **全カード実装エンジン完成まで engine 拡張再開** (mega-wave program)
 > - 目標 = **残 51+α 未出荷 primitive を全部出荷** (bespoke 尾含む、見積 3-4 セッション)。CARD PHASE は engine 完成後に一括刈り取り。
 > - **ワークフロー必須運用** (ユーザー opt-in 済): 設計 = workflow 並列 (次 wave 設計を実装中に背景 pipeline) / 実装 = 本 loop 逐次 (union file 衝突回避) / review = workflow 混成 2 lens。
