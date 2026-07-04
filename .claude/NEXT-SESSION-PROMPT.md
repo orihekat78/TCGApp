@@ -1,3 +1,18 @@
+> ## ★★★2026-07-04 午後 CARD PHASE step12 batch2 出荷済 (origin/main = 3f0f719e)
+> - **declareName family 5 printings**: B09108/B09108P(MR) 工藤新一&服部平次 / B09003/B09003P 江戸川コナン / PR105 工藤有希子 (nameOverride 初 live consumer)。vitest baseline = **4131+1skip**。smoke winsA=472 不変。
+> - **DeclareCardNameModal 配線完了**: useDeclareNamePicker (store+Promise) + Playmat mount + flows 3.8 (dispatch 前収集→costParams.declaredName) + findDeclareNameAtom (atom args.optional=true で「してもよい」= skip ボタン)。playwright 実機: B09108 a2 全通し (autocomplete→FILE ops→draw2→discard2 multi-pick)・PR105 skip/declare 両経路・console err0。
+> - **バグ 3 件修正 (全て first-consumer probe / playwright 実機が検出)**:
+>   BUG-171 (engine 骨格修正) = 宣言能力 ctx.dyn の queue 境界喪失 (costPaid のみ永続化だった) → EffectStackEntry.dyn 永続化 + entryToCtx shallow-copy 復元 + charSetTurnEffect 未解決 '$'/空文字 val guard。**教訓: first-consumer probe は必ず production dispatch 経路 (activateDeclaredAbility+runAllUntilEmpty) で書く** (W6 probe は runAtom 直駆動で queue 境界未踏だった)。
+>   BUG-172 (UI) = 宣言能力 2 つ持ちの ability 択が picker.start (クリック面なし) で human hang → ChoicePickerModal (能力説明全文) 差替。既出荷 B05028/B05045/B06069 等の latent hang も一括解消。
+>   BUG-173 (UI) = selectInteractionLocked が resolved 残留 entry で ActionsPanel **永久ロック** (効果 1 回解決後 main action 不能) → pending|resolving filter (BUG-151 規約)。
+> - **batch1 の playwright 実機一括 実施済** (DEFERRED-INDEX step12-batch1 (3) ✅): ヒラメキ suppress (B03126) + non-suppress 1 本通し (gain が fire/skip 後、megaw6b LOUD 解消) / B01058 reserve fire human pick→スタン / B07014 rider 宣言列挙+removeAreaToDeckTop pick / B05042 useEventFromHand human pick (lv7 decoy 除外・自身除外・skip) / B04072 アクション候補除外 UI。
+> - 混成 review: sonnet5 SHIP (印字⇔DSL 全句 1:1) / opus SHIP_WITH_NITS blocker0 (NIT 2 件即反映 = chainStepNoApply persist 除外 + 空文字 guard)。旧挙動 pin test 2 file を新挙動に更新 (BUG-172/173)。
+> - **★次 session 候補 (優先順)**:
+>   ① **B06085 touch-up** (evidenceGain faceUp = 1-arg 素通しの軽微 additive、DEFER 筆頭) + **compiler T0 batch 22 枚** (.tmp/compiler/param-compilable.json、B04093 コルン含む — Track B B4 で compile 可判明分の codegen 刈り取り)。
+>   ② **PA宣言19 batch** (PA-MR UI 一括: PartnerArea 描画 + enumDeclaredAbilitySources partnerMR source + tile pick + rider description 表示統一。B09108 a2 の PA 発 human 宣言もここで解禁。DEFERRED-INDEX batch2 節参照)。
+>   ③ 残 engine DEFER: B09112 (pre-walk dyn literal 化) / B06042 (charGrantAbility declared 3 gap) / B06020 (hand-scope aura) / B01092 (human-defender window)。
+> - ⚠ card author 規約追加: conditional×boundNameMatchesDeclared の then 内は**短縮形/runtime pick のみ** (eager $pick 不可、DEFERRED-INDEX batch2 節)。
+>
 > ## ★★★2026-07-04 昼 CARD PHASE step12 batch1 出荷済 (origin/main = 514440b5 系列、6458f95f = 本体)
 > - **15枚出荷**: B04072/B03046/B08014/B09090/B01058/B08069/B03126/B02088/B07026/B05042/B08026/D10005/B07014/B01039/B09070(MR) — mega-wave W1-W6 first-consumer 一括。vitest baseline = **4104+1skip**。smoke winsA=472 不変。
 > - **BUG-170 修正 (骨格バグ修正 exception)**: 「このターン中に〜した」履歴 flag (selectedByOwnMr/shippuFiredCharThisTurn) の endTurn 清掃 vs turn-end queue 解決時参照 (rules/25) の race → 清掃を startTurn 境界へ移動。区別基準 =「〜まで」持続効果は endTurn 清掃 / 履歴 flag は startTurn 清掃 (BUG-170.md 水平展開節)。
