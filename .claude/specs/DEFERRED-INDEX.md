@@ -1081,3 +1081,21 @@ DEFERRED_DOCUMENTED 11 / 真の未記録欠落 2 = [[BUG-163]] (B08079 変装、
   card author 時の playwright で non-suppress ヒラメキも 1 件通し確認。
   (4) startFromEffect は mustTargetCandidates (G28 挑発) を素通し — 効果コンタクトに挑発が及ぶかの
   公式裁定なし (遭遇時に照会、推測補完しない)。
+
+## CARD PHASE step12 batch1 (2026-07-04 出荷) — grounding DEFER + latent
+
+出荷 15 枚 = B04072/B03046/B08014/B09090/B01058/B08069/B03126/B02088/B07026/B05042/B08026/D10005/B07014/B01039/B09070 (+BUG-170 engine 修正 = 履歴 flag の startTurn 境界清掃)。
+22 候補の grounding (sonnet5 workflow、per-card 全句⇔engine token 実測) による DEFER:
+
+- ★**B06020 佐々木小次郎** — a1「自分の手札にある【緑】〚特徴[YAIBA]〛のキャラは【カットイン】AP+2000を持つ」= **hand-zone への継続能力付与 aura 機構不在** (ContinuousModifier は board char 前提、hand-scope grant consumer 皆無)。a2 (startContact declared) は全部品出荷済で CLEAN — partial 禁止で a1 解消後に一括。
+- ★**B06042 ここで会うたが百年目** — 「【宣言】能力を与える」経路不在: (1) atomCharGrantAbility が grantedDef.type を無条件 'triggered' 強制 (char.ts:172) — spec の type:'declared' が反映されない。(2) findDeclaredAbility (canDeclared/useDeclared/UI 列挙の共有 helper) が turnEffects.grantedAbilities を非走査。(3) 同一対象へ複数回付与時の grantedId (`granted:${cardId}:${abilityId}`) が【ターン1】独立カウント (公式Q&A) を満たせない。→ engine touch-up 3 点が前提。
+- ★**B06085 松田陣平** — 第3句「MRを選んだ場合、相手はデッキ上から1枚**表向き**で証拠として得る」= evidenceGain atom に faceUp arg 不在 (mutate.evidence.addFromDeck は faceUp 受取可 = **1-arg 素通しの軽微 additive**)。他 4/5 句 (sceneToEvidence/boundIsMr/evidenceToDeckBottom/hirameki sleep) は全部品出荷済。次の軽微 touch-up 候補筆頭。
+- ★**B09112 キッドVS安室** — 核心句「指定名キャラ1枚につきデッキ上から1枚見る」= **resolveEffectPicks pre-walk が {dyn} を declareName 実行前に literal 化** (sequence 経路: maxN=0 baked / chain 経路: raw {dyn} が Math.min に渡り NaN)。grounding agent が vitest scratch probe で両経路とも revealed=0 を実測。deckRevealUntil maxN への dispatch-time dyn 解決 (filter は W5 で対応済、maxN は未対応) が要る。
+- ★**B09108 / PR105 / B09003 — DeclareCardNameModal UI 配線待ち (batch2 予定)**: DSL 部品 (declareName/boundNameMatchesDeclared/nameOverride/fileRemoveTop/fileFlipTop/fileAdd) は全出荷済・PR105 は megaw5 の「P12 charSetName 不在」DEFER が **stale** (W6 step1/2 の nameOverride で解消済、engine コメントが PR105 名指し)。残 gap = DeclareCardNameModal.tsx が unmounted scaffold (import 0 件) — 宣言 flow が declareName 依存を検出して modal を開き AbilityCostParams.declaredName へ橋渡しする配線 (MisreadPickerModal 前例) を batch2 で実装し 3 枚一括 author。playwright 必須 (新 UI 部品「型」)。
+- **batch1 latent nits (出荷済分)**:
+  (1) B08026 a1「残りをシャッフルしてデッキの下に移す」= deckToBottomBound→deckShuffle (B03018/D11019 出荷済 convention) — 厳密には「残りのみ shuffle して bottom へ」でなく全デッキ shuffle。既存 convention 踏襲 (盤面情報同値だが順序厳密性は Q&A 未照会)。
+  (2) B02088 a2 の「自分か相手のターン終了時」= phase:end:start matcher 無し (両ターン発火、B05014 裁定と整合)。
+  (3) batch1 の playwright 実機は未実施 (engine probe 49 tests + AI 経路のみ) — ヒラメキ suppress (B02088/B03126、DEFERRED-INDEX megaw6b 節 LOUD) / useEventFromHand human pick (B05042/B08026/D10005) / B07014 rider ActionsPanel 列挙 / B01058 reserve fire 時 human pick / B04072 候補除外 UI は **human 実戦投入前に必須**。次 session 冒頭で一括実施推奨。
+- **混成 review nits (step12-batch1、sonnet5 SHIP / opus SHIP_WITH_NITS、blocker 0)**:
+  (1) target-expander.candidates() の静的 pre-check `anyAuraDef` は相手 scene のみ走査 — partnerAreaMR は非走査。MR が untargetableByActionAura を持つカード出荷時に pre-check が false で aura 全 skip (latent、現 pool 非該当)。該当 MR 出荷時に pre-check へ PA-MR slot 追加。
+  (2) `actedCharThisTurn` は endTurn 清掃リストに残留 (turn-end 読者なし) — phase:end:start から読む consumer 出荷時に BUG-170 と同 race → startTurn 境界へ移動要 (BUG-170 水平展開節と同記)。

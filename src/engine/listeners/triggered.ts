@@ -373,7 +373,8 @@ function handleHook(
         state.turnState[card.player].shippuFiredThisTurn = true;
         // mega-wave W6 step4 (2026-07-04, r58): per-char 発動標識も同一 gate で記録
         // (per-player = turnState 履歴 / per-char = turnEffects 標識、B09070 a3 一括アクティブが
-        // TargetFilter.shippuFiredCharThisTurn で読む)。清掃は clearTurnEffects('turn')。
+        // TargetFilter.shippuFiredCharThisTurn で読む)。清掃は次 startTurn 境界 (BUG-170 —
+        // endTurn 清掃だと turn-end queue の解決時参照より先に消える)。
         charMutator.setTurnEffect(state, card.uid, 'shippuFiredCharThisTurn', true);
       }
       // Phase 7-2 (BUG-035 fix): effect 内の $pick atom を候補から substitute してから queue

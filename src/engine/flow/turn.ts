@@ -29,6 +29,18 @@ type Player = 'self' | 'opp';
  *   - メインフェイズ突入
  */
 export function startTurn(state: GameState, p: Player): void {
+  // BUG-170 (2026-07-04, B08014/B09070 first-consumer probe が検出): selectedByOwnMr /
+  // shippuFiredCharThisTurn は endTurn の clearTurnEffects('turn') で消すと、phase:end:start で
+  // queue された効果の conditional / forEach 列挙 (rules/25 解決時参照) が caller の
+  // runAllUntilEmpty (= endTurn 清掃の後) で常に空を読む。「このターン中に〜した」系の
+  // 履歴 flag はターン開始境界で清掃する (endTurn 後〜次 startTurn 間の未解決効果は
+  // 当該ターンの一部として flag を読める)。
+  for (const side of ['self', 'opp'] as const) {
+    for (const c of state.players[side].scene) {
+      delete c.turnEffects['selectedByOwnMr'];
+      delete c.turnEffects['shippuFiredCharThisTurn'];
+    }
+  }
   event.emit(state, 'turn:start', { player: p, turnNo: state.turn.number }, undefined);
   runAutoPhase(state, p);
   state.turn.phase = 'main';

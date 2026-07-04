@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-flows.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:flows`
-> Source hash: `3c0a2da8f915`
+> Source hash: `a7cb113c1471`
 
 `flow.runAutoPhase()` が 1 ターンの開始時に走らせる 4 ステップ。各ステップは Hook を emit するのみで、 能力発火 (登場時等) は pendingEffects に積まれ、呼出元が `engine.resolve.runAllUntilEmpty` で解決する。
 

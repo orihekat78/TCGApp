@@ -1,0 +1,15 @@
+# 🤖 ルール参照ハブ: 27-card-restrictions.md
+
+> ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
+> 再生成: `npm run docs:mapping`
+> Source hash: `4fea8a1cad8d`
+
+公式ルール [`27-card-restrictions.md`](../../../rules/27-card-restrictions.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
+
+## 🔗 ルール本体
+
+- [`27-card-restrictions.md`](../../../rules/27-card-restrictions.md)
+
+## 📄 参照ソース (1)
+
+- [`src/cards/ct-p01/B01058.ts`](../../../../src/cards/ct-p01/B01058.ts)

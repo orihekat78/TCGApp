@@ -25,3 +25,10 @@
 - ゲート: tsc 両0 / vitest **4067+1skip** (+32) / smoke winsA=472 不変 exc0 / 8lint err0 (side-channel allowlist に ContactStartAxId 追加)。
 - 教訓: (1) hirameki は scope 'on-evidence' (probe def の on-scene は listener 素通り) (2) PA短縮形の候補 state filter は query.state **配列** (a.state scalar は to-state — filter は明示 PB target で書く) (3) reservedEffects 発火の AI pick は drainAiEffectPicks 必須 (4) canDeclaredAbility fail-closed 化は pin 3 file 更新を伴う挙動変更 — 既存 pin grep が先 (W4 教訓の再確認)。
 - **次 = step12 CARD PHASE 一括刈り取り** (engine 凍結、B01092 の human-defender window のみ残 engine 必須 touch-up)。
+
+## 2026-07-04 (session: CARD PHASE step12 batch1)
+- **出荷**: mega-wave 解禁 consumer **15枚** (B04072/B03046/B08014/B09090/B01058/B08069/B03126/B02088/B07026/B05042/B08026/D10005/B07014/B01039/B09070) + **BUG-170 修正** (履歴 flag selectedByOwnMr・shippuFiredCharThisTurn の清掃を endTurn→startTurn 境界へ。B08014/B09070 の印字条件が常に空振りする race を first-consumer probe が検出)。
+- grounding = sonnet5 workflow 22 card (⚠ 22 並列は rate-limit 全滅 → **chunk 4 並列で再走**、memory 警告の実証)。probe = tests/cards/step12-batch1.test.ts 49+3 tests。
+- DEFER: B06020 (hand-scope aura 不在) / B06042 (charGrantAbility declared 経路 3 gap) / B06085 (evidenceGain faceUp 軽微 additive) / B09112 (pre-walk dyn literal 化、実測) / B09108+PR105+B09003 (DeclareCardNameModal 配線待ち = **batch2**)。詳細 DEFERRED-INDEX「step12-batch1」節。
+- 教訓: (1) **lint:icon-abilities が B09070 の cutIn 列実装漏れを検出** — grounding 通過後も col11/12/13 は lint が最終防波堤 (2) canDeclaredAbility/useDeclaredAbility は (state, uid, abilId) — player 引数なし (3) charGrantKeyword 短縮形は player 必須 (charModifyAP と非対称) (4) caseTrait cond は CardDef.caseTraits 読み (state.case.traits でない) (5) useDeclaredAbility は cost を支払わない (caller が pay 先行) (6) 「〜まで」持続効果 = endTurn 清掃 / 「このターン中に〜した」履歴 = startTurn 清掃 (BUG-170 区別基準)。
+- playwright 実機は未実施 → batch2 冒頭で一括 (hirameki suppress / useEventFromHand / rider / reserve / 候補除外 UI)。

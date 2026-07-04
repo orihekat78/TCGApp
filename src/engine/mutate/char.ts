@@ -193,14 +193,19 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     // engine additive wave-7 (2026-07-02, P17): 「このターン中にアクション[キャラ]した」flag
     // (declare が立て、TargetFilter.actedCharThisTurn が honor)。ターン終了で失効 (B08049)。
     delete te['actedCharThisTurn'];
-    // mega-wave W6 step4 (2026-07-04, r58/B09090): 疾風 per-char 発動標識 + waive 消費痕跡
-    // (どちらも「このターン中」scope、wave-7 教訓: 新 turn キーは必ずここに列挙)。
-    delete te['shippuFiredCharThisTurn'];
+    // mega-wave W6 step4 (2026-07-04, r58/B09090): waive 消費痕跡。
     delete te['shippuWaived'];
-    // mega-wave W6 step6 (2026-07-04, r79/B08014): 「このターン中に自分のMRの能力によって選ばれた」
-    // 標識。phase:end:start の granted ability (not selectedByOwnMr) 評価は本清掃より **前** に走る
-    // (turn.ts: trigger queue → clearTurnEffects の順) ため読取と衝突しない。
-    delete te['selectedByOwnMr'];
+    // BUG-170 水平展開: shippuFiredCharThisTurn は **ここでは削除しない** — B09070 a3
+    // 「ターン終了時、このターン中に【疾風】を発動していたすべてのキャラをアクティブにする」が
+    // phase:end:start queue の解決時 (endTurn 清掃の後) に本 flag を読む。selectedByOwnMr と
+    // 同じくターン開始境界 (flow/turn.ts startTurn) で清掃する。
+    // mega-wave W6 step6 (2026-07-04, r79/B08014) → BUG-170 (同日修正): 「このターン中に自分の
+    // MRの能力によって選ばれた」標識は **ここでは削除しない**。endTurn は phase:end:start の
+    // trigger を queue した直後に本清掃を同期実行するが、queue された granted ability の
+    // conditional は caller の runAllUntilEmpty (= 清掃の後) で解決される (rules/25 解決時参照)
+    // ため、ここで消すと B08014「選ばれていなかった場合」が常に成立してしまう。
+    // 清掃は flow/turn.ts startTurn (次ターン開始境界) が行う (noAutoActivateBySourceUid と同様の
+    // 非対称清掃 key)。
     // engine additive wave-8 (2026-07-02, P15): 「このキャラは推理できない。」(B09072 a2、ターン終了時まで)
     // 付与を解除。canReason が本キーを読む (reason-ban)。actedCharThisTurn 同様 boolean flag key。
     delete te['cannotReason'];

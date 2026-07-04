@@ -1109,6 +1109,21 @@ import { B04074 } from '../ct-p04/B04074.js';
 import { B04074P } from '../ct-p04/B04074P.js';
 import { B04088 } from '../ct-p04/B04088.js';
 import { B04088P } from '../ct-p04/B04088P.js';
+import { B04072 } from '../ct-p04/B04072.js';
+import { B03046 } from '../ct-p03/B03046.js';
+import { B08014 } from '../ct-p08/B08014.js';
+import { B09090 } from '../ct-p09/B09090.js';
+import { B01058 } from '../ct-p01/B01058.js';
+import { B08069 } from '../ct-p08/B08069.js';
+import { B03126 } from '../ct-p03/B03126.js';
+import { B02088 } from '../ct-p02/B02088.js';
+import { B07026 } from '../ct-p07/B07026.js';
+import { B05042 } from '../ct-p05/B05042.js';
+import { B08026 } from '../ct-p08/B08026.js';
+import { D10005 } from '../ct-d10/D10005.js';
+import { B07014 } from '../ct-p07/B07014.js';
+import { B01039 } from '../ct-p01/B01039.js';
+import { B09070 } from '../ct-p09/B09070.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1457,4 +1472,10 @@ export const REUSE_CARDS: CardDef[] = [
   B04074, B04074P,
   // engine mega-wave W5 — r37 removeDeckTop.n dyn exemplar (B04088/P スコッチ)
   B04088, B04088P,
+  // CARD PHASE step12 batch1
+  B04072,
+  // CARD PHASE step12 batch1
+  B03046, B08014, B09090, B01058, B08069, B03126, B02088, B07026, B05042, B08026, D10005, B07014, B01039,
+  // CARD PHASE step12 batch1 (B09070)
+  B09070,
 ];

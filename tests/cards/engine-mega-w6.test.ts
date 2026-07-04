@@ -9,6 +9,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { evalDyn } from '@/engine/dyn/eval';
 import { evalCond } from '@/engine/cond/eval';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { startTurn } from '@/engine/flow/turn';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { runAtom } from '@/engine/effect/atom-handlers';
 import { run as runEffect } from '@/engine/effect/resolver';
@@ -496,8 +497,12 @@ describe('megaw6 step4 — r58 shippuFiredCharThisTurn (per-char flag + TargetFi
     expect(dec.turnEffects['shippuFiredCharThisTurn']).toBeUndefined();
     const sh = s.players.self.scene.find(x => x.cardId === 'SHIPPU')!;
     expect(sh.turnEffects['shippuFiredCharThisTurn']).toBe(true);
+    // BUG-170: clearTurnEffects('turn') では消えない (B09070 a3 が phase:end:start queue の
+    // 解決時に読むため)。清掃は次 startTurn 境界。
     s = produce(s, (d) => { mutateAll.char.clearTurnEffects(d, sh.uid, 'turn'); });
-    expect(s.players.self.scene.find(x => x.cardId === 'SHIPPU')!.turnEffects['shippuFiredCharThisTurn']).toBeUndefined();
+    expect(s.players.self.scene.find(x => x.cardId === 'SHIPPU')!.turnEffects['shippuFiredCharThisTurn'], 'endTurn 清掃では残る (BUG-170)').toBe(true);
+    s = produce(s, (d) => { d.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn']; startTurn(d, 'opp'); });
+    expect(s.players.self.scene.find(x => x.cardId === 'SHIPPU')!.turnEffects['shippuFiredCharThisTurn'], '次 startTurn で解除').toBeUndefined();
   });
 
   it('B09070 a3 型 forEach 一括アクティブ: 疾風発動キャラのみ active 化 (未発動 decoy は sleep のまま)', () => {
@@ -902,8 +907,9 @@ describe('megaw6 step6 — r79 selectedByOwnMr (MR 選択追跡、AI/human 両�
     expect(s.players.opp.scene.some(c => c.turnEffects['selectedByOwnMr'] === true), '相手キャラは「自分のMR」に該当しない').toBe(false);
   });
 
-  it('selfSelectedByOwnMrThisTurn cond + not 包み (B08014 形) + clearTurnEffects(turn) 清掃', () => {
+  it('selfSelectedByOwnMrThisTurn cond + not 包み (B08014 形) + BUG-170 清掃境界', () => {
     const s = createEmptyGameState();
+    s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     const tgt = mutateAll.scene.enter(s, 'self', 'TGT', {});
     const ctxOf = () => makeCtx({ source: { player: 'self', area: 'scene', uid: tgt.uid, cardId: 'TGT' } });
     expect(evalCond(s, { kind: 'selfSelectedByOwnMrThisTurn' }, ctxOf())).toBe(false);
@@ -911,8 +917,13 @@ describe('megaw6 step6 — r79 selectedByOwnMr (MR 選択追跡、AI/human 両�
     mutateAll.char.tagSelectedByOwnMr(s, tgt.uid, 'self');
     expect(evalCond(s, { kind: 'selfSelectedByOwnMrThisTurn' }, ctxOf())).toBe(true);
     expect(evalCond(s, { kind: 'not', c: { kind: 'selfSelectedByOwnMrThisTurn' } }, ctxOf()), '選択済 → 条件不成立').toBe(false);
+    // BUG-170: clearTurnEffects('turn') では消えない (endTurn 同期清掃 vs 未解決効果の解決時参照
+    // rules/25 の衝突回避 — B08014 rider が endTurn 後の runAllUntilEmpty で flag を読めること)。
     mutateAll.char.clearTurnEffects(s, tgt.uid, 'turn');
-    expect(evalCond(s, { kind: 'selfSelectedByOwnMrThisTurn' }, ctxOf()), 'ターン清掃で解除').toBe(false);
+    expect(evalCond(s, { kind: 'selfSelectedByOwnMrThisTurn' }, ctxOf()), 'endTurn 清掃では残る (BUG-170)').toBe(true);
+    // 清掃は次ターン開始境界 (flow/turn.ts startTurn)
+    startTurn(s, 'opp');
+    expect(evalCond(s, { kind: 'selfSelectedByOwnMrThisTurn' }, ctxOf()), '次 startTurn で解除').toBe(false);
   });
 
   it('paMrColorCountMin: PA-MR 不在 / 1色 / 2色 の分岐 (B09047)', () => {

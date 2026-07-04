@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `f5ca4ec7e959`
+> Source hash: `4fea8a1cad8d`
 
 公式ルール [`03-field-areas.md`](../../../rules/03-field-areas.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,7 +23,7 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 
-## 📄 参照ソース (282)
+## 📄 参照ソース (285)
 
 - [`src/cards/ct-d01/D01008.ts`](../../../../src/cards/ct-d01/D01008.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
@@ -45,4 +45,4 @@
 - [`src/cards/ct-d11/D11006.ts`](../../../../src/cards/ct-d11/D11006.ts)
 - [`src/cards/ct-d11/D11009.ts`](../../../../src/cards/ct-d11/D11009.ts)
 - [`src/cards/ct-d11/D11010.ts`](../../../../src/cards/ct-d11/D11010.ts)
-- _...ほか 262 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 265 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
