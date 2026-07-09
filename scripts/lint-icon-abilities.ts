@@ -20,7 +20,7 @@ const DEFER_ALLOWLIST = new Map<string, string>([
 const registered = new Map(ALL_CARDS.map((d) => [d.id, d]));
 const rows: { id: string; set: string; cutIn: string; hirameki: string }[] = [];
 
-for (const set of readdirSync(DATA)) {
+for (const set of existsSync(DATA) ? readdirSync(DATA) : []) {
   const dir = resolve(DATA, set);
   for (const kind of ['character', 'event']) {
     const f = resolve(dir, `${kind}.tsv`);
@@ -38,6 +38,13 @@ for (const set of readdirSync(DATA)) {
       rows.push({ id, set, cutIn: cols[iCut]?.trim() ?? '', hirameki: cols[iHir]?.trim() ?? '' });
     }
   }
+}
+
+// cards-data TSV はローカル専用 (公開リポジトリ化で untrack、56869955)。CI checkout に無い場合、
+// 欠落検出が全 vacuous になり allowlist が STALE 誤判定される → skip (ローカル実行で担保)。
+if (rows.length === 0) {
+  console.log('[lint:icon-abilities] SKIP — cards-data TSV 不在 (ローカル専用 data)');
+  process.exit(0);
 }
 
 const violations: string[] = [];
