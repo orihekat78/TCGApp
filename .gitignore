@@ -60,3 +60,8 @@ analysis.txt
 # 既存の dated smoke は .claude/reports/_archive/ へ退避済 (履歴保持)。
 /.claude/reports/smoke-*
 !/.claude/reports/smoke-baseline.json
+
+# 公開リポジトリ運用 (2026-07-10): 公式カードテキストの逐語データはコミットしない
+# (著作権配慮、.claude/research/legal/04-recommendation.md)。ローカル専用。
+/.claude/specs/cards-data/_raw/
+/.claude/specs/cards-data/**/*.tsv
