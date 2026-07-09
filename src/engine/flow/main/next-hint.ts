@@ -116,7 +116,9 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
       // Round 4b: payload kind を event-use / character-use に分離。
       // hand-use-card.ts と同じ規約 (eventRemoveByAP matcher 'kind===event-use' との整合)。
       // BUG-132 GAP-2: payload に player を追加 (hand-use-card.ts と同一規約、additive)
-      { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId, player: p },
+      // mini-wave #2 (2026-07-10): viaNextHint flag — 「ネクストヒントで手札を使用したとき」(B01005/B03002/
+      // B05005) を通常の手札の使用と判別する additive field (既存 matcher は未読で挙動不変)。
+      { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId, player: p, viaNextHint: true },
       { player: p, cardId: optionalCardId },
     );
     // キャラの場合: 現場へ登場 (rules/12 §3 — アクティブ・名乗り状態で登場)。

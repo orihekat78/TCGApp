@@ -187,6 +187,10 @@ export type Condition =
   // 「(使用した)〚カード名/特徴〛のカットインのとき」(B09086 = [諸伏景光]/[長野県警] で分岐)。setCardMatches と
   // 同式で matchOneFilter の char 引数は null (CardDef 印字属性のみ)。triggerPlayerIs(側) との複合は and で書く。
   | { kind: 'triggerCutinMatches'; filter: TargetFilter }
+  // mini-wave #2 (2026-07-10): next-hint 判別 + 使用カード def filter。honor: cond/eval.ts case +
+  // CONDITION_KIND_MAP + validate-specs CONDS。
+  | { kind: 'triggerViaNextHint' }
+  | { kind: 'triggerCardMatches'; filter: TargetFilter }
   // engine additive wave-4 (2026-07-01): remove:exit payload の離脱カードを filter 評価。「自分の
   // リムーブエリアにある〚特徴/種別〛のカードがリムーブエリアから離れたとき」(B05087 諸伏高明 /
   // B05088 大和敢助)。emit 元 = mutate/deck.refresh (リフレッシュ=remove→deck、公式Q&A 発動) +

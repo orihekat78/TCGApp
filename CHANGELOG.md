@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `62f13e92280e`
+> Source hash: `37207d97c865`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,16 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+### engine mini-wave #2: next-hint 判別 — 3 printings (cluster ④ 解禁)
+
+- **engine 3 primitive (additive)**: next-hint の effect:declared payload に `viaNextHint:true`
+  (通常手札使用と判別、既存 matcher 未読で挙動不変) + cond `triggerViaNextHint` / `triggerCardMatches`
+  (使用カード CardDef filter 照合、triggerCutinMatches 同型) + dyn `$trigger.cardLevel` (元のレベル参照、QA4)。
+- **consumer 3 printings**: B01005 江戸川コナン / B03002 / B05005 (「ネクストヒントで手札を使用したとき」family)。
+  B02087 (NH 限定色無視) は別機構につき DEFER 継続。
+- probe 16 test green (engine 4 + consumer 12、viaNextHint 判別の hand-use negative 回帰込)。
+- gates: tsc 0 / vitest 4549→**4565** pass +1 skip / smoke winsA=472 不変 exc0 / 8 lint err0。
 
 ### engine mini-wave: lpOverride_turn + $bound levelSum — 3 printings + BUG-179 (shipped 4枚水平修正)
 

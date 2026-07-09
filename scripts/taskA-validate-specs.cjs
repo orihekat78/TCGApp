@@ -86,7 +86,7 @@ const CONDS = new Set([
   // Task D E1 (2026-06-12): hand-count conditions
   'handAtLeast', 'handAtMost', 'handCountAtLeastOther',
   // Task D E2/E3 (2026-06-12)
-  'fileTopMatches', 'triggerPlayerIs', 'charTurnEffect',
+  'fileTopMatches', 'triggerPlayerIs', 'triggerViaNextHint', 'triggerCardMatches', 'charTurnEffect',
   // engine拡張 wave#2 cluster3 (2026-06-13)
   'triggerActionKind',
   // BUG-145 self-state micro-cluster (2026-06-15)

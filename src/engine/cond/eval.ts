@@ -608,6 +608,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const cand: Candidate = { kind: 'char', uid: pl.cardId, cardId: pl.cardId, player: ctx.source.player };
       return matchOneFilter(state, pl.cardId, cond.filter, null, cand);
     }
+    // engine mini-wave #2 (2026-07-10, cluster④): 「ネクストヒントで手札を使用したとき」判別。
+    // next-hint.ts が effect:declared payload に viaNextHint:true を積む (通常手札使用には無い)。
+    case 'triggerViaNextHint': {
+      const pl = ctx.triggerPayload as { viaNextHint?: boolean } | undefined;
+      return pl?.viaNextHint === true;
+    }
+    // engine mini-wave #2 (2026-07-10): 使用カード (effect:declared payload.cardId) の CardDef 印字値を
+    // filter 評価 (B05005「【青】のカードを使用したとき」)。triggerCutinMatches と同式 (char=null)。
+    case 'triggerCardMatches': {
+      const pl = ctx.triggerPayload as { cardId?: string } | undefined;
+      if (!pl || typeof pl.cardId !== 'string') return false;
+      const cand: Candidate = { kind: 'char', uid: pl.cardId, cardId: pl.cardId, player: ctx.source.player };
+      return matchOneFilter(state, pl.cardId, cond.filter, null, cand);
+    }
     // engine mega-wave W3 (2026-07-03, r10): disguise:replaced payload の入替わり側 (newCardId) を
     // filter 評価 (B03052「〚カード名［ベルモット］〛が【変装】によって…入れ替わったとき」)。
     // triggerCutinMatches と同型 — char=null = CardDef 印字値、rules/19 分割名は cardName 経由。
@@ -804,6 +818,8 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
 // (`satisfies Record<Condition['kind'], true>` で両方向同期を強制)。
 // scripts/taskA-validate-specs.cjs CONDS との同期は tests/engine/sync-taskA-whitelists.test.ts。
 const CONDITION_KIND_MAP = {
+  triggerViaNextHint: true,
+  triggerCardMatches: true,
   true: true, false: true, not: true, and: true, or: true, turn: true,
   partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
   bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,

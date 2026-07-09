@@ -10,3 +10,4 @@
   orphan-参照化。B09067 は lens が BUG-161 hazard 検出→正しく DEFER。次 = engine mini-wave (cluster 8種)。
 - engine mini-wave #1 (朝): lpOverride_turn + $bound.levelSum → B01045/B01054/B04063 出荷 (1736→1739)。
   **BUG-179** = filter無し triggerCharMatches の partner 誤発火 (shipped 4枚) を lens 指摘から水平修正。
+- engine mini-wave #2: viaNextHint 判別 + triggerCardMatches + $trigger.cardLevel → B01005/B03002/B05005 (1739→1742)。

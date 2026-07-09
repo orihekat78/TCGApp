@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `75fe1ea5eff6`
+> Source hash: `0250a94364f6`
 
 公式ルール [`12-next-hint.md`](../../../rules/12-next-hint.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -16,11 +16,14 @@
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
 - [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 
-## 📄 参照ソース (22)
+## 📄 参照ソース (25)
 
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
+- [`src/cards/ct-p01/B01005.ts`](../../../../src/cards/ct-p01/B01005.ts)
 - [`src/cards/ct-p02/B02063.ts`](../../../../src/cards/ct-p02/B02063.ts)
+- [`src/cards/ct-p03/B03002.ts`](../../../../src/cards/ct-p03/B03002.ts)
 - [`src/cards/ct-p03/B03051.ts`](../../../../src/cards/ct-p03/B03051.ts)
+- [`src/cards/ct-p05/B05005.ts`](../../../../src/cards/ct-p05/B05005.ts)
 - [`src/cards/ct-p05/B05037.ts`](../../../../src/cards/ct-p05/B05037.ts)
 - [`src/cards/ct-p05/B05045.ts`](../../../../src/cards/ct-p05/B05045.ts)
 - [`src/cards/ct-p05/B05050.ts`](../../../../src/cards/ct-p05/B05050.ts)
@@ -35,7 +38,4 @@
 - [`src/engine/flow/main/hand-use-card.ts`](../../../../src/engine/flow/main/hand-use-card.ts)
 - [`src/engine/mutate/file.ts`](../../../../src/engine/mutate/file.ts)
 - [`src/engine/mutate/flag.ts`](../../../../src/engine/mutate/flag.ts)
-- [`src/engine/mutate/hand.ts`](../../../../src/engine/mutate/hand.ts)
-- [`src/engine/read/player.ts`](../../../../src/engine/read/player.ts)
-- [`src/ui/hooks/useEngineDispatch.ts`](../../../../src/ui/hooks/useEngineDispatch.ts)
-- _...ほか 2 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 5 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -290,6 +290,21 @@ function resolvePlaceholder(state: GameState, placeholder: string, ctx: EffectCt
       return resolveDiscarded(ctx, rest, placeholder);
     case 'bound':
       return resolveBound(state, rest, ctx, placeholder);
+    // mini-wave #2 (2026-07-10): $trigger.cardLevel = trigger payload.cardId の CardDef 印字レベル
+    // (「そのカードのレベル以下」B01005、QA=元のレベル参照)。$trigger.<key> の数値/文字列 passthrough も許容。
+    case 'trigger': {
+      const tp = (ctx as { triggerPayload?: Record<string, unknown> }).triggerPayload;
+      if (!tp) throw new Error(`dyn.eval: $trigger — ctx.triggerPayload 不在 in "${placeholder}"`);
+      const tf = rest[0];
+      if (tf === 'cardLevel') {
+        const cid = tp['cardId'];
+        if (typeof cid !== 'string') return NaN;
+        return def.card(cid)?.level ?? NaN;
+      }
+      const v = tp[tf];
+      if (typeof v === 'number' || typeof v === 'string') return v;
+      throw new Error(`dyn.eval: unknown $trigger field "${tf}" in "${placeholder}"`);
+    }
     case 'declared':
       return resolveDeclared(state, rest, ctx, placeholder);
     default:
