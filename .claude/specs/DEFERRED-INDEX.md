@@ -1285,3 +1285,18 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 
 **pool 状態 (2026-07-10 朝時点)**: refuse-1行 = 枯渇 / refuse-2行 = 枯渇 (本 batch で最終)。
 残 = refuse-3行+ (~66 unit、--max-refusals 3+ で選定可) + DEFER cluster 群 (engine mini-wave 待ち)。
+
+## hybrid-batch6 由来 DEFER (2026-07-10、3-4行 unit 11 中 5 DEFER + 1 VERIFY_NG。全文 = .tmp/_batch6_defers.txt)
+
+| ID | blocker 要旨 |
+|---|---|
+| B06012 | set event の「このイベントをリムーブしてもよい→登場」= 特定 set card 自己除去 verb 不在 (removeOneSetCard は末尾 pop のみ) |
+| B06047 | (詳細 = _batch6_defers.txt) |
+| B06064 | (同上) |
+| B07033 | (同上) |
+| B09113 | (同上) |
+| B09067 | VERIFY_NG: bound-conditional (unstable if) の両枝に Pattern-A pick — BUG-161 pre-walk 過剰 queue hazard。短縮形化 or conditionIfIsStable 拡張後に再 author |
+
+**hybrid pipeline 完了宣言 (2026-07-10 朝)**: refuse-1/2/3/4行 全層掃き終わり。残 pool = DEFER cluster のみ
+(engine mini-wave 対象。優先 cluster = ①turn-scope LP override ②bound levelSum dyn ③deck-reveal 拡張
+④next-hint 判別 ⑤選ばれたとき無効 intercept ⑥hand 内 continuous ⑦set-card 操作系 ⑧cost choice UI)。

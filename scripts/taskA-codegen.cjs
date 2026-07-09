@@ -121,8 +121,15 @@ function serAbility(ab, indent) {
     clone.trigger.matcher = '__EVENT_USE_MATCHER__';
     hasEventUse = true;
   }
+  // grantKeywords: JSON spec では string[] で受け、engine 型 (closure) へ変換して emit (B07005 で導入)
+  let grantKw = null;
+  if (clone.continuousModifier && Array.isArray(clone.continuousModifier.grantKeywords)) {
+    grantKw = clone.continuousModifier.grantKeywords;
+    clone.continuousModifier.grantKeywords = '__GRANT_KW__';
+  }
   let src = ser(clone, indent);
   if (hasEventUse) src = src.replace(ser('__EVENT_USE_MATCHER__', 0), EVENT_USE_MATCHER);
+  if (grantKw) src = src.replace(ser('__GRANT_KW__', 0), `() => ${JSON.stringify(grantKw).replace(/"/g, "'")}`);
   return src;
 }
 

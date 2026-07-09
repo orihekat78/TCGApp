@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `caac5d9d2a2d`
+> Source hash: `a31dff85c9b8`
 
 公式ルール [`17-icons.md`](../../../rules/17-icons.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -30,7 +30,7 @@
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (1052)
+## 📄 参照ソース (1058)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseMonoColor.ts`](../../../../src/cards/_shared/caseMonoColor.ts)
@@ -52,4 +52,4 @@
 - [`src/cards/ct-d01/D01015.ts`](../../../../src/cards/ct-d01/D01015.ts)
 - [`src/cards/ct-d02/D02002.ts`](../../../../src/cards/ct-d02/D02002.ts)
 - [`src/cards/ct-d02/D02003.ts`](../../../../src/cards/ct-d02/D02003.ts)
-- _...ほか 1032 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 1038 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -86,7 +86,7 @@ fs.writeFileSync(path.join(TMP, '_hybrid_refuse1.json'), JSON.stringify({
 // ── 3. twin 自動 group (refused 行集合 同文 + rest deep-equal。finish の機械証明と同条件) ──
 // 1行 unit を先に (安い・歩留まり実証済)、次に 2行 unit — pool 順は refusals 数の昇順で安定させる
 const groups = new Map(); // key -> {ids, nRefusals}
-for (const rec of [...stats.oneLine, ...(MAX_REFUSALS >= 2 ? stats.twoLine : [])]) {
+for (const rec of [...stats.oneLine, ...(MAX_REFUSALS >= 2 ? stats.twoLine : []), ...(MAX_REFUSALS >= 3 ? stats.moreLine.filter((r) => r.refusals.length <= MAX_REFUSALS) : [])]) {
   const m = restOf.get(rec.id);
   if (!m) continue;
   const key = m.restJson === null ? `solo:${rec.id}` : `${m.refusedKey}::${m.restJson}`;

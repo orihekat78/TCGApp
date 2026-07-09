@@ -201,7 +201,7 @@ function validateSpec(spec) {
       if (!ab.continuousModifier) errs.push(`${c}: continuous without continuousModifier`);
       else {
         // pure-JSON continuousModifier fields (card-def.ts). closure-only: grantKeywords / customSelectorPatch → needsManual.
-        const JSON_CONT_KEYS = ['colorIgnoreOnHandUse', /* mega-W2 出荷 (B03126 稼働、whitelist stale だった 2026-07-10) */ 'apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp',
+        const JSON_CONT_KEYS = ['selfActionBan', 'selfCutinBanInContact', /* W2 出荷 boolean flag (B07005、stale whitelist) */ 'colorIgnoreOnHandUse', /* mega-W2 出荷 (B03126 稼働、whitelist stale だった 2026-07-10) */ 'apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp',
           // pure-JSON case-continuous overrides (P05/E3 P11/P53/P10): TargetFilter/number/string[]/boolean、closure なし
           'handUseRestrictFilter', 'sceneCapOverride', 'partnerColorsOverride', 'cannotSolveCase', 'partnerSolveOverride',
           // selfContinuousFlag 系 boolean token (W2 出荷済 engine union、hybrid-batch2 で解禁)
@@ -209,6 +209,7 @@ function validateSpec(spec) {
           // wave-6 P37 grant (pure-JSON string[]、card-def.ts:134-135、B05012 exemplar)
           'grantTraits', 'grantNames'];
         for (const k of Object.keys(ab.continuousModifier)) {
+          if (k === 'grantKeywords' && Array.isArray(ab.continuousModifier[k]) && ab.continuousModifier[k].every((x) => typeof x === 'string')) continue; // codegen が closure へ変換 (B07005)
           if (!JSON_CONT_KEYS.includes(k)) errs.push(`${c}: continuousModifier.${k} not JSON-expressible (grantKeywords/customSelectorPatch need closure → needsManual)`);
         }
       }

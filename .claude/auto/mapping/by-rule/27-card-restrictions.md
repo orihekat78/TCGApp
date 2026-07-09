@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `caac5d9d2a2d`
+> Source hash: `a31dff85c9b8`
 
 公式ルール [`27-card-restrictions.md`](../../../rules/27-card-restrictions.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -10,6 +10,7 @@
 
 - [`27-card-restrictions.md`](../../../rules/27-card-restrictions.md)
 
-## 📄 参照ソース (1)
+## 📄 参照ソース (2)
 
 - [`src/cards/ct-p01/B01058.ts`](../../../../src/cards/ct-p01/B01058.ts)
+- [`src/cards/pr-01/PR067.ts`](../../../../src/cards/pr-01/PR067.ts)
