@@ -131,7 +131,14 @@ describe('parseTsv — unescape rules', () => {
   });
 });
 
-describe('loadSet — actual TSV files', () => {
+import fs from 'node:fs';
+import { resolve as resolvePathForGuard } from 'node:path';
+const HAS_CARDS_DATA = fs.existsSync(
+  resolvePathForGuard(__dirname, '../../../.claude/specs/cards-data/ct-d08/character.tsv'),
+);
+
+// cards-data TSV はローカル専用 (untrack 済、56869955)。CI checkout に無い場合 skip。
+describe.skipIf(!HAS_CARDS_DATA)('loadSet — actual TSV files', () => {
   it("loadSet('CT-D08') returns 26 cards (2 partner + 21 char + 2 event + 1 case)", () => {
     const defs = loadSet('CT-D08');
     expect(defs).toHaveLength(26);

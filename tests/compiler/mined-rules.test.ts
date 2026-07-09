@@ -20,8 +20,11 @@ const ROOT = path.resolve(__dirname, '../..');
 const RULES = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/compiler/rules/line-rules.json'), 'utf8'));
 const EXCEPTIONS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/compiler/rules/exceptions.json'), 'utf8'));
 
-describe('compiler/mined-rules (real data)', () => {
-  const corpus = loadCorpus(ROOT);
+// cards-data TSV はローカル専用 (untrack 済、56869955)。CI checkout に無い場合 skip。
+const corpusAll = loadCorpus(ROOT);
+
+describe.skipIf(corpusAll.length === 0)('compiler/mined-rules (real data)', () => {
+  const corpus = corpusAll;
   const corpusIds = new Set(corpus.map((c: { id: string }) => c.id));
   const shipped = ALL_CARDS.map((d) => canonicalCard(d));
   const report = runOracle(corpus, shipped, loadProductions());

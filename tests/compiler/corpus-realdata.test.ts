@@ -5,8 +5,11 @@ const { loadCorpus, dupIds, TEXT_COLS } = require('../../scripts/compiler/tsv-co
 
 const ROOT = path.resolve(__dirname, '../..');
 
-describe('compiler/corpus (real TSV)', () => {
-  const corpus = loadCorpus(ROOT);
+// cards-data TSV はローカル専用 (2026-07-10 公開リポジトリ化で untrack、56869955)。CI checkout に無い場合 skip。
+const corpusAll = loadCorpus(ROOT);
+
+describe.skipIf(corpusAll.length === 0)('compiler/corpus (real TSV)', () => {
+  const corpus = corpusAll;
   const byId = new Map(corpus.map((c: { id: string }) => [c.id, c]));
 
   it('universe 全 printings を取り込む (2026-07-02 実測 2049)', () => {

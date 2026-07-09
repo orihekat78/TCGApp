@@ -13,8 +13,11 @@ const { runOracle } = require('../../scripts/compiler/oracle.cjs');
 
 const ROOT = path.resolve(__dirname, '../..');
 
-describe('compiler/oracle (real data, production 0 件)', () => {
-  const corpus = loadCorpus(ROOT);
+// cards-data TSV はローカル専用 (untrack 済、56869955)。CI checkout に無い場合 skip。
+const corpusAll = loadCorpus(ROOT);
+
+describe.skipIf(corpusAll.length === 0)('compiler/oracle (real data, production 0 件)', () => {
+  const corpus = corpusAll;
   const shipped = ALL_CARDS.map((d) => canonicalCard(d));
   const report = runOracle(corpus, shipped, []);
   const byId = new Map(corpus.map((c: { id: string }) => [c.id, c]));
