@@ -99,14 +99,20 @@ for (const r of results) {
   specs.push(mk(id));
   const twinsOk = [];
   const twinsFail = [];
+  // 正準 = refusedLines (1〜N 行)。旧 payload (refusedLine 単数) も受ける
+  const baseRefused = payload.refusedLines || [payload.refusedLine];
+  const baseKey = baseRefused.map((x) => normTxt(x.text)).sort().join('||');
   for (const t of (payload.unit.twins || [])) {
     const te = byId.get(t);
     if (!te) { twinsFail.push({ t, why: 'no-corpus' }); continue; }
     const tr = compileCard(te, productions);
-    if (tr.status !== 'refused' || tr.refusals.length !== 1) { twinsFail.push({ t, why: 'refusal-shape' }); continue; }
-    if (normTxt(tr.refusals[0].text) !== normTxt(payload.refusedLine.text)) { twinsFail.push({ t, why: 'refused-text-differs' }); continue; }
+    if (tr.status !== 'refused' || tr.refusals.length !== baseRefused.length) { twinsFail.push({ t, why: 'refusal-shape' }); continue; }
+    const tKey = tr.refusals.map((x) => normTxt(x.text)).sort().join('||');
+    if (tKey !== baseKey) { twinsFail.push({ t, why: 'refused-text-differs' }); continue; }
     const texts2 = { ...te.texts };
-    texts2[tr.refusals[0].col] = splitLines(texts2[tr.refusals[0].col]).filter((l) => l !== tr.refusals[0].text).join('\\n');
+    for (const ref of tr.refusals) {
+      texts2[ref.col] = splitLines(texts2[ref.col]).filter((l) => l !== ref.text).join('\\n');
+    }
     const tr2 = compileCard({ ...te, texts: texts2 }, productions);
     const tRest = tr2.status === 'compiled' ? tr2.abilities.map(strip) : null;
     if (!tRest || !deepEq(tRest, restCompiled)) { twinsFail.push({ t, why: 'rest-differs' }); continue; }

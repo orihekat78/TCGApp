@@ -51,3 +51,9 @@
   fail-closed: observer/continuous/misread/choice → MANUAL 報告。次拡張 = observer hook 系 driver。
 - **check-smoke-baseline 恒久 fix** (4回目の再発 nit): `-N` なし初回 filename を regex optional 化で検出。
 - gates: tsc0 / vitest 4331+1skip / 8lint err0 / src 変更0。
+
+## 2026-07-09 続 — refuse-2行 対応 (ユーザー「さらに効く一手も行いたい」)
+
+- prepare `--max-refusals 2` + finish twin 集合証明化。**pool 93→218 unit (未出荷 base の 88% が
+  pipeline 対象)**。2行 twin 即効: D06003+3 (1 author→4 printings) を合成 result で機械証明 GREEN 実証。
+- payload 正準 = refusedLines[] (旧 refusedLine 後方互換)。tsc0 / genprobe 11/11 / src 変更0。

@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/tmp/megaw1`)
 - **ディレクトリ数**: 224
-- **ファイル数**: 4191
+- **ファイル数**: 4192
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -598,6 +598,7 @@
     - `2026-07-04-05-hybrid-pilot-1.md`
     - `2026-07-09-01-cardphase-hybrid-batch2.md` — feat(cards): CARD PHASE hybrid-batch2 — refuse-1行 pipeline 本番化 38枚 (2026-07-09)
     - `2026-07-09-02-hybrid-tooling.md` — feat(tooling): hybrid pipeline 恒久化 + probe compiler MVP (2026-07-09)
+    - `2026-07-09-03-hybrid-refuse2.md` — feat(tooling): hybrid pipeline refuse-2行 対応 — pool 93→218 unit へ拡大 (2026-07-09)
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**

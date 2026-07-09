@@ -25,6 +25,7 @@ const args = process.argv.slice(2);
 const flag = (k) => args.includes(k);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const N = Number(opt('--n', '35'));
+const MAX_REFUSALS = Number(opt('--max-refusals', '1')); // 2 で refuse-2行 pool (125枚規模) も pipeline に乗せる
 const REPS = opt('--reps', '') ? opt('--reps', '').split(',').map((s) => s.trim()).filter(Boolean) : null;
 
 // ── 1. corpus / shipped-dsl を fresh 化 (stale 選定の再発防止) ──
@@ -45,29 +46,36 @@ const isPVariant = (id) => { const m = id.match(/^(.+?)P\d*$/); return !!(m && i
 // ── 2. refuse-1行 全景 scan ──
 const realBases = corpus.filter((e) => !shippedIds.has(e.id) && !isPVariant(e.id));
 const stats = { compiled: [], oneLine: [], twoLine: [], moreLine: [], entryRefused: [] };
-const restOf = new Map(); // id -> {refusedNorm, restJson} (twin key 素材)
+const restOf = new Map(); // id -> {refusedLines, refusedKey, restJson} (twin key 素材)
 const normTxt = (t) => (t || '').replace(/\s+/g, '');
 const strip = (a) => { const { id: _i, description: _d, ...rest } = a; return rest; };
+// 全 refused 行を各 col から除去して rest を compile (1行/2行 共通)
+function compileRest(e, refusals) {
+  const texts2 = { ...e.texts };
+  for (const ref of refusals) {
+    texts2[ref.col] = splitLines(texts2[ref.col]).filter((l) => l !== ref.text).join('\\n');
+  }
+  return compileCard({ ...e, texts: texts2 }, productions);
+}
 for (const e of realBases) {
   const r = compileCard(e, productions);
   if (r.status === 'compiled') { stats.compiled.push(e.id); continue; }
   if (r.refusals.some((x) => x.col === '*')) { stats.entryRefused.push({ id: e.id, reason: r.refusals[0].reason }); continue; }
   const rec = { id: e.id, name: e.title || '', kind: e.kind, refusals: r.refusals.map((x) => ({ col: x.col, text: x.text })) };
-  if (r.refusals.length === 1) {
-    stats.oneLine.push(rec);
-    // rest compile (refused 行を除く) — twin 判定と payload の両方で使う
-    const refused = r.refusals[0];
-    const texts2 = { ...e.texts };
-    texts2[refused.col] = splitLines(texts2[refused.col]).filter((l) => l !== refused.text).join('\\n');
-    const r2 = compileCard({ ...e, texts: texts2 }, productions);
+  if (r.refusals.length === 1) stats.oneLine.push(rec);
+  else if (r.refusals.length === 2) stats.twoLine.push(rec);
+  else stats.moreLine.push(rec);
+  if (r.refusals.length >= 1 && r.refusals.length <= MAX_REFUSALS) {
+    const refusedLines = r.refusals.map((x) => ({ col: x.col, text: x.text }));
+    const r2 = compileRest(e, refusedLines);
     restOf.set(e.id, {
-      refused,
-      refusedNorm: normTxt(refused.text),
+      refusedLines,
+      // twin key = refused 行の正規化テキスト集合 (順序不問) — finish の機械証明と同条件
+      refusedKey: refusedLines.map((x) => normTxt(x.text)).sort().join('||'),
       restJson: r2.status === 'compiled' ? JSON.stringify(r2.abilities.map(strip)) : null,
       compiledRest: r2.status === 'compiled' ? { abilities: r2.abilities, keywords: r2.keywords } : { error: 'rest-not-compiled', refusals: r2.refusals },
     });
-  } else if (r.refusals.length === 2) stats.twoLine.push(rec);
-  else stats.moreLine.push(rec);
+  }
 }
 fs.writeFileSync(path.join(TMP, '_hybrid_refuse1.json'), JSON.stringify({
   totalUnshippedBases: realBases.length, compiled: stats.compiled.length, entryRefused: stats.entryRefused.length,
@@ -75,13 +83,15 @@ fs.writeFileSync(path.join(TMP, '_hybrid_refuse1.json'), JSON.stringify({
   compiledIds: stats.compiled, oneLineCards: stats.oneLine,
 }, null, 1));
 
-// ── 3. twin 自動 group (refused 行 同文 + rest deep-equal。finish の機械証明と同条件) ──
-const groups = new Map(); // key -> [ids]
-for (const rec of stats.oneLine) {
+// ── 3. twin 自動 group (refused 行集合 同文 + rest deep-equal。finish の機械証明と同条件) ──
+// 1行 unit を先に (安い・歩留まり実証済)、次に 2行 unit — pool 順は refusals 数の昇順で安定させる
+const groups = new Map(); // key -> {ids, nRefusals}
+for (const rec of [...stats.oneLine, ...(MAX_REFUSALS >= 2 ? stats.twoLine : [])]) {
   const m = restOf.get(rec.id);
-  const key = m.restJson === null ? `solo:${rec.id}` : `${m.refusedNorm}::${m.restJson}`;
-  if (!groups.has(key)) groups.set(key, []);
-  groups.get(key).push(rec.id);
+  if (!m) continue;
+  const key = m.restJson === null ? `solo:${rec.id}` : `${m.refusedKey}::${m.restJson}`;
+  if (!groups.has(key)) groups.set(key, { ids: [], nRefusals: rec.refusals.length });
+  groups.get(key).ids.push(rec.id);
 }
 
 // ── 4. DEFERRED-INDEX 照合 (既 DEFER の再選定防止。ただし「出荷済」「解禁」行は除外しない) ──
@@ -89,15 +99,15 @@ const defIdx = fs.readFileSync(path.join(ROOT, '.claude', 'specs', 'DEFERRED-IND
 const defLines = defIdx.split(/\r?\n/);
 const deferListed = (id) => defLines.some((l) => l.includes(id) && !/出荷済|解禁済|✅|~~/.test(l));
 
-// ── 5. 選定: twin group 大きい順 → 単発。--reps 指定時はそれのみ ──
+// ── 5. 選定: refusals 数 昇順 → twin group 大きい順 → 単発。--reps 指定時はそれのみ ──
 const units = [];
 const skippedDeferred = [];
-const candidates = [...groups.values()].sort((a, b) => b.length - a.length);
-for (const g of candidates) {
+const candidates = [...groups.values()].sort((a, b) => (a.nRefusals - b.nRefusals) || (b.ids.length - a.ids.length));
+for (const { ids: g, nRefusals } of candidates) {
   const rep = g[0];
   if (REPS && !g.some((id) => REPS.includes(id))) continue;
   if (!flag('--include-deferred') && deferListed(rep)) { skippedDeferred.push(g); continue; }
-  units.push({ rep, twins: g.slice(1) });
+  units.push({ rep, twins: g.slice(1), nRefusals });
   if (!REPS && units.length >= N) break;
 }
 
@@ -113,7 +123,9 @@ for (const u of units) {
     card: { id: e.id, cardId: e.cardId, pkg: e.pkg, kind: e.kind, title: e.title, color: e.color, level: e.level, ap: e.ap, lp: e.lp, rarity: e.rarity, features: e.features },
     fullTexts: e.texts,
     qa: e.qa || '',
-    refusedLine: { col: m.refused.col, text: m.refused.text },
+    // refusedLine = 後方互換 (1行時のみ)。正準は refusedLines (1〜MAX_REFUSALS 行)
+    refusedLine: m.refusedLines.length === 1 ? m.refusedLines[0] : undefined,
+    refusedLines: m.refusedLines,
     compiledRest: m.compiledRest,
     twinCards: u.twins.map((tid) => { const t = byId.get(tid); return { id: t.id, pkg: t.pkg, cardId: t.cardId, rarity: t.rarity, texts: t.texts, level: t.level, ap: t.ap, lp: t.lp, color: t.color, features: t.features, title: t.title }; }),
   };
@@ -126,7 +138,10 @@ fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify({
 }, null, 1));
 
 console.log(JSON.stringify({
-  oneLineTotal: stats.oneLine.length, selectedUnits: units.length,
+  oneLineTotal: stats.oneLine.length, twoLineTotal: stats.twoLine.length, maxRefusals: MAX_REFUSALS,
+  selectedUnits: units.length,
+  selected1Line: units.filter((u) => u.nRefusals === 1).length,
+  selected2Line: units.filter((u) => u.nRefusals === 2).length,
   selectedPrintings: units.reduce((s, u) => s + 1 + u.twins.length, 0),
   twinGroups: units.filter((u) => u.twins.length).length,
   skippedDeferred: skippedDeferred.length,
