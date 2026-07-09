@@ -20,7 +20,8 @@ import type { Effect, ValidationResult, CardDef, AtomVerb } from '../types/index
 // tsc が検出する (旧: コメント頼みの手動同期)。
 const ATOM_VERB_MAP = {
   draw: true, drawUpToHandSize: true, // drawUpToHandSize: engine additive wave-4 (2026-07-01) — 手札 N 枚まで引く (B08047)
-  discard: true, discardRandom: true, mill: true, fileAdd: true, filePopToHand: true,
+  discard: true,
+  handToDeckBottom: true, discardRandom: true, mill: true, fileAdd: true, filePopToHand: true,
   fileRemoveTop: true, fileFlipTop: true, // Task D E3 (2026-06-12)
   evidenceGain: true, evidenceLose: true, evidenceFlip: true, selfToEvidence: true, evidenceToDeck: true,
   toPartnerArea: true, // engine wave-12 (G39): このカードを PA へ (selfToEvidence 同型)

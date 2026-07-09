@@ -444,6 +444,7 @@ export type AtomVerb =
   // 1枚まで選び、デッキの上に移す」(B07014 rider)。PB pick (handAddFromRemove 同型)、dest=deck top。
   // ⚠ removeAreaAllToDeckBottom (全件・bottom 固定) と紛らわしい — pick 型・top はこちら。
   | 'removeAreaToDeckTop'
+  | 'handToDeckBottom'
   // engine拡張 wave#2 cluster6 (2026-06-14): 「このターン中、自分はイベントを使用できない」
   // (B09034/B09034P)。turnState[p].eventUseBanned=true をセットする turn-scoped flag verb。
   // 手札の使用・ネクストヒントの event のみゲート (公式 Q&A: カットイン/ヒラメキは制限外)。

@@ -28,6 +28,8 @@ export interface AtomPickSpec {
 export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   // 既存 (移行)
   discard:           { defaultArea: 'hand',     mode: 'PB' },
+  // mini-wave #3 (2026-07-10): 手札からデッキ下へ (B05092「手札からカードを4枚まで好きな順番でデッキの下に移し」)
+  handToDeckBottom:  { defaultArea: 'hand',     mode: 'PB' },
   evidenceToHand:    { defaultArea: 'evidence', mode: 'PB' },
   handAddFromRemove: { defaultArea: 'remove',   mode: 'PB', sourceSplice: true },
   // engine mega-wave W6 step11 (2026-07-04, row999 item4 / P42): removeAreaToDeckTop —

@@ -6,7 +6,7 @@ import { def as readDef } from '../../read/def.js'; // W6 step3 (r63): useEventF
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
-import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax } from './_shared.js';
+import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber } from './_shared.js';
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, TargetingRef } from '../../types/index.js';
@@ -14,7 +14,9 @@ import type { GameState, AtomVerb, EffectCtx, FileCard, TargetingRef } from '../
 export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // BUG-072: deck.draw が手札への push まで内部で行う + effect 経由の draw を log に残す
       const drawPlayer = resolvePlayer(a.player, ctx);
-      const drawN = requireField<number>(a, 'n', 'number');
+      // mini-wave #3 (2026-07-10): n は number | {dyn} (B05092「移した枚数と同じ数のカードを引く」
+      // = {dyn:'$bound.$moved.count'})。number は従来 byte 互換 (resolveDeltaToNumber は number passthrough)。
+      const drawN = typeof a.n === 'number' ? a.n : resolveDeltaToNumber(a.n, s, ctx);
       mutate.deck.draw(s, drawPlayer, drawN);
       mutate.log.append(s, {
         ts: Date.now(),
@@ -87,6 +89,62 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       });
       return;
     }
+
+// engine mini-wave #3 (2026-07-10): handToDeckBottom — 手札から N 枚 (pick) をデッキの下へ移す
+// (B05092「手札からカードを4枚まで好きな順番でデッキの下に移し、…移した枚数と同じ数のカードを引く」)。
+// atomDiscard の PB 短縮形 clone (dest = remove でなくデッキ末尾)。「好きな順番」= picked 順で push
+// (デッキ下の順は非公開情報 rules/02 — 順序は所有者選択、engine は picked 順を尊重)。
+// リムーブではないため hand:removed は emit しない (rules/03 zone 移動のみ)。bind = 移した cardId 群。
+export function atomHandToDeckBottom(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      const hdP = resolvePlayer(a.player, ctx);
+      // multi-pick は cardIds:'$pick.cardIds' contract 必須 (B09034/B08028 同型 — short-form N>1 は
+      // normalizeTargetToString で 1 枚に collapse する engine-wide 既知罠。miniwave3 probe で実測)。
+      const hdRawCardIds = (a as { cardIds?: unknown }).cardIds;
+      if (hdRawCardIds === '$pick.cardIds') {
+        if (a.target && typeof a.target === 'object' && !Array.isArray(a.target)) {
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, { byPlayer: hdP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+          mutate.log.append(s, { ts: Date.now(), player: hdP, turn: s.turn.number, action: 'effect:handToDeckBottom:awaiting-pick' });
+        }
+        return;
+      }
+      if (Array.isArray(hdRawCardIds)) {
+        return hdMove(s, a, ctx, hdP, hdRawCardIds as string[]);
+      }
+      const hdArgs = (a.target === undefined && hasNorMax(a))
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToDeckBottom!.defaultArea, a, hdP, hdP) }
+        : a;
+      if (!Array.isArray(hdArgs.target)) {
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: hdArgs }, ctx, { byPlayer: hdP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        mutate.log.append(s, { ts: Date.now(), player: hdP, turn: s.turn.number, action: 'effect:handToDeckBottom:awaiting-pick' });
+        return;
+      }
+      return hdMove(s, a, ctx, hdP, hdArgs.target as string[]);
+    }
+
+function hdMove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, hdP: 'self' | 'opp', hdTarget: string[]): void {
+      const hdHand = s.players[hdP].hand;
+      const movedIds: string[] = [];
+      for (const cid of hdTarget) {
+        const i = hdHand.indexOf(cid);
+        if (i === -1) continue; // 防御的 (rules/15 可能な限り)
+        hdHand.splice(i, 1);
+        s.players[hdP].deck.push(cid);
+        movedIds.push(cid);
+      }
+      if (typeof a.bind === 'string' && movedIds.length > 0) {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = movedIds.map((cardId) => ({ cardId }));
+      }
+      // shuffleThenDrawMoved (B05092「…デッキの下に移し、デッキをシャッフルする。移した枚数と同じ数の
+      // カードを引く」): atom 内蔵で move → shuffle → 同数 draw を印字順に実行。別 step の
+      // draw n:{dyn:'$bound...count'} は初期 walk が bind 前に 0 へ literalize するため不可
+      // (miniwave3 実測。walk-literalize latent は DEFERRED-INDEX 記録)。自己完結が正準。
+      if ((a as { shuffleThenDrawMoved?: unknown }).shuffleThenDrawMoved === true) {
+        mutate.deck.shuffle(s, hdP);
+        if (movedIds.length > 0) mutate.deck.draw(s, hdP, movedIds.length);
+      }
+      mutate.log.append(s, { ts: Date.now(), player: hdP, turn: s.turn.number, action: 'effect:handToDeckBottom', result: String(movedIds.length) });
+      return;
+}
 
 // engine additive: discardRandom — 手札からランダムに n 枚リムーブする (B01077「相手は手札を1枚ランダムに
 // リムーブする」, 公式 QA = 相手が選べず確率均等)。atomDiscard と異なり **pick を持たない** (ランダム =
@@ -274,6 +332,29 @@ export function atomFileAdd(s: GameState, a: Record<string, unknown>, ctx: Effec
 
 export function atomFilePopToHand(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
+      // mini-wave #3 (2026-07-10): n (既定 1) + gate (all-or-nothing、B03110「FILEエリアのカードを上から
+      // 2枚手札に加える」= 2枚揃わなければ以降解決不可 QA)。poppable = アシストパートナー除外後の枚数
+      // (popTop の skip 対象と同一集合)。n=1・gate 無しは従来経路 byte 互換。
+      const fpN = typeof a.n === 'number' ? a.n : 1;
+      if (fpN !== 1 || a.gate === true) {
+        const poppable = s.players[p].file.filter((f) => f.type !== 'assisted-partner').length;
+        if (a.gate === true && poppable < fpN) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+          mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: `gate-fail (${poppable}<${fpN})` });
+          return;
+        }
+        let fpMoved = 0;
+        for (let i = 0; i < fpN; i++) {
+          const fpc = mutate.file.popTop(s, p);
+          if (!fpc) break;
+          mutate.hand.add(s, p, [fpc.cardId]);
+          event.emit(s, 'file:pop', { player: p, popped: fpc }, { player: p });
+          fpMoved++;
+        }
+        if (fpMoved === 0) (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:filePopToHand', result: `n=${fpN} moved=${fpMoved}` });
+        return;
+      }
       const popped: FileCard | undefined = mutate.file.popTop(s, p);
       // BUG-128 (Task D E3, 2026-06-12): FileCard.card-back は Round 3 から実 cardId を保持して
       // いる (next-hint.ts:66-74 は修正済) のに、本 verb は placeholder 'card-back' を手札に

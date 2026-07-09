@@ -49,6 +49,7 @@ import {
   atomInvokeLeaveToRemoveOfCard,
   atomHandAddFromDeckBottom,
   atomHandAddFromRemove,
+  atomHandToDeckBottom,
   atomDeckShuffle,
   atomRemoveAreaAllToDeckBottom,
   atomRemoveAreaToDeckTop,
@@ -178,6 +179,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomHandAddFromDeckBottom(s, a, ctx);
     case 'handAddFromRemove':
       return atomHandAddFromRemove(s, a, ctx, verb);
+    case 'handToDeckBottom':
+      return atomHandToDeckBottom(s, a, ctx, verb);
     case 'sceneEnter':
       return atomSceneEnter(s, a, ctx, verb);
     case 'sceneSwitch':

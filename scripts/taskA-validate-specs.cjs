@@ -14,7 +14,7 @@ const VERBS = new Set([
   'evidenceGain', 'evidenceLose', 'evidenceFlip', 'selfToEvidence', 'evidenceToDeck',
   'toPartnerArea', // engine wave-12 (G39)
   'partnerAreaRemove', // engine wave A1 (G39 継続) — PA から filter 一致 N 枚リムーブ (B07037/PR263)
-  'evidenceToHand', 'handAddFromRemove', 'handAddFromDeck', 'handAddFromDeckBottom',
+  'evidenceToHand', 'handAddFromRemove', 'handToDeckBottom', 'handAddFromDeck', 'handAddFromDeckBottom',
   'handToEvidence',
   'handReveal', // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
   'drawUpToHandSize', // engine additive wave-4 (2026-07-01) — 手札が N 枚になるまで引く (B08047)

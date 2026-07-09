@@ -1310,3 +1310,12 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
   (印字「残りをリムーブエリアに移した」集合と乖離)。probe は加算経路で pin。deckRevealUntil の bind 挙動側の話。
 - compiler exceptions +6 (B02047/B02076/B05045/P/B05056/PR133) — mine の skip 集合 (shipped-gap-suspect) と
   test 全数照合の差分。B3 調査 queue。
+
+## miniwave3 latent (2026-07-10)
+- **walk-literalize**: resolveEffectPicks 初期 walk は plain atom の `{dyn:'$bound...'}` を bind 書込前に
+  literalize (空 bind → 0)。cross-step で「前段 pick の bind を後段 plain atom の dyn が読む」構成は
+  **現状不可** — PB contract atom (walk skip) 内蔵 composite (shuffleThenDrawMoved 等) か dyn-max 対応
+  atom (evidenceFlip 型) で書く。authoring 規約として finish.cjs lint 追加候補。
+- B08057 継続 DEFER: filtered remove→deck-bottom pick EFFECT verb + 「合わせて3枚移した場合」moved-count gate。
+- B03110 gate 意味論 nit: FILE<2 で opt-in した場合「1枚だけ加える (rules/15 可能な限り)」読みも成立。
+  現実装 = all-or-nothing (0枚)。board-wipe 発火条件は両読み同一。カード個別 QA 出現時に再確認。
