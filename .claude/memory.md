@@ -38,3 +38,16 @@
   reuse-batch.test.ts abilities>0 を case のみ免除 (vanilla case PR302 初出荷)。
 - gates: tsc0 / vitest 4320+1skip / smoke 472 exc0 baseline OK / 8lint err0 / crosscheck 14/14 /
   validate 23/23。⚠ check-smoke-baseline は `-N` suffix 必須 regex vs writer 初回 `-N` なし — rename 回避 (tooling nit)。
+
+## 2026-07-09 tooling session — hybrid 恒久化 + probe compiler (ユーザー指示「ツール化してほしい」)
+
+- **scripts/hybrid/prepare.cjs + finish.cjs** (npm run hybrid:prepare/finish): .tmp 手作業 pipeline を
+  恒久化。★twin 自動 group が pilot 手書き group を機械再現 (PR132+PR213+PR285 等一致) /
+  idiom lint 負例 3/3 検出 + codegen 中断。fresh scan: 未出荷 248 base = 1行93 / **2行125** / 3行+30。
+  次拡張 = refuse-2行 対応 (payload を refusedLines[] 化)。
+- **probe compiler MVP** (npm run gen:probes + tests/helpers/card-probe-harness.ts): DSL→scenario
+  機械導出、production dispatch のみ、decoy 除外は surfaced 候補記録で実 assert。出荷済 3枚の
+  再生成 probe 11/11 GREEN。適用 = declared/enter-selfOnly/event-use (batch2 実測 14/33 abilities)。
+  fail-closed: observer/continuous/misread/choice → MANUAL 報告。次拡張 = observer hook 系 driver。
+- **check-smoke-baseline 恒久 fix** (4回目の再発 nit): `-N` なし初回 filename を regex optional 化で検出。
+- gates: tsc0 / vitest 4331+1skip / 8lint err0 / src 変更0。

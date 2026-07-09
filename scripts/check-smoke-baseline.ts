@@ -26,13 +26,16 @@ function loadBaseline(): Baseline {
 function loadLatestSmoke(): SmokeReport | null {
   // BUG-109 fix: 連番 suffix を numeric で比較する (旧 .sort() は文字列比較で
   // "smoke-...-2.json" > "smoke-...-13.json" となり古い report を最新と誤認していた)。
+  // run-1000.ts の初回 report は連番なし (smoke-YYYY-MM-DD.json)、2回目以降 -N 付き。
+  // 旧 regex は連番必須で初回 run を見落とし「no smoke report found」誤報 (2026-06-24/06-27/07-02/07-09 再発)。
+  const RE = /^smoke-(\d{4}-\d{2}-\d{2})(?:-(\d+))?\.json$/;
   const files = readdirSync(REPORTS_DIR)
-    .filter((f) => /^smoke-\d{4}-\d{2}-\d{2}-\d+\.json$/.test(f))
+    .filter((f) => RE.test(f) && f !== 'smoke-baseline.json')
     .sort((a, b) => {
-      const ma = a.match(/^smoke-(\d{4}-\d{2}-\d{2})-(\d+)\.json$/)!;
-      const mb = b.match(/^smoke-(\d{4}-\d{2}-\d{2})-(\d+)\.json$/)!;
+      const ma = a.match(RE)!;
+      const mb = b.match(RE)!;
       if (ma[1] !== mb[1]) return ma[1]! < mb[1]! ? -1 : 1; // 日付は lexical
-      return Number(ma[2]) - Number(mb[2]); // 連番は numeric
+      return Number(ma[2] ?? 0) - Number(mb[2] ?? 0); // 連番は numeric、なし=0
     });
   if (files.length === 0) return null;
   const latest = files[files.length - 1];

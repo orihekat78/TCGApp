@@ -40,7 +40,10 @@
     "dev:meta": "vite --config meta-app/vite.config.meta.ts",
     "build:meta": "vite build --config meta-app/vite.config.meta.ts",
     "preview:meta": "vite preview --config meta-app/vite.config.meta.ts",
-    "test:meta:e2e": "playwright test --config meta-app/playwright.config.ts"
+    "test:meta:e2e": "playwright test --config meta-app/playwright.config.ts",
+    "hybrid:prepare": "node scripts/hybrid/prepare.cjs",
+    "hybrid:finish": "node scripts/hybrid/finish.cjs",
+    "gen:probes": "node scripts/gen-card-probes.cjs"
   },
   "keywords": [],
   "author": "",

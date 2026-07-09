@@ -27,10 +27,13 @@
    additive 小粒優先: contactCharMatches cond (3 unit 一括解禁) / mill bind capture /
    removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / TRIGGERED_HOOKS +phase:main:start /
    cost partnerAreaRemove / $self.partnerAreaTraitCount dyn。/engine-wave 1-2 本 → 解禁後 card 側 clone 同然。
-1. **hybrid pipeline 継続 (30-35 unit/session)**: 残 1行refuse ~77 から twin group 優先。
-   手順 = 前回 script 再利用 (.tmp/_hybrid_refuse1.cjs 再生成 → _hybrid_payload_gen.cjs UNITS 差替 →
-   workflow author+verify → _hybrid_merge.cjs → **key 順正規化 → 本体 shipped-idiom 突合 (pick carrier/
-   PA短縮形 player/BUG-130) → codegen**)。DEFER 率 ~1/3 想定、DEFERRED-INDEX 既 DEFER と照合してから選定。
+1. **hybrid pipeline 継続 (30-35 unit/session、★2026-07-09 ツール化済)**: 残 1行refuse **93** (fresh scan。
+   2行refuse **125** = 次の拡張 pool)。手順 = **`npm run hybrid:prepare -- --n 35`** (fresh 化+twin 自動
+   group+DEFER 照合+payload 一括) → workflow author+verify (payload = .tmp/_hybrid_run/payloads/、
+   結果 → .tmp/_hybrid_run/wf_results.json) → **`npm run hybrid:finish`** (merge+key順+idiom lint
+   +validate+codegen+register+tsc+crosscheck 一気通貫、hard violation で中断) →
+   **`npm run gen:probes -- --specs .tmp/_hybrid_run/specs.json --ids <GREEN分> --out tests/cards/<batch>/`**
+   (declared/enter/event-use は probe 自動生成、MANUAL 報告分のみ手書き) → 意味等価 lens → full gates。
 2. **hybrid-pilot DEFER 解禁 mini-wave (engine、5 unit→9枚)**: mill bind capture (discard:77 同一行形) +
    removeAreaToDeckTop dest:'bottom' + charOverrideAP scope:'turn' + removeAreaAllToDeckBottom player param。
    全部 additive 小粒 — /engine-wave 1 本。解禁後 card 側は clone 同然。
