@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0420ead3f8a3`
+> Source hash: `3770afc27269`
 
 公式ルール [`26-qa-deck-refresh.md`](../../../rules/26-qa-deck-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (187)
+## 📄 参照ソース (191)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
@@ -42,5 +42,5 @@
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
 - [`src/cards/ct-d10/D10003.ts`](../../../../src/cards/ct-d10/D10003.ts)
 - [`src/cards/ct-d10/D10004.ts`](../../../../src/cards/ct-d10/D10004.ts)
-- [`src/cards/ct-d11/D11019.ts`](../../../../src/cards/ct-d11/D11019.ts)
-- _...ほか 167 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- [`src/cards/ct-d10/D10024.ts`](../../../../src/cards/ct-d10/D10024.ts)
+- _...ほか 171 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

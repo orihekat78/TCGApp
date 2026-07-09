@@ -54,8 +54,14 @@ function idiomLint(rep, abilities) {
   const walk = (node, p) => {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { node.forEach((x, i) => walk(x, `${p}[${i}]`)); return; }
-    // BUG-130: pick carrier は短縮形必須 — 明示 uid:'$pick' + target 併用は human 経路で bind 喪失
-    if (node.uid === '$pick' && node.target) errs.push(`${p}: BUG-130 explicit uid:'$pick'+target (短縮形に)`);
+    // BUG-130: pick carrier は短縮形必須 — 明示 uid:'$pick' + target 併用で「後続 atom が bind 参照」する
+    // rider 形のみ human 経路 bind 喪失。standalone (ability 内 $pick 参照 1 回 = 自己完結 atom) は
+    // shipped 正準形 (D01012 ほか 149 files、compiler hirameki 出力形) → WARN 扱い。
+    if (node.uid === '$pick' && node.target) {
+      const refs = (abilityJson.match(/\$pick/g) || []).length;
+      if (refs >= 2) errs.push(`${p}: BUG-130 explicit uid:'$pick'+target + 後続 bind 参照 (rider は短縮形に)`);
+      else errs.push(`${p}: WARN uid:'$pick'+target standalone (shipped 正準形、許容)`);
+    }
     // BUG-123: hand/remove/deck からの pick で「キャラ」対象なのに kind 無しは検出不能 (印字参照要) — kind 無し自体を warn
     if (node.kind === 'pick' && node.query && ['hand', 'remove', 'deck'].includes(node.query.area) && node.query.filter && !node.query.filter.kind) {
       errs.push(`${p}: WARN BUG-123 ${node.query.area}-pick filter に kind 無し (キャラ対象なら kind:'character' 必須)`);
@@ -66,11 +72,13 @@ function idiomLint(rep, abilities) {
     }
     for (const k of Object.keys(node)) walk(node[k], `${p}.${k}`);
   };
+  let abilityJson = '';
   abilities.forEach((a, i) => {
     // BUG-032: on-hand triggered は selfOnly 必須
     if (a.scope === 'on-hand' && a.type === 'triggered' && a.trigger && a.trigger.selfOnly !== true) {
       errs.push(`a${i + 1}: BUG-032 on-hand triggered に selfOnly:true 無し`);
     }
+    abilityJson = JSON.stringify(a);
     walk(a, `a${i + 1}`);
   });
   return errs.map((e) => `${rep}: ${e}`);

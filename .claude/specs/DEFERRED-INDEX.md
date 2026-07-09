@@ -1204,3 +1204,38 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
   カード個別 QA 未確認 (公開エリア pick で選択単独に副作用なし = 機能等価、traceability 記録)。
 - **B07039 宣言 cost の pick UI 未配線** (costParams channel は敷設済、fallback=auto-pick)。
   PA宣言 batch (§5) で UI 一括配線時に解消。
+
+## hybrid-batch3 由来 DEFER (2026-07-10、40 unit 中 26 DEFER + 2 VERIFY_NG。全 file:line 根拠 = .tmp/_batch3_defers.txt)
+
+| ID (+twins) | blocker 要旨 |
+|---|---|
+| B01005 | next-hint 使用と手札使用の emit payload 同一で判別 hook 無し (flag:next-hint:used は TRIGGERED_HOOKS 未登録) + 使用カード level を引く $trigger.level dyn 不在 |
+| B01020 | 相手 actor 側 level-filter アクション禁止 aura 不在 (opponentRestrict に 'action' 無し、_canAction は opp 盤面 aura を走査しない。untargetableByAction は target 側で逆方向) |
+| B01022 | deck-reveal window から複数 (2枚まで) 選択登場する primitive 不在 (deckRevealUntil match 単一 + chooseMatch:'upTo' nMax=1 ハードコード) |
+| B01045 | LP の turn-scope base override 不在 (AP 側 apOverride_turn のみ出荷。lpOverride_turn + observer 側 opt-mill cost 複合) |
+| B01054 | 同上 lpOverride_turn 不在 (【現場リムーブ時】pick + 元LP0 ターン終了時まで) |
+| B01093 | 相手デッキ top 公開→非所有者が上/下を選ぶ placement 不在 (deck top/bottom choice by non-owner) |
+| B02022 | mustBeTargeted taunt (指定できる場合必ず指定) primitive 不在 |
+| B02072 | 捜査X の X=盤面計数 dyn 不在 + 発見カード levelSum 閾値 dyn 不在 |
+| B03040 | 自分証拠 top 1 を見る (peek own evidence) verb 不在 + 証拠獲得 trigger の self-attribution |
+| B03049 | デッキ下から1枚公開→条件分岐 (登場 or 手札) verb 不在 (bottom-reveal branch) |
+| B03063 (死闘) | 盤面計数を上限とする opp multi-pick sleep (dyn nMax) + 「スリープさせたすべて」bound 集合 AP+ の複合 carrier 不在 |
+| B03116 | leave:to-remove hook に「自分の能力や効果によって」の owner-attribution payload 不在 |
+| B04063 | $bound.<key>.levelSum dyn 不在 (リムーブした集合のレベル合計閾値) |
+| B04084 | 「レベル合計10以下になるように2枚まで選ぶ」sum-constrained multi-pick 不在 + 「1枚登場+残りスリープ登場」split deploy 不在 |
+| B04089 | VERIFY_NG: removedCharMatches{cause:'effect'} は actor-attribution (自分の効果によって) を保証しない (payload.byUid 不在 case) |
+| B05047 | 「上から2枚見て各カードを上か下へ」per-card top/bottom placement 不在 (deckRevealUntil は一括 bottom のみ) |
+| B08008 | picked host ($self 以外) の下へ remove-area キャラを重ねる + そのキャラへの ability 付与 rider — host-pick stack + grant 複合不在 |
+| B08057 | remove→deck-BOTTOM pick effect verb 不在 (removeAreaToDeckTop dest:'bottom' は cost 側のみ) + 「1枚までと1枚まで」2独立 pick |
+| B08068 | levelMax = cost-revealed 枚数 + 盤面計数の合成 dyn 不在 |
+| B09005 | revealFromHand cost の公開カード名を effect 側で参照する $costRevealed bind 不在 + 相手 FILE top を表向きにする verb 不在 |
+| B09019 | 「この効果によってキャラが5枚登場した場合」の effect 内登場数カウンタ不在 |
+| B09027 | VERIFY_NG: cost kind:'choice' の human 選択 UI 不在 (pay.ts は最初の payable branch 自動選択、costChoice 供給経路 0。shipped exemplar 0) |
+| B09055 | sceneEnter の partner-area source 不在 + 「PAかリムーブ」2 zone union pick 不在 |
+| B09095 | 手札内 continuous level modifier 不在 (levelAllowed は raw CardDef.level 直読、QA=手札にある間だけ -2) |
+| B09105 | distinct-level multi-pick 不在 (distinctNames のみ、「それぞれレベルの異なる」5枚まで) |
+| D06003 (+D06004/D06021/D06023) | 「【カットイン】AP＋を持つ」の cutin 効果内容判別 filter 不在 (keyword:'カットイン' は形状判定のみ、QA でウォッカ除外必須) |
+| D10009 (+D10010) | scene-source キャラを host の下に重ねる effect verb 不在 (charStackCard は remove/hand/deck source のみ、sceneStackUnderSelf は cost 専用) + 重ねた場合の条件付き突撃[キャラ] 付与 |
+| PR234 (+PR240) | charSetCard pick 経路の faceUp 不在 (裏向きハードコード) + hand∪remove union source 不在 + setcard:leave の faceUp filter 不在 |
+
+**engine mini-wave 候補 cluster (頻度順)**: ①turn-scope LP override (B01045/B01054、apOverride_turn 対称で小粒) ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (multi-deploy B01022 / per-card placement B05047 / bottom-reveal B03049) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。

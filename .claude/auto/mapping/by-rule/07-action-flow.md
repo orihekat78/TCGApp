@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0420ead3f8a3`
+> Source hash: `3770afc27269`
 
 公式ルール [`07-action-flow.md`](../../../rules/07-action-flow.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,7 +23,7 @@
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 
-## 📄 参照ソース (146)
+## 📄 参照ソース (148)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -45,4 +45,4 @@
 - [`src/cards/ct-d11/D11008.ts`](../../../../src/cards/ct-d11/D11008.ts)
 - [`src/cards/ct-d11/D11016.ts`](../../../../src/cards/ct-d11/D11016.ts)
 - [`src/cards/ct-p01/B01007.ts`](../../../../src/cards/ct-p01/B01007.ts)
-- _...ほか 126 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 128 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

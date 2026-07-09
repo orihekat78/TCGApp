@@ -71,3 +71,12 @@
   PR132(+PR213/285)/PR201(+PR207)/PR278。taskA-codegen (specs.json→9 file) + gen:probes (enter/declared 2 file
   GREEN、optional/mill/cutin 形は手書き 24)。B05022 = scope:'turn' 出荷済も multi-pick carrier gap で card DEFER 継続。
 - gates: tsc0 / vitest 4382+1skip / crosscheck 14/14 / smoke winsA=472 exc0 / 8lint err0 / 混成 2-lens review。
+
+## 2026-07-10 深夜 (夜間自走 batch3)
+- hybrid-batch3: 40 unit → 12 EQ + twin = 13 printings 出荷準備 (1692→1705)。DEFER 26+2 は
+  DEFERRED-INDEX「hybrid-batch3 由来」節 + .tmp/_batch3_defers.txt。yield 30% (pool 尾の硬化を実測)。
+- tooling: finish.cjs BUG-130 rider-only 化 / SCOPES on-set-host stale 解消 / harness deckTop+evidence。
+- probe: gen 9 file を agent 4 体で修正 (over-scripted = cost pick は prompt 出ない / 条件は deckTop seed 要) +
+  manual-probes.test.ts (B01047/B01081/B05022/B06104)。36 test green。
+- 別件 (ユーザー要請): repo public 化 B 案 = cards-data 生データ 105 file untrack + README 免責 (56869955)。
+  API key はリテラル未 commit + skip-worktree 保護確認 (ローテ不要)。

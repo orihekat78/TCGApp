@@ -1224,6 +1224,19 @@ import { PR031 } from '../pr-01/PR031.js';
 import { PR213 } from '../pr-01/PR213.js';
 import { PR285 } from '../pr-01/PR285.js';
 import { PR207 } from '../pr-01/PR207.js';
+import { B01047 } from '../ct-p01/B01047.js';
+import { B01081 } from '../ct-p01/B01081.js';
+import { B03003 } from '../ct-p03/B03003.js';
+import { B03024 } from '../ct-p03/B03024.js';
+import { B05022 } from '../ct-p05/B05022.js';
+import { B05068 } from '../ct-p05/B05068.js';
+import { B06062 } from '../ct-p06/B06062.js';
+import { B06078 } from '../ct-p06/B06078.js';
+import { B06104 } from '../ct-p06/B06104.js';
+import { B08025 } from '../ct-p08/B08025.js';
+import { B08076 } from '../ct-p08/B08076.js';
+import { B01023 } from '../ct-p01/B01023.js';
+import { D10024 } from '../ct-d10/D10024.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1598,4 +1611,6 @@ export const REUSE_CARDS: CardDef[] = [
   B02006, B02080, B02076, B04038, B05072, B07039, B07046, PR132, PR201,
   // Task A batch
   PR278, PR133, PR027, PR031, PR213, PR285, PR207,
+  // CARD PHASE hybrid batch
+  B01047, B01081, B03003, B03024, B05022, B05068, B06062, B06078, B06104, B08025, B08076, B01023, D10024,
 ];

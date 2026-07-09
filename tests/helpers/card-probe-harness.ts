@@ -61,6 +61,10 @@ export interface ProbeSetup {
   remove?: string[];
   partnerAreaCards?: string[];
   fileCount?: number;
+  /** デッキ最上部に明示 cardId を積む (removeDeckTop cost / deckRevealUntil の内容依存シナリオ用) */
+  deckTop?: string[];
+  /** self 証拠エリア (flipFaceUpEvidence cost 等) */
+  evidence?: { cardId: string; faceUp?: boolean }[];
 }
 
 export type ProbeDrive =
@@ -161,6 +165,15 @@ function buildState(def: CardDef, fixtures: CardDef[], scenario: ProbeScenario):
   if (setup.hand) s.players.self.hand = [...setup.hand];
   s.players.self.deck = Array.from({ length: setup.deckSize ?? 6 }, (_v, i) => `__DECK_S_${i}`);
   s.players.opp.deck = Array.from({ length: setup.oppDeckSize ?? 4 }, (_v, i) => `__DECK_O_${i}`);
+  // deckTop: 明示 cardId をデッキ最上部へ (cost removeDeckTop / deckRevealUntil の中身依存シナリオ用)
+  if (setup.deckTop) s.players.self.deck = [...setup.deckTop, ...s.players.self.deck];
+  if (setup.evidence) {
+    s.players.self.evidence = setup.evidence.map((e) => ({
+      cardId: e.cardId,
+      faceUp: e.faceUp ?? false,
+      origin: { turn: 1, via: 'effect' as const },
+    }));
+  }
   if (setup.remove) s.players.self.remove = [...setup.remove];
   if (setup.partnerAreaCards) s.players.self.partnerAreaCards = [...setup.partnerAreaCards];
   if (setup.fileCount != null) {
