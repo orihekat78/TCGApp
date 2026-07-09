@@ -2,6 +2,16 @@
  "generatedBy": "scripts/compiler/mine.cjs",
  "cards": [
   {
+   "id": "B02047",
+   "shippedId": "B02047",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分)"
+  },
+  {
+   "id": "B02076",
+   "shippedId": "B02076",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分)"
+  },
+  {
    "id": "B05024",
    "shippedId": "B05024",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
@@ -15,6 +25,21 @@
    "id": "B05030",
    "shippedId": "B05030",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B05045",
+   "shippedId": "B05045",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分)"
+  },
+  {
+   "id": "B05045P",
+   "shippedId": "B05045P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分)"
+  },
+  {
+   "id": "B05056",
+   "shippedId": "B05056",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分)"
   },
   {
    "id": "B08044",
@@ -32,6 +57,16 @@
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {
+   "id": "B09090P",
+   "shippedId": "B09090P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B09090P2",
+   "shippedId": "B09090P2",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
    "id": "D04004",
    "shippedId": "D04004",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
@@ -42,28 +77,14 @@
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {
-   "id": "B02047",
-   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+   "id": "PR099",
+   "shippedId": "PR099",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {
-   "id": "B05045",
-   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
-  },
-  {
-   "id": "B05045P",
-   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
-  },
-  {
-   "id": "B05056",
-   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
-  },
-  {
-   "id": "B09090P",
-   "reason": "param-g1: shipped 非再現 (base B09090 closure matcher — spread variant は compile 対象外、step12 batch3)"
-  },
-  {
-   "id": "B09090P2",
-   "reason": "param-g1: shipped 非再現 (base B09090 closure matcher — spread variant は compile 対象外、step12 batch3)"
+   "id": "PR133",
+   "shippedId": "PR133",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分)"
   }
  ]
 }

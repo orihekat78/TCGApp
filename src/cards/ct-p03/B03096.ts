@@ -23,7 +23,8 @@ const a1: AbilityDef = {
   trigger: {
     hook: 'reasoning:end',
     // 自分の現場にいるキャラが推理したとき (filter 無し = 自分側の任意キャラ、rules/11)
-    matcherCondition: { kind: 'triggerCharMatches', side: 'self' },
+    // BUG-179: filter:{} で scene 走査を強制 (無いと自パートナーの推理でも誤発火。印字は「現場にいるキャラ」)。
+    matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: {} },
   },
   effect: {
     kind: 'sequence',

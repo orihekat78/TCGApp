@@ -42,7 +42,8 @@ const a2: AbilityDef = {
   trigger: {
     hook: 'reasoning:end',
     // 自分の現場にいるキャラが推理したとき (filter 無し = 自分側の任意キャラ)
-    matcherCondition: { kind: 'triggerCharMatches', side: 'self' },
+    // BUG-179: filter:{} で scene 走査を強制 (無いと自パートナーの推理でも誤発火。印字は「現場にいるキャラ」)。
+    matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: {} },
   },
   effect: {
     // セットされているカードを1枚リムーブしてもよい。そうした場合、1枚引く (chain)

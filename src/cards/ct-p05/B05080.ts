@@ -25,7 +25,8 @@ const a2: AbilityDef = {
   trigger: {
     hook: 'reasoning:end',
     // 相手の現場にいるキャラが推理したとき (side:'opp' = payload.player !== source.player)
-    matcherCondition: { kind: 'triggerCharMatches', side: 'opp' },
+    // BUG-179: filter:{} が無いと scene 走査が走らず相手パートナーの推理でも誤発火 (印字は「現場にいるキャラ」)。
+    matcherCondition: { kind: 'triggerCharMatches', side: 'opp', filter: {} },
   },
   effect: {
     // 手札を1枚リムーブしてもよい。そうした場合〜 (chain: step1 が実効果ありのとき step2 を実行)

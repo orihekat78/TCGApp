@@ -513,6 +513,16 @@ function resolveBound(state: GameState, rest: string[], ctx: EffectCtx, original
   switch (field) {
     case 'count':
       return arr.length;
+    // engine mini-wave (2026-07-10): 集合全要素のレベル合計 (B04063「リムーブエリアに移したカードの
+    // レベルの合計以下」)。uid 要素 = 実効 level (scene)、cardId 要素 = 印字 level ('level' case と同解決)。
+    case 'levelSum': {
+      let sum = 0;
+      for (const it of arr as { uid?: string; cardId?: string }[]) {
+        if (typeof it.uid === 'string' && scene.byUid(state, it.uid)) sum += charRead.level(state, it.uid);
+        else if (typeof it.cardId === 'string') sum += def.card(it.cardId)?.level ?? 0;
+      }
+      return sum;
+    }
     case 'level': {
       if (!first) return NaN;
       if (typeof first.uid === 'string' && scene.byUid(state, first.uid)) {

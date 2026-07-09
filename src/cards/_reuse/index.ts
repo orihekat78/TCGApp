@@ -1269,6 +1269,9 @@ import { B05023 } from '../ct-p05/B05023.js';
 import { B07005 } from '../ct-p07/B07005.js';
 import { PR067 } from '../pr-01/PR067.js';
 import { B07054 } from '../ct-p07/B07054.js';
+import { B01045 } from '../ct-p01/B01045.js';
+import { B01054 } from '../ct-p01/B01054.js';
+import { B04063 } from '../ct-p04/B04063.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1651,4 +1654,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07015, B08062, B08064, B08072, B08073, B09002, PR304,
   // CARD PHASE hybrid-batch6
   PR290, PR296, B05023, B07005, PR067, B07054,
+  // CARD PHASE miniwave-lp consumers
+  B01045, B01054, B04063,
 ];

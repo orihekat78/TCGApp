@@ -1300,3 +1300,13 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 **hybrid pipeline 完了宣言 (2026-07-10 朝)**: refuse-1/2/3/4行 全層掃き終わり。残 pool = DEFER cluster のみ
 (engine mini-wave 対象。優先 cluster = ①turn-scope LP override ②bound levelSum dyn ③deck-reveal 拡張
 ④next-hint 判別 ⑤選ばれたとき無効 intercept ⑥hand 内 continuous ⑦set-card 操作系 ⑧cost choice UI)。
+
+## miniwave-lp nits (2026-07-10、opus 敵対 review SHIP_WITH_NITS)
+- **latent: misread listener × lpOverride_turn 共存** — listeners/misread.ts:128 は恒久 lpOverride を書く
+  scaffold (TODO 残置) のため、lpOverride_turn 持ちキャラが推理→相手 misread の同時ケースで misread の
+  LP-X が silent 無効 (under-apply、二重適用ではない)。shipped 到達カードなし。misread listener の
+  turn-scope 化 (TODO Phase5) と同時に解消するのが筋。
+- **latent: B04063 の deckRevealUntil pick:skip 経路** — 0 枚手札加算を選ぶと $revealed unbound → levelSum=0
+  (印字「残りをリムーブエリアに移した」集合と乖離)。probe は加算経路で pin。deckRevealUntil の bind 挙動側の話。
+- compiler exceptions +6 (B02047/B02076/B05045/P/B05056/PR133) — mine の skip 集合 (shipped-gap-suspect) と
+  test 全数照合の差分。B3 調査 queue。

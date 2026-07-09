@@ -41,7 +41,8 @@ const a2: AbilityDef = {
   // 自分の現場にいるキャラ (= side:'self' の scene キャラ、パートナー除外) のアクション［事件］で証拠を得たとき
   trigger: {
     hook: 'evidence:gain',
-    matcherCondition: { kind: 'triggerCharMatches', side: 'self', payloadKey: 'byUid' },
+    // BUG-179: filter:{} で scene 走査を強制 (無いと自パートナーのアクション[事件]でも誤発火。印字は「現場にいるキャラ」)。
+    matcherCondition: { kind: 'triggerCharMatches', side: 'self', payloadKey: 'byUid', filter: {} },
   },
   // 手札を1枚リムーブしてもよい。そうした場合、証拠を1つ得る
   effect: {

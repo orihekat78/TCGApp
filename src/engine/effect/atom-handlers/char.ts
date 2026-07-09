@@ -97,7 +97,13 @@ export function atomCharOverrideLP(s: GameState, a: Record<string, unknown>, ctx
       const olUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof olUid !== 'string' || olUid.startsWith('$')) return;
       const olVal = a.val as number | null;
-      mutate.char.setOverrideLP(s, olUid, olVal);
+      // engine mini-wave (2026-07-10): scope:'turn' = 「ターン終了時まで元のLPを X にする」
+      // (B01045/B01054/B09011)。charOverrideAP scope:'turn' と完全対称。scope 未指定は従来恒久 (byte 不変)。
+      if (a.scope === 'turn') {
+        mutate.char.setOverrideLPTurn(s, olUid, olVal);
+      } else {
+        mutate.char.setOverrideLP(s, olUid, olVal);
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charOverrideLP', target: olUid, result: olVal === null ? 'reset' : String(olVal) });
       return;

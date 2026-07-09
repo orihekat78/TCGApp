@@ -1,7 +1,7 @@
 {
  "generatedBy": "scripts/compiler/mine.cjs",
- "minedFromShipped": 1592,
- "ruleCount": 717,
+ "minedFromShipped": 1739,
+ "ruleCount": 809,
  "rules": [
   {
    "key": "case|effect|【解決編】【宣言】【ターン1】〚手札から、〚特徴［神奈川県警］〛のキャラか【疾風】を持つキャラを1枚リムーブする〛：このターン中、次に自分の現場に登場したキャラは【疾風】の条件を無視できる。",
@@ -56,12 +56,14 @@
     "type": "declared"
    },
    "exemplars": [
-    "B09090"
+    "B09090",
+    "B09090P",
+    "B09090P2"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 4
   },
   {
    "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を1つ以上表向きにする〛：〚特徴［少年探偵団］〛のキャラを1枚まで選び、この【宣言】能力のコストで表向きにした証拠1つにつき、ターン終了時までAP＋1000する。",
@@ -407,6 +409,127 @@
    "count": 2
   },
   {
+   "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を2つ表向きにし、現場にいるキャラを1枚デッキの下に移す〛：自分の現場にいるすべてのキャラが〚カード名［佐藤美和子］〛か〚［高木渉］〛の場合、自分のリムーブエリアにあるレベル4以下の〚カード名［佐藤美和子］〛か〚［高木渉］〛を1枚まで選び、スリープ状態で登場させる。この能力は自分の現場にキャラが2枚以上いる場合に宣言できる。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "kind": "caseStatus",
+       "status": "解決編"
+      },
+      {
+       "kind": "sceneHas",
+       "nMin": 2,
+       "query": {
+        "area": "scene",
+        "filter": {
+         "kind": "character"
+        },
+        "side": "self"
+       }
+      }
+     ],
+     "kind": "and"
+    },
+    "cost": {
+     "items": [
+      {
+       "kind": "flipFaceUpEvidence",
+       "n": {
+        "max": 2,
+        "min": 2
+       }
+      },
+      {
+       "kind": "sceneToDeckBottom",
+       "n": 1,
+       "target": {
+        "chooser": "owner",
+        "kind": "pick",
+        "n": {
+         "max": 1,
+         "min": 1
+        },
+        "query": {
+         "area": "scene",
+         "filter": {
+          "kind": "character"
+         },
+         "side": "self"
+        }
+       }
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "if": {
+      "c": {
+       "kind": "sceneHas",
+       "nMin": 1,
+       "query": {
+        "area": "scene",
+        "filter": {
+         "cardNameNot": [
+          "佐藤美和子",
+          "高木渉"
+         ],
+         "kind": "character"
+        },
+        "side": "self"
+       }
+      },
+      "kind": "not"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "enterSleep": true,
+       "filterAny": [
+        {
+         "cardName": "佐藤美和子",
+         "kind": "character",
+         "levelMax": 4
+        },
+        {
+         "cardName": "高木渉",
+         "kind": "character",
+         "levelMax": 4
+        }
+       ],
+       "from": "remove",
+       "max": 1,
+       "player": "self",
+       "viaEffect": true
+      },
+      "kind": "atom",
+      "verb": "sceneEnter"
+     }
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/11-reasoning.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "always",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B08076"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を2つ表向きにする〛：自分のデッキのカードを上から3枚見る。その中から【現場リムーブ時】を持つキャラを1枚まで公開して手札に加え、残りを好きな順番でデッキの下に移す。この能力は自分の現場に〚カード名［シェリー］〛か〚［灰原哀］〛がいる場合に宣言できる。",
    "ability": {
     "condition": {
@@ -608,6 +731,151 @@
     "desc"
    ],
    "count": 3
+  },
+  {
+   "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を2つ表向きにする〛：自分のデッキのカードを上から3枚見る。その中から〚カード名［服部平次］〛か〚［遠山和葉］〛を1枚まで公開して手札に加え、残りを好きな順番でデッキの下に移す。この能力は自分の現場に〚カード名［服部平次］〛か〚［遠山和葉］〛がいる場合に宣言できる。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "kind": "caseStatus",
+       "status": "解決編"
+      },
+      {
+       "cardName": [
+        "服部平次",
+        "遠山和葉"
+       ],
+       "kind": "bond"
+      }
+     ],
+     "kind": "and"
+    },
+    "cost": {
+     "kind": "flipFaceUpEvidence",
+     "n": {
+      "max": 2,
+      "min": 2
+     }
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "bind": "$revealed",
+        "bindMatch": "$matched",
+        "chooseMatch": "upTo",
+        "filter": {
+         "cardName": [
+          "服部平次",
+          "遠山和葉"
+         ],
+         "kind": "character"
+        },
+        "maxN": 3,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "deckRevealUntil"
+      },
+      {
+       "if": {
+        "key": "$matched",
+        "kind": "bound",
+        "presence": "matched"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "cardId": "$matched.cardId",
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "handAddFromDeck"
+       }
+      },
+      {
+       "args": {
+        "bindKey": "$revealed",
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "deckToBottomBound"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/14-refresh.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "always",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06043",
+    "B06043P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を2つ表向きにする〛：自分のリムーブエリアにある〚特徴［YAIBA］〛のイベントを1枚まで選び、手札に加える。",
+   "ability": {
+    "condition": {
+     "kind": "caseStatus",
+     "status": "解決編"
+    },
+    "cost": {
+     "kind": "flipFaceUpEvidence",
+     "n": {
+      "max": 2,
+      "min": 2
+     }
+    },
+    "effect": {
+     "args": {
+      "filter": {
+       "kind": "event",
+       "trait": "YAIBA"
+      },
+      "max": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "handAddFromRemove"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/01-victory-conditions.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "always",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06065",
+    "B06065P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "case|effect|【解決編】【宣言】【ターン1】〚裏向きの証拠を3つ表向きにする〛：〚特徴［長野県警］〛のキャラを1枚まで選び、ターン終了時まで〚突撃［キャラ］〛を与える。",
@@ -874,7 +1142,7 @@
    "origins": [
     "desc"
    ],
-   "count": 10
+   "count": 12
   },
   {
    "key": "case|effect|この事件が解決編に移行したとき、自分は手札を1枚リムーブする。",
@@ -901,12 +1169,12 @@
    "exemplars": [
     "B06013",
     "B06013P",
-    "PR170"
+    "B06043"
    ],
    "origins": [
     "desc"
    ],
-   "count": 3
+   "count": 7
   },
   {
    "key": "character|cutIn|COLSPAN|【カットイン】【自分ターン中】AP＋2000\n【カットイン】【事件YAIBA】自分のリムーブエリアにある〚特徴［YAIBA］〛のイベントを1枚まで選び、手札に加える。",
@@ -1055,6 +1323,418 @@
     "desc"
    ],
    "count": 49
+  },
+  {
+   "key": "character|cutIn|【カットイン】AP＋1000、〚カード名［佐藤美和子］〛に【カットイン】した場合、カードを1枚引く。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 1000,
+        "scope": "contact",
+        "uid": "$contact.byUid"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "if": {
+        "filter": {
+         "cardName": [
+          "佐藤美和子"
+         ]
+        },
+        "kind": "contactCharMatches",
+        "who": "byUid"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "draw"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08071"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】AP＋1000、〚カード名［小泉紅子］〛のキャラに【カットイン】する場合、代わりにAP＋3000",
+   "ability": {
+    "effect": {
+     "else": {
+      "args": {
+       "delta": 1000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     },
+     "if": {
+      "filter": {
+       "cardName": [
+        "小泉紅子"
+       ]
+      },
+      "kind": "contactCharMatches",
+      "who": "byUid"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "delta": 3000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     }
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B07050"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】AP＋1000、〚カード名［服部平次］〛か〚［服部平蔵］〛か〚［遠山和葉］〛に【カットイン】した場合、カードを1枚引く。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 1000,
+        "scope": "contact",
+        "uid": "$contact.byUid"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "if": {
+        "filter": {
+         "cardName": [
+          "服部平次",
+          "服部平蔵",
+          "遠山和葉"
+         ]
+        },
+        "kind": "contactCharMatches",
+        "who": "byUid"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "draw"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06041"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】AP＋1000、〚カード名［白鳥任三郎］〛か〚特徴［少年探偵団］〛のキャラに【カットイン】した場合、カードを1枚引く。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 1000,
+        "scope": "contact",
+        "uid": "$contact.byUid"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "if": {
+        "cs": [
+         {
+          "filter": {
+           "cardName": [
+            "白鳥任三郎"
+           ]
+          },
+          "kind": "contactCharMatches",
+          "who": "byUid"
+         },
+         {
+          "filter": {
+           "trait": [
+            "少年探偵団"
+           ]
+          },
+          "kind": "contactCharMatches",
+          "who": "byUid"
+         }
+        ],
+        "kind": "or"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "draw"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B07009",
+    "B07009P"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|cutIn|【カットイン】AP＋1000、〚カード名［綾小路文麿］〛のキャラに【カットイン】した場合、カードを1枚引く。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 1000,
+        "scope": "contact",
+        "uid": "$contact.byUid"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "if": {
+        "filter": {
+         "cardName": [
+          "綾小路文麿"
+         ]
+        },
+        "kind": "contactCharMatches",
+        "who": "byUid"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "draw"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B04025"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】AP＋1000、〚特徴［喫茶ポアロ］〛のキャラに【カットイン】した場合、カードを1枚引く。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 1000,
+        "scope": "contact",
+        "uid": "$contact.byUid"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "if": {
+        "filter": {
+         "trait": [
+          "喫茶ポアロ"
+         ]
+        },
+        "kind": "contactCharMatches",
+        "who": "byUid"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "draw"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06092"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】AP＋1000、レベル5以下の〚特徴［少年探偵団］〛のキャラに【カットイン】する場合、代わりにAP＋3000",
+   "ability": {
+    "effect": {
+     "else": {
+      "args": {
+       "delta": 1000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     },
+     "if": {
+      "filter": {
+       "levelMax": 5,
+       "trait": [
+        "少年探偵団"
+       ]
+      },
+      "kind": "contactCharMatches",
+      "who": "byUid"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "delta": 3000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     }
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B02006"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|cutIn|【カットイン】AP＋1000、相手の現場にいるキャラに裏向きでセットされているカードを1枚選び、リムーブしてもよい。そうした場合、代わりにAP＋3000",
@@ -1353,6 +2033,69 @@
    "count": 3
   },
   {
+   "key": "character|cutIn|【カットイン】【パートナー黄】AP＋1000、〚特徴［警察］〛のキャラに【カットイン】した場合、カードを1枚引く。",
+   "ability": {
+    "condition": {
+     "color": "黄",
+     "kind": "partnerColor"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 1000,
+        "scope": "contact",
+        "uid": "$contact.byUid"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "if": {
+        "filter": {
+         "trait": [
+          "警察"
+         ]
+        },
+        "kind": "contactCharMatches",
+        "who": "byUid"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "draw"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "D11013",
+    "PR278",
+    "PR287"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 3
+  },
+  {
    "key": "character|cutIn|【カットイン】【パートナー黄】【解決編】AP＋1000、カードを1枚引く。",
    "ability": {
     "condition": {
@@ -1564,7 +2307,144 @@
    "origins": [
     "desc"
    ],
-   "count": 27
+   "count": 28
+  },
+  {
+   "key": "character|cutIn|【カットイン】【自分ターン中】【黒】のキャラに【カットイン】する場合、AP＋2000",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "if": {
+      "filter": {
+       "color": [
+        "黒"
+       ]
+      },
+      "kind": "contactCharMatches",
+      "who": "byUid"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "delta": 2000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     }
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08086"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】【自分ターン中】〚カード名［毛利蘭］〛に【カットイン】する場合、AP＋3000",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "if": {
+      "filter": {
+       "cardName": [
+        "毛利蘭"
+       ]
+      },
+      "kind": "contactCharMatches",
+      "who": "byUid"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "delta": 3000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     }
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "D10011"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】【自分ターン中】キャラを1枚まで選び、スリープさせる。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "args": {
+      "max": 1,
+      "player": "self",
+      "side": "either",
+      "state": "sleep"
+     },
+     "kind": "atom",
+     "verb": "sceneSetState"
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "PR292",
+    "PR298"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "character|cutIn|【カットイン】【自分ターン中】コンタクト中のすべてのキャラをリムーブする。",
@@ -1985,6 +2865,157 @@
    "count": 2
   },
   {
+   "key": "character|cutIn|【カットイン】【解決編】カードを1枚引く。【黒】のキャラに【カットイン】する場合、AP＋1000",
+   "ability": {
+    "condition": {
+     "kind": "caseStatus",
+     "status": "解決編"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "n": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "draw"
+      },
+      {
+       "if": {
+        "filter": {
+         "color": [
+          "黒"
+         ]
+        },
+        "kind": "contactCharMatches",
+        "who": "byUid"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "delta": 1000,
+         "scope": "contact",
+         "uid": "$contact.byUid"
+        },
+        "kind": "atom",
+        "verb": "charModifyAP"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "PR087",
+    "PR093"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|cutIn|【カットイン】【黒】のキャラに【カットイン】する場合、AP＋1000",
+   "ability": {
+    "effect": {
+     "if": {
+      "filter": {
+       "color": [
+        "黒"
+       ]
+      },
+      "kind": "contactCharMatches",
+      "who": "byUid"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "delta": 1000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     }
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06101"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|cutIn|【カットイン】〚特徴［赤井家］〛のキャラに【カットイン】する場合、AP＋2000",
+   "ability": {
+    "effect": {
+     "if": {
+      "filter": {
+       "trait": [
+        "赤井家"
+       ]
+      },
+      "kind": "contactCharMatches",
+      "who": "byUid"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "delta": 2000,
+       "scope": "contact",
+       "uid": "$contact.byUid"
+      },
+      "kind": "atom",
+      "verb": "charModifyAP"
+     }
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-hand",
+    "trigger": {
+     "hook": "effect:declared",
+     "optional": true,
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B04060"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|cutIn|【カットイン】カードを2枚引き、手札を1枚リムーブする。",
    "ability": {
     "effect": {
@@ -2063,12 +3094,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B02088"
+    "B02088",
+    "B02088P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|COLSPAN|【FILE5】【宣言】【ターン1】【スリープ】：以下から1つ選んで行う。\n・手札を1枚リムーブしてもよい。そうした場合、レベル4以下のキャラを1枚まで選び、リムーブする。\n・手札を1枚リムーブしてもよい。そうした場合、自分の現場にいるLP0の〚カード名［毛利小五郎］〛を1枚まで選び、アクティブにする。\n・自分の現場にいるLP0の〚カード名［毛利小五郎］〛を1枚まで選び、ターン終了時まで〚突撃〛を与える。",
@@ -2741,40 +3773,6 @@
    "count": 1
   },
   {
-   "key": "character|effect|COLSPAN|【登場時】自分の現場にいるキャラを1枚まで選び、自分のデッキのカードを上から1枚裏向きでセットする。\n【宣言】【ターン1】〚現場にいるキャラに裏向きでセットされているカードを1枚リムーブする〛：キャラを1枚まで選び、スリープさせる。",
-   "ability": {
-    "effect": {
-     "args": {
-      "faceUp": false,
-      "fromDeckTop": true,
-      "max": 1,
-      "player": "self",
-      "side": "self"
-     },
-     "kind": "atom",
-     "verb": "charSetCard"
-    },
-    "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/16-card-set.md",
-     "rules/17-icons.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "enter",
-     "selfOnly": true
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "B02023"
-   ],
-   "origins": [
-    "colspan-elim"
-   ],
-   "count": 1
-  },
-  {
    "key": "character|effect|COLSPAN|【登場時】自分の現場にレベル6以上の〚カード名［阿笠博士］〛がいる場合、相手の現場にいるレベル8以下のキャラを1枚まで選び、手札に移す。\n【相手ターン中】【現場リムーブ時】自分のデッキのカードを上から〚カード名［阿笠博士］〛が出るまで1枚ずつ公開し、それを手札に加える。残りの公開したカードをデッキの下に移し、デッキをシャッフルする。",
    "ability": {
     "condition": {
@@ -3211,6 +4209,52 @@
    "count": 2
   },
   {
+   "key": "character|effect|【FILE6】【宣言】【ターン1】〚デッキの下に移す〛：自分のリムーブエリアにあるレベル7以下の〚カード名［毛利蘭］〛を1枚まで選び、登場させる。",
+   "ability": {
+    "condition": {
+     "kind": "fileAtLeast",
+     "n": 6
+    },
+    "cost": {
+     "kind": "selfToDeckBottom"
+    },
+    "effect": {
+     "args": {
+      "filter": {
+       "cardName": "毛利蘭",
+       "kind": "character",
+       "levelMax": 7
+      },
+      "from": "remove",
+      "max": 1,
+      "player": "self",
+      "viaEffect": true
+     },
+     "kind": "atom",
+     "verb": "sceneEnter"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "D10011"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【FILE6】【自分ターン中】自分の現場に〚特徴［長野県警］〛のキャラが3枚以上いる場合、このキャラをAP＋2000する。",
    "ability": {
     "condition": {
@@ -3524,6 +4568,150 @@
    "count": 3
   },
   {
+   "key": "character|effect|【FILE7】【ターン1】このキャラのアクション終了時、このキャラの下にカードが重なっている場合、手札を1枚リムーブしてもよい。そうした場合、このキャラをアクティブにする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "kind": "fileAtLeast",
+       "n": 7
+      },
+      {
+       "kind": "stackedCountAtLeast",
+       "n": 1,
+       "ref": {
+        "kind": "self"
+       }
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "max": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "discard"
+      },
+      {
+       "args": {
+        "state": "active",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "sceneSetState"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/16-card-set.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md",
+     "rules/25-qa-effects-resolution.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:end",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "PR289",
+    "PR295"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【FILE7】【宣言】【ターン1】〚手札から特徴［高校生］のキャラを1枚公開する〛：ターン終了時までこのキャラをAP＋2000し、〚突撃〛を持つ。",
+   "ability": {
+    "condition": {
+     "kind": "fileAtLeast",
+     "n": 7
+    },
+    "cost": {
+     "items": [
+      {
+       "kind": "revealFromHand",
+       "n": 1,
+       "target": {
+        "chooser": "self",
+        "kind": "pick",
+        "n": {
+         "max": 1,
+         "min": 1
+        },
+        "query": {
+         "area": "hand",
+         "filter": {
+          "kind": "character",
+          "trait": "高校生"
+         },
+         "side": "self"
+        }
+       }
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 2000,
+        "scope": "turn",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "args": {
+        "kw": "突撃",
+        "scope": "turn",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "charGrantKeyword"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/21-declared-ability-cost.md",
+     "rules/17-icons.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/05-turn-phases.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "PR179",
+    "PR185"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【FILE7】【登場時】キャラを1枚まで選び、スリープさせる。",
    "ability": {
     "condition": {
@@ -3594,7 +4782,7 @@
    "origins": [
     "desc"
    ],
-   "count": 3
+   "count": 4
   },
   {
    "key": "character|effect|【FILE7】【自分ターン中】【登場時】このキャラをリムーブしてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。",
@@ -4066,6 +5254,48 @@
    "count": 1
   },
   {
+   "key": "character|effect|【ターン1】このキャラのアクションがAP6000以下のキャラによってガードされたとき、このキャラをアクティブにする。",
+   "ability": {
+    "effect": {
+     "args": {
+      "state": "active",
+      "uid": "$self"
+     },
+     "kind": "atom",
+     "verb": "sceneSetState"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/08-contact.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:guarded",
+     "matcherCondition": {
+      "filter": {
+       "apMax": 6000
+      },
+      "kind": "triggerCharMatches",
+      "payloadKey": "guardUid"
+     },
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B03047"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【ターン1】相手が【カットイン】か【変装】を使用したとき、コンタクト中のキャラを1枚まで選び、このコンタクト中、AP－1000する。",
    "ability": {
     "effect": {
@@ -4101,12 +5331,15 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B04075"
+    "B04075",
+    "PR029",
+    "PR033"
    ],
    "origins": [
+    "desc",
     "elim"
    ],
-   "count": 1
+   "count": 3
   },
   {
    "key": "character|effect|【ターン1】相手の現場にいるキャラがこのキャラとのコンタクトによってリムーブされたとき、キャラを1枚まで選び、スリープさせる。",
@@ -4398,6 +5631,79 @@
    "count": 2
   },
   {
+   "key": "character|effect|【ターン1】相手の現場にいるキャラが推理かアクションしたとき、自分のデッキのカードを上から5枚リムーブしてもよい。そうした場合、ターン終了時までそのキャラを元のLPを0にし、元のAPを0にする。",
+   "ability": {
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "gate": true,
+         "n": 5,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "mill"
+       },
+       {
+        "args": {
+         "scope": "turn",
+         "uid": "$trigger.uid",
+         "val": 0
+        },
+        "kind": "atom",
+        "verb": "charOverrideLP"
+       },
+       {
+        "args": {
+         "scope": "turn",
+         "uid": "$trigger.uid",
+         "val": 0
+        },
+        "kind": "atom",
+        "verb": "charOverrideAP"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/11-reasoning.md",
+     "rules/07-action-flow.md",
+     "rules/17-icons.md",
+     "rules/15-abilities-effects.md",
+     "rules/19-special-rules.md",
+     "rules/22-qa-action-contact.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "reasoning:end",
+     "hooks": [
+      "action:declare"
+     ],
+     "matcherCondition": {
+      "filter": {},
+      "kind": "triggerCharMatches",
+      "side": "opp"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B01045"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【ターン1】相手の現場にいるキャラが推理したとき、手札を1枚リムーブしてもよい。そうした場合、ターン終了時までそのキャラをLP－1する。",
    "ability": {
     "effect": {
@@ -4435,6 +5741,7 @@
     "trigger": {
      "hook": "reasoning:end",
      "matcherCondition": {
+      "filter": {},
       "kind": "triggerCharMatches",
       "side": "opp"
      }
@@ -5222,6 +6529,51 @@
    "count": 1
   },
   {
+   "key": "character|effect|【ターン1】自分の現場にいる〚特徴［怪盗］〛のキャラがアクションしたとき、ターン終了時までそのキャラをAP＋1000する。",
+   "ability": {
+    "condition": {
+     "filter": {
+      "trait": "怪盗"
+     },
+     "kind": "triggerCharMatches",
+     "side": "self"
+    },
+    "effect": {
+     "args": {
+      "delta": 1000,
+      "scope": "turn",
+      "uid": "$trigger.byUid"
+     },
+     "kind": "atom",
+     "verb": "charModifyAP"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/22-qa-action-contact.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/03-field-areas.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:declare"
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B02049",
+    "PR039"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【ターン1】自分の現場にいる〚特徴［探偵］〛のキャラが【宣言】能力を使用したとき、カードを1枚引き、手札を1枚リムーブする。",
    "ability": {
     "effect": {
@@ -5353,6 +6705,7 @@
     "trigger": {
      "hook": "reasoning:end",
      "matcherCondition": {
+      "filter": {},
       "kind": "triggerCharMatches",
       "side": "self"
      }
@@ -5409,6 +6762,7 @@
     "trigger": {
      "hook": "reasoning:end",
      "matcherCondition": {
+      "filter": {},
       "kind": "triggerCharMatches",
       "side": "self"
      }
@@ -5423,6 +6777,153 @@
     "elim"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|【ターン1】自分の現場にいるキャラのアクション［事件］によって証拠を得たとき、このキャラをスリープさせてもよい。そうした場合、相手の現場にいるレベル7以下のキャラを1枚まで選び、手札に移す。相手は手札を1枚リムーブする。",
+   "ability": {
+    "condition": {
+     "kind": "charStateIs",
+     "ref": {
+      "kind": "self"
+     },
+     "state": "active"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "state": "sleep",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
+       },
+       {
+        "kind": "sequence",
+        "steps": [
+         {
+          "args": {
+           "filter": {
+            "levelMax": 7
+           },
+           "max": 1,
+           "player": "self",
+           "side": "opp"
+          },
+          "kind": "atom",
+          "verb": "sceneToHand"
+         },
+         {
+          "args": {
+           "n": 1,
+           "player": "opp"
+          },
+          "kind": "atom",
+          "verb": "discard"
+         }
+        ]
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/10-action-event.md",
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "evidence:gain",
+     "matcherCondition": {
+      "kind": "triggerCharMatches",
+      "payloadKey": "byUid",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B03070",
+    "B03070P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【ターン1】自分の現場にいるキャラのアクション［事件］によって証拠を得たとき、このキャラをスリープさせてもよい。そうした場合、相手は手札を1枚リムーブする。",
+   "ability": {
+    "condition": {
+     "kind": "charStateIs",
+     "ref": {
+      "kind": "self"
+     },
+     "state": "active"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "state": "sleep",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
+       },
+       {
+        "args": {
+         "n": 1,
+         "player": "opp"
+        },
+        "kind": "atom",
+        "verb": "discard"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/10-action-event.md",
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "evidence:gain",
+     "matcherCondition": {
+      "kind": "triggerCharMatches",
+      "payloadKey": "byUid",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B04058",
+    "PR028",
+    "PR032"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 3
   },
   {
    "key": "character|effect|【ターン1】自分の現場にいるキャラのアクション［事件］によって証拠を得たとき、手札を1枚リムーブしてもよい。そうした場合、証拠を1つ得る。",
@@ -5465,6 +6966,7 @@
     "trigger": {
      "hook": "evidence:gain",
      "matcherCondition": {
+      "filter": {},
       "kind": "triggerCharMatches",
       "payloadKey": "byUid",
       "side": "self"
@@ -5869,6 +7371,90 @@
    "count": 2
   },
   {
+   "key": "character|effect|【パートナー白】【登場時】自分のデッキのカードを上から3枚リムーブしてもよい。これによって〚カード名［京極真］〛か〚特徴［鈴木財閥］〛のキャラがリムーブされた場合、ターン終了時までこのキャラは〚突撃〛を持つ。",
+   "ability": {
+    "condition": {
+     "color": "白",
+     "kind": "partnerColor"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "bind": "$milled",
+         "gate": true,
+         "n": 3,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "mill"
+       },
+       {
+        "if": {
+         "cs": [
+          {
+           "bindKey": "$milled",
+           "filter": {
+            "cardName": [
+             "京極真"
+            ],
+            "kind": "character"
+           },
+           "kind": "boundAnyMatchesFilter"
+          },
+          {
+           "bindKey": "$milled",
+           "filter": {
+            "kind": "character",
+            "trait": [
+             "鈴木財閥"
+            ]
+           },
+           "kind": "boundAnyMatchesFilter"
+          }
+         ],
+         "kind": "or"
+        },
+        "kind": "conditional",
+        "then": {
+         "args": {
+          "kw": "突撃",
+          "scope": "turn",
+          "uid": "$self"
+         },
+         "kind": "atom",
+         "verb": "charGrantKeyword"
+        }
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "PR201",
+    "PR207"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【パートナー白】【登場時】自分のデッキのカードを上から7枚リムーブしてもよい。そうした場合、キャラを1枚まで選び、デッキの下に移す。",
    "ability": {
     "condition": {
@@ -5982,12 +7568,13 @@
     "type": "continuous"
    },
    "exemplars": [
-    "B03046"
+    "B03046",
+    "B03046P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【パートナー緑】LP＋1",
@@ -6008,6 +7595,133 @@
    },
    "exemplars": [
     "B01027"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【パートナー緑】【宣言】【ターン1】【スリープ】：手札からレベル5か6の【緑】のイベントを1枚まで使用する。",
+   "ability": {
+    "condition": {
+     "color": "緑",
+     "kind": "partnerColor"
+    },
+    "cost": {
+     "kind": "sleepSelf"
+    },
+    "effect": {
+     "args": {
+      "filter": {
+       "color": "緑",
+       "kind": "event",
+       "levelMax": 6,
+       "levelMin": 5
+      },
+      "max": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "useEventFromHand"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B07015"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【パートナー緑】【宣言】【ターン1】〚デッキのカードを上から3枚リムーブする〛：この【宣言】能力のコストによって〚カード名［大岡紅葉］〛か〚［伊織無我］〛がリムーブされた場合、AP8000以下のキャラを1枚まで選び、リムーブし、自分のデッキのカードを上から1枚裏向きでこのキャラにセットする。",
+   "ability": {
+    "condition": {
+     "color": "緑",
+     "kind": "partnerColor"
+    },
+    "cost": {
+     "kind": "removeDeckTop",
+     "n": 3,
+     "player": "self"
+    },
+    "effect": {
+     "if": {
+      "cs": [
+       {
+        "filter": {
+         "cardName": "大岡紅葉"
+        },
+        "kind": "costRemovedMatches"
+       },
+       {
+        "filter": {
+         "cardName": "伊織無我"
+        },
+        "kind": "costRemovedMatches"
+       }
+      ],
+      "kind": "or"
+     },
+     "kind": "conditional",
+     "then": {
+      "kind": "sequence",
+      "steps": [
+       {
+        "args": {
+         "cause": "effect",
+         "filter": {
+          "apMax": 8000
+         },
+         "max": 1,
+         "player": "self",
+         "side": "either"
+        },
+        "kind": "atom",
+        "verb": "sceneRemove"
+       },
+       {
+        "args": {
+         "faceUp": false,
+         "fromDeckTop": true,
+         "player": "self",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "charSetCard"
+       }
+      ]
+     }
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/16-card-set.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B08025"
    ],
    "origins": [
     "desc"
@@ -6442,6 +8156,110 @@
    "count": 2
   },
   {
+   "key": "character|effect|【パートナー緑】【解決編】【登場時】自分の現場にいるレベル6以上の〚特徴［探偵］〛のキャラを1枚スリープさせ、手札を1枚リムーブしてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。この効果によって〚カード名［服部平次］〛か〚［江戸川コナン］〛をスリープさせた場合、カードを1枚引く。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "color": "緑",
+       "kind": "partnerColor"
+      },
+      {
+       "kind": "caseStatus",
+       "status": "解決編"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "bind": "$slept",
+         "filter": {
+          "kind": "character",
+          "levelMin": 6,
+          "trait": "探偵"
+         },
+         "n": 1,
+         "player": "self",
+         "side": "self",
+         "state": "sleep"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
+       },
+       {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "discard"
+       },
+       {
+        "args": {
+         "filter": {
+          "kind": "character",
+          "levelMax": 7
+         },
+         "max": 1,
+         "player": "self",
+         "side": "either"
+        },
+        "kind": "atom",
+        "verb": "sceneRemove"
+       },
+       {
+        "if": {
+         "bindKey": "$slept",
+         "filter": {
+          "cardName": [
+           "服部平次",
+           "江戸川コナン"
+          ]
+         },
+         "kind": "boundMatchesFilter"
+        },
+        "kind": "conditional",
+        "then": {
+         "args": {
+          "n": 1,
+          "player": "self"
+         },
+         "kind": "atom",
+         "verb": "draw"
+        }
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B09022",
+    "B09022P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【パートナー赤】【ターン1】自分の現場にいるキャラがアクション［事件］したとき、レベル7以下のキャラを1枚まで選び、リムーブする。",
    "ability": {
     "condition": {
@@ -6501,76 +8319,6 @@
     "desc"
    ],
    "count": 2
-  },
-  {
-   "key": "character|effect|【パートナー赤】【宣言】【スリープ】：レベル8以下のキャラを1枚まで選び、リムーブする。この能力は自分の現場に〚特徴［FBI］〛のキャラが3枚以上いる場合に宣言できる。",
-   "ability": {
-    "condition": {
-     "cs": [
-      {
-       "color": "赤",
-       "kind": "partnerColor"
-      },
-      {
-       "kind": "sceneHas",
-       "nMin": 3,
-       "query": {
-        "area": "scene",
-        "filter": {
-         "trait": "FBI"
-        },
-        "side": "self"
-       }
-      }
-     ],
-     "kind": "and"
-    },
-    "cost": {
-     "kind": "sleepSelf"
-    },
-    "effect": {
-     "chooser": "self",
-     "kind": "choice",
-     "options": [
-      {
-       "args": {
-        "target": {
-         "chooser": "self",
-         "kind": "pick",
-         "n": {
-          "max": 1,
-          "min": 0
-         },
-         "query": {
-          "area": "scene",
-          "filter": {
-           "levelMax": 8
-          },
-          "side": "either"
-         }
-        },
-        "uid": "$pick"
-       },
-       "kind": "atom",
-       "verb": "sceneRemove"
-      }
-     ]
-    },
-    "ruleRefs": [
-     "rules/21-declared-ability-cost.md",
-     "rules/17-icons.md",
-     "rules/15-abilities-effects.md"
-    ],
-    "scope": "on-scene",
-    "type": "declared"
-   },
-   "exemplars": [
-    "B05069"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
   },
   {
    "key": "character|effect|【パートナー赤】【宣言】【ターン1】【スリープ】：レベル8以下のキャラを1枚まで選び、リムーブする。この能力は自分のFILEエリアにあるカードが5枚以下の場合に宣言できる。",
@@ -7155,6 +8903,73 @@
    },
    "exemplars": [
     "B07067"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【パートナー赤】【登場時】自分のデッキのカードを上から3枚リムーブしてもよい。これによって〚特徴［赤井家］〛のキャラがリムーブされた場合、ターン終了時までこのキャラは〚突撃〛を持つ。",
+   "ability": {
+    "condition": {
+     "color": "赤",
+     "kind": "partnerColor"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "bind": "$milled",
+         "gate": true,
+         "n": 3,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "mill"
+       },
+       {
+        "if": {
+         "bindKey": "$milled",
+         "filter": {
+          "kind": "character",
+          "trait": [
+           "赤井家"
+          ]
+         },
+         "kind": "boundAnyMatchesFilter"
+        },
+        "kind": "conditional",
+        "then": {
+         "args": {
+          "kw": "突撃",
+          "scope": "turn",
+          "uid": "$self"
+         },
+         "kind": "atom",
+         "verb": "charGrantKeyword"
+        }
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/17-icons.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B05068"
    ],
    "origins": [
     "desc"
@@ -7832,12 +9647,14 @@
    },
    "exemplars": [
     "D08003",
-    "D08004"
+    "D08004",
+    "PR281"
    ],
    "origins": [
+    "desc",
     "elim"
    ],
-   "count": 2
+   "count": 3
   },
   {
    "key": "character|effect|【パートナー青】【登場時】手札を1枚リムーブしてもよい。そうした場合、AP8000以下のキャラを1枚まで選び、リムーブする。",
@@ -8113,6 +9930,125 @@
    "count": 2
   },
   {
+   "key": "character|effect|【パートナー黄】【ターン1】自分の現場にいる【黄】のキャラがアクションしたとき、AP8000以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "condition": {
+     "color": "黄",
+     "kind": "partnerColor"
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "apMax": 8000
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md",
+     "rules/15-abilities-effects.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:declare",
+     "matcherCondition": {
+      "filter": {
+       "color": "黄"
+      },
+      "kind": "triggerCharMatches",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B05086"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【パートナー黄】【ターン1】自分の現場にいるキャラがアクションしたとき、レベル7以下のキャラを1枚まで選び、デッキの上か下に移す。",
+   "ability": {
+    "condition": {
+     "color": "黄",
+     "kind": "partnerColor"
+    },
+    "effect": {
+     "chooser": "self",
+     "kind": "choice",
+     "options": [
+      {
+       "args": {
+        "filter": {
+         "levelMax": 7
+        },
+        "max": 1,
+        "player": "self",
+        "pos": "top",
+        "side": "either"
+       },
+       "kind": "atom",
+       "verb": "sceneToDeck"
+      },
+      {
+       "args": {
+        "filter": {
+         "levelMax": 7
+        },
+        "max": 1,
+        "player": "self",
+        "pos": "bottom",
+        "side": "either"
+       },
+       "kind": "atom",
+       "verb": "sceneToDeck"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:declare",
+     "matcherCondition": {
+      "filter": {},
+      "kind": "triggerCharMatches",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B01081"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【パートナー黄】【宣言】【スリープ】：レベル9以下のキャラを1枚まで選び、リムーブする。",
    "ability": {
     "condition": {
@@ -8144,12 +10080,13 @@
     "type": "declared"
    },
    "exemplars": [
-    "B09070"
+    "B09070",
+    "B09070P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【パートナー黄】【宣言】【スリープ】：相手の現場にいるレベル5以下のスリープ状態のキャラを1枚まで選び、手札に移す。",
@@ -8342,6 +10279,91 @@
    "count": 1
   },
   {
+   "key": "character|effect|【パートナー黄】【宣言】【ターン1】【スリープ】：相手の証拠を1つまで選び、デッキの下に移す。相手の現場にいるAP8000以下のキャラを1枚まで選び、相手はそのカードを表向きのまま証拠として得る。相手の現場にいるMRのキャラを選んだ場合、相手はデッキのカードを上から1枚表向きで証拠として得る。",
+   "ability": {
+    "condition": {
+     "color": "黄",
+     "kind": "partnerColor"
+    },
+    "cost": {
+     "kind": "sleepSelf"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "player": "opp",
+        "target": {
+         "chooser": "self",
+         "kind": "pick",
+         "n": {
+          "max": 1,
+          "min": 0
+         },
+         "query": {
+          "area": "evidence",
+          "side": "opp"
+         }
+        }
+       },
+       "kind": "atom",
+       "verb": "evidenceToDeckBottom"
+      },
+      {
+       "args": {
+        "bind": "$picked",
+        "faceUp": true,
+        "filter": {
+         "apMax": 8000
+        },
+        "max": 1,
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "sceneToEvidence"
+      },
+      {
+       "if": {
+        "bindKey": "$picked",
+        "kind": "boundIsMr"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "faceUp": true,
+         "n": 1,
+         "player": "opp"
+        },
+        "kind": "atom",
+        "verb": "evidenceGain"
+       }
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/01-victory-conditions.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/18-mr.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06085"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【パートナー黄】【登場時】手札を1枚リムーブしてもよい。そうした場合、AP8000以下のキャラを1枚まで選び、リムーブする。",
    "ability": {
     "condition": {
@@ -8508,6 +10530,130 @@
    "count": 2
   },
   {
+   "key": "character|effect|【パートナー黄】【登場時】相手は手札を公開する。レベル9以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "condition": {
+     "color": "黄",
+     "kind": "partnerColor"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "action": "reveal-hand",
+        "player": "opp",
+        "result": "相手は手札を公開する（その後、元に戻す）"
+       },
+       "kind": "atom",
+       "verb": "log"
+      },
+      {
+       "args": {
+        "cause": "effect",
+        "filter": {
+         "kind": "character",
+         "levelMax": 9
+        },
+        "max": 1,
+        "player": "self",
+        "side": "either"
+       },
+       "kind": "atom",
+       "verb": "sceneRemove"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06084"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【パートナー黄】【登場時】自分のデッキのカードを上から3枚リムーブしてもよい。これによって〚特徴［警察］〛のキャラがリムーブされた場合、ターン終了時までこのキャラは〚突撃〛を持つ。",
+   "ability": {
+    "condition": {
+     "color": "黄",
+     "kind": "partnerColor"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "bind": "$milled",
+         "gate": true,
+         "n": 3,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "mill"
+       },
+       {
+        "if": {
+         "bindKey": "$milled",
+         "filter": {
+          "kind": "character",
+          "trait": [
+           "警察"
+          ]
+         },
+         "kind": "boundAnyMatchesFilter"
+        },
+        "kind": "conditional",
+        "then": {
+         "args": {
+          "kw": "突撃",
+          "scope": "turn",
+          "uid": "$self"
+         },
+         "kind": "atom",
+         "verb": "charGrantKeyword"
+        }
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/17-icons.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "PR132",
+    "PR213",
+    "PR285"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 3
+  },
+  {
    "key": "character|effect|【パートナー黄】【相手ターン中】【現場リムーブ時】自分のリムーブエリアにあるレベル4以下の〚特徴［警察］〛のキャラを1枚まで選び、スリープ状態で登場させる。",
    "ability": {
     "condition": {
@@ -8560,6 +10706,71 @@
     "desc"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|【パートナー黄】【自分ターン中】【ターン1】自分の現場にこのキャラ以外の〚カード名［佐藤美和子］〛か〚［高木渉］〛が登場したとき、AP8000以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "color": "黄",
+       "kind": "partnerColor"
+      },
+      {
+       "kind": "turn",
+       "player": "self"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "apMax": 8000
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "matcherCondition": {
+      "excludeSource": true,
+      "filter": {
+       "cardName": [
+        "佐藤美和子",
+        "高木渉"
+       ],
+       "kind": "character"
+      },
+      "kind": "triggerCharMatches",
+      "payloadKey": "uid",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08062"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|【パートナー黄】【解決編】【登場時】自分の現場にそれぞれカード名の異なる〚特徴［長野県警］〛のキャラが3枚以上いる場合、レベル7以下のキャラを1枚まで選び、リムーブする。",
@@ -8913,6 +11124,42 @@
    "count": 2
   },
   {
+   "key": "character|effect|【パートナー黒】【自分ターン中】相手の現場にいるキャラ1枚につき、このキャラをAP＋2000する。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "color": "黒",
+       "kind": "partnerColor"
+      },
+      {
+       "kind": "turn",
+       "player": "self"
+      }
+     ],
+     "kind": "and"
+    },
+    "continuousModifier": {
+     "apDelta": {
+      "dyn": "$self.oppSceneCount * 2000"
+     }
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B08086"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【パートナー黒】【解決編】【登場時】手札を1枚リムーブしてもよい。そうした場合、レベル6以下のキャラを1枚まで選び、リムーブする。",
    "ability": {
     "condition": {
@@ -9149,6 +11396,138 @@
    "count": 2
   },
   {
+   "key": "character|effect|【事件YAIBA】【登場時】手札を1枚リムーブしてもよい。そうした場合、自分のリムーブエリアにあるレベル5以下の〚特徴［YAIBA］〛のキャラを1枚まで選び、登場させる。ターン終了時までそのキャラに〚突撃〛と「ターン終了時、このキャラが現場にいる場合、このキャラを表向きのまま証拠として得る。」を与える。",
+   "ability": {
+    "condition": {
+     "kind": "caseTrait",
+     "trait": "YAIBA"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "discard"
+       },
+       {
+        "args": {
+         "bind": "$matched",
+         "cardId": "$pick.cardId",
+         "from": "remove",
+         "player": "self",
+         "target": {
+          "chooser": "self",
+          "kind": "pick",
+          "n": {
+           "max": 1,
+           "min": 0
+          },
+          "query": {
+           "area": "remove",
+           "filter": {
+            "kind": "character",
+            "levelMax": 5,
+            "trait": "YAIBA"
+           },
+           "side": "self"
+          }
+         },
+         "viaEffect": true
+        },
+        "kind": "atom",
+        "verb": "sceneEnter"
+       },
+       {
+        "args": {
+         "kw": "突撃",
+         "scope": "turn",
+         "uid": "$matched.uid"
+        },
+        "kind": "atom",
+        "verb": "charGrantKeyword"
+       },
+       {
+        "args": {
+         "ability": {
+          "description": "ターン終了時、このキャラが現場にいる場合、このキャラを表向きのまま証拠として得る。",
+          "effect": {
+           "args": {
+            "faceUp": true,
+            "uid": "$self"
+           },
+           "kind": "atom",
+           "verb": "sceneToEvidence"
+          },
+          "trigger": {
+           "hook": "phase:end:start"
+          }
+         },
+         "scope": "turn",
+         "uid": "$matched.uid"
+        },
+        "kind": "atom",
+        "verb": "charGrantAbility"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/01-victory-conditions.md",
+     "rules/05-turn-phases.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06018",
+    "B06018P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【事件YAIBA】手札から使用する場合、このキャラは事件カードの色を無視できる。",
+   "ability": {
+    "condition": {
+     "kind": "caseTrait",
+     "trait": "YAIBA"
+    },
+    "continuousModifier": {
+     "colorIgnoreOnHandUse": true
+    },
+    "ruleRefs": [
+     "rules/20-color-and-switch.md",
+     "rules/17-icons.md",
+     "rules/12-next-hint.md"
+    ],
+    "scope": "on-hand",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B06072"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【事件シャッフルロマンス】【登場時】このキャラをスリープさせ、手札を1枚リムーブしてもよい。そうした場合、自分のリムーブエリアにあるレベル8以下の〚カード名［黒衣の騎士・スペイド］〛を1枚まで選び、登場させる。",
    "ability": {
     "condition": {
@@ -9222,12 +11601,14 @@
     "type": "triggered"
    },
    "exemplars": [
-    "D10005"
+    "D10005",
+    "D10006"
    ],
    "origins": [
+    "desc",
     "elim"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【事件婚活パーティー】【宣言】【スリープ】：AP6000以下のキャラを1枚まで選び、リムーブする。この能力は自分の現場に〚特徴［警察］〛のキャラが2枚以上いる場合に宣言できる。",
@@ -9456,6 +11837,63 @@
     "desc"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|【事件緑＆白】【宣言】【ターン1】相手の現場にいるキャラを1枚まで選び、ターン終了時まで「このキャラはガードできる場合、必ずガードする。」を与える。",
+   "ability": {
+    "condition": {
+     "color": [
+      "緑",
+      "白"
+     ],
+     "combine": "and",
+     "kind": "caseColor"
+    },
+    "effect": {
+     "args": {
+      "key": "mustGuard",
+      "target": {
+       "chooser": "self",
+       "kind": "pick",
+       "n": {
+        "max": 1,
+        "min": 0
+       },
+       "query": {
+        "area": "scene",
+        "filter": {
+         "kind": "character"
+        },
+        "side": "opp"
+       }
+      },
+      "uid": "$pick",
+      "val": true
+     },
+     "kind": "atom",
+     "verb": "charSetTurnEffect"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/08-contact.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "PR290",
+    "PR296"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "character|effect|【事件編】LP＋1",
@@ -9739,57 +12177,6 @@
    },
    "exemplars": [
     "PR174"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
-  },
-  {
-   "key": "character|effect|【事件編】【登場時】手札から〚特徴［鈴木財閥］〛のキャラを1枚リムーブしてもよい。そうした場合、カードを2枚引く。",
-   "ability": {
-    "condition": {
-     "kind": "caseStatus",
-     "status": "事件編"
-    },
-    "effect": {
-     "kind": "chain",
-     "steps": [
-      {
-       "args": {
-        "filter": {
-         "kind": "character",
-         "trait": "鈴木財閥"
-        },
-        "max": 1,
-        "player": "self"
-       },
-       "kind": "atom",
-       "verb": "discard"
-      },
-      {
-       "args": {
-        "n": 2,
-        "player": "self"
-       },
-       "kind": "atom",
-       "verb": "draw"
-      }
-     ]
-    },
-    "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/17-icons.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "enter",
-     "selfOnly": true
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "B08039"
    ],
    "origins": [
     "elim"
@@ -10391,6 +12778,76 @@
     "elim"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|【事件青＆緑】【自分ターン中】【ターン1】このキャラ以外のレベル7以下の【青】か【緑】のキャラが自分の現場に登場したとき、AP8000以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "color": [
+        "青",
+        "緑"
+       ],
+       "combine": "and",
+       "kind": "caseColor"
+      },
+      {
+       "kind": "turn",
+       "player": "self"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "apMax": 8000
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "matcherCondition": {
+      "excludeSource": true,
+      "filter": {
+       "color": [
+        "青",
+        "緑"
+       ],
+       "kind": "character",
+       "levelMax": 7
+      },
+      "kind": "triggerCharMatches",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B09003",
+    "B09003P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "character|effect|【事件青＆緑】相手の現場にいるキャラがこのキャラとのコンタクトによってリムーブされたとき、相手のFILEエリアにあるカードを上から1枚表向きにする。",
@@ -11179,7 +13636,7 @@
    "count": 1
   },
   {
-   "key": "character|effect|【宣言】【スリープ】〚このキャラ以外の特徴［探偵］のキャラを1枚スリープさせる〛：レベル7以下のキャラを1枚まで選び、スタンさせる。",
+   "key": "character|effect|【宣言】【スリープ】〚デッキのカードを上から3枚リムーブする〛：この【宣言】能力のコストによって【カットイン】を持つ【黒】のカードが3枚以上リムーブされた場合、相手の現場にいるレベル7以下のキャラを1枚まで選び、リムーブする。",
    "ability": {
     "cost": {
      "items": [
@@ -11187,55 +13644,50 @@
        "kind": "sleepSelf"
       },
       {
-       "kind": "sleepChar",
-       "target": {
-        "chooser": "self",
-        "kind": "pick",
-        "n": {
-         "max": 1,
-         "min": 1
-        },
-        "query": {
-         "area": "scene",
-         "excludeSelf": true,
-         "filter": {
-          "trait": "探偵"
-         },
-         "side": "self"
-        }
-       }
+       "kind": "removeDeckTop",
+       "n": 3,
+       "player": "self"
       }
      ],
      "kind": "pay"
     },
     "effect": {
-     "args": {
+     "if": {
       "filter": {
-       "levelMax": 7
+       "color": "黒",
+       "keyword": "カットイン"
       },
-      "max": 1,
-      "player": "self",
-      "side": "either",
-      "state": "stun"
+      "kind": "costRemovedMatches",
+      "n": 3
      },
-     "kind": "atom",
-     "verb": "sceneSetState"
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "filter": {
+        "levelMax": 7
+       },
+       "max": 1,
+       "player": "self",
+       "side": "opp"
+      },
+      "kind": "atom",
+      "verb": "sceneRemove"
+     }
     },
     "ruleRefs": [
      "rules/15-abilities-effects.md",
      "rules/17-icons.md",
-     "rules/21-declared-ability-cost.md",
-     "rules/24-qa-naming-stun.md"
+     "rules/21-declared-ability-cost.md"
     ],
     "scope": "on-scene",
     "type": "declared"
    },
    "exemplars": [
-    "B03060",
-    "B03060P"
+    "PR292",
+    "PR298"
    ],
    "origins": [
-    "elim"
+    "desc"
    ],
    "count": 2
   },
@@ -11747,6 +14199,102 @@
    "count": 2
   },
   {
+   "key": "character|effect|【宣言】【スリープ】〚リムーブエリアに移す〛：手札からレベル6以下の〚カード名［大岡紅葉］〛のキャラを1枚まで登場させるか、自分のリムーブエリアにあるレベル6以下の〚カード名［大岡紅葉］〛を1枚まで選び、登場させる。",
+   "ability": {
+    "cost": {
+     "items": [
+      {
+       "kind": "sleepSelf"
+      },
+      {
+       "kind": "removeFromScene",
+       "n": 1,
+       "target": {
+        "kind": "self"
+       }
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "chooser": "self",
+     "kind": "choice",
+     "options": [
+      {
+       "args": {
+        "cardId": "$pick.cardId",
+        "from": "hand",
+        "player": "self",
+        "target": {
+         "chooser": "self",
+         "kind": "pick",
+         "n": {
+          "max": 1,
+          "min": 0
+         },
+         "query": {
+          "area": "hand",
+          "filter": {
+           "cardName": "大岡紅葉",
+           "kind": "character",
+           "levelMax": 6
+          },
+          "side": "self"
+         }
+        },
+        "viaEffect": true
+       },
+       "kind": "atom",
+       "verb": "sceneEnter"
+      },
+      {
+       "args": {
+        "cardId": "$pick.cardId",
+        "from": "remove",
+        "player": "self",
+        "target": {
+         "chooser": "self",
+         "kind": "pick",
+         "n": {
+          "max": 1,
+          "min": 0
+         },
+         "query": {
+          "area": "remove",
+          "filter": {
+           "cardName": "大岡紅葉",
+           "kind": "character",
+           "levelMax": 6
+          },
+          "side": "self"
+         }
+        },
+        "viaEffect": true
+       },
+       "kind": "atom",
+       "verb": "sceneEnter"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B05031",
+    "B05031P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【宣言】【スリープ】〚手札からカード名［毛利蘭］を1枚公開する〛：相手の現場にいるレベル7以下のキャラを1枚まで選び、デッキの下に移す。",
    "ability": {
     "cost": {
@@ -11883,6 +14431,95 @@
     "desc"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|【宣言】【スリープ】〚手札を1枚リムーブする〛：AP8000以下のキャラを1枚まで選び、リムーブする。自分のパートナーエリアにある〚特徴［ビッグジュエル］〛のカードを1枚リムーブしてもよい。そうした場合、カードを2枚引く。",
+   "ability": {
+    "cost": {
+     "items": [
+      {
+       "kind": "sleepSelf"
+      },
+      {
+       "kind": "removeFromHand",
+       "n": 1,
+       "target": {
+        "chooser": "self",
+        "kind": "pick",
+        "n": {
+         "max": 1,
+         "min": 1
+        },
+        "query": {
+         "area": "hand",
+         "side": "self"
+        }
+       }
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "filter": {
+         "apMax": 8000
+        },
+        "max": 1,
+        "player": "self",
+        "side": "either"
+       },
+       "kind": "atom",
+       "verb": "sceneRemove"
+      },
+      {
+       "effect": {
+        "kind": "chain",
+        "steps": [
+         {
+          "args": {
+           "filter": {
+            "trait": "ビッグジュエル"
+           },
+           "n": 1,
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "partnerAreaRemove"
+         },
+         {
+          "args": {
+           "n": 2,
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "draw"
+         }
+        ]
+       },
+       "kind": "optional"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/17-icons.md",
+     "rules/03-field-areas.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B07032",
+    "B07032P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "character|effect|【宣言】【スリープ】〚手札を1枚リムーブする〛：自分のデッキのカードを上から1枚裏向きでこのキャラにセットする。レベル7以下のキャラを1枚まで選び、リムーブする。",
@@ -12664,6 +15301,43 @@
    "count": 2
   },
   {
+   "key": "character|effect|【宣言】【スリープ】：このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "cost": {
+     "kind": "sleepSelf"
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "apMax": {
+        "dyn": "$self.ap"
+       }
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B08073"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【宣言】【スリープ】：このキャラをリムーブする。AP4000以下のキャラを1枚まで選び、リムーブする。",
    "ability": {
     "cost": {
@@ -13182,70 +15856,6 @@
    "count": 2
   },
   {
-   "key": "character|effect|【宣言】【スリープ】：自分のリムーブエリアにある〚カード名［工藤有希子］〛を1枚まで選び、裏向きでこのキャラにセットする。セットした場合、レベル7以下のキャラを1枚まで選び、デッキの下に移す。",
-   "ability": {
-    "cost": {
-     "kind": "sleepSelf"
-    },
-    "effect": {
-     "kind": "chain",
-     "steps": [
-      {
-       "args": {
-        "cardIds": "$pick.cardIds",
-        "target": {
-         "chooser": "self",
-         "kind": "pick",
-         "n": {
-          "max": 1,
-          "min": 0
-         },
-         "query": {
-          "area": "remove",
-          "filter": {
-           "cardName": "工藤有希子",
-           "kind": "character"
-          },
-          "side": "self"
-         }
-        },
-        "uid": "$self"
-       },
-       "kind": "atom",
-       "verb": "charSetCard"
-      },
-      {
-       "args": {
-        "filter": {
-         "levelMax": 7
-        },
-        "max": 1,
-        "player": "self",
-        "pos": "bottom",
-        "side": "either"
-       },
-       "kind": "atom",
-       "verb": "sceneToDeck"
-      }
-     ]
-    },
-    "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/16-card-set.md",
-     "rules/21-declared-ability-cost.md"
-    ],
-    "scope": "on-scene",
-    "type": "declared"
-   },
-   "exemplars": [
-    "B08036"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
-  },
-  {
    "key": "character|effect|【宣言】【スリープ】：自分のリムーブエリアにあるレベル4以下の〚特徴［警視庁］〛のキャラを1枚まで選び、登場させる。ターン終了時までそのキャラに〚突撃［事件］〛と「ターン終了時、このキャラを現場からデッキの下に移す。」を与える。",
    "ability": {
     "cost": {
@@ -13450,6 +16060,54 @@
    "count": 2
   },
   {
+   "key": "character|effect|【宣言】【ターン1】AP8000以下のキャラを1枚まで選び、リムーブする。この能力は自分の現場に〚特徴［黒ずくめの組織］〛のキャラが2枚以上いる場合に宣言できる。",
+   "ability": {
+    "condition": {
+     "kind": "sceneHas",
+     "nMin": 2,
+     "query": {
+      "area": "scene",
+      "filter": {
+       "trait": "黒ずくめの組織"
+      },
+      "side": "self"
+     }
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "apMax": 8000
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06098",
+    "B06098P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【宣言】【ターン1】AP9000以下のキャラを1枚まで選び、リムーブする。この能力は自分の現場に〚特徴［赤井家］〛のキャラが3枚以上いる場合に宣言できる。",
    "ability": {
     "condition": {
@@ -13563,6 +16221,75 @@
    ],
    "origins": [
     "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】【スリープ】〚デッキのカードを上から3枚リムーブする〛：この【宣言】能力のコストによって〚カード名［阿笠博士］〛か〚特徴［少年探偵団］〛のキャラがリムーブされた場合、レベル8以下のキャラを1枚まで選び、デッキの下に移す。",
+   "ability": {
+    "cost": {
+     "items": [
+      {
+       "kind": "sleepSelf"
+      },
+      {
+       "kind": "removeDeckTop",
+       "n": 3,
+       "player": "self"
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "if": {
+      "cs": [
+       {
+        "filter": {
+         "cardName": "阿笠博士"
+        },
+        "kind": "costRemovedMatches"
+       },
+       {
+        "filter": {
+         "trait": "少年探偵団"
+        },
+        "kind": "costRemovedMatches"
+       }
+      ],
+      "kind": "or"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "filter": {
+        "levelMax": 8
+       },
+       "max": 1,
+       "player": "self",
+       "pos": "bottom",
+       "side": "either"
+      },
+      "kind": "atom",
+      "verb": "sceneToDeck"
+     }
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B03003"
+   ],
+   "origins": [
+    "desc"
    ],
    "count": 1
   },
@@ -14439,6 +17166,152 @@
    "count": 1
   },
   {
+   "key": "character|effect|【宣言】【ターン1】【黄】のキャラを1枚まで選び、ターン終了時までAP＋1000する。この能力はパートナーエリアでも宣言できる。",
+   "ability": {
+    "effect": {
+     "args": {
+      "delta": 1000,
+      "filter": {
+       "color": "黄"
+      },
+      "max": 1,
+      "scope": "turn",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "charModifyAP"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/17-icons.md",
+     "rules/18-mr.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/15-abilities-effects.md"
+    ],
+    "scope": "on-partner-area",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B05086"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】〚FILEエリアにあるカードを上から2枚リムーブする〛：ターン終了時、自分のFILEエリアにあるカードが5枚以下の場合、デッキのカードを上から2枚、1枚ずつ裏向きのままFILEエリアの上に置く。この能力はパートナーエリアでも宣言できる。",
+   "ability": {
+    "cost": {
+     "kind": "fileFrom",
+     "n": 2
+    },
+    "effect": {
+     "args": {
+      "effect": {
+       "if": {
+        "c": {
+         "kind": "fileAtLeast",
+         "n": 6
+        },
+        "kind": "not"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 2,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "fileAdd"
+       }
+      },
+      "hook": "phase:end:start",
+      "mode": "turn-end"
+     },
+     "kind": "atom",
+     "verb": "reserveEffect"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/05-turn-phases.md",
+     "rules/14-refresh.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/18-mr.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/25-qa-effects-resolution.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-partner-area",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06074"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】〚このキャラか、レベル7以下の特徴［警視庁］のキャラを1枚デッキの下に移す〛：カードを1枚引く。",
+   "ability": {
+    "cost": {
+     "kind": "sceneToDeckBottom",
+     "n": 1,
+     "target": {
+      "chooser": "owner",
+      "kind": "pick",
+      "n": {
+       "max": 1,
+       "min": 1
+      },
+      "query": {
+       "area": "scene",
+       "filter": {
+        "levelMax": 7,
+        "trait": "警視庁"
+       },
+       "side": "self"
+      }
+     }
+    },
+    "effect": {
+     "args": {
+      "n": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "draw"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B08064"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【宣言】【ターン1】〚このキャラか、特徴［赤井家］のキャラを1枚スリープさせる〛：自分のデッキのカードを上から3枚見る。その中から〚特徴［赤井家］〛のキャラを1枚まで公開して手札に加え、残りを好きな順番でデッキの下に移す。カードを手札に加えた場合、手札を1枚リムーブする。",
    "ability": {
     "cost": {
@@ -14755,43 +17628,6 @@
    "count": 2
   },
   {
-   "key": "character|effect|【宣言】【ターン1】〚デッキのカードを上から1枚リムーブする〛：キャラを1枚まで選び、ターン終了時までAP＋1000する。",
-   "ability": {
-    "cost": {
-     "kind": "removeDeckTop",
-     "n": 1,
-     "player": "self"
-    },
-    "effect": {
-     "args": {
-      "delta": 1000,
-      "max": 1,
-      "scope": "turn",
-      "side": "either"
-     },
-     "kind": "atom",
-     "verb": "charModifyAP"
-    },
-    "limit": {
-     "kind": "turn",
-     "n": 1
-    },
-    "ruleRefs": [
-     "rules/21-declared-ability-cost.md",
-     "rules/15-abilities-effects.md"
-    ],
-    "scope": "on-scene",
-    "type": "declared"
-   },
-   "exemplars": [
-    "B03100"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
-  },
-  {
    "key": "character|effect|【宣言】【ターン1】〚リムーブエリアにある【白】のキャラを1枚デッキの下に移す〛：キャラを1枚まで選び、ターン終了時までAP＋1000する。",
    "ability": {
     "cost": {
@@ -14898,6 +17734,82 @@
     "desc"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】〚レベル6以上の特徴［赤井家］のキャラを1枚スリープさせ、デッキのカードを上から3枚リムーブする〛：この【宣言】能力のコストによって〚特徴［赤井家］〛のキャラがリムーブされた場合、AP8000以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "cost": {
+     "items": [
+      {
+       "kind": "sleepChar",
+       "target": {
+        "chooser": "self",
+        "kind": "pick",
+        "n": {
+         "max": 1,
+         "min": 1
+        },
+        "query": {
+         "area": "scene",
+         "filter": {
+          "levelMin": 6,
+          "trait": "赤井家"
+         },
+         "side": "self"
+        }
+       }
+      },
+      {
+       "kind": "removeDeckTop",
+       "n": 3,
+       "player": "self"
+      }
+     ],
+     "kind": "pay"
+    },
+    "effect": {
+     "if": {
+      "filter": {
+       "trait": "赤井家"
+      },
+      "kind": "costRemovedMatches",
+      "n": 1
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "cause": "effect",
+       "filter": {
+        "apMax": 8000
+       },
+       "max": 1,
+       "player": "self",
+       "side": "either"
+      },
+      "kind": "atom",
+      "verb": "sceneRemove"
+     }
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/21-declared-ability-cost.md",
+     "rules/15-abilities-effects.md",
+     "rules/19-special-rules.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06078"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|【宣言】【ターン1】〚手札からカード名［怪盗キッド］を1枚公開してデッキの上に移す〛：〚カード名［黒羽快斗］〛のキャラを1枚まで選び、ターン終了時まで〚突撃〛を与える。",
@@ -15243,6 +18155,72 @@
    "count": 2
   },
   {
+   "key": "character|effect|【宣言】【ターン1】〚捜査2〛する。レベル5以上のカードが発見された場合、このキャラ以外のレベル7以下の〚特徴［探偵］〛のキャラを1枚まで選び、ターン終了時まで〚突撃〛を与える。",
+   "ability": {
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "bind": "$found",
+        "player": "opp",
+        "x": 2
+       },
+       "kind": "atom",
+       "verb": "souza"
+      },
+      {
+       "if": {
+        "bindKey": "$found",
+        "filter": {
+         "levelMin": 5
+        },
+        "kind": "boundAnyMatchesFilter"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "excludeSelf": true,
+         "filter": {
+          "kind": "character",
+          "levelMax": 7,
+          "trait": "探偵"
+         },
+         "kw": "突撃",
+         "max": 1,
+         "player": "self",
+         "scope": "turn",
+         "side": "either"
+        },
+        "kind": "atom",
+        "verb": "charGrantKeyword"
+       }
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B04032"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【宣言】【ターン1】〚特徴［警視庁］〛のキャラを1枚まで選び、ターン終了時までAP＋1000する。",
    "ability": {
     "effect": {
@@ -15276,6 +18254,58 @@
    ],
    "origins": [
     "elim"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】〚現場にいるこのキャラ以外の特徴［少年探偵団］のキャラを1枚このキャラの下に重ねる〛：カードを1枚引く。",
+   "ability": {
+    "cost": {
+     "kind": "sceneStackUnderSelf",
+     "n": 1,
+     "target": {
+      "chooser": "self",
+      "kind": "pick",
+      "n": {
+       "max": 1,
+       "min": 1
+      },
+      "query": {
+       "area": "scene",
+       "excludeSelf": true,
+       "filter": {
+        "kind": "character",
+        "trait": "少年探偵団"
+       },
+       "side": "self"
+      }
+     }
+    },
+    "effect": {
+     "args": {
+      "n": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "draw"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/16-card-set.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "PR289",
+    "PR295"
+   ],
+   "origins": [
+    "desc"
    ],
    "count": 2
   },
@@ -15570,6 +18600,70 @@
    "count": 3
   },
   {
+   "key": "character|effect|【宣言】【ターン1】カードを1枚引き、〚捜査1〛する。レベル7以下のカードが発見された場合、自分は手札を1枚リムーブする。この能力はパートナーエリアでも宣言できる。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "n": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "draw"
+      },
+      {
+       "args": {
+        "bind": "$found",
+        "player": "opp",
+        "x": 1
+       },
+       "kind": "atom",
+       "verb": "souza"
+      },
+      {
+       "if": {
+        "bindKey": "$found",
+        "filter": {
+         "levelMax": 7
+        },
+        "kind": "boundAnyMatchesFilter"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "discard"
+       }
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/18-mr.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-partner-area",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06084"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【宣言】【ターン1】カードを1枚引く。この能力は自分の現場に〚特徴［鈴木財閥］〛のキャラが3枚以上いる場合に宣言できる。",
    "ability": {
     "condition": {
@@ -15611,6 +18705,89 @@
    "count": 1
   },
   {
+   "key": "character|effect|【宣言】【ターン1】カード名を1つ指定し、相手のFILEエリアにあるカードを上から1枚リムーブし、相手はデッキのカードを上から1枚裏向きのままFILEエリアの上に置く。この効果によって指定したカード名のカードがリムーブされた場合、自分はカードを2枚引き、手札を2枚リムーブする。この能力はパートナーエリアでも宣言できる。",
+   "ability": {
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "bind": "named"
+       },
+       "kind": "atom",
+       "verb": "declareName"
+      },
+      {
+       "args": {
+        "bind": "removed",
+        "n": 1,
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "fileRemoveTop"
+      },
+      {
+       "args": {
+        "n": 1,
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "fileAdd"
+      },
+      {
+       "if": {
+        "bindKey": "removed",
+        "declareKey": "named",
+        "kind": "boundNameMatchesDeclared"
+       },
+       "kind": "conditional",
+       "then": {
+        "kind": "sequence",
+        "steps": [
+         {
+          "args": {
+           "n": 2,
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "draw"
+         },
+         {
+          "args": {
+           "n": 2,
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "discard"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/12-next-hint.md",
+     "rules/15-abilities-effects.md",
+     "rules/18-mr.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-partner-area",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B09108",
+    "B09108P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【宣言】【ターン1】キャラを1枚まで選び、ターン終了時までAP＋1000する。",
    "ability": {
     "effect": {
@@ -15644,34 +18821,56 @@
    "count": 2
   },
   {
-   "key": "character|effect|【宣言】【ターン1】キャラを1枚まで選び、ターン終了時までAP－2000する。",
+   "key": "character|effect|【宣言】【ターン1】ターン終了時までこのキャラをAP＋1000する。キャラのカード名を1つ指定し、ターン終了時までこのキャラのカード名を指定したカード名に書き換えてもよい。",
    "ability": {
     "effect": {
-     "args": {
-      "delta": -2000,
-      "max": 1,
-      "scope": "turn",
-      "side": "either"
-     },
-     "kind": "atom",
-     "verb": "charModifyAP"
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "delta": 1000,
+        "scope": "turn",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      },
+      {
+       "args": {
+        "bind": "named",
+        "optional": true
+       },
+       "kind": "atom",
+       "verb": "declareName"
+      },
+      {
+       "args": {
+        "key": "nameOverride",
+        "uid": "$self",
+        "val": "$dyn.declaredName"
+       },
+       "kind": "atom",
+       "verb": "charSetTurnEffect"
+      }
+     ]
     },
     "limit": {
      "kind": "turn",
      "n": 1
     },
     "ruleRefs": [
-     "rules/21-declared-ability-cost.md",
-     "rules/15-abilities-effects.md"
+     "rules/15-abilities-effects.md",
+     "rules/19-special-rules.md",
+     "rules/21-declared-ability-cost.md"
     ],
     "scope": "on-scene",
     "type": "declared"
    },
    "exemplars": [
-    "B03127"
+    "PR105"
    ],
    "origins": [
-    "elim"
+    "desc"
    ],
    "count": 1
   },
@@ -15767,38 +18966,50 @@
    "count": 2
   },
   {
-   "key": "character|effect|【宣言】【ターン1】相手の現場にいるキャラを5枚まで選び、ターン終了時までAP－1000する。",
+   "key": "character|effect|【宣言】【ターン1】相手の現場にいるキャラを1枚まで選び、デッキの下に移す。相手のFILEエリアにあるカードを上から1枚表向きにする。",
    "ability": {
     "effect": {
-     "args": {
-      "delta": -1000,
-      "max": 5,
-      "player": "self",
-      "scope": "turn",
-      "side": "opp"
-     },
-     "kind": "atom",
-     "verb": "charModifyAP"
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "max": 1,
+        "player": "self",
+        "pos": "bottom",
+        "side": "opp"
+       },
+       "kind": "atom",
+       "verb": "sceneToDeck"
+      },
+      {
+       "args": {
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "fileFlipTop"
+      }
+     ]
     },
     "limit": {
      "kind": "turn",
      "n": 1
     },
     "ruleRefs": [
+     "rules/03-field-areas.md",
      "rules/15-abilities-effects.md",
-     "rules/17-icons.md",
      "rules/21-declared-ability-cost.md"
     ],
     "scope": "on-scene",
     "type": "declared"
    },
    "exemplars": [
-    "B02021"
+    "B09108",
+    "B09108P"
    ],
    "origins": [
-    "elim"
+    "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【宣言】【ターン1】自分のFILEエリアにあるカードを上から1枚手札に加え、手札を1枚FILEエリアにあるカードの1番下に表向きで移す。この能力はパートナーエリアでも宣言できる。",
@@ -15839,6 +19050,107 @@
    "exemplars": [
     "B05045",
     "B05045P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【宣言】【ターン1】自分のデッキのカードを上から3枚見る。その中から【カットイン】を持つレベル8以下の【黒】のカードを1枚まで公開して手札に加え、残りをリムーブエリアに移す。レベル4以上のカードを手札に加えた場合、手札を1枚リムーブする。この能力は自分の現場に〚特徴［黒ずくめの組織］〛のキャラが2枚以上いる場合に宣言できる。この能力はパートナーエリアでも宣言できる。",
+   "ability": {
+    "condition": {
+     "kind": "sceneHas",
+     "nMin": 2,
+     "query": {
+      "area": "scene",
+      "filter": {
+       "trait": "黒ずくめの組織"
+      },
+      "side": "self"
+     }
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "bind": "$revealed",
+        "bindMatch": "$matched",
+        "chooseMatch": "upTo",
+        "filter": {
+         "color": "黒",
+         "keyword": "カットイン",
+         "levelMax": 8
+        },
+        "maxN": 3,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "deckRevealUntil"
+      },
+      {
+       "if": {
+        "key": "$matched",
+        "kind": "bound",
+        "presence": "matched"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "cardId": "$matched.cardId",
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "handAddFromDeck"
+       }
+      },
+      {
+       "args": {
+        "bindKey": "$revealed",
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "boundToRemove"
+      },
+      {
+       "if": {
+        "bindKey": "$matched",
+        "filter": {
+         "levelMin": 4
+        },
+        "kind": "boundMatchesFilter"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "discard"
+       }
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/14-refresh.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/18-mr.md",
+     "rules/21-declared-ability-cost.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-partner-area",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B06098",
+    "B06098P"
    ],
    "origins": [
     "desc"
@@ -17401,6 +20713,46 @@
    "count": 1
   },
   {
+   "key": "character|effect|【現場リムーブ時】コンタクトによってリムーブされた場合、キャラを1枚まで選び、スリープさせる。",
+   "ability": {
+    "effect": {
+     "args": {
+      "max": 1,
+      "player": "self",
+      "side": "either",
+      "state": "sleep"
+     },
+     "kind": "atom",
+     "verb": "sceneSetState"
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/08-contact.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "leave:to-remove",
+     "matcherCondition": {
+      "cause": "contact-ap",
+      "kind": "removedCharMatches"
+     },
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B01035",
+    "D06009"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【現場リムーブ時】コンタクトによってリムーブされた場合、スリープ状態のキャラを1枚まで選び、スタンさせる。",
    "ability": {
     "effect": {
@@ -17677,12 +21029,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B09070"
+    "B09070",
+    "B09070P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【疾風】自分は証拠を1つ得る。",
@@ -18019,6 +21372,69 @@
    "count": 1
   },
   {
+   "key": "character|effect|【登場時】このキャラをスリープさせ、手札から〚特徴［警視庁］〛のキャラを1枚公開してもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "state": "sleep",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
+       },
+       {
+        "args": {
+         "filter": {
+          "kind": "character",
+          "trait": "警視庁"
+         },
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "handReveal"
+       },
+       {
+        "args": {
+         "cause": "effect",
+         "filter": {
+          "levelMax": 7
+         },
+         "max": 1,
+         "player": "self",
+         "side": "either"
+        },
+        "kind": "atom",
+        "verb": "sceneRemove"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08064"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【登場時】このキャラをスリープさせ、手札から〚特徴［鈴木財閥］〛のキャラを1枚リムーブしてもよい。そうした場合、リムーブしたカードのレベル以下のレベルのキャラを1枚まで選び、リムーブする。",
    "ability": {
     "effect": {
@@ -18156,81 +21572,6 @@
    ],
    "origins": [
     "desc"
-   ],
-   "count": 2
-  },
-  {
-   "key": "character|effect|【登場時】このキャラをスリープさせ、手札を1枚リムーブしてもよい。そうした場合、自分のリムーブエリアにあるレベル6以下の〚特徴［黒ずくめの組織］〛のキャラを1枚まで選び、登場させる。",
-   "ability": {
-    "condition": {
-     "c": {
-      "kind": "charStateIs",
-      "ref": {
-       "kind": "self"
-      },
-      "state": "sleep"
-     },
-     "kind": "not"
-    },
-    "effect": {
-     "effect": {
-      "kind": "chain",
-      "steps": [
-       {
-        "args": {
-         "state": "sleep",
-         "uid": "$self"
-        },
-        "kind": "atom",
-        "verb": "sceneSetState"
-       },
-       {
-        "args": {
-         "n": 1,
-         "player": "self"
-        },
-        "kind": "atom",
-        "verb": "discard"
-       },
-       {
-        "args": {
-         "filter": {
-          "kind": "character",
-          "levelMax": 6,
-          "trait": "黒ずくめの組織"
-         },
-         "from": "remove",
-         "max": 1,
-         "player": "self",
-         "viaEffect": true
-        },
-        "kind": "atom",
-        "verb": "sceneEnter"
-       }
-      ]
-     },
-     "kind": "optional"
-    },
-    "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/17-icons.md",
-     "rules/15-abilities-effects.md",
-     "rules/20-color-and-switch.md",
-     "rules/03-field-areas.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "enter",
-     "selfOnly": true
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "PR138",
-    "PR144"
-   ],
-   "origins": [
-    "elim"
    ],
    "count": 2
   },
@@ -18564,6 +21905,58 @@
    "count": 3
   },
   {
+   "key": "character|effect|【登場時】カードを1枚引き、手札からレベル7以下の〚特徴［赤井家］〛のキャラを1枚まで登場させる。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "n": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "draw"
+      },
+      {
+       "args": {
+        "filter": {
+         "kind": "character",
+         "levelMax": 7,
+         "trait": "赤井家"
+        },
+        "from": "hand",
+        "max": 1,
+        "player": "self",
+        "viaEffect": true
+       },
+       "kind": "atom",
+       "verb": "sceneEnter"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/05-turn-phases.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06074"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【登場時】カードを1枚引き、手札を1枚リムーブする。",
    "ability": {
     "effect": {
@@ -18676,7 +22069,7 @@
    "origins": [
     "desc"
    ],
-   "count": 3
+   "count": 4
   },
   {
    "key": "character|effect|【登場時】カードを1枚引く。",
@@ -18852,12 +22245,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B03046"
+    "B03046",
+    "B03046P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【登場時】キャラを1枚まで選び、スリープさせる。",
@@ -19607,6 +23001,77 @@
     "elim"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|【登場時】手札から〚特徴［高校生］〛のキャラを1枚公開してもよい。そうした場合、ターン終了時までこのキャラは〚突撃〛を持つ。この効果によって【緑】以外の色を持つキャラを公開した場合、ターン終了時までこのキャラをAP＋1000する。",
+   "ability": {
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "bind": "$revealed",
+        "filter": {
+         "kind": "character",
+         "trait": "高校生"
+        },
+        "n": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "handReveal"
+      },
+      {
+       "args": {
+        "kw": "突撃",
+        "scope": "turn",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "charGrantKeyword"
+      },
+      {
+       "if": {
+        "bindKey": "$revealed",
+        "filter": {
+         "colorNot": "緑"
+        },
+        "kind": "boundMatchesFilter"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "delta": 1000,
+         "scope": "turn",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "charModifyAP"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/05-turn-phases.md",
+     "rules/07-action-flow.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B07022"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|【登場時】手札からレベル4以下の【赤】のキャラを1枚スリープ状態で登場させてもよい。登場させなかった場合、相手に証拠を1つ与え、カードを1枚引く。",
@@ -20790,12 +24255,14 @@
    },
    "exemplars": [
     "B02020",
-    "B02020P"
+    "B02020P",
+    "B05031"
    ],
    "origins": [
+    "desc",
     "elim"
    ],
-   "count": 2
+   "count": 4
   },
   {
    "key": "character|effect|【登場時】相手の現場にキャラが3枚以上いる場合、ターン終了時までこのキャラは〚突撃［キャラ］〛を持つ。相手の証拠が3つ以上ある場合、ターン終了時までこのキャラは〚突撃［事件］〛を持つ。",
@@ -21268,6 +24735,53 @@
     "elim"
    ],
    "count": 7
+  },
+  {
+   "key": "character|effect|【登場時】自分のデッキのカードを上から1枚裏向きでこのキャラにセットする。ターン終了時までこのキャラは〚突撃［キャラ］〛を持つ。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "faceUp": false,
+        "fromDeckTop": true,
+        "player": "self",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "charSetCard"
+      },
+      {
+       "args": {
+        "kw": "突撃[キャラ]",
+        "scope": "turn",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "charGrantKeyword"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/16-card-set.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "PR105"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|【登場時】自分のデッキのカードを上から1枚見る。その中から〚カード名［妃英理］〛か〚カード名［工藤新一］〛か〚特徴［毛利探偵事務所］〛のキャラを1枚まで公開して手札に加え、残りを好きな順番でデッキの下に移す。",
@@ -24372,6 +27886,115 @@
    "count": 1
   },
   {
+   "key": "character|effect|【登場時】自分のリムーブエリアにある〚特徴［YAIBA］〛のカードが14枚以下の場合、レベル7以下のキャラを1枚まで選び、デッキの下に移す。自分のリムーブエリアに〚特徴［YAIBA］〛のカードが15枚以上ある場合、以下を順に行う。「自分のリムーブエリアにあるすべてのカードをデッキの下に移し、デッキをシャッフルする。」「キャラを1枚まで選び、デッキの下に移す。」「カードを1枚引く。」「相手は手札を1枚リムーブする。」「相手は証拠を1つ得る。」",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "if": {
+        "c": {
+         "kind": "removeTraitAtLeast",
+         "n": 15,
+         "player": "self",
+         "trait": "YAIBA"
+        },
+        "kind": "not"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "filter": {
+          "levelMax": 7
+         },
+         "max": 1,
+         "player": "self",
+         "pos": "bottom",
+         "side": "either"
+        },
+        "kind": "atom",
+        "verb": "sceneToDeck"
+       }
+      },
+      {
+       "if": {
+        "kind": "removeTraitAtLeast",
+        "n": 15,
+        "player": "self",
+        "trait": "YAIBA"
+       },
+       "kind": "conditional",
+       "then": {
+        "kind": "sequence",
+        "steps": [
+         {
+          "args": {
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "removeAreaAllToDeckBottom"
+         },
+         {
+          "args": {
+           "max": 1,
+           "player": "self",
+           "pos": "bottom",
+           "side": "either"
+          },
+          "kind": "atom",
+          "verb": "sceneToDeck"
+         },
+         {
+          "args": {
+           "n": 1,
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "draw"
+         },
+         {
+          "args": {
+           "n": 1,
+           "player": "opp"
+          },
+          "kind": "atom",
+          "verb": "discard"
+         },
+         {
+          "args": {
+           "n": 1,
+           "player": "opp"
+          },
+          "kind": "atom",
+          "verb": "evidenceGain"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/14-refresh.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/25-qa-effects-resolution.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06072"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【登場時】自分のリムーブエリアにある〚特徴［探偵］〛のキャラを1枚まで選び、手札に加える。",
    "ability": {
     "effect": {
@@ -24405,6 +28028,88 @@
     "elim"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|【登場時】自分のリムーブエリアにある〚特徴［長野県警］〛のキャラを1枚選び、デッキの下に移してもよい。そうした場合、カードを1枚引く。",
+   "ability": {
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "dest": "bottom",
+        "filter": {
+         "kind": "character",
+         "trait": [
+          "長野県警"
+         ]
+        },
+        "max": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "removeAreaToDeckTop"
+      },
+      {
+       "args": {
+        "n": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "draw"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B02076",
+    "PR133"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【登場時】自分のリムーブエリアにあるすべてのカードをデッキの下に移し、デッキをシャッフルする。",
+   "ability": {
+    "effect": {
+     "args": {
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "removeAreaAllToDeckBottom"
+    },
+    "ruleRefs": [
+     "rules/14-refresh.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B04038",
+    "PR027",
+    "PR031"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 3
   },
   {
    "key": "character|effect|【登場時】自分のリムーブエリアにあるレベル1以下の【黄】のイベントを1枚まで選び、手札に加える。カードを手札に加え、自分の手札が6枚以上ある場合、手札を1枚リムーブする。",
@@ -25794,52 +29499,6 @@
    "count": 1
   },
   {
-   "key": "character|effect|【登場時】自分の証拠を1つ選び、手札に加えてもよい。そうした場合、手札からカードを1枚裏向きで証拠として得る。",
-   "ability": {
-    "effect": {
-     "kind": "chain",
-     "steps": [
-      {
-       "args": {
-        "max": 1,
-        "player": "self"
-       },
-       "kind": "atom",
-       "verb": "evidenceToHand"
-      },
-      {
-       "args": {
-        "n": 1,
-        "player": "self"
-       },
-       "kind": "atom",
-       "verb": "handToEvidence"
-      }
-     ]
-    },
-    "ruleRefs": [
-     "rules/01-victory-conditions.md",
-     "rules/06-card-types.md",
-     "rules/15-abilities-effects.md",
-     "rules/17-icons.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "enter",
-     "selfOnly": true
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "B06029",
-    "B06029P"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 2
-  },
-  {
    "key": "character|effect|【登場時】自分の証拠を上から1つ手札に加えてもよい。そうした場合、手札からカードを1枚裏向きで証拠として得る。",
    "ability": {
     "effect": {
@@ -26074,6 +29733,64 @@
    },
    "exemplars": [
     "B01089"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【相手ターン中】【ターン1】このキャラが〚ミスリード〛したとき、自分の現場に〚カード名［円谷光彦］〛以外のレベル4の〚特徴［少年探偵団］〛のキャラがいる場合、このキャラをアクティブにする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "kind": "turn",
+       "player": "opp"
+      },
+      {
+       "kind": "sceneHas",
+       "nMin": 1,
+       "query": {
+        "area": "scene",
+        "filter": {
+         "cardNameNot": "円谷光彦",
+         "levelMax": 4,
+         "levelMin": 4,
+         "trait": "少年探偵団"
+        },
+        "side": "self"
+       }
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "args": {
+      "state": "active",
+      "uid": "$self"
+     },
+     "kind": "atom",
+     "verb": "sceneSetState"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/13-keywords.md",
+     "rules/17-icons.md",
+     "rules/03-field-areas.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "misread:performed",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B09016"
    ],
    "origins": [
     "desc"
@@ -26374,6 +30091,65 @@
     "desc"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|【相手ターン中】【変装時】〚カード名［世良真純］〛と入れ替わった場合、このキャラをリムーブしてもよい。そうした場合、証拠を1つ得る。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "opp"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "cause": "effect",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "sceneRemove"
+       },
+       {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "evidenceGain"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/08-contact.md",
+     "rules/09-cutin-disguise.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/23-qa-disguise-cutin.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "disguise:into",
+     "matcherCondition": {
+      "filter": {
+       "cardName": "世良真純"
+      },
+      "kind": "disguiseReplacedMatches"
+     },
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B03050"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|【相手ターン中】【現場リムーブ時】〚カード名［黒羽盗一］〛か〚［黒羽快斗］〛か〚［怪盗キッド］〛から1つ指定する。自分のデッキのカードを上から指定したカード名のカードが出るまで1枚ずつ公開し、それを手札に加える。残りの公開したカードをデッキの下に移し、デッキをシャッフルする。",
@@ -26683,60 +30459,6 @@
    "count": 2
   },
   {
-   "key": "character|effect|【相手ターン中】【現場リムーブ時】カードを1枚引く。自分の事件が解決編の場合、手札を1枚リムーブする。",
-   "ability": {
-    "condition": {
-     "kind": "turn",
-     "player": "opp"
-    },
-    "effect": {
-     "kind": "sequence",
-     "steps": [
-      {
-       "args": {
-        "n": 1,
-        "player": "self"
-       },
-       "kind": "atom",
-       "verb": "draw"
-      },
-      {
-       "if": {
-        "kind": "caseStatus",
-        "status": "解決編"
-       },
-       "kind": "conditional",
-       "then": {
-        "args": {
-         "n": 1,
-         "player": "self"
-        },
-        "kind": "atom",
-        "verb": "discard"
-       }
-      }
-     ]
-    },
-    "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/17-icons.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "leave:to-remove",
-     "selfOnly": true
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "B08089"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
-  },
-  {
    "key": "character|effect|【相手ターン中】【現場リムーブ時】キャラを1枚まで選び、ターン終了時までAP－2000する。",
    "ability": {
     "condition": {
@@ -26773,39 +30495,48 @@
    "count": 1
   },
   {
-   "key": "character|effect|【相手ターン中】【現場リムーブ時】スリープ状態のキャラを1枚まで選び、スタンさせる。",
+   "key": "character|effect|【相手ターン中】【現場リムーブ時】キャラを1枚まで選び、ターン終了時まで元のLPを0にする。",
    "ability": {
     "condition": {
      "kind": "turn",
      "player": "opp"
     },
     "effect": {
-     "args": {
-      "state": "stun",
-      "target": {
-       "chooser": "self",
-       "kind": "pick",
-       "n": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "bind": "$picked",
         "max": 1,
-        "min": 0
+        "player": "self",
+        "side": "either"
        },
-       "query": {
-        "area": "scene",
-        "side": "either",
-        "state": [
-         "sleep"
-        ]
-       }
+       "kind": "atom",
+       "verb": "bindPick"
       },
-      "uid": "$pick"
-     },
-     "kind": "atom",
-     "verb": "sceneSetState"
+      {
+       "do": {
+        "args": {
+         "scope": "turn",
+         "uid": "$each.uid",
+         "val": 0
+        },
+        "kind": "atom",
+        "verb": "charOverrideLP"
+       },
+       "kind": "forEach",
+       "over": {
+        "bindKey": "$picked",
+        "kind": "fromBound"
+       }
+      }
+     ]
     },
     "ruleRefs": [
+     "rules/03-field-areas.md",
      "rules/15-abilities-effects.md",
      "rules/17-icons.md",
-     "rules/24-qa-naming-stun.md"
+     "rules/19-special-rules.md"
     ],
     "scope": "on-scene",
     "trigger": {
@@ -26815,10 +30546,10 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B08042"
+    "B01054"
    ],
    "origins": [
-    "elim"
+    "desc"
    ],
    "count": 1
   },
@@ -27611,86 +31342,6 @@
     "desc"
    ],
    "count": 2
-  },
-  {
-   "key": "character|effect|【相手ターン中】【現場リムーブ時】自分のデッキのカードを上から3枚見る。その中からレベル4以下の【青】のキャラを1枚までスリープ状態で登場させ、残りを好きな順番でデッキの下に移す。",
-   "ability": {
-    "condition": {
-     "kind": "turn",
-     "player": "opp"
-    },
-    "effect": {
-     "kind": "sequence",
-     "steps": [
-      {
-       "args": {
-        "bind": "$revealed",
-        "bindMatch": "$matched",
-        "filter": {
-         "color": "青",
-         "kind": "character",
-         "levelMax": 4
-        },
-        "maxN": 3,
-        "player": "self"
-       },
-       "kind": "atom",
-       "verb": "deckRevealUntil"
-      },
-      {
-       "if": {
-        "key": "$matched",
-        "kind": "bound",
-        "presence": "matched"
-       },
-       "kind": "conditional",
-       "then": {
-        "args": {
-         "cardId": "$matched.cardId",
-         "enterSleep": true,
-         "player": "self",
-         "target": {
-          "query": {
-           "area": "deck",
-           "side": "self"
-          }
-         },
-         "viaEffect": true
-        },
-        "kind": "atom",
-        "verb": "sceneEnter"
-       }
-      },
-      {
-       "args": {
-        "bindKey": "$revealed",
-        "player": "self"
-       },
-       "kind": "atom",
-       "verb": "deckToBottomBound"
-      }
-     ]
-    },
-    "ruleRefs": [
-     "rules/03-field-areas.md",
-     "rules/14-refresh.md",
-     "rules/17-icons.md",
-     "rules/26-qa-deck-refresh.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "leave:to-remove",
-     "selfOnly": true
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "D01012"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
   },
   {
    "key": "character|effect|【相手ターン中】【現場リムーブ時】自分のデッキのカードを上から3枚見る。その中からレベル4以下の【黄】のキャラを1枚までスリープ状態で登場させ、残りを好きな順番でデッキの下に移す。",
@@ -28755,51 +32406,6 @@
    "count": 2
   },
   {
-   "key": "character|effect|【相手ターン中】【現場リムーブ時】自分のリムーブエリアにあるレベル6以下の〚カード名［白鳥任三郎］〛を1枚まで選び、スリープ状態で登場させる。",
-   "ability": {
-    "condition": {
-     "kind": "turn",
-     "player": "opp"
-    },
-    "effect": {
-     "args": {
-      "enterSleep": true,
-      "filter": {
-       "cardName": "白鳥任三郎",
-       "kind": "character",
-       "levelMax": 6
-      },
-      "from": "remove",
-      "max": 1,
-      "player": "self",
-      "viaEffect": true
-     },
-     "kind": "atom",
-     "verb": "sceneEnter"
-    },
-    "ruleRefs": [
-     "rules/15-abilities-effects.md",
-     "rules/17-icons.md",
-     "rules/15-abilities-effects.md",
-     "rules/20-color-and-switch.md",
-     "rules/03-field-areas.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "leave:to-remove",
-     "selfOnly": true
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "B04007"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
-  },
-  {
    "key": "character|effect|【相手ターン中】【現場リムーブ時】自分のリムーブエリアにあるレベル6以下の〚カード名［降谷零］〛を1枚まで選び、スリープ状態で登場させる。",
    "ability": {
     "condition": {
@@ -29468,6 +33074,72 @@
    "count": 1
   },
   {
+   "key": "character|effect|【絆佐藤美和子】自分のターン終了時、自分の現場にいるすべてのキャラが〚カード名［佐藤美和子］〛か〚［高木渉］〛の場合、このキャラをアクティブにする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "kind": "turn",
+       "player": "self"
+      },
+      {
+       "cardName": "佐藤美和子",
+       "kind": "bond"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "if": {
+      "c": {
+       "kind": "sceneHas",
+       "nMin": 1,
+       "query": {
+        "area": "scene",
+        "filter": {
+         "cardNameNot": [
+          "佐藤美和子",
+          "高木渉"
+         ],
+         "kind": "character"
+        },
+        "side": "self"
+       }
+      },
+      "kind": "not"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "state": "active",
+       "uid": "$self"
+      },
+      "kind": "atom",
+      "verb": "sceneSetState"
+     }
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/05-turn-phases.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "phase:end:start"
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08073"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【絆大和敢助】【自分ターン中】AP＋2000",
    "ability": {
     "condition": {
@@ -29830,12 +33502,13 @@
     "type": "declared"
    },
    "exemplars": [
-    "D10005"
+    "D10005",
+    "D10006"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【絆工藤新一】【自分ターン中】【ターン1】自分の能力や効果、【宣言】能力のコストによって手札から〚カード名［工藤新一］〛か〚［毛利蘭］〛を公開したとき、手札を1枚リムーブしてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。",
@@ -29908,12 +33581,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B09004"
+    "B09004",
+    "B09004P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|【絆工藤有希子】【登場時】ターン終了時までこのキャラは〚突撃［事件］〛を持つ。",
@@ -29945,6 +33619,87 @@
    "exemplars": [
     "B09037",
     "B09037P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【絆服部平次】【宣言】【ターン1】〚デッキのカードを上から1枚リムーブする〛：カード名を1つ指定し、相手のFILEエリアにあるカードを上から1枚リムーブし、相手はデッキのカードを上から1枚裏向きのままFILEエリアの上に置く。この効果によって指定したカード名のカードがリムーブされた場合、キャラを1枚まで選び、ターン終了時までAP＋2000する。",
+   "ability": {
+    "condition": {
+     "cardName": "服部平次",
+     "kind": "bond"
+    },
+    "cost": {
+     "kind": "removeDeckTop",
+     "n": 1,
+     "player": "self"
+    },
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "bind": "named"
+       },
+       "kind": "atom",
+       "verb": "declareName"
+      },
+      {
+       "args": {
+        "bind": "removed",
+        "n": 1,
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "fileRemoveTop"
+      },
+      {
+       "args": {
+        "n": 1,
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "fileAdd"
+      },
+      {
+       "if": {
+        "bindKey": "removed",
+        "declareKey": "named",
+        "kind": "boundNameMatchesDeclared"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "delta": 2000,
+         "max": 1,
+         "scope": "turn",
+         "side": "either"
+        },
+        "kind": "atom",
+        "verb": "charModifyAP"
+       }
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/12-next-hint.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B09003",
+    "B09003P"
    ],
    "origins": [
     "desc"
@@ -30101,7 +33856,7 @@
    "origins": [
     "desc"
    ],
-   "count": 3
+   "count": 4
   },
   {
    "key": "character|effect|【絆遠山和葉】【自分ターン中】AP＋2000",
@@ -30132,6 +33887,119 @@
    "exemplars": [
     "B08021",
     "B08021P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【絆鈴木園子】AP＋1000",
+   "ability": {
+    "condition": {
+     "cardName": "鈴木園子",
+     "kind": "bond"
+    },
+    "continuousModifier": {
+     "apDelta": 1000
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B03047"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【絆鈴木園子】【ターン1】相手の現場にいるキャラがこのキャラとのコンタクトによってリムーブされたとき、手札を1枚リムーブしてもよい。そうした場合、このキャラをアクティブにし、ターン終了時までこのキャラは〚突撃［キャラ］〛を失い、〚突撃［事件］〛を持つ。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "cardName": "鈴木園子",
+       "kind": "bond"
+      },
+      {
+       "by": "self",
+       "cause": "contact-ap",
+       "kind": "removedCharMatches",
+       "side": "opp"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "discard"
+       },
+       {
+        "args": {
+         "state": "active",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
+       },
+       {
+        "args": {
+         "kw": "突撃[キャラ]",
+         "scope": "turn",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "charRevokeKeyword"
+       },
+       {
+        "args": {
+         "kw": "突撃[事件]",
+         "scope": "turn",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "charGrantKeyword"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/07-action-flow.md",
+     "rules/08-contact.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "leave:to-remove"
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06068",
+    "B06068P"
    ],
    "origins": [
     "desc"
@@ -30205,6 +34073,50 @@
    "count": 1
   },
   {
+   "key": "character|effect|【絆鈴木園子】自分のターン終了時、カードを1枚引く。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "cardName": "鈴木園子",
+       "kind": "bond"
+      },
+      {
+       "kind": "turn",
+       "player": "self"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "args": {
+      "n": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "draw"
+    },
+    "ruleRefs": [
+     "rules/17-icons.md",
+     "rules/05-turn-phases.md",
+     "rules/15-abilities-effects.md",
+     "rules/14-refresh.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "phase:end:start"
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B05051"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|【絆降谷零】【宣言】【ターン1】ターン終了時までこのキャラをLP＋1するか、AP＋2000する。",
    "ability": {
     "condition": {
@@ -30249,6 +34161,78 @@
    },
    "exemplars": [
     "B01087"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【絆高木渉】【解決編】【登場時】自分の現場にいるすべてのキャラが〚カード名［佐藤美和子］〛か〚［高木渉］〛の場合、このキャラのAP以下のAPのキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "cardName": "高木渉",
+       "kind": "bond"
+      },
+      {
+       "kind": "caseStatus",
+       "status": "解決編"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "if": {
+      "c": {
+       "kind": "sceneHas",
+       "nMin": 1,
+       "query": {
+        "area": "scene",
+        "filter": {
+         "cardNameNot": [
+          "佐藤美和子",
+          "高木渉"
+         ],
+         "kind": "character"
+        },
+        "side": "self"
+       }
+      },
+      "kind": "not"
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "cause": "effect",
+       "filter": {
+        "apMax": {
+         "dyn": "$self.ap"
+        }
+       },
+       "max": 1,
+       "player": "self",
+       "side": "either"
+      },
+      "kind": "atom",
+      "verb": "sceneRemove"
+     }
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08072"
    ],
    "origins": [
     "desc"
@@ -30309,14 +34293,14 @@
     "type": "continuous"
    },
    "exemplars": [
+    "B01051",
     "B06039",
-    "B06039P",
-    "B08079"
+    "B06039P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 4
+   "count": 5
   },
   {
    "key": "character|effect|【自分ターン中】【ターン1】〚特徴［毛利探偵事務所］〛のキャラが自分の現場に登場したとき、相手はデッキのカードを上から1枚公開する。",
@@ -30364,6 +34348,63 @@
     "desc"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|【自分ターン中】【ターン1】このキャラが、このキャラよりAPの高いキャラとコンタクトしたとき、手札を1枚リムーブしてもよい。そうした場合、そのコンタクト中、このキャラをAP＋3000する。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "max": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "discard"
+      },
+      {
+       "args": {
+        "delta": 3000,
+        "scope": "contact",
+        "uid": "$self"
+       },
+       "kind": "atom",
+       "verb": "charModifyAP"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/08-contact.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "contact:start",
+     "matcherCondition": {
+      "kind": "contactOpponentApHigher"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "D11007",
+    "D11008",
+    "PR304"
+   ],
+   "origins": [
+    "desc",
+    "elim"
+   ],
+   "count": 3
   },
   {
    "key": "character|effect|【自分ターン中】【ターン1】このキャラ以外の〚特徴［探偵］〛のキャラが自分の現場に登場したとき、手札を1枚リムーブしてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。",
@@ -30583,64 +34624,143 @@
    "count": 1
   },
   {
-   "key": "character|effect|【自分ターン中】【ターン1】自分の現場にいるLP1以上のキャラが推理したとき、カードを1枚引いてもよい。そうした場合、この推理によって自分は証拠を得ない。",
+   "key": "character|effect|【自分ターン中】【ターン1】相手の証拠がリムーブされたとき、カードを1枚引く。",
    "ability": {
     "condition": {
      "kind": "turn",
      "player": "self"
     },
     "effect": {
-     "effect": {
-      "kind": "sequence",
-      "steps": [
-       {
-        "args": {
-         "n": 1,
-         "player": "self"
-        },
-        "kind": "atom",
-        "verb": "draw"
-       },
-       {
-        "args": {
-         "n": "$trigger.gained",
-         "player": "self"
-        },
-        "kind": "atom",
-        "verb": "evidenceToDeck"
-       }
-      ]
+     "args": {
+      "n": 1,
+      "player": "self"
      },
-     "kind": "optional"
+     "kind": "atom",
+     "verb": "draw"
     },
     "limit": {
      "kind": "turn",
      "n": 1
     },
     "ruleRefs": [
-     "rules/11-reasoning.md",
-     "rules/15-abilities-effects.md",
+     "rules/07-action-flow.md",
+     "rules/10-action-event.md",
      "rules/17-icons.md",
-     "rules/19-special-rules.md"
+     "rules/25-qa-effects-resolution.md"
     ],
     "scope": "on-scene",
     "trigger": {
-     "hook": "reasoning:end",
+     "hook": "evidence:removed",
+     "matcherCondition": {
+      "kind": "triggerPlayerIs",
+      "side": "opp"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B02062"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【自分ターン中】【ターン1】自分の現場に〚カード名［服部平次］〛が登場したとき、自分のデッキのカードを上から4枚見る。その中から【緑】のイベントを1枚まで公開して手札に加え、残りをリムーブエリアに移す。カードを手札に加えた場合、手札を1枚リムーブする。この能力はパートナーエリアでも発動する。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "bind": "$revealed",
+        "bindMatch": "$matched",
+        "chooseMatch": "upTo",
+        "filter": {
+         "color": "緑",
+         "kind": "event"
+        },
+        "maxN": 4,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "deckRevealUntil"
+      },
+      {
+       "if": {
+        "key": "$matched",
+        "kind": "bound",
+        "presence": "matched"
+       },
+       "kind": "conditional",
+       "then": {
+        "kind": "sequence",
+        "steps": [
+         {
+          "args": {
+           "cardId": "$matched.cardId",
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "handAddFromDeck"
+         },
+         {
+          "args": {
+           "n": 1,
+           "player": "self"
+          },
+          "kind": "atom",
+          "verb": "discard"
+         }
+        ]
+       }
+      },
+      {
+       "args": {
+        "bindKey": "$revealed",
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "boundToRemove"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/14-refresh.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/18-mr.md",
+     "rules/19-special-rules.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-partner-area",
+    "trigger": {
+     "hook": "enter",
      "matcherCondition": {
       "filter": {
-       "lpMin": 1
+       "cardName": "服部平次"
       },
       "kind": "triggerCharMatches",
+      "payloadKey": "uid",
       "side": "self"
      }
     },
     "type": "triggered"
    },
    "exemplars": [
-    "B03038"
+    "B07015"
    ],
    "origins": [
-    "elim"
+    "desc"
    ],
    "count": 1
   },
@@ -30710,6 +34830,139 @@
    },
    "exemplars": [
     "B02079"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【自分ターン中】【ターン1】自分の現場にいる〚特徴［警察］〛のキャラのコンタクト中に自分が【カットイン】を使用したとき、このコンタクト中、そのキャラをAP＋1000する。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "args": {
+      "delta": 1000,
+      "scope": "contact",
+      "uid": "$contact.byUid"
+     },
+     "kind": "atom",
+     "verb": "charModifyAP"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "cutin:used",
+     "matcherCondition": {
+      "cs": [
+       {
+        "kind": "triggerPlayerIs",
+        "side": "self"
+       },
+       {
+        "filter": {
+         "trait": [
+          "警察"
+         ]
+        },
+        "kind": "contactCharMatches",
+        "who": "byUid"
+       }
+      ],
+      "kind": "and"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B02080"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【自分ターン中】【ターン1】自分の現場にこのキャラ以外の〚カード名［工藤新一］〛か〚［毛利蘭］〛が登場したとき、相手の現場にいるレベル9以下のキャラを1枚まで選び、リムーブするかデッキの下に移す。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "chooser": "self",
+     "kind": "choice",
+     "options": [
+      {
+       "args": {
+        "cause": "effect",
+        "filter": {
+         "levelMax": 9
+        },
+        "max": 1,
+        "player": "self",
+        "side": "opp"
+       },
+       "kind": "atom",
+       "verb": "sceneRemove"
+      },
+      {
+       "args": {
+        "filter": {
+         "levelMax": 9
+        },
+        "max": 1,
+        "player": "self",
+        "pos": "bottom",
+        "side": "opp"
+       },
+       "kind": "atom",
+       "verb": "sceneToDeck"
+      }
+     ]
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "enter",
+     "matcherCondition": {
+      "excludeSource": true,
+      "filter": {
+       "cardName": [
+        "工藤新一",
+        "毛利蘭"
+       ],
+       "kind": "character"
+      },
+      "kind": "triggerCharMatches",
+      "payloadKey": "uid",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B09002"
    ],
    "origins": [
     "desc"
@@ -30996,6 +35249,61 @@
    "count": 1
   },
   {
+   "key": "character|effect|【自分ターン中】現場にいるこのキャラをレベル＋1し、AP＋1000する。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "continuousModifier": {
+     "apDelta": 1000,
+     "lvlDelta": 1
+    },
+    "ruleRefs": [
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "PR290",
+    "PR296"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
+   "key": "character|effect|【自分ターン中】現場にいるこのキャラをレベル－2する。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "continuousModifier": {
+     "lvlDelta": -2
+    },
+    "ruleRefs": [
+     "rules/11-reasoning.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B09003",
+    "B09003P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|effect|【自分ターン中】相手の現場にいるカードがセットされているキャラをAP－1000する。",
    "ability": {
     "condition": {
@@ -31063,6 +35371,33 @@
    ],
    "origins": [
     "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【自分ターン中】自分のパートナーエリアにある〚特徴［ビッグジュエル］〛のカード1枚につき、このキャラをAP＋1000する。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "continuousModifier": {
+     "apDelta": {
+      "dyn": "$self.partnerAreaTraitCount.ビッグジュエル * 1000"
+     }
+    },
+    "ruleRefs": [
+     "rules/17-icons.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B07046"
+   ],
+   "origins": [
+    "desc"
    ],
    "count": 1
   },
@@ -31293,6 +35628,60 @@
    },
    "exemplars": [
     "B07044"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【自分ターン中】自分の現場にいるすべてのキャラが〚カード名［佐藤美和子］〛か〚［高木渉］〛の場合、自分の現場にいるすべてのキャラをAP＋1000する。この能力はパートナーエリアでも有効になる。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "kind": "turn",
+       "player": "self"
+      },
+      {
+       "c": {
+        "kind": "sceneHas",
+        "nMin": 1,
+        "query": {
+         "area": "scene",
+         "filter": {
+          "cardNameNot": [
+           "佐藤美和子",
+           "高木渉"
+          ],
+          "kind": "character"
+         },
+         "side": "self"
+        }
+       },
+       "kind": "not"
+      }
+     ],
+     "kind": "and"
+    },
+    "continuousModifier": {
+     "apDeltaAura": 1000,
+     "auraFilter": {
+      "kind": "character"
+     }
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/18-mr.md",
+     "rules/19-special-rules.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-partner-area",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B08062"
    ],
    "origins": [
     "desc"
@@ -31663,6 +36052,126 @@
     "desc"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|【解決編】【宣言】【ターン1】〚デッキのカードを上から3枚リムーブする〛：この【宣言】能力のコストによって〚特徴［警察］〛のキャラがリムーブされた場合、自分の現場にいるキャラを1枚まで選び、ターン終了時まで「このキャラは相手の現場にいるアクティブ状態のキャラを指定してアクションできる。」を与える。",
+   "ability": {
+    "condition": {
+     "kind": "caseStatus",
+     "status": "解決編"
+    },
+    "cost": {
+     "kind": "removeDeckTop",
+     "n": 3,
+     "player": "self"
+    },
+    "effect": {
+     "if": {
+      "filter": {
+       "trait": "警察"
+      },
+      "kind": "costRemovedMatches",
+      "n": 1
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "key": "actionTargetsActive",
+       "target": {
+        "chooser": "owner",
+        "kind": "pick",
+        "n": {
+         "max": 1,
+         "min": 0
+        },
+        "query": {
+         "area": "scene",
+         "side": "self"
+        }
+       },
+       "uid": "$pick",
+       "val": true
+      },
+      "kind": "atom",
+      "verb": "charSetTurnEffect"
+     }
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/01-victory-conditions.md",
+     "rules/07-action-flow.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B04077"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|【解決編】【宣言】【ターン1】〚パートナーエリアにある特徴［ビッグジュエル］のカードを1枚リムーブする〛：カードを1枚引く。",
+   "ability": {
+    "condition": {
+     "kind": "caseStatus",
+     "status": "解決編"
+    },
+    "cost": {
+     "kind": "partnerAreaRemove",
+     "n": 1,
+     "target": {
+      "chooser": "self",
+      "kind": "pick",
+      "n": {
+       "max": 1,
+       "min": 1
+      },
+      "query": {
+       "area": "partner-area",
+       "filter": {
+        "trait": [
+         "ビッグジュエル"
+        ]
+       },
+       "side": "self"
+      }
+     }
+    },
+    "effect": {
+     "args": {
+      "n": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "draw"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/17-icons.md",
+     "rules/21-declared-ability-cost.md"
+    ],
+    "scope": "on-scene",
+    "type": "declared"
+   },
+   "exemplars": [
+    "B07039"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|【解決編】【宣言】【ターン1】〚手札から【カットイン】を持つ【黒】のカードを1枚リムーブする〛：自分のリムーブエリアにある【カットイン】を持つ【黒】のカード1枚につき、ターン終了時までこのキャラをAP＋1000する。",
@@ -32447,39 +36956,84 @@
    "count": 2
   },
   {
-   "key": "character|effect|【解決編】【登場時】自分の現場に〚特徴［少年探偵団］〛のキャラがいる場合、キャラを1枚まで選び、スリープさせる。",
+   "key": "character|effect|【解決編】【登場時】自分の現場にいる【白】のキャラを1枚スリープさせ、手札を1枚リムーブしてもよい。そうした場合、レベル7以下のキャラを1枚まで選び、リムーブする。この効果によって〚カード名［黒羽快斗］〛をスリープさせた場合、カードを1枚引く。",
    "ability": {
     "condition": {
      "kind": "caseStatus",
      "status": "解決編"
     },
     "effect": {
-     "if": {
-      "kind": "sceneHas",
-      "nMin": 1,
-      "query": {
-       "area": "scene",
-       "filter": {
-        "trait": "少年探偵団"
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "bind": "$slept",
+         "filter": {
+          "color": "白"
+         },
+         "n": 1,
+         "player": "self",
+         "side": "self",
+         "state": "sleep"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
        },
-       "side": "self"
-      }
+       {
+        "args": {
+         "n": 1,
+         "player": "self"
+        },
+        "kind": "atom",
+        "verb": "discard"
+       },
+       {
+        "kind": "sequence",
+        "steps": [
+         {
+          "args": {
+           "cause": "effect",
+           "filter": {
+            "levelMax": 7
+           },
+           "max": 1,
+           "player": "self",
+           "side": "either"
+          },
+          "kind": "atom",
+          "verb": "sceneRemove"
+         },
+         {
+          "if": {
+           "bindKey": "$slept",
+           "filter": {
+            "cardName": "黒羽快斗"
+           },
+           "kind": "boundMatchesFilter"
+          },
+          "kind": "conditional",
+          "then": {
+           "args": {
+            "n": 1,
+            "player": "self"
+           },
+           "kind": "atom",
+           "verb": "draw"
+          }
+         }
+        ]
+       }
+      ]
      },
-     "kind": "conditional",
-     "then": {
-      "args": {
-       "max": 1,
-       "player": "self",
-       "side": "either",
-       "state": "sleep"
-      },
-      "kind": "atom",
-      "verb": "sceneSetState"
-     }
+     "kind": "optional"
     },
     "ruleRefs": [
+     "rules/03-field-areas.md",
      "rules/15-abilities-effects.md",
-     "rules/17-icons.md"
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/01-victory-conditions.md"
     ],
     "scope": "on-scene",
     "trigger": {
@@ -32489,11 +37043,11 @@
     "type": "triggered"
    },
    "exemplars": [
-    "D08019",
-    "D08020"
+    "B07036",
+    "B07036P"
    ],
    "origins": [
-    "elim"
+    "desc"
    ],
    "count": 2
   },
@@ -32873,14 +37427,15 @@
     "type": "icon-misread"
    },
    "exemplars": [
+    "B01045",
     "B02060",
-    "B02082",
-    "B03009"
+    "B02082"
    ],
    "origins": [
+    "desc",
     "elim"
    ],
-   "count": 29
+   "count": 35
   },
   {
    "key": "character|effect|〚ミスリード2〛",
@@ -32914,13 +37469,13 @@
    ],
    "exemplars": [
     "B03014",
-    "B03067",
-    "B03067P"
+    "B03047",
+    "B03067"
    ],
    "origins": [
     "desc"
    ],
-   "count": 19
+   "count": 27
   },
   {
    "key": "character|effect|〚突撃［キャラ］〛",
@@ -32928,14 +37483,14 @@
     "突撃[キャラ]"
    ],
    "exemplars": [
+    "B01051",
     "B05030",
-    "B07017",
-    "B07017P"
+    "B05051"
    ],
    "origins": [
     "desc"
    ],
-   "count": 9
+   "count": 14
   },
   {
    "key": "character|effect|〚突撃［事件］〛",
@@ -32951,6 +37506,95 @@
     "desc"
    ],
    "count": 5
+  },
+  {
+   "key": "character|effect|このキャラがアクションしたとき、〚捜査1〛する。レベル5以上のカードが発見された場合、ターン終了時までこのキャラをAP+2000する。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "bind": "$found",
+        "player": "opp",
+        "x": 1
+       },
+       "kind": "atom",
+       "verb": "souza"
+      },
+      {
+       "if": {
+        "bindKey": "$found",
+        "filter": {
+         "levelMin": 5
+        },
+        "kind": "boundAnyMatchesFilter"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "delta": 2000,
+         "scope": "turn",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "charModifyAP"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:declare",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B01085"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|このキャラがアクションしたとき、アクション終了時まで相手は【カットイン】を使用できない。",
+   "ability": {
+    "effect": {
+     "args": {
+      "key": "cutinBanOpp_action",
+      "uid": "$self",
+      "val": true
+     },
+     "kind": "atom",
+     "verb": "charSetTurnEffect"
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/09-cutin-disguise.md",
+     "rules/15-abilities-effects.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:declare",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "D02008"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|このキャラがアクションしたとき、カードを1枚引く。",
@@ -32982,7 +37626,7 @@
    "origins": [
     "desc"
    ],
-   "count": 3
+   "count": 4
   },
   {
    "key": "character|effect|このキャラがアクションしたとき、キャラを1枚まで選び、ターン終了時までAP＋1000する。",
@@ -33063,12 +37707,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B08014"
+    "B08014",
+    "B08014P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|このキャラがアクションしたとき、相手の現場にいるスリープ状態かスタン状態のキャラ1枚につき、アクション終了時までこのキャラをAP＋1000する。",
@@ -33259,6 +37904,86 @@
     "desc"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|このキャラがアクションしたとき、自分の裏向きの証拠を1つ選び、表向きにし、相手の裏向きの証拠を1つ選び、表向きにする。合わせて2つ表向きにした場合、ターン終了時までこのキャラをAP＋1000する。",
+   "ability": {
+    "effect": {
+     "kind": "sequence",
+     "steps": [
+      {
+       "args": {
+        "bind": "$flipSelf",
+        "cardIds": "$pick.cardIds",
+        "faceDown": true,
+        "n": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "evidenceFlip"
+      },
+      {
+       "args": {
+        "bind": "$flipOpp",
+        "cardIds": "$pick.cardIds",
+        "faceDown": true,
+        "n": 1,
+        "player": "opp"
+       },
+       "kind": "atom",
+       "verb": "evidenceFlip"
+      },
+      {
+       "if": {
+        "cs": [
+         {
+          "key": "$flipSelf",
+          "kind": "bound",
+          "presence": "matched"
+         },
+         {
+          "key": "$flipOpp",
+          "kind": "bound",
+          "presence": "matched"
+         }
+        ],
+        "kind": "and"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "delta": 1000,
+         "scope": "turn",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "charModifyAP"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/15-abilities-effects.md",
+     "rules/01-victory-conditions.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:declare",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06086",
+    "B06086P",
+    "PR288"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 3
   },
   {
    "key": "character|effect|このキャラがアクション［キャラ］したとき、指定したキャラをターン終了時までレベル－1する。そのキャラがレベル6以下の場合、アクション終了時までこのキャラをAP＋3000する。",
@@ -33745,6 +38470,108 @@
    "count": 2
   },
   {
+   "key": "character|effect|このキャラのアクション終了時、このキャラを現場からデッキの下に移してもよい。そうした場合、手札からレベル6以下の【白】の〚カード名［黒羽快斗］〛以外のキャラを1枚まで登場させる。ターン終了時までそのキャラに〚突撃〛と「ターン終了時、このキャラを現場から手札に移す。」を与える。",
+   "ability": {
+    "effect": {
+     "effect": {
+      "kind": "sequence",
+      "steps": [
+       {
+        "args": {
+         "pos": "bottom",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "sceneToDeck"
+       },
+       {
+        "args": {
+         "bind": "$matched",
+         "cardId": "$pick.cardId",
+         "from": "hand",
+         "player": "self",
+         "target": {
+          "chooser": "self",
+          "kind": "pick",
+          "n": {
+           "max": 1,
+           "min": 0
+          },
+          "query": {
+           "area": "hand",
+           "filter": {
+            "cardNameNot": "黒羽快斗",
+            "color": "白",
+            "kind": "character",
+            "levelMax": 6
+           },
+           "side": "self"
+          }
+         },
+         "viaEffect": true
+        },
+        "kind": "atom",
+        "verb": "sceneEnter"
+       },
+       {
+        "args": {
+         "kw": "突撃",
+         "scope": "turn",
+         "uid": "$matched.uid"
+        },
+        "kind": "atom",
+        "verb": "charGrantKeyword"
+       },
+       {
+        "args": {
+         "ability": {
+          "description": "ターン終了時、このキャラを現場から手札に移す。（B01047 付与）",
+          "effect": {
+           "args": {
+            "uid": "$self"
+           },
+           "kind": "atom",
+           "verb": "sceneToHand"
+          },
+          "trigger": {
+           "hook": "phase:end:start"
+          }
+         },
+         "scope": "turn",
+         "uid": "$matched.uid"
+        },
+        "kind": "atom",
+        "verb": "charGrantAbility"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/19-special-rules.md",
+     "rules/20-color-and-switch.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "action:end",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B01047"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|このキャラのアクション終了時、自分の現場にいる〚カード名［仮面ヤイバー］〛以外のキャラを1枚選び、このキャラをそのキャラの下に重ねる。重ねた場合、カードを1枚引く。",
    "ability": {
     "effect": {
@@ -33899,6 +38726,27 @@
    "count": 2
   },
   {
+   "key": "character|effect|このキャラのコンタクト中、自分は【カットイン】を使用できない。",
+   "ability": {
+    "continuousModifier": {
+     "selfCutinBanInContact": true
+    },
+    "ruleRefs": [
+     "rules/08-contact.md",
+     "rules/09-cutin-disguise.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B07005"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|このキャラはスリープ状態で登場する。",
    "ability": {
     "effect": {
@@ -33930,6 +38778,30 @@
     "desc"
    ],
    "count": 7
+  },
+  {
+   "key": "character|effect|このキャラは事件を指定してアクションできない。",
+   "ability": {
+    "continuousModifier": {
+     "caseActionBan": true
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B01051",
+    "B05051"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "character|effect|このキャラは相手の現場にいるアクティブ状態のキャラを指定してアクションできる。",
@@ -33990,12 +38862,13 @@
    },
    "exemplars": [
     "D11007",
-    "D11008"
+    "D11008",
+    "PR304"
    ],
    "origins": [
     "desc"
    ],
-   "count": 2
+   "count": 3
   },
   {
    "key": "character|effect|このキャラ以外の〚カード名［犯人］〛が自分の現場に登場したとき、このキャラをリムーブする。",
@@ -34027,12 +38900,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B02088"
+    "B02088",
+    "B02088P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|ターン終了時、このキャラがスリープ状態で現場にいる場合、このキャラを手札に移し、自分のリムーブエリアにあるレベル3以下の〚カード名［江戸川コナン］〛を1枚まで選び、スリープ状態で登場させる。",
@@ -34156,6 +39030,32 @@
    "count": 1
   },
   {
+   "key": "character|effect|現場にいるこのキャラは〚カード名［毛利小五郎］〛としても扱い、〚特徴［探偵］〛を持つ。",
+   "ability": {
+    "continuousModifier": {
+     "grantNames": [
+      "毛利小五郎"
+     ],
+     "grantTraits": [
+      "探偵"
+     ]
+    },
+    "ruleRefs": [
+     "rules/19-special-rules.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B05012"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|相手の現場にいるキャラがこのキャラとのコンタクトによってリムーブされたとき、カードを1枚引き、手札を1枚リムーブする。",
    "ability": {
     "condition": {
@@ -34242,7 +39142,7 @@
    "origins": [
     "desc"
    ],
-   "count": 12
+   "count": 15
   },
   {
    "key": "character|effect|相手の現場にいるキャラがこのキャラとのコンタクトによってリムーブされたとき、手札を1枚リムーブしてもよい。そうした場合、自分は証拠を1つ得る。",
@@ -34532,12 +39432,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B02088"
+    "B02088",
+    "B02088P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|自分のFILEエリアにあるカードを手札に加えたとき、自分のリムーブエリアにある〚特徴［探偵］〛のキャラを1枚まで選び、手札に加えてもよい。カードを手札に加えた場合、このキャラをリムーブする。",
@@ -34588,6 +39489,59 @@
    },
    "exemplars": [
     "B05050"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|自分のターンのメインフェイズ開始時、手札を1枚リムーブしてもよい。そうした場合、自分のリムーブエリアにある〚カード名［赤井秀一］〛か〚［ライ］〛を1枚まで選び、手札に加える。",
+   "ability": {
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "max": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "discard"
+      },
+      {
+       "args": {
+        "filter": {
+         "cardName": [
+          "赤井秀一",
+          "ライ"
+         ]
+        },
+        "max": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "handAddFromRemove"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/05-turn-phases.md",
+     "rules/15-abilities-effects.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "phase:main:start",
+     "matcherCondition": {
+      "kind": "triggerPlayerIs",
+      "side": "self"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B05072"
    ],
    "origins": [
     "desc"
@@ -34685,6 +39639,74 @@
     "elim"
    ],
    "count": 1
+  },
+  {
+   "key": "character|effect|自分のターン終了時、〚捜査1〛する。レベル5以上のカードが発見された場合、このキャラ以外のレベル6以下のキャラを1枚まで選び、アクティブにする。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "bind": "$found",
+        "player": "opp",
+        "x": 1
+       },
+       "kind": "atom",
+       "verb": "souza"
+      },
+      {
+       "if": {
+        "bindKey": "$found",
+        "filter": {
+         "levelMin": 5
+        },
+        "kind": "boundAnyMatchesFilter"
+       },
+       "kind": "conditional",
+       "then": {
+        "args": {
+         "excludeSelf": true,
+         "filter": {
+          "kind": "character",
+          "levelMax": 6
+         },
+         "max": 1,
+         "player": "self",
+         "side": "either",
+         "state": "active"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
+       }
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/05-turn-phases.md",
+     "rules/13-keywords.md",
+     "rules/15-abilities-effects.md",
+     "rules/26-qa-deck-refresh.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "phase:end:start"
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B01084",
+    "B01084P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
   },
   {
    "key": "character|effect|自分のターン終了時、このキャラがスリープ状態かスタン状態の場合、このキャラをリムーブする。",
@@ -35076,6 +40098,70 @@
     "desc"
    ],
    "count": 2
+  },
+  {
+   "key": "character|effect|自分のターン終了時、手札から〚カード名［工藤新一］〛か〚［毛利蘭］〛を1枚公開してもよい。そうした場合、自分の現場にいるレベル8以上の〚カード名［工藤新一］〛か〚［毛利蘭］〛を1枚まで選び、アクティブにする。この能力はパートナーエリアでも発動する。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "effect": {
+     "kind": "chain",
+     "steps": [
+      {
+       "args": {
+        "filter": {
+         "cardName": [
+          "工藤新一",
+          "毛利蘭"
+         ]
+        },
+        "n": 1,
+        "player": "self"
+       },
+       "kind": "atom",
+       "verb": "handReveal"
+      },
+      {
+       "args": {
+        "filter": {
+         "cardName": [
+          "工藤新一",
+          "毛利蘭"
+         ],
+         "levelMin": 8
+        },
+        "max": 1,
+        "player": "self",
+        "side": "self",
+        "state": "active"
+       },
+       "kind": "atom",
+       "verb": "sceneSetState"
+      }
+     ]
+    },
+    "ruleRefs": [
+     "rules/03-field-areas.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md",
+     "rules/18-mr.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-partner-area",
+    "trigger": {
+     "hook": "phase:end:start"
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B09002"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|effect|自分のターン終了時、手札を1枚リムーブしてもよい。そうした場合、このキャラをアクティブにする。",
@@ -35510,12 +40596,14 @@
    },
    "exemplars": [
     "D08003",
-    "D08004"
+    "D08004",
+    "PR281"
    ],
    "origins": [
+    "desc",
     "elim"
    ],
-   "count": 2
+   "count": 3
   },
   {
    "key": "character|effect|自分のターン終了時、自分の現場に〚特徴［探偵］〛のスリープ状態のキャラが3枚以上いる場合、このキャラをリムーブしてもよい。そうした場合、証拠を1つ得る。",
@@ -35745,12 +40833,13 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B09070"
+    "B09070",
+    "B09070P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 2
   },
   {
    "key": "character|effect|自分のターン終了時、自分の現場にレベル7のキャラが3枚以上いる場合、カードを1枚引き、相手の現場にいるキャラを1枚まで選び、スタンさせる。",
@@ -35818,6 +40907,66 @@
    "count": 2
   },
   {
+   "key": "character|effect|自分の現場に〚カード名［妃英理］〛がいない場合、このキャラはアクションできない。",
+   "ability": {
+    "condition": {
+     "c": {
+      "cardName": "妃英理",
+      "kind": "bond"
+     },
+     "kind": "not"
+    },
+    "continuousModifier": {
+     "selfActionBan": true
+    },
+    "ruleRefs": [
+     "rules/07-action-flow.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B07005"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|自分の現場に〚特徴［探偵］〛のキャラが5枚以上いる場合、このキャラをLP＋1する。",
+   "ability": {
+    "condition": {
+     "kind": "sceneHas",
+     "nMin": 5,
+     "query": {
+      "area": "scene",
+      "filter": {
+       "trait": "探偵"
+      },
+      "side": "self"
+     }
+    },
+    "continuousModifier": {
+     "lpDelta": 1
+    },
+    "ruleRefs": [
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-scene",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B04032"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|effect|自分の現場にいる〚カード名［毛利小五郎］〛が推理したとき、このキャラをリムーブしてもよい。そうした場合、LP0のキャラを1枚まで選び、ターン終了時までLP＋1する。",
    "ability": {
     "effect": {
@@ -35875,6 +41024,81 @@
    ],
    "origins": [
     "elim"
+   ],
+   "count": 1
+  },
+  {
+   "key": "character|effect|自分の現場にいるこのキャラ以外のキャラがコンタクトしたとき、このキャラをスリープさせてもよい。そうした場合、コンタクト中のキャラを1枚まで選び、このコンタクト中、AP＋1000する。",
+   "ability": {
+    "condition": {
+     "c": {
+      "kind": "charStateIs",
+      "ref": {
+       "kind": "self"
+      },
+      "state": "sleep"
+     },
+     "kind": "not"
+    },
+    "effect": {
+     "effect": {
+      "kind": "chain",
+      "steps": [
+       {
+        "args": {
+         "state": "sleep",
+         "uid": "$self"
+        },
+        "kind": "atom",
+        "verb": "sceneSetState"
+       },
+       {
+        "args": {
+         "delta": 1000,
+         "inContact": true,
+         "max": 1,
+         "scope": "contact"
+        },
+        "kind": "atom",
+        "verb": "charModifyAP"
+       }
+      ]
+     },
+     "kind": "optional"
+    },
+    "ruleRefs": [
+     "rules/08-contact.md",
+     "rules/22-qa-action-contact.md",
+     "rules/24-qa-naming-stun.md"
+    ],
+    "scope": "on-scene",
+    "trigger": {
+     "hook": "contact:start",
+     "matcherCondition": {
+      "cs": [
+       {
+        "excludeSource": true,
+        "kind": "triggerCharMatches",
+        "payloadKey": "aUid",
+        "side": "self"
+       },
+       {
+        "excludeSource": true,
+        "kind": "triggerCharMatches",
+        "payloadKey": "bUid",
+        "side": "self"
+       }
+      ],
+      "kind": "or"
+     }
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B04093"
+   ],
+   "origins": [
+    "desc"
    ],
    "count": 1
   },
@@ -35995,46 +41219,6 @@
    },
    "exemplars": [
     "D04005"
-   ],
-   "origins": [
-    "elim"
-   ],
-   "count": 1
-  },
-  {
-   "key": "character|effect|自分の現場にいるレベル4以下の〚特徴［警察］〛のキャラが推理したとき、ターン終了時までこのキャラをAP＋1000する。",
-   "ability": {
-    "effect": {
-     "args": {
-      "delta": 1000,
-      "scope": "turn",
-      "uid": "$self"
-     },
-     "kind": "atom",
-     "verb": "charModifyAP"
-    },
-    "ruleRefs": [
-     "rules/11-reasoning.md",
-     "rules/15-abilities-effects.md",
-     "rules/17-icons.md",
-     "rules/19-special-rules.md"
-    ],
-    "scope": "on-scene",
-    "trigger": {
-     "hook": "reasoning:end",
-     "matcherCondition": {
-      "filter": {
-       "levelMax": 4,
-       "trait": "警察"
-      },
-      "kind": "triggerCharMatches",
-      "side": "self"
-     }
-    },
-    "type": "triggered"
-   },
-   "exemplars": [
-    "B03102"
    ],
    "origins": [
     "elim"
@@ -36272,6 +41456,42 @@
    "count": 2
   },
   {
+   "key": "character|henso|【変装】【事件白or赤】【FILE5】",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "color": [
+        "白",
+        "赤"
+       ],
+       "combine": "or",
+       "kind": "caseColor"
+      },
+      {
+       "kind": "fileAtLeast",
+       "n": 5
+      }
+     ],
+     "kind": "and"
+    },
+    "ruleRefs": [
+     "rules/09-cutin-disguise.md",
+     "rules/17-icons.md",
+     "rules/20-color-and-switch.md"
+    ],
+    "scope": "on-scene",
+    "type": "icon-disguise"
+   },
+   "exemplars": [
+    "B03050"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|henso|【変装】【事件白】【FILE4】",
    "ability": {
     "condition": {
@@ -36419,6 +41639,51 @@
    "count": 2
   },
   {
+   "key": "character|hirameki|【ヒラメキ】【事件YAIBA】【解決編】アクション中のキャラを1枚まで選び、リムーブする。",
+   "ability": {
+    "condition": {
+     "cs": [
+      {
+       "kind": "caseTrait",
+       "trait": "YAIBA"
+      },
+      {
+       "kind": "caseStatus",
+       "status": "解決編"
+      }
+     ],
+     "kind": "and"
+    },
+    "effect": {
+     "args": {
+      "cause": "effect",
+      "uid": "$trigger.byUid"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
+    },
+    "ruleRefs": [
+     "rules/10-action-event.md",
+     "rules/15-abilities-effects.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-evidence",
+    "trigger": {
+     "hook": "evidence:remove-by-action",
+     "optional": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B06028",
+    "B06028P"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "character|hirameki|【ヒラメキ】【解決編】アクション中のキャラを1枚まで選び、スタンさせる。",
    "ability": {
     "condition": {
@@ -36517,7 +41782,7 @@
    "origins": [
     "desc"
    ],
-   "count": 108
+   "count": 117
   },
   {
    "key": "character|hirameki|【ヒラメキ】キャラを1枚まで選び、アクティブにする。",
@@ -36553,31 +41818,20 @@
    "count": 2
   },
   {
-   "key": "character|hirameki|【ヒラメキ】キャラを1枚まで選び、スリープさせる。",
+   "key": "character|hirameki|【ヒラメキ】相手の裏向きの証拠を1つまで選び、表向きにする。",
    "ability": {
     "effect": {
      "args": {
-      "state": "sleep",
-      "target": {
-       "chooser": "self",
-       "kind": "pick",
-       "n": {
-        "max": 1,
-        "min": 0
-       },
-       "query": {
-        "area": "scene",
-        "side": "either"
-       }
-      },
-      "uid": "$pick"
+      "faceDown": true,
+      "max": 1,
+      "player": "opp"
      },
      "kind": "atom",
-     "verb": "sceneSetState"
+     "verb": "evidenceFlip"
     },
     "ruleRefs": [
-     "rules/10-action-event.md",
-     "rules/03-field-areas.md"
+     "rules/01-victory-conditions.md",
+     "rules/10-action-event.md"
     ],
     "scope": "on-evidence",
     "trigger": {
@@ -36587,14 +41841,14 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B01048",
-    "B01048P",
-    "B01065"
+    "B06086",
+    "B06086P",
+    "PR288"
    ],
    "origins": [
     "desc"
    ],
-   "count": 70
+   "count": 3
   },
   {
    "key": "character|hirameki|【ヒラメキ】相手の裏向きの証拠を2つまで選び、表向きにする。",
@@ -36650,12 +41904,13 @@
    },
    "exemplars": [
     "B02088",
+    "B02088P",
     "B03126"
    ],
    "origins": [
     "desc"
    ],
-   "count": 2
+   "count": 3
   },
   {
    "key": "character|hirameki|【ヒラメキ】相手は手札を1枚リムーブする。",
@@ -36679,12 +41934,14 @@
     "type": "triggered"
    },
    "exemplars": [
-    "B02063"
+    "B02063",
+    "B04058",
+    "PR028"
    ],
    "origins": [
     "desc"
    ],
-   "count": 1
+   "count": 4
   },
   {
    "key": "character|hirameki|【ヒラメキ】自分のデッキのカードを上から5枚リムーブする。",
@@ -36930,6 +42187,40 @@
    "count": 1
   },
   {
+   "key": "character|hirameki|【ヒラメキ】自分のリムーブエリアにある〚カード名［佐藤美和子］〛を1枚まで選び、手札に加える。",
+   "ability": {
+    "effect": {
+     "args": {
+      "filter": {
+       "cardName": "佐藤美和子"
+      },
+      "max": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "handAddFromRemove"
+    },
+    "ruleRefs": [
+     "rules/10-action-event.md",
+     "rules/14-refresh.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-evidence",
+    "trigger": {
+     "hook": "evidence:remove-by-action",
+     "optional": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B04077"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|hirameki|【ヒラメキ】自分のリムーブエリアにある〚カード名［工藤新一］〛を1枚まで選び、手札に加える。",
    "ability": {
     "effect": {
@@ -37143,6 +42434,39 @@
    "count": 2
   },
   {
+   "key": "character|hirameki|【ヒラメキ】自分のリムーブエリアにある〚カード名［綾小路文麿］〛を1枚まで選び、手札に加える。",
+   "ability": {
+    "effect": {
+     "args": {
+      "filter": {
+       "cardName": "綾小路文麿"
+      },
+      "max": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "handAddFromRemove"
+    },
+    "ruleRefs": [
+     "rules/10-action-event.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-evidence",
+    "trigger": {
+     "hook": "evidence:remove-by-action",
+     "optional": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B04025"
+   ],
+   "origins": [
+    "elim"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|hirameki|【ヒラメキ】自分のリムーブエリアにある〚カード名［萩原千速］〛を1枚まで選び、手札に加える。",
    "ability": {
     "effect": {
@@ -37313,6 +42637,39 @@
     "elim"
    ],
    "count": 2
+  },
+  {
+   "key": "character|hirameki|【ヒラメキ】自分のリムーブエリアにある〚カード名［高木渉］〛を1枚まで選び、手札に加える。",
+   "ability": {
+    "effect": {
+     "args": {
+      "filter": {
+       "cardName": "高木渉"
+      },
+      "max": 1,
+      "player": "self"
+     },
+     "kind": "atom",
+     "verb": "handAddFromRemove"
+    },
+    "ruleRefs": [
+     "rules/10-action-event.md",
+     "rules/19-special-rules.md"
+    ],
+    "scope": "on-evidence",
+    "trigger": {
+     "hook": "evidence:remove-by-action",
+     "optional": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B08072"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
   },
   {
    "key": "character|hirameki|【ヒラメキ】自分のリムーブエリアにある〚カード名［黒羽快斗］〛を1枚まで選び、手札に加える。",
@@ -37693,6 +43050,52 @@
    "count": 1
   },
   {
+   "key": "character|hirameki|【ヒラメキ】自分の現場に〚特徴［少年探偵団］〛のキャラがいる場合、カードを2枚引く。",
+   "ability": {
+    "effect": {
+     "if": {
+      "kind": "sceneHas",
+      "nMin": 1,
+      "query": {
+       "area": "scene",
+       "filter": {
+        "trait": [
+         "少年探偵団"
+        ]
+       },
+       "side": "self"
+      }
+     },
+     "kind": "conditional",
+     "then": {
+      "args": {
+       "n": 2,
+       "player": "self"
+      },
+      "kind": "atom",
+      "verb": "draw"
+     }
+    },
+    "ruleRefs": [
+     "rules/10-action-event.md",
+     "rules/14-refresh.md"
+    ],
+    "scope": "on-evidence",
+    "trigger": {
+     "hook": "evidence:remove-by-action",
+     "optional": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B02006"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
    "key": "character|hirameki|【ヒラメキ】自分の現場に〚特徴［黒ずくめの組織］〛のキャラがいる場合、AP3000以下のキャラを1枚まで選び、リムーブする。",
    "ability": {
     "condition": {
@@ -38022,6 +43425,102 @@
    "count": 2
   },
   {
+   "key": "event|effect|このイベントがセットされているキャラは「【ターン1】このキャラがアクション［事件］したとき、このキャラをアクティブにする。」を持つ。",
+   "ability": {
+    "effect": {
+     "args": {
+      "state": "active",
+      "uid": "$self"
+     },
+     "kind": "atom",
+     "verb": "sceneSetState"
+    },
+    "limit": {
+     "kind": "turn",
+     "n": 1
+    },
+    "ruleRefs": [
+     "rules/16-card-set.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-set-host",
+    "trigger": {
+     "hook": "action:declare",
+     "matcherCondition": {
+      "kind": "triggerActionKind",
+      "v": "case"
+     },
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B03080"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "event|effect|このイベントがセットされているキャラは「【自分ターン中】AP＋2000」を持つ。",
+   "ability": {
+    "condition": {
+     "kind": "turn",
+     "player": "self"
+    },
+    "continuousModifier": {
+     "apDelta": 2000
+    },
+    "ruleRefs": [
+     "rules/16-card-set.md",
+     "rules/17-icons.md"
+    ],
+    "scope": "on-set-host",
+    "type": "continuous"
+   },
+   "exemplars": [
+    "B06063"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 1
+  },
+  {
+   "key": "event|effect|このイベントがセットされているキャラは「このキャラがコンタクトしたとき、そのコンタクト中、このキャラをAP＋2000する。」を持つ。",
+   "ability": {
+    "effect": {
+     "args": {
+      "delta": 2000,
+      "scope": "contact",
+      "uid": "$self"
+     },
+     "kind": "atom",
+     "verb": "charModifyAP"
+    },
+    "ruleRefs": [
+     "rules/08-contact.md",
+     "rules/16-card-set.md",
+     "rules/22-qa-action-contact.md"
+    ],
+    "scope": "on-set-host",
+    "trigger": {
+     "hook": "contact:start",
+     "selfOnly": true
+    },
+    "type": "triggered"
+   },
+   "exemplars": [
+    "B01023",
+    "D10024"
+   ],
+   "origins": [
+    "desc"
+   ],
+   "count": 2
+  },
+  {
    "key": "event|hirameki|【ヒラメキ】このカードをパートナーエリアに移す。",
    "ability": {
     "effect": {
@@ -38047,7 +43546,7 @@
    "origins": [
     "desc"
    ],
-   "count": 6
+   "count": 8
   },
   {
    "key": "event|hirameki|【ヒラメキ】このカードを手札に加える。",
@@ -38104,14 +43603,14 @@
     "type": "triggered"
    },
    "exemplars": [
+    "B01023",
     "B06071",
-    "B06071P",
-    "B06094"
+    "B06071P"
    ],
    "origins": [
     "desc"
    ],
-   "count": 12
+   "count": 17
   },
   {
    "key": "event|hirameki|【ヒラメキ】キャラを1枚まで選び、スリープさせる。",

@@ -275,7 +275,12 @@ function ap(s: GameState, uid: string): number {
 function lp(s: GameState, uid: string): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
-  const base = char.lpOverride !== null ? char.lpOverride : (def.card(char.cardId)?.lp ?? 0);
+  // engine mini-wave (2026-07-10): 「ターン終了時まで元のLPを X」(B01045 等) = lpOverride_turn が
+  // base を差替 (恒久 lpOverride より優先 = 後発効果勝ち、apOverride_turn と対称)。修整±は残る (rules/19 QA)。
+  const lpOvTurn = char.turnEffects['lpOverride_turn'];
+  const base = typeof lpOvTurn === 'number'
+    ? lpOvTurn
+    : (char.lpOverride !== null ? char.lpOverride : (def.card(char.cardId)?.lp ?? 0));
   const modPermanent = (char.turnEffects['lpMod_permanent'] as number | undefined) ?? 0;
   const modTurn      = (char.turnEffects['lpMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
