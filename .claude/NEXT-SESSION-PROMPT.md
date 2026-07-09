@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト — CARD PHASE (2026-07-04 hybrid-pilot-1 出荷後)
+# 次セッション再開プロンプト — CARD PHASE (2026-07-09 hybrid-batch2 出荷後)
 
 > モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 (grounding/意味等価 = sonnet5 high / 敵対 review = sonnet5+opus 混成、割れたら fable or 実測裁定 / 機械 = sonnet low)。⚠ 応答は日本語。Caveman + Ultracode 有効。
 > 履歴詳細は CHANGELOG.md / .claude/sessions/ / memory MEMORY.md / DEFERRED-INDEX.md を参照 (本ファイルには書かない)。
@@ -6,19 +6,28 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-07-04 夜、hybrid-pilot-1 出荷)
-- **engine 骨格凍結済**。以後 engine は ±5/軽微 touch-up のみ (直近: BUG-175 4 site)。メイン作業 = CARD PHASE。
-- 出荷済 **1638** / corpus 2074 (pilot で 19枚: 17 + P spread 2)。残実 author ≈ 276 (1行refuse 残 ~113)。
-- vitest baseline = **4172 pass +1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
-- **hybrid pipeline 実証済 (歩留まり 67%)**: pilot 15 unit → 10 GREEN=19枚 / 5 DEFER (全て engine gap 実在、
-  DEFERRED-INDEX「hybrid-pilot-1 由来」節)。**BUG-175** (pick 解決後 queue ctx=chooser、cross-side 二重反転) 修正。
-  教訓: ①verify lens は plumbing 罠を見ない→本体 shipped-idiom 突合必須 ②codegen 前 key 順正規化 (scope<type)
-  ③fake emit は production payload 丸写し。詳細 = changelog 2026-07-04-05 / sessions/2026-07-04-cardphase.md。
+## 現在地 (2026-07-09、hybrid-batch2 出荷 = b6d56c71)
+- **engine 骨格凍結済**。以後 engine は ±5/軽微 touch-up のみ。メイン作業 = CARD PHASE。
+- 出荷済 **1676** / corpus 2074 (batch2 で 38枚: 23 base + P spread 15)。残実 author ≈ **240 unit**
+  (1行refuse 残 ~77)。全体見積 = 単独 lane 11-15 session / 2-3 lane 並走で暦上 5-7 slot。
+- vitest baseline = **4320 pass +1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
+- **hybrid pipeline 2連続実証 (歩留まり 62-67%)**: batch2 = 37 unit → 23 GREEN / 13 DEFER
+  (DEFERRED-INDEX「hybrid-batch2 由来」節。★最大 cluster = contactCharMatches cond 1本で
+  B02006/B02080/PR278 解禁)。P spread = TSV 全列同文 機械証明→個別検証スキップ (rules/02 同ID)。
+  batch2 教訓: ①probe 内 require('@/...') は runtime 解決不能→top import ②vanilla case は
+  reuse-batch abilities>0 を kind:'case' 免除 ③check-smoke-baseline は `-N` suffix filename 必須
+  (writer 初回は `-N` なし、rename 回避。nits = DEFERRED-INDEX batch2 節末尾)。
+  pilot 教訓 (継続有効): verify lens は plumbing 罠を見ない→shipped-idiom 突合 / key 順 scope<type /
+  fake emit は production payload 丸写し。詳細 = changelog 2026-07-09-01 / sessions/2026-07-04-cardphase.md。
 - ★開始時 `git ls-remote origin main` + `gh run list -L1`。並行 session 前提 → worktree (C:/tmp/megaw1 再利用可、
   node_modules junction 済) + 明示 pathspec add + push 先着 FF。
 
-## 残 ~276 の攻略計画 (優先順)
-1. **hybrid pipeline 本番化 (35 unit/session)**: 残 1行refuse ~113 から twin group 優先で 30-35 unit。
+## 残 ~240 の攻略計画 (優先順)
+0. **★次 session 推奨 = DEFER 解禁 engine mini-wave**: pilot 5 + batch2 13 = 18 unit が engine gap 待ち。
+   additive 小粒優先: contactCharMatches cond (3 unit 一括解禁) / mill bind capture /
+   removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / TRIGGERED_HOOKS +phase:main:start /
+   cost partnerAreaRemove / $self.partnerAreaTraitCount dyn。/engine-wave 1-2 本 → 解禁後 card 側 clone 同然。
+1. **hybrid pipeline 継続 (30-35 unit/session)**: 残 1行refuse ~77 から twin group 優先。
    手順 = 前回 script 再利用 (.tmp/_hybrid_refuse1.cjs 再生成 → _hybrid_payload_gen.cjs UNITS 差替 →
    workflow author+verify → _hybrid_merge.cjs → **key 順正規化 → 本体 shipped-idiom 突合 (pick carrier/
    PA短縮形 player/BUG-130) → codegen**)。DEFER 率 ~1/3 想定、DEFERRED-INDEX 既 DEFER と照合してから選定。
