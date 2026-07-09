@@ -22,3 +22,19 @@
   (mutate/scene.ts:323 等) を丸写し — side/removedChar 欠落で matcher 不発の偽陰性を踏んだ。
 - gates: tsc0 / vitest 4172+1skip (+32 probe) / smoke 472 exc0 / 8lint0 / crosscheck 14/14。
 - B03104 は BUG-176 (使用中イベント +1 計数、D11019 precedent) 起票のみ、境界 probe は解消後。
+
+## 2026-07-09 CARD PHASE hybrid-batch2 — parked 資産 verify→ship (38枚)
+
+- **前 session (2026-07-04 夜) が C:/tmp/megaw1 に未commit park した batch2 を再開・出荷**:
+  card 23 + probe 17 は authored 済だった → 残 probe 5 (B07032/B07036/B09016/B09022/B09089) を
+  opus agent ×5 並列 author (計35 test、全 production dispatch 経路 + human pick 駆動) + PR302 shape 1。
+- **P spread 15枚** (.tmp/_hybrid_spread.cjs、前 session 準備済): TSV 全列同文 15/15 機械証明 →
+  spread 形で個別検証スキップ (rules/02 同 ID)。batch 計 38 printings、shipped 1638→1676。
+- **engine touch 1 (additive)**: buildShortFormPick に excludeSelf 露出 (candidates.ts:314 既 honor、
+  consumer B01084)。validator JSON_CONT_KEYS +3 (caseActionBan/grantTraits/grantNames) で B05012 解禁。
+- **DEFER 13 → DEFERRED-INDEX「hybrid-batch2 由来」節**。最大 cluster = contact-参加者 filter cond
+  (B02006/B02080/PR278、新 cond contactCharMatches 1本で解禁可 = 次 engine mini-wave 候補筆頭)。
+- **fix 2件**: B06098.test.ts の require('@/...') alias 実行時解決不能 → top import 化 /
+  reuse-batch.test.ts abilities>0 を case のみ免除 (vanilla case PR302 初出荷)。
+- gates: tsc0 / vitest 4320+1skip / smoke 472 exc0 baseline OK / 8lint err0 / crosscheck 14/14 /
+  validate 23/23。⚠ check-smoke-baseline は `-N` suffix 必須 regex vs writer 初回 `-N` なし — rename 回避 (tooling nit)。

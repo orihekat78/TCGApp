@@ -200,7 +200,11 @@ function validateSpec(spec) {
         // pure-JSON continuousModifier fields (card-def.ts). closure-only: grantKeywords / customSelectorPatch → needsManual.
         const JSON_CONT_KEYS = ['apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp',
           // pure-JSON case-continuous overrides (P05/E3 P11/P53/P10): TargetFilter/number/string[]/boolean、closure なし
-          'handUseRestrictFilter', 'sceneCapOverride', 'partnerColorsOverride', 'cannotSolveCase', 'partnerSolveOverride'];
+          'handUseRestrictFilter', 'sceneCapOverride', 'partnerColorsOverride', 'cannotSolveCase', 'partnerSolveOverride',
+          // selfContinuousFlag 系 boolean token (W2 出荷済 engine union、hybrid-batch2 で解禁)
+          'caseActionBan',
+          // wave-6 P37 grant (pure-JSON string[]、card-def.ts:134-135、B05012 exemplar)
+          'grantTraits', 'grantNames'];
         for (const k of Object.keys(ab.continuousModifier)) {
           if (!JSON_CONT_KEYS.includes(k)) errs.push(`${c}: continuousModifier.${k} not JSON-expressible (grantKeywords/customSelectorPatch need closure → needsManual)`);
         }

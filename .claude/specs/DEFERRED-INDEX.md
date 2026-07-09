@@ -1157,3 +1157,37 @@ file:line 根拠つき (誤 DEFER でない)。解禁は additive wave 1 本で 
 
 補足: B03104 は出荷したが removeCountAtLeast 境界 (他14枚+使用中イベント自身=15 誤成立) は
 [[BUG-176]] (event-lifecycle pre-existing、D11019 precedent)。境界 probe は BUG-176 解消後に追加。
+
+## hybrid-batch2 由来 DEFER (2026-07-09 出荷、37 unit 中 13 DEFER。全て src/engine 直参照 file:line 根拠つき、詳細 = .tmp/_batch2_defers.txt)
+
+★最大 cluster = **contact-参加者 filter cond 不在** (3 unit): cond/eval.ts の contact 系は
+contactOpponentApHigher(:359)/guardedBySelf(:792) のみで、$contact.byUid/targetUid のキャラを
+TargetFilter で評価する serializable kind が無い。新 cond `contactCharMatches{who:'byUid'|'targetUid', filter}`
+1本で 3 unit 解禁 (additive、eval.ts + CONDITION_KIND_MAP + cjs 3点同期)。
+
+| rep | DEFER 理由 (engine gap) | 解禁条件 |
+|-----|----------------------|---------|
+| B02006 | カットイン「少年探偵団 Lv≤5 に【カットイン】する場合 代わりに+3000」— コンタクト対象 ($contact.byUid own-char) を filter 評価する cond 不在 | contactCharMatches |
+| B02080 | cutin:used + 【ターン1】 + 「警察のキャラのコンタクト中」gate — limit は queue 時無条件加算 (triggered.ts:456、rules/24) ゆえ B03118 effect-conditional idiom だと非該当コンタクトで【ターン1】焼失 | contactCharMatches を trigger matcherCondition に |
+| PR278 (D11013 twin) | 「警察のキャラにカットインした場合 draw」— 出荷実現は D11013 の kind:'custom' closure のみ (JSON 非表現) | contactCharMatches (cond 版) |
+| B03110 | ①FILE 上2枚→手札 all-or-nothing (filePopToHand は 1枚固定 pop、n/gate 無し core.ts:270) ②「このキャラ以外のすべてのキャラをリムーブ」 | filePopToHand n+gate 化 + board-wipe verb |
+| B03111 | 相手手札公開→**自分が選び**相手がリムーブ (公式QA) = chooser=self × hand-owner=opp の cross-side discard — atomDiscard は両方 a.player に結合 (core.ts:49) | discard の chooser/owner 分離 (megaw3 latent「cross-side 短縮形 pick」と同根) |
+| B04073 | 「アクションで指定されていたのが三池苗子だった場合」— action:guarded payload は {byUid,guardUid} のみで target 不在 (state-machine.ts:296) | action:guarded payload に target 同梱 |
+| B05072 | 「メインフェイズ開始時」— 'phase:main:start' は HookName に在るが TRIGGERED_HOOKS 非収録 = card trigger 永久不発 (triggered.ts:59-146) | TRIGGERED_HOOKS 追加 (Q&A: autophase 完了後 timing) |
+| B07039 | 宣言 cost「PA のビッグジュエル 1枚リムーブ」— COSTS に partner-area 由来 removal cost 無し | cost kind partnerAreaRemove 追加 |
+| B07046 | 「PA のビッグジュエル 1枚につき AP+1000」— dyn resolveSelf に partnerAreaCards filter 計数 token 無し (PR263 同系) | $self.partnerAreaTraitCount dyn |
+| B07049 | remove ∪ partner-area の union pick「1枚まで」→手札 — candidates の area switch は排他 (union token 無し) | union-area pick or 2段 choice 設計裁定 |
+| B07061 | remove→PA へ移す pick — toPartnerArea は ctx.source.cardId 固定 (core.ts:368、pick/target 引数なし)、partnerAreaRemove は逆方向 | toPartnerArea の target/pick 化 |
+| D06013 | デッキ上4枚 reveal 全 bind + 色 gate + sleep→stun pick — deckRevealUntil は matched 抽出型、souza は bind-all だが pre-walk over-fire (BUG-145/161) と衝突 | souza 型 reveal + conditionIfIsStable 整理 |
+| PR284 | 継続 keyword grant (突撃) — grantKeywords は closure 型のみ (JSON_CONT_KEYS 拒否)。partnerColorKeyword 等 __shared は条件非等価 | grantKeywords の JSON string[] 受理 or __shared 追加 (hand-author 逃げ可) |
+
+補足: defers.txt には B05012 も記録されているが、本 batch 内で JSON_CONT_KEYS whitelist に
+grantTraits/grantNames を追加して**解禁・出荷済** (wave-6 P37 engine は honor 済だった、validator gap のみ)。
+
+nits (opus lens、0 blocker): ① reuse-batch.test.ts の abilities>0 免除は kind:'case' 全体 —
+将来「効果テキスト有りなのに abilities 空」の case card が素通りしうる (現状 false-negative 0、
+46 case 中 空は vanilla PR302 のみ実測。printed-text の機械 proxy 不在ゆえ coarse 免除が現状最善)。
+② check-smoke-baseline.ts regex は `smoke-YYYY-MM-DD-N.json` 必須だが run-1000.ts 初回は `-N` なし
+filename → 初回 run が「no smoke report found」誤報 (rename 回避、恒久 fix は writer/checker どちらかの統一)。
+③ B06028「1枚まで選び」= trigger.optional (発動拒否=0枚) に折り畳む wave-11 hirameki-actor idiom
+(B05032/B05111 出荷同型)。発動後の 0-pick は無し — sonnet5 lens NIT、rules/10 発動任意で実害なし。

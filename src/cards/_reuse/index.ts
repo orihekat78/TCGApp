@@ -1170,6 +1170,44 @@ import { B03104 } from '../ct-p03/B03104.js';
 import { B03098 } from '../ct-p03/B03098.js';
 import { B06086P } from '../ct-p06/B06086P.js';
 import { B03098P } from '../ct-p03/B03098P.js';
+import { B01051 } from '../ct-p01/B01051.js';
+import { B01084 } from '../ct-p01/B01084.js';
+import { B01085 } from '../ct-p01/B01085.js';
+import { B01095 } from '../ct-p01/B01095.js';
+import { B02062 } from '../ct-p02/B02062.js';
+import { B03070 } from '../ct-p03/B03070.js';
+import { B05031 } from '../ct-p05/B05031.js';
+import { B05103 } from '../ct-p05/B05103.js';
+import { B06018 } from '../ct-p06/B06018.js';
+import { B06028 } from '../ct-p06/B06028.js';
+import { B06043 } from '../ct-p06/B06043.js';
+import { B06065 } from '../ct-p06/B06065.js';
+import { B06068 } from '../ct-p06/B06068.js';
+import { B06082 } from '../ct-p06/B06082.js';
+import { B06098 } from '../ct-p06/B06098.js';
+import { B07022 } from '../ct-p07/B07022.js';
+import { B07032 } from '../ct-p07/B07032.js';
+import { B07036 } from '../ct-p07/B07036.js';
+import { B09016 } from '../ct-p09/B09016.js';
+import { B09022 } from '../ct-p09/B09022.js';
+import { B09089 } from '../ct-p09/B09089.js';
+import { PR302 } from '../pr-01/PR302.js';
+import { B05012 } from '../ct-p05/B05012.js';
+import { B01084P } from '../ct-p01/B01084P.js';
+import { B03070P } from '../ct-p03/B03070P.js';
+import { B05031P } from '../ct-p05/B05031P.js';
+import { B05103P } from '../ct-p05/B05103P.js';
+import { B06018P } from '../ct-p06/B06018P.js';
+import { B06028P } from '../ct-p06/B06028P.js';
+import { B06043P } from '../ct-p06/B06043P.js';
+import { B06065P } from '../ct-p06/B06065P.js';
+import { B06068P } from '../ct-p06/B06068P.js';
+import { B06082P } from '../ct-p06/B06082P.js';
+import { B06098P } from '../ct-p06/B06098P.js';
+import { B07032P } from '../ct-p07/B07032P.js';
+import { B07036P } from '../ct-p07/B07036P.js';
+import { B09022P } from '../ct-p09/B09022P.js';
+import { B09089P } from '../ct-p09/B09089P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1534,4 +1572,10 @@ export const REUSE_CARDS: CardDef[] = [
   B04058, PR028, PR032, B01035, D06009, B02049, PR039, B06086, PR288, PR179, PR185, PR291, PR297, PR277, D02008, B03104, B03098,
   // hybrid-pilot-1 P variants
   B06086P, B03098P,
+  // Task A batch
+  B01051, B01084, B01085, B01095, B02062, B03070, B05031, B05103, B06018, B06028, B06043, B06065, B06068, B06082, B06098, B07022, B07032, B07036, B09016, B09022, B09089, PR302,
+  // Task A batch
+  B05012,
+  // CARD PHASE hybrid-batch2 P spread
+  B01084P, B03070P, B05031P, B05103P, B06018P, B06028P, B06043P, B06065P, B06068P, B06082P, B06098P, B07032P, B07036P, B09022P, B09089P,
 ];
