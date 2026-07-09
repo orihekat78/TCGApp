@@ -1256,6 +1256,13 @@ import { B06063 } from '../ct-p06/B06063.js';
 import { B06072 } from '../ct-p06/B06072.js';
 import { B06074 } from '../ct-p06/B06074.js';
 import { B06084 } from '../ct-p06/B06084.js';
+import { B07015 } from '../ct-p07/B07015.js';
+import { B08062 } from '../ct-p08/B08062.js';
+import { B08064 } from '../ct-p08/B08064.js';
+import { B08072 } from '../ct-p08/B08072.js';
+import { B08073 } from '../ct-p08/B08073.js';
+import { B09002 } from '../ct-p09/B09002.js';
+import { PR304 } from '../pr-01/PR304.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1634,4 +1641,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01047, B01081, B03003, B03024, B05022, B05068, B06062, B06078, B06104, B08025, B08076, B01023, D10024,
   // CARD PHASE hybrid-batch4
   PR289, PR295, PR292, PR298, B03047, B03050, B03080, B03134, B04027, B04032, B04077, B05051, B05081, B05086, B06063, B06072, B06074, B06084,
+  // CARD PHASE hybrid-batch5
+  B07015, B08062, B08064, B08072, B08073, B09002, PR304,
 ];

@@ -1270,3 +1270,18 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B07011 | じゃんけん RNG primitive 不在 (P48、既知) |
 
 **cluster 追記 (batch3 と合算した mini-wave 優先度)**: ⑥next-hint 判別 hook + 使用カード参照 dyn (B01005/B03002/B05005/B02087 = 4 unit) ⑦「選ばれたとき無効」intercept (B02067/B04003) ⑧hand 内 continuous (B01009/B09095/B07003)。
+
+## hybrid-batch5 由来 DEFER (2026-07-10、2行 pool 最終 14 unit 中 7 DEFER。全文 = .tmp/_batch5_defers.txt)
+
+| ID | blocker 要旨 |
+|---|---|
+| B07030 | remove→PA の pick 型 verb 不在 (toPartnerArea は self-only 決定論、pick 不可) |
+| B08017 | 「相手の能力や効果によって選ばれない」select-protection token 不在 (opponentRestrict に select 無し) + on-set-host aura rider 未 honor |
+| B08081 | 「選ばれたとき〜無効」intercept (B02067/B04003 cluster ⑦) + 相手 optional 分岐 |
+| B09011 | turn-scope LP override (B01045/B01054 cluster ①) の「元のLPを1」変種 + forEach all 適用 |
+| B09039 | PA∪remove union pick 不在 (B09055 と同 cluster) |
+| B09060 | 手札 cost リムーブの costRemovedMatches が hand-source 非対応 (removeDeckTop 専用) |
+| B09110 | 「同じカード名が出るまで公開」の動的 stop 条件 (リムーブしたキャラ名 bind) 不在 |
+
+**pool 状態 (2026-07-10 朝時点)**: refuse-1行 = 枯渇 / refuse-2行 = 枯渇 (本 batch で最終)。
+残 = refuse-3行+ (~66 unit、--max-refusals 3+ で選定可) + DEFER cluster 群 (engine mini-wave 待ち)。

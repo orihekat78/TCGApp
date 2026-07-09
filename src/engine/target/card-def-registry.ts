@@ -36,8 +36,8 @@ export function cardNameComponents(name: string): string[] {
   const components = new Set<string>();
   components.add(name);
 
-  // Split on & first
-  const ampParts = name.split('&').map(s => s.trim()).filter(Boolean);
+  // Split on & first (BUG-178: 印字は全角＆のカードが 57 file — 半角/全角両対応。parenRe と同 posture)
+  const ampParts = name.split(/[&＆]/).map(s => s.trim()).filter(Boolean);
   for (const part of ampParts) {
     components.add(part);
   }

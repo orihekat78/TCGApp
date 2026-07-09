@@ -71,7 +71,7 @@ function parseRows(text: string): Row[] {
 function extractNames(title: string): string[] {
   const names = [title];
   if (title.includes('&')) {
-    for (const part of title.split('&').map(s => s.trim())) {
+    for (const part of title.split(/[&＆]/).map(s => s.trim())) { // BUG-178: 全角＆対応
       if (part && !names.includes(part)) names.push(part);
     }
   }
