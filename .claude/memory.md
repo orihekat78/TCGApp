@@ -80,3 +80,6 @@
   manual-probes.test.ts (B01047/B01081/B05022/B06104)。36 test green。
 - 別件 (ユーザー要請): repo public 化 B 案 = cards-data 生データ 105 file untrack + README 免責 (56869955)。
   API key はリテラル未 commit + skip-worktree 保護確認 (ローテ不要)。
+- batch4 (2行 unit 初回): 40 unit → 16 EQ + twin 2 = 18 printings (1705→1723、yield 40%)。DEFER 22+2 記録。
+  whitelist stale 3例目 (colorIgnoreOnHandUse)。probe 54 test green。CI fix 2 件 (TSV untrack 起因の
+  compiler real-data test + lint:icon-abilities を data-absent skip 化、d843e383 で CI green 復帰)。

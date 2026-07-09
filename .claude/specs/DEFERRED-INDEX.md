@@ -1239,3 +1239,34 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | PR234 (+PR240) | charSetCard pick 経路の faceUp 不在 (裏向きハードコード) + hand∪remove union source 不在 + setcard:leave の faceUp filter 不在 |
 
 **engine mini-wave 候補 cluster (頻度順)**: ①turn-scope LP override (B01045/B01054、apOverride_turn 対称で小粒) ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (multi-deploy B01022 / per-card placement B05047 / bottom-reveal B03049) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。
+
+## hybrid-batch4 由来 DEFER (2026-07-10、2行 40 unit 中 22 DEFER + 2 VERIFY_NG。file:line 根拠全文 = .tmp/_batch4_defers.txt)
+
+| ID (+twins) | blocker 要旨 |
+|---|---|
+| B01009 | 手札内 continuous level 上書き不在 (levelAllowed は def.level 静読、B09095 と同 cluster) |
+| B01070 | 「このキャラを指定してアクション」= target=self gate 不在 (triggerCharMatches に includeSource 系 field 無し、side:self では over-fire) |
+| B02013 | set-host への grantKeywords が closure 型で JSON 不可 (on-set-host 継続 rider の keyword 版) |
+| B02039 | set-card を表向き証拠として持ち主が得る verb 不在 |
+| B02067 | 「選ばれたとき無効にする」= choose-intercept + negate 機構不在 (B04003 と同 cluster) |
+| B02084 | セット状態のイベント自身の remove 到達 observer 不在 (PR234 line2 と同 cluster、faceUp filter も) |
+| B02086 | 【変装時】相手 discard 強制 or 無効化の相手選択分岐 (そうしなかった場合〜) 不在 |
+| B02087 | ネクストヒント限定の色無視 token 不在 (colorIgnoreOnHandUse は手札使用+NH 両経路で over-wide、QA は NH 限定) |
+| B03002 | 「ネクストヒントで手札を使用したとき」判別不在 (B01005/B05005 と同 cluster) |
+| B03028 | 「【緑】のイベントを使用したとき」= event-use の color filter matcher 不在 (matcherCondition に triggerCardMatches{color} は event-use payload 非対応) |
+| B03041 | イベント→host への triggered 能力付与機構不在 (grantAbility は declared 想定) |
+| B03078 | sleepGuard (スリープ状態でもガード可) の JSON token 不在 (closure 出荷 1 枚のみ) |
+| B03112 | leave:to-remove payload に効果 owner attribution 不在 (B03116/B04091 と同 cluster) |
+| B04003 | 「選ばれたとき〜無効にする」intercept (B02067 と同 cluster) + 相手 optional discard 分岐 |
+| B05005 | ネクストヒント限定 trigger (B01005 cluster) + 使用カード color filter |
+| B05007 | 「このターン中〜アクションしたとき」の遅延 observer 設置 (turn-scoped conditional hook 付与) 不在 |
+| B05092 | 手札→デッキ下 N 枚 (好きな順) verb 不在 + 移した枚数 bind draw |
+| B05097 | player-chosen 可変枚数 deck-top リムーブ EFFECT 不在 (cost 側 r37 と対、QA=枚数先決め) |
+| B06003 | cost〚ターン終了時まで LP-2〛= self LP-delta cost primitive 不在 |
+| B06037 | VERIFY_NG: 「パートナーエリアでも宣言できる」= scope on-scene では PA 宣言不可 (PA宣言 batch 送り、DEFERRED-INDEX batch2 節と同 cluster) |
+| B06066 | cost「このキャラか同特徴のキャラ 1 枚スリープ」= self-or-shared-trait cost 不在 |
+| B07001 | VERIFY_NG: charGrantAbility が inert (grantedDeclared 3 gap、B06042 と同 cluster) |
+| B07003 | 手札内カードへのカットイン能力動的付与不在 (isCutInCard は印字判定) |
+| B07011 | じゃんけん RNG primitive 不在 (P48、既知) |
+
+**cluster 追記 (batch3 と合算した mini-wave 優先度)**: ⑥next-hint 判別 hook + 使用カード参照 dyn (B01005/B03002/B05005/B02087 = 4 unit) ⑦「選ばれたとき無効」intercept (B02067/B04003) ⑧hand 内 continuous (B01009/B09095/B07003)。

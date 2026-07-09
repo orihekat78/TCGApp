@@ -201,7 +201,7 @@ function validateSpec(spec) {
       if (!ab.continuousModifier) errs.push(`${c}: continuous without continuousModifier`);
       else {
         // pure-JSON continuousModifier fields (card-def.ts). closure-only: grantKeywords / customSelectorPatch → needsManual.
-        const JSON_CONT_KEYS = ['apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp',
+        const JSON_CONT_KEYS = ['colorIgnoreOnHandUse', /* mega-W2 出荷 (B03126 稼働、whitelist stale だった 2026-07-10) */ 'apDelta', 'lpDelta', 'lvlDelta', 'apDeltaAura', 'lpDeltaAura', 'auraFilter', 'auraExcludeSelf', 'opponentRestrict', 'apDeltaAuraOpp', 'lpDeltaAuraOpp', 'auraFilterOpp',
           // pure-JSON case-continuous overrides (P05/E3 P11/P53/P10): TargetFilter/number/string[]/boolean、closure なし
           'handUseRestrictFilter', 'sceneCapOverride', 'partnerColorsOverride', 'cannotSolveCase', 'partnerSolveOverride',
           // selfContinuousFlag 系 boolean token (W2 出荷済 engine union、hybrid-batch2 で解禁)

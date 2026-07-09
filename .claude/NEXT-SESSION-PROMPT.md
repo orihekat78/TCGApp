@@ -16,12 +16,12 @@
   shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
   混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
   残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- 出荷済 **1705** / corpus 2074 = **残り未実装 369 printings** (残実 author pool: 1行41+2行121 ≈ **162 unit** + DEFER 群)。
+- 出荷済 **1723** / corpus 2074 = **残り未実装 351 printings** (残実 author pool ≈ 2行 ~99 unit + DEFER 群。1行 pool 枯渇済)。
 - **★残枚数 随時報告義務 (2026-07-09 ユーザー指示)**: session 開始時 + batch/wave 出荷ごとに
   「出荷済 X / corpus 2074 = 残 Y printings (残 unit ≈ Z)」をユーザー向け報告に必ず含める。
   実測 = shipped: `npm run lint:icon-abilities` (shipped=N 表示) / unit 内訳: `npm run hybrid:prepare` summary。
   出荷後は本ファイルのこの行も更新する。
-- vitest baseline = **4418 pass +1 skip** (batch3 probe +36) / smoke winsA=**472** exceptions=0 / 8 lint err0。
+- vitest baseline = **4472 pass +1 skip** (batch3+4 probe +90) / smoke winsA=**472** exceptions=0 / 8 lint err0。
 - **batch3 実測 (2026-07-10 夜間自走)**: 40 unit → 13 printings (yield 30%、pool 尾の硬化)。DEFER 26+2 = DEFERRED-INDEX「hybrid-batch3 由来」節 (mini-wave 候補 cluster 5 件抽出済)。次 batch は yield 低下前提で --n 40 継続 or mini-wave (turn-scope LP override + bound levelSum dyn が最頻)。
 - **hybrid pipeline 2連続実証 (歩留まり 62-67%)**: batch2 = 37 unit → 23 GREEN / 13 DEFER
   (DEFERRED-INDEX「hybrid-batch2 由来」節。★最大 cluster = contactCharMatches cond 1本で

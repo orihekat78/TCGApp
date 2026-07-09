@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `3770afc27269`
+> Source hash: `b33e59c03a8d`
 
 公式ルール [`25-qa-effects-resolution.md`](../../../rules/25-qa-effects-resolution.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -26,7 +26,7 @@
 - [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 
-## 📄 参照ソース (30)
+## 📄 参照ソース (34)
 
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
 - [`src/cards/ct-d08/D08005.ts`](../../../../src/cards/ct-d08/D08005.ts)
@@ -42,10 +42,10 @@
 - [`src/cards/ct-p05/B05050.ts`](../../../../src/cards/ct-p05/B05050.ts)
 - [`src/cards/ct-p06/B06008.ts`](../../../../src/cards/ct-p06/B06008.ts)
 - [`src/cards/ct-p06/B06057.ts`](../../../../src/cards/ct-p06/B06057.ts)
+- [`src/cards/ct-p06/B06072.ts`](../../../../src/cards/ct-p06/B06072.ts)
+- [`src/cards/ct-p06/B06074.ts`](../../../../src/cards/ct-p06/B06074.ts)
 - [`src/cards/ct-p07/B07002.ts`](../../../../src/cards/ct-p07/B07002.ts)
 - [`src/cards/ct-p07/B07026.ts`](../../../../src/cards/ct-p07/B07026.ts)
 - [`src/cards/ct-p08/B08049.ts`](../../../../src/cards/ct-p08/B08049.ts)
 - [`src/cards/ct-p08/B08049P.ts`](../../../../src/cards/ct-p08/B08049P.ts)
-- [`src/cards/ct-p08/B08058.ts`](../../../../src/cards/ct-p08/B08058.ts)
-- [`src/cards/ct-p08/B08058P.ts`](../../../../src/cards/ct-p08/B08058P.ts)
-- _...ほか 10 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 14 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
