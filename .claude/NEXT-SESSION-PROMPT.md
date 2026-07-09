@@ -16,7 +16,7 @@
   shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
   混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
   残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- 出荷済 **1742** / corpus 2074 = **残り未実装 332 printings**。**★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。次 = **engine mini-wave** (優先 cluster 8 種 = DEFERRED-INDEX batch6 節末尾: ①turn-scope LP override ②bound levelSum dyn ③deck-reveal 拡張 ④next-hint 判別 ⑤選ばれたとき無効 intercept ⑥hand 内 continuous ⑦set-card 操作 ⑧cost choice UI) → 解禁 unit を hybrid pipeline 再走で刈り取り。
+- 出荷済 **1742** / corpus 2074 = **残り未実装 332 printings**。**★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。engine mini-wave 進行中: **①②④ 出荷済** (2026-07-10 朝、lpOverride_turn + levelSum + viaNextHint、消化 6 printings + BUG-179 水平 4 枚)。次 = ③deck-reveal 拡張 (B01022/B05047/B03049) ⑤「選ばれたとき無効」intercept (B02067/B04003/B08081) ⑥hand 内 continuous (B01009/B09095/B07003) ⑦set-card 操作 ⑧cost choice UI (T3)。手順 = 本 session 実証済 (RED probe → 実装 → prepare --reps --include-deferred → workflow author+verify → finish → probe agent → 混成 review → ship)。
 - **★残枚数 随時報告義務 (2026-07-09 ユーザー指示)**: session 開始時 + batch/wave 出荷ごとに
   「出荷済 X / corpus 2074 = 残 Y printings (残 unit ≈ Z)」をユーザー向け報告に必ず含める。
   実測 = shipped: `npm run lint:icon-abilities` (shipped=N 表示) / unit 内訳: `npm run hybrid:prepare` summary。
