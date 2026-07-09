@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `f3d526c45fa7`
+> Source hash: `cf7d056b2467`
 
 仕様書 [`engine-api-events`](../../../specs/engine-api-events.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

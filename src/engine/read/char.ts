@@ -252,7 +252,13 @@ function noAutoActivateLocked(s: GameState, uid: string): boolean {
 function ap(s: GameState, uid: string): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
-  const base = char.apOverride !== null ? char.apOverride : (def.card(char.cardId)?.ap ?? 0);
+  // engine defer-unlock mini-wave (2026-07-09): 「ターン終了時まで元のAPを X にする」(B05022) は
+  // turnEffects['apOverride_turn'] が base を差替 (恒久 apOverride より優先 = 後発効果勝ち)。
+  // rules/19 QA: 修整 (apMod_* / continuous / aura) はその上に合算で残る。
+  const apOvTurn = char.turnEffects['apOverride_turn'];
+  const base = typeof apOvTurn === 'number'
+    ? apOvTurn
+    : (char.apOverride !== null ? char.apOverride : (def.card(char.cardId)?.ap ?? 0));
   const modPermanent = (char.turnEffects['apMod_permanent'] as number | undefined) ?? 0;
   const modTurn      = (char.turnEffects['apMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['apMod_contact']   as number | undefined) ?? 0;

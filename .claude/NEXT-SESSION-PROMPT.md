@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト — CARD PHASE (2026-07-09 hybrid-batch2 出荷後)
+# 次セッション再開プロンプト — CARD PHASE (2026-07-09 defer-unlock mini-wave 出荷後)
 
 > モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 (grounding/意味等価 = sonnet5 high / 敵対 review = sonnet5+opus 混成、割れたら fable or 実測裁定 / 機械 = sonnet low)。⚠ 応答は日本語。Caveman + Ultracode 有効。
 > 履歴詳細は CHANGELOG.md / .claude/sessions/ / memory MEMORY.md / DEFERRED-INDEX.md を参照 (本ファイルには書かない)。
@@ -6,11 +6,18 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-07-09、hybrid-batch2 出荷 = b6d56c71)
+## 現在地 (2026-07-09 夜、defer-unlock mini-wave 出荷)
 - **engine 骨格凍結済**。以後 engine は ±5/軽微 touch-up のみ。メイン作業 = CARD PHASE。
-- 出荷済 **1676** / corpus 2074 (batch2 で 38枚: 23 base + P spread 15)。残実 author ≈ **240 unit**
-  (1行refuse 残 ~77)。全体見積 = 単独 lane 11-15 session / 2-3 lane 並走で暦上 5-7 slot。
-- vitest baseline = **4320 pass +1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
+- **defer-unlock mini-wave 出荷済** (2026-07-09 夜): additive 8 primitive (contactCharMatches /
+  mill bind / removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / removeAreaAllToDeckBottom
+  player / phase:main:start hook / Cost partnerAreaRemove / $self.partnerAreaTraitCount) + **16 printings**
+  (B02006/B02080/B02076+PR133/B04038+PR027/31/B05072/B07039/B07046/PR132+PR213/285/PR201+PR207/PR278)
+  + **★BUG-177** (「〜のキャラに【カットイン】した場合」= 自コンタクトキャラ (B02006/B07050 公式QA) —
+  shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
+  混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
+  残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
+- 出荷済 **1692** / corpus 2074。残実 author ≈ **224 unit**。
+- vitest baseline = **4382 pass +1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
 - **hybrid pipeline 2連続実証 (歩留まり 62-67%)**: batch2 = 37 unit → 23 GREEN / 13 DEFER
   (DEFERRED-INDEX「hybrid-batch2 由来」節。★最大 cluster = contactCharMatches cond 1本で
   B02006/B02080/PR278 解禁)。P spread = TSV 全列同文 機械証明→個別検証スキップ (rules/02 同ID)。
@@ -22,11 +29,10 @@
 - ★開始時 `git ls-remote origin main` + `gh run list -L1`。並行 session 前提 → worktree (C:/tmp/megaw1 再利用可、
   node_modules junction 済) + 明示 pathspec add + push 先着 FF。
 
-## 残 ~240 の攻略計画 (優先順)
-0. **★次 session 推奨 = DEFER 解禁 engine mini-wave**: pilot 5 + batch2 13 = 18 unit が engine gap 待ち。
-   additive 小粒優先: contactCharMatches cond (3 unit 一括解禁) / mill bind capture /
-   removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / TRIGGERED_HOOKS +phase:main:start /
-   cost partnerAreaRemove / $self.partnerAreaTraitCount dyn。/engine-wave 1-2 本 → 解禁後 card 側 clone 同然。
+## 残 ~224 の攻略計画 (優先順)
+0. ~~DEFER 解禁 engine mini-wave~~ → ✅ **2026-07-09 夜 出荷済** (additive 8本 + 11 unit 実装まで完了)。
+   **次 session 推奨 = hybrid-batch3** (`npm run hybrid:prepare -- --n 40 --max-refusals 2`)。
+   残 engine DEFER は大物のみ (下記 6 + B05022 carrier) — 個別 T2/T3 で都度判断。
 1. **hybrid pipeline 継続 (40+ unit/session、★2026-07-09 ツール化+2行対応済)**: pool = 1行 **93** +
    2行 **125** = **218 unit (未出荷 base 248 の 88%)**。手順 = **`npm run hybrid:prepare -- --n 40
    --max-refusals 2`** (fresh 化+twin 自動 group (集合キー)+DEFER 照合+payload 一括。1行優先選定) →

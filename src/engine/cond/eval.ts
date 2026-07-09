@@ -374,6 +374,34 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const guardUid = (ctx.triggerPayload as { guardUid?: string } | undefined)?.guardUid;
       return guardUid === ctx.source.uid;
     }
+    case 'contactCharMatches': {
+      // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラの TargetFilter 評価
+      // (B02006/B02080/PR278/D11013)。ctx.contact (cutin effect 実行時、entryToCtx が bindings.contact
+      // から復元 = p-相対: byUid=自コンタクトキャラ / targetUid=相手コンタクトキャラ、buildContactBindings)
+      // 優先。無ければ ctx.bindings.contact[0] を直接読む — triggered の matcherCondition 経路 (queue 時
+      // gate、ctxMc は contact field を持たず gateBindings のみ)。B02080 の【ターン1】limit は queue 時
+      // 無条件加算 (rules/24) のため、effect 側 conditional では非該当コンタクトで焼失する — 本 cond を
+      // trigger.matcherCondition に置くことで「発動しない=未消費」を守る。
+      // B02006 公式QA:「コンタクト中の**自分の**キャラがレベル5以下の特徴[少年探偵団]の場合に AP+3000」
+      // = who:'byUid' (相対=自コンタクトキャラ)。filter は board char (uid 既知) で評価
+      // (triggerCharMatches と同式: 実効 trait/level = matchOneFilter c!=null 経路)。fail-closed。
+      const ccInfo = ctx.contact
+        ?? ((ctx.bindings as Record<string, unknown[]> | undefined)?.['contact']?.[0] as
+          { byUid?: string; targetUid?: string } | undefined);
+      if (!ccInfo) return false;
+      const ccUid = ccInfo[cond.who];
+      if (typeof ccUid !== 'string' || ccUid.length === 0) return false;
+      // scene のみ探索 — パートナーがコンタクト参加者の場合は false (fail-closed)。$contact.byUid の
+      // charModifyAP も scene-only のため観測可能な不整合はない (system-wide の既存制約、review nit 記録)。
+      for (const ccSide of ['self', 'opp'] as const) {
+        const ch = state.players[ccSide].scene.find(c => c.uid === ccUid);
+        if (ch) {
+          const cand: Candidate = { kind: 'char', uid: ch.uid, cardId: ch.cardId, player: ccSide };
+          return matchOneFilter(state, ch.cardId, cond.filter, ch, cand);
+        }
+      }
+      return false;
+    }
     case 'enterOrderEquals': {
       // D11014 a1 / D11003 / D11009 driver: enter hook payload.enterOrderThisTurn が n と一致するか
       // rules/17 §【疾風 N】: 「自分の現場にこのターン N番目に登場したとき」
@@ -790,6 +818,7 @@ const CONDITION_KIND_MAP = {
   enterCountAtMost: true, // engine additive (2026-06-29, B09089)
   stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
+  contactCharMatches: true, // engine defer-unlock mini-wave (2026-07-09, B02006/B02080/PR278)
   enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
   boundAnyMatchesFilter: true, // engine additive wave-5 (2026-07-01, G17): bound 集合 any-match (PR132/D06013)
   boundDistinctColorCount: true, // engine additive wave-10 (2026-07-02, G17 残): bound 集合内 相互異色 n 枚 (B07002)

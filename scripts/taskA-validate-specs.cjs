@@ -57,6 +57,7 @@ const HOOKS = new Set([
   'enter', 'enter:group', 'disguise:into', 'leave:to-remove', 'action:declare', 'action:guarded',
   'action:pre-target', 'contact:start', 'reasoning:end', 'case:to-resolved',
   'phase:end:start', 'effect:declared', 'evidence:remove-by-action',
+  'phase:main:start', // engine defer-unlock mini-wave (2026-07-09): メインフェイズ開始時 (B05072)
   'file:pop', // Task D E3 (2026-06-12)
   'action:end', 'evidence:gain', // engine拡張 wave#2 cluster3 (2026-06-13)
   'setcard:leave', // engine拡張 wave#2 cluster9 (2026-06-15)
@@ -77,6 +78,7 @@ const CONDS = new Set([
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
   'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundDistinctColorCount', 'triggerCharMatches',
+  'contactCharMatches', // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラ filter (B02006/B02080/PR278)
   'boundNameMatchesDeclared', 'boundIsMr', // engine mega-wave W6 step1 (2026-07-04): 宣言名一致 / MR 判定 (B09108/B06085)
   'leaveCauseIn', 'leaveOwnerIs', // engine mega-wave W6 step10 (2026-07-04, row9): leave:intercept matcher (B01092/B01039)
   'eventUseSource', // engine mega-wave W6 step3 (2026-07-04, P19): イベント使用の起源判別 (B07026)
@@ -114,6 +116,7 @@ const COSTS = new Set([
   'handStackUnder', // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる (B08006 a1)
   'revealFromHand', // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
   'revealHandToDeckTop', // engine mega-wave W1 (2026-07-03, P29): 手札公開→デッキ上 cost (B05049 a1)
+  'partnerAreaRemove', // engine defer-unlock mini-wave (2026-07-09): PA カード n 枚リムーブ cost (B07039)
 ]);
 
 const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'conditional', 'forEach', 'atom', 'chain']);

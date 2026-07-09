@@ -79,7 +79,14 @@ export function atomCharOverrideAP(s: GameState, a: Record<string, unknown>, ctx
       const oaUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof oaUid !== 'string' || oaUid.startsWith('$')) return;
       const oaVal = a.val as number | null;
-      mutate.char.setOverrideAP(s, oaUid, oaVal);
+      // engine defer-unlock mini-wave (2026-07-09): scope:'turn' = 「ターン終了時まで元のAPを X にする」
+      // (B05022)。turnEffects['apOverride_turn'] ベース (rules/19 QA: 修整±は残る = read.char.ap の
+      // base のみ差替)。clearTurnEffects('turn') で失効。scope 未指定は従来の恒久 apOverride (byte 不変)。
+      if (a.scope === 'turn') {
+        mutate.char.setOverrideAPTurn(s, oaUid, oaVal);
+      } else {
+        mutate.char.setOverrideAP(s, oaUid, oaVal);
+      }
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charOverrideAP', target: oaUid, result: oaVal === null ? 'reset' : String(oaVal) });
       return;

@@ -227,7 +227,13 @@ export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCt
         mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: 'gate-skip' });
         return;
       }
-      mutate.deck.removeFromTop(s, millP, millN);
+      const millRemoved = mutate.deck.removeFromTop(s, millP, millN);
+      // engine defer-unlock mini-wave (2026-07-09): 「これによって〜がリムーブされた場合」(PR132/PR201) 用に
+      // リムーブした cardId を bind (discard/handReveal/partnerAreaRemove と同型)。refresh より前に確定 —
+      // binding は cardId snapshot なので refresh でデッキへ戻っても boundAnyMatchesFilter (印字値評価) は不変。
+      if (typeof a.bind === 'string' && millRemoved.length > 0) {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = millRemoved.map((cardId) => ({ cardId }));
+      }
       // BUG-137 (wave#2 cluster2, 2026-06-12): デッキ枯渇時の refresh guard が欠落していた。
       // rules/14 (デッキ 0 で即座に refresh) + rules/26 (可能な限りリムーブ → refresh →
       // 残り分は追加リムーブしない)。B09104 qAndA「可能な限りリムーブし、その後リフレッシュを行います」。
@@ -944,15 +950,27 @@ export function atomRemoveAreaToDeckTop(s: GameState, a: Record<string, unknown>
       let rtdMoved = false;
       if (rtdIdx !== -1) {
         rtdRem.splice(rtdIdx, 1);
-        mutate.remove.emitExit(s, rtdP, rtdTarget); // remove→deck top 離脱 (原因非依存 remove:exit)
-        mutate.deck.toTop(s, rtdP, [rtdTarget]);
+        mutate.remove.emitExit(s, rtdP, rtdTarget); // remove→deck 離脱 (原因非依存 remove:exit)
+        // engine defer-unlock mini-wave (2026-07-09): dest:'bottom' = 「デッキの下に移す」(B02076)。
+        // 従来 (dest 未指定) は top 固定 (B07014) — 既存 consumer は byte 不変。
+        if (a.dest === 'bottom') {
+          mutate.deck.toBottom(s, rtdP, [rtdTarget]);
+        } else {
+          mutate.deck.toTop(s, rtdP, [rtdTarget]);
+        }
         rtdMoved = true;
+      }
+      // engine defer-unlock mini-wave (2026-07-09): 0枚 (skip/不在) → chainStepNoApply。「〜してもよい。
+      // そうした場合、カードを1枚引く」(B02076) の chain gate (discard/partnerAreaRemove と同型)。
+      // 単発 path (B07014 rider) では flag は読まれない = 挙動不変。
+      if (!rtdMoved) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
       }
       mutate.log.append(s, { ts: Date.now(), player: rtdP, turn: s.turn.number, action: 'effect:removeAreaToDeckTop', target: rtdTarget, result: rtdMoved ? 'ok' : 'not-found' });
       return;
     }
 
-export function atomRemoveAreaAllToDeckBottom(s: GameState, _a: Record<string, unknown>, ctx: EffectCtx): void {
+export function atomRemoveAreaAllToDeckBottom(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // cluster4 (2026-06-14) B08027【登場時】: 自分と相手はリムーブエリアの「すべて」のカードを
       //   各自のデッキの下に移し、両者のデッキをシャッフルする。
       // ⚠ 'self'/'opp' は **絶対スロット** を意図的に走査する (resolvePlayer しない)。この verb は
@@ -966,7 +984,13 @@ export function atomRemoveAreaAllToDeckBottom(s: GameState, _a: Record<string, u
       // 公式テキスト通り、移動枚数 0 (remove 空) のプレイヤーも無条件でシャッフルする。
       // shuffle は ctx.rng があれば使い、無ければ mutate.deck.shuffle 内の Math.random
       //   (smoke では seeded RNG に global override されている) を使う (deckShuffle と同一契約)。
-      for (const pp of ['self', 'opp'] as const) {
+      // engine defer-unlock mini-wave (2026-07-09): args.player 指定時は **片側のみ** (B04038 白馬探
+      // 「自分のリムーブエリアにあるすべてのカードを…」= player:'self'、resolvePlayer で所有者相対)。
+      // 未指定は従来どおり両者対称 (B08027) — 既存 consumer は byte 不変。
+      const raSlots = a.player === undefined
+        ? (['self', 'opp'] as const)
+        : ([resolvePlayer(a.player, ctx)] as const);
+      for (const pp of raSlots) {
         const rem = s.players[pp].remove;
         if (rem.length > 0) {
           const ids = rem.splice(0, rem.length); // ALL — remove を drain

@@ -212,6 +212,30 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       for (const id of ids) acc.paidItems.push({ kind: 'removeAreaToDeckBottom', details: { id } });
       return;
     }
+    // engine defer-unlock mini-wave (2026-07-09): 〚パートナーエリアにある…のカードを n 枚リムーブする〛
+    // コスト (B07039 アン王女)。removeAreaToDeckBottom と同型: UI 選択 (ctx.dyn.costParams.
+    // partnerAreaRemove.ids) 優先、無ければ pickCandidates fallback (AI/smoke)。p は自分の PA のみ
+    // (rules/21「自分の」省略 + 公式Q&A B07039: コストでは自分のカードしか使えない)。移動は
+    // mutate.partner.removeAreaCardsToRemove (atom verb partnerAreaRemove と同 mutate = lastIndexOf
+    // splice + remove:exit なし — PA は remove エリアでないため exit hook 対象外、G39 契約)。
+    case 'partnerAreaRemove': {
+      const p = ctx.source.player;
+      const explicit = readPartnerAreaRemoveIds(ctx);
+      const ids: string[] = [];
+      if (explicit.length >= cost.n) {
+        ids.push(...explicit.slice(0, cost.n));
+      } else {
+        // partner 本体 candidate を除いた上で n 枚 (canPay と対称 — pickCandidates の先頭 slice に
+        // {kind:'partner'} が混ざると支払い枚数が n を割るため)。
+        const patTargets = candidates(state, cost.target, ctx).filter(c => c.kind === 'card').slice(0, cost.n);
+        for (const cand of patTargets) {
+          if (cand.kind === 'card') ids.push(cand.cardId);
+        }
+      }
+      mutate.partner.removeAreaCardsToRemove(state, p, ids);
+      for (const id of ids) acc.paidItems.push({ kind: 'partnerAreaRemove', details: { id } });
+      return;
+    }
     // engine additive wave (2026-06-24): 〚現場にいるキャラに裏向きでセットされているカードを合わせて n 枚
     //   リムーブする〛コスト (B08033 a2)。UI 選択 (ctx.dyn.costParams.removeSetCard.hostUids — 1 removal=1
     //   entry、repeat で同一 host から複数枚=2-from-1) を優先、無ければ self scene 順に face-down set card を
@@ -354,6 +378,18 @@ function readSceneToDeckUids(ctx: EffectCtx): string[] {
   const std = params && (params['sceneToDeckBottom'] as { uids?: string[] } | undefined);
   if (std && Array.isArray(std.uids)) {
     return std.uids;
+  }
+  return [];
+}
+
+// engine defer-unlock mini-wave (2026-07-09): UI が選んだ partnerAreaRemove コスト対象 cardId
+// (readRemoveAreaToDeckIds と同型)。
+function readPartnerAreaRemoveIds(ctx: EffectCtx): string[] {
+  const dyn = ctx.dyn;
+  const params = dyn && (dyn['costParams'] as Record<string, unknown> | undefined);
+  const r = params && (params['partnerAreaRemove'] as { ids?: string[] } | undefined);
+  if (r && Array.isArray(r.ids)) {
+    return r.ids;
   }
   return [];
 }

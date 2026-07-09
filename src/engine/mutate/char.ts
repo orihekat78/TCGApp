@@ -71,6 +71,16 @@ function setOverrideAP(s: GameState, uid: string, val: number | null): void {
   found.char.apOverride = val;
 }
 
+/** engine defer-unlock mini-wave (2026-07-09): 「ターン終了時まで元のAPを X にする」(B05022)。
+ * turnEffects['apOverride_turn'] に積む (apMod_turn と同 suffix 規約)。read.char.ap が base 差替で
+ * honor (rules/19 QA: 能力/効果による +/- 修整は残る)。null = 解除。clearTurnEffects('turn') で失効。 */
+function setOverrideAPTurn(s: GameState, uid: string, val: number | null): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+  if (val === null) delete found.char.turnEffects['apOverride_turn'];
+  else found.char.turnEffects['apOverride_turn'] = val;
+}
+
 /** lpOverride を直接設定 */
 function setOverrideLP(s: GameState, uid: string, val: number | null): void {
   const found = findChar(s, uid);
@@ -179,6 +189,9 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     // ap/lp の turn/contact と対称に turn 終了で解除する (read.char.level / filter level に波及していた)。
     delete te['lvlMod_turn'];
     delete te['lvlMod_contact'];
+    // engine defer-unlock mini-wave (2026-07-09): 「ターン終了時まで元のAPを0」(B05022、BUG-119 教訓:
+    // 新 turn キーは必ずここに列挙)。
+    delete te['apOverride_turn'];
     delete te['grantedKeywords'];
     // engine additive (2026-06-29): revokeKeywordTurn が積んだ「ターン終了時まで失う」キーワード (B06068)。
     delete te['revokedKeywords'];
@@ -383,6 +396,7 @@ export const char = {
   modifyLP,
   modifyLevel,
   setOverrideAP,
+  setOverrideAPTurn,
   setOverrideLP,
   grantKeyword,
   revokeKeyword,

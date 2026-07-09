@@ -57,3 +57,17 @@
 - prepare `--max-refusals 2` + finish twin 集合証明化。**pool 93→218 unit (未出荷 base の 88% が
   pipeline 対象)**。2行 twin 即効: D06003+3 (1 author→4 printings) を合成 result で機械証明 GREEN 実証。
 - payload 正準 = refusedLines[] (旧 refusedLine 後方互換)。tsc0 / genprobe 11/11 / src 変更0。
+
+## 2026-07-09 夜 — engine defer-unlock mini-wave (additive 8 primitive + BUG-177 + 16 printings)
+
+- **8 primitive**: contactCharMatches cond (ctx.contact + bindings.contact fallback = matcherCondition queue-gate) /
+  mill bind / removeAreaToDeckTop dest:'bottom'+0枚chainStepNoApply / charOverrideAP scope:'turn'
+  (turnEffects['apOverride_turn']) / removeAreaAllToDeckBottom player / TRIGGERED_HOOKS phase:main:start /
+  Cost partnerAreaRemove / $self.partnerAreaTraitCount dyn。probe 27 + sync-whitelist (cjs HOOKS/CONDS/COSTS) 同期。
+- **★BUG-177 (高)**: 「〜のキャラに【カットイン】した場合」= B02006 公式QA で**自コンタクトキャラ** (byUid 相対)
+  と確定 — shipped の contactTargetMatches 共通クラス + D11013 inline は targetUid (相手) で全逆。helper 書換で
+  13 printings 一括修正 + 旧方向 pin test 3 file 書換 + cutIn 実 emit probe で両方向 pin。
+- **cards 16 printings**: B02006/B02080/B02076(+PR133)/B04038(+PR027/31)/B05072/B07039/B07046/
+  PR132(+PR213/285)/PR201(+PR207)/PR278。taskA-codegen (specs.json→9 file) + gen:probes (enter/declared 2 file
+  GREEN、optional/mill/cutin 形は手書き 24)。B05022 = scope:'turn' 出荷済も multi-pick carrier gap で card DEFER 継続。
+- gates: tsc0 / vitest 4382+1skip / crosscheck 14/14 / smoke winsA=472 exc0 / 8lint err0 / 混成 2-lens review。

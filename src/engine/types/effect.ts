@@ -104,6 +104,11 @@ export type Condition =
   | { kind: 'contactOpponentApHigher' }
   // D11016 a1: action:guarded payload.guardUid === ctx.source.uid (このキャラがガードしたとき、rules/07)
   | { kind: 'guardedBySelf' }
+  // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラを TargetFilter で評価
+  // (B02006/B02080/PR278/D11013)。who は p-相対 (buildContactBindings): byUid=自コンタクトキャラ /
+  // targetUid=相手コンタクトキャラ。ctx.contact 優先 + ctx.bindings.contact[0] fallback
+  // (matcherCondition queue-time gate 用)。honor: cond/eval.ts case + CONDITION_KIND_MAP + validate-specs CONDS。
+  | { kind: 'contactCharMatches'; who: 'byUid' | 'targetUid'; filter: TargetFilter }
   // D11014 a1 / D11003 / D11009 driver: enter hook の payload.enterOrder が n と一致するか
   // (【疾風 N】 = ターン N 番目に登場で発火、matcher → matcherCondition declarative 化)
   | { kind: 'enterOrderEquals'; n: number }
@@ -521,6 +526,12 @@ export type Cost =
   // rules: 21 (全部行えなければ使用不可 / 「自分の」省略 → query.side:'self' / 公式Q&A「相手のカードは移せない」),
   //   09/23 (デッキ下移動はリムーブでない=現場リムーブ時不発動), 14/26 (デッキが増えるのみ → refresh は起きない)
   | { kind: 'removeAreaToDeckBottom'; target: TargetingRef; n: number }
+  // engine defer-unlock mini-wave (2026-07-09): 〚パートナーエリアにある…のカードを n 枚リムーブする〛
+  //   コスト (B07039 アン王女【宣言】)。removeAreaToDeckBottom と同型 (canPay = candidates ≥ n /
+  //   pay = costParams 優先 + pickCandidates fallback → mutate.partner.removeAreaCardsToRemove)。
+  //   cost.target は query.area:'partner-area' + side:'self' (rules/21「自分の」省略、公式Q&A B07039:
+  //   コストでは自分のカードしか使えない)。atom verb 'partnerAreaRemove' (effect 側) と同名だが別 union。
+  | { kind: 'partnerAreaRemove'; target: TargetingRef; n: number }
   // engine additive wave (2026-06-24): 〚現場にいるキャラに裏向きでセットされているカードを合わせて n 枚
   //   リムーブする〛コスト (B08033 工藤有希子 a2)。count-based の self-pool コスト (TargetingRef 不使用 —
   //   candidates() は set card を Candidate 列挙しない sub-entity ゆえ。discardEvidence/removeDeckTop と同型)。

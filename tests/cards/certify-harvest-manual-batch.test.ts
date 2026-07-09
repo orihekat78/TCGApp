@@ -64,7 +64,10 @@ describe('Task A certify-harvest — needsManual 手書き 3枚', () => {
     expect(a1.trigger).toMatchObject({ hook: 'effect:declared', optional: true, selfOnly: true });
     const eff = a1.effect as { kind: string; if: { kind: string }; then: { verb: string; args: Record<string, unknown> } };
     expect(eff.kind).toBe('conditional');
-    expect(eff.if.kind, 'contactTargetMatches → custom 条件').toBe('custom');
+    // BUG-177 (2026-07-09): contactTargetMatches は custom closure → serializable contactCharMatches
+    // (who:'byUid'=自コンタクトキャラ、B02006 公式Q&A 準拠) に移行。
+    expect(eff.if.kind, 'contactTargetMatches → contactCharMatches 条件').toBe('contactCharMatches');
+    expect(eff.if).toMatchObject({ who: 'byUid', filter: { color: ['黒'] } });
     expect(eff.then).toMatchObject({ verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } });
   });
 

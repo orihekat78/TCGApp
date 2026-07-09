@@ -261,7 +261,8 @@ describe('B07050 藤江 — enter triggered draw + cutin', () => {
     expect(a2.trigger).toMatchObject({ hook: 'effect:declared', optional: true, selfOnly: true });
     const cond = a2.effect as { kind: string; if: unknown; then: { args?: { delta?: number; uid?: string; scope?: string } }; else: { args?: { delta?: number } } };
     expect(cond.kind).toBe('conditional');
-    expect((cond.if as { kind?: string }).kind).toBe('custom'); // contactTargetMatches closure
+    // BUG-177 (2026-07-09): custom closure → contactCharMatches (who:'byUid'、B02006 公式Q&A 準拠)
+    expect(cond.if).toMatchObject({ kind: 'contactCharMatches', who: 'byUid', filter: { cardName: ['小泉紅子'] } });
     expect(cond.then.args).toMatchObject({ uid: '$contact.byUid', delta: 3000, scope: 'contact' });
     expect(cond.else.args).toMatchObject({ delta: 1000 });
   });

@@ -107,13 +107,16 @@ describe('B08086 a2 【カットイン】([黒]相手に cutin → $contact.byUi
     };
   }
 
-  it('コンタクト相手が[黒] → 自 attacker AP+2000', () => {
+  // BUG-177 (2026-07-09): 「【黒】のキャラに【カットイン】する場合」= コンタクト中の**自分の**キャラが
+  // 黒 (B02006 公式Q&A「コンタクト中の自分のキャラが〜の場合」準拠)。旧テストはコンタクト相手=黒での
+  // 発火を pin していた (逆方向) — contactCharMatches who:'byUid' 移行に合わせて書換。
+  it('自コンタクトキャラが[黒] → そのキャラ AP+2000 (相手は非黒でも発火)', () => {
     let atk = '';
     let def = '';
     const after = produce(createEmptyGameState(), (d) => {
       d.turn.player = 'self';
-      atk = mutate.scene.enter(d, 'self', 'MOB', {}).uid;
-      def = mutate.scene.enter(d, 'opp', 'KURO', {}).uid;
+      atk = mutate.scene.enter(d, 'self', 'KURO', {}).uid;
+      def = mutate.scene.enter(d, 'opp', 'AKA', {}).uid;
       d.players.self.hand = ['B08086'];
       const ax = mkAx(atk, def);
       expect(canCutIn(d, ax, 'self', 'B08086')).toBe(true);
@@ -123,13 +126,13 @@ describe('B08086 a2 【カットイン】([黒]相手に cutin → $contact.byUi
     expect(engine.read.char.ap(after, atk)).toBe(4000); // 2000 + 2000
   });
 
-  it('DECOY コンタクト相手が非[黒] → conditional 不成立 → AP 据置', () => {
+  it('DECOY 自コンタクトキャラが非[黒] (相手は黒) → conditional 不成立 → AP 据置', () => {
     let atk = '';
     let def = '';
     const after = produce(createEmptyGameState(), (d) => {
       d.turn.player = 'self';
       atk = mutate.scene.enter(d, 'self', 'MOB', {}).uid;
-      def = mutate.scene.enter(d, 'opp', 'AKA', {}).uid;
+      def = mutate.scene.enter(d, 'opp', 'KURO', {}).uid;
       d.players.self.hand = ['B08086'];
       const ax = mkAx(atk, def);
       cutIn(d, ax, 'self', 'B08086');

@@ -18,6 +18,7 @@ const COST_KIND_MAP = {
   removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
+  partnerAreaRemove: true, // engine defer-unlock mini-wave (2026-07-09): PA カード n 枚リムーブ (B07039)
   removeSetCard: true, // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
   sceneStackUnderSelf: true, // engine mega-wave W4 (2026-07-03, r6): 現場キャラを自身の下に重ねる (B09048 a2)
   handStackUnder: true, // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる (B08006 a1)
@@ -105,6 +106,15 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     // rules/21: 全部行えなければ使用不可 (candidates >= n)。デッキへ「増やす」だけなのでデッキ枚数条件は無い。
     case 'removeAreaToDeckBottom': {
       const cands = candidates(state, cost.target, ctx);
+      return cands.length >= cost.n;
+    }
+    // engine defer-unlock mini-wave (2026-07-09): 〚パートナーエリアにある…のカードを n 枚リムーブする〛
+    // コスト (B07039)。removeAreaToDeckBottom と同型 (candidates が area:'partner-area' を列挙 = wave A1)。
+    // rules/21: 全部行えなければ使用不可 (candidates >= n) / 「自分の」省略 → cost.target は side:'self'。
+    case 'partnerAreaRemove': {
+      // ⚠ partner-area 列挙はパートナー本体 ({kind:'partner'}) も含みうる — 本コストの対象は
+      // PA 一般カード枠 (kind:'card') のみ (パートナーはリムーブ不可、rules/06)。
+      const cands = candidates(state, cost.target, ctx).filter(c => c.kind === 'card');
       return cands.length >= cost.n;
     }
     // engine additive wave (2026-06-24): 〚現場にいるキャラに裏向きでセットされているカードを合わせて n 枚

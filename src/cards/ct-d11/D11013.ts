@@ -6,8 +6,7 @@
 //   【カットイン】【パートナー黄】AP＋1000、〚特徴［警察］〛のキャラに【カットイン】した場合、
 //     カードを1枚引く。（コンタクト中に手札からリムーブして使う）
 
-import type { AbilityDef, CardDef, EffectCtx, GameState } from '@/engine/types';
-import { engine } from '@/engine';
+import type { AbilityDef, CardDef } from '@/engine/types';
 
 const a1: AbilityDef = {
   id: 'a1',
@@ -22,16 +21,12 @@ const a1: AbilityDef = {
       // AP＋1000 (コンタクト中のこのカット元キャラ)
       { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
       // [警察]のキャラに【カットイン】した場合、カードを1枚引く
+      // BUG-177 (2026-07-09): 旧 custom closure は $contact.targetUid (コンタクト相手) を読んでいたが、
+      // B02006 公式Q&A により「〜のキャラにカットインした」= コンタクト中の**自分の**キャラ (byUid 相対)
+      // と確定 → engine cond contactCharMatches (defer-unlock mini-wave) へ移行。
       {
         kind: 'conditional',
-        if: {
-          kind: 'custom',
-          check: (s: GameState, ctx: EffectCtx) => {
-            const tgt = ctx.contact?.targetUid;
-            if (!tgt) return false;
-            return engine.read.char.traits(s, tgt).includes('警察');
-          },
-        },
+        if: { kind: 'contactCharMatches', who: 'byUid', filter: { trait: ['警察'] } },
         then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
       },
     ],

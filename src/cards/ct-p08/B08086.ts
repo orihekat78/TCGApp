@@ -11,7 +11,7 @@
 //     ($self.oppSceneCount dyn = 相手現場キャラ数、dyn/eval.ts:305 出荷済。B05030 a2 の apDelta{dyn} 同型)。
 // a2: 自身の【カットイン】(icon-cutin = D11013 同型 type:triggered/scope:on-hand/effect:declared selfOnly)。
 //     【自分ターン中】= ability.condition turn self。「【黒】のキャラに【カットイン】する場合 AP+2000」=
-//     effect conditional{ if: contactTargetMatches(colors黒) (=$contact.targetUid が黒), then: charModifyAP
+//     effect conditional{ if: contactTargetMatches(colors黒) (=自コンタクトキャラが黒、BUG-177), then: charModifyAP
 //     $contact.byUid +2000 scope:contact }。AP0 base ゆえ黒相手時のみ +2000。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
@@ -42,7 +42,7 @@ const a2: AbilityDef = {
   scope: 'on-hand',
   trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
   condition: { kind: 'turn', player: 'self' }, // 【自分ターン中】
-  // 【黒】のキャラに【カットイン】する場合 (=コンタクト相手 $contact.targetUid が黒) → AP+2000
+  // 【黒】のキャラに【カットイン】する場合 (=コンタクト中の自分のキャラが黒、BUG-177/B02006 公式QA) → AP+2000
   effect: {
     kind: 'conditional',
     if: contactTargetMatches({ colors: ['黒'] }),

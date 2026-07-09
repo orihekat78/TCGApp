@@ -366,6 +366,24 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
       return wants.some(w => allCardNameComponentsForDef(d).includes(w));
     }).length;
   }
+  // engine defer-unlock mini-wave (2026-07-09): $self.partnerAreaTraitCount.<trait>[.<trait>...] —
+  // ctx.source.player の PA 一般カード枠 (partnerAreaCards、G39) で「指定特徴のいずれかを持つ」カード数
+  // (B07046 ドロン刑事「PA にある特徴[ビッグジュエル]のカード1枚につき AP+1000」= 継続 aura の
+  // apDelta:{dyn:'$self.partnerAreaTraitCount.ビッグジュエル * 1000'})。removeNameCount と同式の
+  // player ベース (uid 要件より前)。判定は CardDef 印字 traits (PA カードは盤面キャラでないため
+  // continuous grant 経路なし)。同一 cardId 重複も各1枚 (partnerAreaCards は CardId[] multiset)。
+  if (prop === 'partnerAreaTraitCount') {
+    const patWants = rest.slice(1).filter(x => typeof x === 'string' && x.length > 0);
+    if (patWants.length === 0) {
+      throw new Error(`dyn.eval: $self.partnerAreaTraitCount requires at least one trait (e.g. $self.partnerAreaTraitCount.ビッグジュエル) — got "${original}"`);
+    }
+    const patSide = ctx.source.player;
+    return (state.players[patSide].partnerAreaCards ?? []).filter(id => {
+      const d = lookupCardDef(id);
+      if (!d) return false;
+      return patWants.some(w => d.traits.includes(w));
+    }).length;
+  }
   // engine additive wave-14 (2026-07-02, G16 残): $self.sceneMaxLp — ctx.source.player の現場キャラの
   // 「実効 LP の最大値」。B08043「手のこんだ悪巧み」(相手の現場のキャラが自分の現場で LP がもっとも高い
   // キャラの LP 以下の場合リムーブ) の相対 LP フィルタ足場。filter に lpMax:{dyn:'$self.sceneMaxLp'} を

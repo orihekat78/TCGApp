@@ -67,6 +67,11 @@ export const TRIGGERED_HOOKS = [
   'contact:start',
   'case:to-resolved',
   'phase:end:start',
+  // engine defer-unlock mini-wave (2026-07-09): 「自分のターンのメインフェイズ開始時」(B05072 沖矢昴)。
+  // emit は flow/turn.ts 既存 (オートフェイズ完了後 = 公式Q&A のタイミングと一致)。payload={player}、
+  // キャラ uid を持たない hook のため側 gate は matcherCondition triggerPlayerIs (file:pop 同流儀)。
+  // 挙動不変の機序 (wave-3 と同論拠): 既存カードは本 hook を trigger.hook に宣言しない → queue 0。
+  'phase:main:start',
   // engine-extension #1: 現場リムーブ時 (rules/17 §リムーブ方法は問わない)。離場カード自身は
   // collectCardsInPlay に出ないため handleLeaveToRemoveSelf (virtual location) を併用、
   // 在場カードの「キャラがリムーブされたとき」反応は通常 in-play scan (handleHook)。

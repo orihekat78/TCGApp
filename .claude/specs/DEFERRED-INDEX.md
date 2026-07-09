@@ -785,7 +785,7 @@ ctx.contact を読まない = 挙動不変)。
 
 | カード | 形 | 送り先 |
 |--------|----|-------|
-| B02080 三池苗子 | 【自分ターン中】【ターン1】[警察]参加者のコンタクト中に自 cutin → その[警察] AP+1000。警察-in-contact が **trigger 条件** かつ turn1 limit → effect-conditional 不可 | A1 (handleHook condition-eval ctx.contact) |
+| ~~B02080 三池苗子~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。contactCharMatches cond が matcherCondition で bindings.contact を読む (handleHook ctxMc 経由) → queue-time gate 成立 | ✅ 出荷済 |
 - **P20 remove:exit (リムーブエリア離脱 observer、B05088)** は本 wave 不採用 → wave-4。離場 snapshot + refresh per-card emit の別 sub-pattern。
 
 ## wave engine/wave4-0701 — additive 3件 出荷 ($self.level / drawUpToHandSize / remove:exit) + latent (2026-07-01)
@@ -1150,10 +1150,10 @@ file:line 根拠つき (誤 DEFER でない)。解禁は additive wave 1 本で 
 
 | rep (twins) | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
-| PR132 (PR213/PR285) + PR201 (PR207) | 「デッキ上3枚リムーブ→**これによって**〚X〛がリムーブされた場合」— atomMill (core.ts:216) に `a.bind` writeback 無し (discard:77/handReveal:165 等は有り、mill だけ欠落)。removeName/TraitAtLeast は remove 全体計数で「これによって」に非等価、costRemovedMatches は宣言 cost 専用 | mill verb に bind capture 追加 (discard と同一行形) → boundAnyMatchesFilter |
-| B02076 (PR133) | 「リムーブの〚長野県警〛1枚選び**デッキの下**」— removeAreaToDeckTop は dest=TOP 固定 (直後 draw で自引きしてしまい非等価)。removeAreaToDeckBottom は cost 型 | removeAreaToDeckTop に dest:'bottom' param or 新 verb |
-| B05022 | 「ターン終了時まで**元のAPを0**」— charOverrideAP は apOverride 恒久設定のみ (scope 無し、endTurn の clearTurnEffects('turn') は turnEffects キーのみ清掃) | charOverrideAP scope:'turn' + turn-end reset (turnEffects ベース化) |
-| B04038 (PR027/PR031) | self-only remove 全件→デッキ下+shuffle (既存 §「白馬探トリオ」節と同一、2026-07-04 再実測で不変を確認: core.ts:955 両者固定のまま) | removeAreaAllToDeckBottom に player scope param |
+| ~~PR132 (PR213/PR285) + PR201 (PR207)~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。mill に a.bind writeback 追加 → optional{chain[mill gate:true bind, conditional boundAny]} で全 5 printings 実装 | ✅ 出荷済 |
+| ~~B02076 (PR133)~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。removeAreaToDeckTop に dest:'bottom' param + 0枚→chainStepNoApply gate 追加 | ✅ 出荷済 |
+| B05022 | ~~scope 不在~~ → **charOverrideAP scope:'turn' は 2026-07-09 mini-wave で出荷済** (turnEffects['apOverride_turn'] + read.char.ap base 差替 + clearTurnEffects 清掃)。**残 gap = 「好きな数選び」multi-pick carrier**: forEach over pick 未出荷 / charOverrideAP に PA 短縮形 pick 無し (B02014 charGrantAbility carrier は ability 付与を伴い非等価)。wave-10 教訓「N枚 pick は 4層+playwright」に該当 | charOverrideAP に PA 短縮形 multi-pick (charModifyAP 同型) + playwright 実機 |
+| ~~B04038 (PR027/PR031)~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。removeAreaAllToDeckBottom に player param 追加 (省略時は両者 = B08027 不変) | ✅ 出荷済 |
 
 補足: B03104 は出荷したが removeCountAtLeast 境界 (他14枚+使用中イベント自身=15 誤成立) は
 [[BUG-176]] (event-lifecycle pre-existing、D11019 precedent)。境界 probe は BUG-176 解消後に追加。
@@ -1167,15 +1167,15 @@ TargetFilter で評価する serializable kind が無い。新 cond `contactChar
 
 | rep | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
-| B02006 | カットイン「少年探偵団 Lv≤5 に【カットイン】する場合 代わりに+3000」— コンタクト対象 ($contact.byUid own-char) を filter 評価する cond 不在 | contactCharMatches |
-| B02080 | cutin:used + 【ターン1】 + 「警察のキャラのコンタクト中」gate — limit は queue 時無条件加算 (triggered.ts:456、rules/24) ゆえ B03118 effect-conditional idiom だと非該当コンタクトで【ターン1】焼失 | contactCharMatches を trigger matcherCondition に |
-| PR278 (D11013 twin) | 「警察のキャラにカットインした場合 draw」— 出荷実現は D11013 の kind:'custom' closure のみ (JSON 非表現) | contactCharMatches (cond 版) |
+| ~~B02006~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。contactCharMatches{who:'byUid'} 新設。本カード公式QA が BUG-177 (contactTargetMatches 全消費者の方向逆転) の一次根拠になった | ✅ 出荷済 |
+| ~~B02080~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。contactCharMatches を trigger matcherCondition に置き queue-time gate (【ターン1】保全、probe で非該当コンタクト未消費を pin) | ✅ 出荷済 |
+| ~~PR278 (D11013 twin)~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。D11013 を contactCharMatches へ移行 (BUG-177 修正込) + PR278 spread | ✅ 出荷済 |
 | B03110 | ①FILE 上2枚→手札 all-or-nothing (filePopToHand は 1枚固定 pop、n/gate 無し core.ts:270) ②「このキャラ以外のすべてのキャラをリムーブ」 | filePopToHand n+gate 化 + board-wipe verb |
 | B03111 | 相手手札公開→**自分が選び**相手がリムーブ (公式QA) = chooser=self × hand-owner=opp の cross-side discard — atomDiscard は両方 a.player に結合 (core.ts:49) | discard の chooser/owner 分離 (megaw3 latent「cross-side 短縮形 pick」と同根) |
 | B04073 | 「アクションで指定されていたのが三池苗子だった場合」— action:guarded payload は {byUid,guardUid} のみで target 不在 (state-machine.ts:296) | action:guarded payload に target 同梱 |
-| B05072 | 「メインフェイズ開始時」— 'phase:main:start' は HookName に在るが TRIGGERED_HOOKS 非収録 = card trigger 永久不発 (triggered.ts:59-146) | TRIGGERED_HOOKS 追加 (Q&A: autophase 完了後 timing) |
-| B07039 | 宣言 cost「PA のビッグジュエル 1枚リムーブ」— COSTS に partner-area 由来 removal cost 無し | cost kind partnerAreaRemove 追加 |
-| B07046 | 「PA のビッグジュエル 1枚につき AP+1000」— dyn resolveSelf に partnerAreaCards filter 計数 token 無し (PR263 同系) | $self.partnerAreaTraitCount dyn |
+| ~~B05072~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。TRIGGERED_HOOKS に phase:main:start 追加 + matcherCondition triggerPlayerIs | ✅ 出荷済 |
+| ~~B07039~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。cost kind partnerAreaRemove 新設 (canPay/pay/costParams channel/costToText)。⚠ latent: 宣言 cost pick の専用 UI は未配線 — pay は costParams 優先 + pickCandidates fallback (auto-pick)。同名 jewel 主体で実害小、UI 配線は PA宣言 batch (§5) で | ✅ 出荷済 |
+| ~~B07046~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。$self.partnerAreaTraitCount.<trait> dyn 新設 (removeNameCount 同式 player-based) | ✅ 出荷済 |
 | B07049 | remove ∪ partner-area の union pick「1枚まで」→手札 — candidates の area switch は排他 (union token 無し) | union-area pick or 2段 choice 設計裁定 |
 | B07061 | remove→PA へ移す pick — toPartnerArea は ctx.source.cardId 固定 (core.ts:368、pick/target 引数なし)、partnerAreaRemove は逆方向 | toPartnerArea の target/pick 化 |
 | D06013 | デッキ上4枚 reveal 全 bind + 色 gate + sleep→stun pick — deckRevealUntil は matched 抽出型、souza は bind-all だが pre-walk over-fire (BUG-145/161) と衝突 | souza 型 reveal + conditionIfIsStable 整理 |
@@ -1191,3 +1191,16 @@ nits (opus lens、0 blocker): ① reuse-batch.test.ts の abilities>0 免除は 
 filename → 初回 run が「no smoke report found」誤報 (rename 回避、恒久 fix は writer/checker どちらかの統一)。
 ③ B06028「1枚まで選び」= trigger.optional (発動拒否=0枚) に折り畳む wave-11 hirameki-actor idiom
 (B05032/B05111 出荷同型)。発動後の 0-pick は無し — sonnet5 lens NIT、rules/10 発動任意で実害なし。
+
+## defer-unlock mini-wave nits (2026-07-09、混成 review SHIP・0 blocker の latent 記録)
+
+- **apOverride_turn 優先順位**: turn override > 恒久 apOverride > printed は「後発効果勝ち」の
+  engineering 判断 (両方 stack するカードは現状無し、QA 未裁定)。該当カード出現時に公式QA 再確認。
+- **atomRemoveAreaToDeckTop の chainStepNoApply** は全経路で立つ — B07014 a3 (単発 declared) では
+  flag 未読で無害と実測済。将来 B07014 を chain 化する場合は 0枚 gate 挙動に注意。
+- **contactCharMatches は scene のみ探索** — パートナー参加コンタクトは false (fail-closed、
+  $contact.byUid の charModifyAP も scene-only で system-wide 整合。cond/eval.ts に comment 済)。
+- **B02076 a1「1枚選び…してもよい」→ max:1 (0-pick=decline)**: B03039 出荷 precedent 同型。
+  カード個別 QA 未確認 (公開エリア pick で選択単独に副作用なし = 機能等価、traceability 記録)。
+- **B07039 宣言 cost の pick UI 未配線** (costParams channel は敷設済、fallback=auto-pick)。
+  PA宣言 batch (§5) で UI 一括配線時に解消。
