@@ -16,7 +16,11 @@
   shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
   混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
   残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- 出荷済 **1745** / corpus 2074 = **残り未実装 329 printings**。**★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。engine mini-wave 進行中: **①②④ 出荷済** (2026-07-10 朝、lpOverride_turn + levelSum + viaNextHint、消化 6 printings + BUG-179 水平 4 枚)。次 = ③deck-reveal 拡張 (B01022/B05047/B03049) ⑤「選ばれたとき無効」intercept (B02067/B04003/B08081) ⑥hand 内 continuous (B01009/B09095/B07003) ⑦set-card 操作 ⑧cost choice UI (T3)。手順 = 本 session 実証済 (RED probe → 実装 → prepare --reps --include-deferred → workflow author+verify → finish → probe agent → 混成 review → ship)。
+- 出荷済 **1745** / corpus 2074 = **残り未実装 329 printings**。**★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。engine mini-wave 進行中: **①②④ 出荷済** (2026-07-10 朝、lpOverride_turn + levelSum + viaNextHint、消化 6 printings + BUG-179 水平 4 枚)。消化済 = ①②④ + #3 小粒 verb (handToDeckBottom 等、B03110/B03133/B05092)。**次 = mini-wave #4 = ⑥hand 内 continuous level** (B01009「手札にあるこのキャラはレベル4になる」/ B09095「手札にある間レベル-2」):
+  ContinuousModifier に lvlOverrideInHand/lvlDeltaInHand を追加し、hand-use-card.ts levelAllowed (L100) と
+  next-hint.ts の d.level 直読 (L94-96) を effective hand level helper 経由に (handUseColorIgnoreAllowed L70 が
+  「hand 在中カード自身の continuous walk + condition honor」の完全 template)。条件は sceneHas{side:either,nMin:6} /
+  scratchTrace 既存。その後 ③deck-reveal 拡張 ⑤intercept ⑦set-card ⑧cost choice UI (T3)。手順 = 本 session 実証済 (RED probe → 実装 → prepare --reps --include-deferred → workflow author+verify → finish → probe agent → 混成 review → ship)。
 - **★残枚数 随時報告義務 (2026-07-09 ユーザー指示)**: session 開始時 + batch/wave 出荷ごとに
   「出荷済 X / corpus 2074 = 残 Y printings (残 unit ≈ Z)」をユーザー向け報告に必ず含める。
   実測 = shipped: `npm run lint:icon-abilities` (shipped=N 表示) / unit 内訳: `npm run hybrid:prepare` summary。
