@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/tmp/megaw1`)
 - **ディレクトリ数**: 238
-- **ファイル数**: 4563
+- **ファイル数**: 4600
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1352,7 +1352,44 @@
       - `remaining-to-classify.json`
       - `task-d-priority-map.json`
     - **`grounding/`**
+      - `B01020.md` — B01020 毛利小五郎 grounding (2026-07-10, sonnet5)
+      - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
+      - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
+      - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
+      - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
+      - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
+      - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
+      - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
+      - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
+      - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
+      - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
+      - `B05009.md` — B05009 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
+      - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
+      - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
+      - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
+      - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
+      - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
+      - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
+      - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
+      - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
+      - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
+      - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
+      - `B08074.md` — B08074 降谷零 grounding (2026-07-10, sonnet5)
+      - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
+      - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
+      - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
+      - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
+      - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
+      - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
+      - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
+      - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `m3-pa-batch.md` — M3 前処理: PA(パートナーエリア) 宣言19+発動5 batch dossier
+      - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
+      - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
+      - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
       - `README.md` — specs/grounding/ — grounding 判断の永続化 (2026-07-10 token 削減施策 #3)
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
