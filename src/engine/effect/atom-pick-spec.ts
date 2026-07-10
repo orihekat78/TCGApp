@@ -35,6 +35,10 @@ export const ATOM_PICK_SPEC: Record<string, AtomPickSpec> = {
   // engine mega-wave W6 step11 (2026-07-04, row999 item4 / P42): removeAreaToDeckTop —
   // remove から pick → デッキの上へ (B07014 rider)。handAddFromRemove と同型 PB + sourceSplice。
   removeAreaToDeckTop: { defaultArea: 'remove', mode: 'PB', sourceSplice: true },
+  // Cluster WB1 (2026-07-11, B07030/B07061): toPartnerArea pick-form — remove から pick → パートナーエリアへ
+  //   移す (「リムーブエリアにある〚特徴[ビッグジュエル]〛を1枚まで選び、PAに移す」)。handAddFromRemove/
+  //   removeAreaToDeckTop と同型 PB + sourceSplice。target/n/max 不在の args:{} 自己移動形は handler が別分岐。
+  toPartnerArea:     { defaultArea: 'remove', mode: 'PB', sourceSplice: true },
   // engine拡張 wave (2026-06-21): handToEvidence — 手札から1枚 pick → 裏向きで証拠へ (evidenceToHand の逆)。
   handToEvidence:    { defaultArea: 'hand',     mode: 'PB' },
   // engine additive wave (2026-06-28): handReveal — 手札から1枚 pick → 公開 (zone 変化なし)。discard と同型 PB pick。
@@ -108,6 +112,8 @@ export function buildShortFormPick(
   if (Array.isArray(a.filterAny)) query.filterAny = a.filterAny;
   if (Array.isArray(a.state)) query.state = a.state;
   if (a.distinctNames === true) query.distinctNames = true;
+  // Cluster WB1 (2026-07-11, B09105): distinctLevel 短縮形 pass-through (「それぞれレベルの異なる」)。
+  if (a.distinctLevel === true) query.distinctLevel = true;
   // engine拡張 wave (2026-06-23): evidenceFlip 用 — 裏向き(未公開)の証拠のみ候補化。
   if (a.faceDown === true) query.faceDown = true;
   // engine拡張 wave (2026-06-23): evidenceFlipDown 用 — 表向き(公開済)の証拠のみ候補化。

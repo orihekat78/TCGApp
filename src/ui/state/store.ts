@@ -201,6 +201,11 @@ export type PendingEffectPick = {
    */
   distinctNames?: boolean;
   /**
+   * Cluster WB1 (2026-07-11, B09105「キッ」): target.query.distinctLevel を UI multi-select に伝達。
+   * CardListModal で同一 (印字) レベルの重複選択を click 不可化する (distinctNames の level 版)。
+   */
+  distinctLevel?: boolean;
+  /**
    * BUG-132 GAP-1: decline (pickedUid=null) を「0枚選択の atom 解決 + remainder 続行」として
    * 処理するマーカー (engine 側 PendingEffectPickSide.skipResolvesAtom と同 shape)。
    */

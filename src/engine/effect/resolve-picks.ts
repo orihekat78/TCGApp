@@ -94,7 +94,14 @@ function resolveDynArgs(
       const dynExpr = (v as { dyn: string }).dyn;
       const boundKeys = [...dynExpr.matchAll(/\$bound\.(\$?\w+)/g)].map((m) => m[1]);
       const hasUnresolvedBound = boundKeys.some((key) => !(key in ((ctx.bindings ?? {}) as Record<string, unknown>)));
-      if (hasUnresolvedBound) {
+      // WB2 (2026-07-11, B09112): `$declared.<key>.*` 参照で <key> が初期 walk 時点で未宣言の場合も literal 化を
+      // 保留する。declareName verb は chain/sequence 前段の実行時に ctx.declaredNames を書くため、walk 時点で
+      // evalDyn すると sceneNameCount=0 (空宣言 defensive) が焼き込まれ maxN=0 baked / 未 defer だと raw {dyn}
+      // が Math.min に渡り NaN 化。$bound と同型の deferral。runtime 側は handler-local resolveDeltaToNumber
+      // (atomDeckRevealUntil maxN) が解決。既宣言 $declared / 非 $declared dyn は従来通り literal 化 (byte 互換)。
+      const declaredKeys = [...dynExpr.matchAll(/\$declared\.(\w+)/g)].map((m) => m[1]);
+      const hasUnresolvedDeclared = declaredKeys.some((key) => !(key in ((ctx.declaredNames ?? {}) as Record<string, unknown>)));
+      if (hasUnresolvedBound || hasUnresolvedDeclared) {
         out[k] = v;
         continue;
       }
@@ -424,7 +431,7 @@ function substituteAtomPick(
       (ctx.dyn ??= {}).chainStepNoApply = true;
       return atom as Effect;
     }
-    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; perSideMax?: number } };
+    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; distinctLevel?: boolean; perSideMax?: number } };
     pushPendingEffectPickSide({
       player: byPlayer,
       // BUG-175: 能力所有者を同梱 — chooser≠owner の cross-side pick で解決後 ctx の座標系を保つ
@@ -442,6 +449,8 @@ function substituteAtomPick(
       // D08021 driver 2026-05-26: target.query.distinctNames を UI に伝える。
       // CardListModal multi-select で同 name component 衝突候補を click 不可化する。
       distinctNames: targetRef.query?.distinctNames === true,
+      // Cluster WB1 (2026-07-11, B09105): distinctLevel を UI/AI へ伝播 (「それぞれレベルの異なる」)。
+      distinctLevel: targetRef.query?.distinctLevel === true,
       // engine mega-wave W4 (2026-07-03, r84): perSideMax quota を UI/AI へ伝播 (B08019 a2)。
       ...(typeof targetRef.query?.perSideMax === 'number' ? { perSideMax: targetRef.query.perSideMax } : {}),
       // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、

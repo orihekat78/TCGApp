@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `fc9a5c23ebca`
+> Source hash: `39e5f0bbba04`
 
 公式ルール [`16-card-set.md`](../../../rules/16-card-set.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -14,7 +14,7 @@
 
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
 
-## 📄 参照ソース (85)
+## 📄 参照ソース (86)
 
 - [`src/cards/ct-d08/D08021.ts`](../../../../src/cards/ct-d08/D08021.ts)
 - [`src/cards/ct-d10/D10009.ts`](../../../../src/cards/ct-d10/D10009.ts)
@@ -36,4 +36,4 @@
 - [`src/cards/ct-p02/B02046.ts`](../../../../src/cards/ct-p02/B02046.ts)
 - [`src/cards/ct-p02/B02084.ts`](../../../../src/cards/ct-p02/B02084.ts)
 - [`src/cards/ct-p02/B02087.ts`](../../../../src/cards/ct-p02/B02087.ts)
-- _...ほか 65 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 66 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -192,7 +192,10 @@ export type Condition =
   // 「このキャラ以外の〚X〛が登場したとき」(B09002 a1) で rules/19 分割名の自己一致を防ぐ。
   // Task D E4 (2026-06-12): payloadKey — payload の uid フィールド名を指定 (例: 'guardUid' で
   // 「レベル6以下のキャラによってガードされたとき」B09041。player は scene 走査で導出)。
-  | { kind: 'triggerCharMatches'; side?: 'self' | 'opp' | 'either'; filter?: TargetFilter; excludeSource?: boolean; payloadKey?: string }
+  // WB2 (2026-07-11, B01070): requireSource — payload[payloadKey] === ctx.source.uid を要求 (excludeSource の逆)。
+  //   「このキャラを指定してアクションしたとき」= action:declare payload.targetUid が source 自身 (同名複数現場の
+  //   over-fire を side+cardId filter でなく uid 同定で防ぐ)。
+  | { kind: 'triggerCharMatches'; side?: 'self' | 'opp' | 'either'; filter?: TargetFilter; excludeSource?: boolean; requireSource?: boolean; payloadKey?: string }
   // engine additive (2026-06-29): setcard:enter payload の set card を filter 評価。
   // 「このキャラに〚特徴[YAIBA]〛のカードがセットされたとき」(B06046)。matcherCondition として使う。
   // 裏向きセット (faceUp!==true) は情報を持たない (rules/16) → 必ず false。set card は scene char では
@@ -246,7 +249,9 @@ export type Condition =
   // rules/17「【登場時】能力/効果による登場でも発動」。「レベル3以上のキャラの能力やレベル3以上のイベントの効果で
   // 登場した場合」(B01014/15/21 = or([{kind:character,levelMin:3},{kind:event,levelMin:3}])) /
   // 「【緑】のイベントの効果で登場した場合」(B07019 = {kind:event,color:緑})。sourceCardId 不在/non-effect は不一致。
-  | { kind: 'enterSource'; viaEffect?: boolean; sourceFilter?: TargetFilter }
+  // WB2 (2026-07-11, B05009/D10022): side — 原因カードの所有側 (enter payload.sourcePlayer) が登場キャラと
+  //   同側か。「自分のキャラの能力によって登場した場合」= side:'self' (viaEffect:true と and)。
+  | { kind: 'enterSource'; viaEffect?: boolean; sourceFilter?: TargetFilter; side?: 'self' | 'opp' }
   | { kind: 'custom'; check: (s: GameState, ctx: EffectCtx) => boolean };
 
 // ---------- TargetFilter / TargetQuery / TargetingRef ----------
@@ -282,6 +287,12 @@ export type TargetFilter = {
   apMax?: number;
   lpMin?: number;
   lpMax?: number;
+  // Cluster WB1 (2026-07-11, B09011「灰原哀」): 「元のLP」= 印字 LP か override 単体 (lpOverride ?? printed)。
+  //   lpMin/lpMax が turn/aura/continuous 修整込みの実効 LP なのに対し、baseLp は修整を除いた「元のLP」
+  //   (rules/19 §元のLP、公式 Q&A「もともと書かれている LP」)。scene 上のキャラで buff/debuff を無視して
+  //   「元のLPが0」を判定するために追加 (matchOneFilter/targetFilterToPredicate 両経路で honored)。
+  baseLpMin?: number;
+  baseLpMax?: number;
   levelMin?: number;
   levelMax?: number;
   // engine mega-wave W5 (2026-07-03, r47): 実効 level が集合内のキャラのみ。「発見されたカードの
@@ -326,6 +337,10 @@ export type TargetQuery = {
   state?: ('active' | 'sleep' | 'stun')[];
   named?: boolean;
   distinctNames?: boolean;
+  // Cluster WB1 (2026-07-11, B09105「キッ」): distinctNames のレベル軸版 —「それぞれレベルの異なる」
+  //   (2つの pick が同一 (印字) レベルを共有できない)。distinctNames と同型 3経路 enforcement
+  //   (resolve validate / chooseAiPick greedy / UI disabled)。card/char 候補は lookupCardDef(cardId).level で判定。
+  distinctLevel?: boolean;
   // engine拡張 wave (2026-06-23): evidence area の pick を裏向き(未公開)のみに限定する。
   // 「(相手の)裏向きの証拠を1つまで選び、表向きにする」(evidenceFlip pick-form) 用。
   // 既存カードは未使用 (= no-op、smoke baseline 不変)。candidates.ts evidence case が honor。

@@ -90,7 +90,11 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       //   $matched = 最初の match (or null) / $revealed = match を除いた残りの全 reveal カード。
       //   この semantics で「上から N 枚見て、その中から該当 1 枚を取り、残りはデッキ下」が成立。
       // maxN 未指定時: 従来通り (filter match まで or デッキ末尾まで reveal、match で stop)。
-      const maxN = a.maxN as number | undefined;
+      // WB2 (2026-07-11, B09112): maxN が {dyn} object の場合 dispatch 時に解決 (「指定名キャラ1枚につき」=
+      // {dyn:'$declared.named.sceneNameCount'})。filter dyn (L11-19) と対の処理 — resolve-picks の pre-walk は
+      // declareName 実行前で literal 化できず (deferral)、handler dispatch 時が唯一の解決点。plain number は
+      // resolveDeltaToNumber が同値返し = 既存 ~60 消費者 byte 互換。undefined は undefined 維持 (非 maxN 経路)。
+      const maxN = a.maxN === undefined ? undefined : resolveDeltaToNumber(a.maxN, s, ctx);
       // mini-wave #5 P3 (2026-07-10): fromBottom — 「デッキ下から公開」(B03049)。走査方向のみ切替
       // (maxN 分岐 = deck 末尾から i 枚 / 非 maxN = 逆順 copy を走査)。revealed の格納順は底優先。
       // bind/bindMatch/chooseMatch/refresh は無改変。未指定 (既存 ~60 消費者) は byte 互換。

@@ -1033,6 +1033,15 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                     })
                   )
                 : undefined}
+              pickDistinctLevel={isPickModeForThisArea ? (pendingPickForArea as { distinctLevel?: boolean } | undefined)?.distinctLevel : undefined}
+              pickLevels={isPickModeForThisArea && (pendingPickForArea as { distinctLevel?: boolean } | undefined)?.distinctLevel
+                ? Object.fromEntries(
+                    (pendingPickForArea?.candidates ?? []).map((c) => {
+                      const d = readDef.card(c.cardId);
+                      return [c.uid, d?.level];
+                    })
+                  )
+                : undefined}
             />
           );
         })()}

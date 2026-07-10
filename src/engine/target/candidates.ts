@@ -515,6 +515,13 @@ export function matchOneFilter(
   if (filter.apMax !== undefined && ap > filter.apMax) return false;
   if (filter.lpMin !== undefined && lp < filter.lpMin) return false;
   if (filter.lpMax !== undefined && lp > filter.lpMax) return false;
+  // Cluster WB1 (2026-07-11, B09011): baseLp = 「元のLP」= override 単体 (lpOverride ?? printed)。
+  // turn/aura/continuous 修整を含まない (rules/19 §元のLP、公式Q&A「もともと書かれているLP」)。
+  if (filter.baseLpMin !== undefined || filter.baseLpMax !== undefined) {
+    const baseLp = c?.lpOverride ?? base?.lp ?? 0;
+    if (filter.baseLpMin !== undefined && baseLp < filter.baseLpMin) return false;
+    if (filter.baseLpMax !== undefined && baseLp > filter.baseLpMax) return false;
+  }
   if (filter.levelMin !== undefined && level < filter.levelMin) return false;
   if (filter.levelMax !== undefined && level > filter.levelMax) return false;
   // engine mega-wave W5 (2026-07-03, r47): levelIn — 実効 level が集合内 (B04074)。levelInBound は

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `460bc5a60e91`
+> Source hash: `379edd8c46b6`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,23 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## 夜間自走 Wave B — engine param 拡張 9 rep + exemplar 13 printings (1935→1948)
+
+- **pick/query (WB1)**: toPartnerArea pick 化 (B07030/B07061) / sceneEnter partner-area∪remove union
+  source (B09055) / sceneSetState dyn-max ({dyn} は既存動作と実証 — degenerate max≤0 抑止のみ追加、
+  B03063) / distinctLevel query (distinctNames 同型 9 site、B09105 card は fileRemoveTop exact-N gate
+  待ちで DEFER) / baseLpMin-Max filter (元LP 判定、B09011)。
+- **trigger/dyn (WB2、4/4)**: $declared pre-walk deferral + deckRevealUntil maxN dyn (B09112+P) /
+  enter payload sourcePlayer + enterSource side (「自分のキャラの能力や効果によって登場」、
+  B05009+P/D10022) / triggerCharMatches requireSource (「このキャラを指定してアクション」、B01070) /
+  B05075 (engine 変更 0 — stale DEFER)。
+- **T2 混成 review**: BLOCK 1 = B05075 a1 が「してもよい」を bare chain で実装し human の decline 権を
+  剥奪 (rules/15 違反、D04007 の optional idiom が正) → optional wrapper 化 + decline probe 追加。
+  NIT = B09011P 欠落 → 補完。
+- DEFER: B06027 (前提不成立 — evidence card は hirameki 解決時点で remove に居る、設計判断要) /
+  B09105 card (fileRemoveTop exact-N chain-break 別 primitive)。
+- gates: tsc 0 / vitest 5333+ / smoke 472 exc0 / lint err0 / probe wB1 26 + wB2 41。**1948 / 2074 = 残 126**。
 
 ## 夜間自走 Wave A — engine additive 15 rep 相当 + exemplar 19 printings (1916→1935)
 

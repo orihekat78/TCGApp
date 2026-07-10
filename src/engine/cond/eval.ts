@@ -611,6 +611,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       // Task D E2 (2026-06-12): excludeSource — 「このキャラ以外の〚X〛が登場したとき」(B09002 a1)。
       // rules/19 分割名で自カードが filter に自己一致するのを除外する。
       if (cond.excludeSource && tcmUid === ctx.source.uid) return false;
+      // WB2 (2026-07-11, B01070): requireSource — 「このキャラを指定してアクションしたとき」(payloadKey:'targetUid')。
+      // action:declare payload.targetUid が source 自身 uid でなければ不一致 (excludeSource の逆方向)。
+      if (cond.requireSource && tcmUid !== ctx.source.uid) return false;
       // side:'self' = トリガキャラが card 所有者と同じ側 (ctx.source.player)
       const sameSide = tcmPlayer === ctx.source.player;
       if (cond.side === 'self' && !sameSide) return false;
@@ -810,8 +813,15 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     // 原因カードが既に盤面を離れていても可、fileTopMatches/boundMatchesFilter と同流儀)。
     // sourceCardId 不在 (EffectStackEntrySource.cardId は optional) / non-effect 登場は不一致 (安全側 false)。
     case 'enterSource': {
-      const esPayload = ctx.triggerPayload as { viaEffect?: boolean; sourceCardId?: string } | undefined;
+      const esPayload = ctx.triggerPayload as { viaEffect?: boolean; sourceCardId?: string; sourcePlayer?: 'self' | 'opp' } | undefined;
       if (cond.viaEffect !== undefined && (esPayload?.viaEffect ?? false) !== cond.viaEffect) return false;
+      // WB2 (2026-07-11, B05009): side — 原因カードの所有側 (payload.sourcePlayer) が登場キャラ (ctx.source) と
+      // 同側か。「自分のキャラの能力によって登場」= side:'self'。sourcePlayer 不在 emit (旧経路) は undefined→不一致。
+      if (cond.side) {
+        const sameSide = esPayload?.sourcePlayer === ctx.source.player;
+        if (cond.side === 'self' && !sameSide) return false;
+        if (cond.side === 'opp' && sameSide) return false;
+      }
       if (cond.sourceFilter) {
         const scId = esPayload?.sourceCardId;
         if (typeof scId !== 'string') return false;

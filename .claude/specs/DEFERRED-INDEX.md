@@ -41,6 +41,20 @@ setActionCutinBanFilter・$removed dyn・charRemoveSetCard/sceneRemove bind。
 | B08078 | 他カード ability の外部 hook 発火機構不在 (removeKeywordAtLeast cond 単体は trivial だが exemplar 不可) |
 | B05097 は choice{mill 0..N} 代替で出荷済 — count-picker primitive は不要になった |
 
+## ★夜間 Wave B 上書き節 (2026-07-11 night-run — 同上、本節優先)
+
+**✅出荷済**: B07030 / B07061 / B09055 / B03063 / B09011(+P) / B09112(+P) / B05009(+P) / D10022 /
+B01070 / B05075 = 13 printings。新 primitive: toPartnerArea pick / sceneEnter PA∪remove union /
+distinctLevel / baseLpMin-Max / $declared deferral + deckRevealUntil maxN dyn / enter sourcePlayer +
+enterSource side / triggerCharMatches requireSource。B05075 は T2 BLOCK (してもよい bare chain) を
+optional 化で修正済。
+
+**DEFER (2026-07-11 実測)**:
+| ID | blocker |
+|----|---------|
+| B06027 | 前提不成立: evidence:remove-by-action 発火時点でカードは remove 移動済 (mutate.evidence.removeTop が先、action-case.ts:38)。「証拠から登場」= remove-source 自己参照 か removeTop タイミング再設計 (骨格) の設計判断要 |
+| B09105 (card のみ — distinctLevel primitive は出荷済) | fileRemoveTop の exact-N chain-break gate 不在 (0-removed break のみ、Q&A は FILE=1 で deploy 不成立を要求) |
+
 ## 公式 defer 宣言済 (専用ファイルあり)
 
 | Phase | 内容 | 専用 spec |

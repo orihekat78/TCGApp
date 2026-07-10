@@ -93,7 +93,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             //   per-card emit で enterOrderThisTurn が 1 枚ずつ加算され【疾風 N】が正しく判定される (batch emit 禁止)。
             event.emit(s, 'enter', {
               uid: nc.uid, viaEffect: viaEffectM, enterOrder: nc.enterOrder,
-              enterOrderThisTurn: nc.enterOrderThisTurn, sourceCardId: (ctx.source as { cardId?: string }).cardId,
+              enterOrderThisTurn: nc.enterOrderThisTurn, sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
             }, { player: enterP, uid: nc.uid, cardId: cid });
             enteredGroup.push({ kind: 'char', uid: nc.uid, cardId: cid, player: enterP });
           }
@@ -108,7 +108,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           if (viaEffectM && enteredGroup.length > 0) {
             event.emit(s, 'enter:group', {
               player: enterP, uids: enteredGroup.map(e => e.uid),
-              sourceCardId: (ctx.source as { cardId?: string }).cardId,
+              sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
             }, { player: enterP, bindings: { enterGroup: enteredGroup } });
           }
           return;
@@ -191,7 +191,36 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const sourceSide = ((a.target && typeof a.target === 'object')
         ? ((a.target as { query?: { side?: string } }).query?.side)
         : undefined) as 'self' | 'opp' | undefined;
-      if (sourceArea === 'remove') {
+      // Cluster WB1 (2026-07-11, B09055「世良真純」): source area が union 配列 or 'partner-area' の場合 —
+      //   「自分のパートナーエリアかリムーブエリアにある〚X〛を1枚まで登場」。handAddFromRemove の union
+      //   splice と同流儀 (pick 済 cardId は一意 zone 由来)。候補列挙は area 配列 union が既対応
+      //   (candidates.ts 'partner-area' = partnerAreaCards、非MR一般枠)。remove→登場 は remove:exit emit
+      //   (wave-4 一貫性)、PA→登場 は PA 一般枠から除去 (remove:exit 不要 = 離脱でなく現場流入)。
+      //   単一 area 文字列 (remove/hand/deck) は従来 branch へ落ちる = byte 互換。
+      const rawSrcArea = (a.target && typeof a.target === 'object')
+        ? (a.target as { query?: { area?: string | string[] } }).query?.area : undefined;
+      if (Array.isArray(rawSrcArea) || rawSrcArea === 'partner-area') {
+        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const areas = (Array.isArray(rawSrcArea) ? rawSrcArea : [rawSrcArea])
+          .filter((x): x is 'remove' | 'partner-area' => x === 'remove' || x === 'partner-area');
+        let spliced = false;
+        for (const ar of areas) {
+          if (ar === 'remove') {
+            const arr = s.players[fromPlayer].remove;
+            const idx = arr.indexOf(cardId);
+            if (idx !== -1) { arr.splice(idx, 1); mutate.remove.emitExit(s, fromPlayer, cardId); spliced = true; break; }
+          } else {
+            const pa = s.players[fromPlayer].partnerAreaCards;
+            const idx = pa ? pa.indexOf(cardId) : -1;
+            if (idx !== -1) { pa!.splice(idx, 1); spliced = true; break; }
+          }
+        }
+        // sourceRequired (B05115 型): 解決までに union のどの zone にも無ければ登場中止。
+        if (!spliced && (a as { sourceRequired?: boolean }).sourceRequired === true) {
+          mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:source-missing-skip', target: cardId });
+          return;
+        }
+      } else if (sourceArea === 'remove') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].remove;
         const idx = arr.indexOf(cardId);
@@ -262,13 +291,13 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         viaEffect,
         enterOrder: newChar.enterOrder,
         enterOrderThisTurn: newChar.enterOrderThisTurn,
-        sourceCardId: (ctx.source as { cardId?: string }).cardId,
+        sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
       }, { player: enterPlayer, uid: newChar.uid, cardId });
       // engine mega-wave W4 (2026-07-03, r83): 単一登場も group-of-1 として emit (B01012 は 1枚登場でも発動)
       if (viaEffect) {
         event.emit(s, 'enter:group', {
           player: enterPlayer, uids: [newChar.uid],
-          sourceCardId: (ctx.source as { cardId?: string }).cardId,
+          sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
         }, { player: enterPlayer, bindings: { enterGroup: [{ kind: 'char', uid: newChar.uid, cardId, player: enterPlayer }] } });
       }
       return;
@@ -298,13 +327,13 @@ export function atomSceneSwitch(s: GameState, a: Record<string, unknown>, ctx: E
         viaEffect,
         enterOrder: newChar.enterOrder,
         enterOrderThisTurn: newChar.enterOrderThisTurn,
-        sourceCardId: (ctx.source as { cardId?: string }).cardId,
+        sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
       }, { player: swPlayer, uid: newChar.uid, cardId: swCardId });
       // engine mega-wave W4 (2026-07-03, r83): スイッチ登場も「登場」(rules/17) → group-of-1 emit
       if (viaEffect) {
         event.emit(s, 'enter:group', {
           player: swPlayer, uids: [newChar.uid],
-          sourceCardId: (ctx.source as { cardId?: string }).cardId,
+          sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
         }, { player: swPlayer, bindings: { enterGroup: [{ kind: 'char', uid: newChar.uid, cardId: swCardId, player: swPlayer }] } });
       }
       return;
@@ -459,9 +488,20 @@ export function atomSceneToEvidence(s: GameState, a: Record<string, unknown>, ct
     }
 
 export function atomSceneSetState(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
-      // PA 短縮形: uid 不在 + player + state(設定する状態の文字列) + n|max → scene pick を構築。
+      // PA 短縮形: uid 不在 + player + state(設定先の状態の文字列) + n|max → scene pick を構築。
       // a.state は「設定先の状態」なので候補 filter には載せない (buildShortFormPick は配列 state のみ拾う)。
       if (a.uid === undefined && typeof a.player === 'string' && typeof a.state === 'string' && hasNorMax(a)) {
+        // Cluster WB1 (2026-07-11, B03063「死闘」): dyn 上限が 0 以下に解決された「0枚まで選ぶ」は degenerate
+        //   pick を出さず no-op (rules/15「〜まで」= 0可、evidenceFlip の dyn-max-0 と同 posture)。
+        //   「自分の現場の〚特徴[空手家]〛と同じ数まで相手キャラをスリープ」= max:{dyn:'$self.sceneTrait.空手家'}。
+        //   ★ top-level {dyn} は resolve-picks.resolveDynArgs が atom dispatch 前に literal 化済 (nMax:2 等は
+        //   既に機能) → ここでは resolved 数値のみを見て 0以下を抑止する。全カードで literal max:0/n:0 短縮形は
+        //   未使用のため byte 互換 (n.max:0 の pick object とは別物)。
+        const ssMaxN = typeof a.max === 'number' ? a.max : (typeof a.n === 'number' ? (a.n as number) : undefined);
+        if (ssMaxN !== undefined && ssMaxN <= 0) {
+          mutate.log.append(s, { ts: Date.now(), player: resolvePlayer(a.player, ctx), turn: s.turn.number, action: 'effect:sceneSetState', target: 'max-0', result: 'none' });
+          return;
+        }
         paShortFormAwait(s, verb, a, ctx, resolvePlayer(a.player, ctx), 'either');
         return;
       }

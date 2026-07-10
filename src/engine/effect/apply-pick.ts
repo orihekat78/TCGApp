@@ -383,8 +383,9 @@ function chooseAiPick(
       : cands;
     // engine mega-wave W4 (2026-07-03, r84): perSideMax (「自分と相手で1枚ずつ」B08019 a2) — distinctNames
     // と同型の greedy walk (side 別 counter)。両 flag 併用時は perSideMax gate → name-dedup の順で複合。
-    if (pending.distinctNames === true || typeof pending.perSideMax === 'number') {
+    if (pending.distinctNames === true || pending.distinctLevel === true || typeof pending.perSideMax === 'number') {
       const seen = new Set<string>();
+      const seenLv = new Set<number>(); // Cluster WB1 (2026-07-11, B09105): distinctLevel greedy dedup
       const bySide: Record<string, number> = {};
       const chosen: string[] = [];
       for (const c of orderedCands) {
@@ -398,6 +399,14 @@ function chooseAiPick(
           const comps = d ? allCardNameComponentsForDef(d) : [c.cardId];
           if (comps.some((x) => seen.has(x))) continue;
           comps.forEach((x) => seen.add(x));
+        }
+        // Cluster WB1: distinctLevel — 既選択と同レベルは skip (「それぞれレベルの異なる」B09105)。
+        if (pending.distinctLevel === true) {
+          const lv = def.card(c.cardId)?.level;
+          if (typeof lv === 'number') {
+            if (seenLv.has(lv)) continue;
+            seenLv.add(lv);
+          }
         }
         if (typeof pending.perSideMax === 'number') {
           const side = (c as { player?: string }).player ?? '?';

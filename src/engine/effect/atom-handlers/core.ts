@@ -484,7 +484,7 @@ export function atomSelfToEvidence(s: GameState, a: Record<string, unknown>, ctx
       return;
     }
 
-export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // 「このカードをパートナーエリアに移す」(rules/03 §パートナーエリア、engine wave-12 G39)。
       // selfToEvidence と同型の deterministic self 経路 (pick 不要): イベント使用後 handUseCard /
       // next-hint が当該カードをリムーブへ置き、hirameki も evidence.removeTop が remove へ移動済 →
@@ -492,6 +492,26 @@ export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx:
       // lastIndexOf splice + 不在 no-op (B06026 Q&A 同型) + remove:exit emit + PA push (上限なし) を行う。
       // ctx.source.cardId = 当該カード自身、ctx.source.player = 使用者/証拠所有者。
       const tpaP = resolvePlayer((a.player as 'self' | 'opp' | undefined) ?? 'self', ctx);
+      // Cluster WB1 (2026-07-11, B07030 a1後段 / B07061): pick-form — 「リムーブエリアにある〚特徴
+      //   [ビッグジュエル]〛を1枚まで選び、PAに移す」。removeAreaToDeckTop と同型 (PB pick + sourceSplice)、
+      //   dest = PA (addAreaCardFromRemove が remove splice + remove:exit emit + PA push を行う)。target/n/max
+      //   があれば pick-form、無ければ従来の自己移動形 (args:{}、B07059/B07060/PR195 等) = byte 互換。
+      if (a.target !== undefined || hasNorMax(a)) {
+        const tpaArgs = (a.target === undefined && hasNorMax(a))
+          ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.toPartnerArea!.defaultArea, a, tpaP, tpaP) }
+          : a;
+        const tpaTarget = normalizeTargetToString(tpaArgs.target);
+        if (!tpaTarget) {
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: tpaArgs }, ctx, { byPlayer: tpaP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+          mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea:awaiting-pick' });
+          return;
+        }
+        const tpaPicked = mutate.partner.addAreaCardFromRemove(s, tpaP, tpaTarget);
+        // 0枚 (skip/不在) → chain gate (removeAreaToDeckTop と同型、「してもよい。そうした場合」対応)。
+        if (!tpaPicked) (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: tpaP, turn: s.turn.number, action: 'effect:toPartnerArea', target: tpaTarget, result: tpaPicked ? 'ok' : 'not-found' });
+        return;
+      }
       const tpaCardId = ctx.source.cardId;
       if (typeof tpaCardId !== 'string' || tpaCardId.length === 0) return;
       const moved = mutate.partner.addAreaCardFromRemove(s, tpaP, tpaCardId);

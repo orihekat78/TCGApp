@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `88393ca6d467`
+> Source hash: `395c351cdec9`
 
 仕様書 [`engine-api-atom-verbs`](../../../specs/engine-api-atom-verbs.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

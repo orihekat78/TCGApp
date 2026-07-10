@@ -61,6 +61,22 @@ export function resolve(
         }
       }
 
+      // Cluster WB1 (2026-07-11, B09105): distinctLevel (rules: 「それぞれレベルの異なる」)。
+      // no two picks may share the same (印字) level。card/char 候補は lookupCardDef(cardId).level。
+      if (ref.query.distinctLevel) {
+        const seenLv = new Set<number>();
+        for (const p of picked) {
+          const lv = levelForCandidate(p);
+          if (lv === undefined) continue; // partner/evidence/file 等は level 概念なし → skip
+          if (seenLv.has(lv)) {
+            throw new Error(
+              `target.resolve: distinctLevel violated — duplicate level "${lv}"`,
+            );
+          }
+          seenLv.add(lv);
+        }
+      }
+
       // engine mega-wave W4 (2026-07-03, r84): perSideMax — side 毎の選択上限 (「自分と相手で1枚ずつ」
       // B08019 a2)。distinctNames と同 posture の runtime validate。partner candidate は player 概念が
       // side quota に馴染まないため使用不可 (throw)。
@@ -120,4 +136,10 @@ function componentsForCandidate(cand: Candidate): string[] {
     case 'file':
       return [];
   }
+}
+
+// Cluster WB1 (2026-07-11, B09105): distinctLevel 用 — 候補の (印字) レベル。char/card のみ level を持つ。
+function levelForCandidate(cand: Candidate): number | undefined {
+  if (cand.kind !== 'char' && cand.kind !== 'card') return undefined;
+  return lookupCardDef(cand.cardId)?.level;
 }

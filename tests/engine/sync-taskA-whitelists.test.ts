@@ -29,6 +29,7 @@ import type { TargetFilter } from '@/engine/types/effect';
 const TARGET_FILTER_KEYS = {
   cardId: true, cardName: true, cardNameNot: true, trait: true, color: true, colorNot: true, keyword: true,
   kind: true, apMin: true, apMax: true, lpMin: true, lpMax: true,
+  baseLpMin: true, baseLpMax: true, // Cluster WB1 (2026-07-11, B09011): 元LP (override 単体) 軸
   levelMin: true, levelMax: true, hasSetCards: true,
   actedCharThisTurn: true, // engine additive wave-7 (2026-07-02, P17)
   hasFaceDownSetCards: true, // engine mega-wave W4 (2026-07-03, r82 同梱): 裏向きセット保持軸 (B08035 a2)

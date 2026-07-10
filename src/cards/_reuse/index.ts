@@ -1476,6 +1476,19 @@ import { B02087P } from '../ct-p02/B02087P.js';
 import { B05007 } from '../ct-p05/B05007.js';
 import { B05007P } from '../ct-p05/B05007P.js';
 import { B05097 } from '../ct-p05/B05097.js';
+import { B07030 } from '../ct-p07/B07030.js';
+import { B07061 } from '../ct-p07/B07061.js';
+import { B09055 } from '../ct-p09/B09055.js';
+import { B03063 } from '../ct-p03/B03063.js';
+import { B09011 } from '../ct-p09/B09011.js';
+import { B09112 } from '../ct-p09/B09112.js';
+import { B09112P } from '../ct-p09/B09112P.js';
+import { B05009 } from '../ct-p05/B05009.js';
+import { B05009P } from '../ct-p05/B05009P.js';
+import { D10022 } from '../ct-d10/D10022.js';
+import { B01070 } from '../ct-p01/B01070.js';
+import { B05075 } from '../ct-p05/B05075.js';
+import { B09011P } from '../ct-p09/B09011P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1907,4 +1920,8 @@ export const REUSE_CARDS: CardDef[] = [
   B03111P, B05117P,
   // night-wA: engine additive wave A (verb/hook/cond/dyn/cost) exemplar 19 printings (2026-07-11)
   B07049, D10009, D10010, B07063, B07063P, B04073, B03008, B03040, B02084, B02084P, B03041, B03041P, B09107, B09107P, B02087, B02087P, B05007, B05007P, B05097,
+  // night-wB: param 拡張 wave B exemplar 12 printings (2026-07-11)
+  B07030, B07061, B09055, B03063, B09011, B09112, B09112P, B05009, B05009P, D10022, B01070, B05075,
+  // night-wB P spread 補完 (B09011P)
+  B09011P,
 ];

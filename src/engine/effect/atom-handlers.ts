@@ -164,7 +164,7 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
     case 'selfToEvidence':
       return atomSelfToEvidence(s, a, ctx);
     case 'toPartnerArea':
-      return atomToPartnerArea(s, a, ctx);
+      return atomToPartnerArea(s, a, ctx, verb);
     case 'evidenceLose':
       return atomEvidenceLose(s, a, ctx);
     case 'evidenceToDeck':

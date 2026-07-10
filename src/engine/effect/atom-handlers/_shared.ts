@@ -151,6 +151,10 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
     const lp = d.lp ?? 0;
     if (filter.lpMin !== undefined && lp < filter.lpMin) return false;
     if (filter.lpMax !== undefined && lp > filter.lpMax) return false;
+    // Cluster WB1 (2026-07-11, B09011): baseLp = 「元のLP」。deck/remove カードは override/turnEffect を
+    // 持たない = 印字 LP がそのまま元LP (matchOneFilter の非現場ケースと同式、3経路 sync)。
+    if (filter.baseLpMin !== undefined && lp < filter.baseLpMin) return false;
+    if (filter.baseLpMax !== undefined && lp > filter.baseLpMax) return false;
     if (filter.levelMin !== undefined && (d.level ?? 0) < filter.levelMin) return false;
     if (filter.levelMax !== undefined && (d.level ?? Infinity) > filter.levelMax) return false;
     // mega-wave W5 (2026-07-04, r47 review nit): levelIn / 未解決 levelInBound。levelIn は printed 判定

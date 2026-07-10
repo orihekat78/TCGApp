@@ -116,6 +116,13 @@ export type CardListModalProps = {
    */
   pickComponents?: Record<string, string[]>;
   /**
+   * Cluster WB1 (2026-07-11, B09105「キッ」): rules 「それぞれレベルの異なる」制約を multi-select に
+   * 適用するフラグ。true で同一 (印字) レベルの既選択と衝突する候補を disable。`pickLevels` を併せて渡す。
+   */
+  pickDistinctLevel?: boolean;
+  /** 各 pickCands uid → (印字) レベルのマップ。pickDistinctLevel=true のとき重複検査に使用。 */
+  pickLevels?: Record<string, number | undefined>;
+  /**
    * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) forced 集合。
    * multi-select では auto-select + deselect 不可 + 完了 gate (forced ⊆ selected)、
    * single-select では forced 以外を click 不可化。skip (選ばない) は Playmat 側で封じる。
@@ -125,7 +132,7 @@ export type CardListModalProps = {
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickForcedUids } = props;
+  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickForcedUids } = props;
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
   const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
@@ -155,6 +162,21 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
     const cmps = pickComponents[uid] ?? [];
     return cmps.some((c) => selectedComponents.has(c));
   };
+  // Cluster WB1 (2026-07-11, B09105): 選択済 uid → (印字) レベル Set (「それぞれレベルの異なる」)
+  const selectedLevels = new Set<number>();
+  if (pickDistinctLevel && pickLevels) {
+    for (const u of selectedUids) {
+      const lv = pickLevels[u];
+      if (typeof lv === 'number') selectedLevels.add(lv);
+    }
+  }
+  /** 候補 uid が distinctLevel 制約で disabled か (未選択かつ既選択と同一レベル) */
+  const isDistinctLevelBlocked = (uid: string): boolean => {
+    if (!pickDistinctLevel || !pickLevels) return false;
+    if (selectedUids.includes(uid)) return false; // 既選択は toggle off 可
+    const lv = pickLevels[uid];
+    return typeof lv === 'number' && selectedLevels.has(lv);
+  };
   const toggleSelect = (uid: string): void => {
     setSelectedUids((prev) => {
       // W2b (P50/r27): lock された forced は deselect 不可 (「必ず選ぶ」)
@@ -163,8 +185,9 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
         return prev.filter((u) => u !== uid);
       }
       if (typeof pickNMax === 'number' && prev.length >= pickNMax) return prev; // 上限ガード
-      // distinctNames 衝突は click 不可なので click 経路に到達しないが、念のため防御
+      // distinctNames / distinctLevel 衝突は click 不可なので click 経路に到達しないが、念のため防御
       if (isDistinctNamesBlocked(uid)) return prev;
+      if (isDistinctLevelBlocked(uid)) return prev;
       return [...prev, uid];
     });
   };
@@ -310,7 +333,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 if (pickUid !== undefined) {
                   const isSelected = isMultiPick && selectedUids.includes(pickUid);
                   const isForcedLocked = forcedLockable && forcedInCands.includes(pickUid);
-                  const isBlocked = (isMultiPick && isDistinctNamesBlocked(pickUid)) || isForcedBlocked(pickUid);
+                  const isBlocked = (isMultiPick && (isDistinctNamesBlocked(pickUid) || isDistinctLevelBlocked(pickUid))) || isForcedBlocked(pickUid);
                   const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                   return (
                     <button

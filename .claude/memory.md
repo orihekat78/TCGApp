@@ -51,3 +51,10 @@
 - ★T2 review 実 BLOCK 検出→修正: removeDeckAll コスト時 refresh 未発火 (公式Q&A 違反)。probe が
   バグを pin していた実例 — 「probe green ≠ 意味正」、Q&A 列突合 lens は費用対効果あり。
 - DEFER 6 (B05101 card/B06005/B09078/B09039/B08002 card/B08078) — blocker を DEFERRED-INDEX へ。
+
+## Wave B (param 拡張、同夜)
+- WB1 5/6 + WB2 4/4 = 13 printings (1935→1948)。T2 review BLOCK: B05075「してもよい」bare chain
+  (decline 権剥奪) → optional 化。★agent の「strategically 常に有利だから optional 省略」は
+  忠実性違反 pattern — 印字の選択権は常に DSL に写す (D04007 idiom)。
+- B06027 DEFER: evidence:remove-by-action 時点でカードは remove に移動済 (removeTop が先) —
+  「証拠から登場」系は remove-source 自己参照 or removeTop タイミング再設計 (骨格) の設計判断要。
