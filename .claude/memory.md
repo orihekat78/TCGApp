@@ -31,3 +31,8 @@
   mini-wave #5 (deck-reveal) は grounding 済 = specs/miniwave5-deck-reveal-grounding.md (P3 T2小/P2 T2+PW/P1 T3)、
   実装は次 session。worktree megaw1 branch engine/miniwave5-deck-reveal 作成済 (rebase 要)。
   ⚠ 本端末は gitignored 蓄積 (dist-meta 等) で structure.md を clean 生成不能 → HEAD 復元 + docs は worktree 側で。
+- mini-wave #5 出荷 (ad545f49): fromBottom + deckPlaceSplitBound + DeckPlaceModal + bindMatch gate、
+  B03049/P + B05047 = 3 printings (1791/2074)。混成 review が実バグ 2 件検出→出荷前修正
+  (B1 同名コピー誤 splice→deckPos:'bottom'+positional bottom verb / B2 oppTurnDriver gate 漏れ)。
+  BUG-180 起票 (handAddFromDeck/sceneEnter deck-splice refresh gap ~152 消費者)。e2e playwright green。
+  残 = B01022 (T3、grounding 済) + roadmap S2 以降。
