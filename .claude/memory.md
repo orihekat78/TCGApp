@@ -76,3 +76,7 @@
   actionTargetsActive (B04077 idiom、出荷済) で可だが a1 blocker で card 全体 DEFER。
 - tsc 0 / full vitest 5349 pass+1 expfail+1 skip (減なし) / sync-taskA green。登録=_reuse/index.ts night-wC 節
   (B06042/P B06032/P B09081)。未 commit (driver 委譲)。
+
+## Wave C軽 + 最終 sweep (朝)
+- B06042+P/B06032+P/B09081 出荷 (16098619)。review CLEAN。gen-p-spread 収穫 0 (P 枯渇)。
+- 夜間 run 合計: 1903→1953 (+50p)、残 121。詳細 = memory reference-night-run-2026-07-11。

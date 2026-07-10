@@ -1496,6 +1496,7 @@ import { B06032 } from '../ct-p06/B06032.js';
 import { B06032P } from '../ct-p06/B06032P.js';
 import { B09081 } from '../ct-p09/B09081.js';
 
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1932,4 +1933,6 @@ export const REUSE_CARDS: CardDef[] = [
   B09011P,
   // night-wC (2026-07-11): charGrantAbility declared 解禁 (B06042) + hirameki optional humanChooser (B06032/B09081)
   B06042, B06042P, B06032, B06032P, B09081,
+  // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 0 枚)
+
 ];
