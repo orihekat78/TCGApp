@@ -110,6 +110,14 @@ export function findDeclaredAbility(
   for (const p of ['self', 'opp'] as const) {
     const host = state.players[p].scene.find((c) => c.uid === uid);
     if (!host) continue;
+    // gap② (2026-07-11, B06042): charGrantAbility で付与された declared ability
+    // (turnEffects.grantedAbilities[] の type:'declared') を宿主キャラの宣言能力として解決する。
+    // rider (on-set-host) walk と同順で、印字 abilities に無い abilId をここで拾う。
+    const granted = host.turnEffects['grantedAbilities'];
+    if (Array.isArray(granted)) {
+      const g = (granted as AbilityDef[]).find((a) => a.id === abilId && a.type === 'declared');
+      if (g) return g;
+    }
     for (const entry of host.setCards) {
       if (!entry.faceUp) continue;
       const rider = readDef.card(entry.cardId)?.abilities?.find(
@@ -120,6 +128,20 @@ export function findDeclaredAbility(
     return undefined;
   }
   return undefined;
+}
+
+/**
+ * grantedDeclaredAbilitiesOf — 指定 scene char に charGrantAbility で付与された
+ * declared ability を列挙する共有 helper (gap② 2026-07-11, B06042)。
+ * findDeclaredAbility の granted 走査と 1:1 対称 — UI/AI enumerator が印字 abilities に
+ * granted declared を合流させるために使う (rider walk の enumerator 版と同じ役割)。
+ */
+export function grantedDeclaredAbilitiesOf(
+  char: { turnEffects?: Record<string, unknown> } | undefined,
+): AbilityDef[] {
+  const granted = char?.turnEffects?.['grantedAbilities'];
+  if (!Array.isArray(granted)) return [];
+  return (granted as AbilityDef[]).filter((a) => a && a.type === 'declared');
 }
 
 /**

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `570a362953f9`
+> Source hash: `9824d4feaf4f`
 
 フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard）
 
@@ -49,6 +49,7 @@
 | `canStartNextHint` | `(state: GameState, p: Player): boolean` | canStartNextHint — ネクストヒントを開始可能か判定する。 - FILE 最上部 (アシストパートナー以外) が 1 枚以上必要 (= 実質 FILE ≥ 1 + 非アシスト) / |
 | `doReasoning` | `(state: GameState, uid: string): void` | doReasoning — 推理を実行する。 - reasoning:declare → スリープ化 → reasoning:before-add → 証拠追加 → reasoning:end - LP は max(0, lp) で証拠枚数を決定 (rules/… |
 | `endTurn` | `(state: GameState, p: Player): void` | ターン終了処理 (rules/05 エンドフェイズ): 1. phase:main:end (メインフェイズ終了) 2. phase:end:start (エンドフェイズ開始 — ターン終了時能力発火窓) 3. [呼出元の責務] resolve.runAllUntilEmpty でターン終了時 trigger 解決 4.… |
+| `grantedDeclaredAbilitiesOf` | `(char: { turnEffects?: Record<string, unknown> } \| undefined): AbilityDef[]` | grantedDeclaredAbilitiesOf — 指定 scene char に charGrantAbility で付与された declared ability を列挙する共有 helper (gap② 2026-07-11, B06042)。 findDeclaredAbility の granted 走査と 1:1 対称 — UI/… |
 | `handUseCard` | `(state: GameState, p: Player, cardId: string, _ctx?: unknown, switchRemoveUid?: string): void` | handUseCard — 手札の使用を宣言する。 - turnFlags.handUseUsed=true をセット - effect:declared hook を emit (Phase 5 で登録された listener が pendingEffects に積む) - ログ追加 実際のカード効果解決は呼出元が engine.resolve.runAllUntilEmpty を実行する責務。… |
 | `mustTargetCandidates` | `(state: GameState, byUid: string): TargetCandidate[]` | mustTargetCandidates — 必ず指定すべき対象 (G28: turnEffects.mustBeTargeted=true) - 相手 (opp) の scene を走査 - turnEffects.mustBeTargeted === true のキャラのみ返す / |
 | `registerTargetExpander` | `(uid: string, expander: TargetExpander): Unsubscribe` | registerTargetExpander — 指定 uid を発火元とする対象拡張を登録する。 戻り値の Unsubscribe を呼ぶと該当 uid のエントリを削除する。 同じ uid で複数回登録した場合は **後勝ち** (上書き)。 / |

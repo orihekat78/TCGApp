@@ -72,7 +72,8 @@ export function enumDeclaredAbilitySources(
   for (const c of state.players[player].scene) {
     const def = engine.cards.get(c.cardId);
     if (!def) continue;
-    const abilities = [...def.abilities, ...riderDeclaredAbilities(state, c)];
+    // gap② (2026-07-11, B06042): charGrantAbility 付与の declared も列挙 (findDeclaredAbility と対称)。
+    const abilities = [...def.abilities, ...riderDeclaredAbilities(state, c), ...flow.grantedDeclaredAbilitiesOf(c)];
     const hasUsable = abilities.some((a) => {
       if (a.type !== 'declared') return false;
       if (!flow.canDeclaredAbility(state, c.uid, a.id)) return false;
@@ -224,7 +225,8 @@ export function enumDeclaredAbilityIdsFor(
       if (c) {
         cardId = c.cardId;
         owner = p;
-        riderAbilities = riderDeclaredAbilities(state, c); // W6 step11 item4: on-set-host rider 込み
+        // W6 step11 item4: on-set-host rider 込み + gap② (2026-07-11, B06042): charGrantAbility 付与 declared 込み。
+        riderAbilities = [...riderDeclaredAbilities(state, c), ...flow.grantedDeclaredAbilitiesOf(c)];
         break;
       }
     }

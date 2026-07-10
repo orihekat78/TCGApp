@@ -203,15 +203,37 @@ export function atomCharGrantAbility(s: GameState, a: Record<string, unknown>, c
       const abilitySpec = a.ability;
       if (!abilitySpec || typeof abilitySpec !== 'object') return;
       const spec = abilitySpec as Record<string, unknown>;
+      // gap① (2026-07-11, B06042「【宣言】能力を与える」): spec.type / spec.scope を honor して
+      // declared ability の付与を解禁する。既存カード (B07063/B02014/B08014 等) は descriptor に
+      // type/scope を持たない → 'triggered' / 'on-scene' (旧固定値と byte 不変・回帰0)。
+      const grantedType = spec.type === 'declared' ? 'declared' : 'triggered';
+      const grantedScope = typeof spec.scope === 'string' ? spec.scope : 'on-scene';
       // granted id namespace (limit:{turn} の declaredUseCount キーとして機能する)
-      const grantedId = typeof spec.id === 'string'
+      const baseGrantedId = typeof spec.id === 'string'
         ? spec.id
         : `granted:${ctx.source.cardId ?? '?'}:${ctx.source.abilityId ?? '?'}`;
+      // gap③ (2026-07-11): declared grant のみ、同一 host へ base id 衝突で複数付与された場合に
+      // #N suffix を付し【ターン1】(declaredUseCount) を独立カウントさせる (公式Q&A B06042「同じキャラに
+      // 2回使用 → それぞれ1回ずつ計2回使える」)。triggered grant は従来 id 維持 (byte 不変)。
+      let grantedId = baseGrantedId;
+      if (grantedType === 'declared') {
+        let existingGranted: unknown;
+        for (const pl of ['self', 'opp'] as const) {
+          const host = s.players[pl].scene.find((c) => c.uid === cgaUid);
+          if (host) { existingGranted = host.turnEffects['grantedAbilities']; break; }
+        }
+        if (Array.isArray(existingGranted)) {
+          const dup = (existingGranted as Array<{ id?: unknown }>).filter(
+            (g) => typeof g.id === 'string' && (g.id === baseGrantedId || g.id.startsWith(`${baseGrantedId}#`)),
+          ).length;
+          if (dup > 0) grantedId = `${baseGrantedId}#${dup}`;
+        }
+      }
       const grantedDef = {
         ...spec,
         id: grantedId,
-        type: 'triggered',
-        scope: 'on-scene',
+        type: grantedType,
+        scope: grantedScope,
         description: typeof spec.description === 'string' ? spec.description : '(granted)',
       };
       mutate.char.grantAbility(s, cgaUid, grantedDef);

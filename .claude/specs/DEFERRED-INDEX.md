@@ -55,6 +55,18 @@ optional 化で修正済。
 | B06027 | 前提不成立: evidence:remove-by-action 発火時点でカードは remove 移動済 (mutate.evidence.removeTop が先、action-case.ts:38)。「証拠から登場」= remove-source 自己参照 か removeTop タイミング再設計 (骨格) の設計判断要 |
 | B09105 (card のみ — distinctLevel primitive は出荷済) | fileRemoveTop の exact-N chain-break gate 不在 (0-removed break のみ、Q&A は FILE=1 で deploy 不成立を要求) |
 
+## ★夜間 Wave C 軽 上書き節 (2026-07-11 night-run — 同上、本節優先)
+
+**✅出荷済**: B06042(+P) = charGrantAbility declared 解禁 (4点 + UI/AI enum) / B06032(+P) + B09081 =
+hiramekiResolve humanChooser (hirameki 内 optional の human surface 実バグ修正)。
+**DEFER**: B07001 (cost-removed trait-count dyn 不在 — costRemovedMatches は threshold のみ) /
+B09109 a2 (revealFromHand costPaid cardName + resolveBindRef $cost 非対応)。
+**NIT (記録)**: B09081 a2「1枚まで」が optional 諾否に折込 (B03085/B05111 踏襲、候補常 1 体)。
+**Wave C 残 (今夜未着手、次 session 候補)**: B05093+B02086 (chooser:'opp' 実配線 — resolve-picks:637
+意図的 dead、multi-site) / B06023+B06036+B06034 (hirameki invoke-by-cardId) / B06020+B07003 (hand-zone
+cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B04042+B04084 B05033 B08003 /
+T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D BLOCKED cluster (untargetableByOppEffect 設計)。
+
 ## 公式 defer 宣言済 (専用ファイルあり)
 
 | Phase | 内容 | 専用 spec |

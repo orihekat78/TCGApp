@@ -58,3 +58,21 @@
   忠実性違反 pattern — 印字の選択権は常に DSL に写す (D04007 idiom)。
 - B06027 DEFER: evidence:remove-by-action 時点でカードは remove に移動済 (removeTop が先) —
   「証拠から登場」系は remove-source 自己参照 or removeTop タイミング再設計 (骨格) の設計判断要。
+
+## Wave C (charGrantAbility declared + hirameki optional、2026-07-11 早朝)
+- Task1 SHIPPED: charGrantAbility declared 解禁 4点 (①char.ts spec.type/scope honor ②findDeclaredAbility
+  grantedAbilities 走査 ③grantedId #N 独立化 ④validate trigger 免除) + UI/AI enum 合流 → **B06042** author
+  (grantedContact=bindPick(opp)+startContact、startContact 初 live consumer)。probe 7/7 (owner=opp pin 込)。
+- Task2 SHIPPED: hiramekiResolve に humanChooser 配線 (isHumanHirameki、triggered.ts:433 と対称) →
+  top-level optional が human に surface (旧: AI-skip collapse) → **B06032/B09081** author。probe 8/8
+  (dispatch 実経路: optional surface→optionalResolve→discard pick→revive/stun、decline、condition gate)。
+  ★probe pin: evidence:remove-by-action の payload に byUid 併記必須 ($trigger.byUid 用、action-case.ts:47)。
+- Task3 DEFER B09109: a1 primitives (toDeckBottomOnTurnEnd + deckRevealUntil nested-dyn) 出荷済&検証済
+  (textual-grant.test.ts:144 / picks.ts B09109 名指し)。a2「カード名を公開キャラのに書換」= revealFromHand
+  costPaid に cardName 追加 + resolveBindRef $cost 非対応 (charSetTurnEffect nameOverride 経路不在) +
+  rules/19 複数名 override 未裁定 → engine additive 案件、partial 不可で card 全体 DEFER。
+- B07001 DEFER (Task1 同梱予定だった): a1「リムーブされた[少年探偵団]/[毛利探偵事務所]1枚につきAP+1000」=
+  cost-removed trait-match COUNT dyn 不在 (costRemovedMatches は threshold conditional のみ)。a2 は charSetTurnEffect
+  actionTargetsActive (B04077 idiom、出荷済) で可だが a1 blocker で card 全体 DEFER。
+- tsc 0 / full vitest 5349 pass+1 expfail+1 skip (減なし) / sync-taskA green。登録=_reuse/index.ts night-wC 節
+  (B06042/P B06032/P B09081)。未 commit (driver 委譲)。

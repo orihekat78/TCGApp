@@ -201,9 +201,19 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
             triggerPayload: { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
           };
           const aiPolicy = new HeuristicPolicy();
+          // night-wC (2026-07-11, B06032/B09081): ヒラメキ所有者が human のとき humanChooser:true を渡し、
+          // effect 内 top-level optional (「手札を1枚リムーブしてもよい。そうした場合〜」) を
+          // pendingEffectOptional として surface する (EffectOptionalModalHost + optionalResolve が resume)。
+          // 従来は humanChooser 不在で optional が常に AI-skip → 再生/スタン効果が無音 collapse していた
+          // (declared-ability.ts の isHumanEffect パターンと対称)。owner が AI (or spectator=null) は従来どおり
+          // heuristic 自動解決 (byte 不変)。
+          const hiramekiHumanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+          const isHumanHirameki = hiramekiHumanSide !== null && pending.player === hiramekiHumanSide;
           const resolved = resolveEffectPicks(draft, ability.effect as never, ctx, {
-            chooseAtomTarget: aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+            chooseAtomTarget: isHumanHirameki ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
             byPlayer: pending.player,
+            humanChooser: isHumanHirameki,
+            source: { cardId: pending.cardId, abilityId: pending.abilityId },
           });
           // engine wave-11 (2026-07-02): byUid = pendingHirameki.actorUid を trigger payload に
           // 復元 — 効果内 '$trigger.byUid' (「アクション中のキャラ」= アクション[事件] actor、公式Q&A B05111)

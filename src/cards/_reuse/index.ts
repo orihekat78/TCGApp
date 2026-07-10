@@ -1489,6 +1489,12 @@ import { D10022 } from '../ct-d10/D10022.js';
 import { B01070 } from '../ct-p01/B01070.js';
 import { B05075 } from '../ct-p05/B05075.js';
 import { B09011P } from '../ct-p09/B09011P.js';
+// night-wC (2026-07-11): charGrantAbility declared 解禁 + hirameki optional humanChooser
+import { B06042 } from '../ct-p06/B06042.js';
+import { B06042P } from '../ct-p06/B06042P.js';
+import { B06032 } from '../ct-p06/B06032.js';
+import { B06032P } from '../ct-p06/B06032P.js';
+import { B09081 } from '../ct-p09/B09081.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1924,4 +1930,6 @@ export const REUSE_CARDS: CardDef[] = [
   B07030, B07061, B09055, B03063, B09011, B09112, B09112P, B05009, B05009P, D10022, B01070, B05075,
   // night-wB P spread 補完 (B09011P)
   B09011P,
+  // night-wC (2026-07-11): charGrantAbility declared 解禁 (B06042) + hirameki optional humanChooser (B06032/B09081)
+  B06042, B06042P, B06032, B06032P, B09081,
 ];

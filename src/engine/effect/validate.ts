@@ -192,9 +192,15 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
  * - effect があれば通常の Effect として walk
  */
 function validateGrantedAbility(ability: Record<string, unknown>, path: string, errors: string[]): void {
-  const trig = ability['trigger'] as Record<string, unknown> | undefined;
-  if (!trig || typeof trig !== 'object') {
-    errors.push(`${path}.trigger: granted ability requires trigger`);
+  // gap④ (2026-07-11, B06042「【宣言】能力を与える」): declared 付与は trigger を持たない
+  // (宣言能力は trigger でなく limit + effect + 任意 cost で構成される)。type:'declared' のときは
+  // trigger 必須検査を免除する。triggered 付与 (既定) は従来どおり trigger 必須。
+  const grantedType = ability['type'];
+  if (grantedType !== 'declared') {
+    const trig = ability['trigger'] as Record<string, unknown> | undefined;
+    if (!trig || typeof trig !== 'object') {
+      errors.push(`${path}.trigger: granted ability requires trigger`);
+    }
   }
   // engine additive A2 (2026-07-11, B07063 鈴木園子): 旧 'leave:to-remove' grant 禁止を解禁。
   // 当時の禁止理由「virtual-location handler does not scan grantedAbilities」は現行 code で解消済:

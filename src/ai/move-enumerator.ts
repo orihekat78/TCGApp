@@ -163,7 +163,8 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   // 6. declaredAbility (scene 順 × ability 順)
   // Phase 8.8d: 同じく cost.canPay フィルタ
   for (const c of state.players[byPlayer].scene) {
-    for (const ab of charDeclaredAbilities(c.cardId)) {
+    // gap② (2026-07-11, B06042): 印字 declared + charGrantAbility 付与 declared (BUG-084 UI/AI 対称)。
+    for (const ab of [...charDeclaredAbilities(c.cardId), ...engine.flow.grantedDeclaredAbilitiesOf(c)]) {
       if (!engine.flow.canDeclaredAbility(state, c.uid, ab.id)) continue;
       if (ab.cost) {
         const ctx = makeDeclaredAbilCtx(state, c.uid, ab.id);
