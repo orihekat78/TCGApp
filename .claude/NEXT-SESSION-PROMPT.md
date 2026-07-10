@@ -1,4 +1,13 @@
-# 次セッション再開プロンプト — CARD PHASE (2026-07-10 M3 PA batch 出荷後)
+# 次セッション再開プロンプト — CARD PHASE (2026-07-11 夜間自走 run 進行中)
+
+## ★夜間自走 run 進捗 (2026-07-11、本節が下より優先)
+- **✅Wave 0 出荷 (cb9831a3、CI green)**: cost-choice UI + EffectPickerModal multi-select +
+  GREEN 6 = +13 printings (1903→1916)。BUG-186 修正 / BUG-187 起票。
+- **✅Wave A 出荷 (a1a13f4c)**: engine additive 14 primitive + 19 printings (1916→**1935、残 139**)。
+  T2 review BLOCK 1 (removeDeckAll refresh) 同 wave 修正。
+- **次 = Wave B (param 拡張 11 rep) → C (structural 26 rep) → D (BLOCKED 挑戦) → 最終 sweep**
+  (driver = specs/night-run-2026-07-11.md。DEFER 更新は DEFERRED-INDEX「夜間 W0/Wave A 上書き節」)。
+- 中断時はこの節 + driver + DEFERRED-INDEX 上書き節から再開可能。
 
 > モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 — **★model 未指定禁止 (未指定 = session モデル継承。判定表 = CLAUDE.md 2026-07-10 追記)**。⚠ 応答は日本語。Caveman + Ultracode 有効。
 > 履歴詳細は CHANGELOG.md / .claude/sessions/ / memory MEMORY.md / DEFERRED-INDEX.md を参照 (本ファイルには書かない)。

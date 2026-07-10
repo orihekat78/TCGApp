@@ -15,7 +15,8 @@ import { join } from 'node:path';
 const CARDS_DIR = join(process.cwd(), 'src', 'cards');
 
 // 'on-set-host' (2026-06-29c): 装備イベント等がセット先 host に付与するライダー scope (rules/16)。
-const ALLOWED_SCOPE = ['on-scene', 'on-hand', 'on-partner-area', 'on-evidence', 'on-set-host', 'always'];
+// 'on-set-self' (2026-07-11 夜間WA): 除去された setCard 自身の ability 走査 scope (B02084、faceUp gate)。
+const ALLOWED_SCOPE = ['on-scene', 'on-hand', 'on-partner-area', 'on-evidence', 'on-set-host', 'on-set-self', 'always'];
 
 type Issue = { file: string; msg: string; level: 'error' | 'warn' };
 
