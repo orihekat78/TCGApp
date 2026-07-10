@@ -76,6 +76,7 @@ const CONDS = new Set([
   'boundCountCompare', // S2 deck cluster (2026-07-10, B08057)
   'evidenceTraitAtLeast', // engine E3 P53 (2026-07-03, B09107)
   'costRemovedMatches', // engine additive wave (2026-06-29d)
+  'costRevealedMatches', // attribution mini-wave (2026-07-10)
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'contactOpponentApHigher',
   'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundDistinctColorCount', 'triggerCharMatches',

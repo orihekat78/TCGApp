@@ -327,7 +327,11 @@ function removeToRemove(
       // removedChar (2026-06-23): 離場キャラ snapshot (splice 前の char ref)。removedCharMatches.removedFilter が
       // 色/特徴/レベル/状態を判定する用 (rules/17/19)。matchOneFilter は char.turnEffects から effective level を読む
       // ため splice 後も同期 eval 中は修正後レベルが正しい。既存 consumer は本フィールドを無視 = 回帰0。
-      { uid: leavingUid, cause, side: player, byUid, removedChar: char },
+      // byPlayer (attribution mini-wave 2026-07-10): 効果 owner (atom-handlers/scene.ts:338 が
+      // ctx.source.player を渡す既存 opts を emit に配線)。removedCharMatches.byPlayer
+      // (「自分の能力や効果によってリムーブされたとき」) の帰属判定用。legacy caller
+      // (turn-end/MR②/switch/cost) は未指定 = undefined → byPlayer gate は fail-closed。
+      { uid: leavingUid, cause, side: player, byUid, removedChar: char, byPlayer: opts?.byPlayer },
       { player, uid: leavingUid, cardId: leavingCardId },
     );
   }

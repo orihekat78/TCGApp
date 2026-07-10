@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト — CARD PHASE (2026-07-10 S2 deck cluster 出荷後)
+# 次セッション再開プロンプト — CARD PHASE (2026-07-10 M2 attribution mini-wave 出荷後)
 
 > モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 (grounding/意味等価 = sonnet5 high / 敵対 review = sonnet5+opus 混成、割れたら fable or 実測裁定 / 機械 = sonnet low)。⚠ 応答は日本語。Caveman + Ultracode 有効。
 > 履歴詳細は CHANGELOG.md / .claude/sessions/ / memory MEMORY.md / DEFERRED-INDEX.md を参照 (本ファイルには書かない)。
@@ -6,7 +6,7 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-07-10 夕、✅M1 mega-sweep 出荷)
+## 現在地 (2026-07-10 夜、✅M2 attribution mini-wave 出荷)
 - **engine 骨格凍結済**。以後 engine は ±5/軽微 touch-up のみ。メイン作業 = CARD PHASE。
 - **defer-unlock mini-wave 出荷済** (2026-07-09 夜): additive 8 primitive (contactCharMatches /
   mill bind / removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / removeAreaAllToDeckBottom
@@ -16,7 +16,16 @@
   shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
   混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
   残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- 出荷済 **1830** / corpus 2074 = **残り未実装 244 printings** (実測 = npm run lint:icon-abilities)。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
+- **✅M2 attribution mini-wave 出荷済 (2026-07-10 夜)**: engine additive 6 点 (byPlayer emit 配線 /
+  removedCharMatches.byPlayer / costPaid 書込み 4 case / costRemovedMatches.key / costRevealedMatches
+  新 kind / revealFromHand n:{min,max} + removeSetCard hostSelf) + **12 unit** (B03112/B03116/B04089/
+  B04091/B04094/B05107 + B07025/B08041/B08068/B09005/B09050/B09060) + **P spread 25 枚随伴** (M1 base
+  の TSV 同文 twin)。T2 混成 review: semantic BLOCK 1 件 (B08041「このキャラに」host 非限定) →
+  hostSelf param 追加で同 wave 内修正。nits = DEFERRED-INDEX「M2 attribution mini-wave nits」節。
+  **次 = M2 後半 batch: set-card 残 (PR234/PR240/B01057/B02039、B02084 は BLOCKED ui-cost-choice) +
+  dyn-counter 小粒 9 (B05063/B06066/PR265/B09019/B04048/B06003/B07008/B08047) + cutin-filter
+  (D06003/B07100) — cluster 単位 1 lens (T0-T2 規約)。その後 M3 = UI mega (PA batch + B09027)**。
+- 出荷済 **1867** / corpus 2074 = **残り未実装 207 printings** (実測 = npm run lint:icon-abilities)。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
   driver = [.claude/specs/completion-roadmap-2026-07-10.md](specs/completion-roadmap-2026-07-10.md)。
   在庫の真実 = 実作業 **163 unit** (in-pool DEFER) + ride-along P 108 + ✅spread 済 39
   (`scripts/gen-p-spread.cjs` 新設、毎 session 末尾に随伴実行)。session 割当は roadmap 表参照。

@@ -89,7 +89,14 @@ export type Condition =
   // ⚠ filter は単一 TargetFilter = AND セマンティクス。OR が要るカード (B03003「〚阿笠博士〛か〚少年探偵団〛」) は
   //   Condition-level `or[costRemovedMatches{cardName:阿笠博士}, costRemovedMatches{trait:少年探偵団}]` で合成すること。
   //   B04077(警察)/B06078(赤井家) は単一 trait ゆえそのまま可。
-  | { kind: 'costRemovedMatches'; filter: TargetFilter; n?: number }
+  // key (attribution mini-wave 2026-07-10): 読む costPaid record を選択 (既定 'removeDeckTop' = 後方互換)。
+  //   'removeFromHand' (B09060「コストでリムーブしたカードが〚FBI〛の場合」) / 'removeSetCard'
+  //   (B08041「リムーブしたカードがキャラ/イベントの場合」)。書込み側 = cost/pay.ts 各 case。
+  | { kind: 'costRemovedMatches'; filter: TargetFilter; n?: number; key?: 'removeDeckTop' | 'removeFromHand' | 'removeSetCard' }
+  // costRevealedMatches (attribution mini-wave 2026-07-10, B09005): revealFromHand コストで公開した
+  // カードの素性で分岐 (「公開したカードが〚江戸川コナン〛か〚工藤新一〛の場合」)。costRemovedMatches と
+  // 同型ロジック (ctx.costPaid['revealFromHand'].ids を matchOneFilter(c=null=印字値) で判定、n=必要一致数 既定1)。
+  | { kind: 'costRevealedMatches'; filter: TargetFilter; n?: number }
   // engine additive (2026-06-29, B09089 刑事だらけの店): 「このターン中、自分の現場にキャラが
   // 登場していない場合」= turnState[p].enterCountThisTurn が n 以下か。player は resolvePlayer 規約
   // ('self'=カード所有者)。enterCountThisTurn は mutate/scene.ts enter() のみが increment、turn:start で
@@ -172,7 +179,12 @@ export type Condition =
   // 出ず continuous/aura 分が 0 化する (静的 apMod_* は turnEffects から正しく読む)。現出荷カードは removed char の
   // AP/LP filter を使わないため未踏。将来 AP/LP 軸の removedFilter を要するカードは snapshot に effective AP/LP を
   // 事前計算して載せる additive 拡張が必要 (DEFER 対象)。
-  | { kind: 'removedCharMatches'; side?: 'self' | 'opp' | 'either'; cause?: 'contact-ap' | 'effect' | 'switch' | 'cost'; by?: 'self' | { filter: TargetFilter; excludeSource?: boolean }; removedFilter?: TargetFilter; removedState?: ('active' | 'sleep' | 'stun')[] }
+  // byPlayer (attribution mini-wave 2026-07-10): リムーブを起こした効果 owner の帰属判定
+  //   ('self'=カード所有者自身の能力/効果、'opp'=相手の)。payload.byPlayer (absolute Player、
+  //   mutate/scene.ts emit) と ctx.source.player を比較。payload.byPlayer 未設定 (legacy caller:
+  //   turn-end/MR②/switch/cost) は fail-closed = false。既存 `by` field (コンタクト勝者 uid) とは別軸。
+  //   DSL authoring 規約: byPlayer 使用時は cause:'effect' を必ず併記 (他 cause 由来 payload の偶然一致防止)。
+  | { kind: 'removedCharMatches'; side?: 'self' | 'opp' | 'either'; cause?: 'contact-ap' | 'effect' | 'switch' | 'cost'; by?: 'self' | { filter: TargetFilter; excludeSource?: boolean }; byPlayer?: 'self' | 'opp'; removedFilter?: TargetFilter; removedState?: ('active' | 'sleep' | 'stun')[] }
   // 2026-06-06 タスクC: トリガ payload のキャラ (例: reasoning:end の推理キャラ payload.uid) を
   // side + TargetFilter で評価する。「自分/相手の現場にいる〚条件〛のキャラが推理したとき」を
   // matcherCondition で declarative 化。side:'self'=payload.player===source.player (= card 所有者側)。
@@ -516,7 +528,9 @@ export type Cost =
   // removeFromHand と同型の canPay (candidates ≥ n) だが pay() は no-op = presence-check cost
   // (公開のみ、リムーブしない)。公式Q&A (B08093): コスト支払い完了→効果解決時に手札へ戻してよい。
   // rules: 21 (コスト「自分の」省略 → query.side:'self' / 全部行えなければ使用不可)。
-  | { kind: 'revealFromHand'; target: TargetingRef; n: number }
+  // n: {min,max} (attribution mini-wave 2026-07-10): B08068「好きな枚数公開」= min:0 可変枚数。
+  //   canPay は min 基準 (min:0 なら常に支払可、rules/15「〜まで」=0可)。number は従来挙動不変。
+  | { kind: 'revealFromHand'; target: TargetingRef; n: number | { min: number; max: number } }
   // engine mega-wave W1 (2026-07-03, P29): 〚手札から filter 一致カードを n 枚公開してデッキの上に移す〛
   // コスト (B05049 a1)。canPay = removeFromHand/revealFromHand と同型 (candidates ≥ n)。pay = 手札から
   // 抜いてデッキ上へ (公式Q&A B05049: 裏向きでデッキの上に移す = deck は CardId[] で不可視)。
@@ -550,7 +564,10 @@ export type Cost =
   //   candidates() は set card を Candidate 列挙しない sub-entity ゆえ。discardEvidence/removeDeckTop と同型)。
   // rules: 16 (set/離場時表向きリムーブ), 21 (コスト「自分の」省略 → self-only / 全部行えなければ不可)。
   //   公式Q&A (B08033): 相手カード不可・host 自身も数える・「裏向き」(faceUp:false) のみ対象・分割可。
-  | { kind: 'removeSetCard'; n: number }
+  //   hostSelf (attribution mini-wave 2026-07-10, B08041「**このキャラに**裏向きでセットされている
+  //   カードを1枚リムーブする」): true で host を能力使用キャラ自身 (ctx.source.uid) に限定。
+  //   未指定 = 従来通り自陣全キャラ (B08033「現場にいるキャラに〜」)。
+  | { kind: 'removeSetCard'; n: number; hostSelf?: boolean }
   // engine mega-wave W4 (2026-07-03, r6): 〚現場にいる…のキャラを n 枚このキャラの下に重ねる〛コスト
   //   (B09048 中森銀三 a2)。mutate.scene.toStack (非リムーブ離場、rules/16 情報喪失・cascade) を
   //   cost 経路から呼ぶ。host = 能力使用キャラ自身 (ctx.source.uid)。

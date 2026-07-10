@@ -14,6 +14,8 @@ import { candidates } from '@/engine/target/candidates.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { canPay } from './evaluate.js';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
+// attribution mini-wave (2026-07-10): costPaid 導出値 (level/kind) の印字値参照。dyn/eval.ts と同一 import 元。
+import { def as readDef } from '@/engine/read/def.js';
 
 /**
  * Pay a Cost. Mutates the draft in place.
@@ -96,18 +98,34 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       // W3 (r17): 宣言コスト由来は hand:removed を emit しない (rules/21)
       mutate.hand.discardToRemove(state, ctx.source.player, ids, { viaCost: true });
       acc.paidItems.push({ kind: 'removeFromHand', details: { ids } });
+      // attribution mini-wave (2026-07-10): costRemovedMatches{key:'removeFromHand'} (B09060) と
+      // dyn $cost.removeFromHand.level (B09050「リムーブしたカードとレベルが同じか低い」) が読む。
+      // level は先頭 1 枚の印字値 (対象カードは n=1 のみ。removeDeckTop の ids 記録と同型)。
+      if (!ctx.costPaid) ctx.costPaid = {};
+      ctx.costPaid['removeFromHand'] = { ids, level: readDef.card(ids[0])?.level };
       return;
     }
     // engine additive wave (2026-06-28): revealFromHand — 手札公開 presence-check cost (B08093 a1)。
     // pay() は no-op: 公開のみでカードは手札に残る (mutate しない、消費なし)。paidItems に log のみ。
     case 'revealFromHand': {
-      const targets = pickCandidates(state, cost.target, ctx, cost.n);
+      // n: {min,max} (attribution mini-wave 2026-07-10): B08068「好きな枚数公開」= 可変枚数。
+      // picked (UI/AI 選択) が min 以上あればそれを max まで採用、無ければ filter 一致全部を max まで
+      // (公開は多いほど利益 = AI fallback 最大公開)。number は従来 pickCandidates と同一挙動。
+      const rfhMin = typeof cost.n === 'number' ? cost.n : cost.n.min;
+      const rfhMax = typeof cost.n === 'number' ? cost.n : cost.n.max;
+      const targets = (ctx.picked && ctx.picked.length >= rfhMin
+        ? ctx.picked.slice(0, rfhMax)
+        : candidates(state, cost.target, ctx).slice(0, rfhMax));
       const ids = targets
         .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
         .map(c => c.cardId);
       // W3 (r18): コスト経路の公開も hand:reveal を emit (B09004「【宣言】能力のコストによって」)
       mutate.hand.emitReveal(state, ctx.source.player, ids);
       acc.paidItems.push({ kind: 'revealFromHand', details: { ids } });
+      // attribution mini-wave (2026-07-10): dyn $cost.revealFromHand.count (B08068「公開した枚数」) と
+      // costRevealedMatches (B09005「公開したカードが〜の場合」) が読む。
+      if (!ctx.costPaid) ctx.costPaid = {};
+      ctx.costPaid['revealFromHand'] = { ids, count: ids.length };
       return;
     }
     // engine mega-wave W1 (2026-07-03, P29): revealHandToDeckTop — 手札公開→デッキ上 cost (B05049 a1)。
@@ -179,10 +197,17 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
           if (cand.kind === 'char') uids.push(cand.uid);
         }
       }
+      // attribution mini-wave (2026-07-10): dyn $cost.sceneToDeckBottom.level (B07025「移した
+      // キャラとレベルが同じか低い」) が読む。cardId は toDeck (splice) 前に捕捉する。
+      const stdbIds: string[] = [];
       for (const uid of uids) {
+        const ch = state.players[ctx.source.player].scene.find(c => c.uid === uid);
+        if (ch) stdbIds.push(ch.cardId);
         mutate.scene.toDeck(state, uid, 'bottom');
         acc.paidItems.push({ kind: 'sceneToDeckBottom', details: { uid } });
       }
+      if (!ctx.costPaid) ctx.costPaid = {};
+      ctx.costPaid['sceneToDeckBottom'] = { ids: stdbIds, level: readDef.card(stdbIds[0])?.level };
       return;
     }
     // cluster4 (2026-06-14): 〚リムーブエリアにある…を n 枚デッキの下に移す〛コスト。
@@ -248,22 +273,34 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       // self/opp 両 scene を探索するため、explicit hostUids を **自陣 scene の uid に filter** して
       // 相手 set card の誤リムーブを防ぐ (self-only 不変条件を engine 側で担保、review concern #3)。
       const selfUids = new Set(state.players[p].scene.map(c => c.uid));
-      const explicit = readRemoveSetCardUids(ctx).filter(u => selfUids.has(u));
+      // hostSelf (attribution mini-wave 2026-07-10, B08041「このキャラに〜」): host を能力使用
+      // キャラ自身に限定 (explicit / fallback 両経路。canPay evaluate.ts と対)。
+      const hostOk = (uid: string) => !cost.hostSelf || uid === ctx.source.uid;
+      const explicit = readRemoveSetCardUids(ctx).filter(u => selfUids.has(u) && hostOk(u));
       const uids: string[] = [];
       if (explicit.length >= cost.n) {
         uids.push(...explicit.slice(0, cost.n));
       } else {
         let need = cost.n;
         for (const c of state.players[p].scene) {
+          if (!hostOk(c.uid)) continue;
           let fd = c.setCards.filter(e => !e.faceUp).length;
           while (fd > 0 && need > 0) { uids.push(c.uid); fd--; need--; }
           if (need === 0) break;
         }
       }
+      // attribution mini-wave (2026-07-10): costRemovedMatches{key:'removeSetCard'} (B08041
+      // 「リムーブしたカードがキャラ/イベントの場合」) が読む。kinds は各除去カードの印字種別。
+      const rscIds: string[] = [];
       for (const uid of uids) {
         const removed = mutate.char.removeOneSetCard(state, uid, { faceDownOnly: true, cause: 'cost' });
-        if (removed) acc.paidItems.push({ kind: 'removeSetCard', details: { hostUid: uid, setCardId: removed } });
+        if (removed) {
+          rscIds.push(removed);
+          acc.paidItems.push({ kind: 'removeSetCard', details: { hostUid: uid, setCardId: removed } });
+        }
       }
+      if (!ctx.costPaid) ctx.costPaid = {};
+      ctx.costPaid['removeSetCard'] = { ids: rscIds, kinds: rscIds.map(id => readDef.card(id)?.kind) };
       return;
     }
     case 'removeDeckTop': {

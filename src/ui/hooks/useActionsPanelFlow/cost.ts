@@ -31,7 +31,9 @@ export function costToText(cost: Cost, resolve?: { state: GameState; ctx: Effect
     case 'sleepChar':         return 'キャラ 1 枚をスリープ';
     case 'stunChar':          return 'キャラ 1 枚をスタン'; // engine additive wave (2026-06-24)
     case 'removeFromHand':    return `手札 ${cost.n} 枚をリムーブ`;
-    case 'revealFromHand':    return `手札から ${cost.n} 枚を公開`; // engine additive wave (2026-06-28)
+    case 'revealFromHand': // engine additive wave (2026-06-28)。n:{min,max} は attribution mini-wave (2026-07-10, B08068 好きな枚数)
+      if (typeof cost.n === 'number') return `手札から ${cost.n} 枚を公開`;
+      return cost.n.min === 0 ? `手札から好きな枚数を公開` : `手札から ${cost.n.min}〜${cost.n.max} 枚を公開`;
     case 'revealHandToDeckTop': return `手札から ${cost.n} 枚を公開してデッキの上へ`; // engine mega-wave W1 (2026-07-03)
     case 'removeFromScene':   return `現場 ${cost.n} 枚をリムーブ`;
     case 'removeDeckTop': {

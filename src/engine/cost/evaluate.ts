@@ -68,9 +68,10 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     }
     // engine additive wave (2026-06-28): revealFromHand — 手札公開 presence-check cost (B08093 a1)。
     // removeFromHand と同型 (filter 一致 ≥ n) だが pay() は no-op (公開のみ、消費なし)。
+    // n: {min,max} (attribution mini-wave 2026-07-10): min 基準で判定 (B08068 min:0 = 常に支払可)。
     case 'revealFromHand': {
       const cands = candidates(state, cost.target, ctx);
-      return cands.length >= cost.n;
+      return cands.length >= (typeof cost.n === 'number' ? cost.n : cost.n.min);
     }
     // engine mega-wave W1 (2026-07-03, P29): revealHandToDeckTop — 手札公開→デッキ上 cost (B05049 a1)。
     // canPay は removeFromHand/revealFromHand と完全同型 (rules/21 全部行えなければ使用不可)。
@@ -122,8 +123,10 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     // rules/21: 全部行えなければ使用不可 / コスト「自分の」省略 → ctx.source.player の scene のみ (self-only)。
     // テキスト「裏向きで」ゆえ faceUp:true (表向きセット) は数えない。
     case 'removeSetCard': {
+      // hostSelf (attribution mini-wave 2026-07-10, B08041): host = 能力使用キャラ自身のみ数える。
       let count = 0;
       for (const c of state.players[ctx.source.player].scene) {
+        if (cost.hostSelf && c.uid !== ctx.source.uid) continue;
         count += c.setCards.filter(e => !e.faceUp).length;
       }
       return count >= cost.n;

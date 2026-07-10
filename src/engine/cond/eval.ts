@@ -335,7 +335,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     // 盤面不在ゆえ matchOneFilter(c=null = CardDef 印字値、boundMatchesFilter/enterSource と同流儀) で判定。
     // n=必要一致数 (既定1)。ids 不在 (cost 未払い/別 cost のみ) → 0 一致 → false。
     case 'costRemovedMatches': {
-      const rec = ctx.costPaid?.['removeDeckTop'] as { ids?: string[] } | undefined;
+      // key (attribution mini-wave 2026-07-10): 読む costPaid record を選択。既定 'removeDeckTop' =
+      // 後方互換 (既存 consumer B03003/B04077/B06078 は key 無指定)。書込み側 = cost/pay.ts 各 case。
+      const rec = ctx.costPaid?.[cond.key ?? 'removeDeckTop'] as { ids?: string[] } | undefined;
       const ids = rec?.ids ?? [];
       if (ids.length === 0) return false;
       const need = cond.n ?? 1;
@@ -343,6 +345,23 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       let cnt = 0;
       for (const id of ids) {
         const cand: Candidate = { kind: 'card', cardId: id, area: 'remove', player };
+        if (matchOneFilter(state, id, cond.filter, null, cand)) cnt++;
+      }
+      return cnt >= need;
+    }
+    // costRevealedMatches (attribution mini-wave 2026-07-10, B09005): revealFromHand コストで公開した
+    // カードの素性で分岐。costRemovedMatches と同型 (ctx.costPaid['revealFromHand'].ids を
+    // matchOneFilter(c=null=印字値) で判定)。公開カードは手札に残る (rules/21、pay は no-op reveal)
+    // ため area は hand だが、判定は印字値のみで area 非依存。
+    case 'costRevealedMatches': {
+      const rec = ctx.costPaid?.['revealFromHand'] as { ids?: string[] } | undefined;
+      const ids = rec?.ids ?? [];
+      if (ids.length === 0) return false;
+      const need = cond.n ?? 1;
+      const player = ctx.source.player ?? 'self';
+      let cnt = 0;
+      for (const id of ids) {
+        const cand: Candidate = { kind: 'card', cardId: id, area: 'hand', player };
         if (matchOneFilter(state, id, cond.filter, null, cand)) cnt++;
       }
       return cnt >= need;
@@ -696,7 +715,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     // spec: .claude/specs/engine-cluster15-contact-removal-observer-design.md
     case 'removedCharMatches': {
       const pl = ctx.triggerPayload as
-        | { uid?: string; cause?: string; side?: 'self' | 'opp'; byUid?: string; removedChar?: SceneCharacter }
+        | { uid?: string; cause?: string; side?: 'self' | 'opp'; byUid?: string; byPlayer?: 'self' | 'opp'; removedChar?: SceneCharacter }
         | undefined;
       if (!pl || (pl.side !== 'self' && pl.side !== 'opp')) return false;
       // side: payload.side === owner → 'self' (自分のキャラが除去された) / それ以外 → 'opp'。
@@ -705,6 +724,16 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (cond.side === 'opp' && sameSide) return false;
       // cause: 'contact-ap' 等で限定 (省略 = 方法問わず、rules/17)。
       if (cond.cause !== undefined && pl.cause !== cond.cause) return false;
+      // byPlayer (attribution mini-wave 2026-07-10): リムーブを起こした効果 owner の帰属判定
+      // (「自分の能力や効果によって」B03116/B05107/B03112/B04089/91/94)。payload.byPlayer は
+      // absolute Player (mutate/scene.ts emit、atom-handlers 由来のみ設定)。未設定 (legacy caller:
+      // turn-end/MR②/switch/cost) は fail-closed = false。`by` (コンタクト勝者 uid) とは別軸。
+      if (cond.byPlayer !== undefined) {
+        if (typeof pl.byPlayer !== 'string') return false;
+        const bySelf = pl.byPlayer === ctx.source.player;
+        if (cond.byPlayer === 'self' && !bySelf) return false;
+        if (cond.byPlayer === 'opp' && bySelf) return false;
+      }
       // by: 除去者 (= contact winner aUid)。winner は contact で除去されない (rules/08) = 生存 → 再取得可。
       if (cond.by !== undefined) {
         const byUid = pl.byUid;
@@ -846,6 +875,7 @@ const CONDITION_KIND_MAP = {
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
   removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true, removeCountAtLeast: true,
   sceneLpSum: true, costRemovedMatches: true, // engine additive wave (2026-06-29d)
+  costRevealedMatches: true, // attribution mini-wave (2026-07-10)
   enterCountAtMost: true, // engine additive (2026-06-29, B09089)
   stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,

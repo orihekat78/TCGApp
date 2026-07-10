@@ -1365,6 +1365,44 @@ import { B08004 } from '../ct-p08/B08004.js';
 import { B08033 } from '../ct-p08/B08033.js';
 import { B08082 } from '../ct-p08/B08082.js';
 import { PR096 } from '../pr-01/PR096.js';
+import { B02013P } from '../ct-p02/B02013P.js';
+import { B02018P } from '../ct-p02/B02018P.js';
+import { B02031P } from '../ct-p02/B02031P.js';
+import { B03028P } from '../ct-p03/B03028P.js';
+import { B03029P } from '../ct-p03/B03029P.js';
+import { B03078P } from '../ct-p03/B03078P.js';
+import { B03135P } from '../ct-p03/B03135P.js';
+import { B05027P } from '../ct-p05/B05027P.js';
+import { B05087P } from '../ct-p05/B05087P.js';
+import { B05087P2 } from '../ct-p05/B05087P2.js';
+import { B05106P } from '../ct-p05/B05106P.js';
+import { B05118P } from '../ct-p05/B05118P.js';
+import { B05119P } from '../ct-p05/B05119P.js';
+import { B05120P } from '../ct-p05/B05120P.js';
+import { B06090P } from '../ct-p06/B06090P.js';
+import { B06106P } from '../ct-p06/B06106P.js';
+import { B06107P } from '../ct-p06/B06107P.js';
+import { B06108P } from '../ct-p06/B06108P.js';
+import { B06109P } from '../ct-p06/B06109P.js';
+import { B07065P } from '../ct-p07/B07065P.js';
+import { B07068P } from '../ct-p07/B07068P.js';
+import { B08004P } from '../ct-p08/B08004P.js';
+import { B08033P } from '../ct-p08/B08033P.js';
+import { B08038P } from '../ct-p08/B08038P.js';
+import { B09111P } from '../ct-p09/B09111P.js';
+// CARD PHASE M2 attribution mini-wave (2026-07-10): byPlayer 束 6 + costPaid 束 6
+import { B03112 } from '../ct-p03/B03112.js';
+import { B03116 } from '../ct-p03/B03116.js';
+import { B04089 } from '../ct-p04/B04089.js';
+import { B04091 } from '../ct-p04/B04091.js';
+import { B04094 } from '../ct-p04/B04094.js';
+import { B05107 } from '../ct-p05/B05107.js';
+import { B07025 } from '../ct-p07/B07025.js';
+import { B08041 } from '../ct-p08/B08041.js';
+import { B08068 } from '../ct-p08/B08068.js';
+import { B09005 } from '../ct-p09/B09005.js';
+import { B09050 } from '../ct-p09/B09050.js';
+import { B09060 } from '../ct-p09/B09060.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1769,4 +1807,12 @@ export const REUSE_CARDS: CardDef[] = [
   B01022, B01093, B02072, B02072P, B08057,
   // CARD PHASE M1 mega-sweep
   PR263, PR269, B03029, B05120, B06109, B07068, B08038, B09111, PR284, B05118, B05119, B06106, B06107, B06108, B03135, D07024, B02002, B02013, B02018, B02031, B03028, B03078, B05015, B05027, B05087, B05106, B06026, B06090, B07053, B07065, B08004, B08033, B08082, PR096,
+  // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 25 枚)
+  B02013P, B02018P, B02031P, B03028P, B03029P, B03078P, B03135P, B05027P,
+  B05087P, B05087P2, B05106P, B05118P, B05119P, B05120P, B06090P, B06106P,
+  B06107P, B06108P, B06109P, B07065P, B07068P, B08004P, B08033P, B08038P,
+  B09111P,
+  // CARD PHASE M2 attribution mini-wave (byPlayer emit + costPaid write)
+  B03112, B03116, B04089, B04091, B04094, B05107,
+  B07025, B08041, B08068, B09005, B09050, B09060,
 ];

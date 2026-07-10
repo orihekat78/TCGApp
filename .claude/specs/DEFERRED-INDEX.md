@@ -1349,3 +1349,18 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
   ②costPaid 書込み 4 種 (6 unit)。次点 dyn-counter 小粒 9
 - **[[BUG-183]] (修正済、同 commit)**: handReveal「1枚公開してもよい」n:1 強制発火 family —
   batch 内 B08082/B07053 + shipped B07022/B08064/B09002 を max:1 に一括修正。B09061 は意図的例外 (文書化済)
+
+## M2 attribution mini-wave nits (2026-07-10、混成 review SHIP・BLOCK 1 件は同 wave 内修正済)
+
+- **出荷 12 unit**: B03112/B03116/B04089/B04091/B04094/B05107 (byPlayer 束) +
+  B07025/B08041/B08068/B09005/B09050/B09060 (costPaid 束) — 本 index の該当旧行 (行240/672/699/721/748-749/1223/1226/1230-1231/1259/1283 等) は解消済として読み替え
+- **semantic lens BLOCK → 修正済**: B08041 a2「このキャラに」= removeSetCard cost に hostSelf param
+  追加 (types/evaluate/pay 3 site + decoy pin)。B08033「現場にいるキャラに」は hostSelf 未指定で従来通り
+- **[NIT] costPaid 上書き非対称**: removeFromHand/revealFromHand/sceneToDeckBottom/removeSetCard は
+  後勝ち上書き、removeDeckTop のみ accumulate。同一 ability に同種 cost 2 個のカードは現 corpus に不在。
+  出現したら accumulate へ揃える
+- **[NIT] B08068 human 0公開経路**: revealFromHand n:{min:0,max} で UI が picked 未 populate
+  (undefined) の場合 fallback = 最大自動公開。「好きな枚数」の human 選択 UI は M3 UI mega (cost pick
+  channel) で B09027 と同居して配線 + playwright で踏む
+- **[KNOWN GAP 再掲] handAddFromRemove PB 短縮形 owner=opp 反転** (B07025 probe S6 で lock):
+  [[BUG-181]] family、M5 resolver 回で一括修正
