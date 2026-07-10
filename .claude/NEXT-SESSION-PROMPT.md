@@ -6,7 +6,7 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-07-09 夜、defer-unlock mini-wave 出荷)
+## 現在地 (2026-07-10 昼、S2 deck cluster + token 削減 6 施策 出荷)
 - **engine 骨格凍結済**。以後 engine は ±5/軽微 touch-up のみ。メイン作業 = CARD PHASE。
 - **defer-unlock mini-wave 出荷済** (2026-07-09 夜): additive 8 primitive (contactCharMatches /
   mill bind / removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / removeAreaAllToDeckBottom
