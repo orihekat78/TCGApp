@@ -69,3 +69,6 @@
 - ★ruleRefs typo (10-action-face-event.md) が full vitest で検出 → validate-all が守った。
 - 水平 sweep 確定: B07022/B08064/B09002 も handReveal n:1 DEFECT → 同 commit 修正 (BUG-183 起票、
   B09061 は文書化済み意図的例外)。B03028 手書き probe 8 green / B05087 S9 で chain add-gate 実証。
+- ★M1 出荷: **1d3bf18c** push 済 (191 files、1796→1830)。structure.md 汚染源 = .claude/worktrees/ 迷子
+  worktree (fix/deck-cardid-grouping) → gen-structure EXCLUDE_DIRS に worktrees 追加で恒久解決。
+  session 完了 → /clear 推奨。次 = M2 (attribution mini-wave 先行、spec 済)。
