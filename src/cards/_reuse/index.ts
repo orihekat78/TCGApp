@@ -1282,6 +1282,45 @@ import { B01009 } from '../ct-p01/B01009.js';
 import { B01009P } from '../ct-p01/B01009P.js';
 import { B09095 } from '../ct-p09/B09095.js';
 import { B09095P } from '../ct-p09/B09095P.js';
+import { B01005P } from '../ct-p01/B01005P.js';
+import { B01023P } from '../ct-p01/B01023P.js';
+import { B01047P } from '../ct-p01/B01047P.js';
+import { B01054P } from '../ct-p01/B01054P.js';
+import { B01081P } from '../ct-p01/B01081P.js';
+import { B02006P } from '../ct-p02/B02006P.js';
+import { B02076P } from '../ct-p02/B02076P.js';
+import { B03002P } from '../ct-p03/B03002P.js';
+import { B03003P } from '../ct-p03/B03003P.js';
+import { B03024P } from '../ct-p03/B03024P.js';
+import { B03047P } from '../ct-p03/B03047P.js';
+import { B03080P } from '../ct-p03/B03080P.js';
+import { B03110P } from '../ct-p03/B03110P.js';
+import { B04027P } from '../ct-p04/B04027P.js';
+import { B04032P } from '../ct-p04/B04032P.js';
+import { B04063P } from '../ct-p04/B04063P.js';
+import { B04077P } from '../ct-p04/B04077P.js';
+import { B05005P } from '../ct-p05/B05005P.js';
+import { B05005P2 } from '../ct-p05/B05005P2.js';
+import { B05023P } from '../ct-p05/B05023P.js';
+import { B06062P } from '../ct-p06/B06062P.js';
+import { B06063P } from '../ct-p06/B06063P.js';
+import { B06072P } from '../ct-p06/B06072P.js';
+import { B06074P } from '../ct-p06/B06074P.js';
+import { B06078P } from '../ct-p06/B06078P.js';
+import { B06084P } from '../ct-p06/B06084P.js';
+import { B06085P } from '../ct-p06/B06085P.js';
+import { B06104P } from '../ct-p06/B06104P.js';
+import { B07014P } from '../ct-p07/B07014P.js';
+import { B07015P } from '../ct-p07/B07015P.js';
+import { B07026P } from '../ct-p07/B07026P.js';
+import { B07039P } from '../ct-p07/B07039P.js';
+import { B07054P } from '../ct-p07/B07054P.js';
+import { B08025P } from '../ct-p08/B08025P.js';
+import { B08062P } from '../ct-p08/B08062P.js';
+import { B08076P } from '../ct-p08/B08076P.js';
+import { B08092P } from '../ct-p08/B08092P.js';
+import { B09002P } from '../ct-p09/B09002P.js';
+import { B09086P } from '../ct-p09/B09086P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1672,4 +1711,10 @@ export const REUSE_CARDS: CardDef[] = [
   B03110, B03133, B05092,
   // CARD PHASE miniwave4 consumers (hand 内 continuous level)
   B01009, B01009P, B09095, B09095P,
+  // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 39 枚)
+  B01005P, B01023P, B01047P, B01054P, B01081P, B02006P, B02076P, B03002P,
+  B03003P, B03024P, B03047P, B03080P, B03110P, B04027P, B04032P, B04063P,
+  B04077P, B05005P, B05005P2, B05023P, B06062P, B06063P, B06072P, B06074P,
+  B06078P, B06084P, B06085P, B06104P, B07014P, B07015P, B07026P, B07039P,
+  B07054P, B08025P, B08062P, B08076P, B08092P, B09002P, B09086P,
 ];

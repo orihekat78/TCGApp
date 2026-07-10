@@ -12,6 +12,11 @@
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分)"
   },
   {
+   "id": "B02076P",
+   "shippedId": "B02076P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue (2026-07-10 re-mine 後、mine skip 集合と test 全数照合の差分) (P-spread clone、base B02076 と同根)"
+  },
+  {
    "id": "B05024",
    "shippedId": "B05024",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"

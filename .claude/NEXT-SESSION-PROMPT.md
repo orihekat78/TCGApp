@@ -16,7 +16,11 @@
   shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
   混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
   残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- 出荷済 **1749** / corpus 2074 = **残り未実装 325 printings**。**★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。engine mini-wave 進行中: **①②④ + #3 小粒 verb + #4 出荷済**。
+- 出荷済 **1788** / corpus 2074 = **残り未実装 286 printings**。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
+  driver = [.claude/specs/completion-roadmap-2026-07-10.md](specs/completion-roadmap-2026-07-10.md)。
+  在庫の真実 = 実作業 **163 unit** (in-pool DEFER) + ride-along P 108 + ✅spread 済 39
+  (`scripts/gen-p-spread.cjs` 新設、毎 session 末尾に随伴実行)。session 割当は roadmap 表参照。
+  **★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。engine mini-wave 進行中: **①②④ + #3 小粒 verb + #4 出荷済**。
   **#4 = hand 内 continuous level 出荷済 (2026-07-10 朝)**: lvlOverrideInHand/lvlDeltaInHand +
   effectiveHandLevel helper (hand-use-card.ts) を 4 site (levelAllowed / next-hint step2 / UI
   flows.toCandidate / handUseReason) 配線 + B01009/P + B09095/P = 4 printings。B07003 (cutin 動的付与)
