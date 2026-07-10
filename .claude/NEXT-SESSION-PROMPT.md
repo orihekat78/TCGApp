@@ -20,7 +20,7 @@
   driver = [.claude/specs/completion-roadmap-2026-07-10.md](specs/completion-roadmap-2026-07-10.md)。
   在庫の真実 = 実作業 **163 unit** (in-pool DEFER) + ride-along P 108 + ✅spread 済 39
   (`scripts/gen-p-spread.cjs` 新設、毎 session 末尾に随伴実行)。session 割当は roadmap 表参照。
-  **✅S2 deck cluster 出荷済 (2026-07-10: B01022/B01093/B02072+P/B08057 = 5 printings、混成 4-lens SHIP)。次 = S3 re-triage sweep (roadmap 表参照) or D06013 単独 T3 (pre-walk Pattern-A over-fire 2点修正、grounding = DEFERRED-INDEX D06013 行)**。旧記述: 設計全文 =
+  **✅S2 deck cluster 出荷済 (2026-07-10 昼: 5 printings、4-lens SHIP)。同日 token 削減 6 施策出荷: ①rules 自動注入停止 (settings.json claudeMdExcludes — 次 session から効く) ②npm run ground = grounding 決定論前処理 (dossier + capability snapshot) ③.claude/specs/grounding/ 永続化 (D06013 保存済) ④gen:probes cost-gate/and 拡張 ⑤haiku 機械 lens + T0-T2 1 lens 規約 ⑥locate = Serena/cavecrew (全部 CLAUDE.md 反映済)。次 = M1 mega-sweep (roadmap 統合 M-plan 節、S3+S12 合体、hybrid pipeline + npm run ground 前処理で 1 晩 ~30 unit)。D06013 = M5 (grounding = specs/grounding/D06013.md)**。旧記述: 設計全文 =
   [specs/miniwave5-deck-reveal-grounding.md](specs/miniwave5-deck-reveal-grounding.md)。
   P3 B03049+P (fromBottom param、T2小) → P2 B05047 (deckPlaceSplitBound+新modal、T2+PW) → P1 B01022 (T3、切離し可)。
   worktree megaw1 branch `engine/miniwave5-deck-reveal` 作成済 (着手時 origin/main rebase)。

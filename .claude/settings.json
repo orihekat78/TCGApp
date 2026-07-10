@@ -99,5 +99,8 @@
         ]
       }
     ]
-  }
+  },
+  "claudeMdExcludes": [
+    ".claude/rules/**"
+  ]
 }

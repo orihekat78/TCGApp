@@ -340,7 +340,10 @@ function deriveScenarios(cardId, ability, staticData, mode) {
 
   // === Scenario B: condition-off (noPromptSurfaced) ===
   if (condition) {
-    const offVariants = condition.kind === 'and' && Array.isArray(condition.all) ? condition.all : [condition];
+    // S2 token 施策 #4 (2026-07-10): and の子配列は実型では `cs` (types/effect.ts)。旧 `all` 参照は
+    // 常に不成立で and 条件の off-variant が 1 件も生成されていなかった (B08057 で実測)。両対応。
+    const andChildren = condition.kind === 'and' ? (condition.cs ?? condition.all) : null;
+    const offVariants = Array.isArray(andChildren) ? andChildren : [condition];
     let vi = 0;
     for (const cv of offVariants) {
       const extra = {};
@@ -423,8 +426,15 @@ function deriveScenarios(cardId, ability, staticData, mode) {
   }
 
   // === Scenario E: cost-gate (declared only) ===
-  if (mode === 'declared' && ability.cost && ability.cost.kind === 'pay' && Array.isArray(ability.cost.items)) {
-    const items = ability.cost.items.map((it) => it.kind);
+  // S2 token 施策 #4 (2026-07-10): (a) 非 pay の単独 cost ({kind:'sleepSelf'} 直書き、B02072 型) も
+  // items 1 件として正規化 (b) removeDeckTop の deck 不足 gate (公式Q&A「N枚リムーブできなければ
+  // 使用不可」、B08057 型) を追加。
+  const costNorm = mode === 'declared' && ability.cost
+    ? (ability.cost.kind === 'pay' && Array.isArray(ability.cost.items) ? ability.cost.items : [ability.cost])
+    : null;
+  if (costNorm) {
+    const costItems = costNorm;
+    const items = costItems.map((it) => it.kind);
     if (items.includes('sleepSelf')) {
       scenarios.push({
         name: `${cardId} cost-gate: sleepSelf unpayable (self sleeping) -> canPay=false`,
@@ -444,7 +454,18 @@ function deriveScenarios(cardId, ability, staticData, mode) {
         expect: [],
       });
     }
-    const gatable = items.filter((k) => k === 'sleepSelf' || k === 'removeFromHand');
+    const rdt = costItems.find((it) => it.kind === 'removeDeckTop' && typeof it.n === 'number');
+    if (rdt) {
+      scenarios.push({
+        name: `${cardId} cost-gate: removeDeckTop n=${rdt.n} unpayable (deck ${rdt.n - 1}) -> canPay=false`,
+        setup: { selfScene: [{ cardId, uid: CARRIER_UID, state: 'active' }], hand: ['__HAND_FODDER__'], deckSize: Math.max(0, rdt.n - 1), caseStatus: condition && condition.kind === 'caseStatus' ? condition.status : '解決編' },
+        drive: { kind: 'cost-gate', uid: CARRIER_UID, abilityId: ability.id, expectCanPay: false },
+        script: [],
+        expect: [],
+      });
+      addFix('__HAND_FODDER__', {});
+    }
+    const gatable = items.filter((k) => k === 'sleepSelf' || k === 'removeFromHand' || k === 'removeDeckTop');
     for (const k of items) if (!gatable.includes(k)) notes.push(`${cardId}/${ability.id}: cost item '${k}' has no gate scenario (not in cost table)`);
   }
 

@@ -44,3 +44,7 @@
   D06013 = T3 確定 (pre-walk Pattern-A over-fire 2点修正、S3+ 単独枠)。B02072 DEFER は stale だった
   (両 dyn 出荷済) — DEFER 行は着手前に現行 code で必ず再検証 (unlocked-label-stale の逆パターン)。
   harness 拡張: pickCardIds multi-pick script + oppDeckTop。
+- token 削減 6 施策出荷 (2026-07-10 昼、同 session 第2 phase): claudeMdExcludes で rules 注入停止 /
+  npm run ground (dossier+capability snapshot) / specs/grounding/ 永続化 (D06013 済) / gen:probes
+  cost-gate+and 拡張 (★and 展開の all→cs 実バグ修正) / haiku 機械 lens + T0-T2 1 lens / locate 委譲。
+  roadmap M-plan (5-7 session) 追記。次 = M1 mega-sweep。

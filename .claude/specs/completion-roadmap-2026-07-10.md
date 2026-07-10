@@ -53,3 +53,18 @@
 
 - session 末: 本表の該当行に ✅ + 実績数を追記、NEXT-SESSION-PROMPT の現在地行を更新
 - 残枚数報告義務 (2026-07-09): 「出荷済 X / 2074 = 残 Y printings」を session 開始時 + 出荷ごと
+
+## 統合 M-plan (2026-07-10 ユーザー承認「いくつかでまとめて」— S3〜S15 を 5-7 session に圧縮)
+
+| M | 旧行 | 中身 | unit≈ |
+|---|---|---|---|
+| M1 | S3+S12 | mega-sweep: re-triage 機械分類 → easy 刈り + 尾 sweep + Track B re-mine (hybrid pipeline 1 晩) | ~30 |
+| M2 | S4+S7+S8 | T2 cluster batch: set-card + dyn/counter + cutin-filter + case (workflow 連続投入、cluster 単位 1 lens) | ~23 |
+| M3 | S5+S11 | UI mega: PA batch + B09027 cost-choice — UI 2 型を Playwright 1 pass に同居 (溢れたら分割) | ~15 |
+| M4 | S6+S9 | intercept + attribution + 大物 A | ~13 |
+| M5 | S10+D06013 | 大物 B + stacked-identity + D06013 (resolver 触る回を 1 つに集約) | ~10 |
+| M6 | S13-15 | buffer: 持ち越し / bug 回収 / 最終 audit | — |
+
+前提 token 削減施策 (2026-07-10 出荷): ①rules 自動注入停止 (claudeMdExcludes) ②`npm run ground`
+(grounding 決定論前処理) ③specs/grounding/ 永続化 ④gen:probes cost-gate/and-condition 拡張
+⑤haiku 機械 lens + T0-T2 1 lens + resumeFromRunId ⑥locate = Serena/cavecrew 委譲。

@@ -21,6 +21,10 @@
 
 ## ルール参照義務
 
+**★2026-07-10: `.claude/rules/*.md` は session 開始時に自動注入されない**
+(settings.json `claudeMdExcludes` — 固定 token 費 2-3 万/session の削減)。
+参照義務は不変 — ルール判断のたびに該当ファイルを**都度 Read** すること。
+
 ゲームルール・カード処理に関する判断を行うときは **必ず** 以下を参照：
 
 - `.claude/rules/INDEX.md` から該当トピックを開く
@@ -181,6 +185,8 @@
   (セッション本体のモデルは /model で切替: リファクタ系セッション=fable / 通常セッション=opus 推奨)
 - **sonnet は慎重に選定した機械作業のみ**: grep/集合一致検証、diff の機械突合、whitelist 抽出、
   lint/テスト実走系 lens。迷ったら opus
+- **★2026-07-10 追加: 純機械 lens は haiku 4.5 に降格可**: 出力が機械検証可能な collect/grep 突合/
+  dump 収集 lens は `model:'haiku', effort:'low'`。判断が 1 mm でも入るなら sonnet 以上
 - **★2026-07-03 改定: Sonnet 5 を grounding/設計/意味等価 lens に昇格** (ユーザー指示で A/B 実測。
   既知正解 3 タスク — grounding 罠 2種 (name-grep 偽陽性/union 登録済 stub)・contact-guard 配置罠・
   意味等価 誤り2件仕込み — を **sonnet5 が全問 opus 級で通過**)。新運用: grounding 判定/設計 spec/
@@ -210,6 +216,23 @@
 - レビュー深度はフェーズのリスクに連動させる (低リスク=決定論検証+1 lens / 高リスク=フルパネル)
 - ただし opus / Fable で行うほうが効果が見られる場面 (意味論・ルール整合の検証等) には積極的に使う
 - reviewer に full vitest 等を再実走させない (メインループの実行結果をプロンプトで渡す)
+- **★2026-07-10: T0-T2 sweep は cluster 単位 1 lens** (unit 単位に lens を割らない)。4 lens フルパネルは
+  T3 のみ。lens やり直しは Workflow `resumeFromRunId` で未変更 agent を cache 再生 (再実行しない)
+
+### grounding の決定論前処理 + 永続化 (2026-07-10 token 削減施策)
+
+- **grounding 前に必ず `npm run ground -- <ID>...`** — TSV 行 / 登録判定 / DEFER 行 / capability
+  snapshot (verb/cond/dyn/cost/hook 存在一覧) を `.tmp/_ground/` に機械出力。agent には dossier を
+  Read させ、判断 (意味突合・設計・tier) だけをさせる。「探す」工程を agent にやらせない
+- grounding agent の報告は `.claude/specs/grounding/<ID>.md` に**直接 Write** させ、main loop へは
+  5 行以内の要約のみ返させる (運用詳細: [specs/grounding/README.md](specs/grounding/README.md))
+- DEFER 行の blocker 記述は stale 化しうる (B02072 実例) — dossier + 現行 code で再検証してから見積る
+
+### locate 作業の委譲 (2026-07-10 token 削減施策)
+
+- 「どこで定義 / 誰が呼ぶ / 全使用箇所」の locate は本体で sed 全域読みせず、
+  **Serena MCP (find_symbol / find_referencing_symbols)** か **cavecrew-investigator**
+  (圧縮出力 subagent) に委譲する。本体が直接 Read するのは編集対象領域のみ
 
 ### 決定論スクリプト優先
 

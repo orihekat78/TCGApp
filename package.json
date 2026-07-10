@@ -43,7 +43,8 @@
     "test:meta:e2e": "playwright test --config meta-app/playwright.config.ts",
     "hybrid:prepare": "node scripts/hybrid/prepare.cjs",
     "hybrid:finish": "node scripts/hybrid/finish.cjs",
-    "gen:probes": "node scripts/gen-card-probes.cjs"
+    "gen:probes": "node scripts/gen-card-probes.cjs",
+    "ground": "node scripts/ground-dossier.cjs"
   },
   "keywords": [],
   "author": "",
