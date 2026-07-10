@@ -44,7 +44,7 @@ const a1: AbilityDef = {
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
-  scope: 'on-scene',
+  scope: 'on-partner-area', // M3 PA batch (2026-07-10): 「この能力はパートナーエリアでも宣言できる」(rules/18)
   limit: { kind: 'turn', n: 1 },
   // 〚手札を1枚リムーブする〛(コスト: 自分の手札から1枚)
   cost: { kind: 'removeFromHand', target: { kind: 'pick', query: { area: 'hand', side: 'self' }, n: { min: 1, max: 1 }, chooser: 'self' }, n: 1 },

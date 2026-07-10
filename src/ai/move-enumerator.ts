@@ -193,6 +193,25 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     }
   }
 
+  // 6c. partnerAreaMR の declaredAbility (uid 'partnerMR:self'/'partnerMR:opp')
+  // M3 PA batch (2026-07-10, rules/18 §パートナーエリアにいるMRキャラ): BUG-084 同型の
+  // UI/AI source 非対称を防ぐ。scope gate (on-partner-area/always のみ) は engine 側。
+  {
+    const mr = state.players[byPlayer].partnerAreaMR;
+    if (mr) {
+      const mrUid = `partnerMR:${byPlayer}`;
+      for (const ab of charDeclaredAbilities(mr.cardId)) {
+        if (!engine.flow.canDeclaredAbility(state, mrUid, ab.id)) continue;
+        if (ab.cost) {
+          const ctx = makeDeclaredAbilCtx(state, mrUid, ab.id);
+          if (!ctx) continue;
+          if (!engine.cost.canPay(state, ab.cost, ctx)) continue;
+        }
+        moves.push({ kind: 'declaredAbility', uid: mrUid, abilityId: ab.id });
+      }
+    }
+  }
+
   // 7. reasoning (partner → scene)
   const partnerUid = byPlayer === 'self' ? 'partner:self' : 'partner:opp';
   if (engine.flow.canReason(state, partnerUid)) {

@@ -6,7 +6,7 @@ export const PR260: CardDef = {
   id: 'PR260',
   no: 'P080/PR260',
   kind: 'partner',
-  names: ['江戸川コナン＆世良真純'],
+  names: ['江戸川コナン＆世良真純', '江戸川コナン', '世良真純'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: ['青'],
   lp: 1,
   traits: [],

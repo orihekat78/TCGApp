@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `6b57b6e540fc`
+> Source hash: `ec29f4513084`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,42 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-07-10
+seq: 16
+slug: m3-pa-batch
+---
+
+## M3 PA batch — パートナーエリア常駐 MR の宣言能力 human/AI 経路 一括解禁 (+6 printings + scope 補正 11 + BUG-185×23)
+
+roadmap M3 (UI mega) 前半。PA 宣言 UI 基盤を 6 site 配線し、PA 常駐 MR の宣言能力を human
+(クリック経路) と AI (move 列挙) の両方で解禁。既出荷 6 unit の scope 補正 + 未登録 3 unit 新規
+author (1897→**1903** / 2074、残 171)。engine (src/engine) 変更 **0** — 骨格凍結維持。
+
+- **UI 基盤 (T3、e2e 実機検証済)**: ①enumDeclaredAbilitySources に partnerMR source (4番目) +
+  enumDeclaredAbilityIdsFor partnerMR 分岐 ②flows resolveDeclaredSourceCardId / owner 解決 /
+  costText ctx area — partnerMR: + hand: (B06103 W6 step11 の未配線分) 両 prefix 対応
+  ③uidNames uidToDisplayName partnerMR: (confirm 文言に raw uid が出ない) ④PartnerArea
+  partnerAreaMR tile (candidate pulse 流用 + data-testid) ⑤Playmat candidate loop + PlayerMat
+  props 貫通 ⑥ai/ability-ctx + move-enumerator 6c (BUG-084 同型の UI/AI source 非対称を予防 —
+  CPU も PA 宣言を使う)。e2e = tests/e2e/m3-pa-mr-declared.spec.ts (tile 強調→confirm 名解決→
+  side:'opp' decoy 除外 pick→lvlMod_turn 反映→console error 0)
+- **scope 補正 11 file (T1)**: B07079/P・B08032/P・B09054/P・B07093/P・B05066/P・B05045 の
+  「この能力はパートナーエリアでも宣言できる」句 → a2 scope:'on-partner-area'。probe 8 pin
+  (PA 宣言可 / a1 は scope gate で不可の decoy / B09054 公式 Q&A【ターン1】uid 単位 / B07079 cost gate)
+- **新規 author 3 unit + P twin = 6 printings (T1-T2)**: B06037 服部平次＆沖田総司 (enter observer
+  高校生→sceneRemove + PA宣言 AP+1000+actionTargetsActive) / B08046 赤井秀一＆ジョディ (FBI≥2 gate
+  sceneRemove + costRemovedMatches 追加 draw) / B08093 灰原哀＆シェリー (revealFromHand cost +
+  相手ターン中 handAtMost draw + 青黒 独立 pick AP+1000)。probe 36、crosscheck 14/14。
+  triage で stale DEFER 3 件是正 (costRemovedMatches / 現場リムーブ時 keyword filter は出荷済だった)
+- **BUG-185 (水平展開)**: rules/19 複数名カード names 分割漏れ **23 枚** を一括修正 +
+  names-split.lint.test (全登録 def 走査の恒久 gate)。【絆】/カード名参照/同名重ね制限の不成立を解消
+- **triage 成果 (sonnet×2 並列)**: 32 ID 分類 → DONE 8 / UI_UNLOCKED 12 (本 batch で解禁) /
+  SMALL_GAP 11 (engine 3 cluster: paCards source zone / toPartnerArea pick / removed-card snapshot
+  root — specs/grounding/m3-triage-*.md に永続化) / BLOCKED 0。B05106「chain で decline でも draw」
+  疑義は**偽** (chain-origin skip は「そうした場合」gate、apply-pick.ts:228)
+- compiler G1 再採掘 (scope flip 由来の意図的アラーム → re-mine で match 1244→1541、mismatch 0)
 
 ---
 date: 2026-07-10

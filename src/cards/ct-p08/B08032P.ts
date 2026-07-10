@@ -29,7 +29,7 @@ const a1: AbilityDef = {
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
-  scope: 'on-scene',
+  scope: 'on-partner-area', // M3 PA batch (2026-07-10): 「この能力はパートナーエリアでも宣言できる」(rules/18)
   limit: { kind: 'turn', n: 1 },
   // 自分の現場にいる[京極真]を1枚まで選び、ターン終了時までAP＋1000する (分割名で自身も対象可 rules/19)
   effect: { kind: 'atom', verb: 'charModifyAP', args: { player: 'self', max: 1, side: 'self', filter: { cardName: '京極真' }, delta: 1000, scope: 'turn' } },

@@ -255,13 +255,24 @@ export async function runPartnerAbilityFlow(opts: { player: Player }): Promise<F
  * パートナーエリアの MR (rules/18) — 8.8a partnerAbility 経由なので別フロー
  */
 /**
- * BUG-172: 宣言能力 source uid → cardId 解決 (scene / case)。ability 択一 modal (複数宣言能力持ち)
- * の説明文表示と、後段の cost/confirm 表示が同じ解決を使う。
- * hand:/ partnerMR: uid は現状 enumDeclaredAbilitySources が返さない (B06103 / PA宣言19 で配線予定)。
+ * BUG-172: 宣言能力 source uid → cardId 解決 (scene / case / partnerMR / hand)。
+ * ability 択一 modal (複数宣言能力持ち) の説明文表示と、後段の cost/confirm 表示が同じ解決を使う。
+ * M3 PA batch (2026-07-10): partnerMR: (rules/18) + hand: (B06103, W6 step11) prefix を追加。
  */
 function resolveDeclaredSourceCardId(state: GameState, sourceUid: string): string | null {
   if (sourceUid === 'case:self' || sourceUid === 'case:opp') {
     return state.players[sourceUid === 'case:self' ? 'self' : 'opp'].case.cardId ?? null;
+  }
+  if (sourceUid === 'partnerMR:self' || sourceUid === 'partnerMR:opp') {
+    const p = sourceUid === 'partnerMR:self' ? 'self' : 'opp';
+    return state.players[p].partnerAreaMR?.cardId ?? null;
+  }
+  if (sourceUid.startsWith('hand:')) {
+    // hand sentinel `hand:${player}:${cardId}` — findCardOnBoard と同じ split 規約
+    const [, hp, ...rest] = sourceUid.split(':');
+    const hCardId = rest.join(':');
+    if ((hp === 'self' || hp === 'opp') && state.players[hp].hand.includes(hCardId)) return hCardId;
+    return null;
   }
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((x) => x.uid === sourceUid);
@@ -317,9 +328,24 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   // 一元化。本フローは picker 選択値を costParams に集めて dispatch へ渡すのみ。
   let cardId: string | null = null;
   let owner: Player | null = null;
+  let sourceArea: 'scene' | 'case' | 'hand' | 'partner-area' = 'scene';
   if (sourceUid === 'case:self' || sourceUid === 'case:opp') {
     owner = sourceUid === 'case:self' ? 'self' : 'opp';
     cardId = stateAfterSrc.players[owner].case.cardId ?? null;
+    sourceArea = 'case';
+  } else if (sourceUid === 'partnerMR:self' || sourceUid === 'partnerMR:opp') {
+    // M3 PA batch (rules/18): PA 常駐 MR sentinel
+    owner = sourceUid === 'partnerMR:self' ? 'self' : 'opp';
+    cardId = stateAfterSrc.players[owner].partnerAreaMR?.cardId ?? null;
+    sourceArea = 'partner-area';
+  } else if (sourceUid.startsWith('hand:')) {
+    // hand sentinel `hand:${player}:${cardId}` (B06103, W6 step11)
+    const [, hp, ...rest] = sourceUid.split(':');
+    if (hp === 'self' || hp === 'opp') {
+      owner = hp;
+      cardId = rest.join(':') || null;
+      sourceArea = 'hand';
+    }
   } else {
     for (const p of ['self', 'opp'] as const) {
       const c = stateAfterSrc.players[p].scene.find((x) => x.uid === sourceUid);
@@ -338,7 +364,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   const costText = cost
     ? costToText(cost, {
         state: stateAfterSrc,
-        ctx: { source: { player: owner ?? 'self', uid: sourceUid, cardId: cardId ?? undefined, area: 'scene' }, bindings: {} },
+        ctx: { source: { player: owner ?? 'self', uid: sourceUid, cardId: cardId ?? undefined, area: sourceArea }, bindings: {} },
       })
     : '無し';
   let costParams: AbilityCostParams | undefined;

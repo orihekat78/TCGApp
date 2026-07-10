@@ -6,7 +6,7 @@ export const PR261: CardDef = {
   id: 'PR261',
   no: 'P081/PR261',
   kind: 'partner',
-  names: ['萩原千速＆横溝重悟＆萩原研二＆松田陣平'],
+  names: ['萩原千速＆横溝重悟＆萩原研二＆松田陣平', '萩原千速', '横溝重悟', '萩原研二', '松田陣平'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: ['黄'],
   lp: 1,
   traits: [],

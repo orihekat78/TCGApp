@@ -132,9 +132,7 @@ export const B06074: CardDef = {
   id: 'B06074',
   no: '0694/B06074',
   kind: 'character',
-  names: [
-    '沖矢昴＆世良真純'
-  ],
+  names: ['沖矢昴＆世良真純', '沖矢昴', '世良真純'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '赤'
   ],

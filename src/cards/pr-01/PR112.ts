@@ -6,7 +6,7 @@ export const PR112: CardDef = {
   id: 'PR112',
   no: 'P045/PR112',
   kind: 'partner',
-  names: ['江戸川コナン＆毛利蘭＆毛利小五郎'],
+  names: ['江戸川コナン＆毛利蘭＆毛利小五郎', '江戸川コナン', '毛利蘭', '毛利小五郎'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: ['青'],
   lp: 1,
   traits: [],

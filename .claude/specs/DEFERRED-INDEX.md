@@ -1109,11 +1109,10 @@ engine 骨格バグ修正) + BUG-172 (宣言 2 つ持ち ability 択 = ChoicePic
 (suppress + non-suppress ヒラメキ / B01058 reserve human pick→stun / B07014 rider 列挙+removeAreaToDeckTop
 pick / B05042 useEventFromHand human pick (lv7 decoy 除外・自身除外・skip) / B04072 候補除外 UI)。
 
-- ★**B09108 a2 の PA 発 human 宣言 UI は未配線 (PA宣言19 batch へ)**: engine 側は scope:'on-partner-area' +
-  canDeclaredAbility(partnerMR:uid) 対応済 (probe pin あり)。UI 側は (1) PartnerArea が partnerAreaMR slot を
-  **描画すらしない** (2) enumDeclaredAbilitySources に partnerMR source 無し (3) flows の source cardId 解決も
-  partnerMR: 未対応 — PA宣言19 batch で PA-MR 表示 + source 列挙 + tile pick を一括配線する (batch1 の
-  B09070 (MR) 出荷時と同じ既知 gap、新規 gap 増加なし)。現場からの宣言 (主経路) は playwright 実機済。
+- ✅**B09108 a2 の PA 発 human 宣言 UI — M3 PA batch (2026-07-10) で解消**: (1) PartnerArea partnerAreaMR
+  tile 描画 (2) enumDeclaredAbilitySources partnerMR source (3) flows resolveDeclaredSourceCardId /
+  uidToDisplayName partnerMR:+hand: 対応 + AI move-enumerator 6c (BUG-084 同型非対称の予防) を一括配線。
+  実機 = tests/e2e/m3-pa-mr-declared.spec.ts (tile 強調→confirm 名解決→decoy 除外 pick→lvlMod 反映)。
 - **conditional×boundNameMatchesDeclared の card-author 規約**: 本 cond は conditionIfIsStable で stable 扱い
   (bindings/declaredNames を読むのに unstable list 未登録) → pre-walk が dispatch 時 (bind 空) に false 評価し
   then を raw のまま残す。**then 内は短縮形/runtime pick (discard / charModifyAP 短縮形等) のみ可、
@@ -1392,3 +1391,18 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
   当面は area 配列を remove 先順で書く規約
 - **[FIXED 同 wave] B05045/B08086 cutin description 半角 +** — TSV master は全角 ＋ (corpus 半角 0 件)。
   cutinTextIncludes 偽陰性の実害を修正。**新規約: cutin description の「AP＋」は全角必須** (lint 候補)
+
+## M3 PA batch SMALL_GAP (2026-07-10 深夜、triage 全文 = specs/grounding/m3-triage-unregistered.md)
+
+UI 基盤 (partnerMR source 列挙 + PA-MR tile + flows 解決) は出荷済。残 11 unit は engine 小 gap 3 cluster:
+
+- **cluster 1: paCards を source zone に統合** (B07049/B09039/B09055): handAddFromRemove / sceneEnter の
+  候補列挙は zone 配列対応済だが **mutate 側 splice に partner-area 分岐が無い**。additive 1 点
+- **cluster 2: toPartnerArea の pick 対応** (B07030/B07061): 現 verb は self-only。remove→PA / PA→現場の
+  pick 型変種。additive
+- **cluster 3: removed-card static snapshot root** (B08002 level / B09110 cardName 配列): `$discarded.*`
+  同型の「リムーブしたカード」参照 root 不在。B09109 は revealFromHand costPaid に cardName 1 行追加のみ
+- 単発: B07001 (charSetTurnEffect 経路は解禁済 — 再 ground 要) / B08019 (scope 配列) / B09027
+  (cost kind:'choice' の UI ブランチ選択 modal — flows 3.7 effect-choice の cost 版) / B09110 / B09055
+- BUG-154 (mutate 層 PA-MR 非解決) は本 batch 出荷分では非該当を実測済。「PA 発動 + 自身 mutate」型が
+  出たら先に engine probe

@@ -128,9 +128,7 @@ export const B05106: CardDef = {
   id: 'B05106',
   no: '0602/B05106',
   kind: 'character',
-  names: [
-    'ジン＆ウォッカ'
-  ],
+  names: ['ジン＆ウォッカ', 'ジン', 'ウォッカ'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '黒'
   ],

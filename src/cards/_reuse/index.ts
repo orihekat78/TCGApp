@@ -1434,6 +1434,12 @@ import { B06066P } from '../ct-p06/B06066P.js';
 import { B08047P } from '../ct-p08/B08047P.js';
 import { B08068P } from '../ct-p08/B08068P.js';
 import { B09019P } from '../ct-p09/B09019P.js';
+import { B06037 } from '../ct-p06/B06037.js';
+import { B06037P } from '../ct-p06/B06037P.js';
+import { B08046 } from '../ct-p08/B08046.js';
+import { B08046P } from '../ct-p08/B08046P.js';
+import { B08093 } from '../ct-p08/B08093.js';
+import { B08093P } from '../ct-p08/B08093P.js';
 
 
 
@@ -1860,4 +1866,6 @@ export const REUSE_CARDS: CardDef[] = [
   // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 14 枚)
   B01057P, B03112P, B03116P, B04048P, B04089P, B04091P, B04094P, B05063P,
   B05107P, B06003P, B06066P, B08047P, B08068P, B09019P,
+  // M3 PA batch (2026-07-10): PA宣言 MR 3 unit + P twin (scope on-partner-area 解禁)
+  B06037, B06037P, B08046, B08046P, B08093, B08093P,
 ];

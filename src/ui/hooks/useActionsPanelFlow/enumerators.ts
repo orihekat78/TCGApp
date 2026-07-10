@@ -132,6 +132,34 @@ export function enumDeclaredAbilitySources(
     });
     if (hasUsable) sources.push(uid);
   }
+  // 4. partnerAreaMR (M3 PA batch, rules/18 §パートナーエリアにいるMRキャラ):
+  //    scope on-partner-area / always の宣言能力のみ engine gate (declared-ability.ts:147) を通る。
+  //    uid は triggered.ts collectCardsInPlay と同じ sentinel `partnerMR:${player}`。
+  {
+    const mr = state.players[player].partnerAreaMR;
+    if (mr) {
+      const def = engine.cards.get(mr.cardId);
+      if (def) {
+        const uid = `partnerMR:${player}`;
+        const hasUsable = def.abilities.some((a) => {
+          if (a.type !== 'declared') return false;
+          if (!flow.canDeclaredAbility(state, uid, a.id)) return false; // scope gate は engine 側
+          if (a.cost) {
+            const ctx = makeAbilityCtx({
+              player,
+              uid,
+              cardId: mr.cardId,
+              abilityId: a.id,
+              area: 'partner-area',
+            });
+            if (!engine.cost.canPay(state, a.cost, ctx)) return false;
+          }
+          return true;
+        });
+        if (hasUsable) sources.push(uid);
+      }
+    }
+  }
   return sources;
 }
 
@@ -166,12 +194,21 @@ export function enumDeclaredAbilityIdsFor(
   // uid から cardId / owner player / area を引く (user_request 20260522_01 #5: case 対応)
   let cardId: string | null = null;
   let owner: Player | null = null;
-  let area: 'scene' | 'case' | 'hand' = 'scene';
+  let area: 'scene' | 'case' | 'hand' | 'partner-area' = 'scene';
   let riderAbilities: import('@/engine/types/card-def.js').AbilityDef[] = [];
   if (uid === 'case:self' || uid === 'case:opp') {
     owner = uid === 'case:self' ? 'self' : 'opp';
     cardId = state.players[owner].case.cardId ?? null;
     area = 'case';
+  } else if (uid === 'partnerMR:self' || uid === 'partnerMR:opp') {
+    // M3 PA batch (rules/18): PA 常駐 MR sentinel — declared-ability.ts findCardOnBoard と同規約
+    const p: Player = uid === 'partnerMR:self' ? 'self' : 'opp';
+    const mr = state.players[p].partnerAreaMR;
+    if (mr) {
+      owner = p;
+      cardId = mr.cardId;
+      area = 'partner-area';
+    }
   } else if (uid.startsWith('hand:')) {
     // W6 step11 (row999 item3): hand sentinel uid — findCardOnBoard と同じ split 規約
     const [, hp, ...rest] = uid.split(':');

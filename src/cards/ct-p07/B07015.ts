@@ -165,9 +165,7 @@ export const B07015: CardDef = {
   id: 'B07015',
   no: '0747/B07015',
   kind: 'character',
-  names: [
-    '遠山和葉＆大岡紅葉'
-  ],
+  names: ['遠山和葉＆大岡紅葉', '遠山和葉', '大岡紅葉'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '緑'
   ],

@@ -53,6 +53,16 @@ export function makeDeclaredAbilCtx(
       bindings: {},
     };
   }
+  // M3 PA batch (rules/18): PA 常駐 MR sentinel (uid 'partnerMR:self'/'partnerMR:opp')
+  if (uid === 'partnerMR:self' || uid === 'partnerMR:opp') {
+    const p: Player = uid === 'partnerMR:self' ? 'self' : 'opp';
+    const mr = state.players[p].partnerAreaMR;
+    if (!mr) return null;
+    return {
+      source: { cardId: mr.cardId, uid, abilityId, player: p, area: 'partner-area' },
+      bindings: {},
+    };
+  }
   // scene キャラ
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((x) => x.uid === uid);

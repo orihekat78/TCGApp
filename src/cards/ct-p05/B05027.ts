@@ -153,9 +153,7 @@ export const B05027: CardDef = {
   id: 'B05027',
   no: '0531/B05027',
   kind: 'character',
-  names: [
-    '服部平次＆遠山和葉'
-  ],
+  names: ['服部平次＆遠山和葉', '服部平次', '遠山和葉'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '緑'
   ],

@@ -17,7 +17,7 @@ import type { AbilityDef, CardDef } from '@/engine/types';
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
-  scope: 'on-scene',
+  scope: 'on-partner-area', // M3 PA batch (2026-07-10): 「この能力はパートナーエリアでも宣言できる」(rules/18)
   limit: { kind: 'turn', n: 1 },
   effect: {
     kind: 'atom',

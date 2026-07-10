@@ -161,9 +161,7 @@ export const B09002: CardDef = {
   id: 'B09002',
   no: '0947/B09002',
   kind: 'character',
-  names: [
-    '工藤新一&毛利蘭'
-  ],
+  names: ['工藤新一&毛利蘭', '工藤新一', '毛利蘭'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '青'
   ],

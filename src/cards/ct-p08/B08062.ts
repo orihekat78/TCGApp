@@ -140,9 +140,7 @@ export const B08062: CardDef = {
   id: 'B08062',
   no: '0899/B08062',
   kind: 'character',
-  names: [
-    '佐藤美和子＆高木渉'
-  ],
+  names: ['佐藤美和子＆高木渉', '佐藤美和子', '高木渉'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '黄'
   ],

@@ -110,9 +110,7 @@ export const B07065: CardDef = {
   id: 'B07065',
   no: '0794/B07065',
   kind: 'character',
-  names: [
-    '世良真純＆メアリー'
-  ],
+  names: ['世良真純＆メアリー', '世良真純', 'メアリー'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '赤'
   ],

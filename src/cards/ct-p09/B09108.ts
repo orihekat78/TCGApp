@@ -36,8 +36,9 @@
 //     (discard = human 2枚 pick、BUG-165 修正済 multi-pick)。
 //   - a2「この能力はパートナーエリアでも宣言できる」=> scope:'on-partner-area' (B09070 a3 同型。
 //     本カードは MR = rules/18 PA 常駐可。engine 側 canDeclaredAbility/findCardOnBoard は partnerMR uid
-//     対応済。⚠ human の PA 発 宣言 UI (source 列挙/表示) は PA宣言19 batch へ DEFER — 現場からの
-//     宣言 = 本 family 主経路は本 commit の playwright で実機検証)。
+//     対応済。human の PA 発 宣言 UI は M3 PA batch (2026-07-10) で配線済 —
+//     enumDeclaredAbilitySources partnerMR source + PartnerArea MR tile + flows resolve。
+//     実機検証 = tests/e2e/m3-pa-mr-declared.spec.ts)。
 //   - 【カットイン】AP＋2000 => D01011 同型 (on-hand + effect:declared + $contact.byUid + scope:'contact')。
 import type { AbilityDef, CardDef } from '@/engine/types';
 

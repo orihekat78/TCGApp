@@ -17,6 +17,16 @@
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
   },
   {
+   "id": "B05063",
+   "shippedId": "B05063",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B05063P",
+   "shippedId": "B05063P",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
    "id": "B08044",
    "shippedId": "B08044",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"

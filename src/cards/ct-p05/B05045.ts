@@ -15,8 +15,8 @@
 //     sceneToDeck 短縮形 {apMax:8000, max:1, side:'either', pos:'bottom'}。
 // a2: chain[filePopToHand (アシストパートナー除外 = mutate.file.popTop 実装済、FILE0 は chain-break),
 //     handToFileBottom (W1 新 verb、n:1 = 必須1枚、FILE 1番下=unshift 表向き)]。
-//     ※「この能力はパートナーエリアでも宣言できる」は partial-impl (scope:'on-scene' のみ、
-//       PA での宣言は Phase 4 card wave で scope 補正 — B05066 と同方針、BUG-154 / DEFERRED-INDEX)。
+//     「この能力はパートナーエリアでも宣言できる」= scope:'on-partner-area' (M3 PA batch 2026-07-10
+//       で補正。効果は FILE/手札操作のみでキャラ mutate なし → BUG-154 非該当)。
 // a3: 【カットイン】AP+2000 (B05066 a3 同型、on-hand effect:declared → $contact.byUid)。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
@@ -38,7 +38,7 @@ const a1: AbilityDef = {
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
-  scope: 'on-scene', // 「パートナーエリアでも宣言できる」は partial (B05066 同方針、BUG-154)
+  scope: 'on-partner-area', // M3 PA batch (2026-07-10): 「この能力はパートナーエリアでも宣言できる」(rules/18)
   limit: { kind: 'turn', n: 1 }, // 【ターン1】
   effect: {
     kind: 'chain',

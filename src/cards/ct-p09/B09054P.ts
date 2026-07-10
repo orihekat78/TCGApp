@@ -45,7 +45,7 @@ const a1: AbilityDef = {
 const a2: AbilityDef = {
   id: 'a2',
   type: 'declared',
-  scope: 'on-scene',
+  scope: 'on-partner-area', // M3 PA batch (2026-07-10): 「この能力はパートナーエリアでも宣言できる」(rules/18)
   // 【ターン1】
   limit: { kind: 'turn', n: 1 },
   // 自分の現場にいる〚特徴［赤井家］〛のアクティブ状態のキャラを1枚まで選び、相手のターン終了時まで「スリープ状態でもガードできる」を与える

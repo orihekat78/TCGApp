@@ -1,4 +1,4 @@
-# 次セッション再開プロンプト — CARD PHASE (2026-07-10 M2 後半 batch 出荷後)
+# 次セッション再開プロンプト — CARD PHASE (2026-07-10 M3 PA batch 出荷後)
 
 > モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 — **★model 未指定禁止 (未指定 = session モデル継承。判定表 = CLAUDE.md 2026-07-10 追記)**。⚠ 応答は日本語。Caveman + Ultracode 有効。
 > 履歴詳細は CHANGELOG.md / .claude/sessions/ / memory MEMORY.md / DEFERRED-INDEX.md を参照 (本ファイルには書かない)。
@@ -6,7 +6,22 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-07-10 深夜、✅M2 後半 batch 出荷 = M2 完了)
+## 現在地 (2026-07-10 深夜2、✅M3 PA batch 出荷 = M3 前半完了)
+
+- **✅M3 PA batch 出荷済**: PA 常駐 MR 宣言能力の human/AI 経路 一括解禁。UI 基盤 6 site
+  (enumDeclaredAbilitySources partnerMR + flows resolve partnerMR:/hand: + uidNames + PartnerArea
+  MR tile + Playmat + ai move-enumerator 6c) / scope 補正 11 file (B07079/P B08032/P B09054/P
+  B07093/P B05066/P B05045) / 新規 3 unit+P (B06037 B08046 B08093) = **1897→1903、残 171**。
+  probe 57 + e2e m3-pa-mr-declared.spec.ts / BUG-185 (rules/19 names 分割漏れ 23 枚) 一括修正 +
+  names-split.lint 恒久 gate / compiler re-mine (match 1541) / UI_UNLOCKED 12 枚 (B05106 B06003
+  B07065 B05005 B09108 B05086 B06084 B06098 B06074 等) も本 UI で解禁済。
+- **★次 = M3 残: SMALL_GAP mini-wave** — triage 確定 11 unit (specs/grounding/m3-triage-unregistered.md +
+  DEFERRED-INDEX「M3 PA batch SMALL_GAP」節)。engine 3 cluster: ①paCards source zone 統合
+  (B07049/B09039/B09055) ②toPartnerArea pick 型 (B07030/B07061) ③removed-card snapshot root
+  (B08002/B09110、B09109 は costPaid cardName 1 行) + B09027 cost-choice UI + B08019 scope 配列。
+  全部 additive 小粒 — /engine-wave 1 本 + card 刈り取り。
+
+## 前回まで (M2 完了時点)
 - **engine 骨格凍結済**。メイン作業 = CARD PHASE。
 - **✅M2 後半 batch 出荷済 (2026-07-10 深夜、e1606037)**: engine additive 15 点 (mill/hdb dyn +
   shuffleMoved + drawUpTo bind + sceneEnter multi bind + charSetCard faceUp + bindRef +
@@ -18,7 +33,8 @@
   (B05045・B08086 cutin 全角＋統一 / B07100 side:'opp' / PR234 union remove 先) /
   B09019 ban 無条件化 (字義裁定)。nits = DEFERRED-INDEX「M2 後半 batch nits」節。
   B02039 は M3 送り (T3 UI)。
-- **★次 = M3: UI mega (PA batch + B09027 cost-choice + B08068 human 0公開)**。
+- (✅済 2026-07-10 深夜2) M3: UI mega PA batch — B08068 は triage で DONE 判明 (triggered 自動発火、
+  UI 依存なし)、B09027 は SMALL_GAP (cost-choice UI) で M3 残へ。
   前処理済 dossier = [specs/grounding/m3-pa-batch.md](specs/grounding/m3-pa-batch.md) —
   「宣言19+発動5」の逐語 ID は不在、実プール = MR 25 + 既出荷 scope 補正 5 (B07079 等が
   scope:'on-scene' のまま) + 非 MR PA 宣言 8 ≈ 33 候補。M3 冒頭で npm run ground 再確定。
@@ -31,14 +47,15 @@
   M5 = stacked-identity: B06005・B08019 SMALL_GAP (stale 2 検出) / B08003・B08074 BLOCKED +
   大物 B: B09112・B06042 SMALL_GAP / B01092・B06020 BLOCKED。
 - **★残枚数 随時報告義務**: session 開始時 + 出荷ごと「出荷済 X / 2074 = 残 Y printings」を報告
-  (実測 = npm run lint:icon-abilities)。出荷後は本ファイルのこの行も更新: 現在 **1897 / 2074 = 残 177**。
-- vitest baseline = **5064 pass + 1 expected-fail + 1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
+  (実測 = npm run lint:icon-abilities)。出荷後は本ファイルのこの行も更新: 現在 **1903 / 2074 = 残 171**。
+- vitest baseline = **5113 pass + 1 expected-fail + 1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0 /
+  playwright e2e 127 pass。
 - ★開始時 `git ls-remote origin main` + `gh run list -L1`。並行 session 前提 → worktree
   (C:/tmp/megaw1 再利用可、node_modules junction 済。gen-p-spread は CONAN_ROOT=<worktree> +
   事前に npx tsx scripts/compiler/dump-shipped.ts で shipped-dsl 再生成) + 明示 pathspec add + push 先着 FF。
 
-## 残 177 の攻略計画 (優先順、roadmap = specs/completion-roadmap-2026-07-10.md M-plan)
-0. **M3 (次 session) = UI mega** — 上記 現在地の M3 節 + specs/grounding/m3-pa-batch.md 参照。
+## 残 171 の攻略計画 (優先順、roadmap = specs/completion-roadmap-2026-07-10.md M-plan)
+0. **M3 残 (次 session) = SMALL_GAP mini-wave** — 上記 現在地の「★次」節参照 (11 unit、additive 3 cluster)。
 1. **hybrid pipeline 継続 (40+ unit/session、★2026-07-09 ツール化+2行対応済)**: pool = 1行 **93** +
    2行 **125** = **218 unit (未出荷 base 248 の 88%)**。手順 = **`npm run hybrid:prepare -- --n 40
    --max-refusals 2`** (fresh 化+twin 自動 group (集合キー)+DEFER 照合+payload 一括。1行優先選定) →
@@ -53,8 +70,8 @@
    全部 additive 小粒 — /engine-wave 1 本。解禁後 card 側は clone 同然。
 3. **随伴 sweep 標準化 (毎 session 末尾)**: dump-shipped → param-mine rerun → spread (P variant) + twin harvest + crosscheck。
 4. **機構 cluster**: case 8枚 (事件解決書き換え+証拠隠滅、P10/P53 出荷済) / on-set-host イベント 5枚 / 捜査観測系。
-5. **PA宣言19+発動5 batch** (UI 一括: PartnerArea 描画 + enumDeclaredAbilitySources partnerMR + tile pick +
-   rider description 統一。B09108 a2 PA発 human 宣言も解禁。DEFERRED-INDEX batch2 節)。
+5. (✅済 M3 PA batch 2026-07-10) PA宣言 UI 一括 — 残 = rider description 統一 (nit、DEFERRED-INDEX) +
+   SMALL_GAP 11 unit (項目 0)。
 6. **残 engine DEFER**: B09112 (pre-walk dyn literal 化) / B06042 (charGrantAbility declared 3 gap) / B06020 (hand-scope aura) /
    B01092 (human-defender window) / stacked-identity 系 (B08003/B06005/B08019/B08074) / BUG-176 (event 自己計数)。DEFERRED-INDEX 各節。
 - 並列 lane 可: card phase の衝突面は _reuse/index.ts (append-only) と docs のみ。パッケージ別 2-3 lane 並走可。

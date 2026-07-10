@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `ae5493f330d3`
+> Source hash: `61f1c8c65b70`
 
 Hook on/emit/queue + EffectStackEntry 自動wrap
 

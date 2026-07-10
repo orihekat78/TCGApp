@@ -6,7 +6,7 @@ export const PR005: CardDef = {
   id: 'PR005',
   no: 'P014/PR005',
   kind: 'partner',
-  names: ['江戸川コナン＆工藤新一'],
+  names: ['江戸川コナン＆工藤新一', '江戸川コナン', '工藤新一'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: ['青'],
   lp: 1,
   traits: [],

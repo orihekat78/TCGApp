@@ -140,9 +140,7 @@ export const B06084: CardDef = {
   id: 'B06084',
   no: '0703/B06084',
   kind: 'character',
-  names: [
-    '安室透＆榎本梓'
-  ],
+  names: ['安室透＆榎本梓', '安室透', '榎本梓'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '黄'
   ],

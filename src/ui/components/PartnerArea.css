@@ -327,3 +327,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ---- M3 PA batch (rules/18 §MR能力①): PA 常駐 MR tile ---- */
+/* partner と同 slot に並ぶ。candidate pulse は既存 .partner-area .card.candidate を流用。 */
+.partner-area .card.pa-mr .stats .mr-state {
+  font-size: 9px;
+  font-weight: 700;
+}

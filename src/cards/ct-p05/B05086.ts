@@ -109,9 +109,7 @@ export const B05086: CardDef = {
   id: 'B05086',
   no: '0584/B05086',
   kind: 'character',
-  names: [
-    '安室透＆降谷零'
-  ],
+  names: ['安室透＆降谷零', '安室透', '降谷零'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '黄'
   ],

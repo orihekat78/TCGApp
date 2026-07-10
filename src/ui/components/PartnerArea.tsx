@@ -5,7 +5,7 @@
 // 操作系は Phase 8。
 
 import type { JSX } from 'react';
-import type { PartnerOnBoard } from '@/engine/types/game-state.js';
+import type { PartnerOnBoard, SceneCharacter } from '@/engine/types/game-state.js';
 import type { ResolvedCardMeta } from './SceneArea.js';
 import { CardArt } from './CardArt.js';
 import './PartnerArea.css';
@@ -17,10 +17,16 @@ export type PartnerAreaProps = {
   /** engine wave-12 (G39): PA 一般カード枠 (「このカードをパートナーエリアに移す」で常駐したカード)。
    *  rules/03 §パートナーエリア — 枚数上限なし。undefined/空 = 非表示 (既存表示不変)。 */
   paCards?: string[];
+  /** M3 PA batch (rules/18 §MR能力①): 相手ターン中に現場を離れた MR の常駐 slot。
+   *  null/undefined = 非表示 (既存表示不変)。 */
+  partnerAreaMR?: SceneCharacter | null;
   /** Phase 8.5: 推理/宣言能力/アシスト 対象選択中のハイライト */
   isCandidate?: boolean;
   /** Phase 8.5: 候補としてクリックされたとき。uid は親が知っている (`partner:self` 等)。 */
   onClick?: () => void;
+  /** M3 PA batch: PA-MR が宣言能力 source 候補のとき (uid `partnerMR:${side}` は親が知っている) */
+  isMrCandidate?: boolean;
+  onMrClick?: () => void;
   /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
   onExpand?: (cardId: string) => void;
 };
@@ -50,12 +56,13 @@ const COLOR_LABEL: Record<ResolvedCardMeta['color'], string> = {
  * 'file-area' (アシスト中) / 'mr-removed' (MR リムーブ) のときは
  * キーホール透かしのみ + 状態ラベルを表示する。
  */
-export function PartnerArea({ partner, side, resolveCard, paCards, isCandidate, onClick, onExpand }: PartnerAreaProps): JSX.Element {
+export function PartnerArea({ partner, side, resolveCard, paCards, partnerAreaMR, isCandidate, onClick, isMrCandidate, onMrClick, onExpand }: PartnerAreaProps): JSX.Element {
   const isOnBoard = partner !== null && partner.location === 'partner-area';
   const assisted  = partner !== null && partner.location === 'file-area';
   const mrRemoved = partner !== null && partner.location === 'mr-removed';
 
   const meta = isOnBoard ? resolveCard(partner.cardId) : null;
+  const mrMeta = partnerAreaMR != null ? resolveCard(partnerAreaMR.cardId) : null;
 
   return (
     <div className={`zone partner-col partner-zone partner-area side-${side}`}>
@@ -111,6 +118,34 @@ export function PartnerArea({ partner, side, resolveCard, paCards, isCandidate, 
               </span>
             </div>
           </>
+        )}
+        {/* M3 PA batch (rules/18 §MR能力①): PA 常駐 MR — パートナーと同 slot に並べて描画。
+            宣言能力 source 候補 (isMrCandidate) のとき既存 .card.candidate pulse を流用。 */}
+        {partnerAreaMR != null && mrMeta !== null && (
+          <div
+            className={`card pa-mr color-${mrMeta.color}${partnerAreaMR.state === 'sleep' ? ' sleep' : ''}${partnerAreaMR.state === 'stun' ? ' stun' : ''}${isMrCandidate ? ' candidate' : ''}`}
+            onClick={
+              isMrCandidate && onMrClick
+                ? onMrClick
+                : onExpand
+                  ? () => onExpand(partnerAreaMR.cardId)
+                  : undefined
+            }
+            style={isMrCandidate || onExpand ? { cursor: 'pointer' } : undefined}
+            data-card-id={partnerAreaMR.cardId}
+            data-testid={`pa-mr-${side}`}
+          >
+            <div className="color-stripe" />
+            <div className="art">
+              <CardArt cardId={partnerAreaMR.cardId} alt={mrMeta.name} />
+            </div>
+            <div className="name">{mrMeta.name}</div>
+            <div className="stats">
+              <span className="mr-state" style={{ color: STATE_COLOR[partnerAreaMR.state] }}>
+                MR ● {STATE_LABEL[partnerAreaMR.state]}
+              </span>
+            </div>
+          </div>
         )}
       </div>
 

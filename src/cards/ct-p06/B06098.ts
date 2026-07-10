@@ -168,9 +168,7 @@ export const B06098: CardDef = {
   id: 'B06098',
   no: '0715/B06098',
   kind: 'character',
-  names: [
-    'ベルモット＆シェリー'
-  ],
+  names: ['ベルモット＆シェリー', 'ベルモット', 'シェリー'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '黒'
   ],

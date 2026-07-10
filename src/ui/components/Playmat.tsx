@@ -104,6 +104,9 @@ type CandidateProps = {
   onUnitClick?: (uid: string) => void;
   isPartnerCandidate?: boolean;
   onPartnerClick?: () => void;
+  /** M3 PA batch (rules/18): PA 常駐 MR が宣言能力 source 候補 (uid 'partnerMR:self') */
+  isPartnerMRCandidate?: boolean;
+  onPartnerMRClick?: () => void;
 };
 
 type PlayerMatProps = CandidateProps & {
@@ -149,6 +152,7 @@ function sceneVerbBanner(verb: string | undefined): string {
 function PlayerMat({
   side, state, resolveCard, resolveCase,
   candidateUids, onUnitClick, isPartnerCandidate, onPartnerClick,
+  isPartnerMRCandidate, onPartnerMRClick,
   isCaseCandidate, onCaseClick, onAreaClick, onExpand,
   pickCharUids, onPickChar, nextHintDrawPreview = false,
   activeCardUid, activeCardLabel,
@@ -243,8 +247,11 @@ function PlayerMat({
             side={side}
             resolveCard={resolveCard}
             paCards={state?.players[side].partnerAreaCards}
+            partnerAreaMR={state?.players[side].partnerAreaMR ?? null}
             isCandidate={isPartnerCandidate}
             onClick={onPartnerClick}
+            isMrCandidate={isPartnerMRCandidate}
+            onMrClick={onPartnerMRClick}
             onExpand={onExpand}
           />
         </div>
@@ -520,6 +527,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const candidateUidsSelf = new Set<string>();
   const candidateUidsOpp = new Set<string>();
   let isSelfPartnerCandidate = false;
+  let isSelfPartnerMRCandidate = false;
   let isOppCaseCandidate = false;
   // 2026-05-30 user_request: 事件カードの宣言能力 source ('case:self') を盤面で黄色強調する。
   let isSelfCaseCandidate = false;
@@ -543,6 +551,12 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         continue;
       }
       if (uid === 'partner:opp') continue;
+      // M3 PA batch (rules/18): PA 常駐 MR の宣言能力 source
+      if (uid === 'partnerMR:self') {
+        isSelfPartnerMRCandidate = true;
+        continue;
+      }
+      if (uid === 'partnerMR:opp') continue;
       if (isTargetingOpp) candidateUidsOpp.add(uid);
       else candidateUidsSelf.add(uid);
     }
@@ -657,6 +671,9 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             onUnitClick={(uid) => pickAndConfirm(uid)}
             isPartnerCandidate={isSelfPartnerCandidate}
             onPartnerClick={() => pickAndConfirm('partner:self')}
+            // M3 PA batch (rules/18): PA 常駐 MR が宣言能力 source 候補のとき黄色強調 + クリック選択
+            isPartnerMRCandidate={isSelfPartnerMRCandidate}
+            onPartnerMRClick={() => pickAndConfirm('partnerMR:self')}
             // 2026-05-30: 宣言能力 source として自分の事件が候補のとき黄色強調 + クリックで選択
             isCaseCandidate={isSelfCaseCandidate}
             onCaseClick={() => pickAndConfirm('case:self')}

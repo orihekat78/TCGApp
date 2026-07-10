@@ -132,9 +132,7 @@ export const B05005: CardDef = {
   id: 'B05005',
   no: '0511/B05005',
   kind: 'character',
-  names: [
-    '江戸川コナン＆工藤新一'
-  ],
+  names: ['江戸川コナン＆工藤新一', '江戸川コナン', '工藤新一'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: [
     '青'
   ],

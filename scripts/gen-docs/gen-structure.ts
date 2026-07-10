@@ -49,6 +49,7 @@ const EXCLUDE_DIRS = new Set<string>([
   'blob-report',
   '.claudian',
   '.superpowers',
+  'dist-meta', // meta-app build 出力 (gitignored) — local build 有無で structure.md が揺れるのを防ぐ
 ]);
 
 const EXCLUDE_REL_PATHS = new Set<string>([
@@ -56,6 +57,8 @@ const EXCLUDE_REL_PATHS = new Set<string>([
   '.claude/settings.local.json',
   'playwright/.cache',
   '.serena/cache', // gitignored env 固有 LSP cache — CI (fresh checkout) との差分を防ぐため除外
+  '.serena/project.local.yml', // env 固有 serena local 設定 (M3 2026-07-10)
+  '.claude/scheduled_tasks.lock', // schedule plugin の runtime lock (M3 2026-07-10)
 ]);
 
 const EXCLUDE_FILE_PATTERNS: RegExp[] = [

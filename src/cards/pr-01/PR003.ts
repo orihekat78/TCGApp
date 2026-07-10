@@ -6,7 +6,7 @@ export const PR003: CardDef = {
   id: 'PR003',
   no: 'P002/PR003',
   kind: 'partner',
-  names: ['服部平次＆怪盗キッド'],
+  names: ['服部平次＆怪盗キッド', '服部平次', '怪盗キッド'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: ['緑'],
   lp: 1,
   traits: [],

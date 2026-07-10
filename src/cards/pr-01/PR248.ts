@@ -6,7 +6,7 @@ export const PR248: CardDef = {
   id: 'PR248',
   no: 'P078/PR248',
   kind: 'partner',
-  names: ['江戸川コナン&毛利蘭'],
+  names: ['江戸川コナン&毛利蘭', '江戸川コナン', '毛利蘭'], // rules/19 複数名カード (BUG-185 一括分割 2026-07-10)
   colors: ['青'],
   lp: 1,
   traits: [],
