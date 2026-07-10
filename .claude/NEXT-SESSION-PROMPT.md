@@ -8,7 +8,7 @@
 
 ## 現在地 (2026-07-10 深夜2、✅M3 PA batch 出荷 = M3 前半完了)
 
-- **✅M3 PA batch 出荷済**: PA 常駐 MR 宣言能力の human/AI 経路 一括解禁。UI 基盤 6 site
+- **✅M3 PA batch 出荷済 (02a00e57)**: PA 常駐 MR 宣言能力の human/AI 経路 一括解禁。UI 基盤 6 site
   (enumDeclaredAbilitySources partnerMR + flows resolve partnerMR:/hand: + uidNames + PartnerArea
   MR tile + Playmat + ai move-enumerator 6c) / scope 補正 11 file (B07079/P B08032/P B09054/P
   B07093/P B05066/P B05045) / 新規 3 unit+P (B06037 B08046 B08093) = **1897→1903、残 171**。

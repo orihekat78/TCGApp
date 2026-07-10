@@ -11,7 +11,7 @@
 - M3/M4/M5 grounding 前処理を待ち時間で完了 (specs/grounding/ 永続化、M4=SG5+BLOCKED3、M5=SG4+BLOCKED4)
 - 新規約: Agent model 未指定禁止 (CLAUDE.md 表) / cutin description AP＋全角必須 / gen-p-spread CONAN_ROOT
 
-## 2026-07-10 深夜 — M3 PA batch (session: m3-pa)
+## 2026-07-10 深夜2 — M3 PA batch (session: m3-pa、origin 02a00e57)
 - UI 基盤 6 site: enumDeclaredAbilitySources partnerMR source + enumDeclaredAbilityIdsFor partnerMR 分岐 /
   flows resolveDeclaredSourceCardId+owner解決 (partnerMR:+hand: 両対応、costText area も正規化) /
   uidNames partnerMR / ai/ability-ctx + move-enumerator 6c (BUG-084 同型予防) / PartnerArea MR tile + Playmat 配線
