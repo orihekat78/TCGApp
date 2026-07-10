@@ -1,69 +1,44 @@
-# 次セッション再開プロンプト — CARD PHASE (2026-07-10 M2 attribution mini-wave 出荷後)
+# 次セッション再開プロンプト — CARD PHASE (2026-07-10 M2 後半 batch 出荷後)
 
-> モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 (grounding/意味等価 = sonnet5 high / 敵対 review = sonnet5+opus 混成、割れたら fable or 実測裁定 / 機械 = sonnet low)。⚠ 応答は日本語。Caveman + Ultracode 有効。
+> モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 — **★model 未指定禁止 (未指定 = session モデル継承。判定表 = CLAUDE.md 2026-07-10 追記)**。⚠ 応答は日本語。Caveman + Ultracode 有効。
 > 履歴詳細は CHANGELOG.md / .claude/sessions/ / memory MEMORY.md / DEFERRED-INDEX.md を参照 (本ファイルには書かない)。
 
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-07-10 夜、✅M2 attribution mini-wave 出荷)
-- **engine 骨格凍結済**。以後 engine は ±5/軽微 touch-up のみ。メイン作業 = CARD PHASE。
-- **defer-unlock mini-wave 出荷済** (2026-07-09 夜): additive 8 primitive (contactCharMatches /
-  mill bind / removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / removeAreaAllToDeckBottom
-  player / phase:main:start hook / Cost partnerAreaRemove / $self.partnerAreaTraitCount) + **16 printings**
-  (B02006/B02080/B02076+PR133/B04038+PR027/31/B05072/B07039/B07046/PR132+PR213/285/PR201+PR207/PR278)
-  + **★BUG-177** (「〜のキャラに【カットイン】した場合」= 自コンタクトキャラ (B02006/B07050 公式QA) —
-  shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
-  混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
-  残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- **✅M2 attribution mini-wave 出荷済 (2026-07-10 夜)**: engine additive 6 点 (byPlayer emit 配線 /
-  removedCharMatches.byPlayer / costPaid 書込み 4 case / costRemovedMatches.key / costRevealedMatches
-  新 kind / revealFromHand n:{min,max} + removeSetCard hostSelf) + **12 unit** (B03112/B03116/B04089/
-  B04091/B04094/B05107 + B07025/B08041/B08068/B09005/B09050/B09060) + **P spread 25 枚随伴** (M1 base
-  の TSV 同文 twin)。T2 混成 review: semantic BLOCK 1 件 (B08041「このキャラに」host 非限定) →
-  hostSelf param 追加で同 wave 内修正。nits = DEFERRED-INDEX「M2 attribution mini-wave nits」節。
-  **次 = M2 後半 batch: set-card 残 (PR234/PR240/B01057/B02039、B02084 は BLOCKED ui-cost-choice) +
-  dyn-counter 小粒 9 (B05063/B06066/PR265/B09019/B04048/B06003/B07008/B08047) + cutin-filter
-  (D06003/B07100) — cluster 単位 1 lens (T0-T2 規約)。その後 M3 = UI mega (PA batch + B09027)**。
-- 出荷済 **1867** / corpus 2074 = **残り未実装 207 printings** (実測 = npm run lint:icon-abilities)。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
-  driver = [.claude/specs/completion-roadmap-2026-07-10.md](specs/completion-roadmap-2026-07-10.md)。
-  在庫の真実 = 実作業 **163 unit** (in-pool DEFER) + ride-along P 108 + ✅spread 済 39
-  (`scripts/gen-p-spread.cjs` 新設、毎 session 末尾に随伴実行)。session 割当は roadmap 表参照。
-  **✅S2 deck cluster 出荷済 (2026-07-10 昼: 5 printings、4-lens SHIP)。同日 token 削減 6 施策出荷: ①rules 自動注入停止 (settings.json claudeMdExcludes — 次 session から効く) ②npm run ground = grounding 決定論前処理 (dossier + capability snapshot) ③.claude/specs/grounding/ 永続化 (D06013 保存済) ④gen:probes cost-gate/and 拡張 ⑤haiku 機械 lens + T0-T2 1 lens 規約 ⑥locate = Serena/cavecrew (全部 CLAUDE.md 反映済)。次 = M1 mega-sweep (roadmap 統合 M-plan 節、S3+S12 合体、hybrid pipeline + npm run ground 前処理で 1 晩 ~30 unit)。D06013 = M5 (grounding = specs/grounding/D06013.md)**。旧記述: 設計全文 =
-  [specs/miniwave5-deck-reveal-grounding.md](specs/miniwave5-deck-reveal-grounding.md)。
-  P3 B03049+P (fromBottom param、T2小) → P2 B05047 (deckPlaceSplitBound+新modal、T2+PW) → P1 B01022 (T3、切離し可)。
-  worktree megaw1 branch `engine/miniwave5-deck-reveal` 作成済 (着手時 origin/main rebase)。
-  **★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。engine mini-wave 進行中: **①②④ + #3 小粒 verb + #4 出荷済**。
-  **#4 = hand 内 continuous level 出荷済 (2026-07-10 朝)**: lvlOverrideInHand/lvlDeltaInHand +
-  effectiveHandLevel helper (hand-use-card.ts) を 4 site (levelAllowed / next-hint step2 / UI
-  flows.toCandidate / handUseReason) 配線 + B01009/P + B09095/P = 4 printings。B07003 (cutin 動的付与)
-  は別機構で DEFER 継続。probe 教訓 = beforeEach 再登録時 event._resetRegistry() 必須 (handler 累積で
-  N 重発火)。**次候補 = 残 mini-wave cluster**: ⑦「選ばれたとき無効」intercept (B02067/B04003) /
-  ③deck-reveal 拡張 (B01022/B05047/B03049) / faceUp setCard 系 (PR234) / ⑧cost choice UI (B09027、T3) /
-  大物 DEFER (B03111/B04073/B07049/B07061/D06013/PR284 個別 T2/T3)。手順 = 実証済 (RED probe → 実装 →
-  card author → probe → 混成 review → ship)。
-- **★残枚数 随時報告義務 (2026-07-09 ユーザー指示)**: session 開始時 + batch/wave 出荷ごとに
-  「出荷済 X / corpus 2074 = 残 Y printings (残 unit ≈ Z)」をユーザー向け報告に必ず含める。
-  実測 = shipped: `npm run lint:icon-abilities` (shipped=N 表示) / unit 内訳: `npm run hybrid:prepare` summary。
-  出荷後は本ファイルのこの行も更新する。
-- vitest baseline = **4866 pass + 1 expected-fail (PR263 tripwire) + 1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
-- **✅M1 mega-sweep 出荷済 (2026-07-10 夕)**: 134 unit 全 re-triage (GREEN 33/SMALL_GAP 47/BLOCKED 54、stale 30% — [specs/triage-m1-2026-07-10.md](specs/triage-m1-2026-07-10.md)) → 28 unit=34 printings + G1 整合 (B05056 a2 完成/BUG-183 handReveal n→max 5枚/BUG-184 selfOnly)。engine latent bug 起票 = BUG-181/182 (short-form pick side 二重解決 family、M5 resolver 回で一括修正)。**次 = M2: attribution mini-wave 先行 (設計 spec 済 = [specs/miniwave-attribution-2026-07-10.md](specs/miniwave-attribution-2026-07-10.md)、byPlayer 1-field + costPaid 4 case + costRevealedMatches → 12 unit) → set-card/dyn-counter/cutin-filter cluster batch**。
-- **batch3 実測 (2026-07-10 夜間自走)**: 40 unit → 13 printings (yield 30%、pool 尾の硬化)。DEFER 26+2 = DEFERRED-INDEX「hybrid-batch3 由来」節 (mini-wave 候補 cluster 5 件抽出済)。次 batch は yield 低下前提で --n 40 継続 or mini-wave (turn-scope LP override + bound levelSum dyn が最頻)。
-- **hybrid pipeline 2連続実証 (歩留まり 62-67%)**: batch2 = 37 unit → 23 GREEN / 13 DEFER
-  (DEFERRED-INDEX「hybrid-batch2 由来」節。★最大 cluster = contactCharMatches cond 1本で
-  B02006/B02080/PR278 解禁)。P spread = TSV 全列同文 機械証明→個別検証スキップ (rules/02 同ID)。
-  batch2 教訓: ①probe 内 require('@/...') は runtime 解決不能→top import ②vanilla case は
-  reuse-batch abilities>0 を kind:'case' 免除 ③check-smoke-baseline は `-N` suffix filename 必須
-  (writer 初回は `-N` なし、rename 回避。nits = DEFERRED-INDEX batch2 節末尾)。
-  pilot 教訓 (継続有効): verify lens は plumbing 罠を見ない→shipped-idiom 突合 / key 順 scope<type /
-  fake emit は production payload 丸写し。詳細 = changelog 2026-07-09-01 / sessions/2026-07-04-cardphase.md。
-- ★開始時 `git ls-remote origin main` + `gh run list -L1`。並行 session 前提 → worktree (C:/tmp/megaw1 再利用可、
-  node_modules junction 済) + 明示 pathspec add + push 先着 FF。
+## 現在地 (2026-07-10 深夜、✅M2 後半 batch 出荷 = M2 完了)
+- **engine 骨格凍結済**。メイン作業 = CARD PHASE。
+- **✅M2 後半 batch 出荷済 (2026-07-10 深夜、e1606037)**: engine additive 15 点 (mill/hdb dyn +
+  shuffleMoved + drawUpTo bind + sceneEnter multi bind + charSetCard faceUp + bindRef +
+  toHandOnTurnEnd + cutinTextIncludes + lvlDeltaInHandPer + discard chooser:'source' +
+  Cost selfLpDeltaTurn/removeFromHandDownTo + on-set-host rider walk + area 配列 union +
+  **resolveDynArgs walk-literalize guard** (未bind $bound 保留 — B08028 宣言経路も修復)) +
+  **15 unit + PR240 + P spread 14 = +30 printings (1867→1897、残 177)**。
+  T2 混成 review (sonnet5+fable): semantic BLOCK1 誤検出棄却 / edge BLOCK3 同 wave 修正
+  (B05045・B08086 cutin 全角＋統一 / B07100 side:'opp' / PR234 union remove 先) /
+  B09019 ban 無条件化 (字義裁定)。nits = DEFERRED-INDEX「M2 後半 batch nits」節。
+  B02039 は M3 送り (T3 UI)。
+- **★次 = M3: UI mega (PA batch + B09027 cost-choice + B08068 human 0公開)**。
+  前処理済 dossier = [specs/grounding/m3-pa-batch.md](specs/grounding/m3-pa-batch.md) —
+  「宣言19+発動5」の逐語 ID は不在、実プール = MR 25 + 既出荷 scope 補正 5 (B07079 等が
+  scope:'on-scene' のまま) + 非 MR PA 宣言 8 ≈ 33 候補。M3 冒頭で npm run ground 再確定。
+  UI 工事 = 新規 modal 0 / 既存流用 3 (PartnerArea.tsx / enumDeclaredAbilitySources / flows.ts) /
+  配線 ~19。engine gap なし。T3 = UI 基盤 3 点 + family exemplar 1 の playwright。
+- **M4/M5 grounding も前処理済** (待ち時間で完了、specs/grounding/ 永続化):
+  M4 = intercept ⑦ 3 枚 BLOCKED (pick-finalization hook が真に不在、T3 新機構) +
+  attribution 残 4 SMALL_GAP (B01070 selfUid / B05009+D10022 enterSource side / B03040 evidencePeek) +
+  大物 A: B01020 GREEN (B04072 clone!) / B03111・B04073 SMALL_GAP / B02022 BLOCKED (新 primitive 設計要)。
+  M5 = stacked-identity: B06005・B08019 SMALL_GAP (stale 2 検出) / B08003・B08074 BLOCKED +
+  大物 B: B09112・B06042 SMALL_GAP / B01092・B06020 BLOCKED。
+- **★残枚数 随時報告義務**: session 開始時 + 出荷ごと「出荷済 X / 2074 = 残 Y printings」を報告
+  (実測 = npm run lint:icon-abilities)。出荷後は本ファイルのこの行も更新: 現在 **1897 / 2074 = 残 177**。
+- vitest baseline = **5064 pass + 1 expected-fail + 1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
+- ★開始時 `git ls-remote origin main` + `gh run list -L1`。並行 session 前提 → worktree
+  (C:/tmp/megaw1 再利用可、node_modules junction 済。gen-p-spread は CONAN_ROOT=<worktree> +
+  事前に npx tsx scripts/compiler/dump-shipped.ts で shipped-dsl 再生成) + 明示 pathspec add + push 先着 FF。
 
-## 残 ~224 の攻略計画 (優先順)
-0. ~~DEFER 解禁 engine mini-wave~~ → ✅ **2026-07-09 夜 出荷済** (additive 8本 + 11 unit 実装まで完了)。
-   **次 session 推奨 = hybrid-batch3** (`npm run hybrid:prepare -- --n 40 --max-refusals 2`)。
-   残 engine DEFER は大物のみ (下記 6 + B05022 carrier) — 個別 T2/T3 で都度判断。
+## 残 177 の攻略計画 (優先順、roadmap = specs/completion-roadmap-2026-07-10.md M-plan)
+0. **M3 (次 session) = UI mega** — 上記 現在地の M3 節 + specs/grounding/m3-pa-batch.md 参照。
 1. **hybrid pipeline 継続 (40+ unit/session、★2026-07-09 ツール化+2行対応済)**: pool = 1行 **93** +
    2行 **125** = **218 unit (未出荷 base 248 の 88%)**。手順 = **`npm run hybrid:prepare -- --n 40
    --max-refusals 2`** (fresh 化+twin 自動 group (集合キー)+DEFER 照合+payload 一括。1行優先選定) →
