@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `e31568c5e234`
+> Source hash: `574e1c8b07a2`
 
 公式ルール [`23-qa-disguise-cutin.md`](../../../rules/23-qa-disguise-cutin.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -18,7 +18,7 @@
 
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
 
-## 📄 参照ソース (42)
+## 📄 参照ソース (44)
 
 - [`src/cards/ct-d11/D11013.ts`](../../../../src/cards/ct-d11/D11013.ts)
 - [`src/cards/ct-d11/D11017.ts`](../../../../src/cards/ct-d11/D11017.ts)
@@ -40,4 +40,4 @@
 - [`src/cards/ct-p03/B03052.ts`](../../../../src/cards/ct-p03/B03052.ts)
 - [`src/cards/ct-p03/B03058.ts`](../../../../src/cards/ct-p03/B03058.ts)
 - [`src/cards/ct-p03/B03062.ts`](../../../../src/cards/ct-p03/B03062.ts)
-- _...ほか 22 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 24 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

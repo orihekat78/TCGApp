@@ -94,7 +94,7 @@ const a2: AbilityDef = {
         verb: 'handReveal',
         args: {
           player: 'self',
-          n: 1,
+          max: 1,
           filter: {
             cardName: [
               '工藤新一',

@@ -70,10 +70,7 @@ const a2: AbilityDef = {
         kind: 'pick',
         query: {
           area: 'scene',
-          side: 'either',
-          filter: {
-            kind: 'character'
-          }
+          side: 'either'
         },
         n: {
           min: 0,

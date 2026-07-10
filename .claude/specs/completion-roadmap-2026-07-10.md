@@ -58,8 +58,8 @@
 
 | M | 旧行 | 中身 | unit≈ |
 |---|---|---|---|
-| M1 | S3+S12 | mega-sweep: re-triage 機械分類 → easy 刈り + 尾 sweep + Track B re-mine (hybrid pipeline 1 晩) | ~30 |
-| M2 | S4+S7+S8 | T2 cluster batch: set-card + dyn/counter + cutin-filter + case (workflow 連続投入、cluster 単位 1 lens) | ~23 |
+| ✅M1 | S3+S12 | mega-sweep: re-triage 機械分類 → easy 刈り — **実績 28 unit = 34 printings (1796→1830、残 244)**。134 unit 全 triage = GREEN 33 / SMALL_GAP 47 / BLOCKED 54 ([triage-m1-2026-07-10.md](triage-m1-2026-07-10.md))。case 群 S8 分 6 printings 先食い。BUG-181/182 起票 (resolver、M5 で修正)。Track B re-mine は次回繰越 (gen-simple-cards は --dry 非対応・出荷済上書きに注意) | ~30 |
+| M2 | S4+S7+S8 | **attribution mini-wave 先行** (設計 spec 済: [miniwave-attribution-2026-07-10.md](miniwave-attribution-2026-07-10.md)、byPlayer 1-field + costPaid 4 case + costRevealedMatches で 12 unit) → T2 cluster batch: set-card + dyn/counter + cutin-filter 残 (cluster 単位 1 lens) | ~23 |
 | M3 | S5+S11 | UI mega: PA batch + B09027 cost-choice — UI 2 型を Playwright 1 pass に同居 (溢れたら分割) | ~15 |
 | M4 | S6+S9 | intercept + attribution + 大物 A | ~13 |
 | M5 | S10+D06013 | 大物 B + stacked-identity + D06013 (resolver 触る回を 1 つに集約) | ~10 |

@@ -1331,6 +1331,41 @@ import { B02072 } from '../ct-p02/B02072.js';
 import { B02072P } from '../ct-p02/B02072P.js';
 import { B08057 } from '../ct-p08/B08057.js';
 
+import { PR263 } from '../pr-01/PR263.js';
+import { PR269 } from '../pr-01/PR269.js';
+import { B03029 } from '../ct-p03/B03029.js';
+import { B05120 } from '../ct-p05/B05120.js';
+import { B06109 } from '../ct-p06/B06109.js';
+import { B07068 } from '../ct-p07/B07068.js';
+import { B08038 } from '../ct-p08/B08038.js';
+import { B09111 } from '../ct-p09/B09111.js';
+import { PR284 } from '../pr-01/PR284.js';
+import { B05118 } from '../ct-p05/B05118.js';
+import { B05119 } from '../ct-p05/B05119.js';
+import { B06106 } from '../ct-p06/B06106.js';
+import { B06107 } from '../ct-p06/B06107.js';
+import { B06108 } from '../ct-p06/B06108.js';
+import { B03135 } from '../ct-p03/B03135.js';
+import { D07024 } from '../ct-d07/D07024.js';
+import { B02002 } from '../ct-p02/B02002.js';
+import { B02013 } from '../ct-p02/B02013.js';
+import { B02018 } from '../ct-p02/B02018.js';
+import { B02031 } from '../ct-p02/B02031.js';
+import { B03028 } from '../ct-p03/B03028.js';
+import { B03078 } from '../ct-p03/B03078.js';
+import { B05015 } from '../ct-p05/B05015.js';
+import { B05027 } from '../ct-p05/B05027.js';
+import { B05087 } from '../ct-p05/B05087.js';
+import { B05106 } from '../ct-p05/B05106.js';
+import { B06026 } from '../ct-p06/B06026.js';
+import { B06090 } from '../ct-p06/B06090.js';
+import { B07053 } from '../ct-p07/B07053.js';
+import { B07065 } from '../ct-p07/B07065.js';
+import { B08004 } from '../ct-p08/B08004.js';
+import { B08033 } from '../ct-p08/B08033.js';
+import { B08082 } from '../ct-p08/B08082.js';
+import { PR096 } from '../pr-01/PR096.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1732,4 +1767,6 @@ export const REUSE_CARDS: CardDef[] = [
   B03049, B03049P,
   // CARD PHASE S2 deck cluster (deck-window multi-deploy / souza dyn X / 非所有者 deck-place / remove 3-tier)
   B01022, B01093, B02072, B02072P, B08057,
+  // CARD PHASE M1 mega-sweep
+  PR263, PR269, B03029, B05120, B06109, B07068, B08038, B09111, PR284, B05118, B05119, B06106, B06107, B06108, B03135, D07024, B02002, B02013, B02018, B02031, B03028, B03078, B05015, B05027, B05087, B05106, B06026, B06090, B07053, B07065, B08004, B08033, B08082, PR096,
 ];

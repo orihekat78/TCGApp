@@ -31,7 +31,7 @@ const a1: AbilityDef = {
           verb: 'handReveal',
           args: {
             player: 'self',
-            n: 1,
+            max: 1,
             filter: {
               trait: '警視庁',
               kind: 'character'

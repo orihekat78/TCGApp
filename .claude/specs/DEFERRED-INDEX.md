@@ -1328,3 +1328,24 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 - human=opp 時 pendingDeckPlace{opp} は modal 非表示のまま残留 (DeckReorder と同 parity)。ゲーム reset で pending 系未クリア (同 parity)
 - B03049 match 枝で現場5枚満杯: sceneEnter 明示 cardId 経路は switch 提示なし silent no-op (D11019 等と同 class parity)
 - fromBottom window + deckPlaceSplitBound の併用は resolve 側で wrong-copy を踏む (B1 同類) — 併用禁止。BUG-180 = handAddFromDeck/sceneEnter deck-splice の refresh gap (~152 消費者)
+
+## ✅ M1 mega-sweep re-triage + 一括出荷 (2026-07-10、cards/m1-megasweep)
+
+- **pool 全数 re-triage**: refuse≤2 の 134 unit を dossier (npm run ground) + sonnet5 12-lens で
+  GREEN_NOW 33 / SMALL_GAP 47 / BLOCKED 54 に機械分類。**stale blocker 40 unit (30%)**。
+  全 verdict 表 + 次 mini-wave cluster 割当 = [triage-m1-2026-07-10.md](triage-m1-2026-07-10.md)
+- **出荷 28 unit = 34 printings**: PR263+PR269 / B03029 / B05120 / B06109 / B07068 / B08038 /
+  B09111 / PR284 / B05118+B05119+B06106+B06107+B06108 / B03135+D07024 / B02002 / B02013 / B02018 /
+  B02031 / B03028 / B03078 / B05015 / B05027 / B05087 / B05106 / B06026 / B06090 / B07053 / B07065 /
+  B08004 / B08033 / B08082 / PR096 — 本 index の該当旧行はすべて解消済として読み替え
+- **author 段 DEFER 差戻し 5** (triage GREEN_NOW だったが真 gap): B03063 (multi-pick sleep fan-out) /
+  B07102 (walk-literalize、PB composite 要) / B05075 (charRemoveSetCard の $self 限定 field 不在) /
+  B08008 (picked-host stack + 重ねた場合 gate + grant rider 複合) / B09081 (hiramekiResolve に
+  humanChooser 無し → optional 潰れ)。詳細 = triage spec §M1 author 段 DEFER
+- **engine latent bug 2 件起票** (probe owner=opp pin が検出): [[BUG-181]] (PB 短縮形 pre-walk の
+  player 絶対解決) / [[BUG-182]] (chain 内 short-form の side 二重反転 → state 破損)。
+  resolver 系 → M5 回で一括修正。probe は現状挙動を lock 済 (修正時に反転させる)
+- **次 mini-wave 最有力**: attribution 2 束 — ①byPlayer emit + removedCharMatches gate (6 unit) /
+  ②costPaid 書込み 4 種 (6 unit)。次点 dyn-counter 小粒 9
+- **[[BUG-183]] (修正済、同 commit)**: handReveal「1枚公開してもよい」n:1 強制発火 family —
+  batch 内 B08082/B07053 + shipped B07022/B08064/B09002 を max:1 に一括修正。B09061 は意図的例外 (文書化済)

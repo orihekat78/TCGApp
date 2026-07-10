@@ -33,6 +33,7 @@ interface FsEntry {
 
 const EXCLUDE_DIRS = new Set<string>([
   'node_modules',
+  'worktrees',
   '.git',
   'dist',
   'build',

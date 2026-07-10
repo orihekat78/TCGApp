@@ -21,7 +21,7 @@ const a1: AbilityDef = {
         verb: 'handReveal',
         args: {
           player: 'self',
-          n: 1,
+          max: 1,
           filter: {
             trait: '高校生',
             kind: 'character'

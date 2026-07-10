@@ -48,3 +48,24 @@
   npm run ground (dossier+capability snapshot) / specs/grounding/ 永続化 (D06013 済) / gen:probes
   cost-gate+and 拡張 (★and 展開の all→cs 実バグ修正) / haiku 機械 lens + T0-T2 1 lens / locate 委譲。
   roadmap M-plan (5-7 session) 追記。次 = M1 mega-sweep。
+
+## 2026-07-10 午後 — M1 mega-sweep (本 session)
+- 開始: 出荷済 1796/2074 = 残 278 printings。pool 実測 = refuse≤2 で 134 unit (147 printings、全 DEFER-listed)。
+- M1-A: ground-dossier 134 rep 一括生成済 (.tmp/_ground/)。
+- M1-B: re-triage workflow (sonnet5 high × 12 chunk) 投入。★教訓: workflow args を手打ちして 82 ID 捏造
+  → manifest 突合で検出、kill→再投入。**args は必ず node で manifest から機械抽出**。
+- ★gen-simple-cards.cjs は --dry 非対応、出荷済 9 file (PR277/293-303) を上書き→即 revert。
+  Track B rerun は diff 精査必須。
+- megaw1 worktree: untracked genprobe-validation scratch (前 session 産物、19 fail) 削除。tracked 3 file 復元 (11 pass)。
+- ★gen:probes 弱点実測: conditional+no-pick ability に架空 pick を script (over-scripted) / nMin-0
+  scenario 誤生成 — 28 unit 中 15 file fail → 削除して手書き probe に切替。generator 修正は後日
+  (対象 shape: conditional{if:sceneHas}+charGrantKeyword uid:$self、optional-decline、caseStatus off)。
+- probe workflow round1 11/11 green。★owner=opp pin が engine latent bug 2 件検出:
+  BUG-181 (PB短縮形 pre-walk player 絶対解決、B05087) / BUG-182 (chain 内 short-form side 二重反転
+  → state 破損、B03078。shipped B03053 同族)。両方 resolver=T3 → M5 回で一括修正、probe は現状 lock。
+- cluster review 6 lens: SHIP 4 / BLOCK 2 → 実対応 = B08082+B07053 handReveal n:1→max:1 (「してもよい」
+  辞退可否、rules/15) + B03028 probe stub 差替 + B05087 は chain gate で反証 (probe scenario 追加)。
+  水平 sweep = B07022/B08064/B09002/B09061 印字突合 agent 委譲。
+- ★ruleRefs typo (10-action-face-event.md) が full vitest で検出 → validate-all が守った。
+- 水平 sweep 確定: B07022/B08064/B09002 も handReveal n:1 DEFECT → 同 commit 修正 (BUG-183 起票、
+  B09061 は文書化済み意図的例外)。B03028 手書き probe 8 green / B05087 S9 で chain add-gate 実証。

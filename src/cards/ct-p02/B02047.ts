@@ -21,7 +21,6 @@ import type { AbilityDef, CardDef } from '@/engine/types';
 const a1: AbilityDef = {
   id: 'a1',
   type: 'icon-disguise',
-  scope: 'on-scene',
   condition: {
     kind: 'and',
     cs: [

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `e76c93f913e5`
+> Source hash: `71fd6d776831`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,45 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-07-10
+seq: 13
+slug: m1-megasweep
+---
+
+## M1 mega-sweep — pool 全数 re-triage + stale-DEFER 一括刈り取り (34 printings)
+
+roadmap M1 (旧 S3+S12 統合) 消化。残 pool 134 unit を機械 re-triage し、stale blocker 40 unit を
+検出、GREEN_NOW 33 unit を hybrid pipeline で一括 author → **28 unit = 34 printings 出荷**
+(1796→**1830** / 2074、残 244)。
+
+- **re-triage**: `npm run ground` dossier 134 rep 一括生成 → sonnet5 12-lens 分類 =
+  GREEN_NOW 33 / SMALL_GAP 47 / BLOCKED 54。全 verdict + 次 mini-wave cluster 割当 =
+  [.claude/specs/triage-m1-2026-07-10.md](../specs/triage-m1-2026-07-10.md)
+- **出荷 34 printings**: case 群 (B05118+119/B06106-108/B03135+D07024 = partnerSolveOverride ·
+  handUseRestrictFilter 初 consumer) / PA 群 (PR263+269/B05027/B05106/B07065 = MR·on-partner-area) /
+  set-card 群 (B02013/B02018/B02031/B08033) / attribution 群 (B03028/B05015/B05087/B06026/B07053/
+  PR096/B08038/B09111) / dyn-counter (B02002/B08004) / その他 (B03029/B03078/B05120/B06109/B07068/
+  B06090/B08082/PR284)
+- **author/verify 2 段 gate**: opus author + sonnet5 意味等価 verify (chunk 4)。verify が実質的
+  意味差 3 件検出 → issues 差戻し retry で 1 件 GREEN 化、5 unit は真 gap 確定で DEFER 差戻し
+  (triage 楽観 15% を実測で刈った)
+- **probe**: gen:probes 自動 2 file + 手書き 26 file (workflow 並列)。★owner=opp pin (BUG-174 規約)
+  が engine latent bug 2 件を検出 → **BUG-181** (PB 短縮形 pre-walk player 絶対解決) /
+  **BUG-182** (chain 内 short-form side 二重反転 → state 破損)。resolver 系のため M5 で一括修正、
+  probe は現状挙動 lock 済
+- **gen:probes 弱点実測**: conditional+no-pick ability への架空 pick script (over-scripted) で
+  15/17 file fail → 削除して手書きに切替。generator 修正は別 increment
+- **compiler G1 gate が発散 5 件検出** (n→max fix の裏面で再 mine → 副次検出): B05045 cutin observer
+  selfOnly 欠落 (**BUG-184**) / B02047 icon-disguise 未使用 scope / B02076+P/PR133 冗長 filter
+  (意味不変正規化) / **B05056 a2 partial 実装を完成** (宣言スリープ→鈴木財閥登場)。re-mine 副産物:
+  match 1250→1489、unshipped compile 可 17
+- **cluster review (6 lens 混成)**: case/pa/set-card/dyn-deck SHIP。attribution/other の BLOCK 3 件は
+  ①B08082/B07053 の handReveal「してもよい」が n:1 強制発火 → max:1 修正 + 水平 sweep で shipped
+  B07022/B08064/B09002 も同修正 (**BUG-183**、B09061 は文書化済み意図的例外)
+  ②B03028 probe stub → 手書き差替 ③B05087 chain-gate 指摘は B03078 probe の同 verb 実証で反証 +
+  add=0 scenario 追加で挙動 pin
 
 ---
 date: 2026-07-10

@@ -6,7 +6,7 @@
 ```text
 名探偵コナンTCG MVP。まず CLAUDE.md → README → CHANGELOG → .claude/auto/structure.md → memory.md を読む。
 
-## 現在地 (2026-07-10 昼、S2 deck cluster + token 削減 6 施策 出荷)
+## 現在地 (2026-07-10 夕、✅M1 mega-sweep 出荷)
 - **engine 骨格凍結済**。以後 engine は ±5/軽微 touch-up のみ。メイン作業 = CARD PHASE。
 - **defer-unlock mini-wave 出荷済** (2026-07-09 夜): additive 8 primitive (contactCharMatches /
   mill bind / removeAreaToDeckTop dest:'bottom' / charOverrideAP scope:'turn' / removeAreaAllToDeckBottom
@@ -16,7 +16,7 @@
   shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
   混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
   残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- 出荷済 **1796** / corpus 2074 = **残り未実装 278 printings** (実測 = npm run lint:icon-abilities)。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
+- 出荷済 **1830** / corpus 2074 = **残り未実装 244 printings** (実測 = npm run lint:icon-abilities)。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
   driver = [.claude/specs/completion-roadmap-2026-07-10.md](specs/completion-roadmap-2026-07-10.md)。
   在庫の真実 = 実作業 **163 unit** (in-pool DEFER) + ride-along P 108 + ✅spread 済 39
   (`scripts/gen-p-spread.cjs` 新設、毎 session 末尾に随伴実行)。session 割当は roadmap 表参照。
@@ -37,7 +37,8 @@
   「出荷済 X / corpus 2074 = 残 Y printings (残 unit ≈ Z)」をユーザー向け報告に必ず含める。
   実測 = shipped: `npm run lint:icon-abilities` (shipped=N 表示) / unit 内訳: `npm run hybrid:prepare` summary。
   出荷後は本ファイルのこの行も更新する。
-- vitest baseline = **4604 pass +1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
+- vitest baseline = **4866 pass + 1 expected-fail (PR263 tripwire) + 1 skip** / smoke winsA=**472** exceptions=0 / 8 lint err0。
+- **✅M1 mega-sweep 出荷済 (2026-07-10 夕)**: 134 unit 全 re-triage (GREEN 33/SMALL_GAP 47/BLOCKED 54、stale 30% — [specs/triage-m1-2026-07-10.md](specs/triage-m1-2026-07-10.md)) → 28 unit=34 printings + G1 整合 (B05056 a2 完成/BUG-183 handReveal n→max 5枚/BUG-184 selfOnly)。engine latent bug 起票 = BUG-181/182 (short-form pick side 二重解決 family、M5 resolver 回で一括修正)。**次 = M2: attribution mini-wave 先行 (設計 spec 済 = [specs/miniwave-attribution-2026-07-10.md](specs/miniwave-attribution-2026-07-10.md)、byPlayer 1-field + costPaid 4 case + costRevealedMatches → 12 unit) → set-card/dyn-counter/cutin-filter cluster batch**。
 - **batch3 実測 (2026-07-10 夜間自走)**: 40 unit → 13 printings (yield 30%、pool 尾の硬化)。DEFER 26+2 = DEFERRED-INDEX「hybrid-batch3 由来」節 (mini-wave 候補 cluster 5 件抽出済)。次 batch は yield 低下前提で --n 40 継続 or mini-wave (turn-scope LP override + bound levelSum dyn が最頻)。
 - **hybrid pipeline 2連続実証 (歩留まり 62-67%)**: batch2 = 37 unit → 23 GREEN / 13 DEFER
   (DEFERRED-INDEX「hybrid-batch2 由来」節。★最大 cluster = contactCharMatches cond 1本で
