@@ -21,6 +21,26 @@ e2e night-w0-cost-choice-multipick.spec.ts で実機検証)。
 **新規 BUG**: BUG-186 (sceneEnter 短縮形 side 絶対値 → owner=opp 反転、**修正済同 commit**) /
 BUG-187 (hand 系 atom ~10 site 同族 latent、未着手 — 個別 probe 付きで対応)。
 
+## ★夜間 Wave A 上書き節 (2026-07-11 night-run — 同上、本節優先)
+
+**✅出荷済**: B07049 / D10009 / D10010 / B07063(+P) / B04073 / B03008 / B03040 / B02084(+P) /
+B03041(+P) / B09107(+P) / B02087(+P) / B05007(+P) / B05097 = 19 printings。新 primitive:
+charGrantTrait/RevokeTrait・charStackCard fromScene・handAddFromRemove area union・
+charGrantAbility leave:to-remove 解禁・action:guarded targetUid・state:change hook・peekOwnEvidence・
+on-set-self scope・forceGuard token・removeDeckAll cost (コスト時即時 refresh)・colorIgnoreOnNextHint・
+setActionCutinBanFilter・$removed dyn・charRemoveSetCard/sceneRemove bind。
+
+**DEFER (2026-07-11 実測 blocker)**:
+| ID | blocker |
+|----|---------|
+| B05101 (card のみ — trait verb は出荷済) | 自身を remove から復活させる idiom 不在 ($self.cardId 未解決 + leave:to-remove payload に cardId 無し) |
+| B06005 a2 | fungible stacked カードの枚数選択 (0-2 count-choice) UI primitive 不在 |
+| B09078 | 1 window から dual-filter 二重 pick + reveal-to-remove 複合 |
+| B09039 a2 | handAddFromRemove 0-add 時の chainStepNoApply gate 不在 (過剰 discard) |
+| B08002 a2 (card のみ — $removed dyn は出荷済) | dual-pick (remove-card + scene-host≠source) 不在 |
+| B08078 | 他カード ability の外部 hook 発火機構不在 (removeKeywordAtLeast cond 単体は trivial だが exemplar 不可) |
+| B05097 は choice{mill 0..N} 代替で出荷済 — count-picker primitive は不要になった |
+
 ## 公式 defer 宣言済 (専用ファイルあり)
 
 | Phase | 内容 | 専用 spec |

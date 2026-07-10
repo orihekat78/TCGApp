@@ -15,7 +15,7 @@ const COST_KIND_MAP = {
   sleepSelf: true, sleepChar: true, stunChar: true, removeFromHand: true, removeFromScene: true,
   revealFromHand: true, // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
   revealHandToDeckTop: true, // engine mega-wave W1 (2026-07-03, P29): 手札公開→デッキ上 cost (B05049 a1)
-  removeDeckTop: true, discardEvidence: true, selfToDeckBottom: true,
+  removeDeckTop: true, removeDeckAll: true, discardEvidence: true, selfToDeckBottom: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
   partnerAreaRemove: true, // engine defer-unlock mini-wave (2026-07-09): PA カード n 枚リムーブ (B07039)
@@ -139,6 +139,10 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       // 非有限/非数値は 0 扱い (resolveDynNumber guard) = deck.length >= 0 (n=0 コストは vacuous に true)。
       const rdN = resolveDynNumber(cost.n, state, ctx);
       return state.players[cost.player].deck.length >= rdN;
+    }
+    // engine A3 wave (2026-07-11, B09107): デッキ全部リムーブ — 恒真 (0 枚でも宣言可)。
+    case 'removeDeckAll': {
+      return true;
     }
     case 'discardEvidence': {
       return state.players[ctx.source.player].evidence.length >= cost.n;

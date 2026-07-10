@@ -288,6 +288,8 @@ function resolvePlaceholder(state: GameState, placeholder: string, ctx: EffectCt
       return resolveDyn(rest, ctx, placeholder);
     case 'discarded':
       return resolveDiscarded(ctx, rest, placeholder);
+    case 'removed':
+      return resolveRemoved(ctx, rest, placeholder);
     case 'bound':
       return resolveBound(state, rest, ctx, placeholder);
     // mini-wave #2 (2026-07-10): $trigger.cardLevel = trigger payload.cardId の CardDef 印字レベル
@@ -516,6 +518,29 @@ function resolveDiscarded(ctx: EffectCtx, rest: string[], original: string): Dyn
 // 欠損 binding は defensive (count=0 / level=NaN / cardName='') — 「してもよい」skip 経路で throw しない
 // ($discarded の 0-fallback と同 posture。NaN filter は matchOneFilter/predicate で不一致に落ちる)。
 // 未知 field は throw (author typo を fail-fast)。key は ctx.bindings を verbatim 参照 ('$flipped' 等 $ 込み可)。
+// engine A3 wave (2026-07-11, B08002): $removed.<field> — sceneRemove{bind} が除去**前**に snapshot した
+//   実効 level/ap/lp を参照 (静的値。$bound.level の除去後 re-read = 印字落ちを回避、公式Q&A: 増減状態を参照)。
+//   $discarded と同 posture (先頭1枚参照 / unbound は 0)。B08002 a1 mill n:{dyn:'$removed.level'}。
+function resolveRemoved(ctx: EffectCtx, rest: string[], original: string): DynValue {
+  if (rest.length === 0) {
+    throw new Error(`dyn.eval: $removed requires <field> (level/ap/lp) — got "${original}"`);
+  }
+  const field = rest[0];
+  const binding = (ctx.bindings as Record<string, unknown>)['$removed'];
+  if (!Array.isArray(binding) || binding.length === 0) return 0;
+  const first = binding[0] as { snapLevel?: number; snapAp?: number; snapLp?: number };
+  switch (field) {
+    case 'level':
+      return first.snapLevel ?? 0;
+    case 'ap':
+      return first.snapAp ?? 0;
+    case 'lp':
+      return first.snapLp ?? 0;
+    default:
+      throw new Error(`dyn.eval: unknown $removed field "${field}" in "${original}"`);
+  }
+}
+
 function resolveBound(state: GameState, rest: string[], ctx: EffectCtx, original: string): DynValue {
   if (rest.length < 2) {
     throw new Error(`dyn.eval: $bound requires <key>.<field> (count/level/cardName) — got "${original}"`);

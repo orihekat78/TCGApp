@@ -132,9 +132,9 @@ describe('engine.flow.action.tryGuard', () => {
   });
 
   it('tryGuard sets guardUid + sleeps guard + emits action:guarded', () => {
-    const captured: { byUid: string; guardUid: string }[] = [];
+    const captured: { byUid: string; guardUid: string; targetUid?: string }[] = [];
     event.on('action:guarded', (_s, payload) => {
-      captured.push(payload as { byUid: string; guardUid: string });
+      captured.push(payload as { byUid: string; guardUid: string; targetUid?: string });
     });
     const { s, selfUid, oppUid, guardUid } = makeScene({ guardActive: true });
     let ax: ActionContext | undefined;
@@ -148,7 +148,8 @@ describe('engine.flow.action.tryGuard', () => {
     const g = out.players.opp.scene.find(c => c.uid === guardUid)!;
     expect(g.state).toBe('sleep');
     expect(captured.length).toBe(1);
-    expect(captured[0]).toEqual({ byUid: selfUid, guardUid });
+    // engine additive A2 (2026-07-11, B04073): action:guarded payload に targetUid を同梱 (char 対象=oppUid)
+    expect(captured[0]).toEqual({ byUid: selfUid, guardUid, targetUid: oppUid });
   });
 });
 

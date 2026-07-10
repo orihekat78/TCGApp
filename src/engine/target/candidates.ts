@@ -436,7 +436,19 @@ export function matchOneFilter(
     const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
     const printed = d?.traits ?? [];
     const granted = c?.uid !== undefined ? traitNameGrantSafe(state, c.uid, 'grantTraits') : NO_GRANT;
-    const traits = granted.length > 0 ? [...printed, ...granted] : printed;
+    // engine A1 wave (2026-07-11, B05101): applied trait 付与/剥奪 (mutate.char.grantTrait/revokeTrait) を
+    // honor。read.char.traits と同じ集合 (printed ∪ continuous-grant ∪ applied-grant − applied-revoke)。
+    // c.turnEffects 経由なので removedChar snapshot でも正しい (B05101 の再リムーブ時 trait gate)。
+    // 既存カードは未宣言 → 全 [] = 従来と byte 等価 (回帰0)。
+    const te = c?.turnEffects as Record<string, unknown> | undefined;
+    const appliedG = te
+      ? [...((te['grantedTraits_permanent'] as string[] | undefined) ?? []), ...((te['grantedTraits_turn'] as string[] | undefined) ?? [])]
+      : [];
+    const revoked = te
+      ? [...((te['revokedTraits_permanent'] as string[] | undefined) ?? []), ...((te['revokedTraits_turn'] as string[] | undefined) ?? [])]
+      : [];
+    let traits = (granted.length > 0 || appliedG.length > 0) ? [...printed, ...granted, ...appliedG] : printed;
+    if (revoked.length > 0) traits = traits.filter(t => !revoked.includes(t));
     if (!wants.some(w => traits.includes(w))) return false;
   }
 

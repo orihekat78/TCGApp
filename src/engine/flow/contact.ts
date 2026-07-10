@@ -17,6 +17,7 @@ import { char as readChar } from '../read/char.js';
 import { toPlainDeep } from '../effect/pending-state.js';
 import { abilityIsCutin } from '../read/keyword.js';
 import { evalCond } from '../cond/eval.js';
+import { matchOneFilter } from '../target/candidates.js'; // engine A3 wave (2026-07-11): B05007 filtered action-scoped cutin ban
 import { computeOrder as _computeOrder } from './action/order.js';
 
 type Player = 'self' | 'opp';
@@ -108,6 +109,22 @@ export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId:
   // resetTurnFlags (turn:start) が清掃。side-level flag ゆえ発動キャラ離場後も有効 (公式 Q&A B07002)。
   // 既存カードは本 flag 未使用 → 回帰0。
   if (state.turnState[p].cutinBanned) return false;
+  // engine A3 wave (2026-07-11, B05007 妃英理): filtered action-scoped cutin ban。現行アクションの actor
+  //   (ax.byUid、owner ax.byPlayer) が armer の actionCutinBanOppFilter に一致し、p が armer の相手なら不可。
+  //   「自分の[毛利探偵事務所]がアクションしたとき、アクション終了時まで相手は【カットイン】使用できない」=
+  //   一致キャラのアクション中のみ封じる (canCutIn がアクション中のみ呼ばれる → 自然に action スコープ)。
+  //   将来登場キャラも filter 一致なら適用 (per-char flag でなく filter live 照合)。partner actor は scene 不在 → 非該当。
+  {
+    const armerSide = ax.byPlayer;
+    const acbFilter = state.turnState[armerSide].actionCutinBanOppFilter;
+    if (acbFilter && p !== armerSide) {
+      const actor = state.players[armerSide].scene.find(c => c.uid === ax.byUid);
+      if (actor && matchOneFilter(state, actor.cardId, acbFilter, actor,
+        { kind: 'char', uid: actor.uid, cardId: actor.cardId, player: armerSide })) {
+        return false;
+      }
+    }
+  }
   // engine mega-wave W2 (2026-07-03, P07/r24): selfCutinBanInContact — p 側のコンタクト参加キャラ自身が
   // 「このキャラのコンタクト中、自分は【カットイン】を使用できない」継続 aura を持つ場合、p は cutin 不可
   // (B07005)。参加キャラは contactCharUidOf(ax, p)。不在時 false = 挙動不変。

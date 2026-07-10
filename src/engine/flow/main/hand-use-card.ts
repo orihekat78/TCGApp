@@ -80,6 +80,28 @@ export function handUseColorIgnoreAllowed(state: GameState, p: Player, cardId: s
   return false;
 }
 
+/**
+ * engine A3 wave (2026-07-11, B02087 キール): ネクストヒント経路の色無視判定。
+ * NH は「手札から使用」の一種 (rules/12) なので colorIgnoreOnHandUse (B03126 両経路) も honor しつつ、
+ * NH 限定 token colorIgnoreOnNextHint (B02087) も追加で honor する。
+ * hand-use-card colorAllowed / handUseReason (= 手札の使用経路) は本 helper を**使わない** → NH 限定を担保。
+ * consumer: next-hint.ts colorAllowed / UI flows.ts toCandidate。呼出規約は handUseColorIgnoreAllowed と同じ
+ * (色 subset 判定が失敗した時のみ委譲 → 通常カードはゼロコスト)。
+ */
+export function nextHintColorIgnoreAllowed(state: GameState, p: Player, cardId: string): boolean {
+  if (handUseColorIgnoreAllowed(state, p, cardId)) return true; // B03126 両経路 token も NH で有効
+  const d = readDef.card(cardId);
+  if (!d) return false;
+  const ctx = { source: { player: p, area: 'hand', cardId }, bindings: {} } as EffectCtx;
+  for (const ab of d.abilities ?? []) {
+    if (ab.type !== 'continuous') continue;
+    if (!ab.continuousModifier?.colorIgnoreOnNextHint) continue;
+    if (ab.condition && !evalCond(state, ab.condition, ctx)) continue;
+    return true;
+  }
+  return false;
+}
+
 function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
   const d = readDef.card(cardId);
   if (!d) return true; // 未登録は寛容

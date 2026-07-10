@@ -391,6 +391,10 @@ export type AtomVerb =
   // (evidenceFlip=表向き化 の逆 mutate)。PB pick (defaultArea 'evidence', faceUp 候補限定)。
   // rules: 03-field-areas.md §状態 / 15-abilities-effects.md。B05013/B06017/B06019 で使用。
   | 'evidenceGain' | 'evidenceLose' | 'evidenceFlip' | 'evidenceFlipDown' | 'selfToEvidence' | 'evidenceToDeck'
+  // engine additive A2 (2026-07-11, B03040 和田進一): peekOwnEvidence — 「自分の証拠を上から1つ見る。
+  // （裏向きの証拠を見た場合、その後、元に戻す）」= zone/faceUp 不変の私的閲覧 (evidenceFlip の
+  // 「表向きに固定」とは意味が正反対)。UI へ private 通知するのみ (log entry)。args.player 既定 self。
+  | 'peekOwnEvidence'
   // engine wave-12 (2026-07-02 G39): 「このカードをパートナーエリアに移す」— ctx.source card を
   // owner の remove から PlayerState.partnerAreaCards へ (selfToEvidence 同型の deterministic self 経路)
   | 'toPartnerArea'
@@ -449,7 +453,7 @@ export type AtomVerb =
   | 'evidenceToDeckBottom'
   | 'charModifyAP' | 'charModifyLP' | 'charModifyLevel' | 'charSetAP' | 'charSetLP'
   | 'charOverrideAP' | 'charOverrideLP'
-  | 'charGrantKeyword' | 'charRevokeKeyword' | 'charDisableOriginal'
+  | 'charGrantKeyword' | 'charRevokeKeyword' | 'charGrantTrait' | 'charRevokeTrait' | 'charDisableOriginal'
   | 'charSetTurnEffect' | 'charSetCard' | 'charStackCard' | 'charRemoveSetCard'
   // Task D E4 (2026-06-12): triggered ability の動的付与 (turnEffects.grantedAbilities へ JSON descriptor)。
   // 「そのキャラに『このキャラがアクションしたとき、カードを1枚引く。』を与える」(B02014) 等。
@@ -499,6 +503,7 @@ export type AtomVerb =
   // (setNextHintBan mirror)。ゲートは flow/contact.ts canCutIn / canDisguise。side-level flag ゆえ
   // 発動キャラ離場後も有効 (公式 Q&A B07002)。resetTurnFlags でクリア。rules: 09 / 15 / 25
   | 'setCutinBan'
+  | 'setActionCutinBanFilter' // engine A3 wave (2026-07-11, B05007): 「〜がアクションしたとき相手カットイン不可」turn-scoped filter を arm
   | 'setDisguiseBan'
   | 'setHiramekiSuppress'
   // mega-wave W6 step7 (2026-07-04, row70): 「相手はこのアクションによって証拠を得られない」
@@ -552,6 +557,11 @@ export type Cost =
   // cross-side 化しないこと。canPay/pay が resolveDynNumber (dyn/eval.ts) で dispatch 時に解決。
   // 他 Cost kind への {dyn} 展開は consumer 出現時に個別判断 (YAGNI)。JSON シリアライズ可能維持。
   | { kind: 'removeDeckTop'; player: 'self'; n: number | { dyn: string } }
+  // engine A3 wave (2026-07-11, B09107 犯人たちの犯行): 〚デッキのカードをすべてリムーブする〛コスト。
+  //   n 固定でない全部リムーブ (removeDeckTop の n=deck.length を宣言時に評価できないため専用 kind)。
+  //   canPay = 恒真 (0 枚でも宣言可、公式Q&A「決めた枚数の残りはリムーブしない」の全部版)。
+  //   refresh は removeDeckTop と同 posture (即時 refresh せず、draw 時 lazy) — 本カード効果は deck 非参照。
+  | { kind: 'removeDeckAll'; player: 'self' }
   | { kind: 'discardEvidence'; n: number }
   | { kind: 'selfToDeckBottom' }
   // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト (B04011/B07080/B08076)。

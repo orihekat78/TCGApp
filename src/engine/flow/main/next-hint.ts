@@ -17,7 +17,7 @@ import type { GameState } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
-import { handUseCharRestrictAllows, handUseColorIgnoreAllowed, effectiveHandLevel } from './hand-use-card.js';
+import { handUseCharRestrictAllows, nextHintColorIgnoreAllowed, effectiveHandLevel } from './hand-use-card.js';
 
 type Player = 'self' | 'opp';
 
@@ -46,8 +46,8 @@ function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
   const caseColors = state.players[p].case.colors;
   if (d.colors.length === 0) return true;
   for (const c of d.colors) {
-    // W2 P09/r26: subset 失敗時のみ colorIgnoreOnHandUse bypass (B03126、ネクストヒントも「手札から使用」)
-    if (!caseColors.includes(c)) return handUseColorIgnoreAllowed(state, p, cardId);
+    // W2 P09/r26: subset 失敗時のみ colorIgnore bypass (B03126 両経路 / B02087 NH 限定、A3 wave)
+    if (!caseColors.includes(c)) return nextHintColorIgnoreAllowed(state, p, cardId);
   }
   return true;
 }

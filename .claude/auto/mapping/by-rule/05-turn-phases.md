@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1f25cff9cba1`
+> Source hash: `fc9a5c23ebca`
 
 公式ルール [`05-turn-phases.md`](../../../rules/05-turn-phases.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 
-## 📄 参照ソース (104)
+## 📄 参照ソース (106)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -37,10 +37,10 @@
 - [`src/cards/ct-d09/D09004.ts`](../../../../src/cards/ct-d09/D09004.ts)
 - [`src/cards/ct-d09/D09005.ts`](../../../../src/cards/ct-d09/D09005.ts)
 - [`src/cards/ct-d09/D09020.ts`](../../../../src/cards/ct-d09/D09020.ts)
+- [`src/cards/ct-d10/D10009.ts`](../../../../src/cards/ct-d10/D10009.ts)
+- [`src/cards/ct-d10/D10010.ts`](../../../../src/cards/ct-d10/D10010.ts)
 - [`src/cards/ct-d11/D11015.ts`](../../../../src/cards/ct-d11/D11015.ts)
 - [`src/cards/ct-p01/B01011.ts`](../../../../src/cards/ct-p01/B01011.ts)
 - [`src/cards/ct-p01/B01032.ts`](../../../../src/cards/ct-p01/B01032.ts)
 - [`src/cards/ct-p01/B01075.ts`](../../../../src/cards/ct-p01/B01075.ts)
-- [`src/cards/ct-p01/B01084.ts`](../../../../src/cards/ct-p01/B01084.ts)
-- [`src/cards/ct-p01/B01089.ts`](../../../../src/cards/ct-p01/B01089.ts)
-- _...ほか 84 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 86 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

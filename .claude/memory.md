@@ -36,3 +36,18 @@
   B09110 (deckRevealUntil match 早期停止不在 + PA self-remove 不達)。
 - grantKeywords は関数 shape (`() => ['突撃']`) — 配列 literal は grantFn is not a function (read/char.ts:441)。
 - e2e buildGameState fixture callback は page serialize — 外側 closure helper 参照不可、inline 必須。
+
+## engine A1 wave (2026-07-11、subagent) — verb/zone 系 5 rep
+- SHIP 3 primitive (additive, byte-safe, 骨格凍結内): 
+  1. **handAddFromRemove area union** (core.ts array 分岐 ~L998): remove∪partner-area splice。exemplar **B07049** フィリップ王子。
+  2. **charStackCard fromScene** (char.ts atomCharStackCard, fromSelf の鏡像): 現場キャラを host($self)下へ重ねる。hostUid を pick 前に args 注入 (re-dispatch で ctx.source.uid drop 対策)。exemplar **D10009 + D10010** 工藤新一。
+  3. **charGrantTrait/charRevokeTrait** (新 verb, 3点sync済): permanent=turnEffects grantedTraits_permanent/revokedTraits_permanent (clearTurnEffects で消さない=「ターン終了時に切れない」) / turn=_turn (清掃)。**両 honor site** = read.char.traits + candidates.matchOneFilter。変装は disguiseInto(cardId のみ差替) で自動引継ぎ。
+- probe: tests/cards/night-wA1/ (B07049 4 / D10009 9 / trait-grant-revoke 6 + sync)。全 24 green。full vitest 5206 pass 回帰0。
+- DEFER 3+1: **B06005 a2** (重なりカード「2枚まで」= fungible count-choice UI primitive 不在) / **B09078** (dual-filter deck-look 3→白黄char+白黄event 二重pick + reveal-to-remove、複合新primitive) / **B09039** (a1 は union verb で可だが a2 の handAddFromRemove「加えた場合」chainStepNoApply gate 不在→過剰discard、既存consumer 影響リスク) / **B05101 card** (verb は SHIP+test 済。self-revival-by-cardId idiom 不在=$self.cardId 未解決/payload に cardId 無 + optional-chain 層で card 全体 DEFER)。
+- 未登録: 3 card は _reuse/index.ts 未登録 (指示「登録は main loop」)。probe は直接 registerCardDef。
+
+## Wave A (engine additive、同夜)
+- A1-A3 cluster + 刈り取り = 19 printings 出荷 (1916→1935)。新 primitive 12 点 (詳細 changelog-entry 02)。
+- ★T2 review 実 BLOCK 検出→修正: removeDeckAll コスト時 refresh 未発火 (公式Q&A 違反)。probe が
+  バグを pin していた実例 — 「probe green ≠ 意味正」、Q&A 列突合 lens は費用対効果あり。
+- DEFER 6 (B05101 card/B06005/B09078/B09039/B08002 card/B08078) — blocker を DEFERRED-INDEX へ。

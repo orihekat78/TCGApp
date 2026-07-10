@@ -149,6 +149,19 @@ export function atomSetCutinBan(s: GameState, a: Record<string, unknown>, ctx: E
       return;
     }
 
+export function atomSetActionCutinBanFilter(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // engine A3 wave (2026-07-11) B05007 妃英理 a2「このターン中、自分の現場にいる〚特徴［毛利探偵事務所］〛の
+      //   キャラがアクションしたとき、アクション終了時まで相手は【カットイン】を使用できない」を arm する。
+      //   turnState[p].actionCutinBanOppFilter = a.filter (armer 側 slot、既定 self)。
+      //   canCutIn が現行アクションの actor (ax.byUid/byPlayer) を本 filter と live 照合して相手 cutin を封じる。
+      //   清掃: turn:start の resetTurnFlags。setCutinBan (全面 ban) の filter 付き action-scoped 版。
+      // rules: 07 (アクション) / 09 (カットイン) / 15 (継続制限) / 22・25 (公式 Q&A 発動タイミング)
+      const acbP = resolvePlayer(a.player ?? 'self', ctx);
+      s.turnState[acbP].actionCutinBanOppFilter = (a.filter ?? {}) as GameState['turnState']['self']['actionCutinBanOppFilter'];
+      mutate.log.append(s, { ts: Date.now(), player: acbP, turn: s.turn.number, action: 'effect:setActionCutinBanFilter' });
+      return;
+    }
+
 export function atomSetDisguiseBan(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // engine additive wave-10 (2026-07-02) B07002 a2 の変装側。turnState[p].disguiseBanned=true。
       // ゲート: flow/contact.ts canDisguise。他は atomSetCutinBan と同一 (mirror)。

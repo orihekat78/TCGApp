@@ -149,6 +149,36 @@ function revokeKeywordTurn(s: GameState, uid: string, kw: string): void {
   te['revokedKeywords'] = cur;
 }
 
+/**
+ * 特徴 (trait) の付与 / 剥奪 (engine A1 wave 2026-07-11、B05101 毛利小五郎)。
+ * charGrantKeyword / charRevokeKeyword の trait 版。特徴は keywordOverrides のような専用 char field を
+ * 持たないため turnEffects へ積む (GameState 形状不変 = 既存カード byte 互換)。
+ * - scope='permanent' (既定): 'grantedTraits_permanent' / 'revokedTraits_permanent' — clearTurnEffects('turn')
+ *   の削除リストに **無い** ため turn 終了で失効しない (「ターン終了時に切れない」B05101)。'_permanent' suffix は
+ *   apMod_permanent 等と同じ生存 key。変装 (disguiseInto は cardId のみ差替) でも turnEffects 保持ゆえ
+ *   自動引継ぎ (rules/23 B05101 Q&A「入れ替わったキャラにも引き継がれる」)。
+ * - scope='turn': 'grantedTraits_turn' / 'revokedTraits_turn' — clearTurnEffects('turn') で清掃 (下参照)。
+ * read.char.traits が printed ∪ granted − revoked を集約する。既存カードは未宣言 → [] (回帰0)。
+ */
+function grantTrait(s: GameState, uid: string, trait: string, scope: 'permanent' | 'turn' = 'permanent'): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+  const key = scope === 'turn' ? 'grantedTraits_turn' : 'grantedTraits_permanent';
+  const cur = (found.char.turnEffects[key] as string[] | undefined) ?? [];
+  if (!cur.includes(trait)) cur.push(trait);
+  found.char.turnEffects[key] = cur;
+}
+
+/** 特徴を失う (grantTrait の鏡像)。printed / granted 双方を read.char.traits が最終集合から減算する。 */
+function revokeTrait(s: GameState, uid: string, trait: string, scope: 'permanent' | 'turn' = 'permanent'): void {
+  const found = findChar(s, uid);
+  if (!found) return;
+  const key = scope === 'turn' ? 'revokedTraits_turn' : 'revokedTraits_permanent';
+  const cur = (found.char.turnEffects[key] as string[] | undefined) ?? [];
+  if (!cur.includes(trait)) cur.push(trait);
+  found.char.turnEffects[key] = cur;
+}
+
 /** 元の能力を無効にする (rules/19) MR能力は無効にならない */
 function disableOriginalAbilities(s: GameState, uid: string): void {
   const found = findChar(s, uid);
@@ -206,6 +236,11 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     delete te['grantedKeywords'];
     // engine additive (2026-06-29): revokeKeywordTurn が積んだ「ターン終了時まで失う」キーワード (B06068)。
     delete te['revokedKeywords'];
+    // engine A1 wave (2026-07-11): scope:'turn' の trait 付与/剥奪 (grantTrait/revokeTrait)。
+    // '_permanent' 版は「ターン終了時に切れない」ため **ここでは消さない** (B05101、grantedTraits_permanent /
+    // revokedTraits_permanent は apMod_permanent と同じ生存 key)。BUG-119 教訓: 新 turn キーは必ずここに列挙。
+    delete te['grantedTraits_turn'];
+    delete te['revokedTraits_turn'];
     // Task D E4 (2026-06-12): textual-ability token / granted ability の清掃 (BUG-119 教訓:
     // 新 turn キーは必ずここに列挙)。typed flag は delete でなく false リセット (型整合)。
     delete te['actionTargetsActive'];
@@ -413,6 +448,8 @@ export const char = {
   grantKeyword,
   revokeKeyword,
   revokeKeywordTurn,
+  grantTrait,
+  revokeTrait,
   disableOriginalAbilities,
   setTurnEffect,
   tagSelectedByOwnMr,

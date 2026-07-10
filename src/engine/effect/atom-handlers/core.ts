@@ -636,6 +636,24 @@ export function atomEvidenceFlip(s: GameState, a: Record<string, unknown>, ctx: 
       return;
     }
 
+// engine additive A2 (2026-07-11, B03040 和田進一): peekOwnEvidence — 「自分の証拠を上から1つ見る。
+// （裏向きの証拠を見た場合、その後、元に戻す）」= 状態変化を伴わない私的閲覧 (evidenceFlip の「表向きに
+// 固定」とは意味が正反対 — 永続 flip ではなく peek のみ)。zone/faceUp 完全不変。UI へ private 通知する
+// のみ (log entry で表現)。証拠 0 枚は no-op。fromTop = 末尾 = 1番上 (evidence push=末尾=最上部)。
+export function atomPeekOwnEvidence(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, _verb: AtomVerb): void {
+  const p = resolvePlayer(a.player, ctx); // 既定 self (「自分の証拠」)
+  const evList = s.players[p].evidence;
+  if (evList.length === 0) {
+    mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidencePeek', result: 'none' });
+    return;
+  }
+  const top = evList[evList.length - 1];
+  mutate.log.append(s, {
+    ts: Date.now(), player: p, turn: s.turn.number,
+    action: 'effect:evidencePeek', target: top.cardId, result: top.faceUp ? 'faceUp' : 'faceDown',
+  });
+}
+
 // engine拡張 wave (2026-06-23): evidenceFlipDown — 「自分の表向きの証拠を N つまで選び、裏向きにする」
 // (evidenceFlip=表向き化 の逆 mutate)。atomHandAddFromRemove と同型の 3-path:
 //   ① cardIds:'$pick.cardIds' 未解決 (await) → tryRePickFromAtom で side-channel pick を enqueue
@@ -996,13 +1014,33 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
         return;
       }
       if (Array.isArray(rawCardIds)) {
-        // 解決済 (0〜max 枚): 各 cardId を remove → hand へ移す (rules/15「〜まで」= 0 枚可 → no-op + log)。
+        // 解決済 (0〜max 枚): 各 cardId を source zone → hand へ移す (rules/15「〜まで」= 0 枚可 → no-op + log)。
         const cardIds = rawCardIds as string[];
-        const remM = s.players[p].remove;
+        // engine A1 wave (2026-07-11, B07049/B09039): source area union (remove ∪ partner-area) —
+        // 「自分のリムーブエリアかパートナーエリアにある〚特徴[ビッグジュエル]〛の…を手札に加える」。
+        // candidate 列挙は PR234 の area 配列 union が既に対応 (candidates.ts 'partner-area' = partnerAreaCards)。
+        // splice 側を area ごとに順に探す (pick 済 cardId は一意 zone 由来 = charStackCard/charSetCard union と同流儀)。
+        // area 無指定 / ['remove'] のみ = 従来 remove-only path と byte 等価 (B09034 等の既存 consumer 回帰0)。
+        // ⚠ partner-area の対象は partnerAreaCards (非MR 一般カード枠) — partnerAreaMR (MR 専用 slot) は
+        // candidates 'partner-area' が列挙しない (read/candidates 実測) ため本 consumer 群では非到達 (MR slot 清掃不要)。
+        const hafrSrcRaw = (a.target && typeof a.target === 'object')
+          ? (a.target as { query?: { area?: string | string[] } }).query?.area : undefined;
+        const hafrSrcAreas = (Array.isArray(hafrSrcRaw) ? hafrSrcRaw : [hafrSrcRaw])
+          .filter((x): x is 'remove' | 'partner-area' => x === 'remove' || x === 'partner-area');
+        const hafrAreas: Array<'remove' | 'partner-area'> = hafrSrcAreas.length > 0 ? hafrSrcAreas : ['remove'];
         const movedIds: string[] = [];
         for (const cid of cardIds) {
-          const idx = remM.indexOf(cid);
-          if (idx !== -1) { remM.splice(idx, 1); mutate.remove.emitExit(s, p, cid); mutate.hand.add(s, p, [cid]); movedIds.push(cid); }
+          for (const ar of hafrAreas) {
+            if (ar === 'remove') {
+              const remM = s.players[p].remove;
+              const idx = remM.indexOf(cid);
+              if (idx !== -1) { remM.splice(idx, 1); mutate.remove.emitExit(s, p, cid); mutate.hand.add(s, p, [cid]); movedIds.push(cid); break; }
+            } else {
+              const pa = s.players[p].partnerAreaCards;
+              const idx = pa ? pa.indexOf(cid) : -1;
+              if (idx !== -1) { pa!.splice(idx, 1); mutate.hand.add(s, p, [cid]); movedIds.push(cid); break; }
+            }
+          }
         }
         mutate.log.append(s, {
           ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove',

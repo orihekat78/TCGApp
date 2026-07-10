@@ -20,6 +20,7 @@ const VERBS = new Set([
   'drawUpToHandSize', // engine additive wave-4 (2026-07-01) — 手札が N 枚になるまで引く (B08047)
   'discardRandom', // engine additive (2026-06-28) — 手札ランダムリムーブ (B01077)
   'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
+  'peekOwnEvidence', // engine additive A2 (2026-07-11) — 自証拠 top1 私的閲覧 zone不変 (B03040)
   'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
   'sceneToDeck', // Task D E2 (2026-06-12)
   'sceneToEvidence', // engine mega-wave W1 (2026-07-03, P38): 現場キャラ→所有者の証拠 (B03084)
@@ -30,6 +31,7 @@ const VERBS = new Set([
   'charModifyAP', 'charModifyLP', 'charModifyLevel',
   'charOverrideAP', 'charOverrideLP',
   'charGrantKeyword', 'charRevokeKeyword', 'charDisableOriginal',
+  'charGrantTrait', 'charRevokeTrait',
   'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
   'opponentLoses', // engine E3 (2026-07-02) — alt-lose 勝利ルート
@@ -38,6 +40,7 @@ const VERBS = new Set([
   'setEventUseBan', // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   'setNextHintBan', // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)
   'setCutinBan', // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
+  'setActionCutinBanFilter', // engine A3 wave (2026-07-11) — filtered action-scoped cutin ban (B05007)
   'setDisguiseBan', // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   'setHiramekiSuppress', // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
   'setEvidenceGainSuppress', // mega-wave W6 step7 (2026-07-04, row70) — action[事件] gain suppress (B02088/B03126)
@@ -67,6 +70,7 @@ const HOOKS = new Set([
   'ability:declared', // engine mega-wave W2 (2026-07-03): 宣言能力使用の第三者観測 (B03057)
   'disguise:replaced', 'hand:removed', 'hand:reveal', // engine mega-wave W3 (2026-07-03): observer hooks // engine mega-wave W2 (2026-07-03): 宣言能力使用の第三者観測 (B03057)
   'remove:exit', // engine additive wave-4 (2026-07-01) — リムーブエリア離脱 observer (B05087/B05088)
+  'state:change', // engine additive A2 (2026-07-11) — active→sleep 遷移 observer (B03008 阿笠博士)
 ]);
 
 const CONDS = new Set([
@@ -121,6 +125,7 @@ const COSTS = new Set([
   'partnerAreaRemove', // engine defer-unlock mini-wave (2026-07-09): PA カード n 枚リムーブ cost (B07039)
   'selfLpDeltaTurn', // M2後半 (2026-07-10): 〚ターン終了時までLP-2する〛(B06003 a1)
   'removeFromHandDownTo', // M2後半 (2026-07-10): 〚手札が n 枚になるまでリムーブ〛(B08047 a2)
+  'removeDeckAll', // engine A3 wave (2026-07-11): 〚デッキのカードをすべてリムーブする〛(B09107)
 ]);
 
 const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'conditional', 'forEach', 'atom', 'chain']);

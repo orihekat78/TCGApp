@@ -45,6 +45,13 @@ export type AbilityScope =
   //   (4) authoring hazard: rider triggered の limit{turn} は (hostUid, ability.id) でキー。host 印字能力や同名 rider 2枚と
   //       id 衝突するとカウンタ共有。rider ability.id は card-unique に命名すること (例 'set_t1')。
   | 'on-set-host'        // セットされているキャラ (host) に付与 (rules/16, 装備イベント) — READ 側 infra のみ
+  // engine additive A2 (2026-07-11, B02084 安室の愛車): セットカード **自身** が、host からリムーブ
+  // エリアへ置かれたときに反応する triggered 用 (「キャラにセットされていたこのイベントがリムーブ
+  // エリアに置かれたとき」)。セットカードは離場後 collectCardsInPlay に出ないため handleHook では
+  // 拾えない → handleSetcardLeaveSelf (virtual-location handler、handleLeaveToRemoveSelf 同型) が
+  // payload.setCardId から def を引き本 scope の setcard:leave ability を発火。faceUp のみ (rules/16
+  // 裏向きセットは情報を持たない / B02084 Q&A)。on-set-host (host へ conferral) とは別軸 = 自己反応。
+  | 'on-set-self'
   | 'always';            // どこでも (デバッグ用)
 
 // ---------- AbilityLimit ----------
@@ -195,6 +202,12 @@ export type ContinuousModifier = {
   //   色 subset 判定が失敗した時のみ委譲 = 通常カードはゼロコスト。効果登場/カットイン/ヒラメキは元々
   //   色制限外 (rules/20) のため対象外。
   colorIgnoreOnHandUse?: boolean;
+  // engine A3 wave (2026-07-11, B02087 キール): 「ネクストヒントで手札から使用する場合、このキャラは
+  //   事件カードの色を無視できる」— NH 経路**限定**の色無視 (colorIgnoreOnHandUse は手札の使用 + NH の
+  //   両経路で over-wide、B02087 の公式Q&A は「ネクストヒントで手札から使用する場合のみ」)。
+  //   consumer = next-hint.ts colorAllowed / flows.ts toCandidate のみ (nextHintColorIgnoreAllowed 経由)。
+  //   手札の使用経路 (hand-use-card colorAllowed / handUseReason) は本 token を**見ない** = NH 限定を担保。
+  colorIgnoreOnNextHint?: boolean;
   // engine mini-wave #4 (2026-07-10, cluster ⑧): hand 内 continuous level modifier
   //   「手札にあるこのキャラはレベル4になる」(B01009) / 「手札にある間レベル-2」(B09095)。
   //   flow.main.hand-use-card.effectiveHandLevel (単一ソース helper) が hand 在中カード**自身**の def を

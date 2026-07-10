@@ -95,8 +95,17 @@ export function mustGuardCandidates(
   byUid: string,
   excludeUid?: string,
 ): { uid: string; cardId: string }[] {
+  // engine additive A2 (2026-07-11, B03041 直球勝負): 攻撃側起点の強制ガード token。
+  // 「このキャラ (attacker=byUid) がアクションしたとき、相手はガードできる場合、必ずガードする。」
+  // = attacker が 'text:forceGuard' を持つとき、legal な防御候補すべてが義務化される (公式Q&A:
+  // 「ガードできるキャラが1枚以上いる場合、その中から1枚でガードしなければいけない」)。
+  // 従来の防御側 'mustGuard' token (B09040 a2) は個別 char 単位の義務。両者は OR で合流し
+  // candidates() の legal 集合 (スリープ/ブレット/対象自身除外) を共有するため公式Q&A が自動成立。
+  // hasTextAbility は turnEffects + keywords() (on-set-host grantKeywords 'text:forceGuard' 含む) の
+  // 2チャネルを見るため B03041 のセットイベント継続付与を honor。consumer 0 なら [] = byte 等価。
+  const attackerForces = readChar.hasTextAbility(state, byUid, 'forceGuard');
   return candidates(state, byUid, excludeUid)
-    .filter(c => readChar.hasTextAbility(state, c.uid, 'mustGuard'));
+    .filter(c => attackerForces || readChar.hasTextAbility(state, c.uid, 'mustGuard'));
 }
 
 export const guard = {

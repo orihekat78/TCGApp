@@ -364,7 +364,22 @@ function traits(s: GameState, uid: string): string[] {
   if (!char) return [];
   const printed = def.card(char.cardId)?.traits ?? [];
   const granted = traitNameGrantSafe(s, uid, 'grantTraits');
-  return granted.length > 0 ? [...new Set([...printed, ...granted])] : printed;
+  // engine A1 wave (2026-07-11, B05101): applied trait 付与/剥奪 (mutate.char.grantTrait/revokeTrait)。
+  // keywords() の grantedKeywords/revokedKeywords 経路と同型。'_permanent' はターン終了で切れない
+  // (「〚特徴[警察]〛を失い、〚特徴[探偵]〛を持つ（ターン終了時に切れない）」B05101)、'_turn' は
+  // clearTurnEffects('turn') で失効。revoked は **印字 + continuous grant 双方** から減算 (B05101 の
+  // 「〚特徴[警察]〛と〚[警視庁]〛を失い」= 印字 trait の剥奪)。既存カード未宣言 → 全 [] (回帰0)。
+  const te = char.turnEffects;
+  const grantedApplied = [
+    ...((te['grantedTraits_permanent'] as string[] | undefined) ?? []),
+    ...((te['grantedTraits_turn'] as string[] | undefined) ?? []),
+  ];
+  const revoked = [
+    ...((te['revokedTraits_permanent'] as string[] | undefined) ?? []),
+    ...((te['revokedTraits_turn'] as string[] | undefined) ?? []),
+  ];
+  const unioned = [...new Set([...printed, ...granted, ...grantedApplied])];
+  return revoked.length > 0 ? unioned.filter(t => !revoked.includes(t)) : unioned;
 }
 
 // keywords: granted + 元能力 (disabledOriginal の場合は元抜き)

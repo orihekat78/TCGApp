@@ -293,10 +293,15 @@ export function tryGuard(state: GameState, ax: ActionContext, guardUid: string):
   // guardUid スリープ化
   mutate.scene.setState(state, guardUid, 'sleep');
 
+  // engine additive A2 (2026-07-11, B04073 千葉和伸): action:guarded payload に targetUid を同梱。
+  // 「アクションで指定されていたのが〚カード名［三池苗子］〛だった場合」= ガード成立後に元の
+  // アクション**宣言時**対象 (ax.target、rules/22 宣言時 snapshot 固定) を読む手段。passGuard
+  // (action:unguarded) は既に target 同梱済 (line ~327) — 非対称を解消。char 以外 (事件対象) は
+  // undefined。消費側 = triggerCharMatches{payloadKey:'targetUid'} (action:declare で実証済 exemplar)。
   event.emit(
     state,
     'action:guarded',
-    { byUid: ax.byUid, guardUid },
+    { byUid: ax.byUid, guardUid, targetUid: ax.target.kind === 'char' ? ax.target.uid : undefined },
     { player: ax.byPlayer, uid: ax.byUid },
   );
 

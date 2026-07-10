@@ -343,6 +343,16 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
           }
         }
       }
+      // engine A3 wave (2026-07-11, B08002): 除去キャラの **実効** level/ap/lp を除去**前**に snapshot し bind。
+      //   「リムーブしたキャラのレベルと同じ枚数」(mill) 等で参照。$bound.level は除去後 re-read で
+      //   盤面不在→印字値に落ちるが、本 snapshot は増減後の実効値を静的保存 (公式Q&A: 増減した状態を参照)。
+      //   dyn root $removed.<field> が binding[0].snap* を読む。既存 caller は bind 未指定 → 挙動不変。
+      if (typeof a.bind === 'string') {
+        const srChar = s.players.self.scene.find(c => c.uid === srUid) ?? s.players.opp.scene.find(c => c.uid === srUid);
+        (ctx.bindings as Record<string, unknown>)[a.bind] = srChar
+          ? [{ uid: srUid, cardId: srChar.cardId, snapLevel: readChar.level(s, srUid), snapAp: readChar.ap(s, srUid), snapLp: readChar.lp(s, srUid) }]
+          : [];
+      }
       // W6 step10 (row9): byPlayer = 効果 source 側 — leave:intercept の「相手の能力や効果」帰属判定用
       mutate.scene.removeToRemove(s, srUid, (a.cause as RemoveCause) ?? 'effect', undefined, { byPlayer: ctx.source.player });
       // BUG-073: effect log
@@ -372,6 +382,13 @@ export function atomCharRemoveSetCard(s: GameState, a: Record<string, unknown>, 
       // engine mega-wave W4 (2026-07-03, r82 同梱): faceDownOnly opt-in 転送 (B08035 a2「裏向きで
       // セットされているカード」)。未指定は従来通り末尾1枚 (B02033 は裏向き限定なし = 挙動不変)。
       const removed = mutate.char.removeOneSetCard(s, rsUid, a.faceDownOnly === true ? { faceDownOnly: true } : undefined);
+      // engine A3 wave (2026-07-11, B02087): 実除去カードを bind (「リムーブした場合」gate 用)。
+      //   removed=cardId なら [{cardId}]、無ければ []。後続 conditional{bound presence:'matched'} が
+      //   「リムーブした場合のみ」を判定 (0枚 decline/no-candidate は unbound/[] → not-matched)。既存 caller は
+      //   bind 未指定 → 挙動不変。
+      if (typeof a.bind === 'string') {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = removed ? [{ cardId: removed }] : [];
+      }
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRemoveSetCard', target: rsUid, result: removed ?? 'none' });
       return;
     }

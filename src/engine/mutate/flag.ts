@@ -86,6 +86,7 @@ function resetTurnFlags(s: GameState, p: Player): void {
   s.turnState[p].shippuWaiveArmed = false; // W6 step4 B09090: 疾風条件 waive 予約の backstop (主清掃は endTurn 両プレイヤー)
   s.turnState[p].cutinBanned = false; // wave-10 B07002: 「このターン中カットイン使用不可」をターン境界で解除
   s.turnState[p].disguiseBanned = false; // wave-10 B07002: 「このターン中変装使用不可」をターン境界で解除
+  s.turnState[p].actionCutinBanOppFilter = undefined; // A3 wave B05007: 「このターン中〜アクションしたとき相手カットイン不可」filter を解除
   s.turnState[p].declaredAbilityUseCount = {};
   // BUG-067 (2026-05-28): declared ability の【ターン①/②】 enforcement のため、
   // SceneCharacter / Case の declaredUseCount もターン境界でリセット。

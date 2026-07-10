@@ -29,6 +29,7 @@ import {
   atomDiscard,
   atomDiscardRandom,
   atomHandReveal,
+  atomPeekOwnEvidence,
   atomPartnerAreaRemove,
   atomMill,
   atomFileAdd,
@@ -75,6 +76,8 @@ import {
   atomCharOverrideLP,
   atomCharGrantKeyword,
   atomCharRevokeKeyword,
+  atomCharGrantTrait,
+  atomCharRevokeTrait,
   atomCharDisableOriginal,
   atomCharGrantAbility,
   atomCharSetTurnEffect,
@@ -102,6 +105,7 @@ import {
   atomSetNextHintBan,
   atomSetShippuWaive,
   atomSetCutinBan,
+  atomSetActionCutinBanFilter,
   atomSetDisguiseBan,
   atomSetHiramekiSuppress,
   atomSetEvidenceGainSuppress,
@@ -169,6 +173,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomEvidenceFlip(s, a, ctx, verb);
     case 'evidenceFlipDown':
       return atomEvidenceFlipDown(s, a, ctx, verb);
+    case 'peekOwnEvidence':
+      return atomPeekOwnEvidence(s, a, ctx, verb);
     case 'evidenceToHand':
       return atomEvidenceToHand(s, a, ctx, verb);
     case 'handToEvidence':
@@ -221,6 +227,10 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomCharGrantKeyword(s, a, ctx, verb);
     case 'charRevokeKeyword':
       return atomCharRevokeKeyword(s, a, ctx);
+    case 'charGrantTrait':
+      return atomCharGrantTrait(s, a, ctx);
+    case 'charRevokeTrait':
+      return atomCharRevokeTrait(s, a, ctx);
     case 'charDisableOriginal':
       return atomCharDisableOriginal(s, a, ctx);
     case 'charGrantAbility':
@@ -273,6 +283,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomSetNextHintBan(s, a, ctx);
     case 'setCutinBan':
       return atomSetCutinBan(s, a, ctx);
+    case 'setActionCutinBanFilter':
+      return atomSetActionCutinBanFilter(s, a, ctx);
     case 'setDisguiseBan':
       return atomSetDisguiseBan(s, a, ctx);
     case 'setHiramekiSuppress':

@@ -1457,6 +1457,25 @@ import { B09027 } from '../ct-p09/B09027.js';
 import { B09027P } from '../ct-p09/B09027P.js';
 import { B03111P } from '../ct-p03/B03111P.js';
 import { B05117P } from '../ct-p05/B05117P.js';
+import { B07049 } from '../ct-p07/B07049.js';
+import { D10009 } from '../ct-d10/D10009.js';
+import { D10010 } from '../ct-d10/D10010.js';
+import { B07063 } from '../ct-p07/B07063.js';
+import { B07063P } from '../ct-p07/B07063P.js';
+import { B04073 } from '../ct-p04/B04073.js';
+import { B03008 } from '../ct-p03/B03008.js';
+import { B03040 } from '../ct-p03/B03040.js';
+import { B02084 } from '../ct-p02/B02084.js';
+import { B02084P } from '../ct-p02/B02084P.js';
+import { B03041 } from '../ct-p03/B03041.js';
+import { B03041P } from '../ct-p03/B03041P.js';
+import { B09107 } from '../ct-p09/B09107.js';
+import { B09107P } from '../ct-p09/B09107P.js';
+import { B02087 } from '../ct-p02/B02087.js';
+import { B02087P } from '../ct-p02/B02087P.js';
+import { B05007 } from '../ct-p05/B05007.js';
+import { B05007P } from '../ct-p05/B05007P.js';
+import { B05097 } from '../ct-p05/B05097.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1886,4 +1905,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01020, B01077, B03111, B05052, B05117, B07099, B07102, B08019, B08019P, B09027, B09027P,
   // night-w0 P spread (B03111P/B05117P)
   B03111P, B05117P,
+  // night-wA: engine additive wave A (verb/hook/cond/dyn/cost) exemplar 19 printings (2026-07-11)
+  B07049, D10009, D10010, B07063, B07063P, B04073, B03008, B03040, B02084, B02084P, B03041, B03041P, B09107, B09107P, B02087, B02087P, B05007, B05007P, B05097,
 ];

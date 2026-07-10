@@ -320,6 +320,25 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       ctx.costPaid['removeDeckTop'] = { ids: [...prior, ...removed] };
       return;
     }
+    // engine A3 wave (2026-07-11, B09107): デッキ全部リムーブ。removeFromTop(deck.length) で全除去。
+    //   player は controller 相対 (ctx.source.player = 「自分の」rules/21)。cost.player は shape のみ。
+    //   ★T2 review BLOCK (両 lens 一致、night-wA): 公式Q&A (B09107 TSV) 「リフレッシュはコストを
+    //   支払った時点で (この【宣言】能力の効果を解決するより前に) 行います」— 全除去でデッキ 0 に
+    //   なるため rules/14 の refresh をここで即時発火する (mill の BUG-137 guard と同 idiom)。
+    //   リムーブエリア 0 (=支払前の deck が空で removed も 0) なら refresh 不能 → 支払者敗北 (rules/14)。
+    case 'removeDeckAll': {
+      const p = ctx.source.player;
+      const removed = mutate.deck.removeFromTop(state, p, state.players[p].deck.length);
+      acc.paidItems.push({ kind: 'removeDeckAll', details: { removed } });
+      if (state.players[p].deck.length === 0) {
+        const r = mutate.deck.refresh(state, p);
+        if (!r.ok && state.gameResult === undefined) {
+          const winner: 'self' | 'opp' = p === 'self' ? 'opp' : 'self';
+          mutate.gameResult.set(state, winner, 'deck-out');
+        }
+      }
+      return;
+    }
     case 'discardEvidence': {
       const p = ctx.source.player;
       const ids: string[] = [];

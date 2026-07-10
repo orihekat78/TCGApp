@@ -11,7 +11,7 @@ import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
-import { handUseColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 + mini-wave#4 hand level
+import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 (NH: B03126 両経路 + B02087 NH 限定 A3) + mini-wave#4 hand level
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
@@ -145,9 +145,9 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
     //   rules/25 公式 Q&A: ネクストヒントの event 使用も不可。キャラは制限外。
     if (d.kind === 'event' && state.turnState[p].eventUseBanned) return null;
     // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)。
-    // W2 P09/r26: colorIgnoreOnHandUse bypass (B03126) — engine (next-hint colorAllowed) と鏡像。
+    // W2 P09/r26: colorIgnore bypass — engine (next-hint colorAllowed) と鏡像 (B03126 両経路 / B02087 NH 限定 A3)。
     if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))
-      && !handUseColorIgnoreAllowed(state, p, cardId)) return null;
+      && !nextHintColorIgnoreAllowed(state, p, cardId)) return null;
     // レベル ≤ postPopCount (rules/12)
     // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) — engine gate (next-hint.ts
     //   effectiveHandLevel) と鏡像。表示 level も有効値 (公式 QA: 手札にある間はそのレベル)。

@@ -183,6 +183,15 @@ export type TurnScopedFlags = {
    * setDisguiseBan verb がセット、ゲートは flow/contact.ts canDisguise、清掃は resetTurnFlags。
    */
   disguiseBanned?: boolean;
+  /**
+   * engine A3 wave (2026-07-11, B05007 妃英理): 「このターン中、自分の現場にいる〚特徴［毛利探偵事務所］〛の
+   * キャラがアクションしたとき、アクション終了時まで相手は【カットイン】を使用できない」— 【宣言】能力が
+   * arm する **turn-scoped filter**。canCutIn が現行アクションの actor (ax.byUid/byPlayer) を本 filter と
+   * live 照合し、一致キャラのアクション中のみ相手 cutin を封じる (per-char flag 不要 = 将来登場キャラにも自動適用)。
+   * 「アクション終了時まで」= canCutIn がアクション中のみ呼ばれるため自然に action スコープ。turn:start で清掃。
+   * この slot は armer (【宣言】使用者) 側。undefined = 制限なし (既存カード未使用 → 挙動不変)。
+   */
+  actionCutinBanOppFilter?: TargetFilter;
 };
 
 export type LogEntry = {
@@ -199,6 +208,7 @@ export type LogEntry = {
 // spec: .claude/specs/engine-api-resolver.md
 import type { EffectStackEntry } from './effect-stack.js';
 import type { ReservedEffectEntry } from './reserved-effect.js';
+import type { TargetFilter } from './effect.js'; // engine A3 wave (2026-07-11): actionCutinBanOppFilter (B05007)
 
 export type GameState = {
   turn: {

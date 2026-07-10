@@ -503,23 +503,43 @@ function toEvidence(s: GameState, uid: string, faceUp: boolean, sourceCardId?: s
  * ⚠ active を渡したとき、現在 stun なら sleep に変換 (スタン特殊挙動)
  * ⚠ stun 状態で sleep/stun を渡してもスタンのまま
  */
-function setState(s: GameState, uid: string, st: CharState): void {
+function setState(s: GameState, uid: string, st: CharState, cause?: string): void {
   const found = findChar(s, uid);
   if (!found) return;
 
-  const { char } = found;
+  const { char, player } = found;
+  const prev = char.state;
 
   // スタン状態の特殊挙動 (rules/03)
   if (char.state === 'stun') {
     if (st === 'active') {
       // スタン状態でアクティブにする効果を受けた → スリープになる
       char.state = 'sleep';
+      // ⚠ これは stun→sleep 遷移であり「アクティブ状態のキャラがスリープになった」ではない
+      // (rules/03: スタンは元アクティブではない) → state:change (active→sleep) は emit しない。
     }
     // sleep/stun を渡してもスタンのまま (何もしない)
     return;
   }
 
   char.state = st;
+
+  // engine additive A2 (2026-07-11, B03008 阿笠博士): active→sleep 遷移の汎用 state:change emit。
+  // 「アクティブ状態の〚特徴［少年探偵団］〛のキャラがスリープ状態になったとき」(推理/アクション/
+  // ガード/宣言コスト/効果いずれのスリープ化も網羅、公式Q&A) を card-triggerable 化する唯一の
+  // chokepoint。**状態が実際に変わった時 (prev==='active' && st==='sleep') のみ** emit するため
+  // オートフェイズの再アクティブ化 (→active) や sleep→sleep の再設定では発火しない = hot-path 静穏。
+  // 既存カードは 'state:change' を未購読 → handleHook が一致 ability 0 = pendingEffects 不変 (回帰0)。
+  // payload {player,uid,from,to,cause}: 消費側は triggerCharMatches{payloadKey:'uid'} で char を、
+  // side/trait を filter で判定 (from==='active' は本 gate で構造保証済のため card 側 from 判定不要)。
+  if (prev === 'active' && st === 'sleep') {
+    event.emit(
+      s,
+      'state:change',
+      { player, uid, from: prev, to: st, cause },
+      { player, uid, cardId: char.cardId },
+    );
+  }
 }
 
 /**

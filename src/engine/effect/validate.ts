@@ -30,6 +30,7 @@ const ATOM_VERB_MAP = {
   handToEvidence: true,
   handReveal: true, // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
   evidenceFlipDown: true, // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
+  peekOwnEvidence: true, // engine additive A2 (2026-07-11) — 自証拠 top1 私的閲覧 zone不変 (B03040)
   sceneEnter: true, sceneSwitch: true, sceneRemove: true, sceneSetState: true, sceneDisguise: true, sceneToHand: true,
   sceneToDeck: true, // Task D E2 (2026-06-12)
   sceneToEvidence: true, // engine mega-wave W1 (2026-07-03, P38): 現場キャラ→所有者の証拠 (B03084)
@@ -38,6 +39,7 @@ const ATOM_VERB_MAP = {
   charModifyAP: true, charModifyLP: true, charModifyLevel: true, charSetAP: true, charSetLP: true,
   charOverrideAP: true, charOverrideLP: true,
   charGrantKeyword: true, charRevokeKeyword: true, charDisableOriginal: true,
+  charGrantTrait: true, charRevokeTrait: true, // engine A1 wave (2026-07-11, B05101)
   charGrantAbility: true, // Task D E4 (2026-06-12)
   charSetTurnEffect: true, charSetCard: true, charStackCard: true, charRemoveSetCard: true,
   partnerAssist: true, partnerSetState: true, partnerSolveCase: true,
@@ -49,6 +51,7 @@ const ATOM_VERB_MAP = {
   setEventUseBan: true, // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   setNextHintBan: true, // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)
   setCutinBan: true, // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
+  setActionCutinBanFilter: true, // engine A3 wave (2026-07-11) — filtered action-scoped cutin ban (B05007)
   setDisguiseBan: true, // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
   setHiramekiSuppress: true, // cluster8 (2026-06-15) — action-scoped opp-hirameki suppress (B06049)
   setEvidenceGainSuppress: true, // mega-wave W6 step7 (2026-07-04, row70) — action[事件] gain suppress (B02088/B03126 ヒラメキ)
@@ -192,12 +195,15 @@ function validateGrantedAbility(ability: Record<string, unknown>, path: string, 
   const trig = ability['trigger'] as Record<string, unknown> | undefined;
   if (!trig || typeof trig !== 'object') {
     errors.push(`${path}.trigger: granted ability requires trigger`);
-  } else {
-    const hooks = [trig['hook'], ...(Array.isArray(trig['hooks']) ? trig['hooks'] : [])];
-    if (hooks.includes('leave:to-remove')) {
-      errors.push(`${path}.trigger: hook 'leave:to-remove' cannot be granted (virtual-location handler does not scan grantedAbilities)`);
-    }
   }
+  // engine additive A2 (2026-07-11, B07063 鈴木園子): 旧 'leave:to-remove' grant 禁止を解禁。
+  // 当時の禁止理由「virtual-location handler does not scan grantedAbilities」は現行 code で解消済:
+  //   (1) 在場 observer 型 (「相手の現場のキャラがこのキャラとのコンタクトによってリムーブされたとき」
+  //       = B07063 の付与先はアタッカー自身で在場) は handleHook が turnEffects.grantedAbilities を
+  //       既に合算走査する (triggered.ts collectCardsInPlay ループ)。
+  //   (2) 自己 leave 型 (「このキャラ (被付与) がリムーブされたとき」) は本 wave で
+  //       handleLeaveToRemoveSelf に removedChar.turnEffects.grantedAbilities 走査を追加。
+  // よって leave:to-remove の grant は両経路で発火する → prohibition 撤廃。
   // 深層 function 検査 (effect の kind:'custom' 例外も granted では認めない)
   const stack: Array<{ v: unknown; p: string }> = [{ v: ability, p: path }];
   while (stack.length > 0) {

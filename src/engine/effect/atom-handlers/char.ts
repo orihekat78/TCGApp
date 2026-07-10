@@ -150,6 +150,30 @@ export function atomCharRevokeKeyword(s: GameState, a: Record<string, unknown>, 
       return;
     }
 
+export function atomCharGrantTrait(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // engine A1 wave (2026-07-11, B05101 毛利小五郎): 特徴付与。charGrantKeyword の trait 版。
+      // 本 consumer は uid:'$self' (triggered actor 自身) のみ — pick 短縮形は不要 (必要になったら
+      // charGrantKeyword 同型で後付け可)。scope 既定 'permanent' = ターン終了で切れない (B05101)。
+      const gtUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof gtUid !== 'string' || gtUid.startsWith('$')) return;
+      const gtTrait = a.trait as string;
+      const gtScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      mutate.char.grantTrait(s, gtUid, gtTrait, gtScope);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantTrait', target: gtUid, result: `${gtTrait}/${gtScope}` });
+      return;
+    }
+
+export function atomCharRevokeTrait(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      // engine A1 wave (2026-07-11, B05101): 特徴剥奪 (grantTrait の鏡像)。印字/継続双方から read.char.traits が減算。
+      const rtUid = resolveBindRef(a.uid, ctx) as string;
+      if (typeof rtUid !== 'string' || rtUid.startsWith('$')) return;
+      const rtTrait = a.trait as string;
+      const rtScope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      mutate.char.revokeTrait(s, rtUid, rtTrait, rtScope);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charRevokeTrait', target: rtUid, result: `${rtTrait}/${rtScope}` });
+      return;
+    }
+
 export function atomCharDisableOriginal(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // BUG-068: bind ref 解決を配線
       const doUid = resolveBindRef(a.uid, ctx) as string;
@@ -407,6 +431,33 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         if (typeof selfUid !== 'string') return;
         mutate.scene.toStack(s, selfUid, hostUid);
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:self-under', target: hostUid, result: selfUid });
+        return;
+      }
+      // engine A1 wave (2026-07-11, D10009 工藤新一 a2): scene-source 方向 — 「自分の現場にいるキャラを
+      // 1枚まで選び、**このキャラ (ctx.source)** の下に重ねる」。fromSelf の鏡像 (fromSelf は host を pick し
+      // 自身を重ねる / 本 branch は重ねる側を pick し host=ctx.source)。sceneRemove と同じ PA 短縮形で
+      // 選択 uid が a.uid に解決され、toStack(pickedUid, ctx.source.uid) で host 下へ。moved の set/stacked は
+      // toStack が離場時リムーブ (rules/16)。0枚 pick ('$pick') は chainStepNoApply → 「重ねた場合」後続を gate。
+      if (a.fromScene === true) {
+        if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
+          // host (= ctx.source.uid) を pick 前に args へ固定する。effectPickResolve/continuation 経由の
+          // re-dispatch では ctx.source.uid が drop されうる (fromSelf 分岐の argsWithResolvedUid と同趣旨) ため、
+          // hostUid を短縮形 args に載せて再入時に読む。
+          const injected = typeof ctx.source.uid === 'string' ? { ...a, hostUid: ctx.source.uid } : a;
+          paShortFormAwait(s, verb, injected, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す
+          return;
+        }
+        if (a.uid === '$pick') {
+          (ctx.dyn ??= {}).chainStepNoApply = true; // 「重ねた場合」不成立 (0枚選択) → chain break
+          mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:scene-under', result: 'skipped' });
+          return;
+        }
+        const movedUid = resolveBindRef(a.uid, ctx) as string;
+        if (typeof movedUid !== 'string' || movedUid.startsWith('$')) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
+        const hostUid = typeof a.hostUid === 'string' ? a.hostUid : ctx.source.uid;
+        if (typeof hostUid !== 'string') return;
+        mutate.scene.toStack(s, movedUid, hostUid);
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard:scene-under', target: hostUid, result: movedUid });
         return;
       }
       const stUid = resolveBindRef(a.uid, ctx) as string;

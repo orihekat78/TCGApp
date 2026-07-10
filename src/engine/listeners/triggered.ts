@@ -147,6 +147,12 @@ export const TRIGGERED_HOOKS = [
   'disguise:replaced',
   'hand:removed',
   'hand:reveal',
+  // engine additive A2 (2026-07-11): state:change — キャラの active→sleep 遷移観測 (B03008 阿笠博士
+  // 「アクティブ状態の〚少年探偵団〛がスリープになったとき」)。emit 元 = mutate/scene.ts setState
+  // (active→sleep のみ、実遷移時)。listener = 在場の第三者キャラ (遷移キャラも sleep で在場) →
+  // 通常 in-play scan (handleHook) で処理 = 特別 handler 不要。既存カード未宣言 = 挙動不変 (wave-3 同論拠)。
+  // matcher = triggerCharMatches{payloadKey:'uid', side, filter}。
+  'state:change',
 ] as const;
 
 type TriggeredHook = (typeof TRIGGERED_HOOKS)[number];
@@ -536,6 +542,17 @@ export function registerTriggeredListener(): void {
       });
       continue;
     }
+    if (hook === 'setcard:leave') {
+      // engine additive A2 (2026-07-11, B02084 安室の愛車): セットカード自身の remove 到達自己反応。
+      //  - セットカード自身の on-set-self triggered: 離場後 collectCardsInPlay に出ないため
+      //    handleSetcardLeaveSelf (virtual location、faceUp gate) で処理。
+      //  - 在場キャラの「セットカードが離れたとき」観測 (B07034/B02020): 通常 in-play scan (handleHook)。
+      event.on(hook, (state, payload, source) => {
+        handleSetcardLeaveSelf(state, payload, source);
+        handleHook('setcard:leave', state, payload, source);
+      });
+      continue;
+    }
     event.on(hook, (state, payload, source) => {
       handleHook(hook, state, payload, source);
     });
@@ -653,7 +670,7 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   // setCards 保持) から entry 単位で def を引く (公式Q&A: 2枚セット→2つ発動)。裏向きは不発 (rules/16)。
   // source = host (uid/cardId/player) — rider の「このキャラ (host) がリムーブされたとき」座標系。
   const riderAbilities: AbilityDef[] = [];
-  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean }[] } } | undefined)?.removedChar;
+  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean }[]; turnEffects?: Record<string, unknown> } } | undefined)?.removedChar;
   for (const entry of removedChar?.setCards ?? []) {
     if (entry.faceUp !== true) continue;
     const setDef = readDef.card(entry.cardId);
@@ -663,7 +680,17 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
       }
     }
   }
-  for (const ability of [...(def.abilities as AbilityDef[]), ...riderAbilities]) {
+  // engine additive A2 (2026-07-11, B07063 解禁の対): 自己 leave 型の付与済 triggered ability
+  // (charGrantAbility で turnEffects.grantedAbilities に積まれた「このキャラ (被付与) がリムーブ
+  // されたとき」) も走査する。離場後キャラは scene から消えているが payload.removedChar (splice 前
+  // snapshot) が turnEffects を保持するため grantedAbilities を再取得できる。in-play scan (handleHook)
+  // は grantedAbilities を合算するが離場カード自身は collectCardsInPlay に出ないため self-leave grant は
+  // この経路でのみ拾える。裏向き/JSON descriptor そのまま (validate が function 不可を静的保証)。
+  const grantedSelf = removedChar?.turnEffects?.['grantedAbilities'];
+  const grantedSelfAbilities: AbilityDef[] = Array.isArray(grantedSelf)
+    ? (grantedSelf as AbilityDef[]).filter(ab => ab.type === 'triggered' && ab.trigger?.hook === 'leave:to-remove')
+    : [];
+  for (const ability of [...(def.abilities as AbilityDef[]), ...riderAbilities, ...grantedSelfAbilities]) {
     if (ability.type !== 'triggered') continue;
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'leave:to-remove') continue;
@@ -765,6 +792,68 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
       'disguise:replaced',
       payload,
       sourceBindings,
+    );
+  }
+}
+
+/**
+ * engine additive A2 (2026-07-11, B02084 安室の愛車): setcard:leave の **セットカード自身** 用
+ * virtual-location handler。handleLeaveToRemoveSelf / handleDisguiseReplacedSelf と同構造。
+ * setcard:leave payload = { player, hostUid, hostCardId, setCardId, faceUp, cause }。離場した
+ * セットカードは collectCardsInPlay に出ない → payload.setCardId から def を引き、scope:'on-set-self' +
+ * hook:'setcard:leave' の triggered を発火。faceUp:false は情報を持たない (rules/16 / B02084 Q&A) → 不発。
+ * source uid は自己参照しない ability 用に host uid を借りる (line2 は remove-area pick で自 uid 不要)。
+ */
+function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unknown): void {
+  const pl = payload as
+    | { player?: Player; setCardId?: string; faceUp?: boolean; hostUid?: string }
+    | undefined;
+  if (!pl || !pl.player || !pl.setCardId) return;
+  if (pl.faceUp !== true) return; // 裏向きセットは情報を持たない (rules/16, B02084 Q&A)
+  const def = readDef.card(pl.setCardId);
+  if (!def) return;
+  const card: CardLocation = {
+    player: pl.player,
+    uid: pl.hostUid ?? pl.setCardId, // 合成 uid (on-set-self ability は自己参照しない)
+    cardId: pl.setCardId,
+    area: 'scene', // scope gate は on-set-self 直判定で bypass — area 値は非依存
+  };
+  for (const ability of def.abilities as AbilityDef[]) {
+    if (ability.type !== 'triggered') continue;
+    const trig = ability.trigger;
+    if (!trig || trig.hook !== 'setcard:leave') continue;
+    if (ability.scope !== 'on-set-self') continue;
+    if (trig.matcher && !trig.matcher(payload, state)) continue;
+    const baseCtx = {
+      source: {
+        cardId: card.cardId,
+        uid: card.uid,
+        abilityId: ability.id,
+        player: card.player,
+        area: card.area,
+      },
+      bindings: {},
+      triggerPayload: payload,
+    };
+    if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx)) continue;
+    if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
+    if (!ability.effect) continue;
+
+    const humanSide = getHumanPlayerSide();
+    const isHumanEffect = humanSide !== null && card.player === humanSide;
+    const aiPolicy = new HeuristicPolicy();
+    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
+      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
+      byPlayer: card.player,
+      humanChooser: isHumanEffect,
+      source: { cardId: card.cardId, abilityId: ability.id },
+    });
+    event.queue(
+      state,
+      resolvedEffect,
+      { player: card.player, uid: card.uid, cardId: card.cardId },
+      'setcard:leave',
+      payload,
     );
   }
 }

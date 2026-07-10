@@ -10,12 +10,14 @@ import { resolveDynNumber } from '@/engine/dyn/eval.js';
  */
 export function choiceOptionLabel(opt: Effect): string {
   if (opt.kind !== 'atom') return opt.kind;
-  const args = (opt.args ?? {}) as { delta?: unknown };
+  const args = (opt.args ?? {}) as { delta?: unknown; n?: unknown };
   const delta = typeof args.delta === 'number' ? args.delta : null;
   const sign = delta !== null && delta >= 0 ? `＋${delta}` : delta !== null ? `${delta}` : '';
   switch (opt.verb) {
     case 'charModifyLP': return `LP${sign}`;
     case 'charModifyAP': return `AP${sign}`;
+    // B05097「上から5枚までリムーブする（枚数を決めてからリムーブ）」= mill n 択一。n が number のときのみラベル化。
+    case 'mill':         return typeof args.n === 'number' ? `デッキ上 ${args.n} 枚をリムーブ` : String(opt.verb);
     default:             return String(opt.verb);
   }
 }
@@ -42,6 +44,7 @@ export function costToText(cost: Cost, resolve?: { state: GameState; ctx: Effect
       if (resolve) return `デッキ上 ${resolveDynNumber(cost.n, resolve.state, resolve.ctx)} 枚をリムーブ`;
       return 'デッキ上のカードをリムーブ (枚数は盤面で決まる)';
     }
+    case 'removeDeckAll':     return 'デッキのカードをすべてリムーブ'; // engine A3 wave (2026-07-11, B09107)
     case 'discardEvidence':   return `証拠 ${cost.n} 枚をリムーブ`;
     case 'selfLpDeltaTurn':   return `ターン終了時までこのキャラをLP${cost.delta}`; // M2後半 (2026-07-10, B06003)
     case 'removeFromHandDownTo': return `手札が ${cost.n} 枚になるまでリムーブ`; // M2後半 (2026-07-10, B08047)

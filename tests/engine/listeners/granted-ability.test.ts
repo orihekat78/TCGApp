@@ -100,13 +100,15 @@ describe('charGrantAbility (Task D E4)', () => {
     expect(after.players.self.hand, '印字 + 付与の両方が発火して 2 ドロー').toHaveLength(2);
   });
 
-  it("validate: charGrantAbility の trigger.hook='leave:to-remove' は拒否 (virtual-location 未対応)", () => {
+  it("validate: charGrantAbility の trigger.hook='leave:to-remove' は許可 (engine additive A2, B07063 解禁)", () => {
+    // 2026-07-11: 旧禁止 (virtual-location 未対応) を撤廃。在場 observer は handleHook が grantedAbilities を
+    // 合算走査 / 自己 leave は handleLeaveToRemoveSelf が removedChar.turnEffects.grantedAbilities を走査。
     const eff: Effect = {
       kind: 'atom', verb: 'charGrantAbility',
       args: { uid: 'x', scope: 'turn', ability: { trigger: { hook: 'leave:to-remove', selfOnly: true }, effect: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } } } },
     } as Effect;
     const r = validate(eff);
-    expect(r.ok).toBe(false);
+    expect(r.ok).toBe(true);
   });
 
   it('validate: ability 内の function (matcher 等) は拒否 (JSON シリアライズ可能性維持)', () => {
