@@ -1322,6 +1322,10 @@ import { B08092P } from '../ct-p08/B08092P.js';
 import { B09002P } from '../ct-p09/B09002P.js';
 import { B09086P } from '../ct-p09/B09086P.js';
 
+import { B05047 } from '../ct-p05/B05047.js';
+import { B03049 } from '../ct-p03/B03049.js';
+import { B03049P } from '../ct-p03/B03049P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1717,4 +1721,8 @@ export const REUSE_CARDS: CardDef[] = [
   B04077P, B05005P, B05005P2, B05023P, B06062P, B06063P, B06072P, B06074P,
   B06078P, B06084P, B06085P, B06104P, B07014P, B07015P, B07026P, B07039P,
   B07054P, B08025P, B08062P, B08076P, B08092P, B09002P, B09086P,
+  // CARD PHASE mini-wave #5 deck-reveal
+  B05047,
+  // CARD PHASE mini-wave #5 deck-reveal
+  B03049, B03049P,
 ];

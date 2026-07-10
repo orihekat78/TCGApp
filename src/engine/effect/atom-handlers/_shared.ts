@@ -57,6 +57,30 @@ export function _drainPendingDeckReorderSide(): PendingDeckReorderSide | null {
   return v;
 }
 
+// mini-wave #5 P2 (2026-07-10): deckPlaceSplitBound (B05047「見た各カードを上か下へ」) の
+// human 振り分け待ち (deckReorder 同型 side-channel)。human 所有時のみ set し、UI の
+// DeckPlaceModal が 2-bucket (top/bottom) 割当を surface → useEngineDispatch 'deckPlaceResolve'
+// が multiset 検証つきで mutate.deck.toTop/toBottom を適用する。AI / 非 human は atom 側で
+// 恒等 (全カード元位置のまま = 合法な一choice、souza AI default 同型) のため set しない。
+// ⚠ await 中は対象カードが deck 元位置に残る (rules/26 見ている間はデッキ扱い)。同一 effect
+// chain の後続 step が deck を読む構成は本 atom の消費者では組まないこと (B05047 は最終 step)。
+declare global {
+  // eslint-disable-next-line no-var
+  var __pendingDeckPlaceSide: PendingDeckPlaceSide | null | undefined;
+}
+
+export type PendingDeckPlaceSide = {
+  player: 'self' | 'opp';
+  /** 振り分け対象の cardId 群 (公開順)。human が各カードを top/bottom バケツへ割り当てる */
+  cardIds: string[];
+};
+
+export function _drainPendingDeckPlaceSide(): PendingDeckPlaceSide | null {
+  const v = (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide ?? null;
+  (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
+  return v;
+}
+
 // mega-wave W6 step9 (2026-07-04, row65): startContact atom が生成した ActionContext.id の
 // 片道通知 (effect atom → React store の produce 境界越え、hirameki/misread/deckReveal と同型)。
 // UI 側は drain → store.setActiveActionId(id) で useContactFlowDriver が拾う。

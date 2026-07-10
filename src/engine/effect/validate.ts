@@ -44,7 +44,7 @@ const ATOM_VERB_MAP = {
   opponentLoses: true, // engine E3 (2026-07-02) — alt-lose 勝利ルート「相手はゲームに敗北する」(B03135/B09107)
   caseToResolved: true,
   startContact: true, endActionEarly: true,
-  deckRevealUntil: true, deckToBottomBound: true, boundToRemove: true, deckShuffle: true, souza: true,
+  deckRevealUntil: true, deckToBottomBound: true, deckPlaceSplitBound: true, boundToRemove: true, deckShuffle: true, souza: true,
   removeAreaAllToDeckBottom: true, // cluster4 (2026-06-14)
   setEventUseBan: true, // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   setNextHintBan: true, // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)

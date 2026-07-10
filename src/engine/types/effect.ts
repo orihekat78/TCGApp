@@ -434,7 +434,7 @@ export type AtomVerb =
   | 'opponentLoses'
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
-  | 'deckRevealUntil' | 'deckToBottomBound' | 'boundToRemove' | 'deckShuffle' | 'souza'
+  | 'deckRevealUntil' | 'deckToBottomBound' | 'deckPlaceSplitBound' | 'boundToRemove' | 'deckShuffle' | 'souza'
   // engine拡張 wave#2 cluster4 (2026-06-14): 自分と相手はリムーブエリアの「すべて」のカードを各自の
   // デッキの下に移し、両者のデッキをシャッフルする (B08027【登場時】)。pick を持たない fixed verb。
   // rules: 14/26 (デッキが増えるのみ → これは「リフレッシュ」ではない=証拠を得る手順なし、公式Q&A),

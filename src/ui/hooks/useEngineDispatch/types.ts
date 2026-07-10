@@ -69,6 +69,8 @@ export type EngineAction =
   | { type: 'optionalResolve'; run: boolean }
   // BUG-136: deckToBottomBound「好きな順番でデッキの下に移す」の順序確定。order = 底ブロックの新順 (cardId 列)。
   | { type: 'deckReorderResolve'; order: string[] }
+  // mini-wave #5 P2: deckPlaceSplitBound「各カードを上か下へ」の振り分け確定。top/bottom = 各バケツの cardId 列 (順序込み)。
+  | { type: 'deckPlaceResolve'; top: string[]; bottom: string[] }
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
   | { type: 'endTurn'; player: Player };

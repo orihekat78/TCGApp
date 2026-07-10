@@ -91,6 +91,10 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       // BUG-136: pendingDeckReorder が set されているときのみ有効
       return useGameStateStore.getState().pendingDeckReorder !== null;
     }
+    case 'deckPlaceResolve': {
+      // mini-wave #5 P2: pendingDeckPlace が set されているときのみ有効
+      return useGameStateStore.getState().pendingDeckPlace !== null;
+    }
     case 'choiceResolve': {
       // BUG-121: pendingEffectChoice が set されているときのみ有効
       return useGameStateStore.getState().pendingEffectChoice !== null;

@@ -34,7 +34,7 @@
 
 - Route B 採用: plain reveal → window 制限つき別 sceneEnter multi-pick → 既存 deckToBottomBound+deckShuffle。
 - engine 3 (additive): ①picks.ts:164-183 bindKey 書込みの matched-exclusion を `bindMatchKey !== undefined` で gate
-  (既存 91+ 消費者は全部 bindMatch ペア済 = 挙動不変、grep 実測済) + Candidate に index 追加 (型定義済 candidate.ts:7)。
+  (既存 **168** 消費者は全部 bindMatch ペア済 = 挙動不変、grep 実測済 (grounding 時の 91+ は過小計上)) + Candidate に index 追加 (型定義済 candidate.ts:7)。
   重複 cardId 耐性のため indexOf 再利用せず並行 index 配列で 1:1 対応。
   ②TargetQuery.fromGroupCards?: string 新設 (effect.ts:296-327、fromGroup は char 専用のため独立 field)。
   ③candidates.ts fromGroup ブロック (L201-210) と並列に fromGroupCards 分岐 (bound index Set で card-kind post-filter)。

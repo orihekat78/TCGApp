@@ -184,7 +184,10 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       } else if (sourceArea === 'deck') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].deck;
-        const idx = arr.indexOf(cardId);
+        // mini-wave #5 review B1 (2026-07-10): fromBottom 公開カードの登場は deckPos:'bottom' を渡す。
+        // indexOf (先頭出現) だと同名コピーがデッキ上方にあるとき「見せていない top 側」が抜かれ、
+        // 公開した底カードが残る (隠れ順序破壊、rules/02 同名3枚合法なので頻出)。lastIndexOf = 底出現。
+        const idx = a.deckPos === 'bottom' ? arr.lastIndexOf(cardId) : arr.indexOf(cardId);
         if (idx !== -1) arr.splice(idx, 1);
       }
       const enterOpts = {

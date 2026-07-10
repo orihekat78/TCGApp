@@ -33,7 +33,7 @@ const VERBS = new Set([
   'charSetTurnEffect', 'charSetCard', 'charStackCard', 'charRemoveSetCard',
   'partnerAssist', 'partnerSetState', 'partnerSolveCase',
   'opponentLoses', // engine E3 (2026-07-02) — alt-lose 勝利ルート
-  'caseToResolved', 'deckRevealUntil', 'deckToBottomBound', 'boundToRemove', 'deckShuffle', 'souza',
+  'caseToResolved', 'deckRevealUntil', 'deckToBottomBound', 'deckPlaceSplitBound', 'boundToRemove', 'deckShuffle', 'souza',
   'removeAreaAllToDeckBottom', // cluster4 (2026-06-14)
   'setEventUseBan', // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   'setNextHintBan', // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)

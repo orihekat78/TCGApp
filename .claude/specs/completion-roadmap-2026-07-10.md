@@ -27,7 +27,7 @@
 
 | S | bucket | unit≈ | printings≈ | tier |
 |---|---|---|---|---|
-| ✅S1 | P-spread 39 + mini-wave #5 (B03049+P fromBottom / B05047 deckPlaceSplit) + roadmap | 2 | 42 | T0+T2 |
+| ✅S1 | P-spread 39 + mini-wave #5 (B03049+P fromBottom / B05047 deckPlaceSplit) + roadmap — **実績 42 printings (1749→1791)** | 2 | 42 | T0+T2 |
 | S2 | deck cluster 残: B01022 (T3 window-pick UI) + B01093 + B08057 + D06013 + B02072 | 5 | ~6 | T3 |
 | S3 | **re-triage sweep**: yellow ~12 + INDEX未記載 ~39 unit を機械 batch 再分類 → easy 刈り取り | ~15 | ~20 | T0-T2 |
 | S4 | set-card cluster: PR234+240 / B02084 / B01057 / B02013 / B02031 / B02039 / B08008 / D10009+10 | 9 | ~12 | T2 |

@@ -28,7 +28,7 @@ import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
-import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
+import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import { isAllowed } from './useEngineDispatch/can-check.js';
 import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
 // Phase 3d: public 型 (ContactChoice/EngineAction/DispatchResult) は types.ts を barrel 再 export し importer 不変。
@@ -355,6 +355,43 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
+    case 'deckPlaceResolve': {
+      // mini-wave #5 P2: deckPlaceSplitBound (B05047「見た各カードを上か下へ」) の human 振り分け適用。
+      // pending.cardIds はまだ deck 元位置に居る (atom は await のみ)。top∪bottom が pending.cardIds と
+      // multiset 一致することを検証してから splice → mutate.deck.toTop/toBottom を各 1 回 bulk 適用
+      // (「好きな順番で」= 各バケツ内の相対順も human 指定、bulk API なので順序保持)。不一致なら何もしない。
+      const pendingP = useGameStateStore.getState().pendingDeckPlace;
+      if (!pendingP) return;
+      const deckP = draft.players[pendingP.player].deck;
+      const combined = [...action.top, ...action.bottom];
+      const tallyP = (xs: string[]): Map<string, number> => {
+        const m = new Map<string, number>();
+        for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1);
+        return m;
+      };
+      if (combined.length !== pendingP.cardIds.length) return;
+      const te = tallyP(pendingP.cardIds);
+      const tc = tallyP(combined);
+      if (te.size !== tc.size) return;
+      for (const [k, v] of te) if (tc.get(k) !== v) return;
+      // 検証 OK → deck から対象を splice (deckToBottomBound と同じ窓侵食防御: 実在分のみ) して振り分け
+      const splicedP: string[] = [];
+      for (const id of pendingP.cardIds) {
+        const idx = deckP.indexOf(id);
+        if (idx !== -1) { deckP.splice(idx, 1); splicedP.push(id); }
+      }
+      const inSpliced = tallyP(splicedP);
+      const takeIf = (ids: string[]): string[] => ids.filter(id => {
+        const c = inSpliced.get(id) ?? 0;
+        if (c <= 0) return false;
+        inSpliced.set(id, c - 1);
+        return true;
+      });
+      mutate.deck.toTop(draft, pendingP.player, takeIf(action.top));
+      mutate.deck.toBottom(draft, pendingP.player, takeIf(action.bottom));
+      // クリアは produce 後に dispatchEngineAction が行う
+      return;
+    }
     case 'endTurn': {
       // Round 2 修正: 旧実装は endTurn のみで、次プレイヤーの startTurn を呼ばなかった。
       // 結果 (a) opp.turn 開始時に auto-phase 走らず、(b) opp.endTurn 後 self.turn でも
@@ -418,6 +455,9 @@ export function surfacePendingSideChannels(): void {
   // BUG-136: deckToBottomBound 順序選択の取り残し防止 (auto-phase / ターンドライバ経路)
   const deckReorderSide = _drainPendingDeckReorderSide();
   if (deckReorderSide) store.setPendingDeckReorder(deckReorderSide);
+  // mini-wave #5 P2: deckPlaceSplitBound 振り分けの取り残し防止 (同経路)
+  const deckPlaceSide = _drainPendingDeckPlaceSide();
+  if (deckPlaceSide) store.setPendingDeckPlace(deckPlaceSide);
 }
 
 /**
@@ -516,6 +556,13 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       store.setPendingDeckReorder(deckReorderSide);
     } else if (deckReorderSide) {
       store.setPendingDeckReorder(deckReorderSide);
+    }
+    // mini-wave #5 P2: deckPlaceSplitBound 振り分けチャネル drain (deckReorder と同 clear セマンティクス)。
+    const deckPlaceSide = _drainPendingDeckPlaceSide();
+    if (action.type === 'deckPlaceResolve') {
+      store.setPendingDeckPlace(deckPlaceSide);
+    } else if (deckPlaceSide) {
+      store.setPendingDeckPlace(deckPlaceSide);
     }
     return { ok: true };
   } catch (e) {

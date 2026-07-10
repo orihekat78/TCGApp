@@ -55,6 +55,9 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
         }
         if (bindKey) {
           // decline 時は全 reveal が「残り」(公式: 加えなければ全部デッキ下へ。B08020 公式Q&A)
+          // ⚠ 本再入 path (chooseMatch) は bindMatchKey===undefined gate (下の初回 path、mini-wave #5 ①)
+          //   の対象外で matched を常時除外する。bind-only + chooseMatch:'upTo' の組合せカードは現状 0 件
+          //   (grep 実測) — 将来組む場合は初回/再入で $bind の内容が食い違うため gate をここにも要移植。
           let restIds: string[];
           if (chosen === null) {
             restIds = windowIds;
@@ -88,11 +91,15 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       //   この semantics で「上から N 枚見て、その中から該当 1 枚を取り、残りはデッキ下」が成立。
       // maxN 未指定時: 従来通り (filter match まで or デッキ末尾まで reveal、match で stop)。
       const maxN = a.maxN as number | undefined;
+      // mini-wave #5 P3 (2026-07-10): fromBottom — 「デッキ下から公開」(B03049)。走査方向のみ切替
+      // (maxN 分岐 = deck 末尾から i 枚 / 非 maxN = 逆順 copy を走査)。revealed の格納順は底優先。
+      // bind/bindMatch/chooseMatch/refresh は無改変。未指定 (既存 ~60 消費者) は byte 互換。
+      const fromBottom = a.fromBottom === true;
       if (maxN !== undefined) {
         // 公式テキスト "上から N 枚見る" — N 枚を全件 reveal し、その中から最初の match を採用
         const lookN = Math.min(deck.length, maxN);
         for (let i = 0; i < lookN; i++) {
-          revealed.push(deck[i]!);
+          revealed.push(fromBottom ? deck[deck.length - 1 - i]! : deck[i]!);
         }
         for (const cardId of revealed) {
           if (filter(cardId)) {
@@ -102,7 +109,7 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
         }
       } else {
         // 従来 semantics: filter match まで 1 枚ずつ reveal、match で停止
-        for (const cardId of deck) {
+        for (const cardId of (fromBottom ? [...deck].reverse() : deck)) {
           revealed.push(cardId);
           if (filter(cardId)) {
             matched = cardId;
@@ -164,8 +171,12 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       if (bindKey) {
         // 旧 semantics (maxN 未指定): match は revealed の最後尾 → slice(0,-1) で除く
         // 新 semantics (maxN 指定): match は revealed の任意位置 → matched の最初の出現を除外
+        // mini-wave #5 ① (2026-07-10): matched 除外は bindMatch とペアのときのみ。bindMatch 省略 =
+        // 「window 全体を $bind に保持したい」用途 (B05047 の見た 2 枚全部を後段で振り分け)。filter 省略時は
+        // predicate が常 true で先頭が matched になり、gate 無しだと 1 枚が意図せず欠落する。
+        // 既存の bindKey 消費者 168 file は全部 bindMatch とペア (grep 実測) = 挙動不変。
         let restIds: string[];
-        if (matched === null) {
+        if (matched === null || bindMatchKey === undefined) {
           restIds = revealed;
         } else if (maxN === undefined) {
           restIds = revealed.slice(0, -1);
@@ -239,6 +250,37 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
           cardIds: [...splicedIds],
         };
       }
+      return;
+    }
+
+// mini-wave #5 P2 (2026-07-10): 「見た各カードを、好きな順番でデッキの上か下に移す」(B05047)。
+// bound window (deckRevealUntil 公開分、まだ deck 元位置に居る) を対象に:
+// - human 所有: __pendingDeckPlaceSide を立てて await (deckReorder 同型 side-channel)。カードは
+//   未移動のまま (rules/26 見ている間はデッキ扱い)。UI の DeckPlaceModal → 'deckPlaceResolve'
+//   dispatch が multiset 検証つきで splice + mutate.deck.toTop/toBottom を適用する。
+// - AI / 非 human: 恒等 (全カード元位置のまま = 「全部を元の順で上に置く」合法 choice、
+//   souza AI default = peek 順そのまま と同じ設計判断)。smoke baseline 不変。
+export function atomDeckPlaceSplitBound(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const p = resolvePlayer(a.player, ctx);
+      const bindKey = a.bindKey as string;
+      const bound = ctx.bindings[bindKey];
+      if (!bound || bound.length === 0) return;
+      const ids = bound.map(c => {
+        const cAny = c as unknown as { cardId?: string };
+        return cAny.cardId ?? '';
+      }).filter(id => id !== '');
+      if (ids.length === 0) return;
+      const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (p === humanSide) {
+        (globalThis as { __pendingDeckPlaceSide?: import('./_shared.js').PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = {
+          player: p,
+          cardIds: [...ids],
+        };
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `await ${ids.length}` });
+        return;
+      }
+      // AI 恒等: deck に既に元順で存在するため mutation 不要
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `identity ${ids.length}` });
       return;
     }
 

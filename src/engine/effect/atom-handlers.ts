@@ -17,9 +17,11 @@ import type { GameState, AtomVerb, EffectCtx } from '../types/index.js';
 export {
   _drainPendingDeckRevealSide,
   _drainPendingDeckReorderSide,
+  _drainPendingDeckPlaceSide, // mini-wave #5 P2: deckPlaceSplitBound (top/bottom 振り分け) の drain
   _drainPendingContactStartAxId, // W6 step9 (row65): startContact 生成 ax.id の drain
   type PendingDeckRevealSide,
   type PendingDeckReorderSide,
+  type PendingDeckPlaceSide,
 } from './atom-handlers/_shared.js';
 import {
   atomDraw,
@@ -82,6 +84,7 @@ import {
 import {
   atomDeckRevealUntil,
   atomDeckToBottomBound,
+  atomDeckPlaceSplitBound,
   atomBoundToRemove,
   atomSouza,
   atomBindPick,
@@ -245,6 +248,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomDeckRevealUntil(s, a, ctx);
     case 'deckToBottomBound':
       return atomDeckToBottomBound(s, a, ctx);
+    case 'deckPlaceSplitBound':
+      return atomDeckPlaceSplitBound(s, a, ctx);
     case 'boundToRemove':
       return atomBoundToRemove(s, a, ctx);
     case 'deckShuffle':

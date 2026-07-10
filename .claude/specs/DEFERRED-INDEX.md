@@ -1218,13 +1218,13 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B02022 | mustBeTargeted taunt (指定できる場合必ず指定) primitive 不在 |
 | B02072 | 捜査X の X=盤面計数 dyn 不在 + 発見カード levelSum 閾値 dyn 不在 |
 | B03040 | 自分証拠 top 1 を見る (peek own evidence) verb 不在 + 証拠獲得 trigger の self-attribution |
-| B03049 | デッキ下から1枚公開→条件分岐 (登場 or 手札) verb 不在 (bottom-reveal branch) |
+| ~~B03049~~ | **✅ 解消 (2026-07-10 mini-wave #5)**: deckRevealUntil fromBottom param 追加。B03049/P 出荷 |
 | B03063 (死闘) | 盤面計数を上限とする opp multi-pick sleep (dyn nMax) + 「スリープさせたすべて」bound 集合 AP+ の複合 carrier 不在 |
 | B03116 | leave:to-remove hook に「自分の能力や効果によって」の owner-attribution payload 不在 |
 | B04063 | $bound.<key>.levelSum dyn 不在 (リムーブした集合のレベル合計閾値) |
 | B04084 | 「レベル合計10以下になるように2枚まで選ぶ」sum-constrained multi-pick 不在 + 「1枚登場+残りスリープ登場」split deploy 不在 |
 | B04089 | VERIFY_NG: removedCharMatches{cause:'effect'} は actor-attribution (自分の効果によって) を保証しない (payload.byUid 不在 case) |
-| B05047 | 「上から2枚見て各カードを上か下へ」per-card top/bottom placement 不在 (deckRevealUntil は一括 bottom のみ) |
+| ~~B05047~~ | **✅ 解消 (2026-07-10 mini-wave #5)**: 新 atom deckPlaceSplitBound + DeckPlaceModal (top/bottom 振り分け UI)。B05047 出荷 |
 | B08008 | picked host ($self 以外) の下へ remove-area キャラを重ねる + そのキャラへの ability 付与 rider — host-pick stack + grant 複合不在 |
 | B08057 | remove→deck-BOTTOM pick effect verb 不在 (removeAreaToDeckTop dest:'bottom' は cost 側のみ) + 「1枚までと1枚まで」2独立 pick |
 | B08068 | levelMax = cost-revealed 枚数 + 盤面計数の合成 dyn 不在 |
@@ -1238,7 +1238,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | D10009 (+D10010) | scene-source キャラを host の下に重ねる effect verb 不在 (charStackCard は remove/hand/deck source のみ、sceneStackUnderSelf は cost 専用) + 重ねた場合の条件付き突撃[キャラ] 付与 |
 | PR234 (+PR240) | charSetCard pick 経路の faceUp 不在 (裏向きハードコード) + hand∪remove union source 不在 + setcard:leave の faceUp filter 不在 |
 
-**engine mini-wave 候補 cluster (頻度順)**: ①turn-scope LP override (B01045/B01054、apOverride_turn 対称で小粒) ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (multi-deploy B01022 / per-card placement B05047 / bottom-reveal B03049) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。
+**engine mini-wave 候補 cluster (頻度順)**: ①turn-scope LP override (B01045/B01054、apOverride_turn 対称で小粒) ②bound 集合 levelSum/計数 dyn (B04063/B02072/B08068/B03063) ③deck-reveal 拡張 (~~per-card placement B05047 / bottom-reveal B03049~~ ✅ mini-wave #5 出荷済。残 = multi-deploy B01022 (T3、grounding 済 = specs/miniwave5-deck-reveal-grounding.md P1 節)) ④cost choice UI (B09027、W 級 UI) ⑤faceUp setCard 系 (PR234 + B07034 済基盤)。
 
 ## hybrid-batch4 由来 DEFER (2026-07-10、2行 40 unit 中 22 DEFER + 2 VERIFY_NG。file:line 根拠全文 = .tmp/_batch4_defers.txt)
 
@@ -1319,3 +1319,12 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 - B08057 継続 DEFER: filtered remove→deck-bottom pick EFFECT verb + 「合わせて3枚移した場合」moved-count gate。
 - B03110 gate 意味論 nit: FILE<2 で opt-in した場合「1枚だけ加える (rules/15 可能な限り)」読みも成立。
   現実装 = all-or-nothing (0枚)。board-wipe 発火条件は両読み同一。カード個別 QA 出現時に再確認。
+
+## mini-wave #5 review nits (2026-07-10、非 blocker 繰越)
+
+- deckRevealUntil bind-only (bindMatch 無) 時も matched が overlay/log に立つ (B05047 で「1枚選ばれた」風に見える) — bindMatch 無し時は演出 matched 抑制が綺麗
+- useEngineDispatch の deckReorder/deckPlace drain if/else-if は両枝同一処理 (既存パターン踏襲) — 統合可
+- __pendingDeckPlaceSide 単一 slot: 同一解決内 2 回発火は先勝ち上書き (既存 side-channel parity)。DeckPlaceModalHost key=cardIds は同一 window 連続で state 持越し (nonce 追加で解消)
+- human=opp 時 pendingDeckPlace{opp} は modal 非表示のまま残留 (DeckReorder と同 parity)。ゲーム reset で pending 系未クリア (同 parity)
+- B03049 match 枝で現場5枚満杯: sceneEnter 明示 cardId 経路は switch 提示なし silent no-op (D11019 等と同 class parity)
+- fromBottom window + deckPlaceSplitBound の併用は resolve 側で wrong-copy を踏む (B1 同類) — 併用禁止。BUG-180 = handAddFromDeck/sceneEnter deck-splice の refresh gap (~152 消費者)

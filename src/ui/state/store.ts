@@ -135,6 +135,13 @@ export type GameStateStore = {
   pendingDeckReorder: PendingDeckReorder | null;
   setPendingDeckReorder: (p: PendingDeckReorder | null) => void;
   /**
+   * mini-wave #5 P2: deckPlaceSplitBound「見た各カードを上か下へ」の振り分け待ち。
+   * engine 側 PendingDeckPlaceSide と同 shape。human 所有時だけ set され DeckPlaceModal で
+   * top/bottom へ割当。deckPlaceResolve dispatch で適用して null へ。
+   */
+  pendingDeckPlace: PendingDeckPlace | null;
+  setPendingDeckPlace: (p: PendingDeckPlace | null) => void;
+  /**
    * 2026-05-26 ヒラメキ効果検証 demo モード。
    * 'idle'      … 未使用 (通常ゲーム)
    * 'picking'   … HiramekiDemoPickerModal 表示中、ユーザが icon-flash カード選択待ち
@@ -169,6 +176,12 @@ export type PendingDeckReveal = {
 export type PendingDeckReorder = {
   player: 'self' | 'opp';
   /** デッキ底へ移したカード群 (公開順)。並べ替え対象 */
+  cardIds: string[];
+};
+
+export type PendingDeckPlace = {
+  player: 'self' | 'opp';
+  /** mini-wave #5 P2: deckPlaceSplitBound「各カードを上か下へ」の振り分け対象 (公開順、まだ deck 元位置) */
   cardIds: string[];
 };
 
@@ -278,6 +291,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
   pendingDeckReorder: null,
   setPendingDeckReorder: (p) => set({ pendingDeckReorder: p }),
+  pendingDeckPlace: null,
+  setPendingDeckPlace: (p) => set({ pendingDeckPlace: p }),
   hiramekiDemoMode: 'idle',
   setHiramekiDemoMode: (m) => set({ hiramekiDemoMode: m }),
   hiramekiDemoSelectedCardId: null,

@@ -16,11 +16,11 @@
   shipped contactTargetMatches 全消費者 13 printings が逆方向だった。helper 書換で一括修正)。
   混成 2-lens review SHIP・BUG-177 両 lens CORRECT。nits = DEFERRED-INDEX「defer-unlock mini-wave nits」節。
   残 pilot/batch2 DEFER = B05022 (multi-pick carrier) + 大物 7 (B03110/B03111/B04073/B07049/B07061/D06013/PR284)。
-- 出荷済 **1788** / corpus 2074 = **残り未実装 286 printings**。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
+- 出荷済 **1791** / corpus 2074 = **残り未実装 283 printings**。**★完了 roadmap 起票 (2026-07-10、user 指示「10-15 session で完了」)**:
   driver = [.claude/specs/completion-roadmap-2026-07-10.md](specs/completion-roadmap-2026-07-10.md)。
   在庫の真実 = 実作業 **163 unit** (in-pool DEFER) + ride-along P 108 + ✅spread 済 39
   (`scripts/gen-p-spread.cjs` 新設、毎 session 末尾に随伴実行)。session 割当は roadmap 表参照。
-  **次 = mini-wave #5 (deck-reveal 拡張、grounding 済)**: 設計全文 =
+  **✅mini-wave #5 前半出荷済 (B03049+P/B05047)。次 = P1 B01022 (T3) or S2 deck cluster**: 設計全文 =
   [specs/miniwave5-deck-reveal-grounding.md](specs/miniwave5-deck-reveal-grounding.md)。
   P3 B03049+P (fromBottom param、T2小) → P2 B05047 (deckPlaceSplitBound+新modal、T2+PW) → P1 B01022 (T3、切離し可)。
   worktree megaw1 branch `engine/miniwave5-deck-reveal` 作成済 (着手時 origin/main rebase)。
