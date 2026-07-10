@@ -195,6 +195,17 @@ export type ContinuousModifier = {
   //   色 subset 判定が失敗した時のみ委譲 = 通常カードはゼロコスト。効果登場/カットイン/ヒラメキは元々
   //   色制限外 (rules/20) のため対象外。
   colorIgnoreOnHandUse?: boolean;
+  // engine mini-wave #4 (2026-07-10, cluster ⑧): hand 内 continuous level modifier
+  //   「手札にあるこのキャラはレベル4になる」(B01009) / 「手札にある間レベル-2」(B09095)。
+  //   flow.main.hand-use-card.effectiveHandLevel (単一ソース helper) が hand 在中カード**自身**の def を
+  //   walk (colorIgnoreOnHandUse と同流儀、ability.condition honor)。consumer = 手札の使用 levelAllowed /
+  //   ネクストヒント step2 level gate / UI flows.toCandidate / handUseReason (全 4 site 同 helper 経由)。
+  //   合成は rules/19 流儀の二段 (override を先に確定 → delta を加算、ability 記載順に依存しない)。
+  //   下限なし (rules/19 §レベルに下限はない — 負値も FILE 比較にそのまま使う)。
+  //   ⚠ hand gate 専用 — scene/その他エリアの level 読み (candidates levelMax 等) は不変
+  //   (公式 QA: 「手札にある間だけ。現場では元のレベル」)。不在時 no-op (baseline 不変)。
+  lvlOverrideInHand?: number;
+  lvlDeltaInHand?: number;
   // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura (rules/15, 17 §【自分ターン中】, 24 §常時有効型)。
   // 「【自分ターン中】自分の現場にいる [auraFilter] のキャラを AP±N」型。bearer の **同一 side の現場**の各キャラに対し、
   //   auraFilter (matchOneFilter で 有効値=turnEffects 反映レベル を判定) が一致すれば apDeltaAura/lpDeltaAura を加算する。

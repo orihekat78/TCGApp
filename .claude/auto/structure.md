@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/tmp/megaw1`)
-- **ディレクトリ数**: 232
-- **ファイル数**: 4321
+- **ディレクトリ数**: 233
+- **ファイル数**: 4328
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -610,6 +610,7 @@
     - `2026-07-10-05-engine-miniwave-lp-levelsum.md`
     - `2026-07-10-06-engine-miniwave2-nexthint.md`
     - `2026-07-10-07-engine-miniwave3-verbs.md`
+    - `2026-07-10-08-engine-miniwave4-hand-level.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -2086,6 +2087,8 @@
       - `B01005.ts` — cards/ct-p01/B01005 江戸川コナン (character) — Task A green候補 (engine変更0)
       - `B01007.ts` — cards/ct-p01/B01007 毛利蘭 (character) — Task A green候補 (engine変更0)
       - `B01008.ts` — cards/ct-p01/B01008 江戸川コナン (キャラ) — catalog-reuse batch
+      - `B01009.ts` — cards/ct-p01/B01009 工藤新一 (character) — engine mini-wave #4 (hand 内 continuous le…
+      - `B01009P.ts` — cards/ct-p01/B01009P 工藤新一 (キャラ パラレル) — B01009 の絵柄違い (同 cardId 0005)
       - `B01010.ts` — cards/ct-p01/B01010 毛利小五郎 (character) — Task A green候補 (engine変更0)
       - `B01010P.ts` — cards/ct-p01/B01010P 毛利小五郎 (character) — Task A green候補 (engine変更0)
       - `B01011.ts` — cards/ct-p01/B01011 江戸川コナン (キャラ) — Task A batch#2 (engine変更0) A.…
@@ -3299,6 +3302,8 @@
       - `B09093.ts` — cards/ct-p09/B09093 ウォッカ (キャラ) — catalog-reuse batch
       - `B09093P.ts` — cards/ct-p09/B09093P ウォッカ (キャラ) — catalog-reuse batch; B09093 の絵柄違い (同 cardId)
       - `B09094.ts` — cards/ct-p09/B09094 ジン (キャラ) — catalog-reuse batch
+      - `B09095.ts` — cards/ct-p09/B09095 ベルモット (character) — engine mini-wave #4 (hand 内 continuous l…
+      - `B09095P.ts` — cards/ct-p09/B09095P ベルモット (キャラ パラレル) — B09095 の絵柄違い (同 cardId 1034)
       - `B09096.ts` — cards/ct-p09/B09096 キャンティ (キャラ) — engine0 wave (G15 relative-AP filter, 2026-06-…
       - `B09096P.ts` — cards/ct-p09/B09096P キャンティ (キャラ・パラレル) — engine0 wave (G15 relative-AP filter, 20…
       - `B09097.ts` — cards/ct-p09/B09097 コルン (character) — Task A green候補 再author (engine変更0)
@@ -4062,6 +4067,8 @@
       - `B03133.gen.test.ts` — tests/cards/miniwave3/B03133 — HAND-WRITTEN probe (旧 gen 版を差し替え。再生成禁止)
       - `B05092.gen.test.ts` — tests/cards/miniwave3/B05092 — HAND-WRITTEN probe (旧 gen 版を差し替え。再生成禁止)
       - `manual-probes.test.ts` — tests/cards/miniwave3/manual-probes — 手書き probe (gen-card-probes.…
+    - **`miniwave4/`**
+      - `manual-probes.test.ts` — tests/cards/miniwave4/manual-probes — hand 内 continuous level (mini-wave #4) con…
     - **`pr-01/`**
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
     - **`triage-greens-2026-06-15/`**
@@ -4336,6 +4343,7 @@
       - `miniwave-lp-override-levelsum.test.ts` — engine mini-wave (2026-07-10): lpOverride_turn + $bound.<key>.levelSum
       - `miniwave2-nexthint-trigger.test.ts` — engine mini-wave #2 (2026-07-10): next-hint 判別 (viaNextHint payload flag + trigg…
       - `miniwave3-verbs.test.ts` — engine mini-wave #3 (2026-07-10): handToDeckBottom verb + filePopToHand n/…
+      - `miniwave4-hand-level.test.ts` — engine mini-wave #4 (2026-07-10): hand 内 continuous level modifier
       - `multi-target-pick.test.ts` — engine-extension #3 (2026-06-05): multi-target Pattern A pick
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
       - `pick-bind.test.ts` — Task D E0 (2026-06-12): pick-bind writeback — 1 つの pick を後続 atom で共有する機構。

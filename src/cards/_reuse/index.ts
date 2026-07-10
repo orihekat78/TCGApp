@@ -1278,6 +1278,10 @@ import { B05005 } from '../ct-p05/B05005.js';
 import { B03110 } from '../ct-p03/B03110.js';
 import { B03133 } from '../ct-p03/B03133.js';
 import { B05092 } from '../ct-p05/B05092.js';
+import { B01009 } from '../ct-p01/B01009.js';
+import { B01009P } from '../ct-p01/B01009P.js';
+import { B09095 } from '../ct-p09/B09095.js';
+import { B09095P } from '../ct-p09/B09095P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1666,4 +1670,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01005, B03002, B05005,
   // CARD PHASE miniwave3 consumers
   B03110, B03133, B05092,
+  // CARD PHASE miniwave4 consumers (hand 内 continuous level)
+  B01009, B01009P, B09095, B09095P,
 ];

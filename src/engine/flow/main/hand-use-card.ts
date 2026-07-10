@@ -93,15 +93,42 @@ function colorAllowed(state: GameState, p: Player, cardId: string): boolean {
 }
 
 /**
+ * engine mini-wave #4 (2026-07-10, cluster ⑧): 手札内での有効レベル (単一ソース helper)。
+ * 「手札にあるこのキャラはレベル4になる」(B01009 lvlOverrideInHand) / 「手札にある間レベル-2」
+ * (B09095 lvlDeltaInHand) を、hand 在中カード**自身**の def の continuous ability walk で反映する
+ * (handUseColorIgnoreAllowed と同流儀、ability.condition honor)。
+ * 合成は rules/19 流儀の二段: override を先に確定 → delta を加算 (ability 記載順に依存しない)。
+ * 下限なし (rules/19) — 負値もそのまま返す。公式 QA: 手札にある間だけ有効、現場では元レベル →
+ * 本 helper は 手札の使用 / ネクストヒント step2 の level gate (+UI 表示系) 専用。
+ * consumer: 本ファイル levelAllowed / next-hint.ts step2 / UI flows.ts toCandidate / handUseReason.ts。
+ */
+export function effectiveHandLevel(state: GameState, p: Player, cardId: string): number | undefined {
+  const d = readDef.card(cardId);
+  if (!d || d.level === undefined) return d?.level;
+  const ctx = { source: { player: p, area: 'hand', cardId }, bindings: {} } as EffectCtx;
+  let base = d.level;
+  let delta = 0;
+  for (const ab of d.abilities ?? []) {
+    if (ab.type !== 'continuous') continue;
+    const m = ab.continuousModifier;
+    if (!m || (m.lvlOverrideInHand === undefined && m.lvlDeltaInHand === undefined)) continue;
+    if (ab.condition && !evalCond(state, ab.condition, ctx)) continue;
+    if (m.lvlOverrideInHand !== undefined) base = m.lvlOverrideInHand;
+    if (m.lvlDeltaInHand !== undefined) delta += m.lvlDeltaInHand;
+  }
+  return base + delta;
+}
+
+/**
  * レベル制限チェック: カードのレベル ≤ FILE 枚数 (rules/12)
  *   - CardDef が未登録なら true
  *   - level が未定義なら制限なし扱い
+ *   - mini-wave #4: 手札内 continuous level modifier (effectiveHandLevel) を反映
  */
 function levelAllowed(state: GameState, p: Player, cardId: string): boolean {
-  const d = readDef.card(cardId);
-  if (!d) return true;
-  if (d.level === undefined) return true;
-  return d.level <= state.players[p].file.length;
+  const lvl = effectiveHandLevel(state, p, cardId);
+  if (lvl === undefined) return true;
+  return lvl <= state.players[p].file.length;
 }
 
 /**

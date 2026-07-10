@@ -207,7 +207,9 @@ function validateSpec(spec) {
           // selfContinuousFlag 系 boolean token (W2 出荷済 engine union、hybrid-batch2 で解禁)
           'caseActionBan',
           // wave-6 P37 grant (pure-JSON string[]、card-def.ts:134-135、B05012 exemplar)
-          'grantTraits', 'grantNames'];
+          'grantTraits', 'grantNames',
+          // mini-wave #4 (2026-07-10): hand 内 continuous level (pure-JSON number、B01009/B09095)
+          'lvlOverrideInHand', 'lvlDeltaInHand'];
         for (const k of Object.keys(ab.continuousModifier)) {
           if (k === 'grantKeywords' && Array.isArray(ab.continuousModifier[k]) && ab.continuousModifier[k].every((x) => typeof x === 'string')) continue; // codegen が closure へ変換 (B07005)
           if (!JSON_CONT_KEYS.includes(k)) errs.push(`${c}: continuousModifier.${k} not JSON-expressible (grantKeywords/customSelectorPatch need closure → needsManual)`);

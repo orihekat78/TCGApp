@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `ff347b44803f`
+> Source hash: `a3a545049b50`
 
 公式ルール [`12-next-hint.md`](../../../rules/12-next-hint.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -16,10 +16,11 @@
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
 - [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 
-## 📄 参照ソース (25)
+## 📄 参照ソース (27)
 
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
 - [`src/cards/ct-p01/B01005.ts`](../../../../src/cards/ct-p01/B01005.ts)
+- [`src/cards/ct-p01/B01009.ts`](../../../../src/cards/ct-p01/B01009.ts)
 - [`src/cards/ct-p02/B02063.ts`](../../../../src/cards/ct-p02/B02063.ts)
 - [`src/cards/ct-p03/B03002.ts`](../../../../src/cards/ct-p03/B03002.ts)
 - [`src/cards/ct-p03/B03051.ts`](../../../../src/cards/ct-p03/B03051.ts)
@@ -34,8 +35,7 @@
 - [`src/cards/ct-p07/B07069P.ts`](../../../../src/cards/ct-p07/B07069P.ts)
 - [`src/cards/ct-p08/B08056.ts`](../../../../src/cards/ct-p08/B08056.ts)
 - [`src/cards/ct-p09/B09034.ts`](../../../../src/cards/ct-p09/B09034.ts)
+- [`src/cards/ct-p09/B09095.ts`](../../../../src/cards/ct-p09/B09095.ts)
 - [`src/cards/ct-p09/B09108.ts`](../../../../src/cards/ct-p09/B09108.ts)
 - [`src/engine/flow/main/hand-use-card.ts`](../../../../src/engine/flow/main/hand-use-card.ts)
-- [`src/engine/mutate/file.ts`](../../../../src/engine/mutate/file.ts)
-- [`src/engine/mutate/flag.ts`](../../../../src/engine/mutate/flag.ts)
-- _...ほか 5 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 7 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

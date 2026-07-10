@@ -17,7 +17,7 @@ import type { GameState } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
-import { handUseCharRestrictAllows, handUseColorIgnoreAllowed } from './hand-use-card.js';
+import { handUseCharRestrictAllows, handUseColorIgnoreAllowed, effectiveHandLevel } from './hand-use-card.js';
 
 type Player = 'self' | 'opp';
 
@@ -90,10 +90,12 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
       throw new Error(`runNextHint: ${optionalCardId} color violates case`);
     }
     // レベル ≤ 現在 FILE 枚数 (rules/12 — 1 で取った分は既に減算済)
+    // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) を effectiveHandLevel で反映
     const d = readDef.card(optionalCardId);
-    if (d && d.level !== undefined) {
-      if (d.level > state.players[p].file.length) {
-        throw new Error(`runNextHint: ${optionalCardId} level ${d.level} > FILE ${state.players[p].file.length}`);
+    const nhLvl = effectiveHandLevel(state, p, optionalCardId);
+    if (nhLvl !== undefined) {
+      if (nhLvl > state.players[p].file.length) {
+        throw new Error(`runNextHint: ${optionalCardId} level ${nhLvl} > FILE ${state.players[p].file.length}`);
       }
     }
     // イベント使用不可 (B09034 §M3): ネクストヒントの step2 でも event 使用は不可 (rules/25 公式 Q&A:

@@ -11,7 +11,7 @@
 
 import type { GameState } from '@/engine/types/game-state.js';
 import { def as readDef } from '@/engine/read/def.js';
-import { handUseColorIgnoreAllowed } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像
+import { handUseColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 + mini-wave#4 hand level
 
 type Player = 'self' | 'opp';
 
@@ -61,10 +61,12 @@ export function getHandUseDisabledReason(
   }
 
   // 5. レベル制限 (FILE 枚数)
-  if (d.level !== undefined) {
+  // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) — engine levelAllowed と鏡像
+  const lvl = effectiveHandLevel(state, player, cardId);
+  if (lvl !== undefined) {
     const fileCount = state.players[player].file.length;
-    if (d.level > fileCount) {
-      return `カードのレベル ${d.level} が FILE 枚数 ${fileCount} を超えています (FILE を ${d.level} 枚以上にする必要があります)`;
+    if (lvl > fileCount) {
+      return `カードのレベル ${lvl} が FILE 枚数 ${fileCount} を超えています (FILE を ${lvl} 枚以上にする必要があります)`;
     }
   }
 

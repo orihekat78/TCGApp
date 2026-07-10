@@ -1232,7 +1232,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B09019 | 「この効果によってキャラが5枚登場した場合」の effect 内登場数カウンタ不在 |
 | B09027 | VERIFY_NG: cost kind:'choice' の human 選択 UI 不在 (pay.ts は最初の payable branch 自動選択、costChoice 供給経路 0。shipped exemplar 0) |
 | B09055 | sceneEnter の partner-area source 不在 + 「PAかリムーブ」2 zone union pick 不在 |
-| B09095 | 手札内 continuous level modifier 不在 (levelAllowed は raw CardDef.level 直読、QA=手札にある間だけ -2) |
+| ~~B09095~~ | ✅ 出荷済 (2026-07-10 mini-wave #4: lvlDeltaInHand + effectiveHandLevel 4 site) |
 | B09105 | distinct-level multi-pick 不在 (distinctNames のみ、「それぞれレベルの異なる」5枚まで) |
 | D06003 (+D06004/D06021/D06023) | 「【カットイン】AP＋を持つ」の cutin 効果内容判別 filter 不在 (keyword:'カットイン' は形状判定のみ、QA でウォッカ除外必須) |
 | D10009 (+D10010) | scene-source キャラを host の下に重ねる effect verb 不在 (charStackCard は remove/hand/deck source のみ、sceneStackUnderSelf は cost 専用) + 重ねた場合の条件付き突撃[キャラ] 付与 |
@@ -1244,7 +1244,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 
 | ID (+twins) | blocker 要旨 |
 |---|---|
-| B01009 | 手札内 continuous level 上書き不在 (levelAllowed は def.level 静読、B09095 と同 cluster) |
+| ~~B01009~~ | ✅ 出荷済 (2026-07-10 mini-wave #4: lvlOverrideInHand、B09095 と同 wave) |
 | B01070 | 「このキャラを指定してアクション」= target=self gate 不在 (triggerCharMatches に includeSource 系 field 無し、side:self では over-fire) |
 | B02013 | set-host への grantKeywords が closure 型で JSON 不可 (on-set-host 継続 rider の keyword 版) |
 | B02039 | set-card を表向き証拠として持ち主が得る verb 不在 |
@@ -1269,7 +1269,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B07003 | 手札内カードへのカットイン能力動的付与不在 (isCutInCard は印字判定) |
 | B07011 | じゃんけん RNG primitive 不在 (P48、既知) |
 
-**cluster 追記 (batch3 と合算した mini-wave 優先度)**: ⑥next-hint 判別 hook + 使用カード参照 dyn (B01005/B03002/B05005/B02087 = 4 unit) ⑦「選ばれたとき無効」intercept (B02067/B04003) ⑧hand 内 continuous (B01009/B09095/B07003)。
+**cluster 追記 (batch3 と合算した mini-wave 優先度)**: ~~⑥next-hint 判別~~ ✅ mini-wave #2 出荷済 ⑦「選ばれたとき無効」intercept (B02067/B04003) ~~⑧hand 内 continuous level~~ ✅ mini-wave #4 出荷済 (B01009/B09095。B07003 は cutin 動的付与 = 別機構で DEFER 継続)。
 
 ## hybrid-batch5 由来 DEFER (2026-07-10、2行 pool 最終 14 unit 中 7 DEFER。全文 = .tmp/_batch5_defers.txt)
 

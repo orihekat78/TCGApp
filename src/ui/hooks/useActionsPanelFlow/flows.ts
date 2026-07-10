@@ -11,7 +11,7 @@ import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
-import { handUseColorIgnoreAllowed } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像
+import { handUseColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 + mini-wave#4 hand level
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
@@ -149,12 +149,15 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
     if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))
       && !handUseColorIgnoreAllowed(state, p, cardId)) return null;
     // レベル ≤ postPopCount (rules/12)
-    if (d.level !== undefined && d.level > postPopCount) return null;
+    // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) — engine gate (next-hint.ts
+    //   effectiveHandLevel) と鏡像。表示 level も有効値 (公式 QA: 手札にある間はそのレベル)。
+    const lvl = effectiveHandLevel(state, p, cardId);
+    if (lvl !== undefined && lvl > postPopCount) return null;
     return {
       cardId,
       source,
       name: d.names?.[0] ?? cardId,
-      level: d.level ?? 0,
+      level: lvl ?? 0,
       kind: d.kind,
     };
   };
