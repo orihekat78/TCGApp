@@ -20,6 +20,10 @@
   driver = [.claude/specs/completion-roadmap-2026-07-10.md](specs/completion-roadmap-2026-07-10.md)。
   在庫の真実 = 実作業 **163 unit** (in-pool DEFER) + ride-along P 108 + ✅spread 済 39
   (`scripts/gen-p-spread.cjs` 新設、毎 session 末尾に随伴実行)。session 割当は roadmap 表参照。
+  **次 = mini-wave #5 (deck-reveal 拡張、grounding 済)**: 設計全文 =
+  [specs/miniwave5-deck-reveal-grounding.md](specs/miniwave5-deck-reveal-grounding.md)。
+  P3 B03049+P (fromBottom param、T2小) → P2 B05047 (deckPlaceSplitBound+新modal、T2+PW) → P1 B01022 (T3、切離し可)。
+  worktree megaw1 branch `engine/miniwave5-deck-reveal` 作成済 (着手時 origin/main rebase)。
   **★hybrid pipeline 完了 (2026-07-10 朝、refuse 1-4行 全層枯渇)** — 残 = DEFER cluster のみ。engine mini-wave 進行中: **①②④ + #3 小粒 verb + #4 出荷済**。
   **#4 = hand 内 continuous level 出荷済 (2026-07-10 朝)**: lvlOverrideInHand/lvlDeltaInHand +
   effectiveHandLevel helper (hand-use-card.ts) を 4 site (levelAllowed / next-hint step2 / UI

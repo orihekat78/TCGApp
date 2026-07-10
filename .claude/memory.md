@@ -25,3 +25,9 @@
 - probe 教訓: beforeEach 再登録は **event._resetRegistry() 必須** (欠くと triggered handler 累積 → N 重
   発火で偽 refresh 発生。miniwave3 慣行) / mutate.file.popTop は produce draft 内でのみ (Immer current)。
 - gates: tsc0 / vitest 4604+1skip / smoke 472 exc0 / 8lint0 / crosscheck 14/14 / 混成 2-lens review。
+- P-spread sweep session (別 lane、92feeeca): 残 325 の機械 inventory → 40 spread-ready 発見 →
+  scripts/gen-p-spread.cjs 新設で 39 printings 出荷 (1749→1788、B05086P データ差除外、B02076P G1 exceptions)。
+  10-15 session 完了 roadmap = specs/completion-roadmap-2026-07-10.md 起票 (実作業 163 unit)。
+  mini-wave #5 (deck-reveal) は grounding 済 = specs/miniwave5-deck-reveal-grounding.md (P3 T2小/P2 T2+PW/P1 T3)、
+  実装は次 session。worktree megaw1 branch engine/miniwave5-deck-reveal 作成済 (rebase 要)。
+  ⚠ 本端末は gitignored 蓄積 (dist-meta 等) で structure.md を clean 生成不能 → HEAD 復元 + docs は worktree 側で。
