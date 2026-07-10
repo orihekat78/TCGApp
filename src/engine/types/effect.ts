@@ -576,7 +576,9 @@ export type Cost =
   //   hostSelf (attribution mini-wave 2026-07-10, B08041「**このキャラに**裏向きでセットされている
   //   カードを1枚リムーブする」): true で host を能力使用キャラ自身 (ctx.source.uid) に限定。
   //   未指定 = 従来通り自陣全キャラ (B08033「現場にいるキャラに〜」)。
-  | { kind: 'removeSetCard'; n: number; hostSelf?: boolean }
+  //   anyFace (夜間 W0 2026-07-11, B05052「現場にいるキャラにセットされているカードを1枚リムーブする」—
+  //   裏向き限定句なし): true で表裏不問に計数/除去。未指定 = 従来通り裏向きのみ (B08033/B09027 挙動不変)。
+  | { kind: 'removeSetCard'; n: number; hostSelf?: boolean; anyFace?: boolean }
   // M2後半 (2026-07-10, B06003 a1): 〚ターン終了時までLP-2する〛— 自身への turn-scope LP デルタ cost。
   //   canPay 恒真 (LP 下限なし rules/19、公式Q&A: LP1以下でも支払可・負値可)。pay = lpMod_turn 書込
   //   (mutate.char.modifyLP scope:'turn'、clearTurnEffects で失効)。emit なし — rules/21 コストで

@@ -3,6 +3,24 @@
 本ファイルは「実装はあるが未完成 or 未着手で先送りされた」項目の集約 INDEX。
 新規 defer を生んだ commit / session log は必ずここに 1 行追加すること。
 
+## ★夜間 W0 上書き節 (2026-07-11 night-run — 本節が下方の旧 DEFER 行より優先)
+
+**✅出荷済 (旧 DEFER 行は全て stale)**: B07099 / B01020 / B03111(+P) / B01077 / B07102 /
+B05117(+P) / **B09027(+P) = cost kind:'choice' human UI 初 consumer** (flows.ts 3.6 ChoicePicker +
+findChoiceCost) / **B05052** (removeSetCard `anyFace` cost param 追加) / **B08019(+P) =
+EffectPickerModal multi-select mode 初 consumer** (nMax>1 + perSideMax quota + 確定 button、
+e2e night-w0-cost-choice-multipick.spec.ts で実機検証)。
+
+**DEFER 更新 (再 grounding 済の正確な blocker)**:
+| ID | blocker (2026-07-11 実測) |
+|----|--------------------------|
+| B09081 | a2 ヒラメキが optional{chain} — hiramekiResolve (useEngineDispatch.ts:172) が resolveEffectPicks を humanChooser 無しで呼び optional が空 collapse。B06032 と同根 (hirameki optional humanChooser 配線) — Wave C で同時解禁 |
+| B09052 | cutin 経路 declareName の dyn が queue 越しに渡らず AP+0 機能不全 (B01095 同根) + rename「そのキャラ以外」の excludeBoundKey 不在 |
+| B09110 | deckRevealUntil maxN mode が match 早期停止せず + matched を $revealed から除外 / 「このキャラをリムーブ」が PA 常駐時に不達 (scene 限定 findChar) — Wave B の $removed snapshot cluster と別 gate |
+
+**新規 BUG**: BUG-186 (sceneEnter 短縮形 side 絶対値 → owner=opp 反転、**修正済同 commit**) /
+BUG-187 (hand 系 atom ~10 site 同族 latent、未着手 — 個別 probe 付きで対応)。
+
 ## 公式 defer 宣言済 (専用ファイルあり)
 
 | Phase | 内容 | 専用 spec |

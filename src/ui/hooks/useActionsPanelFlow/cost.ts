@@ -49,7 +49,7 @@ export function costToText(cost: Cost, resolve?: { state: GameState; ctx: Effect
     case 'sceneToDeckBottom': return `現場のキャラ ${cost.n} 枚をデッキの下へ`; // Task D E2
     case 'removeAreaToDeckBottom': return `リムーブエリアの ${cost.n} 枚をデッキの下へ`; // cluster4 (2026-06-14)
     case 'partnerAreaRemove': return `パートナーエリアのカード ${cost.n} 枚をリムーブ`; // engine defer-unlock mini-wave (2026-07-09, B07039)
-    case 'removeSetCard':     return `裏向きセットされたカードを ${cost.n} 枚リムーブ`; // engine additive wave (2026-06-24)
+    case 'removeSetCard':     return cost.anyFace ? `セットされているカードを ${cost.n} 枚リムーブ` : `裏向きセットされたカードを ${cost.n} 枚リムーブ`; // engine additive wave (2026-06-24) / anyFace 夜間W0 (B05052)
     case 'sceneStackUnderSelf': return `現場のキャラ ${cost.n} 枚をこのキャラの下に重ねる`; // engine mega-wave W4 r6 (B09048)
     case 'handStackUnder':    return '手札のカード1枚を公開して現場のキャラの下に重ねる'; // engine mega-wave W4 r7 (B08006)
     case 'pay':               return cost.items.map(i => costToText(i, resolve)).join(' + ');
@@ -82,6 +82,25 @@ export function findFlipFaceUpCost(cost: Cost | undefined): FlipFaceUpCost | nul
   if (cost.kind === 'pay' || cost.kind === 'choice') {
     for (const item of cost.items) {
       const found = findFlipFaceUpCost(item);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/**
+ * 夜間 W0 (2026-07-11, B09027): cost の中から choice (「AかBをリムーブする」択一コスト) を探す。
+ * engine cost.pay は ctx.dyn.costChoice (readChosenIndex) 未供給時 first-payable auto-select に
+ * 落ちるため、human 経路は dispatch 前に branch index を選んで costParams.costChoice へ積む。
+ * pay (複合) ネストにも備え再帰 (findFlipFaceUpCost と同姿勢)。choice の入れ子は現カード非存在。
+ */
+type ChoiceCost = Extract<Cost, { kind: 'choice' }>;
+export function findChoiceCost(cost: Cost | undefined): ChoiceCost | null {
+  if (!cost) return null;
+  if (cost.kind === 'choice') return cost;
+  if (cost.kind === 'pay') {
+    for (const item of cost.items) {
+      const found = findChoiceCost(item);
       if (found) return found;
     }
   }

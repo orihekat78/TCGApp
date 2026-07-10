@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `1d21fa05f0f8`
+> Source hash: `1f25cff9cba1`
 
 公式ルール [`25-qa-effects-resolution.md`](../../../rules/25-qa-effects-resolution.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -23,12 +23,13 @@
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-api-effect-descriptor`](../by-spec/engine-api-effect-descriptor.md)
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
+- [`B03111`](../by-spec/grounding--B03111.md)
 - [`B07100`](../by-spec/grounding--B07100.md)
 - [`B09019`](../by-spec/grounding--B09019.md)
 - [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 
-## 📄 参照ソース (37)
+## 📄 参照ソース (39)
 
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
 - [`src/cards/ct-d08/D08005.ts`](../../../../src/cards/ct-d08/D08005.ts)
@@ -37,6 +38,7 @@
 - [`src/cards/ct-p01/B01058.ts`](../../../../src/cards/ct-p01/B01058.ts)
 - [`src/cards/ct-p02/B02062.ts`](../../../../src/cards/ct-p02/B02062.ts)
 - [`src/cards/ct-p02/B02088.ts`](../../../../src/cards/ct-p02/B02088.ts)
+- [`src/cards/ct-p03/B03111.ts`](../../../../src/cards/ct-p03/B03111.ts)
 - [`src/cards/ct-p03/B03126.ts`](../../../../src/cards/ct-p03/B03126.ts)
 - [`src/cards/ct-p04/B04074.ts`](../../../../src/cards/ct-p04/B04074.ts)
 - [`src/cards/ct-p04/B04074P.ts`](../../../../src/cards/ct-p04/B04074P.ts)
@@ -49,5 +51,4 @@
 - [`src/cards/ct-p07/B07002.ts`](../../../../src/cards/ct-p07/B07002.ts)
 - [`src/cards/ct-p07/B07026.ts`](../../../../src/cards/ct-p07/B07026.ts)
 - [`src/cards/ct-p07/B07100.ts`](../../../../src/cards/ct-p07/B07100.ts)
-- [`src/cards/ct-p08/B08046.ts`](../../../../src/cards/ct-p08/B08046.ts)
-- _...ほか 17 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 19 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

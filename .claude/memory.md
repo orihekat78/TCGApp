@@ -23,3 +23,16 @@
 - ★水平展開: rules/19 複数名 names 分割漏れ 23 枚発覚→BUG-185 一括修正 + names-split.lint.test 恒久 gate
 - triage 二次 finding「B05106 chain で draw が decline でも走る」は**偽** — chain-origin skip は
   「そうした場合」gate で remainder skip (apply-pick.ts:228-230 実読)。chain = 正しい idiom
+
+## 2026-07-11 夜間自走 Wave 0 (session night-run)
+- W0 出荷: cost-choice UI (flows 3.6 ChoicePicker, B09027+P) + EffectPickerModal multi-select
+  (perSideMax quota + nMin clamp, B08019+P) + removeSetCard anyFace (B05052) + GREEN 6
+  (B07099/B01020/B03111+P/B01077/B07102/B05117+P) = +13 printings (1903→1916)。
+- ★BUG-186 修正: sceneEnter 短縮形 side 絶対値渡し→owner=opp 反転 (BUG-174 同族)。
+  水平展開: hand 系 atom ~10 site 同族 latent = BUG-187 起票 (discard は B01077 probe pass だが
+  fixture 対称性の偽陰性可能性 — side 非対称 fixture で要再検証)。
+- 原則 DEFER 3: B09081 (hirameki optional humanChooser 無し collapse、B06032 同根) /
+  B09052 (cutin declareName dyn queue 不達 B01095 同根 + excludeBoundKey 不在) /
+  B09110 (deckRevealUntil match 早期停止不在 + PA self-remove 不達)。
+- grantKeywords は関数 shape (`() => ['突撃']`) — 配列 literal は grantFn is not a function (read/char.ts:441)。
+- e2e buildGameState fixture callback は page serialize — 外側 closure helper 参照不可、inline 必須。

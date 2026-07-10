@@ -1444,6 +1444,20 @@ import { B08093P } from '../ct-p08/B08093P.js';
 
 
 
+import { B01020 } from '../ct-p01/B01020.js';
+import { B01077 } from '../ct-p01/B01077.js';
+import { B03111 } from '../ct-p03/B03111.js';
+import { B05052 } from '../ct-p05/B05052.js';
+import { B05117 } from '../ct-p05/B05117.js';
+import { B07099 } from '../ct-p07/B07099.js';
+import { B07102 } from '../ct-p07/B07102.js';
+import { B08019 } from '../ct-p08/B08019.js';
+import { B08019P } from '../ct-p08/B08019P.js';
+import { B09027 } from '../ct-p09/B09027.js';
+import { B09027P } from '../ct-p09/B09027P.js';
+import { B03111P } from '../ct-p03/B03111P.js';
+import { B05117P } from '../ct-p05/B05117P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1868,4 +1882,8 @@ export const REUSE_CARDS: CardDef[] = [
   B05107P, B06003P, B06066P, B08047P, B08068P, B09019P,
   // M3 PA batch (2026-07-10): PA宣言 MR 3 unit + P twin (scope on-partner-area 解禁)
   B06037, B06037P, B08046, B08046P, B08093, B08093P,
+  // night-w0: stale-DEFER GREEN 6 + cost-choice UI 2 + multi-pick UI 1 (2026-07-11)
+  B01020, B01077, B03111, B05052, B05117, B07099, B07102, B08019, B08019P, B09027, B09027P,
+  // night-w0 P spread (B03111P/B05117P)
+  B03111P, B05117P,
 ];

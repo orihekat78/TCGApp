@@ -135,7 +135,10 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       // sourceSplice (remove/evidence から実体除去) は解決後の本処理が target.query.area を見て行う。
       if (a.cardId === undefined && typeof a.from === 'string' && hasNorMax(a)) {
         const seP0 = resolvePlayer(a.player, ctx);
-        const seTarget = buildShortFormPick(a.from, a, seP0, seP0);
+        // BUG-186 (夜間 W0 2026-07-11): side は相対値のまま渡す (sidesForQuery が owner 相対解釈)。
+        // 旧実装は解決済み絶対値 seP0 を渡しており、owner='opp' で side が反転し候補 0 になっていた
+        // (BUG-174 と同族。sceneToDeck/sceneSetState は相対渡しで正しい)。chooser は絶対値のままで正。
+        const seTarget = buildShortFormPick(a.from, a, seP0, (a.player as 'self' | 'opp' | undefined) ?? 'self');
         tryRePickFromAtom(s, { kind: 'atom', verb, args: { ...a, cardId: '$pick.cardId', target: seTarget } }, ctx, { byPlayer: seP0, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: seP0, turn: s.turn.number, action: 'effect:sceneEnter:awaiting-pick' });
         return;

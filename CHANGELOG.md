@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `ec29f4513084`
+> Source hash: `10552af3918f`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,25 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## 夜間自走 Wave 0 — cost-choice UI + multi-pick UI + stale-DEFER GREEN 6 (+13 printings、1903→1916)
+
+- **cost kind:'choice' human 選択 UI** (B09027 大岡紅葉 +P 初 consumer): flows.ts 3.6 に
+  ChoicePicker branch 選択を追加 (canPay で payable 絞り、1 択 auto / 0 択防御)。
+  costChoice → ctx.dyn 配線は既存 (ability-activate.ts) — 欠けていた human picker 1 段のみ追加。
+- **EffectPickerModal multi-select mode** (B08019 大岡紅葉＆伊織無我 +P 初 consumer):
+  nMax>1 で toggle 選択 + perSideMax quota (「自分と相手で1枚ずつ」) + nMin の実選択可能数 clamp
+  (soft-lock 防止) + 確定 button。e2e night-w0-cost-choice-multipick.spec.ts 2 本で実機検証。
+- **removeSetCard cost `anyFace` param** (B05052 工藤優作): 「セットされているカード」(裏向き限定
+  句なし) を表裏不問で計数/除去。default 従来挙動 (裏向きのみ)。
+- **stale-DEFER GREEN 6**: B07099 板倉卓 / B01020 毛利小五郎 / B03111 バーボン(+P) /
+  B01077 赤井…秀一!? / B07102 犯人 / B05117 コンコン(+P) — 全て既存 primitive の clone、engine 変更 0。
+- **BUG-186 修正**: sceneEnter 短縮形が pick side に絶対値を渡し owner='opp' で反転 (候補 0)。
+  相対値渡しに修正 (BUG-174 同族)。水平展開で hand 系 atom ~10 site の同族 latent を BUG-187 起票。
+- 原則 DEFER 3 (推測実装回避): B09081 (hirameki optional collapse) / B09052 (cutin declareName
+  dyn 不達) / B09110 (deckRevealUntil early-stop 不在 + PA self-remove 不達)。
+- gates: tsc 0 / vitest 5187 (+74) / smoke winsA=472 exceptions=0 / 8 lint err0 / crosscheck 14/14 /
+  e2e 新規 2 pass。
 
 ---
 date: 2026-07-10

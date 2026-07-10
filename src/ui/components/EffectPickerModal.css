@@ -112,3 +112,34 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* 夜間 W0 (2026-07-11, B08019 a2): multi-select mode (合わせてN枚 + 各陣営quota) */
+.effect-picker-cand--selected {
+  outline: 2px solid #7fd47f;
+  background: #2a4030;
+}
+
+.cand-selected-mark {
+  color: #7fd47f;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.effect-picker-confirm {
+  padding: 6px 18px;
+  border: 1px solid #4a7050;
+  background: #2a5030;
+  color: #d8e8d8;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.effect-picker-confirm:hover:not(:disabled) {
+  background: #3a7040;
+}
+
+.effect-picker-confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -284,7 +284,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
         let need = cost.n;
         for (const c of state.players[p].scene) {
           if (!hostOk(c.uid)) continue;
-          let fd = c.setCards.filter(e => !e.faceUp).length;
+          // anyFace (夜間 W0 2026-07-11, B05052): 表裏不問に計数。未指定は従来通り裏向きのみ。
+          let fd = cost.anyFace ? c.setCards.length : c.setCards.filter(e => !e.faceUp).length;
           while (fd > 0 && need > 0) { uids.push(c.uid); fd--; need--; }
           if (need === 0) break;
         }
@@ -293,7 +294,10 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       // 「リムーブしたカードがキャラ/イベントの場合」) が読む。kinds は各除去カードの印字種別。
       const rscIds: string[] = [];
       for (const uid of uids) {
-        const removed = mutate.char.removeOneSetCard(state, uid, { faceDownOnly: true, cause: 'cost' });
+        const removed = mutate.char.removeOneSetCard(
+          state, uid,
+          cost.anyFace ? { cause: 'cost' } : { faceDownOnly: true, cause: 'cost' },
+        );
         if (removed) {
           rscIds.push(removed);
           acc.paidItems.push({ kind: 'removeSetCard', details: { hostUid: uid, setCardId: removed } });

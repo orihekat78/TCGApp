@@ -211,6 +211,12 @@ export type PendingEffectPick = {
    * skip を封じる (human enforce は UI が唯一の層)。unclamped — min(forced.length, nMax) 枚必須。
    */
   forcedUids?: string[];
+  /**
+   * 夜間 W0 (2026-07-11, B08019 a2): perSideMax quota (「自分と相手で1枚ずつ」) を UI multi-select
+   * に伝達 (engine 側 PendingEffectPickSide.perSideMax と同 shape、resolve-picks.ts が伝播済)。
+   * EffectPickerModal multi mode が side 別選択数を quota で click 不可化する (human enforce は UI 層)。
+   */
+  perSideMax?: number;
 };
 
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */

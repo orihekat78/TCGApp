@@ -126,10 +126,11 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     // テキスト「裏向きで」ゆえ faceUp:true (表向きセット) は数えない。
     case 'removeSetCard': {
       // hostSelf (attribution mini-wave 2026-07-10, B08041): host = 能力使用キャラ自身のみ数える。
+      // anyFace (夜間 W0 2026-07-11, B05052): 表裏不問に計数。未指定は従来通り裏向きのみ。
       let count = 0;
       for (const c of state.players[ctx.source.player].scene) {
         if (cost.hostSelf && c.uid !== ctx.source.uid) continue;
-        count += c.setCards.filter(e => !e.faceUp).length;
+        count += cost.anyFace ? c.setCards.length : c.setCards.filter(e => !e.faceUp).length;
       }
       return count >= cost.n;
     }

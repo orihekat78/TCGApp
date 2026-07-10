@@ -15,7 +15,7 @@ import { handUseColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/mai
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, findDeclareNameAtom, choiceOptionLabel } from './cost.js';
+import { costToText, findFlipFaceUpCost, findChoiceCost, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
@@ -413,6 +413,43 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     // ctx.dyn.costParams.flipFaceUpEvidence.indices へ詰め替え (cost.pay が読む)、
     // costPaid.count → effect の $cost dyn にも繋がる (BUG-085 伝播)。
     costParams = { ...(costParams ?? {}), flipFaceUpEvidence: { indices: choice.indices } };
+  }
+
+  // 3.6) 夜間 W0 (2026-07-11, B09027): cost kind:'choice' (「AかBを1枚リムーブする」択一コスト) の
+  //   human branch 選択。engine cost.pay は ctx.dyn.costChoice 未供給時 first-payable auto-select
+  //   に落ち、human は 2 番目の branch を選べない (readChosenIndex, pay.ts)。payable branch を
+  //   canPay で絞り、2 択以上のときのみ ChoicePicker を出す (1 択は auto、0 択は防御 return —
+  //   can-check 列挙済のため通常到達しない)。選択 index → costParams.costChoice →
+  //   dispatcher (ability-activate.ts costParamsToDyn) が ctx.dyn.costChoice へ詰め替え。
+  const choiceCost = findChoiceCost(cost);
+  if (choiceCost && owner === 'self' && cardId) {
+    const ccState = useGameStateStore.getState().gameState;
+    if (ccState === null) return { ok: false, reason: 'no-state' };
+    const ccCtx = makeAbilityCtx({
+      player: owner,
+      uid: sourceUid,
+      cardId,
+      abilityId: chosenAbilId,
+      area: sourceArea,
+    });
+    const payable = choiceCost.items
+      .map((item, index) => ({
+        index,
+        label: costToText(item, { state: ccState, ctx: ccCtx }),
+        ok: engine.cost.canPay(ccState, item, ccCtx),
+      }))
+      .filter((o) => o.ok);
+    if (payable.length === 0) return { ok: false, reason: 'not-allowed' };
+    if (payable.length === 1) {
+      costParams = { ...(costParams ?? {}), costChoice: payable[0].index };
+    } else {
+      const choice = await useChoicePicker().ask({
+        sourceName,
+        options: payable.map(({ index, label }) => ({ index, label })),
+      });
+      if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+      costParams = { ...(costParams ?? {}), costChoice: choice.index };
+    }
   }
 
   // 3.7) BUG-108: 複数 option を持つ top-level choice effect (D11012 a1「LP＋1するか / AP＋2000する」)
