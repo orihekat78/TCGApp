@@ -15,7 +15,7 @@
   probe 57 + e2e m3-pa-mr-declared.spec.ts / BUG-185 (rules/19 names 分割漏れ 23 枚) 一括修正 +
   names-split.lint 恒久 gate / compiler re-mine (match 1541) / UI_UNLOCKED 12 枚 (B05106 B06003
   B07065 B05005 B09108 B05086 B06084 B06098 B06074 等) も本 UI で解禁済。
-- **★次 = M3 残: SMALL_GAP mini-wave** — triage 確定 11 unit (specs/grounding/m3-triage-unregistered.md +
+- **★次 = 夜間自走 run: [specs/night-run-2026-07-11.md](specs/night-run-2026-07-11.md) を driver に Wave 0→A→B→C→D を順に実行** (残 80 rep 全分類済 = specs/grounding/defer80-classified.json。hybrid pool は枯渇 — selectedUnits 0 実測)。旧記述 (M3 残 SMALL_GAP) は Wave A/B に統合済: — triage 確定 11 unit (specs/grounding/m3-triage-unregistered.md +
   DEFERRED-INDEX「M3 PA batch SMALL_GAP」節)。engine 3 cluster: ①paCards source zone 統合
   (B07049/B09039/B09055) ②toPartnerArea pick 型 (B07030/B07061) ③removed-card snapshot root
   (B08002/B09110、B09109 は costPaid cardName 1 行) + B09027 cost-choice UI + B08019 scope 配列。

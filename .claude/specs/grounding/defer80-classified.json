@@ -1,0 +1,562 @@
+[
+ {
+  "rep": "B07011",
+  "gap": "じゃんけん RNG primitive 不在 (P48 既知cluster)",
+  "kind": "BLOCKED",
+  "printings": 1,
+  "note": "src/engine 全域 grep 0件 (janken/RNG/coinFlip 皆無)。新規乱数勝敗判定機構の設計が必要。DEFER記述と一致、stale無し。"
+ },
+ {
+  "rep": "B07030",
+  "gap": "toPartnerArea に cardIds pick 契約追加",
+  "kind": "param-extension",
+  "printings": 2,
+  "note": "atomToPartnerArea(atom-handlers/core.ts:484)は source.cardId固定self-onlyのみ。charSetCard等と同型でpick対応要。a2 partnerAreaRemove+sceneEnterはGREEN。"
+ },
+ {
+  "rep": "B07063",
+  "gap": "charGrantAbility に leave:to-remove hook grant 許可",
+  "kind": "additive-hook",
+  "printings": 2,
+  "note": "validate.ts:197-198が現在も禁止中(grep実測で確認、stale無し)。on-set-hostリバイダ走査(triggered.ts:651-669)と同型でgrantedAbilities走査拡張が要る。"
+ },
+ {
+  "rep": "B07099",
+  "gap": "無し (既存 exemplar で解禁済)",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 1,
+  "note": "B03116(src/cards/ct-p03/B03116.ts a1)がtrigger.hook:'leave:to-remove'+selfOnly+matcherCondition removedCharMatches{cause:'effect',byPlayer:'self'}の完全同型exemplar。DEFER記述はstale。facedownヒラメキも既存GREEN。"
+ },
+ {
+  "rep": "B08002",
+  "gap": "$removed.level 静的スナップショット root 追加",
+  "kind": "additive-dyn",
+  "printings": 2,
+  "note": "dyn/eval.ts:541-547の$bound.<key>.levelは都度re-readで除去済キャラは取れない。$discarded.level(dyn/eval.ts:20)と同型で新設要。a2 charStackCardはGREEN。"
+ },
+ {
+  "rep": "B08003",
+  "gap": "stackedCards の identity 保持 GameState 形状変更",
+  "kind": "structural",
+  "printings": 2,
+  "note": "SceneCharacter.stackedCards(types/game-state.ts:54)はnumberのみ。既存の重ねカード全カードのcount-only契約を壊すcross-cutting変更、W6級。"
+ },
+ {
+  "rep": "B08017",
+  "gap": "「相手の能力や効果によって選ばれない」select-protection token",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "opponentRestrict/selectProtect等grep0件、engine全域に選択免疫の概念自体が不存在。全select site(target/candidates.ts)へ配線する新規機構設計が要る。"
+ },
+ {
+  "rep": "B08019",
+  "gap": "SceneArea 両陣営 multi-pick 収集 UI",
+  "kind": "UI",
+  "printings": 2,
+  "note": "perSideMax(atom-pick-spec.ts:119-120)はengine実装済だがSceneAreaが単発dispatchへcollapse(BUG-165同型)。engine parts(a1トリガ/a2条件)は全てGREEN。"
+ },
+ {
+  "rep": "B08078",
+  "gap": "リムーブエリアの keyword 保有計数 Condition 追加",
+  "kind": "additive-cond",
+  "printings": 2,
+  "note": "invokeLeaveToRemoveOfCard(atom-handlers/core.ts:892)は既に出荷済。removeTraitAtLeast(cond/eval.ts:305)型のkeyword版(『現場リムーブ時』保有枚数)が不在、a1宣言前提に必要。"
+ },
+ {
+  "rep": "B08081",
+  "gap": "選択時 intercept + 即時無効化 hook",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "select-intercept hook(『選ばれたとき』即時反応)がtypes/hooks.tsに不存在、grep0件。cluster⑦(B02067/B04003も未登録)全体が同一新規機構待ち。"
+ },
+ {
+  "rep": "B04073",
+  "gap": "action:guarded payload に targetUid 同梱 (対象キャラ識別)",
+  "kind": "additive-hook",
+  "printings": 1,
+  "note": "実測: state-machine.ts:298 payload={byUid,guardUid}のみ、ax.target.uidは未emit。他ロジック変更不要、hook payload拡張のみ。DEFER記述は今も正確(stale無し)。"
+ },
+ {
+  "rep": "B04084",
+  "gap": "sum制約multi-pick(レベル合計上限) + split-state deploy(1枚active+残りsleep登場)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "実測: sceneEnter multi-cardIdsはenterOptsM.activeを全カード一律適用(scene.ts:42-45)、per-card state分岐皆無。sum制約pickも候補列挙側に前例なし。2機構要新設。"
+ },
+ {
+  "rep": "B05033",
+  "gap": "altCostProvider: 【宣言】能力コスト支払いの代替(このキャラをリムーブして肩代わり)分岐",
+  "kind": "structural",
+  "printings": 1,
+  "note": "実測: useDeclaredAbility(declared-ability.ts:182)にalt-cost分岐皆無、altCost/costProvider系grep全滅。ability-activate cost dispatchへの新分岐+【ターン1】独立カウント考慮要。"
+ },
+ {
+  "rep": "B05093",
+  "gap": "pick.chooser='opp' (相手が選び自分が得る) の実配線 — cross-player UI dispatch",
+  "kind": "structural",
+  "printings": 2,
+  "note": "実測: TargetQuery pick型にchooser fieldは存在(effect.ts:360)するが、resolve-picks.tsのpick解決本体(319行以降)は一切読まず常にowner-pick化。UI/apply-pick継続の複数箇所配線要。"
+ },
+ {
+  "rep": "B05101",
+  "gap": "charGrantTrait/charRevokeTrait 永続verb (特徴の恒久的付与/剥奪、charGrantKeyword scope機構の clone)",
+  "kind": "additive-verb",
+  "printings": 1,
+  "note": "実測: trait変更verb皆無(grep全滅)。revival(sceneEnter from:remove sleep)・draw・optionalは既存で組める。charGrantKeyword/RevokeKeyword(char.ts:121-149、scope=permanent/turn)を型として複製すれば解禁。変装引継ぎ(rules/23)は既存permanent効果と同経路。"
+ },
+ {
+  "rep": "B06023",
+  "gap": "hirameki invoke-by-cardId (evidence:remove-by-action外での、選択した特定カードの【ヒラメキ】効果を単独起動する新verb)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "実測: flipFaceUpEvidence costはindices記録済(pay.ts:394-400、identity復元は state.evidence[idx].cardId読取で可)なので『count記録のみ』は一部stale。真の欠落はcross-card hirameki invoke機構(listeners/hirameki.tsに該当関数皆無)。DEFERRED-INDEX 545行が既に'engine拡張要'と明記、B06034/B06036と共有blocker。"
+ },
+ {
+  "rep": "B06027",
+  "gap": "sceneEnter source area union に 'evidence' 追加 (証拠→現場、ヒラメキ内自己再登場のreplacement意味論)",
+  "kind": "param-extension",
+  "printings": 1,
+  "note": "実測: atomSceneEnterのsrcArea型は'remove'|'hand'|'deck'のみ(scene.ts:47)、evidence未対応。remove/hand/deckと同型splice機構の第4areaとして追加すれば解禁(ただしevidence配列要素は形状が異なるため単純追加ではない)。"
+ },
+ {
+  "rep": "B06032",
+  "gap": "hiramekiResolve dispatch (useEngineDispatch.ts:204) が humanChooser:true を渡さず top-level optional が常時skip — hirameki専用 resume/continuation機構の新設",
+  "kind": "structural",
+  "printings": 2,
+  "note": "実測確認: resolveEffectPicks呼出でopts.humanChooserが未設定→resolve-picks.ts 'optional'caseが常にAI-skip分岐へ。BUG-145同族の実バグ。単純フラグ変更では済まず、hirameki用pendingOptional surface+resume機構が要る。"
+ },
+ {
+  "rep": "B06036",
+  "gap": "hirameki invoke-by-cardId (B06023と同一機構、事件カード【宣言】版)",
+  "kind": "structural",
+  "printings": 2,
+  "note": "B06023と全く同じblocker(flipFaceUpEvidence cost→複数flip済カードから1枚選びその【ヒラメキ】を起動)。DEFERRED-INDEX 545行のクラスタに直接記載。同一engine作業で両方解禁可能。"
+ },
+ {
+  "rep": "B06042",
+  "gap": "charGrantAbility type強制修正(type:'declared'反映) + findDeclaredAbility の turnEffects.grantedAbilities走査 + granted複数付与時の独立【ターン1】カウント",
+  "kind": "structural",
+  "printings": 2,
+  "note": "実測確認: char.ts:189で type:'triggered' 固定を再確認、stale無し。3点要修正済み構造的gapとしてdossier記載通り。B07001も同cluster(VERIFY_NG)。"
+ },
+ {
+  "rep": "B01020",
+  "gap": "none — untargetableByActionAura+condition reuse",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 1,
+  "note": "DEFER stale (書かれた後 W6 step5 出荷)。read/char.ts:199 auraUntargetableByAction + target-expander.ts:143 が levelMax filter aura 対応済。ability.condition{charStateIs self sleep}+continuousModifier.untargetableByActionAura:{levelMax:4} で B04072(src/cards/ct-p04/B04072.ts)同型 clone 可"
+ },
+ {
+  "rep": "B01092",
+  "gap": "leave-intercept human accept/decline window (state-machine phase)",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "consult-leave-intercept.ts:32-36 に明記: optional intercept は現状AI-onlyで所有側human なら素通し。human window は別increment に明示DEFER (row9 risks(e))。新state-machine phase設計要、非stale"
+ },
+ {
+  "rep": "B02022",
+  "gap": "self-declared mustBeTargeted + turn-once consume-on-check (G28拡張)",
+  "kind": "structural",
+  "printings": 2,
+  "note": "G28 turnEffects.mustBeTargeted (target-expander.ts) は外部effect付与+opp turn end解除の taunt専用、pure read fn。B02022は自身の継続宣言+「指定できたか問わず宣言ごとに1回消費」= 新turn-scoped flag + declare時mutation を候補計算に混在させる配線要 (2+箇所)"
+ },
+ {
+  "rep": "B03008",
+  "gap": "becomes-sleep state-transition hook (state:change emit)",
+  "kind": "additive-hook",
+  "printings": 1,
+  "note": "hooks.ts:96 に'state:change'型宣言のみ、emit箇所0件(grep実測)。汎用active→sleep遷移hook + listener新設要、DEFER記述と一致・非stale"
+ },
+ {
+  "rep": "B03040",
+  "gap": "peekOwnEvidence verb + evidence:gain emit(self-attribution)",
+  "kind": "additive-hook",
+  "printings": 1,
+  "note": "hooks.ts:101 'evidence:gain'型宣言のみ、emit 0件(grep実測)。自証拠top1枚peek(reveal→restore、handReveal atomと同idiom)verbも不在。両方小粒additiveだが2点必要"
+ },
+ {
+  "rep": "B03063",
+  "gap": "pick n/max が {dyn} 未対応 (hasNorMax literal-number限定)",
+  "kind": "param-extension",
+  "printings": 1,
+  "note": "_shared.ts:333 hasNorMax は typeof==='number'限定でdyn objectをgate。$self.sceneTrait.<trait> dynは既存(dyn/eval.ts:322)で計数可能なので、pick n/max resolutionをisDynObject対応に拡張するだけで解禁 (AP+1000側は既存turn-scoped filter aura で別途対応可)"
+ },
+ {
+  "rep": "B03093",
+  "gap": "untargetable-by-opp-event-pick predicate (effect-pick時排除)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "既存untargetableByAction/Auraはaction対象限定。B03093は「相手のイベント効果によるpick」から除外必須(能力/効果は選べる=対象限定的)。resolve-picks.ts/candidates.tsにevent-use限定の負filter新設要、8枚clusterの一角(DEFER記述と一致・非stale)"
+ },
+ {
+  "rep": "B03111",
+  "gap": "none — discard chooser:'source' reuse",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 2,
+  "note": "DEFER stale。core.ts:60-66 chooser:'source'(M2後半, B07100)が本日出荷済、手札所有者≠pick chooser分離を実現。B07100(src/cards/ct-p07/B07100.ts)を filter levelMax:7・conditional無しでclone可(reveal log→discard chooser:source→相手remove)"
+ },
+ {
+  "rep": "B04042",
+  "gap": "aggregate-selection-budget (sum≤N) multi-pick制約",
+  "kind": "structural",
+  "printings": 2,
+  "note": "「レベル合計10以下になるよう2枚まで選ぶ」= 組合せ制約selection。grep 'budget'/'levelSum' in effect/atom-handlers = 0件、per-candidate filterのみでcross-selection集計制約なし。DEFER記述と一致・非stale"
+ },
+ {
+  "rep": "B04055",
+  "gap": "reveal-then-conditional-by-removed-char-trait (trigger払戻traitのdynamic filter注入)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "公開カードのfilterを離場キャラの動的特徴集合でパラメタ化する機構が不在(filterは静的指定のみ、grep 'removedTrait'/'triggerPayload.*trait'=0件)。trigger payloadのtrait集合をreveal-conditional atomへbindする新配線要。DEFER記述と一致・非stale"
+ },
+ {
+  "rep": "B09105",
+  "gap": "distinctLevel pick 検証 (distinctNames のレベル軸版)",
+  "kind": "param-extension",
+  "printings": 2,
+  "note": "distinctNames は target/resolve.ts:49 実装済(カード名分割)。「それぞれレベルの異なる」はレベル軸の同型 validation が resolve.ts/apply-pick.ts に不在。"
+ },
+ {
+  "rep": "B09112",
+  "gap": "resolveDynArgs pre-walk deferral を $declared.* に拡張",
+  "kind": "param-extension",
+  "printings": 2,
+  "note": "$declared.<key>.sceneNameCount dyn は dyn/eval.ts:585 に本カード専用で実装済。resolve-picks.ts:89 の未解決deferral正規表現が$boundのみ対応、$declared未対応でmaxNがNaN化(vitest probe実測済)。"
+ },
+ {
+  "rep": "D06013",
+  "gap": "pre-walk Pattern-A over-fire + $pick自己解決fallback 2点セット",
+  "kind": "structural",
+  "printings": 1,
+  "note": "grounding dossier自身がT3確定(2026-07-10 S2)。部品は全engine0だがunstable-if conditional then内Pattern-A pre-walk push抑止とatomSceneSetStateの$pick fallbackが両方必要。resolver hot-path=4lens+Playwright。"
+ },
+ {
+  "rep": "B05009",
+  "gap": "enter payload に sourcePlayer 追加 + enterSource side判定",
+  "kind": "param-extension",
+  "printings": 2,
+  "note": "enterSource cond(cond/eval.ts:812)はviaEffect+sourceFilterのみ実装。sourceCardId emit(scene.ts 4箇所)にsourcePlayer未同梱で「自分のキャラの能力」同側判定不可。"
+ },
+ {
+  "rep": "D10009",
+  "gap": "scene-source キャラを host 下に重ねる charStackCard 拡張",
+  "kind": "additive-verb",
+  "printings": 1,
+  "note": "charStackCard(char.ts:385)はremove/hand/deck source+fromSelf(自分をhost下)のみ対応。char.ts:392コメントで「現場のキャラを選びhost下」方向は別途verb要と明記、未実装。twin D10010同型。"
+ },
+ {
+  "rep": "B01006",
+  "gap": "untargetable-grant (target-selection-time 除外predicate)",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "capability完全不在(grep src/engine 選ばれない/untargetable=0hit)。全pick候補列挙(candidates.ts)横断のnew predicate+継続aura機構が要る新設計。engine-extension-upper-boundの主要gate候補(C04群8枚共通ブロッカー)。"
+ },
+ {
+  "rep": "B01070",
+  "gap": "triggerCharMatches に requireSource(自身がaction対象)field",
+  "kind": "param-extension",
+  "printings": 1,
+  "note": "excludeSource(cond/eval.ts:608)は逆方向(除外)のみ実装済。「このキャラを指定してアクション」=target===source要求フィールドが不在、side:selfのみだとover-fire。"
+ },
+ {
+  "rep": "B01077",
+  "gap": "(無し — discardRandom 実装・登録済)",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 1,
+  "note": "atomDiscardRandom実装済(atom-handlers/core.ts:184)、verb union(effect.ts:420)・dispatch(atom-handlers.ts:142)も登録済。DEFERRED-INDEX記述はstale、即author可。"
+ },
+ {
+  "rep": "B01082",
+  "gap": "cannotGuard/cannotAct 自己制限 + action対象除外 (3箇所配線)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "restrictsOpponent(read/char.ts:465)はopponent-aura型トークン限定で不適合(cannotGuard等grep0hit)。action.ts actor適格・guard適格・candidates.ts対象除外の3flow同時変更要。dossier曰くr74スコープ外、a2のみ出荷済。"
+ },
+ {
+  "rep": "B02039",
+  "gap": "setCard→証拠 verb + entry単位 pick UI",
+  "kind": "structural",
+  "printings": 1,
+  "note": "charRemoveSetCard(atom-handlers/scene.ts:364)はremoveのみでevidence化verb不在。個別setCardエントリ選択UIも未実装。dossier自身がM3 UI mega送りと明記。"
+ },
+ {
+  "rep": "B06095",
+  "gap": "全8エリア横断キャラ trait grant (scene限定のgrantKeywords/traitsを越える新aura機構)",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "cost(flipFaceUpEvidence n:{2,2})はB06013/B07062/B08094等で解禁済=stale部分あり。だが効果本体「自分の全8エリア(現場/PA/事件/デッキ/証拠/FILE/リムーブ/手札)のキャラに特徴付与」は現行read.char.traits/grantKeywords walkがscene(+on-set-host)限定で対応不可。新規cross-zone継続効果機構が要る。"
+ },
+ {
+  "rep": "B06103",
+  "gap": "turn-scoped カード名 use+summon ban (handUseRestrictFilterとは別mechanism)",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "handUseRestrictFilter(card-def.ts:241)はcase card発の character-filter型・全体制限。B06103は自キャラ発・ターン限定・カード名指定・手札使用+登場(効果含む)両方banという別軸。DEFERRED-INDEX 821行が現行code一致(handUseRestrictFilter探索でヒットなし)、stale化なし。"
+ },
+ {
+  "rep": "B07049",
+  "gap": "handAddFromRemove union-source (remove∪partner-area splice)",
+  "kind": "additive-verb",
+  "printings": 1,
+  "note": "TargetQuery.area配列union(PR234, e1606037出荷済)でcandidate列挙自体はremove+partner-area横断可能になったが、atomHandAddFromRemove(core.ts:1012-1035)のsplice先はs.players[p].removeにハードコード。candidateの実出自areaで分岐するよう拡張が必要=cluster1が未完了(今夜計画通り)。"
+ },
+ {
+  "rep": "B07061",
+  "gap": "toPartnerArea target/pick 化 (現状 ctx.source.cardId 固定=self専用)",
+  "kind": "param-extension",
+  "printings": 2,
+  "note": "atomToPartnerArea(core.ts:486-501)はpick/target引数を一切持たずctx.source.cardId固定。removeAreaToDeckTop(同ファイル985行〜)が既にtarget/pick対応済の同型なので、そのパターンを流用したparam拡張で解禁可能。DEFERRED-INDEXのblocker記述は現行codeと一致(stale無し)。"
+ },
+ {
+  "rep": "B07102",
+  "gap": "(解消済) bind+$bound.count+draw{dyn}既存、cutinTextIncludes:''をhasCutin代替に転用",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 1,
+  "note": "DEFERRED-INDEXの「可変枚数select+count結合dyn不在」はstale。mini-wave#3(2026-07-10、B05092「手札から4枚まで好きな順デッキ下、移した枚数と同じ数引く」)がatomDiscard/atomHandToDeckBottomのbind + $bound.<key>.count dyn + draw{n:{dyn}}を同日出荷済(core.ts:56-101,103〜,14-29, eval.ts:508)。B07102「好きな枚数リムーブ→同数引く」は同型でauthor可。色黒フィルタ+「カットインを持つ」はcutinTextIncludes:''(空文字.includes('')は常にtrue)をabilityIsCutin gateと組合せてhasCutin相当として使える(keyword.ts:34)。"
+ },
+ {
+  "rep": "B08008",
+  "gap": "host-pick stack(dual-pick chain: remove候補pick→scene host pick→stack) + 新keyword「相手のアクティブ状態キャラを指定してアクションできる」(action対象ルール上書き)",
+  "kind": "BLOCKED",
+  "printings": 1,
+  "note": "atomCharStackCard(char.ts:386〜)はa.uidが解決済uid前提(fromSelf=selfのみ/または既解決bind)、pick先host自体を別pickステップの結果から束ねる複合chainは未対応。加えて付与される能力「相手の現場のアクティブ状態キャラを指定してアクションできる」はtargetActive系mechanismが engine全体でgrep0件=完全に新規のaction対象ルール変更。2機構とも新設計が要り高コスト・低yield(1枚)。"
+ },
+ {
+  "rep": "B08059",
+  "gap": "continuousDelta self-include 例外 (再帰guardの固定点評価)",
+  "kind": "structural",
+  "printings": 2,
+  "note": "lvlDelta機構自体はa206e9dcで解禁済だが、_inContinuousDelta guard(candidates.ts:24)がdepth-2で全deltaをbase化するため自己条件評価中は自分がlv6扱いになりQA要求のself-include latch(「このキャラを含めて2枚」)を再現できない。過去に設計workflow自身が「touched6+ files・要engine変更・要設計」でDEFER推奨済、再検証でも同結論(未修正のまま現存)。"
+ },
+ {
+  "rep": "B09027",
+  "gap": "cost kind:'choice' の human選択UI (CostChoiceModal相当、engine側readChosenIndexは既存)",
+  "kind": "UI",
+  "printings": 2,
+  "note": "cost/pay.ts:363-370のcase'choice'はctx.dyn['costChoice']があればそれを使うがUI側でCostChoiceModal等の供給元が0件(grep該当なし、ai/policy.tsはAI側選択のみ)。現状pay.tsは最初のpayable branchを自動選択するのみでhuman操作不可。エンジン機構自体は揃っており純UI配線タスク。タスク#6でも今夜対応予定と明記済。"
+ },
+ {
+  "rep": "B09033",
+  "gap": "fromGroupCards 反復消費 (同一reveal windowから複数回登場、B01022と共通のT3課題)",
+  "kind": "structural",
+  "printings": 2,
+  "note": "S2 deck cluster(2026-07-10)でfromGroupCards(ctx.bindings[key]のcard集合限定pick)は「デッキ上6枚見てその中から2枚まで登場」(B01022)向けに導入されたが、そのB01022自体がmulti-deploy枝としてT3扱いで未出荷(specs/miniwave5-deck-reveal-grounding.md P1節)。B09033は同型構造(4枚公開窓から最大4回登場、FILEカードconsumeで反復)でさらに「3回まで行ってよい」repeat制御も要る。"
+ },
+ {
+  "rep": "B09055",
+  "gap": "sceneEnter union-source (partner-area∪remove splice、現状sourceAreaはremove/hand/deckのみ)",
+  "kind": "param-extension",
+  "printings": 3,
+  "note": "atomSceneEnter(scene.ts:185-208)のsourceArea分岐はremove/hand/deckのみでpartner-area未対応。TargetQuery.area配列union(PR234)でcandidate列挙自体はPA+remove横断可能だが、splice元をpartner-areaに向ける分岐追加が必要。B09039も同cluster(PA∪remove union pick不在)でDEFERRED-INDEXの記述は現行codeと一致(stale無し)。cost側のpartnerAreaRemove(既存union.ts flipFaceUpEvidence等とは別union)にmutate.partner除去関数が既にあるので流用可能。"
+ },
+ {
+  "rep": "B02067",
+  "gap": "選ばれたとき無効: pick-finalization intercept hook 皆無",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "resolve-picks.ts に選択確定 emit 0件 (実測grep一致)。要: ①pick確定consult hook ②相手optional cost window ③負無効化。B04003/B08081と同cluster、T3。specs/grounding/B02067.md既存で結論一致"
+ },
+ {
+  "rep": "B02084",
+  "gap": "additive-hook: setcard:leave self反応 virtual-location handler不在",
+  "kind": "additive-hook",
+  "printings": 2,
+  "note": "handleLeaveToRemoveSelf/handleDisguiseReplacedSelf(triggered.ts:639,708)と同型で新設可。setcard:leaveは現状in-play scanのみ(除去済setCard自身のability非走査)。faceUpガード必須(Q&A)。PR234同cluster"
+ },
+ {
+  "rep": "B02086",
+  "gap": "additive-hook: choice/optional chooser:'opp' の human modal配線が明示除外",
+  "kind": "additive-hook",
+  "printings": 2,
+  "note": "resolve-picks.ts:637 'chooser!==opp' で意図的に人間modal非surface (相手選択が機能しない、reference-pick-chooser-dead-byplayer既知)。変装時hookは既存(disguise:into)。相手optional discard-or-negate分岐の配線のみ不足"
+ },
+ {
+  "rep": "B02087",
+  "gap": "additive-cond: colorIgnoreOnHandUseがhand-use両経路(手札使用+NH)共有でNH限定不可",
+  "kind": "additive-cond",
+  "printings": 2,
+  "note": "hand-use-card.ts:76とnext-hint.ts:49が同一token参照(over-wide)。NH専用の新tokenを追加しnext-hint.tsのみ消費させれば解禁。B03126既存exemplarは両経路許容の別カードで衝突なし"
+ },
+ {
+  "rep": "B03030",
+  "gap": "structural: untargetable-grant(相手の能力/効果で選ばれない)がcandidates.ts/TargetFilterに完全不在",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "grep 0hit確認(untargetable/選ばれない)。C04群8枚共通gate、engine-extension-upper-boundの主要候補としてdossier自身が明記。B05008と同cluster"
+ },
+ {
+  "rep": "B03041",
+  "gap": "additive-hook: 攻撃側起点の'相手は必ずガードする'token不在(既存mustGuardは防御側専用)",
+  "kind": "additive-hook",
+  "printings": 2,
+  "note": "on-set-hostのtriggered rider機構自体はB03080/B03118で実証済(action:declare/contact:start双方動作)。契機AP+2000は既存conditional-if contact idiomで無エンジン変更可。ガード義務のみ新token(guard.ts mustGuardCandidatesは防御側flag限定、攻撃側からの強制は逆方向で不在)"
+ },
+ {
+  "rep": "B03042",
+  "gap": "structural: 相対色cross-pick multi-match + shuffle-to-bottom variant 不在",
+  "kind": "structural",
+  "printings": 1,
+  "note": "deckRevealUntilは単一match限定、2枚目filterが1枚目の色を参照するcross-pick機構なし。かつ残りシャッフル下送りvariantも不在。2機構同時追加が必要でdossier自身がengine gate候補と明記"
+ },
+ {
+  "rep": "B04003",
+  "gap": "選ばれたとき無効: B02067と同一intercept機構不在(a1が律速、a2単独出荷不可)",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "a2(宣言能力AP8000以下デッキ下)は単独ならT1/T2表現可だがa1(絆+選ばれたとき無効)がカード主要意味論のため部分出荷不可。specs/grounding/B04003.mdで結論一致、B02067参照"
+ },
+ {
+  "rep": "B05007",
+  "gap": "additive-cond: 特徴フィルタ条件付きturn-scoped cutin禁止(既存disguiseBannedは無条件side-level)",
+  "kind": "additive-cond",
+  "printings": 2,
+  "note": "B07002 a2のstate.turnState[p].disguiseBanned前例はfilter非対応の全ターン一律ban。本カードは「特徴[毛利探偵事務所]のキャラがアクションしたとき」条件付き+action終了までのスコープが必要(将来登場キャラにも適用、公式Q&A明記)。同ゲート(canCutIn)への filter付き turnState 追加で解禁可"
+ },
+ {
+  "rep": "B05008",
+  "gap": "untargetable-grant(相手の能力/効果で選ばれない) — B03030と同cluster",
+  "kind": "BLOCKED",
+  "printings": 2,
+  "note": "C04群8枚共通gate。B03030と完全同一blocker(untargetable-grant engine不在)。宣言能力(突撃付与)+ヒラメキ部分は単独表現可だが絆能力側が律速"
+ },
+ {
+  "rep": "B05052",
+  "gap": "costChoice 分岐選択 UI (human 用、engine choice cost 済)",
+  "kind": "UI",
+  "printings": 1,
+  "note": "engine 'choice' cost + readChosenIndex 実装済 (cost/pay.ts:361-367,475-486)。ctx.dyn.costChoice を設定する UI が存在せず (grep 0件、src/ui)、human は set-card branch を選べない。"
+ },
+ {
+  "rep": "B05075",
+  "gap": "charRemoveSetCard 直接uid経路に gate flag (chainStepNoApply)",
+  "kind": "param-extension",
+  "printings": 1,
+  "note": "DEFER note stale: phase:main:start hook(triggered.ts:74)/$self resolveBindRef/kind:'optional'/evidenceGain 全て既存 (B05072 が同型exemplar)。「そうした場合」正しさに mill{gate:true} 同型flag のみ不足 (scene.ts:349-368)。"
+ },
+ {
+  "rep": "B05097",
+  "gap": "player-chosen quantity picker (effect側、mill n自由選択)",
+  "kind": "additive-dyn",
+  "printings": 1,
+  "note": "cost側 removeDeckTop n={dyn}式のみ (formula、自由数値選択でない)。effect側 mill もnumber/{dyn}限定、candidateなしの「数を決める」pick型が cost/effect 両方に不在 (grep chooseNumber等0件)。"
+ },
+ {
+  "rep": "B05117",
+  "gap": "なし (全部品解禁済、即 author 可)",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 2,
+  "note": "DEFER blocker は stale。on-set-host rider leave:to-remove は M2後半で解禁済 (B01057.ts exemplar、listeners/triggered.ts:651-663)。not+sceneHas(現場0枚判定)/sceneEnter cutinTextIncludes+levelMax 既存primitiveで組立可。"
+ },
+ {
+  "rep": "B06005",
+  "gap": "host→host stackedCards 数値転送 verb (charStackCard fromUid)",
+  "kind": "additive-verb",
+  "printings": 2,
+  "note": "a1 は levelSum bound dyn 解禁済 (dyn/eval.ts:533、specs/grounding/B06005.md確認済)でGREEN相当。a2のみ新規小verb (数値のみ、GameState形状不変) 要、partial-ship禁止で全体DEFER継続。"
+ },
+ {
+  "rep": "B06020",
+  "gap": "hand-zone継続cutin付与aura (flow/contact.ts候補列挙へ新規consult)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "a2 startContact は全部品出荷済でCLEAN(単独GREEN)。a1 はhand走査するaura consumer皆無 (grep handGrantKeyword等0件)、コンタクト候補収集hot-pathへの新規配線要 (specs/grounding/B06020.md T3判定)。"
+ },
+ {
+  "rep": "B06025",
+  "gap": "evidence-transient self-reenter (sceneEnter fromArea:evidence)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "sceneEnterはevidence area未対応(grep0件)。ヒラメキ解決中(未リムーブエリア到達)の自身をvirtual識別しscene復帰、通常のpost-hirameki配置をbypassする意味論変更要。B06027(カマキリ男)同族gap。"
+ },
+ {
+  "rep": "B06034",
+  "gap": "cross-card ヒラメキ効果invoke verb (他カードability実行)",
+  "kind": "structural",
+  "printings": 1,
+  "note": "evidenceFlip cardIds+bind (identity保持) は解禁済 (atom-handlers/core.ts:590-609、B08028 exemplar) — DEFER note「identity破棄」はstale。他カードのヒラメキability効果を直接発動するverbのみ新規要。B06023同族。"
+ },
+ {
+  "rep": "B07001",
+  "gap": "charGrantAbility type固定/findDeclaredAbility未走査/grantedId衝突",
+  "kind": "structural",
+  "printings": 3,
+  "note": "B06042 grounding (2026-07-10 sonnet5) で3点実在確認済 (char.ts:189 type強制/declared-ability.ts:100-123 grantedAbilities未走査/grantedId衝突)。共有helper3箇所へのtouch-up、partial修正は無意味で3点セット必須。"
+ },
+ {
+  "rep": "B07003",
+  "gap": "hand-zone継続cutin付与aura (B06020 a1と同一機構、未解決共有)",
+  "kind": "structural",
+  "printings": 2,
+  "note": "mini-wave#4はhand内level(effectiveHandLevel、hand-use-card.ts:105)のみ解禁、cutin動的付与は別consumer。B06020 a1の gap と同一根本原因 — 解禁時は両カード同時ship対象。"
+ },
+ {
+  "rep": "B09011",
+  "gap": "TargetFilter「元LP」専用フィールド (override基準、turn mod除外)",
+  "kind": "param-extension",
+  "printings": 2,
+  "note": "forEach{kind:'all'}とcharOverrideLP(turn scope)は既存(B01045)。lpMin/lpMaxはturn mod込み合算のみでoverride単体値を判定不可。1箇所追加で解禁。"
+ },
+ {
+  "rep": "B09024",
+  "gap": "他キャラへ triggered能力テキストを継続付与するaura機構",
+  "kind": "structural",
+  "printings": 1,
+  "note": "charGrantAbilityは1回pick型でscope離脱時に自動失効しない。setCards riderと同型のscene走査を新設しtriggered.tsに合成する必要あり。"
+ },
+ {
+  "rep": "B09039",
+  "gap": "handAddFromRemove source-zone union (partner-area統合)",
+  "kind": "additive-verb",
+  "printings": 1,
+  "note": "現行handAddFromRemoveはremove固定splice。a1「PAかリムーブエリアにある」は今夜予定のpaCards zone統合で解禁見込み。a2は既存primitiveのみで可。"
+ },
+ {
+  "rep": "B09052",
+  "gap": "なし (blocker解消済)",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 2,
+  "note": "DEFER記載の「宣言UI+designated-name比較」はPR105(nameOverride)/B09112系($declared.key.sceneNameCount)/$bound.cardNameで解消済み。bindPick+fromBound+forEachで書換可。"
+ },
+ {
+  "rep": "B09078",
+  "gap": "deck-window(bound)→手札pick verb (char/eventフィルタ2枠)",
+  "kind": "additive-verb",
+  "printings": 1,
+  "note": "deckRevealUntil(bind)+boundToRemove(残りリムーブ)は既存。だがwindowから player選択でhandへ移すPB pick verbが無い(handAddFromDeckはbindMatch自動解決専用)。"
+ },
+ {
+  "rep": "B09081",
+  "gap": "なし (blocker解消済)",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 1,
+  "note": "src/cards/ct-p03/B03085.ts(登録済)が同型: optional{chain[discard,sceneEnter from:'remove' filter]}+hirameki sceneSetState uid:'$trigger.byUid'。cardName filterも既存。"
+ },
+ {
+  "rep": "B09107",
+  "gap": "removeDeckAll cost (or $self.deckCount dyn) + evidenceFlipAll verb",
+  "kind": "additive-cost",
+  "printings": 2,
+  "note": "cannotSolveCase/evidenceTraitAtLeast/opponentLoadsは全てE3 P53で既に本カード名指しで出荷済(read/game.ts)。残るのはデッキ全部milling costと証拠全表向きverbの2点。"
+ },
+ {
+  "rep": "B09109",
+  "gap": "reserveEffect動的uid捕捉+deckRevealUntil dyn+sceneEnter複合の実証",
+  "kind": "structural",
+  "printings": 2,
+  "note": "deckRevealUntilのnested{dyn}filterはB09109 a1名指しで既出荷(picks.ts)。だが「登場させた特定キャラをターン終了時デッキ下」grantがreserveEffectで動的uid保持できるか未検証、要probe。"
+ },
+ {
+  "rep": "B09110",
+  "gap": "なし (未着手だが全primitive既存)",
+  "kind": "STALE_DEFER_GREEN",
+  "printings": 2,
+  "note": "caseColor combine:'and'既存/sceneRemove pick既存/deckRevealUntil(maxN10,bindMatch)+boundToRemove既存/choice既存/PA宣言UI本日出荷済。memory記録済GREEN候補と一致。"
+ },
+ {
+  "rep": "PR279",
+  "gap": "event-effect限定 removal-immunity 継続フィールド+mutate gate",
+  "kind": "structural",
+  "printings": 1,
+  "note": "「コンタクトによってリムーブされない」相当の継続immunityフィールドがcard-def.tsに一切未実装(grep0件)。cause判別+複数removal dispatch箇所への配線が必要。"
+ }
+]
