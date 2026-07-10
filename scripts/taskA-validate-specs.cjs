@@ -132,7 +132,7 @@ const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'con
 const SHARED_FNS = new Set(['misreadX', 'souzaX', 'partnerColorKeyword', 'eventRemoveByAP', 'caseTraitConditioned', 'caseResolvedHandRemove', 'caseDeclaredEvidenceFlip']);
 const ABILITY_TYPES = new Set(['continuous', 'triggered', 'declared', 'icon-disguise', 'icon-misread']);
 const SCOPES = new Set(['on-scene', 'on-partner-area', 'on-hand', 'on-evidence', 'on-set-host', 'always']); // on-set-host: shipped 2026-06-29c (B01039/B05041/B07014 稼働、whitelist stale だった)
-const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'cutinTextIncludes', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn', 'shippuFiredCharThisTurn']);
+const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'cutinTextIncludes', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'baseLpMin', 'baseLpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn', 'shippuFiredCharThisTurn']);
 
 function walk(node, errs, ctx) {
   if (node === null || typeof node !== 'object') {
