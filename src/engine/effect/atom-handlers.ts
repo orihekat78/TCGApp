@@ -85,6 +85,7 @@ import {
   atomDeckRevealUntil,
   atomDeckToBottomBound,
   atomDeckPlaceSplitBound,
+  atomDeckBottomReorderBound, // S2 B08057: bottom 済 bound block の並べ替え surface
   atomBoundToRemove,
   atomSouza,
   atomBindPick,
@@ -250,6 +251,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomDeckToBottomBound(s, a, ctx);
     case 'deckPlaceSplitBound':
       return atomDeckPlaceSplitBound(s, a, ctx);
+    case 'deckBottomReorderBound': // S2 B08057
+      return atomDeckBottomReorderBound(s, a, ctx);
     case 'boundToRemove':
       return atomBoundToRemove(s, a, ctx);
     case 'deckShuffle':

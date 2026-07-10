@@ -20,7 +20,9 @@ import './SouzaReorderModal.css';
 
 export function DeckPlaceModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckPlace);
-  return pending && pending.player === 'self'
+  // S2 B01093: gate は選択者 (ownerPlayer) — 対象デッキ所有者 (player) ではない。
+  // 「相手デッキの top 1 を公開し、自分が上か下かを選ぶ」で human に modal を出すための座標系是正。
+  return pending && pending.ownerPlayer === 'self'
     ? <DeckPlaceModalInner key={pending.cardIds.join('|')} cardIds={pending.cardIds} />
     : null;
 }

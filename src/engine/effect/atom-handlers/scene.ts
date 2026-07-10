@@ -54,7 +54,25 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             if (srcArea === 'remove' || srcArea === 'hand' || srcArea === 'deck') {
               const arr = s.players[fp][srcArea];
               const i = arr.indexOf(cid);
-              if (i !== -1) arr.splice(i, 1);
+              if (i !== -1) {
+                arr.splice(i, 1);
+                // S2 deck cluster (2026-07-10, B01022): stale-bind prune — deck を離れたカードの
+                // bound entry を各 bindKey から 1 occurrence ずつ除去する。怠ると後続 deckToBottomBound
+                // (cardId ベース splice) が同 cardId の deep copy (window 外) を誤って底送りする。
+                // deck source の cardIds-multi 経路のみ (shipped 単一 path は bindMatch 除外で stale が
+                // 生じない構成のため触らない)。array は差替え (凍結 bindings shallow-copy と非干渉)。
+                if (srcArea === 'deck') {
+                  for (const bk of Object.keys(ctx.bindings)) {
+                    const bArr = ctx.bindings[bk];
+                    if (!Array.isArray(bArr)) continue;
+                    const bi = bArr.findIndex(b => {
+                      const e = b as { kind?: string; area?: string; player?: string; cardId?: string };
+                      return e.kind === 'card' && e.area === 'deck' && e.player === fp && e.cardId === cid;
+                    });
+                    if (bi !== -1) ctx.bindings[bk] = [...bArr.slice(0, bi), ...bArr.slice(bi + 1)];
+                  }
+                }
+              }
             }
             // FIX-B3a: full は **ループ内で都度再計算** (hoist 禁止。enter で scene が伸びるため)。
             const full = s.players[enterP].scene.length >= sceneCap(s, enterP);

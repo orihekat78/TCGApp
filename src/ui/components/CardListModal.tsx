@@ -17,13 +17,14 @@ import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 import './CardListModal.css';
 
-export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area';
+export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area' | 'deck';
 
 const TITLE: Record<CardListKind, string> = {
   file:            'FILE エリア',
   evidence:        '証拠エリア',
   remove:          'リムーブエリア',
   'partner-area':  'パートナーエリア', // engine wave A1 (G39): PA 一般カード枠 pick (partnerAreaRemove)
+  deck:            '公開されたカード', // S2 B01022: deck-window pick (公開済 window のみ。デッキ本体は非公開)
 };
 
 const HINT: Record<CardListKind, string> = {
@@ -31,6 +32,7 @@ const HINT: Record<CardListKind, string> = {
   evidence: '推理やアクション[事件] で集めた証拠カード (裏向き)。ヒラメキ付きが含まれる可能性があります。',
   remove:   '使用済イベント / リムーブされたキャラ。リフレッシュでデッキに戻る対象 (rules/14)。',
   'partner-area': 'パートナーエリアに常駐するカード (特徴[ビッグジュエル]等、rules/03)。', // engine wave A1 (G39)
+  deck: '効果でデッキから公開されたカードのうち、選択条件を満たすもの (rules/26 見ている間はデッキ扱い)。', // S2 B01022
 };
 
 /**
@@ -42,6 +44,7 @@ const PICK_BANNER_TEXT: Record<CardListKind, string> = {
   evidence: '証拠から1枚選んで手札に加えてください',
   remove:   'リムーブから1枚選んで手札に加えてください',
   'partner-area': 'パートナーエリアから選んでリムーブしてください', // engine wave A1 (G39)
+  deck: '公開されたカードから選んでください', // S2 B01022 (Playmat が verb 別文言で override)
 };
 
 export type CardListModalProps = {
@@ -188,8 +191,14 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
     const wantUid = `${cardId}#${idx}`;
     const exact = pickCands!.find((c) => c.uid === wantUid);
     if (exact) return exact.uid;
-    // fallback: cardId だけで match (重複時は最初の候補)
-    return pickCands!.find((c) => c.cardId === cardId)?.uid;
+    // fallback: nth-occurrence — cards が pickCands と 1:1 で構築される kind ('deck' window pick 等、
+    // uid の index が cell idx と一致しない) では、cell の同 cardId 出現順 = 候補の同 cardId 出現順で
+    // 対応させる (S2 B01022: 重複 cardId の multi-pick を別 uid に割当てる)。単一出現なら従来の
+    // 「最初の候補」と同結果。既存 kind (remove 等) の重複 cardId + exact 不成立ケースでは旧実装が
+    // 常に先頭候補へ誤 map していたため、順序対応の本 fallback は挙動改善 (S2 review nit で明確化)。
+    const nth = cards.slice(0, idx).filter((c) => c === cardId).length;
+    const dup = pickCands!.filter((c) => c.cardId === cardId);
+    return (dup[nth] ?? dup[0])?.uid;
   };
 
   // Esc で閉じる (本 modal のみ scope。global keymap には影響しない)

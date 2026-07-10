@@ -370,6 +370,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       if (area === 'remove') return 'remove';
       if (area === 'evidence') return 'evidence';
       if (area === 'file') return 'file';
+      // S2 B01022 (2026-07-10): deck-window pick — deckRevealUntil で公開した window から登場対象を選ぶ。
+      // cards ソースは pending.candidates (window+filter 通過分) のみ。gameState.deck 直読みは禁止
+      // (window 外の非公開カードが見えるため)。
+      if (area === 'deck') return 'deck';
     }
     // D08021 driver 2026-05-26: charStackCard (multi-pick 0-5 から下に重ねる) も
     // target.query.area で area kind が決まる (typically remove)。
@@ -394,7 +398,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   useEffect(() => {
     if (pickAreaKind !== null) return;
     // area pick が無くなり、area modal が pick 用に開いていた場合は閉じる
-    if (areaModal && areaModal.side === 'self' && (areaModal.kind === 'evidence' || areaModal.kind === 'remove' || areaModal.kind === 'partner-area')) {
+    if (areaModal && areaModal.side === 'self' && (areaModal.kind === 'evidence' || areaModal.kind === 'remove' || areaModal.kind === 'partner-area' || areaModal.kind === 'deck')) {
       // pendingEffectPick が消えた → pick 完了 or skip
       // (手動で開いた閲覧モーダルも閉じてしまうが、pick 関連の自然な挙動として許容)
       setAreaModal(null);
@@ -886,6 +890,11 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           } else if (areaModal.kind === 'partner-area') {
             // engine wave A1 (G39): PA 一般カード枠 (全カード表向き、リムーブ同様)
             cards = (player.partnerAreaCards ?? []) as string[];
+          } else if (areaModal.kind === 'deck') {
+            // S2 B01022: deck-window pick — pending.candidates の cardId を候補順で 1:1 表示。
+            // gameState.deck を読まない (window 外の非公開カードを見せない)。pick 解決で modal は
+            // 自動 close するため、candidates 不在時は空リスト (手動 open 経路は無い)。
+            cards = (pendingPickForArea?.candidates ?? []).map((c) => c.cardId) as string[];
           } else if (areaModal.kind === 'file') {
             const partnerInFile: string[] = [];
             let backCount = 0;
@@ -931,7 +940,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               pickCands={isPickModeForThisArea ? pendingPickForArea!.candidates : undefined}
               pickBannerText={
                 isPickModeForThisArea && pendingPickForArea?.atomVerb === 'sceneEnter'
-                  ? ((pendingPickForArea.nMax ?? 1) > 1
+                  ? (areaModal.kind === 'deck'
+                      // S2 B01022: deck-window 用文言 (公開カードから登場。「〜まで」= 0枚可 rules/15)
+                      ? `公開されたカードから${(pendingPickForArea.nMax ?? 1) > 1 ? `${pendingPickForArea.nMax}枚まで` : '1枚'}選んで現場に登場させてください`
+                      : (pendingPickForArea.nMax ?? 1) > 1
                       ? `リムーブから${pendingPickForArea.nMax}枚まで選んで現場に登場させてください`
                       : 'リムーブから1枚選んで現場に登場させてください')
                   : isPickModeForThisArea && pendingPickForArea?.atomVerb === 'charStackCard'

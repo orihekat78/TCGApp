@@ -36,3 +36,11 @@
   (B1 同名コピー誤 splice→deckPos:'bottom'+positional bottom verb / B2 oppTurnDriver gate 漏れ)。
   BUG-180 起票 (handAddFromDeck/sceneEnter deck-splice refresh gap ~152 消費者)。e2e playwright green。
   残 = B01022 (T3、grounding 済) + roadmap S2 以降。
+- S2 deck cluster 出荷 (2026-07-10 昼): B01022(T3)+B01093+B02072/P+B08057 = 5 printings (**1796**/2074、残278)。
+  engine additive: fromGroupCards + bind index + stale-bind prune / deckPlaceSplitBound ownerPlayer 是正 /
+  souza x:{dyn} resolveDeltaToNumber (chain 経路 gap、BUG-114 同型) / boundCountCompare +
+  deckBottomReorderBound + removeAreaToDeckTop bindKey。混成 4-lens review 4/4 SHIP (nits 2 = 文言修正済
+  + BUG-180 水平展開追記済)。e2e 5 spec pass (B01022 新規 + B05047 回帰)。probe 36 本追加 (vitest 4662+1)。
+  D06013 = T3 確定 (pre-walk Pattern-A over-fire 2点修正、S3+ 単独枠)。B02072 DEFER は stale だった
+  (両 dyn 出荷済) — DEFER 行は着手前に現行 code で必ず再検証 (unlocked-label-stale の逆パターン)。
+  harness 拡張: pickCardIds multi-pick script + oppDeckTop。

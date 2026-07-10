@@ -63,6 +63,8 @@ export interface ProbeSetup {
   fileCount?: number;
   /** デッキ最上部に明示 cardId を積む (removeDeckTop cost / deckRevealUntil の内容依存シナリオ用) */
   deckTop?: string[];
+  /** 相手デッキ最上部に明示 cardId を積む (souza 等の相手デッキ公開シナリオ用、S2 B02072) */
+  oppDeckTop?: string[];
   /** self 証拠エリア (flipFaceUpEvidence cost 等) */
   evidence?: { cardId: string; faceUp?: boolean }[];
 }
@@ -78,7 +80,10 @@ export type ProbeScriptAction =
   | 'optional:decline'
   | 'pick:skip'
   | { pickUid: string }
-  | { pickCardId: string };
+  | { pickCardId: string }
+  // S2 B01022 (2026-07-10): multi-pick (nMax>1) を 1 prompt で複数解決する。cardId 指定で
+  // 候補 pool から先頭一致を 1 つずつ消費 (同 cardId 重複も別候補に割当)。
+  | { pickCardIds: string[] };
 
 export type ProbeAssertion =
   | { kind: 'zone'; cardId: string; zone: 'remove' | 'hand' | 'scene' | 'deck' | 'partner-area'; side: Side; present: boolean }
@@ -167,6 +172,8 @@ function buildState(def: CardDef, fixtures: CardDef[], scenario: ProbeScenario):
   s.players.opp.deck = Array.from({ length: setup.oppDeckSize ?? 4 }, (_v, i) => `__DECK_O_${i}`);
   // deckTop: 明示 cardId をデッキ最上部へ (cost removeDeckTop / deckRevealUntil の中身依存シナリオ用)
   if (setup.deckTop) s.players.self.deck = [...setup.deckTop, ...s.players.self.deck];
+  // oppDeckTop: 相手デッキ最上部へ (souza 等、S2 B02072)
+  if (setup.oppDeckTop) s.players.opp.deck = [...setup.oppDeckTop, ...s.players.opp.deck];
   if (setup.evidence) {
     s.players.self.evidence = setup.evidence.map((e) => ({
       cardId: e.cardId,
@@ -246,6 +253,22 @@ function driveAndScript(
           throw new Error(`[harness] pickCardId "${action.pickCardId}" not among candidates of "${pick.atomVerb}" (got: ${cands.map((c) => c.cardId).join(',') || '∅'})`);
         }
         applyPickAndContinuation(s, pick, hit.uid);
+      } else if (typeof action === 'object' && 'pickCardIds' in action) {
+        // S2 B01022: multi-pick — pool から cardId 一致を 1 件ずつ消費 (重複 cardId は別候補に割当)
+        const pool = [...cands];
+        const uids: string[] = [];
+        for (const cid of action.pickCardIds) {
+          const i = pool.findIndex((c) => c.cardId === cid);
+          if (i === -1) {
+            throw new Error(`[harness] pickCardIds "${cid}" not among remaining candidates of "${pick.atomVerb}" (got: ${pool.map((c) => c.cardId).join(',') || '∅'})`);
+          }
+          uids.push(pool[i]!.uid);
+          pool.splice(i, 1);
+        }
+        if (uids.length === 0) {
+          throw new Error('[harness] pickCardIds must contain at least 1 cardId (use pick:skip for 0)');
+        }
+        applyPickAndContinuation(s, pick, uids[0]!, uids);
       } else {
         throw new Error(`[harness] pick "${pick.atomVerb}" surfaced but script action is "${String(action)}" (expected pick action)`);
       }

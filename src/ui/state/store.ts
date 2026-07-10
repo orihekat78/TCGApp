@@ -183,6 +183,8 @@ export type PendingDeckPlace = {
   player: 'self' | 'opp';
   /** mini-wave #5 P2: deckPlaceSplitBound「各カードを上か下へ」の振り分け対象 (公開順、まだ deck 元位置) */
   cardIds: string[];
+  /** S2 B01093: 選択者 = ability owner (絶対座標)。modal 表示 gate はこちらで判定 (engine 型と同 shape) */
+  ownerPlayer: 'self' | 'opp';
 };
 
 export type PendingEffectPick = {

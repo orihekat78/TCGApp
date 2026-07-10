@@ -1,7 +1,7 @@
 // engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj } from '../resolve-picks.js';
-import { targetFilterToPredicate, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
+import { targetFilterToPredicate, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber } from './_shared.js';
 import type { Player, PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
 import type { GameState, EffectCtx, Candidate, AtomVerb } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
@@ -175,26 +175,40 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
         // 「window 全体を $bind に保持したい」用途 (B05047 の見た 2 枚全部を後段で振り分け)。filter 省略時は
         // predicate が常 true で先頭が matched になり、gate 無しだと 1 枚が意図せず欠落する。
         // 既存の bindKey 消費者 168 file は全部 bindMatch とペア (grep 実測) = 挙動不変。
+        // S2 deck cluster (2026-07-10, B01022): 各 entry に reveal 時点の deck 位置 index を同梱。
+        // fromGroupCards (candidates.ts) が window 内の重複 cardId を位置で区別するために必要。
+        // 走査規約: revealed の k 番目 = deck[fromBottom ? deck.length-1-k : k] (maxN/非 maxN 共通)。
+        // matched 除外時は位置配列を並行 slice する (indexOf 再利用だと同 cardId 重複で取り違える)。
+        // index は reveal 時点の snapshot — 後続 atom が deck を mutate したら失効 (fromGroupCards の
+        // pick 列挙は splice 前に行われるため B01022 系 flow では常に有効)。
+        const posToDeckIdx = (k: number): number => (fromBottom ? deck.length - 1 - k : k);
+        const allIdxs = revealed.map((_, k) => posToDeckIdx(k));
         let restIds: string[];
+        let restIdxs: number[];
         if (matched === null || bindMatchKey === undefined) {
           restIds = revealed;
+          restIdxs = allIdxs;
         } else if (maxN === undefined) {
           restIds = revealed.slice(0, -1);
+          restIdxs = allIdxs.slice(0, -1);
         } else {
           // 最初の matched 出現を 1 件だけ除く (同 cardId 複数あっても 1 件のみ拾われる前提)
           const idx = revealed.indexOf(matched);
           restIds = idx === -1 ? revealed : [...revealed.slice(0, idx), ...revealed.slice(idx + 1)];
+          restIdxs = idx === -1 ? allIdxs : [...allIdxs.slice(0, idx), ...allIdxs.slice(idx + 1)];
         }
-        ctx.bindings[bindKey] = restIds.map<Candidate>(id => ({
+        ctx.bindings[bindKey] = restIds.map<Candidate>((id, k) => ({
           kind: 'card',
           cardId: id,
           area: 'deck',
           player: p,
+          index: restIdxs[k]!,
         }));
       }
       if (bindMatchKey) {
+        const mPos = matched !== null ? revealed.indexOf(matched) : -1;
         ctx.bindings[bindMatchKey] = matched
-          ? [{ kind: 'card', cardId: matched, area: 'deck', player: p }]
+          ? [{ kind: 'card', cardId: matched, area: 'deck', player: p, index: fromBottom ? deck.length - 1 - mPos : mPos }]
           : [];
       }
       // user_request 20260522_01 #12 BUG-061: UI 演出側チャネル
@@ -271,16 +285,50 @@ export function atomDeckPlaceSplitBound(s: GameState, a: Record<string, unknown>
       }).filter(id => id !== '');
       if (ids.length === 0) return;
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-      if (p === humanSide) {
+      // S2 B01093 (2026-07-10): 選択者 = ability owner (印字「自分が上か下かを選ぶ」)。gate を
+      // 対象デッキ所有者 (p) から owner 絶対座標に是正 — B01093 は p='opp' (相手デッキ) でも
+      // owner=human なら modal を出し、逆に CPU owner が human デッキを対象にしても modal を出さない。
+      // B05047 (唯一の既存消費者) は player:'self' で p===owner のため挙動不変 (byte 互換)。
+      const ownerAbs = ctx.source.player;
+      if (ownerAbs === humanSide) {
         (globalThis as { __pendingDeckPlaceSide?: import('./_shared.js').PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = {
           player: p,
           cardIds: [...ids],
+          ownerPlayer: ownerAbs,
         };
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `await ${ids.length}` });
         return;
       }
       // AI 恒等: deck に既に元順で存在するため mutation 不要
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckPlaceSplitBound', result: `identity ${ids.length}` });
+      return;
+    }
+
+// S2 deck cluster (2026-07-10, B08057): 「好きな順番でデッキの下に移す」の順序選択を、
+// removeAreaToDeckTop(dest:'bottom') 等で **既に deck 底へ移し終えた** bound block に対して surface する。
+// atomDeckToBottomBound の BUG-136 tail (並べ替え modal) の独立 atom 版 — 本 atom 自体は deck を
+// mutate しない (block は移動順という合法な一 choice で既置。human のみ DeckReorderModal →
+// 'deckReorderResolve' が deck 末尾 multiset 検証つきで並べ替える)。AI / 非 human は恒等。
+// ⚠ 前提: bound block の移送と本 atom の間に他の bottom 操作を挟まないこと (multiset 不一致で
+// 並べ替えが silent no-op になる)。B08057 は直前 3 step の連続移送 → 最終 step 配置で満たす。
+export function atomDeckBottomReorderBound(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const p = resolvePlayer(a.player, ctx);
+      const bound = ctx.bindings[a.bindKey as string];
+      if (!bound || !Array.isArray(bound) || bound.length === 0) return;
+      const ids = bound
+        .map(c => (c as unknown as { cardId?: string }).cardId ?? '')
+        .filter(id => id !== '');
+      const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (ids.length >= 2 && p === humanSide) {
+        (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
+          player: p,
+          cardIds: [...ids],
+        };
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckBottomReorderBound', result: `await ${ids.length}` });
+        return;
+      }
+      // AI / 1 枚以下: 移動順のまま (恒等)
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckBottomReorderBound', result: `identity ${ids.length}` });
       return;
     }
 
@@ -326,7 +374,10 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
       // 順番変更しない default)。AI policy chooseSouzaOrder は将来 Sub-task B/C で
       // listener / dispatcher 経由で呼ぶ予定。「発見された」参照効果は scope 外。
       const player = resolvePlayer(a.player, ctx);
-      const x = a.x as number;
+      // S2 deck cluster (2026-07-10, B02072): x:{dyn} 対応 — chain 経路は pre-walk (resolveDynArgs) を
+      // 通らないため handler 側で数値化する (BUG-114 resolveDeltaToNumber と同型。number は素通り =
+      // 既存 literal 消費者 byte 互換)。「捜査X — Xは自分の現場の[警察]の数」= x:{dyn:'$self.sceneTrait.警察'}。
+      const x = resolveDeltaToNumber(a.x, s, ctx);
       const deck = s.players[player].deck;
       const count = Math.min(x, deck.length);
       if (count === 0) {

@@ -22,6 +22,17 @@ type Phase = 'reveal' | 'toBottom' | 'shuffle';
 export function DeckRevealOverlay(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckReveal);
   const setPending = useGameStateStore((s) => s.setPendingDeckReveal);
+  // S2 B01022 (2026-07-10): deck-window pick (sceneEnter query.area='deck') の未解決中も hold。
+  // chooseMatch (awaitingPick) と違い pendingDeckReveal 自体は完了形で set されるため、
+  // pendingEffectPick 側を見て「公開カードから選択中」の間は自動進行を止める。
+  // 解決で pendingEffectPick が消え、この effect が再実行されて通常演出 (toBottom→shuffle) が走る
+  // (= engine 側でも deckToBottomBound/deckShuffle が続けて解決されるタイミングと同期)。
+  const deckWindowPickActive = useGameStateStore((s) => {
+    const p = s.pendingEffectPick;
+    if (!p) return false;
+    const area = (p.atomArgs as { target?: { query?: { area?: string } } } | undefined)?.target?.query?.area;
+    return area === 'deck';
+  });
   const [phase, setPhase] = useState<Phase>('reveal');
 
   useEffect(() => {
@@ -34,7 +45,8 @@ export function DeckRevealOverlay(): JSX.Element | null {
     // 公開リストを表示したまま自動進行 (toBottom→shuffle→dismiss) を停止し、
     // EffectPickerModal (z-index 9700 > overlay 9050) の選択/decline を待つ。
     // pick 解決の再入で awaitingPick 無しの pending が再 set され通常演出で完了する。
-    if (pending.awaitingPick === true) {
+    // S2 B01022: deck-window pick 未解決中も同様に hold (上記 deckWindowPickActive)。
+    if (pending.awaitingPick === true || deckWindowPickActive) {
       return;
     }
     // reveal: 1 枚 0.5 秒 + 余韻 / toBottom: 1.1 秒 / shuffle: 1.0 秒
@@ -49,13 +61,13 @@ export function DeckRevealOverlay(): JSX.Element | null {
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [pending, setPending]);
+  }, [pending, setPending, deckWindowPickActive]);
 
   if (!pending) return null;
 
   const playerLabel = pending.player === 'self' ? '自分' : '相手';
   const headerText =
-    pending.awaitingPick === true
+    pending.awaitingPick === true || deckWindowPickActive
       ? // BUG-132 GAP-1: 「1枚まで」= 0枚可 (rules/15) — 選択待ちであることを明示
         '公開したカードから選択中…（加えないことも選べます）'
       : phase === 'reveal'

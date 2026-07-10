@@ -223,6 +223,20 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       return false; // unreachable (cmp は 5 リテラル union)
     }
+    // S2 deck cluster (2026-07-10, B08057): bound 集合の要素数比較 (「合わせて3枚移した場合」)。
+    // binding 不在/非配列 = 0 として比較。sceneCountCompare の cmp 流儀を bound.length に適用。
+    case 'boundCountCompare': {
+      const arr = ctx.bindings?.[cond.bindKey];
+      const bc = Array.isArray(arr) ? arr.length : 0;
+      switch (cond.cmp) {
+        case 'lt': return bc < cond.n;
+        case 'le': return bc <= cond.n;
+        case 'gt': return bc > cond.n;
+        case 'ge': return bc >= cond.n;
+        case 'eq': return bc === cond.n;
+      }
+      return false; // unreachable
+    }
     case 'fileTopType': {
       const owner = ctx.source.player;
       const file = state.players[owner].file;
@@ -824,6 +838,7 @@ const CONDITION_KIND_MAP = {
   partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
   bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,
   evidenceDiff: true, sceneCountCompare: true, // engine additive wave (2026-06-30, B05103/B05081)
+  boundCountCompare: true, // S2 deck cluster (2026-07-10, B08057): bound 要素数比較 (合わせてN枚 gate)
   evidenceTraitAtLeast: true, // engine E3 P53 (2026-07-03, B09107 証拠特徴計数)
   handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, // Task D E1 (2026-06-12)
   fileTopType: true,

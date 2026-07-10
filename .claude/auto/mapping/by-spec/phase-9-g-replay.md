@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `fce3337a378d`
+> Source hash: `fe494f6d6b4c`
 
 仕様書 [`phase-9-g-replay`](../../../specs/phase-9-g-replay.md) を参照しているソース・関連 rule・関連 engine namespace のハブ。
 

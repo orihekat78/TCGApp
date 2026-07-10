@@ -209,6 +209,25 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
   })();
   if (fromGroupUids !== null && fromGroupUids.size === 0) return out;
 
+  // S2 deck cluster (2026-07-10, B01022): fromGroupCards — 母集合を bound card 集合に限定する
+  // fromGroup の card-kind 並列版。照合キー = `${player}:${area}:${index}` (index = bind 時点の
+  // 配列位置 snapshot。deckRevealUntil が reveal 時に同梱する。重複 cardId を位置で区別)。
+  // index を欠く bound entry は照合対象にしない (fail-closed — 旧 producer の bind を誤って通さない)。
+  const fromGroupCardKeys: Set<string> | null = (() => {
+    if (typeof query.fromGroupCards !== 'string') return null;
+    const bound = ctx.bindings?.[query.fromGroupCards];
+    if (!Array.isArray(bound) || bound.length === 0) return new Set<string>();
+    const keys = new Set<string>();
+    for (const b of bound) {
+      const e = b as { kind?: string; area?: string; player?: string; index?: number };
+      if (e.kind === 'card' && typeof e.area === 'string' && typeof e.player === 'string' && typeof e.index === 'number') {
+        keys.add(`${e.player}:${e.area}:${e.index}`);
+      }
+    }
+    return keys;
+  })();
+  if (fromGroupCardKeys !== null && fromGroupCardKeys.size === 0) return out;
+
   for (const side of sides) {
     switch (area) {
       case 'scene': {
@@ -300,6 +319,13 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
   // W4 r83: fromGroup post-filter (uid を持つ candidate のみ通す = scene char 前提)
   if (fromGroupUids !== null) {
     return out.filter(cand => cand.kind === 'char' && typeof cand.uid === 'string' && fromGroupUids.has(cand.uid));
+  }
+  // S2 B01022: fromGroupCards post-filter — {kind:'card'} candidate を (player,area,index) キーで
+  // bound 集合と突合。index 無し candidate (case area 等) は通さない (fail-closed)。
+  if (fromGroupCardKeys !== null) {
+    return out.filter(cand =>
+      cand.kind === 'card' && typeof cand.index === 'number' &&
+      fromGroupCardKeys.has(`${cand.player}:${cand.area}:${cand.index}`));
   }
   return out;
 }

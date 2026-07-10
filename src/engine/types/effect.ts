@@ -58,6 +58,9 @@ export type Condition =
   // handCountAtLeastOther の scene 版だが cmp で 5 比較子 (lt/le/gt/ge/eq) を一般化。
   // .scene.length = キャラ枚数 ($self.oppSceneCount と同流儀、rules/03 §現場=scene)。player/other は resolvePlayer 規約。
   | { kind: 'sceneCountCompare'; player: 'self' | 'opp'; other: 'self' | 'opp'; cmp: 'lt' | 'le' | 'gt' | 'ge' | 'eq' }
+  // S2 deck cluster (2026-07-10, B08057): bound 集合の要素数比較 (「カードを合わせて3枚移した場合」)。
+  // binding 不在/非配列 = 0 として比較 (fail-closed 側)。cmp union は sceneCountCompare と同一。
+  | { kind: 'boundCountCompare'; bindKey: string; cmp: 'lt' | 'le' | 'gt' | 'ge' | 'eq'; n: number }
   | { kind: 'fileTopType'; type: 'card-back' | 'assisted-partner' }
   // Task D E3 (2026-06-12): FILE 最上位の非 assisted-partner カードを TargetFilter で評価
   // (「FILEエリアにある1番上のカードがキャラの場合」B09021。fileFlipTop が公開した札と同一参照)
@@ -320,6 +323,11 @@ export type TargetQuery = {
   // engine mega-wave W4 (2026-07-03, r83 G34): pick 母集合を ctx.bindings[fromGroup] の uid 集合に限定。
   // enter:group hook の '$enterGroup' 相当 (「同時に登場したキャラの中から1枚」B01012)。binding 不在/空 = 候補0。
   fromGroup?: string;
+  // S2 deck cluster (2026-07-10, B01022): pick 母集合を ctx.bindings[key] の card 集合 (player+area+index
+  // 一致) に限定する fromGroup の card-kind 並列版 (fromGroup は uid ベース = scene char 専用のため独立 field)。
+  // 「デッキ上から6枚見て、その中から〜を2枚まで登場」の window 制限。binding 不在/空/entry index 欠落 = 候補0
+  // (fail-closed)。index は deckRevealUntil bind が reveal 時点の deck 位置を同梱する (重複 cardId 区別)。
+  fromGroupCards?: string;
   // engine mega-wave W4 (2026-07-03, r84 G38): side 毎の選択上限 quota (「自分と相手で1枚ずつ」B08019 a2)。
   // distinctNames と同型の 3経路 enforcement (resolve validate / chooseAiPick greedy / UI disabled)。
   // partner candidate (player 概念が side でない) では使用不可。
@@ -434,7 +442,7 @@ export type AtomVerb =
   | 'opponentLoses'
   | 'caseToResolved'
   | 'startContact' | 'endActionEarly'
-  | 'deckRevealUntil' | 'deckToBottomBound' | 'deckPlaceSplitBound' | 'boundToRemove' | 'deckShuffle' | 'souza'
+  | 'deckRevealUntil' | 'deckToBottomBound' | 'deckPlaceSplitBound' | 'deckBottomReorderBound' | 'boundToRemove' | 'deckShuffle' | 'souza'
   // engine拡張 wave#2 cluster4 (2026-06-14): 自分と相手はリムーブエリアの「すべて」のカードを各自の
   // デッキの下に移し、両者のデッキをシャッフルする (B08027【登場時】)。pick を持たない fixed verb。
   // rules: 14/26 (デッキが増えるのみ → これは「リフレッシュ」ではない=証拠を得る手順なし、公式Q&A),

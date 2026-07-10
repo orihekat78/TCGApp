@@ -70,9 +70,16 @@ declare global {
 }
 
 export type PendingDeckPlaceSide = {
+  /** 対象デッキの所有者 (deckPlaceResolve が splice する側) */
   player: 'self' | 'opp';
   /** 振り分け対象の cardId 群 (公開順)。human が各カードを top/bottom バケツへ割り当てる */
   cardIds: string[];
+  /**
+   * S2 B01093 (2026-07-10): 選択者 = ability owner (絶対座標)。B01093「相手デッキ top 1 を公開し、
+   * **自分**が上か下かを選ぶ」は 対象デッキ所有者 ≠ 選択者。modal 表示 gate は ownerPlayer で判定する
+   * (BUG-175 の player/ownerPlayer 分離パターン踏襲)。B05047 は player===ownerPlayer で挙動不変。
+   */
+  ownerPlayer: 'self' | 'opp';
 };
 
 export function _drainPendingDeckPlaceSide(): PendingDeckPlaceSide | null {

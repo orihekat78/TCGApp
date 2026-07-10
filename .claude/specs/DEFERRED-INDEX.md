@@ -1178,7 +1178,7 @@ TargetFilter で評価する serializable kind が無い。新 cond `contactChar
 | ~~B07046~~ | ✅ **出荷済 (2026-07-09 defer-unlock mini-wave)**。$self.partnerAreaTraitCount.<trait> dyn 新設 (removeNameCount 同式 player-based) | ✅ 出荷済 |
 | B07049 | remove ∪ partner-area の union pick「1枚まで」→手札 — candidates の area switch は排他 (union token 無し) | union-area pick or 2段 choice 設計裁定 |
 | B07061 | remove→PA へ移す pick — toPartnerArea は ctx.source.cardId 固定 (core.ts:368、pick/target 引数なし)、partnerAreaRemove は逆方向 | toPartnerArea の target/pick 化 |
-| D06013 | デッキ上4枚 reveal 全 bind + 色 gate + sleep→stun pick — deckRevealUntil は matched 抽出型、souza は bind-all だが pre-walk over-fire (BUG-145/161) と衝突 | souza 型 reveal + conditionIfIsStable 整理 |
+| D06013 | **★T3 確定 (2026-07-10 S2 grounding)**: 部品は全 engine0 (bind-only reveal + boundAnyMatchesFilter×2 AND + D03004 型 stun pick + bottom+shuffle) だが、unstable-if conditional の then 内 Pattern-A pick が pre-walk で over-fire (shipped 前例 0)。修正 2 点セット必須: ①resolve-picks conditional pre-walk の Pattern-A push 抑止 ②atomSceneSetState に $pick 自己解決 fallback (片方だけだと silent-drop or over-fire)。resolver+pre-walk hot-path = 4 lens + Playwright | S3 以降の単独 T3 枠 |
 | PR284 | 継続 keyword grant (突撃) — grantKeywords は closure 型のみ (JSON_CONT_KEYS 拒否)。partnerColorKeyword 等 __shared は条件非等価 | grantKeywords の JSON string[] 受理 or __shared 追加 (hand-author 逃げ可) |
 
 補足: defers.txt には B05012 も記録されているが、本 batch 内で JSON_CONT_KEYS whitelist に
@@ -1211,12 +1211,12 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 |---|---|
 | B01005 | next-hint 使用と手札使用の emit payload 同一で判別 hook 無し (flag:next-hint:used は TRIGGERED_HOOKS 未登録) + 使用カード level を引く $trigger.level dyn 不在 |
 | B01020 | 相手 actor 側 level-filter アクション禁止 aura 不在 (opponentRestrict に 'action' 無し、_canAction は opp 盤面 aura を走査しない。untargetableByAction は target 側で逆方向) |
-| B01022 | deck-reveal window から複数 (2枚まで) 選択登場する primitive 不在 (deckRevealUntil match 単一 + chooseMatch:'upTo' nMax=1 ハードコード) |
+| ~~B01022~~ | **✅ 解消 (2026-07-10 S2)**: fromGroupCards TargetQuery + bind index 同梱 + stale-bind prune + CardListModal deck kind。B01022 出荷 |
 | B01045 | LP の turn-scope base override 不在 (AP 側 apOverride_turn のみ出荷。lpOverride_turn + observer 側 opt-mill cost 複合) |
 | B01054 | 同上 lpOverride_turn 不在 (【現場リムーブ時】pick + 元LP0 ターン終了時まで) |
-| B01093 | 相手デッキ top 公開→非所有者が上/下を選ぶ placement 不在 (deck top/bottom choice by non-owner) |
+| ~~B01093~~ | **✅ 解消 (2026-07-10 S2)**: deckPlaceSplitBound chooser を ownerPlayer gate に是正 (BUG-175 パターン)。B01093 出荷 |
 | B02022 | mustBeTargeted taunt (指定できる場合必ず指定) primitive 不在 |
-| B02072 | 捜査X の X=盤面計数 dyn 不在 + 発見カード levelSum 閾値 dyn 不在 |
+| ~~B02072~~ | **✅ 解消 (2026-07-10 S2)**: 両 dyn とも既出荷 (sceneTrait / $bound.levelSum) の stale DEFER。souza x:{dyn} handler 数値化 (+5行) のみ追加。B02072/P 出荷 (chain 必須の罠 = probe pin 済) |
 | B03040 | 自分証拠 top 1 を見る (peek own evidence) verb 不在 + 証拠獲得 trigger の self-attribution |
 | ~~B03049~~ | **✅ 解消 (2026-07-10 mini-wave #5)**: deckRevealUntil fromBottom param 追加。B03049/P 出荷 |
 | B03063 (死闘) | 盤面計数を上限とする opp multi-pick sleep (dyn nMax) + 「スリープさせたすべて」bound 集合 AP+ の複合 carrier 不在 |
@@ -1226,7 +1226,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B04089 | VERIFY_NG: removedCharMatches{cause:'effect'} は actor-attribution (自分の効果によって) を保証しない (payload.byUid 不在 case) |
 | ~~B05047~~ | **✅ 解消 (2026-07-10 mini-wave #5)**: 新 atom deckPlaceSplitBound + DeckPlaceModal (top/bottom 振り分け UI)。B05047 出荷 |
 | B08008 | picked host ($self 以外) の下へ remove-area キャラを重ねる + そのキャラへの ability 付与 rider — host-pick stack + grant 複合不在 |
-| B08057 | remove→deck-BOTTOM pick effect verb 不在 (removeAreaToDeckTop dest:'bottom' は cost 側のみ) + 「1枚までと1枚まで」2独立 pick |
+| ~~B08057~~ | **✅ 解消 (2026-07-10 S2)**: removeAreaToDeckTop bindKey opt + boundCountCompare cond + deckBottomReorderBound atom (~60行 additive)。B08057 出荷 |
 | B08068 | levelMax = cost-revealed 枚数 + 盤面計数の合成 dyn 不在 |
 | B09005 | revealFromHand cost の公開カード名を effect 側で参照する $costRevealed bind 不在 + 相手 FILE top を表向きにする verb 不在 |
 | B09019 | 「この効果によってキャラが5枚登場した場合」の effect 内登場数カウンタ不在 |

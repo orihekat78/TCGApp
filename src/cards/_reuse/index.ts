@@ -1325,6 +1325,11 @@ import { B09086P } from '../ct-p09/B09086P.js';
 import { B05047 } from '../ct-p05/B05047.js';
 import { B03049 } from '../ct-p03/B03049.js';
 import { B03049P } from '../ct-p03/B03049P.js';
+import { B01022 } from '../ct-p01/B01022.js';
+import { B01093 } from '../ct-p01/B01093.js';
+import { B02072 } from '../ct-p02/B02072.js';
+import { B02072P } from '../ct-p02/B02072P.js';
+import { B08057 } from '../ct-p08/B08057.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1725,4 +1730,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05047,
   // CARD PHASE mini-wave #5 deck-reveal
   B03049, B03049P,
+  // CARD PHASE S2 deck cluster (deck-window multi-deploy / souza dyn X / 非所有者 deck-place / remove 3-tier)
+  B01022, B01093, B02072, B02072P, B08057,
 ];

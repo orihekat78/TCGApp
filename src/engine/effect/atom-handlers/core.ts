@@ -1040,6 +1040,16 @@ export function atomRemoveAreaToDeckTop(s: GameState, a: Record<string, unknown>
           mutate.deck.toTop(s, rtdP, [rtdTarget]);
         }
         rtdMoved = true;
+        // S2 deck cluster (2026-07-10, B08057): bindKey — 移動成功分を bound へ accumulate。
+        // 「カードを合わせて3枚移した場合」(boundCountCompare) の材料 + deckBottomReorderBound の
+        // block 特定に使う。未指定は従来挙動 (既存 consumer B07014/B02076 は byte 不変)。
+        if (typeof a.bindKey === 'string') {
+          const rtdPrev = ctx.bindings[a.bindKey];
+          ctx.bindings[a.bindKey] = [
+            ...(Array.isArray(rtdPrev) ? rtdPrev : []),
+            { kind: 'card', cardId: rtdTarget, area: 'deck', player: rtdP },
+          ];
+        }
       }
       // engine defer-unlock mini-wave (2026-07-09): 0枚 (skip/不在) → chainStepNoApply。「〜してもよい。
       // そうした場合、カードを1枚引く」(B02076) の chain gate (discard/partnerAreaRemove と同型)。
