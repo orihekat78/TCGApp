@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `631ef954d926`
+> Source hash: `75652dda3082`
 
 公式ルール [`17-icons.md`](../../../rules/17-icons.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -25,12 +25,16 @@
 - [`engine-api-card-abilities`](../by-spec/engine-api-card-abilities.md)
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
+- [`B05063`](../by-spec/grounding--B05063.md)
+- [`B07100`](../by-spec/grounding--B07100.md)
+- [`D06003`](../by-spec/grounding--D06003.md)
+- [`PR265`](../by-spec/grounding--PR265.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseTraitConditioned`](../by-spec/shared-classes--caseTraitConditioned.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (1100)
+## 📄 参照ソース (1115)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseMonoColor.ts`](../../../../src/cards/_shared/caseMonoColor.ts)
@@ -52,4 +56,4 @@
 - [`src/cards/ct-d01/D01015.ts`](../../../../src/cards/ct-d01/D01015.ts)
 - [`src/cards/ct-d02/D02002.ts`](../../../../src/cards/ct-d02/D02002.ts)
 - [`src/cards/ct-d02/D02003.ts`](../../../../src/cards/ct-d02/D02003.ts)
-- _...ほか 1080 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 1095 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -22,6 +22,8 @@ const COST_KIND_MAP = {
   removeSetCard: true, // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
   sceneStackUnderSelf: true, // engine mega-wave W4 (2026-07-03, r6): 現場キャラを自身の下に重ねる (B09048 a2)
   handStackUnder: true, // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる (B08006 a1)
+  selfLpDeltaTurn: true, // M2後半 (2026-07-10): 〚ターン終了時までLP-2する〛(B06003 a1)
+  removeFromHandDownTo: true, // M2後半 (2026-07-10): 〚手札が n 枚になるまでリムーブ〛(B08047 a2)
   pay: true, choice: true, fileFrom: true, flipFaceUpEvidence: true, custom: true,
 } as const satisfies Record<Cost['kind'], true>;
 export const COST_KINDS: ReadonlySet<string> = new Set(Object.keys(COST_KIND_MAP));
@@ -139,6 +141,14 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     }
     case 'discardEvidence': {
       return state.players[ctx.source.player].evidence.length >= cost.n;
+    }
+    // M2後半 (2026-07-10, B06003 a1): 恒真 — LP は下限なし (rules/19)、公式Q&A: LP1以下でも支払可。
+    case 'selfLpDeltaTurn': {
+      return true;
+    }
+    // M2後半 (2026-07-10, B08047 a2): 恒真 — 公式Q&A: 手札 n 枚以下でも宣言可 (支払枚数 0 で成立)。
+    case 'removeFromHandDownTo': {
+      return true;
     }
     case 'selfToDeckBottom': {
       const uid = ctx.source.uid;

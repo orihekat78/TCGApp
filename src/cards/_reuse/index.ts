@@ -1404,6 +1404,40 @@ import { B09005 } from '../ct-p09/B09005.js';
 import { B09050 } from '../ct-p09/B09050.js';
 import { B09060 } from '../ct-p09/B09060.js';
 
+import { D06003 } from '../ct-d06/D06003.js';
+import { D06004 } from '../ct-d06/D06004.js';
+import { D06021 } from '../ct-d06/D06021.js';
+import { D06023 } from '../ct-d06/D06023.js';
+import { B07100 } from '../ct-p07/B07100.js';
+import { PR234 } from '../pr-01/PR234.js';
+import { PR240 } from '../pr-01/PR240.js';
+import { B01057 } from '../ct-p01/B01057.js';
+import { B05063 } from '../ct-p05/B05063.js';
+import { PR265 } from '../pr-01/PR265.js';
+import { B09019 } from '../ct-p09/B09019.js';
+import { B04048 } from '../ct-p04/B04048.js';
+import { B06003 } from '../ct-p06/B06003.js';
+import { B07008 } from '../ct-p07/B07008.js';
+import { B08047 } from '../ct-p08/B08047.js';
+import { B06066 } from '../ct-p06/B06066.js';
+import { B01057P } from '../ct-p01/B01057P.js';
+import { B03112P } from '../ct-p03/B03112P.js';
+import { B03116P } from '../ct-p03/B03116P.js';
+import { B04048P } from '../ct-p04/B04048P.js';
+import { B04089P } from '../ct-p04/B04089P.js';
+import { B04091P } from '../ct-p04/B04091P.js';
+import { B04094P } from '../ct-p04/B04094P.js';
+import { B05063P } from '../ct-p05/B05063P.js';
+import { B05107P } from '../ct-p05/B05107P.js';
+import { B06003P } from '../ct-p06/B06003P.js';
+import { B06066P } from '../ct-p06/B06066P.js';
+import { B08047P } from '../ct-p08/B08047P.js';
+import { B08068P } from '../ct-p08/B08068P.js';
+import { B09019P } from '../ct-p09/B09019P.js';
+
+
+
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1815,4 +1849,15 @@ export const REUSE_CARDS: CardDef[] = [
   // CARD PHASE M2 attribution mini-wave (byPlayer emit + costPaid write)
   B03112, B03116, B04089, B04091, B04094, B05107,
   B07025, B08041, B08068, B09005, B09050, B09060,
+  // M2 latter batch (2026-07-10): set-card + dyn-counter + cutin-filter 15 unit
+  D06003, D06004, D06021, D06023, B07100, PR234, PR240, B01057, B05063, PR265, B09019, B04048, B06003, B07008, B08047, B06066,
+  // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 0 枚)
+
+  // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 0 枚)
+
+  // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 0 枚)
+
+  // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 14 枚)
+  B01057P, B03112P, B03116P, B04048P, B04089P, B04091P, B04094P, B05063P,
+  B05107P, B06003P, B06066P, B08047P, B08068P, B09019P,
 ];

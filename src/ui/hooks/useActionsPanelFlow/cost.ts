@@ -43,6 +43,8 @@ export function costToText(cost: Cost, resolve?: { state: GameState; ctx: Effect
       return 'デッキ上のカードをリムーブ (枚数は盤面で決まる)';
     }
     case 'discardEvidence':   return `証拠 ${cost.n} 枚をリムーブ`;
+    case 'selfLpDeltaTurn':   return `ターン終了時までこのキャラをLP${cost.delta}`; // M2後半 (2026-07-10, B06003)
+    case 'removeFromHandDownTo': return `手札が ${cost.n} 枚になるまでリムーブ`; // M2後半 (2026-07-10, B08047)
     case 'selfToDeckBottom':  return 'このキャラをデッキの下へ';
     case 'sceneToDeckBottom': return `現場のキャラ ${cost.n} 枚をデッキの下へ`; // Task D E2
     case 'removeAreaToDeckBottom': return `リムーブエリアの ${cost.n} 枚をデッキの下へ`; // cluster4 (2026-06-14)

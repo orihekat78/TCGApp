@@ -274,9 +274,14 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
             mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'host-absent' });
             return;
           }
-          const setSrcArea = ((a.target && typeof a.target === 'object')
-            ? ((a.target as { query?: { area?: string } }).query?.area)
-            : undefined) as 'remove' | 'hand' | 'deck' | undefined;
+          // M2後半 (2026-07-10, PR234 a1): area 配列 (zone union pick) 対応 — splice は各 area を
+          // 順に探して最初に見つかった zone から消費する (pick 済 cardId は一意 zone 由来)。
+          const setSrcAreaRaw = ((a.target && typeof a.target === 'object')
+            ? ((a.target as { query?: { area?: string | string[] } }).query?.area)
+            : undefined);
+          const setSrcAreas = (Array.isArray(setSrcAreaRaw) ? setSrcAreaRaw : [setSrcAreaRaw])
+            .filter((x): x is 'remove' | 'hand' | 'deck' => x === 'remove' || x === 'hand' || x === 'deck');
+          const setSrcArea = setSrcAreas[0];
           const setSrcSide = ((a.target && typeof a.target === 'object')
             ? ((a.target as { query?: { side?: string } }).query?.side)
             : undefined) as 'self' | 'opp' | undefined;
@@ -285,18 +290,24 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           // controller が opp の場合に相対化されない — 現 consumer (B08036) は side:'self' のみで非到達。
           // opp-side source の consumer 追加時は resolvePlayer 相対化を検討 (DEFERRED-INDEX megaw1)。
           const fromPlayer = setSrcSide === 'opp' ? 'opp' : setOwnerP;
-          if (setSrcArea === 'remove' || setSrcArea === 'hand' || setSrcArea === 'deck') {
-            const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[setSrcArea];
+          if (setSrcArea !== undefined) {
             for (const cid of setIds) {
-              const idx = arr?.indexOf(cid) ?? -1;
-              if (idx !== -1) {
-                arr.splice(idx, 1);
-                if (setSrcArea === 'remove') mutate.remove.emitExit(s, fromPlayer, cid); // remove→set-card 離脱 (wave-4 流儀)
+              // union pick: pick 済 cardId を各 area 順に探し、最初に見つかった zone から 1 枚消費。
+              for (const ar of setSrcAreas) {
+                const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[ar];
+                const idx = arr?.indexOf(cid) ?? -1;
+                if (idx !== -1) {
+                  arr.splice(idx, 1);
+                  if (ar === 'remove') mutate.remove.emitExit(s, fromPlayer, cid); // remove→set-card 離脱 (wave-4 流儀)
+                  break;
+                }
               }
             }
           }
           for (const cid of setIds) {
-            mutate.char.setCard(s, scUid, cid, false); // 裏向きでセット (rules/16)
+            // M2後半 (2026-07-10, PR234 a1): faceUp:true 明示時のみ表向きセット (「表向きでセットする」)。
+            // 既定は従来どおり裏向き (rules/16) — B08036 等の既存 consumer は引数無しで裏向き前提 = byte 互換。
+            mutate.char.setCard(s, scUid, cid, a.faceUp === true);
           }
           mutate.log.append(s, { ts: Date.now(), player: setOwnerP, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: setIds.join(',') });
           return;

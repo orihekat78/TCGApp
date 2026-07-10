@@ -187,6 +187,16 @@
   lint/テスト実走系 lens。迷ったら opus
 - **★2026-07-10 追加: 純機械 lens は haiku 4.5 に降格可**: 出力が機械検証可能な collect/grep 突合/
   dump 収集 lens は `model:'haiku', effort:'low'`。判断が 1 mm でも入るなら sonnet 以上
+- **★2026-07-10 追加 (user 指示): Agent/Workflow の model は必ず明示 — 未指定禁止**。
+  未指定 = session 本体モデルを継承する仕様 (opus fallback ではない)。fable session で author を
+  未指定起動し fable 課金した実害あり。起動前にタスク tier を判定して明示する:
+  | タスク | model |
+  |---|---|
+  | 機械 (grep 突合/dump/collect) | haiku low (判断入るなら sonnet low) |
+  | grounding 判定/設計 spec/意味等価 lens | sonnet (effort high) |
+  | card authoring (grounding spec に DSL 案確定済) | opus (純 clone spread は sonnet) |
+  | 敵対 review | sonnet+opus 混成 各1 |
+  | ルール裁定/lens 割れ裁定/T3 最終 verify | fable |
 - **★2026-07-03 改定: Sonnet 5 を grounding/設計/意味等価 lens に昇格** (ユーザー指示で A/B 実測。
   既知正解 3 タスク — grounding 罠 2種 (name-grep 偽陽性/union 登録済 stub)・contact-guard 配置罠・
   意味等価 誤り2件仕込み — を **sonnet5 が全問 opus 級で通過**)。新運用: grounding 判定/設計 spec/

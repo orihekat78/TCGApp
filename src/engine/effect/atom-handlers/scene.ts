@@ -97,6 +97,12 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             }, { player: enterP, uid: nc.uid, cardId: cid });
             enteredGroup.push({ kind: 'char', uid: nc.uid, cardId: cid, player: enterP });
           }
+          // M2後半 (2026-07-10, B09019): 実登場キャラ群を bind (「この効果によってキャラが5枚登場した場合」
+          // = boundCountCompare が読む)。scene-full-skip 分は enteredGroup に積まれない → 実登場のみ計数。
+          // 0枚でも明示 [] を書く (evidenceFlip declined と同 posture — 「0枚登場した」を記録)。
+          if (typeof a.bind === 'string') {
+            (ctx.bindings as Record<string, unknown>)[a.bind] = enteredGroup;
+          }
           // engine mega-wave W4 (2026-07-03, r83 G34): batch 単位の enter:group を 1 回だけ emit
           // (per-cid でなく呼出単位、「その中から1枚」の母集合)。viaEffect=true のみ (「能力や効果によって」)。
           if (viaEffectM && enteredGroup.length > 0) {

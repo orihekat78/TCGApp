@@ -37,7 +37,12 @@ export function atomDrawUpToHandSize(s: GameState, a: Record<string, unknown>, c
       const drawPlayer = resolvePlayer(a.player, ctx);
       const target = requireField<number>(a, 'n', 'number');
       const need = Math.max(0, target - s.players[drawPlayer].hand.length);
-      if (need > 0) mutate.deck.draw(s, drawPlayer, need);
+      // M2後半 (2026-07-10, B04048): 引いた cardId 群を bind (「引いた枚数と同じ数」を後段
+      // handToDeckBottom n:{dyn:'$bound.<key>.count'} が読む)。mill/discard と同 idiom (0枚は書かない)。
+      const drawn = need > 0 ? mutate.deck.draw(s, drawPlayer, need) : [];
+      if (typeof a.bind === 'string' && drawn.length > 0) {
+        (ctx.bindings as Record<string, unknown>)[a.bind] = drawn.map((cardId) => ({ cardId }));
+      }
       mutate.log.append(s, {
         ts: Date.now(),
         player: drawPlayer,
@@ -58,11 +63,16 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       // BUG-076: awaiting-pick 時に tryRePickFromAtom で side-channel 再 set (連続 pick)
       // 物理動作 atom 化: { player, n } の省略形を受け取れるよう default pick target で補完
       const dcP = resolvePlayer(a.player, ctx);
+      // M2後半 (2026-07-10, B07100): chooser:'source' — 「(自分が) 選び、相手はそれをリムーブする」。
+      // 選ぶ主語 = 能力所有者 (ctx.source.player)、手札所有者 (dcP) と分離する。pending 側は
+      // BUG-175 の ownerPlayer 分離が chooser≠owner の再実行座標系を既に支える。未指定は従来
+      // どおり手札所有者が選ぶ (byte 互換)。
+      const dcChooser = a.chooser === 'source' ? ctx.source.player : dcP;
       const dcArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.discard.defaultArea, a, dcP, dcP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.discard.defaultArea, a, dcChooser, dcP) }
         : a;
       if (!Array.isArray(dcArgs.target)) {
-        tryRePickFromAtom(s, { kind: 'atom', verb, args: dcArgs }, ctx, { byPlayer: dcP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
+        tryRePickFromAtom(s, { kind: 'atom', verb, args: dcArgs }, ctx, { byPlayer: dcChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, {
           ts: Date.now(),
           player: dcP,
@@ -95,7 +105,15 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
 // atomDiscard の PB 短縮形 clone (dest = remove でなくデッキ末尾)。「好きな順番」= picked 順で push
 // (デッキ下の順は非公開情報 rules/02 — 順序は所有者選択、engine は picked 順を尊重)。
 // リムーブではないため hand:removed は emit しない (rules/03 zone 移動のみ)。bind = 移した cardId 群。
-export function atomHandToDeckBottom(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+export function atomHandToDeckBottom(s: GameState, a0: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      // M2後半 (2026-07-10, B04048): n:{dyn:'$bound.<key>.count'} を handler-local で解決
+      // (「引いた枚数と同じ数の手札を…デッキの下に移す」)。evidenceFlip dyn-max と同封じ込め
+      // (共有 helper は byte 不変)。解決値 <=0 は「0枚移す」= no-op (pick を出さない)。
+      const a = isDynObject(a0.n) ? { ...a0, n: resolveDynNumber(a0.n, s, ctx) } : a0;
+      if (isDynObject(a0.n) && (a.n as number) <= 0) {
+        mutate.log.append(s, { ts: Date.now(), player: resolvePlayer(a.player, ctx), turn: s.turn.number, action: 'effect:handToDeckBottom', result: 'dyn-n-0' });
+        return;
+      }
       const hdP = resolvePlayer(a.player, ctx);
       // multi-pick は cardIds:'$pick.cardIds' contract 必須 (B09034/B08028 同型 — short-form N>1 は
       // normalizeTargetToString で 1 枚に collapse する engine-wide 既知罠。miniwave3 probe で実測)。
@@ -123,6 +141,16 @@ export function atomHandToDeckBottom(s: GameState, a: Record<string, unknown>, c
 
 function hdMove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, hdP: 'self' | 'opp', hdTarget: string[]): void {
       const hdHand = s.players[hdP].hand;
+      // M2後半 (2026-07-10, B04048): shuffleMoved — 「シャッフルしてデッキの下に移す」= 移動群のみ
+      // 順序無作為化 (Fisher-Yates、mutate.deck.shuffle と同 idiom)。デッキ全体 shuffle
+      // (shuffleThenDrawMoved、B05092) とは別物。既存カードは未指定 = picked 順 push 不変。
+      if ((a as { shuffleMoved?: unknown }).shuffleMoved === true) {
+        hdTarget = [...hdTarget];
+        for (let i = hdTarget.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = hdTarget[i]; hdTarget[i] = hdTarget[j]; hdTarget[j] = tmp;
+        }
+      }
       const movedIds: string[] = [];
       for (const cid of hdTarget) {
         const i = hdHand.indexOf(cid);
@@ -274,7 +302,11 @@ export function atomPartnerAreaRemove(s: GameState, a: Record<string, unknown>, 
 export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // BUG-073: effect log
       const millP = resolvePlayer(a.player, ctx);
-      const millN = a.n as number;
+      // M2後半 (2026-07-10, PR265): n:{dyn:'$bound.<key>.level'} を handler-local で解決
+      // (「そのカードのレベルと同じ枚数リムーブする」)。chain 経路は pre-walk (resolveDynArgs) を
+      // 通らず、前段 bind は実行時確定のため handler 側で数値化する (souza x:{dyn} / atomDraw と同型。
+      // number は素通り = 既存 literal 消費者 byte 互換)。
+      const millN = typeof a.n === 'number' ? a.n : resolveDeltaToNumber(a.n, s, ctx);
       // deck-mill-gated-chain wave (2026-06-23): gate:true は「上からN枚リムーブする」が実行不能
       // (deck<N) のとき何もリムーブせず chainStepNoApply を立て、chain (「そうした場合」) を break する。
       // 公式Q&A (B01044/B03094/B05061/B06016): 「N枚リムーブが実行できない場合、それ以降の効果は
@@ -981,7 +1013,11 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
       const hafrArgs = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handAddFromRemove.defaultArea, a, p, p) }
         : a;
-      const target = normalizeTargetToString(hafrArgs.target);
+      // M2後半 (2026-07-10, PR234 a2): target の bind 参照 ($trigger.setCardId 等) を解決してから
+      // cardId 照合する。「その中から1枚」= trigger payload の厳密対象 (filter:{cardName} 代替は
+      // 同名別 printing 混在で観測差)。非 '$' 文字列は resolveBindRef が素通し = 既存 byte 互換。
+      const target0 = normalizeTargetToString(hafrArgs.target);
+      const target = typeof target0 === 'string' ? (resolveBindRef(target0, ctx) as string) : target0;
       if (!target) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: hafrArgs }, ctx, { byPlayer: p, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove:awaiting-pick' });

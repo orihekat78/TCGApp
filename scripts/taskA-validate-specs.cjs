@@ -119,13 +119,15 @@ const COSTS = new Set([
   'revealFromHand', // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
   'revealHandToDeckTop', // engine mega-wave W1 (2026-07-03, P29): 手札公開→デッキ上 cost (B05049 a1)
   'partnerAreaRemove', // engine defer-unlock mini-wave (2026-07-09): PA カード n 枚リムーブ cost (B07039)
+  'selfLpDeltaTurn', // M2後半 (2026-07-10): 〚ターン終了時までLP-2する〛(B06003 a1)
+  'removeFromHandDownTo', // M2後半 (2026-07-10): 〚手札が n 枚になるまでリムーブ〛(B08047 a2)
 ]);
 
 const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'conditional', 'forEach', 'atom', 'chain']);
 const SHARED_FNS = new Set(['misreadX', 'souzaX', 'partnerColorKeyword', 'eventRemoveByAP', 'caseTraitConditioned', 'caseResolvedHandRemove', 'caseDeclaredEvidenceFlip']);
 const ABILITY_TYPES = new Set(['continuous', 'triggered', 'declared', 'icon-disguise', 'icon-misread']);
 const SCOPES = new Set(['on-scene', 'on-partner-area', 'on-hand', 'on-evidence', 'on-set-host', 'always']); // on-set-host: shipped 2026-06-29c (B01039/B05041/B07014 稼働、whitelist stale だった)
-const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn', 'shippuFiredCharThisTurn']);
+const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'cutinTextIncludes', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn', 'shippuFiredCharThisTurn']);
 
 function walk(node, errs, ctx) {
   if (node === null || typeof node !== 'object') {

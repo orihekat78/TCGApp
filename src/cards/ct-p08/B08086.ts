@@ -31,7 +31,7 @@ const a1: AbilityDef = {
   },
   // 相手の現場のキャラ1枚につき AP+2000
   continuousModifier: { apDelta: { dyn: '$self.oppSceneCount * 2000' } },
-  description: '【パートナー黒】【自分ターン中】相手の現場のキャラ1枚につきAP+2000。',
+  description: '【パートナー黒】【自分ターン中】相手の現場のキャラ1枚につきAP＋2000。',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };
 
@@ -48,7 +48,7 @@ const a2: AbilityDef = {
     if: contactTargetMatches({ colors: ['黒'] }),
     then: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 2000, scope: 'contact' } },
   },
-  description: '【カットイン】【自分ターン中】[黒]のキャラに【カットイン】する場合、AP+2000。',
+  description: '【カットイン】【自分ターン中】[黒]のキャラに【カットイン】する場合、AP＋2000。',
   ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'],
 };
 

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `631ef954d926`
+> Source hash: `75652dda3082`
 
 公式ルール [`01-victory-conditions.md`](../../../rules/01-victory-conditions.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,10 +21,11 @@
 ## 📐 関連 Spec
 
 - [`engine-api-flow-setup`](../by-spec/engine-api-flow-setup.md)
+- [`B05063`](../by-spec/grounding--B05063.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 
-## 📄 参照ソース (112)
+## 📄 参照ソース (113)
 
 - [`src/ai/match.ts`](../../../../src/ai/match.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -46,4 +47,4 @@
 - [`src/cards/ct-d11/D11011.ts`](../../../../src/cards/ct-d11/D11011.ts)
 - [`src/cards/ct-d11/D11021.ts`](../../../../src/cards/ct-d11/D11021.ts)
 - [`src/cards/ct-p01/B01024.ts`](../../../../src/cards/ct-p01/B01024.ts)
-- _...ほか 92 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 93 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

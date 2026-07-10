@@ -1,7 +1,8 @@
 // P-spread generator: base 出荷済 + TSV 全列同文の P variant を slim clone で生成し _reuse/index.ts に登録
 const fs = require('fs');
 const path = require('path');
-const ROOT = 'C:/Users/arumi/OneDrive/デスクトップ/conan';
+// M2後半 (2026-07-10): ROOT hardcode を env 対応に (worktree 運用で spread 0 件になる latent の恒久 fix)。
+const ROOT = process.env.CONAN_ROOT || 'C:/Users/arumi/OneDrive/デスクトップ/conan';
 
 const corpus = JSON.parse(fs.readFileSync(path.join(ROOT, '.tmp/compiler/corpus.json'), 'utf8')).cards;
 const byId = new Map(corpus.map(c => [c.id, c]));

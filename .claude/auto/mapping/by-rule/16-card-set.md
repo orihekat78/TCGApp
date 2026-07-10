@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `631ef954d926`
+> Source hash: `75652dda3082`
 
 公式ルール [`16-card-set.md`](../../../rules/16-card-set.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -14,12 +14,13 @@
 
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
 
-## 📄 参照ソース (73)
+## 📄 参照ソース (76)
 
 - [`src/cards/ct-d08/D08021.ts`](../../../../src/cards/ct-d08/D08021.ts)
 - [`src/cards/ct-d10/D10024.ts`](../../../../src/cards/ct-d10/D10024.ts)
 - [`src/cards/ct-p01/B01023.ts`](../../../../src/cards/ct-p01/B01023.ts)
 - [`src/cards/ct-p01/B01039.ts`](../../../../src/cards/ct-p01/B01039.ts)
+- [`src/cards/ct-p01/B01057.ts`](../../../../src/cards/ct-p01/B01057.ts)
 - [`src/cards/ct-p02/B02013.ts`](../../../../src/cards/ct-p02/B02013.ts)
 - [`src/cards/ct-p02/B02018.ts`](../../../../src/cards/ct-p02/B02018.ts)
 - [`src/cards/ct-p02/B02019.ts`](../../../../src/cards/ct-p02/B02019.ts)
@@ -35,5 +36,4 @@
 - [`src/cards/ct-p03/B03033.ts`](../../../../src/cards/ct-p03/B03033.ts)
 - [`src/cards/ct-p03/B03034.ts`](../../../../src/cards/ct-p03/B03034.ts)
 - [`src/cards/ct-p03/B03035.ts`](../../../../src/cards/ct-p03/B03035.ts)
-- [`src/cards/ct-p03/B03039.ts`](../../../../src/cards/ct-p03/B03039.ts)
-- _...ほか 53 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 56 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

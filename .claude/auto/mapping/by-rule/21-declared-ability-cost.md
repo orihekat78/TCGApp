@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `631ef954d926`
+> Source hash: `75652dda3082`
 
 公式ルール [`21-declared-ability-cost.md`](../../../rules/21-declared-ability-cost.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,9 +21,11 @@
 
 - [`engine-api-card-shape`](../by-spec/engine-api-card-shape.md)
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
+- [`B05063`](../by-spec/grounding--B05063.md)
+- [`PR265`](../by-spec/grounding--PR265.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (331)
+## 📄 参照ソース (337)
 
 - [`src/ai/ability-ctx.ts`](../../../../src/ai/ability-ctx.ts)
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
@@ -45,4 +47,4 @@
 - [`src/cards/ct-d10/D10021.ts`](../../../../src/cards/ct-d10/D10021.ts)
 - [`src/cards/ct-d11/D11003.ts`](../../../../src/cards/ct-d11/D11003.ts)
 - [`src/cards/ct-d11/D11004.ts`](../../../../src/cards/ct-d11/D11004.ts)
-- _...ほか 311 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 317 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

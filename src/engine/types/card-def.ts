@@ -206,6 +206,11 @@ export type ContinuousModifier = {
   //   (公式 QA: 「手札にある間だけ。現場では元のレベル」)。不在時 no-op (baseline 不変)。
   lvlOverrideInHand?: number;
   lvlDeltaInHand?: number;
+  // M2後半 (2026-07-10, B07008): hand 内 per-count level modifier —
+  //   「自分の現場にいる〚カード名[X]〛か特徴[Y]のキャラ1枚につきレベル-1」。
+  //   filterAny (OR、per-char 判定 = 両該当でも 1 枚は 1 で二重計上なし) に一致する自現場キャラ数 × delta を
+  //   effectiveHandLevel が加算する (honor site は同 helper 1 箇所で閉じる — scene 側 level 読みは不変)。
+  lvlDeltaInHandPer?: { delta: number; filterAny: TargetFilter[] };
   // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura (rules/15, 17 §【自分ターン中】, 24 §常時有効型)。
   // 「【自分ターン中】自分の現場にいる [auraFilter] のキャラを AP±N」型。bearer の **同一 side の現場**の各キャラに対し、
   //   auraFilter (matchOneFilter で 有効値=turnEffects 反映レベル を判定) が一致すれば apDeltaAura/lpDeltaAura を加算する。

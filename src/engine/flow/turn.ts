@@ -79,15 +79,23 @@ export function endTurn(state: GameState, p: Player): void {
   // 「ターン終了時、このキャラを現場からデッキの下に移す」(PR181/B07079) → scene.toDeck (rules/16 清掃込み)
   // 挿入位置: phase:end:start trigger (①能力発動) の後・clearTurnEffects (②効果切れ) の前 (rules/05)。
   // iterate 中の splice を避けるため uid を snapshot してから処理する。
+  // M2後半 (2026-07-10, B05063): toHandOnTurnEnd — 「ターン終了時、このキャラを現場から手札に移す」。
+  // 手札移動はリムーブでない → leave:to-remove 不発 (rules/17【現場リムーブ時】非該当) = scene.toHand が担保。
   for (const player of ['self', 'opp'] as const) {
     const consumed = state.players[player].scene
-      .filter(c => c.turnEffects.removeOnTurnEnd === true || c.turnEffects['toDeckBottomOnTurnEnd'] === true)
-      .map(c => ({ uid: c.uid, toRemove: c.turnEffects.removeOnTurnEnd === true }));
-    for (const { uid, toRemove } of consumed) {
-      if (toRemove) {
+      .filter(c => c.turnEffects.removeOnTurnEnd === true || c.turnEffects['toDeckBottomOnTurnEnd'] === true || c.turnEffects['toHandOnTurnEnd'] === true)
+      .map(c => ({
+        uid: c.uid,
+        dest: c.turnEffects.removeOnTurnEnd === true ? 'remove' as const
+          : c.turnEffects['toDeckBottomOnTurnEnd'] === true ? 'deck' as const : 'hand' as const,
+      }));
+    for (const { uid, dest } of consumed) {
+      if (dest === 'remove') {
         sceneMutator.removeToRemove(state, uid, 'effect');
-      } else {
+      } else if (dest === 'deck') {
         sceneMutator.toDeck(state, uid, 'bottom');
+      } else {
+        sceneMutator.toHand(state, uid);
       }
     }
   }

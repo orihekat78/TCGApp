@@ -1364,3 +1364,31 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
   channel) で B09027 と同居して配線 + playwright で踏む
 - **[KNOWN GAP 再掲] handAddFromRemove PB 短縮形 owner=opp 反転** (B07025 probe S6 で lock):
   [[BUG-181]] family、M5 resolver 回で一括修正
+
+## M2 後半 batch nits (2026-07-10 夜、engine additive 14 点 + 15 unit)
+
+- **出荷 15 unit** (予定、ship 時確定): D06003/D06004/D06021/D06023 (cutinTextIncludes family) /
+  B07100 / PR234+PR240 / B01057 / B05063 / PR265 / B09019 / B04048 / B06003 / B07008 / B08047 /
+  B06066 — 本 index の該当旧行は解消済として読み替え。DEFER 行 stale 5 箇所検出
+  (B06066 sleepChar cost / B01057 fromSelf+on-set-host gate / PR234 setcard:leave faceUp filter /
+  B07100 opponentHand verb / B07008 in-hand modifier — grounding specs/grounding/<ID>.md に記録)
+- **B02039 → M3 送り**: set-card→証拠 verb + entry 単位 pick が T3 (UI 配線)。M3 UI mega (PA batch +
+  B09027 cost-choice + B08068 human 0公開) と同居
+- **[NIT] grounding 誤り検出**: PR234 spec の「B08036 は faceUp 引数明示」は誤 (実際は hardcode 依存)。
+  fix は faceUp===true opt-in に変更して byte 互換維持 — 既定反転は B08036 を回帰させた
+- **[NIT] removeFromHandDownTo head-fixed**: どの札を残すかの owner-choice pick は全 target-pick cost
+  共通の既存制約 (pay.ts:54) と同 posture。cost pick channel (M3 UI mega) で一括改善
+- **[NIT] normalizeSource は abilityId を運ばない** (event/registry.ts:48、全 triggered entry 共通) —
+  pendingEffects からの ability 識別は hook + source.cardId + effect 形で行う (rider probe で実踏)
+- **[LATENT] B07003 出荷時**: cutinTextIncludes / defHasKeyword は CardDef 静的判定 — 手札カードへの
+  cutin 付与 (B07003) 出荷時に state-aware presence reader へ拡張必須 (rules/17 付与も「持つ」裁定)
+- **[LATENT] shuffleMoved は Math.random** (mutate.deck.shuffle と同 idiom) — seed 化する場合は両方同時に
+- **[REVIEW 追記 2026-07-10 夜] edge lens 検出分**: ①resolveDynArgs guard の regex `\$bound\.(\$?\w+)` は
+  非 ASCII bind key を取り零す (現 corpus 全 ASCII で実害 0 — bind key ASCII 強制 lint が将来措置)
+  ②B08028 宣言 production 経路 probe 不在 (guard で dyn-max が復活 = 治る方向。probe 追加は次回)
+  ③handleLeaveToRemoveSelf は rider の【ターンN】limit を enforce しない (limit 付き rider 出現前に guard 要)
+  ④selfLpDeltaTurn は ctx.source.uid 不在 (case/event scope) で pay throw — char 専用の authoring 規約
+  ⑤union pick の恒久 fix = pick channel に zone 同梱 (synthetic uid を cardId#area#index 化)。
+  当面は area 配列を remove 先順で書く規約
+- **[FIXED 同 wave] B05045/B08086 cutin description 半角 +** — TSV master は全角 ＋ (corpus 半角 0 件)。
+  cutinTextIncludes 偽陰性の実害を修正。**新規約: cutin description の「AP＋」は全角必須** (lint 候補)

@@ -269,6 +269,12 @@ export type TargetFilter = {
   // honor 経路 = matchOneFilter / boundMatchesFilter / targetFilterToPredicate の3 filter-eval サイト。
   colorNot?: string | string[];
   keyword?: string | string[];
+  // M2後半 (2026-07-10, D06003/D06004/D06021/D06023): カットイン効果内容 filter —
+  // 「【カットイン】AP＋」を持つ = cutin ability の印字 description が指定文字列を包含するか。
+  // 公式 qAndA (D06003) の判定基準は文字列包含 (ウォッカ B01097 = cutin draw 型は「AP＋」を含まず除外)。
+  // keyword:'カットイン' (形状判定のみ) では表現不能。honor = matchOneFilter (defHasCutinTextIncludes 経由、
+  // def ベースなので remove-area card candidate でも動く)。
+  cutinTextIncludes?: string;
   // BUG-118: カード種別 filter ('character' | 'event')。deckRevealUntil (targetFilterToPredicate) は
   // 元から評価していたが matchOneFilter (target pick 経路) が未評価だったため型に昇格して両経路で honored 化。
   kind?: 'character' | 'event';
@@ -309,7 +315,10 @@ export type TargetFilter = {
 };
 
 export type TargetQuery = {
-  area?: 'scene' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case';
+  // M2後半 (2026-07-10, PR234 a1): 配列 = zone union (「手札かリムーブエリアにある」を 1 pick で横断)。
+  // enumerateByQuery が area ごとに列挙して連結する。既存カードは単一 string = byte 互換。
+  area?: 'scene' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case'
+    | Array<'scene' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case'>;
   side?: 'self' | 'opp' | 'either' | 'owner' | 'opp-of-owner';
   filter?: TargetFilter;
   filterAny?: TargetFilter[];
@@ -568,6 +577,16 @@ export type Cost =
   //   カードを1枚リムーブする」): true で host を能力使用キャラ自身 (ctx.source.uid) に限定。
   //   未指定 = 従来通り自陣全キャラ (B08033「現場にいるキャラに〜」)。
   | { kind: 'removeSetCard'; n: number; hostSelf?: boolean }
+  // M2後半 (2026-07-10, B06003 a1): 〚ターン終了時までLP-2する〛— 自身への turn-scope LP デルタ cost。
+  //   canPay 恒真 (LP 下限なし rules/19、公式Q&A: LP1以下でも支払可・負値可)。pay = lpMod_turn 書込
+  //   (mutate.char.modifyLP scope:'turn'、clearTurnEffects で失効)。emit なし — rules/21 コストで
+  //   行ったことは「効果によって〜したとき」条件を満たさない。
+  | { kind: 'selfLpDeltaTurn'; delta: number }
+  // M2後半 (2026-07-10, B08047 a2): 〚手札が n 枚になるまで手札をリムーブする〛— down-to 可変枚数 cost。
+  //   canPay 恒真 (公式Q&A B08047: 手札2枚以下でも宣言可、その場合このコストは実質支払なし)。
+  //   pay = max(0, hand-n) 枚を viaCost で discardToRemove (hand:removed 非 emit、rules/21)。
+  //   どの札を残すかは head-fixed (全 target-pick cost 共通の既存制約 pay.ts:54 と同 posture)。
+  | { kind: 'removeFromHandDownTo'; n: number }
   // engine mega-wave W4 (2026-07-03, r6): 〚現場にいる…のキャラを n 枚このキャラの下に重ねる〛コスト
   //   (B09048 中森銀三 a2)。mutate.scene.toStack (非リムーブ離場、rules/16 情報喪失・cascade) を
   //   cost 経路から呼ぶ。host = 能力使用キャラ自身 (ctx.source.uid)。

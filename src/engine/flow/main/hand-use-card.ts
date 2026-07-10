@@ -111,10 +111,21 @@ export function effectiveHandLevel(state: GameState, p: Player, cardId: string):
   for (const ab of d.abilities ?? []) {
     if (ab.type !== 'continuous') continue;
     const m = ab.continuousModifier;
-    if (!m || (m.lvlOverrideInHand === undefined && m.lvlDeltaInHand === undefined)) continue;
+    if (!m || (m.lvlOverrideInHand === undefined && m.lvlDeltaInHand === undefined && m.lvlDeltaInHandPer === undefined)) continue;
     if (ab.condition && !evalCond(state, ab.condition, ctx)) continue;
     if (m.lvlOverrideInHand !== undefined) base = m.lvlOverrideInHand;
     if (m.lvlDeltaInHand !== undefined) delta += m.lvlDeltaInHand;
+    // M2後半 (2026-07-10, B07008): per-count — filterAny (OR、per-char 判定) に一致する自現場キャラ数 × delta。
+    // matchOneFilter は静的評価のみ (continuousDeltaSafe 再帰系を踏まない)。両 filter 該当でも 1 枚は 1。
+    if (m.lvlDeltaInHandPer !== undefined) {
+      const per = m.lvlDeltaInHandPer;
+      let cnt = 0;
+      for (const ch of state.players[p].scene) {
+        const cand = { kind: 'char' as const, uid: ch.uid, cardId: ch.cardId, player: p };
+        if (per.filterAny.some(f => matchOneFilter(state, ch.cardId, f, ch, cand))) cnt++;
+      }
+      delta += per.delta * cnt;
+    }
   }
   return base + delta;
 }

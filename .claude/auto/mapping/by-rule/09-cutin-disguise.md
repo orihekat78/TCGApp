@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `631ef954d926`
+> Source hash: `75652dda3082`
 
 公式ルール [`09-cutin-disguise.md`](../../../rules/09-cutin-disguise.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,9 +21,10 @@
 
 - [`card-condition-catalog`](../by-spec/card-condition-catalog.md)
 - [`engine-api-flow-contact`](../by-spec/engine-api-flow-contact.md)
+- [`B07100`](../by-spec/grounding--B07100.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (224)
+## 📄 参照ソース (226)
 
 - [`src/cards/_shared/contactTargetMatches.ts`](../../../../src/cards/_shared/contactTargetMatches.ts)
 - [`src/cards/_shared/eventRemoveByAP.ts`](../../../../src/cards/_shared/eventRemoveByAP.ts)
@@ -45,4 +46,4 @@
 - [`src/cards/ct-d04/D04009.ts`](../../../../src/cards/ct-d04/D04009.ts)
 - [`src/cards/ct-d04/D04012.ts`](../../../../src/cards/ct-d04/D04012.ts)
 - [`src/cards/ct-d04/D04015.ts`](../../../../src/cards/ct-d04/D04015.ts)
-- _...ほか 204 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 206 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

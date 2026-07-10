@@ -13,7 +13,7 @@ import type {
   CardDef,
 } from '@/engine/types';
 import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from './card-def-registry.js';
-import { defHasKeyword } from '@/engine/read/keyword.js';
+import { defHasKeyword, defHasCutinTextIncludes } from '@/engine/read/keyword.js';
 
 // BUG-113: 数値フィルタの有効値に continuousModifier.apDelta/lpDelta (継続効果 dyn) を含める。
 // read/char.ts → cond/eval.ts → candidates.ts の静的 import 循環を避けるため late-binding (register) で注入。
@@ -172,6 +172,15 @@ export function candidates(state: GameState, ref: TargetingRef, ctx: EffectCtx):
 }
 
 function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx): Candidate[] {
+  // M2後半 (2026-07-10, PR234 a1): area 配列 = zone union — area ごとに列挙して連結
+  // (「手札かリムーブエリアにある〚X〛を1枚」の単一 pick)。単一 string は従来経路 = byte 互換。
+  if (Array.isArray(query.area)) {
+    const merged: Candidate[] = [];
+    for (const ar of query.area) {
+      merged.push(...enumerateByQuery(state, { ...query, area: ar }, ctx));
+    }
+    return merged;
+  }
   const area = query.area ?? 'scene';
   const sides = sidesForQuery(query, ctx);
   const out: Candidate[] = [];
@@ -452,6 +461,12 @@ export function matchOneFilter(
     // ミスリード) は keywords[] ではなく ability 構造で表現される。defHasKeyword が両表現を吸収する
     // (旧実装は keywords[] のみ → B05112「【カットイン】を持つキャラ」が候補0で機能しなかった)。
     if (!wants.some(w => defHasKeyword(d, w))) return false;
+  }
+
+  // M2後半 (2026-07-10, D06003): cutin 効果内容 filter — 「【カットイン】AP＋」を持つ (印字包含判定、
+  // qAndA ウォッカ B01097 除外)。def ベースなので remove-area card candidate (c===null) でも動く。
+  if (filter.cutinTextIncludes !== undefined) {
+    if (!defHasCutinTextIncludes(d, filter.cutinTextIncludes)) return false;
   }
 
   // BUG-118: カード種別 filter ('character' | 'event')。本関数 (target pick 候補列挙の正準経路) が

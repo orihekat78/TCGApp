@@ -647,11 +647,28 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
     cardId: s.cardId,
     area: 'scene', // 現場にいた → on-scene scope を通す (rules/17)
   };
-  for (const ability of def.abilities as AbilityDef[]) {
+  // M2後半 (2026-07-10, B01057 a2): host の faceUp setCards が持つ scope:'on-set-host' +
+  // hook:'leave:to-remove' rider も走査する。emit 順序 = setCards→remove push → host splice → emit
+  // のため in-play scan (handleHook) からは見えない — payload.removedChar (splice 前 snapshot、
+  // setCards 保持) から entry 単位で def を引く (公式Q&A: 2枚セット→2つ発動)。裏向きは不発 (rules/16)。
+  // source = host (uid/cardId/player) — rider の「このキャラ (host) がリムーブされたとき」座標系。
+  const riderAbilities: AbilityDef[] = [];
+  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean }[] } } | undefined)?.removedChar;
+  for (const entry of removedChar?.setCards ?? []) {
+    if (entry.faceUp !== true) continue;
+    const setDef = readDef.card(entry.cardId);
+    for (const ab of (setDef?.abilities ?? []) as AbilityDef[]) {
+      if (ab.type === 'triggered' && ab.scope === 'on-set-host' && ab.trigger?.hook === 'leave:to-remove') {
+        riderAbilities.push(ab);
+      }
+    }
+  }
+  for (const ability of [...(def.abilities as AbilityDef[]), ...riderAbilities]) {
     if (ability.type !== 'triggered') continue;
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'leave:to-remove') continue;
-    if (!scopeAllowsArea(ability.scope, card.area)) continue;
+    // rider (on-set-host) は host 現場離場 = scope 成立済みなので area gate を通す (host 印字は従来どおり)。
+    if (ability.scope !== 'on-set-host' && !scopeAllowsArea(ability.scope, card.area)) continue;
     if (trig.selfOnly && !selfOnlyMatches(card, payload, source)) continue;
     if (trig.matcher && !trig.matcher(payload, state)) continue;
     const baseCtx = {

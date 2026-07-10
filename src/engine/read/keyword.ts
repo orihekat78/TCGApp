@@ -26,6 +26,17 @@ export function abilityIsCutin(ab: AbilityDef): boolean {
 }
 
 /**
+ * M2後半 (2026-07-10, D06003): CardDef が「【カットイン】<text>」を持つか — cutin ability の
+ * 印字 description が text を包含するかで判定 (公式 qAndA の裁定基準は文字列包含。
+ * 構造 walk (charModifyAP 有無) は「AP−」cutin や非 atom 表現で乖離しうるため不採用)。
+ * エラッタ後テキストが description の正 (rules/28)。
+ */
+export function defHasCutinTextIncludes(def: CardDef | undefined, text: string): boolean {
+  if (!def) return false;
+  return (def.abilities ?? []).some(ab => abilityIsCutin(ab) && (ab.description ?? '').includes(text));
+}
+
+/**
  * ヒラメキ能力か (2026-05-27 Option C: type:'triggered' +
  * trigger:{hook:'evidence:remove-by-action', optional:true})。
  */

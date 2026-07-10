@@ -85,7 +85,20 @@ function resolveDynArgs(
       'dyn' in v &&
       typeof (v as { dyn: unknown }).dyn === 'string'
     ) {
-      out[k] = evalDyn(state, (v as { dyn: string }).dyn, ctx);
+      // M2後半 (2026-07-10, PR265): `$bound.<key>.*` 参照で <key> が初期 walk 時点で未 bind の場合は
+      // literal 化を保留する ({dyn} のまま残す)。chain/sequence 前段 (deckRevealUntil 等) が bind を
+      // 書くのは実行時であり、walk 時に evalDyn すると NaN が焼き込まれる (walk-literalize 罠 —
+      // binding-dependent conditional は両枝 walk するため then 内 atom も踏む)。runtime 側は
+      // handler-local resolveDeltaToNumber (mill/souza/handToDeckBottom 等) が解決する。
+      // 既 bind の $bound / 非 $bound dyn ($cost.* 等) は従来通り literal 化 (byte 互換)。
+      const dynExpr = (v as { dyn: string }).dyn;
+      const boundKeys = [...dynExpr.matchAll(/\$bound\.(\$?\w+)/g)].map((m) => m[1]);
+      const hasUnresolvedBound = boundKeys.some((key) => !(key in ((ctx.bindings ?? {}) as Record<string, unknown>)));
+      if (hasUnresolvedBound) {
+        out[k] = v;
+        continue;
+      }
+      out[k] = evalDyn(state, dynExpr, ctx);
       mutated = true;
     } else {
       out[k] = v;

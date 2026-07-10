@@ -326,6 +326,27 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       acc.paidItems.push({ kind: 'discardEvidence', details: { ids } });
       return;
     }
+    // M2後半 (2026-07-10, B06003 a1): 〚ターン終了時までLP-2する〛— lpMod_turn 書込のみ。
+    // emit なし (rules/21: コストで行ったことは「効果によって」条件を満たさない。modifyLP は
+    // event を発しない mutator なので追加抑止も不要)。clearTurnEffects で失効。
+    case 'selfLpDeltaTurn': {
+      const uid = ctx.source.uid;
+      if (!uid) throw new Error('cost.pay: selfLpDeltaTurn requires ctx.source.uid');
+      mutate.char.modifyLP(state, uid, cost.delta, 'turn');
+      acc.paidItems.push({ kind: 'selfLpDeltaTurn', details: { uid, delta: cost.delta } });
+      return;
+    }
+    // M2後半 (2026-07-10, B08047 a2): 〚手札が n 枚になるまで手札をリムーブする〛。
+    // count = max(0, hand - n)。0 枚は no-op 成功 (公式Q&A: 実質支払なし)。head-fixed
+    // (全 target-pick cost 共通の既存制約と同 posture)。viaCost で hand:removed 非 emit (rules/21)。
+    case 'removeFromHandDownTo': {
+      const p = ctx.source.player;
+      const cnt = Math.max(0, state.players[p].hand.length - cost.n);
+      const ids = state.players[p].hand.slice(0, cnt);
+      if (ids.length > 0) mutate.hand.discardToRemove(state, p, ids, { viaCost: true });
+      acc.paidItems.push({ kind: 'removeFromHandDownTo', details: { ids } });
+      return;
+    }
     case 'selfToDeckBottom': {
       const uid = ctx.source.uid;
       if (!uid) throw new Error('cost.pay: selfToDeckBottom requires ctx.source.uid');

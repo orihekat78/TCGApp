@@ -61,7 +61,7 @@ const a3: AbilityDef = {
   scope: 'on-hand',
   trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
   effect: { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 2000, scope: 'contact' } },
-  description: '【カットイン】AP+2000',
+  description: '【カットイン】AP＋2000',
   ruleRefs: ['rules/09-cutin-disguise.md'],
 };
 
