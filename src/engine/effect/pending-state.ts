@@ -362,3 +362,21 @@ export function _takePendingOptionalBindings(): Record<string, unknown> | null {
   g.__pendingEffectOptionalBindings = null;
   return v;
 }
+
+// --- optional 再開 ctx の costPaid 復元 (WC2b 2026-07-11) ---
+// declared 能力の cost で積んだ costPaid は effect resolveCtx に載る (declared-ability.ts) が、
+// top-level `optional{}` の resume ctx (apply-pick.applyOptionalAndContinuation) は costPaid を
+// 再構築しないため、optional 内で $cost.* を参照する effect (B06023 invokeHiramekiOfCard
+// cardIds:'$cost.flipFaceUpEvidence.ids') が unbound 化する。surface 時 (optional walk) の
+// ctx.costPaid を保持し resume ctx + queue entry へ復元する (bindings 復元の対称、純 additive:
+// $cost を参照する optional は本 wave 新規のみ = 既存挙動不変)。
+export function setPendingOptionalCostPaid(cp: Record<string, unknown> | undefined): void {
+  (globalThis as { __pendingEffectOptionalCostPaid?: Record<string, unknown> | null }).__pendingEffectOptionalCostPaid = cp ?? null;
+}
+/** optionalResolve 時に costPaid を取り出してクリア。 */
+export function _takePendingOptionalCostPaid(): Record<string, unknown> | null {
+  const g = globalThis as { __pendingEffectOptionalCostPaid?: Record<string, unknown> | null };
+  const v = g.__pendingEffectOptionalCostPaid ?? null;
+  g.__pendingEffectOptionalCostPaid = null;
+  return v;
+}

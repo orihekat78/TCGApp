@@ -47,7 +47,7 @@ const VERBS = new Set([
   'reserveEffect', // mega-wave W6 step8 (2026-07-04, row75) — 離場後予約効果 queue (B08069/B01058)
   'leaveInterceptRedirect', // mega-wave W6 step10 (2026-07-04, row9) — leave:intercept 宣言的 marker (B01092/B01039)
   'removeAreaToDeckTop', // mega-wave W6 step11 (2026-07-04, row999 item4 / P42) — remove→deck top pick (B07014 rider)
-  'expandActionTargets', 'log', 'invokeLeaveToRemoveOfCard', 'noop',
+  'expandActionTargets', 'log', 'invokeLeaveToRemoveOfCard', 'invokeHiramekiOfCard', 'noop',
   'bindPick', // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
   'declareName', // engine mega-wave W6 step1 (2026-07-04) — 任意カード名宣言 → ctx.declaredNames (B09112/B09108)
   'useEventFromHand', // engine mega-wave W6 step3 (2026-07-04, r63 P18) — 効果内イベント使用 (B08026/D10005/B05042)

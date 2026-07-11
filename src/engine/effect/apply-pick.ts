@@ -12,7 +12,7 @@
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
-import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings } from './resolve-picks.js';
+import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
 
 type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
@@ -310,6 +310,8 @@ export function applyOptionalAndContinuation(
   // (entry.bindings) を汚染し既存 optional (B09038 sceneEnter 等) を壊す。よって contact は 6th arg 経由でのみ伝達。
   const resumeBindings = _takePendingOptionalBindings();
   const hasResumeBindings = resumeBindings != null && Object.keys(resumeBindings).length > 0;
+  // WC2b: surface 時に保持した costPaid を復元 (optional 内 $cost.* 参照用、B06023)。null は従来挙動。
+  const resumeCostPaid = _takePendingOptionalCostPaid();
   const ctx: EffectCtx = {
     source: {
       cardId: pending.source.cardId,
@@ -322,6 +324,9 @@ export function applyOptionalAndContinuation(
     dyn: { optionalRun: run },
     // 2026-06-06 タスクC: optional 内の $trigger.<field> (B03038 の $trigger.gained 等) を解決可能に
     triggerPayload: (pending as { triggerPayload?: unknown }).triggerPayload,
+    // WC2b: $cost.* (invokeHiramekiOfCard cardIds) は runtime (entryToCtx) 解決なので下の queue entryExtras
+    // へも渡す。resume walk 自体の pre-walk でも参照できるよう ctx にも載せる。
+    ...(resumeCostPaid ? { costPaid: resumeCostPaid } : {}),
   };
   const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.player,
@@ -342,6 +347,8 @@ export function applyOptionalAndContinuation(
     // (optional 内 $contact.* / inContact pick が runAllUntilEmpty 実行時に entryToCtx で解決される)。
     // 非空 (contact 有) のときのみ渡す — 空 optional (B09038 等) は従来通り bindings 省略 = 挙動不変。
     hasResumeBindings ? (resumeBindings as Record<string, unknown[]>) : undefined,
+    // WC2b: costPaid を entry へ永続化 → runtime entryToCtx が復元し optional 内 $cost.* を解決 (B06023)。
+    resumeCostPaid ? { costPaid: resumeCostPaid } : undefined,
   );
   runAllUntilEmpty(state);
 }

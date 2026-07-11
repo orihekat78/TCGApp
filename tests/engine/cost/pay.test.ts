@@ -211,7 +211,7 @@ describe('engine.cost.pay', () => {
       expect(result.players.self.evidence[0].faceUp).toBe(true);
       expect(result.players.self.evidence[1].faceUp).toBe(false);
       expect(result.players.self.evidence[2].faceUp).toBe(true);
-      expect(ctx.costPaid?.flipFaceUpEvidence).toEqual({ count: 2 });
+      expect(ctx.costPaid?.flipFaceUpEvidence).toEqual({ count: 2, ids: ['A', 'C'] });
     });
 
     it('throws when indices.length below min', () => {

@@ -50,6 +50,7 @@ import {
   atomEvidenceToDeckBottom,
   atomHandAddFromDeck,
   atomInvokeLeaveToRemoveOfCard,
+  atomInvokeHiramekiOfCard,
   atomHandAddFromDeckBottom,
   atomHandAddFromRemove,
   atomHandToDeckBottom,
@@ -299,6 +300,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     case 'invokeLeaveToRemoveOfCard':
       return atomInvokeLeaveToRemoveOfCard(s, a, ctx);
+    case 'invokeHiramekiOfCard':
+      return atomInvokeHiramekiOfCard(s, a, ctx);
     case 'bindPick':
       return atomBindPick(s, a, ctx, verb);
     case 'declareName':

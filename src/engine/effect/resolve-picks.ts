@@ -216,6 +216,7 @@ import {
   pushPendingEffectPickSide, toPlainDeep, _peekPendingEffectChoiceSide, getPendingChoiceResume,
   setPendingChoiceResume, pushPendingEffectChoiceSide, setPendingChoiceBindings,
   pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings,
+  setPendingOptionalCostPaid,
 } from './pending-state.js';
 // Phase 3b: pending管理は pending-state.ts へ分離。旧 public API は barrel 再export で不変 (importer 改変0)。
 export {
@@ -225,6 +226,7 @@ export {
   _peekPendingEffectChoiceSide, _takePendingChoiceResume, _clearPendingChoiceResume,
   _drainPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _peekPendingEffectOptionalSide,
   _takePendingOptionalResume, _clearPendingOptionalResume, _takePendingOptionalBindings,
+  _takePendingOptionalCostPaid,
 } from './pending-state.js';
 export type {
   ContinuationFrame, PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide,
@@ -372,7 +374,18 @@ function substituteAtomPick(
   }
 
   const verb = typeof atom.verb === 'string' ? atom.verb : '';
-  const byPlayer: Player = opts.byPlayer ?? 'self';
+  // WC2a (2026-07-11, B05093 榎本梓): pick query chooser の owner 相対解決 chokepoint (唯一点)。
+  // 「相手はその中から1枚選び、自分はそれを手札に加える」= 選ぶ主体は所有者の相手 (chooser)、
+  // 恩恵 (hand-add) は所有者。owner = ctx.source.player。'opp-of-owner' のみ opp 側へ振る。
+  // 他 chooser 値 ('self'|'owner'|'opp'|'source'|undefined) と短縮形経路は opts.byPlayer 維持で
+  // byte 等価 — buildShortFormPick は **絶対** chooser を埋め、caller が同値を opts.byPlayer に渡すため
+  // (target.chooser を一律 owner 相対解釈すると owner='opp' の短縮形で二重反転する)。'opp-of-owner' は
+  // 型に存在するが既存カード/短縮形いずれも未使用 (grep 実測 0) = 純 additive。pending.player=chooser
+  // 側に載り、owner≠chooser の再実行座標系は BUG-175 pending.ownerPlayer が支える (下 push 参照)。
+  const targetChooser = (target as { chooser?: string }).chooser;
+  const byPlayer: Player = targetChooser === 'opp-of-owner'
+    ? (ctx.source.player === 'self' ? 'opp' : 'self')
+    : (opts.byPlayer ?? 'self');
 
   // mega-wave W6 step6 (2026-07-04, r79/B08014): source card が MR の「選ぶ」効果 — 解決済み現場
   // キャラ uid を informational field `_mrSelectCharUids` として args に同梱する (turnEffects への
@@ -706,6 +719,8 @@ export function resolveEffectPicks(
         // engine wave-18: surface 時の ctx.bindings ($contact.* / ctx.contact) を保持し resume ctx へ復元
         // (BUG-114 choice-bindings の対称。B04092 キャンティ optional{chain[sleep, inContact pick]})。
         setPendingOptionalBindings({ ...(ctx.bindings as Record<string, unknown>) });
+        // WC2b: surface 時の costPaid を保持 → resume ctx で $cost.* 参照可 (B06023 invoke)。
+        setPendingOptionalCostPaid((ctx as { costPaid?: Record<string, unknown> }).costPaid);
         return { kind: 'parallel', steps: [] };
       }
       // AI / non-human: skip (resolver の optionalRun 未設定 default と同じ。surface しない)

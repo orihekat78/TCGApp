@@ -542,6 +542,9 @@ export type AtomVerb =
   // event.emit('leave:to-remove') は使わない — 盤面 observer (第三者反応) が誤発火するため、対象 CardDef の
   // abilities を直接走査して queue する (effect/invoke-leave-to-remove.ts leaf)。
   | 'invokeLeaveToRemoveOfCard'
+  // 別カードの【ヒラメキ】effect を明示発動 (証拠を表向きにした結果 → その【ヒラメキ】を発動、
+  // effect/invoke-hirameki.ts leaf)。cardId|cardIds|trait|player args。B06023/B06034。
+  | 'invokeHiramekiOfCard'
   | 'log' | 'noop';
 
 // ---------- Cost ----------

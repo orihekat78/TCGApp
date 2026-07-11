@@ -1,17 +1,22 @@
 # 次セッション再開プロンプト — CARD PHASE (2026-07-11 夜間自走 run 進行中)
 
 ## ★夜間自走 run 完了 (2026-07-11 朝、本節が下より優先)
-- **合計 +50 printings (1903→1953、残 121)**。W0 (cb9831a3) +13 / WA (a1a13f4c) +19 /
-  WB (e28e58dc) +13 / WC軽 (16098619) +5。全 wave CI green (lint enum / whitelist 同期漏れ 2 件は
-  即追随 commit で修復済)。詳細 = CHANGELOG 2026-07-11-01〜04 + memory reference-night-run-2026-07-11。
-- engine ~25 primitive + UI 基盤 3 (cost-choice ChoicePicker / EffectPickerModal multi-select /
-  hirameki optional humanChooser)。BUG-186 修正・BUG-187 起票。T2 review 実 BLOCK 2
-  (removeDeckAll refresh / B05075 optional 剥奪) を同 wave 修正。
-- **次 session = Wave C 残 + Wave D** (一覧 = DEFERRED-INDEX「夜間 Wave C 軽 上書き節」の
-  「Wave C 残」行 + driver specs/night-run-2026-07-11.md Wave C/D 節)。優先: ①B05093+B02086
-  chooser:'opp' 実配線 (p4) ②hirameki invoke-by-cardId 3rep ③B06020+B07003 hand-zone cutin aura
-  ④Wave D untargetableByOppEffect cluster (B01006 B03030 B05008 B08017、T3 設計)。
-- BUG-187 (hand 系 atom side 絶対値 latent ~10 site) は個別 probe 付き修正を別 session で。
+- **合計 +54 printings (1903→1957、残 117)**。W0 (cb9831a3) +13 / WA (a1a13f4c) +19 /
+  WB (e28e58dc) +13 / WC軽 (16098619) +5 / WC2 +4。全 wave CI green。
+  詳細 = CHANGELOG 2026-07-11-01〜05 + memory reference-night-run-2026-07-11。
+- engine ~27 primitive + UI 基盤 3 + chooser:'opp-of-owner' chokepoint + invokeHiramekiOfCard。
+  BUG-186 修正・BUG-187 起票。T2 review 実 BLOCK 3 (removeDeckAll refresh / B05075 optional 剥奪 /
+  B06034 flip+invoke 潰し) を全て同 wave 修正 — review lens は費用対効果実証済。
+- **残 117 の攻略順 (user 合意: 残り 2 session で 95% 目標、完了確実は 3)**:
+  - **次 session (structural+T3 前半)**: ①B06036 (cost-flipped-ids pick source — 小、verb/channel 済)
+    ②B06020+B07003 hand-zone cutin aura ③PR279 contact immunity field ④B03093 event-pick 負 filter
+    (Wave D cluster の先行 1 点) ⑤B09024 grant scope 離脱失効 ⑥B03042/B04055/B09033 deck-reveal 拡張
+    ⑦小粒 DEFER 刈り (B09039 gate / B08002 dual-pick / B05101 revival / B09105 fileRemoveTop /
+    B07001 trait-count / B09109 $cost bindRef)。目標 +40〜50p。
+  - **次々 session**: Wave D untargetableByOppEffect 設計 spec → 実装 (B01006 B03030 B05008 B08017) /
+    intercept ⑦ 3 枚 (pick-finalization hook 新機構) / B07011 RNG / B06095 8エリア aura / B02022 /
+    B02086 opp-decision infra / 残 T3 (D06013 B02039 B01082 B06025 B08059) + 最終 sweep。
+- BUG-187 (hand 系 atom side 絶対値 latent ~10 site) は個別 probe 付き修正を独立タスクで。
 
 > モデル方針: 本体 opus (リファクタ系のみ fable)。subagent = CLAUDE.md「モデル段階化」表 — **★model 未指定禁止 (未指定 = session モデル継承。判定表 = CLAUDE.md 2026-07-10 追記)**。⚠ 応答は日本語。Caveman + Ultracode 有効。
 > 履歴詳細は CHANGELOG.md / .claude/sessions/ / memory MEMORY.md / DEFERRED-INDEX.md を参照 (本ファイルには書かない)。

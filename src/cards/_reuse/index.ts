@@ -1497,6 +1497,11 @@ import { B06032P } from '../ct-p06/B06032P.js';
 import { B09081 } from '../ct-p09/B09081.js';
 
 
+import { B05093 } from '../ct-p05/B05093.js';
+import { B05093P } from '../ct-p05/B05093P.js';
+import { B06023 } from '../ct-p06/B06023.js';
+import { B06034 } from '../ct-p06/B06034.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1935,4 +1940,8 @@ export const REUSE_CARDS: CardDef[] = [
   B06042, B06042P, B06032, B06032P, B09081,
   // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 0 枚)
 
+  // WC2a: B05093/P opp-chooser deck-reveal (chooser opp-of-owner)
+  B05093, B05093P,
+  // night-wC2b invokeHiramekiOfCard (B06023/B06034)
+  B06023, B06034,
 ];

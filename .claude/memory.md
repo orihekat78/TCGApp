@@ -80,3 +80,20 @@
 ## Wave C軽 + 最終 sweep (朝)
 - B06042+P/B06032+P/B09081 出荷 (16098619)。review CLEAN。gen-p-spread 収穫 0 (P 枯渇)。
 - 夜間 run 合計: 1903→1953 (+50p)、残 121。詳細 = memory reference-night-run-2026-07-11。
+
+## WC2a — pick chooser 'opp-of-owner' 実配線 (B05093、朝)
+- SHIP B05093+P (榎本梓、opp-chooser deck-reveal)。DEFER B02086 (optional chooser+else+AI-drain infra 別途)。
+- engine 2点: resolve-picks substituteAtomPick に byPlayer chooser chokepoint (target.chooser==='opp-of-owner'
+  のみ opp 反転、他は opts.byPlayer で byte 等価 — buildShortFormPick は絶対 chooser + caller が同値渡し) /
+  handAddFromDeck に $pick.cardId await-pick 分岐 (sceneEnter 同型 clone、bind 経路は不変)。
+- 下流 infra 全既存: pending.player=chooser 側 / ownerPlayer=BUG-175 再実行座標 / drainAiEffectPicks opp 解決 /
+  UI player==='self' surface gate。chooser:'opp' は 0 card 使用 = 純 additive。
+- probe tests/cards/night-wC2/ 4件 (owner=self AI解決 / 候補0 no-op / owner=opp human surface / B01048 回帰) GREEN。
+- tsc 0 / full vitest 5353 pass+1 expfail+1 skip (5349→+4、減なし) / sync-taskA green。shipped=1955。未 commit (driver 委譲)。
+
+## WC2 (朝、user 起床後に区切り)
+- B05093+P (chooser:'opp-of-owner' chokepoint) + B06023/B06034 (invokeHiramekiOfCard) = +4p (1957)。
+- review BLOCK: B06034 flip+invoke 1-optional 潰し → sequence+conditional+atom-level optional 化。
+  ★walk-level optional は unstable-if で eager surface — bind 依存 optional は atom-level flag が正。
+- DEFER: B02086 (opp-decision infra) / B06036 (cost-flipped-ids pick source、小 follow-up)。
+- 残 2 session 見積り: structural+T3 → 残50-70 → Wave D+intercept → 残0-25 (完了確実は 3 session)。

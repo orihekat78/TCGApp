@@ -268,6 +268,21 @@ export function resolveBindRef(value: unknown, ctx: EffectCtx): unknown {
     const dynObj = ctx.dyn as Record<string, unknown> | undefined;
     return dynObj && dkey in dynObj ? dynObj[dkey] : value;
   }
+  // WC2b (2026-07-11): $cost.<key>.<path> → ctx.costPaid[key][path] (非数値 path も)。
+  // 数値 dyn ($cost.X.count 等) は dyn/eval.ts が処理するが、cardIds 配列 ($cost.flipFaceUpEvidence.ids)
+  // を verb arg に渡す用途は resolveBindRef 経由 (invokeHiramekiOfCard cardIds)。未供給 key は passthrough。
+  if (value.startsWith('$cost.')) {
+    const rest = value.slice('$cost.'.length);
+    const dotc = rest.indexOf('.');
+    const ckey = dotc < 0 ? rest : rest.slice(0, dotc);
+    const cpath = dotc < 0 ? undefined : rest.slice(dotc + 1);
+    const cp = (ctx as { costPaid?: Record<string, unknown> }).costPaid;
+    const rec = cp && cp[ckey];
+    if (!rec || typeof rec !== 'object') return value;
+    if (!cpath) return rec;
+    const rv = (rec as Record<string, unknown>)[cpath];
+    return rv ?? value;
+  }
   const dot = value.indexOf('.');
   if (dot < 0) return value;
   const key = value.slice(1, dot);

@@ -417,9 +417,15 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       for (const idx of indices) {
         mutate.evidence.flipFaceUp(state, p, idx);
       }
-      // Record count for $cost.flipFaceUpEvidence.count placeholder access
+      // Record count for $cost.flipFaceUpEvidence.count placeholder access.
+      // WC2b (2026-07-11): ids も記録 — 「コストによって表向きになった【ヒラメキ】持ちカードの
+      // その【ヒラメキ】を発動」(B06023/B06036) が $cost.flipFaceUpEvidence.ids で識別する。
+      // flip は既に適用済みなので state.players[p].evidence[idx].cardId が表向き化した cardId (removeDeckTop.ids 同型)。
       if (!ctx.costPaid) ctx.costPaid = {};
-      ctx.costPaid['flipFaceUpEvidence'] = { count: indices.length };
+      const flippedIds = indices
+        .map(i => state.players[p].evidence[i]?.cardId)
+        .filter((id): id is string => typeof id === 'string');
+      ctx.costPaid['flipFaceUpEvidence'] = { count: indices.length, ids: flippedIds };
       acc.paidItems.push({ kind: 'flipFaceUpEvidence', details: { count: indices.length, indices } });
       return;
     }

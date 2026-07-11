@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `298d8f96b9d5`
+> Source hash: `8e46146b4c13`
 
 公式ルール [`14-refresh.md`](../../../rules/14-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -21,7 +21,7 @@
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 - [`PR265`](../by-spec/grounding--PR265.md)
 
-## 📄 参照ソース (336)
+## 📄 参照ソース (337)
 
 - [`src/cards/ct-d01/D01003.ts`](../../../../src/cards/ct-d01/D01003.ts)
 - [`src/cards/ct-d01/D01006.ts`](../../../../src/cards/ct-d01/D01006.ts)
@@ -43,4 +43,4 @@
 - [`src/cards/ct-d05/D05004.ts`](../../../../src/cards/ct-d05/D05004.ts)
 - [`src/cards/ct-d05/D05005.ts`](../../../../src/cards/ct-d05/D05005.ts)
 - [`src/cards/ct-d05/D05007.ts`](../../../../src/cards/ct-d05/D05007.ts)
-- _...ほか 316 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 317 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

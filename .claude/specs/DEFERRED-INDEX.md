@@ -62,8 +62,7 @@ hiramekiResolve humanChooser (hirameki 内 optional の human surface 実バグ�
 **DEFER**: B07001 (cost-removed trait-count dyn 不在 — costRemovedMatches は threshold のみ) /
 B09109 a2 (revealFromHand costPaid cardName + resolveBindRef $cost 非対応)。
 **NIT (記録)**: B09081 a2「1枚まで」が optional 諾否に折込 (B03085/B05111 踏襲、候補常 1 体)。
-**Wave C 残 (今夜未着手、次 session 候補)**: B05093+B02086 (chooser:'opp' 実配線 — resolve-picks:637
-意図的 dead、multi-site) / B06023+B06036+B06034 (hirameki invoke-by-cardId) / B06020+B07003 (hand-zone
+**Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / B06023+B06036+B06034 (hirameki invoke-by-cardId) / B06020+B07003 (hand-zone
 cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B04042+B04084 B05033 B08003 /
 T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D BLOCKED cluster (untargetableByOppEffect 設計)。
 
@@ -814,7 +813,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | B03029 | yellow | play-event-from-effect (「手札から【緑】イベントを1枚まで使用する」= 効果でイベント使用の verb 未実装) |
 | B05063 | yellow | turn-end→手札 (「ターン終了時このキャラを現場から手札に移す」= toHandOnTurnEnd flag / turn.ts branch 無し) + grant 非キーワード ability |
 | B09033 | yellow | reveal-window 反復登場 (4枚公開窓から繰り返し1枚ずつ登場 = deckRevealUntil は単一 $matched bind、reveal 窓を pick ソース化不能) |
-| B05093 | yellow | opp-as-chooser of beneficial deck-reveal pick (公開3枚から【相手】が1枚選び【自分】が手札に = chooser:opp の deck-look pick 未対応) |
+| ~~B05093~~ | ~~yellow~~ | **SHIPPED (WC2a 2026-07-11)** — pick query chooser:'opp-of-owner' 実配線 (resolve-picks chokepoint + handAddFromDeck $pick.cardId await-pick)。deckRevealUntil bind + handAddFromDeck(fromGroupCards, filterAny[event|喫茶ポアロ], chooser:opp-of-owner) + deckToBottomBound。B05093P 同梱 |
 | ~~B03098~~ | ✅ 出荷済 (2026-07-04 hybrid-pilot-1、B03098P 含む)。a1=enter+charStateIs{sleep} gate、a2 hirameki は compiler mined rule (shipped exemplar 由来)。旧 refuted の hiraRes pick surface は BUG-171 系修正後の現行経路で解消済 | (解消) |
 | B06090 | refuted | spec が BUG-145 self-sleep gate (not charStateIs self sleep) を欠落 → 既 sleep で過剰再発火 (再 certify で gate 追加すれば green 化可、shipped PR144/B09058 同型) |
 
@@ -1313,7 +1312,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B02039 | set-card を表向き証拠として持ち主が得る verb 不在 |
 | B02067 | 「選ばれたとき無効にする」= choose-intercept + negate 機構不在 (B04003 と同 cluster) |
 | B02084 | セット状態のイベント自身の remove 到達 observer 不在 (PR234 line2 と同 cluster、faceUp filter も) |
-| B02086 | 【変装時】相手 discard 強制 or 無効化の相手選択分岐 (そうしなかった場合〜) 不在 |
+| B02086 | 【変装時】相手 discard 強制 or 無効化の相手選択分岐 (そうしなかった場合〜) 不在。**WC2a で再検証 → 依然 DEFER**: pick chooser:'opp-of-owner' は解決したが、B02086 は optional/choice の **chooser=opp + else 枝** (相手が discard する/しない を決め、しない場合 contactUnremovable 付与) を要する。optional 型に chooser も else も無く、optional/choice には pick と違い AI-drain (drainAiEffectPicks) が無い (resolve-picks:713 で AI skip 固定) → opp-decision infra 新設が別途必要。0-hand feasibility で choice 2択モデルも不可 |
 | B02087 | ネクストヒント限定の色無視 token 不在 (colorIgnoreOnHandUse は手札使用+NH 両経路で over-wide、QA は NH 限定) |
 | B03002 | 「ネクストヒントで手札を使用したとき」判別不在 (B01005/B05005 と同 cluster) |
 | B03028 | 「【緑】のイベントを使用したとき」= event-use の color filter matcher 不在 (matcherCondition に triggerCardMatches{color} は event-use payload 非対応) |

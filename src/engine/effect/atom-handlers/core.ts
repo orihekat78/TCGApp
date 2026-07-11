@@ -1,9 +1,12 @@
 // engine.effect.atom-handlers/core — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { invokeLeaveToRemoveOfCard } from '../invoke-leave-to-remove.js';
+import { invokeHiramekiOfCard } from '../invoke-hirameki.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js'; // W6 step3 (r63): useEventFromHand の kind guard
 import { tryRePickFromAtom } from '../resolve-picks.js';
+// WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
+import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from '../atom-pick-spec.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, hasNorMax, resolveDeltaToNumber } from './_shared.js';
@@ -932,13 +935,82 @@ export function atomInvokeLeaveToRemoveOfCard(s: GameState, a: Record<string, un
       return;
     }
 
+// engine night-wave WC2b (2026-07-11): 別カードの【ヒラメキ】effect を明示発動 (B06023/B06034)。
+// 実体は effect/invoke-hirameki.ts leaf (emit 非経由)。
+// args: { cardId | cardIds ('$bind.ref' / '$cost.flipFaceUpEvidence.ids' 等), player? ('self' 相対),
+//         trait? (印字 trait gate — 例 'YAIBA'), optional? (「発動させてもよい」atom-level prompt — 下記) }。
+// cardIds 配列内の各 cardId を順に invoke。
+// 未解決 ($ 残り) / non-string は skip。invoke 側で def 不在・trait 不一致・hirameki 不在は no-op。
+//
+// optional:true (T2 review B06034): walk-level optional{} は binding-依存 conditional (boundMatchesFilter
+// $flipped) の then 枝内で使えない — pre-walk が unstable-if の両枝を walk して bind 確定前に eager
+// surface し (BUG-161 の unstable 側 latent)、continuation 経路の remainder は runtime resolver 直行で
+// optional を surface できない (optionalRun 未設定 = silent skip)。よって「してもよい」prompt を atom 実行時
+// (= bind 確定後・conditional 成立時のみ到達) に side-channel surface する。human owner → pendingEffectOptional
+// (live ctx.bindings/costPaid を wave-18 resume 機構で保持、resume = optional{本 atom (flag 除去)})。
+// AI / non-human → skip (walk-level optional の AI 既定 skip と同一 posture)。
+export function atomInvokeHiramekiOfCard(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+      const ihP = resolvePlayer(a.player ?? 'self', ctx);
+      const ihTrait = typeof a.trait === 'string' ? a.trait : undefined;
+      if (a.optional === true) {
+        const ihHuman = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+        const ihCtrl = ctx.source.player;
+        if (ihHuman !== null && ihCtrl === ihHuman) {
+          const { optional: _ihOpt, ...ihRest } = a;
+          void _ihOpt;
+          pushPendingEffectOptionalSide({
+            player: ihCtrl,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '' },
+            triggerPayload: (ctx as { triggerPayload?: unknown }).triggerPayload,
+          });
+          // resume = optional{atom (flag 除去)} — applyOptionalAndContinuation の walk が
+          // dyn.optionalRun で run/skip を確定する (run:false = parallel[] で完全 no-op)。
+          setPendingOptionalResume({ kind: 'optional', effect: { kind: 'atom', verb: 'invokeHiramekiOfCard', args: ihRest } } as never);
+          setPendingOptionalBindings({ ...(ctx.bindings as Record<string, unknown>) });
+          setPendingOptionalCostPaid((ctx as { costPaid?: Record<string, unknown> }).costPaid);
+          mutate.log.append(s, { ts: Date.now(), player: ihCtrl, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard:awaiting-optional' });
+          return;
+        }
+        // AI / non-human: skip (「してもよい」既定不使用 — walk-level optional と同 posture)
+        mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard', target: 'optional-skip' });
+        return;
+      }
+      let ihIds: string[] = [];
+      if (a.cardIds !== undefined) {
+        const resolved = resolveBindRef(a.cardIds, ctx);
+        if (Array.isArray(resolved)) {
+          ihIds = resolved.filter((x): x is string => typeof x === 'string' && !x.startsWith('$'));
+        }
+      } else if (a.cardId !== undefined) {
+        const c = resolveBindRef(a.cardId, ctx);
+        if (typeof c === 'string' && !c.startsWith('$')) ihIds = [c];
+      }
+      for (const cid of ihIds) invokeHiramekiOfCard(s, cid, ihP, ihTrait);
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard', target: ihIds.join(',') });
+      return;
+    }
+
 export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // engine-extension #5a (2026-06-05): deck-reorder 系の補助 — bind 済 cardId をデッキから抜き手札へ。
       // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).
       // 通常 a.cardId='$matched.cardId' で bind 解決 → デッキから splice → hand.add。
       const hadP = resolvePlayer(a.player, ctx);
-      const hadCardId = resolveBindRef(a.cardId, ctx) as string;
+      const rawHadCardId = a.cardId;
+      const hadCardId = resolveBindRef(rawHadCardId, ctx) as string;
       if (typeof hadCardId !== 'string' || hadCardId.startsWith('$')) {
+        // WC2a (2026-07-11, B05093): cardId='$pick.cardId' + pick query → await-pick で相手が選ぶ
+        // deck-window を surface する (sceneEnter scene.ts:155 の $pick.cardId 経路と同型 Pattern B)。
+        // byPlayer は owner 側 hadP を渡すだけ — resolve-picks の chooser chokepoint が target.chooser
+        // ='opp-of-owner' から opp 側へ解決する。解決後 apply-pick が cardId=$pick.cardId contract で
+        // 実 cardId を載せ再実行 (source.player=owner=BUG-175 ownerPlayer) → 下 splice/hand.add に合流。
+        if (rawHadCardId === '$pick.cardId' && a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb: 'handAddFromDeck', args: a }, ctx, {
+            byPlayer: hadP,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck:awaiting-pick' });
+          return;
+        }
         // 未解決 (bind 不在) は silent no-op
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: 'no-bind' });
         return;
