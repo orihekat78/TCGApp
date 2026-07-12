@@ -65,3 +65,4 @@ analysis.txt
 # (著作権配慮、.claude/research/legal/04-recommendation.md)。ローカル専用。
 /.claude/specs/cards-data/_raw/
 /.claude/specs/cards-data/**/*.tsv
+/.codex/config.local.toml

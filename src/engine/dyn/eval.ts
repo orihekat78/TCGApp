@@ -633,6 +633,20 @@ function resolveCost(rest: string[], ctx: EffectCtx, original: string): DynValue
   if (entry === undefined) {
     throw new Error(`dyn.eval: ctx.costPaid['${key}'] is undefined (in "${original}")`);
   }
+  // S1 wave (2026-07-11, B07001): $cost.<key>.traitCountAny:特徴A|特徴B — コストで移動した
+  // cardId 群 (entry.ids / entry.removed) のうち、印字特徴のいずれかを持つカードの枚数。
+  // 公式Q&A (B07001): 両特徴を持つカードも 1 枚分として数える = any-match の枚数カウント。
+  // 「1枚につき AP+1000」= charModifyAP delta:{dyn:'$cost.removeDeckTop.traitCountAny:少年探偵団|毛利探偵事務所 * 1000'}。
+  if (innerPath.length === 1 && innerPath[0].startsWith('traitCountAny:')) {
+    const traits = innerPath[0].slice('traitCountAny:'.length).split('|').filter(t => t.length > 0);
+    const rec = entry as { ids?: unknown; removed?: unknown };
+    const idsRaw = Array.isArray(rec.ids) ? rec.ids : Array.isArray(rec.removed) ? rec.removed : [];
+    const ids = idsRaw.filter((x): x is string => typeof x === 'string');
+    return ids.filter(id => {
+      const d = lookupCardDef(id);
+      return d !== undefined && (d.traits ?? []).some(t => traits.includes(t));
+    }).length;
+  }
   return drillDown(entry, innerPath, original);
 }
 

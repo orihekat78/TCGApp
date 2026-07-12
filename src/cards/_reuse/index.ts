@@ -1501,6 +1501,23 @@ import { B05093 } from '../ct-p05/B05093.js';
 import { B05093P } from '../ct-p05/B05093P.js';
 import { B06023 } from '../ct-p06/B06023.js';
 import { B06034 } from '../ct-p06/B06034.js';
+import { B03093 } from '../ct-p03/B03093.js';
+import { B05101 } from '../ct-p05/B05101.js';
+import { B06036 } from '../ct-p06/B06036.js';
+import { B06036P } from '../ct-p06/B06036P.js';
+import { B06105 } from '../ct-p06/B06105.js';
+import { B06105P } from '../ct-p06/B06105P.js';
+import { B07001 } from '../ct-p07/B07001.js';
+import { B07001P } from '../ct-p07/B07001P.js';
+import { B07001P2 } from '../ct-p07/B07001P2.js';
+import { B08002 } from '../ct-p08/B08002.js';
+import { B08002P } from '../ct-p08/B08002P.js';
+import { B09039 } from '../ct-p09/B09039.js';
+import { B09105 } from '../ct-p09/B09105.js';
+import { B09105P } from '../ct-p09/B09105P.js';
+import { B09109 } from '../ct-p09/B09109.js';
+import { B09109P } from '../ct-p09/B09109P.js';
+import { PR279 } from '../pr-01/PR279.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -1944,4 +1961,6 @@ export const REUSE_CARDS: CardDef[] = [
   B05093, B05093P,
   // night-wC2b invokeHiramekiOfCard (B06023/B06034)
   B06023, B06034,
+  // S1/S2 deferred-card completion
+  B03093, B05101, B06036, B06036P, B06105, B06105P, B07001, B07001P, B07001P2, B08002, B08002P, B09039, B09105, B09105P, B09109, B09109P, PR279,
 ];

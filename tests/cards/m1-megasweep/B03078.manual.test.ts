@@ -189,8 +189,7 @@ describe('B03078 a2 — ヒラメキ: 青/赤を1枚まで手札へ → 加え�
       s.players.self.hand = ['SH1'];
     });
     // 本来: opp.hand に RED が加わるべき。現状 engine gap で add が不発 (RED は opp.remove に残る)。
-    expect(after.players.opp.hand, '【engine gap】add 不発で RED が opp 手札に来ない (本来は来るべき)')
-      .not.toContain('RED');
-    expect(after.players.opp.remove, '【engine gap】RED は opp.remove に取り残される').toContain('RED');
+    expect(after.players.opp.hand, 'RED は opp 手札に加わる').toContain('RED');
+    expect(after.players.opp.remove, 'RED は opp remove から取り除かれる').not.toContain('RED');
   });
 });

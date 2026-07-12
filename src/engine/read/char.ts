@@ -235,6 +235,75 @@ function auraUntargetableByAction(s: GameState, targetUid: string): boolean {
 // の警告コメント参照)。消費 = flow/auto-phase.ts ステップ2 のみ。
 // 制約: 単一 sourceUid 上書き方式 — 複数 bearer の同時 lock は後勝ち (現 exemplar B01082 のみで非該当、
 // 複数 locker カードが出たら配列化)。
+// S2 wave (2026-07-11, PR279): 「現場にいるこのキャラは相手のイベントの効果によってリムーブされない」
+// — charProtectedFrom の opponentEventRestrict 版 (event-source 限定保護、atomSceneRemove の相手発 gate が
+// def.kind==='event' 判定と併せて読む)。①自身の印字 continuous + ②faceUp setCards rider の 2 層は
+// charProtectedFrom と同構造 (rules/16: 裏向きセットは能力を持たない)。
+function charProtectedFromOppEvent(s: GameState, uid: string, token: 'remove'): boolean {
+  const c = scene.byUid(s, uid);
+  if (!c) return false;
+  const owner = ownerSideOf(s, uid);
+  if (!owner) return false;
+  const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
+  const d = def.card(c.cardId);
+  for (const ability of d?.abilities ?? []) {
+    if (ability.type !== 'continuous') continue;
+    if (ability.scope === 'on-set-host') continue;
+    if (!ability.continuousModifier?.opponentEventRestrict?.includes(token)) continue;
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    return true;
+  }
+  for (const entry of c.setCards) {
+    if (!entry.faceUp) continue;
+    const sd = def.card(entry.cardId);
+    for (const ability of sd?.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (ability.scope !== 'on-set-host') continue;
+      if (!ability.continuousModifier?.opponentEventRestrict?.includes(token)) continue;
+      if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+// S2 wave (2026-07-11, B03093): 「自分の現場にいる[filter]の[state]のキャラは、相手のイベントの効果に
+// よって選ばれない」— auraUntargetableByAction の event-pick 版 board-scan。bearer = 同 side の現場
+// キャラ + PA-MR。state は untargetableByOppEventAuraState (TargetFilter に state が無い removedFilter
+// と同事情の companion field) で判定。配線 = resolve-picks.ts の pick 列挙直後 負 filter。
+function charUntargetableByOppEvent(s: GameState, targetUid: string): boolean {
+  const target = scene.byUid(s, targetUid);
+  if (!target) return false;
+  const ownerSide: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === targetUid)
+    ? 'self'
+    : s.players.opp.scene.some(c => c.uid === targetUid)
+      ? 'opp'
+      : null;
+  if (!ownerSide) return false;
+  const targetCand = { kind: 'char', uid: target.uid, cardId: target.cardId, player: ownerSide } as Candidate;
+  const bearers: Array<{ char: typeof target; inPA: boolean }> =
+    s.players[ownerSide].scene.map(c => ({ char: c, inPA: false }));
+  const slotMr = s.players[ownerSide].partnerAreaMR;
+  if (slotMr) bearers.push({ char: slotMr, inPA: true });
+  for (const { char: bearer, inPA } of bearers) {
+    const bd = def.card(bearer.cardId);
+    if (!bd) continue;
+    const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+    for (const ability of bd.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+      const filter = ability.continuousModifier?.untargetableByOppEventAura as TargetFilter | undefined;
+      if (!filter) continue;
+      const states = ability.continuousModifier?.untargetableByOppEventAuraState;
+      if (states && !states.includes(target.state)) continue;
+      if (ability.condition && !evalCond(s, ability.condition, bearerCtx)) continue;
+      if (!matchOneFilter(s, target.cardId, filter, target, targetCand)) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
 function noAutoActivateLocked(s: GameState, uid: string): boolean {
   const c = scene.byUid(s, uid);
   if (!c) return false;
@@ -661,8 +730,10 @@ export const char = {
   hasKeyword,
   filteredAssaultKeywords,
   charProtectedFrom,
+  charProtectedFromOppEvent,
   restrictsOpponent,
   auraUntargetableByAction,
+  charUntargetableByOppEvent,
   noAutoActivateLocked,
   selfContinuousFlag,
   hasTextAbility,

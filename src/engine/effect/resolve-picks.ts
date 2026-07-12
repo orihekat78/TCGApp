@@ -365,7 +365,16 @@ function substituteAtomPick(
     target as { kind?: string; query?: unknown } & Record<string, unknown>,
     ctx,
   );
-  const cands = targetCandidates(state, resolvedTarget as TargetingRef, ctx);
+  const cands0 = targetCandidates(state, resolvedTarget as TargetingRef, ctx);
+  // S2 wave (2026-07-11, B03093): 「相手のイベントの効果によって選ばれない」— pick 経路唯一の
+  // chokepoint (AI substitute / human pending 双方が本列挙を通る) で char candidate を負 filter。
+  // source カードが kind==='event' かつ相手側 (aura 保有 side ≠ picker) のみ適用。cond 計数・
+  // アクション対象・ガードは本関数非経由 = 公式Q&A (「キャラを選ばないイベントの効果による影響は
+  // 受ける」/ キャラ能力では選べる / イベントが与えた能力はキャラの能力扱い B02052) と整合。
+  const cands = readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
+    ? cands0.filter(c => c.kind !== 'char' || c.player === ctx.source.player
+        || !readChar.charUntargetableByOppEvent(state, c.uid))
+    : cands0;
   if (cands.length === 0) {
     // 拡張 5 (chain): no-candidate を chain break 信号として記録 (Phase 3c: ctx.dyn 経由。runtime tryRePickFromAtom
     // 経路では本 ctx = resolver chain ctx と同一参照ゆえ resolver chain case が読む。初期 walk 経路は dead write)

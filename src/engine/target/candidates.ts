@@ -331,10 +331,14 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
   }
   // S2 B01022: fromGroupCards post-filter — {kind:'card'} candidate を (player,area,index) キーで
   // bound 集合と突合。index 無し candidate (case area 等) は通さない (fail-closed)。
+  // S1 wave (2026-07-11, B06036): {kind:'evidence'} candidate も (player,'evidence',index) キーで通す —
+  // 「コストによって表向きになった証拠から選ぶ」(bound = pay.ts flipFaceUpEvidence '$costFlipped')。
   if (fromGroupCardKeys !== null) {
     return out.filter(cand =>
-      cand.kind === 'card' && typeof cand.index === 'number' &&
-      fromGroupCardKeys.has(`${cand.player}:${cand.area}:${cand.index}`));
+      (cand.kind === 'card' && typeof cand.index === 'number' &&
+        fromGroupCardKeys.has(`${cand.player}:${cand.area}:${cand.index}`)) ||
+      (cand.kind === 'evidence' &&
+        fromGroupCardKeys.has(`${cand.player}:evidence:${cand.index}`)));
   }
   return out;
 }

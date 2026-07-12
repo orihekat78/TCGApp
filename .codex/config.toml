@@ -1,0 +1,19 @@
+[mcp_servers.firecrawl]
+command = "npx"
+args = [
+    "-y",
+    "firecrawl-mcp",
+]
+
+[mcp_servers.serena]
+command = "uvx"
+args = [
+    "--from",
+    "git+https://github.com/oraios/serena",
+    "serena",
+    "start-mcp-server",
+    "--context",
+    "codex",
+    "--project",
+    'C:\Users\arumi\OneDrive\デスクトップ\conan',
+]

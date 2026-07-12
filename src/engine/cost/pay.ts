@@ -124,8 +124,13 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       acc.paidItems.push({ kind: 'revealFromHand', details: { ids } });
       // attribution mini-wave (2026-07-10): dyn $cost.revealFromHand.count (B08068「公開した枚数」) と
       // costRevealedMatches (B09005「公開したカードが〜の場合」) が読む。
+      // S1 wave (2026-07-11, B09109 a2): cardName — 「カード名を公開したキャラのカード名に書き換える」が
+      // charSetTurnEffect{key:'nameOverride', val:'$cost.revealFromHand.cardName'} で読む (先頭 1 枚の
+      // 印字名。複数名カードは names[0]=複合名 — nameOverride は完全置換、rules/19 分割 override は
+      // 公式裁定なしの既存設計判断と同 posture)。
       if (!ctx.costPaid) ctx.costPaid = {};
-      ctx.costPaid['revealFromHand'] = { ids, count: ids.length };
+      const rfhName = ids.length > 0 ? readDef.card(ids[0])?.names?.[0] : undefined;
+      ctx.costPaid['revealFromHand'] = { ids, count: ids.length, cardName: rfhName };
       return;
     }
     // engine mega-wave W1 (2026-07-03, P29): revealHandToDeckTop — 手札公開→デッキ上 cost (B05049 a1)。
@@ -426,6 +431,13 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
         .map(i => state.players[p].evidence[i]?.cardId)
         .filter((id): id is string => typeof id === 'string');
       ctx.costPaid['flipFaceUpEvidence'] = { count: indices.length, ids: flippedIds };
+      // S1 wave (2026-07-11, B06036): fromGroupCards 用の bound 集合も書く — 「コストによって表向きに
+      // なった〜のカードを1枚まで選び」が pick query {area:'evidence', fromGroupCards:'$costFlipped'}
+      // で母集合を「今回 flip した証拠」に限定する (照合キー = player:evidence:index、candidates.ts
+      // fromGroupCardKeys と対)。ids (cardId) だけでは同名証拠の位置区別ができないため index を持つ。
+      (ctx.bindings as Record<string, unknown>)['$costFlipped'] = indices
+        .filter(i => typeof state.players[p].evidence[i]?.cardId === 'string')
+        .map(i => ({ kind: 'card', cardId: state.players[p].evidence[i].cardId, area: 'evidence', player: p, index: i }));
       acc.paidItems.push({ kind: 'flipFaceUpEvidence', details: { count: indices.length, indices } });
       return;
     }

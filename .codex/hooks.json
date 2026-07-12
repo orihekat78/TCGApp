@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "grep -q \"git commit\" && printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"[context-hygiene 2026-06-12 ユーザー指示④] phase commit を検出。このセッションで既に1〜2フェーズ完了済みの場合: (1) .claude/NEXT-SESSION-PROMPT.md を再開可能な状態に更新 (2) phases.md / memory.md の記録を閉じる (3) ターンを終了し、次フェーズは /clear 後の新セッションで開始するようユーザーに推奨すること。\"}}' || true",
+            "timeout": 10,
+            "statusMessage": "phase commit 検出チェック"
+          }
+        ]
+      }
+    ]
+  }
+}

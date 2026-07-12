@@ -325,11 +325,11 @@ describe('B05087 a2 phase:end:start【自ターン終了時】長野県警(lvl�
     const s = runA2({
       owner: 'opp', turn: 'opp', emitPlayer: 'opp',
       remove: ['NAGANO6', 'OTHER'], hand: ['F1', 'F2'],
-      script: [], // a2 の add pick は opp remove を見ない → cands 0 (self remove 空) → 何も surface しない
+      script: [{ pickCardIds: ['NAGANO6'] }],
     });
     // 反転バグの現状: opp remove から NAGANO6 が回収されない (bug が直れば ['F1','F2','NAGANO6'] になる)。
-    expect(s.players.opp.hand.slice().sort(), 'opp 手札 不変 (NAGANO6 未回収 = 反転バグ現状)').toEqual(['F1', 'F2']);
-    expect(s.players.opp.remove, 'opp remove に NAGANO6 が残存 (回収されず)').toContain('NAGANO6');
+    expect(s.players.opp.hand.slice().sort(), 'opp remove の NAGANO6 を手札へ加える').toEqual(['F1', 'F2', 'NAGANO6']);
+    expect(s.players.opp.remove, 'NAGANO6 は opp remove から取り除かれる').not.toContain('NAGANO6');
   });
 
   // add-gate 実証 (review lens PLAUSIBLE 反証): chain step1 (handAddFromRemove) の候補が 0 枚 →

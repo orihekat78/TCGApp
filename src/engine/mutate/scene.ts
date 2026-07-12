@@ -331,7 +331,10 @@ function removeToRemove(
       // ctx.source.player を渡す既存 opts を emit に配線)。removedCharMatches.byPlayer
       // (「自分の能力や効果によってリムーブされたとき」) の帰属判定用。legacy caller
       // (turn-end/MR②/switch/cost) は未指定 = undefined → byPlayer gate は fail-closed。
-      { uid: leavingUid, cause, side: player, byUid, removedChar: char, byPlayer: opts?.byPlayer },
+      // cardId (S1 wave 2026-07-11, B05101): 離場キャラの cardId — 「このキャラをリムーブエリアから
+      // 登場させて」(self-revival) が $trigger.cardId で remove 内の自カードを特定する用。
+      // 既存 consumer は本フィールドを無視 = 回帰0 (additive)。
+      { uid: leavingUid, cause, side: player, byUid, removedChar: char, byPlayer: opts?.byPlayer, cardId: leavingCardId },
       { player, uid: leavingUid, cardId: leavingCardId },
     );
   }

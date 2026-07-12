@@ -5,6 +5,7 @@ import { tryRePickFromAtom } from '../resolve-picks.js';
 import { buildShortFormPick } from '../atom-pick-spec.js';
 import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 import { char as readChar } from '../../read/char.js'; // engine mega-wave W4 (2026-07-03, r1): 保護 rider gate
+import { def as readDef } from '../../read/def.js'; // S2 wave (2026-07-11, PR279): event-source 限定保護の kind 判定
 import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
@@ -368,6 +369,15 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
           const srOwner: Player = s.players.self.scene.some(c => c.uid === srUid) ? 'self' : 'opp';
           if (ctx.source.player !== srOwner && readChar.charProtectedFrom(s, srUid, 'remove')) {
             mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid, result: 'blocked-protected' });
+            return;
+          }
+          // S2 wave (2026-07-11, PR279): 「相手のイベントの効果によってリムーブされない」— 相手発 かつ
+          // source カードが kind==='event' (イベント本体効果・イベントの【ヒラメキ】/【カットイン】) のみ block。
+          // キャラ能力発のリムーブは素通し (charProtectedFrom 'remove' より狭い保護、公式Q&A PR279)。
+          if (ctx.source.player !== srOwner
+            && readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
+            && readChar.charProtectedFromOppEvent(s, srUid, 'remove')) {
+            mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', target: srUid, result: 'blocked-event-protected' });
             return;
           }
         }

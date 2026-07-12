@@ -272,7 +272,7 @@ describe('B07025 a1 — owner=opp (BUG-174 KNOWN GAP)', () => {
       pick: 'skip',
       capture: (c) => { cands = c; },
     });
-    expect(cands, '反転 pre-walk が self remove (空) を列挙 → 候補 0').toEqual([]);
+    expect(cands, 'opp remove の一致カードだけを候補にする').toEqual([RMAG3]);
     expect(s.players.opp.hand.length, 'opp 手札 不変 (RMAG3 未回収 = 反転バグ現状)').toBe(0);
     expect(s.players.opp.remove, 'opp remove に RMAG3 残存 (回収されず)').toContain(RMAG3);
     // コスト側 (sceneToDeckBottom) は owner-relative に正しく解決される (反転しない)

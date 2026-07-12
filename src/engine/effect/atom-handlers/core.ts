@@ -72,7 +72,7 @@ export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: Effec
       // どおり手札所有者が選ぶ (byte 互換)。
       const dcChooser = a.chooser === 'source' ? ctx.source.player : dcP;
       const dcArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.discard.defaultArea, a, dcChooser, dcP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.discard.defaultArea, a, dcChooser, a.player as Player) }
         : a;
       if (!Array.isArray(dcArgs.target)) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: dcArgs }, ctx, { byPlayer: dcChooser, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
@@ -132,7 +132,7 @@ export function atomHandToDeckBottom(s: GameState, a0: Record<string, unknown>, 
         return hdMove(s, a, ctx, hdP, hdRawCardIds as string[]);
       }
       const hdArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToDeckBottom!.defaultArea, a, hdP, hdP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToDeckBottom!.defaultArea, a, hdP, a.player as Player) }
         : a;
       if (!Array.isArray(hdArgs.target)) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: hdArgs }, ctx, { byPlayer: hdP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
@@ -217,7 +217,7 @@ export function atomDiscardRandom(s: GameState, a: Record<string, unknown>, ctx:
 export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       const hrP = resolvePlayer(a.player, ctx);
       const hrArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handReveal.defaultArea, a, hrP, hrP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handReveal.defaultArea, a, hrP, a.player as Player) }
         : a;
       // exact-N gate (2026-06-28, B09061 a1): 短縮形 n:N (= pick {min:N,max:N}) は「N枚公開する」=
       // 固定数 (rules/15「N枚」、「まで」なし) = all-or-nothing。手札の filter 一致が N 枚未満なら
@@ -271,7 +271,7 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
 export function atomPartnerAreaRemove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       const paP = resolvePlayer(a.player, ctx);
       const paArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.partnerAreaRemove.defaultArea, a, paP, paP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.partnerAreaRemove.defaultArea, a, paP, a.player as Player) }
         : a;
       // exact-N gate (handReveal 同型): 短縮形 n:N は「N枚リムーブ」= 固定数 (rules/15「N枚」、「まで」なし)。
       // PA の filter 一致が N 枚未満なら実行不可 → chainStepNoApply で「そうした場合」を gate。
@@ -426,6 +426,13 @@ export function atomFileRemoveTop(s: GameState, a: Record<string, unknown>, ctx:
       } else {
         (ctx.dyn ??= {}).chainStepNoApply = true; // Phase 3c: chain break 信号を ctx.dyn へ (resolver chain case が読む)
       }
+      // S1 wave (2026-07-11, B09105): requireExact (opt-in) — 「FILE を上から N 枚リムーブしてもよい。
+      // そうした場合〜」で N 枚に満たない場合は後続を gate (公式Q&A: FILE 1枚では以降の効果を解決
+      // できない)。リムーブ自体は可能な限り行う (rules/15「可能な限り」、Q&A は以降の解決のみ否定)。
+      // 既存 consumer は未宣言 → 0枚 break のみの従来挙動 byte 互換。
+      if ((a as { requireExact?: boolean }).requireExact === true && removedIds.length < frN) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+      }
       if (typeof a.bind === 'string') {
         (ctx.bindings as Record<string, unknown[]>)[a.bind] =
           removedIds.map(cardId => ({ kind: 'card', cardId, area: 'remove', player: frP }));
@@ -501,7 +508,7 @@ export function atomToPartnerArea(s: GameState, a: Record<string, unknown>, ctx:
       //   があれば pick-form、無ければ従来の自己移動形 (args:{}、B07059/B07060/PR195 等) = byte 互換。
       if (a.target !== undefined || hasNorMax(a)) {
         const tpaArgs = (a.target === undefined && hasNorMax(a))
-          ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.toPartnerArea!.defaultArea, a, tpaP, tpaP) }
+          ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.toPartnerArea!.defaultArea, a, tpaP, a.player as Player) }
           : a;
         const tpaTarget = normalizeTargetToString(tpaArgs.target);
         if (!tpaTarget) {
@@ -760,7 +767,7 @@ export function atomEvidenceToHand(s: GameState, a: Record<string, unknown>, ctx
         return;
       }
       const ethArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceToHand.defaultArea, a, p, p) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.evidenceToHand.defaultArea, a, p, a.player as Player) }
         : a;
       const target = normalizeTargetToString(ethArgs.target);
       if (!target) {
@@ -788,7 +795,7 @@ export function atomHandToEvidence(s: GameState, a: Record<string, unknown>, ctx
       // fromArea:'none' = hand から先に remove 済なので remove エリアは触らない。
       const hteP = resolvePlayer(a.player, ctx);
       const hteArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToEvidence.defaultArea, a, hteP, hteP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToEvidence.defaultArea, a, hteP, a.player as Player) }
         : a;
       if (!Array.isArray(hteArgs.target)) {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: hteArgs }, ctx, { byPlayer: hteP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
@@ -816,7 +823,7 @@ export function atomHandToFileBottom(s: GameState, a: Record<string, unknown>, c
       // (PB pick defaultArea 'hand')。FILE 1番下 = mutate.file.insertBottomFaceUp (unshift、rules/05)。
       const hfbP = resolvePlayer(a.player, ctx);
       const hfbArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToFileBottom!.defaultArea, a, hfbP, hfbP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handToFileBottom!.defaultArea, a, hfbP, a.player as Player) }
         : a;
       const hfbT = hfbArgs.target;
       if (!Array.isArray(hfbT) && typeof hfbT !== 'string') {
@@ -855,7 +862,7 @@ export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, c
         return;
       }
       const uefArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.useEventFromHand!.defaultArea, a, uefP, uefP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.useEventFromHand!.defaultArea, a, uefP, a.player as Player) }
         : a;
       const uefT = uefArgs.target;
       if (!Array.isArray(uefT) && typeof uefT !== 'string') {
@@ -982,6 +989,19 @@ export function atomInvokeHiramekiOfCard(s: GameState, a: Record<string, unknown
           ihIds = resolved.filter((x): x is string => typeof x === 'string' && !x.startsWith('$'));
         }
       } else if (a.cardId !== undefined) {
+        // S1 wave (2026-07-11, B06036): cardId='$pick.cardId' + target query → Pattern B await-pick。
+        // 「コストによって表向きになった〜のカードを1枚まで選び、その【ヒラメキ】の効果を発動」—
+        // cost が表向きにした複数枚 (fromGroupCards:'$costFlipped') から 1 枚を選ばせる。
+        // apply-pick は evidence:side:idx uid → cardId 逆引き対応済 (resolveCardIdFromPickUid)。
+        // 0枚辞退 = cardId 未解決のまま re-dispatch されず → 発動なし (「1枚まで」rules/15)。
+        if (a.cardId === '$pick.cardId' && a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb: 'invokeHiramekiOfCard', args: a }, ctx, {
+            byPlayer: ihP,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: ihP, turn: s.turn.number, action: 'effect:invokeHiramekiOfCard:awaiting-pick' });
+          return;
+        }
         const c = resolveBindRef(a.cardId, ctx);
         if (typeof c === 'string' && !c.startsWith('$')) ihIds = [c];
       }
@@ -1138,10 +1158,16 @@ export function atomHandAddFromRemove(s: GameState, a: Record<string, unknown>, 
           ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:handAddFromRemove',
           target: movedIds.join(','), result: cardIds.length === 0 ? '0' : (movedIds.length ? 'ok' : 'not-found'),
         });
+        // S1 wave (2026-07-11, B09039 a2): gateOnZero (opt-in) — 「カードを手札に加えた場合、手札を
+        // 1枚リムーブする」の「加えた場合」gate。0 枚 (辞退 or 候補喪失) なら後続 chain step を skip
+        // (useEventFromHand の gate-on-0 と同型)。既存 consumer は未宣言 → byte 互換。
+        if ((a as { gateOnZero?: boolean }).gateOnZero === true && movedIds.length === 0) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
+        }
         return;
       }
       const hafrArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handAddFromRemove.defaultArea, a, p, p) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.handAddFromRemove.defaultArea, a, p, a.player as Player) }
         : a;
       // M2後半 (2026-07-10, PR234 a2): target の bind 参照 ($trigger.setCardId 等) を解決してから
       // cardId 照合する。「その中から1枚」= trigger payload の厳密対象 (filter:{cardName} 代替は
@@ -1184,7 +1210,7 @@ export function atomRemoveAreaToDeckTop(s: GameState, a: Record<string, unknown>
       // ⚠ removeAreaAllToDeckBottom (全件 bottom + shuffle) とは別 verb — 命名衝突注意 (row999 risks④)。
       const rtdP = resolvePlayer(a.player, ctx);
       const rtdArgs = (a.target === undefined && hasNorMax(a))
-        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.removeAreaToDeckTop!.defaultArea, a, rtdP, rtdP) }
+        ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.removeAreaToDeckTop!.defaultArea, a, rtdP, a.player as Player) }
         : a;
       const rtdTarget = normalizeTargetToString(rtdArgs.target);
       if (!rtdTarget) {

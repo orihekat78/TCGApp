@@ -44,7 +44,9 @@
     "hybrid:prepare": "node scripts/hybrid/prepare.cjs",
     "hybrid:finish": "node scripts/hybrid/finish.cjs",
     "gen:probes": "node scripts/gen-card-probes.cjs",
-    "ground": "node scripts/ground-dossier.cjs"
+    "ground": "node scripts/ground-dossier.cjs",
+    "sync:codex-skills": "node scripts/sync-codex-skills.mjs",
+    "check:codex-migration": "node scripts/check-codex-migration.mjs"
   },
   "keywords": [],
   "author": "",

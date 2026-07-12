@@ -16,6 +16,15 @@ export function atomPartnerAssist(s: GameState, a: Record<string, unknown>, ctx:
 export function atomPartnerSetState(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const psP = resolvePlayer(a.player, ctx);
       const psState = a.state as 'active' | 'sleep' | 'stun';
+      // S1 wave (2026-07-11, B09105): requireActive (opt-in) — 「自分のパートナーをスリープさせ〜
+      // してもよい。そうした場合〜」で、パートナーが既にアクティブでない場合は実行不成立 =
+      // 後続 chain step を gate (公式Q&A B09105: パートナーがスリープ状態だと「すべて実行できない」
+      // ため以降の効果を解決できない)。既存 consumer は未宣言 → byte 互換。
+      if ((a as { requireActive?: boolean }).requireActive === true && s.players[psP].partner.state !== 'active') {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: psP, turn: s.turn.number, action: 'effect:partnerSetState', result: 'not-active-gate' });
+        return;
+      }
       mutate.partner.setState(s, psP, psState);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: psP, turn: s.turn.number, action: 'effect:partnerSetState', result: psState });

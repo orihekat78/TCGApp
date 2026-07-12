@@ -183,6 +183,22 @@ export type ContinuousModifier = {
   //   (auraDelta 同型 board-scan)、配線 = target-expander.candidates() の負 filter (ガードは非対象 =
   //   公式Q&A B04072「ガードは可能」、guard 経路は candidates() 非経由で自動整合)。
   untargetableByActionAura?: TargetFilter;
+  // S2 wave (2026-07-11, B03093): 「自分の現場にいる[filter]の[state]のキャラは、相手のイベントの
+  //   効果によって選ばれない」— bearer が同 side のキャラ群を **相手の kind==='event' カード発の
+  //   effect-pick** から除外する aura (untargetableByActionAura の event-pick 版)。TargetFilter は
+  //   state を持たない (removedFilter と同事情) ため companion の untargetableByOppEventAuraState で
+  //   状態を絞る (B03093 = ['sleep'])。読取 = read.char.charUntargetableByOppEvent、配線 =
+  //   resolve-picks.ts の列挙直後 負 filter (pick 経路のみ — 公式Q&A B03093: キャラの能力や効果では
+  //   選べる / キャラを選ばないイベントの効果による影響は受ける / イベントが与えた能力はキャラの
+  //   能力扱い (B02052 裁定) — いずれも source def.kind 判定 + pick 限定配線が自然に満たす)。
+  untargetableByOppEventAura?: TargetFilter;
+  untargetableByOppEventAuraState?: ('active' | 'sleep' | 'stun')[];
+  // S2 wave (2026-07-11, PR279): 「現場にいるこのキャラは相手のイベントの効果によってリムーブされない」
+  //   — opponentRestrict:['remove'] の event-source 限定版。選ぶことは妨げない / sleep・stun・デッキ下
+  //   移動は不変 / イベントの【ヒラメキ】によるリムーブも block (公式Q&A PR279 — hirameki の
+  //   ctx.source.cardId は証拠のイベントカード = def.kind 'event' で自然に該当)。
+  //   読取 = read.char.charProtectedFromOppEvent、配線 = atomSceneRemove の相手発 gate に併設。
+  opponentEventRestrict?: ('remove')[];
   caseActionBan?: boolean;
   selfActionBan?: boolean;
   selfCutinBanInContact?: boolean;

@@ -295,7 +295,7 @@ describe('PR263 a3 — 【変装時】disguise:into で同 chain / owner=opp pin
   //   ※ a1 (continuous) の owner=opp 非反転は C4 が別途 GREEN で pin 済 (dyn は ctx.source.player 直参照ゆえ健全)。
   //   本 scenario は正しい期待値 (opp PA 消費 + self 側キャラを self.remove へ) を assert し、意図的に fail させて
   //   engine bug を可視化する。カード本体/engine は編集禁止のため未修正。
-  it.fails('D2 owner=opp pin (BUG-174) — ENGINE_GAP: opp 所有 PR263 の partnerAreaRemove 短縮形が opp PA を読めず gate', () => {
+  it('D2 owner=opp pin (BUG-174) — ENGINE_GAP: opp 所有 PR263 の partnerAreaRemove 短縮形が opp PA を読めず gate', () => {
     setHuman('opp');
     let s = base('opp'); // opp ターン (condition turn:self = owner ターンで成立)
     s.players.opp.scene = [sceneChar('PR263', 'okid', { state: 'active' })];
