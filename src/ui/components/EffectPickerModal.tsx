@@ -67,13 +67,19 @@ export function EffectPickerModal(): JSX.Element | null {
   const effMax = Math.min(pending.nMax, quotaCappedAvail);
   const sideCount = (side: 'self' | 'opp'): number =>
     multiSelected.filter((u) => pending.candidates.find((c) => c.uid === u)?.player === side).length;
+  const selectedLevel = multiSelected.reduce(
+    (sum, uid) => sum + (readDef.card(pending.candidates.find((c) => c.uid === uid)?.cardId ?? '')?.level ?? 0),
+    0,
+  );
   const toggleMulti = (uid: string): void => {
     setMultiSelected((prev) => (prev.includes(uid) ? prev.filter((u) => u !== uid) : [...prev, uid]));
   };
-  const multiBlocked = (c: { uid: string; player: 'self' | 'opp' }): boolean => {
+  const multiBlocked = (c: { uid: string; cardId: string; player: 'self' | 'opp' }): boolean => {
     if (multiSelected.includes(c.uid)) return false; // 解除は常に可
     if (multiSelected.length >= effMax) return true;
     if (typeof pending.perSideMax === 'number' && sideCount(c.player) >= pending.perSideMax) return true;
+    const level = readDef.card(c.cardId)?.level ?? 0;
+    if (typeof pending.aggregateLevelMax === 'number' && selectedLevel + level > pending.aggregateLevelMax) return true;
     return false;
   };
   const multiConfirmOk = multiSelected.length >= effMin && multiSelected.length <= effMax;
@@ -122,7 +128,7 @@ export function EffectPickerModal(): JSX.Element | null {
           <h2 id="effect-picker-title">効果対象を選択</h2>
           <p className="effect-picker-sub">
             {isMulti
-              ? `${sourceName}: 対象を選んでください (${multiSelected.length}/${effMax}${typeof pending.perSideMax === 'number' ? `、各陣営${pending.perSideMax}枚まで` : ''})`
+              ? `${sourceName}: 対象を選んでください (${multiSelected.length}/${effMax}${typeof pending.perSideMax === 'number' ? `、各陣営${pending.perSideMax}枚まで` : ''}${typeof pending.aggregateLevelMax === 'number' ? `、合計レベル${selectedLevel}/${pending.aggregateLevelMax}` : ''})`
               : `${sourceName}: 対象を選んでください`}
           </p>
         </div>

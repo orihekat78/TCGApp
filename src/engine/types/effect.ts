@@ -381,6 +381,8 @@ export type TargetQuery = {
   // distinctNames と同型の 3経路 enforcement (resolve validate / chooseAiPick greedy / UI disabled)。
   // partner candidate (player 概念が side でない) では使用不可。
   perSideMax?: number;
+  /** Combined printed level ceiling for a multi-pick (B04042/B04084). */
+  aggregateLevelMax?: number;
 };
 
 export type TargetingRef =

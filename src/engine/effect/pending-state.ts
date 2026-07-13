@@ -119,6 +119,8 @@ export type PendingEffectPickSide = {
    * UI multi-select は quota 到達 side の残候補を click 不可化 / chooseAiPick は greedy walk で skip。
    */
   perSideMax?: number;
+  /** Combined printed level ceiling for a multi-pick. */
+  aggregateLevelMax?: number;
   /**
    * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) の
    * forced-inclusion 集合。resolve-picks の human push site が算出して載せ、UI (CardListModal

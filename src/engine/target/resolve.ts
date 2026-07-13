@@ -91,6 +91,15 @@ export function resolve(
       // engine mega-wave W4 (2026-07-03, r84): perSideMax — side 毎の選択上限 (「自分と相手で1枚ずつ」
       // B08019 a2)。distinctNames と同 posture の runtime validate。partner candidate は player 概念が
       // side quota に馴染まないため使用不可 (throw)。
+      if (typeof ref.query.aggregateLevelMax === 'number') {
+        const totalLevel = picked.reduce((sum, candidate) => sum + (levelForCandidate(candidate) ?? 0), 0);
+        if (totalLevel > ref.query.aggregateLevelMax) {
+          throw new Error(
+            `target.resolve: aggregateLevelMax violated — total ${totalLevel} exceeds ${ref.query.aggregateLevelMax}`,
+          );
+        }
+      }
+
       if (typeof ref.query.perSideMax === 'number') {
         const bySide: Record<string, number> = {};
         for (const p of picked) {

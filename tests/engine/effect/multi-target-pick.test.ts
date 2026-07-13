@@ -90,6 +90,19 @@ describe('engine-extension #3: multi-target Pattern A pick', () => {
     expect(readChar.ap(s, 'e3'), 'e3 に -2000').toBe(apBefore - 2000);
   });
 
+  it('rejects a human multi-pick that exceeds aggregateLevelMax', () => {
+    const s = setupState();
+    const pending = {
+      ...makePendingPA('charModifyAP', { player: 'self', delta: -1000, scope: 'turn' }, [
+        { uid: 'e1', cardId: 'D11015', player: 'opp' },
+        { uid: 'e2', cardId: 'D11015', player: 'opp' },
+      ]),
+      aggregateLevelMax: 1,
+    };
+
+    expect(() => applyPickAndContinuation(s, pending, 'e1', ['e1', 'e2'])).toThrow(/aggregateLevelMax/);
+  });
+
   it('AI 経路の chooseAiPick も multi-pick (nMax>1) で全候補に適用 (greedy)', () => {
     const s = setupState();
     const apBefore = readChar.ap(s, 'e1');
@@ -104,5 +117,26 @@ describe('engine-extension #3: multi-target Pattern A pick', () => {
     expect(readChar.ap(s, 'e1'), 'e1 -500').toBe(apBefore - 500);
     expect(readChar.ap(s, 'e2'), 'e2 -500').toBe(apBefore - 500);
     expect(readChar.ap(s, 'e3'), 'e3 -500').toBe(apBefore - 500);
+  });
+
+  it('AI multi-pick stops before aggregateLevelMax is exceeded', () => {
+    const s = setupState();
+    const apBefore = readChar.ap(s, 'e1');
+    (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue = [
+      {
+        ...makePendingPA('charModifyAP', { player: 'self', delta: -500, scope: 'turn' }, [
+          { uid: 'e1', cardId: 'D11015', player: 'opp' },
+          { uid: 'e2', cardId: 'D11015', player: 'opp' },
+          { uid: 'e3', cardId: 'D11015', player: 'opp' },
+        ]),
+        aggregateLevelMax: 10,
+      },
+    ];
+
+    drainAiEffectPicks(s, new HeuristicPolicy());
+
+    expect(readChar.ap(s, 'e1')).toBe(apBefore - 500);
+    expect(readChar.ap(s, 'e2')).toBe(apBefore - 500);
+    expect(readChar.ap(s, 'e3')).toBe(apBefore);
   });
 });

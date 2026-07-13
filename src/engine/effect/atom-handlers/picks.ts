@@ -1,9 +1,10 @@
 // engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
-import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj } from '../resolve-picks.js';
+import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj, tryRePickFromAtom } from '../resolve-picks.js';
+import { candidates as targetCandidates } from '../../target/candidates.js';
 import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber } from './_shared.js';
 import type { Player, PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
-import type { GameState, EffectCtx, Candidate, AtomVerb } from '../../types/index.js';
+import type { GameState, EffectCtx, Candidate, AtomVerb, TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
 
 export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
@@ -433,6 +434,32 @@ export function atomSouza(s: GameState, a: Record<string, unknown>, ctx: EffectC
 // 変更する場合は本 atom も必ず回帰確認すること。decline ('$pick' 残置) は bind 無し = 後続
 // conditional{fromBound} が not-matched で正しく no-op (rules/15「まで」=0枚可)。
 export function atomBindPick(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+  const rawCardIds = a.cardIds;
+  if (rawCardIds === '$pick.cardIds') {
+    if (a.target && typeof a.target === 'object') {
+      tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+        byPlayer: ctx.source.player,
+        source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+      });
+    }
+    return;
+  }
+  if (Array.isArray(rawCardIds)) {
+    const target = a.target as TargetingRef | undefined;
+    const available = target ? targetCandidates(s, target, ctx) : [];
+    const remaining = available.filter((candidate): candidate is Extract<Candidate, { kind: 'card' }> => candidate.kind === 'card');
+    const selected: Array<Extract<Candidate, { kind: 'card' }>> = [];
+    for (const cardId of rawCardIds) {
+      if (typeof cardId !== 'string') continue;
+      const index = remaining.findIndex((candidate) => candidate.cardId === cardId);
+      if (index === -1) continue;
+      selected.push(remaining[index]!);
+      remaining.splice(index, 1);
+    }
+    if (typeof a.bind === 'string') (ctx.bindings as Record<string, unknown>)[a.bind] = selected;
+    mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:bindPick', target: selected.map((candidate) => candidate.cardId).join(',') });
+    return;
+  }
   if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
     paShortFormAwait(s, verb, a, ctx, resolvePlayer(a.player, ctx), 'either');
     return;

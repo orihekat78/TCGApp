@@ -455,7 +455,7 @@ function substituteAtomPick(
       (ctx.dyn ??= {}).chainStepNoApply = true;
       return atom as Effect;
     }
-    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; distinctLevel?: boolean; distinctColors?: boolean; perSideMax?: number } };
+    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; distinctLevel?: boolean; distinctColors?: boolean; perSideMax?: number; aggregateLevelMax?: number } };
     pushPendingEffectPickSide({
       player: byPlayer,
       // BUG-175: 能力所有者を同梱 — chooser≠owner の cross-side pick で解決後 ctx の座標系を保つ
@@ -478,6 +478,7 @@ function substituteAtomPick(
       distinctColors: targetRef.query?.distinctColors === true,
       // engine mega-wave W4 (2026-07-03, r84): perSideMax quota を UI/AI へ伝播 (B08019 a2)。
       ...(typeof targetRef.query?.perSideMax === 'number' ? { perSideMax: targetRef.query.perSideMax } : {}),
+      ...(typeof targetRef.query?.aggregateLevelMax === 'number' ? { aggregateLevelMax: targetRef.query.aggregateLevelMax } : {}),
       // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、
       //   0枚 decline を applyPickSkipAndContinuation で解決し remainder を実行する (deckRevealUntil と同契約)。
       skipResolvesAtom: (args as { skipResolvesAtom?: boolean }).skipResolvesAtom === true,

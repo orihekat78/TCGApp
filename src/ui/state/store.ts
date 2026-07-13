@@ -226,6 +226,7 @@ export type PendingEffectPick = {
    * EffectPickerModal multi mode が side 別選択数を quota で click 不可化する (human enforce は UI 層)。
    */
   perSideMax?: number;
+  aggregateLevelMax?: number;
 };
 
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */

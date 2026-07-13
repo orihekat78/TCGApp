@@ -1,6 +1,7 @@
 # 実装保留 (Deferred) 一覧
 
-> 2026-07-13 continuation: B02022/B02022P and B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271 shipped. Registry 1999/2074; remaining 75. B02022 action-target primitive cleared Sol review. Lane-B 20-printing green-wave assumption disproven: only six exact DSL/twin closures remained.
+> 2026-07-13 continuation: B02022/B02022P and B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271, then B04042/B04042P/B04084, shipped. Registry 2002/2074; remaining 72. B02022 action-target primitive cleared Sol review. Lane-B 20-printing green-wave assumption disproven: only six exact DSL/twin closures remained.
+> Next portfolio grounded: aggregate multi-pick (3), self set-card remove-to-enter (9), stacked identity/host stack (5), and choose-intercept/opponent decision (6). Integrate one primitive per CI cycle; source dossier/RED matrix: `.claude/sessions/2026-07-13-2.md`.
 
 本ファイルは「実装はあるが未完成 or 未着手で先送りされた」項目の集約 INDEX。
 新規 defer を生んだ commit / session log は必ずここに 1 行追加すること。
@@ -65,7 +66,7 @@ hiramekiResolve humanChooser (hirameki 内 optional の human surface 実バグ�
 B09109 a2 (revealFromHand costPaid cardName + resolveBindRef $cost 非対応)。
 **NIT (記録)**: B09081 a2「1枚まで」が optional 諾否に折込 (B03085/B05111 踏襲、候補常 1 体)。
 **Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / B06023+B06036+B06034 (hirameki invoke-by-cardId) / B06020+B07003 (hand-zone
-cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B04042+B04084 B05033 B08003 /
+cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B05033 B08003 /
 T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D `untargetableByOppEffect` 実装・gate中。
 
 ## 公式 defer 宣言済 (専用ファイルあり)
@@ -455,7 +456,7 @@ window5 = fresh green候補 20 rep を per-card certify (opus grounding→敵対
 |------|------|------|------|
 | B05028 | 🟢 **解禁 (誤診断、上記解決参照)** | ~~宣言a1 chain[charRemoveSetCard, sceneRemove] の「そうした場合」が human-decline 経路で破綻。~~ (2026-06-16: 再現せず誤診断と判明、修正不要で出荷可能)set-card holder 在 + step1 を 0枚 decline すると step2 sceneRemove が**発火してしまう** (applyPickSkipAndContinuation が chain 残りを無条件実行、decline した charRemoveSetCard が `__chainStepNoApply` を立てない)。no-candidate 経路は substituteAtomPick で正しく break するが **candidate在+decline** が壊れる。AI は greedy で decline せず仮面化 → certify+敵対verify 見落とし、**gate5 実機テストが検出** | BUG-111: candidate在 pick の human-decline でも chain-gated continuation を drop (engine) |
 | B09056 | DEFER 継続 (choice-surface gap、BUG-111 underfire は修正済) | optional{sequence[自sleep, sceneRemove(0-pick), **必須choice**]}。レベル8以下 removal 候補在 + 0枚 decline で末尾の必須 choice (痕跡分岐: 黒復活/相手mill) が drop。「リムーブし、以下から1つ選んで行う」= choice は常時発火が正 | 同上 (BUG-111) |
-| B04042 | yellow | 「レベルの合計が10以下になるようにキャラを2枚まで選び」= multi-pick の**集約(sum/budget)制約**。engine に sum 制約 pick 機構なし (per-candidate filter のみ、distinctNames 以外の cross-selection 制約不可) | aggregate-selection-budget 制約 (engine) |
+| ~~B04042/B04042P/B04084~~ | ✅ 出荷済 (2026-07-13) | `aggregateLevelMax` を resolver/human UI/AI の3経路に追加。B04084 は remove occurrence bind + active 1枚 / sleep remainder split entry。重複、0選択、budget、production dispatch を probe。| — |
 | B06032 | yellow | 【ヒラメキ】本体が top-level optional{chain[discard1, sceneEnter from:remove]} を要するが、hiramekiResolve 経路が humanChooser なしで resolveEffectPicks を呼ぶため top-level optional が常に skip → 再生効果が無音 no-op (BUG-145 同族) | hirameki 経路の top-level optional honor (engine) |
 | B08038 | yellow | 「この効果によって特徴[高校生]/[鈴木財閥]がリムーブされた場合」= **removed-by-this-effect** 条件。mill verb は bind せず、removeTraitAtLeast は remove パイル累積を見るため中盤で誤発火 (false-positive AP+1000) | mill bind + removed-by-this-effect condition (engine) |
 | ~~PR236~~ | ✅ 出荷済 | **出荷済 (2026-06-21、`cards/wave-distinct-name-count`)**。`sceneHas` eval を `query.distinctNames` honor に拡張 (1分岐 additive、新 Condition kind 無)。PR236/PR242 (大和敢助 declared a2 宣言ゲート) + B08067/B08067P (諸伏高明 enter conditional) 計 **4 刷**。詳細下記「distinct-name-count cluster」 | — |
@@ -1286,7 +1287,6 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B03063 (死闘) | 盤面計数を上限とする opp multi-pick sleep (dyn nMax) + 「スリープさせたすべて」bound 集合 AP+ の複合 carrier 不在 |
 | B03116 | leave:to-remove hook に「自分の能力や効果によって」の owner-attribution payload 不在 |
 | B04063 | $bound.<key>.levelSum dyn 不在 (リムーブした集合のレベル合計閾値) |
-| B04084 | 「レベル合計10以下になるように2枚まで選ぶ」sum-constrained multi-pick 不在 + 「1枚登場+残りスリープ登場」split deploy 不在 |
 | B04089 | VERIFY_NG: removedCharMatches{cause:'effect'} は actor-attribution (自分の効果によって) を保証しない (payload.byUid 不在 case) |
 | ~~B05047~~ | **✅ 解消 (2026-07-10 mini-wave #5)**: 新 atom deckPlaceSplitBound + DeckPlaceModal (top/bottom 振り分け UI)。B05047 出荷 |
 | B08008 | picked host ($self 以外) の下へ remove-area キャラを重ねる + そのキャラへの ability 付与 rider — host-pick stack + grant 複合不在 |

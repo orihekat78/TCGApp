@@ -124,6 +124,7 @@ export function buildShortFormPick(
   if (typeof a.fromGroup === 'string') query.fromGroup = a.fromGroup;
   // engine mega-wave W4 (2026-07-03, r84): perSideMax — side 毎 quota (「自分と相手で1枚ずつ」B08019)。
   if (typeof a.perSideMax === 'number') query.perSideMax = a.perSideMax;
+  if (typeof a.aggregateLevelMax === 'number') query.aggregateLevelMax = a.aggregateLevelMax;
   // hybrid-batch2 touch-up (2026-07-04): excludeSelf — 「このキャラ以外」を短縮形で表現 (B01084)。
   // candidates.ts:314 が query.excludeSelf を既 honor。既存カードに短縮形 excludeSelf 引数の使用ゼロ = 挙動不変。
   if (a.excludeSelf === true) query.excludeSelf = true;

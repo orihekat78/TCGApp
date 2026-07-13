@@ -11,6 +11,8 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { mutate } from '@/engine/mutate/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
+import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
+import { run } from '@/engine/effect/resolver';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/engine/effect/pending-state';
 import type { CardDef, GameState, EffectCtx, Candidate } from '@/engine/types';
@@ -139,5 +141,34 @@ describe('P5: sceneEnter cardIds-multi bind (B09019)', () => {
     }, ctx);
     const b = ((ctx.bindings as Record<string, unknown>)['$entered'] ?? []) as unknown[];
     expect(b.length).toBe(0); // switchUids 無し → 全 skip
+  });
+});
+
+describe('P6: bindPick binds a resolved card multi-pick without moving cards (B04084)', () => {
+  it('keeps selected remove cards in place and records their card candidates for a second pick', () => {
+    const s = base(); const ctx = ctxFor(s);
+    s.players.self.remove = ['KID1', 'KID2'];
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+
+    run(s, {
+      kind: 'sequence',
+      steps: [
+        {
+          kind: 'atom', verb: 'bindPick', args: {
+            player: 'self', cardIds: '$pick.cardIds', bind: '$selected',
+            target: { kind: 'pick', query: { area: 'remove', side: 'self' }, n: { min: 0, max: 2 }, chooser: 'self' },
+          },
+        },
+        { kind: 'atom', verb: 'noop', args: {} },
+      ],
+    } as never, ctx);
+    const pending = _drainPendingEffectPickSide();
+
+    expect(pending).not.toBeNull();
+    const uids = pending!.candidates.map((c) => c.uid);
+    applyPickAndContinuation(s, pending!, uids[0]!, uids);
+
+    expect(s.players.self.remove).toEqual(['KID1', 'KID2']);
+    expect((ctx.bindings as Record<string, Array<{ cardId: string }>>)['$selected']!.map((c) => c.cardId)).toEqual(['KID1', 'KID2']);
   });
 });

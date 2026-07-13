@@ -10,6 +10,37 @@ import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwai
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
 
+function rebaseBoundCardIndexes(
+  ctx: EffectCtx,
+  player: Player,
+  area: 'remove' | 'hand' | 'deck',
+  removedIndex: number,
+  cardId: string,
+): void {
+  for (const key of Object.keys(ctx.bindings)) {
+    const bound = ctx.bindings[key];
+    if (!Array.isArray(bound)) continue;
+    let consumed = false;
+    const remaining = bound.filter((entry) => {
+      const card = entry as { kind?: string; player?: string; area?: string; index?: number; cardId?: string };
+      if (!consumed && card.kind === 'card' && card.player === player && card.area === area
+        && card.index === removedIndex && card.cardId === cardId) {
+        consumed = true;
+        return false;
+      }
+      return true;
+    });
+    ctx.bindings[key] = remaining.map((entry) => {
+      const card = entry as Candidate;
+      if (card.kind === 'card' && card.player === player && card.area === area
+        && typeof card.index === 'number' && card.index > removedIndex) {
+        return { ...card, index: card.index - 1 };
+      }
+      return entry;
+    }) as EffectCtx['bindings'][string];
+  }
+}
+
 export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // cluster14 (2026-06-15) multi-card sceneEnter: 「…キャラを2枚まで選び、登場させる」(B09010/PR042 等)。
       //   handAddFromRemove/charStackCard と同型の cardIds:'$pick.cardIds' 契約を sceneEnter に拡張する。
@@ -248,7 +279,10 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       } else if (sourceArea === 'remove') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].remove;
-        const idx = arr.indexOf(cardId);
+        const selectedIndex = (a as { selectedCardIndex?: unknown }).selectedCardIndex;
+        const idx = typeof selectedIndex === 'number' && arr[selectedIndex] === cardId
+          ? selectedIndex
+          : arr.indexOf(cardId);
         // engine mega-wave W3 (2026-07-03, r17): sourceRequired:true (opt-in) — 対象カードが source area に
         // 無ければ登場自体を中止 (B05115 公式Q&A「解決までにリムーブエリアを離れていた場合、登場できません」)。
         // 既存カードは未宣言 → 従来挙動 (idx===-1 でも enter 続行) byte 等価。
@@ -257,6 +291,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           return;
         }
         if (idx !== -1) { arr.splice(idx, 1); mutate.remove.emitExit(s, fromPlayer, cardId); } // wave-4: remove→登場 離脱 (原因非依存 remove:exit、B05087 1st 能力が観測しうる)
+        if (idx !== -1) rebaseBoundCardIndexes(ctx, fromPlayer, 'remove', idx, cardId);
       } else if (sourceArea === 'hand') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].hand;

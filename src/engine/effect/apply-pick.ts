@@ -145,6 +145,12 @@ function validatePendingPick(
       if (count[c.player] > pending.perSideMax) throw new Error('effectPickResolve: perSideMax violated');
     }
   }
+  if (typeof pending.aggregateLevelMax === 'number') {
+    const totalLevel = chosen.reduce((sum, candidate) => sum + (def.card(candidate.cardId)?.level ?? 0), 0);
+    if (totalLevel > pending.aggregateLevelMax) {
+      throw new Error('effectPickResolve: aggregateLevelMax violated');
+    }
+  }
 }
 
 /**
@@ -219,7 +225,7 @@ export function applyPickAndContinuation(
     const newArgs: Record<string, unknown> = hasCardIdsBind
       ? { ...pending.atomArgs, cardIds: allCardIds, selectedDeckIndexes, ...switchPart } // target は元の pick query を保持
       : hasCardIdBind
-        ? { ...pending.atomArgs, cardId: resolvedCardId, ...switchPart } // target は元の pick query を保持
+        ? { ...pending.atomArgs, cardId: resolvedCardId, selectedCardIndex: selectedDeckIndexes[0], ...switchPart } // target は元の pick query を保持
         // BUG-165 (wave-10 2026-07-02): 旧 target:[resolvedCardId] は pickedUids (nMax>1 の複数選択、
         // UI Playmat multi-select / AI chooseAiPick が渡す) を握り潰し先頭 1枚に collapse していた
         // (B04005「手札を2枚リムーブする」が全経路 1枚しか落ちない / handReveal ★未対応(3) の bind 1枚問題)。
@@ -466,11 +472,12 @@ function chooseAiPick(
       : cands;
     // engine mega-wave W4 (2026-07-03, r84): perSideMax (「自分と相手で1枚ずつ」B08019 a2) — distinctNames
     // と同型の greedy walk (side 別 counter)。両 flag 併用時は perSideMax gate → name-dedup の順で複合。
-    if (pending.distinctNames === true || pending.distinctLevel === true || pending.distinctColors === true || typeof pending.perSideMax === 'number') {
+    if (pending.distinctNames === true || pending.distinctLevel === true || pending.distinctColors === true || typeof pending.perSideMax === 'number' || typeof pending.aggregateLevelMax === 'number') {
       const seen = new Set<string>();
       const seenLv = new Set<number>(); // Cluster WB1 (2026-07-11, B09105): distinctLevel greedy dedup
       const seenColors = new Set<string>();
       const bySide: Record<string, number> = {};
+      let totalLevel = 0;
       const chosen: string[] = [];
       for (const c of orderedCands) {
         if (chosen.length >= pending.nMax) break;
@@ -492,6 +499,8 @@ function chooseAiPick(
             seenLv.add(lv);
           }
         }
+        const level = def.card(c.cardId)?.level ?? 0;
+        if (typeof pending.aggregateLevelMax === 'number' && totalLevel + level > pending.aggregateLevelMax) continue;
         if (pending.distinctColors === true) {
           const colors = def.card(c.cardId)?.colors ?? [];
           if (colors.some(color => seenColors.has(color))) continue;
@@ -501,6 +510,7 @@ function chooseAiPick(
           const side = (c as { player?: string }).player ?? '?';
           bySide[side] = (bySide[side] ?? 0) + 1;
         }
+        totalLevel += level;
         chosen.push(c.uid);
       }
       return { pickedUid: chosen[0] ?? pickedUid, pickedUids: chosen };

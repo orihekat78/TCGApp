@@ -109,6 +109,23 @@ describe('engine.target.resolve', () => {
       expect(() => resolve(s, ref, makeCtx(), picked)).toThrow(/out of legal range/);
     });
 
+    it('rejects a multi-pick whose combined printed levels exceed aggregateLevelMax', () => {
+      registerCardDef(defOf({ id: 'LV6', level: 6 }));
+      registerCardDef(defOf({ id: 'LV5', level: 5 }));
+      let s = createEmptyGameState();
+      s = withScene(s, 'self', [
+        makeChar({ uid: 'lv6', cardId: 'LV6' }),
+        makeChar({ uid: 'lv5', cardId: 'LV5' }),
+      ]);
+      const ref = pickRef({ side: 'self', aggregateLevelMax: 10 } as TargetQuery, 0, 2);
+      const picked: Candidate[] = [
+        { kind: 'char', uid: 'lv6', cardId: 'LV6', player: 'self' },
+        { kind: 'char', uid: 'lv5', cardId: 'LV5', player: 'self' },
+      ];
+
+      expect(() => resolve(s, ref, makeCtx(), picked)).toThrow(/aggregateLevelMax/);
+    });
+
     it('throws when too few picked (enough candidates available)', () => {
       let s = createEmptyGameState();
       s = withScene(s, 'self', [

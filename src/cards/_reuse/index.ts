@@ -723,6 +723,9 @@ import { D04014 } from '../ct-d04/D04014.js';
 import { B04061 } from '../ct-p04/B04061.js';
 import { D05014 } from '../ct-d05/D05014.js';
 import { B04083 } from '../ct-p04/B04083.js';
+import { B04042 } from '../ct-p04/B04042.js';
+import { B04042P } from '../ct-p04/B04042P.js';
+import { B04084 } from '../ct-p04/B04084.js';
 import { D07023 } from '../ct-d07/D07023.js';
 import { B03132 } from '../ct-p03/B03132.js';
 import { B03132P } from '../ct-p03/B03132P.js';
@@ -1701,7 +1704,7 @@ export const REUSE_CARDS: CardDef[] = [
   // engine拡張 wave#2 cluster11 (enter-source-level filter, BUG-146 coupled)
   B01014, B01015, B01021, B07019,
   // engine拡張 wave#2 cluster12 — nested-filter-dyn (FILE-level enter events)
-  D01014, B04013, D02014, B04026, D03014, B04040, D04014, B04061, D05014, B04083, D07023, B03132, B03132P, B08060, B08060P,
+  D01014, B04013, D02014, B04026, D03014, B04040, D04014, B04061, D05014, B04083, B04042, B04042P, B04084, D07023, B03132, B03132P, B08060, B08060P,
   // engine拡張 wave#2 cluster13 — aura-grant (他キャラ AP buff)
   D05005, D07010, D07011, B01038, B01038P, B02012, B03075, B07044, B09009, PR274, PR275,
   // engine拡張 wave#2 cluster14 — multi-card sceneEnter
