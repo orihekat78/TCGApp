@@ -158,7 +158,7 @@ describe('engine-additive-0629d #3 charSetCard fromSelf', () => {
     const s = setup();
     runAtom(s, 'charSetCard', { uid: 'h1', fromSelf: true, player: 'self' }, ctxEvt());
     const host = s.players.self.scene[0];
-    expect(host.setCards).toEqual([{ cardId: 'EVT', faceUp: true }]);
+    expect(host.setCards).toEqual([{ cardId: 'EVT', faceUp: true, instanceId: 'set:1' }]);
     expect(s.players.self.remove).not.toContain('EVT');
     expect(read.char.ap(s, 'h1')).toBe(5000); // 3000 + on-set-host 2000
   });
@@ -171,7 +171,7 @@ describe('engine-additive-0629d #3 charSetCard fromSelf', () => {
     const s = setup();
     s.players.self.remove = [];
     runAtom(s, 'charSetCard', { uid: 'h1', fromSelf: true, player: 'self' }, ctxEvt());
-    expect(s.players.self.scene[0].setCards).toEqual([{ cardId: 'EVT', faceUp: true }]);
+    expect(s.players.self.scene[0].setCards).toEqual([{ cardId: 'EVT', faceUp: true, instanceId: 'set:1' }]);
   });
   it('短縮形 fromSelf (uid未指定+n/max): 即セットせず host pick を await する', () => {
     const s = setup();

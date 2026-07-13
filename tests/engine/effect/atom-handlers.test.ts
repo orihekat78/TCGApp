@@ -569,7 +569,7 @@ describe('engine.effect.runAtom', () => {
       const result = produce(s, draft => {
         runAtom(draft, 'charSetCard', { uid: 'sc-uid', cardId: 'ITEM', faceUp: true }, makeCtx());
       });
-      expect(result.players.self.scene[0].setCards).toEqual([{ cardId: 'ITEM', faceUp: true }]);
+      expect(result.players.self.scene[0].setCards).toEqual([{ cardId: 'ITEM', faceUp: true, instanceId: 'set:1' }]);
     });
 
     // engine-extension #5b (2026-06-05): fromDeckTop オプション
@@ -580,7 +580,7 @@ describe('engine.effect.runAtom', () => {
       const result = produce(s, draft => {
         runAtom(draft, 'charSetCard', { uid: 'set-deck', fromDeckTop: true, faceUp: false, player: 'self' }, makeCtx());
       });
-      expect(result.players.self.scene[0].setCards).toEqual([{ cardId: 'DECK_TOP', faceUp: false }]);
+      expect(result.players.self.scene[0].setCards).toEqual([{ cardId: 'DECK_TOP', faceUp: false, instanceId: 'set:1' }]);
       expect(result.players.self.deck).toEqual(['DECK_2', 'DECK_3']);
     });
 

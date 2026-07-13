@@ -38,7 +38,7 @@ describe('B03034 稲尾一久 — カットイン (AP+1000 + 相手デッキ上�
     runEffect(s, B03034.abilities[0]!.effect!, ctx);
     runAllUntilEmpty(s);
     expect(charRead.ap(s, 'atk')).toBe(2000); // 1000 + 1000
-    expect(s.players.opp.scene[0]!.setCards).toEqual([{ cardId: 'DECK1', faceUp: false }]);
+    expect(s.players.opp.scene[0]!.setCards).toEqual([{ cardId: 'DECK1', faceUp: false, instanceId: 'set:1' }]);
     expect(s.players.opp.deck).toEqual(['DECK2']); // DECK1 が deck から除去
   });
 

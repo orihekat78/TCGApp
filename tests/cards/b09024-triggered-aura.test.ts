@@ -130,7 +130,7 @@ describe('B09024 a2 declared ability', () => {
 
     expect(s.players.self.hand).toEqual(['POLICE']);
     expect(s.players.opp.scene.some(c => c.uid === targetUid)).toBe(false);
-    expect(s.players.self.scene.find(c => c.uid === sourceUid)?.setCards).toEqual([{ cardId: 'DRAW', faceUp: false }]);
+    expect(s.players.self.scene.find(c => c.uid === sourceUid)?.setCards).toEqual([{ cardId: 'DRAW', faceUp: false, instanceId: 'set:1' }]);
   });
 
   it('does not set a card after active target removal', () => {

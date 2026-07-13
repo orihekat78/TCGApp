@@ -155,7 +155,7 @@ describe('B02018 a1 — setcard:enter で choice[アクティブ化 / 突撃付�
       expect(fired, '自分ターン中 set → a1 発火 (choice surface)').toBe(true);
     });
     expect(read.char.state(afterA, 'hattori'), 'option0 → sleep→active').toBe('active');
-    expect(afterA.players.self.scene[0].setCards, 'set card は裏向きで載る').toEqual([{ cardId: 'SET1', faceUp: false }]);
+    expect(afterA.players.self.scene[0].setCards, 'set card は裏向きで載る').toEqual([{ cardId: 'SET1', faceUp: false, instanceId: 'set:1' }]);
 
     // off-variant: 相手ターン中 (owner=self にとって turn{self} 不成立) → set しても発火せず
     const afterOff = produce(board('self', 'opp', 'hattori', 'sleep'), (d) => {
@@ -207,7 +207,7 @@ describe('B02018 a1 — setcard:enter で choice[アクティブ化 / 突撃付�
     });
     expect(read.char.state(after, 'oh'), 'owner=opp: opp 側 B02018 が active (owner 反転せず)').toBe('active');
     expect(after.players.self.scene.length, 'self 側は無関係').toBe(0);
-    expect(after.players.opp.scene[0].setCards, 'opp 側に裏向き set').toEqual([{ cardId: 'SET1', faceUp: false }]);
+    expect(after.players.opp.scene[0].setCards, 'opp 側に裏向き set').toEqual([{ cardId: 'SET1', faceUp: false, instanceId: 'set:1' }]);
   });
 });
 
@@ -241,7 +241,7 @@ describe('B02018 a2 — 宣言: cost removeDeckTop3 → charSetCard fromDeckTop 
       expect(after.players.self.deck.includes(cid), `${cid} は deck から抜けた`).toBe(false);
     }
     // effect: cost 後の上端 SET が裏向きセット / TAIL は deck に残る
-    expect(after.players.self.scene[0].setCards, 'SET が裏向き(faceUp:false)でセット').toEqual([{ cardId: 'SET', faceUp: false }]);
+    expect(after.players.self.scene[0].setCards, 'SET が裏向き(faceUp:false)でセット').toEqual([{ cardId: 'SET', faceUp: false, instanceId: 'set:1' }]);
     expect(after.players.self.deck, 'SET 消費後 deck 残は TAIL のみ').toEqual(['TAIL']);
     // cascade: a1 発火で B02018 が active 化 (real a2→a1 統合経路)
     expect(read.char.state(after, 'hattori'), 'cascade a1 option0 → active').toBe('active');

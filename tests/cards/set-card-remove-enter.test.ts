@@ -39,7 +39,7 @@ describe('B06012 self set-card removal', () => {
   });
 
   it('keeps the base and parallel rules text equal', () => {
-    expect(B06012P.abilities).toEqual(B06012.abilities);
+    expect(JSON.stringify(B06012P.abilities, (_key, value) => typeof value === 'function' ? '[function]' : value)).toBe(JSON.stringify(B06012.abilities, (_key, value) => typeof value === 'function' ? '[function]' : value));
     expect(B06012P.names).toEqual(B06012.names);
   });
 

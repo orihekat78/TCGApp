@@ -843,7 +843,7 @@ describe('W4 step7 r1: on-set-host protection rider (opponentRestrict remove/sle
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     const host = after.players.self.scene.find(c => c.uid === 'gh#2')!;
-    expect(host.setCards).toEqual([{ cardId: 'B05041', faceUp: true }]);
+    expect(host.setCards).toEqual([{ cardId: 'B05041', faceUp: true, instanceId: 'set:1' }]);
     expect(after.players.self.remove, 'イベント自身は remove から host へ').not.toContain('B05041');
   });
 });

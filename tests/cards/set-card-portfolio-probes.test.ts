@@ -12,6 +12,8 @@ import { mutate } from '@/engine/mutate';
 import { event } from '@/engine/event';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { runAllUntilEmpty } from '@/engine/resolve';
+import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
+import { _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { char as readChar } from '@/engine/read/char';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks';
@@ -23,9 +25,11 @@ import type { CardDef, EffectCtx } from '@/engine/types';
 
 const ctx = (player: 'self' | 'opp' = 'self'): EffectCtx => ({ source: { player, cardId: 'SRC', uid: 'src' }, bindings: {} } as EffectCtx);
 const char = (id: string, color: string, level = 1): CardDef => ({ id, no: id, kind: 'character', names: [id], colors: [color], level, ap: 1000, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] });
+const serializedAbilities = (def: CardDef) => JSON.stringify(def.abilities, (_key, value) => typeof value === 'function' ? '[function]' : value);
 
 beforeEach(() => {
   resetDefRegistry(); event._resetRegistry(); _resetTriggeredRegistered();
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   registerCardDef(B06064); registerCardDef(B07033); registerCardDef(B09113);
   registerCardDef(char('RED', '赤')); registerCardDef(char('BLACK', '黒')); registerCardDef(char('SLEEP7', '白', 7));
   registerCardDef({ ...char('HOST', '白'), traits: ['YAIBA'], level: 8 });
@@ -40,7 +44,7 @@ beforeEach(() => {
 
 describe('deferred set-card portfolio — CI probes', () => {
   it('B06064/P preserve face-up host grant and opponent-turn leave reanimate contracts', () => {
-    expect(B06064P.abilities).toEqual(B06064.abilities);
+    expect(serializedAbilities(B06064P)).toBe(serializedAbilities(B06064));
     expect(B06064.abilities[0]).toMatchObject({ trigger: { hook: 'effect:declared', selfOnly: true }, effect: { kind: 'atom', verb: 'charSetCard', args: { filter: { trait: 'YAIBA', levelMin: 8 } } } });
     expect(B06064.abilities[1]).toMatchObject({ scope: 'on-set-host', continuousModifier: { grantKeywords: expect.any(Function) } });
     expect(B06064.abilities[2]).toMatchObject({ scope: 'on-set-self', trigger: { hook: 'setcard:leave' }, condition: { kind: 'turn', player: 'opp' }, effect: { kind: 'atom', verb: 'sceneEnter', args: { enterSleep: true, filter: { trait: 'YAIBA', levelMax: 5 } } } });
@@ -53,6 +57,11 @@ describe('deferred set-card portfolio — CI probes', () => {
       mutate.char.setCard(draft, host.uid, 'B06064', true);
       draft.players.self.remove = ['YAIBA5'];
       mutate.char.removeOneSetCard(draft, host.uid, { setCardInstanceId: host.setCards[0]!.instanceId });
+      runAllUntilEmpty(draft);
+      const pending = _drainPendingEffectPickSide();
+      const candidate = pending?.candidates.find(item => item.cardId === 'YAIBA5');
+      expect(candidate?.uid).toBeTruthy();
+      applyPickAndContinuation(draft, pending!, candidate!.uid!);
       runAllUntilEmpty(draft);
     });
     expect(after.players.self.scene.find(c => c.cardId === 'YAIBA5')?.state).toBe('sleep');
@@ -73,10 +82,10 @@ describe('deferred set-card portfolio — CI probes', () => {
   });
 
   it('B07033 family keeps partner-white assault conditional and exact PA threshold', () => {
-    expect(B07033P.abilities).toEqual(B07033.abilities);
-    expect(B07033P2.abilities).toEqual(B07033.abilities);
+    expect(serializedAbilities(B07033P)).toBe(serializedAbilities(B07033));
+    expect(serializedAbilities(B07033P2)).toBe(serializedAbilities(B07033));
     expect(B07033.keywords).toEqual([]);
-    expect(B07033.abilities[0]).toEqual(partnerColorKeyword({ color: '白', kw: '突撃', abilityId: 'a0' }));
+    expect(JSON.stringify(B07033.abilities[0], (_key, value) => typeof value === 'function' ? '[function]' : value)).toBe(JSON.stringify(partnerColorKeyword({ color: '白', kw: '突撃', abilityId: 'a0' }), (_key, value) => typeof value === 'function' ? '[function]' : value));
     expect(B07033.abilities[1]).toMatchObject({ condition: { kind: 'and', cs: [{ kind: 'turn', player: 'self' }, { kind: 'sceneHas', query: { area: 'partner-area', side: 'self', filter: { trait: 'ビッグジュエル' } }, nMin: 2 }] }, continuousModifier: { apDelta: 2000 } });
     expect(B07033.abilities[2]).toMatchObject({ trigger: { hook: 'disguise:into', selfOnly: true }, effect: { kind: 'atom', verb: 'toPartnerArea', args: { max: 1, filter: { kind: 'event', trait: 'ビッグジュエル' } } } });
   });
@@ -100,7 +109,7 @@ describe('deferred set-card portfolio — CI probes', () => {
   });
 
   it('B09113/P retains Q&A choice no-op gates and sleep-only remove branch', () => {
-    expect(B09113P.abilities).toEqual(B09113.abilities);
+    expect(serializedAbilities(B09113P)).toBe(serializedAbilities(B09113));
     const effect = B09113.abilities[1]!.effect!;
     expect(effect).toMatchObject({ kind: 'choice', chooser: 'self' });
     const options = (effect as Extract<typeof effect, { kind: 'choice' }>).options;
@@ -121,8 +130,8 @@ describe('deferred set-card portfolio — CI probes', () => {
     const after = produce(createEmptyGameState(), draft => {
       draft.scratchTrace.self = '未発見';
       draft.players.self.evidence = [{ cardId: 'DECK', faceUp: false, origin: { turn: 1, via: 'effect' } }];
-      draft.players.opp.deck = ['DECK', 'DECK'];
-      const c = ctx();
+      draft.players.opp.deck = ['DECK', 'DECK', 'DECK'];
+      const c = { ...ctx(), dyn: { choiceIndex: 0 } };
       const walked = resolveEffectPicks(draft, effect, c, { byPlayer: 'self', humanChooser: false, chooseAtomTarget: policy.chooseAtomTarget?.bind(policy), source: { cardId: 'B09113', abilityId: 'a2' } });
       runEffect(draft, walked, c);
     });
@@ -136,7 +145,7 @@ describe('deferred set-card portfolio — CI probes', () => {
     const after = produce(createEmptyGameState(), draft => {
       draft.scratchTrace.self = '未発見';
       draft.players.opp.deck = ['DECK', 'DECK'];
-      const c = ctx();
+      const c = { ...ctx(), dyn: { choiceIndex: 0 } };
       const walked = resolveEffectPicks(draft, effect, c, { byPlayer: 'self', humanChooser: false, chooseAtomTarget: policy.chooseAtomTarget?.bind(policy), source: { cardId: 'B09113', abilityId: 'a2' } });
       runEffect(draft, walked, c);
       runAllUntilEmpty(draft);

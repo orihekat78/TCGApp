@@ -69,7 +69,7 @@ describe('PR234 a1 (enter → union pick → faceUp set)', () => {
     };
     const s = runCardScenario(PR234, FIXTURES, sc);
     const host = s.players.self.scene.find((c) => c.uid === '__HU__')!;
-    expect(host.setCards).toEqual([{ cardId: 'B01023', faceUp: true }]); // 「表向きでセット」(a2 の参照と整合)
+    expect(host.setCards).toEqual([{ cardId: 'B01023', faceUp: true, instanceId: 'set:1' }]); // 「表向きでセット」(a2 の参照と整合)
   });
 
   it('remove source (union): リムーブエリアのシャッフルロマンスも同一 pick で選べ、remove から消費される', () => {
@@ -90,7 +90,7 @@ describe('PR234 a1 (enter → union pick → faceUp set)', () => {
     };
     const s = runCardScenario(PR234, FIXTURES, sc);
     const host = s.players.self.scene.find((c) => c.uid === '__HU__')!;
-    expect(host.setCards).toEqual([{ cardId: 'B01023', faceUp: true }]);
+    expect(host.setCards).toEqual([{ cardId: 'B01023', faceUp: true, instanceId: 'set:1' }]);
   });
 });
 
@@ -206,7 +206,7 @@ describe('B01057 a1 (event-use → fromSelf faceUp set, 【白】filter)', () =>
     };
     const s = runCardScenario(B01057, [WHT, REDD], sc);
     const host = s.players.self.scene.find((c) => c.uid === '__WU__')!;
-    expect(host.setCards).toEqual([{ cardId: 'B01057', faceUp: true }]); // fromSelf = 常に表向き (rider walk 前提)
+    expect(host.setCards).toEqual([{ cardId: 'B01057', faceUp: true, instanceId: 'set:1' }]); // fromSelf = 常に表向き (rider walk 前提)
   });
 });
 

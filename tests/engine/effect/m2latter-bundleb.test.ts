@@ -180,7 +180,7 @@ describe('P15: TargetQuery.area 配列 union (PR234 a1)', () => {
     }, ctx);
     expect(s.players.self.remove).toEqual([]); // remove 先消費 (所有者有利側)
     expect(s.players.self.hand).toEqual(['EV_H']); // hand は不変
-    expect(s.players.self.scene[0].setCards[0]).toEqual({ cardId: 'EV_H', faceUp: true });
+    expect(s.players.self.scene[0].setCards[0]).toEqual({ cardId: 'EV_H', faceUp: true, instanceId: 'set:1' });
   });
   it('charSetCard cardIds branch の source-splice も union 対応 (hand 側から消費)', () => {
     const s = base(); const ctx = ctxFor(s);
@@ -192,6 +192,6 @@ describe('P15: TargetQuery.area 配列 union (PR234 a1)', () => {
     }, ctx);
     expect(s.players.self.hand).toEqual([]);
     expect(s.players.self.remove).toEqual(['EV_R']); // remove 側は不変
-    expect(s.players.self.scene[0].setCards[0]).toEqual({ cardId: 'EV_H', faceUp: true });
+    expect(s.players.self.scene[0].setCards[0]).toEqual({ cardId: 'EV_H', faceUp: true, instanceId: 'set:1' });
   });
 });

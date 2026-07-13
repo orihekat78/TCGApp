@@ -263,7 +263,7 @@ describe('engine.mutate.char', () => {
         char.setCard(draft, 'uid-1', 'EV001', true);
       });
       expect(result.players.self.scene[0].setCards).toEqual([
-        { cardId: 'EV001', faceUp: true },
+        { cardId: 'EV001', faceUp: true, instanceId: 'set:1' },
       ]);
     });
 
@@ -274,7 +274,7 @@ describe('engine.mutate.char', () => {
         char.setCard(draft, 'uid-1', 'EV002', false);
       });
       expect(result.players.self.scene[0].setCards).toEqual([
-        { cardId: 'EV002', faceUp: false },
+        { cardId: 'EV002', faceUp: false, instanceId: 'set:1' },
       ]);
     });
 

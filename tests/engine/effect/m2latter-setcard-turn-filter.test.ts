@@ -95,13 +95,13 @@ describe('P6: charSetCard cardIds branch faceUp honor (PR234 a1)', () => {
     run(s, ctx, { faceUp: true });
     const host = s.players.self.scene[0];
     expect(host.setCards.length).toBe(1);
-    expect(host.setCards[0]).toEqual({ cardId: 'EV1', faceUp: true });
+    expect(host.setCards[0]).toEqual({ cardId: 'EV1', faceUp: true, instanceId: 'set:1' });
   });
   it('faceUp 未指定は従来どおり裏向き (B08036 回帰 0)', () => {
     const s = base(); const ctx = ctxFor(s);
     s.players.self.remove = ['EV1'];
     run(s, ctx, {});
-    expect(s.players.self.scene[0].setCards[0]).toEqual({ cardId: 'EV1', faceUp: false });
+    expect(s.players.self.scene[0].setCards[0]).toEqual({ cardId: 'EV1', faceUp: false, instanceId: 'set:1' });
   });
 });
 
