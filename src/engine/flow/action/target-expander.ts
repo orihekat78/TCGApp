@@ -83,12 +83,12 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
   const seen = new Set(baseList.map(c => c.uid));
   const extra: TargetCandidate[] = [];
   for (const expander of _expanders.values()) {
-    let returned: TargetCandidate[] = [];
+    let returned: TargetCandidate[];
     try {
       returned = expander(state, byUid);
     } catch {
       // 防御的: expander が throw しても candidates 全体は壊さない
-      returned = [];
+      continue;
     }
     for (const c of returned) {
       if (!seen.has(c.uid)) {
@@ -210,5 +210,50 @@ export function mustTargetCandidates(state: GameState, byUid: string): TargetCan
       out.push({ uid: c.uid, cardId: c.cardId, player: opp });
     }
   }
+  out.push(...mustTargetSelfOnceCandidates(state, byUid));
   return out;
+}
+
+function hasMustTargetSelfOnce(cardId: string): boolean {
+  const cardDef = readDef.card(cardId);
+  return cardDef?.abilities?.some(ab =>
+    ab.type === 'triggered'
+    && ab.scope === 'on-scene'
+    && ab.trigger?.hook === 'action:pre-target'
+    && ab.effect?.kind === 'atom'
+    && ab.effect.verb === 'mustTargetSelfOnce',
+  ) ?? false;
+}
+
+/** B02022: declaration commit で同時発動した全コピーを【ターン1】消費する。 */
+export function mustTargetSelfOnceCandidates(state: GameState, byUid: string): TargetCandidate[] {
+  const actor = sceneActorPlayer(state, byUid);
+  if (!actor) return []; // 印字は「相手の現場にいるキャラ」がアクションするとき。partner は対象外。
+  const opp: Player = actor === 'self' ? 'opp' : 'self';
+  const legal = candidates(state, byUid);
+  return state.players[opp].scene.flatMap((c) =>
+    hasMustTargetSelfOnce(c.cardId)
+      && c.turnEffects.mustTargetSelfOnce !== state.turn.number
+      && legal.some(x => x.uid === c.uid)
+      ? [{ uid: c.uid, cardId: c.cardId, player: opp }]
+      : [],
+  );
+}
+
+export function consumeMustTargetSelfOnce(state: GameState, byUid: string): void {
+  const actor = sceneActorPlayer(state, byUid);
+  if (!actor) return;
+  const opp: Player = actor === 'self' ? 'opp' : 'self';
+  for (const c of state.players[opp].scene) {
+    if (hasMustTargetSelfOnce(c.cardId)) {
+      c.turnEffects.mustTargetSelfOnce = state.turn.number;
+    }
+  }
+}
+
+function sceneActorPlayer(state: GameState, byUid: string): Player | null {
+  for (const p of ['self', 'opp'] as const) {
+    if (state.players[p].scene.some(c => c.uid === byUid)) return p;
+  }
+  return null;
 }

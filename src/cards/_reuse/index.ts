@@ -81,6 +81,8 @@ import { B01102 } from '../ct-p01/B01102.js';
 import { B01102P } from '../ct-p01/B01102P.js';
 import { B02009 } from '../ct-p02/B02009.js';
 import { B02010 } from '../ct-p02/B02010.js';
+import { B02022 } from '../ct-p02/B02022.js';
+import { B02022P } from '../ct-p02/B02022P.js';
 import { B02032 } from '../ct-p02/B02032.js';
 import { B02051 } from '../ct-p02/B02051.js';
 import { B02060 } from '../ct-p02/B02060.js';
@@ -1425,6 +1427,7 @@ import { PR240 } from '../pr-01/PR240.js';
 import { B01057 } from '../ct-p01/B01057.js';
 import { B05063 } from '../ct-p05/B05063.js';
 import { PR265 } from '../pr-01/PR265.js';
+import { PR271 } from '../pr-01/PR271.js';
 import { B09019 } from '../ct-p09/B09019.js';
 import { B04048 } from '../ct-p04/B04048.js';
 import { B06003 } from '../ct-p06/B06003.js';
@@ -1489,8 +1492,13 @@ import { B05007 } from '../ct-p05/B05007.js';
 import { B05007P } from '../ct-p05/B05007P.js';
 import { B05097 } from '../ct-p05/B05097.js';
 import { B07030 } from '../ct-p07/B07030.js';
+import { B07030P } from '../ct-p07/B07030P.js';
+import { B07030P2 } from '../ct-p07/B07030P2.js';
 import { B07061 } from '../ct-p07/B07061.js';
+import { B07061P } from '../ct-p07/B07061P.js';
 import { B09055 } from '../ct-p09/B09055.js';
+import { B09055P } from '../ct-p09/B09055P.js';
+import { B09055P2 } from '../ct-p09/B09055P2.js';
 import { B03063 } from '../ct-p03/B03063.js';
 import { B09011 } from '../ct-p09/B09011.js';
 import { B09112 } from '../ct-p09/B09112.js';
@@ -1547,7 +1555,7 @@ export const REUSE_CARDS: CardDef[] = [
   B01028, B01028P, B01029, B01032, B01040, B01040P, B01046, B01049,
   B01063, B01064, B01083, B01087, B01088, B01091, B01094, B01094P,
   B01099, B01099P, B01100, B01100P, B01101, B01101P, B01102, B01102P,
-  B02009, B02010, B02032, B02051, B02060, B02061, B02074, B02074P,
+  B02009, B02010, B02022, B02022P, B02032, B02051, B02060, B02061, B02074, B02074P,
   B02082, B02089, B02089P, B02090, B02091, B03004, B03009, B03010,
   B03010P, B03011, B03015, B03015P, B03021, B03021P, B03022, B03022P,
   B03026, B03037, B03043, B03048, B03048P, B03054, B03054P, B03055,
@@ -1949,7 +1957,7 @@ export const REUSE_CARDS: CardDef[] = [
   B03112, B03116, B04089, B04091, B04094, B05107,
   B07025, B08041, B08068, B09005, B09050, B09060,
   // M2 latter batch (2026-07-10): set-card + dyn-counter + cutin-filter 15 unit
-  D06003, D06004, D06021, D06023, B07100, PR234, PR240, B01057, B05063, PR265, B09019, B04048, B06003, B07008, B08047, B06066,
+  D06003, D06004, D06021, D06023, B07100, PR234, PR240, B01057, B05063, PR265, PR271, B09019, B04048, B06003, B07008, B08047, B06066,
   // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 0 枚)
 
   // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 0 枚)
@@ -1968,7 +1976,7 @@ export const REUSE_CARDS: CardDef[] = [
   // night-wA: engine additive wave A (verb/hook/cond/dyn/cost) exemplar 19 printings (2026-07-11)
   B07049, D10009, D10010, B07063, B07063P, B04073, B03008, B03040, B02084, B02084P, B03041, B03041P, B03042, B09107, B09107P, B02087, B02087P, B05007, B05007P, B05097,
   // night-wB: param 拡張 wave B exemplar 12 printings (2026-07-11)
-  B07030, B07061, B09055, B03063, B09011, B09112, B09112P, B05009, B05009P, D10022, B01070, B05075,
+  B07030, B07030P, B07030P2, B07061, B07061P, B09055, B09055P, B09055P2, B03063, B09011, B09112, B09112P, B05009, B05009P, D10022, B01070, B05075,
   // night-wB P spread 補完 (B09011P)
   B09011P,
   // night-wC (2026-07-11): charGrantAbility declared 解禁 (B06042) + hirameki optional humanChooser (B06032/B09081)

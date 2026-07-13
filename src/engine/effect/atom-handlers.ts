@@ -312,6 +312,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return;
     case 'expandActionTargets':
       return atomExpandActionTargets(s, a, ctx);
+    case 'mustTargetSelfOnce':
+      // B02022 marker: target-expander が同期 read、state-machine が宣言確定時に消費する。
+      return;
 
     default: {
       // exhaustiveness check

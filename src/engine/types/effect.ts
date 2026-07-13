@@ -550,6 +550,9 @@ export type AtomVerb =
   // D11007 v2 Phase 3: action target 拡張仕様を transient side-channel に push
   // (action:pre-target hook の listener が呼ぶ。candidates() が consume)
   | 'expandActionTargets'
+  // B02022: action:pre-target の同期 read で一度だけ強制対象にする marker。
+  // 消費は候補列挙でなく action.declare の確定時。
+  | 'mustTargetSelfOnce'
   // engine mega-wave W3 (2026-07-03, r12): リムーブエリア在中カードの【現場リムーブ時】selfOnly 効果を
   // 明示発動させる (B08078 a2「この効果によってリムーブしたカードの【現場リムーブ時】の効果を発動させてもよい」)。
   // event.emit('leave:to-remove') は使わない — 盤面 observer (第三者反応) が誤発火するため、対象 CardDef の

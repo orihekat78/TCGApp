@@ -1,5 +1,7 @@
 # 実装保留 (Deferred) 一覧
 
+> 2026-07-13 continuation: B02022/B02022P and B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271 shipped. Registry 1999/2074; remaining 75. B02022 action-target primitive cleared Sol review. Lane-B 20-printing green-wave assumption disproven: only six exact DSL/twin closures remained.
+
 本ファイルは「実装はあるが未完成 or 未着手で先送りされた」項目の集約 INDEX。
 新規 defer を生んだ commit / session log は必ずここに 1 行追加すること。
 

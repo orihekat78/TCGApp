@@ -59,6 +59,7 @@ const ATOM_VERB_MAP = {
   leaveInterceptRedirect: true, // mega-wave W6 step10 (2026-07-04, row9) — leave:intercept 宣言的 marker (B01092/B01039)
   removeAreaToDeckTop: true, // mega-wave W6 step11 (2026-07-04, row999 item4 / P42) — remove→deck top pick (B07014 rider)
   expandActionTargets: true, // D11007 v2 Phase 3
+  mustTargetSelfOnce: true, // B02022 — action declaration commit consumes the per-turn marker
   invokeLeaveToRemoveOfCard: true, // engine mega-wave W3 (2026-07-03, r12)
   invokeHiramekiOfCard: true, // engine night-wave WC2b (2026-07-11) — 別カードの【ヒラメキ】effect 明示発動 (B06023/B06034)
   bindPick: true, // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)

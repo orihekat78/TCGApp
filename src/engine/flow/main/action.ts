@@ -14,7 +14,7 @@
 import type { GameState, Candidate } from '../../types/index.js';
 import { char as readChar } from '../../read/char.js';
 import { matchOneFilter } from '../../target/candidates.js';
-import { candidates as targetCandidates, mustTargetCandidates } from '../action/target-expander.js';
+import { candidates as targetCandidates, mustTargetCandidates, mustTargetSelfOnceCandidates } from '../action/target-expander.js';
 
 type Player = 'self' | 'opp';
 
@@ -152,5 +152,8 @@ export function canActionAgainstCase(state: GameState, byUid: string, targetPlay
   // (B05051)。partner actor は def walk 対象外 (selfContinuousFlag は scene/PA-MR uid のみ true になりうる)。
   if (readChar.selfContinuousFlag(state, byUid, 'caseActionBan')) return false;
   if (state.players[targetPlayer].evidence.length < 1) return false;
+  // B02022: legal な鬼丸猛を指定できる scene character は事件を指定できない。
+  // partner は印字「現場にいるキャラ」ではないため helper が常に空を返す。
+  if (mustTargetSelfOnceCandidates(state, byUid).length > 0) return false;
   return true;
 }

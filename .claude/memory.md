@@ -60,3 +60,9 @@
 - Historical +50p evidence is batch throughput: pre-authored cards/probes and P-spread deployment, not 50 new T3 implementations.
 - Next prompt now requires parallel Lane A (one T3 primitive) and Lane B (20–35 existing-DSL/green/twin/P printings); Lane C prepares grounding and RED probes.
 - Do not compress B07011, B06095, B02022, and B02086 into one final session without a parallel bulk wave. Re-estimate when Lane B ships under 20p or a T3 needs new UI/state machinery.
+
+## 2026-07-13 deferred continuation
+
+- Shipped B02022/B02022P: `mustTargetSelfOnce` forces a scene character's first legal action target; it blocks case targeting only while a legal forced character exists. Partner actions neither force nor consume it. Official Q&A, RED probes, Sol re-review, focused probes, tsc, and diff-check green.
+- Shipped six registry/P closures: B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271. Grounded and text crosscheck green. Registry count 1999/2074; remaining 75.
+- Lane B capacity correction: only six remaining printings were exact existing-DSL/twin closures. Remaining queue needs primitives or card-specific grounding; do not assume a 20-printing green wave.

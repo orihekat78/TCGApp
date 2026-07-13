@@ -25,6 +25,7 @@ import { buildContactBindings } from '../contact.js';
 import { computeOrder } from './order.js';
 import {
   candidates as targetCandidates,
+  consumeMustTargetSelfOnce,
   mustTargetCandidates,
   registerTargetExpander,
   _resetTargetExpanders,
@@ -171,6 +172,9 @@ export function declare(state: GameState, byUid: string, target: Target): Action
   if (!byPlayer) {
     throw new Error(`flow.action.declare: actor not found ${byUid}`);
   }
+
+  // B02022: pre-target preview では消費せず、合法性と強制指定が確定した宣言時にだけ消費する。
+  consumeMustTargetSelfOnce(state, byUid);
 
   // byUid スリープ化
   sleepActor(state, byUid);
