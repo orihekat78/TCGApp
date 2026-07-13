@@ -10,7 +10,18 @@ $ErrorActionPreference = 'Stop'
 # スクリプトは scripts/ 配下 → 一つ上が repo ルート
 Set-Location (Join-Path $PSScriptRoot '..')
 $repo = (Get-Location).Path
-$Url = 'http://localhost:5173/'
+$apps = @(
+  @{
+    Name = 'ゲーム'
+    Url = 'http://localhost:5173/'
+    Command = 'title Conan TCG Game Server  (このウィンドウを閉じるとゲームが停止します) && npm run dev'
+  },
+  @{
+    Name = 'デッキ編集'
+    Url = 'http://localhost:5174/#home'
+    Command = 'title Conan TCG Deck Builder  (このウィンドウを閉じるとデッキ編集が停止します) && npm run dev:meta'
+  }
+)
 
 function Pause-And-Exit([int]$code) {
   Write-Host ''
@@ -98,32 +109,38 @@ if ($needInstall) {
 }
 Write-Host ''
 
-# ---- 3. 開発サーバー起動 → ブラウザでロビーを開く ----
-Write-Host ('[3/3] 開発サーバーを別ウィンドウで起動します（{0}）...' -f $Url) -ForegroundColor Yellow
-# 別の cmd ウィンドウで dev サーバーを起動（このウィンドウを閉じてもサーバーは継続）
-$devCmd = 'title Conan TCG Dev Server  (このウィンドウを閉じるとゲームが停止します) && npm run dev'
-Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', $devCmd -WorkingDirectory $repo | Out-Null
-
-# 起動完了（5173 応答）を待ってからブラウザを開く
-$ready = $false
-for ($i = 0; $i -lt 60; $i++) {
-  try {
-    $resp = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2
-    if ($resp.StatusCode -eq 200) { $ready = $true; break }
-  } catch { Start-Sleep -Milliseconds 800 }
+# ---- 3. 開発サーバー起動 → ブラウザでゲームとデッキ編集を開く ----
+Write-Host '[3/3] ゲームとデッキ編集を別ウィンドウで起動します...' -ForegroundColor Yellow
+foreach ($app in $apps) {
+  Start-Process -FilePath 'cmd.exe' -ArgumentList '/k', $app.Command -WorkingDirectory $repo | Out-Null
 }
 
-if ($ready) {
-  Write-Host 'サーバー起動を確認しました。ブラウザでロビーを開きます...' -ForegroundColor Green
+function Wait-For-App([string]$url) {
+  for ($i = 0; $i -lt 60; $i++) {
+    try {
+      $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2
+      if ($response.StatusCode -eq 200) { return $true }
+    } catch {}
+    Start-Sleep -Milliseconds 800
+  }
+  return $false
+}
+
+$notReady = @()
+foreach ($app in $apps) {
+  if (-not (Wait-For-App $app.Url)) { $notReady += $app }
+}
+
+foreach ($app in $apps) { Start-Process $app.Url }
+if ($notReady.Count -eq 0) {
+  Write-Host 'ゲームとデッキ編集の起動を確認しました。ブラウザを開きます...' -ForegroundColor Green
 } else {
-  Write-Warning ('サーバーの起動確認に時間がかかっています。手動で {0} を開いてください。' -f $Url)
+  Write-Warning ('起動確認がタイムアウトしました。手動で開いてください: {0}' -f ($notReady.Url -join ', '))
 }
-Start-Process $Url
 
 Write-Host ''
 Write-Host '====================================================='
-Write-Host '  完了！ブラウザで「対戦開始」を押すと遊べます。' -ForegroundColor Green
-Write-Host '  ゲームは別ウィンドウのサーバーで動作中です。'
-Write-Host '  終了するには、そのサーバーウィンドウを閉じてください。'
+Write-Host '  ブラウザでゲームとデッキ編集を開きました。' -ForegroundColor Green
+Write-Host '  終了するには、各サーバーウィンドウを閉じてください。'
 Write-Host '====================================================='
 Pause-And-Exit 0
