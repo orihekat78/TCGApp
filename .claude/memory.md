@@ -72,3 +72,7 @@
 - CL327 CI green after `a3681d49` synchronized `mustTargetSelfOnce` with Task A validation whitelist.
 - Next portfolio grounded: aggregate multi-pick (3), self set-card remove-to-enter (9), stacked identity/host stack (5), and choose-intercept/opponent decision (6). Ship one primitive at a time; RED/ownership/Sol checklist: `sessions/2026-07-13-2.md`.
 - Shipped aggregate multi-pick: B04042/B04042P/B04084. Added aggregate level cap across resolver, human picker, and AI; B04084 binds exact remove occurrences before active/sleep split entry. Focused probes (34), tsc, diff-check GREEN; full local gates deferred to GitHub CI by user. Registry 2002/2074; remaining 72.
+
+## 2026-07-13 parallel follow-up decision
+
+- After repairing the current set-card CI failure, user chose parallel implementation through isolated worktrees: stack, hook/external-ability, picker/bind, and choose-intercept lanes. Shared contracts first; main integrates and ships sequentially. Session detail: `sessions/2026-07-13-2.md`.
