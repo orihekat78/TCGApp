@@ -21,7 +21,7 @@ const VERBS = new Set([
   'discardRandom', // engine additive (2026-06-28) — 手札ランダムリムーブ (B01077)
   'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   'peekOwnEvidence', // engine additive A2 (2026-07-11) — 自証拠 top1 私的閲覧 zone不変 (B03040)
-  'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand',
+  'sceneEnter', 'sceneSwitch', 'sceneRemove', 'sceneSetState', 'sceneDisguise', 'sceneToHand', 'mustTargetSelfOnce',
   'sceneToDeck', // Task D E2 (2026-06-12)
   'sceneToEvidence', // engine mega-wave W1 (2026-07-03, P38): 現場キャラ→所有者の証拠 (B03084)
   'handToFileBottom', // engine mega-wave W1 (2026-07-03, P41): 手札→FILE 1番下 表向き (B05045)
