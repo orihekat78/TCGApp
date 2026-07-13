@@ -12,12 +12,12 @@
   - B03042、B04055、Wave D target protection、Lane B twin/P 4枚、launcher/docs統合（`8be63e7e`）
 - T3 review: B09024 / B09033-PはSol承認済み。B03042 / B04055 / Wave Dは統合gateで出荷済み。
 
-## 次の優先順位
+## 次の実行 — T3前半と小粒DEFERを並列起動
 
-1. 残83枚を再分類する。優先順は既存DSL、twin/P-spread、1 primitiveで複数解禁、単発T3。
-2. Intercept候補 B02022 / B02086 / B06095 / B07011 を、解禁数・UI追加量・既存hook再利用率で順位付けし、最高収益primitiveを1つだけ選ぶ。
-3. green/twin/P waveを20〜35 printings単位で並列投入する。base/P本文を機械照合し随伴出荷する。
-4. 最後にcrosscheck、registry漏れ、DEFERRED-INDEX、残printings再計数を行う。
+- **Lane A — T3前半（engine writer 1人）**: Intercept候補 B02022 / B02086 / B06095 / B07011 を、解禁数・UI追加量・既存hook再利用率で順位付けする。最高収益primitiveを1つだけ選び、RED→GREEN、Sol review、full gates、CIまで出荷する。
+- **Lane B — 小粒DEFER刈り（独立writer）**: Lane Aを待たず、既存DSLだけで書ける残カード、green/twin/P-spreadを20〜35 printings単位で実装・出荷する。base/P本文を機械照合し、P-spreadを持ち越さない。
+- **Lane C — 並列準備**: 残83枚を「既存DSL / twin・P / 1 primitiveで複数解禁 / 単発T3」に再分類する。次のT3候補のgrounding、公式Q&A照合、RED probeを準備する。
+- Lane A/Bの各commit後にCIを確認する。最後にcrosscheck、registry漏れ、DEFERRED-INDEX、残printings再計数を行う。
 
 ## 必須手順
 
