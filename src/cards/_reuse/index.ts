@@ -1519,6 +1519,10 @@ import { B09109 } from '../ct-p09/B09109.js';
 import { B09109P } from '../ct-p09/B09109P.js';
 import { PR279 } from '../pr-01/PR279.js';
 
+import { B06020 } from '../ct-p06/B06020.js';
+import { B07003 } from '../ct-p07/B07003.js';
+import { B07003P } from '../ct-p07/B07003P.js';
+
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
   D02015, D03002, D03010, D03011, D03015, D04002, D04004, D04008,
@@ -1963,4 +1967,6 @@ export const REUSE_CARDS: CardDef[] = [
   B06023, B06034,
   // S1/S2 deferred-card completion
   B03093, B05101, B06036, B06036P, B06105, B06105P, B07001, B07001P, B07001P2, B08002, B08002P, B09039, B09105, B09105P, B09109, B09109P, PR279,
+  // S3 hand-zone cutin aura
+  B06020, B07003, B07003P,
 ];

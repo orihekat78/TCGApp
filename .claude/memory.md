@@ -1,99 +1,35 @@
 # memory — 現セッション scratchpad
 
-> 過去ログは `.claude/sessions/YYYY-MM-DD.md`。直近 = [2026-07-10.md](sessions/2026-07-10.md) (M1 mega-sweep + M2 attribution mini-wave 1867/2074)。
-> 再開手順: Track A = `.claude/NEXT-SESSION-PROMPT.md` / Track B = `.claude/NEXT-SESSION-PROMPT-TRACK-B.md`。
+> 過去ログは `.claude/sessions/YYYY-MM-DD.md`。直近 =
+> [2026-07-13.md](sessions/2026-07-13.md)。
 
-## 2026-07-10 夜2 — M2 後半 batch (session: m2-latter)
-- engine additive 15 点 (mill dyn/drawUpTo bind/hdb dyn+shuffle/sceneEnter bind/faceUp honor/bindRef/
-  toHandOnTurnEnd/cutinTextIncludes/lvlDeltaInHandPer/chooser source/Cost×2/rider walk/area union/
-  resolver walk-literalize guard) + 15 unit + PR240 + P spread 14 = **+30 printings (1867→1897、残 177)**
-- T2 混成 review: semantic BLOCK1=誤検出 (一次資料裁定)、edge BLOCK3=同 wave 修正 (半角＋/side/union順)
-- M3/M4/M5 grounding 前処理を待ち時間で完了 (specs/grounding/ 永続化、M4=SG5+BLOCKED3、M5=SG4+BLOCKED4)
-- 新規約: Agent model 未指定禁止 (CLAUDE.md 表) / cutin description AP＋全角必須 / gen-p-spread CONAN_ROOT
+## 2026-07-13 - Codex environment upgrade
 
-## 2026-07-10 深夜2 — M3 PA batch (session: m3-pa、origin 02a00e57)
-- UI 基盤 6 site: enumDeclaredAbilitySources partnerMR source + enumDeclaredAbilityIdsFor partnerMR 分岐 /
-  flows resolveDeclaredSourceCardId+owner解決 (partnerMR:+hand: 両対応、costText area も正規化) /
-  uidNames partnerMR / ai/ability-ctx + move-enumerator 6c (BUG-084 同型予防) / PartnerArea MR tile + Playmat 配線
-- probe: pa-mr-declared 5 + move-enumerator.pa-mr 3 + scope-flip 8 / e2e m3-pa-mr-declared.spec.ts green
-  (tile→candidate→confirm 名解決→decoy 除外 pick→lvlMod_turn 反映→console error 0)
-- scope flip 11 file (B07079/P B08032/P B09054/P B07093/P B05066/P B05045、P は spread or 全複製)
-- triage: 登録済 18 = DONE8/UI_UNLOCKED9/SCOPE_FLIP1 (B05045) / 未登録 14 = UI_UNLOCKED3 (author 中)
-  +SMALL_GAP11 (engine 3 cluster: paCards source zone / toPartnerArea pick / removed-card snapshot root)
-- ★水平展開: rules/19 複数名 names 分割漏れ 23 枚発覚→BUG-185 一括修正 + names-split.lint.test 恒久 gate
-- triage 二次 finding「B05106 chain で draw が decline でも走る」は**偽** — chain-origin skip は
-  「そうした場合」gate で remainder skip (apply-pick.ts:228-230 実読)。chain = 正しい idiom
+- Global defaults: GPT-5.6 Terra medium; review Sol; Luna/Terra/Sol custom roles added.
+- Added global `codex-risk-router`; fresh-task probes route T0/T1/T3 to GPT-5.6 correctly.
+- Replaced root startup rules with a compact router and added scoped AGENTS for engine/cards/UI/tests/docs.
+- Added `conan-session-router`; route probes pass for question, Engine, and new UI. Single-card wording tightened so `card-wave` is batch-only.
+- Disabled implicit `using-superpowers` through its Codex policy; fresh-task probe now loads only `conan-session-router`. Migration checker detects policy loss after plugin cache updates.
+- Added deterministic `.codex/context/current.md` generation via `npm run docs:codex-context`; focused test passes and output is bounded to 80 lines.
+- Regenerated `.claude/auto/structure.md`. Existing application implementation changes were preserved and not modified by this environment work.
 
-## 2026-07-11 夜間自走 Wave 0 (session night-run)
-- W0 出荷: cost-choice UI (flows 3.6 ChoicePicker, B09027+P) + EffectPickerModal multi-select
-  (perSideMax quota + nMin clamp, B08019+P) + removeSetCard anyFace (B05052) + GREEN 6
-  (B07099/B01020/B03111+P/B01077/B07102/B05117+P) = +13 printings (1903→1916)。
-- ★BUG-186 修正: sceneEnter 短縮形 side 絶対値渡し→owner=opp 反転 (BUG-174 同族)。
-  水平展開: hand 系 atom ~10 site 同族 latent = BUG-187 起票 (discard は B01077 probe pass だが
-  fixture 対称性の偽陰性可能性 — side 非対称 fixture で要再検証)。
-- 原則 DEFER 3: B09081 (hirameki optional humanChooser 無し collapse、B06032 同根) /
-  B09052 (cutin declareName dyn queue 不達 B01095 同根 + excludeBoundKey 不在) /
-  B09110 (deckRevealUntil match 早期停止不在 + PA self-remove 不達)。
-- grantKeywords は関数 shape (`() => ['突撃']`) — 配列 literal は grantFn is not a function (read/char.ts:441)。
-- e2e buildGameState fixture callback は page serialize — 外側 closure helper 参照不可、inline 必須。
+## 2026-07-13 — Claude → Codex migration audit
 
-## engine A1 wave (2026-07-11、subagent) — verb/zone 系 5 rep
-- SHIP 3 primitive (additive, byte-safe, 骨格凍結内): 
-  1. **handAddFromRemove area union** (core.ts array 分岐 ~L998): remove∪partner-area splice。exemplar **B07049** フィリップ王子。
-  2. **charStackCard fromScene** (char.ts atomCharStackCard, fromSelf の鏡像): 現場キャラを host($self)下へ重ねる。hostUid を pick 前に args 注入 (re-dispatch で ctx.source.uid drop 対策)。exemplar **D10009 + D10010** 工藤新一。
-  3. **charGrantTrait/charRevokeTrait** (新 verb, 3点sync済): permanent=turnEffects grantedTraits_permanent/revokedTraits_permanent (clearTurnEffects で消さない=「ターン終了時に切れない」) / turn=_turn (清掃)。**両 honor site** = read.char.traits + candidates.matchOneFilter。変装は disguiseInto(cardId のみ差替) で自動引継ぎ。
-- probe: tests/cards/night-wA1/ (B07049 4 / D10009 9 / trait-grant-revoke 6 + sync)。全 24 green。full vitest 5206 pass 回帰0。
-- DEFER 3+1: **B06005 a2** (重なりカード「2枚まで」= fungible count-choice UI primitive 不在) / **B09078** (dual-filter deck-look 3→白黄char+白黄event 二重pick + reveal-to-remove、複合新primitive) / **B09039** (a1 は union verb で可だが a2 の handAddFromRemove「加えた場合」chainStepNoApply gate 不在→過剰discard、既存consumer 影響リスク) / **B05101 card** (verb は SHIP+test 済。self-revival-by-cardId idiom 不在=$self.cardId 未解決/payload に cardId 無 + optional-chain 層で card 全体 DEFER)。
-- 未登録: 3 card は _reuse/index.ts 未登録 (指示「登録は main loop」)。probe は直接 registerCardDef。
-
-## Wave A (engine additive、同夜)
-- A1-A3 cluster + 刈り取り = 19 printings 出荷 (1916→1935)。新 primitive 12 点 (詳細 changelog-entry 02)。
-- ★T2 review 実 BLOCK 検出→修正: removeDeckAll コスト時 refresh 未発火 (公式Q&A 違反)。probe が
-  バグを pin していた実例 — 「probe green ≠ 意味正」、Q&A 列突合 lens は費用対効果あり。
-- DEFER 6 (B05101 card/B06005/B09078/B09039/B08002 card/B08078) — blocker を DEFERRED-INDEX へ。
-
-## Wave B (param 拡張、同夜)
-- WB1 5/6 + WB2 4/4 = 13 printings (1935→1948)。T2 review BLOCK: B05075「してもよい」bare chain
-  (decline 権剥奪) → optional 化。★agent の「strategically 常に有利だから optional 省略」は
-  忠実性違反 pattern — 印字の選択権は常に DSL に写す (D04007 idiom)。
-- B06027 DEFER: evidence:remove-by-action 時点でカードは remove に移動済 (removeTop が先) —
-  「証拠から登場」系は remove-source 自己参照 or removeTop タイミング再設計 (骨格) の設計判断要。
-
-## Wave C (charGrantAbility declared + hirameki optional、2026-07-11 早朝)
-- Task1 SHIPPED: charGrantAbility declared 解禁 4点 (①char.ts spec.type/scope honor ②findDeclaredAbility
-  grantedAbilities 走査 ③grantedId #N 独立化 ④validate trigger 免除) + UI/AI enum 合流 → **B06042** author
-  (grantedContact=bindPick(opp)+startContact、startContact 初 live consumer)。probe 7/7 (owner=opp pin 込)。
-- Task2 SHIPPED: hiramekiResolve に humanChooser 配線 (isHumanHirameki、triggered.ts:433 と対称) →
-  top-level optional が human に surface (旧: AI-skip collapse) → **B06032/B09081** author。probe 8/8
-  (dispatch 実経路: optional surface→optionalResolve→discard pick→revive/stun、decline、condition gate)。
-  ★probe pin: evidence:remove-by-action の payload に byUid 併記必須 ($trigger.byUid 用、action-case.ts:47)。
-- Task3 DEFER B09109: a1 primitives (toDeckBottomOnTurnEnd + deckRevealUntil nested-dyn) 出荷済&検証済
-  (textual-grant.test.ts:144 / picks.ts B09109 名指し)。a2「カード名を公開キャラのに書換」= revealFromHand
-  costPaid に cardName 追加 + resolveBindRef $cost 非対応 (charSetTurnEffect nameOverride 経路不在) +
-  rules/19 複数名 override 未裁定 → engine additive 案件、partial 不可で card 全体 DEFER。
-- B07001 DEFER (Task1 同梱予定だった): a1「リムーブされた[少年探偵団]/[毛利探偵事務所]1枚につきAP+1000」=
-  cost-removed trait-match COUNT dyn 不在 (costRemovedMatches は threshold conditional のみ)。a2 は charSetTurnEffect
-  actionTargetsActive (B04077 idiom、出荷済) で可だが a1 blocker で card 全体 DEFER。
-- tsc 0 / full vitest 5349 pass+1 expfail+1 skip (減なし) / sync-taskA green。登録=_reuse/index.ts night-wC 節
-  (B06042/P B06032/P B09081)。未 commit (driver 委譲)。
-
-## Wave C軽 + 最終 sweep (朝)
-- B06042+P/B06032+P/B09081 出荷 (16098619)。review CLEAN。gen-p-spread 収穫 0 (P 枯渇)。
-- 夜間 run 合計: 1903→1953 (+50p)、残 121。詳細 = memory reference-night-run-2026-07-11。
-
-## WC2a — pick chooser 'opp-of-owner' 実配線 (B05093、朝)
-- SHIP B05093+P (榎本梓、opp-chooser deck-reveal)。DEFER B02086 (optional chooser+else+AI-drain infra 別途)。
-- engine 2点: resolve-picks substituteAtomPick に byPlayer chooser chokepoint (target.chooser==='opp-of-owner'
-  のみ opp 反転、他は opts.byPlayer で byte 等価 — buildShortFormPick は絶対 chooser + caller が同値渡し) /
-  handAddFromDeck に $pick.cardId await-pick 分岐 (sceneEnter 同型 clone、bind 経路は不変)。
-- 下流 infra 全既存: pending.player=chooser 側 / ownerPlayer=BUG-175 再実行座標 / drainAiEffectPicks opp 解決 /
-  UI player==='self' surface gate。chooser:'opp' は 0 card 使用 = 純 additive。
-- probe tests/cards/night-wC2/ 4件 (owner=self AI解決 / 候補0 no-op / owner=opp human surface / B01048 回帰) GREEN。
-- tsc 0 / full vitest 5353 pass+1 expfail+1 skip (5349→+4、減なし) / sync-taskA green。shipped=1955。未 commit (driver 委譲)。
-
-## WC2 (朝、user 起床後に区切り)
-- B05093+P (chooser:'opp-of-owner' chokepoint) + B06023/B06034 (invokeHiramekiOfCard) = +4p (1957)。
-- review BLOCK: B06034 flip+invoke 1-optional 潰し → sequence+conditional+atom-level optional 化。
-  ★walk-level optional は unstable-if で eager surface — bind 依存 optional は atom-level flag が正。
-- DEFER: B02086 (opp-decision infra) / B06036 (cost-flipped-ids pick source、小 follow-up)。
-- 残 2 session 見積り: structural+T3 → 残50-70 → Wave D+intercept → 残0-25 (完了確実は 3 session)。
+- `caveman@caveman` は enabled、skills 認識済み。ただし plugin の
+  SessionStart 自動注入は task log に証跡なし。
+- 全 Codex task 用の正本として `C:\Users\arumi\.codex\AGENTS.md` を追加。
+  caveman full、言語維持、安全・明瞭性例外、task-local 停止を定義。
+- README の active governance 参照 3 件を root `AGENTS.md` へ統一。
+  `.claude/CLAUDE.md` は Claude 互換 copy として温存。
+- 新規 task probe で root `AGENTS.md` 内の stale `.claude/AGENTS.md` 参照を
+  検出し、存在する root `AGENTS.md` へ修正。
+- `.codex/hooks.json` の Claude/GNU 前提 PostToolUse hook に
+  `commandWindows` を追加。review で quoted `git commit` 偽陽性を検出後、
+  PowerShell AST 判定へ変更。commit / quoted / status / compound probe green。
+- `C:\Users\arumi\.codex\config.toml` から平文 GitHub PAT と旧 GitHub MCP
+  block を除去。GitHub App connector を継続利用。
+- 水平確認: project skills 3 件、Serena/Firecrawl/claude-mem MCP、主要 plugins
+  は Codex から利用可能。Claude permission allowlist と claudeMdExcludes は
+  Codex へ直訳せず、Codex permission profile と targeted rule reads を維持。
+- 新規 Codex task 2 件で global caveman full と root AGENTS 読込を実測。
+  独立 review は初回 Important 1 件を上記修正後、再 review CLEAN。

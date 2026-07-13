@@ -240,6 +240,10 @@ export type ContinuousModifier = {
   //   filterAny (OR、per-char 判定 = 両該当でも 1 枚は 1 で二重計上なし) に一致する自現場キャラ数 × delta を
   //   effectiveHandLevel が加算する (honor site は同 helper 1 箇所で閉じる — scene 側 level 読みは不変)。
   lvlDeltaInHandPer?: { delta: number; filterAny: TargetFilter[] };
+  // S3 hand-zone cutin aura (2026-07-12, B06020/B07003): bearer が手札にある間、同じ owner の
+  // 手札で filter に一致するカードへ固定 AP cutin を付与する。read.hand-cutin が CardDef を変更せず
+  // synthetic on-hand ability として合成し、flow.contact / triggered listener が同じ集合を参照する。
+  handCutinAura?: { filter: TargetFilter; apDelta: number };
   // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura (rules/15, 17 §【自分ターン中】, 24 §常時有効型)。
   // 「【自分ターン中】自分の現場にいる [auraFilter] のキャラを AP±N」型。bearer の **同一 side の現場**の各キャラに対し、
   //   auraFilter (matchOneFilter で 有効値=turnEffects 反映レベル を判定) が一致すれば apDeltaAura/lpDeltaAura を加算する。

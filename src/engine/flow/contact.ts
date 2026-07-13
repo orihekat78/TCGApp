@@ -15,7 +15,7 @@ import { event } from '../event/index.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
 import { toPlainDeep } from '../effect/pending-state.js';
-import { abilityIsCutin } from '../read/keyword.js';
+import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { evalCond } from '../cond/eval.js';
 import { matchOneFilter } from '../target/candidates.js'; // engine A3 wave (2026-07-11): B05007 filtered action-scoped cutin ban
 import { computeOrder as _computeOrder } from './action/order.js';
@@ -29,12 +29,8 @@ type Player = 'self' | 'opp';
  * + trigger:{hook:'effect:declared', optional:true} のパターンを「カットイン」と判定。
  * optional:true は「プレイヤー選択 (cutin/disguise/pass) 経由で発動」マーカー。
  */
-function isCutInCard(cardId: string): boolean {
-  const def = readDef.card(cardId);
-  if (!def) return false;
-  // BUG-122: 判定述語は engine.read.keyword.abilityIsCutin に一元化
-  // (matchOneFilter の filter.keyword:'カットイン' と同一基準を共有しドリフトを防ぐ)。
-  return def.abilities.some(abilityIsCutin);
+function isCutInCard(state: GameState, player: Player, cardId: string): boolean {
+  return effectiveCutinAbilities(state, player, cardId).length > 0;
 }
 
 /**
@@ -91,7 +87,7 @@ export function buildContactBindings(ax: ActionContext, p: Player): Record<strin
  */
 export function canCutIn(state: GameState, ax: ActionContext, p: Player, cardId: string): boolean {
   if (!state.players[p].hand.includes(cardId)) return false;
-  if (!isCutInCard(cardId)) return false;
+  if (!isCutInCard(state, p, cardId)) return false;
   if (ax.cutInUsed?.[p]) return false;
   // engine拡張 wave#2 cluster5 (2026-06-14): cut-in する p の相手が「相手は【カットイン】を使用できない」
   // aura を現場に展開している場合は不可 (B02063/B04034/B09017、rules/09 §カットイン)。
@@ -153,7 +149,7 @@ function sideHasActionCutinBan(state: GameState, side: Player): boolean {
  * その中で cutin Effect を pendingEffects に push した後、
  * engine.resolve.runAllUntilEmpty() を駆動すること。
  */
-export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: string): void {
+export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: string, cutinAbilityId?: string): void {
   if (!canCutIn(state, ax, p, cardId)) {
     throw new Error(`flow.contact.cutIn: cannot cut in cardId=${cardId} for ${p}`);
   }
@@ -168,7 +164,12 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
   // と渡り、atom-handler の resolveBindRef が `$contact.byUid` を解決できる。
   // BUG-104: p 視点の contact bindings (攻撃側/防御側 cutin で $contact.byUid が正しく解決)。
   const contactBindings = buildContactBindings(ax, p);
-  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin' }, {
+  const cutinAbilities = effectiveCutinAbilities(state, p, cardId);
+  const selected = cutinAbilityId
+    ? cutinAbilities.find(a => a.id === cutinAbilityId)
+    : cutinAbilities[0];
+  if (!selected) throw new Error(`flow.contact.cutIn: cutin ability not found cardId=${cardId}`);
+  event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin', cutinAbilityId: selected.id }, {
     player: p, cardId, bindings: contactBindings,
   });
   // engine additive wave-3 (2026-06-30): カットイン使用を第三者キャラが観測する専用 hook (rules/09)。

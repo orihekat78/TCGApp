@@ -24,6 +24,7 @@ import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js'; // BUG-096: triggered ability の limit enforcement
 import { abilityIsShippu } from '../read/keyword.js'; // wave-8 P15: 疾風発動 per-turn 記録
+import { effectiveCutinAbilities } from '../read/hand-cutin.js';
 import { char as charMutator } from '../mutate/char.js'; // W6 step4 (r58/B09090): per-char 疾風 flag + waive 消費
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
@@ -190,7 +191,9 @@ function collectCardsInPlay(state: GameState): CardLocation[] {
       result.push({ player: p, uid: `partnerMR:${p}`, cardId: ps.partnerAreaMR.cardId, area: 'partner-area' });
     }
     // hand card (event card の on-hand ability 用)
-    for (const cardId of ps.hand) {
+    // on-hand ability は「使用したその1枚」が発火する。payload は cardId 単位で物理コピーを
+    // 区別しないため、同一 cardId が複数あっても1 locationだけ列挙する (S3 duplicate probe)。
+    for (const cardId of new Set(ps.hand)) {
       result.push({ player: p, uid: `hand:${p}:${cardId}`, cardId, area: 'hand' });
     }
   }
@@ -291,8 +294,11 @@ function handleHook(
         }
       }
     }
-    const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0)
-      ? [...(def.abilities as AbilityDef[]), ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]) : []), ...riderAbilities]
+    const handCutinAbilities = card.area === 'hand'
+      ? effectiveCutinAbilities(state, card.player, card.cardId).filter(a => !(def.abilities as AbilityDef[]).includes(a))
+      : [];
+    const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0 || handCutinAbilities.length > 0)
+      ? [...(def.abilities as AbilityDef[]), ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]) : []), ...riderAbilities, ...handCutinAbilities]
       : (def.abilities as AbilityDef[]);
     for (const ability of abilityList) {
       if (ability.type !== 'triggered') continue;
@@ -313,6 +319,8 @@ function handleHook(
       ) {
         continue;
       }
+      const selectedCutinId = (payload as { cutinAbilityId?: unknown } | undefined)?.cutinAbilityId;
+      if (hookName === 'effect:declared' && selectedCutinId !== undefined && ability.id !== selectedCutinId) continue;
       // scope check
       if (!scopeAllowsArea(ability.scope, card.area)) continue;
       // selfOnly check
