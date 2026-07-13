@@ -13,6 +13,7 @@ function base(over: Partial<Slice> = {}): Slice {
     pendingEffectPick: null,
     pendingEffectChoice: null,
     pendingEffectOptional: null,
+    pendingEffectRepeatOptional: null,
     pendingHirameki: null,
     pendingMisread: null,
     pendingDeckReveal: null,
@@ -47,7 +48,7 @@ describe('selectInteractionLocked', () => {
 
   it('各 decision 待ち (pick/choice/optional/hirameki/misread/deck-reveal) で個別にロック', () => {
     const keys: (keyof Slice)[] = [
-      'pendingEffectPick', 'pendingEffectChoice', 'pendingEffectOptional',
+      'pendingEffectPick', 'pendingEffectChoice', 'pendingEffectOptional', 'pendingEffectRepeatOptional',
       'pendingHirameki', 'pendingMisread', 'pendingDeckReveal',
     ];
     for (const k of keys) {

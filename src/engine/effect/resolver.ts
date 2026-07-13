@@ -22,6 +22,7 @@ import { runAtom } from './atom-handlers.js';
 import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrSelectCharUids タグ書込
 import { evalCond } from '../cond/eval.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
+import { _peekPendingEffectRepeatOptionalSide, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder } from './pending-state.js';
 
 /**
  * BUG-111 family (continuation-nest, 2026-06-22): 中断 pick に continuation frame を連結する。
@@ -56,8 +57,11 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
       };
       for (let i = 0; i < eff.steps.length; i++) {
+        const repeatBefore = _peekPendingEffectRepeatOptionalSide() !== null;
         const qBefore = gSeq.__pendingEffectPickQueue?.length ?? 0;
         run(state, eff.steps[i]!, ctx);
+        const repeatAfter = _peekPendingEffectRepeatOptionalSide() !== null;
+        if (!repeatBefore && repeatAfter) { setPendingEffectRepeatOptionalRemainder(eff.steps.slice(i + 1)); return; }
         const qAfter = gSeq.__pendingEffectPickQueue?.length ?? 0;
         if (qAfter > qBefore) {
           const remainder = eff.steps.slice(i + 1);
@@ -157,6 +161,12 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           ctx.bindings['$each'] = prev;
         }
       }
+      return;
+    }
+    case 'repeatOptional': {
+      const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (human !== ctx.source.player) return;
+      pushPendingEffectRepeatOptionalSide({ player: ctx.source.player, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '' }, remaining: eff.max }, { body: eff.body, remaining: eff.max, ctx, remainder: [] });
       return;
     }
     case 'replace':

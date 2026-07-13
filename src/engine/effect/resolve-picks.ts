@@ -771,6 +771,10 @@ export function resolveEffectPicks(
     case 'replace':
       return { kind: 'replace', trigger: effect.trigger, with: resolveEffectPicks(state, effect.with, ctx, opts) };
     case 'chain':
+    case 'repeatOptional':
+      // The body can depend on bindings created by earlier runtime steps (B09033 $revealed).
+      // Defer its walk until the player accepts this round.
+      return effect;
     case 'negate':
     case 'custom':
       // pre-walk passthrough (un-walked, 参照同一の effect をそのまま返す)。chain の step 内 atom $pick は

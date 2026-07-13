@@ -16,6 +16,18 @@ import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBinding
 
 type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
+import { _takePendingEffectRepeatOptionalResume, type PendingEffectRepeatOptionalSide } from './pending-state.js';
+
+export function applyRepeatOptionalAndContinuation(state: GameState, _pending: PendingEffectRepeatOptionalSide, run: boolean): void {
+  const resume = _takePendingEffectRepeatOptionalResume();
+  if (!resume) return;
+  const next: Effect[] = run
+    ? [resume.body, ...(resume.remaining > 1 ? [{ kind: 'repeatOptional', max: resume.remaining - 1, body: resume.body } as Effect] : []), ...resume.remainder]
+    : resume.remainder;
+  const effect: Effect = { kind: 'sequence', steps: next };
+  const resolved = resolveEffectPicks(state, effect, resume.ctx, { humanChooser: true, byPlayer: resume.ctx.source.player, source: { cardId: resume.ctx.source.cardId ?? '', abilityId: resume.ctx.source.abilityId ?? '' } });
+  runEffect(state, resolved, resume.ctx);
+}
 import { runAllUntilEmpty } from '../resolve/index.js';
 import { event } from '../event/index.js';
 import { def } from '../read/def.js';
@@ -523,3 +535,5 @@ export function hasPendingHumanPick(): boolean {
   if (g.__pendingEffectChoiceSide?.player === humanSide) return true;
   return false;
 }
+    __pendingEffectRepeatOptionalSide?: { player: 'self' | 'opp' } | null;
+  if (g.__pendingEffectRepeatOptionalSide?.player === humanSide) return true;

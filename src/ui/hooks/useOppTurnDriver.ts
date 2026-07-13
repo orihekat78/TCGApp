@@ -56,7 +56,7 @@ export function driveOppTurn(): void {
   // BUG-136: deckToBottomBound 順序選択 modal (【相手ターン中】deckToBottomBound が human 所有で発火しうる)。
   // mini-wave #5 review B2: pendingDeckPlace も gate (相手ターン中の human 変装 (rules/09 非ターン側可) で
   // B05047 a2 が発火し modal 待ちになる — 漏れると AI driver が await 中に deck を動かし振り分けが部分無効化)。
-  if (store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional || store.pendingDeckReorder || store.pendingDeckPlace) return;
+  if (store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional || store.pendingEffectRepeatOptional || store.pendingDeckReorder || store.pendingDeckPlace) return;
   if (isDriving) return;
   isDriving = true;
   try {
@@ -198,6 +198,7 @@ export function useOppTurnDriver(): void {
   const pendingEffectPick = useGameStateStore((s) => s.pendingEffectPick);
   const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
   const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
+  const pendingEffectRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
   const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
   const pendingDeckPlace = useGameStateStore((s) => s.pendingDeckPlace); // mini-wave #5 review B2
   // Task4: 1手駆動の再 fire トリガ。driveOppTurn が 1 手適用するたび bump され、turn.player が
@@ -205,7 +206,7 @@ export function useOppTurnDriver(): void {
   const oppMoveTick = useGameStateStore((s) => s.oppMoveTick);
   useEffect(() => {
     if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
-    if (pendingEffectPick || pendingEffectChoice || pendingEffectOptional || pendingDeckReorder || pendingDeckPlace) return undefined;
+    if (pendingEffectPick || pendingEffectChoice || pendingEffectOptional || pendingEffectRepeatOptional || pendingDeckReorder || pendingDeckPlace) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -217,5 +218,5 @@ export function useOppTurnDriver(): void {
     }
     Promise.resolve().then(driveOppTurn);
     return undefined;
-  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, pendingDeckReorder, pendingDeckPlace, oppMoveTick]);
+  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, pendingEffectRepeatOptional, pendingDeckReorder, pendingDeckPlace, oppMoveTick]);
 }

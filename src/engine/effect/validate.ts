@@ -100,9 +100,9 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
   const obj = node as Record<string, unknown>;
   const kind = obj['kind'];
   switch (kind) {
-    case 'sequence':
-    case 'parallel':
+    case 'sequence': case 'parallel':
     // 拡張 5: chain も同じ steps[] 構造 (semantics は resolver 側で差異)
+    // falls through: chain uses the same steps[] validation.
     case 'chain': {
       const steps = obj['steps'];
       if (!Array.isArray(steps)) {
@@ -143,6 +143,11 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
         errors.push(`${path}.over.kind: must be one of ${Array.from(TARGETING_KINDS).join('|')}`);
       }
       walk(obj['do'], `${path}.do`, errors, warnings);
+      return;
+    }
+    case 'repeatOptional': {
+      if (!Number.isInteger(obj['max']) || (obj['max'] as number) < 1) errors.push(`${path}.max: repeatOptional requires positive integer`);
+      walk(obj['body'], `${path}.body`, errors, warnings);
       return;
     }
     case 'replace': {

@@ -87,6 +87,9 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効
       return useGameStateStore.getState().pendingEffectOptional !== null;
     }
+    case 'repeatOptionalResolve': {
+      return useGameStateStore.getState().pendingEffectRepeatOptional !== null;
+    }
     case 'deckReorderResolve': {
       // BUG-136: pendingDeckReorder が set されているときのみ有効
       return useGameStateStore.getState().pendingDeckReorder !== null;

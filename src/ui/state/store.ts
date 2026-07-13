@@ -119,6 +119,9 @@ export type GameStateStore = {
    */
   pendingEffectOptional: PendingEffectOptional | null;
   setPendingEffectOptional: (p: PendingEffectOptional | null) => void;
+  /** repeatOptional の各round決定。body実行後、残回数があれば次roundへ遷移する。 */
+  pendingEffectRepeatOptional: PendingEffectRepeatOptional | null;
+  setPendingEffectRepeatOptional: (p: PendingEffectRepeatOptional | null) => void;
   /**
    * user_request 20260522_01 #12 BUG-061: D11019「15の受難」等の
    * deckRevealUntil 効果でデッキ上から公開されたカードを順次めくる演出用。
@@ -240,6 +243,12 @@ export type PendingEffectOptional = {
 };
 
 /** ヒラメキ保留 (Commit 3a) */
+export type PendingEffectRepeatOptional = {
+  player: 'self' | 'opp';
+  source: { cardId: string; abilityId: string; uid: string };
+  remaining: number;
+};
+
 export type PendingHirameki = {
   /** 証拠の所有者 = ヒラメキ発動権利者 */
   player: 'self' | 'opp';
@@ -301,6 +310,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   pendingEffectOptional: null,
   setPendingEffectOptional: (p) => set({ pendingEffectOptional: p }),
   pendingDeckReveal: null,
+  pendingEffectRepeatOptional: null,
+  setPendingEffectRepeatOptional: (p) => set({ pendingEffectRepeatOptional: p }),
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
   pendingDeckReorder: null,
   setPendingDeckReorder: (p) => set({ pendingDeckReorder: p }),

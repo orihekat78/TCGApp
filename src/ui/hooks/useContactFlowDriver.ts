@@ -116,6 +116,7 @@ export function useContactFlowDriver(): void {
   // 宣言時 trigger の optional (例 B02068 granted「手札を1枚リムーブしてもよい→ブレット」) が解決される
   // 前に driver が guard へ進むと、公式裁定「効果もガード判定前に解決」(rules/22 R1) に違反する。
   const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
+  const pendingEffectRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
   const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
 
   useEffect(() => {
@@ -132,7 +133,7 @@ export function useContactFlowDriver(): void {
     // 行動順確認の前に解決)
     if (pendingEffectPick !== null) return;
     // BUG-141 (cluster3): optional/choice modal も解決待ち (宣言時 trigger の効果はガード判定前に解決)
-    if (pendingEffectOptional !== null) return;
+    if (pendingEffectOptional !== null || pendingEffectRepeatOptional !== null) return;
     if (pendingEffectChoice !== null) return;
 
     const ax = flow.action._getContext(activeActionId);
@@ -142,7 +143,7 @@ export function useContactFlowDriver(): void {
     }
 
     runOneStep(gameState, ax, spectatorMode);
-  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick]);
+  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice]);
 }
 
 function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean): void {

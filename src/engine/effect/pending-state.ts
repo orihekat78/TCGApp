@@ -71,6 +71,16 @@ export type ContinuationFrame = {
   outer?: ContinuationFrame;
 };
 
+export type PendingEffectRepeatOptionalSide = { player: Player; source: { cardId: string; abilityId: string; uid: string }; remaining: number };
+type RepeatOptionalResume = { body: Effect; remaining: number; ctx: EffectCtx; remainder: Effect[] };
+declare global { var __pendingEffectRepeatOptionalSide: PendingEffectRepeatOptionalSide | null | undefined; var __pendingEffectRepeatOptionalResume: RepeatOptionalResume | null | undefined; }
+export function pushPendingEffectRepeatOptionalSide(v: PendingEffectRepeatOptionalSide, r: RepeatOptionalResume): void { globalThis.__pendingEffectRepeatOptionalSide = v; globalThis.__pendingEffectRepeatOptionalResume = r; }
+export function _drainPendingEffectRepeatOptionalSide(): PendingEffectRepeatOptionalSide | null { const v = globalThis.__pendingEffectRepeatOptionalSide ?? null; globalThis.__pendingEffectRepeatOptionalSide = null; return v; }
+export function _peekPendingEffectRepeatOptionalSide(): PendingEffectRepeatOptionalSide | null { return globalThis.__pendingEffectRepeatOptionalSide ?? null; }
+export function _takePendingEffectRepeatOptionalResume(): RepeatOptionalResume | null { const v = globalThis.__pendingEffectRepeatOptionalResume ?? null; globalThis.__pendingEffectRepeatOptionalResume = null; return v; }
+export function setPendingEffectRepeatOptionalRemainder(remainder: Effect[]): void { if (globalThis.__pendingEffectRepeatOptionalResume) globalThis.__pendingEffectRepeatOptionalResume.remainder = remainder; }
+export function _clearPendingEffectRepeatOptionalSide(): void { globalThis.__pendingEffectRepeatOptionalSide = null; globalThis.__pendingEffectRepeatOptionalResume = null; }
+
 export type PendingEffectPickSide = {
   player: Player;
   /**

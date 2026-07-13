@@ -25,6 +25,9 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // 2026-06-06 タスクC: optional 再開 effect の holder (resolve-picks.ts) -
   // applyOptionalAndContinuation が consume (store/UI へは出ない。UI 露出は別チャネル EffectOptional 側)
   'EffectOptionalResume',
+  // B09033: repeatOptional の再開フレーム。表示用の EffectRepeatOptional と異なり、
+  // applyRepeatOptionalAndContinuation だけが consume する engine-internal holder。
+  'EffectRepeatOptionalResume',
   // Phase 3c (2026-06-22): 旧 'EffectChoiceBindings' channel は EffectChoiceResume holder の bindings field に
   // 統合され消滅 (BUG-114 の cutin $contact.* 保持は EffectChoiceResume.bindings が担う)。allowlist entry も除去。
   // engine wave-18 (2026-07-03): optional 再開 ctx の contact bindings holder (pending-state.ts)。

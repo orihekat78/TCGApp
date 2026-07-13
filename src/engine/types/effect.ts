@@ -651,3 +651,4 @@ export type Effect =
   // step N が「実効果あり」のとき N+1 を実行。N が no-op (no candidate) なら以降 skip。
   // pick await 時は chain 継続情報を保存して effectPickResolve 後に再 queue する。
   | { kind: 'chain'; steps: Effect[] };
+  | { kind: 'repeatOptional'; max: number; body: Effect }

@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation } from '@/engine/effect/apply-pick.js';
+import { applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation } from '@/engine/effect/apply-pick.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
@@ -28,6 +28,7 @@ import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectRepeatOptionalSide } from '@/engine/effect/pending-state.js';
 import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import { isAllowed } from './useEngineDispatch/can-check.js';
 import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
@@ -338,6 +339,12 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
+    case 'repeatOptionalResolve': {
+      const pending = useGameStateStore.getState().pendingEffectRepeatOptional;
+      if (!pending) return;
+      applyRepeatOptionalAndContinuation(draft, pending, action.run);
+      return;
+    }
     case 'deckReorderResolve': {
       // BUG-136: deckToBottomBound で底へ移したブロックを human が選んだ順に並べ替える。
       // 底ブロック = deck 末尾 n 件 (deck[0]=top / push=bottom)。action.order が現底ブロックの
@@ -460,6 +467,8 @@ export function surfacePendingSideChannels(): void {
   // 2026-06-06 タスクC: optional 決定の取り残し防止 (choice と同様)
   const effectOptionalSide = _drainPendingEffectOptionalSide();
   if (effectOptionalSide) store.setPendingEffectOptional(effectOptionalSide);
+  const repeatOptionalSide = _drainPendingEffectRepeatOptionalSide();
+  if (repeatOptionalSide) store.setPendingEffectRepeatOptional(repeatOptionalSide);
   const deckRevealSide = _drainPendingDeckRevealSide();
   if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
   // BUG-136: deckToBottomBound 順序選択の取り残し防止 (auto-phase / ターンドライバ経路)
@@ -554,6 +563,12 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       store.setPendingEffectOptional(effectOptionalSide);
     } else if (effectOptionalSide) {
       store.setPendingEffectOptional(effectOptionalSide);
+    }
+    const repeatOptionalSide = _drainPendingEffectRepeatOptionalSide();
+    if (action.type === 'repeatOptionalResolve') {
+      store.setPendingEffectRepeatOptional(repeatOptionalSide);
+    } else if (repeatOptionalSide) {
+      store.setPendingEffectRepeatOptional(repeatOptionalSide);
     }
     // user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出側チャネル drain
     const deckRevealSide = _drainPendingDeckRevealSide();

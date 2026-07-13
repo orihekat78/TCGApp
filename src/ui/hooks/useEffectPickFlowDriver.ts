@@ -15,6 +15,7 @@ export function useEffectPickFlowDriver(): void {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
   const pendingChoice = useGameStateStore((s) => s.pendingEffectChoice);
   const pendingOptional = useGameStateStore((s) => s.pendingEffectOptional);
+  const pendingRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
   useEffect(() => {
     if (!pending) return;
     if (pending.player !== 'self') {
@@ -43,4 +44,10 @@ export function useEffectPickFlowDriver(): void {
       dispatchEngineAction({ type: 'optionalResolve', run: false });
     }
   }, [pendingOptional]);
+  useEffect(() => {
+    if (!pendingRepeatOptional) return;
+    if (pendingRepeatOptional.player !== 'self') {
+      dispatchEngineAction({ type: 'repeatOptionalResolve', run: false });
+    }
+  }, [pendingRepeatOptional]);
 }
