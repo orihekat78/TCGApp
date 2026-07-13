@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 263
-- **ファイル数**: 4779
+- **ディレクトリ数**: 264
+- **ファイル数**: 4828
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -126,6 +126,8 @@
         - `grounding--B05063.md` — 🤖 Spec 参照ハブ: B05063
         - `grounding--B07100.md` — 🤖 Spec 参照ハブ: B07100
         - `grounding--B09019.md` — 🤖 Spec 参照ハブ: B09019
+        - `grounding--B09033.md` — 🤖 Spec 参照ハブ: B09033
+        - `grounding--B09033P.md` — 🤖 Spec 参照ハブ: B09033P
         - `grounding--D06003.md` — 🤖 Spec 参照ハブ: D06003
         - `grounding--PR265.md` — 🤖 Spec 参照ハブ: PR265
         - `hiramekiCharStun.md` — 🤖 Spec 参照ハブ: hiramekiCharStun
@@ -1380,6 +1382,7 @@
       - `remaining-to-classify.json`
       - `task-d-priority-map.json`
     - **`grounding/`**
+      - `B01006.md` — B01006 / B01006P grounding
       - `B01020.md` — B01020 毛利小五郎 grounding (2026-07-10, sonnet5)
       - `B01057.md` — B01057 「最も出会いたくない…恋人ってトコロかな？」 grounding (2026-07-10, fable)
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
@@ -1387,26 +1390,39 @@
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B03030.md` — B03030 / B03030P grounding
       - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
+      - `B03042.md` — B03042 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
+      - `B04055.md` — B04055 grounding
       - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
+      - `B05008.md` — B05008 / B05008P grounding
       - `B05009.md` — B05009 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `B05048.md` — B05048 grounding
       - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
+      - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
       - `B06020.md` — B06020 佐々木小次郎 grounding (2026-07-10, sonnet5)
       - `B06042.md` — B06042 ここで会うたが百年目 (イベント) grounding (2026-07-10, sonnet5)
       - `B06066.md` — B06066/B06066P 怪盗キッド＆白馬探 (MR キャラ) grounding (2026-07-10, fable)
       - `B07008.md` — B07008 小嶋元太 grounding (2026-07-10, fable)
+      - `B07030P.md` — grounding dossier: B07030P (自動生成 2026-07-13)
+      - `B07030P2.md` — grounding dossier: B07030P2 (自動生成 2026-07-13)
+      - `B07061P.md` — grounding dossier: B07061P (自動生成 2026-07-13)
       - `B07100.md` — B07100 コルン grounding (2026-07-10, fable)
       - `B08003.md` — B08003 阿笠博士 (SR/SRP) grounding (2026-07-10, sonnet5)
+      - `B08017.md` — B08017 / B08017P grounding
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
       - `B08074.md` — B08074 降谷零 grounding (2026-07-10, sonnet5)
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
+      - `B09024.md` — grounding dossier: B09024（世良真純）
+      - `B09033.md` — grounding dossier: B09033
+      - `B09033P.md` — grounding dossier: B09033P
       - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
       - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
@@ -1604,6 +1620,7 @@
   - **`memories/`**
   - `.gitignore`
   - `project.yml`
+- **`.worktrees/`**
 - **`design-mockups/`** — UI モックアップ HTML / 画像 (ブレスト成果物)
   - **`CaseArea/`**
     - `CaseArea-demo.html`
@@ -1730,6 +1747,7 @@
       - `2026-06-02-card-atom-compaction.md` — カード atom コンパクト化 + 規約制定 Implementation Plan
       - `2026-06-02-cutin-handzone-pick.md` — カットイン選択 HandZone pick 化 Implementation Plan
       - `2026-06-03-hirameki-inline.md` — ヒラメキ inline 化 + factory 廃止 Implementation Plan
+      - `2026-07-13-dual-app-launcher.md` — Dual-app launcher Implementation Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -1738,6 +1756,7 @@
       - `2026-06-03-hirameki-inline-design.md` — 設計: ヒラメキ inline 化 + factory 廃止 (2026-06-03)
       - `2026-06-03-lensf-fix-batch1-design.md` — 設計: Lens F 監査 高確度修正バッチ1 (A/B/G) (2026-06-03)
       - `2026-06-03-triggered-limit-and-d11016-guard-design.md` — 設計: triggered ability の limit enforcement + D11016 a1 ガード自己判定 (2026-06-03)
+      - `2026-07-13-deck-builder-design.md` — Deck builder and launcher design
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
@@ -2206,6 +2225,8 @@
       - `B01004P.ts` — cards/ct-p01/B01004P 毛利小五郎 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B01005.ts` — cards/ct-p01/B01005 江戸川コナン (character) — Task A green候補 (engine変更0)
       - `B01005P.ts` — cards/ct-p01/B01005P 江戸川コナン (キャラ パラレル) — B01005 の絵柄違い (同 cardId 0001)
+      - `B01006.ts` — B01006 灰原哀 — rules/13,15,17,20,21.
+      - `B01006P.ts` — B01006P print variant — same effect as B01006.
       - `B01007.ts` — cards/ct-p01/B01007 毛利蘭 (character) — Task A green候補 (engine変更0)
       - `B01008.ts` — cards/ct-p01/B01008 江戸川コナン (キャラ) — catalog-reuse batch
       - `B01009.ts` — cards/ct-p01/B01009 工藤新一 (character) — engine mini-wave #4 (hand 内 continuous le…
@@ -2533,6 +2554,8 @@
       - `B03028P.ts` — cards/ct-p03/B03028P 服部平次 (キャラ パラレル) — B03028 の絵柄違い (同 cardId 0285)
       - `B03029.ts` — cards/ct-p03/B03029 遠山和葉 (character) — Task A green候補 (engine変更0)
       - `B03029P.ts` — cards/ct-p03/B03029P 遠山和葉 (キャラ パラレル) — B03029 の絵柄違い (同 cardId 0286)
+      - `B03030.ts` — B03030 伊織無我 — action-declare trigger fires after attacker sleeps, before guard.
+      - `B03030P.ts` — B03030P print variant — same effect as B03030.
       - `B03031.ts` — cards/ct-p03/B03031 大岡紅葉 (character) — Task A green候補 (engine変更0)
       - `B03031P.ts` — cards/ct-p03/B03031P 大岡紅葉 (character) — Task A green候補 (engine変更0)
       - `B03032.ts` — cards/ct-p03/B03032 服部平次 (キャラ) — engine#5b charSetCard batch #3 (a1+a3 only)
@@ -2549,6 +2572,7 @@
       - `B03040.ts` — cards/ct-p03/B03040 和田進一 (character) — engine additive A2 exemplar (peekOwnEvide…
       - `B03041.ts` — cards/ct-p03/B03041 直球勝負 (event) — engine additive A2 exemplar (attacker-side fo…
       - `B03041P.ts` — cards/ct-p03/B03041P 直球勝負 (イベント パラレル) — B03041 の絵柄違い (同 cardId 0298)
+      - `B03042.ts` — cards/ct-p03/B03042 「ボクは好きだな… 君みたいな熱い探偵…」 (event)
       - `B03043.ts` — cards/ct-p03/B03043 平次からのメール (イベント) — catalog-reuse batch
       - `B03044.ts` — cards/ct-p03/B03044 槍田郁美 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B03045.ts` — cards/ct-p03/B03045 茂木遥史 (パートナー) — auto-generated by scripts/gen-cards/…
@@ -2774,6 +2798,7 @@
       - `B04053.ts` — cards/ct-p04/B04053 赤井秀一 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B04054.ts` — cards/ct-p04/B04054 赤井務武 (キャラ) — catalog-reuse batch
       - `B04054P.ts` — cards/ct-p04/B04054P 赤井務武 (キャラ) — catalog-reuse batch; B04054 の絵柄違い (同 cardId)
+      - `B04055.ts` — rules: 15-abilities-effects.md, 25-qa-effects-resolution.md
       - `B04056.ts` — cards/ct-p04/B04056 アンドレ・キャメル (キャラ) — catalog-reuse batch
       - `B04056P.ts` — cards/ct-p04/B04056P アンドレ・キャメル (キャラ) — catalog-reuse batch; B04056 の絵柄違い (同 card…
       - `B04057.ts` — cards/ct-p04/B04057 ジョディ・スターリング (キャラ) — auto-generated by scripts/gen-cards/…
@@ -2849,6 +2874,8 @@
       - `B05006P2.ts` — cards/ct-p05/B05006P2 毛利小五郎 (character) — Task A green候補 (engine変更0)
       - `B05007.ts` — cards/ct-p05/B05007 妃英理 (character) — Wave A 刈り取り (engine A3 wave setActionCutin…
       - `B05007P.ts` — cards/ct-p05/B05007P 妃英理 (キャラ パラレル) — B05007 の絵柄違い (同 cardId 0513)
+      - `B05008.ts` — B05008 灰原哀 — rules/10,13,15,17,21.
+      - `B05008P.ts` — B05008P print variant — same effect as B05008.
       - `B05009.ts` — cards/ct-p05/B05009 毛利蘭 (character) — engine additive WB2 (2026-07-11)
       - `B05009P.ts` — cards/ct-p05/B05009P 毛利蘭 (キャラ パラレル) — B05009 の絵柄違い (同 cardId 0515)
       - `B05010.ts` — cards/ct-p05/B05010 江戸川コナン (キャラ) — auto-generated by scripts/gen-cards/…
@@ -2905,6 +2932,7 @@
       - `B05046P.ts` — cards/ct-p05/B05046P 鈴木園子 (character) — Task A green候補 (engine変更0)
       - `B05046P2.ts` — cards/ct-p05/B05046P2 鈴木園子 (character) — Task A green候補 (engine変更0)
       - `B05047.ts` — cards/ct-p05/B05047 怪盗キッド (character) — Task A green候補 (engine変更0)
+      - `B05048.ts` — B05048 黒羽快斗 — rules/07,10,13,15,20.
       - `B05049.ts` — cards/ct-p05/B05049 中森青子 (character) — engine mega-wave W1 exemplar (cost reveal…
       - `B05049P.ts` — cards/ct-p05/B05049P 中森青子 (character) — B05049 の絵柄違い (同 cardNum 0551、engine mega…
       - `B05050.ts` — cards/ct-p05/B05050 大上祝善 (キャラ) — Task D batch (2026-06-12)
@@ -2960,6 +2988,7 @@
       - `B05085Sec1.ts` — cards/ct-p05/B05085Sec1 諸伏高明 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05085Sec2.ts` — cards/ct-p05/B05085Sec2 諸伏高明 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B05086.ts` — cards/ct-p05/B05086 安室透＆降谷零 (character) — Task A green候補 (engine変更0)
+      - `B05086P.ts` — cards/ct-p05/B05086P 安室透＆降谷零 (character) — Task A green候補 (engine変更0)
       - `B05087.ts` — cards/ct-p05/B05087 諸伏高明 (character) — Task A green候補 (engine変更0)
       - `B05087P.ts` — cards/ct-p05/B05087P 諸伏高明 (キャラ パラレル) — B05087 の絵柄違い (同 cardId 0585)
       - `B05087P2.ts` — cards/ct-p05/B05087P2 諸伏高明 (キャラ パラレル) — B05087 の絵柄違い (同 cardId 0585)
@@ -3236,6 +3265,8 @@
       - `B07029.ts` — cards/ct-p07/B07029 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07029P.ts` — cards/ct-p07/B07029P 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
       - `B07030.ts` — cards/ct-p07/B07030 黒羽快斗＆中森青子 (キャラ MR) — Cluster WB1 exemplar (toPartnerArea pic…
+      - `B07030P.ts` — cards/ct-p07/B07030P 黒羽快斗＆中森青子 (キャラ MR) — Cluster WB1 exemplar (toPartnerArea pi…
+      - `B07030P2.ts` — cards/ct-p07/B07030P2 黒羽快斗＆中森青子 (キャラ MR) — Cluster WB1 exemplar (toPartnerArea p…
       - `B07031.ts` — cards/ct-p07/B07031 小泉紅子 (character) — 赤魔術 trait family残 (engine変更0)
       - `B07031P.ts` — cards/ct-p07/B07031P 小泉紅子 (character・パラレル) — B3-1 conflict canonical 化で unlock (…
       - `B07032.ts` — cards/ct-p07/B07032 白馬探 (character) — Task A green候補 (engine変更0)
@@ -3281,6 +3312,7 @@
       - `B07060.ts` — cards/ct-p07/B07060 クリスタル・マザー (event) — engine wave-12 exemplar (toPartnerArea /…
       - `B07060P.ts` — cards/ct-p07/B07060P クリスタル・マザー (event, パラレル) — B07060 の絵柄違い (abilities 同一参照)
       - `B07061.ts` — cards/ct-p07/B07061 日輪の後光の巻 (事件) — Cluster WB1 exemplar (toPartnerArea pick-form…
+      - `B07061P.ts` — cards/ct-p07/B07061P 日輪の後光の巻 (事件) — Cluster WB1 exemplar (toPartnerArea pick-for…
       - `B07062.ts` — cards/ct-p07/B07062 緋色の誘惑の巻 (事件) — catalog-reuse batch
       - `B07062P.ts` — cards/ct-p07/B07062P 緋色の誘惑の巻 (事件) — catalog-reuse batch
       - `B07063.ts` — cards/ct-p07/B07063 鈴木園子 (character) — engine additive A2 exemplar (granted leav…
@@ -3369,6 +3401,8 @@
       - `B08014P.ts` — cards/ct-p08/B08014P 毛利蘭 (character) — B08014 の絵柄違い (同 cardId 0855、CARD PHASE st…
       - `B08015.ts` — cards/ct-p08/B08015 若狭留美 (キャラ) — catalog-reuse batch
       - `B08016.ts` — cards/ct-p08/B08016 脇田兼則 (character C) — engine拡張 wave#2 cluster1 (ability-prese…
+      - `B08017.ts` — cards/ct-p08/B08017 「どうしてお姉ちゃんを…助けてくれなかったの？」 (event)
+      - `B08017P.ts` — cards/ct-p08/B08017P print variant — same printed effect as B08017.
       - `B08018.ts` — cards/ct-p08/B08018 服部静華 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08018P.ts` — cards/ct-p08/B08018P 服部静華 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B08019.ts` — cards/ct-p08/B08019 大岡紅葉＆伊織無我 (character MR) — 夜間 W0 multi-pick UI 解禁 (2026-07-1…
@@ -3518,6 +3552,7 @@
       - `B09022P.ts` — cards/ct-p09/B09022P 遠山和葉 (character) — B09022 の絵柄違い (同 cardId 0966、CARD PHASE h…
       - `B09023.ts` — cards/ct-p09/B09023 沖田総司 (character) — Task A green候補 (engine変更0)
       - `B09023P.ts` — cards/ct-p09/B09023P 沖田総司 (character) — Task A green候補 (engine変更0)
+      - `B09024.ts`
       - `B09025.ts` — cards/ct-p09/B09025 綾小路文麿 (キャラ) — catalog-reuse batch
       - `B09025P.ts` — cards/ct-p09/B09025P 綾小路文麿 (キャラ・パラレル) — catalog-reuse batch
       - `B09026.ts` — cards/ct-p09/B09026 伊織無我 (character) — Task A green候補 (engine変更0)
@@ -3529,6 +3564,8 @@
       - `B09030P.ts` — cards/ct-p09/B09030P 服部平次 (キャラ) — auto-generated; B09030 の絵柄違い (同 cardId)
       - `B09031.ts` — cards/ct-p09/B09031 松田左文字 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B09032.ts` — cards/ct-p09/B09032 溝端理子 (キャラ) — Task D batch (2026-06-12)
+      - `B09033.ts` — cards/ct-p09/B09033 「ひょっとしたら…」 (event)
+      - `B09033P.ts` — cards/ct-p09/B09033P 「ひょっとしたら…」 (event)
       - `B09034.ts` — cards/ct-p09/B09034 「朝日射し夕日輝く鉄の瓶…黄金千枚二千杯」 (event)
       - `B09034P.ts` — cards/ct-p09/B09034P 「朝日射し夕日輝く鉄の瓶…黄金千枚二千杯」 (event)
       - `B09035.ts` — cards/ct-p09/B09035 怪盗キッド (パートナー) — auto-generated by scripts/gen-cards/…
@@ -4064,6 +4101,7 @@
       - `player.ts` — engine.read.player — プレイヤー情報セレクタ (純粋関数)
       - `scene-cap.ts` — engine.read.sceneCap — 現場登場キャラ枚数の上限 (rules/03 §現場5枚, rules/20 §スイッチ)
       - `scene.ts` — engine.read.scene — 現場セレクタ (純粋関数)
+      - `triggered-aura.ts`
       - `turn.ts` — engine.read.turn — ターン情報セレクタ (純粋関数)
     - **`resolve/`**
       - `.gitkeep`
@@ -4127,6 +4165,7 @@
       - `EffectOptionalModalHost.tsx` — 2026-06-06 タスクC: optional (「〜してもよい」) を surface する store 駆動 modal。
       - `EffectPickerModal.css`
       - `EffectPickerModal.tsx` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 modal
+      - `EffectRepeatOptionalModalHost.tsx`
       - `EffectStackPanel.css`
       - `EffectStackPanel.tsx` — Phase 7 Task 7.14: EffectStackPanel
       - `EvidenceArea.css`
@@ -4577,8 +4616,15 @@
     - `.gitkeep`
     - `akamajutsu-trait-family.test.ts` — 赤魔術 trait family — 構造 + 実 engine 挙動テスト。
     - `b03033-toyama-aura.test.ts` — B03033 遠山和葉 — live consumer E2E: 【自分ターン中】相手のセット済キャラ AP-1000 (apDeltaAuraOpp)。
+    - `b03042-distinct-colors.test.ts`
+    - `b03042-hot-detective.test.ts`
     - `b03051-kid-deck-bottom.test.ts` — B03051 怪盗キッド — カード配線統合テスト (card-authoring wave15, 2026-07-02)
+    - `b04055-amanda-hughes.test.ts` — B04055 — removal observer + removed-trait deck reveal.
     - `B07051-momoi-deckreveal.test.ts` — gate5 RUNTIME behavior — B07051 桃井恵子 (character, 白/高校生, L4 AP4000 LP1)
+    - `b08017-untargetable-aura.test.ts`
+    - `b09024-triggered-aura.test.ts`
+    - `b09033-registry.test.ts`
+    - `b09033-reveal-repeat.test.ts`
     - `b09096-g15-relative-ap.test.ts` — B09096 キャンティ G15 relative-AP filter — engine0 wave 2026-06-29 (stale-yellow 解禁の回…
     - `bug-114-discard-scale-cutins.test.ts` — BUG-114: B05040 / B08055 カットイン — discard-bind dyn で「リムーブしたカードの level/…
     - `bug-123-character-kind.test.ts` — BUG-123: イベントを含むエリア (remove/hand) からの「キャラ」pick は kind:'character' 必須。
@@ -4678,6 +4724,7 @@
     - `step12-batch3-b06085.test.ts` — CARD PHASE step12 batch3 probe — B06085 松田陣平 + engine touch-up evidenceGain face…
     - `triggerchar-target-batch.test.ts` — engine-extension triggerChar→target batch (2026-06-06 タスクC) — $trigger.…
     - `turn-leveldown-b05102.test.ts` — turn-scope levelDelta wave — B05102「小五郎の弟子」(黄 L1 event) の挙動テスト。engine変更0。
+    - `twin-p-spread-wave.test.ts`
     - `validate-all.test.ts` — tests/cards/validate-all — Phase 5 Group F: 全 47 枚 validateAll
     - `wave-b07002-2026-07-02.test.ts` — wave-10 (2026-07-02) — B07002 江戸川コナン exemplar E2E probe。
     - `wave-b09072-2026-07-02.test.ts` — wave-9 (2026-07-02) — B09072 横溝重悟 (engine変更0)。
@@ -4686,6 +4733,7 @@
     - `wave-certify-0628-B03035-B04037.test.ts` — wave certify-0628 — B03035 大滝悟郎 / B04037 鈴木園子 (engine変更0, Task A green候補)。
     - `wave-codegen-handcount-setevent-2026-06-23.test.ts` — wave codegen-handcount-setevent (2026-06-23) — engine変更0 / 全部手書き
     - `wave-colornot-removeset-0627.test.ts` — card wave colornot-removeset-0627 — engine変更0 新カード 3枚 (printings: B07012/…
+    - `wave-d-untargetable-protection.test.ts`
     - `wave-deck-mill-gated-chain-2026-06-23.test.ts` — wave-deck-mill-gated-chain (2026-06-23) — engine拡張 mill gate flag + 出荷4枚(+P4) の文…
     - `wave-decklook-bottom.test.ts` — wave-deckLook-bottom — B05078 世良真純 / B03056 千間降代 を実 engine 経路で駆動する挙動テスト。
     - `wave-decklook-enter-handadd-2026-06-23.test.ts` — wave decklook-enter-handadd (2026-06-23, cards/…
@@ -4792,6 +4840,7 @@
       - `atom-souza.test.ts` — tests/engine/effect/atom-souza.test.ts — Phase 5 advance Souza atom unit test
       - `atom-target-normalize.test.ts` — BUG-074: evidenceToHand / handAddFromRemove の target が BUG-065 array 化と不整合で
       - `audit-leave-suspects.test.ts` — 監査 suspect (leave:to-remove family) の候補フィルタ text-faithfulness を engine レベルで検証。
+      - `b04055-trigger-removed-trait-filter.test.ts` — B04055 engine primitive: a deck-reveal filter may compare the revealed
       - `bug-077-evidence-to-hand-e2e.test.ts` — BUG-077: D08013 a1 step 2 evidenceToHand end-to-end simulation
       - `bug-083-multi-entry-switch.test.ts` — BUG-083 characterization: 効果で複数キャラを同時登場させ現場上限 (5) を超える場合の挙動。
       - `bug-108-choice-index.test.ts` — BUG-108: choice effect の choiceIndex が production の人間/AI どちらでも set されず
@@ -4990,6 +5039,7 @@
     - **`hooks/`**
       - `bug-107-d11014-bind-propagation.test.ts` — BUG-107: D11014 a2 human 経路で sceneEnter の bind:'$entered' が pick-resolve 越しに
       - `bug-108-choice-picker.test.ts` — BUG-108: D11012 a1「LP＋1するか / AP＋2000する」の choice 択一 UI フロー統合テスト。
+      - `repeat-optional-dispatch.test.ts`
       - `switch-on-effect-enter.test.ts` — switch-on-effect-enter (rules/20 §スイッチ): 現場満杯の効果登場 (D11014 a2 reanimate) で、
       - `useActionsPanelFlow.action.test.ts` — Phase 8.7a: runActionFlow tests
       - `useActionsPanelFlow.assist.test.ts` — Phase 8.6: runAssistFlow / runSolveCaseFlow tests

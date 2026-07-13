@@ -1,0 +1,8 @@
+// B01006 灰原哀 — rules/13,15,17,20,21.
+import type { AbilityDef, CardDef } from '@/engine/types';
+const a1: AbilityDef = { id:'a1', type:'continuous', scope:'on-scene', condition:{ kind:'bond', cardName:'江戸川コナン' }, continuousModifier:{ untargetableByOppEffect:true }, description:'【絆江戸川コナン】相手の能力や効果によって選ばれない。', ruleRefs:['rules/13-keywords.md','rules/15-abilities-effects.md'] };
+const a2: AbilityDef = { id:'a2', type:'declared', scope:'on-scene', cost:{kind:'sleepSelf'}, effect:{kind:'sequence',steps:[
+  {kind:'atom',verb:'sceneEnter',args:{player:'self',cardId:'$pick.cardId',from:'hand',viaEffect:true,bind:'$matched',target:{kind:'pick',query:{area:'hand',side:'self',filter:{trait:'少年探偵団',levelMax:5,kind:'character'}},n:{min:0,max:1},chooser:'self'}}},
+  {kind:'conditional',if:{kind:'boundMatchesFilter',bindKey:'$matched',filter:{cardName:'江戸川コナン'}},then:{kind:'atom',verb:'draw',args:{player:'self',n:1}}},
+]}, description:'【宣言】【スリープ】：手札からレベル5以下の〚特徴［少年探偵団］〛のキャラを1枚まで登場させる。〚カード名［江戸川コナン］〛を登場させた場合、カードを1枚引く。', ruleRefs:['rules/15-abilities-effects.md','rules/20-color-and-switch.md','rules/21-declared-ability-cost.md'] };
+export const B01006: CardDef = { id:'B01006',no:'0002/B01006',kind:'character',names:['灰原哀'],colors:['青'],level:6,ap:4000,lp:1,traits:['少年探偵団','科学者'],keywords:[],rarity:'SR',imageUrl:'1734349765562208.jpg',abilities:[a1,a2],ruleRefs:['rules/13-keywords.md','rules/15-abilities-effects.md','rules/17-icons.md','rules/20-color-and-switch.md','rules/21-declared-ability-cost.md'] };

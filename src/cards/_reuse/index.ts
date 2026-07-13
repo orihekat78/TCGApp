@@ -51,6 +51,8 @@ import { D09026 } from '../ct-d09/D09026.js';
 import { D10012 } from '../ct-d10/D10012.js';
 import { D10025 } from '../ct-d10/D10025.js';
 import { B01008 } from '../ct-p01/B01008.js';
+import { B01006 } from '../ct-p01/B01006.js';
+import { B01006P } from '../ct-p01/B01006P.js';
 import { B01011 } from '../ct-p01/B01011.js';
 import { B01027 } from '../ct-p01/B01027.js';
 import { B01028 } from '../ct-p01/B01028.js';
@@ -248,6 +250,13 @@ import { B09006P } from '../ct-p09/B09006P.js';
 import { B09014 } from '../ct-p09/B09014.js';
 import { B09018 } from '../ct-p09/B09018.js';
 import { B09024 } from '../ct-p09/B09024.js';
+import { B03030 } from '../ct-p03/B03030.js';
+import { B03030P } from '../ct-p03/B03030P.js';
+import { B05008 } from '../ct-p05/B05008.js';
+import { B05008P } from '../ct-p05/B05008P.js';
+import { B05048 } from '../ct-p05/B05048.js';
+import { B08017 } from '../ct-p08/B08017.js';
+import { B08017P } from '../ct-p08/B08017P.js';
 import { B09025 } from '../ct-p09/B09025.js';
 import { B09025P } from '../ct-p09/B09025P.js';
 import { B09029 } from '../ct-p09/B09029.js';
@@ -597,6 +606,7 @@ import { B09092 } from '../ct-p09/B09092.js';
 import { B09092P } from '../ct-p09/B09092P.js';
 import { B07081 } from '../ct-p07/B07081.js';
 import { B04064 } from '../ct-p04/B04064.js';
+import { B04055 } from '../ct-p04/B04055.js';
 import { B07080 } from '../ct-p07/B07080.js';
 import { B07080P } from '../ct-p07/B07080P.js';
 import { B04011 } from '../ct-p04/B04011.js';
@@ -1470,6 +1480,7 @@ import { B02084 } from '../ct-p02/B02084.js';
 import { B02084P } from '../ct-p02/B02084P.js';
 import { B03041 } from '../ct-p03/B03041.js';
 import { B03041P } from '../ct-p03/B03041P.js';
+import { B03042 } from '../ct-p03/B03042.js';
 import { B09107 } from '../ct-p09/B09107.js';
 import { B09107P } from '../ct-p09/B09107P.js';
 import { B02087 } from '../ct-p02/B02087.js';
@@ -1650,7 +1661,7 @@ export const REUSE_CARDS: CardDef[] = [
   B06101, D10011, B09008,
   // Task D engine拡張 wave#1 (2026-06-12): hand-count/scene→deck/FILE-zone/textual-grant + pick-bind 解禁 35枚
   // (敵対検証 workflow 通過。B09028/B09054系=sleepGuard+自己ガード除外、B09032=charGrantKeyword短縮形で解禁)
-  B09092, B09092P, B07081, B04064, B07080, B07080P, B04011, B08058, B08058P, B09021, B09021P, B04068, B04068P, B05050, PR100, PR106, B08037, B08037P, B09028, PR181, PR187, B09054, B09054P, B09041, B09041P, B07090, B07090P, B08029, B08029P, B08032, B08032P, B09032, B07079, B07079P, B02014,
+  B09092, B09092P, B07081, B04064, B04055, B07080, B07080P, B04011, B08058, B08058P, B09021, B09021P, B04068, B04068P, B05050, PR100, PR106, B08037, B08037P, B09028, PR181, PR187, B09054, B09054P, B09041, B09041P, B07090, B07090P, B08029, B08029P, B08032, B08032P, B09032, B07079, B07079P, B02014,
   // Task A wave#2 codegen3 (D09016/D09017 FILE6行動 / B05076 解決編)。B08020/P は共有 engine gap で defer (BUG-132)
   B05076, D09016, D09017,
   // engine拡張 wave#2 — BUG-132 GAP-1/2 修正後の B08020/P 再採用
@@ -1955,7 +1966,7 @@ export const REUSE_CARDS: CardDef[] = [
   // night-w0 P spread (B03111P/B05117P)
   B03111P, B05117P,
   // night-wA: engine additive wave A (verb/hook/cond/dyn/cost) exemplar 19 printings (2026-07-11)
-  B07049, D10009, D10010, B07063, B07063P, B04073, B03008, B03040, B02084, B02084P, B03041, B03041P, B09107, B09107P, B02087, B02087P, B05007, B05007P, B05097,
+  B07049, D10009, D10010, B07063, B07063P, B04073, B03008, B03040, B02084, B02084P, B03041, B03041P, B03042, B09107, B09107P, B02087, B02087P, B05007, B05007P, B05097,
   // night-wB: param 拡張 wave B exemplar 12 printings (2026-07-11)
   B07030, B07061, B09055, B03063, B09011, B09112, B09112P, B05009, B05009P, D10022, B01070, B05075,
   // night-wB P spread 補完 (B09011P)
@@ -1972,5 +1983,8 @@ export const REUSE_CARDS: CardDef[] = [
   B03093, B05101, B06036, B06036P, B06105, B06105P, B07001, B07001P, B07001P2, B08002, B08002P, B09039, B09105, B09105P, B09109, B09109P, PR279,
   // S3 hand-zone cutin aura
   B06020, B07003, B07003P,
+  // T3 repeat deck window
   B09033, B09033P,
+  // Wave D: opponent-effect target protection
+  B01006, B01006P, B03030, B03030P, B05008, B05008P, B05048, B08017, B08017P,
 ];

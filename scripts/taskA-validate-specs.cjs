@@ -93,6 +93,7 @@ const CONDS = new Set([
   'handAtLeast', 'handAtMost', 'handCountAtLeastOther',
   // Task D E2/E3 (2026-06-12)
   'fileTopMatches', 'triggerPlayerIs', 'triggerViaNextHint', 'triggerCardMatches', 'charTurnEffect',
+  'sourceInScene', 'boundCharStateIs', // B04055 / B09024 resolution-time source and remove snapshot
   // engine拡張 wave#2 cluster3 (2026-06-13)
   'triggerActionKind',
   // BUG-145 self-state micro-cluster (2026-06-15)

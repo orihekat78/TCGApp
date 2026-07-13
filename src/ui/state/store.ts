@@ -208,6 +208,7 @@ export type PendingEffectPick = {
    * CardListModal で同一 (印字) レベルの重複選択を click 不可化する (distinctNames の level 版)。
    */
   distinctLevel?: boolean;
+  distinctColors?: boolean;
   /**
    * BUG-132 GAP-1: decline (pickedUid=null) を「0枚選択の atom 解決 + remainder 続行」として
    * 処理するマーカー (engine 側 PendingEffectPickSide.skipResolvesAtom と同 shape)。
@@ -242,13 +243,13 @@ export type PendingEffectOptional = {
   triggerPayload?: unknown;
 };
 
-/** ヒラメキ保留 (Commit 3a) */
 export type PendingEffectRepeatOptional = {
   player: 'self' | 'opp';
   source: { cardId: string; abilityId: string; uid: string };
   remaining: number;
 };
 
+/** ヒラメキ保留 (Commit 3a) */
 export type PendingHirameki = {
   /** 証拠の所有者 = ヒラメキ発動権利者 */
   player: 'self' | 'opp';
@@ -309,9 +310,9 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingEffectChoice: (p) => set({ pendingEffectChoice: p }),
   pendingEffectOptional: null,
   setPendingEffectOptional: (p) => set({ pendingEffectOptional: p }),
-  pendingDeckReveal: null,
   pendingEffectRepeatOptional: null,
   setPendingEffectRepeatOptional: (p) => set({ pendingEffectRepeatOptional: p }),
+  pendingDeckReveal: null,
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
   pendingDeckReorder: null,
   setPendingDeckReorder: (p) => set({ pendingDeckReorder: p }),

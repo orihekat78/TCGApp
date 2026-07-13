@@ -112,6 +112,8 @@ export type PendingEffectPickSide = {
    * true なら multi-select で「既選択カードと同一 (印字) レベルを持つ候補」を click 不可化 (distinctNames の level 版)。
    */
   distinctLevel?: boolean;
+  /** B03042: multi-pick cards cannot share a printed color. */
+  distinctColors?: boolean;
   /**
    * engine mega-wave W4 (2026-07-03, r84 G38): side 毎の選択上限 (「自分と相手で1枚ずつ」B08019 a2)。
    * UI multi-select は quota 到達 side の残候補を click 不可化 / chooseAiPick は greedy walk で skip。

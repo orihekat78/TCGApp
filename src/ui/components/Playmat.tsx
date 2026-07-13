@@ -1042,6 +1042,10 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
                     })
                   )
                 : undefined}
+              pickDistinctColors={isPickModeForThisArea ? (pendingPickForArea as { distinctColors?: boolean } | undefined)?.distinctColors : undefined}
+              pickColors={isPickModeForThisArea && (pendingPickForArea as { distinctColors?: boolean } | undefined)?.distinctColors
+                ? Object.fromEntries((pendingPickForArea?.candidates ?? []).map((c) => [c.uid, readDef.card(c.cardId)?.colors ?? []]))
+                : undefined}
             />
           );
         })()}

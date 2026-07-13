@@ -9,6 +9,7 @@ import { buildShortFormPick } from '../atom-pick-spec.js';
 import { evalDyn } from '../../dyn/eval.js';
 import { defHasKeyword } from '../../read/keyword.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
+import { effectiveTraitNames } from '../../target/candidates.js';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -121,7 +122,19 @@ export function _drainPendingContactStartAxId(): string | null {
  *   deck 内のカードは scene candidate (turnEffects/override) を持たないため、printed 値
  *   (d.ap/d.lp/d.level、undefined は 0) で判定する = matchOneFilter の非現場ケースと同式。
  */
+/**
+ * Static deck-card filter.  Kept as the public compatibility API used by
+ * legacy probes and callers that have no trigger context.
+ */
 export function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: string) => boolean {
+  return targetFilterToPredicateWithCtx(undefined, filter);
+}
+
+/**
+ * Context-aware deck-card filter.  Dynamic trigger payload filters must use
+ * this path; absent state/payload fails closed.
+ */
+export function targetFilterToPredicateWithCtx(state: GameState | undefined, filter: TargetFilter | undefined, ctx?: EffectCtx): (cardId: string) => boolean {
   if (!filter) return () => true;
   return (cardId: string) => {
     const d = engineCards.get(cardId);
@@ -143,6 +156,12 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
     if (filter.trait !== undefined) {
       const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
       if (!wants.some(w => d.traits?.includes(w))) return false;
+    }
+    if (filter.traitSharedWithTriggerRemoved === true) {
+      const removed = (ctx?.triggerPayload as { removedChar?: { cardId?: unknown } | undefined } | undefined)?.removedChar;
+      if (!state || !removed || typeof removed.cardId !== 'string') return false;
+      const traits = effectiveTraitNames(state, removed.cardId, removed as never);
+      if (!traits.some(trait => d.traits?.includes(trait))) return false;
     }
     // BUG-117: AP/LP filter (printed 値判定 — deck card は override/turnEffect を持たない)
     const ap = d.ap ?? 0;

@@ -371,10 +371,12 @@ function substituteAtomPick(
   // source カードが kind==='event' かつ相手側 (aura 保有 side ≠ picker) のみ適用。cond 計数・
   // アクション対象・ガードは本関数非経由 = 公式Q&A (「キャラを選ばないイベントの効果による影響は
   // 受ける」/ キャラ能力では選べる / イベントが与えた能力はキャラの能力扱い B02052) と整合。
-  const cands = readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
-    ? cands0.filter(c => c.kind !== 'char' || c.player === ctx.source.player
-        || !readChar.charUntargetableByOppEvent(state, c.uid))
-    : cands0;
+  const sourceKind = readDef.card(ctx.source.cardId ?? '')?.kind;
+  const cands = cands0.filter(c => {
+    if (c.kind !== 'char' || c.player === ctx.source.player) return true;
+    if (readChar.charUntargetableByOppEffect(state, c.uid)) return false;
+    return sourceKind !== 'event' || !readChar.charUntargetableByOppEvent(state, c.uid);
+  });
   if (cands.length === 0) {
     // 拡張 5 (chain): no-candidate を chain break 信号として記録 (Phase 3c: ctx.dyn 経由。runtime tryRePickFromAtom
     // 経路では本 ctx = resolver chain ctx と同一参照ゆえ resolver chain case が読む。初期 walk 経路は dead write)
@@ -453,7 +455,7 @@ function substituteAtomPick(
       (ctx.dyn ??= {}).chainStepNoApply = true;
       return atom as Effect;
     }
-    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; distinctLevel?: boolean; perSideMax?: number } };
+    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; distinctLevel?: boolean; distinctColors?: boolean; perSideMax?: number } };
     pushPendingEffectPickSide({
       player: byPlayer,
       // BUG-175: 能力所有者を同梱 — chooser≠owner の cross-side pick で解決後 ctx の座標系を保つ
@@ -473,6 +475,7 @@ function substituteAtomPick(
       distinctNames: targetRef.query?.distinctNames === true,
       // Cluster WB1 (2026-07-11, B09105): distinctLevel を UI/AI へ伝播 (「それぞれレベルの異なる」)。
       distinctLevel: targetRef.query?.distinctLevel === true,
+      distinctColors: targetRef.query?.distinctColors === true,
       // engine mega-wave W4 (2026-07-03, r84): perSideMax quota を UI/AI へ伝播 (B08019 a2)。
       ...(typeof targetRef.query?.perSideMax === 'number' ? { perSideMax: targetRef.query.perSideMax } : {}),
       // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、
@@ -768,13 +771,13 @@ export function resolveEffectPicks(
       // forEach は over の各候補で do を実行する dynamic 構造。$pick は do 内に出ない想定だが
       // 念のため再帰 (do 自体が atom-with-$pick になることはないが、ネスト構造はあり得る)
       return { kind: 'forEach', over: effect.over, do: resolveEffectPicks(state, effect.do, ctx, opts) };
-    case 'replace':
-      return { kind: 'replace', trigger: effect.trigger, with: resolveEffectPicks(state, effect.with, ctx, opts) };
-    case 'chain':
     case 'repeatOptional':
       // The body can depend on bindings created by earlier runtime steps (B09033 $revealed).
       // Defer its walk until the player accepts this round.
       return effect;
+    case 'replace':
+      return { kind: 'replace', trigger: effect.trigger, with: resolveEffectPicks(state, effect.with, ctx, opts) };
+    case 'chain':
     case 'negate':
     case 'custom':
       // pre-walk passthrough (un-walked, 参照同一の effect をそのまま返す)。chain の step 内 atom $pick は

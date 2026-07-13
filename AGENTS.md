@@ -62,8 +62,9 @@ Search or open their relevant sections only when needed.
 - Investigate structurally similar sites after fixes and additions.
 - Record decisions and horizontal findings in `.claude/memory.md`.
 - Before user review, state self-review and horizontal investigation status.
-- User grants standing authorization for this repository to commit and push completed, verified work.
-  Keep commits coherent and gated; do not merge, deploy, publish, or expose secrets without a separate request.
+- User grants standing authorization for this repository to commit, push, merge, deploy, publish,
+  and create or comment on GitHub PRs/issues when needed for the requested work.
+  Keep commits coherent and gated; never expose secrets.
 
 Historical detailed policy and numeric targets remain in
 `.claude/CLAUDE.md`; active Codex instructions in this file and nested

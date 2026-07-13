@@ -1,7 +1,7 @@
 // engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj } from '../resolve-picks.js';
-import { targetFilterToPredicate, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber } from './_shared.js';
+import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber } from './_shared.js';
 import type { Player, PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
 import type { GameState, EffectCtx, Candidate, AtomVerb } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
@@ -28,9 +28,9 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       if (typeof filterArg === 'function') {
         filter = filterArg;
       } else {
-        const basePred = targetFilterToPredicate(filterArg);
+        const basePred = targetFilterToPredicateWithCtx(s, filterArg, ctx);
         if (Array.isArray(filterAnyArg) && filterAnyArg.length > 0) {
-          const anyPreds = filterAnyArg.map(f => targetFilterToPredicate(f));
+          const anyPreds = filterAnyArg.map(f => targetFilterToPredicateWithCtx(s, f, ctx));
           filter = (cardId: string) => basePred(cardId) && anyPreds.some(p => p(cardId));
         } else {
           filter = basePred;

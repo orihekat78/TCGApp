@@ -122,6 +122,8 @@ export type CardListModalProps = {
   pickDistinctLevel?: boolean;
   /** 各 pickCands uid → (印字) レベルのマップ。pickDistinctLevel=true のとき重複検査に使用。 */
   pickLevels?: Record<string, number | undefined>;
+  pickDistinctColors?: boolean;
+  pickColors?: Record<string, string[] | undefined>;
   /**
    * engine mega-wave W2b (2026-07-03, P50/r27): mustBeSelectedByOppEvent (B08087) forced 集合。
    * multi-select では auto-select + deselect 不可 + 完了 gate (forced ⊆ selected)、
@@ -132,7 +134,7 @@ export type CardListModalProps = {
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickForcedUids } = props;
+  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
   const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
   const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
@@ -177,6 +179,14 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
     const lv = pickLevels[uid];
     return typeof lv === 'number' && selectedLevels.has(lv);
   };
+  const selectedColors = new Set<string>();
+  if (pickDistinctColors && pickColors) {
+    for (const u of selectedUids) for (const color of pickColors[u] ?? []) selectedColors.add(color);
+  }
+  const isDistinctColorsBlocked = (uid: string): boolean => {
+    if (!pickDistinctColors || !pickColors || selectedUids.includes(uid)) return false;
+    return (pickColors[uid] ?? []).some(color => selectedColors.has(color));
+  };
   const toggleSelect = (uid: string): void => {
     setSelectedUids((prev) => {
       // W2b (P50/r27): lock された forced は deselect 不可 (「必ず選ぶ」)
@@ -188,6 +198,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
       // distinctNames / distinctLevel 衝突は click 不可なので click 経路に到達しないが、念のため防御
       if (isDistinctNamesBlocked(uid)) return prev;
       if (isDistinctLevelBlocked(uid)) return prev;
+      if (isDistinctColorsBlocked(uid)) return prev;
       return [...prev, uid];
     });
   };
@@ -333,7 +344,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 if (pickUid !== undefined) {
                   const isSelected = isMultiPick && selectedUids.includes(pickUid);
                   const isForcedLocked = forcedLockable && forcedInCands.includes(pickUid);
-                  const isBlocked = (isMultiPick && (isDistinctNamesBlocked(pickUid) || isDistinctLevelBlocked(pickUid))) || isForcedBlocked(pickUid);
+                  const isBlocked = (isMultiPick && (isDistinctNamesBlocked(pickUid) || isDistinctLevelBlocked(pickUid) || isDistinctColorsBlocked(pickUid))) || isForcedBlocked(pickUid);
                   const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                   return (
                     <button
@@ -345,7 +356,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                       data-testid={`card-list-pick-${pickUid}`}
                       aria-label={`${cardIdToDisplayName(cardId)} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       aria-pressed={isMultiPick ? isSelected : undefined}
-                      title={isForcedLocked ? '必ず選ぶ (相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(pickUid) ? '同じカード名は1枚まで (rules/19)' : isBlocked ? '必ず選ぶキャラが優先されます' : undefined}
+                      title={isForcedLocked ? '必ず選ぶ (相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(pickUid) ? '同じカード名は1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(pickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(pickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラが優先されます' : undefined}
                     >
                       {itemContent}
                     </button>

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `8e46146b4c13`
+> Source hash: `ff1ed969ac22`
 
 公式ルール [`15-abilities-effects.md`](../../../rules/15-abilities-effects.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -36,6 +36,8 @@
 - [`B05063`](../by-spec/grounding--B05063.md)
 - [`B07100`](../by-spec/grounding--B07100.md)
 - [`B09019`](../by-spec/grounding--B09019.md)
+- [`B09033`](../by-spec/grounding--B09033.md)
+- [`B09033P`](../by-spec/grounding--B09033P.md)
 - [`D06003`](../by-spec/grounding--D06003.md)
 - [`PR265`](../by-spec/grounding--PR265.md)
 - [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
@@ -43,7 +45,7 @@
 - [`caseResolvedHandRemove`](../by-spec/shared-classes--caseResolvedHandRemove.md)
 - [`eventRemoveByAP`](../by-spec/shared-classes--eventRemoveByAP.md)
 
-## 📄 参照ソース (1161)
+## 📄 参照ソース (1183)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/_shared/caseResolvedHandRemove.ts`](../../../../src/cards/_shared/caseResolvedHandRemove.ts)
@@ -65,4 +67,4 @@
 - [`src/cards/ct-d02/D02008.ts`](../../../../src/cards/ct-d02/D02008.ts)
 - [`src/cards/ct-d02/D02010.ts`](../../../../src/cards/ct-d02/D02010.ts)
 - [`src/cards/ct-d02/D02011.ts`](../../../../src/cards/ct-d02/D02011.ts)
-- _...ほか 1141 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 1163 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

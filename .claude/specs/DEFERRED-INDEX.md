@@ -64,7 +64,7 @@ B09109 a2 (revealFromHand costPaid cardName + resolveBindRef $cost 非対応)。
 **NIT (記録)**: B09081 a2「1枚まで」が optional 諾否に折込 (B03085/B05111 踏襲、候補常 1 体)。
 **Wave C 残 (次 session 候補)**: ~~B05093~~ **SHIPPED (WC2a)** / B02086 依然 DEFER (optional chooser+else+AI-drain infra 別途要、上記 B02086 行参照) / B06023+B06036+B06034 (hirameki invoke-by-cardId) / B06020+B07003 (hand-zone
 cutin aura) / B03042 B04055 B09033 PR279 B03093 / 重: B02022 B04042+B04084 B05033 B08003 /
-T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D BLOCKED cluster (untargetableByOppEffect 設計)。
+T3: B06025 B08059 B02039 B01082 D06013 B09024 / Wave D `untargetableByOppEffect` 実装・gate中。
 
 ## 公式 defer 宣言済 (専用ファイルあり)
 
@@ -225,7 +225,7 @@ relative-AP (B09096) は本 session で **stale 訂正** (engine変更0 と判�
 |------|------|---------|
 | mustGuard token | 「ガードできる場合、必ずガードする」(B09040 a2) | guard 強制の AI/UI 同時追従 (GuardPickerModal forced 化) |
 | auraGrant (AP/LP buff) | **✅ 解消 (2026-06-15 cluster13)**: continuous OWNER-ONLY 制約を解除し、他キャラへの数値 aura (apDeltaAura/lpDeltaAura + auraFilter + auraExcludeSelf) を board-scan reader で実装。11 printings 出荷 | 完了 — branch engine/wave2-cluster13-aura-grant |
-| auraGrant (triggered 付与) | 常時 aura で他キャラに **triggered 能力テキスト**を付与 (B09024 a1「他キャラに【現場リムーブ時】を与える」) | **別 gate 継続 DEFER**: 非キーワード能力テキストの付与 + 二重 queue 防止 (cluster13 の数値 aura とは別機構) |
+| auraGrant (triggered 付与) | 常時 aura で他キャラに **triggered 能力テキスト**を付与 (B09024 a1「他キャラに【現場リムーブ時】を与える」) | **✅ 解消 (2026-07-13, uncommitted)**: `triggeredAbilityAura` reader は付与元UIDを合成ability IDへ含め、各abilityを一度だけqueueする。batch remove の発火時点snapshotも実装。 |
 | partner-area 構造 | ビッグジュエル B07045 / MR 列挙 B09047 / MR能力①② (rules/18) | **Phase1 engine core 実装済 (2026-06-23, engine/mr-partner-area-core)**: partnerAreaMR slot + MR①②(全 leave verb / enter-removal) + PA-MR reader spine (byUid/continuous/declared/auto活性) + canDeclaredAbility PA scope gate。4-lens 敵対review=REVISE 反映。残: Phase2=UI / 3=AI / 4=card wave (SOLE 15)。未解決4件+暫定5件=[BUG-154](../bugs/BUG-154.md)。設計=[design](engine-mr-partner-area-design.md)+[cohort](engine-mr-partner-area-cohort.md)。**ビッグジュエル列挙: wave-12 (2026-07-02) で PA 一般カード枠 spine (partnerAreaCards + toPartnerArea + candidates 列挙) 出荷済** — 残 = PA→remove 移動 verb (B07037) + PA 読み Condition (B07045/PR263)、下段 wave12-pa-cards 節参照 |
 | 「パートナーエリアでも宣言できる/発動する」句 | B07079/P・B08032/P・B09054/P + B07093/B05066 | **engine 配線済 (2026-06-23)**: MR①② は本5枚で有効化。PA 常駐 MR の宣言能力 (scope on-partner-area) は使用可。card固有 scope 補正は Phase 4 wave で per-card 対応 |
 | name-designation | 「カード名を1つ指定し」UI+条件 (B09003/B09108/B09111/B09052) | 宣言 UI surface + designated-name 比較 condition |
@@ -417,7 +417,7 @@ opus 3-lens 敵対設計レビュー GO。詳細: changelog 2026-06-15-09 + clus
 | 項目 | 内容 | 状況 |
 |------|------|------|
 | 両 side aura | auraDelta は target の同一 side のみ走査 (自陣 buff 専用)。現出荷 11枚は全て「自分の現場」aura のため十分 | 設計どおり (相手 buff/debuff aura が出たら ownerSide 走査を拡張) |
-| triggered 能力テキスト付与 aura | B09024「他キャラに【現場リムーブ時】を与える」は非キーワード能力テキスト付与 = 別 gate | 継続 DEFER (上表 auraGrant(triggered 付与)) |
+| triggered 能力テキスト付与 aura | B09024「他キャラに【現場リムーブ時】を与える」は非キーワード能力テキスト付与 = 別 gate | **✅ 解消 (2026-07-13, uncommitted)** — `triggeredAbilityAura` + leave batch snapshot。 |
 | auraFilter の AP/LP filter | auraFilter が apMin/apMax 等を使う場合、matchOneFilter 再入は _inAuraDelta で aura 抜き AP を見る (二重計上防止)。現出荷は color/trait/level のみ使用 | 文書化のみ |
 
 ## トリアージ・スイープ window4 certify — yellow/refuted DEFER (2026-06-16, batch#3)
@@ -564,7 +564,7 @@ sweep landscape の「hand→deck-bottom verb 無」note は **stale** (wave1 �
 
 | rep | 種別 | 理由 (支配 gate) | 解禁条件 |
 |------|------|------|------|
-| B03042 | DEFER | look-5 で **探偵 2枚 (相対色「同じ色を持たない」) を同時 pick** + 「**シャッフル**してデッキ下」。deckRevealUntil は 1 match のみ / cross-pick 相対色 filter なし / shuffle-to-bottom variant 不在 | multi-match relative-filter pick + shuffle-bottom variant (engine) |
+| B03042 | **✅ IMPLEMENTED (2026-07-13, uncommitted)** | look-5 の探偵最大2枚を `distinctColors` cross-pick 制約で選び、残りをshuffleしてdeck bottomへ。human dispatch validator/UI/AIまで配線し、0選択を確認。 | resolved |
 | PR265 | DEFER | 登場時「加えたカードの**レベル分**デッキ上からリムーブ」= bound カードの level を動的 N とする mill。deckRemoveTop は静的 N のみ + 解決編宣言 mill-by-level | dynamic-count (bound-card-level) mill (engine) |
 | ~~B07066~~ | **出荷済** (㉖) | enter-observer remove (B04017同型) + 宣言 sleepChar cost→look-3 (B05078同型)。engine変更0 | — |
 | ~~PR194~~ | **出荷済** (㉖) | 宣言 removeFromScene{self} cost→look-2 forced-top (filter省略=match-all、B01048同型)。engine変更0 | — |
@@ -689,7 +689,7 @@ matchOneFilter が char.turnEffects 由来の effective level を読む = rules/
 
 | rep | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
-| B04055 (アマンダ・ヒューズ, 全体) | a1 trigger (このキャラ以外の【赤】除去 + self sleep条件) は removedFilter{color:赤}+excludeSource で表現可だが、**effect が「公開カードがリムーブされたキャラのいずれかと同じ特徴を持つ場合手札に加える」= 公開カードの filter を離場キャラの動的特徴集合でパラメタ化**する機構が engine 不在 (filter は静的指定のみ、trigger payload の trait 集合を reveal filter に注入する verb ゼロ)。主能力ゆえ全体 DEFER | reveal-then-conditional-by-removed-char-trait 機構 (engine) |
+| B04055 (アマンダ・ヒューズ, 全体) | **✅ IMPLEMENTED (2026-07-13, uncommitted)** — `traitSharedWithTriggerRemoved` はremove eventのsnapshot traitsを公開カードfilterへ注入。source-in-scene条件でqueue済みobserverの離場後解決も防止。 | resolved |
 | B07096 (ウォッカ, 全体) | a1 (相手 Lv4以下除去→draw) は removedFilter{levelMax:4} side:'opp' で clean だが、innate keyword **〚突撃［レベル4以下のキャラ］〛= 条件付きターゲット突撃**が engine 未対応 (flow/main/action.ts は '突撃[キャラ]' string-match のみ、名乗り状態例外を target レベルで gate する機構なし)。印字 keyword の silent no-op は不誠実ゆえ全体 DEFER | 条件付target 突撃 (突撃[レベルN以下のキャラ]) の naming-state 例外 gate (engine) |
 
 ## 白馬探 トリオ (B04038 / PR027 / PR031) — self-only remove-area drain 機構不在 (2026-06-24)
@@ -735,7 +735,7 @@ classify(59)→certify+adversarial-verify(15) で **refuted 3 + yellow 3** を D
 | B09050 (char, 全体) | 【宣言】cost「手札を1枚リムーブ」で除去したカードの **レベルを後続 pick の levelMax へ渡す cost-relative dynamic filter** が不在。removeFromHand cost は costPaid を書かず (flipFaceUpEvidence のみ)、$cost.removeFromHand.level は undefined→throw。主能力ゆえ全体 DEFER | removeFromHand cost の costPaid 記録 + filter への relative-level 注入 (engine) |
 | ~~B09096 (char, 全体)~~ | ✅ **出荷済 (2026-06-29, 29ebc443、B09096/B09096P キャンティ)**。G15 relative-AP filter `{apMin/apMax:{dyn:'$self.ap'}}` を engine変更0 で解禁 (resolve-picks resolveTargetFilterDyn が pick 列挙前 literalize、cluster12 と同経路)。probe 4/4 (SAME除去/DIFF残存/0候補/dyn-liveness)。旧 `.tmp/certify/B09096.json` yellow は cluster12 解禁前の stale だった | ✅ 解決済 |
 | B08035 (char, 全体) | a1【解決編】【登場時】「相手キャラ1枚選び、sleep→stun / active→sleep」= **pick した そのキャラの現状態で適用 state を分岐**する per-picked-target conditional state transform が不在 (sceneSetState 短縮は全 pick に固定 state、charStateIs ref:'pick' は .some で全候補判定=「そのキャラ」不成立、decoy 誤路)。a2 は green。a1 ゆえ全体 DEFER | pick-then-branch-on-picked-state primitive (engine) |
-| **C04 untargetable 群 (8枚): B01006/B01006P B03030/B03030P B03093 B05008/B05008P B05048** | 「相手の能力や効果によって選ばれない」= **untargetable-grant** が engine 完全不在 (capability-map.txt L607『untargetable』= 存在しない、`grep src/engine 選ばれない/untargetable` = 0 hit、ContinuousModifier は apDeltaAura/lpDeltaAura/auraFilter/restrictsOpponent のみで no-select 保護なし)。相手の pick 候補列挙 (candidates.ts) から保護対象を除外する target-selection-time predicate + 【絆】/aura conditional flag が必要。B03093/B05048 は他キャラへ aura 付与 (trait/cardName filter)。⚠ engine0-wave 分類器 (engine0-vs-extension TSV) は本群を **ENGINE0 と誤判定**したが gates 列は `NEW:untargetable` を明記、`.tmp/certify/B01006.json` は正しく yellow。Tier A pilot で確定 (楽観バイアス実証) | TargetFilter/candidates に untargetable 保護 predicate + 継続付与機構 (engine。engine-extension-upper-bound の主要 gate 候補) |
+| **C04 untargetable 群** | **✅ 解消 (2026-07-13, uncommitted)**: B01006/B01006P、B03030/B03030P、B03093、B05008/B05008P、B05048。`untargetableByOppEffect` は相手effect pickのみをresolver chokepointで除外し、絆・face-up on-set-host auraを読む。 | resolved |
 
 ## wave novel-tail-0627 由来 (2026-06-27)
 
@@ -812,7 +812,7 @@ full blocker は `.tmp/certify/<rep>.json`。queue は engine-gated tail に到�
 | B05107 | yellow | 同 cause-attribution (self【現場リムーブ時】「自分の能力や効果によって」) + 自個体 resurrection (「このキャラを remove からスリープ登場」= leave payload の removedChar を sceneEnter source に bind する経路無し) |
 | B03029 | yellow | play-event-from-effect (「手札から【緑】イベントを1枚まで使用する」= 効果でイベント使用の verb 未実装) |
 | B05063 | yellow | turn-end→手札 (「ターン終了時このキャラを現場から手札に移す」= toHandOnTurnEnd flag / turn.ts branch 無し) + grant 非キーワード ability |
-| B09033 | yellow | reveal-window 反復登場 (4枚公開窓から繰り返し1枚ずつ登場 = deckRevealUntil は単一 $matched bind、reveal 窓を pick ソース化不能) |
+| B09033 / B09033P | **✅ IMPLEMENTED (2026-07-13, uncommitted)** | `repeatOptional` と公開deck windowのstable occurrence UIDで、4枚から任意回数1枚ずつ登場。human UI / AI / spectator / owner=opp / 0選択を検証。 |
 | ~~B05093~~ | ~~yellow~~ | **SHIPPED (WC2a 2026-07-11)** — pick query chooser:'opp-of-owner' 実配線 (resolve-picks chokepoint + handAddFromDeck $pick.cardId await-pick)。deckRevealUntil bind + handAddFromDeck(fromGroupCards, filterAny[event|喫茶ポアロ], chooser:opp-of-owner) + deckToBottomBound。B05093P 同梱 |
 | ~~B03098~~ | ✅ 出荷済 (2026-07-04 hybrid-pilot-1、B03098P 含む)。a1=enter+charStateIs{sleep} gate、a2 hirameki は compiler mined rule (shipped exemplar 由来)。旧 refuted の hiraRes pick surface は BUG-171 系修正後の現行経路で解消済 | (解消) |
 | B06090 | refuted | spec が BUG-145 self-sleep gate (not charStateIs self sleep) を欠落 → 既 sleep で過剰再発火 (再 certify で gate 追加すれば green 化可、shipped PR144/B09058 同型) |
@@ -1338,7 +1338,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | ID | blocker 要旨 |
 |---|---|
 | B07030 | remove→PA の pick 型 verb 不在 (toPartnerArea は self-only 決定論、pick 不可) |
-| B08017 | 「相手の能力や効果によって選ばれない」select-protection token 不在 (opponentRestrict に select 無し) + on-set-host aura rider 未 honor |
+| B08017 / B08017P | **✅ IMPLEMENTED (2026-07-13, uncommitted)** — sleep hostのface-up set riderが自陣灰原哀へ `untargetableByOppEffectAura` を付与。 |
 | B08081 | 「選ばれたとき〜無効」intercept (B02067/B04003 cluster ⑦) + 相手 optional 分岐 |
 | B09011 | turn-scope LP override (B01045/B01054 cluster ①) の「元のLPを1」変種 + forEach all 適用 |
 | B09039 | PA∪remove union pick 不在 (B09055 と同 cluster) |

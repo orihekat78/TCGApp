@@ -304,6 +304,34 @@ function charUntargetableByOppEvent(s: GameState, targetUid: string): boolean {
   return false;
 }
 
+/** rules/15: opponent effects cannot select a protected character. Actions remain legal. */
+function charUntargetableByOppEffect(s: GameState, targetUid: string): boolean {
+  const target = scene.byUid(s, targetUid);
+  const owner = ownerSideOf(s, targetUid);
+  if (!target || !owner) return false;
+  const targetCand = { kind: 'char', uid: target.uid, cardId: target.cardId, player: owner } as Candidate;
+  const bearers: Array<{ char: typeof target; inPA: boolean }> = s.players[owner].scene.map(char => ({ char, inPA: false }));
+  if (s.players[owner].partnerAreaMR) bearers.push({ char: s.players[owner].partnerAreaMR!, inPA: true });
+  for (const { char: bearer, inPA } of bearers) {
+    const bearerCtx = { source: { player: owner, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+    const abilities = [
+      ...(def.card(bearer.cardId)?.abilities ?? []).filter(a => a.scope !== 'on-set-host'),
+      ...(!inPA ? (bearer.setCards ?? []).filter(entry => entry.faceUp).flatMap(entry =>
+        (def.card(entry.cardId)?.abilities ?? []).filter(a => a.scope === 'on-set-host')) : []),
+    ];
+    for (const ability of abilities) {
+      if (ability.type !== 'continuous') continue;
+      if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+      const mod = ability.continuousModifier;
+      if (!mod || (ability.condition && !evalCond(s, ability.condition, bearerCtx))) continue;
+      if (bearer.uid === targetUid && mod.untargetableByOppEffect === true) return true;
+      const filter = mod.untargetableByOppEffectAura;
+      if (filter && matchOneFilter(s, target.cardId, filter, target, targetCand)) return true;
+    }
+  }
+  return false;
+}
+
 function noAutoActivateLocked(s: GameState, uid: string): boolean {
   const c = scene.byUid(s, uid);
   if (!c) return false;
@@ -734,6 +762,7 @@ export const char = {
   restrictsOpponent,
   auraUntargetableByAction,
   charUntargetableByOppEvent,
+  charUntargetableByOppEffect,
   noAutoActivateLocked,
   selfContinuousFlag,
   hasTextAbility,

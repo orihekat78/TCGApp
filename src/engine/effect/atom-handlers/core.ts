@@ -1015,6 +1015,39 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).
       // 通常 a.cardId='$matched.cardId' で bind 解決 → デッキから splice → hand.add。
       const hadP = resolvePlayer(a.player, ctx);
+      const rawHadCardIds = (a as { cardIds?: unknown }).cardIds;
+      if (rawHadCardIds === '$pick.cardIds') {
+        if (a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb: 'handAddFromDeck', args: a }, ctx, {
+            byPlayer: hadP,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck:awaiting-pick' });
+        }
+        return;
+      }
+      if (Array.isArray(rawHadCardIds)) {
+        const movedIds: string[] = [];
+        const deck = s.players[hadP].deck;
+        for (const cardId of rawHadCardIds.filter((id): id is string => typeof id === 'string')) {
+          const idx = deck.indexOf(cardId);
+          if (idx === -1) continue;
+          deck.splice(idx, 1);
+          mutate.hand.add(s, hadP, [cardId]);
+          movedIds.push(cardId);
+          for (const bindKey of Object.keys(ctx.bindings)) {
+            const bound = ctx.bindings[bindKey];
+            if (!Array.isArray(bound)) continue;
+            const bi = bound.findIndex((b) => {
+              const e = b as { kind?: string; area?: string; player?: string; cardId?: string };
+              return e.kind === 'card' && e.area === 'deck' && e.player === hadP && e.cardId === cardId;
+            });
+            if (bi !== -1) ctx.bindings[bindKey] = [...bound.slice(0, bi), ...bound.slice(bi + 1)];
+          }
+        }
+        mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: movedIds.join(','), result: movedIds.length ? 'ok' : 'none' });
+        return;
+      }
       const rawHadCardId = a.cardId;
       const hadCardId = resolveBindRef(rawHadCardId, ctx) as string;
       if (typeof hadCardId !== 'string' || hadCardId.startsWith('$')) {

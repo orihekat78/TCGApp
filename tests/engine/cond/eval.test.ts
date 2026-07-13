@@ -485,6 +485,15 @@ describe('engine.cond.eval', () => {
       expect(evalCond(s, { kind: 'boundMatchesFilter', bindKey: '$e', filter: { trait: '探偵' } }, ctx)).toBe(false);
     });
   });
+
+  describe('boundCharStateIs (B09024 remove snapshot)', () => {
+    it('sceneRemove 前にbindしたsleep stateだけをtrueとする', () => {
+      const s = createEmptyGameState();
+      const ctx = makeCtx({ bindings: { '$removed': [{ cardId: 'C1', snapState: 'sleep' }] } });
+      expect(evalCond(s, { kind: 'boundCharStateIs', bindKey: '$removed', state: 'sleep' } as never, ctx)).toBe(true);
+      expect(evalCond(s, { kind: 'boundCharStateIs', bindKey: '$removed', state: 'active' } as never, ctx)).toBe(false);
+    });
+  });
 });
 
 // Task D E1 (2026-06-12): hand-count conditions

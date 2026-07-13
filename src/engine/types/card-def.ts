@@ -110,12 +110,6 @@ export type ContinuousDelta =
 export type FilteredAssaultGrant = { targetKind: 'char' | 'case'; filter: TargetFilter };
 
 export type ContinuousModifier = {
-  /**
-   * Grants one triggered ability to each matching friendly scene character.
-   * The generated ability keeps the recipient as its source; bearer identity
-   * is appended to its id, so independent aura sources queue independently.
-   */
-  triggeredAbilityAura?: { filter: TargetFilter; excludeSelf?: boolean; ability: AbilityDef };
   apDelta?: ContinuousDelta;
   lpDelta?: ContinuousDelta;
   // engine additive wave (2026-06-24): 条件付き継続レベル修正 (「【自分ターン中】レベル+1」B08059 /
@@ -199,6 +193,10 @@ export type ContinuousModifier = {
   //   能力扱い (B02052 裁定) — いずれも source def.kind 判定 + pick 限定配線が自然に満たす)。
   untargetableByOppEventAura?: TargetFilter;
   untargetableByOppEventAuraState?: ('active' | 'sleep' | 'stun')[];
+  // 相手の能力・効果の選択対象にならない。action の対象指定や非選択効果は妨げない。
+  untargetableByOppEffect?: boolean;
+  // 同一sideのfilter一致キャラへ上記保護を付与する。faceUp on-set-host rider も読む。
+  untargetableByOppEffectAura?: TargetFilter;
   // S2 wave (2026-07-11, PR279): 「現場にいるこのキャラは相手のイベントの効果によってリムーブされない」
   //   — opponentRestrict:['remove'] の event-source 限定版。選ぶことは妨げない / sleep・stun・デッキ下
   //   移動は不変 / イベントの【ヒラメキ】によるリムーブも block (公式Q&A PR279 — hirameki の
@@ -250,6 +248,12 @@ export type ContinuousModifier = {
   // 手札で filter に一致するカードへ固定 AP cutin を付与する。read.hand-cutin が CardDef を変更せず
   // synthetic on-hand ability として合成し、flow.contact / triggered listener が同じ集合を参照する。
   handCutinAura?: { filter: TargetFilter; apDelta: number };
+  /**
+   * Grants one triggered ability to each matching friendly scene character.
+   * The generated ability keeps the recipient as its source; bearer identity
+   * is appended to its id, so independent aura sources queue independently.
+   */
+  triggeredAbilityAura?: { filter: TargetFilter; excludeSelf?: boolean; ability: AbilityDef };
   // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura (rules/15, 17 §【自分ターン中】, 24 §常時有効型)。
   // 「【自分ターン中】自分の現場にいる [auraFilter] のキャラを AP±N」型。bearer の **同一 side の現場**の各キャラに対し、
   //   auraFilter (matchOneFilter で 有効値=turnEffects 反映レベル を判定) が一致すれば apDeltaAura/lpDeltaAura を加算する。

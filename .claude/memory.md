@@ -33,3 +33,24 @@
   Codex へ直訳せず、Codex permission profile と targeted rule reads を維持。
 - 新規 Codex task 2 件で global caveman full と root AGENTS 読込を実測。
   独立 review は初回 Important 1 件を上記修正後、再 review CLEAN。
+
+## 2026-07-13 — B09033/B09033P repeatOptional
+
+- 公開windowからの反復任意登場は `repeatOptional` を追加。各 round は human UI で決め、残り sequence は最終判断まで停止する。
+- deck の候補 UID (`cardId#index`) を `sceneEnter` まで保持した。同一IDが公開windowに複数あるとき、選択した実体だけを splice / bind prune し、残ったコピーを次 round で選べる。focused probe で後方 duplicate を選ぶ RED→GREEN を確認。
+- 水平確認: deck window binding は splice 後により大きい index を rebase。`hasPendingHumanPick` に repeatOptional を追加して turn driver の早期再開を防止。
+- Sol probe: 初回windowは owner 非human / spectator では既存 AI heuristic が選択し、`repeatOptional` のみ auto-skip。production trigger probe は `event._resetRegistry()` も reset しないと listener が多重登録され、偽の反復登場になる。
+
+## 2026-07-13 — deferred T3 four-card wave
+
+- B09024: `triggeredAbilityAura` の合成IDへaura bearer UIDを含め、付与triggerを一度だけqueueする。leave-to-remove batch は発火時点のauraをsnapshotする。
+- B03042: `distinctColors` を target query / resolver / UI / AI へ配線。human pick は membership・重複・max・cross-pick制約を検証しつつ、合法なpartial/0選択を維持。
+- B04055: `traitSharedWithTriggerRemoved` がremove event snapshotのtraitsを公開filterへ注入。`sourceInScene` が離場済みobserverのqueue解決を防止。
+- B09033/B09033P: stable occurrence UID (`cardId#index`) で同一cardIdを含むdeck windowを反復pick可能にした。duplicate / 0 choice / owner=opp / spectator / production dispatch / UIを確認。
+- Gates: focused suites・full Vitest (656 files, 5474 tests)・tsc・diff-check はgreen。Playwrightのhirameki 2 failureは `160986192` からのhuman target-pick仕様と旧assertの不一致で、今回wave以前から存在。
+
+## 2026-07-13 — Wave D target-protection
+
+- Added `untargetableByOppEffect` and `untargetableByOppEffectAura`. Resolver filters only cross-side effect picks; action target declaration and non-selection effects remain unaffected.
+- Reader examines printed continuous abilities and face-up `on-set-host` riders; conditions use the bearer/host context. This unlocks B01006/P, B03030/P, B05008/P, B05048, and B08017/P.
+- Focused evidence: bond-protection and sleep-host aura probes green, plus `tsc` and diff-check. Remaining: final T3 Sol review/full gates and B05048 spread.

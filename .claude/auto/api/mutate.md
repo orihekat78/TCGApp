@@ -39,7 +39,7 @@ Immer draft 上の primitive 変更操作
 | `log` | `append`, `clear` |
 | `partner` | `addAreaCardFromRemove`, `assist`, `init`, `removeAreaCardsToRemove`, `returnFromFile`, `setLocation`, `setState`, `solveCase` |
 | `remove` | `add`, `emitExit`, `removeFromHere` |
-| `scene` | `clearNamed`, `enter`, `removeToRemove`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toEvidence`, `toHand`, `toStack`, `tryActivate` |
+| `scene` | `clearNamed`, `enter`, `removeToRemove`, `removeToRemoveBatch`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toEvidence`, `toHand`, `toStack`, `tryActivate` |
 | `scratchTrace` | `set` |
 
 ---

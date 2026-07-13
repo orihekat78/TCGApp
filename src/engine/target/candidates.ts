@@ -86,6 +86,21 @@ export function traitNameGrantSafe(s: GameState, uid: string | undefined, which:
   }
 }
 
+/** Effective traits for a live character or a removal snapshot. */
+export function effectiveTraitNames(state: GameState, cardId: string, c: SceneCharacter | null): string[] {
+  const printed = lookupCardDef(cardId)?.traits ?? [];
+  const granted = c?.uid !== undefined ? traitNameGrantSafe(state, c.uid, 'grantTraits') : NO_GRANT;
+  const te = c?.turnEffects as Record<string, unknown> | undefined;
+  const appliedG = te
+    ? [...((te['grantedTraits_permanent'] as string[] | undefined) ?? []), ...((te['grantedTraits_turn'] as string[] | undefined) ?? [])]
+    : [];
+  const revoked = te
+    ? [...((te['revokedTraits_permanent'] as string[] | undefined) ?? []), ...((te['revokedTraits_turn'] as string[] | undefined) ?? [])]
+    : [];
+  const traits = (granted.length > 0 || appliedG.length > 0) ? [...printed, ...granted, ...appliedG] : printed;
+  return revoked.length > 0 ? traits.filter(t => !revoked.includes(t)) : traits;
+}
+
 // 有効カード名 component 集合 = allCardNameComponentsForDef(印字) ∪ (granted 名を rules/19 分割展開したもの)。
 // board char (c?.uid 既知) のみ granted を合流。c===null は印字のみ (deck/remove/bound=cardId)。
 // export: cond/eval bond が matchOneFilter と同一の name 解決を使う (BUG-117 一貫性)。
@@ -438,23 +453,18 @@ export function matchOneFilter(
   // wave-6 (P37): board char は 印字 ∪ granted (grantTraits)。c===null は印字のみ (deck/remove)。
   if (filter.trait !== undefined) {
     const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
-    const printed = d?.traits ?? [];
-    const granted = c?.uid !== undefined ? traitNameGrantSafe(state, c.uid, 'grantTraits') : NO_GRANT;
     // engine A1 wave (2026-07-11, B05101): applied trait 付与/剥奪 (mutate.char.grantTrait/revokeTrait) を
     // honor。read.char.traits と同じ集合 (printed ∪ continuous-grant ∪ applied-grant − applied-revoke)。
     // c.turnEffects 経由なので removedChar snapshot でも正しい (B05101 の再リムーブ時 trait gate)。
     // 既存カードは未宣言 → 全 [] = 従来と byte 等価 (回帰0)。
-    const te = c?.turnEffects as Record<string, unknown> | undefined;
-    const appliedG = te
-      ? [...((te['grantedTraits_permanent'] as string[] | undefined) ?? []), ...((te['grantedTraits_turn'] as string[] | undefined) ?? [])]
-      : [];
-    const revoked = te
-      ? [...((te['revokedTraits_permanent'] as string[] | undefined) ?? []), ...((te['revokedTraits_turn'] as string[] | undefined) ?? [])]
-      : [];
-    let traits = (granted.length > 0 || appliedG.length > 0) ? [...printed, ...granted, ...appliedG] : printed;
-    if (revoked.length > 0) traits = traits.filter(t => !revoked.includes(t));
+    const traits = effectiveTraitNames(state, cardId, c);
     if (!wants.some(w => traits.includes(w))) return false;
   }
+
+  // Dynamic removal-snapshot filters are only resolved by deckRevealUntil,
+  // whose predicate receives EffectCtx.  Generic candidate enumeration lacks
+  // that context, so reject rather than silently widening the target set.
+  if (filter.traitSharedWithTriggerRemoved === true) return false;
 
   if (filter.color !== undefined) {
     const wants = Array.isArray(filter.color) ? filter.color : [filter.color];

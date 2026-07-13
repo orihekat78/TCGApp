@@ -57,6 +57,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       return cond.cs.some(c => evalCond(state, c, ctx));
     case 'turn':
       return state.turn.player === resolvePlayer(cond.player, ctx);
+    case 'sourceInScene':
+      return typeof ctx.source.uid === 'string'
+        && state.players[ctx.source.player].scene.some(c => c.uid === ctx.source.uid);
     case 'partnerColor': {
       const owner = ctx.source.player;
       const partner = state.players[owner].partner;
@@ -529,6 +532,10 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const loSame = loPayload.ownerPlayer === ctx.source.player;
       return cond.player === 'self' ? loSame : !loSame;
     }
+    case 'boundCharStateIs': {
+      const bound = ctx.bindings?.[cond.bindKey];
+      return Array.isArray(bound) && (bound[0] as { snapState?: unknown } | undefined)?.snapState === cond.state;
+    }
     case 'boundMatchesFilter': {
       // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
       // (「〚カード名[X]〛を登場させた場合」を declarative 化)
@@ -873,7 +880,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
 const CONDITION_KIND_MAP = {
   triggerViaNextHint: true,
   triggerCardMatches: true,
-  true: true, false: true, not: true, and: true, or: true, turn: true,
+  true: true, false: true, not: true, and: true, or: true, turn: true, sourceInScene: true,
   partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
   bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,
   evidenceDiff: true, sceneCountCompare: true, // engine additive wave (2026-06-30, B05103/B05081)
@@ -890,7 +897,7 @@ const CONDITION_KIND_MAP = {
   stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
   contactCharMatches: true, // engine defer-unlock mini-wave (2026-07-09, B02006/B02080/PR278)
-  enterOrderEquals: true, boundMatchesFilter: true, triggerCharMatches: true,
+  enterOrderEquals: true, boundCharStateIs: true, boundMatchesFilter: true, triggerCharMatches: true,
   boundAnyMatchesFilter: true, // engine additive wave-5 (2026-07-01, G17): bound 集合 any-match (PR132/D06013)
   boundDistinctColorCount: true, // engine additive wave-10 (2026-07-02, G17 残): bound 集合内 相互異色 n 枚 (B07002)
   boundNameMatchesDeclared: true, // engine mega-wave W6 step1 (2026-07-04): declareName 宣言名 ⇔ bound 集合 any-match (B09108)

@@ -49,12 +49,26 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           const srcSide = ((a.target && typeof a.target === 'object') ? (a.target as { query?: { side?: string } }).query?.side : undefined) as 'self' | 'opp' | undefined;
           // engine mega-wave W4 (2026-07-03, r83): 同一解決で登場した全キャラを集約 (enter:group 用)
           const enteredGroup: Array<{ kind: 'char'; uid: string; cardId: string; player: Player }> = [];
-          for (const cid of cardIds) {
+          const selectedDeckIndexes = Array.isArray((a as { selectedDeckIndexes?: unknown }).selectedDeckIndexes)
+            ? (a as { selectedDeckIndexes: unknown[] }).selectedDeckIndexes
+            : [];
+          for (const [cardPosition, cid] of cardIds.entries()) {
             // 単一 path と同じ inline splice (remove/hand/deck のみ)。これがないと remove に残り複製登場 (D11014 a2 class bug)。
             const fp = srcSide === 'opp' ? 'opp' : enterP;
             if (srcArea === 'remove' || srcArea === 'hand' || srcArea === 'deck') {
               const arr = s.players[fp][srcArea];
-              const i = arr.indexOf(cid);
+              const originalSelectedIndex = selectedDeckIndexes[cardPosition];
+              // Earlier entries in the same multi-pick have already been spliced.
+              // Convert the candidate's snapshot index to its current deck index.
+              const selectedIndex = typeof originalSelectedIndex === 'number'
+                ? originalSelectedIndex - selectedDeckIndexes.slice(0, cardPosition)
+                  .filter((previous): previous is number => typeof previous === 'number' && previous < originalSelectedIndex).length
+                : undefined;
+              const i = srcArea === 'deck'
+                && typeof selectedIndex === 'number'
+                && arr[selectedIndex] === cid
+                ? selectedIndex
+                : arr.indexOf(cid);
               if (i !== -1) {
                 arr.splice(i, 1);
                 // S2 deck cluster (2026-07-10, B01022): stale-bind prune — deck を離れたカードの
@@ -67,10 +81,20 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
                     const bArr = ctx.bindings[bk];
                     if (!Array.isArray(bArr)) continue;
                     const bi = bArr.findIndex(b => {
-                      const e = b as { kind?: string; area?: string; player?: string; cardId?: string };
-                      return e.kind === 'card' && e.area === 'deck' && e.player === fp && e.cardId === cid;
+                      const e = b as { kind?: string; area?: string; player?: string; cardId?: string; index?: number };
+                      return e.kind === 'card' && e.area === 'deck' && e.player === fp && e.cardId === cid
+                        && (typeof selectedIndex !== 'number' || e.index === selectedIndex);
                     });
-                    if (bi !== -1) ctx.bindings[bk] = [...bArr.slice(0, bi), ...bArr.slice(bi + 1)];
+                    const withoutEntered = bi !== -1 ? [...bArr.slice(0, bi), ...bArr.slice(bi + 1)] : bArr;
+                    // A bound deck window keeps snapshot indexes. Splicing a selected card shifts
+                    // every later live deck index; rebase them so subsequent window picks remain legal.
+                    ctx.bindings[bk] = withoutEntered.map(entry => {
+                      const card = entry as Candidate;
+                      if (card.kind === 'card' && card.area === 'deck' && card.player === fp && typeof card.index === 'number' && card.index > i) {
+                        return { ...card, index: card.index - 1 };
+                      }
+                      return entry;
+                    });
                   }
                 }
               }
@@ -389,7 +413,7 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       if (typeof a.bind === 'string') {
         const srChar = s.players.self.scene.find(c => c.uid === srUid) ?? s.players.opp.scene.find(c => c.uid === srUid);
         (ctx.bindings as Record<string, unknown>)[a.bind] = srChar
-          ? [{ uid: srUid, cardId: srChar.cardId, snapLevel: readChar.level(s, srUid), snapAp: readChar.ap(s, srUid), snapLp: readChar.lp(s, srUid) }]
+          ? [{ uid: srUid, cardId: srChar.cardId, snapState: srChar.state, snapLevel: readChar.level(s, srUid), snapAp: readChar.ap(s, srUid), snapLp: readChar.lp(s, srUid) }]
           : [];
       }
       // W6 step10 (row9): byPlayer = 効果 source 側 — leave:intercept の「相手の能力や効果」帰属判定用

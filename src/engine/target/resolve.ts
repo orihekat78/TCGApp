@@ -77,6 +77,17 @@ export function resolve(
         }
       }
 
+      if (ref.query.distinctColors) {
+        const seenColors = new Set<string>();
+        for (const p of picked) {
+          const colors = colorsForCandidate(p);
+          if (colors.some(color => seenColors.has(color))) {
+            throw new Error('target.resolve: distinctColors violated — shared color');
+          }
+          colors.forEach(color => seenColors.add(color));
+        }
+      }
+
       // engine mega-wave W4 (2026-07-03, r84): perSideMax — side 毎の選択上限 (「自分と相手で1枚ずつ」
       // B08019 a2)。distinctNames と同 posture の runtime validate。partner candidate は player 概念が
       // side quota に馴染まないため使用不可 (throw)。
@@ -142,4 +153,9 @@ function componentsForCandidate(cand: Candidate): string[] {
 function levelForCandidate(cand: Candidate): number | undefined {
   if (cand.kind !== 'char' && cand.kind !== 'card') return undefined;
   return lookupCardDef(cand.cardId)?.level;
+}
+
+function colorsForCandidate(cand: Candidate): string[] {
+  if (cand.kind !== 'char' && cand.kind !== 'card') return [];
+  return lookupCardDef(cand.cardId)?.colors ?? [];
 }
