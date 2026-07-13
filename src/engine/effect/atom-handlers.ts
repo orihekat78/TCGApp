@@ -84,6 +84,7 @@ import {
   atomCharSetTurnEffect,
   atomCharSetCard,
   atomCharStackCard,
+  atomCharTransferStackedCards,
 } from './atom-handlers/char.js';
 import {
   atomDeckRevealUntil,
@@ -93,6 +94,7 @@ import {
   atomBoundToRemove,
   atomSouza,
   atomBindPick,
+  atomStackedCardPick,
 } from './atom-handlers/picks.js';
 import {
   atomPartnerAssist,
@@ -242,6 +244,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomCharSetCard(s, a, ctx, verb);
     case 'charStackCard':
       return atomCharStackCard(s, a, ctx, verb);
+    case 'charTransferStackedCards':
+      return atomCharTransferStackedCards(s, a, ctx);
     case 'partnerAssist':
       return atomPartnerAssist(s, a, ctx);
     case 'partnerSetState':
@@ -304,6 +308,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomInvokeHiramekiOfCard(s, a, ctx);
     case 'bindPick':
       return atomBindPick(s, a, ctx, verb);
+    case 'stackedCardPick':
+      return atomStackedCardPick(s, a, ctx);
     case 'declareName':
       return atomDeclareName(s, a, ctx);
     case 'log':

@@ -3,6 +3,8 @@
 // rules: 14-refresh.md, 15-abilities-effects.md, 13-keywords.md
 
 export type HookName =
+  | 'effect:choose-intercept'
+  | 'effect:choose-intercept-discard'
   // フェイズ関連
   | 'phase:auto:start'
   | 'phase:auto:before-draw'

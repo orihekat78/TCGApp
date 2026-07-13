@@ -501,7 +501,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some(c => c.uid === 'ky#1'), 'self は scene から離場').toBe(false);
     const host = after.players.self.scene.find(c => c.uid === 'host#1')!;
-    expect(host.stackedCards, 'host の下に1枚重なる').toBe(1);
+    expect(Array.isArray(host.stackedCards) ? host.stackedCards.length : host.stackedCards, 'host の下に1枚重なる').toBe(1);
     expect(after.players.self.remove.length, 'リムーブではない (remove 不変)').toBe(0);
     expect(after.players.self.hand.length, '重ねた場合 → draw1').toBe(1);
   });
@@ -531,7 +531,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.remove, 'set card リムーブ').toContain('SETX');
     expect(after.players.self.remove.filter(c => c === 'back-card').length, '重なっていた2枚もリムーブ').toBe(2);
-    expect(after.players.self.scene.find(c => c.uid === 'host#1')!.stackedCards, 'host は +1 のみ').toBe(1);
+    { const stacked = after.players.self.scene.find(c => c.uid === 'host#1')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked, 'host は +1 のみ').toBe(1); }
   });
 
   it('B06008 shape: 青 lv5 ap6000 lp0 ヒーロー、a1=enter+removeTraitAtLeast、a2=action:end fromSelf chain', () => {
@@ -578,7 +578,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.scene.some(c => c.uid === 'kyb#1'), 'B06008 は host の下へ').toBe(false);
-    expect(after.players.self.scene.find(c => c.uid === 'host#1')!.stackedCards).toBe(1);
+    { const stacked = after.players.self.scene.find(c => c.uid === 'host#1')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked).toBe(1); }
     expect(after.players.self.hand.length, '重ねた場合 draw1').toBe(1);
   });
 
@@ -591,7 +591,7 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'host#1' });
     expect(r.ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
-    expect(after.players.self.scene.find(c => c.uid === 'host#1')!.stackedCards, 'MR も重なる').toBe(1);
+    { const stacked = after.players.self.scene.find(c => c.uid === 'host#1')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked, 'MR も重なる').toBe(1); }
     expect(after.players.self.partnerAreaMR ?? null, 'PA redirect しない').toBeFalsy();
   });
 });
@@ -890,7 +890,7 @@ describe('W4 step4 r6: sceneStackUnderSelf cost (B09048 型)', () => {
     const s = stage4(true);
     const after = produce(s, (d) => { pay(d, COST, hostCtx()); });
     expect(after.players.self.scene.some(c => c.uid === 'poly#1'), '重なった (scene から消える)').toBe(false);
-    expect(after.players.self.scene.find(c => c.uid === 'naka#1')!.stackedCards).toBe(1);
+    { const stacked = after.players.self.scene.find(c => c.uid === 'naka#1')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked).toBe(1); }
     expect(after.players.self.remove.length, 'リムーブではない').toBe(0);
   });
 
@@ -939,7 +939,7 @@ describe('W4 step4 r7: handStackUnder cost (B08006 型)', () => {
     const s = stage7(['SB_HAND', 'RED_HOST'], true);
     const after = produce(s, (d) => { pay(d, COST, genCtx()); });
     expect(after.players.self.hand.length, '公開した1枚が手札から消える').toBe(1);
-    expect(after.players.self.scene.find(c => c.uid === 'gen#1')!.stackedCards, '青キャラ (自身可) の下に重なる').toBe(1);
+    { const stacked = after.players.self.scene.find(c => c.uid === 'gen#1')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked, '青キャラ (自身可) の下に重なる').toBe(1); }
     expect(after.players.self.remove.length, 'リムーブではない').toBe(0);
   });
 });
@@ -1027,7 +1027,7 @@ describe('W4 step4 exemplar shapes (B09048 / B08006)', () => {
     const ctx: EffectCtx = { source: { cardId: 'B09048', uid: 'naka#2', abilityId: 'a2', player: 'self', area: 'scene' }, bindings: {} } as EffectCtx;
     expect(canPayCost(s, B09048.abilities[1]!.cost as never, ctx)).toBe(true);
     const after = produce(s, (d) => { pay(d, B09048.abilities[1]!.cost as never, ctx); });
-    expect(after.players.self.scene.find(c => c.uid === 'naka#2')!.stackedCards, 'cost で自身の下に重なる').toBe(1);
+    { const stacked = after.players.self.scene.find(c => c.uid === 'naka#2')!.stackedCards; expect(Array.isArray(stacked) ? stacked.length : stacked, 'cost で自身の下に重なる').toBe(1); }
     expect(after.players.self.scene.some(c => c.uid === 'py#1')).toBe(false);
   });
 });

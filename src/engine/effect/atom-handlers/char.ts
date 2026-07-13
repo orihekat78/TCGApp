@@ -446,7 +446,8 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         if (a.uid === undefined && typeof a.player === 'string' && hasNorMax(a)) {
           paShortFormAwait(s, verb, a, ctx, ctx.source.player as Player, a.player as Player); // BUG-174: side は相対値のまま渡す (sidesForQuery が owner 相対解釈 — 絶対値だと owner='opp' で反転)
           return;
-        }
+}
+
         const hostUid = resolveBindRef(a.uid, ctx) as string;
         if (typeof hostUid !== 'string' || hostUid.startsWith('$')) return; // decline/未解決 → no-op (chain gate は skip 側が担う)
         const selfUid = ctx.source.uid;
@@ -508,10 +509,17 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         const cardIds = rawCardIds as string[];
         if (cardIds.length === 0) {
           // skip (n.min=0 で 0 枚 pick) → no-op + log
+          if (a.gateOnEmpty === true) (ctx.dyn ??= {}).chainStepNoApply = true;
           mutate.log.append(s, {
             ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
             action: 'effect:charStackCard', target: stUid, result: '0',
           });
+          return;
+        }
+        // The selected source cards must not leave their zone unless the selected host
+        // still exists when this resumed pick is applied.
+        if (typeof stUid !== 'string' || stUid.startsWith('$') || !readScene.byUid(s, stUid)) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
           return;
         }
         const sourceArea = ((a.target && typeof a.target === 'object')
@@ -524,12 +532,25 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
         if (sourceArea === 'remove' || sourceArea === 'hand' || sourceArea === 'deck') {
           const fromPlayer = sourceSide === 'opp' ? 'opp' : ownerP;
           const arr = (s.players[fromPlayer] as unknown as Record<string, string[]>)[sourceArea];
+          // Pending card picks carry only card IDs. Revalidate multiplicity at resume so
+          // a stale source occurrence cannot be recreated under the host.
+          const needed = new Map<string, number>();
+          for (const cid of cardIds) needed.set(cid, (needed.get(cid) ?? 0) + 1);
+          if ([...needed].some(([cid, n]) => (arr?.filter(id => id === cid).length ?? 0) < n)) {
+            (ctx.dyn ??= {}).chainStepNoApply = true;
+            return;
+          }
+          if (typeof a.bind === 'string') {
+            (ctx.bindings as Record<string, unknown>)[a.bind] = cardIds.map(cardId => ({ cardId }));
+          }
           for (const cid of cardIds) {
             const idx = arr?.indexOf(cid) ?? -1;
             if (idx !== -1) arr.splice(idx, 1);
           }
+        } else if (typeof a.bind === 'string') {
+          (ctx.bindings as Record<string, unknown>)[a.bind] = cardIds.map(cardId => ({ cardId }));
         }
-        mutate.char.stackCard(s, stUid, cardIds.length);
+        mutate.char.stackCard(s, stUid, cardIds.length, cardIds);
         mutate.log.append(s, {
           ts: Date.now(), player: ownerP, turn: s.turn.number,
           action: 'effect:charStackCard', target: stUid, result: cardIds.join(','),
@@ -542,3 +563,23 @@ export function atomCharStackCard(s: GameState, a: Record<string, unknown>, ctx:
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charStackCard', target: stUid, result: String(stN) });
       return;
     }
+
+/** Move exact selected stacked occurrences from one own-scene host to another. */
+export function atomCharTransferStackedCards(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+  const fromUid = resolveBindRef(a.fromUid, ctx);
+  const toUid = resolveBindRef(a.toUid, ctx);
+  const raw = typeof a.bind === 'string' ? (ctx.bindings as Record<string, unknown>)[a.bind] : undefined;
+  const instanceIds = Array.isArray(raw)
+    ? raw.map(item => (item as { instanceId?: unknown }).instanceId).filter((id): id is string => typeof id === 'string')
+    : [];
+  if (typeof fromUid !== 'string' || typeof toUid !== 'string' || fromUid.startsWith('$') || toUid.startsWith('$') || instanceIds.length === 0) return;
+  const moved = mutate.char.transferStackedCards(s, fromUid, toUid, instanceIds.length, instanceIds);
+  if (moved.length !== instanceIds.length) {
+    (ctx.dyn ??= {}).chainStepNoApply = true;
+    return;
+  }
+  mutate.log.append(s, {
+    ts: Date.now(), player: ctx.source.player, turn: s.turn.number,
+    action: 'effect:charTransferStackedCards', target: `${fromUid}->${toUid}`, result: instanceIds.join(','),
+  });
+}

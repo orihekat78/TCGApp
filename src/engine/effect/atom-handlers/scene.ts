@@ -279,7 +279,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       } else if (sourceArea === 'remove') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].remove;
-        const selectedIndex = (a as { selectedCardIndex?: unknown }).selectedCardIndex;
+        const selectedIndex = resolveBindRef((a as { selectedCardIndex?: unknown }).selectedCardIndex, ctx);
         const idx = typeof selectedIndex === 'number' && arr[selectedIndex] === cardId
           ? selectedIndex
           : arr.indexOf(cardId);

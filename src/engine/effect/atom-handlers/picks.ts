@@ -1,11 +1,39 @@
 // engine.effect.atom-handlers/picks — Phase 3a 分割 (case body 無改変移送, 2026-06-22)
 import { mutate } from '../../mutate/index.js';
 import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj, tryRePickFromAtom } from '../resolve-picks.js';
+import { pushPendingEffectPickSide } from '../pending-state.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber } from './_shared.js';
 import type { Player, PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
 import type { GameState, EffectCtx, Candidate, AtomVerb, TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
+
+/** Exact stacked occurrences use instance IDs as generic-picker UIDs. */
+export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+  const hostUid = resolveBindRef(a.hostUid, ctx);
+  const min = a.min;
+  const max = a.max;
+  if (typeof hostUid !== 'string' || hostUid.startsWith('$') || typeof min !== 'number' || typeof max !== 'number' || !Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < min) return;
+  // A picker promises stable instance identities through its continuation. Upgrade old
+  // count-only stacks before either surfacing candidates or validating a resumed choice.
+  if (!mutate.char.ensureStackedCardEntries(s, hostUid)) return;
+  if (Array.isArray(a.selectedInstanceIds)) {
+    if (!a.selectedInstanceIds.every((id): id is string => typeof id === 'string')) return;
+    const selected = mutate.char.selectStackedCardEntries(s, hostUid, a.selectedInstanceIds, min, max);
+    if (!selected) return;
+    if (typeof a.bind === 'string') (ctx.bindings as Record<string, unknown>)[a.bind] = selected.map(entry => ({ kind: 'stacked', hostUid, cardId: entry.cardId, instanceId: entry.instanceId }));
+    mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:stackedCardPick', target: a.selectedInstanceIds.join(',') });
+    return;
+  }
+  const owner = (['self', 'opp'] as const).find(player => s.players[player].scene.some(c => c.uid === hostUid));
+  if (!owner) return;
+  pushPendingEffectPickSide({
+    player: resolvePlayer(a.player, ctx), ownerPlayer: ctx.source.player,
+    candidates: mutate.char.stackedCardEntries(s, hostUid).map(entry => ({ uid: entry.instanceId, cardId: entry.cardId, player: owner })),
+    atomVerb: 'stackedCardPick', atomArgs: toPlainDeep(a), nMin: min, nMax: max,
+    source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid },
+  });
+}
 
 export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);

@@ -2,7 +2,7 @@
 // rules: 03-field-areas.md (状態), 09-cutin-disguise.md (変装引継ぎ), 13-keywords.md, 19-special-rules.md
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
-import type { GameState } from '@/engine/types';
+import { stackedCardCount, type GameState, type StackedCardEntry } from '@/engine/types';
 import { event } from '../event/index.js'; // engine拡張 wave#2 cluster9: removeOneSetCard で setcard:leave emit
 
 type Player = 'self' | 'opp';
@@ -373,10 +373,106 @@ function setCard(s: GameState, uid: string, cardId: string, faceUp: boolean): vo
 }
 
 /** キャラの下に重ねる (stackedCards 加算) (rules/16) */
-function stackCard(s: GameState, uid: string, count: number): void {
+function stackCard(s: GameState, uid: string, count: number, cardIds?: string[]): void {
   const found = findChar(s, uid);
   if (!found) return;
-  found.char.stackedCards += count;
+  const legacyCount = stackedCardCount(found.char.stackedCards);
+  const existing = Array.isArray(found.char.stackedCards)
+    ? found.char.stackedCards
+    : Array.from({ length: legacyCount }, (_, i) => ({ cardId: 'back-card', instanceId: `legacy:${uid}:${i}` }));
+  const usedInstanceIds = new Set(existing.map(entry => entry.instanceId));
+  const additions = Array.from({ length: count }, (_, i) => {
+    let suffix = legacyCount + i;
+    let instanceId = `stack:${uid}:${suffix}`;
+    while (usedInstanceIds.has(instanceId)) instanceId = `stack:${uid}:${++suffix}`;
+    usedInstanceIds.add(instanceId);
+    return { cardId: cardIds?.[i] ?? 'back-card', instanceId };
+  });
+  found.char.stackedCards = [...existing, ...additions];
+}
+
+/** Remove exact occurrences from one host stack, preserving duplicate card IDs. */
+function removeStackedCards(s: GameState, uid: string, count: number, instanceIds?: string[]): StackedCardEntry[] {
+  const found = findChar(s, uid);
+  if (!found || count < 1 || stackedCardCount(found.char.stackedCards) < count) return [];
+  if (Array.isArray(found.char.stackedCards)) {
+    const stackEntries = found.char.stackedCards;
+    if (instanceIds !== undefined) {
+      if (instanceIds.length !== count || new Set(instanceIds).size !== count) return [];
+      const selected = instanceIds.map(id => stackEntries.find(entry => entry.instanceId === id));
+      if (selected.every((entry): entry is StackedCardEntry => entry !== undefined)) {
+        const selectedIds = new Set(instanceIds);
+        found.char.stackedCards = stackEntries.filter(entry => !selectedIds.has(entry.instanceId));
+        return stackEntries.filter(entry => selectedIds.has(entry.instanceId));
+      }
+      return [];
+    }
+    return found.char.stackedCards.splice(0, count);
+  }
+  found.char.stackedCards -= count;
+  return Array.from({ length: count }, (_, i) => ({ cardId: 'back-card', instanceId: `legacy:${uid}:${i}` }));
+}
+
+/** Stable stacked-card candidates for a picker. Legacy count-only stacks get deterministic synthetic IDs. */
+function stackedCardEntries(s: GameState, uid: string): StackedCardEntry[] {
+  const found = findChar(s, uid);
+  if (!found) return [];
+  if (Array.isArray(found.char.stackedCards)) return found.char.stackedCards.map((entry) => ({ ...entry }));
+  return Array.from({ length: found.char.stackedCards }, (_, i) => ({ cardId: 'back-card', instanceId: `legacy:${uid}:${i}` }));
+}
+
+/** Upgrade the legacy count-only representation before an identity-aware operation. */
+function ensureStackedCardEntries(s: GameState, uid: string): StackedCardEntry[] | null {
+  const found = findChar(s, uid);
+  if (!found) return null;
+  if (!Array.isArray(found.char.stackedCards)) {
+    found.char.stackedCards = Array.from(
+      { length: found.char.stackedCards },
+      (_, i) => ({ cardId: 'back-card', instanceId: `legacy:${uid}:${i}` }),
+    );
+  }
+  return found.char.stackedCards;
+}
+
+/** Validates a player-provided stack selection without mutating the host. */
+function selectStackedCardEntries(s: GameState, uid: string, instanceIds: string[], min: number, max: number): StackedCardEntry[] | null {
+  if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < min) return null;
+  if (instanceIds.length < min || instanceIds.length > max || new Set(instanceIds).size !== instanceIds.length) return null;
+  const candidates = stackedCardEntries(s, uid);
+  const byId = new Map(candidates.map((entry) => [entry.instanceId, entry]));
+  const selected = instanceIds.map((id) => byId.get(id));
+  return selected.every((entry): entry is StackedCardEntry => entry !== undefined) ? selected : null;
+}
+
+/** Move exact stacked-card occurrences between hosts without recreating their identities. */
+function transferStackedCards(
+  s: GameState,
+  fromUid: string,
+  toUid: string,
+  count: number,
+  instanceIds?: string[],
+): StackedCardEntry[] {
+  const from = findChar(s, fromUid);
+  const to = findChar(s, toUid);
+  if (!from || !to || from.player !== to.player || fromUid === toUid || count < 1 || stackedCardCount(from.char.stackedCards) < count) return [];
+
+  const existingTarget = Array.isArray(to.char.stackedCards)
+    ? to.char.stackedCards
+    : Array.from({ length: stackedCardCount(to.char.stackedCards) }, (_, i) => ({ cardId: 'back-card', instanceId: `legacy:${toUid}:${i}` }));
+  const targetIds = new Set(existingTarget.map(entry => entry.instanceId));
+  if (!Array.isArray(from.char.stackedCards) && instanceIds !== undefined) return [];
+  const sourceEntries: StackedCardEntry[] = Array.isArray(from.char.stackedCards)
+    ? from.char.stackedCards
+    : Array.from({ length: count }, (_, i) => ({ cardId: 'back-card', instanceId: `legacy:${fromUid}:${i}` }));
+  const selectedBefore = instanceIds === undefined
+    ? sourceEntries.slice(0, count)
+    : instanceIds.map(id => sourceEntries.find(entry => entry.instanceId === id)).filter((entry): entry is StackedCardEntry => entry !== undefined);
+  if (selectedBefore.length !== count || selectedBefore.some(entry => targetIds.has(entry.instanceId))) return [];
+
+  const moved = removeStackedCards(s, fromUid, count, instanceIds);
+  if (moved.length !== count) return [];
+  to.char.stackedCards = [...existingTarget, ...moved];
+  return moved;
 }
 
 /**
@@ -396,8 +492,10 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
   char.setCards = [];
 
   // stackedCards 分の back-card をリムーブエリアへ
-  for (let i = 0; i < char.stackedCards; i++) {
-    s.players[player].remove.push('back-card');
+  if (Array.isArray(char.stackedCards)) {
+    s.players[player].remove.push(...char.stackedCards.map(entry => entry.cardId));
+  } else {
+    for (let i = 0; i < char.stackedCards; i++) s.players[player].remove.push('back-card');
   }
   char.stackedCards = 0;
 }
@@ -495,6 +593,11 @@ export const char = {
   grantAbility,
   setCard,
   stackCard,
+  removeStackedCards,
+  stackedCardEntries,
+  ensureStackedCardEntries,
+  selectStackedCardEntries,
+  transferStackedCards,
   removeAllSetAndStacked,
   removeOneSetCard,
   ensureSetCardInstanceIds,

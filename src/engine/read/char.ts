@@ -650,7 +650,7 @@ function setCardsDetailed(s: GameState, uid: string): SetCardEntry[] {
 
 function stackedCount(s: GameState, uid: string): number {
   const char = scene.byUid(s, uid);
-  return char?.stackedCards ?? 0;
+  return char ? (Array.isArray(char.stackedCards) ? char.stackedCards.length : char.stackedCards) : 0;
 }
 
 // turnEffect: SceneCharacter.turnEffects から任意のキーを取得

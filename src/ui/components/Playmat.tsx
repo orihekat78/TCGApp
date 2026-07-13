@@ -68,6 +68,7 @@ import { useChoicePicker, useChoicePickerStore } from '../hooks/useChoicePicker.
 import { DeclareCardNameModal } from './DeclareCardNameModal.js';
 import { useDeclareNamePicker, useDeclareNamePickerStore } from '../hooks/useDeclareNamePicker.js';
 import { useEvidenceFlipPickerStore, useEvidenceFlipPicker } from '../hooks/useEvidenceFlipPicker.js';
+import { useStackedCardCostPickerStore, useStackedCardCostPicker } from '../hooks/useStackedCardCostPicker.js';
 import { dispatchEngineAction } from '../hooks/useEngineDispatch.js';
 import { useGameStateStore } from '../state/store.js';
 import { selectInteractionLocked } from '../state/interactionLock.js';
@@ -880,6 +881,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
         {/* BUG-085: 宣言能力コスト〚裏向きの証拠を表向きにする〛の証拠選択 picker
             (証拠エリア拡大表示 CardListModal を pick mode で流用) */}
         <PlaymatEvidenceFlipPickerModal />
+        <PlaymatStackedCardCostPickerModal />
 
         {/* Phase 8.5: narrator-msg と log-btn は ActionsPanel に集約。
             LogPanel は open=true のときのみオーバーレイで描画。 */}
@@ -1388,6 +1390,30 @@ function PlaymatEvidenceFlipPickerModal(): JSX.Element | null {
         const idxs = uids.map(parseIdx).filter((i): i is number => i !== null);
         useEvidenceFlipPicker().confirm(idxs);
       }}
+    />
+  );
+}
+
+function PlaymatStackedCardCostPickerModal(): JSX.Element | null {
+  const current = useStackedCardCostPickerStore((s) => s.current);
+  if (!current) return null;
+  const pickCands = current.candidates.map((candidate) => ({
+    uid: candidate.instanceId,
+    cardId: candidate.cardId,
+    player: 'self' as const,
+  }));
+  return (
+    <CardListModal
+      kind="remove"
+      side="self"
+      cards={current.candidates.map((candidate) => candidate.cardId)}
+      onClose={() => useStackedCardCostPicker().cancel()}
+      pickCands={pickCands}
+      pickBannerText={`${current.sourceName}: このキャラの下のカードを${current.nMin}枚選んでください`}
+      onPick={(instanceId) => useStackedCardCostPicker().confirm([instanceId])}
+      pickNMin={current.nMin}
+      pickNMax={current.nMax}
+      onPickMulti={(instanceIds) => useStackedCardCostPicker().confirm(instanceIds)}
     />
   );
 }

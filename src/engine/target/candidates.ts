@@ -252,6 +252,25 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
   })();
   if (fromGroupCardKeys !== null && fromGroupCardKeys.size === 0) return out;
 
+  // B08003: a declared ability can name exactly the cards removed by its
+  // stacked-card cost.  `remove` itself stores IDs only, so retain the
+  // post-payment occurrence index from costPaid and fail closed if that slot
+  // was changed before the opponent chooses.
+  const fromCostPaidCardKeys: Set<string> | null = (() => {
+    if (typeof query.fromCostPaidCards !== 'string') return null;
+    const record = ctx.costPaid?.[query.fromCostPaidCards] as { entries?: unknown } | undefined;
+    if (!Array.isArray(record?.entries) || record.entries.length === 0) return new Set<string>();
+    const keys = new Set<string>();
+    for (const entry of record.entries) {
+      const e = entry as { cardId?: unknown; removeIndex?: unknown };
+      if (typeof e.cardId === 'string' && typeof e.removeIndex === 'number') {
+        keys.add(`${ctx.source.player}:remove:${e.removeIndex}:${e.cardId}`);
+      }
+    }
+    return keys;
+  })();
+  if (fromCostPaidCardKeys !== null && fromCostPaidCardKeys.size === 0) return out;
+
   for (const side of sides) {
     switch (area) {
       case 'scene': {
@@ -354,6 +373,11 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
         fromGroupCardKeys.has(`${cand.player}:${cand.area}:${cand.index}`)) ||
       (cand.kind === 'evidence' &&
         fromGroupCardKeys.has(`${cand.player}:evidence:${cand.index}`)));
+  }
+  if (fromCostPaidCardKeys !== null) {
+    return out.filter(cand => cand.kind === 'card' && cand.area === 'remove'
+      && typeof cand.index === 'number'
+      && fromCostPaidCardKeys.has(`${cand.player}:remove:${cand.index}:${cand.cardId}`));
   }
   return out;
 }

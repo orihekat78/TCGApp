@@ -119,6 +119,8 @@ export type GameStateStore = {
    */
   pendingEffectOptional: PendingEffectOptional | null;
   setPendingEffectOptional: (p: PendingEffectOptional | null) => void;
+  pendingChooseIntercept: PendingChooseIntercept | null;
+  setPendingChooseIntercept: (p: PendingChooseIntercept | null) => void;
   /** repeatOptional の各round決定。body実行後、残回数があれば次roundへ遷移する。 */
   pendingEffectRepeatOptional: PendingEffectRepeatOptional | null;
   setPendingEffectRepeatOptional: (p: PendingEffectRepeatOptional | null) => void;
@@ -244,6 +246,13 @@ export type PendingEffectOptional = {
   triggerPayload?: unknown;
 };
 
+/** Opponent may discard one hand occurrence to cancel the already-selected effect. */
+export type PendingChooseIntercept = {
+  player: 'self' | 'opp';
+  protector: { uid: string; cardId: string; abilityId: string };
+  targetUid: string;
+};
+
 export type PendingEffectRepeatOptional = {
   player: 'self' | 'opp';
   source: { cardId: string; abilityId: string; uid: string };
@@ -311,6 +320,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingEffectChoice: (p) => set({ pendingEffectChoice: p }),
   pendingEffectOptional: null,
   setPendingEffectOptional: (p) => set({ pendingEffectOptional: p }),
+  pendingChooseIntercept: null,
+  setPendingChooseIntercept: (p) => set({ pendingChooseIntercept: p }),
   pendingEffectRepeatOptional: null,
   setPendingEffectRepeatOptional: (p) => set({ pendingEffectRepeatOptional: p }),
   pendingDeckReveal: null,

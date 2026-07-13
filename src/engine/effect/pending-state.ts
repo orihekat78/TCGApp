@@ -56,6 +56,12 @@ declare global {
   // surface 時の ctx.bindings を保持しないと resume ctx で contact が失われ pick 候補0になる。
   // eslint-disable-next-line no-var
   var __pendingEffectOptionalBindings: Record<string, unknown> | null | undefined;
+  // Dedicated discard-or-negate response. It deliberately does not share optional/choice state:
+  // accepting discards a hand occurrence and cancels a different effect; declining resumes it.
+  // eslint-disable-next-line no-var
+  var __pendingChooseInterceptSide: PendingChooseInterceptSide | null | undefined;
+  // eslint-disable-next-line no-var
+  var __pendingChooseInterceptResume: ChooseInterceptResume | null | undefined;
 }
 
 /**
@@ -100,7 +106,7 @@ export type PendingEffectPickSide = {
   nMin: number;
   nMax: number;
   /** ability source (UI 表示・log 用) */
-  source: { cardId: string; abilityId: string };
+  source: { cardId: string; abilityId: string; uid?: string };
   /**
    * D08021 driver 2026-05-26: target.query.distinctNames を UI に渡すための flag。
    * true なら UI multi-select で「同じ name component (rules/19 分割名展開後) を持つ
@@ -153,6 +159,42 @@ export type PendingEffectPickSide = {
    */
   skipResolvesAtom?: boolean;
 };
+
+export type PendingChooseInterceptSide = {
+  player: Player;
+  protector: { uid: string; cardId: string; abilityId: string };
+  targetUid: string;
+};
+
+type ChooseInterceptResume = {
+  pending: PendingEffectPickSide;
+  pickedUid: string;
+  pickedUids?: string[];
+  switchRemoveUid?: string;
+  switchRemoveUids?: string[];
+};
+
+export function pushPendingChooseInterceptSide(v: PendingChooseInterceptSide, resume: ChooseInterceptResume): void {
+  globalThis.__pendingChooseInterceptSide = v;
+  globalThis.__pendingChooseInterceptResume = resume;
+}
+
+export function _drainPendingChooseInterceptSide(): PendingChooseInterceptSide | null {
+  const v = globalThis.__pendingChooseInterceptSide ?? null;
+  globalThis.__pendingChooseInterceptSide = null;
+  return v;
+}
+
+export function _takePendingChooseInterceptResume(): ChooseInterceptResume | null {
+  const v = globalThis.__pendingChooseInterceptResume ?? null;
+  globalThis.__pendingChooseInterceptResume = null;
+  return v;
+}
+
+export function _clearPendingChooseInterceptSide(): void {
+  globalThis.__pendingChooseInterceptSide = null;
+  globalThis.__pendingChooseInterceptResume = null;
+}
 
 function getPendingQueue(): PendingEffectPickSide[] {
   const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };

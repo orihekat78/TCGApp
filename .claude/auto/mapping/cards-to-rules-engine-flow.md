@@ -2,13 +2,13 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `6d446f7b27a5`
+> Source hash: `8779a0e4f063`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **127** ファイル（[全体 index](./index.md)）
+このグループ: **129** ファイル（[全体 index](./index.md)）
 
-## engine/effect (18)
+## engine/effect (19)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -21,6 +21,7 @@
 | [`src/engine/effect/atom-handlers/picks.ts`](../../../src/engine/effect/atom-handlers/picks.ts) | _(参照なし)_ |
 | [`src/engine/effect/atom-handlers/scene.ts`](../../../src/engine/effect/atom-handlers/scene.ts) | _(参照なし)_ |
 | [`src/engine/effect/atom-pick-spec.ts`](../../../src/engine/effect/atom-pick-spec.ts) | _(参照なし)_ |
+| [`src/engine/effect/consult-choose-intercept.ts`](../../../src/engine/effect/consult-choose-intercept.ts) | _(参照なし)_ |
 | [`src/engine/effect/consult-leave-intercept.ts`](../../../src/engine/effect/consult-leave-intercept.ts) | _(参照なし)_ |
 | [`src/engine/effect/index.ts`](../../../src/engine/effect/index.ts) | _(参照なし)_ |
 | [`src/engine/effect/invoke-hirameki.ts`](../../../src/engine/effect/invoke-hirameki.ts) | [`10-action-event.md`](../../rules/10-action-event.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
@@ -100,7 +101,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (55)
+## その他 (56)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -144,6 +145,7 @@
 | [`src/ui/hooks/useSceneCharacters.ts`](../../../src/ui/hooks/useSceneCharacters.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 | [`src/ui/hooks/useSceneSwitchPickerStore.ts`](../../../src/ui/hooks/useSceneSwitchPickerStore.ts) | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/ui/hooks/useSpectatorTurnDriver.ts`](../../../src/ui/hooks/useSpectatorTurnDriver.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
+| [`src/ui/hooks/useStackedCardCostPicker.ts`](../../../src/ui/hooks/useStackedCardCostPicker.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useStageScale.ts`](../../../src/ui/hooks/useStageScale.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useTargetPicker.ts`](../../../src/ui/hooks/useTargetPicker.ts) | [`07-action-flow.md`](../../rules/07-action-flow.md) / [`11-reasoning.md`](../../rules/11-reasoning.md) / [`17-icons.md`](../../rules/17-icons.md) / [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useTopBar.ts`](../../../src/ui/hooks/useTopBar.ts) | _(参照なし)_ |

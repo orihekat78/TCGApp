@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b6dcb0596b79`
+> Source hash: `24962e9de4d9`
 
 公式ルール [`17-icons.md`](../../../rules/17-icons.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

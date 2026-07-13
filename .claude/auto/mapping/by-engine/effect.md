@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `4b2eaf456646`
+> Source hash: `a46c4e845b55`
 
 `src/engine/effect/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -26,7 +26,7 @@
 - [`engine-api-resolver`](../by-spec/engine-api-resolver.md)
 - [`phase-3b-design`](../by-spec/refactor-plan--phase-3b-design.md)
 
-## 📄 ソース (18)
+## 📄 ソース (19)
 
 - [`src/engine/effect/apply-pick.ts`](../../../../src/engine/effect/apply-pick.ts)
 - [`src/engine/effect/atom-handlers.ts`](../../../../src/engine/effect/atom-handlers.ts)
@@ -37,6 +37,7 @@
 - [`src/engine/effect/atom-handlers/picks.ts`](../../../../src/engine/effect/atom-handlers/picks.ts)
 - [`src/engine/effect/atom-handlers/scene.ts`](../../../../src/engine/effect/atom-handlers/scene.ts)
 - [`src/engine/effect/atom-pick-spec.ts`](../../../../src/engine/effect/atom-pick-spec.ts)
+- [`src/engine/effect/consult-choose-intercept.ts`](../../../../src/engine/effect/consult-choose-intercept.ts)
 - [`src/engine/effect/consult-leave-intercept.ts`](../../../../src/engine/effect/consult-leave-intercept.ts)
 - [`src/engine/effect/index.ts`](../../../../src/engine/effect/index.ts)
 - [`src/engine/effect/invoke-hirameki.ts`](../../../../src/engine/effect/invoke-hirameki.ts)

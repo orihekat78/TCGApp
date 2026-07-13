@@ -40,6 +40,19 @@ export type SetCardEntry = {
   instanceId?: string;
 };
 
+/** Exact occurrence below a host; duplicate print IDs remain distinguishable. */
+export type StackedCardEntry = {
+  cardId: string;
+  instanceId: string;
+};
+
+/** Numeric form is accepted only for legacy saved states and old fixtures. */
+export type StackedCards = number | StackedCardEntry[];
+
+export function stackedCardCount(cards: StackedCards): number {
+  return Array.isArray(cards) ? cards.length : cards;
+}
+
 export type SceneCharacter = {
   cardId: string;
   uid: string;
@@ -53,7 +66,7 @@ export type SceneCharacter = {
    */
   enterOrderThisTurn?: number;
   setCards: SetCardEntry[];   // rules: 16-card-set.md (裏向きセット対応)
-  stackedCards: number;
+  stackedCards: StackedCards;
   keywordOverrides: { granted: string[]; disabledOriginal: boolean };
   apOverride: number | null;
   lpOverride: number | null;

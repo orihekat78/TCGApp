@@ -378,6 +378,12 @@ export type TargetQuery = {
   // 「デッキ上から6枚見て、その中から〜を2枚まで登場」の window 制限。binding 不在/空/entry index 欠落 = 候補0
   // (fail-closed)。index は deckRevealUntil bind が reveal 時点の deck 位置を同梱する (重複 cardId 区別)。
   fromGroupCards?: string;
+  /**
+   * Restrict card candidates to exact remove occurrences produced by a paid
+   * cost.  The cost record carries the post-payment remove indexes, preserving
+   * identity when the remove area also contains duplicate card IDs.
+   */
+  fromCostPaidCards?: string;
   // engine mega-wave W4 (2026-07-03, r84 G38): side 毎の選択上限 quota (「自分と相手で1枚ずつ」B08019 a2)。
   // distinctNames と同型の 3経路 enforcement (resolve validate / chooseAiPick greedy / UI disabled)。
   // partner candidate (player 概念が side でない) では使用不可。
@@ -457,7 +463,7 @@ export type AtomVerb =
   // ctx.bindings[args.bind] へ蓄積するだけ (書込は runAtom の pick-bind writeback preamble)。後続の
   // conditional{charStateIs fromBound} 等が同一 pick を排他分岐で共有する (B08035「そのキャラが
   // スリープ状態の場合スタン/アクティブ状態の場合スリープ」)。PA 短縮形 (sceneSetState 同型、state 不要)。
-  | 'bindPick'
+  | 'bindPick' | 'stackedCardPick' | 'charTransferStackedCards'
   // engine mega-wave W6 step1 (2026-07-04, rows 49/53/999 統合): declareName — プレイヤーが任意の
   // カード名 (自由文字列) を1つ宣言し ctx.declaredNames[args.bind] へ書く (「カード名を1つ指定し」
   // B09112/B09108/B09003)。名前の供給は ctx.dyn.declaredName (UI= DeclareCardNameModal → AbilityCostParams
@@ -626,6 +632,7 @@ export type Cost =
   //   anyFace (夜間 W0 2026-07-11, B05052「現場にいるキャラにセットされているカードを1枚リムーブする」—
   //   裏向き限定句なし): true で表裏不問に計数/除去。未指定 = 従来通り裏向きのみ (B08033/B09027 挙動不変)。
   | { kind: 'removeSetCard'; n: number; hostSelf?: boolean; anyFace?: boolean }
+  | { kind: 'removeStackedCards'; n: number }
   // M2後半 (2026-07-10, B06003 a1): 〚ターン終了時までLP-2する〛— 自身への turn-scope LP デルタ cost。
   //   canPay 恒真 (LP 下限なし rules/19、公式Q&A: LP1以下でも支払可・負値可)。pay = lpMod_turn 書込
   //   (mutate.char.modifyLP scope:'turn'、clearTurnEffects で失効)。emit なし — rules/21 コストで

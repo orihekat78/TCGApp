@@ -71,7 +71,7 @@ describe('D10009 a2 — charStackCard scene-source (毛利蘭 を this の下へ
     applyPickAndContinuation(s, pick!, ran.uid, [ran.uid]);
     runAllUntilEmpty(s);
     const host = s.players.self.scene.find(c => c.uid === me.uid)!;
-    expect(host.stackedCards, 'host stacked +1').toBe(1);
+    expect(Array.isArray(host.stackedCards) ? host.stackedCards.length : host.stackedCards, 'host stacked +1').toBe(1);
     expect(s.players.self.scene.find(c => c.uid === ran.uid), '毛利蘭 現場離脱').toBeUndefined();
     expect(charRead.keywords(s, me.uid), '重ねた → 突撃[キャラ] 付与 (turn)').toContain('突撃[キャラ]');
   });

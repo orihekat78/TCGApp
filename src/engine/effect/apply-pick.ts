@@ -13,10 +13,20 @@
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
+import { findChooseIntercept } from './consult-choose-intercept.js';
 
 type Player = 'self' | 'opp';
 import { run as runEffect } from './resolver.js';
-import { _takePendingEffectRepeatOptionalResume, type PendingEffectRepeatOptionalSide } from './pending-state.js';
+import {
+  _takePendingChooseInterceptResume,
+  _takePendingEffectRepeatOptionalResume,
+  pushPendingChooseInterceptSide,
+  type PendingChooseInterceptSide,
+  type PendingEffectRepeatOptionalSide,
+} from './pending-state.js';
+import { hand } from '../mutate/hand.js';
+import { char as charMutator } from '../mutate/char.js';
+import { resolveBindRef } from './atom-handlers/_shared.js';
 
 export function applyRepeatOptionalAndContinuation(state: GameState, _pending: PendingEffectRepeatOptionalSide, run: boolean): void {
   const resume = _takePendingEffectRepeatOptionalResume();
@@ -165,8 +175,49 @@ export function applyPickAndContinuation(
   pickedUids?: string[],
   switchRemoveUid?: string,
   switchRemoveUids?: string[],
+  skipChooseIntercept = false,
 ): void {
   validatePendingPick(pending, pickedUid, pickedUids);
+  const interceptCtx = pending.continuation?.ctx ?? {
+    source: {
+      cardId: pending.source.cardId,
+      uid: (pending.source as { uid?: string }).uid ?? '',
+      abilityId: pending.source.abilityId,
+      player: pending.ownerPlayer ?? pending.player,
+      area: 'scene' as const,
+    },
+    bindings: {},
+  };
+  if (!skipChooseIntercept) {
+    for (const uid of pickedUids ?? [pickedUid]) {
+      const intercept = findChooseIntercept(state, uid, interceptCtx);
+      if (intercept.kind === 'cancel') return;
+      if (intercept.kind === 'discard-or-cancel') {
+        pushPendingChooseInterceptSide(
+          {
+            player: intercept.responder,
+            protector: { uid: intercept.protectorUid, cardId: intercept.protectorCardId, abilityId: intercept.abilityId },
+            targetUid: uid,
+          },
+          { pending, pickedUid, pickedUids, switchRemoveUid, switchRemoveUids },
+        );
+        return;
+      }
+    }
+  }
+  // Stacked-card candidates are identities, not card IDs. Revalidate their host
+  // immediately before resolution: a stale or below-minimum client selection must
+  // not reach the atom or its continuation.
+  let resolvedStackHostUid: string | undefined;
+  if (pending.atomVerb === 'stackedCardPick') {
+    const args = pending.atomArgs as { hostUid?: unknown; min?: unknown; max?: unknown };
+    const hostUid = resolveBindRef(args.hostUid, interceptCtx);
+    if (typeof hostUid !== 'string' || typeof args.min !== 'number' || typeof args.max !== 'number'
+      || charMutator.selectStackedCardEntries(state, hostUid, pickedUids ?? [pickedUid], args.min, args.max) === null) {
+      throw new Error('stackedCardPick: stale, duplicate, or below-minimum selection');
+    }
+    resolvedStackHostUid = hostUid;
+  }
   // ---- resolved atom を build (Pattern A: uid='$pick' → uid 置換 / Pattern B: cardId(s)/target 置換) ----
   const pendingArgs = pending.atomArgs as { uid?: unknown };
   const isPatternA = pendingArgs.uid === '$pick';
@@ -205,6 +256,7 @@ export function applyPickAndContinuation(
     if (!resolvedCardId) return; // 想定外、防御スキップ
     const hasCardIdBind = (pending.atomArgs as { cardId?: unknown }).cardId === '$pick.cardId';
     const hasCardIdsBind = (pending.atomArgs as { cardIds?: unknown }).cardIds === '$pick.cardIds';
+    const hasInstanceIdsBind = (pending.atomArgs as { selectedInstanceIds?: unknown }).selectedInstanceIds === '$pick.uids';
     const allUids: string[] = pickedUids ?? [pickedUid];
     const allCardIds: string[] = allUids
       .map((u) => resolveCardIdFromPickUid(u, state, pending))
@@ -232,6 +284,8 @@ export function applyPickAndContinuation(
         // allCardIds = pickedUids ?? [pickedUid] の解決済全件 → n:1 は [resolvedCardId] と byte 同一。
         : { ...pending.atomArgs, target: allCardIds, ...switchPart }; // 従来 pattern (handAddFromRemove 等)
     // W6 step6 (r79): Pattern B でも現場キャラ uid が選ばれた場合はタグ (scene 照合で char-kind 判別)
+    if (hasInstanceIdsBind) newArgs.selectedInstanceIds = allUids;
+    if (resolvedStackHostUid !== undefined) newArgs.hostUid = resolvedStackHostUid;
     resolvedAtom = { kind: 'atom', verb: pending.atomVerb as never, args: w6TagMr(newArgs, allUids) };
   }
 
@@ -262,6 +316,22 @@ export function applyPickAndContinuation(
   }
 }
 
+/** Resolve the dedicated discard-or-cancel response. Not discarding cancels the selected effect. */
+export function applyChooseInterceptResponse(
+  state: GameState,
+  pending: PendingChooseInterceptSide,
+  discardIndex: number | null,
+): void {
+  const resume = _takePendingChooseInterceptResume();
+  if (!resume) return;
+  const cards = state.players[pending.player].hand;
+  if (Number.isInteger(discardIndex) && discardIndex! >= 0 && discardIndex! < cards.length) {
+    hand.discardToRemove(state, pending.player, [cards[discardIndex!]!], { byPlayer: pending.player });
+    return;
+  }
+  void resume;
+}
+
 /**
  * BUG-132 GAP-1 (2026-06-12): skipResolvesAtom 付き pending の decline (pickedUid=null) 解決。
  * 通常 skip (pending 破棄 = continuation も drop) と異なり、「0枚選択」を atom の解決として実行し、
@@ -274,6 +344,9 @@ export function applyPickSkipAndContinuation(
   pending: PendingEffectPickSide,
   runDeclinedAtom = true,
 ): void {
+  if (pending.atomVerb === 'stackedCardPick' && pending.nMin > 0) {
+    throw new Error('stackedCardPick: below-minimum selection');
+  }
   const head = pending.continuation;
   // BUG-111 #2 (2026-06-16): runDeclinedAtom で declined head atom を再実行するか分岐する。
   //   - true (deckRevealUntil skipResolvesAtom): atom を __declined で再実行 (公開カードのデッキ下移動等、

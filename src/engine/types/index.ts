@@ -7,6 +7,8 @@ export type {
   PlayerState,
   SceneCharacter,
   SetCardEntry,
+  StackedCardEntry,
+  StackedCards,
   PartnerOnBoard,
   EvidenceCard,
   EvidenceOrigin,
@@ -15,7 +17,7 @@ export type {
   LogEntry,
 } from './game-state.js';
 
-export { FILE_CARD_BACK_PLACEHOLDER } from './game-state.js';
+export { FILE_CARD_BACK_PLACEHOLDER, stackedCardCount } from './game-state.js';
 
 export type {
   Effect,

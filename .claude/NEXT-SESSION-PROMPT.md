@@ -2,13 +2,13 @@
 
 ## Current State
 
-- branch: `main`; latest: `a3681d49 fix(ci): sync target forcing verb whitelist`.
-- CL327 GitHub CI green: typecheck, full Vitest, lint chain, and smoke 1000.
-- Shipped count: **2002 / 2074 printings; remaining 72**.
-- Shipped: B02022/B02022P, B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271, and B04042/B04042P/B04084.
+- branch: `main`; latest: `5466f27f docs(session): record parallel primitive lanes`.
+- CL328 GitHub CI green: typecheck, full Vitest, lint chain, and smoke 1000: https://github.com/orihekat78/TCGApp/actions/runs/29242247994
+- Integrated, uncommitted count: **2022 / 2074 printings; remaining 52**.
+- Pending first CI: B06005/P, B08003/P, B08008 and B02067/P, B04003/P, B08081/P; all have Sol review and focused probes.
 - B02022 `mustTargetSelfOnce` has Sol CLEAN approval. Case targeting and partner-action exceptions are probed.
 - Exact existing-DSL/twin closures are exhausted. Do not plan a 20-printing no-engine batch.
-- Uncommitted preparation: `.claude/sessions/2026-07-13-2.md`.
+- Uncommitted documentation update: CI checkpoint and next-session plan below.
 
 ## Start
 
@@ -20,15 +20,14 @@
 
 | Order | Primitive | Unlock | Risk |
 |---|---|---:|---|
-| 1 | self set-card targeted remove -> enter | B06012/P, B06064/P, B07033/P/P2, B09113/P = 9 | T3 |
-| 2 | stacked identity / host stack | B06005/P, B08003/P, B08008 = 5 | T3 |
-| 3 | choose-intercept / negate / opponent decision | B02067/P, B04003/P, B08081/P = 6 | T3 |
+| 1 | stacked identity / host stack | B06005/P, B08003/P, B08008 = 5 | T3 |
+| 2 | choose-intercept / negate / opponent decision | B02067/P, B04003/P, B08081/P = 6 | T3 |
 
 ## Execution Rules
 
-- Aggregate multi-pick shipped. Prepare remaining three; ship **one primitive at a time**.
-- Main owns integration, Sol review, commit, CI, registry, DEFERRED-INDEX, recount, and memory.
-- Keep engine ownership disjoint. Do not combine stack identity/GameState work with set-card, aggregate-picker, or opponent-decision edits.
+- Aggregate multi-pick and self set-card remove->enter shipped. Start four isolated lanes: A stack identity, B hook/external ability, C picker/bind, E choose-intercept.
+- Each lane owns its minimal engine slice, one representative card, and RED probes. Freeze shared contracts first. Main alone performs serial integration, Sol review, commits, registry/DEFERRED/memory/recount.
+- Do not combine: intercept×picker, intercept×generic decision UI/AI, or stack×zone/self-reference. Keep stack/GameState work disjoint from picker and opponent-decision edits.
 - Check production dispatch, 0 selection, `owner=opp`, duplicate IDs, host/target leaves, AI/human parity, stale pending state, and base/P text equality.
 - New UI decision flow requires Playwright. T3 requires RED→GREEN, Sol review, full gates, and CI.
 
@@ -42,6 +41,7 @@ npm run docs:structure
 git diff --check
 ```
 
-- Add lint, smoke 1000, and Playwright according to risk.
-- Record every shipment in reuse registry, memory, DEFERRED-INDEX, and session log.
-- Re-estimate after each primitive; do not promise a combined 23-printing wave.
+- New UI decision flow requires Playwright. T3 requires RED→GREEN and Sol review.
+- GitHub CI runs exactly twice: after four-lane serial integration, then after all unlocked card additions. Do not push intermediate lane work to `main`.
+- After representative primitives are integrated, add remaining unlocked cards/P variants/probes in parallel. Run the second CI only after that addition phase.
+- Completion is optimistic, not promised: only declare complete at `2074/2074` after both CI checkpoints. New grounded primitive/UI/DSL gaps create a new lane.

@@ -669,6 +669,12 @@ import { B01037 } from '../ct-p01/B01037.js';
 import { B01068 } from '../ct-p01/B01068.js';
 import { B01067 } from '../ct-p01/B01067.js';
 import { B02068 } from '../ct-p02/B02068.js';
+import { B02067 } from '../ct-p02/B02067.js';
+import { B02067P } from '../ct-p02/B02067P.js';
+import { B04003 } from '../ct-p04/B04003.js';
+import { B04003P } from '../ct-p04/B04003P.js';
+import { B08081 } from '../ct-p08/B08081.js';
+import { B08081P } from '../ct-p08/B08081P.js';
 import { B03097 } from '../ct-p03/B03097.js';
 import { B03073 } from '../ct-p03/B03073.js';
 import { D04005 } from '../ct-d04/D04005.js';
@@ -806,8 +812,13 @@ import { B05046P } from '../ct-p05/B05046P.js';
 import { B05046P2 } from '../ct-p05/B05046P2.js';
 import { B06011 } from '../ct-p06/B06011.js';
 import { B06011P } from '../ct-p06/B06011P.js';
+import { B06005 } from '../ct-p06/B06005.js';
+import { B06005P } from '../ct-p06/B06005P.js';
 import { B06012 } from '../ct-p06/B06012.js';
 import { B06012P } from '../ct-p06/B06012P.js';
+import { B08008 } from '../ct-p08/B08008.js';
+import { B08003 } from '../ct-p08/B08003.js';
+import { B08003P } from '../ct-p08/B08003P.js';
 import { B06013 } from '../ct-p06/B06013.js';
 import { B06013P } from '../ct-p06/B06013P.js';
 import { B06064 } from '../ct-p06/B06064.js';
@@ -1693,7 +1704,7 @@ export const REUSE_CARDS: CardDef[] = [
   // (現場リムーブ時/疾風/カットイン presence — X1 述語 + X1b 窓/bound filter + X6 boundToRemove + X7/X8 骨格バグ修正)
   B03128, B03131, B08005, B08005P, B08016, B08094, B08094P, B09073, B09073P, B09104,
   // engine拡張 wave#2 cluster3 — action-lifecycle trigger 15枚
-  B01036, B01037, B01068, B01067, B02068, B03097, B03073, D04005, D04007, B08012, B08012P, B08048, B05108, PR086, PR092,
+  B01036, B01037, B01068, B01067, B02067, B02067P, B04003, B04003P, B08081, B08081P, B02068, B03097, B03073, D04005, D04007, B08012, B08012P, B08048, B05108, PR086, PR092,
   // engine拡張 wave#2 cluster4 (2026-06-14): remove-area → deck-bottom 解禁6枚 (B08051/P 赤井秀一・B08066/P 上原由衣・B03059 土井塔克樹・B08027 長門秀臣)
   B08051, B08051P, B08066, B08066P, B08027, B03059,
   // engine拡張 wave#2 cluster5 (2026-06-14): usage-restriction aura 3枚 (B02063 羽田秀吉=相手カットイン不可・B04034 京極真=相手カットイン不可+変装時不発動・B09017 吉田歩美=条件付き相手カットイン不可)
@@ -1723,7 +1734,7 @@ export const REUSE_CARDS: CardDef[] = [
   // engine拡張 wave-11 (2026-07-02) — hirameki actor payload ($trigger.byUid「アクション中のキャラ」) consumer
   B03085, B03085P, B05032, B05111,
   // Task A batch
-  B01018, B01062, B01062P, B01066, B01066P, B02003, B02003P, B02005, B02005P, B02019, B02019P, B02044, B02044P, B02077, B02077P, PR080, B03005, D10020, D10021, B03025, B03086, B03086P, B03089, B03089P, D09020, B04014, B04014P, B04017, B04017P, B05006, B05006P, B05006P2, B05020, B05020P, B05046, B05046P, B05046P2, B06011, B06011P, B06012, B06012P, B06013, B06013P, B06064, B06064P, PR170, B07004, B07004P, B07020, B07020P, B07023, B07023P, B07098, B07098P, D09004, D09005, PR193, PR060, PR064, PR154,
+  B01018, B01062, B01062P, B01066, B01066P, B02003, B02003P, B02005, B02005P, B02019, B02019P, B02044, B02044P, B02077, B02077P, PR080, B03005, D10020, D10021, B03025, B03086, B03086P, B03089, B03089P, D09020, B04014, B04014P, B04017, B04017P, B05006, B05006P, B05006P2, B05020, B05020P, B05046, B05046P, B05046P2, B06005, B06005P, B06011, B06011P, B06012, B06012P, B06013, B06013P, B06064, B06064P, PR170, B07004, B07004P, B07020, B07020P, B07023, B07023P, B07098, B07098P, D09004, D09005, PR193, PR060, PR064, PR154, B08003, B08003P, B08008,
   // triage-batch2 (window4 confirmed greens: B01052/B02025/B04022/B04031 + byte-identical clones)
   B01052, D06016, B02025, B02025P, B04022, B04022P, B04031, B04031P,
   // triage batch#3 (window4 verified green B03079 + clone)
@@ -1884,7 +1895,7 @@ export const REUSE_CARDS: CardDef[] = [
   // sleep→stun/active→sleep + 裏向きセット限定 charRemoveSetCard faceDownOnly)
   B08035,
   // engine mega-wave W4 step2 — r83 enter:group + fromGroup exemplar (B01012 阿笠博士:
-  // 効果登場 batch 集約 →「その中から1枚」active + 迅速 rider。B08003 は stacked-identity 不在で DEFER)
+  // 効果登場 batch 集約 →「その中から1枚」active + 迅速 rider。
   B01012,
   // engine mega-wave W4 step3 — r5 charStackCard fromSelf exemplar (B06008+P 仮面ヤイバー:
   // アクション終了時 self を host の下に重ねる = mutate.scene.toStack 非リムーブ離場 + chain draw)

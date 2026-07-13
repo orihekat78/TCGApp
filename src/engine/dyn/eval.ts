@@ -449,8 +449,10 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     // B06006 a2「下に重なっているカード1枚につき AP+1000」継続修飾の dyn 足場。setCardCount と同型だが
     // stackedCards は number field (重ね≠セット rules/16: 重ねは枚数以外の情報を持たない)。静的 state
     // field 読みのため ap/lp の continuousDelta 再帰経路を踏まない (BUG-156/157 と無縁)。
-    case 'stackedCount':
-      return scene.byUid(state, uid)?.stackedCards ?? 0;
+    case 'stackedCount': {
+      const stacked = scene.byUid(state, uid)?.stackedCards;
+      return stacked == null ? 0 : Array.isArray(stacked) ? stacked.length : stacked;
+    }
     default:
       throw new Error(`dyn.eval: unknown $self property "${prop}" in "${original}"`);
   }

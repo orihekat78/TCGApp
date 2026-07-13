@@ -290,14 +290,127 @@ describe('engine.mutate.char', () => {
   });
 
   describe('stackCard', () => {
+    it('allocates a new occurrence ID after a middle stack entry was removed', () => {
+      const c = makeChar({
+        stackedCards: [
+          { cardId: 'A', instanceId: 'stack:uid-1:0' },
+          { cardId: 'C', instanceId: 'stack:uid-1:2' },
+        ],
+      });
+      const result = produce(makeState(c), draft => {
+        char.stackCard(draft, 'uid-1', 1, ['D']);
+      });
+      const entries = result.players.self.scene[0].stackedCards;
+      expect(Array.isArray(entries) && new Set(entries.map(entry => entry.instanceId)).size).toBe(3);
+    });
+
     it('stackedCards に count を加算', () => {
       const c = makeChar({ stackedCards: 2 });
       const s = makeState(c);
       const result = produce(s, draft => {
         char.stackCard(draft, 'uid-1', 3);
       });
-      expect(result.players.self.scene[0].stackedCards).toBe(5);
+      expect(Array.isArray(result.players.self.scene[0].stackedCards) ? result.players.self.scene[0].stackedCards.length : result.players.self.scene[0].stackedCards).toBe(5);
     });
+  });
+
+  describe('transferStackedCards', () => {
+    it('moves the exact selected identity to another host without recreating it', () => {
+      const source = makeChar({
+        uid: 'source',
+        stackedCards: [
+          { cardId: 'A', instanceId: 'stack:source:a' },
+          { cardId: 'B', instanceId: 'stack:source:b' },
+        ],
+      });
+      const target = makeChar({
+        uid: 'target',
+        stackedCards: [{ cardId: 'C', instanceId: 'stack:target:c' }],
+      });
+      const result = produce(makeState(source), draft => {
+        draft.players.self.scene.push(target);
+        char.transferStackedCards(draft, 'source', 'target', 1, ['stack:source:b']);
+      });
+      expect(result.players.self.scene[0].stackedCards).toEqual([
+        { cardId: 'A', instanceId: 'stack:source:a' },
+      ]);
+      expect(result.players.self.scene[1].stackedCards).toEqual([
+        { cardId: 'C', instanceId: 'stack:target:c' },
+        { cardId: 'B', instanceId: 'stack:source:b' },
+      ]);
+    });
+
+    it('fails closed for a stale selected occurrence', () => {
+      const source = makeChar({
+        uid: 'source',
+        stackedCards: [{ cardId: 'A', instanceId: 'stack:source:a' }],
+      });
+      const target = makeChar({ uid: 'target', stackedCards: 0 });
+      const result = produce(makeState(source), draft => {
+        draft.players.self.scene.push(target);
+        expect(char.transferStackedCards(draft, 'source', 'target', 1, ['stale'])).toEqual([]);
+      });
+      expect(result.players.self.scene[0].stackedCards).toEqual([
+        { cardId: 'A', instanceId: 'stack:source:a' },
+      ]);
+      expect(result.players.self.scene[1].stackedCards).toBe(0);
+    });
+
+    it('does not transfer a stack across player ownership', () => {
+      const source = makeChar({
+        uid: 'source',
+        stackedCards: [{ cardId: 'A', instanceId: 'stack:source:a' }],
+      });
+      const target = makeChar({ uid: 'target', stackedCards: 0 });
+      const result = produce(makeState(source), draft => {
+        draft.players.opp.scene.push(target);
+        expect(char.transferStackedCards(draft, 'source', 'target', 1, ['stack:source:a'])).toEqual([]);
+      });
+      expect(result.players.self.scene[0].stackedCards).toHaveLength(1);
+      expect(result.players.opp.scene[0].stackedCards).toBe(0);
+    });
+
+    it('does not mutate either host when target already has a selected occurrence ID', () => {
+      const source = makeChar({
+        uid: 'source',
+        stackedCards: [{ cardId: 'A', instanceId: 'shared' }],
+      });
+      const target = makeChar({
+        uid: 'target',
+        stackedCards: [{ cardId: 'B', instanceId: 'shared' }],
+      });
+      const result = produce(makeState(source), draft => {
+        draft.players.self.scene.push(target);
+        expect(char.transferStackedCards(draft, 'source', 'target', 1)).toEqual([]);
+      });
+      expect(result.players.self.scene[0].stackedCards).toHaveLength(1);
+      expect(result.players.self.scene[1].stackedCards).toHaveLength(1);
+    });
+  });
+
+  it('exposes stable identity candidates for explicit and legacy stacks', () => {
+    const explicit = produce(makeState(makeChar({ stackedCards: [{ cardId: 'A', instanceId: 'stack:host:a' }] })), (draft) => {
+      expect(char.stackedCardEntries(draft, 'uid-1')).toEqual([{ cardId: 'A', instanceId: 'stack:host:a' }]);
+    });
+    expect(explicit.players.self.scene).toHaveLength(1);
+    const legacy = produce(makeState(makeChar({ stackedCards: 2 })), (draft) => {
+      expect(char.stackedCardEntries(draft, 'uid-1')).toEqual([
+        { cardId: 'back-card', instanceId: 'legacy:uid-1:0' },
+        { cardId: 'back-card', instanceId: 'legacy:uid-1:1' },
+      ]);
+    });
+    expect(legacy.players.self.scene).toHaveLength(1);
+  });
+
+  it('validates zero, duplicate, and stale stacked identity selections fail-closed', () => {
+    const state = makeState(makeChar({ stackedCards: [
+      { cardId: 'A', instanceId: 'stack:host:a' },
+      { cardId: 'B', instanceId: 'stack:host:b' },
+    ] }));
+    expect(char.selectStackedCardEntries(state, 'uid-1', [], 0, 2)).toEqual([]);
+    expect(char.selectStackedCardEntries(state, 'uid-1', ['stack:host:a'], 0, 2)).toEqual([{ cardId: 'A', instanceId: 'stack:host:a' }]);
+    expect(char.selectStackedCardEntries(state, 'uid-1', ['stack:host:a', 'stack:host:a'], 0, 2)).toBeNull();
+    expect(char.selectStackedCardEntries(state, 'uid-1', ['stale'], 0, 2)).toBeNull();
   });
 
   describe('removeAllSetAndStacked', () => {

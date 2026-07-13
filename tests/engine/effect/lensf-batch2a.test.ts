@@ -11,7 +11,7 @@ import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _setHumanPlayerSide, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { runAllUntilEmpty } from '@/engine/resolve/stack';
 import { registerAll } from '@/cards/index';
-import type { GameState } from '@/engine/types';
+import { stackedCardCount, type GameState } from '@/engine/types';
 
 describe('BUG-103: D08021 charStackCard multi-pick が AI 経路で解決される', () => {
   beforeEach(() => {
@@ -34,7 +34,7 @@ describe('BUG-103: D08021 charStackCard multi-pick が AI 経路で解決され�
     });
     s = produce(s, (d) => { runAllUntilEmpty(d); });
     const c = s.players.opp.scene.find((x) => x.cardId === 'D08021');
-    expect(c?.stackedCards).toBe(3);     // 修正前は 0 (AI 経路で no-op)
+    expect(stackedCardCount(c?.stackedCards ?? 0)).toBe(3);     // 修正前は 0 (AI 経路で no-op)
     expect(s.players.opp.remove).toEqual([]); // splice 済 (複製しない)
   });
 

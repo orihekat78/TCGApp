@@ -312,6 +312,21 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       ctx.costPaid['removeSetCard'] = { ids: rscIds, kinds: rscIds.map(id => readDef.card(id)?.kind) };
       return;
     }
+    case 'removeStackedCards': {
+      const hostUid = ctx.source.uid;
+      if (typeof hostUid !== 'string') throw new Error('cost.pay: removeStackedCards requires ctx.source.uid');
+      const entries = mutate.char.removeStackedCards(state, hostUid, cost.n, readRemoveStackedCardInstanceIds(ctx));
+      if (entries.length !== cost.n) throw new Error('cost.pay: removeStackedCards is not payable');
+      const removeStart = state.players[ctx.source.player].remove.length;
+      const paidEntries = entries.map((entry, offset) => ({
+        cardId: entry.cardId, instanceId: entry.instanceId, removeIndex: removeStart + offset,
+      }));
+      state.players[ctx.source.player].remove.push(...paidEntries.map(entry => entry.cardId));
+      acc.paidItems.push({ kind: 'removeStackedCards', details: { hostUid, entries: paidEntries } });
+      if (!ctx.costPaid) ctx.costPaid = {};
+      ctx.costPaid['removeStackedCards'] = { entries: paidEntries };
+      return;
+    }
     case 'removeDeckTop': {
       // mega-wave W5 (r37): n は number | {dyn} — canPay と同一式で解決 (evaluate.ts と対)。
       const rdN = resolveDynNumber(cost.n, state, ctx);
@@ -514,6 +529,14 @@ function readRemoveSetCardUids(ctx: EffectCtx): string[] {
     return r.hostUids;
   }
   return [];
+}
+
+function readRemoveStackedCardInstanceIds(ctx: EffectCtx): string[] | undefined {
+  const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
+  const selected = params?.['removeStackedCards'] as { instanceIds?: unknown } | undefined;
+  return Array.isArray(selected?.instanceIds) && selected.instanceIds.every(id => typeof id === 'string')
+    ? selected.instanceIds
+    : undefined;
 }
 
 function readChosenIndex(ctx: EffectCtx): number | undefined {

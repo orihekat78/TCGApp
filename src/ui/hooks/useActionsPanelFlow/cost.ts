@@ -55,6 +55,7 @@ export function costToText(cost: Cost, resolve?: { state: GameState; ctx: Effect
     case 'removeSetCard':     return cost.anyFace ? `セットされているカードを ${cost.n} 枚リムーブ` : `裏向きセットされたカードを ${cost.n} 枚リムーブ`; // engine additive wave (2026-06-24) / anyFace 夜間W0 (B05052)
     case 'sceneStackUnderSelf': return `現場のキャラ ${cost.n} 枚をこのキャラの下に重ねる`; // engine mega-wave W4 r6 (B09048)
     case 'handStackUnder':    return '手札のカード1枚を公開して現場のキャラの下に重ねる'; // engine mega-wave W4 r7 (B08006)
+    case 'removeStackedCards': return `Remove ${cost.n} cards stacked under this character`;
     case 'pay':               return cost.items.map(i => costToText(i, resolve)).join(' + ');
     case 'choice':            return cost.items.map(i => costToText(i, resolve)).join(' / ');
     case 'fileFrom':          return `FILE から ${cost.n} 枚`;
@@ -85,6 +86,19 @@ export function findFlipFaceUpCost(cost: Cost | undefined): FlipFaceUpCost | nul
   if (cost.kind === 'pay' || cost.kind === 'choice') {
     for (const item of cost.items) {
       const found = findFlipFaceUpCost(item);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+type RemoveStackedCardsCost = Extract<Cost, { kind: 'removeStackedCards' }>;
+export function findRemoveStackedCardsCost(cost: Cost | undefined): RemoveStackedCardsCost | null {
+  if (!cost) return null;
+  if (cost.kind === 'removeStackedCards') return cost;
+  if (cost.kind === 'pay' || cost.kind === 'choice') {
+    for (const item of cost.items) {
+      const found = findRemoveStackedCardsCost(item);
       if (found) return found;
     }
   }

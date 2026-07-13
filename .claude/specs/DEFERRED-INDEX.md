@@ -1,7 +1,7 @@
 # 実装保留 (Deferred) 一覧
 
-> 2026-07-13 continuation: B02022/B02022P and B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271, then B04042/B04042P/B04084, shipped. Registry 2002/2074; remaining 72. B02022 action-target primitive cleared Sol review. Lane-B 20-printing green-wave assumption disproven: only six exact DSL/twin closures remained.
-> Next portfolio grounded: aggregate multi-pick (3), self set-card remove-to-enter (9), stacked identity/host stack (5), and choose-intercept/opponent decision (6). Integrate one primitive per CI cycle; source dossier/RED matrix: `.claude/sessions/2026-07-13-2.md`.
+> 2026-07-13 continuation: B02022/B02022P and B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271, B04042/B04042P/B04084, then B06012/P/B06064/P/B07033/P/P2/B09113/P shipped. Registry 2011/2074; remaining 63. CL328 green (typecheck, full Vitest, lint chain, smoke 1000). B02022 action-target primitive cleared Sol review. Lane-B 20-printing green-wave assumption disproven: only six exact DSL/twin closures remained.
+> Next plan: four isolated representative lanes — stack identity, hook/external ability, picker/bind, choose-intercept — then serial shared-surface integration. CI checkpoints are integration and final card-addition completion only; source dossier/RED matrix: `.claude/sessions/2026-07-13-2.md`.
 
 本ファイルは「実装はあるが未完成 or 未着手で先送りされた」項目の集約 INDEX。
 新規 defer を生んだ commit / session log は必ずここに 1 行追加すること。
@@ -37,7 +37,7 @@ setActionCutinBanFilter・$removed dyn・charRemoveSetCard/sceneRemove bind。
 | ID | blocker |
 |----|---------|
 | B05101 (card のみ — trait verb は出荷済) | 自身を remove から復活させる idiom 不在 ($self.cardId 未解決 + leave:to-remove payload に cardId 無し) |
-| B06005 a2 | fungible stacked カードの枚数選択 (0-2 count-choice) UI primitive 不在 |
+| ~~B06005 a2~~ | ✅ 解消: exact stacked identity picker + host-to-host transfer、0/stale/legacy probe |
 | B09078 | 1 window から dual-filter 二重 pick + reveal-to-remove 複合 |
 | B09039 a2 | handAddFromRemove 0-add 時の chainStepNoApply gate 不在 (過剰 discard) |
 | B08002 a2 (card のみ — $removed dyn は出荷済) | dual-pick (remove-card + scene-host≠source) 不在 |
@@ -1289,7 +1289,7 @@ filename → 初回 run が「no smoke report found」誤報 (rename 回避、�
 | B04063 | $bound.<key>.levelSum dyn 不在 (リムーブした集合のレベル合計閾値) |
 | B04089 | VERIFY_NG: removedCharMatches{cause:'effect'} は actor-attribution (自分の効果によって) を保証しない (payload.byUid 不在 case) |
 | ~~B05047~~ | **✅ 解消 (2026-07-10 mini-wave #5)**: 新 atom deckPlaceSplitBound + DeckPlaceModal (top/bottom 振り分け UI)。B05047 出荷 |
-| B08008 | picked host ($self 以外) の下へ remove-area キャラを重ねる + そのキャラへの ability 付与 rider — host-pick stack + grant 複合不在 |
+| ~~B08008~~ | ✅ 解消: picked blue host stack + gateOnEmpty + actionTargetsActive rider |
 | ~~B08057~~ | **✅ 解消 (2026-07-10 S2)**: removeAreaToDeckTop bindKey opt + boundCountCompare cond + deckBottomReorderBound atom (~60行 additive)。B08057 出荷 |
 | B08068 | levelMax = cost-revealed 枚数 + 盤面計数の合成 dyn 不在 |
 | B09005 | revealFromHand cost の公開カード名を effect 側で参照する $costRevealed bind 不在 + 相手 FILE top を表向きにする verb 不在 |

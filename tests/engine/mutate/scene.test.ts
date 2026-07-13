@@ -172,6 +172,25 @@ describe('engine.mutate.scene', () => {
       expect(backCards).toHaveLength(3);
     });
 
+    it('preserves duplicate stack-card identities when the host leaves', () => {
+      const c = makeChar({
+        uid: 'uid-remove',
+        cardId: 'C001',
+        stackedCards: [
+          { cardId: 'STACK001', instanceId: 'stack-1' },
+          { cardId: 'STACK001', instanceId: 'stack-2' },
+          { cardId: 'STACK002', instanceId: 'stack-3' },
+        ],
+      });
+      const result = produce(makeState([c]), draft => {
+        scene.removeToRemove(draft, 'uid-remove', 'effect');
+      });
+      expect(result.players.self.remove).toEqual(expect.arrayContaining([
+        'C001', 'STACK001', 'STACK001', 'STACK002',
+      ]));
+      expect(result.players.self.remove).not.toContain('back-card');
+    });
+
     it('戻り値に removed 情報が含まれる', () => {
       const c = makeChar({ uid: 'uid-remove', cardId: 'C001' });
       const s = makeState([c]);

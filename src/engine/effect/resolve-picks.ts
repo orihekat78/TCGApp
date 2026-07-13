@@ -27,6 +27,8 @@ import { char as readChar } from '../read/char.js';
 import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
 import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
+import { findChooseIntercept } from './consult-choose-intercept.js';
+import { hand } from '../mutate/hand.js';
 
 type Player = 'self' | 'opp';
 
@@ -506,6 +508,17 @@ function substituteAtomPick(
 
   if (isPatternA) {
     if (picked.kind !== 'char') return atom as Effect;
+    const intercept = findChooseIntercept(state, picked.uid, ctx);
+    if (intercept.kind === 'cancel') {
+      (ctx.dyn ??= {}).chooseIntercepted = true;
+      return { kind: 'parallel', steps: [] };
+    }
+    if (intercept.kind === 'discard-or-cancel') {
+      const card = state.players[intercept.responder].hand[0];
+      if (card) hand.discardToRemove(state, intercept.responder, [card], { byPlayer: intercept.responder });
+      (ctx.dyn ??= {}).chooseIntercepted = true;
+      return { kind: 'parallel', steps: [] };
+    }
     const { target: _omit, ...restArgs } = args;
     void _omit;
     return {
@@ -631,6 +644,10 @@ export function resolveEffectPicks(
       for (let i = 0; i < effect.steps.length; i++) {
         const choiceBefore = _peekPendingEffectChoiceSide() !== null;
         seqOut.push(resolveEffectPicks(state, effect.steps[i]!, ctx, opts));
+        if (ctx.dyn?.chooseIntercepted === true) {
+          delete ctx.dyn.chooseIntercepted;
+          return { kind: 'parallel', steps: [] };
+        }
         const choiceAfter = _peekPendingEffectChoiceSide() !== null;
         if (!choiceBefore && choiceAfter) {
           const remainder = effect.steps.slice(i + 1);

@@ -63,6 +63,8 @@ const ATOM_VERB_MAP = {
   invokeLeaveToRemoveOfCard: true, // engine mega-wave W3 (2026-07-03, r12)
   invokeHiramekiOfCard: true, // engine night-wave WC2b (2026-07-11) — 別カードの【ヒラメキ】effect 明示発動 (B06023/B06034)
   bindPick: true, // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
+  stackedCardPick: true,
+  charTransferStackedCards: true,
   declareName: true, // engine mega-wave W6 step1 (2026-07-04) — 任意カード名宣言 → ctx.declaredNames (B09112/B09108)
   useEventFromHand: true, // engine mega-wave W6 step3 (2026-07-04, r63 P18) — 効果内イベント使用 (B08026/D10005/B05042)
   setShippuWaive: true, // engine mega-wave W6 step4 (2026-07-04, B09090/P16) — 疾風条件 waive 予約

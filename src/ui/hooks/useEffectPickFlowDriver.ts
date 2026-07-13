@@ -15,6 +15,7 @@ export function useEffectPickFlowDriver(): void {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
   const pendingChoice = useGameStateStore((s) => s.pendingEffectChoice);
   const pendingOptional = useGameStateStore((s) => s.pendingEffectOptional);
+  const pendingChooseIntercept = useGameStateStore((s) => s.pendingChooseIntercept);
   const pendingRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
   useEffect(() => {
     if (!pending) return;
@@ -44,6 +45,11 @@ export function useEffectPickFlowDriver(): void {
       dispatchEngineAction({ type: 'optionalResolve', run: false });
     }
   }, [pendingOptional]);
+  useEffect(() => {
+    if (!pendingChooseIntercept || pendingChooseIntercept.player === 'self') return;
+    const hand = useGameStateStore.getState().gameState?.players[pendingChooseIntercept.player].hand ?? [];
+    dispatchEngineAction({ type: 'chooseInterceptResolve', discardIndex: hand.length > 0 ? 0 : null });
+  }, [pendingChooseIntercept]);
   useEffect(() => {
     if (!pendingRepeatOptional) return;
     if (pendingRepeatOptional.player !== 'self') {

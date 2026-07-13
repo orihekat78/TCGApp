@@ -87,6 +87,9 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効
       return useGameStateStore.getState().pendingEffectOptional !== null;
     }
+    case 'chooseInterceptResolve': {
+      return useGameStateStore.getState().pendingChooseIntercept !== null;
+    }
     case 'repeatOptionalResolve': {
       return useGameStateStore.getState().pendingEffectRepeatOptional !== null;
     }

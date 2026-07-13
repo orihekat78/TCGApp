@@ -174,8 +174,8 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
         </div>
       )}
       {setCount > 0 && <div className="set-badge">+{setCount}</div>}
-      {ch.stackedCards > 0 && (
-        <div className="stack-badge">×{ch.stackedCards + 1}</div>
+      {(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) > 0 && (
+        <div className="stack-badge">×{(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) + 1}</div>
       )}
     </div>
   );

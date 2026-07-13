@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `f0b7d189b5fb`
+> Source hash: `b43079add33d`
 
 `src/engine/target/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 

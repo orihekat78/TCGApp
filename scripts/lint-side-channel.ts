@@ -25,6 +25,9 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // 2026-06-06 タスクC: optional 再開 effect の holder (resolve-picks.ts) -
   // applyOptionalAndContinuation が consume (store/UI へは出ない。UI 露出は別チャネル EffectOptional 側)
   'EffectOptionalResume',
+  // ChooseIntercept の UI は公開 side-channel のみを表示する。resume は
+  // applyChooseInterceptResponse が消費する engine-internal holder。
+  'ChooseInterceptResume',
   // B09033: repeatOptional の再開フレーム。表示用の EffectRepeatOptional と異なり、
   // applyRepeatOptionalAndContinuation だけが consume する engine-internal holder。
   'EffectRepeatOptionalResume',

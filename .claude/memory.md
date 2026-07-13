@@ -76,3 +76,19 @@
 ## 2026-07-13 parallel follow-up decision
 
 - After repairing the current set-card CI failure, user chose parallel implementation through isolated worktrees: stack, hook/external-ability, picker/bind, and choose-intercept lanes. Shared contracts first; main integrates and ships sequentially. Session detail: `sessions/2026-07-13-2.md`.
+
+## 2026-07-13 CI boundary / completion hypothesis
+
+- Two CI checkpoints only: after four-lane primitive integration, and after all unlocked card additions. Intermediate lane work stays in isolated worktrees/integration branch, not `main`.
+- Flow: parallel minimum engine+representative+RED -> serial shared-surface integration -> Sol/representative green -> parallel card/P/probe additions -> final CI. Optimistic completion = all remaining cards map to these lanes or existing DSL and registry reaches 2074/2074; new primitive/UI/semantic gaps invalidate the forecast.
+
+## 2026-07-13 set-card shipment / CL328
+
+- B06012/P, B06064/P, B07033/P/P2, and B09113/P shipped. `setCards.instanceId` is serialized; legacy exact-match tests were updated, B06012P text matches base, and production probes cover exact pick continuation.
+- CL328 (`29242247994`) green: typecheck, full Vitest, lint chain, and smoke 1000. Registry 2011/2074; remaining 63.
+- Next session starts four isolated representative lanes (stack, hook/external, picker/bind, intercept). CI only after serial integration and after all unlocked card additions; completion remains conditional on no new grounded primitive/UI/DSL gap.
+
+## 2026-07-13 deferred primitive integration
+
+- Integrated 11 printings: B06005/P, B08003/P, B08008 plus B02067/P, B04003/P, B08081/P. Registry 2022/2074; remaining 52; commit/CI pending.
+- Stack identities now cover exact picker/transfer/cost, stale/duplicate/zero, AI/human and owner-relative opponent choice. B08003/P has blue-partner gate and Playwright 3-of-4 picker/cancel coverage. Sol CLEAN.

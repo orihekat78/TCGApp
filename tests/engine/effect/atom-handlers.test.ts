@@ -613,7 +613,7 @@ describe('engine.effect.runAtom', () => {
       const result = produce(s, draft => {
         runAtom(draft, 'charStackCard', { uid: 'sk-uid', n: 2 }, makeCtx());
       });
-      expect(result.players.self.scene[0].stackedCards).toBe(3);
+      expect(Array.isArray(result.players.self.scene[0].stackedCards) ? result.players.self.scene[0].stackedCards.length : result.players.self.scene[0].stackedCards).toBe(3);
     });
   });
 

@@ -39,6 +39,9 @@ Search or open their relevant sections only when needed.
 - Use `apply_patch` for manual edits.
 - Keep handwritten Markdown at 100 lines or fewer.
 - Generated files under `.claude/auto/` are never hand-edited.
+- After dispatching GitHub CI, do not poll, watch, sleep, or otherwise wait for
+  it in an active turn. End the turn and resume only on an external notification
+  or explicit user message that CI completed; inactive waiting consumes no tokens.
 
 ## Risk
 

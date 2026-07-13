@@ -20,6 +20,7 @@ const COST_KIND_MAP = {
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
   partnerAreaRemove: true, // engine defer-unlock mini-wave (2026-07-09): PA カード n 枚リムーブ (B07039)
   removeSetCard: true, // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
+  removeStackedCards: true,
   sceneStackUnderSelf: true, // engine mega-wave W4 (2026-07-03, r6): 現場キャラを自身の下に重ねる (B09048 a2)
   handStackUnder: true, // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる (B08006 a1)
   selfLpDeltaTurn: true, // M2後半 (2026-07-10): 〚ターン終了時までLP-2する〛(B06003 a1)
@@ -133,6 +134,12 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
         count += cost.anyFace ? c.setCards.length : c.setCards.filter(e => !e.faceUp).length;
       }
       return count >= cost.n;
+    }
+    case 'removeStackedCards': {
+      const uid = ctx.source.uid;
+      if (typeof uid !== 'string' || cost.n < 1) return false;
+      const host = state.players[ctx.source.player].scene.find(char => char.uid === uid);
+      return host !== undefined && (Array.isArray(host.stackedCards) ? host.stackedCards.length : host.stackedCards) >= cost.n;
     }
     case 'removeDeckTop': {
       // mega-wave W5 (r37): n は number | {dyn} — dispatch 時に解決 (B04088 .oppSceneCount*2)。

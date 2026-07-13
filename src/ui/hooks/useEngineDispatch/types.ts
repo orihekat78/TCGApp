@@ -67,6 +67,7 @@ export type EngineAction =
   | { type: 'choiceResolve'; choiceIndex: number }
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
   | { type: 'optionalResolve'; run: boolean }
+  | { type: 'chooseInterceptResolve'; discardIndex: number | null }
   | { type: 'repeatOptionalResolve'; run: boolean }
   // BUG-136: deckToBottomBound「好きな順番でデッキの下に移す」の順序確定。order = 底ブロックの新順 (cardId 列)。
   | { type: 'deckReorderResolve'; order: string[] }

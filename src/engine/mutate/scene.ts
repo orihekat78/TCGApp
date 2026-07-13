@@ -2,7 +2,7 @@
 // rules: 03-field-areas.md, 09-cutin-disguise.md, 16-card-set.md, 20-color-and-switch.md
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
-import type { AbilityDef, GameState, SceneCharacter, RemoveResult } from '@/engine/types';
+import { stackedCardCount, type AbilityDef, type GameState, type SceneCharacter, type RemoveResult } from '@/engine/types';
 import { event } from '../event/index.js';
 import { effectiveTriggeredAuraAbilities } from '../read/triggered-aura.js';
 import { def } from '../read/def.js'; // MR partner-area (rules/18): isMR 判定 (def → types のみ依存、循環なし)
@@ -17,6 +17,23 @@ type RemoveOpts = {
   byPlayer?: Player;
   triggeredAuraAbilities?: AbilityDef[];
 };
+
+function moveStackedCardsToRemove(s: GameState, player: Player, char: SceneCharacter): number {
+  if (Array.isArray(char.stackedCards)) {
+    s.players[player].remove.push(...char.stackedCards.map(entry => entry.cardId));
+    return char.stackedCards.length;
+  }
+  for (let i = 0; i < char.stackedCards; i++) s.players[player].remove.push('back-card');
+  return char.stackedCards;
+}
+
+function stackCardUnder(host: SceneCharacter, cardId: string, instanceId: string): void {
+  const legacyCount = stackedCardCount(host.stackedCards);
+  const legacyEntries = Array.isArray(host.stackedCards)
+    ? host.stackedCards
+    : Array.from({ length: legacyCount }, (_, i) => ({ cardId: 'back-card', instanceId: `legacy:${host.uid}:${i}` }));
+  host.stackedCards = [...legacyEntries, { cardId, instanceId }];
+}
 
 export interface EnterOpts {
   active?: boolean;   // false で sleep 状態で登場 (デフォルト: true)
@@ -276,8 +293,7 @@ function removeToRemove(
       const hSetCardsRemoved: string[] = char.setCards.map(e => e.cardId);
       s.players[player].remove.push(...hSetCardsRemoved);
       emitSetCardLeaves(s, char, player, cause); // set-card 自身は正規に離れる (row9 risks(a))
-      const hStacked = char.stackedCards;
-      for (let i = 0; i < hStacked; i++) s.players[player].remove.push('back-card');
+      const hStacked = moveStackedCardsToRemove(s, player, char);
       // hand.push は splice 成功時のみ (混成 review opus NIT: interceptor cost 除去の
       // 【現場リムーブ時】cascade が対象 char を先に除去した病的ケースで phantom 手札を作らない)
       const hIdx = s.players[player].scene.findIndex(c => c.uid === uid);
@@ -309,10 +325,7 @@ function removeToRemove(
   }
 
   // stackedCards 分も back-card としてリムーブ
-  const stackedCardsRemoved = char.stackedCards;
-  for (let i = 0; i < stackedCardsRemoved; i++) {
-    s.players[player].remove.push('back-card');
-  }
+  const stackedCardsRemoved = moveStackedCardsToRemove(s, player, char);
 
   // キャラ本体をリムーブエリアへ
   const idx = s.players[player].scene.findIndex(c => c.uid === uid);
@@ -415,7 +428,7 @@ function toDeckBottom(s: GameState, uid: string): void {
   if (shouldRedirectMrToPA(s, char, player)) {
     // 本関数は通常 set/stack を新キャラへ引継ぐ (変装) が、MR① は新キャラ無しで現場離脱 → rules/16 で remove へ。
     if (char.setCards.length > 0) s.players[player].remove.push(...char.setCards.map(e => e.cardId));
-    for (let i = 0; i < char.stackedCards; i++) s.players[player].remove.push('back-card');
+    moveStackedCardsToRemove(s, player, char);
     placeMrInPA(s, char, player);
     return;
   }
@@ -439,9 +452,7 @@ function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): vo
   if (char.setCards.length > 0) {
     s.players[player].remove.push(...char.setCards.map(e => e.cardId));
   }
-  for (let i = 0; i < char.stackedCards; i++) {
-    s.players[player].remove.push('back-card');
-  }
+  moveStackedCardsToRemove(s, player, char);
 
   // engine拡張 wave#2 cluster9: set card 離場 → setcard:leave emit (host splice 前)。
   // デッキ移動自体は leave:to-remove ではないが、set card は rules/16 でリムーブされる = 現場から離れる。
@@ -479,9 +490,7 @@ function toHand(s: GameState, uid: string): void {
   if (char.setCards.length > 0) {
     s.players[player].remove.push(...char.setCards.map(e => e.cardId));
   }
-  for (let i = 0; i < char.stackedCards; i++) {
-    s.players[player].remove.push('back-card');
-  }
+  moveStackedCardsToRemove(s, player, char);
 
   // engine拡張 wave#2 cluster9: set card 離場 → setcard:leave emit (host splice 前)。
   emitSetCardLeaves(s, char, player, 'leave:to-hand');
@@ -516,9 +525,7 @@ function toEvidence(s: GameState, uid: string, faceUp: boolean, sourceCardId?: s
   if (char.setCards.length > 0) {
     s.players[player].remove.push(...char.setCards.map(e => e.cardId));
   }
-  for (let i = 0; i < char.stackedCards; i++) {
-    s.players[player].remove.push('back-card');
-  }
+  moveStackedCardsToRemove(s, player, char);
 
   // set card 離場 → setcard:leave emit (host splice 前、toHand/toDeck と同流儀)
   emitSetCardLeaves(s, char, player, 'leave:to-evidence');
@@ -621,15 +628,13 @@ function toStack(s: GameState, uid: string, hostUid: string): void {
   if (char.setCards.length > 0) {
     s.players[player].remove.push(...char.setCards.map(e => e.cardId));
   }
-  for (let i = 0; i < char.stackedCards; i++) {
-    s.players[player].remove.push('back-card');
-  }
+  moveStackedCardsToRemove(s, player, char);
   emitSetCardLeaves(s, char, player, 'leave:to-stack');
   const idx = s.players[player].scene.findIndex(c => c.uid === uid);
   if (idx !== -1) {
     s.players[player].scene.splice(idx, 1);
   }
-  hostFound.char.stackedCards += 1;
+  stackCardUnder(hostFound.char, char.cardId, `stack:${char.uid}`);
 }
 
 export const scene = {

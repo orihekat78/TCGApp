@@ -8,6 +8,7 @@ import { useTargetPicker } from '../useTargetPicker.js';
 import { useNextHintPicker, type NextHintCandidate } from '../useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from '../useSceneSwitchPickerStore.js';
 import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
+import { useStackedCardCostPicker } from '../useStackedCardCostPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
@@ -15,7 +16,7 @@ import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/ma
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, findChoiceCost, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
+import { costToText, findFlipFaceUpCost, findRemoveStackedCardsCost, findChoiceCost, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
@@ -381,6 +382,36 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     cancelLabel: 'キャンセル',
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
+
+  const removeStackedCost = findRemoveStackedCardsCost(cost);
+  if (removeStackedCost && owner === 'self' && sourceArea === 'scene') {
+    const stackedState = useGameStateStore.getState().gameState;
+    if (stackedState === null) return { ok: false, reason: 'no-state' };
+    const source = stackedState.players[owner].scene.find((char) => char.uid === sourceUid);
+    const entries = source?.stackedCards;
+    if (!Array.isArray(entries) || entries.length < removeStackedCost.n) {
+      return { ok: false, reason: 'not-allowed' };
+    }
+    // With exactly n entries no choice exists; omit params so human and AI use
+    // the same deterministic engine fallback. Otherwise retain exact identities.
+    if (entries.length > removeStackedCost.n) {
+      const choice = await useStackedCardCostPicker().ask({
+        sourceName,
+        candidates: entries.map(({ instanceId, cardId }) => ({ instanceId, cardId })),
+        nMin: removeStackedCost.n,
+        nMax: removeStackedCost.n,
+      });
+      if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+      const unique = new Set(choice.instanceIds);
+      const candidateIds = new Set(entries.map((entry) => entry.instanceId));
+      if (choice.instanceIds.length !== removeStackedCost.n
+        || unique.size !== choice.instanceIds.length
+        || choice.instanceIds.some((id) => !candidateIds.has(id))) {
+        return { ok: false, reason: 'not-allowed' };
+      }
+      costParams = { ...(costParams ?? {}), removeStackedCards: { instanceIds: choice.instanceIds } };
+    }
+  }
 
   // 3.5) BUG-085: 〚裏向きの証拠を1つ以上表向きにする〛コスト (caseDeclaredEvidenceFlip /
   //   D08005 等) は、どの裏向き証拠を表向きにするかを user に選ばせる必要がある。

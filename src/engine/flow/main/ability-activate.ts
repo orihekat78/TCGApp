@@ -33,6 +33,7 @@ export interface AbilityCostParams {
   sceneToDeckBottom?: { uids: string[] };
   removeAreaToDeckBottom?: { ids: string[] }; // cluster4 (2026-06-14)
   removeSetCard?: { hostUids: string[] }; // engine additive wave (2026-06-24): 裏向きセットリムーブの host 選択 (B08033 a2)
+  removeStackedCards?: { instanceIds: string[] };
   costChoice?: number;
   choiceIndex?: number;
   // mega-wave W6 step1 (2026-07-04): declareName verb への宣言カード名供給 (UI= DeclareCardNameModal /
@@ -48,6 +49,7 @@ function costParamsToDyn(costParams?: AbilityCostParams): Record<string, unknown
   if (costParams.sceneToDeckBottom) params['sceneToDeckBottom'] = costParams.sceneToDeckBottom;
   if (costParams.removeAreaToDeckBottom) params['removeAreaToDeckBottom'] = costParams.removeAreaToDeckBottom; // cluster4
   if (costParams.removeSetCard) params['removeSetCard'] = costParams.removeSetCard; // engine additive wave (2026-06-24)
+  if (costParams.removeStackedCards) params['removeStackedCards'] = costParams.removeStackedCards;
   if (Object.keys(params).length > 0) dyn['costParams'] = params;
   if (costParams.costChoice !== undefined) dyn['costChoice'] = costParams.costChoice;
   if (costParams.choiceIndex !== undefined) dyn['choiceIndex'] = costParams.choiceIndex;

@@ -48,7 +48,7 @@ const VERBS = new Set([
   'leaveInterceptRedirect', // mega-wave W6 step10 (2026-07-04, row9) — leave:intercept 宣言的 marker (B01092/B01039)
   'removeAreaToDeckTop', // mega-wave W6 step11 (2026-07-04, row999 item4 / P42) — remove→deck top pick (B07014 rider)
   'expandActionTargets', 'log', 'invokeLeaveToRemoveOfCard', 'invokeHiramekiOfCard', 'noop',
-  'bindPick', // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
+  'bindPick', 'stackedCardPick', 'charTransferStackedCards', // engine mega-wave W4 (2026-07-03, r82 G33) — pick-only bind atom (B08035)
   'declareName', // engine mega-wave W6 step1 (2026-07-04) — 任意カード名宣言 → ctx.declaredNames (B09112/B09108)
   'useEventFromHand', // engine mega-wave W6 step3 (2026-07-04, r63 P18) — 効果内イベント使用 (B08026/D10005/B05042)
   'setShippuWaive', // engine mega-wave W6 step4 (2026-07-04, B09090/P16) — 疾風条件 waive 予約
@@ -119,6 +119,7 @@ const COSTS = new Set([
   'sceneToDeckBottom', // Task D E2 (2026-06-12)
   'removeAreaToDeckBottom', // cluster4 (2026-06-14)
   'removeSetCard', // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
+  'removeStackedCards',
   'sceneStackUnderSelf', // engine mega-wave W4 (2026-07-03, r6): 現場キャラを自身の下に重ねる (B09048 a2)
   'handStackUnder', // engine mega-wave W4 (2026-07-03, r7): 手札公開→現場キャラ下に重ねる (B08006 a1)
   'revealFromHand', // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
