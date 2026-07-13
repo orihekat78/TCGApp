@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 264
-- **ファイル数**: 4828
+- **ファイル数**: 4830
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -967,6 +967,8 @@
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
     - `README.md` — .claude/reports
+    - `smoke-2026-07-13.json`
+    - `smoke-2026-07-13.md` — Smoke 1000戦レポート — smoke-2026-07-13-075513
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
