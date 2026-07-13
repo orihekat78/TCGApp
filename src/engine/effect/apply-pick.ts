@@ -90,6 +90,63 @@ function runContinuationChain(state: GameState, head: ContinuationFrame | undefi
   }
 }
 
+/** Human dispatch is untrusted. Enforce the same multi-pick constraints as UI and AI. */
+function validatePendingPick(
+  pending: PendingEffectPickSide,
+  pickedUid: string,
+  pickedUids?: string[],
+): void {
+  const uids = pickedUids ?? [pickedUid];
+  // Existing pick contract: 0-pick reaches the atom as `target: []`, while
+  // exact-N short-form atoms may resolve one human-picked candidate at a time.
+  if (uids.length === 0) return;
+  if (!uids.includes(pickedUid)) throw new Error('effectPickResolve: pickedUid is absent from pickedUids');
+  if (uids.length > pending.nMax) {
+    throw new Error(`effectPickResolve: picked count ${uids.length} exceeds ${pending.nMax}`);
+  }
+  if (new Set(uids).size !== uids.length) throw new Error('effectPickResolve: duplicate candidate uid');
+  const chosen = uids.map((uid) => {
+    const candidate = pending.candidates.find((c) => c.uid === uid);
+    if (!candidate) throw new Error(`effectPickResolve: unknown candidate uid ${uid}`);
+    return candidate;
+  });
+  const forced = (pending.forcedUids ?? []).slice(0, pending.nMax);
+  if (forced.some((uid) => !chosen.some((c) => c.uid === uid))) {
+    throw new Error('effectPickResolve: required candidate omitted');
+  }
+  if (pending.distinctNames === true) {
+    const seen = new Set<string>();
+    for (const c of chosen) {
+      const names = def.card(c.cardId) ? allCardNameComponentsForDef(def.card(c.cardId)!) : [c.cardId];
+      if (names.some((name) => seen.has(name))) throw new Error('effectPickResolve: distinctNames violated');
+      names.forEach((name) => seen.add(name));
+    }
+  }
+  if (pending.distinctLevel === true) {
+    const seen = new Set<number>();
+    for (const c of chosen) {
+      const level = def.card(c.cardId)?.level;
+      if (typeof level === 'number' && seen.has(level)) throw new Error('effectPickResolve: distinctLevel violated');
+      if (typeof level === 'number') seen.add(level);
+    }
+  }
+  if (pending.distinctColors === true) {
+    const seen = new Set<string>();
+    for (const c of chosen) {
+      const colors = def.card(c.cardId)?.colors ?? [];
+      if (colors.some((color) => seen.has(color))) throw new Error('effectPickResolve: distinctColors violated');
+      colors.forEach((color) => seen.add(color));
+    }
+  }
+  if (typeof pending.perSideMax === 'number') {
+    const count: Record<Player, number> = { self: 0, opp: 0 };
+    for (const c of chosen) {
+      count[c.player]++;
+      if (count[c.player] > pending.perSideMax) throw new Error('effectPickResolve: perSideMax violated');
+    }
+  }
+}
+
 /**
  * pending pick を pickedUid(s) で解決し、保存された sequence/chain continuation があれば
  * **同一 ctx** で remainder を実行する (BUG-107: bind を step 間で共有)。
@@ -103,6 +160,7 @@ export function applyPickAndContinuation(
   switchRemoveUid?: string,
   switchRemoveUids?: string[],
 ): void {
+  validatePendingPick(pending, pickedUid, pickedUids);
   // ---- resolved atom を build (Pattern A: uid='$pick' → uid 置換 / Pattern B: cardId(s)/target 置換) ----
   const pendingArgs = pending.atomArgs as { uid?: unknown };
   const isPatternA = pendingArgs.uid === '$pick';
@@ -145,6 +203,12 @@ export function applyPickAndContinuation(
     const allCardIds: string[] = allUids
       .map((u) => resolveCardIdFromPickUid(u, state, pending))
       .filter((c): c is string => typeof c === 'string');
+    // Deck candidate uid carries the selected occurrence as `${cardId}#${index}`.
+    // Preserve it because card IDs alone cannot distinguish duplicate copies.
+    const selectedDeckIndexes = allUids.map((uid) => {
+      const match = /#(\d+)$/.exec(uid);
+      return match ? Number(match[1]) : undefined;
+    });
     // switch-on-effect-enter: sceneEnter が現場満杯のとき UI が収集した switch 退場 uid を
     // 解決済 atom args に載せる (handler が switchEnter する)。他 atom には影響しない (未指定なら付かない)。
     // cluster14: multi-card sceneEnter は switchRemoveUids[] (plural, overflow 枚数ぶん) を優先。
@@ -153,7 +217,7 @@ export function applyPickAndContinuation(
       ? { switchRemoveUids }
       : switchRemoveUid ? { switchRemoveUid } : {};
     const newArgs: Record<string, unknown> = hasCardIdsBind
-      ? { ...pending.atomArgs, cardIds: allCardIds, ...switchPart } // target は元の pick query を保持
+      ? { ...pending.atomArgs, cardIds: allCardIds, selectedDeckIndexes, ...switchPart } // target は元の pick query を保持
       : hasCardIdBind
         ? { ...pending.atomArgs, cardId: resolvedCardId, ...switchPart } // target は元の pick query を保持
         // BUG-165 (wave-10 2026-07-02): 旧 target:[resolvedCardId] は pickedUids (nMax>1 の複数選択、
@@ -402,9 +466,10 @@ function chooseAiPick(
       : cands;
     // engine mega-wave W4 (2026-07-03, r84): perSideMax (「自分と相手で1枚ずつ」B08019 a2) — distinctNames
     // と同型の greedy walk (side 別 counter)。両 flag 併用時は perSideMax gate → name-dedup の順で複合。
-    if (pending.distinctNames === true || pending.distinctLevel === true || typeof pending.perSideMax === 'number') {
+    if (pending.distinctNames === true || pending.distinctLevel === true || pending.distinctColors === true || typeof pending.perSideMax === 'number') {
       const seen = new Set<string>();
       const seenLv = new Set<number>(); // Cluster WB1 (2026-07-11, B09105): distinctLevel greedy dedup
+      const seenColors = new Set<string>();
       const bySide: Record<string, number> = {};
       const chosen: string[] = [];
       for (const c of orderedCands) {
@@ -426,6 +491,11 @@ function chooseAiPick(
             if (seenLv.has(lv)) continue;
             seenLv.add(lv);
           }
+        }
+        if (pending.distinctColors === true) {
+          const colors = def.card(c.cardId)?.colors ?? [];
+          if (colors.some(color => seenColors.has(color))) continue;
+          colors.forEach(color => seenColors.add(color));
         }
         if (typeof pending.perSideMax === 'number') {
           const side = (c as { player?: string }).player ?? '?';
@@ -525,6 +595,7 @@ export function hasPendingHumanPick(): boolean {
   const g = globalThis as {
     __pendingEffectPickQueue?: PendingEffectPickSide[];
     __pendingEffectOptionalSide?: { player: 'self' | 'opp' } | null;
+    __pendingEffectRepeatOptionalSide?: { player: 'self' | 'opp' } | null;
     __pendingEffectChoiceSide?: { player: 'self' | 'opp' } | null;
     __humanPlayerSide?: 'self' | 'opp' | null;
   };
@@ -532,8 +603,7 @@ export function hasPendingHumanPick(): boolean {
   if (humanSide === null) return false;
   if ((g.__pendingEffectPickQueue ?? []).some(p => p.player === humanSide)) return true;
   if (g.__pendingEffectOptionalSide?.player === humanSide) return true;
+  if (g.__pendingEffectRepeatOptionalSide?.player === humanSide) return true;
   if (g.__pendingEffectChoiceSide?.player === humanSide) return true;
   return false;
 }
-    __pendingEffectRepeatOptionalSide?: { player: 'self' | 'opp' } | null;
-  if (g.__pendingEffectRepeatOptionalSide?.player === humanSide) return true;

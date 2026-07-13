@@ -72,6 +72,11 @@ export type Condition =
   | { kind: 'flag'; player: 'self' | 'opp'; key: keyof TurnScopedFlags; v: boolean }
   | { kind: 'declaredUseUnder'; uid: string; abilityId: string; max: number }
   | { kind: 'bound'; key: string; presence?: 'exists' | 'matched' }
+  // Triggered observers can queue before their source leaves.  Resolution-time
+  // wording such as 「このキャラが現場にいる場合」 requires a source-uid check.
+  | { kind: 'sourceInScene' }
+  // B09024: sceneRemove が bind した除去前stateを後続conditionalで読む。
+  | { kind: 'boundCharStateIs'; bindKey: string; state: 'active' | 'sleep' | 'stun' }
   // engine additive wave (2026-06-30): cardKind を追加し色 AND **カード種別** で計数 (B08004 江戸川コナン
   // 「リムーブエリアに【黒】の**キャラ**が3枚以上ある場合」= 黒イベントを数えない)。cardKind 省略時は
   // 従来通り全種別計数 (回帰0)。field 名は discriminant `kind` と衝突するため cardKind (TargetFilter.kind 同値)。
@@ -267,6 +272,11 @@ export type TargetFilter = {
   // honor 経路 = matchOneFilter / targetFilterToPredicate / boundMatchesFilter の3 filter-eval サイト。
   cardNameNot?: string | string[];
   trait?: string | string[];
+  // B04055: deck-reveal only.  Match a revealed card when it shares at least
+  // one effective trait with the leave:to-remove payload's removedChar.
+  // Missing/non-removal payload fails closed; target pick paths do not have a
+  // trigger context and therefore also fail closed.
+  traitSharedWithTriggerRemoved?: boolean;
   color?: string | string[];
   // engine additive (2026-06-27): 色 NEGATION (「【X】以外の色を持つ」)。公式 B08079 裁定で some説確定:
   // 「X以外の色を1つ以上持つ」(= colors.some(c => c∉notSet))。mono-X は除外、2色{X,Y} は該当 (Y を持つ)。
@@ -341,6 +351,9 @@ export type TargetQuery = {
   //   (2つの pick が同一 (印字) レベルを共有できない)。distinctNames と同型 3経路 enforcement
   //   (resolve validate / chooseAiPick greedy / UI disabled)。card/char 候補は lookupCardDef(cardId).level で判定。
   distinctLevel?: boolean;
+  // B03042: selected characters must not share any printed color. A multicolor
+  // card occupies every one of its colors.
+  distinctColors?: boolean;
   // engine拡張 wave (2026-06-23): evidence area の pick を裏向き(未公開)のみに限定する。
   // 「(相手の)裏向きの証拠を1つまで選び、表向きにする」(evidenceFlip pick-form) 用。
   // 既存カードは未使用 (= no-op、smoke baseline 不変)。candidates.ts evidence case が honor。
@@ -643,6 +656,7 @@ export type Effect =
   | { kind: 'optional'; effect: Effect }
   | { kind: 'conditional'; if: Condition; then: Effect; else?: Effect }
   | { kind: 'forEach'; over: TargetingRef; do: Effect }
+  | { kind: 'repeatOptional'; max: number; body: Effect }
   | { kind: 'replace'; trigger: TriggerRef; with: Effect }
   | { kind: 'negate'; trigger: TriggerRef }
   | { kind: 'atom'; verb: AtomVerb; args: unknown }
@@ -651,4 +665,3 @@ export type Effect =
   // step N が「実効果あり」のとき N+1 を実行。N が no-op (no candidate) なら以降 skip。
   // pick await 時は chain 継続情報を保存して effectPickResolve 後に再 queue する。
   | { kind: 'chain'; steps: Effect[] };
-  | { kind: 'repeatOptional'; max: number; body: Effect }
