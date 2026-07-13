@@ -19,6 +19,13 @@
 - **Lane C — 並列準備**: 残83枚を「既存DSL / twin・P / 1 primitiveで複数解禁 / 単発T3」に再分類する。次のT3候補のgrounding、公式Q&A照合、RED probeを準備する。
 - Lane A/Bの各commit後にCIを確認する。最後にcrosscheck、registry漏れ、DEFERRED-INDEX、残printings再計数を行う。
 
+## 見積りの根拠と失敗条件
+
+- 過去実績: 2026-07-13の夜間runは **+50 printings**。ただし前セッションでauthor済みのカード/probeと、P-spread自動展開をまとめて出荷したthroughputであり、新規T3を50枚実装した速度ではない。
+- 直前の直列T3深掘りと、少数Wave D処理はこの大量waveを維持できなかった。以後、Lane Aを1 primitiveずつに限定し、Lane Bを止めない。
+- **3 session完了は条件付き目標**: T3を前倒しで閉じ、各sessionでgreen/twin/P-spreadを20〜35 printings出荷できる場合のみ。大量waveが20未満、またはT3が新UI/state machineを要する時点で再見積りする。
+- B07011（決定論RNG）、B06095（8エリアtrait）、B02022（action対象強制）、B02086（相手optional decision/contact限定防止）は独立T3 primitive。green/twin大量waveなしに最終1 sessionへ圧縮しない。
+
 ## 必須手順
 
 - 最寄りの `AGENTS.md`、`.codex/context/current.md`、該当ルールのみ読む。

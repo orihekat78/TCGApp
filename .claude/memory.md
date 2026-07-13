@@ -54,3 +54,9 @@
 - Added `untargetableByOppEffect` and `untargetableByOppEffectAura`. Resolver filters only cross-side effect picks; action target declaration and non-selection effects remain unaffected.
 - Reader examines printed continuous abilities and face-up `on-set-host` riders; conditions use the bearer/host context. This unlocks B01006/P, B03030/P, B05008/P, B05048, and B08017/P.
 - Focused evidence: bond-protection and sleep-host aura probes green, plus `tsc` and diff-check. Remaining: final T3 Sol review/full gates and B05048 spread.
+
+## 2026-07-13 — next-session throughput correction
+
+- Historical +50p evidence is batch throughput: pre-authored cards/probes and P-spread deployment, not 50 new T3 implementations.
+- Next prompt now requires parallel Lane A (one T3 primitive) and Lane B (20–35 existing-DSL/green/twin/P printings); Lane C prepares grounding and RED probes.
+- Do not compress B07011, B06095, B02022, and B02086 into one final session without a parallel bulk wave. Re-estimate when Lane B ships under 20p or a T3 needs new UI/state machinery.
