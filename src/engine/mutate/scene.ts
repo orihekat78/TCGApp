@@ -200,6 +200,7 @@ function emitSetCardLeaves(s: GameState, char: SceneCharacter, player: Player, c
         hostUid: char.uid,
         hostCardId: char.cardId,
         setCardId: entry.cardId,
+        setCardInstanceId: entry.instanceId,
         faceUp: entry.faceUp,
         cause,
       },

@@ -1,0 +1,28 @@
+// rules: 07-action-flow.md, 15-abilities-effects.md, 16-card-set.md
+import type { AbilityDef, CardDef } from '@/engine/types';
+
+const a1: AbilityDef = {
+  id: 'a1', type: 'triggered', scope: 'on-hand',
+  trigger: { hook: 'effect:declared', selfOnly: true, matcher: (p: unknown) => (p as { kind?: unknown })?.kind === 'event-use' },
+  effect: { kind: 'atom', verb: 'charSetCard', args: { player: 'self', fromSelf: true, n: 1, filter: { kind: 'character', trait: 'YAIBA', levelMin: 8 } } },
+  description: 'このイベントを自分の現場にいるレベル8以上の〚特徴［YAIBA］〛のキャラ1枚にセットする。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/16-card-set.md'],
+};
+const a2: AbilityDef = {
+  id: 'a2', type: 'continuous', scope: 'on-set-host',
+  continuousModifier: { grantKeywords: () => ['text:actionTargetsActive'] },
+  description: 'このイベントがセットされているキャラは「このキャラは相手の現場にいるアクティブ状態のキャラを指定してアクションできる。」を持つ。',
+  ruleRefs: ['rules/07-action-flow.md', 'rules/16-card-set.md'],
+};
+const a3: AbilityDef = {
+  id: 'a3', type: 'triggered', scope: 'on-set-self',
+  trigger: { hook: 'setcard:leave' }, condition: { kind: 'turn', player: 'opp' },
+  effect: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', from: 'remove', max: 1, enterSleep: true, viaEffect: true, filter: { kind: 'character', trait: 'YAIBA', levelMax: 5 } } },
+  description: '【相手ターン中】キャラにセットされていたこのイベントがリムーブエリアに置かれたとき、自分のリムーブエリアにあるレベル5以下の〚特徴［YAIBA］〛のキャラを1枚まで選び、スリープ状態で登場させる。',
+  ruleRefs: ['rules/15-abilities-effects.md', 'rules/16-card-set.md'],
+};
+export const B06064: CardDef = {
+  id: 'B06064', no: '0685/B06064', kind: 'event', names: ['刃新陰流風車'], colors: ['白'], level: 7,
+  traits: [], keywords: [], rarity: 'C', imageUrl: '1754285220546831.jpg', abilities: [a1, a2, a3],
+  ruleRefs: ['rules/07-action-flow.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md'],
+};

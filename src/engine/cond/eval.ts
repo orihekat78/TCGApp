@@ -392,6 +392,18 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const uids = resolveCharsForRef(state, cond.ref, ctx);
       return uids.some(uid => charRead.state(state, uid) === cond.state);
     }
+    case 'charMatches': {
+      const uids = resolveCharsForRef(state, cond.ref, ctx);
+      for (const uid of uids) {
+        for (const player of ['self', 'opp'] as const) {
+          const ch = state.players[player].scene.find(c => c.uid === uid);
+          if (!ch) continue;
+          const cand: Candidate = { kind: 'char', uid: ch.uid, cardId: ch.cardId, player };
+          if (matchOneFilter(state, ch.cardId, cond.filter, ch, cand)) return true;
+        }
+      }
+      return false;
+    }
     case 'contactOpponentApHigher': {
       // D11007 a3: contact:start payload から aUid (attacker) / bUid (defender) を取得。
       // 自分 (ctx.source.uid) が攻撃者 (aUid) として、相手 (bUid) の AP が自分より高いコンタクトのみ true。
@@ -894,7 +906,7 @@ const CONDITION_KIND_MAP = {
   sceneLpSum: true, costRemovedMatches: true, // engine additive wave (2026-06-29d)
   costRevealedMatches: true, // attribution mini-wave (2026-07-10)
   enterCountAtMost: true, // engine additive (2026-06-29, B09089)
-  stackedCountAtLeast: true, charStateIs: true, // charStateIs: BUG-145 (2026-06-15)
+  stackedCountAtLeast: true, charStateIs: true, charMatches: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
   contactCharMatches: true, // engine defer-unlock mini-wave (2026-07-09, B02006/B02080/PR278)
   enterOrderEquals: true, boundCharStateIs: true, boundMatchesFilter: true, triggerCharMatches: true,

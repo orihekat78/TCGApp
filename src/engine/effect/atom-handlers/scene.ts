@@ -479,7 +479,17 @@ export function atomCharRemoveSetCard(s: GameState, a: Record<string, unknown>, 
       if (typeof rsUid !== 'string' || rsUid.startsWith('$')) return;
       // engine mega-wave W4 (2026-07-03, r82 同梱): faceDownOnly opt-in 転送 (B08035 a2「裏向きで
       // セットされているカード」)。未指定は従来通り末尾1枚 (B02033 は裏向き限定なし = 挙動不変)。
-      const removed = mutate.char.removeOneSetCard(s, rsUid, a.faceDownOnly === true ? { faceDownOnly: true } : undefined);
+      const setCardId = resolveBindRef(a.setCardId, ctx) as string | undefined;
+      const setCardInstanceId = resolveBindRef(a.setCardInstanceId, ctx) as string | undefined;
+      const removeOpts = typeof setCardInstanceId === 'string' && !setCardInstanceId.startsWith('$')
+        ? { setCardInstanceId }
+        : typeof setCardId === 'string' && !setCardId.startsWith('$')
+        ? { setCardId }
+        : a.faceDownOnly === true ? { faceDownOnly: true } : undefined;
+      const removed = mutate.char.removeOneSetCard(s, rsUid, removeOpts);
+      if (!removed && a.gateOnMissing === true) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+      }
       // engine A3 wave (2026-07-11, B02087): 実除去カードを bind (「リムーブした場合」gate 用)。
       //   removed=cardId なら [{cardId}]、無ければ []。後続 conditional{bound presence:'matched'} が
       //   「リムーブした場合のみ」を判定 (0枚 decline/no-candidate は unbound/[] → not-matched)。既存 caller は

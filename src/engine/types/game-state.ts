@@ -36,6 +36,8 @@ export type PlayerState = {
 export type SetCardEntry = {
   cardId: string;
   faceUp: boolean;
+  /** Runtime occurrence identity. Optional for saved states and legacy fixtures. */
+  instanceId?: string;
 };
 
 export type SceneCharacter = {
@@ -219,6 +221,8 @@ export type GameState = {
   };
   players: { self: PlayerState; opp: PlayerState };
   pendingEffects: EffectStackEntry[];
+  /** Monotonic set-card occurrence allocator; absent only in legacy saved state. */
+  setCardInstanceSeq?: number;
   /**
    * 離場後予約効果 queue (mega-wave W6 step8, row75)。コストで源カードが盤面を離れる
    * 「ターン終了時〜」(B08069) /「このターン中、次に〜したとき」(B01058) をカード位置非依存で保持。

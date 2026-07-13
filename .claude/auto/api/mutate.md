@@ -29,7 +29,7 @@ Immer draft 上の primitive 変更操作
 | 名前 | メンバー |
 | ---- | -------- |
 | `case` _(internal: `caseOp`)_ | `init`, `toResolved` |
-| `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `grantAbility`, `grantKeyword`, `grantTrait`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `removeOneSetCard`, `revokeKeyword`, `revokeKeywordTurn`, `revokeTrait`, `setCard`, `setOverrideAP`, `setOverrideAPTurn`, `setOverrideLP`, `setOverrideLPTurn`, `setTurnEffect`, `stackCard`, `tagSelectedByOwnMr` |
+| `char` | `clearTurnEffects`, `disableOriginalAbilities`, `disguiseInto`, `ensureSetCardInstanceIds`, `grantAbility`, `grantKeyword`, `grantTrait`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `removeOneSetCard`, `revokeKeyword`, `revokeKeywordTurn`, `revokeTrait`, `setCard`, `setOverrideAP`, `setOverrideAPTurn`, `setOverrideLP`, `setOverrideLPTurn`, `setTurnEffect`, `stackCard`, `tagSelectedByOwnMr` |
 | `deck` | `draw`, `peek`, `refresh`, `removeFromTop`, `reveal`, `shuffle`, `toBottom`, `toTop` |
 | `evidence` | `addFromDeck`, `flipFaceDown`, `flipFaceUp`, `gainCard`, `removeAt`, `removeTop`, `toDeckTop`, `toRemove` |
 | `file` | `addFromDeckTop`, `flipTop`, `insertAssistedPartner`, `insertBottomFaceUp`, `popTop`, `removeAssistedPartner` |

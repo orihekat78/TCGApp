@@ -706,6 +706,9 @@ import { B07038 } from '../ct-p07/B07038.js';
 
 import { B07034 } from '../ct-p07/B07034.js';
 import { B07034P } from '../ct-p07/B07034P.js';
+import { B07033 } from '../ct-p07/B07033.js';
+import { B07033P } from '../ct-p07/B07033P.js';
+import { B07033P2 } from '../ct-p07/B07033P2.js';
 import { PR231 } from '../pr-01/PR231.js';
 // engine拡張 wave#2 cluster11 (enter-source-level filter, BUG-146 coupled)
 import { B01014 } from '../ct-p01/B01014.js';
@@ -803,8 +806,12 @@ import { B05046P } from '../ct-p05/B05046P.js';
 import { B05046P2 } from '../ct-p05/B05046P2.js';
 import { B06011 } from '../ct-p06/B06011.js';
 import { B06011P } from '../ct-p06/B06011P.js';
+import { B06012 } from '../ct-p06/B06012.js';
+import { B06012P } from '../ct-p06/B06012P.js';
 import { B06013 } from '../ct-p06/B06013.js';
 import { B06013P } from '../ct-p06/B06013P.js';
+import { B06064 } from '../ct-p06/B06064.js';
+import { B06064P } from '../ct-p06/B06064P.js';
 import { PR170 } from '../pr-01/PR170.js';
 import { B07004 } from '../ct-p07/B07004.js';
 import { B07004P } from '../ct-p07/B07004P.js';
@@ -1506,6 +1513,8 @@ import { B03063 } from '../ct-p03/B03063.js';
 import { B09011 } from '../ct-p09/B09011.js';
 import { B09112 } from '../ct-p09/B09112.js';
 import { B09112P } from '../ct-p09/B09112P.js';
+import { B09113 } from '../ct-p09/B09113.js';
+import { B09113P } from '../ct-p09/B09113P.js';
 import { B05009 } from '../ct-p05/B05009.js';
 import { B05009P } from '../ct-p05/B05009P.js';
 import { D10022 } from '../ct-d10/D10022.js';
@@ -1700,7 +1709,7 @@ export const REUSE_CARDS: CardDef[] = [
   // 赤魔術 family残 (B07031/B07038/B07047)
   B07047, B07031, B07038,
   // engine拡張 wave#2 cluster9 (setcard:leave hook)
-  B07034, B07034P, PR231,
+  B07033, B07033P, B07033P2, B07034, B07034P, PR231,
   // engine拡張 wave#2 cluster11 (enter-source-level filter, BUG-146 coupled)
   B01014, B01015, B01021, B07019,
   // engine拡張 wave#2 cluster12 — nested-filter-dyn (FILE-level enter events)
@@ -1714,7 +1723,7 @@ export const REUSE_CARDS: CardDef[] = [
   // engine拡張 wave-11 (2026-07-02) — hirameki actor payload ($trigger.byUid「アクション中のキャラ」) consumer
   B03085, B03085P, B05032, B05111,
   // Task A batch
-  B01018, B01062, B01062P, B01066, B01066P, B02003, B02003P, B02005, B02005P, B02019, B02019P, B02044, B02044P, B02077, B02077P, PR080, B03005, D10020, D10021, B03025, B03086, B03086P, B03089, B03089P, D09020, B04014, B04014P, B04017, B04017P, B05006, B05006P, B05006P2, B05020, B05020P, B05046, B05046P, B05046P2, B06011, B06011P, B06013, B06013P, PR170, B07004, B07004P, B07020, B07020P, B07023, B07023P, B07098, B07098P, D09004, D09005, PR193, PR060, PR064, PR154,
+  B01018, B01062, B01062P, B01066, B01066P, B02003, B02003P, B02005, B02005P, B02019, B02019P, B02044, B02044P, B02077, B02077P, PR080, B03005, D10020, D10021, B03025, B03086, B03086P, B03089, B03089P, D09020, B04014, B04014P, B04017, B04017P, B05006, B05006P, B05006P2, B05020, B05020P, B05046, B05046P, B05046P2, B06011, B06011P, B06012, B06012P, B06013, B06013P, B06064, B06064P, PR170, B07004, B07004P, B07020, B07020P, B07023, B07023P, B07098, B07098P, D09004, D09005, PR193, PR060, PR064, PR154,
   // triage-batch2 (window4 confirmed greens: B01052/B02025/B04022/B04031 + byte-identical clones)
   B01052, D06016, B02025, B02025P, B04022, B04022P, B04031, B04031P,
   // triage batch#3 (window4 verified green B03079 + clone)
@@ -1979,7 +1988,7 @@ export const REUSE_CARDS: CardDef[] = [
   // night-wA: engine additive wave A (verb/hook/cond/dyn/cost) exemplar 19 printings (2026-07-11)
   B07049, D10009, D10010, B07063, B07063P, B04073, B03008, B03040, B02084, B02084P, B03041, B03041P, B03042, B09107, B09107P, B02087, B02087P, B05007, B05007P, B05097,
   // night-wB: param 拡張 wave B exemplar 12 printings (2026-07-11)
-  B07030, B07030P, B07030P2, B07061, B07061P, B09055, B09055P, B09055P2, B03063, B09011, B09112, B09112P, B05009, B05009P, D10022, B01070, B05075,
+  B07030, B07030P, B07030P2, B07061, B07061P, B09055, B09055P, B09055P2, B03063, B09011, B09112, B09112P, B09113, B09113P, B05009, B05009P, D10022, B01070, B05075,
   // night-wB P spread 補完 (B09011P)
   B09011P,
   // night-wC (2026-07-11): charGrantAbility declared 解禁 (B06042) + hirameki optional humanChooser (B06032/B09081)

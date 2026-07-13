@@ -570,6 +570,13 @@ export function registerTriggeredListener(): void {
       });
       continue;
     }
+    if (hook === 'phase:end:start') {
+      event.on(hook, (state, payload, source) => {
+        handleOnSetSelfPhaseEndStart(state, payload, source);
+        handleHook('phase:end:start', state, payload, source);
+      });
+      continue;
+    }
     event.on(hook, (state, payload, source) => {
       handleHook(hook, state, payload, source);
     });
@@ -827,6 +834,42 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
  * hook:'setcard:leave' の triggered を発火。faceUp:false は情報を持たない (rules/16 / B02084 Q&A) → 不発。
  * source uid は自己参照しない ability 用に host uid を借りる (line2 は remove-area pick で自 uid 不要)。
  */
+function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source: unknown): void {
+  charMutator.ensureSetCardInstanceIds(state);
+  for (const player of ['self', 'opp'] as const) {
+    for (const host of state.players[player].scene) {
+      for (const setCard of host.setCards) {
+        if (!setCard.faceUp) continue;
+        const def = readDef.card(setCard.cardId);
+        if (!def) continue;
+        for (const ability of def.abilities as AbilityDef[]) {
+          if (ability.type !== 'triggered' || ability.scope !== 'on-set-self') continue;
+          const trigger = ability.trigger;
+          if (!trigger || trigger.hook !== 'phase:end:start') continue;
+          if (trigger.selfOnly && !selfOnlyMatches({ player, uid: host.uid, cardId: setCard.cardId, area: 'scene' }, payload, source)) continue;
+          if (trigger.matcher && !trigger.matcher(payload, state)) continue;
+          const triggerPayload = { ...(payload as Record<string, unknown>), setCardInstanceId: setCard.instanceId };
+          const ctx: EffectCtx = {
+            source: { cardId: setCard.cardId, uid: host.uid, abilityId: ability.id, player, area: 'scene' },
+            bindings: {}, triggerPayload,
+          };
+          if (trigger.matcherCondition && !evalCond(state, trigger.matcherCondition, ctx)) continue;
+          if (ability.condition && !evalCond(state, ability.condition, ctx)) continue;
+          if (!ability.effect) continue;
+          const human = getHumanPlayerSide() === player;
+          const policy = new HeuristicPolicy();
+          const resolved = resolveEffectPicks(state, ability.effect, ctx, {
+            chooseAtomTarget: human ? undefined : policy.chooseAtomTarget?.bind(policy),
+            byPlayer: player, humanChooser: human,
+            source: { cardId: setCard.cardId, abilityId: ability.id },
+          });
+          event.queue(state, resolved, { player, uid: host.uid, cardId: setCard.cardId }, 'phase:end:start', triggerPayload);
+        }
+      }
+    }
+  }
+}
+
 function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unknown): void {
   const pl = payload as
     | { player?: Player; setCardId?: string; faceUp?: boolean; hostUid?: string }

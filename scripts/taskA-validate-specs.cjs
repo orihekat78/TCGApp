@@ -97,7 +97,7 @@ const CONDS = new Set([
   // engine拡張 wave#2 cluster3 (2026-06-13)
   'triggerActionKind',
   // BUG-145 self-state micro-cluster (2026-06-15)
-  'charStateIs',
+  'charStateIs', 'charMatches',
   // engine拡張 wave#2 cluster11 (2026-06-15, BUG-146 coupled): 効果登場の原因カード評価
   'enterSource',
   // engine拡張 wave#2 cluster15 (2026-06-16): removal-observer (反撃カード一族)

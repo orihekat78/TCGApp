@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `66c5eb939baf`
+> Source hash: `13b4de71d1e0`
 
 公式ルール [`08-contact.md`](../../../rules/08-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -22,7 +22,7 @@
 - [`engine-api-flow-control`](../by-spec/engine-api-flow-control.md)
 - [`engine-cluster15-contact-removal-observer-design`](../by-spec/engine-cluster15-contact-removal-observer-design.md)
 
-## 📄 参照ソース (107)
+## 📄 参照ソース (109)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -44,4 +44,4 @@
 - [`src/cards/ct-p01/B01010.ts`](../../../../src/cards/ct-p01/B01010.ts)
 - [`src/cards/ct-p01/B01010P.ts`](../../../../src/cards/ct-p01/B01010P.ts)
 - [`src/cards/ct-p01/B01023.ts`](../../../../src/cards/ct-p01/B01023.ts)
-- _...ほか 87 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 89 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

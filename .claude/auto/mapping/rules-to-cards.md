@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `66c5eb939baf`
+> Source hash: `13b4de71d1e0`
 
 各公式ルールがどのソースファイルから参照されているか。未参照ルールは要確認。
 
@@ -15,27 +15,27 @@
 | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) | 1 | `ui/services/tutorialSteps.ts` |
 | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) | 119 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 116 件 |
 | [`02-deck-construction.md`](../../rules/02-deck-construction.md) | 15 | `cards/ct-d08/index.ts`, `cards/ct-d11/index.ts`, `cards/ct-p05/B05092.ts` ほか 12 件 |
-| [`03-field-areas.md`](../../rules/03-field-areas.md) | 363 | `cards/ct-d01/D01008.ts`, `cards/ct-d01/D01012.ts`, `cards/ct-d03/D03002.ts` ほか 360 件 |
+| [`03-field-areas.md`](../../rules/03-field-areas.md) | 368 | `cards/ct-d01/D01008.ts`, `cards/ct-d01/D01012.ts`, `cards/ct-d03/D03002.ts` ほか 365 件 |
 | [`04-game-setup.md`](../../rules/04-game-setup.md) | 11 | `ai/match.ts`, `cards/ct-d08/D08001.ts`, `cards/ct-d08/D08002.ts` ほか 8 件 |
 | [`05-turn-phases.md`](../../rules/05-turn-phases.md) | 107 | `ai/match.ts`, `ai/move-enumerator.ts`, `ai/policies/random.ts` ほか 104 件 |
 | [`06-card-types.md`](../../rules/06-card-types.md) | 47 | `cards/ct-d01/D01016.ts`, `cards/ct-d02/D02016.ts`, `cards/ct-d03/D03016.ts` ほか 44 件 |
-| [`07-action-flow.md`](../../rules/07-action-flow.md) | 179 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 176 件 |
-| [`08-contact.md`](../../rules/08-contact.md) | 107 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/_shared/contactTargetMatches.ts` ほか 104 件 |
-| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 241 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 238 件 |
+| [`07-action-flow.md`](../../rules/07-action-flow.md) | 181 | `ai/action-resolution.ts`, `ai/move-enumerator.ts`, `ai/policies/heuristic.ts` ほか 178 件 |
+| [`08-contact.md`](../../rules/08-contact.md) | 109 | `ai/action-resolution.ts`, `ai/policies/heuristic.ts`, `cards/_shared/contactTargetMatches.ts` ほか 106 件 |
+| [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) | 244 | `cards/_shared/contactTargetMatches.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01009.ts` ほか 241 件 |
 | [`10-action-event.md`](../../rules/10-action-event.md) | 291 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 288 件 |
 | [`11-reasoning.md`](../../rules/11-reasoning.md) | 72 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `cards/ct-d01/D01010.ts` ほか 69 件 |
 | [`12-next-hint.md`](../../rules/12-next-hint.md) | 34 | `ai/policies/heuristic.ts`, `cards/ct-p01/B01005.ts`, `cards/ct-p01/B01009.ts` ほか 31 件 |
-| [`13-keywords.md`](../../rules/13-keywords.md) | 413 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 410 件 |
-| [`14-refresh.md`](../../rules/14-refresh.md) | 341 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 338 件 |
-| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 1187 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 1184 件 |
+| [`13-keywords.md`](../../rules/13-keywords.md) | 416 | `ai/move-enumerator.ts`, `ai/policies/heuristic.ts`, `ai/policy.ts` ほか 413 件 |
+| [`14-refresh.md`](../../rules/14-refresh.md) | 343 | `cards/ct-d01/D01003.ts`, `cards/ct-d01/D01006.ts`, `cards/ct-d01/D01012.ts` ほか 340 件 |
+| [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) | 1196 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseResolvedHandRemove.ts`, `cards/_shared/eventRemoveByAP.ts` ほか 1193 件 |
 | [`15-contact-removal-observer-design.md`](../../rules/15-contact-removal-observer-design.md) | 4 | `cards/ct-d10/D10007.ts`, `cards/ct-d10/D10008.ts`, `cards/ct-p01/B01007.ts`, `cards/ct-p09/B09026.ts` |
 | [`15-workflow.md`](../../rules/15-workflow.md) | 2 | `cards/ct-d08/D08015.ts`, `cards/ct-d08/D08016.ts` |
-| [`16-card-set.md`](../../rules/16-card-set.md) | 88 | `cards/ct-d08/D08021.ts`, `cards/ct-d10/D10009.ts`, `cards/ct-d10/D10010.ts` ほか 85 件 |
-| [`17-icons.md`](../../rules/17-icons.md) | 1176 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 1173 件 |
+| [`16-card-set.md`](../../rules/16-card-set.md) | 92 | `cards/ct-d08/D08021.ts`, `cards/ct-d10/D10009.ts`, `cards/ct-d10/D10010.ts` ほか 89 件 |
+| [`17-icons.md`](../../rules/17-icons.md) | 1179 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/caseMonoColor.ts`, `cards/_shared/caseTraitConditioned.ts` ほか 1176 件 |
 | [`18-mr.md`](../../rules/18-mr.md) | 42 | `cards/ct-p05/B05005.ts`, `cards/ct-p05/B05045.ts`, `cards/ct-p05/B05066.ts` ほか 39 件 |
 | [`19-special-rules.md`](../../rules/19-special-rules.md) | 310 | `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/_shared/eventRemoveByAP.ts`, `cards/ct-d01/D01003.ts` ほか 307 件 |
 | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) | 268 | `cards/_shared/caseMonoColor.ts`, `cards/ct-d01/D01004.ts`, `cards/ct-d01/D01008.ts` ほか 265 件 |
-| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 373 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 370 件 |
+| [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) | 375 | `ai/ability-ctx.ts`, `cards/_shared/caseDeclaredEvidenceFlip.ts`, `cards/ct-d01/D01003.ts` ほか 372 件 |
 | [`22-qa-action-contact.md`](../../rules/22-qa-action-contact.md) | 293 | `cards/_shared/contactTargetMatches.ts`, `cards/ct-d01/D01009.ts`, `cards/ct-d01/D01010.ts` ほか 290 件 |
 | [`23-qa-disguise-cutin.md`](../../rules/23-qa-disguise-cutin.md) | 46 | `cards/ct-d11/D11013.ts`, `cards/ct-d11/D11017.ts`, `cards/ct-d11/D11018.ts` ほか 43 件 |
 | [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) | 168 | `cards/_shared/partnerColorFilteredAssault.ts`, `cards/_shared/partnerColorKeyword.ts`, `cards/ct-d01/D01005.ts` ほか 165 件 |

@@ -50,6 +50,7 @@ export function createEmptyGameState(): GameState {
       opp: createEmptyPlayerState(6),
     },
     pendingEffects: [],
+    setCardInstanceSeq: 1,
     reservedEffects: [], // W6 step8 (row75): 離場後予約効果 queue
 
     // rules: 13-keywords.md — 痕跡は初期状態 '未発見'

@@ -325,11 +325,40 @@ function grantAbility(s: GameState, uid: string, ability: object): void {
  * キャラにカードをセット (rules/16 裏向きセット対応)
  * faceUp=false で裏向きセット (リムーブ時に表向きにしてリムーブエリアへ)
  */
+/** Backfill legacy entries and allocate per-state IDs so hydration cannot collide. */
+function ensureSetCardInstanceIds(s: GameState): void {
+  const used = new Set<string>();
+  for (const player of ['self', 'opp'] as const) {
+    for (const char of s.players[player].scene) {
+      for (const entry of char.setCards) if (entry.instanceId) used.add(entry.instanceId);
+    }
+  }
+  let seq = s.setCardInstanceSeq ?? 1;
+  for (const id of used) {
+    const match = /^set:(\d+)$/.exec(id);
+    if (match) seq = Math.max(seq, Number(match[1]) + 1);
+  }
+  for (const player of ['self', 'opp'] as const) {
+    for (const char of s.players[player].scene) {
+      for (const entry of char.setCards) {
+        if (entry.instanceId) continue;
+        let id = `set:${seq++}`;
+        while (used.has(id)) id = `set:${seq++}`;
+        entry.instanceId = id;
+        used.add(id);
+      }
+    }
+  }
+  s.setCardInstanceSeq = seq;
+}
+
 function setCard(s: GameState, uid: string, cardId: string, faceUp: boolean): void {
+  ensureSetCardInstanceIds(s);
   const found = findChar(s, uid);
   if (!found) return;
   const { char, player } = found;
-  char.setCards.push({ cardId, faceUp });
+  const instanceId = `set:${s.setCardInstanceSeq!++}`;
+  char.setCards.push({ cardId, faceUp, instanceId });
   // engine additive (2026-06-29): カード1枚が host にセットされた → setcard:enter emit (setcard:leave の対)。
   // push 後 (host は在場) に emit するため listener (host 自身 selfOnly) は collectCardsInPlay で捕捉される。
   // payload/source は setcard:leave と同形。cause:'effect' (本関数は atomCharSetCard 経由のみ)。
@@ -338,7 +367,7 @@ function setCard(s: GameState, uid: string, cardId: string, faceUp: boolean): vo
   event.emit(
     s,
     'setcard:enter',
-    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: cardId, faceUp, cause: 'effect' },
+    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: cardId, setCardInstanceId: instanceId, faceUp, cause: 'effect' },
     { player, uid: char.uid, cardId: char.cardId },
   );
 }
@@ -386,15 +415,24 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
 function removeOneSetCard(
   s: GameState,
   uid: string,
-  opts?: { faceDownOnly?: boolean; cause?: 'effect' | 'cost' },
+  opts?: { faceDownOnly?: boolean; setCardId?: string; setCardInstanceId?: string; cause?: 'effect' | 'cost' },
 ): string | null {
+  ensureSetCardInstanceIds(s);
   const found = findChar(s, uid);
   if (!found) return null;
   const { char, player } = found;
   const faceDownOnly = opts?.faceDownOnly ?? false;
   const cause = opts?.cause ?? 'effect';
-  let entry: { cardId: string; faceUp: boolean } | undefined;
-  if (faceDownOnly) {
+  let entry: { cardId: string; faceUp: boolean; instanceId?: string } | undefined;
+  if (typeof opts?.setCardInstanceId === 'string') {
+    const idx = char.setCards.findIndex((candidate) => candidate.instanceId === opts.setCardInstanceId);
+    if (idx < 0) return null;
+    entry = char.setCards.splice(idx, 1)[0];
+  } else if (typeof opts?.setCardId === 'string') {
+    const idx = char.setCards.findIndex((candidate) => candidate.cardId === opts.setCardId);
+    if (idx < 0) return null;
+    entry = char.setCards.splice(idx, 1)[0];
+  } else if (faceDownOnly) {
     let idx = -1;
     for (let i = char.setCards.length - 1; i >= 0; i--) {
       if (!char.setCards[i].faceUp) { idx = i; break; }
@@ -412,7 +450,7 @@ function removeOneSetCard(
   event.emit(
     s,
     'setcard:leave',
-    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: entry.cardId, faceUp: entry.faceUp, cause },
+    { player, hostUid: char.uid, hostCardId: char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause },
     { player, uid: char.uid, cardId: char.cardId },
   );
   return entry.cardId;
@@ -459,5 +497,6 @@ export const char = {
   stackCard,
   removeAllSetAndStacked,
   removeOneSetCard,
+  ensureSetCardInstanceIds,
   disguiseInto,
 };

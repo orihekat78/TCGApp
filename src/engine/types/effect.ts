@@ -114,6 +114,7 @@ export type Condition =
   // (公式qAndA PR138/PR144/B04049: 既にスリープなら「スリープさせることができないので行えません」)。
   // ref 解決は apAtLeast/stackedCountAtLeast と同流儀 (resolveCharsForRef)。複数解決時は .some。
   | { kind: 'charStateIs'; ref: TargetingRef; state: 'active' | 'sleep' | 'stun' }
+  | { kind: 'charMatches'; ref: TargetingRef; filter: TargetFilter }
   // D11007 a3: contact:start hook 発火時、attacker (aUid) より defender (bUid) の方が AP が高い場合
   // payload は ctx.triggerPayload に詰められ、listener から評価される (TriggerDef.matcherCondition 経由)
   | { kind: 'contactOpponentApHigher' }
