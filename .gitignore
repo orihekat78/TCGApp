@@ -66,3 +66,4 @@ analysis.txt
 /.claude/specs/cards-data/_raw/
 /.claude/specs/cards-data/**/*.tsv
 /.codex/config.local.toml
+/.codex/context/current.md

@@ -17,6 +17,7 @@
     "docs:mapping": "tsx scripts/gen-docs/index.ts mapping",
     "docs:structure": "tsx scripts/gen-docs/index.ts structure",
     "docs:changelog": "tsx scripts/gen-docs/index.ts changelog",
+    "docs:codex-context": "node scripts/gen-codex-context.mjs",
     "docs": "tsx scripts/gen-docs/index.ts all",
     "docs:check": "tsx scripts/gen-docs/index.ts check",
     "lint:bugs": "tsx scripts/lint-bug-frontmatter.ts",

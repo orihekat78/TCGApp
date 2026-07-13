@@ -59,7 +59,7 @@ npm run docs     # 自動生成ドキュメント全部更新
 
 ### 規約・運用
 
-- [.claude/CLAUDE.md](.claude/CLAUDE.md) — プロジェクト規約 (骨格凍結原則 / セルフレビュー手順 / 効率より精度)
+- [AGENTS.md](AGENTS.md) — Codex プロジェクト規約 (骨格凍結原則 / セルフレビュー手順 / リスク連動の精度)
 - [.claude/memory.md](.claude/memory.md) — 現セッション作業ログ
 - [.claude/sessions/](.claude/sessions/) — 過去セッションのアーカイブ (日次詳細)
 - [.claude/auto/README.md](.claude/auto/README.md) — 🤖 自動生成ドキュメント運用ガイド
@@ -84,7 +84,7 @@ npm run docs     # 自動生成ドキュメント全部更新
 - 作業時は [.claude/memory.md](.claude/memory.md) に必ず追記
 - 骨格凍結原則: カード効果のための engine 修正禁止 → `cards/_shared/` に共通クラスで吸収
 - ユーザーレビュー前に Claude 自身が **セルフレビュー + 水平展開調査** を実施
-- 詳細: [.claude/CLAUDE.md](.claude/CLAUDE.md)
+- 詳細: [AGENTS.md](AGENTS.md)
 
 ## この README の運用
 
@@ -93,4 +93,4 @@ README は「プロジェクト紹介・起動方法・主要リンク」だけ�
 - **何ができたか (履歴)** → [CHANGELOG.md](CHANGELOG.md) に手書きで追記 (Phase / Round 完了時)
 - **構造・ファイル説明** → `npm run docs:structure` で [.claude/auto/structure.md](.claude/auto/structure.md) を再生成
 - **日次作業ログ** → [.claude/memory.md](.claude/memory.md) + [.claude/sessions/](.claude/sessions/)
-- **規約・手順** → [.claude/CLAUDE.md](.claude/CLAUDE.md)
+- **規約・手順** → [AGENTS.md](AGENTS.md)
