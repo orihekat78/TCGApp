@@ -152,11 +152,11 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     }
     case 'removeFromScene': {
       const targets = pickCandidates(state, cost.target, ctx, cost.n);
-      for (const cand of targets) {
-        if (cand.kind !== 'char') continue;
-        mutate.scene.removeToRemove(state, cand.uid, 'cost');
-        acc.paidItems.push({ kind: 'removeFromScene', details: { uid: cand.uid } });
-      }
+      const chars = targets.filter((cand): cand is Candidate & { kind: 'char' } => cand.kind === 'char');
+      // One removeFromScene cost pays all selected characters simultaneously.
+      // This preserves leave-trigger auras when bearer and recipient leave together.
+      mutate.scene.removeToRemoveBatch(state, chars.map(cand => cand.uid), 'cost');
+      for (const cand of chars) acc.paidItems.push({ kind: 'removeFromScene', details: { uid: cand.uid } });
       return;
     }
     // engine mega-wave W4 (2026-07-03, r6): 現場キャラを能力使用キャラ自身の下に重ねる cost (B09048 a2)。

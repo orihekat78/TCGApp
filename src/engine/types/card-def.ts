@@ -110,6 +110,12 @@ export type ContinuousDelta =
 export type FilteredAssaultGrant = { targetKind: 'char' | 'case'; filter: TargetFilter };
 
 export type ContinuousModifier = {
+  /**
+   * Grants one triggered ability to each matching friendly scene character.
+   * The generated ability keeps the recipient as its source; bearer identity
+   * is appended to its id, so independent aura sources queue independently.
+   */
+  triggeredAbilityAura?: { filter: TargetFilter; excludeSelf?: boolean; ability: AbilityDef };
   apDelta?: ContinuousDelta;
   lpDelta?: ContinuousDelta;
   // engine additive wave (2026-06-24): 条件付き継続レベル修正 (「【自分ターン中】レベル+1」B08059 /

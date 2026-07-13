@@ -2,8 +2,9 @@
 // rules: 03-field-areas.md, 09-cutin-disguise.md, 16-card-set.md, 20-color-and-switch.md
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
-import type { GameState, SceneCharacter, RemoveResult } from '@/engine/types';
+import type { AbilityDef, GameState, SceneCharacter, RemoveResult } from '@/engine/types';
 import { event } from '../event/index.js';
+import { effectiveTriggeredAuraAbilities } from '../read/triggered-aura.js';
 import { def } from '../read/def.js'; // MR partner-area (rules/18): isMR 判定 (def → types のみ依存、循環なし)
 import { sceneCap } from '../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 import { consultLeaveIntercept } from '../effect/consult-leave-intercept.js'; // W6 step10 (row9): pre-splice consult (純関数 leaf、循環なし)
@@ -11,6 +12,11 @@ import { consultLeaveIntercept } from '../effect/consult-leave-intercept.js'; //
 type Player = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
 type RemoveCause = 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow';
+type RemoveOpts = {
+  noMrRedirect?: boolean;
+  byPlayer?: Player;
+  triggeredAuraAbilities?: AbilityDef[];
+};
 
 export interface EnterOpts {
   active?: boolean;   // false で sleep 状態で登場 (デフォルト: true)
@@ -217,7 +223,7 @@ function removeToRemove(
   // W6 step10 (row9): byPlayer = cause='effect' の効果 source 側 (atom-handlers/scene.ts が
   // ctx.source.player を渡す)。leave:intercept の「相手の能力や効果」帰属判定に使う。
   // 未指定 (legacy caller: turn.ts removeOnTurnEnd / MR②/switch 内部) は fail-closed = intercept なし。
-  opts?: { noMrRedirect?: boolean; byPlayer?: Player },
+  opts?: RemoveOpts,
 ): RemoveResult {
   const found = findChar(s, uid);
   if (!found) {
@@ -334,7 +340,11 @@ function removeToRemove(
       // cardId (S1 wave 2026-07-11, B05101): 離場キャラの cardId — 「このキャラをリムーブエリアから
       // 登場させて」(self-revival) が $trigger.cardId で remove 内の自カードを特定する用。
       // 既存 consumer は本フィールドを無視 = 回帰0 (additive)。
-      { uid: leavingUid, cause, side: player, byUid, removedChar: char, byPlayer: opts?.byPlayer, cardId: leavingCardId },
+      {
+        uid: leavingUid, cause, side: player, byUid, removedChar: char,
+        byPlayer: opts?.byPlayer, cardId: leavingCardId,
+        triggeredAuraAbilities: opts?.triggeredAuraAbilities,
+      },
       { player, uid: leavingUid, cardId: leavingCardId },
     );
   }
@@ -354,6 +364,34 @@ function removeToRemove(
     stackedCardsRemoved,
     triggeredHooks: [],
   };
+}
+
+/** Remove one simultaneous group with triggered auras fixed at batch start. */
+function removeToRemoveBatch(
+  s: GameState,
+  uids: string[],
+  cause: RemoveCause,
+  byUid?: string,
+  opts?: Omit<RemoveOpts, 'triggeredAuraAbilities'>,
+): void {
+  const uniqueUids = [...new Set(uids)];
+  const auraByUid = new Map<string, AbilityDef[]>();
+  for (const uid of uniqueUids) {
+    const found = findChar(s, uid);
+    if (!found) continue;
+    auraByUid.set(uid, effectiveTriggeredAuraAbilities(s, {
+      player: found.player,
+      uid: found.char.uid,
+      cardId: found.char.cardId,
+      char: found.char,
+    }));
+  }
+  for (const uid of uniqueUids) {
+    removeToRemove(s, uid, cause, byUid, {
+      ...opts,
+      triggeredAuraAbilities: auraByUid.get(uid),
+    });
+  }
 }
 
 /**
@@ -597,6 +635,7 @@ export const scene = {
   enter,
   switchEnter,
   removeToRemove,
+  removeToRemoveBatch,
   toHand,
   toDeck,
   toDeckBottom,
