@@ -6,7 +6,7 @@
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
 import type { GameState, Condition, EffectCtx, Candidate, SceneCharacter } from '@/engine/types';
-import { candidates, matchOneFilter, effectiveNameComponents } from '@/engine/target/candidates.js';
+import { candidates, matchOneFilter, effectiveNameComponents, effectiveTraitNames } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
@@ -190,8 +190,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const p = resolvePlayer(cond.player, ctx);
       const wants = Array.isArray(cond.trait) ? cond.trait : [cond.trait];
       const count = state.players[p].evidence.filter(e => {
-        const d = lookupCardDef(e.cardId);
-        const traits = d?.traits ?? [];
+        const traits = effectiveTraitNames(state, e.cardId, null, { kind: 'evidence', player: p, index: 0 });
         return wants.some(w => traits.includes(w));
       }).length;
       return count >= cond.n;
@@ -309,8 +308,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const p = resolvePlayer(cond.player, ctx);
       const wants = Array.isArray(cond.trait) ? cond.trait : [cond.trait];
       const count = state.players[p].remove.filter(id => {
-        const d = lookupCardDef(id);
-        const traits = d?.traits ?? [];
+        const traits = effectiveTraitNames(state, id, null, { kind: 'card', cardId: id, area: 'remove', player: p });
         return wants.some(w => traits.includes(w));
       }).length;
       return count >= cond.n;
@@ -383,6 +381,15 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'stackedCountAtLeast': {
       const uids = resolveCharsForRef(state, cond.ref, ctx);
       return uids.some(uid => charRead.stackedCount(state, uid) >= cond.n);
+    }
+    case 'hostSetCardCountAtLeast': {
+      const uid = ctx.source.uid;
+      if (typeof uid !== 'string') return false;
+      const host = state.players[ctx.source.player].scene.find(char => char.uid === uid);
+      if (!host) return false;
+      const count = host.setCards.filter(entry => entry.faceUp === true
+        && matchOneFilter(state, entry.cardId, cond.filter, null, null as never)).length;
+      return count >= cond.n;
     }
     // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態判定。
     // 「このキャラをスリープさせ(…)てもよい」を already-sleep で gate する用途
@@ -576,7 +583,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       if (f.trait !== undefined) {
         const wants = Array.isArray(f.trait) ? f.trait : [f.trait];
-        const traits = d?.traits ?? [];
+        const traits = effectiveTraitNames(state, cardId, null, { kind: 'card', cardId, area: 'bound', player: ctx.source.player });
         if (!wants.some(w => traits.includes(w))) return false;
       }
       if (f.color !== undefined) {
@@ -906,7 +913,7 @@ const CONDITION_KIND_MAP = {
   sceneLpSum: true, costRemovedMatches: true, // engine additive wave (2026-06-29d)
   costRevealedMatches: true, // attribution mini-wave (2026-07-10)
   enterCountAtMost: true, // engine additive (2026-06-29, B09089)
-  stackedCountAtLeast: true, charStateIs: true, charMatches: true, // charStateIs: BUG-145 (2026-06-15)
+  stackedCountAtLeast: true, hostSetCardCountAtLeast: true, charStateIs: true, charMatches: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
   contactCharMatches: true, // engine defer-unlock mini-wave (2026-07-09, B02006/B02080/PR278)
   enterOrderEquals: true, boundCharStateIs: true, boundMatchesFilter: true, triggerCharMatches: true,

@@ -115,6 +115,8 @@ export type TurnScopedFlags = {
   nextHintUsed: boolean;
   assistedThisTurn: boolean;
   declaredAbilityUseCount: Record<string, number>;
+  /** Turn-scoped traits granted to every character owned by this player, in every rules area. */
+  globalCharacterTraitGrants_turn?: string[];
   /**
    * 「このターンの登場順」カウンタ (rules/17 §【疾風 N】用)。
    * mutate.scene.enter で increment、turn:start で 0 リセット。

@@ -57,9 +57,9 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       if (typeof filterArg === 'function') {
         filter = filterArg;
       } else {
-        const basePred = targetFilterToPredicateWithCtx(s, filterArg, ctx);
+        const basePred = targetFilterToPredicateWithCtx(s, filterArg, ctx, p);
         if (Array.isArray(filterAnyArg) && filterAnyArg.length > 0) {
-          const anyPreds = filterAnyArg.map(f => targetFilterToPredicateWithCtx(s, f, ctx));
+          const anyPreds = filterAnyArg.map(f => targetFilterToPredicateWithCtx(s, f, ctx, p));
           filter = (cardId: string) => basePred(cardId) && anyPreds.some(p => p(cardId));
         } else {
           filter = basePred;
@@ -132,12 +132,11 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
         // 公式テキスト "上から N 枚見る" — N 枚を全件 reveal し、その中から最初の match を採用
         const lookN = Math.min(deck.length, maxN);
         for (let i = 0; i < lookN; i++) {
-          revealed.push(fromBottom ? deck[deck.length - 1 - i]! : deck[i]!);
-        }
-        for (const cardId of revealed) {
+          const cardId = fromBottom ? deck[deck.length - 1 - i]! : deck[i]!;
+          revealed.push(cardId);
           if (filter(cardId)) {
-            matched = cardId;
-            break;
+            if (matched === null) matched = cardId;
+            if (a.stopAtFirstMatch === true) break;
           }
         }
       } else {

@@ -78,6 +78,7 @@ import {
   atomCharGrantKeyword,
   atomCharRevokeKeyword,
   atomCharGrantTrait,
+  atomCharGrantTraitAllAreasTurn,
   atomCharRevokeTrait,
   atomCharDisableOriginal,
   atomCharGrantAbility,
@@ -232,6 +233,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomCharRevokeKeyword(s, a, ctx);
     case 'charGrantTrait':
       return atomCharGrantTrait(s, a, ctx);
+    case 'charGrantTraitAllAreasTurn':
+      return atomCharGrantTraitAllAreasTurn(s, a, ctx);
     case 'charRevokeTrait':
       return atomCharRevokeTrait(s, a, ctx);
     case 'charDisableOriginal':

@@ -92,3 +92,10 @@
 
 - Integrated 11 printings: B06005/P, B08003/P, B08008 plus B02067/P, B04003/P, B08081/P. Registry 2022/2074; remaining 52; commit/CI pending.
 - Stack identities now cover exact picker/transfer/cost, stale/duplicate/zero, AI/human and owner-relative opponent choice. B08003/P has blue-partner gate and Playwright 3-of-4 picker/cancel coverage. Sol CLEAN.
+
+## 2026-07-13 card wave after CI checkpoint 1
+
+- Local wave adds B05086P, B04069/P, B05088/P/P2, B06046/P, B06095/P, B08063/P, and B09110/P; registry 2036/2074, remaining 38. Do not push until final 2074/2074 CI boundary.
+- New primitives: filtered face-up host set-card count; all-area turn trait grant with hidden evidence/FILE protection; `deckRevealUntil.stopAtFirstMatch`; exact stacked/choose-intercept work remains in prior commit.
+- Sol CLEAN after fixing P-definition independence, B06095 hidden-evidence leak, B09110 first-match/fixed-window regression, and production dispatch coverage. Gates: focused 100, full 5600, tsc, smoke1000, docs structure, diff-check.
+- Next grounded T3 candidates: B01082 bearer `cannotGuard`, B06025 exact evidence occurrence reentry, B08059 self-inclusive effective-level fixed point. Keep separate.

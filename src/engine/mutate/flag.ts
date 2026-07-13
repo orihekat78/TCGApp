@@ -27,6 +27,12 @@ function setAssistedThisTurn(s: GameState, p: Player, v: boolean): void {
   s.turnState[p].assistedThisTurn = v;
 }
 
+function grantCharacterTraitAllAreasTurn(s: GameState, p: Player, trait: string): void {
+  const grants = s.turnState[p].globalCharacterTraitGrants_turn ?? [];
+  if (!grants.includes(trait)) grants.push(trait);
+  s.turnState[p].globalCharacterTraitGrants_turn = grants;
+}
+
 /**
  * 宣言能力使用カウントをインクリメント (rules/21, 17 【ターン①】等)
  * uid: SceneCharacter の uid, abilId: 能力 ID
@@ -88,6 +94,7 @@ function resetTurnFlags(s: GameState, p: Player): void {
   s.turnState[p].disguiseBanned = false; // wave-10 B07002: 「このターン中変装使用不可」をターン境界で解除
   s.turnState[p].actionCutinBanOppFilter = undefined; // A3 wave B05007: 「このターン中〜アクションしたとき相手カットイン不可」filter を解除
   s.turnState[p].declaredAbilityUseCount = {};
+  s.turnState[p].globalCharacterTraitGrants_turn = undefined;
   // BUG-067 (2026-05-28): declared ability の【ターン①/②】 enforcement のため、
   // SceneCharacter / Case の declaredUseCount もターン境界でリセット。
   // (現状 4 カードのみ limit:'turn' を使用、'game' kind は未使用なので turn 単位リセットで全カード正常)
@@ -103,6 +110,7 @@ export const flag = {
   setHandUseUsed,
   setNextHintUsed,
   setAssistedThisTurn,
+  grantCharacterTraitAllAreasTurn,
   incrDeclaredUseCount,
   resetTurnFlags,
 };

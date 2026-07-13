@@ -7,6 +7,7 @@ import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02
 import { char as readChar } from '../../read/char.js'; // engine mega-wave W4 (2026-07-03, r1): 保護 rider gate
 import { def as readDef } from '../../read/def.js'; // S2 wave (2026-07-11, PR279): event-source 限定保護の kind 判定
 import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
+import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
 
@@ -448,7 +449,7 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       if (typeof a.bind === 'string') {
         const srChar = s.players.self.scene.find(c => c.uid === srUid) ?? s.players.opp.scene.find(c => c.uid === srUid);
         (ctx.bindings as Record<string, unknown>)[a.bind] = srChar
-          ? [{ uid: srUid, cardId: srChar.cardId, snapState: srChar.state, snapLevel: readChar.level(s, srUid), snapAp: readChar.ap(s, srUid), snapLp: readChar.lp(s, srUid) }]
+          ? [{ uid: srUid, cardId: srChar.cardId, snapState: srChar.state, snapLevel: readChar.level(s, srUid), snapAp: readChar.ap(s, srUid), snapLp: readChar.lp(s, srUid), snapCardNames: allCardNameComponentsForDef(readDef.card(srChar.cardId)!) }]
           : [];
       }
       // W6 step10 (row9): byPlayer = 効果 source 側 — leave:intercept の「相手の能力や効果」帰属判定用

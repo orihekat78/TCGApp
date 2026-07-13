@@ -87,8 +87,11 @@ export function traitNameGrantSafe(s: GameState, uid: string | undefined, which:
 }
 
 /** Effective traits for a live character or a removal snapshot. */
-export function effectiveTraitNames(state: GameState, cardId: string, c: SceneCharacter | null): string[] {
+export function effectiveTraitNames(state: GameState, cardId: string, c: SceneCharacter | null, candidate?: Candidate): string[] {
   const printed = lookupCardDef(cardId)?.traits ?? [];
+  const isCharacter = lookupCardDef(cardId)?.kind === 'character';
+  const owner = candidate?.player;
+  const global = isCharacter && owner ? (state.turnState[owner].globalCharacterTraitGrants_turn ?? []) : NO_GRANT;
   const granted = c?.uid !== undefined ? traitNameGrantSafe(state, c.uid, 'grantTraits') : NO_GRANT;
   const te = c?.turnEffects as Record<string, unknown> | undefined;
   const appliedG = te
@@ -97,7 +100,7 @@ export function effectiveTraitNames(state: GameState, cardId: string, c: SceneCh
   const revoked = te
     ? [...((te['revokedTraits_permanent'] as string[] | undefined) ?? []), ...((te['revokedTraits_turn'] as string[] | undefined) ?? [])]
     : [];
-  const traits = (granted.length > 0 || appliedG.length > 0) ? [...printed, ...granted, ...appliedG] : printed;
+  const traits = (global.length > 0 || granted.length > 0 || appliedG.length > 0) ? [...printed, ...global, ...granted, ...appliedG] : printed;
   return revoked.length > 0 ? traits.filter(t => !revoked.includes(t)) : traits;
 }
 
@@ -337,6 +340,10 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
           // engine拡張 wave (2026-06-23): faceUp=true は表向き(公開済)の証拠のみ候補化 (faceDown の逆)。
           // 「表向きの証拠を選び、裏向きにする」(evidenceFlipDown pick) で既に裏向きの証拠を除外。
           if (query.faceUp === true && !ev[i].faceUp) continue;
+          // A filtered evidence query inspects card information. Face-down
+          // evidence has no referable card information, so it cannot become a
+          // legal candidate merely because a turn-scoped trait is granted.
+          if ((query.filter || query.filterAny) && !ev[i].faceUp) continue;
           const cand: Candidate = { kind: 'evidence', player: side, index: i };
           if (matchesFiltersByCardId(state, ev[i].cardId, query, cand)) out.push(cand);
         }
@@ -346,6 +353,11 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
         const file = state.players[side].file;
         for (let i = 0; i < file.length; i++) {
           const cand: Candidate = { kind: 'file', player: side, index: i };
+          const entry = file[i];
+          if (query.filter || query.filterAny) {
+            if (entry.type !== 'card-back' || entry.faceUp !== true) continue;
+            if (!matchesFiltersByCardId(state, entry.cardId, query, cand)) continue;
+          }
           out.push(cand);
         }
         break;
@@ -481,7 +493,7 @@ export function matchOneFilter(
     // honor。read.char.traits と同じ集合 (printed ∪ continuous-grant ∪ applied-grant − applied-revoke)。
     // c.turnEffects 経由なので removedChar snapshot でも正しい (B05101 の再リムーブ時 trait gate)。
     // 既存カードは未宣言 → 全 [] = 従来と byte 等価 (回帰0)。
-    const traits = effectiveTraitNames(state, cardId, c);
+    const traits = effectiveTraitNames(state, cardId, c, cand);
     if (!wants.some(w => traits.includes(w))) return false;
   }
 

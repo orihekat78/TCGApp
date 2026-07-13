@@ -134,7 +134,7 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
  * Context-aware deck-card filter.  Dynamic trigger payload filters must use
  * this path; absent state/payload fails closed.
  */
-export function targetFilterToPredicateWithCtx(state: GameState | undefined, filter: TargetFilter | undefined, ctx?: EffectCtx): (cardId: string) => boolean {
+export function targetFilterToPredicateWithCtx(state: GameState | undefined, filter: TargetFilter | undefined, ctx?: EffectCtx, player?: 'self' | 'opp'): (cardId: string) => boolean {
   if (!filter) return () => true;
   return (cardId: string) => {
     const d = engineCards.get(cardId);
@@ -155,13 +155,27 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
     }
     if (filter.trait !== undefined) {
       const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
-      if (!wants.some(w => d.traits?.includes(w))) return false;
+      const owner = player ?? ctx?.source.player;
+      const traits = state && owner
+        ? effectiveTraitNames(state, cardId, null, { kind: 'card', cardId, area: 'deck', player: owner })
+        : (d.traits ?? []);
+      if (!wants.some(w => traits.includes(w))) return false;
     }
     if (filter.traitSharedWithTriggerRemoved === true) {
       const removed = (ctx?.triggerPayload as { removedChar?: { cardId?: unknown } | undefined } | undefined)?.removedChar;
       if (!state || !removed || typeof removed.cardId !== 'string') return false;
       const traits = effectiveTraitNames(state, removed.cardId, removed as never);
-      if (!traits.some(trait => d.traits?.includes(trait))) return false;
+      const owner = player ?? ctx?.source.player;
+      const candidateTraits = owner
+        ? effectiveTraitNames(state, cardId, null, { kind: 'card', cardId, area: 'deck', player: owner })
+        : (d.traits ?? []);
+      if (!traits.some(trait => candidateTraits.includes(trait))) return false;
+    }
+    if (filter.cardNameAnyBound !== undefined) {
+      const bound = ctx?.bindings?.[filter.cardNameAnyBound];
+      const entry = Array.isArray(bound) ? bound[0] as { snapCardNames?: unknown } | undefined : undefined;
+      const names = Array.isArray(entry?.snapCardNames) ? entry.snapCardNames.filter((name): name is string => typeof name === 'string') : [];
+      if (names.length === 0 || !allCardNameComponentsForDef(d).some(name => names.includes(name))) return false;
     }
     // BUG-117: AP/LP filter (printed 値判定 — deck card は override/turnEffect を持たない)
     const ap = d.ap ?? 0;

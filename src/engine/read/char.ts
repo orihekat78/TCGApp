@@ -459,6 +459,7 @@ function names(s: GameState, uid: string): string[] {
 function traits(s: GameState, uid: string): string[] {
   const char = scene.byUid(s, uid);
   if (!char) return [];
+  const owner = ownerSideOf(s, uid);
   const printed = def.card(char.cardId)?.traits ?? [];
   const granted = traitNameGrantSafe(s, uid, 'grantTraits');
   // engine A1 wave (2026-07-11, B05101): applied trait 付与/剥奪 (mutate.char.grantTrait/revokeTrait)。
@@ -475,7 +476,8 @@ function traits(s: GameState, uid: string): string[] {
     ...((te['revokedTraits_permanent'] as string[] | undefined) ?? []),
     ...((te['revokedTraits_turn'] as string[] | undefined) ?? []),
   ];
-  const unioned = [...new Set([...printed, ...granted, ...grantedApplied])];
+  const global = owner ? (s.turnState[owner].globalCharacterTraitGrants_turn ?? []) : [];
+  const unioned = [...new Set([...printed, ...global, ...granted, ...grantedApplied])];
   return revoked.length > 0 ? unioned.filter(t => !revoked.includes(t)) : unioned;
 }
 

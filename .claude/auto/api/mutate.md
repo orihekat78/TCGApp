@@ -33,7 +33,7 @@ Immer draft 上の primitive 変更操作
 | `deck` | `draw`, `peek`, `refresh`, `removeFromTop`, `reveal`, `shuffle`, `toBottom`, `toTop` |
 | `evidence` | `addFromDeck`, `flipFaceDown`, `flipFaceUp`, `gainCard`, `removeAt`, `removeTop`, `toDeckTop`, `toRemove` |
 | `file` | `addFromDeckTop`, `flipTop`, `insertAssistedPartner`, `insertBottomFaceUp`, `popTop`, `removeAssistedPartner` |
-| `flag` | `incrDeclaredUseCount`, `resetTurnFlags`, `setAssistedThisTurn`, `setHandUseUsed`, `setNextHintUsed` |
+| `flag` | `grantCharacterTraitAllAreasTurn`, `incrDeclaredUseCount`, `resetTurnFlags`, `setAssistedThisTurn`, `setHandUseUsed`, `setNextHintUsed` |
 | `gameResult` | `clear`, `set` |
 | `hand` | `add`, `discardToRemove`, `emitReveal`, `remove`, `toDeckBottom` |
 | `log` | `append`, `clear` |

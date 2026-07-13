@@ -28,6 +28,7 @@ export type {
   TargetingRef,
   TargetQuery,
   TargetFilter,
+  DeckRevealUntilArgs,
   Cost,
 } from './effect.js';
 

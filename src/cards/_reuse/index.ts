@@ -618,6 +618,8 @@ import { B09021 } from '../ct-p09/B09021.js';
 import { B09021P } from '../ct-p09/B09021P.js';
 import { B04068 } from '../ct-p04/B04068.js';
 import { B04068P } from '../ct-p04/B04068P.js';
+import { B04069 } from '../ct-p04/B04069.js';
+import { B04069P } from '../ct-p04/B04069P.js';
 import { B05050 } from '../ct-p05/B05050.js';
 import { PR100 } from '../pr-01/PR100.js';
 import { PR106 } from '../pr-01/PR106.js';
@@ -945,6 +947,8 @@ import { B09097P } from '../ct-p09/B09097P.js';
 
 import { B08067 } from '../ct-p08/B08067.js';
 import { B08067P } from '../ct-p08/B08067P.js';
+import { B08063 } from '../ct-p08/B08063.js';
+import { B08063P } from '../ct-p08/B08063P.js';
 import { PR236 } from '../pr-01/PR236.js';
 import { PR242 } from '../pr-01/PR242.js';
 
@@ -1216,6 +1220,7 @@ import { B06018 } from '../ct-p06/B06018.js';
 import { B06028 } from '../ct-p06/B06028.js';
 import { B06043 } from '../ct-p06/B06043.js';
 import { B06065 } from '../ct-p06/B06065.js';
+import { B06095 } from '../ct-p06/B06095.js';
 import { B06068 } from '../ct-p06/B06068.js';
 import { B06082 } from '../ct-p06/B06082.js';
 import { B06098 } from '../ct-p06/B06098.js';
@@ -1235,6 +1240,7 @@ import { B06018P } from '../ct-p06/B06018P.js';
 import { B06028P } from '../ct-p06/B06028P.js';
 import { B06043P } from '../ct-p06/B06043P.js';
 import { B06065P } from '../ct-p06/B06065P.js';
+import { B06095P } from '../ct-p06/B06095P.js';
 import { B06068P } from '../ct-p06/B06068P.js';
 import { B06082P } from '../ct-p06/B06082P.js';
 import { B06098P } from '../ct-p06/B06098P.js';
@@ -1286,6 +1292,7 @@ import { B04077 } from '../ct-p04/B04077.js';
 import { B05051 } from '../ct-p05/B05051.js';
 import { B05081 } from '../ct-p05/B05081.js';
 import { B05086 } from '../ct-p05/B05086.js';
+import { B05086P } from '../ct-p05/B05086P.js';
 import { B06063 } from '../ct-p06/B06063.js';
 import { B06072 } from '../ct-p06/B06072.js';
 import { B06074 } from '../ct-p06/B06074.js';
@@ -1373,6 +1380,7 @@ import { B06109 } from '../ct-p06/B06109.js';
 import { B07068 } from '../ct-p07/B07068.js';
 import { B08038 } from '../ct-p08/B08038.js';
 import { B09111 } from '../ct-p09/B09111.js';
+import { B09110 } from '../ct-p09/B09110.js';
 import { PR284 } from '../pr-01/PR284.js';
 import { B05118 } from '../ct-p05/B05118.js';
 import { B05119 } from '../ct-p05/B05119.js';
@@ -1390,6 +1398,7 @@ import { B03078 } from '../ct-p03/B03078.js';
 import { B05015 } from '../ct-p05/B05015.js';
 import { B05027 } from '../ct-p05/B05027.js';
 import { B05087 } from '../ct-p05/B05087.js';
+import { B05088 } from '../ct-p05/B05088.js';
 import { B05106 } from '../ct-p05/B05106.js';
 import { B06026 } from '../ct-p06/B06026.js';
 import { B06090 } from '../ct-p06/B06090.js';
@@ -1409,6 +1418,8 @@ import { B03135P } from '../ct-p03/B03135P.js';
 import { B05027P } from '../ct-p05/B05027P.js';
 import { B05087P } from '../ct-p05/B05087P.js';
 import { B05087P2 } from '../ct-p05/B05087P2.js';
+import { B05088P } from '../ct-p05/B05088P.js';
+import { B05088P2 } from '../ct-p05/B05088P2.js';
 import { B05106P } from '../ct-p05/B05106P.js';
 import { B05118P } from '../ct-p05/B05118P.js';
 import { B05119P } from '../ct-p05/B05119P.js';
@@ -1424,6 +1435,7 @@ import { B08004P } from '../ct-p08/B08004P.js';
 import { B08033P } from '../ct-p08/B08033P.js';
 import { B08038P } from '../ct-p08/B08038P.js';
 import { B09111P } from '../ct-p09/B09111P.js';
+import { B09110P } from '../ct-p09/B09110P.js';
 // CARD PHASE M2 attribution mini-wave (2026-07-10): byPlayer 束 6 + costPaid 束 6
 import { B03112 } from '../ct-p03/B03112.js';
 import { B03116 } from '../ct-p03/B03116.js';
@@ -1535,6 +1547,8 @@ import { B09011P } from '../ct-p09/B09011P.js';
 // night-wC (2026-07-11): charGrantAbility declared 解禁 + hirameki optional humanChooser
 import { B06042 } from '../ct-p06/B06042.js';
 import { B06042P } from '../ct-p06/B06042P.js';
+import { B06046 } from '../ct-p06/B06046.js';
+import { B06046P } from '../ct-p06/B06046P.js';
 import { B06032 } from '../ct-p06/B06032.js';
 import { B06032P } from '../ct-p06/B06032P.js';
 import { B09081 } from '../ct-p09/B09081.js';
@@ -1692,7 +1706,7 @@ export const REUSE_CARDS: CardDef[] = [
   B06101, D10011, B09008,
   // Task D engine拡張 wave#1 (2026-06-12): hand-count/scene→deck/FILE-zone/textual-grant + pick-bind 解禁 35枚
   // (敵対検証 workflow 通過。B09028/B09054系=sleepGuard+自己ガード除外、B09032=charGrantKeyword短縮形で解禁)
-  B09092, B09092P, B07081, B04064, B04055, B07080, B07080P, B04011, B08058, B08058P, B09021, B09021P, B04068, B04068P, B05050, PR100, PR106, B08037, B08037P, B09028, PR181, PR187, B09054, B09054P, B09041, B09041P, B07090, B07090P, B08029, B08029P, B08032, B08032P, B09032, B07079, B07079P, B02014,
+  B09092, B09092P, B07081, B04064, B04055, B07080, B07080P, B04011, B08058, B08058P, B09021, B09021P, B04068, B04068P, B04069, B04069P, B05050, PR100, PR106, B08037, B08037P, B09028, PR181, PR187, B09054, B09054P, B09041, B09041P, B07090, B07090P, B08029, B08029P, B08032, B08032P, B09032, B07079, B07079P, B02014,
   // Task A wave#2 codegen3 (D09016/D09017 FILE6行動 / B05076 解決編)。B08020/P は共有 engine gap で defer (BUG-132)
   B05076, D09016, D09017,
   // engine拡張 wave#2 — BUG-132 GAP-1/2 修正後の B08020/P 再採用
@@ -1763,6 +1777,7 @@ export const REUSE_CARDS: CardDef[] = [
   // distinct-name-count micro-cluster (2026-06-21): sceneHas query.distinctNames を計数 honor
   //   (「それぞれカード名の異なる〚特徴X〛がN枚以上」rules/19)。諸伏高明 enter gate + 大和敢助 declared a2 gate。
   B08067, B08067P, PR236, PR242,
+  B08063, B08063P,
   // handToEvidence micro-cluster (2026-06-21): 手札⇔証拠 swap (「証拠1つ選び手札へ。そうした場合、手札1枚を
   //   裏向きで証拠として得る」chain[evidenceToHand, handToEvidence])。ヘビ男 (新 verb handToEvidence)。
   B06029, B06029P,
@@ -1932,11 +1947,11 @@ export const REUSE_CARDS: CardDef[] = [
   // hybrid-pilot-1 P variants
   B06086P, B03098P,
   // Task A batch
-  B01051, B01084, B01085, B01095, B02062, B03070, B05031, B05103, B06018, B06028, B06043, B06065, B06068, B06082, B06098, B07022, B07032, B07036, B09016, B09022, B09089, PR302,
+  B01051, B01084, B01085, B01095, B02062, B03070, B05031, B05103, B06018, B06028, B06043, B06046, B06065, B06068, B06082, B06095, B06098, B07022, B07032, B07036, B09016, B09022, B09089, PR302,
   // Task A batch
   B05012,
   // CARD PHASE hybrid-batch2 P spread
-  B01084P, B03070P, B05031P, B05103P, B06018P, B06028P, B06043P, B06065P, B06068P, B06082P, B06098P, B07032P, B07036P, B09022P, B09089P,
+  B01084P, B03070P, B05031P, B05103P, B06018P, B06028P, B06043P, B06046P, B06065P, B06068P, B06082P, B06095P, B06098P, B07032P, B07036P, B09022P, B09089P,
   // Task A batch
   B02006, B02080, B02076, B04038, B05072, B07039, B07046, PR132, PR201,
   // Task A batch
@@ -1944,7 +1959,7 @@ export const REUSE_CARDS: CardDef[] = [
   // CARD PHASE hybrid batch
   B01047, B01081, B03003, B03024, B05022, B05068, B06062, B06078, B06104, B08025, B08076, B01023, D10024,
   // CARD PHASE hybrid-batch4
-  PR289, PR295, PR292, PR298, B03047, B03050, B03080, B03134, B04027, B04032, B04077, B05051, B05081, B05086, B06063, B06072, B06074, B06084,
+  PR289, PR295, PR292, PR298, B03047, B03050, B03080, B03134, B04027, B04032, B04077, B05051, B05081, B05086, B05086P, B06063, B06072, B06074, B06084,
   // CARD PHASE hybrid-batch5
   B07015, B08062, B08064, B08072, B08073, B09002, PR304,
   // CARD PHASE hybrid-batch6
@@ -1970,12 +1985,12 @@ export const REUSE_CARDS: CardDef[] = [
   // CARD PHASE S2 deck cluster (deck-window multi-deploy / souza dyn X / 非所有者 deck-place / remove 3-tier)
   B01022, B01093, B02072, B02072P, B08057,
   // CARD PHASE M1 mega-sweep
-  PR263, PR269, B03029, B05120, B06109, B07068, B08038, B09111, PR284, B05118, B05119, B06106, B06107, B06108, B03135, D07024, B02002, B02013, B02018, B02031, B03028, B03078, B05015, B05027, B05087, B05106, B06026, B06090, B07053, B07065, B08004, B08033, B08082, PR096,
+  PR263, PR269, B03029, B05120, B06109, B07068, B08038, B09110, B09111, PR284, B05118, B05119, B06106, B06107, B06108, B03135, D07024, B02002, B02013, B02018, B02031, B03028, B03078, B05015, B05027, B05087, B05088, B05106, B06026, B06090, B07053, B07065, B08004, B08033, B08082, PR096,
   // CARD PHASE P-spread sweep 2026-07-10 (base 出荷済 + TSV 全列同文の slim clone 25 枚)
   B02013P, B02018P, B02031P, B03028P, B03029P, B03078P, B03135P, B05027P,
-  B05087P, B05087P2, B05106P, B05118P, B05119P, B05120P, B06090P, B06106P,
+  B05087P, B05087P2, B05088P, B05088P2, B05106P, B05118P, B05119P, B05120P, B06090P, B06106P,
   B06107P, B06108P, B06109P, B07065P, B07068P, B08004P, B08033P, B08038P,
-  B09111P,
+  B09110P, B09111P,
   // CARD PHASE M2 attribution mini-wave (byPlayer emit + costPaid write)
   B03112, B03116, B04089, B04091, B04094, B05107,
   B07025, B08041, B08068, B09005, B09050, B09060,

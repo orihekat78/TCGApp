@@ -583,3 +583,13 @@ export function atomCharTransferStackedCards(s: GameState, a: Record<string, unk
     action: 'effect:charTransferStackedCards', target: `${fromUid}->${toUid}`, result: instanceIds.join(','),
   });
 }
+
+export function atomCharGrantTraitAllAreasTurn(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+  const trait = a.trait;
+  if (typeof trait !== 'string' || trait.length === 0) return;
+  const player = a.player === 'opp'
+    ? (ctx.source.player === 'self' ? 'opp' : 'self')
+    : ctx.source.player;
+  mutate.flag.grantCharacterTraitAllAreasTurn(s, player, trait);
+  mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charGrantTraitAllAreasTurn', result: `${player}:${trait}` });
+}

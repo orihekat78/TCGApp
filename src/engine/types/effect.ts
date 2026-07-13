@@ -109,6 +109,9 @@ export type Condition =
   // 読んでも prior-enter 数を正しく反映 (handAtMost/removeCountAtLeast と同じ player-resolved 数値比較)。
   | { kind: 'enterCountAtMost'; player: 'self' | 'opp'; n: number }
   | { kind: 'stackedCountAtLeast'; ref: TargetingRef; n: number }
+  // B06046: count known (face-up) set cards of a filtered kind on the ability host.
+  // Hidden set cards carry no referable information under rules/16.
+  | { kind: 'hostSetCardCountAtLeast'; filter: TargetFilter; n: number }
   // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態 (active/sleep/stun) 判定。
   // 「このキャラをスリープさせ(…)てもよい。そうした場合…」を already-sleep で gate するための条件
   // (公式qAndA PR138/PR144/B04049: 既にスリープなら「スリープさせることができないので行えません」)。
@@ -278,6 +281,7 @@ export type TargetFilter = {
   // Missing/non-removal payload fails closed; target pick paths do not have a
   // trigger context and therefore also fail closed.
   traitSharedWithTriggerRemoved?: boolean;
+  cardNameAnyBound?: string;
   color?: string | string[];
   // engine additive (2026-06-27): 色 NEGATION (「【X】以外の色を持つ」)。公式 B08079 裁定で some説確定:
   // 「X以外の色を1つ以上持つ」(= colors.some(c => c∉notSet))。mono-X は除外、2色{X,Y} は該当 (Y を持つ)。
@@ -398,6 +402,19 @@ export type TargetingRef =
   | { kind: 'all'; query: TargetQuery }
   | { kind: 'fromBound'; bindKey: string };
 
+/** Arguments unique to the bounded deck-reveal primitive. */
+export type DeckRevealUntilArgs = {
+  player: 'self' | 'opp';
+  maxN?: number;
+  /** Stop at the first matching card; otherwise a maxN reveal scans its full window. */
+  stopAtFirstMatch?: boolean;
+  filter?: TargetFilter;
+  bind?: string;
+  bindMatch?: string;
+  fromBottom?: boolean;
+  chooseMatch?: 'upTo';
+};
+
 // ---------- TriggerRef ----------
 
 export type TriggerRef =
@@ -490,7 +507,7 @@ export type AtomVerb =
   | 'evidenceToDeckBottom'
   | 'charModifyAP' | 'charModifyLP' | 'charModifyLevel' | 'charSetAP' | 'charSetLP'
   | 'charOverrideAP' | 'charOverrideLP'
-  | 'charGrantKeyword' | 'charRevokeKeyword' | 'charGrantTrait' | 'charRevokeTrait' | 'charDisableOriginal'
+  | 'charGrantKeyword' | 'charRevokeKeyword' | 'charGrantTrait' | 'charRevokeTrait' | 'charGrantTraitAllAreasTurn' | 'charDisableOriginal'
   | 'charSetTurnEffect' | 'charSetCard' | 'charStackCard' | 'charRemoveSetCard'
   // Task D E4 (2026-06-12): triggered ability の動的付与 (turnEffects.grantedAbilities へ JSON descriptor)。
   // 「そのキャラに『このキャラがアクションしたとき、カードを1枚引く。』を与える」(B02014) 等。

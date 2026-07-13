@@ -486,6 +486,30 @@ describe('engine.cond.eval', () => {
     });
   });
 
+  describe('hostSetCardCountAtLeast (B06046)', () => {
+    it('counts only face-up YAIBA set cards on the source host, never another host or hidden cards', () => {
+      registerCardDef(defOf({ id: 'YAIBA_UP', traits: ['YAIBA'] }));
+      registerCardDef(defOf({ id: 'YAIBA_DOWN', traits: ['YAIBA'] }));
+      registerCardDef(defOf({ id: 'OTHER_UP', traits: ['OTHER'] }));
+      let s = createEmptyGameState();
+      s = withScene(s, 'self', [
+        makeChar({ uid: 'host', cardId: 'HOST', setCards: [
+          { cardId: 'YAIBA_UP', faceUp: true },
+          { cardId: 'YAIBA_DOWN', faceUp: false },
+          { cardId: 'OTHER_UP', faceUp: true },
+        ] }),
+        makeChar({ uid: 'decoy', cardId: 'DECOY', setCards: [
+          { cardId: 'YAIBA_UP', faceUp: true },
+        ] }),
+      ]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'host' } });
+      const cond = { kind: 'hostSetCardCountAtLeast', filter: { trait: 'YAIBA' }, n: 2 } as never;
+      expect(evalCond(s, cond, ctx)).toBe(false);
+      s.players.self.scene[0]!.setCards.push({ cardId: 'YAIBA_UP', faceUp: true });
+      expect(evalCond(s, cond, ctx)).toBe(true);
+    });
+  });
+
   describe('boundCharStateIs (B09024 remove snapshot)', () => {
     it('sceneRemove 前にbindしたsleep stateだけをtrueとする', () => {
       const s = createEmptyGameState();

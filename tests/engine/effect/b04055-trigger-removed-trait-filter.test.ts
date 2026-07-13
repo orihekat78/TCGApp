@@ -23,6 +23,8 @@ const VICTIM: CardDef = {
   id: 'VICTIM', no: 'VICTIM', kind: 'character', names: ['VICTIM'], colors: ['赤'],
   level: 1, ap: 1000, lp: 1, traits: ['FBI'], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [],
 };
+const SPLIT: CardDef = { ...VICTIM, id: 'SPLIT', names: ['A&B', 'A', 'B'] };
+const NAME_MATCH: CardDef = { ...MATCH, id: 'NAME_MATCH', names: ['B'] };
 
 function state(): GameState {
   const s = createEmptyGameState();
@@ -40,7 +42,7 @@ function ctx(): EffectCtx {
 
 beforeEach(() => {
   resetDefRegistry();
-  for (const d of [HOST, DECOY, MATCH, VICTIM]) registerCardDef(d);
+  for (const d of [HOST, DECOY, MATCH, VICTIM, SPLIT, NAME_MATCH]) registerCardDef(d);
 });
 
 describe('B04055 trigger-removed trait reveal filter', () => {
@@ -77,5 +79,23 @@ describe('B04055 trigger-removed trait reveal filter', () => {
     }, effectCtx);
 
     expect((effectCtx.bindings['$matched'] ?? [])).toEqual([]);
+  });
+
+  it('matches any split name from the sceneRemove bound snapshot and fails closed when stale/missing', () => {
+    const s = state(); s.players.self.deck = ['DECOY', 'NAME_MATCH'];
+    const effectCtx = { ...ctx(), bindings: { '$removed': [{ cardId: 'SPLIT', snapCardNames: ['A&B', 'A', 'B'] }] } } as EffectCtx;
+    runAtom(s, 'deckRevealUntil' as never, { player: 'self', maxN: 10, bind: '$revealed', bindMatch: '$matched', filter: { cardNameAnyBound: '$removed' } }, effectCtx);
+    expect((effectCtx.bindings['$matched'] ?? []).map(c => c.cardId)).toEqual(['NAME_MATCH']);
+    const missing = { ...ctx(), bindings: { '$removed': [] } } as EffectCtx;
+    runAtom(s, 'deckRevealUntil' as never, { player: 'self', maxN: 1, bindMatch: '$matched', filter: { cardNameAnyBound: '$removed' } }, missing);
+    expect(missing.bindings['$matched']).toEqual([]);
+  });
+
+  it('stopAtFirstMatch keeps later deck cards outside the revealed bound window', () => {
+    const s = state(); s.players.self.deck = ['DECOY', 'NAME_MATCH', 'MATCH'];
+    const effectCtx = { ...ctx(), bindings: { '$removed': [{ cardId: 'SPLIT', snapCardNames: ['A&B', 'A', 'B'] }] } } as EffectCtx;
+    runAtom(s, 'deckRevealUntil' as never, { player: 'self', maxN: 10, stopAtFirstMatch: true, bind: '$revealed', bindMatch: '$matched', filter: { cardNameAnyBound: '$removed' } }, effectCtx);
+    expect((effectCtx.bindings['$revealed'] ?? []).map(c => c.cardId)).toEqual(['DECOY']);
+    expect((effectCtx.bindings['$matched'] ?? []).map(c => c.cardId)).toEqual(['NAME_MATCH']);
   });
 });

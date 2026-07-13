@@ -2,19 +2,18 @@
 
 ## Current State
 
-- branch: `main`; latest: `5466f27f docs(session): record parallel primitive lanes`.
-- CL328 GitHub CI green: typecheck, full Vitest, lint chain, and smoke 1000: https://github.com/orihekat78/TCGApp/actions/runs/29242247994
-- Integrated, uncommitted count: **2022 / 2074 printings; remaining 52**.
-- Pending first CI: B06005/P, B08003/P, B08008 and B02067/P, B04003/P, B08081/P; all have Sol review and focused probes.
-- B02022 `mustTargetSelfOnce` has Sol CLEAN approval. Case targeting and partner-action exceptions are probed.
-- Exact existing-DSL/twin closures are exhausted. Do not plan a 20-printing no-engine batch.
-- Uncommitted documentation update: CI checkpoint and next-session plan below.
+- branch: `main`; latest commit: `38579c02 feat(engine): integrate deferred decision primitives`.
+- CI checkpoint 1 green: https://github.com/orihekat78/TCGApp/actions/runs/29252401237
+- Local, uncommitted wave count: **2036 / 2074 printings; remaining 38**. Commit/push still pending.
+- Wave: B05086P, B04069/P, B05088/P/P2, B06046/P, B06095/P, B08063/P, B09110/P.
+- Sol CLEAN; focused 100, full Vitest 5600, typecheck, smoke 1000, docs structure, and diff check green.
+- Second CI remains reserved for final `2074/2074`; do not push this intermediate card wave.
 
 ## Start
 
 1. Run `git status --short`; preserve session-preparation file unless intentionally committing documentation.
 2. Read root/nested `AGENTS.md`, `.codex/context/current.md`, relevant rules, and `sessions/2026-07-13-2.md`.
-3. Run `npm run ground -- <IDs>` before authoring. Four-cluster dossiers are in `.tmp/_ground/`.
+3. Run `npm run ground -- <IDs>` before authoring. Current T3 candidates: B01082 (`cannotGuard`), B06025 (exact evidence instance), B08059 (self-inclusive level fixed point).
 
 ## Portfolio
 

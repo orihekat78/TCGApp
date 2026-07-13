@@ -13,7 +13,7 @@
 //   - ruleRefs の実在チェックは `./validate-spec-files.ts` (Node 専用) に分離。
 //     ブラウザバンドルから node:fs 依存を切り離すため、ここでは行わない。
 
-import type { Effect, ValidationResult, CardDef, AtomVerb } from '../types/index.js';
+import type { Effect, ValidationResult, CardDef, AtomVerb, DeckRevealUntilArgs } from '../types/index.js';
 
 // refactor 2b (2026-06-12): AtomVerb union との同期を手動からコンパイル時強制に変更。
 // `satisfies Record<AtomVerb, true>` により、union への verb 追加漏れ・余剰 key の両方向を
@@ -39,7 +39,7 @@ const ATOM_VERB_MAP = {
   charModifyAP: true, charModifyLP: true, charModifyLevel: true, charSetAP: true, charSetLP: true,
   charOverrideAP: true, charOverrideLP: true,
   charGrantKeyword: true, charRevokeKeyword: true, charDisableOriginal: true,
-  charGrantTrait: true, charRevokeTrait: true, // engine A1 wave (2026-07-11, B05101)
+  charGrantTrait: true, charRevokeTrait: true, charGrantTraitAllAreasTurn: true, // engine A1 wave (2026-07-11, B05101)
   charGrantAbility: true, // Task D E4 (2026-06-12)
   charSetTurnEffect: true, charSetCard: true, charStackCard: true, charRemoveSetCard: true,
   partnerAssist: true, partnerSetState: true, partnerSolveCase: true,
@@ -177,6 +177,12 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
           errors.push(`${path}.args.ability: charGrantAbility requires ability descriptor object`);
         } else {
           validateGrantedAbility(ability as Record<string, unknown>, `${path}.args.ability`, errors);
+        }
+      }
+      if (verb === 'deckRevealUntil') {
+        const args = obj['args'] as Partial<DeckRevealUntilArgs> | undefined;
+        if (args?.stopAtFirstMatch !== undefined && typeof args.stopAtFirstMatch !== 'boolean') {
+          errors.push(`${path}.args.stopAtFirstMatch: deckRevealUntil requires boolean`);
         }
       }
       // args is otherwise treated opaquely here; per-verb arg validation belongs to runAtom.

@@ -15,6 +15,7 @@
 
 import type { GameState } from '@/engine/types';
 import type { EffectCtx } from '@/engine/types';
+import { effectiveTraitNames } from '@/engine/target/candidates.js';
 import { char as charRead } from '@/engine/read/char.js';
 import { scene } from '@/engine/read/scene.js'; // session64: $self.setCardCount (このキャラの setCards 枚数)
 import { def } from '@/engine/read/def.js'; // BUG-114: $discarded.level/ap で discard したカードの printed 値を参照
@@ -396,9 +397,8 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     }
     const patSide = ctx.source.player;
     return (state.players[patSide].partnerAreaCards ?? []).filter(id => {
-      const d = lookupCardDef(id);
-      if (!d) return false;
-      return patWants.some(w => d.traits.includes(w));
+      const traits = effectiveTraitNames(state, id, null, { kind: 'card', cardId: id, area: 'partner-area', player: patSide });
+      return patWants.some(w => traits.includes(w));
     }).length;
   }
   // engine additive wave-14 (2026-07-02, G16 残): $self.sceneMaxLp — ctx.source.player の現場キャラの

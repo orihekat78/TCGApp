@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `1d5ba229c8f0`
+> Source hash: `19501dbbc8ae`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -42,6 +42,7 @@ classDiagram
     +nextHintUsed: boolean
     +assistedThisTurn: boolean
     +declaredAbilityUseCount: Record<string, number>
+    +globalCharacterTraitGrants_turn?: string[]
     +enterCountThisTurn?: number
     +eventUseBanned?: boolean
     +nextHintBanned?: boolean
