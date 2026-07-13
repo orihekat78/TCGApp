@@ -176,6 +176,8 @@ export type ContinuousModifier = {
   //   selfCutinBanInContact   = 「このキャラのコンタクト中、自分は【カットイン】を使用できない」(B07005)。
   //                             canCutIn が p 側コンタクト参加キャラの flag を gate。
   untargetableByAction?: boolean;
+  /** Bearer-only: this character is never a legal guard candidate. */
+  cannotGuard?: boolean;
   // engine mega-wave W6 step5 (2026-07-04, r50/B04072): 「相手は自分の現場にいる[filter]のキャラを
   //   指定してアクションできない」— bearer (現場/PA-MR) が **同 side の他キャラ群** を filter 越しに
   //   対象除外へ投影する aura 版 (untargetableByAction = 自身 bool とは別フィールド、混同注意)。

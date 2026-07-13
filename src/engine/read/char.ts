@@ -1,7 +1,7 @@
 // engine.read.char — キャラ単位派生情報セレクタ (純粋関数)
 // rules: 03-field-areas.md (状態), 11-reasoning.md (LP≤0), 13-keywords.md, 19-special-rules.md
 
-import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter, AbilityScope, FilteredAssaultGrant } from '@/engine/types';
+import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter, AbilityScope, FilteredAssaultGrant, Condition } from '@/engine/types';
 import { scene } from './scene.js';
 import { def } from './def.js';
 import { evalCond } from '../cond/eval.js';
@@ -9,7 +9,7 @@ import { evalDyn } from '../dyn/eval.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
 // cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
-import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerTraitNameGrant, traitNameGrantSafe } from '../target/candidates.js';
+import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerTraitNameGrant, traitNameGrantSafe, registerLevelFilterOverride } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -45,7 +45,7 @@ function selfContinuousFlag(
   uid: string,
   // W2b (2026-07-03, r27): mustBeSelectedByOppEvent (B08087) — effect-pick forced-inclusion flag。
   // scene.byUid のみ走査 = 「現場にいる場合に有効」(公式Q&A) が自動整合。
-  token: 'untargetableByAction' | 'caseActionBan' | 'selfActionBan' | 'selfCutinBanInContact' | 'mustBeSelectedByOppEvent',
+  token: 'untargetableByAction' | 'caseActionBan' | 'selfActionBan' | 'selfCutinBanInContact' | 'mustBeSelectedByOppEvent' | 'cannotGuard',
 ): boolean {
   const char = scene.byUid(s, uid);
   if (!char) return false;
@@ -65,6 +65,33 @@ function selfContinuousFlag(
   return false;
 }
 
+const prospectiveLevels = new WeakMap<GameState, Map<string, number>>();
+
+function withProspectiveLevel<T>(s: GameState, uid: string, value: number, run: () => T): T {
+  let levels = prospectiveLevels.get(s);
+  if (!levels) {
+    levels = new Map();
+    prospectiveLevels.set(s, levels);
+  }
+  const previous = levels.get(uid);
+  levels.set(uid, value);
+  try {
+    return run();
+  } finally {
+    if (previous === undefined) levels.delete(uid);
+    else levels.set(uid, previous);
+  }
+}
+
+function levelWithoutContinuous(char: NonNullable<ReturnType<typeof scene.byUid>>, d: ReturnType<typeof def.card>): number {
+  const turnEffects = char.turnEffects ?? {};
+  return (d?.level ?? 0)
+    + ((turnEffects['lvlMod_permanent'] as number | undefined) ?? 0)
+    + ((turnEffects['lvlMod_turn'] as number | undefined) ?? 0)
+    + ((turnEffects['lvlMod_contact'] as number | undefined) ?? 0)
+    + ((turnEffects['lvlMod_action'] as number | undefined) ?? 0);
+}
+
 function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta' | 'lvlDelta'): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
@@ -75,13 +102,56 @@ function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'
   if (!owner) return 0;
   const inPA = isPartnerMrUid(uid);
   const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+  if (which === 'lvlDelta') {
+    const entries: Array<{ condition: Condition | undefined; delta: unknown }> = [];
+    for (const ability of d.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+      const delta = ability.continuousModifier?.lvlDelta;
+      if (delta !== undefined) entries.push({ condition: ability.condition, delta });
+    }
+    for (const entry of char.setCards ?? []) {
+      if (!entry.faceUp) continue;
+      const sd = def.card(entry.cardId);
+      for (const ability of sd?.abilities ?? []) {
+        if (ability.type !== 'continuous' || ability.scope !== 'on-set-host') continue;
+        const delta = ability.continuousModifier?.lvlDelta;
+        if (delta !== undefined) entries.push({ condition: ability.condition, delta });
+      }
+    }
+    const resolve = (delta: unknown): number => {
+      if (typeof delta === 'number') return delta;
+      if (typeof delta === 'function') return delta(s, { uid }) || 0;
+      if (typeof delta === 'object' && delta !== null && 'dyn' in delta) {
+        const v = evalDyn(s, (delta as { dyn: Parameters<typeof evalDyn>[1] }).dyn, ctx);
+        return typeof v === 'number' && Number.isFinite(v) ? v : 0;
+      }
+      return 0;
+    };
+    const baseLevel = levelWithoutContinuous(char, d);
+    let total = 0;
+    for (let pass = 0; pass < 16; pass += 1) {
+      let next = 0;
+      for (const entry of entries) {
+        // Test each contribution against the value it would create.  This is
+        // the self-inclusive fixed point required by B08059's official Q&A.
+        const delta = withProspectiveLevel(s, uid, baseLevel + total, () => resolve(entry.delta));
+        const condition = entry.condition;
+        const enabled = !condition || withProspectiveLevel(s, uid, baseLevel + total + delta, () => evalCond(s, condition, ctx));
+        if (enabled) next += delta;
+      }
+      if (next === total) return total;
+      total = next;
+    }
+    return total;
+  }
   let total = 0;
   for (const ability of d.abilities ?? []) {
     if (ability.type !== 'continuous') continue;
     if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
     const delta = ability.continuousModifier?.[which];
     if (delta === undefined) continue;
-    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    if (ability.condition && !evalContinuousCondition(s, uid, ctx, ability.condition)) continue;
     if (typeof delta === 'number') {
       total += delta;
     } else if (typeof delta === 'function') {
@@ -106,7 +176,7 @@ function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'
       if (ability.scope !== 'on-set-host') continue;
       const delta = ability.continuousModifier?.[which];
       if (delta === undefined) continue;
-      if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+      if (ability.condition && !evalContinuousCondition(s, uid, ctx, ability.condition)) continue;
       if (typeof delta === 'number') {
         total += delta;
       } else if (typeof delta === 'function') {
@@ -118,6 +188,14 @@ function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'
     }
   }
   return total;
+}
+
+function evalContinuousCondition(s: GameState, uid: string, ctx: EffectCtx, condition: Condition): boolean {
+  const char = scene.byUid(s, uid);
+  const d = char ? def.card(char.cardId) : undefined;
+  if (!char || !d) return false;
+  const effectiveLevel = levelWithoutContinuous(char, d) + continuousDelta(s, uid, 'lvlDelta');
+  return withProspectiveLevel(s, uid, effectiveLevel, () => evalCond(s, condition, ctx));
 }
 
 // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラへの AP/LP buff aura の board-scan reader。
@@ -517,7 +595,7 @@ function keywords(s: GameState, uid: string): string[] {
           if (ability.scope !== 'on-set-host') continue;
           const grantFn = ability.continuousModifier?.grantKeywords;
           if (!grantFn) continue;
-          if (ability.condition && !evalCond(s, ability.condition, setCtx)) continue;
+          if (ability.condition && !evalContinuousCondition(s, uid, setCtx, ability.condition)) continue;
           const kws = grantFn(s, { uid });
           if (Array.isArray(kws)) fromSetHost.push(...kws);
         }
@@ -551,7 +629,7 @@ function keywords(s: GameState, uid: string): string[] {
         if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
         const grantFn = ability.continuousModifier?.grantKeywords;
         if (!grantFn) continue;
-        if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+        if (ability.condition && !evalContinuousCondition(s, uid, ctx, ability.condition)) continue;
         const kws = grantFn(s, { uid });
         if (Array.isArray(kws)) fromContinuous.push(...kws);
       }
@@ -779,5 +857,6 @@ export const char = {
 
 // BUG-113: module load 時に continuousDelta を candidates へ登録 (数値フィルタの有効値に反映)。
 registerContinuousDelta(continuousDelta);
+registerLevelFilterOverride((s, uid) => prospectiveLevels.get(s)?.get(uid));
 registerAuraDelta(auraDelta); // cluster13: 他キャラ aura board-scan を candidates へ late-bind
 registerTraitNameGrant(grantWalk); // wave-6 (P37): 継続 trait/name 付与 board reader を candidates へ late-bind

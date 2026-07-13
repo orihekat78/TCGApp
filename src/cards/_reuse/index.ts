@@ -66,6 +66,7 @@ import { B01049 } from '../ct-p01/B01049.js';
 import { B01063 } from '../ct-p01/B01063.js';
 import { B01064 } from '../ct-p01/B01064.js';
 import { B01083 } from '../ct-p01/B01083.js';
+import { B01082 } from '../ct-p01/B01082.js';
 import { B01087 } from '../ct-p01/B01087.js';
 import { B01088 } from '../ct-p01/B01088.js';
 import { B01091 } from '../ct-p01/B01091.js';
@@ -654,6 +655,8 @@ import { B08023 } from '../ct-p08/B08023.js';
 import { B08023P } from '../ct-p08/B08023P.js';
 import { B08050 } from '../ct-p08/B08050.js';
 import { B08050P } from '../ct-p08/B08050P.js';
+import { B08059 } from '../ct-p08/B08059.js';
+import { B08059P } from '../ct-p08/B08059P.js';
 // engine拡張 wave#2 cluster2 (2026-06-12): ability-presence filter (X1/X1b/X6/X7/X8) 解禁 10枚
 import { B03128 } from '../ct-p03/B03128.js';
 import { B03131 } from '../ct-p03/B03131.js';
@@ -1401,6 +1404,7 @@ import { B05087 } from '../ct-p05/B05087.js';
 import { B05088 } from '../ct-p05/B05088.js';
 import { B05106 } from '../ct-p05/B05106.js';
 import { B06026 } from '../ct-p06/B06026.js';
+import { B06025 } from '../ct-p06/B06025.js';
 import { B06090 } from '../ct-p06/B06090.js';
 import { B07053 } from '../ct-p07/B07053.js';
 import { B07065 } from '../ct-p07/B07065.js';
@@ -1713,7 +1717,7 @@ export const REUSE_CARDS: CardDef[] = [
   B08020, B08020P,
   // engine変更0 wave (2026-06-24): engine additive wave a206e9dc 解放分。B08023/P=carrier-reuse×3 choice /
   // B08050/P=【解決編】lvlDelta+3 + 登場時 deck-look(boundToRemove + cardNameNot discard)
-  B08023, B08023P, B08050, B08050P,
+  B08023, B08023P, B08050, B08050P, B08059, B08059P,
   // engine拡張 wave#2 cluster2 (2026-06-12): ability-presence filter 解禁 10枚
   // (現場リムーブ時/疾風/カットイン presence — X1 述語 + X1b 窓/bound filter + X6 boundToRemove + X7/X8 骨格バグ修正)
   B03128, B03131, B08005, B08005P, B08016, B08094, B08094P, B09073, B09073P, B09104,
@@ -2033,4 +2037,6 @@ export const REUSE_CARDS: CardDef[] = [
   B09033, B09033P,
   // Wave D: opponent-effect target protection
   B01006, B01006P, B03030, B03030P, B05008, B05008P, B05048, B08017, B08017P,
+  // deferred T3 wave: bearer guard ban, exact evidence return, self-inclusive level
+  B01082, B06025,
 ];

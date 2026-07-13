@@ -592,7 +592,7 @@ export function registerTriggeredListener(): void {
  * - trigger.optional=false なら従来の triggered と同じく強制発動 (effect queue)
  */
 function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: unknown): void {
-  const p = payload as { player?: 'self' | 'opp'; ev?: { cardId?: string }; byUid?: string } | undefined;
+  const p = payload as { player?: 'self' | 'opp'; ev?: { cardId?: string }; byUid?: string; occurrence?: { player?: 'self' | 'opp'; cardId?: string; removeIndex?: number } } | undefined;
   if (!p || !p.player || !p.ev || !p.ev.cardId) return;
   // B06049 cluster8 (2026-06-15): アクション[事件] を行った側が「相手の【ヒラメキ】は発動しない」を
   // セットしている場合 (turnState[証拠を失う側].hiramekiSuppressed)、optional/forced 両経路の
@@ -633,6 +633,7 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
     if (!ability.effect) continue;
 
     if (trig.optional) {
+      const occurrence = p.occurrence;
       // ヒラメキ semantics: fire/skip 選択を UI に委譲
       // (旧 hirameki.ts listener と同等の動作)
       pushPendingHirameki({
@@ -643,6 +644,13 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
         // (forced 経路は baseCtx.triggerPayload=payload に byUid が既に載る)。hiramekiResolve が
         // queue payload に復元し '$trigger.byUid' (「アクション中のキャラ」) を解決可能にする。
         actorUid: p.byUid,
+        occurrence: occurrence
+          && occurrence.player === p.player
+          && occurrence.cardId === p.ev.cardId
+          && typeof occurrence.removeIndex === 'number'
+          && Number.isInteger(occurrence.removeIndex)
+          ? { player: occurrence.player, cardId: occurrence.cardId, removeIndex: occurrence.removeIndex }
+          : undefined,
       });
       return; // 1 イベントで複数 optional は想定せず、最初の 1 件のみ
     }

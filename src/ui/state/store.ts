@@ -269,6 +269,8 @@ export type PendingHirameki = {
   abilityId: string;
   /** wave-11: アクション[事件] actor uid snapshot ('$trigger.byUid' =「アクション中のキャラ」解決用) */
   actorUid?: string;
+  /** Exact remove-area occurrence created by the action evidence removal. */
+  occurrence?: { player: 'self' | 'opp'; cardId: string; removeIndex: number };
 };
 
 /** ミスリード保留 (Commit 3b) */

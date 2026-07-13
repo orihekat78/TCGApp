@@ -86,6 +86,19 @@ export function traitNameGrantSafe(s: GameState, uid: string | undefined, which:
   }
 }
 
+// A lvlDelta condition can itself ask whether its source meets a level filter.
+// The level reader supplies its one-shot prospective value while evaluating that
+// condition.  This intentionally does not relax _inContinuousDelta: other
+// recursive delta walks still terminate at zero.
+type LevelFilterOverrideFn = (s: GameState, uid: string) => number | undefined;
+let levelFilterOverrideImpl: LevelFilterOverrideFn | null = null;
+export function registerLevelFilterOverride(fn: LevelFilterOverrideFn): void {
+  levelFilterOverrideImpl = fn;
+}
+function levelFilterOverride(s: GameState, uid: string | undefined): number | undefined {
+  return uid === undefined ? undefined : levelFilterOverrideImpl?.(s, uid);
+}
+
 /** Effective traits for a live character or a removal snapshot. */
 export function effectiveTraitNames(state: GameState, cardId: string, c: SceneCharacter | null, candidate?: Candidate): string[] {
   const printed = lookupCardDef(cardId)?.traits ?? [];
@@ -558,8 +571,9 @@ export function matchOneFilter(
   // engine-extension #2 (2026-06-05): charModifyLevel に伴い filter level も 3 scope 合算
   // (旧は base のみ → modifyLevel 不使用時 = base + 0 + 0 + 0 で互換)
   // engine additive wave (2026-06-24): continuous lvlDelta も合算 (read.char.level と同式 = BUG-117 原則)。既存カードは未宣言 → 0。
-  const lvlContinuous = continuousDeltaSafe(state, c?.uid, 'lvlDelta');
-  const level = (base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action') + lvlContinuous;
+  const levelOverride = levelFilterOverride(state, c?.uid);
+  const lvlContinuous = levelOverride === undefined ? continuousDeltaSafe(state, c?.uid, 'lvlDelta') : 0;
+  const level = levelOverride ?? ((base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action') + lvlContinuous);
 
   if (filter.apMin !== undefined && ap < filter.apMin) return false;
   if (filter.apMax !== undefined && ap > filter.apMax) return false;

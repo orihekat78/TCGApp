@@ -3,6 +3,8 @@
 > 2026-07-13 continuation: B02022/B02022P and B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271, B04042/B04042P/B04084, then B06012/P/B06064/P/B07033/P/P2/B09113/P shipped. Registry 2011/2074; remaining 63. CL328 green (typecheck, full Vitest, lint chain, smoke 1000). B02022 action-target primitive cleared Sol review. Lane-B 20-printing green-wave assumption disproven: only six exact DSL/twin closures remained.
 >
 > 2026-07-13 local wave (uncommitted): B05086P, B04069/P, B05088/P/P2, B06046/P, B06095/P, B08063/P, B09110/P. Registry 2036/2074; remaining 38. Added host face-up filtered set count, all-area turn trait grant (no hidden evidence/FILE leak), and `deckRevealUntil.stopAtFirstMatch`; Sol CLEAN, full gates green. Earlier rows for these IDs are stale history.
+>
+> 2026-07-14 local T3 follow-up: B01082 and B06025 added; B08059/P's registered definitions completed. Registry 2040/2074; remaining 34. Added bearer `cannotGuard`, exact evidence occurrence reentry, and self-inclusive effective-level reading. Sol CLEAN; full gates green. Earlier rows for these IDs are stale history.
 > Next plan: four isolated representative lanes — stack identity, hook/external ability, picker/bind, choose-intercept — then serial shared-surface integration. CI checkpoints are integration and final card-addition completion only; source dossier/RED matrix: `.claude/sessions/2026-07-13-2.md`.
 
 本ファイルは「実装はあるが未完成 or 未着手で先送りされた」項目の集約 INDEX。

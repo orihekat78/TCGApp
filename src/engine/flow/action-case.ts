@@ -47,7 +47,12 @@ export function removeOpponentEvidenceTop(
   event.emit(
     state,
     'evidence:remove-by-action',
-    { player, ev, byUid: ax.byUid },
+    {
+      player,
+      ev,
+      byUid: ax.byUid,
+      occurrence: { player, cardId: ev.cardId, removeIndex: state.players[player].remove.length - 1 },
+    },
     { player: ax.byPlayer, uid: ax.byUid },
   );
 

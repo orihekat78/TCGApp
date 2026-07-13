@@ -99,3 +99,9 @@
 - New primitives: filtered face-up host set-card count; all-area turn trait grant with hidden evidence/FILE protection; `deckRevealUntil.stopAtFirstMatch`; exact stacked/choose-intercept work remains in prior commit.
 - Sol CLEAN after fixing P-definition independence, B06095 hidden-evidence leak, B09110 first-match/fixed-window regression, and production dispatch coverage. Gates: focused 100, full 5600, tsc, smoke1000, docs structure, diff-check.
 - Next grounded T3 candidates: B01082 bearer `cannotGuard`, B06025 exact evidence occurrence reentry, B08059 self-inclusive effective-level fixed point. Keep separate.
+
+## 2026-07-14 deferred T3 follow-up
+
+- Added B01082 and B06025; completed B08059/P's existing registered definitions. Registry 2040/2074, remaining 34; local commit pending and no second CI until 2074/2074.
+- B01082: bearer-only `cannotGuard` plus enter sleep/no-auto-active lock. B06025: exact removed-evidence occurrence reentry and other-YAIBA turn choice. B08059: self-inclusive effective-level fixed point.
+- Sol CLEAN after full TSV correction (including B06025 green), duplicate registry removal, and legacy missing-`turnEffects` compatibility repair. Full 5621 tests, smoke 1000, tsc, docs, and diff check green.

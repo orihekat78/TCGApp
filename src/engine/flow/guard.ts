@@ -9,6 +9,7 @@
 
 import type { GameState } from '../types/index.js';
 import { char as readChar } from '../read/char.js';
+import { def as readDef } from '../read/def.js';
 
 type Player = 'self' | 'opp';
 
@@ -55,12 +56,20 @@ export function candidates(
   if (!attackerSide) return [];
   const defenderSide: Player = attackerSide === 'self' ? 'opp' : 'self';
 
+  // Bearer-only prohibition (B01082): unlike Bullet, this never changes the
+  // attacker or other defenders' guard legality.
+  const hasCannotGuardBearer = state.players[defenderSide].scene.some(c => {
+    const d = readDef.card(c.cardId);
+    return d?.abilities?.some(a => a.type === 'continuous' && a.continuousModifier?.cannotGuard === true) ?? false;
+  });
+
   // Task D E4 (2026-06-12): sleepGuard token — 「このキャラはスリープ状態でもガードできる。」
   // (B09054/B09028)。スタンは flag があっても不可 (rules/03 行動不可)。flag 不在時は従来と byte 等価。
   return state.players[defenderSide].scene
     .filter(c => c.uid !== excludeUid)
     .filter(c => c.state === 'active'
       || (c.state === 'sleep' && readChar.hasTextAbility(state, c.uid, 'sleepGuard')))
+    .filter(c => !hasCannotGuardBearer || !readChar.selfContinuousFlag(state, c.uid, 'cannotGuard'))
     .map(c => ({ uid: c.uid, cardId: c.cardId }));
 }
 

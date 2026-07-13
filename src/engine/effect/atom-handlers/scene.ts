@@ -281,8 +281,9 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const arr = s.players[fromPlayer].remove;
         const selectedIndex = resolveBindRef((a as { selectedCardIndex?: unknown }).selectedCardIndex, ctx);
-        const idx = typeof selectedIndex === 'number' && arr[selectedIndex] === cardId
-          ? selectedIndex
+        const exactSelectedIndex = (a as { exactSelectedCardIndex?: unknown }).exactSelectedCardIndex === true;
+        const idx = typeof selectedIndex === 'number'
+          ? (arr[selectedIndex] === cardId ? selectedIndex : (exactSelectedIndex ? -1 : arr.indexOf(cardId)))
           : arr.indexOf(cardId);
         // engine mega-wave W3 (2026-07-03, r17): sourceRequired:true (opt-in) — 対象カードが source area に
         // 無ければ登場自体を中止 (B05115 公式Q&A「解決までにリムーブエリアを離れていた場合、登場できません」)。
@@ -414,12 +415,16 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       // 「$pick」placeholder のまま atom-handler 到達 = pick で 0 枚選択された場合
       // (max: N で min=0 だと user が skip 可能)。silent no-op (log のみ)。
       if (a.uid === '$pick') {
+        if (a.gateOnMissing === true) (ctx.dyn ??= {}).chainStepNoApply = true;
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', result: 'skipped' });
         return;
       }
       // BUG-068: bind ref ($matched.uid 等) 解決を配線
       const srUid = resolveBindRef(a.uid, ctx) as string;
-      if (typeof srUid !== 'string' || srUid.startsWith('$')) return;
+      if (typeof srUid !== 'string' || srUid.startsWith('$')) {
+        if (a.gateOnMissing === true) (ctx.dyn ??= {}).chainStepNoApply = true;
+        return;
+      }
       // engine mega-wave W4 (2026-07-03, r1 P01): 保護 rider gate —「相手の能力や効果によって
       // リムーブされず」(B05041)。cause 'effect' の **相手発** のみ block (公式Q&A: 選ぶことは可 /
       // コンタクト除去・スイッチ・コストは別経路ゆえ自然に対象外)。既存カードは未宣言 → false 短絡。

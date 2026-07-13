@@ -26,6 +26,8 @@ export type PendingHiramekiSide = {
   // ための payload 貫通 (公式Q&A B05111: ヒラメキを発動させたキャラが該当)。optional 経路で
   // pendingHirameki に持ち越し、hiramekiResolve が queue payload に復元する。
   actorUid?: string;
+  /** Exact remove-area occurrence created by the action evidence removal. */
+  occurrence?: { player: 'self' | 'opp'; cardId: string; removeIndex: number };
   /**
    * mega-wave W6 step7 (2026-07-04, row70): actionJudge (per-step 経路) が「このヒラメキの
    * fire/skip が決まるまで gainSelfEvidence を保留した」印。hiramekiResolve が fire/skip 決定後に

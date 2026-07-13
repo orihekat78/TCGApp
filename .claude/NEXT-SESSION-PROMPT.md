@@ -4,8 +4,8 @@
 
 - branch: `main`; latest commit: `38579c02 feat(engine): integrate deferred decision primitives`.
 - CI checkpoint 1 green: https://github.com/orihekat78/TCGApp/actions/runs/29252401237
-- Local, uncommitted wave count: **2036 / 2074 printings; remaining 38**. Commit/push still pending.
-- Wave: B05086P, B04069/P, B05088/P/P2, B06046/P, B06095/P, B08063/P, B09110/P.
+- Local, uncommitted wave count: **2040 / 2074 printings; remaining 34**. Commit/push still pending.
+- Latest wave: B01082, B06025, and B08059/P semantic completion (already registered); previous wave remains intact.
 - Sol CLEAN; focused 100, full Vitest 5600, typecheck, smoke 1000, docs structure, and diff check green.
 - Second CI remains reserved for final `2074/2074`; do not push this intermediate card wave.
 
@@ -13,7 +13,7 @@
 
 1. Run `git status --short`; preserve session-preparation file unless intentionally committing documentation.
 2. Read root/nested `AGENTS.md`, `.codex/context/current.md`, relevant rules, and `sessions/2026-07-13-2.md`.
-3. Run `npm run ground -- <IDs>` before authoring. Current T3 candidates: B01082 (`cannotGuard`), B06025 (exact evidence instance), B08059 (self-inclusive level fixed point).
+3. Run `npm run ground -- <IDs>` before authoring. Re-triage the remaining 34; B01082, B06025, and B08059 are no longer candidates.
 
 ## Portfolio
 

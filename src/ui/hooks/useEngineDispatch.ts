@@ -196,10 +196,10 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           // Human/AI 共通で適用 — UI 側 modal が出るときはこの dispatch 経路を通らないため実害なし。
           const ctx: EffectCtx = {
             source: { player: pending.player, cardId: pending.cardId, area: 'evidence' },
-            bindings: {},
+            bindings: pending.occurrence ? { occurrence: [{ kind: 'card' as const, cardId: pending.occurrence.cardId, area: 'remove', player: pending.occurrence.player, index: pending.occurrence.removeIndex }] } : {},
             // wave-11: pick 解決段でも $trigger.<field> を参照可能に (queue payload と同内容。
             // atom 実行時は entryToCtx の triggerPayload が使われるため両段で一致させる)
-            triggerPayload: { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
+            triggerPayload: { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid, occurrence: pending.occurrence },
           };
           const aiPolicy = new HeuristicPolicy();
           // night-wC (2026-07-11, B06032/B09081): ヒラメキ所有者が human のとき humanChooser:true を渡し、
@@ -224,7 +224,8 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
             resolved as never,
             { player: pending.player, cardId: pending.cardId },
             'evidence:remove-by-action',
-            { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid },
+            { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid, occurrence: pending.occurrence },
+            ctx.bindings,
           );
         }
       }
