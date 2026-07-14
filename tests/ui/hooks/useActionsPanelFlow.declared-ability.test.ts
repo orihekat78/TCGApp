@@ -202,7 +202,7 @@ describe('runDeclaredAbilityFlow', () => {
     const promise = runDeclaredAbilityFlow({ player: 'self' });
 
     // source picker
-    let phase = useTargetPickerStore.getState().phase;
+    const phase = useTargetPickerStore.getState().phase;
     expect(phase.phase).toBe('picking');
     if (phase.phase === 'picking') {
       expect(phase.purpose).toBe('declared-ability:source');

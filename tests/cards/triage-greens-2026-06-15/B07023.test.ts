@@ -130,12 +130,11 @@ describe('B07023 光本兵我 — gate5 runtime behavior', () => {
     ];
 
     // optional 「する」を実行
-    let p;
     s = produce(s, (d) => {
       endTurn(d, 'self');           // phase:end:start emit → a1 (turn:self) → optional surface
       runAllUntilEmpty(d);
     });
-    p = _peekPendingEffectOptionalSide();
+    const p = _peekPendingEffectOptionalSide();
     expect(p, 'optional がプレイヤーに surface する (してもよい)').not.toBeNull();
     expect(p!.player, 'optional の所有者は self').toBe('self');
 

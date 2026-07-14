@@ -14,7 +14,7 @@ import { B08075 } from '@/cards/ct-p08/B08075';
 import { B08075P } from '@/cards/ct-p08/B08075P';
 import type { CardDef } from '@/engine/types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 function checkAbility(card: CardDef) {
   const a1: any = card.abilities[0];

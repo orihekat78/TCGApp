@@ -231,7 +231,7 @@ describe('D09004 大和敢助 — gate5 runtime behavior', () => {
   // ===== a1 LP+1 continuous + DECOY: bond 諸伏高明 & 自分ターン中で LP+1、未充足で +0 =====
   it('a1 + DECOY: 諸伏高明が現場 & 自分ターン中 → LP1+1=2 / 諸伏高明不在 → LP1 / 相手ターン中 → LP1', () => {
     // 充足: D09004(uid='yamato') + D09006(諸伏高明) 同現場、自分ターン
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('D09004', 'yamato'), sceneChar('D09006', 'morofushi')];
     expect(readChar.lp(s, 'yamato'), '絆諸伏高明 & 自分ターン中 → LP 1+1=2').toBe(2);

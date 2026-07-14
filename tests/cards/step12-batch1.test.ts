@@ -676,7 +676,9 @@ describe('step12 B07014 弁当型携帯FAX', () => {
   });
 
   it('a3: host から宣言 → リムーブのキャラ1枚をデッキ上へ (event decoy 除外)', () => {
-    let { s, hostUid } = setOnHost();
+    const initial = setOnHost();
+    let s = initial.s;
+    const { hostUid } = initial;
     s = produce(s, (d) => { d.players.self.remove = ['MOB', 'GEV5']; });
     const found = findDeclaredAbility(s, hostUid, 'BLUEHOST', 'scene', 'a3');
     expect(found, 'rider a3 が host から見える').toBeTruthy();

@@ -28,7 +28,7 @@ const inScene = (s: GameState, side: 'self' | 'opp', cardId: string) =>
   s.players[side].scene.some((c) => c.cardId === cardId);
 
 function driveA1(mutate: (s: GameState) => void, selfApOverride: number | null = null): GameState {
-  let s = createEmptyGameState();
+  const s = createEmptyGameState();
   s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
   mutate(s);
   const a1 = B09096.abilities.find((a) => a.id === 'a1')!;

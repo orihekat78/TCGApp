@@ -43,7 +43,7 @@ import { D08021 } from '@/cards/ct-d08/D08021';
 import { D11014 } from '@/cards/ct-d11/D11014';
 import { PR241 } from '@/cards/pr-01/PR241';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 function defOf(o: Partial<CardDef> & { id: string }): CardDef {
   return {
     id: o.id, no: o.no ?? 'NO', kind: 'character', names: ['default'],

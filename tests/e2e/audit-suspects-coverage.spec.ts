@@ -118,7 +118,7 @@ test.describe('audit suspects runtime coverage (2026-06-05)', () => {
     expect(oppHand, 'oP(D08005) が opp 手札へ bounce').toContain('D08005');
     // choice / pick の両 pending が解消
     const pendingChoice = await page.evaluate(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       return (window as any).__game.getState().pendingEffectChoice;
     });
     expect(pendingChoice, 'pendingEffectChoice は null に戻る').toBeNull();

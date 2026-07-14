@@ -41,7 +41,7 @@ export type PendingHiramekiSide = {
 // side-channel を保持。複数の hirameki.ts module instance が存在しても、すべて同じ
 // globalThis.__pendingHirameki を read/write する。jsdom + browser 両方で動作。
 declare global {
-  // eslint-disable-next-line no-var
+
   var __pendingHirameki: PendingHiramekiSide | null | undefined;
 }
 function _readSide(): PendingHiramekiSide | null {

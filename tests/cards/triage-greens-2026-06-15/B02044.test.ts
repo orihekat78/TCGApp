@@ -218,7 +218,7 @@ describe('B02044 怪盗キッド — gate5 runtime behavior', () => {
 
   // ===== a3: 【変装】icon-disguise ゲート 【事件白】&【FILE4】 — 条件達/未達で canDisguise 切替 =====
   it('a3 + DECOY条件: 変装ゲート 【事件白】&【FILE4】 — 白+FILE4で可 / 事件赤(非白)・FILE3で不可', () => {
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.players.self.scene = [sceneChar('D08017', 'atk')];
     s.players.opp.scene = [sceneChar('D08017', 'dft')];
     s.players.self.hand = ['B02044'];

@@ -16,7 +16,7 @@ export function effectIsSerializable(eff: Effect): void {
 
   try {
     JSON.stringify(eff);
-  } catch (e) {
-    throw new Error(`effectIsSerializable: effect is not JSON-serializable: ${String(e)}`);
+  } catch (cause) {
+    throw new Error(`effectIsSerializable: effect is not JSON-serializable: ${String(cause)}`, { cause });
   }
 }

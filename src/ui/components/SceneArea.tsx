@@ -5,6 +5,7 @@
 // 視覚: design-mockups/01-board-mockup.html 1326-1356 / 1452-1483 行 + 376-478 行 CSS
 // 由来: Claude Design (Research Preview) — engine 型に接続して取込み
 
+/* eslint-disable no-irregular-whitespace -- The Japanese area label retains its typographic spacing. */
 import { useEffect, useRef, useState, type JSX } from 'react';
 import type { SceneCharacter } from '@/engine/types/game-state.js';
 import { CardArt } from './CardArt.js';

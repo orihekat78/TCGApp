@@ -42,7 +42,7 @@ import { pushPendingHirameki } from './hirameki.js';
 // 「対戦開始」(spectatorMode=false) のとき 'self' を set、観戦モード/null は
 // human 無し。triggered.ts は本 flag を見て auto-pick を skip する。
 declare global {
-  // eslint-disable-next-line no-var
+
   var __humanPlayerSide: 'self' | 'opp' | null | undefined;
 }
 

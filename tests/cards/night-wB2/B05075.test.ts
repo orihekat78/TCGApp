@@ -70,7 +70,7 @@ describe('B05075 a1 — メインフェイズ開始時 セット除去→証拠1
   // optional 化 (T2 review BLOCK 反映): human 'self' で emit → surface した optional を optIn で解決。
   function fire(setCards: { cardId: string; faceUp: boolean }[], player: 'self' | 'opp' = 'self', optIn = true): GameState {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 5, player, phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     s.players.self.scene = [makeChar({ uid: 'k0', cardId: 'B05075', state: 'active', setCards })];
     s.players.self.deck = ['d1', 'd2'];

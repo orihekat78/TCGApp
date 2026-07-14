@@ -247,7 +247,7 @@ describe('B03005 工藤新一 — gate5 runtime behavior', () => {
 
   // ===== a1 C1: 【パートナー青】未達 — canDeclaredAbility=false (条件未達=能力を持たない扱い rules/17) =====
   it('a1 C1: パートナーが赤 → 【パートナー青】未達 → canDeclaredAbility=false (条件アイコン gate)', () => {
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.partner = { cardId: PARTNER_RED, state: 'active', location: 'partner-area' }; // 赤 → 未達
     s.players.self.scene = [

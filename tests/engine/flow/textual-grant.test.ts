@@ -130,7 +130,7 @@ describe('contactImmune — snapshotAP 配線 (Task D E4)', () => {
 describe('removeOnTurnEnd / toDeckBottomOnTurnEnd consume — endTurn (Task D E4)', () => {
   it('removeOnTurnEnd=true のキャラはターン終了時にリムーブされる (B09032「ターン終了時、このキャラをリムーブする」)', () => {
     registerCardDef(defOf('R1'));
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene.push(sceneChar('R1', 'r-uid', 'sleep', { removeOnTurnEnd: true }));
     s.players.self.scene.push(sceneChar('R1', 'stay-uid'));
@@ -143,7 +143,7 @@ describe('removeOnTurnEnd / toDeckBottomOnTurnEnd consume — endTurn (Task D E4
 
   it('toDeckBottomOnTurnEnd=true はデッキの下へ (B07079/PR181「ターン終了時、現場からデッキの下に移す」)', () => {
     registerCardDef(defOf('D1'));
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.deck = ['X1'];
     s.players.self.scene.push(sceneChar('D1', 'd-uid', 'sleep', { toDeckBottomOnTurnEnd: true }));

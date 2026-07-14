@@ -65,7 +65,7 @@ function loadBugs(): Bug[] {
     const content = readFileSync(join(BUGS_DIR, f), 'utf-8');
     const fm = parseFrontmatter(content);
     // RCA テキストは ## RCA セクションから抽出 (最初の 3 段落程度)
-    const rcaMatch = content.match(/## RCA[\s\S]*?(?=^## |\Z)/m);
+    const rcaMatch = content.match(/## RCA[\s\S]*?(?=^## |(?![\s\S]))/m);
     const rcaText = rcaMatch ? rcaMatch[0].slice(0, 800) : '';
     const base = {
       id: fm.id ?? f.replace('.md', ''),

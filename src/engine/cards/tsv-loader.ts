@@ -44,6 +44,7 @@ function unescapeCell(s: string): string {
 
 // ---------- 行→カラム ----------
 
+/* eslint-disable no-irregular-whitespace -- The BOM character is parsed literally from TSV input. */
 type Row = Record<string, string>;
 
 function parseRows(text: string): Row[] {

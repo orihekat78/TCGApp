@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 const { extractSlots, buildParamRules, instantiate, stripDesc, deepEqual } = require('../../scripts/compiler/param.cjs');
 
 const ROOT = path.join(__dirname, '..', '..');

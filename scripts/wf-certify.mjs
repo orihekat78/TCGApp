@@ -193,7 +193,7 @@ const greens = done.filter((x) => x.spec.verdict === 'green');
 const verified = greens.filter((x) => x.verify && x.verify.ok);
 const refuted = greens.filter((x) => x.verify && !x.verify.ok);
 log(`certified ${done.length}/${recs.length}: green=${greens.length} (verified-ok=${verified.length}, refuted=${refuted.length}) yellow=${done.length - greens.length}`);
-return {
+export default {
   total: recs.length,
   returned: done.length,
   green: greens.length,

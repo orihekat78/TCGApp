@@ -32,7 +32,7 @@ export type PendingMisreadSide = {
 // Round 4j-fix (BUG-034): vite dev mode の module instance 分離回避のため globalThis 経由で
 // side-channel を保持。hirameki.ts と同パターン (水平展開)。
 declare global {
-  // eslint-disable-next-line no-var
+
   var __pendingMisread: PendingMisreadSide | null | undefined;
 }
 function _readMisreadSide(): PendingMisreadSide | null {

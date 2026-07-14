@@ -411,7 +411,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
       // (手動で開いた閲覧モーダルも閉じてしまうが、pick 関連の自然な挙動として許容)
       setAreaModal(null);
     }
-  }, [pickAreaKind]);
+  }, [pickAreaKind, areaModal]);
   // BUG-085 review (Finding 2): 証拠 flip picker が開いたら、手動で開いていた証拠
   // 閲覧 areaModal を閉じて backdrop の二重表示を防ぐ。
   const flipPickerActive = useEvidenceFlipPickerStore((s) => s.current !== null);
@@ -842,7 +842,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               return;
             }
             // 残作業はなし — 全 ActionsPanel item が配線済 (Phase 8.6〜8.8b 完了)
-            // eslint-disable-next-line no-console
+
             console.warn(`[Playmat] unknown action item: ${id}`);
           }}
           narratorMessage={narratorMessage}

@@ -137,7 +137,7 @@ function renderClass(c: ClassInfo): string {
   const lines = [`  class ${safe} {`];
   for (const f of c.fields) {
     const opt = f.optional ? '?' : '';
-    const safeName = f.name.replace(/[^A-Za-z0-9_\[\]:]/g, '_');
+    const safeName = f.name.replace(/[^A-Za-z0-9_[]:]/g, '_');
     const safeType = compactType(f.typeText).replace(/["`]/g, "'");
     lines.push(`    +${safeName}${opt}: ${safeType}`);
   }

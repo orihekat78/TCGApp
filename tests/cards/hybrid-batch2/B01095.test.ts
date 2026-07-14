@@ -137,7 +137,7 @@ describe('B01095 「僕の日本から…」 — hybrid-batch2 probe (event-use 
     // 観測: production event-use 経路でスタンが発生するか
     const stunned = allStunned(after);
     // 診断出力 (green/red いずれでも root-cause を残す)
-    // eslint-disable-next-line no-console
+
     console.log('[B01095 payoff probe] stunned uids =', stunned.map((c) => c.uid));
     expect(stunned.length, 'production event-use での stun 発生枚数').toBe(0);
   });

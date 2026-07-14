@@ -283,7 +283,7 @@ describe('B05046 鈴木園子 — gate5 runtime behavior', () => {
   // a3: 【宣言】〚手札から特徴［鈴木財閥］のキャラを1枚リムーブ〛：キャラを1枚まで選び、スリープ
   // ============================================================
   it('a3 cost DECOY: cost 候補 filter {trait:鈴木財閥, kind:character} 実評価 — 鈴木財閥キャラのみ payable', () => {
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('B05046', 'sonoko#1', { state: 'active' })];
     const a3 = B05046.abilities.find((a) => a.id === 'a3')!;

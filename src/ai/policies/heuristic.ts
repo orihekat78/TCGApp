@@ -70,7 +70,7 @@ function readEffectiveAp(s: GameState, uid: string): number {
 
 type Player = 'self' | 'opp';
 
-export interface HeuristicPolicyOptions extends RandomPolicyOptions {}
+export type HeuristicPolicyOptions = RandomPolicyOptions;
 
 export class HeuristicPolicy implements AIPolicy {
   readonly name = 'heuristic';

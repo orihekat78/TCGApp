@@ -14,7 +14,7 @@ function makeEntry(overrides: Partial<EffectStackEntry> & Pick<EffectStackEntry,
     source: { player: 'self' },
     triggeredBy: { hook: 'OnEnter' },
     triggeredAt: { turn: 1, phase: 'main', nano: 0 },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     effect: { kind: 'noop' } as any,
     state: 'pending',
     ...overrides,

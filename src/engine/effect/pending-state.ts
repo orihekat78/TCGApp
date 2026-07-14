@@ -21,18 +21,18 @@ type ChoiceResumeState = { effect: Effect | null; bindings: Record<string, unkno
 // 場合 (D08013 a1 step 2 evidenceToHand → step 3 discard 等)、初回 drain で両方を push し、
 // effectPickResolve dispatch ごとに先頭を shift して順次 UI に出す。
 declare global {
-  // eslint-disable-next-line no-var
+
   var __pendingEffectPickQueue: PendingEffectPickSide[] | undefined;
   // Legacy backward-compat: 旧コード/テストが queue[0] を読む時の互換 property。
   // 書き込み (`= null`) しても queue は変わらないため、cleanup は
   // `_clearPendingEffectPickQueue()` を使うこと。
-  // eslint-disable-next-line no-var
+
   var __pendingEffectPickSide: PendingEffectPickSide | null | undefined;
   // Phase 3c (2026-06-22): 旧 chain break 信号 slot (chainStepNoApply) は ctx.dyn.chainStepNoApply へ移設
   // (intra-produce で resolver chain case のみ読む → globalThis 不要)。本 declare global は削除。
   // BUG-121: human の複数 option choice を pause/surface する side-channel (pick と同型・別スロット)。
   // deckReveal と同じ単一スロット (choice は 1 dispatch に高々 1 個想定)。drain で null クリア。
-  // eslint-disable-next-line no-var
+
   var __pendingEffectChoiceSide: PendingEffectChoiceSide | null | undefined;
   // BUG-121 (残課題解消): choiceResolve 再開時に再 walk すべき effect (engine holder、store へは drain しない)。
   // top-level choice なら choice 効果そのもの。sequence 内 choice なら sequence case が
@@ -41,35 +41,35 @@ declare global {
   // bindings field に統合 (常にペアで set/take/clear されるため。globalThis side-channel -1)。bindings = cutin の
   // ctx.bindings ($contact.byUid 等) を保持し、choiceResolve 再開時に resume ctx へ復元する
   // (applyChoiceAndContinuation の bindings:{} で contact binding が落ち、option の $contact.* が未解決になる問題を解消)。
-  // eslint-disable-next-line no-var
+
   var __pendingEffectChoiceResume: ChoiceResumeState | null | undefined;
   // 2026-06-06 タスクC: optional 決定の配線 (pendingEffectChoice と同型・別スロット)。
   // 「〜してもよい」effect (Effect kind:'optional') を human に「する/しない」で問う side-channel。
   // choice との違いは選択値が boolean (run) であること。drain で null クリア。
-  // eslint-disable-next-line no-var
+
   var __pendingEffectOptionalSide: PendingEffectOptionalSide | null | undefined;
   // optionalResolve 再開時に再 walk すべき optional 効果の holder (engine 内のみ、store へは drain しない)。
-  // eslint-disable-next-line no-var
+
   var __pendingEffectOptionalResume: Effect | null | undefined;
   // engine wave-18 (2026-07-03): optional 再開 ctx の bindings 復元 (BUG-114 の choice-bindings 対称)。
   // optional{...} 内効果が $contact.* / ctx.contact (inContact pick, B04092 キャンティ) を参照する場合、
   // surface 時の ctx.bindings を保持しないと resume ctx で contact が失われ pick 候補0になる。
-  // eslint-disable-next-line no-var
+
   var __pendingEffectOptionalBindings: Record<string, unknown> | null | undefined;
   // Rock-paper-scissors is a distinct simultaneous-decision flow.  It must not
   // share generic choice state because the hidden AI hand and tie retries are
   // part of its resolution contract.
-  // eslint-disable-next-line no-var
+
   var __pendingRpsSide: PendingRpsSide | null | undefined;
-  // eslint-disable-next-line no-var
+
   var __pendingRpsResume: Effect | null | undefined;
-  // eslint-disable-next-line no-var
+
   var __pendingRpsBindings: Record<string, unknown> | null | undefined;
   // Dedicated discard-or-negate response. It deliberately does not share optional/choice state:
   // accepting discards a hand occurrence and cancels a different effect; declining resumes it.
-  // eslint-disable-next-line no-var
+
   var __pendingChooseInterceptSide: PendingChooseInterceptSide | null | undefined;
-  // eslint-disable-next-line no-var
+
   var __pendingChooseInterceptResume: ChooseInterceptResume | null | undefined;
 }
 

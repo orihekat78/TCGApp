@@ -12,7 +12,7 @@ import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import { effectiveTraitNames } from '../../target/candidates.js';
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __pendingDeckRevealSide: PendingDeckRevealSide | null | undefined;
 }
 
@@ -42,7 +42,7 @@ export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
 // DeckReorderModal が並べ替えを surface する。AI / spectator / smoke (__humanPlayerSide が
 // 当該 player でない) では set しないため従来挙動 byte-equal (公開順固定 = 合法な一choice)。
 declare global {
-  // eslint-disable-next-line no-var
+
   var __pendingDeckReorderSide: PendingDeckReorderSide | null | undefined;
 }
 
@@ -66,7 +66,7 @@ export function _drainPendingDeckReorderSide(): PendingDeckReorderSide | null {
 // ⚠ await 中は対象カードが deck 元位置に残る (rules/26 見ている間はデッキ扱い)。同一 effect
 // chain の後続 step が deck を読む構成は本 atom の消費者では組まないこと (B05047 は最終 step)。
 declare global {
-  // eslint-disable-next-line no-var
+
   var __pendingDeckPlaceSide: PendingDeckPlaceSide | null | undefined;
 }
 
@@ -96,7 +96,7 @@ export function _drainPendingDeckPlaceSide(): PendingDeckPlaceSide | null {
 // 現 exemplar (B06020/B06042) は 0-1 pick 単発なので到達しない。複数発火カードが出たら
 // pendingEffectPick 同様の queue 化が要る (row65 risks(4))。
 declare global {
-  // eslint-disable-next-line no-var
+
   var __pendingContactStartAxId: string | null | undefined;
 }
 

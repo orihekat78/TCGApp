@@ -328,7 +328,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
   it('a2 sequence (human): step1 で POLICE 選択 → 自分デッキ上を裏向きセット / step2 で OPPCHAR 選択 → 相手デッキ上を裏向きセット (持ち主のデッキ)', () => {
     setHuman('self');
     _resetUidCounter();
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     s.players.self.scene = [
       sceneChar(SRC, 'src#0', { state: 'active' }),
@@ -375,7 +375,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
   it('a2 decline (sequence): step1 を 0枚 decline → 自陣には何もセットされない が step2 (相手キャラへのセット) は発火する (sequence 各 step 独立 rules/15)', () => {
     setHuman('self');
     _resetUidCounter();
-    let s = createEmptyGameState();
+    const s = createEmptyGameState();
     s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     s.players.self.scene = [
       sceneChar(SRC, 'src#0', { state: 'active' }),

@@ -194,7 +194,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         (a === 'rock' && b === 'scissors') || (a === 'paper' && b === 'rock') || (a === 'scissors' && b === 'paper');
       const randomHand = (): RpsHand => hands[Math.floor(Math.random() * hands.length)]!;
       if (human === null) {
-        let ownerHand = randomHand();
+        const ownerHand = randomHand();
         let otherHand = randomHand();
         while (ownerHand === otherHand) otherHand = randomHand();
         const branch = wins(ownerHand, otherHand) ? eff.win : eff.lose;

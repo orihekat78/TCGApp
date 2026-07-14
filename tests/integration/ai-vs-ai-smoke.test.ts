@@ -103,19 +103,19 @@ describe('AI vs AI 100戦 smoke', () => {
     const turnCaps = results.filter(r => r.reason === 'turn-cap').length;
     const wins = results.filter(r => r.reason === 'evidence').length;
 
-    // eslint-disable-next-line no-console
+
     console.log(`\n=== 100戦 smoke 結果 ===`);
-    // eslint-disable-next-line no-console
+
     console.log(`Winners: self=${winnersSelf}, opp=${winnersOpp}, draws=${draws}, failures=${failures}`);
-    // eslint-disable-next-line no-console
+
     console.log(`Avg turns: ${avgTurns.toFixed(1)}`);
-    // eslint-disable-next-line no-console
+
     console.log(`Reason: evidence=${wins}, deck-out=${deckOuts}, turn-cap=${turnCaps}`);
     if (errors.length > 0) {
-      // eslint-disable-next-line no-console
+
       console.log(`Failures (${errors.length}):`);
       for (const e of errors.slice(0, 5)) {
-        // eslint-disable-next-line no-console
+
         console.log(`  match #${e.idx} turn=${e.turns}: ${e.error}`);
       }
     }
@@ -154,13 +154,13 @@ describe('AI vs AI 100戦 smoke', () => {
       _resetTargetExpanders();
     }
 
-    // eslint-disable-next-line no-console
+
     console.log(`\n=== Random vs Heuristic (20戦) ===`);
-    // eslint-disable-next-line no-console
+
     console.log(`Heuristic wins: ${heuristicWins} / Random wins: ${randomWins} / draws: ${draws} / failures: ${failures}`);
     if (errors.length > 0) {
       for (const e of errors.slice(0, 5)) {
-        // eslint-disable-next-line no-console
+
         console.log(`  match #${e.idx}: ${e.error}`);
       }
     }

@@ -81,7 +81,7 @@ beforeEach(() => {
 // ── a2 production 経路 helper: 実 emit で trigger 発火 → pending 確認 → AI drain loop で効果解決 ──
 function fireHirameki(evidenceOwner: Player, setup: (s: GameState) => void): GameState {
   const attacker: Player = evidenceOwner === 'self' ? 'opp' : 'self';
-  let s = produce(createEmptyGameState(), (d) => {
+  const s = produce(createEmptyGameState(), (d) => {
     d.turn = { number: 3, player: attacker, phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     setup(d);
   });

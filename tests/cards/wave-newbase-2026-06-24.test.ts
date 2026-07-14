@@ -20,7 +20,7 @@ import { B03124 } from '@/cards/ct-p03/B03124';
 import { B03068 } from '@/cards/ct-p03/B03068';
 import { PR094 } from '@/cards/pr-01/PR094';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const ctxPayload = (payload: unknown): EffectCtx =>
   ({ source: { cardId: 'X', uid: 'u0', abilityId: 'a1', player: 'self', area: 'scene' }, bindings: {}, triggerPayload: payload } as EffectCtx);
 const ctxSelf = (uid: string, cardId: string): EffectCtx =>

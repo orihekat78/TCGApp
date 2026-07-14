@@ -13,7 +13,7 @@ import type { CardDef, GameState } from '@/engine/types';
 const FILL: CardDef = { id:'FILL', no:'FILL', kind:'character', names:['FILL'], colors:['黄'], level:3, ap:3000, lp:1, traits:[], keywords:[], rarity:'C', imageUrl:'', abilities:[], ruleRefs:[] };
 beforeEach(() => { _resetRegistry(); _resetTriggeredRegistered(); _resetUidCounter(); _clearPendingEffectPickQueue(); [PR279, FILL].forEach(registerCardDef); registerTriggeredListener(); (globalThis as any).__humanPlayerSide = null; });
 it('dbg2', () => {
-  let s = createEmptyGameState();
+  const s = createEmptyGameState();
   s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
   s.players.opp.evidence = [{ cardId: 'FILL', faceUp: false }, { cardId: 'FILL', faceUp: false }];
   s.players.self.remove = ['PR279'];

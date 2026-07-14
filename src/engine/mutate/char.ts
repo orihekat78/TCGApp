@@ -628,7 +628,6 @@ function removeOneSetCard(
   const { char, player } = found;
   const faceDownOnly = opts?.faceDownOnly ?? false;
   const cause = opts?.cause ?? 'effect';
-  let entry: { cardId: string; faceUp: boolean; instanceId?: string } | undefined;
   let idx = -1;
   if (typeof opts?.setCardInstanceId === 'string') {
     idx = char.setCards.findIndex((candidate) => candidate.instanceId === opts.setCardInstanceId);
@@ -647,7 +646,7 @@ function removeOneSetCard(
   const candidate = char.setCards[idx];
   if (!candidate) return null;
   if (opts?.skipReplacement !== true && maybeReplaceSetCardRemoval(s, player, uid, candidate)) return null;
-  entry = char.setCards.splice(idx, 1)[0];
+  const entry = char.setCards.splice(idx, 1)[0];
   if (!entry) return null;
   s.players[player].remove.push(entry.cardId);
   // engine拡張 wave#2 cluster9: set card 1枚が現場から離れる (host は在場のまま) → setcard:leave emit。

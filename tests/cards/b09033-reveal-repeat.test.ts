@@ -142,7 +142,7 @@ describe('B09033 「ひょっとしたら…」', () => {
 
   it('owner=opp / human=self: 初回windowはAIが選び、反復任意だけauto-declineして残りをbottomへ置く', () => {
     resetB09033(H1, H2);
-    let state = createEmptyGameState();
+    const state = createEmptyGameState();
     state.players.opp.deck = [H1.id, H2.id];
     state.players.opp.hand = [B09033.id];
     state.players.opp.case.colors = ['緑'];
@@ -184,7 +184,7 @@ describe('B09033 「ひょっとしたら…」', () => {
 
   it('AI/spectator: 初回windowはAIが選び、反復任意はskipしてpromptを残さない', () => {
     resetB09033(H1, H2);
-    let state = createEmptyGameState();
+    const state = createEmptyGameState();
     state.players.self.hand = [B09033.id];
     state.players.self.deck = [H1.id, H2.id];
     state.players.self.case.colors = ['緑'];

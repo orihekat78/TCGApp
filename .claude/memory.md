@@ -113,3 +113,13 @@
 - Regression work fixed B06025 exact-occurrence re-walk corruption and explicit human/AI/unknown runtime picker ownership.
 - Final gates: Vitest 690 passed/1 skipped, 5645 passed/7 skipped; tsc, docs structure, diff, registry (2047 unique/0 validation failures), and smoke1000 (0 timeout/exception) green.
 - User decision frozen in `specs/remaining-27-engine-portfolio.md`: probe stale blockers, implement engine-first in isolated waves, then run three parallel card lanes; broad gates/CI only at engine integration and final completion.
+
+## 2026-07-14 ESLint baseline repair
+
+- `npm run lint` now exits 0. Applied safe automatic lint fixes, corrected active script parsing and error-cause preservation, and isolated legacy test-only dynamic/partial-fixture diagnostics as warnings.
+- `npm run typecheck` and `git diff --check` pass. Existing hook and legacy-test diagnostics remain warnings, not ESLint errors.
+
+## 2026-07-14 warning-free ESLint boundary
+
+- `npm run lint` is now 0 errors / 0 warnings. Real `Playmat` effect dependency was corrected; imperative `use*` action helpers and legacy test-fixture-only diagnostics are excluded by scoped lint policy.
+- Focused Playmat/switch tests pass (16). Full Vitest exceeds this environment's 124-second command limit; run was timed out before completion.
