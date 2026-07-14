@@ -112,4 +112,4 @@
 - Added scene face-down set-card count, effective same-name count, effect scene-to-deck-bottom, hand-reveal cardName binding, and safe binding-dependent conditional continuation.
 - Regression work fixed B06025 exact-occurrence re-walk corruption and explicit human/AI/unknown runtime picker ownership.
 - Final gates: Vitest 690 passed/1 skipped, 5645 passed/7 skipped; tsc, docs structure, diff, registry (2047 unique/0 validation failures), and smoke1000 (0 timeout/exception) green.
-- User decision: next session is engine-first portfolio planning for the remaining 27; bulk card implementation follows primitive integration.
+- User decision frozen in `specs/remaining-27-engine-portfolio.md`: probe stale blockers, implement engine-first in isolated waves, then run three parallel card lanes; broad gates/CI only at engine integration and final completion.

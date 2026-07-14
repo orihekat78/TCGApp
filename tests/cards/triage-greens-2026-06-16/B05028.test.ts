@@ -424,7 +424,7 @@ describe('B05028 服部平蔵 — gate5 runtime behavior', () => {
     expect(e1.kind, 'a1 effect chain (「そうした場合」gate)').toBe('chain');
     expect(e1.steps[0], 'a1 step1 charRemoveSetCard hasSetCards/either/max:1').toMatchObject({
       kind: 'atom', verb: 'charRemoveSetCard',
-      args: { player: 'self', max: 1, side: 'either', filter: { hasSetCards: true } },
+      args: { player: 'self', max: 1, side: 'either', filter: { hasFaceDownSetCards: true }, faceDownOnly: true },
     });
     expect(e1.steps[1], 'a1 step2 sceneRemove apMax:8000/either/cause:effect/max:1').toMatchObject({
       kind: 'atom', verb: 'sceneRemove',

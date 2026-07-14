@@ -12,14 +12,16 @@
 
 ## Next Work
 
-1. Read current context and compute remaining IDs from TSV minus `ALL_CARDS`.
-2. Plan **engine-first**: group all 27 cards by shared missing primitive.
-3. Implement primitives in isolated T3 lanes, each with a representative card and RED probe.
-4. After primitive integration and Sol/full gates, add unlocked cards/P variants in three parallel card lanes.
+1. Follow `.claude/specs/remaining-27-engine-portfolio.md` as the frozen execution plan.
+2. Repair stale context/shipped inventory, then batch-ground all remaining IDs once.
+3. Probe the six existing-DSL candidates before adding any primitive.
+4. Execute additive, data/bind, UI-serial, then structural-serial engine waves.
+5. After engine checkpoint and CI, add remaining cards/P variants in three parallel lanes.
 
 ## Rules
 
 - Run `npm run ground -- <IDs>` before authoring; no partial cards.
 - Check 0 choice, owner=opp, AI/human parity, stale state, duplicate IDs, and base/P equality.
 - New decision UI requires Playwright.
-- Do not run second CI until all cards are added and registry is 2074/2074.
+- Broad gates run only at engine integration and final `2074/2074`.
+- CI checkpoints are engine integration and final `2074/2074`.

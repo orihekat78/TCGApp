@@ -28,22 +28,23 @@ const a1: AbilityDef = {
       // デッキ上からレベル4以下【黄】のキャラが出るまで1枚ずつ公開 ($matched=該当キャラ / $revealed=公開した全カード)
       { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { color: '黄', levelMax: 4, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } },
       { kind: 'conditional',
-        if: { kind: 'bound', key: '$matched', presence: 'matched' },
+        if: { kind: 'and', cs: [{ kind: 'bound', key: '$matched', presence: 'matched' }, { kind: 'removeColorAtLeast', player: 'self', color: '黄', n: 20 }] },
         // 公開した【黄】キャラを登場させる
         // BUG-102: target に source area=deck を指定し、登場時にマッチカードをデッキから除去
         // (sourceArea='deck' → atom-handlers sceneEnter:421 splice)。無いと現場+デッキで複製。
-        then: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true, target: { query: { area: 'deck', side: 'self' } } } },
+        then: {
+          kind: 'sequence',
+          steps: [
+            { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true, target: { query: { area: 'deck', side: 'self' } } } },
+            { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$matched.uid', kw: '突撃[事件]', scope: 'turn' } },
+          ],
+        },
+        else: { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true, target: { query: { area: 'deck', side: 'self' } } } },
       },
       // 残りの公開カードをデッキの下に移す
       { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
       // デッキをシャッフルする
       { kind: 'atom', verb: 'deckShuffle', args: { player: 'self' } },
-      { kind: 'conditional',
-        // リムーブエリアに【黄】が20枚以上ある場合
-        if: { kind: 'and', cs: [{ kind: 'bound', key: '$matched', presence: 'matched' }, { kind: 'removeColorAtLeast', player: 'self', color: '黄', n: 20 }] },
-        // ターン終了時までそのキャラに突撃[事件]を付与
-        then: { kind: 'atom', verb: 'charGrantKeyword', args: { uid: '$matched.uid', kw: '突撃[事件]', scope: 'turn' } },
-      },
     ],
   },
   description:

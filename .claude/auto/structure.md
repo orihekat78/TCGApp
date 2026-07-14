@@ -10,7 +10,7 @@
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
 - **ディレクトリ数**: 265
-- **ファイル数**: 4990
+- **ファイル数**: 4994
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -981,6 +981,8 @@
     - `smoke-2026-07-14-3.md` — Smoke 1000戦レポート — smoke-2026-07-14-042137
     - `smoke-2026-07-14-4.json`
     - `smoke-2026-07-14-4.md` — Smoke 1000戦レポート — smoke-2026-07-14-051757
+    - `smoke-2026-07-14-5.json`
+    - `smoke-2026-07-14-5.md` — Smoke 1000戦レポート — smoke-2026-07-14-055342
     - `smoke-2026-07-14.json`
     - `smoke-2026-07-14.md` — Smoke 1000戦レポート — smoke-2026-07-14-014802
     - `smoke-baseline.json`
@@ -4774,6 +4776,7 @@
     - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15):
     - `bug-163-b08079-henso.test.ts` — BUG-163: B08079/B08079P ピンガ — henso 列 (col13)【変装】【事件黒】【FILE7】の grounding 漏れ追補 pr…
     - `bug-165-pb-multipick-collapse.test.ts` — BUG-165 (2026-07-02, wave-10): PB generic multi-pick collapse — n≥2 の Pattern B…
+    - `bug-169-face-down-set-card.test.ts`
     - `bug155-pick-filter-kind-2026-06-24.test.ts` — BUG-155 水平展開 sweep (2026-06-24, engine変更0) — pick系 atom/query の filter が公式テキストの
     - `bug159-b02010-colornot-2026-06-27.test.ts` — BUG-159 fix — B02010 灰原哀 a1「【青】以外の色を持つキャラ」を custom closure (none説) から
     - `cardphase3-cutin-observer.test.ts` — tests/cards/cardphase3-cutin-observer
@@ -5008,6 +5011,7 @@
       - `bug-134-cofire-pick-staleness.test.ts` — BUG-134 characterization / guard — 同一 hook (phase:end:start 等) で複数 triggered ent…
       - `bug-136-deck-reorder.test.ts` — BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択。
       - `bug-138-drain-ownership.test.ts` — BUG-138 (engine拡張 wave#2 cluster2 X8): drainAiEffectPicks の pick 所有権
+      - `bug-187-relative-hand-side.test.ts`
       - `charsetcard-fromdecktop-refresh.test.ts` — tests/engine/effect/charsetcard-fromdecktop-refresh — unit B (session64)
       - `conditional-deferred-pick.test.ts`
       - `cost-paid-stacked-pick.test.ts`

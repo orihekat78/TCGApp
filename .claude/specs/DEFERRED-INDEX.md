@@ -1,5 +1,12 @@
 # 実装保留 (Deferred) 一覧
 
+> **Current (2026-07-14, portfolio completion):** `ALL_CARDS` is
+> **2074 / 2074** (unique IDs 2074; definition validation 0). Therefore the
+> current **unimplemented-card DEFER count is 0**. This file retains historical
+> card/engine defer records; individual old rows are not a live card backlog.
+> Active bugs are tracked separately in `.claude/bugs/`: **12** (10 unstarted,
+> 2 in progress).
+
 > 2026-07-13 continuation: B02022/B02022P and B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271, B04042/B04042P/B04084, then B06012/P/B06064/P/B07033/P/P2/B09113/P shipped. Registry 2011/2074; remaining 63. CL328 green (typecheck, full Vitest, lint chain, smoke 1000). B02022 action-target primitive cleared Sol review. Lane-B 20-printing green-wave assumption disproven: only six exact DSL/twin closures remained.
 >
 > 2026-07-13 local wave (uncommitted): B05086P, B04069/P, B05088/P/P2, B06046/P, B06095/P, B08063/P, B09110/P. Registry 2036/2074; remaining 38. Added host face-up filtered set count, all-area turn trait grant (no hidden evidence/FILE leak), and `deckRevealUntil.stopAtFirstMatch`; Sol CLEAN, full gates green. Earlier rows for these IDs are stale history.
