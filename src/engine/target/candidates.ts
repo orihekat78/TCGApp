@@ -417,6 +417,14 @@ function matchesQueryForChar(
   // excludeSelf
   if (query.excludeSelf && cand.kind === 'char' && cand.uid === ctx.source.uid) return false;
 
+  // A bound scene group is identity-bearing.  Missing bindings are unsafe for
+  // an exclusion request, so do not offer a target rather than broadening it.
+  if (typeof query.excludeBound === 'string') {
+    const bound = ctx.bindings?.[query.excludeBound];
+    if (!Array.isArray(bound)) return false;
+    if (bound.some(entry => (entry as { uid?: unknown }).uid === c.uid)) return false;
+  }
+
   // engine additive wave-18 (2026-07-03): inContact — pick を現コンタクト参加者に限定 (B04075/PR029/B04092)。
   // 参加者 = ctx.contact.{byUid,targetUid,guardUid}。ctx.contact は resolve 時のみ populate (BUG-104) →
   // コンタクト外の誤用や non-char 候補は不一致 = drop (安全側)。excludeSelf と同じ ctx 依存 char 述語サイト。

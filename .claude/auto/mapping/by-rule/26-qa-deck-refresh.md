@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `0345a4755025`
+> Source hash: `db1b5d617393`
 
 公式ルール [`26-qa-deck-refresh.md`](../../../rules/26-qa-deck-refresh.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,7 +24,7 @@
 - [`PR265`](../by-spec/grounding--PR265.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (217)
+## 📄 参照ソース (218)
 
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
 - [`src/cards/ct-d01/D01012.ts`](../../../../src/cards/ct-d01/D01012.ts)
@@ -39,11 +39,11 @@
 - [`src/cards/ct-d05/D05007.ts`](../../../../src/cards/ct-d05/D05007.ts)
 - [`src/cards/ct-d05/D05012.ts`](../../../../src/cards/ct-d05/D05012.ts)
 - [`src/cards/ct-d05/D05014.ts`](../../../../src/cards/ct-d05/D05014.ts)
+- [`src/cards/ct-d06/D06013.ts`](../../../../src/cards/ct-d06/D06013.ts)
 - [`src/cards/ct-d06/D06016.ts`](../../../../src/cards/ct-d06/D06016.ts)
 - [`src/cards/ct-d07/D07019.ts`](../../../../src/cards/ct-d07/D07019.ts)
 - [`src/cards/ct-d07/D07023.ts`](../../../../src/cards/ct-d07/D07023.ts)
 - [`src/cards/ct-d08/D08026.ts`](../../../../src/cards/ct-d08/D08026.ts)
 - [`src/cards/ct-d10/D10003.ts`](../../../../src/cards/ct-d10/D10003.ts)
 - [`src/cards/ct-d10/D10004.ts`](../../../../src/cards/ct-d10/D10004.ts)
-- [`src/cards/ct-d10/D10024.ts`](../../../../src/cards/ct-d10/D10024.ts)
-- _...ほか 197 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 198 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -1432,9 +1432,12 @@ import { B05087 } from '../ct-p05/B05087.js';
 import { B05088 } from '../ct-p05/B05088.js';
 import { B05106 } from '../ct-p05/B05106.js';
 import { B06026 } from '../ct-p06/B06026.js';
+import { D06013 } from '../ct-d06/D06013.js';
+import { B06027 } from '../ct-p06/B06027.js';
 import { B06025 } from '../ct-p06/B06025.js';
 import { B06090 } from '../ct-p06/B06090.js';
 import { B07053 } from '../ct-p07/B07053.js';
+import { B07013 } from '../ct-p07/B07013.js';
 import { B07065 } from '../ct-p07/B07065.js';
 import { B08004 } from '../ct-p08/B08004.js';
 import { B08033 } from '../ct-p08/B08033.js';
@@ -1562,6 +1565,9 @@ import { B07030P2 } from '../ct-p07/B07030P2.js';
 import { B07061 } from '../ct-p07/B07061.js';
 import { B07061P } from '../ct-p07/B07061P.js';
 import { B09055 } from '../ct-p09/B09055.js';
+import { B09047 } from '../ct-p09/B09047.js';
+import { B09052 } from '../ct-p09/B09052.js';
+import { B09052P } from '../ct-p09/B09052P.js';
 import { B09055P } from '../ct-p09/B09055P.js';
 import { B09055P2 } from '../ct-p09/B09055P2.js';
 import { B03063 } from '../ct-p03/B03063.js';
@@ -2067,6 +2073,11 @@ export const REUSE_CARDS: CardDef[] = [
   B01006, B01006P, B03030, B03030P, B05008, B05008P, B05048, B08017, B08017P,
   // deferred T3 wave: bearer guard ban, exact evidence return, self-inclusive level
   B01082, B06025,
+  B06027,
+  B07013,
+  B09047,
+  B09052, B09052P,
+  D06013,
   // T3 same-effective-name count / hand-reveal nameOverride
   B09036, B09036P,
   // Remaining-27 Wave 2: discard-down level-sum event.

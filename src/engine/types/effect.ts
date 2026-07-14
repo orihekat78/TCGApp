@@ -361,6 +361,8 @@ export type TargetQuery = {
   filter?: TargetFilter;
   filterAny?: TargetFilter[];
   excludeSelf?: boolean;
+  /** Exclude scene characters whose uid appears in this effect binding. */
+  excludeBound?: string;
   state?: ('active' | 'sleep' | 'stun')[];
   named?: boolean;
   distinctNames?: boolean;

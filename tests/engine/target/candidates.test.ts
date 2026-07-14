@@ -215,6 +215,27 @@ describe('engine.target.candidates', () => {
     });
   });
 
+  describe('excludeBound', () => {
+    it('drops every scene character uid recorded in the named binding', () => {
+      let s = createEmptyGameState();
+      s = withScene(s, 'self', [
+        makeChar({ uid: 'entered' }),
+        makeChar({ uid: 'other' }),
+      ]);
+      const ctx = makeCtx({
+        bindings: { entered: [{ kind: 'char', uid: 'entered', cardId: 'C', player: 'self' }] },
+      });
+      const result = candidates(s, pickRef({ side: 'self', excludeBound: 'entered' }), ctx);
+      expect(result).toHaveLength(1);
+      expect((result[0] as { uid: string }).uid).toBe('other');
+    });
+
+    it('fails closed when the binding is missing', () => {
+      const s = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'only' })]);
+      expect(candidates(s, pickRef({ side: 'self', excludeBound: 'missing' }), makeCtx())).toEqual([]);
+    });
+  });
+
   describe('state filter', () => {
     it('filters by sleep/stun', () => {
       let s = createEmptyGameState();
