@@ -45,13 +45,13 @@ export function continuousDeltaSafe(s: GameState, uid: string | undefined, which
 // matchOneFilter と read.char.ap/lp の両方が auraDeltaSafe 経由で合算する (filter-AP と combat-AP を一致させる = BUG-117 原則)。
 // 未登録 / 既存カード (aura 未宣言) は 0 = no-op (smoke baseline 不変)。auraDelta 内の matchOneFilter 再入は
 // _inAuraDelta で 0 化 (auraFilter の AP 判定が aura を二重計上しない)。_inContinuousDelta 中も 0 (BUG-113 cycle と同 posture)。
-type AuraDeltaFn = (s: GameState, uid: string, which: 'apDeltaAura' | 'lpDeltaAura') => number;
+type AuraDeltaFn = (s: GameState, uid: string, which: 'apDeltaAura' | 'lpDeltaAura' | 'lvlDeltaAura') => number;
 let auraDeltaImpl: AuraDeltaFn | null = null;
 let _inAuraDelta = false;
 export function registerAuraDelta(fn: AuraDeltaFn): void {
   auraDeltaImpl = fn;
 }
-export function auraDeltaSafe(s: GameState, uid: string | undefined, which: 'apDeltaAura' | 'lpDeltaAura'): number {
+export function auraDeltaSafe(s: GameState, uid: string | undefined, which: 'apDeltaAura' | 'lpDeltaAura' | 'lvlDeltaAura'): number {
   if (auraDeltaImpl === null || _inAuraDelta || _inContinuousDelta || uid === undefined) return 0;
   _inAuraDelta = true;
   try {
@@ -573,7 +573,8 @@ export function matchOneFilter(
   // engine additive wave (2026-06-24): continuous lvlDelta も合算 (read.char.level と同式 = BUG-117 原則)。既存カードは未宣言 → 0。
   const levelOverride = levelFilterOverride(state, c?.uid);
   const lvlContinuous = levelOverride === undefined ? continuousDeltaSafe(state, c?.uid, 'lvlDelta') : 0;
-  const level = levelOverride ?? ((base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action') + lvlContinuous);
+  const lvlAura = levelOverride === undefined ? auraDeltaSafe(state, c?.uid, 'lvlDeltaAura') : 0;
+  const level = levelOverride ?? ((base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action') + lvlContinuous + lvlAura);
 
   if (filter.apMin !== undefined && ap < filter.apMin) return false;
   if (filter.apMax !== undefined && ap > filter.apMax) return false;

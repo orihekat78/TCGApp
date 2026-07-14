@@ -43,6 +43,10 @@ export type EngineAction =
   | { type: 'actionContact'; actionId: string; player: Player; choice: ContactChoice }
   | { type: 'actionAdvance'; actionId: string }
   | { type: 'actionJudge'; actionId: string }
+  | { type: 'leaveInterceptResolve'; accept: boolean }
+  | { type: 'rpsResolve'; hand: 'rock' | 'paper' | 'scissors' }
+  | { type: 'setCardChoiceResolve'; instanceId: string }
+  | { type: 'setCardReplacementResolve'; targetUid: string | null }
   // Phase 8 完全クローズ Commit 3a: ヒラメキ発動 / スキップ決定
   | { type: 'hiramekiResolve'; choice: 'fire' | 'skip' }
   // Phase 8 完全クローズ Commit 3b: ミスリード発動キャラ複数選択

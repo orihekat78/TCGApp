@@ -13,6 +13,7 @@
 import type { GameState, CardDef, AbilityDef } from '@/engine/types';
 import { engine } from '@/engine';
 import { makePartnerAbilCtx, makeDeclaredAbilCtx } from './ability-ctx.js';
+import { alternativeCostProviders } from '@/engine/cost/alternative.js';
 
 type Player = 'self' | 'opp';
 
@@ -169,7 +170,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
       if (ab.cost) {
         const ctx = makeDeclaredAbilCtx(state, c.uid, ab.id);
         if (!ctx) continue;
-        if (!engine.cost.canPay(state, ab.cost, ctx)) continue;
+        if (!engine.cost.canPay(state, ab.cost, ctx) && alternativeCostProviders(state, ctx, ab).length === 0) continue;
       }
       moves.push({ kind: 'declaredAbility', uid: c.uid, abilityId: ab.id });
     }

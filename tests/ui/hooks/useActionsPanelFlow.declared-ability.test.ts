@@ -105,6 +105,7 @@ async function rejectConfirmation(): Promise<void> {
 beforeEach(() => {
   useGameStateStore.setState({ gameState: null });
   useTargetPickerStore.getState()._reset();
+  useChoicePickerStore.getState()._reset();
   useConfirmationStore.getState()._reset();
   _resetUidCounter();
   resetDefRegistry();
@@ -112,6 +113,41 @@ beforeEach(() => {
 });
 
 describe('runDeclaredAbilityFlow', () => {
+  it('offers a payable ordinary cost and an alternative-cost provider, then uses the selected provider', async () => {
+    registerCardDef(makeCard('AltProvider', {
+      traits: ['provider'],
+      abilities: [{
+        id: 'provider', type: 'continuous', scope: 'on-scene', description: '', ruleRefs: [],
+        continuousModifier: { alternativeCostProvider: { targetFilter: { kind: 'character', trait: 'detective' } } },
+      }],
+    }));
+    registerCardDef(makeCard('AltTarget', {
+      traits: ['detective'],
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-scene', cost: { kind: 'sleepSelf' },
+        effect: { kind: 'atom', verb: 'noop', args: {} }, description: '', ruleRefs: [],
+      }],
+    }));
+    const s = produce(setupBase(), (d) => {
+      mutate.scene.enter(d, 'self', 'AltTarget', { active: true });
+      mutate.scene.enter(d, 'self', 'AltProvider', { active: true });
+    });
+    useGameStateStore.setState({ gameState: s });
+    const targetUid = s.players.self.scene.find((c) => c.cardId === 'AltTarget')!.uid;
+    const providerUid = s.players.self.scene.find((c) => c.cardId === 'AltProvider')!.uid;
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker(targetUid);
+    await acceptConfirmation();
+    const costChoice = useChoicePickerStore.getState().current;
+    expect(costChoice?.options).toHaveLength(2);
+    await chooseAbilityOption(1);
+    const result = await promise;
+    expect(result.ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.scene.some((c) => c.uid === providerUid)).toBe(false);
+    expect(after.players.self.scene.find((c) => c.uid === targetUid)?.state).toBe('active');
+  });
+
   it('not-allowed when no scene char has declared abilities', async () => {
     registerCardDef(makeCard('NoAbil', { abilities: [] }));
     const s = produce(setupBase(), (d) => {

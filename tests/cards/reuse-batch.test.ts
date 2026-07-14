@@ -45,7 +45,7 @@ describe('reuse batch — registration & validate', () => {
   });
 
   it('全 ability に ruleRefs があり、effect.kind が既知', () => {
-    const KNOWN = new Set(['atom', 'sequence', 'parallel', 'chain', 'choice', 'conditional', 'optional', 'forEach']);
+    const KNOWN = new Set(['atom', 'sequence', 'parallel', 'chain', 'choice', 'conditional', 'optional', 'forEach', 'traitChoice', 'rps']);
     for (const c of REUSE_CARDS) {
       for (const ab of c.abilities as AbilityDef[]) {
         expect(ab.ruleRefs?.length, `${c.id}/${ab.id}: ruleRefs`).toBeGreaterThan(0);

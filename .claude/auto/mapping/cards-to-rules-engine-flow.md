@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `7751ecd31cbc`
+> Source hash: `8971829fa6f2`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **129** ファイル（[全体 index](./index.md)）
+このグループ: **130** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (19)
 
@@ -69,7 +69,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (27)
+## engine (他) (28)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -79,6 +79,7 @@
 | [`src/engine/cards/tsv-loader.ts`](../../../src/engine/cards/tsv-loader.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/engine/cond/eval.ts`](../../../src/engine/cond/eval.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`18-mr.md`](../../rules/18-mr.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/cond/index.ts`](../../../src/engine/cond/index.ts) | _(参照なし)_ |
+| [`src/engine/cost/alternative.ts`](../../../src/engine/cost/alternative.ts) | _(参照なし)_ |
 | [`src/engine/cost/evaluate.ts`](../../../src/engine/cost/evaluate.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/cost/index.ts`](../../../src/engine/cost/index.ts) | _(参照なし)_ |
 | [`src/engine/cost/pay.ts`](../../../src/engine/cost/pay.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |

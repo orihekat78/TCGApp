@@ -324,6 +324,14 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }).length;
       return count >= cond.n;
     }
+    case 'removeFilterAtLeast': {
+      const p = resolvePlayer(cond.player, ctx);
+      const count = state.players[p].remove.filter((id) => {
+        const cand: Candidate = { kind: 'card', cardId: id, area: 'remove', player: p };
+        return cond.filters.some((filter) => matchOneFilter(state, id, filter, null, cand));
+      }).length;
+      return count >= cond.n;
+    }
     // engine additive: removeCountAtLeast — リムーブエリアの総枚数 (filter 無し) が n 以上か (B03104)。
     // removeColor/Trait/NameAtLeast の unfiltered 版。使用中イベント自身は未だ remove に無いため
     // 数えない (B03104 qAndA と整合 — 効果解決時点で remove に置かれていない)。
@@ -496,6 +504,21 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
         if (matchOneFilter(state, bId, cond.filter, null, cand)) return true;
       }
       return false;
+    }
+    case 'boundMatchCountAtLeast': {
+      const boundSet = ctx.bindings?.[cond.bindKey];
+      if (!Array.isArray(boundSet)) return false;
+      const declared = cond.traitBind === undefined ? undefined : ctx.bindings?.[cond.traitBind]?.[0] as { trait?: unknown } | undefined;
+      const filter = typeof declared?.trait === 'string' ? { ...cond.filter, trait: declared.trait } : cond.filter;
+      if (cond.traitBind !== undefined && typeof declared?.trait !== 'string') return false;
+      let count = 0;
+      for (const b of boundSet) {
+        const cardId = (b as { cardId?: string }).cardId;
+        if (typeof cardId !== 'string') continue;
+        const cand: Candidate = { kind: 'card', cardId, area: 'remove', player: ctx.source.player };
+        if (matchOneFilter(state, cardId, filter, null, cand)) count++;
+      }
+      return count >= cond.n;
     }
     case 'boundDistinctColorCount': {
       // engine additive wave-10 (2026-07-02, G17 残): bound 集合内に「filter 一致 かつ 相互に同じ色を
@@ -916,6 +939,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
 // (`satisfies Record<Condition['kind'], true>` で両方向同期を強制)。
 // scripts/taskA-validate-specs.cjs CONDS との同期は tests/engine/sync-taskA-whitelists.test.ts。
 const CONDITION_KIND_MAP = {
+  boundMatchCountAtLeast: true,
   triggerViaNextHint: true,
   triggerCardMatches: true,
   true: true, false: true, not: true, and: true, or: true, turn: true, sourceInScene: true,
@@ -928,7 +952,7 @@ const CONDITION_KIND_MAP = {
   fileTopType: true,
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
-  removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true, removeCountAtLeast: true,
+  removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true, removeFilterAtLeast: true, removeCountAtLeast: true,
   sceneLpSum: true, costRemovedMatches: true, // engine additive wave (2026-06-29d)
   costRevealedMatches: true, // attribution mini-wave (2026-07-10)
   enterCountAtMost: true, // engine additive (2026-06-29, B09089)

@@ -228,6 +228,12 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         return;
       }
       const enterPlayer = resolvePlayer(a.player, ctx);
+      const enteringDef = readDef.card(cardId);
+      if (enteringDef?.kind === 'character' && (s.turnState[enterPlayer].useEnterBannedCardNames ?? []).some(name => enteringDef.names.includes(name))) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:use-enter-banned', target: cardId });
+        return;
+      }
       // switch-on-effect-enter (rules/20): 現場満杯時は既存キャラを除去 (switchEnter) して登場する。
       // switchRemoveUid (UI が SceneSwitchPickerModal で収集した退場キャラ uid) があれば switchEnter、
       // 無ければ skip (human が switch を辞退 / AI 経路)。room があれば通常 enter。
@@ -415,6 +421,16 @@ export function atomSceneRemove(s: GameState, a: Record<string, unknown>, ctx: E
       // 「$pick」placeholder のまま atom-handler 到達 = pick で 0 枚選択された場合
       // (max: N で min=0 だと user が skip 可能)。silent no-op (log のみ)。
       if (a.uid === '$pick') {
+        // A preceding runtime atom can populate a binding used by this
+        // target query. Re-resolve now instead of treating the pre-walk
+        // placeholder as a declined pick.
+        if (a.target && typeof a.target === 'object') {
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+            byPlayer: ctx.source.player,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          return;
+        }
         if (a.gateOnMissing === true) (ctx.dyn ??= {}).chainStepNoApply = true;
         mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneRemove', result: 'skipped' });
         return;

@@ -92,6 +92,9 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
     // レベル ≤ 現在 FILE 枚数 (rules/12 — 1 で取った分は既に減算済)
     // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) を effectiveHandLevel で反映
     const d = readDef.card(optionalCardId);
+    if (d?.kind === 'character' && (state.turnState[p].useEnterBannedCardNames ?? []).some(name => d.names.includes(name))) {
+      throw new Error(`runNextHint: ${optionalCardId} use/enter banned this turn`);
+    }
     const nhLvl = effectiveHandLevel(state, p, optionalCardId);
     if (nhLvl !== undefined) {
       if (nhLvl > state.players[p].file.length) {

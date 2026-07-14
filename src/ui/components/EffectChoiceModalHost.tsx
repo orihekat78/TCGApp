@@ -30,9 +30,9 @@ export function EffectChoiceModalHost(): JSX.Element | null {
 
   const options = pending.options.map((o) => ({
     index: o.index,
-    label: o.verb
+    label: o.label ?? (o.verb
       ? choiceOptionLabel({ kind: 'atom', verb: o.verb, args: o.args ?? {} } as Effect)
-      : `効果 ${o.index + 1}`,
+      : `効果 ${o.index + 1}`),
   }));
 
   const handlePick = (index: number): void => {

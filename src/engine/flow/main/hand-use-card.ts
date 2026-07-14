@@ -183,6 +183,7 @@ function handUseGateCommon(state: GameState, p: Player, cardId: string): boolean
   // rules/25 公式 Q&A:「手札の使用やネクストヒントでイベントカードを使用することができ(ない)」→
   //   event のみ対象、キャラは制限外。【カットイン】【ヒラメキ】は別経路 (contact / hirameki) で対象外。
   const def = readDef.card(cardId);
+  if (def?.kind === 'character' && (state.turnState[p].useEnterBannedCardNames ?? []).some(name => def.names.includes(name))) return false;
   if (def?.kind === 'event' && state.turnState[p].eventUseBanned) return false;
   // P05 (wave-5): case card 継続の character 手札使用制限 (「特徴[X]以外のキャラを使用できない」)。
   //   非 character / 制限 case 無しは素通り (baseline 不変)。

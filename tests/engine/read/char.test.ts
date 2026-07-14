@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { char } from '@/engine/read/char';
 import { register, _resetRegistry } from '@/engine/read/def';
+import { matchOneFilter } from '@/engine/target/candidates';
 import type { GameState, SceneCharacter, CardDef } from '@/engine/types';
 import { makeChar as baseChar } from '../../helpers/fixtures';
 
@@ -43,6 +44,32 @@ function makeDef(overrides: Partial<CardDef> = {}): CardDef {
 describe('engine.read.char', () => {
   beforeEach(() => { _resetRegistry(); });
   afterEach(() => { _resetRegistry(); });
+
+  it('applies active self-turn level auras from every opposing bearer', () => {
+    register(makeDef({
+      id: 'AKAI_A',
+      abilities: [{
+        id: 'a1', type: 'continuous', condition: { kind: 'turn', player: 'self' },
+        continuousModifier: { lvlDeltaAuraOpp: -1 }, description: '', ruleRefs: [],
+      }],
+    }));
+    register(makeDef({
+      id: 'AKAI_B',
+      abilities: [{
+        id: 'a1', type: 'continuous', condition: { kind: 'turn', player: 'self' },
+        continuousModifier: { lvlDeltaAuraOpp: -1 }, description: '', ruleRefs: [],
+      }],
+    }));
+    register(makeDef({ id: 'TARGET', level: 8 }));
+    const s = createEmptyGameState();
+    s.players.self.scene = [makeChar({ uid: 'self-a', cardId: 'AKAI_A' }), makeChar({ uid: 'self-b', cardId: 'AKAI_B' })];
+    s.players.opp.scene = [makeChar({ uid: 'opp-target', cardId: 'TARGET' })];
+
+    expect(char.level(s, 'opp-target')).toBe(6);
+    expect(matchOneFilter(s, 'TARGET', { levelMax: 6 }, s.players.opp.scene[0], {
+      kind: 'char', uid: 'opp-target', cardId: 'TARGET', player: 'opp',
+    })).toBe(true);
+  });
 
   describe('ap', () => {
     it('apOverride が null でなければ override を返す', () => {

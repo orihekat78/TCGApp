@@ -16,6 +16,9 @@ type LockSlice = Pick<
   | 'pendingEffectChoice'
   | 'pendingEffectOptional'
   | 'pendingChooseIntercept'
+  | 'pendingLeaveIntercept'
+  | 'pendingSetCardChoice'
+  | 'pendingSetCardReplacement'
   | 'pendingEffectRepeatOptional'
   | 'pendingHirameki'
   | 'pendingMisread'
@@ -33,6 +36,9 @@ export function selectInteractionLocked(s: LockSlice): boolean {
     s.pendingEffectChoice != null ||
     s.pendingEffectOptional != null ||
     s.pendingChooseIntercept != null ||
+    s.pendingLeaveIntercept != null ||
+    s.pendingSetCardChoice != null ||
+    s.pendingSetCardReplacement != null ||
     s.pendingEffectRepeatOptional != null ||
     s.pendingHirameki != null ||
     s.pendingMisread != null ||

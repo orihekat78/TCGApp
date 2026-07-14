@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b413582ba0f8`
+> Source hash: `7c2f524512a7`
 
 `src/engine/cost/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -16,8 +16,9 @@
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 - [`26-qa-deck-refresh.md`](../by-rule/26-qa-deck-refresh.md)
 
-## 📄 ソース (3)
+## 📄 ソース (4)
 
+- [`src/engine/cost/alternative.ts`](../../../../src/engine/cost/alternative.ts)
 - [`src/engine/cost/evaluate.ts`](../../../../src/engine/cost/evaluate.ts)
 - [`src/engine/cost/index.ts`](../../../../src/engine/cost/index.ts)
 - [`src/engine/cost/pay.ts`](../../../../src/engine/cost/pay.ts)

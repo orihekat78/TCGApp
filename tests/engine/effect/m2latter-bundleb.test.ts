@@ -18,6 +18,8 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { mutate } from '@/engine/mutate/index';
 import { runAtom } from '@/engine/effect/atom-handlers';
+import { run as runEffect } from '@/engine/effect/resolver';
+import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { candidates } from '@/engine/target/candidates';
 import { canPay } from '@/engine/cost/evaluate';
@@ -55,6 +57,7 @@ function ctxFor(s: GameState): EffectCtx {
 }
 beforeEach(() => {
   resetDefRegistry(); _resetUidCounter(); event._resetRegistry(); _resetTriggeredRegistered();
+  _clearPendingEffectPickQueue();
   for (const d of [HOST, FILLER, EV_H, EV_R, RIDER_EV]) registerCardDef(d);
   (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
 });
@@ -108,6 +111,36 @@ describe('P13: Cost removeFromHandDownTo (B08047 a2)', () => {
     pay(s, COST, ctx);
     expect(s.players.self.hand).toEqual(['EV_H']);
     expect(s.players.self.remove.length).toBe(0);
+  });
+});
+
+describe('P13b: effect discardDownTo (B07076)', () => {
+  it('removes down to n, binds every card, and exposes their printed level sum', async () => {
+    const { evalDyn } = await import('@/engine/dyn/eval');
+    const s = base(); const ctx = ctxFor(s);
+    s.players.self.hand = ['EV_H', 'EV_R', 'FILLER', 'HOST'];
+    runAtom(s, 'discardDownTo', { player: 'self', n: 2, bind: '$discarded' }, ctx);
+    expect(s.players.self.hand).toEqual(['FILLER', 'HOST']);
+    expect(s.players.self.remove).toEqual(['EV_H', 'EV_R']);
+    expect(evalDyn(s, '$discarded.levelSum', ctx)).toBe(4);
+  });
+
+  it('defers a bound aggregate target until the discard has resolved, then queues it at the live cap', () => {
+    const s = base(); const ctx = ctxFor(s);
+    s.players.self.hand = ['EV_H', 'EV_R', 'FILLER', 'HOST'];
+    const opponent = mutate.scene.enter(s, 'opp', 'HOST', {});
+    const effect = {
+      kind: 'sequence', steps: [
+        { kind: 'atom', verb: 'discardDownTo', args: { player: 'self', n: 2, bind: '$discarded' } },
+        { kind: 'atom', verb: 'sceneRemove', args: { uid: '$pick', target: { kind: 'pick', query: { area: 'scene', side: 'opp', aggregateLevelMax: { dyn: '$discarded.levelSum' } }, n: { min: 0, max: 2 }, chooser: 'self' } } },
+      ],
+    } as never;
+    const resolved = resolveEffectPicks(s, effect, ctx, { humanChooser: true, byPlayer: 'self' });
+    expect(_drainPendingEffectPickSide()).toBeNull();
+    runEffect(s, resolved, ctx);
+    const pending = _drainPendingEffectPickSide();
+    expect(pending?.aggregateLevelMax).toBe(4);
+    expect(pending?.candidates.map(c => c.uid)).toContain(opponent.uid);
   });
 });
 

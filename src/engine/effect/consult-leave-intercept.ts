@@ -36,6 +36,7 @@ function getHumanPlayerSide(): Player | null {
 
 export type LeaveInterceptVerdict =
   | { kind: 'hand'; interceptorUid: string }
+  | { kind: 'pending'; interceptorUid: string }
   | { kind: 'kept-in-scene'; consumedSetCards: string[] }
   | null;
 
@@ -84,7 +85,6 @@ export function consultLeaveIntercept(
   if (consumed.length > 0) return { kind: 'kept-in-scene', consumedSetCards: consumed };
 
   // (2) optional 現場 interceptor (B01092 型) — AI-only (human 所有は DEFER 素通し)
-  if (getHumanPlayerSide() === player) return null;
   for (const c of state.players[player].scene) {
     if (c.uid === char.uid) continue; // 「このキャラ以外」は構造的除外 (印字の filter 句ではない)
     const def = readDef.card(c.cardId);
@@ -102,6 +102,7 @@ export function consultLeaveIntercept(
       if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx as never)) continue;
       if (ability.condition && !evalCond(state, ability.condition, baseCtx as never)) continue;
       if (destinationOf(ability) !== 'hand') continue;
+      if (getHumanPlayerSide() === player) return { kind: 'pending', interceptorUid: c.uid };
       // AI heuristic: コスト (interceptor 自身のリムーブ) は在場なら常に支払可能 → accept
       // (常時 accept は戦略最適でない既知の簡易化 — row9 risks(d)、DEFERRED-INDEX)
       return { kind: 'hand', interceptorUid: c.uid };

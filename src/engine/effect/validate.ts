@@ -19,7 +19,7 @@ import type { Effect, ValidationResult, CardDef, AtomVerb, DeckRevealUntilArgs }
 // `satisfies Record<AtomVerb, true>` により、union への verb 追加漏れ・余剰 key の両方向を
 // tsc が検出する (旧: コメント頼みの手動同期)。
 const ATOM_VERB_MAP = {
-  draw: true, drawUpToHandSize: true, // drawUpToHandSize: engine additive wave-4 (2026-07-01) — 手札 N 枚まで引く (B08047)
+  draw: true, drawUpToHandSize: true, discardDownTo: true, // hand-size effects
   discard: true,
   handToDeckBottom: true, discardRandom: true, mill: true, fileAdd: true, filePopToHand: true,
   fileRemoveTop: true, fileFlipTop: true, // Task D E3 (2026-06-12)
@@ -50,6 +50,7 @@ const ATOM_VERB_MAP = {
   removeAreaAllToDeckBottom: true, // cluster4 (2026-06-14)
   setEventUseBan: true, // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   setNextHintBan: true, // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)
+  setUseEnterBanCardName: true,
   setCutinBan: true, // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
   setActionCutinBanFilter: true, // engine A3 wave (2026-07-11) — filtered action-scoped cutin ban (B05007)
   setDisguiseBan: true, // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
@@ -146,6 +147,20 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
         errors.push(`${path}.over.kind: must be one of ${Array.from(TARGETING_KINDS).join('|')}`);
       }
       walk(obj['do'], `${path}.do`, errors, warnings);
+      return;
+    }
+    case 'traitChoice': {
+      if (typeof obj['bind'] !== 'string') errors.push(`${path}.bind: traitChoice requires bind`);
+      walk(obj['then'], `${path}.then`, errors, warnings);
+      return;
+    }
+    case 'rps': {
+      walk(obj['win'], `${path}.win`, errors, warnings);
+      walk(obj['lose'], `${path}.lose`, errors, warnings);
+      return;
+    }
+    case 'setCardToEvidence': {
+      if (typeof obj['hostUid'] !== 'string') errors.push(`${path}.hostUid: required for setCardToEvidence`);
       return;
     }
     case 'repeatOptional': {

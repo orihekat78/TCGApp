@@ -12,6 +12,7 @@ import { useStackedCardCostPicker } from '../useStackedCardCostPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { alternativeCostProviders } from '@/engine/cost/alternative.js';
 import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 (NH: B03126 両経路 + B02087 NH 限定 A3) + mini-wave#4 hand level
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Effect, GameState } from '@/engine/types';
@@ -383,8 +384,41 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
 
+  // A replacement pays the entire declared cost.  When the ordinary cost is
+  // also payable, it is a genuine player choice rather than an AI fallback.
+  // Choose it before collecting any ordinary-cost parameters.
+  let useAlternativeCost = false;
+  if (cost && owner === 'self' && cardId) {
+    const altState = useGameStateStore.getState().gameState;
+    if (altState === null) return { ok: false, reason: 'no-state' };
+    const altCtx = makeAbilityCtx({
+      player: owner,
+      uid: sourceUid,
+      cardId,
+      abilityId: chosenAbilId,
+      area: sourceArea,
+    });
+    const providers = alternativeCostProviders(altState, altCtx, chosenAbil!);
+    if (providers.length > 0 && engine.cost.canPay(altState, cost, altCtx)) {
+      const choice = await useChoicePicker().ask({
+        sourceName,
+        options: [
+          { index: 0, label: `通常のコスト (${costText})` },
+          ...providers.map((uid, index) => ({ index: index + 1, label: `${uidToDisplayName(altState, uid)}をリムーブ` })),
+        ],
+      });
+      if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+      if (choice.index > 0) {
+        const providerUid = providers[choice.index - 1];
+        if (!providerUid) return { ok: false, reason: 'not-allowed' };
+        costParams = { alternativeCostProviderUid: providerUid };
+        useAlternativeCost = true;
+      }
+    }
+  }
+
   const removeStackedCost = findRemoveStackedCardsCost(cost);
-  if (removeStackedCost && owner === 'self' && sourceArea === 'scene') {
+  if (!useAlternativeCost && removeStackedCost && owner === 'self' && sourceArea === 'scene') {
     const stackedState = useGameStateStore.getState().gameState;
     if (stackedState === null) return { ok: false, reason: 'no-state' };
     const source = stackedState.players[owner].scene.find((char) => char.uid === sourceUid);
@@ -420,7 +454,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //   「OK 押下後に何も起きない」症状になっていた (本バグの直接原因)。
   //   確認モーダル accept 後に証拠エリア拡大表示 (CardListModal) を流用した picker を出す。
   const flipCost = findFlipFaceUpCost(cost);
-  if (flipCost && owner === 'self' && cardId) {
+  if (!useAlternativeCost && flipCost && owner === 'self' && cardId) {
     const flipState = useGameStateStore.getState().gameState;
     if (flipState === null) return { ok: false, reason: 'no-state' };
     const evidence = flipState.players[owner].evidence;
@@ -453,7 +487,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //   can-check 列挙済のため通常到達しない)。選択 index → costParams.costChoice →
   //   dispatcher (ability-activate.ts costParamsToDyn) が ctx.dyn.costChoice へ詰め替え。
   const choiceCost = findChoiceCost(cost);
-  if (choiceCost && owner === 'self' && cardId) {
+  if (!useAlternativeCost && choiceCost && owner === 'self' && cardId) {
     const ccState = useGameStateStore.getState().gameState;
     if (ccState === null) return { ok: false, reason: 'no-state' };
     const ccCtx = makeAbilityCtx({

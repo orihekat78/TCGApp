@@ -2,8 +2,12 @@
 // rules: 03-field-areas.md (状態), 09-cutin-disguise.md (変装引継ぎ), 13-keywords.md, 19-special-rules.md
 // ⚠ 各関数は Immer draft 前提 (produce 内部で呼び出す)
 
-import { stackedCardCount, type GameState, type StackedCardEntry } from '@/engine/types';
+import { stackedCardCount, type AbilityDef, type GameState, type StackedCardEntry } from '@/engine/types';
 import { event } from '../event/index.js'; // engine拡張 wave#2 cluster9: removeOneSetCard で setcard:leave emit
+import { def as readDef } from '../read/def.js';
+import { evalCond } from '../cond/eval.js';
+import { matchOneFilter } from '../target/candidates.js';
+import { pushPendingSetCardReplacementSide, type PendingSetCardReplacementSide } from '../effect/pending-state.js';
 
 type Player = 'self' | 'opp';
 // engine拡張 wave#2 cluster3 (2026-06-13): 'action' = 「アクション終了時まで」(rules/08 §6-7)。
@@ -391,6 +395,109 @@ function stackCard(s: GameState, uid: string, count: number, cardIds?: string[])
   found.char.stackedCards = [...existing, ...additions];
 }
 
+type SetCardReplacementEntry = GameState['players']['self']['scene'][number]['setCards'][number];
+
+function replacementCandidates(s: GameState, player: Player, fromUid: string, ability: AbilityDef): { uid: string; cardId: string }[] {
+  const replacement = ability.setCardRemovalReplacement;
+  if (!replacement) return [];
+  return s.players[player].scene
+    .filter((char) => char.uid !== fromUid)
+    .filter((char) => matchOneFilter(s, char.cardId, replacement.filter, char, { kind: 'char', uid: char.uid, cardId: char.cardId, player }))
+    .map((char) => ({ uid: char.uid, cardId: char.cardId }));
+}
+
+function eligibleSetCardReplacement(s: GameState, player: Player, fromUid: string, entry: SetCardReplacementEntry): { ability: AbilityDef; candidates: { uid: string; cardId: string }[] } | null {
+  if (!entry.faceUp) return null;
+  const card = readDef.card(entry.cardId);
+  if (!card) return null;
+  for (const ability of card.abilities as AbilityDef[]) {
+    if (ability.type !== 'triggered' || ability.scope !== 'on-set-self' || ability.trigger?.hook !== 'setcard:leave' || !ability.setCardRemovalReplacement) continue;
+    const used = entry.replacementUseCounts?.[ability.id];
+    if (ability.limit?.kind === 'turn' && used?.turn === s.turn.number && used.count >= ability.limit.n) continue;
+    const ctx = { source: { cardId: entry.cardId, uid: fromUid, abilityId: ability.id, player, area: 'scene' as const }, bindings: {} };
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    const candidates = replacementCandidates(s, player, fromUid, ability);
+    if (candidates.length > 0) return { ability, candidates };
+  }
+  return null;
+}
+
+function markSetCardReplacementUsed(s: GameState, entry: SetCardReplacementEntry, abilityId: string): void {
+  const counts = (entry.replacementUseCounts ??= {});
+  const previous = counts[abilityId];
+  counts[abilityId] = { turn: s.turn.number, count: previous?.turn === s.turn.number ? previous.count + 1 : 1 };
+}
+
+function moveSetCardEntry(s: GameState, fromUid: string, toUid: string, instanceId: string, abilityId: string): boolean {
+  if (fromUid === toUid) return false;
+  const from = findChar(s, fromUid);
+  const to = findChar(s, toUid);
+  if (!from || !to || from.player !== to.player) return false;
+  const idx = from.char.setCards.findIndex((entry) => entry.instanceId === instanceId);
+  if (idx < 0) return false;
+  const [entry] = from.char.setCards.splice(idx, 1);
+  if (!entry) return false;
+  markSetCardReplacementUsed(s, entry, abilityId);
+  to.char.setCards.push(entry);
+  event.emit(s, 'setcard:enter', { player: from.player, hostUid: to.char.uid, hostCardId: to.char.cardId, setCardId: entry.cardId, setCardInstanceId: entry.instanceId, faceUp: entry.faceUp, cause: 'replacement' }, { player: from.player, uid: to.char.uid, cardId: to.char.cardId });
+  return true;
+}
+
+function maybeReplaceSetCardRemoval(s: GameState, player: Player, fromUid: string, entry: SetCardReplacementEntry, allowHuman = true): boolean {
+  const eligible = eligibleSetCardReplacement(s, player, fromUid, entry);
+  if (!eligible || !entry.instanceId) return false;
+  const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+  if (human === player && allowHuman) {
+    pushPendingSetCardReplacementSide({ player, fromUid, setCardInstanceId: entry.instanceId, candidates: eligible.candidates, source: { cardId: entry.cardId, abilityId: eligible.ability.id, uid: fromUid } });
+    return true;
+  }
+  return moveSetCardEntry(s, fromUid, eligible.candidates[0]!.uid, entry.instanceId, eligible.ability.id);
+}
+
+/** Suspend a human-owned replacement before the host itself is removed. */
+function deferSetCardReplacementForHostLeave(
+  s: GameState,
+  uid: string,
+  resume: NonNullable<PendingSetCardReplacementSide['resume']>,
+): boolean {
+  ensureSetCardInstanceIds(s);
+  const found = findChar(s, uid);
+  if (!found) return false;
+  const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+  if (human !== found.player) return false;
+  for (const entry of found.char.setCards) {
+    const eligible = eligibleSetCardReplacement(s, found.player, uid, entry);
+    if (!eligible || !entry.instanceId) continue;
+    pushPendingSetCardReplacementSide({ player: found.player, fromUid: uid, setCardInstanceId: entry.instanceId, candidates: eligible.candidates, source: { cardId: entry.cardId, abilityId: eligible.ability.id, uid }, resume });
+    return true;
+  }
+  return false;
+}
+
+/** AI-safe preflight for a host that is about to leave the scene. */
+function replaceEligibleSetCardsBeforeHostLeaves(s: GameState, uid: string): void {
+  ensureSetCardInstanceIds(s);
+  const found = findChar(s, uid);
+  if (!found) return;
+  for (const instanceId of found.char.setCards.map((entry) => entry.instanceId).filter((id): id is string => typeof id === 'string')) {
+    const current = found.char.setCards.find((entry) => entry.instanceId === instanceId);
+    if (current) maybeReplaceSetCardRemoval(s, found.player, uid, current, false);
+  }
+}
+
+/** Resolve or decline an optional pre-removal set-card replacement. */
+function resolveSetCardRemovalReplacement(s: GameState, pending: PendingSetCardReplacementSide, toUid: string | null): boolean {
+  const found = findChar(s, pending.fromUid);
+  const entry = found?.char.setCards.find((candidate) => candidate.instanceId === pending.setCardInstanceId);
+  if (!found || !entry) return false;
+  if (toUid !== null && pending.candidates.some((candidate) => candidate.uid === toUid)) {
+    moveSetCardEntry(s, pending.fromUid, toUid, pending.setCardInstanceId, pending.source.abilityId);
+    return true;
+  }
+  removeOneSetCard(s, pending.fromUid, { setCardInstanceId: pending.setCardInstanceId, skipReplacement: true });
+  return true;
+}
+
 /** Remove exact occurrences from one host stack, preserving duplicate card IDs. */
 function removeStackedCards(s: GameState, uid: string, count: number, instanceIds?: string[]): StackedCardEntry[] {
   const found = findChar(s, uid);
@@ -513,7 +620,7 @@ function removeAllSetAndStacked(s: GameState, uid: string): void {
 function removeOneSetCard(
   s: GameState,
   uid: string,
-  opts?: { faceDownOnly?: boolean; setCardId?: string; setCardInstanceId?: string; cause?: 'effect' | 'cost' },
+  opts?: { faceDownOnly?: boolean; setCardId?: string; setCardInstanceId?: string; cause?: 'effect' | 'cost'; skipReplacement?: boolean },
 ): string | null {
   ensureSetCardInstanceIds(s);
   const found = findChar(s, uid);
@@ -522,24 +629,25 @@ function removeOneSetCard(
   const faceDownOnly = opts?.faceDownOnly ?? false;
   const cause = opts?.cause ?? 'effect';
   let entry: { cardId: string; faceUp: boolean; instanceId?: string } | undefined;
+  let idx = -1;
   if (typeof opts?.setCardInstanceId === 'string') {
-    const idx = char.setCards.findIndex((candidate) => candidate.instanceId === opts.setCardInstanceId);
+    idx = char.setCards.findIndex((candidate) => candidate.instanceId === opts.setCardInstanceId);
     if (idx < 0) return null;
-    entry = char.setCards.splice(idx, 1)[0];
   } else if (typeof opts?.setCardId === 'string') {
-    const idx = char.setCards.findIndex((candidate) => candidate.cardId === opts.setCardId);
+    idx = char.setCards.findIndex((candidate) => candidate.cardId === opts.setCardId);
     if (idx < 0) return null;
-    entry = char.setCards.splice(idx, 1)[0];
   } else if (faceDownOnly) {
-    let idx = -1;
     for (let i = char.setCards.length - 1; i >= 0; i--) {
       if (!char.setCards[i].faceUp) { idx = i; break; }
     }
     if (idx < 0) return null;
-    entry = char.setCards.splice(idx, 1)[0];
   } else {
-    entry = char.setCards.pop();
+    idx = char.setCards.length - 1;
   }
+  const candidate = char.setCards[idx];
+  if (!candidate) return null;
+  if (opts?.skipReplacement !== true && maybeReplaceSetCardRemoval(s, player, uid, candidate)) return null;
+  entry = char.setCards.splice(idx, 1)[0];
   if (!entry) return null;
   s.players[player].remove.push(entry.cardId);
   // engine拡張 wave#2 cluster9: set card 1枚が現場から離れる (host は在場のまま) → setcard:leave emit。
@@ -552,6 +660,18 @@ function removeOneSetCard(
     { player, uid: char.uid, cardId: char.cardId },
   );
   return entry.cardId;
+}
+
+/** Detach one exact set-card occurrence without a leave event or remove-area move. */
+function takeOneSetCard(s: GameState, uid: string, setCardInstanceId: string): { cardId: string; player: Player } | null {
+  ensureSetCardInstanceIds(s);
+  const found = findChar(s, uid);
+  if (!found) return null;
+  const idx = found.char.setCards.findIndex((entry) => entry.instanceId === setCardInstanceId);
+  if (idx < 0) return null;
+  const [entry] = found.char.setCards.splice(idx, 1);
+  if (!entry) return null;
+  return { cardId: entry.cardId, player: found.player };
 }
 
 /**
@@ -600,6 +720,10 @@ export const char = {
   transferStackedCards,
   removeAllSetAndStacked,
   removeOneSetCard,
+  replaceEligibleSetCardsBeforeHostLeaves,
+  deferSetCardReplacementForHostLeave,
+  resolveSetCardRemovalReplacement,
+  takeOneSetCard,
   ensureSetCardInstanceIds,
   disguiseInto,
 };

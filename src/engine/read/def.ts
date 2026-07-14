@@ -34,6 +34,11 @@ function byColor(color: string): CardDef[] {
   return Array.from(_registry.values()).filter(d => d.colors.includes(color));
 }
 
+/** Canonical selectable trait universe, deterministic for declaration UI and AI. */
+function allTraits(): string[] {
+  return [...new Set(Array.from(_registry.values()).flatMap((d) => d.traits))].sort((a, b) => a.localeCompare(b, 'ja'));
+}
+
 /**
  * MR 判定 (rules/18)。MR/MRP/MRCP 全 printing を含むため rarity の前方一致で判定する
  * (engine/mr-partner-area-core, 2026-06-23)。CardDef.isMR が明示 true ならそれも尊重する
@@ -50,5 +55,6 @@ export const def = {
   card,
   byTrait,
   byColor,
+  allTraits,
   isMR,
 };

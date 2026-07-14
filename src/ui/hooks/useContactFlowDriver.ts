@@ -118,6 +118,8 @@ export function useContactFlowDriver(): void {
   const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
   const pendingEffectRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
   const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
+  const pendingLeaveIntercept = useGameStateStore((s) => s.pendingLeaveIntercept);
+  const pendingRps = useGameStateStore((s) => s.pendingRps);
 
   useEffect(() => {
     if (!activeActionId || !gameState) return;
@@ -135,6 +137,8 @@ export function useContactFlowDriver(): void {
     // BUG-141 (cluster3): optional/choice modal も解決待ち (宣言時 trigger の効果はガード判定前に解決)
     if (pendingEffectOptional !== null || pendingEffectRepeatOptional !== null) return;
     if (pendingEffectChoice !== null) return;
+    if (pendingLeaveIntercept !== null) return;
+    if (pendingRps !== null) return;
 
     const ax = flow.action._getContext(activeActionId);
     if (!ax) {
@@ -143,7 +147,7 @@ export function useContactFlowDriver(): void {
     }
 
     runOneStep(gameState, ax, spectatorMode);
-  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice]);
+  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice, pendingLeaveIntercept, pendingRps]);
 }
 
 function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean): void {

@@ -454,6 +454,7 @@ function handleHook(
       // B07016/B08020 a2「（イベントを解決してからキャラを選ぶ）」)。selfOnly entry
       // (イベント自効果 / カットイン自効果 / scene rider) は従来通り queue 時解決。
       const isDeclaredReaction = hookName === 'effect:declared' && trig.selfOnly !== true;
+      const pendingPickCountBefore = (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0;
       const resolvedEffect = isDeclaredReaction
         ? ability.effect
         : resolveEffectPicks(state, ability.effect, resolveCtx, {
@@ -464,9 +465,11 @@ function handleHook(
             humanChooser: isHumanEffect,
             source: { cardId: card.cardId, abilityId: ability.id },
           });
+      const prewalkQueuedTopLevelPick = ability.effect.kind === 'atom'
+        && ((globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0) > pendingPickCountBefore;
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)。
       // sourceBindings (contact bindings) は上で算出済 → entry に永続化 (runtime $contact.byUid 解決)。
-      event.queue(
+      if (!prewalkQueuedTopLevelPick) event.queue(
         state,
         resolvedEffect,
         { player: card.player, uid: card.uid, cardId: card.cardId },

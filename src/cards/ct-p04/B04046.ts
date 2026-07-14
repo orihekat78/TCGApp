@@ -1,0 +1,44 @@
+// cards/ct-p04/B04046 赤井秀一
+// rules: 08-contact.md, 15-abilities-effects.md, 17-icons.md, 21-declared-ability-cost.md
+import type { AbilityDef, CardDef } from '@/engine/types';
+
+const grantedContact: AbilityDef = {
+  id: 'b04046_granted_contact', type: 'triggered', scope: 'on-scene',
+  trigger: { hook: 'contact:start', selfOnly: true, matcherCondition: { kind: 'triggerCharMatches', payloadKey: 'bUid', filter: { levelMax: 7 } } },
+  effect: { kind: 'sequence', steps: [
+    { kind: 'atom', verb: 'sceneRemove', args: { uid: '$contact.targetUid', cause: 'effect' } },
+    { kind: 'atom', verb: 'sceneRemove', args: { uid: '$contact.byUid', cause: 'effect' } },
+  ] },
+  description: 'このキャラがレベル7以下のキャラとコンタクトしたとき、コンタクト中のすべてのキャラをリムーブする。',
+  ruleRefs: ['rules/08-contact.md', 'rules/15-abilities-effects.md'],
+};
+
+const abilities: AbilityDef[] = [
+  {
+    id: 'a1', type: 'continuous', scope: 'on-scene', condition: { kind: 'turn', player: 'self' },
+    continuousModifier: { lvlDeltaAuraOpp: -1 },
+    description: '【自分ターン中】相手の現場にいるキャラをレベル−1する。',
+    ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
+  },
+  {
+    id: 'a2', type: 'triggered', scope: 'on-scene', trigger: { hook: 'enter', selfOnly: true },
+    effect: { kind: 'sequence', steps: [
+      { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+      { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', from: 'hand', max: 1, viaEffect: true, filter: { trait: 'FBI', levelMax: 6, kind: 'character' } } },
+    ] },
+    description: '【登場時】カードを1枚引く。手札からレベル6以下の〚特徴［FBI］〛のキャラを1枚まで登場させる。',
+    ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
+  },
+  {
+    id: 'a3', type: 'declared', scope: 'on-scene', limit: { kind: 'turn', n: 1 },
+    effect: { kind: 'atom', verb: 'charGrantAbility', args: { player: 'self', side: 'self', max: 1, filter: { trait: 'FBI' }, scope: 'turn', ability: grantedContact } },
+    description: '【宣言】【ターン1】自分の現場にいる〚特徴［FBI］〛のキャラを1枚まで選び、ターン終了時まで「このキャラがレベル7以下のキャラとコンタクトしたとき、コンタクト中のすべてのキャラをリムーブする。」を与える。',
+    ruleRefs: ['rules/08-contact.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
+  },
+];
+
+export const B04046: CardDef = {
+  id: 'B04046', no: '0438/B04046', kind: 'character', names: ['赤井秀一'], colors: ['赤'],
+  level: 8, ap: 7000, lp: 2, traits: ['FBI', '赤井家'], keywords: [], rarity: 'SR', imageUrl: '1735287781707148.jpg',
+  abilities, ruleRefs: ['rules/08-contact.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/21-declared-ability-cost.md'],
+};

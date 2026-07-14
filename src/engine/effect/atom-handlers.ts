@@ -26,6 +26,7 @@ export {
 import {
   atomDraw,
   atomDrawUpToHandSize,
+  atomDiscardDownTo,
   atomDiscard,
   atomDiscardRandom,
   atomHandReveal,
@@ -107,6 +108,7 @@ import {
   atomEndActionEarly,
   atomSetEventUseBan,
   atomSetNextHintBan,
+  atomSetUseEnterBanCardName,
   atomSetShippuWaive,
   atomSetCutinBan,
   atomSetActionCutinBanFilter,
@@ -145,6 +147,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomDraw(s, a, ctx);
     case 'drawUpToHandSize':
       return atomDrawUpToHandSize(s, a, ctx);
+    case 'discardDownTo':
+      return atomDiscardDownTo(s, a, ctx);
     case 'discard':
       return atomDiscard(s, a, ctx, verb);
     case 'discardRandom':
@@ -289,6 +293,8 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomSetShippuWaive(s, a, ctx); // engine mega-wave W6 step4 (2026-07-04, B09090/P16)
     case 'setNextHintBan':
       return atomSetNextHintBan(s, a, ctx);
+    case 'setUseEnterBanCardName':
+      return atomSetUseEnterBanCardName(s, a, ctx);
     case 'setCutinBan':
       return atomSetCutinBan(s, a, ctx);
     case 'setActionCutinBanFilter':

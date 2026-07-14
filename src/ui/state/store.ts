@@ -121,6 +121,14 @@ export type GameStateStore = {
   setPendingEffectOptional: (p: PendingEffectOptional | null) => void;
   pendingChooseIntercept: PendingChooseIntercept | null;
   setPendingChooseIntercept: (p: PendingChooseIntercept | null) => void;
+  pendingLeaveIntercept: PendingLeaveIntercept | null;
+  setPendingLeaveIntercept: (p: PendingLeaveIntercept | null) => void;
+  pendingRps: PendingRps | null;
+  setPendingRps: (p: PendingRps | null) => void;
+  pendingSetCardChoice: PendingSetCardChoice | null;
+  setPendingSetCardChoice: (p: PendingSetCardChoice | null) => void;
+  pendingSetCardReplacement: PendingSetCardReplacement | null;
+  setPendingSetCardReplacement: (p: PendingSetCardReplacement | null) => void;
   /** repeatOptional の各round決定。body実行後、残回数があれば次roundへ遷移する。 */
   pendingEffectRepeatOptional: PendingEffectRepeatOptional | null;
   setPendingEffectRepeatOptional: (p: PendingEffectRepeatOptional | null) => void;
@@ -235,7 +243,7 @@ export type PendingEffectPick = {
 export type PendingEffectChoice = {
   player: 'self' | 'opp';
   source: { cardId: string; abilityId: string; uid: string };
-  options: { index: number; verb?: string; args?: Record<string, unknown> }[];
+  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string }[];
 };
 
 /** 2026-06-06 タスクC: optional 決定 (「〜してもよい」) 保留 (PendingEffectOptionalSide と同 shape)。 */
@@ -246,11 +254,39 @@ export type PendingEffectOptional = {
   triggerPayload?: unknown;
 };
 
+export type PendingRps = {
+  player: 'self' | 'opp';
+  ownerPlayer: 'self' | 'opp';
+  aiHand: 'rock' | 'paper' | 'scissors';
+  source: { cardId: string; abilityId: string; uid: string };
+};
+
+/** An opaque set-card entry: no card identity crosses the UI boundary. */
+export type PendingSetCardChoice = {
+  player: 'self' | 'opp';
+  hostUid: string;
+  entries: { instanceId: string; ordinal: number }[];
+  source: { cardId: string; abilityId: string; uid: string };
+};
+export type PendingSetCardReplacement = {
+  player: 'self' | 'opp'; fromUid: string; setCardInstanceId: string;
+  candidates: { uid: string; cardId: string }[];
+  source: { cardId: string; abilityId: string; uid: string };
+};
+
 /** Opponent may discard one hand occurrence to cancel the already-selected effect. */
 export type PendingChooseIntercept = {
   player: 'self' | 'opp';
   protector: { uid: string; cardId: string; abilityId: string };
   targetUid: string;
+};
+
+/** Human decision window for B01092-style leave interception. */
+export type PendingLeaveIntercept = {
+  player: 'self' | 'opp';
+  targetUid: string;
+  interceptorUid: string;
+  actionId: string;
 };
 
 export type PendingEffectRepeatOptional = {
@@ -324,6 +360,14 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingEffectOptional: (p) => set({ pendingEffectOptional: p }),
   pendingChooseIntercept: null,
   setPendingChooseIntercept: (p) => set({ pendingChooseIntercept: p }),
+  pendingLeaveIntercept: null,
+  setPendingLeaveIntercept: (p) => set({ pendingLeaveIntercept: p }),
+  pendingRps: null,
+  setPendingRps: (p) => set({ pendingRps: p }),
+  pendingSetCardChoice: null,
+  setPendingSetCardChoice: (p) => set({ pendingSetCardChoice: p }),
+  pendingSetCardReplacement: null,
+  setPendingSetCardReplacement: (p) => set({ pendingSetCardReplacement: p }),
   pendingEffectRepeatOptional: null,
   setPendingEffectRepeatOptional: (p) => set({ pendingEffectRepeatOptional: p }),
   pendingDeckReveal: null,

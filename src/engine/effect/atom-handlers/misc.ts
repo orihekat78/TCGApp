@@ -145,6 +145,15 @@ export function atomSetNextHintBan(s: GameState, a: Record<string, unknown>, ctx
       return;
     }
 
+export function atomSetUseEnterBanCardName(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+  const p = resolvePlayer(a.player ?? 'self', ctx);
+  const name = a.cardName;
+  if (typeof name !== 'string' || name === '') return;
+  const names = s.turnState[p].useEnterBannedCardNames ?? (s.turnState[p].useEnterBannedCardNames = []);
+  if (!names.includes(name)) names.push(name);
+  mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:setUseEnterBanCardName', target: name });
+}
+
 export function atomSetCutinBan(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // engine additive wave-10 (2026-07-02) B07002 江戸川コナン a2「このターン中、相手は【カットイン】と
       //   【変装】を使用できない」の cutin 側。turnState[p].cutinBanned=true をセットする turn-scoped

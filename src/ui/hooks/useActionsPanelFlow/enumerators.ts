@@ -2,6 +2,7 @@
 import * as flow from '@/engine/flow/index.js';
 import { engine } from '@/engine';
 import { makeAbilityCtx } from './cost.js';
+import { alternativeCostProviders } from '@/engine/cost/alternative.js';
 import type { Player } from './cost.js';
 
 /**
@@ -86,7 +87,7 @@ export function enumDeclaredAbilitySources(
           abilityId: a.id,
           area: 'scene',
         });
-        if (!engine.cost.canPay(state, a.cost, ctx)) return false;
+        if (!engine.cost.canPay(state, a.cost, ctx) && alternativeCostProviders(state, ctx, a).length === 0) return false;
       }
       return true;
     });
@@ -246,7 +247,7 @@ export function enumDeclaredAbilityIdsFor(
         abilityId: a.id,
         area,
       });
-      return engine.cost.canPay(state, a.cost, ctx);
+      return engine.cost.canPay(state, a.cost, ctx) || alternativeCostProviders(state, ctx, a).length > 0;
     })
     .map((a) => a.id);
 }

@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyChooseInterceptResponse, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation } from '@/engine/effect/apply-pick.js';
+import { applyChooseInterceptResponse, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
@@ -28,7 +28,7 @@ import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
 import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
-import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide } from '@/engine/effect/pending-state.js';
+import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide, _drainPendingRpsSide, _drainPendingSetCardChoiceSide, _drainPendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import { isAllowed } from './useEngineDispatch/can-check.js';
 import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
@@ -166,8 +166,20 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       } else {
         // char target OR case target + guard 成立 → contact AP 判定
         flow.action.snapshotAP(draft, ax);
-        flow.contact.judge(draft, ax);
+        const result = flow.contact.judge(draft, ax);
+        if (result.deferred && result.pendingLeaveIntercept) {
+          useGameStateStore.getState().setPendingLeaveIntercept({ ...result.pendingLeaveIntercept, actionId: ax.id });
+        }
       }
+      return;
+    }
+    case 'leaveInterceptResolve': {
+      const pending = useGameStateStore.getState().pendingLeaveIntercept;
+      if (!pending) return;
+      const ax = flow.action._getContext(pending.actionId);
+      if (!ax?.apSnapshot) return;
+      mutate.scene.resolveLeaveIntercept(draft, pending.targetUid, 'contact-ap', ax.apSnapshot.aUid, undefined, pending.interceptorUid, action.accept);
+      flow.contact.judge(draft, ax);
       return;
     }
     case 'hiramekiResolve': {
@@ -343,6 +355,24 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
+    case 'rpsResolve': {
+      const pending = useGameStateStore.getState().pendingRps;
+      if (!pending) return;
+      applyRpsAndContinuation(draft, pending, action.hand);
+      return;
+    }
+    case 'setCardChoiceResolve': {
+      const pending = useGameStateStore.getState().pendingSetCardChoice;
+      if (!pending) return;
+      applySetCardChoiceAndContinuation(draft, pending, action.instanceId);
+      return;
+    }
+    case 'setCardReplacementResolve': {
+      const pending = useGameStateStore.getState().pendingSetCardReplacement;
+      if (!pending) return;
+      applySetCardReplacement(draft, pending, action.targetUid);
+      return;
+    }
     case 'chooseInterceptResolve': {
       const pending = useGameStateStore.getState().pendingChooseIntercept;
       if (!pending) return;
@@ -477,6 +507,12 @@ export function surfacePendingSideChannels(): void {
   // 2026-06-06 タスクC: optional 決定の取り残し防止 (choice と同様)
   const effectOptionalSide = _drainPendingEffectOptionalSide();
   if (effectOptionalSide) store.setPendingEffectOptional(effectOptionalSide);
+  const rpsSide = _drainPendingRpsSide();
+  if (rpsSide) store.setPendingRps(rpsSide);
+  const setCardChoiceSide = _drainPendingSetCardChoiceSide();
+  if (setCardChoiceSide) store.setPendingSetCardChoice(setCardChoiceSide);
+  const setCardReplacementSide = _drainPendingSetCardReplacementSide();
+  if (setCardReplacementSide) store.setPendingSetCardReplacement(setCardReplacementSide);
   const chooseInterceptSide = _drainPendingChooseInterceptSide();
   if (chooseInterceptSide) store.setPendingChooseIntercept(chooseInterceptSide);
   const repeatOptionalSide = _drainPendingEffectRepeatOptionalSide();
@@ -576,11 +612,32 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     } else if (effectOptionalSide) {
       store.setPendingEffectOptional(effectOptionalSide);
     }
+    const rpsSide = _drainPendingRpsSide();
+    if (action.type === 'rpsResolve') {
+      store.setPendingRps(rpsSide);
+    } else if (rpsSide) {
+      store.setPendingRps(rpsSide);
+    }
+    const setCardChoiceSide = _drainPendingSetCardChoiceSide();
+    if (action.type === 'setCardChoiceResolve') {
+      store.setPendingSetCardChoice(setCardChoiceSide);
+    } else if (setCardChoiceSide) {
+      store.setPendingSetCardChoice(setCardChoiceSide);
+    }
+    const setCardReplacementSide = _drainPendingSetCardReplacementSide();
+    if (action.type === 'setCardReplacementResolve') {
+      store.setPendingSetCardReplacement(setCardReplacementSide);
+    } else if (setCardReplacementSide) {
+      store.setPendingSetCardReplacement(setCardReplacementSide);
+    }
     const chooseInterceptSide = _drainPendingChooseInterceptSide();
     if (action.type === 'chooseInterceptResolve') {
       store.setPendingChooseIntercept(chooseInterceptSide);
     } else if (chooseInterceptSide) {
       store.setPendingChooseIntercept(chooseInterceptSide);
+    }
+    if (action.type === 'leaveInterceptResolve') {
+      store.setPendingLeaveIntercept(null);
     }
     const repeatOptionalSide = _drainPendingEffectRepeatOptionalSide();
     if (action.type === 'repeatOptionalResolve') {

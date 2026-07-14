@@ -634,10 +634,11 @@ describe('W6b step10 (row9): leave:intercept pre-splice consult (B01092 hand / B
     setHuman('self');
     const s = produce(interceptBase('opp'), (d) => {
       const r = mutate.scene.removeToRemove(d, 'victim', 'contact-ap', 'atk');
-      expect(r.prevented).toBeFalsy();
+      expect(r.deferred).toBe(true);
+      expect(r.pendingLeaveIntercept).toEqual({ player: 'self', targetUid: 'victim', interceptorUid: 'grd' });
     });
-    expect(s.players.self.remove).toContain('VICTIM');
-    expect(s.players.self.scene.map((c) => c.cardId)).toEqual(['GUARDIAN']); // 未消費
+    expect(s.players.self.remove).toEqual([]);
+    expect(s.players.self.scene.map((c) => c.cardId)).toEqual(['VICTIM', 'GUARDIAN']);
   });
 
   it('§11-1 findCardOnBoard hand sentinel: 在中 → area hand / 不在 → null', () => {

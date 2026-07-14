@@ -38,6 +38,8 @@ export type SetCardEntry = {
   faceUp: boolean;
   /** Runtime occurrence identity. Optional for saved states and legacy fixtures. */
   instanceId?: string;
+  /** Per-occurrence replacement history. Turn numbers make expiry implicit. */
+  replacementUseCounts?: Record<string, { turn: number; count: number }>;
 };
 
 /** Exact occurrence below a host; duplicate print IDs remain distinguishable. */
@@ -139,6 +141,8 @@ export type TurnScopedFlags = {
    * 手札の使用 (rules/05 01.) は別行動なので阻害しない。enterCountThisTurn と同じ optional-flag 前例に倣い未初期化。
    */
   nextHintBanned?: boolean;
+  /** Turn-scoped named character restriction (B06103): normal use and effect entry only. */
+  useEnterBannedCardNames?: string[];
   /**
    * 「アクション[事件]終了時まで、このプレイヤーの【ヒラメキ】は発動しない」(B06049 a2、cluster8 2026-06-15)。
    * setHiramekiSuppress verb が **相手** (アクション[事件]を行った側から見た相手 = 証拠を失う側) の slot に

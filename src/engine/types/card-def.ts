@@ -6,6 +6,13 @@ import type { GameState, SceneCharacter } from './game-state.js';
 import type { Effect, Condition, Cost, TargetFilter } from './effect.js';
 import type { HookName } from './hooks.js';
 
+export type SetCardRemovalReplacement = {
+  kind: 'move-to-own-scene';
+  filter: TargetFilter;
+};
+
+export type AlternativeCostProvider = { targetFilter: TargetFilter };
+
 // ---------- AbilityType ----------
 // rules: 15-abilities-effects.md, 21-declared-ability-cost.md, 25-qa-effects-resolution.md
 
@@ -110,6 +117,8 @@ export type ContinuousDelta =
 export type FilteredAssaultGrant = { targetKind: 'char' | 'case'; filter: TargetFilter };
 
 export type ContinuousModifier = {
+  /** A scene character may be removed instead of paying a declared ability's printed cost. */
+  alternativeCostProvider?: AlternativeCostProvider;
   apDelta?: ContinuousDelta;
   lpDelta?: ContinuousDelta;
   // engine additive wave (2026-06-24): 条件付き継続レベル修正 (「【自分ターン中】レベル+1」B08059 /
@@ -276,6 +285,7 @@ export type ContinuousModifier = {
   //   (既存カードは未宣言 → 反対 side 走査の加算 0、smoke baseline 不変)。
   apDeltaAuraOpp?: number;
   lpDeltaAuraOpp?: number;
+  lvlDeltaAuraOpp?: number;
   auraFilterOpp?: TargetFilter;
   // engine additive wave-5 (2026-07-01, P05): case card 継続能力「自分は [handUseRestrictFilter] 以外の
   //   キャラを手札から使用できない」(B05120 特徴[探偵] / B06109 特徴[高校生])。allow-filter = 使用を
@@ -329,6 +339,8 @@ export type AbilityDef = {
   trigger?: TriggerDef;                    // type='triggered' 時
   scope?: AbilityScope;                    // 「いつ有効か」
   limit?: AbilityLimit;                    // 【ターン①】等
+  /** Pre-removal replacement for a face-up set-card occurrence. */
+  setCardRemovalReplacement?: SetCardRemovalReplacement;
   effect?: Effect;                         // Descriptor (DSL) — continuous 以外
   continuousModifier?: ContinuousModifier; // type='continuous' 時のみ (G23)
   description: string;                     // 公式テキスト (エラッタ後)

@@ -83,6 +83,9 @@ export type Condition =
   | { kind: 'removeColorAtLeast'; player: 'self' | 'opp'; color: string | string[]; n: number; cardKind?: 'character' | 'event' }
   | { kind: 'removeTraitAtLeast'; player: 'self' | 'opp'; trait: string | string[]; n: number }
   | { kind: 'removeNameAtLeast'; player: 'self' | 'opp'; cardName: string | string[]; n: number }
+  // Remove-area count with OR-composed TargetFilters. Each physical card counts at most once,
+  // even if it matches several filters (B05062: named Kyogoku OR Suzuki-Zaibatsu character).
+  | { kind: 'removeFilterAtLeast'; player: 'self' | 'opp'; filters: TargetFilter[]; n: number }
   // engine additive: removeCountAtLeast — リムーブエリアの **総枚数** (filter 無し) が n 以上か (B03104
   // 「リムーブエリアにカードが15枚以上ある場合」)。removeColor/Trait/NameAtLeast の unfiltered 版。
   | { kind: 'removeCountAtLeast'; player: 'self' | 'opp'; n: number }
@@ -145,6 +148,8 @@ export type Condition =
   // した **N 枚集合のいずれか** が filter に一致するか (PR132「特徴[警察]がリムーブされた場合」/
   // D06013「【緑】と【白】が1枚以上」= and[boundAny{緑}, boundAny{白}])。各要素は matchOneFilter に委譲。
   | { kind: 'boundAnyMatchesFilter'; bindKey: string; filter: TargetFilter }
+  /** Number of bound cards matching a runtime-declared filter. */
+  | { kind: 'boundMatchCountAtLeast'; bindKey: string; filter: TargetFilter; n: number; traitBind?: string }
   // engine additive wave-10 (2026-07-02, G17 残): bound 集合内に「filter 一致 かつ 相互に同じ色を
   // 持たない (色集合の pairwise 交差が空)」カードが n 枚以上存在するか。B07002 江戸川コナン a1
   // 「この効果によってそれぞれ色の異なる（同じ色を持たない）〚特徴［探偵］〛のキャラを2枚リムーブした場合」。
@@ -400,7 +405,7 @@ export type TargetQuery = {
   // partner candidate (player 概念が side でない) では使用不可。
   perSideMax?: number;
   /** Combined printed level ceiling for a multi-pick (B04042/B04084). */
-  aggregateLevelMax?: number;
+  aggregateLevelMax?: number | { dyn: string };
 };
 
 export type TargetingRef =
@@ -448,6 +453,7 @@ export type AtomVerb =
   // draw(max(0, n − 現手札)) の決定論 verb (atomDraw の薄いラッパー、pick 無し)。手札 ≥ N なら no-op
   // (draw-up 方向のみ)。discard-down (B07076) / 引いた枚数 return (B04048) は別 variant で DEFER。args.player 明示。
   | 'drawUpToHandSize'
+  | 'discardDownTo'
   // engine拡張 wave (2026-06-23): evidenceFlipDown — 「自分の表向きの証拠を N つまで選び、裏向きにする」
   // (evidenceFlip=表向き化 の逆 mutate)。PB pick (defaultArea 'evidence', faceUp 候補限定)。
   // rules: 03-field-areas.md §状態 / 15-abilities-effects.md。B05013/B06017/B06019 で使用。
@@ -559,6 +565,7 @@ export type AtomVerb =
   // turnState[p].nextHintBanned=true をセットする turn-scoped flag verb。canStartNextHint が gate (ネクストヒント全体)。
   // resetTurnFlags でクリア。rules: 12 (ネクストヒント) / 15 (「〜できない」継続制限)
   | 'setNextHintBan'
+  | 'setUseEnterBanCardName'
   // engine additive wave-10 (2026-07-02): 「このターン中、相手は【カットイン】/【変装】を使用できない」
   // (B07002 江戸川コナン a2)。turnState[p].cutinBanned / disguiseBanned をセットする turn-scoped flag verb
   // (setNextHintBan mirror)。ゲートは flow/contact.ts canCutIn / canDisguise。side-level flag ゆえ
@@ -687,10 +694,14 @@ export type Cost =
 // ---------- Effect ----------
 
 export type Effect =
+  | { kind: 'traitChoice'; bind: string; then: Effect; chooser?: 'owner' }
+  | { kind: 'rps'; win: Effect; lose: Effect }
+  /** Select one opaque set-card occurrence on a previously selected host. */
+  | { kind: 'setCardToEvidence'; hostUid: string }
   | { kind: 'sequence'; steps: Effect[] }
   | { kind: 'parallel'; steps: Effect[] }
   | { kind: 'choice'; options: Effect[]; chooser: 'self' | 'opp' | 'owner' }
-  | { kind: 'optional'; effect: Effect }
+  | { kind: 'optional'; effect: Effect; chooser?: 'owner' | 'opp-of-owner'; else?: Effect; aiRun?: 'if-hand' }
   | { kind: 'conditional'; if: Condition; then: Effect; else?: Effect }
   | { kind: 'forEach'; over: TargetingRef; do: Effect }
   | { kind: 'repeatOptional'; max: number; body: Effect }

@@ -204,7 +204,7 @@ function evalContinuousCondition(s: GameState, uid: string, ctx: EffectCtx, cond
 // auraExcludeSelf 時は bearer≠target + auraFilter が target に一致 (matchOneFilter = 有効値レベル/色/特徴) を満たせば加算。
 // restrictsOpponent (cluster5) と同じ board-scan を数値 aura へ拡張 (rules/24 §常時有効型)。
 // 不在時 0 (既存カードは aura 未宣言 → no-op、smoke baseline 不変)。再帰 guard は auraDeltaSafe (candidates.ts) が担う。
-function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDeltaAura'): number {
+function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDeltaAura' | 'lvlDeltaAura'): number {
   const target = scene.byUid(s, targetUid);
   if (!target) return 0;
   const ownerSide: 'self' | 'opp' | null = s.players.self.scene.some(c => c.uid === targetUid)
@@ -229,7 +229,7 @@ function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDe
       if (ability.type !== 'continuous') continue;
       if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       const cm = ability.continuousModifier;
-      const delta = cm?.[which];
+      const delta = which === 'lvlDeltaAura' ? undefined : cm?.[which];
       if (typeof delta !== 'number') continue;
       if (cm?.auraExcludeSelf && bearer.uid === targetUid) continue; // 「このキャラ以外」
       if (ability.condition && !evalCond(s, ability.condition, bearerCtx)) continue; // 【自分ターン中】等の常時条件
@@ -243,7 +243,11 @@ function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDe
   // ability.condition を bearer 自身の side で評価、auraFilterOpp が target に一致すれば apDeltaAuraOpp/lpDeltaAuraOpp を加算。
   // auraExcludeSelf は cross-side では常に bearer≠target ゆえ非適用。同 side 走査と完全対称 (honor site 共有)。不在時 0 (回帰0)。
   const oppSide: 'self' | 'opp' = ownerSide === 'self' ? 'opp' : 'self';
-  const whichOpp = which === 'apDeltaAura' ? 'apDeltaAuraOpp' : 'lpDeltaAuraOpp';
+  const whichOpp = which === 'apDeltaAura'
+    ? 'apDeltaAuraOpp'
+    : which === 'lpDeltaAura'
+      ? 'lpDeltaAuraOpp'
+      : 'lvlDeltaAuraOpp';
   const oppBearers: Array<{ char: typeof target; inPA: boolean }> =
     s.players[oppSide].scene.map(c => ({ char: c, inPA: false }));
   const oppSlotMr = s.players[oppSide].partnerAreaMR;
@@ -481,7 +485,8 @@ function level(s: GameState, uid: string): number {
   // 不在時 +0。再帰は continuousDeltaSafe (candidates) の _inContinuousDelta guard が depth-2 で 0 化し終端。
   // BUG-157 (2026-06-27): ap/lp と対称に guard 経由へ統一 (旧 local 直呼びは無 guard entry だった)。
   const modContinuous = continuousDeltaSafe(s, uid, 'lvlDelta');
-  return base + modPermanent + modTurn + modContact + modAction + modContinuous;
+  const modAura = auraDeltaSafe(s, uid, 'lvlDeltaAura');
+  return base + modPermanent + modTurn + modContact + modAction + modContinuous + modAura;
 }
 
 function colors(s: GameState, uid: string): string[] {

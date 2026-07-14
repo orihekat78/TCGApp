@@ -352,6 +352,12 @@ export function judge(state: GameState, ax: ActionContext): JudgeResult {
     // defender は現場を離れていない (kept-in-scene) or 手札へ redirect。contact:judge の
     // winner/loser 導出は defenderRemoved を見るため、ここで反転を反映する。
     const rr = mutate.scene.removeToRemove(state, bUid, 'contact-ap', aUid);
+    if (rr.deferred) {
+      return {
+        attackerAP: aAP, defenderAP: bAP, defenderRemoved: false, attackerRemoved: false,
+        deferred: true, pendingLeaveIntercept: rr.pendingLeaveIntercept,
+      };
+    }
     defenderRemoved = !rr.prevented;
   }
 

@@ -74,6 +74,12 @@ describe('engine.read.def', () => {
     });
   });
 
+  it('enumerates the registered selectable traits in deterministic order', () => {
+    register({ id: 'TRAIT-Z', no: 'z', kind: 'character', names: ['z'], colors: [], level: 1, ap: 0, lp: 0, traits: ['Zeta', 'Alpha'], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] });
+    register({ id: 'TRAIT-A', no: 'a', kind: 'character', names: ['a'], colors: [], level: 1, ap: 0, lp: 0, traits: ['Alpha'], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] });
+    expect(def.allTraits()).toEqual(['Alpha', 'Zeta']);
+  });
+
   describe('byColor', () => {
     it('特定の色を持つカードを取得', () => {
       register(makeDef({ id: 'A', colors: ['青', '赤'] }));

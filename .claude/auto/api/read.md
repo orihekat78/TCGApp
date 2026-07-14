@@ -23,7 +23,7 @@
 | 名前 | メンバー |
 | ---- | -------- |
 | `char` | `ap`, `auraUntargetableByAction`, `charProtectedFrom`, `charProtectedFromOppEvent`, `charUntargetableByOppEffect`, `charUntargetableByOppEvent`, `colors`, `declaredUseCount`, `filteredAssaultKeywords`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `noAutoActivateLocked`, `restrictsOpponent`, `selfContinuousFlag`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
-| `def` | `byColor`, `byTrait`, `card`, `isMR` |
+| `def` | `allTraits`, `byColor`, `byTrait`, `card`, `isMR` |
 | `game` | `canWin`, `cannotSolveCase`, `evidenceShortfall`, `partnerSolveOverride`, `refreshCount`, `result` |
 | `log` | `byPlayer`, `byTurn`, `search`, `tail` |
 | `player` | `case`, `deck`, `deckCount`, `evidence`, `evidenceCount`, `file`, `fileCount`, `hand`, `handCount`, `partner`, `remove`, `removeCount`, `requiredEvidence`, `scratchTrace` |

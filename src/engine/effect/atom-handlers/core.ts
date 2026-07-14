@@ -56,6 +56,24 @@ export function atomDrawUpToHandSize(s: GameState, a: Record<string, unknown>, c
       return;
     }
 
+/** Remove cards from the front of hand until exactly n remain. */
+export function atomDiscardDownTo(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
+  const player = resolvePlayer(a.player, ctx);
+  const n = requireField<number>(a, 'n', 'number');
+  const hand = s.players[player].hand;
+  const ids = hand.slice(0, Math.max(0, hand.length - n));
+  if (ids.length > 0) {
+    mutate.hand.discardToRemove(s, player, ids, { byPlayer: ctx.source.player });
+  }
+  if (typeof a.bind === 'string') {
+    (ctx.bindings as Record<string, unknown>)[a.bind] = ids.map((cardId) => ({ cardId }));
+  }
+  mutate.log.append(s, {
+    ts: Date.now(), player, turn: s.turn.number,
+    action: 'effect:discardDownTo', result: `${ids.length}`,
+  });
+}
+
 export function atomDiscard(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
       // BUG-065 (本格対応) で resolve-picks.ts が pattern B (uid なし + target.kind='pick')
       // の解決をサポート。ここに到達した時点で a.target は string[] のはず。
@@ -1050,6 +1068,9 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
             });
             if (bi !== -1) ctx.bindings[bindKey] = [...bound.slice(0, bi), ...bound.slice(bi + 1)];
           }
+        }
+        if (typeof a.bind === 'string') {
+          (ctx.bindings as Record<string, unknown>)[a.bind] = movedIds.map(cardId => ({ kind: 'card', cardId, area: 'deck', player: hadP }));
         }
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: movedIds.join(','), result: movedIds.length ? 'ok' : 'none' });
         return;

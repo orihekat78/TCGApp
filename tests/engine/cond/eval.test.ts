@@ -308,6 +308,28 @@ describe('engine.cond.eval', () => {
     });
   });
 
+  describe('removeFilterAtLeast', () => {
+    it('counts each remove card once when it matches any supplied filter', () => {
+      registerCardDef(defOf({ id: 'NAME_ONLY', names: ['京極真'], traits: [] }));
+      registerCardDef(defOf({ id: 'TRAIT_ONLY', names: ['鈴木園子'], traits: ['鈴木財閥'] }));
+      registerCardDef(defOf({ id: 'BOTH', names: ['京極真'], traits: ['鈴木財閥'] }));
+      registerCardDef(defOf({ id: 'DECOY', names: ['毛利蘭'], traits: ['空手'] }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, remove: ['NAME_ONLY', 'TRAIT_ONLY', 'BOTH', 'DECOY'] } } };
+      const cond = { kind: 'removeFilterAtLeast', player: 'self', filters: [{ kind: 'character', cardName: '京極真' }, { kind: 'character', trait: '鈴木財閥' }], n: 3 } as const;
+      expect(evalCond(s, cond, makeCtx())).toBe(true);
+      expect(evalCond(s, { ...cond, n: 4 }, makeCtx())).toBe(false);
+    });
+
+    it('resolves self relative to the ability owner, not turn player', () => {
+      registerCardDef(defOf({ id: 'OPP_MATCH', traits: ['鈴木財閥'] }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, opp: { ...s.players.opp, remove: ['OPP_MATCH'] } } };
+      const cond = { kind: 'removeFilterAtLeast', player: 'self', filters: [{ trait: '鈴木財閥' }], n: 1 } as const;
+      expect(evalCond(s, cond, makeCtx({ source: { player: 'opp', area: 'scene' } }))).toBe(true);
+    });
+  });
+
   describe('removeCountAtLeast', () => {
     it('counts the whole remove pile regardless of card identity (B03104)', () => {
       registerCardDef(defOf({ id: 'A', colors: ['黄'] }));

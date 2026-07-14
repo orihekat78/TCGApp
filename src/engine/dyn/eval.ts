@@ -510,6 +510,11 @@ function resolveDiscarded(ctx: EffectCtx, rest: string[], original: string): Dyn
   const d = def.card(cardId);
   if (!d) return 0;
   switch (field) {
+    case 'levelSum':
+      return binding.reduce((sum, entry) => {
+        const cardId = (entry as { cardId?: string }).cardId;
+        return sum + (typeof cardId === 'string' ? (def.card(cardId)?.level ?? 0) : 0);
+      }, 0);
     case 'level':
       return d.level ?? 0;
     case 'ap':

@@ -388,6 +388,11 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const ids = state.players[p].hand.slice(0, cnt);
       if (ids.length > 0) mutate.hand.discardToRemove(state, p, ids, { viaCost: true });
       acc.paidItems.push({ kind: 'removeFromHandDownTo', details: { ids } });
+      if (!ctx.costPaid) ctx.costPaid = {};
+      ctx.costPaid['removeFromHandDownTo'] = {
+        ids,
+        levelSum: ids.reduce((sum, id) => sum + (readDef.card(id)?.level ?? 0), 0),
+      };
       return;
     }
     case 'selfToDeckBottom': {

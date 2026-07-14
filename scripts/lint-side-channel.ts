@@ -41,6 +41,16 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // setPendingOptionalCostPaid で set、applyOptionalAndContinuation が consume (store/UI へ出ない、
   // EffectOptionalBindings と同種の engine-internal)。B06023 optional{invoke $cost.ids} 用。
   'EffectOptionalCostPaid',
+  // Dedicated RPS UI exposes only PendingRpsSide.  Resume/bind holders are
+  // consumed by applyRpsAndContinuation and must never become separate UI.
+  'RpsResume',
+  'RpsBindings',
+  // Set-card choice exposes only the opaque occurrence picker.  Its resume
+  // frame and bindings/remainder are resolver plumbing consumed on submit.
+  'SetCardChoiceResume',
+  'SetCardChoiceBindings',
+  'SetCardChoiceRemainder',
+  'SetCardChoiceRemainderKind',
   // mega-wave W6 step9 (2026-07-04, row65): startContact atom → ActionContext.id の片道通知。
   // 専用 store field を持たず dispatch drain → store.setActiveActionId(id) 直結 (useContactFlowDriver が
   // 既存の activeActionId 監視で拾う = 専用 Modal/Overlay 不要)。標準 4 点配線の対象外。

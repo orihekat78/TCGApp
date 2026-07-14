@@ -17,6 +17,9 @@ export type RemoveResult = {
    */
   prevented?: boolean;
   redirectedTo?: 'hand' | 'kept-in-scene';
+  /** A human optional leave intercept is awaiting a decision; no removal happened. */
+  deferred?: boolean;
+  pendingLeaveIntercept?: { player: 'self' | 'opp'; targetUid: string; interceptorUid: string };
 };
 
 export type RefreshResult =
@@ -28,6 +31,9 @@ export type JudgeResult = {
   defenderAP: number;
   defenderRemoved: boolean;
   attackerRemoved: false;
+  /** Judge is paused before a human leave-intercept decision. */
+  deferred?: boolean;
+  pendingLeaveIntercept?: { player: 'self' | 'opp'; targetUid: string; interceptorUid: string };
 };
 
 export type PaidRecord = { kind: string; details: unknown };

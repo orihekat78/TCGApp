@@ -71,6 +71,16 @@ import { B01082 } from '../ct-p01/B01082.js';
 import { B01087 } from '../ct-p01/B01087.js';
 import { B01088 } from '../ct-p01/B01088.js';
 import { B01091 } from '../ct-p01/B01091.js';
+import { B01092 } from '../ct-p01/B01092.js';
+import { B01092P } from '../ct-p01/B01092P.js';
+import { B02086 } from '../ct-p02/B02086.js';
+import { B02039 } from '../ct-p02/B02039.js';
+import { B02052 } from '../ct-p02/B02052.js';
+import { B02052P } from '../ct-p02/B02052P.js';
+import { B05033 } from '../ct-p05/B05033.js';
+import { B02086P } from '../ct-p02/B02086P.js';
+import { B08074 } from '../ct-p08/B08074.js';
+import { B07011 } from '../ct-p07/B07011.js';
 import { B01094 } from '../ct-p01/B01094.js';
 import { B01094P } from '../ct-p01/B01094P.js';
 import { B01099 } from '../ct-p01/B01099.js';
@@ -144,6 +154,8 @@ import { B04025 } from '../ct-p04/B04025.js';
 import { B04035 } from '../ct-p04/B04035.js';
 import { B04035P } from '../ct-p04/B04035P.js';
 import { B04036 } from '../ct-p04/B04036.js';
+import { B04046 } from '../ct-p04/B04046.js';
+import { B04046P } from '../ct-p04/B04046P.js';
 import { B04047 } from '../ct-p04/B04047.js';
 import { B04047P } from '../ct-p04/B04047P.js';
 import { B04050 } from '../ct-p04/B04050.js';
@@ -186,6 +198,7 @@ import { B06033 } from '../ct-p06/B06033.js';
 import { B06033P } from '../ct-p06/B06033P.js';
 import { B06030 } from '../ct-p06/B06030.js';
 import { B06030P } from '../ct-p06/B06030P.js';
+import { B06047 } from '../ct-p06/B06047.js';
 import { B06035 } from '../ct-p06/B06035.js';
 import { B06040 } from '../ct-p06/B06040.js';
 import { B06040P } from '../ct-p06/B06040P.js';
@@ -502,6 +515,11 @@ import { B04024 } from '../ct-p04/B04024.js';
 import { B05057 } from '../ct-p05/B05057.js';
 import { B06088 } from '../ct-p06/B06088.js';
 import { B05060 } from '../ct-p05/B05060.js';
+import { B05062 } from '../ct-p05/B05062.js';
+import { B06103 } from '../ct-p06/B06103.js';
+import { B06103P } from '../ct-p06/B06103P.js';
+import { B08078 } from '../ct-p08/B08078.js';
+import { B08078P } from '../ct-p08/B08078P.js';
 import { B03007 } from '../ct-p03/B03007.js';
 import { PR061 } from '../pr-01/PR061.js';
 import { PR065 } from '../pr-01/PR065.js';
@@ -548,6 +566,8 @@ import { B07072 } from '../ct-p07/B07072.js';
 import { B07073 } from '../ct-p07/B07073.js';
 import { B07073P } from '../ct-p07/B07073P.js';
 import { B07075 } from '../ct-p07/B07075.js';
+import { B07076 } from '../ct-p07/B07076.js';
+import { B07076P } from '../ct-p07/B07076P.js';
 import { B07077 } from '../ct-p07/B07077.js';
 import { B07077P } from '../ct-p07/B07077P.js';
 import { B07082 } from '../ct-p07/B07082.js';
@@ -571,6 +591,7 @@ import { B09062 } from '../ct-p09/B09062.js';
 import { B09065 } from '../ct-p09/B09065.js';
 import { B09075 } from '../ct-p09/B09075.js';
 import { B09075P } from '../ct-p09/B09075P.js';
+import { B09078 } from '../ct-p09/B09078.js';
 import { B09082 } from '../ct-p09/B09082.js';
 import { B09084 } from '../ct-p09/B09084.js';
 import { B09102 } from '../ct-p09/B09102.js';
@@ -1601,21 +1622,21 @@ export const REUSE_CARDS: CardDef[] = [
   D07004, D07005, D07016, D07017, D07022, D09006, D09007, D09008,
   D09009, D09022, D09023, D09026, D10012, D10025, D10026, B01008, B01027,
   B01028, B01028P, B01029, B01032, B01040, B01040P, B01046, B01049,
-  B01063, B01064, B01083, B01087, B01088, B01091, B01094, B01094P,
+  B01063, B01064, B01083, B01087, B01088, B01091, B01092, B01092P, B01094, B01094P,
   B01099, B01099P, B01100, B01100P, B01101, B01101P, B01102, B01102P,
   B02009, B02010, B02022, B02022P, B02032, B02051, B02060, B02061, B02074, B02074P,
-  B02082, B02089, B02089P, B02090, B02091, B03004, B03009, B03010,
+  B02082, B02086, B02086P, B02089, B02089P, B02090, B02091, B03004, B03009, B03010,
   B03010P, B03011, B03015, B03015P, B03021, B03021P, B03022, B03022P,
   B03026, B03037, B03043, B03048, B03048P, B03054, B03054P, B03055,
   B03060, B03060P, B03064, B03067, B03067P, B03074, B03082, B03087,
   B03087P, B03100, B03103, B03103P, B03105, B03114, B03114P, B03125,
   B03127, B03136, B03137, B03138, B04005, B04005P, B04008, B04009,
-  B04020, B04025, B04035, B04035P, B04036, B04047, B04047P, B04050,
+  B04020, B04025, B04035, B04035P, B04036, B04046, B04046P, B04047, B04047P, B04050,
   B04050P, B04052, B04052P, B04054, B04054P, B04056, B04056P, B04060,
   B04070, B04070P, B04071, B04071P, B04080, B04096, B04096P, B05018,
   B05018P, B05037, B05038, B05055, B05067, B05067P, B05069, B05071,
   B05083, B05083P, B05089, B05089P, B05089P2, B05109, B05110, B05110P,
-  B05112, B06030, B06030P, B06035, B06040, B06040P, B06056, B06060,
+  B05112, B06030, B06030P, B06035, B06040, B06040P, B06047, B06056, B06060,
   B06070, B06071, B06071P, B06075, B06075P, B06091, B06093, B06094,
   B06094P, B06099, B06099P, B07007, B07007P, B07007P2, B07012, B07012P,
   B07016, B07016P,
@@ -1694,7 +1715,7 @@ export const REUSE_CARDS: CardDef[] = [
   // Task A batch#2 (2026-06-09): A.enter+hirameki クラスタ — 自己スリープ登場 (enter→sceneSetState{$self,sleep}) + ヒラメキdraw
   B01011,
   // Task A batch#2 wave1 (2026-06-10): look-N→hand クラスタ — deckRevealUntil+handAddFromDeck+deckToBottomBound (B01013/D01013 同型) + hirameki/enterSleep/leave-hook/cutin
-  B04024, B05057, B06088, B05060, B03007, PR061, PR065, PR180, PR186, PR084, PR090,
+  B04024, B05057, B06088, B05060, B05062, B06103, B06103P, B08078, B08078P, B03007, PR061, PR065, PR180, PR186, PR084, PR090,
   // Task A batch#2 wave2 (2026-06-10): leave→hand (handAddFromRemove) / reanimate (sceneEnter from:remove|hand ± enterSleep) / forEach-all sleep (B06071 同型) — B02004/D08024/B05112/D01012/D03013 同型
   B05034, B07042, B09015, B04007, B03099, B03012, PR155, PR161, PR230,
   // Task A batch#2 certify-harvest #1 (2026-06-11): adversarial-certify workflow verified greens — B01050 (enterSleep+look1白+hirameki) / B01069 (opt 相手証拠+draw) / B02053 (event reanimate白怪盗+hirameki, __eventUse closure)
@@ -2048,4 +2069,12 @@ export const REUSE_CARDS: CardDef[] = [
   B01082, B06025,
   // T3 same-effective-name count / hand-reveal nameOverride
   B09036, B09036P,
+  // Remaining-27 Wave 2: discard-down level-sum event.
+  B07076, B07076P,
+  B09078,
+  B08074,
+  B07011,
+  B02039,
+  B02052, B02052P,
+  B05033,
 ];

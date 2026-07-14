@@ -23,9 +23,18 @@ import {
   pushPendingChooseInterceptSide,
   type PendingChooseInterceptSide,
   type PendingEffectRepeatOptionalSide,
+  type PendingRpsSide,
+  type RpsHand,
+  _takePendingRpsResume,
+  pushPendingRpsSide,
+  setPendingRpsResume,
+  _takePendingSetCardChoiceResume,
+  type PendingSetCardChoiceSide,
+  type PendingSetCardReplacementSide,
 } from './pending-state.js';
 import { hand } from '../mutate/hand.js';
 import { char as charMutator } from '../mutate/char.js';
+import { scene as sceneMutator } from '../mutate/scene.js';
 import { resolveBindRef } from './atom-handlers/_shared.js';
 
 export function applyRepeatOptionalAndContinuation(state: GameState, _pending: PendingEffectRepeatOptionalSide, run: boolean): void {
@@ -42,6 +51,88 @@ import { runAllUntilEmpty } from '../resolve/index.js';
 import { event } from '../event/index.js';
 import { def } from '../read/def.js';
 import { allCardNameComponentsForDef } from '../target/card-def-registry.js';
+
+/** Resolve the human half of a dedicated rock-paper-scissors decision. */
+export function applyRpsAndContinuation(state: GameState, pending: PendingRpsSide, handChoice: RpsHand): void {
+  const resume = _takePendingRpsResume();
+  if (!resume || resume.effect.kind !== 'rps') return;
+  const hands: RpsHand[] = ['rock', 'paper', 'scissors'];
+  const wins = (a: RpsHand, b: RpsHand): boolean =>
+    (a === 'rock' && b === 'scissors') || (a === 'paper' && b === 'rock') || (a === 'scissors' && b === 'paper');
+  const ownerHand = pending.ownerPlayer === pending.player ? handChoice : pending.aiHand;
+  const otherHand = pending.ownerPlayer === pending.player ? pending.aiHand : handChoice;
+  if (ownerHand === otherHand) {
+    const aiHand = hands[Math.floor(Math.random() * hands.length)]!;
+    pushPendingRpsSide({ ...pending, aiHand });
+    setPendingRpsResume(resume.effect, resume.bindings);
+    return;
+  }
+  const ctx: EffectCtx = {
+    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: 'scene' },
+    bindings: resume.bindings as EffectCtx['bindings'],
+  };
+  const branch = wins(ownerHand, otherHand) ? resume.effect.win : resume.effect.lose;
+  const resolved = resolveEffectPicks(state, branch, ctx, {
+    byPlayer: pending.ownerPlayer,
+    humanChooser: pending.player === pending.ownerPlayer,
+    humanPlayer: pending.player,
+    source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
+  });
+  runEffect(state, resolved, ctx);
+  runAllUntilEmpty(state);
+}
+
+/** Resolve an opaque set-card occurrence selection and expose it as face-up evidence. */
+export function applySetCardChoiceAndContinuation(state: GameState, pending: PendingSetCardChoiceSide, instanceId: string): void {
+  const resume = _takePendingSetCardChoiceResume();
+  if (!resume || resume.effect.kind !== 'setCardToEvidence' || !pending.entries.some((entry) => entry.instanceId === instanceId)) return;
+  const moved = charMutator.takeOneSetCard(state, pending.hostUid, instanceId);
+  if (!moved) return;
+  state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: true, origin: { turn: state.turn.number, via: 'effect', sourceCardId: pending.source.cardId } });
+  if (resume.remainder.length > 0) {
+    const ctx: EffectCtx = {
+      source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.player, area: 'scene' },
+      bindings: resume.bindings as EffectCtx['bindings'],
+    };
+    const continuation: Effect = { kind: resume.remainderKind, steps: resume.remainder };
+    const resolved = resolveEffectPicks(state, continuation, ctx, {
+      byPlayer: pending.player,
+      humanChooser: true,
+      humanPlayer: pending.player,
+      source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
+    });
+    runEffect(state, resolved, ctx);
+  }
+  runAllUntilEmpty(state);
+}
+
+/** Resolve the optional pre-removal replacement of one exact set-card occurrence. */
+export function applySetCardReplacement(state: GameState, pending: PendingSetCardReplacementSide, toUid: string | null): void {
+  const applied = charMutator.resolveSetCardRemovalReplacement(state, pending, toUid);
+  if (applied && pending.resume) {
+    switch (pending.resume.kind) {
+      case 'scene-remove':
+        sceneMutator.removeToRemove(state, pending.fromUid, pending.resume.cause, pending.resume.byUid, {
+          byPlayer: pending.resume.byPlayer,
+          skipSetCardReplacementInstanceIds: [pending.setCardInstanceId],
+        });
+        break;
+      case 'scene-to-deck':
+        sceneMutator.toDeck(state, pending.fromUid, pending.resume.pos);
+        break;
+      case 'scene-to-hand':
+        sceneMutator.toHand(state, pending.fromUid);
+        break;
+      case 'scene-to-evidence':
+        sceneMutator.toEvidence(state, pending.fromUid, pending.resume.faceUp, pending.resume.sourceCardId);
+        break;
+      case 'scene-to-stack':
+        sceneMutator.toStack(state, pending.fromUid, pending.resume.hostUid);
+        break;
+    }
+  }
+  runAllUntilEmpty(state);
+}
 
 /**
  * pick uid → cardId 逆引き。`evidence:side:idx` / `cardId#idx` / snapshot fallback に対応。
@@ -252,7 +343,7 @@ export function applyPickAndContinuation(
       cardId: pending.source.cardId,
       uid: (pending.source as { uid?: string }).uid ?? '',
       abilityId: pending.source.abilityId,
-      player: pending.ownerPlayer ?? pending.player,
+      player: pending.player,
       area: 'scene' as const,
     },
     bindings: {},
@@ -541,7 +632,7 @@ export function applyOptionalAndContinuation(
       cardId: pending.source.cardId,
       uid: pending.source.uid,
       abilityId: pending.source.abilityId,
-      player: pending.player,
+      player: pending.ownerPlayer ?? pending.player,
       area: 'scene',
     },
     bindings: {},
@@ -553,8 +644,9 @@ export function applyOptionalAndContinuation(
     ...(resumeCostPaid ? { costPaid: resumeCostPaid } : {}),
   };
   const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
-    byPlayer: pending.player,
+    byPlayer: pending.ownerPlayer ?? pending.player,
     humanChooser: true,
+    humanPlayer: pending.player,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
   });
   // 2026-06-06 タスクC: payload に元 triggerPayload を載せて queue する (あれば)。これで runtime ctx
@@ -564,7 +656,7 @@ export function applyOptionalAndContinuation(
   event.queue(
     state,
     resolved as never,
-    { player: pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
+    { player: pending.ownerPlayer ?? pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
     'effect:optional-resolved',
     optTriggerPayload ?? { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
     // engine wave-18: 復元した contact bindings を queue 6th arg で entry → runtime ctx.contact へ伝達

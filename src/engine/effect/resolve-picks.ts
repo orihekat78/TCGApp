@@ -546,7 +546,22 @@ function substituteAtomPick(
       (ctx.dyn ??= {}).chainStepNoApply = true;
       return atom as Effect;
     }
-    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; distinctLevel?: boolean; distinctColors?: boolean; perSideMax?: number; aggregateLevelMax?: number } };
+    const targetRef = target as { n?: { min?: number; max?: number }; query?: { distinctNames?: boolean; distinctLevel?: boolean; distinctColors?: boolean; perSideMax?: number; aggregateLevelMax?: number | { dyn: string } } };
+    const aggregateDyn = targetRef.query?.aggregateLevelMax;
+    // A later sequence step can depend on a discard bind produced by an
+    // earlier runtime atom. Do not freeze its target cap to zero during the
+    // initial UI pre-walk; the atom handler will re-resolve it after binding.
+    if (typeof aggregateDyn === 'object'
+      && aggregateDyn !== null
+      && aggregateDyn.dyn.startsWith('$discarded.')
+      && !Array.isArray((ctx.bindings as Record<string, unknown>)['$discarded'])) {
+      return atom as Effect;
+    }
+    const aggregateLevelMax = typeof targetRef.query?.aggregateLevelMax === 'number'
+      ? targetRef.query.aggregateLevelMax
+      : targetRef.query?.aggregateLevelMax && typeof targetRef.query.aggregateLevelMax === 'object'
+        ? evalDyn(state, targetRef.query.aggregateLevelMax.dyn, ctx)
+        : undefined;
     pushPendingEffectPickSide({
       player: byPlayer,
       // BUG-175: 能力所有者を同梱 — chooser≠owner の cross-side pick で解決後 ctx の座標系を保つ
@@ -569,7 +584,7 @@ function substituteAtomPick(
       distinctColors: targetRef.query?.distinctColors === true,
       // engine mega-wave W4 (2026-07-03, r84): perSideMax quota を UI/AI へ伝播 (B08019 a2)。
       ...(typeof targetRef.query?.perSideMax === 'number' ? { perSideMax: targetRef.query.perSideMax } : {}),
-      ...(typeof targetRef.query?.aggregateLevelMax === 'number' ? { aggregateLevelMax: targetRef.query.aggregateLevelMax } : {}),
+      ...(typeof aggregateLevelMax === 'number' && Number.isFinite(aggregateLevelMax) ? { aggregateLevelMax } : {}),
       // cluster14: atom が skipResolvesAtom:true を持つ場合 (B09010「2枚まで登場」+ 後続 FILE上1リムーブ)、
       //   0枚 decline を applyPickSkipAndContinuation で解決し remainder を実行する (deckRevealUntil と同契約)。
       skipResolvesAtom: (args as { skipResolvesAtom?: boolean }).skipResolvesAtom === true,
@@ -759,6 +774,34 @@ export function resolveEffectPicks(
     }
     case 'parallel':
       return { kind: 'parallel', steps: effect.steps.map((s) => resolveEffectPicks(state, s, ctx, opts)) };
+    case 'traitChoice': {
+      const traits = readDef.allTraits();
+      const rawIndex = (ctx.dyn as { choiceIndex?: unknown } | undefined)?.choiceIndex;
+      if (typeof rawIndex === 'number' && traits[rawIndex]) {
+        delete (ctx.dyn as { choiceIndex?: unknown }).choiceIndex;
+        (ctx.bindings as Record<string, unknown>)[effect.bind] = [{ trait: traits[rawIndex] }];
+        return resolveEffectPicks(state, effect.then, ctx, opts);
+      }
+      const human = humanDecisionPlayer(opts);
+      if (human === ctx.source.player) {
+        pushPendingEffectChoiceSide({
+          player: human,
+          source: { cardId: opts.source?.cardId ?? '', abilityId: opts.source?.abilityId ?? '', uid: ctx.source.uid ?? '' },
+          options: traits.map((label, index) => ({ index, label })),
+        });
+        setPendingChoiceResume(effect);
+        setPendingChoiceBindings({ ...(ctx.bindings as Record<string, unknown>) });
+        return { kind: 'parallel', steps: [] };
+      }
+      const trait = traits[0];
+      if (!trait) return { kind: 'parallel', steps: [] };
+      (ctx.bindings as Record<string, unknown>)[effect.bind] = [{ trait }];
+      return resolveEffectPicks(state, effect.then, ctx, opts);
+    }
+    case 'rps':
+      // RPS is resolved by its dedicated pending flow.  Keep both branches
+      // opaque during ordinary pick pre-walk.
+      return effect;
     case 'choice': {
       // BUG-108: ctx.dyn.choiceIndex 指定時は選択 option へ unwrap する (dyn-arg / pick と同様に
       // walk 中に bake)。resolver.run の choice も choiceIndex を読むが、effect は event.queue →
@@ -827,12 +870,18 @@ export function resolveEffectPicks(
         delete (ctx.dyn as { optionalRun?: unknown }).optionalRun;
         return dynRun
           ? resolveEffectPicks(state, effect.effect, ctx, opts)
-          : { kind: 'parallel', steps: [] };
+          : effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel', steps: [] };
       }
-      if (opts.humanChooser === true) {
+      const ownerPlayer = ctx.source.player;
+      const decisionPlayer = effect.chooser === 'opp-of-owner'
+        ? (ownerPlayer === 'self' ? 'opp' : 'self')
+        : ownerPlayer;
+      const humanPlayer = humanDecisionPlayer(opts);
+      if (humanPlayer === decisionPlayer) {
         const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';
         pushPendingEffectOptionalSide({
-          player: opts.byPlayer ?? 'self',
+          player: decisionPlayer,
+          ownerPlayer,
           source: {
             cardId: opts.source?.cardId ?? '',
             abilityId: opts.source?.abilityId ?? '',
@@ -850,8 +899,10 @@ export function resolveEffectPicks(
         setPendingOptionalCostPaid((ctx as { costPaid?: Record<string, unknown> }).costPaid);
         return { kind: 'parallel', steps: [] };
       }
-      // AI / non-human: skip (resolver の optionalRun 未設定 default と同じ。surface しない)
-      return { kind: 'parallel', steps: [] };
+      if (effect.aiRun === 'if-hand' && state.players[decisionPlayer].hand.length > 0) {
+        return resolveEffectPicks(state, effect.effect, ctx, opts);
+      }
+      return effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel', steps: [] };
     }
     case 'conditional': {
       // BUG-161 fix (binding-aware, BUG-145 §2 の over-fire 根治): a choice/optional/$pick in the NON-taken branch must not
@@ -915,6 +966,8 @@ export function resolveEffectPicks(
     case 'repeatOptional':
       // The body can depend on bindings created by earlier runtime steps (B09033 $revealed).
       // Defer its walk until the player accepts this round.
+      return effect;
+    case 'setCardToEvidence':
       return effect;
     case 'replace':
       return { kind: 'replace', trigger: effect.trigger, with: resolveEffectPicks(state, effect.with, ctx, opts) };

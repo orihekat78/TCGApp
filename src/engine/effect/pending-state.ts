@@ -56,6 +56,15 @@ declare global {
   // surface 時の ctx.bindings を保持しないと resume ctx で contact が失われ pick 候補0になる。
   // eslint-disable-next-line no-var
   var __pendingEffectOptionalBindings: Record<string, unknown> | null | undefined;
+  // Rock-paper-scissors is a distinct simultaneous-decision flow.  It must not
+  // share generic choice state because the hidden AI hand and tie retries are
+  // part of its resolution contract.
+  // eslint-disable-next-line no-var
+  var __pendingRpsSide: PendingRpsSide | null | undefined;
+  // eslint-disable-next-line no-var
+  var __pendingRpsResume: Effect | null | undefined;
+  // eslint-disable-next-line no-var
+  var __pendingRpsBindings: Record<string, unknown> | null | undefined;
   // Dedicated discard-or-negate response. It deliberately does not share optional/choice state:
   // accepting discards a hand occurrence and cancels a different effect; declining resumes it.
   // eslint-disable-next-line no-var
@@ -283,7 +292,7 @@ export type PendingEffectChoiceSide = {
   /** 元 ability の特定 + 再開 ctx 復元 + option1 の $self 解決 + event.queue source に使用 */
   source: { cardId: string; abilityId: string; uid: string };
   /** UI ラベル化用 (atom option のみ verb/args、それ以外は index のみ)。JSON シリアライズ可能 */
-  options: { index: number; verb?: string; args?: Record<string, unknown> }[];
+  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string }[];
 };
 
 export function pushPendingEffectChoiceSide(v: PendingEffectChoiceSide): void {
@@ -357,6 +366,8 @@ export function _clearPendingChoiceResume(): void {
 
 export type PendingEffectOptionalSide = {
   player: Player;
+  /** Effect owner. May differ from the player making this optional decision. */
+  ownerPlayer?: Player;
   /** 元 ability の特定 + 再開 ctx 復元 ($self 解決 / modal の文言表示) に使用 */
   source: { cardId: string; abilityId: string; uid: string };
   /**
@@ -366,6 +377,98 @@ export type PendingEffectOptionalSide = {
    */
   triggerPayload?: unknown;
 };
+
+export type RpsHand = 'rock' | 'paper' | 'scissors';
+/** Pre-removal set-card replacement.  The original removal stays suspended. */
+export type PendingSetCardReplacementSide = {
+  player: Player;
+  fromUid: string;
+  setCardInstanceId: string;
+  candidates: { uid: string; cardId: string }[];
+  source: { cardId: string; abilityId: string; uid: string };
+  resume?:
+    | { kind: 'scene-remove'; cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player }
+    | { kind: 'scene-to-deck'; pos: 'bottom' | 'top' }
+    | { kind: 'scene-to-hand' }
+    | { kind: 'scene-to-evidence'; faceUp: boolean; sourceCardId?: string }
+    | { kind: 'scene-to-stack'; hostUid: string };
+};
+export function pushPendingSetCardReplacementSide(v: PendingSetCardReplacementSide): void {
+  (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide = v;
+}
+export function _drainPendingSetCardReplacementSide(): PendingSetCardReplacementSide | null {
+  const g = globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null };
+  const v = g.__pendingSetCardReplacementSide ?? null; g.__pendingSetCardReplacementSide = null; return v;
+}
+export type PendingSetCardChoiceSide = {
+  player: Player;
+  hostUid: string;
+  entries: { instanceId: string; ordinal: number }[];
+  source: { cardId: string; abilityId: string; uid: string };
+};
+
+export function pushPendingSetCardChoiceSide(v: PendingSetCardChoiceSide): void {
+  (globalThis as { __pendingSetCardChoiceSide?: PendingSetCardChoiceSide | null }).__pendingSetCardChoiceSide = v;
+}
+export function _drainPendingSetCardChoiceSide(): PendingSetCardChoiceSide | null {
+  const g = globalThis as { __pendingSetCardChoiceSide?: PendingSetCardChoiceSide | null };
+  const v = g.__pendingSetCardChoiceSide ?? null;
+  g.__pendingSetCardChoiceSide = null;
+  return v;
+}
+export function setPendingSetCardChoiceResume(effect: Effect, bindings: Record<string, unknown>): void {
+  (globalThis as { __pendingSetCardChoiceResume?: Effect | null }).__pendingSetCardChoiceResume = effect;
+  (globalThis as { __pendingSetCardChoiceBindings?: Record<string, unknown> | null }).__pendingSetCardChoiceBindings = bindings;
+}
+export function setPendingSetCardChoiceRemainder(remainder: Effect[], kind: 'sequence' | 'chain'): void {
+  (globalThis as { __pendingSetCardChoiceRemainder?: Effect[] | null }).__pendingSetCardChoiceRemainder = remainder;
+  (globalThis as { __pendingSetCardChoiceRemainderKind?: 'sequence' | 'chain' | null }).__pendingSetCardChoiceRemainderKind = kind;
+}
+export function _takePendingSetCardChoiceResume(): { effect: Effect; bindings: Record<string, unknown>; remainder: Effect[]; remainderKind: 'sequence' | 'chain' } | null {
+  const g = globalThis as { __pendingSetCardChoiceResume?: Effect | null; __pendingSetCardChoiceBindings?: Record<string, unknown> | null; __pendingSetCardChoiceRemainder?: Effect[] | null; __pendingSetCardChoiceRemainderKind?: 'sequence' | 'chain' | null };
+  const effect = g.__pendingSetCardChoiceResume ?? null;
+  const bindings = g.__pendingSetCardChoiceBindings ?? null;
+  const remainder = g.__pendingSetCardChoiceRemainder ?? [];
+  const remainderKind = g.__pendingSetCardChoiceRemainderKind ?? 'chain';
+  g.__pendingSetCardChoiceResume = null;
+  g.__pendingSetCardChoiceBindings = null;
+  g.__pendingSetCardChoiceRemainder = null;
+  g.__pendingSetCardChoiceRemainderKind = null;
+  return effect && bindings ? { effect, bindings, remainder, remainderKind } : null;
+}
+export type PendingRpsSide = {
+  player: Player;
+  ownerPlayer: Player;
+  aiHand: RpsHand;
+  source: { cardId: string; abilityId: string; uid: string };
+};
+
+export function pushPendingRpsSide(v: PendingRpsSide): void {
+  (globalThis as { __pendingRpsSide?: PendingRpsSide | null }).__pendingRpsSide = v;
+}
+export function _drainPendingRpsSide(): PendingRpsSide | null {
+  const g = globalThis as { __pendingRpsSide?: PendingRpsSide | null };
+  const v = g.__pendingRpsSide ?? null;
+  g.__pendingRpsSide = null;
+  return v;
+}
+export function _clearPendingRpsSide(): void {
+  (globalThis as { __pendingRpsSide?: PendingRpsSide | null }).__pendingRpsSide = null;
+  (globalThis as { __pendingRpsResume?: Effect | null }).__pendingRpsResume = null;
+  (globalThis as { __pendingRpsBindings?: Record<string, unknown> | null }).__pendingRpsBindings = null;
+}
+export function setPendingRpsResume(effect: Effect, bindings: Record<string, unknown>): void {
+  (globalThis as { __pendingRpsResume?: Effect | null }).__pendingRpsResume = effect;
+  (globalThis as { __pendingRpsBindings?: Record<string, unknown> | null }).__pendingRpsBindings = bindings;
+}
+export function _takePendingRpsResume(): { effect: Effect; bindings: Record<string, unknown> } | null {
+  const g = globalThis as { __pendingRpsResume?: Effect | null; __pendingRpsBindings?: Record<string, unknown> | null };
+  const effect = g.__pendingRpsResume ?? null;
+  const bindings = g.__pendingRpsBindings ?? null;
+  g.__pendingRpsResume = null;
+  g.__pendingRpsBindings = null;
+  return effect && bindings ? { effect, bindings } : null;
+}
 
 export function pushPendingEffectOptionalSide(v: PendingEffectOptionalSide): void {
   (globalThis as { __pendingEffectOptionalSide?: PendingEffectOptionalSide | null }).__pendingEffectOptionalSide = v;

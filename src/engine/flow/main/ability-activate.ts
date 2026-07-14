@@ -16,6 +16,8 @@ import { cost as engineCost } from '../../cost/index.js';
 import { def as readDef } from '../../read/def.js';
 import { findCardOnBoard, useDeclaredAbility, findDeclaredAbility } from './declared-ability.js';
 import { usePartnerAbility } from './partner-ability.js';
+import { alternativeCostProviders } from '../../cost/alternative.js';
+import { mutate } from '../../mutate/index.js';
 
 type Player = 'self' | 'opp';
 
@@ -34,6 +36,7 @@ export interface AbilityCostParams {
   removeAreaToDeckBottom?: { ids: string[] }; // cluster4 (2026-06-14)
   removeSetCard?: { hostUids: string[] }; // engine additive wave (2026-06-24): 裏向きセットリムーブの host 選択 (B08033 a2)
   removeStackedCards?: { instanceIds: string[] };
+  alternativeCostProviderUid?: string;
   costChoice?: number;
   choiceIndex?: number;
   // mega-wave W6 step1 (2026-07-04): declareName verb への宣言カード名供給 (UI= DeclareCardNameModal /
@@ -97,7 +100,17 @@ export function activateDeclaredAbility(
   // W6 step11 (row999 item4): rider declared (on-set-host) の cost も解決できるよう共有 helper 経由
   const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
   if (ability?.cost) {
-    engineCost.pay(state, ability.cost, ctx);
+    const alternatives = alternativeCostProviders(state, ctx, ability);
+    const selected = costParams?.alternativeCostProviderUid;
+    const providerUid = selected !== undefined
+      ? (alternatives.includes(selected) ? selected : undefined)
+      : (!engineCost.canPay(state, ability.cost, ctx) ? alternatives[0] : undefined);
+    if (providerUid) {
+      mutate.scene.removeToRemove(state, providerUid, 'cost');
+      ctx.costPaid = { alternativeCost: { providerUid } };
+    } else {
+      engineCost.pay(state, ability.cost, ctx);
+    }
   }
   useDeclaredAbility(state, uid, abilId, ctx);
 }
