@@ -510,6 +510,42 @@ describe('engine.cond.eval', () => {
     });
   });
 
+  describe('sceneFaceDownSetCardCountAtLeast (PR200/PR206)', () => {
+    it('counts every physical face-down set card across the owner scene only', () => {
+      let s = createEmptyGameState();
+      s = withScene(s, 'self', [
+        makeChar({ uid: 'self-a', cardId: 'SELF_A', setCards: [
+          { cardId: 'DUP', faceUp: false },
+          { cardId: 'DUP', faceUp: false },
+          { cardId: 'UP', faceUp: true },
+        ] }),
+        makeChar({ uid: 'self-b', cardId: 'SELF_B', setCards: [
+          { cardId: 'DOWN', faceUp: false },
+        ] }),
+      ]);
+      s = withScene(s, 'opp', [
+        makeChar({ uid: 'opp-a', cardId: 'OPP_A', setCards: [
+          { cardId: 'OPP_DOWN', faceUp: false },
+          { cardId: 'OPP_DOWN', faceUp: false },
+        ] }),
+      ]);
+
+      const selfCtx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'self-a' } });
+      const oppCtx = makeCtx({ source: { player: 'opp', area: 'scene', uid: 'opp-a' } });
+      const atLeast = (n: number, ctx = selfCtx) => evalCond(
+        s,
+        { kind: 'sceneFaceDownSetCardCountAtLeast', player: 'self', n } as never,
+        ctx,
+      );
+
+      expect(atLeast(0)).toBe(true);
+      expect(atLeast(3)).toBe(true);
+      expect(atLeast(4)).toBe(false);
+      expect(atLeast(2, oppCtx), 'self resolves to the opponent-owned source side').toBe(true);
+      expect(evalCond(s, { kind: 'sceneFaceDownSetCardCountAtLeast', player: 'opp', n: 3 } as never, oppCtx)).toBe(true);
+    });
+  });
+
   describe('boundCharStateIs (B09024 remove snapshot)', () => {
     it('sceneRemove 前にbindしたsleep stateだけをtrueとする', () => {
       const s = createEmptyGameState();

@@ -112,6 +112,13 @@ export type Condition =
   // B06046: count known (face-up) set cards of a filtered kind on the ability host.
   // Hidden set cards carry no referable information under rules/16.
   | { kind: 'hostSetCardCountAtLeast'; filter: TargetFilter; n: number }
+  // PR200/PR206: count physical face-down set cards across one controller's scene.
+  // Unlike hostSetCardCountAtLeast, hidden cards are intentionally not inspected.
+  | { kind: 'sceneFaceDownSetCardCountAtLeast'; player: 'self' | 'opp'; n: number }
+  // B09036: source-inclusive count of own-scene characters that share any
+  // effective card-name component with the ability host (turn nameOverride
+  // replaces printed names under rules/19).
+  | { kind: 'sameNameCountAtLeast'; n: number }
   // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態 (active/sleep/stun) 判定。
   // 「このキャラをスリープさせ(…)てもよい。そうした場合…」を already-sleep で gate するための条件
   // (公式qAndA PR138/PR144/B04049: 既にスリープなら「スリープさせることができないので行えません」)。

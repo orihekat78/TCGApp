@@ -10,7 +10,7 @@
 //   - `drainAiEffectPicks` は __pendingEffectPickQueue を heuristic で順次解決する (CPU 経路には
 //     human modal が無いため、PA 短縮形 atom の pick が drain されず no-op になる BUG-109 を解消)。
 
-import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
+import type { GameState, Effect, EffectCtx, Candidate, Condition } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
 import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
@@ -74,6 +74,56 @@ export function resolveCardIdFromPickUid(
  * その新 pick に引き継いで停止する (外側 remainder は新 pick の解決時に実行される)。
  * 単一 frame (outer 無し) は従来の「remainder を 1 回 runEffect + runAllUntilEmpty」と byte 互換。
  */
+function conditionReadsBinding(condition: Condition): boolean {
+  switch (condition.kind) {
+    case 'bound':
+    case 'boundMatchesFilter':
+    case 'boundAnyMatchesFilter':
+    case 'boundDistinctColorCount':
+    case 'boundNameMatchesDeclared':
+    case 'boundIsMr':
+    case 'boundCharStateIs':
+      return true;
+    case 'not':
+      return conditionReadsBinding(condition.c);
+    case 'and':
+    case 'or':
+      return condition.cs.some(conditionReadsBinding);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Pre-walk leaves a conditional raw while a preceding pick has not produced
+ * its binding. Only that shape needs a continuation-boundary re-walk; doing
+ * it for every Pattern-B remainder mutates its original target query.
+ */
+function hasBindingDependentConditional(effect: Effect): boolean {
+  switch (effect.kind) {
+    case 'conditional':
+      return conditionReadsBinding(effect.if)
+        || hasBindingDependentConditional(effect.then)
+        || (effect.else !== undefined && hasBindingDependentConditional(effect.else));
+    case 'sequence':
+    case 'parallel':
+    case 'chain':
+      return effect.steps.some(hasBindingDependentConditional);
+    case 'choice':
+      return effect.options.some(hasBindingDependentConditional);
+    case 'optional':
+      return hasBindingDependentConditional(effect.effect);
+    case 'forEach':
+      return hasBindingDependentConditional(effect.do);
+    case 'repeatOptional':
+      return hasBindingDependentConditional(effect.body);
+    case 'replace':
+      return hasBindingDependentConditional(effect.with);
+    default:
+      return false;
+  }
+}
+
 function runContinuationChain(state: GameState, head: ContinuationFrame | undefined): void {
   const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };
   let f: ContinuationFrame | undefined = head;
@@ -82,7 +132,26 @@ function runContinuationChain(state: GameState, head: ContinuationFrame | undefi
     const remainderEffect: Effect = f.remainder.length === 1
       ? f.remainder[0]!
       : { kind: f.kind, steps: f.remainder };
-    runEffect(state, remainderEffect as never, f.ctx);
+    // A preceding picked atom can create a binding which selects a later
+    // conditional branch. Re-walk only this deferred shape: a blanket
+    // re-walk changes already-resolved Pattern-B target queries (B06025).
+    let resolvedRemainder = remainderEffect;
+    if (hasBindingDependentConditional(remainderEffect)) {
+      const byPlayer = f.ctx.source.player;
+      const runtimeDyn = f.ctx.dyn as Record<string, unknown> | undefined;
+      const knownOwner = runtimeDyn?.['runtimePickOwnerKnown'] === true;
+      const rememberedHuman = runtimeDyn?.['runtimeHumanPlayer'];
+      const humanSide: Player | null = rememberedHuman === 'self' || rememberedHuman === 'opp'
+        ? rememberedHuman
+        : null;
+      resolvedRemainder = resolveEffectPicks(state, remainderEffect, f.ctx, {
+        byPlayer,
+        humanChooser: knownOwner ? humanSide === byPlayer : true,
+        ...(knownOwner ? { humanPlayer: humanSide } : {}),
+        source: { cardId: f.ctx.source.cardId ?? '', abilityId: f.ctx.source.abilityId ?? '' },
+      });
+    }
+    runEffect(state, resolvedRemainder as never, f.ctx);
     const qAfter = g.__pendingEffectPickQueue?.length ?? 0;
     if (qAfter > qBefore && f.outer) {
       // remainder 自身が再 pause → 残り outer frames を新 pick (queue[qBefore]) の continuation 末尾に append。

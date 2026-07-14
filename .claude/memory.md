@@ -105,3 +105,11 @@
 - Added B01082 and B06025; completed B08059/P's existing registered definitions. Registry 2040/2074, remaining 34; local commit pending and no second CI until 2074/2074.
 - B01082: bearer-only `cannotGuard` plus enter sleep/no-auto-active lock. B06025: exact removed-evidence occurrence reentry and other-YAIBA turn choice. B08059: self-inclusive effective-level fixed point.
 - Sol CLEAN after full TSV correction (including B06025 green), duplicate registry removal, and legacy missing-`turnEffects` compatibility repair. Full 5621 tests, smoke 1000, tsc, docs, and diff check green.
+
+## 2026-07-14 deferred primitive checkpoint
+
+- Added D10026, PR200, PR206, B09036/P, and B09067/P. Registry: 2047/2074; 27 remain.
+- Added scene face-down set-card count, effective same-name count, effect scene-to-deck-bottom, hand-reveal cardName binding, and safe binding-dependent conditional continuation.
+- Regression work fixed B06025 exact-occurrence re-walk corruption and explicit human/AI/unknown runtime picker ownership.
+- Final gates: Vitest 690 passed/1 skipped, 5645 passed/7 skipped; tsc, docs structure, diff, registry (2047 unique/0 validation failures), and smoke1000 (0 timeout/exception) green.
+- User decision: next session is engine-first portfolio planning for the remaining 27; bulk card implementation follows primitive integration.

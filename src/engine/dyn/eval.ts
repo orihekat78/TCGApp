@@ -423,6 +423,18 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     throw new Error(`dyn.eval: $self.${prop} requires ctx.source.uid (none provided)`);
   }
   switch (prop) {
+    // B09036: count this source and every character on its controller's scene
+    // that has at least one effective card-name component in common.  names()
+    // deliberately applies the turn nameOverride first (rules/19); therefore a
+    // renamed source still counts itself and no longer counts its printed name.
+    case 'sameNameCount': {
+      const sourceNames = charRead.names(state, uid);
+      if (sourceNames.length === 0) return 0;
+      const wanted = new Set(sourceNames.flatMap(cardNameComponents));
+      return state.players[ctx.source.player].scene.filter(char =>
+        charRead.names(state, char.uid).some(name => cardNameComponents(name).some(part => wanted.has(part))),
+      ).length;
+    }
     case 'ap':
       // Current effective AP via existing read API (includes overrides).
       // TODO Phase 5: turnEffect-based modifiers may need further integration here.

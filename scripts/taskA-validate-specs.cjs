@@ -82,7 +82,7 @@ const CONDS = new Set([
   'costRemovedMatches', // engine additive wave (2026-06-29d)
   'costRevealedMatches', // attribution mini-wave (2026-07-10)
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
-  'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'hostSetCardCountAtLeast', 'contactOpponentApHigher',
+  'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'hostSetCardCountAtLeast', 'sceneFaceDownSetCardCountAtLeast', 'sameNameCountAtLeast', 'contactOpponentApHigher',
   'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundDistinctColorCount', 'triggerCharMatches',
   'contactCharMatches', // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラ filter (B02006/B02080/PR278)
   'boundNameMatchesDeclared', 'boundIsMr', // engine mega-wave W6 step1 (2026-07-04): 宣言名一致 / MR 判定 (B09108/B06085)

@@ -29,6 +29,7 @@ import type { Candidate } from '../types/candidate.js';
 import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
+import { run as runEffect } from './resolver.js';
 
 type Player = 'self' | 'opp';
 
@@ -55,6 +56,34 @@ function conditionIfIsStable(cond: Condition): boolean {
       // Defensive: any nested $-token (e.g. a filter referencing $matched.cardId) marks it unstable.
       return !JSON.stringify(cond).includes('$');
     }
+  }
+}
+
+/**
+ * A binding-dependent condition is unsafe to walk only until its required
+ * binding exists.  Continuations re-enter resolveEffectPicks after their
+ * preceding pick has populated ctx.bindings, so recognise the explicit
+ * binding readers here instead of permanently treating the branch as opaque.
+ */
+function conditionHasMissingBinding(cond: Condition, bindings: EffectCtx['bindings']): boolean {
+  if (!cond || typeof cond !== 'object') return false;
+  switch (cond.kind) {
+    case 'bound':
+      return !Array.isArray(bindings[cond.key]) || bindings[cond.key].length === 0;
+    case 'boundMatchesFilter':
+    case 'boundAnyMatchesFilter':
+    case 'boundDistinctColorCount':
+    case 'boundNameMatchesDeclared':
+    case 'boundIsMr':
+    case 'boundCharStateIs':
+      return !Array.isArray(bindings[cond.bindKey]) || bindings[cond.bindKey].length === 0;
+    case 'not':
+      return conditionHasMissingBinding(cond.c, bindings);
+    case 'and':
+    case 'or':
+      return cond.cs.some(c => conditionHasMissingBinding(c, bindings));
+    default:
+      return false;
   }
 }
 
@@ -198,6 +227,12 @@ export interface ResolveEffectPicksOpts {
    * side-channel が set されていれば event.queue をスキップ。
    */
   humanChooser?: boolean;
+  /**
+   * Actual human side, independent from the effect source. A target can name
+   * the opponent of its owner, so source ownership alone cannot decide
+   * whether this particular pending decision belongs to the human.
+   */
+  humanPlayer?: Player | null;
   /** Pending side-channel に保存する識別子 (UI 側で表示や resolve 時に使用) */
   source?: { cardId: string; abilityId: string };
   /**
@@ -212,6 +247,32 @@ export interface ResolveEffectPicksOpts {
    * 初期 walk での side-channel set が必須なので、この flag に関わらず set する。
    */
   _fromAtomHandler?: boolean;
+}
+
+function humanDecisionPlayer(opts: ResolveEffectPicksOpts): Player | null {
+  if (opts.humanPlayer !== undefined) return opts.humanPlayer;
+  const globalHuman = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide;
+  if (globalHuman === 'self' || globalHuman === 'opp') return globalHuman;
+  return opts.humanChooser === true ? (opts.byPlayer ?? 'self') : null;
+}
+
+/**
+ * A runtime atom handler receives only EffectCtx, not the initial walk opts.
+ * Preserve the real UI owner on that shared resolution context so a later
+ * re-pick can distinguish a UI continuation from an AI continuation.
+ */
+function runtimeHumanDecisionPlayer(ctx: EffectCtx, opts: ResolveEffectPicksOpts): Player | null {
+  const dyn = ctx.dyn as Record<string, unknown> | undefined;
+  // `null` is a real, known non-human owner.  Do not collapse it with a
+  // missing marker: old direct runtime handlers predate ownership tracking
+  // and must retain their queued (human) behavior.
+  if (dyn?.['runtimePickOwnerKnown'] === true) {
+    const remembered = dyn['runtimeHumanPlayer'];
+    return remembered === 'self' || remembered === 'opp' ? remembered : null;
+  }
+  const direct = humanDecisionPlayer(opts);
+  if (direct !== null) return direct;
+  return opts.byPlayer ?? ctx.source.player;
 }
 
 import {
@@ -300,7 +361,24 @@ export function tryRePickFromAtom(
   // atom も全て push する (UI が先頭から消化、effectPickResolve のたびに次が drain される)。
   // BUG-077: _fromAtomHandler=true で substituteAtomPick を呼ぶことで、
   // Pattern B でも side-channel set を許可 (初期 walk からの呼出と区別)。
-  substituteAtomPick(state, atom, ctx, { ...opts, humanChooser: true, _fromAtomHandler: true });
+  // Runtime re-picks are not implicitly human decisions.  Atom handlers run
+  // for both the UI owner and AI/spectator resolution; forcing humanChooser
+  // here used to enqueue a modal for an AI continuation and stop its tail.
+  const human = runtimeHumanDecisionPlayer(ctx, opts);
+  const queueBefore = (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0;
+  const resolved = substituteAtomPick(state, atom, ctx, {
+    ...opts,
+    humanChooser: human !== null && human === opts.byPlayer,
+    humanPlayer: human,
+    _fromAtomHandler: true,
+  });
+  // A runtime atom-handler has already consumed the original atom.  For an
+  // AI/spectator chooser, execute its substituted atom synchronously so the
+  // enclosing sequence can continue.  `resolved === atom` is the explicit
+  // no-candidate/unresolved sentinel; running it again would recurse into the
+  // same handler and double-apply (or loop) instead.
+  const queued = ((globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0) > queueBefore;
+  if (!queued && resolved !== atom) runEffect(state, resolved, ctx);
 }
 
 /**
@@ -426,7 +504,18 @@ function substituteAtomPick(
   // BUG-076: evidence kind の Candidate は cardId field を持たないため (kind:'evidence',
   // player, index のみ)、従来 filter から除外されていた。evidenceToHand などの atom で
   // evidence area を pick する場合に対応するため、evidence/file kind も candidate に含める。
-  if (opts.humanChooser) {
+  // Runtime atom handlers stop resolution by pushing a pending queue entry.
+  // Unlike the initial pre-walk, that pause signal is required even when the
+  // atom's chooser is not the configured human side.
+  const runtimeDyn = ctx.dyn as Record<string, unknown> | undefined;
+  // Runtime owner tri-state: known human and marker-absent legacy handlers
+  // pause for a pending choice; only explicit known-nonhuman executes inline.
+  const runtimeQueues = opts._fromAtomHandler === true
+    && (runtimeDyn?.['runtimePickOwnerKnown'] !== true
+      || runtimeDyn?.['runtimeHumanPlayer'] === 'self'
+      || runtimeDyn?.['runtimeHumanPlayer'] === 'opp');
+  const hasExplicitHumanIdentity = opts.humanChooser === true || opts.humanPlayer !== undefined;
+  if (runtimeQueues || (hasExplicitHumanIdentity && humanDecisionPlayer(opts) === byPlayer)) {
     // BUG-078 fix: queue 化したので「既に set 済み」guard は不要。複数の awaiting を
     // 全て push し、UI が FIFO で消化する (BUG-075 の上書き問題は queue 化で解消)。
     // BUG-077: Pattern B (uid 不在) は runtime atom-handler の awaiting-pick path で
@@ -630,6 +719,14 @@ export function resolveEffectPicks(
   ctx: EffectCtx,
   opts: ResolveEffectPicksOpts = {},
 ): Effect {
+  // Continuation atom handlers only receive EffectCtx.  Persist a tri-state
+  // owner: known human side, known non-human (`null`), or marker absent for
+  // legacy direct handlers (which intentionally queue).
+  if (opts.humanChooser === true || opts.humanPlayer !== undefined) {
+    const dyn = (ctx.dyn ??= {}) as Record<string, unknown>;
+    dyn['runtimePickOwnerKnown'] = true;
+    dyn['runtimeHumanPlayer'] = humanDecisionPlayer(opts);
+  }
   if (!effect || typeof effect !== 'object') return effect;
   switch (effect.kind) {
     case 'atom':
@@ -778,11 +875,37 @@ export function resolveEffectPicks(
             : undefined,
         };
       }
+      // Do not inspect a human branch before its bind-producing predecessor
+      // runs: it could surface an orphaned UI decision.  AI/spectator walks
+      // have no modal to protect, so resolve both branches now; runtime still
+      // executes only the branch selected after the binding is produced.
+      if (conditionHasMissingBinding(effect.if, ctx.bindings)) {
+        const runtimeDyn = ctx.dyn as Record<string, unknown> | undefined;
+        const knownNonHuman = (runtimeDyn?.['runtimePickOwnerKnown'] === true
+          && runtimeDyn?.['runtimeHumanPlayer'] !== 'self'
+          && runtimeDyn?.['runtimeHumanPlayer'] !== 'opp')
+          // Initial AI pre-walk carries its deterministic picker callback,
+          // while legacy runtime atom handlers do not.  Treat only this
+          // initial path as non-human; the latter must retain its queue.
+          || (opts.humanChooser === false && opts.chooseAtomTarget !== undefined);
+        // No marker is legacy runtime territory.  Preserve its queued human
+        // boundary instead of eagerly substituting both branches.
+        if (!knownNonHuman) return effect;
+        return {
+          kind: 'conditional',
+          if: effect.if,
+          then: resolveEffectPicks(state, effect.then, ctx, opts),
+          else: effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : undefined,
+        };
+      }
+      const taken = evalCond(state, effect.if, ctx);
       return {
         kind: 'conditional',
         if: effect.if,
-        then: resolveEffectPicks(state, effect.then, ctx, opts),
-        else: effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : undefined,
+        then: taken ? resolveEffectPicks(state, effect.then, ctx, opts) : effect.then,
+        else: effect.else
+          ? (taken ? effect.else : resolveEffectPicks(state, effect.else, ctx, opts))
+          : undefined,
       };
     }
     case 'forEach':

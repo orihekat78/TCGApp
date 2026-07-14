@@ -252,7 +252,13 @@ export function atomHandReveal(s: GameState, a: Record<string, unknown>, ctx: Ef
       // 公開のみ = zone 変化なし (mutate を呼ばない、カードは手札に残る)。
       // discard の bind と同型: 公開した cardId を ctx.bindings に格納 ($revealed 色読み companion の足場)。
       if (typeof a.bind === 'string' && target.length > 0) {
-        (ctx.bindings as Record<string, unknown>)[a.bind] = target.map((cardId) => ({ cardId }));
+        // A revealed card remains in hand, but its printed name is public to
+        // the resolving effect. Keep it beside cardId so a later chain step
+        // can consume `$<bind>.cardName` without a card-specific atom.
+        (ctx.bindings as Record<string, unknown>)[a.bind] = target.map((cardId) => ({
+          cardId,
+          cardName: readDef.card(cardId)?.names[0],
+        }));
       }
       // 0枚公開 (候補無し or 辞退) → chainStepNoApply で「そうした場合」を gate (mill gate と同型)。
       if (target.length === 0) {

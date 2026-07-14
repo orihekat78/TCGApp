@@ -100,9 +100,9 @@ describe('engine.effect.resolveEffectPicks', () => {
     expect(resolved.else.args.uid, 'taken(else) は substitute される').toBe('self-1');
   });
 
-  it('conditional (binding-dependent if): stale 回避のため BOTH branch を walk (deck-look family 保護)', () => {
-    // if が bound を読む場合、初期 walk 時点で binding 未設定 → evalCond が stale。両 branch walk して
-    // runtime resolver の再評価に委ねる (B06048/B01048/B08020 等 「公開→$matched→…の場合」を壊さない)。
+  it('conditional (binding-dependent if): binding 未設定は raw、bind 後は selected branch のみ walk', () => {
+    // 前段の bind が未解決なら branch を pre-walk せず raw のまま返す。continuation が bind 後に
+    // 再入した時点でだけ condition を評価し、selected branch のみを walk する。
     const s = stateWithSelfChar('self-1');
     const effect: Effect = {
       kind: 'conditional',
@@ -110,9 +110,14 @@ describe('engine.effect.resolveEffectPicks', () => {
       then: PICK_ATOM,
       else: PICK_ATOM,
     };
-    const resolved = resolveEffectPicks(s, effect, ctxSelf()) as { kind: string; then: { args: { uid: string } }; else: { args: { uid: string } } };
-    expect(resolved.then.args.uid, 'binding if → then も walk').toBe('self-1');
-    expect(resolved.else.args.uid, 'binding if → else も walk').toBe('self-1');
+    const ctx = ctxSelf();
+    const unresolved = resolveEffectPicks(s, effect, ctx) as { kind: string; then: { args: { uid: string } }; else: { args: { uid: string } } };
+    expect(unresolved).toBe(effect);
+
+    ctx.bindings.$matched = [{ cardId: 'MATCHED' }];
+    const resolved = resolveEffectPicks(s, effect, ctx) as { kind: string; then: { args: { uid: string } }; else: { args: { uid: string } } };
+    expect(resolved.then.args.uid, 'bind 後 selected then のみ substitute').toBe('self-1');
+    expect(resolved.else.args.uid, 'non-selected else は raw のまま').toBe('$pick');
   });
 
   // 2026-06-06 タスクC: optional 決定の配線。旧「inner を再帰 passthrough」から

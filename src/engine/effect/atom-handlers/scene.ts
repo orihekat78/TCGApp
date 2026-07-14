@@ -591,7 +591,20 @@ export function atomSceneSetState(s: GameState, a: Record<string, unknown>, ctx:
         return;
       }
       const ssUid = resolveBindRef(a.uid, ctx) as string;
-      if (typeof ssUid !== 'string' || ssUid.startsWith('$')) return;
+      // A binding-dependent conditional may defer its Pattern-A pick until the
+      // resolver reaches the selected branch.  Re-surface that pick here;
+      // otherwise uid:'$pick' would silently no-op after the branch is true.
+      if (typeof ssUid !== 'string' || ssUid.startsWith('$')) {
+        if (a.uid === '$pick' && a.target && typeof a.target === 'object') {
+          const ssPlayer = ctx.source.player;
+          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+            byPlayer: ssPlayer,
+            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+          });
+          mutate.log.append(s, { ts: Date.now(), player: ssPlayer, turn: s.turn.number, action: 'effect:sceneSetState:awaiting-pick' });
+        }
+        return;
+      }
       const ssState = a.state as 'active' | 'sleep' | 'stun';
       // engine mega-wave W4 (2026-07-03, r1 P01): 保護 rider gate —「相手の能力や効果によって
       // スリープされず、スタンされない」(B05041)。相手発の sleep/stun のみ block ('active' 化は

@@ -49,7 +49,7 @@ describe('handReveal §1-2 — atom semantics (zone 不変 / bind / gate)', () =
     const ctx = ctxBare();
     runEffect(s, { kind: 'atom', verb: 'handReveal' as never, args: { player: 'self', target: ['BLUE1'], bind: '$revealed' } }, ctx);
     expect(s.players.self.hand).toEqual(['BLUE1', 'RED1']); // zone 変化なし
-    expect((ctx.bindings as Record<string, unknown>)['$revealed']).toEqual([{ cardId: 'BLUE1' }]);
+    expect((ctx.bindings as Record<string, unknown>)['$revealed']).toEqual([{ cardId: 'BLUE1', cardName: 'BLUE1' }]);
     expect(ctx.dyn?.chainStepNoApply).toBeFalsy();
   });
 
@@ -170,7 +170,10 @@ describe('handReveal §8 — max>1 multi-reveal', () => {
     expect(s.players.self.hand).toContain('BLUE1');
     expect(s.players.self.hand).toContain('BLUE2');
     expect(s.players.self.hand).toContain('DK1'); // 公開2枚で chain 継続 → draw
-    expect((ctx.bindings as Record<string, unknown>)['$revealed']).toEqual([{ cardId: 'BLUE1' }, { cardId: 'BLUE2' }]);
+    expect((ctx.bindings as Record<string, unknown>)['$revealed']).toEqual([
+      { cardId: 'BLUE1', cardName: 'BLUE1' },
+      { cardId: 'BLUE2', cardName: 'BLUE2' },
+    ]);
   });
 });
 

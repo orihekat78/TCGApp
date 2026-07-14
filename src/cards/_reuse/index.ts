@@ -50,6 +50,7 @@ import { D09023 } from '../ct-d09/D09023.js';
 import { D09026 } from '../ct-d09/D09026.js';
 import { D10012 } from '../ct-d10/D10012.js';
 import { D10025 } from '../ct-d10/D10025.js';
+import { D10026 } from '../ct-d10/D10026.js';
 import { B01008 } from '../ct-p01/B01008.js';
 import { B01006 } from '../ct-p01/B01006.js';
 import { B01006P } from '../ct-p01/B01006P.js';
@@ -263,6 +264,8 @@ import { B08017P } from '../ct-p08/B08017P.js';
 import { B09025 } from '../ct-p09/B09025.js';
 import { B09025P } from '../ct-p09/B09025P.js';
 import { B09029 } from '../ct-p09/B09029.js';
+import { B09036 } from '../ct-p09/B09036.js';
+import { B09036P } from '../ct-p09/B09036P.js';
 import { B09037 } from '../ct-p09/B09037.js';
 import { B09037P } from '../ct-p09/B09037P.js';
 import { B09042 } from '../ct-p09/B09042.js';
@@ -273,6 +276,8 @@ import { B09046P } from '../ct-p09/B09046P.js';
 import { B09049 } from '../ct-p09/B09049.js';
 import { B09051 } from '../ct-p09/B09051.js';
 import { B09064 } from '../ct-p09/B09064.js';
+import { B09067 } from '../ct-p09/B09067.js';
+import { B09067P } from '../ct-p09/B09067P.js';
 import { B09083 } from '../ct-p09/B09083.js';
 import { B09085 } from '../ct-p09/B09085.js';
 import { B09088 } from '../ct-p09/B09088.js';
@@ -1260,6 +1265,7 @@ import { B07039 } from '../ct-p07/B07039.js';
 import { B07046 } from '../ct-p07/B07046.js';
 import { PR132 } from '../pr-01/PR132.js';
 import { PR201 } from '../pr-01/PR201.js';
+import { PR200 } from '../pr-01/PR200.js';
 import { PR278 } from '../pr-01/PR278.js';
 import { PR133 } from '../pr-01/PR133.js';
 import { PR027 } from '../pr-01/PR027.js';
@@ -1267,6 +1273,7 @@ import { PR031 } from '../pr-01/PR031.js';
 import { PR213 } from '../pr-01/PR213.js';
 import { PR285 } from '../pr-01/PR285.js';
 import { PR207 } from '../pr-01/PR207.js';
+import { PR206 } from '../pr-01/PR206.js';
 import { B01047 } from '../ct-p01/B01047.js';
 import { B01081 } from '../ct-p01/B01081.js';
 import { B03003 } from '../ct-p03/B03003.js';
@@ -1592,7 +1599,7 @@ export const REUSE_CARDS: CardDef[] = [
   D04015, D05002, D05004, D05011, D05015, D06005, D06006, D06010,
   D06011, D06015, D06017, D06018, D06019, D06020, D06022, D06024,
   D07004, D07005, D07016, D07017, D07022, D09006, D09007, D09008,
-  D09009, D09022, D09023, D09026, D10012, D10025, B01008, B01027,
+  D09009, D09022, D09023, D09026, D10012, D10025, D10026, B01008, B01027,
   B01028, B01028P, B01029, B01032, B01040, B01040P, B01046, B01049,
   B01063, B01064, B01083, B01087, B01088, B01091, B01094, B01094P,
   B01099, B01099P, B01100, B01100P, B01101, B01101P, B01102, B01102P,
@@ -1618,7 +1625,7 @@ export const REUSE_CARDS: CardDef[] = [
   B08021, B08021P, B08022, B08030, B08030P, B08039, B08040, B08056,
   B08065, B08065P, B08080, B08080P, B09006, B09006P, B09014, B09018, B09024,
   B09025, B09025P, B09029, B09037, B09037P, B09042, B09044, B09044P,
-  B09046, B09046P, B09049, B09051, B09064, B09083, B09085, B09088,
+  B09046, B09046P, B09049, B09051, B09064, B09067, B09067P, B09083, B09085, B09088,
   B09093, B09093P, B09094, B09099, B09100, B09101, B09103, PR006,
   PR023, PR035, PR043, PR047, PR053, PR056, PR059, PR063,
   PR101, PR107, PR131, PR147, PR148, PR149, PR150, PR151,
@@ -1957,9 +1964,9 @@ export const REUSE_CARDS: CardDef[] = [
   // CARD PHASE hybrid-batch2 P spread
   B01084P, B03070P, B05031P, B05103P, B06018P, B06028P, B06043P, B06046P, B06065P, B06068P, B06082P, B06095P, B06098P, B07032P, B07036P, B09022P, B09089P,
   // Task A batch
-  B02006, B02080, B02076, B04038, B05072, B07039, B07046, PR132, PR201,
+  B02006, B02080, B02076, B04038, B05072, B07039, B07046, PR132, PR200, PR201,
   // Task A batch
-  PR278, PR133, PR027, PR031, PR213, PR285, PR207,
+  PR278, PR133, PR027, PR031, PR213, PR285, PR206, PR207,
   // CARD PHASE hybrid batch
   B01047, B01081, B03003, B03024, B05022, B05068, B06062, B06078, B06104, B08025, B08076, B01023, D10024,
   // CARD PHASE hybrid-batch4
@@ -2039,4 +2046,6 @@ export const REUSE_CARDS: CardDef[] = [
   B01006, B01006P, B03030, B03030P, B05008, B05008P, B05048, B08017, B08017P,
   // deferred T3 wave: bearer guard ban, exact evidence return, self-inclusive level
   B01082, B06025,
+  // T3 same-effective-name count / hand-reveal nameOverride
+  B09036, B09036P,
 ];

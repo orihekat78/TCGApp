@@ -8,7 +8,7 @@
 import type { GameState, Condition, EffectCtx, Candidate, SceneCharacter } from '@/engine/types';
 import { candidates, matchOneFilter, effectiveNameComponents, effectiveTraitNames } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
-import { lookupCardDef, allCardNameComponentsForDef } from '@/engine/target/card-def-registry.js';
+import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
 import { defHasKeyword } from '@/engine/read/keyword.js'; // wave#2 cluster2: boundMatchesFilter keyword 判定
 import { def as readDef } from '@/engine/read/def.js'; // mega-wave W6 step1: boundIsMr の MR 判定 (循環なし — read/def は types のみ import)
@@ -389,6 +389,25 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (!host) return false;
       const count = host.setCards.filter(entry => entry.faceUp === true
         && matchOneFilter(state, entry.cardId, cond.filter, null, null as never)).length;
+      return count >= cond.n;
+    }
+    case 'sceneFaceDownSetCardCountAtLeast': {
+      const player = resolvePlayer(cond.player, ctx);
+      const count = state.players[player].scene.reduce(
+        (total, char) => total + char.setCards.filter(entry => entry.faceUp !== true).length,
+        0,
+      );
+      return count >= cond.n;
+    }
+    case 'sameNameCountAtLeast': {
+      const uid = ctx.source.uid;
+      if (typeof uid !== 'string') return false;
+      const names = charRead.names(state, uid);
+      if (names.length === 0) return false;
+      const wanted = new Set(names.flatMap(cardNameComponents));
+      const count = state.players[ctx.source.player].scene.filter(char =>
+        effectiveNameComponents(state, lookupCardDef(char.cardId), char).some(name => wanted.has(name)),
+      ).length;
       return count >= cond.n;
     }
     // BUG-145 (self-state micro-cluster, 2026-06-15): ref が指すキャラの状態判定。
@@ -913,7 +932,7 @@ const CONDITION_KIND_MAP = {
   sceneLpSum: true, costRemovedMatches: true, // engine additive wave (2026-06-29d)
   costRevealedMatches: true, // attribution mini-wave (2026-07-10)
   enterCountAtMost: true, // engine additive (2026-06-29, B09089)
-  stackedCountAtLeast: true, hostSetCardCountAtLeast: true, charStateIs: true, charMatches: true, // charStateIs: BUG-145 (2026-06-15)
+  stackedCountAtLeast: true, hostSetCardCountAtLeast: true, sceneFaceDownSetCardCountAtLeast: true, sameNameCountAtLeast: true, charStateIs: true, charMatches: true, // charStateIs: BUG-145 (2026-06-15)
   contactOpponentApHigher: true, guardedBySelf: true,
   contactCharMatches: true, // engine defer-unlock mini-wave (2026-07-09, B02006/B02080/PR278)
   enterOrderEquals: true, boundCharStateIs: true, boundMatchesFilter: true, triggerCharMatches: true,
