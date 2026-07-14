@@ -18,6 +18,7 @@ const VERBS = new Set([
   'handToEvidence',
   'handReveal', // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
   'drawUpToHandSize', // engine additive wave-4 (2026-07-01) — 手札が N 枚になるまで引く (B08047)
+  'discardDownTo', // engine wave 2026-07-14 — 手札が N 枚になるまでリムーブ (B07076)
   'discardRandom', // engine additive (2026-06-28) — 手札ランダムリムーブ (B01077)
   'evidenceFlipDown', // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   'peekOwnEvidence', // engine additive A2 (2026-07-11) — 自証拠 top1 私的閲覧 zone不変 (B03040)
@@ -39,6 +40,7 @@ const VERBS = new Set([
   'removeAreaAllToDeckBottom', // cluster4 (2026-06-14)
   'setEventUseBan', // cluster6 (2026-06-14) — turn-scoped event-use ban (B09034)
   'setNextHintBan', // wave use-restrict (2026-06-30) — turn-scoped next-hint ban (B06104/B09019/B09105)
+  'setUseEnterBanCardName', // wave 2026-07-14 — named character use/enter ban (B06103)
   'setCutinBan', // engine additive wave-10 (2026-07-02) — turn-scoped cutin ban (B07002)
   'setActionCutinBanFilter', // engine A3 wave (2026-07-11) — filtered action-scoped cutin ban (B05007)
   'setDisguiseBan', // engine additive wave-10 (2026-07-02) — turn-scoped disguise ban (B07002)
@@ -82,8 +84,8 @@ const CONDS = new Set([
   'costRemovedMatches', // engine additive wave (2026-06-29d)
   'costRevealedMatches', // attribution mini-wave (2026-07-10)
   'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
-  'removeTraitAtLeast', 'removeNameAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'hostSetCardCountAtLeast', 'sceneFaceDownSetCardCountAtLeast', 'sameNameCountAtLeast', 'contactOpponentApHigher',
-  'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundDistinctColorCount', 'triggerCharMatches',
+  'removeTraitAtLeast', 'removeNameAtLeast', 'removeFilterAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'hostSetCardCountAtLeast', 'sceneFaceDownSetCardCountAtLeast', 'sameNameCountAtLeast', 'contactOpponentApHigher',
+  'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundMatchCountAtLeast', 'boundDistinctColorCount', 'triggerCharMatches',
   'contactCharMatches', // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラ filter (B02006/B02080/PR278)
   'boundNameMatchesDeclared', 'boundIsMr', // engine mega-wave W6 step1 (2026-07-04): 宣言名一致 / MR 判定 (B09108/B06085)
   'leaveCauseIn', 'leaveOwnerIs', // engine mega-wave W6 step10 (2026-07-04, row9): leave:intercept matcher (B01092/B01039)
