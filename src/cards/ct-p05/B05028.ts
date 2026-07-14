@@ -36,8 +36,9 @@ const a1: AbilityDef = {
           max: 1,
           side: 'either',
           filter: {
-            hasSetCards: true
-          }
+            hasFaceDownSetCards: true
+          },
+          faceDownOnly: true,
         }
       },
       {

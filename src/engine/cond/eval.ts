@@ -40,6 +40,16 @@ function partnerColorsOverride(state: GameState, owner: 'self' | 'opp'): string[
   return undefined;
 }
 
+function removeIdsForCondition(state: GameState, player: 'self' | 'opp', ctx: EffectCtx): string[] {
+  const remove = state.players[player].remove;
+  const sourceCardId = ctx.source.cardId;
+  if (ctx.source.player !== player || typeof sourceCardId !== 'string' || readDef.card(sourceCardId)?.kind !== 'event') {
+    return remove;
+  }
+  const sourceIndex = remove.indexOf(sourceCardId);
+  return sourceIndex === -1 ? remove : remove.filter((_, index) => index !== sourceIndex);
+}
+
 /**
  * Evaluate a Condition to boolean using current state + ctx.
  */
@@ -294,7 +304,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'removeColorAtLeast': {
       const p = resolvePlayer(cond.player, ctx);
       const wants = Array.isArray(cond.color) ? cond.color : [cond.color];
-      const count = state.players[p].remove.filter(id => {
+      const count = removeIdsForCondition(state, p, ctx).filter(id => {
         const d = lookupCardDef(id);
         // engine additive wave (2026-06-30): cardKind 指定時はカード種別で先に弾く (B08004「黒のキャラ」=
         // 黒イベントを数えない)。未指定は従来通り全種別 (回帰0)。
@@ -307,7 +317,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'removeTraitAtLeast': {
       const p = resolvePlayer(cond.player, ctx);
       const wants = Array.isArray(cond.trait) ? cond.trait : [cond.trait];
-      const count = state.players[p].remove.filter(id => {
+      const count = removeIdsForCondition(state, p, ctx).filter(id => {
         const traits = effectiveTraitNames(state, id, null, { kind: 'card', cardId: id, area: 'remove', player: p });
         return wants.some(w => traits.includes(w));
       }).length;
@@ -316,7 +326,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'removeNameAtLeast': {
       const p = resolvePlayer(cond.player, ctx);
       const wants = Array.isArray(cond.cardName) ? cond.cardName : [cond.cardName];
-      const count = state.players[p].remove.filter(id => {
+      const count = removeIdsForCondition(state, p, ctx).filter(id => {
         const d = lookupCardDef(id);
         if (!d) return false;
         const components = allCardNameComponentsForDef(d);
@@ -326,7 +336,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     }
     case 'removeFilterAtLeast': {
       const p = resolvePlayer(cond.player, ctx);
-      const count = state.players[p].remove.filter((id) => {
+      const count = removeIdsForCondition(state, p, ctx).filter((id) => {
         const cand: Candidate = { kind: 'card', cardId: id, area: 'remove', player: p };
         return cond.filters.some((filter) => matchOneFilter(state, id, filter, null, cand));
       }).length;
@@ -337,7 +347,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     // 数えない (B03104 qAndA と整合 — 効果解決時点で remove に置かれていない)。
     case 'removeCountAtLeast': {
       const p = resolvePlayer(cond.player, ctx);
-      return state.players[p].remove.length >= cond.n;
+      return removeIdsForCondition(state, p, ctx).length >= cond.n;
     }
     // engine additive wave (2026-06-29d): 直前に支払ったコストで除去されたカードの素性で分岐 (B03003/B04077/B06078)。
     // removeDeckTop コストが ctx.costPaid['removeDeckTop'].ids へ除去 cardId を記録 (cost/pay.ts)。除去済カードは

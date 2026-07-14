@@ -14,7 +14,7 @@ type Player = 'self' | 'opp';
 type OrderMode = 'given' | 'reverse';
 
 /** デッキ上から n 枚を手札へ。デッキ不足時はリフレッシュ自動発火 (rules/14) */
-function draw(s: GameState, p: Player, n: number): CardId[] {
+function draw(s: GameState, p: Player, n: number, resolvingCardId?: CardId): CardId[] {
   const drawn: CardId[] = [];
   let remaining = n;
 
@@ -22,7 +22,7 @@ function draw(s: GameState, p: Player, n: number): CardId[] {
     const d = s.players[p].deck;
     if (d.length === 0) {
       // デッキ 0 枚 → リフレッシュ試行
-      const result = refresh(s, p);
+      const result = refresh(s, p, resolvingCardId);
       if (!result.ok) {
         // BUG-036 fix (rules/04 + rules/14): リムーブ 0 枚なら refresh 失敗 →
         // そのプレイヤーは敗北、gameResult を deck-out で設定。
@@ -101,9 +101,14 @@ function shuffle(s: GameState, p: Player, rng?: () => number): void {
  * - リムーブ 0 枚敗北: ok:false 返す (gameResult は draw() 呼出元で
  *   `'deck-out'` reason で set される。BUG-036 fix 2026-05-22)
  */
-function refresh(s: GameState, p: Player): RefreshResult {
+function refresh(s: GameState, p: Player, resolvingCardId?: CardId): RefreshResult {
   const remove = s.players[p].remove;
-  if (remove.length === 0) {
+  const preservedIndex = resolvingCardId === undefined ? -1 : remove.indexOf(resolvingCardId);
+  const preserved = preservedIndex === -1 ? undefined : remove[preservedIndex];
+  const refreshable = preservedIndex === -1
+    ? remove
+    : remove.filter((_, index) => index !== preservedIndex);
+  if (refreshable.length === 0) {
     return {
       ok: false,
       loserPlayer: p,
@@ -111,14 +116,14 @@ function refresh(s: GameState, p: Player): RefreshResult {
     };
   }
 
-  const reshuffled = remove.length;
+  const reshuffled = refreshable.length;
   // engine additive wave-4 (2026-07-01): 離脱カード snapshot (clear 前)。リフレッシュで remove→deck へ
   // 移ったカード毎に remove:exit を emit (rules/14、公式Q&A「シャッフルされデッキへ移った場合に発動」)。
-  const exiting: CardId[] = [...remove];
+  const exiting: CardId[] = [...refreshable];
 
   // リムーブ → デッキへ移動してシャッフル
-  s.players[p].deck.push(...remove);
-  s.players[p].remove = [];
+  s.players[p].deck.push(...refreshable);
+  s.players[p].remove = preserved === undefined ? [] : [preserved];
   shuffle(s, p);
 
   // engine additive wave-4: 離脱カード毎に remove:exit emit (移動完了後)。観測 = B05087/B05088 (在場キャラ)。

@@ -34,6 +34,7 @@ export const B09100: CardDef = {
   traits: ['犯人'],
   keywords: [],
   rarity: 'C',
+  deckLimit: 'unlimited',
   imageUrl: '1775608943928235.jpg',
   abilities: [a1],
   ruleRefs: [

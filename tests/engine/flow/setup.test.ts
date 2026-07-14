@@ -7,6 +7,8 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { setup, type Deck, type DeckPair } from '@/engine/flow/setup';
 import type { GameState } from '@/engine/types';
+import { register as registerCardDef } from '@/engine/read/def';
+import { B09100 } from '@/cards/ct-p09/B09100';
 
 function makeMainDeck(prefix: string): string[] {
   // 40枚 (rules/02). 3枚x13セット + 1枚 = 40. すべて 3 枚以下になるよう構成。
@@ -81,6 +83,15 @@ describe('engine.flow.setup', () => {
           setup.init(draft, decks);
         }),
       ).toThrow(/copies of/);
+    });
+
+    it('allows B09100 above the normal copy limit', () => {
+      registerCardDef(B09100);
+      const decks = makeDecks();
+      decks.self.mainCards = Array(40).fill('B09100');
+      expect(() => produce(createEmptyGameState(), draft => {
+        setup.init(draft, decks);
+      })).not.toThrow();
     });
 
     it('partnerId が空なら throw する', () => {

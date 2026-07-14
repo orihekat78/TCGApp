@@ -363,6 +363,7 @@ export type CardDef = {
   traits: string[];                        // 特徴 (例: [警察], [少年探偵団])
   rarity: string;                          // R/SR/MR/PR ...
   isMR?: boolean;                          // MR フラグ (rules/18)
+  deckLimit?: number | 'unlimited';        // 固有デッキ枚数上限 (rules/02)
   flavor?: string;
   imageUrl: string;                        // ローカル運用 (rules: 法務スタンス)
   abilities: AbilityDef[];                 // 能力定義 (Phase 5 で TSV+merge)

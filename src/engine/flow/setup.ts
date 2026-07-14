@@ -58,9 +58,10 @@ function validateDeck(deck: Deck, side: Player): void {
     counts.set(id, (counts.get(id) ?? 0) + 1);
   }
   for (const [id, n] of counts) {
-    if (n > MAX_SAME_ID) {
+    const limit = readDef.card(id)?.deckLimit ?? MAX_SAME_ID;
+    if (limit !== 'unlimited' && n > limit) {
       throw new Error(
-        `setup.init: ${side} contains ${n} copies of "${id}" — max ${MAX_SAME_ID} (rules/02)`,
+        `setup.init: ${side} contains ${n} copies of "${id}" — max ${limit} (rules/02)`,
       );
     }
   }

@@ -24,7 +24,7 @@ const cutin: AbilityDef = {
     kind: 'chain',
     steps: [
       { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
-      { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'opp', max: 1, filter: { hasSetCards: true } } },
+      { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', side: 'opp', max: 1, filter: { hasFaceDownSetCards: true }, faceDownOnly: true } },
       { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 2000, scope: 'contact' } },
     ],
   },

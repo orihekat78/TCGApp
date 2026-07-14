@@ -307,12 +307,29 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         if (idx !== -1) arr.splice(idx, 1);
       } else if (sourceArea === 'deck') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        if (s.players[fromPlayer].deck.length === 0) {
+          const preserving = ctx.source.player === fromPlayer && readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
+            ? ctx.source.cardId
+            : undefined;
+          const refreshed = mutate.deck.refresh(s, fromPlayer, preserving);
+          if (!refreshed.ok) {
+            if (s.gameResult === undefined) mutate.gameResult.set(s, fromPlayer === 'self' ? 'opp' : 'self', 'deck-out');
+            return;
+          }
+        }
         const arr = s.players[fromPlayer].deck;
         // mini-wave #5 review B1 (2026-07-10): fromBottom 公開カードの登場は deckPos:'bottom' を渡す。
         // indexOf (先頭出現) だと同名コピーがデッキ上方にあるとき「見せていない top 側」が抜かれ、
         // 公開した底カードが残る (隠れ順序破壊、rules/02 同名3枚合法なので頻出)。lastIndexOf = 底出現。
         const idx = a.deckPos === 'bottom' ? arr.lastIndexOf(cardId) : arr.indexOf(cardId);
         if (idx !== -1) arr.splice(idx, 1);
+        if (idx !== -1 && arr.length === 0 && s.gameResult === undefined) {
+          const preserving = ctx.source.player === fromPlayer && readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
+            ? ctx.source.cardId
+            : undefined;
+          const refreshed = mutate.deck.refresh(s, fromPlayer, preserving);
+          if (!refreshed.ok) mutate.gameResult.set(s, fromPlayer === 'self' ? 'opp' : 'self', 'deck-out');
+        }
       }
       const enterOpts = {
         // BUG-093: 効果/能力による登場も「同ターン登場」= 名乗り状態 (rules/06, 17)。

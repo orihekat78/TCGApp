@@ -353,6 +353,16 @@ describe('engine.cond.eval', () => {
     });
   });
 
+  describe('resolving event exclusion', () => {
+    it('does not count an event source while its effect is resolving', () => {
+      registerCardDef(defOf({ id: 'EVENT', kind: 'event' }));
+      let s = createEmptyGameState();
+      s = { ...s, players: { ...s.players, self: { ...s.players.self, remove: [...Array(14).fill('A'), 'EVENT'] } } };
+      const ctx = makeCtx({ source: { player: 'self', area: 'hand', cardId: 'EVENT' } } as Partial<EffectCtx>);
+      expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'self', n: 15 }, ctx)).toBe(false);
+    });
+  });
+
   describe('enterCountAtMost (B09089)', () => {
     it('fresh turn (field undefined) reads as 0 → atMost:0 is true', () => {
       // createEmptyTurnFlags does not initialize enterCountThisTurn → ?? 0 default

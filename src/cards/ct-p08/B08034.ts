@@ -50,7 +50,7 @@ const a2: AbilityDef = {
     kind: 'chain',
     steps: [
       // 自分の現場のキャラ (setCard 保持) を1枚選び、その setCard を1枚リムーブ (skip 可 → chain break)
-      { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', max: 1, side: 'self', filter: { hasSetCards: true } } },
+      { kind: 'atom', verb: 'charRemoveSetCard', args: { player: 'self', max: 1, side: 'self', filter: { hasFaceDownSetCards: true }, faceDownOnly: true } },
       // そうした場合、カードを1枚引く
       { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
     ],

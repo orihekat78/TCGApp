@@ -434,13 +434,13 @@ describe('§G2 PR195 — 中森青子 不在 (not-found 分岐)', () => {
   });
 });
 
-describe('§F2 B07060 — deck0 draw→refresh 自己巻き込み (現状挙動 pinning、rules/26 乖離の顕在化)', () => {
+describe('§F2 B07060 — deck0 draw→refresh は解決中イベントを除外する (rules/26)', () => {
   // 既存 engine-wide 簡略化 (event は使用時に remove へ置かれ、解決中も refresh shuffle 対象):
   // deck0 で a1 step1 draw → refresh が remove (B07060 自身含む) を deck へ shuffle →
   // 末尾 toPartnerArea は lastIndexOf=-1 で graceful no-op → カードは PA でなく deck/hand に居る。
   // rules/26 では「解決中のイベントはまだリムーブエリアに無い (shuffle 非対象)」なので本来は PA 到達が正。
   // 修正は engine-wide の resolving-card 隔離が必要 = 本 wave スコープ外 (DEFERRED-INDEX wave12 節)。
-  it('F2 deck0 → refresh 巻き込みで PA 不達 (crash なし・graceful no-op) — 現状挙動の pin', () => {
+  it('F2 deck0 → refresh 後も解決中イベントを PA へ移す', () => {
     let s = baseState();
     s = produce(s, (d) => {
       d.players.self.file = [FB, FB, FB];
@@ -456,10 +456,9 @@ describe('§F2 B07060 — deck0 draw→refresh 自己巻き込み (現状挙動 
         runAllUntilEmpty(d);
       }
     });
-    // crash せず、B07060 は PA に居ない (refresh に巻き込まれ deck or 手札へ)
-    expect(s.players.self.partnerAreaCards ?? []).toEqual([]);
+    expect(s.players.self.partnerAreaCards).toEqual(['B07060']);
     const everywhere = [...s.players.self.deck, ...s.players.self.hand, ...s.players.self.remove];
-    expect(everywhere).toContain('B07060'); // 消失はしない
+    expect(everywhere).not.toContain('B07060');
     expect(s.gameResult).toBeUndefined();
   });
 });

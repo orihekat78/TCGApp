@@ -14,13 +14,26 @@ import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, TargetingRef } from '../../types/index.js';
 
+function resolvingEventCardId(ctx: EffectCtx, player: Player): string | undefined {
+  const cardId = ctx.source.cardId;
+  return ctx.source.player === player && readDef.card(cardId ?? '')?.kind === 'event' ? cardId : undefined;
+}
+
+function refreshDeckForEffect(s: GameState, player: Player, ctx: EffectCtx): boolean {
+  if (s.players[player].deck.length > 0) return true;
+  const result = mutate.deck.refresh(s, player, resolvingEventCardId(ctx, player));
+  if (result.ok) return true;
+  if (s.gameResult === undefined) mutate.gameResult.set(s, player === 'self' ? 'opp' : 'self', 'deck-out');
+  return false;
+}
+
 export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       // BUG-072: deck.draw が手札への push まで内部で行う + effect 経由の draw を log に残す
       const drawPlayer = resolvePlayer(a.player, ctx);
       // mini-wave #3 (2026-07-10): n は number | {dyn} (B05092「移した枚数と同じ数のカードを引く」
       // = {dyn:'$bound.$moved.count'})。number は従来 byte 互換 (resolveDeltaToNumber は number passthrough)。
       const drawN = typeof a.n === 'number' ? a.n : resolveDeltaToNumber(a.n, s, ctx);
-      mutate.deck.draw(s, drawPlayer, drawN);
+      mutate.deck.draw(s, drawPlayer, drawN, resolvingEventCardId(ctx, drawPlayer));
       mutate.log.append(s, {
         ts: Date.now(),
         player: drawPlayer,
@@ -42,7 +55,7 @@ export function atomDrawUpToHandSize(s: GameState, a: Record<string, unknown>, c
       const need = Math.max(0, target - s.players[drawPlayer].hand.length);
       // M2後半 (2026-07-10, B04048): 引いた cardId 群を bind (「引いた枚数と同じ数」を後段
       // handToDeckBottom n:{dyn:'$bound.<key>.count'} が読む)。mill/discard と同 idiom (0枚は書かない)。
-      const drawn = need > 0 ? mutate.deck.draw(s, drawPlayer, need) : [];
+      const drawn = need > 0 ? mutate.deck.draw(s, drawPlayer, need, resolvingEventCardId(ctx, drawPlayer)) : [];
       if (typeof a.bind === 'string' && drawn.length > 0) {
         (ctx.bindings as Record<string, unknown>)[a.bind] = drawn.map((cardId) => ({ cardId }));
       }
@@ -1039,6 +1052,10 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
       // 用途: 「上から N 枚見る → 1枚まで(filter)を手札に加え → 残りはデッキ下」(D01013/B01013 etc.).
       // 通常 a.cardId='$matched.cardId' で bind 解決 → デッキから splice → hand.add。
       const hadP = resolvePlayer(a.player, ctx);
+      if (!refreshDeckForEffect(s, hadP, ctx)) {
+        mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', result: 'empty-deck-refresh-fail' });
+        return;
+      }
       const rawHadCardIds = (a as { cardIds?: unknown }).cardIds;
       if (rawHadCardIds === '$pick.cardIds') {
         if (a.target && typeof a.target === 'object') {
@@ -1072,6 +1089,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         if (typeof a.bind === 'string') {
           (ctx.bindings as Record<string, unknown>)[a.bind] = movedIds.map(cardId => ({ kind: 'card', cardId, area: 'deck', player: hadP }));
         }
+        if (movedIds.length > 0) refreshDeckForEffect(s, hadP, ctx);
         mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: movedIds.join(','), result: movedIds.length ? 'ok' : 'none' });
         return;
       }
@@ -1103,6 +1121,7 @@ export function atomHandAddFromDeck(s: GameState, a: Record<string, unknown>, ct
         mutate.hand.add(s, hadP, [hadCardId]);
         moved = true;
       }
+      if (moved) refreshDeckForEffect(s, hadP, ctx);
       mutate.log.append(s, { ts: Date.now(), player: hadP, turn: s.turn.number, action: 'effect:handAddFromDeck', target: hadCardId, result: moved ? 'ok' : 'not-found' });
       return;
     }
