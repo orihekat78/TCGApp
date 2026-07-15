@@ -9,8 +9,8 @@
 ## サマリ
 
 - **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 265
-- **ファイル数**: 5038
+- **ディレクトリ数**: 267
+- **ファイル数**: 5054
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -362,6 +362,9 @@
     - `BUG-196.md`
     - `BUG-197.md`
     - `BUG-198.md`
+    - `BUG-199.md`
+    - `BUG-200.md`
+    - `BUG-201.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -666,6 +669,7 @@
     - `2026-07-11-04-night-wC-light.md`
     - `2026-07-11-05-night-wC2-chooser-hirameki-invoke.md`
     - `2026-07-14-01-user-bug-wave.md`
+    - `2026-07-15-01-deck-limit-catalog-ui.md`
     - `README.md` — Changelog エントリ
   - **`design/`**
     - **`mockups/`**
@@ -1008,6 +1012,16 @@
     - `smoke-2026-07-14-9.md` — Smoke 1000戦レポート — smoke-2026-07-14-122409
     - `smoke-2026-07-14.json`
     - `smoke-2026-07-14.md` — Smoke 1000戦レポート — smoke-2026-07-14-014802
+    - `smoke-2026-07-15-2.json`
+    - `smoke-2026-07-15-2.md` — Smoke 1000戦レポート — smoke-2026-07-15-111943
+    - `smoke-2026-07-15-3.json`
+    - `smoke-2026-07-15-3.md` — Smoke 1000戦レポート — smoke-2026-07-15-112453
+    - `smoke-2026-07-15-4.json`
+    - `smoke-2026-07-15-4.md` — Smoke 1000戦レポート — smoke-2026-07-15-112529
+    - `smoke-2026-07-15-5.json`
+    - `smoke-2026-07-15-5.md` — Smoke 1000戦レポート — smoke-2026-07-15-112601
+    - `smoke-2026-07-15.json`
+    - `smoke-2026-07-15.md` — Smoke 1000戦レポート — smoke-2026-07-15-110233
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -4482,6 +4496,8 @@
       - `D08024.test.ts` — tests/cards/ct-d08/D08024
       - `D08025.test.ts` — tests/cards/ct-d08/D08025
       - `D08026.test.ts` — tests/cards/ct-d08/D08026
+    - **`ct-d09/`**
+      - `D09014.test.ts` — cards-data/ct-d09/character.tsv image mapping regression
     - **`ct-d11/`**
       - `D11001.test.ts` — tests/cards/ct-d11/D11001
       - `D11002.test.ts` — tests/cards/ct-d11/D11002
@@ -5199,6 +5215,8 @@
     - `human-vs-cpu-playthrough.test.ts` — Phase 8 完全クローズ Commit 6: human vs CPU 統合 E2E
     - `misread-e2e.test.ts` — tests/integration/misread-e2e.test.ts — Phase 5 advance Misread E2E 結合検証
     - `phase5-smoke.test.ts` — tests/integration/phase5-smoke — Phase 5 Group F: registerAll + 簡単なゲーム進行
+  - **`meta/`**
+    - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
   - **`scripts/`**
     - `gen-codex-context.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト

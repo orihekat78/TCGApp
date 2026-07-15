@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `85b1e9bec20c`
+> Source hash: `528c003b3bdd`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,31 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## Deck limits, catalog image, and deck editor UX (2026-07-15)
+
+### Fixed
+
+- PR158/PR164 now honor the printed unlimited deck-construction rule. Engine,
+  meta validation, and the editor share per-card limits and combine parallel
+  printings by official card ID.
+- D09014 now uses its authoritative image filename instead of falling back to
+  the black placeholder.
+- Built-in CT-D08/CT-D11 and AI/smoke fixtures are legal 40-card decks under
+  official-ID copy limits.
+
+### Added
+
+- Right-click enlargement in the deck editor for deck, pool, partner, case,
+  and partner/case picker cards.
+- Three validated manual-test decks cover the green bug wave, contact/AP, and
+  unlimited ID 0627. Existing user decks remain unchanged.
+
+### Verification
+
+- 5,786 Vitest tests, 13 targeted meta Playwright tests, typecheck, lint,
+  BUG/listener/side-channel/docs checks, meta build, smoke 1000, and benchmark
+  passed. Full 1,145-card catalog scroll had no placeholder or console error.
 
 ## User-reported bug wave (2026-07-14)
 

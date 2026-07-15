@@ -132,3 +132,12 @@
   picks. Cost-8 removal stays deferred: require card ID and game log.
 - Local focused/full non-browser gates and independent reviews are green;
   user delegated full Playwright/complete-match execution to CI.
+
+## 2026-07-15 deck limits and test decks
+
+- BUG-199–201: PR158/PR164 unlimited, official-ID aggregate limits, D09014
+  image, deck-editor right-click enlargement, and legal built-in fixtures.
+- Validated test decks: green bug wave, contact/AP, and ID0627 unlimited.
+  Chrome import codes are ready; preserve the user's existing five decks.
+- Fresh gates: Vitest 5786, targeted meta E2E 13, smoke/benchmark 1000,
+  typecheck, lint, BUG/listener/side-channel/docs, and meta build are green.
