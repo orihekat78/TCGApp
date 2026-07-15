@@ -15,7 +15,7 @@ import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
-import { applyChooseInterceptResponse, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
+import { applyChooseInterceptResponse, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
 import type { GameState } from '@/engine/types/game-state.js';
@@ -386,30 +386,9 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       return;
     }
     case 'deckReorderResolve': {
-      // BUG-136: deckToBottomBound で底へ移したブロックを human が選んだ順に並べ替える。
-      // 底ブロック = deck 末尾 n 件 (deck[0]=top / push=bottom)。action.order が現底ブロックの
-      // 並べ替え (同一 multiset) であることを検証してから差し替える (防御: 不一致なら何もしない)。
       const pendingR = useGameStateStore.getState().pendingDeckReorder;
       if (!pendingR) return;
-      const deck = draft.players[pendingR.player].deck;
-      const n = pendingR.cardIds.length;
-      if (n < 2 || deck.length < n) return;
-      const order = action.order;
-      const bottom = deck.slice(deck.length - n);
-      // multiset 一致検証 (cardId の出現回数が一致するか)
-      const tally = (xs: string[]): Map<string, number> => {
-        const m = new Map<string, number>();
-        for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1);
-        return m;
-      };
-      if (order.length !== n) return;
-      const tb = tally(bottom);
-      const to = tally(order);
-      if (tb.size !== to.size) return;
-      for (const [k, v] of tb) if (to.get(k) !== v) return;
-      // 検証 OK → 底ブロックを order で差し替え (deck 末尾 n 件を上書き)
-      for (let i = 0; i < n; i++) deck[deck.length - n + i] = order[i]!;
-      // クリアは produce 後に dispatchEngineAction が行う
+      applyDeckReorderAndContinuation(draft, pendingR, action.order);
       return;
     }
     case 'deckPlaceResolve': {

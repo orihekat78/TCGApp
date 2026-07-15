@@ -82,4 +82,19 @@ describe('OppTurnOverlay', () => {
     expect(html).toContain('opp-turn-overlay');
     expect(html).toContain('事件');
   });
+
+  it('is hidden while the human is deciding a contact response', () => {
+    const s = produce(createSampleGameState(), (d) => {
+      d.turn.player = 'opp';
+    });
+    useGameStateStore.setState({ gameState: s });
+    useContactModalStore.getState()._setCutInDisguise({
+      actionId: 'ax_human',
+      player: 'self',
+      actorLabel: '1番目',
+      candidates: [],
+    });
+
+    expect(renderToString(<OppTurnOverlay />)).toBe('');
+  });
 });

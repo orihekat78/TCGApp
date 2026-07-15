@@ -20,6 +20,8 @@ const TARGET: CardDef = { id: 'B05088_TARGET', no: 'test/TARGET', kind: 'charact
 const PARTNER: CardDef = { id: 'B05088_PARTNER', no: 'test/PARTNER', kind: 'character', names: ['Partner'], colors: ['黄'], level: 1, ap: 0, lp: 1, traits: [], keywords: [], rarity: 'C', imageUrl: '', abilities: [], ruleRefs: [] };
 
 beforeEach(() => {
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
   event._resetRegistry(); _resetTriggeredRegistered(); _resetRegistry(); _clearPendingEffectPickQueue();
   [B05088, B05088P, B05088P2, NAGANO, TARGET, PARTNER].forEach(registerCardDef);
   registerTriggeredListener();
@@ -61,7 +63,7 @@ describe('B05088 大和敢助', () => {
 
   it('a3 declared cost dispatch moves Nagano card to deck bottom and causes a2', () => {
     const state = setup();
-    state.players.self.partner = 'B05088_PARTNER';
+    mutate.partner.init(state, 'self', 'B05088_PARTNER');
     activateDeclaredAbility(state, 'kansuke', 'a3');
     resolveDebuffPick(state);
     expect(state.players.self.remove).not.toContain('B05088_NAGANO');

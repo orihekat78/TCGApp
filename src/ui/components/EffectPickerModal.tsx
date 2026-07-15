@@ -24,7 +24,7 @@ import './EffectPickerModal.css';
  */
 // D11014 driver 2026-05-26: charModifyAP は scene pick (D08003 sceneRemove と同 UI 流用)、
 // sceneEnter は CardListModal pick (D08013 evidenceToHand と同 UI 流用、area: remove)
-const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'discard', 'sceneRemove', 'charModifyAP', 'sceneEnter', 'charStackCard']);
+const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'deckRevealUntil', 'discard', 'sceneRemove', 'charModifyAP', 'sceneEnter', 'charStackCard']);
 
 export function EffectPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectPick);

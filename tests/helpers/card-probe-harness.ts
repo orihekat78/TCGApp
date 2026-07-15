@@ -33,7 +33,9 @@ import {
   applyPickAndContinuation,
   applyPickSkipAndContinuation,
   applyOptionalAndContinuation,
+  applyDeckReorderAndContinuation,
 } from '@/engine/effect/apply-pick';
+import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { char as readChar } from '@/engine/read/char';
 import type { GameState, CardDef, SceneCharacter, EffectCtx } from '@/engine/types';
@@ -136,9 +138,13 @@ function resetAll(): void {
   const g = globalThis as {
     __pendingEffectOptionalResume?: unknown;
     __pendingEffectOptionalBindings?: unknown;
+    __pendingDeckReorderSide?: unknown;
+    __pendingDeckPlaceSide?: unknown;
   };
   g.__pendingEffectOptionalResume = null;
   g.__pendingEffectOptionalBindings = null;
+  g.__pendingDeckReorderSide = null;
+  g.__pendingDeckPlaceSide = null;
   setHuman('self');
 }
 
@@ -234,6 +240,13 @@ function driveAndScript(
   // pick-first / optional-second drain loop (実測 surfacing order)
   // 安全弁: 1 scenario で 50 prompt を超えたら暴走とみなす
   for (let guard = 0; guard < 50; guard++) {
+    const reorder = _drainPendingDeckReorderSide();
+    if (reorder) {
+      // Probe scenarios do not assert a particular legal permutation. Confirm
+      // identity order without consuming a script action, then continue draining.
+      applyDeckReorderAndContinuation(s, reorder, reorder.cardIds);
+      continue;
+    }
     const pick = _drainPendingEffectPickSide();
     if (pick) {
       promptCount++;

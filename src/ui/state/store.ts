@@ -9,6 +9,8 @@
 
 import { create } from 'zustand';
 import type { GameState } from '@/engine/types/game-state';
+import type { EffectCtx } from '@/engine/types';
+import type { ContinuationFrame } from '@/engine/effect/pending-state';
 
 export type GameStateMutator = (state: GameState) => GameState;
 
@@ -60,7 +62,7 @@ export type GameStateStore = {
   setActiveCard: (uid: string | null, label: string | null) => void;
   /**
    * Task4: CPU 1手駆動の再 fire トリガ。useOppTurnDriver が 1 手 (stepTurn) 適用するたび ++ し、
-   * useEffect の deps に含めることで「1手→aiSpeedMs 待ち→次の1手」のループを成立させる
+   * useEffect の deps に含めることで「1手→重要手だけ aiSpeedMs 表示→次の1手」を成立させる
    * (turn.player は 'opp' のまま変わらないため、これが無いと 1 手で stall する)。
    */
   oppMoveTick: number;
@@ -74,7 +76,7 @@ export type GameStateStore = {
   setSpectatorMode: (v: boolean) => void;
   /**
    * user_request 20260521_01 #12: AI ターン進行の遅延 (ms)。
-   * - useOppTurnDriver / useSpectatorTurnDriver が setTimeout(driver, aiSpeedMs) で参照
+   * - useOppTurnDriver / useSpectatorTurnDriver が重要手の表示間隔として参照
    * - SpectatorHUD の slider で変更可能
    * - default 400ms (既存 oppTurnDelayMs / spectatorDelayMs と一致)
    * - preset: 200 (高速) / 400 (標準) / 800 (普通) / 1500 (ゆっくり) / 3000 (最遅)
@@ -142,8 +144,8 @@ export type GameStateStore = {
   setPendingDeckReveal: (p: PendingDeckReveal | null) => void;
   /**
    * BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択待ち。
-   * engine 側 PendingDeckReorderSide と同 shape。human 所有 & 2 枚以上を底へ移したときだけ set され
-   * DeckReorderModal で並べ替える。deckReorderResolve dispatch で底ブロックを再配置して null へ。
+   * engine 側 PendingDeckReorderSide と同 shape。human 所有 & 2 枚以上なら移動前にsetされ、
+   * DeckReorderModal確定時に指定順で底へ移して後続効果を再開する。
    */
   pendingDeckReorder: PendingDeckReorder | null;
   setPendingDeckReorder: (p: PendingDeckReorder | null) => void;
@@ -188,8 +190,12 @@ export type PendingDeckReveal = {
 
 export type PendingDeckReorder = {
   player: 'self' | 'opp';
-  /** デッキ底へ移したカード群 (公開順)。並べ替え対象 */
+  /** 並べ替え対象カード群。 */
   cardIds: string[];
+  deckSnapshot?: string[];
+  occurrences?: Array<{ cardId: string; index: number }>;
+  ctx?: EffectCtx;
+  continuation?: ContinuationFrame;
 };
 
 export type PendingDeckPlace = {

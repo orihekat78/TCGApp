@@ -32,6 +32,12 @@ test.describe('BUG-136 — deckToBottomBound 順序選択 modal (実機)', () =>
 
     const modal = page.locator('[data-testid="deck-reorder-modal"]');
     await expect(modal).toBeVisible();
+    const panelBox = await modal.locator('.souza-modal').boundingBox();
+    const viewport = page.viewportSize();
+    expect(panelBox).not.toBeNull();
+    expect(viewport).not.toBeNull();
+    expect(panelBox!.x).toBeGreaterThanOrEqual(0);
+    expect(panelBox!.x + panelBox!.width).toBeLessThanOrEqual(viewport!.width);
 
     // 初期 order = [D08003(0), D08007(1), D08013(2)]。
     // row2 を ▲ で 1 つ上へ → [D08003, D08013, D08007]、row1 を ▲ で 1 つ上へ → [D08013, D08003, D08007]。

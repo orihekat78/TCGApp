@@ -4,10 +4,10 @@
 //
 // 役割:
 //   - gameState !== null なら右上に小さな HUD を表示 (any active game)
-//   - preset で AI/CPU ターン進行速度を選択 (aiSpeedMs を store に書き込む)
+//   - preset で AI/CPU の重要手の表示間隔を選択 (aiSpeedMs を store に書き込む)
 //   - useOppTurnDriver / useSpectatorTurnDriver が aiSpeedMs / isAiPaused /
 //     aiStepCounter を subscribe して反映
-//   - spectator: 「AI 速度」「制御」、human vs CPU: 「CPU 速度」「CPU 制御」
+//   - spectator: 「AI 重要手の表示間隔」、human vs CPU: 「CPU 重要手の表示間隔」
 //
 // z-index: 9100 (OppTurnOverlay 9000 より上、Modal 9700 より下)
 
@@ -38,7 +38,7 @@ export function SpectatorHUD(): JSX.Element | null {
   // BUG-063: 観戦モードに加えて、人間 vs CPU (gameState !== null && !spectatorMode)
   // でも HUD を表示し CPU 行動の pause/step を可能にする
   if (gameState === null) return null;
-  const speedLabel = spectatorMode ? 'AI 速度' : 'CPU 速度';
+  const speedLabel = spectatorMode ? 'AI 重要手の表示間隔' : 'CPU 重要手の表示間隔';
   const controlLabel = spectatorMode ? '制御' : 'CPU 制御';
   const ariaLabel = spectatorMode ? '観戦モード制御' : 'CPU 行動制御';
 
@@ -55,7 +55,7 @@ export function SpectatorHUD(): JSX.Element | null {
               onClick={() => setAiSpeedMs(p.ms)}
               data-testid={`spectator-speed-${p.ms}`}
               aria-pressed={aiSpeedMs === p.ms}
-              title={`${p.label} (${p.ms}ms / ターン)`}
+              title={`${p.label} (${p.ms}ms / 重要手)`}
             >
               {p.label}
             </button>

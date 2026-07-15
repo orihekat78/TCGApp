@@ -156,6 +156,7 @@ function applyPreTargetExpansion(
 ): void {
   for (const ownerSide of ['self', 'opp'] as const) {
     for (const sceneCard of state.players[ownerSide].scene) {
+      if (readChar.originalAbilitiesDisabled(state, sceneCard.uid)) continue;
       const cardDef = readDef.card(sceneCard.cardId);
       if (!cardDef?.abilities) continue;
       for (const ab of cardDef.abilities) {
@@ -214,7 +215,8 @@ export function mustTargetCandidates(state: GameState, byUid: string): TargetCan
   return out;
 }
 
-function hasMustTargetSelfOnce(cardId: string): boolean {
+function hasMustTargetSelfOnce(state: GameState, uid: string, cardId: string): boolean {
+  if (readChar.originalAbilitiesDisabled(state, uid)) return false;
   const cardDef = readDef.card(cardId);
   return cardDef?.abilities?.some(ab =>
     ab.type === 'triggered'
@@ -232,7 +234,7 @@ export function mustTargetSelfOnceCandidates(state: GameState, byUid: string): T
   const opp: Player = actor === 'self' ? 'opp' : 'self';
   const legal = candidates(state, byUid);
   return state.players[opp].scene.flatMap((c) =>
-    hasMustTargetSelfOnce(c.cardId)
+    hasMustTargetSelfOnce(state, c.uid, c.cardId)
       && c.turnEffects.mustTargetSelfOnce !== state.turn.number
       && legal.some(x => x.uid === c.uid)
       ? [{ uid: c.uid, cardId: c.cardId, player: opp }]
@@ -245,7 +247,7 @@ export function consumeMustTargetSelfOnce(state: GameState, byUid: string): void
   if (!actor) return;
   const opp: Player = actor === 'self' ? 'opp' : 'self';
   for (const c of state.players[opp].scene) {
-    if (hasMustTargetSelfOnce(c.cardId)) {
+    if (hasMustTargetSelfOnce(state, c.uid, c.cardId)) {
       c.turnEffects.mustTargetSelfOnce = state.turn.number;
     }
   }

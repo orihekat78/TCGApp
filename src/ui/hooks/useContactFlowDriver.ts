@@ -29,6 +29,7 @@ import { dispatchEngineAction, type ContactChoice } from './useEngineDispatch.js
 import * as flow from '@/engine/flow/index.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { char as readChar } from '@/engine/read/char.js';
 import type { GameState, ActionContext } from '@/engine/types/index.js';
 import type { GuardPickerCandidate } from '../components/GuardPickerModal.js';
 import type { CutInDisguiseCandidate } from '../components/CutInDisguisePickerModal.js';
@@ -49,13 +50,13 @@ function readApLp(state: GameState, uid: string): { ap: number; lp: number; card
     const p: Player = uid === 'partner:self' ? 'self' : 'opp';
     const cardId = state.players[p].partner.cardId ?? '';
     const def = cardId ? readDef.card(cardId) : null;
-    return { ap: def?.ap ?? 0, lp: def?.lp ?? 0, cardId, name: def?.names?.[0] ??cardId };
+    return { ap: readChar.ap(state, uid), lp: def?.lp ?? 0, cardId, name: def?.names?.[0] ??cardId };
   }
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((x) => x.uid === uid);
     if (c) {
       const def = readDef.card(c.cardId);
-      return { ap: def?.ap ?? 0, lp: def?.lp ?? 0, cardId: c.cardId, name: def?.names?.[0] ??c.cardId };
+      return { ap: readChar.ap(state, uid), lp: def?.lp ?? 0, cardId: c.cardId, name: def?.names?.[0] ??c.cardId };
     }
   }
   return { ap: 0, lp: 0, cardId: '', name: uid };
@@ -79,14 +80,15 @@ function buildCutInDisguiseCandidates(
 ): CutInDisguiseCandidate[] {
   const hand = state.players[p].hand;
   const result: CutInDisguiseCandidate[] = [];
-  for (const cardId of hand) {
+  for (const [index, cardId] of hand.entries()) {
+    const uid = `${cardId}#${index}`;
     const def = readDef.card(cardId);
     const name = def?.names?.[0] ??cardId;
     if (flow.contact.canCutIn(state, ax, p, cardId)) {
-      result.push({ cardId, name, kind: 'cutin' });
+      result.push({ uid, cardId, name, kind: 'cutin' });
     }
     if (flow.contact.canDisguise(state, ax, p, cardId)) {
-      result.push({ cardId, name, kind: 'disguise' });
+      result.push({ uid, cardId, name, kind: 'disguise' });
     }
   }
   return result;
@@ -118,6 +120,8 @@ export function useContactFlowDriver(): void {
   const pendingEffectOptional = useGameStateStore((s) => s.pendingEffectOptional);
   const pendingEffectRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
   const pendingEffectChoice = useGameStateStore((s) => s.pendingEffectChoice);
+  const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
+  const pendingDeckPlace = useGameStateStore((s) => s.pendingDeckPlace);
   const pendingLeaveIntercept = useGameStateStore((s) => s.pendingLeaveIntercept);
   const pendingRps = useGameStateStore((s) => s.pendingRps);
 
@@ -137,6 +141,8 @@ export function useContactFlowDriver(): void {
     // BUG-141 (cluster3): optional/choice modal も解決待ち (宣言時 trigger の効果はガード判定前に解決)
     if (pendingEffectOptional !== null || pendingEffectRepeatOptional !== null) return;
     if (pendingEffectChoice !== null) return;
+    if (pendingDeckReorder !== null) return;
+    if (pendingDeckPlace !== null) return;
     if (pendingLeaveIntercept !== null) return;
     if (pendingRps !== null) return;
 
@@ -147,7 +153,7 @@ export function useContactFlowDriver(): void {
     }
 
     runOneStep(gameState, ax, spectatorMode);
-  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice, pendingLeaveIntercept, pendingRps]);
+  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice, pendingDeckReorder, pendingDeckPlace, pendingLeaveIntercept, pendingRps]);
 }
 
 function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean): void {
@@ -220,21 +226,9 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
         return;
       }
       const cands = buildCutInDisguiseCandidates(state, ax, decider);
-      if (cands.length === 0) {
-        // 候補ゼロ: 自動 pass
-        dispatchEngineAction({
-          type: 'actionContact',
-          actionId: ax.id,
-          player: decider,
-          choice: { kind: 'pass' },
-        });
-        dispatchEngineAction({ type: 'actionAdvance', actionId: ax.id });
-        return;
-      }
-      // BUG-045 (#9 spectator stall fix): spectator mode では self も AI 委譲
+      // 人間側は候補0枚でも手札を確認し、明示的にパスする。
+      // CPU / 観戦モードだけは従来どおり自動 pass。
       if (decider === 'self' && !spectatorMode) {
-        // user_request 20260522_01 #7 BUG-055: actorName を渡して
-        // 「1番目 (江戸川コナン)」のように具体表示
         const actorUid = ax.phase === 'action-2' ? ax.secondUid : ax.firstUid;
         const actorName = actorUid ? readApLp(state, actorUid).name : undefined;
         useContactModalStore.getState()._setCutInDisguise({
@@ -246,6 +240,17 @@ function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean)
         });
         return;
       }
+      if (cands.length === 0) {
+        dispatchEngineAction({
+          type: 'actionContact',
+          actionId: ax.id,
+          player: decider,
+          choice: { kind: 'pass' },
+        });
+        dispatchEngineAction({ type: 'actionAdvance', actionId: ax.id });
+        return;
+      }
+      // BUG-045 (#9 spectator stall fix): spectator mode では self も AI 委譲
       // opp decider OR spectator mode の self: AI
       const ai = new HeuristicPolicy();
       const choice = chooseAiContact(state, ax, decider, ai);

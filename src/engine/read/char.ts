@@ -9,7 +9,7 @@ import { evalDyn } from '../dyn/eval.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
 // cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
-import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerTraitNameGrant, traitNameGrantSafe, registerLevelFilterOverride } from '../target/candidates.js';
+import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerEffectiveKeyword, registerTraitNameGrant, traitNameGrantSafe, registerLevelFilterOverride } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -33,6 +33,22 @@ function scopeActiveInPartnerArea(scope: AbilityScope | undefined): boolean {
   return scope === 'on-partner-area' || scope === 'always';
 }
 
+function originalAbilitiesDisabledOn(char: {
+  keywordOverrides?: { disabledOriginal?: boolean };
+  turnEffects?: Record<string, unknown>;
+} | null | undefined): boolean {
+  return char?.keywordOverrides?.disabledOriginal === true
+    || char?.turnEffects?.['originalAbilitiesDisabled_turn'] === true;
+}
+
+function originalAbilitiesDisabled(s: GameState, uid: string): boolean {
+  return originalAbilitiesDisabledOn(scene.byUid(s, uid));
+}
+
+function printedAbilitiesOf(char: { cardId: string; keywordOverrides?: { disabledOriginal?: boolean }; turnEffects?: Record<string, unknown> }) {
+  return originalAbilitiesDisabledOn(char) ? [] : (def.card(char.cardId)?.abilities ?? []);
+}
+
 /**
  * engine mega-wave W2 (2026-07-03, P07/r24): bearer 自身の continuous boolean token reader。
  * continuousDelta の boolean 版 — bearer (現場 or PA-MR) の continuous ability を walk し、
@@ -49,13 +65,14 @@ function selfContinuousFlag(
 ): boolean {
   const char = scene.byUid(s, uid);
   if (!char) return false;
+  if (originalAbilitiesDisabledOn(char)) return false;
   const d = def.card(char.cardId);
   if (!d) return false;
   const owner = ownerSideOf(s, uid);
   if (!owner) return false;
   const inPA = isPartnerMrUid(uid);
   const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
-  for (const ability of d.abilities ?? []) {
+  for (const ability of printedAbilitiesOf(char)) {
     if (ability.type !== 'continuous') continue;
     if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
     if (ability.continuousModifier?.[token] !== true) continue;
@@ -102,9 +119,10 @@ function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'
   if (!owner) return 0;
   const inPA = isPartnerMrUid(uid);
   const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+  const printedEnabled = !originalAbilitiesDisabledOn(char);
   if (which === 'lvlDelta') {
     const entries: Array<{ condition: Condition | undefined; delta: unknown }> = [];
-    for (const ability of d.abilities ?? []) {
+    for (const ability of printedEnabled ? (d.abilities ?? []) : []) {
       if (ability.type !== 'continuous') continue;
       if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       const delta = ability.continuousModifier?.lvlDelta;
@@ -146,7 +164,7 @@ function continuousDelta(s: GameState, uid: string, which: 'apDelta' | 'lpDelta'
     return total;
   }
   let total = 0;
-  for (const ability of d.abilities ?? []) {
+  for (const ability of printedEnabled ? (d.abilities ?? []) : []) {
     if (ability.type !== 'continuous') continue;
     if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
     const delta = ability.continuousModifier?.[which];
@@ -225,7 +243,7 @@ function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDe
     const bd = def.card(bearer.cardId);
     if (!bd) continue;
     const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
-    for (const ability of bd.abilities ?? []) {
+    for (const ability of printedAbilitiesOf(bearer)) {
       if (ability.type !== 'continuous') continue;
       if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       const cm = ability.continuousModifier;
@@ -256,7 +274,7 @@ function auraDelta(s: GameState, targetUid: string, which: 'apDeltaAura' | 'lpDe
     const bd = def.card(bearer.cardId);
     if (!bd) continue;
     const bearerCtx = { source: { player: oppSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
-    for (const ability of bd.abilities ?? []) {
+    for (const ability of printedAbilitiesOf(bearer)) {
       if (ability.type !== 'continuous') continue;
       if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       const cm = ability.continuousModifier;
@@ -296,7 +314,7 @@ function auraUntargetableByAction(s: GameState, targetUid: string): boolean {
     const bd = def.card(bearer.cardId);
     if (!bd) continue;
     const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
-    for (const ability of bd.abilities ?? []) {
+    for (const ability of printedAbilitiesOf(bearer)) {
       if (ability.type !== 'continuous') continue;
       if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       const filter = ability.continuousModifier?.untargetableByActionAura as TargetFilter | undefined;
@@ -327,8 +345,7 @@ function charProtectedFromOppEvent(s: GameState, uid: string, token: 'remove'): 
   const owner = ownerSideOf(s, uid);
   if (!owner) return false;
   const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
-  const d = def.card(c.cardId);
-  for (const ability of d?.abilities ?? []) {
+  for (const ability of printedAbilitiesOf(c)) {
     if (ability.type !== 'continuous') continue;
     if (ability.scope === 'on-set-host') continue;
     if (!ability.continuousModifier?.opponentEventRestrict?.includes(token)) continue;
@@ -371,7 +388,7 @@ function charUntargetableByOppEvent(s: GameState, targetUid: string): boolean {
     const bd = def.card(bearer.cardId);
     if (!bd) continue;
     const bearerCtx = { source: { player: ownerSide, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
-    for (const ability of bd.abilities ?? []) {
+    for (const ability of printedAbilitiesOf(bearer)) {
       if (ability.type !== 'continuous') continue;
       if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       const filter = ability.continuousModifier?.untargetableByOppEventAura as TargetFilter | undefined;
@@ -397,7 +414,7 @@ function charUntargetableByOppEffect(s: GameState, targetUid: string): boolean {
   for (const { char: bearer, inPA } of bearers) {
     const bearerCtx = { source: { player: owner, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
     const abilities = [
-      ...(def.card(bearer.cardId)?.abilities ?? []).filter(a => a.scope !== 'on-set-host'),
+      ...printedAbilitiesOf(bearer).filter(a => a.scope !== 'on-set-host'),
       ...(!inPA ? (bearer.setCards ?? []).filter(entry => entry.faceUp).flatMap(entry =>
         (def.card(entry.cardId)?.abilities ?? []).filter(a => a.scope === 'on-set-host')) : []),
     ];
@@ -429,6 +446,17 @@ function noAutoActivateLocked(s: GameState, uid: string): boolean {
 // に反映されないバグ (D11007 a3 の AP+3000 が無効化されていた根本原因)
 // rules: 19-special-rules.md (下限なし)
 function ap(s: GameState, uid: string): number {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p = uid === 'partner:self' ? 'self' : 'opp';
+    const partner = s.players[p].partner;
+    const te = partner.turnEffects ?? {};
+    const base = def.card(partner.cardId)?.ap ?? 0;
+    return base
+      + ((te['apMod_permanent'] as number | undefined) ?? 0)
+      + ((te['apMod_turn'] as number | undefined) ?? 0)
+      + ((te['apMod_contact'] as number | undefined) ?? 0)
+      + ((te['apMod_action'] as number | undefined) ?? 0);
+  }
   const char = scene.byUid(s, uid);
   if (!char) return 0;
   // engine defer-unlock mini-wave (2026-07-09): 「ターン終了時まで元のAPを X にする」(B05022) は
@@ -512,7 +540,7 @@ function grantWalk(s: GameState, uid: string, which: 'grantTraits' | 'grantNames
   const inPA = isPartnerMrUid(uid);
   const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
   const out: string[] = [];
-  for (const ability of d.abilities ?? []) {
+  for (const ability of printedAbilitiesOf(char)) {
     if (ability.type !== 'continuous') continue;
     if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
     const g = ability.continuousModifier?.[which];
@@ -607,7 +635,7 @@ function keywords(s: GameState, uid: string): string[] {
       }
     }
   }
-  if (char.keywordOverrides.disabledOriginal) {
+  if (originalAbilitiesDisabledOn(char)) {
     // 元の CardDef キーワードと continuous ability の grantKeywords は除外 (rules/19)
     // granted は外部から与えられたキーワードなので残る (rules/19 §他のカード能力/効果による付与は無効にならない)。
     // disabledOriginal では base/continuous (= 減算対象) が既に除外済 → external grant に revoke は及ばない (再付与は独立)。
@@ -679,7 +707,7 @@ function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cuti
     const d = def.card(c.cardId);
     if (!d) continue;
     const ctx = { source: { player: ownerSide, uid: c.uid } } as Parameters<typeof evalCond>[2];
-    for (const ability of d.abilities ?? []) {
+    for (const ability of printedAbilitiesOf(c)) {
       if (ability.type !== 'continuous') continue;
       if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
       if (!ability.continuousModifier?.opponentRestrict?.includes(token)) continue;
@@ -784,7 +812,7 @@ function filteredAssaultKeywords(s: GameState, uid: string): FilteredAssaultGran
   const inPA = isPartnerMrUid(uid);
   const out: FilteredAssaultGrant[] = [];
   const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
-  for (const ability of d.abilities ?? []) {
+  for (const ability of printedAbilitiesOf(char)) {
     if (ability.type !== 'continuous') continue;
     if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
     const grants = ability.continuousModifier?.grantFilteredAssault;
@@ -809,8 +837,7 @@ function charProtectedFrom(s: GameState, uid: string, token: 'remove' | 'sleep' 
   if (!owner) return false;
   const ctx = { source: { player: owner, uid } } as Parameters<typeof evalCond>[2];
   // ① 自身の印字 continuous
-  const d = def.card(c.cardId);
-  for (const ability of d?.abilities ?? []) {
+  for (const ability of printedAbilitiesOf(c)) {
     if (ability.type !== 'continuous') continue;
     if (ability.scope === 'on-set-host') continue; // 自身に印字された rider 定義は host 用 — 自分では無効
     if (!ability.continuousModifier?.opponentRestrict?.includes(token)) continue;
@@ -851,6 +878,8 @@ export const char = {
   noAutoActivateLocked,
   selfContinuousFlag,
   hasTextAbility,
+  originalAbilitiesDisabled,
+  originalAbilitiesDisabledOn,
   state,
   isNamed,
   setCards,
@@ -864,4 +893,19 @@ export const char = {
 registerContinuousDelta(continuousDelta);
 registerLevelFilterOverride((s, uid) => prospectiveLevels.get(s)?.get(uid));
 registerAuraDelta(auraDelta); // cluster13: 他キャラ aura board-scan を candidates へ late-bind
+registerEffectiveKeyword((s, uid, keyword) => {
+  const char = scene.byUid(s, uid);
+  // Synthetic/prospective candidates may carry a uid without being registered in
+  // read.def. Let candidates.ts fall back to its CardDef oracle in those cases.
+  if (!char) return undefined;
+  const cardDef = def.card(char.cardId);
+  if (!cardDef) return undefined;
+  const effective = hasKeyword(s, uid, keyword);
+  // Ability-shaped icon keywords are not part of char.keywords(). For an enabled
+  // printed ability, defer to defHasKeyword; when originals are disabled, false
+  // is authoritative. Base/revoked and externally granted keywords stay effective.
+  if (originalAbilitiesDisabledOn(char)) return effective;
+  if ((cardDef.keywords ?? []).includes(keyword) || effective) return effective;
+  return undefined;
+}); // BUG-197: real board keyword filter == effective keyword reader
 registerTraitNameGrant(grantWalk); // wave-6 (P37): 継続 trait/name 付与 board reader を candidates へ late-bind

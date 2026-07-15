@@ -128,6 +128,8 @@ const inDeck = (s: GameState, id: string) => s.players.self.deck.includes(id);
 
 describe('B06013 厄介な難事件 — gate5 runtime behavior', () => {
   beforeEach(() => {
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     event._resetRegistry();
     _resetTriggeredRegistered();
     _resetUidCounter();

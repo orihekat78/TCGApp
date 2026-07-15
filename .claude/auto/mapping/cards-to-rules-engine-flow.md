@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `411cccdea535`
+> Source hash: `d569d00a7dca`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **130** ファイル（[全体 index](./index.md)）
+このグループ: **131** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (19)
 
@@ -102,13 +102,14 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (56)
+## その他 (57)
 
 | ソース | 参照ルール |
 | ------ | --------- |
 | [`src/ui/fixtures/cutinDemoState.ts`](../../../src/ui/fixtures/cutinDemoState.ts) | [`08-contact.md`](../../rules/08-contact.md) / [`09-cutin-disguise.md`](../../rules/09-cutin-disguise.md) |
 | [`src/ui/fixtures/hiramekiDemoState.ts`](../../../src/ui/fixtures/hiramekiDemoState.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/fixtures/sampleGameState.ts`](../../../src/ui/fixtures/sampleGameState.ts) | _(参照なし)_ |
+| [`src/ui/hooks/movePresentationDelay.ts`](../../../src/ui/hooks/movePresentationDelay.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow.ts`](../../../src/ui/hooks/useActionsPanelFlow.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useActionsPanelFlow/cost.ts`](../../../src/ui/hooks/useActionsPanelFlow/cost.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow/enumerators.ts`](../../../src/ui/hooks/useActionsPanelFlow/enumerators.ts) | _(参照なし)_ |

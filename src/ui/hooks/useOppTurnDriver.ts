@@ -27,12 +27,15 @@ import * as flow from '@/engine/flow/index.js';
 import { mutate as engineMutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
+import { movePresentationDelay } from './movePresentationDelay.js';
 
 let isDriving = false;
+let previousMoveKind: Move['kind'] | null = null;
 
 /** Test 用: 二重呼出ガードをリセット。 */
 export function _resetIsDriving(): void {
   isDriving = false;
+  previousMoveKind = null;
 }
 
 /**
@@ -61,10 +64,11 @@ export function driveOppTurn(): void {
   isDriving = true;
   try {
     // Task4: 1 手だけ進める (stepTurn)。1 手ごとに setGameState + activeCard + oppMoveTick++ し、
-    // useEffect が aiSpeedMs 待ち後に再 fire → 次の 1 手。これで CPU の各手が人間ライクに可視化され、
-    // 速度スライダー / 一時停止 / 1 ステップ が全手に効く。pauseOnAction で action 手は従来どおり
+    // useEffect が表示間隔後に再 fire → 次の 1 手。登場・能力・アクション・アシスト・解決編だけ
+    // aiSpeedMs を適用し、routine 手は 0ms yield。pauseOnAction で action 手は従来どおり
     // contact FSM (useContactFlowDriver) へ委譲する。
     const step = stepTurn(current, new HeuristicPolicy(), 'opp', { pauseOnAction: true });
+    previousMoveKind = step.paused?.move?.kind ?? step.move?.kind ?? null;
     // 中間 state を store にコミット (action 直前 / 通常 move 適用後 / pause 時は不変参照)
     store.setGameState(step.nextState);
 
@@ -88,7 +92,7 @@ export function driveOppTurn(): void {
 
     if (!step.done) {
       // 通常の 1 手適用 → アクティブカードを set + tick で次手へ (turn.player は 'opp' のまま)。
-      const pa = primaryActiveCard(step.move, current, step.nextState);
+      const pa = primaryActiveCard(step.move, current, step.nextState, 'opp');
       store.setActiveCard(pa.uid, pa.label);
       store.bumpOppMoveTick();
       return;
@@ -96,6 +100,7 @@ export function driveOppTurn(): void {
 
     // step.done: endTurn / 候補なし / gameResult。アクティブカードをクリアしターン終了処理へ。
     store.setActiveCard(null, null);
+    previousMoveKind = 'endTurn';
     if (step.nextState.gameResult) return; // ゲーム終了確定なら turn 遷移不要
 
     // endTurn move は flow.endTurn を呼ばない (policy.ts コメント参照)。ここで明示的に呼んで
@@ -127,10 +132,11 @@ export function driveOppTurn(): void {
  * 現場カードに紐づく手 (登場/推理/アクション/宣言) は uid を返し、パートナー系や非現場手は null
  * (盤面更新で結果は見える)。登場手は before/after の opp 現場差分で新規 uid を特定する。
  */
-function primaryActiveCard(
+export function primaryActiveCard(
   move: Move | null,
   before: GameState,
   after: GameState,
+  side: 'self' | 'opp',
 ): { uid: string | null; label: string | null } {
   if (!move) return { uid: null, label: null };
   switch (move.kind) {
@@ -140,8 +146,8 @@ function primaryActiveCard(
       return { uid: move.uid, label: '宣言能力' };
     case 'handUseCard':
     case 'handUseCardSwitch': {
-      const beforeUids = new Set(before.players.opp.scene.map((c) => c.uid));
-      const entered = after.players.opp.scene.find((c) => !beforeUids.has(c.uid));
+      const beforeUids = new Set(before.players[side].scene.map((c) => c.uid));
+      const entered = after.players[side].scene.find((c) => !beforeUids.has(c.uid));
       return { uid: entered?.uid ?? null, label: '登場' };
     }
     case 'partnerAbility':
@@ -167,10 +173,9 @@ function primaryActiveCard(
  *   - Promise.resolve().then() で次マイクロタスクに送ると安全
  */
 /**
- * opp ターン処理開始までの遅延 (ms)。
+ * CPU の重要手を表示する間隔 (ms)。
  *
- * Phase 8.10a: OppTurnOverlay を視認できる時間を確保するため、playTurn の同期実行を
- * setTimeout で遅らせる。0 にすればテスト互換 + 即時処理。本番は ~400ms。
+ * routine 手は 0ms yield。重要手だけ movePresentationDelay 経由でこの値を使う。
  *
  * Phase 12-A (user_request #12): module-level の固定値から store.aiSpeedMs 直読に
  * 変更。SpectatorHUD slider 経由でユーザーが任意の速度を選べる。
@@ -214,11 +219,9 @@ export function useOppTurnDriver(): void {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
       _lastConsumedStep = aiStepCounter;
     }
-    if (aiSpeedMs > 0) {
-      const id = setTimeout(driveOppTurn, aiSpeedMs);
-      return () => clearTimeout(id);
-    }
-    Promise.resolve().then(driveOppTurn);
-    return undefined;
+    // pause 中の1ステップは即時。通常進行は「直前の重要手」の表示後だけ待つ。
+    const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
+    const id = setTimeout(driveOppTurn, delay);
+    return () => clearTimeout(id);
   }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, pendingChooseIntercept, pendingEffectRepeatOptional, pendingDeckReorder, pendingDeckPlace, pendingRps, oppMoveTick]);
 }

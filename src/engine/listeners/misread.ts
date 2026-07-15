@@ -95,6 +95,7 @@ export function registerMisreadListener(): void {
     const candidates: MisreadCandidate[] = [];
     for (const c of state.players[defender].scene) {
       if (c.state !== 'active') continue;
+      if (readChar.originalAbilitiesDisabled(state, c.uid)) continue;
       const def = readDef.card(c.cardId);
       if (!def) continue;
       for (const ability of def.abilities) {

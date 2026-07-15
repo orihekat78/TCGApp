@@ -31,11 +31,11 @@ function findChar(s: GameState, uid: string) {
  * - scope='contact': turnEffects['apMod_contact'] に積む
  */
 function modifyAP(s: GameState, uid: string, delta: number, scope: ModScope): void {
-  const found = findChar(s, uid);
-  if (!found) return;
+  const turnEffects = findActorTurnEffects(s, uid);
+  if (!turnEffects) return;
   const key = `apMod_${scope}`;
-  const current = (found.char.turnEffects[key] as number | undefined) ?? 0;
-  found.char.turnEffects[key] = current + delta;
+  const current = (turnEffects[key] as number | undefined) ?? 0;
+  turnEffects[key] = current + delta;
 }
 
 /**
@@ -184,10 +184,14 @@ function revokeTrait(s: GameState, uid: string, trait: string, scope: 'permanent
 }
 
 /** 元の能力を無効にする (rules/19) MR能力は無効にならない */
-function disableOriginalAbilities(s: GameState, uid: string): void {
+function disableOriginalAbilities(s: GameState, uid: string, scope: 'turn' | 'permanent' = 'permanent'): void {
   const found = findChar(s, uid);
   if (!found) return;
-  found.char.keywordOverrides.disabledOriginal = true;
+  if (scope === 'turn') {
+    found.char.turnEffects['originalAbilitiesDisabled_turn'] = true;
+  } else {
+    found.char.keywordOverrides.disabledOriginal = true;
+  }
 }
 
 /** turnEffects に任意のキー/値を設定 */
@@ -220,6 +224,25 @@ function tagSelectedByOwnMr(s: GameState, uid: string, ownerMustBe: 'self' | 'op
  *   apMod_contact, lpMod_contact, lvlMod_contact, grantedKeywords) を削除
  */
 function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' | 'action' | 'contact'): void {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
+    const te = s.players[p].partner.turnEffects;
+    if (!te) return;
+    if (scope === 'turn') {
+      delete te['apMod_turn'];
+      delete te['apMod_contact'];
+      for (const key of Object.keys(te)) {
+        if (key.endsWith('_action')) delete te[key];
+      }
+    } else if (scope === 'action') {
+      for (const key of Object.keys(te)) {
+        if (key.endsWith('_action')) delete te[key];
+      }
+    } else if (scope === 'contact') {
+      delete te['apMod_contact'];
+    }
+    return;
+  }
   const found = findChar(s, uid);
   if (!found) return;
   const te = found.char.turnEffects;
@@ -278,6 +301,7 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     // 「次の自分のオートフェイズでアクティブにならない」はターンを跨いで持続する lock のため
     // turn-end 清掃すると効果が消える (消費側 auto-phase が読み捨て時に自前で解除する設計)。
     delete te['nameOverride'];
+    delete te['originalAbilitiesDisabled_turn'];
     te.contactImmune = false;
     te.removeOnTurnEnd = false;
     // _action suffix もターン終了で確実に切れる (アクション終了清掃の safety net)
@@ -420,6 +444,16 @@ function eligibleSetCardReplacement(s: GameState, player: Player, fromUid: strin
     if (candidates.length > 0) return { ability, candidates };
   }
   return null;
+}
+
+/** scene / partner actor 共通の scoped effect storage。 */
+function findActorTurnEffects(s: GameState, uid: string): Record<string, unknown> | null {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
+    return (s.players[p].partner.turnEffects ??= {});
+  }
+  const found = findChar(s, uid);
+  return found?.char.turnEffects ?? null;
 }
 
 function markSetCardReplacementUsed(s: GameState, entry: SetCardReplacementEntry, abilityId: string): void {

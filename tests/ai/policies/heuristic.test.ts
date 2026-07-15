@@ -217,6 +217,30 @@ describe('HeuristicPolicy — priority 4: actionAgainstCase', () => {
 });
 
 describe('HeuristicPolicy — priority 5: actionAgainstChar (AP filter)', () => {
+  it('uses the partner effective AP including turn modifiers', () => {
+    registerCardDef(makeCard('P-SELF', { kind: 'partner', ap: 3000, lp: 2 }));
+    registerCardDef(makeCard('SceneAtk', { ap: 1500, lp: 1 }));
+    registerCardDef(makeCard('Def', { ap: 1000, lp: 1 }));
+    let sceneAtkUid = '';
+    let defUid = '';
+    const s = produce(makeBaseState(), draft => {
+      draft.players.self.partner.turnEffects = { apMod_turn: -2500 };
+      sceneAtkUid = mutate.scene.enter(draft, 'self', 'SceneAtk', { active: true, named: false }).uid;
+      defUid = mutate.scene.enter(draft, 'opp', 'Def', { active: false, named: false }).uid;
+      mutate.scene.setState(draft, defUid, 'sleep');
+    });
+    const policy = new HeuristicPolicy({ seed: 's' });
+    const moves: Move[] = [
+      { kind: 'actionAgainstChar', byUid: 'partner:self', targetUid: defUid },
+      { kind: 'actionAgainstChar', byUid: sceneAtkUid, targetUid: defUid },
+      { kind: 'endTurn' },
+    ];
+
+    const got = policy.choose(s, moves, 'self');
+
+    expect(got).toEqual({ kind: 'actionAgainstChar', byUid: sceneAtkUid, targetUid: defUid });
+  });
+
   it('picks winning attack (attacker AP >= target AP)', () => {
     registerCardDef(makeCard('Atk', { ap: 2000, lp: 1 }));
     registerCardDef(makeCard('Def', { ap: 1500, lp: 1 }));

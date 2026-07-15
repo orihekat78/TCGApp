@@ -306,9 +306,12 @@ function handleHook(
           char: state.players[card.player].scene.find(c => c.uid === card.uid)!,
         })
       : [];
-    const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0 || handCutinAbilities.length > 0 || triggeredAuraAbilities.length > 0)
-      ? [...(def.abilities as AbilityDef[]), ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]) : []), ...riderAbilities, ...handCutinAbilities, ...triggeredAuraAbilities]
+    const printedAbilities = card.area === 'scene' && readChar.originalAbilitiesDisabled(state, card.uid)
+      ? []
       : (def.abilities as AbilityDef[]);
+    const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0 || handCutinAbilities.length > 0 || triggeredAuraAbilities.length > 0)
+      ? [...printedAbilities, ...(Array.isArray(grantedRaw) ? (grantedRaw as AbilityDef[]) : []), ...riderAbilities, ...handCutinAbilities, ...triggeredAuraAbilities]
+      : printedAbilities;
     for (const ability of abilityList) {
       if (ability.type !== 'triggered') continue;
       const trig = ability.trigger;
@@ -705,7 +708,7 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
   // setCards 保持) から entry 単位で def を引く (公式Q&A: 2枚セット→2つ発動)。裏向きは不発 (rules/16)。
   // source = host (uid/cardId/player) — rider の「このキャラ (host) がリムーブされたとき」座標系。
   const riderAbilities: AbilityDef[] = [];
-  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean }[]; turnEffects?: Record<string, unknown> } } | undefined)?.removedChar;
+  const removedChar = (payload as { removedChar?: { setCards?: { cardId: string; faceUp: boolean }[]; turnEffects?: Record<string, unknown>; keywordOverrides?: { disabledOriginal?: boolean } } } | undefined)?.removedChar;
   for (const entry of removedChar?.setCards ?? []) {
     if (entry.faceUp !== true) continue;
     const setDef = readDef.card(entry.cardId);
@@ -731,7 +734,10 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
     : removedChar
       ? effectiveTriggeredAuraAbilities(state, { player: card.player, uid: card.uid, cardId: card.cardId, char: removedChar as never })
       : [];
-  for (const ability of [...(def.abilities as AbilityDef[]), ...riderAbilities, ...grantedSelfAbilities, ...auraAbilities]) {
+  const printedAbilities = readChar.originalAbilitiesDisabledOn(removedChar)
+    ? []
+    : (def.abilities as AbilityDef[]);
+  for (const ability of [...printedAbilities, ...riderAbilities, ...grantedSelfAbilities, ...auraAbilities]) {
     if (ability.type !== 'triggered') continue;
     const trig = ability.trigger;
     if (!trig || trig.hook !== 'leave:to-remove') continue;
@@ -794,6 +800,7 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
     cardId: s.cardId,
     area: 'scene', // 現場にいた → on-scene scope を通す (rules/17)
   };
+  if (readChar.originalAbilitiesDisabled(state, card.uid)) return;
   for (const ability of def.abilities as AbilityDef[]) {
     if (ability.type !== 'triggered') continue;
     const trig = ability.trigger;

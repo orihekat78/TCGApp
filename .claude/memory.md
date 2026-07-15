@@ -123,3 +123,12 @@
 
 - `npm run lint` is now 0 errors / 0 warnings. Real `Playmat` effect dependency was corrected; imperative `use*` action helpers and legacy test-fixture-only diagnostics are excluded by scoped lint policy.
 - Focused Playmat/switch tests pass (16). Full Vitest exceeds this environment's 124-second command limit; run was timed out before completion.
+
+## 2026-07-14 user-reported bug wave
+
+- BUG-189–198 implemented: browse/reveal/reorder/hand-entry/contact UI,
+  partner AP, original-ability disable, CPU pacing, and B04018/B04018P.
+- Horizontal card fix: B05067 and B05069 no longer rebuild `eventRemoveByAP`
+  picks. Cost-8 removal stays deferred: require card ID and game log.
+- Local focused/full non-browser gates and independent reviews are green;
+  user delegated full Playwright/complete-match execution to CI.

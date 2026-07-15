@@ -39,7 +39,7 @@ function buildBoard(fileCount: number) {
     self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['白'], declaredUseCount: {} };
     self.scene = [mkC('D08005', 's1', 'active')]; // attacker (active, 名乗りなし)
     opp.scene = [mkC('D08006', 'o1', 'sleep')]; // action[char] 対象 (sleep) — ガード候補なし
-    self.hand = ['B03129'];
+    self.hand = ['B03129', 'D08017', 'D08003'];
     self.deck = ['D08013']; // 変装時 1ドロー対象
     self.evidence = []; self.remove = [];
     const fb = { type: 'card-back', cardId: 'D08017' };
@@ -69,8 +69,16 @@ test.describe('disguise-hook 2026-06-06 (タスクC)', () => {
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
 
     // self の contact window で CID モーダルに「変装」候補 B03129 が出る (canDisguise=true)
-    await expect(page.locator('[data-testid="cid-disg-B03129"]')).toBeVisible({ timeout: 5000 });
-    await page.locator('[data-testid="cid-disg-B03129"]').click();
+    await expect(page.locator('[data-testid="cid-disg-B03129#0"]')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid^="cid-hand-card-"]')).toHaveCount(3);
+    await expect(page.locator('[data-testid="cid-hand-card-B03129#0"]')).toHaveClass(/is-eligible/);
+    await expect(page.locator('[data-testid="cid-hand-card-D08017#1"]')).toHaveClass(/is-eligible/);
+    await expect(page.locator('[data-testid="cid-hand-card-D08003#2"]')).not.toHaveClass(/is-eligible/);
+    await expect(page.locator('[data-testid="cid-cutin-D08017#1"]')).toBeVisible();
+    await page.locator('[data-testid="cid-hand-expand-D08003#2"]').click();
+    await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
+    await page.locator('.card-expand-close').click();
+    await page.locator('[data-testid="cid-disg-B03129#0"]').click();
 
     await waitForActionEnd(page);
     const gs = await getGameState(page);
@@ -82,6 +90,22 @@ test.describe('disguise-hook 2026-06-06 (タスクC)', () => {
     expect(self.deck, '引いた D08013 はデッキから抜けた').not.toContain('D08013');
     // rules/09: 変装した元キャラ (D08005) はデッキの下へ
     expect(self.deck, '変装した元キャラ D08005 がデッキ下へ').toContain('D08005');
+    expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
+  });
+
+  test('mixed hand keeps the cut-in action selectable', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await prime(page);
+    await buildGameState(page, buildBoard(6), 6);
+
+    await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
+    await expect(page.locator('[data-testid="cid-cutin-D08017#1"]')).toBeVisible({ timeout: 5000 });
+    await page.locator('[data-testid="cid-cutin-D08017#1"]').click();
+
+    await waitForActionEnd(page);
+    const gs = await getGameState(page);
+    const log = gs.log as { action?: string; player?: string }[];
+    expect(log.some((entry) => entry.action === 'contact-cutin' && entry.player === 'self')).toBe(true);
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
 });

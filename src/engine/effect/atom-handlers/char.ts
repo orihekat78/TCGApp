@@ -178,9 +178,10 @@ export function atomCharDisableOriginal(s: GameState, a: Record<string, unknown>
       // BUG-068: bind ref 解決を配線
       const doUid = resolveBindRef(a.uid, ctx) as string;
       if (typeof doUid !== 'string' || doUid.startsWith('$')) return;
-      mutate.char.disableOriginalAbilities(s, doUid);
+      const scope = (a.scope as 'turn' | 'permanent' | undefined) ?? 'permanent';
+      mutate.char.disableOriginalAbilities(s, doUid, scope);
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charDisableOriginal', target: doUid });
+      mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charDisableOriginal', target: doUid, result: scope });
       return;
     }
 

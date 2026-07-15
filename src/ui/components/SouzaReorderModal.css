@@ -7,7 +7,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  box-sizing: border-box;
+  padding: 12px;
+  /* decision modal 最優先。deck reveal / generic picker より前面。 */
+  z-index: 10000;
 }
 
 .souza-modal {
@@ -15,7 +18,9 @@
   border: 3px solid #2980b9;
   border-radius: 12px;
   padding: 20px 24px;
-  min-width: 420px;
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 24px));
+  min-width: 0;
   max-width: 560px;
   box-shadow: 0 8px 32px rgba(41, 128, 185, 0.4);
 }

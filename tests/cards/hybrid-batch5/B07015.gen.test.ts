@@ -133,7 +133,10 @@ const SCENARIOS: ProbeScenario[] = [
       "partnerAreaCards": [],
       "deckSize": 6,
       "caseStatus": "解決編",
-      "fileCount": 6
+      "fileCount": 6,
+      "partnerColors": [
+        "緑"
+      ]
     },
     "drive": {
       "kind": "declared",
@@ -222,7 +225,10 @@ const SCENARIOS: ProbeScenario[] = [
       "partnerAreaCards": [],
       "deckSize": 6,
       "caseStatus": "解決編",
-      "fileCount": 6
+      "fileCount": 6,
+      "partnerColors": [
+        "緑"
+      ]
     },
     "drive": {
       "kind": "declared",

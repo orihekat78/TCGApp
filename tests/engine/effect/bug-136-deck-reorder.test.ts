@@ -30,7 +30,7 @@ beforeEach(() => {
 afterAll(() => setHuman(null));
 
 describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
-  it('human 所有 & 2 枚以上 → __pendingDeckReorderSide が底ブロックで set される', () => {
+  it('human 所有 & 2 枚以上 → confirmまでdeck不変でreorder pendingがsetされる', () => {
     setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => {
       d.players.self.deck = ['C', 'D', 'E', 'A', 'B']; // C,D,E が「残り」、A,B が既存底
@@ -38,10 +38,18 @@ describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
     const s1 = produce(s0, (d) => {
       runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest' }, ctxWithRest(['C', 'D', 'E']));
     });
-    // C,D,E が底へ → deck = [A, B, C, D, E]
-    expect(s1.players.self.deck).toEqual(['A', 'B', 'C', 'D', 'E']);
+    expect(s1.players.self.deck).toEqual(['C', 'D', 'E', 'A', 'B']);
     const side = _drainPendingDeckReorderSide();
-    expect(side).toEqual({ player: 'self', cardIds: ['C', 'D', 'E'] });
+    expect(side).toMatchObject({
+      player: 'self',
+      cardIds: ['C', 'D', 'E'],
+      deckSnapshot: ['C', 'D', 'E', 'A', 'B'],
+      occurrences: [
+        { cardId: 'C', index: 0 },
+        { cardId: 'D', index: 1 },
+        { cardId: 'E', index: 2 },
+      ],
+    });
     setHuman(null);
   });
 

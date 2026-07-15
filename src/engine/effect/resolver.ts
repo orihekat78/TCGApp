@@ -23,7 +23,7 @@ import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrS
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from './resolve-picks.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
-import { resolveBindRef } from './atom-handlers/_shared.js';
+import { _attachPendingDeckReorderContinuation, _peekPendingDeckReorderSide, resolveBindRef } from './atom-handlers/_shared.js';
 import { _peekPendingEffectRepeatOptionalSide, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, setPendingSetCardChoiceRemainder, type RpsHand } from './pending-state.js';
 
 /**
@@ -60,6 +60,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       };
       for (let i = 0; i < eff.steps.length; i++) {
         const repeatBefore = _peekPendingEffectRepeatOptionalSide() !== null;
+        const reorderBefore = _peekPendingDeckReorderSide();
         const qBefore = gSeq.__pendingEffectPickQueue?.length ?? 0;
         run(state, eff.steps[i]!, ctx);
         if (ctx.dyn?.rpsPending === true || ctx.dyn?.setCardChoicePending === true) {
@@ -70,6 +71,14 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         }
         const repeatAfter = _peekPendingEffectRepeatOptionalSide() !== null;
         if (!repeatBefore && repeatAfter) { setPendingEffectRepeatOptionalRemainder(eff.steps.slice(i + 1)); return; }
+        const reorderAfter = _peekPendingDeckReorderSide();
+        if (reorderAfter && reorderAfter !== reorderBefore) {
+          const remainder = eff.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            _attachPendingDeckReorderContinuation({ remainder, ctx, kind: 'sequence' });
+          }
+          return;
+        }
         const qAfter = gSeq.__pendingEffectPickQueue?.length ?? 0;
         if (qAfter > qBefore) {
           const remainder = eff.steps.slice(i + 1);
@@ -98,12 +107,21 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         // ctx は本 run() tree の全 child run()/runAtom に同一参照で素通しされるため、atom-handler /
         // resolve-picks (tryRePickFromAtom 経由) が同一 ctx に立てた値を本ループが読む (intra-produce)。
         (ctx.dyn ??= {}).chainStepNoApply = false;
+        const reorderBefore = _peekPendingDeckReorderSide();
         const queueLenBefore = g.__pendingEffectPickQueue?.length ?? 0;
         run(state, step, ctx);
         if (ctx.dyn?.rpsPending === true || ctx.dyn?.setCardChoicePending === true) {
           if (ctx.dyn.setCardChoicePending === true) setPendingSetCardChoiceRemainder(eff.steps.slice(i + 1), 'chain');
           delete ctx.dyn.rpsPending;
           delete ctx.dyn.setCardChoicePending;
+          return;
+        }
+        const reorderAfter = _peekPendingDeckReorderSide();
+        if (reorderAfter && reorderAfter !== reorderBefore) {
+          const remainder = eff.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            _attachPendingDeckReorderContinuation({ remainder, ctx, kind: 'chain' });
+          }
           return;
         }
         const queueLenAfter = g.__pendingEffectPickQueue?.length ?? 0;
@@ -127,8 +145,19 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     case 'parallel': {
       // TODO: Phase 4+ で必要に応じて並列セマンティクスを定義する。
       // 現状は sequence と同じ挙動 (副作用順は配列順)。
-      for (const step of eff.steps) {
-        run(state, step, ctx);
+      for (let i = 0; i < eff.steps.length; i++) {
+        const reorderBefore = _peekPendingDeckReorderSide();
+        run(state, eff.steps[i]!, ctx);
+        const reorderAfter = _peekPendingDeckReorderSide();
+        if (reorderAfter && reorderAfter !== reorderBefore) {
+          const remainder = eff.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            // `parallel` currently has sequence semantics, so its deferred tail
+            // resumes through the existing sequence continuation representation.
+            _attachPendingDeckReorderContinuation({ remainder, ctx, kind: 'sequence' });
+          }
+          return;
+        }
       }
       return;
     }
@@ -164,15 +193,43 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       // 直前の $each バインディングを退避し、ループ完了後に復元する。
       const prev = ctx.bindings['$each'];
       try {
-        for (const cand of list) {
+        for (let i = 0; i < list.length; i++) {
+          const cand = list[i]!;
           ctx.bindings['$each'] = [cand];
+          const reorderBefore = _peekPendingDeckReorderSide();
           run(state, eff.do, ctx);
+          const reorderAfter = _peekPendingDeckReorderSide();
+          if (reorderAfter && reorderAfter !== reorderBefore) {
+            const remaining = list.slice(i + 1);
+            if (remaining.length > 0) {
+              const bindings = { ...ctx.bindings };
+              if (prev === undefined) delete bindings['$each'];
+              else bindings['$each'] = prev;
+              if (eff.over.kind === 'fromBound' && eff.over.bindKey.startsWith('$__forEachReorderRemaining')) {
+                delete bindings[eff.over.bindKey];
+              }
+              let suffix = 0;
+              let bindKey = '$__forEachReorderRemaining';
+              while (bindings[bindKey] !== undefined) bindKey = `$__forEachReorderRemaining${++suffix}`;
+              bindings[bindKey] = remaining;
+              const resumeCtx: EffectCtx = { ...ctx, bindings };
+              _attachPendingDeckReorderContinuation({
+                remainder: [{ kind: 'forEach', over: { kind: 'fromBound', bindKey }, do: eff.do }],
+                ctx: resumeCtx,
+                kind: 'sequence',
+              }, true);
+            }
+            return;
+          }
         }
       } finally {
         if (prev === undefined) {
           delete ctx.bindings['$each'];
         } else {
           ctx.bindings['$each'] = prev;
+        }
+        if (eff.over.kind === 'fromBound' && eff.over.bindKey.startsWith('$__forEachReorderRemaining')) {
+          delete ctx.bindings[eff.over.bindKey];
         }
       }
       return;

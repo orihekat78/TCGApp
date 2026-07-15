@@ -2010,8 +2010,9 @@
       },
       {
        "args": {
+        "faceDownOnly": true,
         "filter": {
-         "hasSetCards": true
+         "hasFaceDownSetCards": true
         },
         "max": 1,
         "player": "self",
@@ -7575,8 +7576,9 @@
      "steps": [
       {
        "args": {
+        "faceDownOnly": true,
         "filter": {
-         "hasSetCards": true
+         "hasFaceDownSetCards": true
         },
         "max": 1,
         "player": "self",
@@ -8847,8 +8849,9 @@
      "steps": [
       {
        "args": {
+        "faceDownOnly": true,
         "filter": {
-         "hasSetCards": true
+         "hasFaceDownSetCards": true
         },
         "max": 1,
         "player": "self",
@@ -9502,32 +9505,17 @@
      "kind": "sleepSelf"
     },
     "effect": {
-     "chooser": "self",
-     "kind": "choice",
-     "options": [
-      {
-       "args": {
-        "target": {
-         "chooser": "self",
-         "kind": "pick",
-         "n": {
-          "max": 1,
-          "min": 0
-         },
-         "query": {
-          "area": "scene",
-          "filter": {
-           "levelMax": 8
-          },
-          "side": "either"
-         }
-        },
-        "uid": "$pick"
-       },
-       "kind": "atom",
-       "verb": "sceneRemove"
-      }
-     ]
+     "args": {
+      "cause": "effect",
+      "filter": {
+       "levelMax": 8
+      },
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
     },
     "ruleRefs": [
      "rules/21-declared-ability-cost.md",
@@ -9824,29 +9812,14 @@
      "kind": "and"
     },
     "effect": {
-     "chooser": "self",
-     "kind": "choice",
-     "options": [
-      {
-       "args": {
-        "target": {
-         "chooser": "self",
-         "kind": "pick",
-         "n": {
-          "max": 1,
-          "min": 0
-         },
-         "query": {
-          "area": "scene",
-          "side": "either"
-         }
-        },
-        "uid": "$pick"
-       },
-       "kind": "atom",
-       "verb": "sceneRemove"
-      }
-     ]
+     "args": {
+      "cause": "effect",
+      "max": 1,
+      "player": "self",
+      "side": "either"
+     },
+     "kind": "atom",
+     "verb": "sceneRemove"
     },
     "limit": {
      "kind": "turn",

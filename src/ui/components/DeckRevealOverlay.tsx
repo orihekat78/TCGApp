@@ -33,7 +33,22 @@ export function DeckRevealOverlay(): JSX.Element | null {
     const area = (p.atomArgs as { target?: { query?: { area?: string } } } | undefined)?.target?.query?.area;
     return area === 'deck';
   });
+  const downstreamDecisionActive = useGameStateStore((s) => {
+    if (s.pendingDeckReorder !== null) return true;
+    const p = s.pendingEffectPick;
+    if (p?.atomVerb !== 'sceneEnter') return false;
+    const area = (p.atomArgs as { target?: { query?: { area?: string } } }).target?.query?.area;
+    return area === 'hand';
+  });
   const [phase, setPhase] = useState<Phase>('reveal');
+
+  useEffect(() => {
+    // B04026 等は公開選択後、順序決定/手札登場へ進む。
+    // 公開モーダルに統合済みの snapshot を残し、後から誤った shuffle 演出を出さない。
+    if (pending && pending.awaitingPick !== true && downstreamDecisionActive) {
+      setPending(null);
+    }
+  }, [pending, downstreamDecisionActive, setPending]);
 
   useEffect(() => {
     if (!pending) {
@@ -64,17 +79,15 @@ export function DeckRevealOverlay(): JSX.Element | null {
   }, [pending, setPending, deckWindowPickActive]);
 
   if (!pending) return null;
+  // 公開選択は CardListModal へ統合。後続の並べ替え/手札登場の操作も遮らない。
+  if (pending.awaitingPick === true || deckWindowPickActive || downstreamDecisionActive) return null;
 
   const playerLabel = pending.player === 'self' ? '自分' : '相手';
-  const headerText =
-    pending.awaitingPick === true || deckWindowPickActive
-      ? // BUG-132 GAP-1: 「1枚まで」= 0枚可 (rules/15) — 選択待ちであることを明示
-        '公開したカードから選択中…（加えないことも選べます）'
-      : phase === 'reveal'
-        ? `${playerLabel}のデッキを公開中…`
-        : phase === 'toBottom'
-          ? '残りのカードをデッキの下へ…'
-          : 'デッキをシャッフル中…';
+  const headerText = phase === 'reveal'
+    ? `${playerLabel}のデッキを公開中…`
+    : phase === 'toBottom'
+      ? '残りのカードをデッキの下へ…'
+      : 'デッキをシャッフル中…';
 
   return (
     <div className="deck-reveal-overlay" role="status" data-testid="deck-reveal-overlay">

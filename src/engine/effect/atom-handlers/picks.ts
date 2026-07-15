@@ -162,40 +162,37 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           const matchCands = revealed
             .map((cardId, i) => ({ cardId, i }))
             .filter(({ cardId }) => filter(cardId));
-          if (matchCands.length > 0) {
-            pushPendingPickFromAtom({
-              player: owner,
-              ownerPlayer: owner, // BUG-175: 座標系明示 (本 site は chooser==owner ゆえ挙動不変)
-              candidates: matchCands.map(({ cardId, i }) => ({ uid: `${cardId}#${i}`, cardId, player: p })),
-              atomVerb: 'deckRevealUntil',
-              // 再入用に window snapshot を同梱 (deck 再走査しない)。chooseMatch 等の元 args も保持。
-              // BUG-132: toPlainDeep — drafted entry.effect 由来の nested object (filter 等) を
-              // plain 化して produce 境界を安全に跨ぐ (revoked-proxy crash 防止)
-              atomArgs: toPlainDeep({ ...(a as Record<string, unknown>), __windowIds: [...revealed] }),
-              nMin: 0, // 「まで」= 0枚可 → EffectPickerModal が「対象を選ばない」を表示 (既存配線)
-              nMax: 1,
-              source: {
-                cardId: ctx.source.cardId ?? '',
-                abilityId: (ctx.source as { abilityId?: string }).abilityId ?? '',
-              },
-              skipResolvesAtom: true,
-            });
-            // overlay は hold mode — pick 解決まで公開リストを表示し続ける (自動進行しない)
-            (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
-              player: p,
-              revealed: [...revealed],
-              matched: null,
-              awaitingPick: true,
-            };
-            mutate.log.append(s, {
-              ts: Date.now(), player: p, turn: s.turn.number,
-              action: 'effect:deckRevealUntil',
-              result: `revealed=${revealed.length} awaiting-pick (matches=${matchCands.length})`,
-            });
-            // bind 未書込のまま return → resolver の queue 増加検知が残り step を pick に同梱して停止
-            return;
-          }
-          // match 0 件 → 従来 path へ fallthrough ($matched=[] bind、conditional 不発)
+          pushPendingPickFromAtom({
+            player: owner,
+            ownerPlayer: owner, // BUG-175: 座標系明示 (本 site は chooser==owner ゆえ挙動不変)
+            candidates: matchCands.map(({ cardId, i }) => ({ uid: `${cardId}#${i}`, cardId, player: p })),
+            atomVerb: 'deckRevealUntil',
+            // 再入用に window snapshot を同梱 (deck 再走査しない)。chooseMatch 等の元 args も保持。
+            // BUG-132: toPlainDeep — drafted entry.effect 由来の nested object (filter 等) を
+            // plain 化して produce 境界を安全に跨ぐ (revoked-proxy crash 防止)
+            atomArgs: toPlainDeep({ ...(a as Record<string, unknown>), __windowIds: [...revealed] }),
+            nMin: 0, // 「まで」= 0枚可。候補0でも確認/skip decisionを明示する。
+            nMax: 1,
+            source: {
+              cardId: ctx.source.cardId ?? '',
+              abilityId: (ctx.source as { abilityId?: string }).abilityId ?? '',
+            },
+            skipResolvesAtom: true,
+          });
+          // overlay は hold mode — pick 解決まで公開リストを表示し続ける (自動進行しない)
+          (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
+            player: p,
+            revealed: [...revealed],
+            matched: null,
+            awaitingPick: true,
+          };
+          mutate.log.append(s, {
+            ts: Date.now(), player: p, turn: s.turn.number,
+            action: 'effect:deckRevealUntil',
+            result: `revealed=${revealed.length} awaiting-pick (matches=${matchCands.length})`,
+          });
+          // bind 未書込のまま return → resolver の queue 増加検知が残り step を pick に同梱して停止
+          return;
         }
       }
       // bindings に Candidate[] として保存
@@ -269,33 +266,38 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
         const cAny = c as unknown as { cardId?: string };
         return cAny.cardId ?? '';
       }).filter(id => id !== '');
-      // 元のデッキから該当 ID を除去 (deckRevealUntil で公開された分はまだデッキにある)
-      // BUG-132 GAP-1 防御: 実際に splice できた id のみ bottom へ移す。chooseMatch の pick await 中に
-      // 他 pending entry が deck を消費した場合 (同時 trigger の window 侵食、低確率)、deck に無い id を
-      // 無条件 push すると複製が生まれるため (敵対レビュー impl lens 指摘)。
       const deck = s.players[p].deck;
-      const splicedIds: string[] = [];
-      for (const id of ids) {
-        const idx = deck.indexOf(id);
-        if (idx !== -1) {
-          deck.splice(idx, 1);
-          splicedIds.push(id);
-        }
+      // Resolve exact occurrences without mutating. Prefer bound snapshot indexes when
+      // still valid; otherwise consume the first unused matching occurrence.
+      const used = new Set<number>();
+      const occurrences: Array<{ cardId: string; index: number }> = [];
+      for (const [position, id] of ids.entries()) {
+        const candidate = bound[position] as unknown as { index?: number };
+        const hinted = candidate.index;
+        const index = typeof hinted === 'number' && !used.has(hinted) && deck[hinted] === id
+          ? hinted
+          : deck.findIndex((cardId, i) => cardId === id && !used.has(i));
+        if (index === -1) continue;
+        used.add(index);
+        occurrences.push({ cardId: id, index });
       }
-      mutate.deck.toBottom(s, p, splicedIds);
-      // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(splicedIds.length) });
-      // BUG-136: 「残りを好きな順番でデッキの下に移す」の順序選択を human に surface。
-      // 公開順 (splicedIds 順) は既に合法な一choice として底へ置かれている。human 所有 & 2 枚以上のときのみ
-      // 並べ替え modal を出す (1 枚以下は順序が無意味、AI/spectator/smoke は __humanPlayerSide が当該 player
-      // でないため byte-equal)。底ブロック = deck 末尾 splicedIds.length 件。
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-      if (splicedIds.length >= 2 && p === humanSide) {
+      if (occurrences.length >= 2 && p === humanSide) {
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player: p,
-          cardIds: [...splicedIds],
+          cardIds: occurrences.map(entry => entry.cardId),
+          deckSnapshot: [...deck],
+          occurrences,
+          ctx: toPlainDeep(ctx),
         };
+        mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: `await ${occurrences.length}` });
+        return;
       }
+      // AI / spectator / single-card path remains synchronous.
+      for (const entry of [...occurrences].sort((a, b) => b.index - a.index)) deck.splice(entry.index, 1);
+      const splicedIds = occurrences.map(entry => entry.cardId);
+      mutate.deck.toBottom(s, p, splicedIds);
+      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckToBottomBound', result: String(splicedIds.length) });
       return;
     }
 
@@ -355,6 +357,7 @@ export function atomDeckBottomReorderBound(s: GameState, a: Record<string, unkno
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player: p,
           cardIds: [...ids],
+          ctx: toPlainDeep(ctx),
         };
         mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckBottomReorderBound', result: `await ${ids.length}` });
         return;

@@ -84,6 +84,8 @@ export type PartnerOnBoard = {
   cardId: string;
   state: 'active' | 'sleep' | 'stun';
   location: 'partner-area' | 'file-area' | 'mr-removed';
+  /** Scoped actor modifiers. Optional for legacy saved states. */
+  turnEffects?: Record<string, unknown>;
 };
 
 export type EvidenceCard = {

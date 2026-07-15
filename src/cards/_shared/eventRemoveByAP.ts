@@ -34,29 +34,16 @@ export function eventRemoveByAP(opts: {
     },
     condition: opts.additionalCondition,
     effect: {
-      kind: 'choice',
-      chooser: 'self',
-      options: [
-        {
-          kind: 'atom',
-          verb: 'sceneRemove',
-          args: {
-            uid: '$pick',
-            cause: 'effect',
-            target: {
-              kind: 'pick',
-              query: {
-                area: 'scene',
-                side: opts.side ?? 'either',
-                filter: { apMax: opts.apMax },
-                state: opts.state,
-              },
-              n: { min: 0, max: 1 },
-              chooser: 'self',
-            },
-          },
-        },
-      ],
+      kind: 'atom',
+      verb: 'sceneRemove',
+      args: {
+        player: 'self',
+        side: opts.side ?? 'either',
+        max: 1,
+        cause: 'effect',
+        filter: { apMax: opts.apMax },
+        state: opts.state,
+      },
     },
     description: `AP${opts.apMax}以下のキャラを1枚まで選び、リムーブする。`,
     ruleRefs: ['rules/15-abilities-effects.md', 'rules/19-special-rules.md'],

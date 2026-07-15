@@ -61,6 +61,24 @@ export function auraDeltaSafe(s: GameState, uid: string | undefined, which: 'apD
   }
 }
 
+// Board keyword filters must use the same effective value as action eligibility.
+// Late-binding avoids candidates -> read/char -> candidates static import recursion.
+type EffectiveKeywordFn = (s: GameState, uid: string, keyword: string) => boolean | undefined;
+let effectiveKeywordImpl: EffectiveKeywordFn | null = null;
+let _inEffectiveKeyword = false;
+export function registerEffectiveKeyword(fn: EffectiveKeywordFn): void {
+  effectiveKeywordImpl = fn;
+}
+function effectiveKeywordSafe(s: GameState, uid: string, keyword: string): boolean | undefined {
+  if (effectiveKeywordImpl === null || _inEffectiveKeyword) return undefined;
+  _inEffectiveKeyword = true;
+  try {
+    return effectiveKeywordImpl(s, uid, keyword);
+  } finally {
+    _inEffectiveKeyword = false;
+  }
+}
+
 // engine additive wave-6 (2026-07-01, P37): 継続的 trait/name 付与 (continuousModifier.grantTraits/grantNames)。
 // continuousDelta/auraDelta と同じ late-binding + 再帰 guard。effectiveGrant 本体は read/char.ts (自身の continuous
 // ability walk) に実装し register する。matchOneFilter (trait/cardName/cardNameNot) + read.char.traits/names +
@@ -543,7 +561,10 @@ export function matchOneFilter(
     // BUG-122: keyword は通常 keywords[] に入るが、アイコン能力 (カットイン / 変装 / ヒラメキ /
     // ミスリード) は keywords[] ではなく ability 構造で表現される。defHasKeyword が両表現を吸収する
     // (旧実装は keywords[] のみ → B05112「【カットイン】を持つキャラ」が候補0で機能しなかった)。
-    if (!wants.some(w => defHasKeyword(d, w))) return false;
+    const matches = c
+      ? wants.some(w => effectiveKeywordSafe(state, c.uid, w) ?? defHasKeyword(d, w))
+      : wants.some(w => defHasKeyword(d, w));
+    if (!matches) return false;
   }
 
   // M2後半 (2026-07-10, D06003): cutin 効果内容 filter — 「【カットイン】AP＋」を持つ (印字包含判定、

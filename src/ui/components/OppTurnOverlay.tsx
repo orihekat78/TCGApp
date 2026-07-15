@@ -15,6 +15,7 @@
 
 import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
+import { useContactModalStore } from '@/ui/hooks/useContactModalStore.js';
 import { def as readDef } from '@/engine/read/def.js';
 import * as flow from '@/engine/flow/index.js';
 import type { GameState, ActionContext } from '@/engine/types/index.js';
@@ -71,8 +72,13 @@ export function OppTurnOverlay(): JSX.Element | null {
   // subscribe するため再描画は親経由で伝搬する。activeActionId 変化も親再描画でカバー。
   const store = useGameStateStore.getState();
   const gameState = store.gameState;
+  // hook で実機更新を購読。getState fallback で SSR/test の現在 snapshot も読む。
+  const subscribedHumanContactDecision = useContactModalStore((s) => s.cutInDisguise?.player === 'self');
+  const humanContactDecision = subscribedHumanContactDecision
+    || useContactModalStore.getState().cutInDisguise?.player === 'self';
   if (gameState === null) return null;
   if (gameState.turn.player !== 'opp') return null;
+  if (humanContactDecision) return null;
 
   const activeActionId = store.activeActionId;
   const ax = activeActionId ? flow.action._getContext(activeActionId) : null;

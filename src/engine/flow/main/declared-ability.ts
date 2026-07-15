@@ -104,7 +104,9 @@ export function findDeclaredAbility(
   area: 'scene' | 'case' | 'partner-area' | 'hand',
   abilId: string,
 ): AbilityDef | undefined {
-  const printed = readDef.card(cardId)?.abilities?.find((a: AbilityDef) => a.id === abilId);
+  const printed = area === 'scene' && readChar.originalAbilitiesDisabled(state, uid)
+    ? undefined
+    : readDef.card(cardId)?.abilities?.find((a: AbilityDef) => a.id === abilId);
   if (printed) return printed;
   if (area !== 'scene') return undefined;
   for (const p of ['self', 'opp'] as const) {
@@ -230,6 +232,15 @@ export function useDeclaredAbility(
   }
   if (!found) {
     throw new Error(`useDeclaredAbility: card uid=${uid} not on board (scene/case/partner-area/hand)`);
+  }
+  // Public entrypoint is callable without canDeclaredAbility. A suppressed printed
+  // declared ability must stop before count/log/hooks, while externally granted or
+  // face-up set-card abilities with the same id remain effective. Preserve the legacy
+  // unknown-id behavior for non-scene callers.
+  if (found.area === 'scene' && readChar.originalAbilitiesDisabled(state, uid)) {
+    const printed = readDef.card(found.cardId)?.abilities?.find((entry) => entry.id === abilId);
+    if (printed?.type === 'declared'
+      && !findDeclaredAbility(state, uid, found.cardId, found.area, abilId)) return;
   }
   // BUG-112: found.player を渡すことで、selfToDeckBottom 等で source が場外へ出ている場合も
   // player 単位 turnState fallback に【ターン①】カウントが記録される (off-board silent no-op 解消)。

@@ -78,6 +78,8 @@ const inDeck = (s: GameState, id: string) => s.players.self.deck.includes(id);
 
 describe('B05020 吉田歩美 — gate5 runtime behavior', () => {
   beforeEach(() => {
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     event._resetRegistry();
     _resetTriggeredRegistered();
     _resetUidCounter();
@@ -220,8 +222,13 @@ describe('B05020 吉田歩美 — gate5 runtime behavior', () => {
       runAllUntilEmpty(d);
     });
 
-    // match 0件 → chooseMatch pick は surface しない (atom-handlers: matchCands.length>0 のみ pick)
-    expect(pickQueue().length, '該当 0件 → pick surface 無し').toBe(0);
+    const pending = pickQueue()[0];
+    expect(pending?.atomVerb, '該当0件でも公開確認をsurface').toBe('deckRevealUntil');
+    expect(pending?.candidates, '選択可能候補は0件').toEqual([]);
+    g.__pendingEffectPickQueue = [];
+    s = produce(s, (d) => {
+      applyPickSkipAndContinuation(d, pending!);
+    });
     expect(inHand(s, NOTHIT), 'decoy は手札に入らない (filter 実評価)').toBe(false);
     expect(s.players.self.hand.length, '手札 add 0').toBe(0);
     expect(inDeck(s, NOTHIT), 'decoy はデッキに残る (下へ)').toBe(true);

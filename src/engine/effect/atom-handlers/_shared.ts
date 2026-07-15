@@ -2,6 +2,7 @@
 // 元 atom-handlers.ts L14-309 を無改変移送 + export 付与 (refactor Phase 3a, 2026-06-22)
 import type { GameState, AtomVerb, EffectCtx } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
+import type { ContinuationFrame } from '../pending-state.js';
 import { mutate } from '../../mutate/index.js';
 import { cards as engineCards } from '../../cards/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
@@ -39,8 +40,8 @@ export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
 
 // BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 side-channel
 // (side-channel-pattern.md 準拠)。human 所有 & 2 枚以上を底へ移したときのみ set し、UI の
-// DeckReorderModal が並べ替えを surface する。AI / spectator / smoke (__humanPlayerSide が
-// 当該 player でない) では set しないため従来挙動 byte-equal (公開順固定 = 合法な一choice)。
+// DeckReorderModal が並べ替えをsurfaceする。deckToBottomBoundはconfirmまでdeckを変更せず、
+// resolver continuationも本pendingへ保存する。legacy souza等は移動済みbottom blockを扱う。
 declare global {
 
   var __pendingDeckReorderSide: PendingDeckReorderSide | null | undefined;
@@ -48,9 +49,37 @@ declare global {
 
 export type PendingDeckReorderSide = {
   player: 'self' | 'opp';
-  /** デッキ底へ移した cardId 群 (現在の底ブロック、公開順)。human が任意順に並べ替える対象 */
+  /** 並べ替え対象cardId群。新await経路ではconfirmまでデッキ元位置に残る。 */
   cardIds: string[];
+  /** await開始時の全デッキsnapshot。confirm時のstale state防御。 */
+  deckSnapshot?: string[];
+  /** snapshot上の物理occurrence。重複cardIdを別コピーとして保持。 */
+  occurrences?: Array<{ cardId: string; index: number }>;
+  /** 後続効果と共有する保存ctx。 */
+  ctx?: EffectCtx;
+  /** resolverが同梱するsequence/chain remainder。 */
+  continuation?: ContinuationFrame;
 };
+
+export function _peekPendingDeckReorderSide(): PendingDeckReorderSide | null {
+  return (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide ?? null;
+}
+
+export function _attachPendingDeckReorderContinuation(frame: ContinuationFrame, preserveFrameCtx = false): void {
+  const pending = _peekPendingDeckReorderSide();
+  if (!pending) return;
+  const safeFrame: ContinuationFrame = {
+    ...frame,
+    ctx: preserveFrameCtx ? frame.ctx : (pending.ctx ?? frame.ctx),
+  };
+  if (!pending.continuation) {
+    pending.continuation = safeFrame;
+    return;
+  }
+  let tail = pending.continuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = safeFrame;
+}
 
 export function _drainPendingDeckReorderSide(): PendingDeckReorderSide | null {
   const v = (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide ?? null;
@@ -83,8 +112,12 @@ export type PendingDeckPlaceSide = {
   ownerPlayer: 'self' | 'opp';
 };
 
+export function _peekPendingDeckPlaceSide(): PendingDeckPlaceSide | null {
+  return (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide ?? null;
+}
+
 export function _drainPendingDeckPlaceSide(): PendingDeckPlaceSide | null {
-  const v = (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide ?? null;
+  const v = _peekPendingDeckPlaceSide();
   (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
   return v;
 }

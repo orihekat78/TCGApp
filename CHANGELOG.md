@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `40738630c1e7`
+> Source hash: `85b1e9bec20c`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,29 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+## User-reported bug wave (2026-07-14)
+
+### Fixed
+
+- BUG-189–193, 198: browse/pick modal ownership and priority, B04026's full
+  reveal → choice → bottom-order → hand-to-scene chain, contact hand review,
+  and CPU's important-move-only presentation delay.
+- BUG-194, 197: partner effective AP now shares the engine/UI reader and
+  original-ability disable now covers printed abilities while preserving
+  granted and already-resolved effects.
+- BUG-195–196: `eventRemoveByAP` no longer creates a duplicate pick; B04018
+  and B04018P share all three printed abilities. The same duplicate-pick
+  pattern was corrected in B05067 and B05069.
+
+### Verification
+
+- Focused engine, card, UI, and browser probes; typecheck; lint; bug lint;
+  listener/side-channel/docs checks; full Vitest; smoke 1000; benchmark;
+  adversarial and mechanical reviews are green.
+- Full Playwright/complete-match execution is intentionally delegated to CI at
+  the user's request. Cost-8 removal remains unregistered and deferred until
+  its card ID and game log are available.
 
 ## 夜間自走 WC2 — chooser:'opp-of-owner' + invokeHiramekiOfCard (+4 printings、1953→1957)
 

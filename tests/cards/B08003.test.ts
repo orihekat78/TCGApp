@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { B08003 } from '@/cards/ct-p08/B08003';
 import { B08003P } from '@/cards/ct-p08/B08003P';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { mutate } from '@/engine/mutate';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { runAllUntilEmpty } from '@/engine/resolve';
@@ -17,7 +18,11 @@ const character = (id: string, level: number, traits: string[] = []): CardDef =>
 });
 
 describe('B08003 阿笠博士', () => {
-  beforeEach(() => { _resetRegistry(); _clearPendingEffectPickQueue(); });
+  beforeEach(() => {
+    _resetRegistry(); _clearPendingEffectPickQueue();
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
+  });
   it('uses stacked occurrence cost, opponent-owned choice, and the printed conditional branch', () => {
     const [a1, a2] = B08003.abilities;
     expect(a1).toMatchObject({
@@ -69,10 +74,12 @@ describe('B08003 阿笠博士', () => {
     const good = character('GOOD', 8, ['少年探偵団']);
     const other = character('OTHER', 9, ['少年探偵団']);
     const filler = character('FILLER', 1);
-    [B08003, good, other, filler].forEach(registerCardDef);
+    const partner = { ...character('BLUE_PARTNER', 0), kind: 'partner' as const, colors: [...B08003.colors] };
+    [B08003, good, other, filler, partner].forEach(registerCardDef);
     const state = createEmptyGameState();
     state.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     state.players.self.scene.push(sceneChar('B08003', 'agasa'));
+    mutate.partner.init(state, 'self', 'BLUE_PARTNER');
     state.players.self.scene[0]!.stackedCards = [
       { cardId: 'GOOD', instanceId: 'stack:agasa:a' },
       { cardId: 'OTHER', instanceId: 'stack:agasa:b' },

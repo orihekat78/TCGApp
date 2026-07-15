@@ -458,6 +458,29 @@ function substituteAtomPick(
     return sourceKind !== 'event' || !readChar.charUntargetableByOppEvent(state, c.uid);
   });
   if (cands.length === 0) {
+    const zeroChooser: Player = (target as { chooser?: string }).chooser === 'opp-of-owner'
+      ? (ctx.source.player === 'self' ? 'opp' : 'self')
+      : (opts.byPlayer ?? 'self');
+    const zeroN = (target as { n?: { min?: number; max?: number } }).n;
+    const zeroHuman = opts._fromAtomHandler === true
+      && runtimeHumanDecisionPlayer(ctx, opts) === zeroChooser;
+    // Human optional hand-entry is an explicit decision even with no legal cards.
+    // Keep this narrow: other zero-candidate verbs retain their chain/no-op semantics.
+    const zeroArea = (resolvedTarget as { query?: { area?: unknown } }).query?.area;
+    if (verbStr === 'sceneEnter' && zeroArea === 'hand' && zeroN?.min === 0 && zeroHuman) {
+      pushPendingEffectPickSide({
+        player: zeroChooser,
+        ownerPlayer: ctx.source.player,
+        candidates: [],
+        atomVerb: verbStr,
+        atomArgs: toPlainDeep({ ...args }),
+        nMin: 0,
+        nMax: zeroN.max ?? 1,
+        source: opts.source ?? { cardId: '', abilityId: '' },
+        skipResolvesAtom: true,
+      });
+      return atom as Effect;
+    }
     // 拡張 5 (chain): no-candidate を chain break 信号として記録 (Phase 3c: ctx.dyn 経由。runtime tryRePickFromAtom
     // 経路では本 ctx = resolver chain ctx と同一参照ゆえ resolver chain case が読む。初期 walk 経路は dead write)
     (ctx.dyn ??= {}).chainStepNoApply = true;

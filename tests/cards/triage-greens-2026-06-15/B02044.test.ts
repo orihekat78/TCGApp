@@ -80,6 +80,8 @@ function enterBase(): GameState {
 
 describe('B02044 怪盗キッド — gate5 runtime behavior', () => {
   beforeEach(() => {
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     event._resetRegistry();
     _resetTriggeredRegistered();
     _resetUidCounter();

@@ -270,6 +270,12 @@ function deriveScenarios(cardId, ability, staticData, mode) {
     }
     if (condition && condition.kind === 'caseStatus') s.caseStatus = condition.status;
     else if (mode !== 'event-use') s.caseStatus = '解決編'; // default permissive
+    const positiveConditions = condition && condition.kind === 'and'
+      ? (condition.cs ?? condition.all ?? [])
+      : (condition ? [condition] : []);
+    for (const c of positiveConditions) {
+      if (c.kind === 'partnerColor') s.partnerColors = [c.color];
+    }
     return Object.assign(s, extra || {});
   }
 

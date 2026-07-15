@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { produce } from 'immer';
 import { B09033 } from '@/cards/ct-p09/B09033';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -25,8 +25,15 @@ const H3 = highSchooler('B09033_H3');
 const H4 = highSchooler('B09033_H4');
 const DUP = highSchooler('B09033_DUP');
 
+beforeEach(() => {
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
+});
+
 function resetB09033(...defs: CardDef[]): void {
   event._resetRegistry(); _resetRegistry(); _resetTriggeredRegistered(); _clearPendingEffectPickQueue(); _clearPendingEffectOptionalSide(); _clearPendingEffectRepeatOptionalSide();
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
   [B09033, ...defs].forEach(register);
   registerTriggeredListener();
 }

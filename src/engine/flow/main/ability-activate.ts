@@ -14,7 +14,7 @@
 import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { cost as engineCost } from '../../cost/index.js';
 import { def as readDef } from '../../read/def.js';
-import { findCardOnBoard, useDeclaredAbility, findDeclaredAbility } from './declared-ability.js';
+import { canDeclaredAbility, findCardOnBoard, useDeclaredAbility, findDeclaredAbility } from './declared-ability.js';
 import { usePartnerAbility } from './partner-ability.js';
 import { alternativeCostProviders } from '../../cost/alternative.js';
 import { mutate } from '../../mutate/index.js';
@@ -85,6 +85,7 @@ export function activateDeclaredAbility(
     useDeclaredAbility(state, uid, abilId);
     return;
   }
+  if (!canDeclaredAbility(state, uid, abilId)) return;
   const dyn = costParamsToDyn(costParams);
   const ctx: EffectCtx = {
     source: {

@@ -24,6 +24,7 @@ import type {
 import { run as runEffect } from '../effect/resolver.js';
 import { evalCond } from '../cond/eval.js';
 import { _getResolutionLock, _setResolutionLock, event } from '../event/registry.js';
+import { _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide } from '../effect/atom-handlers/_shared.js';
 
 const SAFETY_CAP = 1000;
 
@@ -200,6 +201,9 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
  */
 export function runAllUntilEmpty(state: GameState): void {
   for (let i = 0; i < SAFETY_CAP; i++) {
+    // A deck-order decision is a hard resolution boundary. Do not let a later
+    // stack entry overwrite the single side-channel before the user confirms it.
+    if (_peekPendingDeckReorderSide() || _peekPendingDeckPlaceSide()) return;
     const e = next(state);
     if (e === null) return;
     runOne(state, e);

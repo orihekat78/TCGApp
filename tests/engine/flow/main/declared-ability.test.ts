@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { canDeclaredAbility, useDeclaredAbility } from '@/engine/flow/main/declared-ability';
+import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
@@ -91,6 +92,14 @@ describe('engine.flow.main.useDeclaredAbility', () => {
   });
 
   // BUG-067 (2026-05-28): 事件カード declared ability の ターン① enforcement + case 対応
+  it('activateDeclaredAbility preserves the canonical invalid-uid throw', () => {
+    expect(() =>
+      produce(createEmptyGameState(), draft => {
+        activateDeclaredAbility(draft, 'nonexistent', 'A');
+      }),
+    ).toThrow(/not on board/);
+  });
+
   describe('BUG-067: case + ability.limit enforcement', () => {
     afterEach(() => {
       resetDefRegistry();

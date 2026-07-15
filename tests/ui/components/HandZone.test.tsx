@@ -29,6 +29,24 @@ describe('HandZone', () => {
     expect(html).toMatch(/hand-empty-message">手札なし/);
   });
 
+  it('keeps an empty-hand pick decision visible with an explicit pass button', () => {
+    const html = strip(renderToString(
+      <HandZone
+        cards={[]}
+        expanded
+        pickMode
+        pickableCardIds={new Set()}
+        pickBannerText="カットイン可能 0枚"
+        pickCanSkip
+        pickSkipLabel="パス"
+        onPickSkip={() => undefined}
+      />,
+    ));
+    expect(html).toContain('カットイン可能 0枚');
+    expect(html).toContain('data-testid="hand-zone-pick-skip"');
+    expect(html).toContain('手札なし');
+  });
+
   it('renders all cards as a flat list', () => {
     const cards: HandCardMeta[] = [
       card({ cardId: 'A', name: 'カードA', color: 'blue' }),

@@ -137,7 +137,9 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
   const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
   const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
-  const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
+  const inPickMode = pickCands !== undefined
+    && onPick !== undefined
+    && (pickCands.length > 0 || (pickCanSkip === true && (pickNMin ?? 0) === 0));
   // D08021 driver: multi-pick mode (nMax > 1) で local selection state を保持
   const isMultiPick = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
   const [selectedUids, setSelectedUids] = useState<string[]>([]);

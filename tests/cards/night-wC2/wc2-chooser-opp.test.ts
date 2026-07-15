@@ -66,6 +66,8 @@ const inDeck = (s: GameState, side: 'self' | 'opp', id: string) => s.players[sid
 
 describe('WC2a — pick chooser opp-of-owner (B05093 榎本梓 deck-reveal, 相手が選ぶ)', () => {
   beforeEach(() => {
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     event._resetRegistry();
     _resetTriggeredRegistered();
     _resetUidCounter();

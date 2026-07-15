@@ -11,7 +11,7 @@
 //
 // 既存 SouzaReorderModal.css のスタイルを流用 (同じ「デッキ下へ送る順」UI)。
 
-import { useState, type JSX } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { def as readDef } from '@/engine/read/def.js';
@@ -33,6 +33,10 @@ function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX
   // order は cardId の配列 (重複カード対応のため index ベースで扱う)。
   const [order, setOrder] = useState<string[]>(() => [...cardIds]);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  useEffect(() => {
+    setOrder([...cardIds]);
+    setDragIdx(null);
+  }, [cardIds]);
 
   const move = (from: number, to: number): void => {
     if (to < 0 || to >= order.length || from === to) return;

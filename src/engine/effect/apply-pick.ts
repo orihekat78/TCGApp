@@ -35,7 +35,8 @@ import {
 import { hand } from '../mutate/hand.js';
 import { char as charMutator } from '../mutate/char.js';
 import { scene as sceneMutator } from '../mutate/scene.js';
-import { resolveBindRef } from './atom-handlers/_shared.js';
+import { deck as deckMutator } from '../mutate/deck.js';
+import { _attachPendingDeckReorderContinuation, _peekPendingDeckReorderSide, resolveBindRef, type PendingDeckReorderSide } from './atom-handlers/_shared.js';
 
 export function applyRepeatOptionalAndContinuation(state: GameState, _pending: PendingEffectRepeatOptionalSide, run: boolean): void {
   const resume = _takePendingEffectRepeatOptionalResume();
@@ -220,6 +221,7 @@ function runContinuationChain(state: GameState, head: ContinuationFrame | undefi
   let f: ContinuationFrame | undefined = head;
   while (f) {
     const qBefore = g.__pendingEffectPickQueue?.length ?? 0;
+    const reorderBefore = _peekPendingDeckReorderSide();
     const remainderEffect: Effect = f.remainder.length === 1
       ? f.remainder[0]!
       : { kind: f.kind, steps: f.remainder };
@@ -244,6 +246,12 @@ function runContinuationChain(state: GameState, head: ContinuationFrame | undefi
     }
     runEffect(state, resolvedRemainder as never, f.ctx);
     const qAfter = g.__pendingEffectPickQueue?.length ?? 0;
+    const reorderAfter = _peekPendingDeckReorderSide();
+    if (reorderAfter && reorderAfter !== reorderBefore) {
+      if (f.outer) _attachPendingDeckReorderContinuation(f.outer);
+      runAllUntilEmpty(state);
+      return;
+    }
     if (qAfter > qBefore && f.outer) {
       // remainder 自身が再 pause → 残り outer frames を新 pick (queue[qBefore]) の continuation 末尾に append。
       // (resolver が intra-frame remainder を既に同梱していれば、その outer 末尾に連結される。)
@@ -321,6 +329,69 @@ function validatePendingPick(
       throw new Error('effectPickResolve: aggregateLevelMax violated');
     }
   }
+}
+
+function tallyCardIds(ids: readonly string[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const id of ids) out.set(id, (out.get(id) ?? 0) + 1);
+  return out;
+}
+
+function assertSameCardMultiset(expected: readonly string[], actual: readonly string[]): void {
+  if (actual.length !== expected.length) throw new Error('deckReorderResolve: wrong card count');
+  const e = tallyCardIds(expected);
+  const a = tallyCardIds(actual);
+  if (e.size !== a.size) throw new Error('deckReorderResolve: card multiset mismatch');
+  for (const [id, count] of e) {
+    if (a.get(id) !== count) throw new Error('deckReorderResolve: card multiset mismatch');
+  }
+}
+
+/** Confirm a human deck-bottom order, then resume the saved effect continuation. */
+export function applyDeckReorderAndContinuation(
+  state: GameState,
+  pending: PendingDeckReorderSide,
+  order: readonly string[],
+): void {
+  assertSameCardMultiset(pending.cardIds, order);
+  const deck = state.players[pending.player].deck;
+
+  // Legacy souza/deckBottomReorderBound pending already moved a bottom block.
+  if (!pending.deckSnapshot || !pending.occurrences) {
+    const n = pending.cardIds.length;
+    if (n < 2 || deck.length < n) throw new Error('deckReorderResolve: stale bottom block');
+    const bottom = deck.slice(deck.length - n);
+    assertSameCardMultiset(pending.cardIds, bottom);
+    for (let i = 0; i < n; i++) deck[deck.length - n + i] = order[i]!;
+    if (pending.continuation) runContinuationChain(state, pending.continuation);
+    else runAllUntilEmpty(state);
+    return;
+  }
+
+  if (deck.length !== pending.deckSnapshot.length
+    || deck.some((cardId, index) => cardId !== pending.deckSnapshot![index])) {
+    throw new Error('deckReorderResolve: stale deck snapshot');
+  }
+  if (pending.occurrences.length !== pending.cardIds.length) {
+    throw new Error('deckReorderResolve: stale occurrence count');
+  }
+  const indexes = new Set<number>();
+  for (const occurrence of pending.occurrences) {
+    if (!Number.isInteger(occurrence.index)
+      || occurrence.index < 0
+      || occurrence.index >= deck.length
+      || indexes.has(occurrence.index)
+      || deck[occurrence.index] !== occurrence.cardId) {
+      throw new Error('deckReorderResolve: stale or duplicate occurrence');
+    }
+    indexes.add(occurrence.index);
+  }
+  for (const occurrence of [...pending.occurrences].sort((a, b) => b.index - a.index)) {
+    deck.splice(occurrence.index, 1);
+  }
+  deckMutator.toBottom(state, pending.player, [...order]);
+  if (pending.continuation) runContinuationChain(state, pending.continuation);
+  else runAllUntilEmpty(state);
 }
 
 /**
@@ -841,6 +912,11 @@ export function hasPendingHumanPick(): boolean {
     __pendingEffectOptionalSide?: { player: 'self' | 'opp' } | null;
     __pendingEffectRepeatOptionalSide?: { player: 'self' | 'opp' } | null;
     __pendingEffectChoiceSide?: { player: 'self' | 'opp' } | null;
+    __pendingDeckReorderSide?: { player: 'self' | 'opp' } | null;
+    __pendingDeckPlaceSide?: {
+      player: 'self' | 'opp';
+      ownerPlayer: 'self' | 'opp';
+    } | null;
     __humanPlayerSide?: 'self' | 'opp' | null;
   };
   const humanSide = g.__humanPlayerSide ?? null;
@@ -849,5 +925,7 @@ export function hasPendingHumanPick(): boolean {
   if (g.__pendingEffectOptionalSide?.player === humanSide) return true;
   if (g.__pendingEffectRepeatOptionalSide?.player === humanSide) return true;
   if (g.__pendingEffectChoiceSide?.player === humanSide) return true;
+  if (g.__pendingDeckReorderSide?.player === humanSide) return true;
+  if (g.__pendingDeckPlaceSide?.ownerPlayer === humanSide) return true;
   return false;
 }
