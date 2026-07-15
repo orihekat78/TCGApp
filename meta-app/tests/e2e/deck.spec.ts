@@ -39,17 +39,18 @@ test('DECK: パラレル合算の同ID上限が UI で機能する (追加→兄
   await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
 
   // 江戸川コナン は D08003×2 のみ採用 = cardId 0489 が 2/3。
-  // パラレル D08003/D08004 の両タイルが合算で "2/3" 表示 (パラレル合算の可視化)。
+  // 同 cardId の全印刷が合算で "2/3" 表示 (パラレル合算の可視化)。
   const at2 = page.getByLabel('江戸川コナン 2/3');
-  await expect(at2).toHaveCount(2);
+  const variantCount = await at2.count();
+  expect(variantCount).toBeGreaterThanOrEqual(2);
   await page.screenshot({ path: '.tmp/verify-id-before.png', fullPage: false });
 
   // 1 枚目の絵柄を選択 → 詳細パネルに "2 / 3" + ＋ 有効
   await at2.first().click();
   await expect(page.getByText('2 / 3')).toBeVisible();
   // 詳細の ＋ で +1 → cardId 0489 = 3 → 両絵柄が "3/3" + MAX 表示
-  await page.getByRole('button', { name: '1枚追加' }).click();
-  await expect(page.getByLabel('江戸川コナン 3/3')).toHaveCount(2);
+  await page.getByRole('button', { name: '1枚追加' }).press('Enter');
+  await expect(page.getByLabel('江戸川コナン 3/3')).toHaveCount(variantCount);
   await expect(page.getByText('MAX 3').first()).toBeVisible();
 
   // 兄弟絵柄 (別 cardNum・同 cardId) を選択 → 詳細で「同 ID 上限」+ ＋ 無効でブロックが可視
@@ -94,4 +95,66 @@ test('DECK: デッキコードのエクスポートが表示される', async ({
   // エクスポート用 textarea に CONAN1: コードが入っている
   const ta = page.locator('textarea').first();
   await expect(ta).toHaveValue(/^CONAN1:/);
+});
+
+test('DECK: 右クリックでデッキとプールのカードを拡大表示できる', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/#deck');
+  await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
+
+  // 先頭はデッキ内、末尾はプール内の同一カード。
+  const conan = page.getByLabel('江戸川コナン 2/3');
+  await conan.first().click({ button: 'right' });
+  await expect(page.getByRole('dialog', { name: 'カード拡大表示: 江戸川コナン' })).toBeVisible();
+  await page.getByRole('button', { name: '閉じる' }).click();
+
+  await conan.last().click({ button: 'right' });
+  await expect(page.getByRole('dialog', { name: 'カード拡大表示: 江戸川コナン' })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('DECK: 右クリックでパートナー・事件・選択候補を拡大表示できる', async ({ page }) => {
+  await page.goto('/#deck');
+  await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
+
+  const partnerSlot = page.getByRole('button', { name: /パートナー/ }).first();
+  await partnerSlot.click({ button: 'right' });
+  await expect(page.getByRole('dialog', { name: 'カード拡大表示: 江戸川コナン' })).toBeVisible();
+  await page.getByRole('button', { name: '閉じる' }).click();
+
+  const caseSlot = page.getByRole('button', { name: /事件/ }).first();
+  await caseSlot.click({ button: 'right' });
+  await expect(page.getByRole('dialog', { name: 'カード拡大表示: 青の古城探索事件' })).toBeVisible();
+  await page.getByRole('button', { name: '閉じる' }).click();
+
+  await partnerSlot.click();
+  await expect(page.getByText('パートナーを選択')).toBeVisible();
+  const partnerCandidate = page.locator('[role="button"][aria-label="江戸川コナン"]').last();
+  await partnerCandidate.click({ button: 'right' });
+  await expect(page.getByRole('dialog', { name: 'カード拡大表示: 江戸川コナン' })).toBeVisible();
+});
+
+test('DECK: 枚数上限なしのカードは 4 枚以上でも追加でき、∞ 表示になる', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('conan.meta.v1.decks', JSON.stringify({
+      version: 2,
+      state: {
+        decks: [{
+          id: 'unlimited-test', name: '上限なしテスト', partner: 'D08001', case: 'D08026',
+          cards: [{ num: 'PR158', count: 4 }], modified: 0,
+        }],
+      },
+    }));
+  });
+
+  await page.goto('/#deck');
+  const unlimited = page.getByLabel('犯人 4/∞');
+  await expect(unlimited.first()).toBeVisible({ timeout: 6000 });
+  await unlimited.first().click();
+  await expect(page.getByText('4 / ∞')).toBeVisible();
+  await expect(page.getByRole('button', { name: '1枚追加' })).toBeEnabled();
+  await page.getByRole('button', { name: '1枚追加' }).press('Enter');
+  await expect(page.getByLabel('犯人 5/∞').first()).toBeVisible();
 });

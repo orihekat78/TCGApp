@@ -9,6 +9,10 @@ import { setup, type Deck, type DeckPair } from '@/engine/flow/setup';
 import type { GameState } from '@/engine/types';
 import { register as registerCardDef } from '@/engine/read/def';
 import { B09100 } from '@/cards/ct-p09/B09100';
+import { PR158 } from '@/cards/pr-01/PR158';
+import { PR164 } from '@/cards/pr-01/PR164';
+import { D08003 } from '@/cards/ct-d08/D08003';
+import { D08004 } from '@/cards/ct-d08/D08004';
 
 function makeMainDeck(prefix: string): string[] {
   // 40枚 (rules/02). 3枚x13セット + 1枚 = 40. すべて 3 枚以下になるよう構成。
@@ -74,7 +78,7 @@ describe('engine.flow.setup', () => {
       ).toThrow(/main deck size/);
     });
 
-    it('同IDカードが 4 枚以上なら throw する (rules/02)', () => {
+    it('rejects four copies of an unregistered legacy card id', () => {
       const decks = makeDecks();
       // c0 を 1 枚 → c10 に上書き ⇒ c10 が 4 枚
       decks.self.mainCards[0] = 's-c10';
@@ -85,10 +89,53 @@ describe('engine.flow.setup', () => {
       ).toThrow(/copies of/);
     });
 
+    it('rejects a combined four-plus copies across printings of official card ID 0489', () => {
+      registerCardDef(D08003);
+      registerCardDef(D08004);
+      const decks = makeDecks();
+      decks.self.mainCards = [
+        ...Array(3).fill('D08003'),
+        ...Array(3).fill('D08004'),
+        ...Array.from({ length: 34 }, (_, i) => `parallel-fill-${i}`),
+      ];
+
+      expect(() => produce(createEmptyGameState(), draft => {
+        setup.init(draft, decks);
+      })).toThrow(/copies of/);
+    });
+
+    it('keeps registered cards with different official IDs independent', () => {
+      registerCardDef(D08003);
+      registerCardDef({ ...D08004, id: 'DIFFERENT-ID', no: '9999/DIFFERENT-ID' });
+      const decks = makeDecks();
+      decks.self.mainCards = [
+        ...Array(3).fill('D08003'),
+        ...Array(3).fill('DIFFERENT-ID'),
+        ...Array.from({ length: 34 }, (_, i) => `different-fill-${i}`),
+      ];
+
+      expect(() => produce(createEmptyGameState(), draft => {
+        setup.init(draft, decks);
+      })).not.toThrow();
+    });
+
     it('allows B09100 above the normal copy limit', () => {
       registerCardDef(B09100);
       const decks = makeDecks();
       decks.self.mainCards = Array(40).fill('B09100');
+      expect(() => produce(createEmptyGameState(), draft => {
+        setup.init(draft, decks);
+      })).not.toThrow();
+    });
+
+    it('allows PR158 and PR164 printings of ID 0627 above the normal copy limit', () => {
+      registerCardDef(PR158);
+      registerCardDef(PR164);
+      const decks = makeDecks();
+      decks.self.mainCards = [
+        ...Array(20).fill('PR158'),
+        ...Array(20).fill('PR164'),
+      ];
       expect(() => produce(createEmptyGameState(), draft => {
         setup.init(draft, decks);
       })).not.toThrow();

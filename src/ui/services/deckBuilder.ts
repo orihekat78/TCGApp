@@ -26,13 +26,13 @@ export const AVAILABLE_DECKS: ReadonlyArray<{ id: DeckId; label: string }> = [
 // character は 14 → 12 unique に絞り、event 2 種で枚数を補う。
 const D08_CHAR_IDS = [
   'D08003', 'D08005', 'D08007', 'D08009', 'D08011', 'D08013',
-  'D08015', 'D08017', 'D08018', 'D08021', 'D08022', 'D08023',
+  'D08015', 'D08017', 'D08019', 'D08021', 'D08022', 'D08023',
 ] as const;
 const D08_EVENT_IDS = ['D08024', 'D08025'] as const;
 
 const D11_CHAR_IDS = [
-  'D11003', 'D11004', 'D11005', 'D11006', 'D11007', 'D11009',
-  'D11010', 'D11011', 'D11013', 'D11014', 'D11015', 'D11016',
+  'D11003', 'D11012', 'D11005', 'D11017', 'D11007', 'D11009',
+  'D11018', 'D11011', 'D11013', 'D11014', 'D11015', 'D11016',
 ] as const;
 const D11_EVENT_IDS = ['D11019', 'D11020'] as const;
 

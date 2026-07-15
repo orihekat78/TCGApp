@@ -18,20 +18,33 @@ import { recordMatch, replayLog, ScriptedPolicy } from '@/ai/replay';
 import type { Move } from '@/ai/move-enumerator';
 
 const D08_IDS = [
-  'D08002', 'D08003', 'D08004', 'D08005', 'D08006', 'D08007',
-  'D08008', 'D08009', 'D08010', 'D08011', 'D08012', 'D08013',
-  'D08014', 'D08015',
+  'D08003', 'D08005', 'D08007', 'D08009', 'D08011', 'D08013',
+  'D08015', 'D08017', 'D08019', 'D08021', 'D08022', 'D08023',
+  'D08024', 'D08025',
 ];
 const D11_IDS = [
-  'D11002', 'D11003', 'D11004', 'D11005', 'D11006', 'D11007',
-  'D11008', 'D11009', 'D11010', 'D11011', 'D11012', 'D11013',
-  'D11014', 'D11015',
+  'D11003', 'D11005', 'D11007', 'D11009', 'D11011', 'D11012',
+  'D11013', 'D11014', 'D11015', 'D11016', 'D11017', 'D11018',
+  'D11019', 'D11020',
 ];
+
+function expectOfficialIdLimit(deck: readonly string[]): void {
+  const counts = new Map<string, number>();
+  for (const id of deck) {
+    const card = engine.read.def.card(id);
+    const slash = card?.no.indexOf('/') ?? -1;
+    const officialId = card && slash > 0 ? card.no.slice(0, slash) : id;
+    counts.set(officialId, (counts.get(officialId) ?? 0) + 1);
+  }
+  expect(Math.max(...counts.values())).toBeLessThanOrEqual(3);
+}
 
 function buildDeck40(ids: readonly string[]): string[] {
   const out: string[] = [];
   for (let i = 0; out.length < 40; i++) out.push(ids[i % ids.length]);
-  return out.slice(0, 40);
+  const result = out.slice(0, 40);
+  expectOfficialIdLimit(result);
+  return result;
 }
 
 function buildDeckPair(): DeckPair {

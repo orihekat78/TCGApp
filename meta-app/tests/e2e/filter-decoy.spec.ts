@@ -35,6 +35,7 @@ test('CARDS §7: 色 facet が decoy を除外し、条件内の漏れも無い'
 test('DECK §7: プールの色 facet が decoy を除外 (キャラ/イベントのみ)', async ({ page }) => {
   await page.goto('/#deck');
   await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
+  await page.getByRole('button', { name: 'フィルタを開く' }).click();
 
   // 色=青 → 黄の萩原千速(キャラ)はプールから消える
   await page.locator('button.meta-chip', { hasText: '青' }).first().click();

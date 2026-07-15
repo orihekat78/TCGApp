@@ -2,6 +2,11 @@
 
 import { describe, it, expect } from 'vitest';
 import { buildMvpDeckPair } from '@/ui/services/deckBuilder';
+import { ALL_CARDS } from '@/cards/index';
+
+const officialIdByPrinting = new Map(
+  ALL_CARDS.map((card) => [card.id, card.no.split('/')[0]!] as const),
+);
 
 describe('buildMvpDeckPair', () => {
   it('self deck = CT-D08 (partner D08001, case D08026)', () => {
@@ -26,7 +31,11 @@ describe('buildMvpDeckPair', () => {
     const pair = buildMvpDeckPair();
     for (const deck of [pair.self.mainCards, pair.opp.mainCards]) {
       const counts: Record<string, number> = {};
-      for (const id of deck) counts[id] = (counts[id] ?? 0) + 1;
+      for (const printing of deck) {
+        const officialId = officialIdByPrinting.get(printing);
+        expect(officialId, `未登録印刷: ${printing}`).toBeDefined();
+        counts[officialId!] = (counts[officialId!] ?? 0) + 1;
+      }
       for (const [, n] of Object.entries(counts)) {
         expect(n).toBeLessThanOrEqual(3);
       }

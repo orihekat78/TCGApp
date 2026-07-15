@@ -23,7 +23,7 @@ interface Props {
   dimmed?: boolean;
   count?: number;
   /** 同 ID 上限 (count バッジの "/N" と超過判定に使用、既定 3)。 */
-  maxCount?: number;
+  maxCount?: number | 'unlimited';
   /** count バッジを "n/N" 形式 (デッキ枚数) で出す。false なら "×n" (採用数など)。 */
   showMax?: boolean;
   /** 同 ID 上限に到達して追加不可 (グレーアウト + MAX タグ)。 */
@@ -52,7 +52,8 @@ export function MetaCard({
   const landscape = isCase && orient === 'landscape';
   const h = landscape ? Math.round(w * 0.72) : Math.round(w * 1.4);
   const interactive = !!(onClick || onDoubleClick);
-  const over = showMax && count != null && count > maxCount;
+  const maxLabel = maxCount === 'unlimited' ? '∞' : String(maxCount);
+  const over = showMax && count != null && maxCount !== 'unlimited' && count > maxCount;
   return (
     <div
       onClick={onClick}
@@ -64,7 +65,7 @@ export function MetaCard({
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
       aria-pressed={onClick ? selected : undefined}
-      aria-label={count != null ? `${card.name} ${count}/${maxCount}` : card.name}
+      aria-label={count != null ? `${card.name} ${count}/${maxLabel}` : card.name}
       className={hoverable ? 'meta-card-hover' : undefined}
       style={{
         position: 'relative',
@@ -99,7 +100,7 @@ export function MetaCard({
             padding: '1px 8px', background: T.gold, color: '#1a1208',
             fontFamily: T.fontMono, fontSize: 9, fontWeight: 800, letterSpacing: '0.16em',
             borderRadius: 2, pointerEvents: 'none', whiteSpace: 'nowrap',
-          }}>MAX 3</div>
+          }}>MAX {maxLabel}</div>
         </>
       )}
 
@@ -118,7 +119,7 @@ export function MetaCard({
           fontFamily: T.fontMono, fontSize: 10, fontWeight: 800,
           boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
         }}>
-          {showMax ? `${count}/${maxCount}` : `×${count}`}
+          {showMax ? `${count}/${maxLabel}` : `×${count}`}
         </div>
       )}
 

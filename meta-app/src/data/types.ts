@@ -24,6 +24,8 @@ export interface CardDef {
   features?: string[];
   keywords?: string[];
   effectShort?: string;
+  /** 固有のデッキ投入上限。未指定は 3 枚。 */
+  deckLimit?: number | 'unlimited';
 }
 
 export interface DeckRecord {

@@ -21,24 +21,37 @@ import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { runMatch, type MatchResult } from '@/ai/match';
 import type { GameState } from '@/engine/types';
 
-/** Build a 40-card deck from given char IDs */
+function expectOfficialIdLimit(deck: readonly string[]): void {
+  const counts = new Map<string, number>();
+  for (const id of deck) {
+    const card = engine.read.def.card(id);
+    const slash = card?.no.indexOf('/') ?? -1;
+    const officialId = card && slash > 0 ? card.no.slice(0, slash) : id;
+    counts.set(officialId, (counts.get(officialId) ?? 0) + 1);
+  }
+  expect(Math.max(...counts.values())).toBeLessThanOrEqual(3);
+}
+
+/** Build a legal 40-card deck from given card IDs. */
 function buildDeck(ids: string[]): string[] {
   const deck: string[] = [];
   for (const id of ids) {
     deck.push(id, id, id);
   }
-  return deck.slice(0, 40);
+  const result = deck.slice(0, 40);
+  expectOfficialIdLimit(result);
+  return result;
 }
 
 const SELF_DECK_IDS = [
   'D08003', 'D08005', 'D08007', 'D08009', 'D08011', 'D08013',
-  'D08015', 'D08017', 'D08018', 'D08019', 'D08020', 'D08021',
-  'D08022', 'D08023',
+  'D08015', 'D08017', 'D08019', 'D08021', 'D08022', 'D08023',
+  'D08024', 'D08025',
 ];
 const OPP_DECK_IDS = [
-  'D11003', 'D11004', 'D11005', 'D11006', 'D11007', 'D11009',
-  'D11010', 'D11011', 'D11013', 'D11014', 'D11015', 'D11016',
-  'D11017', 'D11018',
+  'D11003', 'D11005', 'D11007', 'D11009', 'D11011', 'D11012',
+  'D11013', 'D11014', 'D11015', 'D11016', 'D11017', 'D11018',
+  'D11019', 'D11020',
 ];
 
 function setupFreshGame(): GameState {

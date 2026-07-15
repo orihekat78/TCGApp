@@ -71,6 +71,7 @@ function engineToMeta(e: EngineCardDef): CardDef {
     features: e.kind === 'case' ? (e.caseTraits ?? e.traits) : e.traits,
     keywords: deriveKeywords(e),
     effectShort: (e.abilities ?? []).map((a) => a.description).filter(Boolean).join('\n'),
+    deckLimit: e.deckLimit,
   };
 }
 
