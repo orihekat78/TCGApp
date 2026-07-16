@@ -1,4 +1,5 @@
 // useActionsPanelFlow/flows.ts — Phase 3d 分割 (run*Flow オーケストレーション, body 無改変移送, 2026-06-22)
+import { useSyncExternalStore } from 'react';
 import * as flow from '@/engine/flow/index.js';
 import { engine } from '@/engine';
 import { useGameStateStore } from '@/ui/state/store.js';
@@ -30,11 +31,21 @@ import {
   canAssistForUi,
   canSolveCaseForUi,
 } from './enumerators.js';
+import { canEndTurnForUi, subscribeEndTurnContract } from './end-turn-contract.js';
 
 /** runEndTurnFlow / その他フローの返り値 */
 export type FlowResult =
   | DispatchResult
   | { ok: false; reason: 'cancelled' };
+
+/** Playmatもdispatch直前検証も同一のcanEndTurnForUi snapshotを使うreactive reader。 */
+export function useCanEndTurnForUi(player: Player): boolean {
+  return useSyncExternalStore(
+    subscribeEndTurnContract,
+    () => canEndTurnForUi(player),
+    () => canEndTurnForUi(player),
+  );
+}
 
 /**
  * ターン終了フロー: 確認モーダル → accept で endTurn dispatch。
@@ -43,6 +54,7 @@ export type FlowResult =
  * - accept: dispatchEngineAction の結果をそのまま返す
  */
 export async function runEndTurnFlow(opts: { player: Player }): Promise<FlowResult> {
+  if (!canEndTurnForUi(opts.player)) return { ok: false, reason: 'not-allowed' };
   const confirmation = useConfirmation();
   const accepted = await confirmation.ask({
     kind: 'standard',
@@ -54,6 +66,8 @@ export async function runEndTurnFlow(opts: { player: Player }): Promise<FlowResu
   if (!accepted) {
     return { ok: false, reason: 'cancelled' };
   }
+  // 確認表示中に効果/picker が発生し得るため、dispatch 直前の最新stateで再検証。
+  if (!canEndTurnForUi(opts.player)) return { ok: false, reason: 'not-allowed' };
   return dispatchEngineAction({ type: 'endTurn', player: opts.player });
 }
 

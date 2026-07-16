@@ -13,7 +13,7 @@ import { char as readChar } from '../read/char.js';
 type Player = 'self' | 'opp';
 type OrderMode = 'given' | 'reverse';
 
-/** デッキ上から n 枚を手札へ。デッキ不足時はリフレッシュ自動発火 (rules/14) */
+/** デッキ上から n 枚を手札へ。各取得後のexact exhaustionでもリフレッシュ自動発火 (rules/14) */
 function draw(s: GameState, p: Player, n: number, resolvingCardId?: CardId): CardId[] {
   const drawn: CardId[] = [];
   let remaining = n;
@@ -21,20 +21,9 @@ function draw(s: GameState, p: Player, n: number, resolvingCardId?: CardId): Car
   while (remaining > 0) {
     const d = s.players[p].deck;
     if (d.length === 0) {
-      // デッキ 0 枚 → リフレッシュ試行
-      const result = refresh(s, p, resolvingCardId);
-      if (!result.ok) {
-        // BUG-036 fix (rules/04 + rules/14): リムーブ 0 枚なら refresh 失敗 →
-        // そのプレイヤーは敗北、gameResult を deck-out で設定。
-        // 既存実装は break のみで gameResult 未設定だった。
-        // 既に gameResult が設定済 (= 既に勝敗確定) の場合は上書きしない。
-        if (s.gameResult === undefined) {
-          const winner: Player = p === 'self' ? 'opp' : 'self';
-          gameResultMut.set(s, winner, 'deck-out');
-        }
-        // 引ける分だけ返す
-        break;
-      }
+      // Initial/cross-operation empty state uses the same refresh/deck-out
+      // writer as the completed-take checkpoint below.
+      if (!refreshAfterTake(s, p, resolvingCardId)) break;
       // リフレッシュ後再試行
       if (s.players[p].deck.length === 0) break;
     }
@@ -43,6 +32,9 @@ function draw(s: GameState, p: Player, n: number, resolvingCardId?: CardId): Car
     s.players[p].hand.push(card);
     drawn.push(card);
     remaining--;
+    // Exact exhaustion has no next loop iteration to run the pre-take guard.
+    // Refresh at the completed take boundary even when this was the final draw.
+    if (!refreshAfterTake(s, p, resolvingCardId)) break;
   }
 
   return drawn;
@@ -103,7 +95,9 @@ function shuffle(s: GameState, p: Player, rng?: () => number): void {
  */
 function refresh(s: GameState, p: Player, resolvingCardId?: CardId): RefreshResult {
   const remove = s.players[p].remove;
-  const preservedIndex = resolvingCardId === undefined ? -1 : remove.indexOf(resolvingCardId);
+  // The eagerly represented source is appended after older same-ID copies.
+  // Preserve that occurrence, not the first matching physical copy.
+  const preservedIndex = resolvingCardId === undefined ? -1 : remove.lastIndexOf(resolvingCardId);
   const preserved = preservedIndex === -1 ? undefined : remove[preservedIndex];
   const refreshable = preservedIndex === -1
     ? remove
@@ -170,6 +164,25 @@ function refresh(s: GameState, p: Player, resolvingCardId?: CardId): RefreshResu
   };
 }
 
+/**
+ * Resolve the mandatory empty-deck checkpoint after cards have actually left
+ * the deck. Reveal/look windows must not call this: those cards still count as
+ * being in the deck until their final move (rules/14, rules/26).
+ *
+ * Returns false only when refresh cannot be performed (or the game had already
+ * ended), allowing multi-take callers to stop without duplicating deck-out
+ * winner assignment.
+ */
+function refreshAfterTake(s: GameState, p: Player, resolvingCardId?: CardId): boolean {
+  if (s.players[p].deck.length > 0) return true;
+  if (s.gameResult !== undefined) return false;
+  const result = refresh(s, p, resolvingCardId);
+  if (result.ok) return true;
+  const winner: Player = p === 'self' ? 'opp' : 'self';
+  gameResultMut.set(s, winner, 'deck-out');
+  return false;
+}
+
 export const deck = {
   draw,
   peek,
@@ -179,4 +192,5 @@ export const deck = {
   removeFromTop,
   shuffle,
   refresh,
+  refreshAfterTake,
 };

@@ -7,14 +7,26 @@
 //   getter/setter/drain/peek/clear/take。walk (resolve-picks) と continuation (apply-pick) の共有状態。
 //   本ファイルは leaf (resolve-picks/apply-pick/resolver を import しない)。
 
-import type { Effect, EffectCtx } from '../types/index.js';
+import type { Effect, EffectCtx, EffectResolutionKind } from '../types/index.js';
 
 type Player = 'self' | 'opp';
+
+export type PendingEffectSource = {
+  cardId: string;
+  abilityId: string;
+  uid?: string;
+  /** Resolving-card lifecycle marker. Must survive human decision pauses. */
+  resolutionKind?: EffectResolutionKind;
+};
 
 // Phase 3c (2026-06-22): choice 再開 holder。旧 2 channel (Resume=Effect / 旧 ChoiceBindings=bindings) を
 // 1 globalThis slot (__pendingEffectChoiceResume) に統合した格納形。effect / bindings は
 // 個別に set/take/clear できる (現 API シグネチャ不変)。両 field とも null 可・holder 自体も null 可。
-type ChoiceResumeState = { effect: Effect | null; bindings: Record<string, unknown> | null };
+type ChoiceResumeState = {
+  effect: Effect | null;
+  bindings: Record<string, unknown> | null;
+  continuation: ContinuationFrame | null;
+};
 
 // user_request 20260522_01 #6 BUG-054 + BUG-078 (queue 化): human pick の側チャネル。
 // BUG-078 fix: 単一スロットから FIFO queue に変更。sequence 内に複数 PB pick atom がある
@@ -86,14 +98,15 @@ export type ContinuationFrame = {
   outer?: ContinuationFrame;
 };
 
-export type PendingEffectRepeatOptionalSide = { player: Player; source: { cardId: string; abilityId: string; uid: string }; remaining: number };
-type RepeatOptionalResume = { body: Effect; remaining: number; ctx: EffectCtx; remainder: Effect[] };
+export type PendingEffectRepeatOptionalSide = { player: Player; source: PendingEffectSource & { uid: string }; remaining: number };
+type RepeatOptionalResume = { body: Effect; remaining: number; ctx: EffectCtx; remainder: Effect[]; continuation?: ContinuationFrame };
 declare global { var __pendingEffectRepeatOptionalSide: PendingEffectRepeatOptionalSide | null | undefined; var __pendingEffectRepeatOptionalResume: RepeatOptionalResume | null | undefined; }
 export function pushPendingEffectRepeatOptionalSide(v: PendingEffectRepeatOptionalSide, r: RepeatOptionalResume): void { globalThis.__pendingEffectRepeatOptionalSide = v; globalThis.__pendingEffectRepeatOptionalResume = r; }
 export function _drainPendingEffectRepeatOptionalSide(): PendingEffectRepeatOptionalSide | null { const v = globalThis.__pendingEffectRepeatOptionalSide ?? null; globalThis.__pendingEffectRepeatOptionalSide = null; return v; }
 export function _peekPendingEffectRepeatOptionalSide(): PendingEffectRepeatOptionalSide | null { return globalThis.__pendingEffectRepeatOptionalSide ?? null; }
 export function _takePendingEffectRepeatOptionalResume(): RepeatOptionalResume | null { const v = globalThis.__pendingEffectRepeatOptionalResume ?? null; globalThis.__pendingEffectRepeatOptionalResume = null; return v; }
 export function setPendingEffectRepeatOptionalRemainder(remainder: Effect[]): void { if (globalThis.__pendingEffectRepeatOptionalResume) globalThis.__pendingEffectRepeatOptionalResume.remainder = remainder; }
+export function setPendingEffectRepeatOptionalContinuation(continuation: ContinuationFrame): void { if (globalThis.__pendingEffectRepeatOptionalResume) globalThis.__pendingEffectRepeatOptionalResume.continuation = continuation; }
 export function _clearPendingEffectRepeatOptionalSide(): void { globalThis.__pendingEffectRepeatOptionalSide = null; globalThis.__pendingEffectRepeatOptionalResume = null; }
 
 export type PendingEffectPickSide = {
@@ -115,7 +128,7 @@ export type PendingEffectPickSide = {
   nMin: number;
   nMax: number;
   /** ability source (UI 表示・log 用) */
-  source: { cardId: string; abilityId: string; uid?: string };
+  source: PendingEffectSource;
   /**
    * D08021 driver 2026-05-26: target.query.distinctNames を UI に渡すための flag。
    * true なら UI multi-select で「同じ name component (rules/19 分割名展開後) を持つ
@@ -269,6 +282,11 @@ export function _peekPendingEffectPickQueueLength(): number {
   return getPendingQueue().length;
 }
 
+/** FIFO 先頭を消費せずに確認する。UI の二重 surface 防止用。 */
+export function _peekPendingEffectPickSide(): PendingEffectPickSide | null {
+  return getPendingQueue()[0] ?? null;
+}
+
 /** queue を全クリア (テスト用 / セッション初期化用) */
 export function _clearPendingEffectPickQueue(): void {
   const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };
@@ -290,7 +308,7 @@ export function _clearPendingEffectPickQueue(): void {
 export type PendingEffectChoiceSide = {
   player: Player;
   /** 元 ability の特定 + 再開 ctx 復元 + option1 の $self 解決 + event.queue source に使用 */
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   /** UI ラベル化用 (atom option のみ verb/args、それ以外は index のみ)。JSON シリアライズ可能 */
   options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string }[];
 };
@@ -317,7 +335,7 @@ export function _clearPendingEffectChoiceSide(): void {
 // --- choice 再開 ctx の bindings 復元 (BUG-114: cutin の $contact.* 保持。Phase 3c で Resume holder に統合) ---
 export function setPendingChoiceBindings(b: Record<string, unknown>): void {
   const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
-  (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null }).bindings = b;
+  (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null, continuation: null }).bindings = b;
 }
 /** choiceResolve 時に bindings を取り出してクリア (applyChoiceAndContinuation が resume ctx へ復元)。 */
 export function _takePendingChoiceBindings(): Record<string, unknown> | null {
@@ -335,7 +353,7 @@ export function _peekPendingEffectChoiceSide(): PendingEffectChoiceSide | null {
 // --- choice 再開用 holder (engine 内のみ、store へ drain しない。Phase 3c で bindings field を統合) ---
 export function setPendingChoiceResume(eff: Effect): void {
   const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
-  (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null }).effect = eff;
+  (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null, continuation: null }).effect = eff;
 }
 export function getPendingChoiceResume(): Effect | null {
   return (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume?.effect ?? null;
@@ -369,7 +387,7 @@ export type PendingEffectOptionalSide = {
   /** Effect owner. May differ from the player making this optional decision. */
   ownerPlayer?: Player;
   /** 元 ability の特定 + 再開 ctx 復元 ($self 解決 / modal の文言表示) に使用 */
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   /**
    * 2026-06-06 タスクC: optional 内の効果が $trigger.<field> (例 B03038 の $trigger.gained =
    * 推理で得た証拠枚数) を参照する場合、トリガ payload を再開 ctx に復元するため保持する。
@@ -385,7 +403,7 @@ export type PendingSetCardReplacementSide = {
   fromUid: string;
   setCardInstanceId: string;
   candidates: { uid: string; cardId: string }[];
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   resume?:
     | { kind: 'scene-remove'; cause: 'contact-ap' | 'effect' | 'switch' | 'cost' | 'misplay-overflow'; byUid?: string; byPlayer?: Player }
     | { kind: 'scene-to-deck'; pos: 'bottom' | 'top' }
@@ -404,7 +422,7 @@ export type PendingSetCardChoiceSide = {
   player: Player;
   hostUid: string;
   entries: { instanceId: string; ordinal: number }[];
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
 };
 
 export function pushPendingSetCardChoiceSide(v: PendingSetCardChoiceSide): void {
@@ -415,6 +433,16 @@ export function _drainPendingSetCardChoiceSide(): PendingSetCardChoiceSide | nul
   const v = g.__pendingSetCardChoiceSide ?? null;
   g.__pendingSetCardChoiceSide = null;
   return v;
+}
+export function setPendingChoiceContinuation(continuation: ContinuationFrame): void {
+  const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
+  (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null, continuation: null }).continuation = continuation;
+}
+export function _takePendingChoiceContinuation(): ContinuationFrame | null {
+  const g = (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume;
+  const value = g?.continuation ?? null;
+  if (g) g.continuation = null;
+  return value;
 }
 export function setPendingSetCardChoiceResume(effect: Effect, bindings: Record<string, unknown>): void {
   (globalThis as { __pendingSetCardChoiceResume?: Effect | null }).__pendingSetCardChoiceResume = effect;
@@ -440,7 +468,7 @@ export type PendingRpsSide = {
   player: Player;
   ownerPlayer: Player;
   aiHand: RpsHand;
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
 };
 
 export function pushPendingRpsSide(v: PendingRpsSide): void {
@@ -486,6 +514,7 @@ export function _drainPendingEffectOptionalSide(): PendingEffectOptionalSide | n
 export function _clearPendingEffectOptionalSide(): void {
   (globalThis as { __pendingEffectOptionalSide?: PendingEffectOptionalSide | null }).__pendingEffectOptionalSide = null;
   (globalThis as { __pendingEffectOptionalResume?: Effect | null }).__pendingEffectOptionalResume = null;
+  (globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null }).__pendingEffectOptionalContinuation = null;
 }
 
 /** slot を peek (テスト用)。 */
@@ -508,6 +537,50 @@ export function _takePendingOptionalResume(): Effect | null {
 export function _clearPendingOptionalResume(): void {
   (globalThis as { __pendingEffectOptionalResume?: Effect | null }).__pendingEffectOptionalResume = null;
   (globalThis as { __pendingEffectOptionalBindings?: Record<string, unknown> | null }).__pendingEffectOptionalBindings = null;
+  (globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null }).__pendingEffectOptionalContinuation = null;
+}
+export function getPendingOptionalResume(): Effect | null {
+  return (globalThis as { __pendingEffectOptionalResume?: Effect | null }).__pendingEffectOptionalResume ?? null;
+}
+export function setPendingOptionalContinuation(continuation: ContinuationFrame): void {
+  (globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null }).__pendingEffectOptionalContinuation = continuation;
+}
+export function _takePendingOptionalContinuation(): ContinuationFrame | null {
+  const g = globalThis as { __pendingEffectOptionalContinuation?: ContinuationFrame | null };
+  const value = g.__pendingEffectOptionalContinuation ?? null;
+  g.__pendingEffectOptionalContinuation = null;
+  return value;
+}
+
+/**
+ * 対戦セッション境界で、effect resolver が保持する全ての中断状態を破棄する。
+ * side-channel と resume holder は必ず対で消去し、新しい GameState へ継承しない。
+ */
+export function resetPendingEffectSession(): void {
+  _clearPendingEffectPickQueue();
+  _clearPendingEffectChoiceSide();
+  _clearPendingEffectOptionalSide();
+  _clearPendingOptionalResume();
+  _clearPendingRpsSide();
+  _clearPendingChooseInterceptSide();
+  _clearPendingEffectRepeatOptionalSide();
+
+  const g = globalThis as {
+    __pendingEffectOptionalCostPaid?: Record<string, unknown> | null;
+    __pendingSetCardChoiceSide?: PendingSetCardChoiceSide | null;
+    __pendingSetCardChoiceResume?: Effect | null;
+    __pendingSetCardChoiceBindings?: Record<string, unknown> | null;
+    __pendingSetCardChoiceRemainder?: Effect[] | null;
+    __pendingSetCardChoiceRemainderKind?: 'sequence' | 'chain' | null;
+    __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
+  };
+  g.__pendingEffectOptionalCostPaid = null;
+  g.__pendingSetCardChoiceSide = null;
+  g.__pendingSetCardChoiceResume = null;
+  g.__pendingSetCardChoiceBindings = null;
+  g.__pendingSetCardChoiceRemainder = null;
+  g.__pendingSetCardChoiceRemainderKind = null;
+  g.__pendingSetCardReplacementSide = null;
 }
 
 // --- optional 再開 ctx の bindings 復元 (engine wave-18: BUG-114 choice-bindings の対称、$contact.* / ctx.contact 保持) ---

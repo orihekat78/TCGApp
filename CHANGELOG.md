@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `528c003b3bdd`
+> Source hash: `bb64db127bc2`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,81 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-07-16
+category: investigation
+bugs:
+  [
+    BUG-205,
+    BUG-206,
+    BUG-208,
+    BUG-210,
+    BUG-211,
+    BUG-212,
+    BUG-213,
+    BUG-214,
+    BUG-215,
+    BUG-216,
+    BUG-217,
+    BUG-219,
+    BUG-220,
+    BUG-221,
+    BUG-222,
+    BUG-223,
+    BUG-224,
+    BUG-225,
+    BUG-226,
+    BUG-231,
+  ]
+---
+
+## YOU vs CPU 実操作バグの調査・修正作業中
+
+- 上記BUGは全件、検証と実装commitが未確定のため`対応中`。修正済みとは扱わない。
+- 作業ツリーにはsession清掃、世代token、owner/chooser分離、CARD_POOL/MVP表示、
+  mobile HUD、decision-hostに関する候補実装がある。Phase 1で個別に証拠を確定する。
+- YOU vs CPUの回帰条件を、完走だけでなくprovenance、side、pending消滅、
+  次の合法行動まで拡張する方針を記録した。
+- ミスリード関連はBUG-221〜226へ失敗契約を分離した。Phase 3でTDD修正する。
+- BUG-231はログtarget/result内の既知card IDから共通拡大modalへ到達できない未close調査。
+  registry解決、複数ID、未知ID/scene UID非操作化、keyboard操作を検証対象にする。
+- 全gateと実ブラウザ検証後、実装commit・RCA・test pathが揃った票だけを
+  `status: 修正済`へ更新し、別の`category: fixes` entryに掲載する。
+
+## コンタクト表示とMeta効果モーダル修正 (2026-07-15)
+
+### Fixed
+
+- カットイン使用・パス後に展開された手札が残る表示を修正。
+- Meta対戦画面でB09056/Pなどの任意効果が選択待ちのまま見えない問題を修正。
+- 対戦画面だけに出ていた開発用ナビゲーションHUDを非表示化。
+
+### Changed
+
+- 5173/5174の効果決定modal host集合を共通化し、choice、intercept、RPS、set-card、deck reorder/placeを含む10種の構成ずれを解消。
+
+### Verification
+
+- B09056/Pの赤パートナーFILE中の条件成立、コンタクト使用/パス、Meta対戦画面の任意効果操作を回帰テスト。
+- full Vitest 5,788件、smoke/benchmark各1,000戦、typecheck、lint、docs、side-channel lintが成功。
+
+## 公式標準デッキ修正とテストデッキ追加 (2026-07-15)
+
+### Fixed
+
+- `少年探偵団・標準`と`警察・標準`を公式CT-D08/CT-D11の40枚構成へ修正。
+- 保存version 3 migrationで標準2件だけ更新し、ユーザー作成デッキは保持。
+- smoke/benchmarkの重複レシピを廃止し、共通builder参照へ統一。
+
+### Added
+
+- Meta UIと対戦builderのexact-list回帰、v2移行E2E、同ID上限E2Eを追加・更新。
+- ブラウザへ`TEST-バグ波-緑`、`TEST-コンタクト`、`TEST-無制限0627`を追加。
+
+### Verification
+
+- full Vitest 5,787件、Meta deck E2E 9件、typecheck、lint、smoke 1000が成功。
 
 ## Deck limits, catalog image, and deck editor UX (2026-07-15)
 

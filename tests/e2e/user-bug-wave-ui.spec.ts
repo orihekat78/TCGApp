@@ -11,6 +11,29 @@ async function humanMode(page: Page): Promise<void> {
   });
 }
 
+test('BUG-231 log card ID opens the card modal and Escape preserves the log', async ({ page }) => {
+  const { errors } = await setupGamePage(page);
+  await humanMode(page);
+  await buildGameState(page, (gs) => {
+    gs.log = [
+      { ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D11013' },
+    ];
+  });
+
+  await page.getByRole('button', { name: 'ログを開く' }).click();
+  const logDialog = page.getByRole('dialog', { name: 'ゲームログ' });
+  await expect(logDialog).toBeVisible();
+
+  await page.getByRole('button', { name: '萩原千速 (D11013) を拡大表示' }).click();
+  const cardDialog = page.getByRole('dialog', { name: 'カード拡大表示: 萩原千速' });
+  await expect(cardDialog).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(cardDialog).toBeHidden();
+  await expect(logDialog).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('self evidence/remove browsing persists and remove cards can be enlarged', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await humanMode(page);

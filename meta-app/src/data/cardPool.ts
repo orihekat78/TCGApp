@@ -66,7 +66,8 @@ function engineToMeta(e: EngineCardDef): CardDef {
     cost: playLevel,
     ap: e.ap,
     lp: e.lp,
-    level: playLevel,
+    // `cost` は手札使用コストだけ、`level` は事件カードの表示値も保持する。
+    level: e.kind === 'case' ? (e.caseLevel ?? e.level) : playLevel,
     rarity: e.rarity,
     features: e.kind === 'case' ? (e.caseTraits ?? e.traits) : e.traits,
     keywords: deriveKeywords(e),

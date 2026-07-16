@@ -12,7 +12,7 @@
 //     初めて発動。Commit 3b では scaffold + 単体テストのみ。
 
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './MisreadPickerModal.css';
 
 export type MisreadCandidateView = {
@@ -23,6 +23,8 @@ export type MisreadCandidateView = {
 
 export type MisreadPickerModalProps = {
   open: boolean;
+  /** Stable identity of the unresolved decision. */
+  decisionKey: string;
   /** 推理側 (= LP-X 対象) の表示名 */
   reasoningName: string;
   /** 推理側の現在 LP (UI でゴール表示用) */
@@ -33,8 +35,11 @@ export type MisreadPickerModalProps = {
 };
 
 export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element | null {
-  const { open, reasoningName, reasoningLp, candidates, onConfirm, onSkip } = props;
+  const { open, decisionKey, reasoningName, reasoningLp, candidates, onConfirm, onSkip } = props;
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setSelected(new Set());
+  }, [open, decisionKey]);
   if (!open) return null;
 
   const toggle = (uid: string): void => {

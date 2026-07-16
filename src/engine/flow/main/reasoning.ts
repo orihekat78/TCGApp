@@ -22,7 +22,7 @@ import type { GameState, SceneCharacter, PartnerOnBoard } from '../../types/inde
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { char as readChar } from '../../read/char.js';
-import { def as readDef } from '../../read/def.js';
+import { _peekPendingMisread } from '../../listeners/misread.js';
 
 /**
  * uid から対象を探す。パートナーは "partner:self" / "partner:opp" の形式で扱う。
@@ -76,10 +76,14 @@ export function canReason(state: GameState, uid: string): boolean {
  * パートナーの LP を CardDef から取得する (Phase 4 簡易版)
  *   - Phase 5 で read.partner.lp 等の整備時に置き換え予定
  */
-function partnerLP(state: GameState, p: 'self' | 'opp'): number {
-  const cardId = state.players[p].partner.cardId;
-  if (!cardId) return 0;
-  return readDef.card(cardId)?.lp ?? 0;
+function clearReasoningLpModifier(
+  target: { kind: 'char'; char: SceneCharacter } | { kind: 'partner'; partner: PartnerOnBoard },
+): void {
+  if (target.kind === 'char') {
+    delete target.char.turnEffects['lpMod_reasoning'];
+    return;
+  }
+  if (target.partner.turnEffects) delete target.partner.turnEffects['lpMod_reasoning'];
 }
 
 /**
@@ -112,30 +116,66 @@ export function doReasoning(state: GameState, uid: string): void {
   }
 
   // reasoning:before-add — spec: { uid, lpUsed } (lpUsed は pre-clamp 生値 — mislead listener が参照)
-  const lpRaw = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
+  const lpRaw = readChar.lp(state, uid);
   event.emit(state, 'reasoning:before-add', { uid, lpUsed: lpRaw }, { player, uid });
+
+  // Human defender がミスリードを決めるまで、証拠取得と
+  // reasoning:end は保留する。先に発火すると他の human decision と二重になる。
+  const pendingMisread = _peekPendingMisread();
+  if (
+    pendingMisread?.reasoningUid === uid &&
+    pendingMisread.reasoningPlayer === player
+  ) {
+    return;
+  }
+
+  completeReasoning(state, uid, player);
+}
+
+/** Human のミスリード決定後に、保留した推理後半を実行する。 */
+export function _resumeDeferredReasoning(
+  state: GameState,
+  uid: string,
+  player: 'self' | 'opp',
+): void {
+  completeReasoning(state, uid, player);
+}
+
+function completeReasoning(
+  state: GameState,
+  uid: string,
+  player: 'self' | 'opp',
+): void {
+  const t = findTarget(state, uid);
+  if (!t || t.player !== player) {
+    throw new Error(`completeReasoning: missing target uid=${uid} player=${player}`);
+  }
 
   // Phase 8 完全クローズ Commit 3b: emit 後の LP を再読み (mislead listener が
   // turnEffects.lpMod_turn 等で LP を下げた可能性がある)。
-  const lpFinal = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
-  // LP クランプ → max(0, lpFinal) 枚を証拠に追加 (rules/11)
-  const lpToUse = Math.max(0, lpFinal);
-  if (lpToUse > 0) {
-    mutate.evidence.addFromDeck(state, player, lpToUse, false, {
-      turn: state.turn.number,
-      via: 'reasoning',
-      sourceCardId: t.kind === 'char' ? t.char.cardId : t.partner.cardId,
-    });
-  }
+  try {
+    const lpFinal = readChar.lp(state, uid);
+    // LP クランプ → max(0, lpFinal) 枚を証拠に追加 (rules/11)
+    const lpToUse = Math.max(0, lpFinal);
+    if (lpToUse > 0) {
+      mutate.evidence.addFromDeck(state, player, lpToUse, false, {
+        turn: state.turn.number,
+        via: 'reasoning',
+        sourceCardId: t.kind === 'char' ? t.char.cardId : t.partner.cardId,
+      });
+    }
 
-  // ログ + reasoning:end
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player,
-    turn: state.turn.number,
-    action: 'reasoning',
-    target: uid,
-    result: `evidence+${lpToUse}`,
-  });
-  event.emit(state, 'reasoning:end', { uid, player, gained: lpToUse }, { player, uid });
+    // ログ + reasoning:end
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player,
+      turn: state.turn.number,
+      action: 'reasoning',
+      target: uid,
+      result: `evidence+${lpToUse}`,
+    });
+    event.emit(state, 'reasoning:end', { uid, player, gained: lpToUse }, { player, uid });
+  } finally {
+    clearReasoningLpModifier(t);
+  }
 }

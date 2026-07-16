@@ -33,7 +33,9 @@ import {
   runEndTurnFlow,
   runReasoningFlow,
   enumReasoningCandidates,
+  enumPartnerAbilityIds,
   enumDeclaredAbilitySources,
+  useCanEndTurnForUi,
   runNextHintFlow,
   runAssistFlow,
   runSolveCaseFlow,
@@ -83,6 +85,7 @@ import './Playmat.css';
 // engine の `players[side].case.colors` (日本語色名) を CaseInfo.color (英名) に変換
 const JP_COLOR_TO_EN: Record<string, CaseColor> = {
   '青': 'blue', '黄': 'yellow', '赤': 'red', '緑': 'green', '紫': 'purple',
+  '黒': 'black', '白': 'white',
 };
 
 export type PlaymatProps = {
@@ -316,6 +319,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // 効果解決中ロック (rules/05 割り込み禁止): 効果スタック非空 or 人間の未解決 decision 待ち中は
   // ActionsPanel の全メインアクションを塞ぐ。decision modal / 盤面 pick はロック対象外。
   const interactionLocked = useGameStateStore(selectInteractionLocked);
+  const canEndTurn = useCanEndTurnForUi('self');
   // Task2/4: アクティブカード (該当カードをその場でぴこんポップ。中央全画面ポップは不採用)。
   // - CPU 手番中は useOppTurnDriver が store.activeCardUid を 1 手ごとに set (登場/推理/アクション等)。
   // - 人間ターンの効果解決中は pendingEffects (resolving 優先) の source.uid を採用。
@@ -359,6 +363,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     if (!cur) return;
     const cardId = uid.split('#')[0]!;
     useContactModalStore.getState()._setCutInDisguise(null);
+    setHandExpanded(false);
     dispatchEngineAction({ type: 'actionContact', actionId: cur.actionId, player: cur.player, choice: { kind: 'cutin', cardId } });
     dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
   };
@@ -366,6 +371,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
     const cur = useContactModalStore.getState().cutInDisguise;
     if (!cur) return;
     useContactModalStore.getState()._setCutInDisguise(null);
+    setHandExpanded(false);
     dispatchEngineAction({ type: 'actionContact', actionId: cur.actionId, player: cur.player, choice: { kind: 'pass' } });
     dispatchEngineAction({ type: 'actionAdvance', actionId: cur.actionId });
   };
@@ -800,6 +806,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           nextHintUsed={gameState?.turnState.self.nextHintUsed ?? false}
           canNextHint={gameState ? engineFlow.canStartNextHint(gameState, 'self') : false}
           partnerActive={gameState?.players.self.partner.state === 'active'}
+          partnerAbilityCount={gameState ? enumPartnerAbilityIds(gameState, 'self').length : 0}
           declaredTargetCount={
             gameState ? enumDeclaredAbilitySources(gameState, 'self').length : 0
           }
@@ -817,10 +824,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               : 'idle'
           }
           currentPhase={gameState?.turn.phase ?? 'main'}
-          canEndTurn={
-            (gameState?.turn.player === 'self') &&
-            (gameState?.turn.phase === 'main')
-          }
+          canEndTurn={canEndTurn}
           onEndTurn={() => { void runEndTurnFlow({ player: 'self' }); }}
           onActionItemClick={(id: ActionItemId) => {
             // 効果解決中ロック (rules/05 割り込み禁止): 念のためハンドラ側でも弾く
@@ -913,6 +917,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           open={logOpen}
           onClose={() => setLogOpen(false)}
           gameState={gameState}
+          onCardExpand={expandModal.open}
         />
 
         {/* Round 2: FILE/証拠/リムーブ クリック → 内容確認モーダル
@@ -1204,10 +1209,15 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
 function PlaymatMisreadPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingMisread);
   const gameState = useGameStateStore((s) => s.gameState);
-  if (!pending || pending.reasoningPlayer !== 'opp' || !gameState) {
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
+  const humanPlayer = spectatorMode
+    ? null
+    : (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+  if (!pending || pending.player !== humanPlayer || !gameState) {
     return (
       <MisreadPickerModal
         open={false}
+        decisionKey=""
         reasoningName=""
         reasoningLp={0}
         candidates={[]}
@@ -1222,12 +1232,10 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
     : gameState.players[pending.reasoningPlayer].scene.find((c) => c.uid === pending.reasoningUid)?.cardId;
   const reasoningDef = reasoningCardId ? readDef.card(reasoningCardId) : null;
   const reasoningName = reasoningDef?.names?.[0] ?? '相手キャラ';
-  const reasoningLp = pending.reasoningUid.startsWith('partner:')
-    ? (reasoningDef?.lp ?? 0)
-    : readChar.lp(gameState, pending.reasoningUid);
+  const reasoningLp = readChar.lp(gameState, pending.reasoningUid);
   // candidates を MisreadCandidateView 形式に展開
   const candidateViews: MisreadCandidateView[] = pending.candidates.map((c) => {
-    const sceneChar = gameState.players.self.scene.find((sc) => sc.uid === c.uid);
+    const sceneChar = gameState.players[pending.player].scene.find((sc) => sc.uid === c.uid);
     const cardName = sceneChar
       ? (readDef.card(sceneChar.cardId)?.names?.[0] ?? sceneChar.cardId)
       : c.uid;
@@ -1236,6 +1244,7 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
   return (
     <MisreadPickerModal
       open={true}
+      decisionKey={`${pending.player}:${pending.reasoningPlayer}:${pending.reasoningUid}:${pending.candidates.map((c) => `${c.uid}/${c.x}`).join(',')}`}
       reasoningName={reasoningName}
       reasoningLp={reasoningLp}
       candidates={candidateViews}

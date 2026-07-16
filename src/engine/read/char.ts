@@ -480,6 +480,18 @@ function ap(s: GameState, uid: string): number {
 // LP: lpOverride 優先 / 不在なら CardDef.lp、加えて turnEffects['lpMod_*'] を合算
 // rules: 19-special-rules.md (下限なし), 11-reasoning.md (LP≤0 で証拠0枚)
 function lp(s: GameState, uid: string): number {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const player = uid === 'partner:self' ? 'self' : 'opp';
+    const partner = s.players[player].partner;
+    const effects = partner.turnEffects ?? {};
+    const base = def.card(partner.cardId)?.lp ?? 0;
+    return base
+      + ((effects['lpMod_permanent'] as number | undefined) ?? 0)
+      + ((effects['lpMod_turn'] as number | undefined) ?? 0)
+      + ((effects['lpMod_contact'] as number | undefined) ?? 0)
+      + ((effects['lpMod_action'] as number | undefined) ?? 0)
+      + ((effects['lpMod_reasoning'] as number | undefined) ?? 0);
+  }
   const char = scene.byUid(s, uid);
   if (!char) return 0;
   // engine mini-wave (2026-07-10): 「ターン終了時まで元のLPを X」(B01045 等) = lpOverride_turn が
@@ -492,9 +504,10 @@ function lp(s: GameState, uid: string): number {
   const modTurn      = (char.turnEffects['lpMod_turn']      as number | undefined) ?? 0;
   const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
   const modAction    = (char.turnEffects['lpMod_action']    as number | undefined) ?? 0;
+  const modReasoning = (char.turnEffects['lpMod_reasoning'] as number | undefined) ?? 0;
   const modContinuous = continuousDeltaSafe(s, uid, 'lpDelta'); // BUG-157: 再入 guard 経由 (無限相互再帰防止)
   const modAura = auraDeltaSafe(s, uid, 'lpDeltaAura'); // cluster13: 他キャラ aura (guard 付き)
-  return base + modPermanent + modTurn + modContact + modAction + modContinuous + modAura;
+  return base + modPermanent + modTurn + modContact + modAction + modReasoning + modContinuous + modAura;
 }
 
 // Level: CardDef.level、加えて turnEffects['lvlMod_*'] を合算 (rules/19 下限なし)

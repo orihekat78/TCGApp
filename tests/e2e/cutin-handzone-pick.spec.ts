@@ -56,6 +56,8 @@ test.describe('カットイン HandZone pick (黄色枠で選択 / パス)', () 
     await card.click();
 
     await waitForActionEnd(page);
+    await expect(page.locator('.hand-zone--expanded')).toHaveCount(0);
+    await expect(page.locator('.hand-zone--collapsed')).toBeVisible();
     expect(await selfCutinLogged(page), 'contact-cutin が log に記録').toBe(true);
     await expectActorRemoved(page, 'opp-2', 'opp');
     expectNoConsoleErrors(errors);
@@ -75,6 +77,8 @@ test.describe('カットイン HandZone pick (黄色枠で選択 / パス)', () 
     await page.locator('[data-testid="hand-zone-pick-skip"]').click(); // パス
 
     await waitForActionEnd(page);
+    await expect(page.locator('.hand-zone--expanded')).toHaveCount(0);
+    await expect(page.locator('.hand-zone--collapsed')).toBeVisible();
     expect(await selfCutinLogged(page), 'パスなので contact-cutin は記録されない').toBe(false);
     await expectActorRemoved(page, 'opp-2', 'opp'); // self-2 8000 > opp-2 6000 で pass でも除去
     expectNoConsoleErrors(errors);

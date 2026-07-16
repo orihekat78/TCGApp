@@ -22,10 +22,15 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
   useEffect(() => {
     if (!cardId) return undefined;
     function onKey(e: KeyboardEvent): void {
-      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Escape') return;
+      // BUG-231: window capture phase で最前面modalがEscapeを消費する。
+      // 下層LogPanel/global shortcutのlistenerへ伝播させず、このmodalだけ閉じる。
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      onClose();
     }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, { capture: true });
+    return () => window.removeEventListener('keydown', onKey, { capture: true });
   }, [cardId, onClose]);
 
   if (!cardId) return null;

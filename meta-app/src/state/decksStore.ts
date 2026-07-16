@@ -43,19 +43,26 @@ export const useDecksStore = create<DecksState>()(
     }),
     {
       name: 'conan.meta.v1.decks',
-      version: 2,
+      version: 3,
       // v1 → v2: DeckRecord に事件スロット (case) を追加 (rules/02)。
       // 旧デッキはパートナーから既定の事件を補填する。さらに v1 のサンプルデッキは
       // 事件カードがデッキ内に混入していた (BUG-126) ため、正データで上書きして修復する。
       // カスタムデッキはパートナー/事件カードがデッキ内にあれば除去する (rules/02)。
+      // v2 → v3: 標準デッキだけを公式構築済みレシピへ更新し、ユーザーデッキは保持する。
       migrate: (persisted, fromVersion) => {
         const s = persisted as { decks?: DeckRecord[] } | undefined;
-        if (fromVersion < 2 && s?.decks) {
+        if (fromVersion < 3 && s?.decks) {
           for (const d of s.decks) {
-            if (!d.case) d.case = defaultCaseForPartner(d.partner);
-            if (d.id === SAMPLE_DECK.id) d.cards = structuredClone(SAMPLE_DECK.cards);
-            else if (d.id === SAMPLE_DECK_OPP.id) d.cards = structuredClone(SAMPLE_DECK_OPP.cards);
-            else {
+            if (fromVersion < 2 && !d.case) d.case = defaultCaseForPartner(d.partner);
+            if (d.id === SAMPLE_DECK.id) {
+              d.partner = SAMPLE_DECK.partner;
+              d.case = SAMPLE_DECK.case;
+              d.cards = structuredClone(SAMPLE_DECK.cards);
+            } else if (d.id === SAMPLE_DECK_OPP.id) {
+              d.partner = SAMPLE_DECK_OPP.partner;
+              d.case = SAMPLE_DECK_OPP.case;
+              d.cards = structuredClone(SAMPLE_DECK_OPP.cards);
+            } else if (fromVersion < 2) {
               d.cards = (d.cards ?? []).filter((e) => {
                 const c = CARD_POOL.find((x) => x.num === e.num);
                 return c?.type !== 'partner' && c?.type !== 'case';

@@ -1,0 +1,2223 @@
+{
+  "version": 1,
+  "wave": "you-vs-cpu-hardening-phase1",
+  "baseCommit": "03e6fb1478be04a5b425bd1a23123c7e8b7a0036",
+  "bugs": [
+    {
+      "id": "BUG-130",
+      "classification": "verified",
+      "owner": "engine-effects",
+      "implementationPaths": ["src/engine/effect/resolve-picks.ts"],
+      "testPaths": [
+        "tests/cards/bug-130-158-live-human-carrier.test.ts",
+        "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/cards/bug-130-158-live-human-carrier.test.ts tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-140",
+      "classification": "verified",
+      "owner": "cards-tooling",
+      "implementationPaths": ["scripts/lint-icon-abilities.ts"],
+      "testPaths": ["tests/cards/bug-140-deferred-real-cards.test.ts"],
+      "verificationCommands": [
+        "npm run lint:icon-abilities",
+        "npx vitest run tests/cards/bug-140-deferred-real-cards.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-158",
+      "classification": "verified",
+      "owner": "engine-effects",
+      "implementationPaths": ["src/engine/effect/resolve-picks.ts"],
+      "testPaths": [
+        "tests/cards/bug-130-158-live-human-carrier.test.ts",
+        "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/cards/bug-130-158-live-human-carrier.test.ts tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-166",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/read/effect-source.ts",
+        "src/engine/effect/resolver.ts"
+      ],
+      "testPaths": [
+        "tests/engine/bug-166-176-event-resolution-provenance.test.ts",
+        "tests/engine/event/bug-166-176-provenance-wiring.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/engine/bug-166-176-event-resolution-provenance.test.ts tests/engine/event/bug-166-176-provenance-wiring.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-167",
+      "classification": "verified",
+      "owner": "engine-effects",
+      "implementationPaths": ["src/engine/effect/atom-handlers/scene.ts"],
+      "testPaths": [
+        "tests/engine/effect/bug-167-scene-set-state-chain-gate.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/engine/effect/bug-167-scene-set-state-chain-gate.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-176",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/cond/eval.ts",
+        "src/engine/read/effect-source.ts"
+      ],
+      "testPaths": [
+        "tests/engine/bug-166-176-event-resolution-provenance.test.ts",
+        "tests/engine/event/bug-166-176-provenance-wiring.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/engine/bug-166-176-event-resolution-provenance.test.ts tests/engine/event/bug-166-176-provenance-wiring.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-180",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": ["src/engine/mutate/deck.ts"],
+      "testPaths": ["tests/engine/bug-180-completed-deck-take-refresh.test.ts"],
+      "verificationCommands": [
+        "npx vitest run tests/engine/bug-180-completed-deck-take-refresh.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-202",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": [
+        "meta-app/src/data/sampleDeck.ts",
+        "meta-app/src/state/decksStore.ts",
+        "src/ui/services/deckBuilder.ts"
+      ],
+      "testPaths": [
+        "meta-app/tests/e2e/deck.spec.ts",
+        "tests/ui/services/deckBuilder.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/ui/services/deckBuilder.test.ts",
+        "npx playwright test --config meta-app/playwright.config.ts meta-app/tests/e2e/deck.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-203",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": ["src/ui/components/Playmat.tsx"],
+      "testPaths": ["tests/e2e/cutin-handzone-pick.spec.ts"],
+      "verificationCommands": [
+        "npx playwright test tests/e2e/cutin-handzone-pick.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-204",
+      "classification": "verified",
+      "owner": "shared-ui",
+      "implementationPaths": [
+        "src/ui/components/EffectDecisionModalHosts.tsx",
+        "meta-app/src/screens/RealMatchView.tsx"
+      ],
+      "testPaths": ["meta-app/tests/e2e/effect-decision-hosts.spec.ts"],
+      "verificationCommands": [
+        "npx playwright test --config meta-app/playwright.config.ts meta-app/tests/e2e/effect-decision-hosts.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-205",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": [
+        "src/ui/components/ActionsPanel.tsx",
+        "src/ui/hooks/useActionsPanelFlow/flows.ts"
+      ],
+      "testPaths": ["tests/ui/components/ActionsPanel.lock.test.tsx"],
+      "verificationCommands": [
+        "npx vitest run tests/ui/components/ActionsPanel.lock.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-206",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": [
+        "src/ui/services/matchSession.ts",
+        "meta-app/src/screens/ResultScreen.tsx",
+        "meta-app/src/screens/SetupScreen.tsx"
+      ],
+      "testPaths": [
+        "tests/meta/SetupScreen.lifecycle.test.tsx",
+        "tests/meta/matchSession.race.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/meta/SetupScreen.lifecycle.test.tsx tests/meta/matchSession.race.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-207",
+      "classification": "spec-out",
+      "owner": "rules-adjudication",
+      "implementationPaths": ["src/engine/flow/main/hand-use-card.ts"],
+      "testPaths": ["tests/ui/bugs-207-209-218-adjudication.test.tsx"],
+      "verificationCommands": [
+        "npx vitest run tests/ui/bugs-207-209-218-adjudication.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-208",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": [
+        "src/ui/hooks/useActionsPanelFlow/end-turn-contract.ts",
+        "src/ui/hooks/useActionsPanelFlow/flows.ts"
+      ],
+      "testPaths": ["tests/ui/hooks/useCanEndTurnForUi.test.tsx"],
+      "verificationCommands": [
+        "npx vitest run tests/ui/hooks/useCanEndTurnForUi.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-209",
+      "classification": "spec-out",
+      "owner": "rules-adjudication",
+      "implementationPaths": ["src/ui/hooks/useActionsPanelFlow/flows.ts"],
+      "testPaths": ["tests/ui/bugs-207-209-218-adjudication.test.tsx"],
+      "verificationCommands": [
+        "npx vitest run tests/ui/bugs-207-209-218-adjudication.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-210",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": [
+        "meta-app/src/router/useGlobalShortcuts.ts",
+        "src/ui/components/LogPanel.tsx"
+      ],
+      "testPaths": [
+        "tests/ui/router/useGlobalShortcuts.test.tsx",
+        "tests/ui/components/LogPanel.test.tsx"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/ui/router/useGlobalShortcuts.test.tsx tests/ui/components/LogPanel.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-211",
+      "classification": "verified",
+      "owner": "shared-ui",
+      "implementationPaths": [
+        "src/ui/hooks/useActionsPanelFlow/flows.ts",
+        "src/ui/services/matchSession.ts"
+      ],
+      "testPaths": ["tests/e2e/bug-211-212-product-path.spec.ts"],
+      "verificationCommands": [
+        "npx playwright test tests/e2e/bug-211-212-product-path.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-212",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/effect/pending-state.ts",
+        "src/engine/flow/contact.ts"
+      ],
+      "testPaths": [
+        "tests/engine/flow/bug-212-production-contact.test.ts",
+        "tests/e2e/bug-211-212-product-path.spec.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/engine/flow/bug-212-production-contact.test.ts",
+        "npx playwright test tests/e2e/bug-211-212-product-path.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-213",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": [
+        "meta-app/src/screens/RealMatchView.tsx",
+        "meta-app/src/screens/SetupScreen.tsx",
+        "src/ui/services/matchSession.ts"
+      ],
+      "testPaths": [
+        "tests/meta/RealMatchView.initializing.test.tsx",
+        "tests/meta/SetupScreen.lifecycle.test.tsx",
+        "tests/meta/matchSession.race.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/meta/RealMatchView.initializing.test.tsx tests/meta/SetupScreen.lifecycle.test.tsx tests/meta/matchSession.race.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-214",
+      "classification": "verified",
+      "owner": "engine-effects",
+      "implementationPaths": [
+        "src/engine/effect/resolve-picks.ts",
+        "src/engine/effect/atom-handlers/core.ts"
+      ],
+      "testPaths": [
+        "tests/engine/effect/bug-214-opp-owner-production.test.ts",
+        "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/engine/effect/bug-214-opp-owner-production.test.ts tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-215",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": [
+        "meta-app/src/screens/SetupScreen.tsx",
+        "meta-app/src/util/customGameStart.ts"
+      ],
+      "testPaths": ["meta-app/tests/e2e/setup-p2-custom-binding.spec.ts"],
+      "verificationCommands": [
+        "npx playwright test --config meta-app/playwright.config.ts meta-app/tests/e2e/setup-p2-custom-binding.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-216",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": ["meta-app/src/data/cardPool.ts"],
+      "testPaths": ["tests/meta/cardDisplayResolvers.test.ts"],
+      "verificationCommands": [
+        "npx vitest run tests/meta/cardDisplayResolvers.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-217",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": ["meta-app/src/screens/ResultScreen.tsx"],
+      "testPaths": ["tests/meta/ResultScreen.mvp.test.tsx"],
+      "verificationCommands": [
+        "npx vitest run tests/meta/ResultScreen.mvp.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-218",
+      "classification": "spec-out",
+      "owner": "rules-adjudication",
+      "implementationPaths": ["src/ui/hooks/useActionsPanelFlow/flows.ts"],
+      "testPaths": ["tests/ui/bugs-207-209-218-adjudication.test.tsx"],
+      "verificationCommands": [
+        "npx vitest run tests/ui/bugs-207-209-218-adjudication.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-219",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": ["src/ui/components/SpectatorHUD.css"],
+      "testPaths": [
+        "tests/e2e/stacked-card-cost-picker.spec.ts",
+        "tests/e2e/spectator-speed.spec.ts"
+      ],
+      "verificationCommands": [
+        "npx playwright test tests/e2e/stacked-card-cost-picker.spec.ts tests/e2e/spectator-speed.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-220",
+      "classification": "verified",
+      "owner": "meta-ui",
+      "implementationPaths": [
+        "meta-app/src/screens/tutorial/TutorialLessonViewer.tsx",
+        "meta-app/src/router/useGlobalShortcuts.ts"
+      ],
+      "testPaths": ["meta-app/tests/e2e/tutorial.spec.ts"],
+      "verificationCommands": [
+        "npx playwright test --config meta-app/playwright.config.ts meta-app/tests/e2e/tutorial.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-221",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/flow/main/reasoning.ts",
+        "src/engine/listeners/misread.ts"
+      ],
+      "testPaths": ["tests/integration/misread-e2e.test.ts"],
+      "verificationCommands": [
+        "npx vitest run tests/integration/misread-e2e.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-222",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/listeners/misread.ts",
+        "src/engine/listeners/triggered.ts"
+      ],
+      "testPaths": ["tests/engine/event/misread-listener.test.ts"],
+      "verificationCommands": [
+        "npx vitest run tests/engine/event/misread-listener.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-223",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/listeners/misread.ts",
+        "src/engine/read/char.ts"
+      ],
+      "testPaths": ["tests/engine/flow/main/reasoning.misread.test.ts"],
+      "verificationCommands": [
+        "npx vitest run tests/engine/flow/main/reasoning.misread.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-224",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/flow/main/reasoning.ts",
+        "src/engine/read/char.ts"
+      ],
+      "testPaths": ["tests/engine/flow/main/reasoning.misread.test.ts"],
+      "verificationCommands": [
+        "npx vitest run tests/engine/flow/main/reasoning.misread.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-225",
+      "classification": "verified",
+      "owner": "engine-resolution",
+      "implementationPaths": [
+        "src/engine/listeners/misread.ts",
+        "src/ui/hooks/useEngineDispatch/can-check.ts"
+      ],
+      "testPaths": ["tests/integration/misread-e2e.test.ts"],
+      "verificationCommands": [
+        "npx vitest run tests/integration/misread-e2e.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-226",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": ["src/ui/components/MisreadPickerModal.tsx"],
+      "testPaths": ["tests/ui/components/MisreadPickerModal.test.tsx"],
+      "verificationCommands": [
+        "npx vitest run tests/ui/components/MisreadPickerModal.test.tsx"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-227",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": ["src/ui/components/MulliganModal.css"],
+      "testPaths": [
+        "tests/e2e/full-match.spec.ts",
+        "tests/e2e/mobile-viewport-controls.spec.ts"
+      ],
+      "verificationCommands": [
+        "npx playwright test tests/e2e/full-match.spec.ts tests/e2e/mobile-viewport-controls.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-228",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": ["src/ui/components/ReplayPanel.css"],
+      "testPaths": [
+        "tests/e2e/replay-ui.spec.ts",
+        "tests/e2e/mobile-viewport-controls.spec.ts"
+      ],
+      "verificationCommands": [
+        "npx playwright test tests/e2e/replay-ui.spec.ts tests/e2e/mobile-viewport-controls.spec.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-229",
+      "classification": "verified",
+      "owner": "engine-effects",
+      "implementationPaths": [
+        "src/engine/effect/resolve-picks.ts",
+        "src/engine/effect/apply-pick.ts"
+      ],
+      "testPaths": [
+        "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-230",
+      "classification": "verified",
+      "owner": "engine-effects",
+      "implementationPaths": [
+        "src/engine/effect/apply-pick.ts",
+        "src/engine/effect/pending-state.ts"
+      ],
+      "testPaths": [
+        "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
+      ],
+      "nextWaveReason": null
+    },
+    {
+      "id": "BUG-231",
+      "classification": "verified",
+      "owner": "root-ui",
+      "implementationPaths": [
+        "src/ui/components/CardExpandModal.tsx",
+        "src/ui/components/LogPanel.tsx",
+        "src/ui/components/LogPanel.css",
+        "src/ui/components/Playmat.tsx"
+      ],
+      "testPaths": [
+        "tests/e2e/user-bug-wave-ui.spec.ts",
+        "tests/scripts/check-wave-scope.test.ts",
+        "tests/ui/components/LogPanel.test.tsx",
+        "tests/ui/components/Playmat.test.tsx"
+      ],
+      "verificationCommands": [
+        "npx playwright test tests/e2e/user-bug-wave-ui.spec.ts --grep BUG-231 --project=chromium --project=mobile-chromium",
+        "npx vitest run tests/scripts/check-wave-scope.test.ts",
+        "npx vitest run tests/ui/components/LogPanel.test.tsx tests/ui/components/Playmat.test.tsx"
+      ],
+      "nextWaveReason": null
+    }
+  ],
+  "changeOwnership": [
+    {
+      "path": ".claude/auto/api/mutate.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "25a6f4b227d68e1f50eb82ba7b1de9d05916c7819d3a3609469f90750a3a9ccc"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/cond.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d2d3dfc94eb72b746edfa4722b48783abc6faa1a7adccacfd8707606e95e9e34"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/cost.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4fe5195efa2b2b3953294ec90b46b70e3f7ec54665d9722c78be9efff3dcec50"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/effect.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "16032360b47bb2eaa7871f344286fd750c65ec20eca25ac8c87252f6f9494650"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/event.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4aaca7f75592a21cbcd0cfa08bef29773e8b3309f086342afb55c3a428d6c959"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/flow.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "92e8206e61f72d336df0f1432ba09292882aa557ea3c605ac199cf0f9e4b1858"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/listeners.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c3894fda6b0b4dfc88a94121d1c10fdbd4baee44609e7280da8f19feba256d95"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/mutate.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a25f7a64bb3fbe89647dc5182c59666ab7b827e44224016515125de06ae93415"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/read.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4695934700534731d207be5106240865771f8e792f1897e0a310b9e7941901cb"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/resolve.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8ef632bb1a4ddeb782426d96bdd74e846432f98f4e20b0ae64c0694cb3cbbaa7"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/types.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7cc2cfc853317321de6f03eb13bc6f3a05fcc37a1a6d2b4803f8d544da21d9d5"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/01-curriculum-design.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b3f8a22be42151751231d96bc93f4e7b914ee91d9e7aae049c4a908e34bd203e"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/01-victory-conditions.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "572e6a81f20010de0f85d06089ab3691bb345599e51a59570274f0635f5e5494"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/02-deck-construction.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d11c874e8a8f21a4abe701c74f84cd5ffe6f4ff4f2945196cb4d78e6388cd450"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/03-field-areas.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "aa10c9f8deaf01526ee49961a35b2f7afe9bf4361a0036456ae85fe5da4306ba"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/04-game-setup.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "795536b9f1007f0b1c0d6bdbd97db6f29ce8f2a47eea22db03d23faaf8f1a7a1"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/05-turn-phases.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ac9500709159e66e686775665c7c47b9352d0e82a93d0caee788d2d00cb9f9e9"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/06-card-types.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bcb3d072b68bdb0c6d4debfed22f081c2bdbdf0affd4519aabb9480937863e32"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/07-action-flow.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e449e3eaf96ba2719d4a6e1f0f1a1eef179be682c3c191cd2389b56823c5eec7"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/08-contact.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f73eb023a34a043df91b21368d70b01d7199a2126e02840f37eea1d725be761b"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/09-cutin-disguise.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8e65f23a24eabdd3be6fac76a48d1d786d8fc9c4dff5264d4dcb527d08fa0e77"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/10-action-event.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "82f5a11c6013aeebd9599dac15ed8dc7f21e7d773bc7a87a22cb7c070310938c"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/11-reasoning.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "23639560fd1add8b2f5fb5331e8ea7c23095e5c34cd42ded70f7d5a7eed87361"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/12-next-hint.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "6434679f8cef70c0f1149f759e3609a51e7c26f25e4a6a3fe54b7b54f9b0c8fe"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/13-keywords.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "fb4ef8668dcedbaebbc609280cd1cb655fbff93a9c2e923b1f6f0bfadda2bb90"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/14-refresh.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8e1fc56689326f25e0b831900e9f60bde3ba8b827c8593c1ce1d3b4db9caae89"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/15-abilities-effects.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ddf6ad90b0eba6497cedfcf48f41428a3c298928e38043b360de9033bc858606"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/15-contact-removal-observer-design.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ecdded69b9e3ef520e0b705f76fff673732abb9dcb029d7d9b76711c29d9bf5c"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/15-workflow.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7e8d0c1da5c46a96fac3c323106586cf3ae69f9369e96dd597881bc54e98f497"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/16-card-set.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f53c5359590f0852eaa67220b69c62a2641c1920833b1803ed7198d8555c036c"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/17-icons.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "23125ed2c0fdef46a41ba1103e4b6fa1fe3a25c310bff32cc97eaa472b407a12"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/18-mr.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e188f159859afb8be4834515bfbdb2fb2e83b65385508cc1ad4bd398328aa383"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/19-special-rules.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1fc6bbf8a136b917fd8b6b1573907e2de80d407861dd76386f8b34ba08cf0d28"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/20-color-and-switch.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ced483270d602a4b6ccfe10397485e1252bf4230c8c756257c872d06302894f0"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/21-declared-ability-cost.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d926882055385e9af153a8860dc985bb5bba3c56ebe04c6a7f6040f8fdf09979"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/22-qa-action-contact.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1c7e0dd018b7c8b70b5511a14bf039f89f087f0ce4c3d374f94d65116dcd3d15"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/23-qa-disguise-cutin.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "60693babb0bd517496ee16b89d64923a78179184200f70574b14912d225ca759"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/24-qa-naming-stun.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4b2bada55c99b08f594f47b82473a00c79b9a8fb084dad037aa5c881a7c04049"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/25-qa-effects-resolution.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3f454d8ebfef4cc55ce53e539d973e0b829d43d4cad4ae0573fa3481dcaad78d"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/26-05-11-ui-action-flows.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bdb4efaeda0ad1ec37f06aad49244e42c6bf10bfcb55d66e956a0a8048a8eb1a"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/26-05-11-ui-game-setup-flows.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "2410601cf90756ece1d77dde5db0f039d74c732c1c87a72c3da7107f2de7c674"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/26-07-02.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1520954e0acc140cac021255e444a66c122792c1d6c9470d8b5db9d54e645909"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/26-qa-deck-refresh.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bccfb09d773363fa4c4765f2455b61c7b0623d7a33336cb3ef3a9b2ae6d1220c"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/27-card-restrictions.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d240191828addb84df58a6c913c3c491ed0abb27b6f4a7f9f20ce3729cad5e44"
+    },
+    {
+      "path": ".claude/auto/mapping/by-rule/28-errata.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "febb74cfdff4711d55ce4b070d90cd48c5fec3a7af0703b96672ae47c4b62f9a"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/2026-05-11-ui-action-flows.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "fd5e7a8ba44e5fa71bf367ed629c9faa4972e32391fb826a03d745f78ca90005"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/2026-05-11-ui-game-setup-flows.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0a14f6a773118b007b2e516c4566dfc014bd913ad4e53430314a01fa8d3027b4"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/card-authoring-convention.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "aa12bf0ca8e504cb83f5b84db04ffbb8e147a52e1d87e5435d44cbc9831c1618"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/card-condition-catalog.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "73deeec22fe147744ebb0900315bd9682568e995c4b68ed6efb0941d9be3c780"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/cards-data--INDEX.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1bb1b0d5d9adecd5ed73010eb447c94ef0f17480edf9032130ff502ed3480e62"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-atom-verbs.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "13c21dd3969b25de9f10e7672066e8283d07ccba9e5c29f910b65c8ebcad46c5"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-card-abilities.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "9b4bc82a48e812b5a45d93a2d3e24ccfe9778b0053e94f3b6b5e4986e8b27e85"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-card-shape.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f6ecd5986f64f247f3a9cdffd1082bee71b39409721daf064cb59b5f5fab3f32"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-effect-descriptor.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e3aa6a5aad513e46ce3c4cc47cf388c94f2a8a7fbe2745b34af67812569330bb"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-events.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "956d06262a0eb6ef0e8f5ddf971db7716decf5b023572fa66a36d1a80a921656"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-flow-contact.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3f7a7992bd81aee98a09a5e378f7c72f4339306927a3a893203b89900e47c9c0"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-flow-control.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b64ceaea0a9adedddf5e0013004963fe8fe1cc25503d89471392157009796a3f"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-flow-setup.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "843639311cc888625017bdf6454e8ca8ee687c3b0cd9efdfa44c4145e796bc68"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-api-resolver.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "77a93c40eb214522dd2b3e06af2b6714de1d1d42e0e6078f07b903a7efdd1f3f"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-cluster15-contact-removal-observer-design.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4c0072357963e101fac572fe4a8700b3134fa8f75ab3b08dc2e21114b98e8698"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/engine-wave2-action-triggers-design.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3e58e61d10707a576cdae9b623c4beb4ac8a8bcedfd024910a585f1e7ad0061a"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--B03111.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "10186ff2918de6807cf600e85f7b8a9e371844c79f3cc96b2171d8226a084953"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--B05063.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "196103aa405232d21bda94ac56570945a3c82b52cb0d21e9ff14c48d763b9b00"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--B07100.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "259b84a5ea1cdd0853283136117dc45dfff2ea701f38356f97a1e41257b0533d"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--B09019.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "dd4aff500259002f01904774b6fc935dbe019a343964327ceeba96f5b691a591"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--B09033.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ec7f2392667e62ee23d0b5d8eb0d63e2dea5a0f55b7fd4c3accd5209ced00cf4"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--B09033P.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "145894445e86522a138c4bbd0e816fcf13e435dbf53a4cec4ef69d69fd1fe8a5"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--D06003.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1261c5b0d5be8acae313d970e022a325c95d69a50e40fd30dc6e115b2df21a8f"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/grounding--PR265.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "61e0287e6ff372176e659756990e7b58664ba7d2e8d80273cc74b7b324e3bf8d"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/phase-9-f-mcts.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1183487907c53056daeba44c907b6ed5b200ca1dbb4bbcbc6438e739b7ca95c8"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/phase-9-g-replay.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a7f2f2318c76d5ef5a87a4c61cc16efa28f095a60d25e6f52f6fd5fd87933461"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/phase-9-h-performance.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "cc22fd90c39a334277869673261225112847b5fdae0bd207dea51058dc3e8955"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/refactor-plan--phase-3b-design.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "166c48ab8979230c8f45d73a7089eda36fdcbf057a1cb1f72e7001bb63b42475"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/shared-classes--INDEX.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "32ae238c75504fc9cbccdb7bdb003cbf576da91f7b6ece27cb03b3328a443e79"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/shared-classes--caseDeclaredEvidenceFlip.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "da194cb87fb9f90cb41d62248192dfd4e157c2de04e2a42d4810a99f9fe8d5e3"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/shared-classes--caseResolvedHandRemove.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "677c77b6cd608379f23f440b1611c500040ac4bdd089349d4a11fcfa48b6f2fc"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/shared-classes--caseTraitConditioned.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "98f967d19cf21d64ea30ec9deb3b8f92d6da1e7cab4faaeb777f498c59400c8a"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/shared-classes--eventRemoveByAP.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bdace34105b426c1d6eec4cf4d4c1b603796d3cf211eafac2f17da145b420f66"
+    },
+    {
+      "path": ".claude/auto/mapping/by-spec/shared-classes--partnerColorKeyword.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "61ecb7e7c345b3536a53c825cce1f1d83dffed536dc135af77013558e59a3e4c"
+    },
+    {
+      "path": ".claude/auto/mapping/cards-to-rules-cards.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "55fafebd7bfaee9479fa193fbe87fe2eb5ce601f04a1f2b94aecde642cae3595"
+    },
+    {
+      "path": ".claude/auto/mapping/cards-to-rules-engine-core.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3c0c94e70926307c7617cb3b2ce47fa53c86277cdcb18e2937aa9d26ab70d312"
+    },
+    {
+      "path": ".claude/auto/mapping/cards-to-rules-engine-flow.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "926087921583d3b0490797906b48546125677af0a088748dc2fd2776aa7e2cd7"
+    },
+    {
+      "path": ".claude/auto/mapping/graph-rules-engine-core.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a30e33a06ce5c45a7ac89379a5a0bb4d79050aa77eccef4b594d351afe0e6bae"
+    },
+    {
+      "path": ".claude/auto/mapping/graph-rules-engine-flow.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "58504c3dc59a9dbb728e58cf71dd3ba39ba5950dc603afed4756012464cb0ca5"
+    },
+    {
+      "path": ".claude/auto/mapping/graph-specs.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b535a9714be170bd133abbdd9ebca199a0501b1a913d98656e53edeffdfb6ca5"
+    },
+    {
+      "path": ".claude/auto/mapping/index.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e53ce6f749167b87cd506f8e7947ba60d135c9491798ab028fdf0894f1b81638"
+    },
+    {
+      "path": ".claude/auto/mapping/rules-to-cards.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "002967f5eb0fd8c1eb41b4ab73b2cfd1bc4ef90d790fe2acf7e948fff6ccbdf3"
+    },
+    {
+      "path": ".claude/auto/progress/cards.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "12d6ca0fe45b1065c6f3cc67d7c8d5a13aa3b621e062c374415275ba6c6ce469"
+    },
+    {
+      "path": ".claude/auto/progress/tests.md",
+      "owner": "phase1-generated-docs"
+    },
+    {
+      "path": ".claude/auto/structure.md",
+      "owner": "phase1-generated-docs"
+    },
+    {
+      "path": ".claude/bugs/BUG-022.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b1a2901d38a43354bddac8863f7c8bf0a662296559e6f0a589209ba56c7cad7e"
+    },
+    {
+      "path": ".claude/bugs/BUG-083.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "2cd2858fbd45f15112984411640d9eac16e751ec828f97bd004b266f568792ce"
+    },
+    {
+      "path": ".claude/bugs/BUG-105.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7e97e246e90f6a510319d089d2d59f5e4f7f4bd754779909b38faedc8026c7c9"
+    },
+    {
+      "path": ".claude/bugs/BUG-108.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "9549eda1cf3fcce2cd51ce76f92fd70fb73cf7cec186f9d69c31edfddf871597"
+    },
+    {
+      "path": ".claude/bugs/BUG-116.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "2891d5e1b296790bff5fe3f3b5540db2241a561e5cb1b8ef3a75044d75255ad0"
+    },
+    {
+      "path": ".claude/bugs/BUG-130.md",
+      "owner": "engine-effects",
+      "bugId": "BUG-130"
+    },
+    {
+      "path": ".claude/bugs/BUG-133.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4075af8b20a0af4c91d45fa9b3ea6a7e3024f8d4590a4f115c9801a556914480"
+    },
+    {
+      "path": ".claude/bugs/BUG-134.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "195d3a99adfc99e9eb3463239e30d02eb67252e61a9dcaccf60641d44f866113"
+    },
+    {
+      "path": ".claude/bugs/BUG-135.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b45dcd9050360d1814a23a4996744433ff5bb1d6649d224b0e8e3f4a3557ebdf"
+    },
+    {
+      "path": ".claude/bugs/BUG-136.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "6db9b6b72aa8e2b34869a0786992ad46fb769fd9689ae81403cdad00daccc7ee"
+    },
+    {
+      "path": ".claude/bugs/BUG-140.md",
+      "owner": "cards-tooling",
+      "bugId": "BUG-140"
+    },
+    {
+      "path": ".claude/bugs/BUG-152.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4bcd009b8554f69d018e07f44aed8a444bf985624dd629c3a718f3cdd90a13e6"
+    },
+    {
+      "path": ".claude/bugs/BUG-156.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d88616c6831beed019c583b2e6fec6e089261a03f35f0a4f4c83c8a0050cf835"
+    },
+    {
+      "path": ".claude/bugs/BUG-157.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "90ae8e3b4bdd0e97aaf16fefaaf20a71d0550f5269569177dc16af4e7f4bd5e1"
+    },
+    {
+      "path": ".claude/bugs/BUG-158.md",
+      "owner": "engine-effects",
+      "bugId": "BUG-158"
+    },
+    {
+      "path": ".claude/bugs/BUG-159.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "431fae0bb51bc6e00681a56744c9e9fe4bd24e714cadb279248b847c8ba51eb7"
+    },
+    {
+      "path": ".claude/bugs/BUG-160.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a8937cd5d3031b1d47c31e5860ac649851b8bb27832aa8d3605e94437b833041"
+    },
+    {
+      "path": ".claude/bugs/BUG-166.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-166"
+    },
+    {
+      "path": ".claude/bugs/BUG-167.md",
+      "owner": "engine-effects",
+      "bugId": "BUG-167"
+    },
+    {
+      "path": ".claude/bugs/BUG-176.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-176"
+    },
+    {
+      "path": ".claude/bugs/BUG-180.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-180"
+    },
+    {
+      "path": ".claude/bugs/BUG-202.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-202"
+    },
+    {
+      "path": ".claude/bugs/BUG-203.md",
+      "owner": "root-ui",
+      "bugId": "BUG-203"
+    },
+    {
+      "path": ".claude/bugs/BUG-204.md",
+      "owner": "shared-ui",
+      "bugId": "BUG-204"
+    },
+    {
+      "path": ".claude/bugs/BUG-205.md",
+      "owner": "root-ui",
+      "bugId": "BUG-205"
+    },
+    {
+      "path": ".claude/bugs/BUG-206.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-206"
+    },
+    {
+      "path": ".claude/bugs/BUG-207.md",
+      "owner": "rules-adjudication",
+      "bugId": "BUG-207"
+    },
+    {
+      "path": ".claude/bugs/BUG-208.md",
+      "owner": "root-ui",
+      "bugId": "BUG-208"
+    },
+    {
+      "path": ".claude/bugs/BUG-209.md",
+      "owner": "rules-adjudication",
+      "bugId": "BUG-209"
+    },
+    {
+      "path": ".claude/bugs/BUG-210.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-210"
+    },
+    {
+      "path": ".claude/bugs/BUG-211.md",
+      "owner": "shared-ui",
+      "bugId": "BUG-211"
+    },
+    {
+      "path": ".claude/bugs/BUG-212.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-212"
+    },
+    {
+      "path": ".claude/bugs/BUG-213.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-213"
+    },
+    {
+      "path": ".claude/bugs/BUG-214.md",
+      "owner": "engine-effects",
+      "bugId": "BUG-214"
+    },
+    {
+      "path": ".claude/bugs/BUG-215.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-215"
+    },
+    {
+      "path": ".claude/bugs/BUG-216.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-216"
+    },
+    {
+      "path": ".claude/bugs/BUG-217.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-217"
+    },
+    {
+      "path": ".claude/bugs/BUG-218.md",
+      "owner": "rules-adjudication",
+      "bugId": "BUG-218"
+    },
+    {
+      "path": ".claude/bugs/BUG-219.md",
+      "owner": "root-ui",
+      "bugId": "BUG-219"
+    },
+    {
+      "path": ".claude/bugs/BUG-220.md",
+      "owner": "meta-ui",
+      "bugId": "BUG-220"
+    },
+    {
+      "path": ".claude/bugs/BUG-221.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-221"
+    },
+    {
+      "path": ".claude/bugs/BUG-222.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-222"
+    },
+    {
+      "path": ".claude/bugs/BUG-223.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-223"
+    },
+    {
+      "path": ".claude/bugs/BUG-224.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-224"
+    },
+    {
+      "path": ".claude/bugs/BUG-225.md",
+      "owner": "engine-resolution",
+      "bugId": "BUG-225"
+    },
+    {
+      "path": ".claude/bugs/BUG-226.md",
+      "owner": "root-ui",
+      "bugId": "BUG-226"
+    },
+    {
+      "path": ".claude/bugs/BUG-227.md",
+      "owner": "root-ui",
+      "bugId": "BUG-227"
+    },
+    {
+      "path": ".claude/bugs/BUG-228.md",
+      "owner": "root-ui",
+      "bugId": "BUG-228"
+    },
+    {
+      "path": ".claude/bugs/BUG-229.md",
+      "owner": "engine-effects",
+      "bugId": "BUG-229"
+    },
+    {
+      "path": ".claude/bugs/BUG-230.md",
+      "owner": "engine-effects",
+      "bugId": "BUG-230"
+    },
+    {
+      "path": ".claude/bugs/BUG-231.md",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": ".claude/changelog-entries/2026-07-15-02-standard-and-test-decks.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8626adad4073f9071d221f2297913363102f2081c9636b7e277fd09f7c1e9d58"
+    },
+    {
+      "path": ".claude/changelog-entries/2026-07-15-03-contact-and-meta-effect-modals.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3a7faa4774a84aae7393e32e5c2e9bac0ef39ff00b723df08be16a368fccf4e6"
+    },
+    {
+      "path": ".claude/changelog-entries/2026-07-16-01-you-vs-cpu-hardening.md",
+      "owner": "phase1-task2"
+    },
+    {
+      "path": ".claude/memory.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "6b6fd9b9c03c6f3aa4a9e87c0adb07139fc7ecfabc8a9c11c22969ae69968d84"
+    },
+    {
+      "path": ".claude/sessions/2026-07-15-2.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3659c57d568b491fe1071d25019e568fb15462a2d1dea1a8773527cd113a1173"
+    },
+    {
+      "path": ".claude/sessions/2026-07-15-3.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bcf8d837bb37fc66550d9ad988c4561c94ee0649fdc351062544ab6b1f308b06"
+    },
+    {
+      "path": ".claude/specs/DEFERRED-INDEX.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "9ca83d7cdf74855e91bf9115a3355d5dc43d29383a4609b3d3a7d506de53bc1c"
+    },
+    {
+      "path": ".claude/specs/you-vs-cpu-hardening-wave-manifest.json",
+      "owner": "phase1-task1"
+    },
+    {
+      "path": ".claude/specs/you-vs-cpu-test-strengthening.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c2f7edf0722431b98b5d44a93810a75d1264fd5ad83890ca611f54fbd66fefbd"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "owner": "phase1-generated-docs"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-16-bug-wave-closeout.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c1d9444a7393d6439e104adf5de1573e9a3e31864a56ef6625c14c93bda5b35a"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-16-official-qa-compliance.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "34117b6682424f2c726e90db9d234efcc1bb602288b84046597bc6cdbb03513e"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-16-you-vs-cpu-system-validation.md",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e78f27e8e36acd92dae3ac1262300a6d396de13fb2bb523016cd17085f0c575e"
+    },
+    {
+      "path": "meta-app/src/App.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ee8f06237abe04c7e024a6ad378de7683face4521f718b8c12f696b16c4fd976"
+    },
+    {
+      "path": "meta-app/src/data/cardPool.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c929ff289d24b9a31805d9a62657aa48788b96b3cd7f1a5dd51981ab8943678c"
+    },
+    {
+      "path": "meta-app/src/data/sampleDeck.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c1e920be0180420914166833c56715853b021c1135bca7ea4a2488a2a507d835"
+    },
+    {
+      "path": "meta-app/src/main.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "adec62c07255cee094dce19be9818b6d92f32cacf4b707c84a5e970bfb91dc34"
+    },
+    {
+      "path": "meta-app/src/router/useGlobalShortcuts.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a96e5ef0ad0a2fab144955c755c838274ba8154a26191b4c6c33c9c664a5a32c"
+    },
+    {
+      "path": "meta-app/src/screens/RealMatchView.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3e73a71eedc090e850c2aaf5d2639532513e7a6d0e611b9151aff3087f5935d4"
+    },
+    {
+      "path": "meta-app/src/screens/ResultScreen.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3f87496c196a813ed511efc834e2b95a239067907714506b97b8ec64334bd893"
+    },
+    {
+      "path": "meta-app/src/screens/SetupScreen.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "00ea302181b35f3ad7c8d2ab24ad184374860d08fb8058b862ff27ab5013beeb"
+    },
+    {
+      "path": "meta-app/src/screens/TutorialScreen.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "91a8f7d4174e50394c08c7c20547926afeb99c2cfc87eddf2b1382c0a8656a2d"
+    },
+    {
+      "path": "meta-app/src/screens/tutorial/TutorialLessonViewer.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "05ec1dd897cd55bfeb6156fa6d96e9927df2e54186d1968e822189de5337235f"
+    },
+    {
+      "path": "meta-app/src/state/decksStore.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "47bc778fd169101b73aa4084f6426c79af995f3a6eaef748539777170ca6ec89"
+    },
+    {
+      "path": "meta-app/src/util/customGameStart.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "cb12919a402ea1a810b8045c27a68dc5337d224baad597c6fa839e6dcdd9f759"
+    },
+    {
+      "path": "meta-app/src/util/tutorialResolvers.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c67b0a131545e189400715e45d9c5a258dc57e2243319512cdf051a3e843e6ab"
+    },
+    {
+      "path": "meta-app/tests/e2e/deck.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1749d3628c80e42fea7bf5582135e390492dd7b52263ed82c51f4dd89f77103a"
+    },
+    {
+      "path": "meta-app/tests/e2e/effect-decision-hosts.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "43d45531fd8012c0c3ed5fd3e3692746caae55b77cd93313dff22a9adbf52e80"
+    },
+    {
+      "path": "meta-app/tests/e2e/setup-p2-custom-binding.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3ddd33413a16f89a698d34fea2eb7f5d59c982f7817f5e3ae55ce3505bd7c800"
+    },
+    {
+      "path": "meta-app/tests/e2e/smoke.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "444304462d8bc02622f1b7487535cfaa439fa663c817a5cac3ce1f07c57f5f21"
+    },
+    {
+      "path": "meta-app/tests/e2e/tutorial.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f368d6bdc836d7aadf0b6139a5e0911092519ed37cc401daf49581896b3834b8"
+    },
+    {
+      "path": "package.json",
+      "owner": "phase1-task2"
+    },
+    {
+      "path": "scripts/benchmark/mcts-vs-heuristic.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "96b5048c7097eb5749bfaacf3885c79b3ed51c3b67418f4d7d053ae40d240dbb"
+    },
+    {
+      "path": "scripts/check-wave-scope.ts",
+      "owner": "phase1-task1"
+    },
+    {
+      "path": "scripts/lint-bug-closure.ts",
+      "owner": "phase1-task2"
+    },
+    {
+      "path": "scripts/lint-icon-abilities.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b6b19e08d4f7c535df57131af8bcd3db2eb7b597e86aefc8b5ff15c30ab4b6e1"
+    },
+    {
+      "path": "scripts/lint-side-channel.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1642c9147e08445902852cc6680e3a0122210c032b2d5b745c3af004008aff67"
+    },
+    {
+      "path": "scripts/smoke/run-1000.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0e6b7ddf7ef4c857f4a69374e3ee4ab6b0610a48cb9f63e40c547c8558dee547"
+    },
+    {
+      "path": "src/App.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "367f2466c2b06235af042bbd5f1625aaa6842aec2101396727a1771bdc6683e6"
+    },
+    {
+      "path": "src/ai/policies/heuristic.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b606ab4820e5e2ae832d95aedcfcc9549446956352b7546781bffdcd67174bc2"
+    },
+    {
+      "path": "src/cards/ct-p05/B05039.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d4f395e33e095ec791ad9c82e428a8f717fe170f0305b5fd68c6debe76a1d461"
+    },
+    {
+      "path": "src/cards/ct-p06/B06035.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "27e4ed034231f0b81a82a551dc56e6eed86cf96ec9b3f754a7bce13116dfd406"
+    },
+    {
+      "path": "src/engine/cond/eval.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "9700d6f50cd633f66443f5cf6dc48464acd17e3b3fa2f77eb805e933bea806b2"
+    },
+    {
+      "path": "src/engine/cost/pay.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "05da110469771e433d8c5f3499b32ed00831fe1d14f03895601b1023467a8b9c"
+    },
+    {
+      "path": "src/engine/effect/apply-pick.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bc6a159708885f0d4c090a7c0b3ff0a7a164c109f48a7bf7111615e7ac41e457"
+    },
+    {
+      "path": "src/engine/effect/atom-handlers.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "77f2cb8c2396da56a875601cff0fc8f2fa7d040575ad04b72d23df7c4fbaec42"
+    },
+    {
+      "path": "src/engine/effect/atom-handlers/_shared.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "12ade4f07cd29155038b15909f78a961c4a72715a8c7f2234507d7504a5d8538"
+    },
+    {
+      "path": "src/engine/effect/atom-handlers/char.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e2cd89e0befd0b81f1b733bd86b605f02bd1dcf19ef31f524e80b59cb13f512e"
+    },
+    {
+      "path": "src/engine/effect/atom-handlers/core.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "eda82442b4b5c22803a8b0ce1b8af5499e587fdfa114ce98ff8734df2db11fa5"
+    },
+    {
+      "path": "src/engine/effect/atom-handlers/picks.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "963823dd8b4a2c8cda6674828335c87bb45c54bbf16ad2966d44f38161ac769f"
+    },
+    {
+      "path": "src/engine/effect/atom-handlers/scene.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "cf7b3d322877b9d8aa4db4a8f7219545c16493952d788f643bba74fc77236743"
+    },
+    {
+      "path": "src/engine/effect/pending-state.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a8d0802c74dfccb0f6475c876c693dbeb141d7d984a927313eb3149e989e6d21"
+    },
+    {
+      "path": "src/engine/effect/resolve-picks.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "6119f3e3902f16edcd8b8910e9a2b2e7b9a8d1cb1a24c6be32d2498485102970"
+    },
+    {
+      "path": "src/engine/effect/resolver.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "755edc32a2e1cddd413489af187b566c9d9c738d9f7f5823fd52a66805f0a47a"
+    },
+    {
+      "path": "src/engine/event/registry.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "237f21138d40199e7d8c8943ad6a95de571b93cefd6855edddde93ad77906432"
+    },
+    {
+      "path": "src/engine/flow/action-case.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "36f070b434ab354dc4b7ce03ff7df18f305d5cfcc72d0a1196eb694bab96a00d"
+    },
+    {
+      "path": "src/engine/flow/contact.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ee867981c4c6fe7578d857b04737901eb4f958343a07ab577d2bb9d52fc238f5"
+    },
+    {
+      "path": "src/engine/flow/main/hand-use-card.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bbcf459b3ad5a3c3bdf7fecdafaef20cb8b697928ea074a8395dc970b96c0c4d"
+    },
+    {
+      "path": "src/engine/flow/main/next-hint.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "afbc8b52972f0ff302731dd80368365c27ef218e515172bb210e855b6b9a1090"
+    },
+    {
+      "path": "src/engine/flow/main/reasoning.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ad71382630238c282b800afef1e8c417e65b52eb6210e87c51f80629de6772ed"
+    },
+    {
+      "path": "src/engine/listeners/misread.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4ed4281b67493840d17fd4d4b952093c0b38424be22605af14788344bc4c7d74"
+    },
+    {
+      "path": "src/engine/listeners/triggered.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8fce7ba025133c410a604cd385c1bdd53a5daea01166acde997bd8d60459c91d"
+    },
+    {
+      "path": "src/engine/mutate/deck.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "2f18ae1e7df0a6e4c0f5382a1c711d177d46f26656d327c51e40b389965fd36d"
+    },
+    {
+      "path": "src/engine/mutate/evidence.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "11eb0c52d4e8036440c66c9ea587d20f45c20ed60bc909cf47f5d3c922899512"
+    },
+    {
+      "path": "src/engine/mutate/file.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8146174745e3ace7b5d74f0499a2e0860a9cde225f78efbe3a45edafbfc13276"
+    },
+    {
+      "path": "src/engine/read/char.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3e5ba40a1d51eb32e9c3d30867e058ef474ea3981068a323687499cb1aa59c34"
+    },
+    {
+      "path": "src/engine/read/effect-source.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "cd2b1bf54fd697c5ddf58af55c87af16a0d3a2633e5504db860e7f347adcb2ef"
+    },
+    {
+      "path": "src/engine/resolve/stack.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8334b1223734014d49f2d0553f7401b569a4e8296558c35ecf1af2687a55b731"
+    },
+    {
+      "path": "src/engine/types/effect-ctx.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "2c8fea87b60adb4f701de9f7b585a97a9ab627aa3f1b453681b1768011f40c2f"
+    },
+    {
+      "path": "src/engine/types/effect-stack.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b8f9fb204630d60353ee988056a1b1c2d2cf90dde3d2915a851c80dafd1a8cab"
+    },
+    {
+      "path": "src/engine/types/index.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ed262c525d3d0a7d4862dee7d17c7399590d9c9d5ff242a93dedc8025a4832aa"
+    },
+    {
+      "path": "src/ui/components/ActionsPanel.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "2580442df17e7f04106f8bcefd2761400e5fd292474eda85645cb59f8a6fead5"
+    },
+    {
+      "path": "src/ui/components/CardExpandModal.tsx",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": "src/ui/components/CaseArea.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "da2bcb2a1c2a9de8c252caf565b709c559881fc2e3076d028a825471ed4cbaa3"
+    },
+    {
+      "path": "src/ui/components/CaseArea.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d7544d100ea84ebce1f56a0e3957058f54fa297a9968c7b539d6ce8ee691b66d"
+    },
+    {
+      "path": "src/ui/components/EffectDecisionModalHosts.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3a73a2e4fd8f3df7c3d158d0302a2aece69b87793de32aa919940ea430073ed6"
+    },
+    {
+      "path": "src/ui/components/FileArea.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "218ab01fd724a0b3a2f022a892ba00f29c08984304de8bc966a67b000df3ab00"
+    },
+    {
+      "path": "src/ui/components/GameSetupModal.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e2d9ecd19c6bfcd07ccaa412c7c864a5e8cb8f674b9213f7fe39607c2f842484"
+    },
+    {
+      "path": "src/ui/components/HandZone.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "cd3c0377ae1c8630e94aeeb062ea543fb94e533c2551584241ac6fd385ff1685"
+    },
+    {
+      "path": "src/ui/components/HandZone.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "991419e6871988dcbc44536603a4c091cac8e5287654357f158e93f86b6386ac"
+    },
+    {
+      "path": "src/ui/components/LogPanel.css",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": "src/ui/components/LogPanel.tsx",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": "src/ui/components/MisreadPickerModal.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1d88b8fd62138372311b69a2b315a10d079697621963c688088469f4f3aed493"
+    },
+    {
+      "path": "src/ui/components/MulliganModal.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "22421468bfd678f8fa5482b52f7bc2e9ad7fd2f945b82f03caf11e9ace2f443c"
+    },
+    {
+      "path": "src/ui/components/PartnerArea.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "63ded49bf74847cad1449e545e63418cf8846321d03ea1a0bbc09e4416034056"
+    },
+    {
+      "path": "src/ui/components/PartnerArea.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d19992ef6067e31c3c9548f76633a688dafab5b542a20b3d8c57b3df3bdf0053"
+    },
+    {
+      "path": "src/ui/components/Playmat.tsx",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": "src/ui/components/RemoveArea.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7bc3c75ee84cd4606a239296b19240990265d30cc7ac597d36540c6f8903f380"
+    },
+    {
+      "path": "src/ui/components/ReplayPanel.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0381390d99c49730f9422933b2cbe53b1354ede466b92898b667b145cc6ab835"
+    },
+    {
+      "path": "src/ui/components/SceneArea.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "eedc69df352dfeec64882e9a7f24b34f5ca11dcaf4ac5833aaf485f82a4c4ede"
+    },
+    {
+      "path": "src/ui/components/SceneArea.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f015e413c2f14f11ea2e6dfafc792a2229b5c4cd07fddd1820433e440e95cb91"
+    },
+    {
+      "path": "src/ui/components/SpectatorHUD.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "5d3850cee3d6e3b3cf7b1cc07e677241f1ea715571e5df0cdb88c8a43461eb93"
+    },
+    {
+      "path": "src/ui/components/TutorialOverlay.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0544dabcc7f4224297e30d93d4153dc5a952d8efe022b041770e80c065dd5566"
+    },
+    {
+      "path": "src/ui/hooks/useActionsPanelFlow.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "ad190769174e5358c90a29f30b03ad5c3726ad1843a5fbcc81d6115ff89aaaf6"
+    },
+    {
+      "path": "src/ui/hooks/useActionsPanelFlow/end-turn-contract.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "fd106d9440f54f8798dd0aa4f71cfcd7464774bdb63afc49b0a4b2a866fe2655"
+    },
+    {
+      "path": "src/ui/hooks/useActionsPanelFlow/flows.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d8745bd96a8d421f9a70aae412c3b4cedf2813613b517a0b098cb59c3f94de81"
+    },
+    {
+      "path": "src/ui/hooks/useChoicePicker.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d2018591c91f0d28d6de2048cef0447b29653deb62a41adf0fd613f7fc4c30d5"
+    },
+    {
+      "path": "src/ui/hooks/useConfirmation.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "940664a60dc99e034d0943cd1833f4d914203c9b7d6bd6596e4ae699136b4464"
+    },
+    {
+      "path": "src/ui/hooks/useDeclareNamePicker.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "91352dde19115ea75b91eff8fe9c17cd765fad44ce65408f80bbfb27d7fac36d"
+    },
+    {
+      "path": "src/ui/hooks/useEngineDispatch.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7bc177a9386f48b3f13aa4fb12c909d2ad0f226f5b73a290eaed277e192ca7da"
+    },
+    {
+      "path": "src/ui/hooks/useEngineDispatch/can-check.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "5bb971809c7ec33de5885c8a3458d0af659a7dd27920c61e5e04f3d6b30b00d2"
+    },
+    {
+      "path": "src/ui/hooks/useEvidenceFlipPicker.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "632024d08e52c175e6c777a873c10f58b73678b6d23dfe75ee879b3849a2353c"
+    },
+    {
+      "path": "src/ui/hooks/useMisreadFlowDriver.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8820b15fc47931846d2835fc1757ce53145903ed1f65b903f3e36a17932ce716"
+    },
+    {
+      "path": "src/ui/hooks/useNextHintPicker.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bc86141f4106f9297eec04b6eae806946968320bf0280e1c08d54586ad3e8688"
+    },
+    {
+      "path": "src/ui/hooks/useOppTurnDriver.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "df3781ab054a131b926231f63536e204bab4f35df0622f7d9720f623d1f10c84"
+    },
+    {
+      "path": "src/ui/hooks/useSpectatorTurnDriver.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "70143efc03ac1f7aa4d71cffc27db21281c1997ef3c49c739493f27a9ec7ddc5"
+    },
+    {
+      "path": "src/ui/hooks/useStackedCardCostPicker.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "9f41655647cfc8b15fe9ab57f3c85a8db7385573f90c4a6ecfaa0277066b326e"
+    },
+    {
+      "path": "src/ui/hooks/useTargetPicker.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "898ee4ee19141fd24a4b16a615e434d966b2baae17410190beab4f8c45a52b96"
+    },
+    {
+      "path": "src/ui/services/cardResolvers.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8586f2e8404fb42481cbe7c9e660a407342d9e148acee5299033b42d98e4b312"
+    },
+    {
+      "path": "src/ui/services/deckBuilder.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "097f80e3d0703ed95124afbdaaf9136c9220780cda9afb8efc7004ba7c20a8b1"
+    },
+    {
+      "path": "src/ui/services/matchSession.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7dacc4ddc27cf8b923cff550325ab48f30d872f26e58493572dcb65fcf6bee9c"
+    },
+    {
+      "path": "src/ui/state/store.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "41493022117310539ac6531c551cd5c9af31566db6ff9c9de2256aecb3138075"
+    },
+    {
+      "path": "src/ui/styles/tokens.css",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e94f99a9337da87a8d56fd44d6f33d59a7db8c0184c261120696327cc347eeff"
+    },
+    {
+      "path": "tests/cards/B08003.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "17d9b6e9ccffa0c45a234469e3833c6c0a0696a3b0aca133f2d940cebdda85ca"
+    },
+    {
+      "path": "tests/cards/B08063.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0440ec2a1ff341ab813431bbfb7ac28bca9c4aa497638afaebf4a980718602db"
+    },
+    {
+      "path": "tests/cards/B09056-partner-assist.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "00c5ee5cb8379a824aa1344af6ab9a5bde22bbebd503b9def3b3c6bc48e14f81"
+    },
+    {
+      "path": "tests/cards/b09024-triggered-aura.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "aef16f5049df08c2a73b3a53b931b9b9e23f0b36ffa5419b0d8bec1b48f1a16f"
+    },
+    {
+      "path": "tests/cards/b09033-reveal-repeat.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "1751c9a0d854bed5e50b314f790cf1efcc079e7e38d8f25745ceddbfe48b52bb"
+    },
+    {
+      "path": "tests/cards/bug-130-158-live-human-carrier.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a7edaeadad834b99befadac6d9a45614ac872f0fe3b877be8724b90cef1ed4f4"
+    },
+    {
+      "path": "tests/cards/bug-135-sequence-middle-skip.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "fef86a636a8011733b3b6b91719db01c85673130bc48f93872f96c1906dca378"
+    },
+    {
+      "path": "tests/cards/bug-140-deferred-real-cards.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "42b2e239e35b54da72c6d864d699520352866e94aadbedc1c63dcbdb8daaadeb"
+    },
+    {
+      "path": "tests/cards/cardphase3-cutin-observer.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "11a98449e700981defea16ed9f060eba713d02c87052b4e5f791a12e108fb5b5"
+    },
+    {
+      "path": "tests/cards/ct-d11/D11014.a2-ai-reanimate.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c7ac03dabbe1f08cb486875745e2656d5a3d9fcd971973d770c2220ac2377d61"
+    },
+    {
+      "path": "tests/cards/engine-additive-wave3-observer.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "552180afa977d15f359cd2bcdd54943f024da70abdb6697f3910f74845981234"
+    },
+    {
+      "path": "tests/cards/engine-mega-w1-cards.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "acb89f5b51aa9494cbf0615c4ec1a06ac4c86e3ece238da708e02dfde6c2a2d8"
+    },
+    {
+      "path": "tests/cards/engine-mega-w4.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0ea21bdb4f02471c70b5f9b773ee47da1574ac1fcbdf6dc39a91f185b226f0fb"
+    },
+    {
+      "path": "tests/cards/engine-megaw5-dyn-cost.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "418f7dc765ec7c1848007d8445241abbd51368533b74a472c6b4bbb8954c5daa"
+    },
+    {
+      "path": "tests/cards/engine-wave12-partner-area-cards.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "187f75fe7219127f25844818d0edb6b8c64cf0e869b07c090552937adf553ed9"
+    },
+    {
+      "path": "tests/cards/engine-wave18-incontact-consumers.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d954d0e979bd0dbcda76af94e0295f595cc8636ab5d79568e351a5661eda4cb0"
+    },
+    {
+      "path": "tests/cards/hybrid-batch2/B09016.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d438bbec055313af61e649cf967a275726ac7a2112a5c3c42c0dc327f3731225"
+    },
+    {
+      "path": "tests/cards/hybrid-batch6/manual-probes.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "16321e6f3b8389d80542787ec75ee9145d06473f0951b6a1fd9c198eda173ae1"
+    },
+    {
+      "path": "tests/cards/m1-megasweep/B08082.manual.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "02927b9d5136e513cc013d2831fd99b0e3dd0843caaf572864a4d55c4f148db3"
+    },
+    {
+      "path": "tests/cards/m1-megasweep/PR096.manual.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0ae51f75334ab4c1e7d847a05637db944b0d5176c0e9578202036dd3f6418cf2"
+    },
+    {
+      "path": "tests/cards/m2latter-cutin-filter.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "fa3e4511251b498864c84b62356f55ff5ca2d81e2271668e66e8a8319c2cbf0d"
+    },
+    {
+      "path": "tests/cards/m3-pa-batch/scope-flip.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f371a60b1e0e84d8a288340bb2319cced80e44fbf2534832f9b69e953d15e39f"
+    },
+    {
+      "path": "tests/cards/optional-decision-batch.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "880172053320d3c6d4ea1dcba9dcf88ed9f2006facca64a04ffb6c36d80c4c11"
+    },
+    {
+      "path": "tests/cards/reasoning-hook-batch.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8c21cbc3178b317f705d31e9d44a401aca0da10f5c955924904ec2c07315cf9a"
+    },
+    {
+      "path": "tests/cards/reasoning-hook-batch3.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "711b507d71f9ea5a2da08799ffbc5458cca23309348df3d3b411bf8649ba8f13"
+    },
+    {
+      "path": "tests/cards/s2-deck/B08057.gen.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a3b7c1e7ae3372b37d9b62cfc34ff4d2b67f70b8ff3fac63cd5009945549c148"
+    },
+    {
+      "path": "tests/cards/wave-b07002-2026-07-02.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "275319d82f834c20cabeba22ac44b0e539bc3990f181a512d14537d6242d2f9e"
+    },
+    {
+      "path": "tests/cards/wave16-cutin-observer.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "0fc5bfe5fef6fb236832d9febb55918840120d3eb96af2457e14a543bbaae5cd"
+    },
+    {
+      "path": "tests/e2e/audit-suspects-coverage.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "76092f0fe57d31f85a5289aa850d73175acce62f221641c86a0962fff6b6d5f0"
+    },
+    {
+      "path": "tests/e2e/bug-211-212-product-path.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3b8596e5b7bdcffd7d8602c8d420c139d529a03d784962bfd126178a6c40190d"
+    },
+    {
+      "path": "tests/e2e/cutin-handzone-pick.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7d943325f45b10e5b39b5932870638ba4f09a52022fc3353166679fc5d9afd5e"
+    },
+    {
+      "path": "tests/e2e/engine-extensions-2026-06-05.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "01c413dafec4133f563d4b267f42ec0dd7e177d76cf2190027b5f3a1b6ca87f0"
+    },
+    {
+      "path": "tests/e2e/helpers/state.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "da0eaf47fa7a6068e4c067cb203e63e45d9131ec6b59f121414de3343d0987ab"
+    },
+    {
+      "path": "tests/e2e/mobile-viewport-controls.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b8efaadc292d22f9452998a5facda181176fd1857f2259e86830573e08f8c66d"
+    },
+    {
+      "path": "tests/e2e/patterns/hirameki-char-stun.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "eb29cc159517e9548546086b01e8280c5a87a438a60c062cc1c08f187a084cc1"
+    },
+    {
+      "path": "tests/e2e/reasoning-hook-batch3-2026-06-06.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8c588c64386420f2d310354edc43cf99ad09d6e4bc7082662893bb72c81d348c"
+    },
+    {
+      "path": "tests/e2e/triggerchar-target-2026-06-06.spec.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "571cad57dd09f33fce53a05d2334176e83e3e9f5e0c99ffc4023810c9a2779fa"
+    },
+    {
+      "path": "tests/e2e/user-bug-wave-ui.spec.ts",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": "tests/engine/bug-166-176-event-resolution-provenance.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "725d79e64656aa794962b108dd7965bf4093ad3db28c692262888fc1615acfe4"
+    },
+    {
+      "path": "tests/engine/bug-180-completed-deck-take-refresh.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "d28fc2c83825882769401998dd656353c5f0366a2f99e556d372a9eb3f0c47b2"
+    },
+    {
+      "path": "tests/engine/cond/eval.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "87de7ec2f1765fd02216eb3cfa4deb016c9d226556d3e86dd448f0aa13daf60d"
+    },
+    {
+      "path": "tests/engine/effect/bug-077-evidence-to-hand-e2e.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f4b775c778f226b332ef1e279a782b3464e2a42eaaa77ee6cbdb5cc7a91e7f40"
+    },
+    {
+      "path": "tests/engine/effect/bug-111-continuation-nest.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "5943deccd92f85ccdbf3f392c43aef52797ce69a3848ba5b6b2771b2e344efd4"
+    },
+    {
+      "path": "tests/engine/effect/bug-111-human-decline-repro.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "5798e642a494755be56a1c6ae39faec5a4c645b8bee34659ce65449cb54578ef"
+    },
+    {
+      "path": "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "db071db6bfbbd5d2499a8ec3ccdb6f657cdcb742ba86dde7114ec8986cd413f4"
+    },
+    {
+      "path": "tests/engine/effect/bug-167-scene-set-state-chain-gate.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "c93332c0458ffb998f763a7db93f1b5cfb2b932cf931a52d7f6d5c620b4e9921"
+    },
+    {
+      "path": "tests/engine/effect/bug-214-opp-owner-production.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "42c2e9ab3fad9ceee2c231bde3e722974d8b646cbecfa444773e78f927d87546"
+    },
+    {
+      "path": "tests/engine/effect/conditional-deferred-pick.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "00ca2fe3129a33a2c49e35f4c6461ade4e829a4cd637001fc93bc6983b1a5fb0"
+    },
+    {
+      "path": "tests/engine/effect/continuation-chain-gate-real-cards.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8aa470a1cc8a804e2d6eedd70e706d207767bc03d2c20a9a7d4dca859398a68f"
+    },
+    {
+      "path": "tests/engine/event/bug-166-176-provenance-wiring.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "99c519e2a087a60256f3824711338ed5ce5c6871424c2ce854ab76f16cbab470"
+    },
+    {
+      "path": "tests/engine/event/misread-listener.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "9fff3f7117d2a40265778ebb75f88a3d6be5cdd452ac73f592fa0d5697d5752f"
+    },
+    {
+      "path": "tests/engine/flow/bug-212-production-contact.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "eab1bf307fe91fbbc0e70f868e63fafeaf143ec779a07b80a0396df6aca24834"
+    },
+    {
+      "path": "tests/engine/flow/main/reasoning.misread.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8350f231ee42e650e8341d9e8d7f0273f73b02605ace3aaf148a881172af439e"
+    },
+    {
+      "path": "tests/engine/resolve/stack.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "a762acc48b206a605ae8d9c64a786fef49bb5bad314d19f30b8072acf2e7bbb9"
+    },
+    {
+      "path": "tests/integration/misread-e2e.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "fd87a737ee849b31440cb5e9f1d6d0cbb8e1b8b126f96399a0f5597b28e41b2e"
+    },
+    {
+      "path": "tests/meta/ResultScreen.mvp.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f1f013aea485d4d78ed489ccb4638ba8617dcc580bc0e9c164e7fb9eb7e43971"
+    },
+    {
+      "path": "tests/meta/RealMatchView.initializing.test.tsx",
+      "owner": "meta-ui",
+      "bugId": "BUG-213"
+    },
+    {
+      "path": "tests/meta/SetupScreen.lifecycle.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "2c19ba227ab93282f737285848ac01278b87b641a1b92e6d04fcdab6090f7573"
+    },
+    {
+      "path": "tests/meta/cardDisplayResolvers.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "447c59119f8dcbd9e05c2679f37d4aafef63f7c46a780f55632ed7e01ea6e8bd"
+    },
+    {
+      "path": "tests/meta/customGameStart.side-mapping.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "9ae688a55418aa4d0a277c37a1292b5efbec3cf832753f1b76fa31e50619b875"
+    },
+    {
+      "path": "tests/meta/matchSession.race.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "bac742b79c36f9898d1a6811ccb0b07e41d8a52d674a33db22b3a601af498a4a"
+    },
+    {
+      "path": "tests/scripts/check-wave-scope.test.ts",
+      "owner": "phase1-task1"
+    },
+    {
+      "path": "tests/scripts/lint-bug-closure.test.ts",
+      "owner": "phase1-task2"
+    },
+    {
+      "path": "tests/ui/bugs-207-209-218-adjudication.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "db397b16e430432662e1dd36f7680ec3f67000b86ce4cc6d6ae4fd257d1f3d27"
+    },
+    {
+      "path": "tests/ui/components/ActionsPanel.lock.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "7af83b6a9e72dabb34120e3b858be4c71bc2f9b2eedc1bd0ee71c878ced78805"
+    },
+    {
+      "path": "tests/ui/components/GameSetupModal.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "3732678767407a4e31ae3a20d49c255fede28dc0f365b6bd51fe7b017a5c87b2"
+    },
+    {
+      "path": "tests/ui/components/HandZone.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "b0b6e3282da6b8b15c43c04d90ce370fbd0b05ed31d025511b35366409cb544b"
+    },
+    {
+      "path": "tests/ui/components/LogPanel.test.tsx",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": "tests/ui/components/MisreadPickerModal.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "dcbcacd7f9e6110c9d71c348c5a77040d1fc0add191ce99f4f71ca22c9cd30d1"
+    },
+    {
+      "path": "tests/ui/components/Playmat.test.tsx",
+      "owner": "root-ui",
+      "bugId": "BUG-231"
+    },
+    {
+      "path": "tests/ui/components/TutorialOverlay.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "87a3e1b799f6bd5f74df9c907297b73cf9c4b79bc038e93172e33271b2168fd6"
+    },
+    {
+      "path": "tests/ui/hooks/bug-107-d11014-bind-propagation.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e4ad922264643b5def438445e2ee3a8b16d93f0543e955eb4a174655950b6c21"
+    },
+    {
+      "path": "tests/ui/hooks/pending-provenance.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "32253b4639eeca4e286cda302f698533cace75923ab99c619be65a8735b9bd83"
+    },
+    {
+      "path": "tests/ui/hooks/switch-on-effect-enter.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "06cab90c91c72337f8e4f23e3ccf79e962004968393ab80ccb82c754f5df8eed"
+    },
+    {
+      "path": "tests/ui/hooks/useActionsPanelFlow.stacked-cost.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "124df1d2a4fb9003e35189726e753d0fce493db675d5ddb8b2fb48dcd6499a71"
+    },
+    {
+      "path": "tests/ui/hooks/useActionsPanelFlow.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e3b06a1226ecdd1351a9ed75ea5bfd71f06f8e4ca928007cbbe448b8c0a7b3fc"
+    },
+    {
+      "path": "tests/ui/hooks/useCanEndTurnForUi.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "4a0636f8531f76b88064133d9dfc4e55727fc5f7fc41c00ec326cff449e91590"
+    },
+    {
+      "path": "tests/ui/hooks/useEngineDispatch.hirameki.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "f3d43ba3631f6a037d840a92dd4680dc8e9f0ce67ef27c9cad964fa70c4530ac"
+    },
+    {
+      "path": "tests/ui/hooks/useEngineDispatch.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "432cf953add557689b75bcb45175353d87847a7548936757815fce7f420740ee"
+    },
+    {
+      "path": "tests/ui/hooks/useMisreadFlowDriver.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "8521a41d5a0821a1aa0d69617a9bce42b5de25133f9ae489ef46de0d27c9cd18"
+    },
+    {
+      "path": "tests/ui/hooks/useOppTurnDriver.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "fadcf338f58426b3cfb0c90be48e79a19158899325cc986a3085de8b97e2158b"
+    },
+    {
+      "path": "tests/ui/router/useGlobalShortcuts.test.tsx",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "22e8ecb39ccd43e478788f9d7e4e24d31eccc05298fbefbc431360c6d2902aea"
+    },
+    {
+      "path": "tests/ui/services/cardResolvers.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "984641c8387520c9218c3cc25166f6b59f872a6b8664038b76e8400d8bd6b25b"
+    },
+    {
+      "path": "tests/ui/services/deckBuilder.test.ts",
+      "owner": "pre-existing-user-work",
+      "contentSha256": "e0daeeefb04dc468513f887ba53e890b4189755c53551f5ac1f5cb7715e5bc50"
+    }
+  ]
+}

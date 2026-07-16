@@ -13,8 +13,6 @@ const DATA = resolve(ROOT, '.claude/specs/cards-data');
 
 // id:icon → DEFER 理由 (DEFERRED-INDEX.md と同期)
 const DEFER_ALLOWLIST = new Map<string, string>([
-  ['B05039:cutin', 'コンタクト対象キャラの特徴条件 (〚特徴［探偵］〛に【カットイン】した場合) が Condition union に無い'],
-  ['B06035:hirameki', 'hirameki fire 経路内の chain (してもよい→そうした場合) + caseTrait/caseStatus gate が未確証'],
 ]);
 
 const registered = new Map(ALL_CARDS.map((d) => [d.id, d]));

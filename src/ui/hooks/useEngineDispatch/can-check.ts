@@ -5,6 +5,8 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { _getResolutionLock } from '@/engine/event/registry.js';
 import type { GameState } from '@/engine/types/game-state.js';
 import type { EngineAction } from './types.js';
+import { canEndTurnByContract } from '../useActionsPanelFlow/end-turn-contract.js';
+import { _canResolveMisreadPicks } from '@/engine/listeners/misread.js';
 
 // ---- can-check (前段ガード) ----
 
@@ -80,8 +82,8 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       return useGameStateStore.getState().pendingHirameki !== null;
     }
     case 'misreadResolve': {
-      // pendingMisread が set されているときのみ有効
-      return useGameStateStore.getState().pendingMisread !== null;
+      const pending = useGameStateStore.getState().pendingMisread;
+      return pending !== null && _canResolveMisreadPicks(state, pending, action.picks);
     }
     case 'optionalResolve': {
       // 2026-06-06 タスクC: pendingEffectOptional が set されているときのみ有効
@@ -127,15 +129,7 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       return entry.source.player === action.player;
     }
     case 'endTurn': {
-      // engine 側 predicate 無し: 自分の turn かつ main phase のみ許可
-      if (state.turn.player !== action.player || state.turn.phase !== 'main') return false;
-      // BUG-139 (wave#2 cluster2, 2026-06-12): 必須 pick (nMin>=1) 未解決中はターン終了不可
-      // (rules/05 効果解決中は次の行動に移れない)。従来は終了できてしまい、未解決の必須効果
-      // (例: D08026 t1 解決編化 discard) が黙って永久放置されていた (X8 導入で CPU 側 stall として顕在化)。
-      // 任意 pick (nMin=0) / optional / choice は modal が skip/decline を提供するため対象外 (narrow gate)。
-      const pendingPick = useGameStateStore.getState().pendingEffectPick;
-      if (pendingPick && pendingPick.player === action.player && pendingPick.nMin >= 1) return false;
-      return true;
+      return canEndTurnByContract(state, action.player);
     }
     // refactor 3e: 同上。isAllowed は dispatchEngineAction の try 外で呼ばれるため throw 不可
     // (uncaught 化で挙動破壊)。現状の falsy fall-through と等価な return false に固定。到達不能。

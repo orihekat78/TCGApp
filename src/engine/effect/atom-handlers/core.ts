@@ -13,18 +13,14 @@ import { requireField, resolvePlayer, resolveBindRef, normalizeTargetToString, h
 import { isDynObject, resolveDynNumber } from '../../dyn/eval.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, FileCard, TargetingRef } from '../../types/index.js';
+import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 
 function resolvingEventCardId(ctx: EffectCtx, player: Player): string | undefined {
-  const cardId = ctx.source.cardId;
-  return ctx.source.player === player && readDef.card(cardId ?? '')?.kind === 'event' ? cardId : undefined;
+  return removeExcludedSourceCardId(ctx, player);
 }
 
 function refreshDeckForEffect(s: GameState, player: Player, ctx: EffectCtx): boolean {
-  if (s.players[player].deck.length > 0) return true;
-  const result = mutate.deck.refresh(s, player, resolvingEventCardId(ctx, player));
-  if (result.ok) return true;
-  if (s.gameResult === undefined) mutate.gameResult.set(s, player === 'self' ? 'opp' : 'self', 'deck-out');
-  return false;
+  return mutate.deck.refreshAfterTake(s, player, resolvingEventCardId(ctx, player));
 }
 
 export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
@@ -202,7 +198,9 @@ function hdMove(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, hdP: '
       // (miniwave3 実測。walk-literalize latent は DEFERRED-INDEX 記録)。自己完結が正準。
       if ((a as { shuffleThenDrawMoved?: unknown }).shuffleThenDrawMoved === true) {
         mutate.deck.shuffle(s, hdP);
-        if (movedIds.length > 0) mutate.deck.draw(s, hdP, movedIds.length);
+        if (movedIds.length > 0) {
+          mutate.deck.draw(s, hdP, movedIds.length, resolvingEventCardId(ctx, hdP));
+        }
       }
       mutate.log.append(s, { ts: Date.now(), player: hdP, turn: s.turn.number, action: 'effect:handToDeckBottom', result: String(movedIds.length) });
       return;
@@ -367,12 +365,10 @@ export function atomMill(s: GameState, a: Record<string, unknown>, ctx: EffectCt
       // BUG-137 (wave#2 cluster2, 2026-06-12): デッキ枯渇時の refresh guard が欠落していた。
       // rules/14 (デッキ 0 で即座に refresh) + rules/26 (可能な限りリムーブ → refresh →
       // 残り分は追加リムーブしない)。B09104 qAndA「可能な限りリムーブし、その後リフレッシュを行います」。
-      if (s.players[millP].deck.length === 0) {
-        const r = mutate.deck.refresh(s, millP);
-        if (!r.ok && s.gameResult === undefined) {
-          const winner: Player = millP === 'self' ? 'opp' : 'self';
-          mutate.gameResult.set(s, winner, 'deck-out');
-        }
+      // n=0 is not a deck take. For n>0, also resolve an already-empty
+      // adversarial state (removed=0) as the pre-existing BUG-137 contract.
+      if (millN > 0) {
+        mutate.deck.refreshAfterTake(s, millP, resolvingEventCardId(ctx, millP));
       }
       mutate.log.append(s, { ts: Date.now(), player: millP, turn: s.turn.number, action: 'effect:mill', result: String(millN) });
       return;
@@ -382,22 +378,10 @@ export function atomFileAdd(s: GameState, a: Record<string, unknown>, ctx: Effec
       // BUG-073: effect log
       const faP = resolvePlayer(a.player, ctx);
       const faN = a.n as number;
-      // Task D E3 (2026-06-12): rules/14「FILEに置く」効果はデッキ0でリフレッシュ後に残りを解決。
-      // addFromDeckTop 自体 (auto-phase 経路) は不変に保ち、effect 経路のみ 1 枚ずつ
-      // refresh guard を挟む (mutate.deck.draw と同じ敗北処理)。
-      for (let i = 0; i < faN; i++) {
-        if (s.players[faP].deck.length === 0) {
-          const r = mutate.deck.refresh(s, faP);
-          if (!r.ok) {
-            if (s.gameResult === undefined) {
-              const winner: Player = faP === 'self' ? 'opp' : 'self';
-              mutate.gameResult.set(s, winner, 'deck-out');
-            }
-            break;
-          }
-        }
-        mutate.file.addFromDeckTop(s, faP, 1);
-      }
+      // BUG-180: the mutator owns both between-card and exact-final refresh.
+      // Preserve a normal event/hirameki source that is only eagerly represented
+      // in remove while its effect is still resolving (rules/14, rules/26).
+      mutate.file.addFromDeckTop(s, faP, faN, resolvingEventCardId(ctx, faP));
       mutate.log.append(s, { ts: Date.now(), player: faP, turn: s.turn.number, action: 'effect:fileAdd', result: String(faN) });
       return;
     }
@@ -491,26 +475,16 @@ export function atomFileFlipTop(s: GameState, a: Record<string, unknown>, ctx: E
 export function atomEvidenceGain(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
       const n = a.n as number;
-      // engine拡張 wave#2 cluster3 (2026-06-13, BUG-142): rules/14「証拠を得る = リフレッシュ後に
-      // 残りを解決」。addFromDeck はデッキ0で silent break するため (mutate/evidence.ts)、
-      // fileAdd 同型の「1枚ごと事前 deck0→refresh→add」ループで refresh を挟む。remove0 なら敗北。
-      let egGained = 0;
-      for (let i = 0; i < n; i++) {
-        if (s.players[p].deck.length === 0) {
-          const r = mutate.deck.refresh(s, p);
-          if (!r.ok) {
-            if (s.gameResult === undefined) {
-              const winner: Player = p === 'self' ? 'opp' : 'self';
-              mutate.gameResult.set(s, winner, 'deck-out');
-            }
-            break;
-          }
-        }
-        // step12 batch3 (2026-07-04, B06085 第3句): faceUp arg 素通し — 「デッキのカードを上から
-        // 1枚**表向き**で証拠として得る」。未指定は従来通り裏向き (rules/01)。
-        mutate.evidence.addFromDeck(s, p, 1, a.faceUp === true, { turn: s.turn.number, via: 'effect' });
-        egGained++;
-      }
+      // BUG-180: one mutator call owns all refresh checkpoints, including exact
+      // final exhaustion. faceUp remains a direct argument (B06085).
+      const egGained = mutate.evidence.addFromDeck(
+        s,
+        p,
+        n,
+        a.faceUp === true,
+        { turn: s.turn.number, via: 'effect' },
+        resolvingEventCardId(ctx, p),
+      );
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:evidenceGain', result: String(egGained) });
       return;
@@ -922,7 +896,7 @@ export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, c
           s,
           'effect:declared',
           { kind: 'event-use', cardId, player: uefP, viaEffect: true },
-          { player: uefP, cardId },
+          { player: uefP, cardId, resolutionKind: 'normal-event' as const },
         );
         mutate.hand.remove(s, uefP, [cardId]);
         mutate.remove.add(s, uefP, [cardId]);
@@ -1134,9 +1108,7 @@ export function atomHandAddFromDeckBottom(s: GameState, a: Record<string, unknow
       const hadbP = resolvePlayer(a.player, ctx);
       // 事前0 (chain で先行効果が空にした等): take の前に refresh (atomEvidenceGain と同流儀)。
       if (s.players[hadbP].deck.length === 0) {
-        const r = mutate.deck.refresh(s, hadbP);
-        if (!r.ok) {
-          if (s.gameResult === undefined) mutate.gameResult.set(s, hadbP === 'self' ? 'opp' : 'self', 'deck-out');
+        if (!mutate.deck.refreshAfterTake(s, hadbP, resolvingEventCardId(ctx, hadbP))) {
           mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', result: 'empty-deck-refresh-fail' });
           return;
         }
@@ -1150,10 +1122,7 @@ export function atomHandAddFromDeckBottom(s: GameState, a: Record<string, unknow
       deck.pop();
       mutate.hand.add(s, hadbP, [bottomId]);
       // take でデッキが空になったら即リフレッシュ (rules/14 即座 / B03051 Q&A: 残1枚→手札→リフレッシュ)。
-      if (s.players[hadbP].deck.length === 0 && s.gameResult === undefined) {
-        const r2 = mutate.deck.refresh(s, hadbP);
-        if (!r2.ok && s.gameResult === undefined) mutate.gameResult.set(s, hadbP === 'self' ? 'opp' : 'self', 'deck-out');
-      }
+      mutate.deck.refreshAfterTake(s, hadbP, resolvingEventCardId(ctx, hadbP));
       mutate.log.append(s, { ts: Date.now(), player: hadbP, turn: s.turn.number, action: 'effect:handAddFromDeckBottom', target: bottomId, result: 'ok' });
       return;
     }

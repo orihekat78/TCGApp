@@ -1,10 +1,15 @@
 // Phase 7 Task 7.3: Playmat layout structure tests
 // renderToString で SSR snapshot + class/構造アサーション
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { Playmat } from '@/ui/components/Playmat';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
+import { createEmptyGameState } from '@/engine/state-factory';
+import { useGameStateStore } from '@/ui/state/store';
+import { registerAll } from '@/cards';
 
 const resolveCard = (_cardId: string): ResolvedCardMeta => ({
   name: '???',
@@ -15,6 +20,10 @@ const resolveCard = (_cardId: string): ResolvedCardMeta => ({
 });
 
 describe('Playmat', () => {
+  beforeAll(() => {
+    registerAll();
+  });
+
   it('renders the scaler + stage shell at 1920×1080', () => {
     const html = renderToString(<Playmat gameState={null} resolveCard={resolveCard} />);
     expect(html).toMatch(/class="scaler"/);
@@ -48,6 +57,45 @@ describe('Playmat', () => {
     // ActionsPanel 内の LOG ボタンは描画される
     expect(html).toMatch(/class="panel-log-btn"/);
     expect(html).toMatch(/class="panel-log-btn-count">0/);
+  });
+
+  it('Escape closes only the topmost card modal opened from the log', () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const state = createEmptyGameState();
+    state.log.push({
+      ts: 1,
+      player: 'self',
+      turn: 1,
+      action: 'handUseCard',
+      target: 'D08015',
+    });
+    useGameStateStore.setState({ gameState: state });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+      const logButton = container.querySelector('.panel-log-btn') as HTMLButtonElement | null;
+      expect(logButton).not.toBeNull();
+      act(() => logButton!.click());
+
+      const cardButton = container.querySelector('button[aria-label*="D08015"]') as HTMLButtonElement | null;
+      expect(cardButton).not.toBeNull();
+      act(() => cardButton!.click());
+      expect(container.querySelector('.card-expand-modal-backdrop')).not.toBeNull();
+      expect(container.querySelector('.log-panel')).not.toBeNull();
+
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      });
+      expect(container.querySelector('.card-expand-modal-backdrop')).toBeNull();
+      expect(container.querySelector('.log-panel')).not.toBeNull();
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+      useGameStateStore.setState({ gameState: null });
+    }
   });
 
   it('renders ActionsPanel (Phase 8.6 — 8 action items (6 main + assist + solve-case) + phase toggles + END turn)', () => {
@@ -114,6 +162,78 @@ describe('Playmat', () => {
     //   内訳: case-area aria-label + 表示テキスト 2 × 2 mat = 4
     //         case-edition-tag aria-label + 表示テキスト 2 × 2 mat = 4
     expect(html.match(/未開始/g)?.length).toBe(8);
+  });
+
+  it('maps black and white engine case colors without a resolver fallback', () => {
+    const state = createEmptyGameState();
+    state.players.self.case.cardId = 'BLACK-CASE';
+    state.players.self.case.colors = ['黒'];
+    state.players.opp.case.cardId = 'WHITE-CASE';
+    state.players.opp.case.colors = ['白'];
+
+    const html = renderToString(<Playmat gameState={state} resolveCard={resolveCard} />);
+
+    expect(html).toMatch(/case-card[^"]*color-black/);
+    expect(html).toMatch(/case-card[^"]*color-white/);
+  });
+
+  it('shows the chooser own misread candidates when the human player is opp, but not in spectator mode', () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const state = createEmptyGameState();
+    state.players.self.scene.push({
+      cardId: 'SELF-REASONER', uid: 'self-reasoner#1', state: 'active',
+      isNamed: false, enterOrder: 0,
+      setCards: [], stackedCards: [], keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    });
+    state.players.opp.scene.push({
+      cardId: 'OPP-MISREAD', uid: 'opp-misread#1', state: 'active',
+      isNamed: false, enterOrder: 0,
+      setCards: [], stackedCards: [], keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false },
+      declaredUseCount: {},
+    });
+    useGameStateStore.setState({
+      gameState: state,
+      pendingMisread: {
+        player: 'opp',
+        reasoningUid: 'self-reasoner#1',
+        reasoningPlayer: 'self',
+        candidates: [{ uid: 'opp-misread#1', x: 1 }],
+      },
+    });
+    const humanSide = globalThis as { __humanPlayerSide?: 'self' | 'opp' | null };
+    const previousHumanSide = humanSide.__humanPlayerSide;
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    try {
+      humanSide.__humanPlayerSide = 'opp';
+      act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+      expect(container.querySelector('[data-testid="misread-picker-modal"]')).not.toBeNull();
+      expect(container.textContent).toContain('OPP-MISREAD');
+
+      humanSide.__humanPlayerSide = null;
+      act(() => {
+        useGameStateStore.setState({
+          spectatorMode: true,
+          pendingMisread: {
+            player: 'opp',
+            reasoningUid: 'self-reasoner#1',
+            reasoningPlayer: 'self',
+            candidates: [],
+          },
+        });
+        root.render(<Playmat gameState={state} resolveCard={resolveCard} />);
+      });
+      expect(container.querySelector('[data-testid="misread-picker-modal"]')).toBeNull();
+      expect(useGameStateStore.getState().pendingMisread).toBeNull();
+    } finally {
+      act(() => root.unmount());
+      humanSide.__humanPlayerSide = previousHumanSide;
+      useGameStateStore.setState({ gameState: null, pendingMisread: null, spectatorMode: false });
+    }
   });
 
   it('renders PartnerArea (real component) inside each mat', () => {

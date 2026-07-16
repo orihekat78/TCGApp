@@ -32,7 +32,7 @@ import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
 import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
-import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectStackEntry } from '../types/index.js';
+import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectResolutionKind, EffectStackEntry } from '../types/index.js';
 // 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
 // として本 listener で処理。検出時は pendingHirameki side-channel に push して fire/skip を UI に委譲。
 import { pushPendingHirameki } from './hirameki.js';
@@ -333,6 +333,28 @@ function handleHook(
       }
       const selectedCutinId = (payload as { cutinAbilityId?: unknown } | undefined)?.cutinAbilityId;
       if (hookName === 'effect:declared' && selectedCutinId !== undefined && ability.id !== selectedCutinId) continue;
+      // BUG-166/176: only the used card's own effect inherits its explicit
+      // resolution lifecycle. Third-party reactions to the same declaration
+      // are unrelated sources and must not masquerade as the resolving event.
+      const emittedSource = source as {
+        player?: unknown;
+        cardId?: unknown;
+        resolutionKind?: EffectResolutionKind;
+      } | undefined;
+      const resolutionKind = hookName === 'effect:declared'
+        && trig.selfOnly === true
+        && emittedSource?.player === card.player
+        && emittedSource.cardId === card.cardId
+        ? emittedSource.resolutionKind
+        : undefined;
+      const abilitySource = {
+        cardId: card.cardId,
+        uid: card.uid,
+        abilityId: ability.id,
+        player: card.player,
+        area: card.area,
+        ...(resolutionKind ? { resolutionKind } : {}),
+      } as const;
       // scope check
       if (!scopeAllowsArea(ability.scope, card.area)) continue;
       // selfOnly check
@@ -356,13 +378,7 @@ function handleHook(
           && state.players[card.player].scene.find(c => c.uid === card.uid)?.turnEffects?.['shippuWaived'] === true;
         if (!w6ShippuWaived) {
           const ctxMc = {
-            source: {
-              cardId: card.cardId,
-              uid: card.uid,
-              abilityId: ability.id,
-              player: card.player,
-              area: card.area,
-            },
+            source: abilitySource,
             bindings: gateBindings,
             triggerPayload: payload,
           };
@@ -373,13 +389,7 @@ function handleHook(
       // partnerColor / caseTrait 等の condition が未達なら queue しない (rules/17 §条件アイコン)
       if (ability.condition) {
         const ctx = {
-          source: {
-            cardId: card.cardId,
-            uid: card.uid,
-            abilityId: ability.id,
-            player: card.player,
-            area: card.area,
-          },
+          source: abilitySource,
           bindings: gateBindings,
           triggerPayload: payload,
         };
@@ -418,13 +428,7 @@ function handleHook(
       // setPendingOptionalBindings)。既存 non-optional 効果の pick/$contact は従来通り runtime (entryToCtx) 解決。
       const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
       const resolveCtx = {
-        source: {
-          cardId: card.cardId,
-          uid: card.uid,
-          abilityId: ability.id,
-          player: card.player,
-          area: card.area,
-        },
+        source: abilitySource,
         // entryToCtx (stack.ts) と同型の cast (contact bindings は Candidate[] とは限らない任意 object array)。
         // W4 r83: shallow-copy (emit bindings は凍結されうる — runAtom preamble 書込に備える、stack.ts 同型)。
         bindings: { ...(sourceBindings ?? {}) } as EffectCtx['bindings'],
@@ -475,7 +479,7 @@ function handleHook(
       if (!prewalkQueuedTopLevelPick) event.queue(
         state,
         resolvedEffect,
-        { player: card.player, uid: card.uid, cardId: card.cardId },
+        { player: card.player, uid: card.uid, cardId: card.cardId, ...(resolutionKind ? { resolutionKind } : {}) },
         hookName,
         payload,
         sourceBindings,

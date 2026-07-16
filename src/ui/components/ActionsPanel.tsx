@@ -30,6 +30,8 @@ export type ActionsPanelProps = {
   canNextHint: boolean;
   /** パートナー能力: パートナーが active でなければ disabled */
   partnerActive: boolean;
+  /** 宣言可能かつコスト支払可能なパートナー能力数 */
+  partnerAbilityCount: number;
   /** 宣言能力: 利用可能対象数 */
   declaredTargetCount: number;
   /** 推理: 合計 LP (パートナー + active scene キャラ) */
@@ -90,7 +92,7 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
   const {
     handCount, handUseRemaining, handUseUsed = false,
     nextHintFileCount, nextHintUsed, canNextHint,
-    partnerActive,
+    partnerActive, partnerAbilityCount,
     declaredTargetCount,
     reasoningTotalLP,
     canAssist = false,
@@ -136,8 +138,8 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
     {
       id: 'partner-ability',
       label: 'パートナーの能力',
-      subtitle: partnerActive ? '使用可' : 'スリープ中',
-      disabled: !partnerActive,
+      subtitle: partnerAbilityCount === 0 ? '能力なし' : partnerActive ? '使用可' : 'スリープ中',
+      disabled: !partnerActive || partnerAbilityCount === 0,
     },
     {
       id: 'declared-ability',
@@ -255,7 +257,7 @@ export function ActionsPanel(props: ActionsPanelProps): JSX.Element {
         type="button"
         className="end-turn-btn"
         aria-label="ターン終了"
-        disabled={!canEndTurn}
+        disabled={!canEndTurn || interactionLocked}
         onClick={onEndTurn}
       >
         <span className="end-turn-small">END</span>

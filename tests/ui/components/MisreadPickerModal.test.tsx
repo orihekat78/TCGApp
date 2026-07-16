@@ -5,6 +5,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { MisreadPickerModal } from '@/ui/components/MisreadPickerModal';
 
 describe('MisreadPickerModal', () => {
@@ -12,6 +14,7 @@ describe('MisreadPickerModal', () => {
     const html = renderToString(
       <MisreadPickerModal
         open={false}
+        decisionKey="closed"
         reasoningName="毛利蘭"
         reasoningLp={5000}
         candidates={[]}
@@ -26,6 +29,7 @@ describe('MisreadPickerModal', () => {
     const html = renderToString(
       <MisreadPickerModal
         open={true}
+        decisionKey="decision-1"
         reasoningName="毛利蘭"
         reasoningLp={5000}
         candidates={[
@@ -44,5 +48,40 @@ describe('MisreadPickerModal', () => {
     expect(html).toMatch(/LP -1000/);
     expect(html).toMatch(/data-testid="misread-confirm-btn"/);
     expect(html).toMatch(/data-testid="misread-skip-btn"/);
+  });
+
+  it('閉じて再表示した時と次のpendingに切り替わった時に選択をリセットする', () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const render = (open: boolean, reasoningName: string): void => {
+      act(() => root.render(
+        <MisreadPickerModal
+          open={open}
+          decisionKey={reasoningName}
+          reasoningName={reasoningName}
+          reasoningLp={3}
+          candidates={[{ uid: 'm1', cardName: 'M1', x: 1 }]}
+          onConfirm={() => {}}
+          onSkip={() => {}}
+        />,
+      ));
+    };
+
+    render(true, 'reasoner-a');
+    const checkbox = (): HTMLInputElement => container.querySelector('[data-testid="misread-cand-m1"]')!;
+    act(() => checkbox().dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(checkbox().checked).toBe(true);
+
+    render(false, 'reasoner-a');
+    render(true, 'reasoner-a');
+    expect(checkbox().checked).toBe(false);
+
+    act(() => checkbox().dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(checkbox().checked).toBe(true);
+    render(true, 'reasoner-b');
+    expect(checkbox().checked).toBe(false);
+
+    act(() => root.unmount());
   });
 });

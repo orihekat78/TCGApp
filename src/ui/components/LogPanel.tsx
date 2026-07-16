@@ -7,10 +7,38 @@
 // 注: mock は下端パネル未実装 → ui-overall.md の「閉時 32px / 展開時 200px」
 //     仕様を実装。閉時の見た目のみ mock の .log-btn を流用。
 
-import type { JSX, MouseEvent } from 'react';
+import { useEffect, type JSX, type MouseEvent, type ReactNode } from 'react';
 import type { GameState, LogEntry } from '@/engine/types/game-state.js';
-import { cardIdToDisplayName, uidToDisplayName } from '@/ui/services/uidNames.js';
+import { def as readDef } from '@/engine/read/def.js';
+import { uidToDisplayName } from '@/ui/services/uidNames.js';
 import './LogPanel.css';
+
+const CARD_ID_TOKEN_PATTERN = /\b(B\d{5}(?:P\d{0,2})?|D\d{5}|PR\d{3})\b/g;
+
+function resolveKnownCard(cardId: string): { cardId: string; name: string } | null {
+  const card = readDef.card(cardId);
+  if (!card) return null;
+  return { cardId, name: card.names[0] ?? cardId };
+}
+
+function cardExpandButton(
+  card: { cardId: string; name: string },
+  label: string,
+  onCardExpand: (cardId: string) => void,
+  key?: string,
+): JSX.Element {
+  return (
+    <button
+      key={key}
+      type="button"
+      className="log-card-link"
+      aria-label={`${card.name} (${card.cardId}) を拡大表示`}
+      onClick={() => onCardExpand(card.cardId)}
+    >
+      {label}
+    </button>
+  );
+}
 
 /**
  * user_request 20260522_01 #3 BUG-060: log entry の target が cardId (Dxxxxx)
@@ -23,18 +51,37 @@ import './LogPanel.css';
  */
 function formatTarget(target: string | undefined, state: GameState | null | undefined): string | undefined {
   if (!target) return undefined;
-  // CT-D08 / CT-D11 の cardId pattern: D08xxx / D11xxx (3 桁 numeric suffix)
-  if (/^D\d{2}\d{3}/.test(target)) {
-    const name = cardIdToDisplayName(target);
-    // cardIdToDisplayName が未登録時 cardId をそのまま返すなら "[name (id)]" 形式
-    return name === target ? target : `${name} (${target})`;
-  }
+  const card = resolveKnownCard(target);
+  if (card) return `${card.name} (${target})`;
   // uid pattern: `partner:self` / `partner:opp` / `self-N` / `opp-N` (rules/03 §パートナーエリア + scene)
   if (state && /^(?:partner:(?:self|opp)|(?:self|opp)-\d+)$/.test(target)) {
     const name = uidToDisplayName(state, target);
     return name === target ? target : `${name} (${target})`;
   }
   return target;
+}
+
+function renderTarget(
+  target: string,
+  state: GameState | null | undefined,
+  onCardExpand: ((cardId: string) => void) | undefined,
+): ReactNode {
+  const card = resolveKnownCard(target);
+  const label = formatTarget(target, state) ?? target;
+  return card && onCardExpand ? cardExpandButton(card, label, onCardExpand) : label;
+}
+
+function renderResult(
+  result: string,
+  onCardExpand: ((cardId: string) => void) | undefined,
+): ReactNode {
+  if (!onCardExpand) return result;
+  return result.split(CARD_ID_TOKEN_PATTERN).map((token, index) => {
+    const card = resolveKnownCard(token);
+    return card
+      ? cardExpandButton(card, token, onCardExpand, `${index}-${token}`)
+      : token;
+  });
 }
 
 export type LogPanelProps = {
@@ -48,6 +95,8 @@ export type LogPanelProps = {
   /** BUG-069 (2026-05-28): scene char uid / partner uid を表示名に解決するため受け取る。
    *  未指定なら uid を素通しで表示 (テスト互換)。 */
   gameState?: GameState | null;
+  /** BUG-231: 既知カードIDを共通カード拡大modalへ渡す。未指定時は静的表示を保つ。 */
+  onCardExpand?: (cardId: string) => void;
 };
 
 // Round 2: ACTION_LABEL を engine 側 log entry に合わせて拡張。
@@ -130,7 +179,19 @@ function formatTime(ts: number): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState }: LogPanelProps): JSX.Element | null {
+export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState, onCardExpand }: LogPanelProps): JSX.Element | null {
+  useEffect(() => {
+    if (!open || !onClose) return;
+    const handleEscape = (e: KeyboardEvent): void => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      onClose();
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [open, onClose]);
+
   // Phase 8.5: 閉時は何もレンダリングしない (LOG ボタンは ActionsPanel が持つ)
   if (!open) return null;
 
@@ -157,6 +218,7 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState }:
       <div
         className="log-panel open"
         role="dialog"
+        aria-modal="true"
         aria-label="ゲームログ"
         aria-expanded={true}
         onClick={handleBackdropClick}
@@ -189,8 +251,8 @@ export function LogPanel({ entries, open, maxEntries = 30, onClose, gameState }:
               <span className="log-turn">T{e.turn}</span>
               <span className="log-player">{e.player === 'self' ? '自' : '相'}</span>
               <span className="log-action">{ACTION_LABEL[e.action] ?? e.action}</span>
-              {e.target !== undefined && <span className="log-target">→ {formatTarget(e.target, gameState)}</span>}
-              {e.result !== undefined && <span className="log-result">: {e.result}</span>}
+              {e.target !== undefined && <span className="log-target">→ {renderTarget(e.target, gameState, onCardExpand)}</span>}
+              {e.result !== undefined && <span className="log-result">: {renderResult(e.result, onCardExpand)}</span>}
             </div>
           ))
         )}

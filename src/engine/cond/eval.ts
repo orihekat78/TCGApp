@@ -12,6 +12,7 @@ import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from '
 import { char as charRead } from '@/engine/read/char.js';
 import { defHasKeyword } from '@/engine/read/keyword.js'; // wave#2 cluster2: boundMatchesFilter keyword 判定
 import { def as readDef } from '@/engine/read/def.js'; // mega-wave W6 step1: boundIsMr の MR 判定 (循環なし — read/def は types のみ import)
+import { removeExcludedSourceCardId } from '@/engine/read/effect-source.js';
 
 /** Type predicate: narrows a Candidate to the 'char' variant. */
 function isCharCandidate(c: Candidate): c is { kind: 'char'; uid: string; cardId: string; player: 'self' | 'opp' } {
@@ -42,11 +43,11 @@ function partnerColorsOverride(state: GameState, owner: 'self' | 'opp'): string[
 
 function removeIdsForCondition(state: GameState, player: 'self' | 'opp', ctx: EffectCtx): string[] {
   const remove = state.players[player].remove;
-  const sourceCardId = ctx.source.cardId;
-  if (ctx.source.player !== player || typeof sourceCardId !== 'string' || readDef.card(sourceCardId)?.kind !== 'event') {
-    return remove;
-  }
-  const sourceIndex = remove.indexOf(sourceCardId);
+  const sourceCardId = removeExcludedSourceCardId(ctx, player);
+  if (sourceCardId === undefined) return remove;
+  // Normal events/Hirameki are appended after the pre-existing remove pile in
+  // the compatibility lifecycle.  lastIndexOf preserves older same-ID copies.
+  const sourceIndex = remove.lastIndexOf(sourceCardId);
   return sourceIndex === -1 ? remove : remove.filter((_, index) => index !== sourceIndex);
 }
 

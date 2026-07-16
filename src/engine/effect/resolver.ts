@@ -48,6 +48,10 @@ function attachContinuation(pick: { continuation?: ContinuationFrame }, frame: C
  * Immer draft 内 (produce のコールバック) で呼ぶこと。
  */
 export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
+  // A terminal result takes effect immediately, including in the middle of a
+  // sequence. Recursive calls for later steps must therefore become no-ops.
+  if (state.gameResult !== undefined) return;
+
   switch (eff.kind) {
     case 'sequence': {
       // BUG-105: pick await で一時停止し、残り step を pick 本体 (pending.continuation) に同梱する
@@ -237,7 +241,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     case 'repeatOptional': {
       const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
       if (human !== ctx.source.player) return;
-      pushPendingEffectRepeatOptionalSide({ player: ctx.source.player, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '' }, remaining: eff.max }, { body: eff.body, remaining: eff.max, ctx, remainder: [] });
+      pushPendingEffectRepeatOptionalSide({ player: ctx.source.player, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '', ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}) }, remaining: eff.max }, { body: eff.body, remaining: eff.max, ctx, remainder: [] });
       return;
     }
     case 'traitChoice':
@@ -263,7 +267,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         player: human,
         ownerPlayer: owner,
         aiHand,
-        source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '' },
+        source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '', ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}) },
       });
       setPendingRpsResume(eff, { ...(ctx.bindings as Record<string, unknown>) });
       (ctx.dyn ??= {}).rpsPending = true;
@@ -288,7 +292,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       }
       const entries = host.char.setCards.map((entry, index) => ({ instanceId: entry.instanceId ?? '', ordinal: index + 1 })).filter((entry) => entry.instanceId !== '');
       if (entries.length === 0) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
-      pushPendingSetCardChoiceSide({ player: human, hostUid, entries, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '' } });
+      pushPendingSetCardChoiceSide({ player: human, hostUid, entries, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '', ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}) } });
       setPendingSetCardChoiceResume(eff, { ...(ctx.bindings as Record<string, unknown>) });
       (ctx.dyn ??= {}).setCardChoicePending = true;
       return;

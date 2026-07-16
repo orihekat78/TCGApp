@@ -38,9 +38,9 @@ test('DECK: パラレル合算の同ID上限が UI で機能する (追加→兄
   await page.goto('/#deck');
   await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });
 
-  // 江戸川コナン は D08003×2 のみ採用 = cardId 0489 が 2/3。
+  // 毛利蘭は D08023×2 のみ採用 = cardId 0096 が 2/3。
   // 同 cardId の全印刷が合算で "2/3" 表示 (パラレル合算の可視化)。
-  const at2 = page.getByLabel('江戸川コナン 2/3');
+  const at2 = page.getByLabel('毛利蘭 2/3');
   const variantCount = await at2.count();
   expect(variantCount).toBeGreaterThanOrEqual(2);
   await page.screenshot({ path: '.tmp/verify-id-before.png', fullPage: false });
@@ -48,19 +48,19 @@ test('DECK: パラレル合算の同ID上限が UI で機能する (追加→兄
   // 1 枚目の絵柄を選択 → 詳細パネルに "2 / 3" + ＋ 有効
   await at2.first().click();
   await expect(page.getByText('2 / 3')).toBeVisible();
-  // 詳細の ＋ で +1 → cardId 0489 = 3 → 両絵柄が "3/3" + MAX 表示
+  // 詳細の ＋ で +1 → cardId 0096 = 3 → 全絵柄が "3/3" + MAX 表示
   await page.getByRole('button', { name: '1枚追加' }).press('Enter');
-  await expect(page.getByLabel('江戸川コナン 3/3')).toHaveCount(variantCount);
+  await expect(page.getByLabel('毛利蘭 3/3')).toHaveCount(variantCount);
   await expect(page.getByText('MAX 3').first()).toBeVisible();
 
   // 兄弟絵柄 (別 cardNum・同 cardId) を選択 → 詳細で「同 ID 上限」+ ＋ 無効でブロックが可視
-  await page.getByLabel('江戸川コナン 3/3').last().click();
+  await page.getByLabel('毛利蘭 3/3').last().click();
   await expect(page.getByText('同 ID 上限')).toBeVisible();
   await expect(page.getByRole('button', { name: '1枚追加' })).toBeDisabled();
   await page.screenshot({ path: '.tmp/verify-id-after.png', fullPage: false });
 
   // 4/3 にはならない (兄弟絵柄経由でも超過不可)
-  await expect(page.getByLabel('江戸川コナン 4/3')).toHaveCount(0);
+  await expect(page.getByLabel('毛利蘭 4/3')).toHaveCount(0);
 
   expect(errors).toEqual([]);
 });
@@ -157,4 +157,55 @@ test('DECK: 枚数上限なしのカードは 4 枚以上でも追加でき、�
   await expect(page.getByRole('button', { name: '1枚追加' })).toBeEnabled();
   await page.getByRole('button', { name: '1枚追加' }).press('Enter');
   await expect(page.getByLabel('犯人 5/∞').first()).toBeVisible();
+});
+
+test('DECK migration: v2 の標準2デッキだけを最新構成へ更新し、ユーザーデッキを保持する', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('conan.meta.v1.decks', JSON.stringify({
+      version: 2,
+      state: {
+        decks: [
+          {
+            id: 'sample-d08', name: '少年探偵団・標準', partner: 'D08001', case: 'D08026', modified: 1,
+            cards: [{ num: 'D11019', count: 3 }],
+          },
+          {
+            id: 'sample-d11', name: '警察・標準', partner: 'D11001', case: 'D11021', modified: 1,
+            cards: [{ num: 'D08007', count: 3 }],
+          },
+          {
+            id: 'user-deck', name: 'ユーザーデッキ', partner: 'PR220', case: 'B06043', modified: 1,
+            cards: [{ num: 'B04026', count: 3 }],
+          },
+        ],
+      },
+    }));
+  });
+
+  await page.goto('/#deck');
+  const persisted = await page.evaluate(() => {
+    const raw = localStorage.getItem('conan.meta.v1.decks');
+    return raw ? JSON.parse(raw) : null;
+  });
+
+  expect(persisted.version).toBe(3);
+  const decks = persisted.state.decks as Array<{
+    id: string;
+    name: string;
+    partner: string;
+    case: string;
+    modified: number;
+    cards: Array<{ num: string; count: number }>;
+  }>;
+  const d08 = decks.find((deck) => deck.id === 'sample-d08');
+  const d11 = decks.find((deck) => deck.id === 'sample-d11');
+  const user = decks.find((deck) => deck.id === 'user-deck');
+  expect(d08?.cards.reduce((sum, card) => sum + card.count, 0)).toBe(40);
+  expect(d08?.cards.every((card) => card.num.startsWith('D08'))).toBe(true);
+  expect(d11?.cards.reduce((sum, card) => sum + card.count, 0)).toBe(40);
+  expect(d11?.cards.every((card) => card.num.startsWith('D11'))).toBe(true);
+  expect(user).toEqual({
+    id: 'user-deck', name: 'ユーザーデッキ', partner: 'PR220', case: 'B06043', modified: 1,
+    cards: [{ num: 'B04026', count: 3 }],
+  });
 });

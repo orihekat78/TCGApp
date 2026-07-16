@@ -15,6 +15,7 @@ import { misreadX } from '@/cards/_shared/misreadX';
 import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../../helpers/fixtures';
+import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 
 // テスト用のミスリード持ちカード def を engine registry に投入
 const TEST_MISREAD_CARD: CardDef = {
@@ -54,6 +55,7 @@ function makeChar(uid: string, cardId: string, state: 'active' | 'sleep' = 'acti
 describe('misread listener (Commit 3b)', () => {
   beforeEach(() => {
     _resetPendingMisread();
+    _setHumanPlayerSide('self');
     registerMisreadListener();
     engine.cards.register(TEST_MISREAD_CARD);
     engine.cards.register(TEST_NO_ABILITY_CARD);
@@ -77,7 +79,9 @@ describe('misread listener (Commit 3b)', () => {
     expect(s.players.opp.scene.find((c) => c.uid === 'm1')?.state).toBe('sleep');
     // r1 の lpOverride に reduced 値が直接書かれている (base LP 1500 - 2000 = -500)
     const r1 = s.players.self.scene.find((c) => c.uid === 'r1')!;
-    expect(r1.lpOverride).toBe(-500);
+    expect(r1.lpOverride).toBeNull();
+    expect(r1.turnEffects['lpMod_reasoning']).toBe(-2000);
+    expect(engine.read.char.lp(s, 'r1')).toBe(-500);
     // 同期解決なので側チャネルは null のまま
     expect(_drainPendingMisread()).toBeNull();
   });
@@ -91,8 +95,34 @@ describe('misread listener (Commit 3b)', () => {
     expect(pending).not.toBeNull();
     expect(pending?.reasoningUid).toBe('r1');
     expect(pending?.reasoningPlayer).toBe('opp');
+    expect(pending?.player).toBe('self');
     expect(pending?.candidates).toHaveLength(1);
     expect(pending?.candidates[0]).toEqual({ uid: 'm1', x: 2000 });
+  });
+
+  it('human=opp なら opp defender のミを人間決定にする', () => {
+    _setHumanPlayerSide('opp');
+    const s = makeStateWithReasoningAndMisread('self', 'opp');
+
+    engine.event.emit(s, 'reasoning:before-add', { uid: 'r1', lpUsed: 1500 }, { player: 'self', uid: 'r1' });
+
+    expect(s.players.opp.scene.find((c) => c.uid === 'm1')?.state).toBe('active');
+    expect(_drainPendingMisread()).toMatchObject({
+      player: 'opp', reasoningUid: 'r1', reasoningPlayer: 'self',
+    });
+  });
+
+  it('human=null の観戦では両側ともAI同期解決する', () => {
+    _setHumanPlayerSide(null);
+    const selfReasons = makeStateWithReasoningAndMisread('self', 'opp');
+    engine.event.emit(selfReasons, 'reasoning:before-add', { uid: 'r1', lpUsed: 1500 }, { player: 'self', uid: 'r1' });
+    expect(selfReasons.players.opp.scene.find((c) => c.uid === 'm1')?.state).toBe('sleep');
+    expect(_drainPendingMisread()).toBeNull();
+
+    const oppReasons = makeStateWithReasoningAndMisread('opp', 'self');
+    engine.event.emit(oppReasons, 'reasoning:before-add', { uid: 'r1', lpUsed: 1500 }, { player: 'opp', uid: 'r1' });
+    expect(oppReasons.players.self.scene.find((c) => c.uid === 'm1')?.state).toBe('sleep');
+    expect(_drainPendingMisread()).toBeNull();
   });
 
   it('反対側に misread 持ちがいない → no-op', () => {

@@ -47,7 +47,9 @@
     "gen:probes": "node scripts/gen-card-probes.cjs",
     "ground": "node scripts/ground-dossier.cjs",
     "sync:codex-skills": "node scripts/sync-codex-skills.mjs",
-    "check:codex-migration": "node scripts/check-codex-migration.mjs"
+    "check:codex-migration": "node scripts/check-codex-migration.mjs",
+    "check:wave-scope": "tsx scripts/check-wave-scope.ts",
+    "lint:bug-closure": "tsx scripts/lint-bug-closure.ts"
   },
   "keywords": [],
   "author": "",
