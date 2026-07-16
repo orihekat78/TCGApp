@@ -666,6 +666,27 @@
         "npx vitest run tests/scripts/header-source-hash.test.ts tests/scripts/markdown-eol.test.ts tests/scripts/structure-root-portability.test.ts"
       ],
       "nextWaveReason": null
+    },
+    {
+      "id": "BUG-233",
+      "classification": "open",
+      "owner": "docs-tooling",
+      "implementationPaths": [
+        "scripts/gen-docs/lib/header.ts",
+        "scripts/gen-docs/gen-structure.ts"
+      ],
+      "testPaths": [
+        "tests/scripts/header-source-hash.test.ts",
+        "tests/scripts/structure-tracked-files.test.ts",
+        "tests/scripts/check-wave-scope.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/scripts/header-source-hash.test.ts tests/scripts/structure-tracked-files.test.ts",
+        "npx vitest run tests/scripts/check-wave-scope.test.ts",
+        "npm run typecheck",
+        "npm run lint"
+      ],
+      "nextWaveReason": "Stage generator and dictionary inputs, regenerate docs, then close only after clean-clone verification and an implementation commit."
     }
   ],
   "changeOwnership": [
@@ -677,7 +698,7 @@
     {
       "path": "scripts/gen-docs/lib/header.ts",
       "owner": "docs-tooling",
-      "bugId": "BUG-232"
+      "bugId": "BUG-233"
     },
     {
       "path": "scripts/gen-docs/lib/markdown.ts",
@@ -687,12 +708,12 @@
     {
       "path": "scripts/gen-docs/gen-structure.ts",
       "owner": "docs-tooling",
-      "bugId": "BUG-232"
+      "bugId": "BUG-233"
     },
     {
       "path": "tests/scripts/header-source-hash.test.ts",
       "owner": "docs-tooling",
-      "bugId": "BUG-232"
+      "bugId": "BUG-233"
     },
     {
       "path": "tests/scripts/markdown-eol.test.ts",
@@ -703,6 +724,16 @@
       "path": "tests/scripts/structure-root-portability.test.ts",
       "owner": "docs-tooling",
       "bugId": "BUG-232"
+    },
+    {
+      "path": ".claude/bugs/BUG-233.md",
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
+    },
+    {
+      "path": "tests/scripts/structure-tracked-files.test.ts",
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/api/mutate.md",
@@ -761,396 +792,398 @@
     },
     {
       "path": ".claude/auto/mapping/by-rule/01-curriculum-design.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "01b42ae07aecaa7e15705e838a303f6491e4e64045a132134e19c546867fb78d"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/01-victory-conditions.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "bef375bbdf1f268b2749421dba5e702123c0cd75ac2d85ec2f901f6442739d4f"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/02-deck-construction.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "ac8822da81589743b1bb4391d079e7501739d7a4256c33481ff2f9f74bde096a"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/03-field-areas.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "d362bb98f51c28322d2bc76031419c403ef941a8b0dbae84d8dd4b7965ee2926"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/04-game-setup.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "3d093a5fac52c2be1bba3dfcc0f6eb9966259881be2ad4e0c85eadbd3322f925"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/05-turn-phases.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "76603ef16da4627d8f360f08f833c5f19598acfb588a60bf542916b882e13aea"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/06-card-types.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6351bbf800e416a76d999a4448f46dc1a4cf1979e0ac8b7f3267df0987b02a64"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/07-action-flow.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "136914a94db7bbd6bc83c1e4237e8692aa0a398dede706c6e3534bad1374a1b6"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/08-contact.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "0454c9608282b497b2e7bb2361ba93edb91c508fb9e7ea7f4c0afa152265f32e"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/09-cutin-disguise.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "e83a71b0842f66f7870716c749ba20dd3f166534b6be1a27dbaea4f6cb8f575c"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/10-action-event.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "5b6bffedc3dcb3aa393934e15f074f987143832a52e6930459f09662c1d97862"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/11-reasoning.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "8432dd30895cd84ce616fa355288f0256c8c8031eefb3107e6fb69a467abe3ea"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/12-next-hint.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "f9114d9b704bcba2ebdb73e82d359d1ca36e989710560d8926ab44c772ef237f"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/13-keywords.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "79365ffce304e052f492fd4a6e6b7bf0aa7e09ff6d03fd6a55c526bce05557d8"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/14-refresh.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "24a1a8ea48b4d3af8dd467a8c91459f9d0e3c23f4b5167e58f266c5cee0b0914"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/15-abilities-effects.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "5ff60ee9f93e521f8f21ff8f81a5bbe143f534ae73edcffb25f3d229c6c6243b"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/15-contact-removal-observer-design.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "384b5c8432960cd305ddc1fdb10145637b526ec0f839ff155273570d580916c0"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/15-workflow.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "2204da8dbfb6f977e728f9d106f924d61c980ab49af4ee36f8398cd9ce2e242a"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/16-card-set.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "333f7d953004cdd15de86934e1a048fb1bea46729141311ca8173623aa5841bd"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/17-icons.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "ebe62b3286584a00c490281879e9f73402472a49dabc042167919f1d94d866c3"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/18-mr.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "d938fa30bd1418fc279f49945f5b8ddf0349b0b131c59be3c64ee2f3ab7b0219"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/19-special-rules.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "beedb521b7900812d3f2cbfce8e4d91624ede5a570275284ddb38bc0991c4c35"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/20-color-and-switch.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "459509f4d3127ddb554a061f152266dbd1dcdb2c8f55293617ee467a59fcd374"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/21-declared-ability-cost.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "1bb74bb84c12d2bba46ea8e6d4df1fd4d0e7f168cb3e9bfbfe714dacad02ef24"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/22-qa-action-contact.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "d3c00110fa78097970d0eced771c160db9287435818fcdfddd63375f0b58ef9d"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/23-qa-disguise-cutin.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "7042a22b8378f9e3c240a06be53f968b648ba33f8517cb4eec000ad22c50723c"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/24-qa-naming-stun.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "ef444404e09e612059d0af61a2c5ac95d18feace49f25bcd2a5b9803beacb3f3"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/25-qa-effects-resolution.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "104dcb172b5eecd58bec88360bf6e6a06fd3de61ff66f77b2725d38104c9b68e"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-05-11-ui-action-flows.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "d7614ae7743e45b3e9bcb36e799b76303841c46fbe4acee7cee0fb500c0a1d0c"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-05-11-ui-game-setup-flows.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "3913525723b042ad642328ca963dd643dd1708131f6287dfe44e90abf77e105b"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-07-02.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "5ee9a1e40e990fad2f11331138fd186344b234d1126ee53b85b0ebd918ab826f"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-qa-deck-refresh.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "e7df7e43e3a80056cfa8ff73b5ee7d2e3d88f67d88e3217c3bbaedbc73fa921e"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/27-card-restrictions.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6392925f84adce395a8832c9c36b8db0300583019884ebcdc5a3f0a0bda76455"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-rule/28-errata.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "aee3695c013acf93d68dcd89f04766a2bcd72b729149fcf54d6792051237122b"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/2026-05-11-ui-action-flows.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6e0f0ab3a41363c83e322f39c215a8714253791c6eace6efa3bd958c529f7ca8"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/2026-05-11-ui-game-setup-flows.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6ec5eeaef59eade0217ec290a986157bfe55ba5c52a3816680f8be022ecd0a0b"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/card-authoring-convention.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "b14bb533f23eeba06c2225ea733663f474c8991004f49d1fc0607ea30730cd47"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/card-condition-catalog.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "3ba5fd839a4c132a6e356eb41761004696509e56ba3662cecf78d0b0eae8583d"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/cards-data--INDEX.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "bd999d0c4102575b2d1cd24cff63aa8fe8803bbfbcb86b014feb39bf3e02898a"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-atom-verbs.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "48b624c94cc6f7b44a14962680c05c02cf51f5642f211a9b4c137fffb95a5d4d"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-card-abilities.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "0afe552baafd4ede9cd860b6c491b0e80c6173337798b1d52e56654cb573c7df"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-card-shape.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6a60fe44871cf8848c3c5567e7c0f56d773418e8cb2f7ac196e6d5bebfca2ed0"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-effect-descriptor.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "5ccd6200340b019dc7dcc0aff4712a8e4c744740516ee71b9052fa8bcd190757"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-events.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "c218efd8b62250f0dafac3014de50cdc1b88fb45506387fefc24e7b100a4a47a"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-flow-contact.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "beb0c9b8404bb4f11d1884806fa1f1740c96ce042918387e0f33606457ed9988"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-flow-control.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "8596ef13ade33c14c1dc4d9cbc66eea1694794079d22ade8493b75d2945cf1cc"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-flow-setup.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "dd9b436a5e0999c8eb03156688af1ab0a200fc4e16e26615112b5b29c0a75046"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-resolver.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "7e17bc8d2816112f866083f24ab04a65afd0d2efe2d463a8cf78b96e045b550f"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-cluster15-contact-removal-observer-design.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "bcf3057756ef04e71166018557e2db4afb04903131f5d97488e74f69d38725e9"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-wave2-action-triggers-design.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "238df18a0a580de06d23e668229b9fe1faec8ecb3223b9c648ab2ba45cada6d9"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B03111.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "d778cf753086e66da9fb29324805c78f9964f1ba72408ef9e1862e0eae8ddf9f"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B05063.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "2554809b207d31aeed3c99d28870bdd9dd23ff657a17f7a1cff074096e77df1e"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B07100.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "452beb2e231ad2829f42d833587beba9e1538d968e84400a91f255459a28da29"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B09019.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "29cb1fac3bd3ab1eafca009b126f2250a102b90905546d70c5ee419babbaea44"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B09033.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "34e1e3d177fb64065238da4839e5c04e00a0616823903c9153461f94cda56ba5"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B09033P.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "1ac25579f12b491acfad307c5e6c619ccf4ab0267b1526f3b24e9d6dac0a4dc5"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--D06003.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6b2bdc35a61290c77b39841da83be03760846cc2855db4efda8f425f725af9f9"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--PR265.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "4c1c1778e41877d1e4edf9b192c751f09c5b4c0c5b966684f43ee17e88e8047b"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/phase-9-f-mcts.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "eb35c7c056e45787ddeb1b8ce803c10ee17adf2c91ea9e62b42400f502a0cef5"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/phase-9-g-replay.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "76b531556022021c436886a8c5b85dd79216490fbfbb2a494b186c02002d0850"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/phase-9-h-performance.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "3280b5938d4d71bb1f0bcf5b0aa1ddae870c00fb97ab8853853becca034d5810"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/refactor-plan--phase-3b-design.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "86a4bb8b95df323299a38ae97ed109e42afe89a8495fe4db256d6a5bec8e9a97"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--INDEX.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "577fc6dbde9b95a5f06cf09c896cd368501fb6234e33471d498d426d1b50a748"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--caseDeclaredEvidenceFlip.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "426a72856d8afdca08e44873bd193164f30379f1f4a556a5cc3b6573df570e06"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--caseResolvedHandRemove.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "3b6ca94df6ffa28204c42ccb79fe6a139032095f0c707c308c91679ec48b4dea"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--caseTraitConditioned.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "fa6a31d4a8b08d6c649783870b02bec447aea9c194e1209b1ec7acb15f088b71"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--eventRemoveByAP.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "9d435d092054bd2e9ef94a52f2d80f58490c62490becb5a3357ddacec792fe60"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--partnerColorKeyword.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "898c5681cdf3112d3ac39426cf63340b618669ac5fc085191f393a25ea59511d"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/cards-to-rules-cards.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "20ea0722b8e0b261565713e044424484e960ed389f348041b2e8a4b9c5ad2204"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/cards-to-rules-engine-core.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "905651e44dc780261d46af225f8f6203a653333bdcc2c357abde495ac838305a"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/cards-to-rules-engine-flow.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "94e0d7a632e65835a92bd22ef19ca907e2251ac212e0116346c3f4d66cb46cc9"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/graph-rules-engine-core.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "78588e6543e4c482f20aad7ca2b4c5302d86640060ef38a19e1c40a81435047f"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/graph-rules-engine-flow.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "3a05ef45682ff664d8083f3c5de7e89f8f58c02ec3aaab2f6c92090121ab6495"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/graph-specs.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "e28bf5d3bb232d7177eaf5d85daedd878fd27a6d293f71149f4bf40f2bacea44"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/index.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6b07c62a979485484c1a33bde3acd3627ee62dd1e4185b021c9ac98bfea5d5a5"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/mapping/rules-to-cards.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "0750ddbd9b5e52d800915420ee24e30f57817ee856c4929bfbe9c06b7ee77e68"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/progress/cards.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "aa4085f37412a63b36c3a02496642acc81c59931e99153ab1283dbb74a7d1769"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/progress/tests.md",
-      "owner": "phase1-generated-docs"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/auto/structure.md",
-      "owner": "phase1-generated-docs"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": ".claude/bugs/BUG-022.md",
@@ -1459,7 +1492,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "owner": "phase1-generated-docs"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": "docs/superpowers/plans/2026-07-16-bug-wave-closeout.md",
@@ -2280,7 +2314,8 @@
     },
     {
       "path": "tests/scripts/check-wave-scope.test.ts",
-      "owner": "phase1-task1"
+      "owner": "docs-tooling",
+      "bugId": "BUG-233"
     },
     {
       "path": "tests/scripts/lint-bug-closure.test.ts",

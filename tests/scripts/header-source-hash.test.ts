@@ -61,4 +61,15 @@ describe('computeSourceHash clone-root independence', () => {
       computeSourceHash([join(crlfRoot, 'src')], crlfRoot),
     );
   });
+
+  it('normalizes EOL for explicit text sources regardless of extension', () => {
+    const lfRoot = makeRoot();
+    const crlfRoot = makeRoot();
+    writeFileSync(join(lfRoot, 'dictionary.json'), '{\n  "key": "value"\n}\n');
+    writeFileSync(join(crlfRoot, 'dictionary.json'), '{\r\n  "key": "value"\r\n}\r\n');
+
+    expect(computeSourceHash([join(lfRoot, 'dictionary.json')], lfRoot)).toBe(
+      computeSourceHash([join(crlfRoot, 'dictionary.json')], crlfRoot),
+    );
+  });
 });

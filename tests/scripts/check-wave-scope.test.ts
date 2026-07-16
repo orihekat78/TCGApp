@@ -139,11 +139,28 @@ describe("wave manifest", () => {
       "BUG-176",
       "BUG-180",
       ...Array.from({ length: 30 }, (_, index) => `BUG-${202 + index}`),
+      "BUG-232",
+      "BUG-233",
     ];
 
     expect(actual.baseCommit).toMatch(/^[0-9a-f]{40}$/);
+    expect(actual.bugs).toHaveLength(39);
     expect(actual.bugs?.map((entry) => entry.id).sort()).toEqual(
       expectedIds.sort(),
+    );
+    expect(
+      Object.fromEntries(
+        ["verified", "spec-out", "open"].map((classification) => [
+          classification,
+          actual.bugs?.filter((entry) => entry.classification === classification).length,
+        ]),
+      ),
+    ).toEqual({ verified: 35, "spec-out": 3, open: 1 });
+    expect(actual.bugs?.find((entry) => entry.id === "BUG-232")?.classification).toBe(
+      "verified",
+    );
+    expect(actual.bugs?.find((entry) => entry.id === "BUG-233")?.classification).toBe(
+      "open",
     );
     for (const entry of actual.bugs ?? []) {
       expect(["verified", "spec-out", "open", "official-blocked"]).toContain(
