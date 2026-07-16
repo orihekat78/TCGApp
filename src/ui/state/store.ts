@@ -10,7 +10,7 @@
 import { create } from 'zustand';
 import type { GameState } from '@/engine/types/game-state';
 import type { EffectCtx } from '@/engine/types';
-import type { ContinuationFrame } from '@/engine/effect/pending-state';
+import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
 
 export type GameStateMutator = (state: GameState) => GameState;
 
@@ -19,6 +19,8 @@ export type GameStateStore = {
   gameState: GameState | null;
   /** state を全置換する（ゲーム開始 / リセット / リプレイ読み込み用） */
   setGameState: (state: GameState) => void;
+  /** 新規対戦開始前に GameState と UI 上の対戦一時状態を一括破棄する。 */
+  resetMatchSessionState: () => void;
   /**
    * 現在の gameState に mutator を適用し、その戻り値で置き換える。
    * gameState が null の場合は何もしない（mutator も呼ばれない）。
@@ -213,7 +215,7 @@ export type PendingEffectPick = {
   atomArgs: Record<string, unknown>;
   nMin: number;
   nMax: number;
-  source: { cardId: string; abilityId: string };
+  source: PendingEffectSource;
   /**
    * D08021 driver 2026-05-26: target.query.distinctNames を UI multi-select に伝達。
    * CardListModal で同 name component (rules/19) の重複選択を click 不可化する。
@@ -248,14 +250,14 @@ export type PendingEffectPick = {
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */
 export type PendingEffectChoice = {
   player: 'self' | 'opp';
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string }[];
 };
 
 /** 2026-06-06 タスクC: optional 決定 (「〜してもよい」) 保留 (PendingEffectOptionalSide と同 shape)。 */
 export type PendingEffectOptional = {
   player: 'self' | 'opp';
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   /** optional 内が $trigger.<field> を参照する場合の再開 ctx 復元用 (B03038、JSON-safe) */
   triggerPayload?: unknown;
 };
@@ -264,7 +266,7 @@ export type PendingRps = {
   player: 'self' | 'opp';
   ownerPlayer: 'self' | 'opp';
   aiHand: 'rock' | 'paper' | 'scissors';
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
 };
 
 /** An opaque set-card entry: no card identity crosses the UI boundary. */
@@ -272,12 +274,12 @@ export type PendingSetCardChoice = {
   player: 'self' | 'opp';
   hostUid: string;
   entries: { instanceId: string; ordinal: number }[];
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
 };
 export type PendingSetCardReplacement = {
   player: 'self' | 'opp'; fromUid: string; setCardInstanceId: string;
   candidates: { uid: string; cardId: string }[];
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
 };
 
 /** Opponent may discard one hand occurrence to cancel the already-selected effect. */
@@ -297,7 +299,7 @@ export type PendingLeaveIntercept = {
 
 export type PendingEffectRepeatOptional = {
   player: 'self' | 'opp';
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   remaining: number;
 };
 
@@ -317,6 +319,8 @@ export type PendingHirameki = {
 
 /** ミスリード保留 (Commit 3b) */
 export type PendingMisread = {
+  /** Player who chooses which misread abilities to activate. */
+  player: 'self' | 'opp';
   /** 推理側 (LP-X 対象) の uid */
   reasoningUid: string;
   /** 推理側プレイヤー */
@@ -325,9 +329,38 @@ export type PendingMisread = {
   candidates: { uid: string; x: number }[];
 };
 
+export const MATCH_SESSION_RESET_STATE = {
+  gameState: null,
+  activeActionId: null,
+  pendingHirameki: null,
+  pendingMisread: null,
+  activeCardUid: null,
+  activeCardLabel: null,
+  oppMoveTick: 0,
+  isAiPaused: false,
+  aiStepCounter: 0,
+  pendingEffectPick: null,
+  pendingEffectChoice: null,
+  pendingEffectOptional: null,
+  pendingChooseIntercept: null,
+  pendingLeaveIntercept: null,
+  pendingRps: null,
+  pendingSetCardChoice: null,
+  pendingSetCardReplacement: null,
+  pendingEffectRepeatOptional: null,
+  pendingDeckReveal: null,
+  pendingDeckReorder: null,
+  pendingDeckPlace: null,
+  hiramekiDemoMode: 'idle',
+  hiramekiDemoSelectedCardId: null,
+  cutinDemoMode: 'idle',
+  cutinDemoSelectedCardId: null,
+} as const;
+
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
   gameState: null,
   setGameState: (state) => set({ gameState: state }),
+  resetMatchSessionState: () => set(MATCH_SESSION_RESET_STATE),
   dispatch: (mutator) => {
     const current = get().gameState;
     if (current === null) return;

@@ -5,6 +5,8 @@
 import { current } from '@/engine/produce';
 import type { GameState, FileCard } from '@/engine/types';
 import { caseOp } from './case.js';
+import { deck as deckMut } from './deck.js';
+import type { CardId } from '@/engine/types';
 
 type Player = 'self' | 'opp';
 
@@ -12,16 +14,20 @@ type Player = 'self' | 'opp';
  * デッキ上から n 枚を裏向きで FILE に push (rules/05)
  * 先攻初手は n=1, 通常 n=2 (呼出元が判定)
  * カードには順番がある: もっとも新しく置かれたカードが1番上 (push=末尾が先頭扱い)
+ * 各取得後にデッキ0なら即時リフレッシュ。公開中カードには使用しない (rules/14, 26)。
  */
-function addFromDeckTop(s: GameState, p: Player, n: number): void {
+function addFromDeckTop(s: GameState, p: Player, n: number, resolvingCardId?: CardId): number {
+  let added = 0;
   for (let i = 0; i < n; i++) {
     const d = s.players[p].deck;
-    if (d.length === 0) break; // デッキ不足は呼出元が管理
+    if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
     // Round 3: ネクストヒント時に表向きで手札に渡せるよう cardId を保持
     const cardId = d.shift();
     if (cardId === undefined) break;
     const card: FileCard = { type: 'card-back', cardId };
     s.players[p].file.push(card);
+    added++;
+    if (!deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
   }
   // user_request 20260522_01 #4/#16 fix: FILE 7 枚以上で事件編→解決編 自動遷移
   // (rules/01 + rules/13 + rules/25)。assist() に同等 check があるが、
@@ -29,6 +35,7 @@ function addFromDeckTop(s: GameState, p: Player, n: number): void {
   if (s.players[p].case.status === '事件編' && s.players[p].file.length >= 7) {
     caseOp.toResolved(s, p); // BUG-089: hook 経由で a1 (caseResolvedHandRemove) を発火させる
   }
+  return added;
 }
 
 /**

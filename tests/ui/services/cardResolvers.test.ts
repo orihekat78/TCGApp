@@ -58,6 +58,26 @@ describe('createCardResolver', () => {
     expect(resolve('D11020').color).toBe('yellow');
   });
 
+  it('maps black and white without falling back to blue', () => {
+    const source: RawCardsJson = {
+      count: 2,
+      cards: [
+        {
+          cardId: 'BLACK', cardNum: 'BLACK', title: '黒カード',
+          type: 'キャラ', color: '黒', cost: '2', ap: '1000', lp: '1',
+        },
+        {
+          cardId: 'WHITE', cardNum: 'WHITE', title: '白カード',
+          type: 'キャラ', color: '白', cost: '3', ap: '2000', lp: '1',
+        },
+      ],
+    };
+    const resolve = createCardResolver(source);
+
+    expect(resolve('BLACK').color).toBe('black');
+    expect(resolve('WHITE').color).toBe('white');
+  });
+
   it('handles null AP/LP (partner card) as 0', () => {
     const resolve = createCardResolver(sampleSource);
     const r = resolve('D08001');

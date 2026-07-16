@@ -24,13 +24,14 @@ import { resolveActionAgainstChar, resolveActionAgainstCase } from '@/ai/action-
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import { event as engineEvent } from '@/engine/event/index.js';
 import { def as readDef } from '@/engine/read/def.js';
-import { char as readCharFromEngine } from '@/engine/read/char.js';
 // Round 4j-fix (BUG-034): `@/engine` 経由で取得し vite dev mode の module duplication 回避
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
-import { _drainPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectPickSide, _peekPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide, _drainPendingRpsSide, _drainPendingSetCardChoiceSide, _drainPendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import { isAllowed } from './useEngineDispatch/can-check.js';
+import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning.js';
+import { _resolveMisreadPicks } from '@/engine/listeners/misread.js';
 import type { EngineAction, DispatchResult, Player } from './useEngineDispatch/types.js';
 // Phase 3d: public 型 (ContactChoice/EngineAction/DispatchResult) は types.ts を barrel 再 export し importer 不変。
 export type { ContactChoice, EngineAction, DispatchResult } from './useEngineDispatch/types.js';
@@ -207,7 +208,10 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           // (D11009 sceneSetState stun → 敵 active 最高 AP 等)。
           // Human/AI 共通で適用 — UI 側 modal が出るときはこの dispatch 経路を通らないため実害なし。
           const ctx: EffectCtx = {
-            source: { player: pending.player, cardId: pending.cardId, area: 'evidence' },
+            // Human Pattern-A picks pause during this pre-walk, before the queued entry can
+            // restore its source metadata. Keep the resolving-card lifecycle on the shared
+            // continuation ctx so exact-exhaustion refresh still excludes this hirameki.
+            source: { player: pending.player, cardId: pending.cardId, area: 'evidence', resolutionKind: 'hirameki' },
             bindings: pending.occurrence ? { occurrence: [{ kind: 'card' as const, cardId: pending.occurrence.cardId, area: 'remove', player: pending.occurrence.player, index: pending.occurrence.removeIndex }] } : {},
             // wave-11: pick 解決段でも $trigger.<field> を参照可能に (queue payload と同内容。
             // atom 実行時は entryToCtx の triggerPayload が使われるため両段で一致させる)
@@ -234,7 +238,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
           engineEvent.queue(
             draft,
             resolved as never,
-            { player: pending.player, cardId: pending.cardId },
+            { player: pending.player, cardId: pending.cardId, resolutionKind: 'hirameki' },
             'evidence:remove-by-action',
             { player: pending.player, ev: { cardId: pending.cardId }, byUid: pending.actorUid, occurrence: pending.occurrence },
             ctx.bindings,
@@ -257,26 +261,8 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'misreadResolve': {
       const pending = useGameStateStore.getState().pendingMisread;
       if (!pending) return;
-      // 各 pick について sleep + LP-X 合算
-      let totalReduction = 0;
-      for (const pick of action.picks) {
-        mutate.scene.setState(draft, pick.uid, 'sleep');
-        totalReduction += pick.x;
-        // engine additive wave-3 (2026-06-30): misread:performed を人間 defender 経路でも emit
-        // (listeners/misread の AI 経路と対。両経路で発火しないと観測カードが片側で false-green になる)。
-        // payload.player=misread 実行側 (= pick.uid のキャラ所有者)、source.uid=misread キャラ uid (selfOnly 用)。
-        const side: Player = draft.players.self.scene.some((c) => c.uid === pick.uid) ? 'self' : 'opp';
-        engineEvent.emit(draft, 'misread:performed', { player: side }, { player: side, uid: pick.uid });
-      }
-      // listener と同じパターン: lpOverride で 1 回適用 (partner uid は対象外)
-      if (
-        totalReduction > 0 &&
-        pending.reasoningUid !== 'partner:self' &&
-        pending.reasoningUid !== 'partner:opp'
-      ) {
-        const currentLp = readCharFromEngine.lp(draft, pending.reasoningUid);
-        mutate.char.setOverrideLP(draft, pending.reasoningUid, currentLp - totalReduction);
-      }
+      _resolveMisreadPicks(draft, pending, action.picks);
+      _resumeDeferredReasoning(draft, pending.reasoningUid, pending.reasoningPlayer);
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
@@ -474,36 +460,64 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
  */
 export function surfacePendingSideChannels(): void {
   const store = useGameStateStore.getState();
-  const hiramekiSide = _drainPendingHirameki();
-  if (hiramekiSide) store.setPendingHirameki(hiramekiSide);
-  const misreadSide = _drainPendingMisread();
-  if (misreadSide) store.setPendingMisread(misreadSide);
-  const effectPickSide = _drainPendingEffectPickSide();
-  if (effectPickSide) store.setPendingEffectPick(effectPickSide);
+  if (store.pendingHirameki === null) {
+    const hiramekiSide = _drainPendingHirameki();
+    if (hiramekiSide) store.setPendingHirameki(hiramekiSide);
+  }
+  if (store.pendingMisread === null) {
+    const misreadSide = _drainPendingMisread();
+    if (misreadSide) store.setPendingMisread(misreadSide);
+  }
+  // FIFO 先頭は、現在表示中の decision が決着するまで消費しない。
+  // opp pending も順番を保って次の driver tick へ渡し、human pending を上書きしない。
+  if (store.pendingEffectPick === null && _peekPendingEffectPickSide() !== null) {
+    const effectPickSide = _drainPendingEffectPickSide();
+    if (effectPickSide) store.setPendingEffectPick(effectPickSide);
+  }
   // BUG-121: auto-phase enter 由来 choice の取り残し防止 (useOppTurnDriver 経路)
-  const effectChoiceSide = _drainPendingEffectChoiceSide();
-  if (effectChoiceSide) store.setPendingEffectChoice(effectChoiceSide);
+  if (store.pendingEffectChoice === null) {
+    const effectChoiceSide = _drainPendingEffectChoiceSide();
+    if (effectChoiceSide) store.setPendingEffectChoice(effectChoiceSide);
+  }
   // 2026-06-06 タスクC: optional 決定の取り残し防止 (choice と同様)
-  const effectOptionalSide = _drainPendingEffectOptionalSide();
-  if (effectOptionalSide) store.setPendingEffectOptional(effectOptionalSide);
-  const rpsSide = _drainPendingRpsSide();
-  if (rpsSide) store.setPendingRps(rpsSide);
-  const setCardChoiceSide = _drainPendingSetCardChoiceSide();
-  if (setCardChoiceSide) store.setPendingSetCardChoice(setCardChoiceSide);
-  const setCardReplacementSide = _drainPendingSetCardReplacementSide();
-  if (setCardReplacementSide) store.setPendingSetCardReplacement(setCardReplacementSide);
-  const chooseInterceptSide = _drainPendingChooseInterceptSide();
-  if (chooseInterceptSide) store.setPendingChooseIntercept(chooseInterceptSide);
-  const repeatOptionalSide = _drainPendingEffectRepeatOptionalSide();
-  if (repeatOptionalSide) store.setPendingEffectRepeatOptional(repeatOptionalSide);
-  const deckRevealSide = _drainPendingDeckRevealSide();
-  if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
+  if (store.pendingEffectOptional === null) {
+    const effectOptionalSide = _drainPendingEffectOptionalSide();
+    if (effectOptionalSide) store.setPendingEffectOptional(effectOptionalSide);
+  }
+  if (store.pendingRps === null) {
+    const rpsSide = _drainPendingRpsSide();
+    if (rpsSide) store.setPendingRps(rpsSide);
+  }
+  if (store.pendingSetCardChoice === null) {
+    const setCardChoiceSide = _drainPendingSetCardChoiceSide();
+    if (setCardChoiceSide) store.setPendingSetCardChoice(setCardChoiceSide);
+  }
+  if (store.pendingSetCardReplacement === null) {
+    const setCardReplacementSide = _drainPendingSetCardReplacementSide();
+    if (setCardReplacementSide) store.setPendingSetCardReplacement(setCardReplacementSide);
+  }
+  if (store.pendingChooseIntercept === null) {
+    const chooseInterceptSide = _drainPendingChooseInterceptSide();
+    if (chooseInterceptSide) store.setPendingChooseIntercept(chooseInterceptSide);
+  }
+  if (store.pendingEffectRepeatOptional === null) {
+    const repeatOptionalSide = _drainPendingEffectRepeatOptionalSide();
+    if (repeatOptionalSide) store.setPendingEffectRepeatOptional(repeatOptionalSide);
+  }
+  if (store.pendingDeckReveal === null) {
+    const deckRevealSide = _drainPendingDeckRevealSide();
+    if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
+  }
   // BUG-136: deckToBottomBound 順序選択の取り残し防止 (auto-phase / ターンドライバ経路)
-  const deckReorderSide = _drainPendingDeckReorderSide();
-  if (deckReorderSide) store.setPendingDeckReorder(deckReorderSide);
+  if (store.pendingDeckReorder === null) {
+    const deckReorderSide = _drainPendingDeckReorderSide();
+    if (deckReorderSide) store.setPendingDeckReorder(deckReorderSide);
+  }
   // mini-wave #5 P2: deckPlaceSplitBound 振り分けの取り残し防止 (同経路)
-  const deckPlaceSide = _drainPendingDeckPlaceSide();
-  if (deckPlaceSide) store.setPendingDeckPlace(deckPlaceSide);
+  if (store.pendingDeckPlace === null) {
+    const deckPlaceSide = _drainPendingDeckPlaceSide();
+    if (deckPlaceSide) store.setPendingDeckPlace(deckPlaceSide);
+  }
 }
 
 /**

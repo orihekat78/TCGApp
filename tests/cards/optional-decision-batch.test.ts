@@ -56,7 +56,8 @@ function buildState(): GameState {
     sceneChar('LP0_T', 'lp0#1'),
     sceneChar('LP1_T', 'lp1#1'),
   ];
-  s.players.self.deck = ['D08005']; // 推理 LP1 で 1 枚消費
+  // 推理後も非terminalにし、optional decision契約をdeck-outから分離する。
+  s.players.self.deck = ['D08005', 'D08005']; // 推理 LP1 で 1 枚消費
   return s;
 }
 

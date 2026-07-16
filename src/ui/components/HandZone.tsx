@@ -14,7 +14,7 @@ import './HandZone.css';
 // ------------------------------------------------------------------
 
 export type CardId = string;
-export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
+export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple' | 'black' | 'white';
 export type CardType = 'キャラ' | 'イベント';
 
 export type HandCardMeta = {

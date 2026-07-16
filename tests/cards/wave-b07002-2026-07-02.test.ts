@@ -130,7 +130,7 @@ describe('B07002 江戸川コナン — wave-10 exemplar', () => {
     setHuman('self');
     const s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
-    s.players.self.deck = ['T_AO', 'T_AKA'];
+    s.players.self.deck = ['T_AO', 'T_AKA', 'PAD1'];
     s.players.self.hand = [];
     s.players.self.scene = [sceneChar('LOWAP', 'w#1'), sceneChar('BIGAP', 'b#1')];
     s.players.opp.scene = [sceneChar('OPPLOW', 'ol#1'), sceneChar('BIGAP', 'ob#1')];
@@ -167,7 +167,7 @@ describe('B07002 江戸川コナン — wave-10 exemplar', () => {
     setHuman('self');
     const s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
-    s.players.self.deck = ['T_AO', 'T_AKA'];
+    s.players.self.deck = ['T_AO', 'T_AKA', 'PAD1'];
     s.players.opp.scene = [sceneChar('OPPLOW', 'ol#1')];
     s.players.self.remove = ['B07002'];
     runEffect(s, summonFrom('B07002') as never, srcCtx());
@@ -185,7 +185,7 @@ describe('B07002 江戸川コナン — wave-10 exemplar', () => {
   it('a1 false (AI): 同色探偵2枚 → discard 2枚 (BUG-165 AI 経路) だが sceneRemove 発生せず', () => {
     let s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
-    s.players.self.deck = ['T_AO', 'T_AO2'];
+    s.players.self.deck = ['T_AO', 'T_AO2', 'PAD1'];
     s.players.self.hand = [];
     s.players.opp.scene = [sceneChar('OPPLOW', 'ol#1')];
     s.players.self.remove = ['B07002'];
@@ -204,7 +204,7 @@ describe('B07002 江戸川コナン — wave-10 exemplar', () => {
   it('a1 false: 異色でも片方 非探偵 → conditional false', () => {
     let s = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
-    s.players.self.deck = ['T_AO', 'K_AKA'];
+    s.players.self.deck = ['T_AO', 'K_AKA', 'PAD1'];
     s.players.opp.scene = [sceneChar('OPPLOW', 'ol#1')];
     s.players.self.remove = ['B07002'];
     s = produce(s, (d) => {

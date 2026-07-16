@@ -124,7 +124,7 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
       // mini-wave #2 (2026-07-10): viaNextHint flag — 「ネクストヒントで手札を使用したとき」(B01005/B03002/
       // B05005) を通常の手札の使用と判別する additive field (既存 matcher は未読で挙動不変)。
       { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId, player: p, viaNextHint: true },
-      { player: p, cardId: optionalCardId },
+      { player: p, cardId: optionalCardId, ...(d?.kind === 'event' ? { resolutionKind: 'normal-event' as const } : {}) },
     );
     // キャラの場合: 現場へ登場 (rules/12 §3 — アクティブ・名乗り状態で登場)。
     // 手札の使用とは異なり、ネクストヒントによる登場は **手動プレイ** = viaEffect:false。

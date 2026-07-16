@@ -1,8 +1,11 @@
 // cards/ct-p06/B06035 風神剣 (イベント) — catalog-reuse batch
-// rules: 03-field-areas.md, 15-abilities-effects.md, 19-special-rules.md, 20-color-and-switch.md
+// rules: 03-field-areas.md, 10-action-event.md, 15-abilities-effects.md, 17-icons.md,
+//        19-special-rules.md, 20-color-and-switch.md
 //
 // 公式テキスト:
 //   キャラを1枚まで選び、リムーブする。
+//   【ヒラメキ】【事件YAIBA】【解決編】手札を1枚リムーブしてもよい。
+//     そうした場合、キャラを1枚まで選び、リムーブする。
 //
 // a1: effect:declared (event-use matcher) → キャラを1枚まで選びリムーブ (D11020 a1 step1 同型 / inline sceneRemove, filter なし)。
 
@@ -23,6 +26,33 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/19-special-rules.md'],
 };
 
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-evidence',
+  trigger: { hook: 'evidence:remove-by-action', optional: true },
+  condition: {
+    kind: 'and',
+    cs: [
+      { kind: 'caseTrait', trait: 'YAIBA' },
+      { kind: 'caseStatus', status: '解決編' },
+    ],
+  },
+  effect: {
+    kind: 'optional',
+    aiRun: 'if-hand',
+    effect: {
+      kind: 'chain',
+      steps: [
+        { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
+        { kind: 'atom', verb: 'sceneRemove', args: { player: 'self', max: 1, side: 'either', cause: 'effect' } },
+      ],
+    },
+  },
+  description: '【ヒラメキ】【事件YAIBA】【解決編】手札を1枚リムーブしてもよい。そうした場合、キャラを1枚まで選び、リムーブする。',
+  ruleRefs: ['rules/03-field-areas.md', 'rules/10-action-event.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
+};
+
 export const B06035: CardDef = {
   id: 'B06035',
   no: '0658/B06035',
@@ -35,10 +65,12 @@ export const B06035: CardDef = {
   traits: ['YAIBA'],
   rarity: 'C',
   imageUrl: '1754285189462482.jpg',
-  abilities: [a1],
+  abilities: [a1, a2],
   ruleRefs: [
     'rules/03-field-areas.md',
+    'rules/10-action-event.md',
     'rules/15-abilities-effects.md',
+    'rules/17-icons.md',
     'rules/19-special-rules.md',
     'rules/20-color-and-switch.md',
   ],

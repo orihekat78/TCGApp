@@ -229,6 +229,8 @@
 .file-area .card-back.assisted-partner.color-red    { box-shadow: 0 0 8px color-mix(in oklch, var(--color-red,    #c84040) 50%, transparent); }
 .file-area .card-back.assisted-partner.color-green  { box-shadow: 0 0 8px color-mix(in oklch, var(--color-green,  #3aa67a) 50%, transparent); }
 .file-area .card-back.assisted-partner.color-purple { box-shadow: 0 0 8px color-mix(in oklch, var(--color-purple, #8a4cc0) 50%, transparent); }
+.file-area .card-back.assisted-partner.color-black  { box-shadow: 0 0 8px color-mix(in oklch, var(--color-black,  #3b3f46) 70%, white 20%); }
+.file-area .card-back.assisted-partner.color-white  { box-shadow: 0 0 8px color-mix(in oklch, var(--color-white,  #e8e8e8) 60%, transparent); }
 
 /* パートナー識別マーカー */
 .file-area .card-back.assisted-partner .partner-stripe {
@@ -240,6 +242,8 @@
 .file-area .card-back.assisted-partner.color-red    .partner-stripe { background: var(--color-red,    #c84040); }
 .file-area .card-back.assisted-partner.color-green  .partner-stripe { background: var(--color-green,  #3aa67a); }
 .file-area .card-back.assisted-partner.color-purple .partner-stripe { background: var(--color-purple, #8a4cc0); }
+.file-area .card-back.assisted-partner.color-black  .partner-stripe { background: var(--color-black,  #3b3f46); }
+.file-area .card-back.assisted-partner.color-white  .partner-stripe { background: var(--color-white,  #e8e8e8); }
 
 .file-area .card-back.assisted-partner .partner-mark {
   flex: 1;

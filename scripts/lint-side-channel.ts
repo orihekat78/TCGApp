@@ -8,6 +8,8 @@ const SRC_DIR = join(process.cwd(), 'src');
 const STORE_PATH = join(SRC_DIR, 'ui', 'state', 'store.ts');
 const DISPATCH_PATH = join(SRC_DIR, 'ui', 'hooks', 'useEngineDispatch.ts');
 const APP_PATH = join(SRC_DIR, 'App.tsx');
+const DECISION_HOSTS_PATH = join(SRC_DIR, 'ui', 'components', 'EffectDecisionModalHosts.tsx');
+const META_MATCH_PATH = join(process.cwd(), 'meta-app', 'src', 'screens', 'RealMatchView.tsx');
 
 // 2026-06-05: engine 内部 queue (UI modal 不要) を allowlist 化。
 // 以下は __pending<Name> 形式だが UI 表示は行わない engine-internal な保管庫:
@@ -37,6 +39,9 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // setPendingOptionalBindings で set、applyOptionalAndContinuation が queue 6th arg で consume (store/UI へ出ない、
   // EffectOptionalResume と同種の engine-internal)。B04092 キャンティ optional{chain[sleep, inContact pick]} 用。
   'EffectOptionalBindings',
+  // BUG-230: optional 判断後に再開する外側 ContinuationFrame の holder。
+  // 表示用 EffectOptional と対で applyOptionalAndContinuation が consume する。
+  'EffectOptionalContinuation',
   // 夜間WC2b (2026-07-11): optional 再開 ctx の costPaid holder (pending-state.ts)。
   // setPendingOptionalCostPaid で set、applyOptionalAndContinuation が consume (store/UI へ出ない、
   // EffectOptionalBindings と同種の engine-internal)。B06023 optional{invoke $cost.ids} 用。
@@ -87,7 +92,7 @@ function main(): void {
   const dispatch = readFileSync(DISPATCH_PATH, 'utf-8');
   // App.tsx + Playmat.tsx 等 wrapper を含めて 1 つの文字列に結合 (mount は
   // 複数 component file に分散している可能性あり)
-  const uiSearchSpace = [APP_PATH, join(SRC_DIR, 'ui', 'components', 'Playmat.tsx')]
+  const uiSearchSpace = [APP_PATH, join(SRC_DIR, 'ui', 'components', 'Playmat.tsx'), DECISION_HOSTS_PATH]
     .filter((p) => { try { statSync(p); return true; } catch { return false; } })
     .map((p) => readFileSync(p, 'utf-8'))
     .join('\n');
@@ -125,6 +130,17 @@ function main(): void {
     const appOK = appPattern.test(uiSearchSpace);
     if (appOK) console.log(`  [OK]    UI (App/Playmat) に ${name}* component 配線`);
     else { console.warn(`  [WARN]  UI (App/Playmat) に ${name}*Modal|Overlay|Picker mount 無し`); warns++; }
+  }
+
+  // 5173 と 5174 は同じ decision host 集合を必ず mount する。
+  // 片側だけの直書きはMeta対戦画面で選択待ちが不可視になるため、共通bundleの使用を強制する。
+  for (const [label, path] of [['src/App.tsx', APP_PATH], ['meta RealMatchView', META_MATCH_PATH]] as const) {
+    const mounted = (() => {
+      try { return /<EffectDecisionModalHosts\b/.test(readFileSync(path, 'utf-8')); }
+      catch { return false; }
+    })();
+    if (mounted) console.log(`  [OK]    ${label} に EffectDecisionModalHosts mount`);
+    else { console.error(`  [ERROR] ${label} に EffectDecisionModalHosts mount 無し`); errors++; }
   }
 
   console.log(`\n[lint-side-channel] ${channels.size} channels / errors=${errors} / warns=${warns}`);

@@ -5,13 +5,15 @@
 import { current } from '@/engine/produce';
 import { event } from '../event/index.js'; // engine additive wave-3: evidence:removed emit (mutate/char.ts setcard:enter と同パターン)
 import { remove as removeMut } from './remove.js'; // engine additive wave-4: remove:exit emit (remove→証拠 離脱)
-import type { GameState, EvidenceCard, EvidenceOrigin } from '@/engine/types';
+import { deck as deckMut } from './deck.js';
+import type { GameState, EvidenceCard, EvidenceOrigin, CardId } from '@/engine/types';
 
 type Player = 'self' | 'opp';
 
 /**
  * デッキ上から n 枚を証拠エリアに追加 (rules/11 推理, rules/10 アクション[事件])
- * デッキ不足時はリフレッシュは呼出元が別途行う前提
+ * デッキ不足・取得後のexact exhaustionは内部で即時リフレッシュする。
+ * resolvingCardId は解決中イベント/ヒラメキのremove除外用 (rules/14, 26)。
  */
 function addFromDeck(
   s: GameState,
@@ -19,13 +21,20 @@ function addFromDeck(
   n: number,
   faceUp: boolean,
   origin: EvidenceOrigin,
-): void {
+  resolvingCardId?: CardId,
+): number {
+  let added = 0;
   for (let i = 0; i < n; i++) {
     const d = s.players[p].deck;
-    if (d.length === 0) break; // デッキ不足は呼出元が管理
+    // Existing callers historically guarded only before each take. Keep the
+    // initial/cross-refresh behavior here so every evidence path has one owner.
+    if (d.length === 0 && !deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
     const cardId = d.shift()!;
     s.players[p].evidence.push({ cardId, faceUp, origin });
+    added++;
+    if (!deckMut.refreshAfterTake(s, p, resolvingCardId)) break;
   }
+  return added;
 }
 
 /**

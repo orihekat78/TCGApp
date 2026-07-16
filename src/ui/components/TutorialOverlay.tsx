@@ -28,7 +28,7 @@ export function TutorialOverlay(): JSX.Element | null {
   const canPrev = currentStep > 0;
 
   return (
-    <div className="tutorial-overlay" role="dialog" data-testid="tutorial-overlay">
+    <div className="tutorial-overlay" role="dialog" aria-modal="true" data-testid="tutorial-overlay">
       {/* Round 3c-A: step.target があるとき盤面要素を border + glow + 矢印でハイライト。
           無いときは bar のみ表示 (story-only step の fallback) */}
       {step.target && <TutorialHighlight key={step.id} target={step.target} />}

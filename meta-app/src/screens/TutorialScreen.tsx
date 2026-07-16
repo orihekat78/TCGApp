@@ -16,6 +16,7 @@ import type { TutorialChapter } from './tutorial/types';
 import { TutorialLessonViewer } from './tutorial/TutorialLessonViewer';
 import { useTutorialStore } from '@/ui/state/tutorialStore';
 import { TUTORIAL_STEPS } from '@/ui/services/tutorialSteps';
+import { beginMatchSession, commitMatchSession, isCurrentMatchSession } from '@/ui/services/matchSession';
 
 interface Props {
   onNav: (r: Route) => void;
@@ -139,13 +140,15 @@ export function TutorialScreen({ onNav }: Props) {
   const startPractice = () => {
     const self = decks.find((d) => d.id === 'sample-d08') ?? { ...SAMPLE_DECK, modified: Date.now() };
     const opp = decks.find((d) => d.id === 'sample-d11') ?? { ...SAMPLE_DECK_OPP, modified: Date.now() };
+    const session = beginMatchSession('self');
     useGameStateStore.getState().setSpectatorMode(false);
     useTutorialStore.getState().exit(); // 通常の練習試合はガイド overlay を出さない
     startPracticeFor(PRACTICE_CHAPTER);
     onNav('match');
-    customGameStart(self, opp)
-      .then((gs) => useGameStateStore.getState().setGameState(gs))
+    customGameStart(self, opp, { isSessionCurrent: () => isCurrentMatchSession(session) })
+      .then((gs) => { commitMatchSession(session, gs); })
       .catch((err: unknown) => {
+        if (!isCurrentMatchSession(session)) return;
         console.error('[Phase 16] practice match failed:', err);
         onNav('tutorial');
       });
@@ -156,13 +159,15 @@ export function TutorialScreen({ onNav }: Props) {
     const self = decks.find((d) => d.id === 'sample-d08') ?? { ...SAMPLE_DECK, modified: Date.now() };
     const opp = decks.find((d) => d.id === 'sample-d11') ?? { ...SAMPLE_DECK_OPP, modified: Date.now() };
     setViewer(null);
+    const session = beginMatchSession('self');
     useGameStateStore.getState().setSpectatorMode(false);
     useTutorialStore.setState({ currentStep: CHAPTER_TO_SRC_STEP[chapterNum] ?? 0 });
     startPracticeFor(chapterNum);
     onNav('match');
-    customGameStart(self, opp)
-      .then((gs) => useGameStateStore.getState().setGameState(gs))
+    customGameStart(self, opp, { isSessionCurrent: () => isCurrentMatchSession(session) })
+      .then((gs) => { commitMatchSession(session, gs); })
       .catch((err: unknown) => {
+        if (!isCurrentMatchSession(session)) return;
         console.error('[Phase 17] guided match failed:', err);
         useTutorialStore.getState().exit();
         onNav('tutorial');

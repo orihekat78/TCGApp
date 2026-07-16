@@ -28,6 +28,12 @@ import { _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide } from '../effec
 
 const SAFETY_CAP = 1000;
 
+function cancelPendingAfterGameEnd(state: GameState): void {
+  for (const entry of state.pendingEffects) {
+    if (entry.state === 'pending') entry.state = 'cancelled';
+  }
+}
+
 // BUG-132 GAP-2 (2026-06-12): declaredReaction entry の pick/dyn を解決時に substitute する
 // resolver。実体は listener 層 (listeners/triggered.ts resolveDeferredEntryPicks) が
 // _setDeferredEntryPickResolver で注入する — stack コアから @/ai への依存を作らないため
@@ -57,6 +63,7 @@ function entryToCtx(entry: EffectStackEntry): EffectCtx {
       area: 'scene',
       cardId: entry.source.cardId,
       uid: entry.source.uid,
+      resolutionKind: entry.source.resolutionKind,
     },
     // 2026-05-27 (Option C follow-up): entry.bindings に queue 時点の値があれば復元。
     // `$contact.byUid` 等の bind ref が atom-handler 実行時に正しく解決されるよう保証。
@@ -173,6 +180,10 @@ export function next(state: GameState): EffectStackEntry | null {
  *   - effect:resolve:end   { effectId } — 解決終了時 (resolved 状態に遷移後)
  */
 export function runOne(state: GameState, entry: EffectStackEntry): void {
+  if (state.gameResult !== undefined) {
+    cancelPendingAfterGameEnd(state);
+    return;
+  }
   entry.state = 'resolving';
   event.emit(state, 'effect:resolve:start', { effectId: entry.id }, entry.source);
   const ctx = entryToCtx(entry);
@@ -201,6 +212,10 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
  */
 export function runAllUntilEmpty(state: GameState): void {
   for (let i = 0; i < SAFETY_CAP; i++) {
+    if (state.gameResult !== undefined) {
+      cancelPendingAfterGameEnd(state);
+      return;
+    }
     // A deck-order decision is a hard resolution boundary. Do not let a later
     // stack entry overwrite the single side-channel before the user confirms it.
     if (_peekPendingDeckReorderSide() || _peekPendingDeckPlaceSide()) return;

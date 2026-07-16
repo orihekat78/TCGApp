@@ -40,11 +40,11 @@ export async function getGameState(page: Page): Promise<GameStateLike> {
   })) as GameStateLike;
 }
 
-export async function dispatchAction(page: Page, action: unknown): Promise<void> {
-  await page.evaluate((act) => {
+export async function dispatchAction<T = { ok: boolean; reason?: string }>(page: Page, action: unknown): Promise<T> {
+  return (await page.evaluate((act) => {
     const w = window as unknown as GameWindow;
-    w.__game.dispatch(act);
-  }, action);
+    return w.__game.dispatch(act) as unknown;
+  }, action)) as T;
 }
 
 export async function getActionContext(

@@ -211,6 +211,12 @@
 .partner-area .card.color-purple {
   border-color: color-mix(in oklch, var(--color-purple) 70%, white 10%);
 }
+.partner-area .card.color-black {
+  border-color: color-mix(in oklch, var(--color-black) 65%, white 30%);
+}
+.partner-area .card.color-white {
+  border-color: color-mix(in oklch, var(--color-white) 80%, #8aa0b8 20%);
+}
 
 .partner-area .card .color-stripe {
   height: 7px;
@@ -221,6 +227,8 @@
 .partner-area .card.color-red    .color-stripe { background: var(--color-red); }
 .partner-area .card.color-green  .color-stripe { background: var(--color-green); }
 .partner-area .card.color-purple .color-stripe { background: var(--color-purple); }
+.partner-area .card.color-black  .color-stripe { background: var(--color-black); }
+.partner-area .card.color-white  .color-stripe { background: var(--color-white); }
 
 .partner-area .card .art {
   flex: 1;

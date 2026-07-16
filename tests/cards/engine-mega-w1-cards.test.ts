@@ -107,7 +107,11 @@ describe('PR136 伊織無我 a3 (production trigger 経路)', () => {
     applyPickAndContinuation(s, pending!, oSurvivorUid); // 相手側 host を明示 pick
     const oHost = s.players.opp.scene.find(c => c.uid === oSurvivorUid)!;
     expect(oHost.setCards.map(e => ({ cardId: e.cardId, faceUp: e.faceUp }))).toEqual([{ cardId: 'ODECK1', faceUp: false }]); // 持ち主=opp のデッキ
-    expect(s.players.opp.deck).toHaveLength(0);
+    // set は成立。その取得で deck0 になり、先に contact-ap で remove 済みの VICTIM を即 refresh。
+    expect(s.players.opp.deck).toEqual(['VICTIM']);
+    expect(s.players.opp.remove).toHaveLength(0);
+    expect(s.refreshCount.opp).toBe(1);
+    expect(s.players.self.evidence).toHaveLength(1);
     expect(s.players.self.deck).toEqual(['SDECK1']); // 自分のデッキは不変
   });
 

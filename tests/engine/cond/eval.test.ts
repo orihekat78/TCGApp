@@ -358,7 +358,7 @@ describe('engine.cond.eval', () => {
       registerCardDef(defOf({ id: 'EVENT', kind: 'event' }));
       let s = createEmptyGameState();
       s = { ...s, players: { ...s.players, self: { ...s.players.self, remove: [...Array(14).fill('A'), 'EVENT'] } } };
-      const ctx = makeCtx({ source: { player: 'self', area: 'hand', cardId: 'EVENT' } } as Partial<EffectCtx>);
+      const ctx = makeCtx({ source: { player: 'self', area: 'hand', cardId: 'EVENT', resolutionKind: 'normal-event' } } as Partial<EffectCtx>);
       expect(evalCond(s, { kind: 'removeCountAtLeast', player: 'self', n: 15 }, ctx)).toBe(false);
     });
   });

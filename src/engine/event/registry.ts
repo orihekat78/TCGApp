@@ -52,6 +52,9 @@ function normalizeSource(raw: unknown): EffectStackEntrySource {
     const src: EffectStackEntrySource = { player };
     if (typeof r.uid === 'string') src.uid = r.uid;
     if (typeof r.cardId === 'string') src.cardId = r.cardId;
+    if (r.resolutionKind === 'normal-event' || r.resolutionKind === 'hirameki' || r.resolutionKind === 'cutin') {
+      src.resolutionKind = r.resolutionKind;
+    }
     return src;
   }
   return { player: 'self' };

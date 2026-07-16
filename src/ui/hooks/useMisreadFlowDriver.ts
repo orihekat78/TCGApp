@@ -16,9 +16,14 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from './useEngineDispatch.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 
+function getHumanPlayerSide(): 'self' | 'opp' | null {
+  return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+}
+
 export function useMisreadFlowDriver(): void {
   const pending = useGameStateStore((s) => s.pendingMisread);
   const gameState = useGameStateStore((s) => s.gameState);
+  const spectatorMode = useGameStateStore((s) => s.spectatorMode);
 
   useEffect(() => {
     if (!pending || !gameState) return;
@@ -27,12 +32,13 @@ export function useMisreadFlowDriver(): void {
       useGameStateStore.getState().setPendingMisread(null);
       return;
     }
-    if (pending.reasoningPlayer === 'opp') return; // AI 推理 / 人間 defender: モーダル待ち
+    const humanPlayer = spectatorMode ? null : getHumanPlayerSide();
+    if (humanPlayer === pending.player) return;
     // 人間推理 / AI defender: HeuristicPolicy 自動判定
     const ai = new HeuristicPolicy();
     const picks = ai.chooseMisreadTriggers
       ? ai.chooseMisreadTriggers(gameState, pending.reasoningUid, pending.candidates)
       : []; // フォールバック: 全スキップ
     dispatchEngineAction({ type: 'misreadResolve', picks });
-  }, [pending, gameState]);
+  }, [pending, gameState, spectatorMode]);
 }

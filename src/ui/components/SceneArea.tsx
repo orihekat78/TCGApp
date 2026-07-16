@@ -31,7 +31,7 @@ export function pickRemovedCharacters(
 
 const GHOST_DURATION_MS = 420;
 
-export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
+export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple' | 'black' | 'white';
 
 // cardId → 表示用メタを解決する関数 (CardDB と疎結合に保つための注入点)
 export type ResolvedCardMeta = {

@@ -58,7 +58,7 @@ const SCENARIOS: ProbeScenario[] = [
       selfScene: SCENE3,
       oppScene: [{ cardId: 'OPPC', uid: 'uo' }],
       remove: ['R5', 'R4', 'R1', 'R3'],
-      deckSize: 9, fileCount: 3,
+      deckSize: 10, fileCount: 3, // cost 9枚後も1枚残し、remove選択をrefreshから分離
     },
     drive: { kind: 'declared', uid: 'u0', abilityId: 'a1' === 'a1' ? 'a2' : 'a2' },
     script: [
@@ -103,7 +103,7 @@ const SCENARIOS: ProbeScenario[] = [
       selfScene: SCENE3,
       oppScene: [{ cardId: 'OPPC', uid: 'uo' }],
       remove: ['R5', 'R4', 'R3'],
-      deckSize: 9, fileCount: 3,
+      deckSize: 10, fileCount: 3, // cost 9枚後も1枚残し、remove選択をrefreshから分離
     },
     drive: { kind: 'declared', uid: 'u0', abilityId: 'a2' },
     script: [{ pickCardId: 'R5' }, { pickCardId: 'R4' }], // lv1 prompt は候補0で出ない

@@ -65,7 +65,7 @@ describe('engine-extension reasoning-hook batch #3 (2026-06-06)', () => {
       sceneChar('L7X', 'l7'),
       sceneChar('L4X', 'l4'), sceneChar('L6X', 'l6'),
     ];
-    s.players.self.deck = ['D08005']; // 推理 LP1 で 1 枚消費
+    s.players.self.deck = ['D08005', 'D08009']; // LP1後も1枚残し、triggerをdeck-outから分離
     s = produce(s, (d) => {
       doReasoning(d, 'mat#1');
       runAllUntilEmpty(d);
@@ -96,8 +96,8 @@ describe('engine-extension reasoning-hook batch #3 (2026-06-06)', () => {
     let s: GameState = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('B03096', 'mgr#1')];
-    // self deck: [推理 LP1 で消費する 1 枚, 発見ドローで引く 1 枚]
-    s.players.self.deck = ['D08005', 'D08013'];
+    // self deck: [推理LP1, 発見ドロー, terminal回避フィラー]
+    s.players.self.deck = ['D08005', 'D08013', 'D08009'];
     // opp deck top = Lv8 (発見 = 条件成立)
     s.players.opp.deck = ['L8X', 'OPPF2', 'OPPF3'];
     s = produce(s, (d) => {

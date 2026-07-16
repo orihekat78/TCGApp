@@ -11,7 +11,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from 'immer';
 import { event } from '@/engine/event/index';
-import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
+import { registerTriggeredListener, _resetTriggeredRegistered, _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { registerMisreadListener, _resetMisreadRegistered, _resetPendingMisread, _drainPendingMisread } from '@/engine/listeners/misread';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { cutIn, canCutIn } from '@/engine/flow/contact';
@@ -252,6 +252,7 @@ describe('wave3 G04 — misread:performed observer (人間 defender / UI dispatc
   };
   beforeEach(() => {
     event._resetRegistry(); _resetTriggeredRegistered(); _resetMisreadRegistered(); _resetPendingMisread();
+    _setHumanPlayerSide('self');
     _resetUidCounter(); resetDefRegistry();
     // 推理キャラ R(opp) / 相手観測 OBS(opp, side:opp) / misread+自己観測 M(self, selfOnly)
     registerCardDef(defOf({ id: 'R', lp: 1000 }));

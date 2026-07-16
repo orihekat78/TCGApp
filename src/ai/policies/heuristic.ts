@@ -472,13 +472,6 @@ export class HeuristicPolicy implements AIPolicy {
  *   - scene のキャラは engine.read.char.lp で apOverride / lpOverride 反映済みの値
  */
 function lpOf(state: GameState, uid: string): number {
-  if (uid === 'partner:self' || uid === 'partner:opp') {
-    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
-    const cardId = state.players[p].partner.cardId;
-    if (!cardId) return 0;
-    const def = engine.cards.get(cardId);
-    return def?.lp ?? 0;
-  }
   return engine.read.char.lp(state, uid);
 }
 

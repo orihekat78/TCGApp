@@ -34,6 +34,8 @@
   --color-red:      #c84040;
   --color-green:    #3aa67a;
   --color-purple:   #8a4cc0;
+  --color-black:    #3b3f46;
+  --color-white:    #e8e8e8;
 
   /* ---- State (opacity = mock 仕様) ---- */
   --state-sleep:    rgba(40, 80, 200, 0.6);

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `9a6cfaeb5527`
+> Source hash: `4db7d33be9b5`
 
 `src/engine/read/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -28,10 +28,11 @@
 - [`19-special-rules.md`](../by-rule/19-special-rules.md)
 - [`26-07-02.md`](../by-rule/26-07-02.md)
 
-## 📄 ソース (12)
+## 📄 ソース (13)
 
 - [`src/engine/read/char.ts`](../../../../src/engine/read/char.ts)
 - [`src/engine/read/def.ts`](../../../../src/engine/read/def.ts)
+- [`src/engine/read/effect-source.ts`](../../../../src/engine/read/effect-source.ts)
 - [`src/engine/read/game.ts`](../../../../src/engine/read/game.ts)
 - [`src/engine/read/hand-cutin.ts`](../../../../src/engine/read/hand-cutin.ts)
 - [`src/engine/read/index.ts`](../../../../src/engine/read/index.ts)

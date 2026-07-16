@@ -12,11 +12,14 @@
 // resolver 由来のサブ効果) を許容するため string で受ける。
 
 import type { Effect, Condition } from './effect.js';
+import type { EffectResolutionKind } from './effect-ctx.js';
 
 export type EffectStackEntrySource = {
   uid?: string;
   cardId?: string;
   player: 'self' | 'opp';
+  /** Explicit source-card lifecycle; preserved across the JSON stack boundary. */
+  resolutionKind?: EffectResolutionKind;
 };
 
 export type EffectStackEntryTrigger = {

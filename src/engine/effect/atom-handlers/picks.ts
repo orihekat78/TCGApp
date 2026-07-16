@@ -3,8 +3,9 @@ import { mutate } from '../../mutate/index.js';
 import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj, tryRePickFromAtom } from '../resolve-picks.js';
 import { pushPendingEffectPickSide } from '../pending-state.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
+import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber } from './_shared.js';
-import type { Player, PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
+import type { PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
 import type { GameState, EffectCtx, Candidate, AtomVerb, TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
 
@@ -392,12 +393,8 @@ export function atomBoundToRemove(s: GameState, a: Record<string, unknown>, ctx:
         }
       }
       mutate.remove.add(s, p, splicedIds);
-      if (s.players[p].deck.length === 0) {
-        const r = mutate.deck.refresh(s, p);
-        if (!r.ok && s.gameResult === undefined) {
-          const winner: Player = p === 'self' ? 'opp' : 'self';
-          mutate.gameResult.set(s, winner, 'deck-out');
-        }
+      if (splicedIds.length > 0) {
+        mutate.deck.refreshAfterTake(s, p, removeExcludedSourceCardId(ctx, p));
       }
       mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:boundToRemove', result: String(splicedIds.length) });
       return;

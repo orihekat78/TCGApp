@@ -262,7 +262,7 @@ export function handUseCard(
     // kind/cardId のみ参照するため無影響。現状の B07016/B08020 a2 は condition turn:self による
     // 間接実装 (イベント使用は使用者ターンに限る) で side を遮蔽している。
     { kind: emitKind, cardId, player: p },
-    { player: p, cardId },
+    { player: p, cardId, ...(d?.kind === 'event' ? { resolutionKind: 'normal-event' as const } : {}) },
   );
   // キャラの場合: 現場へ登場 (rules/05 §01 + rules/06 + rules/12 §3 — アクティブ・名乗り状態で登場)
   // NextHint と同じパターン (flow/main/next-hint.ts L105-119) を踏襲。

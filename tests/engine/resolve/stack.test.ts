@@ -67,6 +67,25 @@ describe('engine.resolve.stack', () => {
       expect(result.pendingEffects[0].state).toBe('resolved');
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(100);
     });
+
+    it('cancels queued effects without mutation after the game has ended', () => {
+      const s = newStateWithChar();
+      const first = makeEntry(s, {
+        kind: 'atom', verb: 'charModifyAP',
+        args: { uid: 'A#1', delta: 100, scope: 'turn' },
+      }, { id: 'first' });
+      const second = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { id: 'second' });
+      const result = produce(s, draft => {
+        resolve.queue(draft, first);
+        resolve.queue(draft, second);
+        draft.gameResult = { winner: 'opp', reason: 'deck-out' };
+        resolve.runOne(draft, draft.pendingEffects[0]!);
+      });
+
+      expect(result.pendingEffects.map(entry => entry.state)).toEqual(['cancelled', 'cancelled']);
+      expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBeUndefined();
+      expect(result.gameResult).toEqual({ winner: 'opp', reason: 'deck-out' });
+    });
   });
 
   describe('ordering', () => {
@@ -164,6 +183,22 @@ describe('engine.resolve.stack', () => {
       expect(result.pendingEffects[0].state).toBe('resolved'); // seed
       expect(result.pendingEffects[1].state).toBe('resolved'); // child
       expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBe(7);
+    });
+
+    it('cancels the pending stack when a terminal result already exists', () => {
+      const s = newStateWithChar();
+      const e = makeEntry(s, {
+        kind: 'atom', verb: 'charModifyAP',
+        args: { uid: 'A#1', delta: 100, scope: 'turn' },
+      });
+      const result = produce(s, draft => {
+        resolve.queue(draft, e);
+        draft.gameResult = { winner: 'opp', reason: 'deck-out' };
+        resolve.runAllUntilEmpty(draft);
+      });
+
+      expect(result.pendingEffects[0]?.state).toBe('cancelled');
+      expect(result.players.self.scene[0].turnEffects['apMod_turn']).toBeUndefined();
     });
 
     it('safety cap throws after 1000 iterations with entry context in message', () => {

@@ -95,6 +95,9 @@ describe('BUG-111 continuation-nest — sequence[chain[pausing-pick, step2], ste
     expect(s.players.self.hand, 'chain remainder(discard) が実行され手札が 1 枚減る (2-1+1=2)').toHaveLength(2);
     // sequence remainder(draw) が discard の再 pause を跨いで実行され DRAW1 が手札へ
     expect(s.players.self.hand, 'sequence remainder(draw) が再 pause を跨いで実行').toContain('DRAW1');
-    expect(s.players.self.deck, 'deck 消費 (draw 実行済)').toEqual([]);
+    // DRAW1 取得で deck が空になった直後、BUG-166/176 の公式refreshで
+    // discard済みH0が新deckへ戻る。DRAW1が手札にあることが継続実行の証明。
+    expect(s.players.self.deck, 'exact exhaustion後にremoveのH0をrefresh').toEqual(['H0']);
+    expect(s.players.self.remove, 'refresh後のremoveは空').toEqual([]);
   });
 });

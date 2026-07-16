@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { registerAll } from '@/cards';
 import { resolveEffectPicks, _clearPendingEffectPickQueue, _drainPendingEffectChoiceSide, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
@@ -28,6 +28,10 @@ const conditionalStunPick: Effect = {
 describe('binding-dependent conditional pick deferral', () => {
   beforeAll(() => registerAll());
   beforeEach(() => _clearPendingEffectPickQueue());
+  afterEach(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+    _clearPendingEffectPickQueue();
+  });
 
   it('does not surface either branch before its binding is produced', () => {
     const state = createEmptyGameState();
@@ -166,5 +170,81 @@ describe('binding-dependent conditional pick deferral', () => {
     });
     expect(state.players.opp.scene[0]?.state).toBe('active');
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+  });
+
+  it('resolves an AI-owned runtime Pattern-B continuation without a human pending pick', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const state = createEmptyGameState();
+    state.players.opp.hand = ['D08015', 'D08017'];
+    const effect: Effect = {
+      kind: 'conditional', if: { kind: 'bound', key: '$ready', presence: 'matched' },
+      then: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
+    } as Effect;
+    const effectCtx: EffectCtx = {
+      source: { player: 'opp', area: 'scene', cardId: 'AI', abilityId: 'a1' }, bindings: {},
+    };
+    const walked = resolveEffectPicks(state, effect, effectCtx, {
+      humanChooser: false, byPlayer: 'opp', source: { cardId: 'AI', abilityId: 'a1' },
+    });
+    effectCtx.bindings.$ready = [{ kind: 'card', cardId: 'READY', area: 'deck', player: 'opp' }];
+    runEffect(state, walked, effectCtx);
+    expect(_drainPendingEffectPickSide()).toBeNull();
+    expect(state.players.opp.hand).toHaveLength(1);
+    expect(state.players.opp.remove).toHaveLength(1);
+  });
+
+  it('preserves the AI target policy when Pattern-B candidates appear only at runtime', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const state = createEmptyGameState();
+    const effect: Effect = {
+      kind: 'conditional', if: { kind: 'bound', key: '$ready', presence: 'matched' },
+      then: { kind: 'atom', verb: 'discard', args: { player: 'self', n: 1 } },
+    } as Effect;
+    const effectCtx: EffectCtx = {
+      source: { player: 'opp', area: 'scene', cardId: 'AI', abilityId: 'a1' }, bindings: {},
+    };
+    const walked = resolveEffectPicks(state, effect, effectCtx, {
+      humanChooser: false,
+      byPlayer: 'opp',
+      source: { cardId: 'AI', abilityId: 'a1' },
+      chooseAtomTarget: (_s, _verb, _args, candidates) =>
+        candidates.find((candidate) => candidate.kind === 'card' && candidate.cardId === 'D08017') ?? null,
+    });
+
+    // The initial walk has no legal candidate. Rebuild the runtime context
+    // across a real serialization boundary, then create two candidates only
+    // before execution. Object-identity policy markers cannot survive this.
+    const runtimeCtx = structuredClone(effectCtx) as EffectCtx;
+    state.players.opp.hand = ['D08015', 'D08017'];
+    runtimeCtx.bindings.$ready = [{ kind: 'card', cardId: 'READY', area: 'deck', player: 'opp' }];
+    runEffect(state, walked, runtimeCtx);
+
+    expect(_drainPendingEffectPickSide()).toBeNull();
+    expect(state.players.opp.hand).toEqual(['D08015']);
+    expect(state.players.opp.remove).toEqual(['D08017']);
+  });
+
+  it('resolves a human-owned opp-of-owner runtime Pattern-B continuation on the AI side', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const state = createEmptyGameState();
+    state.players.opp.hand = ['D08015', 'D08017'];
+    const effect: Effect = {
+      kind: 'conditional', if: { kind: 'bound', key: '$ready', presence: 'matched' },
+      then: {
+        kind: 'atom', verb: 'discard', args: {
+          player: 'opp', n: 1,
+          target: { kind: 'pick', chooser: 'opp-of-owner', n: { min: 1, max: 1 }, query: { area: 'hand', side: 'opp' } },
+        },
+      },
+    } as Effect;
+    const effectCtx = ctx();
+    const walked = resolveEffectPicks(state, effect, effectCtx, {
+      humanChooser: true, byPlayer: 'self', source: { cardId: 'TEST', abilityId: 'a1' },
+    });
+    effectCtx.bindings.$ready = [{ kind: 'card', cardId: 'READY', area: 'deck', player: 'self' }];
+    runEffect(state, walked, effectCtx);
+    expect(_drainPendingEffectPickSide()).toBeNull();
+    expect(state.players.opp.hand).toHaveLength(1);
+    expect(state.players.opp.remove).toHaveLength(1);
   });
 });

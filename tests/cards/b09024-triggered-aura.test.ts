@@ -80,7 +80,12 @@ describe('B09024 triggered ability aura', () => {
     runAllUntilEmpty(s);
 
     expect(s.players.self.hand).toEqual(['DRAW']);
-    expect(s.players.self.remove).toEqual(expect.arrayContaining(['OSAKA', 'DECOY']));
+    // DRAW 取得で deck が exact exhaustion → 先に remove 済みの OSAKA は即 refresh。
+    // その後に捨てた DECOY だけが remove に残る (rules/14, 26)。
+    expect(s.players.self.deck).toEqual(['OSAKA']);
+    expect(s.players.self.remove).toEqual(['DECOY']);
+    expect(s.refreshCount.self).toBe(1);
+    expect(s.players.opp.evidence).toHaveLength(1);
   });
 
   it('two aura bearers create two independently queued triggers', () => {

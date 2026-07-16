@@ -41,7 +41,7 @@ describe('engine-extension reasoning-hook batch (2026-06-06)', () => {
     let s: GameState = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('B01074', 'hyd#1')];
-    s.players.self.deck = ['D08005']; // LP1 推理用フィラー
+    s.players.self.deck = ['D08005', 'D08009']; // LP1後も1枚残し、reasoning:endをdeck-outから分離
     s = produce(s, (d) => {
       doReasoning(d, 'hyd#1');
       runAllUntilEmpty(d);
@@ -74,7 +74,7 @@ describe('engine-extension reasoning-hook batch (2026-06-06)', () => {
     let s: GameState = createEmptyGameState();
     s.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('B03102', 'ykm#1'), sceneChar('D02009', 'pol#1')];
-    s.players.self.deck = ['D08005'];
+    s.players.self.deck = ['D08005', 'D08009'];
     s = produce(s, (d) => { doReasoning(d, 'pol#1'); runAllUntilEmpty(d); });
     expect(readChar.ap(s, 'ykm#1'), '自分側[警察]Lv≤4 の推理で AP+1000 (5000→6000)').toBe(6000);
 
@@ -82,7 +82,7 @@ describe('engine-extension reasoning-hook batch (2026-06-06)', () => {
     let s2: GameState = createEmptyGameState();
     s2.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     s2.players.self.scene = [sceneChar('B03102', 'ykm#1'), sceneChar('D08009', 'boy#1')];
-    s2.players.self.deck = ['D08005'];
+    s2.players.self.deck = ['D08005', 'D08009'];
     s2 = produce(s2, (d) => { doReasoning(d, 'boy#1'); runAllUntilEmpty(d); });
     expect(readChar.ap(s2, 'ykm#1'), '非[警察]の推理では buff 不発').toBe(5000);
   });
@@ -92,7 +92,7 @@ describe('engine-extension reasoning-hook batch (2026-06-06)', () => {
     s.turn = { number: 5, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('B03102', 'ykm#1')];
     s.players.opp.scene = [sceneChar('D02009', 'opol#1')];
-    s.players.opp.deck = ['D08005'];
+    s.players.opp.deck = ['D08005', 'D08009'];
     s = produce(s, (d) => { doReasoning(d, 'opol#1'); runAllUntilEmpty(d); });
     expect(readChar.ap(s, 'ykm#1'), '相手側[警察]の推理では不発 (side:self)').toBe(5000);
   });

@@ -338,6 +338,10 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       if (!ctx.costPaid) ctx.costPaid = {};
       const prior = (ctx.costPaid['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
       ctx.costPaid['removeDeckTop'] = { ids: [...prior, ...removed] };
+      // BUG-180: exact payment has no next deck operation to trigger the old
+      // pre-take guard. The paid cards are already in remove and participate in
+      // this immediate refresh (rules/14, rules/21, rules/26).
+      if (removed.length > 0) mutate.deck.refreshAfterTake(state, cost.player);
       return;
     }
     // engine A3 wave (2026-07-11, B09107): デッキ全部リムーブ。removeFromTop(deck.length) で全除去。
@@ -350,13 +354,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const p = ctx.source.player;
       const removed = mutate.deck.removeFromTop(state, p, state.players[p].deck.length);
       acc.paidItems.push({ kind: 'removeDeckAll', details: { removed } });
-      if (state.players[p].deck.length === 0) {
-        const r = mutate.deck.refresh(state, p);
-        if (!r.ok && state.gameResult === undefined) {
-          const winner: 'self' | 'opp' = p === 'self' ? 'opp' : 'self';
-          mutate.gameResult.set(state, winner, 'deck-out');
-        }
-      }
+      mutate.deck.refreshAfterTake(state, p);
       return;
     }
     case 'discardEvidence': {

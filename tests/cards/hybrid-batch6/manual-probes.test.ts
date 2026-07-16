@@ -174,7 +174,7 @@ function drainScript(s: GameState, script: ScriptAction[]): { recorded: Recorded
     }
     break;
   }
-  if (i < script.length) throw new Error(`${script.length - i} leftover script action(s) but no more prompts (over-scripted)`);
+  if (i < script.length) throw new Error(`${script.length - i} leftover script action(s) but no more prompts (over-scripted); recorded=${JSON.stringify(recorded)}`);
   return { recorded, prompts };
 }
 
@@ -370,18 +370,18 @@ describe('B07054 a1【パートナー白】event-use → conditional(and[黒羽�
     const sleeperUid = s.players.self.scene.find((c) => c.cardId === 'SLEEPER')!.uid;
     handUseCard(s, 'self', 'B07054');
     runAllUntilEmpty(s);
-    // MANUAL-NOTE: この then は outer sequence の 3 サブ効果の pick が **逆順** に surface する
-    //   (実測 2026-07-10): [0]=sceneSetState(stun) / [1]=charSetTurnEffect(actionTargetsActive) /
-    //   [2]=charModifyAP(+2000&突撃)。各 atom は自身の対象を pick するため語義は保たれる (順序のみ engine 実測に追従)。
-    const { recorded } = drainScript(s, [{ pickCardId: 'SLEEPER' }, { pickCardId: 'AOKO' }, { pickCardId: 'KAITO' }]);
-    expect(recorded[0]?.verb, '[0] = sceneSetState(stun)').toBe('sceneSetState');
-    expect(recorded[0]?.cardIds, 'stun 対象(sleep lv≤7) は lv8 SLEEP8 を除外').not.toContain('SLEEP8');
-    expect(recorded[2]?.verb, '[2] = charModifyAP(白)').toBe('charModifyAP');
-    expect(recorded[2]?.cardIds, 'charModifyAP(白) は 赤 REDCH を除外').not.toContain('REDCH');
+    // MANUAL-NOTE: 公式記載順どおり AP+2000&突撃 → stun → actionTargetsActive。
+    const { recorded } = drainScript(s, [{ pickCardId: 'KAITO' }, { pickCardId: 'SLEEPER' }, { pickCardId: 'AOKO' }]);
+    expect(recorded[0]?.verb, '[0] = charModifyAP(白)').toBe('charModifyAP');
+    expect(recorded[0]?.cardIds, 'charModifyAP(白) は 赤 REDCH を除外').not.toContain('REDCH');
+    expect(recorded[1]?.verb, '[1] = sceneSetState(stun)').toBe('sceneSetState');
+    expect(recorded[1]?.cardIds, 'stun 対象(sleep lv≤7) は lv8 SLEEP8 を除外').not.toContain('SLEEP8');
+    expect(recorded[2]?.verb, '[2] = charSetTurnEffect(白)').toBe('charSetTurnEffect');
     expect(engine.read.char.ap(s, kaitoUid), 'KAITO AP 3000+2000').toBe(5000);
     expect(engine.read.char.keywords(s, kaitoUid), 'KAITO に 突撃').toContain('突撃');
     expect(s.players.self.scene.find((c) => c.uid === sleeperUid)?.state, 'SLEEPER stun').toBe('stun');
     expect(engine.read.char.hasTextAbility(s, aokoUid, 'actionTargetsActive'), 'AOKO に actionTargetsActive 付与').toBe(true);
+    expect(_drainPendingEffectPickSide(), '3効果解決後に pending pick が残らない').toBeNull();
   });
 
   it('negative: パートナー青 → 【パートナー白】不成立 → 不発火 (prompt なし / AP据置)', () => {

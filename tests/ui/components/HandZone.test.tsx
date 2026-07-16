@@ -128,8 +128,8 @@ describe('HandZone', () => {
     expect(html).not.toMatch(/disabled/);
   });
 
-  it('renders all 5 color classes for cards', () => {
-    const colors: HandCardMeta['color'][] = ['blue', 'yellow', 'red', 'green', 'purple'];
+  it('renders all 7 color classes for cards', () => {
+    const colors: HandCardMeta['color'][] = ['blue', 'yellow', 'red', 'green', 'purple', 'black', 'white'];
     const cards: HandCardMeta[] = colors.map((color, i) => card({ cardId: `c-${i}`, color }));
     const html = strip(renderToString(<HandZone cards={cards} expanded={true} />));
     for (const color of colors) {

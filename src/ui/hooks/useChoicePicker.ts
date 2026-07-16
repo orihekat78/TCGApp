@@ -81,11 +81,15 @@ function settle(choice: ChoiceResult): void {
   if (resolver) resolver(choice);
 }
 
+export function cancelChoicePicker(): void {
+  settle({ kind: 'cancel' });
+}
+
 export function useChoicePicker(): ChoicePicker {
   return {
     current: useChoicePickerStore.getState().current,
     ask: askChoice,
     choose: (index) => settle({ kind: 'choose', index }),
-    cancel: () => settle({ kind: 'cancel' }),
+    cancel: cancelChoicePicker,
   };
 }

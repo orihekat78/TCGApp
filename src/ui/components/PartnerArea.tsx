@@ -49,6 +49,8 @@ const COLOR_LABEL: Record<ResolvedCardMeta['color'], string> = {
   red:    '赤',
   green:  '緑',
   purple: '紫',
+  black:  '黒',
+  white:  '白',
 };
 
 /**

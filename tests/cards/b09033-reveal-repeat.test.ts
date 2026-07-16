@@ -71,7 +71,11 @@ describe('B09033 「ひょっとしたら…」', () => {
 
     expect(state.players.self.scene).toHaveLength(4);
     expect(state.players.self.file).toHaveLength(3);
-    expect(state.players.self.deck).toHaveLength(0);
+    // 4枚目の登場で exact exhaustion。反復コストで remove へ移した FILE 3枚を即 refresh。
+    expect(state.players.self.deck).toEqual([H1.id, H1.id, H1.id]);
+    expect(state.players.self.remove).toHaveLength(0);
+    expect(state.refreshCount.self).toBe(1);
+    expect(state.players.opp.evidence).toHaveLength(1);
   });
 
   it('同一カードIDでも、選択した公開window上の実体だけを登場させ、残った同IDを次の反復で選べる', () => {

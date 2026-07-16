@@ -250,9 +250,14 @@ describe('B08082 a2 — 相手ターン中の現場リムーブで 非黒char di
   it('S4 happy: turn=opp, 手札に赤char → 除去時に discard(赤) → draw 1', () => {
     const base = board('self', 'opp', [RED], [DKC]);
     const after = removeAndDrain(base, 'self');
-    expect(after.players.self.remove, '赤char を discard').toContain(RED);
     expect(after.players.self.hand, 'discard 後 draw で DKC が手札に').toEqual([DKC]);
-    expect(after.players.self.deck, 'デッキから1枚 draw').toEqual([]);
+    // DKC 取得で exact exhaustion。discard の RED と離場した B08082 は即 refresh。
+    expect(after.players.self.remove).toHaveLength(0);
+    expect(after.players.self.deck, 'discard/leave カードが refresh でデッキへ戻る')
+      .toEqual(expect.arrayContaining([RED, 'B08082']));
+    expect(after.players.self.deck).toHaveLength(2);
+    expect(after.refreshCount.self).toBe(1);
+    expect(after.players.opp.evidence).toHaveLength(1);
   });
 
   it('S5 gate + colorNot/kind decoy: 手札が 黒char と event のみ → 候補0 → discard も draw も無し', () => {

@@ -27,6 +27,7 @@ let previousMoveKind: Move['kind'] | null = null;
 export function _resetSpectatorDriving(): void {
   isDriving = false;
   previousMoveKind = null;
+  _lastConsumedStep = 0;
 }
 
 function driveSelfTurn(): void {

@@ -163,6 +163,14 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
   return targetFilterToPredicateWithCtx(undefined, filter);
 }
 
+/** 対戦セッションを跨いではならない atom 側の一時通知を一括消去する。 */
+export function resetPendingAtomSession(): void {
+  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = null;
+  (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
+  (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId = null;
+}
+
 /**
  * Context-aware deck-card filter.  Dynamic trigger payload filters must use
  * this path; absent state/payload fails closed.

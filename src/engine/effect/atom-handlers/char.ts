@@ -3,6 +3,7 @@ import { mutate } from '../../mutate/index.js';
 import { scene as readScene } from '../../read/scene.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { isShortFormDelta } from '../atom-pick-spec.js';
+import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { resolvePlayer, resolveBindRef, resolveDeltaToNumber, hasNorMax, paShortFormAwait } from './_shared.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx } from '../../types/index.js';
@@ -409,17 +410,15 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
         // リフレッシュ後に残りを解決する (公式Q&A B08033「残り全部セット→リフレッシュ→残り分セット」)。
         // host 存在は上で確認済 → ここで refresh して安全に shift できる (draw/fileAdd/evidenceGain と同型)。
         // remove も 0 なら refresh 失敗 = deck-out 敗北 (rules/14)。
-        if (s.players[sscP].deck.length === 0) {
-          const r = mutate.deck.refresh(s, sscP);
-          if (!r.ok) {
-            if (s.gameResult === undefined) {
-              mutate.gameResult.set(s, sscP === 'self' ? 'opp' : 'self', 'deck-out');
-            }
-            mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'empty-deck-refresh-fail' });
-            return;
-          }
+        const excludedSource = removeExcludedSourceCardId(ctx, sscP);
+        if (!mutate.deck.refreshAfterTake(s, sscP, excludedSource)) {
+          mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: 'empty-deck-refresh-fail' });
+          return;
         }
         scCardId = s.players[sscP].deck.shift()!;
+        // The old pre-take guard misses exact exhaustion when no later set
+        // remains. Refresh immediately after this completed transfer.
+        mutate.deck.refreshAfterTake(s, sscP, excludedSource);
       } else {
         scCardId = resolveBindRef(a.cardId, ctx) as string;
         if (typeof scCardId !== 'string' || scCardId.startsWith('$')) return;

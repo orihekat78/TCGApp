@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `c02acbc81554`
+> Source hash: `3ac90deaa334`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **131** ファイル（[全体 index](./index.md)）
+このグループ: **133** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (19)
 
@@ -89,7 +89,7 @@
 | [`src/engine/event/registry.ts`](../../../src/engine/event/registry.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/index.ts`](../../../src/engine/index.ts) | _(参照なし)_ |
 | [`src/engine/listeners/hirameki.ts`](../../../src/engine/listeners/hirameki.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
-| [`src/engine/listeners/misread.ts`](../../../src/engine/listeners/misread.ts) | [`13-keywords.md`](../../rules/13-keywords.md) |
+| [`src/engine/listeners/misread.ts`](../../../src/engine/listeners/misread.ts) | _(参照なし)_ |
 | [`src/engine/listeners/reserved-effects.ts`](../../../src/engine/listeners/reserved-effects.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/listeners/triggered.ts`](../../../src/engine/listeners/triggered.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) |
 | [`src/engine/produce.ts`](../../../src/engine/produce.ts) | _(参照なし)_ |
@@ -102,7 +102,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (57)
+## その他 (59)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -112,6 +112,7 @@
 | [`src/ui/hooks/movePresentationDelay.ts`](../../../src/ui/hooks/movePresentationDelay.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow.ts`](../../../src/ui/hooks/useActionsPanelFlow.ts) | [`26-05-11-ui-action-flows.md`](../../rules/26-05-11-ui-action-flows.md) |
 | [`src/ui/hooks/useActionsPanelFlow/cost.ts`](../../../src/ui/hooks/useActionsPanelFlow/cost.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useActionsPanelFlow/end-turn-contract.ts`](../../../src/ui/hooks/useActionsPanelFlow/end-turn-contract.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow/enumerators.ts`](../../../src/ui/hooks/useActionsPanelFlow/enumerators.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useActionsPanelFlow/flows.ts`](../../../src/ui/hooks/useActionsPanelFlow/flows.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useCardExpandModal.ts`](../../../src/ui/hooks/useCardExpandModal.ts) | _(参照なし)_ |
@@ -157,6 +158,7 @@
 | [`src/ui/services/deckBuilder.ts`](../../../src/ui/services/deckBuilder.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) |
 | [`src/ui/services/gameStarter.ts`](../../../src/ui/services/gameStarter.ts) | [`04-game-setup.md`](../../rules/04-game-setup.md) |
 | [`src/ui/services/handUseReason.ts`](../../../src/ui/services/handUseReason.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/ui/services/matchSession.ts`](../../../src/ui/services/matchSession.ts) | _(参照なし)_ |
 | [`src/ui/services/scenePick.ts`](../../../src/ui/services/scenePick.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/ui/services/tutorialSteps.ts`](../../../src/ui/services/tutorialSteps.ts) | [`01-curriculum-design.md`](../../rules/01-curriculum-design.md) |
 | [`src/ui/services/uidNames.ts`](../../../src/ui/services/uidNames.ts) | _(参照なし)_ |

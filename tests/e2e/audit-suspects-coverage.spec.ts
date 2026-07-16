@@ -11,8 +11,10 @@ import { setupGamePage, buildGameState, dispatchAction, getGameState } from './h
 async function prime(page: Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
-    const w = window as unknown as { __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void } } } };
-    w.__game.store.getState().setSpectatorMode(false);
+    const w = window as unknown as { __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void; setAiPaused: (v: boolean) => void } } } };
+    const store = w.__game.store.getState();
+    store.setSpectatorMode(false);
+    store.setAiPaused(true);
   });
 }
 
@@ -139,7 +141,7 @@ test.describe('audit suspects runtime coverage (2026-06-05)', () => {
       self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
       self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['黄'], declaredUseCount: {} };
       // self: B03091(警察,lv3,リムーブ対象) + 警察キャラ(pol) + 非警察キャラ(civ)
-      self.scene = [ mkC('B03091', 'tk#1'), mkC('D09008', 'pol#1'), mkC('D08013', 'civ#1') ];
+      self.scene = [ mkC('B03091', 'tk#1'), mkC('D11003', 'pol#1') ];
       self.hand = []; self.evidence = []; self.remove = []; self.deck = ['D08005','D08013'];
       // opp(AI): B01063 (cost=自分の他キャラをsleep / effect=level≤7 を1枚リムーブ) + sleep コスト用の補助キャラ
       opp.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
@@ -162,6 +164,17 @@ test.describe('audit suspects runtime coverage (2026-06-05)', () => {
     const uids = (pending?.candidates ?? []).map((c) => c.uid).sort();
     // 候補 = 自分の現場の[警察] (pol#1)。非警察 civ#1 と 相手キャラは除外。
     expect(uids, '自分の[警察] pol#1 のみ (非警察/相手は除外)').toEqual(['pol#1']);
+    const apBefore = await page.evaluate(() => {
+      const w = window as unknown as { __game: { getState: () => { gameState: unknown }; read: { char: { ap: (state: unknown, uid: string) => number } } } };
+      return w.__game.read.char.ap(w.__game.getState().gameState, 'pol#1');
+    });
+    expect(await dispatchAction(page, { type: 'effectPickResolve', pickedUid: 'pol#1' })).toMatchObject({ ok: true });
+    const apAfter = await page.evaluate(() => {
+      const w = window as unknown as { __game: { getState: () => { gameState: unknown }; read: { char: { ap: (state: unknown, uid: string) => number } } } };
+      return w.__game.read.char.ap(w.__game.getState().gameState, 'pol#1');
+    });
+    expect(apAfter - apBefore).toBe(1000);
+    expect(await getPendingEffectPick(page)).toBeNull();
     expect(errors).toEqual([]);
   });
 });

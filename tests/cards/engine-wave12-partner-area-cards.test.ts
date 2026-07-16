@@ -446,7 +446,9 @@ describe('§F2 B07060 — deck0 draw→refresh は解決中イベントを除外
       d.players.self.file = [FB, FB, FB];
       d.players.self.hand = ['B07060'];
       d.players.self.deck = []; // draw で即 refresh
-      d.players.self.remove = ['OTHER']; // refresh 可能 (remove 0 なら敗北)
+      // 2 枚必要: pre-draw refresh 後に 1 枚引いても deck が残る。
+      // 1 枚だけなら、引き切り直後の 2 回目 refresh 不能で正常に deck-out。
+      d.players.self.remove = ['OTHER', 'TGT8000'];
     });
     s = produce(s, (d) => {
       handUseCard(d, 'self', 'B07060');

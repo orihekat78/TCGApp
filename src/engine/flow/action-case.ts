@@ -123,16 +123,7 @@ export function gainSelfEvidence(state: GameState, ax: ActionGainCtx): void {
   }
   // engine拡張 wave#2 cluster3 (2026-06-13, BUG-142): rules/14「証拠を得る = リフレッシュ後に残り解決」。
   // 獲得前に deck0 なら refresh (fileAdd 同型の事前 guard)。remove0 なら敗北し、獲得も emit も行わない。
-  if (state.players[p].deck.length === 0) {
-    const r = mutate.deck.refresh(state, p);
-    if (!r.ok) {
-      if (state.gameResult === undefined) {
-        const winner: Player = p === 'self' ? 'opp' : 'self';
-        mutate.gameResult.set(state, winner, 'deck-out');
-      }
-      return;
-    }
-  }
+  if (!mutate.deck.refreshAfterTake(state, p)) return;
   const before = state.players[p].evidence.length;
   mutate.evidence.addFromDeck(state, p, 1, false, {
     turn: state.turn.number,
