@@ -2,15 +2,15 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `a9de04bba60d`
+> Source hash: `94cb7358c6df`
 
 ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/Users/arumi/AppData/Local/Temp/conan-phase1-review-2262547278ea4a0ca30fdbc1fff74a61`)
+- **対象ルート**: `.`
 - **ディレクトリ数**: 243
-- **ファイル数**: 4954
+- **ファイル数**: 4955
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -365,6 +365,7 @@
     - `BUG-199.md`
     - `BUG-200.md`
     - `BUG-201.md`
+    - `BUG-232.md`
     - `BUG-template.md`
     - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
@@ -5086,7 +5087,10 @@
   - **`scripts/`**
     - `check-wave-scope.test.ts`
     - `gen-codex-context.test.ts`
+    - `header-source-hash.test.ts`
     - `lint-bug-closure.test.ts`
+    - `markdown-eol.test.ts`
+    - `structure-root-portability.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト
     - `aggregate.test.ts` — tests/smoke/aggregate — Phase 9-A pure aggregation tests
     - `format-md.test.ts` — tests/smoke/format-md — Phase 9-A Markdown formatter tests
@@ -5207,9 +5211,6 @@
 - `start.bat`
 - `tsconfig.json` — TypeScript 設定
 - `vite.config.ts` — Vite ビルド設定
-- `vitest-clean.json`
-- `vitest-overlay-all.json`
-- `vitest-overlay-prod.json`
 - `vitest.config.ts` — Vitest 設定
 
 ---

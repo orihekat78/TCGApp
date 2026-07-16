@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `0e7507092474`
+> Source hash: `9d4c008f1941`
 
 Immer draft 上の primitive 変更操作
 

@@ -1,4 +1,4 @@
-import { dirname, resolve, relative, sep, posix } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readdirSync, readFileSync } from 'node:fs';
 import { renderHeader } from './lib/header.js';
@@ -69,8 +69,9 @@ const EXCLUDE_FILE_PATTERNS: RegExp[] = [
   /^\.env(\..+)?$/,
 ];
 
-function toPosix(p: string): string {
-  return p.split(sep).join(posix.sep);
+export function renderStructureRootSummary(projectRoot: string): string {
+  void projectRoot;
+  return '- **対象ルート**: `.`';
 }
 
 function shouldSkipDir(name: string, relPath: string): boolean {
@@ -207,7 +208,7 @@ function renderStructureMd(entries: FsEntry[], dict: Dictionary): string {
   const summary = [
     `## サマリ`,
     '',
-    `- **対象ルート**: \`${toPosix(relative(PROJECT_ROOT, PROJECT_ROOT)) || '.'}\` (\`${toPosix(PROJECT_ROOT)}\`)`,
+    renderStructureRootSummary(PROJECT_ROOT),
     `- **ディレクトリ数**: ${counts.dirs}`,
     `- **ファイル数**: ${counts.files}`,
     `- **辞書エントリ**: dirs ${Object.keys(dict.directories).length} / files ${Object.keys(dict.files).length}`,

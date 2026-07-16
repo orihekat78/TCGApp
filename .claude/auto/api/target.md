@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `ff00f169a8c6`
+> Source hash: `65bef674dd3d`
 
 候補抽出 + 選択検証（split-name / distinctNames 含む）
 
