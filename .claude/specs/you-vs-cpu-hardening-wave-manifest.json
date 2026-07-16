@@ -7,7 +7,9 @@
       "id": "BUG-130",
       "classification": "verified",
       "owner": "engine-effects",
-      "implementationPaths": ["src/engine/effect/resolve-picks.ts"],
+      "implementationPaths": [
+        "src/engine/effect/resolve-picks.ts"
+      ],
       "testPaths": [
         "tests/cards/bug-130-158-live-human-carrier.test.ts",
         "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
@@ -21,8 +23,14 @@
       "id": "BUG-140",
       "classification": "verified",
       "owner": "cards-tooling",
-      "implementationPaths": ["scripts/lint-icon-abilities.ts"],
-      "testPaths": ["tests/cards/bug-140-deferred-real-cards.test.ts"],
+      "implementationPaths": [
+        "scripts/lint-icon-abilities.ts",
+        "src/cards/ct-p05/B05039.ts",
+        "src/cards/ct-p06/B06035.ts"
+      ],
+      "testPaths": [
+        "tests/cards/bug-140-deferred-real-cards.test.ts"
+      ],
       "verificationCommands": [
         "npm run lint:icon-abilities",
         "npx vitest run tests/cards/bug-140-deferred-real-cards.test.ts"
@@ -33,7 +41,9 @@
       "id": "BUG-158",
       "classification": "verified",
       "owner": "engine-effects",
-      "implementationPaths": ["src/engine/effect/resolve-picks.ts"],
+      "implementationPaths": [
+        "src/engine/effect/resolve-picks.ts"
+      ],
       "testPaths": [
         "tests/cards/bug-130-158-live-human-carrier.test.ts",
         "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts"
@@ -49,7 +59,9 @@
       "owner": "engine-resolution",
       "implementationPaths": [
         "src/engine/read/effect-source.ts",
-        "src/engine/effect/resolver.ts"
+        "src/engine/effect/resolver.ts",
+        "src/engine/types/effect-ctx.ts",
+        "src/engine/types/effect-stack.ts"
       ],
       "testPaths": [
         "tests/engine/bug-166-176-event-resolution-provenance.test.ts",
@@ -64,7 +76,9 @@
       "id": "BUG-167",
       "classification": "verified",
       "owner": "engine-effects",
-      "implementationPaths": ["src/engine/effect/atom-handlers/scene.ts"],
+      "implementationPaths": [
+        "src/engine/effect/atom-handlers/scene.ts"
+      ],
       "testPaths": [
         "tests/engine/effect/bug-167-scene-set-state-chain-gate.test.ts"
       ],
@@ -79,7 +93,9 @@
       "owner": "engine-resolution",
       "implementationPaths": [
         "src/engine/cond/eval.ts",
-        "src/engine/read/effect-source.ts"
+        "src/engine/read/effect-source.ts",
+        "src/engine/types/effect-ctx.ts",
+        "src/engine/types/effect-stack.ts"
       ],
       "testPaths": [
         "tests/engine/bug-166-176-event-resolution-provenance.test.ts",
@@ -94,8 +110,20 @@
       "id": "BUG-180",
       "classification": "verified",
       "owner": "engine-resolution",
-      "implementationPaths": ["src/engine/mutate/deck.ts"],
-      "testPaths": ["tests/engine/bug-180-completed-deck-take-refresh.test.ts"],
+      "implementationPaths": [
+        "src/engine/mutate/deck.ts",
+        "src/engine/mutate/evidence.ts",
+        "src/engine/mutate/file.ts",
+        "src/engine/cost/pay.ts",
+        "src/engine/effect/atom-handlers/core.ts",
+        "src/engine/effect/atom-handlers/scene.ts",
+        "src/engine/effect/atom-handlers/char.ts",
+        "src/engine/effect/atom-handlers/picks.ts",
+        "src/engine/flow/action-case.ts"
+      ],
+      "testPaths": [
+        "tests/engine/bug-180-completed-deck-take-refresh.test.ts"
+      ],
       "verificationCommands": [
         "npx vitest run tests/engine/bug-180-completed-deck-take-refresh.test.ts"
       ],
@@ -124,8 +152,12 @@
       "id": "BUG-203",
       "classification": "verified",
       "owner": "root-ui",
-      "implementationPaths": ["src/ui/components/Playmat.tsx"],
-      "testPaths": ["tests/e2e/cutin-handzone-pick.spec.ts"],
+      "implementationPaths": [
+        "src/ui/components/Playmat.tsx"
+      ],
+      "testPaths": [
+        "tests/e2e/cutin-handzone-pick.spec.ts"
+      ],
       "verificationCommands": [
         "npx playwright test tests/e2e/cutin-handzone-pick.spec.ts"
       ],
@@ -137,10 +169,16 @@
       "owner": "shared-ui",
       "implementationPaths": [
         "src/ui/components/EffectDecisionModalHosts.tsx",
-        "meta-app/src/screens/RealMatchView.tsx"
+        "meta-app/src/screens/RealMatchView.tsx",
+        "src/App.tsx",
+        "meta-app/src/main.tsx"
       ],
-      "testPaths": ["meta-app/tests/e2e/effect-decision-hosts.spec.ts"],
+      "testPaths": [
+        "tests/cards/B09056-partner-assist.test.ts",
+        "meta-app/tests/e2e/effect-decision-hosts.spec.ts"
+      ],
       "verificationCommands": [
+        "npx vitest run tests/cards/B09056-partner-assist.test.ts",
         "npx playwright test --config meta-app/playwright.config.ts meta-app/tests/e2e/effect-decision-hosts.spec.ts"
       ],
       "nextWaveReason": null
@@ -153,7 +191,9 @@
         "src/ui/components/ActionsPanel.tsx",
         "src/ui/hooks/useActionsPanelFlow/flows.ts"
       ],
-      "testPaths": ["tests/ui/components/ActionsPanel.lock.test.tsx"],
+      "testPaths": [
+        "tests/ui/components/ActionsPanel.lock.test.tsx"
+      ],
       "verificationCommands": [
         "npx vitest run tests/ui/components/ActionsPanel.lock.test.tsx"
       ],
@@ -165,8 +205,22 @@
       "owner": "meta-ui",
       "implementationPaths": [
         "src/ui/services/matchSession.ts",
+        "meta-app/src/App.tsx",
         "meta-app/src/screens/ResultScreen.tsx",
-        "meta-app/src/screens/SetupScreen.tsx"
+        "meta-app/src/screens/SetupScreen.tsx",
+        "meta-app/src/screens/RealMatchView.tsx",
+        "meta-app/src/screens/TutorialScreen.tsx",
+        "meta-app/src/util/customGameStart.ts",
+        "src/ui/state/store.ts",
+        "src/ui/hooks/useChoicePicker.ts",
+        "src/ui/hooks/useConfirmation.ts",
+        "src/ui/hooks/useDeclareNamePicker.ts",
+        "src/ui/hooks/useEvidenceFlipPicker.ts",
+        "src/ui/hooks/useNextHintPicker.ts",
+        "src/ui/hooks/useStackedCardCostPicker.ts",
+        "src/ui/hooks/useTargetPicker.ts",
+        "src/ui/hooks/useOppTurnDriver.ts",
+        "src/ui/hooks/useSpectatorTurnDriver.ts"
       ],
       "testPaths": [
         "tests/meta/SetupScreen.lifecycle.test.tsx",
@@ -181,8 +235,12 @@
       "id": "BUG-207",
       "classification": "spec-out",
       "owner": "rules-adjudication",
-      "implementationPaths": ["src/engine/flow/main/hand-use-card.ts"],
-      "testPaths": ["tests/ui/bugs-207-209-218-adjudication.test.tsx"],
+      "implementationPaths": [
+        "src/engine/flow/main/hand-use-card.ts"
+      ],
+      "testPaths": [
+        "tests/ui/bugs-207-209-218-adjudication.test.tsx"
+      ],
       "verificationCommands": [
         "npx vitest run tests/ui/bugs-207-209-218-adjudication.test.tsx"
       ],
@@ -196,7 +254,9 @@
         "src/ui/hooks/useActionsPanelFlow/end-turn-contract.ts",
         "src/ui/hooks/useActionsPanelFlow/flows.ts"
       ],
-      "testPaths": ["tests/ui/hooks/useCanEndTurnForUi.test.tsx"],
+      "testPaths": [
+        "tests/ui/hooks/useCanEndTurnForUi.test.tsx"
+      ],
       "verificationCommands": [
         "npx vitest run tests/ui/hooks/useCanEndTurnForUi.test.tsx"
       ],
@@ -206,8 +266,12 @@
       "id": "BUG-209",
       "classification": "spec-out",
       "owner": "rules-adjudication",
-      "implementationPaths": ["src/ui/hooks/useActionsPanelFlow/flows.ts"],
-      "testPaths": ["tests/ui/bugs-207-209-218-adjudication.test.tsx"],
+      "implementationPaths": [
+        "src/ui/hooks/useActionsPanelFlow/flows.ts"
+      ],
+      "testPaths": [
+        "tests/ui/bugs-207-209-218-adjudication.test.tsx"
+      ],
       "verificationCommands": [
         "npx vitest run tests/ui/bugs-207-209-218-adjudication.test.tsx"
       ],
@@ -238,7 +302,9 @@
         "src/ui/hooks/useActionsPanelFlow/flows.ts",
         "src/ui/services/matchSession.ts"
       ],
-      "testPaths": ["tests/e2e/bug-211-212-product-path.spec.ts"],
+      "testPaths": [
+        "tests/e2e/bug-211-212-product-path.spec.ts"
+      ],
       "verificationCommands": [
         "npx playwright test tests/e2e/bug-211-212-product-path.spec.ts"
       ],
@@ -306,7 +372,9 @@
         "meta-app/src/screens/SetupScreen.tsx",
         "meta-app/src/util/customGameStart.ts"
       ],
-      "testPaths": ["meta-app/tests/e2e/setup-p2-custom-binding.spec.ts"],
+      "testPaths": [
+        "meta-app/tests/e2e/setup-p2-custom-binding.spec.ts"
+      ],
       "verificationCommands": [
         "npx playwright test --config meta-app/playwright.config.ts meta-app/tests/e2e/setup-p2-custom-binding.spec.ts"
       ],
@@ -316,10 +384,18 @@
       "id": "BUG-216",
       "classification": "verified",
       "owner": "meta-ui",
-      "implementationPaths": ["meta-app/src/data/cardPool.ts"],
-      "testPaths": ["tests/meta/cardDisplayResolvers.test.ts"],
+      "implementationPaths": [
+        "meta-app/src/data/cardPool.ts",
+        "meta-app/src/util/tutorialResolvers.ts",
+        "src/ui/services/cardResolvers.ts",
+        "src/ui/components/Playmat.tsx"
+      ],
+      "testPaths": [
+        "tests/meta/cardDisplayResolvers.test.ts",
+        "tests/ui/services/cardResolvers.test.ts"
+      ],
       "verificationCommands": [
-        "npx vitest run tests/meta/cardDisplayResolvers.test.ts"
+        "npx vitest run tests/meta/cardDisplayResolvers.test.ts tests/ui/services/cardResolvers.test.ts"
       ],
       "nextWaveReason": null
     },
@@ -327,8 +403,12 @@
       "id": "BUG-217",
       "classification": "verified",
       "owner": "meta-ui",
-      "implementationPaths": ["meta-app/src/screens/ResultScreen.tsx"],
-      "testPaths": ["tests/meta/ResultScreen.mvp.test.tsx"],
+      "implementationPaths": [
+        "meta-app/src/screens/ResultScreen.tsx"
+      ],
+      "testPaths": [
+        "tests/meta/ResultScreen.mvp.test.tsx"
+      ],
       "verificationCommands": [
         "npx vitest run tests/meta/ResultScreen.mvp.test.tsx"
       ],
@@ -338,8 +418,12 @@
       "id": "BUG-218",
       "classification": "spec-out",
       "owner": "rules-adjudication",
-      "implementationPaths": ["src/ui/hooks/useActionsPanelFlow/flows.ts"],
-      "testPaths": ["tests/ui/bugs-207-209-218-adjudication.test.tsx"],
+      "implementationPaths": [
+        "src/ui/hooks/useActionsPanelFlow/flows.ts"
+      ],
+      "testPaths": [
+        "tests/ui/bugs-207-209-218-adjudication.test.tsx"
+      ],
       "verificationCommands": [
         "npx vitest run tests/ui/bugs-207-209-218-adjudication.test.tsx"
       ],
@@ -349,7 +433,9 @@
       "id": "BUG-219",
       "classification": "verified",
       "owner": "root-ui",
-      "implementationPaths": ["src/ui/components/SpectatorHUD.css"],
+      "implementationPaths": [
+        "src/ui/components/SpectatorHUD.css"
+      ],
       "testPaths": [
         "tests/e2e/stacked-card-cost-picker.spec.ts",
         "tests/e2e/spectator-speed.spec.ts"
@@ -367,7 +453,9 @@
         "meta-app/src/screens/tutorial/TutorialLessonViewer.tsx",
         "meta-app/src/router/useGlobalShortcuts.ts"
       ],
-      "testPaths": ["meta-app/tests/e2e/tutorial.spec.ts"],
+      "testPaths": [
+        "meta-app/tests/e2e/tutorial.spec.ts"
+      ],
       "verificationCommands": [
         "npx playwright test --config meta-app/playwright.config.ts meta-app/tests/e2e/tutorial.spec.ts"
       ],
@@ -379,11 +467,16 @@
       "owner": "engine-resolution",
       "implementationPaths": [
         "src/engine/flow/main/reasoning.ts",
-        "src/engine/listeners/misread.ts"
+        "src/engine/listeners/misread.ts",
+        "src/ui/hooks/useEngineDispatch.ts",
+        "src/ui/hooks/useMisreadFlowDriver.ts"
       ],
-      "testPaths": ["tests/integration/misread-e2e.test.ts"],
+      "testPaths": [
+        "tests/integration/misread-e2e.test.ts",
+        "tests/ui/hooks/useMisreadFlowDriver.test.tsx"
+      ],
       "verificationCommands": [
-        "npx vitest run tests/integration/misread-e2e.test.ts"
+        "npx vitest run tests/integration/misread-e2e.test.ts tests/ui/hooks/useMisreadFlowDriver.test.tsx"
       ],
       "nextWaveReason": null
     },
@@ -395,7 +488,9 @@
         "src/engine/listeners/misread.ts",
         "src/engine/listeners/triggered.ts"
       ],
-      "testPaths": ["tests/engine/event/misread-listener.test.ts"],
+      "testPaths": [
+        "tests/engine/event/misread-listener.test.ts"
+      ],
       "verificationCommands": [
         "npx vitest run tests/engine/event/misread-listener.test.ts"
       ],
@@ -409,7 +504,9 @@
         "src/engine/listeners/misread.ts",
         "src/engine/read/char.ts"
       ],
-      "testPaths": ["tests/engine/flow/main/reasoning.misread.test.ts"],
+      "testPaths": [
+        "tests/engine/flow/main/reasoning.misread.test.ts"
+      ],
       "verificationCommands": [
         "npx vitest run tests/engine/flow/main/reasoning.misread.test.ts"
       ],
@@ -423,7 +520,9 @@
         "src/engine/flow/main/reasoning.ts",
         "src/engine/read/char.ts"
       ],
-      "testPaths": ["tests/engine/flow/main/reasoning.misread.test.ts"],
+      "testPaths": [
+        "tests/engine/flow/main/reasoning.misread.test.ts"
+      ],
       "verificationCommands": [
         "npx vitest run tests/engine/flow/main/reasoning.misread.test.ts"
       ],
@@ -435,9 +534,12 @@
       "owner": "engine-resolution",
       "implementationPaths": [
         "src/engine/listeners/misread.ts",
-        "src/ui/hooks/useEngineDispatch/can-check.ts"
+        "src/ui/hooks/useEngineDispatch/can-check.ts",
+        "src/ui/hooks/useEngineDispatch.ts"
       ],
-      "testPaths": ["tests/integration/misread-e2e.test.ts"],
+      "testPaths": [
+        "tests/integration/misread-e2e.test.ts"
+      ],
       "verificationCommands": [
         "npx vitest run tests/integration/misread-e2e.test.ts"
       ],
@@ -447,8 +549,13 @@
       "id": "BUG-226",
       "classification": "verified",
       "owner": "root-ui",
-      "implementationPaths": ["src/ui/components/MisreadPickerModal.tsx"],
-      "testPaths": ["tests/ui/components/MisreadPickerModal.test.tsx"],
+      "implementationPaths": [
+        "src/ui/components/MisreadPickerModal.tsx",
+        "src/ui/components/Playmat.tsx"
+      ],
+      "testPaths": [
+        "tests/ui/components/MisreadPickerModal.test.tsx"
+      ],
       "verificationCommands": [
         "npx vitest run tests/ui/components/MisreadPickerModal.test.tsx"
       ],
@@ -458,7 +565,9 @@
       "id": "BUG-227",
       "classification": "verified",
       "owner": "root-ui",
-      "implementationPaths": ["src/ui/components/MulliganModal.css"],
+      "implementationPaths": [
+        "src/ui/components/MulliganModal.css"
+      ],
       "testPaths": [
         "tests/e2e/full-match.spec.ts",
         "tests/e2e/mobile-viewport-controls.spec.ts"
@@ -472,7 +581,9 @@
       "id": "BUG-228",
       "classification": "verified",
       "owner": "root-ui",
-      "implementationPaths": ["src/ui/components/ReplayPanel.css"],
+      "implementationPaths": [
+        "src/ui/components/ReplayPanel.css"
+      ],
       "testPaths": [
         "tests/e2e/replay-ui.spec.ts",
         "tests/e2e/mobile-viewport-controls.spec.ts"
@@ -536,448 +647,502 @@
         "npx vitest run tests/ui/components/LogPanel.test.tsx tests/ui/components/Playmat.test.tsx"
       ],
       "nextWaveReason": null
+    },
+    {
+      "id": "BUG-232",
+      "classification": "verified",
+      "owner": "docs-tooling",
+      "implementationPaths": [
+        "scripts/gen-docs/lib/header.ts",
+        "scripts/gen-docs/lib/markdown.ts",
+        "scripts/gen-docs/gen-structure.ts"
+      ],
+      "testPaths": [
+        "tests/scripts/header-source-hash.test.ts",
+        "tests/scripts/markdown-eol.test.ts",
+        "tests/scripts/structure-root-portability.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/scripts/header-source-hash.test.ts tests/scripts/markdown-eol.test.ts tests/scripts/structure-root-portability.test.ts"
+      ],
+      "nextWaveReason": null
     }
   ],
   "changeOwnership": [
     {
+      "path": ".claude/bugs/BUG-232.md",
+      "owner": "docs-tooling",
+      "bugId": "BUG-232"
+    },
+    {
+      "path": "scripts/gen-docs/lib/header.ts",
+      "owner": "docs-tooling",
+      "bugId": "BUG-232"
+    },
+    {
+      "path": "scripts/gen-docs/lib/markdown.ts",
+      "owner": "docs-tooling",
+      "bugId": "BUG-232"
+    },
+    {
+      "path": "scripts/gen-docs/gen-structure.ts",
+      "owner": "docs-tooling",
+      "bugId": "BUG-232"
+    },
+    {
+      "path": "tests/scripts/header-source-hash.test.ts",
+      "owner": "docs-tooling",
+      "bugId": "BUG-232"
+    },
+    {
+      "path": "tests/scripts/markdown-eol.test.ts",
+      "owner": "docs-tooling",
+      "bugId": "BUG-232"
+    },
+    {
+      "path": "tests/scripts/structure-root-portability.test.ts",
+      "owner": "docs-tooling",
+      "bugId": "BUG-232"
+    },
+    {
       "path": ".claude/auto/api/mutate.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "25a6f4b227d68e1f50eb82ba7b1de9d05916c7819d3a3609469f90750a3a9ccc"
+      "contentSha256": "234b327d4b591ab015c0d04ffe41eaf24979f048cad5239f8250e48ce59a5ea3"
     },
     {
       "path": ".claude/auto/mapping/by-engine/cond.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d2d3dfc94eb72b746edfa4722b48783abc6faa1a7adccacfd8707606e95e9e34"
+      "contentSha256": "3cb37052c93f33a0ee4b1d9a05ace3cd2deed92cfee3927016438d40b6e988e0"
     },
     {
       "path": ".claude/auto/mapping/by-engine/cost.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "4fe5195efa2b2b3953294ec90b46b70e3f7ec54665d9722c78be9efff3dcec50"
+      "contentSha256": "63be19161d1048362c78656faedd9acc331a981a5f72fabb5feb7193e4678c53"
     },
     {
       "path": ".claude/auto/mapping/by-engine/effect.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "16032360b47bb2eaa7871f344286fd750c65ec20eca25ac8c87252f6f9494650"
+      "contentSha256": "2763b0cc50e46d84f8180a07c38c0acc3ba7aacc2e372e1192dbfbd2122cf5bb"
     },
     {
       "path": ".claude/auto/mapping/by-engine/event.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "4aaca7f75592a21cbcd0cfa08bef29773e8b3309f086342afb55c3a428d6c959"
+      "contentSha256": "354f15a607920dedd7ffb159f0609d7ccce2c1df1d272fba8c87150f50c37b65"
     },
     {
       "path": ".claude/auto/mapping/by-engine/flow.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "92e8206e61f72d336df0f1432ba09292882aa557ea3c605ac199cf0f9e4b1858"
+      "contentSha256": "4f919813249030497b7449872dc3f7f037d65b7f71f699dc672ba990e8d75e60"
     },
     {
       "path": ".claude/auto/mapping/by-engine/listeners.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "c3894fda6b0b4dfc88a94121d1c10fdbd4baee44609e7280da8f19feba256d95"
+      "contentSha256": "3affd564b3dd32e35c18ce6e0095176746a98901b256e1a4a7c7f7c4f1b52d40"
     },
     {
       "path": ".claude/auto/mapping/by-engine/mutate.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "a25f7a64bb3fbe89647dc5182c59666ab7b827e44224016515125de06ae93415"
+      "contentSha256": "2e15014c14823017410ef28279cf2463c03c16e0aa38557568ed25cd30981e25"
     },
     {
       "path": ".claude/auto/mapping/by-engine/read.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "4695934700534731d207be5106240865771f8e792f1897e0a310b9e7941901cb"
+      "contentSha256": "08a7311e1429c25a766b3752c748540b25c2d8816d4321315e82fab5e6158520"
     },
     {
       "path": ".claude/auto/mapping/by-engine/resolve.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8ef632bb1a4ddeb782426d96bdd74e846432f98f4e20b0ae64c0694cb3cbbaa7"
+      "contentSha256": "0aa9c6ef29c127facb0b9e8614c1c993dea10537d576543e6c680f854a555a5e"
     },
     {
       "path": ".claude/auto/mapping/by-engine/types.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "7cc2cfc853317321de6f03eb13bc6f3a05fcc37a1a6d2b4803f8d544da21d9d5"
+      "contentSha256": "e2cce4d90a13d309890ca1216e0a1ea018dcaafe2e2de71cf9929fd2f2da915f"
     },
     {
       "path": ".claude/auto/mapping/by-rule/01-curriculum-design.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "b3f8a22be42151751231d96bc93f4e7b914ee91d9e7aae049c4a908e34bd203e"
+      "contentSha256": "01b42ae07aecaa7e15705e838a303f6491e4e64045a132134e19c546867fb78d"
     },
     {
       "path": ".claude/auto/mapping/by-rule/01-victory-conditions.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "572e6a81f20010de0f85d06089ab3691bb345599e51a59570274f0635f5e5494"
+      "contentSha256": "bef375bbdf1f268b2749421dba5e702123c0cd75ac2d85ec2f901f6442739d4f"
     },
     {
       "path": ".claude/auto/mapping/by-rule/02-deck-construction.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d11c874e8a8f21a4abe701c74f84cd5ffe6f4ff4f2945196cb4d78e6388cd450"
+      "contentSha256": "ac8822da81589743b1bb4391d079e7501739d7a4256c33481ff2f9f74bde096a"
     },
     {
       "path": ".claude/auto/mapping/by-rule/03-field-areas.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "aa10c9f8deaf01526ee49961a35b2f7afe9bf4361a0036456ae85fe5da4306ba"
+      "contentSha256": "d362bb98f51c28322d2bc76031419c403ef941a8b0dbae84d8dd4b7965ee2926"
     },
     {
       "path": ".claude/auto/mapping/by-rule/04-game-setup.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "795536b9f1007f0b1c0d6bdbd97db6f29ce8f2a47eea22db03d23faaf8f1a7a1"
+      "contentSha256": "3d093a5fac52c2be1bba3dfcc0f6eb9966259881be2ad4e0c85eadbd3322f925"
     },
     {
       "path": ".claude/auto/mapping/by-rule/05-turn-phases.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ac9500709159e66e686775665c7c47b9352d0e82a93d0caee788d2d00cb9f9e9"
+      "contentSha256": "76603ef16da4627d8f360f08f833c5f19598acfb588a60bf542916b882e13aea"
     },
     {
       "path": ".claude/auto/mapping/by-rule/06-card-types.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "bcb3d072b68bdb0c6d4debfed22f081c2bdbdf0affd4519aabb9480937863e32"
+      "contentSha256": "6351bbf800e416a76d999a4448f46dc1a4cf1979e0ac8b7f3267df0987b02a64"
     },
     {
       "path": ".claude/auto/mapping/by-rule/07-action-flow.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "e449e3eaf96ba2719d4a6e1f0f1a1eef179be682c3c191cd2389b56823c5eec7"
+      "contentSha256": "136914a94db7bbd6bc83c1e4237e8692aa0a398dede706c6e3534bad1374a1b6"
     },
     {
       "path": ".claude/auto/mapping/by-rule/08-contact.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "f73eb023a34a043df91b21368d70b01d7199a2126e02840f37eea1d725be761b"
+      "contentSha256": "0454c9608282b497b2e7bb2361ba93edb91c508fb9e7ea7f4c0afa152265f32e"
     },
     {
       "path": ".claude/auto/mapping/by-rule/09-cutin-disguise.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8e65f23a24eabdd3be6fac76a48d1d786d8fc9c4dff5264d4dcb527d08fa0e77"
+      "contentSha256": "e83a71b0842f66f7870716c749ba20dd3f166534b6be1a27dbaea4f6cb8f575c"
     },
     {
       "path": ".claude/auto/mapping/by-rule/10-action-event.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "82f5a11c6013aeebd9599dac15ed8dc7f21e7d773bc7a87a22cb7c070310938c"
+      "contentSha256": "5b6bffedc3dcb3aa393934e15f074f987143832a52e6930459f09662c1d97862"
     },
     {
       "path": ".claude/auto/mapping/by-rule/11-reasoning.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "23639560fd1add8b2f5fb5331e8ea7c23095e5c34cd42ded70f7d5a7eed87361"
+      "contentSha256": "8432dd30895cd84ce616fa355288f0256c8c8031eefb3107e6fb69a467abe3ea"
     },
     {
       "path": ".claude/auto/mapping/by-rule/12-next-hint.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "6434679f8cef70c0f1149f759e3609a51e7c26f25e4a6a3fe54b7b54f9b0c8fe"
+      "contentSha256": "f9114d9b704bcba2ebdb73e82d359d1ca36e989710560d8926ab44c772ef237f"
     },
     {
       "path": ".claude/auto/mapping/by-rule/13-keywords.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "fb4ef8668dcedbaebbc609280cd1cb655fbff93a9c2e923b1f6f0bfadda2bb90"
+      "contentSha256": "79365ffce304e052f492fd4a6e6b7bf0aa7e09ff6d03fd6a55c526bce05557d8"
     },
     {
       "path": ".claude/auto/mapping/by-rule/14-refresh.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8e1fc56689326f25e0b831900e9f60bde3ba8b827c8593c1ce1d3b4db9caae89"
+      "contentSha256": "24a1a8ea48b4d3af8dd467a8c91459f9d0e3c23f4b5167e58f266c5cee0b0914"
     },
     {
       "path": ".claude/auto/mapping/by-rule/15-abilities-effects.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ddf6ad90b0eba6497cedfcf48f41428a3c298928e38043b360de9033bc858606"
+      "contentSha256": "5ff60ee9f93e521f8f21ff8f81a5bbe143f534ae73edcffb25f3d229c6c6243b"
     },
     {
       "path": ".claude/auto/mapping/by-rule/15-contact-removal-observer-design.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ecdded69b9e3ef520e0b705f76fff673732abb9dcb029d7d9b76711c29d9bf5c"
+      "contentSha256": "384b5c8432960cd305ddc1fdb10145637b526ec0f839ff155273570d580916c0"
     },
     {
       "path": ".claude/auto/mapping/by-rule/15-workflow.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "7e8d0c1da5c46a96fac3c323106586cf3ae69f9369e96dd597881bc54e98f497"
+      "contentSha256": "2204da8dbfb6f977e728f9d106f924d61c980ab49af4ee36f8398cd9ce2e242a"
     },
     {
       "path": ".claude/auto/mapping/by-rule/16-card-set.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "f53c5359590f0852eaa67220b69c62a2641c1920833b1803ed7198d8555c036c"
+      "contentSha256": "333f7d953004cdd15de86934e1a048fb1bea46729141311ca8173623aa5841bd"
     },
     {
       "path": ".claude/auto/mapping/by-rule/17-icons.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "23125ed2c0fdef46a41ba1103e4b6fa1fe3a25c310bff32cc97eaa472b407a12"
+      "contentSha256": "ebe62b3286584a00c490281879e9f73402472a49dabc042167919f1d94d866c3"
     },
     {
       "path": ".claude/auto/mapping/by-rule/18-mr.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "e188f159859afb8be4834515bfbdb2fb2e83b65385508cc1ad4bd398328aa383"
+      "contentSha256": "d938fa30bd1418fc279f49945f5b8ddf0349b0b131c59be3c64ee2f3ab7b0219"
     },
     {
       "path": ".claude/auto/mapping/by-rule/19-special-rules.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1fc6bbf8a136b917fd8b6b1573907e2de80d407861dd76386f8b34ba08cf0d28"
+      "contentSha256": "beedb521b7900812d3f2cbfce8e4d91624ede5a570275284ddb38bc0991c4c35"
     },
     {
       "path": ".claude/auto/mapping/by-rule/20-color-and-switch.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ced483270d602a4b6ccfe10397485e1252bf4230c8c756257c872d06302894f0"
+      "contentSha256": "459509f4d3127ddb554a061f152266dbd1dcdb2c8f55293617ee467a59fcd374"
     },
     {
       "path": ".claude/auto/mapping/by-rule/21-declared-ability-cost.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d926882055385e9af153a8860dc985bb5bba3c56ebe04c6a7f6040f8fdf09979"
+      "contentSha256": "1bb74bb84c12d2bba46ea8e6d4df1fd4d0e7f168cb3e9bfbfe714dacad02ef24"
     },
     {
       "path": ".claude/auto/mapping/by-rule/22-qa-action-contact.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1c7e0dd018b7c8b70b5511a14bf039f89f087f0ce4c3d374f94d65116dcd3d15"
+      "contentSha256": "d3c00110fa78097970d0eced771c160db9287435818fcdfddd63375f0b58ef9d"
     },
     {
       "path": ".claude/auto/mapping/by-rule/23-qa-disguise-cutin.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "60693babb0bd517496ee16b89d64923a78179184200f70574b14912d225ca759"
+      "contentSha256": "7042a22b8378f9e3c240a06be53f968b648ba33f8517cb4eec000ad22c50723c"
     },
     {
       "path": ".claude/auto/mapping/by-rule/24-qa-naming-stun.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "4b2bada55c99b08f594f47b82473a00c79b9a8fb084dad037aa5c881a7c04049"
+      "contentSha256": "ef444404e09e612059d0af61a2c5ac95d18feace49f25bcd2a5b9803beacb3f3"
     },
     {
       "path": ".claude/auto/mapping/by-rule/25-qa-effects-resolution.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "3f454d8ebfef4cc55ce53e539d973e0b829d43d4cad4ae0573fa3481dcaad78d"
+      "contentSha256": "104dcb172b5eecd58bec88360bf6e6a06fd3de61ff66f77b2725d38104c9b68e"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-05-11-ui-action-flows.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "bdb4efaeda0ad1ec37f06aad49244e42c6bf10bfcb55d66e956a0a8048a8eb1a"
+      "contentSha256": "d7614ae7743e45b3e9bcb36e799b76303841c46fbe4acee7cee0fb500c0a1d0c"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-05-11-ui-game-setup-flows.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "2410601cf90756ece1d77dde5db0f039d74c732c1c87a72c3da7107f2de7c674"
+      "contentSha256": "3913525723b042ad642328ca963dd643dd1708131f6287dfe44e90abf77e105b"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-07-02.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1520954e0acc140cac021255e444a66c122792c1d6c9470d8b5db9d54e645909"
+      "contentSha256": "5ee9a1e40e990fad2f11331138fd186344b234d1126ee53b85b0ebd918ab826f"
     },
     {
       "path": ".claude/auto/mapping/by-rule/26-qa-deck-refresh.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "bccfb09d773363fa4c4765f2455b61c7b0623d7a33336cb3ef3a9b2ae6d1220c"
+      "contentSha256": "e7df7e43e3a80056cfa8ff73b5ee7d2e3d88f67d88e3217c3bbaedbc73fa921e"
     },
     {
       "path": ".claude/auto/mapping/by-rule/27-card-restrictions.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d240191828addb84df58a6c913c3c491ed0abb27b6f4a7f9f20ce3729cad5e44"
+      "contentSha256": "6392925f84adce395a8832c9c36b8db0300583019884ebcdc5a3f0a0bda76455"
     },
     {
       "path": ".claude/auto/mapping/by-rule/28-errata.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "febb74cfdff4711d55ce4b070d90cd48c5fec3a7af0703b96672ae47c4b62f9a"
+      "contentSha256": "aee3695c013acf93d68dcd89f04766a2bcd72b729149fcf54d6792051237122b"
     },
     {
       "path": ".claude/auto/mapping/by-spec/2026-05-11-ui-action-flows.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "fd5e7a8ba44e5fa71bf367ed629c9faa4972e32391fb826a03d745f78ca90005"
+      "contentSha256": "6e0f0ab3a41363c83e322f39c215a8714253791c6eace6efa3bd958c529f7ca8"
     },
     {
       "path": ".claude/auto/mapping/by-spec/2026-05-11-ui-game-setup-flows.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "0a14f6a773118b007b2e516c4566dfc014bd913ad4e53430314a01fa8d3027b4"
+      "contentSha256": "6ec5eeaef59eade0217ec290a986157bfe55ba5c52a3816680f8be022ecd0a0b"
     },
     {
       "path": ".claude/auto/mapping/by-spec/card-authoring-convention.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "aa12bf0ca8e504cb83f5b84db04ffbb8e147a52e1d87e5435d44cbc9831c1618"
+      "contentSha256": "b14bb533f23eeba06c2225ea733663f474c8991004f49d1fc0607ea30730cd47"
     },
     {
       "path": ".claude/auto/mapping/by-spec/card-condition-catalog.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "73deeec22fe147744ebb0900315bd9682568e995c4b68ed6efb0941d9be3c780"
+      "contentSha256": "3ba5fd839a4c132a6e356eb41761004696509e56ba3662cecf78d0b0eae8583d"
     },
     {
       "path": ".claude/auto/mapping/by-spec/cards-data--INDEX.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1bb1b0d5d9adecd5ed73010eb447c94ef0f17480edf9032130ff502ed3480e62"
+      "contentSha256": "bd999d0c4102575b2d1cd24cff63aa8fe8803bbfbcb86b014feb39bf3e02898a"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-atom-verbs.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "13c21dd3969b25de9f10e7672066e8283d07ccba9e5c29f910b65c8ebcad46c5"
+      "contentSha256": "48b624c94cc6f7b44a14962680c05c02cf51f5642f211a9b4c137fffb95a5d4d"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-card-abilities.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "9b4bc82a48e812b5a45d93a2d3e24ccfe9778b0053e94f3b6b5e4986e8b27e85"
+      "contentSha256": "0afe552baafd4ede9cd860b6c491b0e80c6173337798b1d52e56654cb573c7df"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-card-shape.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "f6ecd5986f64f247f3a9cdffd1082bee71b39409721daf064cb59b5f5fab3f32"
+      "contentSha256": "6a60fe44871cf8848c3c5567e7c0f56d773418e8cb2f7ac196e6d5bebfca2ed0"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-effect-descriptor.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "e3aa6a5aad513e46ce3c4cc47cf388c94f2a8a7fbe2745b34af67812569330bb"
+      "contentSha256": "5ccd6200340b019dc7dcc0aff4712a8e4c744740516ee71b9052fa8bcd190757"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-events.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "956d06262a0eb6ef0e8f5ddf971db7716decf5b023572fa66a36d1a80a921656"
+      "contentSha256": "c218efd8b62250f0dafac3014de50cdc1b88fb45506387fefc24e7b100a4a47a"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-flow-contact.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "3f7a7992bd81aee98a09a5e378f7c72f4339306927a3a893203b89900e47c9c0"
+      "contentSha256": "beb0c9b8404bb4f11d1884806fa1f1740c96ce042918387e0f33606457ed9988"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-flow-control.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "b64ceaea0a9adedddf5e0013004963fe8fe1cc25503d89471392157009796a3f"
+      "contentSha256": "8596ef13ade33c14c1dc4d9cbc66eea1694794079d22ade8493b75d2945cf1cc"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-flow-setup.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "843639311cc888625017bdf6454e8ca8ee687c3b0cd9efdfa44c4145e796bc68"
+      "contentSha256": "dd9b436a5e0999c8eb03156688af1ab0a200fc4e16e26615112b5b29c0a75046"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-api-resolver.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "77a93c40eb214522dd2b3e06af2b6714de1d1d42e0e6078f07b903a7efdd1f3f"
+      "contentSha256": "7e17bc8d2816112f866083f24ab04a65afd0d2efe2d463a8cf78b96e045b550f"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-cluster15-contact-removal-observer-design.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "4c0072357963e101fac572fe4a8700b3134fa8f75ab3b08dc2e21114b98e8698"
+      "contentSha256": "bcf3057756ef04e71166018557e2db4afb04903131f5d97488e74f69d38725e9"
     },
     {
       "path": ".claude/auto/mapping/by-spec/engine-wave2-action-triggers-design.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "3e58e61d10707a576cdae9b623c4beb4ac8a8bcedfd024910a585f1e7ad0061a"
+      "contentSha256": "238df18a0a580de06d23e668229b9fe1faec8ecb3223b9c648ab2ba45cada6d9"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B03111.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "10186ff2918de6807cf600e85f7b8a9e371844c79f3cc96b2171d8226a084953"
+      "contentSha256": "d778cf753086e66da9fb29324805c78f9964f1ba72408ef9e1862e0eae8ddf9f"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B05063.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "196103aa405232d21bda94ac56570945a3c82b52cb0d21e9ff14c48d763b9b00"
+      "contentSha256": "2554809b207d31aeed3c99d28870bdd9dd23ff657a17f7a1cff074096e77df1e"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B07100.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "259b84a5ea1cdd0853283136117dc45dfff2ea701f38356f97a1e41257b0533d"
+      "contentSha256": "452beb2e231ad2829f42d833587beba9e1538d968e84400a91f255459a28da29"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B09019.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "dd4aff500259002f01904774b6fc935dbe019a343964327ceeba96f5b691a591"
+      "contentSha256": "29cb1fac3bd3ab1eafca009b126f2250a102b90905546d70c5ee419babbaea44"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B09033.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ec7f2392667e62ee23d0b5d8eb0d63e2dea5a0f55b7fd4c3accd5209ced00cf4"
+      "contentSha256": "34e1e3d177fb64065238da4839e5c04e00a0616823903c9153461f94cda56ba5"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--B09033P.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "145894445e86522a138c4bbd0e816fcf13e435dbf53a4cec4ef69d69fd1fe8a5"
+      "contentSha256": "1ac25579f12b491acfad307c5e6c619ccf4ab0267b1526f3b24e9d6dac0a4dc5"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--D06003.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1261c5b0d5be8acae313d970e022a325c95d69a50e40fd30dc6e115b2df21a8f"
+      "contentSha256": "6b2bdc35a61290c77b39841da83be03760846cc2855db4efda8f425f725af9f9"
     },
     {
       "path": ".claude/auto/mapping/by-spec/grounding--PR265.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "61e0287e6ff372176e659756990e7b58664ba7d2e8d80273cc74b7b324e3bf8d"
+      "contentSha256": "4c1c1778e41877d1e4edf9b192c751f09c5b4c0c5b966684f43ee17e88e8047b"
     },
     {
       "path": ".claude/auto/mapping/by-spec/phase-9-f-mcts.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1183487907c53056daeba44c907b6ed5b200ca1dbb4bbcbc6438e739b7ca95c8"
+      "contentSha256": "eb35c7c056e45787ddeb1b8ce803c10ee17adf2c91ea9e62b42400f502a0cef5"
     },
     {
       "path": ".claude/auto/mapping/by-spec/phase-9-g-replay.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "a7f2f2318c76d5ef5a87a4c61cc16efa28f095a60d25e6f52f6fd5fd87933461"
+      "contentSha256": "76b531556022021c436886a8c5b85dd79216490fbfbb2a494b186c02002d0850"
     },
     {
       "path": ".claude/auto/mapping/by-spec/phase-9-h-performance.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "cc22fd90c39a334277869673261225112847b5fdae0bd207dea51058dc3e8955"
+      "contentSha256": "3280b5938d4d71bb1f0bcf5b0aa1ddae870c00fb97ab8853853becca034d5810"
     },
     {
       "path": ".claude/auto/mapping/by-spec/refactor-plan--phase-3b-design.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "166c48ab8979230c8f45d73a7089eda36fdcbf057a1cb1f72e7001bb63b42475"
+      "contentSha256": "86a4bb8b95df323299a38ae97ed109e42afe89a8495fe4db256d6a5bec8e9a97"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--INDEX.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "32ae238c75504fc9cbccdb7bdb003cbf576da91f7b6ece27cb03b3328a443e79"
+      "contentSha256": "577fc6dbde9b95a5f06cf09c896cd368501fb6234e33471d498d426d1b50a748"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--caseDeclaredEvidenceFlip.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "da194cb87fb9f90cb41d62248192dfd4e157c2de04e2a42d4810a99f9fe8d5e3"
+      "contentSha256": "426a72856d8afdca08e44873bd193164f30379f1f4a556a5cc3b6573df570e06"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--caseResolvedHandRemove.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "677c77b6cd608379f23f440b1611c500040ac4bdd089349d4a11fcfa48b6f2fc"
+      "contentSha256": "3b6ca94df6ffa28204c42ccb79fe6a139032095f0c707c308c91679ec48b4dea"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--caseTraitConditioned.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "98f967d19cf21d64ea30ec9deb3b8f92d6da1e7cab4faaeb777f498c59400c8a"
+      "contentSha256": "fa6a31d4a8b08d6c649783870b02bec447aea9c194e1209b1ec7acb15f088b71"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--eventRemoveByAP.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "bdace34105b426c1d6eec4cf4d4c1b603796d3cf211eafac2f17da145b420f66"
+      "contentSha256": "9d435d092054bd2e9ef94a52f2d80f58490c62490becb5a3357ddacec792fe60"
     },
     {
       "path": ".claude/auto/mapping/by-spec/shared-classes--partnerColorKeyword.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "61ecb7e7c345b3536a53c825cce1f1d83dffed536dc135af77013558e59a3e4c"
+      "contentSha256": "898c5681cdf3112d3ac39426cf63340b618669ac5fc085191f393a25ea59511d"
     },
     {
       "path": ".claude/auto/mapping/cards-to-rules-cards.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "55fafebd7bfaee9479fa193fbe87fe2eb5ce601f04a1f2b94aecde642cae3595"
+      "contentSha256": "20ea0722b8e0b261565713e044424484e960ed389f348041b2e8a4b9c5ad2204"
     },
     {
       "path": ".claude/auto/mapping/cards-to-rules-engine-core.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "3c0c94e70926307c7617cb3b2ce47fa53c86277cdcb18e2937aa9d26ab70d312"
+      "contentSha256": "905651e44dc780261d46af225f8f6203a653333bdcc2c357abde495ac838305a"
     },
     {
       "path": ".claude/auto/mapping/cards-to-rules-engine-flow.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "926087921583d3b0490797906b48546125677af0a088748dc2fd2776aa7e2cd7"
+      "contentSha256": "94e0d7a632e65835a92bd22ef19ca907e2251ac212e0116346c3f4d66cb46cc9"
     },
     {
       "path": ".claude/auto/mapping/graph-rules-engine-core.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "a30e33a06ce5c45a7ac89379a5a0bb4d79050aa77eccef4b594d351afe0e6bae"
+      "contentSha256": "78588e6543e4c482f20aad7ca2b4c5302d86640060ef38a19e1c40a81435047f"
     },
     {
       "path": ".claude/auto/mapping/graph-rules-engine-flow.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "58504c3dc59a9dbb728e58cf71dd3ba39ba5950dc603afed4756012464cb0ca5"
+      "contentSha256": "3a05ef45682ff664d8083f3c5de7e89f8f58c02ec3aaab2f6c92090121ab6495"
     },
     {
       "path": ".claude/auto/mapping/graph-specs.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "b535a9714be170bd133abbdd9ebca199a0501b1a913d98656e53edeffdfb6ca5"
+      "contentSha256": "e28bf5d3bb232d7177eaf5d85daedd878fd27a6d293f71149f4bf40f2bacea44"
     },
     {
       "path": ".claude/auto/mapping/index.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "e53ce6f749167b87cd506f8e7947ba60d135c9491798ab028fdf0894f1b81638"
+      "contentSha256": "6b07c62a979485484c1a33bde3acd3627ee62dd1e4185b021c9ac98bfea5d5a5"
     },
     {
       "path": ".claude/auto/mapping/rules-to-cards.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "002967f5eb0fd8c1eb41b4ab73b2cfd1bc4ef90d790fe2acf7e948fff6ccbdf3"
+      "contentSha256": "0750ddbd9b5e52d800915420ee24e30f57817ee856c4929bfbe9c06b7ee77e68"
     },
     {
       "path": ".claude/auto/progress/cards.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "12d6ca0fe45b1065c6f3cc67d7c8d5a13aa3b621e062c374415275ba6c6ce469"
+      "contentSha256": "aa4085f37412a63b36c3a02496642acc81c59931e99153ab1283dbb74a7d1769"
     },
     {
       "path": ".claude/auto/progress/tests.md",
@@ -1257,9 +1422,12 @@
       "owner": "phase1-task2"
     },
     {
+      "path": ".claude/changelog-entries/2026-07-17-01-you-vs-cpu-hardening-fixed.md",
+      "owner": "phase1-task6"
+    },
+    {
       "path": ".claude/memory.md",
-      "owner": "pre-existing-user-work",
-      "contentSha256": "6b6fd9b9c03c6f3aa4a9e87c0adb07139fc7ecfabc8a9c11c22969ae69968d84"
+      "owner": "phase1-task6"
     },
     {
       "path": ".claude/sessions/2026-07-15-2.md",
@@ -1270,6 +1438,10 @@
       "path": ".claude/sessions/2026-07-15-3.md",
       "owner": "pre-existing-user-work",
       "contentSha256": "bcf8d837bb37fc66550d9ad988c4561c94ee0649fdc351062544ab6b1f308b06"
+    },
+    {
+      "path": ".claude/sessions/2026-07-17.md",
+      "owner": "phase1-task6"
     },
     {
       "path": ".claude/specs/DEFERRED-INDEX.md",
@@ -2218,6 +2390,90 @@
       "path": "tests/ui/services/deckBuilder.test.ts",
       "owner": "pre-existing-user-work",
       "contentSha256": "e0daeeefb04dc468513f887ba53e890b4189755c53551f5ac1f5cb7715e5bc50"
+    },
+    {
+      "path": ".claude/auto/api/cards.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/cond.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/cost.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/dyn.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/effect.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/event.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/flow.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/index.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/invariant.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/read.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/resolve.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/api/target.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/flows/action-fsm.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/flows/auto-phase.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/flows/setup.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/flows/turn.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/cards.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/dyn.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/invariant.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/mapping/by-engine/target.md",
+      "owner": "phase1-task6"
+    },
+    {
+      "path": ".claude/auto/state/game-state.md",
+      "owner": "phase1-task6"
     }
   ]
 }

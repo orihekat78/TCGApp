@@ -1,143 +1,55 @@
 # memory — 現セッション scratchpad
 
-> 過去ログは `.claude/sessions/YYYY-MM-DD.md`。直近 =
-> [2026-07-13.md](sessions/2026-07-13.md)。
+> 過去ログは`.claude/sessions/YYYY-MM-DD.md`。直近 =
+> [2026-07-17.md](sessions/2026-07-17.md)。
 
-## 2026-07-13 - Codex environment upgrade
+## 2026-07-16 YOU vs CPU hardening
 
-- Global defaults: GPT-5.6 Terra medium; review Sol; Luna/Terra/Sol custom roles added.
-- Added global `codex-risk-router`; fresh-task probes route T0/T1/T3 to GPT-5.6 correctly.
-- Replaced root startup rules with a compact router and added scoped AGENTS for engine/cards/UI/tests/docs.
-- Added `conan-session-router`; route probes pass for question, Engine, and new UI. Single-card wording tightened so `card-wave` is batch-only.
-- Disabled implicit `using-superpowers` through its Codex policy; fresh-task probe now loads only `conan-session-router`. Migration checker detects policy loss after plugin cache updates.
-- Added deterministic `.codex/context/current.md` generation via `npm run docs:codex-context`; focused test passes and output is bounded to 80 lines.
-- Regenerated `.claude/auto/structure.md`. Existing application implementation changes were preserved and not modified by this environment work.
+- BUG-205〜219をengine/UI/session/mobileの共有原因で水平修正。
+- 既存テストの盲点は件数不足より製品経路差。AI vs AI、合成state、単発effect、
+  desktop中心では所有権・非同期再開・複数試合・pointer遮蔽を通らなかった。
+- runtime AI policyはserialization可能なhandleで保持。match境界で清掃。
+- 強化方針: [you-vs-cpu-test-strengthening.md](specs/you-vs-cpu-test-strengthening.md)。
+- 10デッキ100組は組み合わせ探索。能力契約回帰と分離して運用する。
+- E2E false-green原因: dispatch結果破棄、`undefined`を通すnull assert、pending注入、
+  実hookを迂回する直接emit。false-red原因: AI配列順依存、旧自動選択期待、state完全一致。
+- fixtureで相手ターンを直接dispatchするときはCPUを停止し、最初に`ok:true`を確認する。
+- 判断テストはsource/ability/owner/chooser/UID、全pending消滅、次の合法行動まで検査する。
+- B03091はAI方針改善に追従していないfixture。合法除去対象を一意化して本体正常を確認。
+- B05080は実バグ: humanミスリード判断前に`reasoning:end`が進み、後続判断と同時表示。
+- 敵対レビューで初回修正をreject。human side未参照によりAI vs AI停止、LP-X期限残留、
+  partner推理未適用、不正pick受理、picker再表示state残留を検出。全モード行列へ拡張。
+## 2026-07-16 YOU vs CPUテスト強化
 
-## 2026-07-13 — Claude → Codex migration audit
+- 完走数ではなく製品経路との差が主因。合成state、直接event emit、pending注入はUI接続を証明しない。
+- 判断処理はsource/owner/chooser/target/changed side、dispatch `ok`、pending 0、次の合法行動まで検査する。
+- `toBeVisible()`はviewport外でも通るため、mobileは矩形全体＋強制なし実クリックを契約にする。
+- 総当たり100組は組み合わせ探索。能力カテゴリ・分岐・期限・連鎖のfocused回帰を別に維持する。
 
-- `caveman@caveman` は enabled、skills 認識済み。ただし plugin の
-  SessionStart 自動注入は task log に証跡なし。
-- 全 Codex task 用の正本として `C:\Users\arumi\.codex\AGENTS.md` を追加。
-  caveman full、言語維持、安全・明瞭性例外、task-local 停止を定義。
-- README の active governance 参照 3 件を root `AGENTS.md` へ統一。
-  `.claude/CLAUDE.md` は Claude 互換 copy として温存。
-- 新規 task probe で root `AGENTS.md` 内の stale `.claude/AGENTS.md` 参照を
-  検出し、存在する root `AGENTS.md` へ修正。
-- `.codex/hooks.json` の Claude/GNU 前提 PostToolUse hook に
-  `commandWindows` を追加。review で quoted `git commit` 偽陽性を検出後、
-  PowerShell AST 判定へ変更。commit / quoted / status / compound probe green。
-- `C:\Users\arumi\.codex\config.toml` から平文 GitHub PAT と旧 GitHub MCP
-  block を除去。GitHub App connector を継続利用。
-- 水平確認: project skills 3 件、Serena/Firecrawl/claude-mem MCP、主要 plugins
-  は Codex から利用可能。Claude permission allowlist と claudeMdExcludes は
-  Codex へ直訳せず、Codex permission profile と targeted rule reads を維持。
-- 新規 Codex task 2 件で global caveman full と root AGENTS 読込を実測。
-  独立 review は初回 Important 1 件を上記修正後、再 review CLEAN。
+## 2026-07-16 BUG-180 horizontal refresh
 
-## 2026-07-13 — B09033/B09033P repeatOptional
+- deck shortageだけでなく「残数=取得数」を独立境界にする。pre-take guardだけでは最終取得後0枚を見逃す。
+- completed takeは`mutate.deck.refreshAfterTake`へ統一。draw/evidence/FILE/cost/hand/scene/set-card/millを接続。
+- reveal/look中は公式上deck扱い。sceneEnter等の最終移動完了後だけcheckpointを呼ぶ。
+- effect refreshは`resolutionKind`でnormal-event/hirameki sourceだけremoveから除外する。
 
-- 公開windowからの反復任意登場は `repeatOptional` を追加。各 round は human UI で決め、残り sequence は最終判断まで停止する。
-- deck の候補 UID (`cardId#index`) を `sceneEnter` まで保持した。同一IDが公開windowに複数あるとき、選択した実体だけを splice / bind prune し、残ったコピーを次 round で選べる。focused probe で後方 duplicate を選ぶ RED→GREEN を確認。
-- 水平確認: deck window binding は splice 後により大きい index を rebase。`hasPendingHumanPick` に repeatOptional を追加して turn driver の早期再開を防止。
-- Sol probe: 初回windowは owner 非human / spectator では既存 AI heuristic が選択し、`repeatOptional` のみ auto-skip。production trigger probe は `event._resetRegistry()` も reset しないと listener が多重登録され、偽の反復登場になる。
+## 2026-07-16 BUG-140 deferred closure
 
-## 2026-07-13 — deferred T3 four-card wave
+- B05039/B06035を実カードのhuman/AI経路で補完。icon ability allowlistは0件。
+- 旧batchは代表テンプレのみ、かつallowlistが欠落を正常化したためすり抜けた。
+- 保留解除は実カードでpending→発動→任意判断→対象選択→stateとnegative gateを固定する。
 
-- B09024: `triggeredAbilityAura` の合成IDへaura bearer UIDを含め、付与triggerを一度だけqueueする。leave-to-remove batch は発火時点のauraをsnapshotする。
-- B03042: `distinctColors` を target query / resolver / UI / AI へ配線。human pick は membership・重複・max・cross-pick制約を検証しつつ、合法なpartial/0選択を維持。
-- B04055: `traitSharedWithTriggerRemoved` がremove event snapshotのtraitsを公開filterへ注入。`sourceInScene` が離場済みobserverのqueue解決を防止。
-- B09033/B09033P: stable occurrence UID (`cardId#index`) で同一cardIdを含むdeck windowを反復pick可能にした。duplicate / 0 choice / owner=opp / spectator / production dispatch / UIを確認。
-- Gates: focused suites・full Vitest (656 files, 5474 tests)・tsc・diff-check はgreen。Playwrightのhirameki 2 failureは `160986192` からのhuman target-pick仕様と旧assertの不一致で、今回wave以前から存在。
+## 2026-07-17 Phase 1 closeout
 
-## 2026-07-13 — Wave D target-protection
-
-- Added `untargetableByOppEffect` and `untargetableByOppEffectAura`. Resolver filters only cross-side effect picks; action target declaration and non-selection effects remain unaffected.
-- Reader examines printed continuous abilities and face-up `on-set-host` riders; conditions use the bearer/host context. This unlocks B01006/P, B03030/P, B05008/P, B05048, and B08017/P.
-- Focused evidence: bond-protection and sleep-host aura probes green, plus `tsc` and diff-check. Remaining: final T3 Sol review/full gates and B05048 spread.
-
-## 2026-07-13 — next-session throughput correction
-
-- Historical +50p evidence is batch throughput: pre-authored cards/probes and P-spread deployment, not 50 new T3 implementations.
-- Next prompt now requires parallel Lane A (one T3 primitive) and Lane B (20–35 existing-DSL/green/twin/P printings); Lane C prepares grounding and RED probes.
-- Do not compress B07011, B06095, B02022, and B02086 into one final session without a parallel bulk wave. Re-estimate when Lane B ships under 20p or a T3 needs new UI/state machinery.
-
-## 2026-07-13 deferred continuation
-
-- Shipped B02022/B02022P: `mustTargetSelfOnce` forces a scene character's first legal action target; it blocks case targeting only while a legal forced character exists. Partner actions neither force nor consume it. Official Q&A, RED probes, Sol re-review, focused probes, tsc, and diff-check green.
-- Shipped six registry/P closures: B07030P/B07030P2/B07061P/B09055P/B09055P2/PR271. Grounded and text crosscheck green. Registry count 1999/2074; remaining 75.
-- Lane B capacity correction: only six remaining printings were exact existing-DSL/twin closures. Remaining queue needs primitives or card-specific grounding; do not assume a 20-printing green wave.
-
-## 2026-07-13 next-session portfolio
-
-- CL327 CI green after `a3681d49` synchronized `mustTargetSelfOnce` with Task A validation whitelist.
-- Next portfolio grounded: aggregate multi-pick (3), self set-card remove-to-enter (9), stacked identity/host stack (5), and choose-intercept/opponent decision (6). Ship one primitive at a time; RED/ownership/Sol checklist: `sessions/2026-07-13-2.md`.
-- Shipped aggregate multi-pick: B04042/B04042P/B04084. Added aggregate level cap across resolver, human picker, and AI; B04084 binds exact remove occurrences before active/sleep split entry. Focused probes (34), tsc, diff-check GREEN; full local gates deferred to GitHub CI by user. Registry 2002/2074; remaining 72.
-
-## 2026-07-13 parallel follow-up decision
-
-- After repairing the current set-card CI failure, user chose parallel implementation through isolated worktrees: stack, hook/external-ability, picker/bind, and choose-intercept lanes. Shared contracts first; main integrates and ships sequentially. Session detail: `sessions/2026-07-13-2.md`.
-
-## 2026-07-13 CI boundary / completion hypothesis
-
-- Two CI checkpoints only: after four-lane primitive integration, and after all unlocked card additions. Intermediate lane work stays in isolated worktrees/integration branch, not `main`.
-- Flow: parallel minimum engine+representative+RED -> serial shared-surface integration -> Sol/representative green -> parallel card/P/probe additions -> final CI. Optimistic completion = all remaining cards map to these lanes or existing DSL and registry reaches 2074/2074; new primitive/UI/semantic gaps invalidate the forecast.
-
-## 2026-07-13 set-card shipment / CL328
-
-- B06012/P, B06064/P, B07033/P/P2, and B09113/P shipped. `setCards.instanceId` is serialized; legacy exact-match tests were updated, B06012P text matches base, and production probes cover exact pick continuation.
-- CL328 (`29242247994`) green: typecheck, full Vitest, lint chain, and smoke 1000. Registry 2011/2074; remaining 63.
-- Next session starts four isolated representative lanes (stack, hook/external, picker/bind, intercept). CI only after serial integration and after all unlocked card additions; completion remains conditional on no new grounded primitive/UI/DSL gap.
-
-## 2026-07-13 deferred primitive integration
-
-- Integrated 11 printings: B06005/P, B08003/P, B08008 plus B02067/P, B04003/P, B08081/P. Registry 2022/2074; remaining 52; commit/CI pending.
-- Stack identities now cover exact picker/transfer/cost, stale/duplicate/zero, AI/human and owner-relative opponent choice. B08003/P has blue-partner gate and Playwright 3-of-4 picker/cancel coverage. Sol CLEAN.
-
-## 2026-07-13 card wave after CI checkpoint 1
-
-- Local wave adds B05086P, B04069/P, B05088/P/P2, B06046/P, B06095/P, B08063/P, and B09110/P; registry 2036/2074, remaining 38. Do not push until final 2074/2074 CI boundary.
-- New primitives: filtered face-up host set-card count; all-area turn trait grant with hidden evidence/FILE protection; `deckRevealUntil.stopAtFirstMatch`; exact stacked/choose-intercept work remains in prior commit.
-- Sol CLEAN after fixing P-definition independence, B06095 hidden-evidence leak, B09110 first-match/fixed-window regression, and production dispatch coverage. Gates: focused 100, full 5600, tsc, smoke1000, docs structure, diff-check.
-- Next grounded T3 candidates: B01082 bearer `cannotGuard`, B06025 exact evidence occurrence reentry, B08059 self-inclusive effective-level fixed point. Keep separate.
-
-## 2026-07-14 deferred T3 follow-up
-
-- Added B01082 and B06025; completed B08059/P's existing registered definitions. Registry 2040/2074, remaining 34; local commit pending and no second CI until 2074/2074.
-- B01082: bearer-only `cannotGuard` plus enter sleep/no-auto-active lock. B06025: exact removed-evidence occurrence reentry and other-YAIBA turn choice. B08059: self-inclusive effective-level fixed point.
-- Sol CLEAN after full TSV correction (including B06025 green), duplicate registry removal, and legacy missing-`turnEffects` compatibility repair. Full 5621 tests, smoke 1000, tsc, docs, and diff check green.
-
-## 2026-07-14 deferred primitive checkpoint
-
-- Added D10026, PR200, PR206, B09036/P, and B09067/P. Registry: 2047/2074; 27 remain.
-- Added scene face-down set-card count, effective same-name count, effect scene-to-deck-bottom, hand-reveal cardName binding, and safe binding-dependent conditional continuation.
-- Regression work fixed B06025 exact-occurrence re-walk corruption and explicit human/AI/unknown runtime picker ownership.
-- Final gates: Vitest 690 passed/1 skipped, 5645 passed/7 skipped; tsc, docs structure, diff, registry (2047 unique/0 validation failures), and smoke1000 (0 timeout/exception) green.
-- User decision frozen in `specs/remaining-27-engine-portfolio.md`: probe stale blockers, implement engine-first in isolated waves, then run three parallel card lanes; broad gates/CI only at engine integration and final completion.
-
-## 2026-07-14 ESLint baseline repair
-
-- `npm run lint` now exits 0. Applied safe automatic lint fixes, corrected active script parsing and error-cause preservation, and isolated legacy test-only dynamic/partial-fixture diagnostics as warnings.
-- `npm run typecheck` and `git diff --check` pass. Existing hook and legacy-test diagnostics remain warnings, not ESLint errors.
-
-## 2026-07-14 warning-free ESLint boundary
-
-- `npm run lint` is now 0 errors / 0 warnings. Real `Playmat` effect dependency was corrected; imperative `use*` action helpers and legacy test-fixture-only diagnostics are excluded by scoped lint policy.
-- Focused Playmat/switch tests pass (16). Full Vitest exceeds this environment's 124-second command limit; run was timed out before completion.
-
-## 2026-07-14 user-reported bug wave
-
-- BUG-189–198 implemented: browse/reveal/reorder/hand-entry/contact UI,
-  partner AP, original-ability disable, CPU pacing, and B04018/B04018P.
-- Horizontal card fix: B05067 and B05069 no longer rebuild `eventRemoveByAP`
-  picks. Cost-8 removal stays deferred: require card ID and game log.
-- Local focused/full non-browser gates and independent reviews are green;
-  user delegated full Playwright/complete-match execution to CI.
-
-## 2026-07-15 deck limits and test decks
-
-- BUG-199–201: PR158/PR164 unlimited, official-ID aggregate limits, D09014
-  image, deck-editor right-click enlargement, and legal built-in fixtures.
-- Validated test decks: green bug wave, contact/AP, and ID0627 unlimited.
-  Chrome import codes are ready; preserve the user's existing five decks.
-- Fresh gates: Vitest 5786, targeted meta E2E 13, smoke/benchmark 1000,
-  typecheck, lint, BUG/listener/side-channel/docs, and meta build are green.
+- dirty mainでgreenに見えた`979060836ebff223a79217b69adfba36767ff453`単独は、clean cloneで
+  不足deltaが顧在化し93 failures / 38 test files。false-greenと確定。
+- `300353bd79ca806460c8ea74025c3f062e6528b9`で不足prod/test/supportを補い、clean 6018 pass。
+- runtime 34票を`300353bd79ca806460c8ea74025c3f062e6528b9`へ紐づけた。
+- BUG-232はdocs可搬性commit `46bc113748e9d15c20bfeb3c5b1a6f4f713cfef9`で閉じ、修正済みは計35票。
+- BUG-207/209/218は仕様外。修正済み数へ含めない。
+- Root Playwrightは293成功。B04026の1件はChromium資源枯渇だったため、同一case単独再実行で成功を確認。
+- 5174の実操作でbrowse、log拡大、session初期化、contact cut-in/pass、次の合法行動、console error 0を確認。
+- 水平調査はowner/chooser、pending、continuation、effect source、refresh、session、Meta/mobileまで完了。
+- 300の別path clean cloneで`docs:check` 112 drift。absolute root、EOL、structure本文を原因と確定。
+- Source hashはrelative path+LF、Markdown比較はEOL正規化、structure rootは`.`へ統一。
+- 自己reviewと水平調査で全110 generated docsの共通header/diff経路を確認。
