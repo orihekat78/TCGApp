@@ -110,6 +110,20 @@
     overflow-y: auto;
   }
 }
+
+/* BUG-241: landscape の短辺では width が広くても dialog 内で scroll できる。 */
+@media (max-height: 480px) {
+  .guard-picker-overlay {
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .guard-picker-modal {
+    box-sizing: border-box;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}
 .guard-picker-skip:hover {
   filter: brightness(1.2);
   border-color: #ee5566;

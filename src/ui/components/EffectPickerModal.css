@@ -118,6 +118,7 @@
 }
 
 .effect-picker-skip {
+  min-block-size: 44px;
   padding: 6px 14px;
   border: 1px solid #4a5070;
   background: #2a3050;
@@ -150,6 +151,7 @@
 }
 
 .effect-picker-confirm {
+  min-block-size: 44px;
   padding: 6px 18px;
   border: 1px solid #4a7050;
   background: #2a5030;
@@ -203,5 +205,19 @@
     width: 30px;
     height: 42px;
     margin-right: 6px;
+  }
+}
+
+/* BUG-241: wide landscape viewport でも短辺に dialog を収めて scroll を許可する。 */
+@media (max-height: 480px) {
+  .effect-picker-overlay {
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .effect-picker-modal {
+    box-sizing: border-box;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
   }
 }
