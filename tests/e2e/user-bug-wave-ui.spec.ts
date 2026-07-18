@@ -134,6 +134,65 @@ test('BUG-240 landscape HUD leaves the card-list close hit target reachable', as
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });
 
+test('BUG-240 landscape HUD button gaps pass through to the covered close control', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'formal BUG-240 fixture is Pixel 5 landscape');
+
+  const { errors } = await setupGamePage(page);
+  await humanMode(page);
+  await buildGameState(page, (gs) => {
+    gs.players.self.remove = ['D08003'];
+  });
+
+  await page.locator('.remove-area.side-self').click();
+  const modal = page.locator('.card-list-modal');
+  const close = modal.locator('.card-list-modal-close');
+  await expect(modal).toBeVisible();
+  await expect(close).toBeVisible();
+
+  const gapPoint = await page.evaluate(() => {
+    const buttonRail = document.querySelector<HTMLElement>('.spectator-hud-buttons');
+    if (!buttonRail) return null;
+
+    const railRect = buttonRail.getBoundingClientRect();
+    const buttonRects = [...buttonRail.querySelectorAll('button')].map((button) => button.getBoundingClientRect());
+    for (let index = 1; index < buttonRects.length; index += 1) {
+      const previous = buttonRects[index - 1]!;
+      const next = buttonRects[index]!;
+      const gapLeft = previous.right;
+      const gapRight = next.left;
+      const overlapTop = Math.max(previous.top, next.top);
+      const overlapBottom = Math.min(previous.bottom, next.bottom);
+      if (gapRight > gapLeft && overlapBottom > overlapTop) {
+        const x = (gapLeft + gapRight) / 2;
+        const y = (overlapTop + overlapBottom) / 2;
+        if (x > railRect.left && x < railRect.right && y > railRect.top && y < railRect.bottom) {
+          return { x, y };
+        }
+      }
+    }
+    return null;
+  });
+  expect(gapPoint, 'the HUD speed rail exposes a non-button flex-gap coordinate').not.toBeNull();
+
+  await close.evaluate((element, point) => {
+    const { width, height } = element.getBoundingClientRect();
+    Object.assign(element.style, {
+      position: 'fixed',
+      left: `${point.x - width / 2}px`,
+      top: `${point.y - height / 2}px`,
+    });
+  }, gapPoint!);
+
+  expect(await page.evaluate(({ x, y }) => {
+    const hit = document.elementFromPoint(x, y);
+    return hit?.closest('.card-list-modal-close') !== null;
+  }, gapPoint!), 'the HUD button gap must not own the modal close hit point').toBe(true);
+
+  await page.mouse.click(gapPoint!.x, gapPoint!.y);
+  await expect(modal).toHaveCount(0);
+  expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
+});
+
 test('B04026 completes reveal, reorder, and optional hand sceneEnter in decision order', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await humanMode(page);

@@ -35,7 +35,6 @@
 .spectator-hud-buttons {
   display: flex;
   gap: 2px;
-  pointer-events: auto;
 }
 
 .spectator-hud-preset {
@@ -140,7 +139,6 @@
     min-width: 0;
     overflow-x: auto;
     scrollbar-width: thin;
-    pointer-events: auto;
   }
 
   .spectator-hud-preset,
