@@ -11,7 +11,7 @@
 // side-channel-pattern.md 4 点 checklist の (3) UI 側実装
 
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
@@ -44,6 +44,12 @@ export function DeckRevealOverlay(): JSX.Element | null {
     return area === 'hand';
   });
   const [phase, setPhase] = useState<Phase>('reveal');
+  const timelineRef = useRef<{
+    pending: NonNullable<typeof pending>;
+    remainingMs: number;
+    startedAt: number | null;
+  } | null>(null);
+  const detailOpen = expandModal.expandedCard !== null;
 
   useEffect(() => {
     // B04026 等は公開選択後、順序決定/手札登場へ進む。
@@ -55,31 +61,59 @@ export function DeckRevealOverlay(): JSX.Element | null {
 
   useEffect(() => {
     if (!pending) {
+      timelineRef.current = null;
       setPhase('reveal');
       return;
     }
-    setPhase('reveal');
     // BUG-132 GAP-1: chooseMatch (「1枚まで」) の human pick 未解決中は hold —
     // 公開リストを表示したまま自動進行 (toBottom→shuffle→dismiss) を停止し、
     // EffectPickerModal (z-index 9700 > overlay 9050) の選択/decline を待つ。
     // pick 解決の再入で awaitingPick 無しの pending が再 set され通常演出で完了する。
     // S2 B01022: deck-window pick 未解決中も同様に hold (上記 deckWindowPickActive)。
-    if (pending.awaitingPick === true || deckWindowPickActive) {
-      return;
-    }
-    // reveal: 1 枚 0.5 秒 + 余韻 / toBottom: 1.1 秒 / shuffle: 1.0 秒
     const revealMs = pending.revealed.length * 500 + 500;
     const toBottomMs = 1100;
     const shuffleMs = 1000;
-    const t1 = setTimeout(() => setPhase('toBottom'), revealMs);
-    const t2 = setTimeout(() => setPhase('shuffle'), revealMs + toBottomMs);
-    const t3 = setTimeout(() => setPending(null), revealMs + toBottomMs + shuffleMs);
+    const totalMs = revealMs + toBottomMs + shuffleMs;
+    let timeline = timelineRef.current;
+    if (!timeline || timeline.pending !== pending) {
+      timeline = { pending, remainingMs: totalMs, startedAt: null };
+      timelineRef.current = timeline;
+      setPhase('reveal');
+    }
+
+    // Inspecting a card pauses the live reveal remainder; it must not resolve
+    // behind the expanded-card modal on a short landscape viewport.
+    if (pending.awaitingPick === true || deckWindowPickActive || detailOpen) {
+      return;
+    }
+    // reveal: 1 枚 0.5 秒 + 余韻 / toBottom: 1.1 秒 / shuffle: 1.0 秒
+    const remainingMs = timeline.remainingMs;
+    if (remainingMs <= 0) {
+      setPending(null);
+      return;
+    }
+    timeline.startedAt = Date.now();
+    const toBottomDelay = remainingMs - toBottomMs - shuffleMs;
+    const shuffleDelay = remainingMs - shuffleMs;
+    const t1 = toBottomDelay > 0
+      ? setTimeout(() => setPhase('toBottom'), toBottomDelay)
+      : undefined;
+    const t2 = shuffleDelay > 0
+      ? setTimeout(() => setPhase('shuffle'), shuffleDelay)
+      : undefined;
+    if (toBottomDelay <= 0 && shuffleDelay > 0) setPhase('toBottom');
+    if (shuffleDelay <= 0) setPhase('shuffle');
+    const t3 = setTimeout(() => setPending(null), remainingMs);
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
+      if (t1 !== undefined) clearTimeout(t1);
+      if (t2 !== undefined) clearTimeout(t2);
       clearTimeout(t3);
+      if (timelineRef.current === timeline && timeline.startedAt !== null) {
+        timeline.remainingMs = Math.max(0, timeline.remainingMs - (Date.now() - timeline.startedAt));
+        timeline.startedAt = null;
+      }
     };
-  }, [pending, setPending, deckWindowPickActive]);
+  }, [pending, setPending, deckWindowPickActive, detailOpen]);
 
   if (!pending) return null;
   // 公開選択は CardListModal へ統合。後続の並べ替え/手札登場の操作も遮らない。

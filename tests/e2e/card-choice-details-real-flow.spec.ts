@@ -173,7 +173,8 @@ test.describe('real mounted card-choice details', () => {
     expectNoConsoleErrors(errors);
   });
 
-  test('DeckReveal: D11019 keeps reveal progression after details close', async ({ page }) => {
+  test('DeckReveal: landscape detail inspection pauses then resumes reveal progression', async ({ page }) => {
+    await page.setViewportSize({ width: 851, height: 393 });
     const { errors } = await setupGamePage(page);
     await primeHuman(page);
     await buildGameState(page, (gs: GameStateLike) => {
@@ -187,8 +188,8 @@ test.describe('real mounted card-choice details', () => {
       };
       w.__game.store.getState().setPendingDeckReveal({
         player: 'self',
-        revealed: ['D11020', 'D11013', 'D11017', 'D11017', 'D11019'],
-        matched: 'D11019',
+        revealed: ['D11020'],
+        matched: 'D11020',
       });
     });
     const primary = page.getByTestId('deck-reveal-card-0');
@@ -197,9 +198,19 @@ test.describe('real mounted card-choice details', () => {
     // Reveal animation ends after 500ms for the first public card. Use an ordinary
     // interaction only after that real UI transition has settled.
     await page.waitForTimeout(600);
-    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('deck-reveal-detail-0'));
-    await page.getByTestId('deck-reveal-shuffle').waitFor({ state: 'visible', timeout: 6000 });
-    await page.getByTestId('deck-reveal-overlay').waitFor({ state: 'detached', timeout: 5000 });
+    const detail = page.getByTestId('deck-reveal-detail-0');
+    await assertDetailClickAndContextMenu(page, primary, detail);
+
+    await detail.click();
+    await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
+    // The original 3100ms reveal timeline has elapsed, but the overlay remains
+    // while the user reads the expanded card.
+    await page.waitForTimeout(3300);
+    await expect(page.getByTestId('deck-reveal-overlay')).toBeVisible();
+    await page.locator('.card-expand-close').click();
+    await expect(page.getByTestId('deck-reveal-overlay')).toBeVisible();
+    // Continuation uses the <2500ms remainder. A reset would still be visible.
+    await page.getByTestId('deck-reveal-overlay').waitFor({ state: 'detached', timeout: 2700 });
     expectNoConsoleErrors(errors);
   });
 
