@@ -57,6 +57,18 @@ async function expectPublicCardArt(primary: Locator, cardId: string, imageFile: 
   ).toBe(true);
 }
 
+async function expectHiddenCardBack(hidden: Locator): Promise<void> {
+  const image = hidden.locator('img');
+  await expect(image).toBeVisible();
+  await expect.poll(
+    () => image.evaluate((node) => {
+      const art = node as HTMLImageElement;
+      return art.complete && art.naturalWidth > 0 && art.currentSrc.startsWith('data:');
+    }),
+    { message: 'face-down evidence is a loaded generic back, never a card network image', timeout: 10_000 },
+  ).toBe(true);
+}
+
 async function assertDetailClickAndContextMenu(page: Page, primary: Locator, detail: Locator): Promise<void> {
   await expectTouchTarget(detail);
 
@@ -152,9 +164,9 @@ test.describe('real mounted card-choice details', () => {
 
     const hidden = page.getByTestId('effect-pick-cand-evidence:self:0');
     await expect(hidden).toBeVisible();
+    await expectHiddenCardBack(hidden);
     await expect(hidden).not.toContainText('D08003');
     await expect(hidden).not.toContainText('江戸川コナン');
-    await expect(hidden.locator('img')).toHaveAttribute('src', /^(?!.*D08003)/);
     await expect(hidden.locator('img')).not.toHaveAttribute('alt', /江戸川コナン/);
     await expect(page.getByTestId('effect-pick-detail-evidence:self:0')).toHaveCount(0);
     await expect(hidden).not.toHaveAttribute('data-card-id');
