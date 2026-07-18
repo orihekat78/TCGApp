@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `07edcb1ba307`
+> Source hash: `e787119d8461`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,19 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-07-19
+category: fixes
+bugs: [BUG-235, BUG-236, BUG-237, BUG-238, BUG-239, BUG-240, BUG-241, BUG-242, BUG-243, BUG-244]
+---
+
+## Phase 3 card-choice visuals and landscape closure
+
+- Shared visible card choices now retain occurrence identity, safe hidden-card rendering, public duplicate labels, and detail-close resolution.
+- Decision/detail layering, timed deck reveal, toast/HUD pointer pass-through, and deck/picker scroll containment are fixed.
+- Formal mobile coverage is **landscape Pixel 5, 851x393**; portrait remains out of scope.
+- BUG-235 through BUG-244 are closed with implementation, unit, and real-flow browser evidence.
 
 ---
 date: 2026-07-17

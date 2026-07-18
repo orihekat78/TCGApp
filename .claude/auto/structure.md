@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5020
+- **ファイル数**: 5047
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -400,6 +400,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-232.md`
     - `BUG-233.md`
     - `BUG-234.md`
+    - `BUG-235.md`
+    - `BUG-236.md`
+    - `BUG-237.md`
+    - `BUG-238.md`
+    - `BUG-239.md`
+    - `BUG-240.md`
+    - `BUG-241.md`
+    - `BUG-242.md`
+    - `BUG-243.md`
+    - `BUG-244.md`
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -707,6 +717,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-15-03-contact-and-meta-effect-modals.md`
     - `2026-07-16-01-you-vs-cpu-hardening.md`
     - `2026-07-17-01-you-vs-cpu-hardening-fixed.md`
+    - `2026-07-19-01-phase-3-card-choice-visuals.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1238,6 +1249,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-15-3.md` — 2026-07-15 manual YOU vs AI matrix
     - `2026-07-17.md` — 2026-07-14〜15 bug wave session
     - `2026-07-18-task7-qa-offline-lint.md` — Task 7 — Q&A offline lint
+    - `2026-07-19.md` — memory — 現セッション scratchpad
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1697,6 +1709,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-07-16-bug-wave-closeout.md` — Current Bug Wave Baseline Implementation Plan
       - `2026-07-16-official-qa-compliance.md` — Official QA Compliance Implementation Plan
       - `2026-07-16-you-vs-cpu-system-validation.md` — YOU vs CPU System Validation Implementation Plan
+      - `2026-07-18-card-choice-visuals.md` — Phase 3: Card-choice visuals and landscape QA
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -4899,6 +4912,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-122-cutin-keyword-filter.spec.ts` — E2E: BUG-122 — matchOneFilter の filter.keyword がアイコン能力 (カットイン) を未検出だったバグの実機検証。
     - `bug-136-deck-reorder.spec.ts` — E2E regression: BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」順序選択 modal
     - `bug-211-212-product-path.spec.ts` — Active characters are not ordinary action targets. Evidence 0 also makes
+    - `bug-237-recent-action-toast-pointer.spec.ts` — 長い target により toast-target の中心を実際の自己リムーブ領域へ置く。
+    - `bug-239-landscape-deck-modal.spec.ts`
+    - `bug-241-landscape-pickers.spec.ts` — Layout carrier only. Exact opaque-instance resolution remains in the real B02039…
+    - `bug-243-public-duplicate-a11y.spec.ts`
+    - `bug-244-landscape-special-pickers.spec.ts`
+    - `card-choice-details-real-flow.spec.ts` — Reveal animation ends after 500ms for the first public card. Use an ordinary
+    - `card-expand-modal-priority.spec.ts`
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `choose-intercept.spec.ts`
@@ -4911,7 +4931,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `evidence-suppression-2026-06-06.spec.ts` — E2E: evidence 抑制 (evidenceToDeck + optional $trigger.…
     - `full-match-human-vs-cpu.spec.ts` — 1試合通し Playwright smoke (human vs CPU) — CLAUDE.md 6.3 compliance
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
-    - `leave-intercept.spec.ts`
+    - `leave-intercept.spec.ts` — UI が guard 後を action-1 まで進める。以降のコンタクト選択と判定は公開 dispatch を通す。
     - `m3-pa-mr-declared.spec.ts` — E2E: M3 PA batch — パートナーエリア常駐 MR の宣言能力 human 経路 (実機クリック)
     - `miniwave5-deck-place.spec.ts` — E2E: mini-wave #5 P2 — B05047「【登場時】自分のデッキのカードを上から2枚見て、好きな順番で
     - `mobile-viewport-controls.spec.ts`
@@ -5160,6 +5180,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`components/`**
       - `ActionsPanel.lock.test.tsx` — tests/ui/components/ActionsPanel.lock — 効果解決中ロック (rules/05 割り込み禁止)
       - `CardArt.test.tsx` — tests/ui/components/CardArt — Phase 9-C: カード画像 img wrapper
+      - `CardExpandModal.priority.test.tsx`
       - `CardListModal.pick-detail.test.tsx`
       - `CardListModal.zero-pick.test.tsx`
       - `CaseArea.stamp.test.tsx` — Phase 8.10h: CaseArea stamp-flip class application
@@ -5171,6 +5192,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `DeckArea.test.tsx` — Phase 7 Task 7.7: DeckArea tests
       - `DeckPlaceModalHost.test.tsx`
       - `DeckReorderModalHost.reset.test.tsx`
+      - `DeckRevealOverlay.card-detail.test.tsx` — The original 3100ms reveal timeline must not run behind the detail modal.
+      - `DemoPickerModal.card-details.test.tsx`
+      - `EffectPickerModal.card-detail.test.tsx`
       - `EffectStackPanel.reorder.test.tsx` — Phase 8 完全クローズ Commit 5: EffectStackPanel reorder UI SSR test
       - `EffectStackPanel.test.tsx` — Phase 7 Task 7.14: EffectStackPanel tests
       - `EvidenceArea.test.tsx` — Phase 7 Task 7.9: EvidenceArea tests
@@ -5179,12 +5203,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `GuardPickerModal.test.tsx` — Phase 8.6α: GuardPickerModal tests
       - `HandZone.test.tsx` — Phase 7 Task 7.11: HandZone tests
       - `HiramekiPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3a: HiramekiPickerModal SSR test
+      - `LeaveInterceptModalHost.card-details.test.tsx`
       - `LogPanel.test.tsx` — Phase 7 Task 7.13: LogPanel tests
       - `MisreadPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3b: MisreadPickerModal SSR test
       - `OppTurnOverlay.test.tsx` — Phase 8.10a: OppTurnOverlay tests
       - `PartnerArea.test.tsx` — Phase 7 Task 7.5: PartnerArea tests
       - `Playmat.test.tsx` — Phase 7 Task 7.3: Playmat layout structure tests
       - `Playmat.user-bug-wave.test.tsx`
+      - `RecentActionToast.test.tsx`
       - `RefreshOverlay.test.tsx` — Phase 8.10i: RefreshOverlay tests
       - `RemoveArea.test.tsx` — Phase 7 Task 7.10: RemoveArea tests
       - `SceneArea.activepop.test.tsx` — tests/ui/components/SceneArea.activepop — アクティブカード「ぴこんポップ」(Task2)
@@ -5255,6 +5281,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `tokens.test.ts` — Phase 7 Task 7.2: tokens.css smoke test
     - `bugs-207-209-218-adjudication.test.tsx` — BUG-207/209/218 adjudication regressions.
   - `AGENTS.md` — Test Instructions
+  - `playwright-mobile-landscape-config.test.ts`
   - `sanity.test.ts`
 - **`user_request/`** — ユーザーからの要望テキスト (triage 元データ)
   - `20260521_01.txt`
