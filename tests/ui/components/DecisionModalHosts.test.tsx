@@ -4,6 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChooseInterceptModalHost } from '@/ui/components/ChooseInterceptModalHost';
 import { SetCardReplacementModalHost } from '@/ui/components/SetCardReplacementModalHost';
 import { SetCardChoiceModalHost } from '@/ui/components/SetCardChoiceModalHost';
+import { EffectOptionalModalHost } from '@/ui/components/EffectOptionalModalHost';
+import { EffectRepeatOptionalModalHost } from '@/ui/components/EffectRepeatOptionalModalHost';
+import { RpsModalHost } from '@/ui/components/RpsModalHost';
 import { useGameStateStore } from '@/ui/state/store';
 
 const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
@@ -14,7 +17,10 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 type DecisionHost = typeof ChooseInterceptModalHost
   | typeof SetCardReplacementModalHost
-  | typeof SetCardChoiceModalHost;
+  | typeof SetCardChoiceModalHost
+  | typeof EffectOptionalModalHost
+  | typeof EffectRepeatOptionalModalHost
+  | typeof RpsModalHost;
 
 function gameState(hand: string[] = []) {
   return {
@@ -169,6 +175,33 @@ describe('decision modal hosts', () => {
     expect(container.textContent).toContain('2');
     act(() => (container.querySelector('[data-instance-id="set-instance-2"]') as HTMLButtonElement).click());
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'setCardChoiceResolve', instanceId: 'set-instance-2' });
+    unmount(root, container);
+  });
+
+  it('keeps optional choices in the fixed action footer and preserves the run boolean', () => {
+    useGameStateStore.setState({ pendingEffectOptional: { player: 'self', source: { cardId: 'D08025', abilityId: 'a1' } } as never });
+    const { container, root } = renderHost(EffectOptionalModalHost);
+    expect(container.querySelector('.cp-body [data-testid="opt-run-yes"]')).toBeNull();
+    act(() => (container.querySelector('[data-testid="opt-run-no"]') as HTMLButtonElement).click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'optionalResolve', run: false });
+    unmount(root, container);
+  });
+
+  it('keeps repeat choices in the fixed action footer and preserves the run boolean', () => {
+    useGameStateStore.setState({ pendingEffectRepeatOptional: { player: 'self', remaining: 2, source: { cardId: 'D08025', abilityId: 'a1' } } as never });
+    const { container, root } = renderHost(EffectRepeatOptionalModalHost);
+    expect(container.querySelector('.cp-body [data-testid="repeat-opt-run-yes"]')).toBeNull();
+    act(() => (container.querySelector('[data-testid="repeat-opt-run-yes"]') as HTMLButtonElement).click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'repeatOptionalResolve', run: true });
+    unmount(root, container);
+  });
+
+  it('keeps RPS choices in the fixed action footer and preserves the selected hand', () => {
+    useGameStateStore.setState({ pendingRps: { player: 'self', ownerPlayer: 'opp', aiHand: 'paper' } as never });
+    const { container, root } = renderHost(RpsModalHost);
+    expect(container.querySelector('.cp-body [data-testid="rps-rock"]')).toBeNull();
+    act(() => (container.querySelector('[data-testid="rps-rock"]') as HTMLButtonElement).click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'rpsResolve', hand: 'rock' });
     unmount(root, container);
   });
 });

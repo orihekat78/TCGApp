@@ -62,6 +62,13 @@
   margin-top: 16px;
 }
 
+.cp-actions .cp-list {
+  display: flex;
+  gap: 8px;
+}
+
+.cp-actions .cp-list li { margin: 0; }
+
 .cp-btn {
   min-block-size: 44px;
   padding: 8px 20px;
