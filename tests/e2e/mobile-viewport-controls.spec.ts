@@ -42,8 +42,8 @@ test.describe('mobile viewport controls', () => {
     expect(errors).toEqual([]);
   });
 
-  test('portraitでリプレイ終了操作がviewport内に収まる', async ({ page }) => {
-    await page.setViewportSize({ width: 393, height: 851 });
+  test('landscapeでリプレイ終了操作がviewport内に収まる', async ({ page }) => {
+    await page.setViewportSize({ width: 851, height: 393 });
     const { errors } = await setupGamePage(page);
 
     await page.evaluate(() => {
