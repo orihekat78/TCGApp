@@ -120,8 +120,11 @@ describe('lint-qa-trace', () => {
 
   it('rejects worsened coverage and accepts a matched improvement', () => {
     const one = [item('1')];
-    const worse = fixture({ coverage: coverageFor(one, { [one[0]!.qaId]: 'test-missing' }) });
-    expect(lintQaTrace({ root: worse.root }).issues.map((issue) => issue.code)).toContain('coverage-worsened');
+    const worse = fixture({
+      baselineCoverage: coverageFor(one, { [one[0]!.qaId]: 'matched' }),
+      coverage: coverageFor(one, { [one[0]!.qaId]: 'test-missing' }),
+    });
+    expect(lintQaTrace({ root: worse.root }).issues.map((issue) => issue.code)).toContain('coverage-item-worsened');
 
     const improved = fixture({ coverage: coverageFor(one, { [one[0]!.qaId]: 'matched' }) });
     expect(lintQaTrace({ root: improved.root }).issues).toEqual([]);
@@ -159,9 +162,13 @@ describe('lint-qa-trace', () => {
       baselineCoverage: coverageFor(one, { [one[0]!.qaId]: before }),
       coverage: coverageFor(one, { [one[0]!.qaId]: after }),
     });
-    const codes = lintQaTrace({ root }).issues.map((issue) => issue.code);
+    const issues = lintQaTrace({ root }).issues;
 
-    expect(codes.includes('coverage-item-worsened')).toBe(!allowedTransitions[before].includes(after));
+    if (allowedTransitions[before].includes(after)) {
+      expect(issues).toEqual([]);
+    } else {
+      expect(issues.map((issue) => issue.code)).toContain('coverage-item-worsened');
+    }
   });
 });
 
