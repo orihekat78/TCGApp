@@ -12,8 +12,8 @@ import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const resolveCard = (cardId: string): ResolvedCardMeta => ({
-  name: cardId === 'P-Conan' ? '江戸川 コナン' : '萩原 千速',
-  color: cardId === 'P-Conan' ? 'blue' : 'yellow',
+  name: cardId === 'B07059' ? '\u8d64\u3044\u6d99' : cardId === 'P-Conan' ? '江戸川 コナン' : '萩原 千速',
+  color: cardId === 'B07059' ? 'red' : cardId === 'P-Conan' ? 'blue' : 'yellow',
   ap: 0,
   lp: 1,
   lv: 0,
@@ -161,6 +161,12 @@ describe('PartnerArea partner-area cards', () => {
     expect(details).toHaveLength(2);
     const primaryLabels = primaries.map((button) => button.getAttribute('aria-label'));
     const detailLabels = details.map((button) => button.getAttribute('aria-label'));
+    const expectedLabels = [
+      '\u8d64\u3044\u6d99\uff081\u679a\u76ee\uff09\u306e\u8a73\u7d30\u3092\u8868\u793a',
+      '\u8d64\u3044\u6d99\uff082\u679a\u76ee\uff09\u306e\u8a73\u7d30\u3092\u8868\u793a',
+    ];
+    expect(primaryLabels).toEqual(expectedLabels);
+    expect(detailLabels).toEqual(expectedLabels);
     expect(primaryLabels.every((label) => label?.includes('詳細を表示'))).toBe(true);
     expect(detailLabels.every((label) => label?.includes('詳細を表示'))).toBe(true);
     expect(new Set(primaryLabels).size).toBe(2);
