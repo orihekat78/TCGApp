@@ -21,7 +21,9 @@
   min-width: 0;
   max-width: 620px;
   max-height: calc(100vh - 24px);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
 }
 
@@ -111,12 +113,16 @@
 }
 
 .cid-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  margin-bottom: 14px;
+  overflow-y: auto;
+}
+
+.cid-choice-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 14px;
-  max-height: 280px;
-  overflow-y: auto;
 }
 
 .cid-section h3 {
@@ -197,10 +203,13 @@
 
 .cid-actions {
   display: flex;
+  flex: 0 0 auto;
   justify-content: flex-end;
 }
 
 .cid-pass {
+  min-width: 44px;
+  min-height: 44px;
   padding: 7px 22px;
   background: rgba(80, 80, 90, 0.4);
   border: 1px solid rgba(140, 140, 160, 0.45);
@@ -219,6 +228,6 @@
 
 @media (max-width: 480px) {
   .cid-modal { padding: 16px 12px; }
-  .cid-body { grid-template-columns: 1fr; }
+  .cid-choice-grid { grid-template-columns: 1fr; }
   .cid-hand-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

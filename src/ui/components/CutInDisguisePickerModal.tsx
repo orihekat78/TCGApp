@@ -70,6 +70,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
           <p className="cid-sub" data-testid="cid-actor-label">{`${actorDisplay}: カットイン / 変装 を選択`}</p>
         </div>
 
+        <div className="cid-body">
         {handCards !== undefined && (
           <section className="cid-hand-preview" aria-label="手札一覧">
             <h3>手札（黄色枠のみ使用可能）</h3>
@@ -109,7 +110,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
           </section>
         )}
 
-        <div className="cid-body">
+        <div className="cid-choice-grid">
           <section className="cid-section">
             <h3>カットイン</h3>
             {cutins.length === 0 ? (
@@ -189,6 +190,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
           </section>
         </div>
 
+        </div>
         <div className="cid-actions">
           <button
             type="button"
