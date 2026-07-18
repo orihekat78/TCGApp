@@ -669,7 +669,7 @@
     },
     {
       "id": "BUG-233",
-      "classification": "open",
+      "classification": "verified",
       "owner": "docs-tooling",
       "implementationPaths": [
         "scripts/gen-docs/lib/header.ts",
@@ -686,11 +686,11 @@
         "npm run typecheck",
         "npm run lint"
       ],
-      "nextWaveReason": "Stage generator and dictionary inputs, regenerate docs, then close only after clean-clone verification and an implementation commit."
+      "nextWaveReason": null
     },
     {
       "id": "BUG-234",
-      "classification": "open",
+      "classification": "verified",
       "owner": "docs-tooling",
       "implementationPaths": [
         "scripts/check-wave-scope.ts"
@@ -704,7 +704,7 @@
         "npm run lint",
         "npm run check:wave-scope"
       ],
-      "nextWaveReason": "Close after core.autocrlf=true clean-checkout and pre-existing snapshot ownership verification, then an implementation commit."
+      "nextWaveReason": null
     }
   ],
   "changeOwnership": [

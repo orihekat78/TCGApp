@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `700e86d61480`
+> Source hash: `07edcb1ba307`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -73,18 +73,22 @@ bugs:
     BUG-230,
     BUG-231,
     BUG-232,
+    BUG-233,
+    BUG-234,
   ]
 ---
 
 ## YOU vs CPU 製品経路の水平修正完了
 
 - runtime実装commit `300353bd79ca806460c8ea74025c3f062e6528b9`へ34票、docs可搬性commit
-  `46bc113748e9d15c20bfeb3c5b1a6f4f713cfef9`へBUG-232を紐づけ、計35票を修正済みにした。
+  `46bc113748e9d15c20bfeb3c5b1a6f4f713cfef9`へBUG-232、`f4b3728ab808473802f0f2e1ae06e705cfefbbcb`へBUG-233、
+  `639b8cd0600a3c8696420f42adc34f8a920f109e`へBUG-234を紐づけ、計37票を修正済みにした。
 - owner/chooser、非同期continuation、効果source、contact、misread、deck refresh、
   session境界、Meta画面、mobile操作、ログカード拡大を製品経路で修正した。
-- Vitest 6041件、Root Playwright 293件、Meta Playwright 44件、実ブラウザの
+- clean Vitest 6035件、Root Playwright 293件、Meta Playwright 44件、実ブラウザの
   YOU vs CPU操作、typecheck、lint、docs、smoke、benchmarkで検証した。
 - BUG-207/209/218は仕様外。修正済み件数へ含めない。
+- BUG-233はmapping contamination 35件を是正、BUG-234はclean checkoutのscope portabilityを固定した。
 
 ---
 date: 2026-07-16

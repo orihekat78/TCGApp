@@ -156,15 +156,15 @@ describe("wave manifest", () => {
           actual.bugs?.filter((entry) => entry.classification === classification).length,
         ]),
       ),
-    ).toEqual({ verified: 35, "spec-out": 3, open: 2 });
+    ).toEqual({ verified: 37, "spec-out": 3, open: 0 });
     expect(actual.bugs?.find((entry) => entry.id === "BUG-232")?.classification).toBe(
       "verified",
     );
     expect(actual.bugs?.find((entry) => entry.id === "BUG-233")?.classification).toBe(
-      "open",
+      "verified",
     );
     expect(actual.bugs?.find((entry) => entry.id === "BUG-234")?.classification).toBe(
-      "open",
+      "verified",
     );
     for (const entry of actual.bugs ?? []) {
       expect(["verified", "spec-out", "open", "official-blocked"]).toContain(

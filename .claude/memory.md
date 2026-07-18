@@ -39,7 +39,11 @@
 - 旧batchは代表テンプレのみ、かつallowlistが欠落を正常化したためすり抜けた。
 - 保留解除は実カードでpending→発動→任意判断→対象選択→stateとnegative gateを固定する。
 
-## 2026-07-17 Phase 1 closeout
+## 2026-07-17–18 Phase 1 final closeout
+
+- clean `f4b3728a` で mapping contamination 35件を是正し、full Vitest 6035 pass。BUG-233を修正済みにした。
+- `639b8cd0` は `core.autocrlf=true` clean checkout と pre-existing ownership のscope portabilityを固定。BUG-234を修正済みにした。
+- manifest は verified 37 / spec-out 3 / open 0。self-review と generator入力・scope collector・closure metadata の横断確認を完了。
 
 - dirty mainでgreenに見えた`979060836ebff223a79217b69adfba36767ff453`単独は、clean cloneで
   不足deltaが顧在化し93 failures / 38 test files。false-greenと確定。
