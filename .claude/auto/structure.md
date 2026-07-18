@@ -5141,7 +5141,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `lint-bug-closure.test.ts`
     - `markdown-eol.test.ts`
     - `official-api.test.ts`
-    - `rule-qa-provenance.test.ts` — Top-level prose bullets are rulings. Nested examples and related-rule links are…
+    - `rule-qa-provenance.test.ts`
     - `structure-root-portability.test.ts`
     - `structure-tracked-files.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト

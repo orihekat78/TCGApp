@@ -23,7 +23,7 @@
       "status": "unverified",
       "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
       "deferId": "DEFER-QA-POST-ID",
-      "summaryHash": "2911b5052f60ebfe4f5b70aab846c13cb7811ef56023b513c064b666b468386e"
+      "summaryHash": "31af903a6328eb83897ad39e6b508a64a60fce3841d7a07b0f53d3955365d240"
     },
     {
       "id": "qa-23-community-index",
@@ -31,7 +31,7 @@
       "status": "unverified",
       "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
       "deferId": "DEFER-QA-POST-ID",
-      "summaryHash": "054783cfc3d0bc5d7ec984fed45eed2ca1be3d23a781aab257a7a35045cd9df0"
+      "summaryHash": "dbabf7346a0a3904d423021536a44b106dfdfd0a244dcc958609d99801afe9e1"
     },
     {
       "id": "qa-24-community-index",
@@ -39,7 +39,7 @@
       "status": "unverified",
       "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
       "deferId": "DEFER-QA-POST-ID",
-      "summaryHash": "baaacf88c8d4f2a6228ba00aca7bb5e86fa41ecbf0c67ed9c14833d5db6c98ea"
+      "summaryHash": "d426d731ead14ae502f498807a3da3318adefe0b0bf51a3a26bcbf3581b13f00"
     },
     {
       "id": "qa-25-community-index",
@@ -47,7 +47,7 @@
       "status": "unverified",
       "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
       "deferId": "DEFER-QA-POST-ID",
-      "summaryHash": "7d47ba4995b860ed804727e5c7c1b094f02122d32b391d6fe03c8c66d07f627e"
+      "summaryHash": "0d699e05ce1f881036318966213ead68fb09b4d84ae28af6a7daf578eb229b55"
     },
     {
       "id": "qa-26-community-index",
@@ -55,7 +55,7 @@
       "status": "unverified",
       "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
       "deferId": "DEFER-QA-POST-ID",
-      "summaryHash": "e6c81dd69b335f3be51741636c48a574d5c1358ae057e133f6a1145913ba6a42"
+      "summaryHash": "2178eeb19b8e6442d21a090a8928285743f85a686752b6cda4fef3dcaf599215"
     }
   ]
 }
