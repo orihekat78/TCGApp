@@ -91,6 +91,8 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
     // 候補が表示されている (s2 が active なので 1 件以上)
     const candCount = await page.locator('[data-testid^="guard-cand-"]').count();
     expect(candCount).toBeGreaterThanOrEqual(1);
+    await page.getByTestId('guard-cand-s2').click();
+    await expect(page.getByTestId('guard-picker-modal')).toBeHidden();
 
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });

@@ -70,10 +70,11 @@ export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | nu
             <ul className="guard-picker-list">
               {candidates.map((c) => (
                 <li key={c.uid}>
-                  <div className="guard-picker-choice" data-testid={`guard-cand-${c.uid}`}>
+                  <div className="guard-picker-choice">
                     <SelectableCardTile
                       cardId={c.cardId}
                       instanceId={c.uid}
+                      selectTestId={`guard-cand-${c.uid}`}
                       onSelect={onPick}
                       onExpand={expandModal.open}
                     />

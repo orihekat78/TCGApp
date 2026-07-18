@@ -13,7 +13,7 @@ export function SetCardReplacementModalHost(): JSX.Element | null {
   if (!pending || pending.player !== 'self') return null;
   return <div className="cp-overlay" role="dialog" aria-modal="true" data-testid="set-card-replacement-modal">
     <div className="cp-modal"><div className="cp-header"><h2>Move set card</h2><p className="cp-sub">Choose a character, or remove the card.</p></div>
-      <div className="cp-body"><ul className="cp-list">{pending.candidates.map((candidate) => <li key={candidate.uid}><SelectableCardTile cardId={candidate.cardId} instanceId={candidate.uid} onSelect={() => dispatchEngineAction({ type: 'setCardReplacementResolve', targetUid: candidate.uid })} onExpand={expandModal.open} /></li>)}</ul>
+      <div className="cp-body"><ul className="cp-list">{pending.candidates.map((candidate) => <li key={candidate.uid}><SelectableCardTile cardId={candidate.cardId} instanceId={candidate.uid} selectTestId={`set-card-replacement-${candidate.uid}`} onSelect={() => dispatchEngineAction({ type: 'setCardReplacementResolve', targetUid: candidate.uid })} onExpand={expandModal.open} /></li>)}</ul>
         <button type="button" className="cp-cand" data-testid="set-card-replacement-decline" onClick={() => dispatchEngineAction({ type: 'setCardReplacementResolve', targetUid: null })}>Remove card</button>
       </div>
     </div>

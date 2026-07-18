@@ -13,12 +13,12 @@ import {
 } from '@/ui/components/GuardPickerModal';
 import type { SceneCharacter } from '@/engine/types/game-state';
 
-const CSS_SOURCE = readFileSync(
-  resolve(process.cwd(), 'src/ui/components/GuardPickerModal.css'),
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+const SELECTABLE_TILE_CSS = readFileSync(
+  resolve(process.cwd(), 'src/ui/components/SelectableCardTile.css'),
   'utf8',
 );
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const cands: GuardPickerCandidate[] = [
   { uid: 'u1', cardId: 'D08003', name: '毛利蘭', ap: 5000, lp: 2 },
@@ -28,12 +28,15 @@ const cands: GuardPickerCandidate[] = [
 describe('GuardPickerModal', () => {
   let root: Root | null = null;
   let container: HTMLDivElement | null = null;
+  let styles: HTMLStyleElement | null = null;
 
   afterEach(() => {
     if (root) act(() => root!.unmount());
     container?.remove();
     root = null;
     container = null;
+    styles?.remove();
+    styles = null;
   });
   it('returns null when open=false', () => {
     const html = renderToString(
@@ -81,11 +84,17 @@ describe('GuardPickerModal', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    styles = document.createElement('style');
+    styles.textContent = SELECTABLE_TILE_CSS;
+    document.head.appendChild(styles);
     const onPick = vi.fn();
     act(() => root!.render(<GuardPickerModal open candidates={cands} onPick={onPick} onSkip={vi.fn()} />));
 
     expect(container.querySelectorAll('[data-instance-id]')).toHaveLength(2);
-    expect(container.querySelector('[data-instance-id="u2"]')).not.toBeNull();
+    const candidate = container.querySelector<HTMLButtonElement>('[data-testid="guard-cand-u2"]');
+    expect(candidate).toBeInstanceOf(HTMLButtonElement);
+    expect(candidate?.dataset.instanceId).toBe('u2');
+    expect(getComputedStyle(candidate!).minHeight).toBe('44px');
     expect(container.querySelector('button button')).toBeNull();
     const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
     expect(details).toHaveLength(2);
@@ -94,17 +103,27 @@ describe('GuardPickerModal', () => {
     act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
     expect(container.querySelector('[data-testid="guard-picker-modal"]')).not.toBeNull();
 
-    act(() => (container.querySelector('[data-instance-id="u2"]') as HTMLButtonElement).click());
+    act(() => candidate!.click());
     expect(onPick).toHaveBeenCalledWith('u2');
   });
 
-  it('keeps guard controls at the mobile 44px touch-target minimum', () => {
-    expect(CSS_SOURCE).toMatch(
-      /\.guard-picker-choice\s*\{[\s\S]*min-block-size:\s*44px;/,
+  it('blocks skip when a guard is mandatory', () => {
+    const html = renderToString(
+      <GuardPickerModal open candidates={cands} onPick={vi.fn()} onSkip={vi.fn()} mustGuard />,
     );
-    expect(CSS_SOURCE).toMatch(
-      /\.guard-picker-skip\s*\{[\s\S]*min-block-size:\s*44px;/,
-    );
+    expect(html).toContain('data-testid="guard-picker-must"');
+    expect(html).not.toContain('data-testid="guard-picker-skip"');
+  });
+
+  it('calls skip when guarding is optional', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    const onSkip = vi.fn();
+    act(() => root!.render(<GuardPickerModal open candidates={cands} onPick={vi.fn()} onSkip={onSkip} mustGuard={false} />));
+
+    act(() => (container.querySelector('[data-testid="guard-picker-skip"]') as HTMLButtonElement).click());
+    expect(onSkip).toHaveBeenCalledOnce();
   });
 });
 

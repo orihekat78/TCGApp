@@ -70,6 +70,7 @@ describe('decision modal hosts', () => {
 
     const tiles = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')];
     expect(tiles.map((tile) => tile.dataset.instanceId)).toEqual(['hand:self:0', 'hand:self:1']);
+    expect(container.querySelectorAll('.selectable-card-tile img')).toHaveLength(2);
     expect(container.querySelector('button button')).toBeNull();
     const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
     expect(details).toHaveLength(2);
@@ -99,7 +100,7 @@ describe('decision modal hosts', () => {
     unmount(root, container);
   });
 
-  it('resolves a set-card replacement by target uid and keeps removal available with no candidates', () => {
+  it('resolves a set-card replacement from its native candidate selector and keeps details in the pending modal', () => {
     useGameStateStore.setState({
       pendingSetCardReplacement: {
         player: 'self', fromUid: 'from-1', setCardInstanceId: 'set-1',
@@ -109,8 +110,17 @@ describe('decision modal hosts', () => {
     });
     const { container, root } = renderHost(SetCardReplacementModalHost);
 
-    expect(container.querySelector('[data-instance-id="candidate-1"]')).not.toBeNull();
-    act(() => (container.querySelector('[data-instance-id="candidate-1"]') as HTMLButtonElement).click());
+    const candidate = container.querySelector<HTMLButtonElement>('[data-testid="set-card-replacement-candidate-1"]');
+    expect(candidate).toBeInstanceOf(HTMLButtonElement);
+    expect(container.querySelector('.selectable-card-tile img')).not.toBeNull();
+    const detail = container.querySelector<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
+    expect(detail).not.toBeNull();
+    act(() => detail!.click());
+    expect(container.querySelector('.card-expand-close')).not.toBeNull();
+    act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
+    expect(container.querySelector('[data-testid="set-card-replacement-modal"]')).not.toBeNull();
+
+    act(() => candidate!.click());
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'setCardReplacementResolve', targetUid: 'candidate-1' });
     unmount(root, container);
 
@@ -128,11 +138,16 @@ describe('decision modal hosts', () => {
 
   it('renders set-card choices as opaque ordinal tiles and resolves only the selected instance id', () => {
     useGameStateStore.setState({
-      gameState: gameState(),
+      gameState: {
+        players: {
+          self: { hand: [], scene: [{ uid: 'host-1', cardId: 'HOST-SECRET-ID' }] },
+          opp: { hand: [], scene: [] },
+        },
+      } as never,
       pendingSetCardChoice: {
         player: 'self', hostUid: 'host-1',
         entries: [{ instanceId: 'set-instance-1', ordinal: 1 }, { instanceId: 'set-instance-2', ordinal: 2 }],
-        source: { uid: 'source-1' } as never,
+        source: { uid: 'source-1', cardId: 'SET-SECRET-ID' } as never,
       },
     });
     const { container, root } = renderHost(SetCardChoiceModalHost);
@@ -140,8 +155,11 @@ describe('decision modal hosts', () => {
     const html = container.innerHTML;
     expect(container.querySelectorAll('.selectable-card-tile--hidden')).toHaveLength(2);
     expect(container.querySelectorAll('[data-testid="selectable-card-tile-detail"]')).toHaveLength(0);
-    expect(html).not.toContain('B01001');
+    expect(html).not.toContain('HOST-SECRET-ID');
+    expect(html).not.toContain('SET-SECRET-ID');
     expect(html).not.toContain('cardId');
+    expect([...container.querySelectorAll<HTMLElement>('[aria-label]')].map((element) => element.getAttribute('aria-label')).join(' ')).not.toContain('SECRET');
+    expect(container.querySelectorAll('[data-card-id]')).toHaveLength(0);
     expect(container.textContent).toContain('1');
     expect(container.textContent).toContain('2');
     act(() => (container.querySelector('[data-instance-id="set-instance-2"]') as HTMLButtonElement).click());
