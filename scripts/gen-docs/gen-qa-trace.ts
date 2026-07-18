@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ALL_CARDS } from '../../src/cards/index.js';
+import { mergeQaAdjudication, type QaAdjudicationResult, type QaAdjudicationStatus } from '../qa-adjudication.js';
 import { computeLogicalTextSourceHash, renderHeader } from './lib/header.js';
 import { diffMarkdown, writeMarkdown } from './lib/markdown.js';
 
@@ -60,6 +61,7 @@ type Issue =
 export interface QaTraceItem extends QaSnapshotItem {
   classification: Classification;
   coverageStatus: CoverageStatus;
+  adjudicationResult: QaAdjudicationResult;
   sourceRefs: string[];
   testRefs: string[];
 }
@@ -72,7 +74,9 @@ export interface QaTrace {
     total: number;
     statusCounts: Record<CoverageStatus, number>;
     itemStatuses: Record<string, CoverageStatus>;
+    adjudicationResults: Record<string, QaAdjudicationResult>;
     allCompliant: boolean;
+    allAdjudicated: boolean;
   };
 }
 
@@ -236,6 +240,8 @@ export function buildQaTrace(input: {
   shippedCardIds: ReadonlySet<string>;
   deferredCardIds: ReadonlySet<string>;
   coverageOverrides?: ReadonlyMap<string, QaCoverageOverride>;
+  adjudicationStatuses?: ReadonlyMap<string, QaAdjudicationStatus>;
+  adjudicationResults?: ReadonlyMap<string, QaAdjudicationResult>;
 }): QaTrace {
   validateQaSnapshot(input.snapshot);
   const snapshotItems = [...input.snapshot.items].sort((a, b) => compareOrdinal(a.qaId, b.qaId));
@@ -276,7 +282,8 @@ export function buildQaTrace(input: {
       ...item,
       cardNums: sortedUnique(item.cardNums),
       classification: classify(item.cardId, item, input.shippedCardIds, input.deferredCardIds),
-      coverageStatus: override?.status ?? classifyCoverage(sourceRefs, testRefs),
+      coverageStatus: override?.status ?? input.adjudicationStatuses?.get(item.qaId) ?? classifyCoverage(sourceRefs, testRefs),
+      adjudicationResult: input.adjudicationResults?.get(item.qaId) ?? 'unreviewed',
       sourceRefs,
       testRefs,
     };
@@ -292,7 +299,9 @@ export function buildQaTrace(input: {
       total: traceItems.length,
       statusCounts,
       itemStatuses: Object.fromEntries(traceItems.map((item) => [item.qaId, item.coverageStatus])),
+      adjudicationResults: Object.fromEntries(traceItems.map((item) => [item.qaId, item.adjudicationResult])),
       allCompliant: traceItems.length > 0 && statusCounts.matched === traceItems.length,
+      allAdjudicated: traceItems.length > 0 && traceItems.every((item) => item.adjudicationResult !== 'unreviewed' && item.adjudicationResult !== 'needs-manual'),
     },
   };
 }
@@ -353,6 +362,14 @@ function loadQaCoverageOverrides(projectRoot: string, snapshot: QaSnapshot): Map
   );
 }
 
+/** Tracked sharded adjudications overlay inferred coverage; legacy overrides remain authoritative. */
+function loadQaAdjudications(projectRoot: string): { statuses: Map<string, QaAdjudicationStatus>; results: Map<string, QaAdjudicationResult> } | undefined {
+  const manifestPath = resolve(projectRoot, '.claude/specs/qa-adjudication/manifest.json');
+  if (!existsSync(manifestPath)) return undefined;
+  const merged = mergeQaAdjudication({ root: projectRoot, check: true });
+  return { statuses: new Map(Object.entries(merged.statuses)), results: new Map(Object.entries(merged.results)) };
+}
+
 function loadDeferredCardIds(projectRoot: string): Set<string> {
   const indexPath = resolve(projectRoot, '.claude/specs/DEFERRED-INDEX.md');
   if (!existsSync(indexPath)) return new Set();
@@ -411,9 +428,9 @@ function renderTrace(trace: QaTrace): string {
     '',
     '## Trace',
     '',
-    '| QA ID | Card | Printings | Shipped/missing | Coverage | Source refs | Test refs |',
-    '| --- | --- | --- | --- | --- | --- | --- |',
-    ...trace.items.map((item) => `| \`${item.qaId}\` | \`${item.cardId}\` | ${item.cardNums.map((n) => `\`${n}\``).join(', ')} | ${item.classification} | ${item.coverageStatus} | ${item.sourceRefs.length} | ${item.testRefs.length} |`),
+    '| QA ID | Card | Printings | Shipped/missing | Coverage | Adjudication | Source refs | Test refs |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
+    ...trace.items.map((item) => `| \`${item.qaId}\` | \`${item.cardId}\` | ${item.cardNums.map((n) => `\`${n}\``).join(', ')} | ${item.classification} | ${item.coverageStatus} | ${item.adjudicationResult} | ${item.sourceRefs.length} | ${item.testRefs.length} |`),
     '',
     '## Issues',
     '',
@@ -437,12 +454,15 @@ export function runGenQaTrace(options: RunOptions, projectRoot = PROJECT_ROOT): 
   validateQaSnapshotAgainstStatus(snapshot, loadTrackedStatus(projectRoot));
   const files = [...listSourceFiles(resolve(projectRoot, 'src')), ...listSourceFiles(resolve(projectRoot, 'tests'))]
     .map((path) => ({ path: relative(projectRoot, path).replaceAll('\\', '/'), content: readFileSync(path, 'utf8') }));
+  const adjudications = loadQaAdjudications(projectRoot);
   const trace = buildQaTrace({
     snapshot,
     files,
     shippedCardIds: loadShippedCardIds(),
     deferredCardIds: loadDeferredCardIds(projectRoot),
     coverageOverrides: loadQaCoverageOverrides(projectRoot, snapshot),
+    adjudicationStatuses: adjudications?.statuses,
+    adjudicationResults: adjudications?.results,
   });
   const manifestPath = resolve(projectRoot, '.claude/auto/qa-manifest.json');
   const tracePath = resolve(projectRoot, '.claude/auto/qa-trace.md');

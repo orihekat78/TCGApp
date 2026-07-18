@@ -55,7 +55,10 @@
     "check:codex-migration": "node scripts/check-codex-migration.mjs",
     "check:wave-scope": "tsx scripts/check-wave-scope.ts",
     "lint:bug-closure": "tsx scripts/lint-bug-closure.ts",
-    "lint:qa": "tsx scripts/lint-qa-trace.ts"
+    "lint:qa": "tsx scripts/lint-qa-trace.ts",
+    "qa:adjudication:bootstrap": "tsx scripts/qa-adjudication.ts --bootstrap",
+    "qa:adjudication:merge": "tsx scripts/qa-adjudication.ts --check",
+    "qa:adjudication:verify-local": "tsx scripts/qa-adjudication.ts --check --with-local-raw"
   },
   "keywords": [],
   "author": "",

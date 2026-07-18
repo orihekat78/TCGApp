@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "snapshot": {
+    "normalizedFaqHash": "0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3",
+    "itemCount": 2912,
+    "qaIdSetHash": "d6e9b6b71dbe6d82adff0b1285dd3d54bf7beb34edbafcc840b79d552717b839",
+    "itemSetHash": "3a3a846dc7d4ebd96b1e65f33d7173801252f740134f5c99b3521ebefdfb339d",
+    "answerSetHash": "afccf6ddb424d20cd2763302ce3b374e64bdd3af3a13c7d51cf460b0ad1f2902",
+    "conflictSetHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "rawPackages": [
+    {
+      "file": "ct-d01-api.json",
+      "sha256": "d5e8c8dfa34cffe92deda735f4d3b7db6c6244e0401920fc4be1c5ad46467eeb",
+      "cardNumHash": "4a97363349d79cf5b98082200216f063d37cc5e673e6a977fddec0b9b598ffae",
+      "cardNumCount": 16
+    },
+    {
+      "file": "ct-d02-api.json",
+      "sha256": "f4d773eb40c6a21d606dcd1b77bf9e970a4c37df7b190d183956331b94c40bff",
+      "cardNumHash": "2b0f370cce3757c9c1cb33091ab7d30840cadbf589c332ba030b8fa96e7c1200",
+      "cardNumCount": 16
+    },
+    {
+      "file": "ct-d03-api.json",
+      "sha256": "69f5ce117df6e8dd953818bab25374371bae9b1f1c6c5e3be20c140433c8eda8",
+      "cardNumHash": "bdaf258272d511138aa1e6a7be50d4d9e4d1cc16adfa900c33dcd5e30f616fef",
+      "cardNumCount": 16
+    },
+    {
+      "file": "ct-d04-api.json",
+      "sha256": "7208f43576464108cd3d260303e90aa685940b7051e6700f465657e6fac6da26",
+      "cardNumHash": "e63c292210b5da8e99a758aedb7b54592a481317f7e2024e11752a3ecb9de7f8",
+      "cardNumCount": 16
+    },
+    {
+      "file": "ct-d05-api.json",
+      "sha256": "a774f80f1875eb3eab26a351f91deec14d20dff74366a1ed6192a7e830e823b5",
+      "cardNumHash": "9b15901cfdd96fd3957c51f2adbe3230f37543a5c94b457f9d5c728948843382",
+      "cardNumCount": 16
+    },
+    {
+      "file": "ct-d06-api.json",
+      "sha256": "ddfee51fdf8969ff8b29c163ac1128179a7396fe5d10540bb4eec748bb48dec5",
+      "cardNumHash": "5fb4a5216112037e3894fee44e97d16294d921b7dc069b27be809bd5c06cdb2f",
+      "cardNumCount": 24
+    },
+    {
+      "file": "ct-d07-api.json",
+      "sha256": "5a06086b7dcb7b1943812564cacb6e1c87cc1cc31fc32caa350f5cd5f39c5504",
+      "cardNumHash": "b7d83869ab66762e97729a24e0d7ee26993370fd73814e4e08988166dbc9f37b",
+      "cardNumCount": 24
+    },
+    {
+      "file": "ct-d08-api.json",
+      "sha256": "a14d4772e3af26b7732f938640f377cf2c10d99b66aef1f0dacc5a0842688fc4",
+      "cardNumHash": "abf5a01e6fc01a30493cbbe5a57bd5ab5af79cd273985305760366a9a0dbdd83",
+      "cardNumCount": 26
+    },
+    {
+      "file": "ct-d09-api.json",
+      "sha256": "68773c76ac0be0a044ba5ac17c558a653861913db98c6236fd22e2cf1043413b",
+      "cardNumHash": "8435ef7919ef234a129a3bc310faf92934d869c6cc14636ca08ef130681d8526",
+      "cardNumCount": 27
+    },
+    {
+      "file": "ct-d10-api.json",
+      "sha256": "cb4a40786419ccd8a45065443363dd119d4592b70a54f6b1dc93834135fa20ba",
+      "cardNumHash": "4c6448ace86a52e3510c9eb7ab9f649f6f0ac575b87180525a4136317fe0e393",
+      "cardNumCount": 26
+    },
+    {
+      "file": "ct-d11-api.json",
+      "sha256": "f48e893c500387bde45da20caccf26412184504243e67f88544e2445b9a1226b",
+      "cardNumHash": "3b5617ea639aa7c6d335a2ad06a3706068c9016421d020619a4df4009b67661e",
+      "cardNumCount": 21
+    },
+    {
+      "file": "ct-p01-api.json",
+      "sha256": "cdf3a847334b9e0d71f4a49bc910aa263a23543c2400d28b81d43e8d64e28751",
+      "cardNumHash": "5778a4e7f6c76d9968e9dcb3f746666fe2a8c7a934ed0620ceb03a43f045dfba",
+      "cardNumCount": 160
+    },
+    {
+      "file": "ct-p02-api.json",
+      "sha256": "1de541b54ac60762bf9dc5e9c1ef4133d1c2c6b5af6f4c332fc51b7439808ce7",
+      "cardNumHash": "2c489077ec6b7176a8c14937fff438288245b26252110740ecf243a06f4fd325",
+      "cardNumCount": 149
+    },
+    {
+      "file": "ct-p03-api.json",
+      "sha256": "0a1b2128d01ba478be2a0d5582babcc7b940b8d43629204c4e6fe1d41c452cf6",
+      "cardNumHash": "911c483b5892657a5e6ad64029781734b6b05a2815a1c7dbb213efbe582eaed6",
+      "cardNumCount": 205
+    },
+    {
+      "file": "ct-p04-api.json",
+      "sha256": "1ccc9219f03caee752cc5ad9ac80e7a075916ac0df66f511ab11c60e98c46396",
+      "cardNumHash": "577473f69036c2f638ed125fcddfd3c9fb6489c603f7a69208312066de4e8cdd",
+      "cardNumCount": 148
+    },
+    {
+      "file": "ct-p05-api.json",
+      "sha256": "3dc74e6a7ebc8f5dbf0fd8be6b5474aa664fcc1a09abec84c99e899e2c33c9d3",
+      "cardNumHash": "4ae31df7c07513742132c60daee47a735f85f4406bb74dfe2650bcfb060cadf7",
+      "cardNumCount": 188
+    },
+    {
+      "file": "ct-p06-api.json",
+      "sha256": "fedcc418e32f1f9a72bfb8f8b8968fc288c94286e050c8db0207dc9f24de24d8",
+      "cardNumHash": "794c8899629cd6b2e6801aa2c5fb049de6713ff94e6e534242e686d558070483",
+      "cardNumCount": 184
+    },
+    {
+      "file": "ct-p07-api.json",
+      "sha256": "366fcbf35ec8b6c00920e03fe4fba6b3d4ccd1fa2df17c0b8c253234820b917b",
+      "cardNumHash": "d882b1fb25fabbe07c514eb635ff8445dbefc753acde51ce1276c7294fafc794",
+      "cardNumCount": 175
+    },
+    {
+      "file": "ct-p08-api.json",
+      "sha256": "d1270f7c720b5bc4f0e38316d5a8e1d8d741f1ffaa9cf1415f50639cefac3b5f",
+      "cardNumHash": "fc7b3bcaa83693ac80fba2706650e046dc2ae8e134889772a738dfc352fde7dc",
+      "cardNumCount": 145
+    },
+    {
+      "file": "ct-p09-api.json",
+      "sha256": "25f9d60c2d7f6851be406db9ff63c84d143743b7f22995b034ef6255cae1796c",
+      "cardNumHash": "b83f0de45290a5de78d52cba5602d440a8d01f7678297c4839ae1372ffe3cb12",
+      "cardNumCount": 188
+    },
+    {
+      "file": "ct-p10-api.json",
+      "sha256": "213c7113f2894c55670e0ca81f400499241dc3271504e4310b82ae46d032bae3",
+      "cardNumHash": "d6ca7e64138026b2c26d7b8ebc6d21d0f79badc30fffccdc1b97082f61f47213",
+      "cardNumCount": 166
+    },
+    {
+      "file": "pr-01-api.json",
+      "sha256": "f6a845262131fdf350714f4bcd806b86e3a1ffe02c54007b2016fabef15cf06a",
+      "cardNumHash": "f5033e05dab92139fcd217dd9c58577089b68b9c045c8cbb384fa7f431f0911b",
+      "cardNumCount": 304
+    }
+  ]
+}

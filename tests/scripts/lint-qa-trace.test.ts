@@ -33,7 +33,14 @@ function item(id: string, answerHash = HASH_C) {
 function coverageFor(items: ReturnType<typeof item>[], statuses: Record<string, QaTraceBaseline['coverage']['itemStatuses'][string]>) {
   const statusCounts = { matched: 0, 'test-missing': 0, 'legacy-unreviewed': 0, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 } as QaTraceBaseline['coverage']['statusCounts'];
   for (const status of Object.values(statuses)) statusCounts[status] += 1;
-  return { total: items.length, statusCounts, itemStatuses: statuses, allCompliant: items.length > 0 && statusCounts.matched === items.length };
+  return {
+    total: items.length,
+    statusCounts,
+    itemStatuses: statuses,
+    adjudicationResults: Object.fromEntries(items.map((entry) => [entry.qaId, 'unreviewed'])),
+    allCompliant: items.length > 0 && statusCounts.matched === items.length,
+    allAdjudicated: false,
+  };
 }
 
 function fixture(options: {
@@ -73,11 +80,12 @@ function fixture(options: {
 }
 
 describe('lint-qa-trace', () => {
-  it('accepts the reviewed legacy baseline but require-all fails it', () => {
+  it('accepts the reviewed legacy baseline but strict compliance and reviewed gates fail it', () => {
     const { root } = fixture();
     expect(lintQaTrace({ root }).issues).toEqual([]);
     expect(lintExitCode(lintQaTrace({ root }))).toBe(0);
     expect(lintExitCode(lintQaTrace({ root, requireAll: true }))).toBe(1);
+    expect(lintQaTrace({ root, requireReviewed: true }).issues.map((issue) => issue.code)).toContain('require-reviewed');
   });
 
   it('rejects aggregate hash, added, removed, and answer hash drift', () => {

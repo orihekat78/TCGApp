@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { runGenQaTrace, validateQaSnapshot, validateQaSnapshotAgainstStatus, type QaSnapshot, type QaSnapshotItem, type CoverageStatus } from './gen-docs/gen-qa-trace.js';
+import { ADJUDICATION_RESULTS, type QaAdjudicationResult } from './qa-adjudication.js';
 
 const ROOT = process.cwd();
 const HASH = /^[a-f0-9]{64}$/;
@@ -21,7 +22,9 @@ export type QaTraceCoverage = {
   total: number;
   statusCounts: Record<CoverageStatus, number>;
   itemStatuses: Record<string, CoverageStatus>;
+  adjudicationResults: Record<string, QaAdjudicationResult>;
   allCompliant: boolean;
+  allAdjudicated: boolean;
 };
 
 export type QaTraceBaseline = {
@@ -71,10 +74,11 @@ function snapshotSource(snapshot: QaSnapshot): QaTraceBaseline['source'] {
 function assertCoverage(value: unknown, qaIds?: ReadonlySet<string>): asserts value is QaTraceCoverage {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid Q&A coverage');
   const coverage = value as Record<string, unknown>;
-  if (Object.keys(coverage).some((key) => !['total', 'statusCounts', 'itemStatuses', 'allCompliant'].includes(key))
-    || !Number.isInteger(coverage.total) || typeof coverage.allCompliant !== 'boolean'
+  if (Object.keys(coverage).some((key) => !['total', 'statusCounts', 'itemStatuses', 'adjudicationResults', 'allCompliant', 'allAdjudicated'].includes(key))
+    || !Number.isInteger(coverage.total) || typeof coverage.allCompliant !== 'boolean' || typeof coverage.allAdjudicated !== 'boolean'
     || !coverage.statusCounts || typeof coverage.statusCounts !== 'object'
-    || !coverage.itemStatuses || typeof coverage.itemStatuses !== 'object' || Array.isArray(coverage.itemStatuses)) {
+    || !coverage.itemStatuses || typeof coverage.itemStatuses !== 'object' || Array.isArray(coverage.itemStatuses)
+    || !coverage.adjudicationResults || typeof coverage.adjudicationResults !== 'object' || Array.isArray(coverage.adjudicationResults)) {
     throw new Error('invalid Q&A coverage');
   }
   const counts = coverage.statusCounts as Record<string, unknown>;
@@ -89,6 +93,11 @@ function assertCoverage(value: unknown, qaIds?: ReadonlySet<string>): asserts va
   const derivedCounts = Object.fromEntries(STATUSES.map((status) => [status, 0])) as Record<CoverageStatus, number>;
   for (const status of Object.values(itemStatuses) as CoverageStatus[]) derivedCounts[status] += 1;
   if (STATUSES.some((status) => derivedCounts[status] !== counts[status])) throw new Error('Q&A coverage item status count mismatch');
+  const adjudicationResults = coverage.adjudicationResults as Record<string, unknown>;
+  if (Object.keys(adjudicationResults).length !== coverage.total || Object.entries(adjudicationResults).some(([qaId, result]) => !(qaId in itemStatuses) || !ADJUDICATION_RESULTS.includes(result as QaAdjudicationResult))) {
+    throw new Error('invalid Q&A adjudication results');
+  }
+  if (coverage.allAdjudicated !== (coverage.total > 0 && Object.values(adjudicationResults).every((result) => result !== 'unreviewed' && result !== 'needs-manual'))) throw new Error('invalid Q&A allAdjudicated');
   if (qaIds && (Object.keys(itemStatuses).length !== qaIds.size || [...qaIds].some((qaId) => !(qaId in itemStatuses)))) {
     throw new Error('Q&A coverage item identities mismatch');
   }
@@ -162,7 +171,7 @@ function compareCoverage(baseline: QaTraceCoverage, current: QaTraceCoverage, is
   }
 }
 
-export function lintQaTrace(options: { root?: string; requireAll?: boolean; checkGenerated?: boolean } = {}): QaLintResult {
+export function lintQaTrace(options: { root?: string; requireAll?: boolean; requireReviewed?: boolean; checkGenerated?: boolean } = {}): QaLintResult {
   const root = resolve(options.root ?? ROOT);
   const dataDir = resolve(root, '.claude/specs/cards-data');
   const snapshot = readJson(resolve(dataDir, 'qa-hash-snapshot.json'));
@@ -180,6 +189,7 @@ export function lintQaTrace(options: { root?: string; requireAll?: boolean; chec
     if (result.changedFiles.length) push(issues, 'generated-docs-drift', `generated Q&A artifacts are stale: ${result.changedFiles.join(', ')}`);
   }
   if (options.requireAll && !coverage.allCompliant) push(issues, 'require-all', 'Q&A coverage is not all compliant');
+  if (options.requireReviewed && (!coverage.allAdjudicated || coverage.statusCounts['legacy-unreviewed'] > 0)) push(issues, 'require-reviewed', 'Q&A adjudications still contain unreviewed, needs-manual, or legacy-unreviewed items');
   return { issues, coverage, baseline };
 }
 
@@ -216,7 +226,7 @@ function main(): void {
       process.stdout.write(`[lint:qa] wrote hash-only baseline items=${baseline.items.length}\n`);
       return;
     }
-    const result = lintQaTrace({ root, requireAll: process.argv.includes('--require-all'), checkGenerated: true });
+    const result = lintQaTrace({ root, requireAll: process.argv.includes('--require-all'), requireReviewed: process.argv.includes('--require-reviewed'), checkGenerated: true });
     writeReport(root, result);
     for (const issue of result.issues) process.stderr.write(`[lint:qa] ${issue.code}: ${issue.message}\n`);
     process.stdout.write(`[lint:qa] issues=${result.issues.length} all-compliant=${result.coverage.allCompliant}\n`);

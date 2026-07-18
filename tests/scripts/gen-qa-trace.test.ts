@@ -97,10 +97,27 @@ describe('gen-qa-trace', () => {
       total: 2,
       statusCounts: { matched: 1, 'test-missing': 0, 'legacy-unreviewed': 1, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 },
       itemStatuses: { [QA_A]: 'matched', [QA_B]: 'legacy-unreviewed' },
+      adjudicationResults: { [QA_A]: 'unreviewed', [QA_B]: 'unreviewed' },
       allCompliant: false,
+      allAdjudicated: false,
     });
     expect(nonblockingReport.coverage).toEqual(manifest.coverage);
     expect(report).toContain('- all-compliant: false');
+  });
+
+  it('keeps semantic adjudication result independent from trace-comment coverage status', () => {
+    const trace = buildQaTrace({
+      snapshot: snapshot([item(QA_A)]),
+      files: [],
+      shippedCardIds: new Set(),
+      deferredCardIds: new Set(),
+      coverageOverrides: new Map([[QA_A, { qaId: QA_A, status: 'unmapped', reason: 'tracked elsewhere' }]]),
+      adjudicationStatuses: new Map([[QA_A, 'matched']]),
+      adjudicationResults: new Map([[QA_A, 'aligned']]),
+    });
+
+    expect(trace.items[0]).toMatchObject({ coverageStatus: 'unmapped', adjudicationResult: 'aligned' });
+    expect(trace.coverage).toMatchObject({ allCompliant: false, allAdjudicated: true });
   });
 
   it('reports a dangling annotation when its card has no snapshot entry', () => {

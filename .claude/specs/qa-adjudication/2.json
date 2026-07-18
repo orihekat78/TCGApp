@@ -1,0 +1,1189 @@
+{
+  "schemaVersion": 1,
+  "shard": "2",
+  "items": [
+    {
+      "qaId": "card:B01006:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01006:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01034:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01047:36a8324e64bb363a2f90c2997622ad8675905ce2551ebb909bc2acbd2dd9b583",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01074:b2d6edcda9d8ff9b4508bd45fe365d41afd76529aabbd7dae53e3506a04d451b",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01081:bbf035d318b99174302c36993983a94dfb9c3cdccbc9e7385e12bfd54e083fcf",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01082:6feef271ccc669032b420f176f053bce3c5b7f303f22b9c5f01c2e5b9a7ceee5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01082:d5e12470a488f5fff7a5c8744ee1bf72381334453fe8ba111bb032298a5cb2f8",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01088:01bb734094827c257df91fd003da99ea0d4b837ed48b4cd5abecc6a860322d09",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B01095:7fd96e0746c8292ec5c55c1b6aabcff60e70a5f163392c0baf95cd026581e305",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02012:99c598d5872d5554c140b03c33a74088ff73468718440070381e8f4a8af1eb96",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02030:22477398ef5d506ba40697a07f730240d929ade78c8a7edaa6aeed9aeb97b358",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02038:d80f04fd9ed2fa2cc2d120f6086e1121f6342b9135da0bfe0abfeb59a2967713",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02047:398a5969fe581da3a0acd13503e5ba93ff177775f17125cca57fe30166b6ce7f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02050:b32a63d8b5cf1c8e71f20ccb817ee97888a391b5359b7618f6208aa4ca783fb9",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02058:762a82ad66fef61f8a12010f8d850cf7cca54916f71d63712f5f7227f290bd90",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02060:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02062:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B02072:d370f1b6e59c56f2d1bd035a04300d6b1292944bc2328768ee314b6a7f84ae47",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03002:23c9bd7209af9bd9d812ae6f4607207f920a91b7b692105dc6b17b3c3d655bf2",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03002:32dfdf12d183f78c1bf123cbe67660e3b1299585ac3db54acd8020d208b98bee",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03017:e5a197771ebd36c3392d1f9c23bc43656be4718a9f597831c06c90894f4f84fe",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03017:f93a2659346899a7ff80fb8ed4b5248f01756c1a96ce538d8aa1ec49e3c160cc",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03025:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03028:a65a25a1eb6dfd4bb92665c599e72f3b1640055984ce4ac017127fc5bdc86746",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03033:e0b65c7b32899b4f47f84b7048f97cb7fee3ddaac8c945c9e96d887550675395",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03038:54fb4af056b07232c5a41ed53a697aad9f30338fa1638762288377010dd900f9",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03053:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03056:2a7ae93b926ee4d1cf83481b483817a89ddefee141c9b7bccd3e7e432b00b4af",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03056:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03078:3459835ef11734bdac00b08e5c35eeac6f76f4792302ddac9d6ffee79e1a71be",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03080:6f9e39e813dd420a6e0992c9b0ff99606674c4416e5ffd20099e5b41a25f1008",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03088:5a4999726e0fc32bc0789f91b5a02b5de6702355d0e149df27c161568e92a980",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03091:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03096:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03096:9f6dd27f461691dbed853838301402ea7f626e048ca55d38f4cd670fd660d185",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03096:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03116:6d00eabe29a7a4e6bbdca2e810c993d56415fc94c3310a33400a53ebd1b54db6",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03118:671a506d6cd45b85ab6e121432c77d00d150acccde74ac53b33970e89b80f54f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B03132:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04013:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04017:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04032:1c06bf42b4f0a4e87e760d612038f4bde5afe72aeb2f69ffba9c046565ef93f3",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04040:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04061:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04086:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04090:7f1ae0bce0cdf8a001d292c56d381d5d2c4c43ff040f867fe277f19c9785402a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B04092:65acd5a3820a8bdf77b58c13b11916e953402d3e434d28526d2bda9354897f23",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05011:3b685813b3b6006e643ed5a3ea2ffe4f560a1bfba591df13fbb02e700820b75a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05013:84e243eb4cca4e3333cfc9cf98b770240221c6fd3cb8eb27269fdb313ef9702e",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05039:407ae363ecac714c23502b4c3c7307985df30d93d94449ee29c88ae3b653a3c6",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05058:005869b804a7f1211f4012d0d1923a1b445b97f955eaa4b6df86b2644fff0648",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05058:357bc184b1a324a6e8f0c47236894c6098a8a9bf9d216a5f53ab86712037a2e5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05060:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05063:f196b334a1672c967abd518d16ca1eba1da2ee1cc4b6222c3860b1569b172c2e",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05075:24cf16c15551dab0130d679d4fda19070b9be436c7b6460bcd533ef9bf2d63d6",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05076:54fa4ff4de63f3cf433dca3c54731cce244bb95165955ad394dc8785c031109c",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05076:e38956dd4cbd8054602a5e4bfe2a6bb9975ac9f1a94716e2df291eeb333990ab",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05097:f2b2c74eedde643a2bf417dabc86acbd7df8535f21a45a9e8ae4772110d99ced",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05114:844962a343a6a8cb30e74e7af29660bfc18ffe26f0529a82c9560dbb086c5248",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B05115:5171672c0eaee3a84dded05fce799e16ccd57911a1397e87474850f57dac45d2",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06004:2cdfbf4e0f6aa22ba6ade98705a08b6f260291f3e528e236990015cc0230538c",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06020:485eda52c818372d3d67bc9b0b368cc836fce3c368e78da9338bd95f0d5fd98a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06034:a54fba013cee1c4f1657f7007dbc6e664a2cedf67c66990f1a3a2daa903b7ef5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06035:9e8f0558023c02a4b87236725dd1b3167831cd8d4708d5563ef872ea2abd278a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06036:ce881ce830b0156ebce763608d2da6878acb277765f1fc7927e75ef2a4257b2a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06036:d2801ad523314893321b13f87864afdf389f5e2d19fb245f32abaf27689701c4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06047:71275d44596838d9a65df3ebe860bf925508ff37f83c2cad8b1eb99176f7b63d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06048:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06058:e0392238c06113cff66e959d9819ed9dd84b2cab1a32abc93bf5c445f0af575d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06067:216635e95c72a51ec62eae36e6d454a46acedc98cc0a2a21ba43330df5ea5cdc",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06082:778145d226f364876d2f75e0d6bc0336b6c61bdfdd1822254bb244878b57c818",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06088:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06088:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06090:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B06095:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07001:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07002:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07019:2ac36a628488dd7fcb62f9d2873454623005fcfe75b98f02ac098e2d298e4477",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07031:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07045:e49f743ebbec3e1494c711d047472f55c71b83b546a83501ab44c18d582290a5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07058:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07068:426886de8581b320e3ebb09308f95cdb635a8c7c5a9cea88b3333ff26606f83d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07068:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07069:fe60095d4b257e19dc003f76a307b4b68db03357af49ee5e3c4159c46e86e96d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07077:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07090:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B07091:b0ef1b9d2e03f39626615f5aece59ba7305ff0e0b970f184a230f38b4818c9a5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08004:5156e8b649b89ed0566a0621df2de796b2ecf5d5a2e9cd6ad79e3b5fa8d31911",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08006:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08008:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08017:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08028:af0cdf511d18e1a0179030dc1fd324092d8a99b6b538bf8aadf398e60529891b",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08029:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08035:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08051:f4a642b51d9e6a3f15c26aaa09c523c9650a98ad925d4c237ba629a31033bea5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08066:7b874358a3b2be6f3991251836cb1b2d0253c3128a3e646b9c5e3c6436781c24",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08071:523cfbbc838c1e8234cce0bf1979e193a4c147b984557d8a45380ca0678e70f7",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08081:d889f1124f88bd5349a26b958a18b82b1763750edd4fba8e540934e467d2c49a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08092:2acd62799ca89c8181d220a474927d8805e8f2fac855125cae4be29f07af6fa5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08092:c059cac83edb5c5b4dc00457a0efa81f6b4caf9a0d2a7def41d117b64c59a427",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B08093:47fabf5627988c2bf910ae95008b3e967362e3d568152c4a4b4f67947e90064b",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09002:c347b802f4268b0b27e673a9a37a5243256ece0e6d059ab80f6b5a424003072d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09003:682c1eea6331e85fd27be74ff5a7e85fd9e8d8ef09f8a04d5e25d55f30e63275",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09003:e82edcacc4d18e6a2ff915688e95656aa9d83051d0590c8a4ec9a1845023748c",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09017:d95b8a90fc8ae31ba0f4daea26a25aa50ed87eebfb5b29023ee562c1766bd4c0",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09038:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09047:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09075:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09080:3c05e16d5ef7b94286c8cd3bd45086e8b3dac5667746a237cc61d4a2a947522e",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09081:657dd497b26a92029c3f39a8efc6fe749a07c294f3deba97e3543baa2c8c6052",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B09112:d14361a0f6cd544938aac3b8343c913c302e2a8c4c3b621d33815d9154832d6a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10003:54428a56120352e87c0453571ed56e53487032d3527e3d88c5fba1f450cacfa3",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10006:f3675c5a8391462013fd4d69ecfa0277101b9d0085a1dab5948b401bc785fb2e",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10011:a29432736c9e0da7f13b3e318a178351f577621ebd450b986296f9f839c94421",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10013:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10016:086fc456b0dfd82ca4bb2d4fb5dd261cc74b3736ceedeb8af2a1d9549dd120a1",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10023:6b96389cc833a3fa159cdc9a1b55a5f5db61c7ee0131677aa3e999ce49bd2c2d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10033:3bbd1d1b862db20515ace88f7b77bb80a1e73060ca14fb51e01c6ef2419444d4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10040:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10040:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10047:fac3ccc84f2aee3eba1f3fd4dc22d5cd5c14486619d0ea7b84219010b18ac2c2",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10071:6101d0fa940b40560af15667082922dda4dfb4a159c988d3a6c41fb94f927020",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10074:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10082:d14361a0f6cd544938aac3b8343c913c302e2a8c4c3b621d33815d9154832d6a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10088:340979e7fce7e5eb3f4810fe4d27e817992a19ea6dada9dded99181420f55674",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10089:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10090:2b759372c0a207cb001bf56b43478ed9b30d564925538f276224626704ee5b23",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10091:c475c7ad0469ec9babf8db8ac86267422ffe8845da2a0df309033a44a5fd4e12",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:B10096:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D02013:6ed7fb4878a594ec4f9c792b4c397f1b45d3002fe8332abb0844397edb79da4a",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D04014:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D06006:9a924c2361fd57be0465117515cc95264f49e8a2829d02021c45d52a10e07ddc",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D06015:7917a528ebb99edb4efb1d6ed72558b874851a0c65d93d121901eb7488a29e03",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D07010:26a288541a34ebb3575133183ec65669424c4c62a11a46270cae3c734ccbf8a5",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D07024:4884b70d9b28923ff8aa12110cd31e8a1dbcc3b34ef9dea7cdc81f1a5b856a9b",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D08012:e5923114a6415f3ff08ddc4aa5ff5ca12303edb0124296d08045fe05e1b9d786",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D08026:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D09016:7516cd02c9848ddc808d369cd3af22fc7928580f38f6762c35b66bb22678cbcf",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D09017:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D09020:4f1e7b564a969ed3ca23c1c7599caeef0dd4fcdb4d5299623c98f1d4009bea99",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D09027:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D09027:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:D10009:44c0dc46f30cf1c3af445a1dbeaba8a3c4e0edfb425461d026abeb155e12168e",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR098:6f90cb127af1c12c8a5b08b830d7a2d32066a401549fe855e6fd4d5d8bd1edeb",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR104:ddcac6ceb6ba89ab95e855683a39784409388705ec4efcfc21d693d918a6eab9",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR117:b0780b558314019e01a34848d201a395b5b9928d1e0c55120c7d84bee8d8930c",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR117:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR137:972660377e7a1234e105ec6ca37df38d49a7747a333a6d01109f21f9c5fe3edc",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR137:aefa15b9be82ec8dcc29b14ed78982d60c272dc8924b8d8c710a81a402973ac6",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR138:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR143:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR163:7a972cc4e9d13bbd16c52ec38017de070de393761d2c6bad22a54b377dde933e",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR164:efd6c21e2f7905796100f2d468a68b999155b3da10e77373da20e6be92c33536",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR177:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR180:b294bc57d842a4b1a4aae0d72a5235a9ace1fc0a3c60e43df68c9e6c939153ce",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR180:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR199:3405649bcd3102358d74f5a7c645011cc3fe89abd35af2d070f6f49437a53556",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR205:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR237:cac27dea4837a9776d71b2e875c1ea06895b988013bdfddf557a38d580e47c72",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR279:8acc30fd02aa7a57c56a3a40704c2abd0853dd036d083f11f04b3cf0687a4e11",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR287:6afacc527edb1f91971747c8e7b4a6281ce88b569f711f8e310a8222bfbc85a1",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR288:c84d7aad4528fd6d980afa11b31629dd80c57a9c461526f6b41e76abb0604128",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR289:76f3670ceb57dfb996531dae5f61c2fefd2e21bed4287242a3866a4218a951c3",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR295:7c21ddfce705710ac7b5ece3ae25390cdf61d0de9c9f623d2f40f082ec3e301f",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR297:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    },
+    {
+      "qaId": "card:PR304:31477ac476064f376e887ccbb69a33524e3c445608c9009f36c53aa4a9c3b2ba",
+      "status": "legacy-unreviewed",
+      "result": "unreviewed",
+      "method": "unreviewed",
+      "evidence": []
+    }
+  ]
+}

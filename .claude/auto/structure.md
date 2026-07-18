@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 244
-- **ファイル数**: 5047
+- **ディレクトリ数**: 245
+- **ファイル数**: 5066
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1415,6 +1415,24 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
     - **`plans/`**
       - `2026-06-19-cpu-visualize-and-interrupt-lock-plan.md` — CPU逐次プレイ可視化 + 効果解決中ロック 実装計画
+    - **`qa-adjudication/`**
+      - `0.json`
+      - `1.json`
+      - `2.json`
+      - `3.json`
+      - `4.json`
+      - `5.json`
+      - `6.json`
+      - `7.json`
+      - `8.json`
+      - `9.json`
+      - `a.json`
+      - `b.json`
+      - `c.json`
+      - `d.json`
+      - `e.json`
+      - `f.json`
+      - `manifest.json`
     - **`refactor-plan/`**
       - `INDEX.md` — 全体リファクタリング計画 (2026-06-12 起案、ユーザー指示)
       - `phase-3a-design.md` — Phase 3a 設計: atom-handlers.ts 分割 (着手前設計レビュー、2026-06-22)
@@ -1892,6 +1910,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `lint-qa-trace.ts`
   - `lint-side-channel.ts` — Phase 8-3: side-channel pattern 4 点配線 AST check
   - `lint-test-pair.ts` — Phase 8-2: 新規 .ts file → test pair 必須 lint
+  - `qa-adjudication.ts`
   - `reuse-registry-check.ts` — full-registry duplicate id check
   - `reuse-validate.ts`
   - `setup-and-run.ps1`
@@ -5169,6 +5188,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `lint-qa-trace.test.ts`
     - `markdown-eol.test.ts`
     - `official-api.test.ts`
+    - `qa-adjudication.test.ts`
     - `qa-workflows.test.ts`
     - `rule-qa-provenance.test.ts`
     - `structure-root-portability.test.ts`
