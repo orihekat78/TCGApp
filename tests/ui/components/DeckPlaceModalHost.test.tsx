@@ -1,8 +1,12 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeckPlaceModalHost } from '@/ui/components/DeckPlaceModalHost';
 import { useGameStateStore } from '@/ui/state/store';
+
+const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
+
+vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({ dispatchEngineAction: dispatchEngineActionMock }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -20,6 +24,7 @@ describe('DeckPlaceModalHost card details', () => {
         cardIds: ['UNKNOWN-CARD', 'DUPLICATE-CARD', 'DUPLICATE-CARD'],
       },
     });
+    dispatchEngineActionMock.mockClear();
   });
 
   afterEach(() => {
@@ -50,5 +55,29 @@ describe('DeckPlaceModalHost card details', () => {
     expect(container.querySelector('[data-testid="deck-place-row-0"]')?.textContent).toContain('DUPLICATE-CARD');
     expect(container.querySelector('[data-testid="deck-place-top-0"]')?.getAttribute('aria-pressed')).toBe('false');
     expect(container.querySelector('[data-testid="deck-place-bottom-0"]')?.getAttribute('aria-pressed')).toBe('true');
+    act(() => (container.querySelector('[data-testid="deck-place-confirm-btn"]') as HTMLButtonElement).click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'deckPlaceResolve',
+      top: ['UNKNOWN-CARD', 'DUPLICATE-CARD'],
+      bottom: ['DUPLICATE-CARD'],
+    });
+  });
+
+  it('preserves dragged occurrence order in the deck-place payload', () => {
+    act(() => root.render(<DeckPlaceModalHost />));
+    const start = container.querySelector<HTMLElement>('[data-testid="deck-place-row-0"]')!;
+    const target = container.querySelector<HTMLElement>('[data-testid="deck-place-row-2"]')!;
+    act(() => start.dispatchEvent(new Event('dragstart', { bubbles: true })));
+    act(() => target.dispatchEvent(new Event('drop', { bubbles: true })));
+
+    expect([...container.querySelectorAll<HTMLElement>('[data-instance-id]')].map((tile) => tile.dataset.instanceId))
+      .toEqual(['DUPLICATE-CARD#1', 'DUPLICATE-CARD#2', 'UNKNOWN-CARD#0']);
+    act(() => (container.querySelector('[data-testid="deck-place-bottom-1"]') as HTMLButtonElement).click());
+    act(() => (container.querySelector('[data-testid="deck-place-confirm-btn"]') as HTMLButtonElement).click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'deckPlaceResolve',
+      top: ['DUPLICATE-CARD', 'UNKNOWN-CARD'],
+      bottom: ['DUPLICATE-CARD'],
+    });
   });
 });

@@ -7,9 +7,13 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { SouzaReorderModal } from '@/ui/components/SouzaReorderModal';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+const CSS_SOURCE = readFileSync(resolve(process.cwd(), 'src/ui/components/SouzaReorderModal.css'), 'utf8');
 
 describe('SouzaReorderModal', () => {
   it('open=false → 何も描画しない', () => {
@@ -52,6 +56,7 @@ describe('SouzaReorderModal', () => {
     const container = document.createElement('div');
     const root: Root = createRoot(container);
     const onConfirm = vi.fn();
+    const onCancel = vi.fn();
 
     act(() => {
       root.render(
@@ -63,15 +68,20 @@ describe('SouzaReorderModal', () => {
             { cardId: 'DUPLICATE-CARD', name: 'Duplicate' },
           ]}
           onConfirm={onConfirm}
-          onCancel={() => {}}
+          onCancel={onCancel}
         />,
       );
     });
 
-    act(() => (container.querySelector('[data-testid="souza-down-0"]') as HTMLButtonElement).click());
+    const start = container.querySelector<HTMLElement>('[data-testid="souza-row-0"]')!;
+    const target = container.querySelector<HTMLElement>('[data-testid="souza-row-2"]')!;
+    act(() => start.dispatchEvent(new Event('dragstart', { bubbles: true })));
+    act(() => target.dispatchEvent(new Event('drop', { bubbles: true })));
     const tiles = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')];
     expect(tiles).toHaveLength(3);
     expect(new Set(tiles.map((tile) => tile.dataset.instanceId)).size).toBe(3);
+    expect(tiles.map((tile) => tile.dataset.instanceId))
+      .toEqual(['DUPLICATE-CARD#1', 'DUPLICATE-CARD#2', 'UNKNOWN-CARD#0']);
     expect(container.querySelectorAll('.selectable-card-tile img')).toHaveLength(3);
     expect(container.querySelector<HTMLImageElement>('[data-card-id="UNKNOWN-CARD"] img')?.src)
       .toMatch(/^data:image\/svg\+xml/);
@@ -83,9 +93,10 @@ describe('SouzaReorderModal', () => {
     expect(container.querySelector('[aria-label^="カード拡大表示:"]')).not.toBeNull();
     act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
 
-    expect(container.querySelector('[data-testid="souza-row-0"]')?.textContent).toContain('DUPLICATE-CARD');
+    act(() => (container.querySelector('[data-testid="souza-cancel-btn"]') as HTMLButtonElement).click());
+    expect(onCancel).toHaveBeenCalledTimes(1);
     act(() => (container.querySelector('[data-testid="souza-confirm-btn"]') as HTMLButtonElement).click());
-    expect(onConfirm).toHaveBeenCalledWith(['DUPLICATE-CARD', 'UNKNOWN-CARD', 'DUPLICATE-CARD']);
+    expect(onConfirm).toHaveBeenCalledWith(['DUPLICATE-CARD', 'DUPLICATE-CARD', 'UNKNOWN-CARD']);
     act(() => root.unmount());
   });
 
@@ -100,5 +111,11 @@ describe('SouzaReorderModal', () => {
     );
     expect(html).toContain('公開カードがありません');
     expect(html).not.toContain('selectable-card-tile');
+  });
+
+  it('keeps confirm and cancel controls at the mobile 44px target minimum', () => {
+    expect(CSS_SOURCE).toMatch(
+      /\.souza-btn\s*\{[\s\S]*min-inline-size:\s*44px;[\s\S]*min-block-size:\s*44px;/,
+    );
   });
 });

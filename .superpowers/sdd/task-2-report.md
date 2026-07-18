@@ -28,3 +28,12 @@
 - Reviewed existing BUG-136 and mini-wave #5 E2E paths; their dispatch payload and drag/bucket behavior remain green.
 - No `SelectableCardTile` edits. Existing unregistered-card image behavior is exercised through the shared tile in all three modal paths.
 - Pre-existing untracked `BUG-235.md` and card-choice plan remain untouched and must not be included in this commit.
+
+## Review P2 Follow-up
+
+- DeckReorder now asserts exact duplicate occurrence-ID order before/after move, after detail close, and mocked `deckReorderResolve` payload.
+- DeckPlace now asserts detail-close bucket/order payload and drag-derived `deckPlaceResolve` payload.
+- A registered visible card now dispatches an image `error` event in integration and must reach the shared SVG placeholder.
+- Souza now exercises drag order plus confirm/cancel callbacks. Confirm and cancel controls have a CSS 44px touch-target contract.
+- Sensitivity RED checks used temporary production mutations, then were reverted: duplicate occurrence ID, reorder payload, deck-place bucket payload, CardArt error fallback, and Souza `onDrop` all failed their strengthened tests as expected.
+- The only persistent product gap was Souza confirm/cancel controls below the 44px minimum; CSS now sets `min-inline-size` and `min-block-size` to 44px.

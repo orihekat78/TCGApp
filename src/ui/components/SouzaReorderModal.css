@@ -91,6 +91,8 @@
 }
 
 .souza-btn {
+  min-inline-size: 44px;
+  min-block-size: 44px;
   padding: 8px 20px;
   border-radius: 6px;
   font-weight: 600;

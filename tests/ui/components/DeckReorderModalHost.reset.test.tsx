@@ -1,8 +1,14 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DeckReorderModalHost } from '@/ui/components/DeckReorderModalHost';
 import { useGameStateStore } from '@/ui/state/store';
+import { engine } from '@/engine';
+import { getCardImagePlaceholder } from '@/ui/services/cardImage';
+
+const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
+
+vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({ dispatchEngineAction: dispatchEngineActionMock }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -17,12 +23,14 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     useGameStateStore.setState({
       pendingDeckReorder: { player: 'self', cardIds: ['A', 'B', 'C'] },
     });
+    dispatchEngineActionMock.mockClear();
   });
 
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
     useGameStateStore.getState().setPendingDeckReorder(null);
+    engine.cards._resetRegistry();
   });
 
   it('resets local order when a new pending decision has the same multiset', () => {
@@ -49,17 +57,23 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     });
     act(() => root.render(<DeckReorderModalHost />));
 
+    const before = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
+      .map((tile) => tile.dataset.instanceId);
+    expect(before).toEqual(['UNKNOWN-CARD#0', 'DUPLICATE-CARD#1', 'DUPLICATE-CARD#2']);
+
     act(() => {
-      (container.querySelector('[data-testid="deck-reorder-up-2"]') as HTMLButtonElement).click();
+      (container.querySelector('[data-testid="deck-reorder-down-0"]') as HTMLButtonElement).click();
     });
-    expect(container.querySelector('[data-testid="deck-reorder-row-1"]')?.textContent).toContain('DUPLICATE-CARD');
+    const afterMove = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
+      .map((tile) => tile.dataset.instanceId);
+    expect(afterMove).toEqual(['DUPLICATE-CARD#1', 'UNKNOWN-CARD#0', 'DUPLICATE-CARD#2']);
 
     const tiles = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')];
     expect(tiles).toHaveLength(3);
     expect(new Set(tiles.map((tile) => tile.dataset.instanceId)).size).toBe(3);
     expect(container.querySelectorAll('.selectable-card-tile img')).toHaveLength(3);
     expect(container.querySelector<HTMLImageElement>('[data-card-id="UNKNOWN-CARD"] img')?.src)
-      .toMatch(/^data:image\/svg\+xml/);
+      .toBe(getCardImagePlaceholder());
     expect(container.querySelector('button button')).toBeNull();
 
     const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
@@ -68,6 +82,27 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     expect(container.querySelector('[aria-label^="カード拡大表示:"]')).not.toBeNull();
     act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
 
-    expect(container.querySelector('[data-testid="deck-reorder-row-1"]')?.textContent).toContain('DUPLICATE-CARD');
+    const afterDetail = [...container.querySelectorAll<HTMLElement>('[data-instance-id]')]
+      .map((tile) => tile.dataset.instanceId);
+    expect(afterDetail).toEqual(afterMove);
+    act(() => (container.querySelector('[data-testid="deck-reorder-confirm-btn"]') as HTMLButtonElement).click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'deckReorderResolve',
+      order: ['DUPLICATE-CARD', 'UNKNOWN-CARD', 'DUPLICATE-CARD'],
+    });
+  });
+
+  it('falls back after a visible card image errors', () => {
+    engine.cards.register({
+      id: 'BROKEN-IMAGE-CARD', no: '0001/BROKEN-IMAGE-CARD', kind: 'event', names: ['Broken image'],
+      colors: [], level: 0, traits: [], keywords: [], rarity: 'C', imageUrl: 'broken-image.jpg', abilities: [], ruleRefs: [],
+    });
+    useGameStateStore.getState().setPendingDeckReorder({ player: 'self', cardIds: ['BROKEN-IMAGE-CARD'] });
+    act(() => root.render(<DeckReorderModalHost />));
+
+    const image = container.querySelector<HTMLImageElement>('[data-card-id="BROKEN-IMAGE-CARD"] img')!;
+    expect(image.src).toContain('broken-image.jpg');
+    act(() => image.dispatchEvent(new Event('error', { bubbles: true })));
+    expect(image.src).toBe(getCardImagePlaceholder());
   });
 });
