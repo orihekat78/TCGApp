@@ -173,6 +173,68 @@ describe('CardListModal pick detail controls', () => {
     expect(onPickMulti).toHaveBeenCalledWith(['evidence:self:0']);
   });
 
+  it('retains selection for the same session but resets it for a new session with identical candidates', () => {
+    const sessionA = {};
+    const sessionB = {};
+    const render = (pickSessionKey: object): void => {
+      root.render(
+        <CardListModal
+          kind="deck"
+          side="self"
+          cards={['D08003']}
+          pickCands={[{ uid: 'D08003#0', cardId: 'D08003', player: 'self' }]}
+          pickSessionKey={pickSessionKey}
+          pickNMin={1}
+          pickNMax={2}
+          onPick={vi.fn()}
+          onPickMulti={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+    };
+    act(() => render(sessionA));
+    const primary = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-D08003#0"]')!;
+    act(() => primary.click());
+    expect(primary.getAttribute('aria-pressed')).toBe('true');
+    act(() => render(sessionA));
+    expect(primary.getAttribute('aria-pressed')).toBe('true');
+    act(() => render(sessionB));
+    expect(primary.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('applies forced and blocked semantics to face-up evidence picks', () => {
+    const candidates = [
+      { uid: 'evidence:self:0', cardId: 'D08003' as const, player: 'self' as const },
+      { uid: 'evidence:self:1', cardId: 'D08004' as const, player: 'self' as const },
+    ];
+    act(() => {
+      root.render(
+        <CardListModal kind="evidence" side="self" cards={[]} faceDownCount={2}
+          faceUpEvidence={[{ index: 0, cardId: 'D08003' }, { index: 1, cardId: 'D08004' }]}
+          pickCands={candidates} pickForcedUids={['evidence:self:0']} onPick={vi.fn()} onExpand={vi.fn()} onClose={vi.fn()} />,
+      );
+    });
+    const forced = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:0"]')!;
+    const blocked = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:1"]')!;
+    expect(forced.disabled).toBe(false);
+    expect(blocked.disabled).toBe(true);
+    expect(blocked.getAttribute('title')).not.toBeNull();
+    expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:1"]')).not.toBeNull();
+
+    act(() => {
+      root.render(
+        <CardListModal kind="evidence" side="self" cards={[]} faceDownCount={1}
+          faceUpEvidence={[{ index: 0, cardId: 'D08003' }]}
+          pickCands={[candidates[0]!]} pickForcedUids={['evidence:self:0']} pickNMin={1} pickNMax={2}
+          onPick={vi.fn()} onPickMulti={vi.fn()} onExpand={vi.fn()} onClose={vi.fn()} />,
+      );
+    });
+    const locked = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:0"]')!;
+    expect(locked.getAttribute('aria-pressed')).toBe('true');
+    act(() => locked.click());
+    expect(locked.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('preserves forced lock and blocked-primary behavior beside detail siblings', () => {
     const onPickMulti = vi.fn();
     act(() => {

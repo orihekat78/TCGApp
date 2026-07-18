@@ -987,6 +987,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
               onClose={closeAreaModal}
               onExpand={(cardId) => expandModal.open(cardId)}
               pickCands={isPickModeForThisArea ? pendingPickForArea!.candidates : undefined}
+              pickSessionKey={isPickModeForThisArea ? pendingPickForArea : undefined}
               pickBannerText={
                 isPickModeForThisArea && pendingPickForArea?.atomVerb === 'deckRevealUntil'
                   ? pendingPickForArea.candidates.length === 0
@@ -1424,6 +1425,7 @@ function PlaymatEvidenceFlipPickerModal(): JSX.Element | null {
       faceUpEvidence={faceUpEvidence}
       onClose={() => useEvidenceFlipPicker().cancel()}
       pickCands={pickCands}
+      pickSessionKey={current}
       pickBannerText={`${current.sourceName}: 表向きにする裏向き証拠を選んでください（${rangeLabel}）`}
       onPick={(uid) => {
         const i = parseIdx(uid);
@@ -1454,6 +1456,7 @@ function PlaymatStackedCardCostPickerModal(): JSX.Element | null {
       cards={current.candidates.map((candidate) => candidate.cardId)}
       onClose={() => useStackedCardCostPicker().cancel()}
       pickCands={pickCands}
+      pickSessionKey={current}
       pickBannerText={`${current.sourceName}: このキャラの下のカードを${current.nMin}枚選んでください`}
       onPick={(instanceId) => useStackedCardCostPicker().confirm([instanceId])}
       pickNMin={current.nMin}

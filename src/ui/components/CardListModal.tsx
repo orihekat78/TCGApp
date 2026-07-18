@@ -81,6 +81,8 @@ export type CardListModalProps = {
    *   - face-up (remove): cards[idx] の cardId と一致する uid → 該当 cell が click 対応
    */
   pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp' }>;
+  /** Stable identity of the pending decision. A new identity resets local multi-pick state. */
+  pickSessionKey?: unknown;
   /**
    * Pick mode banner 文言 override (default は kind 別 PICK_BANNER_TEXT)。
    * D11014 a2 sceneEnter のように「手札に加える」ではなく「現場に登場」させる
@@ -134,7 +136,7 @@ export type CardListModalProps = {
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
+  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickSessionKey, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
   const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
   const inPickMode = pickCands !== undefined
@@ -154,8 +156,8 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
   const forcedKey = (pickForcedUids ?? []).join('\u0000');
   // pending pick が切り替わった (kind change) で local selection reset (forced は auto-select)
   const isMultiPickInit = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- derived values are covered by stable identity keys and pickNMax.
-  useEffect(() => { setSelectedUids(isMultiPickInit && forcedLockable ? forcedInCands : []); }, [kind, pickCandidateKey, forcedKey, pickNMax]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- derived values are covered by stable keys; explicit session identity wins when supplied.
+  useEffect(() => { setSelectedUids(isMultiPickInit && forcedLockable ? forcedInCands : []); }, [kind, pickSessionKey ?? pickCandidateKey, forcedKey, pickNMax]);
   // D08021 driver 2026-05-26: 選択済 uid → 集計済 name component Set (rules/19)
   const selectedComponents = new Set<string>();
   if (pickDistinctNames && pickComponents) {
@@ -426,13 +428,16 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   const faceUpPickUid = findFaceDownPickUid(idx);
                   if (faceUpPickUid !== undefined) {
                     const isSelected = isMultiPick && selectedUids.includes(faceUpPickUid);
-                    const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}`;
+                    const isForcedLocked = forcedLockable && forcedInCands.includes(faceUpPickUid);
+                    const isBlocked = (isMultiPick && (isDistinctNamesBlocked(faceUpPickUid) || isDistinctLevelBlocked(faceUpPickUid) || isDistinctColorsBlocked(faceUpPickUid))) || isForcedBlocked(faceUpPickUid);
+                    const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                     return (
                       <div key={`faceup-pick-${idx}`} className="card-list-pick-shell">
                       <button
                         type="button"
                         key={`faceup-${idx}`}
                         className={cls}
+                        disabled={isBlocked}
                         onClick={() => (isMultiPick ? toggleSelect(faceUpPickUid) : onPick!(faceUpPickUid))}
                         onContextMenu={onExpand ? (event) => {
                           event.preventDefault();
@@ -440,6 +445,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         } : undefined}
                         data-testid={`card-list-pick-${faceUpPickUid}`}
                         aria-pressed={isMultiPick ? isSelected : undefined}
+                        title={isForcedLocked ? '必ず選ぶ (相手のイベントの効果によってこのキャラクターを選ぶ場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(faceUpPickUid) ? '同じカード名のカードは1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(faceUpPickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(faceUpPickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラクターが指定されています' : undefined}
                         aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isSelected ? '選択解除' : '選択'}`}
                       >
                         {revealedContent}
