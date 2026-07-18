@@ -107,6 +107,25 @@ describe('GuardPickerModal', () => {
     expect(onPick).toHaveBeenCalledWith('u2');
   });
 
+  it('gives duplicate public guards distinct primary and detail names without exposing their uids', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    const duplicates: GuardPickerCandidate[] = [
+      { uid: 'guard-internal:one', cardId: 'DUPLICATE-CARD', name: 'Duplicate', ap: 1000, lp: 1 },
+      { uid: 'guard-internal:two', cardId: 'DUPLICATE-CARD', name: 'Duplicate', ap: 1000, lp: 1 },
+    ];
+    act(() => root!.render(<GuardPickerModal open candidates={duplicates} onPick={vi.fn()} onSkip={vi.fn()} />));
+
+    const primary = [...container.querySelectorAll<HTMLButtonElement>('.selectable-card-tile__select')];
+    const detail = [...container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')];
+    expect(primary.map((button) => button.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目を選択', 'DUPLICATE-CARD 2枚目を選択']);
+    expect(detail.map((button) => button.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目の詳細を表示', 'DUPLICATE-CARD 2枚目の詳細を表示']);
+    const labels = [...primary, ...detail].map((button) => button.getAttribute('aria-label')).join(' ');
+    expect(labels).not.toContain('guard-internal:one');
+    expect(labels).not.toContain('guard-internal:two');
+  });
+
   it('blocks skip when a guard is mandatory', () => {
     const html = renderToString(
       <GuardPickerModal open candidates={cands} onPick={vi.fn()} onSkip={vi.fn()} mustGuard />,

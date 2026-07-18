@@ -86,14 +86,41 @@ describe('CardListModal pick detail controls', () => {
     const secondDetail = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-D08003#1"]')!;
     const primaryNames = [first, second].map((button) => button.getAttribute('aria-label'));
     const detailNames = [firstDetail, secondDetail].map((button) => button.getAttribute('aria-label'));
-    expect(new Set(primaryNames).size).toBe(2);
-    expect(new Set(detailNames).size).toBe(2);
-    expect([...primaryNames, ...detailNames].join(' ')).not.toContain('D08003#');
+    const name = cardIdToDisplayName('D08003');
+    expect(primaryNames).toEqual([`${name} 1枚目 を選択`, `${name} 2枚目 を選択`]);
+    expect(detailNames).toEqual([`${name} 1枚目 の詳細を表示`, `${name} 2枚目 の詳細を表示`]);
+    const allNames = [...primaryNames, ...detailNames].join(' ');
+    expect(allNames).not.toContain('D08003#0');
+    expect(allNames).not.toContain('D08003#1');
 
     act(() => second.click());
     expect(onPick).toHaveBeenCalledWith('D08003#1');
     act(() => secondDetail.click());
     expect(onExpand).toHaveBeenCalledWith('D08003');
+  });
+
+  it('keeps a singleton public pick free of an occurrence ordinal and internal uid', () => {
+    act(() => {
+      root.render(
+        <CardListModal
+          kind="deck"
+          side="self"
+          cards={['D08003']}
+          pickCands={[{ uid: 'actual-candidate-uid:0', cardId: 'D08003', player: 'self' }]}
+          onPick={vi.fn()}
+          onExpand={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+    });
+
+    const name = cardIdToDisplayName('D08003');
+    const primary = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-actual-candidate-uid:0"]')!;
+    const detail = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-actual-candidate-uid:0"]')!;
+    expect(primary.getAttribute('aria-label')).toBe(`${name} を選択`);
+    expect(detail.getAttribute('aria-label')).toBe(`${name} の詳細を表示`);
+    expect(`${primary.getAttribute('aria-label')} ${detail.getAttribute('aria-label')}`).not.toContain('actual-candidate-uid:0');
+    expect(`${primary.getAttribute('aria-label')} ${detail.getAttribute('aria-label')}`).not.toContain('枚目');
   });
 
   it('orders duplicate face-up evidence occurrence labels by physical evidence index', () => {

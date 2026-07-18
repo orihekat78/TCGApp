@@ -31,15 +31,23 @@ test.describe('BUG-243 public duplicate card accessibility', () => {
     const candidates = pending?.candidates ?? [];
     expect(candidates.map((candidate) => candidate.cardId)).toEqual(['D08024', 'D08024']);
     expect(new Set(candidates.map((candidate) => candidate.uid)).size).toBe(2);
+    const firstUid = candidates[0]!.uid;
     const secondUid = candidates[1]!.uid;
 
+    const firstPrimary = page.getByTestId(`card-list-pick-${firstUid}`);
+    const firstDetail = page.getByTestId(`card-list-pick-detail-${firstUid}`);
     const primary = page.getByTestId(`card-list-pick-${secondUid}`);
     const detail = page.getByTestId(`card-list-pick-detail-${secondUid}`);
-    const primaryNames = await page.locator('[data-testid^="card-list-pick-"]:not([data-testid^="card-list-pick-detail-"]):not([data-testid="card-list-pick-skip"])').evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-label')));
-    const detailNames = await page.locator('[data-testid^="card-list-pick-detail-"]').evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-label')));
-    expect(new Set(primaryNames).size).toBe(2);
-    expect(new Set(detailNames).size).toBe(2);
-    expect([...primaryNames, ...detailNames].join(' ')).not.toContain('#');
+    const publicName = await firstPrimary.locator('.card-list-item-name').textContent();
+    expect(publicName).not.toBeNull();
+    await expect(firstPrimary).toHaveAccessibleName(`${publicName} 1枚目 を選択`);
+    await expect(primary).toHaveAccessibleName(`${publicName} 2枚目 を選択`);
+    await expect(firstDetail).toHaveAccessibleName(`${publicName} 1枚目 の詳細を表示`);
+    await expect(detail).toHaveAccessibleName(`${publicName} 2枚目 の詳細を表示`);
+    const labels = await page.locator('[data-testid^="card-list-pick-"]').evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-label')).join(' '));
+    expect(labels).not.toContain(firstUid);
+    expect(labels).not.toContain(secondUid);
+    expect(labels).not.toContain('bug-243-source');
 
     await detail.click();
     await expect(page.locator('.card-expand-modal-backdrop')).toHaveAccessibleName(/カード拡大表示/);

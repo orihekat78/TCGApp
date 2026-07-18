@@ -75,6 +75,12 @@ describe('DeckReorderModalHost consecutive decisions', () => {
     expect(container.querySelector<HTMLImageElement>('[data-card-id="UNKNOWN-CARD"] img')?.src)
       .toBe(getCardImagePlaceholder());
     expect(container.querySelector('button button')).toBeNull();
+    const duplicateTiles = tiles.filter((tile) => tile.dataset.cardId === 'DUPLICATE-CARD');
+    const duplicateDetails = [...container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')]
+      .filter((detail) => detail.parentElement?.querySelector('[data-card-id="DUPLICATE-CARD"]'));
+    expect(duplicateTiles.map((tile) => tile.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目を選択', 'DUPLICATE-CARD 2枚目を選択']);
+    expect(duplicateDetails.map((detail) => detail.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目の詳細を表示', 'DUPLICATE-CARD 2枚目の詳細を表示']);
+    expect([...duplicateTiles, ...duplicateDetails].map((element) => element.getAttribute('aria-label')).join(' ')).not.toContain('DUPLICATE-CARD#');
 
     const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
     expect(details).toHaveLength(3);

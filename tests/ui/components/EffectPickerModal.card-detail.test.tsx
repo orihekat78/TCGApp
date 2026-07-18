@@ -2,10 +2,14 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
 import { useGameStateStore } from '@/ui/state/store';
+
+const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
+
+vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({ dispatchEngineAction: dispatchEngineActionMock }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -43,6 +47,7 @@ describe('EffectPickerModal card details', () => {
     act(() => root.unmount());
     container.remove();
     useGameStateStore.setState({ gameState: null, pendingEffectPick: null });
+    dispatchEngineActionMock.mockClear();
   });
 
   it('shows public evidence art and opens details without selecting it', () => {
@@ -79,6 +84,28 @@ describe('EffectPickerModal card details', () => {
     act(() => select.dispatchEvent(event));
     expect(event.defaultPrevented).toBe(true);
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+  });
+
+  it('dispatches effectPickResolve with the exact second duplicate candidate uid', () => {
+    const secondUid = 'real-candidate:second';
+    useGameStateStore.setState({
+      pendingEffectPick: {
+        player: 'self',
+        candidates: [
+          { uid: 'real-candidate:first', cardId: 'DUPLICATE-CARD', player: 'self' },
+          { uid: secondUid, cardId: 'DUPLICATE-CARD', player: 'self' },
+        ],
+        atomVerb: 'charSetCard',
+        atomArgs: {},
+        nMin: 1,
+        nMax: 1,
+        source: { cardId: 'B04026', abilityId: 'a1' },
+      },
+    });
+    act(() => root.render(<EffectPickerModal />));
+
+    act(() => (container.querySelector(`[data-testid="effect-pick-cand-${secondUid}"]`) as HTMLButtonElement).click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'effectPickResolve', pickedUid: secondUid });
   });
 
   it('keeps the public detail control at the mobile touch target minimum', () => {

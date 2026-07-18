@@ -127,6 +127,7 @@ describe('SelectableCardTile', () => {
   });
 
   it('distinguishes duplicate public occurrences for selection and details without exposing instance ids', () => {
+    registerPublicCard();
     const container = document.createElement('div');
     const root = createRoot(container);
     const onSelect = vi.fn();
@@ -135,8 +136,8 @@ describe('SelectableCardTile', () => {
     act(() => {
       root.render(
         <>
-          <SelectableCardTile cardId="B01001" instanceId="hand:self:1" occurrenceLabel="1枚目" onSelect={onSelect} onExpand={onExpand} />
-          <SelectableCardTile cardId="B01001" instanceId="hand:self:2" occurrenceLabel="2枚目" onSelect={onSelect} onExpand={onExpand} />
+          <SelectableCardTile cardId="PUBLIC-CARD" instanceId="instance:public:one" occurrenceLabel="1枚目" onSelect={onSelect} onExpand={onExpand} />
+          <SelectableCardTile cardId="PUBLIC-CARD" instanceId="instance:public:two" occurrenceLabel="2枚目" onSelect={onSelect} onExpand={onExpand} />
         </>,
       );
     });
@@ -145,14 +146,31 @@ describe('SelectableCardTile', () => {
     const detail = [...container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')];
     const primaryNames = primary.map((button) => button.getAttribute('aria-label'));
     const detailNames = detail.map((button) => button.getAttribute('aria-label'));
-    expect(new Set(primaryNames).size).toBe(2);
-    expect(new Set(detailNames).size).toBe(2);
-    expect([...primaryNames, ...detailNames].join(' ')).not.toContain('hand:self:');
+    expect(primaryNames).toEqual(['Known Card 1枚目を選択', 'Known Card 2枚目を選択']);
+    expect(detailNames).toEqual(['Known Card 1枚目の詳細を表示', 'Known Card 2枚目の詳細を表示']);
+    const allNames = [...primaryNames, ...detailNames].join(' ');
+    expect(allNames).not.toContain('instance:public:one');
+    expect(allNames).not.toContain('instance:public:two');
 
     act(() => primary[1]!.click());
-    expect(onSelect).toHaveBeenCalledWith('hand:self:2');
+    expect(onSelect).toHaveBeenCalledWith('instance:public:two');
     act(() => detail[1]!.click());
-    expect(onExpand).toHaveBeenCalledWith('B01001');
+    expect(onExpand).toHaveBeenCalledWith('PUBLIC-CARD');
+    unmount(root);
+  });
+
+  it('keeps a singleton public card free of an occurrence ordinal', () => {
+    registerPublicCard();
+    const { container, root } = renderTile({
+      cardId: 'PUBLIC-CARD',
+      instanceId: 'singleton:private-instance',
+    });
+
+    expect(container.querySelector<HTMLButtonElement>('.selectable-card-tile__select')?.getAttribute('aria-label'))
+      .toBe('Known Cardを選択');
+    expect(container.querySelector<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')?.getAttribute('aria-label'))
+      .toBe('Known Cardの詳細を表示');
+    expect(container.textContent).not.toContain('1枚目');
     unmount(root);
   });
 

@@ -65,7 +65,7 @@ describe('decision modal hosts', () => {
 
   it('keeps duplicate hand cards index-distinct and resolves the chosen discard index after details close', () => {
     useGameStateStore.setState({
-      gameState: gameState(['B01001', 'B01001']),
+      gameState: gameState(['DUPLICATE-CARD', 'DUPLICATE-CARD']),
       pendingChooseIntercept: {
         player: 'self',
         protector: { uid: 'protector-1', cardId: 'B01001', abilityId: 'a1' },
@@ -80,6 +80,11 @@ describe('decision modal hosts', () => {
     expect(container.querySelector('button button')).toBeNull();
     const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
     expect(details).toHaveLength(2);
+    const primaryNames = tiles.map((tile) => tile.getAttribute('aria-label'));
+    const detailNames = [...details].map((detail) => detail.getAttribute('aria-label'));
+    expect(primaryNames).toEqual(['DUPLICATE-CARD 1枚目を選択', 'DUPLICATE-CARD 2枚目を選択']);
+    expect(detailNames).toEqual(['DUPLICATE-CARD 1枚目の詳細を表示', 'DUPLICATE-CARD 2枚目の詳細を表示']);
+    expect([...primaryNames, ...detailNames].join(' ')).not.toContain('hand:self:');
     act(() => details[1]!.click());
     expect(container.querySelector('.card-expand-close')).not.toBeNull();
     act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
@@ -110,16 +115,26 @@ describe('decision modal hosts', () => {
     useGameStateStore.setState({
       pendingSetCardReplacement: {
         player: 'self', fromUid: 'from-1', setCardInstanceId: 'set-1',
-        candidates: [{ uid: 'candidate-1', cardId: 'B01001' }],
+        candidates: [
+          { uid: 'candidate-internal:one', cardId: 'DUPLICATE-CARD' },
+          { uid: 'candidate-internal:two', cardId: 'DUPLICATE-CARD' },
+        ],
         source: { uid: 'source-1' } as never,
       },
     });
     const { container, root } = renderHost(SetCardReplacementModalHost);
 
-    const candidate = container.querySelector<HTMLButtonElement>('[data-testid="set-card-replacement-candidate-1"]');
+    const candidate = container.querySelector<HTMLButtonElement>('[data-testid="set-card-replacement-candidate-internal:one"]');
     expect(candidate).toBeInstanceOf(HTMLButtonElement);
-    expect(container.querySelector('.selectable-card-tile img')).not.toBeNull();
-    const detail = container.querySelector<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
+    expect(container.querySelectorAll('.selectable-card-tile img')).toHaveLength(2);
+    const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
+    const primaryNames = [...container.querySelectorAll<HTMLButtonElement>('.selectable-card-tile__select')]
+      .map((button) => button.getAttribute('aria-label'));
+    const detailNames = [...details].map((detail) => detail.getAttribute('aria-label'));
+    expect(primaryNames).toEqual(['DUPLICATE-CARD 1枚目を選択', 'DUPLICATE-CARD 2枚目を選択']);
+    expect(detailNames).toEqual(['DUPLICATE-CARD 1枚目の詳細を表示', 'DUPLICATE-CARD 2枚目の詳細を表示']);
+    expect([...primaryNames, ...detailNames].join(' ')).not.toContain('candidate-internal:');
+    const detail = details[0];
     expect(detail).not.toBeNull();
     act(() => detail!.click());
     expect(container.querySelector('.card-expand-close')).not.toBeNull();
@@ -127,7 +142,7 @@ describe('decision modal hosts', () => {
     expect(container.querySelector('[data-testid="set-card-replacement-modal"]')).not.toBeNull();
 
     act(() => candidate!.click());
-    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'setCardReplacementResolve', targetUid: 'candidate-1' });
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'setCardReplacementResolve', targetUid: 'candidate-internal:one' });
     unmount(root, container);
 
     dispatchEngineActionMock.mockClear();
