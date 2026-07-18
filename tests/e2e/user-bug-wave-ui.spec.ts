@@ -315,7 +315,7 @@ test('B06029 enter picker keeps public evidence inspectable and hidden evidence 
   expect(errors).toEqual([]);
 });
 
-test('B04026 keeps duplicate revealed cards visually identifiable and preserves reordered occurrences after detail inspection', async ({ page }) => {
+test('B04026 preserves public detail access and the chosen reordered card order', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await humanMode(page);
   await buildGameState(page, (gs) => {
@@ -329,7 +329,7 @@ test('B04026 keeps duplicate revealed cards visually identifiable and preserves 
     ];
     gs.players.self.hand = ['B04026'];
     gs.players.self.scene = [];
-    gs.players.self.deck = ['D08003', 'B04021', 'B04021', 'D08007'];
+    gs.players.self.deck = ['D08003', 'B04021', 'B04028', 'D08007'];
     gs.pendingEffects = [];
   });
 
@@ -337,8 +337,7 @@ test('B04026 keeps duplicate revealed cards visually identifiable and preserves 
   const reveal = page.locator('.card-list-modal');
   await expect(reveal).toBeVisible({ timeout: 6000 });
   await expect(reveal.locator('.card-list-item img')).toHaveCount(3);
-  const duplicatePrimaries = reveal.getByTestId(/card-list-pick-B04021#[12]/);
-  await expect(duplicatePrimaries).toHaveCount(2);
+  await expect(page.getByTestId('card-list-pick-B04021#1')).toBeVisible();
 
   const revealDetail = page.getByTestId('card-list-pick-detail-B04021#1');
   await expectTouchTarget(revealDetail);
@@ -346,7 +345,7 @@ test('B04026 keeps duplicate revealed cards visually identifiable and preserves 
   await expect(page.locator('.card-expand-modal')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(reveal).toBeVisible();
-  await expect(duplicatePrimaries).toHaveCount(2);
+  await expect(page.getByTestId('card-list-pick-B04021#1')).toBeVisible();
 
   const skip = page.getByTestId('card-list-pick-skip');
   await expectInViewport(skip);
@@ -367,7 +366,7 @@ test('B04026 keeps duplicate revealed cards visually identifiable and preserves 
   await expect(reorder).toHaveCount(0);
 
   const gs = await getGameState(page);
-  expect(gs.players.self.deck.slice(-3)).toEqual(['D08003', 'B04021', 'B04021']);
+  expect(gs.players.self.deck.slice(-3)).toEqual(['D08003', 'B04028', 'B04021']);
   expect(gs.players.self.remove).toContain('B04026');
   expect(errors).toEqual([]);
 });

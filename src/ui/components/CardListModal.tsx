@@ -148,10 +148,14 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
   const forcedInCands = (pickForcedUids ?? []).filter((u) => (pickCands ?? []).some((c) => c.uid === u));
   const forcedLockable = forcedInCands.length > 0 && forcedInCands.length <= (pickNMax ?? 1);
   const forcedRequired = Math.min(forcedInCands.length, pickNMax ?? Number.POSITIVE_INFINITY);
+  // Parent detail state may recreate arrays without changing the pending decision.
+  // Reset only when its candidate/forced identities actually change.
+  const pickCandidateKey = (pickCands ?? []).map((candidate) => candidate.uid).join('\u0000');
+  const forcedKey = (pickForcedUids ?? []).join('\u0000');
   // pending pick が切り替わった (kind change) で local selection reset (forced は auto-select)
   const isMultiPickInit = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- forcedInCands は render 毎に再生成の派生値のため prop (pickForcedUids/pickNMax) を dep にする
-  useEffect(() => { setSelectedUids(isMultiPickInit && forcedLockable ? forcedInCands : []); }, [kind, pickCands, pickForcedUids, pickNMax]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- derived values are covered by stable identity keys and pickNMax.
+  useEffect(() => { setSelectedUids(isMultiPickInit && forcedLockable ? forcedInCands : []); }, [kind, pickCandidateKey, forcedKey, pickNMax]);
   // D08021 driver 2026-05-26: 選択済 uid → 集計済 name component Set (rules/19)
   const selectedComponents = new Set<string>();
   if (pickDistinctNames && pickComponents) {
