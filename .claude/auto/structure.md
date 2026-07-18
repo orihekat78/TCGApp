@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 4994
+- **ファイル数**: 4996
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1802,6 +1802,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `check-official-sync.cjs`
     - `fetch-official.cjs`
     - `official-api.cjs`
+    - `qa-normalize.cjs`
   - **`compiler/`**
     - **`rules/`**
       - `exceptions.json`
@@ -4854,6 +4855,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `oracle-realdata.test.ts` — Track B compiler — oracle の実 data 受入テスト (B0 完了条件を回帰化)。
     - `oracle.test.ts` — Track B compiler — oracle 3 値判定の単体テスト。
     - `param.test.ts` — Track B compiler — B4 param rule (slot 汎化) 単体テスト。
+    - `qa-normalize.test.ts`
   - **`e2e/`** — Playwright E2E テスト (1 試合通し検証 + 共通パターン spec)
     - **`helpers/`** — E2E 共通ヘルパー (types / setup / state / assertions)
       - `assertions.ts` — E2E test assertion helpers — engine state + DOM の両層を確認
