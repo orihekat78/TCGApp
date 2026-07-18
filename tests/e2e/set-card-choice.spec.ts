@@ -16,7 +16,7 @@ function applyB02039Fixture(gs: GameStateLike): void {
     turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
   });
   players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
-  players.self.scene = [makeChar('B02039', 'yusaku'), makeChar('B02036', 'toichi')];
+  players.self.scene = [makeChar('B02039', 'yusaku'), makeChar('B02040', 'toichi')];
   players.self.hand = [];
   players.self.deck = ['D08026'];
   players.self.evidence = [];
