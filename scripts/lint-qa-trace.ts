@@ -7,6 +7,15 @@ import { runGenQaTrace, validateQaSnapshot, validateQaSnapshotAgainstStatus, typ
 const ROOT = process.cwd();
 const HASH = /^[a-f0-9]{64}$/;
 const STATUSES: readonly CoverageStatus[] = ['matched', 'test-missing', 'legacy-unreviewed', 'unmapped', 'mismatch', 'deferred', 'manual-only'];
+const ALLOWED_COVERAGE_TRANSITIONS: Readonly<Record<CoverageStatus, ReadonlySet<CoverageStatus>>> = {
+  matched: new Set(['matched']),
+  'test-missing': new Set(['test-missing', 'matched']),
+  'legacy-unreviewed': new Set(STATUSES),
+  unmapped: new Set(['unmapped', 'matched']),
+  mismatch: new Set(['mismatch', 'matched']),
+  deferred: new Set(['deferred', 'matched']),
+  'manual-only': new Set(['manual-only', 'matched']),
+};
 
 export type QaTraceCoverage = {
   total: number;
@@ -150,18 +159,9 @@ function compareCoverage(baseline: QaTraceCoverage, current: QaTraceCoverage, is
     + coverage.statusCounts['manual-only']
     + 2 * (coverage.statusCounts['test-missing'] + coverage.statusCounts.unmapped + coverage.statusCounts.mismatch + coverage.statusCounts.deferred);
   if (current.statusCounts.matched < baseline.statusCounts.matched || burden(current) > burden(baseline)) push(issues, 'coverage-worsened', 'Q&A coverage regressed from the approved baseline');
-  const severity: Record<CoverageStatus, number> = {
-    matched: 0,
-    'legacy-unreviewed': 1,
-    'manual-only': 1,
-    'test-missing': 2,
-    unmapped: 2,
-    mismatch: 2,
-    deferred: 2,
-  };
   for (const [qaId, before] of Object.entries(baseline.itemStatuses)) {
     const after = current.itemStatuses[qaId];
-    if (after && severity[after] > severity[before]) {
+    if (after && !ALLOWED_COVERAGE_TRANSITIONS[before].has(after)) {
       push(issues, 'coverage-item-worsened', `Q&A coverage regressed for ${qaId}: ${before} -> ${after}`);
     }
   }

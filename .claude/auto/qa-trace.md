@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-qa-trace.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:qa-trace`
-> Source hash: `26671eaca459`
+> Source hash: `76bcc8b4cbf5`
 
 Tracked Q&A identifiers and digests only. Official question and answer bodies are intentionally excluded.
 
@@ -13,16 +13,16 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 
 ## Shipped/missing classification
 
-- shipped: 2644
+- shipped: 2642
 - deferred: 0
 - missing: 270
 
 ## Coverage classification
 
-- total: 2914
+- total: 2912
 - matched: 0
 - test-missing: 0
-- legacy-unreviewed: 2914
+- legacy-unreviewed: 2912
 - unmapped: 0
 - mismatch: 0
 - deferred: 0
@@ -33,9 +33,7 @@ Tracked Q&A identifiers and digests only. Official question and answer bodies ar
 
 | QA ID | Card | Printings | Shipped/missing | Coverage | Source refs | Test refs |
 | --- | --- | --- | --- | --- | --- | --- |
-| `card:B01001:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa` | `B01001` | `B01001`, `B01001P` | shipped | legacy-unreviewed | 0 | 0 |
-| `card:B01001Sec1:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa` | `B01001Sec1` | `B01001Sec1` | shipped | legacy-unreviewed | 0 | 0 |
-| `card:B01001Sec2:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa` | `B01001Sec2` | `B01001Sec2` | shipped | legacy-unreviewed | 0 | 0 |
+| `card:B01001:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa` | `B01001` | `B01001`, `B01001P`, `B01001Sec1`, `B01001Sec2` | shipped | legacy-unreviewed | 0 | 0 |
 | `card:B01002:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa` | `B01002` | `B01002`, `B01002P` | shipped | legacy-unreviewed | 0 | 0 |
 | `card:B01003:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa` | `B01003` | `B01003`, `B01003P` | shipped | legacy-unreviewed | 0 | 0 |
 | `card:B01004:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa` | `B01004` | `B01004`, `B01004P` | shipped | legacy-unreviewed | 0 | 0 |

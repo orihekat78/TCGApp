@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "source": {
-    "normalizedFaqHash": "f846884e74373c00a9854558dc13f1fd585f650cf6a4a2f447f96c6530aacef4",
-    "itemSetHash": "8eb0afa9ac453b065a23b04b3896d4238fd1e3bca20d6c0f6ebf8a4e69d4e4a5",
-    "answerSetHash": "b37b798060ab11146872be0d6adb37f5aa3c2aa9a5e836ae2a9e5e5c74d81623",
+    "normalizedFaqHash": "0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3",
+    "itemSetHash": "3a3a846dc7d4ebd96b1e65f33d7173801252f740134f5c99b3521ebefdfb339d",
+    "answerSetHash": "afccf6ddb424d20cd2763302ce3b374e64bdd3af3a13c7d51cf460b0ad1f2902",
     "conflictSetHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
   "items": [
@@ -12,26 +12,8 @@
       "cardId": "B01001",
       "cardNums": [
         "B01001",
-        "B01001P"
-      ],
-      "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
-      "questionHash": "298b21f15c81d747544197e952c137e9eb5bb2e41908677256633add82bbcc55",
-      "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f"
-    },
-    {
-      "qaId": "card:B01001Sec1:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
-      "cardId": "B01001Sec1",
-      "cardNums": [
-        "B01001Sec1"
-      ],
-      "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
-      "questionHash": "298b21f15c81d747544197e952c137e9eb5bb2e41908677256633add82bbcc55",
-      "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f"
-    },
-    {
-      "qaId": "card:B01001Sec2:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
-      "cardId": "B01001Sec2",
-      "cardNums": [
+        "B01001P",
+        "B01001Sec1",
         "B01001Sec2"
       ],
       "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
@@ -30600,11 +30582,11 @@
   ],
   "conflicts": [],
   "coverage": {
-    "total": 2914,
+    "total": 2912,
     "statusCounts": {
       "matched": 0,
       "test-missing": 0,
-      "legacy-unreviewed": 2914,
+      "legacy-unreviewed": 2912,
       "unmapped": 0,
       "mismatch": 0,
       "deferred": 0,
@@ -30612,8 +30594,6 @@
     },
     "itemStatuses": {
       "card:B01001:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
-      "card:B01001Sec1:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
-      "card:B01001Sec2:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
       "card:B01002:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
       "card:B01003:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
       "card:B01004:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",

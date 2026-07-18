@@ -145,7 +145,7 @@ function parseQa(value) {
 function printableCardFamily(cardNum) {
   // P/P2 identifies an alternate printing of the immediately preceding card
   // number. `card_id` is not globally unique across released printings.
-  return cardNum.replace(/^(.*\d)P\d*$/, '$1');
+  return cardNum.replace(/^(.*\d)(?:P\d*|Sec\d+)$/, '$1');
 }
 
 function normalizeQaCards(cards) {

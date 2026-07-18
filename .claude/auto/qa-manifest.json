@@ -10,34 +10,8 @@
       "cardId": "B01001",
       "cardNums": [
         "B01001",
-        "B01001P"
-      ],
-      "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
-      "questionHash": "298b21f15c81d747544197e952c137e9eb5bb2e41908677256633add82bbcc55",
-      "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f",
-      "classification": "shipped",
-      "coverageStatus": "legacy-unreviewed",
-      "sourceRefs": [],
-      "testRefs": []
-    },
-    {
-      "qaId": "card:B01001Sec1:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
-      "cardId": "B01001Sec1",
-      "cardNums": [
-        "B01001Sec1"
-      ],
-      "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
-      "questionHash": "298b21f15c81d747544197e952c137e9eb5bb2e41908677256633add82bbcc55",
-      "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f",
-      "classification": "shipped",
-      "coverageStatus": "legacy-unreviewed",
-      "sourceRefs": [],
-      "testRefs": []
-    },
-    {
-      "qaId": "card:B01001Sec2:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
-      "cardId": "B01001Sec2",
-      "cardNums": [
+        "B01001P",
+        "B01001Sec1",
         "B01001Sec2"
       ],
       "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
@@ -42254,11 +42228,11 @@
   ],
   "issues": [],
   "coverage": {
-    "total": 2914,
+    "total": 2912,
     "statusCounts": {
       "matched": 0,
       "test-missing": 0,
-      "legacy-unreviewed": 2914,
+      "legacy-unreviewed": 2912,
       "unmapped": 0,
       "mismatch": 0,
       "deferred": 0,
@@ -42266,8 +42240,6 @@
     },
     "itemStatuses": {
       "card:B01001:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
-      "card:B01001Sec1:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
-      "card:B01001Sec2:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
       "card:B01002:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
       "card:B01003:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",
       "card:B01004:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa": "legacy-unreviewed",

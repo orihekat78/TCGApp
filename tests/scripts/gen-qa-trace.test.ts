@@ -411,10 +411,11 @@ describe('gen-qa-trace', () => {
       url: 'https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards',
       fetchedAt: '2026-07-18T05:51:08.0459736Z',
     });
-    expect(tracked.items).toHaveLength(2914);
+    expect(tracked.normalizedFaqHash).toBe('0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3');
+    expect(tracked.items).toHaveLength(2912);
     expect(tracked.conflicts).toEqual([]);
-    expect(manifest.coverage.total).toBe(2914);
-    expect(Object.values(manifest.coverage.statusCounts).reduce((total: number, count: unknown) => total + Number(count), 0)).toBe(2914);
+    expect(manifest.coverage.total).toBe(2912);
+    expect(Object.values(manifest.coverage.statusCounts).reduce((total: number, count: unknown) => total + Number(count), 0)).toBe(2912);
     expect(JSON.stringify(tracked)).not.toMatch(/"(?:question|answer|q_a|qAndA|section)"\s*:/);
   });
 });

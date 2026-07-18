@@ -4,33 +4,15 @@
     "url": "https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards",
     "fetchedAt": "2026-07-18T05:51:08.0459736Z"
   },
-  "normalizedFaqHash": "f846884e74373c00a9854558dc13f1fd585f650cf6a4a2f447f96c6530aacef4",
+  "normalizedFaqHash": "0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3",
   "items": [
     {
       "qaId": "card:B01001:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
       "cardId": "B01001",
       "cardNums": [
         "B01001",
-        "B01001P"
-      ],
-      "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
-      "questionHash": "298b21f15c81d747544197e952c137e9eb5bb2e41908677256633add82bbcc55",
-      "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f"
-    },
-    {
-      "qaId": "card:B01001Sec1:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
-      "cardId": "B01001Sec1",
-      "cardNums": [
-        "B01001Sec1"
-      ],
-      "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",
-      "questionHash": "298b21f15c81d747544197e952c137e9eb5bb2e41908677256633add82bbcc55",
-      "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f"
-    },
-    {
-      "qaId": "card:B01001Sec2:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
-      "cardId": "B01001Sec2",
-      "cardNums": [
+        "B01001P",
+        "B01001Sec1",
         "B01001Sec2"
       ],
       "sectionHash": "38712bce88945feeed80eeea9bc48a0c36102756c2b848122fa5768e882c6ac5",

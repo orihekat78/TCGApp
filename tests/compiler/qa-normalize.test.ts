@@ -96,6 +96,23 @@ describe('compiler/qa-normalize', () => {
     })]);
   });
 
+  it('coalesces P and Sec alternate printings into the same printable card family', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B01001', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+      { card_num: 'B01001P', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+      { card_num: 'B01001Sec1', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+      { card_num: 'B01001Sec2', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual([expect.objectContaining({
+      qaId: `card:B01001:${sha256('\0同じ質問')}`,
+      cardId: 'B01001',
+      cardNums: ['B01001', 'B01001P', 'B01001Sec1', 'B01001Sec2'],
+    })]);
+  });
+
   it('does not merge Q&A from distinct printable card numbers that reuse an internal card id', () => {
     const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
     const result = normalizeQaCards([

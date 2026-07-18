@@ -141,6 +141,28 @@ describe('lint-qa-trace', () => {
 
     expect(lintQaTrace({ root }).issues.map((issue) => issue.code)).toContain('coverage-item-worsened');
   });
+
+  const statuses = ['matched', 'test-missing', 'legacy-unreviewed', 'unmapped', 'mismatch', 'deferred', 'manual-only'] as const;
+  const allowedTransitions: Record<(typeof statuses)[number], readonly (typeof statuses)[number][]> = {
+    matched: ['matched'],
+    'test-missing': ['test-missing', 'matched'],
+    'legacy-unreviewed': statuses,
+    unmapped: ['unmapped', 'matched'],
+    mismatch: ['mismatch', 'matched'],
+    deferred: ['deferred', 'matched'],
+    'manual-only': ['manual-only', 'matched'],
+  };
+
+  it.each(statuses.flatMap((before) => statuses.map((after) => [before, after] as const)))('allows only reviewed coverage transition %s -> %s', (before, after) => {
+    const one = [item('1')];
+    const { root } = fixture({
+      baselineCoverage: coverageFor(one, { [one[0]!.qaId]: before }),
+      coverage: coverageFor(one, { [one[0]!.qaId]: after }),
+    });
+    const codes = lintQaTrace({ root }).issues.map((issue) => issue.code);
+
+    expect(codes.includes('coverage-item-worsened')).toBe(!allowedTransitions[before].includes(after));
+  });
 });
 
 afterEach(() => {
