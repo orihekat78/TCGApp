@@ -3,6 +3,8 @@
 ## 2026-07-18 Q&A hash-only trace
 
 - `qa-hash-snapshot.json` is tracked and excludes official question/answer/section bodies; raw API stays ignored.
+- Rules 22–26 now mark 88 top-level ruling bullets with `qa-ref`; their five document-summary SHA-256 values are in `rules/qa-sources.json`.
+- Community box access is static/non-exhaustive and yields no exact post ID, so every new ref stays `unverified` under `DEFER-QA-POST-ID`; provenance tests reject accidental verification, dangling refs, and hash drift.
 - Snapshot: 2,650 IDs, source 2026-07-18; its normalized corpus SHA-256 matches `cards-data/status.json` (`74aeb9…2352`). The earlier 2,644 plan number is a 2026-07-16 source baseline, not Task4 parser drift.
 - `docs:qa-trace` reads only the tracked snapshot, checks `// qa: <qaId>` dangling/digest drift, and reports source/test coverage without changing CardDefs or engine.
 - Review follow-up: trace scans `.ts`/`.tsx` only; snapshot now records Task3-equivalent normalized corpus hash and generator fails status/provenance drift without raw inputs.

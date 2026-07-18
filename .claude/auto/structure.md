@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5005
+- **ファイル数**: 5007
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1117,6 +1117,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `29-floor-rule-timing.md` — 29. フロアルール: 時間制限・決着処理
     - `30-floor-rule-misplay.md` — 30. フロアルール: 不適切なゲーム進行と対応処置
     - `INDEX.md` — 公式ルール集の目次
+    - `qa-sources.json`
     - `sources.md` — 公式 PDF / Wiki / Q&A の出典一覧
   - **`sessions/`** — 過去セッションの作業ログアーカイブ (日付別、80 行超で memory.md からローテート)
     - `2026-05-10.md` — 2026-05-10 — Day 1 セッションログ（アーカイブ）
@@ -5140,6 +5141,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `lint-bug-closure.test.ts`
     - `markdown-eol.test.ts`
     - `official-api.test.ts`
+    - `rule-qa-provenance.test.ts` — Top-level prose bullets are rulings. Nested examples and related-rule links are…
     - `structure-root-portability.test.ts`
     - `structure-tracked-files.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト
