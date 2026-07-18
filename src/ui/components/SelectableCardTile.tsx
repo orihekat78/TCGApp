@@ -7,6 +7,8 @@ export type SelectableCardTileProps = {
   cardId: string;
   instanceId: string;
   hidden?: boolean;
+  hiddenLabel?: string;
+  selectTestId?: string;
   onSelect: (instanceId: string) => void;
   onExpand?: (cardId: string) => void;
 };
@@ -15,6 +17,8 @@ export function SelectableCardTile({
   cardId,
   instanceId,
   hidden = false,
+  hiddenLabel = '伏せられたカード',
+  selectTestId,
   onSelect,
   onExpand,
 }: SelectableCardTileProps): JSX.Element {
@@ -32,6 +36,7 @@ export function SelectableCardTile({
       <button
         type="button"
         className="selectable-card-tile__select"
+        data-testid={selectTestId}
         data-instance-id={instanceId}
         data-card-id={hidden ? undefined : cardId}
         aria-label={hidden ? '伏せられたカードを選択' : `${name}を選択`}
@@ -42,7 +47,7 @@ export function SelectableCardTile({
         } : undefined}
       >
         {hidden ? (
-          <span className="selectable-card-tile__hidden-label">伏せられたカード</span>
+          <span className="selectable-card-tile__hidden-label">{hiddenLabel}</span>
         ) : (
           <>
           <span className="selectable-card-tile__art" aria-hidden="true">

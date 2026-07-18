@@ -163,6 +163,22 @@ describe('SelectableCardTile', () => {
     unmount(root);
   });
 
+  it('exposes an optional primary selection test id without disclosing a hidden card id', () => {
+    const { container, root } = renderTile({
+      cardId: 'PUBLIC-CARD',
+      hidden: true,
+      hiddenLabel: 'Set card 2',
+      selectTestId: 'set-card-choice-2',
+    });
+    const tile = container.querySelector<HTMLElement>('[data-testid="set-card-choice-2"]');
+
+    expect(tile).toBeInstanceOf(HTMLButtonElement);
+    expect(tile?.textContent).toBe('Set card 2');
+    expect(tile?.innerHTML).not.toContain('PUBLIC-CARD');
+    expect(tile?.getAttribute('aria-label')).not.toContain('PUBLIC-CARD');
+    unmount(root);
+  });
+
   it('keeps the detail button at the mobile touch target minimum', () => {
     expect(CSS_SOURCE).toMatch(
       /\.selectable-card-tile__detail\s*\{[\s\S]*min-inline-size:\s*44px;[\s\S]*min-block-size:\s*44px;/,

@@ -2,12 +2,16 @@ import type { JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { SelectableCardTile } from './SelectableCardTile.js';
 import './ChoicePickerModal.css';
 
 /** Dedicated responder prompt. This is intentionally separate from generic optional choices. */
 export function ChooseInterceptModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingChooseIntercept);
   const gameState = useGameStateStore((s) => s.gameState);
+  const expandModal = useCardExpandModal();
   if (!pending || pending.player !== 'self' || !gameState) return null;
 
   const protector = readDef.card(pending.protector.cardId);
@@ -28,9 +32,13 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
           <ul className="cp-list">
             {hand.map((cardId, index) => (
               <li key={`${cardId}-${index}`}>
-                <button type="button" className="cp-cand" onClick={() => resolve(index)} data-testid={`choose-intercept-discard-${index}`}>
-                  Discard {readDef.card(cardId)?.names[0] ?? cardId}
-                </button>
+                <SelectableCardTile
+                  cardId={cardId}
+                  instanceId={`hand:self:${index}`}
+                  selectTestId={`choose-intercept-discard-${index}`}
+                  onSelect={() => resolve(index)}
+                  onExpand={expandModal.open}
+                />
               </li>
             ))}
             <li>
@@ -41,6 +49,7 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
           </ul>
         </div>
       </div>
+      <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
     </div>
   );
 }

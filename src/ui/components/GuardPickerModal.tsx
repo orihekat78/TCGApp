@@ -11,6 +11,9 @@
 
 import type { JSX } from 'react';
 import type { SceneCharacter } from '@/engine/types/game-state.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { SelectableCardTile } from './SelectableCardTile.js';
 import './GuardPickerModal.css';
 
 export type GuardPickerCandidate = {
@@ -41,6 +44,7 @@ export type GuardPickerModalProps = {
 
 export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | null {
   const { open, candidates, attackerName, onPick, onSkip, mustGuard } = props;
+  const expandModal = useCardExpandModal();
   if (!open) return null;
 
   return (
@@ -66,16 +70,17 @@ export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | nu
             <ul className="guard-picker-list">
               {candidates.map((c) => (
                 <li key={c.uid}>
-                  <button
-                    type="button"
-                    className="guard-picker-cand"
-                    onClick={() => onPick(c.uid)}
-                    data-testid={`guard-cand-${c.uid}`}
-                  >
-                    <span className="cand-name">{c.name}</span>
-                    <span className="cand-ap">AP {c.ap}</span>
-                    <span className="cand-lp">LP {c.lp}</span>
-                  </button>
+                  <div className="guard-picker-choice" data-testid={`guard-cand-${c.uid}`}>
+                    <SelectableCardTile
+                      cardId={c.cardId}
+                      instanceId={c.uid}
+                      onSelect={onPick}
+                      onExpand={expandModal.open}
+                    />
+                    <span className="guard-picker-stats" aria-label={`${c.name}: AP ${c.ap}, LP ${c.lp}`}>
+                      AP {c.ap} / LP {c.lp}
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -99,6 +104,7 @@ export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | nu
           )}
         </div>
       </div>
+      <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
     </div>
   );
 }

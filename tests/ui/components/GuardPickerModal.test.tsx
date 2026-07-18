@@ -1,6 +1,10 @@
 // Phase 8.6α: GuardPickerModal tests
 
-import { describe, it, expect, vi } from 'vitest';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import {
   GuardPickerModal,
@@ -9,12 +13,28 @@ import {
 } from '@/ui/components/GuardPickerModal';
 import type { SceneCharacter } from '@/engine/types/game-state';
 
+const CSS_SOURCE = readFileSync(
+  resolve(process.cwd(), 'src/ui/components/GuardPickerModal.css'),
+  'utf8',
+);
+
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
 const cands: GuardPickerCandidate[] = [
   { uid: 'u1', cardId: 'D08003', name: '毛利蘭', ap: 5000, lp: 2 },
   { uid: 'u2', cardId: 'D08005', name: '工藤新一', ap: 6000, lp: 3 },
 ];
 
 describe('GuardPickerModal', () => {
+  let root: Root | null = null;
+  let container: HTMLDivElement | null = null;
+
+  afterEach(() => {
+    if (root) act(() => root!.unmount());
+    container?.remove();
+    root = null;
+    container = null;
+  });
   it('returns null when open=false', () => {
     const html = renderToString(
       <GuardPickerModal open={false} candidates={cands} onPick={vi.fn()} onSkip={vi.fn()} />,
@@ -55,6 +75,36 @@ describe('GuardPickerModal', () => {
       <GuardPickerModal open candidates={[]} onPick={vi.fn()} onSkip={vi.fn()} />,
     );
     expect(html).toContain('ガードできるキャラがいません');
+  });
+
+  it('selects guards by uid and keeps the pending prompt after card details close', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    const onPick = vi.fn();
+    act(() => root!.render(<GuardPickerModal open candidates={cands} onPick={onPick} onSkip={vi.fn()} />));
+
+    expect(container.querySelectorAll('[data-instance-id]')).toHaveLength(2);
+    expect(container.querySelector('[data-instance-id="u2"]')).not.toBeNull();
+    expect(container.querySelector('button button')).toBeNull();
+    const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
+    expect(details).toHaveLength(2);
+    act(() => details[0]!.click());
+    expect(container.querySelector('.card-expand-close')).not.toBeNull();
+    act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
+    expect(container.querySelector('[data-testid="guard-picker-modal"]')).not.toBeNull();
+
+    act(() => (container.querySelector('[data-instance-id="u2"]') as HTMLButtonElement).click());
+    expect(onPick).toHaveBeenCalledWith('u2');
+  });
+
+  it('keeps guard controls at the mobile 44px touch-target minimum', () => {
+    expect(CSS_SOURCE).toMatch(
+      /\.guard-picker-choice\s*\{[\s\S]*min-block-size:\s*44px;/,
+    );
+    expect(CSS_SOURCE).toMatch(
+      /\.guard-picker-skip\s*\{[\s\S]*min-block-size:\s*44px;/,
+    );
   });
 });
 

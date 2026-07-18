@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5018
+- **ファイル数**: 5019
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5166,6 +5166,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `ConfirmModal.test.tsx` — Phase 8 Task 8.5: ConfirmModal 描画スナップショット
       - `ContactFlash.test.tsx` — Phase 8.10f: ContactFlash tests
       - `CutInDisguisePickerModal.test.tsx` — Phase 8.6β: CutInDisguisePickerModal tests
+      - `DecisionModalHosts.test.tsx`
       - `DeckArea.test.tsx` — Phase 7 Task 7.7: DeckArea tests
       - `DeckPlaceModalHost.test.tsx`
       - `DeckReorderModalHost.reset.test.tsx`
