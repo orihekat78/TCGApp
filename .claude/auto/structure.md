@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 4996
+- **ファイル数**: 4999
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1295,10 +1295,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `TEMPLATE.md` — カード効果分析テンプレート (TSV参照型)
       - `WORKFLOW-GUIDELINES.md` — カード処理ワークフロー図 作成ガイドライン
     - **`cards-data/`**
-      - `INDEX.md` — cards-data — カードデータ TSV (権威ソース)
+      - `INDEX.md` — cards-data — local official-card cache
       - `_regen.js` — TSV regenerator from fresh API JSON in _raw/.
       - `_regen_all.cjs`
-      - `packages.md` — cards-data パッケージ一覧
+      - `packages.md` — cards-data package IDs
+      - `status.json`
     - **`catalog-survey-2026-06-06/`**
       - `README.md` — 残カタログ再分類サーベイ (2026-06-06〜07, タスク A) — **完走**
       - `_buckets.json`
@@ -1799,6 +1800,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `mcts-vs-heuristic.ts` — scripts/benchmark/mcts-vs-heuristic — Phase 9-F: MCTS vs Heuristic 100 戦比較
     - `run.ts` — scripts/benchmark/run — Phase 9-H パフォーマンス計測ランナー
   - **`cards/`**
+    - `cards-data-status.cjs`
     - `check-official-sync.cjs`
     - `fetch-official.cjs`
     - `official-api.cjs`
@@ -4847,6 +4849,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `wave2-cluster2-batch.test.ts` — engine拡張 wave#2 cluster2 — ability-presence filter 解禁 10枚の実 flow 検証 (decoy 付き)
   - **`compiler/`**
     - `canonical.test.ts` — Track B compiler — canonical 正規化の単体テスト。
+    - `cards-data-consistency.test.ts`
     - `compile.test.ts` — Track B compiler — compile skeleton の単体テスト。
     - `corpus-realdata.test.ts` — Track B compiler — corpus 抽出の実 data 整合テスト (.claude/specs/cards-data 直読、.…
     - `mine.test.ts` — Track B compiler — mine.cjs (採掘器) の単体テスト。

@@ -30,6 +30,12 @@ afterEach(() => {
 });
 
 describe("official card API", () => {
+  it("maps the official PR category label into the stable local PR-01 package", () => {
+    const { packageCode } = require("../../scripts/cards/official-api.cjs");
+
+    expect(packageCode("PRカード")).toBe("PR-01");
+  });
+
   it("fetches every page and retries a transient page failure", async () => {
     const { fetchAllCards } = require("../../scripts/cards/official-api.cjs");
     const calls: string[] = [];

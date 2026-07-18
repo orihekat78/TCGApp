@@ -35,6 +35,7 @@
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",
     "benchmark": "tsx scripts/benchmark/run.ts",
     "cards:fetch": "node scripts/cards/fetch-official.cjs && node .claude/specs/cards-data/_regen_all.cjs",
+    "cards:status": "node scripts/cards/cards-data-status.cjs",
     "cards:check": "node scripts/cards/check-official-sync.cjs",
     "cards:sync": "npm run cards:fetch && node scripts/compiler/tsv-corpus.cjs && tsx scripts/compiler/dump-shipped.ts && node scripts/compiler/mine.cjs && node scripts/compiler/oracle.cjs --gate",
     "test:e2e": "playwright test",

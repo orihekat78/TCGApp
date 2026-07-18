@@ -50,6 +50,7 @@ function parseQaText(value) {
   const text = String(value ?? '').replace(/\r\n?/g, '\n');
   const pairs = [];
   let section = '';
+  const preamble = [];
   let question = null;
   let answerLines = null;
 
@@ -71,13 +72,14 @@ function parseQaText(value) {
       section = sectionMatch[1];
       continue;
     }
-    const questionMatch = line.match(/^\s*Q(?:uestion)?\s*[:：]\s*(.*)$/i);
+    const questionMatch = line.match(/^\s*Q(?:uestion)?\s*[.:：]\s*(.*)$/i);
     if (questionMatch) {
       flush();
+      if (!section && preamble.length) section = normalizeText(preamble.join('\n'));
       question = questionMatch[1];
       continue;
     }
-    const answerMatch = line.match(/^\s*A(?:nswer)?\s*[:：]\s*(.*)$/i);
+    const answerMatch = line.match(/^\s*A(?:nswer)?\s*[.:：]\s*(.*)$/i);
     if (answerMatch) {
       if (question === null || answerLines !== null) throw new QaParseError('malformed-qa-text');
       answerLines = [answerMatch[1]];
@@ -91,7 +93,10 @@ function parseQaText(value) {
       question += `\n${line}`;
       continue;
     }
-    if (line.trim()) throw new QaParseError('unrecognized-text');
+    if (line.trim()) {
+      preamble.push(line);
+      continue;
+    }
   }
   flush();
   if (!pairs.length) throw new QaParseError('unrecognized-text');

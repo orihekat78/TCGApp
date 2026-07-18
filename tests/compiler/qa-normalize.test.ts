@@ -107,6 +107,40 @@ describe('compiler/qa-normalize', () => {
     })]);
   });
 
+  it('parses current official Q&A with an ability preamble before full-width markers', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'D08003',
+      card_id: '0489',
+      q_a: '●Ability preamble\r\n\r\nQ：Does this count?\r\nA：Yes.',
+    }]);
+
+    expect(result).toMatchObject({
+      conflicts: [],
+      items: [expect.objectContaining({
+        cardNums: ['D08003'],
+        section: '●Ability preamble',
+        questionHash: sha256('Does this count?'),
+        answerHash: sha256('Yes.'),
+      })],
+    });
+  });
+
+  it('parses current official Q&A using period markers', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'B04075',
+      card_id: '0256',
+      q_a: 'Q. Which resolves first?\r\nA. The turn player.',
+    }]);
+
+    expect(result.items).toEqual([expect.objectContaining({
+      cardNums: ['B04075'],
+      questionHash: sha256('Which resolves first?'),
+      answerHash: sha256('The turn player.'),
+    })]);
+  });
+
   it.each([
     ['invalid JSON', '{not json', 'unrecognized-text'],
     ['JSON array', '["not supported"]', 'unsupported-json-array'],

@@ -6,6 +6,7 @@ const OFFICIAL_CARDS_URL =
 const PACKAGE_CODE = /^(CT-(?:D|P)\d{2}|PR-\d{2})\b/;
 
 function packageCode(packageName) {
+  if (packageName === "PRカード") return "PR-01";
   const match = typeof packageName === "string" && packageName.match(PACKAGE_CODE);
   if (!match) throw new Error(`invalid official package: ${packageName}`);
   return match[1];
