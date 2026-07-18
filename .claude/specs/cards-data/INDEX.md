@@ -9,8 +9,7 @@ It supports compiler and grounding work; it is not application content.
 only source URL/time, package and kind counts, card-number hashes, a normalized
 FAQ-metadata hash, and duplicate results—never official card text or images.
 
-Current snapshot: **22 packages / 2,240 printings**, including **CT-P10: 166**.
-Do not copy these counts into new docs; link to `status.json` instead.
+Read `status.json` for the current snapshot. Do not copy its counts into docs.
 
 ## Local-only inputs
 

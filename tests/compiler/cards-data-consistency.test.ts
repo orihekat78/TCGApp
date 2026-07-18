@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -34,6 +34,14 @@ afterEach(() => {
 });
 
 describe("cards-data consistency status", () => {
+  it("keeps current snapshot counts out of the INDEX", () => {
+    const index = readFileSync(path.join(ROOT, ".claude", "specs", "cards-data", "INDEX.md"), "utf8");
+
+    expect(index).toContain("[status.json]");
+    expect(index).not.toMatch(/\b\d[\d,]*\s+(?:packages|printings)\b/i);
+    expect(index).not.toMatch(/\bCT-P10\b/i);
+  });
+
   it("hashes normalized Q&A and records only deterministic source metadata", () => {
     const { generateCardsDataStatus, normalizedFaqMetadata } = require("../../scripts/cards/cards-data-status.cjs");
     const root = tempRoot();
