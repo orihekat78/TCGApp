@@ -41,12 +41,12 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
                 />
               </li>
             ))}
-            <li>
-              <button type="button" className="cp-cand" onClick={() => resolve(null)} data-testid="choose-intercept-decline">
-                Do not cancel
-              </button>
-            </li>
           </ul>
+        </div>
+        <div className="cp-actions">
+          <button type="button" className="cp-btn cp-btn-cancel" onClick={() => resolve(null)} data-testid="choose-intercept-decline">
+            Do not cancel
+          </button>
         </div>
       </div>
       <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />

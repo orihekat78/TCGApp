@@ -66,8 +66,8 @@ export function LeaveInterceptModalHost(): JSX.Element | null {
           {interceptor && <LeaveInterceptCard cardId={interceptor.cardId} name={interceptorName} role="interceptor" onExpand={expandModal.open} />}
           {target && <LeaveInterceptCard cardId={target.cardId} name={targetName} role="target" onExpand={expandModal.open} />}
         </div>
-        <ul className="cp-list"><li><button type="button" className="cp-cand" data-testid="leave-intercept-yes" onClick={() => resolve(true)}>Yes</button></li><li><button type="button" className="cp-cand" data-testid="leave-intercept-no" onClick={() => resolve(false)}>No</button></li></ul>
       </div>
+      <div className="cp-actions"><button type="button" className="cp-btn" data-testid="leave-intercept-yes" onClick={() => resolve(true)}>Yes</button><button type="button" className="cp-btn cp-btn-cancel" data-testid="leave-intercept-no" onClick={() => resolve(false)}>No</button></div>
     </div>
     <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
   </div>;

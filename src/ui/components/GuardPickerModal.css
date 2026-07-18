@@ -84,7 +84,7 @@
 }
 
 .guard-picker-skip {
-  min-block-size: 44px;
+  min-block-size: 48px;
   padding: 8px 24px;
   background: rgba(80, 80, 90, 0.4);
   border: 1px solid rgba(140, 140, 160, 0.45);
@@ -107,7 +107,15 @@
     max-height: 90dvh;
     padding: 16px;
     border-radius: 10px 10px 0 0;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .guard-picker-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    max-height: none;
   }
 }
 
@@ -121,7 +129,15 @@
   .guard-picker-modal {
     box-sizing: border-box;
     max-height: calc(100dvh - 24px);
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .guard-picker-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    max-height: none;
   }
 }
 .guard-picker-skip:hover {

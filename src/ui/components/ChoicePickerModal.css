@@ -58,6 +58,7 @@
 .cp-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 16px;
 }
 
@@ -158,9 +159,17 @@
     min-width: 0;
     width: 100%;
     max-height: min(90dvh, 720px);
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 16px;
     border-radius: 12px 12px 0 0;
+  }
+
+  .cp-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
   }
 
   .leave-intercept-cards { grid-template-columns: 1fr; }
@@ -176,6 +185,14 @@
   .cp-modal {
     box-sizing: border-box;
     max-height: calc(100dvh - 24px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .cp-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
     overflow-y: auto;
   }
 }
