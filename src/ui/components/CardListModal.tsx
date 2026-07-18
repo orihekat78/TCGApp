@@ -472,6 +472,10 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                       key={`faceup-${idx}`}
                       className="card-list-item card-list-item--clickable"
                       onClick={() => onExpand(faceUpCardId)}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        onExpand(faceUpCardId);
+                      }}
                       data-testid={`card-list-evidence-faceup-${idx}`}
                       aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を拡大表示`}
                     >

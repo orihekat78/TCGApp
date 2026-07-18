@@ -141,26 +141,55 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
   });
 
-  it('gives evidence-flip and stacked-cost CardList pickers their own public detail modal', () => {
+  it('keeps evidence-flip candidates face-down while public evidence can open details', () => {
     const state = createEmptyGameState();
-    state.players.self.evidence = [{ cardId: 'D08003', faceUp: true, origin: { turn: 1, via: 'reasoning' } }];
+    state.players.self.evidence = [
+      { cardId: 'D08003', faceUp: true, origin: { turn: 1, via: 'reasoning' } },
+      { cardId: 'D08004', faceUp: false, origin: { turn: 1, via: 'reasoning' } },
+    ];
     useGameStateStore.setState({ gameState: state });
     useEvidenceFlipPickerStore.setState({
-      current: { side: 'self', sourceName: 'flip', candidates: [{ index: 0, cardId: 'D08003' }], nMin: 1, nMax: 1 },
+      current: { side: 'self', sourceName: 'flip', candidates: [{ index: 1, cardId: 'D08004' }], nMin: 1, nMax: 1 },
       _resolver: null,
     });
     act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
-    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-evidence:self:0"]')!).click());
+
+    const publicEvidence = container.querySelector<HTMLButtonElement>('[data-testid="card-list-evidence-faceup-0"]')!;
+    expect(publicEvidence).not.toBeNull();
+    act(() => publicEvidence.click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
     act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
 
-    useEvidenceFlipPickerStore.getState()._reset();
+    const contextMenu = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    act(() => publicEvidence.dispatchEvent(contextMenu));
+    expect(contextMenu.defaultPrevented).toBe(true);
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
+
+    const faceDownCandidate = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:1"]')!;
+    expect(faceDownCandidate).not.toBeNull();
+    expect(faceDownCandidate.getAttribute('aria-label')).toContain('非公開');
+    expect(faceDownCandidate.textContent).toBe('非公開');
+    expect(faceDownCandidate.querySelector('.card-list-item-art')).toBeNull();
+    expect(faceDownCandidate.querySelector('.card-list-item-id')).toBeNull();
+    expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:1"]')).toBeNull();
+  });
+
+  it('opens stacked-cost CardList details through click and contextmenu', () => {
     useStackedCardCostPickerStore.setState({
       current: { sourceName: 'stack', candidates: [{ instanceId: 'stack:0', cardId: 'D08003' }], nMin: 1, nMax: 1 },
       _resolver: null,
     });
-    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+    act(() => root.render(<Playmat gameState={createEmptyGameState()} resolveCard={resolveCard} />));
+
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-stack:0"]')!).click());
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
+
+    const stackedCandidate = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-stack:0"]')!;
+    const contextMenu = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    act(() => stackedCandidate.dispatchEvent(contextMenu));
+    expect(contextMenu.defaultPrevented).toBe(true);
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
   });
 
