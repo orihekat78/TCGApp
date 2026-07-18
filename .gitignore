@@ -66,5 +66,8 @@ analysis.txt
 # (著作権配慮、.claude/research/legal/04-recommendation.md)。ローカル専用。
 /.claude/specs/cards-data/_raw/
 /.claude/specs/cards-data/**/*.tsv
+/.claude/specs/.cards-data.transactions/
+/.claude/specs/.cards-data.stage-*
+/.claude/specs/.cards-data.backup-*
 /.codex/config.local.toml
 /.codex/context/current.md

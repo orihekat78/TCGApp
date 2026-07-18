@@ -123,7 +123,39 @@ function packageDirectories(baseDir) {
 }
 
 function transactionDirectory(baseDir) {
-  return path.join(path.dirname(baseDir), `.${path.basename(baseDir)}.transactions`);
+  const resolvedBaseDir = path.resolve(baseDir);
+  return path.join(path.dirname(resolvedBaseDir), `.${path.basename(resolvedBaseDir)}.transactions`);
+}
+
+function assertPlainDirectory(target, label) {
+  const stat = fs.lstatSync(target);
+  if (!stat.isDirectory() || stat.isSymbolicLink()) {
+    throw new Error(`unsafe cards-data ${label}: ${target}`);
+  }
+}
+
+function assertManagedRootPath(baseDir, target, kind) {
+  const resolvedBaseDir = path.resolve(baseDir);
+  const resolvedTarget = path.resolve(target);
+  const parentDir = path.dirname(resolvedBaseDir);
+  const expectedPrefix = `.${path.basename(resolvedBaseDir)}.${kind}-`;
+  if (path.dirname(resolvedTarget) !== parentDir || !path.basename(resolvedTarget).startsWith(expectedPrefix)) {
+    throw new Error(`unsafe cards-data transaction ${kind} path: ${target}`);
+  }
+  if (fs.existsSync(resolvedTarget)) assertPlainDirectory(resolvedTarget, `transaction ${kind}`);
+  return resolvedTarget;
+}
+
+function assertBaseRoot(baseDir) {
+  const resolvedBaseDir = path.resolve(baseDir);
+  if (fs.existsSync(resolvedBaseDir)) assertPlainDirectory(resolvedBaseDir, "base root");
+  return resolvedBaseDir;
+}
+
+function assertJournalDirectory(baseDir) {
+  const directory = transactionDirectory(baseDir);
+  if (fs.existsSync(directory)) assertPlainDirectory(directory, "transaction journal directory");
+  return directory;
 }
 
 function writeTransaction(journalPath, transaction) {
@@ -132,9 +164,10 @@ function writeTransaction(journalPath, transaction) {
   fs.renameSync(tempPath, journalPath);
 }
 
-function removeIfPresent(target, rmSync) {
+function removePlainDirectoryIfPresent(target, rmSync) {
   if (!fs.existsSync(target)) return true;
   try {
+    assertPlainDirectory(target, "transaction cleanup target");
     rmSync(target, { recursive: true, force: true });
     return true;
   } catch {
@@ -142,26 +175,64 @@ function removeIfPresent(target, rmSync) {
   }
 }
 
-function readTransactions(baseDir) {
-  const directory = transactionDirectory(baseDir);
+function removeJournalIfPresent(journalPath, rmSync) {
+  if (!fs.existsSync(journalPath)) return true;
+  try {
+    const stat = fs.lstatSync(journalPath);
+    if (!stat.isFile() || stat.isSymbolicLink()) return false;
+    rmSync(journalPath, { force: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function quarantineJournal(baseDir, journalPath) {
+  const directory = assertJournalDirectory(baseDir);
+  const quarantineDir = path.join(directory, "quarantine");
+  if (fs.existsSync(quarantineDir)) assertPlainDirectory(quarantineDir, "transaction journal quarantine");
+  else fs.mkdirSync(quarantineDir, { recursive: true });
+  fs.renameSync(journalPath, path.join(quarantineDir, `${path.basename(journalPath)}.${randomUUID()}.rejected`));
+}
+
+function readTransaction(baseDir, journalPath) {
+  const stat = fs.lstatSync(journalPath);
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`unsafe cards-data transaction journal: ${journalPath}`);
+  const transaction = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+  const resolvedBaseDir = assertBaseRoot(baseDir);
+  if (path.resolve(transaction.baseDir ?? "") !== resolvedBaseDir || typeof transaction.stagedBaseDir !== "string" || typeof transaction.backupDir !== "string") {
+    throw new Error(`invalid cards-data transaction journal: ${journalPath}`);
+  }
+  return {
+    ...transaction,
+    baseDir: resolvedBaseDir,
+    stagedBaseDir: assertManagedRootPath(resolvedBaseDir, transaction.stagedBaseDir, "stage"),
+    backupDir: assertManagedRootPath(resolvedBaseDir, transaction.backupDir, "backup"),
+  };
+}
+
+function journalPaths(baseDir) {
+  const directory = assertJournalDirectory(baseDir);
   if (!fs.existsSync(directory)) return [];
   return fs.readdirSync(directory)
     .filter((name) => name.endsWith(".json"))
     .sort((left, right) => left.localeCompare(right))
-    .map((name) => {
-      const journalPath = path.join(directory, name);
-      const transaction = JSON.parse(fs.readFileSync(journalPath, "utf8"));
-      if (transaction.baseDir !== baseDir || typeof transaction.stagedBaseDir !== "string" || typeof transaction.backupDir !== "string") {
-        throw new Error(`invalid cards-data transaction journal: ${journalPath}`);
-      }
-      return { journalPath, transaction };
-    });
+    .map((name) => path.join(directory, name));
 }
 
 function recoverCardsDataTransactions({ baseDir, renameSync = fs.renameSync, rmSync = fs.rmSync }) {
   let recovered = 0;
   let cleanupPending = 0;
-  for (const { journalPath, transaction } of readTransactions(baseDir)) {
+  let rejected = 0;
+  for (const journalPath of journalPaths(baseDir)) {
+    let transaction;
+    try {
+      transaction = readTransaction(baseDir, journalPath);
+    } catch {
+      quarantineJournal(baseDir, journalPath);
+      rejected += 1;
+      continue;
+    }
     const baseExists = fs.existsSync(baseDir);
     const backupExists = fs.existsSync(transaction.backupDir);
     if (!baseExists && backupExists) {
@@ -171,12 +242,12 @@ function recoverCardsDataTransactions({ baseDir, renameSync = fs.renameSync, rmS
       throw new Error(`cards-data transaction recovery requires a base or backup root: ${journalPath}`);
     }
 
-    const backupRemoved = removeIfPresent(transaction.backupDir, rmSync);
-    const stageRemoved = removeIfPresent(transaction.stagedBaseDir, rmSync);
-    if (backupRemoved && stageRemoved && removeIfPresent(journalPath, rmSync)) continue;
+    const backupRemoved = removePlainDirectoryIfPresent(transaction.backupDir, rmSync);
+    const stageRemoved = removePlainDirectoryIfPresent(transaction.stagedBaseDir, rmSync);
+    if (backupRemoved && stageRemoved && removeJournalIfPresent(journalPath, rmSync)) continue;
     cleanupPending += 1;
   }
-  return { recovered, cleanupPending };
+  return { recovered, cleanupPending, rejected };
 }
 
 function replaceStagedCardsDataRoot({
@@ -186,25 +257,27 @@ function replaceStagedCardsDataRoot({
   rmSync = fs.rmSync,
   hooks = {},
 }) {
-  const parentDir = path.dirname(baseDir);
-  const journalDir = transactionDirectory(baseDir);
+  const resolvedBaseDir = assertBaseRoot(baseDir);
+  const resolvedStagedBaseDir = assertManagedRootPath(resolvedBaseDir, stagedBaseDir, "stage");
+  const parentDir = path.dirname(resolvedBaseDir);
+  const journalDir = transactionDirectory(resolvedBaseDir);
   fs.mkdirSync(journalDir, { recursive: true });
-  const backupDir = path.join(parentDir, `.${path.basename(baseDir)}.backup-${randomUUID()}`);
+  const backupDir = path.join(parentDir, `.${path.basename(resolvedBaseDir)}.backup-${randomUUID()}`);
   const journalPath = path.join(journalDir, `${randomUUID()}.json`);
-  const transaction = { version: 1, baseDir, stagedBaseDir, backupDir, state: "prepared" };
+  const transaction = { version: 1, baseDir: resolvedBaseDir, stagedBaseDir: resolvedStagedBaseDir, backupDir, state: "prepared" };
   writeTransaction(journalPath, transaction);
 
-  renameSync(baseDir, backupDir);
+  renameSync(resolvedBaseDir, backupDir);
   transaction.state = "backup-moved";
   writeTransaction(journalPath, transaction);
   hooks.afterBackupMoved?.();
 
-  renameSync(stagedBaseDir, baseDir);
+  renameSync(resolvedStagedBaseDir, resolvedBaseDir);
   transaction.state = "installed";
   writeTransaction(journalPath, transaction);
 
-  const backupRemoved = removeIfPresent(backupDir, rmSync);
-  const journalRemoved = backupRemoved && removeIfPresent(journalPath, rmSync);
+  const backupRemoved = removePlainDirectoryIfPresent(backupDir, rmSync);
+  const journalRemoved = backupRemoved && removeJournalIfPresent(journalPath, rmSync);
   return { cleanupPending: !backupRemoved || !journalRemoved };
 }
 
@@ -275,5 +348,6 @@ module.exports = {
   packageDirectories,
   recoverCardsDataTransactions,
   replaceStagedCardsDataRoot,
+  transactionDirectory,
   writeRawPackages,
 };

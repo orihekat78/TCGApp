@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -169,7 +169,7 @@ describe("official card API", () => {
     const { recoverCardsDataTransactions, replaceStagedCardsDataRoot } = require("../../scripts/cards/official-api.cjs");
     const parentDir = tempDir();
     const baseDir = join(parentDir, "cards-data");
-    const stagedBaseDir = join(parentDir, "cards-data-stage");
+    const stagedBaseDir = join(parentDir, ".cards-data.stage-test");
     mkdirSync(baseDir, { recursive: true });
     mkdirSync(stagedBaseDir, { recursive: true });
     writeFileSync(join(baseDir, "marker.txt"), "old\n");
@@ -190,7 +190,7 @@ describe("official card API", () => {
     const { replaceStagedCardsDataRoot } = require("../../scripts/cards/official-api.cjs");
     const parentDir = tempDir();
     const baseDir = join(parentDir, "cards-data");
-    const stagedBaseDir = join(parentDir, "cards-data-stage");
+    const stagedBaseDir = join(parentDir, ".cards-data.stage-test");
     mkdirSync(baseDir, { recursive: true });
     mkdirSync(stagedBaseDir, { recursive: true });
     writeFileSync(join(baseDir, "marker.txt"), "old\n");
@@ -235,6 +235,57 @@ describe("official card API", () => {
 
     expect(readFileSync(join(rawDir, "old-api.json"), "utf8")).toBe("old raw\n");
     expect(readFileSync(join(packageDir, "character.tsv"), "utf8")).toBe("old tsv\n");
+  });
+
+  it("quarantines an unsafe journal without deleting its external paths", () => {
+    const { recoverCardsDataTransactions, transactionDirectory } = require("../../scripts/cards/official-api.cjs");
+    const parentDir = tempDir();
+    const baseDir = join(parentDir, "cards-data");
+    const externalDir = join(parentDir, "external");
+    mkdirSync(baseDir, { recursive: true });
+    mkdirSync(externalDir, { recursive: true });
+    writeFileSync(join(externalDir, "keep.txt"), "do not remove\n");
+    const journalDir = transactionDirectory(baseDir);
+    mkdirSync(journalDir, { recursive: true });
+    writeFileSync(join(journalDir, "unsafe.json"), JSON.stringify({
+      version: 1,
+      baseDir,
+      stagedBaseDir: externalDir,
+      backupDir: externalDir,
+      state: "installed",
+    }));
+
+    expect(recoverCardsDataTransactions({ baseDir })).toMatchObject({ rejected: 1 });
+    expect(readFileSync(join(externalDir, "keep.txt"), "utf8")).toBe("do not remove\n");
+    expect(existsSync(join(journalDir, "unsafe.json"))).toBe(false);
+    expect(readdirSync(join(journalDir, "quarantine"))).toHaveLength(1);
+  });
+
+  it("quarantines a managed-name reparse point without following it", () => {
+    const { recoverCardsDataTransactions, transactionDirectory } = require("../../scripts/cards/official-api.cjs");
+    const parentDir = tempDir();
+    const baseDir = join(parentDir, "cards-data");
+    const externalDir = join(parentDir, "external");
+    const stagedBaseDir = join(parentDir, ".cards-data.stage-link");
+    const backupDir = join(parentDir, ".cards-data.backup-link");
+    mkdirSync(baseDir, { recursive: true });
+    mkdirSync(externalDir, { recursive: true });
+    writeFileSync(join(externalDir, "keep.txt"), "do not follow\n");
+    symlinkSync(externalDir, stagedBaseDir, "junction");
+    const journalDir = transactionDirectory(baseDir);
+    mkdirSync(journalDir, { recursive: true });
+    writeFileSync(join(journalDir, "reparse.json"), JSON.stringify({ version: 1, baseDir, stagedBaseDir, backupDir, state: "prepared" }));
+
+    expect(recoverCardsDataTransactions({ baseDir })).toMatchObject({ rejected: 1 });
+    expect(readFileSync(join(externalDir, "keep.txt"), "utf8")).toBe("do not follow\n");
+  });
+
+  it("ignores transaction journals and interrupted stage or backup roots", () => {
+    const gitignore = readFileSync(join(process.cwd(), ".gitignore"), "utf8");
+
+    expect(gitignore).toContain("/.claude/specs/.cards-data.transactions/");
+    expect(gitignore).toContain("/.claude/specs/.cards-data.stage-*");
+    expect(gitignore).toContain("/.claude/specs/.cards-data.backup-*");
   });
 });
 
