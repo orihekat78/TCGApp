@@ -213,6 +213,8 @@ describe('Playmat', () => {
       act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
       expect(container.querySelector('[data-testid="misread-picker-modal"]')).not.toBeNull();
       expect(container.textContent).toContain('OPP-MISREAD');
+      expect(container.querySelector('[data-testid="misread-card-opp-misread#1"] img')).not.toBeNull();
+      expect(container.querySelector('[data-testid="misread-detail-opp-misread#1"]')).not.toBeNull();
 
       humanSide.__humanPlayerSide = null;
       act(() => {
@@ -233,6 +235,27 @@ describe('Playmat', () => {
       act(() => root.unmount());
       humanSide.__humanPlayerSide = previousHumanSide;
       useGameStateStore.setState({ gameState: null, pendingMisread: null, spectatorMode: false });
+    }
+  });
+
+  it('passes the pending hirameki card identity to its source-card controls', () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const state = createEmptyGameState();
+    useGameStateStore.setState({
+      gameState: state,
+      pendingHirameki: { player: 'self', cardId: 'D08013', abilityId: 'a2' },
+    });
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    try {
+      act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+      expect(container.querySelector('[data-testid="hirameki-picker-modal"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="hirameki-source-card"] img')).not.toBeNull();
+      expect(container.querySelector('[data-testid="hirameki-source-card-detail"]')).not.toBeNull();
+    } finally {
+      act(() => root.unmount());
+      useGameStateStore.setState({ gameState: null, pendingHirameki: null });
     }
   });
 

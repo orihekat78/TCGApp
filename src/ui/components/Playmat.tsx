@@ -1177,6 +1177,7 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
     return (
       <HiramekiPickerModal
         open={false}
+        cardId={undefined}
         cardName=""
         abilityText=""
         onFire={() => {}}
@@ -1193,6 +1194,7 @@ function PlaymatHiramekiPickerModal(): JSX.Element | null {
   return (
     <HiramekiPickerModal
       open={true}
+      cardId={pending.cardId}
       cardName={cardName}
       abilityText={abilityText}
       onFire={() => dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' })}
@@ -1240,7 +1242,7 @@ function PlaymatMisreadPickerModal(): JSX.Element | null {
     const cardName = sceneChar
       ? (readDef.card(sceneChar.cardId)?.names?.[0] ?? sceneChar.cardId)
       : c.uid;
-    return { uid: c.uid, cardName, x: c.x };
+    return { uid: c.uid, cardId: sceneChar?.cardId, cardName, x: c.x };
   });
   return (
     <MisreadPickerModal
