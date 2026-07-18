@@ -42,6 +42,21 @@ async function expectWithinViewport(page: Page, locator: Locator): Promise<void>
   expect(box!.y + box!.height, 'element bottom').toBeLessThanOrEqual(viewport.height);
 }
 
+async function expectPublicCardArt(primary: Locator, cardId: string, imageFile: string): Promise<void> {
+  const image = primary.locator('img');
+  await expect(image).toBeVisible();
+  await expect.poll(
+    () => image.evaluate((node, expectedImageFile) => {
+      const art = node as HTMLImageElement;
+      return art.complete
+        && art.naturalWidth > 0
+        && !art.currentSrc.startsWith('data:')
+        && art.currentSrc.includes(expectedImageFile);
+    }, imageFile),
+    { message: `${cardId} uses its loaded card image rather than a placeholder`, timeout: 10_000 },
+  ).toBe(true);
+}
+
 async function assertDetailClickAndContextMenu(page: Page, primary: Locator, detail: Locator): Promise<void> {
   await expectTouchTarget(detail);
 
@@ -86,7 +101,7 @@ test.describe('real mounted card-choice details', () => {
     await page.getByTestId('opt-run-yes').click();
 
     const primary = page.getByTestId('effect-pick-cand-D08011#0');
-    await expect(primary.locator('img')).toBeVisible();
+    await expectPublicCardArt(primary, 'D08011', '1743743093474254.jpg');
     const detail = page.getByTestId('effect-pick-detail-D08011#0');
     await expectWithinViewport(page, page.getByTestId('effect-picker-modal'));
     await expectWithinViewport(page, detail);
@@ -166,7 +181,7 @@ test.describe('real mounted card-choice details', () => {
     });
     const primary = page.getByTestId('deck-reveal-card-0');
     await expect(primary).toBeVisible();
-    await expect(primary.locator('img')).toBeVisible();
+    await expectPublicCardArt(primary, 'D11020', '1775608977402003.jpg');
     // Reveal animation ends after 500ms for the first public card. Use an ordinary
     // interaction only after that real UI transition has settled.
     await page.waitForTimeout(600);
@@ -205,7 +220,7 @@ test.describe('real mounted card-choice details', () => {
     await dispatchAction(page, { type: 'reasoning', uid: 'enemy#1' });
     const primary = page.getByTestId('misread-card-hyd#1');
     await expect(primary).toBeVisible();
-    await expect(primary.locator('img')).toBeVisible();
+    await expectPublicCardArt(primary, 'B05080', '1745322226168482.jpg');
     await assertDetailClickAndContextMenu(page, primary, page.getByTestId('misread-detail-hyd#1'));
     await page.getByTestId('misread-cand-hyd#1').check();
     await page.getByTestId('misread-confirm-btn').click();
@@ -239,7 +254,7 @@ test.describe('real mounted card-choice details', () => {
     await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
     const primary = page.getByTestId('cid-disg-B03129#0');
     await expect(primary).toBeVisible();
-    await expect(primary.locator('img')).toBeVisible();
+    await expectPublicCardArt(primary, 'B03129', '1729133510413412.jpg');
     await assertDetailClickAndContextMenu(page, primary, page.getByTestId('cid-disg-detail-B03129#0'));
     await primary.click();
     await waitForActionEnd(page);
