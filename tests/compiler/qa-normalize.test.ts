@@ -11,6 +11,16 @@ function tempRoot() {
   return root;
 }
 
+function expectQaParseError(run: () => unknown, expected: Record<string, string>) {
+  let error: unknown;
+  try {
+    run();
+  } catch (caught) {
+    error = caught;
+  }
+  expect(error).toMatchObject(expected);
+}
+
 afterEach(() => {
   for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
@@ -70,6 +80,46 @@ describe('compiler/qa-normalize', () => {
     }]);
   });
 
+  it('starts a new Q/A item when repeated section headers occur in Q/A text', () => {
+    const { normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'B02086',
+      card_id: '0086',
+      q_a: '【First】\nQ: One\nA: First answer\n【Second】\nQ: Two\nA: Second answer',
+    }]);
+
+    expect(result.items.map((item: { section: string }) => item.section)).toEqual(['First', 'Second']);
+    expect(result.items).toHaveLength(2);
+  });
+
+  it.each([
+    ['invalid JSON', '{not json', 'unrecognized-text'],
+    ['JSON array', '["not supported"]', 'unsupported-json-array'],
+    ['unlabeled text', 'text without Q and A labels', 'unrecognized-text'],
+    ['missing answer label', 'Q: Missing answer', 'malformed-qa-text'],
+  ])('surfaces %s as a structured parse error instead of silently dropping it', (_label, q_a, reason) => {
+    const { normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+
+    expectQaParseError(() => normalizeQaCards([{ card_num: 'B02086P', card_id: '0086', q_a }]), {
+      name: 'QaParseError',
+      code: 'QA_PARSE_ERROR',
+      cardId: '0086',
+      cardNum: 'B02086P',
+      reason,
+    });
+  });
+
+  it('uses ordinal sorting for stable output regardless of locale', () => {
+    const { compareOrdinal, normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B2', card_id: 'a', q_a: JSON.stringify({ Question: 'Answer' }) },
+      { card_num: 'B1', card_id: 'A', q_a: JSON.stringify({ Question: 'Answer' }) },
+    ]);
+
+    expect(compareOrdinal('A', 'a')).toBeLessThan(0);
+    expect(result.items.map((item: { cardId: string }) => item.cardId)).toEqual(['A', 'a']);
+  });
+
   it('keeps duplicate questions in separate sections and reports answer conflicts deterministically', () => {
     const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
     const result = normalizeQaCards([
@@ -121,5 +171,23 @@ describe('compiler/qa-normalize', () => {
     expect(corpus).toHaveLength(1);
     expect(corpus[0].qa).toBe('legacy source stays untouched');
     expect(qa).toMatchObject({ items: [{ cardId: '0086', cardNums: ['B02086'] }], conflicts: [] });
+  });
+
+  it('surfaces raw Q&A parse errors through tsv-corpus with card context', () => {
+    const { loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
+    const root = tempRoot();
+    const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(path.join(rawDir, 'ct-p01-api.json'), JSON.stringify({ data: [{
+      card_num: 'B06098', card_id: '0098', q_a: 'not Q/A text',
+    }] }));
+
+    expectQaParseError(() => loadQaCorpus(root), {
+      name: 'QaParseError',
+      code: 'QA_PARSE_ERROR',
+      cardId: '0098',
+      cardNum: 'B06098',
+      reason: 'unrecognized-text',
+    });
   });
 });
