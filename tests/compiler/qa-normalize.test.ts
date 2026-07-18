@@ -334,4 +334,29 @@ describe('compiler/qa-normalize', () => {
       reason: 'malformed-qa-text',
     });
   });
+
+  it.each([
+    ['native array', ['not supported'], 'unsupported-json-array'],
+    ['native boolean', true, 'unsupported-value'],
+    ['native number', 42, 'unsupported-value'],
+    ['JSON array', '["not supported"]', 'unsupported-json-array'],
+    ['JSON boolean', 'true', 'unsupported-json-value'],
+    ['JSON number', '42', 'unsupported-json-value'],
+  ])('fails fast at raw ingress for malformed structured %s values', (_label, q_a, reason) => {
+    const { loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
+    const root = tempRoot();
+    const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(path.join(rawDir, 'ct-p01-api.json'), JSON.stringify({ data: [{
+      card_num: 'B06099', card_id: '0099', q_a,
+    }] }));
+
+    expectQaParseError(() => loadQaCorpus(root), {
+      name: 'QaParseError',
+      code: 'QA_PARSE_ERROR',
+      cardId: '0099',
+      cardNum: 'B06099',
+      reason,
+    });
+  });
 });

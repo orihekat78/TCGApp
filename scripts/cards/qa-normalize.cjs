@@ -38,11 +38,16 @@ function normalizeText(value) {
 }
 
 function isQaShaped(value) {
-  if (value && typeof value === 'object') return !Array.isArray(value);
-  if (typeof value !== 'string') return false;
+  if (value == null || value === '') return false;
+  if (typeof value !== 'string') return true;
   const text = value.trim();
   if (!text) return false;
-  if (text.startsWith('{')) return true;
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    if (text.startsWith('{') || text.startsWith('[')) return true;
+  }
   const normalized = text.normalize('NFKC').replace(/\r\n?/g, '\n');
   return /(?:^|\n)\s*[QA](?:uestion|nswer)?\s*[.:]/im.test(normalized);
 }

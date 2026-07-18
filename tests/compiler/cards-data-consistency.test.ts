@@ -87,6 +87,33 @@ describe("cards-data consistency status", () => {
 
     expect(generateCardsDataStatus(root).hashes.normalizedFaq).toMatch(/^[a-f0-9]{64}$/);
   });
+
+  it("keeps ingress and status metadata identical while excluding B08023 manual notes", () => {
+    const { createHash } = require("node:crypto");
+    const { loadQaCorpus } = require("../../scripts/compiler/tsv-corpus.cjs");
+    const { generateCardsDataStatus, normalizedFaqMetadata } = require("../../scripts/cards/cards-data-status.cjs");
+    const root = tempRoot();
+    writeFixture(root, ["B08022", "B08023", "B08023P", "B08024"]);
+    const rawDir = path.join(root, ".claude", "specs", "cards-data", "_raw");
+    const rawPath = path.join(rawDir, "ct-p10-api.json");
+    const raw = JSON.parse(readFileSync(rawPath, "utf8"));
+    raw.data[0].q_a = "Q: Included question\nA: Included answer";
+    raw.data[1].q_a = "manual-reference note";
+    raw.data[2].q_a = "manual-reference note";
+    raw.data[3].q_a = JSON.stringify({ Question: "Included JSON answer" });
+    writeFileSync(rawPath, JSON.stringify(raw));
+
+    const ingress = loadQaCorpus(root);
+    const statusCorpus = normalizedFaqMetadata(root);
+    const status = generateCardsDataStatus(root);
+    const hash = createHash("sha256").update(JSON.stringify(ingress)).digest("hex");
+
+    expect(ingress).toEqual(statusCorpus);
+    expect(ingress).toMatchObject({ items: expect.any(Array), conflicts: [] });
+    expect(ingress.items).toHaveLength(2);
+    expect(ingress.items.filter((item: { cardNums: string[] }) => item.cardNums.some((cardNum) => /^B08023P?$/.test(cardNum)))).toEqual([]);
+    expect(status.hashes.normalizedFaq).toBe(hash);
+  });
 });
 
 const ROOT = path.resolve(__dirname, "../..");
