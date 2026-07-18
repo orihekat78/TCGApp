@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5019
+- **ファイル数**: 5020
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5160,6 +5160,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`components/`**
       - `ActionsPanel.lock.test.tsx` — tests/ui/components/ActionsPanel.lock — 効果解決中ロック (rules/05 割り込み禁止)
       - `CardArt.test.tsx` — tests/ui/components/CardArt — Phase 9-C: カード画像 img wrapper
+      - `CardListModal.pick-detail.test.tsx`
       - `CardListModal.zero-pick.test.tsx`
       - `CaseArea.stamp.test.tsx` — Phase 8.10h: CaseArea stamp-flip class application
       - `CaseArea.test.tsx` — Phase 7 Task 7.6: CaseArea tests

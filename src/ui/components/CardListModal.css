@@ -153,6 +153,40 @@
   color: #5a89b0;
 }
 
+.card-list-pick-shell {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.card-list-pick-shell > .card-list-item {
+  min-width: 0;
+}
+
+.card-list-pick-detail {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px;
+  border: 1px solid #406384;
+  border-radius: 5px;
+  background: #243854;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+.card-list-pick-detail:hover,
+.card-list-pick-detail:focus-visible {
+  border-color: #80a0e8;
+  outline: 2px solid #80a0e8;
+  outline-offset: 1px;
+}
+
 /* Pick mode: User vision (CardListModal を pick UI として流用)。
    ハイライト + hover で「ここを選択」ヒントを視覚化。 */
 .card-list-item--pickable {

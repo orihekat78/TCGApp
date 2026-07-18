@@ -349,12 +349,17 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   const isBlocked = (isMultiPick && (isDistinctNamesBlocked(pickUid) || isDistinctLevelBlocked(pickUid) || isDistinctColorsBlocked(pickUid))) || isForcedBlocked(pickUid);
                   const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                   return (
+                    <div key={`face-pick-${cardId}-${idx}`} className="card-list-pick-shell">
                     <button
                       type="button"
                       key={`face-${cardId}-${idx}`}
                       className={cls}
                       disabled={isBlocked}
                       onClick={() => isMultiPick ? toggleSelect(pickUid) : onPick!(pickUid)}
+                      onContextMenu={onExpand ? (event) => {
+                        event.preventDefault();
+                        onExpand(cardId);
+                      } : undefined}
                       data-testid={`card-list-pick-${pickUid}`}
                       aria-label={`${cardIdToDisplayName(cardId)} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       aria-pressed={isMultiPick ? isSelected : undefined}
@@ -362,6 +367,18 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                     >
                       {itemContent}
                     </button>
+                    {onExpand && (
+                      <button
+                        type="button"
+                        className="card-list-pick-detail"
+                        data-testid={`card-list-pick-detail-${pickUid}`}
+                        aria-label={`${cardIdToDisplayName(cardId)} の詳細を表示`}
+                        onClick={() => onExpand(cardId)}
+                      >
+                        詳細
+                      </button>
+                    )}
+                    </div>
                   );
                 }
                 return onExpand ? (
@@ -407,17 +424,34 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                     const isSelected = isMultiPick && selectedUids.includes(faceUpPickUid);
                     const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}`;
                     return (
+                      <div key={`faceup-pick-${idx}`} className="card-list-pick-shell">
                       <button
                         type="button"
                         key={`faceup-${idx}`}
                         className={cls}
                         onClick={() => (isMultiPick ? toggleSelect(faceUpPickUid) : onPick!(faceUpPickUid))}
+                        onContextMenu={onExpand ? (event) => {
+                          event.preventDefault();
+                          onExpand(faceUpCardId);
+                        } : undefined}
                         data-testid={`card-list-pick-${faceUpPickUid}`}
                         aria-pressed={isMultiPick ? isSelected : undefined}
                         aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isSelected ? '選択解除' : '選択'}`}
                       >
                         {revealedContent}
                       </button>
+                      {onExpand && (
+                        <button
+                          type="button"
+                          className="card-list-pick-detail"
+                          data-testid={`card-list-pick-detail-${faceUpPickUid}`}
+                          aria-label={`${cardIdToDisplayName(faceUpCardId)} の詳細を表示`}
+                          onClick={() => onExpand(faceUpCardId)}
+                        >
+                          詳細
+                        </button>
+                      )}
+                      </div>
                     );
                   }
                   return onExpand ? (
