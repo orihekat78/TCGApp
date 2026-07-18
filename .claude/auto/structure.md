@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5017
+- **ファイル数**: 5018
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -5167,6 +5167,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `ContactFlash.test.tsx` — Phase 8.10f: ContactFlash tests
       - `CutInDisguisePickerModal.test.tsx` — Phase 8.6β: CutInDisguisePickerModal tests
       - `DeckArea.test.tsx` — Phase 7 Task 7.7: DeckArea tests
+      - `DeckPlaceModalHost.test.tsx`
       - `DeckReorderModalHost.reset.test.tsx`
       - `EffectStackPanel.reorder.test.tsx` — Phase 8 完全クローズ Commit 5: EffectStackPanel reorder UI SSR test
       - `EffectStackPanel.test.tsx` — Phase 7 Task 7.14: EffectStackPanel tests
