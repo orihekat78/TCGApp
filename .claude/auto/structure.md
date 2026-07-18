@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5014
+- **ファイル数**: 5017
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -4255,6 +4255,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `RpsModalHost.tsx`
       - `SceneArea.css`
       - `SceneArea.tsx` — Phase 7 Task 7.4: SceneArea
+      - `SelectableCardTile.css`
+      - `SelectableCardTile.tsx`
       - `SetCardChoiceModalHost.tsx`
       - `SetCardReplacementModalHost.tsx`
       - `SouzaReorderModal.css`
@@ -5186,6 +5188,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `SceneArea.animation.test.tsx` — Phase 8.10c: SceneArea animation attributes test
       - `SceneArea.fadeout.test.ts` — Phase 8.10g-2: SceneArea ゴーストトラッカー (pickRemovedCharacters helper)
       - `SceneArea.test.tsx` — Phase 7 Task 7.4: SceneArea snapshot/behavior tests
+      - `SelectableCardTile.test.tsx`
       - `SouzaReorderModal.test.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal SSR test
       - `SpectatorHUD.test.tsx` — user_request 20260521_01 #12: SpectatorHUD tests
       - `TopBar.test.tsx` — Phase 7 Task 7.12: TopBar tests
