@@ -8,7 +8,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1600; /* CardListModal (1500) より前面 */
+  /* Detail is a child interaction of every card surface.  It must stay above
+   * the CPU HUD (9100) and every currently reachable modal/overlay (10002). */
+  z-index: 10003;
   backdrop-filter: blur(6px);
   cursor: zoom-out;
 }
