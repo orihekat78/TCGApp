@@ -233,13 +233,13 @@ function defaultRegenerate({ baseDir, rawDir }) {
 }
 
 async function fetchAndRegenerateAllCards(options = {}) {
-  const snapshot = await fetchAllCards(options);
   const baseDir = options.baseDir ?? path.join(__dirname, "..", "..", ".claude", "specs", "cards-data");
+  recoverCardsDataTransactions({ baseDir });
+  const snapshot = await fetchAllCards(options);
   const parentDir = path.dirname(baseDir);
   const stagedBaseDir = fs.mkdtempSync(path.join(parentDir, `.${path.basename(baseDir)}.stage-`));
   const rawDir = path.join(stagedBaseDir, "_raw");
   const regenerate = options.regenerate ?? defaultRegenerate;
-  recoverCardsDataTransactions({ baseDir });
   try {
     copyStaticCardsData(baseDir, stagedBaseDir);
     const written = writeRawPackages(snapshot.cards, rawDir);
