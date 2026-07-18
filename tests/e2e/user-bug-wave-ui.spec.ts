@@ -98,6 +98,42 @@ test('self evidence/remove browsing persists and remove cards can be enlarged', 
   expect(errors).toEqual([]);
 });
 
+test('BUG-240 landscape HUD leaves the card-list close hit target reachable', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-chromium', 'formal BUG-240 fixture is Pixel 5 landscape');
+
+  const { errors } = await setupGamePage(page);
+  await humanMode(page);
+  await buildGameState(page, (gs) => {
+    gs.players.self.remove = ['D08003'];
+  });
+
+  await page.locator('.remove-area.side-self').click();
+  const modal = page.locator('.card-list-modal');
+  const close = modal.locator('.card-list-modal-close');
+  const hud = page.getByTestId('spectator-hud');
+  await expect(modal).toBeVisible();
+  await expect(close).toBeVisible();
+  await expect(hud).toBeVisible();
+
+  const closePoint = await close.evaluate((element) => {
+    const { x, y, width, height } = element.getBoundingClientRect();
+    return { x: x + width / 2, y: y + height / 2 };
+  });
+  expect(await page.evaluate(({ x, y }) => {
+    const hit = document.elementFromPoint(x, y);
+    return hit?.closest('.card-list-modal-close') !== null;
+  }, closePoint), 'the visible close button must own its center hit point').toBe(true);
+
+  await close.click();
+  await expect(modal).toHaveCount(0);
+
+  const pause = page.getByTestId('spectator-pause-toggle');
+  await expect(pause).toBeVisible();
+  await pause.click();
+  await expect(pause).toHaveAttribute('aria-pressed', 'true');
+  expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
+});
+
 test('B04026 completes reveal, reorder, and optional hand sceneEnter in decision order', async ({ page }) => {
   const { errors } = await setupGamePage(page);
   await humanMode(page);

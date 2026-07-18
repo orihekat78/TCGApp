@@ -16,13 +16,15 @@
   font-family: system-ui, sans-serif;
   font-size: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
+  /* The HUD can sit above browsing modals; only its real controls may own input. */
+  pointer-events: none;
 }
 
 .spectator-hud-section {
   display: flex;
   align-items: center;
   gap: 8px;
+  pointer-events: none;
 }
 
 .spectator-hud-label {
@@ -33,6 +35,7 @@
 .spectator-hud-buttons {
   display: flex;
   gap: 2px;
+  pointer-events: auto;
 }
 
 .spectator-hud-preset {
@@ -44,6 +47,7 @@
   cursor: pointer;
   border-radius: 3px;
   transition: background 0.1s, border-color 0.1s;
+  pointer-events: auto;
 }
 
 .spectator-hud-preset:hover {
@@ -75,6 +79,7 @@
   cursor: pointer;
   border-radius: 3px;
   transition: background 0.1s, border-color 0.1s;
+  pointer-events: auto;
 }
 
 .spectator-hud-control:hover:not(:disabled) {
