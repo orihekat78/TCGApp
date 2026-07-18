@@ -1,5 +1,4 @@
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -17,6 +16,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   collectChangedPaths,
   runWaveScopeCheck,
+  stableTextSha256,
   validateWaveScope,
   type WaveBug,
   type WaveManifest,
@@ -141,10 +141,11 @@ describe("wave manifest", () => {
       ...Array.from({ length: 30 }, (_, index) => `BUG-${202 + index}`),
       "BUG-232",
       "BUG-233",
+      "BUG-234",
     ];
 
     expect(actual.baseCommit).toMatch(/^[0-9a-f]{40}$/);
-    expect(actual.bugs).toHaveLength(39);
+    expect(actual.bugs).toHaveLength(40);
     expect(actual.bugs?.map((entry) => entry.id).sort()).toEqual(
       expectedIds.sort(),
     );
@@ -155,11 +156,14 @@ describe("wave manifest", () => {
           actual.bugs?.filter((entry) => entry.classification === classification).length,
         ]),
       ),
-    ).toEqual({ verified: 35, "spec-out": 3, open: 1 });
+    ).toEqual({ verified: 35, "spec-out": 3, open: 2 });
     expect(actual.bugs?.find((entry) => entry.id === "BUG-232")?.classification).toBe(
       "verified",
     );
     expect(actual.bugs?.find((entry) => entry.id === "BUG-233")?.classification).toBe(
+      "open",
+    );
+    expect(actual.bugs?.find((entry) => entry.id === "BUG-234")?.classification).toBe(
       "open",
     );
     for (const entry of actual.bugs ?? []) {
@@ -184,6 +188,14 @@ describe("wave manifest", () => {
 });
 
 describe("validateWaveScope", () => {
+  it("treats LF, CRLF, and CR as the same stable text hash", () => {
+    const lf = stableTextSha256("alpha\nbeta\n");
+
+    expect(stableTextSha256("alpha\r\nbeta\r\n")).toBe(lf);
+    expect(stableTextSha256("alpha\rbeta\r")).toBe(lf);
+    expect(stableTextSha256("alpha\ngamma\n")).not.toBe(lf);
+  });
+
   it("rejects a changed path outside the manifest", () => {
     const root = tempRepo();
     createRepoFile(root, "src/outside.ts");
@@ -228,6 +240,38 @@ describe("validateWaveScope", () => {
     );
   });
 
+  it("allows a stable pre-existing ownership path absent from changed paths", () => {
+    const root = tempRepo();
+    const input = manifest({
+      bugs: [],
+      changeOwnership: [
+        {
+          path: "src/owned.ts",
+          owner: "pre-existing-user-work",
+          contentSha256: stableTextSha256("fixture\n"),
+        },
+      ],
+    });
+
+    expect(validateWaveScope(input, [], root)).toEqual([]);
+  });
+
+  it("skips stale pre-existing hash validation when the path is not changed", () => {
+    const root = tempRepo();
+    const input = manifest({
+      bugs: [],
+      changeOwnership: [
+        {
+          path: "src/owned.ts",
+          owner: "pre-existing-user-work",
+          contentSha256: stableTextSha256("older snapshot\n"),
+        },
+      ],
+    });
+
+    expect(validateWaveScope(input, [], root)).toEqual([]);
+  });
+
   it("rejects paths that escape the repository root", () => {
     const root = tempRepo();
     const input = manifest({ bugs: [bug("BUG-202", ["../outside.ts"])] });
@@ -268,9 +312,7 @@ describe("validateWaveScope", () => {
   it("rejects content changes to an already-listed pre-existing file", () => {
     const root = tempRepo();
     const ownedPath = resolve(root, "src/owned.ts");
-    const contentSha256 = createHash("sha256")
-      .update(readFileSync(ownedPath))
-      .digest("hex");
+    const contentSha256 = stableTextSha256(readFileSync(ownedPath, "utf8"));
     const input = manifest({
       changeOwnership: [
         {
@@ -285,6 +327,25 @@ describe("validateWaveScope", () => {
     createRepoFile(root, "src/owned.ts", "overwritten\n");
 
     expect(validateWaveScope(input, ["src/owned.ts"], root)).toContain(
+      "pre-existing content hash changed: src/owned.ts",
+    );
+  });
+
+  it("accepts an EOL-only change to pre-existing UTF-8 content", () => {
+    const root = tempRepo();
+    const ownedPath = resolve(root, "src/owned.ts");
+    const input = manifest({
+      changeOwnership: [
+        {
+          path: "src/owned.ts",
+          owner: "pre-existing-user-work",
+          contentSha256: stableTextSha256("fixture\n"),
+        },
+      ],
+    });
+    writeFileSync(ownedPath, "fixture\r\n", "utf8");
+
+    expect(validateWaveScope(input, ["src/owned.ts"], root)).not.toContain(
       "pre-existing content hash changed: src/owned.ts",
     );
   });
@@ -451,6 +512,26 @@ describe("validateWaveScope", () => {
 });
 
 describe("collectChangedPaths", () => {
+  it("respects core.autocrlf=true when a clean checkout contains CRLF", () => {
+    const root = tempRepo();
+    execFileSync("git", ["init", "-q"], { cwd: root });
+    execFileSync("git", ["config", "user.email", "scope-test@example.invalid"], {
+      cwd: root,
+    });
+    execFileSync("git", ["config", "user.name", "Scope Test"], { cwd: root });
+    execFileSync("git", ["config", "core.autocrlf", "true"], { cwd: root });
+    execFileSync("git", ["add", "."], { cwd: root, stdio: "ignore" });
+    execFileSync("git", ["commit", "-qm", "fixture"], { cwd: root });
+    rmSync(resolve(root, "src/owned.ts"));
+    execFileSync("git", ["checkout", "--", "src/owned.ts"], { cwd: root });
+
+    expect(readFileSync(resolve(root, "src/owned.ts"), "utf8")).toContain("\r\n");
+    expect(
+      execFileSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }),
+    ).toBe("");
+    expect(collectChangedPaths(root)).toEqual([]);
+  });
+
   it("collects both tracked and untracked workspace changes", () => {
     const root = tempRepo();
     execFileSync("git", ["init", "-q"], { cwd: root });

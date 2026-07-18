@@ -687,6 +687,24 @@
         "npm run lint"
       ],
       "nextWaveReason": "Stage generator and dictionary inputs, regenerate docs, then close only after clean-clone verification and an implementation commit."
+    },
+    {
+      "id": "BUG-234",
+      "classification": "open",
+      "owner": "docs-tooling",
+      "implementationPaths": [
+        "scripts/check-wave-scope.ts"
+      ],
+      "testPaths": [
+        "tests/scripts/check-wave-scope.test.ts"
+      ],
+      "verificationCommands": [
+        "npx vitest run tests/scripts/check-wave-scope.test.ts",
+        "npm run typecheck",
+        "npm run lint",
+        "npm run check:wave-scope"
+      ],
+      "nextWaveReason": "Close after core.autocrlf=true clean-checkout and pre-existing snapshot ownership verification, then an implementation commit."
     }
   ],
   "changeOwnership": [
@@ -729,6 +747,11 @@
       "path": ".claude/bugs/BUG-233.md",
       "owner": "docs-tooling",
       "bugId": "BUG-233"
+    },
+    {
+      "path": ".claude/bugs/BUG-234.md",
+      "owner": "docs-tooling",
+      "bugId": "BUG-234"
     },
     {
       "path": "tests/scripts/structure-tracked-files.test.ts",
@@ -1193,7 +1216,7 @@
     {
       "path": ".claude/bugs/BUG-083.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "2cd2858fbd45f15112984411640d9eac16e751ec828f97bd004b266f568792ce"
+      "contentSha256": "2bae3adc64ba195f0514ac7521ef5a3372013132d3de4c0777663cf8cef917c3"
     },
     {
       "path": ".claude/bugs/BUG-105.md",
@@ -1208,7 +1231,7 @@
     {
       "path": ".claude/bugs/BUG-116.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "2891d5e1b296790bff5fe3f3b5540db2241a561e5cb1b8ef3a75044d75255ad0"
+      "contentSha256": "75384de81eb77171d7fa1178e5f995a41048ab3eacb2352a58a1ac8df746cb10"
     },
     {
       "path": ".claude/bugs/BUG-130.md",
@@ -1218,22 +1241,22 @@
     {
       "path": ".claude/bugs/BUG-133.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "4075af8b20a0af4c91d45fa9b3ea6a7e3024f8d4590a4f115c9801a556914480"
+      "contentSha256": "c76efcbf2a700d949c72c4b63cb2a5ec1ea4159636126e0448fb97b73747c055"
     },
     {
       "path": ".claude/bugs/BUG-134.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "195d3a99adfc99e9eb3463239e30d02eb67252e61a9dcaccf60641d44f866113"
+      "contentSha256": "24e4eed336b5332257a02d78af462f523fafb4526cf25e5d9df62659c12c703a"
     },
     {
       "path": ".claude/bugs/BUG-135.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "b45dcd9050360d1814a23a4996744433ff5bb1d6649d224b0e8e3f4a3557ebdf"
+      "contentSha256": "aff75429a0a8fff35399e13218ae11ae456e7231bbe014148b0ffb9770d8d10c"
     },
     {
       "path": ".claude/bugs/BUG-136.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "6db9b6b72aa8e2b34869a0786992ad46fb769fd9689ae81403cdad00daccc7ee"
+      "contentSha256": "fcf013008bb705ebe9afe7fb9dd823a144f3b8bf1a61a306c1db11c787f9e5f2"
     },
     {
       "path": ".claude/bugs/BUG-140.md",
@@ -1243,17 +1266,17 @@
     {
       "path": ".claude/bugs/BUG-152.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "4bcd009b8554f69d018e07f44aed8a444bf985624dd629c3a718f3cdd90a13e6"
+      "contentSha256": "518e07ae60d2c4744caad615fcf1aaf0f15af1b63bf7f544572b97597a660787"
     },
     {
       "path": ".claude/bugs/BUG-156.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d88616c6831beed019c583b2e6fec6e089261a03f35f0a4f4c83c8a0050cf835"
+      "contentSha256": "87fd30f4de1cd7a1b8009e8d3201c67c468a12cb5b74eab096f0e7edce433e09"
     },
     {
       "path": ".claude/bugs/BUG-157.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "90ae8e3b4bdd0e97aaf16fefaaf20a71d0550f5269569177dc16af4e7f4bd5e1"
+      "contentSha256": "b2360ab8b984e9796c2698bdf8b2652c182b1a1e01d0a8c1ba8f0e027b71e67a"
     },
     {
       "path": ".claude/bugs/BUG-158.md",
@@ -1263,12 +1286,12 @@
     {
       "path": ".claude/bugs/BUG-159.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "431fae0bb51bc6e00681a56744c9e9fe4bd24e714cadb279248b847c8ba51eb7"
+      "contentSha256": "8602b0f647eb7d414ad761b62b784f731b65d47433fc53d62c2cb50a2591ee3e"
     },
     {
       "path": ".claude/bugs/BUG-160.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "a8937cd5d3031b1d47c31e5860ac649851b8bb27832aa8d3605e94437b833041"
+      "contentSha256": "65047d44937c02108516d15c9ec832bd3a64184736e42fa736c444bc5e483979"
     },
     {
       "path": ".claude/bugs/BUG-166.md",
@@ -1479,11 +1502,12 @@
     {
       "path": ".claude/specs/DEFERRED-INDEX.md",
       "owner": "pre-existing-user-work",
-      "contentSha256": "9ca83d7cdf74855e91bf9115a3355d5dc43d29383a4609b3d3a7d506de53bc1c"
+      "contentSha256": "576b13782464adb50f8633bba389047603bcae83dc83d96073e254ed4c1801c8"
     },
     {
       "path": ".claude/specs/you-vs-cpu-hardening-wave-manifest.json",
-      "owner": "phase1-task1"
+      "owner": "docs-tooling",
+      "bugId": "BUG-234"
     },
     {
       "path": ".claude/specs/you-vs-cpu-test-strengthening.md",
@@ -1518,12 +1542,12 @@
     {
       "path": "meta-app/src/data/cardPool.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "c929ff289d24b9a31805d9a62657aa48788b96b3cd7f1a5dd51981ab8943678c"
+      "contentSha256": "5ba1e91412507a9b46820732763b4085d41570ebc1983fcb8c58a0b8c5b69055"
     },
     {
       "path": "meta-app/src/data/sampleDeck.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "c1e920be0180420914166833c56715853b021c1135bca7ea4a2488a2a507d835"
+      "contentSha256": "bc985a55fbf933ef46b816e27c5e59e3c4669a1bc787f8192b1eb65a23586ec4"
     },
     {
       "path": "meta-app/src/main.tsx",
@@ -1533,7 +1557,7 @@
     {
       "path": "meta-app/src/router/useGlobalShortcuts.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "a96e5ef0ad0a2fab144955c755c838274ba8154a26191b4c6c33c9c664a5a32c"
+      "contentSha256": "3f7ac37e26f7bd385a3bb7f560404ed611a2991e387a65f11dcbf4d2e914be86"
     },
     {
       "path": "meta-app/src/screens/RealMatchView.tsx",
@@ -1543,12 +1567,12 @@
     {
       "path": "meta-app/src/screens/ResultScreen.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "3f87496c196a813ed511efc834e2b95a239067907714506b97b8ec64334bd893"
+      "contentSha256": "62f941f69e11ca2aaf6f9c7419e81586d1d216860216f8a2abeb02c023e330cd"
     },
     {
       "path": "meta-app/src/screens/SetupScreen.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "00ea302181b35f3ad7c8d2ab24ad184374860d08fb8058b862ff27ab5013beeb"
+      "contentSha256": "8f76e30a96bba72c36ab743f3572503849dcc148b02b3fe9f402d567beb8d7cd"
     },
     {
       "path": "meta-app/src/screens/TutorialScreen.tsx",
@@ -1563,12 +1587,12 @@
     {
       "path": "meta-app/src/state/decksStore.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "47bc778fd169101b73aa4084f6426c79af995f3a6eaef748539777170ca6ec89"
+      "contentSha256": "de7bc3ff34279d66156f337c43adb27e723e9fe9c5a4cf5142e954921600e4dd"
     },
     {
       "path": "meta-app/src/util/customGameStart.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "cb12919a402ea1a810b8045c27a68dc5337d224baad597c6fa839e6dcdd9f759"
+      "contentSha256": "ae35c06cd716de1b7314a791706a6f0f166bfd12b75c6dc5ff2483b19823134f"
     },
     {
       "path": "meta-app/src/util/tutorialResolvers.ts",
@@ -1578,7 +1602,7 @@
     {
       "path": "meta-app/tests/e2e/deck.spec.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1749d3628c80e42fea7bf5582135e390492dd7b52263ed82c51f4dd89f77103a"
+      "contentSha256": "0e808529a93b773db9647a6a3f307220e329e821978e1b7806ec7db9625d1256"
     },
     {
       "path": "meta-app/tests/e2e/effect-decision-hosts.spec.ts",
@@ -1611,7 +1635,8 @@
     },
     {
       "path": "scripts/check-wave-scope.ts",
-      "owner": "phase1-task1"
+      "owner": "docs-tooling",
+      "bugId": "BUG-234"
     },
     {
       "path": "scripts/lint-bug-closure.ts",
@@ -1620,12 +1645,12 @@
     {
       "path": "scripts/lint-icon-abilities.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "b6b19e08d4f7c535df57131af8bcd3db2eb7b597e86aefc8b5ff15c30ab4b6e1"
+      "contentSha256": "0479e6f9458e40379305f07797afcefb358313ae2619745978e866e381767d91"
     },
     {
       "path": "scripts/lint-side-channel.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "1642c9147e08445902852cc6680e3a0122210c032b2d5b745c3af004008aff67"
+      "contentSha256": "ee69efffb121f427a82b825161d45c222e1fbdf625f0caa561bf9b3cb3ad4038"
     },
     {
       "path": "scripts/smoke/run-1000.ts",
@@ -1635,112 +1660,112 @@
     {
       "path": "src/App.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "367f2466c2b06235af042bbd5f1625aaa6842aec2101396727a1771bdc6683e6"
+      "contentSha256": "d6f0d15e86ac3e3e16da185e0ebe763ae44e5fbc062f30b160aad1b617db8d7e"
     },
     {
       "path": "src/ai/policies/heuristic.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "b606ab4820e5e2ae832d95aedcfcc9549446956352b7546781bffdcd67174bc2"
+      "contentSha256": "743775b16c4f658334c56dc12c71c55be4080377f6df5b1d26284e4396f74a31"
     },
     {
       "path": "src/cards/ct-p05/B05039.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d4f395e33e095ec791ad9c82e428a8f717fe170f0305b5fd68c6debe76a1d461"
+      "contentSha256": "121bd5bd49fb305b67c136b99c4f399b170386ea515bcd4b3119aa2dab3b45c6"
     },
     {
       "path": "src/cards/ct-p06/B06035.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "27e4ed034231f0b81a82a551dc56e6eed86cf96ec9b3f754a7bce13116dfd406"
+      "contentSha256": "7e3ecc0655ecc9415b002d2245b7fca41d851db69492738bf9c1489f72334ead"
     },
     {
       "path": "src/engine/cond/eval.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "9700d6f50cd633f66443f5cf6dc48464acd17e3b3fa2f77eb805e933bea806b2"
+      "contentSha256": "b3154224125c12cf20571e0fea0ba348d83f179544614f5f8aa6fdcb5624f878"
     },
     {
       "path": "src/engine/cost/pay.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "05da110469771e433d8c5f3499b32ed00831fe1d14f03895601b1023467a8b9c"
+      "contentSha256": "c45fb9b0eafc5b1ede82e618c9b6926e32ecb02c48bbf8f0020042798f2337ce"
     },
     {
       "path": "src/engine/effect/apply-pick.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "bc6a159708885f0d4c090a7c0b3ff0a7a164c109f48a7bf7111615e7ac41e457"
+      "contentSha256": "445d7c8716dd8c874fff70ef1d44a8fa8163f9a2adbf35acf250e974eed3b4e0"
     },
     {
       "path": "src/engine/effect/atom-handlers.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "77f2cb8c2396da56a875601cff0fc8f2fa7d040575ad04b72d23df7c4fbaec42"
+      "contentSha256": "7ff257630042b27b4462d0aaf778ca7b81baca8e9cfddfd3d0405931d9bd37fc"
     },
     {
       "path": "src/engine/effect/atom-handlers/_shared.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "12ade4f07cd29155038b15909f78a961c4a72715a8c7f2234507d7504a5d8538"
+      "contentSha256": "f9498d82343cb8b7392214f28a40617f6dbfac840f2a6d2f28d29f7497aceee8"
     },
     {
       "path": "src/engine/effect/atom-handlers/char.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "e2cd89e0befd0b81f1b733bd86b605f02bd1dcf19ef31f524e80b59cb13f512e"
+      "contentSha256": "4d47b4189389c40dacdaa4a2d55f6a59119f49cf6d2fac7e05dd6678e7e5898e"
     },
     {
       "path": "src/engine/effect/atom-handlers/core.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "eda82442b4b5c22803a8b0ce1b8af5499e587fdfa114ce98ff8734df2db11fa5"
+      "contentSha256": "84bf0dba837f36118797c9dbc4ad60f14ce4f4cd4a0211dcc99bea757e6304a2"
     },
     {
       "path": "src/engine/effect/atom-handlers/picks.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "963823dd8b4a2c8cda6674828335c87bb45c54bbf16ad2966d44f38161ac769f"
+      "contentSha256": "2507f789dc61efcdd9acd2a3869b7c0d41e069e63f6df99730b9218df9aaa21e"
     },
     {
       "path": "src/engine/effect/atom-handlers/scene.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "cf7b3d322877b9d8aa4db4a8f7219545c16493952d788f643bba74fc77236743"
+      "contentSha256": "1b6ba9b0abc6de3ba643b93c256cbb9f6182d477870df26f25787b564e6c49ff"
     },
     {
       "path": "src/engine/effect/pending-state.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "a8d0802c74dfccb0f6475c876c693dbeb141d7d984a927313eb3149e989e6d21"
+      "contentSha256": "6f4235df7c49da5b5fa8a2208830dfc7df55509002c15fb85c6cf7ab7680b787"
     },
     {
       "path": "src/engine/effect/resolve-picks.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "6119f3e3902f16edcd8b8910e9a2b2e7b9a8d1cb1a24c6be32d2498485102970"
+      "contentSha256": "15bf2d94602f6a5cfb467b2183f453cce4ff0fbc311ebc6fb005996914c06303"
     },
     {
       "path": "src/engine/effect/resolver.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "755edc32a2e1cddd413489af187b566c9d9c738d9f7f5823fd52a66805f0a47a"
+      "contentSha256": "204cd4eb3c082fd14468fff42dedad576dcddf4faa4a00fd992cd3b2c226188d"
     },
     {
       "path": "src/engine/event/registry.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "237f21138d40199e7d8c8943ad6a95de571b93cefd6855edddde93ad77906432"
+      "contentSha256": "311ee87547af840d65416fa2f582c23abe32beca36c05f7b6bced3206142633f"
     },
     {
       "path": "src/engine/flow/action-case.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "36f070b434ab354dc4b7ce03ff7df18f305d5cfcc72d0a1196eb694bab96a00d"
+      "contentSha256": "c38fb2de56d54cf222aa31f7d3ae900eed13e5a209a3fc3dd51f824cf4a96eac"
     },
     {
       "path": "src/engine/flow/contact.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ee867981c4c6fe7578d857b04737901eb4f958343a07ab577d2bb9d52fc238f5"
+      "contentSha256": "df89048b6557d1ca0a7a1705ce0c22b0c37b017ba86976b97aea10fe006176ee"
     },
     {
       "path": "src/engine/flow/main/hand-use-card.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "bbcf459b3ad5a3c3bdf7fecdafaef20cb8b697928ea074a8395dc970b96c0c4d"
+      "contentSha256": "748b153735e5f9509ca88e70cb666ca0497e1d9e7f9861440a801be5a250172e"
     },
     {
       "path": "src/engine/flow/main/next-hint.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "afbc8b52972f0ff302731dd80368365c27ef218e515172bb210e855b6b9a1090"
+      "contentSha256": "b799af7ce76a2e70c3f8a5a720030f751d973ae3026635b36c7974cb0ac0c41e"
     },
     {
       "path": "src/engine/flow/main/reasoning.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ad71382630238c282b800afef1e8c417e65b52eb6210e87c51f80629de6772ed"
+      "contentSha256": "61df5f530ce3afef70e4c45d4ce4956414fa48e2335c543571d56ab785b139b4"
     },
     {
       "path": "src/engine/listeners/misread.ts",
@@ -1750,27 +1775,27 @@
     {
       "path": "src/engine/listeners/triggered.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8fce7ba025133c410a604cd385c1bdd53a5daea01166acde997bd8d60459c91d"
+      "contentSha256": "0c87057ac8765a40f60c0bea6d48b49847766e9bba8ed46501daad2e86e93e47"
     },
     {
       "path": "src/engine/mutate/deck.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "2f18ae1e7df0a6e4c0f5382a1c711d177d46f26656d327c51e40b389965fd36d"
+      "contentSha256": "915d8b903b7444bfd2df7e267e443f2c23680d06a8889d7ca75b418beb0a5065"
     },
     {
       "path": "src/engine/mutate/evidence.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "11eb0c52d4e8036440c66c9ea587d20f45c20ed60bc909cf47f5d3c922899512"
+      "contentSha256": "3bc9775615c1d0420db9f3bcd11e749915cc8eeaa24aa7bc6674639918354dbe"
     },
     {
       "path": "src/engine/mutate/file.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8146174745e3ace7b5d74f0499a2e0860a9cde225f78efbe3a45edafbfc13276"
+      "contentSha256": "a910b886198ed238e01f597f24b04298126849b27d4486be2f35e9b527576353"
     },
     {
       "path": "src/engine/read/char.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "3e5ba40a1d51eb32e9c3d30867e058ef474ea3981068a323687499cb1aa59c34"
+      "contentSha256": "8076229d336919a6b91ee874f937becb423b2e3c216d8d30c696cd4ef46d1fd4"
     },
     {
       "path": "src/engine/read/effect-source.ts",
@@ -1780,27 +1805,27 @@
     {
       "path": "src/engine/resolve/stack.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8334b1223734014d49f2d0553f7401b569a4e8296558c35ecf1af2687a55b731"
+      "contentSha256": "934e14f7aa0984231cdb69c36d2d7b583efc107e8c6e9cdb0034acce7c4d2584"
     },
     {
       "path": "src/engine/types/effect-ctx.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "2c8fea87b60adb4f701de9f7b585a97a9ab627aa3f1b453681b1768011f40c2f"
+      "contentSha256": "ac102eea6d1da275332e70dbe902f829b503bc38417644b947509bc8b940ff7d"
     },
     {
       "path": "src/engine/types/effect-stack.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "b8f9fb204630d60353ee988056a1b1c2d2cf90dde3d2915a851c80dafd1a8cab"
+      "contentSha256": "a3f9a4c6e842ecb5df67b66dacc530be57e392d46ba54b7e261c4b64ea2457df"
     },
     {
       "path": "src/engine/types/index.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ed262c525d3d0a7d4862dee7d17c7399590d9c9d5ff242a93dedc8025a4832aa"
+      "contentSha256": "5b884b0a4fee52d5a89d1101147f549d8e2bdb4136ef6e65b31059ed474e0880"
     },
     {
       "path": "src/ui/components/ActionsPanel.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "2580442df17e7f04106f8bcefd2761400e5fd292474eda85645cb59f8a6fead5"
+      "contentSha256": "14dc4a552bcdcc19ef04b0ae3fcb26011b7ca898649240e505b7a9c559a70923"
     },
     {
       "path": "src/ui/components/CardExpandModal.tsx",
@@ -1835,12 +1860,12 @@
     {
       "path": "src/ui/components/HandZone.css",
       "owner": "pre-existing-user-work",
-      "contentSha256": "cd3c0377ae1c8630e94aeeb062ea543fb94e533c2551584241ac6fd385ff1685"
+      "contentSha256": "fbd81b5cd52a29d5078d235d6f253fd1a911b22a10a31f5516addff148a4ba45"
     },
     {
       "path": "src/ui/components/HandZone.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "991419e6871988dcbc44536603a4c091cac8e5287654357f158e93f86b6386ac"
+      "contentSha256": "f58e79fa85d748105d380ca9ed85538f2a69ce621a0865ee0aa0b97fb5e8678b"
     },
     {
       "path": "src/ui/components/LogPanel.css",
@@ -1865,12 +1890,12 @@
     {
       "path": "src/ui/components/PartnerArea.css",
       "owner": "pre-existing-user-work",
-      "contentSha256": "63ded49bf74847cad1449e545e63418cf8846321d03ea1a0bbc09e4416034056"
+      "contentSha256": "a423aceb5fcc04b8094c365ec4cf371e1187e588f54d38cbb83325622639c31b"
     },
     {
       "path": "src/ui/components/PartnerArea.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d19992ef6067e31c3c9548f76633a688dafab5b542a20b3d8c57b3df3bdf0053"
+      "contentSha256": "5aef3254c91439ae6a75bcb994fa7566a4f2857193a4df2d935c1e0e97f29417"
     },
     {
       "path": "src/ui/components/Playmat.tsx",
@@ -1890,12 +1915,12 @@
     {
       "path": "src/ui/components/SceneArea.css",
       "owner": "pre-existing-user-work",
-      "contentSha256": "eedc69df352dfeec64882e9a7f24b34f5ca11dcaf4ac5833aaf485f82a4c4ede"
+      "contentSha256": "9142d9a1cac765222e96d599dd1521331eaf45cff962402eb9cdb16bc6bcd07e"
     },
     {
       "path": "src/ui/components/SceneArea.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "f015e413c2f14f11ea2e6dfafc792a2229b5c4cd07fddd1820433e440e95cb91"
+      "contentSha256": "6f34543e112b4148777a5d30e94b9f21852976fa9d146fc6f7e196d39afbd8db"
     },
     {
       "path": "src/ui/components/SpectatorHUD.css",
@@ -1910,7 +1935,7 @@
     {
       "path": "src/ui/hooks/useActionsPanelFlow.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "ad190769174e5358c90a29f30b03ad5c3726ad1843a5fbcc81d6115ff89aaaf6"
+      "contentSha256": "acde2d81f44f74378f93d38cfbe769dd9ab97a2f1cea227c3758f2fe39a5ca58"
     },
     {
       "path": "src/ui/hooks/useActionsPanelFlow/end-turn-contract.ts",
@@ -1920,7 +1945,7 @@
     {
       "path": "src/ui/hooks/useActionsPanelFlow/flows.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d8745bd96a8d421f9a70aae412c3b4cedf2813613b517a0b098cb59c3f94de81"
+      "contentSha256": "a7824f20c06541ef3688652aadf546f6b40fb482d06fbdbe06646f9c98f80229"
     },
     {
       "path": "src/ui/hooks/useChoicePicker.ts",
@@ -1935,22 +1960,22 @@
     {
       "path": "src/ui/hooks/useDeclareNamePicker.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "91352dde19115ea75b91eff8fe9c17cd765fad44ce65408f80bbfb27d7fac36d"
+      "contentSha256": "0a9d3d98de85d7c354110bcb8851f9e8cd3402f5aab654bc3c9ea05f273da38a"
     },
     {
       "path": "src/ui/hooks/useEngineDispatch.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "7bc177a9386f48b3f13aa4fb12c909d2ad0f226f5b73a290eaed277e192ca7da"
+      "contentSha256": "3432685290100786c8e99a2f51d767c363ffd73291c93e6c0c1da9244e62bdc6"
     },
     {
       "path": "src/ui/hooks/useEngineDispatch/can-check.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "5bb971809c7ec33de5885c8a3458d0af659a7dd27920c61e5e04f3d6b30b00d2"
+      "contentSha256": "7123eeccc9c4eadc31a4e2ab660d8dc41273873b05909b88e18d52973a28c7fc"
     },
     {
       "path": "src/ui/hooks/useEvidenceFlipPicker.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "632024d08e52c175e6c777a873c10f58b73678b6d23dfe75ee879b3849a2353c"
+      "contentSha256": "f9ebba2bcec50b44db148b6360638baec7f4a37d963e85afafef44cb0d7bb814"
     },
     {
       "path": "src/ui/hooks/useMisreadFlowDriver.ts",
@@ -1960,17 +1985,17 @@
     {
       "path": "src/ui/hooks/useNextHintPicker.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "bc86141f4106f9297eec04b6eae806946968320bf0280e1c08d54586ad3e8688"
+      "contentSha256": "141aa906f4754fd03230d3f7f348d3a7004f7b88e0a2d49aa0d91e404250ccf5"
     },
     {
       "path": "src/ui/hooks/useOppTurnDriver.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "df3781ab054a131b926231f63536e204bab4f35df0622f7d9720f623d1f10c84"
+      "contentSha256": "48082d34a475f912fc804e4d67f046deeb6ac91b6cd0d4690d8962a8630a54a6"
     },
     {
       "path": "src/ui/hooks/useSpectatorTurnDriver.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "70143efc03ac1f7aa4d71cffc27db21281c1997ef3c49c739493f27a9ec7ddc5"
+      "contentSha256": "6753cd46f7c60242fa3c921ba932594a16939e1287a026fcdce3aa01db8843dc"
     },
     {
       "path": "src/ui/hooks/useStackedCardCostPicker.ts",
@@ -1985,7 +2010,7 @@
     {
       "path": "src/ui/services/cardResolvers.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8586f2e8404fb42481cbe7c9e660a407342d9e148acee5299033b42d98e4b312"
+      "contentSha256": "676bc557724291e5602412e07773af6506172ca6d210c790c21150a54a962a54"
     },
     {
       "path": "src/ui/services/deckBuilder.ts",
@@ -2000,12 +2025,12 @@
     {
       "path": "src/ui/state/store.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "41493022117310539ac6531c551cd5c9af31566db6ff9c9de2256aecb3138075"
+      "contentSha256": "ad72f5e27659759adcf881dcd087749eb5dd68781054222641809f0c1befefaa"
     },
     {
       "path": "src/ui/styles/tokens.css",
       "owner": "pre-existing-user-work",
-      "contentSha256": "e94f99a9337da87a8d56fd44d6f33d59a7db8c0184c261120696327cc347eeff"
+      "contentSha256": "2e9168e33aef30a54adae75f7d842e667863e779053cae78b53c5a7b4305d987"
     },
     {
       "path": "tests/cards/B08003.test.ts",
@@ -2040,7 +2065,7 @@
     {
       "path": "tests/cards/bug-135-sequence-middle-skip.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "fef86a636a8011733b3b6b91719db01c85673130bc48f93872f96c1906dca378"
+      "contentSha256": "5319503e2d3f57ccebea5a25f1b0268d402c8aa0c6f974e8488d542f6186385d"
     },
     {
       "path": "tests/cards/bug-140-deferred-real-cards.test.ts",
@@ -2050,52 +2075,52 @@
     {
       "path": "tests/cards/cardphase3-cutin-observer.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "11a98449e700981defea16ed9f060eba713d02c87052b4e5f791a12e108fb5b5"
+      "contentSha256": "7df2ec2df82736fd18496a01a87d89fdba98948200b880184d505eff1e1b45e7"
     },
     {
       "path": "tests/cards/ct-d11/D11014.a2-ai-reanimate.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "c7ac03dabbe1f08cb486875745e2656d5a3d9fcd971973d770c2220ac2377d61"
+      "contentSha256": "ee7e5ebe16ed1d326bcddb16114930554f1c11fec51d15db90c29862df3fa36e"
     },
     {
       "path": "tests/cards/engine-additive-wave3-observer.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "552180afa977d15f359cd2bcdd54943f024da70abdb6697f3910f74845981234"
+      "contentSha256": "7bef9d0f902ef2ac854a4ba7b521559d7405eb0eed814fd0981a0044c9be895d"
     },
     {
       "path": "tests/cards/engine-mega-w1-cards.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "acb89f5b51aa9494cbf0615c4ec1a06ac4c86e3ece238da708e02dfde6c2a2d8"
+      "contentSha256": "ecd8e016848d539455f5542f9a4458809d36a02b98fa9e7fbf1037e991a602dd"
     },
     {
       "path": "tests/cards/engine-mega-w4.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "0ea21bdb4f02471c70b5f9b773ee47da1574ac1fcbdf6dc39a91f185b226f0fb"
+      "contentSha256": "f5a6ace68207db046c2f9a44ff87e28692f2bb8e05d35a4b49f0956bc5164df2"
     },
     {
       "path": "tests/cards/engine-megaw5-dyn-cost.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "418f7dc765ec7c1848007d8445241abbd51368533b74a472c6b4bbb8954c5daa"
+      "contentSha256": "862b512f6904f10f2dc8c61d49070219aa98a82f7a5c19d15f0787bfca958f65"
     },
     {
       "path": "tests/cards/engine-wave12-partner-area-cards.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "187f75fe7219127f25844818d0edb6b8c64cf0e869b07c090552937adf553ed9"
+      "contentSha256": "8e215a384815e4fb969352a9c7a4cb01590a1a94c0222324763bf2689ea9006c"
     },
     {
       "path": "tests/cards/engine-wave18-incontact-consumers.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d954d0e979bd0dbcda76af94e0295f595cc8636ab5d79568e351a5661eda4cb0"
+      "contentSha256": "021fe0d9c640fb16363ad69a271fb748dd0b09c7a5b416d484e9dfa6becb1e6c"
     },
     {
       "path": "tests/cards/hybrid-batch2/B09016.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "d438bbec055313af61e649cf967a275726ac7a2112a5c3c42c0dc327f3731225"
+      "contentSha256": "1323b65a10c9d5fcba3ee7e8b0f0726c0d19bd83f70e54a25d1cf093338255c0"
     },
     {
       "path": "tests/cards/hybrid-batch6/manual-probes.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "16321e6f3b8389d80542787ec75ee9145d06473f0951b6a1fd9c198eda173ae1"
+      "contentSha256": "701cd751e4204b73ae776015ff0fe5678442d1da74c11c6d3f1c531499d61a3c"
     },
     {
       "path": "tests/cards/m1-megasweep/B08082.manual.test.ts",
@@ -2110,7 +2135,7 @@
     {
       "path": "tests/cards/m2latter-cutin-filter.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "fa3e4511251b498864c84b62356f55ff5ca2d81e2271668e66e8a8319c2cbf0d"
+      "contentSha256": "b19eaa5626fdd7e84b077ec6f2064bb9d41f3d361f582227b3795c97fb6e6532"
     },
     {
       "path": "tests/cards/m3-pa-batch/scope-flip.test.ts",
@@ -2120,37 +2145,37 @@
     {
       "path": "tests/cards/optional-decision-batch.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "880172053320d3c6d4ea1dcba9dcf88ed9f2006facca64a04ffb6c36d80c4c11"
+      "contentSha256": "e86d5bc8ca804ab27e58567244585b1b0be0f507722bbc8820792461cc078690"
     },
     {
       "path": "tests/cards/reasoning-hook-batch.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8c21cbc3178b317f705d31e9d44a401aca0da10f5c955924904ec2c07315cf9a"
+      "contentSha256": "9e00a903b63823b4de77f1adf25dd24515310f1f10842c0125721793d3ff9783"
     },
     {
       "path": "tests/cards/reasoning-hook-batch3.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "711b507d71f9ea5a2da08799ffbc5458cca23309348df3d3b411bf8649ba8f13"
+      "contentSha256": "91ffd4becce352ea3b37ac11e72252a1082e47432c0984a84038b2dd08991988"
     },
     {
       "path": "tests/cards/s2-deck/B08057.gen.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "a3b7c1e7ae3372b37d9b62cfc34ff4d2b67f70b8ff3fac63cd5009945549c148"
+      "contentSha256": "d7b9c6c121544d0feac54d092290a00b8cffd59542cf7209ded7b1d195a7aa4c"
     },
     {
       "path": "tests/cards/wave-b07002-2026-07-02.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "275319d82f834c20cabeba22ac44b0e539bc3990f181a512d14537d6242d2f9e"
+      "contentSha256": "402fbd62a9938ba39f3e60c9e8e13fbd92a3d8c01c75d4ce0a2d10457fa66a63"
     },
     {
       "path": "tests/cards/wave16-cutin-observer.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "0fc5bfe5fef6fb236832d9febb55918840120d3eb96af2457e14a543bbaae5cd"
+      "contentSha256": "1e70a2bcd21ab803e01fc07907fa0de64e053f8eb98bd04737ac7d3bf1cd60e5"
     },
     {
       "path": "tests/e2e/audit-suspects-coverage.spec.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "76092f0fe57d31f85a5289aa850d73175acce62f221641c86a0962fff6b6d5f0"
+      "contentSha256": "f10ddecf0a80b552ccc51874aa8a95b8da793cfe4d312f2b714117a4c7128442"
     },
     {
       "path": "tests/e2e/bug-211-212-product-path.spec.ts",
@@ -2165,7 +2190,7 @@
     {
       "path": "tests/e2e/engine-extensions-2026-06-05.spec.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "01c413dafec4133f563d4b267f42ec0dd7e177d76cf2190027b5f3a1b6ca87f0"
+      "contentSha256": "535554d207fca9861fe3ea6746c875ed28b8219dc7eb3cfc03acb270a09ad2d6"
     },
     {
       "path": "tests/e2e/helpers/state.ts",
@@ -2185,12 +2210,12 @@
     {
       "path": "tests/e2e/reasoning-hook-batch3-2026-06-06.spec.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8c588c64386420f2d310354edc43cf99ad09d6e4bc7082662893bb72c81d348c"
+      "contentSha256": "d0b9dacc2ed8eaebbca6a46ed6007570f14c85e431dba4ce6f3d69434f904141"
     },
     {
       "path": "tests/e2e/triggerchar-target-2026-06-06.spec.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "571cad57dd09f33fce53a05d2334176e83e3e9f5e0c99ffc4023810c9a2779fa"
+      "contentSha256": "ea189e941017cd98c6c318ace28b833fb4fb858495987f5aa42b5288ec3a2f67"
     },
     {
       "path": "tests/e2e/user-bug-wave-ui.spec.ts",
@@ -2210,7 +2235,7 @@
     {
       "path": "tests/engine/cond/eval.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "87de7ec2f1765fd02216eb3cfa4deb016c9d226556d3e86dd448f0aa13daf60d"
+      "contentSha256": "65b4f1ca372372cca3e1d5482d6467d9b9aaa492c980eae8244c0fed4bb2811f"
     },
     {
       "path": "tests/engine/effect/bug-077-evidence-to-hand-e2e.test.ts",
@@ -2220,12 +2245,12 @@
     {
       "path": "tests/engine/effect/bug-111-continuation-nest.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "5943deccd92f85ccdbf3f392c43aef52797ce69a3848ba5b6b2771b2e344efd4"
+      "contentSha256": "6371b7388c9b0e2bd41c8e55f0232d0da2f39e36194e7d4b0f3512f96baa1c11"
     },
     {
       "path": "tests/engine/effect/bug-111-human-decline-repro.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "5798e642a494755be56a1c6ae39faec5a4c645b8bee34659ce65449cb54578ef"
+      "contentSha256": "2898ce82c57e11cbc674890f809a071c6a2e75a1eeadc588175d996c8bbcc098"
     },
     {
       "path": "tests/engine/effect/bug-130-158-pattern-a-repause.test.ts",
@@ -2260,7 +2285,7 @@
     {
       "path": "tests/engine/event/misread-listener.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "9fff3f7117d2a40265778ebb75f88a3d6be5cdd452ac73f592fa0d5697d5752f"
+      "contentSha256": "3f45320739d15e3f61f549aff882ce4bf77426d4fbba4aca9e34e3f138cfe583"
     },
     {
       "path": "tests/engine/flow/bug-212-production-contact.test.ts",
@@ -2270,7 +2295,7 @@
     {
       "path": "tests/engine/flow/main/reasoning.misread.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "8350f231ee42e650e8341d9e8d7f0273f73b02605ace3aaf148a881172af439e"
+      "contentSha256": "b415aa3620988cd8ae6aad97c40afb05a246eb31c497a5a1c88aee8d2c77312b"
     },
     {
       "path": "tests/engine/resolve/stack.test.ts",
@@ -2280,7 +2305,7 @@
     {
       "path": "tests/integration/misread-e2e.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "fd87a737ee849b31440cb5e9f1d6d0cbb8e1b8b126f96399a0f5597b28e41b2e"
+      "contentSha256": "b9f8a5d5d7b416a67427427ef2024b2b7e7bcfb47eb87bb77e400d12638cdee3"
     },
     {
       "path": "tests/meta/ResultScreen.mvp.test.tsx",
@@ -2315,7 +2340,7 @@
     {
       "path": "tests/scripts/check-wave-scope.test.ts",
       "owner": "docs-tooling",
-      "bugId": "BUG-233"
+      "bugId": "BUG-234"
     },
     {
       "path": "tests/scripts/lint-bug-closure.test.ts",
@@ -2329,7 +2354,7 @@
     {
       "path": "tests/ui/components/ActionsPanel.lock.test.tsx",
       "owner": "pre-existing-user-work",
-      "contentSha256": "7af83b6a9e72dabb34120e3b858be4c71bc2f9b2eedc1bd0ee71c878ced78805"
+      "contentSha256": "0625f418556327a09fbeda6c1784ec20d002cbbff5ea17c316b60522c782a1af"
     },
     {
       "path": "tests/ui/components/GameSetupModal.test.tsx",
@@ -2364,7 +2389,7 @@
     {
       "path": "tests/ui/hooks/bug-107-d11014-bind-propagation.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "e4ad922264643b5def438445e2ee3a8b16d93f0543e955eb4a174655950b6c21"
+      "contentSha256": "449843051f86125f3bef2484e6edc61ed51840563e47dc928c78f69ac95da708"
     },
     {
       "path": "tests/ui/hooks/pending-provenance.test.ts",
@@ -2374,7 +2399,7 @@
     {
       "path": "tests/ui/hooks/switch-on-effect-enter.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "06cab90c91c72337f8e4f23e3ccf79e962004968393ab80ccb82c754f5df8eed"
+      "contentSha256": "993ad54bcf32a38c68702d9b7ac5ca64aa89f87da6e48312f6df0491ed5fcdcd"
     },
     {
       "path": "tests/ui/hooks/useActionsPanelFlow.stacked-cost.test.ts",
@@ -2399,7 +2424,7 @@
     {
       "path": "tests/ui/hooks/useEngineDispatch.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "432cf953add557689b75bcb45175353d87847a7548936757815fce7f420740ee"
+      "contentSha256": "fcc7e51fd94f3d3c37e376787e62d7d8977be468957342e20738457e152c900e"
     },
     {
       "path": "tests/ui/hooks/useMisreadFlowDriver.test.tsx",
@@ -2409,7 +2434,7 @@
     {
       "path": "tests/ui/hooks/useOppTurnDriver.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "fadcf338f58426b3cfb0c90be48e79a19158899325cc986a3085de8b97e2158b"
+      "contentSha256": "8d9dc09c21de93cca063e4be5073b87ae5d9168f20d9f69ba7f3be93b20b3ec3"
     },
     {
       "path": "tests/ui/router/useGlobalShortcuts.test.tsx",
@@ -2419,7 +2444,7 @@
     {
       "path": "tests/ui/services/cardResolvers.test.ts",
       "owner": "pre-existing-user-work",
-      "contentSha256": "984641c8387520c9218c3cc25166f6b59f872a6b8664038b76e8400d8bd6b25b"
+      "contentSha256": "0ae1d26b91a0e8d8a4e9b79757cc233512ab83398499e3e653be1c8cd5a00116"
     },
     {
       "path": "tests/ui/services/deckBuilder.test.ts",

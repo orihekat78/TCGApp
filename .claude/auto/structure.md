@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 243
-- **ファイル数**: 4989
+- **ファイル数**: 4990
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -397,6 +397,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-231.md`
     - `BUG-232.md`
     - `BUG-233.md`
+    - `BUG-234.md`
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)

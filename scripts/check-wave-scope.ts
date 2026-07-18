@@ -75,6 +75,12 @@ function splitNullDelimited(output: string): string[] {
     .filter((path) => path.length > 0);
 }
 
+export function stableTextSha256(content: string): string {
+  return createHash("sha256")
+    .update(content.replace(/\r\n?/g, "\n"), "utf8")
+    .digest("hex");
+}
+
 function commandTokens(command: string): string[] {
   return [...command.matchAll(/"([^"]*)"|'([^']*)'|[^\s]+/g)].map(
     (match) => match[1] ?? match[2] ?? match[0],
@@ -106,8 +112,6 @@ export function collectChangedPaths(
   const tracked = execFileSync(
     "git",
     [
-      "-c",
-      "core.autocrlf=false",
       "diff",
       "--no-renames",
       "--name-only",
@@ -120,8 +124,6 @@ export function collectChangedPaths(
   const untracked = execFileSync(
     "git",
     [
-      "-c",
-      "core.autocrlf=false",
       "ls-files",
       "--others",
       "--exclude-standard",
@@ -263,8 +265,11 @@ export function validateWaveScope(
     }
   }
 
-  for (const path of ownershipByPath.keys()) {
+  for (const [path, entries] of ownershipByPath) {
     if (!changedPathSet.has(path)) {
+      if (entries.every((entry) => entry.owner === "pre-existing-user-work")) {
+        continue;
+      }
       errors.push(`manifest ownership path is not changed: ${path}`);
     }
   }
@@ -330,12 +335,11 @@ export function validateWaveScope(
       continue;
     }
     const path = normalizeRepoPath(ownership.path);
+    if (!changedPathSet.has(path)) continue;
     if (!isPathInsideRepo(repoRoot, path)) continue;
     const absolutePath = resolve(repoRoot, path);
     if (!existsSync(absolutePath)) continue;
-    const actualSha256 = createHash("sha256")
-      .update(readFileSync(absolutePath))
-      .digest("hex");
+    const actualSha256 = stableTextSha256(readFileSync(absolutePath, "utf8"));
     if (actualSha256 !== ownership.contentSha256) {
       errors.push(`pre-existing content hash changed: ${path}`);
     }
