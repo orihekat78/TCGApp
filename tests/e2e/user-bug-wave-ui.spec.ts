@@ -30,13 +30,17 @@ async function expectTouchTarget(locator: Locator): Promise<void> {
   expect(box!.height).toBeGreaterThanOrEqual(44);
 }
 
-async function expectActualCardImage(locator: Locator): Promise<void> {
+const OFFICIAL_CARD_IMAGE_BASE =
+  'https://www.takaratomy.co.jp/products/conan-cardgame/storage/card/';
+
+async function expectActualCardImage(locator: Locator, expectedImageFile: string): Promise<void> {
   const image = locator.locator('img.card-art').first();
   await expect(image).toBeVisible();
-  await expect(image).toHaveAttribute(
-    'src',
-    /^https:\/\/www\.takaratomy\.co\.jp\/products\/conan-cardgame\/storage\/card\/\d+\.jpg$/,
-  );
+  await expect.poll(
+    () => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0),
+    { message: `card artwork ${expectedImageFile} finishes loading` },
+  ).toBe(true);
+  await expect(image).toHaveJSProperty('currentSrc', `${OFFICIAL_CARD_IMAGE_BASE}${expectedImageFile}`);
 }
 
 async function closeCardDetails(page: Page): Promise<void> {
@@ -306,7 +310,7 @@ test('B06029 enter picker keeps public evidence inspectable and hidden evidence 
   const publicEvidencePrimary = page.getByTestId('card-list-pick-evidence:self:0');
   await expect(publicEvidencePrimary).toBeVisible({ timeout: 6000 });
   expect(await publicEvidencePrimary.evaluate((element) => element.tagName)).toBe('BUTTON');
-  await expectActualCardImage(publicEvidencePrimary);
+  await expectActualCardImage(publicEvidencePrimary, '1743743093434380.jpg');
 
   const hiddenEvidencePrimary = page.getByTestId('card-list-pick-evidence:self:1');
   await expect(hiddenEvidencePrimary).toBeVisible();
@@ -332,7 +336,7 @@ test('B06029 enter picker keeps public evidence inspectable and hidden evidence 
 
   const handPrimary = page.getByTestId('effect-pick-cand-D08011#0');
   await expect(handPrimary).toBeVisible();
-  await expectActualCardImage(handPrimary);
+  await expectActualCardImage(handPrimary, '1743743093474254.jpg');
   const handDetail = page.getByTestId('effect-pick-detail-D08011#0');
   await expectTouchTarget(handDetail);
   await handDetail.click();
@@ -377,9 +381,9 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   const nonEligibleFirst = page.getByTestId('card-list-item-D08003-0');
   const eligible = page.getByTestId('card-list-pick-B04021#1');
   const nonEligibleLast = page.getByTestId('card-list-item-B04028-2');
-  await expectActualCardImage(nonEligibleFirst);
-  await expectActualCardImage(eligible);
-  await expectActualCardImage(nonEligibleLast);
+  await expectActualCardImage(nonEligibleFirst, '1743743093434380.jpg');
+  await expectActualCardImage(eligible, '1735287737396188.jpg');
+  await expectActualCardImage(nonEligibleLast, '1735287737436527.jpg');
   await expect(eligible).toHaveClass(/card-list-item--pickable/);
   await expect(nonEligibleFirst).not.toHaveClass(/card-list-item--pickable/);
   await expect(nonEligibleLast).not.toHaveClass(/card-list-item--pickable/);
@@ -404,6 +408,9 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   const rows = reorder.getByTestId(/deck-reorder-row-/);
   await expect(rows).toHaveCount(3);
   await expect(rows.locator('img')).toHaveCount(3);
+  await expectActualCardImage(rows.nth(0), '1743743093434380.jpg');
+  await expectActualCardImage(rows.nth(1), '1735287737396188.jpg');
+  await expectActualCardImage(rows.nth(2), '1735287737436527.jpg');
   await expect(rows.nth(0).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'D08003');
   await expect(rows.nth(1).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'B04021');
   await expect(rows.nth(2).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'B04028');
@@ -463,14 +470,16 @@ test('B04026 keeps duplicate reveal and reorder occurrences independently addres
   const reveal = page.locator('.card-list-modal');
   await expect(reveal).toBeVisible({ timeout: 6000 });
   await expect(reveal.locator('.card-list-item img')).toHaveCount(3);
+  const nonEligible = page.getByTestId('card-list-item-D08003-0');
   const firstDuplicate = page.getByTestId('card-list-pick-B04021#1');
   const secondDuplicate = page.getByTestId('card-list-pick-B04021#2');
+  await expectActualCardImage(nonEligible, '1743743093434380.jpg');
   await expect(firstDuplicate).toBeVisible();
   await expect(secondDuplicate).toBeVisible();
   await expect(firstDuplicate).toHaveClass(/card-list-item--pickable/);
   await expect(secondDuplicate).toHaveClass(/card-list-item--pickable/);
-  await expectActualCardImage(firstDuplicate);
-  await expectActualCardImage(secondDuplicate);
+  await expectActualCardImage(firstDuplicate, '1735287737396188.jpg');
+  await expectActualCardImage(secondDuplicate, '1735287737396188.jpg');
 
   const firstDetail = page.getByTestId('card-list-pick-detail-B04021#1');
   const secondDetail = page.getByTestId('card-list-pick-detail-B04021#2');
@@ -488,6 +497,9 @@ test('B04026 keeps duplicate reveal and reorder occurrences independently addres
   await expect(reorder).toBeVisible();
   const rows = reorder.getByTestId(/deck-reorder-row-/);
   await expect(rows).toHaveCount(3);
+  await expectActualCardImage(rows.nth(0), '1743743093434380.jpg');
+  await expectActualCardImage(rows.nth(1), '1735287737396188.jpg');
+  await expectActualCardImage(rows.nth(2), '1735287737396188.jpg');
 
   const instanceOrder = async (): Promise<string[]> => rows.locator('.selectable-card-tile__select').evaluateAll(
     (nodes) => nodes.map((node) => node.getAttribute('data-instance-id') ?? ''),

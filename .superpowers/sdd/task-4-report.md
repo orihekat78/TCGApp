@@ -12,6 +12,13 @@ Status: COMPLETE — mounted desktop/mobile proof passes after the responsive Ef
 
 Before CardList wiring, B06029 failed because `card-list-pick-detail-evidence:self:0` was absent. B04026 failed because the reveal list had no shared visual tile/detail path. The fixture's first `{ ok:false }` was traced to the case-color gate and corrected.
 
+The image-helper review added a load-completion gate (`complete && naturalWidth > 0`)
+and exact final `currentSrc` checks for every public B06029/B04026 reveal, picker,
+and reorder image. A temporary
+B06029 mutation from D08003's `1743743093434380.jpg` to D08011's valid official
+`1743743093474254.jpg` failed with the exact expected/received URL mismatch. The
+mutation was reverted before the green run.
+
 ## Mounted browser results
 
 Server: `npx vite --host 127.0.0.1 --port 5198 --strictPort`.
