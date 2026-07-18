@@ -87,7 +87,11 @@ function parseQaText(value) {
       answerLines.push(line);
       continue;
     }
-    if (line.trim()) throw new QaParseError(question === null ? 'unrecognized-text' : 'malformed-qa-text');
+    if (question !== null) {
+      question += `\n${line}`;
+      continue;
+    }
+    if (line.trim()) throw new QaParseError('unrecognized-text');
   }
   flush();
   if (!pairs.length) throw new QaParseError('unrecognized-text');

@@ -92,6 +92,21 @@ describe('compiler/qa-normalize', () => {
     expect(result.items).toHaveLength(2);
   });
 
+  it('collects multiline questions before the answer marker under a Japanese section', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'B02086',
+      card_id: '0086',
+      q_a: '【規則】\r\nQ: What is\r\nthis question?\r\nA: Answer',
+    }]);
+
+    expect(result.items).toEqual([expect.objectContaining({
+      section: '規則',
+      questionHash: sha256('What is this question?'),
+      answerHash: sha256('Answer'),
+    })]);
+  });
+
   it.each([
     ['invalid JSON', '{not json', 'unrecognized-text'],
     ['JSON array', '["not supported"]', 'unsupported-json-array'],
