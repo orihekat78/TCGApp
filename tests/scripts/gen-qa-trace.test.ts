@@ -156,6 +156,35 @@ describe('gen-qa-trace', () => {
     ]);
   });
 
+  it('keeps a test-only exact annotation legacy-unreviewed without a missing-test issue', () => {
+    const trace = buildQaTrace({
+      snapshot: snapshot([item(QA_A)]),
+      files: [{ path: 'tests/cards/a.test.ts', content: `// qa: ${QA_A}` }],
+      shippedCardIds: new Set(['card-a']),
+      deferredCardIds: new Set(),
+    });
+
+    expect(trace.items[0]).toMatchObject({
+      classification: 'shipped',
+      coverageStatus: 'legacy-unreviewed',
+      sourceRefs: [],
+      testRefs: ['tests/cards/a.test.ts:1'],
+    });
+    expect(trace.issues).toEqual([]);
+    expect(trace.coverage.statusCounts['legacy-unreviewed']).toBe(1);
+  });
+
+  it('does not count a plain card ID mention as coverage', () => {
+    const trace = buildQaTrace({
+      snapshot: snapshot([item(QA_A)]),
+      files: [{ path: 'src/cards/a.ts', content: 'card-a is mentioned, but this is not a Q&A annotation.' }],
+      shippedCardIds: new Set(['card-a']),
+      deferredCardIds: new Set(),
+    });
+
+    expect(trace.items[0]).toMatchObject({ coverageStatus: 'legacy-unreviewed', sourceRefs: [], testRefs: [] });
+  });
+
   it('requires live BUG/DEFER records and manual evidence for exceptional coverage overrides', () => {
     const overrides = {
       schemaVersion: 1,
@@ -174,9 +203,42 @@ describe('gen-qa-trace', () => {
     }, new Set([QA_A]), {
       bugIds: new Set(['BUG-001']), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(['qa-22-community-index']),
     })).toThrow(/manual-only override requires ruleRefs and non-empty manualSteps/);
+    expect(() => validateQaCoverageOverrides({
+      schemaVersion: 1,
+      overrides: [{ qaId: QA_A, status: 'manual-only', reason: 'Requires a human interaction.', ruleRefs: ['qa-22-community-index'], manualSteps: [] }],
+    }, new Set([QA_A]), {
+      bugIds: new Set(['BUG-001']), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(['qa-22-community-index']),
+    })).toThrow(/manual-only override requires ruleRefs and non-empty manualSteps/);
     expect(validateQaCoverageOverrides(overrides, new Set([QA_A, QA_B]), {
       bugIds: new Set(['BUG-001']), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(['qa-22-community-index']),
     }).get(QA_A)).toMatchObject({ status: 'mismatch', bugId: 'BUG-001' });
+  });
+
+  it('rejects a dangling DEFER override without another invalid field', () => {
+    expect(() => validateQaCoverageOverrides({
+      schemaVersion: 1,
+      overrides: [{ qaId: QA_A, status: 'deferred', reason: 'Implementation is intentionally deferred.', deferId: 'DEFER-UNKNOWN' }],
+    }, new Set([QA_A]), {
+      bugIds: new Set(), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(),
+    })).toThrow(/dangling DEFER override.*DEFER-UNKNOWN/);
+  });
+
+  it('rejects an unknown override status without another invalid field', () => {
+    expect(() => validateQaCoverageOverrides({
+      schemaVersion: 1,
+      overrides: [{ qaId: QA_A, status: 'unknown', reason: 'Reviewed.' }],
+    }, new Set([QA_A]), {
+      bugIds: new Set(), deferIds: new Set(), ruleRefIds: new Set(),
+    })).toThrow(/stale coverage override status/);
+  });
+
+  it('rejects a blank override reason without another invalid field', () => {
+    expect(() => validateQaCoverageOverrides({
+      schemaVersion: 1,
+      overrides: [{ qaId: QA_A, status: 'deferred', reason: '  ', deferId: 'DEFER-QA-POST-ID' }],
+    }, new Set([QA_A]), {
+      bugIds: new Set(), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(),
+    })).toThrow(/override requires a reason/);
   });
 
   it('rejects stale unmapped overrides once an exact production annotation exists', () => {

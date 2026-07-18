@@ -166,7 +166,7 @@ export function validateQaCoverageOverrides(
     const manualSteps = Array.isArray(override.manualSteps) && override.manualSteps.every((step) => typeof step === 'string') ? override.manualSteps : undefined;
     if (status === 'mismatch' && (!bugId || !records.bugIds.has(bugId))) throw new Error(`dangling BUG override: ${bugId ?? '(missing)'}`);
     if (status === 'deferred' && (!deferId || !records.deferIds.has(deferId))) throw new Error(`dangling DEFER override: ${deferId ?? '(missing)'}`);
-    if (status === 'manual-only' && (!ruleRefs?.length || !manualSteps?.every((step) => step.trim()))) {
+    if (status === 'manual-only' && (!ruleRefs?.length || !manualSteps?.length || !manualSteps.every((step) => step.trim()))) {
       throw new Error('manual-only override requires ruleRefs and non-empty manualSteps');
     }
     if (status === 'manual-only' && (ruleRefs ?? []).some((ref) => !records.ruleRefIds.has(ref))) {
