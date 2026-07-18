@@ -4,6 +4,7 @@ const path = require("node:path");
 const OFFICIAL_CARDS_URL =
   "https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards";
 const PACKAGE_CODE = /^(CT-(?:D|P)\d{2}|PR-\d{2})\b/;
+const PACKAGE_DIRECTORY = /^(?:ct-(?:d|p)\d{2}|pr-\d{2})$/;
 
 function packageCode(packageName) {
   if (packageName === "PRカード") return "PR-01";
@@ -112,6 +113,98 @@ function writeRawPackages(cards, outputDir) {
   }
 }
 
+function packageDirectories(baseDir) {
+  if (!fs.existsSync(baseDir)) return [];
+  return fs.readdirSync(baseDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && PACKAGE_DIRECTORY.test(entry.name))
+    .map((entry) => entry.name)
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function replaceStagedDirectories({ baseDir, stagedBaseDir, renameSync = fs.renameSync }) {
+  const parentDir = path.dirname(baseDir);
+  fs.mkdirSync(baseDir, { recursive: true });
+  const backupDir = fs.mkdtempSync(path.join(parentDir, `.${path.basename(baseDir)}.backup-`));
+  const names = ["_raw", ...new Set([
+    ...packageDirectories(baseDir),
+    ...packageDirectories(stagedBaseDir),
+  ])];
+  const movedExisting = [];
+  const installed = [];
+  let removeBackup = false;
+  try {
+    for (const name of names) {
+      const target = path.join(baseDir, name);
+      const staged = path.join(stagedBaseDir, name);
+      const backup = path.join(backupDir, name);
+      if (fs.existsSync(target)) {
+        renameSync(target, backup);
+        movedExisting.push(name);
+      }
+      if (fs.existsSync(staged)) {
+        renameSync(staged, target);
+        installed.push(name);
+      }
+    }
+    removeBackup = true;
+  } catch (error) {
+    const rollbackErrors = [];
+    for (const name of [...installed].reverse()) {
+      const target = path.join(baseDir, name);
+      const staged = path.join(stagedBaseDir, name);
+      try {
+        if (fs.existsSync(target)) renameSync(target, staged);
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
+      }
+    }
+    for (const name of [...movedExisting].reverse()) {
+      const target = path.join(baseDir, name);
+      const backup = path.join(backupDir, name);
+      try {
+        if (fs.existsSync(backup) && !fs.existsSync(target)) renameSync(backup, target);
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
+      }
+    }
+    if (rollbackErrors.length > 0) {
+      error.rollbackErrors = rollbackErrors;
+      error.backupDir = backupDir;
+    } else {
+      removeBackup = true;
+    }
+    throw error;
+  } finally {
+    if (removeBackup) fs.rmSync(backupDir, { recursive: true, force: true });
+  }
+}
+
+function defaultRegenerate({ baseDir, rawDir }) {
+  const { regenerateAll } = require("../../.claude/specs/cards-data/_regen_all.cjs");
+  return regenerateAll({ baseDir, rawDir });
+}
+
+async function fetchAndRegenerateAllCards(options = {}) {
+  const snapshot = await fetchAllCards(options);
+  const baseDir = options.baseDir ?? path.join(__dirname, "..", "..", ".claude", "specs", "cards-data");
+  const parentDir = path.dirname(baseDir);
+  const stagedBaseDir = fs.mkdtempSync(path.join(parentDir, `.${path.basename(baseDir)}.stage-`));
+  const rawDir = path.join(stagedBaseDir, "_raw");
+  const regenerate = options.regenerate ?? defaultRegenerate;
+  try {
+    const written = writeRawPackages(snapshot.cards, rawDir);
+    regenerate({ baseDir: stagedBaseDir, rawDir });
+    replaceStagedDirectories({
+      baseDir,
+      stagedBaseDir,
+      ...(options.renameSync ? { renameSync: options.renameSync } : {}),
+    });
+    return { ...snapshot, written };
+  } finally {
+    fs.rmSync(stagedBaseDir, { recursive: true, force: true });
+  }
+}
+
 async function fetchAndWriteAllCards(options = {}) {
   const snapshot = await fetchAllCards(options);
   const outputDir = options.outputDir ?? path.join(__dirname, "..", "..", ".claude", "specs", "cards-data", "_raw");
@@ -121,7 +214,10 @@ async function fetchAndWriteAllCards(options = {}) {
 module.exports = {
   OFFICIAL_CARDS_URL,
   fetchAllCards,
+  fetchAndRegenerateAllCards,
   fetchAndWriteAllCards,
   packageCode,
+  packageDirectories,
+  replaceStagedDirectories,
   writeRawPackages,
 };

@@ -1,7 +1,7 @@
-const { fetchAndWriteAllCards } = require("./official-api.cjs");
+const { fetchAndRegenerateAllCards } = require("./official-api.cjs");
 
 if (require.main === module) {
-  fetchAndWriteAllCards()
+  fetchAndRegenerateAllCards()
     .then((result) => {
       process.stdout.write(`fetched ${result.total} cards across ${result.written.length} packages\n`);
     })
@@ -11,4 +11,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { fetchAndWriteAllCards };
+module.exports = { fetchAndRegenerateAllCards };

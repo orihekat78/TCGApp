@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -115,6 +115,54 @@ describe("official card API", () => {
       { card_num: "D01001", package: "CT-D01 set" },
     ], outputDir)).toThrow("disk full");
     expect(readdirSync(outputDir)).toEqual(["old-api.json"]);
+  });
+
+  it("keeps raw and generated TSV snapshots unchanged when staged regeneration fails", async () => {
+    const { fetchAndRegenerateAllCards } = require("../../scripts/cards/official-api.cjs");
+    const baseDir = join(tempDir(), "cards-data");
+    const rawDir = join(baseDir, "_raw");
+    const packageDir = join(baseDir, "ct-p01");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(packageDir, { recursive: true });
+    writeFileSync(join(rawDir, "old-api.json"), "old raw\n");
+    writeFileSync(join(packageDir, "character.tsv"), "old tsv\n");
+
+    await expect(fetchAndRegenerateAllCards({
+      baseDir,
+      fetchImpl: async () => response(page([{ card_num: "B01001", package: "CT-P01 set" }], 1, 1)),
+      regenerate: () => { throw new Error("regeneration failed"); },
+    })).rejects.toThrow("regeneration failed");
+
+    expect(readFileSync(join(rawDir, "old-api.json"), "utf8")).toBe("old raw\n");
+    expect(readFileSync(join(packageDir, "character.tsv"), "utf8")).toBe("old tsv\n");
+  });
+
+  it("replaces raw and generated package directories together after staged regeneration succeeds", async () => {
+    const { fetchAndRegenerateAllCards } = require("../../scripts/cards/official-api.cjs");
+    const baseDir = join(tempDir(), "cards-data");
+    const rawDir = join(baseDir, "_raw");
+    const packageDir = join(baseDir, "ct-p01");
+    const stalePackageDir = join(baseDir, "ct-d01");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(packageDir, { recursive: true });
+    mkdirSync(stalePackageDir, { recursive: true });
+    writeFileSync(join(rawDir, "old-api.json"), "old raw\n");
+    writeFileSync(join(packageDir, "character.tsv"), "old tsv\n");
+    writeFileSync(join(stalePackageDir, "character.tsv"), "stale tsv\n");
+
+    await fetchAndRegenerateAllCards({
+      baseDir,
+      fetchImpl: async () => response(page([{ card_num: "B01001", package: "CT-P01 set" }], 1, 1)),
+      regenerate: ({ baseDir: stagedBaseDir, rawDir: stagedRawDir }: { baseDir: string; rawDir: string }) => {
+        mkdirSync(join(stagedBaseDir, "ct-p01"), { recursive: true });
+        expect(readdirSync(stagedRawDir)).toEqual(["ct-p01-api.json"]);
+        writeFileSync(join(stagedBaseDir, "ct-p01", "character.tsv"), "new tsv\n");
+      },
+    });
+
+    expect(readdirSync(rawDir)).toEqual(["ct-p01-api.json"]);
+    expect(readFileSync(join(packageDir, "character.tsv"), "utf8")).toBe("new tsv\n");
+    expect(existsSync(stalePackageDir)).toBe(false);
   });
 });
 

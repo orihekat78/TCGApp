@@ -35,7 +35,7 @@
     "lint:icon-abilities": "tsx scripts/lint-icon-abilities.ts",
     "smoke:1000": "tsx scripts/smoke/run-1000.ts",
     "benchmark": "tsx scripts/benchmark/run.ts",
-    "cards:fetch": "node scripts/cards/fetch-official.cjs && node .claude/specs/cards-data/_regen_all.cjs",
+    "cards:fetch": "node scripts/cards/fetch-official.cjs",
     "cards:status": "node scripts/cards/cards-data-status.cjs",
     "cards:qa-snapshot": "node scripts/cards/write-qa-hash-snapshot.cjs",
     "cards:check": "node scripts/cards/check-official-sync.cjs",

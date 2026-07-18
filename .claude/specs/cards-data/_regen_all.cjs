@@ -3,8 +3,8 @@
 // Existing ct-d08/ and ct-d11/ remain regenerable via the legacy _regen.js too.
 const fs = require('fs');
 const path = require('path');
-const baseDir = __dirname;
-const rawDir = path.join(baseDir, '_raw');
+
+function regenerateAll({ baseDir = __dirname, rawDir = path.join(baseDir, '_raw') } = {}) {
 
 const kindMap = { 'パートナー':'partner', 'キャラ':'character', 'イベント':'event', '事件':'case' };
 
@@ -85,3 +85,10 @@ for (const file of files) {
   totalCards += setTotal;
 }
 console.log('total ' + totalCards + ' cards across ' + files.length + ' packages');
+
+  return { totalCards, packageCount: files.length };
+}
+
+if (require.main === module) regenerateAll();
+
+module.exports = { regenerateAll };
