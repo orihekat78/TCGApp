@@ -59,6 +59,7 @@ analysis.txt
 # Phase 4: 日次 smoke レポートは再生成可・追跡しない (smoke-baseline.json は例外で tracked)。
 # 既存の dated smoke は .claude/reports/_archive/ へ退避済 (履歴保持)。
 /.claude/reports/smoke-*
+/.claude/reports/qa-coverage-*.json
 !/.claude/reports/smoke-baseline.json
 
 # 公開リポジトリ運用 (2026-07-10): 公式カードテキストの逐語データはコミットしない

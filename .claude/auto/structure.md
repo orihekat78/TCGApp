@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5007
+- **ファイル数**: 5008
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1523,6 +1523,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `phase-9-f-mcts.md` — Phase 9-F: MCTS AI Policy (MVP: Rollout-based)
     - `phase-9-g-replay.md` — Phase 9-G: リプレイ機構
     - `phase-9-h-performance.md` — Phase 9-H: パフォーマンス計測
+    - `qa-coverage-overrides.json`
     - `remaining-27-engine-portfolio.md` — Remaining 27 Engine-First Portfolio
     - `risk-and-bug-tracker.md` — バグ RCA + 水平展開計画 hub
     - `round-4i-event-remove-by-ap-design.md` — Round 4i — eventRemoveByAP E2E spec 設計

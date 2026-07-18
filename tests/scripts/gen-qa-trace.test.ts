@@ -7,6 +7,7 @@ import {
   buildQaTrace,
   parseQaAnnotations,
   runGenQaTrace,
+  validateQaCoverageOverrides,
   validateQaSnapshotAgainstStatus,
   validateQaSnapshot,
   type QaSnapshot,
@@ -76,6 +77,31 @@ describe('gen-qa-trace', () => {
     });
   });
 
+  it('materializes exhaustive coverage counts and never calls legacy-unreviewed output compliant', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'conan-qa-coverage-counts-'));
+    tempRoots.push(root);
+    const dataDir = path.join(root, '.claude', 'specs', 'cards-data');
+    writeStatus(root);
+    writeFileSync(path.join(dataDir, 'qa-hash-snapshot.json'), JSON.stringify(snapshot([item(QA_A), item(QA_B, 'card-b')])));
+    mkdirSync(path.join(root, 'src'), { recursive: true });
+    mkdirSync(path.join(root, 'tests'), { recursive: true });
+    writeFileSync(path.join(root, 'src', 'a.ts'), `// qa: ${QA_A}`);
+    writeFileSync(path.join(root, 'tests', 'a.test.ts'), `// qa: ${QA_A}`);
+
+    runGenQaTrace({ checkOnly: false }, root);
+
+    const manifest = JSON.parse(readFileSync(path.join(root, '.claude', 'auto', 'qa-manifest.json'), 'utf8'));
+    const report = readFileSync(path.join(root, '.claude', 'auto', 'qa-trace.md'), 'utf8');
+    const nonblockingReport = JSON.parse(readFileSync(path.join(root, '.claude', 'reports', 'qa-coverage-current.json'), 'utf8'));
+    expect(manifest.coverage).toEqual({
+      total: 2,
+      statusCounts: { matched: 1, 'test-missing': 0, 'legacy-unreviewed': 1, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 },
+      allCompliant: false,
+    });
+    expect(nonblockingReport.coverage).toEqual(manifest.coverage);
+    expect(report).toContain('- all-compliant: false');
+  });
+
   it('reports a dangling annotation when its card has no snapshot entry', () => {
     expect(() => buildQaTrace({
       snapshot: snapshot([item(QA_A)]),
@@ -104,6 +130,92 @@ describe('gen-qa-trace', () => {
 
     expect(trace.items[0]).toMatchObject({ classification: 'shipped', sourceRefs: ['src/engine/flow/shared.ts:1'], testRefs: [] });
     expect(trace.issues).toEqual([{ kind: 'missing-test', qaId: QA_A }]);
+  });
+
+  it('keeps shipped state separate from exact annotation coverage', () => {
+    const trace = buildQaTrace({
+      snapshot: snapshot([
+        item(QA_A, 'card-a'),
+        item(QA_B, 'card-b'),
+        item(`card:card-c:${'d'.repeat(64)}`, 'card-c'),
+      ]),
+      files: [
+        { path: 'src/cards/a.ts', content: `// qa: ${QA_A}` },
+        { path: 'tests/cards/a.test.ts', content: `// qa: ${QA_A}` },
+        { path: 'src/cards/b.ts', content: `// qa: ${QA_B}` },
+        { path: 'src/cards/c.ts', content: 'card-c is mentioned here, but without an exact Q&A annotation.' },
+      ],
+      shippedCardIds: new Set(['card-a', 'card-b', 'card-c']),
+      deferredCardIds: new Set(),
+    });
+
+    expect(trace.items.map((entry) => [entry.classification, entry.coverageStatus])).toEqual([
+      ['shipped', 'matched'],
+      ['shipped', 'test-missing'],
+      ['shipped', 'legacy-unreviewed'],
+    ]);
+  });
+
+  it('requires live BUG/DEFER records and manual evidence for exceptional coverage overrides', () => {
+    const overrides = {
+      schemaVersion: 1,
+      overrides: [
+        { qaId: QA_A, status: 'mismatch', reason: 'Reviewed against the current implementation.', bugId: 'BUG-001' },
+        { qaId: QA_B, status: 'deferred', reason: 'Implementation is intentionally deferred.', deferId: 'DEFER-QA-POST-ID' },
+      ],
+    } as const;
+
+    expect(() => validateQaCoverageOverrides(overrides, new Set([QA_A, QA_B]), {
+      bugIds: new Set(), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(['qa-22-community-index']),
+    })).toThrow(/dangling BUG override.*BUG-001/);
+    expect(() => validateQaCoverageOverrides({
+      schemaVersion: 1,
+      overrides: [{ qaId: QA_A, status: 'manual-only', reason: 'Requires a human interaction.', manualSteps: [] }],
+    }, new Set([QA_A]), {
+      bugIds: new Set(['BUG-001']), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(['qa-22-community-index']),
+    })).toThrow(/manual-only override requires ruleRefs and non-empty manualSteps/);
+    expect(validateQaCoverageOverrides(overrides, new Set([QA_A, QA_B]), {
+      bugIds: new Set(['BUG-001']), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(['qa-22-community-index']),
+    }).get(QA_A)).toMatchObject({ status: 'mismatch', bugId: 'BUG-001' });
+  });
+
+  it('rejects stale unmapped overrides once an exact production annotation exists', () => {
+    expect(() => buildQaTrace({
+      snapshot: snapshot([item(QA_A)]),
+      files: [{ path: 'src/cards/a.ts', content: `// qa: ${QA_A}` }],
+      shippedCardIds: new Set(['card-a']),
+      deferredCardIds: new Set(),
+      coverageOverrides: new Map([[QA_A, { qaId: QA_A, status: 'unmapped', reason: 'No mapping at review time.' }]]),
+    })).toThrow(/stale unmapped override/);
+  });
+
+  it('applies the reviewed override decision table without treating card IDs as coverage', () => {
+    const QA_C = `card:card-c:${'d'.repeat(64)}`;
+    const QA_D = `card:card-d:${'e'.repeat(64)}`;
+    const overrides = validateQaCoverageOverrides({
+      schemaVersion: 1,
+      overrides: [
+        { qaId: QA_A, status: 'mismatch', reason: 'Implementation differs.', bugId: 'BUG-001' },
+        { qaId: QA_B, status: 'deferred', reason: 'Awaiting the engine family.', deferId: 'DEFER-QA-POST-ID' },
+        { qaId: QA_C, status: 'manual-only', reason: 'Requires a human interaction.', ruleRefs: ['qa-22-community-index'], manualSteps: ['Use the specified interaction path.'] },
+        { qaId: QA_D, status: 'unmapped', reason: 'Reviewed; no production mapping exists.' },
+      ],
+    }, new Set([QA_A, QA_B, QA_C, QA_D]), {
+      bugIds: new Set(['BUG-001']), deferIds: new Set(['DEFER-QA-POST-ID']), ruleRefIds: new Set(['qa-22-community-index']),
+    });
+    const trace = buildQaTrace({
+      snapshot: snapshot([item(QA_A), item(QA_B, 'card-b'), item(QA_C, 'card-c'), item(QA_D, 'card-d')]),
+      files: [
+        { path: 'src/cards/a.ts', content: `// qa: ${QA_A}` },
+        { path: 'src/cards/c.ts', content: `// qa: ${QA_C}` },
+        { path: 'src/cards/d.ts', content: 'card-d is only mentioned, never annotated.' },
+      ],
+      shippedCardIds: new Set(['card-a', 'card-b', 'card-c', 'card-d']),
+      deferredCardIds: new Set(),
+      coverageOverrides: overrides,
+    });
+
+    expect(trace.items.map((entry) => entry.coverageStatus)).toEqual(['mismatch', 'deferred', 'manual-only', 'unmapped']);
   });
 
   it('coalesces multiple printings, preserves duplicate annotations, and classifies deferred or missing cards', () => {
@@ -224,6 +336,7 @@ describe('gen-qa-trace', () => {
 
   it('pins the approved 2026-07-18 hash-only official snapshot and rejects body-shaped fields', () => {
     const tracked = JSON.parse(readFileSync(path.resolve('.claude/specs/cards-data/qa-hash-snapshot.json'), 'utf8'));
+    const manifest = JSON.parse(readFileSync(path.resolve('.claude/auto/qa-manifest.json'), 'utf8'));
 
     validateQaSnapshot(tracked);
     expect(tracked.source).toEqual({
@@ -231,6 +344,8 @@ describe('gen-qa-trace', () => {
       fetchedAt: '2026-07-18T05:51:08.0459736Z',
     });
     expect(tracked.items).toHaveLength(2650);
+    expect(manifest.coverage.total).toBe(2650);
+    expect(Object.values(manifest.coverage.statusCounts).reduce((total: number, count: unknown) => total + Number(count), 0)).toBe(2650);
     expect(JSON.stringify(tracked)).not.toMatch(/"(?:question|answer|q_a|qAndA|section)"\s*:/);
   });
 });

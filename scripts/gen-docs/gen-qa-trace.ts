@@ -36,12 +36,30 @@ export interface QaAnnotation {
 }
 
 type Classification = 'shipped' | 'deferred' | 'missing';
+export type CoverageStatus = 'matched' | 'test-missing' | 'legacy-unreviewed' | 'unmapped' | 'mismatch' | 'deferred' | 'manual-only';
+type ExceptionalCoverageStatus = Exclude<CoverageStatus, 'matched' | 'test-missing' | 'legacy-unreviewed'>;
+
+export interface QaCoverageOverride {
+  qaId: string;
+  status: ExceptionalCoverageStatus;
+  reason: string;
+  bugId?: string;
+  deferId?: string;
+  ruleRefs?: string[];
+  manualSteps?: string[];
+}
+
+export interface QaCoverageOverrides {
+  schemaVersion: 1;
+  overrides: QaCoverageOverride[];
+}
 type Issue =
   | { kind: 'missing-test'; qaId: string }
   | { kind: 'duplicate-annotation'; qaId: string; path: string };
 
 export interface QaTraceItem extends QaSnapshotItem {
   classification: Classification;
+  coverageStatus: CoverageStatus;
   sourceRefs: string[];
   testRefs: string[];
 }
@@ -50,6 +68,11 @@ export interface QaTrace {
   source: QaSnapshot['source'];
   items: QaTraceItem[];
   issues: Issue[];
+  coverage: {
+    total: number;
+    statusCounts: Record<CoverageStatus, number>;
+    allCompliant: boolean;
+  };
 }
 
 export interface RunOptions { checkOnly: boolean }
@@ -113,6 +136,47 @@ export function validateQaSnapshot(value: unknown): asserts value is QaSnapshot 
   }
 }
 
+/** Validate hash-only human classifications against live BUG, DEFER, and rule-reference records. */
+export function validateQaCoverageOverrides(
+  value: unknown,
+  qaIds: ReadonlySet<string>,
+  records: { bugIds: ReadonlySet<string>; deferIds: ReadonlySet<string>; ruleRefIds: ReadonlySet<string> },
+): Map<string, QaCoverageOverride> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid Q&A coverage overrides');
+  const input = value as Record<string, unknown>;
+  assertExactKeys(input, ['schemaVersion', 'overrides'], 'Q&A coverage overrides');
+  if (input.schemaVersion !== 1 || !Array.isArray(input.overrides)) throw new Error('invalid Q&A coverage override schema');
+  const overrides = new Map<string, QaCoverageOverride>();
+  for (const candidate of input.overrides) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('invalid Q&A coverage override');
+    const override = candidate as Record<string, unknown>;
+    assertExactKeys(override, ['qaId', 'status', 'reason', 'bugId', 'deferId', 'ruleRefs', 'manualSteps'], 'Q&A coverage override');
+    const qaId = String(override.qaId ?? '');
+    const status = override.status;
+    const reason = typeof override.reason === 'string' ? override.reason.trim() : '';
+    if (!QA_ID.test(qaId) || !qaIds.has(qaId)) throw new Error(`dangling Q&A coverage override: ${qaId}`);
+    if (status !== 'unmapped' && status !== 'mismatch' && status !== 'deferred' && status !== 'manual-only') {
+      throw new Error(`stale coverage override status for ${qaId}`);
+    }
+    if (!reason) throw new Error(`Q&A coverage override requires a reason: ${qaId}`);
+    if (overrides.has(qaId)) throw new Error(`duplicate Q&A coverage override: ${qaId}`);
+    const bugId = typeof override.bugId === 'string' ? override.bugId : undefined;
+    const deferId = typeof override.deferId === 'string' ? override.deferId : undefined;
+    const ruleRefs = Array.isArray(override.ruleRefs) && override.ruleRefs.every((ref) => typeof ref === 'string') ? override.ruleRefs : undefined;
+    const manualSteps = Array.isArray(override.manualSteps) && override.manualSteps.every((step) => typeof step === 'string') ? override.manualSteps : undefined;
+    if (status === 'mismatch' && (!bugId || !records.bugIds.has(bugId))) throw new Error(`dangling BUG override: ${bugId ?? '(missing)'}`);
+    if (status === 'deferred' && (!deferId || !records.deferIds.has(deferId))) throw new Error(`dangling DEFER override: ${deferId ?? '(missing)'}`);
+    if (status === 'manual-only' && (!ruleRefs?.length || !manualSteps?.every((step) => step.trim()))) {
+      throw new Error('manual-only override requires ruleRefs and non-empty manualSteps');
+    }
+    if (status === 'manual-only' && (ruleRefs ?? []).some((ref) => !records.ruleRefIds.has(ref))) {
+      throw new Error(`dangling manual-only rule reference: ${(ruleRefs ?? []).find((ref) => !records.ruleRefIds.has(ref))}`);
+    }
+    overrides.set(qaId, { qaId, status, reason, ...(bugId ? { bugId } : {}), ...(deferId ? { deferId } : {}), ...(ruleRefs ? { ruleRefs } : {}), ...(manualSteps ? { manualSteps } : {}) });
+  }
+  return overrides;
+}
+
 /** The tracked snapshot and cards-data status must describe the same normalized official corpus. */
 export function validateQaSnapshotAgainstStatus(snapshot: QaSnapshot, status: unknown): void {
   validateQaSnapshot(snapshot);
@@ -145,10 +209,20 @@ function sortedUnique(values: Iterable<string>): string[] {
   return [...new Set(values)].sort(compareOrdinal);
 }
 
+const COVERAGE_STATUSES: readonly CoverageStatus[] = [
+  'matched', 'test-missing', 'legacy-unreviewed', 'unmapped', 'mismatch', 'deferred', 'manual-only',
+];
+
 function classify(cardId: string, item: QaSnapshotItem, shipped: ReadonlySet<string>, deferred: ReadonlySet<string>): Classification {
   if (shipped.has(cardId) || item.cardNums.some((cardNum) => shipped.has(cardNum))) return 'shipped';
   if (deferred.has(cardId) || item.cardNums.some((cardNum) => deferred.has(cardNum))) return 'deferred';
   return 'missing';
+}
+
+function classifyCoverage(sourceRefs: readonly string[], testRefs: readonly string[]): CoverageStatus {
+  if (sourceRefs.length > 0 && testRefs.length > 0) return 'matched';
+  if (sourceRefs.length > 0) return 'test-missing';
+  return 'legacy-unreviewed';
 }
 
 export function buildQaTrace(input: {
@@ -156,6 +230,7 @@ export function buildQaTrace(input: {
   files: Array<{ path: string; content: string }>;
   shippedCardIds: ReadonlySet<string>;
   deferredCardIds: ReadonlySet<string>;
+  coverageOverrides?: ReadonlyMap<string, QaCoverageOverride>;
 }): QaTrace {
   validateQaSnapshot(input.snapshot);
   const snapshotItems = [...input.snapshot.items].sort((a, b) => compareOrdinal(a.qaId, b.qaId));
@@ -188,16 +263,32 @@ export function buildQaTrace(input: {
     for (const path of sourcePaths) {
       if (itemRefs.filter((ref) => ref.path === path).length > 1) issues.push({ kind: 'duplicate-annotation', qaId: item.qaId, path });
     }
+    const override = input.coverageOverrides?.get(item.qaId);
+    if (override?.status === 'unmapped' && sourceRefs.length > 0) throw new Error(`stale unmapped override for ${item.qaId}: exact production annotation now exists`);
+    if (override?.status === 'mismatch' && sourceRefs.length === 0) throw new Error(`stale mismatch override for ${item.qaId}: exact production annotation is missing`);
+    if (override?.status === 'manual-only' && sourceRefs.length === 0) throw new Error(`manual-only override requires an exact production annotation: ${item.qaId}`);
     return {
       ...item,
       cardNums: sortedUnique(item.cardNums),
       classification: classify(item.cardId, item, input.shippedCardIds, input.deferredCardIds),
+      coverageStatus: override?.status ?? classifyCoverage(sourceRefs, testRefs),
       sourceRefs,
       testRefs,
     };
   });
   issues.sort((a, b) => compareOrdinal(a.qaId, b.qaId) || compareOrdinal(a.kind, b.kind) || ('path' in a && 'path' in b ? compareOrdinal(a.path, b.path) : 0));
-  return { source: input.snapshot.source, items: traceItems, issues };
+  const statusCounts = Object.fromEntries(COVERAGE_STATUSES.map((status) => [status, 0])) as Record<CoverageStatus, number>;
+  for (const item of traceItems) statusCounts[item.coverageStatus] += 1;
+  return {
+    source: input.snapshot.source,
+    items: traceItems,
+    issues,
+    coverage: {
+      total: traceItems.length,
+      statusCounts,
+      allCompliant: traceItems.length > 0 && statusCounts.matched === traceItems.length,
+    },
+  };
 }
 
 function listSourceFiles(root: string): string[] {
@@ -229,6 +320,33 @@ function loadTrackedStatus(projectRoot: string): unknown {
   return JSON.parse(readFileSync(statusPath, 'utf8'));
 }
 
+function loadQaCoverageOverrides(projectRoot: string, snapshot: QaSnapshot): Map<string, QaCoverageOverride> {
+  const overridePath = resolve(projectRoot, '.claude/specs/qa-coverage-overrides.json');
+  if (!existsSync(overridePath)) return new Map();
+  const bugDir = resolve(projectRoot, '.claude/bugs');
+  const bugIds = existsSync(bugDir)
+    ? new Set(readdirSync(bugDir).flatMap((name) => name.match(/^(BUG-\d+)\.md$/)?.slice(1) ?? []))
+    : new Set<string>();
+  const ruleSourcesPath = resolve(projectRoot, '.claude/rules/qa-sources.json');
+  if (!existsSync(ruleSourcesPath)) throw new Error('missing Q&A rule sources for coverage overrides');
+  const ruleSources: unknown = JSON.parse(readFileSync(ruleSourcesPath, 'utf8'));
+  if (!ruleSources || typeof ruleSources !== 'object' || Array.isArray(ruleSources)) throw new Error('invalid Q&A rule sources for coverage overrides');
+  const sourceRecord = ruleSources as { refs?: unknown; deferrals?: unknown };
+  const ruleRefIds = new Set(
+    Array.isArray(sourceRecord.refs)
+      ? sourceRecord.refs.flatMap((ref) => ref && typeof ref === 'object' && typeof (ref as { id?: unknown }).id === 'string' ? [(ref as { id: string }).id] : [])
+      : [],
+  );
+  const deferIds = new Set(sourceRecord.deferrals && typeof sourceRecord.deferrals === 'object' && !Array.isArray(sourceRecord.deferrals)
+    ? Object.keys(sourceRecord.deferrals as Record<string, unknown>)
+    : []);
+  return validateQaCoverageOverrides(
+    JSON.parse(readFileSync(overridePath, 'utf8')),
+    new Set(snapshot.items.map((item) => item.qaId)),
+    { bugIds, deferIds, ruleRefIds },
+  );
+}
+
 function loadDeferredCardIds(projectRoot: string): Set<string> {
   const indexPath = resolve(projectRoot, '.claude/specs/DEFERRED-INDEX.md');
   if (!existsSync(indexPath)) return new Set();
@@ -246,6 +364,11 @@ function loadShippedCardIds(): Set<string> {
 
 function manifest(trace: QaTrace): string {
   return `${JSON.stringify({ schemaVersion: 1, ...trace }, null, 2)}\n`;
+}
+
+/** Local triage input: deterministic, hash-only, and intentionally outside docs drift checks. */
+function nonblockingCoverageReport(trace: QaTrace): string {
+  return `${JSON.stringify({ schemaVersion: 1, source: trace.source, coverage: trace.coverage }, null, 2)}\n`;
 }
 
 function renderTrace(trace: QaTrace): string {
@@ -268,17 +391,23 @@ function renderTrace(trace: QaTrace): string {
     `- URL: ${trace.source.url}`,
     `- Fetched: ${trace.source.fetchedAt}`,
     '',
-    '## Classification',
+    '## Shipped/missing classification',
     '',
     `- shipped: ${counts.get('shipped') ?? 0}`,
     `- deferred: ${counts.get('deferred') ?? 0}`,
     `- missing: ${counts.get('missing') ?? 0}`,
     '',
+    '## Coverage classification',
+    '',
+    `- total: ${trace.coverage.total}`,
+    ...COVERAGE_STATUSES.map((status) => `- ${status}: ${trace.coverage.statusCounts[status]}`),
+    `- all-compliant: ${trace.coverage.allCompliant}`,
+    '',
     '## Trace',
     '',
-    '| QA ID | Card | Printings | Status | Source refs | Test refs |',
-    '| --- | --- | --- | --- | --- | --- |',
-    ...trace.items.map((item) => `| \`${item.qaId}\` | \`${item.cardId}\` | ${item.cardNums.map((n) => `\`${n}\``).join(', ')} | ${item.classification} | ${item.sourceRefs.length} | ${item.testRefs.length} |`),
+    '| QA ID | Card | Printings | Shipped/missing | Coverage | Source refs | Test refs |',
+    '| --- | --- | --- | --- | --- | --- | --- |',
+    ...trace.items.map((item) => `| \`${item.qaId}\` | \`${item.cardId}\` | ${item.cardNums.map((n) => `\`${n}\``).join(', ')} | ${item.classification} | ${item.coverageStatus} | ${item.sourceRefs.length} | ${item.testRefs.length} |`),
     '',
     '## Issues',
     '',
@@ -302,9 +431,16 @@ export function runGenQaTrace(options: RunOptions, projectRoot = PROJECT_ROOT): 
   validateQaSnapshotAgainstStatus(snapshot, loadTrackedStatus(projectRoot));
   const files = [...listSourceFiles(resolve(projectRoot, 'src')), ...listSourceFiles(resolve(projectRoot, 'tests'))]
     .map((path) => ({ path: relative(projectRoot, path).replaceAll('\\', '/'), content: readFileSync(path, 'utf8') }));
-  const trace = buildQaTrace({ snapshot, files, shippedCardIds: loadShippedCardIds(), deferredCardIds: loadDeferredCardIds(projectRoot) });
+  const trace = buildQaTrace({
+    snapshot,
+    files,
+    shippedCardIds: loadShippedCardIds(),
+    deferredCardIds: loadDeferredCardIds(projectRoot),
+    coverageOverrides: loadQaCoverageOverrides(projectRoot, snapshot),
+  });
   const manifestPath = resolve(projectRoot, '.claude/auto/qa-manifest.json');
   const tracePath = resolve(projectRoot, '.claude/auto/qa-trace.md');
+  const reportPath = resolve(projectRoot, '.claude/reports/qa-coverage-current.json');
   const changed: string[] = [];
   const json = manifest(trace);
   if (diffText(manifestPath, json)) {
@@ -316,5 +452,6 @@ export function runGenQaTrace(options: RunOptions, projectRoot = PROJECT_ROOT): 
     if (!options.checkOnly) writeMarkdown(tracePath, markdown);
     changed.push(tracePath);
   }
+  if (!options.checkOnly) writeJson(reportPath, nonblockingCoverageReport(trace));
   return { changedFiles: changed, totalFiles: 2 };
 }

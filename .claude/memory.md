@@ -9,6 +9,9 @@
 - `docs:qa-trace` reads only the tracked snapshot, checks `// qa: <qaId>` dangling/digest drift, and reports source/test coverage without changing CardDefs or engine.
 - Review follow-up: trace scans `.ts`/`.tsx` only; snapshot now records Task3-equivalent normalized corpus hash and generator fails status/provenance drift without raw inputs.
 - P1: status URL/fetchedAt are now non-empty and exactly match snapshot provenance; snapshot writer rejects before mutation and clean trace rejects missing status source.
+- Task 6 coverage backfill: generated Q&A trace now keeps shipped/missing separate from coverage (`matched`, `test-missing`, `legacy-unreviewed`, `unmapped`, `mismatch`, `deferred`, `manual-only`).
+- Exact `// qa: <qaId>` annotations are the only automatic coverage evidence; an ordinary card ID mention never counts. Initial output is 2,650 `legacy-unreviewed`, so `all-compliant=false`.
+- `.claude/specs/qa-coverage-overrides.json` is hash-only. Exceptional reviewed statuses require a reason; mismatch validates a live BUG, deferred a live DEFER, and manual-only an exact source annotation, rule ref, and nonempty manual steps.
 
 > 過去ログは`.claude/sessions/YYYY-MM-DD.md`。直近 =
 > [2026-07-17.md](sessions/2026-07-17.md)。
