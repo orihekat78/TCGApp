@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import {
   setupGamePage,
   buildGameState,
@@ -7,6 +7,14 @@ import {
   getGameState,
   waitForPhase,
 } from './helpers';
+
+async function expectLoadedCardArt(card: Locator, imageFile: string): Promise<void> {
+  const image = card.locator('img.card-art');
+  await expect(image).toBeVisible();
+  await expect(image).not.toHaveAttribute('src', /^data:image\//);
+  await expect(image).toHaveAttribute('src', new RegExp(`${imageFile}$`));
+  await expect.poll(() => image.evaluate((element) => element.complete && element.naturalWidth > 0)).toBe(true);
+}
 
 for (const { accept, label } of [
   { accept: true, label: 'accept redirects the target to hand and removes the interceptor' },
@@ -52,8 +60,10 @@ test(`B01092 legal opponent contact removal opens leave intercept details and ${
 
   await expect(page.locator('[data-testid="leave-intercept-modal"]')).toBeVisible();
   const interceptor = page.locator('[data-testid="leave-intercept-card-interceptor"]');
+  const target = page.locator('[data-testid="leave-intercept-card-target"]');
   const targetDetail = page.locator('[data-testid="leave-intercept-card-detail-target"]');
-  await expect(interceptor.locator('img.card-art')).toBeVisible();
+  await expectLoadedCardArt(interceptor, '1714013082039905.jpg');
+  await expectLoadedCardArt(target, '1743743093434380.jpg');
   await expect(targetDetail).toBeVisible();
   await targetDetail.click();
   await expect(page.locator('.card-expand-close')).toBeVisible();
