@@ -80,10 +80,12 @@ describe('CardListModal pick detail controls', () => {
       );
     });
 
-    const first = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-D08003#0"]')!;
-    const second = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-D08003#1"]')!;
-    const firstDetail = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-D08003#0"]')!;
-    const secondDetail = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-D08003#1"]')!;
+    const firstUid = 'D08003#0';
+    const secondUid = 'D08003#1';
+    const first = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${firstUid}"]`)!;
+    const second = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${secondUid}"]`)!;
+    const firstDetail = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-detail-${firstUid}"]`)!;
+    const secondDetail = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-detail-${secondUid}"]`)!;
     const primaryNames = [first, second].map((button) => button.getAttribute('aria-label'));
     const detailNames = [firstDetail, secondDetail].map((button) => button.getAttribute('aria-label'));
     const name = cardIdToDisplayName('D08003');
@@ -94,7 +96,7 @@ describe('CardListModal pick detail controls', () => {
     expect(allNames).not.toContain('D08003#1');
 
     act(() => second.click());
-    expect(onPick).toHaveBeenCalledWith('D08003#1');
+    expect(onPick).toHaveBeenCalledWith(secondUid);
     act(() => secondDetail.click());
     expect(onExpand).toHaveBeenCalledWith('D08003');
   });

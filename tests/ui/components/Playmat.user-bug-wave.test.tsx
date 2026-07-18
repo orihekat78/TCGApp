@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Playmat } from '@/ui/components/Playmat';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -9,6 +9,10 @@ import { useEvidenceFlipPickerStore } from '@/ui/hooks/useEvidenceFlipPicker';
 import { useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import type { HandCardMeta } from '@/ui/components/HandZone';
+
+const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
+
+vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({ dispatchEngineAction: dispatchEngineActionMock }));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -63,6 +67,7 @@ describe('Playmat user bug wave', () => {
     });
     useEvidenceFlipPickerStore.getState()._reset();
     useStackedCardCostPickerStore.setState({ current: null, _resolver: null });
+    dispatchEngineActionMock.mockClear();
   });
 
   afterEach(() => {
@@ -139,6 +144,30 @@ describe('Playmat user bug wave', () => {
 
     expect(container.querySelector('.card-list-modal')).not.toBeNull();
     expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+  });
+
+  it('routes the second duplicate public remove pick through CardListModal to effectPickResolve', () => {
+    const state = createEmptyGameState();
+    state.players.self.remove = ['D08024', 'D08024'];
+    const secondUid = 'remove:public:second';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        atomVerb: 'handAddFromRemove',
+        candidates: [
+          { uid: 'remove:public:first', cardId: 'D08024', player: 'self' },
+          { uid: secondUid, cardId: 'D08024', player: 'self' },
+        ],
+        nMin: 1,
+        nMax: 1,
+      }),
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const second = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${secondUid}"]`)!;
+    expect(second).toBeInstanceOf(HTMLButtonElement);
+    act(() => second.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'effectPickResolve', pickedUid: secondUid });
   });
 
   it('keeps evidence-flip candidates face-down while public evidence can open details', () => {
