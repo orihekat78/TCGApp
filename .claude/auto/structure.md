@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 4999
+- **ファイル数**: 5005
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -160,6 +160,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`state/`**
       - `game-state.md` — 🤖 GameState shape
     - `README.md` — 自動生成ドキュメント運用ガイド (手書き、唯一の例外)
+    - `qa-manifest.json`
+    - `qa-trace.md` — Official Q&A hash-only trace
     - `structure.md` — プロジェクト構造
   - **`bugs/`** — バグ・リスク管理表 (Obsidian Base 形式、BUG-XXX.md 個別ファイル)
     - `AUDIT-2026-05-22.md` — BUG フォルダ AUDIT (2026-05-22)
@@ -1299,6 +1301,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `_regen.js` — TSV regenerator from fresh API JSON in _raw/.
       - `_regen_all.cjs`
       - `packages.md` — cards-data package IDs
+      - `qa-hash-snapshot.json`
       - `status.json`
     - **`catalog-survey-2026-06-06/`**
       - `README.md` — 残カタログ再分類サーベイ (2026-06-06〜07, タスク A) — **完走**
@@ -1805,6 +1808,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `fetch-official.cjs`
     - `official-api.cjs`
     - `qa-normalize.cjs`
+    - `write-qa-hash-snapshot.cjs`
   - **`compiler/`**
     - **`rules/`**
       - `exceptions.json`
@@ -1834,6 +1838,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `gen-flows.ts` — 状態遷移図生成器 (setup / auto-phase / turn / action FSM)
     - `gen-mapping.ts` — ルール↔カード双方向リンク生成器
     - `gen-progress.ts` — カード実装進捗・テスト数生成器
+    - `gen-qa-trace.ts`
     - `gen-state.ts` — GameState 構造生成器
     - `gen-structure.ts` — プロジェクト構造生成器 (本ファイル群を出力)
     - `index.ts` — 生成器ディスパッチャ (npm run docs:<cmd> エントリ)
@@ -5130,6 +5135,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - **`scripts/`**
     - `check-wave-scope.test.ts`
     - `gen-codex-context.test.ts`
+    - `gen-qa-trace.test.ts`
     - `header-source-hash.test.ts`
     - `lint-bug-closure.test.ts`
     - `markdown-eol.test.ts`
