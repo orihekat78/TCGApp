@@ -95,14 +95,22 @@ function sameCardNums(rawCardNums, tsvCardNums) {
     && rawCardNums.length === tsvCardNums.length;
 }
 
-function normalizedFaqMetadata(root) {
-  const qaCards = loadRawQaCards(root).filter((card) => {
+function normalizedFaqMetadataFromCards(cards) {
+  const qaCards = (cards ?? []).filter((card) => {
     const value = card.q_a;
     if (value && typeof value === "object") return true;
     const text = String(value ?? "").trim();
     return text.startsWith("{") || /^\s*[QA](?:uestion|nswer)?\s*[.:：]/im.test(text);
   });
   return normalizeQaCards(qaCards);
+}
+
+function normalizedFaqMetadata(root) {
+  return normalizedFaqMetadataFromCards(loadRawQaCards(root));
+}
+
+function normalizedFaqHashFromCards(cards) {
+  return sha256(JSON.stringify(normalizedFaqMetadataFromCards(cards)));
 }
 
 function generateCardsDataStatus(root, source = {}) {
@@ -148,4 +156,12 @@ if (require.main === module) {
   process.stdout.write(`${JSON.stringify(status)}\n`);
 }
 
-module.exports = { generateCardsDataStatus, normalizedFaqMetadata, readRaw, readTsv, writeCardsDataStatus };
+module.exports = {
+  generateCardsDataStatus,
+  normalizedFaqHashFromCards,
+  normalizedFaqMetadata,
+  normalizedFaqMetadataFromCards,
+  readRaw,
+  readTsv,
+  writeCardsDataStatus,
+};

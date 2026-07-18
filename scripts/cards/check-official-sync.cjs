@@ -4,6 +4,7 @@ const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 
 const { fetchAllCards } = require("./official-api.cjs");
+const { normalizedFaqHashFromCards } = require("./cards-data-status.cjs");
 
 function readLocalQaByCardNum(root) {
   const rawDir = path.join(root, ".claude", "specs", "cards-data", "_raw");
@@ -78,19 +79,25 @@ function compareLiveStatus({ officialCards, status }) {
   if (officialCardNums.some((cardNum) => !cardNum)) throw new Error("official live status includes a missing card_num");
   const expectedTotal = status?.printings?.raw;
   const expectedCardNumsHash = status?.hashes?.rawCardNums;
-  if (!Number.isInteger(expectedTotal) || typeof expectedCardNumsHash !== "string") throw new Error("invalid tracked cards-data status for live comparison");
+  const expectedNormalizedFaqHash = status?.hashes?.normalizedFaq;
+  if (!Number.isInteger(expectedTotal) || typeof expectedCardNumsHash !== "string" || typeof expectedNormalizedFaqHash !== "string") throw new Error("invalid tracked cards-data status for live comparison");
   const officialCardNumsHash = cardNumHash(officialCardNums);
+  const officialNormalizedFaqHash = normalizedFaqHashFromCards(officialCards);
   const countChanged = officialCardNums.length !== expectedTotal;
   const cardNumHashChanged = officialCardNumsHash !== expectedCardNumsHash;
+  const normalizedFaqHashChanged = officialNormalizedFaqHash !== expectedNormalizedFaqHash;
   return {
     mode: "live-status",
     expectedTotal,
     officialTotal: officialCardNums.length,
     expectedCardNumsHash,
     officialCardNumsHash,
+    expectedNormalizedFaqHash,
+    officialNormalizedFaqHash,
     countChanged,
     cardNumHashChanged,
-    changed: countChanged || cardNumHashChanged,
+    normalizedFaqHashChanged,
+    changed: countChanged || cardNumHashChanged || normalizedFaqHashChanged,
   };
 }
 

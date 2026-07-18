@@ -25,6 +25,17 @@ function response(payload: unknown, ok = true): Response {
   } as Response;
 }
 
+function liveStatus(cards: Array<{ card_num: string; card_id?: string; q_a?: unknown }>) {
+  const { normalizedFaqMetadataFromCards } = require("../../scripts/cards/cards-data-status.cjs");
+  return {
+    printings: { raw: cards.length, tsv: cards.length },
+    hashes: {
+      rawCardNums: createHash("sha256").update(cards.map((card) => card.card_num).sort().join("\n")).digest("hex"),
+      normalizedFaq: createHash("sha256").update(JSON.stringify(normalizedFaqMetadataFromCards(cards))).digest("hex"),
+    },
+  };
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
@@ -156,14 +167,11 @@ describe("official sync stale checker", () => {
 });
 
 describe("official live-status checker", () => {
-  it("matches the tracked 2240-style status hash without writing local data", async () => {
+  it("matches tracked card-number and normalized FAQ hashes without writing local data", async () => {
     const { compareLiveStatus, runLiveStatusCheck, liveStatusExitCode } = require("../../scripts/cards/check-official-sync.cjs");
-    const cards = [{ card_num: "B00001" }];
-    const status = {
-      printings: { raw: 1, tsv: 1 },
-      hashes: { rawCardNums: createHash("sha256").update("B00001").digest("hex") },
-    };
-    expect(compareLiveStatus({ officialCards: cards, status })).toMatchObject({ changed: false, officialTotal: 1, expectedTotal: 1 });
+    const cards = [{ card_num: "B00001", card_id: "card-a", q_a: "Q: Match?\nA: Yes" }];
+    const status = liveStatus(cards);
+    expect(compareLiveStatus({ officialCards: cards, status })).toMatchObject({ changed: false, officialTotal: 1, expectedTotal: 1, normalizedFaqHashChanged: false });
     expect(liveStatusExitCode(compareLiveStatus({ officialCards: cards, status }))).toBe(0);
 
     const root = tempDir();
@@ -173,17 +181,35 @@ describe("official live-status checker", () => {
     await expect(runLiveStatusCheck({ root, fetchImpl: async () => response(page(cards, 1, 1)) })).resolves.toMatchObject({ changed: false });
   });
 
-  it("fails on live count or card-number hash drift and surfaces source failures", async () => {
+  it("fails on live count, card-number, or normalized FAQ hash drift", () => {
     const { compareLiveStatus, liveStatusExitCode, runLiveStatusCheck, LIVE_STATUS_SOURCE_FAILURE_EXIT_CODE } = require("../../scripts/cards/check-official-sync.cjs");
-    const status = {
-      printings: { raw: 1, tsv: 1 },
-      hashes: { rawCardNums: createHash("sha256").update("B00001").digest("hex") },
-    };
+    const status = liveStatus([{ card_num: "B00001", card_id: "card-a", q_a: "Q: Same?\nA: Old" }]);
     const drift = compareLiveStatus({ officialCards: [{ card_num: "B00002" }, { card_num: "B00003" }], status });
-    expect(drift).toMatchObject({ changed: true, countChanged: true, cardNumHashChanged: true });
+    expect(drift).toMatchObject({ changed: true, countChanged: true, cardNumHashChanged: true, normalizedFaqHashChanged: true });
     expect(liveStatusExitCode(drift)).toBe(1);
     expect(LIVE_STATUS_SOURCE_FAILURE_EXIT_CODE).toBe(2);
+  });
 
+  it("fails when a same-count same-card live Q&A answer changes", () => {
+    const { compareLiveStatus, liveStatusExitCode } = require("../../scripts/cards/check-official-sync.cjs");
+    const tracked = [{ card_num: "B00001", card_id: "card-a", q_a: "Q: Same?\nA: Old" }];
+    const live = [{ card_num: "B00001", card_id: "card-a", q_a: "Q: Same?\nA: New" }];
+    const result = compareLiveStatus({ officialCards: live, status: liveStatus(tracked) });
+
+    expect(result).toMatchObject({ countChanged: false, cardNumHashChanged: false, normalizedFaqHashChanged: true, changed: true });
+    expect(liveStatusExitCode(result)).toBe(1);
+  });
+
+  it("surfaces source and malformed live Q&A failures", async () => {
+    const { runLiveStatusCheck } = require("../../scripts/cards/check-official-sync.cjs");
     await expect(runLiveStatusCheck({ root: tempDir(), fetchImpl: async () => { throw new Error("source down"); } })).rejects.toThrow("source down");
+
+    const root = tempDir();
+    const statusPath = join(root, ".claude", "specs", "cards-data");
+    mkdirSync(statusPath, { recursive: true });
+    writeFileSync(join(statusPath, "status.json"), JSON.stringify(liveStatus([{ card_num: "B00001", card_id: "card-a", q_a: "Q: Valid?\nA: Yes" }])));
+    await expect(runLiveStatusCheck({ root, fetchImpl: async () => response(page([
+      { card_num: "B00001", card_id: "card-a", q_a: "Q: malformed without answer" },
+    ], 1, 1)) })).rejects.toThrow(/Q&A parse error/);
   });
 });
