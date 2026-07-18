@@ -113,6 +113,7 @@ describe('SelectableCardTile', () => {
 
     expect(container.querySelector('button button')).toBeNull();
     expect(tile).toBeInstanceOf(HTMLButtonElement);
+    expect(detail).toBeInstanceOf(HTMLButtonElement);
     expect(tile).not.toBeNull();
     expect(detail).not.toBeNull();
     if (!tile || !detail) return;
