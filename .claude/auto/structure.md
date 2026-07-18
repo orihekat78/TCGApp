@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 243
-- **ファイル数**: 4990
+- **ディレクトリ数**: 244
+- **ファイル数**: 4994
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1798,6 +1798,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - **`benchmark/`**
     - `mcts-vs-heuristic.ts` — scripts/benchmark/mcts-vs-heuristic — Phase 9-F: MCTS vs Heuristic 100 戦比較
     - `run.ts` — scripts/benchmark/run — Phase 9-H パフォーマンス計測ランナー
+  - **`cards/`**
+    - `check-official-sync.cjs`
+    - `fetch-official.cjs`
+    - `official-api.cjs`
   - **`compiler/`**
     - **`rules/`**
       - `exceptions.json`
@@ -5124,6 +5128,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `header-source-hash.test.ts`
     - `lint-bug-closure.test.ts`
     - `markdown-eol.test.ts`
+    - `official-api.test.ts`
     - `structure-root-portability.test.ts`
     - `structure-tracked-files.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト

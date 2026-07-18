@@ -14,8 +14,7 @@ cards-data/
 ├── INDEX.md (本ファイル)
 ├── _regen.js       (CT-D08/CT-D11 のみ再生成、レガシー残置)
 ├── _regen_all.cjs  (_raw/*-api.json を全件再生成、19 パッケージ対応)
-├── _raw/           (API レスポンス キャッシュ、_fetch_all.cjs で取得)
-│   ├── _fetch_all.cjs   (全パッケージ取得スクリプト)
+├── _raw/           (API レスポンス キャッシュ、`npm run cards:fetch` が取得)
 │   ├── ct-d01-api.json …
 │   └── pr-01-api.json
 ├── ct-d01/ ～ ct-d11/     (Case-StartDeck 01-05 + Case-ThemeDeck 01-06)
@@ -75,7 +74,7 @@ cards-data/
 - 取得元: `https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards?page=N&package=<CODE>`
   - `<CODE>` は HTML `<option value="...">` の値。CT-P01 ～ CT-P09, CT-D01 ～ CT-D11, **PR-01** (プロモ)
   - ページング: レスポンスの `lastPage` まで取得
-- 全パッケージ再フェッチ: `cd _raw && node _fetch_all.cjs` (約 80 リクエスト、polite throttle 300ms)
+- 全パッケージ再フェッチ: `npm run cards:fetch` (`scripts/cards/fetch-official.cjs`、polite throttle 300ms)
 - TSV 再生成:
   - **全パッケージ**: `node _regen_all.cjs` (`_raw/*-api.json` を全件処理)
   - レガシー (CT-D08/CT-D11 のみ): `node _regen.js`
