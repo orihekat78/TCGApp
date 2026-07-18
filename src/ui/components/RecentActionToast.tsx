@@ -77,6 +77,7 @@ export function RecentActionToast(): JSX.Element | null {
       role="status"
       data-testid="recent-action-toast"
       data-player={visible.player}
+      style={{ pointerEvents: 'none' }}
     >
       {isOpp && <span className="toast-cpu-badge" aria-label="CPU">🤖</span>}
       <span className="toast-who">{who}</span>

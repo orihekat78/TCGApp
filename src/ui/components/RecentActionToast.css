@@ -1,5 +1,5 @@
 /* RecentActionToast.css — Phase 8.10b
- * 画面右下にスライドイン表示。OppTurnOverlay とは異なり pointer-events 通常 (操作可能)。
+ * 画面右下にスライドイン表示。通知は操作を持たず、盤面への pointer input を必ず通す。
  */
 
 .recent-action-toast {
@@ -20,6 +20,9 @@
   color: var(--text-primary, #fff);
   animation: recent-toast-in 220ms ease-out both;
   max-width: 360px;
+  /* BUG-237: 横向き mobile では自己のリムーブ/証拠エリアに重なる。
+     status notification is non-interactive, so never make it a hit-test target. */
+  pointer-events: none;
 }
 
 @keyframes recent-toast-in {
