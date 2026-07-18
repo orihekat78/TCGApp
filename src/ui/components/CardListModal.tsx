@@ -448,7 +448,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         aria-pressed={isMultiPick ? isSelected : undefined}
                         aria-description={pickStateLabel}
                         title={isForcedLocked ? '必ず選ぶ (相手のイベントの効果によってこのキャラクターを選ぶ場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(faceUpPickUid) ? '同じカード名のカードは1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(faceUpPickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(faceUpPickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラクターが指定されています' : undefined}
-                        aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isSelected ? '選択解除' : '選択'}`}
+                        aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       >
                         {revealedContent}
                       </button>
