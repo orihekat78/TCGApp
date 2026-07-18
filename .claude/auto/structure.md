@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 244
-- **ファイル数**: 5008
+- **ファイル数**: 5014
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1237,6 +1237,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-15-2.md` — 2026-07-13〜15 scratchpad rotation
     - `2026-07-15-3.md` — 2026-07-15 manual YOU vs AI matrix
     - `2026-07-17.md` — 2026-07-14〜15 bug wave session
+    - `2026-07-18-task7-qa-offline-lint.md` — Task 7 — Q&A offline lint
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1524,6 +1525,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `phase-9-g-replay.md` — Phase 9-G: リプレイ機構
     - `phase-9-h-performance.md` — Phase 9-H: パフォーマンス計測
     - `qa-coverage-overrides.json`
+    - `qa-trace-baseline.json`
     - `remaining-27-engine-portfolio.md` — Remaining 27 Engine-First Portfolio
     - `risk-and-bug-tracker.md` — バグ RCA + 水平展開計画 hub
     - `round-4i-event-remove-by-ap-design.md` — Round 4i — eventRemoveByAP E2E spec 設計
@@ -1551,6 +1553,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `hooks.json`
 - **`.github/`**
   - **`workflows/`**
+    - `cards-sync.yml`
     - `ci.yml`
 - **`.obsidian/`** — Obsidian Vault 設定 (ワークスペース / グラフ / プラグイン)
   - `app.json`
@@ -1873,6 +1876,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `lint-icon-abilities.ts` — lint:icon-abilities — TSV の cutIn / hirameki 列が非空なのに、出荷 def に該当アイコン能力が
   - `lint-listener-scope.ts` — Phase 7-D (LESSONS-LEARNED 教訓 2 enforcement):
   - `lint-ok-false-pattern.ts` — Phase 8-5: ok:false caller heuristic check
+  - `lint-qa-trace.ts`
   - `lint-side-channel.ts` — Phase 8-3: side-channel pattern 4 点配線 AST check
   - `lint-test-pair.ts` — Phase 8-2: 新規 .ts file → test pair 必須 lint
   - `reuse-registry-check.ts` — full-registry duplicate id check
@@ -5140,8 +5144,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `gen-qa-trace.test.ts`
     - `header-source-hash.test.ts`
     - `lint-bug-closure.test.ts`
+    - `lint-qa-trace.test.ts`
     - `markdown-eol.test.ts`
     - `official-api.test.ts`
+    - `qa-workflows.test.ts`
     - `rule-qa-provenance.test.ts`
     - `structure-root-portability.test.ts`
     - `structure-tracked-files.test.ts`

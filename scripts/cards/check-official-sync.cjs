@@ -1,4 +1,5 @@
 const fs = require("node:fs");
+const crypto = require("node:crypto");
 const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 
@@ -61,16 +62,70 @@ function syncExitCode(result) {
   return result.changed ? 1 : 0;
 }
 
+const LIVE_STATUS_SOURCE_FAILURE_EXIT_CODE = 2;
+
+function cardNumHash(cardNums) {
+  return crypto.createHash("sha256").update([...cardNums].sort().join("\n"), "utf8").digest("hex");
+}
+
+function readTrackedStatus(root = path.resolve(__dirname, "..", "..")) {
+  return JSON.parse(fs.readFileSync(path.join(root, ".claude", "specs", "cards-data", "status.json"), "utf8"));
+}
+
+/** Live, read-only comparison for scheduled/manual CI. It never refreshes raw or generated card data. */
+function compareLiveStatus({ officialCards, status }) {
+  const officialCardNums = officialCards.map((card) => String(card.card_num ?? "").trim());
+  if (officialCardNums.some((cardNum) => !cardNum)) throw new Error("official live status includes a missing card_num");
+  const expectedTotal = status?.printings?.raw;
+  const expectedCardNumsHash = status?.hashes?.rawCardNums;
+  if (!Number.isInteger(expectedTotal) || typeof expectedCardNumsHash !== "string") throw new Error("invalid tracked cards-data status for live comparison");
+  const officialCardNumsHash = cardNumHash(officialCardNums);
+  const countChanged = officialCardNums.length !== expectedTotal;
+  const cardNumHashChanged = officialCardNumsHash !== expectedCardNumsHash;
+  return {
+    mode: "live-status",
+    expectedTotal,
+    officialTotal: officialCardNums.length,
+    expectedCardNumsHash,
+    officialCardNumsHash,
+    countChanged,
+    cardNumHashChanged,
+    changed: countChanged || cardNumHashChanged,
+  };
+}
+
+async function runLiveStatusCheck({ root = path.resolve(__dirname, "..", ".."), fetchImpl } = {}) {
+  const official = await fetchAllCards({ fetchImpl });
+  return compareLiveStatus({ officialCards: official.cards, status: readTrackedStatus(root) });
+}
+
+function liveStatusExitCode(result) {
+  return result.changed ? 1 : 0;
+}
+
 if (require.main === module) {
-  runOfficialSyncCheck()
+  const liveStatus = process.argv.includes("--live-status");
+  (liveStatus ? runLiveStatusCheck() : runOfficialSyncCheck())
     .then((result) => {
       process.stdout.write(`${JSON.stringify(result)}\n`);
-      process.exitCode = syncExitCode(result);
+      process.exitCode = liveStatus ? liveStatusExitCode(result) : syncExitCode(result);
     })
     .catch((error) => {
       process.stderr.write(`${error.stack ?? error}\n`);
-      process.exitCode = 2;
+      process.exitCode = liveStatus ? LIVE_STATUS_SOURCE_FAILURE_EXIT_CODE : 2;
     });
 }
 
-module.exports = { compareOfficialSync, readLocalCards, readLocalQaByCardNum, runOfficialSyncCheck, syncExitCode };
+module.exports = {
+  LIVE_STATUS_SOURCE_FAILURE_EXIT_CODE,
+  cardNumHash,
+  compareLiveStatus,
+  compareOfficialSync,
+  liveStatusExitCode,
+  readLocalCards,
+  readLocalQaByCardNum,
+  readTrackedStatus,
+  runLiveStatusCheck,
+  runOfficialSyncCheck,
+  syncExitCode,
+};

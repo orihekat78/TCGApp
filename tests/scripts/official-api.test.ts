@@ -1,4 +1,5 @@
-import { mkdtempSync, existsSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdtempSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -151,5 +152,38 @@ describe("official sync stale checker", () => {
       officialCards: [{ card_num: "B01001", q_a: "new answer" }],
       localCards: [{ cardNum: "B01001", qAndA: "old answer" }],
     })).toMatchObject({ added: 0, removed: 0, qaChanged: 1 });
+  });
+});
+
+describe("official live-status checker", () => {
+  it("matches the tracked 2240-style status hash without writing local data", async () => {
+    const { compareLiveStatus, runLiveStatusCheck, liveStatusExitCode } = require("../../scripts/cards/check-official-sync.cjs");
+    const cards = [{ card_num: "B00001" }];
+    const status = {
+      printings: { raw: 1, tsv: 1 },
+      hashes: { rawCardNums: createHash("sha256").update("B00001").digest("hex") },
+    };
+    expect(compareLiveStatus({ officialCards: cards, status })).toMatchObject({ changed: false, officialTotal: 1, expectedTotal: 1 });
+    expect(liveStatusExitCode(compareLiveStatus({ officialCards: cards, status }))).toBe(0);
+
+    const root = tempDir();
+    const statusPath = join(root, ".claude", "specs", "cards-data");
+    mkdirSync(statusPath, { recursive: true });
+    writeFileSync(join(statusPath, "status.json"), JSON.stringify(status));
+    await expect(runLiveStatusCheck({ root, fetchImpl: async () => response(page(cards, 1, 1)) })).resolves.toMatchObject({ changed: false });
+  });
+
+  it("fails on live count or card-number hash drift and surfaces source failures", async () => {
+    const { compareLiveStatus, liveStatusExitCode, runLiveStatusCheck, LIVE_STATUS_SOURCE_FAILURE_EXIT_CODE } = require("../../scripts/cards/check-official-sync.cjs");
+    const status = {
+      printings: { raw: 1, tsv: 1 },
+      hashes: { rawCardNums: createHash("sha256").update("B00001").digest("hex") },
+    };
+    const drift = compareLiveStatus({ officialCards: [{ card_num: "B00002" }, { card_num: "B00003" }], status });
+    expect(drift).toMatchObject({ changed: true, countChanged: true, cardNumHashChanged: true });
+    expect(liveStatusExitCode(drift)).toBe(1);
+    expect(LIVE_STATUS_SOURCE_FAILURE_EXIT_CODE).toBe(2);
+
+    await expect(runLiveStatusCheck({ root: tempDir(), fetchImpl: async () => { throw new Error("source down"); } })).rejects.toThrow("source down");
   });
 });

@@ -39,6 +39,7 @@
     "cards:status": "node scripts/cards/cards-data-status.cjs",
     "cards:qa-snapshot": "node scripts/cards/write-qa-hash-snapshot.cjs",
     "cards:check": "node scripts/cards/check-official-sync.cjs",
+    "cards:check:live-status": "node scripts/cards/check-official-sync.cjs --live-status",
     "cards:sync": "npm run cards:fetch && node scripts/compiler/tsv-corpus.cjs && tsx scripts/compiler/dump-shipped.ts && node scripts/compiler/mine.cjs && node scripts/compiler/oracle.cjs --gate",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
@@ -53,7 +54,8 @@
     "sync:codex-skills": "node scripts/sync-codex-skills.mjs",
     "check:codex-migration": "node scripts/check-codex-migration.mjs",
     "check:wave-scope": "tsx scripts/check-wave-scope.ts",
-    "lint:bug-closure": "tsx scripts/lint-bug-closure.ts"
+    "lint:bug-closure": "tsx scripts/lint-bug-closure.ts",
+    "lint:qa": "tsx scripts/lint-qa-trace.ts"
   },
   "keywords": [],
   "author": "",
