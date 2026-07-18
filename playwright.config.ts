@@ -1,9 +1,23 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const e2ePort = process.env.PLAYWRIGHT_PORT ?? '5173';
-const e2eBaseUrl = `http://localhost:${e2ePort}`;
+export function resolveE2EPort(value = process.env.PLAYWRIGHT_PORT): number {
+  if (value === undefined) return 5173;
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new Error('PLAYWRIGHT_PORT must be a decimal integer from 1 to 65535');
+  }
 
-export default defineConfig({
+  const port = Number(value);
+  if (!Number.isSafeInteger(port) || port > 65535) {
+    throw new Error('PLAYWRIGHT_PORT must be a decimal integer from 1 to 65535');
+  }
+
+  return port;
+}
+
+export function createPlaywrightConfig(e2ePort = resolveE2EPort()) {
+  const e2eBaseUrl = `http://localhost:${e2ePort}`;
+
+  return defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -17,7 +31,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `npm run dev -- --port ${e2ePort}`,
+    command: `npm run dev -- --port ${e2ePort} --strictPort`,
     url: e2eBaseUrl,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
@@ -36,4 +50,7 @@ export default defineConfig({
       },
     },
   ],
-});
+  });
+}
+
+export default createPlaywrightConfig();
