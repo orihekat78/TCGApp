@@ -178,6 +178,28 @@ describe('gen-qa-trace', () => {
     expect(readFileSync(output, 'utf8')).toBe('keep-existing-snapshot');
   });
 
+  it('refuses to overwrite a hash snapshot when status provenance is empty', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'conan-qa-missing-source-'));
+    tempRoots.push(root);
+    const dataDir = path.join(root, '.claude', 'specs', 'cards-data');
+    mkdirSync(path.join(dataDir, '_raw'), { recursive: true });
+    writeFileSync(path.join(dataDir, '_raw', 'ct-p01-api.json'), JSON.stringify({ data: [
+      { card_num: 'B00001', card_id: 'card-a', q_a: 'Q: Require provenance\nA: Refuse write' },
+    ] }));
+    const { normalizedFaqMetadata } = require('../../scripts/cards/cards-data-status.cjs');
+    const normalizedFaq = createHash('sha256').update(JSON.stringify(normalizedFaqMetadata(root))).digest('hex');
+    writeFileSync(path.join(dataDir, 'status.json'), JSON.stringify({
+      source: { url: '', fetchedAt: '' },
+      hashes: { normalizedFaq },
+    }));
+    const output = path.join(dataDir, 'qa-hash-snapshot.json');
+    writeFileSync(output, 'keep-existing-snapshot');
+
+    const { writeQaHashSnapshot } = require('../../scripts/cards/write-qa-hash-snapshot.cjs');
+    expect(() => writeQaHashSnapshot(root)).toThrow(/source URL and fetchedAt/);
+    expect(readFileSync(output, 'utf8')).toBe('keep-existing-snapshot');
+  });
+
   it('rejects tracked aggregate drift without requiring ignored raw data', () => {
     const root = mkdtempSync(path.join(tmpdir(), 'conan-qa-clean-drift-'));
     tempRoots.push(root);
@@ -187,6 +209,17 @@ describe('gen-qa-trace', () => {
 
     expect(() => runGenQaTrace({ checkOnly: true }, root)).toThrow(/normalized FAQ hash drift/);
     expect(() => validateQaSnapshotAgainstStatus(snapshot([item(QA_A)]), { hashes: { normalizedFaq: '0'.repeat(64) } })).toThrow(/normalized FAQ hash drift/);
+  });
+
+  it('rejects missing status provenance in a clean trace generator run', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'conan-qa-clean-missing-source-'));
+    tempRoots.push(root);
+    const dataDir = path.join(root, '.claude', 'specs', 'cards-data');
+    mkdirSync(dataDir, { recursive: true });
+    writeFileSync(path.join(dataDir, 'status.json'), JSON.stringify({ hashes: { normalizedFaq: CORPUS_HASH } }));
+    writeFileSync(path.join(dataDir, 'qa-hash-snapshot.json'), JSON.stringify(snapshot([item(QA_A)])));
+
+    expect(() => runGenQaTrace({ checkOnly: true }, root)).toThrow(/status source URL and fetchedAt/);
   });
 
   it('pins the approved 2026-07-18 hash-only official snapshot and rejects body-shaped fields', () => {

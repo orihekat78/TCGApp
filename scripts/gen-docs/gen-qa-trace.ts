@@ -84,7 +84,7 @@ export function validateQaSnapshot(value: unknown): asserts value is QaSnapshot 
   if (!snapshot.source || typeof snapshot.source !== 'object' || Array.isArray(snapshot.source)) throw new Error('invalid Q&A source');
   assertExactKeys(snapshot.source as Record<string, unknown>, ['url', 'fetchedAt'], 'Q&A source');
   const source = snapshot.source as Record<string, unknown>;
-  if (typeof source.url !== 'string' || typeof source.fetchedAt !== 'string') throw new Error('invalid Q&A source metadata');
+  if (typeof source.url !== 'string' || !source.url || typeof source.fetchedAt !== 'string' || !source.fetchedAt) throw new Error('invalid Q&A source metadata');
   assertHash(snapshot.normalizedFaqHash, 'normalizedFaqHash');
   if (!Array.isArray(snapshot.items)) throw new Error('invalid Q&A snapshot items');
   for (const candidate of snapshot.items) {
@@ -122,7 +122,10 @@ export function validateQaSnapshotAgainstStatus(snapshot: QaSnapshot, status: un
   if (typeof normalizedFaq !== 'string' || !HASH.test(normalizedFaq) || snapshot.normalizedFaqHash !== normalizedFaq) {
     throw new Error('normalized FAQ hash drift between tracked Q&A snapshot and cards-data status');
   }
-  if (record.source && (record.source.url !== snapshot.source.url || record.source.fetchedAt !== snapshot.source.fetchedAt)) {
+  if (!record.source || typeof record.source.url !== 'string' || !record.source.url || typeof record.source.fetchedAt !== 'string' || !record.source.fetchedAt) {
+    throw new Error('status source URL and fetchedAt must be non-empty strings');
+  }
+  if (record.source.url !== snapshot.source.url || record.source.fetchedAt !== snapshot.source.fetchedAt) {
     throw new Error('Q&A source provenance drift between tracked snapshot and cards-data status');
   }
 }

@@ -14,7 +14,7 @@ function normalizedFaqHash(corpus) {
 }
 
 function assertStatusMatchesCorpus(status, corpus) {
-  if (!status.source || typeof status.source.url !== 'string' || typeof status.source.fetchedAt !== 'string') {
+  if (!status.source || typeof status.source.url !== 'string' || !status.source.url.trim() || typeof status.source.fetchedAt !== 'string' || !status.source.fetchedAt.trim()) {
     throw new Error('cards-data status must contain source URL and fetchedAt');
   }
   const expected = status.hashes?.normalizedFaq;
