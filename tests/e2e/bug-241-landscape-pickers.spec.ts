@@ -185,8 +185,6 @@ test('BUG-241 Pixel 5 landscape: shared Choice hosts keep footer controls fixed'
       store.setState({ [field]: value });
     }, { field, value });
   };
-  const clearPending = async (field: string): Promise<void> => setPending(field, null);
-
   await setPending('pendingChooseIntercept', { player: 'self', protector: { uid: 'protector', cardId: 'B01001', abilityId: 'a1' }, targetUid: 'target' });
   const chooseIntercept = page.getByTestId('choose-intercept-modal');
   await expectFixedFooter(page, chooseIntercept, page.getByTestId('choose-intercept-decline'));
