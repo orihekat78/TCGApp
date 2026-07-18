@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const { OFFICIAL_CARDS_URL } = require("./official-api.cjs");
-const { compareOrdinal, loadRawQaCards, normalizeQaCards } = require("./qa-normalize.cjs");
+const { compareOrdinal, isQaShaped, loadRawQaCards, normalizeQaCards } = require("./qa-normalize.cjs");
 
 const STATUS_FILE = path.join(".claude", "specs", "cards-data", "status.json");
 const RAW_KIND = {
@@ -96,12 +96,7 @@ function sameCardNums(rawCardNums, tsvCardNums) {
 }
 
 function normalizedFaqMetadataFromCards(cards) {
-  const qaCards = (cards ?? []).filter((card) => {
-    const value = card.q_a;
-    if (value && typeof value === "object") return true;
-    const text = String(value ?? "").trim();
-    return text.startsWith("{") || /^\s*[QA](?:uestion|nswer)?\s*[.:：]/im.test(text);
-  });
+  const qaCards = (cards ?? []).filter((card) => isQaShaped(card.q_a ?? card.qAndA));
   return normalizeQaCards(qaCards);
 }
 

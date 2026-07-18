@@ -37,6 +37,16 @@ function normalizeText(value) {
     .trim();
 }
 
+function isQaShaped(value) {
+  if (value && typeof value === 'object') return !Array.isArray(value);
+  if (typeof value !== 'string') return false;
+  const text = value.trim();
+  if (!text) return false;
+  if (text.startsWith('{')) return true;
+  const normalized = text.normalize('NFKC').replace(/\r\n?/g, '\n');
+  return /(?:^|\n)\s*[QA](?:uestion|nswer)?\s*[.:]/im.test(normalized);
+}
+
 function sha256(value) {
   return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
 }
@@ -220,7 +230,7 @@ function loadRawQaCards(root) {
 }
 
 function loadQaCorpus(root) {
-  return normalizeQaCards(loadRawQaCards(root));
+  return normalizeQaCards(loadRawQaCards(root).filter((card) => isQaShaped(card.q_a ?? card.qAndA)));
 }
 
-module.exports = { QaParseError, compareOrdinal, loadQaCorpus, loadRawQaCards, normalizeQaCards, normalizeText, parseQa, sha256 };
+module.exports = { QaParseError, compareOrdinal, isQaShaped, loadQaCorpus, loadRawQaCards, normalizeQaCards, normalizeText, parseQa, sha256 };

@@ -289,13 +289,41 @@ describe('compiler/qa-normalize', () => {
     expect(qa).toMatchObject({ items: [{ cardId: 'B02086', cardNums: ['B02086'] }], conflicts: [] });
   });
 
-  it('surfaces raw Q&A parse errors through tsv-corpus with card context', () => {
+  it('ignores non-Q&A manual-reference notes at raw corpus ingress', () => {
+    const { loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
+    const root = tempRoot();
+    const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(path.join(rawDir, 'ct-b08-api.json'), JSON.stringify({ data: [
+      { card_num: 'B08022', card_id: '0822', q_a: 'Q: Included question\nA: Included answer' },
+      { card_num: 'B08023', card_id: '0823', q_a: 'manual-reference note' },
+      { card_num: 'B08023P', card_id: '0823', q_a: 'manual-reference note' },
+    ] }));
+
+    expect(loadQaCorpus(root)).toMatchObject({
+      items: [{ cardId: 'B08022', cardNums: ['B08022'] }],
+      conflicts: [],
+    });
+  });
+
+  it.each([
+    ['legacy JSON object', JSON.stringify({ '【Rule】 Question': 'Answer' })],
+    ['legacy Q/A text', 'Q: Question\nA: Answer'],
+    ['current Q&A with a preamble and full-width markers', '●Ability preamble\n\nQ：Question\nA：Answer'],
+    ['current Q&A using period markers', 'Q. Question\nA. Answer'],
+  ])('recognizes %s as Q&A-shaped before ingress normalization', (_label, q_a) => {
+    const { isQaShaped } = require('../../scripts/cards/qa-normalize.cjs');
+
+    expect(isQaShaped(q_a)).toBe(true);
+  });
+
+  it('surfaces malformed purported raw Q&A through tsv-corpus with card context', () => {
     const { loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
     const root = tempRoot();
     const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
     mkdirSync(rawDir, { recursive: true });
     writeFileSync(path.join(rawDir, 'ct-p01-api.json'), JSON.stringify({ data: [{
-      card_num: 'B06098', card_id: '0098', q_a: 'not Q/A text',
+      card_num: 'B06098', card_id: '0098', q_a: 'Q: Missing answer',
     }] }));
 
     expectQaParseError(() => loadQaCorpus(root), {
@@ -303,7 +331,7 @@ describe('compiler/qa-normalize', () => {
       code: 'QA_PARSE_ERROR',
       cardId: '0098',
       cardNum: 'B06098',
-      reason: 'unrecognized-text',
+      reason: 'malformed-qa-text',
     });
   });
 });
