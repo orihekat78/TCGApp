@@ -60,6 +60,66 @@ describe('CardListModal pick detail controls', () => {
     expect(onExpand).toHaveBeenCalledTimes(2);
   });
 
+  it('distinguishes duplicate public pick occurrences while preserving their exact uid and detail card', () => {
+    const onPick = vi.fn();
+    const onExpand = vi.fn();
+    act(() => {
+      root.render(
+        <CardListModal
+          kind="deck"
+          side="self"
+          cards={['D08003', 'D08003']}
+          pickCands={[
+            { uid: 'D08003#0', cardId: 'D08003', player: 'self' },
+            { uid: 'D08003#1', cardId: 'D08003', player: 'self' },
+          ]}
+          onPick={onPick}
+          onExpand={onExpand}
+          onClose={vi.fn()}
+        />,
+      );
+    });
+
+    const first = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-D08003#0"]')!;
+    const second = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-D08003#1"]')!;
+    const firstDetail = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-D08003#0"]')!;
+    const secondDetail = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-D08003#1"]')!;
+    const primaryNames = [first, second].map((button) => button.getAttribute('aria-label'));
+    const detailNames = [firstDetail, secondDetail].map((button) => button.getAttribute('aria-label'));
+    expect(new Set(primaryNames).size).toBe(2);
+    expect(new Set(detailNames).size).toBe(2);
+    expect([...primaryNames, ...detailNames].join(' ')).not.toContain('D08003#');
+
+    act(() => second.click());
+    expect(onPick).toHaveBeenCalledWith('D08003#1');
+    act(() => secondDetail.click());
+    expect(onExpand).toHaveBeenCalledWith('D08003');
+  });
+
+  it('orders duplicate face-up evidence occurrence labels by physical evidence index', () => {
+    act(() => {
+      root.render(
+        <CardListModal
+          kind="evidence"
+          side="self"
+          cards={[]}
+          faceDownCount={3}
+          faceUpEvidence={[{ index: 2, cardId: 'D08003' }, { index: 0, cardId: 'D08003' }]}
+          pickCands={[
+            { uid: 'evidence:self:0', cardId: 'D08003', player: 'self' },
+            { uid: 'evidence:self:2', cardId: 'D08003', player: 'self' },
+          ]}
+          onPick={vi.fn()}
+          onExpand={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+    });
+
+    expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:0"]')?.getAttribute('aria-label')).toContain('1枚目');
+    expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:2"]')?.getAttribute('aria-label')).toContain('2枚目');
+  });
+
   it('never exposes a face-down evidence pick to detail expansion', () => {
     act(() => {
       root.render(

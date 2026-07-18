@@ -92,6 +92,12 @@ export function cardIdToDisplayName(cardId: string): string {
   return cardId;
 }
 
+/** Gives repeated public cards an assistive-technology-only ordinal, never an internal id. */
+export function publicCardOccurrenceLabel(cardIds: readonly string[], cardId: string, index: number): string | undefined {
+  if (cardIds.filter((id) => id === cardId).length < 2) return undefined;
+  return `${cardIds.slice(0, index + 1).filter((id) => id === cardId).length}枚目`;
+}
+
 /**
  * cardId (内部 engine ID, 例: "D08022") → 公式印刷番号 (例: "0091")。
  *

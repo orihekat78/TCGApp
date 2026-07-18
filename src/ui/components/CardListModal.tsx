@@ -14,7 +14,7 @@
 import { useEffect, useState, type JSX } from 'react';
 import type { CardId } from '@/engine/types';
 import { CardArt } from './CardArt.js';
-import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
+import { cardIdToDisplayName, cardIdToPrintedNumber, publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import './CardListModal.css';
 
 export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area' | 'deck';
@@ -257,6 +257,8 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
 
   const sideLabel = side === 'self' ? '自分の' : '相手の';
   const total = cards.length + faceDownCount;
+  const faceUpEvidenceEntries = [...(faceUpEvidence ?? [])].sort((a, b) => a.index - b.index);
+  const faceUpEvidenceCards = faceUpEvidenceEntries.map((e) => e.cardId);
 
   return (
     <div
@@ -332,6 +334,8 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
               {/* user_request 20260522_01 #11 BUG-057: onExpand 指定時はクリック
                   可能 (button 化) で個別カード拡大表示。未指定なら従来通り div */}
               {cards.map((cardId, idx) => {
+                const occurrenceLabel = publicCardOccurrenceLabel(cards, cardId, idx);
+                const accessibleName = occurrenceLabel ? `${cardIdToDisplayName(cardId)} ${occurrenceLabel}` : cardIdToDisplayName(cardId);
                 const itemContent = (
                   <>
                     <CardArt
@@ -367,7 +371,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         onExpand(cardId);
                       } : undefined}
                       data-testid={`card-list-pick-${pickUid}`}
-                      aria-label={`${cardIdToDisplayName(cardId)} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
+                      aria-label={`${accessibleName} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       aria-pressed={isMultiPick ? isSelected : undefined}
                       title={isForcedLocked ? '必ず選ぶ (相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(pickUid) ? '同じカード名は1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(pickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(pickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラが優先されます' : undefined}
                     >
@@ -378,7 +382,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         type="button"
                         className="card-list-pick-detail"
                         data-testid={`card-list-pick-detail-${pickUid}`}
-                        aria-label={`${cardIdToDisplayName(cardId)} の詳細を表示`}
+                        aria-label={`${accessibleName} の詳細を表示`}
                         onClick={() => onExpand(cardId)}
                       >
                         詳細
@@ -394,7 +398,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                     className="card-list-item card-list-item--clickable"
                     onClick={() => onExpand(cardId)}
                     data-testid={`card-list-item-${cardId}-${idx}`}
-                    aria-label={`${cardIdToDisplayName(cardId)} を拡大表示`}
+                    aria-label={`${accessibleName} を拡大表示`}
                   >
                     {itemContent}
                   </button>
@@ -409,6 +413,9 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 // BUG-085: この index の証拠が表向きなら公開カードとして描画する。
                 const faceUpCardId = faceUpByIndex.get(idx);
                 if (faceUpCardId !== undefined) {
+                  const evidenceIndex = faceUpEvidenceEntries.findIndex((e) => e.index === idx);
+                  const occurrenceLabel = publicCardOccurrenceLabel(faceUpEvidenceCards, faceUpCardId, evidenceIndex);
+                  const accessibleName = occurrenceLabel ? `${cardIdToDisplayName(faceUpCardId)} ${occurrenceLabel}` : cardIdToDisplayName(faceUpCardId);
                   const revealedContent = (
                     <>
                       <CardArt
@@ -448,7 +455,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         aria-pressed={isMultiPick ? isSelected : undefined}
                         aria-description={pickStateLabel}
                         title={isForcedLocked ? '必ず選ぶ (相手のイベントの効果によってこのキャラクターを選ぶ場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(faceUpPickUid) ? '同じカード名のカードは1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(faceUpPickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(faceUpPickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラクターが指定されています' : undefined}
-                        aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
+                        aria-label={`${idx + 1} 番目の証拠 ${accessibleName} (表向き) を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       >
                         {revealedContent}
                       </button>
@@ -457,7 +464,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                           type="button"
                           className="card-list-pick-detail"
                           data-testid={`card-list-pick-detail-${faceUpPickUid}`}
-                          aria-label={`${cardIdToDisplayName(faceUpCardId)} の詳細を表示`}
+                          aria-label={`${accessibleName} の詳細を表示`}
                           onClick={() => onExpand(faceUpCardId)}
                         >
                           詳細
@@ -477,7 +484,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         onExpand(faceUpCardId);
                       }}
                       data-testid={`card-list-evidence-faceup-${idx}`}
-                      aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を拡大表示`}
+                      aria-label={`${idx + 1} 番目の証拠 ${accessibleName} (表向き) を拡大表示`}
                     >
                       {revealedContent}
                     </button>

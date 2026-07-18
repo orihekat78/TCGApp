@@ -12,6 +12,7 @@
 
 import { useEffect, useState, type JSX } from 'react';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
 import './SouzaReorderModal.css';
@@ -90,6 +91,7 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
                   <SelectableCardTile
                     cardId={card.cardId}
                     instanceId={card.occurrenceId}
+                    occurrenceLabel={publicCardOccurrenceLabel(order.map((item) => item.cardId), card.cardId, i)}
                     onSelect={() => {}}
                     onExpand={expandModal.open}
                   />

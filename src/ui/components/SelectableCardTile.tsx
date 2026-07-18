@@ -8,6 +8,7 @@ export type SelectableCardTileProps = {
   instanceId: string;
   hidden?: boolean;
   hiddenLabel?: string;
+  occurrenceLabel?: string;
   selectTestId?: string;
   onSelect: (instanceId: string) => void;
   onExpand?: (cardId: string) => void;
@@ -16,6 +17,7 @@ export type SelectableCardTileProps = {
 export function SelectableCardTile({
   cardId,
   instanceId,
+  occurrenceLabel,
   hidden = false,
   hiddenLabel = '伏せられたカード',
   selectTestId,
@@ -24,6 +26,7 @@ export function SelectableCardTile({
 }: SelectableCardTileProps): JSX.Element {
   const card = hidden ? undefined : readDef.card(cardId);
   const name = card?.names[0] ?? cardId;
+  const accessibleName = occurrenceLabel ? `${name} ${occurrenceLabel}` : name;
   const canExpand = !hidden && onExpand !== undefined;
 
   const select = (): void => onSelect(instanceId);
@@ -39,7 +42,7 @@ export function SelectableCardTile({
         data-testid={selectTestId}
         data-instance-id={instanceId}
         data-card-id={hidden ? undefined : cardId}
-        aria-label={hidden ? `${hiddenLabel} を選択` : `${name}を選択`}
+        aria-label={hidden ? `${hiddenLabel} を選択` : `${accessibleName}を選択`}
         onClick={select}
         onContextMenu={canExpand ? (event) => {
           event.preventDefault();
@@ -70,7 +73,7 @@ export function SelectableCardTile({
           type="button"
           className="selectable-card-tile__detail"
           data-testid="selectable-card-tile-detail"
-          aria-label={`${name}の詳細を表示`}
+          aria-label={`${accessibleName}の詳細を表示`}
           onClick={expand}
         >
           詳細

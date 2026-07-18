@@ -3,6 +3,7 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
 import './ChoicePickerModal.css';
@@ -35,6 +36,7 @@ export function ChooseInterceptModalHost(): JSX.Element | null {
                 <SelectableCardTile
                   cardId={cardId}
                   instanceId={`hand:self:${index}`}
+                  occurrenceLabel={publicCardOccurrenceLabel(hand, cardId, index)}
                   selectTestId={`choose-intercept-discard-${index}`}
                   onSelect={() => resolve(index)}
                   onExpand={expandModal.open}

@@ -126,6 +126,36 @@ describe('SelectableCardTile', () => {
     unmount(root);
   });
 
+  it('distinguishes duplicate public occurrences for selection and details without exposing instance ids', () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const onSelect = vi.fn();
+    const onExpand = vi.fn();
+
+    act(() => {
+      root.render(
+        <>
+          <SelectableCardTile cardId="B01001" instanceId="hand:self:1" occurrenceLabel="1枚目" onSelect={onSelect} onExpand={onExpand} />
+          <SelectableCardTile cardId="B01001" instanceId="hand:self:2" occurrenceLabel="2枚目" onSelect={onSelect} onExpand={onExpand} />
+        </>,
+      );
+    });
+
+    const primary = [...container.querySelectorAll<HTMLButtonElement>('.selectable-card-tile__select')];
+    const detail = [...container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')];
+    const primaryNames = primary.map((button) => button.getAttribute('aria-label'));
+    const detailNames = detail.map((button) => button.getAttribute('aria-label'));
+    expect(new Set(primaryNames).size).toBe(2);
+    expect(new Set(detailNames).size).toBe(2);
+    expect([...primaryNames, ...detailNames].join(' ')).not.toContain('hand:self:');
+
+    act(() => primary[1]!.click());
+    expect(onSelect).toHaveBeenCalledWith('hand:self:2');
+    act(() => detail[1]!.click());
+    expect(onExpand).toHaveBeenCalledWith('B01001');
+    unmount(root);
+  });
+
   it('opens public card details from a right click without selecting', () => {
     const { container, root, onSelect, onExpand } = renderTile();
     const tile = container.querySelector<HTMLElement>('[data-instance-id="hand:self:2"]')!;

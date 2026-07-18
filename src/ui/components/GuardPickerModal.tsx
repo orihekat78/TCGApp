@@ -12,6 +12,7 @@
 import type { JSX } from 'react';
 import type { SceneCharacter } from '@/engine/types/game-state.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
 import './GuardPickerModal.css';
@@ -68,12 +69,13 @@ export function GuardPickerModal(props: GuardPickerModalProps): JSX.Element | nu
             <p className="guard-picker-empty">ガードできるキャラがいません</p>
           ) : (
             <ul className="guard-picker-list">
-              {candidates.map((c) => (
+              {candidates.map((c, index) => (
                 <li key={c.uid}>
                   <div className="guard-picker-choice">
                     <SelectableCardTile
                       cardId={c.cardId}
                       instanceId={c.uid}
+                      occurrenceLabel={publicCardOccurrenceLabel(candidates.map((candidate) => candidate.cardId), c.cardId, index)}
                       selectTestId={`guard-cand-${c.uid}`}
                       onSelect={onPick}
                       onExpand={expandModal.open}

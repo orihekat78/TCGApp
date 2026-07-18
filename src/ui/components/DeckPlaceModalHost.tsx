@@ -16,6 +16,7 @@ import { useEffect, useState, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import { SelectableCardTile } from './SelectableCardTile.js';
 import './SouzaReorderModal.css';
@@ -95,6 +96,7 @@ function DeckPlaceModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.E
                 <SelectableCardTile
                   cardId={row.cardId}
                   instanceId={row.occurrenceId}
+                  occurrenceLabel={publicCardOccurrenceLabel(rows.map((item) => item.cardId), row.cardId, i)}
                   onSelect={() => {}}
                   onExpand={expandModal.open}
                 />
