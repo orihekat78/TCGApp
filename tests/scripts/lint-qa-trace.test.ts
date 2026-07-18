@@ -30,28 +30,38 @@ function item(id: string, answerHash = HASH_C) {
   };
 }
 
-function fixture(options: { currentItems?: ReturnType<typeof item>[]; coverage?: QaTraceBaseline['coverage']; conflicts?: unknown[] } = {}) {
+function coverageFor(items: ReturnType<typeof item>[], statuses: Record<string, QaTraceBaseline['coverage']['itemStatuses'][string]>) {
+  const statusCounts = { matched: 0, 'test-missing': 0, 'legacy-unreviewed': 0, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 } as QaTraceBaseline['coverage']['statusCounts'];
+  for (const status of Object.values(statuses)) statusCounts[status] += 1;
+  return { total: items.length, statusCounts, itemStatuses: statuses, allCompliant: items.length > 0 && statusCounts.matched === items.length };
+}
+
+function fixture(options: {
+  baselineItems?: ReturnType<typeof item>[];
+  currentItems?: ReturnType<typeof item>[];
+  baselineCoverage?: QaTraceBaseline['coverage'];
+  coverage?: QaTraceBaseline['coverage'];
+  baselineConflicts?: unknown[];
+  conflicts?: unknown[];
+} = {}) {
   const root = mkdtempSync(join(tmpdir(), 'conan-lint-qa-'));
   roots.push(root);
   const data = join(root, '.claude', 'specs', 'cards-data');
   const auto = join(root, '.claude', 'auto');
   mkdirSync(data, { recursive: true });
   mkdirSync(auto, { recursive: true });
-  const baselineItems = [item('1')];
-  const baselineCoverage = {
-    total: 1,
-    statusCounts: { matched: 0, 'test-missing': 0, 'legacy-unreviewed': 1, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 },
-    allCompliant: false,
-  };
-  const coverage = options.coverage ?? baselineCoverage;
+  const baselineItems = options.baselineItems ?? [item('1')];
+  const baselineCoverage = options.baselineCoverage ?? coverageFor(baselineItems, Object.fromEntries(baselineItems.map((entry) => [entry.qaId, 'legacy-unreviewed'])));
+  const currentItems = options.currentItems ?? baselineItems;
+  const coverage = options.coverage ?? coverageFor(currentItems, Object.fromEntries(currentItems.map((entry) => [entry.qaId, 'legacy-unreviewed'])));
   const snapshot = {
     schemaVersion: 1,
     source: { url: 'https://example.test/cards', fetchedAt: '2026-07-18T00:00:00.000Z' },
     normalizedFaqHash: hash(JSON.stringify(baselineItems)),
-    items: options.currentItems ?? baselineItems,
-    conflicts: options.conflicts ?? [],
+    items: currentItems,
+    conflicts: options.conflicts ?? options.baselineConflicts ?? [],
   };
-  const baseline = buildQaTraceBaseline({ snapshot: { ...snapshot, items: baselineItems }, coverage: baselineCoverage });
+  const baseline = buildQaTraceBaseline({ snapshot: { ...snapshot, items: baselineItems, conflicts: options.baselineConflicts ?? [] }, coverage: baselineCoverage });
   writeFileSync(join(data, 'qa-hash-snapshot.json'), JSON.stringify(snapshot));
   writeFileSync(join(data, 'status.json'), JSON.stringify({
     source: snapshot.source,
@@ -91,7 +101,7 @@ describe('lint-qa-trace', () => {
 
   it('rejects a collision or conflict added after the reviewed baseline', () => {
     const collision = fixture({ currentItems: [item('1'), item('1')] });
-    expect(lintQaTrace({ root: collision.root }).issues.map((issue) => issue.code)).toContain('qa-collision');
+    expect(() => lintQaTrace({ root: collision.root })).toThrow('Q&A coverage total mismatch');
 
     const conflict = fixture();
     const snapshotPath = join(conflict.root, '.claude', 'specs', 'cards-data', 'qa-hash-snapshot.json');
@@ -102,20 +112,34 @@ describe('lint-qa-trace', () => {
     expect(lintQaTrace({ root: conflict.root }).issues.map((issue) => issue.code)).toContain('conflict-drift');
   });
 
+  it('rejects an unresolved conflict even when it was copied into the baseline', () => {
+    const conflict = { qaId: `card:1:${HASH_A}`, cardId: '1', cardNums: ['B00001'], answerHashes: [HASH_A, HASH_C] };
+    const { root } = fixture({ baselineConflicts: [conflict], conflicts: [conflict] });
+    expect(lintQaTrace({ root }).issues.map((issue) => issue.code)).toContain('qa-conflict');
+  });
+
   it('rejects worsened coverage and accepts a matched improvement', () => {
-    const worse = fixture({ coverage: {
-      total: 1,
-      statusCounts: { matched: 0, 'test-missing': 1, 'legacy-unreviewed': 0, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 },
-      allCompliant: false,
-    } });
+    const one = [item('1')];
+    const worse = fixture({ coverage: coverageFor(one, { [one[0]!.qaId]: 'test-missing' }) });
     expect(lintQaTrace({ root: worse.root }).issues.map((issue) => issue.code)).toContain('coverage-worsened');
 
-    const improved = fixture({ coverage: {
-      total: 1,
-      statusCounts: { matched: 1, 'test-missing': 0, 'legacy-unreviewed': 0, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 },
-      allCompliant: true,
-    } });
+    const improved = fixture({ coverage: coverageFor(one, { [one[0]!.qaId]: 'matched' }) });
     expect(lintQaTrace({ root: improved.root }).issues).toEqual([]);
+  });
+
+  it('rejects a per-item coverage regression even when aggregate counts are unchanged', () => {
+    const baselineItems = [item('1'), item('2')];
+    const baselineCoverage = coverageFor(baselineItems, {
+      [baselineItems[0]!.qaId]: 'matched',
+      [baselineItems[1]!.qaId]: 'legacy-unreviewed',
+    });
+    const currentCoverage = coverageFor(baselineItems, {
+      [baselineItems[0]!.qaId]: 'legacy-unreviewed',
+      [baselineItems[1]!.qaId]: 'matched',
+    });
+    const { root } = fixture({ baselineItems, baselineCoverage, coverage: currentCoverage });
+
+    expect(lintQaTrace({ root }).issues.map((issue) => issue.code)).toContain('coverage-item-worsened');
   });
 });
 

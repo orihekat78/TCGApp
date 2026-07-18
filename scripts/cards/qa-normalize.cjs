@@ -30,6 +30,10 @@ function normalizeText(value) {
     .normalize('NFKC')
     .replace(/\r\n?/g, '\n')
     .replace(/[\t \n]+/g, ' ')
+    // Official Japanese Q&A has incidental spaces inside a sentence on some
+    // alternate printings. Keep word separation for Latin text, but make
+    // CJK sentence spacing stable across printings.
+    .replace(/([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}。、】【】]) ([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}【])/gu, '$1$2')
     .trim();
 }
 
@@ -138,24 +142,34 @@ function parseQa(value) {
   return parseQaText(text);
 }
 
+function printableCardFamily(cardNum) {
+  // P/P2 identifies an alternate printing of the immediately preceding card
+  // number. `card_id` is not globally unique across released printings.
+  return cardNum.replace(/^(.*\d)P\d*$/, '$1');
+}
+
 function normalizeQaCards(cards) {
   const groups = new Map();
   for (const card of cards ?? []) {
-    const cardId = normalizeText(card.card_id ?? card.cardId);
+    const internalCardId = normalizeText(card.card_id ?? card.cardId);
     const cardNum = normalizeText(card.card_num ?? card.cardNum);
     const qaValue = card.q_a ?? card.qAndA;
     if (qaValue == null || qaValue === '') continue;
-    if (!cardId || !cardNum) throw new QaParseError('missing-card-identity', { cardId, cardNum });
+    if (!internalCardId || !cardNum) throw new QaParseError('missing-card-identity', { cardId: internalCardId, cardNum });
     let pairs;
     try {
       pairs = parseQa(qaValue);
     } catch (error) {
-      if (error instanceof QaParseError) throw new QaParseError(error.reason, { cardId, cardNum });
+      if (error instanceof QaParseError) throw new QaParseError(error.reason, { cardId: internalCardId, cardNum });
       throw error;
     }
+    const cardId = printableCardFamily(cardNum);
+    const occurrences = new Map();
     for (const pair of pairs) {
       const keyMaterial = `${pair.section}\0${pair.question}`;
-      const qaId = `card:${cardId}:${sha256(keyMaterial)}`;
+      const occurrence = (occurrences.get(keyMaterial) ?? 0) + 1;
+      occurrences.set(keyMaterial, occurrence);
+      const qaId = `card:${cardId}:${sha256(occurrence === 1 ? keyMaterial : `${keyMaterial}\0${occurrence}`)}`;
       let group = groups.get(qaId);
       if (!group) {
         group = { qaId, cardId, section: pair.section, question: pair.question, answers: new Map(), cardNums: new Set() };
@@ -168,7 +182,7 @@ function normalizeQaCards(cards) {
   }
 
   const ordered = [...groups.values()].sort((a, b) =>
-    compareOrdinal(a.cardId, b.cardId) || compareOrdinal(a.section, b.section) || compareOrdinal(a.question, b.question),
+    compareOrdinal(a.cardId, b.cardId) || compareOrdinal(a.section, b.section) || compareOrdinal(a.question, b.question) || compareOrdinal(a.qaId, b.qaId),
   );
   const items = ordered.map((group) => {
     const answerHash = [...group.answers.keys()].sort(compareOrdinal)[0];

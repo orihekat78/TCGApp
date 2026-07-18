@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { randomUUID } = require("node:crypto");
 
 const OFFICIAL_CARDS_URL =
   "https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards";
@@ -121,61 +122,108 @@ function packageDirectories(baseDir) {
     .sort((left, right) => left.localeCompare(right));
 }
 
-function replaceStagedDirectories({ baseDir, stagedBaseDir, renameSync = fs.renameSync }) {
-  const parentDir = path.dirname(baseDir);
-  fs.mkdirSync(baseDir, { recursive: true });
-  const backupDir = fs.mkdtempSync(path.join(parentDir, `.${path.basename(baseDir)}.backup-`));
-  const names = ["_raw", ...new Set([
-    ...packageDirectories(baseDir),
-    ...packageDirectories(stagedBaseDir),
-  ])];
-  const movedExisting = [];
-  const installed = [];
-  let removeBackup = false;
+function transactionDirectory(baseDir) {
+  return path.join(path.dirname(baseDir), `.${path.basename(baseDir)}.transactions`);
+}
+
+function writeTransaction(journalPath, transaction) {
+  const tempPath = `${journalPath}.tmp-${randomUUID()}`;
+  fs.writeFileSync(tempPath, `${JSON.stringify(transaction)}\n`, "utf8");
+  fs.renameSync(tempPath, journalPath);
+}
+
+function removeIfPresent(target, rmSync) {
+  if (!fs.existsSync(target)) return true;
   try {
-    for (const name of names) {
-      const target = path.join(baseDir, name);
-      const staged = path.join(stagedBaseDir, name);
-      const backup = path.join(backupDir, name);
-      if (fs.existsSync(target)) {
-        renameSync(target, backup);
-        movedExisting.push(name);
+    rmSync(target, { recursive: true, force: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readTransactions(baseDir) {
+  const directory = transactionDirectory(baseDir);
+  if (!fs.existsSync(directory)) return [];
+  return fs.readdirSync(directory)
+    .filter((name) => name.endsWith(".json"))
+    .sort((left, right) => left.localeCompare(right))
+    .map((name) => {
+      const journalPath = path.join(directory, name);
+      const transaction = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+      if (transaction.baseDir !== baseDir || typeof transaction.stagedBaseDir !== "string" || typeof transaction.backupDir !== "string") {
+        throw new Error(`invalid cards-data transaction journal: ${journalPath}`);
       }
-      if (fs.existsSync(staged)) {
-        renameSync(staged, target);
-        installed.push(name);
-      }
+      return { journalPath, transaction };
+    });
+}
+
+function recoverCardsDataTransactions({ baseDir, renameSync = fs.renameSync, rmSync = fs.rmSync }) {
+  let recovered = 0;
+  let cleanupPending = 0;
+  for (const { journalPath, transaction } of readTransactions(baseDir)) {
+    const baseExists = fs.existsSync(baseDir);
+    const backupExists = fs.existsSync(transaction.backupDir);
+    if (!baseExists && backupExists) {
+      renameSync(transaction.backupDir, baseDir);
+      recovered += 1;
+    } else if (!baseExists) {
+      throw new Error(`cards-data transaction recovery requires a base or backup root: ${journalPath}`);
     }
-    removeBackup = true;
-  } catch (error) {
-    const rollbackErrors = [];
-    for (const name of [...installed].reverse()) {
-      const target = path.join(baseDir, name);
-      const staged = path.join(stagedBaseDir, name);
-      try {
-        if (fs.existsSync(target)) renameSync(target, staged);
-      } catch (rollbackError) {
-        rollbackErrors.push(rollbackError);
-      }
-    }
-    for (const name of [...movedExisting].reverse()) {
-      const target = path.join(baseDir, name);
-      const backup = path.join(backupDir, name);
-      try {
-        if (fs.existsSync(backup) && !fs.existsSync(target)) renameSync(backup, target);
-      } catch (rollbackError) {
-        rollbackErrors.push(rollbackError);
-      }
-    }
-    if (rollbackErrors.length > 0) {
-      error.rollbackErrors = rollbackErrors;
-      error.backupDir = backupDir;
-    } else {
-      removeBackup = true;
-    }
-    throw error;
-  } finally {
-    if (removeBackup) fs.rmSync(backupDir, { recursive: true, force: true });
+
+    const backupRemoved = removeIfPresent(transaction.backupDir, rmSync);
+    const stageRemoved = removeIfPresent(transaction.stagedBaseDir, rmSync);
+    if (backupRemoved && stageRemoved && removeIfPresent(journalPath, rmSync)) continue;
+    cleanupPending += 1;
+  }
+  return { recovered, cleanupPending };
+}
+
+function replaceStagedCardsDataRoot({
+  baseDir,
+  stagedBaseDir,
+  renameSync = fs.renameSync,
+  rmSync = fs.rmSync,
+  hooks = {},
+}) {
+  const parentDir = path.dirname(baseDir);
+  const journalDir = transactionDirectory(baseDir);
+  fs.mkdirSync(journalDir, { recursive: true });
+  const backupDir = path.join(parentDir, `.${path.basename(baseDir)}.backup-${randomUUID()}`);
+  const journalPath = path.join(journalDir, `${randomUUID()}.json`);
+  const transaction = { version: 1, baseDir, stagedBaseDir, backupDir, state: "prepared" };
+  writeTransaction(journalPath, transaction);
+
+  renameSync(baseDir, backupDir);
+  transaction.state = "backup-moved";
+  writeTransaction(journalPath, transaction);
+  hooks.afterBackupMoved?.();
+
+  renameSync(stagedBaseDir, baseDir);
+  transaction.state = "installed";
+  writeTransaction(journalPath, transaction);
+
+  const backupRemoved = removeIfPresent(backupDir, rmSync);
+  const journalRemoved = backupRemoved && removeIfPresent(journalPath, rmSync);
+  return { cleanupPending: !backupRemoved || !journalRemoved };
+}
+
+function copyStaticCardsData(baseDir, stagedBaseDir) {
+  fs.mkdirSync(baseDir, { recursive: true });
+  for (const entry of fs.readdirSync(baseDir, { withFileTypes: true })) {
+    if (entry.name === "_raw" || (entry.isDirectory() && PACKAGE_DIRECTORY.test(entry.name))) continue;
+    fs.cpSync(path.join(baseDir, entry.name), path.join(stagedBaseDir, entry.name), { recursive: true });
+  }
+}
+
+function validateStagedCardsData({ stagedBaseDir, written }) {
+  const rawDir = path.join(stagedBaseDir, "_raw");
+  if (!fs.existsSync(rawDir)) throw new Error("staged cards-data is missing raw packages");
+  for (const filename of written) {
+    const rawPath = path.join(rawDir, filename);
+    if (!fs.existsSync(rawPath)) throw new Error(`staged cards-data is missing ${filename}`);
+    const payload = JSON.parse(fs.readFileSync(rawPath, "utf8"));
+    if (!Array.isArray(payload.data)) throw new Error(`staged cards-data is invalid: ${filename}`);
   }
 }
 
@@ -191,15 +239,22 @@ async function fetchAndRegenerateAllCards(options = {}) {
   const stagedBaseDir = fs.mkdtempSync(path.join(parentDir, `.${path.basename(baseDir)}.stage-`));
   const rawDir = path.join(stagedBaseDir, "_raw");
   const regenerate = options.regenerate ?? defaultRegenerate;
+  recoverCardsDataTransactions({ baseDir });
   try {
+    copyStaticCardsData(baseDir, stagedBaseDir);
     const written = writeRawPackages(snapshot.cards, rawDir);
     regenerate({ baseDir: stagedBaseDir, rawDir });
-    replaceStagedDirectories({
+    validateStagedCardsData({ stagedBaseDir, written });
+    const transaction = replaceStagedCardsDataRoot({
       baseDir,
       stagedBaseDir,
       ...(options.renameSync ? { renameSync: options.renameSync } : {}),
+      ...(options.rmSync ? { rmSync: options.rmSync } : {}),
     });
-    return { ...snapshot, written };
+    return { ...snapshot, written, ...transaction };
+  } catch (error) {
+    recoverCardsDataTransactions({ baseDir });
+    throw error;
   } finally {
     fs.rmSync(stagedBaseDir, { recursive: true, force: true });
   }
@@ -218,6 +273,7 @@ module.exports = {
   fetchAndWriteAllCards,
   packageCode,
   packageDirectories,
-  replaceStagedDirectories,
+  recoverCardsDataTransactions,
+  replaceStagedCardsDataRoot,
   writeRawPackages,
 };

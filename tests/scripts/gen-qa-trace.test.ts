@@ -96,6 +96,7 @@ describe('gen-qa-trace', () => {
     expect(manifest.coverage).toEqual({
       total: 2,
       statusCounts: { matched: 1, 'test-missing': 0, 'legacy-unreviewed': 1, unmapped: 0, mismatch: 0, deferred: 0, 'manual-only': 0 },
+      itemStatuses: { [QA_A]: 'matched', [QA_B]: 'legacy-unreviewed' },
       allCompliant: false,
     });
     expect(nonblockingReport.coverage).toEqual(manifest.coverage);
@@ -405,9 +406,10 @@ describe('gen-qa-trace', () => {
       url: 'https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards',
       fetchedAt: '2026-07-18T05:51:08.0459736Z',
     });
-    expect(tracked.items).toHaveLength(2650);
-    expect(manifest.coverage.total).toBe(2650);
-    expect(Object.values(manifest.coverage.statusCounts).reduce((total: number, count: unknown) => total + Number(count), 0)).toBe(2650);
+    expect(tracked.items).toHaveLength(2914);
+    expect(tracked.conflicts).toEqual([]);
+    expect(manifest.coverage.total).toBe(2914);
+    expect(Object.values(manifest.coverage.statusCounts).reduce((total: number, count: unknown) => total + Number(count), 0)).toBe(2914);
     expect(JSON.stringify(tracked)).not.toMatch(/"(?:question|answer|q_a|qAndA|section)"\s*:/);
   });
 });

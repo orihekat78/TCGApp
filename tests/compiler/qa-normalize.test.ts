@@ -42,12 +42,12 @@ describe('compiler/qa-normalize', () => {
     expect(result.items).toHaveLength(944);
     expect(result.conflicts).toEqual([]);
     expect(result.items[0]).toMatchObject({
-      cardId: 'C0',
+      cardId: 'S00000',
       cardNums: ['S00000'],
       section: 'Section 0',
       questionHash: sha256('Q0-0'),
       answerHash: sha256('A0-0'),
-      qaId: `card:C0:${sha256('Section 0\0Q0-0')}`,
+      qaId: `card:S00000:${sha256('Section 0\0Q0-0')}`,
     });
     expect(Object.keys(result.items[0]).sort()).toEqual([
       'answerHash', 'cardId', 'cardNums', 'qaId', 'questionHash', 'section',
@@ -71,13 +71,63 @@ describe('compiler/qa-normalize', () => {
 
     expect(result.conflicts).toEqual([]);
     expect(result.items).toEqual([{
-      qaId: `card:0086:${sha256('Rule\0What is this?')}`,
-      cardId: '0086',
+      qaId: `card:B02086:${sha256('Rule\0What is this?')}`,
+      cardId: 'B02086',
       cardNums: ['B02086', 'B02086P'],
       section: 'Rule',
       questionHash: sha256('What is this?'),
       answerHash: sha256('Answer one'),
     }]);
+  });
+
+  it('uses the printable card-number family and removes incidental Japanese answer whitespace', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B02086', card_id: '0247', q_a: '【Rule】\nQ: 同じ質問\nA: 回答。 【規則】' },
+      { card_num: 'B02086P', card_id: '0247', q_a: '【Rule】\nQ: 同じ質問\nA: 回答。【規則】' },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual([expect.objectContaining({
+      qaId: `card:B02086:${sha256('Rule\0同じ質問')}`,
+      cardId: 'B02086',
+      cardNums: ['B02086', 'B02086P'],
+      answerHash: sha256('回答。【規則】'),
+    })]);
+  });
+
+  it('does not merge Q&A from distinct printable card numbers that reuse an internal card id', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B04075', card_id: '0256', q_a: 'Q: 同じ質問\nA: 最初の回答' },
+      { card_num: 'PR029', card_id: '0256', q_a: 'Q: 同じ質問\nA: 別の回答' },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ qaId: `card:B04075:${sha256('\0同じ質問')}`, cardId: 'B04075', cardNums: ['B04075'] }),
+      expect.objectContaining({ qaId: `card:PR029:${sha256('\0同じ質問')}`, cardId: 'PR029', cardNums: ['PR029'] }),
+    ]));
+  });
+
+  it('keeps repeated question text under repeated section records as separate Q&A items', () => {
+    const { normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      {
+        card_num: 'B06098',
+        card_id: '0715',
+        q_a: '【宣言能力】\nQ: 同じ質問\nA: 最初の回答\n【宣言能力】\nQ: 同じ質問\nA: 別の回答',
+      },
+      {
+        card_num: 'B06098P',
+        card_id: '0715',
+        q_a: '【宣言能力】\nQ: 同じ質問\nA: 最初の回答\n【宣言能力】\nQ: 同じ質問\nA: 別の回答',
+      },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toHaveLength(2);
+    expect(result.items.every((item: { cardId: string; cardNums: string[] }) => item.cardId === 'B06098' && item.cardNums.join(',') === 'B06098,B06098P')).toBe(true);
   });
 
   it('starts a new Q/A item when repeated section headers occur in Q/A text', () => {
@@ -166,7 +216,7 @@ describe('compiler/qa-normalize', () => {
     ]);
 
     expect(compareOrdinal('A', 'a')).toBeLessThan(0);
-    expect(result.items.map((item: { cardId: string }) => item.cardId)).toEqual(['A', 'a']);
+    expect(result.items.map((item: { cardId: string }) => item.cardId)).toEqual(['B1', 'B2']);
   });
 
   it('keeps duplicate questions in separate sections and reports answer conflicts deterministically', () => {
@@ -188,12 +238,12 @@ describe('compiler/qa-normalize', () => {
     ]);
 
     expect(result.items.map((item: { qaId: string }) => item.qaId)).toEqual([
-      `card:0098:${sha256('First\0Same question')}`,
-      `card:0098:${sha256('Second\0Same question')}`,
+      `card:B06098:${sha256('First\0Same question')}`,
+      `card:B06098:${sha256('Second\0Same question')}`,
     ]);
     expect(result.conflicts).toEqual([{
-      qaId: `card:0098:${sha256('First\0Same question')}`,
-      cardId: '0098',
+      qaId: `card:B06098:${sha256('First\0Same question')}`,
+      cardId: 'B06098',
       cardNums: ['B06098', 'B06098P'],
       answerHashes: [sha256('Different answer'), sha256('Same answer')].sort(),
     }]);
@@ -219,7 +269,7 @@ describe('compiler/qa-normalize', () => {
 
     expect(corpus).toHaveLength(1);
     expect(corpus[0].qa).toBe('legacy source stays untouched');
-    expect(qa).toMatchObject({ items: [{ cardId: '0086', cardNums: ['B02086'] }], conflicts: [] });
+    expect(qa).toMatchObject({ items: [{ cardId: 'B02086', cardNums: ['B02086'] }], conflicts: [] });
   });
 
   it('surfaces raw Q&A parse errors through tsv-corpus with card context', () => {

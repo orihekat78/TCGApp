@@ -164,6 +164,78 @@ describe("official card API", () => {
     expect(readFileSync(join(packageDir, "character.tsv"), "utf8")).toBe("new tsv\n");
     expect(existsSync(stalePackageDir)).toBe(false);
   });
+
+  it("recovers the prior root after an interrupted root swap", () => {
+    const { recoverCardsDataTransactions, replaceStagedCardsDataRoot } = require("../../scripts/cards/official-api.cjs");
+    const parentDir = tempDir();
+    const baseDir = join(parentDir, "cards-data");
+    const stagedBaseDir = join(parentDir, "cards-data-stage");
+    mkdirSync(baseDir, { recursive: true });
+    mkdirSync(stagedBaseDir, { recursive: true });
+    writeFileSync(join(baseDir, "marker.txt"), "old\n");
+    writeFileSync(join(stagedBaseDir, "marker.txt"), "new\n");
+
+    expect(() => replaceStagedCardsDataRoot({
+      baseDir,
+      stagedBaseDir,
+      hooks: { afterBackupMoved: () => { throw new Error("simulated power loss"); } },
+    })).toThrow("simulated power loss");
+    expect(existsSync(baseDir)).toBe(false);
+
+    expect(recoverCardsDataTransactions({ baseDir })).toMatchObject({ recovered: 1, cleanupPending: 0 });
+    expect(readFileSync(join(baseDir, "marker.txt"), "utf8")).toBe("old\n");
+  });
+
+  it("keeps the installed root successful when backup cleanup is busy", () => {
+    const { replaceStagedCardsDataRoot } = require("../../scripts/cards/official-api.cjs");
+    const parentDir = tempDir();
+    const baseDir = join(parentDir, "cards-data");
+    const stagedBaseDir = join(parentDir, "cards-data-stage");
+    mkdirSync(baseDir, { recursive: true });
+    mkdirSync(stagedBaseDir, { recursive: true });
+    writeFileSync(join(baseDir, "marker.txt"), "old\n");
+    writeFileSync(join(stagedBaseDir, "marker.txt"), "new\n");
+
+    const result = replaceStagedCardsDataRoot({
+      baseDir,
+      stagedBaseDir,
+      rmSync: (target: string, options: Parameters<typeof rmSync>[1]) => {
+        if (target.includes(".backup-")) throw new Error("EBUSY");
+        return rmSync(target, options);
+      },
+    });
+
+    expect(result).toMatchObject({ cleanupPending: true });
+    expect(readFileSync(join(baseDir, "marker.txt"), "utf8")).toBe("new\n");
+  });
+
+  it("recovers the prior root when installing the staged root fails", async () => {
+    const { fetchAndRegenerateAllCards } = require("../../scripts/cards/official-api.cjs");
+    const baseDir = join(tempDir(), "cards-data");
+    const rawDir = join(baseDir, "_raw");
+    const packageDir = join(baseDir, "ct-p01");
+    mkdirSync(rawDir, { recursive: true });
+    mkdirSync(packageDir, { recursive: true });
+    writeFileSync(join(rawDir, "old-api.json"), "old raw\n");
+    writeFileSync(join(packageDir, "character.tsv"), "old tsv\n");
+    const nativeRename = require("node:fs").renameSync;
+
+    await expect(fetchAndRegenerateAllCards({
+      baseDir,
+      fetchImpl: async () => response(page([{ card_num: "B01001", package: "CT-P01 set" }], 1, 1)),
+      regenerate: ({ baseDir: stagedBaseDir }: { baseDir: string }) => {
+        mkdirSync(join(stagedBaseDir, "ct-p01"), { recursive: true });
+        writeFileSync(join(stagedBaseDir, "ct-p01", "character.tsv"), "new tsv\n");
+      },
+      renameSync: (from: string, to: string) => {
+        if (to === baseDir && from.includes(".cards-data.stage-")) throw new Error("install failed");
+        return nativeRename(from, to);
+      },
+    })).rejects.toThrow("install failed");
+
+    expect(readFileSync(join(rawDir, "old-api.json"), "utf8")).toBe("old raw\n");
+    expect(readFileSync(join(packageDir, "character.tsv"), "utf8")).toBe("old tsv\n");
+  });
 });
 
 describe("local official Q&A source", () => {

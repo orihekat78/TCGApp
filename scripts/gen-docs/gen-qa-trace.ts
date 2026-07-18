@@ -71,6 +71,7 @@ export interface QaTrace {
   coverage: {
     total: number;
     statusCounts: Record<CoverageStatus, number>;
+    itemStatuses: Record<string, CoverageStatus>;
     allCompliant: boolean;
   };
 }
@@ -286,6 +287,7 @@ export function buildQaTrace(input: {
     coverage: {
       total: traceItems.length,
       statusCounts,
+      itemStatuses: Object.fromEntries(traceItems.map((item) => [item.qaId, item.coverageStatus])),
       allCompliant: traceItems.length > 0 && statusCounts.matched === traceItems.length,
     },
   };
