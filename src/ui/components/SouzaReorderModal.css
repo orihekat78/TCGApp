@@ -9,8 +9,9 @@
   justify-content: center;
   box-sizing: border-box;
   padding: 12px;
-  /* decision modal 最優先。deck reveal / generic picker より前面。 */
-  z-index: 10000;
+  /* High-priority optional decision band: above ordinary pickers (9700),
+   * below root-level card detail (10000) and mandatory progression (10001+). */
+  z-index: 9998;
 }
 
 .souza-modal {

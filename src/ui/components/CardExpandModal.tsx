@@ -73,6 +73,8 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
     </div>
   );
 
+  // SSR cannot establish a portal host, so it emits static nested markup.
+  // The app mounts with createRoot; interactive browser renders take the portal path.
   if (typeof document === 'undefined') return modal;
 
   return (

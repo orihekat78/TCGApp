@@ -2,6 +2,79 @@ import { test, expect } from '@playwright/test';
 import { buildGameState, setupGamePage } from './helpers';
 
 test.describe('BUG-236 card detail modal priority', () => {
+  test('deck reorder detail is explicitly above its decision and preserves the chosen order', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await buildGameState(page, (gs) => {
+      gs.players.self.deck = ['D08001', 'D08003', 'D08007', 'D08013'];
+    });
+    await page.evaluate(() => {
+      const game = (window as unknown as {
+        __game: { getState: () => { setPendingDeckReorder: (pending: unknown) => void } };
+      }).__game;
+      game.getState().setPendingDeckReorder({ player: 'self', cardIds: ['D08003', 'D08007', 'D08013'] });
+    });
+
+    const decision = page.getByTestId('deck-reorder-modal');
+    await expect(decision).toBeVisible();
+    await page.getByTestId('deck-reorder-up-2').click();
+    const orderedInstances = async () => decision.locator('[data-instance-id]').evaluateAll(
+      (nodes) => nodes.map((node) => node.getAttribute('data-instance-id')),
+    );
+    expect(await orderedInstances()).toEqual(['D08003#0', 'D08013#2', 'D08007#1']);
+
+    await page.getByTestId('deck-reorder-row-1').getByTestId('selectable-card-tile-detail').click();
+    const detail = page.locator('.card-expand-modal-backdrop');
+    await expect(detail).toBeVisible();
+    const layers = await page.evaluate(() => ({
+      detail: Number.parseInt(getComputedStyle(document.querySelector('.card-expand-modal-backdrop')!).zIndex, 10),
+      decision: Number.parseInt(getComputedStyle(document.querySelector('[data-testid="deck-reorder-modal"]')!).zIndex, 10),
+    }));
+    expect(layers.detail, 'card detail must explicitly outrank deck reorder').toBeGreaterThan(layers.decision);
+    await page.locator('.card-expand-close').click();
+    await expect(detail).toHaveCount(0);
+    await expect(decision).toBeVisible();
+    expect(await orderedInstances()).toEqual(['D08003#0', 'D08013#2', 'D08007#1']);
+    expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
+  });
+
+  test('deck place detail is explicitly above its decision and preserves bucket and row state', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await buildGameState(page, () => {});
+    await page.evaluate(() => {
+      const game = (window as unknown as {
+        __game: { getState: () => { setPendingDeckPlace: (pending: unknown) => void } };
+      }).__game;
+      game.getState().setPendingDeckPlace({
+        player: 'self', ownerPlayer: 'self', cardIds: ['D08003', 'D08007', 'D08013'],
+      });
+    });
+
+    const decision = page.getByTestId('deck-place-modal');
+    await expect(decision).toBeVisible();
+    await page.getByTestId('deck-place-bottom-0').click();
+    await page.getByTestId('deck-place-down-0').click();
+    const placedInstances = async () => decision.locator('[data-instance-id]').evaluateAll(
+      (nodes) => nodes.map((node) => node.getAttribute('data-instance-id')),
+    );
+    expect(await placedInstances()).toEqual(['D08007#1', 'D08003#0', 'D08013#2']);
+    await expect(page.getByTestId('deck-place-bottom-1')).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByTestId('deck-place-row-1').getByTestId('selectable-card-tile-detail').click();
+    const detail = page.locator('.card-expand-modal-backdrop');
+    await expect(detail).toBeVisible();
+    const layers = await page.evaluate(() => ({
+      detail: Number.parseInt(getComputedStyle(document.querySelector('.card-expand-modal-backdrop')!).zIndex, 10),
+      decision: Number.parseInt(getComputedStyle(document.querySelector('[data-testid="deck-place-modal"]')!).zIndex, 10),
+    }));
+    expect(layers.detail, 'card detail must explicitly outrank deck place').toBeGreaterThan(layers.decision);
+    await page.locator('.card-expand-close').click();
+    await expect(detail).toHaveCount(0);
+    await expect(decision).toBeVisible();
+    expect(await placedInstances()).toEqual(['D08007#1', 'D08003#0', 'D08013#2']);
+    await expect(page.getByTestId('deck-place-bottom-1')).toHaveAttribute('aria-pressed', 'true');
+    expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
+  });
+
   test('a detail opened inside choose-intercept escapes its overlay and closes normally above the HUD', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await buildGameState(page, (gs) => {
