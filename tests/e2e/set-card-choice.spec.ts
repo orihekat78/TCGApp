@@ -1,20 +1,44 @@
-import { test, expect } from '@playwright/test';
-import { setupGamePage, buildGameState } from './helpers';
+import { test, expect, type Page } from '@playwright/test';
+import { setupGamePage, buildGameState, dispatchAction, getGameState, type GameStateLike } from './helpers';
 
-test('set-card choice shows loaded opaque backs with distinct labels and resolves the keyboard-selected instance', async ({ page }) => {
-  await page.setViewportSize({ width: 851, height: 393 });
-  const { errors } = await setupGamePage(page);
-  await buildGameState(page, (gs) => {
-    (gs as unknown as Record<string, unknown>).pendingEffects = [];
-  });
+async function setHumanSelf(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const w = window as unknown as { __game: { store: { getState: () => { setPendingSetCardChoice: (v: unknown) => void } } } };
-    w.__game.store.getState().setPendingSetCardChoice({
-      player: 'self', hostUid: 'opaque-host',
-      entries: [{ instanceId: 'set:1', ordinal: 1 }, { instanceId: 'set:2', ordinal: 2 }],
-      source: { cardId: 'B02039', abilityId: 'a1', uid: 'yusaku' },
-    });
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
   });
+}
+
+function applyB02039Fixture(gs: GameStateLike): void {
+  const game = gs as unknown as Record<string, unknown>;
+  const players = game.players as { self: Record<string, unknown>; opp: Record<string, unknown> };
+  const makeChar = (cardId: string, uid: string, setCards: unknown[] = []) => ({
+    cardId, uid, state: 'active', isNamed: false, enterOrder: 1, setCards, stackedCards: 0,
+    keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null,
+    turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+  });
+  players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+  players.self.scene = [makeChar('B02039', 'yusaku'), makeChar('B02036', 'toichi')];
+  players.self.hand = [];
+  players.self.deck = ['D08026'];
+  players.self.evidence = [];
+  players.opp.scene = [makeChar('D08013', 'opp-host', [
+    { cardId: 'D08003', faceUp: false, instanceId: 'set:opp-host:alpha' },
+    { cardId: 'D08003', faceUp: false, instanceId: 'set:opp-host:beta' },
+  ])];
+  players.opp.hand = [];
+  players.opp.evidence = [];
+  game.pendingEffects = [];
+  game.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+}
+
+test('B02039 resolves the selected duplicate set-card occurrence through the real engine flow', async ({ page }, testInfo) => {
+  if (testInfo.project.name === 'chromium') await page.setViewportSize({ width: 851, height: 393 });
+  const { errors } = await setupGamePage(page);
+  await setHumanSelf(page);
+  await buildGameState(page, applyB02039Fixture);
+
+  expect(await dispatchAction(page, { type: 'declaredAbility', uid: 'yusaku', abilId: 'a1' })).toEqual({ ok: true });
+  await page.locator('[data-uid="opp-host"]').click();
+
   await expect(page.locator('[data-testid="set-card-choice-modal"]')).toBeVisible();
   const first = page.getByTestId('set-card-choice-1');
   const second = page.getByTestId('set-card-choice-2');
@@ -24,6 +48,8 @@ test('set-card choice shows loaded opaque backs with distinct labels and resolve
     choices.map((choice) => choice.getAttribute('aria-label')),
   );
   expect(new Set(names).size).toBe(2);
+  const modal = page.locator('[data-testid="set-card-choice-modal"]');
+  await expect(modal.getByTestId('selectable-card-tile-detail')).toHaveCount(0);
   for (const choice of [first, second]) {
     const image = choice.locator('img.card-art.selectable-card-tile__back-art');
     await expect(image).toBeVisible();
@@ -32,15 +58,32 @@ test('set-card choice shows loaded opaque backs with distinct labels and resolve
       return back.complete && back.naturalWidth > 0 && back.currentSrc.startsWith('data:image/svg+xml');
     })).toBe(true);
     await expect(image).toHaveAttribute('alt', '');
+    expect(await image.evaluate((node) => (node as HTMLImageElement).currentSrc)).not.toContain('D08003');
   }
-  await expect(page.locator('[data-testid="set-card-choice-modal"]')).not.toContainText('SECRET');
-  await expect(page.locator('[data-testid="set-card-choice-modal"]')).not.toContainText('B02039');
-  await second.focus();
-  await second.press('Enter');
+  await expect(modal).not.toContainText('D08003');
+  await expect(modal).not.toContainText('江戸川コナン');
+  await expect(second).toHaveAttribute('data-instance-id', 'set:opp-host:beta');
+  if (testInfo.project.name === 'mobile-chromium') {
+    expect(await page.evaluate(() => navigator.maxTouchPoints)).toBeGreaterThan(0);
+    await second.tap();
+  } else {
+    await second.focus();
+    await second.press('Enter');
+  }
   await expect(page.locator('[data-testid="set-card-choice-modal"]')).toBeHidden();
-  await expect.poll(() => page.evaluate(() => {
-    const w = window as unknown as { __game: { getState: () => { pendingSetCardChoice: unknown } } };
-    return w.__game.getState().pendingSetCardChoice;
-  })).toBeNull();
+  const state = await getGameState(page);
+  const opp = state.players.opp as unknown as {
+    evidence: { cardId: string; faceUp: boolean }[];
+    scene: { uid: string; setCards: { instanceId: string; cardId: string; faceUp: boolean }[] }[];
+  };
+  expect(opp.evidence).toHaveLength(1);
+  expect(opp.evidence[0]).toMatchObject({
+    cardId: 'D08003',
+    faceUp: true,
+    origin: { sourceCardId: 'B02039', turn: 3, via: 'effect' },
+  });
+  expect(opp.scene.find((char) => char.uid === 'opp-host')?.setCards).toEqual([
+    { cardId: 'D08003', faceUp: false, instanceId: 'set:opp-host:alpha' },
+  ]);
   expect(errors).toEqual([]);
 });

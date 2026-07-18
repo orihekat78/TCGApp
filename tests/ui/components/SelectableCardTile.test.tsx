@@ -183,7 +183,7 @@ describe('SelectableCardTile', () => {
       root.render(
         <>
           <SelectableCardTile cardId="PRIVATE-ONE" instanceId="set:self:1" hidden hiddenLabel="Set card 1" onSelect={onSelect} />
-          <SelectableCardTile cardId="PRIVATE-TWO" instanceId="set:self:2" hidden hiddenLabel="Set card 2" onSelect={onSelect} />
+          <SelectableCardTile cardId="PRIVATE-ONE" instanceId="set:self:2" hidden hiddenLabel="Set card 2" onSelect={onSelect} />
         </>,
       );
     });
@@ -193,7 +193,6 @@ describe('SelectableCardTile', () => {
     expect(hiddenTiles.map((tile) => tile.dataset.instanceId)).toEqual(['set:self:1', 'set:self:2']);
     expect(hiddenTiles.every((tile) => tile.type === 'button' && tile.tabIndex === 0)).toBe(true);
     expect(container.innerHTML).not.toContain('PRIVATE-ONE');
-    expect(container.innerHTML).not.toContain('PRIVATE-TWO');
 
     act(() => hiddenTiles[1]!.click());
     expect(onSelect).toHaveBeenCalledWith('set:self:2');
