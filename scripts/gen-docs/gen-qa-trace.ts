@@ -7,10 +7,6 @@ import { diffMarkdown, writeMarkdown } from './lib/markdown.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(HERE, '../..');
-const SNAPSHOT_PATH = resolve(PROJECT_ROOT, '.claude/specs/cards-data/qa-hash-snapshot.json');
-const DEFERRED_INDEX_PATH = resolve(PROJECT_ROOT, '.claude/specs/DEFERRED-INDEX.md');
-const MANIFEST_PATH = resolve(PROJECT_ROOT, '.claude/auto/qa-manifest.json');
-const TRACE_PATH = resolve(PROJECT_ROOT, '.claude/auto/qa-trace.md');
 const HASH = /^[a-f0-9]{64}$/;
 const QA_ID = /^card:([^:\s]+):([a-f0-9]{64})$/;
 const QA_ANNOTATION = /^\s*\/\/\s*qa:\s*(card:[^\s]+)\s*$/;
@@ -27,6 +23,7 @@ export interface QaSnapshotItem {
 export interface QaSnapshot {
   schemaVersion: 1;
   source: { url: string; fetchedAt: string };
+  normalizedFaqHash: string;
   items: QaSnapshotItem[];
   conflicts?: Array<{ qaId: string; cardId: string; cardNums: string[]; answerHashes: string[] }>;
 }
@@ -82,12 +79,13 @@ function assertHash(value: unknown, name: string): asserts value is string {
 export function validateQaSnapshot(value: unknown): asserts value is QaSnapshot {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('invalid Q&A snapshot');
   const snapshot = value as Record<string, unknown>;
-  assertExactKeys(snapshot, ['schemaVersion', 'source', 'items', 'conflicts'], 'Q&A snapshot');
+  assertExactKeys(snapshot, ['schemaVersion', 'source', 'normalizedFaqHash', 'items', 'conflicts'], 'Q&A snapshot');
   if (snapshot.schemaVersion !== 1) throw new Error('unsupported Q&A snapshot schema');
   if (!snapshot.source || typeof snapshot.source !== 'object' || Array.isArray(snapshot.source)) throw new Error('invalid Q&A source');
   assertExactKeys(snapshot.source as Record<string, unknown>, ['url', 'fetchedAt'], 'Q&A source');
   const source = snapshot.source as Record<string, unknown>;
   if (typeof source.url !== 'string' || typeof source.fetchedAt !== 'string') throw new Error('invalid Q&A source metadata');
+  assertHash(snapshot.normalizedFaqHash, 'normalizedFaqHash');
   if (!Array.isArray(snapshot.items)) throw new Error('invalid Q&A snapshot items');
   for (const candidate of snapshot.items) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('invalid Q&A snapshot item');
@@ -112,6 +110,20 @@ export function validateQaSnapshot(value: unknown): asserts value is QaSnapshot 
       }
       for (const hash of conflict.answerHashes) assertHash(hash, 'conflict answerHash');
     }
+  }
+}
+
+/** The tracked snapshot and cards-data status must describe the same normalized official corpus. */
+export function validateQaSnapshotAgainstStatus(snapshot: QaSnapshot, status: unknown): void {
+  validateQaSnapshot(snapshot);
+  if (!status || typeof status !== 'object' || Array.isArray(status)) throw new Error('invalid cards-data status');
+  const record = status as { hashes?: { normalizedFaq?: unknown }; source?: { url?: unknown; fetchedAt?: unknown } };
+  const normalizedFaq = record.hashes?.normalizedFaq;
+  if (typeof normalizedFaq !== 'string' || !HASH.test(normalizedFaq) || snapshot.normalizedFaqHash !== normalizedFaq) {
+    throw new Error('normalized FAQ hash drift between tracked Q&A snapshot and cards-data status');
+  }
+  if (record.source && (record.source.url !== snapshot.source.url || record.source.fetchedAt !== snapshot.source.fetchedAt)) {
+    throw new Error('Q&A source provenance drift between tracked snapshot and cards-data status');
   }
 }
 
@@ -185,27 +197,39 @@ export function buildQaTrace(input: {
   return { source: input.snapshot.source, items: traceItems, issues };
 }
 
-function listTsFiles(root: string): string[] {
+function listSourceFiles(root: string): string[] {
   if (!existsSync(root)) return [];
   const files: string[] = [];
   for (const entry of readdirSync(root, { withFileTypes: true })) {
     const path = resolve(root, entry.name);
-    if (entry.isDirectory()) files.push(...listTsFiles(path));
-    else if (entry.isFile() && entry.name.endsWith('.ts')) files.push(path);
+    if (entry.isDirectory()) files.push(...listSourceFiles(path));
+    else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) files.push(path);
   }
   return files.sort((a, b) => compareOrdinal(a, b));
 }
 
-function loadTrackedSnapshot(): QaSnapshot {
-  if (!existsSync(SNAPSHOT_PATH)) throw new Error('missing tracked Q&A hash snapshot; run npm run cards:qa-snapshot with local raw data');
-  const snapshot: unknown = JSON.parse(readFileSync(SNAPSHOT_PATH, 'utf8'));
+function cardsDataPath(projectRoot: string, file: string): string {
+  return resolve(projectRoot, '.claude/specs/cards-data', file);
+}
+
+function loadTrackedSnapshot(projectRoot: string): QaSnapshot {
+  const snapshotPath = cardsDataPath(projectRoot, 'qa-hash-snapshot.json');
+  if (!existsSync(snapshotPath)) throw new Error('missing tracked Q&A hash snapshot; run npm run cards:qa-snapshot with local raw data');
+  const snapshot: unknown = JSON.parse(readFileSync(snapshotPath, 'utf8'));
   validateQaSnapshot(snapshot);
   return snapshot;
 }
 
-function loadDeferredCardIds(): Set<string> {
-  if (!existsSync(DEFERRED_INDEX_PATH)) return new Set();
-  return new Set(readFileSync(DEFERRED_INDEX_PATH, 'utf8').match(/\b[A-Z]\d{5}(?:P\d*)?\b/g) ?? []);
+function loadTrackedStatus(projectRoot: string): unknown {
+  const statusPath = cardsDataPath(projectRoot, 'status.json');
+  if (!existsSync(statusPath)) throw new Error('missing tracked cards-data status');
+  return JSON.parse(readFileSync(statusPath, 'utf8'));
+}
+
+function loadDeferredCardIds(projectRoot: string): Set<string> {
+  const indexPath = resolve(projectRoot, '.claude/specs/DEFERRED-INDEX.md');
+  if (!existsSync(indexPath)) return new Set();
+  return new Set(readFileSync(indexPath, 'utf8').match(/\b[A-Z]\d{5}(?:P\d*)?\b/g) ?? []);
 }
 
 function loadShippedCardIds(): Set<string> {
@@ -270,21 +294,24 @@ function writeJson(path: string, value: string): void {
   writeFileSync(path, value, 'utf8');
 }
 
-export function runGenQaTrace(options: RunOptions): RunResult {
-  const snapshot = loadTrackedSnapshot();
-  const files = [...listTsFiles(resolve(PROJECT_ROOT, 'src')), ...listTsFiles(resolve(PROJECT_ROOT, 'tests'))]
-    .map((path) => ({ path: relative(PROJECT_ROOT, path).replaceAll('\\', '/'), content: readFileSync(path, 'utf8') }));
-  const trace = buildQaTrace({ snapshot, files, shippedCardIds: loadShippedCardIds(), deferredCardIds: loadDeferredCardIds() });
+export function runGenQaTrace(options: RunOptions, projectRoot = PROJECT_ROOT): RunResult {
+  const snapshot = loadTrackedSnapshot(projectRoot);
+  validateQaSnapshotAgainstStatus(snapshot, loadTrackedStatus(projectRoot));
+  const files = [...listSourceFiles(resolve(projectRoot, 'src')), ...listSourceFiles(resolve(projectRoot, 'tests'))]
+    .map((path) => ({ path: relative(projectRoot, path).replaceAll('\\', '/'), content: readFileSync(path, 'utf8') }));
+  const trace = buildQaTrace({ snapshot, files, shippedCardIds: loadShippedCardIds(), deferredCardIds: loadDeferredCardIds(projectRoot) });
+  const manifestPath = resolve(projectRoot, '.claude/auto/qa-manifest.json');
+  const tracePath = resolve(projectRoot, '.claude/auto/qa-trace.md');
   const changed: string[] = [];
   const json = manifest(trace);
-  if (diffText(MANIFEST_PATH, json)) {
-    if (!options.checkOnly) writeJson(MANIFEST_PATH, json);
-    changed.push(MANIFEST_PATH);
+  if (diffText(manifestPath, json)) {
+    if (!options.checkOnly) writeJson(manifestPath, json);
+    changed.push(manifestPath);
   }
   const markdown = renderTrace(trace);
-  if (diffMarkdown(TRACE_PATH, markdown).changed) {
-    if (!options.checkOnly) writeMarkdown(TRACE_PATH, markdown);
-    changed.push(TRACE_PATH);
+  if (diffMarkdown(tracePath, markdown).changed) {
+    if (!options.checkOnly) writeMarkdown(tracePath, markdown);
+    changed.push(tracePath);
   }
   return { changedFiles: changed, totalFiles: 2 };
 }

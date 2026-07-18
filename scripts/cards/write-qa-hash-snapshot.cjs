@@ -9,15 +9,31 @@ const ROOT = path.resolve(__dirname, '..', '..');
 const STATUS = path.join(ROOT, '.claude', 'specs', 'cards-data', 'status.json');
 const OUTPUT = path.join(ROOT, '.claude', 'specs', 'cards-data', 'qa-hash-snapshot.json');
 
-function buildQaHashSnapshot(root = ROOT) {
-  const corpus = normalizedFaqMetadata(root);
-  const status = JSON.parse(fs.readFileSync(path.join(root, '.claude', 'specs', 'cards-data', 'status.json'), 'utf8'));
+function normalizedFaqHash(corpus) {
+  return sha256(JSON.stringify(corpus));
+}
+
+function assertStatusMatchesCorpus(status, corpus) {
   if (!status.source || typeof status.source.url !== 'string' || typeof status.source.fetchedAt !== 'string') {
     throw new Error('cards-data status must contain source URL and fetchedAt');
   }
+  const expected = status.hashes?.normalizedFaq;
+  if (typeof expected !== 'string' || !/^[a-f0-9]{64}$/.test(expected)) {
+    throw new Error('cards-data status must contain normalized FAQ hash');
+  }
+  const actual = normalizedFaqHash(corpus);
+  if (actual !== expected) throw new Error(`normalized FAQ hash mismatch: status=${expected} raw=${actual}`);
+  return actual;
+}
+
+function buildQaHashSnapshot(root = ROOT) {
+  const corpus = normalizedFaqMetadata(root);
+  const status = JSON.parse(fs.readFileSync(path.join(root, '.claude', 'specs', 'cards-data', 'status.json'), 'utf8'));
+  const aggregateHash = assertStatusMatchesCorpus(status, corpus);
   return {
     schemaVersion: 1,
     source: { url: status.source.url, fetchedAt: status.source.fetchedAt },
+    normalizedFaqHash: aggregateHash,
     items: corpus.items.map((item) => ({
       qaId: item.qaId,
       cardId: item.cardId,
@@ -47,4 +63,4 @@ if (require.main === module) {
   process.stdout.write(`wrote ${snapshot.items.length} hash-only Q&A items\n`);
 }
 
-module.exports = { buildQaHashSnapshot, writeQaHashSnapshot, STATUS };
+module.exports = { assertStatusMatchesCorpus, buildQaHashSnapshot, normalizedFaqHash, writeQaHashSnapshot, STATUS };

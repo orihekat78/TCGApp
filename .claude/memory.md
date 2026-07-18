@@ -5,6 +5,7 @@
 - `qa-hash-snapshot.json` is tracked and excludes official question/answer/section bodies; raw API stays ignored.
 - Snapshot: 2,650 IDs, source 2026-07-18; its normalized corpus SHA-256 matches `cards-data/status.json` (`74aeb9…2352`). The earlier 2,644 plan number is a 2026-07-16 source baseline, not Task4 parser drift.
 - `docs:qa-trace` reads only the tracked snapshot, checks `// qa: <qaId>` dangling/digest drift, and reports source/test coverage without changing CardDefs or engine.
+- Review follow-up: trace scans `.ts`/`.tsx` only; snapshot now records Task3-equivalent normalized corpus hash and generator fails status/provenance drift without raw inputs.
 
 > 過去ログは`.claude/sessions/YYYY-MM-DD.md`。直近 =
 > [2026-07-17.md](sessions/2026-07-17.md)。
