@@ -8,9 +8,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Detail is a child interaction of every card surface.  It must stay above
-   * the CPU HUD (9100) and every currently reachable modal/overlay (10002). */
-  z-index: 10003;
+  /* Optional decision/detail band: above HUD (9100) and ordinary pickers,
+   * but below mandatory progression (Mulligan starts at 10001).  The portal
+   * makes this a root-layer value instead of a trapped descendant value. */
+  z-index: 10000;
   backdrop-filter: blur(6px);
   cursor: zoom-out;
 }

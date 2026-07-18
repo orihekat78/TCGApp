@@ -3,10 +3,11 @@
 // 仕様:
 //   - cardId が指定されたとき表示、null で非表示
 //   - backdrop click / ESC キー / × ボタンで close
-//   - z-index: 1600 (CardListModal=1500 より前面)
+//   - 呼び出し元の stacking context を避けるため React root 直下へ portal
 //   - CardArt を full-size 表示 + 名前 caption
 
-import { useEffect, type JSX } from 'react';
+import { useCallback, useEffect, useState, type JSX } from 'react';
+import { createPortal } from 'react-dom';
 import type { CardId } from '@/engine/types';
 import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName } from '@/ui/services/uidNames.js';
@@ -18,6 +19,16 @@ export type CardExpandModalProps = {
 };
 
 export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.Element | null {
+  const [portalHost, setPortalHost] = useState<HTMLElement | null>(null);
+  const portalAnchorRef = useCallback((anchor: HTMLSpanElement | null): void => {
+    if (!anchor || typeof document === 'undefined') return;
+    let host = anchor.parentElement;
+    while (host?.parentElement && host.parentElement !== document.body) {
+      host = host.parentElement;
+    }
+    setPortalHost(host ?? document.body);
+  }, []);
+
   // ESC キーで close
   useEffect(() => {
     if (!cardId) return undefined;
@@ -37,7 +48,7 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
 
   const name = cardIdToDisplayName(cardId) ?? cardId;
 
-  return (
+  const modal = (
     <div
       className="card-expand-modal-backdrop"
       onClick={onClose}
@@ -60,5 +71,14 @@ export function CardExpandModal({ cardId, onClose }: CardExpandModalProps): JSX.
         <div className="card-name">{name}</div>
       </div>
     </div>
+  );
+
+  if (typeof document === 'undefined') return modal;
+
+  return (
+    <>
+      <span ref={portalAnchorRef} hidden aria-hidden="true" />
+      {portalHost ? createPortal(modal, portalHost) : modal}
+    </>
   );
 }

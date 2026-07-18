@@ -29,6 +29,19 @@ describe('CardExpandModal close controls', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('escapes an ancestor modal stacking context into the React root', () => {
+    act(() => root.render(
+      <div className="cp-overlay">
+        <CardExpandModal cardId="D08015" onClose={vi.fn()} />
+      </div>,
+    ));
+
+    const detail = container.querySelector('.card-expand-modal-backdrop');
+    expect(detail).not.toBeNull();
+    expect(detail?.parentElement).toBe(container);
+    expect(detail?.closest('.cp-overlay')).toBeNull();
+  });
+
   it('keeps backdrop and Escape close paths', () => {
     const onClose = vi.fn();
     act(() => root.render(<CardExpandModal cardId="D08015" onClose={onClose} />));
