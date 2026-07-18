@@ -43,6 +43,30 @@ describe('HiramekiPickerModal', () => {
     expect(html).toMatch(/発動する/);
     expect(html).toMatch(/スキップ/);
   });
+
+  it('forwards each final action to its exact callback', () => {
+    const onFire = vi.fn();
+    const onSkip = vi.fn();
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    act(() => root.render(
+      <HiramekiPickerModal
+        open
+        cardName="長文ヒラメキ"
+        abilityText="長文の能力テキスト"
+        onFire={onFire}
+        onSkip={onSkip}
+      />,
+    ));
+
+    act(() => {
+      (container.querySelector<HTMLButtonElement>('[data-testid="hirameki-fire-btn"]')!).click();
+      (container.querySelector<HTMLButtonElement>('[data-testid="hirameki-skip-btn"]')!).click();
+    });
+    expect(onFire).toHaveBeenCalledOnce();
+    expect(onSkip).toHaveBeenCalledOnce();
+    act(() => root.unmount());
+  });
 });
 
 describe('HiramekiPickerModal source-card details', () => {

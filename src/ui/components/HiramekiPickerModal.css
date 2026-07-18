@@ -15,8 +15,7 @@
   border: 3px solid #f5c518;
   border-radius: 12px;
   padding: 20px 24px;
-  box-sizing: border-box;
-  width: min(480px, calc(100vw - 24px));
+  min-width: 360px;
   max-width: 480px;
   max-height: calc(100vh - 24px);
   display: flex;
@@ -145,4 +144,16 @@
 .hirameki-btn-skip {
   background: #ddd;
   color: #555;
+}
+
+@media (max-height: 480px) {
+  .hirameki-picker-modal {
+    box-sizing: border-box;
+    width: min(480px, calc(100vw - 24px));
+    min-width: 0;
+  }
+
+  .hirameki-picker-body {
+    max-height: 116px;
+  }
 }

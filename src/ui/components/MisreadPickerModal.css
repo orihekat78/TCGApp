@@ -15,8 +15,7 @@
   border: 3px solid #9b59b6;
   border-radius: 12px;
   padding: 20px 24px;
-  box-sizing: border-box;
-  width: min(560px, calc(100vw - 24px));
+  min-width: 420px;
   max-width: 560px;
   max-height: calc(100vh - 24px);
   display: flex;
@@ -129,3 +128,11 @@
 
 .misread-btn-fire { background: #9b59b6; color: #fff; }
 .misread-btn-skip { background: #ddd; color: #555; }
+
+@media (max-height: 480px) {
+  .misread-picker-modal {
+    box-sizing: border-box;
+    width: min(560px, calc(100vw - 24px));
+    min-width: 0;
+  }
+}
