@@ -31,6 +31,7 @@ describe.each([
     const detail = container.querySelector<HTMLButtonElement>(`[data-testid^="${detailPrefix}"]`);
     expect(primary).toBeInstanceOf(HTMLButtonElement);
     expect(detail).toBeInstanceOf(HTMLButtonElement);
+    expect(detail!.getAttribute('aria-label')).toMatch(/^.+の詳細を表示$/);
     expect(primary?.querySelector('img.card-art')).not.toBeNull();
     expect(primary?.querySelector('button')).toBeNull();
 

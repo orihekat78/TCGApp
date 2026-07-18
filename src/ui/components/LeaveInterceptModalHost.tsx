@@ -19,13 +19,14 @@ function LeaveInterceptCard({
   onExpand: (cardId: string) => void;
 }): JSX.Element {
   const expand = (): void => onExpand(cardId);
+  const detailLabel = `${role === 'interceptor' ? '置換するキャラ' : '手札に戻す対象'}・${name}の詳細を表示`;
   return (
     <div className="leave-intercept-card">
       <button
         type="button"
         className="leave-intercept-card-select"
         data-testid={`leave-intercept-card-${role}`}
-        aria-label={`${name}の詳細を表示`}
+        aria-label={detailLabel}
         onClick={expand}
         onContextMenu={(event) => {
           event.preventDefault();
@@ -39,7 +40,7 @@ function LeaveInterceptCard({
         type="button"
         className="leave-intercept-card-detail"
         data-testid={`leave-intercept-card-detail-${role}`}
-        aria-label={`${name}の詳細を表示`}
+        aria-label={detailLabel}
         onClick={expand}
       >
         詳細

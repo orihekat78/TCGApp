@@ -77,6 +77,8 @@ describe('HiramekiPickerModal source-card details', () => {
     const detail = container.querySelector<HTMLButtonElement>('[data-testid="hirameki-source-card-detail"]');
     expect(source).toBeInstanceOf(HTMLButtonElement);
     expect(detail).toBeInstanceOf(HTMLButtonElement);
+    expect(source!.getAttribute('aria-label')).toContain('阿笠博士');
+    expect(detail!.getAttribute('aria-label')).toContain('阿笠博士');
     expect(source?.querySelector('img.card-art')).not.toBeNull();
     expect(source?.querySelector('button')).toBeNull();
     act(() => detail!.click());

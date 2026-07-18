@@ -157,6 +157,7 @@ export function PartnerArea({ partner, side, resolveCard, paCards, partnerAreaMR
           {paCards.map((cardId, i) => {
             const m = resolveCard(cardId);
             const expand = (): void => onExpand?.(cardId);
+            const detailLabel = `${m.name}${paCards.length > 1 ? `（${i + 1}枚目）` : ''}の詳細を表示`;
             return (
               <div
                 key={`${cardId}#${i}`}
@@ -167,7 +168,7 @@ export function PartnerArea({ partner, side, resolveCard, paCards, partnerAreaMR
                   type="button"
                   className="pa-card-select"
                   data-testid={`pa-card-${side}-${i}`}
-                  aria-label={`${m.name}の詳細を表示`}
+                  aria-label={detailLabel}
                   onClick={expand}
                   onContextMenu={onExpand ? (event) => {
                     event.preventDefault();
@@ -183,7 +184,7 @@ export function PartnerArea({ partner, side, resolveCard, paCards, partnerAreaMR
                     type="button"
                     className="pa-card-detail"
                     data-testid={`pa-card-detail-${side}-${i}`}
-                    aria-label={`${m.name}の詳細を表示`}
+                    aria-label={detailLabel}
                     onClick={expand}
                   >
                     詳細
