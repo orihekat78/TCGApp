@@ -23,10 +23,27 @@ async function expectInViewport(locator: Locator): Promise<void> {
 }
 
 async function expectTouchTarget(locator: Locator): Promise<void> {
+  await locator.scrollIntoViewIfNeeded();
   await expectInViewport(locator);
   const box = await locator.boundingBox();
   expect(box!.width).toBeGreaterThanOrEqual(44);
   expect(box!.height).toBeGreaterThanOrEqual(44);
+}
+
+async function expectActualCardImage(locator: Locator): Promise<void> {
+  const image = locator.locator('img.card-art').first();
+  await expect(image).toBeVisible();
+  await expect(image).toHaveAttribute(
+    'src',
+    /^https:\/\/www\.takaratomy\.co\.jp\/products\/conan-cardgame\/storage\/card\/\d+\.jpg$/,
+  );
+}
+
+async function closeCardDetails(page: Page): Promise<void> {
+  const modal = page.locator('.card-expand-modal');
+  await expect(modal).toBeVisible();
+  await modal.locator('.card-expand-close').click();
+  await expect(page.locator('.card-expand-modal')).toHaveCount(0);
 }
 
 test('BUG-231 log card ID opens the card modal and Escape preserves the log', async ({ page }) => {
@@ -289,28 +306,48 @@ test('B06029 enter picker keeps public evidence inspectable and hidden evidence 
   const publicEvidencePrimary = page.getByTestId('card-list-pick-evidence:self:0');
   await expect(publicEvidencePrimary).toBeVisible({ timeout: 6000 });
   expect(await publicEvidencePrimary.evaluate((element) => element.tagName)).toBe('BUTTON');
-  await expect(publicEvidencePrimary.locator('img')).toHaveCount(1);
+  await expectActualCardImage(publicEvidencePrimary);
 
   const hiddenEvidencePrimary = page.getByTestId('card-list-pick-evidence:self:1');
   await expect(hiddenEvidencePrimary).toBeVisible();
-  await expect(hiddenEvidencePrimary.locator('img')).toHaveCount(0);
+  await expect(hiddenEvidencePrimary.locator('.card-list-item-back')).toBeVisible();
+  await expect(hiddenEvidencePrimary.locator('.card-list-item-art')).toHaveCount(0);
+  await expect(hiddenEvidencePrimary.locator('.card-list-item-id')).toHaveCount(0);
+  await expect(hiddenEvidencePrimary).not.toContainText('D08007');
+  await expect(hiddenEvidencePrimary).not.toHaveAttribute('data-card-id', /.+/);
   await expect(page.getByTestId('card-list-pick-detail-evidence:self:1')).toHaveCount(0);
 
   const publicDetail = page.getByTestId('card-list-pick-detail-evidence:self:0');
   await expectTouchTarget(publicDetail);
   await publicDetail.click();
-  await expect(page.locator('.card-expand-modal')).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('.card-expand-modal')).toHaveCount(0);
+  await closeCardDetails(page);
+  await expect(publicEvidencePrimary).toBeVisible();
+
+  await publicEvidencePrimary.click({ button: 'right' });
+  await closeCardDetails(page);
   await expect(publicEvidencePrimary).toBeVisible();
 
   await publicEvidencePrimary.focus();
   await page.keyboard.press('Enter');
 
+  const handPrimary = page.getByTestId('effect-pick-cand-D08011#0');
+  await expect(handPrimary).toBeVisible();
+  await expectActualCardImage(handPrimary);
+  const handDetail = page.getByTestId('effect-pick-detail-D08011#0');
+  await expectTouchTarget(handDetail);
+  await handDetail.click();
+  await closeCardDetails(page);
+  await expect(handPrimary).toBeVisible();
+  await handPrimary.click();
+
+  await expect.poll(async () => {
+    const state = await getGameState(page);
+    return state.players.self.evidence.map((e) => `${e.cardId}:${e.faceUp}`);
+  }).toEqual(['D08007:false', 'D08011:false']);
+
   const gs = await getGameState(page);
   expect(gs.players.self.hand).toContain('D08003');
-  expect(gs.players.self.hand).toContain('D08011');
-  expect(gs.players.self.evidence.map((e) => `${e.cardId}:${e.faceUp}`)).toEqual(['D08007:false']);
+  expect(gs.players.self.hand).not.toContain('D08011');
   expect(gs.players.self.scene.map((card) => card.cardId)).toContain('B06029');
   expect(errors).toEqual([]);
 });
@@ -337,15 +374,25 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   const reveal = page.locator('.card-list-modal');
   await expect(reveal).toBeVisible({ timeout: 6000 });
   await expect(reveal.locator('.card-list-item img')).toHaveCount(3);
-  await expect(page.getByTestId('card-list-pick-B04021#1')).toBeVisible();
+  const nonEligibleFirst = page.getByTestId('card-list-item-D08003-0');
+  const eligible = page.getByTestId('card-list-pick-B04021#1');
+  const nonEligibleLast = page.getByTestId('card-list-item-B04028-2');
+  await expectActualCardImage(nonEligibleFirst);
+  await expectActualCardImage(eligible);
+  await expectActualCardImage(nonEligibleLast);
+  await expect(eligible).toHaveClass(/card-list-item--pickable/);
+  await expect(nonEligibleFirst).not.toHaveClass(/card-list-item--pickable/);
+  await expect(nonEligibleLast).not.toHaveClass(/card-list-item--pickable/);
 
   const revealDetail = page.getByTestId('card-list-pick-detail-B04021#1');
   await expectTouchTarget(revealDetail);
   await revealDetail.click();
-  await expect(page.locator('.card-expand-modal')).toBeVisible();
-  await page.keyboard.press('Escape');
+  await closeCardDetails(page);
   await expect(reveal).toBeVisible();
-  await expect(page.getByTestId('card-list-pick-B04021#1')).toBeVisible();
+  await eligible.click({ button: 'right' });
+  await closeCardDetails(page);
+  await expect(reveal).toBeVisible();
+  await expect(eligible).toBeVisible();
 
   const skip = page.getByTestId('card-list-pick-skip');
   await expectInViewport(skip);
@@ -357,16 +404,117 @@ test('B04026 preserves public detail access and the chosen reordered card order'
   const rows = reorder.getByTestId(/deck-reorder-row-/);
   await expect(rows).toHaveCount(3);
   await expect(rows.locator('img')).toHaveCount(3);
+  await expect(rows.nth(0).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'D08003');
+  await expect(rows.nth(1).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'B04021');
+  await expect(rows.nth(2).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'B04028');
+
+  const reorderDetail = rows.nth(1).getByTestId('selectable-card-tile-detail');
+  await expectTouchTarget(reorderDetail);
+  await reorderDetail.click();
+  await closeCardDetails(page);
+  await rows.nth(1).locator('.selectable-card-tile__select').click({ button: 'right' });
+  await closeCardDetails(page);
+  await expect(rows).toHaveCount(3);
 
   await page.getByTestId('deck-reorder-up-2').click();
+  await expect(rows.nth(0).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'D08003');
+  await expect(rows.nth(1).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'B04028');
+  await expect(rows.nth(2).locator('.selectable-card-tile__select')).toHaveAttribute('data-card-id', 'B04021');
   const confirm = page.getByTestId('deck-reorder-confirm-btn');
   await expectInViewport(confirm);
   await confirm.focus();
   await page.keyboard.press('Enter');
   await expect(reorder).toHaveCount(0);
 
+  const handSkip = page.getByTestId('hand-zone-pick-skip');
+  await expect(handSkip).toBeVisible();
+  await handSkip.click();
+  await expect(handSkip).toHaveCount(0);
+
   const gs = await getGameState(page);
   expect(gs.players.self.deck.slice(-3)).toEqual(['D08003', 'B04028', 'B04021']);
+  expect(gs.players.self.remove).toContain('B04026');
+  expect(gs.pendingEffects.filter((effect) => effect.state === 'pending' || effect.state === 'resolving')).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('B04026 keeps duplicate reveal and reorder occurrences independently addressable', async ({ page }) => {
+  const { errors } = await setupGamePage(page);
+  await humanMode(page);
+  await buildGameState(page, (gs) => {
+    gs.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    gs.players.self.case = {
+      cardId: 'CASE-ALL-COLORS', status: '解決編', requiredEvidence: 7,
+      colors: ['赤', '青', '緑', '黄', '白', '黒'], declaredUseCount: {},
+    };
+    gs.players.self.file = [
+      { type: 'card-back', cardId: 'D08003' },
+      { type: 'card-back', cardId: 'D08003' },
+    ];
+    gs.players.self.hand = ['B04026'];
+    gs.players.self.scene = [];
+    gs.players.self.deck = ['D08003', 'B04021', 'B04021', 'D08007'];
+    gs.pendingEffects = [];
+  });
+
+  const use = await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B04026' });
+  expect(use).toMatchObject({ ok: true });
+
+  const reveal = page.locator('.card-list-modal');
+  await expect(reveal).toBeVisible({ timeout: 6000 });
+  await expect(reveal.locator('.card-list-item img')).toHaveCount(3);
+  const firstDuplicate = page.getByTestId('card-list-pick-B04021#1');
+  const secondDuplicate = page.getByTestId('card-list-pick-B04021#2');
+  await expect(firstDuplicate).toBeVisible();
+  await expect(secondDuplicate).toBeVisible();
+  await expect(firstDuplicate).toHaveClass(/card-list-item--pickable/);
+  await expect(secondDuplicate).toHaveClass(/card-list-item--pickable/);
+  await expectActualCardImage(firstDuplicate);
+  await expectActualCardImage(secondDuplicate);
+
+  const firstDetail = page.getByTestId('card-list-pick-detail-B04021#1');
+  const secondDetail = page.getByTestId('card-list-pick-detail-B04021#2');
+  await expectTouchTarget(firstDetail);
+  await expectTouchTarget(secondDetail);
+  await firstDetail.click();
+  await closeCardDetails(page);
+  await secondDuplicate.click({ button: 'right' });
+  await closeCardDetails(page);
+  await expect(firstDuplicate).toBeVisible();
+  await expect(secondDuplicate).toBeVisible();
+
+  await page.getByTestId('card-list-pick-skip').click();
+  const reorder = page.getByTestId('deck-reorder-modal');
+  await expect(reorder).toBeVisible();
+  const rows = reorder.getByTestId(/deck-reorder-row-/);
+  await expect(rows).toHaveCount(3);
+
+  const instanceOrder = async (): Promise<string[]> => rows.locator('.selectable-card-tile__select').evaluateAll(
+    (nodes) => nodes.map((node) => node.getAttribute('data-instance-id') ?? ''),
+  );
+  expect(await instanceOrder()).toEqual(['D08003#0', 'B04021#1', 'B04021#2']);
+
+  const duplicateRowDetails = reorder.getByTestId('selectable-card-tile-detail');
+  await expect(duplicateRowDetails).toHaveCount(3);
+  await expectTouchTarget(rows.nth(2).getByTestId('selectable-card-tile-detail'));
+  await rows.nth(2).getByTestId('selectable-card-tile-detail').click();
+  await closeCardDetails(page);
+  await page.getByTestId('deck-reorder-up-2').click();
+  expect(await instanceOrder()).toEqual(['D08003#0', 'B04021#2', 'B04021#1']);
+
+  const confirm = page.getByTestId('deck-reorder-confirm-btn');
+  await confirm.focus();
+  await page.keyboard.press('Enter');
+  await expect(reorder).toHaveCount(0);
+  const handSkip = page.getByTestId('hand-zone-pick-skip');
+  await expect(handSkip).toBeVisible();
+  await handSkip.click();
+
+  const gs = await getGameState(page);
+  expect(gs.players.self.deck.slice(-3)).toEqual(['D08003', 'B04021', 'B04021']);
+  expect(gs.players.self.deck.filter((cardId) => cardId === 'B04021')).toHaveLength(2);
+  expect(gs.players.self.hand).not.toContain('B04021');
+  expect(gs.players.self.scene.map((card) => card.cardId)).not.toContain('B04021');
   expect(gs.players.self.remove).toContain('B04026');
   expect(errors).toEqual([]);
 });
