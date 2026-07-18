@@ -93,6 +93,29 @@
   color: inherit;
   text-align: center;
 }
+.hirameki-demo-picker-card-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 6px;
+}
+.hirameki-demo-picker-card-detail {
+  min-width: 44px;
+  min-height: 44px;
+  align-self: center;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  background: #111827;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.hirameki-demo-picker-card-detail:hover,
+.hirameki-demo-picker-card-detail:focus-visible {
+  border-color: #ffd966;
+  outline: 1px solid #ffd966;
+}
 .hirameki-demo-picker-card:hover {
   transform: scale(1.04);
   box-shadow: 0 0 14px rgba(255, 217, 102, 0.7);

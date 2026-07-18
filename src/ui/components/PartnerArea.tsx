@@ -156,15 +156,39 @@ export function PartnerArea({ partner, side, resolveCard, paCards, partnerAreaMR
         <div className="pa-cards" data-testid={`pa-cards-${side}`}>
           {paCards.map((cardId, i) => {
             const m = resolveCard(cardId);
+            const expand = (): void => onExpand?.(cardId);
             return (
               <div
                 key={`${cardId}#${i}`}
                 className={`pa-card color-${m.color}`}
                 data-card-id={cardId}
-                onClick={onExpand ? () => onExpand(cardId) : undefined}
-                style={onExpand ? { cursor: 'pointer' } : undefined}
               >
-                <span className="pa-card-name">{m.name}</span>
+                <button
+                  type="button"
+                  className="pa-card-select"
+                  data-testid={`pa-card-${side}-${i}`}
+                  aria-label={`${m.name}の詳細を表示`}
+                  onClick={expand}
+                  onContextMenu={onExpand ? (event) => {
+                    event.preventDefault();
+                    expand();
+                  } : undefined}
+                  disabled={!onExpand}
+                >
+                  <CardArt cardId={cardId} alt="" />
+                  <span className="pa-card-name">{m.name}</span>
+                </button>
+                {onExpand && (
+                  <button
+                    type="button"
+                    className="pa-card-detail"
+                    data-testid={`pa-card-detail-${side}-${i}`}
+                    aria-label={`${m.name}の詳細を表示`}
+                    onClick={expand}
+                  >
+                    詳細
+                  </button>
+                )}
               </div>
             );
           })}
