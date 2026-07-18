@@ -1,0 +1,231 @@
+import { expect, test, type Locator, type Page } from '@playwright/test';
+import {
+  buildGameState,
+  dispatchAction,
+  expectNoConsoleErrors,
+  getGameState,
+  setupGamePage,
+  waitForActionEnd,
+} from './helpers';
+import type { GameStateLike } from './helpers';
+
+type AnyState = Record<string, unknown>;
+
+async function primeHuman(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const w = window as unknown as {
+      __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void; setAiPaused: (v: boolean) => void } } };
+    };
+    const store = w.__game.store.getState();
+    store.setSpectatorMode(false);
+    store.setAiPaused(true);
+  });
+}
+
+async function expectTouchTarget(detail: Locator): Promise<void> {
+  await expect(detail).toBeVisible();
+  await expect(detail).toBeInViewport();
+  const box = await detail.boundingBox();
+  expect(box, 'detail control has a box').not.toBeNull();
+  expect(box!.width, 'detail width').toBeGreaterThanOrEqual(44);
+  expect(box!.height, 'detail height').toBeGreaterThanOrEqual(44);
+}
+
+async function assertDetailClickAndContextMenu(page: Page, primary: Locator, detail: Locator): Promise<void> {
+  await expectTouchTarget(detail);
+
+  await detail.click();
+  await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
+  await page.locator('.card-expand-close').click();
+  await expect(page.locator('.card-expand-modal-backdrop')).toBeHidden();
+
+  await primary.click({ button: 'right' });
+  await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
+  await page.locator('.card-expand-close').click();
+  await expect(page.locator('.card-expand-modal-backdrop')).toBeHidden();
+}
+
+test.describe('real mounted card-choice details', () => {
+  test('EffectPicker: B08019 preserves multi-pick resolution while public details expand', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await primeHuman(page);
+    await buildGameState(page, (gs: GameStateLike) => {
+      const g = gs as unknown as AnyState;
+      const mk = (cardId: string, uid: string, state = 'active', setCards: { cardId: string; faceUp: boolean }[] = []) => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards, stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
+      const players = g.players as { self: AnyState; opp: AnyState };
+      players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      players.self.scene = [
+        mk('B08019', 'self-1'),
+        mk('D08013', 'self-2', 'active', [
+          { cardId: 'D08003', faceUp: false },
+          { cardId: 'D08011', faceUp: false },
+        ]),
+      ];
+      players.opp.scene = [mk('D08013', 'opp-1', 'active', [{ cardId: 'D08007', faceUp: false }])];
+      players.self.hand = [];
+      players.self.deck = ['D08026'];
+      players.opp.hand = [];
+      g.pendingEffects = [];
+      g.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    await page.locator('[data-action-id="declared-ability"]').click();
+    await page.locator('[data-uid="self-1"]').click();
+    await page.locator('.confirm-ok').click();
+    await page.getByTestId('opt-run-yes').click();
+
+    const primary = page.getByTestId('effect-pick-cand-self-2');
+    await expect(primary.locator('img')).toBeVisible();
+    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('effect-pick-detail-self-2'));
+    await expect(page.getByTestId('effect-picker-modal')).toBeVisible();
+
+    await primary.click();
+    await page.getByTestId('effect-pick-cand-opp-1').click();
+    await page.getByTestId('effect-picker-confirm').click();
+    await page.waitForFunction(() => {
+      const w = window as unknown as { __game: { getState: () => { gameState: { players: { self: { hand: string[] } } } } } };
+      return w.__game.getState().gameState.players.self.hand.length === 1;
+    });
+    const state = await getGameState(page);
+    expect((state.players.self as { scene: { uid: string; setCards: unknown[] }[] }).scene.find((c) => c.uid === 'self-2')!.setCards).toHaveLength(1);
+    expect((state.players.opp as { scene: { uid: string; setCards: unknown[] }[] }).scene.find((c) => c.uid === 'opp-1')!.setCards).toHaveLength(0);
+    expectNoConsoleErrors(errors);
+  });
+
+  test('EffectPicker: face-down evidence exposes no identity or detail control', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await primeHuman(page);
+    await buildGameState(page, (gs: GameStateLike) => {
+      const g = gs as unknown as AnyState;
+      const self = (g.players as { self: AnyState }).self;
+      self.evidence = [{ cardId: 'D08003', faceUp: false, origin: { turn: 1, via: 'reasoning' } }];
+    });
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __game: { store: { getState: () => { setPendingEffectPick: (p: unknown) => void } } };
+      };
+      w.__game.store.getState().setPendingEffectPick({
+        player: 'self',
+        candidates: [{ uid: 'evidence:self:0', cardId: 'D08003', player: 'self' }],
+        atomVerb: 'charSetCard',
+        atomArgs: {},
+        nMin: 1,
+        nMax: 1,
+        source: { cardId: 'B04026', abilityId: 'a1' },
+      });
+    });
+
+    const hidden = page.getByTestId('effect-pick-cand-evidence:self:0');
+    await expect(hidden).toBeVisible();
+    await expect(hidden).not.toContainText('D08003');
+    await expect(hidden).not.toContainText('江戸川コナン');
+    await expect(hidden.locator('img')).toHaveAttribute('src', /^(?!.*D08003)/);
+    await expect(hidden.locator('img')).not.toHaveAttribute('alt', /江戸川コナン/);
+    await expect(page.getByTestId('effect-pick-detail-evidence:self:0')).toHaveCount(0);
+    await expect(hidden).not.toHaveAttribute('data-card-id');
+    expectNoConsoleErrors(errors);
+  });
+
+  test('DeckReveal: D11019 keeps reveal progression after details close', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await primeHuman(page);
+    await buildGameState(page, (gs: GameStateLike) => {
+      const g = gs as unknown as AnyState;
+      g.pendingEffects = [];
+      g.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __game: { store: { getState: () => { setPendingDeckReveal: (p: unknown) => void } } };
+      };
+      w.__game.store.getState().setPendingDeckReveal({
+        player: 'self',
+        revealed: ['D11020', 'D11013', 'D11017', 'D11017', 'D11019'],
+        matched: 'D11019',
+      });
+    });
+    const primary = page.getByTestId('deck-reveal-card-0');
+    await expect(primary).toBeVisible();
+    await expect(primary.locator('img')).toBeVisible();
+    // Reveal animation ends after 500ms for the first public card. Use an ordinary
+    // interaction only after that real UI transition has settled.
+    await page.waitForTimeout(600);
+    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('deck-reveal-detail-0'));
+    await page.getByTestId('deck-reveal-shuffle').waitFor({ state: 'visible', timeout: 6000 });
+    await page.getByTestId('deck-reveal-overlay').waitFor({ state: 'detached', timeout: 5000 });
+    expectNoConsoleErrors(errors);
+  });
+
+  test('Misread: B05080 resolves its selected ability after public detail inspection', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await primeHuman(page);
+    await buildGameState(page, (gs: GameStateLike) => {
+      const g = gs as unknown as AnyState;
+      const mk = (cardId: string, uid: string, state = 'active') => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
+      const players = g.players as { self: AnyState; opp: AnyState };
+      players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      players.self.scene = [mk('B05080', 'hyd#1')];
+      players.self.hand = ['D08005'];
+      players.self.deck = ['D08006'];
+      players.self.evidence = [];
+      players.self.remove = [];
+      players.self.file = [];
+      players.opp.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      players.opp.case = { cardId: 'D08026', status: 'investigation', requiredEvidence: 6, colors: ['blue'], declaredUseCount: {} };
+      players.opp.scene = [mk('D08013', 'enemy#1')];
+      players.opp.deck = ['D08005', 'D08006'];
+      players.opp.hand = [];
+      players.opp.evidence = [];
+      players.opp.remove = [];
+      players.opp.file = [];
+      g.pendingEffects = [];
+      g.turn = { number: 6, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    await dispatchAction(page, { type: 'reasoning', uid: 'enemy#1' });
+    const primary = page.getByTestId('misread-card-hyd#1');
+    await expect(primary).toBeVisible();
+    await expect(primary.locator('img')).toBeVisible();
+    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('misread-detail-hyd#1'));
+    await page.getByTestId('misread-cand-hyd#1').check();
+    await page.getByTestId('misread-confirm-btn').click();
+    await page.waitForFunction(() => {
+      const w = window as unknown as { __game: { getState: () => { pendingEffectPick: { atomVerb: string } | null } } };
+      return w.__game.getState().pendingEffectPick?.atomVerb === 'discard';
+    });
+    expectNoConsoleErrors(errors);
+  });
+
+  test('CutIn/Disguise: B03129 detail inspection preserves disguise resolution', async ({ page }) => {
+    const { errors } = await setupGamePage(page);
+    await primeHuman(page);
+    await buildGameState(page, (gs: GameStateLike) => {
+      const g = gs as unknown as AnyState;
+      const mk = (cardId: string, uid: string, state = 'active') => ({ cardId, uid, state, isNamed: false, enterOrder: 1, setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false }, apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {} });
+      const players = g.players as { self: AnyState; opp: AnyState };
+      players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+      players.self.case = { cardId: 'D08026', status: 'investigation', requiredEvidence: 7, colors: ['white'], declaredUseCount: {} };
+      players.self.scene = [mk('D08005', 's1')];
+      players.self.hand = ['B03129', 'D08017', 'D08003'];
+      players.self.deck = ['D08013'];
+      players.self.evidence = [];
+      players.self.remove = [];
+      players.self.file = Array.from({ length: 6 }, () => ({ type: 'card-back', cardId: 'D08017' }));
+      players.opp.scene = [mk('D08006', 'o1', 'sleep')];
+      g.pendingEffects = [];
+      g.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    });
+
+    await dispatchAction(page, { type: 'actionDeclareChar', byUid: 's1', targetUid: 'o1' });
+    const primary = page.getByTestId('cid-disg-B03129#0');
+    await expect(primary).toBeVisible();
+    await expect(primary.locator('img')).toBeVisible();
+    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('cid-disg-detail-B03129#0'));
+    await primary.click();
+    await waitForActionEnd(page);
+    const state = await getGameState(page);
+    expect((state.players.self as { scene: { uid: string; cardId: string }[] }).scene.find((card) => card.uid === 's1')?.cardId).toBe('B03129');
+    expectNoConsoleErrors(errors);
+  });
+});

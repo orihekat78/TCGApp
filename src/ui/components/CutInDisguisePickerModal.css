@@ -145,7 +145,7 @@
 
 .cid-list li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) 48px;
   gap: 4px;
 }
 
@@ -170,8 +170,8 @@
 }
 
 .cid-cand-detail {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 48px;
+  min-height: 48px;
   border: 1px solid rgba(140, 180, 220, 0.55);
   border-radius: 5px;
   background: rgba(10, 20, 35, 0.8);
