@@ -3,7 +3,7 @@
 // rules: 13-keywords.md §捜査X
 // spec: 計画 — Commit 4
 
-import { act } from 'react';
+import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
@@ -102,6 +102,66 @@ describe('SouzaReorderModal', () => {
     act(() => root.unmount());
   });
 
+  it('keeps every long Souza decision control and the exact occurrence order after details close', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
+    const deckTop = [
+      { cardId: 'D08003', name: 'A' }, { cardId: 'D08007', name: 'B' },
+      { cardId: 'D08013', name: 'C' }, { cardId: 'D08001', name: 'D' },
+      { cardId: 'D08003', name: 'A' }, { cardId: 'D08007', name: 'B' },
+      { cardId: 'D08013', name: 'C' }, { cardId: 'D08001', name: 'D' },
+    ];
+    const expected = ['D08007#1', 'D08003#0', 'D08013#2', 'D08001#3', 'D08003#4', 'D08007#5', 'D08001#7', 'D08013#6'];
+
+    function DecisionHarness() {
+      const [open, setOpen] = useState(true);
+      return (
+        <SouzaReorderModal
+          open={open}
+          deckTop={deckTop}
+          onCancel={() => { onCancel(); setOpen(false); }}
+          onConfirm={(ids) => { onConfirm(ids); setOpen(false); }}
+        />
+      );
+    }
+
+    const exerciseLongDecision = (): void => {
+      expect(container.querySelectorAll('[data-instance-id]')).toHaveLength(8);
+      act(() => (container.querySelector('[data-testid="souza-down-0"]') as HTMLButtonElement).click());
+      const firstDetail = container.querySelector<HTMLElement>('[data-testid="souza-row-0"] [data-testid="selectable-card-tile-detail"]')!;
+      act(() => firstDetail.click());
+      act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
+      act(() => (container.querySelector('[data-testid="souza-up-7"]') as HTMLButtonElement).click());
+      const finalDetail = container.querySelector<HTMLElement>('[data-testid="souza-row-7"] [data-testid="selectable-card-tile-detail"]')!;
+      act(() => finalDetail.click());
+      act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
+      expect([...container.querySelectorAll<HTMLElement>('[data-instance-id]')].map((tile) => tile.dataset.instanceId))
+        .toEqual(expected);
+      expect(container.querySelector('[data-testid="souza-up-7"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="souza-confirm-btn"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="souza-cancel-btn"]')).not.toBeNull();
+    };
+
+    let root: Root = createRoot(container);
+    act(() => root.render(<DecisionHarness />));
+    exerciseLongDecision();
+    act(() => (container.querySelector('[data-testid="souza-cancel-btn"]') as HTMLButtonElement).click());
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-testid="souza-modal"]')).toBeNull();
+    act(() => root.unmount());
+
+    root = createRoot(container);
+    act(() => root.render(<DecisionHarness />));
+    exerciseLongDecision();
+    act(() => (container.querySelector('[data-testid="souza-confirm-btn"]') as HTMLButtonElement).click());
+    expect(onConfirm).toHaveBeenCalledWith(['D08007', 'D08003', 'D08013', 'D08001', 'D08003', 'D08007', 'D08001', 'D08013']);
+    expect(container.querySelector('[data-testid="souza-modal"]')).toBeNull();
+    act(() => root.unmount());
+    container.remove();
+  });
+
   it('renders an explicit empty state without card tiles', () => {
     const html = renderToString(
       <SouzaReorderModal
@@ -121,9 +181,10 @@ describe('SouzaReorderModal', () => {
     );
   });
 
-  it('shares a viewport-bounded, internally scrolling shell with both deck decision hosts', () => {
+  it('uses the 851x393 landscape-safe, internally scrolling shared shell for all deck decisions', () => {
     expect(CSS_SOURCE).toMatch(/\.souza-modal\s*\{[\s\S]*max-height:\s*calc\(100vh - 16px\);[\s\S]*max-block-size:\s*calc\(100dvh - 16px\);[\s\S]*display:\s*flex;/);
     expect(CSS_SOURCE).toMatch(/\.souza-body\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*min-block-size:\s*0;[\s\S]*overflow-y:\s*auto;/);
+    expect(CSS_SOURCE).toMatch(/\.souza-arrow\s*\{[\s\S]*min-inline-size:\s*44px;[\s\S]*min-block-size:\s*44px;/);
     expect(DECK_REORDER_SOURCE).toContain("import './SouzaReorderModal.css';");
     expect(DECK_PLACE_SOURCE).toContain("import './SouzaReorderModal.css';");
   });
