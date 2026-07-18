@@ -142,7 +142,11 @@ describe('SelectableCardTile', () => {
 
   it('does not disclose hidden card data through DOM text or accessibility', () => {
     registerPublicCard();
-    const { container, root, onSelect, onExpand } = renderTile({ cardId: 'PUBLIC-CARD', hidden: true });
+    const { container, root, onSelect, onExpand } = renderTile({
+      cardId: 'PUBLIC-CARD',
+      hidden: true,
+      hiddenLabel: 'Set card 2',
+    });
     const tile = container.querySelector<HTMLElement>('[data-instance-id="hand:self:2"]')!;
 
     expect(tile).not.toBeNull();
@@ -150,7 +154,14 @@ describe('SelectableCardTile', () => {
     expect(tile.dataset.cardId).toBeUndefined();
     expect(tile.getAttribute('aria-label')).not.toContain('PUBLIC-CARD');
     expect(tile.getAttribute('aria-label')).not.toContain('Known Card');
-    expect(container.querySelector('img')).toBeNull();
+    const back = container.querySelector<HTMLImageElement>('img.card-art');
+    expect(back).not.toBeNull();
+    expect(back?.classList.contains('selectable-card-tile__back-art')).toBe(true);
+    expect(back?.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
+    expect(back?.getAttribute('src')).not.toContain('PUBLIC-CARD');
+    expect(back?.getAttribute('src')).not.toContain('Known%20Card');
+    expect(back?.getAttribute('alt')).toBe('');
+    expect(tile.getAttribute('aria-label')).toBe('Set card 2 を選択');
     expect(container.querySelector('[data-testid="selectable-card-tile-detail"]')).toBeNull();
     expect(container.textContent).not.toContain('PUBLIC-CARD');
     expect(container.textContent).not.toContain('Known Card');
@@ -160,6 +171,32 @@ describe('SelectableCardTile', () => {
     expect(onExpand).not.toHaveBeenCalled();
     act(() => tile.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     expect(onSelect).toHaveBeenCalledWith('hand:self:2');
+    unmount(root);
+  });
+
+  it('gives duplicate hidden physical cards distinct accessible names while preserving keyboard-selectable instance ids', () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const onSelect = vi.fn();
+
+    act(() => {
+      root.render(
+        <>
+          <SelectableCardTile cardId="PRIVATE-ONE" instanceId="set:self:1" hidden hiddenLabel="Set card 1" onSelect={onSelect} />
+          <SelectableCardTile cardId="PRIVATE-TWO" instanceId="set:self:2" hidden hiddenLabel="Set card 2" onSelect={onSelect} />
+        </>,
+      );
+    });
+
+    const hiddenTiles = [...container.querySelectorAll<HTMLButtonElement>('.selectable-card-tile__select')];
+    expect(hiddenTiles.map((tile) => tile.getAttribute('aria-label'))).toEqual(['Set card 1 を選択', 'Set card 2 を選択']);
+    expect(hiddenTiles.map((tile) => tile.dataset.instanceId)).toEqual(['set:self:1', 'set:self:2']);
+    expect(hiddenTiles.every((tile) => tile.type === 'button' && tile.tabIndex === 0)).toBe(true);
+    expect(container.innerHTML).not.toContain('PRIVATE-ONE');
+    expect(container.innerHTML).not.toContain('PRIVATE-TWO');
+
+    act(() => hiddenTiles[1]!.click());
+    expect(onSelect).toHaveBeenCalledWith('set:self:2');
     unmount(root);
   });
 

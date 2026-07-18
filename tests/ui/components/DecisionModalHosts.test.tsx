@@ -160,6 +160,11 @@ describe('decision modal hosts', () => {
     expect(html).not.toContain('cardId');
     expect([...container.querySelectorAll<HTMLElement>('[aria-label]')].map((element) => element.getAttribute('aria-label')).join(' ')).not.toContain('SECRET');
     expect(container.querySelectorAll('[data-card-id]')).toHaveLength(0);
+    const choices = [...container.querySelectorAll<HTMLButtonElement>('button[data-testid^="set-card-choice-"]')];
+    expect(choices.map((choice) => choice.getAttribute('aria-label'))).toEqual(['Set card 1 を選択', 'Set card 2 を選択']);
+    expect(choices.map((choice) => choice.dataset.instanceId)).toEqual(['set-instance-1', 'set-instance-2']);
+    expect(choices.every((choice) => choice.querySelector('img.card-art.selectable-card-tile__back-art') !== null)).toBe(true);
+    expect(choices.every((choice) => choice.querySelector('img')?.getAttribute('src')?.startsWith('data:image/svg+xml') === true)).toBe(true);
     expect(container.textContent).toContain('1');
     expect(container.textContent).toContain('2');
     act(() => (container.querySelector('[data-instance-id="set-instance-2"]') as HTMLButtonElement).click());

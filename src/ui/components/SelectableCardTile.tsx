@@ -39,7 +39,7 @@ export function SelectableCardTile({
         data-testid={selectTestId}
         data-instance-id={instanceId}
         data-card-id={hidden ? undefined : cardId}
-        aria-label={hidden ? '伏せられたカードを選択' : `${name}を選択`}
+        aria-label={hidden ? `${hiddenLabel} を選択` : `${name}を選択`}
         onClick={select}
         onContextMenu={canExpand ? (event) => {
           event.preventDefault();
@@ -47,7 +47,12 @@ export function SelectableCardTile({
         } : undefined}
       >
         {hidden ? (
-          <span className="selectable-card-tile__hidden-label">{hiddenLabel}</span>
+          <>
+            <span className="selectable-card-tile__art" aria-hidden="true">
+              <CardArt cardId={null} alt="" className="selectable-card-tile__back-art" />
+            </span>
+            <span className="selectable-card-tile__hidden-label">{hiddenLabel}</span>
+          </>
         ) : (
           <>
           <span className="selectable-card-tile__art" aria-hidden="true">
