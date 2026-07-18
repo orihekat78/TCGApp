@@ -5,6 +5,8 @@ import { Playmat } from '@/ui/components/Playmat';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { useGameStateStore, type PendingEffectPick } from '@/ui/state/store';
+import { useEvidenceFlipPickerStore } from '@/ui/hooks/useEvidenceFlipPicker';
+import { useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import type { HandCardMeta } from '@/ui/components/HandZone';
 
@@ -59,6 +61,8 @@ describe('Playmat user bug wave', () => {
       spectatorMode: false,
       aiSpeedMs: 0,
     });
+    useEvidenceFlipPickerStore.getState()._reset();
+    useStackedCardCostPickerStore.setState({ current: null, _resolver: null });
   });
 
   afterEach(() => {
@@ -135,6 +139,29 @@ describe('Playmat user bug wave', () => {
 
     expect(container.querySelector('.card-list-modal')).not.toBeNull();
     expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+  });
+
+  it('gives evidence-flip and stacked-cost CardList pickers their own public detail modal', () => {
+    const state = createEmptyGameState();
+    state.players.self.evidence = [{ cardId: 'D08003', faceUp: true, origin: { turn: 1, via: 'reasoning' } }];
+    useGameStateStore.setState({ gameState: state });
+    useEvidenceFlipPickerStore.setState({
+      current: { side: 'self', sourceName: 'flip', candidates: [{ index: 0, cardId: 'D08003' }], nMin: 1, nMax: 1 },
+      _resolver: null,
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-evidence:self:0"]')!).click());
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
+
+    useEvidenceFlipPickerStore.getState()._reset();
+    useStackedCardCostPickerStore.setState({
+      current: { sourceName: 'stack', candidates: [{ instanceId: 'stack:0', cardId: 'D08003' }], nMin: 1, nMax: 1 },
+      _resolver: null,
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-stack:0"]')!).click());
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
   });
 
   it('hosts hand sceneEnter in HandZone with exact duplicate occurrence candidates', () => {

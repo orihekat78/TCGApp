@@ -217,7 +217,9 @@ describe('CardListModal pick detail controls', () => {
     const forced = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:0"]')!;
     const blocked = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:1"]')!;
     expect(forced.disabled).toBe(false);
+    expect(forced.getAttribute('aria-description')).toBe('必ず選択 (強制対象)');
     expect(blocked.disabled).toBe(true);
+    expect(blocked.getAttribute('aria-description')).toBe('選択不可');
     expect(blocked.getAttribute('title')).not.toBeNull();
     expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:1"]')).not.toBeNull();
 
@@ -231,6 +233,7 @@ describe('CardListModal pick detail controls', () => {
     });
     const locked = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:0"]')!;
     expect(locked.getAttribute('aria-pressed')).toBe('true');
+    expect(locked.getAttribute('aria-description')).toBe('必ず選択 (強制対象)');
     act(() => locked.click());
     expect(locked.getAttribute('aria-pressed')).toBe('true');
   });

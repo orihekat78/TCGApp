@@ -1390,6 +1390,7 @@ function PlaymatDeclareNameModal(): JSX.Element | null {
  * cell は候補に含まれず click 不可で表示される。
  */
 function PlaymatEvidenceFlipPickerModal(): JSX.Element | null {
+  const expandModal = useCardExpandModal();
   const current = useEvidenceFlipPickerStore((s) => s.current);
   const evidence = useGameStateStore((s) =>
     s.gameState && current ? s.gameState.players[current.side].evidence : null,
@@ -1417,6 +1418,7 @@ function PlaymatEvidenceFlipPickerModal(): JSX.Element | null {
     : `${current.nMin} 枚以上`;
 
   return (
+    <>
     <CardListModal
       kind="evidence"
       side={current.side}
@@ -1424,6 +1426,7 @@ function PlaymatEvidenceFlipPickerModal(): JSX.Element | null {
       faceDownCount={evidenceLen}
       faceUpEvidence={faceUpEvidence}
       onClose={() => useEvidenceFlipPicker().cancel()}
+      onExpand={expandModal.open}
       pickCands={pickCands}
       pickSessionKey={current}
       pickBannerText={`${current.sourceName}: 表向きにする裏向き証拠を選んでください（${rangeLabel}）`}
@@ -1438,10 +1441,13 @@ function PlaymatEvidenceFlipPickerModal(): JSX.Element | null {
         useEvidenceFlipPicker().confirm(idxs);
       }}
     />
+    <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+    </>
   );
 }
 
 function PlaymatStackedCardCostPickerModal(): JSX.Element | null {
+  const expandModal = useCardExpandModal();
   const current = useStackedCardCostPickerStore((s) => s.current);
   if (!current) return null;
   const pickCands = current.candidates.map((candidate) => ({
@@ -1450,11 +1456,13 @@ function PlaymatStackedCardCostPickerModal(): JSX.Element | null {
     player: 'self' as const,
   }));
   return (
+    <>
     <CardListModal
       kind="remove"
       side="self"
       cards={current.candidates.map((candidate) => candidate.cardId)}
       onClose={() => useStackedCardCostPicker().cancel()}
+      onExpand={expandModal.open}
       pickCands={pickCands}
       pickSessionKey={current}
       pickBannerText={`${current.sourceName}: このキャラの下のカードを${current.nMin}枚選んでください`}
@@ -1463,6 +1471,8 @@ function PlaymatStackedCardCostPickerModal(): JSX.Element | null {
       pickNMax={current.nMax}
       onPickMulti={(instanceIds) => useStackedCardCostPicker().confirm(instanceIds)}
     />
+    <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+    </>
   );
 }
 

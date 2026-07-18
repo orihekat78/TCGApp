@@ -430,6 +430,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                     const isSelected = isMultiPick && selectedUids.includes(faceUpPickUid);
                     const isForcedLocked = forcedLockable && forcedInCands.includes(faceUpPickUid);
                     const isBlocked = (isMultiPick && (isDistinctNamesBlocked(faceUpPickUid) || isDistinctLevelBlocked(faceUpPickUid) || isDistinctColorsBlocked(faceUpPickUid))) || isForcedBlocked(faceUpPickUid);
+                    const pickStateLabel = isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (強制対象)' : isSelected ? '選択済み' : '選択';
                     const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                     return (
                       <div key={`faceup-pick-${idx}`} className="card-list-pick-shell">
@@ -445,6 +446,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         } : undefined}
                         data-testid={`card-list-pick-${faceUpPickUid}`}
                         aria-pressed={isMultiPick ? isSelected : undefined}
+                        aria-description={pickStateLabel}
                         title={isForcedLocked ? '必ず選ぶ (相手のイベントの効果によってこのキャラクターを選ぶ場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(faceUpPickUid) ? '同じカード名のカードは1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(faceUpPickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(faceUpPickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラクターが指定されています' : undefined}
                         aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isSelected ? '選択解除' : '選択'}`}
                       >
