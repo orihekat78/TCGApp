@@ -314,6 +314,11 @@ describe('gen-qa-trace', () => {
     })).toThrow(/disallowed field.*answer/);
   });
 
+  it('rejects a mismatched or duplicate Q&A identifier before baseline generation', () => {
+    expect(() => validateQaSnapshot(snapshot([item(QA_A, 'card-b')]))).toThrow(/snapshot item identity/);
+    expect(() => validateQaSnapshot(snapshot([item(QA_A), item(QA_A, 'card-a', ['B00002'])]))).toThrow(/duplicate Q&A snapshot identifier/);
+  });
+
   it('creates the tracked source snapshot from FAQ-shaped raw entries without retaining non-Q&A notes', () => {
     const root = mkdtempSync(path.join(tmpdir(), 'conan-qa-snapshot-'));
     tempRoots.push(root);

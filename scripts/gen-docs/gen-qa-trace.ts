@@ -111,14 +111,18 @@ export function validateQaSnapshot(value: unknown): asserts value is QaSnapshot 
   if (typeof source.url !== 'string' || !source.url || typeof source.fetchedAt !== 'string' || !source.fetchedAt) throw new Error('invalid Q&A source metadata');
   assertHash(snapshot.normalizedFaqHash, 'normalizedFaqHash');
   if (!Array.isArray(snapshot.items)) throw new Error('invalid Q&A snapshot items');
+  const qaIds = new Set<string>();
   for (const candidate of snapshot.items) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('invalid Q&A snapshot item');
     const item = candidate as Record<string, unknown>;
     assertExactKeys(item, ['qaId', 'cardId', 'cardNums', 'sectionHash', 'questionHash', 'answerHash'], 'Q&A snapshot item');
     const qaId = String(item.qaId ?? '');
-    if (!QA_ID.test(qaId) || typeof item.cardId !== 'string' || !Array.isArray(item.cardNums) || item.cardNums.some((n) => typeof n !== 'string')) {
+    const identity = qaId.match(QA_ID);
+    if (!identity || identity[1] !== item.cardId || typeof item.cardId !== 'string' || !Array.isArray(item.cardNums) || item.cardNums.some((n) => typeof n !== 'string')) {
       throw new Error('invalid Q&A snapshot item identity');
     }
+    if (qaIds.has(qaId)) throw new Error(`duplicate Q&A snapshot identifier: ${qaId}`);
+    qaIds.add(qaId);
     assertHash(item.sectionHash, 'sectionHash');
     assertHash(item.questionHash, 'questionHash');
     assertHash(item.answerHash, 'answerHash');

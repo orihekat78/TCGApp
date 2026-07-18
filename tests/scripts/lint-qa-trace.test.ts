@@ -101,7 +101,7 @@ describe('lint-qa-trace', () => {
 
   it('rejects a collision or conflict added after the reviewed baseline', () => {
     const collision = fixture({ currentItems: [item('1'), item('1')] });
-    expect(() => lintQaTrace({ root: collision.root })).toThrow('Q&A coverage total mismatch');
+    expect(() => lintQaTrace({ root: collision.root })).toThrow('duplicate Q&A snapshot identifier');
 
     const conflict = fixture();
     const snapshotPath = join(conflict.root, '.claude', 'specs', 'cards-data', 'qa-hash-snapshot.json');
