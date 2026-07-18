@@ -32,6 +32,16 @@ async function expectTouchTarget(detail: Locator): Promise<void> {
   expect(box!.height, 'detail height').toBeGreaterThanOrEqual(44);
 }
 
+async function expectWithinViewport(page: Page, locator: Locator): Promise<void> {
+  const box = await locator.boundingBox();
+  expect(box, 'element has a box').not.toBeNull();
+  const viewport = await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  expect(box!.x, 'element left').toBeGreaterThanOrEqual(0);
+  expect(box!.y, 'element top').toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width, 'element right').toBeLessThanOrEqual(viewport.width);
+  expect(box!.y + box!.height, 'element bottom').toBeLessThanOrEqual(viewport.height);
+}
+
 async function assertDetailClickAndContextMenu(page: Page, primary: Locator, detail: Locator): Promise<void> {
   await expectTouchTarget(detail);
 
@@ -57,7 +67,7 @@ test.describe('real mounted card-choice details', () => {
       players.self.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
       players.self.scene = [
         mk('B08019', 'self-1'),
-        mk('D08013', 'self-2', 'active', [
+        mk('D08011', 'D08011#0', 'active', [
           { cardId: 'D08003', faceUp: false },
           { cardId: 'D08011', faceUp: false },
         ]),
@@ -75,9 +85,18 @@ test.describe('real mounted card-choice details', () => {
     await page.locator('.confirm-ok').click();
     await page.getByTestId('opt-run-yes').click();
 
-    const primary = page.getByTestId('effect-pick-cand-self-2');
+    const primary = page.getByTestId('effect-pick-cand-D08011#0');
     await expect(primary.locator('img')).toBeVisible();
-    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('effect-pick-detail-self-2'));
+    const detail = page.getByTestId('effect-pick-detail-D08011#0');
+    await expectWithinViewport(page, page.getByTestId('effect-picker-modal'));
+    await expectWithinViewport(page, detail);
+    await expect(detail).toHaveAccessibleName(/円谷光彦.*詳細を表示/);
+    await expect(page.getByTestId('effect-pick-detail-opp-1')).toHaveAccessibleName(/吉田歩美.*詳細を表示/);
+    const detailNames = await page.locator('.effect-picker-detail').evaluateAll((buttons) =>
+      buttons.map((button) => button.getAttribute('aria-label')),
+    );
+    expect(new Set(detailNames).size).toBe(detailNames.length);
+    await assertDetailClickAndContextMenu(page, primary, detail);
     await expect(page.getByTestId('effect-picker-modal')).toBeVisible();
 
     await primary.click();
@@ -88,7 +107,7 @@ test.describe('real mounted card-choice details', () => {
       return w.__game.getState().gameState.players.self.hand.length === 1;
     });
     const state = await getGameState(page);
-    expect((state.players.self as { scene: { uid: string; setCards: unknown[] }[] }).scene.find((c) => c.uid === 'self-2')!.setCards).toHaveLength(1);
+    expect((state.players.self as { scene: { uid: string; setCards: unknown[] }[] }).scene.find((c) => c.uid === 'D08011#0')!.setCards).toHaveLength(1);
     expect((state.players.opp as { scene: { uid: string; setCards: unknown[] }[] }).scene.find((c) => c.uid === 'opp-1')!.setCards).toHaveLength(0);
     expectNoConsoleErrors(errors);
   });

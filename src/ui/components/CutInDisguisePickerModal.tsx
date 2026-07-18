@@ -74,7 +74,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
           <section className="cid-hand-preview" aria-label="手札一覧">
             <h3>手札（黄色枠のみ使用可能）</h3>
             <div className="cid-hand-list">
-              {handCards.map((card) => {
+              {handCards.map((card, index) => {
                 const actions = candidates.filter((candidate) =>
                   candidate.uid !== undefined
                     ? candidate.uid === card.uid
@@ -92,7 +92,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       className="cid-hand-expand"
                       onClick={() => expandModal.open(card.cardId)}
                       data-testid={`cid-hand-expand-${card.uid}`}
-                      aria-label={`${card.name}を拡大`}
+                      aria-label={`${card.name}（${index + 1}枚目）の詳細を表示`}
                     >
                       <CardArt cardId={card.cardId} alt={card.name} className="cid-hand-art" />
                       <span>{card.name}</span>
@@ -137,7 +137,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       type="button"
                       className="cid-cand-detail"
                       data-testid={`cid-cutin-detail-${occurrenceId}`}
-                      aria-label="View card details"
+                      aria-label={`${c.name}（${index + 1}枚目）の詳細を表示`}
                       onClick={() => expandModal.open(c.cardId)}
                     >
                       Details
@@ -176,7 +176,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       type="button"
                       className="cid-cand-detail"
                       data-testid={`cid-disg-detail-${occurrenceId}`}
-                      aria-label="View card details"
+                      aria-label={`${c.name}（${index + 1}枚目）の詳細を表示`}
                       onClick={() => expandModal.open(c.cardId)}
                     >
                       Details

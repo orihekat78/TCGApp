@@ -137,7 +137,7 @@ export function EffectPickerModal(): JSX.Element | null {
           </p>
         </div>
         <ul className="effect-picker-list">
-          {pending.candidates.map((c) => {
+          {pending.candidates.map((c, index) => {
             const name = candDisplayName(c);
             // 同名カード識別のためカード画像を表示 (Recognition over Recall)。
             // 裏向き証拠 ('(非公開)') は実画像を出さず placeholder にフォールバックさせる。
@@ -173,7 +173,7 @@ export function EffectPickerModal(): JSX.Element | null {
                     type="button"
                     className="effect-picker-detail"
                     data-testid={`effect-pick-detail-${c.uid}`}
-                    aria-label="View card details"
+                    aria-label={`${name}（${index + 1}枚目）の詳細を表示`}
                     onClick={() => expandModal.open(c.cardId)}
                   >
                     Details

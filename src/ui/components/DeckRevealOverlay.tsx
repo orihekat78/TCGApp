@@ -125,7 +125,7 @@ export function DeckRevealOverlay(): JSX.Element | null {
                     type="button"
                     className="deck-reveal-card-detail"
                     data-testid={`deck-reveal-detail-${idx}`}
-                    aria-label="View card details"
+                    aria-label={`${name}（${idx + 1}枚目）の詳細を表示`}
                     onClick={() => expandModal.open(cardId)}
                   >
                     Details

@@ -167,3 +167,41 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* A narrow viewport must keep both the public candidate and its detail action
+   inside the dialog. Desktop retains the denser 420px minimum above. */
+@media (max-width: 480px) {
+  .effect-picker-overlay {
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .effect-picker-modal {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    max-height: 100%;
+    overflow-y: auto;
+    padding: 16px 12px;
+  }
+
+  .effect-picker-cand-row {
+    grid-template-columns: minmax(0, 1fr) 48px;
+  }
+
+  .effect-picker-cand {
+    padding: 8px 10px;
+  }
+
+  .effect-picker-detail {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .cand-art {
+    width: 30px;
+    height: 42px;
+    margin-right: 6px;
+  }
+}

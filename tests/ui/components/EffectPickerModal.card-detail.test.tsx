@@ -52,6 +52,8 @@ describe('EffectPickerModal card details', () => {
     const detail = container.querySelector<HTMLButtonElement>('[data-testid="effect-pick-detail-evidence:self:0"]')!;
     expect(select.querySelector('img')).not.toBeNull();
     expect(detail).toBeInstanceOf(HTMLButtonElement);
+    expect(detail.getAttribute('aria-label')).toContain(select.querySelector('.cand-name')!.textContent!);
+    expect(detail.getAttribute('aria-label')).toContain('詳細を表示');
     expect(select.parentElement).toBe(detail.parentElement);
     act(() => detail.click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();

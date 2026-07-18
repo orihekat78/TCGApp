@@ -37,6 +37,8 @@ describe('DeckRevealOverlay card details', () => {
     const detail = container.querySelector<HTMLButtonElement>('[data-testid="deck-reveal-detail-0"]')!;
     expect(card.querySelector('img')).not.toBeNull();
     expect(detail).toBeInstanceOf(HTMLButtonElement);
+    expect(detail.getAttribute('aria-label')).toContain(card.querySelector('.deck-reveal-card-name')!.textContent!);
+    expect(detail.getAttribute('aria-label')).toContain('詳細を表示');
     act(() => detail.click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
     expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).not.toBeNull();
@@ -55,6 +57,6 @@ describe('DeckRevealOverlay card details', () => {
 
   it('keeps the reveal detail control at the mobile touch target minimum', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/ui/components/DeckRevealOverlay.css'), 'utf8');
-    expect(css).toMatch(/\.deck-reveal-card-detail\s*\{[\s\S]*min-width:\s*44px;[\s\S]*min-height:\s*44px;/);
+    expect(css).toMatch(/\.deck-reveal-card-detail\s*\{[\s\S]*min-width:\s*48px;[\s\S]*min-height:\s*48px;/);
   });
 });

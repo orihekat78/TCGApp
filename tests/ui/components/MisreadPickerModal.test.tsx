@@ -106,6 +106,7 @@ describe('MisreadPickerModal', () => {
     const detail = container.querySelector<HTMLButtonElement>('[data-testid="misread-detail-m1"]')!;
     expect(container.querySelector('[data-testid="misread-card-m1"] img')).not.toBeNull();
     expect(detail).toBeInstanceOf(HTMLButtonElement);
+    expect(detail.getAttribute('aria-label')).toBe('Public card（1枚目）の詳細を表示');
     act(() => detail.click());
     expect(checkbox.checked).toBe(false);
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();

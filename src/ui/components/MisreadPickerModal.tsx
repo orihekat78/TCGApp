@@ -82,7 +82,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
             <p className="misread-picker-empty">候補がありません</p>
           ) : (
             <ul className="misread-picker-list">
-              {candidates.map((c) => (
+              {candidates.map((c, index) => (
                 <li key={c.uid}>
                   <label
                     className="misread-picker-row"
@@ -107,7 +107,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
                       type="button"
                       className="misread-detail"
                       data-testid={`misread-detail-${c.uid}`}
-                      aria-label="View card details"
+                      aria-label={`${c.cardName}（${index + 1}枚目）の詳細を表示`}
                       onClick={() => expandModal.open(c.cardId!)}
                     >
                       Details

@@ -115,6 +115,7 @@ describe('CutInDisguisePickerModal', () => {
     expect(container.querySelector('[data-testid="cid-hand-card-CUT#0"]')?.classList).toContain('is-eligible');
     expect(container.querySelector('[data-testid="cid-hand-card-DIS#1"]')?.classList).toContain('is-eligible');
     expect(container.querySelector('[data-testid="cid-hand-card-NO#2"]')?.classList).not.toContain('is-eligible');
+    expect(container.querySelector('[data-testid="cid-hand-expand-NO#2"]')?.getAttribute('aria-label')).toBe('Not eligible（3枚目）の詳細を表示');
 
     act(() => {
       (container.querySelector('[data-testid="cid-hand-expand-NO#2"]') as HTMLButtonElement).click();
@@ -171,6 +172,8 @@ describe('CutInDisguisePickerModal', () => {
     );
     expect(html).toContain('data-testid="cid-cutin-SAME#0"');
     expect(html).toContain('data-testid="cid-cutin-SAME#1"');
+    expect(html).toContain('aria-label="Same（1枚目）の詳細を表示"');
+    expect(html).toContain('aria-label="Same（2枚目）の詳細を表示"');
     expect(html).not.toContain('data-testid="cid-cutin-SAME"');
   });
   it('renders public action candidates with independent details and preserves the action payload', () => {
@@ -193,6 +196,7 @@ describe('CutInDisguisePickerModal', () => {
     const detail = container.querySelector<HTMLButtonElement>('[data-testid="cid-cutin-detail-D08015#0"]')!;
     expect(select.querySelector('img')).not.toBeNull();
     expect(detail).toBeInstanceOf(HTMLButtonElement);
+    expect(detail.getAttribute('aria-label')).toBe('Public card（1枚目）の詳細を表示');
     act(() => detail.click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
     const contextEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
@@ -206,6 +210,6 @@ describe('CutInDisguisePickerModal', () => {
   });
   it('keeps public candidate details at the mobile touch target minimum', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/ui/components/CutInDisguisePickerModal.css'), 'utf8');
-    expect(css).toMatch(/\.cid-cand-detail\s*\{[\s\S]*min-width:\s*44px;[\s\S]*min-height:\s*44px;/);
+    expect(css).toMatch(/\.cid-cand-detail\s*\{[\s\S]*min-width:\s*48px;[\s\S]*min-height:\s*48px;/);
   });
 });
