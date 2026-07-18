@@ -80,6 +80,8 @@ test.describe('BUG-136 — deckToBottomBound 順序選択 modal (実機)', () =>
 
     await expect(page.locator('[data-testid="deck-reorder-modal"]')).toBeVisible();
     // row0 (D08003) を row2 (D08013) 位置へ drag → [D08007, D08013, D08003]
+    test.skip(test.info().project.use.isMobile === true,
+      'HTML5 drag is a desktop-only enhancement; the mobile landscape path is covered by the 44px arrow controls below.');
     await page.locator('[data-testid="deck-reorder-row-0"]').dragTo(page.locator('[data-testid="deck-reorder-row-2"]'));
     await page.locator('[data-testid="deck-reorder-confirm-btn"]').click();
 

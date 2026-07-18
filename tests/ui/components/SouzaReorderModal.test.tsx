@@ -14,6 +14,8 @@ import { SouzaReorderModal } from '@/ui/components/SouzaReorderModal';
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const CSS_SOURCE = readFileSync(resolve(process.cwd(), 'src/ui/components/SouzaReorderModal.css'), 'utf8');
+const DECK_REORDER_SOURCE = readFileSync(resolve(process.cwd(), 'src/ui/components/DeckReorderModalHost.tsx'), 'utf8');
+const DECK_PLACE_SOURCE = readFileSync(resolve(process.cwd(), 'src/ui/components/DeckPlaceModalHost.tsx'), 'utf8');
 
 describe('SouzaReorderModal', () => {
   it('open=false → 何も描画しない', () => {
@@ -117,5 +119,12 @@ describe('SouzaReorderModal', () => {
     expect(CSS_SOURCE).toMatch(
       /\.souza-btn\s*\{[\s\S]*min-inline-size:\s*44px;[\s\S]*min-block-size:\s*44px;/,
     );
+  });
+
+  it('shares a viewport-bounded, internally scrolling shell with both deck decision hosts', () => {
+    expect(CSS_SOURCE).toMatch(/\.souza-modal\s*\{[\s\S]*max-height:\s*calc\(100vh - 16px\);[\s\S]*max-block-size:\s*calc\(100dvh - 16px\);[\s\S]*display:\s*flex;/);
+    expect(CSS_SOURCE).toMatch(/\.souza-body\s*\{[\s\S]*flex:\s*1 1 auto;[\s\S]*min-block-size:\s*0;[\s\S]*overflow-y:\s*auto;/);
+    expect(DECK_REORDER_SOURCE).toContain("import './SouzaReorderModal.css';");
+    expect(DECK_PLACE_SOURCE).toContain("import './SouzaReorderModal.css';");
   });
 });

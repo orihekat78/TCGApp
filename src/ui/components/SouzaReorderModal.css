@@ -23,6 +23,12 @@
   width: min(560px, calc(100vw - 24px));
   min-width: 0;
   max-width: 560px;
+  /* BUG-239: three decision hosts share this shell. Keep the shell itself in
+   * the landscape viewport; only the card list may scroll. */
+  max-height: calc(100vh - 16px);
+  max-block-size: calc(100dvh - 16px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 8px 32px rgba(41, 128, 185, 0.4);
 }
 
@@ -39,8 +45,10 @@
   padding: 12px;
   background: rgba(41, 128, 185, 0.08);
   border-radius: 6px;
-  max-height: 280px;
+  flex: 1 1 auto;
+  min-block-size: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .souza-empty { margin: 0; font-size: 13px; color: #888; }
@@ -86,6 +94,7 @@
 
 .souza-actions {
   display: flex;
+  flex: 0 0 auto;
   gap: 12px;
   justify-content: flex-end;
   margin-top: 16px;
