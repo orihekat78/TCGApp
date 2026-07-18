@@ -4,6 +4,8 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   CutInDisguisePickerModal,
   type CutInDisguiseCandidate,
@@ -170,5 +172,40 @@ describe('CutInDisguisePickerModal', () => {
     expect(html).toContain('data-testid="cid-cutin-SAME#0"');
     expect(html).toContain('data-testid="cid-cutin-SAME#1"');
     expect(html).not.toContain('data-testid="cid-cutin-SAME"');
+  });
+  it('renders public action candidates with independent details and preserves the action payload', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const onPickCutIn = vi.fn();
+    act(() => root.render(
+      <CutInDisguisePickerModal
+        open
+        actorLabel="1逡ｪ逶ｮ"
+        candidates={[{ uid: 'D08015#0', cardId: 'D08015', name: 'Public card', kind: 'cutin' }]}
+        onPickCutIn={onPickCutIn}
+        onPickDisguise={vi.fn()}
+        onPass={vi.fn()}
+      />,
+    ));
+
+    const select = container.querySelector<HTMLButtonElement>('[data-testid="cid-cutin-D08015#0"]')!;
+    const detail = container.querySelector<HTMLButtonElement>('[data-testid="cid-cutin-detail-D08015#0"]')!;
+    expect(select.querySelector('img')).not.toBeNull();
+    expect(detail).toBeInstanceOf(HTMLButtonElement);
+    act(() => detail.click());
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+    const contextEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    act(() => select.dispatchEvent(contextEvent));
+    expect(contextEvent.defaultPrevented).toBe(true);
+    act(() => select.click());
+    expect(onPickCutIn).toHaveBeenCalledWith('D08015');
+
+    act(() => root.unmount());
+    container.remove();
+  });
+  it('keeps public candidate details at the mobile touch target minimum', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/ui/components/CutInDisguisePickerModal.css'), 'utf8');
+    expect(css).toMatch(/\.cid-cand-detail\s*\{[\s\S]*min-width:\s*44px;[\s\S]*min-height:\s*44px;/);
   });
 });

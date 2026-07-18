@@ -7,6 +7,8 @@ import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { MisreadPickerModal } from '@/ui/components/MisreadPickerModal';
 
 describe('MisreadPickerModal', () => {
@@ -83,5 +85,41 @@ describe('MisreadPickerModal', () => {
     expect(checkbox().checked).toBe(false);
 
     act(() => root.unmount());
+  });
+  it('renders public candidate art and a sibling detail control without changing checkbox selection', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => root.render(
+      <MisreadPickerModal
+        open
+        decisionKey="detail"
+        reasoningName="Reasoner"
+        reasoningLp={5000}
+        candidates={[{ uid: 'm1', cardId: 'D08015', cardName: 'Public card', x: 1000 }]}
+        onConfirm={() => {}}
+        onSkip={() => {}}
+      />,
+    ));
+
+    const checkbox = container.querySelector<HTMLInputElement>('[data-testid="misread-cand-m1"]')!;
+    const detail = container.querySelector<HTMLButtonElement>('[data-testid="misread-detail-m1"]')!;
+    expect(container.querySelector('[data-testid="misread-card-m1"] img')).not.toBeNull();
+    expect(detail).toBeInstanceOf(HTMLButtonElement);
+    act(() => detail.click());
+    expect(checkbox.checked).toBe(false);
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+
+    const contextEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    act(() => container.querySelector('[data-testid="misread-card-m1"]')!.dispatchEvent(contextEvent));
+    expect(contextEvent.defaultPrevented).toBe(true);
+    expect(checkbox.checked).toBe(false);
+
+    act(() => root.unmount());
+    container.remove();
+  });
+  it('keeps public details at the mobile touch target minimum', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/ui/components/MisreadPickerModal.css'), 'utf8');
+    expect(css).toMatch(/\.misread-detail\s*\{[\s\S]*min-width:\s*44px;[\s\S]*min-height:\s*44px;/);
   });
 });

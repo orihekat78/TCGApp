@@ -54,15 +54,45 @@
   padding: 0;
 }
 
+.misread-picker-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 8px;
+  align-items: center;
+}
+
 .misread-picker-row {
   display: grid;
-  grid-template-columns: 24px 1fr auto;
+  grid-template-columns: 24px 32px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   padding: 6px;
+  min-height: 44px;
   cursor: pointer;
   border-radius: 4px;
 }
+
+.misread-card-art {
+  width: 32px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.misread-detail {
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: 8px;
+  border: 1px solid #9b59b6;
+  border-radius: 4px;
+  background: #fff;
+  color: #6c2caa;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.misread-detail:hover,
+.misread-detail:focus-visible { background: #f5e6ff; }
 
 .misread-picker-row:hover { background: rgba(155, 89, 182, 0.12); }
 

@@ -14,7 +14,9 @@ import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardArt } from './CardArt.js';
+import { CardExpandModal } from './CardExpandModal.js';
 import './DeckRevealOverlay.css';
 
 type Phase = 'reveal' | 'toBottom' | 'shuffle';
@@ -22,6 +24,7 @@ type Phase = 'reveal' | 'toBottom' | 'shuffle';
 export function DeckRevealOverlay(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckReveal);
   const setPending = useGameStateStore((s) => s.setPendingDeckReveal);
+  const expandModal = useCardExpandModal();
   // S2 B01022 (2026-07-10): deck-window pick (sceneEnter query.area='deck') の未解決中も hold。
   // chooseMatch (awaitingPick) と違い pendingDeckReveal 自体は完了形で set されるため、
   // pendingEffectPick 側を見て「公開カードから選択中」の間は自動進行を止める。
@@ -90,6 +93,7 @@ export function DeckRevealOverlay(): JSX.Element | null {
       : 'デッキをシャッフル中…';
 
   return (
+    <>
     <div className="deck-reveal-overlay" role="status" data-testid="deck-reveal-overlay">
       <div className="deck-reveal-box">
         <div className="deck-reveal-header" data-testid="deck-reveal-header">
@@ -108,11 +112,24 @@ export function DeckRevealOverlay(): JSX.Element | null {
                   className={`deck-reveal-card ${isMatched ? 'is-matched' : 'is-rest'}`}
                   style={{ ['--reveal-index' as string]: String(idx) }}
                   data-testid={`deck-reveal-card-${idx}`}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    expandModal.open(cardId);
+                  }}
                 >
                   <span className="deck-reveal-card-num">{idx + 1}</span>
                   <CardArt cardId={cardId} alt={name} className="deck-reveal-card-art" />
                   <span className="deck-reveal-card-name">{name}</span>
                   {isMatched && <span className="deck-reveal-match-badge">登場!</span>}
+                  <button
+                    type="button"
+                    className="deck-reveal-card-detail"
+                    data-testid={`deck-reveal-detail-${idx}`}
+                    aria-label="View card details"
+                    onClick={() => expandModal.open(cardId)}
+                  >
+                    Details
+                  </button>
                 </div>
               );
             })}
@@ -127,5 +144,7 @@ export function DeckRevealOverlay(): JSX.Element | null {
         )}
       </div>
     </div>
+    <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+    </>
   );
 }

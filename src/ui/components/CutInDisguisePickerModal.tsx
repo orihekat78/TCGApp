@@ -124,9 +124,23 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       type="button"
                       className="cid-cand cid-cand-cutin"
                       onClick={() => onPickCutIn(c.cardId)}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        expandModal.open(c.cardId);
+                      }}
                       data-testid={`cid-cutin-${occurrenceId}`}
                     >
+                      <CardArt cardId={c.cardId} alt={c.name} className="cid-cand-art" />
                       {c.name}
+                    </button>
+                    <button
+                      type="button"
+                      className="cid-cand-detail"
+                      data-testid={`cid-cutin-detail-${occurrenceId}`}
+                      aria-label="View card details"
+                      onClick={() => expandModal.open(c.cardId)}
+                    >
+                      Details
                     </button>
                   </li>
                   );
@@ -149,9 +163,23 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       type="button"
                       className="cid-cand cid-cand-disg"
                       onClick={() => onPickDisguise(c.cardId)}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        expandModal.open(c.cardId);
+                      }}
                       data-testid={`cid-disg-${occurrenceId}`}
                     >
+                      <CardArt cardId={c.cardId} alt={c.name} className="cid-cand-art" />
                       {c.name}
+                    </button>
+                    <button
+                      type="button"
+                      className="cid-cand-detail"
+                      data-testid={`cid-disg-detail-${occurrenceId}`}
+                      aria-label="View card details"
+                      onClick={() => expandModal.open(c.cardId)}
+                    >
+                      Details
                     </button>
                   </li>
                   );

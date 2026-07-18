@@ -143,6 +143,12 @@
   gap: 4px;
 }
 
+.cid-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 4px;
+}
+
 .cid-cand {
   width: 100%;
   text-align: left;
@@ -152,7 +158,30 @@
   color: #e0ecf8;
   cursor: pointer;
   transition: filter 0.1s, transform 0.1s;
+  min-height: 44px;
 }
+
+.cid-cand-art {
+  width: 28px;
+  height: 40px;
+  margin-right: 7px;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+.cid-cand-detail {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(140, 180, 220, 0.55);
+  border-radius: 5px;
+  background: rgba(10, 20, 35, 0.8);
+  color: #e0ecf8;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.cid-cand-detail:hover,
+.cid-cand-detail:focus-visible { filter: brightness(1.2); }
 .cid-cand-cutin {
   background: rgba(255, 120, 60, 0.18);
   border: 1px solid color-mix(in oklch, #ff7a3c 50%, transparent);
