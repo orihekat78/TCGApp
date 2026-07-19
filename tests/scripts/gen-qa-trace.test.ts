@@ -105,8 +105,8 @@ describe('gen-qa-trace', () => {
     expect(report).toContain('- all-compliant: false');
   });
 
-  it('keeps semantic adjudication result independent from trace-comment coverage status', () => {
-    const trace = buildQaTrace({
+  it('rejects a legacy coverage override that conflicts with a reviewed shard adjudication', () => {
+    expect(() => buildQaTrace({
       snapshot: snapshot([item(QA_A)]),
       files: [],
       shippedCardIds: new Set(),
@@ -114,10 +114,23 @@ describe('gen-qa-trace', () => {
       coverageOverrides: new Map([[QA_A, { qaId: QA_A, status: 'unmapped', reason: 'tracked elsewhere' }]]),
       adjudicationStatuses: new Map([[QA_A, 'matched']]),
       adjudicationResults: new Map([[QA_A, 'aligned']]),
-    });
+    })).toThrow(/override.*adjudication|conflict/i);
+  });
 
-    expect(trace.items[0]).toMatchObject({ coverageStatus: 'unmapped', adjudicationResult: 'aligned' });
-    expect(trace.coverage).toMatchObject({ allCompliant: false, allAdjudicated: true });
+  it('binds reviewed shard evidence into trace refs without qa comments and never treats missing refs compliant', () => {
+    const verified = buildQaTrace({
+      snapshot: snapshot([item(QA_A)]), files: [], shippedCardIds: new Set(), deferredCardIds: new Set(),
+      adjudicationStatuses: new Map([[QA_A, 'matched']]), adjudicationResults: new Map([[QA_A, 'aligned']]),
+      adjudicationEvidence: new Map([[QA_A, ['src:src/cards/a.ts:4', 'tests:tests/cards/a.test.ts:8']]]),
+    });
+    expect(verified.items[0]).toMatchObject({ sourceRefs: ['src/cards/a.ts:4'], testRefs: ['tests/cards/a.test.ts:8'] });
+    expect(verified.coverage.allCompliant).toBe(true);
+
+    const missing = buildQaTrace({
+      snapshot: snapshot([item(QA_A)]), files: [], shippedCardIds: new Set(), deferredCardIds: new Set(),
+      adjudicationStatuses: new Map([[QA_A, 'matched']]), adjudicationResults: new Map([[QA_A, 'aligned']]),
+    });
+    expect(missing.coverage.allCompliant).toBe(false);
   });
 
   it('reports a dangling annotation when its card has no snapshot entry', () => {

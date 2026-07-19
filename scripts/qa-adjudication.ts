@@ -1,10 +1,13 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import type { QaSnapshot } from './gen-docs/gen-qa-trace.js';
 
 const ROOT = process.cwd();
+const require = createRequire(import.meta.url);
+const SOURCE_CORPUS_CACHE = new Map<string, string>();
 const HASH = /^[a-f0-9]{64}$/;
 const QA_ID = /^card:[^:\s]+:[a-f0-9]{64}$/;
 const SHARDS = '0123456789abcdef'.split('');
@@ -14,8 +17,17 @@ export const ADJUDICATION_RESULTS = ['unreviewed', 'aligned', 'implementation-ga
 export type QaAdjudicationResult = (typeof ADJUDICATION_RESULTS)[number];
 export const ADJUDICATION_METHODS = ['unreviewed', 'manual-semantic', 'group-equivalent', 'trace-audit'] as const;
 export type QaAdjudicationMethod = (typeof ADJUDICATION_METHODS)[number];
+const COMPATIBLE_STATUS: Readonly<Record<QaAdjudicationResult, ReadonlySet<QaAdjudicationStatus>>> = {
+  unreviewed: new Set(['legacy-unreviewed']),
+  aligned: new Set(['matched']),
+  'test-gap': new Set(['test-missing']),
+  'implementation-gap': new Set(['mismatch', 'unmapped']),
+  'deferred-card': new Set(['deferred']),
+  'rule-conflict': new Set(['manual-only']),
+  'needs-manual': new Set(['manual-only']),
+};
 
-export type QaAdjudicationItem = { qaId: string; status: QaAdjudicationStatus; result: QaAdjudicationResult; method: QaAdjudicationMethod; evidence: string[]; noteCodes?: string[] };
+export type QaAdjudicationItem = { qaId: string; answerHash: string; status: QaAdjudicationStatus; result: QaAdjudicationResult; method: QaAdjudicationMethod; evidence: string[]; noteCodes?: string[] };
 export type QaAdjudicationShard = { schemaVersion: 1; shard: string; items: QaAdjudicationItem[] };
 export type QaRawPackage = { file: string; sha256: string; cardNumHash: string; cardNumCount: number };
 export type QaAdjudicationManifest = {
@@ -144,8 +156,9 @@ export function validateQaAdjudicationShard(value: unknown): asserts value is Qa
   for (const candidate of shard.items) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('invalid Q&A adjudication item');
     const item = candidate as Record<string, unknown>;
-    assertExactKeys(item, ['qaId', 'status', 'result', 'method', 'evidence', 'noteCodes'], 'Q&A adjudication item');
+    assertExactKeys(item, ['qaId', 'answerHash', 'status', 'result', 'method', 'evidence', 'noteCodes'], 'Q&A adjudication item');
     if (typeof item.qaId !== 'string' || !QA_ID.test(item.qaId) || qaShard(item.qaId) !== shard.shard) throw new Error(`invalid adjudication shard membership: ${String(item.qaId)}`);
+    assertHash(item.answerHash, `adjudication answerHash: ${item.qaId}`);
     assertStatus(item.status, item.qaId);
     assertResult(item.result, item.qaId);
     assertMethod(item.method, item.qaId);
@@ -159,7 +172,7 @@ export function validateQaAdjudicationShard(value: unknown): asserts value is Qa
     } else if (item.method === 'unreviewed' || evidence.length === 0) {
       throw new Error(`reviewed adjudication requires controlled method and evidence: ${item.qaId}`);
     }
-    if (item.status !== 'legacy-unreviewed' && item.result === 'unreviewed') throw new Error(`reviewed coverage requires adjudication result: ${item.qaId}`);
+    if (!COMPATIBLE_STATUS[item.result].has(item.status)) throw new Error(`incompatible adjudication status/result: ${item.qaId}`);
     if (ids.has(item.qaId)) throw new Error(`duplicate adjudication qaId: ${item.qaId}`);
     ids.add(item.qaId);
     if (previous && compareOrdinal(previous, item.qaId) >= 0) throw new Error(`non-canonical adjudication order: ${item.qaId}`);
@@ -167,10 +180,85 @@ export function validateQaAdjudicationShard(value: unknown): asserts value is Qa
   }
 }
 
+function assertEvidencePath(root: string, category: 'rules' | 'src' | 'tests', path: string, line: string): { content: string; path: string } {
+  if (!/^[1-9]\d*$/.test(line) || path.includes('..') || path.includes('\\')) throw new Error(`invalid adjudication evidence path: ${category}:${path}:${line}`);
+  const allowed = category === 'rules'
+    ? /^\.claude\/rules\/[^/]+\.md$/.test(path)
+    : category === 'src'
+      ? /^src\/(?:[^/]+\/)*[^/]+\.tsx?$/.test(path)
+      : /^tests\/(?:[^/]+\/)*[^/]+\.tsx?$/.test(path);
+  if (!allowed) throw new Error(`invalid adjudication evidence category path: ${category}:${path}`);
+  const target = resolve(root, path);
+  if (relative(root, target).startsWith('..') || !existsSync(target)) throw new Error(`missing adjudication evidence target: ${category}:${path}`);
+  const lines = readFileSync(target, 'utf8').replace(/\r\n?/g, '\n').split('\n');
+  const cited = lines[Number(line) - 1] ?? '';
+  if (!cited.trim()) throw new Error(`blank adjudication evidence line: ${category}:${path}:${line}`);
+  if (category === 'tests' && !/\b(?:expect\s*\(|assert(?:\s*\(|\.))/.test(cited)) throw new Error(`test evidence must contain assertion: ${path}:${line}`);
+  return { content: lines.slice(Math.max(0, Number(line) - 13), Number(line) + 12).join('\n'), path };
+}
+
+function sourceMentionsCard(root: string, item: QaSnapshot['items'][number]): boolean {
+  const corpus = SOURCE_CORPUS_CACHE.get(root) ?? (() => {
+    const visit = (dir: string): string[] => !existsSync(dir) ? [] : readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = resolve(dir, entry.name);
+    if (entry.isDirectory()) return visit(path);
+    return entry.isFile() && /\.tsx?$/.test(entry.name) ? [path, readFileSync(path, 'utf8')].join('\n') : [];
+  });
+    const value = visit(resolve(root, 'src')).join('\n');
+    SOURCE_CORPUS_CACHE.set(root, value);
+    return value;
+  })();
+  return [item.cardId, ...item.cardNums].some((value) => containsIdentifier(corpus, value));
+}
+
+function containsIdentifier(text: string, value: string): boolean {
+  return new RegExp(`(?<![A-Za-z0-9])${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9])`).test(text);
+}
+
+function deferredIndexMentions(root: string, cardId: string): boolean {
+  const index = resolve(root, '.claude/specs/DEFERRED-INDEX.md');
+  return existsSync(index) && containsIdentifier(readFileSync(index, 'utf8'), cardId);
+}
+
+function validateReviewedEvidence(root: string, item: QaAdjudicationItem, snapshotItem: QaSnapshot['items'][number], snapshot: QaSnapshot): void {
+  if (item.result === 'unreviewed') return;
+  const resolved = item.evidence.map((reference) => {
+    const match = reference.match(/^(rules|src|tests):(.+):(\d+)$/);
+    if (match?.[1] && match[2] && match[3]) return assertEvidencePath(root, match[1] as 'rules' | 'src' | 'tests', match[2], match[3]);
+    const deferred = reference.match(/^deferred:([^:\s]+)$/);
+    if (!deferred?.[1] || deferred[1] !== snapshotItem.cardId) throw new Error(`invalid adjudication evidence reference: ${reference}`);
+    const index = resolve(root, '.claude/specs/DEFERRED-INDEX.md');
+    if (!existsSync(index) || !deferredIndexMentions(root, deferred[1])) throw new Error(`missing deferred adjudication evidence: ${deferred[1]}`);
+    return { content: deferred[1], path: 'deferred' };
+  });
+  const has = (category: 'rules' | 'src' | 'tests' | 'deferred') => item.evidence.some((reference) => reference.startsWith(`${category}:`));
+  if (item.result === 'aligned' && (!has('src') || !has('tests'))) throw new Error(`aligned adjudication requires src and assertion-test evidence: ${item.qaId}`);
+  if (item.result === 'test-gap' && (!has('src') || has('tests'))) throw new Error(`test-gap adjudication requires src evidence and no test evidence: ${item.qaId}`);
+  if (item.result === 'implementation-gap' && item.status !== 'unmapped' && !has('src')) throw new Error(`implementation-gap adjudication requires src evidence: ${item.qaId}`);
+  if (item.result === 'deferred-card' && (item.evidence.length !== 1 || item.evidence[0] !== `deferred:${snapshotItem.cardId}`)) throw new Error(`deferred-card adjudication requires exactly matching deferred evidence: ${item.qaId}`);
+  if ((item.result === 'rule-conflict' || item.result === 'needs-manual') && !has('rules')) throw new Error(`rule adjudication requires rules evidence: ${item.qaId}`);
+  const context = [snapshotItem.cardId, ...snapshotItem.cardNums];
+  const boundTo = (reference: { content: string; path: string }, values: readonly string[]) => values.some((value) => containsIdentifier(reference.path, value) || containsIdentifier(reference.content, value));
+  const sourceBound = resolved.some((reference) => reference.path.startsWith('src/') && boundTo(reference, context));
+  const testBound = resolved.some((reference) => reference.path.startsWith('tests/') && boundTo(reference, context));
+  const unmapped = item.result === 'implementation-gap' && item.status === 'unmapped';
+  if (unmapped) {
+    if (has('src') || has('tests') || !has('rules') || !item.noteCodes?.includes('UNIMPLEMENTED-CARD') || sourceMentionsCard(root, snapshotItem) || deferredIndexMentions(root, snapshotItem.cardId)) throw new Error(`unmapped implementation-gap requires absent non-deferred card and UNIMPLEMENTED-CARD evidence: ${item.qaId}`);
+  } else if (item.method === 'manual-semantic' && item.result !== 'deferred-card' && !sourceBound) {
+    throw new Error(`manual-semantic requires card-bound source evidence: ${item.qaId}`);
+  }
+  if (item.result === 'aligned' && item.method !== 'group-equivalent' && !testBound) throw new Error(`aligned adjudication requires card-bound assertion test evidence: ${item.qaId}`);
+  if (item.method !== 'group-equivalent') return;
+  const equivalent = snapshot.items.filter((candidate) => candidate.sectionHash === snapshotItem.sectionHash && candidate.questionHash === snapshotItem.questionHash && candidate.answerHash === snapshotItem.answerHash);
+  if (equivalent.length < 2) throw new Error(`group-equivalent requires multiple Q&A items: ${item.qaId}`);
+  const groupIds = equivalent.flatMap((candidate) => [candidate.cardId, ...candidate.cardNums]);
+  if (item.result === 'aligned' && !resolved.some((reference) => reference.path.startsWith('tests/') && boundTo(reference, groupIds))) throw new Error(`group-equivalent aligned requires member-bound assertion test evidence: ${item.qaId}`);
+  if (!sourceBound && !resolved.some((reference) => reference.path === 'deferred')) throw new Error(`group-equivalent requires card-context evidence: ${item.qaId}`);
+}
+
 export function buildQaAdjudication(input: { snapshot: QaSnapshot; rawPackages: QaRawPackage[] }): { manifest: QaAdjudicationManifest; shards: QaAdjudicationShard[] } {
   validateSnapshot(input.snapshot);
   validateRawPackages(input.rawPackages);
-  const qaIds = input.snapshot.items.map((item) => item.qaId).sort(compareOrdinal);
   return {
     manifest: {
       schemaVersion: 1,
@@ -180,7 +268,7 @@ export function buildQaAdjudication(input: { snapshot: QaSnapshot; rawPackages: 
     shards: SHARDS.map((shard) => ({
       schemaVersion: 1,
       shard,
-      items: qaIds.filter((qaId) => qaShard(qaId) === shard).map((qaId) => ({ qaId, status: 'legacy-unreviewed', result: 'unreviewed', method: 'unreviewed', evidence: [] })),
+      items: input.snapshot.items.filter((item) => qaShard(item.qaId) === shard).sort((a, b) => compareOrdinal(a.qaId, b.qaId)).map((item) => ({ qaId: item.qaId, answerHash: item.answerHash, status: 'legacy-unreviewed', result: 'unreviewed', method: 'unreviewed', evidence: [] })),
     })),
   };
 }
@@ -218,7 +306,14 @@ function validateLocalRaw(root: string, expected: readonly QaRawPackage[]): void
   if (actual.size !== expected.length) throw new Error('local raw package set drift');
 }
 
-export function mergeQaAdjudication(options: { root?: string; check?: boolean; requireReviewed?: boolean; withLocalRaw?: boolean } = {}): { manifest: QaAdjudicationManifest; statuses: Record<string, QaAdjudicationStatus>; results: Record<string, QaAdjudicationResult>; allAdjudicated: boolean } {
+/** Rebuild the hash-only snapshot from ignored raw data so package hashes cannot be spliced from another corpus. */
+function validateLocalRawSnapshot(root: string, snapshot: QaSnapshot): void {
+  const { buildQaHashSnapshot } = require('./cards/write-qa-hash-snapshot.cjs') as { buildQaHashSnapshot: (projectRoot: string) => QaSnapshot };
+  const rebuilt = buildQaHashSnapshot(root);
+  if (JSON.stringify(rebuilt) !== JSON.stringify(snapshot)) throw new Error('local raw Q&A snapshot drift');
+}
+
+export function mergeQaAdjudication(options: { root?: string; check?: boolean; requireReviewed?: boolean; withLocalRaw?: boolean } = {}): { manifest: QaAdjudicationManifest; statuses: Record<string, QaAdjudicationStatus>; results: Record<string, QaAdjudicationResult>; methods: Record<string, QaAdjudicationMethod>; evidence: Record<string, string[]>; allAdjudicated: boolean } {
   const root = resolve(options.root ?? ROOT);
   const snapshot = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
   validateSnapshot(snapshot);
@@ -234,17 +329,29 @@ export function mergeQaAdjudication(options: { root?: string; check?: boolean; r
   const expectedIds = snapshot.items.map((item) => item.qaId).sort(compareOrdinal);
   const actualIds = items.map((item) => item.qaId).sort(compareOrdinal);
   if (actualIds.length !== expectedIds.length || actualIds.some((qaId, index) => qaId !== expectedIds[index])) throw new Error('adjudication shard union does not match tracked snapshot exactly once');
+  const snapshotById = new Map(snapshot.items.map((item) => [item.qaId, item]));
+  for (const item of items) {
+    const snapshotItem = snapshotById.get(item.qaId)!;
+    if (item.answerHash !== snapshotItem.answerHash) throw new Error(`adjudication answer hash drift: ${item.qaId}`);
+    validateReviewedEvidence(root, item, snapshotItem, snapshot);
+  }
   const expectedSnapshot = snapshotHashes(snapshot);
   if (JSON.stringify(manifest.snapshot) !== JSON.stringify(expectedSnapshot)) throw new Error('adjudication manifest aggregate snapshot hash drift');
-  if (options.withLocalRaw) validateLocalRaw(root, manifest.rawPackages);
+  if (options.withLocalRaw) {
+    validateLocalRaw(root, manifest.rawPackages);
+    validateLocalRawSnapshot(root, snapshot);
+  }
   const statuses = Object.fromEntries(items.map((item) => [item.qaId, item.status]));
   const results = Object.fromEntries(items.map((item) => [item.qaId, item.result]));
+  const methods = Object.fromEntries(items.map((item) => [item.qaId, item.method]));
+  const evidence = Object.fromEntries(items.map((item) => [item.qaId, item.evidence]));
   const allAdjudicated = items.every((item) => item.result !== 'unreviewed' && item.result !== 'needs-manual');
-  if (options.requireReviewed && (!allAdjudicated || items.some((item) => item.status === 'legacy-unreviewed'))) throw new Error('unreviewed, needs-manual, or legacy-unreviewed adjudications remain; --require-reviewed failed');
-  return { manifest, statuses, results, allAdjudicated };
+  if (options.requireReviewed && (!allAdjudicated || items.some((item) => item.status === 'legacy-unreviewed' || (item.method !== 'manual-semantic' && item.method !== 'group-equivalent')))) throw new Error('unreviewed, needs-manual, trace-audit, or legacy-unreviewed adjudications remain; --require-reviewed failed');
+  return { manifest, statuses, results, methods, evidence, allAdjudicated };
 }
 
-function writeBootstrap(root: string): void {
+export function writeQaAdjudicationBootstrap(root: string, force = false): void {
+  if (existsSync(pathAt(root, 'manifest.json')) && !force) throw new Error('adjudication shards already exist; use --force only for initial/reset bootstrap');
   const snapshot = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
   validateSnapshot(snapshot);
   const built = buildQaAdjudication({ snapshot, rawPackages: rawPackageMetadata(root) });
@@ -256,7 +363,7 @@ function writeBootstrap(root: string): void {
 function main(): void {
   try {
     const bootstrap = process.argv.includes('--bootstrap');
-    if (bootstrap) writeBootstrap(ROOT);
+    if (bootstrap) writeQaAdjudicationBootstrap(ROOT, process.argv.includes('--force'));
     const result = mergeQaAdjudication({ root: ROOT, check: process.argv.includes('--check'), requireReviewed: process.argv.includes('--require-reviewed'), withLocalRaw: process.argv.includes('--with-local-raw') });
     process.stdout.write(`[qa:adjudication] items=${Object.keys(result.statuses).length} all-adjudicated=${result.allAdjudicated}\n`);
   } catch (error) {

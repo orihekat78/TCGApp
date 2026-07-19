@@ -9,6 +9,7 @@ import {
   lintQaTrace,
   type QaTraceBaseline,
 } from '../../scripts/lint-qa-trace';
+import { buildQaAdjudication } from '../../scripts/qa-adjudication';
 
 const roots: string[] = [];
 const HASH_A = 'a'.repeat(64);
@@ -86,6 +87,28 @@ describe('lint-qa-trace', () => {
     expect(lintExitCode(lintQaTrace({ root }))).toBe(0);
     expect(lintExitCode(lintQaTrace({ root, requireAll: true }))).toBe(1);
     expect(lintQaTrace({ root, requireReviewed: true }).issues.map((issue) => issue.code)).toContain('require-reviewed');
+  });
+
+  it('rejects per-item adjudication result drift even when coverage status is unchanged', () => {
+    const one = [item('1')];
+    const baselineCoverage = { ...coverageFor(one, { [one[0]!.qaId]: 'manual-only' }), adjudicationResults: { [one[0]!.qaId]: 'rule-conflict' }, allAdjudicated: true };
+    const coverage = { ...coverageFor(one, { [one[0]!.qaId]: 'manual-only' }), adjudicationResults: { [one[0]!.qaId]: 'needs-manual' }, allAdjudicated: false };
+    const { root } = fixture({ baselineCoverage, coverage });
+    expect(lintQaTrace({ root }).issues.map((issue) => issue.code)).toContain('adjudication-result-drift');
+  });
+
+  it('rejects trace-audit under require-reviewed even when coverage has no legacy status', () => {
+    const one = [item('1')];
+    const reviewed = { ...coverageFor(one, { [one[0]!.qaId]: 'matched' }), adjudicationResults: { [one[0]!.qaId]: 'aligned' }, allAdjudicated: true };
+    const { root, snapshot } = fixture({ baselineCoverage: reviewed, coverage: reviewed });
+    const built = buildQaAdjudication({ snapshot, rawPackages: [] });
+    const dir = join(root, '.claude', 'specs', 'qa-adjudication');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify(built.manifest));
+    for (const shard of built.shards) writeFileSync(join(dir, `${shard.shard}.json`), JSON.stringify({ ...shard, items: shard.items.map((entry) => entry.qaId === one[0]!.qaId ? { ...entry, status: 'matched', result: 'aligned', method: 'trace-audit', evidence: ['src:src/card1.ts:1', 'tests:tests/card1.test.ts:1'] } : entry) }));
+    mkdirSync(join(root, 'src'), { recursive: true }); mkdirSync(join(root, 'tests'), { recursive: true });
+    writeFileSync(join(root, 'src/card1.ts'), 'export const B00001 = true;\n'); writeFileSync(join(root, 'tests/card1.test.ts'), 'expect(B00001).toBe(true);\n');
+    expect(lintQaTrace({ root, requireReviewed: true }).issues.find((issue) => issue.code === 'require-reviewed')?.message).toMatch(/trace-audit/);
   });
 
   it('rejects aggregate hash, added, removed, and answer hash drift', () => {

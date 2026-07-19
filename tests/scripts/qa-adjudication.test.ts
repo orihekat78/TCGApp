@@ -7,6 +7,7 @@ import {
   buildQaAdjudication,
   mergeQaAdjudication,
   qaShard,
+  writeQaAdjudicationBootstrap,
   type QaAdjudicationManifest,
   type QaAdjudicationShard,
 } from '../../scripts/qa-adjudication.js';
@@ -41,6 +42,15 @@ function fixture(): string {
   mkdirSync(data, { recursive: true });
   writeFileSync(resolve(data, 'qa-hash-snapshot.json'), JSON.stringify(snapshot));
   writeFileSync(resolve(data, 'status.json'), JSON.stringify(status));
+  mkdirSync(resolve(root, '.claude/rules'), { recursive: true });
+  mkdirSync(resolve(root, 'src'), { recursive: true });
+  mkdirSync(resolve(root, 'tests'), { recursive: true });
+  writeFileSync(resolve(root, '.claude/rules/rule.md'), 'rule evidence\n');
+  writeFileSync(resolve(root, 'src/one.ts'), 'export const one = true;\n');
+  writeFileSync(resolve(root, 'tests/one.test.ts'), 'expect(one).toBe(true);\n');
+  writeFileSync(resolve(root, 'src/generic.ts'), 'export const generic = true;\n');
+  writeFileSync(resolve(root, 'tests/generic.test.ts'), 'expect(generic).toBe(true);\n');
+  writeFileSync(resolve(root, '.claude/specs/DEFERRED-INDEX.md'), 'one\n');
   return root;
 }
 
@@ -119,9 +129,173 @@ describe('Q&A adjudication shards', () => {
 
     const reviewed = built.shards.find((entry) => entry.shard === shard)!;
     writeShard(root, shard, reviewed.items.map((entry) => entry.qaId === qaId
-      ? { ...entry, status: 'matched', result: 'aligned', method: 'manual-semantic', evidence: ['rules:25-qa-effects-resolution.md#case-1'], noteCodes: ['ENGINE-ALIGNED'] }
+      ? { ...entry, status: 'matched', result: 'aligned', method: 'manual-semantic', evidence: ['rules:.claude/rules/rule.md:1', 'src:src/one.ts:1', 'tests:tests/one.test.ts:1'], noteCodes: ['ENGINE-ALIGNED'] }
       : entry));
     expect(() => mergeQaAdjudication({ root, check: true })).not.toThrow();
+  });
+
+  it.each([
+    ['aligned', 'matched'],
+    ['test-gap', 'test-missing'],
+    ['implementation-gap', 'mismatch'],
+    ['deferred-card', 'deferred'],
+    ['rule-conflict', 'manual-only'],
+    ['needs-manual', 'manual-only'],
+  ] as const)('requires %s to use trace status %s', (result, status) => {
+    const root = fixture();
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    const qaId = snapshotItems()[0]!.qaId;
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === qaId
+      ? { ...entry, result, status: status === 'matched' ? 'test-missing' : 'matched', method: 'manual-semantic', evidence: ['rules:.claude/rules/rule.md:1'] }
+      : entry));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).toThrow(/status.*result|compatib/i);
+  });
+
+  it('resolves only category-correct existing evidence lines and rejects arbitrary anchors', () => {
+    const root = fixture();
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    const qaId = snapshotItems()[0]!.qaId;
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === qaId
+      ? { ...entry, status: 'matched', result: 'aligned', method: 'manual-semantic', evidence: ['rules:.claude/rules/rule.md:1', 'src:src/one.ts:1', 'tests:tests/one.test.ts:1'] }
+      : entry));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).not.toThrow();
+    const shard = built.shards.find((file) => file.items.some((entry) => entry.qaId === qaId))!;
+    writeShard(root, shard.shard, shard.items.map((entry) => entry.qaId === qaId
+      ? { ...entry, status: 'matched', result: 'aligned', method: 'manual-semantic', evidence: ['rules:../secret.md:1'] }
+      : entry));
+    expect(() => mergeQaAdjudication({ root, check: true })).toThrow(/evidence|path/i);
+  });
+
+  it.each([
+    ['aligned', 'matched', ['src:src/one.ts:1']],
+    ['test-gap', 'test-missing', ['src:src/one.ts:1', 'tests:tests/one.test.ts:1']],
+    ['deferred-card', 'deferred', ['deferred:two']],
+    ['rule-conflict', 'manual-only', ['src:src/one.ts:1']],
+    ['needs-manual', 'manual-only', ['src:src/one.ts:1']],
+  ] as const)('rejects invalid %s evidence category set', (result, status, evidence) => {
+    const root = fixture();
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    const qaId = snapshotItems()[0]!.qaId;
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === qaId
+      ? { ...entry, result, status, method: 'manual-semantic', evidence }
+      : entry));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).toThrow(/requires|deferred|evidence/i);
+  });
+
+  it('pins each ruling to its snapshot answer hash', () => {
+    const root = fixture();
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    const qaId = snapshotItems()[0]!.qaId;
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === qaId ? { ...entry, answerHash: HASH_B } : entry));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).toThrow(/answer hash drift/i);
+  });
+
+  it('refuses to overwrite existing rulings unless force explicitly resets the shards', () => {
+    const root = fixture();
+    writeQaAdjudicationBootstrap(root);
+    expect(() => writeQaAdjudicationBootstrap(root)).toThrow(/already exist/i);
+    writeQaAdjudicationBootstrap(root, true);
+    expect(mergeQaAdjudication({ root, check: true }).results).toEqual(Object.fromEntries(snapshotItems().map((item) => [item.qaId, 'unreviewed'])));
+  });
+
+  it('rejects a raw package/snapshot splice during optional local raw verification', () => {
+    const root = fixture();
+    const rawDir = resolve(root, '.claude/specs/cards-data/_raw');
+    mkdirSync(rawDir, { recursive: true });
+    const raw = JSON.stringify({ data: [] });
+    writeFileSync(resolve(rawDir, 'pkg-api.json'), raw);
+    const built = buildQaAdjudication({
+      snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] },
+      rawPackages: [{ file: 'pkg-api.json', sha256: hash(raw), cardNumHash: hash(''), cardNumCount: 0 }],
+    });
+    for (const file of built.shards) writeShard(root, file.shard, file.items);
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true, withLocalRaw: true })).toThrow(/normalized FAQ hash mismatch|raw Q&A snapshot drift/i);
+  });
+
+  it('rejects generic manual-semantic proof that is not bound to the reviewed card', () => {
+    const root = fixture();
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    const qaId = snapshotItems()[0]!.qaId;
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === qaId
+      ? { ...entry, status: 'matched', result: 'aligned', method: 'manual-semantic', evidence: ['src:src/generic.ts:1', 'tests:tests/generic.test.ts:1'] }
+      : entry));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).toThrow(/card-bound|card context/i);
+  });
+
+  it('allows unmapped implementation gaps only for absent non-deferred cards with rules proof', () => {
+    const root = fixture();
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    const qaId = snapshotItems()[1]!.qaId;
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === qaId
+      ? { ...entry, status: 'unmapped', result: 'implementation-gap', method: 'manual-semantic', evidence: ['rules:.claude/rules/rule.md:1'], noteCodes: ['UNIMPLEMENTED-CARD'] }
+      : entry));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).not.toThrow();
+  });
+
+  it('rejects group-equivalent when matching question/answer hashes have different section hashes', () => {
+    const root = fixture();
+    const items = [
+      { qaId: `card:B01001:${HASH_A}`, cardId: 'B01001', cardNums: ['B01001'], sectionHash: HASH_A, questionHash: HASH_A, answerHash: HASH_A },
+      { qaId: `card:B01002:${HASH_B}`, cardId: 'B01002', cardNums: ['B01002'], sectionHash: HASH_B, questionHash: HASH_A, answerHash: HASH_A },
+    ];
+    const snapshot = { schemaVersion: 1 as const, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items, conflicts: [] };
+    writeFileSync(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'), JSON.stringify(snapshot));
+    writeFileSync(resolve(root, 'src/B01001.ts'), 'export const B01001 = true;\n');
+    const built = buildQaAdjudication({ snapshot, rawPackages: [] });
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === items[0]!.qaId
+      ? { ...entry, status: 'matched', result: 'aligned', method: 'group-equivalent', evidence: ['src:src/B01001.ts:1', 'tests:tests/generic.test.ts:1'] }
+      : entry));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).toThrow(/group-equivalent requires multiple/i);
+  });
+
+  it('rejects trace-audit from strict reviewed mode even with reviewed result/status', () => {
+    const root = fixture();
+    writeFileSync(resolve(root, 'src/two.ts'), 'export const two = true;\n');
+    writeFileSync(resolve(root, 'tests/two.test.ts'), 'expect(two).toBe(true);\n');
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    const qaId = snapshotItems()[0]!.qaId;
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === qaId
+      ? { ...entry, status: 'matched', result: 'aligned', method: 'trace-audit', evidence: ['src:src/one.ts:1', 'tests:tests/one.test.ts:1'] }
+      : { ...entry, status: 'matched', result: 'aligned', method: 'manual-semantic', evidence: ['src:src/two.ts:1', 'tests:tests/two.test.ts:1'] }));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true, requireReviewed: true })).toThrow(/trace-audit/i);
+  });
+
+  it('requires group-equivalent aligned assertions to name an exact representative, not generic or prefix text', () => {
+    const root = fixture();
+    const items = [
+      { qaId: `card:B01001:${HASH_A}`, cardId: 'B01001', cardNums: ['B01001'], sectionHash: HASH_A, questionHash: HASH_A, answerHash: HASH_A },
+      { qaId: `card:B01002:${HASH_B}`, cardId: 'B01002', cardNums: ['B01002'], sectionHash: HASH_A, questionHash: HASH_A, answerHash: HASH_A },
+    ];
+    const snapshot = { schemaVersion: 1 as const, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items, conflicts: [] };
+    writeFileSync(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'), JSON.stringify(snapshot));
+    writeFileSync(resolve(root, 'src/B01001.ts'), 'export const B01001 = true;\n');
+    writeFileSync(resolve(root, 'tests/member.test.ts'), 'expect(B01001).toBe(true);\n');
+    const built = buildQaAdjudication({ snapshot, rawPackages: [] });
+    const write = (test: string) => { for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => entry.qaId === items[0]!.qaId ? { ...entry, status: 'matched', result: 'aligned', method: 'group-equivalent', evidence: ['src:src/B01001.ts:1', `tests:tests/${test}:1`] } : entry)); };
+    write('member.test.ts'); writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true })).not.toThrow();
+    writeFileSync(resolve(root, 'tests/member.test.ts'), 'expect(B010010).toBe(true);\n');
+    expect(() => mergeQaAdjudication({ root, check: true })).toThrow(/member-bound/i);
+  });
+
+  it('accepts a unique deferred-card manual-semantic ruling under strict review without source evidence', () => {
+    const root = fixture();
+    const item = snapshotItems()[0]!;
+    const snapshot = { schemaVersion: 1 as const, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: [item], conflicts: [] };
+    writeFileSync(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'), JSON.stringify(snapshot));
+    const built = buildQaAdjudication({ snapshot, rawPackages: [] });
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((entry) => ({ ...entry, status: 'deferred', result: 'deferred-card', method: 'manual-semantic', evidence: ['deferred:one'] })));
+    writeFileSync(resolve(root, '.claude/specs/qa-adjudication/manifest.json'), JSON.stringify(built.manifest));
+    expect(() => mergeQaAdjudication({ root, check: true, requireReviewed: true })).not.toThrow();
   });
 });
 

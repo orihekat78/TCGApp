@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { runGenQaTrace, validateQaSnapshot, validateQaSnapshotAgainstStatus, type QaSnapshot, type QaSnapshotItem, type CoverageStatus } from './gen-docs/gen-qa-trace.js';
 import { ADJUDICATION_RESULTS, type QaAdjudicationResult } from './qa-adjudication.js';
+import { mergeQaAdjudication } from './qa-adjudication.js';
 
 const ROOT = process.cwd();
 const HASH = /^[a-f0-9]{64}$/;
@@ -169,6 +170,10 @@ function compareCoverage(baseline: QaTraceCoverage, current: QaTraceCoverage, is
       push(issues, 'coverage-item-worsened', `Q&A coverage regressed for ${qaId}: ${before} -> ${after}`);
     }
   }
+  for (const [qaId, before] of Object.entries(baseline.adjudicationResults)) {
+    const after = current.adjudicationResults[qaId];
+    if (after && after !== before) push(issues, 'adjudication-result-drift', `Q&A adjudication result changed for ${qaId}: ${before} -> ${after}`);
+  }
 }
 
 export function lintQaTrace(options: { root?: string; requireAll?: boolean; requireReviewed?: boolean; checkGenerated?: boolean } = {}): QaLintResult {
@@ -189,7 +194,14 @@ export function lintQaTrace(options: { root?: string; requireAll?: boolean; requ
     if (result.changedFiles.length) push(issues, 'generated-docs-drift', `generated Q&A artifacts are stale: ${result.changedFiles.join(', ')}`);
   }
   if (options.requireAll && !coverage.allCompliant) push(issues, 'require-all', 'Q&A coverage is not all compliant');
-  if (options.requireReviewed && (!coverage.allAdjudicated || coverage.statusCounts['legacy-unreviewed'] > 0)) push(issues, 'require-reviewed', 'Q&A adjudications still contain unreviewed, needs-manual, or legacy-unreviewed items');
+  if (options.requireReviewed) {
+    try {
+      mergeQaAdjudication({ root, check: true, requireReviewed: true });
+    } catch (error) {
+      push(issues, 'require-reviewed', error instanceof Error ? error.message : 'Q&A adjudications are not strictly reviewed');
+    }
+    if (!coverage.allAdjudicated || coverage.statusCounts['legacy-unreviewed'] > 0) push(issues, 'require-reviewed', 'Q&A adjudications still contain unreviewed, needs-manual, trace-audit, or legacy-unreviewed items');
+  }
   return { issues, coverage, baseline };
 }
 
