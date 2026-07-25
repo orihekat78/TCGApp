@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { engine } from '@/engine';
-import { registerMisreadListener, _drainPendingMisread, _resetPendingMisread, _resolveMisreadPicks } from '@/engine/listeners/misread';
+import { registerMisreadListener, _drainPendingMisread, _resetMisreadRegistered, _resetPendingMisread, _resolveMisreadPicks } from '@/engine/listeners/misread';
 import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { misreadX } from '@/cards/_shared/misreadX';
@@ -16,6 +16,7 @@ import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../../../helpers/fixtures';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
+import { runAllUntilEmpty } from '@/engine/resolve';
 
 const TEST_REASONER: CardDef = {
   id: 'TEST_R',
@@ -66,6 +67,7 @@ function resolveAllPendingMisread(state: GameState): void {
 describe('reasoning × misread integration (Commit 3b)', () => {
   beforeEach(() => {
     _resetPendingMisread();
+    _resetMisreadRegistered();
     _setHumanPlayerSide(null);
     registerMisreadListener();
     engine.cards.register(TEST_REASONER);
@@ -82,6 +84,8 @@ describe('reasoning × misread integration (Commit 3b)', () => {
     s.players.self.deck = ['e1', 'e2', 'e3', 'e4', 'e5'];
 
     engine.flow.doReasoning(s, 'r1');
+    runAllUntilEmpty(s);
+    runAllUntilEmpty(s);
 
     // r1 LP=1000, misread x=2000 → totalX(2000) >= targetLp(1000) → AI 1 枚発動
     // 結果: r1 turnEffects.lpMod_turn = -2000 → 実効 LP = -1000 → max(0, -1000) = 0
@@ -104,6 +108,7 @@ describe('reasoning × misread integration (Commit 3b)', () => {
     // r1 LP=1000 → 1000 枚追加…ではなく実は deck 5 枚で頭打ちでもなく LP 1000 は1000枚追加。
     // 実際は LP は ap/lp/level の数値そのまま (LP1000 = 1000 LP)。証拠 5 枚しか deck になく add は addFromDeck で全部使う
     // ここでは「LP の数値」が「枚数」になるため、テスト用の TEST_REASONER.lp は 1000 にしてあるが実際の意図は「1 枚以上」確認
+    runAllUntilEmpty(s);
     expect(s.players.self.evidence.length).toBeGreaterThan(0);
   });
 
@@ -117,6 +122,7 @@ describe('reasoning × misread integration (Commit 3b)', () => {
 
     _setHumanPlayerSide('opp');
     engine.flow.doReasoning(s, 'r1');
+    runAllUntilEmpty(s);
     resolveAllPendingMisread(s);
 
     expect(s.players.self.evidence).toHaveLength(3); // (printed 3 + turn 1) - misread 1
@@ -135,10 +141,12 @@ describe('reasoning × misread integration (Commit 3b)', () => {
 
     _setHumanPlayerSide('opp');
     engine.flow.doReasoning(s, 'r1');
+    runAllUntilEmpty(s);
     resolveAllPendingMisread(s);
     s.players.self.scene[0].state = 'active';
     s.players.opp.scene[0].state = 'active';
     engine.flow.doReasoning(s, 'r1');
+    runAllUntilEmpty(s);
     resolveAllPendingMisread(s);
 
     expect(s.players.self.evidence).toHaveLength(4);
@@ -155,6 +163,7 @@ describe('reasoning × misread integration (Commit 3b)', () => {
 
     _setHumanPlayerSide('opp');
     engine.flow.doReasoning(s, 'partner:self');
+    runAllUntilEmpty(s);
     resolveAllPendingMisread(s);
 
     expect(s.players.self.evidence).toHaveLength(2);

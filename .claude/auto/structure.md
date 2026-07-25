@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 245
-- **ファイル数**: 5066
+- **ディレクトリ数**: 247
+- **ファイル数**: 5123
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -410,6 +410,21 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-242.md`
     - `BUG-243.md`
     - `BUG-244.md`
+    - `BUG-245.md`
+    - `BUG-246.md`
+    - `BUG-248.md`
+    - `BUG-249.md`
+    - `BUG-250.md`
+    - `BUG-251.md`
+    - `BUG-252.md`
+    - `BUG-253.md`
+    - `BUG-254.md`
+    - `BUG-255.md`
+    - `BUG-256.md`
+    - `BUG-257.md`
+    - `BUG-258.md`
+    - `BUG-259.md` — BUG-259: CT-P10 Q&A-bearing cards lack CardDef coverage
+    - `BUG-260.md`
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -1335,23 +1350,32 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
+      - `B02023.md` — B02023 遠山和葉 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B03020.md` — B03020 毛利蘭 grounding
+      - `B03023.md` — B03023 脇田兼則 grounding
       - `B03030.md` — B03030 / B03030P grounding
+      - `B03032.md` — B03032 grounding
       - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
       - `B03042.md` — B03042 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
       - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
       - `B04018P.md` — B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
+      - `B04027.md` — B04027 grounding
+      - `B04028.md` — B04028 grounding
+      - `B04030.md` — B04030 grounding
       - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
       - `B04055.md` — B04055 grounding
+      - `B04059.md` — B04059 水無怜奈 grounding
       - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
       - `B05008.md` — B05008 / B05008P grounding
       - `B05009.md` — B05009 毛利蘭 grounding (2026-07-10, sonnet5)
       - `B05028P.md` — B05028P grounding
       - `B05048.md` — B05048 grounding
       - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
+      - `B05080.md` — B05080 timing grounding
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
@@ -1369,7 +1393,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B08017.md` — B08017 / B08017P grounding
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
-      - `B08074.md` — B08074 降谷零 grounding (2026-07-10, sonnet5)
+      - `B08074.md` — B08074 降谷零 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
       - `B09024.md` — grounding dossier: B09024（世良真純）
@@ -1389,6 +1413,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
       - `README.md` — specs/grounding/ — grounding 判断の永続化 (2026-07-10 token 削減施策 #3)
+      - `deckRevealUntil-visibility.md` — deckRevealUntil visibility classification
       - `defer80-classified.json`
       - `m3-pa-batch.md` — M3 前処理: PA(パートナーエリア) 宣言19+発動5 batch dossier
       - `m3-triage-registered.md` — M3 PA batch triage — 登録済 18 ID (2026-07-10)
@@ -1426,6 +1451,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `7.json`
       - `8.json`
       - `9.json`
+      - `WORKFLOW.md` — Q&A Adjudication Queue Workflow
       - `a.json`
       - `b.json`
       - `c.json`
@@ -1595,6 +1621,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `page-preview.json`
   - `workspace.json`
 - **`.serena/`**
+  - **`memories/`**
+    - `memory_maintenance.md` — Memory Maintenance
   - `.gitignore`
   - `project.yml`
 - **`design-mockups/`** — UI モックアップ HTML / 画像 (ブレスト成果物)
@@ -2408,7 +2436,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B02021.ts` — cards/ct-p02/B02021 沖田総司 (キャラ) — engine-extension #3 batch (multi-target Pattern…
       - `B02022.ts` — cards/ct-p02/B02022 鬼丸猛 (キャラ)
       - `B02022P.ts` — cards/ct-p02/B02022P 鬼丸猛 (P) — B02022 と本文同一。
-      - `B02023.ts` — cards/ct-p02/B02023 遠山和葉 (キャラ) — engine-extension #5b 残課題: PA短縮形 (uid pick + fro…
+      - `B02023.ts` — cards/ct-p02/B02023 遠山和葉 (キャラ)
       - `B02024.ts` — cards/ct-p02/B02024 服部平次 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B02024P.ts` — cards/ct-p02/B02024P 服部平次 (キャラ) — auto-generated; B02024 の絵柄違い (同 cardId)
       - `B02025.ts` — cards/ct-p02/B02025 遠山和葉 (character) — Task A green候補 (engine変更0)
@@ -2566,7 +2594,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B03030P.ts` — B03030P print variant — same effect as B03030.
       - `B03031.ts` — cards/ct-p03/B03031 大岡紅葉 (character) — Task A green候補 (engine変更0)
       - `B03031P.ts` — cards/ct-p03/B03031P 大岡紅葉 (character) — Task A green候補 (engine変更0)
-      - `B03032.ts` — cards/ct-p03/B03032 服部平次 (キャラ) — engine#5b charSetCard batch #3 (a1+a3 only)
+      - `B03032.ts` — cards/ct-p03/B03032 服部平次 (キャラ) — engine#5b charSetCard batch #3
       - `B03032P.ts` — cards/ct-p03/B03032P 服部平次 (パラレル) — B03032 と同型
       - `B03033.ts` — cards/ct-p03/B03033 遠山和葉 (character) — card-authoring vein 解禁 (engine変更0, apDelt…
       - `B03033P.ts` — cards/ct-p03/B03033P 遠山和葉 (キャラ, パラレル) — engine変更0 (apDeltaAuraOpp consumer)
@@ -2818,7 +2846,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B04056P.ts` — cards/ct-p04/B04056P アンドレ・キャメル (キャラ) — catalog-reuse batch; B04056 の絵柄違い (同 card…
       - `B04057.ts` — cards/ct-p04/B04057 ジョディ・スターリング (キャラ) — auto-generated by scripts/gen-cards/…
       - `B04058.ts` — cards/ct-p04/B04058 ジョディ・スターリング (character) — Task A green候補 (engine変更0)
-      - `B04059.ts` — cards/ct-p04/B04059 水無怜奈 (キャラ) — engine-extension #1 leave:to-remove batch #2 (a…
+      - `B04059.ts` — cards/ct-p04/B04059 水無怜奈 (character) — scene-only additional name + leave:to-rem…
       - `B04060.ts` — cards/ct-p04/B04060 メアリー (キャラ) — catalog-reuse batch
       - `B04061.ts` — cards/ct-p04/B04061 「謎めいた乗客」 (イベント) — engine拡張 wave#2 cluster12 (nested-filter-d…
       - `B04062.ts` — cards/ct-p04/B04062 なるほど… (イベント) — engine-extension event→evidence batch (2026-0…
@@ -4083,6 +4111,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `evaluate.ts` — engine.cost.canPay — Cost feasibility check (read-only)
       - `index.ts` — engine.cost — Cost evaluator barrel
       - `pay.ts` — engine.cost.pay — Cost payment (mutates draft)
+      - `remove-set-card-witness.ts`
     - **`dyn/`**
       - `eval.ts` — engine.dyn.eval — Dyn (late-bound) expression evaluator
       - `index.ts` — engine.dyn — Dyn (late-bound) expression evaluator
@@ -4121,6 +4150,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `ability-activate.ts` — engine.flow.main.activateAbility — 宣言/パートナー能力の dispatch 契約 (Phase 2c, BUG-116 構造…
         - `action.ts` — engine.flow.main.canAction* — アクション可否判定 (rules/05 06., rules/07)
         - `declared-ability.ts` — engine.flow.main.useDeclaredAbility — 宣言能力使用 (rules/05 04.)
+        - `declared-cost-params.ts`
         - `hand-use-card.ts` — engine.flow.main.handUseCard — 手札の使用 (rules/05 01.)
         - `index.ts` — engine.flow.main namespace barrel — メインフェイズ 6 行動 (rules/05)
         - `next-hint.ts` — engine.flow.main.runNextHint — ネクストヒント (rules/05 02., rules/12)
@@ -4349,6 +4379,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useReplayDriver.ts` — Phase 9-G.2 (Cleanup 7-A): リプレイ playback driver hook
       - `useSceneCharacters.ts` — Phase 7 Task 7.4: SceneArea selector hook
       - `useSceneSwitchPickerStore.ts` — Phase 5 advance — SceneSwitch UI: picker open 状態 store
+      - `useSetCardCostPicker.ts` — BUG-248: removeSetCard 宣言コストの物理 occurrence picker。
       - `useSpectatorTurnDriver.ts` — Round 4l (B5 観戦モード): self ターンも AI が自動進行する driver
       - `useStackedCardCostPicker.ts`
       - `useStageScale.ts` — Cleanup Phase #6 (user_request 20260521_01 関連): Playmat のレスポンシブ対応
@@ -4392,6 +4423,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`replay/`**
       - `recorder.test.ts` — ai.replay — Phase 9-G.1 unit tests (recorder + player)
     - `.gitkeep`
+    - `bug-246-on-hand-declared-ability.test.ts`
     - `match.test.ts` — tests/ai/match.test.ts — Phase 6 Group C Task 6.5 tests
     - `move-enumerator.pa-mr.test.ts` — M3 PA batch (2026-07-10): AI 側 declaredAbility 列挙に partnerAreaMR source を追加
     - `move-enumerator.test.ts` — tests/ai/move-enumerator.test.ts — Phase 6 Group A Task 6.1 tests
@@ -4399,6 +4431,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `policy.action-guard.test.ts` — Phase 8.7c: policy.applyMove での actionAgainstChar ガード判定統合テスト。
     - `policy.pause-on-action.test.ts` — Phase 8 完全クローズ Commit 2.5: playTurn pauseOnAction tests
     - `policy.test.ts` — tests/ai/policy.test.ts — Phase 6 Group A Task 6.2 tests
+    - `reasoning-continuation-consumers.test.ts`
     - `step-turn-human-deck-decision.test.ts` — CPU move effects may open a human-owned deck decision. The same step must pause,
     - `step-turn.test.ts` — tests/ai/step-turn — Task3: stepTurn (playTurn の 1手駆動分解)
   - **`cards/`** — カード単体ユニットテスト
@@ -4455,6 +4488,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `D11021.test.ts` — tests/cards/ct-d11/D11021
     - **`ct-p02/`**
       - `B02022.test.ts` — tests/cards/ct-p02/B02022 — 鬼丸猛: action 宣言の一回限り強制指定
+      - `B02023.test.ts` — B02023 遠山和葉 — 裏向きセットの宣言コスト。
     - **`ct-p03/`**
       - `B03034.test.ts` — BUG-114: B03034 稲尾一久 カットイン実装 (engine変更0 — $contact.…
       - `B03039.test.ts` — BUG-114: B03039 長島茂雄 カットイン実装 (task-C charRemoveSetCard + side 分離で engine変更0 化)。
@@ -4473,6 +4507,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B07039.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `miniwave-cards-manual.test.ts` — defer-unlock mini-wave (2026-07-09) — 手書き probe (gen:probes 非対応 shape 分)。
     - **`genprobe-validation/`**
+      - `B04008.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
+      - `B05052.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B07032.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B07036.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B09089.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
@@ -4643,6 +4679,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `wc2-chooser-opp.test.ts` — WC2a RUNTIME behavior — pick chooser 'opp-of-owner' 実配線 (B05093 榎本梓 exemplar)。
     - **`night-wC2b/`**
       - `invoke-hirameki.test.ts` — tests/cards/night-wC2b/invoke-hirameki
+    - **`official-qa/`**
+      - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
+      - `B03020.test.ts` — Official Q&A B03020: fewer than three cards cannot resolve the effect.
+      - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
+      - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
+      - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
     - **`pr-01/`**
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
       - `PR200-PR206.test.ts` — PR200/PR206 大滝悟郎 — scene-wide face-down set-card count unlock
@@ -4763,6 +4805,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-165-pb-multipick-collapse.test.ts` — BUG-165 (2026-07-02, wave-10): PB generic multi-pick collapse — n≥2 の Pattern B…
     - `bug-169-face-down-set-card.test.ts`
     - `bug-195-event-remove-by-ap.test.ts` — BUG-195: eventRemoveByAP の単一 choice が sceneRemove pick を二重生成する回帰。
+    - `bug-249-b03006-ordering.test.ts`
     - `bug155-pick-filter-kind-2026-06-24.test.ts` — BUG-155 水平展開 sweep (2026-06-24, engine変更0) — pick系 atom/query の filter が公式テキストの
     - `bug159-b02010-colornot-2026-06-27.test.ts` — BUG-159 fix — B02010 灰原哀 a1「【青】以外の色を持つキャラ」を custom closure (none説) から
     - `cardphase3-cutin-observer.test.ts` — tests/cards/cardphase3-cutin-observer
@@ -4936,6 +4979,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `bug-241-landscape-pickers.spec.ts` — Layout carrier only. Exact opaque-instance resolution remains in the real B02039…
     - `bug-243-public-duplicate-a11y.spec.ts`
     - `bug-244-landscape-special-pickers.spec.ts`
+    - `bug-248-remove-set-card-cost.spec.ts`
+    - `bug-249-effect-order.spec.ts` — Keep reserve cards: both real effects consume a card, and normal engine
+    - `bug-252-reveal-visibility-order.spec.ts` — setupGamePage already waited for the Vite dev bridge. Hash-only routing avoids
+    - `bug-260-b04030-switch-overlay.spec.ts`
     - `card-choice-details-real-flow.spec.ts` — Reveal animation ends after 500ms for the first public card. Use an ordinary
     - `card-expand-modal-priority.spec.ts`
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
@@ -5013,6 +5060,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-187-relative-hand-side.test.ts`
       - `bug-190-191-b04026-flow.test.ts`
       - `bug-214-opp-owner-production.test.ts`
+      - `bug-249-continuation-priority.test.ts`
       - `charsetcard-fromdecktop-refresh.test.ts` — tests/engine/effect/charsetcard-fromdecktop-refresh — unit B (session64)
       - `conditional-deferred-pick.test.ts` — The initial walk has no legal candidate. Rebuild the runtime context
       - `continuation-chain-gate-real-cards.test.ts` — Enter through the runtime atom handler so the first carrier is queued
@@ -5067,6 +5115,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `next-hint.test.ts` — Phase 4 Task 4.3 — flow.main.runNextHint
         - `nexthint-ban.test.ts` — use-restriction — next-hint ban (setNextHintBan / turnState.…
         - `partner-ability.test.ts` — Phase 4 Task 4.3 — flow.main.usePartnerAbility
+        - `reasoning-continuation.test.ts`
         - `reasoning.misread.test.ts` — Phase 8 完全クローズ Commit 3b: reasoning + misread end-to-end 統合テスト
         - `reasoning.test.ts` — Phase 4 Task 4.3 — flow.main.doReasoning
       - `action-case.test.ts` — Phase 4 Group B Task 4.6 — flow.actionCase
@@ -5096,6 +5145,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`listeners/`**
       - `bug-197-original-ability-suppression.test.ts` — BUG-197: "original abilities" means every printed ability entry, not only keywor…
       - `cutin-summon-misfire.test.ts` — tests/engine/listeners/cutin-summon-misfire — 【カットイン】が召喚時に誤発火しないこと
+      - `declared-batch-seq.test.ts`
       - `granted-ability.test.ts` — Task D E4 (2026-06-12): charGrantAbility — triggered ability の動的付与
       - `leave-to-remove.test.ts` — Engine 拡張 #1: leave/現場リムーブ時 hook (engine-extension-plan.md step 1)
       - `on-set-self-turn-end.test.ts`
@@ -5146,8 +5196,11 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `.gitkeep`
     - `bug-166-176-event-resolution-provenance.test.ts`
     - `bug-180-completed-deck-take-refresh.test.ts`
+    - `bug-253-254-event-use-and-hirameki-faceup.test.ts` — rules: 06-card-types.md, 10-action-event.md, 15-abilities-effects.md
+    - `bug-256-b03032-active-set-target.test.ts` — BUG-256: B03032 / B03032P active target exception for set-card hosts.
     - `cost-remove-set-card.test.ts` — engine additive wave (2026-06-24) — Cost `removeSetCard`。
     - `cost-reveal-from-hand.test.ts` — engine additive wave — Cost `revealFromHand`。
+    - `declared-cost-params.test.ts`
     - `produce.test.ts`
     - `rng.test.ts`
     - `state-factory.test.ts`
@@ -5181,6 +5234,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
   - **`scripts/`**
     - `check-wave-scope.test.ts`
+    - `gen-card-probes.test.ts`
     - `gen-codex-context.test.ts`
     - `gen-qa-trace.test.ts`
     - `header-source-hash.test.ts`
@@ -5193,6 +5247,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `rule-qa-provenance.test.ts`
     - `structure-root-portability.test.ts`
     - `structure-tracked-files.test.ts`
+    - `taskA-codegen-use-condition.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト
     - `aggregate.test.ts` — tests/smoke/aggregate — Phase 9-A pure aggregation tests
     - `format-md.test.ts` — tests/smoke/format-md — Phase 9-A Markdown formatter tests
@@ -5214,6 +5269,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `DeckReorderModalHost.reset.test.tsx`
       - `DeckRevealOverlay.card-detail.test.tsx` — The original 3100ms reveal timeline must not run behind the detail modal.
       - `DemoPickerModal.card-details.test.tsx`
+      - `EffectChoiceModalHost.test.tsx`
       - `EffectPickerModal.card-detail.test.tsx`
       - `EffectStackPanel.reorder.test.tsx` — Phase 8 完全クローズ Commit 5: EffectStackPanel reorder UI SSR test
       - `EffectStackPanel.test.tsx` — Phase 7 Task 7.14: EffectStackPanel tests
@@ -5248,6 +5304,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`hooks/`**
       - `bug-107-d11014-bind-propagation.test.ts` — BUG-107: D11014 a2 human 経路で sceneEnter の bind:'$entered' が pick-resolve 越しに
       - `bug-108-choice-picker.test.ts` — BUG-108: D11012 a1「LP＋1するか / AP＋2000する」の choice 択一 UI フロー統合テスト。
+      - `bug-245-declared-ability-cost.test.ts` — Structural declaration discovery intentionally stays timing-agnostic.
+      - `bug-250-empty-partner-actions.test.ts` — BUG-250: 未初期化パートナーを共通パートナーactionとして使用できてはならない。
       - `movePresentationDelay.test.ts`
       - `pending-provenance.test.ts`
       - `repeat-optional-dispatch.test.ts`
@@ -5262,6 +5320,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useActionsPanelFlow.pa-mr-declared.test.ts` — M3 PA batch (2026-07-10): パートナーエリア常駐 MR の宣言能力 human 経路
       - `useActionsPanelFlow.partner-ability.test.ts` — Phase 8.8a: runPartnerAbilityFlow tests
       - `useActionsPanelFlow.reasoning.test.ts` — Phase 8 Task 8.6: runReasoningFlow tests
+      - `useActionsPanelFlow.remove-set-cost.test.tsx` — BUG-248: 人間の removeSetCard 宣言コストは、裏面の物理 occurrence を明示選択する。
       - `useActionsPanelFlow.stacked-cost.test.ts`
       - `useActionsPanelFlow.test.ts` — Phase 8 Task 8.5: ActionsPanel フロー (endTurn 最小配線)
       - `useCanEndTurnForUi.test.tsx`

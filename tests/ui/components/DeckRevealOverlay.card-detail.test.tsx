@@ -13,11 +13,12 @@ describe('DeckRevealOverlay card details', () => {
   let root: Root;
 
   beforeEach(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
     useGameStateStore.setState({
-      pendingDeckReveal: { player: 'self', revealed: ['D08015'], matched: 'D08015' },
+      pendingDeckReveal: { player: 'self', visibility: 'private', viewer: 'self', revealed: ['D08015'], matched: 'D08015' },
       pendingEffectPick: null,
       pendingDeckReorder: null,
       gameState: null,
@@ -29,6 +30,7 @@ describe('DeckRevealOverlay card details', () => {
     act(() => root.unmount());
     container.remove();
     useGameStateStore.setState({ pendingDeckReveal: null });
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
   it('keeps reveal progression while exposing each public card through a sibling detail control', () => {
@@ -83,5 +85,32 @@ describe('DeckRevealOverlay card details', () => {
   it('keeps the reveal detail control at the mobile touch target minimum', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/ui/components/DeckRevealOverlay.css'), 'utf8');
     expect(css).toMatch(/\.deck-reveal-card-detail\s*\{[\s\S]*min-width:\s*48px;[\s\S]*min-height:\s*48px;/);
+  });
+
+  it('uses the reveal-return presentation without bottom-placement or shuffle copy', () => {
+    vi.useFakeTimers();
+    useGameStateStore.setState({
+      pendingDeckReveal: { player: 'opp', visibility: 'public', viewer: 'all', revealed: ['D08015'], matched: 'D08015', presentation: 'reveal-return' },
+    });
+    act(() => root.render(<DeckRevealOverlay />));
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(container.querySelector('[data-testid="deck-reveal-header"]')?.textContent).toContain('元のデッキへ戻しています');
+    expect(container.querySelector('[data-testid="deck-reveal-shuffle"]')).toBeNull();
+    expect(container.querySelector('.deck-reveal-card.is-matched')).toBeNull();
+    expect(container.querySelector('.deck-reveal-match-badge')).toBeNull();
+  });
+
+  it('fails closed without rendering an unauthorized private CPU look', () => {
+    useGameStateStore.setState({
+      pendingDeckReveal: {
+        player: 'opp', visibility: 'private', viewer: 'opp',
+        revealed: ['D08015'], matched: 'D08015',
+      },
+    });
+    act(() => root.render(<DeckRevealOverlay />));
+
+    expect(container.querySelector('[data-testid="deck-reveal-overlay"]')).toBeNull();
+    expect(container.querySelector('img')).toBeNull();
   });
 });

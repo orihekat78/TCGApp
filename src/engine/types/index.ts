@@ -40,6 +40,7 @@ export type {
   EffectStackEntryTrigger,
   EffectStackEntryTimestamp,
   EffectStackEntryState,
+  ReasoningContinuation,
 } from './effect-stack.js';
 
 export type { EffectCtx, ContactCtx, EffectResolutionKind } from './effect-ctx.js';

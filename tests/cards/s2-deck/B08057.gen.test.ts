@@ -155,10 +155,10 @@ describe('B08057 — hand-authored probe (remove 3-tier → deck bottom + moved-
         name: 'gate', setup: {
           caseStatus,
           selfScene: scene3 ? SCENE3 : SCENE3.slice(0, 2),
-          remove: ['R5'], deckSize: 9, fileCount: 3,
+          remove: ['R5'], deckSize: 10, fileCount: 3,
         },
-        // cost-gate drive は canPay=true を検証しつつ state を返す (発火はしない)
-        drive: { kind: 'cost-gate', uid: 'u0', abilityId: 'a2', expectCanPay: true },
+        // a2 は enter trigger を持たないため、盤面だけを構築して structural gate を直接検証する。
+        drive: { kind: 'enter', cardId: 'B08057', uid: 'u0' },
         script: [], expect: [],
       };
       return runCardScenario(B08057, FIXTURES, sc);

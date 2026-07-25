@@ -33,7 +33,7 @@ const a1: AbilityDef = {
     kind: 'sequence',
     steps: [
       // 自分のデッキの上から3枚公開 → window を $revealed に bind
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 3, bind: '$revealed' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', maxN: 3, bind: '$revealed' } },
       // 相手が「イベント or [喫茶ポアロ]キャラ」を1枚選び、自分が手札に加える (chooser=相手 / 恩恵=自分)
       {
         kind: 'atom',

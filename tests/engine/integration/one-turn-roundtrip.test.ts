@@ -28,6 +28,7 @@ import {
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
 import { judge } from '@/engine/flow/contact';
 import { event } from '@/engine/event/index';
+import { resolve } from '@/engine/resolve';
 import { mutate } from '@/engine/mutate/index';
 import { invariant } from '@/engine/invariant/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
@@ -180,6 +181,7 @@ describe('integration: 1-turn round-trip', () => {
       // 推理 (LP=2 → 2 枚の証拠)
       const s2 = produce(s1, draft => {
         doReasoning(draft, charUid);
+        resolve.runAllUntilEmpty(draft);
       });
 
       // 結果検証

@@ -18,11 +18,17 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { choiceOptionLabel } from '@/ui/hooks/useActionsPanelFlow.js';
 import { def as readDef } from '@/engine/read/def.js';
+import { sceneCap } from '@/engine/read/scene-cap.js';
+import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore.js';
 import { ChoicePickerModal } from './ChoicePickerModal.js';
 
 export function EffectChoiceModalHost(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectChoice);
-  if (!pending || pending.player !== 'self') return null;
+  const switchPicker = useSceneSwitchPickerStore((s) => s.current);
+  // The switch surface is a direct-manipulation layer in Playmat. Suspend this
+  // full-screen host while it owns the next decision; otherwise .cp-overlay
+  // catches every pointer event above the scene cards.
+  if (!pending || pending.player !== 'self' || switchPicker) return null;
 
   const sourceName = pending.source.cardId
     ? readDef.card(pending.source.cardId)?.names?.[0] ?? pending.source.cardId
@@ -35,7 +41,31 @@ export function EffectChoiceModalHost(): JSX.Element | null {
       : `効果 ${o.index + 1}`),
   }));
 
-  const handlePick = (index: number): void => {
+  const handlePick = async (index: number): Promise<void> => {
+    const option = pending.options.find((candidate) => candidate.index === index);
+    const state = useGameStateStore.getState().gameState;
+    const isB04030EnterChoice = (pending.source.cardId === 'B04030' || pending.source.cardId === 'B04030P')
+      && option?.index === 1;
+    if (isB04030EnterChoice && state && state.players[pending.player].scene.length >= sceneCap(state, pending.player)) {
+      const candidates = state.players[pending.player].scene.map((character) => ({
+        uid: character.uid,
+        cardId: character.cardId,
+        name: readDef.card(character.cardId)?.names?.[0] ?? character.cardId,
+        state: character.state,
+        isNamed: character.isNamed,
+      }));
+      const switchRemoveUid = await new Promise<string | null>((resolve) => {
+        useSceneSwitchPickerStore.getState()._open({
+          cardId: '', newCardName: '登場するキャラ', candidates, resolve,
+        });
+      });
+      if (switchRemoveUid !== null) {
+        dispatchEngineAction({ type: 'choiceResolve', choiceIndex: index, switchRemoveUid });
+      } else {
+        dispatchEngineAction({ type: 'choiceResolve', choiceIndex: index });
+      }
+      return;
+    }
     dispatchEngineAction({ type: 'choiceResolve', choiceIndex: index });
   };
 

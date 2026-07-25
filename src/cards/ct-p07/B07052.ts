@@ -48,7 +48,7 @@ const a2: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: { player: 'self', filter: { trait: '赤魔術', kind: 'event' }, bind: '$revealed', bindMatch: '$matched' },
+        args: { visibility: 'public', viewer: 'all', player: 'self', filter: { trait: '赤魔術', kind: 'event' }, bind: '$revealed', bindMatch: '$matched' },
       },
       {
         kind: 'conditional',

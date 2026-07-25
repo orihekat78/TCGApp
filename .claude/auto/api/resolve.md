@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `b2f02f7a454d`
+> Source hash: `628481171b14`
 
 Effect Stack（queue/next/runOne + cancel/replace/lock）
 
@@ -15,6 +15,7 @@ Effect Stack（queue/next/runOne + cancel/replace/lock）
 | `lock` | `(_state: GameState, reason: string): void` |  |
 | `next` | `(state: GameState): EffectStackEntry \| null` | Determine the next entry to resolve, per rules/15 + rules/25. Returns null if no pending entry exists. / |
 | `peek` | `(state: GameState): EffectStackEntry[]` | Snapshot of pendingEffects regardless of state — for UI / debug. Returns a shallow copy of the array (entries themselves are shared). / |
+| `pendingOwnerOrderGroup` | `(state: GameState, human: 'self' \| 'opp' \| null): EffectStackEntry[]` | All currently eligible unresolved effects owned by the priority human. */ |
 | `queue` | `(state: GameState, entry: EffectStackEntry): void` | Push an entry into pendingEffects. Callers (event.queue / event.emit / card listeners) already provide a fully built entry. / |
 | `replace` | `(state: GameState, entryId: string, newEffect: Effect): void` | Replace the Effect on a pending entry (id-keyed). Used by "代わりに〜" effects (rules/15 即時例外). @see Effect.… |
 | `runAllUntilEmpty` | `(state: GameState): void` | Drain the stack until no pending entries remain. New entries queued during resolution are picked up automatically (rules/15 "未解決"). Safety cap: 1000 iterations. / |

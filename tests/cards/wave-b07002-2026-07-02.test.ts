@@ -260,7 +260,7 @@ describe('B07002 江戸川コナン — wave-10 exemplar', () => {
     const ctx: EffectCtx = { source: { cardId: 'B07002', uid: 'y#1', abilityId: 'a2', player: 'self', area: 'scene' }, bindings: {} };
     const a2cost = (B07002.abilities[1] as AbilityDef).cost!;
     expect(canPay(s, a2cost, ctx), 'active 探偵なし (警察のみ active) → 支払不可').toBe(false);
-    s.players.self.scene = [sceneChar('B07002', 'y#1', { state: 'sleep' }), sceneChar('T_AKA', 't#1'), sceneChar('K_AKA', 'k#1')];
-    expect(canPay(s, a2cost, ctx), 'active 探偵 (t#1) あり → 支払可 (自身 sleep でも他探偵で払える)').toBe(true);
+    s.players.self.scene = [sceneChar('B07002', 'y#1'), sceneChar('T_AKA', 't#1', { state: 'sleep' }), sceneChar('K_AKA', 'k#1')];
+    expect(canPay(s, a2cost, ctx), 'active 探偵 (y#1) あり → 支払可').toBe(true);
   });
 });

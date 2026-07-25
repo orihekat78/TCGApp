@@ -20,6 +20,7 @@ import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _clearPendingEffectPickQueue, _clearPendingEffectOptionalSide, _drainPendingEffectOptionalSide } from '@/engine/effect/pending-state';
 import { applyOptionalAndContinuation } from '@/engine/effect/apply-pick';
+import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { runCardScenario } from '../helpers/card-probe-harness';
 import type { ProbeScenario } from '../helpers/card-probe-harness';
 import { PR234 } from '@/cards/pr-01/PR234';
@@ -133,6 +134,7 @@ describe('PR234 a2 (setcard:leave → handAddFromRemove queue)', () => {
     mutate.char.setCard(s, h.uid, 'B01023', true);
     registerTriggeredListener();
     mutate.scene.removeToRemove(s, h.uid, 'effect');
+    runAllUntilEmpty(s);
     const riders = q(s);
     expect(riders).toHaveLength(1);
     expect(riders[0]!.source.cardId).toBe('PR234');

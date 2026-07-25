@@ -27,7 +27,7 @@ const a1: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: { player: 'self', filter: { cardName: '毛利小五郎' }, bind: '$revealed', bindMatch: '$matched' },
+        args: { visibility: 'public', viewer: 'all', player: 'self', filter: { cardName: '毛利小五郎' }, bind: '$revealed', bindMatch: '$matched' },
       },
       {
         kind: 'conditional',

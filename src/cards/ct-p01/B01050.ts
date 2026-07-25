@@ -50,7 +50,7 @@ const a2: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: {
+        args: { visibility: 'public', viewer: 'all',
           player: 'self',
           filter: {
             color: '白'

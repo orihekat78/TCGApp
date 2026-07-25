@@ -5,7 +5,7 @@
 //   このイベントは自分の事件が解決編で、自分の現場に〚カード名［服部平次］〛がいる場合に使用できる。
 //   相手の現場にいるすべてのキャラをスリープさせる。
 //
-// a1: 使用条件 (使用できる) = condition:and[caseStatus 解決編, bond 服部平次] → 不成立なら効果なし (rules/17)。
+// a1: Usage authorization belongs exclusively to CardDef.useCondition.
 //     イベント使用 (effect:declared selfOnly, matcher kind:'event-use' — D11020 同型)。
 //     「すべて」=プレイヤー選択無し → forEach over:{kind:'all'}(相手現場) で sceneSetState(sleep)。
 //     ($each.uid 形 — tests/engine/effect/foreach-all.test.ts で primitive 検証済)。
@@ -16,8 +16,6 @@ const a1: AbilityDef = {
   id: 'a1',
   type: 'triggered',
   scope: 'on-hand',
-  // 自分の事件が解決編で、自分の現場に[服部平次]がいる場合に使用できる
-  condition: { kind: 'and', cs: [{ kind: 'caseStatus', status: '解決編' }, { kind: 'bond', cardName: '服部平次' }] },
   trigger: {
     hook: 'effect:declared',
     selfOnly: true,
@@ -43,6 +41,7 @@ export const B02032: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1721357211034778.jpg',
+  useCondition: { kind: 'and', cs: [{ kind: 'caseStatus', status: '解決編' }, { kind: 'bond', cardName: '服部平次' }] },
   abilities: [a1],
   ruleRefs: ['rules/03-field-areas.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/19-special-rules.md'],
 };

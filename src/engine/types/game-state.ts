@@ -229,7 +229,7 @@ export type LogEntry = {
 // pendingEffects は EffectStackEntry[] として保持する。
 // 単なる Effect ではなく、発火元・発火タイミング・解決状態を含むラッパー。
 // spec: .claude/specs/engine-api-resolver.md
-import type { EffectStackEntry } from './effect-stack.js';
+import type { EffectStackEntry, ReasoningContinuation } from './effect-stack.js';
 import type { ReservedEffectEntry } from './reserved-effect.js';
 import type { TargetFilter } from './effect.js'; // engine A3 wave (2026-07-11): actionCutinBanOppFilter (B05007)
 
@@ -242,6 +242,26 @@ export type GameState = {
   };
   players: { self: PlayerState; opp: PlayerState };
   pendingEffects: EffectStackEntry[];
+  /**
+   * Monotonic identity allocator for one hook emission.  Kept in GameState so
+   * a saved/replayed match cannot accidentally merge two separate timings.
+   * Optional only for legacy saves created before BUG-249.
+   */
+  effectTriggerBatchSeq?: number;
+  /** Persisted declaration-causality sequence; survives save/reload. */
+  declaredBatchSeq?: number;
+  /** Engine-only single-use authority for the current reasoning continuation. */
+  pendingReasoningContinuation?: ReasoningContinuation;
+  /** Monotonic token allocator for reasoning continuations. */
+  reasoningContinuationSeq?: number;
+  /**
+   * Transient nesting context while a hook listener is running.  This is
+   * deliberately state-owned (rather than a module singleton) so nested
+   * `event.queue` calls retain their real emission batch.
+   */
+  effectTriggerBatchContext?: number;
+  /** Confirmation inherited only by continuation entries queued while resolving. */
+  effectTriggerBatchConfirmedContext?: boolean;
   /** Monotonic set-card occurrence allocator; absent only in legacy saved state. */
   setCardInstanceSeq?: number;
   /**

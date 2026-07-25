@@ -16,11 +16,49 @@ import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoi
 import { findChooseIntercept } from './consult-choose-intercept.js';
 
 type Player = 'self' | 'opp';
+
+function withChoiceSwitch(effect: Effect, switchRemoveUid: string | undefined): Effect {
+  if (!switchRemoveUid) return effect;
+  if (effect.kind === 'atom') {
+    return effect.verb === 'sceneEnter'
+      ? { ...effect, args: { ...(effect.args as Record<string, unknown>), switchRemoveUid } }
+      : effect;
+  }
+  if (effect.kind === 'sequence' || effect.kind === 'parallel') {
+    return { ...effect, steps: effect.steps.map(step => withChoiceSwitch(step, switchRemoveUid)) };
+  }
+  if (effect.kind === 'conditional') {
+    return { ...effect, then: withChoiceSwitch(effect.then, switchRemoveUid), ...(effect.else ? { else: withChoiceSwitch(effect.else, switchRemoveUid) } : {}) };
+  }
+  if (effect.kind === 'optional') return { ...effect, effect: withChoiceSwitch(effect.effect, switchRemoveUid) };
+  return effect;
+}
+
+function resumedEntryExtras(source: {
+  triggerBatch?: number;
+  ownerChosenOrder?: number;
+  ownerOrderConfirmed?: boolean;
+  declaredBatch?: number | string;
+}) {
+  return {
+    resumesCurrentEffect: true as const,
+    ...(source.triggerBatch !== undefined ? { triggerBatch: source.triggerBatch } : {}),
+    ...(source.ownerChosenOrder !== undefined ? { ownerChosenOrder: source.ownerChosenOrder } : {}),
+    ...(source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: source.ownerOrderConfirmed } : {}),
+    ...(source.declaredBatch !== undefined ? { declaredBatch: source.declaredBatch } : {}),
+  };
+}
+
 import { run as runEffect } from './resolver.js';
 import {
   _takePendingChooseInterceptResume,
   _takePendingEffectRepeatOptionalResume,
+  _drainPendingEffectChoiceSide,
+  _drainPendingEffectPickSide,
+  _drainPendingEffectOptionalSide,
+  _drainPendingEffectRepeatOptionalSide,
   _peekPendingEffectChoiceSide,
+  _peekPendingEffectPickSide,
   _peekPendingEffectOptionalSide,
   _peekPendingEffectRepeatOptionalSide,
   _takePendingChoiceContinuation,
@@ -40,15 +78,32 @@ import {
   type PendingSetCardChoiceSide,
   type PendingSetCardReplacementSide,
 } from './pending-state.js';
+
+function consumeQueuedPick(pending: PendingEffectPickSide): void {
+  if (_peekPendingEffectPickSide() === pending) _drainPendingEffectPickSide();
+}
+
+function consumeQueuedChoice(pending: PendingEffectChoiceSide): void {
+  if (_peekPendingEffectChoiceSide() === pending) _drainPendingEffectChoiceSide();
+}
+
+function consumeQueuedOptional(pending: PendingEffectOptionalSide): void {
+  if (_peekPendingEffectOptionalSide() === pending) _drainPendingEffectOptionalSide();
+}
+
+function consumeQueuedRepeatOptional(pending: PendingEffectRepeatOptionalSide): void {
+  if (_peekPendingEffectRepeatOptionalSide() === pending) _drainPendingEffectRepeatOptionalSide();
+}
 import { hand } from '../mutate/hand.js';
 import { char as charMutator } from '../mutate/char.js';
 import { scene as sceneMutator } from '../mutate/scene.js';
 import { deck as deckMutator } from '../mutate/deck.js';
 import { _attachPendingDeckReorderContinuation, _peekPendingDeckReorderSide, resolveBindRef, type PendingDeckReorderSide } from './atom-handlers/_shared.js';
 
-export function applyRepeatOptionalAndContinuation(state: GameState, _pending: PendingEffectRepeatOptionalSide, run: boolean): void {
+export function applyRepeatOptionalAndContinuation(state: GameState, pending: PendingEffectRepeatOptionalSide, run: boolean): void {
   const resume = _takePendingEffectRepeatOptionalResume();
   if (!resume) return;
+  consumeQueuedRepeatOptional(pending);
   const next: Effect[] = run
     ? [resume.body, ...(resume.remaining > 1 ? [{ kind: 'repeatOptional', max: resume.remaining - 1, body: resume.body } as Effect] : []), ...resume.remainder]
     : resume.remainder;
@@ -62,9 +117,10 @@ export function applyRepeatOptionalAndContinuation(state: GameState, _pending: P
     runEffect(state, resolved, resume.ctx);
   }
 }
-import { runAllUntilEmpty } from '../resolve/index.js';
+import { pendingOwnerOrderGroup, runAllUntilEmpty } from '../resolve/index.js';
 import { event } from '../event/index.js';
 import { def } from '../read/def.js';
+import { eventUseAllowed } from '../flow/main/hand-use-card.js';
 import { allCardNameComponentsForDef } from '../target/card-def-registry.js';
 import { evalCond } from '../cond/eval.js';
 
@@ -84,7 +140,7 @@ export function applyRpsAndContinuation(state: GameState, pending: PendingRpsSid
     return;
   }
   const ctx: EffectCtx = {
-    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}) },
+    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
     bindings: resume.bindings as EffectCtx['bindings'],
   };
   const branch = wins(ownerHand, otherHand) ? resume.effect.win : resume.effect.lose;
@@ -107,7 +163,7 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
   state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: true, origin: { turn: state.turn.number, via: 'effect', sourceCardId: pending.source.cardId } });
   if (resume.remainder.length > 0) {
     const ctx: EffectCtx = {
-      source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.player, area: 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}) },
+      source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.player, area: 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
       bindings: resume.bindings as EffectCtx['bindings'],
     };
     const continuation: Effect = { kind: resume.remainderKind, steps: resume.remainder };
@@ -172,6 +228,38 @@ export function resolveCardIdFromPickUid(
   const ch = uid.match(/^([^#]+)#\d+$/);
   if (ch) return ch[1] ?? null;
   return pending.candidates.find((c) => c.uid === uid)?.cardId ?? null;
+}
+
+/**
+ * A human may leave an effect-use picker open while its authorization changes
+ * (for example, a FILE/evidence state update or an event-use prohibition).
+ * Such a pick must close without running either the selected atom or its
+ * continuation.  An explicit zero pick is deliberately excluded: that is the
+ * printed "up to" choice and `useEventFromHand` owns its chain-gate behavior.
+ */
+function isStaleEffectEventUsePick(
+  state: GameState,
+  pending: PendingEffectPickSide,
+  pickedUid: string,
+  pickedUids?: string[],
+): boolean {
+  if (pending.atomVerb !== 'useEventFromHand') return false;
+  const uids = pickedUids ?? [pickedUid];
+  if (uids.length === 0) return false;
+  if (state.turnState[pending.player].eventUseBanned) return true;
+
+  const wanted = new Map<string, number>();
+  for (const uid of uids) {
+    const cardId = resolveCardIdFromPickUid(uid, state, pending);
+    if (!cardId || def.card(cardId)?.kind !== 'event') return true;
+    wanted.set(cardId, (wanted.get(cardId) ?? 0) + 1);
+  }
+  const inHand = new Map<string, number>();
+  for (const cardId of state.players[pending.player].hand) {
+    inHand.set(cardId, (inHand.get(cardId) ?? 0) + 1);
+  }
+  return [...wanted].some(([cardId, count]) =>
+    (inHand.get(cardId) ?? 0) < count || !eventUseAllowed(state, pending.player, cardId));
 }
 
 /**
@@ -576,6 +664,13 @@ export function applyPickAndContinuation(
   skipChooseIntercept = false,
 ): void {
   validatePendingPick(pending, pickedUid, pickedUids);
+  if (isStaleEffectEventUsePick(state, pending, pickedUid, pickedUids)) {
+    // Consume only the stale UI decision.  In particular, do not create
+    // bindings, logs, hooks, queued atoms, or continuation-side effects.
+    consumeQueuedPick(pending);
+    return;
+  }
+  consumeQueuedPick(pending);
   const interceptCtx = pending.continuation?.ctx ?? {
     source: {
       cardId: pending.source.cardId,
@@ -713,6 +808,8 @@ export function applyPickAndContinuation(
       },
       'effect:pick-resolved',
       { picked: pickedUid, source: pending.source },
+      undefined,
+      resumedEntryExtras(pending.source),
     );
     runAllUntilEmpty(state);
   }
@@ -749,6 +846,7 @@ export function applyPickSkipAndContinuation(
   if (pending.atomVerb === 'stackedCardPick' && pending.nMin > 0) {
     throw new Error('stackedCardPick: below-minimum selection');
   }
+  consumeQueuedPick(pending);
   const head = pending.continuation;
   // BUG-111 #2 (2026-06-16): runDeclinedAtom で declined head atom を再実行するか分岐する。
   //   - true (deckRevealUntil skipResolvesAtom): atom を __declined で再実行 (公開カードのデッキ下移動等、
@@ -778,6 +876,8 @@ export function applyPickSkipAndContinuation(
         },
         'effect:pick-resolved',
         { picked: null, source: pending.source },
+        undefined,
+        resumedEntryExtras(pending.source),
       );
       runAllUntilEmpty(state);
       return;
@@ -813,9 +913,11 @@ export function applyChoiceAndContinuation(
   state: GameState,
   pending: PendingEffectChoiceSide,
   choiceIndex: number,
+  switchRemoveUid?: string,
 ): void {
   const resumeEffect = _takePendingChoiceResume();
   if (!resumeEffect) return;
+  consumeQueuedChoice(pending);
   const continuation = _takePendingChoiceContinuation();
   // BUG-114: choice surface 時の bindings (cutin の $contact.* 等) を resume ctx へ復元。
   const resumeBindings = _takePendingChoiceBindings() ?? {};
@@ -837,11 +939,11 @@ export function applyChoiceAndContinuation(
     Object.assign(ctx.bindings as Record<string, unknown>, resumeBindings);
     (ctx.dyn ??= {}).choiceIndex = choiceIndex;
   }
-  const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
+  const resolved = withChoiceSwitch(resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.player,
     humanChooser: true,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
-  });
+  }), switchRemoveUid);
   if (continuation) {
     runContinuationChain(state, {
       remainder: [resolved], ctx, kind: 'sequence', outer: continuation,
@@ -862,6 +964,7 @@ export function applyChoiceAndContinuation(
     // BUG-114: 復元した contact bindings を queue の bindings 引数 (6th) に渡し、entry → runtime ctx.bindings
     // へ伝達する (選択 option の $contact.byUid 等が runAllUntilEmpty 実行時に解決される)。
     resumeBindings as Record<string, unknown[]>,
+    resumedEntryExtras(pending.source),
   );
   runAllUntilEmpty(state);
 }
@@ -882,6 +985,7 @@ export function applyOptionalAndContinuation(
 ): void {
   const resumeEffect = _takePendingOptionalResume();
   if (!resumeEffect) return;
+  consumeQueuedOptional(pending);
   const continuation = _takePendingOptionalContinuation();
   // engine wave-18: surface 時の contact bindings を復元。ctx.bindings 自体は fresh {} のままにする —
   // resume walk は contact を必要とせず (optional 内 inContact pick / $contact.* は queue → runtime entryToCtx で
@@ -944,7 +1048,10 @@ export function applyOptionalAndContinuation(
     // 非空 (contact 有) のときのみ渡す — 空 optional (B09038 等) は従来通り bindings 省略 = 挙動不変。
     hasResumeBindings ? (resumeBindings as Record<string, unknown[]>) : undefined,
     // WC2b: costPaid を entry へ永続化 → runtime entryToCtx が復元し optional 内 $cost.* を解決 (B06023)。
-    resumeCostPaid ? { costPaid: resumeCostPaid } : undefined,
+    {
+      ...resumedEntryExtras(pending.source),
+      ...(resumeCostPaid ? { costPaid: resumeCostPaid } : {}),
+    },
   );
   runAllUntilEmpty(state);
 }
@@ -1109,13 +1216,13 @@ export function _drainAllEffectPicksForTest(
 }
 
 /**
- * BUG-138 (X8): human 所有の未解決 decision (pick queue / optional / choice 各 side-channel) が
+ * BUG-138/249: human 所有の未解決 decision (owner order / pick / optional / choice) が
  * engine 側に残っているか。playTurn が move 選択前に確認し、残っていれば
  * paused:{humanPick:true} で停止する (rules/05 効果解決中は次の行動に移れない /
  * rules/15 未解決効果は所有者が解決)。__humanPlayerSide 未設定 (null) なら常に false
  * — smoke / spectator は従来挙動 byte-equal。
  */
-export function hasPendingHumanPick(): boolean {
+export function hasPendingHumanPick(state?: GameState): boolean {
   const g = globalThis as {
     __pendingEffectPickQueue?: PendingEffectPickSide[];
     __pendingEffectOptionalSide?: { player: 'self' | 'opp' } | null;
@@ -1129,10 +1236,15 @@ export function hasPendingHumanPick(): boolean {
     __pendingMisread?: {
       player: 'self' | 'opp';
     } | null;
+    __pendingChooseInterceptSide?: { player: 'self' | 'opp' } | null;
+    __pendingRpsSide?: { player: 'self' | 'opp' } | null;
+    __pendingSetCardChoiceSide?: { player: 'self' | 'opp' } | null;
+    __pendingSetCardReplacementSide?: { player: 'self' | 'opp' } | null;
     __humanPlayerSide?: 'self' | 'opp' | null;
   };
   const humanSide = g.__humanPlayerSide ?? null;
   if (humanSide === null) return false;
+  if (state && pendingOwnerOrderGroup(state, humanSide).length >= 2) return true;
   if ((g.__pendingEffectPickQueue ?? []).some(p => p.player === humanSide)) return true;
   if (g.__pendingEffectOptionalSide?.player === humanSide) return true;
   if (g.__pendingEffectRepeatOptionalSide?.player === humanSide) return true;
@@ -1140,5 +1252,9 @@ export function hasPendingHumanPick(): boolean {
   if (g.__pendingDeckReorderSide?.player === humanSide) return true;
   if (g.__pendingDeckPlaceSide?.ownerPlayer === humanSide) return true;
   if (g.__pendingMisread?.player === humanSide) return true;
+  if (g.__pendingChooseInterceptSide?.player === humanSide) return true;
+  if (g.__pendingRpsSide?.player === humanSide) return true;
+  if (g.__pendingSetCardChoiceSide?.player === humanSide) return true;
+  if (g.__pendingSetCardReplacementSide?.player === humanSide) return true;
   return false;
 }

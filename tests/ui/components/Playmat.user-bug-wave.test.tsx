@@ -10,9 +10,15 @@ import { useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPick
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import type { HandCardMeta } from '@/ui/components/HandZone';
 
-const { dispatchEngineActionMock } = vi.hoisted(() => ({ dispatchEngineActionMock: vi.fn() }));
+const { dispatchEngineActionMock, surfacePendingSideChannelsMock } = vi.hoisted(() => ({
+  dispatchEngineActionMock: vi.fn(),
+  surfacePendingSideChannelsMock: vi.fn(),
+}));
 
-vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({ dispatchEngineAction: dispatchEngineActionMock }));
+vi.mock('@/ui/hooks/useEngineDispatch.js', () => ({
+  dispatchEngineAction: dispatchEngineActionMock,
+  surfacePendingSideChannels: surfacePendingSideChannelsMock,
+}));
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -68,6 +74,7 @@ describe('Playmat user bug wave', () => {
     useEvidenceFlipPickerStore.getState()._reset();
     useStackedCardCostPickerStore.setState({ current: null, _resolver: null });
     dispatchEngineActionMock.mockClear();
+    surfacePendingSideChannelsMock.mockClear();
   });
 
   afterEach(() => {

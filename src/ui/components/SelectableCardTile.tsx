@@ -12,6 +12,7 @@ export type SelectableCardTileProps = {
   selectTestId?: string;
   onSelect: (instanceId: string) => void;
   onExpand?: (cardId: string) => void;
+  selected?: boolean;
 };
 
 export function SelectableCardTile({
@@ -23,6 +24,7 @@ export function SelectableCardTile({
   selectTestId,
   onSelect,
   onExpand,
+  selected = false,
 }: SelectableCardTileProps): JSX.Element {
   const card = hidden ? undefined : readDef.card(cardId);
   const name = card?.names[0] ?? cardId;
@@ -34,7 +36,7 @@ export function SelectableCardTile({
 
   return (
     <div
-      className={`selectable-card-tile${hidden ? ' selectable-card-tile--hidden' : ''}`}
+      className={`selectable-card-tile${hidden ? ' selectable-card-tile--hidden' : ''}${selected ? ' selectable-card-tile--selected' : ''}`}
     >
       <button
         type="button"
@@ -43,6 +45,7 @@ export function SelectableCardTile({
         data-instance-id={instanceId}
         data-card-id={hidden ? undefined : cardId}
         aria-label={hidden ? `${hiddenLabel} を選択` : `${accessibleName}を選択`}
+        aria-pressed={selected}
         onClick={select}
         onContextMenu={canExpand ? (event) => {
           event.preventDefault();

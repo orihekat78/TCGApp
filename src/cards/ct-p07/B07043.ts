@@ -20,7 +20,7 @@ const revealUntilToHand = (cardName: string): Effect => ({
     {
       kind: 'atom',
       verb: 'deckRevealUntil',
-      args: { player: 'self', filter: { cardName }, bind: '$revealed', bindMatch: '$matched' },
+      args: { player: 'self', visibility: 'public', viewer: 'all', filter: { cardName }, bind: '$revealed', bindMatch: '$matched' },
     },
     {
       kind: 'conditional',

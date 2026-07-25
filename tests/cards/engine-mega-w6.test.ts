@@ -998,6 +998,6 @@ describe('megaw6 review-fix — useEventFromHand kind guard', () => {
     runAtom(s, 'useEventFromHand', { player: 'self', target: ['CHARCARD'] }, ctx);
     expect(s.players.self.hand).toContain('CHARCARD');
     expect(s.players.self.remove).not.toContain('CHARCARD');
-    expect(ctx.dyn?.chainStepNoApply, '使用 0 件 → gate').toBe(true);
+    expect(ctx.dyn, '非イベント対象の原子的な拒否は chain state を作らない').toBeUndefined();
   });
 });

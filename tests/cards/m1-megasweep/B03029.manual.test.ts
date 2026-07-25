@@ -69,7 +69,7 @@ function base(): GameState {
   s.players.opp.case = { cardId: 'co', status: '事件編', requiredEvidence: 6, colors: ['緑'], declaredUseCount: {} };
   s.players.self.deck.push('d1', 'd2', 'd3');
   s.players.opp.deck.push('e1', 'e2', 'e3');
-  s.turn = { number: 2, player: 'self' } as GameState['turn'];
+  s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
   return s;
 }
 
@@ -199,6 +199,7 @@ describe('S4 effect 0-pick (「〜まで」= 0枚可): 手札の緑イベント�
 describe('S5 反転 pin: B03029 が opp 所有 → cost/effect は opp 資源のみ消費、self は不変', () => {
   it('opp 自身スリープ + opp 緑event2枚→opp デッキ下 / self の remove・deck・hand 全て不変', () => {
     const s = base();
+    s.turn.player = 'opp';
     s.players.opp.scene.push(makeChar({ uid: 'u-wakasa', cardId: 'B03029', state: 'active' }));
     s.players.opp.remove.push('GEV5a', 'GEV5b');
     s.players.opp.hand.push('GEV6');

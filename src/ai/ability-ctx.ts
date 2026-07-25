@@ -43,6 +43,17 @@ export function makeDeclaredAbilCtx(
   uid: string,
   abilityId: string,
 ): EffectCtx | null {
+  // On-hand declared abilities use the same canonical sentinel as the
+  // enumerator and flow boundary: `hand:<owner>:<cardId>`.
+  if (uid.startsWith('hand:')) {
+    const [, rawPlayer, ...parts] = uid.split(':');
+    const cardId = parts.join(':');
+    if ((rawPlayer !== 'self' && rawPlayer !== 'opp') || !cardId || !state.players[rawPlayer].hand.includes(cardId)) return null;
+    return {
+      source: { cardId, uid, abilityId, player: rawPlayer, area: 'hand' },
+      bindings: {},
+    };
+  }
   // 事件カード (rules/21: 自分の事件の宣言能力)
   if (uid === 'case:self' || uid === 'case:opp') {
     const p: Player = uid === 'case:self' ? 'self' : 'opp';

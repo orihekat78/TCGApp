@@ -27,6 +27,12 @@ export type EffectCtx = {
     player: 'self' | 'opp';
     area: 'scene' | 'partner-area' | 'hand' | 'evidence' | 'file' | 'remove' | 'case';
     resolutionKind?: EffectResolutionKind;
+    /** Internal stack provenance retained while a human decision is paused. */
+    triggerBatch?: number;
+    ownerChosenOrder?: number;
+    ownerOrderConfirmed?: boolean;
+    /** Exact declaration provenance for causal observer gating. */
+    declaredBatch?: number | string;
   };
   bindings: Record<string, Candidate[]>;
   // mega-wave W6 step1 (2026-07-04): declareName verb が書き込む「プレイヤーが宣言した任意カード名」。

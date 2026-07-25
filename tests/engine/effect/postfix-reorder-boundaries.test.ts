@@ -70,6 +70,10 @@ describe('reorder boundary: effect stack', () => {
     state.players.self.deck = ['A1', 'A2', 'B1', 'B2', 'TAIL'];
     resolve.queue(state, entry(state, 'first', '$first', ['A1', 'A2']));
     resolve.queue(state, entry(state, 'second', '$second', ['B1', 'B2']));
+    state.pendingEffects.forEach((item, order) => {
+      item.ownerChosenOrder = order;
+      item.ownerOrderConfirmed = true;
+    });
 
     resolve.runAllUntilEmpty(state);
 

@@ -17,6 +17,11 @@ export type PendingEffectSource = {
   uid?: string;
   /** Resolving-card lifecycle marker. Must survive human decision pauses. */
   resolutionKind?: EffectResolutionKind;
+  /** Stack position to resume before the next simultaneous sibling. */
+  triggerBatch?: number;
+  ownerChosenOrder?: number;
+  ownerOrderConfirmed?: boolean;
+  declaredBatch?: number | string;
 };
 
 // Phase 3c (2026-06-22): choice 再開 holder。旧 2 channel (Resume=Effect / 旧 ChoiceBindings=bindings) を
@@ -213,6 +218,10 @@ export function _takePendingChooseInterceptResume(): ChooseInterceptResume | nul
   return v;
 }
 
+export function _peekPendingChooseInterceptSide(): PendingChooseInterceptSide | null {
+  return globalThis.__pendingChooseInterceptSide ?? null;
+}
+
 export function _clearPendingChooseInterceptSide(): void {
   globalThis.__pendingChooseInterceptSide = null;
   globalThis.__pendingChooseInterceptResume = null;
@@ -310,7 +319,7 @@ export type PendingEffectChoiceSide = {
   /** 元 ability の特定 + 再開 ctx 復元 + option1 の $self 解決 + event.queue source に使用 */
   source: PendingEffectSource & { uid: string };
   /** UI ラベル化用 (atom option のみ verb/args、それ以外は index のみ)。JSON シリアライズ可能 */
-  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string }[];
+  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string; sceneEnter?: boolean }[];
 };
 
 export function pushPendingEffectChoiceSide(v: PendingEffectChoiceSide): void {
@@ -418,6 +427,17 @@ export function _drainPendingSetCardReplacementSide(): PendingSetCardReplacement
   const g = globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null };
   const v = g.__pendingSetCardReplacementSide ?? null; g.__pendingSetCardReplacementSide = null; return v;
 }
+export function _peekPendingSetCardReplacementSide(): PendingSetCardReplacementSide | null {
+  return (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide ?? null;
+}
+/** Preserve a pre-existing replacement prompt across rejected transactions. */
+export function _restorePendingSetCardReplacementSide(v: PendingSetCardReplacementSide | null): void {
+  (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide = v;
+}
+/** Drop a replacement created by a payment that subsequently failed atomically. */
+export function _clearPendingSetCardReplacementSide(): void {
+  (globalThis as { __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null }).__pendingSetCardReplacementSide = null;
+}
 export type PendingSetCardChoiceSide = {
   player: Player;
   hostUid: string;
@@ -433,6 +453,9 @@ export function _drainPendingSetCardChoiceSide(): PendingSetCardChoiceSide | nul
   const v = g.__pendingSetCardChoiceSide ?? null;
   g.__pendingSetCardChoiceSide = null;
   return v;
+}
+export function _peekPendingSetCardChoiceSide(): PendingSetCardChoiceSide | null {
+  return (globalThis as { __pendingSetCardChoiceSide?: PendingSetCardChoiceSide | null }).__pendingSetCardChoiceSide ?? null;
 }
 export function setPendingChoiceContinuation(continuation: ContinuationFrame): void {
   const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
@@ -479,6 +502,9 @@ export function _drainPendingRpsSide(): PendingRpsSide | null {
   const v = g.__pendingRpsSide ?? null;
   g.__pendingRpsSide = null;
   return v;
+}
+export function _peekPendingRpsSide(): PendingRpsSide | null {
+  return (globalThis as { __pendingRpsSide?: PendingRpsSide | null }).__pendingRpsSide ?? null;
 }
 export function _clearPendingRpsSide(): void {
   (globalThis as { __pendingRpsSide?: PendingRpsSide | null }).__pendingRpsSide = null;

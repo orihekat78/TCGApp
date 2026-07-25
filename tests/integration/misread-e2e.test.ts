@@ -36,6 +36,7 @@ import { event } from '@/engine/event/index';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../helpers/fixtures';
@@ -96,6 +97,11 @@ function fullReset(): void {
   (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
 }
 
+function doReasoningUntilPending(state: GameState, uid: string): void {
+  engine.flow.doReasoning(state, uid);
+  runAllUntilEmpty(state);
+}
+
 describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => {
   beforeAll(() => {
     registerAll();
@@ -112,7 +118,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
     s.players.opp.deck = ['e1', 'e2', 'e3', 'e4', 'e5'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     const pending = _drainPendingMisread();
     expect(pending).not.toBeNull();
@@ -129,7 +135,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     // self.scene 空
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     expect(_drainPendingMisread()).toBeNull();
   });
@@ -144,7 +150,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     ];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     const pending = _drainPendingMisread();
     expect(pending).not.toBeNull();
@@ -163,7 +169,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     ];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     expect(_drainPendingMisread()).toBeNull();
   });
@@ -178,7 +184,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     ];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
     expect(pending).not.toBeNull();
 
@@ -212,7 +218,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
@@ -235,7 +241,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     let reasoningEndCount = 0;
     event.on('reasoning:end', () => { reasoningEndCount += 1; });
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
 
     expect(pending).not.toBeNull();
@@ -289,7 +295,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.opp.scene = [makeChar('r1', 'TEST_R')];
     s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
@@ -308,7 +314,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.opp.scene = [makeChar('r1', 'TEST_R')];
     s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
     s.players.self.scene[0].state = 'sleep';
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
@@ -328,7 +334,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.opp.scene = [makeChar('r1', 'TEST_R')];
     s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
     s.players.opp.scene = [];
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });

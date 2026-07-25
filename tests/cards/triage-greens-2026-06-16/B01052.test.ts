@@ -46,7 +46,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
-import { runAllUntilEmpty } from '@/engine/resolve/stack';
+import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/stack';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
@@ -62,6 +62,14 @@ type G = {
 const g = globalThis as G;
 const pickQueue = (): PendingEffectPickSide[] => g.__pendingEffectPickQueue ?? [];
 const setHuman = (s: 'self' | 'opp' | null) => { g.__humanPlayerSide = s; };
+function confirmOwnerOrder(s: GameState): GameState {
+  return produce(s, (d) => {
+    const group = pendingOwnerOrderGroup(d, 'self');
+    expect(group, 'same-timing enter effects pause before forced reveal').toHaveLength(2);
+    group.forEach((entry, order) => { entry.ownerChosenOrder = order; entry.ownerOrderConfirmed = true; });
+    runAllUntilEmpty(d);
+  });
+}
 
 // 合成 def 群 (id prefix DEC_B01052_ で衝突回避)。abilities 空 = 登場しても再帰トリガー無し。
 const FB = { type: 'card-back' as const, cardId: 'FB' };
@@ -195,6 +203,7 @@ describe('B01052 工藤優作 — gate5 runtime behavior', () => {
       handUseCard(d, 'self', 'B01052');
       runAllUntilEmpty(d);
     });
+    s = confirmOwnerOrder(s);
     expect(pickQueue().length, 'deckRevealUntil は chooseMatch 無し forced reveal → pick 無し').toBe(0);
     // 結果は盤面で確定済み (C_LV5 が登場)。
     expect(s.players.self.scene.some((c) => c.cardId === C_LV5), 'forced: level5 char は登場').toBe(true);

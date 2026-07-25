@@ -5,7 +5,7 @@
 //   自分の現場にいる〚カード名［毛利小五郎］〛が推理したとき、このキャラをリムーブしてもよい。
 //     そうした場合、LP0のキャラを1枚まで選び、ターン終了時までLP＋1する。
 //
-// a1: 推理反応 (reasoning:end, 非 selfOnly)。matcherCondition triggerCharMatches{side:'self',
+// a1: 推理反応 (reasoning:after-sleep, 非 selfOnly)。matcherCondition triggerCharMatches{side:'self',
 //   filter:{cardName:'毛利小五郎'}} で「自分側の[毛利小五郎]が推理したとき」を gate (B05011 同型)。
 //   効果は optional (「〜してもよい」=任意): する を選ぶと
 //     1) このキャラ ($self) をリムーブ (sceneRemove)、
@@ -20,7 +20,7 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-scene',
   trigger: {
-    hook: 'reasoning:end',
+    hook: 'reasoning:after-sleep',
     // 自分側の[毛利小五郎]が推理したとき (rules/11, 19 分割名対応)
     matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: { cardName: '毛利小五郎' } },
   },

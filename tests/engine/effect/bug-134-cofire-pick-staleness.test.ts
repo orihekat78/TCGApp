@@ -21,8 +21,8 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { event } from '@/engine/event/index';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { drainAiEffectPicks } from '@/engine/effect/apply-pick';
-import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { applyPickAndContinuation, drainAiEffectPicks } from '@/engine/effect/apply-pick';
+import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
@@ -86,26 +86,33 @@ describe('BUG-134 — 同時 queue entry の pick 候補は発動時確定 (guar
     g.__humanPlayerSide = null;
   });
 
-  it('機構ドキュメント: co-fire する 2 entry の pick 候補は両方とも発動時 (元) 盤面で固定される', () => {
-    // human path で 2 entry を surface させ、後続 entry の候補が「発動時の opp 盤面」(OX, OY) で
-    // 固定されていることを観測する (= 先行解決の前に確定 = BUG-134 の構造)。
+  it('human path: owner order resolves each sibling against the then-current board', () => {
+    // Both same-batch triggers wait for the owner order. The first resolution removes OX;
+    // only then is the second trigger's legal target set derived from the current board.
     g.__humanPlayerSide = 'self';
-    const s0 = produce(createEmptyGameState(), (d) => {
+    let state = produce(createEmptyGameState(), (d) => {
       d.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
       d.players.self.scene = [sceneChar('REMA', 'a0', { state: 'active' }), sceneChar('REMB', 'b0', { state: 'active' })];
       d.players.opp.scene = [sceneChar('OX', 'ox0', { state: 'sleep' }), sceneChar('OY', 'oy0', { state: 'sleep' })];
     });
-    produce(s0, (d) => {
+    state = produce(state, (d) => {
       event.emit(d, 'phase:end:start', { player: 'self' }, undefined);
       runAllUntilEmpty(d);
+      expect(d.pendingEffects.filter(entry => entry.state === 'pending')).toHaveLength(2);
+      d.pendingEffects.forEach((entry, order) => {
+        entry.ownerChosenOrder = order;
+        entry.ownerOrderConfirmed = true;
+      });
+      runAllUntilEmpty(d);
     });
-    const q = g.__pendingEffectPickQueue ?? [];
-    // 2 つの sceneRemove pick が queue され、各候補は発動時盤面 (ox0, oy0) で固定。
-    expect(q.length).toBe(2);
-    for (const p of q) {
-      expect(p.atomVerb).toBe('sceneRemove');
-      expect(p.candidates.map((c) => c.uid).sort()).toEqual(['ox0', 'oy0']);
-    }
+    const first = _drainPendingEffectPickSide()!;
+    expect(first.source.triggerBatch).toBeDefined();
+    // The first picker sees the original board; the second no longer offers the removed OX.
+    expect(first.candidates.map(candidate => candidate.uid).sort()).toEqual(['ox0', 'oy0']);
+    state = produce(state, draft => applyPickAndContinuation(draft, first, 'ox0'));
+    const second = _drainPendingEffectPickSide()!;
+    expect(second.candidates.map(candidate => candidate.uid)).toEqual(['ox0', 'oy0']);
+    expect(state.players.opp.scene.map(character => character.uid)).toEqual(['oy0']);
     g.__humanPlayerSide = null;
   });
 });

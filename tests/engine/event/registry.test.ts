@@ -106,6 +106,79 @@ describe('engine.event.registry', () => {
     });
   });
 
+  describe('trigger batch persistence', () => {
+    it('persists one batch across listener-owned queue calls and retains ability metadata', () => {
+      const eff: Effect = { kind: 'atom', verb: 'noop', args: {} };
+      event.on('turn:start', (state) => {
+        event.queue(state, eff, { player: 'self', cardId: 'B03006', abilityId: 'a3', description: 'draw' });
+      });
+      event.on('turn:start', (state) => {
+        event.queue(state, eff, { player: 'self', cardId: 'B03006', abilityId: 'a4', description: 'evidence' });
+      });
+      const result = produce(createEmptyGameState(), draft => {
+        event.emit(draft, 'turn:start', { player: 'self' });
+      });
+      expect(result.effectTriggerBatchSeq).toBe(1);
+      expect(result.pendingEffects.map((entry) => entry.triggerBatch)).toEqual([1, 1]);
+      expect(result.pendingEffects.map((entry) => entry.source.abilityId)).toEqual(['a3', 'a4']);
+      expect(result.effectTriggerBatchContext).toBeUndefined();
+    });
+
+    it('gives nested emit a distinct state-owned batch and restores the outer queue context', () => {
+      const eff: Effect = { kind: 'atom', verb: 'noop', args: {} };
+      event.on('turn:start', (state) => {
+        event.queue(state, eff, { player: 'self' });
+        event.emit(state, 'turn:end', {});
+        event.queue(state, eff, { player: 'self' });
+      });
+      event.on('turn:end', (state) => event.queue(state, eff, { player: 'self' }));
+      const result = produce(createEmptyGameState(), draft => event.emit(draft, 'turn:start', {}));
+      expect(result.effectTriggerBatchSeq).toBe(2);
+      expect(result.pendingEffects.map((entry) => entry.triggerBatch)).toEqual([1, 2, 1]);
+    });
+
+    it('does not inherit a resolved parent confirmation into a newly emitted timing batch', () => {
+      const eff: Effect = { kind: 'atom', verb: 'noop', args: {} };
+      event.on('turn:end', (state) => event.queue(state, eff, { player: 'self' }));
+      event.on('turn:end', (state) => event.queue(state, eff, { player: 'self' }));
+      const source = createEmptyGameState();
+      source.effectTriggerBatchContext = 4;
+      source.effectTriggerBatchConfirmedContext = true;
+
+      const result = produce(source, draft => event.emit(draft, 'turn:end', {}));
+
+      expect(result.pendingEffects.map((entry) => entry.triggerBatch)).toEqual([1, 1]);
+      expect(result.pendingEffects.map((entry) => entry.ownerOrderConfirmed)).toEqual([undefined, undefined]);
+      expect(result.effectTriggerBatchContext).toBe(4);
+      expect(result.effectTriggerBatchConfirmedContext).toBe(true);
+    });
+
+    it('continues the monotonic batch sequence after JSON save and reload', () => {
+      const eff: Effect = { kind: 'atom', verb: 'noop', args: {} };
+      event.on('turn:start', () => eff);
+      const first = produce(createEmptyGameState(), draft => event.emit(draft, 'turn:start', {}));
+      const restored = JSON.parse(JSON.stringify(first)) as GameState;
+      const second = produce(restored, draft => event.emit(draft, 'turn:start', {}));
+      expect(second.effectTriggerBatchSeq).toBe(2);
+      expect(second.pendingEffects.map((entry) => entry.triggerBatch)).toEqual([1, 2]);
+      expect(second.effectTriggerBatchContext).toBeUndefined();
+    });
+
+    it('recovers a legacy missing sequence from persisted pending batch ids', () => {
+      const restored = createEmptyGameState();
+      delete restored.effectTriggerBatchSeq;
+      restored.pendingEffects.push({
+        id: 'saved', source: { player: 'self' }, triggeredBy: { hook: 'saved' },
+        triggeredAt: { turn: 1, phase: 'main', nano: 1 },
+        effect: { kind: 'atom', verb: 'noop', args: {} }, triggerBatch: 9, state: 'pending',
+      });
+      event.on('turn:start', () => ({ kind: 'atom', verb: 'noop', args: {} }));
+      const result = produce(restored, draft => event.emit(draft, 'turn:start', {}));
+      expect(result.effectTriggerBatchSeq).toBe(10);
+      expect(result.pendingEffects.at(-1)!.triggerBatch).toBe(10);
+    });
+  });
+
   describe('Unsubscribe', () => {
     it('on の戻り値を呼ぶと listener が解除される', () => {
       let called = 0;

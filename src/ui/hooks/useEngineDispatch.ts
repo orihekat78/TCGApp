@@ -14,7 +14,7 @@
 import { produce } from 'immer';
 import * as flow from '@/engine/flow/index.js';
 import { mutate } from '@/engine/mutate/index.js';
-import { runAllUntilEmpty } from '@/engine/resolve/index.js';
+import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { applyChooseInterceptResponse, applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, applyChoiceAndContinuation, applyOptionalAndContinuation, applyRepeatOptionalAndContinuation, applyRpsAndContinuation, applySetCardChoiceAndContinuation, applySetCardReplacement } from '@/engine/effect/apply-pick.js';
 import { resolveEffectPicks } from '@/engine/effect/resolve-picks.js';
 import { useGameStateStore } from '@/ui/state/store.js';
@@ -269,7 +269,23 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
     case 'setEffectOrder': {
       // entry を直接 mutate (isAllowed で entry 存在 + owner 一致は確認済)
       const entry = draft.pendingEffects.find((e) => e.id === action.entryId);
-      if (entry) entry.ownerChosenOrder = action.order;
+      if (!entry) return;
+      const entries = pendingOwnerOrderGroup(draft, action.player);
+      const from = entries.findIndex((e) => e.id === entry.id);
+      if (from < 0) return;
+      const target = Math.max(0, Math.min(action.order, entries.length - 1));
+      const [moved] = entries.splice(from, 1);
+      if (!moved) return;
+      entries.splice(target, 0, moved);
+      entries.forEach((e, index) => { e.ownerChosenOrder = index; });
+      return;
+    }
+    case 'resolveEffectOrder': {
+      const group = pendingOwnerOrderGroup(draft, action.player);
+      for (const [order, entry] of group.entries()) {
+        entry.ownerChosenOrder = order;
+        entry.ownerOrderConfirmed = true;
+      }
       return;
     }
     case 'effectPickResolve': {
@@ -328,7 +344,7 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
       // __pendingEffectPickQueue へ再 push され既存 effectPickResolve 経路で連鎖消化される。
       const pendingC = useGameStateStore.getState().pendingEffectChoice;
       if (!pendingC) return;
-      applyChoiceAndContinuation(draft, pendingC, action.choiceIndex);
+      applyChoiceAndContinuation(draft, pendingC, action.choiceIndex, 'switchRemoveUid' in action ? action.switchRemoveUid : undefined);
       // クリアは produce 後に dispatchEngineAction が行う
       return;
     }
@@ -533,6 +549,7 @@ export function surfacePendingSideChannels(): void {
  */
 export function dispatchEngineAction(action: EngineAction): DispatchResult {
   const store = useGameStateStore.getState();
+  const pendingReplacementBefore = store.pendingSetCardReplacement;
   const current = store.gameState;
   if (current === null) return { ok: false, reason: 'no-state' };
   if (!isAllowed(current, action)) return { ok: false, reason: 'not-allowed' };
@@ -548,6 +565,13 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       }),
     );
     // Commit 2: declareChar/Case 直後は ActionContext.id を store.activeActionId にセット
+    // BUG-249: owner ordering is stored inside GameState, but the opponent-turn
+    // driver subscribes to its explicit wake-up tick and side channels. Wake it
+    // after the human confirms while the CPU still owns the turn.
+    if (action.type === 'resolveEffectOrder'
+      && useGameStateStore.getState().gameState?.turn.player === 'opp') {
+      store.bumpOppMoveTick();
+    }
     if (_justDeclaredAxId) {
       store.setActiveActionId(_justDeclaredAxId);
       _justDeclaredAxId = null;
@@ -639,9 +663,13 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
       store.setPendingEffectRepeatOptional(repeatOptionalSide);
     }
     // user_request 20260522_01 #12 BUG-061: deckRevealUntil 演出側チャネル drain
-    const deckRevealSide = _drainPendingDeckRevealSide();
-    if (deckRevealSide) {
-      store.setPendingDeckReveal(deckRevealSide);
+    const visibleReveal = useGameStateStore.getState().pendingDeckReveal;
+    if (action.type === 'effectPickResolve' && visibleReveal?.awaitingPick === true) {
+      store.setPendingDeckReveal(null);
+    }
+    if (useGameStateStore.getState().pendingDeckReveal === null) {
+      const deckRevealSide = _drainPendingDeckRevealSide();
+      if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
     }
     // BUG-136: deckToBottomBound 順序選択チャネル drain。deckReorderResolve は解決で消化 → 次 (通常 null)。
     const deckReorderSide = _drainPendingDeckReorderSide();
@@ -660,6 +688,7 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     return { ok: true };
   } catch (e) {
     _justDeclaredAxId = null;
+    store.setPendingSetCardReplacement(pendingReplacementBefore);
     const detail = e instanceof Error ? e.message : String(e);
     return { ok: false, reason: 'engine-error', detail };
   }

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `33e9aabe3a3d`
+> Source hash: `139f3fe76412`
 
 公式ルール [`21-declared-ability-cost.md`](../../../rules/21-declared-ability-cost.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -25,7 +25,7 @@
 - [`PR265`](../by-spec/grounding--PR265.md)
 - [`caseDeclaredEvidenceFlip`](../by-spec/shared-classes--caseDeclaredEvidenceFlip.md)
 
-## 📄 参照ソース (386)
+## 📄 参照ソース (387)
 
 - [`src/ai/ability-ctx.ts`](../../../../src/ai/ability-ctx.ts)
 - [`src/cards/_shared/caseDeclaredEvidenceFlip.ts`](../../../../src/cards/_shared/caseDeclaredEvidenceFlip.ts)
@@ -47,4 +47,4 @@
 - [`src/cards/ct-d10/D10011.ts`](../../../../src/cards/ct-d10/D10011.ts)
 - [`src/cards/ct-d10/D10020.ts`](../../../../src/cards/ct-d10/D10020.ts)
 - [`src/cards/ct-d10/D10021.ts`](../../../../src/cards/ct-d10/D10021.ts)
-- _...ほか 366 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 367 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

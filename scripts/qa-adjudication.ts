@@ -35,6 +35,17 @@ export type QaAdjudicationManifest = {
   snapshot: { normalizedFaqHash: string; itemCount: number; qaIdSetHash: string; itemSetHash: string; answerSetHash: string; conflictSetHash: string };
   rawPackages: QaRawPackage[];
 };
+export type QaAdjudicationQueueItem = {
+  qaId: string;
+  cardId: string;
+  sectionHash: string;
+  questionHash: string;
+  answerHash: string;
+  evidence: string[];
+  candidateGroup: { key: string; size: number };
+  groupEquivalentEligible: boolean;
+};
+export type QaAdjudicationQueue = { total: number; unreviewedCount: number; shards: Array<{ shard: string; unreviewedCount: number; items: QaAdjudicationQueueItem[] }> };
 
 function compareOrdinal(left: string, right: string): number {
   const a = Array.from(left);
@@ -282,6 +293,51 @@ function pathAt(root: string, ...parts: string[]): string {
   return resolve(root, '.claude/specs/qa-adjudication', ...parts);
 }
 
+/** Read-only hash-only work queue. Does not touch ignored raw data or adjudication files. */
+export function readQaAdjudicationQueue(options: { root?: string } = {}): QaAdjudicationQueue {
+  const root = resolve(options.root ?? ROOT);
+  const snapshot = readJson(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'));
+  validateSnapshot(snapshot);
+  const shards = SHARDS.map((name) => {
+    const shard = readJson(pathAt(root, `${name}.json`));
+    validateQaAdjudicationShard(shard);
+    if (shard.shard !== name) throw new Error(`adjudication shard filename mismatch: ${name}`);
+    return shard;
+  });
+  const shardItems = shards.flatMap((shard) => shard.items);
+  const snapshotById = new Map(snapshot.items.map((item) => [item.qaId, item]));
+  const expectedIds = [...snapshotById.keys()].sort(compareOrdinal);
+  const actualIds = shardItems.map((item) => item.qaId).sort(compareOrdinal);
+  if (actualIds.length !== expectedIds.length || actualIds.some((qaId, index) => qaId !== expectedIds[index])) throw new Error('adjudication shard union does not match tracked snapshot exactly once');
+  const groups = new Map<string, QaSnapshot['items']>();
+  for (const item of snapshot.items) {
+    const key = hash(`${item.sectionHash}\u0000${item.questionHash}\u0000${item.answerHash}`);
+    const members = groups.get(key) ?? [];
+    members.push(item);
+    groups.set(key, members);
+  }
+  const queueShards = shards.map((shard) => {
+    const items = shard.items.map((adjudication) => {
+      const snapshotItem = snapshotById.get(adjudication.qaId);
+      if (!snapshotItem || adjudication.answerHash !== snapshotItem.answerHash) throw new Error(`adjudication answer hash drift: ${adjudication.qaId}`);
+      const key = hash(`${snapshotItem.sectionHash}\u0000${snapshotItem.questionHash}\u0000${snapshotItem.answerHash}`);
+      const members = groups.get(key)!;
+      return {
+        qaId: snapshotItem.qaId,
+        cardId: snapshotItem.cardId,
+        sectionHash: snapshotItem.sectionHash,
+        questionHash: snapshotItem.questionHash,
+        answerHash: snapshotItem.answerHash,
+        evidence: [...adjudication.evidence],
+        candidateGroup: { key, size: members.length },
+        groupEquivalentEligible: members.length >= 2 && members.every((member) => qaShard(member.qaId) === shard.shard),
+      };
+    });
+    return { shard: shard.shard, unreviewedCount: shard.items.filter((item) => item.result === 'unreviewed').length, items };
+  });
+  return { total: shardItems.length, unreviewedCount: shardItems.filter((item) => item.result === 'unreviewed').length, shards: queueShards };
+}
+
 function rawPackageMetadata(root: string): QaRawPackage[] {
   const rawRoot = resolve(root, '.claude/specs/cards-data/_raw');
   if (!existsSync(rawRoot)) return [];
@@ -362,10 +418,24 @@ export function writeQaAdjudicationBootstrap(root: string, force = false): void 
 
 function main(): void {
   try {
-    const bootstrap = process.argv.includes('--bootstrap');
-    if (bootstrap) writeQaAdjudicationBootstrap(ROOT, process.argv.includes('--force'));
-    const result = mergeQaAdjudication({ root: ROOT, check: process.argv.includes('--check'), requireReviewed: process.argv.includes('--require-reviewed'), withLocalRaw: process.argv.includes('--with-local-raw') });
-    process.stdout.write(`[qa:adjudication] items=${Object.keys(result.statuses).length} all-adjudicated=${result.allAdjudicated}\n`);
+    const args = process.argv.slice(2);
+    const exact = (...expected: string[]) => args.length === expected.length && args.every((arg, index) => arg === expected[index]);
+    if (exact('--queue')) {
+      process.stdout.write(`${JSON.stringify(readQaAdjudicationQueue({ root: ROOT }))}\n`);
+      return;
+    }
+    if (exact('--bootstrap') || exact('--bootstrap', '--force')) {
+      writeQaAdjudicationBootstrap(ROOT, args.includes('--force'));
+      const result = mergeQaAdjudication({ root: ROOT });
+      process.stdout.write(`[qa:adjudication] items=${Object.keys(result.statuses).length} all-adjudicated=${result.allAdjudicated}\n`);
+      return;
+    }
+    if (exact('--check') || exact('--check', '--require-reviewed') || exact('--check', '--with-local-raw') || exact('--check', '--with-local-raw', '--require-reviewed')) {
+      const result = mergeQaAdjudication({ root: ROOT, check: true, requireReviewed: args.includes('--require-reviewed'), withLocalRaw: args.includes('--with-local-raw') });
+      process.stdout.write(`[qa:adjudication] items=${Object.keys(result.statuses).length} all-adjudicated=${result.allAdjudicated}\n`);
+      return;
+    }
+    throw new Error('invalid Q&A adjudication CLI arguments');
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : error}\n`);
     process.exitCode = 1;

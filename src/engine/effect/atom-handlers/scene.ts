@@ -262,9 +262,18 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       // そこから cardId 1 枚を取り除いてから scene へ。これがないと「リムーブから
       // 登場」が「リムーブに残ったまま scene にコピー登場」になる duplication bug。
       // handAddFromRemove と同 pattern (line 360-367)。
-      const sourceArea = ((a.target && typeof a.target === 'object')
+      const targetSourceArea = ((a.target && typeof a.target === 'object')
         ? ((a.target as { query?: { area?: string; side?: string } }).query?.area)
         : undefined) as 'remove' | 'evidence' | 'file' | 'deck' | 'hand' | undefined;
+      // A direct hand declaration can enter its own source without a target
+      // picker (B06103/B06103P). Consume that exact source card once; do not
+      // turn an on-hand effect into a duplicate scene character.
+      const declaredHandSource = targetSourceArea === undefined
+        && a.from === 'hand'
+        && typeof ctx.source.uid === 'string'
+        && ctx.source.uid.startsWith('hand:')
+        && ctx.source.cardId === cardId;
+      const sourceArea = targetSourceArea ?? (declaredHandSource ? 'hand' : undefined);
       const sourceSide = ((a.target && typeof a.target === 'object')
         ? ((a.target as { query?: { side?: string } }).query?.side)
         : undefined) as 'self' | 'opp' | undefined;
@@ -317,7 +326,9 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         if (idx !== -1) { arr.splice(idx, 1); mutate.remove.emitExit(s, fromPlayer, cardId); } // wave-4: remove→登場 離脱 (原因非依存 remove:exit、B05087 1st 能力が観測しうる)
         if (idx !== -1) rebaseBoundCardIndexes(ctx, fromPlayer, 'remove', idx, cardId);
       } else if (sourceArea === 'hand') {
-        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const fromPlayer = declaredHandSource
+          ? ctx.source.player
+          : (sourceSide === 'opp' ? 'opp' : enterPlayer);
         const arr = s.players[fromPlayer].hand;
         const idx = arr.indexOf(cardId);
         if (idx !== -1) arr.splice(idx, 1);

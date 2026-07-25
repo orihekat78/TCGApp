@@ -36,7 +36,7 @@ const a1: AbilityDef = {
     kind: 'sequence',
     steps: [
       // 中森青子 が出るまで1枚ずつ公開 (B01018 同型)
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { cardName: '中森青子' }, bind: '$revealed', bindMatch: '$matched' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', filter: { cardName: '中森青子' }, bind: '$revealed', bindMatch: '$matched' } },
       // 出たら必ず手札へ (found guard、選択不可 = rules/26)
       {
         kind: 'conditional',

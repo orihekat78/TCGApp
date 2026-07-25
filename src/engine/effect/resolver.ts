@@ -18,6 +18,7 @@
 
 import type { GameState, Effect, EffectCtx, Candidate } from '../types/index.js';
 import type { ContinuationFrame } from './resolve-picks.js';
+import { isDraft } from 'immer';
 import { runAtom } from './atom-handlers.js';
 import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrSelectCharUids タグ書込
 import { evalCond } from '../cond/eval.js';
@@ -25,6 +26,24 @@ import { resolveEffectPicks } from './resolve-picks.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
 import { _attachPendingDeckReorderContinuation, _peekPendingDeckReorderSide, resolveBindRef } from './atom-handlers/_shared.js';
 import { _peekPendingEffectRepeatOptionalSide, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, setPendingSetCardChoiceRemainder, type RpsHand } from './pending-state.js';
+import { toPlainDeep } from './pending-state.js';
+
+function decisionSource(ctx: EffectCtx): {
+  cardId: string; abilityId: string; uid: string;
+  resolutionKind?: EffectCtx['source']['resolutionKind'];
+  triggerBatch?: number; ownerChosenOrder?: number; ownerOrderConfirmed?: boolean;
+} {
+  return {
+    cardId: ctx.source.cardId ?? '',
+    abilityId: ctx.source.abilityId ?? '',
+    uid: ctx.source.uid ?? '',
+    ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
+    ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
+    ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
+    ...(ctx.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: ctx.source.ownerOrderConfirmed } : {}),
+    ...(ctx.source.declaredBatch !== undefined ? { declaredBatch: ctx.source.declaredBatch } : {}),
+  };
+}
 
 /**
  * BUG-111 family (continuation-nest, 2026-06-22): 中断 pick に continuation frame を連結する。
@@ -33,14 +52,52 @@ import { _peekPendingEffectRepeatOptionalSide, pushPendingEffectRepeatOptionalSi
  * 親 sequence (外側) が step3 を append でき、head=内側 → outer=外側 の順に実行される。
  * 単一 frame (outer 無し) は従来 (BUG-111 #1/#2) と byte 互換。
  */
+const continuationCtxSnapshots = new WeakMap<object, EffectCtx>();
+
 function attachContinuation(pick: { continuation?: ContinuationFrame }, frame: ContinuationFrame): void {
+  // UI dispatch runs the resolver inside Immer. A continuation that crosses the
+  // produce boundary must not retain revoked drafts. Plain engine callers rely on
+  // the original ctx/bindings identity, so preserve it when no draft is present.
+  const safeFrame = snapshotContinuationFrame(frame);
   if (!pick.continuation) {
-    pick.continuation = frame;
+    pick.continuation = safeFrame;
     return;
   }
   let tail = pick.continuation;
   while (tail.outer) tail = tail.outer;
-  tail.outer = frame;
+  tail.outer = safeFrame;
+}
+
+function snapshotContinuationFrame(frame: ContinuationFrame): ContinuationFrame {
+  const ctxHasDraft = containsDraft(frame.ctx);
+  const remainderHasDraft = containsDraft(frame.remainder);
+  if (!ctxHasDraft && !remainderHasDraft) return frame;
+
+  let ctx = frame.ctx;
+  if (ctxHasDraft) {
+    const ctxKey = frame.ctx as object;
+    const cached = continuationCtxSnapshots.get(ctxKey);
+    if (cached) ctx = cached;
+    else {
+      ctx = toPlainDeep(frame.ctx);
+      continuationCtxSnapshots.set(ctxKey, ctx);
+    }
+  }
+  return {
+    ...frame,
+    ctx,
+    remainder: remainderHasDraft ? toPlainDeep(frame.remainder) : frame.remainder,
+  };
+}
+
+function containsDraft(value: unknown, seen = new WeakSet<object>()): boolean {
+  if (value === null || (typeof value !== 'object' && typeof value !== 'function')) return false;
+  if (isDraft(value)) return true;
+  const objectValue = value as object;
+  if (seen.has(objectValue)) return false;
+  seen.add(objectValue);
+  return Object.keys(objectValue).some((key) =>
+    containsDraft((objectValue as Record<string, unknown>)[key], seen));
 }
 
 /**
@@ -267,7 +324,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         player: human,
         ownerPlayer: owner,
         aiHand,
-        source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '', ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}) },
+        source: decisionSource(ctx),
       });
       setPendingRpsResume(eff, { ...(ctx.bindings as Record<string, unknown>) });
       (ctx.dyn ??= {}).rpsPending = true;
@@ -292,7 +349,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       }
       const entries = host.char.setCards.map((entry, index) => ({ instanceId: entry.instanceId ?? '', ordinal: index + 1 })).filter((entry) => entry.instanceId !== '');
       if (entries.length === 0) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
-      pushPendingSetCardChoiceSide({ player: human, hostUid, entries, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '', uid: ctx.source.uid ?? '', ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}) } });
+      pushPendingSetCardChoiceSide({ player: human, hostUid, entries, source: decisionSource(ctx) });
       setPendingSetCardChoiceResume(eff, { ...(ctx.bindings as Record<string, unknown>) });
       (ctx.dyn ??= {}).setCardChoicePending = true;
       return;

@@ -367,6 +367,13 @@ export type CardDef = {
   flavor?: string;
   imageUrl: string;                        // ローカル運用 (rules: 法務スタンス)
   abilities: AbilityDef[];                 // 能力定義 (Phase 5 で TSV+merge)
+  /**
+   * Printed "this event may be used if ..." authorization only.  This is
+   * deliberately separate from AbilityDef.condition: icon and effect
+   * conditions may make a used event resolve with no effect, but never by
+   * themselves prohibit using it.
+   */
+  useCondition?: Condition;
   ruleRefs: string[];                      // 例: ["rules/11-reasoning.md §LP≤0"]
 
   // kind-specific optional fields

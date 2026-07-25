@@ -58,7 +58,8 @@ describe('監査 leave suspect の候補フィルタ (B08042/B04030/B03013)', ()
     // self: D08009 lv5 / B05066 lv9、opp: D08003 lv8 / B05066 lv9
     s.players.self.scene.push(sc('D08009', 'self-l5', 'active') as never, sc('B05066', 'self-l9', 'active') as never);
     s.players.opp.scene.push(sc('D08003', 'opp-l8', 'sleep') as never, sc('B05066', 'opp-l9', 'sleep') as never);
-    const { verb, args } = atomArgsOf(B04030, 0);
+    const effect = B04030.abilities.find((ability) => ability.id === 'a2')!.effect as { verb: string; args: Record<string, unknown> };
+    const { verb, args } = effect;
     runAtom(s, verb as never, args, ctxSelf('B04030'));
     const side = _drainPendingEffectPickSide();
     expect(side?.atomVerb).toBe('sceneSetState');

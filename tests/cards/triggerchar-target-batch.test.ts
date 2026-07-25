@@ -45,10 +45,10 @@ describe('engine-extension triggerChar→target batch (2026-06-06)', () => {
     setHuman(null);
   });
 
-  it('card def: a1=misread / a2=reasoning:end + triggerCharMatches opp + chain', () => {
+  it('card def: a1=misread / a2=reasoning:after-sleep + triggerCharMatches opp + chain', () => {
     expect(B05080.abilities[0].type).toBe('icon-misread');
     expect(B05080.abilities[1].trigger).toMatchObject({
-      hook: 'reasoning:end',
+      hook: 'reasoning:after-sleep',
       matcherCondition: { kind: 'triggerCharMatches', side: 'opp' },
     });
     expect((B05080.abilities[1].effect as { kind: string }).kind).toBe('chain');
@@ -69,6 +69,7 @@ describe('engine-extension triggerChar→target batch (2026-06-06)', () => {
     });
     expect(s.players.self.hand, '手札 D08005 がリムーブされた').not.toContain('D08005');
     expect(readChar.lp(s, 'enemy#1'), 'そのキャラ (推理した相手) を LP-1 (2→1)').toBe(1);
+    expect(s.players.opp.evidence, 'LP-1 is visible before this reasoning gains evidence').toHaveLength(1);
   });
 
   it('手札0枚 → discard no-candidate で chain break (LP-1 しない =「そうした場合」)', () => {
@@ -101,5 +102,21 @@ describe('engine-extension triggerChar→target batch (2026-06-06)', () => {
     });
     expect(s.players.self.hand, '自分側推理では発火せず 手札も減らない').toContain('D08005');
     expect(readChar.lp(s, 'mine#1'), '自分側推理では LP-1 不発').toBe(2);
+  });
+
+  it('opponent partner reasoning is a decoy: it does not satisfy the printed character trigger', () => {
+    const policy = new HeuristicPolicy();
+    let s: GameState = createEmptyGameState();
+    s.turn = { number: 5, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.self.scene = [sceneChar('B05080', 'hyd#1')];
+    s.players.self.hand = ['D08005'];
+    s.players.opp.partner = { cardId: 'D08001', state: 'active', location: 'partner-area' };
+    s.players.opp.deck = ['D08005', 'D08006', 'D08009'];
+    s = produce(s, (d) => {
+      doReasoning(d, 'partner:opp');
+      runAllUntilEmpty(d);
+      drainAiEffectPicks(d, policy);
+    });
+    expect(s.players.self.hand).toContain('D08005');
   });
 });

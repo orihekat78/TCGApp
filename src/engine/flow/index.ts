@@ -16,6 +16,7 @@ export {
   canPartnerAbility,
   usePartnerAbility,
   canDeclaredAbility,
+  canActivateDeclaredAbility,
   useDeclaredAbility,
   grantedDeclaredAbilitiesOf,
   activateDeclaredAbility,

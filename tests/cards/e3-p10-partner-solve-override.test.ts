@@ -42,6 +42,8 @@ beforeEach(() => {
 // winnable かつ partner 色を指定した state
 const winnable = (caseId: string, partnerId: string, evCount = 2, required = 2): GameState =>
   produce(createEmptyGameState(), (d) => {
+    d.turn.player = 'self';
+    d.turn.phase = 'main';
     const p = d.players.self;
     p.case.cardId = caseId;
     p.case.status = '解決編';

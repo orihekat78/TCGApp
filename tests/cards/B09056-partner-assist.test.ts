@@ -16,6 +16,7 @@ import { _resetTriggeredRegistered, registerTriggeredListener } from '@/engine/l
 import { mutate } from '@/engine/mutate';
 import { _resetRegistry } from '@/engine/read/def';
 import { runAllUntilEmpty } from '@/engine/resolve';
+import { pendingOwnerOrderGroup } from '@/engine/resolve';
 import { createEmptyGameState } from '@/engine/state-factory';
 
 const FILE_BACK = { type: 'card-back' as const, cardId: 'D04014' };
@@ -51,6 +52,13 @@ describe('B09056P 赤井秀一 — パートナーアシスト中の登場時効
     expect(state.players.self.partner.location).toBe('file-area');
 
     handUseCard(state, 'self', B09056P.id);
+    runAllUntilEmpty(state);
+    const group = pendingOwnerOrderGroup(state, 'self');
+    expect(group, 'same-timing effects pause before the optional prompt').toHaveLength(2);
+    group.forEach((entry, order) => {
+      entry.ownerChosenOrder = order;
+      entry.ownerOrderConfirmed = true;
+    });
     runAllUntilEmpty(state);
 
     const optional = _drainPendingEffectOptionalSide();

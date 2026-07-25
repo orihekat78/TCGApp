@@ -7,10 +7,12 @@ import type { GameState } from '@/engine/types/game-state.js';
 import type { EngineAction } from './types.js';
 import { canEndTurnByContract } from '../useActionsPanelFlow/end-turn-contract.js';
 import { _canResolveMisreadPicks } from '@/engine/listeners/misread.js';
+import { pendingOwnerOrderGroup } from '@/engine/resolve/stack.js';
 
 // ---- can-check (前段ガード) ----
 
 export function isAllowed(state: GameState, action: EngineAction): boolean {
+  if (isNewPrimaryAction(action) && hasExclusivePublicActionContext()) return false;
   switch (action.type) {
     case 'reasoning':
       return flow.canReason(state, action.uid);
@@ -23,26 +25,11 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
     case 'partnerAbility':
       return flow.canPartnerAbility(state, action.player, action.abilId);
     case 'declaredAbility':
-      return flow.canDeclaredAbility(state, action.uid, action.abilId);
-    case 'assist': {
-      // src/ai/move-enumerator.ts canAssist と同条件
-      const ps = state.players[action.player];
-      if (ps.partner.state !== 'active') return false;
-      if (ps.partner.location !== 'partner-area') return false;
-      if (state.turnState[action.player].assistedThisTurn) return false;
-      return true;
-    }
-    case 'solveCase': {
-      // src/ai/move-enumerator.ts canSolveCase と同条件
-      const ps = state.players[action.player];
-      if (ps.case.status !== '解決編') return false;
-      if (ps.evidence.length < ps.case.requiredEvidence) return false;
-      if (ps.partner.state !== 'active') return false;
-      if (state.turnState[action.player].assistedThisTurn) return false;
-      // E3 P53: 「自分は【事件解決】できない」case (B09107) は事件解決不可 (canWin/canSolveCase(UI/AI) と同 gate)
-      if (readGame.cannotSolveCase(state, action.player)) return false;
-      return true;
-    }
+      return flow.canActivateDeclaredAbility(state, action.uid, action.abilId, action.costParams);
+    case 'assist':
+      return readGame.canPartnerAssist(state, action.player);
+    case 'solveCase':
+      return readGame.canPartnerSolveCase(state, action.player);
     case 'actionAgainstChar':
       return flow.canActionAgainstChar(state, action.byUid, action.targetUid);
     case 'actionAgainstCase':
@@ -124,9 +111,20 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       const lock = _getResolutionLock();
       if (lock.locked) return false;
       // entry が存在 + owner が action.player と一致する場合のみ
-      const entry = state.pendingEffects.find((e) => e.id === action.entryId);
-      if (!entry) return false;
-      return entry.source.player === action.player;
+      const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (human !== action.player) return false;
+      const group = pendingOwnerOrderGroup(state, human);
+      return group.some((entry) => entry.id === action.entryId);
+    }
+    case 'resolveEffectOrder': {
+      const lock = _getResolutionLock();
+      if (lock.locked) return false;
+      const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (human !== action.player) return false;
+      const group = pendingOwnerOrderGroup(state, human);
+      return group.length >= 2
+        && group.length === action.entryIds.length
+        && group.every((entry, index) => entry.id === action.entryIds[index]);
     }
     case 'endTurn': {
       return canEndTurnByContract(state, action.player);
@@ -138,5 +136,47 @@ export function isAllowed(state: GameState, action: EngineAction): boolean {
       void _exhaustive;
       return false;
     }
+  }
+}
+
+/** Human resolution prompts and action contexts own public dispatch until resolved. */
+function hasExclusivePublicActionContext(): boolean {
+  const store = useGameStateStore.getState();
+  if (_getResolutionLock().locked || store.activeActionId !== null) return true;
+  return store.pendingHirameki !== null
+    || store.pendingMisread !== null
+    || store.pendingEffectPick !== null
+    || store.pendingEffectChoice !== null
+    || store.pendingEffectOptional !== null
+    || store.pendingChooseIntercept !== null
+    || store.pendingLeaveIntercept !== null
+    || store.pendingRps !== null
+    || store.pendingSetCardChoice !== null
+    || store.pendingSetCardReplacement !== null
+    || store.pendingEffectRepeatOptional !== null
+    || store.pendingDeckReveal !== null
+    || store.pendingDeckReorder !== null
+    || store.pendingDeckPlace !== null;
+}
+
+/** These actions initiate a fresh turn action; resolution actions remain allowed. */
+function isNewPrimaryAction(action: EngineAction): boolean {
+  switch (action.type) {
+    case 'reasoning':
+    case 'handUseCard':
+    case 'handUseCardSwitch':
+    case 'nextHint':
+    case 'partnerAbility':
+    case 'declaredAbility':
+    case 'assist':
+    case 'solveCase':
+    case 'actionAgainstChar':
+    case 'actionAgainstCase':
+    case 'actionDeclareChar':
+    case 'actionDeclareCase':
+    case 'endTurn':
+      return true;
+    default:
+      return false;
   }
 }

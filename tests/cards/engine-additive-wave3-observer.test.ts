@@ -19,6 +19,7 @@ import { doReasoning } from '@/engine/flow/main/reasoning';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { makeChar } from '../helpers/fixtures';
@@ -272,6 +273,7 @@ describe('wave3 G04 — misread:performed observer (人間 defender / UI dispatc
 
     // opp 推理 → reasoning:before-add → defender=self(人間) なので side-channel に pendingMisread が乗る
     doReasoning(s, 'r1');
+    runAllUntilEmpty(s);
     const pending = _drainPendingMisread();
     expect(pending, '人間 defender 経路 = side-channel set').not.toBeNull();
 

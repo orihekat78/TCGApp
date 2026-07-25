@@ -27,6 +27,8 @@ import { FileArea } from './FileArea.js';
 import { EvidenceArea } from './EvidenceArea.js';
 import { HandZone, type HandCardMeta } from './HandZone.js';
 import { TopBar } from './TopBar.js';
+import { EffectStackPanel } from './EffectStackPanel.js';
+import { pendingOwnerOrderGroup } from '@/engine/resolve/stack.js';
 import { ActionsPanel, type ActionItemId } from './ActionsPanel.js';
 import { ConfirmModal } from './ConfirmModal.js';
 import {
@@ -611,6 +613,7 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   // board-content 配下の [data-flip-id] の構造変化を MutationObserver で監視し位置差分をスライド。
   const boardRef = useRef<HTMLDivElement>(null);
   useFlipAnimation(boardRef);
+  const effectOrderEntries = gameState ? pendingOwnerOrderGroup(gameState, 'self') : [];
   return (
     <div className="scaler" id="scaler" data-stage-scale={stageScale}>
       <div className="stage">
@@ -645,7 +648,6 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
             ).length
           }
         />
-
         <div className="play-area">
           {/* Opponent hand strip (top of opp mat, count + mini card-backs) */}
           <div className="opp-hand-strip" aria-label="相手手札">
@@ -1125,6 +1127,13 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
           </div>
         )}
       </div>
+      <EffectStackPanel
+        entries={effectOrderEntries}
+        open={effectOrderEntries.length >= 2}
+        reorderPlayer="self"
+        onReorder={(entryId, order) => { dispatchEngineAction({ type: 'setEffectOrder', entryId, order, player: 'self' }); }}
+        onConfirmOrder={(entryIds) => { dispatchEngineAction({ type: 'resolveEffectOrder', entryIds, player: 'self' }); }}
+      />
     </div>
   );
 }

@@ -11,15 +11,16 @@
 // side-channel-pattern.md 4 点 checklist の (3) UI 側実装
 
 import type { JSX } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch.js';
 import { CardArt } from './CardArt.js';
 import { CardExpandModal } from './CardExpandModal.js';
 import './DeckRevealOverlay.css';
 
-type Phase = 'reveal' | 'toBottom' | 'shuffle';
+type Phase = 'reveal' | 'return' | 'toBottom' | 'shuffle';
 
 export function DeckRevealOverlay(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingDeckReveal);
@@ -50,14 +51,27 @@ export function DeckRevealOverlay(): JSX.Element | null {
     startedAt: number | null;
   } | null>(null);
   const detailOpen = expandModal.expandedCard !== null;
+  const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? 'self';
+  const viewerAllowed = pending === null
+    || pending.visibility === 'public'
+    || pending.viewer === 'all'
+    || pending.viewer === humanSide;
+  const dismiss = useCallback((): void => {
+    setPending(null);
+    surfacePendingSideChannels();
+  }, [setPending]);
+
+  useEffect(() => {
+    if (pending && !viewerAllowed) dismiss();
+  }, [pending, viewerAllowed, dismiss]);
 
   useEffect(() => {
     // B04026 等は公開選択後、順序決定/手札登場へ進む。
     // 公開モーダルに統合済みの snapshot を残し、後から誤った shuffle 演出を出さない。
     if (pending && pending.awaitingPick !== true && downstreamDecisionActive) {
-      setPending(null);
+      dismiss();
     }
-  }, [pending, downstreamDecisionActive, setPending]);
+  }, [pending, downstreamDecisionActive, dismiss]);
 
   useEffect(() => {
     if (!pending) {
@@ -71,8 +85,8 @@ export function DeckRevealOverlay(): JSX.Element | null {
     // pick 解決の再入で awaitingPick 無しの pending が再 set され通常演出で完了する。
     // S2 B01022: deck-window pick 未解決中も同様に hold (上記 deckWindowPickActive)。
     const revealMs = pending.revealed.length * 500 + 500;
-    const toBottomMs = 1100;
-    const shuffleMs = 1000;
+    const toBottomMs = pending.presentation === 'reveal-return' ? 700 : 1100;
+    const shuffleMs = pending.presentation === 'reveal-return' ? 0 : 1000;
     const totalMs = revealMs + toBottomMs + shuffleMs;
     let timeline = timelineRef.current;
     if (!timeline || timeline.pending !== pending) {
@@ -89,21 +103,22 @@ export function DeckRevealOverlay(): JSX.Element | null {
     // reveal: 1 枚 0.5 秒 + 余韻 / toBottom: 1.1 秒 / shuffle: 1.0 秒
     const remainingMs = timeline.remainingMs;
     if (remainingMs <= 0) {
-      setPending(null);
+      dismiss();
       return;
     }
     timeline.startedAt = Date.now();
     const toBottomDelay = remainingMs - toBottomMs - shuffleMs;
     const shuffleDelay = remainingMs - shuffleMs;
     const t1 = toBottomDelay > 0
-      ? setTimeout(() => setPhase('toBottom'), toBottomDelay)
+      ? setTimeout(() => setPhase(pending.presentation === 'reveal-return' ? 'return' : 'toBottom'), toBottomDelay)
       : undefined;
     const t2 = shuffleDelay > 0
       ? setTimeout(() => setPhase('shuffle'), shuffleDelay)
       : undefined;
-    if (toBottomDelay <= 0 && shuffleDelay > 0) setPhase('toBottom');
-    if (shuffleDelay <= 0) setPhase('shuffle');
-    const t3 = setTimeout(() => setPending(null), remainingMs);
+    if (toBottomDelay <= 0 && shuffleDelay > 0) setPhase(pending.presentation === 'reveal-return' ? 'return' : 'toBottom');
+    if (pending.presentation === 'reveal-return' && toBottomDelay <= 0) setPhase('return');
+    if (shuffleDelay <= 0 && pending.presentation !== 'reveal-return') setPhase('shuffle');
+    const t3 = setTimeout(dismiss, remainingMs);
     return () => {
       if (t1 !== undefined) clearTimeout(t1);
       if (t2 !== undefined) clearTimeout(t2);
@@ -113,15 +128,17 @@ export function DeckRevealOverlay(): JSX.Element | null {
         timeline.startedAt = null;
       }
     };
-  }, [pending, setPending, deckWindowPickActive, detailOpen]);
+  }, [pending, deckWindowPickActive, detailOpen, downstreamDecisionActive, dismiss]);
 
-  if (!pending) return null;
+  if (!pending || !viewerAllowed) return null;
   // 公開選択は CardListModal へ統合。後続の並べ替え/手札登場の操作も遮らない。
   if (pending.awaitingPick === true || deckWindowPickActive || downstreamDecisionActive) return null;
 
   const playerLabel = pending.player === 'self' ? '自分' : '相手';
   const headerText = phase === 'reveal'
     ? `${playerLabel}のデッキを公開中…`
+    : phase === 'return'
+      ? '公開したカードを元のデッキへ戻しています…'
     : phase === 'toBottom'
       ? '残りのカードをデッキの下へ…'
       : 'デッキをシャッフル中…';
@@ -138,14 +155,16 @@ export function DeckRevealOverlay(): JSX.Element | null {
           <div className={`deck-reveal-list phase-${phase}`} data-testid="deck-reveal-list">
             {pending.revealed.map((cardId, idx) => {
               const name = readDef.card(cardId)?.names?.[0] ?? cardId;
-              const isMatched =
-                pending.matched === cardId && idx === pending.revealed.length - 1;
+              const isMatched = pending.presentation !== 'reveal-return'
+                && pending.matched === cardId
+                && idx === pending.revealed.length - 1;
               return (
                 <div
                   key={`${cardId}-${idx}`}
                   className={`deck-reveal-card ${isMatched ? 'is-matched' : 'is-rest'}`}
                   style={{ ['--reveal-index' as string]: String(idx) }}
                   data-testid={`deck-reveal-card-${idx}`}
+                  data-card-id={cardId}
                   onContextMenu={(event) => {
                     event.preventDefault();
                     expandModal.open(cardId);

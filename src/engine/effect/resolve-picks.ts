@@ -30,12 +30,27 @@ import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
+import { eventUseAllowed } from '../flow/main/hand-use-card.js';
 
 type Player = 'self' | 'opp';
 
-function pendingSource<T extends { cardId: string; abilityId: string }>(ctx: EffectCtx, source: T): T {
-  const resolutionKind = ctx.source.resolutionKind;
-  return resolutionKind ? { ...source, resolutionKind } : source;
+function containsSceneEnter(effect: Effect): boolean {
+  if (effect.kind === 'atom') return effect.verb === 'sceneEnter';
+  if (effect.kind === 'sequence' || effect.kind === 'parallel') return effect.steps.some(containsSceneEnter);
+  if (effect.kind === 'conditional') return containsSceneEnter(effect.then) || (effect.else ? containsSceneEnter(effect.else) : false);
+  if (effect.kind === 'optional') return containsSceneEnter(effect.effect);
+  return false;
+}
+
+function pendingSource<T extends { cardId: string; abilityId: string }>(ctx: EffectCtx, source: T) {
+  return {
+    ...source,
+    ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
+    ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
+    ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
+    ...(ctx.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: ctx.source.ownerOrderConfirmed } : {}),
+    ...(ctx.source.declaredBatch !== undefined ? { declaredBatch: ctx.source.declaredBatch } : {}),
+  };
 }
 
 /**
@@ -530,6 +545,11 @@ function substituteAtomPick(
   // 受ける」/ キャラ能力では選べる / イベントが与えた能力はキャラの能力扱い B02052) と整合。
   const sourceKind = readDef.card(ctx.source.cardId ?? '')?.kind;
   const cands = cands0.filter(c => {
+    // An effect that says "use an event from hand" has the same printed
+    // authorization gate as every other event-use entry point.  Filter here,
+    // before both human pending UI and AI policy selection, so an invalid card
+    // cannot consume the only pick and make a later valid card unreachable.
+    if (verbStr === 'useEventFromHand' && c.kind === 'card' && !eventUseAllowed(state, c.player, c.cardId)) return false;
     if (c.kind !== 'char' || c.player === ctx.source.player) return true;
     if (readChar.charUntargetableByOppEffect(state, c.uid)) return false;
     return sourceKind !== 'event' || !readChar.charUntargetableByOppEvent(state, c.uid);
@@ -989,6 +1009,7 @@ export function resolveEffectPicks(
             index: i,
             verb: o.kind === 'atom' ? (o.verb as string) : undefined,
             args: o.kind === 'atom' ? (o.args as Record<string, unknown>) : undefined,
+            sceneEnter: containsSceneEnter(o),
           })),
         });
         // 再開 holder = この choice 効果そのもの (top-level)。sequence 内なら sequence case が

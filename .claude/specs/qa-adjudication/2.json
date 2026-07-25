@@ -5,1354 +5,1826 @@
     {
       "qaId": "card:B01006:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a",
       "answerHash": "b38556a3b0d73ffc75872defde055c2d635f5354b7caed0b0b2816b748591886",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/17-icons.md:45",
+        "src:src/cards/ct-p01/B01006.ts:3",
+        "src:src/engine/read/char.ts:426"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
     },
     {
       "qaId": "card:B01006:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
       "answerHash": "fda2286021be4b097fae9dc0b0dd802834a37cf7555c306f1441a64eac98957a",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/19-special-rules.md:21",
+        "src:src/cards/ct-p01/B01006.ts:3",
+        "src:src/engine/cond/eval.ts:138"
+      ],
+      "noteCodes": [
+        "BOND-PARTNER-NEGATIVE-TEST-MISSING"
+      ]
     },
     {
       "qaId": "card:B01034:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p01/B01034.ts:13"
+      ],
+      "noteCodes": [
+        "RAW-READ",
+        "TEST-GAP"
+      ]
     },
     {
       "qaId": "card:B01047:36a8324e64bb363a2f90c2997622ad8675905ce2551ebb909bc2acbd2dd9b583",
       "answerHash": "14671016884f8a0a511a47c2e442d47e7e61a4b7d84a74ff29c727c983d901b2",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01047.ts:104"
+      ]
     },
     {
       "qaId": "card:B01074:b2d6edcda9d8ff9b4508bd45fe365d41afd76529aabbd7dae53e3506a04d451b",
       "answerHash": "5db57eaf44033a487f659f59f376aaff83e46f34ae5ec6a06a077ef54a39bd7d",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01074.ts:37"
+      ]
     },
     {
       "qaId": "card:B01081:bbf035d318b99174302c36993983a94dfb9c3cdccbc9e7385e12bfd54e083fcf",
       "answerHash": "0721d5a352031374c7c09d22307b4ce3582d7bbedc744add76f02a929e0cdf91",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/22-qa-action-contact.md:10",
+        "src:src/cards/ct-p01/B01081.ts:69"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
     },
     {
       "qaId": "card:B01082:6feef271ccc669032b420f176f053bce3c5b7f303f22b9c5f01c2e5b9a7ceee5",
       "answerHash": "9a119509ead489d1dba564d0f7a8985ff446464db46bdbdd0274e28d1093c538",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01082.ts:26"
+      ]
     },
     {
       "qaId": "card:B01082:d5e12470a488f5fff7a5c8744ee1bf72381334453fe8ba111bb032298a5cb2f8",
       "answerHash": "219a7142fc09c68faad5fbf0b4fabbf88c876da98a49ccf4ab8e2ec41908ded8",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01082.ts:26"
+      ]
     },
     {
       "qaId": "card:B01088:01bb734094827c257df91fd003da99ea0d4b837ed48b4cd5abecc6a860322d09",
       "answerHash": "a59d427662d1ccb609694fffe240c6a21ead2cf3ad85ee7a2442755e68819ff2",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01088.ts:56"
+      ]
     },
     {
       "qaId": "card:B01095:7fd96e0746c8292ec5c55c1b6aabcff60e70a5f163392c0baf95cd026581e305",
       "answerHash": "cf9e029f63dc02ea9b94a8e39361c805a3c0332630c8b9f13aed6e80abe4514c",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01095.ts:71"
+      ]
     },
     {
       "qaId": "card:B02012:99c598d5872d5554c140b03c33a74088ff73468718440070381e8f4a8af1eb96",
       "answerHash": "54532f394fd126baabc2026fddad3b9df7113a2e475b7b3c160fbc06d5f16d83",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:12",
+        "src:src/cards/ct-p02/B02012.ts:35"
+      ],
+      "noteCodes": [
+        "TEST-GAP"
+      ]
     },
     {
       "qaId": "card:B02030:22477398ef5d506ba40697a07f730240d929ade78c8a7edaa6aeed9aeb97b358",
       "answerHash": "deac3f359bdb60021b232a80af7f820e7531dfb0860314bad66246e2f0969614",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02030.ts:30"
+      ]
     },
     {
       "qaId": "card:B02038:d80f04fd9ed2fa2cc2d120f6086e1121f6342b9135da0bfe0abfeb59a2967713",
       "answerHash": "229f99df8cdcd7c9a8fea3db132cff9db1ac7e3828825a3edeb0c25e53d402eb",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02038.ts:112"
+      ]
     },
     {
       "qaId": "card:B02047:398a5969fe581da3a0acd13503e5ba93ff177775f17125cca57fe30166b6ce7f",
       "answerHash": "87ac70513d7e7470d6f5c6536af7fcde0147a29de8ff973c1213f8a94d201c0d",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/22-qa-action-contact.md:37",
+        "src:src/cards/ct-p02/B02047.ts:49"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
     },
     {
       "qaId": "card:B02050:b32a63d8b5cf1c8e71f20ccb817ee97888a391b5359b7618f6208aa4ca783fb9",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02050.ts:54"
+      ]
     },
     {
       "qaId": "card:B02058:762a82ad66fef61f8a12010f8d850cf7cca54916f71d63712f5f7227f290bd90",
       "answerHash": "c35c48d623b1f8f493b2b6868c6ffb5b3ff583a9d623419aa7caad09ce21c6e1",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/26-qa-deck-refresh.md:65",
+        "src:src/cards/ct-p02/B02058.ts:58"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
     },
     {
       "qaId": "card:B02060:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
       "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02060.ts:42"
+      ]
     },
     {
       "qaId": "card:B02062:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02062.ts:69"
+      ]
     },
     {
       "qaId": "card:B02072:d370f1b6e59c56f2d1bd035a04300d6b1292944bc2328768ee314b6a7f84ae47",
       "answerHash": "ed917d61402287be39335fe97b783c430fef846c0a729c3ac4eee2d0f4f2588b",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02072.ts:48"
+      ]
     },
     {
       "qaId": "card:B03002:23c9bd7209af9bd9d812ae6f4607207f920a91b7b692105dc6b17b3c3d655bf2",
       "answerHash": "547d3539bbb32a41913b887375a93a4c15d3c470de217f9de0e58b6671fd4adc",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:14",
+        "src:src/cards/ct-p03/B03002.ts:27",
+        "src:src/engine/listeners/triggered.ts:403"
+      ],
+      "noteCodes": [
+        "TURN1-ZERO-MATCH-CONSUMPTION-TEST-MISSING"
+      ]
     },
     {
       "qaId": "card:B03002:32dfdf12d183f78c1bf123cbe67660e3b1299585ac3db54acd8020d208b98bee",
       "answerHash": "0b6657e5a8c49ad27b97e004447efbd296f6050d2801c10fa4f1d5527fb20a3c",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/25-qa-effects-resolution.md:79",
+        "src:src/cards/ct-p03/B03002.ts:13",
+        "src:src/engine/resolve/stack.ts:113"
+      ],
+      "noteCodes": [
+        "NEXT-HINT-EVENT-OWN-EFFECT-ORDER-TEST-MISSING"
+      ]
     },
     {
       "qaId": "card:B03017:e5a197771ebd36c3392d1f9c23bc43656be4718a9f597831c06c90894f4f84fe",
       "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/09-cutin-disguise.md:23",
+        "src:src/cards/ct-p03/B03017.ts:12",
+        "src:src/engine/flow/contact.ts:88"
+      ],
+      "noteCodes": [
+        "SELF-TURN-CUTIN-NO-EFFECT-UNTESTED"
+      ]
     },
     {
       "qaId": "card:B03017:f93a2659346899a7ff80fb8ed4b5248f01756c1a96ce538d8aa1ec49e3c160cc",
       "answerHash": "ca9db1c1ea19bbf281991e8f0b8c78f6e0a031d5f022f8fedfd7c7682cf0dd21",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/08-contact.md:51",
+        "src:src/cards/ct-p03/B03017.ts:15",
+        "src:src/engine/flow/action/state-machine.ts:510"
+      ],
+      "noteCodes": [
+        "CUTIN-STATE-CHANGE-CONTACT-PERSISTS-UNTESTED"
+      ]
     },
     {
       "qaId": "card:B03025:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/26-qa-deck-refresh.md:24",
+        "src:src/cards/ct-p03/B03025.ts:91"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
     },
     {
       "qaId": "card:B03028:a65a25a1eb6dfd4bb92665c599e72f3b1640055984ce4ac017127fc5bdc86746",
       "answerHash": "a5971c615dc236ff5ee928f6e8f2d73905f43862e0bb78d82bebf268dd2ce1a3",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03028.ts:153"
+      ]
     },
     {
       "qaId": "card:B03033:e0b65c7b32899b4f47f84b7048f97cb7fee3ddaac8c945c9e96d887550675395",
       "answerHash": "c4c98c23bd8cdda07a5f3827296ed34c61e0fc68bb67e7657d5c723a2b06416b",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03033.ts:50"
+      ]
     },
     {
       "qaId": "card:B03038:54fb4af056b07232c5a41ed53a697aad9f30338fa1638762288377010dd900f9",
       "answerHash": "387b73164ae6d56a103e6d6ea950cd0e613ad171a264f3855a095d0f9bb411b0",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03038.ts:65"
+      ]
     },
     {
       "qaId": "card:B03053:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
       "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/13-keywords.md:25",
+        "src:src/cards/ct-p03/B03053.ts:65"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
     },
     {
       "qaId": "card:B03056:2a7ae93b926ee4d1cf83481b483817a89ddefee141c9b7bccd3e7e432b00b4af",
       "answerHash": "71076e36aa1f6a39894f597da1f6dda804c7f76557105ca28046f3ba83cfba45",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03056.ts:150"
+      ]
     },
     {
       "qaId": "card:B03056:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03056.ts:150"
+      ]
     },
     {
       "qaId": "card:B03078:3459835ef11734bdac00b08e5c35eeac6f76f4792302ddac9d6ffee79e1a71be",
       "answerHash": "3f7f6ed9c016b36dc69f7c83a39a8b6b00c2ff1cc4efa7f684b3c8b062b4935e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03078.ts:68"
+      ]
     },
     {
       "qaId": "card:B03080:6f9e39e813dd420a6e0992c9b0ff99606674c4416e5ffd20099e5b41a25f1008",
       "answerHash": "cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03080.ts:85"
+      ]
     },
     {
       "qaId": "card:B03088:5a4999726e0fc32bc0789f91b5a02b5de6702355d0e149df27c161568e92a980",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03088.ts:86"
+      ]
     },
     {
       "qaId": "card:B03091:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
       "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03091.ts:27"
+      ]
     },
     {
       "qaId": "card:B03096:586cbc6530a51d5bcfbe6b4b5eac53defa0f7184e31d96b19b4cdbfebca0b4b8",
       "answerHash": "151f71e0f3fe880bba4086d745e94540f1546d2bed45fbe51037afd3a7c27ead",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03096.ts:73"
+      ]
     },
     {
       "qaId": "card:B03096:9f6dd27f461691dbed853838301402ea7f626e048ca55d38f4cd670fd660d185",
       "answerHash": "3ea606db500aeba76b751dd64cae403b7c9ada7d0f9ab10ec7983a65c67104f6",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03096.ts:73"
+      ]
     },
     {
       "qaId": "card:B03096:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03096.ts:73"
+      ]
     },
     {
       "qaId": "card:B03116:6d00eabe29a7a4e6bbdca2e810c993d56415fc94c3310a33400a53ebd1b54db6",
       "answerHash": "742bf65aed3a396edbd434c0710cd1487c91e995b86098ff751656a60cb3b722",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03116.ts:96"
+      ]
     },
     {
       "qaId": "card:B03118:671a506d6cd45b85ab6e121432c77d00d150acccde74ac53b33970e89b80f54f",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03118.ts:52"
+      ]
     },
     {
       "qaId": "card:B03132:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03132.ts:46"
+      ]
     },
     {
       "qaId": "card:B04013:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p04/B04013.ts:37"
+      ],
+      "noteCodes": [
+        "B04013-SCENE-ENTER-DECLINE-TEST-MISSING"
+      ]
     },
     {
       "qaId": "card:B04017:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "src:src/cards/ct-p04/B04017.ts:37"
+      ],
+      "noteCodes": [
+        "B04017-SIMULTANEOUS-TRIGGER-ORDER-TEST-MISSING"
+      ]
     },
     {
       "qaId": "card:B04032:1c06bf42b4f0a4e87e760d612038f4bde5afe72aeb2f69ffba9c046565ef93f3",
       "answerHash": "c1f982c38bd6fc257bc3de8864cd5d56faf34ebd8427677c6fbbdb11d8e5e6d6",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04032.ts:13"
+      ],
+      "noteCodes": [
+        "B04032-SELF-SCENE-COUNT-TEST-MISSING"
+      ]
     },
     {
       "qaId": "card:B04040:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04040.ts:46"
+      ]
     },
     {
       "qaId": "card:B04061:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04061.ts:46"
+      ]
     },
     {
       "qaId": "card:B04068:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04068.ts:53"
+      ]
     },
     {
       "qaId": "card:B04086:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
       "answerHash": "24c759d28a4ec6639a5e29d0bfe9ecf8ae35c9fef100ec84884250ecbdda798e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04086.ts:34"
+      ]
     },
     {
       "qaId": "card:B04090:7f1ae0bce0cdf8a001d292c56d381d5d2c4c43ff040f867fe277f19c9785402a",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04090.ts:66"
+      ]
     },
     {
       "qaId": "card:B04092:65acd5a3820a8bdf77b58c13b11916e953402d3e434d28526d2bda9354897f23",
       "answerHash": "14f798a4ba48e0198334b13fd303c9de8ee4dd37f8bcb7d18f9b474a5dc0d347",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04092.ts:65"
+      ]
     },
     {
       "qaId": "card:B05011:3b685813b3b6006e643ed5a3ea2ffe4f560a1bfba591df13fbb02e700820b75a",
       "answerHash": "ac91fa239fbfba4e40089018d6a4744d2492ac2955a4de5f1ad844b220dfde72",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/11-reasoning.md:11",
+        "src:src/cards/ct-p05/B05011.ts:18",
+        "src:src/engine/flow/main/reasoning.ts:109",
+        "src:src/engine/flow/main/reasoning.ts:177",
+        "src:src/engine/listeners/triggered.ts:85"
+      ],
+      "noteCodes": [
+        "B05011-REASONING-DECLARE-TIMING-MISMATCH"
+      ]
     },
     {
       "qaId": "card:B05013:84e243eb4cca4e3333cfc9cf98b770240221c6fd3cb8eb27269fdb313ef9702e",
       "answerHash": "133a3564c4613f67da4b3b62b0c581e8414404471673f6861688291bc7b53448",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05013.ts:29"
+      ],
+      "noteCodes": [
+        "B05013-EVIDENCE-ORDER-CARD-BOUND-TEST-MISSING"
+      ]
     },
     {
       "qaId": "card:B05039:407ae363ecac714c23502b4c3c7307985df30d93d94449ee29c88ae3b653a3c6",
       "answerHash": "50c869438aaaa3ac411c6fdc95fc4b581c58f7ce37a07a746bb90ac4d5352053",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05039.ts:75"
+      ]
     },
     {
       "qaId": "card:B05058:005869b804a7f1211f4012d0d1923a1b445b97f955eaa4b6df86b2644fff0648",
       "answerHash": "ecbe86a579ce0fefe59eec0001d65691f85cba5ca5fc360fdb491fc53103d4e3",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05058.ts:36"
+      ]
     },
     {
       "qaId": "card:B05058:357bc184b1a324a6e8f0c47236894c6098a8a9bf9d216a5f53ab86712037a2e5",
       "answerHash": "af64accc95354e4a6c8d31baffaae1f879f49bbab0facb0708eef0482d4401ca",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05058.ts:36"
+      ]
     },
     {
       "qaId": "card:B05060:633f9760add3d888abf4d567f7e31ef389cb534d862dd3b498f4422090bc6cb4",
       "answerHash": "bb85881edd52a7cfd35eb3210f5e76e43e4dd05bf78467d7777740d52aef6998",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05060.ts:75"
+      ]
     },
     {
       "qaId": "card:B05063:f196b334a1672c967abd518d16ca1eba1da2ee1cc4b6222c3860b1569b172c2e",
       "answerHash": "1f9dea222899252685faff65ee3a04b23d7ec4a0bc5637f27004c075dc0a5485",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05063.ts:85"
+      ]
     },
     {
       "qaId": "card:B05075:24cf16c15551dab0130d679d4fda19070b9be436c7b6460bcd533ef9bf2d63d6",
       "answerHash": "bd32e864059ef0c6140248556ab1e3030f471e881db6318bed4f7e0fa140d7c6",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05075.ts:64"
+      ]
     },
     {
       "qaId": "card:B05076:54fa4ff4de63f3cf433dca3c54731cce244bb95165955ad394dc8785c031109c",
       "answerHash": "e15ab05b4dffecf964839e7ce66f28061dcfae448e476e52470e258ee532985f",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05076.ts:64"
+      ]
     },
     {
       "qaId": "card:B05076:e38956dd4cbd8054602a5e4bfe2a6bb9975ac9f1a94716e2df291eeb333990ab",
       "answerHash": "6677ac1532dee8001a9807a5d7a4397e53b51fca5f5f4e8e88959aa7ca5baff4",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05076.ts:64"
+      ]
     },
     {
       "qaId": "card:B05097:f2b2c74eedde643a2bf417dabc86acbd7df8535f21a45a9e8ae4772110d99ced",
       "answerHash": "0356945115ef81637755ce32fb794659b9ef3710b85f9325d7562be13a4893f4",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05097.ts:86"
+      ]
     },
     {
       "qaId": "card:B05114:844962a343a6a8cb30e74e7af29660bfc18ffe26f0529a82c9560dbb086c5248",
       "answerHash": "a27ae75a4bba47c8fb23d3f20ea03e0173aff98c55a371f7dc8380b373d39980",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05114.ts:54"
+      ]
     },
     {
       "qaId": "card:B05115:5171672c0eaee3a84dded05fce799e16ccd57911a1397e87474850f57dac45d2",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05115.ts:52"
+      ]
     },
     {
       "qaId": "card:B06004:2cdfbf4e0f6aa22ba6ade98705a08b6f260291f3e528e236990015cc0230538c",
       "answerHash": "03f747fc0004d0ab02278308d610f766abb0d85b5802adb55124456806679b84",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06004.ts:103"
+      ]
     },
     {
       "qaId": "card:B06020:485eda52c818372d3d67bc9b0b368cc836fce3c368e78da9338bd95f0d5fd98a",
       "answerHash": "f5834e58aee59e1ce9d5ad7ab8ee2402bca1d4a5152a27ee2fba7ef640612302",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06020.ts:34"
+      ]
     },
     {
       "qaId": "card:B06034:a54fba013cee1c4f1657f7007dbc6e664a2cedf67c66990f1a3a2daa903b7ef5",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06034.ts:86"
+      ]
     },
     {
       "qaId": "card:B06035:9e8f0558023c02a4b87236725dd1b3167831cd8d4708d5563ef872ea2abd278a",
       "answerHash": "ba94442c68e785c5a42f9ef9f433e4246b2d73ab01fc47ed8b3f2d2361515800",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06035.ts:57"
+      ]
     },
     {
       "qaId": "card:B06036:ce881ce830b0156ebce763608d2da6878acb277765f1fc7927e75ef2a4257b2a",
       "answerHash": "fdb4cd8735372c7760f3c8fcef6f0210434450e71dc1ee3a988e3f8e0a3ce3bd",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06036.ts:85"
+      ]
     },
     {
       "qaId": "card:B06036:d2801ad523314893321b13f87864afdf389f5e2d19fb245f32abaf27689701c4",
       "answerHash": "99d6a346089467b0690dbc60d37949341be463529e4fba04d9a3dae4118a166c",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06036.ts:85"
+      ]
     },
     {
       "qaId": "card:B06047:71275d44596838d9a65df3ebe860bf925508ff37f83c2cad8b1eb99176f7b63d",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06047.ts:10"
+      ]
     },
     {
       "qaId": "card:B06048:3ff94362a5adf45433f46c7c052d2cf4a4edfc526106d85c5cf811bd4c11c7cd",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06048.ts:66"
+      ]
     },
     {
       "qaId": "card:B06058:e0392238c06113cff66e959d9819ed9dd84b2cab1a32abc93bf5c445f0af575d",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06058.ts:73"
+      ]
     },
     {
       "qaId": "card:B06067:216635e95c72a51ec62eae36e6d454a46acedc98cc0a2a21ba43330df5ea5cdc",
       "answerHash": "c5d1cee01abe0dc70c768bdce2c746a11eb5ea2128ea73834b9de379031eea94",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06067.ts:109"
+      ]
     },
     {
       "qaId": "card:B06082:778145d226f364876d2f75e0d6bc0336b6c61bdfdd1822254bb244878b57c818",
       "answerHash": "2c48d0949f5d59e3446ce09f98f14b5a47264f924c9091c5de1a8e7d8bccb616",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06082.ts:101"
+      ]
     },
     {
       "qaId": "card:B06088:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06088.ts:72"
+      ]
     },
     {
       "qaId": "card:B06088:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06088.ts:72"
+      ]
     },
     {
       "qaId": "card:B06090:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "c33da85009cf273d54a9605099d3838c12df2fe8b7a93d9bca03398b93d173c3",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06090.ts:97"
+      ]
     },
     {
       "qaId": "card:B06095:9d0790992ac15c9e4a2f284d4b0f667e34549c1e3c38b86e01080fa0a851b41a",
       "answerHash": "dfc687d5bd704d90cfe7cb905e4b2580b1b16357c920715a87bc2ed21315563a",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06095.ts:24"
+      ]
     },
     {
       "qaId": "card:B07001:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07001.ts:91"
+      ]
     },
     {
       "qaId": "card:B07002:18266db4732b9571ebae419afbd36f26fb54fb836c7752251e64e6dad817b4d1",
       "answerHash": "633d5abb94c53099b0ffb15b3de00e013fb959272fb2c28019d9082c3263d5c1",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07002.ts:87"
+      ]
     },
     {
       "qaId": "card:B07019:2ac36a628488dd7fcb62f9d2873454623005fcfe75b98f02ac098e2d298e4477",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07019.ts:49"
+      ]
     },
     {
       "qaId": "card:B07031:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
       "answerHash": "3ef97efe6e461ba6b4a5f8bba236edd1078298c43d05f2c5ec145c0ec58c2282",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07031.ts:93"
+      ]
     },
     {
       "qaId": "card:B07045:e49f743ebbec3e1494c711d047472f55c71b83b546a83501ab44c18d582290a5",
       "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07045.ts:42"
+      ]
     },
     {
       "qaId": "card:B07058:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
       "answerHash": "d8539f8a4353174dfab714067b969b9c1f5c5ce33ab94b14fc039cad8c93abc5",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07058.ts:78"
+      ]
     },
     {
       "qaId": "card:B07068:426886de8581b320e3ebb09308f95cdb635a8c7c5a9cea88b3333ff26606f83d",
       "answerHash": "edf0f03e2a909c6af537ac0fe4079553dd6f60524e9c24674f251a699059db59",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07068.ts:155"
+      ]
     },
     {
       "qaId": "card:B07068:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "f61d3330613e46bff354c9ef6abb4392333314b68d6e99be4376d4cab5bce520",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07068.ts:155"
+      ]
     },
     {
       "qaId": "card:B07069:fe60095d4b257e19dc003f76a307b4b68db03357af49ee5e3c4159c46e86e96d",
       "answerHash": "d5bfe6aec9aa427a606d26ccedc68d2293fa218037451e07e64b0f8f1f987576",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07069.ts:79"
+      ]
     },
     {
       "qaId": "card:B07077:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "313e1ad30e3a129a24100fc82f4f13cd69451a27f7d48df2f353a4da50d24877",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07077.ts:94"
+      ]
     },
     {
       "qaId": "card:B07090:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
       "answerHash": "b79af84d1269cf62ae85ac95d41ce067c3c3dd661890d73e47e4fb451572fe70",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07090.ts:64"
+      ]
     },
     {
       "qaId": "card:B07091:b0ef1b9d2e03f39626615f5aece59ba7305ff0e0b970f184a230f38b4818c9a5",
       "answerHash": "ee27a75137d8be3254ab5e403771c609f1ff891b3f6a2fbfa09f2aa48fb95409",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07091.ts:30"
+      ]
     },
     {
       "qaId": "card:B08004:5156e8b649b89ed0566a0621df2de796b2ecf5d5a2e9cd6ad79e3b5fa8d31911",
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08004.ts:101"
+      ]
     },
     {
       "qaId": "card:B08006:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08006.ts:55"
+      ]
     },
     {
       "qaId": "card:B08008:baf36a2a55e34e29198a9e60f21265ec373b762dba909635d38f91ce1297f6b4",
       "answerHash": "47d3f424c54fdda218fd6120058f5d1cd53286fb892b7f7225bac77745c6b456",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08008.ts:23"
+      ]
     },
     {
       "qaId": "card:B08017:b203c71c5a2ca8e57b36312ceddefe99ca091d50acdc98837bcbc27a0703471a",
       "answerHash": "c8e5ef406a3c3c53f65d15f156294f0521335cd56a29f2be93abd1da6a050e4d",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08017.ts:26"
+      ]
     },
     {
       "qaId": "card:B08028:af0cdf511d18e1a0179030dc1fd324092d8a99b6b538bf8aadf398e60529891b",
       "answerHash": "d7bfb5794ba7618ccd2c7afb523bfd4494affecdd3d9d075f9f33940efb17f09",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08028.ts:70"
+      ]
     },
     {
       "qaId": "card:B08029:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
       "answerHash": "b79af84d1269cf62ae85ac95d41ce067c3c3dd661890d73e47e4fb451572fe70",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08029.ts:58"
+      ]
     },
     {
       "qaId": "card:B08035:d52596199be14d625d7776309eeaca145097a31eecca550237262ad7075cb2f4",
       "answerHash": "da01fecb57f3731bb4a1166f54efabdfd8c1c7e7f732689edac0289f6f5cdb51",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08035.ts:69"
+      ]
     },
     {
       "qaId": "card:B08049:190baa1e1f03afa7d9e83de8ff7b5f6134452bd6b3a05caf22783df26c2a9ea8",
       "answerHash": "ee0e8003b26515fbed1c5a86aba4c61bdb2561b3af573e78c0e3422756351eb5",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08049.ts:64"
+      ]
     },
     {
       "qaId": "card:B08051:f4a642b51d9e6a3f15c26aaa09c523c9650a98ad925d4c237ba629a31033bea5",
       "answerHash": "0baabddda8188bd36f10329f7ddfe3fc4328f7151082bcee12829142481d5c6d",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08051.ts:60"
+      ]
     },
     {
       "qaId": "card:B08066:7b874358a3b2be6f3991251836cb1b2d0253c3128a3e646b9c5e3c6436781c24",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08066.ts:54"
+      ]
     },
     {
       "qaId": "card:B08071:523cfbbc838c1e8234cce0bf1979e193a4c147b984557d8a45380ca0678e70f7",
       "answerHash": "50c869438aaaa3ac411c6fdc95fc4b581c58f7ce37a07a746bb90ac4d5352053",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08071.ts:63"
+      ]
     },
     {
       "qaId": "card:B08081:d889f1124f88bd5349a26b958a18b82b1763750edd4fba8e540934e467d2c49a",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08081.ts:22"
+      ]
     },
     {
       "qaId": "card:B08092:2acd62799ca89c8181d220a474927d8805e8f2fac855125cae4be29f07af6fa5",
       "answerHash": "7a7909ca18ed1c591d3d3b4f18bb35345f0d8f50366b1685c1abdbaf773bd7d1",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08092.ts:95"
+      ]
     },
     {
       "qaId": "card:B08092:c059cac83edb5c5b4dc00457a0efa81f6b4caf9a0d2a7def41d117b64c59a427",
       "answerHash": "b90223f4f3b35457eceba7b093fad17e9f2bfd926b95a8c18208cd755621b4c1",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08092.ts:95"
+      ]
     },
     {
       "qaId": "card:B08093:47fabf5627988c2bf910ae95008b3e967362e3d568152c4a4b4f67947e90064b",
       "answerHash": "7a7909ca18ed1c591d3d3b4f18bb35345f0d8f50366b1685c1abdbaf773bd7d1",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08093.ts:115"
+      ]
     },
     {
       "qaId": "card:B09002:c347b802f4268b0b27e673a9a37a5243256ece0e6d059ab80f6b5a424003072d",
       "answerHash": "e8b14c382c07b3cafd23fc630aae6b25882d0d331ad3ac8d8e6bf97b3fbdd9aa",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09002.ts:161"
+      ]
     },
     {
       "qaId": "card:B09003:682c1eea6331e85fd27be74ff5a7e85fd9e8d8ef09f8a04d5e25d55f30e63275",
       "answerHash": "fb5e55cf6005cab917bb68bcfd28131026458aeb3789aede85085a47b91a96b3",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09003.ts:118"
+      ]
     },
     {
       "qaId": "card:B09003:e82edcacc4d18e6a2ff915688e95656aa9d83051d0590c8a4ec9a1845023748c",
       "answerHash": "2818fdd5a6774029d339e10e4777a5eb614b989d1d530f76ea66008b4ba4f201",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09003.ts:118"
+      ]
     },
     {
       "qaId": "card:B09017:d95b8a90fc8ae31ba0f4daea26a25aa50ed87eebfb5b29023ee562c1766bd4c0",
       "answerHash": "424e76341eadb77410410583fe93f63738826ee9d5e8494580ecba9a08be2fc2",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09017.ts:60"
+      ]
     },
     {
       "qaId": "card:B09038:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "7199d9e710df47f630d388201ae9f928c9ed5ebe7d17da1dc896300e2d9e26d2",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09038.ts:156"
+      ]
     },
     {
       "qaId": "card:B09047:f99615ed14f068c2665eb794f70f387bc172946f72a10011407b0a091f842aa3",
       "answerHash": "38b379b1993cd5e2dadea3d1b9f6c9c3e03eeef380d72a7911ad2565af114955",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09047.ts:18"
+      ]
     },
     {
       "qaId": "card:B09075:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002",
       "answerHash": "88b539d2f128438f8b6437ecf299f862444710db3e1cb7ca3f9da2c2b66a0728",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09075.ts:83"
+      ]
     },
     {
       "qaId": "card:B09080:3c05e16d5ef7b94286c8cd3bd45086e8b3dac5667746a237cc61d4a2a947522e",
       "answerHash": "2908d8921945d306e905c41d6ebff75bcfd69737d21a4689e80c9ad6f566abf0",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09080.ts:40"
+      ]
     },
     {
       "qaId": "card:B09081:657dd497b26a92029c3f39a8efc6fe749a07c294f3deba97e3543baa2c8c6052",
       "answerHash": "4a6a3fc1ccf2875c4529e661b66dd2978c665e277fd6b3b78c0619507d5711fc",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09081.ts:84"
+      ]
     },
     {
       "qaId": "card:B09112:d14361a0f6cd544938aac3b8343c913c302e2a8c4c3b621d33815d9154832d6a",
       "answerHash": "dbbcc5c6f78482d0c89f56018ca32bf80a619f259353e590b01cdc6f62f532b8",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09112.ts:96"
+      ]
     },
     {
       "qaId": "card:B10003:54428a56120352e87c0453571ed56e53487032d3527e3d88c5fba1f450cacfa3",
       "answerHash": "9c0db2a38965deffd47636c93cae43b0d982f74ebba0f3cfb2444876c95e59f4",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10006:f3675c5a8391462013fd4d69ecfa0277101b9d0085a1dab5948b401bc785fb2e",
       "answerHash": "3e24c4974b890684c6425a1c553584756a707e44f3ebb6b1e853cdbef3ff1ab0",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10011:a29432736c9e0da7f13b3e318a178351f577621ebd450b986296f9f839c94421",
       "answerHash": "63fddb7dbd0120193584f647dae3a2df77a341e27bd7e482737f21c9b03454d5",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10013:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10",
       "answerHash": "bc06b45c77b553b94d7406a9e439b81183696c446e50547af0d7ca1748470faf",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10016:086fc456b0dfd82ca4bb2d4fb5dd261cc74b3736ceedeb8af2a1d9549dd120a1",
       "answerHash": "22cf72497c12e4979f2dbd0c277552e3e126cdc6f68932e8f3809d54cedd206d",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10023:6b96389cc833a3fa159cdc9a1b55a5f5db61c7ee0131677aa3e999ce49bd2c2d",
       "answerHash": "0e19d91c02200449417a55074745e64a3393a543782d6647d6b042fbd8f0201e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10033:3bbd1d1b862db20515ace88f7b77bb80a1e73060ca14fb51e01c6ef2419444d4",
       "answerHash": "aa8c6df7b3e5044a1d36ed7fc11f7438f114b5891f0766af373a356e072bf799",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10040:b439f52112312a2dc0c944cc0f0aa531a2eda23b876e486679bd42f2af1b71b7",
       "answerHash": "4c8d0ca99cf571a16514ffdd00a8e799ce732b57c6ef00d3e9049b7e4b2d9b94",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10040:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10",
       "answerHash": "680d57491551931f5b374ace756957433681dfbd699daa88cb92b1e2099b9c9a",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10047:fac3ccc84f2aee3eba1f3fd4dc22d5cd5c14486619d0ea7b84219010b18ac2c2",
       "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10071:6101d0fa940b40560af15667082922dda4dfb4a159c988d3a6c41fb94f927020",
       "answerHash": "32846bc1e9b89390298687c9bb46a56a75314aa92a2f44d4f4a526a54f4ce6f4",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10074:98e82fae32a43d9b6de8c7fd8289dcf4565f2dada1498f0760f5ba9d0cf8ae17",
       "answerHash": "18f8e7239b7b3106b53ed65eda0bd0b77b6992397418c002da2da9af7a9502c6",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10082:d14361a0f6cd544938aac3b8343c913c302e2a8c4c3b621d33815d9154832d6a",
       "answerHash": "dbbcc5c6f78482d0c89f56018ca32bf80a619f259353e590b01cdc6f62f532b8",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10088:340979e7fce7e5eb3f4810fe4d27e817992a19ea6dada9dded99181420f55674",
       "answerHash": "09ac3974741d3f1b11af49f9784152184c91bbaa96972834da09effd62d3f59f",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10089:1a92dcdf67120f7d76c881aa12661add73fc79ad2cefe30d1e4fbda6978a4758",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10090:2b759372c0a207cb001bf56b43478ed9b30d564925538f276224626704ee5b23",
       "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10091:c475c7ad0469ec9babf8db8ac86267422ffe8845da2a0df309033a44a5fd4e12",
       "answerHash": "d2bd42ea448b8a3ab40740673cc12d9b3ca9859199108b67602ddc2a484e8ea7",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:B10096:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
       "answerHash": "3b001d2e46360ae0ed16a3d7bf4e84017dafbe7a33a5a3d371e1fc3c84b070b7",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
     },
     {
       "qaId": "card:D02013:6ed7fb4878a594ec4f9c792b4c397f1b45d3002fe8332abb0844397edb79da4a",
       "answerHash": "192beaa3c15826ccaa6b1af7b18dee1281a5beae4ce2e780a41127c56d7df84b",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d02/D02013.ts:50"
+      ]
     },
     {
       "qaId": "card:D04014:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d04/D04014.ts:46"
+      ]
     },
     {
       "qaId": "card:D06006:9a924c2361fd57be0465117515cc95264f49e8a2829d02021c45d52a10e07ddc",
       "answerHash": "58cbf5dcee1dc29866bb4a6f67a6fb4cf18c826e8ca01d7eaa25cd80b4711c56",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d06/D06006.ts:30"
+      ]
     },
     {
       "qaId": "card:D06015:7917a528ebb99edb4efb1d6ed72558b874851a0c65d93d121901eb7488a29e03",
       "answerHash": "4c8d0ca99cf571a16514ffdd00a8e799ce732b57c6ef00d3e9049b7e4b2d9b94",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d06/D06015.ts:7"
+      ]
     },
     {
       "qaId": "card:D07010:26a288541a34ebb3575133183ec65669424c4c62a11a46270cae3c734ccbf8a5",
       "answerHash": "ec3a636a56fc1ea212df885082407d0994afed30304e2c456e415fb355ca67d7",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d07/D07010.ts:36"
+      ]
     },
     {
       "qaId": "card:D07024:4884b70d9b28923ff8aa12110cd31e8a1dbcc3b34ef9dea7cdc81f1a5b856a9b",
       "answerHash": "408b0f7ae3053fdc4833d6e7775a945fc98d62835225940d30d4901c86fcfc46",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d07/D07024.ts:29"
+      ]
     },
     {
       "qaId": "card:D08012:e5923114a6415f3ff08ddc4aa5ff5ca12303edb0124296d08045fe05e1b9d786",
       "answerHash": "3120e27c9ca9b474d9a3dfb82bd8a5858fc5e5e90e8430563a234f48f0756686",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d08/D08012.ts:10"
+      ]
     },
     {
       "qaId": "card:D08026:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "313e1ad30e3a129a24100fc82f4f13cd69451a27f7d48df2f353a4da50d24877",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d08/D08026.ts:73"
+      ]
     },
     {
       "qaId": "card:D09016:7516cd02c9848ddc808d369cd3af22fc7928580f38f6762c35b66bb22678cbcf",
       "answerHash": "83d521329e90458d525fb8ebb53e11d58a4adcf35d2cbf475988a0080b4a6e27",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d09/D09016.ts:102"
+      ]
     },
     {
       "qaId": "card:D09017:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d09/D09017.ts:102"
+      ]
     },
     {
       "qaId": "card:D09020:4f1e7b564a969ed3ca23c1c7599caeef0dd4fcdb4d5299623c98f1d4009bea99",
       "answerHash": "6223febd50b52eeb0900c76871f2cf6ab9ceda54a1c79e612616f96c8c024df0",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d09/D09020.ts:161"
+      ]
     },
     {
       "qaId": "card:D09027:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
       "answerHash": "313e1ad30e3a129a24100fc82f4f13cd69451a27f7d48df2f353a4da50d24877",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d09/D09027.ts:80"
+      ]
     },
     {
       "qaId": "card:D09027:d685529c7ceef08583d418d640c7682a311cfb0fe8bc0982e0b20085b8201297",
       "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d09/D09027.ts:80"
+      ]
     },
     {
       "qaId": "card:D10009:44c0dc46f30cf1c3af445a1dbeaba8a3c4e0edfb425461d026abeb155e12168e",
       "answerHash": "25fb29e6478548c7c2dc58a1724457131afaff84212eb156c8aab87600b6307c",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10009.ts:70"
+      ]
     },
     {
       "qaId": "card:PR098:6f90cb127af1c12c8a5b08b830d7a2d32066a401549fe855e6fd4d5d8bd1edeb",
       "answerHash": "75684197785387f372ce4f491306ed5ccd399fe44b734b7f287ba9b8481214b7",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR098.ts:132"
+      ]
     },
     {
       "qaId": "card:PR104:ddcac6ceb6ba89ab95e855683a39784409388705ec4efcfc21d693d918a6eab9",
       "answerHash": "285b96c872bd7866018435a3aee3f3a26f1379610497ae3b1549f32fb99c6152",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR104.ts:132"
+      ]
     },
     {
       "qaId": "card:PR117:b0780b558314019e01a34848d201a395b5b9928d1e0c55120c7d84bee8d8930c",
       "answerHash": "8fa6df429995a7c8ce3724b8ce6b54ccb2253d6fdd0f1199f90a37ef25879654",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR117.ts:149"
+      ]
     },
     {
       "qaId": "card:PR117:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
       "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR117.ts:149"
+      ]
     },
     {
       "qaId": "card:PR137:972660377e7a1234e105ec6ca37df38d49a7747a333a6d01109f21f9c5fe3edc",
       "answerHash": "b675054015b9efca40d4e16376513d50d47909e34e7b020d9fdb1e6cd649df63",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR137.ts:115"
+      ]
     },
     {
       "qaId": "card:PR137:aefa15b9be82ec8dcc29b14ed78982d60c272dc8924b8d8c710a81a402973ac6",
       "answerHash": "65db1e91355223e3963198bc67a03b8070f282d9c2ecb76c0f2eaf686f34cc7e",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR137.ts:115"
+      ]
     },
     {
       "qaId": "card:PR138:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
       "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR138.ts:109"
+      ]
     },
     {
       "qaId": "card:PR143:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR143.ts:115"
+      ]
     },
     {
       "qaId": "card:PR163:7a972cc4e9d13bbd16c52ec38017de070de393761d2c6bad22a54b377dde933e",
       "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR163.ts:87"
+      ]
     },
     {
       "qaId": "card:PR164:efd6c21e2f7905796100f2d468a68b999155b3da10e77373da20e6be92c33536",
       "answerHash": "2cfc332da63be1f02a3c457cd74370a31acf49f90bca4c0d0b74ad4f3893b781",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR164.ts:26"
+      ]
     },
     {
       "qaId": "card:PR177:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
       "answerHash": "fda2286021be4b097fae9dc0b0dd802834a37cf7555c306f1441a64eac98957a",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR177.ts:5"
+      ]
     },
     {
       "qaId": "card:PR180:b294bc57d842a4b1a4aae0d72a5235a9ace1fc0a3c60e43df68c9e6c939153ce",
       "answerHash": "17cfa635ffffb262d471d7d41114d4bb0d0a90bbfd7cf16a92189f19755f6e03",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR180.ts:110"
+      ]
     },
     {
       "qaId": "card:PR180:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f",
       "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR180.ts:110"
+      ]
     },
     {
       "qaId": "card:PR199:3405649bcd3102358d74f5a7c645011cc3fe89abd35af2d070f6f49437a53556",
       "answerHash": "4e6440b9a46e7071c280be658d510b1d7984ab95b423844b445b4b415560c89a",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR199.ts:136"
+      ]
     },
     {
       "qaId": "card:PR205:0b717e7ed550284fdf464f7f33e6c412c355fb6b492d66373c2469c1fb4f771b",
       "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR205.ts:136"
+      ]
     },
     {
       "qaId": "card:PR237:cac27dea4837a9776d71b2e875c1ea06895b988013bdfddf557a38d580e47c72",
       "answerHash": "b713067c9d9b0bc19278255cbfebc4197426842b165b1e85f2243796eeaec9a4",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR237.ts:77"
+      ]
     },
     {
       "qaId": "card:PR279:8acc30fd02aa7a57c56a3a40704c2abd0853dd036d083f11f04b3cf0687a4e11",
       "answerHash": "cb4fe5abb0109aacfe807a5aa363432062f0fabb52e699154a3aada0c9710177",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR279.ts:54"
+      ]
     },
     {
       "qaId": "card:PR287:6afacc527edb1f91971747c8e7b4a6281ce88b569f711f8e310a8222bfbc85a1",
       "answerHash": "50c869438aaaa3ac411c6fdc95fc4b581c58f7ce37a07a746bb90ac4d5352053",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR287.ts:7"
+      ]
     },
     {
       "qaId": "card:PR288:c84d7aad4528fd6d980afa11b31629dd80c57a9c461526f6b41e76abb0604128",
       "answerHash": "9678dcba4645bd0bc2d7ce77e0ce1c56e29eb806bc870a3e8dcfd085d227db98",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR288.ts:105"
+      ]
     },
     {
       "qaId": "card:PR289:76f3670ceb57dfb996531dae5f61c2fefd2e21bed4287242a3866a4218a951c3",
       "answerHash": "9c0db2a38965deffd47636c93cae43b0d982f74ebba0f3cfb2444876c95e59f4",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR289.ts:111"
+      ]
     },
     {
       "qaId": "card:PR295:7c21ddfce705710ac7b5ece3ae25390cdf61d0de9c9f623d2f40f082ec3e301f",
       "answerHash": "46e1a464208add587d017e3a784ccf6b53feeb02d0c9dd069a3065a019627fe6",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR295.ts:111"
+      ]
     },
     {
       "qaId": "card:PR297:a97d46d3ab0116f37821991f7d72e241ecfa6e2ff8a5930e1ce47aea3939bad7",
       "answerHash": "2c60b49e60c88e7551164d81261d4f3a0e591b10d837f965019e3e67a007c6b1",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR297.ts:118"
+      ]
     },
     {
       "qaId": "card:PR304:31477ac476064f376e887ccbb69a33524e3c445608c9009f36c53aa4a9c3b2ba",
       "answerHash": "33f0805905c079ade93217d4dc82e0041bd476996e960b67128f752042900dff",
-      "status": "legacy-unreviewed",
-      "result": "unreviewed",
-      "method": "unreviewed",
-      "evidence": []
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR304.ts:88"
+      ]
     }
   ]
 }

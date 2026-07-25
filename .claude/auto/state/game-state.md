@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-state.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:state`
-> Source hash: `acdfd0e9c838`
+> Source hash: `aec120e85e06`
 
 `src/engine/types/game-state.ts` から抽出した GameState の構造図。
 
@@ -16,6 +16,12 @@ classDiagram
     +turn: «object×4»
     +players: «object×2»
     +pendingEffects: EffectStackEntry[]
+    +effectTriggerBatchSeq?: number
+    +declaredBatchSeq?: number
+    +pendingReasoningContinuation?: ReasoningContinuation
+    +reasoningContinuationSeq?: number
+    +effectTriggerBatchContext?: number
+    +effectTriggerBatchConfirmedContext?: boolean
     +setCardInstanceSeq?: number
     +reservedEffects: ReservedEffectEntry[]
     +scratchTrace: «object×2»

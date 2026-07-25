@@ -42,7 +42,7 @@ function base(): GameState {
   s.players.opp.case = { cardId: 'co', status: '事件編', requiredEvidence: 6, colors: ['赤'], declaredUseCount: {} };
   s.players.self.deck.push('d1', 'd2', 'd3');
   s.players.opp.deck.push('e1', 'e2');
-  s.turn = { number: 2, player: 'self' } as GameState['turn'];
+  s.turn = { number: 2, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
   return s;
 }
 

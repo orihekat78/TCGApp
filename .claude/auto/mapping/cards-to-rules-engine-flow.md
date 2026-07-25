@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `94943b900257`
+> Source hash: `32ea07e8cc31`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **133** ファイル（[全体 index](./index.md)）
+このグループ: **136** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (19)
 
@@ -32,7 +32,7 @@
 | [`src/engine/effect/validate-spec-files.ts`](../../../src/engine/effect/validate-spec-files.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/effect/validate.ts`](../../../src/engine/effect/validate.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 
-## engine/flow (18)
+## engine/flow (19)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -47,6 +47,7 @@
 | [`src/engine/flow/main/ability-activate.ts`](../../../src/engine/flow/main/ability-activate.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/engine/flow/main/action.ts`](../../../src/engine/flow/main/action.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/declared-ability.ts`](../../../src/engine/flow/main/declared-ability.ts) | [`17-icons.md`](../../rules/17-icons.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`24-qa-naming-stun.md`](../../rules/24-qa-naming-stun.md) |
+| [`src/engine/flow/main/declared-cost-params.ts`](../../../src/engine/flow/main/declared-cost-params.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/hand-use-card.ts`](../../../src/engine/flow/main/hand-use-card.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) / [`12-next-hint.md`](../../rules/12-next-hint.md) / [`17-icons.md`](../../rules/17-icons.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/engine/flow/main/index.ts`](../../../src/engine/flow/main/index.ts) | _(参照なし)_ |
 | [`src/engine/flow/main/next-hint.ts`](../../../src/engine/flow/main/next-hint.ts) | _(参照なし)_ |
@@ -69,7 +70,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (28)
+## engine (他) (29)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -83,6 +84,7 @@
 | [`src/engine/cost/evaluate.ts`](../../../src/engine/cost/evaluate.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/cost/index.ts`](../../../src/engine/cost/index.ts) | _(参照なし)_ |
 | [`src/engine/cost/pay.ts`](../../../src/engine/cost/pay.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/cost/remove-set-card-witness.ts`](../../../src/engine/cost/remove-set-card-witness.ts) | _(参照なし)_ |
 | [`src/engine/dyn/eval.ts`](../../../src/engine/dyn/eval.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/dyn/index.ts`](../../../src/engine/dyn/index.ts) | _(参照なし)_ |
 | [`src/engine/event/index.ts`](../../../src/engine/event/index.ts) | _(参照なし)_ |
@@ -102,7 +104,7 @@
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (59)
+## その他 (60)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -147,6 +149,7 @@
 | [`src/ui/hooks/useReplayDriver.ts`](../../../src/ui/hooks/useReplayDriver.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useSceneCharacters.ts`](../../../src/ui/hooks/useSceneCharacters.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 | [`src/ui/hooks/useSceneSwitchPickerStore.ts`](../../../src/ui/hooks/useSceneSwitchPickerStore.ts) | [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/ui/hooks/useSetCardCostPicker.ts`](../../../src/ui/hooks/useSetCardCostPicker.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useSpectatorTurnDriver.ts`](../../../src/ui/hooks/useSpectatorTurnDriver.ts) | [`05-turn-phases.md`](../../rules/05-turn-phases.md) |
 | [`src/ui/hooks/useStackedCardCostPicker.ts`](../../../src/ui/hooks/useStackedCardCostPicker.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useStageScale.ts`](../../../src/ui/hooks/useStageScale.ts) | _(参照なし)_ |

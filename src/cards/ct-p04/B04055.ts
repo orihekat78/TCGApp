@@ -24,7 +24,7 @@ const a1: AbilityDef = {
     steps: [
       {
         kind: 'atom', verb: 'deckRevealUntil',
-        args: {
+        args: { visibility: 'public', viewer: 'all',
           player: 'self', maxN: 1,
           filter: { traitSharedWithTriggerRemoved: true },
           bind: '$revealed', bindMatch: '$matched',

@@ -33,6 +33,7 @@ import { char as readChar } from '@/engine/read/char.js';
 import type { GameState, ActionContext } from '@/engine/types/index.js';
 import type { GuardPickerCandidate } from '../components/GuardPickerModal.js';
 import type { CutInDisguiseCandidate } from '../components/CutInDisguisePickerModal.js';
+import { pendingOwnerOrderGroup } from '@/engine/resolve/index.js';
 
 type Player = 'self' | 'opp';
 
@@ -123,7 +124,10 @@ export function useContactFlowDriver(): void {
   const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
   const pendingDeckPlace = useGameStateStore((s) => s.pendingDeckPlace);
   const pendingLeaveIntercept = useGameStateStore((s) => s.pendingLeaveIntercept);
+  const pendingChooseIntercept = useGameStateStore((s) => s.pendingChooseIntercept);
   const pendingRps = useGameStateStore((s) => s.pendingRps);
+  const pendingSetCardChoice = useGameStateStore((s) => s.pendingSetCardChoice);
+  const pendingSetCardReplacement = useGameStateStore((s) => s.pendingSetCardReplacement);
 
   useEffect(() => {
     if (!activeActionId || !gameState) return;
@@ -134,6 +138,8 @@ export function useContactFlowDriver(): void {
     }
     // モーダルが open 中はユーザー操作待ち
     if (guardPickerOpen || cutInDisguiseOpen) return;
+    const human = (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
+    if (pendingOwnerOrderGroup(gameState, human).length >= 2) return;
     // D11007 a3 fix: effect pick modal (contact:start triggered の chain など)
     // が open 中は contact flow を進めない (rules/22 「コンタクトしたとき」が
     // 行動順確認の前に解決)
@@ -144,7 +150,9 @@ export function useContactFlowDriver(): void {
     if (pendingDeckReorder !== null) return;
     if (pendingDeckPlace !== null) return;
     if (pendingLeaveIntercept !== null) return;
+    if (pendingChooseIntercept !== null) return;
     if (pendingRps !== null) return;
+    if (pendingSetCardChoice !== null || pendingSetCardReplacement !== null) return;
 
     const ax = flow.action._getContext(activeActionId);
     if (!ax) {
@@ -153,7 +161,7 @@ export function useContactFlowDriver(): void {
     }
 
     runOneStep(gameState, ax, spectatorMode);
-  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice, pendingDeckReorder, pendingDeckPlace, pendingLeaveIntercept, pendingRps]);
+  }, [activeActionId, gameState, spectatorMode, guardPickerOpen, cutInDisguiseOpen, pendingEffectPick, pendingEffectOptional, pendingEffectRepeatOptional, pendingEffectChoice, pendingDeckReorder, pendingDeckPlace, pendingLeaveIntercept, pendingChooseIntercept, pendingRps, pendingSetCardChoice, pendingSetCardReplacement]);
 }
 
 function runOneStep(state: GameState, ax: ActionContext, spectatorMode: boolean): void {

@@ -17,8 +17,9 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
-import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { _drainAllEffectPicksForTest, applyPickAndContinuation } from '@/engine/effect/apply-pick';
+import { _clearPendingEffectPickQueue, resolveEffectPicks } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectPickSide, _peekPendingEffectPickSide } from '@/engine/effect/pending-state';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
@@ -162,4 +163,47 @@ describe('B09039 a2 — chain gate paths (owner=opp)', () => {
     expect(s.players.opp.remove.includes(W3), 'W3 は remove 残 (handAdd 未実行)').toBe(true);
     expect(discarded(s), 'discard 発生しない').toBe(false);
   });
+
+  it.each(['use condition', 'event-use ban'] as const)(
+    'human pending event use becomes stale by %s: consumes only the picker and aborts the B09039.a2 remainder',
+    (staleBy) => {
+      registerCardDef(ev(BJ5, {
+        level: 5,
+        traits: ['ビッグジュエル'],
+        useCondition: { kind: 'fileAtLeast', n: 1 },
+      }));
+      const s = createEmptyGameState();
+      oppTurn(s);
+      s.players.opp.hand = [BJ5, SENT];
+      s.players.opp.remove = [W3];
+      s.players.opp.file = [{ type: 'card-back' }];
+      const ctx: EffectCtx = {
+        source: { player: 'opp', cardId: 'B09039', uid: 'aoko#1', abilityId: 'a2', area: 'scene' },
+        bindings: {},
+      };
+      const selected = resolveEffectPicks(s, B09039.abilities.find((a) => a.id === 'a2')!.effect!, ctx, {
+        byPlayer: 'opp', humanChooser: true, humanPlayer: 'opp', source: { cardId: 'B09039', abilityId: 'a2' },
+      });
+      runEffect(s, selected, ctx);
+      const pick = _peekPendingEffectPickSide();
+      expect(pick?.candidates.map((c) => c.cardId)).toEqual([BJ5]);
+      const pickedUid = pick!.candidates[0]!.uid;
+
+      if (staleBy === 'use condition') s.players.opp.file = [];
+      else s.turnState.opp.eventUseBanned = true;
+      const before = structuredClone(s);
+      const beforeBindings = structuredClone(ctx.bindings);
+      const beforeDyn = structuredClone(ctx.dyn);
+      let declared = 0;
+      event.on('effect:declared', () => { declared++; });
+
+      applyPickAndContinuation(s, pick!, pickedUid);
+
+      expect(s).toEqual(before);
+      expect(ctx.bindings).toEqual(beforeBindings);
+      expect(ctx.dyn).toEqual(beforeDyn);
+      expect(declared).toBe(0);
+      expect(_drainPendingEffectPickSide()).toBeNull();
+    },
+  );
 });

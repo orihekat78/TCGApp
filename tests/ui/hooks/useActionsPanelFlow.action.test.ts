@@ -125,7 +125,7 @@ describe('enumActionTargetCandidates', () => {
 
 describe('runActionFlow', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null });
+    useGameStateStore.setState({ gameState: null, activeActionId: null });
     useTargetPickerStore.getState()._reset();
     useConfirmationStore.getState()._reset();
     _resetActionContexts();

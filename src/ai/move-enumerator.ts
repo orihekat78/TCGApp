@@ -12,8 +12,7 @@
 
 import type { GameState, CardDef, AbilityDef } from '@/engine/types';
 import { engine } from '@/engine';
-import { makePartnerAbilCtx, makeDeclaredAbilCtx } from './ability-ctx.js';
-import { alternativeCostProviders } from '@/engine/cost/alternative.js';
+import { makePartnerAbilCtx } from './ability-ctx.js';
 
 type Player = 'self' | 'opp';
 
@@ -41,11 +40,7 @@ export type Move =
  *   - その turn で assistedThisTurn === false
  */
 export function canAssist(state: GameState, p: Player): boolean {
-  const ps = state.players[p];
-  if (ps.partner.state !== 'active') return false;
-  if (ps.partner.location !== 'partner-area') return false;
-  if (state.turnState[p].assistedThisTurn) return false;
-  return true;
+  return engine.read.game.canPartnerAssist(state, p);
 }
 
 /**
@@ -57,14 +52,7 @@ export function canAssist(state: GameState, p: Player): boolean {
  *   - 同ターン assist 済みは不可 (rules/01 注意)
  */
 export function canSolveCase(state: GameState, p: Player): boolean {
-  const ps = state.players[p];
-  if (ps.case.status !== '解決編') return false;
-  if (ps.evidence.length < ps.case.requiredEvidence) return false;
-  if (ps.partner.state !== 'active') return false;
-  if (state.turnState[p].assistedThisTurn) return false;
-  // E3 P53: 「自分は【事件解決】できない」case (B09107) は事件解決不可 (read.game.canWin と同 gate)
-  if (engine.read.game.cannotSolveCase(state, p)) return false;
-  return true;
+  return engine.read.game.canPartnerSolveCase(state, p);
 }
 
 /**
@@ -166,12 +154,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   for (const c of state.players[byPlayer].scene) {
     // gap② (2026-07-11, B06042): 印字 declared + charGrantAbility 付与 declared (BUG-084 UI/AI 対称)。
     for (const ab of [...charDeclaredAbilities(c.cardId), ...engine.flow.grantedDeclaredAbilitiesOf(c)]) {
-      if (!engine.flow.canDeclaredAbility(state, c.uid, ab.id)) continue;
-      if (ab.cost) {
-        const ctx = makeDeclaredAbilCtx(state, c.uid, ab.id);
-        if (!ctx) continue;
-        if (!engine.cost.canPay(state, ab.cost, ctx) && alternativeCostProviders(state, ctx, ab).length === 0) continue;
-      }
+      if (!engine.flow.canActivateDeclaredAbility(state, c.uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
       moves.push({ kind: 'declaredAbility', uid: c.uid, abilityId: ab.id });
     }
   }
@@ -184,12 +167,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     if (caseCardId) {
       const caseUid = `case:${byPlayer}`;
       for (const ab of charDeclaredAbilities(caseCardId)) {
-        if (!engine.flow.canDeclaredAbility(state, caseUid, ab.id)) continue;
-        if (ab.cost) {
-          const ctx = makeDeclaredAbilCtx(state, caseUid, ab.id);
-          if (!ctx) continue;
-          if (!engine.cost.canPay(state, ab.cost, ctx)) continue;
-        }
+        if (!engine.flow.canActivateDeclaredAbility(state, caseUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
         moves.push({ kind: 'declaredAbility', uid: caseUid, abilityId: ab.id });
       }
     }
@@ -203,18 +181,24 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
     if (mr) {
       const mrUid = `partnerMR:${byPlayer}`;
       for (const ab of charDeclaredAbilities(mr.cardId)) {
-        if (!engine.flow.canDeclaredAbility(state, mrUid, ab.id)) continue;
-        if (ab.cost) {
-          const ctx = makeDeclaredAbilCtx(state, mrUid, ab.id);
-          if (!ctx) continue;
-          if (!engine.cost.canPay(state, ab.cost, ctx)) continue;
-        }
+        if (!engine.flow.canActivateDeclaredAbility(state, mrUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
         moves.push({ kind: 'declaredAbility', uid: mrUid, abilityId: ab.id });
       }
     }
   }
 
   // 7. reasoning (partner → scene)
+  // 6d. hand declaredAbility (uid `hand:self:<cardId>` / `hand:opp:<cardId>`)
+  // Keep the UI's source identity and duplicate-card contract: one sentinel
+  // per cardId, admitted by the same cost/timing/ownership boundary.
+  for (const cardId of new Set(state.players[byPlayer].hand)) {
+    const handUid = `hand:${byPlayer}:${cardId}`;
+    for (const ab of charDeclaredAbilities(cardId)) {
+      if (!engine.flow.canActivateDeclaredAbility(state, handUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
+      moves.push({ kind: 'declaredAbility', uid: handUid, abilityId: ab.id });
+    }
+  }
+
   const partnerUid = byPlayer === 'self' ? 'partner:self' : 'partner:opp';
   if (engine.flow.canReason(state, partnerUid)) {
     moves.push({ kind: 'reasoning', uid: partnerUid });

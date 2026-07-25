@@ -47,7 +47,7 @@ const a1: AbilityDef = {
       // 現場のレベル8以下のキャラを1枚選んでもよい (chain origin。辞退=0枚で remainder skip)
       { kind: 'atom', verb: 'bindPick', args: { player: 'self', max: 1, filter: { levelMax: 8, kind: 'character' }, side: 'self', bind: 'chosenChar' } },
       // デッキ上から chosenChar と同 level・同 cardName のキャラが出るまで1枚ずつ公開 (dyn filter は dispatch 時解決 = 実効値)
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { kind: 'character', levelMin: { dyn: '$bound.chosenChar.level' }, levelMax: { dyn: '$bound.chosenChar.level' }, cardName: { dyn: '$bound.chosenChar.cardName' } }, bind: 'restRevealed', bindMatch: 'matchedChar' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', filter: { kind: 'character', levelMin: { dyn: '$bound.chosenChar.level' }, levelMax: { dyn: '$bound.chosenChar.level' }, cardName: { dyn: '$bound.chosenChar.cardName' } }, bind: 'restRevealed', bindMatch: 'matchedChar' } },
       // それを登場させる (BUG-102: target.query.area='deck' でデッキから splice。matched 無し=silent no-op)
       { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matchedChar.cardId', bind: '$entered', viaEffect: true, target: { query: { area: 'deck', side: 'self' } } } },
       // ターン終了時まで「ターン終了時、このキャラを現場からデッキの下に移す。」を与える (rider)

@@ -61,6 +61,14 @@ describe('deckPlace boundary: effect stack', () => {
     ));
 
     resolve.runAllUntilEmpty(state);
+    expect(resolve.pendingOwnerOrderGroup(state, 'self').map(item => item.id))
+      .toEqual(['place-first', 'draw-second']);
+    expect(state.pendingEffects.map(item => item.state)).toEqual(['pending', 'pending']);
+    state.pendingEffects.forEach((item, order) => {
+      item.ownerChosenOrder = order;
+      item.ownerOrderConfirmed = true;
+    });
+    resolve.runAllUntilEmpty(state);
 
     expect(globals.__pendingDeckPlaceSide).toMatchObject({
       player: 'self',

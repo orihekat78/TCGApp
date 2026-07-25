@@ -53,18 +53,49 @@ function partnerSolveOverride(s: GameState, p: 'self' | 'opp'): boolean {
 // - 同ターンにアシストしていないこと (rules: 01-victory-conditions.md)
 // - case が【事件解決】不可を宣言していないこと (E3 P53、rules: 01)
 // rules: 01-victory-conditions.md, 13-keywords.md
-function canWin(s: GameState, p: 'self' | 'opp'): boolean {
+/**
+ * Common partner action gate. A partner slot is not a partner card until setup
+ * initializes its cardId; the state factory deliberately leaves that slot
+ * active/in-area for ergonomic fixtures, so identity must be checked here.
+ */
+function canPartnerAct(s: GameState, p: 'self' | 'opp'): boolean {
   const playerState = s.players[p];
-  const caseStatus = playerState.case.status;
-  if (caseStatus !== '解決編') return false;
-  if (playerState.evidence.length < playerState.case.requiredEvidence) return false;
+  if (s.gameResult !== undefined) return false;
+  if (s.turn.player !== p) return false;
+  if (s.turn.phase !== 'main') return false;
+  if (!playerState.partner.cardId) return false;
   if (playerState.partner.state !== 'active') return false;
   if (playerState.partner.location !== 'partner-area') return false;
+  return true;
+}
+
+/** Common 【アシスト】 availability shared by UI, public dispatch, and AI. */
+function canPartnerAssist(s: GameState, p: 'self' | 'opp'): boolean {
+  if (!canPartnerAct(s, p)) return false;
+  return !s.turnState[p].assistedThisTurn;
+}
+
+/** Common 【事件解決】 availability shared by UI, public dispatch, and AI. */
+function canPartnerSolveCase(s: GameState, p: 'self' | 'opp'): boolean {
+  const playerState = s.players[p];
+  if (!canPartnerAct(s, p)) return false;
+  if (playerState.case.status !== '解決編') return false;
+  if (playerState.evidence.length < playerState.case.requiredEvidence) return false;
   // アシストしたターンは事件解決できない (rules: 01-victory-conditions.md)
   if (s.turnState[p].assistedThisTurn) return false;
   // E3 P53: 「自分は【事件解決】できない」case (B09107) は通常勝利ルート封鎖 (alt-lose のみ残す)
   if (cannotSolveCase(s, p)) return false;
   return true;
+}
+
+function canWin(s: GameState, p: 'self' | 'opp'): boolean {
+  const playerState = s.players[p];
+  if (playerState.case.status !== '解決編') return false;
+  if (playerState.evidence.length < playerState.case.requiredEvidence) return false;
+  if (playerState.partner.state !== 'active') return false;
+  if (playerState.partner.location !== 'partner-area') return false;
+  if (s.turnState[p].assistedThisTurn) return false;
+  return !cannotSolveCase(s, p);
 }
 
 // 必要証拠数と現在証拠数の差 (マイナスなら達成済)
@@ -85,6 +116,8 @@ function result(s: GameState): GameResult | null {
 
 export const game = {
   canWin,
+  canPartnerAssist,
+  canPartnerSolveCase,
   cannotSolveCase,
   partnerSolveOverride,
   evidenceShortfall,

@@ -33,7 +33,7 @@ const a1: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: { player: 'opp', maxN: 1, filter: { levelMin: 8 }, bind: '$rest', bindMatch: '$found' },
+        args: { player: 'opp', maxN: 1, visibility: 'public', viewer: 'all', filter: { levelMin: 8 }, bind: '$rest', bindMatch: '$found' },
       },
       // レベル8以上のカードが発見された場合、自分はカードを1枚引く (必須)
       {

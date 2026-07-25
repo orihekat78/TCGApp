@@ -14,9 +14,10 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { _resetRegistry as resetCardDefRegistry, register as registerCardDef } from '@/engine/read/def';
 import { doReasoning } from '@/engine/flow/main/reasoning';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
-import { drainAiEffectPicks, applyOptionalAndContinuation, _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
+import { drainAiEffectPicks, applyOptionalAndContinuation, applyPickAndContinuation, _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
 import {
   _peekPendingEffectOptionalSide,
+  _peekPendingEffectPickSide,
   _clearPendingEffectOptionalSide,
   _clearPendingEffectPickQueue,
 } from '@/engine/effect/resolve-picks';
@@ -78,10 +79,29 @@ describe('engine-extension optional-decision batch (2026-06-06)', () => {
 
   it('card def: optional 効果 (trigger=reasoning:end + triggerCharMatches self 毛利小五郎)', () => {
     expect(B05019.abilities[0].trigger).toMatchObject({
-      hook: 'reasoning:end',
+      hook: 'reasoning:after-sleep',
       matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: { cardName: '毛利小五郎' } },
     });
     expect(B05019.abilities[0].effect).toMatchObject({ kind: 'optional' });
+  });
+
+  it('accepting the current LP0 reasoner makes this reasoning gain evidence', () => {
+    setHuman('self');
+    let s: GameState = buildState();
+    s = produce(s, (d) => {
+      d.players.self.scene.find((c) => c.uid === 'kog#1')!.lpOverride = 0;
+      doReasoning(d, 'kog#1');
+      runAllUntilEmpty(d);
+      const optional = _peekPendingEffectOptionalSide();
+      expect(optional).not.toBeNull();
+      applyOptionalAndContinuation(d, optional!, true);
+      const pick = _peekPendingEffectPickSide();
+      expect(pick?.candidates.some((candidate) => candidate.uid === 'kog#1')).toBe(true);
+      applyPickAndContinuation(d, pick!, 'kog#1');
+      runAllUntilEmpty(d);
+    });
+    expect(readChar.lp(s, 'kog#1')).toBe(1);
+    expect(s.players.self.evidence).toHaveLength(1);
   });
 
   it('human: [毛利小五郎] 推理で optional が surface (盤面未変更で pause)', () => {

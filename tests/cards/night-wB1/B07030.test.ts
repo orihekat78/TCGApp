@@ -12,6 +12,11 @@ import { _drainPendingEffectPickSide, _clearPendingEffectPickQueue } from '@/eng
 import { applyPickAndContinuation } from '@/engine/effect/apply-pick';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
+import { canActivateDeclaredAbility } from '@/engine/flow/main/declared-ability';
+import { enumerateMoves } from '@/ai/move-enumerator';
+import { enumDeclaredAbilityIdsFor, enumDeclaredAbilitySources } from '@/ui/hooks/useActionsPanelFlow/enumerators';
+import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { useGameStateStore } from '@/ui/state/store';
 import { sceneChar } from '../../helpers/fixtures';
 import { B07030 } from '@/cards/ct-p07/B07030';
 import type { CardDef, GameState, SceneCharacter } from '@/engine/types';
@@ -44,6 +49,7 @@ beforeEach(() => {
   _resetUidCounter();
   _clearPendingEffectPickQueue();
   setHuman('self');
+  useGameStateStore.setState({ gameState: null });
   for (const d of ALL_DEFS) registerCardDef(d);
   registerTriggeredListener();
 });
@@ -80,6 +86,76 @@ describe('B07030 a1 — sceneToDeck(opp) + toPartnerArea pick (remove の〚ビ�
 });
 
 describe('B07030 — a2/a3 構造 (M3 PA batch / cutin 既存 primitive)', () => {
+  it('a2 public activation consumes exactly two eligible partner-area cards before entering the hand character asleep', () => {
+    const s = base();
+    mutate.scene.enter(s, 'self', 'B07030', {});
+    s.players.self.partnerAreaMR = sc('B07030', 'partnerMR:self');
+    s.players.self.partnerAreaCards = ['JEWEL_EV', 'JEWEL_EV'];
+    s.players.self.hand = ['FILL'];
+
+    activateDeclaredAbility(s, 'partnerMR:self', 'a2', {
+      partnerAreaRemove: { ids: ['JEWEL_EV', 'JEWEL_EV'] },
+    });
+    runAllUntilEmpty(s);
+    const pick = _drainPendingEffectPickSide();
+    expect(pick?.atomVerb).toBe('sceneEnter');
+    const fill = (pick!.candidates as Array<{ cardId: string; uid: string }>).find(candidate => candidate.cardId === 'FILL')!;
+    applyPickAndContinuation(s, pick!, fill.uid, [fill.uid]);
+    runAllUntilEmpty(s);
+
+    expect(s.players.self.partnerAreaCards).toEqual([]);
+    expect(s.players.self.remove.filter(id => id === 'JEWEL_EV')).toHaveLength(2);
+    expect(s.players.self.scene.find(c => c.cardId === 'FILL')?.state).toBe('sleep');
+    expect(s.players.self.hand).toEqual([]);
+  });
+
+  it('a2 rejects insufficient, out-of-filter, invalid, and extra PA witnesses without state changes', () => {
+    const make = (cards: string[]) => {
+      const s = base();
+      mutate.scene.enter(s, 'self', 'B07030', {});
+      s.players.self.partnerAreaMR = sc('B07030', 'partnerMR:self');
+      s.players.self.partnerAreaCards = cards;
+      s.players.self.hand = ['FILL'];
+      return s;
+    };
+    const cases = [
+      { state: make(['JEWEL_EV']), ids: ['JEWEL_EV'] },
+      { state: make(['JEWEL_EV', 'FILL']), ids: ['JEWEL_EV', 'FILL'] },
+      { state: make(['JEWEL_EV', 'JEWEL_EV']), ids: ['JEWEL_EV'] },
+      { state: make(['JEWEL_EV', 'JEWEL_EV']), ids: ['JEWEL_EV', 'MISSING'] },
+      { state: make(['JEWEL_EV', 'JEWEL_EV']), ids: ['JEWEL_EV', 'JEWEL_EV', 'JEWEL_EV'] },
+    ];
+    for (const { state, ids } of cases) {
+      const before = JSON.stringify(state);
+      expect(canActivateDeclaredAbility(state, 'partnerMR:self', 'a2', { partnerAreaRemove: { ids } })).toBe(false);
+      expect(JSON.stringify(state)).toBe(before);
+    }
+  });
+
+  it('a2 cannot spend opponent PA and keeps dispatcher/UI/AI surfaces closed when unpaid', () => {
+    const s = base();
+    mutate.scene.enter(s, 'self', 'B07030', {});
+    s.players.self.partnerAreaMR = sc('B07030', 'partnerMR:self');
+    s.players.opp.partnerAreaCards = ['JEWEL_EV', 'JEWEL_EV'];
+    s.players.self.hand = ['FILL'];
+    const before = JSON.stringify(s);
+
+    expect(canActivateDeclaredAbility(s, 'partnerMR:self', 'a2', {
+      partnerAreaRemove: { ids: ['JEWEL_EV', 'JEWEL_EV'] },
+    })).toBe(false);
+    expect(enumDeclaredAbilitySources(s, 'self')).not.toContain('partnerMR:self');
+    expect(enumDeclaredAbilityIdsFor(s, 'partnerMR:self')).not.toContain('a2');
+    expect(enumerateMoves(s, 'self')).not.toContainEqual({ kind: 'declaredAbility', uid: 'partnerMR:self', abilityId: 'a2' });
+
+    useGameStateStore.setState({ gameState: s });
+    expect(dispatchEngineAction({
+      type: 'declaredAbility', uid: 'partnerMR:self', abilId: 'a2',
+      costParams: { partnerAreaRemove: { ids: ['JEWEL_EV', 'JEWEL_EV'] } },
+    })).toEqual({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().gameState).toBe(s);
+    expect(JSON.stringify(s)).toBe(before);
+  });
+
   it('a2 = on-partner-area declared / or[bond] / cost partnerAreaRemove n2 / sceneEnter from hand', () => {
     const a2 = B07030.abilities[1]!;
     expect(a2.type).toBe('declared');

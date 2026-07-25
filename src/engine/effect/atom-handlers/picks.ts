@@ -4,10 +4,42 @@ import { pushPendingPickFromAtom, toPlainDeep, resolveFilterDynObj, tryRePickFro
 import { pushPendingEffectPickSide } from '../pending-state.js';
 import { candidates as targetCandidates } from '../../target/candidates.js';
 import { removeExcludedSourceCardId } from '../../read/effect-source.js';
-import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber } from './_shared.js';
-import type { PendingDeckRevealSide, PendingDeckReorderSide } from './_shared.js';
+import { targetFilterToPredicateWithCtx, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait, resolveDeltaToNumber, queuePendingDeckRevealSide } from './_shared.js';
+import type { PendingDeckReorderSide } from './_shared.js';
 import type { GameState, EffectCtx, Candidate, AtomVerb, TargetingRef } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
+
+type DeckRevealVisibility = 'public' | 'private';
+type DeckRevealViewer = 'self' | 'opp' | 'all';
+
+function resolveDeckRevealAccess(
+  a: Record<string, unknown>,
+  ctx: EffectCtx,
+  deckOwner: 'self' | 'opp',
+): { visibility: DeckRevealVisibility; viewer: DeckRevealViewer; humanCanSee: boolean } {
+  const visibility: DeckRevealVisibility = a.visibility === 'public' ? 'public' : 'private';
+  let viewer: DeckRevealViewer;
+  if (visibility === 'public' || a.viewer === 'all') {
+    viewer = 'all';
+  } else if (a.viewer === 'deck-owner') {
+    viewer = deckOwner;
+  } else if (a.viewer === 'self' || a.viewer === 'opp') {
+    viewer = resolvePlayer(a.viewer, ctx);
+  } else {
+    viewer = ctx.source.player;
+  }
+  const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+  return { visibility, viewer, humanCanSee: viewer === 'all' || viewer === humanSide };
+}
+
+function deckRevealLogResult(
+  access: { visibility: DeckRevealVisibility; viewer: DeckRevealViewer; humanCanSee: boolean },
+  revealedCount: number,
+  matched: string,
+): string {
+  const visibleMatch = access.humanCanSee ? matched : 'hidden';
+  return `revealed=${revealedCount} matched=${visibleMatch} visibility=${access.visibility} viewer=${access.viewer}`;
+}
 
 /** Exact stacked occurrences use instance IDs as generic-picker UIDs. */
 export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
@@ -38,6 +70,7 @@ export function atomStackedCardPick(s: GameState, a: Record<string, unknown>, ct
 
 export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
       const p = resolvePlayer(a.player, ctx);
+      const revealAccess = resolveDeckRevealAccess(a, ctx, p);
       // mega-wave W5 (2026-07-03, r47): filter 内の {dyn} nested field を **dispatch 時** に解決
       // (B09109 a1「そのキャラと同じレベルで同じカード名」= levelMin/levelMax/cardName:{dyn:'$bound...'})。
       // resolveEffectPicks の generic 事前 walk は top-level 引数しか解決せず、また bind (chain 前段の
@@ -100,15 +133,21 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
           }));
         }
         // overlay: 確定 matched で再 set (awaitingPick 無し → hold 解除、通常演出で完了)
-        (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
-          player: p,
-          revealed: [...windowIds],
-          matched: chosen,
-        };
+        if (revealAccess.humanCanSee) {
+          queuePendingDeckRevealSide({
+            player: p,
+            visibility: revealAccess.visibility,
+            viewer: revealAccess.viewer,
+            revealed: [...windowIds],
+            matched: chosen,
+            presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
+            source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+          });
+        }
         mutate.log.append(s, {
           ts: Date.now(), player: p, turn: s.turn.number,
           action: 'effect:deckRevealUntil',
-          result: `revealed=${windowIds.length} matched=${chosen ?? (declined ? 'declined' : 'none')}`,
+          result: deckRevealLogResult(revealAccess, windowIds.length, chosen ?? (declined ? 'declined' : 'none')),
         });
         return;
       }
@@ -181,16 +220,22 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
             skipResolvesAtom: true,
           });
           // overlay は hold mode — pick 解決まで公開リストを表示し続ける (自動進行しない)
-          (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
-            player: p,
-            revealed: [...revealed],
-            matched: null,
-            awaitingPick: true,
-          };
+          if (revealAccess.humanCanSee) {
+            queuePendingDeckRevealSide({
+              player: p,
+              visibility: revealAccess.visibility,
+              viewer: revealAccess.viewer,
+              revealed: [...revealed],
+              matched: null,
+              awaitingPick: true,
+              presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
+              source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+            });
+          }
           mutate.log.append(s, {
             ts: Date.now(), player: p, turn: s.turn.number,
             action: 'effect:deckRevealUntil',
-            result: `revealed=${revealed.length} awaiting-pick (matches=${matchCands.length})`,
+            result: `revealed=${revealed.length} awaiting-pick matches=${matchCands.length} visibility=${revealAccess.visibility} viewer=${revealAccess.viewer}`,
           });
           // bind 未書込のまま return → resolver の queue 増加検知が残り step を pick に同梱して停止
           return;
@@ -245,15 +290,23 @@ export function atomDeckRevealUntil(s: GameState, a: Record<string, unknown>, ct
       // `__pendingDeckRevealSide` に revealed/matched を set。後続 atom が
       // 結果を消費する前 (sceneEnter / deckToBottomBound / shuffle 前) の
       // スナップショットとして公開する。
-      if (revealed.length > 0) {
-        (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = {
+      if (revealed.length > 0 && revealAccess.humanCanSee) {
+        queuePendingDeckRevealSide({
           player: p,
+          visibility: revealAccess.visibility,
+          viewer: revealAccess.viewer,
           revealed: [...revealed],
           matched,
-        };
+          presentation: a.presentation === 'reveal-return' ? 'reveal-return' : undefined,
+          source: { cardId: ctx.source.cardId, abilityId: ctx.source.abilityId, uid: ctx.source.uid },
+        });
       }
       // BUG-073: effect log
-      mutate.log.append(s, { ts: Date.now(), player: p, turn: s.turn.number, action: 'effect:deckRevealUntil', result: `revealed=${revealed.length} matched=${matched ?? 'none'}` });
+      mutate.log.append(s, {
+        ts: Date.now(), player: p, turn: s.turn.number,
+        action: 'effect:deckRevealUntil',
+        result: deckRevealLogResult(revealAccess, revealed.length, matched ?? 'none'),
+      });
       return;
     }
 

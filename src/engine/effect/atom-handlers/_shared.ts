@@ -14,11 +14,15 @@ import { effectiveTraitNames } from '../../target/candidates.js';
 
 declare global {
 
-  var __pendingDeckRevealSide: PendingDeckRevealSide | null | undefined;
+  var __pendingDeckRevealSide: PendingDeckRevealSide | PendingDeckRevealSide[] | null | undefined;
 }
 
 export type PendingDeckRevealSide = {
   player: 'self' | 'opp';
+  /** Public reveals are visible to both players; private looks only to viewer. */
+  visibility: 'public' | 'private';
+  /** Absolute viewer identity after resolving source-relative effect args. */
+  viewer: 'self' | 'opp' | 'all';
   /** デッキ上から公開した順番のカード ID (matched 含む末尾) */
   revealed: string[];
   /** filter match した cardId、null なら全公開でも不一致 */
@@ -30,12 +34,46 @@ export type PendingDeckRevealSide = {
    * pick 解決の再入時に確定 matched で再 set される (awaitingPick 無し → 通常演出)。
    */
   awaitingPick?: boolean;
+  /** A plain reveal returns every card to its original deck position. */
+  presentation?: 'reveal-return';
+  /** Stable resolver source identity; prevents an unrelated reveal replacing this one. */
+  source?: { cardId?: string; abilityId?: string; uid?: string };
 };
 
 export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
-  const v = (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide ?? null;
-  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = null;
-  return v;
+  const channel = (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide;
+  if (!channel) return null;
+  if (!Array.isArray(channel)) {
+    (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide = null;
+    return channel;
+  }
+  const next = channel.shift() ?? null;
+  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide =
+    channel.length === 0 ? null : channel.length === 1 ? channel[0]! : channel;
+  return next;
+}
+
+/** FIFO prevents simultaneous reveal effects from overwriting a different player's private card. */
+export function queuePendingDeckRevealSide(next: PendingDeckRevealSide): void {
+  const root = globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null };
+  const current = root.__pendingDeckRevealSide;
+  const replacesAwaiting = (candidate: PendingDeckRevealSide): boolean =>
+    next.awaitingPick !== true
+    && candidate.awaitingPick === true
+    && candidate.source?.cardId === next.source?.cardId
+    && candidate.source?.abilityId === next.source?.abilityId
+    && candidate.source?.uid === next.source?.uid;
+  if (!current) {
+    root.__pendingDeckRevealSide = next;
+  } else if (Array.isArray(current)) {
+    const awaitingIndex = current.findIndex(replacesAwaiting);
+    if (awaitingIndex >= 0) current[awaitingIndex] = next;
+    else current.push(next);
+  } else if (replacesAwaiting(current)) {
+    root.__pendingDeckRevealSide = next;
+  } else {
+    root.__pendingDeckRevealSide = [current, next];
+  }
 }
 
 // BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 side-channel
@@ -165,7 +203,7 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
 
 /** 対戦セッションを跨いではならない atom 側の一時通知を一括消去する。 */
 export function resetPendingAtomSession(): void {
-  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = null;
+  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide = null;
   (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = null;
   (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
   (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId = null;

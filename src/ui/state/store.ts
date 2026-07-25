@@ -8,6 +8,8 @@
 //  - gameState=null はゲーム未ロードを表す。dispatch は null のとき no-op
 
 import { create } from 'zustand';
+import { produce } from '@/engine/produce';
+import { mutate } from '@/engine/mutate';
 import type { GameState } from '@/engine/types/game-state';
 import type { EffectCtx } from '@/engine/types';
 import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
@@ -18,7 +20,7 @@ export type GameStateStore = {
   /** 現在のゲーム状態。未ロード時は null。 */
   gameState: GameState | null;
   /** state を全置換する（ゲーム開始 / リセット / リプレイ読み込み用） */
-  setGameState: (state: GameState) => void;
+  setGameState: (state: GameState | null) => void;
   /** 新規対戦開始前に GameState と UI 上の対戦一時状態を一括破棄する。 */
   resetMatchSessionState: () => void;
   /**
@@ -184,10 +186,15 @@ export type GameStateStore = {
 
 export type PendingDeckReveal = {
   player: 'self' | 'opp';
+  visibility: 'public' | 'private';
+  viewer: 'self' | 'opp' | 'all';
   revealed: string[];
   matched: string | null;
   /** BUG-132 GAP-1: chooseMatch pick 未解決中は overlay を hold (engine 側 PendingDeckRevealSide と同 shape) */
   awaitingPick?: boolean;
+  /** Pure reveal which returns every card to its original deck position. */
+  presentation?: 'reveal-return';
+  source?: { cardId?: string; abilityId?: string; uid?: string };
 };
 
 export type PendingDeckReorder = {
@@ -251,7 +258,7 @@ export type PendingEffectPick = {
 export type PendingEffectChoice = {
   player: 'self' | 'opp';
   source: PendingEffectSource & { uid: string };
-  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string }[];
+  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string; sceneEnter?: boolean }[];
 };
 
 /** 2026-06-06 タスクC: optional 決定 (「〜してもよい」) 保留 (PendingEffectOptionalSide と同 shape)。 */
@@ -273,7 +280,20 @@ export type PendingRps = {
 export type PendingSetCardChoice = {
   player: 'self' | 'opp';
   hostUid: string;
-  entries: { instanceId: string; ordinal: number }[];
+  /** effect=従来の単一選択、cost=宣言コストの複数物理 occurrence 選択。 */
+  purpose?: 'effect' | 'cost';
+  entries: {
+    instanceId: string;
+    ordinal: number;
+    /** cost picker の公開 host 情報。裏向き cardId は格納しない。 */
+    hostUid?: string;
+    hostLabel?: string;
+    hidden?: boolean;
+    cardId?: string;
+  }[];
+  nMin?: number;
+  nMax?: number;
+  selectedInstanceIds?: string[];
   source: PendingEffectSource & { uid: string };
 };
 export type PendingSetCardReplacement = {
@@ -359,7 +379,9 @@ export const MATCH_SESSION_RESET_STATE = {
 
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
   gameState: null,
-  setGameState: (state) => set({ gameState: state }),
+  setGameState: (state) => set({
+    gameState: state === null ? null : produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft)),
+  }),
   resetMatchSessionState: () => set(MATCH_SESSION_RESET_STATE),
   dispatch: (mutator) => {
     const current = get().gameState;

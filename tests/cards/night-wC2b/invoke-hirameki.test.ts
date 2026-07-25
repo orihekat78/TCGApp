@@ -12,7 +12,7 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { registerHiramekiListener, _drainPendingHirameki, _resetPendingHirameki, _resetHiramekiRegistered } from '@/engine/listeners/hirameki';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { run as runEffect } from '@/engine/effect/resolver';
-import { runAllUntilEmpty } from '@/engine/resolve/index';
+import { resolve, runAllUntilEmpty } from '@/engine/resolve/index';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { mutate } from '@/engine/mutate/index';
@@ -23,6 +23,8 @@ import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { B06023 } from '@/cards/ct-p06/B06023';
 import { B06034 } from '@/cards/ct-p06/B06034';
+import { B06049 } from '@/cards/ct-p06/B06049';
+import { D03004 } from '@/cards/ct-d03/D03004';
 import type { AbilityDef, CardDef, Effect, EffectCtx, GameState, SceneCharacter } from '@/engine/types';
 
 type Player = 'self' | 'opp';
@@ -66,6 +68,7 @@ const sc = (cardId: string, uid: string): SceneCharacter =>
   } as unknown as SceneCharacter);
 
 const invoke = (args: Record<string, unknown>): Effect => ({ kind: 'atom', verb: 'invokeHiramekiOfCard', args } as never);
+const invokeLeave = (args: Record<string, unknown>): Effect => ({ kind: 'atom', verb: 'invokeLeaveToRemoveOfCard', args } as never);
 const srcCtx = (player: Player = 'self'): EffectCtx =>
   ({ source: { cardId: 'PLAIN', uid: 'src#1', abilityId: 'a1', player, area: 'scene' }, bindings: {} } as EffectCtx);
 
@@ -81,7 +84,7 @@ beforeEach(() => {
   event._resetRegistry(); _resetTriggeredRegistered(); _resetHiramekiRegistered(); _resetPendingHirameki();
   resetDefRegistry(); _resetUidCounter(); _clearPendingEffectPickQueue();
   for (const d of [HIR_DRAW, HIR_NONYAIBA, NO_HIR, HIR_KAIKETSU, HIR_TRIGDYN, TARGET, mkChar('PLAIN'), mkChar('D1'), mkChar('D2')]) registerCardDef(d);
-  registerCardDef(B06023); registerCardDef(B06034);
+  registerCardDef(B06023); registerCardDef(B06034); registerCardDef(B06049); registerCardDef(D03004);
   registerTriggeredListener(); registerHiramekiListener();
   setHuman(null);
   useGameStateStore.setState({ gameState: null, activeActionId: null, pendingHirameki: null, pendingMisread: null, pendingEffectPick: null, pendingEffectOptional: null });
@@ -94,7 +97,104 @@ describe('shape / validate', () => {
   });
 });
 
+describe('BUG-249 public direct invoke order gate', () => {
+  it('confirms B06049.a3 before creating its human pick', () => {
+    setHuman('self');
+    const s = baseState();
+    mutate.case.toResolved(s, 'self');
+    s.players.self.scene = [sc('B06023', 'B06023#0')];
+    s.players.self.evidence = [{ cardId: B06049.id, faceUp: false, origin: { turn: 1, via: 'reasoning' } }] as GameState['players']['self']['evidence'];
+    s.players.opp.scene = [sc('TARGET', 'sleep-target')];
+    useGameStateStore.setState({ gameState: s });
+
+    expect(dispatchEngineAction({ type: 'declaredAbility', uid: 'B06023#0', abilId: 'a2', costParams: { flipFaceUpEvidence: { indices: [0] } } } as never).ok).toBe(true);
+    expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    const group = resolve.pendingOwnerOrderGroup(useGameStateStore.getState().gameState!, 'self');
+    expect(group.map(entry => entry.source.cardId)).toEqual(['B06023', B06049.id]);
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+
+    expect(dispatchEngineAction({ type: 'resolveEffectOrder', player: 'self', entryIds: group.map(entry => entry.id) }).ok).toBe(true);
+    expect(useGameStateStore.getState().pendingEffectPick?.source).toMatchObject({ cardId: B06049.id, abilityId: 'a3' });
+  });
+});
+
 describe('invokeHiramekiOfCard verb (直接 runEffect)', () => {
+  it.each([
+    ['hirameki', B06049.id, 'a3', invoke({ cardId: B06049.id, player: 'self' })],
+    ['leave-to-remove', D03004.id, 'a1', invokeLeave({ cardId: D03004.id, player: 'self' })],
+  ] as const)('BUG-249: direct %s child pick waits for its new owner-order confirmation', (_kind, cardId, abilityId, effect) => {
+    setHuman('self');
+    const after = produce(baseState(), (d) => {
+      d.turn.player = 'opp'; // D03004 a1's printed opponent-turn condition.
+      d.players.opp.scene = [sc('TARGET', 'sleep-target')];
+      d.players.opp.scene[0]!.state = 'sleep';
+      const parent = event.queue(
+        d,
+        effect,
+        { player: 'self', cardId: 'PARENT', abilityId: 'a1', description: 'parent' },
+        'manual',
+        undefined,
+        undefined,
+        { triggerBatch: 7, ownerOrderConfirmed: true },
+      );
+      event.queue(
+        d,
+        { kind: 'atom', verb: 'noop', args: {} } as never,
+        { player: 'self', cardId: 'SIBLING', abilityId: 'a2', description: 'sibling' },
+        'manual',
+        undefined,
+        undefined,
+        { triggerBatch: 7, ownerOrderConfirmed: true },
+      );
+
+      resolve.runOne(d, parent);
+    });
+    setHuman(null);
+
+    const child = after.pendingEffects.find(entry => entry.source.cardId === cardId);
+    expect(child?.source.abilityId).toBe(abilityId);
+    expect(child?.deferredPicks).toBe(true);
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
+    expect(resolve.pendingOwnerOrderGroup(after, 'self').map(entry => entry.source.cardId))
+      .toEqual(['SIBLING', cardId]);
+  });
+
+  it('BUG-249: confirmed parent direct-invoke child is a newly orderable labeled entry', () => {
+    setHuman('self');
+    const after = produce(baseState(), (d) => {
+      const parent = event.queue(
+        d,
+        invoke({ cardId: 'HIR_DRAW', trait: 'YAIBA', player: 'self' }),
+        { player: 'self', cardId: 'PARENT', abilityId: 'a1', description: 'parent' },
+        'manual',
+        undefined,
+        undefined,
+        { triggerBatch: 7, ownerOrderConfirmed: true },
+      );
+      event.queue(
+        d,
+        { kind: 'atom', verb: 'noop', args: {} } as never,
+        { player: 'self', cardId: 'SIBLING', abilityId: 'a2', description: 'sibling' },
+        'manual',
+        undefined,
+        undefined,
+        { triggerBatch: 7, ownerOrderConfirmed: true },
+      );
+
+      resolve.runOne(d, parent);
+    });
+    setHuman(null);
+
+    const child = after.pendingEffects.find(entry => entry.source.cardId === 'HIR_DRAW');
+    expect(child?.source).toMatchObject({
+      player: 'self', cardId: 'HIR_DRAW', abilityId: 'h1', description: hirDraw.description,
+    });
+    expect(child?.resumesCurrentEffect).toBeUndefined();
+    expect(child?.ownerOrderConfirmed).toBeUndefined();
+    expect(resolve.pendingOwnerOrderGroup(after, 'self').map(entry => entry.source.cardId))
+      .toEqual(['SIBLING', 'HIR_DRAW']);
+  });
+
   it('対象ヒラメキ effect が実際に走る (draw1)', () => {
     const s = baseState();
     const after = produce(s, (d) => { runEffect(d, invoke({ cardId: 'HIR_DRAW', trait: 'YAIBA', player: 'self' }), srcCtx()); runAllUntilEmpty(d); });
@@ -188,9 +288,12 @@ describe('B06023 金棒博士 production (declared → cost flip → optional in
     declare(board());
     expect(useGameStateStore.getState().pendingEffectOptional, 'invoke optional surface').not.toBeNull();
     expect(dispatchEngineAction({ type: 'optionalResolve', run: true }).ok).toBe(true);
+    const group = resolve.pendingOwnerOrderGroup(useGameStateStore.getState().gameState!, 'self');
+    expect(group.map(entry => entry.source.cardId)).toEqual(['B06023', 'HIR_DRAW']);
+    expect(dispatchEngineAction({ type: 'resolveEffectOrder', player: 'self', entryIds: group.map(entry => entry.id) }).ok).toBe(true);
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.evidence[0].faceUp, 'コストで表向き化').toBe(true);
-    expect(after.players.self.hand.length, 'invoke → HIR_DRAW draw1').toBe(1);
+    expect(after.players.self.hand.length).toBe(1);
   });
 
   it('run:false (decline) → cost flip のみ / invoke draw なし', () => {

@@ -101,6 +101,7 @@ describe('BUG-166/176 production provenance wiring', () => {
     const state = legalEventState('NORMAL');
 
     handUseCard(state, 'self', 'NORMAL');
+    runAllUntilEmpty(state);
     const pending = _drainPendingEffectChoiceSide();
     expect(pending?.source.resolutionKind).toBe('normal-event');
     applyChoiceAndContinuation(state, pending!, 0);
@@ -281,12 +282,16 @@ describe('BUG-166/176 production provenance wiring', () => {
     mutate.char.setCard(setState, host.uid, 'SET', false);
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
     const source = {
-      source: { player: 'self' as const, cardId: 'NORMAL', uid: 'event:self', abilityId: 'a1', area: 'hand' as const, resolutionKind: 'normal-event' as const },
+      source: { player: 'self' as const, cardId: 'NORMAL', uid: 'event:self', abilityId: 'a1', area: 'hand' as const, resolutionKind: 'normal-event' as const, triggerBatch: 91, ownerChosenOrder: 0, ownerOrderConfirmed: true },
       bindings: {},
     };
     runEffect(setState, { kind: 'setCardToEvidence', hostUid: host.uid }, source);
+    event.queue(setState, { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }, { player: 'self', cardId: 'SIBLING', abilityId: 'a1' });
+    runAllUntilEmpty(setState);
+    expect(setState.pendingEffects[0]?.state).toBe('pending');
     const pendingSet = _drainPendingSetCardChoiceSide();
     expect(pendingSet?.source.resolutionKind).toBe('normal-event');
+    expect(pendingSet?.source).toMatchObject({ triggerBatch: 91, ownerChosenOrder: 0, ownerOrderConfirmed: true });
     setPendingSetCardChoiceRemainder([{ kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } }], 'sequence');
     applySetCardChoiceAndContinuation(setState, pendingSet!, pendingSet!.entries[0]!.instanceId);
     expect(setState.players.self.remove).toEqual(['NORMAL']);

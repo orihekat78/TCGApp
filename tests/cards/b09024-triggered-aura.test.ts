@@ -117,6 +117,7 @@ describe('B09024 triggered ability aura', () => {
 describe('B09024 a2 declared ability', () => {
   function declaredState(targetId: string, targetState: 'active' | 'sleep', deck: string[] = ['DRAW']): { s: GameState; sourceUid: string; targetUid: string } {
     const s = state();
+    s.turn.player = 'self';
     s.players.self.partner.cardId = 'B09024';
     s.players.self.hand = ['POLICE'];
     s.players.self.deck = [...deck];

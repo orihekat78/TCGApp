@@ -19,7 +19,9 @@ beforeEach(() => { resetDefRegistry(); registerAll(); registerCardDef(TARGET); r
 
 describe('B05033 alternative declared cost', () => {
   it('removes the selected provider instead of the full printed cost and still consumes turn-1', () => {
-    const s = createEmptyGameState(); s.players.self.deck = ['X'];
+    const s = createEmptyGameState();
+    s.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.self.deck = ['X'];
     const target = mutate.scene.enter(s, 'self', 'ALT_TARGET', {});
     const provider = mutate.scene.enter(s, 'self', 'B05033', {});
     expect(canDeclaredAbility(s, target.uid, 'a1')).toBe(true);
@@ -32,6 +34,7 @@ describe('B05033 alternative declared cost', () => {
 
   it('does not permit a non-探偵 target and never bypasses a declared condition', () => {
     const s = createEmptyGameState();
+    s.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     const target = mutate.scene.enter(s, 'self', 'ALT_DECOY', {});
     const provider = mutate.scene.enter(s, 'self', 'B05033', {});
     activateDeclaredAbility(s, target.uid, 'a1', { alternativeCostProviderUid: provider.uid });

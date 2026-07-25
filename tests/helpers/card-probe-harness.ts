@@ -8,7 +8,7 @@
 //   - declared   : activateDeclaredAbility + runAllUntilEmpty (B07032 慣行)
 //   - enter      : event.emit('enter', …) + runAllUntilEmpty (B07036 の登場 hook payload shape)
 //   - event-use  : handUseCard + runAllUntilEmpty (B09089 慣行)
-//   - cost-gate  : canPay のみ (drive せず、支払可否ゲートを pin)
+//   - cost-gate  : public declared activation gate (state/queue unchanged を pin)
 //
 // pick / optional は 2 本の別 queue に surface する (pending-state)。harness は毎反復
 //   「pick 先・無ければ optional」順で drain し (B07032/B07036/B09089 実測順)、script を 1 対 1 で適用する。
@@ -21,7 +21,7 @@ import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/l
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
-import { canPay } from '@/engine/cost/index';
+import { canActivateDeclaredAbility } from '@/engine/flow/main/declared-ability';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import {
   _drainPendingEffectPickSide,
@@ -38,7 +38,8 @@ import {
 import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { char as readChar } from '@/engine/read/char';
-import type { GameState, CardDef, SceneCharacter, EffectCtx } from '@/engine/types';
+import type { GameState, CardDef, SceneCharacter } from '@/engine/types';
+import type { AbilityCostParams } from '@/engine/flow/main/ability-activate';
 
 type Side = 'self' | 'opp';
 type CharState = 'active' | 'sleep' | 'stun';
@@ -47,6 +48,8 @@ export interface ProbeSceneChar {
   cardId: string;
   uid: string;
   state?: CharState;
+  setCards?: Array<{ cardId: string; faceUp: boolean; instanceId: string }>;
+  stackedCards?: Array<{ cardId: string; instanceId: string }>;
 }
 
 export interface ProbeSetup {
@@ -72,10 +75,10 @@ export interface ProbeSetup {
 }
 
 export type ProbeDrive =
-  | { kind: 'declared'; uid: string; abilityId: string }
+  | { kind: 'declared'; uid: string; abilityId: string; costParams?: AbilityCostParams }
   | { kind: 'enter'; cardId: string; uid: string; side?: Side }
   | { kind: 'event-use'; cardId: string }
-  | { kind: 'cost-gate'; uid: string; abilityId: string; expectCanPay: boolean };
+  | { kind: 'cost-gate'; uid: string; abilityId: string; expectCanPay: boolean; costParams?: AbilityCostParams };
 
 export type ProbeScriptAction =
   | 'optional:take'
@@ -94,7 +97,8 @@ export type ProbeAssertion =
   | { kind: 'deckDelta'; side: Side; n: number }
   | { kind: 'candidatesExclude'; pickIndex: number; uid?: string; cardId?: string }
   | { kind: 'noPromptSurfaced' }
-  | { kind: 'apDelta'; uid: string; n: number };
+  | { kind: 'apDelta'; uid: string; n: number }
+  | { kind: 'stacked'; hostUid: string; cardId: string; present: boolean };
 
 export interface ProbeScenario {
   name: string;
@@ -118,8 +122,8 @@ function mkSceneChar(c: ProbeSceneChar): SceneCharacter {
     isNamed: false,
     enterOrder: 1,
     enterOrderThisTurn: 1,
-    setCards: [],
-    stackedCards: 0,
+    setCards: c.setCards ? c.setCards.map(entry => ({ ...entry })) : [],
+    stackedCards: c.stackedCards ? c.stackedCards.map(entry => ({ ...entry })) : 0,
     keywordOverrides: { granted: [], disabledOriginal: false },
     apOverride: null,
     lpOverride: null,
@@ -219,7 +223,7 @@ function driveAndScript(
 
   const drive = scenario.drive;
   if (drive.kind === 'declared') {
-    activateDeclaredAbility(s, drive.uid, drive.abilityId);
+    activateDeclaredAbility(s, drive.uid, drive.abilityId, drive.costParams);
     runAllUntilEmpty(s);
   } else if (drive.kind === 'enter') {
     const side = drive.side ?? 'self';
@@ -344,24 +348,20 @@ export function runCardScenario(def: CardDef, fixtures: CardDef[], scenario: Pro
 
   const s = buildState(def, fixtures, scenario);
 
-  // cost-gate: drive せず canPay のみ pin
+  // Cost gate must match the public declared-ability boundary. Calling the
+  // mutator afterwards also proves an unpayable branch queues no effect.
   if (scenario.drive.kind === 'cost-gate') {
     const drive = scenario.drive;
-    const found = s.players.self.scene.find((c) => c.uid === drive.uid);
     const ability = def.abilities.find((a) => a.id === drive.abilityId);
     if (!ability || !ability.cost) throw new Error(`[harness] cost-gate: ability ${drive.abilityId} has no cost`);
-    const ctx = {
-      source: {
-        player: 'self',
-        uid: drive.uid,
-        cardId: found?.cardId ?? def.id,
-        abilityId: drive.abilityId,
-        area: 'scene',
-      },
-      bindings: {},
-    } as unknown as EffectCtx;
-    const can = canPay(s, ability.cost, ctx);
-    expect(can, `[${scenario.name}] canPay expected ${drive.expectCanPay}`).toBe(drive.expectCanPay);
+    const before = JSON.stringify(s);
+    const can = canActivateDeclaredAbility(s, drive.uid, drive.abilityId, drive.costParams);
+    expect(can, `[${scenario.name}] public activation expected ${drive.expectCanPay}`).toBe(drive.expectCanPay);
+    if (!can) {
+      activateDeclaredAbility(s, drive.uid, drive.abilityId, drive.costParams);
+      expect(JSON.stringify(s), `[${scenario.name}] rejected activation mutated state`).toBe(before);
+      expect(s.pendingEffects, `[${scenario.name}] rejected activation queued effects`).toEqual([]);
+    }
     return s;
   }
 
@@ -417,6 +417,13 @@ export function runCardScenario(def: CardDef, fixtures: CardDef[], scenario: Pro
       case 'apDelta': {
         const now = (() => { try { return readChar.ap(s, a.uid); } catch { return 0; } })();
         expect(now - (apBefore.get(a.uid) ?? 0), `[${scenario.name}] apDelta ${a.uid}`).toBe(a.n);
+        break;
+      }
+      case 'stacked': {
+        const host = [...s.players.self.scene, ...s.players.opp.scene].find(char => char.uid === a.hostUid);
+        const entries = host && Array.isArray(host.stackedCards) ? host.stackedCards : [];
+        expect(entries.some(entry => entry.cardId === a.cardId), `[${scenario.name}] ${a.cardId} stacked under ${a.hostUid}`)
+          .toBe(a.present);
         break;
       }
     }

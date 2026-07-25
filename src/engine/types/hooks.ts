@@ -19,6 +19,7 @@ export type HookName =
   | 'turn:end'
   // 推理関連 (rules: 11-reasoning.md)
   | 'reasoning:declare'
+  | 'reasoning:after-sleep'
   | 'reasoning:before-add'
   | 'reasoning:end'
   // engine additive wave-3 (2026-06-30): ミスリードが実行されたとき (rules/13 §ミスリード)。

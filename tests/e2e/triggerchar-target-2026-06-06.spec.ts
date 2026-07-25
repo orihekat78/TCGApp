@@ -55,39 +55,43 @@ function build(gs: AnyState, activeMisread = false): void {
 }
 
 test.describe('triggerChar→target B05080 (2026-06-06)', () => {
-  test('misread発動後にだけ証拠取得とB05080の捨札決定を開始し、次の合法行動へ戻る', async ({ page }) => {
+  test('B05080の捨札決定をsleep直後に完了してからmisreadと証拠取得へ進む', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await setHumanSelf(page);
     await buildGameState(page, build, true);
 
     expect(await dispatchAction(page, { type: 'reasoning', uid: 'enemy#1' })).toMatchObject({ ok: true });
 
+    await expect.poll(async () => (await getPendingPick(page))?.atomVerb ?? null).toBe('discard');
+    expect(await page.evaluate(() => {
+      const w = window as unknown as { __game: { getState: () => { pendingMisread: unknown; pendingEffectPick: unknown; gameState: { players: { opp: { evidence: unknown[] } } } } } };
+      const state = w.__game.getState();
+      return { hasMisread: state.pendingMisread !== null, hasEffectPick: state.pendingEffectPick !== null, evidence: state.gameState.players.opp.evidence.length };
+    })).toEqual({ hasMisread: false, hasEffectPick: true, evidence: 0 });
+
+    const initialDiscardPick = await getPendingPick(page);
+    const initialDiscard = initialDiscardPick?.candidates.find((candidate) => candidate.cardId === 'D08005');
+    expect(initialDiscard).toBeTruthy();
+    expect(await dispatchAction(page, {
+      type: 'effectPickResolve', pickedUid: initialDiscard!.uid,
+    })).toMatchObject({ ok: true });
+
     await expect.poll(async () => page.evaluate(() => {
       const w = window as unknown as { __game: { getState: () => { pendingMisread: unknown } } };
       return w.__game.getState().pendingMisread !== null;
     })).toBe(true);
-    expect(await page.evaluate(() => {
-      const w = window as unknown as { __game: { getState: () => { pendingEffectPick: unknown; gameState: { players: { opp: { evidence: unknown[] } } } } } };
-      const state = w.__game.getState();
-      return { hasEffectPick: state.pendingEffectPick !== null, evidence: state.gameState.players.opp.evidence.length };
-    })).toEqual({ hasEffectPick: false, evidence: 0 });
 
+    expect(await page.evaluate(() => {
+      const w = window as unknown as { __game: { getState: () => { pendingMisread: unknown; pendingEffectPick: unknown; gameState: { players: { opp: { evidence: unknown[] } } } } } };
+      const state = w.__game.getState();
+      return { hasMisread: state.pendingMisread !== null, hasEffectPick: state.pendingEffectPick !== null, evidence: state.gameState.players.opp.evidence.length };
+    })).toEqual({ hasMisread: true, hasEffectPick: false, evidence: 0 });
+
+    const _discardPick = await getPendingPick(page);
+    const discard = _discardPick?.candidates.find((candidate) => candidate.cardId === 'D08005');
+    expect(discard, 'B05080の後続効果はミスリード待ちへ先回りしない').toBeUndefined();
     expect(await dispatchAction(page, {
       type: 'misreadResolve', picks: [{ uid: 'hyd#1', x: 1 }],
-    })).toMatchObject({ ok: true });
-
-    await expect.poll(async () => (await getPendingPick(page))?.atomVerb ?? null).toBe('discard');
-    expect(await page.evaluate(() => {
-      const w = window as unknown as { __game: { getState: () => { pendingMisread: unknown; gameState: { players: { opp: { evidence: unknown[] } } } } } };
-      const state = w.__game.getState();
-      return { hasMisread: state.pendingMisread !== null, evidence: state.gameState.players.opp.evidence.length };
-    })).toEqual({ hasMisread: false, evidence: 0 });
-
-    const discardPick = await getPendingPick(page);
-    const discard = discardPick?.candidates.find((candidate) => candidate.cardId === 'D08005');
-    expect(discard, 'B05080の後続効果で手札D08005を選択できる').toBeTruthy();
-    expect(await dispatchAction(page, {
-      type: 'effectPickResolve', pickedUid: discard!.uid,
     })).toMatchObject({ ok: true });
     expect(await page.evaluate(() => {
       const state = (window as unknown as { __game: { getState: () => Record<string, unknown> } }).__game.getState();

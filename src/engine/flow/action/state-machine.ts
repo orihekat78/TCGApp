@@ -83,6 +83,11 @@ export function _getContext(id: string): ActionContext | undefined {
   return _contexts.get(id);
 }
 
+/** A declared ability cannot begin while any ActionContext is still resolving. */
+export function _hasOpenActionContext(): boolean {
+  return [..._contexts.values()].some((context) => context.phase !== 'action-end');
+}
+
 /**
  * _deleteContext — ActionContext をレジストリから削除
  *
@@ -568,6 +573,7 @@ export const action = {
   _resetActionContexts,
   _resetTargetExpanders,
   _getContext,
+  _hasOpenActionContext,
   _deleteContext,
 };
 

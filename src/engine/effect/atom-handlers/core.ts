@@ -4,6 +4,7 @@ import { invokeLeaveToRemoveOfCard } from '../invoke-leave-to-remove.js';
 import { invokeHiramekiOfCard } from '../invoke-hirameki.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js'; // W6 step3 (r63): useEventFromHand の kind guard
+import { eventUseAllowed } from '../../flow/main/hand-use-card.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 // WC2b (2026-07-11): invokeHiramekiOfCard atom-level optional prompt 用 (pending-state は leaf — cycle 無し)。
 import { pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings, setPendingOptionalCostPaid } from '../pending-state.js';
@@ -21,6 +22,21 @@ function resolvingEventCardId(ctx: EffectCtx, player: Player): string | undefine
 
 function refreshDeckForEffect(s: GameState, player: Player, ctx: EffectCtx): boolean {
   return mutate.deck.refreshAfterTake(s, player, resolvingEventCardId(ctx, player));
+}
+
+/** Limit a useEventFromHand pick to events authorized at selection time. */
+function restrictEventUsePick(s: GameState, player: Player, args: Record<string, unknown>): Record<string, unknown> {
+  const target = args.target as { kind?: unknown; query?: { area?: unknown; filter?: { cardId?: string | string[] } } } | undefined;
+  if (target?.kind !== 'pick' || target.query?.area !== 'hand') return args;
+  const allowed = s.players[player].hand.filter(cardId => readDef.card(cardId)?.kind === 'event' && eventUseAllowed(s, player, cardId));
+  const existing = target.query.filter?.cardId;
+  const selected = existing === undefined
+    ? allowed
+    : allowed.filter(cardId => (Array.isArray(existing) ? existing : [existing]).includes(cardId));
+  return {
+    ...args,
+    target: { ...target, query: { ...target.query, filter: { ...target.query.filter, cardId: selected } } },
+  };
 }
 
 export function atomDraw(s: GameState, a: Record<string, unknown>, ctx: EffectCtx): void {
@@ -869,12 +885,12 @@ export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, c
       // pick 構築より前に落とす — human に無意味な pick を出させない)。
       if (s.turnState[uefP].eventUseBanned) {
         (ctx.dyn ??= {}).chainStepNoApply = true;
-        mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand:banned' });
         return;
       }
-      const uefArgs = (a.target === undefined && hasNorMax(a))
+      const uefArgs0 = (a.target === undefined && hasNorMax(a))
         ? { ...a, target: buildShortFormPick(ATOM_PICK_SPEC.useEventFromHand!.defaultArea, a, uefP, a.player as Player) }
         : a;
+      const uefArgs = restrictEventUsePick(s, uefP, uefArgs0);
       const uefT = uefArgs.target;
       if (!Array.isArray(uefT) && typeof uefT !== 'string') {
         tryRePickFromAtom(s, { kind: 'atom', verb, args: uefArgs }, ctx, { byPlayer: uefP, source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' } });
@@ -882,16 +898,34 @@ export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, c
         return;
       }
       const uefIds = Array.isArray(uefT) ? (uefT as string[]) : [uefT as string];
-      let uefUsed = 0;
+      // Recheck every selected event before the first emit/move. A stale
+      // authorization must reject the atom atomically and leave no log.
+      const selectedCounts = new Map<string, number>();
+      for (const cardId of uefIds) selectedCounts.set(cardId, (selectedCounts.get(cardId) ?? 0) + 1);
+      const handCounts = new Map<string, number>();
+      for (const cardId of s.players[uefP].hand) handCounts.set(cardId, (handCounts.get(cardId) ?? 0) + 1);
+      const staleSelection = [...selectedCounts].some(([cardId, count]) => (
+        (handCounts.get(cardId) ?? 0) < count
+        || readDef.card(cardId)?.kind !== 'event'
+      ));
+      if (staleSelection) {
+        // A stale commit is rejected as if it never entered this handler:
+        // no state, hook, log, or resolver-dynamic side effect.
+        return;
+      }
+      // An explicit empty selection is a legitimate optional decline and
+      // retains its chain gate. A non-empty authorization failure is stale
+      // selection state, so it must leave ctx.dyn untouched as well.
+      if (uefIds.length === 0) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        return;
+      }
+      const staleAuthorization = [...selectedCounts].some(([cardId]) => !eventUseAllowed(s, uefP, cardId));
+      if (staleAuthorization) return;
       for (const cardId of uefIds) {
         // 手札に実在する場合のみ使用 (無い cardId は no-op)
-        if (!s.players[uefP].hand.includes(cardId)) continue;
         // 混成 review NIT 対応 (2026-07-04): イベント以外は使用しない (author が filter:{kind:'event'}
         // を書き漏らした時にキャラカードが silent にリムーブ行きになる footgun の防御 1 行)。
-        if (readDef.card(cardId)?.kind !== 'event') {
-          mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand:not-event', target: cardId });
-          continue;
-        }
         event.emit(
           s,
           'effect:declared',
@@ -900,13 +934,9 @@ export function atomUseEventFromHand(s: GameState, a: Record<string, unknown>, c
         );
         mutate.hand.remove(s, uefP, [cardId]);
         mutate.remove.add(s, uefP, [cardId]);
-        uefUsed++;
       }
-      if (uefUsed === 0) {
         // 0枚 (辞退/候補なし) → 「そうした場合」gate (handReveal gate-on-0 と同型)
-        (ctx.dyn ??= {}).chainStepNoApply = true;
-      }
-      mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand', result: String(uefUsed) });
+      mutate.log.append(s, { ts: Date.now(), player: uefP, turn: s.turn.number, action: 'effect:useEventFromHand', result: String(uefIds.length) });
       return;
     }
 

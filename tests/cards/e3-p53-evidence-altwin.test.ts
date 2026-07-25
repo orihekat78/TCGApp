@@ -103,12 +103,15 @@ describe('E3 P53 ③ cannotSolveCase gate', () => {
   // 通常勝利条件を満たした state
   const winnable = (caseId: string): GameState => produce(createEmptyGameState(), (d) => {
     const p = d.players.self;
+    d.turn.player = 'self';
+    d.turn.phase = 'main';
     p.case.cardId = caseId;
     p.case.status = '解決編';
     p.case.requiredEvidence = 2;
     p.evidence = [ev('A'), ev('B')];
     p.partner.state = 'active';
     p.partner.location = 'partner-area';
+    p.partner.cardId = 'B01025';
     d.turnState.self.assistedThisTurn = false;
   });
 

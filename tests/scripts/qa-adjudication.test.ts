@@ -2,9 +2,11 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   buildQaAdjudication,
+  readQaAdjudicationQueue,
   mergeQaAdjudication,
   qaShard,
   writeQaAdjudicationBootstrap,
@@ -25,6 +27,13 @@ function snapshotItems() {
     { qaId: `card:one:${HASH_A}`, cardId: 'one', cardNums: ['ONE'], sectionHash: HASH_A, questionHash: HASH_A, answerHash: HASH_A },
     { qaId: `card:two:${HASH_B}`, cardId: 'two', cardNums: ['TWO'], sectionHash: HASH_B, questionHash: HASH_B, answerHash: HASH_B },
   ];
+}
+
+function qaIdForShard(cardId: string, shard: string, offset = 0): string {
+  for (let index = offset; ; index += 1) {
+    const qaId = `card:${cardId}:${hash(`${cardId}:${index}`)}`;
+    if (qaShard(qaId) === shard) return qaId;
+  }
 }
 
 function fixture(): string {
@@ -60,7 +69,66 @@ function writeShard(root: string, shard: string, items: QaAdjudicationShard['ite
   writeFileSync(path, `${JSON.stringify({ schemaVersion: 1, shard, items }, null, 2)}\n`);
 }
 
+function runCli(root: string, ...args: string[]) {
+  return spawnSync(process.execPath, [resolve(process.cwd(), 'node_modules/tsx/dist/cli.mjs'), resolve(process.cwd(), 'scripts/qa-adjudication.ts'), ...args], { cwd: root, encoding: 'utf8' });
+}
+
 describe('Q&A adjudication shards', () => {
+  it('builds a deterministic hash-only queue with per-shard unreviewed counts', () => {
+    const root = fixture();
+    const sameShard = qaShard(`card:one:${HASH_A}`);
+    const items = [
+      { qaId: qaIdForShard('B01001', sameShard), cardId: 'B01001', cardNums: ['B01001'], sectionHash: HASH_A, questionHash: HASH_A, answerHash: HASH_A },
+      { qaId: qaIdForShard('B01002', sameShard, 1), cardId: 'B01002', cardNums: ['B01002'], sectionHash: HASH_A, questionHash: HASH_A, answerHash: HASH_A },
+      { qaId: qaIdForShard('B01003', 'f'), cardId: 'B01003', cardNums: ['B01003'], sectionHash: HASH_B, questionHash: HASH_A, answerHash: HASH_A },
+      { qaId: qaIdForShard('B01004', sameShard), cardId: 'B01004', cardNums: ['B01004'], sectionHash: HASH_B, questionHash: HASH_A, answerHash: HASH_A },
+    ];
+    const snapshot = { schemaVersion: 1 as const, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items, conflicts: [] };
+    writeFileSync(resolve(root, '.claude/specs/cards-data/qa-hash-snapshot.json'), JSON.stringify(snapshot));
+    const built = buildQaAdjudication({ snapshot, rawPackages: [] });
+    for (const file of built.shards) writeShard(root, file.shard, file.items.map((item) => item.qaId === items[1]!.qaId
+      ? { ...item, status: 'matched', result: 'aligned', method: 'manual-semantic', evidence: ['src:src/one.ts:1'] }
+      : item));
+
+    const queue = readQaAdjudicationQueue({ root });
+    expect(queue.total).toBe(4);
+    expect(queue.unreviewedCount).toBe(3);
+    expect(queue.shards.map((entry) => entry.shard)).toEqual('0123456789abcdef'.split(''));
+    expect(queue.shards.flatMap((entry) => entry.items).map((item) => item.qaId)).toEqual(built.shards.flatMap((entry) => entry.items).map((item) => item.qaId));
+    expect(queue.shards.find((entry) => entry.shard === sameShard)?.unreviewedCount).toBe(2);
+    const grouped = queue.shards.flatMap((entry) => entry.items).filter((item) => item.cardId === 'B01001' || item.cardId === 'B01002');
+    expect(grouped.map((item) => item.candidateGroup.size)).toEqual([2, 2]);
+    expect(grouped.map((item) => item.groupEquivalentEligible)).toEqual([true, true]);
+    expect(queue.shards.flatMap((entry) => entry.items).filter((item) => item.cardId === 'B01003' || item.cardId === 'B01004').map((item) => item.groupEquivalentEligible)).toEqual([false, false]);
+    for (const item of queue.shards.flatMap((entry) => entry.items)) {
+      expect(item).toEqual(expect.objectContaining({
+        qaId: expect.stringMatching(/^card:[^:\s]+:[a-f0-9]{64}$/),
+        cardId: expect.stringMatching(/^[A-Z0-9]+$/),
+        sectionHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        questionHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        answerHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        evidence: expect.any(Array),
+      }));
+      expect(item.evidence.every((reference) => /^(?:rules|src|tests|deferred):/.test(reference) && !/https?:\/\/|_raw\//i.test(reference))).toBe(true);
+    }
+    expect(JSON.stringify(queue)).not.toMatch(/"(?:question|answer|section|url|path|raw)"\s*:/i);
+  });
+
+  it('emits JSON for --queue and fails closed without queue stdout for invalid argument combinations', () => {
+    const root = fixture();
+    const built = buildQaAdjudication({ snapshot: { schemaVersion: 1, source: { url: 'https://example.invalid', fetchedAt: '2026-07-19' }, normalizedFaqHash: HASH_A, items: snapshotItems(), conflicts: [] }, rawPackages: [] });
+    for (const shard of built.shards) writeShard(root, shard.shard, shard.items);
+
+    const valid = runCli(root, '--queue');
+    expect(valid.status).toBe(0);
+    expect(() => JSON.parse(valid.stdout)).not.toThrow();
+    expect(JSON.parse(valid.stdout)).toEqual(expect.objectContaining({ total: 2, unreviewedCount: 2 }));
+    for (const args of [['--queue', '--check'], ['--queue', '--with-local-raw'], ['--bootstrap', '--check'], ['--unknown'], ['--queue', '--queue']]) {
+      const invalid = runCli(root, ...args);
+      expect(invalid.status).not.toBe(0);
+      expect(invalid.stdout).toBe('');
+    }
+  });
   it('assigns each Q&A identifier to the first hex character of its SHA-256 digest', () => {
     expect(qaShard(`card:one:${HASH_A}`)).toBe(hash(`card:one:${HASH_A}`)[0]);
   });

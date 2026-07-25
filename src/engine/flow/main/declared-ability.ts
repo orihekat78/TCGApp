@@ -18,8 +18,16 @@ import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
 import { char as readChar } from '../../read/char.js'; // BUG-067: ability.limit enforcement
 import { evalCond } from '../../cond/eval.js';          // BUG-099: ability.condition gate
+import { canPayWithPreflight } from '../../cost/pay.js';
+import { alternativeCostProviders } from '../../cost/alternative.js';
 import { resolveEffectPicks } from '../../effect/resolve-picks.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
+import type { AbilityCostParams } from './ability-activate.js';
+import { declaredCostParamsToDyn } from './declared-cost-params.js';
+import { parseRemoveSetCardWitness } from '../../cost/remove-set-card-witness.js';
+import { _getResolutionLock } from '../../event/registry.js';
+import { hasPendingHumanPick } from '../../effect/apply-pick.js';
+import { _hasOpenActionContext } from '../action/state-machine.js';
 
 function getHumanPlayerSide(): 'self' | 'opp' | null {
   return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
@@ -194,6 +202,110 @@ export function canDeclaredAbility(state: GameState, uid: string, abilId: string
   return true;
 }
 
+/** Common admission boundary for every declared-ability caller. */
+function canStartDeclaredAbility(state: GameState, player: 'self' | 'opp'): boolean {
+  if (state.turn.player !== player || state.turn.phase !== 'main') return false;
+  if (_getResolutionLock().locked || _hasOpenActionContext()) return false;
+  if (state.pendingEffects.some((entry) => entry.state === 'pending')) return false;
+  return !hasPendingHumanPick(state);
+}
+
+/**
+ * Cost-aware authorization for the public activation/dispatch boundary.
+ * `canDeclaredAbility` intentionally remains the structural declaration gate;
+ * callers that can spend or replace costs must use this stronger predicate.
+ */
+export function canActivateDeclaredAbility(
+  state: GameState,
+  uid: string,
+  abilId: string,
+  costParams?: AbilityCostParams,
+  options?: { allowImplicitRemoveSetCard?: boolean },
+): boolean {
+  if (!canDeclaredAbility(state, uid, abilId)) return false;
+  const found = findCardOnBoard(state, uid);
+  if (!found) return false;
+  if (!canStartDeclaredAbility(state, found.player)) return false;
+  const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
+  if (!ability) return false;
+  const dyn = declaredCostParamsToDyn(costParams);
+  const ctx: EffectCtx = {
+    source: { cardId: found.cardId, player: found.player, uid, abilityId: abilId, area: found.area },
+    bindings: {},
+    ...(dyn ? { dyn } : {}),
+  };
+  // BUG-248: UI の候補列挙時はコスト在庫だけを確認するが、人間の public dispatch は
+  // 裏面 cardId を明かさず選ばれた物理 occurrence (instanceId) を必須にする。
+  // 未指定 fallback は AI/smoke の決定戦略だけに限定する。
+  if (!options?.allowImplicitRemoveSetCard
+    && costParams?.paymentMode !== 'alternative'
+    && found.player === getHumanPlayerSide()
+    && selectedCostContainsRemoveSetCard(ability.cost, costParams?.costChoice, costParams?.costChoicePath)
+    && !hasExactRemoveSetCardWitness(costParams)) {
+    return false;
+  }
+  return resolveDeclaredPaymentPlan(state, ability, ctx, costParams, {
+    allowLegacyInvalidAlternativeFallback: options?.allowImplicitRemoveSetCard === true,
+  }) !== null;
+}
+
+export type DeclaredPaymentPlan = { kind: 'printed' } | { kind: 'alternative'; providerUid: string };
+
+/** One canonical payment choice for authorization and execution. */
+export function resolveDeclaredPaymentPlan(
+  state: GameState,
+  ability: AbilityDef,
+  ctx: EffectCtx,
+  costParams?: AbilityCostParams,
+  options?: { allowLegacyInvalidAlternativeFallback?: boolean },
+): DeclaredPaymentPlan | null {
+  if (!ability.cost) return costParams?.paymentMode === 'alternative' ? null : { kind: 'printed' };
+  const providers = alternativeCostProviders(state, ctx, ability);
+  const selectedProvider = costParams?.alternativeCostProviderUid;
+  if (costParams?.paymentMode === 'alternative') {
+    return selectedProvider !== undefined && providers.includes(selectedProvider)
+      ? { kind: 'alternative', providerUid: selectedProvider }
+      : null;
+  }
+  if (costParams?.paymentMode === 'printed') {
+    return canPayWithPreflight(state, ability.cost, ctx) ? { kind: 'printed' } : null;
+  }
+  // Legacy callers supplied a provider UID without an explicit mode. Use it
+  // when it remains legal; otherwise retain the historical printed-cost path.
+  if (selectedProvider !== undefined && providers.includes(selectedProvider)) {
+    return { kind: 'alternative', providerUid: selectedProvider };
+  }
+  if (selectedProvider !== undefined && !options?.allowLegacyInvalidAlternativeFallback) return null;
+  if (canPayWithPreflight(state, ability.cost, ctx)) return { kind: 'printed' };
+  return providers[0] ? { kind: 'alternative', providerUid: providers[0] } : null;
+}
+
+function selectedCostContainsRemoveSetCard(
+  cost: AbilityDef['cost'] | undefined,
+  choiceIndex: number | undefined,
+  choicePath: readonly number[] | undefined,
+): boolean {
+  const path = choicePath ?? (choiceIndex === undefined ? undefined : [choiceIndex]);
+  let cursor = 0;
+  const visit = (node: NonNullable<AbilityDef['cost']>): boolean => {
+    if (node.kind === 'removeSetCard') return true;
+    if (node.kind === 'pay') return node.items.some(visit);
+    if (node.kind !== 'choice') return false;
+    const selected = path?.[cursor++];
+    if (selected !== undefined && Number.isInteger(selected) && selected >= 0 && selected < node.items.length) {
+      return visit(node.items[selected]!);
+    }
+    // Low-level callers without a public selection are deliberately conservative.
+    return node.items.some(visit);
+  };
+  return cost ? visit(cost) : false;
+}
+
+function hasExactRemoveSetCardWitness(costParams: AbilityCostParams | undefined): boolean {
+  const witness = parseRemoveSetCardWitness(costParams?.removeSetCard);
+  return witness.kind === 'valid' && witness.instanceIds !== undefined;
+}
+
 /**
  * useDeclaredAbility — 宣言能力使用を宣言する。
  *
@@ -308,7 +420,7 @@ export function useDeclaredAbility(
     humanChooser: isHumanEffect,
     source: { cardId: found.cardId, abilityId: abilId },
   });
-  event.queue(
+  const declaredEntry = event.queue(
     state,
     resolvedEffect,
     { player: found.player, uid, cardId: found.cardId, abilityId: abilId, area: found.area },
@@ -331,6 +443,11 @@ export function useDeclaredAbility(
         }
       : undefined,
   );
+  // `ability:declared` observers must wait for this declared effect.  Keep a
+  // distinct, persisted precedence key so their normal owner-order group is
+  // opened only after this effect (and any decision it creates) completes.
+  const declaredBatch = `declared:${declaredEntry.id}`;
+  declaredEntry.declaredBatch = declaredBatch;
   // engine mega-wave W2 (2026-07-03, hook): ability:declared — 宣言能力使用の第三者観測 hook
   // (B03057「自分の現場にいる〚特徴[探偵]〛のキャラが【宣言】能力を使用したとき」)。
   // ★emit は宣言者自身の effect queue の **後** (W2 混成 review sonnet-lens blocker 対応):
@@ -342,7 +459,7 @@ export function useDeclaredAbility(
   event.emit(
     state,
     'ability:declared',
-    { uid, cardId: found.cardId, abilityId: abilId, player: found.player },
+    { uid, cardId: found.cardId, abilityId: abilId, player: found.player, declaredBatch },
     { player: found.player, uid, cardId: found.cardId },
   );
 }

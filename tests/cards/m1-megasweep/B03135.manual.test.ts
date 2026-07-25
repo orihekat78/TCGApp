@@ -38,6 +38,8 @@ const PA_RED = 'PA_RED';     // 非黒 partner → 書き換え不成立 (QA)
 // 事件解決 winnable (解決編 + active partner + evidence>=required)。B03135 を自 case に置く。
 function winnable(side: 'self' | 'opp', partnerId: string, evCount: number, required: number): GameState {
   return produce(createEmptyGameState(), (d) => {
+    d.turn.player = side;
+    d.turn.phase = 'main';
     const p = d.players[side];
     p.case.cardId = 'B03135';
     p.case.status = '解決編';

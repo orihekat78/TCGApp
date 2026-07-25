@@ -397,7 +397,7 @@ export function stepTurn(
 ): StepTurnResult {
   // BUG-138 (X8): human 所有の未解決 pick が残っている間は次の move に移れない (rules/05)。
   // __humanPlayerSide 未設定 (smoke / spectator) では常に false → 従来挙動不変。
-  if (hasPendingHumanPick()) {
+  if (hasPendingHumanPick(state)) {
     return { move: null, nextState: state, done: false, paused: { humanPick: true } };
   }
   const candidates = enumerateMoves(state, byPlayer);
@@ -427,7 +427,7 @@ export function stepTurn(
     // (chooseAtomTarget は walk と同じ HeuristicPolicy を使用。continuation も BUG-107 機構で進む)。
     drainAiEffectPicks(draft, new HeuristicPolicy());
   });
-  const pausedForHuman = hasPendingHumanPick();
+  const pausedForHuman = hasPendingHumanPick(s);
   return {
     move: chosen,
     nextState: s,

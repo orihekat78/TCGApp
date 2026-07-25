@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReplayLog } from '@/ai/replay/recorder.js';
 import { applyMove } from '@/ai/policy.js';
 import { produce } from '@/engine/produce';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import type { GameState } from '@/engine/types';
 import { useGameStateStore } from '@/ui/state/store.js';
 
@@ -43,13 +44,14 @@ export type ReplayDriverApi = {
 };
 
 /** initialState から moves[0..upto-1] を apply した結果の GameState を返す */
-function computeStateAt(log: ReplayLog, upto: number): GameState {
+export function computeStateAt(log: ReplayLog, upto: number): GameState {
   let st = log.initialState;
   for (let i = 0; i < upto && i < log.moves.length; i++) {
     const m = log.moves[i];
     try {
       st = produce(st, (draft) => {
         applyMove(draft, m.move, m.player);
+        runAllUntilEmpty(draft);
       });
     } catch {
       // apply 失敗時は state そのまま (記録時から engine が壊れた可能性)

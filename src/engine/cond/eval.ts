@@ -217,6 +217,10 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const p = resolvePlayer(cond.player, ctx);
       return state.players[p].hand.length <= cond.n;
     }
+    case 'deckAtLeast': {
+      const p = resolvePlayer(cond.player, ctx);
+      return state.players[p].deck.length >= cond.n;
+    }
     case 'handCountAtLeastOther': {
       const p = resolvePlayer(cond.player, ctx);
       const other = p === 'self' ? 'opp' : 'self';
@@ -959,7 +963,7 @@ const CONDITION_KIND_MAP = {
   evidenceDiff: true, sceneCountCompare: true, // engine additive wave (2026-06-30, B05103/B05081)
   boundCountCompare: true, // S2 deck cluster (2026-07-10, B08057): bound 要素数比較 (合わせてN枚 gate)
   evidenceTraitAtLeast: true, // engine E3 P53 (2026-07-03, B09107 証拠特徴計数)
-  handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, // Task D E1 (2026-06-12)
+  handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, deckAtLeast: true, // Task D E1 (2026-06-12)
   fileTopType: true,
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,

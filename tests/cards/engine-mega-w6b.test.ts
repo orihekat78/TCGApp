@@ -118,6 +118,7 @@ function reserveBase(): GameState {
 }
 
 beforeEach(() => {
+  useGameStateStore.getState().resetMatchSessionState();
   event._resetRegistry(); _resetTriggeredRegistered(); _resetReservedEffectsRegistered(); _resetUidCounter(); resetDefRegistry();
   _clearPendingEffectPickQueue();
   setHuman(null);

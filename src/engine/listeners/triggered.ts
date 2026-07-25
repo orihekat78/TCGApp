@@ -30,7 +30,7 @@ import { char as charMutator } from '../mutate/char.js'; // W6 step4 (r58/B09090
 import { flag } from '../mutate/flag.js';            // BUG-096: declaredUseCount 流用
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from '../effect/resolve-picks.js';
-import { _setDeferredEntryPickResolver } from '../resolve/stack.js';
+import { _setDeferredEntryPickResolver, effectCtxFromStackEntry } from '../resolve/stack.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import type { GameState, AbilityDef, AbilityScope, Effect, EffectCtx, EffectResolutionKind, EffectStackEntry } from '../types/index.js';
 // 2026-05-27 Option C: ヒラメキは triggered hook='evidence:remove-by-action' + optional:true
@@ -86,6 +86,9 @@ export const TRIGGERED_HOOKS = [
   // 発火。推理キャラは scene に sleep で残るため collectCardsInPlay に出る → 特別 handler 不要、
   // 通常 in-play scan (handleHook) で処理。selfOnly=「このキャラが推理したとき」(source.uid 一致)。
   'reasoning:end',
+  // A reaction window after the reasoning character sleeps but before mislead
+  // and evidence. Flow queues a gated continuation for the latter stages.
+  'reasoning:after-sleep',
   // engine-extension (2026-06-06 タスクC): 変装時 (rules/09 §変装, 23-qa-disguise-cutin.md)。
   // flow.contact.disguise が emit する disguise:into (source={player, uid}=変装で入れ替わったキャラ。
   // uid は維持され cardId のみ変装カードに差替わる) を card-triggerable 化。変装後のキャラは scene に
@@ -243,7 +246,14 @@ function selfOnlyMatches(
 // 同一 emit で queue される全 entry (自効果 + 第三者反応) に同じ番号を付与し、
 // stack.next() の pairwise gate で「自効果 → 反応」順 (rules/15 §未解決 + B08020 公式Q&A
 // 「使用したイベントの効果を先に解決します」) を保証する。
-let declaredBatchSeq = 0;
+
+function nextDeclaredBatch(state: GameState): number {
+  const persisted = state.declaredBatchSeq ?? 0;
+  const legacyMax = state.pendingEffects.reduce((max, entry) =>
+    typeof entry.declaredBatch === 'number' ? Math.max(max, entry.declaredBatch) : max,
+  0);
+  return (state.declaredBatchSeq = Math.max(persisted, legacyMax) + 1);
+}
 
 function handleHook(
   hookName: TriggeredHook,
@@ -251,7 +261,13 @@ function handleHook(
   payload: unknown,
   source: unknown,
 ): void {
-  const declaredBatch = hookName === 'effect:declared' ? ++declaredBatchSeq : undefined;
+  const abilityDeclaredBatch = (payload as { declaredBatch?: unknown } | undefined)?.declaredBatch;
+  const declaredBatch = hookName === 'effect:declared'
+    ? nextDeclaredBatch(state)
+    : hookName === 'ability:declared'
+      && (typeof abilityDeclaredBatch === 'number' || typeof abilityDeclaredBatch === 'string')
+      ? abilityDeclaredBatch
+      : undefined;
   // mega-wave W6 step4 (2026-07-04, B09090/P16): 疾風条件 waive の消費。
   // 「このターン中、**次に**自分の現場に登場したキャラは【疾風】の条件を無視できる」— armed 中の
   // owner 側へ登場した**次の 1 体**が、疾風の有無を問わず arm を消費する (公式Q&A: 疾風を持たない
@@ -351,6 +367,7 @@ function handleHook(
         cardId: card.cardId,
         uid: card.uid,
         abilityId: ability.id,
+        description: ability.description,
         player: card.player,
         area: card.area,
         ...(resolutionKind ? { resolutionKind } : {}),
@@ -427,18 +444,6 @@ function handleHook(
       // ctx.contact (inContact pick, B04092 キャンティ) を surface 時に captur するため (choice の BUG-114 対称、
       // setPendingOptionalBindings)。既存 non-optional 効果の pick/$contact は従来通り runtime (entryToCtx) 解決。
       const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
-      const resolveCtx = {
-        source: abilitySource,
-        // entryToCtx (stack.ts) と同型の cast (contact bindings は Candidate[] とは限らない任意 object array)。
-        // W4 r83: shallow-copy (emit bindings は凍結されうる — runAtom preamble 書込に備える、stack.ts 同型)。
-        bindings: { ...(sourceBindings ?? {}) } as EffectCtx['bindings'],
-        // 2026-06-06 タスクC: optional surface 時に $trigger.<field> 用 payload を引き継ぐ
-        // (B03038 の $trigger.gained = reasoning:end payload.gained)。
-        triggerPayload: payload,
-      };
-      // Phase 7-3: listener callback 内で instantiate (module top では circular import 発生)。
-      // misread.ts:110 と同じパターン。allocation cost は 1 ability/frame で実害なし。
-      const aiPolicy = new HeuristicPolicy();
       // user_request 20260522_01 #6/#2 + BUG-054 + BUG-065-followup:
       // human player owned effect は humanChooser=true で resolveEffectPicks に
       // 渡し、$pick 検出時に side-channel `__pendingEffectPickSide` を set。
@@ -453,43 +458,40 @@ function handleHook(
       // atom-handlers の safety net (例: discard:skip-unresolved-pick) で no-op
       // 扱い。後で UI が modal でユーザー選択 → effectPickResolve dispatch で
       // 解決済み atom が単体で queue されて実行される。
-      const humanSide = getHumanPlayerSide();
-      const isHumanEffect = humanSide !== null && card.player === humanSide;
       // BUG-132 GAP-2: 第三者反応 (own = trig.selfOnly===true 以外) は pick/dyn を queue 時に
       // 確定せず raw のまま queue し、stack.runOne() の遅延 substitute (下の
       // resolveDeferredEntryPicks) で解決時盤面の候補を参照する (rules/15 §解決時参照、
       // B07016/B08020 a2「（イベントを解決してからキャラを選ぶ）」)。selfOnly entry
       // (イベント自効果 / カットイン自効果 / scene rider) は従来通り queue 時解決。
-      const isDeclaredReaction = hookName === 'effect:declared' && trig.selfOnly !== true;
-      const pendingPickCountBefore = (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0;
-      const resolvedEffect = isDeclaredReaction
-        ? ability.effect
-        : resolveEffectPicks(state, ability.effect, resolveCtx, {
-            chooseAtomTarget: isHumanEffect
-              ? undefined
-              : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-            byPlayer: card.player,
-            humanChooser: isHumanEffect,
-            source: { cardId: card.cardId, abilityId: ability.id },
-          });
-      const prewalkQueuedTopLevelPick = ability.effect.kind === 'atom'
-        && ((globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0) > pendingPickCountBefore;
+      const isDeclaredReaction = (hookName === 'effect:declared' || hookName === 'ability:declared')
+        && trig.selfOnly !== true;
+      const resolvedEffect = ability.effect;
       // queue (side-channel set されていても skip しない、pre-pick step 実行のため)。
       // sourceBindings (contact bindings) は上で算出済 → entry に永続化 (runtime $contact.byUid 解決)。
-      if (!prewalkQueuedTopLevelPick) event.queue(
+      event.queue(
         state,
         resolvedEffect,
-        { player: card.player, uid: card.uid, cardId: card.cardId, ...(resolutionKind ? { resolutionKind } : {}) },
+        {
+          player: card.player,
+          uid: card.uid,
+          cardId: card.cardId,
+          abilityId: ability.id,
+          description: ability.description,
+          ...(resolutionKind ? { resolutionKind } : {}),
+        },
         hookName,
         payload,
         sourceBindings,
         // BUG-132 GAP-2: effect:declared のみ batch 連番 + 反応マーカーを entry に付与
-        declaredBatch !== undefined
+        {
+          deferredPicks: true,
+          ...(declaredBatch !== undefined
           ? {
               declaredBatch,
               ...(isDeclaredReaction ? { declaredReaction: { abilityId: ability.id } } : {}),
             }
-          : undefined,
+          : {}),
+        },
       );
       // BUG-096: 発火を記録 (limit:{turn} のカウント。limit 無しは no-op)
       if (ability.limit?.kind === 'turn') {
@@ -503,29 +505,22 @@ function handleHook(
 // handleHook の queue 時 resolveEffectPicks と同じ contract を、解決時盤面に対して実行する。
 // stack コアに AI import を持ち込まないため、listener 層から関数注入する (敵対レビュー反映)。
 function resolveDeferredEntryPicks(state: GameState, entry: EffectStackEntry): Effect {
-  const abilityId = entry.declaredReaction?.abilityId ?? '';
-  const resolveCtx = {
-    source: {
-      cardId: entry.source.cardId ?? '',
-      uid: entry.source.uid ?? '',
-      abilityId,
-      player: entry.source.player,
-      // entryToCtx (stack.ts) と同じ近似。pick 解決に area は実質関与しない
-      area: 'scene' as const,
-    },
-    bindings: {},
-    triggerPayload: entry.triggeredBy.payload,
-  };
+  const resolveCtx = effectCtxFromStackEntry(entry);
+  const abilityId = entry.declaredReaction?.abilityId ?? entry.source.abilityId ?? '';
   const humanSide = getHumanPlayerSide();
   const isHumanEffect = humanSide !== null && entry.source.player === humanSide;
   // handleHook と同じ lazy instantiate (module top では circular import 発生)
   const aiPolicy = new HeuristicPolicy();
-  return resolveEffectPicks(state, entry.effect, resolveCtx, {
+  const resolved = resolveEffectPicks(state, entry.effect, resolveCtx, {
     chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
     byPlayer: entry.source.player,
     humanChooser: isHumanEffect,
     source: { cardId: entry.source.cardId ?? '', abilityId },
   });
+  // `resolveEffectPicks` leaves the queued atom as a runtime no-op carrier,
+  // but retains every earlier sequence step.  Discarding the whole resolved
+  // effect here also discarded those already-unblocked prefix effects.
+  return resolved;
 }
 
 let _registered = false;
@@ -666,24 +661,16 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
     }
 
     // 強制発動 (rules/15 §必須効果) — 通常 triggered と同じ経路
-    const humanSide = getHumanPlayerSide();
-    const isHumanEffect = humanSide !== null && card.player === humanSide;
-    const aiPolicy = new HeuristicPolicy();
-    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
-      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-      byPlayer: card.player,
-      humanChooser: isHumanEffect,
-      source: { cardId: card.cardId, abilityId: ability.id },
-    });
     // ヒラメキ用に source.bindings も伝達 (今後 $evidence.* 等を使うカードを想定)
     const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
     event.queue(
       state,
-      resolvedEffect,
-      { player: card.player, uid: card.uid, cardId: card.cardId },
+      ability.effect,
+      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
       'evidence:remove-by-action',
       payload,
       sourceBindings,
+      { deferredPicks: true },
     );
   }
 }
@@ -764,23 +751,15 @@ function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unk
     if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
     if (!ability.effect) continue;
 
-    const humanSide = getHumanPlayerSide();
-    const isHumanEffect = humanSide !== null && card.player === humanSide;
-    const aiPolicy = new HeuristicPolicy();
-    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
-      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-      byPlayer: card.player,
-      humanChooser: isHumanEffect,
-      source: { cardId: card.cardId, abilityId: ability.id },
-    });
     const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
     event.queue(
       state,
-      resolvedEffect,
-      { player: card.player, uid: card.uid, cardId: card.cardId },
+      ability.effect,
+      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
       'leave:to-remove',
       payload,
       sourceBindings,
+      { deferredPicks: true },
     );
   }
 }
@@ -827,23 +806,15 @@ function handleDisguiseReplacedSelf(state: GameState, payload: unknown, source: 
     if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
     if (!ability.effect) continue;
 
-    const humanSide = getHumanPlayerSide();
-    const isHumanEffect = humanSide !== null && card.player === humanSide;
-    const aiPolicy = new HeuristicPolicy();
-    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
-      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-      byPlayer: card.player,
-      humanChooser: isHumanEffect,
-      source: { cardId: card.cardId, abilityId: ability.id },
-    });
     const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
     event.queue(
       state,
-      resolvedEffect,
-      { player: card.player, uid: card.uid, cardId: card.cardId },
+      ability.effect,
+      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
       'disguise:replaced',
       payload,
       sourceBindings,
+      { deferredPicks: true },
     );
   }
 }
@@ -878,14 +849,15 @@ function handleOnSetSelfPhaseEndStart(state: GameState, payload: unknown, source
           if (trigger.matcherCondition && !evalCond(state, trigger.matcherCondition, ctx)) continue;
           if (ability.condition && !evalCond(state, ability.condition, ctx)) continue;
           if (!ability.effect) continue;
-          const human = getHumanPlayerSide() === player;
-          const policy = new HeuristicPolicy();
-          const resolved = resolveEffectPicks(state, ability.effect, ctx, {
-            chooseAtomTarget: human ? undefined : policy.chooseAtomTarget?.bind(policy),
-            byPlayer: player, humanChooser: human,
-            source: { cardId: setCard.cardId, abilityId: ability.id },
-          });
-          event.queue(state, resolved, { player, uid: host.uid, cardId: setCard.cardId }, 'phase:end:start', triggerPayload);
+          event.queue(
+            state,
+            ability.effect,
+            { player, uid: host.uid, cardId: setCard.cardId, abilityId: ability.id, description: ability.description },
+            'phase:end:start',
+            triggerPayload,
+            undefined,
+            { deferredPicks: true },
+          );
         }
       }
     }
@@ -927,21 +899,14 @@ function handleSetcardLeaveSelf(state: GameState, payload: unknown, _source: unk
     if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
     if (!ability.effect) continue;
 
-    const humanSide = getHumanPlayerSide();
-    const isHumanEffect = humanSide !== null && card.player === humanSide;
-    const aiPolicy = new HeuristicPolicy();
-    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
-      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-      byPlayer: card.player,
-      humanChooser: isHumanEffect,
-      source: { cardId: card.cardId, abilityId: ability.id },
-    });
     event.queue(
       state,
-      resolvedEffect,
-      { player: card.player, uid: card.uid, cardId: card.cardId },
+      ability.effect,
+      { player: card.player, uid: card.uid, cardId: card.cardId, abilityId: ability.id, description: ability.description },
       'setcard:leave',
       payload,
+      undefined,
+      { deferredPicks: true },
     );
   }
 }

@@ -13,4 +13,5 @@ export {
   lock,
   unlock,
   isLocked,
+  pendingOwnerOrderGroup,
 } from './stack.js';

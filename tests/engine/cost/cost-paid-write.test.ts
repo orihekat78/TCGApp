@@ -96,6 +96,24 @@ describe('engine.cost.pay — costPaid write (attribution ②)', () => {
       .toThrow('cost.pay: removeStackedCards is not payable');
   });
 
+  it('removeStackedCards normalizes legacy numeric stacks identically in authorization and payment', async () => {
+    const { canPayAtomically } = await import('@/engine/cost/pay');
+    const host = makeChar({ uid: 'legacy-host', cardId: 'HOST', stackedCards: 2 });
+    const s = withScene(createEmptyGameState(), 'self', [host]);
+    const cost = { kind: 'removeStackedCards', n: 2 } as Cost;
+    const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'legacy-host' } });
+
+    expect(canPayAtomically(s, cost, ctx)).toBe(true);
+    expect(s.players.self.scene[0]!.stackedCards).toBe(2);
+    const result = produce(s, draft => { pay(draft, cost, ctx); });
+    expect(result.players.self.remove).toEqual(['back-card', 'back-card']);
+    expect(result.players.self.scene[0]!.stackedCards).toEqual([]);
+    expect(ctx.costPaid?.['removeStackedCards']).toEqual({ entries: [
+      { cardId: 'back-card', instanceId: 'legacy:legacy-host:0', removeIndex: 0 },
+      { cardId: 'back-card', instanceId: 'legacy:legacy-host:1', removeIndex: 1 },
+    ] });
+  });
+
   it("removeFromHand — costPaid['removeFromHand'] = { ids, level } (B09050/B09060)", () => {
     registerCardDef(defOf({ id: 'HND5', level: 5 }));
     const s = withHand(createEmptyGameState(), ['HND5', 'X']);

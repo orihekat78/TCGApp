@@ -103,6 +103,34 @@ afterEach(() => {
 });
 
 describe('CPU pause for human-owned deck decisions', () => {
+  it('does not choose a CPU move while the human must order unresolved effects', () => {
+    const state = reorderState();
+    state.pendingEffects = ['human-a', 'human-b'].map((id, index) => ({
+      id,
+      source: { player: 'self' as const, cardId: 'B03006' },
+      triggeredBy: { hook: 'action:declare' },
+      triggeredAt: { turn: 3, phase: 'main', nano: index },
+      effect: { kind: 'atom' as const, verb: 'noop' as const, args: {} },
+      state: 'pending' as const,
+    }));
+    let chooseCalls = 0;
+    const policy: AIPolicy = {
+      name: 'must-not-choose',
+      choose: () => { chooseCalls += 1; return null; },
+    };
+
+    const step = stepTurn(state, policy, 'opp');
+
+    expect(step).toMatchObject({ move: null, done: false, paused: { humanPick: true } });
+    expect(step.nextState).toBe(state);
+    expect(chooseCalls).toBe(0);
+
+    useGameStateStore.getState().setGameState(state);
+    driveOppTurn();
+    expect(useGameStateStore.getState().gameState).toBe(state);
+    expect(state.pendingEffects.map(entry => entry.state)).toEqual(['pending', 'pending']);
+  });
+
   it('pauses in the same step that generates a reorder, surfaces its snapshot, and resumes without stale state', () => {
     const initial = reorderState();
     const policy = new DeclaredOnly();

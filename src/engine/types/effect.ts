@@ -51,6 +51,8 @@ export type Condition =
   //        21-declared-ability-cost.md (宣言ゲートは AbilityDef.condition)
   | { kind: 'handAtLeast'; player: 'self' | 'opp'; n: number }
   | { kind: 'handAtMost'; player: 'self' | 'opp'; n: number }
+  /** Deck-size gate, evaluated before any reveal. */
+  | { kind: 'deckAtLeast'; player: 'self' | 'opp'; n: number }
   // 「player の手札枚数 >= 反対側の手札枚数」(B07067「相手の手札が自分の手札の枚数以上」= player:'opp')
   | { kind: 'handCountAtLeastOther'; player: 'self' | 'opp' }
   // engine additive wave (2026-06-30): 自他 **現場キャラ枚数** の比較 (B05081 威嚇射撃「自分の現場に

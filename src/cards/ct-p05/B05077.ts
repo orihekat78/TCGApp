@@ -27,7 +27,7 @@ const a1: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: {
+        args: { visibility: 'public', viewer: 'all',
           player: 'self',
           filter: { cardName: 'ジョディ・スターリング', levelMax: 4, kind: 'character' },
           bind: '$revealed',

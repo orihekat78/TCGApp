@@ -37,7 +37,7 @@ function setupOppTurnMinimal(): GameState {
 
 describe('driveOppTurn', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null, pendingMisread: null });
+    useGameStateStore.setState({ gameState: null, pendingMisread: null, pendingDeckReveal: null });
     _resetIsDriving();
     _resetActionContexts();
   });
@@ -86,6 +86,21 @@ describe('driveOppTurn', () => {
         reasoningUid: 'reasoner#1',
         reasoningPlayer: 'opp',
         candidates: [{ uid: 'misread#1', x: 1 }],
+      },
+    });
+
+    driveOppTurn();
+
+    expect(useGameStateStore.getState().gameState).toBe(before);
+  });
+
+  it('is a no-op while a surfaced public deck reveal is pending', () => {
+    const before = setupOppTurnMinimal();
+    useGameStateStore.setState({
+      gameState: before,
+      pendingDeckReveal: {
+        player: 'self', visibility: 'public', viewer: 'all',
+        revealed: ['c1'], matched: 'c1', presentation: 'reveal-return',
       },
     });
 

@@ -101,7 +101,7 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
   // D11007 v2 Phase 3: 「action:pre-target」 declarative trigger を直接 lookup
   //
   // Card-side DSL は trigger { hook: 'action:pre-target', selfOnly: true } + effect:
-  // atom expandActionTargets { side, state[], levelMin, levelMax } で表現される。
+  // atom expandActionTargets { side, state[], levelMin, levelMax, hasSetCards } で表現される。
   // queue 経由の事後 resolve では candidates() の即時 enumeration に間に合わないので、
   // ここで直接 scene 上の triggered ability を walk して args を読む (sync inline)。
   applyPreTargetExpansion(state, byUid, actor, opp, seen, extra);
@@ -171,6 +171,7 @@ function applyPreTargetExpansion(
         const stateFilter = args.state as ('active' | 'sleep' | 'stun')[] | undefined;
         const levelMin = args.levelMin as number | undefined;
         const levelMax = args.levelMax as number | undefined;
+        const hasSetCards = args.hasSetCards === true;
         const sides: Player[] = sideArg === 'opp' ? [opp]
           : sideArg === 'self' ? [actor]
           : [actor, opp]; // 'either'
@@ -181,6 +182,7 @@ function applyPreTargetExpansion(
             const lvl = readChar.level(state, c.uid);
             if (levelMin !== undefined && lvl < levelMin) continue;
             if (levelMax !== undefined && lvl > levelMax) continue;
+            if (hasSetCards && c.setCards.length === 0) continue;
             seen.add(c.uid);
             extra.push({ uid: c.uid, cardId: c.cardId, player: sd });
           }

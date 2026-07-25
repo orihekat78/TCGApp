@@ -5,11 +5,11 @@
  */
 
 .effect-stack-panel {
-  position: absolute;
+  position: fixed;
   right: 16px;
-  top: 56px;
+  top: 12px;
   width: 200px;
-  z-index: 25;
+  z-index: 260;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -19,7 +19,7 @@
 }
 
 .effect-stack-panel.open {
-  width: 320px;
+  width: min(440px, calc(100vw - 24px));
 }
 
 .effect-stack-badge {
@@ -61,7 +61,7 @@
 /* ---- Open list ---- */
 .effect-stack-list {
   pointer-events: auto;
-  max-height: 360px;
+  max-height: calc(100dvh - 68px);
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.78);
   border: 1px solid color-mix(in oklch, var(--neon-blue) 30%, transparent);
@@ -157,8 +157,10 @@
   background: transparent;
   border: 1px solid var(--neon-blue);
   color: var(--neon-blue);
-  font-size: 8px;
-  padding: 1px 4px;
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 16px;
+  padding: 4px 8px;
   border-radius: 2px;
   cursor: pointer;
   line-height: 1;
@@ -170,3 +172,23 @@
   opacity: 0.3;
   cursor: not-allowed;
 }
+.entry-ability { color: var(--neon-blue); font-weight: 800; }
+.entry-description {
+  grid-column: 1 / -1;
+  color: var(--text-secondary);
+  white-space: normal;
+}
+
+.effect-stack-confirm {
+  align-self: flex-end;
+  border: 1px solid var(--accent-gold);
+  background: rgba(255, 208, 0, 0.12);
+  color: var(--accent-gold);
+  border-radius: 2px;
+  font: inherit;
+  font-weight: 700;
+  min-height: 44px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.effect-stack-confirm:disabled { opacity: 0.35; cursor: not-allowed; }

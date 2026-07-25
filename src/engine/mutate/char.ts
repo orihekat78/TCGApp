@@ -356,15 +356,20 @@ function grantAbility(s: GameState, uid: string, ability: object): void {
 /** Backfill legacy entries and allocate per-state IDs so hydration cannot collide. */
 function ensureSetCardInstanceIds(s: GameState): void {
   const used = new Set<string>();
+  let seq = s.setCardInstanceSeq ?? 1;
   for (const player of ['self', 'opp'] as const) {
     for (const char of s.players[player].scene) {
-      for (const entry of char.setCards) if (entry.instanceId) used.add(entry.instanceId);
+      for (const entry of char.setCards) {
+        const id = entry.instanceId;
+        if (typeof id !== 'string' || id.length === 0 || used.has(id)) {
+          entry.instanceId = undefined;
+          continue;
+        }
+        used.add(id);
+        const match = /^set:(\d+)$/.exec(id);
+        if (match) seq = Math.max(seq, Number(match[1]) + 1);
+      }
     }
-  }
-  let seq = s.setCardInstanceSeq ?? 1;
-  for (const id of used) {
-    const match = /^set:(\d+)$/.exec(id);
-    if (match) seq = Math.max(seq, Number(match[1]) + 1);
   }
   for (const player of ['self', 'opp'] as const) {
     for (const char of s.players[player].scene) {

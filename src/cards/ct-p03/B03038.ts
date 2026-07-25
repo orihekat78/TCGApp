@@ -5,12 +5,11 @@
 //   【自分ターン中】【ターン1】自分の現場にいるLP1以上のキャラが推理したとき、カードを1枚引いてもよい。
 //     そうした場合、この推理によって自分は証拠を得ない。
 //
-// a1: 推理反応 (reasoning:end, 非 selfOnly)。【自分ターン中】= condition turn:self、【ターン1】= limit turn1。
+// a1: 推理反応 (reasoning:after-sleep, 非 selfOnly)。【自分ターン中】= condition turn:self、【ターン1】= limit turn1。
 //   matcherCondition triggerCharMatches{side:'self', filter:{lpMin:1}} で「自分側の LP1以上のキャラが推理したとき」を gate。
 //   効果は optional (「引いてもよい」= 任意): する を選ぶと
-//     1) draw 1、2) evidenceToDeck($trigger.gained) = この推理で得た証拠 (payload.gained 枚) をデッキ上へ戻す
-//        (rules/11 §LP≤0 と同じ「証拠を1つも得ない」状態 = net 証拠0・デッキ復元)。
-//   $trigger.gained は reasoning:end payload.gained を resolveBindRef が解決 (engine 拡張、optional 越しに triggerPayload を引継ぎ)。
+//     1) draw 1、2) この推理キャラへ suppressReasoningEvidence を設定する。
+//        継続後の証拠加算は 0 となり、証拠を得ない。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -21,7 +20,7 @@ const a1: AbilityDef = {
   condition: { kind: 'turn', player: 'self' }, // 【自分ターン中】
   limit: { kind: 'turn', n: 1 }, // 【ターン1】
   trigger: {
-    hook: 'reasoning:end',
+    hook: 'reasoning:after-sleep',
     // 自分側の LP1以上のキャラが推理したとき
     matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: { lpMin: 1 } },
   },
@@ -32,8 +31,8 @@ const a1: AbilityDef = {
       kind: 'sequence',
       steps: [
         { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
-        // この推理で得た証拠 (gained 枚) をデッキ上へ戻す = 証拠を得ない
-        { kind: 'atom', verb: 'evidenceToDeck', args: { player: 'self', n: '$trigger.gained' } },
+        // 継続後のこの推理の証拠加算を抑止する
+        { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$trigger.uid', key: 'suppressReasoningEvidence', val: true } },
       ],
     },
   },

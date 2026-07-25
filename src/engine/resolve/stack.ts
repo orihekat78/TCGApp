@@ -9,7 +9,7 @@
 //   - next() は rules/25 の解決順を適用:
 //       1. state==='pending' のみ
 //       2. ターンプレイヤー > 非ターンプレイヤー
-//       3. 同所有者内: ownerChosenOrder 昇順 (undefined は最後)
+//       3. 同所有者の全未解決効果内: ownerChosenOrder 昇順 (undefined は最後)
 //       4. tiebreaker: pendingEffects 配列の挿入順
 //   - runOne() は resolveGuard を解決直前に再評価 (rules/25 「〜してもよい」)
 //   - runAllUntilEmpty は最大 1000 件で安全弁 (無限ループ防止)
@@ -24,7 +24,18 @@ import type {
 import { run as runEffect } from '../effect/resolver.js';
 import { evalCond } from '../cond/eval.js';
 import { _getResolutionLock, _setResolutionLock, event } from '../event/registry.js';
+import { _resolveReasoningContinuation } from '../flow/main/reasoning.js';
 import { _peekPendingDeckPlaceSide, _peekPendingDeckReorderSide } from '../effect/atom-handlers/_shared.js';
+import {
+  _peekPendingEffectChoiceSide,
+  _peekPendingEffectOptionalSide,
+  _peekPendingEffectPickSide,
+  _peekPendingEffectRepeatOptionalSide,
+  _peekPendingChooseInterceptSide,
+  _peekPendingRpsSide,
+  _peekPendingSetCardChoiceSide,
+  _peekPendingSetCardReplacementSide,
+} from '../effect/pending-state.js';
 
 const SAFETY_CAP = 1000;
 
@@ -50,7 +61,7 @@ export function _setDeferredEntryPickResolver(fn: DeferredEntryPickResolver | nu
  * helper. Card abilities that need richer context should pass their own
  * EffectCtx via direct engine.effect.run calls.
  */
-function entryToCtx(entry: EffectStackEntry): EffectCtx {
+export function effectCtxFromStackEntry(entry: EffectStackEntry): EffectCtx {
   // BUG-104: cutin の contact binding を ctx.contact に展開する。D11013 custom check は
   // ctx.contact.targetUid (コンタクト相手) を読んで「警察か」を判定するが、従来 ctx.contact 未設定で
   // 永久 false (1ドロー不発) だった。bindings.contact は cutIn (flow/contact.ts) が詰める。
@@ -63,7 +74,12 @@ function entryToCtx(entry: EffectStackEntry): EffectCtx {
       area: 'scene',
       cardId: entry.source.cardId,
       uid: entry.source.uid,
+      abilityId: entry.source.abilityId,
       resolutionKind: entry.source.resolutionKind,
+      triggerBatch: entry.triggerBatch,
+      ownerChosenOrder: entry.ownerChosenOrder,
+      ownerOrderConfirmed: entry.ownerOrderConfirmed,
+      ...(entry.declaredBatch !== undefined ? { declaredBatch: entry.declaredBatch } : {}),
     },
     // 2026-05-27 (Option C follow-up): entry.bindings に queue 時点の値があれば復元。
     // `$contact.byUid` 等の bind ref が atom-handler 実行時に正しく解決されるよう保証。
@@ -97,6 +113,19 @@ export function queue(state: GameState, entry: EffectStackEntry): void {
   state.pendingEffects.push(entry);
 }
 
+function isDeclaredReactionEligible(
+  entry: EffectStackEntry,
+  pending: Array<{ entry: EffectStackEntry; idx: number }>,
+): boolean {
+  if (entry.declaredReaction === undefined) return true;
+  if (entry.declaredBatch !== undefined
+    && pending.some(other =>
+      other.entry !== entry
+      && other.entry.declaredBatch === entry.declaredBatch
+      && other.entry.declaredReaction === undefined)) return false;
+  return true;
+}
+
 /**
  * Determine the next entry to resolve, per rules/15 + rules/25.
  * Returns null if no pending entry exists.
@@ -119,12 +148,10 @@ export function next(state: GameState): EffectStackEntry | null {
   //        human modal 解決前に反応の候補を確定させない (解決は次 dispatch の runAllUntilEmpty で再開)
   //   (iii) own 由来の follow-up entry (choice-option 再開等、source.cardId 一致・非反応) が pending
   // own が cancelled (無効化) になった場合は gate が外れ、発動済みの反応は解決される (rules/24 §発動済)。
-  const g = globalThis as {
-    __pendingEffectPickQueue?: { source?: { cardId?: string } }[];
-    __pendingEffectChoiceSide?: { source?: { cardId?: string } } | null;
-    __pendingEffectOptionalSide?: { source?: { cardId?: string } } | null;
-  };
   const gated = pending.filter(({ entry }) => {
+    if (entry.reasoningContinuation !== undefined) {
+      return !pending.some(other => other.entry !== entry && other.entry.reasoningContinuation === undefined);
+    }
     if (entry.declaredReaction === undefined) return true;
     // (i) 同 batch の own entry が pending
     if (entry.declaredBatch !== undefined
@@ -132,18 +159,6 @@ export function next(state: GameState): EffectStackEntry | null {
         o.entry !== entry
         && o.entry.declaredBatch === entry.declaredBatch
         && o.entry.declaredReaction === undefined)) return false;
-    const evCardId = (entry.triggeredBy.payload as { cardId?: string } | undefined)?.cardId;
-    if (evCardId !== undefined) {
-      // (ii) own 由来の未解決 human pick/choice/optional (modal 解決待ち)
-      if ((g.__pendingEffectPickQueue ?? []).some(pk => pk.source?.cardId === evCardId)) return false;
-      if (g.__pendingEffectChoiceSide?.source?.cardId === evCardId) return false;
-      if (g.__pendingEffectOptionalSide?.source?.cardId === evCardId) return false;
-      // (iii) own 由来の follow-up entry が pending
-      if (pending.some(o =>
-        o.entry !== entry
-        && o.entry.declaredReaction === undefined
-        && o.entry.source.cardId === evCardId)) return false;
-    }
     return true;
   });
   // 反応のみが残存 = own の modal 解決待ち。null を返して drain を終了し、modal 解決後の
@@ -151,18 +166,52 @@ export function next(state: GameState): EffectStackEntry | null {
   if (gated.length === 0) return null;
 
   gated.sort((a, b) => {
-    // 1. Turn player first.
+    // 1. A carrier created after a human decision is still the effect that was
+    // already resolving. Finish it before any trigger emitted by its prefix.
+    const ar = a.entry.resumesCurrentEffect === true ? 0 : 1;
+    const br = b.entry.resumesCurrentEffect === true ? 0 : 1;
+    if (ar !== br) return ar - br;
+    // 2. Turn player first.
     const ap = a.entry.source.player === turnPlayer ? 0 : 1;
     const bp = b.entry.source.player === turnPlayer ? 0 : 1;
     if (ap !== bp) return ap - bp;
-    // 2. ownerChosenOrder ascending; undefined treated as +Infinity.
+    // 3. The owner orders all unresolved effects, regardless of activation
+    // order or emission batch (rules/15). Batch remains provenance only.
     const ao = a.entry.ownerChosenOrder ?? Number.POSITIVE_INFINITY;
     const bo = b.entry.ownerChosenOrder ?? Number.POSITIVE_INFINITY;
     if (ao !== bo) return ao - bo;
-    // 3. Tiebreaker: insertion order.
+    // 4. Stable insertion order before the owner makes an explicit choice.
     return a.idx - b.idx;
   });
   return gated[0].entry;
+}
+
+/** All currently eligible unresolved effects owned by the priority human. */
+export function pendingOwnerOrderGroup(
+  state: GameState,
+  human: 'self' | 'opp' | null,
+): EffectStackEntry[] {
+  if (human === null) return [];
+  const upcoming = next(state);
+  if (!upcoming || upcoming.source.player !== human) return [];
+  if (upcoming.resumesCurrentEffect === true || upcoming.reasoningContinuation !== undefined) return [];
+  const pending = state.pendingEffects
+    .map((entry, idx) => ({ entry, idx }))
+    .filter(({ entry }) => entry.state === 'pending');
+  const group = state.pendingEffects.filter((entry) =>
+    entry.state === 'pending'
+    && entry.resumesCurrentEffect !== true
+    && entry.reasoningContinuation === undefined
+    && entry.source.player === human
+    && isDeclaredReactionEligible(entry, pending),
+  );
+  if (group.length < 2 || group.every((entry) => entry.ownerOrderConfirmed === true)) return [];
+  return group.sort((a, b) => {
+    const ao = a.ownerChosenOrder ?? Number.POSITIVE_INFINITY;
+    const bo = b.ownerChosenOrder ?? Number.POSITIVE_INFINITY;
+    if (ao !== bo) return ao - bo;
+    return state.pendingEffects.indexOf(a) - state.pendingEffects.indexOf(b);
+  });
 }
 
 /**
@@ -184,25 +233,38 @@ export function runOne(state: GameState, entry: EffectStackEntry): void {
     cancelPendingAfterGameEnd(state);
     return;
   }
-  entry.state = 'resolving';
-  event.emit(state, 'effect:resolve:start', { effectId: entry.id }, entry.source);
-  const ctx = entryToCtx(entry);
-  if (entry.resolveGuard !== undefined) {
-    const ok = evalCond(state, entry.resolveGuard, ctx);
-    if (!ok) {
-      entry.state = 'cancelled';
-      return;
+  const parentBatch = state.effectTriggerBatchContext;
+  const parentConfirmed = state.effectTriggerBatchConfirmedContext;
+  state.effectTriggerBatchContext = entry.triggerBatch;
+  state.effectTriggerBatchConfirmedContext = entry.ownerOrderConfirmed;
+  try {
+    entry.state = 'resolving';
+    event.emit(state, 'effect:resolve:start', { effectId: entry.id }, entry.source);
+    const ctx = effectCtxFromStackEntry(entry);
+    if (entry.resolveGuard !== undefined) {
+      const ok = evalCond(state, entry.resolveGuard, ctx);
+      if (!ok) {
+        entry.state = 'cancelled';
+        return;
+      }
     }
+    if (entry.reasoningContinuation !== undefined) {
+      _resolveReasoningContinuation(state, entry.reasoningContinuation);
+    } else {
+      // Candidate substitution happens only when this entry is actually reached.
+      const effectToRun = (entry.declaredReaction !== undefined || entry.deferredPicks === true) && _deferredEntryPickResolver !== null
+        ? _deferredEntryPickResolver(state, entry)
+        : entry.effect;
+      runEffect(state, effectToRun, ctx);
+    }
+    entry.state = 'resolved';
+    event.emit(state, 'effect:resolve:end', { effectId: entry.id }, entry.source);
+  } finally {
+    if (parentBatch === undefined) delete state.effectTriggerBatchContext;
+    else state.effectTriggerBatchContext = parentBatch;
+    if (parentConfirmed === undefined) delete state.effectTriggerBatchConfirmedContext;
+    else state.effectTriggerBatchConfirmedContext = parentConfirmed;
   }
-  // BUG-132 GAP-2: 第三者反応は pick/dyn 候補を解決時に substitute する (rules/15 §解決時参照)。
-  // イベント自効果の解決後盤面で候補が確定する — queue 時確定だと B07016/B08020 a2 の
-  // sceneRemove 候補がイベント解決前の盤面で固定される乖離があった。
-  const effectToRun = entry.declaredReaction !== undefined && _deferredEntryPickResolver !== null
-    ? _deferredEntryPickResolver(state, entry)
-    : entry.effect;
-  runEffect(state, effectToRun, ctx);
-  entry.state = 'resolved';
-  event.emit(state, 'effect:resolve:end', { effectId: entry.id }, entry.source);
 }
 
 /**
@@ -216,11 +278,29 @@ export function runAllUntilEmpty(state: GameState): void {
       cancelPendingAfterGameEnd(state);
       return;
     }
-    // A deck-order decision is a hard resolution boundary. Do not let a later
-    // stack entry overwrite the single side-channel before the user confirms it.
-    if (_peekPendingDeckReorderSide() || _peekPendingDeckPlaceSide()) return;
     const e = next(state);
     if (e === null) return;
+    // A human decision is a hard resolution boundary. Do not let a sibling
+    // stack entry overtake it or overwrite a single-slot side channel. A
+    // just-selected pick may still run its own `effect:pick-resolved` entry
+    // while a later FIFO pick is waiting.
+    if (
+      _peekPendingEffectChoiceSide()
+      || _peekPendingEffectOptionalSide()
+      || _peekPendingEffectRepeatOptionalSide()
+      || _peekPendingChooseInterceptSide()
+      || _peekPendingRpsSide()
+      || _peekPendingSetCardChoiceSide()
+      || _peekPendingSetCardReplacementSide()
+      || _peekPendingDeckReorderSide()
+      || _peekPendingDeckPlaceSide()
+    ) return;
+    const pendingPick = _peekPendingEffectPickSide();
+    if (
+      pendingPick?.source.triggerBatch !== undefined
+      && e.triggeredBy.hook !== 'effect:pick-resolved'
+    ) return;
+    if (shouldPauseForOwnerOrder(state, e)) return;
     runOne(state, e);
   }
   // Provide the last-seen entry's details for debuggability (Phase 4+ scenarios).
@@ -231,6 +311,12 @@ export function runAllUntilEmpty(state: GameState): void {
   throw new Error(
     `engine.resolve.runAllUntilEmpty: 1000-iter safety cap exceeded — possible infinite loop. Last entry: id=${lastId} cardId=${lastCardId} hook=${lastHook}`,
   );
+}
+
+function shouldPauseForOwnerOrder(state: GameState, upcoming: EffectStackEntry): boolean {
+  const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+  const group = pendingOwnerOrderGroup(state, human);
+  return group.length >= 2 && group.some((entry) => entry.id === upcoming.id);
 }
 
 /**

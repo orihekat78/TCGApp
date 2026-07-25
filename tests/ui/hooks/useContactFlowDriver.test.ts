@@ -48,6 +48,7 @@ function makeBattle(): GameState {
 
 describe('useContactFlowDriver — _runDriverStep', () => {
   beforeEach(() => {
+    useGameStateStore.getState().resetMatchSessionState();
     useGameStateStore.setState({
       gameState: null,
       activeActionId: null,
@@ -205,6 +206,9 @@ describe('useContactFlowDriver — _runDriverStep', () => {
 
   it('action-end phase → clears activeActionId', () => {
     useGameStateStore.setState({ gameState: makeBattle(), activeActionId: 'ax_999' });
+    expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    useGameStateStore.setState({ activeActionId: null });
     // 手動で fake ax を 'action-end' にしておく
     flow.action._resetActionContexts();
     // 実際の ax を生成

@@ -19,6 +19,9 @@ import { makeChar } from '../helpers/fixtures';
 import type { CardDef, GameState, EffectCtx, Effect } from '@/engine/types';
 import { B03035 } from '@/cards/ct-p03/B03035';
 import { B04037 } from '@/cards/ct-p04/B04037';
+import { PR234 } from '@/cards/pr-01/PR234';
+import { applyMove } from '@/ai/policy';
+import { mutate } from '@/engine/mutate';
 
 function pchar(id: string, names: string[], traits: string[] = []): CardDef {
   return {
@@ -31,9 +34,32 @@ beforeEach(() => {
   resetDefRegistry();
   _resetUidCounter();
   registerCardDef(B03035);
+  registerCardDef(PR234);
   registerCardDef(B04037); // 鈴木園子 (names:['鈴木園子'])
   registerCardDef(pchar('KYOGOKU', ['京極真'], ['格闘家']));
   registerCardDef(pchar('OTHER', ['毛利蘭'], ['高校生']));
+});
+
+describe('B03035 declared cost integration', () => {
+  it('AI applyMove deterministically pays a face-up set-card cost without a human witness', () => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const after = produce(createEmptyGameState(), (draft) => {
+      draft.turn = { number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+      draft.players.opp.deck = ['DK1'];
+      const source = mutate.scene.enter(draft, 'opp', 'B03035', {});
+      const host = mutate.scene.enter(draft, 'opp', 'OTHER', {});
+      mutate.char.setCard(draft, host.uid, 'PR234', true);
+      applyMove(draft, { kind: 'declaredAbility', uid: source.uid, abilityId: 'a1' }, 'opp');
+    });
+    expect(after.players.opp.scene.find((char) => char.cardId === 'B03035')!.state).toBe('sleep');
+    expect(after.players.opp.scene.find((char) => char.cardId === 'OTHER')!.setCards).toEqual([]);
+    expect(after.players.opp.remove).toContain('PR234');
+    expect(after.players.opp.hand).toEqual([]);
+    expect(after.pendingEffects.at(-1)).toMatchObject({
+      state: 'pending',
+      costPaid: { removeSetCard: { ids: ['PR234'] } },
+    });
+  });
 });
 
 const a1Effect = B04037.abilities.find((a) => a.id === 'a1')!.effect as Effect;

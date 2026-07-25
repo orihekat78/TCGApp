@@ -26,7 +26,7 @@ const a1: AbilityDef = {
     kind: 'sequence',
     steps: [
       // デッキ上からレベル4以下【黄】のキャラが出るまで1枚ずつ公開 ($matched=該当キャラ / $revealed=公開した全カード)
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { color: '黄', levelMax: 4, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', filter: { color: '黄', levelMax: 4, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } },
       { kind: 'conditional',
         if: { kind: 'and', cs: [{ kind: 'bound', key: '$matched', presence: 'matched' }, { kind: 'removeColorAtLeast', player: 'self', color: '黄', n: 20 }] },
         // 公開した【黄】キャラを登場させる

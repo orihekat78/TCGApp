@@ -5,6 +5,20 @@ import { partnerColorKeyword } from '../_shared/index.js';
 
 const a1 = partnerColorKeyword({ color: '緑', kw: '突撃', abilityId: 'a1' });
 
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-scene',
+  trigger: { hook: 'action:pre-target', selfOnly: true },
+  effect: {
+    kind: 'atom',
+    verb: 'expandActionTargets',
+    args: { side: 'opp', state: ['active'], hasSetCards: true },
+  },
+  description: 'このキャラは相手の現場にいるカードがセットされているアクティブ状態のキャラを指定してアクションできる。',
+  ruleRefs: ['rules/07-action-flow.md', 'rules/16-card-set.md'],
+};
+
 const a3: AbilityDef = {
   id: 'a3',
   type: 'triggered',
@@ -29,6 +43,6 @@ export const B03032P: CardDef = {
   traits: ['探偵', '高校生'], keywords: [],
   rarity: 'CP',
   imageUrl: '1729133249293615.jpg',
-  abilities: [a1, a3],
+  abilities: [a1, a2, a3],
   ruleRefs: ['rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/16-card-set.md', 'rules/17-icons.md'],
 };

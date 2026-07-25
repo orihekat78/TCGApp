@@ -14,7 +14,8 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { run as runEffect } from '@/engine/effect/resolver';
 import { _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
-import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import { _clearPendingEffectPickQueue, _drainPendingEffectPickSide } from '@/engine/effect/resolve-picks';
+import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards';
 import type { Effect, EffectCtx, GameState } from '@/engine/types';
@@ -99,5 +100,41 @@ describe('BUG-111 continuation-nest — sequence[chain[pausing-pick, step2], ste
     // discard済みH0が新deckへ戻る。DRAW1が手札にあることが継続実行の証明。
     expect(s.players.self.deck, 'exact exhaustion後にremoveのH0をrefresh').toEqual(['H0']);
     expect(s.players.self.remove, 'refresh後のremoveは空').toEqual([]);
+  });
+
+  it('snapshots an Immer continuation once while preserving one shared ctx across nested frames', () => {
+    const s: GameState = createEmptyGameState();
+    s.players.self.evidence.push({ cardId: 'EV1', faceUp: false, origin: { turn: 0, via: 'init' } });
+    s.pendingEffects.push({
+      id: 'ctx-holder',
+      source: { player: 'self', cardId: 'TEST' },
+      triggeredBy: { hook: 'test' },
+      triggeredAt: { turn: 0, phase: 'main', nano: 0 },
+      effect: { kind: 'atom', verb: 'noop', args: {} },
+      state: 'pending',
+      bindings: {},
+    });
+    const eff: Effect = {
+      kind: 'sequence',
+      steps: [{
+        kind: 'chain',
+        steps: [
+          { kind: 'atom', verb: 'evidenceToHand' as never, args: { player: 'self', max: 1 } },
+          { kind: 'atom', verb: 'noop', args: {} },
+        ],
+      }, { kind: 'atom', verb: 'noop', args: {} }],
+    };
+
+    produce(s, (draft) => {
+      runEffect(draft, eff, {
+        source: { player: 'self', area: 'scene', cardId: 'TEST', abilityId: 'a1' },
+        bindings: draft.pendingEffects[0]!.bindings as EffectCtx['bindings'],
+      });
+    });
+    const pending = _drainPendingEffectPickSide();
+
+    expect(pending?.continuation?.outer).toBeDefined();
+    expect(pending?.continuation?.ctx).toBe(pending?.continuation?.outer?.ctx);
+    expect(() => Object.keys(pending?.continuation?.ctx.bindings ?? {})).not.toThrow();
   });
 });

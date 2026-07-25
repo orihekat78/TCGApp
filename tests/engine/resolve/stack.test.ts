@@ -7,6 +7,11 @@ import { produce } from '@/engine/produce';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { resolve } from '@/engine/resolve/index';
 import { event } from '@/engine/event/index';
+import {
+  _clearPendingEffectOptionalSide,
+  _peekPendingEffectOptionalSide,
+  pushPendingEffectOptionalSide,
+} from '@/engine/effect/pending-state';
 import type { Effect, EffectStackEntry, GameState } from '@/engine/types';
 
 function makeEntry(
@@ -22,6 +27,8 @@ function makeEntry(
     effect,
     resolveGuard: opts.resolveGuard,
     ownerChosenOrder: opts.ownerChosenOrder,
+    triggerBatch: opts.triggerBatch,
+    ownerOrderConfirmed: opts.ownerOrderConfirmed,
     state: opts.state ?? 'pending',
   };
 }
@@ -48,6 +55,7 @@ function newStateWithChar(uid = 'A#1', cardId = 'D08001', player: 'self' | 'opp'
 describe('engine.resolve.stack', () => {
   beforeEach(() => {
     event._resetRegistry();
+    _clearPendingEffectOptionalSide();
   });
 
   describe('queue + next + runOne', () => {
@@ -105,15 +113,30 @@ describe('engine.resolve.stack', () => {
 
     it('within same player, ownerChosenOrder ascending', () => {
       const s = createEmptyGameState();
-      const a = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { player: 'self', id: 'a', ownerChosenOrder: 2 });
-      const b = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { player: 'self', id: 'b', ownerChosenOrder: 1 });
-      const c = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { player: 'self', id: 'c' /* no order */ });
+      const a = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { player: 'self', id: 'a', ownerChosenOrder: 2, triggerBatch: 1 });
+      const b = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { player: 'self', id: 'b', ownerChosenOrder: 1, triggerBatch: 1 });
+      const c = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { player: 'self', id: 'c', triggerBatch: 1 /* no order */ });
       const result = produce(s, draft => {
         resolve.queue(draft, a);
         resolve.queue(draft, b);
         resolve.queue(draft, c);
       });
       expect(resolve.next(result)?.id).toBe('b');
+    });
+
+    it('lets the owner order unresolved effects across activation batches', () => {
+      const s = createEmptyGameState();
+      const old = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        player: 'self', id: 'old', triggerBatch: 2, ownerChosenOrder: 1,
+      });
+      const future = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        player: 'self', id: 'future', triggerBatch: 3, ownerChosenOrder: 0,
+      });
+      const result = produce(s, draft => {
+        resolve.queue(draft, old);
+        resolve.queue(draft, future);
+      });
+      expect(resolve.next(result)?.id).toBe('future');
     });
   });
 
@@ -152,6 +175,98 @@ describe('engine.resolve.stack', () => {
   });
 
   describe('runAllUntilEmpty', () => {
+    it('pauses legacy unbatched human effects for one owner-order decision', () => {
+      const s = createEmptyGameState();
+      const first = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { id: 'legacy-a', player: 'self' });
+      const second = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, { id: 'legacy-b', player: 'self' });
+      (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+      try {
+        const result = produce(s, draft => {
+          resolve.queue(draft, first);
+          resolve.queue(draft, second);
+          resolve.runAllUntilEmpty(draft);
+        });
+        expect(resolve.pendingOwnerOrderGroup(result, 'self').map(entry => entry.id)).toEqual(['legacy-a', 'legacy-b']);
+        expect(result.pendingEffects.map(entry => entry.state)).toEqual(['pending', 'pending']);
+      } finally {
+        (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+      }
+    });
+
+    it('stops at a human same-timing batch, including when the human is not the turn player', () => {
+      const s = createEmptyGameState();
+      s.turn.player = 'opp';
+      const first = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'human-a3', player: 'self', triggerBatch: 9,
+      });
+      const second = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'human-a4', player: 'self', triggerBatch: 9,
+      });
+      (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+      try {
+        const result = produce(s, draft => {
+          resolve.queue(draft, first);
+          resolve.queue(draft, second);
+          resolve.runAllUntilEmpty(draft);
+        });
+        expect(result.pendingEffects.map((entry) => entry.state)).toEqual(['pending', 'pending']);
+      } finally {
+        (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+      }
+    });
+
+    it('resolves the turn-player entry before exposing a non-turn human order group', () => {
+      const s = createEmptyGameState();
+      s.turn.player = 'opp';
+      const turnPlayer = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'turn-player', player: 'opp', triggerBatch: 8,
+      });
+      const humanA = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'human-a', player: 'self', triggerBatch: 9,
+      });
+      const humanB = makeEntry(s, { kind: 'atom', verb: 'noop', args: {} }, {
+        id: 'human-b', player: 'self', triggerBatch: 9,
+      });
+      (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+      try {
+        const result = produce(s, draft => {
+          resolve.queue(draft, humanA);
+          resolve.queue(draft, turnPlayer);
+          resolve.queue(draft, humanB);
+          resolve.runAllUntilEmpty(draft);
+        });
+        expect(result.pendingEffects.find((entry) => entry.id === 'turn-player')!.state).toBe('resolved');
+        expect(result.pendingEffects.filter((entry) => entry.source.player === 'self').map((entry) => entry.state)).toEqual(['pending', 'pending']);
+      } finally {
+        (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+      }
+    });
+
+    it('inherits the real emission batch through queue calls made during resolution', () => {
+      const s = createEmptyGameState();
+      const nested: Effect = { kind: 'atom', verb: 'noop', args: {} };
+      const seed: Effect = {
+        kind: 'custom',
+        fn: (state) => {
+          event.queue(state, nested, { player: 'self' });
+          event.queue(state, nested, { player: 'self' });
+        },
+      };
+      event.on('turn:start', () => seed);
+      (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+      try {
+        const result = produce(s, draft => {
+          event.emit(draft, 'turn:start', {}, { player: 'self' });
+          resolve.runAllUntilEmpty(draft);
+        });
+        expect(result.pendingEffects[0]!.state).toBe('resolved');
+        expect(result.pendingEffects.slice(1).map((entry) => entry.triggerBatch)).toEqual([1, 1]);
+        expect(result.pendingEffects.slice(1).map((entry) => entry.state)).toEqual(['pending', 'pending']);
+        expect(result.effectTriggerBatchContext).toBeUndefined();
+      } finally {
+        (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+      }
+    });
     it('drains the stack including entries queued during resolution', () => {
       const s = newStateWithChar();
       // Define a custom Effect that queues another entry during its run.
@@ -256,6 +371,32 @@ describe('engine.resolve.stack', () => {
       expect(caught?.message).toMatch(/id=/);
       expect(caught?.message).toMatch(/cardId=/);
       expect(caught?.message).toMatch(/hook=/);
+    });
+
+    it('pauses before a later stack entry can overwrite a human decision', () => {
+      const s = createEmptyGameState();
+      const first = makeEntry(s, {
+        kind: 'custom',
+        fn: () => pushPendingEffectOptionalSide({
+          player: 'self',
+          ownerPlayer: 'self',
+          source: { cardId: 'FIRST', abilityId: 'a1', uid: 'first#1' },
+        }),
+      }, { id: 'first' });
+      const second = makeEntry(s, {
+        kind: 'custom',
+        fn: (state) => { state.log.push({ type: 'test:second-ran', player: 'self' }); },
+      }, { id: 'second' });
+
+      const result = produce(s, draft => {
+        resolve.queue(draft, first);
+        resolve.queue(draft, second);
+        resolve.runAllUntilEmpty(draft);
+      });
+
+      expect(result.pendingEffects.map(entry => entry.state)).toEqual(['resolved', 'pending']);
+      expect(result.log.some(entry => entry.type === 'test:second-ran')).toBe(false);
+      expect(_peekPendingEffectOptionalSide()?.source.cardId).toBe('FIRST');
     });
   });
 

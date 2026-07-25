@@ -9,6 +9,7 @@ import { produce } from 'immer';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { register as registerCardDef, _resetRegistry as resetCardDefRegistry } from '@/engine/read/def';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
+import { event } from '@/engine/event';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { activateDeclaredAbility } from '@/engine/flow/main/ability-activate';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
@@ -58,6 +59,7 @@ const FILL = def('FILL');
 const setHuman = (s: 'self' | 'opp' | null) => { (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = s; };
 
 beforeEach(() => {
+  event._resetRegistry();
   resetCardDefRegistry();
   _resetTriggeredRegistered();
   _resetUidCounter();

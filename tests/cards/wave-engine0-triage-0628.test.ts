@@ -70,8 +70,8 @@ beforeEach(() => {
 });
 
 // ───────────────────────── B03023 脇田兼則 ─────────────────────────
-describe('B03023 脇田兼則 — enter観測(log no-op) + ヒラメキ', () => {
-  it('a1: 【自分ターン中】【ターン1】毛利探偵事務所 enter観測 → log no-op', () => {
+describe('B03023 脇田兼則 — enter観測(相手deck top公開) + ヒラメキ', () => {
+  it('a1: 【自分ターン中】【ターン1】毛利探偵事務所 enter観測 → opponent deck top公開', () => {
     const a1 = ab(B03023, 'a1');
     expect(a1.type).toBe('triggered');
     expect(a1.trigger).toMatchObject({ hook: 'enter' });
@@ -79,8 +79,8 @@ describe('B03023 脇田兼則 — enter観測(log no-op) + ヒラメキ', () => 
     expect(a1.trigger).toMatchObject({ matcherCondition: { kind: 'triggerCharMatches', side: 'self', payloadKey: 'uid', filter: { trait: '毛利探偵事務所' } } });
     expect(a1.condition).toMatchObject({ kind: 'turn', player: 'self' });
     expect(a1.limit).toMatchObject({ kind: 'turn', n: 1 });
-    // 「相手はデッキ上から1枚公開（その後元に戻す）」= 純 state no-op = log atom (盤面非改変)
-    expect(findArgs(a1.effect, 'log')).toMatchObject({ player: 'opp' });
+    // deckRevealUntil は deck を動かさず、公開 card ID を UI side-channel/log へ渡す。
+    expect(findArgs(a1.effect, 'deckRevealUntil')).toMatchObject({ player: 'opp', maxN: 1 });
   });
   it('a2: 【ヒラメキ】証拠リムーブ時 draw1', () => {
     const a2 = ab(B03023, 'a2');
