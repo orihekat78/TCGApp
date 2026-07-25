@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 247
-- **ファイル数**: 5123
+- **ファイル数**: 5124
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -733,6 +733,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-16-01-you-vs-cpu-hardening.md`
     - `2026-07-17-01-you-vs-cpu-hardening-fixed.md`
     - `2026-07-19-01-phase-3-card-choice-visuals.md`
+    - `2026-07-26-01-phase-3-5-official-qa.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
