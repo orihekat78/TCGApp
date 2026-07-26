@@ -1,0 +1,30 @@
+.public-hand-reveal-window {
+  position: fixed;
+  /* Linked choice overlays are 9700. Keep public details usable while their
+     effect is pending, but leave 10000 to CardExpandModal. */
+  z-index: 9800;
+  right: 16px;
+  bottom: 16px;
+  width: min(480px, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid #7c6ab4;
+  border-radius: 8px;
+  background: rgba(23, 20, 42, .96);
+  color: #f3efff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+  pointer-events: none;
+}
+
+.public-hand-reveal-heading { margin-bottom: 8px; font-size: 13px; font-weight: 700; }
+.public-hand-reveal-cards { display: flex; gap: 8px; overflow-x: auto; }
+.public-hand-reveal-card { display: grid; grid-template-columns: 36px minmax(70px, 1fr) auto; gap: 6px; align-items: center; min-width: 150px; pointer-events: auto; }
+.public-hand-reveal-art { width: 34px; height: 48px; object-fit: cover; }
+.public-hand-reveal-name { font-size: 12px; overflow-wrap: anywhere; }
+.public-hand-reveal-occurrence { font-size: 10px; color: #c8bde8; }
+.public-hand-reveal-card button { grid-column: 2 / 4; min-height: 32px; border: 1px solid #7c6ab4; border-radius: 4px; background: #2c254a; color: inherit; }
+
+@media (max-height: 430px) and (orientation: landscape) {
+  .public-hand-reveal-window { right: 8px; bottom: 8px; max-height: calc(100vh - 16px); }
+  .public-hand-reveal-art { width: 28px; height: 40px; }
+  .public-hand-reveal-card { min-width: 128px; }
+}

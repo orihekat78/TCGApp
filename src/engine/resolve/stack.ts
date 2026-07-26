@@ -71,7 +71,7 @@ export function effectCtxFromStackEntry(entry: EffectStackEntry): EffectCtx {
   return {
     source: {
       player: entry.source.player,
-      area: 'scene',
+      area: entry.source.area ?? 'scene',
       cardId: entry.source.cardId,
       uid: entry.source.uid,
       abilityId: entry.source.abilityId,
@@ -99,6 +99,9 @@ export function effectCtxFromStackEntry(entry: EffectStackEntry): EffectCtx {
     // (atomDeclareName / resolveBindRef '$dyn.*') の queue-boundary 喪失修正。entry は Immer 凍結 =
     // runtime の (ctx.dyn ??= {}) 書込 (chainStepNoApply 等) が落ちないよう shallow-copy (bindings 同 posture)。
     ...(entry.dyn ? { dyn: { ...entry.dyn } } : {}),
+    ...(entry.publicHandRevealToken
+      ? { causal: { publicHandRevealToken: entry.publicHandRevealToken } }
+      : {}),
     ...(cb
       ? { contact: { byUid: cb.byUid ?? '', targetUid: cb.targetUid, guardUid: cb.guardUid, attackerSide: cb.attackerSide ?? 'self' } }
       : {}),

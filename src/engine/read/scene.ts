@@ -21,8 +21,10 @@ function byUid(s: GameState, uid: string): SceneCharacter | null {
   // PA-MR にも uniform に効く。additive — partnerAreaMR は既存フローで常に null なので回帰0。
   // ⚠ mutate 層 (mutate/char.findChar / mutate/scene.findChar) は scene array のみ走査するため
   // PA-MR を mutate target にしても no-op (PA-MR は推理/アクション/被 mutate 対象外。rules/18:35-39)。
-  if (uid === 'partnerMR:self') return s.players.self.partnerAreaMR ?? null;
-  if (uid === 'partnerMR:opp') return s.players.opp.partnerAreaMR ?? null;
+  for (const side of ['self', 'opp'] as const) {
+    const slot = s.players[side].partnerAreaMR;
+    if (slot && (slot.uid === uid || uid === `partnerMR:${side}`)) return slot;
+  }
   return null;
 }
 

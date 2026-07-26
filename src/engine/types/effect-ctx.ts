@@ -45,6 +45,10 @@ export type EffectCtx = {
   costPaid?: Record<string, unknown>;
   triggerPayload?: unknown;
   contact?: ContactCtx;
+  /** Scoped causal metadata for the currently resolving effect branch. */
+  causal?: {
+    publicHandRevealToken?: string;
+  };
   dyn?: Record<string, unknown>;
   rng?: () => number;
   parent?: EffectCtx;

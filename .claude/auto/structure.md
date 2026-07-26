@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 247
-- **ファイル数**: 5129
+- **ディレクトリ数**: 249
+- **ファイル数**: 5416
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -426,6 +426,12 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-259.md` — BUG-259: CT-P10 Q&A-bearing cards lack CardDef coverage
     - `BUG-260.md`
     - `BUG-261.md`
+    - `BUG-262.md`
+    - `BUG-263.md`
+    - `BUG-264.md`
+    - `BUG-265.md`
+    - `BUG-266.md`
+    - `BUG-267.md`
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
@@ -736,6 +742,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-19-01-phase-3-card-choice-visuals.md`
     - `2026-07-26-01-phase-3-5-official-qa.md`
     - `2026-07-26-02-rule-manual-ver2.5.md`
+    - `2026-07-26-03-ct-p10-wave.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1406,6 +1413,83 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09052.md` — B09052 grounding
       - `B09052P.md` — B09052P grounding
       - `B09112.md` — B09112 キッドVS安室 王妃の前髪 (事件) grounding (2026-07-10, sonnet5)
+      - `B10001.md` — B10001 grounding
+      - `B10002.md` — B10002 grounding
+      - `B10003.md` — B10003 工藤新一 grounding
+      - `B10004.md` — B10004 grounding
+      - `B10005.md` — B10005 / B10005P grounding
+      - `B10006.md` — B10006
+      - `B10007.md` — B10007 赤木英雄 grounding
+      - `B10008.md` — B10008 grounding
+      - `B10009.md` — B10009 grounding
+      - `B10010.md` — B10010 grounding
+      - `B10011.md` — B10011 grounding
+      - `B10012.md` — B10012 真田貴大
+      - `B10012P.md` — B10012P 真田貴大
+      - `B10013.md` — B10013 比護隆佑
+      - `B10013P.md` — B10013P 比護隆佑
+      - `B10014.md` — B10014 / B10014P grounding
+      - `B10015.md` — B10015 毛利小五郎 grounding
+      - `B10016.md` — B10016 grounding
+      - `B10017.md` — B10017 grounding
+      - `B10018.md` — B10018 / B10018P grounding
+      - `B10019.md` — B10019 grounding
+      - `B10020.md` — B10020 grounding
+      - `B10021.md` — B10021 服部平蔵＆遠山銀司郎
+      - `B10021P.md` — B10021P 服部平蔵＆遠山銀司郎
+      - `B10022.md` — B10022 grounding
+      - `B10023.md` — B10023 grounding
+      - `B10024.md` — B10024 大滝悟郎 grounding
+      - `B10025.md` — B10025 鬼丸猛 grounding
+      - `B10026.md` — B10026 稲尾一久
+      - `B10027.md` — B10027 長島茂雄
+      - `B10028.md` — B10028 grounding
+      - `B10029.md` — B10029 grounding
+      - `B10030.md` — B10030 grounding
+      - `B10031.md` — B10031
+      - `B10032.md` — B10032 grounding
+      - `B10033.md` — B10033
+      - `B10034.md` — B10034 grounding
+      - `B10036.md` — B10036 grounding
+      - `B10037.md` — B10037
+      - `B10038.md` — B10038
+      - `B10039.md` — B10039 白馬探 grounding
+      - `B10040.md` — B10040
+      - `B10046.md` — B10046
+      - `B10047.md` — B10047 grounding
+      - `B10050.md` — B10050 / B10050P grounding
+      - `B10052.md` — B10052
+      - `B10053.md` — B10053
+      - `B10056.md` — B10056 勝又水菜
+      - `B10057.md` — B10057
+      - `B10060.md` — B10060 grounding
+      - `B10061.md` — B10061 grounding
+      - `B10062.md` — B10062 grounding
+      - `B10063.md` — B10063 grounding
+      - `B10064.md` — B10064 grounding
+      - `B10065.md` — B10065 / B10065P / B10065P2 grounding
+      - `B10066.md` — B10066 grounding
+      - `B10067.md` — B10067 grounding
+      - `B10068.md` — B10068 grounding
+      - `B10069.md` — B10069 grounding
+      - `B10070.md` — B10070 grounding
+      - `B10071.md` — B10071 grounding
+      - `B10074.md` — B10074 grounding
+      - `B10081.md` — B10081 grounding
+      - `B10084.md` — B10084 grounding
+      - `B10086.md` — B10086 grounding
+      - `B10087.md` — B10087 grounding
+      - `B10088.md` — B10088 grounding
+      - `B10090.md` — B10090 grounding
+      - `B10091.md` — B10091 grounding
+      - `B10094.md` — B10094 grounding
+      - `B10096.md` — B10096 / B10096P 「何の真似だ…」
+      - `B10097.md` — B10097 grounding
+      - `B10098.md` — B10098 / B10098P grounding
+      - `B10099.md` — B10099 / B10099P 赤井秀一＆安室透
+      - `B10100.md` — B10100 工藤新一NYの事件
+      - `B10101.md` — B10101 / B10101P grounding
+      - `B10102.md` — B10102 / B10102P grounding
       - `D06003.md` — D06003 服部平次 grounding (2026-07-10, fable)
       - `D06004.md` — D06004 服部平次 grounding (2026-07-10, sonnet5)
       - `D06013.md` — D06013 白馬探 grounding (2026-07-10, sonnet 調査 + S2 session 裁定)
@@ -1760,6 +1844,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-07-16-official-qa-compliance.md` — Official QA Compliance Implementation Plan
       - `2026-07-16-you-vs-cpu-system-validation.md` — YOU vs CPU System Validation Implementation Plan
       - `2026-07-18-card-choice-visuals.md` — Phase 3: Card-choice visuals and landscape QA
+      - `2026-07-26-ctp10-card-wave.md` — CT-P10 Card Wave Implementation Plan
+      - `2026-07-26-hand-occurrence-rebase.md` — Hand occurrence rebase Implementation Plan
       - `2026-07-26-rule-manual-ver2-5.md` — Rule Manual Ver.2.5 Implementation Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
@@ -3793,6 +3879,111 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B09112P.ts` — cards/ct-p09/B09112P キッドVS安室 王妃の前髪 (事件 パラレル) — B09112 の絵柄違い (同 cardId 1051)
       - `B09113.ts` — rules: 03-field-areas.md, 14-refresh.md, 15-abilities-effects.…
       - `B09113P.ts` — rules: 03-field-areas.md, 14-refresh.md, 15-abilities-effects.…
+    - **`ct-p10/`**
+      - `B10001.ts` — CT-P10 B10001 赤木英雄 (partner)
+      - `B10002.ts` — CT-P10 B10002 比護隆佑 (partner)
+      - `B10003.ts`
+      - `B10004.ts` — CT-P10 B10004 江戸川コナン
+      - `B10005.ts` — CT-P10 B10005 灰原哀
+      - `B10006.ts`
+      - `B10007.ts`
+      - `B10008.ts` — CT-P10 B10008 上村直樹
+      - `B10009.ts` — CT-P10 B10009 工藤新一
+      - `B10010.ts` — CT-P10 B10010 工藤新一
+      - `B10011.ts` — CT-P10 B10011 毛利蘭
+      - `B10012.ts` — CT-P10 B10012 真田貴大 — rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.…
+      - `B10013.ts` — CT-P10 B10013 比護隆佑 — rules: 15-abilities-effects.md, 16-card-set.md, 17-icons.…
+      - `B10014.ts` — CT-P10 B10014 妃英理
+      - `B10015.ts` — CT-P10 B10015 毛利小五郎
+      - `B10016.ts` — CT-P10 B10016 レイ・カーティス
+      - `B10017.ts`
+      - `B10018.ts` — rules: 15-abilities-effects.md, 16-card-set.md, 21-declared-ability-cost.md
+      - `B10019.ts` — CT-P10 B10019 プロサッカー選手脅迫事件
+      - `B10020.ts` — CT-P10 B10020 沖田総司 (partner)
+      - `B10021.ts` — CT-P10 B10021 服部平蔵＆遠山銀司郎 — rules: 14-refresh.md, 15-abilities-effects.…
+      - `B10022.ts`
+      - `B10023.ts` — CT-P10 B10023 \u670d\u90e8\u5e73\u6b21
+      - `B10024.ts`
+      - `B10025.ts` — CT-P10 B10025 鬼丸猛
+      - `B10026.ts` — CT-P10 B10026 稲尾一久
+      - `B10027.ts` — CT-P10 B10027 長島茂雄
+      - `B10028.ts` — CT-P10 B10028 沖田総司
+      - `B10029.ts` — CT-P10 B10029 国末照明
+      - `B10030.ts` — CT-P10 B10030 坂田祐介
+      - `B10031.ts` — CT-P10 B10031 箕輪奨兵 — rules: 08-contact, 10-action-event, 15-abilities-effects, 1…
+      - `B10032.ts` — CT-P10 B10032 「神妙にして、縛に就けや!!!」
+      - `B10033.ts` — CT-P10 B10033 ドゴ
+      - `B10034.ts` — CT-P10 B10034 大阪ダブルミステリー 浪花剣士と太閤の城
+      - `B10035.ts` — CT-P10 B10035 京極真 (partner)
+      - `B10036.ts` — CT-P10 B10036 鈴木園子 — rules: 05-turn-phases, 08-contact, 09-cutin-disguise, 15-ab…
+      - `B10037.ts` — CT-P10 B10037 京極真 — rules: 08-contact, 09-cutin-disguise, 15-abilities-effects,…
+      - `B10038.ts`
+      - `B10039.ts`
+      - `B10040.ts` — CT-P10 B10040 織田國友
+      - `B10041.ts` — rules: 09-cutin-disguise.md, 15-abilities-effects.md, 22-qa-action-contact.md
+      - `B10042.ts` — CT-P10 B10042 工藤有希子
+      - `B10043.ts` — CT-P10 B10043 真田一三
+      - `B10044.ts` — CT-P10 B10044 シャロン・ヴィンヤード
+      - `B10045.ts` — CT-P10 B10045 中森銀三
+      - `B10046.ts` — CT-P10 B10046 山本萌奈 — rules: 03-field-areas.md, 05-turn-phases.…
+      - `B10047.ts` — CT-P10 B10047 ラディッシュ・レッドウッド — rules: 03-field-areas, 09-cutin-disguise, 12-next-…
+      - `B10048.ts` — CT-P10 B10048 「真さんガンバッてー♡」
+      - `B10049.ts` — CT-P10 B10049 新出智明 (partner)
+      - `B10050.ts` — CT-P10 B10050 ジョディ・スターリング
+      - `B10051.ts` — rules: 03-field-areas.md, 10-action-event.md, 15-abilities-effects.md
+      - `B10052.ts` — CT-P10 B10052 羽田秀𠮷
+      - `B10053.ts` — CT-P10 B10053 宮野エレーナ
+      - `B10054.ts` — CT-P10 B10054 新出智明
+      - `B10055.ts` — rules: 09-cutin-disguise.md, 15-abilities-effects.md, 22-qa-action-contact.md
+      - `B10056.ts` — CT-P10 B10056 勝又水菜
+      - `B10057.ts` — CT-P10 B10057 ジェイムズ・ブラック
+      - `B10058.ts` — rules: 09-cutin-disguise.md, 15-abilities-effects.md, 17-icons.…
+      - `B10059.ts` — CT-P10 B10059 宮野明美
+      - `B10060.ts` — CT-P10 B10060 「あ…赤井が!?」
+      - `B10061.ts` — CT-P10 B10061 骨董盆は隠せない
+      - `B10062.ts` — CT-P10 B10062 松田陣平 (partner, two SEC printings)
+      - `B10063.ts` — CT-P10 B10063 萩原研二 (partner)
+      - `B10064.ts` — CT-P10 B10064 伊達航 (partner)
+      - `B10065.ts` — CT-P10 B10065 松田陣平＆萩原研二
+      - `B10066.ts` — CT-P10 B10066 伊達航
+      - `B10067.ts` — CT-P10 B10067 降谷零
+      - `B10068.ts` — CT-P10 B10068 諸伏景光
+      - `B10069.ts` — CT-P10 B10069 高木渉
+      - `B10070.ts` — CT-P10 B10070 萩原千速
+      - `B10071.ts` — CT-P10 B10071 山村ミサオ
+      - `B10072.ts` — CT-P10 B10072 アラン・カッセル (character)
+      - `B10073.ts` — CT-P10 B10073 鬼塚八蔵 (character)
+      - `B10074.ts` — CT-P10 B10074 風見裕也
+      - `B10075.ts` — CT-P10 B10075 佐藤美和子 — rules/07, 13, 15, 17, 24
+      - `B10076.ts` — rules: 09-cutin-disguise.md, 10-action-event.md, 15-abilities-effects.…
+      - `B10077.ts` — CT-P10 B10077 萩原研二 (character)
+      - `B10078.ts` — rules: 09-cutin-disguise.md, 10-action-event.md, 15-abilities-effects.…
+      - `B10079.ts` — CT-P10 B10079 爆弾犯 — rules/05, 07, 11, 15, 17
+      - `B10080.ts` — CT-P10 B10080 化け物屋敷の3人組
+      - `B10081.ts` — CT-P10 B10081 「化け物屋敷!?」
+      - `B10082.ts` — CT-P10 B10082 出会っていた5人組
+      - `B10083.ts` — CT-P10 B10083 帰らざる刑事
+      - `B10084.ts` — CT-P10 B10084 キール (partner, C / CP printings)
+      - `B10085.ts` — CT-P10 B10085 キャンティ＆コルン
+      - `B10086.ts` — CT-P10 B10086 スコッチ
+      - `B10087.ts` — CT-P10 B10087 ジン
+      - `B10088.ts` — CT-P10 B10088 バーボン
+      - `B10089.ts` — CT-P10 B10089 ヘルエンジェル
+      - `B10090.ts` — CT-P10 B10090 ウォッカ
+      - `B10091.ts` — CT-P10 B10091 カルバドス — rules: 09-cutin-disguise, 15-abilities-effects, 17-icons
+      - `B10092.ts` — rules: 09-cutin-disguise.md, 15-abilities-effects.md, 22-qa-action-contact.md
+      - `B10093.ts` — CT-P10 B10093 銀髪の男
+      - `B10094.ts` — CT-P10 B10094 犯人
+      - `B10095.ts` — CT-P10 B10095 ベルモット
+      - `B10096.ts` — CT-P10 B10096 「何の真似だ…」
+      - `B10097.ts` — CT-P10 B10097 毛利蘭＆ベルモット
+      - `B10098.ts` — CT-P10 B10098 服部平次＆怪盗キッド
+      - `B10098P.ts`
+      - `B10099.ts` — CT-P10 B10099 赤井秀一＆安室透
+      - `B10100.ts`
+      - `B10101.ts` — CT-P10 B10101 狙われた唇
+      - `B10102.ts` — CT-P10 B10102 緋色の真相
+      - `B10102P.ts` — CT-P10 B10102P 緋色の真相 — B10102のパラレル版。印字テキストは同一。
     - **`pr-01/`**
       - `PR001.ts` — cards/pr-01/PR001 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
       - `PR002.ts` — cards/pr-01/PR002 江戸川コナン (パートナー) — auto-generated by scripts/gen-cards/…
@@ -4108,6 +4299,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `tsv-loader.ts` — engine.cards.tsv-loader — TSV ローダ (pure parseTsv のみ)
     - **`cond/`**
       - `.gitkeep`
+      - `binding-keys.ts`
       - `eval.ts` — engine.cond.eval — Condition evaluator
       - `index.ts` — engine.cond — Condition evaluator barrel
     - **`cost/`**
@@ -4116,6 +4308,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `evaluate.ts` — engine.cost.canPay — Cost feasibility check (read-only)
       - `index.ts` — engine.cost — Cost evaluator barrel
       - `pay.ts` — engine.cost.pay — Cost payment (mutates draft)
+      - `remove-set-card-eligible.ts` — An identity-dependent filter is intentionally never evaluated for hidden entries…
       - `remove-set-card-witness.ts`
     - **`dyn/`**
       - `eval.ts` — engine.dyn.eval — Dyn (late-bound) expression evaluator
@@ -4223,6 +4416,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `.gitkeep`
       - `candidates.ts` — engine.target.candidates — enumerate target candidates per TargetingRef/…
       - `card-def-registry.ts` — engine.target.card-def-registry — pluggable CardDef lookup for targeting
+      - `card-occurrence.ts`
       - `index.ts` — engine.target — Targeting API barrel
       - `resolve.ts` — engine.target.resolve — validate a pick against a TargetingRef + apply distinctN…
     - **`types/`**
@@ -4311,6 +4505,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `PartnerArea.tsx` — Phase 7 Task 7.5: PartnerArea
       - `Playmat.css`
       - `Playmat.tsx` — Phase 7 Task 7.3: Playmat レイアウト (1920×1080 / 最低 1280×720)
+      - `PublicHandRevealWindow.css`
+      - `PublicHandRevealWindow.tsx`
       - `RecentActionToast.css`
       - `RecentActionToast.tsx` — Phase 8.10b + BUG-062 (user_request 20260522_01 #15):
       - `RefreshOverlay.css`
@@ -4372,6 +4568,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useEvidenceFlipPicker.ts` — 2026-05-30 BUG-085: 宣言能力コスト〚裏向きの証拠を1つ以上表向きにする〛の
       - `useFile.ts` — Phase 7 Task 7.8: FileArea selector hook
       - `useFlipAnimation.ts` — Task5: FLIP 移動アニメ (polish)。
+      - `useHandCostPicker.ts`
       - `useHiramekiDemoDriver.ts` — 2026-05-26 ヒラメキ効果検証 demo の完了検知 driver
       - `useHiramekiFlowDriver.ts` — Phase 8 完全クローズ Commit 3a: Hirameki driver
       - `useLogEntries.ts` — Phase 7 Task 7.13: LogPanel selector hook
@@ -4428,7 +4625,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - **`replay/`**
       - `recorder.test.ts` — ai.replay — Phase 9-G.1 unit tests (recorder + player)
     - `.gitkeep`
-    - `bug-246-on-hand-declared-ability.test.ts`
+    - `bug-246-on-hand-declared-ability.test.ts` — Existing callers may still identify a hand source by cardId.
     - `match.test.ts` — tests/ai/match.test.ts — Phase 6 Group C Task 6.5 tests
     - `move-enumerator.pa-mr.test.ts` — M3 PA batch (2026-07-10): AI 側 declaredAbility 列挙に partnerAreaMR source を追加
     - `move-enumerator.test.ts` — tests/ai/move-enumerator.test.ts — Phase 6 Group A Task 6.1 tests
@@ -4507,6 +4704,58 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `B06094-conditional-prewalk.test.ts` — B06094 高木君のおごり — conditional pre-walk over-fire 回帰テスト (BUG-145、card-level)。
     - **`ct-p09/`**
       - `B09061.test.ts` — B09061 ジェイムズ・ブラック (ct-p09) — ENGINE0 wave 専用 test。
+    - **`ct-p10/`**
+      - `B10006.test.ts`
+      - `B10018.test.ts`
+      - `B10038.test.ts`
+      - `b10001-marker.test.ts`
+      - `b10004-declared-count.test.ts`
+      - `b10015.test.ts`
+      - `b10017-b10022.test.ts`
+      - `b10019.test.ts`
+      - `b10023-b10024.test.ts` — Keep one card after the draw: an empty deck would immediately refresh
+      - `b10024.test.ts`
+      - `b10025.test.ts`
+      - `b10036-contact.test.ts`
+      - `b10039.test.ts`
+      - `b10046.test.ts`
+      - `b10047-case-name.test.ts`
+      - `b10056.test.ts`
+      - `b10060-usage-boundary.test.ts`
+      - `b10069.test.ts`
+      - `b10074-validation-repair.test.ts`
+      - `b10081-b10097-effective-level.test.ts`
+      - `b10086-cutin-ban.test.ts`
+      - `b10087.test.ts`
+      - `b10094.test.ts`
+      - `b10096.test.ts`
+      - `b10098.test.ts`
+      - `b10099.test.ts`
+      - `b10100.test.ts`
+      - `b10101-qa.test.ts`
+      - `contact-history-cards.test.ts`
+      - `early-cluster.test.ts`
+      - `first-batch.test.ts`
+      - `green-gap-candidates.test.ts`
+      - `green-simple-cluster.test.ts`
+      - `late-99-101.test.ts` — The target-selection atom is exercised through its normal effect resolver.
+      - `late-cluster.test.ts`
+      - `late-simple-cluster.test.ts`
+      - `metadata-parity.test.ts`
+      - `mid-cluster.test.ts`
+      - `original-ability-filter.test.ts` — CT-P10 B10074 / B10102: official Q&A says original abilities are printed
+      - `parallel-early.test.ts`
+      - `parallel-late.test.ts`
+      - `parallel-mid.test.ts`
+      - `review-blocker-cards.test.ts` — CT-P10 Sol review blockers: printed text / official Q&A regressions.
+      - `set-entry-group.test.ts`
+      - `set-move-cards.test.ts`
+      - `sixties-cluster.test.ts`
+      - `unblocked-blue-batch.test.ts`
+      - `unblocked-deck-batch.test.ts`
+      - `vanilla-keyword-cluster.test.ts`
+      - `yellow-combat-cluster.test.ts`
+      - `yellow-deck-cluster.test.ts` — CT-P10 yellow deck cluster — production dispatch / real resolver coverage.
     - **`defer-unlock-miniwave/`**
       - `B04038.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B07039.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
@@ -4967,6 +5216,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `hirameki-draw.spec.ts` — Round 4j (`4dd2cd8`) + Round 4j-fix: hiramekiDraw パターン (アクション[事件] 経由のヒラメキドロー)
       - `partner-color-keyword.spec.ts` — Round 4f Phase 2: partnerColorKeyword 共通クラスを使う 5 カードを 1 spec で集約検証。
     - `audit-suspects-coverage.spec.ts` — E2E: 2026-06-05 監査 workflow が「静的には faithful・実機未確認」とした suspect の runtime カバレッジ。
+    - `b10094-mixed-source.spec.ts` — Two public equal PA cards prove that the UI retains occurrence identity.
     - `bug-006.spec.ts` — BUG-006: アクション[事件] で証拠が変動しない (rules/10)
     - `bug-029.spec.ts` — BUG-029: 現場カードがアクション/推理してもスリープにならない (UI 反映)
     - `bug-037.spec.ts` — BUG-037: 現場カードの sleep / stun が computed transform で実際に rotate されるかを検証。
@@ -4995,6 +5245,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `choose-intercept.spec.ts`
     - `cutin-handzone-pick.spec.ts` — User 要望: コンタクト中のカットイン選択を、テキストボタン modal ではなく HandZone pick mode
     - `deck-reveal-overlay-ui.spec.ts` — E2E: DeckRevealOverlay の演出 (user 指摘 #1, 2026-06-01)
+    - `declared-source-hand-occurrence.spec.ts` — B06103's on-hand declared ability removes a same-colour character as
     - `disguise-hook-2026-06-06.spec.ts` — E2E: engine-extension disguise-hook batch (2026-06-06 タスクC) — text-faithfulness…
     - `effect-pick.spec.ts` — E2E regression: BUG-053 / BUG-054 — human player effect pick UI 経路
     - `engine-extensions-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 engine-extension #1/#2 batches:
@@ -5010,12 +5261,14 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `night-w0-cost-choice-multipick.spec.ts` — E2E: 夜間 W0 (2026-07-11) — cost kind:'choice' human branch 選択 (B09027 初 consumer)…
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
     - `optional-decision-2026-06-06.spec.ts` — E2E: optional-decision (「〜してもよい」= pendingEffectOptional) の実機 text-faithfulness 検…
+    - `public-hand-reveal-window.spec.ts` — The reveal stays usable above its linked effect picker. Card detail is
     - `reasoning-hook-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook (2026-06-06 タスクC) の実機 text-faithfulness 検証。
     - `reasoning-hook-batch3-2026-06-06.spec.ts` — E2E: engine-extension reasoning-hook batch #3 (2026-06-06 タスクC) 実機 text-faithful…
     - `replay-ui.spec.ts` — Phase 9-G.2 (Cleanup 7-D): リプレイ UI E2E
     - `reuse-cards-2026-06-05.spec.ts` — E2E verification for the 2026-06-05 catalog-reuse cards (sequential hand-impl):
     - `rps-decision.spec.ts`
     - `s2-deck-window-pick.spec.ts` — E2E: S2 deck cluster — B01022「少年探偵団」の human 実機検証 (T3 Playwright ゲート)。
+    - `set-card-browse.spec.ts` — The name/text body is not another detail affordance. Browse begins only at 🔍.
     - `set-card-choice.spec.ts`
     - `set-card-replacement.spec.ts`
     - `setcard-removal-2026-06-06.spec.ts` — E2E: set-card 除去 (charRemoveSetCard) の実機 text-faithfulness 検証。
@@ -5030,14 +5283,20 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `registry.test.ts` — engine.cards.* — registry namespace tests
       - `tsv-loader.test.ts` — engine.cards.* — TSV loader tests
     - **`cond/`**
+      - `binding-keys-read.test.ts`
+      - `case-name.test.ts`
+      - `contact-char-matches-require-source.test.ts`
       - `cost-removed-key.test.ts` — engine.cond.eval — costRemovedMatches.key + costRevealedMatches (attribution min…
       - `eval.test.ts` — engine.cond.eval — tests
       - `removed-char-matches-byplayer.test.ts` — engine.cond.eval — removedCharMatches.byPlayer (attribution mini-wave ①, 2026-07…
       - `removed-char-matches.test.ts` — engine.cond.eval — removedCharMatches (cluster15 反撃カード一族, 2026-06-16)
+      - `source-declared-use-count.test.ts`
     - **`cost/`**
       - `cost-paid-write.test.ts` — engine.cost.pay — costPaid write 4 case (attribution mini-wave ②, 2026-07-10)
       - `evaluate.test.ts` — engine.cost.canPay — tests
       - `pay.test.ts` — engine.cost.pay — tests
+      - `remove-set-card-eligible.test.ts`
+      - `self-to-partner-area.test.ts`
     - **`dyn/`**
       - `eval.test.ts` — engine.dyn.eval — Dyn evaluator tests
     - **`effect/`**
@@ -5069,10 +5328,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `charsetcard-fromdecktop-refresh.test.ts` — tests/engine/effect/charsetcard-fromdecktop-refresh — unit B (session64)
       - `conditional-deferred-pick.test.ts` — The initial walk has no legal candidate. Rebuild the runtime context
       - `continuation-chain-gate-real-cards.test.ts` — Enter through the runtime atom handler so the first carrier is queued
-      - `cost-paid-stacked-pick.test.ts`
+      - `cost-paid-stacked-pick.test.ts` — Legacy selections still resolve when they identify exactly one pending occurrenc…
+      - `cutin-entry-history.test.ts`
       - `discard-random.test.ts` — engine.effect.atom discardRandom — 手札からランダムに n 枚リムーブする verb (B01077「相手は手札を
       - `engine-wave11-hirameki-actor.test.ts` — engine 拡張 wave-11 (2026-07-02) — hirameki actor payload ($trigger.…
+      - `exact-occurrence-transfer.test.ts`
       - `foreach-all.test.ts` — forEach over:{kind:'all'} primitive verification — applies an atom to EACH match…
+      - `foreach-pending-pick-continuation.test.ts`
       - `lensf-batch2a.test.ts` — tests/engine/effect/lensf-batch2a — Lens F batch2a (BUG-102 D11019 deck splice /…
       - `m2latter-bundleb.test.ts` — M2 後半 batch (2026-07-10): bundle B — Cost 新 kind 2 + on-set-host rider walk + ar…
       - `m2latter-dyn-bind.test.ts` — M2 後半 batch (2026-07-10): handler-local dyn/bind 小粒 additive 群の TDD probe。
@@ -5082,15 +5344,19 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `miniwave3-verbs.test.ts` — engine mini-wave #3 (2026-07-10): handToDeckBottom verb + filePopToHand n/…
       - `miniwave4-hand-level.test.ts` — engine mini-wave #4 (2026-07-10): hand 内 continuous level modifier
       - `miniwave5-deck-reveal.test.ts` — engine mini-wave #5 (2026-07-10): deck-reveal 拡張 P3+P2。
+      - `move-set-card.test.ts`
       - `multi-target-pick.test.ts` — engine-extension #3 (2026-06-05): multi-target Pattern A pick
+      - `parallel-pause.test.ts`
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
       - `pick-bind.test.ts` — Task D E0 (2026-06-12): pick-bind writeback — 1 つの pick を後続 atom で共有する機構。
       - `player-resolution-bug.test.ts` — tests/engine/effect/player-resolution-bug
       - `postfix-reorder-boundaries.test.ts`
       - `postfix-reorder-zero-scene-enter.test.ts`
+      - `public-hand-reveal-window.test.ts`
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
       - `review-hardening.test.ts` — 2026-06-04 adversarial review (BUG-106〜110 セッション) で確定した latent 修正の回帰テスト。
+      - `runtime-choice.test.ts`
       - `s2-b08057-primitives.test.ts` — S2 deck cluster (2026-07-10, B08057 宮野エレーナ a2): 3 additive primitive。
       - `s2-deck-window-pick.test.ts` — S2 deck cluster (2026-07-10): B01022「上から6枚見て lv4以下[少年探偵団] 2枚まで登場、残りシャッフルしてデッキ下」。
       - `s2-deckplace-chooser.test.ts` — S2 deck cluster (2026-07-10, B01093): deckPlaceSplitBound の選択者座標系是正。
@@ -5099,6 +5365,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `short-form-new-verbs.test.ts` — 新規 verb 短縮形 test (Phase2 Task2.4-2.7)
       - `stacked-card-pick.test.ts`
       - `stacked-card-transfer.test.ts`
+      - `start-contact-actor.test.ts`
       - `validate.test.ts` — engine.effect.validate / engine.cards.validate — tests
       - `wave2-cluster2-ability-filter.test.ts` — engine拡張 wave#2 cluster2 — ability-presence filter pin tests
       - `wave2-cluster3-action-triggers.test.ts` — engine拡張 wave#2 cluster3 — action-lifecycle trigger 族 pin tests (TDD 先行)
@@ -5111,6 +5378,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `cluster16-filter-predicate.test.ts` — engine cluster16 — filter-predicate 表現力完成 (card-name EXCLUSION + deckReveal cros…
     - **`flow/`**
       - **`action/`**
+        - `granted-pre-target.test.ts` — Sleep remains a normal rules/07 target; the grant adds no extra sleep target.
         - `state-machine.test.ts` — Phase 4 Group B Task 4.4 — flow.action state machine
         - `target-expander.test.ts` — Phase 4 Group C Task 4.8 — target expander (G29) + mustBeTargeted (G28)
       - **`main/`**
@@ -5129,6 +5397,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `bug-140-cutin-batch.test.ts` — tests/engine/flow/bug-140-cutin-batch — BUG-140 補修 (2026-06-13) の cutin 挙動検証
       - `bug-194-partner-ap.test.ts` — BUG-194: real partner is a contact actor and must share AP modifier/read/…
       - `bug-212-production-contact.test.ts`
+      - `contact-turn-history.test.ts`
       - `contact.judge-log.test.ts` — Phase 8.10e: contact.judge log integration tests
       - `contact.test.ts` — Phase 4 Group B Task 4.5 — flow.contact (cutIn/disguise/pass/judge/computeOrder)
       - `guard.test.ts` — Phase 4 Group B Task 4.7 — flow.guard
@@ -5149,11 +5418,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `stunSemantics.test.ts` — rules: 03-field-areas.md (スタン特殊挙動)
     - **`listeners/`**
       - `bug-197-original-ability-suppression.test.ts` — BUG-197: "original abilities" means every printed ability entry, not only keywor…
+      - `contact-leave-self-trigger-suppression.test.ts`
       - `cutin-summon-misfire.test.ts` — tests/engine/listeners/cutin-summon-misfire — 【カットイン】が召喚時に誤発火しないこと
       - `declared-batch-seq.test.ts`
       - `granted-ability.test.ts` — Task D E4 (2026-06-12): charGrantAbility — triggered ability の動的付与
       - `leave-to-remove.test.ts` — Engine 拡張 #1: leave/現場リムーブ時 hook (engine-extension-plan.md step 1)
       - `on-set-self-turn-end.test.ts`
+      - `trigger-enter-bindings.test.ts`
       - `triggered-limit-guard.test.ts` — tests/engine/listeners/triggered-limit-guard — BUG-096 / BUG-097
       - `triggered.test.ts` — Round 4b: triggered ability 汎用 listener テスト
     - **`mr-partner-area/`**
@@ -5182,6 +5453,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `char.test.ts` — 2026-05-25 fix: charModifyAP は turnEffects['apMod_*'] に蓄積する。
       - `def.test.ts`
       - `game.test.ts`
+      - `granted-continuous-self-flag.test.ts`
       - `keyword.test.ts` — engine.read.keyword — defHasKeyword / abilityIsCutin /…
       - `log.test.ts`
       - `player.test.ts` — アシスト中のパートナーを含む 2 枚
@@ -5191,26 +5463,39 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `deck-place-boundary.test.ts` — A human deckPlace decision is a hard effect-stack boundary, just like deck reord…
       - `stack.test.ts` — engine.resolve.* — Effect Stack tests
     - **`target/`**
+      - `area-name-alias.test.ts`
       - `bug-113-continuous-delta-filter.test.ts` — BUG-113: 数値ターゲットフィルタ (apMin/apMax/lpMin/lpMax) の有効値が
       - `candidates.test.ts` — engine.target.candidates / legalCount — tests
       - `card-name-components-fullwidth.test.ts` — BUG-178 回帰: 全角＆の複数名カードも rules/19 分割名を持つ (半角 & と同挙動)。
       - `effective-value-filter.test.ts` — 数値フィルタ (apMin/apMax/lpMin/lpMax) は「効果解決時点の有効値」= turnEffects の ±修正を
+      - `face-up-set-card-query.test.ts`
       - `resolve.test.ts` — engine.target.resolve — tests
     - **`types/`**
       - `ability-def.test.ts` — AbilityDef 型のコンパイル時テスト
     - `.gitkeep`
+    - `b10079-self-reason-ban.test.ts`
+    - `b10094-source-area.test.ts`
     - `bug-166-176-event-resolution-provenance.test.ts`
     - `bug-180-completed-deck-take-refresh.test.ts`
     - `bug-253-254-event-use-and-hirameki-faceup.test.ts` — rules: 06-card-types.md, 10-action-event.md, 15-abilities-effects.md
     - `bug-256-b03032-active-set-target.test.ts` — BUG-256: B03032 / B03032P active target exception for set-card hosts.
     - `cost-remove-set-card.test.ts` — engine additive wave (2026-06-24) — Cost `removeSetCard`。
     - `cost-reveal-from-hand.test.ts` — engine additive wave — Cost `revealFromHand`。
+    - `ctp10-bound-level-filter.test.ts` — CT-P10 B10060: a later target uses the entered character's effective level.
+    - `ctp10-effective-level-bound.test.ts` — CT-P10 B10081/B10097: dynamic level bounds must read the bound card in its
+    - `ctp10-keyword-not-filter.test.ts` — CT-P10 B10074/B10102: "【カットイン】と【ヒラメキ】以外" excludes a
+    - `ctp10-original-ability-except-icons.test.ts` — CT-P10 B10050: "【カットイン】と【ヒラメキ】以外の元の能力を持たない"
+    - `ctp10-original-ability-filter.test.ts` — CT-P10 B10074/B10102 + 2026-07-26 B04018 official Q&A:
+    - `ctp10-printed-keyword-filter.test.ts` — CT-P10 B10098/B10101 Q&A: a conditional keyword printed behind this card's
+    - `ctp10-source-ap-filter.test.ts` — CT-P10 B10069: both AP values are read at resolution time, including buffs.
+    - `ctp10-trait-all-filter.test.ts`
     - `declared-cost-params.test.ts`
     - `produce.test.ts`
     - `rng.test.ts`
     - `rule-manual-ver2.5.test.ts` — rules: 13-keywords.md, 15-abilities-effects.md, 17-icons.md
     - `state-factory.test.ts`
     - `sync-taskA-whitelists.test.ts` — refactor 2b (2026-06-12): 手動同期ペアの機械検証
+    - `trait-aura-grant.test.ts`
     - `types.test.ts`
   - **`factory/`**
     - `classify.test.ts`
@@ -5244,6 +5529,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `gen-codex-context.test.ts`
     - `gen-qa-trace.test.ts`
     - `header-source-hash.test.ts`
+    - `inventory-remaining.test.ts`
     - `lint-bug-closure.test.ts`
     - `lint-qa-trace.test.ts`
     - `markdown-eol.test.ts`
@@ -5290,8 +5576,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `MisreadPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3b: MisreadPickerModal SSR test
       - `OppTurnOverlay.test.tsx` — Phase 8.10a: OppTurnOverlay tests
       - `PartnerArea.test.tsx` — Phase 7 Task 7.5: PartnerArea tests
+      - `Playmat.b10094-mixed-source.test.tsx`
       - `Playmat.test.tsx` — Phase 7 Task 7.3: Playmat layout structure tests
       - `Playmat.user-bug-wave.test.tsx`
+      - `PublicHandRevealWindow.test.tsx`
       - `RecentActionToast.test.tsx`
       - `RefreshOverlay.test.tsx` — Phase 8.10i: RefreshOverlay tests
       - `RemoveArea.test.tsx` — Phase 7 Task 7.10: RemoveArea tests
@@ -5338,6 +5626,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
       - `useEvidenceFlipPicker.test.ts` — BUG-085: useEvidenceFlipPicker store + Promise hook の単体テスト
       - `useFlipAnimation.test.ts` — Task5 FLIP 移動アニメ: pure な FLIP 計算 (rectCenter / computeFlipMoves) の単体テスト。
+      - `useHandCostPicker.test.ts`
       - `useMisreadFlowDriver.test.tsx`
       - `useNextHintPicker.test.ts` — 2026-05-28: useNextHintPicker hook tests
       - `useOppTurnDriver.case-resolved-pick.test.ts` — BUG-090: human の auto-phase で 事件編→解決編 になり case card a1 (case:to-resolved →

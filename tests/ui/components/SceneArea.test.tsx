@@ -159,7 +159,7 @@ describe('SceneArea', () => {
       }),
     ];
     const html = strip(renderToString(
-      <SceneArea characters={chars} side="self" resolveCard={resolveCard} />,
+      <SceneArea characters={chars} side="self" resolveCard={resolveCard} onSetInspect={() => {}} />,
     ));
     expect(html).toMatch(/named-badge[^>]*>名</);
     expect(html).toMatch(/set-badge[^>]*>\+2</);

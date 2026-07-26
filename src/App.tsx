@@ -26,6 +26,7 @@ import { useCutinDemoDriver } from '@/ui/hooks/useCutinDemoDriver';
 import { createCutinDemoState, CUTIN_DEMO_OPP_ATTACKER_UID, CUTIN_DEMO_SELF_DEFENDER_UID } from '@/ui/fixtures/cutinDemoState';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
+import { PublicHandRevealWindow } from '@/ui/components/PublicHandRevealWindow';
 import { ContactFlash } from '@/ui/components/ContactFlash';
 import { RefreshOverlay } from '@/ui/components/RefreshOverlay';
 import { VictoryOverlay } from '@/ui/components/VictoryOverlay';
@@ -144,6 +145,7 @@ export default function App() {
       <EffectPickerModal />
       <EffectDecisionModalHosts />
       <DeckRevealOverlay />
+      <PublicHandRevealWindow />
       <RecentActionToast />
       <ContactFlash />
       <RefreshOverlay />

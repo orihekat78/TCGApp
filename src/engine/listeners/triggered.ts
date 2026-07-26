@@ -204,6 +204,28 @@ function collectCardsInPlay(state: GameState): CardLocation[] {
   return result;
 }
 
+/**
+ * Bind the character that caused an enter hook while it is still live.
+ *
+ * The binding is deliberately made before ability gates run and is persisted
+ * on the queued entry.  Consumers then rehydrate it at resolution time, so a
+ * departed entrant fails closed while a still-live entrant uses current state.
+ */
+function triggerBindingsForHook(
+  hookName: TriggeredHook,
+  state: GameState,
+  payload: unknown,
+): EffectCtx['bindings'] {
+  if (hookName !== 'enter') return {};
+  const uid = (payload as { uid?: unknown } | undefined)?.uid;
+  if (typeof uid !== 'string') return {};
+  for (const player of ['self', 'opp'] as const) {
+    const char = state.players[player].scene.find(candidate => candidate.uid === uid);
+    if (char) return { $triggerChar: [{ kind: 'char', uid: char.uid, cardId: char.cardId, player }] };
+  }
+  return {};
+}
+
 function scopeAllowsArea(scope: AbilityScope | undefined, area: CardLocation['area']): boolean {
   // scope 未指定は 'on-scene' default (rules/15)
   const s = scope ?? 'on-scene';
@@ -261,6 +283,11 @@ function handleHook(
   payload: unknown,
   source: unknown,
 ): void {
+  const inheritedBindings = ((source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings ?? {}) as EffectCtx['bindings'];
+  const hookBindings = triggerBindingsForHook(hookName, state, payload);
+  // Hook-owned names win over an emitter-provided binding.  An enter event
+  // cannot spoof the live entrant that gates and later resolves its effect.
+  const queuedBindings = { ...inheritedBindings, ...hookBindings } as EffectCtx['bindings'];
   const abilityDeclaredBatch = (payload as { declaredBatch?: unknown } | undefined)?.declaredBatch;
   const declaredBatch = hookName === 'effect:declared'
     ? nextDeclaredBatch(state)
@@ -385,7 +412,7 @@ function handleHook(
       // enter:group の boundAnyMatchesFilter{bindKey:'enterGroup'} を ability.condition (=発動条件、
       // rules/24: 条件不成立なら「発動」自体しない=【ターン1】未消費) で評価するため。
       // 既存 emit は bindings を渡さない → {} で従来と byte 同一。
-      const gateBindings = ((source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings ?? {}) as EffectCtx['bindings'];
+      const gateBindings = queuedBindings;
       // D11007 v2 (Phase 2): matcherCondition (declarative 版 matcher)
       // payload を ctx.triggerPayload に詰めて evalCond に渡す
       if (trig.matcherCondition) {
@@ -417,7 +444,7 @@ function handleHook(
       }
       // effect が無いと queue しても無意味
       if (!ability.effect) continue;
-      // BUG-096: triggered ability の limit:{kind:'turn',n} (【ターン①/②】) を enforcement。
+      // BUG-096: triggered ability の limit:{kind:'turn',n} (【ターン①/②/③】) を enforcement。
       // declared フロー (declared-ability.ts:82-84) と同じ declaredUseCount を流用
       // (SceneCharacter.declaredUseCount、resetTurnFlags がターン境界で reset、rules/17)。
       if (ability.limit?.kind === 'turn') {
@@ -446,7 +473,7 @@ function handleHook(
       // walk 時 (resolveEffectPicks) の resolveCtx.bindings にも載せる — optional{...} が $contact.* /
       // ctx.contact (inContact pick, B04092 キャンティ) を surface 時に captur するため (choice の BUG-114 対称、
       // setPendingOptionalBindings)。既存 non-optional 効果の pick/$contact は従来通り runtime (entryToCtx) 解決。
-      const sourceBindings = (source as { bindings?: Record<string, unknown[]> } | undefined)?.bindings;
+      const sourceBindings = queuedBindings;
       // user_request 20260522_01 #6/#2 + BUG-054 + BUG-065-followup:
       // human player owned effect は humanChooser=true で resolveEffectPicks に
       // 渡し、$pick 検出時に side-channel `__pendingEffectPickSide` を set。
@@ -693,6 +720,12 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
 function handleLeaveToRemoveSelf(state: GameState, payload: unknown, source: unknown): void {
   const s = source as { player?: Player; uid?: string; cardId?: string } | undefined;
   if (!s || !s.player || !s.uid || !s.cardId) return;
+  // B10039: while the opposing side has an active contact leave self-trigger
+  // restriction, suppress only the leaving character's own leave abilities.
+  // The event still reaches handleHook below, so third-party observers remain.
+  const leave = payload as { cause?: unknown } | undefined;
+  const restrictionOwner: Player = s.player === 'self' ? 'opp' : 'self';
+  if (leave?.cause === 'contact-ap' && readChar.restrictsOpponent(state, restrictionOwner, 'contactLeaveSelfTrigger')) return;
   const def = readDef.card(s.cardId);
   if (!def) return;
   const card: CardLocation = {

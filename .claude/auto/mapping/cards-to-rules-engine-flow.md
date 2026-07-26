@@ -2,11 +2,11 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `d6653d0d30ff`
+> Source hash: `16d83f9bc8f0`
 
 `// rules: NN-name.md, ...` コメントから抽出。ファイル容量制約のためエリア別に分割。
 
-このグループ: **136** ファイル（[全体 index](./index.md)）
+このグループ: **140** ファイル（[全体 index](./index.md)）
 
 ## engine/effect (19)
 
@@ -70,7 +70,7 @@
 | [`src/engine/invariant/scratchTraceMonotonic.ts`](../../../src/engine/invariant/scratchTraceMonotonic.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/invariant/stunSemantics.ts`](../../../src/engine/invariant/stunSemantics.ts) | [`03-field-areas.md`](../../rules/03-field-areas.md) |
 
-## engine (他) (29)
+## engine (他) (32)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -78,12 +78,14 @@
 | [`src/engine/cards/registry.ts`](../../../src/engine/cards/registry.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/engine/cards/tsv-loader-fs.ts`](../../../src/engine/cards/tsv-loader-fs.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
 | [`src/engine/cards/tsv-loader.ts`](../../../src/engine/cards/tsv-loader.ts) | [`02-deck-construction.md`](../../rules/02-deck-construction.md) / [`06-card-types.md`](../../rules/06-card-types.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`20-color-and-switch.md`](../../rules/20-color-and-switch.md) |
+| [`src/engine/cond/binding-keys.ts`](../../../src/engine/cond/binding-keys.ts) | _(参照なし)_ |
 | [`src/engine/cond/eval.ts`](../../../src/engine/cond/eval.ts) | [`13-keywords.md`](../../rules/13-keywords.md) / [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`17-icons.md`](../../rules/17-icons.md) / [`18-mr.md`](../../rules/18-mr.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
 | [`src/engine/cond/index.ts`](../../../src/engine/cond/index.ts) | _(参照なし)_ |
 | [`src/engine/cost/alternative.ts`](../../../src/engine/cost/alternative.ts) | _(参照なし)_ |
 | [`src/engine/cost/evaluate.ts`](../../../src/engine/cost/evaluate.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`26-qa-deck-refresh.md`](../../rules/26-qa-deck-refresh.md) |
 | [`src/engine/cost/index.ts`](../../../src/engine/cost/index.ts) | _(参照なし)_ |
 | [`src/engine/cost/pay.ts`](../../../src/engine/cost/pay.ts) | [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) / [`25-qa-effects-resolution.md`](../../rules/25-qa-effects-resolution.md) |
+| [`src/engine/cost/remove-set-card-eligible.ts`](../../../src/engine/cost/remove-set-card-eligible.ts) | _(参照なし)_ |
 | [`src/engine/cost/remove-set-card-witness.ts`](../../../src/engine/cost/remove-set-card-witness.ts) | _(参照なし)_ |
 | [`src/engine/dyn/eval.ts`](../../../src/engine/dyn/eval.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) |
 | [`src/engine/dyn/index.ts`](../../../src/engine/dyn/index.ts) | _(参照なし)_ |
@@ -101,10 +103,11 @@
 | [`src/engine/state-factory.ts`](../../../src/engine/state-factory.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`03-field-areas.md`](../../rules/03-field-areas.md) / [`04-game-setup.md`](../../rules/04-game-setup.md) |
 | [`src/engine/target/candidates.ts`](../../../src/engine/target/candidates.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 | [`src/engine/target/card-def-registry.ts`](../../../src/engine/target/card-def-registry.ts) | _(参照なし)_ |
+| [`src/engine/target/card-occurrence.ts`](../../../src/engine/target/card-occurrence.ts) | _(参照なし)_ |
 | [`src/engine/target/index.ts`](../../../src/engine/target/index.ts) | _(参照なし)_ |
 | [`src/engine/target/resolve.ts`](../../../src/engine/target/resolve.ts) | [`15-abilities-effects.md`](../../rules/15-abilities-effects.md) / [`19-special-rules.md`](../../rules/19-special-rules.md) |
 
-## その他 (60)
+## その他 (61)
 
 | ソース | 参照ルール |
 | ------ | --------- |
@@ -137,6 +140,7 @@
 | [`src/ui/hooks/useEvidenceFlipPicker.ts`](../../../src/ui/hooks/useEvidenceFlipPicker.ts) | [`01-victory-conditions.md`](../../rules/01-victory-conditions.md) / [`21-declared-ability-cost.md`](../../rules/21-declared-ability-cost.md) |
 | [`src/ui/hooks/useFile.ts`](../../../src/ui/hooks/useFile.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useFlipAnimation.ts`](../../../src/ui/hooks/useFlipAnimation.ts) | _(参照なし)_ |
+| [`src/ui/hooks/useHandCostPicker.ts`](../../../src/ui/hooks/useHandCostPicker.ts) | _(参照なし)_ |
 | [`src/ui/hooks/useHiramekiDemoDriver.ts`](../../../src/ui/hooks/useHiramekiDemoDriver.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/hooks/useHiramekiFlowDriver.ts`](../../../src/ui/hooks/useHiramekiFlowDriver.ts) | [`10-action-event.md`](../../rules/10-action-event.md) |
 | [`src/ui/hooks/useLogEntries.ts`](../../../src/ui/hooks/useLogEntries.ts) | _(参照なし)_ |

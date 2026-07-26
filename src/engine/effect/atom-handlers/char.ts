@@ -208,7 +208,9 @@ export function atomCharGrantAbility(s: GameState, a: Record<string, unknown>, c
       // gap① (2026-07-11, B06042「【宣言】能力を与える」): spec.type / spec.scope を honor して
       // declared ability の付与を解禁する。既存カード (B07063/B02014/B08014 等) は descriptor に
       // type/scope を持たない → 'triggered' / 'on-scene' (旧固定値と byte 不変・回帰0)。
-      const grantedType = spec.type === 'declared' ? 'declared' : 'triggered';
+      const grantedType = spec.type === 'declared' || spec.type === 'continuous'
+        ? spec.type
+        : 'triggered';
       const grantedScope = typeof spec.scope === 'string' ? spec.scope : 'on-scene';
       // granted id namespace (limit:{turn} の declaredUseCount キーとして機能する)
       const baseGrantedId = typeof spec.id === 'string'
@@ -389,6 +391,7 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
       // 系で使用。a.player (既定 'self') の deck.shift で 1 枚 splice → そのまま setCard。
       // (cardId 引数は無視、自動補完される)
       let scCardId: string;
+      let refreshAfterSet: (() => void) | undefined;
       if (a.fromDeckTop) {
         // BUG-153: host (scUid) が現場不在なら deck を消費しない。
         // setCard は host 不在で no-op (mutate/char.ts findChar) なので、shift を先に走らせると
@@ -416,14 +419,15 @@ export function atomCharSetCard(s: GameState, a: Record<string, unknown>, ctx: E
           return;
         }
         scCardId = s.players[sscP].deck.shift()!;
-        // The old pre-take guard misses exact exhaustion when no later set
-        // remains. Refresh immediately after this completed transfer.
-        mutate.deck.refreshAfterTake(s, sscP, excludedSource);
+        // Keep the transfer atomic to observers: setCard emits setcard:enter,
+        // then the completed take may refresh and emit remove:exit.
+        refreshAfterSet = () => mutate.deck.refreshAfterTake(s, sscP, excludedSource);
       } else {
         scCardId = resolveBindRef(a.cardId, ctx) as string;
         if (typeof scCardId !== 'string' || scCardId.startsWith('$')) return;
       }
       mutate.char.setCard(s, scUid, scCardId, a.faceUp as boolean);
+      refreshAfterSet?.();
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:charSetCard', target: scUid, result: scCardId });
       return;

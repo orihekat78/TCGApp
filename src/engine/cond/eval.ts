@@ -6,11 +6,12 @@
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
 import type { GameState, Condition, EffectCtx, Candidate, SceneCharacter } from '@/engine/types';
-import { candidates, matchOneFilter, effectiveKeywordForCard, effectiveNameComponents, effectiveTraitNames } from '@/engine/target/candidates.js';
+import { boundCandidate, candidates, effectiveLevelForCandidate, matchOneFilter, effectiveKeywordForCard, effectiveNameComponents, effectiveTraitNames, printedKeywordForCard, resolveBoundLevelFilter } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
 import { def as readDef } from '@/engine/read/def.js'; // mega-wave W6 step1: boundIsMr の MR 判定 (循環なし — read/def は types のみ import)
+import { defHasNoOriginalAbilityExceptIcons } from '@/engine/read/keyword.js';
 import { removeExcludedSourceCardId } from '@/engine/read/effect-source.js';
 
 /** Type predicate: narrows a Candidate to the 'char' variant. */
@@ -118,6 +119,13 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       // (D11021=婚活 は両方に持つため後方互換 / 古城系 gating を解禁)。
       const traits = [...(d?.caseTraits ?? []), ...(d?.traits ?? [])];
       return traits.includes(cond.trait);
+    }
+    case 'caseName': {
+      const caseId = state.players[ctx.source.player].case.cardId;
+      if (!caseId) return false;
+      // Official 「カード名[工藤新一NYの事件]」 is one full name component.
+      // Do not infer it from partial or separately listed name components.
+      return lookupCardDef(caseId)?.names.includes(cond.name) ?? false;
     }
     case 'fileAtLeast': {
       const owner = ctx.source.player;
@@ -297,6 +305,13 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const used = charRead.declaredUseCount(state, cond.uid, cond.abilityId);
       return used < cond.max;
     }
+    case 'sourceDeclaredUseCount': {
+      const uid = ctx.source.uid;
+      const abilityId = ctx.source.abilityId;
+      if (typeof uid !== 'string' || typeof abilityId !== 'string') return false;
+      const used = charRead.declaredUseCount(state, uid, abilityId);
+      return cond.cmp === 'eq' ? used === cond.n : used >= cond.n;
+    }
     case 'bound': {
       const bound = ctx.bindings[cond.key];
       if (cond.presence === 'matched') {
@@ -333,7 +348,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const count = removeIdsForCondition(state, p, ctx).filter(id => {
         const d = lookupCardDef(id);
         if (!d) return false;
-        const components = allCardNameComponentsForDef(d);
+        const components = allCardNameComponentsForDef(d, 'remove');
         return wants.some(w => components.includes(w));
       }).length;
       return count >= cond.n;
@@ -410,7 +425,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const host = state.players[ctx.source.player].scene.find(char => char.uid === uid);
       if (!host) return false;
       const count = host.setCards.filter(entry => entry.faceUp === true
-        && matchOneFilter(state, entry.cardId, cond.filter, null, null as never)).length;
+        && matchOneFilter(state, entry.cardId, cond.filter, null, null)).length;
       return count >= cond.n;
     }
     case 'sceneFaceDownSetCardCountAtLeast': {
@@ -487,6 +502,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (!ccInfo) return false;
       const ccUid = ccInfo[cond.who];
       if (typeof ccUid !== 'string' || ccUid.length === 0) return false;
+      if (cond.requireSource && ccUid !== ctx.source.uid) return false;
       // scene のみ探索 — パートナーがコンタクト参加者の場合は false (fail-closed)。$contact.byUid の
       // charModifyAP も scene-only のため観測可能な不整合はない (system-wide の既存制約、review nit 記録)。
       for (const ccSide of ['self', 'opp'] as const) {
@@ -579,7 +595,8 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
         const bId = (b as { cardId?: string }).cardId;
         if (typeof bId !== 'string') continue;
         const d = lookupCardDef(bId);
-        if (d && allCardNameComponentsForDef(d).includes(declared)) return true;
+        const area = (b as { area?: unknown }).area;
+        if (d && allCardNameComponentsForDef(d, typeof area === 'string' ? area : undefined).includes(declared)) return true;
       }
       return false;
     }
@@ -609,18 +626,37 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     }
     case 'boundCharStateIs': {
       const bound = ctx.bindings?.[cond.bindKey];
-      return Array.isArray(bound) && (bound[0] as { snapState?: unknown } | undefined)?.snapState === cond.state;
+      if (!Array.isArray(bound) || bound.length === 0) return false;
+      const candidate = boundCandidate(state, bound[0], ctx.source.player);
+      if (candidate?.kind === 'char') {
+        const live = state.players[candidate.player].scene.find(char => char.uid === candidate.uid);
+        return live?.state === cond.state;
+      }
+      // Removal bindings retain their original state after the character is
+      // gone; preserve that snapshot-only use for B09024.
+      return (bound[0] as { snapState?: unknown }).snapState === cond.state;
     }
     case 'boundMatchesFilter': {
       // D11014 a2 driver: ctx.bindings[bindKey][0] の cardId を TargetFilter で評価
       // (「〚カード名[X]〛を登場させた場合」を declarative 化)
       const bound = ctx.bindings?.[cond.bindKey];
       if (!Array.isArray(bound) || bound.length === 0) return false;
+      const candidate = boundCandidate(state, bound[0], ctx.source.player);
+      if (!candidate) return false;
       const cardId = (bound[0] as { cardId?: string }).cardId;
       if (typeof cardId !== 'string') return false;
       const boundPlayer = (bound[0] as { player?: 'self' | 'opp' }).player ?? ctx.source.player;
       const d = lookupCardDef(cardId);
-      const f = cond.filter;
+      // A nested dynamic threshold must retain live provenance (scene uid or
+      // post-move hand occurrence). CardId-only snapshots remain static and
+      // therefore cannot manufacture an effective level here.
+      const thresholdKeys = [cond.filter.levelMaxBound?.bindKey, cond.filter.levelMinBound?.bindKey].filter((key): key is string => typeof key === 'string');
+      if (thresholdKeys.some((key) => {
+        const entry = ctx.bindings?.[key]?.[0] as { uid?: unknown; area?: unknown } | undefined;
+        return typeof entry?.uid !== 'string' && entry?.area !== 'hand';
+      })) return false;
+      const f = resolveBoundLevelFilter(state, cond.filter, ctx);
+      if (!f) return false;
       // CardDef-driven filter のみサポート (SceneCharacter state 系は対象外)
       if (f.cardId !== undefined) {
         const ids = Array.isArray(f.cardId) ? f.cardId : [f.cardId];
@@ -628,20 +664,28 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       }
       if (f.cardName !== undefined) {
         const wants = Array.isArray(f.cardName) ? f.cardName : [f.cardName];
-        const components = d ? allCardNameComponentsForDef(d) : [];
+        const area = (bound[0] as { area?: unknown }).area;
+        const components = d ? allCardNameComponentsForDef(d, typeof area === 'string' ? area : undefined) : [];
         if (!wants.some(w => components.includes(w))) return false;
       }
       // cluster16: cardNameNot (「〚カード名[X]〛以外」) — matchOneFilter / targetFilterToPredicate と同式。
       // 第4の filter-eval サイト (本関数は matchOneFilter 非委譲の inline 評価)。3経路 sync 必須 (cluster2 教訓)。
       if (f.cardNameNot !== undefined) {
         const nots = Array.isArray(f.cardNameNot) ? f.cardNameNot : [f.cardNameNot];
-        const components = d ? allCardNameComponentsForDef(d) : [];
+        const area = (bound[0] as { area?: unknown }).area;
+        const components = d ? allCardNameComponentsForDef(d, typeof area === 'string' ? area : undefined) : [];
         if (nots.some(w => components.includes(w))) return false;
       }
       if (f.trait !== undefined) {
         const wants = Array.isArray(f.trait) ? f.trait : [f.trait];
         const traits = effectiveTraitNames(state, cardId, null, { kind: 'card', cardId, area: 'bound', player: ctx.source.player });
         if (!wants.some(w => traits.includes(w))) return false;
+      }
+      if (f.traitAll !== undefined) {
+        const wants = Array.isArray(f.traitAll) ? f.traitAll : [f.traitAll];
+        if (wants.length === 0) return false;
+        const traits = effectiveTraitNames(state, cardId, null, { kind: 'card', cardId, area: 'bound', player: boundPlayer });
+        if (!wants.every(w => traits.includes(w))) return false;
       }
       if (f.color !== undefined) {
         const wants = Array.isArray(f.color) ? f.color : [f.color];
@@ -655,14 +699,47 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
         const colors = d?.colors ?? [];
         if (!colors.some(c => !nots.includes(c))) return false;
       }
-      if (f.levelMin !== undefined && (d?.level ?? 0) < f.levelMin) return false;
-      if (f.levelMax !== undefined && (d?.level ?? 0) > f.levelMax) return false;
+      // CT-P10 B10074/B10102: this is printed-card metadata, independent of
+      // original text suppression and externally granted abilities.
+      if (f.hasOriginalAbility !== undefined) {
+        if (!d || (d.abilities.length > 0) !== f.hasOriginalAbility) return false;
+      }
+      if (f.hasNoOriginalAbilityExceptIcons !== undefined) {
+        if (!defHasNoOriginalAbilityExceptIcons(d, f.hasNoOriginalAbilityExceptIcons)) return false;
+      }
+      if (f.levelInBound !== undefined || f.levelMaxBound !== undefined || f.levelMinBound !== undefined || f.apMaxSource !== undefined) return false;
+      const needsLevel = f.levelMin !== undefined || f.levelMax !== undefined || f.levelIn !== undefined;
+      if (needsLevel) {
+        const level = effectiveLevelForCandidate(state, candidate);
+        if (level === undefined) return false;
+        if (f.levelMin !== undefined && level < f.levelMin) return false;
+        if (f.levelMax !== undefined && level > f.levelMax) return false;
+        if (f.levelIn !== undefined && !f.levelIn.includes(level)) return false;
+      }
       // wave#2 cluster2 (2026-06-12): keyword/kind/ap/lp が silent drop されていた (BUG-117/118 同型、
       // targetFilterToPredicate と並ぶ第3の drop サイト)。keyword は defHasKeyword (単一真実源)、
       // 数値は printed 値判定 (bound カードは scene candidate を持たない — targetFilterToPredicate と同式)。
       if (f.keyword !== undefined) {
         const wants = Array.isArray(f.keyword) ? f.keyword : [f.keyword];
         if (!wants.some(w => effectiveKeywordForCard(
+          state,
+          `bound:${boundPlayer}:${cardId}`,
+          w,
+          { cardId, player: boundPlayer, area: 'bound' },
+        ))) return false;
+      }
+      if (f.keywordNot !== undefined) {
+        const nots = Array.isArray(f.keywordNot) ? f.keywordNot : [f.keywordNot];
+        if (nots.some(w => effectiveKeywordForCard(
+          state,
+          `bound:${boundPlayer}:${cardId}`,
+          w,
+          { cardId, player: boundPlayer, area: 'bound' },
+        ))) return false;
+      }
+      if (f.keywordFromPrintOrConditionIcon !== undefined) {
+        const wants = Array.isArray(f.keywordFromPrintOrConditionIcon) ? f.keywordFromPrintOrConditionIcon : [f.keywordFromPrintOrConditionIcon];
+        if (!wants.some(w => printedKeywordForCard(
           state,
           `bound:${boundPlayer}:${cardId}`,
           w,
@@ -784,12 +861,17 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     // any-match (B09004「〚カード名［工藤新一］〛か〚［毛利蘭］〛を公開したとき」)。1枚でも一致で true。
     // removeExitMatches と同じ side 規約 (省略時 'self' = 自分の手札公開)。
     case 'triggerRevealMatches': {
-      const pl = ctx.triggerPayload as { player?: 'self' | 'opp'; revealed?: string[] } | undefined;
+      const pl = ctx.triggerPayload as { player?: 'self' | 'opp'; revealed?: string[]; byPlayer?: 'self' | 'opp'; cause?: 'effect' | 'cost' } | undefined;
       if (!pl || (pl.player !== 'self' && pl.player !== 'opp') || !Array.isArray(pl.revealed)) return false;
       const reqSide = cond.side ?? 'self';
       const sameSide = pl.player === ctx.source.player;
       if (reqSide === 'self' && !sameSide) return false;
       if (reqSide === 'opp' && sameSide) return false;
+      if (cond.byPlayer) {
+        if (pl.byPlayer !== 'self' && pl.byPlayer !== 'opp') return false;
+        if ((cond.byPlayer === 'self') !== (pl.byPlayer === ctx.source.player)) return false;
+      }
+      if (cond.cause && pl.cause !== cond.cause) return false;
       if (cond.cardName !== undefined) {
         const nameFilter = { cardName: cond.cardName };
         return pl.revealed.some((id) => {
@@ -963,7 +1045,7 @@ const CONDITION_KIND_MAP = {
   triggerViaNextHint: true,
   triggerCardMatches: true,
   true: true, false: true, not: true, and: true, or: true, turn: true, sourceInScene: true,
-  partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, fileAtLeast: true, caseStatus: true,
+  partnerColor: true, caseColor: true, caseColorNot: true, caseTrait: true, caseName: true, fileAtLeast: true, caseStatus: true,
   bond: true, sceneHas: true, apAtLeast: true, lpAtLeast: true, evidenceAtLeast: true,
   evidenceDiff: true, sceneCountCompare: true, // engine additive wave (2026-06-30, B05103/B05081)
   boundCountCompare: true, // S2 deck cluster (2026-07-10, B08057): bound 要素数比較 (合わせてN枚 gate)
@@ -971,7 +1053,7 @@ const CONDITION_KIND_MAP = {
   handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, deckAtLeast: true, // Task D E1 (2026-06-12)
   fileTopType: true,
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
-  scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,
+  scratchTrace: true, flag: true, declaredUseUnder: true, sourceDeclaredUseCount: true, bound: true,
   removeColorAtLeast: true, removeTraitAtLeast: true, removeNameAtLeast: true, removeFilterAtLeast: true, removeCountAtLeast: true,
   sceneLpSum: true, costRemovedMatches: true, // engine additive wave (2026-06-29d)
   costRevealedMatches: true, // attribution mini-wave (2026-07-10)

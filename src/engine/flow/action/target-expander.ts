@@ -156,10 +156,20 @@ function applyPreTargetExpansion(
 ): void {
   for (const ownerSide of ['self', 'opp'] as const) {
     for (const sceneCard of state.players[ownerSide].scene) {
-      if (readChar.originalAbilitiesDisabled(state, sceneCard.uid)) continue;
       const cardDef = readDef.card(sceneCard.cardId);
-      if (!cardDef?.abilities) continue;
-      for (const ab of cardDef.abilities) {
+      if (!cardDef) continue;
+      // Printed text is suppressed by original-ability disable, but a
+      // charGrantAbility descriptor is external text and must keep working.
+      // This mirrors triggered/declared readers rather than treating disable
+      // as a blanket stop for the host.
+      const printed = readChar.originalAbilitiesDisabled(state, sceneCard.uid)
+        ? []
+        : cardDef.abilities;
+      const granted = sceneCard.turnEffects['grantedAbilities'];
+      const abilities = Array.isArray(granted)
+        ? [...printed, ...(granted as typeof cardDef.abilities)]
+        : printed;
+      for (const ab of abilities) {
         if (ab.type !== 'triggered') continue;
         if (ab.trigger?.hook !== 'action:pre-target') continue;
         // selfOnly: source カード自身が attacker のときのみ

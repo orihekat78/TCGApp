@@ -22,6 +22,7 @@
 import { candidates as targetCandidates } from '../target/candidates.js';
 import { evalDyn } from '../dyn/eval.js';
 import { evalCond } from '../cond/eval.js';
+import { bindingKeysReadByCondition } from '../cond/binding-keys.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
 import type { GameState, Effect, EffectCtx, TargetingRef, Condition } from '../types/index.js';
@@ -31,6 +32,8 @@ import { findChooseIntercept } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
 import { eventUseAllowed } from '../flow/main/hand-use-card.js';
+import { cardOccurrenceUid } from '../target/card-occurrence.js';
+import { peekPublicHandRevealToken, takePublicHandRevealToken } from './atom-handlers/_shared.js';
 
 type Player = 'self' | 'opp';
 
@@ -63,10 +66,8 @@ function pendingSource<T extends { cardId: string; abilityId: string }>(ctx: Eff
  */
 function conditionIfIsStable(cond: Condition): boolean {
   if (!cond || typeof cond !== 'object') return true;
+  if (bindingKeysReadByCondition(cond).length > 0) return false;
   switch (cond.kind) {
-    case 'bound':
-    case 'boundMatchesFilter':
-      return false;
     case 'not':
       return conditionIfIsStable(cond.c);
     case 'and':
@@ -87,24 +88,8 @@ function conditionIfIsStable(cond: Condition): boolean {
  */
 function conditionHasMissingBinding(cond: Condition, bindings: EffectCtx['bindings']): boolean {
   if (!cond || typeof cond !== 'object') return false;
-  switch (cond.kind) {
-    case 'bound':
-      return !Array.isArray(bindings[cond.key]) || bindings[cond.key].length === 0;
-    case 'boundMatchesFilter':
-    case 'boundAnyMatchesFilter':
-    case 'boundDistinctColorCount':
-    case 'boundNameMatchesDeclared':
-    case 'boundIsMr':
-    case 'boundCharStateIs':
-      return !Array.isArray(bindings[cond.bindKey]) || bindings[cond.bindKey].length === 0;
-    case 'not':
-      return conditionHasMissingBinding(cond.c, bindings);
-    case 'and':
-    case 'or':
-      return cond.cs.some(c => conditionHasMissingBinding(c, bindings));
-    default:
-      return false;
-  }
+  return bindingKeysReadByCondition(cond)
+    .some((key) => !Array.isArray(bindings[key]) || bindings[key].length === 0);
 }
 
 /**
@@ -591,6 +576,7 @@ function substituteAtomPick(
     }
     // 拡張 5 (chain): no-candidate を chain break 信号として記録 (Phase 3c: ctx.dyn 経由。runtime tryRePickFromAtom
     // 経路では本 ctx = resolver chain ctx と同一参照ゆえ resolver chain case が読む。初期 walk 経路は dead write)
+    takePublicHandRevealToken(ctx);
     (ctx.dyn ??= {}).chainStepNoApply = true;
     return atom as Effect; // no-op fallback
   }
@@ -638,7 +624,7 @@ function substituteAtomPick(
   // Runtime atom handlers stop resolution by pushing a pending queue entry.
   // Unlike the initial pre-walk, that pause signal is required even when the
   // atom's chooser is not the configured human side.
-  const runtimeDyn = ctx.dyn as Record<string, unknown> | undefined;
+    const runtimeDyn = ctx.dyn as Record<string, unknown> | undefined;
   // Runtime owner tri-state: known human and marker-absent legacy handlers
   // pause for a pending choice; only explicit known-nonhuman executes inline.
   const runtimeQueues = opts._fromAtomHandler === true
@@ -657,18 +643,21 @@ function substituteAtomPick(
       if (opts._runtimePickPause) opts._runtimePickPause.encountered = true;
       return atom as Effect;
     }
-    type CardLike = { uid: string; cardId: string; player: Player };
+    const publicHandRevealToken = takePublicHandRevealToken(ctx);
+    type CardLike = { uid: string; cardId: string; player: Player; kind?: 'char' | 'card' | 'evidence'; area?: string; index?: number };
     const cardLikeCands: CardLike[] = [];
     for (const c of cands) {
       if (c.kind === 'char') {
-        cardLikeCands.push({ uid: c.uid, cardId: c.cardId, player: c.player });
+        cardLikeCands.push({ uid: c.uid, cardId: c.cardId, player: c.player, kind: 'char' });
       } else if (c.kind === 'card') {
-        // BUG-065 pattern B: card candidate には uid が無いので synthetic uid (cardId#index)
-        cardLikeCands.push({ uid: `${c.cardId}#${c.index ?? 0}`, cardId: c.cardId, player: c.player });
+        // Card candidates have no native uid.  The occurrence identity must include
+        // player + area + index: a union query can contain the same cardId at index 0
+        // in more than one area.
+        cardLikeCands.push({ uid: cardOccurrenceUid(c.player, c.area, c.cardId, c.index ?? 0), cardId: c.cardId, player: c.player, kind: 'card', area: c.area, index: c.index });
       } else if (c.kind === 'evidence') {
         // BUG-076: evidence area の pick (D08013 a1 step 2 evidenceToHand 等)
         const evCardId = state.players[c.player].evidence[c.index]?.cardId ?? 'unknown';
-        cardLikeCands.push({ uid: `evidence:${c.player}:${c.index}`, cardId: evCardId, player: c.player });
+        cardLikeCands.push({ uid: `evidence:${c.player}:${c.index}`, cardId: evCardId, player: c.player, kind: 'evidence', area: 'evidence' });
       }
       // file kind は face-down で cardId 不明のため skip (face-up にした後 separately 処理)
     }
@@ -707,6 +696,7 @@ function substituteAtomPick(
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
       source: pendingSource(ctx, opts.source ?? { cardId: '', abilityId: '' }),
+      ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
       // D08021 driver 2026-05-26: target.query.distinctNames を UI に伝える。
       // CardListModal multi-select で同 name component 衝突候補を click 不可化する。
       distinctNames: targetRef.query?.distinctNames === true,
@@ -726,6 +716,7 @@ function substituteAtomPick(
     return atom as Effect; // 未解決のまま返却
   }
 
+  takePublicHandRevealToken(ctx);
   const heuristicPick = (opts.chooseAtomTarget ?? rememberedRuntimeAtomTargetPolicy(ctx))?.(
     state,
     verb,
@@ -776,9 +767,10 @@ function substituteAtomPick(
     //   BUG-076 で対応済、CPU 側は 'card' kind 限定だった)。evidenceFlipDown「自分の表向き証拠を
     //   N つまで選び裏向き」(B05013) の CPU 解決用。既存 multi-pick (D08021/B09034) は remove/hand
     //   = 'card' kind ゆえ evidence 追加は純 additive (回帰0)。greedy max 枚 (取れるだけ取る)。
-    const chosenIds = cands
+    const chosen = cands
       .filter((c) => c.kind === 'card' || c.kind === 'evidence')
-      .slice(0, nMaxC)
+      .slice(0, nMaxC);
+    const chosenIds = chosen
       .map((c) => c.kind === 'evidence'
         ? (state.players[c.player].evidence[c.index]?.cardId ?? '')
         : (c as { cardId: string }).cardId)
@@ -788,7 +780,15 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: resolveDynArgs(state, { ...args, cardIds: chosenIds }, ctx),
+      args: resolveDynArgs(state, {
+        ...args,
+        cardIds: chosenIds,
+        selectedDeckIndexes: chosen.map((candidate) => candidate.kind === 'card' ? candidate.index : undefined),
+        selectedCardOccurrences: chosen.flatMap((candidate) => candidate.kind === 'card'
+          && typeof candidate.index === 'number'
+          ? [{ cardId: candidate.cardId, area: candidate.area, player: candidate.player, index: candidate.index }]
+          : []),
+      }, ctx),
     } as Effect;
   }
   // BUG-106 (D11014 a2 / D11019 a1 driver): single-pick contract (cardId:'$pick.cardId')。
@@ -810,7 +810,14 @@ function substituteAtomPick(
     return {
       kind: 'atom',
       verb: atom.verb as never,
-      args: resolveDynArgs(state, { ...args, cardId: pickedCardId }, ctx),
+      args: resolveDynArgs(state, {
+        ...args,
+        cardId: pickedCardId,
+        ...(picked.kind === 'card' ? { selectedCardIndex: picked.index } : {}),
+        ...(picked.kind === 'card' && typeof picked.index === 'number'
+          ? { selectedCardOccurrences: [{ cardId: picked.cardId, area: picked.area, player: picked.player, index: picked.index }] }
+          : {}),
+      }, ctx),
     } as Effect;
   }
   const pickValueOf = (c: (typeof cands)[number]): string | null =>
@@ -938,7 +945,17 @@ export function resolveEffectPicks(
       return { kind: 'sequence', steps: seqOut };
     }
     case 'parallel':
-      return { kind: 'parallel', steps: effect.steps.map((s) => resolveEffectPicks(state, s, ctx, opts)) };
+      // A public reveal token is causal branch state, not ambient dyn state.
+      // Copy it per branch so one sibling cannot decorate another sibling's pick.
+      return {
+        kind: 'parallel',
+        steps: effect.steps.map((s) => resolveEffectPicks(
+          state,
+          s,
+          { ...ctx, causal: { ...ctx.causal } },
+          opts,
+        )),
+      };
     case 'traitChoice': {
       const traits = readDef.allTraits();
       const rawIndex = (ctx.dyn as { choiceIndex?: unknown } | undefined)?.choiceIndex;
@@ -949,8 +966,10 @@ export function resolveEffectPicks(
       }
       const human = humanDecisionPlayer(opts);
       if (human === ctx.source.player) {
+        const publicHandRevealToken = takePublicHandRevealToken(ctx);
         pushPendingEffectChoiceSide({
           player: human,
+          ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
           source: pendingSource(ctx, { cardId: opts.source?.cardId ?? '', abilityId: opts.source?.abilityId ?? '', uid: ctx.source.uid ?? '' }),
           options: traits.map((label, index) => ({ index, label })),
         });
@@ -982,7 +1001,17 @@ export function resolveEffectPicks(
         // へ leak させない。ctx.dyn は step 間で共有参照のため、消さないと 2 つ目の choice が
         // 前段の index で誤 unwrap する (現状そのようなカードは無いが latent defect の予防)。
         delete (ctx.dyn as { choiceIndex?: unknown }).choiceIndex;
-        return resolveEffectPicks(state, effect.options[rawIdx], ctx, opts);
+        const closesPublicHandReveal = peekPublicHandRevealToken(ctx) !== undefined;
+        const branch = resolveEffectPicks(state, effect.options[rawIdx], ctx, opts);
+        // Scope cleanup is required only when this resumed choice owns a
+        // public hand-reveal token. Normal choices retain their atom/effect
+        // shape for downstream continuations and callers.
+        return closesPublicHandReveal
+          ? {
+              kind: 'sequence',
+              steps: [branch, { kind: 'atom', verb: 'publicHandRevealScopeEnd', args: {} }],
+            }
+          : branch;
       }
       // BUG-121: human の複数 option choice (chooser=owner 側) は option 0 既定化せず pause し、
       // pendingEffectChoice を surface する。pick と同型: side-channel に積み、effect は no-op
@@ -998,8 +1027,10 @@ export function resolveEffectPicks(
         && effect.chooser !== 'opp'
       ) {
         const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';
+        const publicHandRevealToken = takePublicHandRevealToken(ctx);
         pushPendingEffectChoiceSide({
           player: opts.byPlayer ?? 'self',
+          ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
           source: pendingSource(ctx, {
             cardId: opts.source?.cardId ?? '',
             abilityId: opts.source?.abilityId ?? '',
@@ -1034,9 +1065,19 @@ export function resolveEffectPicks(
       if (typeof dynRun === 'boolean') {
         // 消費した optionalRun は同一 ctx の後続/ネスト optional へ leak させない (choiceIndex と同方針)
         delete (ctx.dyn as { optionalRun?: unknown }).optionalRun;
-        return dynRun
+        const closesPublicHandReveal = peekPublicHandRevealToken(ctx) !== undefined;
+        const branch = dynRun
           ? resolveEffectPicks(state, effect.effect, ctx, opts)
-          : effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel', steps: [] };
+          : effect.else ? resolveEffectPicks(state, effect.else, ctx, opts) : { kind: 'parallel' as const, steps: [] };
+        // As with a selected choice, only a resumed public hand-reveal window
+        // needs an explicit scope terminator. Otherwise preserve the resolved
+        // branch's original shape.
+        return closesPublicHandReveal
+          ? {
+              kind: 'sequence',
+              steps: [branch, { kind: 'atom', verb: 'publicHandRevealScopeEnd', args: {} }],
+            }
+          : branch;
       }
       const ownerPlayer = ctx.source.player;
       const decisionPlayer = effect.chooser === 'opp-of-owner'
@@ -1045,8 +1086,10 @@ export function resolveEffectPicks(
       const humanPlayer = humanDecisionPlayer(opts);
       if (humanPlayer === decisionPlayer) {
         const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';
+        const publicHandRevealToken = takePublicHandRevealToken(ctx);
         pushPendingEffectOptionalSide({
           player: decisionPlayer,
+          ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
           ownerPlayer,
           source: pendingSource(ctx, {
             cardId: opts.source?.cardId ?? '',
@@ -1134,6 +1177,7 @@ export function resolveEffectPicks(
       // Defer its walk until the player accepts this round.
       return effect;
     case 'setCardToEvidence':
+    case 'moveSetCard':
       return effect;
     case 'replace':
       return { kind: 'replace', trigger: effect.trigger, with: resolveEffectPicks(state, effect.with, ctx, opts) };

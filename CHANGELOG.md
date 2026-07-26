@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `d6d466de97a1`
+> Source hash: `b863a6f00f9f`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,19 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-07-26
+category: features
+bugs: [BUG-262, BUG-263, BUG-264, BUG-265, BUG-266, BUG-267]
+---
+
+## CT-P10 card and engine wave
+
+- Registered all 166 CT-P10 cards with grounding and targeted regressions.
+- Aligned public hand reveal, declared hand occurrence identity, partner-area costs, remove-set costs, conditional candidates, and parallel pending resolution.
+- Completed individual adjudication for 2,912 official Q&A rows without committing official source text or URLs.
+- Added privacy-safe set-card browsing and card-list detail controls for desktop and 851×393 landscape.
 
 ---
 date: 2026-07-26

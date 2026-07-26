@@ -7,6 +7,7 @@ import { createEmptyGameState } from '@/engine/state-factory';
 import { useGameStateStore, type PendingEffectPick } from '@/ui/state/store';
 import { useEvidenceFlipPickerStore } from '@/ui/hooks/useEvidenceFlipPicker';
 import { useStackedCardCostPickerStore } from '@/ui/hooks/useStackedCardCostPicker';
+import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 import type { HandCardMeta } from '@/ui/components/HandZone';
 
@@ -73,6 +74,7 @@ describe('Playmat user bug wave', () => {
     });
     useEvidenceFlipPickerStore.getState()._reset();
     useStackedCardCostPickerStore.setState({ current: null, _resolver: null });
+    useTargetPickerStore.getState()._reset();
     dispatchEngineActionMock.mockClear();
     surfacePendingSideChannelsMock.mockClear();
   });
@@ -177,7 +179,95 @@ describe('Playmat user bug wave', () => {
     expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'effectPickResolve', pickedUid: secondUid });
   });
 
-  it('keeps evidence-flip candidates face-down while public evidence can open details', () => {
+  it('shows every handAddFromRemove area candidate and dispatches its exact occurrence UID', () => {
+    const state = createEmptyGameState();
+    state.players.self.remove = ['G1'];
+    state.players.self.partnerAreaCards = ['G2'];
+    const partnerUid = 'card:self:partner-area:G2#0';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        atomVerb: 'handAddFromRemove',
+        candidates: [
+          { uid: 'card:self:remove:G1#0', cardId: 'G1', player: 'self', kind: 'card', area: 'remove', index: 0 },
+          { uid: partnerUid, cardId: 'G2', player: 'self', kind: 'card', area: 'partner-area', index: 0 },
+        ],
+        nMin: 1,
+        nMax: 1,
+      }),
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    expect(container.querySelector('[data-testid="card-list-pick-card:self:remove:G1#0"]')).not.toBeNull();
+    const partner = container.querySelector<HTMLButtonElement>(`[data-testid="card-list-pick-${partnerUid}"]`)!;
+    expect(partner).toBeInstanceOf(HTMLButtonElement);
+    act(() => partner.click());
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'effectPickResolve', pickedUid: partnerUid });
+  });
+
+  it('opens the opponent partner-area candidates, not the controller partner area', () => {
+    const state = createEmptyGameState();
+    state.players.self.partnerAreaCards = ['SELF-PA'];
+    state.players.opp.partnerAreaCards = ['OPP-PA'];
+    const uid = 'card:opp:partner-area:OPP-PA#0';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        atomVerb: 'partnerAreaRemove',
+        candidates: [{ uid, cardId: 'OPP-PA', player: 'opp', kind: 'card', area: 'partner-area', index: 0 }],
+      }),
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    expect(container.querySelector('[data-testid="card-list-pick-card:opp:partner-area:OPP-PA#0"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="card-list-item-SELF-PA-0"]')).toBeNull();
+  });
+
+  it('makes only face-up evidence and FILE declared sources selectable', () => {
+    const state = createEmptyGameState();
+    state.players.self.evidence = [
+      { cardId: 'E-UP', faceUp: true, origin: { turn: 1, via: 'reasoning' } },
+      { cardId: 'E-DOWN', faceUp: false, origin: { turn: 1, via: 'reasoning' } },
+    ];
+    state.players.self.file = [
+      { type: 'card-back', cardId: 'F-UP', faceUp: true },
+      { type: 'card-back', cardId: 'F-DOWN' },
+    ];
+    useGameStateStore.setState({ gameState: state });
+    const resolved: Array<string | null> = [];
+    useTargetPickerStore.getState()._setResolver((uid) => resolved.push(uid));
+    useTargetPickerStore.getState()._setPhase({
+      phase: 'picking',
+      purpose: 'declared-ability:source',
+      candidates: ['evidence:self:0', 'file:self:0'],
+    });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const evidence = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-evidence:self:0"]');
+    const file = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-file:self:0"]');
+    expect(evidence).not.toBeNull();
+    expect(file).not.toBeNull();
+    expect(container.querySelector('[data-testid="card-list-pick-evidence:self:1"]')).toBeNull();
+    expect(container.querySelector('[data-testid="card-list-pick-file:self:1"]')).toBeNull();
+    act(() => evidence!.click());
+    expect(useTargetPickerStore.getState().phase).toMatchObject({ phase: 'idle' });
+    expect(resolved).toEqual(['evidence:self:0']);
+  });
+
+  it('shows face-up FILE cards as public cards while retaining only old face-down FILE backs', () => {
+    const state = createEmptyGameState();
+    state.players.self.file = [
+      { type: 'card-back', cardId: 'F-UP', faceUp: true },
+      { type: 'card-back', cardId: 'F-DOWN' },
+    ];
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+    act(() => container.querySelector<HTMLElement>('.file-area.side-self')!.click());
+
+    expect(container.querySelector('[data-testid="card-list-item-F-UP-0"]')).not.toBeNull();
+    expect(container.querySelectorAll('.card-list-item.face-down')).toHaveLength(1);
+  });
+
+  it('keeps evidence-flip candidates face-down while public evidence opens details only from its magnifier', () => {
     const state = createEmptyGameState();
     state.players.self.evidence = [
       { cardId: 'D08003', faceUp: true, origin: { turn: 1, via: 'reasoning' } },
@@ -193,12 +283,8 @@ describe('Playmat user bug wave', () => {
     const publicEvidence = container.querySelector<HTMLButtonElement>('[data-testid="card-list-evidence-faceup-0"]')!;
     expect(publicEvidence).not.toBeNull();
     act(() => publicEvidence.click());
-    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
-    act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
-
-    const contextMenu = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
-    act(() => publicEvidence.dispatchEvent(contextMenu));
-    expect(contextMenu.defaultPrevented).toBe(true);
+    expect(container.querySelector('.card-expand-modal')).toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-detail-D08003-0"]')!).click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
     act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
 
@@ -211,7 +297,7 @@ describe('Playmat user bug wave', () => {
     expect(container.querySelector('[data-testid="card-list-pick-detail-evidence:self:1"]')).toBeNull();
   });
 
-  it('opens stacked-cost CardList details through click and contextmenu', () => {
+  it('opens stacked-cost CardList details only through its magnifier', () => {
     useStackedCardCostPickerStore.setState({
       current: { sourceName: 'stack', candidates: [{ instanceId: 'stack:0', cardId: 'D08003' }], nMin: 1, nMax: 1 },
       _resolver: null,
@@ -221,11 +307,52 @@ describe('Playmat user bug wave', () => {
     act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-detail-stack:0"]')!).click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
     act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-stack:0"]')!).click());
+    expect(container.querySelector('.card-expand-modal')).toBeNull();
+  });
 
-    const stackedCandidate = container.querySelector<HTMLButtonElement>('[data-testid="card-list-pick-stack:0"]')!;
-    const contextMenu = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
-    act(() => stackedCandidate.dispatchEvent(contextMenu));
-    expect(contextMenu.defaultPrevented).toBe(true);
+  it('browses every own set card but hides an opponent face-down set card', () => {
+    const state = createEmptyGameState();
+    state.players.self.scene = [{
+      cardId: 'SELF-HOST', uid: 'self-host', state: 'active', isNamed: false, enterOrder: 0,
+      setCards: [
+        { cardId: 'SELF-FACE-DOWN', faceUp: false, instanceId: 'set:self:down' },
+        { cardId: 'SELF-FACE-UP', faceUp: true, instanceId: 'set:self:up' },
+      ],
+      stackedCards: [], keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+    }];
+    state.players.opp.scene = [{
+      cardId: 'OPP-HOST', uid: 'opp-host', state: 'active', isNamed: false, enterOrder: 0,
+      setCards: [
+        { cardId: 'OPP-PUBLIC', faceUp: true, instanceId: 'set:opp:up' },
+        { cardId: 'OPP-SECRET', faceUp: false, instanceId: 'set:opp:down' },
+      ],
+      stackedCards: [], keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+    }];
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} />));
+
+    const selfCard = container.querySelector<HTMLElement>('.scene-area.side-self [data-uid="self-host"]')!;
+    act(() => selfCard.click());
+    expect(container.querySelector('.card-expand-modal')).toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-card-detail-self-host"]')!).click());
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('.card-expand-close')!).click());
+
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-set-inspect-self-host"]')!).click());
+    expect(container.textContent).toContain('SELF-FACE-DOWN');
+    expect(container.textContent).toContain('SELF-FACE-UP');
+    expect(container.querySelector('[data-testid="card-list-set-state-0"]')?.textContent).toBe('裏向き');
+    expect(container.querySelector('[data-testid="card-list-set-state-1"]')?.textContent).toBe('表向き');
+    expect(container.querySelector('[data-testid="card-list-facedown-set-0"]')).toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('.card-list-modal-close')!).click());
+
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="scene-set-inspect-opp-host"]')!).click());
+    expect(container.textContent).toContain('OPP-PUBLIC');
+    expect(container.textContent).not.toContain('OPP-SECRET');
+    expect(container.querySelector('[data-testid="card-list-facedown-set-1"]')).not.toBeNull();
+    act(() => (container.querySelector<HTMLButtonElement>('[data-testid="card-list-detail-OPP-PUBLIC-0"]')!).click());
     expect(container.querySelector('.card-expand-modal')).not.toBeNull();
   });
 
@@ -235,7 +362,7 @@ describe('Playmat user bug wave', () => {
     const pick = pending({
       atomVerb: 'sceneEnter',
       atomArgs: { target: { query: { area: 'hand' } } },
-      candidates: [{ uid: 'G1#1', cardId: 'G1', player: 'self' }],
+      candidates: [{ uid: 'card:self:hand:G1#1', cardId: 'G1', player: 'self', kind: 'card', area: 'hand', index: 1 }],
     });
     useGameStateStore.setState({ gameState: state, pendingEffectPick: pick });
 
@@ -254,7 +381,37 @@ describe('Playmat user bug wave', () => {
     expect(handCards[0]?.classList.contains('hand-card--pickable')).toBe(false);
     expect(handCards[1]?.classList.contains('hand-card--pickable')).toBe(true);
     expect(handCards[2]?.classList.contains('hand-card--pickable')).toBe(false);
+    act(() => handCards[1]?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({
+      type: 'effectPickResolve',
+      pickedUid: 'card:self:hand:G1#1',
+    });
     expect(container.querySelector('[data-testid="hand-zone-pick-skip"]')).not.toBeNull();
+  });
+
+  it('limits a human discard to the pending hand occurrence at compact landscape size', () => {
+    const state = createEmptyGameState();
+    state.players.self.hand = ['G1', 'G1'];
+    const uid = 'card:self:hand:G1#1';
+    useGameStateStore.setState({
+      gameState: state,
+      pendingEffectPick: pending({
+        atomVerb: 'discard',
+        candidates: [{ uid, cardId: 'G1', player: 'self', kind: 'card', area: 'hand', index: 1 }],
+      }),
+    });
+    const viewport = { width: window.innerWidth, height: window.innerHeight };
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 851 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 393 });
+    act(() => root.render(<Playmat gameState={state} resolveCard={resolveCard} resolveHandCard={resolveHandCard} />));
+
+    const handCards = container.querySelectorAll('.hand-card');
+    expect(handCards[0]?.classList.contains('hand-card--pickable')).toBe(false);
+    expect(handCards[1]?.classList.contains('hand-card--pickable')).toBe(true);
+    act(() => handCards[1]?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'effectPickResolve', pickedUid: uid });
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: viewport.width });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: viewport.height });
   });
 
   it('shows the full hand and an explicit no-target banner for empty optional sceneEnter', () => {

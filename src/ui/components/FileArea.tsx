@@ -39,9 +39,19 @@ export type FileAreaProps = {
 
 type FileCardItemProps = {
   card: FileCard;
+  resolveCard?: (cardId: string) => ResolvedCardMeta;
 };
 
-function FileCardItem({ card }: FileCardItemProps): JSX.Element {
+function FileCardItem({ card, resolveCard }: FileCardItemProps): JSX.Element {
+  if (card.type === 'card-back' && card.faceUp === true) {
+    const meta = resolveCard?.(card.cardId);
+    return (
+      <div className="file-card-faceup" data-card-id={card.cardId} aria-label={`FILE card ${meta?.name ?? card.cardId}`}>
+        <div className="file-card-faceup-name">{meta?.name ?? card.cardId}</div>
+        <div className="file-card-faceup-id">{card.cardId}</div>
+      </div>
+    );
+  }
   if (card.type === 'card-back') {
     // 通常の裏向き FILE カード — ファイル + 虫眼鏡アイコンは CSS の ::before で描画
     return (
@@ -74,7 +84,7 @@ function FileCardItem({ card }: FileCardItemProps): JSX.Element {
 export function FileArea(props: FileAreaProps): JSX.Element {
   // Round 3: resolveCard はもう使用しない (アシスト中パートナーも裏向き表示に統一) が、
   // 呼出側 (Playmat) との互換性のため prop 型は残す。
-  const { cards, side, threshold = 7, onClick, pendingDrawn = 0 } = props;
+  const { cards, side, threshold = 7, onClick, pendingDrawn = 0, resolveCard } = props;
 
   // 2026-05-30: ネクストヒントで引く予定の分を先取りして表示 (実効枚数)。
   const count = Math.max(0, cards.length - pendingDrawn);
@@ -85,6 +95,10 @@ export function FileArea(props: FileAreaProps): JSX.Element {
   // なければ通常 card-back を最前面に。
   // FILE はスタック表示なので「個別カードリスト」は描画せず、
   // 最前面 1 枚 + 3 層の shadow + 枚数オーバーレイで表現する。
+  const lastFaceUp = [...cards].reverse().find(
+    (c): c is { type: 'card-back'; cardId: string; faceUp: true } =>
+      c.type === 'card-back' && c.faceUp === true,
+  );
   const lastAssisted = [...cards].reverse().find(
     (c): c is { type: 'assisted-partner'; cardId: string } =>
       c.type === 'assisted-partner',
@@ -95,7 +109,7 @@ export function FileArea(props: FileAreaProps): JSX.Element {
     (c): c is { type: 'card-back'; cardId: string } =>
       c.type === 'card-back',
   );
-  const topCard: FileCard = lastAssisted ?? lastCardBack ?? { type: 'card-back', cardId: '' };
+  const topCard: FileCard = lastFaceUp ?? lastAssisted ?? lastCardBack ?? { type: 'card-back', cardId: '' };
 
   // 7マス進捗 (上端)
   const cells = Array.from({ length: threshold }, (_, i) => i < progress);
@@ -139,7 +153,7 @@ export function FileArea(props: FileAreaProps): JSX.Element {
         <div className="stack-shadow s2" aria-hidden="true" />
         <div className="stack-shadow s1" aria-hidden="true" />
         {count > 0 ? (
-          <FileCardItem card={topCard} />
+          <FileCardItem card={topCard} resolveCard={resolveCard} />
         ) : (
           // 0 枚時は影だけ残し card-back は描かない (空気感)
           <div className="card-back empty" aria-label="FILE empty" />

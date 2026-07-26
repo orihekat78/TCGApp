@@ -1619,6 +1619,110 @@ import { B07003 } from '../ct-p07/B07003.js';
 import { B07003P } from '../ct-p07/B07003P.js';
 import { B09033 } from '../ct-p09/B09033.js';
 import { B09033P } from '../ct-p09/B09033P.js';
+import { B10001, B10001P } from '../ct-p10/B10001.js';
+import { B10002, B10002P } from '../ct-p10/B10002.js';
+import { B10003, B10003P } from '../ct-p10/B10003.js';
+import { B10004, B10004P } from '../ct-p10/B10004.js';
+import { B10005, B10005P } from '../ct-p10/B10005.js';
+import { B10006 } from '../ct-p10/B10006.js';
+import { B10007, B10007P } from '../ct-p10/B10007.js';
+import { B10008 } from '../ct-p10/B10008.js';
+import { B10009 } from '../ct-p10/B10009.js';
+import { B10010 } from '../ct-p10/B10010.js';
+import { B10011 } from '../ct-p10/B10011.js';
+import { B10012, B10012P } from '../ct-p10/B10012.js';
+import { B10013, B10013P } from '../ct-p10/B10013.js';
+import { B10014, B10014P } from '../ct-p10/B10014.js';
+import { B10015 } from '../ct-p10/B10015.js';
+import { B10016 } from '../ct-p10/B10016.js';
+import { B10017, B10017P } from '../ct-p10/B10017.js';
+import { B10018, B10018P } from '../ct-p10/B10018.js';
+import { B10019, B10019P } from '../ct-p10/B10019.js';
+import { B10020, B10020P } from '../ct-p10/B10020.js';
+import { B10021, B10021P } from '../ct-p10/B10021.js';
+import { B10022, B10022P } from '../ct-p10/B10022.js';
+import { B10023, B10023P } from '../ct-p10/B10023.js';
+import { B10024, B10024P } from '../ct-p10/B10024.js';
+import { B10025 } from '../ct-p10/B10025.js';
+import { B10026, B10026P } from '../ct-p10/B10026.js';
+import { B10027, B10027P } from '../ct-p10/B10027.js';
+import { B10028 } from '../ct-p10/B10028.js';
+import { B10029 } from '../ct-p10/B10029.js';
+import { B10030 } from '../ct-p10/B10030.js';
+import { B10031 } from '../ct-p10/B10031.js';
+import { B10032, B10032P } from '../ct-p10/B10032.js';
+import { B10033, B10033P } from '../ct-p10/B10033.js';
+import { B10034, B10034P } from '../ct-p10/B10034.js';
+import { B10035, B10035P } from '../ct-p10/B10035.js';
+import { B10036, B10036P } from '../ct-p10/B10036.js';
+import { B10037, B10037P } from '../ct-p10/B10037.js';
+import { B10038, B10038P } from '../ct-p10/B10038.js';
+import { B10039, B10039P } from '../ct-p10/B10039.js';
+import { B10040 } from '../ct-p10/B10040.js';
+import { B10041 } from '../ct-p10/B10041.js';
+import { B10042 } from '../ct-p10/B10042.js';
+import { B10043 } from '../ct-p10/B10043.js';
+import { B10044 } from '../ct-p10/B10044.js';
+import { B10045 } from '../ct-p10/B10045.js';
+import { B10046 } from '../ct-p10/B10046.js';
+import { B10047 } from '../ct-p10/B10047.js';
+import { B10048, B10048P } from '../ct-p10/B10048.js';
+import { B10049, B10049P } from '../ct-p10/B10049.js';
+import { B10050, B10050P } from '../ct-p10/B10050.js';
+import { B10051 } from '../ct-p10/B10051.js';
+import { B10052, B10052P } from '../ct-p10/B10052.js';
+import { B10053 } from '../ct-p10/B10053.js';
+import { B10054, B10054P } from '../ct-p10/B10054.js';
+import { B10055 } from '../ct-p10/B10055.js';
+import { B10056 } from '../ct-p10/B10056.js';
+import { B10057 } from '../ct-p10/B10057.js';
+import { B10058 } from '../ct-p10/B10058.js';
+import { B10059 } from '../ct-p10/B10059.js';
+import { B10060, B10060P } from '../ct-p10/B10060.js';
+import { B10061, B10061P } from '../ct-p10/B10061.js';
+import { B10062Sec1, B10062Sec2 } from '../ct-p10/B10062.js';
+import { B10063, B10063P, B10063Sec1, B10063Sec2 } from '../ct-p10/B10063.js';
+import { B10064, B10064P } from '../ct-p10/B10064.js';
+import { B10065, B10065P, B10065P2 } from '../ct-p10/B10065.js';
+import { B10066, B10066P, B10066P2 } from '../ct-p10/B10066.js';
+import { B10067, B10067P, B10067P2, B10067P3 } from '../ct-p10/B10067.js';
+import { B10068, B10068P, B10068P2 } from '../ct-p10/B10068.js';
+import { B10069 } from '../ct-p10/B10069.js';
+import { B10070, B10070P } from '../ct-p10/B10070.js';
+import { B10071, B10071P } from '../ct-p10/B10071.js';
+import { B10072 } from '../ct-p10/B10072.js';
+import { B10073 } from '../ct-p10/B10073.js';
+import { B10074 } from '../ct-p10/B10074.js';
+import { B10075 } from '../ct-p10/B10075.js';
+import { B10076 } from '../ct-p10/B10076.js';
+import { B10077 } from '../ct-p10/B10077.js';
+import { B10078 } from '../ct-p10/B10078.js';
+import { B10079 } from '../ct-p10/B10079.js';
+import { B10080 } from '../ct-p10/B10080.js';
+import { B10081, B10081P } from '../ct-p10/B10081.js';
+import { B10082, B10082P } from '../ct-p10/B10082.js';
+import { B10083, B10083P } from '../ct-p10/B10083.js';
+import { B10084, B10084P } from '../ct-p10/B10084.js';
+import { B10085, B10085P } from '../ct-p10/B10085.js';
+import { B10086, B10086P } from '../ct-p10/B10086.js';
+import { B10087 } from '../ct-p10/B10087.js';
+import { B10088, B10088P } from '../ct-p10/B10088.js';
+import { B10089 } from '../ct-p10/B10089.js';
+import { B10090 } from '../ct-p10/B10090.js';
+import { B10091 } from '../ct-p10/B10091.js';
+import { B10092 } from '../ct-p10/B10092.js';
+import { B10093 } from '../ct-p10/B10093.js';
+import { B10094 } from '../ct-p10/B10094.js';
+import { B10095 } from '../ct-p10/B10095.js';
+import { B10096, B10096P } from '../ct-p10/B10096.js';
+import { B10097, B10097P } from '../ct-p10/B10097.js';
+import { B10098 } from '../ct-p10/B10098.js';
+import { B10098P } from '../ct-p10/B10098P.js';
+import { B10099, B10099P } from '../ct-p10/B10099.js';
+import { B10100, B10100P } from '../ct-p10/B10100.js';
+import { B10101, B10101P } from '../ct-p10/B10101.js';
+import { B10102 } from '../ct-p10/B10102.js';
+import { B10102P } from '../ct-p10/B10102P.js';
 
 export const REUSE_CARDS: CardDef[] = [
   D01003, D01004, D01006, D01010, D01015, D02002, D02009, D02013,
@@ -2078,6 +2182,14 @@ export const REUSE_CARDS: CardDef[] = [
   B09047,
   B09052, B09052P,
   D06013,
+  // CT-P10 wave 1
+  B10001, B10001P, B10002, B10002P, B10003, B10003P, B10004, B10004P, B10005, B10005P, B10006, B10007, B10007P, B10008, B10009, B10010, B10011, B10012, B10012P, B10013, B10013P, B10014, B10014P, B10015, B10016, B10017, B10017P, B10018, B10018P, B10019, B10019P, B10020, B10020P, B10021, B10021P, B10022, B10022P, B10023, B10023P, B10024, B10024P, B10025, B10026, B10026P, B10027, B10027P,
+  B10028, B10029, B10030, B10031, B10032, B10032P, B10033, B10033P, B10034, B10034P, B10035, B10035P, B10036, B10036P, B10037, B10037P, B10038, B10038P, B10039, B10039P, B10040,
+  B10041, B10042, B10043, B10044, B10045, B10046, B10047, B10048, B10048P, B10049, B10049P, B10050, B10050P, B10051, B10052, B10052P, B10053, B10054, B10054P, B10055, B10056, B10057,
+  B10058, B10059, B10060, B10060P, B10061, B10061P, B10062Sec1, B10062Sec2, B10063, B10063P, B10063Sec1, B10063Sec2, B10064, B10064P, B10065, B10065P, B10065P2, B10066, B10066P, B10066P2,
+  B10067, B10067P, B10067P2, B10067P3, B10068, B10068P, B10068P2, B10069, B10070, B10070P, B10071, B10071P, B10072, B10073,
+  B10074, B10075, B10076, B10077, B10078, B10079, B10080, B10081, B10082, B10083,
+  B10081P, B10082P, B10083P, B10084, B10084P, B10085, B10085P, B10086, B10086P, B10087, B10088, B10088P, B10089, B10090, B10091, B10092, B10093, B10094, B10095, B10096, B10096P, B10097, B10097P, B10098, B10098P, B10099, B10099P, B10100, B10100P, B10101, B10101P, B10102, B10102P,
   // T3 same-effective-name count / hand-reveal nameOverride
   B09036, B09036P,
   // Remaining-27 Wave 2: discard-down level-sum event.

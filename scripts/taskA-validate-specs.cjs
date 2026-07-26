@@ -55,7 +55,7 @@ const VERBS = new Set([
   'useEventFromHand', // engine mega-wave W6 step3 (2026-07-04, r63 P18) — 効果内イベント使用 (B08026/D10005/B05042)
   'setShippuWaive', // engine mega-wave W6 step4 (2026-07-04, B09090/P16) — 疾風条件 waive 予約
 ]);
-const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly']);
+const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endActionEarly', 'publicHandRevealScopeEnd']);
 
 // listeners/triggered.ts TRIGGERED_HOOKS (card-triggerable のみ)
 const HOOKS = new Set([
@@ -76,17 +76,17 @@ const HOOKS = new Set([
 ]);
 
 const CONDS = new Set([
-  'true', 'false', 'not', 'and', 'or', 'turn', 'partnerColor', 'caseColor', 'caseColorNot', 'caseTrait',
+  'true', 'false', 'not', 'and', 'or', 'turn', 'partnerColor', 'caseColor', 'caseColorNot', 'caseTrait', 'caseName',
   'fileAtLeast', 'caseStatus', 'bond', 'sceneHas', 'apAtLeast', 'lpAtLeast', 'sceneLpSum', 'evidenceAtLeast',
   'evidenceDiff', 'sceneCountCompare', // engine additive wave (2026-06-30, B05103/B05081)
   'boundCountCompare', // S2 deck cluster (2026-07-10, B08057)
   'evidenceTraitAtLeast', // engine E3 P53 (2026-07-03, B09107)
   'costRemovedMatches', // engine additive wave (2026-06-29d)
   'costRevealedMatches', // attribution mini-wave (2026-07-10)
-  'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'bound', 'removeColorAtLeast',
+  'fileTopType', 'scratchTrace', 'flag', 'declaredUseUnder', 'sourceDeclaredUseCount', 'bound', 'removeColorAtLeast',
   'removeTraitAtLeast', 'removeNameAtLeast', 'removeFilterAtLeast', 'removeCountAtLeast', 'stackedCountAtLeast', 'hostSetCardCountAtLeast', 'sceneFaceDownSetCardCountAtLeast', 'sameNameCountAtLeast', 'contactOpponentApHigher',
   'guardedBySelf', 'enterOrderEquals', 'boundMatchesFilter', 'boundAnyMatchesFilter', 'boundMatchCountAtLeast', 'boundDistinctColorCount', 'triggerCharMatches',
-  'contactCharMatches', // engine defer-unlock mini-wave (2026-07-09): コンタクト参加キャラ filter (B02006/B02080/PR278)
+  'contactCharMatches', // コンタクト参加キャラ filter。B10087 requireSource:true も同 kind の宣言的属性。
   'boundNameMatchesDeclared', 'boundIsMr', // engine mega-wave W6 step1 (2026-07-04): 宣言名一致 / MR 判定 (B09108/B06085)
   'leaveCauseIn', 'leaveOwnerIs', // engine mega-wave W6 step10 (2026-07-04, row9): leave:intercept matcher (B01092/B01039)
   'eventUseSource', // engine mega-wave W6 step3 (2026-07-04, P19): イベント使用の起源判別 (B07026)
@@ -117,7 +117,7 @@ const CONDS = new Set([
 
 const COSTS = new Set([
   'sleepSelf', 'sleepChar', 'stunChar', 'removeFromHand', 'removeFromScene', 'removeDeckTop',
-  'discardEvidence', 'selfToDeckBottom', 'pay', 'choice', 'fileFrom', 'flipFaceUpEvidence',
+  'discardEvidence', 'selfToDeckBottom', 'selfToRemove', 'selfToPartnerArea', 'pay', 'choice', 'fileFrom', 'flipFaceUpEvidence',
   'sceneToDeckBottom', // Task D E2 (2026-06-12)
   'removeAreaToDeckBottom', // cluster4 (2026-06-14)
   'removeSetCard', // engine additive wave (2026-06-24): 裏向きセットを合わせて n 枚リムーブ (B08033 a2)
@@ -136,7 +136,7 @@ const EFFECT_KINDS = new Set(['sequence', 'parallel', 'choice', 'optional', 'con
 const SHARED_FNS = new Set(['misreadX', 'souzaX', 'partnerColorKeyword', 'eventRemoveByAP', 'caseTraitConditioned', 'caseResolvedHandRemove', 'caseDeclaredEvidenceFlip']);
 const ABILITY_TYPES = new Set(['continuous', 'triggered', 'declared', 'icon-disguise', 'icon-misread']);
 const SCOPES = new Set(['on-scene', 'on-partner-area', 'on-hand', 'on-evidence', 'on-set-host', 'always']); // on-set-host: shipped 2026-06-29c (B01039/B05041/B07014 稼働、whitelist stale だった)
-const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'color', 'colorNot', 'keyword', 'cutinTextIncludes', 'kind', 'apMin', 'apMax', 'lpMin', 'lpMax', 'baseLpMin', 'baseLpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn', 'shippuFiredCharThisTurn']);
+const FILTER_FIELDS = new Set(['cardId', 'cardName', 'cardNameNot', 'trait', 'traitAll', 'color', 'colorNot', 'hasOriginalAbility', 'hasNoOriginalAbilityExceptIcons', 'keyword', 'keywordNot', 'keywordFromPrintOrConditionIcon', 'cutinTextIncludes', 'kind', 'apMin', 'apMax', 'apMaxSource', 'lpMin', 'lpMax', 'baseLpMin', 'baseLpMax', 'levelMin', 'levelMax', 'levelIn', 'levelInBound', 'levelMaxBound', 'hasSetCards', 'hasFaceDownSetCards', 'actedCharThisTurn', 'shippuFiredCharThisTurn']);
 
 function walk(node, errs, ctx) {
   if (node === null || typeof node !== 'object') {
@@ -231,7 +231,7 @@ function validateSpec(spec) {
       if (ab.effect) errs.push(`${c}: continuous must not have effect`);
     }
     if (ab.limit !== undefined && ab.limit !== null) {
-      if (ab.limit.kind !== 'turn' || ![1, 2].includes(ab.limit.n)) errs.push(`${c}: bad limit ${JSON.stringify(ab.limit)} (game-limit unenforced)`);
+      if (ab.limit.kind !== 'turn' || ![1, 2, 3].includes(ab.limit.n)) errs.push(`${c}: bad limit ${JSON.stringify(ab.limit)} (game-limit unenforced)`);
     }
     if (ab.effect) walk(ab.effect, errs, `${c}.effect`);
     if (ab.condition) walk(ab.condition, errs, `${c}.condition`);

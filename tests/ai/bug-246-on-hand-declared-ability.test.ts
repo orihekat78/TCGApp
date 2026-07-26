@@ -77,14 +77,30 @@ beforeEach(() => {
 });
 
 describe('BUG-246: AI on-hand declared ability parity', () => {
+  it('uses exact hand-index UIDs for duplicate declared sources while accepting the legacy cardId UID', () => {
+    const state = stateWith([payableId, payableId]);
+    const exact = ['hand:self:0', 'hand:self:1'];
+
+    expect(enumDeclaredAbilitySources(state, 'self')).toEqual(exact);
+    expect(exact.map(uid => enumDeclaredAbilityIdsFor(state, uid))).toEqual([['a1'], ['a1']]);
+    expect(exact.every(uid => canActivateDeclaredAbility(state, uid, 'a1'))).toBe(true);
+    expect(declaredMoves(state, 'self')).toEqual(exact.map(uid => ({ kind: 'declaredAbility', uid, abilityId: 'a1' })));
+
+    // Existing callers may still identify a hand source by cardId.
+    expect(canActivateDeclaredAbility(state, handUid('self', payableId), 'a1')).toBe(true);
+  });
+
   it('enumerates one payable on-hand declaration with the UI source and public dispatcher', () => {
     const state = stateWith([payableId, payableId]);
     const uid = handUid('self', payableId);
 
     expect(canActivateDeclaredAbility(state, uid, 'a1')).toBe(true);
-    expect(enumDeclaredAbilitySources(state, 'self')).toEqual([uid]);
+    expect(enumDeclaredAbilitySources(state, 'self')).toEqual(['hand:self:0', 'hand:self:1']);
     expect(enumDeclaredAbilityIdsFor(state, uid)).toEqual(['a1']);
-    expect(declaredMoves(state, 'self')).toEqual([{ kind: 'declaredAbility', uid, abilityId: 'a1' }]);
+    expect(declaredMoves(state, 'self')).toEqual([
+      { kind: 'declaredAbility', uid: 'hand:self:0', abilityId: 'a1' },
+      { kind: 'declaredAbility', uid: 'hand:self:1', abilityId: 'a1' },
+    ]);
 
     useGameStateStore.setState({ gameState: state });
     expect(dispatchEngineAction({ type: 'declaredAbility', uid, abilId: 'a1' })).toEqual({ ok: true });
@@ -136,7 +152,7 @@ describe('BUG-246: AI on-hand declared ability parity', () => {
       draft.players.opp.hand = [shipped.id, shipped.id];
       mutate.scene.enter(draft, 'opp', shipped.id, { active: true });
     });
-    const uid = handUid('opp', shipped.id);
+    const uid = 'hand:opp:0';
 
     expect(makeDeclaredAbilCtx(state, uid, 'a1')).toMatchObject({
       source: { cardId: shipped.id, uid, player: 'opp', area: 'hand' },

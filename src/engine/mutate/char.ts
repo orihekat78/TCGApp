@@ -20,6 +20,8 @@ function findChar(s: GameState, uid: string) {
   for (const p of ['self', 'opp'] as const) {
     const c = s.players[p].scene.find(c => c.uid === uid);
     if (c) return { char: c, player: p as Player };
+    const slot = s.players[p].partnerAreaMR;
+    if (slot && (slot.uid === uid || uid === `partnerMR:${p}`)) return { char: slot, player: p as Player };
   }
   return null;
 }
@@ -279,6 +281,8 @@ function clearTurnEffects(s: GameState, uid: string, scope: 'turn' | 'opp-turn' 
     // engine additive wave-7 (2026-07-02, P17): 「このターン中にアクション[キャラ]した」flag
     // (declare が立て、TargetFilter.actedCharThisTurn が honor)。ターン終了で失効 (B08049)。
     delete te['actedCharThisTurn'];
+    delete te['removedOpponentByContactThisTurn'];
+    delete te['enteredByCutinEffectThisTurn'];
     // mega-wave W6 step4 (2026-07-04, r58/B09090): waive 消費痕跡。
     delete te['shippuWaived'];
     // BUG-170 水平展開: shippuFiredCharThisTurn は **ここでは削除しない** — B09070 a3
@@ -712,6 +716,52 @@ function takeOneSetCard(s: GameState, uid: string, setCardInstanceId: string): {
   return { cardId: entry.cardId, player: found.player };
 }
 
+/** Move one exact set-card occurrence after validating every mutable endpoint. */
+function moveOneSetCard(
+  s: GameState,
+  fromUid: string,
+  setCardInstanceId: string,
+  face: 'down' | 'up' | 'any',
+  destination: { area: 'evidence'; faceUp: boolean } | { area: 'hand' } | { area: 'scene'; hostUid: string },
+): { cardId: string; player: Player } | null {
+  ensureSetCardInstanceIds(s);
+  const from = findChar(s, fromUid);
+  if (!from) return null;
+  const idx = from.char.setCards.findIndex((entry) => entry.instanceId === setCardInstanceId);
+  if (idx < 0) return null;
+  const entry = from.char.setCards[idx];
+  if (!entry || (face === 'down' && entry.faceUp) || (face === 'up' && !entry.faceUp)) return null;
+
+  // Destination validation is deliberately before source splice. Moving to a
+  // vanished, same-host, or opponent host must leave the exact occurrence in place.
+  const target = destination.area === 'scene' ? findChar(s, destination.hostUid) : null;
+  if (destination.area === 'scene' && (!target || target.player !== from.player || target.char.uid === from.char.uid)) return null;
+
+  const [moved] = from.char.setCards.splice(idx, 1);
+  if (!moved) return null;
+  if (target) {
+    // Physical attachment transfer; it is not a leave/re-enter lifecycle.
+    target.char.setCards.push(moved);
+  } else {
+    event.emit(
+      s,
+      'setcard:leave',
+      {
+        player: from.player,
+        hostUid: from.char.uid,
+        hostCardId: from.char.cardId,
+        setCardId: moved.cardId,
+        setCardInstanceId: moved.instanceId,
+        faceUp: moved.faceUp,
+        cause: 'move',
+        destination,
+      },
+      { player: from.player, uid: from.char.uid, cardId: from.char.cardId },
+    );
+  }
+  return { cardId: moved.cardId, player: from.player };
+}
+
 /**
  * 変装: cardId のみを新カードに変更 (rules/09, 23)
  * 引継ぎテーブル:
@@ -762,6 +812,7 @@ export const char = {
   deferSetCardReplacementForHostLeave,
   resolveSetCardRemovalReplacement,
   takeOneSetCard,
+  moveOneSetCard,
   ensureSetCardInstanceIds,
   disguiseInto,
 };

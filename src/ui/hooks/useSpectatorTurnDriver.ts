@@ -38,12 +38,15 @@ function driveSelfTurn(): void {
   if (current.turn.player !== 'self') return;
   if (current.gameResult) return;
   if (store.activeActionId) return;
+  if (store.pendingPublicHandReveal?.lifetime === 'effect') return;
   if (isDriving) return;
   isDriving = true;
   try {
     const result = stepTurn(current, new HeuristicPolicy(), 'self', { pauseOnAction: true });
     previousMoveKind = result.paused?.move?.kind ?? result.move?.kind ?? null;
     store.setGameState(result.nextState);
+    surfacePendingSideChannels();
+    if (useGameStateStore.getState().pendingPublicHandReveal?.lifetime === 'effect') return;
 
     if (result.paused) {
       // BUG-138 (X8): 観戦モードは __humanPlayerSide=null のため humanPick pause は発生しない
@@ -108,8 +111,9 @@ export function useSpectatorTurnDriver(): void {
   const isAiPaused = useGameStateStore((s) => s.isAiPaused);
   const aiStepCounter = useGameStateStore((s) => s.aiStepCounter);
   const aiMoveTick = useGameStateStore((s) => s.oppMoveTick);
+  const pendingPublicHandReveal = useGameStateStore((s) => s.pendingPublicHandReveal);
   useEffect(() => {
-    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null) return undefined;
+    if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null || pendingPublicHandReveal?.lifetime === 'effect') return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -118,5 +122,5 @@ export function useSpectatorTurnDriver(): void {
     const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
     const id = setTimeout(driveSelfTurn, delay);
     return () => clearTimeout(id);
-  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick]);
+  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick, pendingPublicHandReveal]);
 }

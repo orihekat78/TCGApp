@@ -65,9 +65,9 @@ function discardToRemove(
  * 明示的に含むため (rules/21 の一般原則はカード側文言が上書きする個別ケース、hook は方法非依存)。
  * zone 不変 (公開のみ)。ids 空は no-op。
  */
-function emitReveal(s: GameState, p: Player, ids: CardId[]): void {
+function emitReveal(s: GameState, p: Player, ids: CardId[], attribution?: { byPlayer?: Player; cause?: 'effect' | 'cost' }): void {
   if (ids.length === 0) return;
-  event.emit(s, 'hand:reveal', { player: p, revealed: [...ids] }, { player: p });
+  event.emit(s, 'hand:reveal', { player: p, revealed: [...ids], byPlayer: attribution?.byPlayer ?? p, cause: attribution?.cause ?? 'effect' }, { player: p });
 }
 
 /** 手札 → デッキの下へ移動 (マリガン用: rules/04) */

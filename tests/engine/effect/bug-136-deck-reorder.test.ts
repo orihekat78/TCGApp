@@ -68,6 +68,18 @@ describe('BUG-136 — deckToBottomBound 順序選択 side-channel', () => {
     setHuman(null);
   });
 
+  it('order:preserve はhuman所有でもmodalを出さずbinding順で即時に底へ移す', () => {
+    setHuman('self');
+    const s0 = produce(createEmptyGameState(), (d) => { d.players.self.deck = ['C', 'D', 'E', 'A', 'B']; });
+    const s1 = produce(s0, (d) => {
+      runAtom(d, 'deckToBottomBound', { player: 'self', bindKey: '$rest', order: 'preserve' }, ctxWithRest(['C', 'D', 'E']));
+    });
+
+    expect(s1.players.self.deck).toEqual(['A', 'B', 'C', 'D', 'E']);
+    expect(_drainPendingDeckReorderSide()).toBeNull();
+    setHuman(null);
+  });
+
   it('相手所有 (humanSide=self, player=opp) → 自分の並べ替え対象でないので set しない', () => {
     setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => { d.players.opp.deck = ['C', 'D', 'E', 'A', 'B']; });

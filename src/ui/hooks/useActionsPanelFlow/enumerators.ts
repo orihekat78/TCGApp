@@ -97,25 +97,39 @@ export function enumDeclaredAbilitySources(
   }
   // 3. hand cards (W6 step11 row999 item3: scope:'on-hand' declared — B06103「この能力はこのカードが
   //    手札にある場合に宣言できる」)。同 cardId 複数コピーは Set で 1 uid に重複排除。
-  for (const cardId of new Set(state.players[player].hand)) {
+  for (const [index, cardId] of state.players[player].hand.entries()) {
     const def = engine.cards.get(cardId);
     if (!def) continue;
-    const uid = `hand:${player}:${cardId}`;
+    const uid = `hand:${player}:${index}`;
     const hasUsable = def.abilities.some((a) => {
       if (a.type !== 'declared') return false;
       return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true });
     });
     if (hasUsable) sources.push(uid);
   }
+  for (const [index, entry] of state.players[player].evidence.entries()) {
+    if (!entry.faceUp) continue;
+    const def = engine.cards.get(entry.cardId);
+    const uid = `evidence:${player}:${index}`;
+    if (def?.abilities.some(a => a.type === 'declared'
+      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true }))) sources.push(uid);
+  }
+  for (const [index, entry] of state.players[player].file.entries()) {
+    if (entry.type !== 'card-back' || entry.faceUp !== true) continue;
+    const def = engine.cards.get(entry.cardId);
+    const uid = `file:${player}:${index}`;
+    if (def?.abilities.some(a => a.type === 'declared'
+      && flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true }))) sources.push(uid);
+  }
   // 4. partnerAreaMR (M3 PA batch, rules/18 §パートナーエリアにいるMRキャラ):
   //    scope on-partner-area / always の宣言能力のみ engine gate (declared-ability.ts:147) を通る。
-  //    uid は triggered.ts collectCardsInPlay と同じ sentinel `partnerMR:${player}`。
+  //    uid は slot に保持された実 uid。
   {
     const mr = state.players[player].partnerAreaMR;
     if (mr) {
       const def = engine.cards.get(mr.cardId);
       if (def) {
-        const uid = `partnerMR:${player}`;
+        const uid = mr.uid;
         const hasUsable = def.abilities.some((a) => {
           if (a.type !== 'declared') return false;
           return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true });
@@ -158,29 +172,43 @@ export function enumDeclaredAbilityIdsFor(
   // uid から cardId / owner player / area を引く (user_request 20260522_01 #5: case 対応)
   let cardId: string | null = null;
   let owner: Player | null = null;
-  let area: 'scene' | 'case' | 'hand' | 'partner-area' = 'scene';
+  let area: 'scene' | 'case' | 'hand' | 'partner-area' | 'evidence' | 'file' = 'scene';
   let riderAbilities: import('@/engine/types/card-def.js').AbilityDef[] = [];
   if (uid === 'case:self' || uid === 'case:opp') {
     owner = uid === 'case:self' ? 'self' : 'opp';
     cardId = state.players[owner].case.cardId ?? null;
     area = 'case';
-  } else if (uid === 'partnerMR:self' || uid === 'partnerMR:opp') {
-    // M3 PA batch (rules/18): PA 常駐 MR sentinel — declared-ability.ts findCardOnBoard と同規約
-    const p: Player = uid === 'partnerMR:self' ? 'self' : 'opp';
-    const mr = state.players[p].partnerAreaMR;
-    if (mr) {
-      owner = p;
-      cardId = mr.cardId;
-      area = 'partner-area';
-    }
+  } else if (['self', 'opp'].some((p) => {
+    const mr = state.players[p as Player].partnerAreaMR;
+    if (!mr || (mr.uid !== uid && uid !== `partnerMR:${p}`)) return false;
+    owner = p as Player;
+    cardId = mr.cardId;
+    area = 'partner-area';
+    return true;
+  })) {
+    // PA source resolved above.
   } else if (uid.startsWith('hand:')) {
     // W6 step11 (row999 item3): hand sentinel uid — findCardOnBoard と同じ split 規約
     const [, hp, ...rest] = uid.split(':');
-    const hCardId = rest.join(':');
-    if ((hp === 'self' || hp === 'opp') && state.players[hp].hand.includes(hCardId)) {
+    const token = rest.join(':');
+    const hCardId = (hp === 'self' || hp === 'opp') && /^\d+$/.test(token)
+      ? state.players[hp].hand[Number(token)]
+      : token;
+    if ((hp === 'self' || hp === 'opp') && hCardId && state.players[hp].hand.includes(hCardId)) {
       owner = hp;
       cardId = hCardId;
       area = 'hand';
+    }
+  } else if (/^(evidence|file):(self|opp):(\d+)$/.test(uid)) {
+    const [, rawArea, rawPlayer, rawIndex] = /^(evidence|file):(self|opp):(\d+)$/.exec(uid)!;
+    const p = rawPlayer as Player;
+    const index = Number(rawIndex);
+    if (rawArea === 'evidence') {
+      const entry = state.players[p].evidence[index];
+      if (entry?.faceUp) { owner = p; cardId = entry.cardId; area = 'evidence'; }
+    } else {
+      const entry = state.players[p].file[index];
+      if (entry?.type === 'card-back' && entry.faceUp === true) { owner = p; cardId = entry.cardId; area = 'file'; }
     }
   } else {
     for (const p of ['self', 'opp'] as const) {

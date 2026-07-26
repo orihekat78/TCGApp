@@ -12,6 +12,12 @@ import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import type { Player } from './_shared.js';
 import type { GameState, AtomVerb, EffectCtx, Candidate } from '../../types/index.js';
 
+function markCutinEffectEntry(ctx: EffectCtx, char: { turnEffects: Record<string, unknown> }): void {
+  if (ctx.source.resolutionKind === 'cutin') {
+    char.turnEffects.enteredByCutinEffectThisTurn = true;
+  }
+}
+
 function rebaseBoundCardIndexes(
   ctx: EffectCtx,
   player: Player,
@@ -41,6 +47,28 @@ function rebaseBoundCardIndexes(
       return entry;
     }) as EffectCtx['bindings'][string];
   }
+}
+
+function selectedHandOccurrenceIndex(
+  a: Record<string, unknown>,
+  ctx: EffectCtx,
+  player: Player,
+  cardId: string,
+): number | undefined {
+  if (!Object.hasOwn(a, 'selectedCardOccurrences')) return undefined;
+  const occurrences = resolveBindRef(a.selectedCardOccurrences, ctx);
+  if (!Array.isArray(occurrences) || occurrences.length !== 1) return -1;
+  const occurrence = occurrences[0];
+  if (occurrence === null || typeof occurrence !== 'object' || Array.isArray(occurrence)) return -1;
+  const value = occurrence as Record<string, unknown>;
+  return value.cardId === cardId
+    && value.area === 'hand'
+    && value.player === player
+    && Number.isInteger(value.index)
+    && typeof value.index === 'number'
+    && value.index >= 0
+    ? value.index
+    : -1;
 }
 
 export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
@@ -153,6 +181,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
             } else {
               nc = mutate.scene.enter(s, enterP, cid, enterOptsM);
             }
+            markCutinEffectEntry(ctx, nc);
             // BUG-146: enter emit の source は登場キャラ・原因カードは payload.sourceCardId (単一 path と同規約)。
             //   per-card emit で enterOrderThisTurn が 1 枚ずつ加算され【疾風 N】が正しく判定される (batch emit 禁止)。
             event.emit(s, 'enter', {
@@ -330,8 +359,17 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           ? ctx.source.player
           : (sourceSide === 'opp' ? 'opp' : enterPlayer);
         const arr = s.players[fromPlayer].hand;
-        const idx = arr.indexOf(cardId);
-        if (idx !== -1) arr.splice(idx, 1);
+        const selectedIndex = selectedHandOccurrenceIndex(a, ctx, fromPlayer, cardId);
+        const idx = selectedIndex === undefined ? arr.indexOf(cardId) : selectedIndex;
+        if (idx === -1 || arr[idx] !== cardId) {
+          if ((a as { sourceRequired?: unknown }).sourceRequired === true || selectedIndex !== undefined) {
+            mutate.log.append(s, { ts: Date.now(), player: enterPlayer, turn: s.turn.number, action: 'effect:sceneEnter:source-missing-skip', target: cardId });
+            return;
+          }
+        } else {
+          arr.splice(idx, 1);
+          rebaseBoundCardIndexes(ctx, fromPlayer, 'hand', idx, cardId);
+        }
       } else if (sourceArea === 'deck') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
         const preserving = removeExcludedSourceCardId(ctx, fromPlayer);
@@ -361,6 +399,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       const newChar = seIsFull
         ? mutate.scene.switchEnter(s, enterPlayer, cardId, seSwitchRemoveUid as string, enterOpts)
         : mutate.scene.enter(s, enterPlayer, cardId, enterOpts);
+      markCutinEffectEntry(ctx, newChar);
       // user_request 20260522_01 #12 fix: 新 uid を $matched に書き戻し、
       // 後続 atom (charGrantKeyword 等) が `$matched.uid` で参照できるよう
       // する。元 binding の cardId は維持しつつ uid を上書き。
@@ -429,6 +468,7 @@ export function atomSceneSwitch(s: GameState, a: Record<string, unknown>, ctx: E
         named: (a.named as boolean | undefined) ?? true,
         viaEffect,
       });
+      markCutinEffectEntry(ctx, newChar);
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: swPlayer, turn: s.turn.number, action: 'effect:sceneSwitch', target: swCardId });
       // スイッチ登場も rules/17 上「登場」として enter Hook が発火する

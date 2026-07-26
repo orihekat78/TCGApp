@@ -32,7 +32,9 @@ describe('reuse batch — registration & validate', () => {
       expect(c.ruleRefs.length, `${c.id}: ruleRefs`).toBeGreaterThan(0);
       // vanilla case (印字テキストなし、例: PR302) のみ abilities 0 を許容。
       // character/event/partner の 0 件は誤登録 (取りこぼし) の可能性が高いので引き続き fail させる。
-      if (c.kind !== 'case') expect(c.abilities.length, `${c.id}: abilities`).toBeGreaterThan(0);
+      if (c.kind !== 'case' && !(c.kind === 'partner' && c.standardPartnerActions === true)) {
+        expect(c.abilities.length, `${c.id}: abilities`).toBeGreaterThan(0);
+      }
       if (c.kind === 'character') {
         const ch = c as CardDef & { ap: number; lp: number; level: number; traits: string[]; keywords: string[] };
         expect(typeof ch.ap).toBe('number');

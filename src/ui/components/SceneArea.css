@@ -387,19 +387,58 @@
   white-space: nowrap;
 }
 
+.scene-area .card .scene-card-detail-button {
+  position: absolute;
+  /* The stage scales on narrow screens. This preserves a 44px physical target
+     at the 851×393 landscape contract without enlarging the visual icon. */
+  width: 220px;
+  height: 220px;
+  top: -96px;
+  right: -96px;
+  z-index: 4;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.scene-area .card .scene-card-detail-icon {
+  position: absolute;
+  top: 105px;
+  right: 100px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  background: rgba(8, 18, 36, 0.82);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+}
+
 .scene-area .card .set-badge {
   position: absolute;
   bottom: 14px;
   left: -4px;
-  font-size: 7px;
-  font-weight: 700;
+  min-width: 10px;
+  padding: 1px 2px;
+  border: 0;
+  border-radius: 7px;
   background: color-mix(in oklch, var(--color-blue) 70%, white 20%);
   color: #fff;
-  padding: 1px 3px;
-  border-radius: 2px;
-  letter-spacing: 0.04em;
-  z-index: 2;
+  font-size: 7px;
+  font-weight: 700;
   line-height: 1.2;
+  cursor: pointer;
+}
+
+.scene-area .card .scene-card-detail-button:hover .scene-card-detail-icon,
+.scene-area .card .scene-card-detail-button:focus-visible .scene-card-detail-icon {
+  outline: 2px solid #ffd966;
+  outline-offset: 1px;
 }
 
 .scene-area .card .stack-badge {

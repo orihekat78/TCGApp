@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `97e54b029939`
+> Source hash: `bac5db444560`
 
 `src/engine/cond/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -19,7 +19,8 @@
 - [`19-special-rules.md`](../by-rule/19-special-rules.md)
 - [`25-qa-effects-resolution.md`](../by-rule/25-qa-effects-resolution.md)
 
-## 📄 ソース (2)
+## 📄 ソース (3)
 
+- [`src/engine/cond/binding-keys.ts`](../../../../src/engine/cond/binding-keys.ts)
 - [`src/engine/cond/eval.ts`](../../../../src/engine/cond/eval.ts)
 - [`src/engine/cond/index.ts`](../../../../src/engine/cond/index.ts)

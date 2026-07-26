@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b43c7af643c9`
+> Source hash: `b0a48e17fe01`
 
 公式ルール [`12-next-hint.md`](../../../rules/12-next-hint.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 

@@ -22573,12 +22573,14 @@
      "steps": [
       {
        "args": {
-        "action": "reveal-hand",
+        "all": true,
+        "audience": "all",
+        "lifetime": "presentation",
         "player": "opp",
         "result": "相手は手札を公開する（その後、元に戻す）"
        },
        "kind": "atom",
-       "verb": "log"
+       "verb": "handReveal"
       },
       {
        "args": {
@@ -23802,12 +23804,14 @@
      "steps": [
       {
        "args": {
-        "action": "reveal-hand",
+        "all": true,
+        "audience": "all",
+        "lifetime": "effect",
         "player": "opp",
         "result": "相手は手札を公開する（その後、手札を元に戻す）"
        },
        "kind": "atom",
-       "verb": "log"
+       "verb": "handReveal"
       },
       {
        "kind": "chain",
@@ -23904,12 +23908,14 @@
      "steps": [
       {
        "args": {
-        "action": "reveal-hand",
+        "all": true,
+        "audience": "all",
+        "lifetime": "effect",
         "player": "opp",
         "result": "相手は手札を公開する（その後、手札を元に戻す）"
        },
        "kind": "atom",
-       "verb": "log"
+       "verb": "handReveal"
       },
       {
        "args": {

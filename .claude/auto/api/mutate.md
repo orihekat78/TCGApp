@@ -29,7 +29,7 @@ Immer draft 上の primitive 変更操作
 | 名前 | メンバー |
 | ---- | -------- |
 | `case` _(internal: `caseOp`)_ | `init`, `toResolved` |
-| `char` | `clearTurnEffects`, `deferSetCardReplacementForHostLeave`, `disableOriginalAbilities`, `disguiseInto`, `ensureSetCardInstanceIds`, `ensureStackedCardEntries`, `grantAbility`, `grantKeyword`, `grantTrait`, `modifyAP`, `modifyLP`, `modifyLevel`, `removeAllSetAndStacked`, `removeOneSetCard`, `removeStackedCards`, `replaceEligibleSetCardsBeforeHostLeaves`, `resolveSetCardRemovalReplacement`, `revokeKeyword`, `revokeKeywordTurn`, `revokeTrait`, `selectStackedCardEntries`, `setCard`, `setOverrideAP`, `setOverrideAPTurn`, `setOverrideLP`, `setOverrideLPTurn`, `setTurnEffect`, `stackCard`, `stackedCardEntries`, `tagSelectedByOwnMr`, `takeOneSetCard`, `transferStackedCards` |
+| `char` | `clearTurnEffects`, `deferSetCardReplacementForHostLeave`, `disableOriginalAbilities`, `disguiseInto`, `ensureSetCardInstanceIds`, `ensureStackedCardEntries`, `grantAbility`, `grantKeyword`, `grantTrait`, `modifyAP`, `modifyLP`, `modifyLevel`, `moveOneSetCard`, `removeAllSetAndStacked`, `removeOneSetCard`, `removeStackedCards`, `replaceEligibleSetCardsBeforeHostLeaves`, `resolveSetCardRemovalReplacement`, `revokeKeyword`, `revokeKeywordTurn`, `revokeTrait`, `selectStackedCardEntries`, `setCard`, `setOverrideAP`, `setOverrideAPTurn`, `setOverrideLP`, `setOverrideLPTurn`, `setTurnEffect`, `stackCard`, `stackedCardEntries`, `tagSelectedByOwnMr`, `takeOneSetCard`, `transferStackedCards` |
 | `deck` | `draw`, `peek`, `refresh`, `refreshAfterTake`, `removeFromTop`, `reveal`, `shuffle`, `toBottom`, `toTop` |
 | `evidence` | `addFromDeck`, `flipFaceDown`, `flipFaceUp`, `gainCard`, `removeAt`, `removeTop`, `toDeckTop`, `toRemove` |
 | `file` | `addFromDeckTop`, `flipTop`, `insertAssistedPartner`, `insertBottomFaceUp`, `popTop`, `removeAssistedPartner` |
@@ -37,9 +37,9 @@ Immer draft 上の primitive 変更操作
 | `gameResult` | `clear`, `set` |
 | `hand` | `add`, `discardToRemove`, `emitReveal`, `remove`, `toDeckBottom` |
 | `log` | `append`, `clear` |
-| `partner` | `addAreaCardFromRemove`, `assist`, `init`, `removeAreaCardsToRemove`, `returnFromFile`, `setLocation`, `setState`, `solveCase` |
+| `partner` | `addAreaCardFromRemove`, `assist`, `init`, `removeAreaCardToRemoveAt`, `removeAreaCardsToRemove`, `returnFromFile`, `setLocation`, `setState`, `solveCase` |
 | `remove` | `add`, `emitExit`, `removeFromHere` |
-| `scene` | `clearNamed`, `enter`, `removeToRemove`, `removeToRemoveBatch`, `resolveLeaveIntercept`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toEvidence`, `toHand`, `toStack`, `tryActivate` |
+| `scene` | `clearNamed`, `enter`, `removeToRemove`, `removeToRemoveBatch`, `resolveLeaveIntercept`, `selfToPartnerArea`, `setState`, `switchEnter`, `toDeck`, `toDeckBottom`, `toEvidence`, `toHand`, `toStack`, `tryActivate` |
 | `scratchTrace` | `set` |
 
 ---

@@ -13757,13 +13757,15 @@
      "kind": "sequence",
      "steps": [
       {
-       "args": {
-        "action": "reveal-hand",
-        "player": "opp",
-        "result": "相手は手札を公開する（その後、元に戻す）"
-       },
-       "kind": "atom",
-       "verb": "log"
+      "args": {
+       "all": true,
+       "audience": "all",
+       "lifetime": "presentation",
+       "player": "opp",
+       "result": "相手は手札を公開する（その後、元に戻す）"
+      },
+      "kind": "atom",
+      "verb": "handReveal"
       },
       {
        "args": {
@@ -14569,12 +14571,14 @@
      "steps": [
       {
        "args": {
-        "action": "reveal-hand",
+        "all": true,
+        "audience": "all",
+        "lifetime": "effect",
         "player": "opp",
         "result": "相手は手札を公開する（その後、手札を元に戻す）"
        },
        "kind": "atom",
-       "verb": "log"
+       "verb": "handReveal"
       },
       {
        "kind": "chain",
@@ -14646,12 +14650,14 @@
      "steps": [
       {
        "args": {
-        "action": "reveal-hand",
+        "all": true,
+        "audience": "all",
+        "lifetime": "effect",
         "player": "opp",
         "result": "相手は手札を公開する（その後、手札を元に戻す）"
        },
        "kind": "atom",
-       "verb": "log"
+       "verb": "handReveal"
       },
       {
        "args": {
@@ -28748,10 +28754,12 @@
        },
        {
         "args": {
+         "audience": "all",
          "filter": {
           "kind": "character",
           "trait": "警視庁"
          },
+         "lifetime": "effect",
          "max": 1,
          "player": "self"
         },
@@ -32459,13 +32467,14 @@
    "key": "character|effect|【登場時】相手は手札を公開する。",
    "ability": {
     "effect": {
-     "args": {
-      "action": "reveal-hand",
-      "player": "opp",
-      "result": "相手は手札を公開する（その後、元に戻す）"
-     },
-     "kind": "atom",
-     "verb": "log"
+      "args": {
+       "all": true,
+       "audience": "all",
+       "lifetime": "presentation",
+       "player": "opp"
+      },
+      "kind": "atom",
+      "verb": "handReveal"
     },
     "ruleRefs": [
      "rules/15-abilities-effects.md",
@@ -49386,12 +49395,13 @@
    "ability": {
     "effect": {
      "args": {
-      "action": "reveal-hand",
-      "player": "opp",
-      "result": "相手は手札を公開する（その後、元に戻す）"
+      "all": true,
+      "audience": "all",
+      "lifetime": "presentation",
+      "player": "opp"
      },
      "kind": "atom",
-     "verb": "log"
+     "verb": "handReveal"
     },
     "ruleRefs": [
      "rules/11-reasoning.md",
@@ -51763,12 +51773,14 @@
      "steps": [
       {
        "args": {
+        "audience": "all",
         "filter": {
          "cardName": [
           "工藤新一",
           "毛利蘭"
          ]
         },
+        "lifetime": "effect",
         "max": 1,
         "player": "self"
        },

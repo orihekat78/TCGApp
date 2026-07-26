@@ -47,8 +47,10 @@ export function makeDeclaredAbilCtx(
   // enumerator and flow boundary: `hand:<owner>:<cardId>`.
   if (uid.startsWith('hand:')) {
     const [, rawPlayer, ...parts] = uid.split(':');
-    const cardId = parts.join(':');
-    if ((rawPlayer !== 'self' && rawPlayer !== 'opp') || !cardId || !state.players[rawPlayer].hand.includes(cardId)) return null;
+    const token = parts.join(':');
+    if (rawPlayer !== 'self' && rawPlayer !== 'opp') return null;
+    const cardId = /^\d+$/.test(token) ? state.players[rawPlayer].hand[Number(token)] : token;
+    if (!cardId || !state.players[rawPlayer].hand.includes(cardId)) return null;
     return {
       source: { cardId, uid, abilityId, player: rawPlayer, area: 'hand' },
       bindings: {},
@@ -64,15 +66,11 @@ export function makeDeclaredAbilCtx(
       bindings: {},
     };
   }
-  // M3 PA batch (rules/18): PA 常駐 MR sentinel (uid 'partnerMR:self'/'partnerMR:opp')
-  if (uid === 'partnerMR:self' || uid === 'partnerMR:opp') {
-    const p: Player = uid === 'partnerMR:self' ? 'self' : 'opp';
+  for (const p of ['self', 'opp'] as const) {
     const mr = state.players[p].partnerAreaMR;
-    if (!mr) return null;
-    return {
-      source: { cardId: mr.cardId, uid, abilityId, player: p, area: 'partner-area' },
-      bindings: {},
-    };
+    if (mr && (mr.uid === uid || uid === `partnerMR:${p}`)) {
+      return { source: { cardId: mr.cardId, uid, abilityId, player: p, area: 'partner-area' }, bindings: {} };
+    }
   }
   // scene キャラ
   for (const p of ['self', 'opp'] as const) {

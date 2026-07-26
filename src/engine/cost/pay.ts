@@ -17,6 +17,7 @@ import { resolveDynNumber } from '@/engine/dyn/eval.js';
 // attribution mini-wave (2026-07-10): costPaid 導出値 (level/kind) の印字値参照。dyn/eval.ts と同一 import 元。
 import { def as readDef } from '@/engine/read/def.js';
 import { readRemoveSetCardWitness } from './remove-set-card-witness.js';
+import { eligibleRemoveSetCards } from './remove-set-card-eligible.js';
 import { char as readChar } from '@/engine/read/char.js';
 import { _clearPendingSetCardReplacementSide, _peekPendingSetCardReplacementSide, _restorePendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
 import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _restoreEntryIdCounter, _snapshotEntryIdCounter, _withEventsSuppressed } from '@/engine/event/registry.js';
@@ -78,6 +79,15 @@ function restoreMutable<T extends object>(target: T, snapshot: T): void {
   const mutable = target as Record<string, unknown>;
   for (const key of Object.keys(mutable)) delete mutable[key];
   Object.assign(mutable, cloneForAuthorization(snapshot) as Record<string, unknown>);
+}
+
+function sourceOccurrenceIndex(ctx: EffectCtx): number | null {
+  const area = ctx.source.area;
+  if (area !== 'evidence' && area !== 'file') return null;
+  const match = new RegExp(`^${area}:${ctx.source.player}:(\\d+)$`).exec(ctx.source.uid ?? '');
+  if (!match) return null;
+  const index = Number(match[1]);
+  return Number.isInteger(index) && index >= 0 ? index : null;
 }
 
 /**
@@ -193,7 +203,7 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       return true;
     }
     case 'removeFromHand': {
-      const ids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
+      const ids = selectRemoveFromHandCandidates(state, cost, ctx).map(c => c.cardId);
       if (ids.length !== cost.n) return false;
       removeHand(ids, true);
       recordCostPaid(ctx, 'removeFromHand', { ids, level: readDef.card(ids[0])?.level });
@@ -273,18 +283,76 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
       } else state.players[found.player].deck.push(found.char.cardId);
       return true;
     }
+    case 'selfToRemove': {
+      if (ctx.source.area === 'scene') {
+        const source = state.players[p].scene.find(char => char.uid === ctx.source.uid);
+        if (!source || source.cardId !== ctx.source.cardId) return false;
+        state.players[p].scene.splice(state.players[p].scene.indexOf(source), 1);
+        state.players[p].remove.push(source.cardId);
+        return true;
+      }
+      const index = sourceOccurrenceIndex(ctx);
+      if (index === null) return false;
+      if (ctx.source.area === 'evidence') {
+        const entry = state.players[p].evidence[index];
+        if (!entry || !entry.faceUp || entry.cardId !== ctx.source.cardId) return false;
+        state.players[p].evidence.splice(index, 1);
+        state.players[p].remove.push(entry.cardId);
+        return true;
+      }
+      if (ctx.source.area === 'file') {
+        const entry = state.players[p].file[index];
+        if (!entry || entry.type !== 'card-back' || entry.faceUp !== true || entry.cardId !== ctx.source.cardId) return false;
+        state.players[p].file.splice(index, 1);
+        state.players[p].remove.push(entry.cardId);
+        return true;
+      }
+      return false;
+    }
+    case 'selfToPartnerArea': {
+      if (ctx.source.area !== 'scene' || !ctx.source.uid) return false;
+      const source = state.players[p].scene.find(char => char.uid === ctx.source.uid);
+      if (!source || source.cardId !== ctx.source.cardId || !readDef.isMR(source.cardId) || state.players[p].partnerAreaMR) return false;
+      state.players[p].scene.splice(state.players[p].scene.indexOf(source), 1);
+      state.players[p].remove.push(...source.setCards.map(entry => entry.cardId));
+      state.players[p].remove.push(...(Array.isArray(source.stackedCards)
+        ? source.stackedCards.map(entry => entry.cardId)
+        : Array.from({ length: source.stackedCards }, () => 'back-card')));
+      source.setCards = [];
+      source.stackedCards = 0;
+      source.isNamed = false;
+      state.players[p].partnerAreaMR = source;
+      return true;
+    }
     case 'removeSetCard': {
       const witness = readRemoveSetCardWitness(ctx);
       if (witness.kind === 'invalid') return false;
-      const picks: { hostUids: string[]; instanceIds?: string[] } = witness.kind === 'valid'
-        ? witness
-        : { hostUids: [] };
+      mutate.char.ensureSetCardInstanceIds(state);
+      const eligible = eligibleRemoveSetCards(state, cost, ctx);
+      const picks: typeof eligible = [];
+      if (witness.kind === 'valid') {
+        if (witness.hostUids.length !== cost.n
+          || (witness.instanceIds !== undefined
+            && (witness.instanceIds.length !== cost.n || new Set(witness.instanceIds).size !== cost.n))) return false;
+        const seen = new Set<string>();
+        for (let index = 0; index < cost.n; index++) {
+          const hostUid = witness.hostUids[index]!;
+          const instanceId = witness.instanceIds?.[index];
+          const found = eligible.find((candidate) => candidate.host.uid === hostUid
+            && (instanceId === undefined || candidate.entry.instanceId === instanceId)
+            && candidate.entry.instanceId !== undefined
+            && !seen.has(candidate.entry.instanceId));
+          if (!found || !found.entry.instanceId) return false;
+          seen.add(found.entry.instanceId);
+          picks.push(found);
+        }
+      } else {
+        picks.push(...eligible.slice(0, cost.n));
+      }
+      if (picks.length !== cost.n) return false;
       const removedIds: string[] = [];
-      const hostOk = (uid: string) => !cost.hostSelf || uid === ctx.source.uid;
-      const removeOne = (host: GameState['players']['self']['scene'][number], instanceId?: string): boolean => {
-        const index = instanceId !== undefined
-          ? host.setCards.findIndex(entry => entry.instanceId === instanceId && (cost.anyFace || !entry.faceUp))
-          : host.setCards.map((entry, i) => ({ entry, i })).reverse().find(x => cost.anyFace || !x.entry.faceUp)?.i ?? -1;
+      const removeOne = (host: GameState['players']['self']['scene'][number], instanceId: string | undefined): boolean => {
+        const index = host.setCards.findIndex(entry => entry.instanceId === instanceId);
         if (index < 0) return false;
         const [removed] = host.setCards.splice(index, 1);
         if (!removed) return false;
@@ -292,25 +360,12 @@ function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choic
         removedIds.push(removed.cardId);
         return true;
       };
-      if (witness.kind === 'valid') {
-        if (picks.hostUids.length !== cost.n || (picks.instanceIds !== undefined && (picks.instanceIds.length !== cost.n || new Set(picks.instanceIds).size !== cost.n))) return false;
-        for (let i = 0; i < cost.n; i++) {
-          const host = state.players[p].scene.find(char => char.uid === picks.hostUids[i]);
-          if (!host || !hostOk(host.uid) || !removeOne(host, picks.instanceIds?.[i])) return false;
-        }
-        recordCostPaid(ctx, 'removeSetCard', { ids: removedIds, kinds: removedIds.map(id => readDef.card(id)?.kind) });
-        return true;
+      for (const pick of picks) {
+        const host = state.players[p].scene.find(char => char.uid === pick.host.uid);
+        if (!host || !removeOne(host, pick.entry.instanceId)) return false;
       }
-      let remaining = cost.n;
-      for (const host of state.players[p].scene) {
-        if (!hostOk(host.uid)) continue;
-        while (remaining > 0 && removeOne(host)) remaining--;
-        if (remaining === 0) {
-          recordCostPaid(ctx, 'removeSetCard', { ids: removedIds, kinds: removedIds.map(id => readDef.card(id)?.kind) });
-          return true;
-        }
-      }
-      return false;
+      recordCostPaid(ctx, 'removeSetCard', { ids: removedIds, kinds: removedIds.map(id => readDef.card(id)?.kind) });
+      return true;
     }
     case 'removeStackedCards': {
       const host = state.players[p].scene.find(char => char.uid === ctx.source.uid);
@@ -492,7 +547,9 @@ export function isWellFormedCost(cost: Cost): boolean {
       && upper(cost.n.max)
       && cost.n.min <= cost.n.max;
     case 'sleepSelf':
-    case 'selfToDeckBottom': return true;
+    case 'selfToDeckBottom':
+    case 'selfToRemove': return true;
+    case 'selfToPartnerArea': return true;
     case 'selfLpDeltaTurn': return Number.isFinite(cost.delta);
   }
 }
@@ -555,13 +612,21 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       return;
     }
     case 'removeFromHand': {
-      const targets = pickCandidates(state, cost.target, ctx, cost.n);
-      const ids = targets
-        .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
-        .map(c => c.cardId);
+      const targets = selectRemoveFromHandCandidates(state, cost, ctx);
+      const ids = targets.map(c => c.cardId);
       if (ids.length !== cost.n) throw new Error('cost.pay: removeFromHand is not payable');
-      // W3 (r17): 宣言コスト由来は hand:removed を emit しない (rules/21)
-      mutate.hand.discardToRemove(state, ctx.source.player, ids, { viaCost: true });
+      // Exact occurrence witnesses are removed by index, preserving duplicate
+      // hand-card identity. Legacy/AI fallback still uses the old id path.
+      const explicit = readRemoveFromHandIndices(ctx);
+      if (explicit !== undefined) {
+        for (const index of [...explicit].sort((a, b) => b - a)) {
+          state.players[ctx.source.player].hand.splice(index, 1);
+        }
+        state.players[ctx.source.player].remove.push(...ids);
+      } else {
+        // W3 (r17): 宣言コスト由来は hand:removed を emit しない (rules/21)
+        mutate.hand.discardToRemove(state, ctx.source.player, ids, { viaCost: true });
+      }
       acc.paidItems.push({ kind: 'removeFromHand', details: { ids } });
       // attribution mini-wave (2026-07-10): costRemovedMatches{key:'removeFromHand'} (B09060) と
       // dyn $cost.removeFromHand.level (B09050「リムーブしたカードとレベルが同じか低い」) が読む。
@@ -584,7 +649,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
         .map(c => c.cardId);
       if (ids.length < rfhMin || ids.length > rfhMax) throw new Error('cost.pay: revealFromHand is not payable');
       // W3 (r18): コスト経路の公開も hand:reveal を emit (B09004「【宣言】能力のコストによって」)
-      mutate.hand.emitReveal(state, ctx.source.player, ids);
+      mutate.hand.emitReveal(state, ctx.source.player, ids, { byPlayer: ctx.source.player, cause: 'cost' });
       acc.paidItems.push({ kind: 'revealFromHand', details: { ids } });
       // attribution mini-wave (2026-07-10): dyn $cost.revealFromHand.count (B08068「公開した枚数」) と
       // costRevealedMatches (B09005「公開したカードが〜の場合」) が読む。
@@ -609,7 +674,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       // W3 (r18) 混成 review nit 反映: 「公開して…移す」cost も手札公開 — emit は移動前 (カードが
       // 手札に在る時点、hand:reveal の on-hand scan 契約)。B09004「【宣言】能力のコストによって」を
       // method-agnostic に被覆する (emitReveal 単一ソースの残 site)。
-      mutate.hand.emitReveal(state, ctx.source.player, ids);
+      mutate.hand.emitReveal(state, ctx.source.player, ids, { byPlayer: ctx.source.player, cause: 'cost' });
       mutate.hand.remove(state, ctx.source.player, ids);
       mutate.deck.toTop(state, ctx.source.player, ids);
       acc.paidItems.push({ kind: 'revealHandToDeckTop', details: { ids } });
@@ -657,7 +722,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       const cardCand = cardCands.find((c): c is Candidate & { kind: 'card' } => c.kind === 'card');
       const hostCand = hostCands.find((c): c is Candidate & { kind: 'char' } => c.kind === 'char');
       if (!cardCand || !hostCand) throw new Error('cost.pay: handStackUnder is not payable');
-      mutate.hand.emitReveal(state, ctx.source.player, [cardCand.cardId]);
+      mutate.hand.emitReveal(state, ctx.source.player, [cardCand.cardId], { byPlayer: ctx.source.player, cause: 'cost' });
       mutate.hand.remove(state, ctx.source.player, [cardCand.cardId]);
       mutate.char.stackCard(state, hostCand.uid, 1);
       acc.paidItems.push({ kind: 'handStackUnder', details: { cardId: cardCand.cardId, hostUid: hostCand.uid } });
@@ -772,67 +837,50 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
     // 各 removal は removeOneSetCard(faceDownOnly:true, cause:'cost') 経由で表向きリムーブ + setcard:leave emit
     //   → B07034 等「離れるたび」observer が発火 (faithful: 当該 observer に ability/effect gate 無)。
     case 'removeSetCard': {
-      const p = ctx.source.player;
+      mutate.char.ensureSetCardInstanceIds(state);
+      const eligible = eligibleRemoveSetCards(state, cost, ctx);
       // rules/21「自分の」省略 → コストで使えるのは自分のカードのみ。removeOneSetCard→findChar は
       // self/opp 両 scene を探索するため、explicit hostUids を **自陣 scene の uid に filter** して
       // 相手 set card の誤リムーブを防ぐ (self-only 不変条件を engine 側で担保、review concern #3)。
-      const selfUids = new Set(state.players[p].scene.map(c => c.uid));
       // hostSelf (attribution mini-wave 2026-07-10, B08041「このキャラに〜」): host を能力使用
       // キャラ自身に限定 (explicit / fallback 両経路。canPay evaluate.ts と対)。
-      const hostOk = (uid: string) => !cost.hostSelf || uid === ctx.source.uid;
       const witness = readRemoveSetCardWitness(ctx);
       if (witness.kind === 'invalid') throw new Error('cost.pay: invalid removeSetCard picks');
       const explicit: { hostUids: string[]; instanceIds?: string[] } = witness.kind === 'valid'
         ? witness
         : { hostUids: [] };
-      const uids: string[] = [];
+      const picks: Array<{ uid: string; instanceId?: string; faceUp: boolean }> = [];
       if (witness.kind === 'valid') {
-        const available = new Map<string, number>();
-        for (const c of state.players[p].scene) {
-          if (!hostOk(c.uid)) continue;
-          available.set(c.uid, cost.anyFace ? c.setCards.length : c.setCards.filter(entry => !entry.faceUp).length);
+        const seen = new Set<string>();
+        for (let index = 0; index < explicit.hostUids.length; index++) {
+          const uid = explicit.hostUids[index]!;
+          const instanceId = explicit.instanceIds?.[index];
+          const found = instanceId === undefined
+            ? eligible.find(candidate => candidate.host.uid === uid && !seen.has(candidate.entry.instanceId ?? ''))
+            : eligible.find(candidate => candidate.host.uid === uid && candidate.entry.instanceId === instanceId);
+          if (!found || !found.entry.instanceId || seen.has(found.entry.instanceId)) throw new Error('cost.pay: invalid removeSetCard picks');
+          seen.add(found.entry.instanceId);
+          picks.push({ uid, instanceId: found.entry.instanceId, faceUp: found.entry.faceUp });
         }
-        const selected = new Map<string, number>();
-        for (const uid of explicit.hostUids) selected.set(uid, (selected.get(uid) ?? 0) + 1);
-        const validHosts = explicit.hostUids.length === cost.n
-          && explicit.hostUids.every(uid => selfUids.has(uid) && hostOk(uid))
-          && [...selected].every(([uid, n]) => (available.get(uid) ?? 0) >= n);
-        const validInstances = explicit.instanceIds === undefined || (
-          explicit.instanceIds.length === cost.n
-          && new Set(explicit.instanceIds).size === explicit.instanceIds.length
-          && explicit.instanceIds.every((instanceId, index) => {
-            const host = state.players[p].scene.find((char) => char.uid === explicit.hostUids[index]);
-            const entry = host?.setCards.find((candidate) => candidate.instanceId === instanceId);
-            return entry !== undefined && (cost.anyFace || !entry.faceUp);
-          })
-        );
-        if (!validHosts || !validInstances) throw new Error('cost.pay: invalid removeSetCard picks');
-        uids.push(...explicit.hostUids);
+        if (picks.length !== cost.n) throw new Error('cost.pay: invalid removeSetCard picks');
       } else {
-        let need = cost.n;
-        for (const c of state.players[p].scene) {
-          if (!hostOk(c.uid)) continue;
-          // anyFace (夜間 W0 2026-07-11, B05052): 表裏不問に計数。未指定は従来通り裏向きのみ。
-          let fd = cost.anyFace ? c.setCards.length : c.setCards.filter(e => !e.faceUp).length;
-          while (fd > 0 && need > 0) { uids.push(c.uid); fd--; need--; }
-          if (need === 0) break;
+        for (const candidate of eligible.slice(0, cost.n)) {
+          picks.push({ uid: candidate.host.uid, instanceId: candidate.entry.instanceId, faceUp: candidate.entry.faceUp });
         }
       }
       // attribution mini-wave (2026-07-10): costRemovedMatches{key:'removeSetCard'} (B08041
       // 「リムーブしたカードがキャラ/イベントの場合」) が読む。kinds は各除去カードの印字種別。
       const rscIds: string[] = [];
-      for (let index = 0; index < uids.length; index++) {
-        const uid = uids[index]!;
-        const exactInstanceId = explicit.instanceIds?.[index];
+      for (const pick of picks) {
         const removed = mutate.char.removeOneSetCard(
-          state, uid,
-          cost.anyFace
-            ? { cause: 'cost', ...(exactInstanceId ? { setCardInstanceId: exactInstanceId } : {}) }
-            : { faceDownOnly: true, cause: 'cost', ...(exactInstanceId ? { setCardInstanceId: exactInstanceId } : {}) },
+          state, pick.uid,
+          pick.faceUp
+            ? { cause: 'cost', ...(pick.instanceId ? { setCardInstanceId: pick.instanceId } : {}) }
+            : { faceDownOnly: true, cause: 'cost', ...(pick.instanceId ? { setCardInstanceId: pick.instanceId } : {}) },
         );
         if (removed) {
           rscIds.push(removed);
-          acc.paidItems.push({ kind: 'removeSetCard', details: { hostUid: uid, setCardId: removed } });
+          acc.paidItems.push({ kind: 'removeSetCard', details: { hostUid: pick.uid, setCardId: removed } });
         }
       }
       if (rscIds.length !== cost.n) throw new Error('cost.pay: removeSetCard was replaced or deferred');
@@ -940,6 +988,49 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, 
       acc.paidItems.push({ kind: 'selfToDeckBottom', details: { uid } });
       return;
     }
+    case 'selfToRemove': {
+      const uid = ctx.source.uid;
+      if (!uid) throw new Error('cost.pay: selfToRemove requires source uid');
+      if (ctx.source.area === 'scene') {
+        const source = state.players[ctx.source.player].scene.find(char => char.uid === uid);
+        if (!source || source.cardId !== ctx.source.cardId) throw new Error('cost.pay: selfToRemove scene source is stale');
+        const result = mutate.scene.removeToRemove(state, uid, 'cost');
+        if (result.deferred || result.prevented || result.removed.uid !== uid || result.removed.cardId !== ctx.source.cardId) {
+          throw new Error('cost.pay: selfToRemove scene removal failed');
+        }
+        acc.paidItems.push({ kind: 'selfToRemove', details: { uid, area: 'scene' } });
+        return;
+      }
+      const index = sourceOccurrenceIndex(ctx);
+      if (index === null) throw new Error('cost.pay: selfToRemove requires source occurrence index');
+      if (ctx.source.area === 'evidence') {
+        const entry = state.players[ctx.source.player].evidence[index];
+        if (!entry || !entry.faceUp || entry.cardId !== ctx.source.cardId) throw new Error('cost.pay: selfToRemove evidence occurrence is stale');
+        const removed = mutate.evidence.removeAt(state, ctx.source.player, index);
+        if (!removed || removed.cardId !== ctx.source.cardId) throw new Error('cost.pay: selfToRemove evidence removal failed');
+        acc.paidItems.push({ kind: 'selfToRemove', details: { uid, area: 'evidence', index } });
+        return;
+      }
+      if (ctx.source.area === 'file') {
+        const entry = state.players[ctx.source.player].file[index];
+        if (!entry || entry.type !== 'card-back' || entry.faceUp !== true || entry.cardId !== ctx.source.cardId) throw new Error('cost.pay: selfToRemove FILE occurrence is stale');
+        state.players[ctx.source.player].file.splice(index, 1);
+        state.players[ctx.source.player].remove.push(entry.cardId);
+        acc.paidItems.push({ kind: 'selfToRemove', details: { uid, area: 'file', index } });
+        return;
+      }
+      throw new Error('cost.pay: selfToRemove requires evidence or FILE source');
+    }
+    case 'selfToPartnerArea': {
+      const uid = ctx.source.uid;
+      const cardId = ctx.source.cardId;
+      if (!uid || !cardId || ctx.source.area !== 'scene') throw new Error('cost.pay: selfToPartnerArea requires scene source uid');
+      if (!mutate.scene.selfToPartnerArea(state, ctx.source.player, uid, cardId)) {
+        throw new Error('cost.pay: selfToPartnerArea source is stale or PA is occupied');
+      }
+      acc.paidItems.push({ kind: 'selfToPartnerArea', details: { uid } });
+      return;
+    }
     case 'pay': {
       for (const item of cost.items) {
         payInner(state, item, ctx, acc, choiceCursor);
@@ -1044,6 +1135,29 @@ function selectCostCandidates(
     return candidateMultisetSubset(ctx.picked, allowed) ? ctx.picked : [];
   }
   return allowed.slice(0, n);
+}
+
+/**
+ * Human remove-from-hand costs carry physical hand indices. A supplied
+ * witness is authoritative and never falls back to the first matching card.
+ */
+function selectRemoveFromHandCandidates(
+  state: GameState,
+  cost: Extract<Cost, { kind: 'removeFromHand' }>,
+  ctx: EffectCtx,
+): Array<Candidate & { kind: 'card'; index: number }> {
+  const indices = readRemoveFromHandIndices(ctx);
+  if (indices === undefined) {
+    return selectCostCandidates(state, cost.target, ctx, cost.n)
+      .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } =>
+        candidate.kind === 'card' && typeof candidate.index === 'number');
+  }
+  if (indices.length !== cost.n || new Set(indices).size !== indices.length) return [];
+  const allowed = candidates(state, cost.target, ctx)
+    .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } =>
+      candidate.kind === 'card' && candidate.player === ctx.source.player && typeof candidate.index === 'number');
+  return indices.map(index => allowed.find(candidate => candidate.index === index))
+    .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => candidate !== undefined);
 }
 
 /** Canonical ranged target extraction for sleep/stun costs. */
@@ -1178,6 +1292,16 @@ function readFlipIndices(ctx: EffectCtx): number[] {
     return fpu.indices;
   }
   return [];
+}
+
+function readRemoveFromHandIndices(ctx: EffectCtx): number[] | undefined {
+  const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
+  const selected = params?.['removeFromHand'] as { indices?: unknown } | undefined;
+  if (selected === undefined) return undefined;
+  return Array.isArray(selected.indices)
+    && selected.indices.every(index => typeof index === 'number' && Number.isInteger(index) && index >= 0)
+    ? selected.indices
+    : [];
 }
 
 function hasCostParam(ctx: EffectCtx, key: string): boolean {

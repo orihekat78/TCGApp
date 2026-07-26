@@ -66,6 +66,34 @@ export function uidToDisplayName(state: GameState, uid: string): string {
   }
 
   // scene character uid: 両プレイヤーの scene から探索
+  const handSource = /^hand:(self|opp):(\d+)$/.exec(uid);
+  if (handSource) {
+    const player = handSource[1] as 'self' | 'opp';
+    const cardId = state.players[player].hand[Number(handSource[2])];
+    if (cardId) return cardIdToDisplayName(cardId);
+    return uid;
+  }
+
+  const areaSource = /^(evidence|file):(self|opp):(\d+)$/.exec(uid);
+  if (areaSource) {
+    const [, area, playerText, indexText] = areaSource;
+    const player = playerText as 'self' | 'opp';
+    const index = Number(indexText);
+    const cardId = area === 'evidence'
+      ? state.players[player].evidence[index]?.faceUp
+        ? state.players[player].evidence[index]!.cardId
+        : null
+      : state.players[player].file[index]?.type === 'card-back' && state.players[player].file[index]!.faceUp === true
+        ? state.players[player].file[index]!.cardId
+        : null;
+    if (cardId) {
+      const d = readDef.card(cardId);
+      if (d && d.names.length > 0) return d.names[0];
+      return cardId;
+    }
+    return uid;
+  }
+
   for (const player of ['self', 'opp'] as const) {
     const c = state.players[player].scene.find((sc) => sc.uid === uid);
     if (c) {

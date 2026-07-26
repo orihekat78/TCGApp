@@ -540,6 +540,19 @@ describe('engine.cond.eval', () => {
       s.players.self.scene[0]!.setCards.push({ cardId: 'YAIBA_UP', faceUp: true });
       expect(evalCond(s, cond, ctx)).toBe(true);
     });
+
+    it('evaluates static cardName and trait filters without a scene candidate', () => {
+      registerCardDef(defOf({ id: 'HOST', names: ['host'] }));
+      registerCardDef(defOf({ id: 'SET', names: ['set-name'], traits: ['set-trait'] }));
+      const state = withScene(createEmptyGameState(), 'self', [makeChar({
+        uid: 'host', cardId: 'HOST', setCards: [{ cardId: 'SET', faceUp: true }],
+      })]);
+      const ctx = makeCtx({ source: { player: 'self', area: 'scene', uid: 'host' } });
+
+      expect(evalCond(state, {
+        kind: 'hostSetCardCountAtLeast', n: 1, filter: { cardName: 'set-name', trait: 'set-trait' },
+      }, ctx)).toBe(true);
+    });
   });
 
   describe('sceneFaceDownSetCardCountAtLeast (PR200/PR206)', () => {

@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `47ced1bc8a5e`
+> Source hash: `67fd511967ad`
 
 `src/engine/target/` 配下のソースが参照している rules / specs / 関連 API リファレンスのハブ。
 
@@ -15,9 +15,10 @@
 - [`15-abilities-effects.md`](../by-rule/15-abilities-effects.md)
 - [`19-special-rules.md`](../by-rule/19-special-rules.md)
 
-## 📄 ソース (4)
+## 📄 ソース (5)
 
 - [`src/engine/target/candidates.ts`](../../../../src/engine/target/candidates.ts)
 - [`src/engine/target/card-def-registry.ts`](../../../../src/engine/target/card-def-registry.ts)
+- [`src/engine/target/card-occurrence.ts`](../../../../src/engine/target/card-occurrence.ts)
 - [`src/engine/target/index.ts`](../../../../src/engine/target/index.ts)
 - [`src/engine/target/resolve.ts`](../../../../src/engine/target/resolve.ts)

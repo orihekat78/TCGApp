@@ -18,7 +18,7 @@ import type { GameState, Candidate, TargetFilter, EffectCtx } from '../../types/
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
-import { matchOneFilter } from '../../target/candidates.js';
+import { matchOneFilter, registerEffectiveHandLevel } from '../../target/candidates.js';
 import { evalCond } from '../../cond/eval.js';
 import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 
@@ -151,6 +151,7 @@ export function effectiveHandLevel(state: GameState, p: Player, cardId: string):
   }
   return base + delta;
 }
+registerEffectiveHandLevel(effectiveHandLevel);
 
 /**
  * レベル制限チェック: カードのレベル ≤ FILE 枚数 (rules/12)

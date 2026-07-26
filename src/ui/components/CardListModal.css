@@ -92,6 +92,7 @@
 }
 
 .card-list-item {
+  position: relative;
   background: #243854;
   border: 1px solid #406384;
   border-radius: 5px;
@@ -153,31 +154,59 @@
   color: #5a89b0;
 }
 
-.card-list-pick-shell {
+.card-list-pick-shell,
+.card-list-detail-shell {
+  position: relative;
   min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px;
-  align-items: stretch;
-  gap: 4px;
+  display: block;
 }
 
-.card-list-pick-shell > .card-list-item {
+.card-list-pick-shell > .card-list-item,
+.card-list-detail-shell > .card-list-item {
   min-width: 0;
 }
 
 .card-list-pick-detail {
+  position: absolute;
+  inset: 6px 6px auto auto;
+  z-index: 2;
   min-inline-size: 44px;
   min-block-size: 44px;
   min-width: 44px;
   min-height: 44px;
-  padding: 4px;
-  border: 1px solid #406384;
-  border-radius: 5px;
-  background: #243854;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
   color: inherit;
   cursor: pointer;
   font: inherit;
-  font-size: 11px;
+  font-size: 0;
+}
+
+.card-list-set-state {
+  padding: 1px 5px;
+  border: 1px solid #6b8fbc;
+  border-radius: 999px;
+  color: #d7e8ff;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.card-list-pick-detail > span {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: rgba(8, 18, 36, 0.84);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .card-list-pick-detail:hover,

@@ -8,13 +8,70 @@ import { cards as engineCards } from '../../cards/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
 import { buildShortFormPick } from '../atom-pick-spec.js';
 import { evalDyn } from '../../dyn/eval.js';
-import { defHasKeyword } from '../../read/keyword.js';
+import { defHasKeyword, defHasNoOriginalAbilityExceptIcons } from '../../read/keyword.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
-import { effectiveKeywordForCard, effectiveTraitNames } from '../../target/candidates.js';
+import { effectiveKeywordForCard, effectiveTraitNames, printedKeywordForCard } from '../../target/candidates.js';
 
 declare global {
 
   var __pendingDeckRevealSide: PendingDeckRevealSide | PendingDeckRevealSide[] | null | undefined;
+  var __pendingPublicHandRevealSide: PublicHandRevealSide | PublicHandRevealSide[] | null | undefined;
+}
+
+export type PublicHandRevealSide = {
+  owner: 'self' | 'opp';
+  audience: 'all';
+  /** Ordered occurrences. Duplicate cardIds intentionally remain distinct. */
+  cardIds: string[];
+  handSnapshot: string[];
+  lifetime: 'effect' | 'presentation';
+  resolutionToken: string;
+  source: { cardId?: string; abilityId?: string; uid?: string };
+};
+
+let publicHandRevealSequence = 0;
+
+export function publicHandRevealToken(ctx: EffectCtx): string {
+  const token = `public-hand-reveal:${++publicHandRevealSequence}`;
+  (ctx.causal ??= {}).publicHandRevealToken = token;
+  return token;
+}
+
+export function peekPublicHandRevealToken(ctx: EffectCtx): string | undefined {
+  return ctx.causal?.publicHandRevealToken;
+}
+
+export function takePublicHandRevealToken(ctx: EffectCtx): string | undefined {
+  const token = ctx.causal?.publicHandRevealToken;
+  if (!token || !ctx.causal) return undefined;
+  delete ctx.causal.publicHandRevealToken;
+  if (Object.keys(ctx.causal).length === 0) delete ctx.causal;
+  return token;
+}
+
+export function restorePublicHandRevealToken(ctx: EffectCtx, token: string | undefined): void {
+  if (token) (ctx.causal ??= {}).publicHandRevealToken = token;
+}
+
+export function queuePendingPublicHandRevealSide(next: PublicHandRevealSide): void {
+  const root = globalThis as { __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null };
+  const current = root.__pendingPublicHandRevealSide;
+  if (!current) root.__pendingPublicHandRevealSide = next;
+  else if (Array.isArray(current)) current.push(next);
+  else root.__pendingPublicHandRevealSide = [current, next];
+}
+
+export function _drainPendingPublicHandRevealSide(): PublicHandRevealSide | null {
+  const root = globalThis as { __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null };
+  const current = root.__pendingPublicHandRevealSide;
+  if (!current) return null;
+  if (!Array.isArray(current)) {
+    root.__pendingPublicHandRevealSide = null;
+    return current;
+  }
+  const next = current.shift() ?? null;
+  root.__pendingPublicHandRevealSide = current.length === 0 ? null : current.length === 1 ? current[0]! : current;
+  return next;
 }
 
 export type PendingDeckRevealSide = {
@@ -204,6 +261,8 @@ export function targetFilterToPredicate(filter: TargetFilter | undefined): (card
 /** 対戦セッションを跨いではならない atom 側の一時通知を一括消去する。 */
 export function resetPendingAtomSession(): void {
   (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide = null;
+  (globalThis as { __pendingPublicHandRevealSide?: PublicHandRevealSide | PublicHandRevealSide[] | null }).__pendingPublicHandRevealSide = null;
+  publicHandRevealSequence = 0;
   (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = null;
   (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
   (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId = null;
@@ -232,6 +291,14 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
       const nots = Array.isArray(filter.colorNot) ? filter.colorNot : [filter.colorNot];
       if (!d.colors.some(c => !nots.includes(c))) return false;
     }
+    // CT-P10 B10074/B10102: static printed ability metadata.  Do not read
+    // disabled-original or granted state for deck/reveal candidates.
+    if (filter.hasOriginalAbility !== undefined) {
+      if ((d.abilities.length > 0) !== filter.hasOriginalAbility) return false;
+    }
+    if (filter.hasNoOriginalAbilityExceptIcons !== undefined) {
+      if (!defHasNoOriginalAbilityExceptIcons(d, filter.hasNoOriginalAbilityExceptIcons)) return false;
+    }
     if (filter.trait !== undefined) {
       const wants = Array.isArray(filter.trait) ? filter.trait : [filter.trait];
       const owner = player ?? ctx?.source.player;
@@ -239,6 +306,15 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
         ? effectiveTraitNames(state, cardId, null, { kind: 'card', cardId, area: 'deck', player: owner })
         : (d.traits ?? []);
       if (!wants.some(w => traits.includes(w))) return false;
+    }
+    if (filter.traitAll !== undefined) {
+      const wants = Array.isArray(filter.traitAll) ? filter.traitAll : [filter.traitAll];
+      if (wants.length === 0) return false;
+      const owner = player ?? ctx?.source.player;
+      const traits = state && owner
+        ? effectiveTraitNames(state, cardId, null, { kind: 'card', cardId, area: 'deck', player: owner })
+        : (d.traits ?? []);
+      if (!wants.every(w => traits.includes(w))) return false;
     }
     if (filter.traitSharedWithTriggerRemoved === true) {
       const removed = (ctx?.triggerPayload as { removedChar?: { cardId?: unknown } | undefined } | undefined)?.removedChar;
@@ -274,6 +350,8 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
     // 解決機構が無い = fail-closed で全不一致 (silent drop 防止)。ctx 付き解決は candidates() 経由のみ。
     if (filter.levelIn !== undefined && !filter.levelIn.includes(d.level ?? 0)) return false;
     if (filter.levelInBound !== undefined) return false;
+    if (filter.levelMaxBound !== undefined) return false;
+    if (filter.apMaxSource !== undefined) return false;
     // BUG-118: kind は TargetFilter 型に昇格済 (matchOneFilter と統一)
     if (filter.kind !== undefined && d.kind !== filter.kind) return false;
     // wave#2 cluster2 (2026-06-12): keyword / cardName が silent drop されていた (BUG-117/118 同型
@@ -287,15 +365,27 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
         ? effectiveKeywordForCard(state, `card:${player}:deck:${cardId}`, w, { cardId, player, area: 'deck' })
         : defHasKeyword(d, w))) return false;
     }
+    if (filter.keywordNot !== undefined) {
+      const nots = Array.isArray(filter.keywordNot) ? filter.keywordNot : [filter.keywordNot];
+      if (nots.some(w => state && player
+        ? effectiveKeywordForCard(state, `card:${player}:deck:${cardId}`, w, { cardId, player, area: 'deck' })
+        : defHasKeyword(d, w))) return false;
+    }
+    if (filter.keywordFromPrintOrConditionIcon !== undefined) {
+      const wants = Array.isArray(filter.keywordFromPrintOrConditionIcon) ? filter.keywordFromPrintOrConditionIcon : [filter.keywordFromPrintOrConditionIcon];
+      if (!wants.some(w => state && player
+        ? printedKeywordForCard(state, `card:${player}:deck:${cardId}`, w, { cardId, player, area: 'deck' })
+        : (d.keywords ?? []).includes(w))) return false;
+    }
     if (filter.cardName !== undefined) {
       const wants = Array.isArray(filter.cardName) ? filter.cardName : [filter.cardName];
-      const components = allCardNameComponentsForDef(d);
+      const components = allCardNameComponentsForDef(d, 'deck');
       if (!wants.some(w => components.includes(w))) return false;
     }
     // cluster16: cardNameNot (「〚カード名[X]〛以外」) — matchOneFilter / boundMatchesFilter と同式。
     if (filter.cardNameNot !== undefined) {
       const nots = Array.isArray(filter.cardNameNot) ? filter.cardNameNot : [filter.cardNameNot];
-      const components = allCardNameComponentsForDef(d);
+      const components = allCardNameComponentsForDef(d, 'deck');
       if (nots.some(w => components.includes(w))) return false;
     }
     return true;

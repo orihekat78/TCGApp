@@ -20,6 +20,8 @@ export type EffectStackEntrySource = {
   abilityId?: string;
   description?: string;
   player: 'self' | 'opp';
+  /** Older saved entries have no area and are interpreted as scene sources. */
+  area?: 'scene' | 'partner-area' | 'hand' | 'evidence' | 'file' | 'remove' | 'case';
   /** Explicit source-card lifecycle; preserved across the JSON stack boundary. */
   resolutionKind?: EffectResolutionKind;
 };
@@ -100,6 +102,8 @@ export type EffectStackEntry = {
    * probe が検出。W6 probe は runAtom 直駆動で queue 境界を踏んでいなかった)。
    */
   dyn?: Record<string, unknown>;
+  /** Scoped hand-reveal cause restored only for this resumed entry. */
+  publicHandRevealToken?: string;
   /**
    * BUG-132 GAP-2 (2026-06-12): effect:declared の emit 1 回ごとの batch 連番。
    * 同一 emit で queue された entry 群 (イベント自効果 + 第三者反応) を結ぶ。

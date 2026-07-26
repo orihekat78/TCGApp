@@ -42,7 +42,11 @@ describe('B08003 cost-paid stacked-card chooser', () => {
     const pending = _drainPendingEffectPickSide();
 
     expect(pending?.player).toBe('opp');
-    expect(pending?.candidates.map(c => c.uid)).toEqual(['PAID_A#1', 'PAID_B#2']);
+    expect(pending?.candidates).toEqual([
+      { kind: 'card', uid: 'card:self:remove:PAID_A#1', cardId: 'PAID_A', player: 'self', area: 'remove', index: 1 },
+      { kind: 'card', uid: 'card:self:remove:PAID_B#2', cardId: 'PAID_B', player: 'self', area: 'remove', index: 2 },
+    ]);
+    // Legacy selections still resolve when they identify exactly one pending occurrence.
     applyPickAndContinuation(state, pending!, 'PAID_B#2');
     expect(state.players.self.remove).toEqual(['OLD', 'PAID_A']);
     expect(state.players.self.scene.map(c => c.cardId)).toEqual(['PAID_B']);

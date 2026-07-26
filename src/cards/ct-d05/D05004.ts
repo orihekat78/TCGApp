@@ -16,8 +16,8 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-scene',
   trigger: { hook: 'enter', selfOnly: true },
-  // 相手は手札を公開する。（その後、元に戻す） — 状態変化を伴わない情報公開を log に記録
-  effect: { kind: 'atom', verb: 'log', args: { player: 'opp', action: 'reveal-hand', result: '相手は手札を公開する（その後、元に戻す）' } },
+  // 相手は手札を公開する。（その後、元に戻す） — presentation 窓だけを出し、状態は変えない
+  effect: { kind: 'atom', verb: 'handReveal', args: { player: 'opp', all: true, audience: 'all', lifetime: 'presentation' } },
   description: '【登場時】相手は手札を公開する。（その後、元に戻す）',
   ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };

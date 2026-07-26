@@ -14,13 +14,16 @@
 // refactor Phase 3a (2026-06-22): runAtom を dispatcher 化し各 verb handler を atom-handlers/ へ分割。
 // 外部 API (runAtom + _drainPending*Side + Pending*Side 型) は本 barrel が再 export して不変。
 import type { GameState, AtomVerb, EffectCtx } from '../types/index.js';
+import { takePublicHandRevealToken } from './atom-handlers/_shared.js';
 export {
   _drainPendingDeckRevealSide,
+  _drainPendingPublicHandRevealSide,
   _drainPendingDeckReorderSide,
   _drainPendingDeckPlaceSide, // mini-wave #5 P2: deckPlaceSplitBound (top/bottom 振り分け) の drain
   _drainPendingContactStartAxId, // W6 step9 (row65): startContact 生成 ax.id の drain
   resetPendingAtomSession,
   type PendingDeckRevealSide,
+  type PublicHandRevealSide,
   type PendingDeckReorderSide,
   type PendingDeckPlaceSide,
 } from './atom-handlers/_shared.js';
@@ -156,6 +159,9 @@ export function runAtom(s: GameState, verb: AtomVerb, args: unknown, ctx: Effect
       return atomDiscardRandom(s, a, ctx);
     case 'handReveal':
       return atomHandReveal(s, a, ctx, verb);
+    case 'publicHandRevealScopeEnd':
+      takePublicHandRevealToken(ctx);
+      return;
     case 'partnerAreaRemove':
       return atomPartnerAreaRemove(s, a, ctx, verb);
     case 'mill':

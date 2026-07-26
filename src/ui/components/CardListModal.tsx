@@ -17,9 +17,11 @@ import { CardArt } from './CardArt.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber, publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import './CardListModal.css';
 
-export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area' | 'deck';
+export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area' | 'deck' | 'selection' | 'set';
 
 const TITLE: Record<CardListKind, string> = {
+  set:             'セットカード',
+  selection:       'Selection candidates',
   file:            'FILE エリア',
   evidence:        '証拠エリア',
   remove:          'リムーブエリア',
@@ -28,6 +30,8 @@ const TITLE: Record<CardListKind, string> = {
 };
 
 const HINT: Record<CardListKind, string> = {
+  set: '表向きのカードは公開情報です。裏向きのカードは枚数と裏面のみ表示します。',
+  selection: 'Choose from the listed public-area candidates.',
   file:     'デッキ上から裏向きで配置されたカード (rules/05 オートフェイズ)。アシスト中パートナーが含まれる場合があります。',
   evidence: '推理やアクション[事件] で集めた証拠カード (裏向き)。ヒラメキ付きが含まれる可能性があります。',
   remove:   '使用済イベント / リムーブされたキャラ。リフレッシュでデッキに戻る対象 (rules/14)。',
@@ -40,6 +44,8 @@ const HINT: Record<CardListKind, string> = {
  * `pickBannerText` prop で override 可 (D11014 a2 sceneEnter 等 verb 別 文言)。
  */
 const PICK_BANNER_TEXT: Record<CardListKind, string> = {
+  set: 'セットカードを選んでください',
+  selection: 'Choose a candidate',
   file:     'FILE から1枚選んでください',
   evidence: '証拠から1枚選んで手札に加えてください',
   remove:   'リムーブから1枚選んで手札に加えてください',
@@ -62,7 +68,7 @@ export type CardListModalProps = {
    * 非公開バックではなく CardArt + カード名で描画し、onExpand 提供時は拡大可能にする。
    * 表向き証拠は公開情報 (rules/10 ヒラメキ / D08005 等が参照) のため隠してはならない。
    */
-  faceUpEvidence?: ReadonlyArray<{ index: number; cardId: CardId }>;
+  faceUpEvidence?: ReadonlyArray<{ index: number; cardId: CardId; faceState?: '表向き' | '裏向き' }>;
   /** 閉じる callback */
   onClose: () => void;
   /**
@@ -80,7 +86,9 @@ export type CardListModalProps = {
    *      裏向きの index のみ pickCands に含める = 表向き cell は非 click 化される。BUG-085)
    *   - face-up (remove): cards[idx] の cardId と一致する uid → 該当 cell が click 対応
    */
-  pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp' }>;
+  pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp'; areaLabel?: string }>;
+  /** Exact pending identity for each displayed face-up candidate. */
+  pickCandidateUids?: ReadonlyArray<string>;
   /** Stable identity of the pending decision. A new identity resets local multi-pick state. */
   pickSessionKey?: unknown;
   /**
@@ -136,9 +144,9 @@ export type CardListModalProps = {
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickSessionKey, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
+  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickCandidateUids, pickSessionKey, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
-  const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
+  const faceUpByIndex = new Map<number, { cardId: CardId; faceState?: '表向き' | '裏向き' }>((faceUpEvidence ?? []).map((e) => [e.index, e]));
   const inPickMode = pickCands !== undefined
     && onPick !== undefined
     && (pickCands.length > 0 || (pickCanSkip === true && (pickNMin ?? 0) === 0));
@@ -228,6 +236,10 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
   /** 表向き cell (cards[idx]) から候補 uid を逆引き。同 cardId の重複がある場合は cardId と index 両方の合致を試みる。 */
   const findFaceUpPickUid = (cardId: CardId, idx: number): string | undefined => {
     if (!inPickMode) return undefined;
+    const exactOccurrenceUid = pickCandidateUids?.[idx];
+    if (exactOccurrenceUid && pickCands!.some((candidate) => candidate.uid === exactOccurrenceUid)) {
+      return exactOccurrenceUid;
+    }
     // remove area の pick (handAddFromRemove 用、将来) 等の場合、uid は cardId そのもの (BUG-065 pattern B)
     // synthetic uid `<cardId>#<idx>` の合致を試みる
     const wantUid = `${cardId}#${idx}`;
@@ -242,6 +254,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
     const dup = pickCands!.filter((c) => c.cardId === cardId);
     return (dup[nth] ?? dup[0])?.uid;
   };
+  const candidateAreaLabel = (uid: string): string | undefined => pickCands?.find((candidate) => candidate.uid === uid)?.areaLabel;
 
   // Esc で閉じる (本 modal のみ scope。global keymap には影響しない)
   useEffect(() => {
@@ -366,16 +379,13 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                       className={cls}
                       disabled={isBlocked}
                       onClick={() => isMultiPick ? toggleSelect(pickUid) : onPick!(pickUid)}
-                      onContextMenu={onExpand ? (event) => {
-                        event.preventDefault();
-                        onExpand(cardId);
-                      } : undefined}
                       data-testid={`card-list-pick-${pickUid}`}
                       aria-label={`${accessibleName} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       aria-pressed={isMultiPick ? isSelected : undefined}
                       title={isForcedLocked ? '必ず選ぶ (相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(pickUid) ? '同じカード名は1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(pickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(pickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラが優先されます' : undefined}
                     >
                       {itemContent}
+                      {candidateAreaLabel(pickUid) && <div className="card-list-item-area">{candidateAreaLabel(pickUid)}</div>}
                     </button>
                     {onExpand && (
                       <button
@@ -385,23 +395,30 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         aria-label={`${accessibleName} の詳細を表示`}
                         onClick={() => onExpand(cardId)}
                       >
-                        詳細
+                        <span aria-hidden="true">🔍</span>
                       </button>
                     )}
                     </div>
                   );
                 }
                 return onExpand ? (
-                  <button
-                    type="button"
-                    key={`face-${cardId}-${idx}`}
-                    className="card-list-item card-list-item--clickable"
-                    onClick={() => onExpand(cardId)}
-                    data-testid={`card-list-item-${cardId}-${idx}`}
-                    aria-label={`${accessibleName} を拡大表示`}
-                  >
-                    {itemContent}
-                  </button>
+                  <div key={`face-${cardId}-${idx}`} className="card-list-detail-shell">
+                    <div
+                      className="card-list-item"
+                      data-testid={`card-list-item-${cardId}-${idx}`}
+                    >
+                      {itemContent}
+                    </div>
+                    <button
+                      type="button"
+                      className="card-list-pick-detail"
+                      data-testid={`card-list-detail-${cardId}-${idx}`}
+                      aria-label={`${accessibleName}の詳細を確認`}
+                      onClick={() => onExpand(cardId)}
+                    >
+                      <span aria-hidden="true">🔍</span>
+                    </button>
+                  </div>
                 ) : (
                   <div key={`face-${cardId}-${idx}`} className="card-list-item">
                     {itemContent}
@@ -411,8 +428,9 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
               {/* 裏向きカード (FILE / 証拠 など、内容非公開)。pick mode 中は click 可能化。 */}
               {Array.from({ length: faceDownCount }).map((_, idx) => {
                 // BUG-085: この index の証拠が表向きなら公開カードとして描画する。
-                const faceUpCardId = faceUpByIndex.get(idx);
-                if (faceUpCardId !== undefined) {
+                const faceUpEntry = faceUpByIndex.get(idx);
+                if (faceUpEntry !== undefined) {
+                  const faceUpCardId = faceUpEntry.cardId;
                   const evidenceIndex = faceUpEvidenceEntries.findIndex((e) => e.index === idx);
                   const occurrenceLabel = publicCardOccurrenceLabel(faceUpEvidenceCards, faceUpCardId, evidenceIndex);
                   const accessibleName = occurrenceLabel ? `${cardIdToDisplayName(faceUpCardId)} ${occurrenceLabel}` : cardIdToDisplayName(faceUpCardId);
@@ -424,6 +442,11 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         className="card-list-item-art"
                       />
                       <div className="card-list-item-name">{cardIdToDisplayName(faceUpCardId)}</div>
+                      {faceUpEntry.faceState && (
+                        <div className="card-list-set-state" data-testid={`card-list-set-state-${idx}`}>
+                          {faceUpEntry.faceState}
+                        </div>
+                      )}
                       <div className="card-list-item-id">No.{cardIdToPrintedNumber(faceUpCardId)}</div>
                     </>
                   );
@@ -447,10 +470,6 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                         className={cls}
                         disabled={isBlocked}
                         onClick={() => (isMultiPick ? toggleSelect(faceUpPickUid) : onPick!(faceUpPickUid))}
-                        onContextMenu={onExpand ? (event) => {
-                          event.preventDefault();
-                          onExpand(faceUpCardId);
-                        } : undefined}
                         data-testid={`card-list-pick-${faceUpPickUid}`}
                         aria-pressed={isMultiPick ? isSelected : undefined}
                         aria-description={pickStateLabel}
@@ -467,27 +486,30 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                           aria-label={`${accessibleName} の詳細を表示`}
                           onClick={() => onExpand(faceUpCardId)}
                         >
-                          詳細
+                          <span aria-hidden="true">🔍</span>
                         </button>
                       )}
                       </div>
                     );
                   }
                   return onExpand ? (
-                    <button
-                      type="button"
+                    <div
                       key={`faceup-${idx}`}
-                      className="card-list-item card-list-item--clickable"
-                      onClick={() => onExpand(faceUpCardId)}
-                      onContextMenu={(event) => {
-                        event.preventDefault();
-                        onExpand(faceUpCardId);
-                      }}
+                      className="card-list-item"
                       data-testid={`card-list-evidence-faceup-${idx}`}
                       aria-label={`${idx + 1} 番目の証拠 ${accessibleName} (表向き) を拡大表示`}
                     >
                       {revealedContent}
-                    </button>
+                      <button
+                        type="button"
+                        className="card-list-pick-detail"
+                        data-testid={`card-list-detail-${faceUpCardId}-${idx}`}
+                        aria-label={`${accessibleName}の詳細を確認`}
+                        onClick={() => onExpand(faceUpCardId)}
+                      >
+                        <span aria-hidden="true">🔍</span>
+                      </button>
+                    </div>
                   ) : (
                     <div key={`faceup-${idx}`} className="card-list-item" data-testid={`card-list-evidence-faceup-${idx}`}>
                       {revealedContent}
@@ -527,7 +549,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   );
                 }
                 return (
-                  <div key={`back-${idx}`} className="card-list-item face-down">
+                  <div key={`back-${idx}`} className="card-list-item face-down" data-testid={`card-list-facedown-${kind}-${idx}`}>
                     {backContent}
                   </div>
                 );

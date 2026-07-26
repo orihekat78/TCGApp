@@ -9,18 +9,20 @@ import { useTargetPicker } from '../useTargetPicker.js';
 import { useNextHintPicker, type NextHintCandidate } from '../useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from '../useSceneSwitchPickerStore.js';
 import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
+import { useHandCostPicker } from '../useHandCostPicker.js';
 import { useStackedCardCostPicker } from '../useStackedCardCostPicker.js';
 import { useSetCardCostPicker } from '../useSetCardCostPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { alternativeCostProviders } from '@/engine/cost/alternative.js';
+import { eligibleRemoveSetCards } from '@/engine/cost/remove-set-card-eligible.js';
 import { nextHintEventUseAllowed } from '@/engine/flow/main/next-hint.js';
 import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 (NH: B03126 両経路 + B02087 NH 限定 A3) + mini-wave#4 hand level
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
-import type { Effect, GameState } from '@/engine/types';
+import type { Candidate, Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
+import { costToText, findFlipFaceUpCost, findRemoveFromHandCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
@@ -286,12 +288,31 @@ function resolveDeclaredSourceCardId(state: GameState, sourceUid: string): strin
     const p = sourceUid === 'partnerMR:self' ? 'self' : 'opp';
     return state.players[p].partnerAreaMR?.cardId ?? null;
   }
+  for (const p of ['self', 'opp'] as const) {
+    const mr = state.players[p].partnerAreaMR;
+    if (mr?.uid === sourceUid) return mr.cardId;
+  }
   if (sourceUid.startsWith('hand:')) {
     // hand sentinel `hand:${player}:${cardId}` — findCardOnBoard と同じ split 規約
     const [, hp, ...rest] = sourceUid.split(':');
-    const hCardId = rest.join(':');
+    const token = rest.join(':');
+    const hCardId = (hp === 'self' || hp === 'opp') && /^\d+$/.test(token)
+      ? state.players[hp].hand[Number(token)]
+      : token;
     if ((hp === 'self' || hp === 'opp') && state.players[hp].hand.includes(hCardId)) return hCardId;
     return null;
+  }
+  const areaSource = /^(evidence|file):(self|opp):(\d+)$/.exec(sourceUid);
+  if (areaSource) {
+    const [, area, playerText, indexText] = areaSource;
+    const player = playerText as Player;
+    const index = Number(indexText);
+    if (area === 'evidence') {
+      const entry = state.players[player].evidence[index];
+      return entry?.faceUp ? entry.cardId : null;
+    }
+    const entry = state.players[player].file[index];
+    return entry?.type === 'card-back' && entry.faceUp === true ? entry.cardId : null;
   }
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((x) => x.uid === sourceUid);
@@ -347,7 +368,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   // 一元化。本フローは picker 選択値を costParams に集めて dispatch へ渡すのみ。
   let cardId: string | null = null;
   let owner: Player | null = null;
-  let sourceArea: 'scene' | 'case' | 'hand' | 'partner-area' = 'scene';
+  let sourceArea: 'scene' | 'case' | 'hand' | 'partner-area' | 'evidence' | 'file' = 'scene';
   if (sourceUid === 'case:self' || sourceUid === 'case:opp') {
     owner = sourceUid === 'case:self' ? 'self' : 'opp';
     cardId = stateAfterSrc.players[owner].case.cardId ?? null;
@@ -357,13 +378,42 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     owner = sourceUid === 'partnerMR:self' ? 'self' : 'opp';
     cardId = stateAfterSrc.players[owner].partnerAreaMR?.cardId ?? null;
     sourceArea = 'partner-area';
+  } else if (['self', 'opp'].some((p) => {
+    const mr = stateAfterSrc.players[p as Player].partnerAreaMR;
+    if (mr?.uid !== sourceUid) return false;
+    owner = p as Player;
+    cardId = mr.cardId;
+    sourceArea = 'partner-area';
+    return true;
+  })) {
+    // Physical PA-MR UID resolved above.
   } else if (sourceUid.startsWith('hand:')) {
     // hand sentinel `hand:${player}:${cardId}` (B06103, W6 step11)
     const [, hp, ...rest] = sourceUid.split(':');
     if (hp === 'self' || hp === 'opp') {
       owner = hp;
-      cardId = rest.join(':') || null;
+      const token = rest.join(':');
+      cardId = /^\d+$/.test(token) ? stateAfterSrc.players[hp].hand[Number(token)] ?? null : token || null;
       sourceArea = 'hand';
+    }
+  } else if (/^(evidence|file):(self|opp):(\d+)$/.test(sourceUid)) {
+    const [, rawArea, playerText, indexText] = /^(evidence|file):(self|opp):(\d+)$/.exec(sourceUid)!;
+    const player = playerText as Player;
+    const index = Number(indexText);
+    if (rawArea === 'evidence') {
+      const entry = stateAfterSrc.players[player].evidence[index];
+      if (entry?.faceUp) {
+        owner = player;
+        cardId = entry.cardId;
+        sourceArea = 'evidence';
+      }
+    } else {
+      const entry = stateAfterSrc.players[player].file[index];
+      if (entry?.type === 'card-back' && entry.faceUp === true) {
+        owner = player;
+        cardId = entry.cardId;
+        sourceArea = 'file';
+      }
     }
   } else {
     for (const p of ['self', 'opp'] as const) {
@@ -400,6 +450,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     cancelLabel: 'キャンセル',
   });
   if (!accepted) return { ok: false, reason: 'cancelled' };
+  if (!owner || !cardId) return { ok: false, reason: 'not-allowed' };
 
   // A replacement pays the entire declared cost.  When the ordinary cost is
   // also payable, it is a genuine player choice rather than an AI fallback.
@@ -423,7 +474,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
         uid,
         // Public board position disambiguates same-name providers without
         // exposing hidden information or raw UID values.
-        label: `${uidToDisplayName(altState, uid)}（現場${altState.players[owner].scene.findIndex((char) => char.uid === uid) + 1}）をリムーブ`,
+        label: `${uidToDisplayName(altState, uid)}（現場${altState.players[owner ?? 'self'].scene.findIndex((char) => char.uid === uid) + 1}）をリムーブ`,
       }));
       const choice = await useChoicePicker().ask({
         sourceName,
@@ -510,6 +561,30 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
     costParams = { ...(costParams ?? {}), flipFaceUpEvidence: { indices: choice.indices } };
   }
 
+  // The hand is an occurrence list: duplicate printed cards must remain
+  // separately selectable. Collect exact indices before dispatch so engine
+  // preflight and payment consume the same witness.
+  const removeHandCost = findRemoveFromHandCost(cost, costParams?.costChoicePath ?? costParams?.costChoice);
+  if (!useAlternativeCost && removeHandCost && owner === 'self' && cardId) {
+    const handState = useGameStateStore.getState().gameState;
+    if (handState === null) return { ok: false, reason: 'no-state' };
+    const allowed = engine.target.candidates(handState, removeHandCost.target, makeAbilityCtx({ player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea }))
+      .filter((candidate): candidate is Candidate & { kind: 'card'; index: number } => candidate.kind === 'card' && typeof candidate.index === 'number');
+    if (allowed.length < removeHandCost.n) return { ok: false, reason: 'not-allowed' };
+    const choice = await useHandCostPicker().ask({
+      side: owner,
+      sourceName,
+      candidates: allowed.map(candidate => ({ index: candidate.index, cardId: candidate.cardId })),
+      n: removeHandCost.n,
+    });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    const allowedIndices = new Set(allowed.map(candidate => candidate.index));
+    if (choice.indices.length !== removeHandCost.n
+      || new Set(choice.indices).size !== choice.indices.length
+      || choice.indices.some(index => !allowedIndices.has(index))) return { ok: false, reason: 'not-allowed' };
+    costParams = { ...(costParams ?? {}), removeFromHand: { indices: choice.indices } };
+  }
+
   // 3.6) 夜間 W0 (2026-07-11, B09027): cost kind:'choice' (「AかBを1枚リムーブする」択一コスト) の
   //   human branch 選択。engine cost.pay は ctx.dyn.costChoice 未供給時 first-payable auto-select
   //   に落ち、human は 2 番目の branch を選べない (readChosenIndex, pay.ts)。payable branch を
@@ -570,23 +645,19 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   if (!useAlternativeCost && removeSetCost && owner === 'self' && cardId) {
     const setState = useGameStateStore.getState().gameState;
     if (setState === null) return { ok: false, reason: 'no-state' };
-    const candidates = setState.players[owner].scene.flatMap((host, sceneIndex) => {
-      if (removeSetCost.hostSelf && host.uid !== sourceUid) return [];
-      return host.setCards.flatMap((entry, index) => {
-        if (!removeSetCost.anyFace && entry.faceUp) return [];
-        if (typeof entry.instanceId !== 'string') return [];
+    const setCtx = makeAbilityCtx({ player: owner, uid: sourceUid, cardId, abilityId: chosenAbilId, area: sourceArea });
+    const candidates = eligibleRemoveSetCards(setState, removeSetCost, setCtx)
+      .filter(({ entry }) => typeof entry.instanceId === 'string')
+      .map(({ host, entry }, ordinal) => {
+        const sceneIndex = setState.players[owner ?? 'self'].scene.findIndex(candidate => candidate.uid === host.uid);
         const hidden = !entry.faceUp;
-        return [{
+        return {
           hostUid: host.uid,
-          // UID is not useful to players; public scene position makes same-name hosts distinguishable.
           hostLabel: `${uidToDisplayName(setState, host.uid)}（現場${sceneIndex + 1}）`,
-          instanceId: entry.instanceId,
-          ordinal: index + 1,
-          hidden,
+          instanceId: entry.instanceId!, ordinal: ordinal + 1, hidden,
           ...(hidden ? {} : { cardId: entry.cardId }),
-        }];
+        };
       });
-    }).map((candidate, index) => ({ ...candidate, ordinal: index + 1 }));
     if (candidates.length < removeSetCost.n) return { ok: false, reason: 'not-allowed' };
     const choice = await useSetCardCostPicker().ask({
       player: owner,

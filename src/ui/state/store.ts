@@ -146,6 +146,8 @@ export type GameStateStore = {
    */
   pendingDeckReveal: PendingDeckReveal | null;
   setPendingDeckReveal: (p: PendingDeckReveal | null) => void;
+  pendingPublicHandReveal: PendingPublicHandReveal | null;
+  setPendingPublicHandReveal: (p: PendingPublicHandReveal | null) => void;
   /**
    * BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択待ち。
    * engine 側 PendingDeckReorderSide と同 shape。human 所有 & 2 枚以上なら移動前にsetされ、
@@ -197,6 +199,16 @@ export type PendingDeckReveal = {
   source?: { cardId?: string; abilityId?: string; uid?: string };
 };
 
+export type PendingPublicHandReveal = {
+  owner: 'self' | 'opp';
+  audience: 'all';
+  cardIds: string[];
+  handSnapshot: string[];
+  lifetime: 'effect' | 'presentation';
+  resolutionToken: string;
+  source: { cardId?: string; abilityId?: string; uid?: string };
+};
+
 export type PendingDeckReorder = {
   player: 'self' | 'opp';
   /** 並べ替え対象カード群。 */
@@ -217,12 +229,13 @@ export type PendingDeckPlace = {
 
 export type PendingEffectPick = {
   player: 'self' | 'opp';
-  candidates: { uid: string; cardId: string; player: 'self' | 'opp' }[];
+  candidates: { uid: string; cardId: string; player: 'self' | 'opp'; kind?: 'char' | 'card' | 'evidence'; area?: string }[];
   atomVerb: string;
   atomArgs: Record<string, unknown>;
   nMin: number;
   nMax: number;
   source: PendingEffectSource;
+  publicHandRevealToken?: string;
   /**
    * D08021 driver 2026-05-26: target.query.distinctNames を UI multi-select に伝達。
    * CardListModal で同 name component (rules/19) の重複選択を click 不可化する。
@@ -257,6 +270,7 @@ export type PendingEffectPick = {
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */
 export type PendingEffectChoice = {
   player: 'self' | 'opp';
+  publicHandRevealToken?: string;
   source: PendingEffectSource & { uid: string };
   options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string; sceneEnter?: boolean }[];
 };
@@ -264,6 +278,7 @@ export type PendingEffectChoice = {
 /** 2026-06-06 タスクC: optional 決定 (「〜してもよい」) 保留 (PendingEffectOptionalSide と同 shape)。 */
 export type PendingEffectOptional = {
   player: 'self' | 'opp';
+  publicHandRevealToken?: string;
   source: PendingEffectSource & { uid: string };
   /** optional 内が $trigger.<field> を参照する場合の再開 ctx 復元用 (B03038、JSON-safe) */
   triggerPayload?: unknown;
@@ -280,6 +295,8 @@ export type PendingRps = {
 export type PendingSetCardChoice = {
   player: 'self' | 'opp';
   hostUid: string;
+  face?: 'down' | 'up' | 'any';
+  destination?: { area: 'evidence'; faceUp: boolean } | { area: 'hand' } | { area: 'scene'; hostUid: string };
   /** effect=従来の単一選択、cost=宣言コストの複数物理 occurrence 選択。 */
   purpose?: 'effect' | 'cost';
   entries: {
@@ -305,6 +322,7 @@ export type PendingSetCardReplacement = {
 /** Opponent may discard one hand occurrence to cancel the already-selected effect. */
 export type PendingChooseIntercept = {
   player: 'self' | 'opp';
+  publicHandRevealToken?: string;
   protector: { uid: string; cardId: string; abilityId: string };
   targetUid: string;
 };
@@ -371,6 +389,7 @@ export const MATCH_SESSION_RESET_STATE = {
   pendingSetCardReplacement: null,
   pendingEffectRepeatOptional: null,
   pendingDeckReveal: null,
+  pendingPublicHandReveal: null,
   pendingDeckReorder: null,
   pendingDeckPlace: null,
   hiramekiDemoMode: 'idle',
@@ -435,6 +454,8 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
   setPendingEffectRepeatOptional: (p) => set({ pendingEffectRepeatOptional: p }),
   pendingDeckReveal: null,
   setPendingDeckReveal: (p) => set({ pendingDeckReveal: p }),
+  pendingPublicHandReveal: null,
+  setPendingPublicHandReveal: (p) => set({ pendingPublicHandReveal: p }),
   pendingDeckReorder: null,
   setPendingDeckReorder: (p) => set({ pendingDeckReorder: p }),
   pendingDeckPlace: null,

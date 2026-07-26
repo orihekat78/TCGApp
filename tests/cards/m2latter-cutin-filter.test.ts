@@ -179,7 +179,7 @@ describe('B07100 構造 (印字 ⇔ DSL 1対1)', () => {
     expect(a1.condition).toEqual({ kind: 'partnerColor', color: '黒' });
     const seq = a1.effect as { kind: string; steps: Array<Record<string, unknown>> };
     expect(seq.kind).toBe('sequence');
-    expect(seq.steps[0]).toMatchObject({ kind: 'atom', verb: 'log', args: { player: 'opp', action: 'reveal-hand' } });
+    expect(seq.steps[0]).toMatchObject({ kind: 'atom', verb: 'handReveal', args: { player: 'opp', all: true, audience: 'all', lifetime: 'effect' } });
     const chain = seq.steps[1] as { kind: string; steps: Array<Record<string, unknown>> };
     expect(chain.kind).toBe('chain');
     expect(chain.steps[0]).toMatchObject({

@@ -17,3 +17,16 @@
 - Official manual Ver.2.5 review introduced `BUG-261`. Local rules now distinguish invalid optional Hirameki activation from text resolution, and distinguish printed icon-condition keywords from text-granted keywords outside the scene.
 - The shared readers cover scene, hand, deck, bound, and partner-area MR. Original-ability disable keeps the icon itself referenceable but suppresses printed triggered and declared text; external grants remain independent.
 - Regressions cover invalid activation, valid/invalid keyword state, text-grant exclusion, cut-in condition, disabled icons, and PA-MR. Generated docs must be refreshed after these reader/card-marker changes.
+
+## 2026-07 CT-P10 B10098 PA cost
+
+- Added `Cost.selfToPartnerArea`: own scene MR plus vacant PA preflight; composite payment is atomic. It preserves uid/state/declared count/turn effects, clears named plus set/stacked cards to remove, emits no new leave hook, and endTurn clears PA-MR turn effects. UI/AI enumerate the preserved PA uid.
+- B10098/P are registered once each. Grounding records printed/condition-icon-only plain 突撃 filtering and contact a/b/guard paths. Focused metadata/PA/keyword checks (4 files, 177 tests), typecheck, lint, diff check, and CT-P10 inventory=0 passed.
+
+## 2026-07 CT-P10 implementation checkpoint
+
+- CT-P10 registry is **166 / 166**. The card wave includes source-area identity, public hand reveal lifetime, PA-MR costs, remove-set costs, conditional static candidates, parallel pick resume, and compiler hand-reveal output.
+- Official QA is **2,912 / 2,912 adjudicated**. QA merge/verify, trace generation, and lint complete without storing official text or URLs.
+- Regression evidence before this checkpoint: full Vitest 881 files / 7,120 tests passed (7 skipped); CT-P10 card suite 51 files / 394 tests; typecheck, lint, bug/listener/side-channel lint, docs checks, smoke:1000, and benchmark passed. Targeted desktop and 851x393 Playwright passed for public reveal, occurrence identity, B10094, and set-card privacy.
+- Set-card browse preserves own face states and reveals only an opponent's face-up card. Current UX checkpoint keeps one card-detail magnifier at image top-right and a separate set-count control; do not overlay icons. The next task must audit every detail affordance and navigation path as one coherent interaction.
+- Phase 4 YOU vs CPU manual verification remains pending. Browser security previously blocked localhost Browser Use; do not bypass it.

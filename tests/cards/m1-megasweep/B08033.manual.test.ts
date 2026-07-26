@@ -208,7 +208,7 @@ describe('B08033 a2 — 宣言 (partnerColor白 / cost removeSetCard n2 / 白キ
     expect(readChar.keywords(s, 'w1')).not.toContain('突撃[キャラ]');
 
     s = produce(s, (d) => {
-      activateDeclaredAbility(d, 'yuki', 'a2', { removeSetCard: { hostUids: ['yuki', 'yuki'] } });
+      activateDeclaredAbility(d, 'yuki', 'a2', { removeSetCard: { hostUids: ['yuki', 'yuki'], instanceIds: ['set:1', 'set:2'] } });
       runAllUntilEmpty(d);
     });
     // cost: B08033 の裏向きセット2枚が除去された

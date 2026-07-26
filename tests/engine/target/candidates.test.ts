@@ -3,6 +3,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { candidates, legalCount } from '@/engine/target/candidates';
+import '@/engine/read/char';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { register as registerCardDef, _resetRegistry } from '@/engine/read/def';
 import type {
@@ -353,6 +354,26 @@ describe('engine.target.candidates', () => {
       );
       expect(result).toHaveLength(1);
     });
+  });
+
+  it('does not evaluate unrelated effective stats for static name and trait filters', () => {
+    let apDeltaReads = 0;
+    registerCardDef(defOf({
+      id: 'STATIC',
+      names: ['static-name'],
+      traits: ['static-trait'],
+      abilities: [{
+        id: 'a1', type: 'continuous', scope: 'on-scene',
+        continuousModifier: { apDelta: () => { apDeltaReads += 1; return 1000; } },
+        description: '', ruleRefs: [],
+      }],
+    }));
+    const state = withScene(createEmptyGameState(), 'self', [makeChar({ uid: 'static', cardId: 'STATIC' })]);
+
+    expect(candidates(state, pickRef({ area: 'scene', side: 'self', filter: {
+      cardName: 'static-name', trait: 'static-trait',
+    } }), makeCtx()).map(candidate => candidate.uid)).toEqual(['static']);
+    expect(apDeltaReads).toBe(0);
   });
 });
 

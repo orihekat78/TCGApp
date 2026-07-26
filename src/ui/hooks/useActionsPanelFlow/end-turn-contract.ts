@@ -6,6 +6,7 @@ import { useTargetPickerStore } from '../useTargetPicker.js';
 import { useNextHintPickerStore } from '../useNextHintPicker.js';
 import { useSceneSwitchPickerStore } from '../useSceneSwitchPickerStore.js';
 import { useEvidenceFlipPickerStore } from '../useEvidenceFlipPicker.js';
+import { useHandCostPickerStore } from '../useHandCostPicker.js';
 import { useStackedCardCostPickerStore } from '../useStackedCardCostPicker.js';
 import { useChoicePickerStore } from '../useChoicePicker.js';
 import { useDeclareNamePickerStore } from '../useDeclareNamePicker.js';
@@ -59,6 +60,10 @@ const END_TURN_BLOCK_SOURCES: readonly EndTurnBlockSource[] = [
   {
     subscribe: (listener) => useEvidenceFlipPickerStore.subscribe(listener),
     isBlocked: () => useEvidenceFlipPickerStore.getState().current !== null,
+  },
+  {
+    subscribe: (listener) => useHandCostPickerStore.subscribe(listener),
+    isBlocked: () => useHandCostPickerStore.getState().current !== null,
   },
   {
     subscribe: (listener) => useStackedCardCostPickerStore.subscribe(listener),

@@ -15,8 +15,8 @@ const a1: AbilityDef = {
   scope: 'on-scene',
   // このキャラが推理したとき (reasoning:end、source.uid 一致でこのキャラ自身の推理のみ発火)
   trigger: { hook: 'reasoning:end', selfOnly: true },
-  // 相手は手札を公開する（その後、元に戻す）= 情報開示のみ、状態不変 (D05004 a1 同型)
-  effect: { kind: 'atom', verb: 'log', args: { player: 'opp', action: 'reveal-hand', result: '相手は手札を公開する（その後、元に戻す）' } },
+  // 相手は手札を公開する（その後、元に戻す）= presentation 窓のみ、状態不変 (D05004 a1 同型)
+  effect: { kind: 'atom', verb: 'handReveal', args: { player: 'opp', all: true, audience: 'all', lifetime: 'presentation' } },
   description: 'このキャラが推理したとき、相手は手札を公開する。（その後、元に戻す）',
   ruleRefs: ['rules/11-reasoning.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md'],
 };

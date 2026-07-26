@@ -43,16 +43,38 @@ function getHumanPlayerSide(): 'self' | 'opp' | null {
 export function findCardOnBoard(
   state: GameState,
   uid: string,
-): { player: 'self' | 'opp'; cardId: string; area: 'scene' | 'case' | 'partner-area' | 'hand' } | null {
+): { player: 'self' | 'opp'; cardId: string; area: 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file' } | null {
   // mega-wave W6 step11 (2026-07-04, row999 item3): hand sentinel uid (`hand:${p}:${cardId}` —
   // listeners/triggered.ts collectCardsInPlay の生成規約と 1:1 対称)。B06103 ジン
   // 「この能力はこのカードが手札にある場合に宣言できる」(scope:'on-hand' declared) の resolve 用。
   if (uid.startsWith('hand:')) {
     const [, hp, ...rest] = uid.split(':');
-    const cardId = rest.join(':');
-    if ((hp !== 'self' && hp !== 'opp') || !cardId) return null;
+    const token = rest.join(':');
+    if ((hp !== 'self' && hp !== 'opp') || !token) return null;
+    // Canonical sources identify the exact hand occurrence by current index.
+    // Retain the original cardId sentinel for legacy callers.
+    if (/^\d+$/.test(token)) {
+      const cardId = state.players[hp].hand[Number(token)];
+      return cardId ? { player: hp, cardId, area: 'hand' } : null;
+    }
+    const cardId = token;
     if (state.players[hp].hand.includes(cardId)) return { player: hp, cardId, area: 'hand' };
     return null;
+  }
+  const occurrence = /^(evidence|file):(self|opp):(\d+)$/.exec(uid);
+  if (occurrence) {
+    const area = occurrence[1] as 'evidence' | 'file';
+    const player = occurrence[2] as 'self' | 'opp';
+    const index = Number(occurrence[3]);
+    if (!Number.isSafeInteger(index)) return null;
+    if (area === 'evidence') {
+      const entry = state.players[player].evidence[index];
+      return entry?.faceUp ? { player, cardId: entry.cardId, area } : null;
+    }
+    const entry = state.players[player].file[index];
+    return entry?.type === 'card-back' && entry.faceUp === true
+      ? { player, cardId: entry.cardId, area }
+      : null;
   }
   if (uid === 'case:self' || uid === 'case:opp') {
     const p: 'self' | 'opp' = uid === 'case:self' ? 'self' : 'opp';
@@ -66,12 +88,12 @@ export function findCardOnBoard(
     if (cardId) return { player: p, cardId, area: 'partner-area' };
     return null;
   }
-  // MR partner-area (rules/18/21:10): PA 常駐 MR の宣言能力を resolve (area='partner-area')。
-  if (uid === 'partnerMR:self' || uid === 'partnerMR:opp') {
-    const p: 'self' | 'opp' = uid === 'partnerMR:self' ? 'self' : 'opp';
+  // PA-MR accepts the legacy sentinel and its preserved physical uid.
+  for (const p of ['self', 'opp'] as const) {
     const slot = state.players[p].partnerAreaMR;
-    if (slot) return { player: p, cardId: slot.cardId, area: 'partner-area' };
-    return null;
+    if (slot && (slot.uid === uid || uid === `partnerMR:${p}`)) {
+      return { player: p, cardId: slot.cardId, area: 'partner-area' };
+    }
   }
   for (const p of ['self', 'opp'] as const) {
     const c = state.players[p].scene.find((c) => c.uid === uid);
@@ -109,7 +131,7 @@ export function findDeclaredAbility(
   state: GameState,
   uid: string,
   cardId: string,
-  area: 'scene' | 'case' | 'partner-area' | 'hand',
+  area: 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file',
   abilId: string,
 ): AbilityDef | undefined {
   const printed = readChar.originalAbilitiesDisabled(state, uid)
@@ -119,7 +141,7 @@ export function findDeclaredAbility(
   for (const p of ['self', 'opp'] as const) {
     const host = area === 'scene'
       ? state.players[p].scene.find((c) => c.uid === uid)
-      : area === 'partner-area' && uid === `partnerMR:${p}`
+      : area === 'partner-area' && (state.players[p].partnerAreaMR?.uid === uid || uid === `partnerMR:${p}`)
         ? state.players[p].partnerAreaMR
         : undefined;
     if (!host) continue;
@@ -164,7 +186,7 @@ export function grantedDeclaredAbilitiesOf(
  * - 対象キャラが存在する
  * - 名乗り状態でも OK (rules/24)
  * - active でなくても OK (ただし sleep コストは支払不可なため別途 engine.cost.canPay 判定が必要)
- * - 【ターン①/②】 ability.limit (kind:'turn') を enforcement (BUG-067, 2026-05-28)
+ * - 【ターン①/②/③】 ability.limit (kind:'turn') を enforcement (BUG-067, 2026-05-28)
  *   - 'game' kind は declaredUseCount がターン境界で reset されるため将来仕様、
  *     現状未使用 (cards/_shared / cards/ct-* で全 turn:n=1)
  */
@@ -189,6 +211,7 @@ export function canDeclaredAbility(state: GameState, uid: string, abilId: string
   // カードが hand uid から誤って呼ばれないことも本 gate が保証する (fail-closed)。
   if (ability && found.area === 'hand' && ability.scope !== 'on-hand') return false;
   if (ability && ability.scope === 'on-hand' && found.area !== 'hand') return false;
+  if (ability && (found.area === 'evidence' || found.area === 'file') && ability.scope !== 'on-evidence-file') return false;
   if (ability?.limit?.kind === 'turn') {
     const used = readChar.declaredUseCount(state, uid, abilId);
     if (used >= ability.limit.n) return false;
@@ -343,7 +366,7 @@ export function useDeclaredAbility(
     found = {
       player: src.player,
       cardId: src.cardId,
-      area: (src.area as 'scene' | 'case' | 'partner-area' | 'hand') ?? 'scene',
+      area: (src.area as 'scene' | 'case' | 'partner-area' | 'hand' | 'evidence' | 'file') ?? 'scene',
     };
   }
   if (!found) {
@@ -372,7 +395,7 @@ export function useDeclaredAbility(
     state,
     'effect:declared',
     { kind: 'declaredAbility', uid, abilId },
-    { player: found.player, uid, cardId: found.cardId },
+    { player: found.player, uid, cardId: found.cardId, area: found.area },
   );
 
   // 2026-05-26 fix: type:'declared' ability の effect を直接 queue する。
@@ -440,6 +463,8 @@ export function useDeclaredAbility(
     // (現 reader は runtime step 冒頭 reset で inert だが、将来 reader への落とし穴予防。review NIT)。
     resolveCtx.costPaid || resolveCtx.dyn
       ? {
+          // Picks were resolved before queueing.  Deferring here would resolve
+          // the same pick a second time when this entry reaches the stack.
           ...(resolveCtx.costPaid ? { costPaid: resolveCtx.costPaid } : {}),
           ...(resolveCtx.dyn
             ? { dyn: (({ chainStepNoApply: _drop, ...rest }) => rest)(resolveCtx.dyn) }

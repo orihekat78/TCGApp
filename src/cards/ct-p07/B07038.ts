@@ -42,7 +42,7 @@ const a1: AbilityDef = {
           filter: (cardId: string): boolean => {
             const d = lookupCardDef(cardId);
             if (!d) return false;
-            return allCardNameComponentsForDef(d).includes('小泉紅子') || (d.kind === 'event' && d.traits.includes('赤魔術'));
+            return allCardNameComponentsForDef(d, 'deck').includes('小泉紅子') || (d.kind === 'event' && d.traits.includes('赤魔術'));
           },
           bind: '$revealed',
           bindMatch: '$matched',

@@ -60,6 +60,7 @@ export function canReason(state: GameState, uid: string): boolean {
   }
   // char
   if (t.char.state !== 'active') return false;
+  if (readChar.selfContinuousFlag(state, uid, 'selfReasonBan')) return false;
   // engine additive wave-8 (2026-07-02, P15): 「このキャラは推理できない。」付与 (B09072 a2、
   // ターン終了時まで)。charSetTurnEffect verb が turnEffects['cannotReason']=true を立て、
   // clearTurnEffects('turn') が endTurn で削除。付与は名乗り/迅速に優先する絶対制限 (rules/11:

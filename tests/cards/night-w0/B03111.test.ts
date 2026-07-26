@@ -61,7 +61,7 @@ describe('B03111 構造', () => {
     expect(a1.condition).toEqual({ kind: 'partnerColor', color: '黒' });
     const seq = a1.effect as { kind: string; steps: Array<Record<string, unknown>> };
     expect(seq.kind).toBe('sequence');
-    expect(seq.steps[0]).toMatchObject({ kind: 'atom', verb: 'log', args: { player: 'opp', action: 'reveal-hand' } });
+    expect(seq.steps[0]).toMatchObject({ kind: 'atom', verb: 'handReveal', args: { player: 'opp', all: true, audience: 'all', lifetime: 'effect' } });
     expect(seq.steps[1]).toMatchObject({
       kind: 'atom', verb: 'discard',
       args: { player: 'opp', side: 'opp', max: 1, chooser: 'source', filter: { levelMax: 7 } },

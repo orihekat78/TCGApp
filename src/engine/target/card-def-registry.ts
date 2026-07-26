@@ -67,9 +67,12 @@ export function cardNameComponents(name: string): string[] {
  * Get all card-name components for a CardDef, factoring in rules/19 split-name
  * cards. Combines CardDef.names with any further splitting on each name.
  */
-export function allCardNameComponentsForDef(d: CardDef): string[] {
+export function allCardNameComponentsForDef(d: CardDef, area?: string): string[] {
   const out = new Set<string>();
-  for (const n of d.names) {
+  const aliases = area === 'deck' || area === 'remove'
+    ? d.nameAliasesByArea?.[area] ?? []
+    : [];
+  for (const n of [...d.names, ...aliases]) {
     out.add(n);
     for (const c of cardNameComponents(n)) {
       out.add(c);

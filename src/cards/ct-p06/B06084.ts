@@ -23,10 +23,12 @@ const a1: AbilityDef = {
     steps: [
       {
         kind: 'atom',
-        verb: 'log',
+        verb: 'handReveal',
         args: {
           player: 'opp',
-          action: 'reveal-hand',
+          all: true,
+          audience: 'all',
+          lifetime: 'presentation',
           result: '相手は手札を公開する（その後、元に戻す）'
         }
       },

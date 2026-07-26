@@ -266,6 +266,29 @@ describe('BUG-180: completed deck take refreshes on exact exhaustion', () => {
     expect(s.players.opp.evidence).toHaveLength(1);
   });
 
+  it('charSetCard exact exhaustion completes the set before refresh emits remove:exit', () => {
+    const s = state();
+    const ctx = sceneCtx(s);
+    const hostUid = s.players.self.scene[0]!.uid;
+    s.players.self.deck = ['C1'];
+    s.players.self.remove = ['R'];
+    let setEnterState: { deck: string[]; remove: string[] } | undefined;
+    let removeExitSetCards: string[] | undefined;
+    event.on('setcard:enter', (observed) => {
+      setEnterState = { deck: [...observed.players.self.deck], remove: [...observed.players.self.remove] };
+    });
+    event.on('remove:exit', (observed) => {
+      removeExitSetCards = observed.players.self.scene[0]!.setCards.map((entry) => entry.cardId);
+    });
+
+    runAtom(s, 'charSetCard' as never, {
+      uid: hostUid, fromDeckTop: true, faceUp: false, player: 'self',
+    }, ctx);
+
+    expect(setEnterState).toEqual({ deck: [], remove: ['R'] });
+    expect(removeExitSetCards).toEqual(['C1']);
+  });
+
   it('mill n=0 is not a take and does not refresh an empty deck', () => {
     const s = state();
     const ctx = sceneCtx(s);

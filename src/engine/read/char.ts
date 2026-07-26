@@ -9,7 +9,7 @@ import { evalDyn } from '../dyn/eval.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
 // cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
-import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerEffectiveCutinText, registerEffectiveKeyword, registerTraitNameGrant, traitNameGrantSafe, registerLevelFilterOverride } from '../target/candidates.js';
+import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerEffectiveCutinText, registerEffectiveKeyword, registerPrintedKeyword, registerSourceAp, registerSourceLevel, registerTraitNameGrant, traitNameGrantSafe, registerLevelFilterOverride } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -61,11 +61,10 @@ function selfContinuousFlag(
   uid: string,
   // W2b (2026-07-03, r27): mustBeSelectedByOppEvent (B08087) — effect-pick forced-inclusion flag。
   // scene.byUid のみ走査 = 「現場にいる場合に有効」(公式Q&A) が自動整合。
-  token: 'untargetableByAction' | 'caseActionBan' | 'selfActionBan' | 'selfCutinBanInContact' | 'mustBeSelectedByOppEvent' | 'cannotGuard',
+  token: 'untargetableByAction' | 'caseActionBan' | 'selfActionBan' | 'selfReasonBan' | 'selfCutinBanInContact' | 'mustBeSelectedByOppEvent' | 'cannotGuard' | 'noAutoActivateSelf',
 ): boolean {
   const char = scene.byUid(s, uid);
   if (!char) return false;
-  if (originalAbilitiesDisabledOn(char)) return false;
   const d = def.card(char.cardId);
   if (!d) return false;
   const owner = ownerSideOf(s, uid);
@@ -75,6 +74,27 @@ function selfContinuousFlag(
   for (const ability of printedAbilitiesOf(char)) {
     if (ability.type !== 'continuous') continue;
     if (inPA && !scopeActiveInPartnerArea(ability.scope)) continue;
+    if (ability.continuousModifier?.[token] !== true) continue;
+    if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+    return true;
+  }
+  // External continuous grants are independent of original card text. They
+  // expire with turnEffects and leave with the bearer, but an original-ability
+  // disable must not suppress them (rules/19).
+  const granted = (char.turnEffects ?? {})['grantedAbilities'];
+  if (!Array.isArray(granted)) return false;
+  // Granted continuous abilities deliberately expose only the narrowly
+  // validated temporary Cut-in ban. Other self flags remain print-only.
+  if (token !== 'selfCutinBanInContact') return false;
+  for (const ability of granted as Array<{
+    type?: unknown; scope?: AbilityScope; condition?: Condition; continuousModifier?: Record<string, unknown>;
+  }>) {
+    if (ability.type !== 'continuous') continue;
+    if (inPA) {
+      if (!scopeActiveInPartnerArea(ability.scope)) continue;
+    } else if (ability.scope !== undefined && ability.scope !== 'on-scene' && ability.scope !== 'on-partner-area' && ability.scope !== 'always') {
+      continue;
+    }
     if (ability.continuousModifier?.[token] !== true) continue;
     if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
     return true;
@@ -434,7 +454,7 @@ function charUntargetableByOppEffect(s: GameState, targetUid: string): boolean {
 function noAutoActivateLocked(s: GameState, uid: string): boolean {
   const c = scene.byUid(s, uid);
   if (!c) return false;
-  const src = c.turnEffects['noAutoActivateBySourceUid'];
+  const src = (c.turnEffects ?? {})['noAutoActivateBySourceUid'];
   if (typeof src !== 'string') return false;
   return !!scene.byUid(s, src); // byUid は不在時 null (undefined でない) — truthy 判定
 }
@@ -459,19 +479,20 @@ function ap(s: GameState, uid: string): number {
   }
   const char = scene.byUid(s, uid);
   if (!char) return 0;
+  const effects = char.turnEffects ?? {};
   // engine defer-unlock mini-wave (2026-07-09): 「ターン終了時まで元のAPを X にする」(B05022) は
   // turnEffects['apOverride_turn'] が base を差替 (恒久 apOverride より優先 = 後発効果勝ち)。
   // rules/19 QA: 修整 (apMod_* / continuous / aura) はその上に合算で残る。
-  const apOvTurn = char.turnEffects['apOverride_turn'];
+  const apOvTurn = effects['apOverride_turn'];
   const base = typeof apOvTurn === 'number'
     ? apOvTurn
     : (char.apOverride !== null ? char.apOverride : (def.card(char.cardId)?.ap ?? 0));
-  const modPermanent = (char.turnEffects['apMod_permanent'] as number | undefined) ?? 0;
-  const modTurn      = (char.turnEffects['apMod_turn']      as number | undefined) ?? 0;
-  const modContact   = (char.turnEffects['apMod_contact']   as number | undefined) ?? 0;
+  const modPermanent = (effects['apMod_permanent'] as number | undefined) ?? 0;
+  const modTurn      = (effects['apMod_turn']      as number | undefined) ?? 0;
+  const modContact   = (effects['apMod_contact']   as number | undefined) ?? 0;
   // engine拡張 wave#2 cluster3 (2026-06-13): scope:'action' (「アクション終了時まで」B03097/B08048)。
   // 清掃は clearTurnEffects('action') (action-end 2経路) + turn-end safety net (rules/08 §6-7)。
-  const modAction    = (char.turnEffects['apMod_action']    as number | undefined) ?? 0;
+  const modAction    = (effects['apMod_action']    as number | undefined) ?? 0;
   const modContinuous = continuousDeltaSafe(s, uid, 'apDelta'); // BUG-157: 再入 guard 経由 (無限相互再帰防止)
   const modAura = auraDeltaSafe(s, uid, 'apDeltaAura'); // cluster13: 他キャラ aura (guard 付き)
   return base + modPermanent + modTurn + modContact + modAction + modContinuous + modAura;
@@ -494,17 +515,18 @@ function lp(s: GameState, uid: string): number {
   }
   const char = scene.byUid(s, uid);
   if (!char) return 0;
+  const effects = char.turnEffects ?? {};
   // engine mini-wave (2026-07-10): 「ターン終了時まで元のLPを X」(B01045 等) = lpOverride_turn が
   // base を差替 (恒久 lpOverride より優先 = 後発効果勝ち、apOverride_turn と対称)。修整±は残る (rules/19 QA)。
-  const lpOvTurn = char.turnEffects['lpOverride_turn'];
+  const lpOvTurn = effects['lpOverride_turn'];
   const base = typeof lpOvTurn === 'number'
     ? lpOvTurn
     : (char.lpOverride !== null ? char.lpOverride : (def.card(char.cardId)?.lp ?? 0));
-  const modPermanent = (char.turnEffects['lpMod_permanent'] as number | undefined) ?? 0;
-  const modTurn      = (char.turnEffects['lpMod_turn']      as number | undefined) ?? 0;
-  const modContact   = (char.turnEffects['lpMod_contact']   as number | undefined) ?? 0;
-  const modAction    = (char.turnEffects['lpMod_action']    as number | undefined) ?? 0;
-  const modReasoning = (char.turnEffects['lpMod_reasoning'] as number | undefined) ?? 0;
+  const modPermanent = (effects['lpMod_permanent'] as number | undefined) ?? 0;
+  const modTurn      = (effects['lpMod_turn']      as number | undefined) ?? 0;
+  const modContact   = (effects['lpMod_contact']   as number | undefined) ?? 0;
+  const modAction    = (effects['lpMod_action']    as number | undefined) ?? 0;
+  const modReasoning = (effects['lpMod_reasoning'] as number | undefined) ?? 0;
   const modContinuous = continuousDeltaSafe(s, uid, 'lpDelta'); // BUG-157: 再入 guard 経由 (無限相互再帰防止)
   const modAura = auraDeltaSafe(s, uid, 'lpDeltaAura'); // cluster13: 他キャラ aura (guard 付き)
   return base + modPermanent + modTurn + modContact + modAction + modReasoning + modContinuous + modAura;
@@ -516,12 +538,13 @@ function lp(s: GameState, uid: string): number {
 function level(s: GameState, uid: string): number {
   const char = scene.byUid(s, uid);
   if (!char) return 0;
+  const effects = char.turnEffects ?? {};
   const d = def.card(char.cardId);
   const base = d?.level ?? 0;
-  const modPermanent = (char.turnEffects['lvlMod_permanent'] as number | undefined) ?? 0;
-  const modTurn      = (char.turnEffects['lvlMod_turn']      as number | undefined) ?? 0;
-  const modContact   = (char.turnEffects['lvlMod_contact']   as number | undefined) ?? 0;
-  const modAction    = (char.turnEffects['lvlMod_action']    as number | undefined) ?? 0;
+  const modPermanent = (effects['lvlMod_permanent'] as number | undefined) ?? 0;
+  const modTurn      = (effects['lvlMod_turn']      as number | undefined) ?? 0;
+  const modContact   = (effects['lvlMod_contact']   as number | undefined) ?? 0;
+  const modAction    = (effects['lvlMod_action']    as number | undefined) ?? 0;
   // engine additive wave (2026-06-24): continuous lvlDelta (条件付き継続レベル修正) を合算 (ap/lp と対称)。
   // 不在時 +0。再帰は continuousDeltaSafe (candidates) の _inContinuousDelta guard が depth-2 で 0 化し終端。
   // BUG-157 (2026-06-27): ap/lp と対称に guard 経由へ統一 (旧 local 直呼びは無 guard entry だった)。
@@ -543,13 +566,39 @@ function colors(s: GameState, uid: string): string[] {
 // continuous walk (keywords() 上部 fromContinuous) と同経路。付与は現場/PA の board char のみ (owner 不在時 [])。
 // re-entry guard は traitNameGrantSafe (candidates.ts) が担う (継続 condition が candidates を呼んでも depth-2 終端)。
 // 既存カード未宣言 → [] (回帰0)。matchOneFilter/traits/names/bond の全 honor が本関数の結果を印字に union する。
-function grantWalk(s: GameState, uid: string, which: 'grantTraits' | 'grantNames'): string[] {
+function grantWalk(s: GameState, uid: string, which: 'grantTraits' | 'grantTraitsAura' | 'grantNames'): string[] {
   const char = scene.byUid(s, uid);
   if (!char) return [];
   const d = def.card(char.cardId);
   if (!d) return [];
   const owner = ownerSideOf(s, uid);
   if (!owner) return [];
+  if (which === 'grantTraitsAura') {
+    const target = { kind: 'char', uid: char.uid, cardId: char.cardId, player: owner } as Candidate;
+    const out: string[] = [];
+    const bearers: Array<{ char: typeof char; inPA: boolean }> = s.players[owner].scene.map(bearer => ({ char: bearer, inPA: false }));
+    const slotMr = s.players[owner].partnerAreaMR;
+    if (slotMr) bearers.push({ char: slotMr, inPA: true });
+    for (const { char: bearer, inPA } of bearers) {
+      const bearerOwner = ownerSideOf(s, bearer.uid);
+      if (!bearerOwner) continue;
+      const ctx = { source: { player: bearerOwner, uid: bearer.uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
+      for (const ability of printedAbilitiesOf(bearer)) {
+        if (ability.type !== 'continuous') continue;
+        if (inPA) {
+          if (!scopeActiveInPartnerArea(ability.scope)) continue;
+        } else if (ability.scope !== 'on-scene' && ability.scope !== 'on-partner-area' && ability.scope !== 'always') continue;
+        const grant = ability.continuousModifier?.grantTraitsAura;
+        if (!grant || grant.length === 0) continue;
+        if (ability.continuousModifier?.auraExcludeSelf && bearer.uid === uid) continue;
+        if (ability.condition && !evalCond(s, ability.condition, ctx)) continue;
+        const filter = ability.continuousModifier?.auraFilter as TargetFilter | undefined;
+        if (filter && !matchOneFilter(s, char.cardId, filter, char, target)) continue;
+        out.push(...grant);
+      }
+    }
+    return out;
+  }
   const inPA = isPartnerMrUid(uid);
   const ctx = { source: { player: owner, uid, area: inPA ? 'partner-area' : 'scene' }, bindings: {} } as EffectCtx;
   const out: string[] = [];
@@ -572,7 +621,7 @@ function names(s: GameState, uid: string): string[] {
   // mega-wave W6 step2 (2026-07-04, row 999 item2 / PR105): nameOverride turnEffect は **完全置換**
   // (rules/19 Q&A「元のカード名は持っていない扱い」— grantNames の union 方式とは意図的に別ロジック)。
   // 空文字は未設定扱い (DeclareCardNameModal 空 submit 防御)。clearTurnEffects('turn') で失効。
-  const override = char.turnEffects['nameOverride'] as string | undefined;
+  const override = (char.turnEffects ?? {})['nameOverride'] as string | undefined;
   if (override) return [override];
   const printed = def.card(char.cardId)?.names ?? [];
   const granted = traitNameGrantSafe(s, uid, 'grantNames');
@@ -585,13 +634,16 @@ function traits(s: GameState, uid: string): string[] {
   if (!char) return [];
   const owner = ownerSideOf(s, uid);
   const printed = def.card(char.cardId)?.traits ?? [];
-  const granted = traitNameGrantSafe(s, uid, 'grantTraits');
+  const granted = [
+    ...traitNameGrantSafe(s, uid, 'grantTraits'),
+    ...traitNameGrantSafe(s, uid, 'grantTraitsAura'),
+  ];
   // engine A1 wave (2026-07-11, B05101): applied trait 付与/剥奪 (mutate.char.grantTrait/revokeTrait)。
   // keywords() の grantedKeywords/revokedKeywords 経路と同型。'_permanent' はターン終了で切れない
   // (「〚特徴[警察]〛を失い、〚特徴[探偵]〛を持つ（ターン終了時に切れない）」B05101)、'_turn' は
   // clearTurnEffects('turn') で失効。revoked は **印字 + continuous grant 双方** から減算 (B05101 の
   // 「〚特徴[警察]〛と〚[警視庁]〛を失い」= 印字 trait の剥奪)。既存カード未宣言 → 全 [] (回帰0)。
-  const te = char.turnEffects;
+  const te = char.turnEffects ?? {};
   const grantedApplied = [
     ...((te['grantedTraits_permanent'] as string[] | undefined) ?? []),
     ...((te['grantedTraits_turn'] as string[] | undefined) ?? []),
@@ -610,19 +662,20 @@ function traits(s: GameState, uid: string): string[] {
 function keywords(s: GameState, uid: string): string[] {
   const char = scene.byUid(s, uid);
   if (!char) return [];
+  const effects = char.turnEffects ?? {};
   const granted = char.keywordOverrides.granted;
   // BUG-092: scope='turn'/'contact' の付与キーワード (mutate.char.grantKeyword) は
   // turnEffects['grantedKeywords'] に積まれる。これを統合しないと突撃[事件]等の turn-scope 付与が
   // namedExceptionAllowed (突撃/迅速 の名乗り例外判定) 等で読まれず無効だった。
   // turn-scope の付与も「外部から与えられた能力」なので disabledOriginal でも残す (rules/19)。
-  const turnGranted = (char.turnEffects['grantedKeywords'] as string[] | undefined) ?? [];
+  const turnGranted = (effects['grantedKeywords'] as string[] | undefined) ?? [];
   // engine additive (2026-06-29): ターン終了時まで印字キーワードを失う (「ターン終了時までこのキャラは
   // 〚突撃[キャラ]〛を失う」B06068)。charRevokeKeyword scope:'turn' が turnEffects['revokedKeywords'] へ積む。
   // ⚠ 減算対象は **印字 (base CardDef.keywords) + continuous (自身の grantKeywords) のみ**。granted / turnGranted
   // (外部カードからの付与) は減算しない — 公式 B06068 Q&A「失った後に他カードの能力/効果で 突撃[キャラ] を
   // 再付与された場合はアクション[キャラ]を行える」= 外部付与は「失う」効果と独立に重なる (再付与で復活)。
   // 不在時 [] = 減算なし (既存カードは未宣言 → 回帰0)。clearTurnEffects('turn') で清掃。rules/19 §「失う」効果。
-  const revoked = (char.turnEffects['revokedKeywords'] as string[] | undefined) ?? [];
+  const revoked = (effects['revokedKeywords'] as string[] | undefined) ?? [];
   // engine additive (2026-06-29c): on-set-host rider keyword grant (装備イベント、B02013 〚突撃〛付与)。
   // faceUp でセットされたカード def の scope:'on-set-host' continuous grantKeywords を host に付与する。
   // rider は **他カードによる付与** = 外部 grant 扱い → disabledOriginal でも残り (rules/19 §他カードの付与は無効化されない)、
@@ -700,7 +753,7 @@ function hasKeyword(s: GameState, uid: string, kw: string): boolean {
  * 不在時 false (既存カードは opponentRestrict 未宣言 → no-op、smoke baseline 不変)。
  * @param ownerSide aura を所有する側 (= 制限される側の "相手")。canCutIn/disguise 側は other = opp-of-actor を渡す。
  */
-function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'stunAutoActivate'): boolean {
+function restrictsOpponent(s: GameState, ownerSide: 'self' | 'opp', token: 'cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'stunAutoActivate' | 'contactLeaveSelfTrigger'): boolean {
   // bearer = 現場キャラ + PA 常駐 MR (rules/18 PA でも有効)。PA-MR は scope on-partner-area/always のみ。
   const bearers: Array<{ char: { cardId: string; uid: string }; inPA: boolean }> =
     s.players[ownerSide].scene.map(c => ({ char: c, inPA: false }));
@@ -745,8 +798,9 @@ const TEXT_TOKEN_SUFFIXES = ['', '_oppTurn', '_action'] as const;
 function hasTextAbility(s: GameState, uid: string, token: string): boolean {
   const c = scene.byUid(s, uid);
   if (!c) return false;
+  const effects = c.turnEffects ?? {};
   for (const suf of TEXT_TOKEN_SUFFIXES) {
-    if (c.turnEffects[token + suf] === true) return true;
+    if (effects[token + suf] === true) return true;
   }
   return keywords(s, uid).includes('text:' + token);
 }
@@ -783,7 +837,7 @@ function stackedCount(s: GameState, uid: string): number {
 function turnEffect(s: GameState, uid: string, key: string): unknown {
   const char = scene.byUid(s, uid);
   if (!char) return undefined;
-  return char.turnEffects[key];
+  return (char.turnEffects ?? {})[key];
 }
 
 // 宣言能力の使用回数 (rules: 15-abilities-effects.md 【ターン①】)
@@ -904,6 +958,8 @@ export const char = {
 
 // BUG-113: module load 時に continuousDelta を candidates へ登録 (数値フィルタの有効値に反映)。
 registerContinuousDelta(continuousDelta);
+registerSourceAp((s, uid) => scene.byUid(s, uid) ? ap(s, uid) : undefined);
+registerSourceLevel((s, uid) => scene.byUid(s, uid) ? level(s, uid) : undefined);
 registerLevelFilterOverride((s, uid) => prospectiveLevels.get(s)?.get(uid));
 registerAuraDelta(auraDelta); // cluster13: 他キャラ aura board-scan を candidates へ late-bind
 registerEffectiveKeyword((s, uid, keyword, fallback) => {
@@ -948,6 +1004,31 @@ registerEffectiveKeyword((s, uid, keyword, fallback) => {
   if (effective) return true;
   return defHasKeyword(cardDef, keyword);
 }); // BUG-197: real board keyword filter == effective keyword reader
+registerPrintedKeyword((s, uid, keyword, fallback) => {
+  const char = scene.byUid(s, uid);
+  const cardId = char?.cardId ?? fallback?.cardId;
+  const owner = char ? ownerSideOf(s, uid) : fallback?.player;
+  if (!cardId || !owner) return undefined;
+  const cardDef = def.card(cardId);
+  if (!cardDef) return false;
+  // Printed ordinary keywords need no icon-condition evaluation.  A disabled
+  // original card text cannot contribute an icon-derived keyword on scene.
+  if ((cardDef.keywords ?? []).includes(keyword)) return !char || !originalAbilitiesDisabledOn(char);
+  if (char && originalAbilitiesDisabledOn(char)) return false;
+  const area = fallback?.area === 'deck' || fallback?.area === 'bound' ? 'hand' : fallback?.area ?? 'scene';
+  const ctx = { source: { player: owner, cardId, uid, area }, bindings: {} } as EffectCtx;
+  for (const ability of cardDef.abilities ?? []) {
+    if (ability.type !== 'continuous') continue;
+    if (ability.continuousModifier?.printedKeywordWhenIconValid !== true) continue;
+    if (ability.scope !== 'on-scene' && ability.scope !== 'on-partner-area' && ability.scope !== 'always') continue;
+    const grantFn = ability.continuousModifier.grantKeywords;
+    if (!grantFn) continue;
+    const granted = grantFn(s, { uid });
+    if (!Array.isArray(granted) || !granted.includes(keyword)) continue;
+    if (!ability.condition || evalCond(s, ability.condition, ctx)) return true;
+  }
+  return false;
+});
 registerEffectiveCutinText((s, uid, text, fallback) => {
   const char = scene.byUid(s, uid);
   if (char && originalAbilitiesDisabledOn(char)) return false;

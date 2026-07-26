@@ -88,6 +88,7 @@ export const ${cardNum}: CardDef = {
   rarity: ${sq(rarity)},
   imageUrl: ${sq(img)},
   abilities: [], // TODO: 個別能力 (ct-p05 / pr-01 の一部) は後日実装
+  standardPartnerActions: true,
   ruleRefs: ['rules/01-victory-conditions.md', 'rules/13-keywords.md'],
 };
 `;

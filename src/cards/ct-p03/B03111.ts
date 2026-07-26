@@ -38,10 +38,12 @@ const a1: AbilityDef = {
       // 相手は手札を公開する（その後、手札を元に戻す）— 公開 = zone 不変の reveal idiom
       {
         kind: 'atom',
-        verb: 'log',
+        verb: 'handReveal',
         args: {
           player: 'opp',
-          action: 'reveal-hand',
+          all: true,
+          audience: 'all',
+          lifetime: 'effect',
           result: '相手は手札を公開する（その後、手札を元に戻す）',
         },
       },

@@ -66,6 +66,8 @@ export function costToText(cost: Cost, resolve?: { state: GameState; ctx: Effect
         : `証拠 ${cost.n.min} 枚以上を表向きに`;
     case 'custom':            return '(独自コスト)';
     // refactor 2b: case 追加漏れの compile-time 検出 (noImplicitReturns 無効のため明示 guard)。到達不能。
+    case 'selfToRemove':      return 'このカードをリムーブエリアに移す';
+    case 'selfToPartnerArea': return 'このカードをパートナーエリアに移す';
     default: {
       const _exhaustive: never = cost;
       void _exhaustive;
@@ -93,6 +95,7 @@ export function findFlipFaceUpCost(cost: Cost | undefined): FlipFaceUpCost | nul
 }
 
 type RemoveStackedCardsCost = Extract<Cost, { kind: 'removeStackedCards' }>;
+type RemoveFromHandCost = Extract<Cost, { kind: 'removeFromHand' }>;
 export function findRemoveStackedCardsCost(cost: Cost | undefined): RemoveStackedCardsCost | null {
   if (!cost) return null;
   if (cost.kind === 'removeStackedCards') return cost;
@@ -103,6 +106,31 @@ export function findRemoveStackedCardsCost(cost: Cost | undefined): RemoveStacke
     }
   }
   return null;
+}
+
+/** Return the remove-from-hand item on the already selected cost-choice path. */
+export function findRemoveFromHandCost(
+  cost: Cost | undefined,
+  choicePath?: ChoicePath,
+): RemoveFromHandCost | null {
+  const choices = normalizedChoicePath(choicePath);
+  let cursor = 0;
+  const visit = (node: Cost): RemoveFromHandCost | null => {
+    if (node.kind === 'removeFromHand') return node;
+    if (node.kind === 'pay') {
+      for (const item of node.items) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (node.kind !== 'choice') return null;
+    const selected = choices?.[cursor++];
+    return selected !== undefined && Number.isInteger(selected) && selected >= 0 && selected < node.items.length
+      ? visit(node.items[selected]!)
+      : null;
+  };
+  return cost ? visit(cost) : null;
 }
 
 type RemoveSetCardCost = Extract<Cost, { kind: 'removeSetCard' }>;
@@ -247,7 +275,7 @@ export function makeAbilityCtx(opts: {
   uid: string;
   cardId: string;
   abilityId: string;
-  area: 'scene' | 'partner-area' | 'case' | 'hand'; // W6 step11 (row999 item3): hand-declared (B06103)
+  area: 'scene' | 'partner-area' | 'case' | 'hand' | 'evidence' | 'file';
 }): EffectCtx {
   return {
     source: {

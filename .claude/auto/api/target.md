@@ -18,7 +18,7 @@
 
 | 名前 | シグネチャ | 説明 |
 | ---- | ---------- | ---- |
-| `allCardNameComponentsForDef` | `(d: CardDef): string[]` | Get all card-name components for a CardDef, factoring in rules/19 split-name cards. Combines CardDef.names with any further splitting on each name. / |
+| `allCardNameComponentsForDef` | `(d: CardDef, area?: string): string[]` | Get all card-name components for a CardDef, factoring in rules/19 split-name cards. Combines CardDef.names with any further splitting on each name. / |
 | `candidates` | `(state: GameState, ref: TargetingRef, ctx: EffectCtx): Candidate[]` | Enumerate candidates for a TargetingRef. / |
 | `cardNameComponents` | `(name: string): string[]` | Split a card name into components per rules/19. Splits on '&', '『 』', '( )'. Example: "江戸川コナン&工藤新一" -> ["江戸川コナン&工藤新一", "江戸川コナン", "工藤新一"] The original name is always included as a component. / |
 | `legalCount` | `(state: GameState, ref: TargetingRef, ctx: EffectCtx): { min: number; max: number }` | Legal count range. / |

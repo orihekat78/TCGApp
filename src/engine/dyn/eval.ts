@@ -381,7 +381,7 @@ function resolveSelf(state: GameState, rest: string[], ctx: EffectCtx, original:
     return state.players[side].remove.filter(id => {
       const d = lookupCardDef(id);
       if (!d) return false;
-      return wants.some(w => allCardNameComponentsForDef(d).includes(w));
+      return wants.some(w => allCardNameComponentsForDef(d, 'remove').includes(w));
     }).length;
   }
   // engine defer-unlock mini-wave (2026-07-09): $self.partnerAreaTraitCount.<trait>[.<trait>...] —

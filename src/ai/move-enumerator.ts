@@ -179,7 +179,7 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   {
     const mr = state.players[byPlayer].partnerAreaMR;
     if (mr) {
-      const mrUid = `partnerMR:${byPlayer}`;
+      const mrUid = mr.uid;
       for (const ab of charDeclaredAbilities(mr.cardId)) {
         if (!engine.flow.canActivateDeclaredAbility(state, mrUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
         moves.push({ kind: 'declaredAbility', uid: mrUid, abilityId: ab.id });
@@ -191,11 +191,30 @@ export function enumerateMoves(state: GameState, byPlayer: Player): Move[] {
   // 6d. hand declaredAbility (uid `hand:self:<cardId>` / `hand:opp:<cardId>`)
   // Keep the UI's source identity and duplicate-card contract: one sentinel
   // per cardId, admitted by the same cost/timing/ownership boundary.
-  for (const cardId of new Set(state.players[byPlayer].hand)) {
-    const handUid = `hand:${byPlayer}:${cardId}`;
+  for (const [index, cardId] of state.players[byPlayer].hand.entries()) {
+    const handUid = `hand:${byPlayer}:${index}`;
     for (const ab of charDeclaredAbilities(cardId)) {
       if (!engine.flow.canActivateDeclaredAbility(state, handUid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) continue;
       moves.push({ kind: 'declaredAbility', uid: handUid, abilityId: ab.id });
+    }
+  }
+
+  for (const [index, entry] of state.players[byPlayer].evidence.entries()) {
+    if (!entry.faceUp) continue;
+    const uid = `evidence:${byPlayer}:${index}`;
+    for (const ab of charDeclaredAbilities(entry.cardId)) {
+      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) {
+        moves.push({ kind: 'declaredAbility', uid, abilityId: ab.id });
+      }
+    }
+  }
+  for (const [index, entry] of state.players[byPlayer].file.entries()) {
+    if (entry.type !== 'card-back' || entry.faceUp !== true) continue;
+    const uid = `file:${byPlayer}:${index}`;
+    for (const ab of charDeclaredAbilities(entry.cardId)) {
+      if (engine.flow.canActivateDeclaredAbility(state, uid, ab.id, undefined, { allowImplicitRemoveSetCard: true })) {
+        moves.push({ kind: 'declaredAbility', uid, abilityId: ab.id });
+      }
     }
   }
 

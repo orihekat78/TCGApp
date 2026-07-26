@@ -110,9 +110,11 @@ function solveCase(s: GameState, p: Player): void {
  * real partner singleton / partnerAreaMR には一切触れない。
  * @returns 移動が実行されたか
  */
-function addAreaCardFromRemove(s: GameState, p: Player, cardId: string): boolean {
+function addAreaCardFromRemove(s: GameState, p: Player, cardId: string, exactIndex?: number): boolean {
   const list = s.players[p].remove;
-  const idx = list.lastIndexOf(cardId);
+  const idx = typeof exactIndex === 'number'
+    ? (list[exactIndex] === cardId ? exactIndex : -1)
+    : list.lastIndexOf(cardId);
   if (idx === -1) return false;
   list.splice(idx, 1);
   removeMut.emitExit(s, p, cardId);
@@ -140,6 +142,20 @@ function removeAreaCardsToRemove(s: GameState, p: Player, cardIds: string[]): vo
   }
 }
 
+/**
+ * Remove one exact general-PA occurrence.  Unlike the legacy cardId helper,
+ * this never falls back to another equal copy when a human/AI selection has
+ * become stale.  PA cards are not scene characters, so no scene leave hook is
+ * emitted here.
+ */
+function removeAreaCardToRemoveAt(s: GameState, p: Player, cardId: string, index: number): boolean {
+  const list = s.players[p].partnerAreaCards;
+  if (!list || list[index] !== cardId) return false;
+  list.splice(index, 1);
+  s.players[p].remove.push(cardId);
+  return true;
+}
+
 // MR能力①② (rules/18) は real partner singleton を破壊しない別 slot `PlayerState.partnerAreaMR`
 // に再実装された (engine/mr-partner-area-core, 2026-06-23):
 //   - MR①: mutate/scene.ts placeMrInPA (相手ターン中の全 leave verb から PA へ redirect)
@@ -156,4 +172,5 @@ export const partner = {
   solveCase,
   addAreaCardFromRemove,
   removeAreaCardsToRemove,
+  removeAreaCardToRemoveAt,
 };

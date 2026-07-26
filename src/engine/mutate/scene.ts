@@ -84,6 +84,27 @@ function placeMrInPA(s: GameState, char: SceneCharacter, owner: Player): void {
 }
 
 /**
+ * Declared-cost-only move to the owner's PA MR slot.
+ * This is not MR ability ①: it preserves the original uid and emits no scene-leave hook.
+ */
+function selfToPartnerArea(s: GameState, owner: Player, uid: string, cardId: string): boolean {
+  if (s.players[owner].partnerAreaMR) return false;
+  const index = s.players[owner].scene.findIndex(char => char.uid === uid);
+  if (index < 0) return false;
+  const char = s.players[owner].scene[index]!;
+  if (char.cardId !== cardId || !def.isMR(char.cardId)) return false;
+  charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
+  if (char.setCards.length > 0) s.players[owner].remove.push(...char.setCards.map(entry => entry.cardId));
+  moveStackedCardsToRemove(s, owner, char);
+  char.setCards = [];
+  char.stackedCards = 0;
+  char.isNamed = false;
+  s.players[owner].scene.splice(index, 1);
+  s.players[owner].partnerAreaMR = char;
+  return true;
+}
+
+/**
  * MR能力② (rules/18:25-33, engine/mr-partner-area-core 2026-06-23): 自分の現場に MR が登場する場合、
  * 登場プレイヤー p の既存 MR (現場 or パートナーエリア) をリムーブする。同名不問。
  * - 現場 MR は removeToRemove(cause='effect', noMrRedirect) で除去 → 【現場リムーブ時】発火 +
@@ -141,7 +162,7 @@ function enter(s: GameState, p: Player, cardId: string, opts: EnterOpts): SceneC
   const char: SceneCharacter = {
     cardId,
     uid: generateUid(cardId),
-    state: opts.active === false ? 'sleep' : 'active',
+    state: opts.active === false || def.card(cardId)?.entersSleep === true ? 'sleep' : 'active',
     isNamed: opts.named ?? false,
     enterOrder: currentCount + 1,
     enterOrderThisTurn: prevTurnEnter + 1,
@@ -356,6 +377,13 @@ function removeToRemove(
     s.players[player].scene.splice(idx, 1);
   }
   s.players[player].remove.push(char.cardId);
+
+  if (cause === 'contact-ap' && byUid) {
+    const attacker = findChar(s, byUid);
+    if (attacker && attacker.player !== player) {
+      attacker.char.turnEffects.removedOpponentByContactThisTurn = true;
+    }
+  }
 
   // rules/17 §【現場リムーブ時】(リムーブ方法は問わない) → leave:to-remove Hook 発火。
   // rules/30: 現場6枚超過の修正処置 (misplay-overflow) はリムーブ発動能力 不発動 → 除外。
@@ -700,6 +728,7 @@ export const scene = {
   toDeckBottom,
   toEvidence,
   toStack,
+  selfToPartnerArea,
   setState,
   tryActivate,
   clearNamed,

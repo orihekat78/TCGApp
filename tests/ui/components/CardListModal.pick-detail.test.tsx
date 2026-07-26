@@ -56,8 +56,8 @@ describe('CardListModal pick detail controls', () => {
 
     const contextEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
     act(() => primary!.dispatchEvent(contextEvent));
-    expect(contextEvent.defaultPrevented).toBe(true);
-    expect(onExpand).toHaveBeenCalledTimes(2);
+    expect(contextEvent.defaultPrevented).toBe(false);
+    expect(onExpand).toHaveBeenCalledTimes(1);
   });
 
   it('distinguishes duplicate public pick occurrences while preserving their exact uid and detail card', () => {

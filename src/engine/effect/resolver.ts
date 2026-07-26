@@ -24,8 +24,8 @@ import { char as charMutator } from '../mutate/char.js'; // W6 step6 (r79): _mrS
 import { evalCond } from '../cond/eval.js';
 import { resolveEffectPicks } from './resolve-picks.js';
 import { resolve as resolveTarget } from '../target/resolve.js';
-import { _attachPendingDeckReorderContinuation, _peekPendingDeckReorderSide, resolveBindRef } from './atom-handlers/_shared.js';
-import { _peekPendingEffectRepeatOptionalSide, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, setPendingSetCardChoiceRemainder, type RpsHand } from './pending-state.js';
+import { _attachPendingDeckReorderContinuation, _peekPendingDeckReorderSide, peekPublicHandRevealToken, resolveBindRef, takePublicHandRevealToken } from './atom-handlers/_shared.js';
+import { _peekPendingEffectChoiceSide, _peekPendingEffectOptionalSide, _peekPendingEffectRepeatOptionalSide, _peekPendingRpsSide, _peekPendingSetCardChoiceSide, appendPendingChoiceContinuation, appendPendingRpsContinuation, pushPendingEffectRepeatOptionalSide, setPendingEffectRepeatOptionalRemainder, pushPendingRpsSide, setPendingRpsResume, pushPendingSetCardChoiceSide, setPendingSetCardChoiceResume, appendPendingSetCardChoiceContinuation, pushPendingEffectChoiceSide, setPendingChoiceBindings, setPendingChoiceResume, type RpsHand } from './pending-state.js';
 import { toPlainDeep } from './pending-state.js';
 
 function decisionSource(ctx: EffectCtx): {
@@ -45,6 +45,35 @@ function decisionSource(ctx: EffectCtx): {
   };
 }
 
+function sameDecisionSource(
+  side: { source: { cardId: string; abilityId: string; uid?: string } },
+  ctx: EffectCtx,
+): boolean {
+  return side.source.cardId === (ctx.source.cardId ?? '')
+    && side.source.abilityId === (ctx.source.abilityId ?? '')
+    && (side.source.uid ?? '') === (ctx.source.uid ?? '');
+}
+
+/** Causal display state belongs to one branch only; sibling branches never inherit it. */
+function branchScopedCtx(ctx: EffectCtx): EffectCtx {
+  return { ...ctx, causal: { ...ctx.causal } };
+}
+
+/** Move the cause into an already-prewalked decision from this exact effect. */
+function transferPublicHandRevealToPendingDecision(ctx: EffectCtx): void {
+  const token = peekPublicHandRevealToken(ctx);
+  if (!token) return;
+  const choice = _peekPendingEffectChoiceSide();
+  if (choice && sameDecisionSource(choice, ctx) && !choice.publicHandRevealToken) {
+    choice.publicHandRevealToken = takePublicHandRevealToken(ctx);
+    return;
+  }
+  const optional = _peekPendingEffectOptionalSide();
+  if (optional && sameDecisionSource(optional, ctx) && !optional.publicHandRevealToken) {
+    optional.publicHandRevealToken = takePublicHandRevealToken(ctx);
+  }
+}
+
 /**
  * BUG-111 family (continuation-nest, 2026-06-22): 中断 pick に continuation frame を連結する。
  * 既存 continuation があれば **上書きせず** outer 連結の末尾に append する。
@@ -52,6 +81,31 @@ function decisionSource(ctx: EffectCtx): {
  * 親 sequence (外側) が step3 を append でき、head=内側 → outer=外側 の順に実行される。
  * 単一 frame (outer 無し) は従来 (BUG-111 #1/#2) と byte 互換。
  */
+/** Choice can become reachable only after a preceding runtime binding. */
+function pauseRuntimeHumanChoice(eff: Extract<Effect, { kind: 'choice' }>, ctx: EffectCtx): boolean {
+  const dyn = ctx.dyn as Record<string, unknown> | undefined;
+  if (typeof dyn?.choiceIndex === 'number') return false;
+  const human = dyn?.runtimePickOwnerKnown === true
+    ? dyn.runtimeHumanPlayer
+    : (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide;
+  if ((human !== 'self' && human !== 'opp') || eff.options.length < 2 || eff.chooser === 'opp') return false;
+  const publicHandRevealToken = takePublicHandRevealToken(ctx);
+  pushPendingEffectChoiceSide({
+    player: ctx.source.player,
+    ...(publicHandRevealToken ? { publicHandRevealToken } : {}),
+    source: decisionSource(ctx),
+    options: eff.options.map((option, index) => ({
+      index,
+      verb: option.kind === 'atom' ? option.verb : undefined,
+      args: option.kind === 'atom' ? option.args as Record<string, unknown> : undefined,
+    })),
+  });
+  setPendingChoiceResume(eff);
+  setPendingChoiceBindings(toPlainDeep({ ...(ctx.bindings as Record<string, unknown>) }) as Record<string, unknown>);
+  (ctx.dyn ??= {}).runtimeChoicePending = true;
+  return true;
+}
+
 const continuationCtxSnapshots = new WeakMap<object, EffectCtx>();
 
 function attachContinuation(pick: { continuation?: ContinuationFrame }, frame: ContinuationFrame): void {
@@ -66,6 +120,13 @@ function attachContinuation(pick: { continuation?: ContinuationFrame }, frame: C
   let tail = pick.continuation;
   while (tail.outer) tail = tail.outer;
   tail.outer = safeFrame;
+}
+
+function appendSetCardContinuation(remainder: Effect[], ctx: EffectCtx, kind: 'sequence' | 'chain'): void {
+  if (remainder.length === 0) return;
+  const resumeCtx = toPlainDeep(ctx) as EffectCtx;
+  if (resumeCtx.dyn) delete (resumeCtx.dyn as Record<string, unknown>).setCardChoicePending;
+  appendPendingSetCardChoiceContinuation({ remainder, ctx: resumeCtx, kind });
 }
 
 function snapshotContinuationFrame(frame: ContinuationFrame): ContinuationFrame {
@@ -123,11 +184,25 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         const repeatBefore = _peekPendingEffectRepeatOptionalSide() !== null;
         const reorderBefore = _peekPendingDeckReorderSide();
         const qBefore = gSeq.__pendingEffectPickQueue?.length ?? 0;
+        const choiceBefore = _peekPendingEffectChoiceSide();
+        const rpsBefore = _peekPendingRpsSide();
+        const setCardBefore = _peekPendingSetCardChoiceSide();
         run(state, eff.steps[i]!, ctx);
-        if (ctx.dyn?.rpsPending === true || ctx.dyn?.setCardChoicePending === true) {
-          if (ctx.dyn.setCardChoicePending === true) setPendingSetCardChoiceRemainder(eff.steps.slice(i + 1), 'sequence');
-          delete ctx.dyn.rpsPending;
-          delete ctx.dyn.setCardChoicePending;
+        transferPublicHandRevealToPendingDecision(ctx);
+        if (_peekPendingEffectChoiceSide() !== choiceBefore) {
+          const remainder = eff.steps.slice(i + 1);
+          if (remainder.length > 0) appendPendingChoiceContinuation(snapshotContinuationFrame({ remainder, ctx, kind: 'sequence' }));
+          delete ctx.dyn?.runtimeChoicePending;
+          return;
+        }
+        if (_peekPendingRpsSide() !== rpsBefore) {
+          appendPendingRpsContinuation(snapshotContinuationFrame({ remainder: eff.steps.slice(i + 1), ctx, kind: 'sequence' }));
+          delete ctx.dyn?.rpsPending;
+          return;
+        }
+        if (_peekPendingSetCardChoiceSide() !== setCardBefore) {
+          appendSetCardContinuation(eff.steps.slice(i + 1), ctx, 'sequence');
+          delete ctx.dyn?.setCardChoicePending;
           return;
         }
         const repeatAfter = _peekPendingEffectRepeatOptionalSide() !== null;
@@ -170,11 +245,25 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
         (ctx.dyn ??= {}).chainStepNoApply = false;
         const reorderBefore = _peekPendingDeckReorderSide();
         const queueLenBefore = g.__pendingEffectPickQueue?.length ?? 0;
+        const choiceBefore = _peekPendingEffectChoiceSide();
+        const rpsBefore = _peekPendingRpsSide();
+        const setCardBefore = _peekPendingSetCardChoiceSide();
         run(state, step, ctx);
-        if (ctx.dyn?.rpsPending === true || ctx.dyn?.setCardChoicePending === true) {
-          if (ctx.dyn.setCardChoicePending === true) setPendingSetCardChoiceRemainder(eff.steps.slice(i + 1), 'chain');
-          delete ctx.dyn.rpsPending;
-          delete ctx.dyn.setCardChoicePending;
+        transferPublicHandRevealToPendingDecision(ctx);
+        if (_peekPendingEffectChoiceSide() !== choiceBefore) {
+          const remainder = eff.steps.slice(i + 1);
+          if (remainder.length > 0) appendPendingChoiceContinuation(snapshotContinuationFrame({ remainder, ctx, kind: 'chain' }));
+          delete ctx.dyn?.runtimeChoicePending;
+          return;
+        }
+        if (_peekPendingRpsSide() !== rpsBefore) {
+          appendPendingRpsContinuation(snapshotContinuationFrame({ remainder: eff.steps.slice(i + 1), ctx, kind: 'chain' }));
+          delete ctx.dyn?.rpsPending;
+          return;
+        }
+        if (_peekPendingSetCardChoiceSide() !== setCardBefore) {
+          appendSetCardContinuation(eff.steps.slice(i + 1), ctx, 'chain');
+          delete ctx.dyn?.setCardChoicePending;
           return;
         }
         const reorderAfter = _peekPendingDeckReorderSide();
@@ -206,16 +295,48 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
     case 'parallel': {
       // TODO: Phase 4+ で必要に応じて並列セマンティクスを定義する。
       // 現状は sequence と同じ挙動 (副作用順は配列順)。
+      const g = globalThis as {
+        __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
+      };
       for (let i = 0; i < eff.steps.length; i++) {
+        const branchCtx = branchScopedCtx(ctx);
         const reorderBefore = _peekPendingDeckReorderSide();
-        run(state, eff.steps[i]!, ctx);
+        const queueLenBefore = g.__pendingEffectPickQueue?.length ?? 0;
+        const choiceBefore = _peekPendingEffectChoiceSide();
+        const rpsBefore = _peekPendingRpsSide();
+        const setCardBefore = _peekPendingSetCardChoiceSide();
+        run(state, eff.steps[i]!, branchCtx);
+        transferPublicHandRevealToPendingDecision(branchCtx);
+        const remainder = eff.steps.slice(i + 1);
+        if (_peekPendingEffectChoiceSide() !== choiceBefore) {
+          if (remainder.length > 0) appendPendingChoiceContinuation(snapshotContinuationFrame({ remainder, ctx: branchScopedCtx(ctx), kind: 'sequence' }));
+          delete branchCtx.dyn?.runtimeChoicePending;
+          return;
+        }
+        if (_peekPendingRpsSide() !== rpsBefore) {
+          if (remainder.length > 0) appendPendingRpsContinuation(snapshotContinuationFrame({ remainder, ctx: branchScopedCtx(ctx), kind: 'sequence' }));
+          delete branchCtx.dyn?.rpsPending;
+          return;
+        }
+        if (_peekPendingSetCardChoiceSide() !== setCardBefore) {
+          appendSetCardContinuation(remainder, branchScopedCtx(ctx), 'sequence');
+          delete branchCtx.dyn?.setCardChoicePending;
+          return;
+        }
         const reorderAfter = _peekPendingDeckReorderSide();
         if (reorderAfter && reorderAfter !== reorderBefore) {
-          const remainder = eff.steps.slice(i + 1);
           if (remainder.length > 0) {
             // `parallel` currently has sequence semantics, so its deferred tail
             // resumes through the existing sequence continuation representation.
-            _attachPendingDeckReorderContinuation({ remainder, ctx, kind: 'sequence' });
+            _attachPendingDeckReorderContinuation(snapshotContinuationFrame({ remainder, ctx: branchScopedCtx(ctx), kind: 'sequence' }), true);
+          }
+          return;
+        }
+        const queueLenAfter = g.__pendingEffectPickQueue?.length ?? 0;
+        if (queueLenAfter > queueLenBefore) {
+          if (remainder.length > 0) {
+            const firstNew = g.__pendingEffectPickQueue?.[queueLenBefore];
+            if (firstNew) attachContinuation(firstNew, { remainder, ctx: branchScopedCtx(ctx), kind: 'sequence' });
           }
           return;
         }
@@ -223,6 +344,7 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       return;
     }
     case 'choice': {
+      if (pauseRuntimeHumanChoice(eff, ctx)) return;
       // ctx.dyn.choiceIndex で選択する。未指定 / 非数なら 0 を採用。
       const raw = ctx.dyn?.choiceIndex;
       const idx = typeof raw === 'number' && Number.isInteger(raw) ? raw : 0;
@@ -258,6 +380,9 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           const cand = list[i]!;
           ctx.bindings['$each'] = [cand];
           const reorderBefore = _peekPendingDeckReorderSide();
+          const qBefore = (globalThis as {
+            __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
+          }).__pendingEffectPickQueue?.length ?? 0;
           run(state, eff.do, ctx);
           const reorderAfter = _peekPendingDeckReorderSide();
           if (reorderAfter && reorderAfter !== reorderBefore) {
@@ -282,6 +407,48 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
             }
             return;
           }
+          const queue = (globalThis as {
+            __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
+          }).__pendingEffectPickQueue;
+            if ((queue?.length ?? 0) > qBefore) {
+            const remaining = list.slice(i + 1);
+            if (remaining.length > 0) {
+              const bindings = { ...ctx.bindings };
+              if (prev === undefined) delete bindings['$each'];
+              else bindings['$each'] = prev;
+              if (eff.over.kind === 'fromBound' && eff.over.bindKey.startsWith('$__forEachPickRemaining')) {
+                delete bindings[eff.over.bindKey];
+              }
+              let suffix = 0;
+              let bindKey = '$__forEachPickRemaining';
+              while (bindings[bindKey] !== undefined) bindKey = `$__forEachPickRemaining${++suffix}`;
+              bindings[bindKey] = remaining;
+              const firstNew = queue?.[qBefore];
+              if (firstNew) {
+                attachContinuation(firstNew, {
+                  remainder: [{ kind: 'forEach', over: { kind: 'fromBound', bindKey }, do: eff.do }],
+                  ctx: { ...ctx, bindings },
+                  kind: 'sequence',
+                });
+              }
+            }
+              return;
+            }
+            if (ctx.dyn?.setCardChoicePending === true) {
+              const remaining = list.slice(i + 1);
+              if (remaining.length > 0) {
+                const bindings = { ...ctx.bindings };
+                if (prev === undefined) delete bindings['$each'];
+                else bindings['$each'] = prev;
+                let bindKey = '$__forEachSetCardRemaining';
+                let suffix = 0;
+                while (bindings[bindKey] !== undefined) bindKey = `$__forEachSetCardRemaining${++suffix}`;
+                bindings[bindKey] = remaining;
+                appendSetCardContinuation([{ kind: 'forEach', over: { kind: 'fromBound', bindKey }, do: eff.do }], { ...ctx, bindings }, 'sequence');
+              }
+              delete ctx.dyn.setCardChoicePending;
+              return;
+            }
         }
       } finally {
         if (prev === undefined) {
@@ -290,6 +457,12 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
           ctx.bindings['$each'] = prev;
         }
         if (eff.over.kind === 'fromBound' && eff.over.bindKey.startsWith('$__forEachReorderRemaining')) {
+          delete ctx.bindings[eff.over.bindKey];
+        }
+        if (eff.over.kind === 'fromBound' && eff.over.bindKey.startsWith('$__forEachPickRemaining')) {
+          delete ctx.bindings[eff.over.bindKey];
+        }
+        if (eff.over.kind === 'fromBound' && eff.over.bindKey.startsWith('$__forEachSetCardRemaining')) {
           delete ctx.bindings[eff.over.bindKey];
         }
       }
@@ -349,8 +522,54 @@ export function run(state: GameState, eff: Effect, ctx: EffectCtx): void {
       }
       const entries = host.char.setCards.map((entry, index) => ({ instanceId: entry.instanceId ?? '', ordinal: index + 1 })).filter((entry) => entry.instanceId !== '');
       if (entries.length === 0) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
-      pushPendingSetCardChoiceSide({ player: human, hostUid, entries, source: decisionSource(ctx) });
-      setPendingSetCardChoiceResume(eff, { ...(ctx.bindings as Record<string, unknown>) });
+      const choice = { player: human, hostUid, entries, source: decisionSource(ctx) };
+      pushPendingSetCardChoiceSide(choice);
+      setPendingSetCardChoiceResume(eff, { ...(ctx.bindings as Record<string, unknown>) }, choice);
+      (ctx.dyn ??= {}).setCardChoicePending = true;
+      return;
+    }
+    case 'moveSetCard': {
+      const hostUid = resolveBindRef(eff.hostUid, ctx) as string;
+      if (typeof hostUid !== 'string' || hostUid.startsWith('$')) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
+      const destination = eff.destination.area === 'scene'
+        ? { area: 'scene' as const, hostUid: resolveBindRef(eff.destination.hostUid, ctx) as string }
+        : eff.destination;
+      if (destination.area === 'scene' && (typeof destination.hostUid !== 'string' || destination.hostUid.startsWith('$'))) {
+        (ctx.dyn ??= {}).chainStepNoApply = true;
+        return;
+      }
+      charMutator.ensureSetCardInstanceIds(state);
+      const host = (['self', 'opp'] as const).flatMap((player) => state.players[player].scene.map((char) => ({ player, char }))).find(({ char }) => char.uid === hostUid);
+      if (!host) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
+      const entries = host.char.setCards
+        .map((entry, index) => ({ entry, instanceId: entry.instanceId ?? '', ordinal: index + 1 }))
+        .filter(({ entry, instanceId }) => instanceId !== '' && (eff.face === 'any' || (eff.face === 'up' ? entry.faceUp : !entry.faceUp)));
+      if (entries.length === 0) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
+      const human = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+      if (human !== ctx.source.player) {
+        const moved = charMutator.moveOneSetCard(state, hostUid, entries[entries.length - 1]!.instanceId, eff.face, destination);
+        if (!moved) { (ctx.dyn ??= {}).chainStepNoApply = true; return; }
+        if (destination.area === 'evidence') {
+          state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: destination.faceUp, origin: { turn: state.turn.number, via: 'effect', sourceCardId: ctx.source.cardId } });
+        } else if (destination.area === 'hand') {
+          state.players[moved.player].hand.push(moved.cardId);
+        }
+        return;
+      }
+      const choice = {
+        player: human,
+        hostUid,
+        face: eff.face,
+        destination,
+        // A face-up set card is already public information. Preserve that UI
+        // visibility while never serializing an identity for a face-down entry.
+        entries: entries.map(({ entry, instanceId, ordinal }) => entry.faceUp
+          ? { instanceId, ordinal, hidden: false, cardId: entry.cardId }
+          : { instanceId, ordinal, hidden: true }),
+        source: decisionSource(ctx),
+      };
+      pushPendingSetCardChoiceSide(choice);
+      setPendingSetCardChoiceResume(eff, { ...(ctx.bindings as Record<string, unknown>) }, choice);
       (ctx.dyn ??= {}).setCardChoicePending = true;
       return;
     }

@@ -93,6 +93,8 @@ function normalizeSource(raw: unknown): EffectStackEntrySource {
     if (typeof r.cardId === 'string') src.cardId = r.cardId;
     if (typeof r.abilityId === 'string') src.abilityId = r.abilityId;
     if (typeof r.description === 'string') src.description = r.description;
+    if (r.area === 'scene' || r.area === 'partner-area' || r.area === 'hand' || r.area === 'evidence'
+      || r.area === 'file' || r.area === 'remove' || r.area === 'case') src.area = r.area;
     if (r.resolutionKind === 'normal-event' || r.resolutionKind === 'hirameki' || r.resolutionKind === 'cutin') {
       src.resolutionKind = r.resolutionKind;
     }
@@ -230,6 +232,7 @@ function queue(
     | 'declaredReaction'
     | 'costPaid'
     | 'dyn'
+    | 'publicHandRevealToken'
     | 'triggerBatch'
     | 'ownerChosenOrder'
     | 'ownerOrderConfirmed'

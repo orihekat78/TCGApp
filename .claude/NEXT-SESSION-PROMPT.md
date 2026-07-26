@@ -1,27 +1,25 @@
-# Next Session: Remaining 27 Engine Portfolio
+# Next Task: Detail magnifier navigation audit
 
-## State
+Work from updated `main` after the CT-P10 checkpoint commit.
 
-- branch: `main`; this session commits and pushes its completed primitive wave.
-- Registry: **2047 / 2074; 27 remain**.
-- Added: D10026, PR200, PR206, B09036/P, B09067/P.
-- New primitives: scene face-down set-card count; effective same-name count;
-  scene-to-deck-bottom effect; hand-reveal cardName bind; safe binding-conditional continuation.
-- Final local evidence: Vitest 690 passed / 1 skipped; 5645 passed / 7 skipped;
-  typecheck, docs structure, diff, registry validation, and smoke1000 green.
+## Goal
 
-## Next Work
+Make every match-screen card-detail entry consistent and unambiguous.
 
-1. Follow `.claude/specs/remaining-27-engine-portfolio.md` as the frozen execution plan.
-2. Repair stale context/shipped inventory, then batch-ground all remaining IDs once.
-3. Probe the six existing-DSL candidates before adding any primitive.
-4. Execute additive, data/bind, UI-serial, then structural-serial engine waves.
-5. After engine checkpoint and CI, add remaining cards/P variants in three parallel lanes.
+1. A card has exactly one visible magnifier, placed inside its card image at top-right.
+2. No visible `detail` / `詳細` label or separate side/bottom detail control remains.
+3. Card body clicks retain game actions only; magnifier alone opens a card detail modal.
+4. Set-card counts remain a separate, non-overlapping control. It opens the privacy-filtered set list; it is not a second magnifier.
+5. Keep a usable hit target, desktop and `851×393` landscape containment, and zero console errors.
 
-## Rules
+## Scope
 
-- Run `npm run ground -- <IDs>` before authoring; no partial cards.
-- Check 0 choice, owner=opp, AI/human parity, stale state, duplicate IDs, and base/P equality.
-- New decision UI requires Playwright.
-- Broad gates run only at engine integration and final `2074/2074`.
-- CI checkpoints are engine integration and final `2074/2074`.
+- Start with `SceneArea`, `CardListModal`, `HandZone`, `FileArea`, `EvidenceArea`, partner/case areas, selection modals, and log card links.
+- Search all detail/expand controls before editing. Do not add duplicate controls to solve one flow.
+- Preserve private opponent information: only public face-up set cards are inspectable.
+
+## Required evidence
+
+- Add focused UI assertions: exactly one magnifier per card; no visible text detail control; card-body click does not expand; set control does not overlap the magnifier.
+- Run relevant Vitest and Playwright on desktop plus `851×393` landscape, including click outcomes and console errors.
+- Record horizontal findings in `.claude/memory.md`; create a BUG ticket only for a confirmed behavioral defect.

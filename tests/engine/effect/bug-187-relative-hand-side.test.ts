@@ -34,7 +34,10 @@ describe('BUG-187: relative hand side', () => {
       __pendingEffectPickQueue?: Array<{ candidates: Array<{ uid: string; cardId: string }> }>;
     }).__pendingEffectPickQueue?.at(-1);
     expect(pending?.candidates).toEqual([
-      { uid: 'OWNER_HAND#0', cardId: 'OWNER_HAND', player: 'opp' },
+      {
+        kind: 'card', uid: 'card:opp:hand:OWNER_HAND#0', cardId: 'OWNER_HAND',
+        player: 'opp', area: 'hand', index: 0,
+      },
     ]);
   });
 });

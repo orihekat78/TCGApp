@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `b43c7af643c9`
+> Source hash: `b0a48e17fe01`
 
 公式ルール [`07-action-flow.md`](../../../rules/07-action-flow.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,7 +24,7 @@
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 - [`D06003`](../by-spec/grounding--D06003.md)
 
-## 📄 参照ソース (183)
+## 📄 参照ソース (186)
 
 - [`src/ai/action-resolution.ts`](../../../../src/ai/action-resolution.ts)
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
@@ -46,4 +46,4 @@
 - [`src/cards/ct-d10/D10008.ts`](../../../../src/cards/ct-d10/D10008.ts)
 - [`src/cards/ct-d10/D10022.ts`](../../../../src/cards/ct-d10/D10022.ts)
 - [`src/cards/ct-d11/D11005.ts`](../../../../src/cards/ct-d11/D11005.ts)
-- _...ほか 163 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 166 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

@@ -7,6 +7,7 @@
 import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
 import { CardArt } from './CardArt.js';
+import { cardOccurrenceUid } from '@/engine/target/card-occurrence.js';
 import './HandZone.css';
 
 // ------------------------------------------------------------------
@@ -72,6 +73,8 @@ export type HandZoneProps = {
    *   skip / cancel ボタンを縦並びにする。
    */
   pickBannerText?: string;
+  /** Owner of cards rendered in pick mode. Defaults to the local player's hand. */
+  pickPlayer?: 'self' | 'opp';
   pickableCardIds?: ReadonlySet<string>;
   /** occurrence 単位の候補。重複 cardId の一部だけが候補のときに使う。 */
   pickableCardUids?: ReadonlySet<string>;
@@ -273,6 +276,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     pickCanSkip = false,
     onPickSkip,
     pickBannerText,
+    pickPlayer = 'self',
     pickableCardIds,
     pickableCardUids,
     pickSkipLabel,
@@ -434,7 +438,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
           if (pickMode && (onPickCard || isMultiPick)) {
             // 2026-05-28: pickableCardIds 指定時は該当カードのみ pickable (黄色枠+click)。
             // 非該当は disabled (dimmed, click 無効)。未指定なら全 pickable (discard 既存挙動)。
-            const pickUid = `${c.cardId}#${index}`;
+            const pickUid = cardOccurrenceUid(pickPlayer, 'hand', c.cardId, index);
             const canPick = pickableCardUids
               ? pickableCardUids.has(pickUid)
               : pickableCardIds

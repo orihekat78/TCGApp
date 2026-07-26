@@ -19,6 +19,7 @@ const resolveCard = (cardId: string): ResolvedCardMeta => ({
 // Round 3: FileCard.card-back に cardId 必須 (placeholder で OK、表示は裏向き統一)
 const cardBack: FileCard = { type: 'card-back', cardId: 'C-PLACE' };
 const assisted = (cardId: string): FileCard => ({ type: 'assisted-partner', cardId });
+const faceUp = (cardId: string): FileCard => ({ type: 'card-back', cardId, faceUp: true });
 
 describe('FileArea', () => {
   it('renders zone shell with side class', () => {
@@ -91,6 +92,16 @@ describe('FileArea', () => {
     expect(html).toMatch(/assisted-partner/);
     expect(html).not.toMatch(/partner-name/);
     expect(html).not.toMatch(/partner-mark/);
+  });
+
+  it('renders the top face-up FILE card face-up instead of a card back', () => {
+    const html = strip(renderToString(
+      <FileArea cards={[cardBack, faceUp('P-Conan')]} side="self" resolveCard={resolveCard} />,
+    ));
+    expect(html).toMatch(/file-card-faceup/);
+    expect(html).toMatch(/data-card-id="P-Conan"/);
+    expect(html).toMatch(/探偵パートナー/);
+    expect(html).not.toMatch(/FILE card \(face-down\)/);
   });
 
   it('respects custom threshold (e.g. 5)', () => {

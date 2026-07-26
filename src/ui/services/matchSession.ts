@@ -8,6 +8,7 @@ import { rejectPendingConfirmation } from '@/ui/hooks/useConfirmation';
 import { useContactModalStore } from '@/ui/hooks/useContactModalStore';
 import { cancelDeclareNamePicker } from '@/ui/hooks/useDeclareNamePicker';
 import { cancelEvidenceFlipPicker } from '@/ui/hooks/useEvidenceFlipPicker';
+import { cancelHandCostPicker } from '@/ui/hooks/useHandCostPicker';
 import { useMulliganStore, resolveMulligan } from '@/ui/hooks/useMulligan';
 import { cancelNextHintPicker } from '@/ui/hooks/useNextHintPicker';
 import { useSceneSwitchPickerStore } from '@/ui/hooks/useSceneSwitchPickerStore';
@@ -33,6 +34,7 @@ export function resetMatchSession(options: { preserveGameState?: boolean } = {})
   cancelChoicePicker();
   cancelDeclareNamePicker();
   cancelEvidenceFlipPicker();
+  cancelHandCostPicker();
   cancelNextHintPicker();
   cancelStackedCardCostPicker();
 

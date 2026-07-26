@@ -54,6 +54,8 @@ export type SceneAreaProps = {
   onUnitClick?: (uid: string) => void;
   /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
   onExpand?: (cardId: string) => void;
+  /** Requests a privacy-filtered browse view of cards set under a character. */
+  onSetInspect?: (character: SceneCharacter) => void;
   /**
    * Effect pick mode (User vision: SceneArea も pick UI として流用)。
    * 候補 uid 集合。空でなければ各 char が pick 対象として黄色枠 + click 可能化。
@@ -88,6 +90,7 @@ type SceneCharacterCardProps = {
   onClick?: () => void;
   /** Round 4l (BUG-001): 候補でないとき click で expand modal を開く */
   onExpand?: (cardId: string) => void;
+  onSetInspect?: () => void;
   /** Phase 8.10g-2: ゴースト (fade-out 中) の場合 true → .removing クラスを付与 */
   isGhost?: boolean;
   /** Pick mode (effect pick) — true で黄色枠 + cursor pointer。onPickClick 経由で発火 */
@@ -104,7 +107,7 @@ type SceneCharacterCardProps = {
   activeLabel?: string | null;
 };
 
-function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost, isPickable, onPickClick, chargeKeywords, stats, isActive, activeLabel }: SceneCharacterCardProps): JSX.Element {
+function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, onSetInspect, isGhost, isPickable, onPickClick, chargeKeywords, stats, isActive, activeLabel }: SceneCharacterCardProps): JSX.Element {
   const charges = CHARGE_BADGES.filter((b) => (chargeKeywords ?? []).includes(b.kw));
   // BUG-110: カード下の数値は「修正反映後の有効値」(read.char.ap/lp) を表示する。
   // base (印字値 meta.ap/lp) と異なれば .modified を付けて着色し、AP＋XXXX/LP＋X の反映を視認可能にする。
@@ -127,6 +130,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
     .join(' ');
 
   const setCount = ch.setCards.length;
+  const browseSetCards = setCount > 0 && onSetInspect !== undefined;
 
   return (
     <div
@@ -143,11 +147,9 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
             ? onPickClick  // Pick mode 優先 (effect 対象選択)
             : isCandidate && onClick
               ? onClick
-              : onExpand
-                ? () => onExpand(ch.cardId)
-                : undefined
+              : undefined
       }
-      style={((isCandidate || isPickable || onExpand) && !isGhost) ? { cursor: 'pointer' } : undefined}
+      style={((isCandidate || isPickable) && !isGhost) ? { cursor: 'pointer' } : undefined}
       aria-hidden={isGhost ? 'true' : undefined}
     >
       <div className="color-stripe" />
@@ -174,7 +176,34 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
           ))}
         </div>
       )}
-      {setCount > 0 && <div className="set-badge">+{setCount}</div>}
+      {onExpand && !isGhost && (
+        <button
+          type="button"
+          className="scene-card-detail-button"
+          data-testid={`scene-card-detail-${ch.uid}`}
+          aria-label={`${meta.name}の詳細を確認`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onExpand(ch.cardId);
+          }}
+        >
+          <span className="scene-card-detail-icon" aria-hidden="true">🔍</span>
+        </button>
+      )}
+      {browseSetCards && !isGhost && (
+        <button
+          type="button"
+          className="set-badge"
+          data-testid={`scene-set-inspect-${ch.uid}`}
+          aria-label={`セットカード ${setCount}枚を確認`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSetInspect();
+          }}
+        >
+          +{setCount}
+        </button>
+      )}
       {(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) > 0 && (
         <div className="stack-badge">×{(Array.isArray(ch.stackedCards) ? ch.stackedCards.length : ch.stackedCards) + 1}</div>
       )}
@@ -183,7 +212,7 @@ function SceneCharacterCard({ ch, meta, isCandidate, onClick, onExpand, isGhost,
 }
 
 export function SceneArea(props: SceneAreaProps): JSX.Element {
-  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, pickCharUids, onPickChar, resolveKeywords, resolveCharStats, activeCardUid, activeCardLabel } = props;
+  const { characters, side, resolveCard, maxSlots = 5, candidateUids, onUnitClick, onExpand, onSetInspect, pickCharUids, onPickChar, resolveKeywords, resolveCharStats, activeCardUid, activeCardLabel } = props;
 
   // enterOrder 昇順で並べ替えて表示順を安定させる
   const sorted = [...characters].sort((a, b) => a.enterOrder - b.enterOrder);
@@ -240,6 +269,7 @@ export function SceneArea(props: SceneAreaProps): JSX.Element {
               isCandidate={isCandidate}
               onClick={onUnitClick ? () => onUnitClick(ch.uid) : undefined}
               onExpand={onExpand}
+              onSetInspect={onSetInspect ? () => onSetInspect(ch) : undefined}
               isPickable={isPickable}
               onPickClick={isPickable && onPickChar ? () => onPickChar(ch.uid) : undefined}
               chargeKeywords={resolveKeywords?.(ch.uid)}

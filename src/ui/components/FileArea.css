@@ -128,6 +128,19 @@
   z-index: 2;
 }
 
+.file-area .stack-display .file-card-faceup {
+  width: var(--file-card-w);
+  height: var(--file-card-h);
+  box-sizing: border-box;
+  padding: 8px 6px;
+  border: 1px solid var(--file-neon);
+  background: var(--file-bg-cell);
+  color: var(--file-text-primary);
+  overflow: hidden;
+}
+.file-area .file-card-faceup-name { font-size: 10px; font-weight: 700; }
+.file-area .file-card-faceup-id { margin-top: 4px; font-size: 8px; color: var(--file-text-second); }
+
 /* monogram / magnifier は SVG ::before で代替するので非表示 */
 .file-area .stack-display .card-back .monogram,
 .file-area .stack-display .card-back .magnifier {

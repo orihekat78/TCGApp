@@ -134,7 +134,9 @@ function candidateEquals(a: Candidate, b: Candidate): boolean {
         a.cardId === b.cardId &&
         a.area === b.area &&
         a.player === b.player &&
-        a.index === b.index
+        a.index === b.index &&
+        a.hostUid === b.hostUid &&
+        a.setCardInstanceId === b.setCardInstanceId
       );
     case 'evidence':
       return b.kind === 'evidence' && a.player === b.player && a.index === b.index;
@@ -149,7 +151,7 @@ function componentsForCandidate(cand: Candidate): string[] {
     case 'card': {
       const d = lookupCardDef(cand.cardId);
       if (!d) return [cand.cardId];
-      return allCardNameComponentsForDef(d);
+      return allCardNameComponentsForDef(d, cand.kind === 'card' ? cand.area : undefined);
     }
     case 'partner':
     case 'evidence':

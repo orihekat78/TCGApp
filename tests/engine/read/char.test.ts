@@ -45,6 +45,21 @@ describe('engine.read.char', () => {
   beforeEach(() => { _resetRegistry(); });
   afterEach(() => { _resetRegistry(); });
 
+  it('reads legacy scene characters that omit turnEffects', () => {
+    register(makeDef());
+    const legacy = makeChar();
+    delete (legacy as { turnEffects?: unknown }).turnEffects;
+    const state = withChar(legacy);
+
+    expect(char.ap(state, 'uid-1')).toBe(3000);
+    expect(char.lp(state, 'uid-1')).toBe(2);
+    expect(char.level(state, 'uid-1')).toBe(3);
+    expect(char.names(state, 'uid-1')).toEqual(['江戸川コナン']);
+    expect(char.traits(state, 'uid-1')).toEqual(['少年探偵団']);
+    expect(char.keywords(state, 'uid-1')).toEqual([]);
+    expect(char.turnEffect(state, 'uid-1', 'anything')).toBeUndefined();
+  });
+
   it('applies active self-turn level auras from every opposing bearer', () => {
     register(makeDef({
       id: 'AKAI_A',

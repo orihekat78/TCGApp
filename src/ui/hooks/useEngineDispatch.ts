@@ -28,7 +28,7 @@ import { def as readDef } from '@/engine/read/def.js';
 import { _drainPendingHirameki, _drainPendingMisread, _peekPendingHirameki, _markPendingHiramekiGainDeferred } from '@/engine';
 import { _drainPendingEffectPickSide, _peekPendingEffectPickSide, _drainPendingEffectChoiceSide, _drainPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { _drainPendingChooseInterceptSide, _drainPendingEffectRepeatOptionalSide, _drainPendingRpsSide, _drainPendingSetCardChoiceSide, _drainPendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
-import { _drainPendingDeckRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
+import { _drainPendingDeckRevealSide, _drainPendingPublicHandRevealSide, _drainPendingDeckReorderSide, _drainPendingDeckPlaceSide, _drainPendingContactStartAxId } from '@/engine/effect/atom-handlers';
 import { isAllowed } from './useEngineDispatch/can-check.js';
 import { _resumeDeferredReasoning } from '@/engine/flow/main/reasoning.js';
 import { _resolveMisreadPicks } from '@/engine/listeners/misread.js';
@@ -44,6 +44,36 @@ export type { ContactChoice, EngineAction, DispatchResult } from './useEngineDis
  * dispatchEngineAction が store.setActiveActionId へ転送して null に戻す。
  */
 let _justDeclaredAxId: string | null = null;
+
+function sameCardMultiset(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) return false;
+  const counts = new Map<string, number>();
+  for (const cardId of left) counts.set(cardId, (counts.get(cardId) ?? 0) + 1);
+  for (const cardId of right) {
+    const count = counts.get(cardId) ?? 0;
+    if (count === 0) return false;
+    if (count === 1) counts.delete(cardId); else counts.set(cardId, count - 1);
+  }
+  return counts.size === 0;
+}
+
+function hasLinkedPublicHandRevealDecision(token: string): boolean {
+  const state = useGameStateStore.getState();
+  return state.pendingEffectPick?.publicHandRevealToken === token
+    || state.pendingEffectChoice?.publicHandRevealToken === token
+    || state.pendingEffectOptional?.publicHandRevealToken === token
+    || state.pendingChooseIntercept?.publicHandRevealToken === token;
+}
+
+function surfacePublicHandReveal(
+  reveal: NonNullable<ReturnType<typeof _drainPendingPublicHandRevealSide>>,
+): void {
+  // An effect window only exists while its exact causal decision is pending.
+  // Auto/no-candidate paths have already consumed that cause; surfacing a timer
+  // window here would unnecessarily pause CPU and spectator drivers.
+  if (reveal.lifetime === 'effect' && !hasLinkedPublicHandRevealDecision(reveal.resolutionToken)) return;
+  useGameStateStore.getState().setPendingPublicHandReveal(reveal);
+}
 
 // BUG-109: resolveCardIdFromPickUid + pick build/continuation 実行は engine の
 // apply-pick.ts (applyPickAndContinuation) へ移設し human/AI で共有 (重複排除)。
@@ -527,6 +557,10 @@ export function surfacePendingSideChannels(): void {
     const deckRevealSide = _drainPendingDeckRevealSide();
     if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
   }
+  if (store.pendingPublicHandReveal === null) {
+    const publicHandRevealSide = _drainPendingPublicHandRevealSide();
+    if (publicHandRevealSide) surfacePublicHandReveal(publicHandRevealSide);
+  }
   // BUG-136: deckToBottomBound 順序選択の取り残し防止 (auto-phase / ターンドライバ経路)
   if (store.pendingDeckReorder === null) {
     const deckReorderSide = _drainPendingDeckReorderSide();
@@ -554,8 +588,27 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
   const store = useGameStateStore.getState();
   const pendingReplacementBefore = store.pendingSetCardReplacement;
   const current = store.gameState;
+  const publicHandRevealBefore = store.pendingPublicHandReveal;
+  const pendingPickBefore = store.pendingEffectPick;
+  const actionPublicHandRevealTokenBefore =
+    action.type === 'effectPickResolve' ? pendingPickBefore?.publicHandRevealToken
+    : action.type === 'choiceResolve' ? store.pendingEffectChoice?.publicHandRevealToken
+    : action.type === 'optionalResolve' ? store.pendingEffectOptional?.publicHandRevealToken
+    : action.type === 'chooseInterceptResolve' ? store.pendingChooseIntercept?.publicHandRevealToken
+    : undefined;
   if (current === null) return { ok: false, reason: 'no-state' };
   if (!isAllowed(current, action)) return { ok: false, reason: 'not-allowed' };
+  if (action.type === 'effectPickResolve'
+    && publicHandRevealBefore?.lifetime === 'effect'
+    && pendingPickBefore?.publicHandRevealToken === publicHandRevealBefore.resolutionToken
+    && !sameCardMultiset(current.players[publicHandRevealBefore.owner].hand, publicHandRevealBefore.handSnapshot)) {
+    // Serialized/stale UI may not apply a selection against a different hand.
+    // Drop the exact linked window and decision without exposing any replacement IDs.
+    store.setPendingPublicHandReveal(null);
+    store.setPendingEffectPick(null);
+    surfacePendingSideChannels();
+    return { ok: false, reason: 'not-allowed' };
+  }
 
   _justDeclaredAxId = null;
   try {
@@ -673,6 +726,15 @@ export function dispatchEngineAction(action: EngineAction): DispatchResult {
     if (useGameStateStore.getState().pendingDeckReveal === null) {
       const deckRevealSide = _drainPendingDeckRevealSide();
       if (deckRevealSide) store.setPendingDeckReveal(deckRevealSide);
+    }
+    if (publicHandRevealBefore?.lifetime === 'effect'
+      && actionPublicHandRevealTokenBefore === publicHandRevealBefore.resolutionToken
+      && !hasLinkedPublicHandRevealDecision(publicHandRevealBefore.resolutionToken)) {
+      store.setPendingPublicHandReveal(null);
+    }
+    if (useGameStateStore.getState().pendingPublicHandReveal === null) {
+      const publicHandRevealSide = _drainPendingPublicHandRevealSide();
+      if (publicHandRevealSide) surfacePublicHandReveal(publicHandRevealSide);
     }
     // BUG-136: deckToBottomBound 順序選択チャネル drain。deckReorderResolve は解決で消化 → 次 (通常 null)。
     const deckReorderSide = _drainPendingDeckReorderSide();

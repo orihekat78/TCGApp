@@ -322,4 +322,26 @@ describe('runDeclaredAbilityFlow', () => {
     expect(lastLog?.action).toBe('declaredAbility');
     expect(lastLog?.target).toContain('case:self');
   });
+
+  it('uses the face-up FILE card name and file area for a declared source', async () => {
+    registerCardDef(makeCard('FileDecl', {
+      names: ['FILE source'],
+      abilities: [{
+        id: 'a1', type: 'declared', scope: 'on-evidence-file',
+        effect: { kind: 'atom', verb: 'noop', args: {} }, description: 'from FILE', ruleRefs: [],
+      }],
+    }));
+    const state = produce(setupBase(), (d) => {
+      d.players.self.file = [{ type: 'card-back', cardId: 'FileDecl', faceUp: true }];
+    });
+    useGameStateStore.setState({ gameState: state });
+
+    const promise = runDeclaredAbilityFlow({ player: 'self' });
+    await pickAndConfirmPicker('file:self:0');
+    const body = useConfirmationStore.getState().current?.body ?? '';
+    expect(body).toContain('FILE source');
+    expect(body).not.toContain('file:self:0');
+    await acceptConfirmation();
+    expect((await promise).ok).toBe(true);
+  });
 });

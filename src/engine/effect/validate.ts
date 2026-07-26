@@ -29,6 +29,7 @@ const ATOM_VERB_MAP = {
   evidenceToHand: true, handAddFromRemove: true, handAddFromDeck: true, handAddFromDeckBottom: true,
   handToEvidence: true,
   handReveal: true, // engine additive wave (2026-06-28) — 手札公開 (zone 変化なし、B08082/B07022)
+  publicHandRevealScopeEnd: true,
   evidenceFlipDown: true, // engine拡張 wave (2026-06-23) — 表向き証拠→裏向き (B05013/B06017/B06019)
   peekOwnEvidence: true, // engine additive A2 (2026-07-11) — 自証拠 top1 私的閲覧 zone不変 (B03040)
   sceneEnter: true, sceneSwitch: true, sceneRemove: true, sceneSetState: true, sceneDisguise: true, sceneToHand: true,
@@ -163,6 +164,23 @@ function walk(node: unknown, path: string, errors: string[], warnings: string[])
       if (typeof obj['hostUid'] !== 'string') errors.push(`${path}.hostUid: required for setCardToEvidence`);
       return;
     }
+    case 'moveSetCard': {
+      if (typeof obj['hostUid'] !== 'string') errors.push(`${path}.hostUid: required for moveSetCard`);
+      if (obj['face'] !== 'down' && obj['face'] !== 'up' && obj['face'] !== 'any') errors.push(`${path}.face: must be down|up|any`);
+      const destination = obj['destination'] as Record<string, unknown> | undefined;
+      if (!destination || typeof destination !== 'object') {
+        errors.push(`${path}.destination: required for moveSetCard`);
+      } else if (destination['area'] === 'evidence') {
+        if (typeof destination['faceUp'] !== 'boolean') errors.push(`${path}.destination.faceUp: required for evidence`);
+      } else if (destination['area'] === 'hand') {
+        // No additional fields.
+      } else if (destination['area'] === 'scene') {
+        if (typeof destination['hostUid'] !== 'string') errors.push(`${path}.destination.hostUid: required for scene`);
+      } else {
+        errors.push(`${path}.destination.area: must be evidence|hand|scene`);
+      }
+      return;
+    }
     case 'repeatOptional': {
       if (!Number.isInteger(obj['max']) || (obj['max'] as number) < 1) errors.push(`${path}.max: repeatOptional requires positive integer`);
       walk(obj['body'], `${path}.body`, errors, warnings);
@@ -226,7 +244,30 @@ function validateGrantedAbility(ability: Record<string, unknown>, path: string, 
   // (宣言能力は trigger でなく limit + effect + 任意 cost で構成される)。type:'declared' のときは
   // trigger 必須検査を免除する。triggered 付与 (既定) は従来どおり trigger 必須。
   const grantedType = ability['type'];
-  if (grantedType !== 'declared') {
+  if (grantedType !== undefined && grantedType !== 'triggered' && grantedType !== 'declared' && grantedType !== 'continuous') {
+    errors.push(`${path}.type: unsupported granted ability type "${String(grantedType)}"`);
+  }
+  if (grantedType === 'continuous') {
+    const modifier = ability['continuousModifier'];
+    if (!modifier || typeof modifier !== 'object' || Array.isArray(modifier)) {
+      errors.push(`${path}.continuousModifier: granted continuous ability requires modifier object`);
+    } else {
+      const entries = Object.entries(modifier as Record<string, unknown>);
+      if (entries.length !== 1 || entries[0]![0] !== 'selfCutinBanInContact' || entries[0]![1] !== true) {
+        errors.push(`${path}.continuousModifier: granted continuous ability only allows {selfCutinBanInContact:true}`);
+      }
+    }
+    if (ability['scope'] !== 'on-scene') errors.push(`${path}.scope: granted continuous ability requires on-scene scope`);
+    if (ability['trigger'] !== undefined) errors.push(`${path}.trigger: granted continuous ability must not have trigger`);
+    if (ability['effect'] !== undefined) errors.push(`${path}.effect: granted continuous ability must not have effect`);
+    const condition = ability['condition'];
+    if (condition !== undefined) {
+      if (!isJsonValue(condition) || !isValidGrantedCondition(condition)) {
+        errors.push(`${path}.condition: granted continuous ability requires a valid JSON condition`);
+      }
+    }
+    if (!isJsonValue(ability)) errors.push(`${path}: granted continuous ability must be JSON-serializable`);
+  } else if (grantedType !== 'declared') {
     const trig = ability['trigger'] as Record<string, unknown> | undefined;
     if (!trig || typeof trig !== 'object') {
       errors.push(`${path}.trigger: granted ability requires trigger`);
@@ -254,6 +295,35 @@ function validateGrantedAbility(ability: Record<string, unknown>, path: string, 
       }
     }
   }
+}
+
+function isValidGrantedCondition(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const condition = value as Record<string, unknown>;
+  const kind = condition['kind'];
+  // The only supported grant is the narrow B10086 self cut-in ban.  Its
+  // condition may be a pure boolean tree, never a game-state leaf whose
+  // required fields can be underspecified or evolve into broader authority.
+  if (kind === 'true' || kind === 'false') return Object.keys(condition).length === 1;
+  if (kind === 'not') {
+    return Object.keys(condition).length === 2 && isValidGrantedCondition(condition['c']);
+  }
+  if (kind === 'and' || kind === 'or') {
+    const children = condition['cs'];
+    return Object.keys(condition).length === 2
+      && Array.isArray(children)
+      && children.length > 0
+      && children.every(isValidGrantedCondition);
+  }
+  return false;
+}
+
+function isJsonValue(value: unknown): boolean {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJsonValue);
+  if (!value || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) return false;
+  return Object.values(value as Record<string, unknown>).every(isJsonValue);
 }
 
 // --- engine.cards.validate ---

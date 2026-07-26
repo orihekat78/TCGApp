@@ -193,6 +193,45 @@ describe('decision modal hosts', () => {
     unmount(root, container);
   });
 
+  it('labels moveSetCard by destination while keeping the selected card face-down and non-expandable', () => {
+    useGameStateStore.setState({
+      pendingSetCardChoice: {
+        player: 'self', hostUid: 'host-1', face: 'down', destination: { area: 'hand' },
+        entries: [{ instanceId: 'set-instance-1', ordinal: 1 }],
+        source: { uid: 'source-1', cardId: 'SET-SECRET-ID' } as never,
+      },
+    });
+    const { container, root } = renderHost(SetCardChoiceModalHost);
+
+    expect(container.textContent).toContain('return to its owner hand');
+    expect(container.querySelector('.selectable-card-tile--hidden')).not.toBeNull();
+    expect(container.querySelector('[data-testid="selectable-card-tile-detail"]')).toBeNull();
+    expect(container.innerHTML).not.toContain('SET-SECRET-ID');
+
+    unmount(root, container);
+  });
+
+  it('shows details for public face-up moveSetCard entries while keeping mixed any-face down entries opaque', () => {
+    useGameStateStore.setState({
+      pendingSetCardChoice: {
+        player: 'self', hostUid: 'host-1', face: 'any', destination: { area: 'hand' },
+        entries: [
+          { instanceId: 'public-instance', ordinal: 1, hidden: false, cardId: 'PUBLIC-CARD' },
+          { instanceId: 'hidden-instance', ordinal: 2, hidden: true },
+        ],
+        source: { uid: 'source-1', cardId: 'SET-SECRET-ID' } as never,
+      },
+    });
+    const { container, root } = renderHost(SetCardChoiceModalHost);
+
+    expect(container.querySelector('[data-instance-id="public-instance"]')?.getAttribute('data-card-id')).toBe('PUBLIC-CARD');
+    expect(container.querySelector('[data-instance-id="hidden-instance"]')?.getAttribute('data-card-id')).toBeNull();
+    expect(container.querySelectorAll('[data-testid="selectable-card-tile-detail"]')).toHaveLength(1);
+    expect(container.innerHTML).not.toContain('SET-SECRET-ID');
+
+    unmount(root, container);
+  });
+
   it('keeps optional choices in the fixed action footer and preserves the run boolean', () => {
     useGameStateStore.setState({ pendingEffectOptional: { player: 'self', source: { cardId: 'D08025', abilityId: 'a1' } } as never });
     const { container, root } = renderHost(EffectOptionalModalHost);

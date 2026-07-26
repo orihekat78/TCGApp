@@ -37,7 +37,7 @@ function setupOppTurnMinimal(): GameState {
 
 describe('driveOppTurn', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null, pendingMisread: null, pendingDeckReveal: null });
+    useGameStateStore.setState({ gameState: null, pendingMisread: null, pendingDeckReveal: null, pendingPublicHandReveal: null });
     _resetIsDriving();
     _resetActionContexts();
   });
@@ -107,6 +107,36 @@ describe('driveOppTurn', () => {
     driveOppTurn();
 
     expect(useGameStateStore.getState().gameState).toBe(before);
+  });
+
+  it('is a no-op while a public hand reveal is pending', () => {
+    const before = setupOppTurnMinimal();
+    useGameStateStore.setState({
+      gameState: before,
+      pendingPublicHandReveal: {
+        owner: 'self', audience: 'all', cardIds: ['c1'], handSnapshot: ['c1'],
+        lifetime: 'effect', resolutionToken: 'public-hand-reveal:1', source: {},
+      },
+    });
+
+    driveOppTurn();
+
+    expect(useGameStateStore.getState().gameState).toBe(before);
+  });
+
+  it('resumes CPU progression when a public hand reveal is presentation-only', () => {
+    const before = setupOppTurnMinimal();
+    useGameStateStore.setState({
+      gameState: before,
+      pendingPublicHandReveal: {
+        owner: 'self', audience: 'all', cardIds: ['c1'], handSnapshot: ['c1'],
+        lifetime: 'presentation', resolutionToken: 'public-hand-reveal:1', source: {},
+      },
+    });
+
+    driveOppTurn();
+
+    expect(useGameStateStore.getState().gameState).not.toBe(before);
   });
 
   it('re-entrancy: second call while isDriving=true is a no-op', () => {

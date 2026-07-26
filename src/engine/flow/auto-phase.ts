@@ -70,6 +70,7 @@ export function runAutoPhase(state: GameState, p: Player): void {
   const sceneUids = state.players[p].scene.map(c => c.uid);
   for (const uid of sceneUids) {
     if (readChar.noAutoActivateLocked(state, uid)) continue;
+    if (readChar.selfContinuousFlag(state, uid, 'noAutoActivateSelf')) continue;
     if (w6StunAura && state.players[p].scene.find(c => c.uid === uid)?.state === 'stun') continue;
     mutate.scene.tryActivate(state, uid);
   }

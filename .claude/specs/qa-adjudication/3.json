@@ -523,27 +523,31 @@
     {
       "qaId": "card:B04030:b2bb0991c56c38c14055ec3a8e4b107d7c47811f912761d8d1fe387311bfe17e",
       "answerHash": "95e662f3e830ee91657318ff6cb20439a827d93828ef3c854a0ca547977d0d92",
-      "status": "mismatch",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04030.ts:10"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p04/B04030.ts:19"
       ],
       "noteCodes": [
-        "B04030-A1-ACTION-END-DEFERRED"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B04030:fea86e813ffc71be74d68515b98d60749c639a2b001343462c0406961b3b900f",
       "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
-      "status": "mismatch",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "src:src/cards/ct-p04/B04030.ts:10"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p04/B04030.ts:19"
       ],
       "noteCodes": [
-        "B04030-A1-ACTION-END-DEFERRED"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
@@ -1528,222 +1532,254 @@
     {
       "qaId": "card:B10003:a1a08a01622d9551bdceff6e19bd462e9fc6b6f49f36cd7cabf5dc57eed8aaa6",
       "answerHash": "ecbe86a579ce0fefe59eec0001d65691f85cba5ca5fc360fdb491fc53103d4e3",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:7",
+        "src:src/cards/ct-p10/B10003.ts:8"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10006:dbb11998a97279f0534ec80be93031ba6bbe9f9c0a520fd1559faf0163e992b3",
       "answerHash": "bee2e785a08efdc7d33986e692b981d4e99cba8278b8beac85527fcd2bdc8ded",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+        "rules:.claude/rules/03-field-areas.md:23",
+        "src:src/cards/ct-p10/B10006.ts:5"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10011:e75d64f485e9d46d74d66c1e7bcc4ceaf28d7a3888052bae4b053365e1929f18",
       "answerHash": "974c3d42dbf86f97cbdb1bb746e41bead0ad9bcffc480205e63987b810be506c",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10011.ts:6"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10014:22fc4e7b7317de3c7079b1bf41218c514e90894853bcbfb2c68ab69bc4f38a81",
       "answerHash": "a63d5ae0d23022d3bc4fc5ceceb6b4b14b6e5ab1b346004bc0280f39681b933b",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:7",
+        "src:src/cards/ct-p10/B10014.ts:6"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10016:6d5a65b9e083c8565478cceec3269781a67a936789441e6c196e107f90e2e8c8",
       "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:7",
+        "src:src/cards/ct-p10/B10016.ts:8"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10016:b195e8d9ae057f32c588ebb0b86de05ef57132adcbe33265761e135a55ca77cf",
       "answerHash": "73a6f00663f191761324ed9f7ff894295dbebe8b28371c1db514b6e292884657",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:7",
+        "src:src/cards/ct-p10/B10016.ts:8"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10022:d5170059a9de91cea01aec02d44b8d76f2b3a0525695aa1ed607cfb81144b15d",
       "answerHash": "b827971d951f9835d6c0840bd8d55b1b515112a015ed2bc51e5ec3b110f772b1",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/21-declared-ability-cost.md:15",
+        "src:src/cards/ct-p10/B10022.ts:2"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10028:7d4e5a15f1e2869123ee4ecab7154fb5fb4d1a5b956e7206fd67775940866d4f",
       "answerHash": "95980039f9c73391c93b9f8955948cbdf8cda0b6cdc80945356c4ccb744e8099",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10028.ts:7"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10065:6138ce876f01b448006aa2c5907b58b25b64336ea118bfd262824b21a51da4b3",
       "answerHash": "b224b606f8fc34f02bcbd2792e156388486d6469c478c49a07fe2816784668c6",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10065.ts:6"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10069:b9fe5960816ff4d0b7b0cc3e2a662c36947283aee1e4d85b637105d2be9a06cc",
       "answerHash": "37a61334cfb8570ea4c3d04419c38ec26629f2bd6bbf9a30251709adab49ce2c",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10069.ts:7"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10072:2db8ec1f638c08e23b42d65f6f30eefe718d29bc0803d402cea6f45014edb6fa",
       "answerHash": "8fa6df429995a7c8ce3724b8ce6b54ccb2253d6fdd0f1199f90a37ef25879654",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/21-declared-ability-cost.md:15",
+        "src:src/cards/ct-p10/B10072.ts:10"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10075:d49adc01f3ee4f568669b0e92c791822263b294d4e096979c9d328964c094c25",
       "answerHash": "e47fee061eab2568f3f9bf798a1451e7841dbd11247f2efad2ba0b94ece558f6",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10075.ts:8"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10087:3713f0d43e590be593f1e3ddda522147022e62717e7c503a98ce5eb957d50ee6",
       "answerHash": "43a94cf50dad1c486538e5f4c212b488076fb414d8ff31512f36946a47330686",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10087.ts:7"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10091:cca36b1e251a280c312c55711c6247c447a5e47dc100cd22f398004803583af3",
       "answerHash": "413f73f0b05d3dab70e017b969cd8bfaa395ec427e7f320138bb23d5973d9a9b",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10091.ts:6"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10099:3831a5d53dec2a82c7cad95cba37363eb4fff5b02a4204cabc5f439c7734e880",
       "answerHash": "a6e012c86fee0affd496c51b1e25e3b2fbf583fca8b0feea0741e58f531c178c",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10099.ts:7"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10102:01e64ea9e0d149ca2362d7754c49a44727c3284f0467137dc414ec81443e2891",
       "answerHash": "41189d419cd8777552b58a82b95f911f88878aba990bb637a74822e829d1bcaf",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10102.ts:17"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {
       "qaId": "card:B10102:713c9d0771d0d89c65d6f411a6770c0b70587abe7b80cb0bd592dfaae02a9730",
       "answerHash": "12de0a035eada152bac1f3ab530cf13398255386cf74cc4f94515d7034768fd2",
-      "status": "unmapped",
-      "result": "implementation-gap",
+      "status": "test-missing",
+      "result": "test-gap",
       "method": "manual-semantic",
       "evidence": [
-        "rules:.claude/rules/INDEX.md:1"
+
+        "rules:.claude/rules/15-abilities-effects.md:11",
+        "src:src/cards/ct-p10/B10102.ts:17"
       ],
       "noteCodes": [
-        "UNIMPLEMENTED-CARD"
+        "TEST-GAP-EXACT-QA-ASSERTION-MISSING"
       ]
     },
     {

@@ -23,6 +23,8 @@ export type Condition =
   // honor: cond/eval.ts case 'caseColorNot' + CONDITION_KIND_MAP + validate-specs CONDS。
   | { kind: 'caseColorNot'; color: string | string[] }
   | { kind: 'caseTrait'; trait: string }
+  /** Match one complete printed name component of the owner's current case. */
+  | { kind: 'caseName'; name: string }
   | { kind: 'fileAtLeast'; n: number }
   | { kind: 'caseStatus'; status: '事件編' | '解決編' }
   | { kind: 'bond'; cardName: string | string[] }
@@ -73,6 +75,7 @@ export type Condition =
   | { kind: 'scratchTrace'; player: 'self' | 'opp'; v: '発見済' | '未発見' }
   | { kind: 'flag'; player: 'self' | 'opp'; key: keyof TurnScopedFlags; v: boolean }
   | { kind: 'declaredUseUnder'; uid: string; abilityId: string; max: number }
+  | { kind: 'sourceDeclaredUseCount'; cmp: 'eq' | 'ge'; n: number }
   | { kind: 'bound'; key: string; presence?: 'exists' | 'matched' }
   // Triggered observers can queue before their source leaves.  Resolution-time
   // wording such as 「このキャラが現場にいる場合」 requires a source-uid check.
@@ -139,7 +142,12 @@ export type Condition =
   // (B02006/B02080/PR278/D11013)。who は p-相対 (buildContactBindings): byUid=自コンタクトキャラ /
   // targetUid=相手コンタクトキャラ。ctx.contact 優先 + ctx.bindings.contact[0] fallback
   // (matcherCondition queue-time gate 用)。honor: cond/eval.ts case + CONDITION_KIND_MAP + validate-specs CONDS。
-  | { kind: 'contactCharMatches'; who: 'byUid' | 'targetUid'; filter: TargetFilter }
+  | {
+    kind: 'contactCharMatches';
+    who: 'byUid' | 'targetUid';
+    filter: TargetFilter;
+    requireSource?: boolean;
+  }
   // D11014 a1 / D11003 / D11009 driver: enter hook の payload.enterOrder が n と一致するか
   // (【疾風 N】 = ターン N 番目に登場で発火、matcher → matcherCondition declarative 化)
   | { kind: 'enterOrderEquals'; n: number }
@@ -257,7 +265,7 @@ export type Condition =
   // engine mega-wave W3 (2026-07-03, r18): hand:reveal payload.revealed (公開 CardId[]) の
   // cardName any-match。「手札から〚カード名［工藤新一］〛か〚［毛利蘭］〛を公開したとき」(B09004)。
   // 複数公開のうち 1枚でも一致で true。rules/19 分割名は matchOneFilter cardName 経由で対応。
-  | { kind: 'triggerRevealMatches'; side?: 'self' | 'opp' | 'either'; cardName?: string | string[] }
+  | { kind: 'triggerRevealMatches'; side?: 'self' | 'opp' | 'either'; cardName?: string | string[]; byPlayer?: 'self' | 'opp'; cause?: 'effect' | 'cost' }
   // engine拡張 wave#2 cluster3 (2026-06-13): action:declare payload の target.kind を読む。
   // 「アクション[キャラ]したとき」(v:'char') / 「アクション[事件]したとき」(v:'case') の subtype gate を
   // declarative 化 (matcher closure は granted descriptor で禁止 = validate.ts のため JSON cond が必須。
@@ -290,6 +298,8 @@ export type TargetFilter = {
   // honor 経路 = matchOneFilter / targetFilterToPredicate / boundMatchesFilter の3 filter-eval サイト。
   cardNameNot?: string | string[];
   trait?: string | string[];
+  /** Every listed effective trait must be present. Empty/unresolved selectors fail closed. */
+  traitAll?: string | string[];
   // B04055: deck-reveal only.  Match a revealed card when it shares at least
   // one effective trait with the leave:to-remove payload's removedChar.
   // Missing/non-removal payload fails closed; target pick paths do not have a
@@ -302,7 +312,25 @@ export type TargetFilter = {
   // 等価: 全色が notSet 内のとき除外。⚠ cardNameNot (any-match 除外) とは非対称 — 2色で分岐する。
   // honor 経路 = matchOneFilter / boundMatchesFilter / targetFilterToPredicate の3 filter-eval サイト。
   colorNot?: string | string[];
+  /**
+   * Printed-card ability presence only.  Original ability disable suppresses
+   * text execution but does not change this value; externally granted text
+   * does not affect it.  CT-P10 B10074/B10102, official B04018 Q&A.
+   */
+  hasOriginalAbility?: boolean;
+  /**
+   * Require every printed ability to be one of these icon abilities. This
+   * models "【X】以外の元の能力を持たない" (CT-P10 B10050).
+   */
+  hasNoOriginalAbilityExceptIcons?: string[];
   keyword?: string | string[];
+  /** Exclude a candidate that has any listed effective keyword. */
+  keywordNot?: string | string[];
+  /**
+   * Require a printed keyword or that card's own active condition-icon
+   * keyword. Ordinary and external keyword grants do not qualify.
+   */
+  keywordFromPrintOrConditionIcon?: string | string[];
   // M2後半 (2026-07-10, D06003/D06004/D06021/D06023): カットイン効果内容 filter —
   // 「【カットイン】AP＋」を持つ = cutin ability の印字 description が指定文字列を包含するか。
   // 公式 qAndA (D06003) の判定基準は文字列包含 (ウォッカ B01097 = cutin draw 型は「AP＋」を含まず除外)。
@@ -314,6 +342,8 @@ export type TargetFilter = {
   kind?: 'character' | 'event';
   apMin?: number;
   apMax?: number;
+  /** Maximum is the resolving source character's effective AP. */
+  apMaxSource?: true;
   lpMin?: number;
   lpMax?: number;
   // Cluster WB1 (2026-07-11, B09011「灰原哀」): 「元のLP」= 印字 LP か override 単体 (lpOverride ?? printed)。
@@ -334,6 +364,10 @@ export type TargetFilter = {
   // binding 不在/空 = levelIn:[] = 候補0。未解決のまま matchOneFilter / targetFilterToPredicate に
   // 届いた場合 (filterAny 内等の誤用) は fail-closed で常に不一致 (silent drop しない、W5 review nit)。
   levelInBound?: { bindKey: string };
+  /** Maximum is the effective level of the first bound scene character. */
+  levelMaxBound?: { bindKey: string };
+  /** Minimum is the effective level of the first bound candidate. */
+  levelMinBound?: { bindKey: string };
   hasSetCards?: boolean;
   // engine mega-wave W4 (2026-07-03, r82 同梱): 裏向きセット card を持つキャラのみ (B08035 a2
   // 「裏向きでセットされているカードを1枚リムーブ」)。hasSetCards は表裏不問 (B02033 は裏向き限定なし)。
@@ -357,9 +391,17 @@ export type TargetFilter = {
 export type TargetQuery = {
   // M2後半 (2026-07-10, PR234 a1): 配列 = zone union (「手札かリムーブエリアにある」を 1 pick で横断)。
   // enumerateByQuery が area ごとに列挙して連結する。既存カードは単一 string = byte 互換。
-  area?: 'scene' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case'
-    | Array<'scene' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case'>;
+  area?: 'scene' | 'set-card' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case'
+    | Array<'scene' | 'set-card' | 'partner-area' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'case'>;
   side?: 'self' | 'opp' | 'either' | 'owner' | 'opp-of-owner';
+  /**
+   * Partner-area queries normally retain their historical mixed candidate set.
+   * Consumers that target only general PA cards should opt in explicitly and
+   * exclude the real partner separately.
+   */
+  includePartnerAreaCards?: boolean;
+  /** Include the real partner singleton in a partner-area query (default: true). */
+  includePartner?: boolean;
   filter?: TargetFilter;
   filterAny?: TargetFilter[];
   excludeSelf?: boolean;
@@ -488,7 +530,7 @@ export type AtomVerb =
   // そうした場合〜」(B08082 a1 / B07022)。公開は zone 変化なし (公式Q&A: 解決後に手札へ戻してよい)。
   // atomDiscard の clone から mutate.hand.discardToRemove を除去したもの。0枚 reveal で chainStepNoApply を
   // 立て「そうした場合」を gate (mill gate と同型、reveal は他効果ゼロゆえ無条件 gate-on-0)。PB pick (defaultArea 'hand')。
-  | 'handReveal'
+  | 'handReveal' | 'publicHandRevealScopeEnd'
   // engine additive: discardRandom — 手札からランダムに n 枚リムーブする (B01077「相手は手札を1枚
   // ランダムにリムーブする」)。公式 QA: 相手が選べず確率均等な方法。pick を持たない (ランダム選択 =
   // プレイヤー choice 不要)。ctx.rng で決定的 (smoke 再現性)。既存カードは未使用 → baseline 不変。
@@ -642,6 +684,8 @@ export type Cost =
   | { kind: 'removeDeckAll'; player: 'self' }
   | { kind: 'discardEvidence'; n: number }
   | { kind: 'selfToDeckBottom' }
+  | { kind: 'selfToRemove' }
+  | { kind: 'selfToPartnerArea' }
   // Task D E2 (2026-06-12): 〚現場にいる…を n 枚デッキの下に移す〛コスト (B04011/B07080/B08076)。
   // rules: 21 (全部行えなければ使用不可), 09/23 (リムーブでない)
   | { kind: 'sceneToDeckBottom'; target: TargetingRef; n: number }
@@ -666,7 +710,15 @@ export type Cost =
   //   未指定 = 従来通り自陣全キャラ (B08033「現場にいるキャラに〜」)。
   //   anyFace (夜間 W0 2026-07-11, B05052「現場にいるキャラにセットされているカードを1枚リムーブする」—
   //   裏向き限定句なし): true で表裏不問に計数/除去。未指定 = 従来通り裏向きのみ (B08033/B09027 挙動不変)。
-  | { kind: 'removeSetCard'; n: number; hostSelf?: boolean; anyFace?: boolean }
+  | {
+    kind: 'removeSetCard'; n: number; hostSelf?: boolean; anyFace?: boolean;
+    /** Explicit face selector. Omitted retains legacy anyFace/down behavior. */
+    face?: 'down' | 'up' | 'any';
+    /** Evaluated only after the face gate; face-down identity never reaches this filter. */
+    filter?: TargetFilter;
+    /** Restrict eligible self scene hosts. */
+    hostQuery?: TargetQuery;
+  }
   | { kind: 'removeStackedCards'; n: number }
   // M2後半 (2026-07-10, B06003 a1): 〚ターン終了時までLP-2する〛— 自身への turn-scope LP デルタ cost。
   //   canPay 恒真 (LP 下限なし rules/19、公式Q&A: LP1以下でも支払可・負値可)。pay = lpMod_turn 書込
@@ -697,11 +749,25 @@ export type Cost =
 
 // ---------- Effect ----------
 
+/** Actor/target references for an effect-generated contact. */
+export type StartContactArgs = {
+  targetUid: string;
+  /** Omitted means the ability source, preserving B06020/B06042 behavior. */
+  actorUid?: string;
+};
+
 export type Effect =
   | { kind: 'traitChoice'; bind: string; then: Effect; chooser?: 'owner' }
   | { kind: 'rps'; win: Effect; lose: Effect }
   /** Select one opaque set-card occurrence on a previously selected host. */
   | { kind: 'setCardToEvidence'; hostUid: string }
+  /** Move one opaque physical set-card occurrence without exposing its identity before selection. */
+  | {
+    kind: 'moveSetCard';
+    hostUid: string;
+    face: 'down' | 'up' | 'any';
+    destination: { area: 'evidence'; faceUp: boolean } | { area: 'hand' } | { area: 'scene'; hostUid: string };
+  }
   | { kind: 'sequence'; steps: Effect[] }
   | { kind: 'parallel'; steps: Effect[] }
   | { kind: 'choice'; options: Effect[]; chooser: 'self' | 'opp' | 'owner' }
@@ -711,9 +777,18 @@ export type Effect =
   | { kind: 'repeatOptional'; max: number; body: Effect }
   | { kind: 'replace'; trigger: TriggerRef; with: Effect }
   | { kind: 'negate'; trigger: TriggerRef }
-  | { kind: 'atom'; verb: AtomVerb; args: unknown }
+  | { kind: 'atom'; verb: 'startContact'; args: StartContactArgs }
+  | { kind: 'atom'; verb: 'deckToBottomBound'; args: DeckToBottomBoundArgs }
+  | { kind: 'atom'; verb: Exclude<AtomVerb, 'startContact' | 'deckToBottomBound'>; args: unknown }
   | { kind: 'custom'; fn: (s: GameState, ctx: EffectCtx) => void }
   // 拡張 5 (D08003 driver): 公式テキスト「そうした場合」 semantics。
   // step N が「実効果あり」のとき N+1 を実行。N が no-op (no candidate) なら以降 skip。
   // pick await 時は chain 継続情報を保存して effectPickResolve 後に再 queue する。
   | { kind: 'chain'; steps: Effect[] };
+
+/** `order` 未指定は、既存カード互換の arbitrary (プレイヤーが底順を選択) として扱う。 */
+export type DeckToBottomBoundArgs = {
+  player?: unknown;
+  bindKey?: string;
+  order?: 'arbitrary' | 'preserve';
+};

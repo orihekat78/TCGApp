@@ -173,7 +173,7 @@ describe('B08041 a2 — 宣言 (removeSetCard kind 分岐: character→AP+2000 /
     expect(readChar.ap(s, 'taka')).toBe(4000);
     expect(readChar.lp(s, 'taka')).toBe(1);
     s = produce(s, (d) => {
-      activateDeclaredAbility(d, 'taka', 'a2', { removeSetCard: { hostUids: ['taka'] } });
+      activateDeclaredAbility(d, 'taka', 'a2', { removeSetCard: { hostUids: ['taka'], instanceIds: ['set:1'] } });
       runAllUntilEmpty(d);
     });
     expect(s.players.self.scene.find((c) => c.uid === 'taka')!.setCards.length, 'cost で裏向き1枚除去').toBe(0);

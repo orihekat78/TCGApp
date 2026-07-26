@@ -336,7 +336,8 @@ export function atomDeckToBottomBound(s: GameState, a: Record<string, unknown>, 
         occurrences.push({ cardId: id, index });
       }
       const humanSide = (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
-      if (occurrences.length >= 2 && p === humanSide) {
+      const order = a.order === 'preserve' ? 'preserve' : 'arbitrary';
+      if (order === 'arbitrary' && occurrences.length >= 2 && p === humanSide) {
         (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = {
           player: p,
           cardIds: occurrences.map(entry => entry.cardId),
@@ -529,14 +530,28 @@ export function atomBindPick(s: GameState, a: Record<string, unknown>, ctx: Effe
     const available = target ? targetCandidates(s, target, ctx) : [];
     const remaining = available.filter((candidate): candidate is Extract<Candidate, { kind: 'card' }> => candidate.kind === 'card');
     const selected: Array<Extract<Candidate, { kind: 'card' }>> = [];
-    for (const cardId of rawCardIds) {
+    const hasExactIndexes = Object.hasOwn(a, 'selectedDeckIndexes');
+    const selectedIndexes = Array.isArray(a.selectedDeckIndexes)
+      ? a.selectedDeckIndexes.map((index) => resolveBindRef(index, ctx))
+      : null;
+    const cardIds = rawCardIds.filter((cardId): cardId is string => typeof cardId === 'string');
+    const exactSelectionIsValid = !hasExactIndexes || (
+      selectedIndexes !== null
+      && selectedIndexes.length === cardIds.length
+      && selectedIndexes.every((index): index is number => typeof index === 'number' && Number.isInteger(index) && index >= 0)
+      && new Set(selectedIndexes).size === selectedIndexes.length
+    );
+    for (const [position, cardId] of cardIds.entries()) {
       if (typeof cardId !== 'string') continue;
-      const index = remaining.findIndex((candidate) => candidate.cardId === cardId);
+      const selectedIndex = exactSelectionIsValid ? selectedIndexes?.[position] : undefined;
+      const index = remaining.findIndex((candidate) => candidate.cardId === cardId && (
+        !hasExactIndexes || candidate.index === selectedIndex
+      ));
       if (index === -1) continue;
       selected.push(remaining[index]!);
       remaining.splice(index, 1);
     }
-    if (typeof a.bind === 'string') (ctx.bindings as Record<string, unknown>)[a.bind] = selected;
+    if (typeof a.bind === 'string') (ctx.bindings as Record<string, unknown>)[a.bind] = exactSelectionIsValid && selected.length === cardIds.length ? selected : [];
     mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:bindPick', target: selected.map((candidate) => candidate.cardId).join(',') });
     return;
   }

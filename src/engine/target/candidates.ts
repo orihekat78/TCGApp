@@ -13,7 +13,7 @@ import type {
   CardDef,
 } from '@/engine/types';
 import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from './card-def-registry.js';
-import { defHasKeyword, defHasCutinTextIncludes } from '@/engine/read/keyword.js';
+import { defHasKeyword, defHasCutinTextIncludes, defHasNoOriginalAbilityExceptIcons } from '@/engine/read/keyword.js';
 
 // BUG-113: 数値フィルタの有効値に continuousModifier.apDelta/lpDelta (継続効果 dyn) を含める。
 // read/char.ts → cond/eval.ts → candidates.ts の静的 import 循環を避けるため late-binding (register) で注入。
@@ -23,6 +23,15 @@ import { defHasKeyword, defHasCutinTextIncludes } from '@/engine/read/keyword.js
 type ContinuousDeltaFn = (s: GameState, uid: string, which: 'apDelta' | 'lpDelta' | 'lvlDelta') => number;
 let continuousDeltaImpl: ContinuousDeltaFn | null = null;
 let _inContinuousDelta = false;
+type SourceApFn = (s: GameState, uid: string) => number | undefined;
+let sourceApImpl: SourceApFn | null = null;
+export function registerSourceAp(fn: SourceApFn): void { sourceApImpl = fn; }
+type SourceLevelFn = (s: GameState, uid: string) => number | undefined;
+let sourceLevelImpl: SourceLevelFn | null = null;
+export function registerSourceLevel(fn: SourceLevelFn): void { sourceLevelImpl = fn; }
+type EffectiveHandLevelFn = (s: GameState, player: 'self' | 'opp', cardId: string) => number | undefined;
+let effectiveHandLevelImpl: EffectiveHandLevelFn | null = null;
+export function registerEffectiveHandLevel(fn: EffectiveHandLevelFn): void { effectiveHandLevelImpl = fn; }
 export function registerContinuousDelta(fn: ContinuousDeltaFn): void {
   continuousDeltaImpl = fn;
 }
@@ -66,7 +75,7 @@ export function auraDeltaSafe(s: GameState, uid: string | undefined, which: 'apD
 type EffectiveKeywordFallback = {
   cardId: string;
   player: 'self' | 'opp';
-  area: 'scene' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'bound';
+  area: 'scene' | 'set-card' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'bound';
 };
 type EffectiveKeywordFn = (s: GameState, uid: string, keyword: string, fallback?: EffectiveKeywordFallback) => boolean | undefined;
 let effectiveKeywordImpl: EffectiveKeywordFn | null = null;
@@ -93,6 +102,32 @@ export function effectiveKeywordForCard(
 ): boolean {
   const def = fallback ? lookupCardDef(fallback.cardId) : undefined;
   return effectiveKeywordSafe(state, uid, keyword, fallback) ?? defHasKeyword(def, keyword);
+}
+
+type PrintedKeywordFn = (s: GameState, uid: string, keyword: string, fallback?: EffectiveKeywordFallback) => boolean | undefined;
+let printedKeywordImpl: PrintedKeywordFn | null = null;
+let _inPrintedKeyword = false;
+export function registerPrintedKeyword(fn: PrintedKeywordFn): void {
+  printedKeywordImpl = fn;
+}
+/**
+ * 「【X】を持つ」ではなく、印字Xまたはそのカード自身の条件アイコンで
+ * 有効なXだけを読む。普通の能力・他カードからの付与は除外する。
+ */
+export function printedKeywordForCard(
+  state: GameState,
+  uid: string,
+  keyword: string,
+  fallback?: EffectiveKeywordFallback,
+): boolean {
+  const d = fallback ? lookupCardDef(fallback.cardId) : undefined;
+  if (printedKeywordImpl === null || _inPrintedKeyword) return (d?.keywords ?? []).includes(keyword);
+  _inPrintedKeyword = true;
+  try {
+    return printedKeywordImpl(state, uid, keyword, fallback) ?? (d?.keywords ?? []).includes(keyword);
+  } finally {
+    _inPrintedKeyword = false;
+  }
 }
 
 type EffectiveCutinTextFn = (s: GameState, uid: string, text: string, fallback?: EffectiveKeywordFallback) => boolean | undefined;
@@ -128,13 +163,13 @@ export function effectiveCutinTextForCard(
 // grantWalk → evalCond(継続条件) → candidates → matchOneFilter … を _inTraitNameGrant で depth-2 終端
 // (再入時 [] = 印字のみ。continuousDelta/auraDelta と同一機序)。未登録 / 既存カード (未宣言) は [] = no-op。
 const NO_GRANT: string[] = [];
-type TraitNameGrantFn = (s: GameState, uid: string, which: 'grantTraits' | 'grantNames') => string[];
+type TraitNameGrantFn = (s: GameState, uid: string, which: 'grantTraits' | 'grantTraitsAura' | 'grantNames') => string[];
 let traitNameGrantImpl: TraitNameGrantFn | null = null;
 let _inTraitNameGrant = false;
 export function registerTraitNameGrant(fn: TraitNameGrantFn): void {
   traitNameGrantImpl = fn;
 }
-export function traitNameGrantSafe(s: GameState, uid: string | undefined, which: 'grantTraits' | 'grantNames'): string[] {
+export function traitNameGrantSafe(s: GameState, uid: string | undefined, which: 'grantTraits' | 'grantTraitsAura' | 'grantNames'): string[] {
   if (traitNameGrantImpl === null || _inTraitNameGrant || uid === undefined) return NO_GRANT;
   _inTraitNameGrant = true;
   try {
@@ -163,7 +198,9 @@ export function effectiveTraitNames(state: GameState, cardId: string, c: SceneCh
   const isCharacter = lookupCardDef(cardId)?.kind === 'character';
   const owner = candidate?.player;
   const global = isCharacter && owner ? (state.turnState[owner].globalCharacterTraitGrants_turn ?? []) : NO_GRANT;
-  const granted = c?.uid !== undefined ? traitNameGrantSafe(state, c.uid, 'grantTraits') : NO_GRANT;
+  const granted = c?.uid !== undefined
+    ? [...traitNameGrantSafe(state, c.uid, 'grantTraits'), ...traitNameGrantSafe(state, c.uid, 'grantTraitsAura')]
+    : NO_GRANT;
   const te = c?.turnEffects as Record<string, unknown> | undefined;
   const appliedG = te
     ? [...((te['grantedTraits_permanent'] as string[] | undefined) ?? []), ...((te['grantedTraits_turn'] as string[] | undefined) ?? [])]
@@ -178,8 +215,13 @@ export function effectiveTraitNames(state: GameState, cardId: string, c: SceneCh
 // 有効カード名 component 集合 = allCardNameComponentsForDef(印字) ∪ (granted 名を rules/19 分割展開したもの)。
 // board char (c?.uid 既知) のみ granted を合流。c===null は印字のみ (deck/remove/bound=cardId)。
 // export: cond/eval bond が matchOneFilter と同一の name 解決を使う (BUG-117 一貫性)。
-export function effectiveNameComponents(state: GameState, d: CardDef | undefined, c: SceneCharacter | null): string[] {
-  const base = d ? allCardNameComponentsForDef(d) : [];
+export function effectiveNameComponents(
+  state: GameState,
+  d: CardDef | undefined,
+  c: SceneCharacter | null,
+  candidate?: Candidate,
+): string[] {
+  const base = d ? allCardNameComponentsForDef(d, candidate?.kind === 'card' ? candidate.area : undefined) : [];
   if (c?.uid === undefined) return base;
   // mega-wave W6 step2 追補 (2026-07-04, 混成 review 指摘): nameOverride (PR105「カード名を指定した
   // カード名に書き換える」) は **完全置換** (rules/19 Q&A「元のカード名は持っていない扱い」) —
@@ -229,6 +271,64 @@ function sidesForQuery(query: TargetQuery, ctx: EffectCtx): Side[] {
     case 'opp-of-owner':
       return [oppSide(owner)];
   }
+}
+
+function liveCharacter(state: GameState, uid: string): { char: SceneCharacter; player: Side } | undefined {
+  for (const player of ['self', 'opp'] as const) {
+    const char = state.players[player].scene.find(c => c.uid === uid)
+      ?? (uid === `partnerMR:${player}` ? state.players[player].partnerAreaMR ?? undefined : undefined);
+    if (char) return { char, player };
+  }
+  return undefined;
+}
+
+/** Current effective level for a concrete candidate. Stale identities fail closed. */
+export function effectiveLevelForCandidate(state: GameState, candidate: Candidate): number | undefined {
+  if (candidate.kind === 'char') return sourceLevelImpl?.(state, candidate.uid);
+  if (candidate.kind !== 'card') return undefined;
+  if (candidate.area === 'hand') {
+    if (typeof candidate.index !== 'number' || state.players[candidate.player].hand[candidate.index] !== candidate.cardId) return undefined;
+    return effectiveHandLevelImpl?.(state, candidate.player, candidate.cardId);
+  }
+  return lookupCardDef(candidate.cardId)?.level;
+}
+
+/** Rehydrate a binding only when it still names the same live card occurrence. */
+export function boundCandidate(state: GameState, entry: unknown, fallbackPlayer: Side): Candidate | undefined {
+  if (!entry || typeof entry !== 'object') return undefined;
+  const bound = entry as { uid?: unknown; cardId?: unknown; player?: unknown; area?: unknown; index?: unknown };
+  if (typeof bound.uid === 'string') {
+    const live = liveCharacter(state, bound.uid);
+    if (!live) return undefined;
+    return { kind: 'char', uid: live.char.uid, cardId: live.char.cardId, player: live.player };
+  }
+  if (typeof bound.cardId !== 'string') return undefined;
+  const player: Side = bound.player === 'self' || bound.player === 'opp' ? bound.player : fallbackPlayer;
+  const area = typeof bound.area === 'string' ? bound.area : 'bound';
+  const index = typeof bound.index === 'number' ? bound.index : undefined;
+  const candidate: Candidate = { kind: 'card', cardId: bound.cardId, area, player, ...(index === undefined ? {} : { index }) };
+  return candidate;
+}
+
+/** Resolve dynamic bound-level thresholds once, before all filter consumers. */
+export function resolveBoundLevelFilter(state: GameState, filter: TargetFilter, ctx: EffectCtx): TargetFilter | undefined {
+  const maxBound = filter.levelMaxBound;
+  const minBound = filter.levelMinBound;
+  if (!maxBound && !minBound) return filter;
+  const levelFor = (bindKey: string): number | undefined => {
+    const entries = ctx.bindings?.[bindKey];
+    return Array.isArray(entries) ? effectiveLevelForCandidate(state, boundCandidate(state, entries[0], ctx.source.player) ?? { kind: 'partner', player: ctx.source.player }) : undefined;
+  };
+  const max = maxBound ? levelFor(maxBound.bindKey) : undefined;
+  const min = minBound ? levelFor(minBound.bindKey) : undefined;
+  if ((maxBound && max === undefined) || (minBound && min === undefined)) return undefined;
+  const { levelMaxBound: _max, levelMinBound: _min, ...rest } = filter;
+  void _max; void _min;
+  return {
+    ...rest,
+    ...(max === undefined ? {} : { levelMax: Math.min(rest.levelMax ?? Number.POSITIVE_INFINITY, max) }),
+    ...(min === undefined ? {} : { levelMin: Math.max(rest.levelMin ?? Number.NEGATIVE_INFINITY, min) }),
+  };
 }
 
 /**
@@ -296,6 +396,26 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
     query = { ...query, filter: { ...restFilter, levelIn: levels } };
   }
 
+  // Dynamic source AP bound (CT-P10 B10069). Resolve before enumeration so
+  // the existing effective apMax reader remains the only candidate matcher.
+  if (query.filter?.apMaxSource) {
+    const sourceAp = ctx.source.uid && sourceApImpl ? sourceApImpl(state, ctx.source.uid) : undefined;
+    const { apMaxSource: _resolved, ...restFilter } = query.filter;
+    void _resolved;
+    query = {
+      ...query,
+      filter: {
+        ...restFilter,
+        apMax: sourceAp === undefined ? Number.NEGATIVE_INFINITY : Math.min(restFilter.apMax ?? Number.POSITIVE_INFINITY, sourceAp),
+      },
+    };
+  }
+  if (query.filter?.levelMaxBound || query.filter?.levelMinBound) {
+    const filter = resolveBoundLevelFilter(state, query.filter, ctx);
+    if (!filter) return out;
+    query = { ...query, filter };
+  }
+
   // engine mega-wave W4 (2026-07-03, r83 G34): fromGroup — 母集合を ctx.bindings[fromGroup] の
   // uid 集合に限定 (「その中から1枚」B01012)。binding 不在/空 = 候補0 (fail-closed)。
   // 通常列挙を走らせた後の post-filter (filter/state/side 等の既存判定を全て共有)。
@@ -354,10 +474,26 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
         }
         break;
       }
+      case 'set-card': {
+        for (const host of state.players[side].scene) {
+          for (const entry of host.setCards) {
+            // Rules/16: face-down set cards expose neither identity nor traits.
+            if (!entry.faceUp || !entry.instanceId) continue;
+            const cand: Candidate = {
+              kind: 'card', cardId: entry.cardId, area: 'set-card', player: side,
+              hostUid: host.uid, setCardInstanceId: entry.instanceId,
+            };
+            if (matchesFiltersByCardId(state, entry.cardId, query, cand)) out.push(cand);
+          }
+        }
+        break;
+      }
       case 'partner-area': {
-        const cand: Candidate = { kind: 'partner', player: side };
-        if (matchesFiltersByCardId(state, state.players[side].partner.cardId, query, cand)) {
-          out.push(cand);
+        if (query.includePartner !== false) {
+          const cand: Candidate = { kind: 'partner', player: side };
+          if (matchesFiltersByCardId(state, state.players[side].partner.cardId, query, cand)) {
+            out.push(cand);
+          }
         }
         // engine wave-12 (2026-07-02 G39): PA 一般カード枠 (partnerAreaCards) の列挙。
         // 「このカードをパートナーエリアに移す」で PA 常駐したカード (B07059 等) を
@@ -365,7 +501,7 @@ function enumerateByQuery(state: GameState, query: TargetQuery, ctx: EffectCtx):
         // 全出荷カードは本 field 未使用 (undefined) → 既存カードの候補集合は不変。
         // ※ partnerAreaMR (MR slot) の targetability は公式 Q&A 未解決 (BUG-154 #3) のため列挙しない。
         const paCards = state.players[side].partnerAreaCards;
-        if (paCards) {
+        if (query.includePartnerAreaCards !== false && paCards) {
           for (let i = 0; i < paCards.length; i++) {
             const c: Candidate = { kind: 'card', cardId: paCards[i], area: 'partner-area', player: side, index: i };
             if (matchesFiltersByCardId(state, paCards[i], query, c)) {
@@ -538,7 +674,7 @@ export function matchOneFilter(
   cardId: string,
   filter: TargetFilter,
   c: SceneCharacter | null,
-  cand: Candidate,
+  cand: Candidate | null,
 ): boolean {
   const d = lookupCardDef(cardId);
 
@@ -551,7 +687,7 @@ export function matchOneFilter(
   // wave-6 (P37): board char は effectiveNameComponents = 印字 ∪ granted (grantNames、分割展開込)。
   if (filter.cardName !== undefined) {
     const wants = Array.isArray(filter.cardName) ? filter.cardName : [filter.cardName];
-    const components = effectiveNameComponents(state, d, c);
+    const components = effectiveNameComponents(state, d, c, cand ?? undefined);
     const ok = wants.some(w => components.includes(w));
     if (!ok) return false;
   }
@@ -561,7 +697,7 @@ export function matchOneFilter(
   // wave-6 (P37): granted 名 (「〚カード名[X]〛としても扱い」) も除外対象に含む (effectiveNameComponents)。
   if (filter.cardNameNot !== undefined) {
     const nots = Array.isArray(filter.cardNameNot) ? filter.cardNameNot : [filter.cardNameNot];
-    const components = effectiveNameComponents(state, d, c);
+    const components = effectiveNameComponents(state, d, c, cand ?? undefined);
     if (nots.some(w => components.includes(w))) return false;
   }
 
@@ -572,8 +708,18 @@ export function matchOneFilter(
     // honor。read.char.traits と同じ集合 (printed ∪ continuous-grant ∪ applied-grant − applied-revoke)。
     // c.turnEffects 経由なので removedChar snapshot でも正しい (B05101 の再リムーブ時 trait gate)。
     // 既存カードは未宣言 → 全 [] = 従来と byte 等価 (回帰0)。
-    const traits = effectiveTraitNames(state, cardId, c, cand);
+    const traits = effectiveTraitNames(state, cardId, c, cand ?? undefined);
     if (!wants.some(w => traits.includes(w))) return false;
+  }
+
+  // trait is an any-match selector.  Cards such as CT-P10 B10056 instead say
+  // "特徴[A]と[B]", so every requested effective trait is required.  An empty
+  // selector is malformed/unresolved and must not widen the target set.
+  if (filter.traitAll !== undefined) {
+    const wants = Array.isArray(filter.traitAll) ? filter.traitAll : [filter.traitAll];
+    if (wants.length === 0) return false;
+    const traits = effectiveTraitNames(state, cardId, c, cand ?? undefined);
+    if (!wants.every(w => traits.includes(w))) return false;
   }
 
   // Dynamic removal-snapshot filters are only resolved by deckRevealUntil,
@@ -596,12 +742,24 @@ export function matchOneFilter(
     if (!colors.some(c => !nots.includes(c))) return false;
   }
 
+  // Printed-card metadata only: B04018's original-ability disable makes the
+  // text ineffective, not absent.  A granted ability is likewise not printed.
+  if (filter.hasOriginalAbility !== undefined) {
+    if (!d) return false;
+    const hasOriginalAbility = d.abilities.length > 0;
+    if (hasOriginalAbility !== filter.hasOriginalAbility) return false;
+  }
+
+  if (filter.hasNoOriginalAbilityExceptIcons !== undefined) {
+    if (!defHasNoOriginalAbilityExceptIcons(d, filter.hasNoOriginalAbilityExceptIcons)) return false;
+  }
+
   if (filter.keyword !== undefined) {
     const wants = Array.isArray(filter.keyword) ? filter.keyword : [filter.keyword];
     // BUG-122: keyword は通常 keywords[] に入るが、アイコン能力 (カットイン / 変装 / ヒラメキ /
     // ミスリード) は keywords[] ではなく ability 構造で表現される。defHasKeyword が両表現を吸収する
     // (旧実装は keywords[] のみ → B05112「【カットイン】を持つキャラ」が候補0で機能しなかった)。
-    const fallback: EffectiveKeywordFallback | undefined = cand.kind === 'char'
+    const fallback: EffectiveKeywordFallback | undefined = cand === null ? undefined : cand.kind === 'char'
       ? { cardId, player: cand.player, area: 'scene' }
       : cand.kind === 'card'
         ? { cardId, player: cand.player, area: cand.area as EffectiveKeywordFallback['area'] }
@@ -614,10 +772,40 @@ export function matchOneFilter(
     if (!matches) return false;
   }
 
+  if (filter.keywordNot !== undefined) {
+    const nots = Array.isArray(filter.keywordNot) ? filter.keywordNot : [filter.keywordNot];
+    const fallback: EffectiveKeywordFallback | undefined = cand === null ? undefined : cand.kind === 'char'
+      ? { cardId, player: cand.player, area: 'scene' }
+      : cand.kind === 'card'
+        ? { cardId, player: cand.player, area: cand.area as EffectiveKeywordFallback['area'] }
+        : undefined;
+    const hasExcluded = c
+      ? nots.some(w => effectiveKeywordForCard(state, c.uid, w, fallback))
+      : fallback
+        ? nots.some(w => effectiveKeywordForCard(state, `card:${fallback.player}:${fallback.area}:${cardId}`, w, fallback))
+        : nots.some(w => defHasKeyword(d, w));
+    if (hasExcluded) return false;
+  }
+
+  if (filter.keywordFromPrintOrConditionIcon !== undefined) {
+    const wants = Array.isArray(filter.keywordFromPrintOrConditionIcon) ? filter.keywordFromPrintOrConditionIcon : [filter.keywordFromPrintOrConditionIcon];
+    const fallback: EffectiveKeywordFallback | undefined = cand === null ? undefined : cand.kind === 'char'
+      ? { cardId, player: cand.player, area: 'scene' }
+      : cand.kind === 'card'
+        ? { cardId, player: cand.player, area: cand.area as EffectiveKeywordFallback['area'] }
+        : undefined;
+    const matches = fallback && c
+      ? wants.some(w => printedKeywordForCard(state, c.uid, w, fallback))
+      : fallback
+        ? wants.some(w => printedKeywordForCard(state, `card:${fallback.player}:${fallback.area}:${cardId}`, w, fallback))
+        : wants.some(w => (d?.keywords ?? []).includes(w));
+    if (!matches) return false;
+  }
+
   // M2後半 (2026-07-10, D06003): cutin 効果内容 filter — 「【カットイン】AP＋」を持つ (印字包含判定、
   // qAndA ウォッカ B01097 除外)。def ベースなので remove-area card candidate (c===null) でも動く。
   if (filter.cutinTextIncludes !== undefined) {
-    const fallback: EffectiveKeywordFallback | undefined = cand.kind === 'card'
+    const fallback: EffectiveKeywordFallback | undefined = cand !== null && cand.kind === 'card'
       ? { cardId, player: cand.player, area: cand.area as EffectiveKeywordFallback['area'] }
       : undefined;
     const matches = filter.cutinTextIncludes === ''
@@ -644,12 +832,15 @@ export function matchOneFilter(
   const base = d ?? null;
   const te = (c?.turnEffects ?? {}) as Record<string, unknown>;
   const num = (k: string): number => (typeof te[k] === 'number' ? (te[k] as number) : 0);
-  const apContinuous = continuousDeltaSafe(state, c?.uid, 'apDelta');
-  const lpContinuous = continuousDeltaSafe(state, c?.uid, 'lpDelta');
+  const needsAp = filter.apMin !== undefined || filter.apMax !== undefined;
+  const needsLp = filter.lpMin !== undefined || filter.lpMax !== undefined;
+  const needsLevel = filter.levelMin !== undefined || filter.levelMax !== undefined || filter.levelIn !== undefined;
+  const apContinuous = needsAp ? continuousDeltaSafe(state, c?.uid, 'apDelta') : 0;
+  const lpContinuous = needsLp ? continuousDeltaSafe(state, c?.uid, 'lpDelta') : 0;
   // engine拡張 wave#2 cluster13 (2026-06-15): 他キャラ aura (apDeltaAura/lpDeltaAura) も合算 (第5合算サイト)。
   // read.char.ap/lp と同式を維持 — filter-AP と combat-AP を一致させる (BUG-117 原則)。既存カードは aura 不在 → 0。
-  const apAura = auraDeltaSafe(state, c?.uid, 'apDeltaAura');
-  const lpAura = auraDeltaSafe(state, c?.uid, 'lpDeltaAura');
+  const apAura = needsAp ? auraDeltaSafe(state, c?.uid, 'apDeltaAura') : 0;
+  const lpAura = needsLp ? auraDeltaSafe(state, c?.uid, 'lpDeltaAura') : 0;
   // engine拡張 wave#2 cluster3 (2026-06-13): *Mod_action を合算 (read.char と同式を維持 — 第4合算サイト。
   // 乖離すると BUG-117 型: filter 評価と表示/judge が食い違う)。pin: wave2-cluster3 test X12。
   const ap = (c?.apOverride ?? base?.ap ?? 0) + num('apMod_permanent') + num('apMod_turn') + num('apMod_contact') + num('apMod_action') + apContinuous + apAura;
@@ -657,10 +848,14 @@ export function matchOneFilter(
   // engine-extension #2 (2026-06-05): charModifyLevel に伴い filter level も 3 scope 合算
   // (旧は base のみ → modifyLevel 不使用時 = base + 0 + 0 + 0 で互換)
   // engine additive wave (2026-06-24): continuous lvlDelta も合算 (read.char.level と同式 = BUG-117 原則)。既存カードは未宣言 → 0。
-  const levelOverride = levelFilterOverride(state, c?.uid);
-  const lvlContinuous = levelOverride === undefined ? continuousDeltaSafe(state, c?.uid, 'lvlDelta') : 0;
-  const lvlAura = levelOverride === undefined ? auraDeltaSafe(state, c?.uid, 'lvlDeltaAura') : 0;
-  const level = levelOverride ?? ((base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action') + lvlContinuous + lvlAura);
+  const levelOverride = needsLevel ? levelFilterOverride(state, c?.uid) : undefined;
+  const lvlContinuous = needsLevel && levelOverride === undefined ? continuousDeltaSafe(state, c?.uid, 'lvlDelta') : 0;
+  const lvlAura = needsLevel && levelOverride === undefined ? auraDeltaSafe(state, c?.uid, 'lvlDeltaAura') : 0;
+  const level = needsLevel
+    ? levelOverride
+      ?? (cand ? effectiveLevelForCandidate(state, cand) : undefined)
+      ?? ((base?.level ?? 0) + num('lvlMod_permanent') + num('lvlMod_turn') + num('lvlMod_contact') + num('lvlMod_action') + lvlContinuous + lvlAura)
+    : 0;
 
   if (filter.apMin !== undefined && ap < filter.apMin) return false;
   if (filter.apMax !== undefined && ap > filter.apMax) return false;
@@ -682,6 +877,8 @@ export function matchOneFilter(
   // (filterAny 内 / cond boundMatchesFilter 等) に levelInBound が書かれた場合、silent drop で全一致に
   // ならないよう常に不一致にする。正規経路 (enumerateByQuery) は解決時に levelInBound を除去済み。
   if (filter.levelInBound !== undefined) return false;
+  if (filter.levelMaxBound !== undefined || filter.levelMinBound !== undefined) return false;
+  if (filter.apMaxSource !== undefined) return false;
 
   if (filter.hasSetCards !== undefined) {
     const has = !!(c && c.setCards.length > 0);
@@ -716,7 +913,7 @@ export function matchOneFilter(
   }
 
   if (filter.custom !== undefined) {
-    if (!filter.custom(state, cand)) return false;
+    if (!cand || !filter.custom(state, cand)) return false;
   }
   return true;
 }

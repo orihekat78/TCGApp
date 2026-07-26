@@ -35,6 +35,7 @@ export type AbilityScope =
   | 'on-partner-area'    // パートナーエリアでも (MR系 rules/18)
   | 'on-hand'            // 手札時 (例: 一部カットイン)
   | 'on-evidence'        // 証拠時 (ヒラメキ rules/10)
+  | 'on-evidence-file'   // 表向きの証拠 / FILE にある間
   // engine additive (2026-06-29c): 装備イベント等が「セットされているキャラ」(host) に付与するライダー能力。
   // セットカード def 上に書かれるが、効果対象は **セット先の host キャラ**。faceUp でセットされている間のみ有効
   // (rules/16: 裏向きセットは情報を持たない / セット先が現場を離れたらリムーブ → 自動失効)。
@@ -62,10 +63,10 @@ export type AbilityScope =
   | 'always';            // どこでも (デバッグ用)
 
 // ---------- AbilityLimit ----------
-// rules: 17-icons.md §【ターン①/②】, 24-qa-naming-stun.md
+// rules: 17-icons.md §【ターン①/②/③】, 24-qa-naming-stun.md
 
 export type AbilityLimit =
-  | { kind: 'turn'; n: 1 | 2 }
+  | { kind: 'turn'; n: 1 | 2 | 3 }
   | { kind: 'game'; n: number }
   | null;
 
@@ -154,6 +155,13 @@ export type ContinuousModifier = {
   // 不在時 no-op (既存カードは未宣言 → grantWalk 空集合 → 印字のみ、smoke baseline 不変)。
   // aura 版 (全自軍付与 B06095) / removeTraits (「失う」B05101 の permanent applied 変更) は別 primitive で DEFER。
   grantTraits?: string[];
+  /**
+   * Give matching characters on the bearer’s side effective traits while this
+   * continuous ability is active. `auraFilter` and `auraExcludeSelf` use the
+   * same semantics as numeric auras; the effect vanishes when the bearer
+   * leaves or its original text/condition becomes inactive.
+   */
+  grantTraitsAura?: string[];
   grantNames?: string[];
   customSelectorPatch?: (s: GameState, uid: string, base: SceneCharacter) => Partial<SceneCharacter>;
   // engine拡張 wave#2 cluster5 (2026-06-14): 相手への使用制限 aura (rules/09 §カットイン/変装, rules/24 §常時有効型)。
@@ -179,7 +187,7 @@ export type ContinuousModifier = {
   //   read.char.restrictsOpponent (partner-bearer 拡張済) が読み、flow/auto-phase.ts ステップ2 が
   //   stun キャラの tryActivate を丸ごと skip (rules/03 の stun→sleep 変換も起きない = 公式Q&A
   //   「アクティブになる代わりにスリープになることもありません」)。
-  opponentRestrict?: ('cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'remove' | 'sleep' | 'stun' | 'stunAutoActivate')[];
+  opponentRestrict?: ('cutin' | 'disguiseTrigger' | 'refreshEvidence' | 'hirameki' | 'remove' | 'sleep' | 'stun' | 'stunAutoActivate' | 'contactLeaveSelfTrigger')[];
   // engine mega-wave W2 (2026-07-03, P07/r24): 継続アクション制限 token 群 (bearer 自身に係る)。
   //   read.char.selfContinuousFlag(s, uid, token) が bearer の continuous ability を walk
   //   (condition honor、restrictsOpponent と同流儀) して boolean を返す。不在時 false = 挙動不変。
@@ -222,6 +230,10 @@ export type ContinuousModifier = {
   opponentEventRestrict?: ('remove')[];
   caseActionBan?: boolean;
   selfActionBan?: boolean;
+  /** Bearer-only: this character cannot perform reasoning while active. */
+  selfReasonBan?: boolean;
+  /** Bearer-only: this character does not activate during the auto phase. */
+  noAutoActivateSelf?: boolean;
   selfCutinBanInContact?: boolean;
   // engine mega-wave W2b (2026-07-03, P50/r27): 「相手はイベントの効果によってこのキャラを選べる場合、
   //   必ず選ぶ」(B08087 吞口重彦)。G28 mustBeTargeted (action-target 強制) の effect-pick 版。
@@ -362,6 +374,10 @@ export type CardDef = {
   no: string;                              // 例: "0001/B08004"
   kind: 'character' | 'event' | 'partner' | 'case';
   names: string[];                         // 複数名カードは複数 (rules/19)
+  /** Additional rule names, valid only while the card is in the listed area. */
+  nameAliasesByArea?: Partial<Record<'deck' | 'remove', string[]>>;
+  /** This character enters the scene asleep regardless of its entry route. */
+  entersSleep?: boolean;
   colors: string[];                        // 1〜2色 (rules/20)
   level?: number;                          // event/character (パートナー除く)
   ap?: number;                             // character のみ
@@ -373,6 +389,8 @@ export type CardDef = {
   flavor?: string;
   imageUrl: string;                        // ローカル運用 (rules: 法務スタンス)
   abilities: AbilityDef[];                 // 能力定義 (Phase 5 で TSV+merge)
+  /** Partner-only marker for the built-in assist / solve-case actions; never a CardDef ability. */
+  standardPartnerActions?: true;
   /**
    * Printed "this event may be used if ..." authorization only.  This is
    * deliberately separate from AbilityDef.condition: icon and effect

@@ -8,6 +8,8 @@ import type { GameState, Cost, EffectCtx, TargetingRef } from '@/engine/types';
 import { candidates } from '@/engine/target/candidates.js';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
 import { canPayAtomically, isWellFormedCost } from './pay.js';
+import { eligibleRemoveSetCards } from './remove-set-card-eligible.js';
+import { def as readDef } from '@/engine/read/def.js';
 
 // refactor 2b (2026-06-12): Cost union の kind 一覧を value として単一ソース化。
 // `satisfies Record<Cost['kind'], true>` で union との両方向同期をコンパイル時に強制。
@@ -16,7 +18,7 @@ const COST_KIND_MAP = {
   sleepSelf: true, sleepChar: true, stunChar: true, removeFromHand: true, removeFromScene: true,
   revealFromHand: true, // engine additive wave (2026-06-28): 手札公開 presence-check cost (B08093 a1)
   revealHandToDeckTop: true, // engine mega-wave W1 (2026-07-03, P29): 手札公開→デッキ上 cost (B05049 a1)
-  removeDeckTop: true, removeDeckAll: true, discardEvidence: true, selfToDeckBottom: true,
+  removeDeckTop: true, removeDeckAll: true, discardEvidence: true, selfToDeckBottom: true, selfToRemove: true, selfToPartnerArea: true,
   sceneToDeckBottom: true, // Task D E2 (2026-06-12)
   removeAreaToDeckBottom: true, // cluster4 (2026-06-14)
   partnerAreaRemove: true, // engine defer-unlock mini-wave (2026-07-09): PA カード n 枚リムーブ (B07039)
@@ -128,14 +130,7 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     // rules/21: 全部行えなければ使用不可 / コスト「自分の」省略 → ctx.source.player の scene のみ (self-only)。
     // テキスト「裏向きで」ゆえ faceUp:true (表向きセット) は数えない。
     case 'removeSetCard': {
-      // hostSelf (attribution mini-wave 2026-07-10, B08041): host = 能力使用キャラ自身のみ数える。
-      // anyFace (夜間 W0 2026-07-11, B05052): 表裏不問に計数。未指定は従来通り裏向きのみ。
-      let count = 0;
-      for (const c of state.players[ctx.source.player].scene) {
-        if (cost.hostSelf && c.uid !== ctx.source.uid) continue;
-        count += cost.anyFace ? c.setCards.length : c.setCards.filter(e => !e.faceUp).length;
-      }
-      return count >= cost.n;
+      return eligibleRemoveSetCards(state, cost, ctx).length >= cost.n;
     }
     case 'removeStackedCards': {
       const uid = ctx.source.uid;
@@ -168,6 +163,32 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       const uid = ctx.source.uid;
       if (!uid) return false;
       return !!findChar(state, uid);
+    }
+    case 'selfToRemove': {
+      if (ctx.source.area === 'scene') {
+        const source = state.players[ctx.source.player].scene.find(char => char.uid === ctx.source.uid);
+        return !!source && source.cardId === ctx.source.cardId;
+      }
+      const index = sourceOccurrenceIndex(ctx);
+      if (index === null) return false;
+      if (ctx.source.area === 'evidence') {
+        const entry = state.players[ctx.source.player].evidence[index];
+        return !!entry && entry.faceUp && entry.cardId === ctx.source.cardId;
+      }
+      if (ctx.source.area === 'file') {
+        const entry = state.players[ctx.source.player].file[index];
+        return !!entry && entry.type === 'card-back' && entry.faceUp === true && entry.cardId === ctx.source.cardId;
+      }
+      return false;
+    }
+    case 'selfToPartnerArea': {
+      if (ctx.source.area !== 'scene' || !ctx.source.uid) return false;
+      const player = ctx.source.player;
+      const source = state.players[player].scene.find(char => char.uid === ctx.source.uid);
+      return !!source
+        && source.cardId === ctx.source.cardId
+        && readDef.isMR(source.cardId)
+        && !state.players[player].partnerAreaMR;
     }
     case 'pay': {
       return canPayAtomically(state, cost, ctx);
@@ -212,6 +233,15 @@ function findChar(state: GameState, uid: string) {
     if (found) return found;
   }
   return null;
+}
+
+function sourceOccurrenceIndex(ctx: EffectCtx): number | null {
+  const area = ctx.source.area;
+  if (area !== 'evidence' && area !== 'file') return null;
+  const match = new RegExp(`^${area}:${ctx.source.player}:(\\d+)$`).exec(ctx.source.uid ?? '');
+  if (!match) return null;
+  const index = Number(match[1]);
+  return Number.isInteger(index) && index >= 0 ? index : null;
 }
 
 /**

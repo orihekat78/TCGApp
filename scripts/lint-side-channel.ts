@@ -50,12 +50,18 @@ const ENGINE_INTERNAL_CHANNELS = new Set<string>([
   // consumed by applyRpsAndContinuation and must never become separate UI.
   'RpsResume',
   'RpsBindings',
+  'RpsContinuation',
   // Set-card choice exposes only the opaque occurrence picker.  Its resume
   // frame and bindings/remainder are resolver plumbing consumed on submit.
   'SetCardChoiceResume',
   'SetCardChoiceBindings',
   'SetCardChoiceRemainder',
   'SetCardChoiceRemainderKind',
+  // Guard and continuation frames are validated and consumed inside
+  // apply-pick.  They cannot be surfaced independently without exposing an
+  // incomplete set-card choice to the UI.
+  'SetCardChoiceGuard',
+  'SetCardChoiceContinuation',
   // mega-wave W6 step9 (2026-07-04, row65): startContact atom → ActionContext.id の片道通知。
   // 専用 store field を持たず dispatch drain → store.setActiveActionId(id) 直結 (useContactFlowDriver が
   // 既存の activeActionId 監視で拾う = 専用 Modal/Overlay 不要)。標準 4 点配線の対象外。
@@ -126,7 +132,7 @@ function main(): void {
     else { console.error(`  [ERROR] dispatch で drain or setPending 未配線`); errors++; }
 
     // 4. App.tsx + Playmat.tsx で対応 component 名 grep (柔軟、warn level)
-    const appPattern = new RegExp(`${name}(?:er)?(?:Modal|Overlay|Picker)`, 'i');
+    const appPattern = new RegExp(`${name}(?:er)?(?:Modal|Overlay|Picker|Window)`, 'i');
     const appOK = appPattern.test(uiSearchSpace);
     if (appOK) console.log(`  [OK]    UI (App/Playmat) に ${name}* component 配線`);
     else { console.warn(`  [WARN]  UI (App/Playmat) に ${name}*Modal|Overlay|Picker mount 無し`); warns++; }

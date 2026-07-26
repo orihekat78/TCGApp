@@ -82,6 +82,8 @@ declare global {
   var __pendingRpsResume: Effect | null | undefined;
 
   var __pendingRpsBindings: Record<string, unknown> | null | undefined;
+
+  var __pendingRpsContinuation: ContinuationFrame | null | undefined;
   // Dedicated discard-or-negate response. It deliberately does not share optional/choice state:
   // accepting discards a hand occurrence and cancels a different effect; declining resumes it.
 
@@ -124,7 +126,7 @@ export type PendingEffectPickSide = {
    */
   ownerPlayer?: Player;
   /** 候補 uid 配列 (Candidate.kind === 'char' のみ抽出) */
-  candidates: { uid: string; cardId: string; player: Player }[];
+  candidates: { uid: string; cardId: string; player: Player; kind?: 'char' | 'card' | 'evidence'; area?: string; index?: number }[];
   /** 元 atom の verb (例: 'sceneRemove') */
   atomVerb: string;
   /** atom args (uid='$pick' 含む、resolve 後に上書きされる) */
@@ -134,6 +136,8 @@ export type PendingEffectPickSide = {
   nMax: number;
   /** ability source (UI 表示・log 用) */
   source: PendingEffectSource;
+  /** Links a public opponent-hand window to this exact target resolution. */
+  publicHandRevealToken?: string;
   /**
    * D08021 driver 2026-05-26: target.query.distinctNames を UI に渡すための flag。
    * true なら UI multi-select で「同じ name component (rules/19 分割名展開後) を持つ
@@ -189,6 +193,7 @@ export type PendingEffectPickSide = {
 
 export type PendingChooseInterceptSide = {
   player: Player;
+  publicHandRevealToken?: string;
   protector: { uid: string; cardId: string; abilityId: string };
   targetUid: string;
 };
@@ -316,6 +321,7 @@ export function _clearPendingEffectPickQueue(): void {
 
 export type PendingEffectChoiceSide = {
   player: Player;
+  publicHandRevealToken?: string;
   /** 元 ability の特定 + 再開 ctx 復元 + option1 の $self 解決 + event.queue source に使用 */
   source: PendingEffectSource & { uid: string };
   /** UI ラベル化用 (atom option のみ verb/args、それ以外は index のみ)。JSON シリアライズ可能 */
@@ -393,6 +399,7 @@ export function _clearPendingChoiceResume(): void {
 
 export type PendingEffectOptionalSide = {
   player: Player;
+  publicHandRevealToken?: string;
   /** Effect owner. May differ from the player making this optional decision. */
   ownerPlayer?: Player;
   /** 元 ability の特定 + 再開 ctx 復元 ($self 解決 / modal の文言表示) に使用 */
@@ -441,7 +448,9 @@ export function _clearPendingSetCardReplacementSide(): void {
 export type PendingSetCardChoiceSide = {
   player: Player;
   hostUid: string;
-  entries: { instanceId: string; ordinal: number }[];
+  entries: { instanceId: string; ordinal: number; hidden?: boolean; cardId?: string }[];
+  face?: 'down' | 'up' | 'any';
+  destination?: { area: 'evidence'; faceUp: boolean } | { area: 'hand' } | { area: 'scene'; hostUid: string };
   source: PendingEffectSource & { uid: string };
 };
 
@@ -461,31 +470,81 @@ export function setPendingChoiceContinuation(continuation: ContinuationFrame): v
   const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
   (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null, continuation: null }).continuation = continuation;
 }
+/** Append an outer composite frame without replacing an inner choice continuation. */
+export function appendPendingChoiceContinuation(continuation: ContinuationFrame): void {
+  const g = globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null };
+  const resume = (g.__pendingEffectChoiceResume ??= { effect: null, bindings: null, continuation: null });
+  if (!resume.continuation) {
+    resume.continuation = continuation;
+    return;
+  }
+  let tail = resume.continuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = continuation;
+}
 export function _takePendingChoiceContinuation(): ContinuationFrame | null {
   const g = (globalThis as { __pendingEffectChoiceResume?: ChoiceResumeState | null }).__pendingEffectChoiceResume;
   const value = g?.continuation ?? null;
   if (g) g.continuation = null;
   return value;
 }
-export function setPendingSetCardChoiceResume(effect: Effect, bindings: Record<string, unknown>): void {
+export function setPendingSetCardChoiceResume(effect: Effect, bindings: Record<string, unknown>, choice?: PendingSetCardChoiceSide): void {
   (globalThis as { __pendingSetCardChoiceResume?: Effect | null }).__pendingSetCardChoiceResume = effect;
   (globalThis as { __pendingSetCardChoiceBindings?: Record<string, unknown> | null }).__pendingSetCardChoiceBindings = bindings;
+  (globalThis as { __pendingSetCardChoiceGuard?: PendingSetCardChoiceSide | null }).__pendingSetCardChoiceGuard = choice
+    ? toPlainDeep(choice) as PendingSetCardChoiceSide
+    : null;
+}
+/** Add an outer composite frame without replacing the active set-card decision. */
+export function appendPendingSetCardChoiceContinuation(frame: ContinuationFrame): void {
+  const g = globalThis as { __pendingSetCardChoiceContinuation?: ContinuationFrame | null };
+  if (!g.__pendingSetCardChoiceContinuation) {
+    g.__pendingSetCardChoiceContinuation = frame;
+    return;
+  }
+  let tail = g.__pendingSetCardChoiceContinuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = frame;
 }
 export function setPendingSetCardChoiceRemainder(remainder: Effect[], kind: 'sequence' | 'chain'): void {
-  (globalThis as { __pendingSetCardChoiceRemainder?: Effect[] | null }).__pendingSetCardChoiceRemainder = remainder;
-  (globalThis as { __pendingSetCardChoiceRemainderKind?: 'sequence' | 'chain' | null }).__pendingSetCardChoiceRemainderKind = kind;
+  // Compatibility entry point for existing callers/tests. New composite paths
+  // retain the same information as a real continuation frame, including the
+  // pending decision's provenance.
+  const g = globalThis as { __pendingSetCardChoiceGuard?: PendingSetCardChoiceSide | null };
+  const source = g.__pendingSetCardChoiceGuard?.source;
+  appendPendingSetCardChoiceContinuation({
+    remainder,
+    ctx: {
+      source: {
+        cardId: source?.cardId ?? '',
+        uid: source?.uid ?? '',
+        abilityId: source?.abilityId ?? '',
+        player: g.__pendingSetCardChoiceGuard?.player ?? 'self',
+        area: 'scene',
+        ...(source?.resolutionKind ? { resolutionKind: source.resolutionKind } : {}),
+        ...(source?.triggerBatch !== undefined ? { triggerBatch: source.triggerBatch } : {}),
+        ...(source?.ownerChosenOrder !== undefined ? { ownerChosenOrder: source.ownerChosenOrder } : {}),
+        ...(source?.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: source.ownerOrderConfirmed } : {}),
+      },
+      bindings: {},
+    },
+    kind,
+  });
 }
-export function _takePendingSetCardChoiceResume(): { effect: Effect; bindings: Record<string, unknown>; remainder: Effect[]; remainderKind: 'sequence' | 'chain' } | null {
-  const g = globalThis as { __pendingSetCardChoiceResume?: Effect | null; __pendingSetCardChoiceBindings?: Record<string, unknown> | null; __pendingSetCardChoiceRemainder?: Effect[] | null; __pendingSetCardChoiceRemainderKind?: 'sequence' | 'chain' | null };
+export function _peekPendingSetCardChoiceResume(): { effect: Effect; bindings: Record<string, unknown>; guard?: PendingSetCardChoiceSide; continuation?: ContinuationFrame } | null {
+  const g = globalThis as { __pendingSetCardChoiceResume?: Effect | null; __pendingSetCardChoiceBindings?: Record<string, unknown> | null; __pendingSetCardChoiceGuard?: PendingSetCardChoiceSide | null; __pendingSetCardChoiceContinuation?: ContinuationFrame | null };
   const effect = g.__pendingSetCardChoiceResume ?? null;
   const bindings = g.__pendingSetCardChoiceBindings ?? null;
-  const remainder = g.__pendingSetCardChoiceRemainder ?? [];
-  const remainderKind = g.__pendingSetCardChoiceRemainderKind ?? 'chain';
+  return effect && bindings ? { effect, bindings, guard: g.__pendingSetCardChoiceGuard ?? undefined, continuation: g.__pendingSetCardChoiceContinuation ?? undefined } : null;
+}
+export function _takePendingSetCardChoiceResume(): { effect: Effect; bindings: Record<string, unknown>; guard?: PendingSetCardChoiceSide; continuation?: ContinuationFrame } | null {
+  const value = _peekPendingSetCardChoiceResume();
+  const g = globalThis as { __pendingSetCardChoiceResume?: Effect | null; __pendingSetCardChoiceBindings?: Record<string, unknown> | null; __pendingSetCardChoiceGuard?: PendingSetCardChoiceSide | null; __pendingSetCardChoiceContinuation?: ContinuationFrame | null };
   g.__pendingSetCardChoiceResume = null;
   g.__pendingSetCardChoiceBindings = null;
-  g.__pendingSetCardChoiceRemainder = null;
-  g.__pendingSetCardChoiceRemainderKind = null;
-  return effect && bindings ? { effect, bindings, remainder, remainderKind } : null;
+  g.__pendingSetCardChoiceGuard = null;
+  g.__pendingSetCardChoiceContinuation = null;
+  return value;
 }
 export type PendingRpsSide = {
   player: Player;
@@ -508,20 +567,35 @@ export function _peekPendingRpsSide(): PendingRpsSide | null {
 }
 export function _clearPendingRpsSide(): void {
   (globalThis as { __pendingRpsSide?: PendingRpsSide | null }).__pendingRpsSide = null;
-  (globalThis as { __pendingRpsResume?: Effect | null }).__pendingRpsResume = null;
-  (globalThis as { __pendingRpsBindings?: Record<string, unknown> | null }).__pendingRpsBindings = null;
+  const g = globalThis as { __pendingRpsResume?: Effect | null; __pendingRpsBindings?: Record<string, unknown> | null; __pendingRpsContinuation?: ContinuationFrame | null };
+  g.__pendingRpsResume = null;
+  g.__pendingRpsBindings = null;
+  g.__pendingRpsContinuation = null;
 }
 export function setPendingRpsResume(effect: Effect, bindings: Record<string, unknown>): void {
   (globalThis as { __pendingRpsResume?: Effect | null }).__pendingRpsResume = effect;
   (globalThis as { __pendingRpsBindings?: Record<string, unknown> | null }).__pendingRpsBindings = bindings;
 }
-export function _takePendingRpsResume(): { effect: Effect; bindings: Record<string, unknown> } | null {
-  const g = globalThis as { __pendingRpsResume?: Effect | null; __pendingRpsBindings?: Record<string, unknown> | null };
+/** Append a continuation that must run after the RPS branch resolves. */
+export function appendPendingRpsContinuation(continuation: ContinuationFrame): void {
+  const g = globalThis as { __pendingRpsContinuation?: ContinuationFrame | null };
+  if (!g.__pendingRpsContinuation) {
+    g.__pendingRpsContinuation = continuation;
+    return;
+  }
+  let tail = g.__pendingRpsContinuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = continuation;
+}
+export function _takePendingRpsResume(): { effect: Effect; bindings: Record<string, unknown>; continuation?: ContinuationFrame } | null {
+  const g = globalThis as { __pendingRpsResume?: Effect | null; __pendingRpsBindings?: Record<string, unknown> | null; __pendingRpsContinuation?: ContinuationFrame | null };
   const effect = g.__pendingRpsResume ?? null;
   const bindings = g.__pendingRpsBindings ?? null;
+  const continuation = g.__pendingRpsContinuation ?? undefined;
   g.__pendingRpsResume = null;
   g.__pendingRpsBindings = null;
-  return effect && bindings ? { effect, bindings } : null;
+  g.__pendingRpsContinuation = null;
+  return effect && bindings ? { effect, bindings, continuation } : null;
 }
 
 export function pushPendingEffectOptionalSide(v: PendingEffectOptionalSide): void {
@@ -596,16 +670,16 @@ export function resetPendingEffectSession(): void {
     __pendingSetCardChoiceSide?: PendingSetCardChoiceSide | null;
     __pendingSetCardChoiceResume?: Effect | null;
     __pendingSetCardChoiceBindings?: Record<string, unknown> | null;
-    __pendingSetCardChoiceRemainder?: Effect[] | null;
-    __pendingSetCardChoiceRemainderKind?: 'sequence' | 'chain' | null;
+    __pendingSetCardChoiceGuard?: PendingSetCardChoiceSide | null;
+    __pendingSetCardChoiceContinuation?: ContinuationFrame | null;
     __pendingSetCardReplacementSide?: PendingSetCardReplacementSide | null;
   };
   g.__pendingEffectOptionalCostPaid = null;
   g.__pendingSetCardChoiceSide = null;
   g.__pendingSetCardChoiceResume = null;
   g.__pendingSetCardChoiceBindings = null;
-  g.__pendingSetCardChoiceRemainder = null;
-  g.__pendingSetCardChoiceRemainderKind = null;
+  g.__pendingSetCardChoiceGuard = null;
+  g.__pendingSetCardChoiceContinuation = null;
   g.__pendingSetCardReplacementSide = null;
 }
 

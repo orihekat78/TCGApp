@@ -173,6 +173,7 @@ function computeAiCostParams(
   cost: Cost,
 ): AbilityCostParams | undefined {
   let flip: { indices: number[] } | undefined;
+  let removeFromHand: { indices: number[] } | undefined;
   const walk = (c: Cost): void => {
     switch (c.kind) {
       case 'pay':
@@ -188,13 +189,23 @@ function computeAiCostParams(
         flip = { indices };
         return;
       }
+      case 'removeFromHand': {
+        const indices: number[] = [];
+        for (let i = 0; i < state.players[player].hand.length && indices.length < c.n; i++) {
+          indices.push(i);
+        }
+        removeFromHand = { indices };
+        return;
+      }
       default:
         // Other cost kinds: no picker needed
         return;
     }
   };
   walk(cost);
-  return flip ? { flipFaceUpEvidence: flip } : undefined;
+  return flip || removeFromHand
+    ? { ...(flip ? { flipFaceUpEvidence: flip } : {}), ...(removeFromHand ? { removeFromHand } : {}) }
+    : undefined;
 }
 
 /**

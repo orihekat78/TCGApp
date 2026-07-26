@@ -73,10 +73,19 @@ export function atomStartContact(s: GameState, a: Record<string, unknown>, ctx: 
       // import 経路: effect/ → flow/ の辺は本 atom が初 (逆辺は flow/contact → effect/pending-state
       //   leaf のみ。直接循環なし — tsc/vitest で検証済)。
       // rules: 07/08 (コンタクト処理) / 22 (Q&A アクションではない) / 15 (0枚選択)
-      const scByUid = ctx.source.uid;
-      if (!scByUid) return;
+      const hasExplicitActor = a.actorUid !== undefined;
+      const scByUid = hasExplicitActor ? resolveBindRef(a.actorUid, ctx) : ctx.source.uid;
+      if (typeof scByUid !== 'string' || scByUid.startsWith('$')) return;
       const scTarget = resolveBindRef(a.targetUid, ctx);
       if (typeof scTarget !== 'string' || scTarget.startsWith('$')) return; // 0枚選択 / 未解決 bind
+      // B10036's selected actor is another sleeping character of the ability owner.
+      // Re-check both selections at the atom boundary because earlier picks can go stale.
+      if (hasExplicitActor) {
+        const actor = s.players[ctx.source.player].scene.find((char) => char.uid === scByUid);
+        if (!actor || actor.uid === ctx.source.uid || actor.state !== 'sleep') return;
+      }
+      const targetPlayer = ctx.source.player === 'self' ? 'opp' : 'self';
+      if (!s.players[targetPlayer].scene.some((char) => char.uid === scTarget)) return;
       const scAx = flowAction.startFromEffect(s, scByUid, scTarget);
       if (!scAx) return;
       _setPendingContactStartAxId(scAx.id);

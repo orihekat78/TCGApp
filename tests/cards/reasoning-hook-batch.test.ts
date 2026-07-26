@@ -19,6 +19,7 @@ import { B01017 } from '@/cards/ct-p01/B01017';
 import { B01074 } from '@/cards/ct-p01/B01074';
 import { B03102 } from '@/cards/ct-p03/B03102';
 import { B05011 } from '@/cards/ct-p05/B05011';
+import { _drainPendingPublicHandRevealSide, resetPendingAtomSession } from '@/engine/effect/atom-handlers';
 import type { GameState, CardDef } from '@/engine/types';
 import { sceneChar } from '../helpers/fixtures';
 
@@ -28,6 +29,7 @@ describe('engine-extension reasoning-hook batch (2026-06-06)', () => {
     event._resetRegistry();
     _resetTriggeredRegistered();
     resetCardDefRegistry();
+    resetPendingAtomSession();
     registerAll();
     registerTriggeredListener();
   });
@@ -46,8 +48,13 @@ describe('engine-extension reasoning-hook batch (2026-06-06)', () => {
       doReasoning(d, 'hyd#1');
       runAllUntilEmpty(d);
     });
-    const hasRevealLog = s.log.some((e) => e.action === 'reveal-hand' && e.result?.includes('手札を公開'));
-    expect(hasRevealLog, '相手手札公開の log が記録される').toBe(true);
+    expect(_drainPendingPublicHandRevealSide()).toMatchObject({
+      owner: 'opp',
+      audience: 'all',
+      cardIds: s.players.opp.hand,
+      lifetime: 'presentation',
+      source: { cardId: 'B01074' },
+    });
     expect(s.players.self.scene.find((c) => c.uid === 'hyd#1')?.state, '推理でスリープ').toBe('sleep');
   });
 

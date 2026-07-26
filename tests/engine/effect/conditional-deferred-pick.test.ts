@@ -160,10 +160,16 @@ describe('binding-dependent conditional pick deferral', () => {
       humanChooser: true, byPlayer: 'self', source: { cardId: 'TEST', abilityId: 'a1' },
     }), effectCtx);
     const first = _drainPendingEffectPickSide();
-    expect(first).toMatchObject({ player: 'opp', candidates: [{ uid: 'D08015#0' }] });
+    expect(first).toMatchObject({
+      player: 'opp',
+      candidates: [{
+        kind: 'card', uid: 'card:opp:hand:D08015#0', cardId: 'D08015',
+        player: 'opp', area: 'hand', index: 0,
+      }],
+    });
     expect(first?.continuation?.ctx.source.player).toBe('self');
 
-    applyPickAndContinuation(state, first!, 'D08015#0');
+    applyPickAndContinuation(state, first!, 'card:opp:hand:D08015#0');
 
     expect(_drainPendingEffectPickSide()).toMatchObject({
       player: 'opp', candidates: [{ uid: 'opp-first' }, { uid: 'opp-second' }], atomVerb: 'sceneSetState',

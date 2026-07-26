@@ -41,6 +41,25 @@ describe('compiler/param — extractSlots', () => {
     const { template } = extractSlots('【ターン1】カードを2枚引く。');
     expect(template).toBe('【ターン{N}】カードを{N}枚引く。');
   });
+
+  it('preserves public hand-reveal audience and lifetime in parameter rules', () => {
+    const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'compiler', 'rules', 'param-rules.json'), 'utf8'));
+    const publicRevealRules = data.rules.filter((r: { groupKey: string }) => r.groupKey.includes('相手は手札を公開する。'));
+
+    expect(publicRevealRules).toHaveLength(3);
+    expect(publicRevealRules.map((r: { skeleton: unknown }) => r.skeleton)).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        effect: expect.objectContaining({ steps: expect.arrayContaining([
+          expect.objectContaining({ kind: 'atom', verb: 'handReveal', args: expect.objectContaining({ player: 'opp', all: true, audience: 'all', lifetime: 'presentation' }) }),
+        ]) }),
+      }),
+      expect.objectContaining({
+        effect: expect.objectContaining({ steps: expect.arrayContaining([
+          expect.objectContaining({ kind: 'atom', verb: 'handReveal', args: expect.objectContaining({ player: 'opp', all: true, audience: 'all', lifetime: 'effect' }) }),
+        ]) }),
+      }),
+    ]));
+  });
 });
 
 describe('compiler/param — buildParamRules + instantiate (合成)', () => {

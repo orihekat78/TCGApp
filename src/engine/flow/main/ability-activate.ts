@@ -33,6 +33,8 @@ type Player = 'self' | 'opp';
  */
 export interface AbilityCostParams {
   flipFaceUpEvidence?: { indices: number[] };
+  /** Exact physical hand occurrences selected for a remove-from-hand cost. */
+  removeFromHand?: { indices: number[] };
   sceneToDeckBottom?: { uids: string[] };
   removeAreaToDeckBottom?: { ids: string[] }; // cluster4 (2026-06-14)
   partnerAreaRemove?: { ids: string[] };

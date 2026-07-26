@@ -40,7 +40,12 @@ export function EffectPickerModal(): JSX.Element | null {
   }, [pending]);
   if (!pending || pending.player !== 'self') return null;
   // area pick は CardListModal に譲る (Playmat.tsx が auto-open する)
-  if (AREA_PICK_VERBS.has(pending.atomVerb)) return null;
+  // A discard of another player's revealed hand cannot use the self HandZone.
+  // Keep the finite public candidate list in this modal; it never enumerates
+  // any unrevealed opponent-hand cards.
+  const isPublicOpponentHandDiscard = pending.atomVerb === 'discard'
+    && pending.candidates.some((candidate) => candidate.player === 'opp');
+  if (AREA_PICK_VERBS.has(pending.atomVerb) && !isPublicOpponentHandDiscard) return null;
   // UI picker Direct Manipulation 化: scene-char を 1 枚選ぶ pick は Playmat が
   // 現場カード直接クリックで処理する (本 modal は出さない)。Playmat の isScenePick と
   // **同一述語** を共有して二重 UI / soft-lock を防ぐ (設計 v2 BLOCKER)。

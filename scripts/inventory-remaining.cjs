@@ -3,16 +3,50 @@
 // 決定論クラスタ。engine-gate spec / DEFERRED-INDEX の語彙に合わせたタグ付け。
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
-const root = '.claude/specs/cards-data';
-const reg = new Set(require('../.tmp/_registered-ids.json'));
+const repoRoot = path.resolve(__dirname, '..');
+const root = path.join(repoRoot, '.claude/specs/cards-data');
+
+function parseArgs(argv) {
+  let pkg;
+  let json = false;
+  for (let i = 0; i < argv.length; i += 1) {
+    if (argv[i] === '--pkg') {
+      pkg = argv[++i];
+      if (!pkg) throw new Error('--pkg requires a package name');
+    } else if (argv[i] === '--json') {
+      json = true;
+    } else {
+      throw new Error(`unknown argument: ${argv[i]}`);
+    }
+  }
+  return { pkg, json };
+}
+
+const args = parseArgs(process.argv.slice(2));
+if (args.json) console.log = () => {};
+const dumpPath = path.join(repoRoot, '.tmp', 'compiler', 'shipped-dsl.json');
+
+// Always regenerate from ALL_CARDS. Do not resurrect the old
+// .tmp/_registered-ids.json cache: it could silently omit spread variants.
+execFileSync(
+  process.execPath,
+  [path.join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs'), path.join(repoRoot, 'scripts', 'compiler', 'dump-shipped.ts')],
+  { cwd: repoRoot, stdio: ['ignore', 'ignore', 'pipe'] },
+);
+const shipped = JSON.parse(fs.readFileSync(dumpPath, 'utf8'));
+if (!Array.isArray(shipped.cards)) throw new Error('fresh shipped dump has no cards array');
+const reg = new Set(shipped.cards.map((card) => card.id));
 
 // --- 未実装カード収集 ---
 const cards = []; // {num, kind, title, color, level, text(全効果連結)}
-for (const pkg of fs.readdirSync(root)) {
+const packages = fs.readdirSync(root).filter((pkg) => !args.pkg || pkg === args.pkg).sort();
+if (args.pkg && packages.length === 0) throw new Error(`unknown package: ${args.pkg}`);
+for (const pkg of packages) {
   const pdir = path.join(root, pkg);
   if (!fs.statSync(pdir).isDirectory()) continue;
-  for (const f of fs.readdirSync(pdir)) {
+  for (const f of fs.readdirSync(pdir).sort()) {
     if (!f.endsWith('.tsv')) continue;
     const kind = f.replace('.tsv', '');
     const lines = fs.readFileSync(path.join(pdir, f), 'utf8').split(/\r?\n/).filter(l => l.trim());
@@ -37,6 +71,7 @@ for (const pkg of fs.readdirSync(root)) {
     }
   }
 }
+cards.sort((a, b) => a.num.localeCompare(b.num));
 
 // --- signature 定義 ---
 // status: 'engine-in' = engine に既にある (出荷済 pattern) / 'gate' = engine 拡張 or DEFER 要 / 'cost' = 既存 cost 機構
@@ -102,7 +137,7 @@ for (const s of SIG) statusOf[s.tag] = { status: s.status, note: s.note };
 
 console.log('=== 未実装カード総数:', cards.length, '===\n');
 console.log('--- mechanic signature 別 (size 順、複数該当あり) ---');
-const ranked = Object.entries(tagCount).sort((a, b) => b[1] - a[1]);
+const ranked = Object.entries(tagCount).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 for (const [tag, n] of ranked) {
   const st = statusOf[tag];
   console.log(`${String(n).padStart(4)}  [${st.status.padEnd(9)}] ${tag.padEnd(28)} ${st.note}`);
@@ -137,18 +172,23 @@ for (const card of cards) {
 const cleanCards = cards.filter(c => c.tags.filter(isBlocking).length === 0);
 
 console.log('\n=== 真の yield: 単一 gate が唯一 blocker (= clean cluster 候補) ===');
-const sgRanked = Object.entries(soleGateYield).sort((a, b) => b[1] - a[1]);
+const sgRanked = Object.entries(soleGateYield).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 for (const [tag, n] of sgRanked) {
   console.log(`${String(n).padStart(4)}  ${tag.padEnd(28)} ${statusOf[tag].note}`);
 }
 console.log(`\n  multi-gate (2+ blocker、要個別判断): ${multiGate.length}`);
 console.log(`  blocking gate 無し (全句 engine-in or untagged): ${cleanCards.length}`);
 
-fs.writeFileSync('.tmp/inventory-remaining.json', JSON.stringify({
-  total: cards.length,
-  tagCount, soleGateYield, soleGateCards,
-  multiGate,
-  cleanCards: cleanCards.map(c => ({ num: c.num, kind: c.kind, title: c.title, tags: c.tags, eff: c.eff.slice(0, 90) })),
-  untaggedSample: untagged.map(c => ({ num: c.num, kind: c.kind, title: c.title, eff: c.eff.slice(0, 90) })),
-}, null, 2));
-console.log('\n  detail -> .tmp/inventory-remaining.json');
+if (args.json) {
+  process.stdout.write(`${JSON.stringify({
+    pkg: args.pkg || null,
+    registered: reg.size,
+    total: cards.length,
+    cards: cards.map(({ num, kind, pkg, tags }) => ({ num, kind, pkg, tags })),
+    tagCount: Object.fromEntries(ranked),
+    soleGateYield: Object.fromEntries(sgRanked),
+    multiGate: multiGate.sort((a, b) => a.num.localeCompare(b.num)),
+    cleanCards: cleanCards.map(({ num, kind, pkg, tags }) => ({ num, kind, pkg, tags })),
+    untagged: untagged.map(({ num, kind, pkg }) => ({ num, kind, pkg })),
+  })}\n`);
+}

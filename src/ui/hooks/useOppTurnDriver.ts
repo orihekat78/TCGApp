@@ -61,7 +61,7 @@ export function driveOppTurn(): void {
   // BUG-136: deckToBottomBound 順序選択 modal (【相手ターン中】deckToBottomBound が human 所有で発火しうる)。
   // mini-wave #5 review B2: pendingDeckPlace も gate (相手ターン中の human 変装 (rules/09 非ターン側可) で
   // B05047 a2 が発火し modal 待ちになる — 漏れると AI driver が await 中に deck を動かし振り分けが部分無効化)。
-  if (store.pendingMisread || store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional || store.pendingChooseIntercept || store.pendingLeaveIntercept || store.pendingSetCardChoice || store.pendingSetCardReplacement || store.pendingEffectRepeatOptional || store.pendingDeckReveal || store.pendingDeckReorder || store.pendingDeckPlace || store.pendingRps) return;
+  if (store.pendingMisread || store.pendingEffectPick || store.pendingEffectChoice || store.pendingEffectOptional || store.pendingChooseIntercept || store.pendingLeaveIntercept || store.pendingSetCardChoice || store.pendingSetCardReplacement || store.pendingEffectRepeatOptional || store.pendingDeckReveal || store.pendingPublicHandReveal?.lifetime === 'effect' || store.pendingDeckReorder || store.pendingDeckPlace || store.pendingRps) return;
   if (isDriving) return;
   isDriving = true;
   try {
@@ -216,6 +216,7 @@ export function useOppTurnDriver(): void {
   const pendingSetCardReplacement = useGameStateStore((s) => s.pendingSetCardReplacement);
   const pendingEffectRepeatOptional = useGameStateStore((s) => s.pendingEffectRepeatOptional);
   const pendingDeckReveal = useGameStateStore((s) => s.pendingDeckReveal);
+  const pendingPublicHandReveal = useGameStateStore((s) => s.pendingPublicHandReveal);
   const pendingDeckReorder = useGameStateStore((s) => s.pendingDeckReorder);
   const pendingDeckPlace = useGameStateStore((s) => s.pendingDeckPlace); // mini-wave #5 review B2
   // Task4: 1手駆動の再 fire トリガ。driveOppTurn が 1 手適用するたび bump され、turn.player が
@@ -223,7 +224,7 @@ export function useOppTurnDriver(): void {
   const oppMoveTick = useGameStateStore((s) => s.oppMoveTick);
   useEffect(() => {
     if (turnPlayer !== 'opp' || activeActionId !== null) return undefined;
-    if (pendingMisread || pendingEffectPick || pendingEffectChoice || pendingEffectOptional || pendingChooseIntercept || pendingLeaveIntercept || pendingSetCardChoice || pendingSetCardReplacement || pendingEffectRepeatOptional || pendingDeckReveal || pendingDeckReorder || pendingDeckPlace || pendingRps) return undefined;
+    if (pendingMisread || pendingEffectPick || pendingEffectChoice || pendingEffectOptional || pendingChooseIntercept || pendingLeaveIntercept || pendingSetCardChoice || pendingSetCardReplacement || pendingEffectRepeatOptional || pendingDeckReveal || pendingPublicHandReveal?.lifetime === 'effect' || pendingDeckReorder || pendingDeckPlace || pendingRps) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
     if (isAiPaused) {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
@@ -233,5 +234,5 @@ export function useOppTurnDriver(): void {
     const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
     const id = setTimeout(driveOppTurn, delay);
     return () => clearTimeout(id);
-  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingMisread, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, pendingChooseIntercept, pendingLeaveIntercept, pendingSetCardChoice, pendingSetCardReplacement, pendingEffectRepeatOptional, pendingDeckReveal, pendingDeckReorder, pendingDeckPlace, pendingRps, oppMoveTick]);
+  }, [turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, pendingMisread, pendingEffectPick, pendingEffectChoice, pendingEffectOptional, pendingChooseIntercept, pendingLeaveIntercept, pendingSetCardChoice, pendingSetCardReplacement, pendingEffectRepeatOptional, pendingDeckReveal, pendingPublicHandReveal, pendingDeckReorder, pendingDeckPlace, pendingRps, oppMoveTick]);
 }

@@ -93,6 +93,21 @@ const ICON_KEYWORD_PREDICATES: Record<string, (ab: AbilityDef) => boolean> = {
   疾風: abilityIsShippu,
 };
 
+/**
+ * True when each printed ability is one of the named icon abilities. This is
+ * static metadata: disabled-original state and externally granted abilities
+ * are intentionally irrelevant.
+ */
+export function defHasNoOriginalAbilityExceptIcons(def: CardDef | undefined, allowedIcons: string[]): boolean {
+  if (!def) return false;
+  // Normal printed keywords are original abilities too. They are not icon
+  // AbilityDefs, so they must reject "X以外の元の能力を持たない" up front.
+  if ((def.keywords ?? []).length > 0) return false;
+  const predicates = allowedIcons.map(icon => ICON_KEYWORD_PREDICATES[icon]).filter((p): p is (ab: AbilityDef) => boolean => p !== undefined);
+  if (predicates.length !== allowedIcons.length) return false;
+  return (def.abilities ?? []).every(ab => predicates.some(predicate => predicate(ab)));
+}
+
 /** True only for a printed ability icon, never for ordinary keyword text. */
 export function defHasIconKeyword(def: CardDef | undefined, keyword: string): boolean {
   if (!def) return false;
