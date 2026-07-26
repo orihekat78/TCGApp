@@ -291,9 +291,12 @@ function handleHook(
     // Task D E4 (2026-06-12): granted triggered ability (charGrantAbility) の合算走査。
     // scene のキャラのみ turnEffects.grantedAbilities を持ちうる。granted 配列が無ければ
     // 追加コストほぼゼロ (def.abilities そのまま)。limit は granted id で declaredUseCount が機能。
-    const grantedRaw = card.area === 'scene'
-      ? state.players[card.player].scene.find(c => c.uid === card.uid)?.turnEffects?.['grantedAbilities']
-      : undefined;
+    const grantedHost = card.area === 'scene'
+      ? state.players[card.player].scene.find(c => c.uid === card.uid)
+      : card.area === 'partner-area' && card.uid === `partnerMR:${card.player}`
+        ? state.players[card.player].partnerAreaMR
+        : undefined;
+    const grantedRaw = grantedHost?.turnEffects?.['grantedAbilities'];
     // engine additive (2026-06-29c): on-set-host rider triggered — host の faceUp set card def 上の
     // scope:'on-set-host' triggered を host (card.uid) の能力として合算する (装備イベント、B05117 コンコン
     // 「セットされているキャラが…したとき」)。裏向き (faceUp:false) は情報を持たない (rules/16) → 除外。
@@ -322,7 +325,7 @@ function handleHook(
           char: state.players[card.player].scene.find(c => c.uid === card.uid)!,
         })
       : [];
-    const printedAbilities = card.area === 'scene' && readChar.originalAbilitiesDisabled(state, card.uid)
+    const printedAbilities = readChar.originalAbilitiesDisabled(state, card.uid)
       ? []
       : (def.abilities as AbilityDef[]);
     const abilityList = ((Array.isArray(grantedRaw) && grantedRaw.length > 0) || riderAbilities.length > 0 || handCutinAbilities.length > 0 || triggeredAuraAbilities.length > 0)
@@ -634,7 +637,11 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
       triggerPayload: payload,
     };
     if (trig.matcherCondition && !evalCond(state, trig.matcherCondition, baseCtx)) continue;
-    if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
+    // Ver.2.5 p.21: an invalid Hirameki may still be activated. Its icon is
+    // visible to the player, while its ability text resolves as a no-op.
+    // Other triggered abilities do not fire when their icon condition fails.
+    const effectValid = !ability.condition || evalCond(state, ability.condition, baseCtx);
+    if (!effectValid && !trig.optional) continue;
     if (!ability.effect) continue;
 
     if (trig.optional) {
@@ -645,6 +652,7 @@ function handleEvidenceRemovedHook(state: GameState, payload: unknown, source: u
         player: card.player,
         cardId: card.cardId,
         abilityId: ability.id,
+        effectValid,
         // engine wave-11 (2026-07-02): actor uid snapshot を optional 経路にも貫通
         // (forced 経路は baseCtx.triggerPayload=payload に byUid が既に載る)。hiramekiResolve が
         // queue payload に復元し '$trigger.byUid' (「アクション中のキャラ」) を解決可能にする。

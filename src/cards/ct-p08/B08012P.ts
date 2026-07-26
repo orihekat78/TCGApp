@@ -25,7 +25,7 @@ const a1: AbilityDef = {
   // 【絆真田貴大】 (条件不成立なら能力を持たない扱い / rules/17)
   condition: { kind: 'bond', cardName: '真田貴大' },
   // 〚突撃[事件]〛を持つ
-  continuousModifier: { grantKeywords: () => ['突撃[事件]'] },
+  continuousModifier: { grantKeywords: () => ['突撃[事件]'], printedKeywordWhenIconValid: true },
   description: '【絆真田貴大】〚突撃［事件］〛を持つ。',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md', 'rules/24-qa-naming-stun.md'],
 };

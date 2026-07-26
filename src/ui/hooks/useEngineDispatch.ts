@@ -192,16 +192,19 @@ function runEngineAction(draft: GameState, action: EngineAction): void {
         const ability = def?.abilities.find(
           (a: unknown) => a !== null && typeof a === 'object' && (a as { id?: string }).id === pending.abilityId,
         ) as { effect?: unknown } | undefined;
-        if (ability?.effect) {
+        // Ver.2.5 p.21: a Hirameki whose condition icon is invalid is still
+        // activatable, but its text does not resolve. Do not re-evaluate here:
+        // a valid effect remains queued even if it later becomes invalid.
+        mutate.log.append(draft, {
+          ts: Date.now(),
+          player: pending.player,
+          turn: draft.turn.number,
+          action: 'hirameki:fire',
+          target: pending.cardId,
+        });
+        if (ability?.effect && pending.effectValid !== false) {
           // 2026-05-29 user_request: ヒラメキ発動をフロントログ + トーストに明示。
           // RecentActionToast は log 末尾を拾うため、この 1 行で「【ヒラメキ】発動」演出も出る。
-          mutate.log.append(draft, {
-            ts: Date.now(),
-            player: pending.player,
-            turn: draft.turn.number,
-            action: 'hirameki:fire',
-            target: pending.cardId,
-          });
           // Phase 7-1 + 7-2 (BUG-035): hirameki effect 内の $pick atom を recursive utility で
           // substitute。Phase 7-1 の局所版 resolveHiramekiPick を resolveEffectPicks に retrofit。
           // Phase 7-3: chooseAtomTarget callback で verb 別ヒューリスティック選択

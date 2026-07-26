@@ -3,13 +3,13 @@
 
 import type { GameState, CardId, SetCardEntry, EffectCtx, Candidate, TargetFilter, AbilityScope, FilteredAssaultGrant, Condition } from '@/engine/types';
 import { scene } from './scene.js';
-import { def } from './def.js';
+import { def } from './def.js'; import { abilityIsCutin, defHasIconKeyword, defHasKeyword } from './keyword.js';
 import { evalCond } from '../cond/eval.js';
 import { evalDyn } from '../dyn/eval.js';
 // BUG-113: candidates.ts の数値フィルタへ continuousDelta を late-binding で注入 (静的循環回避)。
 // candidates は read/char を import しない (read/keyword/def は leaf) ため本 import は循環を作らない。
 // cluster13 (2026-06-15): aura buff も同経路で late-binding (registerAuraDelta) + matchOneFilter で auraFilter 有効値判定。
-import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerEffectiveKeyword, registerTraitNameGrant, traitNameGrantSafe, registerLevelFilterOverride } from '../target/candidates.js';
+import { registerContinuousDelta, registerAuraDelta, auraDeltaSafe, continuousDeltaSafe, matchOneFilter, registerEffectiveCutinText, registerEffectiveKeyword, registerTraitNameGrant, traitNameGrantSafe, registerLevelFilterOverride } from '../target/candidates.js';
 
 // 常時有効型 continuousModifier.apDelta/lpDelta を read 時に再計算・合算する。
 // keywords() の grantKeywords walk (BUG-030) と同じ continuous 経路。
@@ -906,19 +906,61 @@ export const char = {
 registerContinuousDelta(continuousDelta);
 registerLevelFilterOverride((s, uid) => prospectiveLevels.get(s)?.get(uid));
 registerAuraDelta(auraDelta); // cluster13: 他キャラ aura board-scan を candidates へ late-bind
-registerEffectiveKeyword((s, uid, keyword) => {
+registerEffectiveKeyword((s, uid, keyword, fallback) => {
   const char = scene.byUid(s, uid);
   // Synthetic/prospective candidates may carry a uid without being registered in
   // read.def. Let candidates.ts fall back to its CardDef oracle in those cases.
-  if (!char) return undefined;
+  if (!char) {
+    if (fallback?.area === 'scene') return undefined;
+    // Ver.2.5 p.25: only a keyword printed behind a condition icon remains
+    // available outside the scene. External grants and ordinary ability text
+    // are deliberately excluded by the explicit CardDef provenance marker.
+    if (!fallback) return undefined;
+    const offSceneDef = def.card(fallback.cardId);
+    if (!offSceneDef) return false;
+    const sourceArea = fallback.area === 'deck' || fallback.area === 'bound' ? 'hand' : fallback.area;
+    const ctx = {
+      source: { player: fallback.player, cardId: fallback.cardId, uid, area: sourceArea },
+      bindings: {},
+    } as EffectCtx;
+    let hasPrintedKeywordAbility = false;
+    for (const ability of offSceneDef.abilities ?? []) {
+      if (ability.type !== 'continuous') continue;
+      if (ability.continuousModifier?.printedKeywordWhenIconValid !== true) continue;
+      if (ability.scope !== 'on-scene' && ability.scope !== 'on-partner-area' && ability.scope !== 'always') continue;
+      const grantFn = ability.continuousModifier?.grantKeywords;
+      if (!grantFn) continue;
+      const granted = grantFn(s, { uid });
+      if (!Array.isArray(granted) || !granted.includes(keyword)) continue;
+      hasPrintedKeywordAbility = true;
+      if (!ability.condition || evalCond(s, ability.condition, ctx)) return true;
+    }
+    return hasPrintedKeywordAbility ? false : undefined;
+  }
   const cardDef = def.card(char.cardId);
   if (!cardDef) return undefined;
   const effective = hasKeyword(s, uid, keyword);
   // Ability-shaped icon keywords are not part of char.keywords(). For an enabled
   // printed ability, defer to defHasKeyword; when originals are disabled, false
   // is authoritative. Base/revoked and externally granted keywords stay effective.
-  if (originalAbilitiesDisabledOn(char)) return effective;
-  if ((cardDef.keywords ?? []).includes(keyword) || effective) return effective;
-  return undefined;
+  if (originalAbilitiesDisabledOn(char)) return effective || defHasIconKeyword(cardDef, keyword);
+  if ((cardDef.keywords ?? []).includes(keyword)) return true;
+  if (effective) return true;
+  return defHasKeyword(cardDef, keyword);
 }); // BUG-197: real board keyword filter == effective keyword reader
+registerEffectiveCutinText((s, uid, text, fallback) => {
+  const char = scene.byUid(s, uid);
+  if (char && originalAbilitiesDisabledOn(char)) return false;
+  const cardId = char?.cardId ?? fallback?.cardId;
+  if (!cardId) return undefined;
+  const cardDef = def.card(cardId);
+  if (!cardDef) return false;
+  const owner = char ? ownerSideOf(s, uid) : fallback?.player;
+  if (!owner) return undefined;
+  const area = fallback?.area === 'deck' || fallback?.area === 'bound' ? 'hand' : fallback?.area ?? 'scene';
+  const ctx = { source: { player: owner, cardId, uid, area }, bindings: {} } as EffectCtx;
+  return cardDef.abilities.some(ability => abilityIsCutin(ability)
+    && ability.description.includes(text)
+    && (!ability.condition || evalCond(s, ability.condition, ctx)));
+});
 registerTraitNameGrant(grantWalk); // wave-6 (P37): 継続 trait/name 付与 board reader を candidates へ late-bind

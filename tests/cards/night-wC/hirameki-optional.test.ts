@@ -125,7 +125,7 @@ describe('B06032 ヒラメキ (human) — 手札1リムーブ→[YAIBA]Lv5をス
     const s = boardResolved();
     s.players.self.case.status = '事件編'; // 解決編 でない
     event.emit(s, 'evidence:remove-by-action', { player: 'self', ev: { cardId: 'B06032' } }, { player: 'opp', uid: 'atk' });
-    expect(_drainPendingHirameki(), '事件編では pendingHirameki 無し').toBeNull();
+    expect(_drainPendingHirameki(), '事件編では本文が無効なpendingHirameki').toMatchObject({ effectValid: false });
   });
 });
 

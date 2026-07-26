@@ -15,7 +15,7 @@ const a1: AbilityDef = {
     color: '緑'
   },
   continuousModifier: {
-    grantKeywords: () => ['突撃[キャラ]']
+    grantKeywords: () => ['突撃[キャラ]'], printedKeywordWhenIconValid: true,
   },
   description: '【パートナー緑】〚突撃［キャラ］〛（登場したターンからすぐにキャラを指定してアクションできる）',
   ruleRefs: [

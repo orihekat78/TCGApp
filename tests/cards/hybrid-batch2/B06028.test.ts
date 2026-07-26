@@ -180,14 +180,14 @@ describe('B06028 風魔の小太郎 — 【ヒラメキ】【事件YAIBA】【�
   it('(d) 事件編 (YAIBA あり) → pending 立たず = リムーブ発生しない', () => {
     const { state, atkUid } = board({ caseId: 'CASE_YAIBA', status: '事件編' });
     driveActionCase(state, atkUid);
-    expect(_drainPendingHirameki(), '解決編でないので発火しない').toBeNull();
+    expect(_drainPendingHirameki(), '解決編でないため本文は無効').toMatchObject({ effectValid: false });
   });
 
   // (e) negative: YAIBA なし (解決編) → pending 立たず (caseTrait gate、novel 半条件)
   it('(e) YAIBA なし事件 (解決編) → pending 立たず = caseTrait gate', () => {
     const { state, atkUid } = board({ caseId: 'CASE_PLAIN', status: '解決編' });
     driveActionCase(state, atkUid);
-    expect(_drainPendingHirameki(), '事件が YAIBA を持たないので発火しない').toBeNull();
+    expect(_drainPendingHirameki(), '事件が YAIBA を持たないため本文は無効').toMatchObject({ effectValid: false });
   });
 
   // (f) actor が既に離場 → 解決は silent no-op (rules/15「可能な限り」)

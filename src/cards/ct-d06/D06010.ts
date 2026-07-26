@@ -18,7 +18,7 @@ const a1: AbilityDef = {
   // 【事件緑＆白】= 事件が緑と白の両方を持つ
   condition: { kind: 'caseColor', color: ['緑', '白'], combine: 'and' },
   // 〚突撃〛を持つ
-  continuousModifier: { grantKeywords: () => ['突撃'] },
+  continuousModifier: { grantKeywords: () => ['突撃'], printedKeywordWhenIconValid: true },
   description: '【事件緑＆白】〚突撃〛を持つ。',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
 };

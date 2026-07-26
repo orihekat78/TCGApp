@@ -112,13 +112,16 @@ export function findDeclaredAbility(
   area: 'scene' | 'case' | 'partner-area' | 'hand',
   abilId: string,
 ): AbilityDef | undefined {
-  const printed = area === 'scene' && readChar.originalAbilitiesDisabled(state, uid)
+  const printed = readChar.originalAbilitiesDisabled(state, uid)
     ? undefined
     : readDef.card(cardId)?.abilities?.find((a: AbilityDef) => a.id === abilId);
   if (printed) return printed;
-  if (area !== 'scene') return undefined;
   for (const p of ['self', 'opp'] as const) {
-    const host = state.players[p].scene.find((c) => c.uid === uid);
+    const host = area === 'scene'
+      ? state.players[p].scene.find((c) => c.uid === uid)
+      : area === 'partner-area' && uid === `partnerMR:${p}`
+        ? state.players[p].partnerAreaMR
+        : undefined;
     if (!host) continue;
     // gap② (2026-07-11, B06042): charGrantAbility で付与された declared ability
     // (turnEffects.grantedAbilities[] の type:'declared') を宿主キャラの宣言能力として解決する。
@@ -128,6 +131,7 @@ export function findDeclaredAbility(
       const g = (granted as AbilityDef[]).find((a) => a.id === abilId && a.type === 'declared');
       if (g) return g;
     }
+    if (area !== 'scene') return undefined;
     for (const entry of host.setCards) {
       if (!entry.faceUp) continue;
       const rider = readDef.card(entry.cardId)?.abilities?.find(
@@ -349,7 +353,7 @@ export function useDeclaredAbility(
   // declared ability must stop before count/log/hooks, while externally granted or
   // face-up set-card abilities with the same id remain effective. Preserve the legacy
   // unknown-id behavior for non-scene callers.
-  if (found.area === 'scene' && readChar.originalAbilitiesDisabled(state, uid)) {
+  if (readChar.originalAbilitiesDisabled(state, uid)) {
     const printed = readDef.card(found.cardId)?.abilities?.find((entry) => entry.id === abilId);
     if (printed?.type === 'declared'
       && !findDeclaredAbility(state, uid, found.cardId, found.area, abilId)) return;

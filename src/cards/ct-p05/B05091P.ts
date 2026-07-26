@@ -13,7 +13,7 @@ const a1: AbilityDef = {
   type: 'continuous',
   scope: 'on-scene',
   condition: { kind: 'bond', cardName: '降谷零' },
-  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'] },
+  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'], printedKeywordWhenIconValid: true },
   description: '【絆降谷零】〚突撃［キャラ］〛（登場したターンからすぐにキャラを指定してアクションできる）',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md', 'rules/24-qa-naming-stun.md'],
 };

@@ -257,7 +257,7 @@ describe('B06035 hirameki', () => {
   ] as const)('%s', (_label, caseId, status) => {
     const { state, attackerUid } = hiramekiBoard(caseId, status);
     removeEvidenceByAction(state, attackerUid);
-    expect(_drainPendingHirameki()).toBeNull();
+    expect(_drainPendingHirameki()).toMatchObject({ effectValid: false });
   });
 
   it('実カードdescriptorはYAIBA＋解決編のANDとoptional chainを持つ', () => {

@@ -93,6 +93,13 @@ const ICON_KEYWORD_PREDICATES: Record<string, (ab: AbilityDef) => boolean> = {
   疾風: abilityIsShippu,
 };
 
+/** True only for a printed ability icon, never for ordinary keyword text. */
+export function defHasIconKeyword(def: CardDef | undefined, keyword: string): boolean {
+  if (!def) return false;
+  const predicate = ICON_KEYWORD_PREDICATES[keyword];
+  return predicate !== undefined && (def.abilities ?? []).some(predicate);
+}
+
 /**
  * CardDef がキーワード kw を「持つ」か。
  * 通常 keywords[] と、アイコン能力 (カットイン / 変装 / ヒラメキ / ミスリード) の

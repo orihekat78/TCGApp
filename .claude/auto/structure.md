@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 247
-- **ファイル数**: 5124
+- **ファイル数**: 5128
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -734,6 +734,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-17-01-you-vs-cpu-hardening-fixed.md`
     - `2026-07-19-01-phase-3-card-choice-visuals.md`
     - `2026-07-26-01-phase-3-5-official-qa.md`
+    - `2026-07-26-02-rule-manual-ver2.5.md`
     - `README.md` — Changelog エントリ
     - `_footer.md`
     - `_unreleased.md`
@@ -1589,6 +1590,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `round-4j-hirameki-draw-design.md` — Round 4j — hiramekiDraw E2E spec 設計
     - `round-4k-hirameki-char-stun-design.md` — Round 4k — hiramekiCharStun E2E spec 設計
     - `round-4l-ui-quad-design.md` — Round 4l — UI 4 課題一括対応 design
+    - `rule-manual-ver2.5.md` — Rule Manual Ver.2.5
     - `side-channel-pattern.md` — Side-Channel Pattern — engine ↔ UI 通信規約
     - `speed-rebalance-2026-07-02.md` — 速度リバランス方針 (2026-07-02 user_request — 「精度過剰で開発速度が遅い」是正)
     - `triage-m1-2026-07-10.md` — M1 mega-sweep re-triage 結果 (2026-07-10、機械 dossier + sonnet5 12-lens)
@@ -1757,6 +1759,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `2026-07-16-official-qa-compliance.md` — Official QA Compliance Implementation Plan
       - `2026-07-16-you-vs-cpu-system-validation.md` — YOU vs CPU System Validation Implementation Plan
       - `2026-07-18-card-choice-visuals.md` — Phase 3: Card-choice visuals and landscape QA
+      - `2026-07-26-rule-manual-ver2-5.md` — Rule Manual Ver.2.5 Implementation Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -5204,6 +5207,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `declared-cost-params.test.ts`
     - `produce.test.ts`
     - `rng.test.ts`
+    - `rule-manual-ver2.5.test.ts` — rules: 13-keywords.md, 15-abilities-effects.md, 17-icons.md
     - `state-factory.test.ts`
     - `sync-taskA-whitelists.test.ts` — refactor 2b (2026-06-12): 手動同期ペアの機械検証
     - `types.test.ts`

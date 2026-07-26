@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-changelog.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:changelog`
-> Source hash: `84bc58bb5979`
+> Source hash: `d6d466de97a1`
 
 「何ができたか」を時系列で記録する。個別エントリのソースは [`.claude/changelog-entries/`](.claude/changelog-entries/) にあり、Phase / Round 完了時にそこへファイルを追加する。日次の詳細ログは [`.claude/sessions/`](.claude/sessions/) に、現セッション scratchpad は [`.claude/memory.md`](.claude/memory.md) にある。形式は [Keep a Changelog](https://keepachangelog.com/) に準拠 (セマンティックバージョン番号は採用せず Phase/Round 名で区切る)。日付は Asia/Tokyo (YYYY-MM-DD)。
 
@@ -32,6 +32,20 @@
 - ~~Phase 5 advance UI 残 — Misread UI~~ → 既に完了済 (`35a0736`)
 - Souza Sub-task B+C — 公式 defer ([phase-5-advance-souza-deferred.md])、
   MVP に使用カード 0 枚で実装不要
+
+---
+date: 2026-07-26
+category: fixes
+bugs: [BUG-261]
+---
+
+## Rule manual Ver.2.5 alignment
+
+- Updated the local rule baseline to Ver.2.5 without storing official manual text.
+- Invalid optional Hirameki choices remain selectable and resolve with no text effect.
+- Added condition-aware, off-scene recognition for explicitly marked printed keywords only.
+- Preserved icon-level references after original-ability disable while suppressing printed text abilities.
+- Covered hand, deck, bound, partner-area MR, and cut-in condition boundaries with engine regressions.
 
 ---
 date: 2026-07-26

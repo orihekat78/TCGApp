@@ -10,7 +10,7 @@ import { buildShortFormPick } from '../atom-pick-spec.js';
 import { evalDyn } from '../../dyn/eval.js';
 import { defHasKeyword } from '../../read/keyword.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
-import { effectiveTraitNames } from '../../target/candidates.js';
+import { effectiveKeywordForCard, effectiveTraitNames } from '../../target/candidates.js';
 
 declare global {
 
@@ -283,7 +283,9 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
     // 経路 (picks.ts) の filter でこれら board-only 軸を使うカードは想定外 (現状 0)。
     if (filter.keyword !== undefined) {
       const wants = Array.isArray(filter.keyword) ? filter.keyword : [filter.keyword];
-      if (!wants.some(w => defHasKeyword(d, w))) return false;
+      if (!wants.some(w => state && player
+        ? effectiveKeywordForCard(state, `card:${player}:deck:${cardId}`, w, { cardId, player, area: 'deck' })
+        : defHasKeyword(d, w))) return false;
     }
     if (filter.cardName !== undefined) {
       const wants = Array.isArray(filter.cardName) ? filter.cardName : [filter.cardName];

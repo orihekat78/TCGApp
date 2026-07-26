@@ -331,6 +331,8 @@ export type PendingHirameki = {
   cardId: string;
   /** 発動対象 ability id */
   abilityId: string;
+  /** Ver.2.5 p.21: false means activation is legal but resolves no text. */
+  effectValid?: boolean;
   /** wave-11: アクション[事件] actor uid snapshot ('$trigger.byUid' =「アクション中のキャラ」解決用) */
   actorUid?: string;
   /** Exact remove-area occurrence created by the action evidence removal. */

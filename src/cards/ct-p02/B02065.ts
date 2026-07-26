@@ -24,7 +24,7 @@ export const B02065: CardDef = {
     type: 'continuous',
     scope: 'on-scene',
     condition: { kind: 'caseStatus', status: '解決編' },
-    continuousModifier: { grantKeywords: () => ['ブレット'] },
+    continuousModifier: { grantKeywords: () => ['ブレット'], printedKeywordWhenIconValid: true },
     description: '【解決編】〚ブレット〛',
     ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
   },

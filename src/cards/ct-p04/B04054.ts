@@ -16,7 +16,7 @@ const a1: AbilityDef = {
   // 【解決編】
   condition: { kind: 'caseStatus', status: '解決編' },
   // 〚突撃［事件］〛
-  continuousModifier: { grantKeywords: () => ['突撃[事件]'] },
+  continuousModifier: { grantKeywords: () => ['突撃[事件]'], printedKeywordWhenIconValid: true },
   description: '【解決編】〚突撃［事件］〛を持つ。',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
 };

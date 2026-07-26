@@ -6,11 +6,10 @@
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
 import type { GameState, Condition, EffectCtx, Candidate, SceneCharacter } from '@/engine/types';
-import { candidates, matchOneFilter, effectiveNameComponents, effectiveTraitNames } from '@/engine/target/candidates.js';
+import { candidates, matchOneFilter, effectiveKeywordForCard, effectiveNameComponents, effectiveTraitNames } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
-import { defHasKeyword } from '@/engine/read/keyword.js'; // wave#2 cluster2: boundMatchesFilter keyword 判定
 import { def as readDef } from '@/engine/read/def.js'; // mega-wave W6 step1: boundIsMr の MR 判定 (循環なし — read/def は types のみ import)
 import { removeExcludedSourceCardId } from '@/engine/read/effect-source.js';
 
@@ -513,9 +512,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const boundSet = ctx.bindings?.[cond.bindKey];
       if (!Array.isArray(boundSet) || boundSet.length === 0) return false;
       for (const b of boundSet) {
-        const bId = (b as { cardId?: string }).cardId;
+        const { cardId: bId, player: boundPlayer } = b as { cardId?: string; player?: 'self' | 'opp' };
         if (typeof bId !== 'string') continue;
-        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: ctx.source.player };
+        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: boundPlayer ?? ctx.source.player };
         if (matchOneFilter(state, bId, cond.filter, null, cand)) return true;
       }
       return false;
@@ -528,9 +527,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (cond.traitBind !== undefined && typeof declared?.trait !== 'string') return false;
       let count = 0;
       for (const b of boundSet) {
-        const cardId = (b as { cardId?: string }).cardId;
+        const { cardId, player: boundPlayer } = b as { cardId?: string; player?: 'self' | 'opp' };
         if (typeof cardId !== 'string') continue;
-        const cand: Candidate = { kind: 'card', cardId, area: 'remove', player: ctx.source.player };
+        const cand: Candidate = { kind: 'card', cardId, area: 'remove', player: boundPlayer ?? ctx.source.player };
         if (matchOneFilter(state, cardId, filter, null, cand)) count++;
       }
       return count >= cond.n;
@@ -548,9 +547,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (!Array.isArray(bdcSet) || bdcSet.length === 0) return false;
       const bdcColorSets: string[][] = [];
       for (const b of bdcSet) {
-        const bId = (b as { cardId?: string }).cardId;
+        const { cardId: bId, player: boundPlayer } = b as { cardId?: string; player?: 'self' | 'opp' };
         if (typeof bId !== 'string') continue;
-        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: ctx.source.player };
+        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: boundPlayer ?? ctx.source.player };
         if (cond.filter && !matchOneFilter(state, bId, cond.filter, null, cand)) continue;
         bdcColorSets.push(lookupCardDef(bId)?.colors ?? []);
       }
@@ -619,6 +618,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (!Array.isArray(bound) || bound.length === 0) return false;
       const cardId = (bound[0] as { cardId?: string }).cardId;
       if (typeof cardId !== 'string') return false;
+      const boundPlayer = (bound[0] as { player?: 'self' | 'opp' }).player ?? ctx.source.player;
       const d = lookupCardDef(cardId);
       const f = cond.filter;
       // CardDef-driven filter のみサポート (SceneCharacter state 系は対象外)
@@ -662,7 +662,12 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       // 数値は printed 値判定 (bound カードは scene candidate を持たない — targetFilterToPredicate と同式)。
       if (f.keyword !== undefined) {
         const wants = Array.isArray(f.keyword) ? f.keyword : [f.keyword];
-        if (!wants.some(w => defHasKeyword(d, w))) return false;
+        if (!wants.some(w => effectiveKeywordForCard(
+          state,
+          `bound:${boundPlayer}:${cardId}`,
+          w,
+          { cardId, player: boundPlayer, area: 'bound' },
+        ))) return false;
       }
       if (f.kind !== undefined && d?.kind !== f.kind) return false;
       const bmfAp = d?.ap ?? 0;

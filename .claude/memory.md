@@ -11,3 +11,9 @@
 - Verification for `d10e1849`: full Vitest 793 files / 6555 passed (7 skipped); typecheck, lint, bug/listener/side-channel lint, QA merge, docs check, smoke:1000 (timeout=0, exceptions=0), benchmark pass. Targeted Playwright desktop + 851x393 passes for affected overlay/order paths.
 - Browser Use localhost automation was blocked by the browser security policy. Do not bypass it. Phase 4 YOU vs CPU hands-on confirmation remains the next user-visible test phase.
 - Ticket closure requires `date_fixed` and the real implementation hash. Keep `BUG-259` open until CT-P10 CardDefs exist.
+
+## 2026-07 Ver.2.5 rule manual alignment
+
+- Official manual Ver.2.5 review introduced `BUG-261`. Local rules now distinguish invalid optional Hirameki activation from text resolution, and distinguish printed icon-condition keywords from text-granted keywords outside the scene.
+- The shared readers cover scene, hand, deck, bound, and partner-area MR. Original-ability disable keeps the icon itself referenceable but suppresses printed triggered and declared text; external grants remain independent.
+- Regressions cover invalid activation, valid/invalid keyword state, text-grant exclusion, cut-in condition, disabled icons, and PA-MR. Generated docs must be refreshed after these reader/card-marker changes.

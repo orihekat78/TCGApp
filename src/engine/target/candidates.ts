@@ -63,19 +63,59 @@ export function auraDeltaSafe(s: GameState, uid: string | undefined, which: 'apD
 
 // Board keyword filters must use the same effective value as action eligibility.
 // Late-binding avoids candidates -> read/char -> candidates static import recursion.
-type EffectiveKeywordFn = (s: GameState, uid: string, keyword: string) => boolean | undefined;
+type EffectiveKeywordFallback = {
+  cardId: string;
+  player: 'self' | 'opp';
+  area: 'scene' | 'hand' | 'deck' | 'remove' | 'evidence' | 'file' | 'bound';
+};
+type EffectiveKeywordFn = (s: GameState, uid: string, keyword: string, fallback?: EffectiveKeywordFallback) => boolean | undefined;
 let effectiveKeywordImpl: EffectiveKeywordFn | null = null;
 let _inEffectiveKeyword = false;
 export function registerEffectiveKeyword(fn: EffectiveKeywordFn): void {
   effectiveKeywordImpl = fn;
 }
-function effectiveKeywordSafe(s: GameState, uid: string, keyword: string): boolean | undefined {
+function effectiveKeywordSafe(s: GameState, uid: string, keyword: string, fallback?: EffectiveKeywordFallback): boolean | undefined {
   if (effectiveKeywordImpl === null || _inEffectiveKeyword) return undefined;
   _inEffectiveKeyword = true;
   try {
-    return effectiveKeywordImpl(s, uid, keyword);
+    return effectiveKeywordImpl(s, uid, keyword, fallback);
   } finally {
     _inEffectiveKeyword = false;
+  }
+}
+
+/** Shared keyword oracle for scene, hand, deck, and bound-card filters. */
+export function effectiveKeywordForCard(
+  state: GameState,
+  uid: string,
+  keyword: string,
+  fallback?: EffectiveKeywordFallback,
+): boolean {
+  const def = fallback ? lookupCardDef(fallback.cardId) : undefined;
+  return effectiveKeywordSafe(state, uid, keyword, fallback) ?? defHasKeyword(def, keyword);
+}
+
+type EffectiveCutinTextFn = (s: GameState, uid: string, text: string, fallback?: EffectiveKeywordFallback) => boolean | undefined;
+let effectiveCutinTextImpl: EffectiveCutinTextFn | null = null;
+let _inEffectiveCutinText = false;
+export function registerEffectiveCutinText(fn: EffectiveCutinTextFn): void {
+  effectiveCutinTextImpl = fn;
+}
+export function effectiveCutinTextForCard(
+  state: GameState,
+  uid: string,
+  text: string,
+  fallback?: EffectiveKeywordFallback,
+): boolean {
+  if (effectiveCutinTextImpl === null || _inEffectiveCutinText) {
+    return defHasCutinTextIncludes(fallback ? lookupCardDef(fallback.cardId) : undefined, text);
+  }
+  _inEffectiveCutinText = true;
+  try {
+    return effectiveCutinTextImpl(state, uid, text, fallback)
+      ?? defHasCutinTextIncludes(fallback ? lookupCardDef(fallback.cardId) : undefined, text);
+  } finally {
+    _inEffectiveCutinText = false;
   }
 }
 
@@ -561,16 +601,33 @@ export function matchOneFilter(
     // BUG-122: keyword は通常 keywords[] に入るが、アイコン能力 (カットイン / 変装 / ヒラメキ /
     // ミスリード) は keywords[] ではなく ability 構造で表現される。defHasKeyword が両表現を吸収する
     // (旧実装は keywords[] のみ → B05112「【カットイン】を持つキャラ」が候補0で機能しなかった)。
+    const fallback: EffectiveKeywordFallback | undefined = cand.kind === 'char'
+      ? { cardId, player: cand.player, area: 'scene' }
+      : cand.kind === 'card'
+        ? { cardId, player: cand.player, area: cand.area as EffectiveKeywordFallback['area'] }
+        : undefined;
     const matches = c
-      ? wants.some(w => effectiveKeywordSafe(state, c.uid, w) ?? defHasKeyword(d, w))
-      : wants.some(w => defHasKeyword(d, w));
+      ? wants.some(w => effectiveKeywordForCard(state, c.uid, w, fallback))
+      : fallback
+        ? wants.some(w => effectiveKeywordForCard(state, `card:${fallback.player}:${fallback.area}:${cardId}`, w, fallback))
+        : wants.some(w => defHasKeyword(d, w));
     if (!matches) return false;
   }
 
   // M2後半 (2026-07-10, D06003): cutin 効果内容 filter — 「【カットイン】AP＋」を持つ (印字包含判定、
   // qAndA ウォッカ B01097 除外)。def ベースなので remove-area card candidate (c===null) でも動く。
   if (filter.cutinTextIncludes !== undefined) {
-    if (!defHasCutinTextIncludes(d, filter.cutinTextIncludes)) return false;
+    const fallback: EffectiveKeywordFallback | undefined = cand.kind === 'card'
+      ? { cardId, player: cand.player, area: cand.area as EffectiveKeywordFallback['area'] }
+      : undefined;
+    const matches = filter.cutinTextIncludes === ''
+      ? defHasCutinTextIncludes(d, '')
+      : c
+        ? effectiveCutinTextForCard(state, c.uid, filter.cutinTextIncludes)
+        : fallback
+          ? effectiveCutinTextForCard(state, `card:${fallback.player}:${fallback.area}:${cardId}`, filter.cutinTextIncludes, fallback)
+          : defHasCutinTextIncludes(d, filter.cutinTextIncludes);
+    if (!matches) return false;
   }
 
   // BUG-118: カード種別 filter ('character' | 'event')。本関数 (target pick 候補列挙の正準経路) が
