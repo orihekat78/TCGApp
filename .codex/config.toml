@@ -1,3 +1,294 @@
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+model_auto_compact_token_limit = 96000
+model_auto_compact_token_limit_scope = "body_after_prefix"
+tool_output_token_limit = 6000
+experimental_compact_prompt_file = "C:/Users/arumi/OneDrive/デスクトップ/conan/.codex/compact-prompt.md"
+
+[agents]
+max_concurrent_threads_per_session = 3
+default_subagent_model = "gpt-5.6-terra"
+default_subagent_reasoning_effort = "medium"
+interrupt_message = false
+
+# Conan uses project-native replacements. Restart Codex after changing this list.
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\skills\codex-risk-router\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\caveman\caveman\local\skills\cavecrew\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\caveman\caveman\local\skills\caveman\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\caveman\caveman\local\skills\caveman-commit\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\caveman\caveman\local\skills\caveman-compress\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\caveman\caveman\local\skills\caveman-help\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\caveman\caveman\local\skills\caveman-review\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\caveman\caveman\local\skills\caveman-stats\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\babysit\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\cloud-sync\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\design-is\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\do\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\how-it-works\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\knowledge-agent\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\learn-codebase\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\make-plan\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\mem-search\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\oh-my-issues\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\pathfinder\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\smart-explore\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\standup\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\timeline-report\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\version-bump\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\weekly-digests\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\what-the\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-mem-local\claude-mem\13.11.0\skills\wowerpoint\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\brainstorming\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\dispatching-parallel-agents\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\executing-plans\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\finishing-a-development-branch\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\receiving-code-review\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\requesting-code-review\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\subagent-driven-development\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\systematic-debugging\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\test-driven-development\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\using-git-worktrees\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\using-superpowers\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\verification-before-completion\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\writing-plans\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\claude-plugins-official\superpowers\6.2.0\skills\writing-skills\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\obsidian-skills\obsidian\1.0.1\skills\defuddle\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\obsidian-skills\obsidian\1.0.1\skills\json-canvas\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\obsidian-skills\obsidian\1.0.1\skills\obsidian-bases\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\obsidian-skills\obsidian\1.0.1\skills\obsidian-cli\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\obsidian-skills\obsidian\1.0.1\skills\obsidian-markdown\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\analyze-data-quality\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\build-dashboard\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\build-report\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\create-data-context\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\design-kpis\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\gather-business-context\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\index\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\jupyter-notebooks\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\kpi-reporting\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\market-sizing\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\metric-diagnostics\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\product-business-analysis\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\publish-artifact-to-sites\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\validate-data\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-curated-remote\data-analytics\0.2.8-13ceeea1f599\skills\visualize-data\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-primary-runtime\documents\26.723.12215\skills\documents\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-primary-runtime\pdf\26.723.12215\skills\pdf\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-primary-runtime\presentations\26.723.12215\skills\presentations\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-primary-runtime\spreadsheets\26.723.12215\skills\excel-live-control\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-primary-runtime\spreadsheets\26.723.12215\skills\spreadsheets\SKILL.md'
+enabled = false
+
+[[skills.config]]
+path = 'C:\Users\arumi\.codex\plugins\cache\openai-primary-runtime\template-creator\26.723.12215\skills\template-creator\SKILL.md'
+enabled = false
+
+
+[features]
+memories = true
+
+[memories]
+generate_memories = true
+use_memories = true
+disable_on_external_context = true
+min_rate_limit_remaining_percent = 50
+extract_model = "gpt-5.6-terra"
+consolidation_model = "gpt-5.6-terra"
+
 [mcp_servers.firecrawl]
 command = "npx"
 args = [

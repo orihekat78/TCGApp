@@ -1,0 +1,7 @@
+interface:
+  display_name: "Conan History"
+  short_description: "Search prior Conan decisions efficiently"
+  default_prompt: "Use $conan-history to retrieve only the prior Conan decisions needed for this task."
+
+policy:
+  allow_implicit_invocation: true

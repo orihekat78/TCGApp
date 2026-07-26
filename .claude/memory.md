@@ -30,3 +30,40 @@
 - Regression evidence before this checkpoint: full Vitest 881 files / 7,120 tests passed (7 skipped); CT-P10 card suite 51 files / 394 tests; typecheck, lint, bug/listener/side-channel lint, docs checks, smoke:1000, and benchmark passed. Targeted desktop and 851x393 Playwright passed for public reveal, occurrence identity, B10094, and set-card privacy.
 - Set-card browse preserves own face states and reveals only an opponent's face-up card. Current UX checkpoint keeps one card-detail magnifier at image top-right and a separate set-count control; do not overlay icons. The next task must audit every detail affordance and navigation path as one coherent interaction.
 - Phase 4 YOU vs CPU manual verification remains pending. Browser security previously blocked localhost Browser Use; do not bypass it.
+
+## 2026-07-26 Figma Meta UI capture
+
+- Created Figma design `N4o682JTrEKgdJ7gJdvxr8` for the ten `meta-app` routes. Confirmed captures: HOME, SETUP, MATCH, RESULT, DECK, CARDS, HISTORY.
+- REPLAY, TUTORIAL, and SETTINGS submissions were launched, but Starter-plan MCP call limits blocked completion polling and Figma-side organization. Temporary capture code was fully removed; `meta-app` has no residual diff.
+- Visual-editing decision: avoid rebuilding implemented screens as editable Figma copies. The user wants Figma-like editing of the real Web UI, so prefer a local in-app Design Studio: runtime token inspector first, then Puck-backed composition of registered React components, with Playwright visual snapshots. Keep Figma only as reference.
+
+## 2026-07-26 Codex context efficiency
+
+- Added 96k body-only structured compaction and a 6k tool-output limit.
+- Replaced two routers with `conan-router`; added bounded `conan-history` and
+  risk-proportional `conan-verify`.
+- Disabled 66 superseded or unrelated skills only for Conan. Claude-mem MCP
+  remains available through the history bridge.
+- Enabled conservative native Memories; MCP/web/tool-search sessions are
+  excluded from generation.
+- Static A/B proxy stays 3/3 while estimated active skill metadata falls from
+  98/14,894 characters to 34/5,033; router bytes fall 7,981 to 2,849.
+
+## 2026-07-26 Codex quality layer
+
+- Added 13 golden tasks with at least three measured repetitions and hard gates:
+  critical 100%, overall 95%, unsupported claims and scope violations zero.
+- Added explicit-only `conan-accuracy` and `conan-design`; normal startup context
+  remains lean.
+- Added six read-only specialists for rules, engine, regression, product design,
+  UX, and rendered visual QA.
+- Product design is neutral and restrained. Conan content carries identity;
+  detective clichés and franchise decoration are not the design direction.
+
+## 2026-07-26 Card-detail and catalog color follow-up
+
+- Match detail navigation is magnifier-only: one visible image-top-right control per public card. Card bodies retain game actions; logs have no card-detail control. Existing set counts remain separate controls, and opponent face-down sets remain undisclosed.
+- Cross-cut audit covered Scene/Case, hand, FILE/evidence, partner, event, pick/reveal modals, and logs. Focused UI Vitest passed; CutIn/Disguise Playwright passed at desktop and 851x393 with console-error assertions.
+- B04059 source color was wrongly blue; corrected to red. Meta catalog and deck now render every `colors` value, including B10097 blue+black; focused CARDS/DECK Playwright and B04059 metadata tests pass.
+- CI does not check in official TSV catalog data by design. Inventory and Task-A codegen tests inject temporary minimal catalogs through `CONAN_CARDS_DATA_DIR`; CT-P10 metadata parity runs only when the local official catalog exists. This keeps CI legal/reproducible while retaining local source-to-printing verification.
+- Follow-up: SceneArea's detail control had a 220px transparent hitbox for its magnifier. It now uses an 18px hitbox inside the card art; desktop/mobile set-card E2E asserts non-icon art clicks never open details.

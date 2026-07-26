@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 249
-- **ファイル数**: 5416
+- **ディレクトリ数**: 259
+- **ファイル数**: 5440
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -18,12 +18,26 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - **`skills/`**
     - **`card-wave/`**
       - `SKILL.md` — card-wave — カード実装 wave 実行手順
-    - **`conan-session-router/`**
+    - **`conan-accuracy/`**
       - **`agents/`**
         - `openai.yaml`
-      - **`references/`**
-        - `routes.md` — Conan Routes
-      - `SKILL.md` — Conan Session Router
+      - `SKILL.md` — Conan Accuracy
+    - **`conan-design/`**
+      - **`agents/`**
+        - `openai.yaml`
+      - `SKILL.md` — Conan Product Design
+    - **`conan-history/`**
+      - **`agents/`**
+        - `openai.yaml`
+      - `SKILL.md` — Conan History
+    - **`conan-router/`**
+      - **`agents/`**
+        - `openai.yaml`
+      - `SKILL.md` — Conan Router
+    - **`conan-verify/`**
+      - **`agents/`**
+        - `openai.yaml`
+      - `SKILL.md` — Conan Verify
     - **`engine-wave/`**
       - `SKILL.md` — engine-wave — engine 拡張 wave 実行 + model/effort オーケストレーション
     - **`refactor-phase/`**
@@ -1353,6 +1367,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `green-candidates-enriched.json`
       - `remaining-to-classify.json`
       - `task-d-priority-map.json`
+    - **`codex-quality/`**
+      - `design.md` — Codex Quality and Product Design
+      - `implementation-plan.md` — Codex Quality Implementation Plan
     - **`grounding/`**
       - `B01006.md` — B01006 / B01006P grounding
       - `B01020.md` — B01020 毛利小五郎 grounding (2026-07-10, sonnet5)
@@ -1692,9 +1709,22 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `settings.json` — Claude Code 設定 (権限・hooks 等)
 - **`.codex/`**
+  - **`agents/`**
+    - `engine-reviewer.toml`
+    - `product-design-director.toml`
+    - `regression-hunter.toml`
+    - `rules-adjudicator.toml`
+    - `ux-reviewer.toml`
+    - `visual-qa.toml`
+  - **`evals/`**
+    - `golden-tasks.json`
   - `MIGRATION.md` — Codex Migration Ledger
+  - `compact-prompt.md` — Conan compact state
   - `config.toml`
+  - `design-principles.md` — Product Design Principles
+  - `efficiency-cases.json`
   - `hooks.json`
+  - `quality-policy.json`
 - **`.github/`**
   - **`workflows/`**
     - `cards-sync.yml`
@@ -2010,10 +2040,13 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
   - `card-classify.cjs`
   - `card-fingerprint.cjs`
   - `card-text-crosscheck.cjs`
+  - `check-codex-efficiency.mjs`
   - `check-codex-migration.mjs`
+  - `check-codex-quality.mjs`
   - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):
   - `check-wave-scope.ts`
+  - `codex-quality-core.mjs`
   - `gen-card-probes.cjs`
   - `gen-codex-context.mjs`
   - `gen-p-spread.cjs`
@@ -5524,6 +5557,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
   - **`scripts/`**
+    - `check-codex-quality.test.ts`
     - `check-wave-scope.test.ts`
     - `gen-card-probes.test.ts`
     - `gen-codex-context.test.ts`

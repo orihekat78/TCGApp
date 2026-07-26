@@ -53,6 +53,8 @@
     "ground": "node scripts/ground-dossier.cjs",
     "sync:codex-skills": "node scripts/sync-codex-skills.mjs",
     "check:codex-migration": "node scripts/check-codex-migration.mjs",
+    "check:codex-efficiency": "node scripts/check-codex-efficiency.mjs",
+    "check:codex-quality": "node scripts/check-codex-quality.mjs",
     "check:wave-scope": "tsx scripts/check-wave-scope.ts",
     "lint:bug-closure": "tsx scripts/lint-bug-closure.ts",
     "lint:qa": "tsx scripts/lint-qa-trace.ts",

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "read-only question",
+    "needles": ["| Question/docs |", "T0/Luna"]
+  },
+  {
+    "name": "shipped-pattern card",
+    "needles": ["| Card |", "T1/Terra; T2 for new wiring"]
+  },
+  {
+    "name": "engine core change",
+    "needles": ["| Engine |", "core/state/resolver T3/Sol"]
+  }
+]

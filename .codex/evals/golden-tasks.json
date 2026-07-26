@@ -1,0 +1,210 @@
+[
+  {
+    "id": "question-indexed-rule",
+    "category": "question",
+    "critical": true,
+    "prompt": "Explain one documented game rule without changing files.",
+    "expected": {
+      "route": "question",
+      "tier": "T0",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "skills": [],
+      "evidence": [".claude/rules/INDEX.md", "exact topic"],
+      "gates": ["source citation"],
+      "forbidden": ["infer absent rule", "broad source scan"]
+    }
+  },
+  {
+    "id": "card-shipped-clone",
+    "category": "card",
+    "critical": true,
+    "prompt": "Implement one card using an existing shipped DSL pattern.",
+    "expected": {
+      "route": "card",
+      "tier": "T1",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "skills": [],
+      "evidence": ["ground dossier", "exact rule topic", "shipped exemplar"],
+      "gates": ["focused card probe", "relevant lint"],
+      "forbidden": ["engine change", "card-wave"]
+    }
+  },
+  {
+    "id": "card-new-wiring",
+    "category": "card",
+    "critical": true,
+    "prompt": "Implement a card whose printed behavior needs new multi-file wiring.",
+    "expected": {
+      "route": "card",
+      "tier": "T2",
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "skills": [],
+      "evidence": ["ground dossier", "exact rule topic", "horizontal consumers"],
+      "gates": ["RED test", "relevant suite", "regression_hunter"],
+      "forbidden": ["infer absent rule", "unreviewed shared contract"]
+    }
+  },
+  {
+    "id": "engine-additive-extension",
+    "category": "engine",
+    "critical": true,
+    "prompt": "Add an isolated engine extension without changing GameState.",
+    "expected": {
+      "route": "engine",
+      "tier": "T2",
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "skills": ["engine-wave"],
+      "evidence": ["located symbols", "exact rules", "consumer search"],
+      "gates": ["RED test", "relevant suite", "engine_reviewer"],
+      "forbidden": ["guess file ownership", "silent API expansion"]
+    }
+  },
+  {
+    "id": "engine-state-core",
+    "category": "engine",
+    "critical": true,
+    "prompt": "Change GameState and resolver behavior used by multiple flows.",
+    "expected": {
+      "route": "engine",
+      "tier": "T3",
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "skills": [],
+      "evidence": ["official rules", "state-to-UI mapping", "all consumers"],
+      "gates": ["full required gates", "engine_reviewer", "rules_adjudicator"],
+      "forbidden": ["single-path verification", "self-review only"]
+    }
+  },
+  {
+    "id": "ui-existing-pattern",
+    "category": "ui",
+    "critical": false,
+    "prompt": "Fix spacing in an established component without changing interaction.",
+    "expected": {
+      "route": "ui",
+      "tier": "T1",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "skills": ["conan-design"],
+      "evidence": ["existing component pattern", "before/after capture"],
+      "gates": ["focused UI test", "visual_qa"],
+      "forbidden": ["new visual language", "decorative detective motif"]
+    }
+  },
+  {
+    "id": "ui-new-type",
+    "category": "ui",
+    "critical": true,
+    "prompt": "Add a new interaction type visible on desktop and mobile landscape.",
+    "expected": {
+      "route": "ui",
+      "tier": "T3",
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "skills": ["conan-design"],
+      "evidence": ["design principles", "state-to-UI mapping", "reference screens"],
+      "gates": ["product_design_director", "ux_reviewer", "Playwright", "visual_qa"],
+      "forbidden": ["portrait requirement", "theme-first design"]
+    }
+  },
+  {
+    "id": "behavior-preserving-refactor",
+    "category": "refactor",
+    "critical": true,
+    "prompt": "Execute one approved behavior-preserving refactor phase.",
+    "expected": {
+      "route": "refactor",
+      "tier": "T3",
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "skills": ["refactor-phase"],
+      "evidence": ["phase spec", "baseline", "horizontal consumers"],
+      "gates": ["full required gates", "regression_hunter"],
+      "forbidden": ["behavior expansion", "unrelated cleanup"]
+    }
+  },
+  {
+    "id": "narrow-codex-config",
+    "category": "config",
+    "critical": false,
+    "prompt": "Change one documented Codex setting and preserve project behavior.",
+    "expected": {
+      "route": "config",
+      "tier": "T0",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "skills": [],
+      "evidence": ["official configuration reference"],
+      "gates": ["TOML parse", "targeted checker", "diff"],
+      "forbidden": ["unverified option", "global config mutation"]
+    }
+  },
+  {
+    "id": "multi-file-bugfix",
+    "category": "bugfix",
+    "critical": true,
+    "prompt": "Fix a reproduced bug crossing public dispatch and UI state.",
+    "expected": {
+      "route": "bugfix",
+      "tier": "T2",
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "skills": [],
+      "evidence": ["reproduction", "root cause", "similar sites"],
+      "gates": ["RED regression", "relevant suite", "regression_hunter"],
+      "forbidden": ["symptom-only fix", "missing horizontal search"]
+    }
+  },
+  {
+    "id": "ambiguous-rule",
+    "category": "review",
+    "critical": true,
+    "prompt": "Adjudicate an implementation where the local rule source is ambiguous.",
+    "expected": {
+      "route": "review",
+      "tier": "T3",
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "skills": [],
+      "evidence": ["official source", "local rule index", "conflict statement"],
+      "gates": ["rules_adjudicator"],
+      "forbidden": ["invent rule", "hide uncertainty"]
+    }
+  },
+  {
+    "id": "final-change-review",
+    "category": "review",
+    "critical": true,
+    "prompt": "Review a completed T3 change before user handoff.",
+    "expected": {
+      "route": "review",
+      "tier": "T3",
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "skills": ["conan-verify"],
+      "evidence": ["fresh test output", "scoped diff", "horizontal findings"],
+      "gates": ["independent specialist review", "full required gates"],
+      "forbidden": ["trust prior claim", "omit skipped gate"]
+    }
+  },
+  {
+    "id": "codex-efficiency-accuracy-gate",
+    "category": "config",
+    "critical": true,
+    "prompt": "Judge whether a Codex token optimization preserves accuracy.",
+    "expected": {
+      "route": "config",
+      "tier": "T2",
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "skills": ["conan-accuracy"],
+      "evidence": ["unchanged golden corpus", "baseline results", "candidate results", "usage metrics"],
+      "gates": ["both result sets pass thresholds", "critical pass rate 100%"],
+      "forbidden": ["PASS without result files", "trade correctness for token reduction"]
+    }
+  }
+]

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderCodexContext, sortBugFilenames } from '../../scripts/gen-codex-context.mjs';
+import {
+  renderCodexContext,
+  selectRecentBullets,
+  sortBugFilenames,
+} from '../../scripts/gen-codex-context.mjs';
 
 describe('renderCodexContext', () => {
   it('renders bounded deterministic startup context', () => {
@@ -22,6 +26,18 @@ describe('renderCodexContext', () => {
     expect(output).not.toContain('undefined');
     expect(output).not.toContain('generated:');
     expect(output.trimEnd().split('\n').length).toBeLessThanOrEqual(80);
+  });
+});
+
+describe('selectRecentBullets', () => {
+  it('keeps the newest bounded memory bullets in chronological order', () => {
+    expect(selectRecentBullets(
+      '- old\n- middle starts\n  middle detail\n- latest starts\n  latest detail',
+      2,
+    )).toEqual([
+      'middle starts middle detail',
+      'latest starts latest detail',
+    ]);
   });
 });
 

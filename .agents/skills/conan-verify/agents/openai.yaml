@@ -1,0 +1,7 @@
+interface:
+  display_name: "Conan Verify"
+  short_description: "Verify Conan changes proportionally"
+  default_prompt: "Use $conan-verify to gather fresh evidence before claiming this Conan task complete."
+
+policy:
+  allow_implicit_invocation: true

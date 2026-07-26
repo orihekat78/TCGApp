@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "thresholds": {
+    "minimumTasks": 12,
+    "minimumRepetitions": 3,
+    "criticalPassRate": 1,
+    "overallPassRate": 0.95,
+    "maximumUnsupportedClaims": 0,
+    "maximumScopeViolations": 0
+  },
+  "requiredCategories": [
+    "question",
+    "card",
+    "engine",
+    "ui",
+    "refactor",
+    "config",
+    "bugfix",
+    "review"
+  ],
+  "profiles": {
+    "economy": { "tiers": ["T0", "T1"], "model": "gpt-5.6-terra", "effort": "medium" },
+    "quality": { "tiers": ["T2"], "model": "gpt-5.6-terra", "effort": "high" },
+    "adjudication": { "tiers": ["T3"], "model": "gpt-5.6-sol", "effort": "high" }
+  }
+}

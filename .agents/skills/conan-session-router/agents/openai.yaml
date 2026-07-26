@@ -1,7 +1,0 @@
-interface:
-  display_name: "Conan Session Router"
-  short_description: "Route Conan tasks with minimal context"
-  default_prompt: "Classify this Conan task, select minimal context, skills, tier, and model, then proceed."
-
-policy:
-  allow_implicit_invocation: true

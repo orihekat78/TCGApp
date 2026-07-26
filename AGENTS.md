@@ -21,8 +21,7 @@ Search or open their relevant sections only when needed.
 
 ## Route
 
-- Any implementation/config/review: use `codex-risk-router`.
-- Session context selection: use `conan-session-router`.
+- Every task: use `conan-router` for context, risk, model, skills, and gates.
 - Engine: [src/engine/AGENTS.md](src/engine/AGENTS.md).
 - Cards: [src/cards/AGENTS.md](src/cards/AGENTS.md).
 - UI: [src/ui/AGENTS.md](src/ui/AGENTS.md).
@@ -43,6 +42,20 @@ Search or open their relevant sections only when needed.
   it in an active turn. End the turn and resume only on an external notification
   or explicit user message that CI completed; inactive waiting consumes no tokens.
 
+## Token Efficiency
+
+- End and hand off after two implementation waves or around 60% context; continue
+  the next wave only in a fresh user-created task.
+- Default to no delegation. When delegation is required, reuse agents and cap
+  total spawned threads at 4 unless the user explicitly requests broader parallel work.
+- Every spawn uses `fork_turns="none"` or at most `"3"`; never use `"all"`.
+- Use one bounded wait per collection point. Never poll with repeated
+  `wait_agent` or `list_agents` calls.
+- Limit inspection output to 200 lines or 100 KB per call. Store larger artifacts
+  on disk and return a path plus a compact summary.
+- Use local paths or URLs for images; never inject base64 when either is available.
+  Move image-heavy follow-up work to a fresh task.
+
 ## Risk
 
 - T0: read-only/docs/config; deterministic checks, no review agent.
@@ -59,9 +72,18 @@ Search or open their relevant sections only when needed.
 - `gpt-5.6-sol`: T3 design, semantic conflict, and final adjudication.
 - Every subagent call must specify model and reasoning effort.
 
+## Quality
+
+- T0/T1 use the economy profile; T2 uses Terra high; T3 uses Sol high/xhigh.
+- Codex workflow or token changes use explicit `conan-accuracy`; no validated
+  result files means accuracy is unproven.
+- Visual or UX work uses explicit `conan-design`; product quality takes priority
+  over franchise decoration.
+- Project custom agents are read-only judges; implementation stays in the main task.
+
 ## Completion
 
-- Verify before claiming completion.
+- Use `conan-verify` before claiming completion.
 - Investigate structurally similar sites after fixes and additions.
 - Record decisions and horizontal findings in `.claude/memory.md`.
 - Before user review, state self-review and horizontal investigation status.

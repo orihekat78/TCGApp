@@ -48,12 +48,27 @@ function collectBugs(root) {
   }
 }
 
+export function selectRecentBullets(value, limit) {
+  const bullets = [];
+  let current = null;
+  for (const rawLine of value.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (/^[-*]\s+/.test(line)) {
+      current = line.replace(/^[-*]\s+/, '');
+      bullets.push(current);
+    } else if (current && line && !line.startsWith('#')) {
+      current = `${current} ${line}`;
+      bullets[bullets.length - 1] = current;
+    } else if (line.startsWith('#')) {
+      current = null;
+    }
+  }
+  return bullets.slice(-limit);
+}
+
 function collectBullets(path, limit) {
   try {
-    return lines(readFileSync(path, 'utf8'))
-      .filter((line) => /^[-*]\s+/.test(line))
-      .map((line) => line.replace(/^[-*]\s+/, ''))
-      .slice(0, limit);
+    return selectRecentBullets(readFileSync(path, 'utf8'), limit);
   } catch {
     return [];
   }
@@ -88,7 +103,7 @@ export function renderCodexContext(snapshot) {
     '',
     snapshot.nextPrompt,
     '',
-    'Use the nearest `AGENTS.md` and `conan-session-router` before opening more context.',
+    'Use the nearest `AGENTS.md` and `conan-router` before opening more context.',
     '',
   ];
   return output.slice(0, 80).join('\n');

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Conan Router"
+  short_description: "Route Conan work with minimal context"
+  default_prompt: "Use $conan-router to select the smallest safe route for this Conan task."
+
+policy:
+  allow_implicit_invocation: true

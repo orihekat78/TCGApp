@@ -1,0 +1,7 @@
+interface:
+  display_name: "Conan Product Design"
+  short_description: "Direct neutral product-grade UI quality"
+  default_prompt: "Use $conan-design to improve this Conan UI with neutral product-design standards and evidence-based visual QA."
+
+policy:
+  allow_implicit_invocation: false

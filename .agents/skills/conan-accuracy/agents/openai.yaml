@@ -1,0 +1,7 @@
+interface:
+  display_name: "Conan Accuracy"
+  short_description: "Run evidence-based Codex quality evaluations"
+  default_prompt: "Use $conan-accuracy to evaluate this Codex workflow against the Conan golden-task thresholds."
+
+policy:
+  allow_implicit_invocation: false
