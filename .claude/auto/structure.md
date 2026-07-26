@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 247
-- **ファイル数**: 5128
+- **ファイル数**: 5129
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -425,6 +425,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `BUG-258.md`
     - `BUG-259.md` — BUG-259: CT-P10 Q&A-bearing cards lack CardDef coverage
     - `BUG-260.md`
+    - `BUG-261.md`
     - `BUG-template.md`
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
