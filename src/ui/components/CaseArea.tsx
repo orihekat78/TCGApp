@@ -55,12 +55,7 @@ const TURN_LABEL: Record<'first' | 'second', string> = {
 export function CaseArea(props: CaseAreaProps): JSX.Element {
   const { caseInfo, turnOrder, side, isCandidate, onClick, onExpand } = props;
   const rootClass = `case-area side-${side}${isCandidate ? ' case-area--candidate' : ''}`;
-  // Round 4l (BUG-001): isCandidate=true なら action onClick、false かつ onExpand 提供時は expand
-  const effectiveClick = isCandidate && onClick
-    ? onClick
-    : onExpand && caseInfo?.cardId
-      ? () => onExpand(caseInfo.cardId as string)
-      : undefined;
+  const effectiveClick = isCandidate && onClick ? onClick : undefined;
   const interactiveProps = effectiveClick
     ? { onClick: effectiveClick, style: { cursor: 'pointer' as const } }
     : {};
@@ -122,6 +117,19 @@ export function CaseArea(props: CaseAreaProps): JSX.Element {
           data-orientation={orientation}
         >
           <CardArt cardId={caseInfo.cardId} alt="" className="case-bg" />
+          {onExpand && (
+            <button
+              type="button"
+              className="case-card-detail"
+              aria-label={`${title}の詳細を表示`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onExpand(caseInfo.cardId);
+              }}
+            >
+              <span aria-hidden="true">🔍</span>
+            </button>
+          )}
           <div className="case-title">{titleNodes}</div>
           {/* Round 2: EVT-色 + Lv 表記は冗長 (タイトルとカード画像で十分判別可能) → 削除済
               Round 3: case-stamp も削除。事件編/解決編 は Playmat 側の余白に独立 tag で表示。 */}

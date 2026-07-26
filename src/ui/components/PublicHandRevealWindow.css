@@ -17,11 +17,11 @@
 
 .public-hand-reveal-heading { margin-bottom: 8px; font-size: 13px; font-weight: 700; }
 .public-hand-reveal-cards { display: flex; gap: 8px; overflow-x: auto; }
-.public-hand-reveal-card { display: grid; grid-template-columns: 36px minmax(70px, 1fr) auto; gap: 6px; align-items: center; min-width: 150px; pointer-events: auto; }
+.public-hand-reveal-card { position: relative; display: grid; grid-template-columns: 36px minmax(70px, 1fr) auto; gap: 6px; align-items: center; min-width: 150px; pointer-events: auto; }
 .public-hand-reveal-art { width: 34px; height: 48px; object-fit: cover; }
 .public-hand-reveal-name { font-size: 12px; overflow-wrap: anywhere; }
 .public-hand-reveal-occurrence { font-size: 10px; color: #c8bde8; }
-.public-hand-reveal-card button { grid-column: 2 / 4; min-height: 32px; border: 1px solid #7c6ab4; border-radius: 4px; background: #2c254a; color: inherit; }
+.public-hand-reveal-card button { position: absolute; top: 3px; left: 14px; width: 22px; height: 22px; padding: 0; border: 1px solid #7c6ab4; border-radius: 50%; background: #2c254a; color: inherit; }
 
 @media (max-height: 430px) and (orientation: landscape) {
   .public-hand-reveal-window { right: 8px; bottom: 8px; max-height: calc(100vh - 16px); }

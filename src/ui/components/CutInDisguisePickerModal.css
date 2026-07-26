@@ -150,9 +150,7 @@
 }
 
 .cid-list li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 48px;
-  gap: 4px;
+  position: relative;
 }
 
 .cid-cand {
@@ -176,15 +174,24 @@
 }
 
 .cid-cand-detail {
+  position: absolute;
+  top: 8px;
+  left: 14px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  padding: 0;
   min-width: 48px;
   min-height: 48px;
-  border: 1px solid rgba(140, 180, 220, 0.55);
-  border-radius: 5px;
-  background: rgba(10, 20, 35, 0.8);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #e0ecf8;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
 }
+
+.cid-cand-detail span { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid rgba(140, 180, 220, 0.55); border-radius: 50%; background: rgba(10, 20, 35, 0.8); }
 
 .cid-cand-detail:hover,
 .cid-cand-detail:focus-visible { filter: brightness(1.2); }

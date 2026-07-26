@@ -143,21 +143,13 @@ function HandCard({
       data-color={card.color}
       title={
         disabled
-          ? `${disabledTitle ?? ''}${onExpand ? '\n(右クリック or 🔍 で拡大表示)' : ''}`
+          ? `${disabledTitle ?? ''}${onExpand ? '\n(🔍 で拡大表示)' : ''}`
           : onExpand
-            ? '右クリック or 🔍 で拡大表示'
+            ? '🔍 で拡大表示'
             : undefined
       }
       aria-disabled={disabled || undefined}
       onClick={disabled ? undefined : onClick}
-      onContextMenu={
-        onExpand
-          ? (e) => {
-              e.preventDefault();
-              onExpand(card.cardId);
-            }
-          : undefined
-      }
     >
       <div className="cost">{card.cost}</div>
       <div className="type-badge">{card.type}</div>
@@ -227,20 +219,12 @@ function HandMiniCard({
       data-type={card.type}
       data-usable={usable ? 'true' : 'false'}
       onClick={onClick}
-      onContextMenu={
-        onExpand
-          ? (e) => {
-              e.preventDefault();
-              onExpand(card.cardId);
-            }
-          : undefined
-      }
       aria-label={ariaLabel}
       title={
         !usable && disabledReason
-          ? `${disabledReason}\n(右クリックで拡大表示)`
+          ? `${disabledReason}\n(🔍 で拡大表示)`
           : onExpand
-            ? '右クリックで拡大表示'
+            ? '🔍 で拡大表示'
             : undefined
       }
     >

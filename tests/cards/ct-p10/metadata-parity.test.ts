@@ -1,12 +1,13 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REUSE_CARDS } from '@/cards/_reuse';
 
 type OfficialRow = Record<string, string> & { kind: string };
 
-function officialRows(): Map<string, OfficialRow> {
-  const dir = join(process.cwd(), '.claude/specs/cards-data/ct-p10');
+const officialDataDir = join(process.cwd(), '.claude/specs/cards-data/ct-p10');
+
+function officialRows(dir: string): Map<string, OfficialRow> {
   const rows = new Map<string, OfficialRow>();
   for (const file of readdirSync(dir).filter((name) => name.endsWith('.tsv'))) {
     const lines = readFileSync(join(dir, file), 'utf8').split(/\r?\n/).filter(Boolean);
@@ -25,8 +26,10 @@ function parts(value: string): string[] {
   return value.split(/[|,，]/).map((item) => item.trim()).filter(Boolean);
 }
 
-describe('CT-P10 official metadata parity', () => {
-  const official = officialRows();
+const describeWithOfficialCatalog = existsSync(officialDataDir) ? describe : describe.skip;
+
+describeWithOfficialCatalog('CT-P10 official metadata parity', () => {
+  const official = existsSync(officialDataDir) ? officialRows(officialDataDir) : new Map<string, OfficialRow>();
   const registered = REUSE_CARDS.filter((card) => card.id.startsWith('B10'));
 
   it.each(registered)('$id matches its official printing metadata', (card) => {

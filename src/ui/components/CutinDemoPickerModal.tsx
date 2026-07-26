@@ -126,7 +126,7 @@ export function CutinDemoPickerModal(props: CutinDemoPickerModalProps): JSX.Elem
                     aria-label={`${cardIdToDisplayName(d.id)}の詳細を表示`}
                     onClick={() => expandModal.open(d.id)}
                   >
-                    詳細
+                    <span aria-hidden="true">🔍</span>
                   </button>
                 </div>
               );

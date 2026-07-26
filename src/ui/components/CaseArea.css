@@ -91,6 +91,22 @@
   position: relative;
   z-index: 1;
 }
+
+.case-area .case-card .case-card-detail {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: rgba(8, 18, 36, 0.84);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
 .case-area .case-card.portrait {
   width: var(--case-card-w);
   height: var(--case-card-h);

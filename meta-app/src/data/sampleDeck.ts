@@ -83,7 +83,9 @@ export function deckStats(deck: DeckRecord): DeckStats {
     const card = CARD_POOL.find((c) => c.num === entry.num);
     if (!card) continue;
     total += entry.count;
-    colors[card.color] = (colors[card.color] ?? 0) + entry.count;
+    for (const color of card.colors ?? [card.color]) {
+      colors[color] = (colors[color] ?? 0) + entry.count;
+    }
     types[card.type] = (types[card.type] ?? 0) + entry.count;
     if (card.cost != null) {
       const k = Math.min(card.cost, 8);

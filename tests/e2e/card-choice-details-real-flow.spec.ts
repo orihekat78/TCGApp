@@ -24,6 +24,7 @@ async function primeHuman(page: Page): Promise<void> {
 }
 
 async function expectTouchTarget(detail: Locator): Promise<void> {
+  await detail.scrollIntoViewIfNeeded();
   await expect(detail).toBeVisible();
   await expect(detail).toBeInViewport();
   const box = await detail.boundingBox();
@@ -69,7 +70,7 @@ async function expectHiddenCardBack(hidden: Locator): Promise<void> {
   ).toBe(true);
 }
 
-async function assertDetailClickAndContextMenu(page: Page, primary: Locator, detail: Locator): Promise<void> {
+async function assertDetailClick(page: Page, detail: Locator): Promise<void> {
   await expectTouchTarget(detail);
 
   await detail.click();
@@ -77,10 +78,6 @@ async function assertDetailClickAndContextMenu(page: Page, primary: Locator, det
   await page.locator('.card-expand-close').click();
   await expect(page.locator('.card-expand-modal-backdrop')).toBeHidden();
 
-  await primary.click({ button: 'right' });
-  await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
-  await page.locator('.card-expand-close').click();
-  await expect(page.locator('.card-expand-modal-backdrop')).toBeHidden();
 }
 
 test.describe('real mounted card-choice details', () => {
@@ -123,7 +120,7 @@ test.describe('real mounted card-choice details', () => {
       buttons.map((button) => button.getAttribute('aria-label')),
     );
     expect(new Set(detailNames).size).toBe(detailNames.length);
-    await assertDetailClickAndContextMenu(page, primary, detail);
+    await assertDetailClick(page, detail);
     await expect(page.getByTestId('effect-picker-modal')).toBeVisible();
 
     await primary.click();
@@ -199,7 +196,7 @@ test.describe('real mounted card-choice details', () => {
     // interaction only after that real UI transition has settled.
     await page.waitForTimeout(600);
     const detail = page.getByTestId('deck-reveal-detail-0');
-    await assertDetailClickAndContextMenu(page, primary, detail);
+    await assertDetailClick(page, detail);
 
     await detail.click();
     await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
@@ -244,7 +241,7 @@ test.describe('real mounted card-choice details', () => {
     const primary = page.getByTestId('misread-card-hyd#1');
     await expect(primary).toBeVisible();
     await expectPublicCardArt(primary, 'B05080', '1745322226168482.jpg');
-    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('misread-detail-hyd#1'));
+    await assertDetailClick(page, page.getByTestId('misread-detail-hyd#1'));
     await page.getByTestId('misread-cand-hyd#1').check();
     await page.getByTestId('misread-confirm-btn').click();
     await page.waitForFunction(() => {
@@ -278,7 +275,7 @@ test.describe('real mounted card-choice details', () => {
     const primary = page.getByTestId('cid-disg-B03129#0');
     await expect(primary).toBeVisible();
     await expectPublicCardArt(primary, 'B03129', '1729133510413412.jpg');
-    await assertDetailClickAndContextMenu(page, primary, page.getByTestId('cid-disg-detail-B03129#0'));
+    await assertDetailClick(page, page.getByTestId('cid-disg-detail-B03129#0'));
     await primary.click();
     await waitForActionEnd(page);
     const state = await getGameState(page);

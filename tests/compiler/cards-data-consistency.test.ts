@@ -119,13 +119,16 @@ describe("cards-data consistency status", () => {
 const ROOT = path.resolve(__dirname, "../..");
 const RAW_DIR = path.join(ROOT, ".claude", "specs", "cards-data", "_raw");
 const STATUS_FILE = path.join(ROOT, ".claude", "specs", "cards-data", "status.json");
-const hasLocalSnapshot = existsSync(STATUS_FILE) && existsSync(RAW_DIR) && require("node:fs").readdirSync(RAW_DIR).some((file: string) => file.endsWith("-api.json"));
+const trackedStatus = require("../../.claude/specs/cards-data/status.json");
+const hasLocalSnapshot = existsSync(STATUS_FILE) && existsSync(RAW_DIR)
+  && Object.keys(trackedStatus.packages.printings).every((pkg) => (
+    existsSync(path.join(ROOT, ".claude", "specs", "cards-data", pkg))
+    && existsSync(path.join(RAW_DIR, `${pkg}-api.json`))
+  ));
 
 describe.skipIf(!hasLocalSnapshot)("cards-data consistency (local official cache)", () => {
   it("matches the tracked status without exposing local official text", () => {
     const { generateCardsDataStatus } = require("../../scripts/cards/cards-data-status.cjs");
-    const tracked = require("../../.claude/specs/cards-data/status.json");
-
-    expect(generateCardsDataStatus(ROOT, tracked.source)).toEqual(tracked);
+    expect(generateCardsDataStatus(ROOT, trackedStatus.source)).toEqual(trackedStatus);
   });
 });

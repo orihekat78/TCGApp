@@ -67,7 +67,7 @@ export function HiramekiPickerModal(props: HiramekiPickerModalProps): JSX.Elemen
                 aria-label={`${cardName}の詳細を表示`}
                 onClick={() => expandModal.open(cardId)}
               >
-                詳細
+                <span aria-hidden="true">🔍</span>
               </button>
             </div>
           )}

@@ -181,7 +181,7 @@ export function EffectPickerModal(): JSX.Element | null {
                     aria-label={`${name}（${index + 1}枚目）の詳細を表示`}
                     onClick={() => expandModal.open(c.cardId)}
                   >
-                    Details
+                    <span aria-hidden="true">🔍</span>
                   </button>
                 )}
                 </div>

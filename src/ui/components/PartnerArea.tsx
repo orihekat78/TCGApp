@@ -164,21 +164,13 @@ export function PartnerArea({ partner, side, resolveCard, paCards, partnerAreaMR
                 className={`pa-card color-${m.color}`}
                 data-card-id={cardId}
               >
-                <button
-                  type="button"
+                <div
                   className="pa-card-select"
                   data-testid={`pa-card-${side}-${i}`}
-                  aria-label={detailLabel}
-                  onClick={expand}
-                  onContextMenu={onExpand ? (event) => {
-                    event.preventDefault();
-                    expand();
-                  } : undefined}
-                  disabled={!onExpand}
                 >
                   <CardArt cardId={cardId} alt="" />
                   <span className="pa-card-name">{m.name}</span>
-                </button>
+                </div>
                 {onExpand && (
                   <button
                     type="button"
@@ -187,7 +179,7 @@ export function PartnerArea({ partner, side, resolveCard, paCards, partnerAreaMR
                     aria-label={detailLabel}
                     onClick={expand}
                   >
-                    詳細
+                    <span aria-hidden="true">🔍</span>
                   </button>
                 )}
               </div>

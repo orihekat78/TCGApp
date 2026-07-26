@@ -15,7 +15,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA = path.join(__dirname, '..', '.claude', 'specs', 'cards-data');
+// Official TSV data is intentionally ignored. Tests inject a minimal catalog
+// without making CI depend on a developer-local corpus.
+const DATA = path.resolve(process.env.CONAN_CARDS_DATA_DIR || path.join(__dirname, '..', '.claude', 'specs', 'cards-data'));
 const SRC_CARDS = path.join(__dirname, '..', 'src', 'cards');
 const COLORS = new Set(['青', '赤', '黄', '緑', '白', '黒']);
 

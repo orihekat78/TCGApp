@@ -364,7 +364,6 @@ function CardGrid({
 function CardListRow({ card, selected, fav, adopt, onClick }: {
   card: CardDef; selected: boolean; fav: boolean; adopt: number; onClick: () => void;
 }) {
-  const c = COLOR_TOKEN[card.color] || T.blue;
   return (
     <button onClick={onClick} className="meta-row" style={{
       display: 'flex', alignItems: 'center', gap: 10, padding: '4px 8px',
@@ -375,8 +374,7 @@ function CardListRow({ card, selected, fav, adopt, onClick }: {
       <div style={{ width: 30, height: 42, borderRadius: 2, overflow: 'hidden', flexShrink: 0, background: '#0a1a28' }}>
         <MetaCard card={card} w={30} hoverable={false} />
       </div>
-      <div style={{ width: 18, height: 18, flexShrink: 0, borderRadius: '50%',
-        background: c, border: `1px solid ${T.bgDeep}` }} title={card.color} />
+      <ColorPills card={card} compact />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {fav && <span style={{ color: T.gold, marginRight: 4 }}>★</span>}{card.name}
@@ -521,6 +519,7 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
               {card.rarity}
             </span>
           )}
+          <ColorPills card={card} />
           <span style={{ marginLeft: 'auto', fontFamily: T.fontMono, fontSize: 10, color: usage.inDecks > 0 ? T.green : T.textMuted, letterSpacing: '0.12em' }}>
             {usage.inDecks > 0 ? `採用 ${usage.inDecks}` : '未採用'}
           </span>
@@ -586,6 +585,22 @@ function SelectedDetail({ card, usage, isFavorited, onToggleFavorite, onSelectVa
     </div>
     <CardExpandModal cardId={expanded ? card.num : null} onClose={() => setExpanded(false)} />
     </>
+  );
+}
+
+function ColorPills({ card, compact = false }: { card: CardDef; compact?: boolean }) {
+  const colors = card.colors ?? [card.color];
+  return (
+    <span data-card-colors={colors.join(',')} aria-label={`色: ${colors.join(',')}`} style={{ display: 'inline-flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+      {colors.map((color) => (
+        <span key={color} title={color} style={{
+          width: compact ? 14 : 'auto', height: compact ? 14 : 'auto', minWidth: compact ? 14 : undefined,
+          padding: compact ? 0 : '1px 5px', borderRadius: compact ? '50%' : 2,
+          background: COLOR_TOKEN[color], border: `1px solid ${T.bgDeep}`,
+          color: compact ? 'transparent' : '#06111d', fontFamily: T.fontMono, fontSize: 9, fontWeight: 800,
+        }}>{compact ? '' : color.toUpperCase()}</span>
+      ))}
+    </span>
   );
 }
 

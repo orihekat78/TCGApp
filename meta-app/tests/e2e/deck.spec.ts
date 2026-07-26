@@ -115,6 +115,24 @@ test('DECK: 右クリックでデッキとプールのカードを拡大表示�
   expect(errors).toEqual([]);
 });
 
+test('DECK: 混色カードの詳細に全色を表示する', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('conan.meta.v1.decks', JSON.stringify({
+      version: 3,
+      state: {
+        decks: [{
+          id: 'color-test', name: '色表示テスト', partner: 'D08001', case: 'D08026', modified: 0,
+          cards: [{ num: 'B10097', count: 1 }],
+        }],
+      },
+    }));
+  });
+  await page.goto('/#deck');
+  await page.getByRole('button', { name: '毛利蘭＆ベルモット 1/3' }).first().click();
+  await expect(page.locator('[data-card-colors="blue,black"]')).toBeVisible();
+  await expect(page.locator('[data-card-colors="blue,black"]')).toHaveText('BLUEBLACK');
+});
+
 test('DECK: 右クリックでパートナー・事件・選択候補を拡大表示できる', async ({ page }) => {
   await page.goto('/#deck');
   await expect(page.getByText('検証 OK')).toBeVisible({ timeout: 6000 });

@@ -59,7 +59,7 @@ describe('Playmat', () => {
     expect(html).toMatch(/class="panel-log-btn-count">0/);
   });
 
-  it('Escape closes only the topmost card modal opened from the log', () => {
+  it('does not offer card details from a log entry', () => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     const state = createEmptyGameState();
     state.log.push({
@@ -80,15 +80,7 @@ describe('Playmat', () => {
       expect(logButton).not.toBeNull();
       act(() => logButton!.click());
 
-      const cardButton = container.querySelector('button[aria-label*="D08015"]') as HTMLButtonElement | null;
-      expect(cardButton).not.toBeNull();
-      act(() => cardButton!.click());
-      expect(container.querySelector('.card-expand-modal-backdrop')).not.toBeNull();
-      expect(container.querySelector('.log-panel')).not.toBeNull();
-
-      act(() => {
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      });
+      expect(container.querySelector('button[aria-label*="D08015"]')).toBeNull();
       expect(container.querySelector('.card-expand-modal-backdrop')).toBeNull();
       expect(container.querySelector('.log-panel')).not.toBeNull();
     } finally {

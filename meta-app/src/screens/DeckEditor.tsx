@@ -383,7 +383,11 @@ function DetailPane({ card, count, onAdd, onRemove, onExpand }: {
       <div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
           <span style={{ fontFamily: T.fontMono, fontSize: 11, color: T.textMuted, letterSpacing: '0.16em' }}>{card.num}</span>
-          <Pill color={c} label={card.color.toUpperCase()} />
+          <span data-card-colors={(card.colors ?? [card.color]).join(',')} aria-label={`色: ${(card.colors ?? [card.color]).join(',')}`} style={{ display: 'contents' }}>
+            {(card.colors ?? [card.color]).map((color) => (
+              <Pill key={color} color={COLOR_TOKEN[color]} label={color.toUpperCase()} />
+            ))}
+          </span>
           {card.rarity && <Pill color={T.gold} label={card.rarity} />}
         </div>
         <div style={{ fontSize: 18, fontWeight: 800, color: T.textPrimary }}>{card.name}</div>

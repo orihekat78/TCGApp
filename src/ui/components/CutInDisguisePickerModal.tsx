@@ -141,7 +141,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       aria-label={`${c.name}（${index + 1}枚目）の詳細を表示`}
                       onClick={() => expandModal.open(c.cardId)}
                     >
-                      Details
+                      <span aria-hidden="true">🔍</span>
                     </button>
                   </li>
                   );
@@ -180,7 +180,7 @@ export function CutInDisguisePickerModal(props: CutInDisguisePickerModalProps): 
                       aria-label={`${c.name}（${index + 1}枚目）の詳細を表示`}
                       onClick={() => expandModal.open(c.cardId)}
                     >
-                      Details
+                      <span aria-hidden="true">🔍</span>
                     </button>
                   </li>
                   );

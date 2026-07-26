@@ -155,7 +155,7 @@ describe('PartnerArea partner-area cards', () => {
       />,
     ));
 
-    const primaries = [...container.querySelectorAll<HTMLButtonElement>('[data-testid^="pa-card-self-"]')];
+    const primaries = [...container.querySelectorAll<HTMLElement>('[data-testid^="pa-card-self-"]')];
     const details = [...container.querySelectorAll<HTMLButtonElement>('[data-testid^="pa-card-detail-self-"]')];
     expect(primaries).toHaveLength(2);
     expect(details).toHaveLength(2);
@@ -165,13 +165,11 @@ describe('PartnerArea partner-area cards', () => {
       '\u8d64\u3044\u6d99\uff081\u679a\u76ee\uff09\u306e\u8a73\u7d30\u3092\u8868\u793a',
       '\u8d64\u3044\u6d99\uff082\u679a\u76ee\uff09\u306e\u8a73\u7d30\u3092\u8868\u793a',
     ];
-    expect(primaryLabels).toEqual(expectedLabels);
+    expect(primaryLabels).toEqual([null, null]);
     expect(detailLabels).toEqual(expectedLabels);
-    expect(primaryLabels.every((label) => label?.includes('詳細を表示'))).toBe(true);
     expect(detailLabels.every((label) => label?.includes('詳細を表示'))).toBe(true);
-    expect(new Set(primaryLabels).size).toBe(2);
     expect(new Set(detailLabels).size).toBe(2);
-    expect(primaries.every((button) => button instanceof HTMLButtonElement)).toBe(true);
+    expect(primaries.every((element) => !(element instanceof HTMLButtonElement))).toBe(true);
     expect(details.every((button) => button instanceof HTMLButtonElement)).toBe(true);
     expect(container.querySelectorAll('.pa-card img.card-art')).toHaveLength(2);
     const images = [...container.querySelectorAll<HTMLImageElement>('.pa-card img.card-art')];
@@ -184,8 +182,7 @@ describe('PartnerArea partner-area cards', () => {
 
     const context = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
     act(() => primaries[0]!.dispatchEvent(context));
-    expect(context.defaultPrevented).toBe(true);
-    expect(onExpand).toHaveBeenLastCalledWith('B07059');
-    expect(onExpand).toHaveBeenCalledTimes(2);
+    expect(context.defaultPrevented).toBe(false);
+    expect(onExpand).toHaveBeenCalledTimes(1);
   });
 });

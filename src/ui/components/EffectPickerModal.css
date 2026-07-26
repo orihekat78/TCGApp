@@ -45,9 +45,7 @@
 }
 
 .effect-picker-cand-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px;
-  gap: 6px;
+  position: relative;
 }
 
 .effect-picker-cand {
@@ -67,15 +65,24 @@
 }
 
 .effect-picker-detail {
+  position: absolute;
+  top: 5px;
+  left: 24px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  padding: 0;
   min-width: 44px;
   min-height: 44px;
-  border: 1px solid #4a5070;
-  border-radius: 4px;
-  background: #2a3050;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #d8d8e8;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
 }
+
+.effect-picker-detail span { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid #4a5070; border-radius: 50%; background: #2a3050; }
 
 .effect-picker-detail:hover,
 .effect-picker-detail:focus-visible {

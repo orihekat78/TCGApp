@@ -1,5 +1,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Playmat } from '@/ui/components/Playmat';
 import { DeckRevealOverlay } from '@/ui/components/DeckRevealOverlay';
@@ -40,6 +42,15 @@ const resolveHandCard = (cardId: string): HandCardMeta => ({
   ap: 1000,
   lp: 1,
   lv: 1,
+});
+
+it('limits the scene detail control hit area to the magnifier itself', () => {
+  const css = readFileSync(join(process.cwd(), 'src/ui/components/SceneArea.css'), 'utf8');
+  const rule = css.match(/\.scene-area \.card \.scene-card-detail-button \{([\s\S]*?)\n\}/)?.[1] ?? '';
+
+  expect(rule).toContain('width: 18px;');
+  expect(rule).toContain('height: 18px;');
+  expect(rule).not.toContain('220px');
 });
 
 function pending(overrides: Partial<PendingEffectPick>): PendingEffectPick {

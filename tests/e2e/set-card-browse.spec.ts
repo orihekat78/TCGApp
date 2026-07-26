@@ -67,11 +67,28 @@ test.describe('set cards beneath a scene character', () => {
     await expect(selfBrowse).toHaveAccessibleName(/2枚.*確認/);
     await expectBrowseIconInArt(selfHost);
     await expect(selfHost.locator('.scene-card-detail-icon')).toHaveCount(1);
+    const selfDetail = page.getByTestId('scene-card-detail-self-set-host');
+    const [artBox, detailBox] = await Promise.all([
+      selfHost.locator('.art').boundingBox(),
+      selfDetail.boundingBox(),
+    ]);
+    expect(artBox).not.toBeNull();
+    expect(detailBox).not.toBeNull();
+    expect(detailBox!.width).toBeLessThan(artBox!.width);
+    expect(detailBox!.height).toBeLessThan(artBox!.height);
 
     // The name/text body is not another detail affordance. Browse begins only at 🔍.
     await selfHost.locator('.name').click();
     await expect(page.locator('.card-list-modal')).toHaveCount(0);
     await expect(page.locator('.card-expand-modal-backdrop')).toHaveCount(0);
+
+    // Non-icon image pixels remain a game-operation surface.
+    await selfHost.locator('.art').click({ position: { x: 2, y: artBox!.height - 2 } });
+    await expect(page.locator('.card-expand-modal-backdrop')).toHaveCount(0);
+
+    await selfDetail.click();
+    await expect(page.locator('.card-expand-modal-backdrop')).toBeVisible();
+    await page.locator('.card-expand-close').click();
 
     await selfBrowse.click();
     const ownModal = page.locator('.card-list-modal');

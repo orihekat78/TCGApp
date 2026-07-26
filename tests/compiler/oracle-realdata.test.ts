@@ -15,6 +15,12 @@ const ROOT = path.resolve(__dirname, '../..');
 
 // cards-data TSV はローカル専用 (untrack 済、56869955)。CI checkout に無い場合 skip。
 const corpusAll = loadCorpus(ROOT);
+const shippedAll = ALL_CARDS.map((d) => canonicalCard(d));
+const reportAll = runOracle(corpusAll, shippedAll, []);
+const hasCompleteLocalCorpus = corpusAll.length > 0 && reportAll.buckets.noCorpus.length === 0;
+// This suite validates a complete private corpus. Keep normal CI independent
+// of an ignored or partial developer-local catalog.
+if (!hasCompleteLocalCorpus) corpusAll.length = 0;
 
 describe.skipIf(corpusAll.length === 0)('compiler/oracle (real data, production 0 件)', () => {
   const corpus = corpusAll;

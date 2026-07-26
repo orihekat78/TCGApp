@@ -47,10 +47,6 @@ export function SelectableCardTile({
         aria-label={hidden ? `${hiddenLabel} を選択` : `${accessibleName}を選択`}
         aria-pressed={selected}
         onClick={select}
-        onContextMenu={canExpand ? (event) => {
-          event.preventDefault();
-          expand();
-        } : undefined}
       >
         {hidden ? (
           <>
@@ -79,7 +75,7 @@ export function SelectableCardTile({
           aria-label={`${accessibleName}の詳細を表示`}
           onClick={expand}
         >
-          詳細
+          <span aria-hidden="true">🔍</span>
         </button>
       )}
     </div>

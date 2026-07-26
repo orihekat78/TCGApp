@@ -38,6 +38,7 @@
 }
 
 .deck-reveal-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -52,16 +53,24 @@
 }
 
 .deck-reveal-card-detail {
+  position: absolute;
+  top: 8px;
+  left: 42px;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  padding: 0;
   min-width: 48px;
   min-height: 48px;
-  margin-left: 8px;
-  border: 1px solid #4a5070;
-  border-radius: 4px;
-  background: #2a3050;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #d8d8e8;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
 }
+
+.deck-reveal-card-detail span { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid #4a5070; border-radius: 50%; background: #2a3050; }
 
 .deck-reveal-card-detail:hover,
 .deck-reveal-card-detail:focus-visible {

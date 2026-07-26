@@ -13,31 +13,10 @@ import { def as readDef } from '@/engine/read/def.js';
 import { uidToDisplayName } from '@/ui/services/uidNames.js';
 import './LogPanel.css';
 
-const CARD_ID_TOKEN_PATTERN = /\b(B\d{5}(?:P\d{0,2})?|D\d{5}|PR\d{3})\b/g;
-
 function resolveKnownCard(cardId: string): { cardId: string; name: string } | null {
   const card = readDef.card(cardId);
   if (!card) return null;
   return { cardId, name: card.names[0] ?? cardId };
-}
-
-function cardExpandButton(
-  card: { cardId: string; name: string },
-  label: string,
-  onCardExpand: (cardId: string) => void,
-  key?: string,
-): JSX.Element {
-  return (
-    <button
-      key={key}
-      type="button"
-      className="log-card-link"
-      aria-label={`${card.name} (${card.cardId}) を拡大表示`}
-      onClick={() => onCardExpand(card.cardId)}
-    >
-      {label}
-    </button>
-  );
 }
 
 /**
@@ -64,24 +43,17 @@ function formatTarget(target: string | undefined, state: GameState | null | unde
 function renderTarget(
   target: string,
   state: GameState | null | undefined,
-  onCardExpand: ((cardId: string) => void) | undefined,
+  _onCardExpand: ((cardId: string) => void) | undefined,
 ): ReactNode {
-  const card = resolveKnownCard(target);
   const label = formatTarget(target, state) ?? target;
-  return card && onCardExpand ? cardExpandButton(card, label, onCardExpand) : label;
+  return label;
 }
 
 function renderResult(
   result: string,
-  onCardExpand: ((cardId: string) => void) | undefined,
+  _onCardExpand: ((cardId: string) => void) | undefined,
 ): ReactNode {
-  if (!onCardExpand) return result;
-  return result.split(CARD_ID_TOKEN_PATTERN).map((token, index) => {
-    const card = resolveKnownCard(token);
-    return card
-      ? cardExpandButton(card, token, onCardExpand, `${index}-${token}`)
-      : token;
-  });
+  return result;
 }
 
 export type LogPanelProps = {

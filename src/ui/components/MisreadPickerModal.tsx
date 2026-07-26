@@ -110,7 +110,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
                       aria-label={`${c.cardName}（${index + 1}枚目）の詳細を表示`}
                       onClick={() => expandModal.open(c.cardId!)}
                     >
-                      Details
+                      <span aria-hidden="true">🔍</span>
                     </button>
                   )}
                 </li>

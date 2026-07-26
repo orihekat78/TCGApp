@@ -205,7 +205,7 @@ describe('LogPanel — interaction (Round 3b)', () => {
     container.remove();
   });
 
-  it('known target card ID click invokes onCardExpand with D08015', () => {
+  it('keeps known target card IDs as log text without a detail control', () => {
     const onCardExpand = vi.fn();
     const entries: LogEntry[] = [
       { ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D08015' },
@@ -214,15 +214,12 @@ describe('LogPanel — interaction (Round 3b)', () => {
       root.render(<LogPanel entries={entries} open={true} onCardExpand={onCardExpand} />);
     });
 
-    const button = container.querySelector('button[aria-label*="D08015"]') as HTMLButtonElement | null;
-    expect(button).not.toBeNull();
-    act(() => {
-      button!.click();
-    });
-    expect(onCardExpand).toHaveBeenCalledWith('D08015');
+    expect(container.textContent).toContain('D08015');
+    expect(container.querySelector('button[aria-label*="D08015"]')).toBeNull();
+    expect(onCardExpand).not.toHaveBeenCalled();
   });
 
-  it('target card uses native keyboard-accessible button semantics', () => {
+  it('does not create a competing detail button for a target card', () => {
     const entries: LogEntry[] = [
       { ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D08015' },
     ];
@@ -230,13 +227,10 @@ describe('LogPanel — interaction (Round 3b)', () => {
       root.render(<LogPanel entries={entries} open={true} onCardExpand={vi.fn()} />);
     });
 
-    const button = container.querySelector('button[aria-label*="D08015"]') as HTMLButtonElement | null;
-    expect(button?.tagName).toBe('BUTTON');
-    expect(button?.type).toBe('button');
-    expect(button?.getAttribute('aria-label')).toMatch(/D08015.*拡大/);
+    expect(container.querySelector('button[aria-label*="D08015"]')).toBeNull();
   });
 
-  it('known card ID embedded in result is clickable', () => {
+  it('keeps known card IDs embedded in results as text', () => {
     const onCardExpand = vi.fn();
     const entries: LogEntry[] = [
       {
@@ -251,16 +245,12 @@ describe('LogPanel — interaction (Round 3b)', () => {
       root.render(<LogPanel entries={entries} open={true} onCardExpand={onCardExpand} />);
     });
 
-    const button = container.querySelector('button[aria-label*="B04018P"]') as HTMLButtonElement | null;
-    expect(button).not.toBeNull();
-    act(() => {
-      button!.click();
-    });
-    expect(onCardExpand).toHaveBeenCalledWith('B04018P');
+    expect(container.querySelector('button[aria-label*="B04018P"]')).toBeNull();
+    expect(onCardExpand).not.toHaveBeenCalled();
     expect(container.querySelector('.log-result')?.textContent).toContain('revealed=3 matched=B04018P');
   });
 
-  it('multiple known card IDs in one result are individually clickable', () => {
+  it('does not make multiple result card IDs competing detail controls', () => {
     const onCardExpand = vi.fn();
     const entries: LogEntry[] = [
       {
@@ -275,14 +265,8 @@ describe('LogPanel — interaction (Round 3b)', () => {
       root.render(<LogPanel entries={entries} open={true} onCardExpand={onCardExpand} />);
     });
 
-    const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.log-result button'));
-    expect(buttons).toHaveLength(3);
-    buttons.forEach((button) => {
-      act(() => {
-        button.click();
-      });
-    });
-    expect(onCardExpand.mock.calls.map(([cardId]) => cardId)).toEqual(['B04018P', 'D08015', 'PR220']);
+    expect(container.querySelectorAll('.log-result button')).toHaveLength(0);
+    expect(onCardExpand).not.toHaveBeenCalled();
   });
 
   it('unknown IDs, scene UIDs, and partner:self remain non-clickable text', () => {

@@ -38,7 +38,7 @@ export const B04059: CardDef = {
   no: '0450/B04059',
   kind: 'character',
   names: ['水無怜奈'],
-  colors: ['青'],
+  colors: ['赤'],
   level: 4, ap: 4000, lp: 1,
   traits: ['アナウンサー'], keywords: [],
   rarity: 'C',

@@ -44,7 +44,7 @@ export function PublicHandRevealWindow(): JSX.Element | null {
                   aria-label={`Details for ${name}, occurrence ${index + 1}`}
                   onClick={() => expandModal.open(cardId)}
                 >
-                  Details
+                  <span aria-hidden="true">🔍</span>
                 </button>
               </article>
             );

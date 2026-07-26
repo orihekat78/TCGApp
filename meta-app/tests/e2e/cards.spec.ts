@@ -77,3 +77,18 @@ test('CARDS: D09014 は正しい公式画像を表示する', async ({ page }) =
   await expect(image).toHaveAttribute('src', /1743742875201036\.jpg$/);
   await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 });
+
+test('CARDS: 色は実カードの単色・混色をすべて表示する', async ({ page }) => {
+  await page.goto('/#cards');
+  const search = page.locator('input[placeholder]').first();
+
+  await search.fill('B04059');
+  await page.getByRole('button', { name: '水無怜奈' }).click();
+  await expect(page.locator('[data-card-colors="red"]')).toBeVisible();
+  await expect(page.locator('[data-card-colors="red"]')).toHaveText('RED');
+
+  await search.fill('B10097');
+  await page.getByRole('button', { name: '毛利蘭＆ベルモット' }).click();
+  await expect(page.locator('[data-card-colors="blue,black"]')).toBeVisible();
+  await expect(page.locator('[data-card-colors="blue,black"]')).toHaveText('BLUEBLACK');
+});

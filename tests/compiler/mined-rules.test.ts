@@ -22,12 +22,15 @@ const EXCEPTIONS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/compiler/
 
 // cards-data TSV はローカル専用 (untrack 済、56869955)。CI checkout に無い場合 skip。
 const corpusAll = loadCorpus(ROOT);
+const shippedAll = ALL_CARDS.map((d) => canonicalCard(d));
+const reportAll = runOracle(corpusAll, shippedAll, loadProductions());
+const hasCompleteLocalCorpus = corpusAll.length > 0 && reportAll.buckets.noCorpus.length === 0;
 
-describe.skipIf(corpusAll.length === 0)('compiler/mined-rules (real data)', () => {
+describe.skipIf(!hasCompleteLocalCorpus)('compiler/mined-rules (real data)', () => {
   const corpus = corpusAll;
   const corpusIds = new Set(corpus.map((c: { id: string }) => c.id));
-  const shipped = ALL_CARDS.map((d) => canonicalCard(d));
-  const report = runOracle(corpus, shipped, loadProductions());
+  const shipped = shippedAll;
+  const report = reportAll;
 
   it('G1: silent mismatch 0 (mined 文法 + 例外リスト適用で全 shipped を再現 or refuse)', () => {
     expect(report.buckets.mismatch).toEqual([]);

@@ -174,7 +174,7 @@ describe('SelectableCardTile', () => {
     unmount(root);
   });
 
-  it('opens public card details from a right click without selecting', () => {
+  it('reserves a right click for the browser and only opens details from the magnifier', () => {
     const { container, root, onSelect, onExpand } = renderTile();
     const tile = container.querySelector<HTMLElement>('[data-instance-id="hand:self:2"]')!;
 
@@ -182,8 +182,8 @@ describe('SelectableCardTile', () => {
     if (!tile) return;
     const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
     act(() => tile.dispatchEvent(event));
-    expect(event.defaultPrevented).toBe(true);
-    expect(onExpand).toHaveBeenCalledWith('B01001');
+    expect(event.defaultPrevented).toBe(false);
+    expect(onExpand).not.toHaveBeenCalled();
     expect(onSelect).not.toHaveBeenCalled();
     unmount(root);
   });

@@ -307,6 +307,7 @@
   max-width: 100%;
 }
 .pa-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -329,11 +330,8 @@
   background: transparent;
   text-align: left;
   font: inherit;
-  cursor: pointer;
+  cursor: default;
 }
-.pa-card-select:disabled { cursor: default; }
-.pa-card-select:not(:disabled):hover,
-.pa-card-select:not(:disabled):focus-visible,
 .pa-card-detail:hover,
 .pa-card-detail:focus-visible {
   outline: 1px solid var(--neon-blue, #4ea8ff);
@@ -354,15 +352,20 @@
   white-space: nowrap;
 }
 .pa-card-detail {
-  min-width: 44px;
-  min-height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 3px;
-  background: transparent;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: rgba(8, 18, 36, 0.84);
   color: inherit;
   cursor: pointer;
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* ---- M3 PA batch (rules/18 §MR能力①): PA 常駐 MR tile ---- */

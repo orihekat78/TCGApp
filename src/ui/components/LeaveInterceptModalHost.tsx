@@ -43,7 +43,7 @@ function LeaveInterceptCard({
         aria-label={detailLabel}
         onClick={expand}
       >
-        詳細
+        <span aria-hidden="true">🔍</span>
       </button>
     </div>
   );
