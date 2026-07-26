@@ -21,6 +21,11 @@ export type PendingHiramekiSide = {
   player: 'self' | 'opp';
   cardId: string;
   abilityId: string;
+  /**
+   * Ver.2.5 p.21: an invalid Hirameki icon is still activatable, but its
+   * ability text has no effect. Omitted keeps legacy pending records valid.
+   */
+  effectValid?: boolean;
   // engine wave-11 (2026-07-02): アクション[事件] actor uid の snapshot。
   // 「アクション中のキャラ」(B03085/B05032/B05111 hirameki) を effect 内 '$trigger.byUid' で参照する
   // ための payload 貫通 (公式Q&A B05111: ヒラメキを発動させたキャラが該当)。optional 経路で

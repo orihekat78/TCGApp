@@ -9,32 +9,498 @@
 //     into event.emit so triggered abilities do not fire from cost-payment mutations.
 //   - canPay() should be called first; pay() throws if a step cannot be paid.
 
-import type { GameState, Cost, EffectCtx, PayResult, Candidate } from '@/engine/types';
+import type { GameState, Cost, EffectCtx, PayResult, Candidate, TargetingRef } from '@/engine/types';
 import { candidates } from '@/engine/target/candidates.js';
 import { mutate } from '@/engine/mutate/index.js';
 import { canPay } from './evaluate.js';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
 // attribution mini-wave (2026-07-10): costPaid 導出値 (level/kind) の印字値参照。dyn/eval.ts と同一 import 元。
 import { def as readDef } from '@/engine/read/def.js';
+import { readRemoveSetCardWitness } from './remove-set-card-witness.js';
+import { char as readChar } from '@/engine/read/char.js';
+import { _clearPendingSetCardReplacementSide, _peekPendingSetCardReplacementSide, _restorePendingSetCardReplacementSide } from '@/engine/effect/pending-state.js';
+import { _abortEventJournal, _beginEventJournal, _commitEventJournal, _restoreEntryIdCounter, _snapshotEntryIdCounter, _withEventsSuppressed } from '@/engine/event/registry.js';
+import { produce } from '@/engine/produce.js';
 
 /**
  * Pay a Cost. Mutates the draft in place.
  * Sets ctx.viaCost = true while executing. Restores prior value when done.
  */
 export function pay(state: GameState, cost: Cost, ctx: EffectCtx): PayResult {
+  if (cost.kind === 'custom') throw new Error('cost.pay: custom costs are unsupported');
+  if (!hasExactCostChoicePath(cost, ctx)) {
+    throw new Error('cost.pay: invalid cost choice path');
+  }
+  if (cost.kind === 'pay' && !canPayAtomically(state, cost, ctx)) {
+    throw new Error('cost.pay: cost is not fully payable');
+  }
   const prevViaCost = ctx.viaCost;
+  const stateBefore = cloneForAuthorization(state);
+  const ctxBefore = cloneForAuthorization(ctx);
+  const entryIdBefore = _snapshotEntryIdCounter();
+  const replacementBefore = _peekPendingSetCardReplacementSide();
+  let journal: ReturnType<typeof _beginEventJournal> | null = null;
   ctx.viaCost = true;
 
   try {
+    // The pure simulator intentionally does not run replacement/defer hooks.
+    // Execute real mutators on a detached clone first, then commit once.
+    const preparedState = cloneForAuthorization(state);
+    const preparedCtx = cloneForAuthorization(ctx);
+    preparedCtx.viaCost = true;
+    try {
+      produce(preparedState, (draft) => {
+        _withEventsSuppressed(() => payInner(draft, cost, preparedCtx, { paidItems: [], releasedTriggers: [] }));
+      });
+    } finally {
+      _restoreEntryIdCounter(entryIdBefore);
+      _restorePendingSetCardReplacementSide(replacementBefore);
+    }
+    journal = _beginEventJournal();
     const result: PayResult = { paidItems: [], releasedTriggers: [] };
     payInner(state, cost, ctx, result);
+    _commitEventJournal(journal);
+    journal = null;
     return result;
+  } catch (error) {
+    if (journal !== null) _abortEventJournal(journal);
+    restoreMutable(state, stateBefore);
+    restoreMutable(ctx, ctxBefore);
+    _restoreEntryIdCounter(entryIdBefore);
+    _restorePendingSetCardReplacementSide(replacementBefore);
+    throw error;
   } finally {
     ctx.viaCost = prevViaCost;
   }
 }
 
-function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult): void {
+function restoreMutable<T extends object>(target: T, snapshot: T): void {
+  const mutable = target as Record<string, unknown>;
+  for (const key of Object.keys(mutable)) delete mutable[key];
+  Object.assign(mutable, cloneForAuthorization(snapshot) as Record<string, unknown>);
+}
+
+/**
+ * Sequential, side-effect-free authorization for composite costs.
+ *
+ * Do not call mutators here. Several mutators emit hooks, allocate event IDs,
+ * and touch pending-choice module state; cloning GameState alone cannot undo
+ * those effects. This simulator changes only a private JSON copy.
+ */
+export function canPayAtomically(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
+  if (!hasExactCostChoicePath(cost, ctx)) return false;
+  return canPayAtomicallyAtChoiceCursor(state, cost, ctx, 0);
+}
+
+/** Replacement-aware, listener-free authorization for public payment gates. */
+export function canPayWithPreflight(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
+  if (!canPayAtomically(state, cost, ctx)) return false;
+  const entryIdBefore = _snapshotEntryIdCounter();
+  const replacementBefore = _peekPendingSetCardReplacementSide();
+  try {
+    const preparedState = cloneForAuthorization(state);
+    const preparedCtx = cloneForAuthorization(ctx);
+    produce(preparedState, (draft) => {
+      _withEventsSuppressed(() => payInner(draft, cost, preparedCtx, { paidItems: [], releasedTriggers: [] }));
+    });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    _restoreEntryIdCounter(entryIdBefore);
+    _restorePendingSetCardReplacementSide(replacementBefore);
+  }
+}
+
+function canPayAtomicallyAtChoiceCursor(state: GameState, cost: Cost, ctx: EffectCtx, choiceCursor: number): boolean {
+  try {
+    // Preserve own `undefined` values and sparse arrays. JSON cloning erases
+    // them; structuredClone cannot clone an Immer draft Proxy.
+    const dryState = cloneForAuthorization(state);
+    const dryCtx = cloneForAuthorization(ctx);
+    return simulateCostPayment(dryState, cost, dryCtx, { value: choiceCursor });
+  } catch {
+    return false;
+  }
+}
+
+function simulateCostPayment(state: GameState, cost: Cost, ctx: EffectCtx, choiceCursor = { value: 0 }): boolean {
+  // Authorization must never execute repository-defined closures. Both
+  // `check` and `pay` may mutate module/global state outside the GameState
+  // clone, so custom costs are deliberately unsupported and fail closed.
+  if (cost.kind === 'custom') return false;
+  if (!isWellFormedCost(cost)) return false;
+  if (cost.kind === 'pay') return cost.items.every(item => simulateCostPayment(state, item, ctx, choiceCursor));
+  if (cost.kind === 'choice') {
+    const selected = readChosenIndex(ctx, choiceCursor.value++);
+    if (selected !== undefined) return !!cost.items[selected] && simulateCostPayment(state, cost.items[selected]!, ctx, choiceCursor);
+    for (const item of cost.items) {
+      const branchState = cloneForAuthorization(state);
+      const branchCtx = cloneForAuthorization(ctx);
+      const branchCursor = { value: choiceCursor.value };
+      if (!simulateCostPayment(branchState, item, branchCtx, branchCursor)) continue;
+      Object.assign(state, branchState);
+      Object.assign(ctx, branchCtx);
+      choiceCursor.value = branchCursor.value;
+      return true;
+    }
+    return false;
+  }
+  if (!canPay(state, cost, ctx)) return false;
+
+  const p = ctx.source.player;
+  const selected = (ref: TargetingRef, n: number): Candidate[] => selectCostCandidates(state, ref, ctx, n);
+  const removeHand = (ids: string[], toRemove = false) => {
+    for (const id of ids) {
+      const index = state.players[p].hand.indexOf(id);
+      if (index >= 0) {
+        state.players[p].hand.splice(index, 1);
+        if (toRemove) state.players[p].remove.push(id);
+      }
+    }
+  };
+  const detachScene = (uid: string, cascade = true) => {
+    for (const side of ['self', 'opp'] as const) {
+      const index = state.players[side].scene.findIndex(char => char.uid === uid);
+      if (index < 0) continue;
+      const [char] = state.players[side].scene.splice(index, 1);
+      if (!char) return undefined;
+      if (cascade) {
+        state.players[side].remove.push(...char.setCards.map(entry => entry.cardId));
+        state.players[side].remove.push(...(Array.isArray(char.stackedCards)
+          ? char.stackedCards.map(entry => entry.cardId)
+          : Array.from({ length: char.stackedCards }, () => 'back-card')));
+        char.setCards = [];
+        char.stackedCards = [];
+      }
+      return { char, player: side };
+    }
+    return undefined;
+  };
+
+  switch (cost.kind) {
+    case 'sleepSelf':
+      findChar(state, ctx.source.uid!)!.state = 'sleep'; return true;
+    case 'sleepChar':
+    case 'stunChar': {
+      const min = cost.target.kind === 'pick' ? cost.target.n.min : 1;
+      const eligible = selectRangeCostCandidates(state, cost.target, ctx).filter((candidate): candidate is Candidate & { kind: 'char' } =>
+        candidate.kind === 'char' && findChar(state, candidate.uid)?.state === 'active');
+      if (eligible.length < min) return false;
+      for (const candidate of eligible) {
+        findChar(state, candidate.uid)!.state = cost.kind === 'sleepChar' ? 'sleep' : 'stun';
+      }
+      return true;
+    }
+    case 'removeFromHand': {
+      const ids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
+      if (ids.length !== cost.n) return false;
+      removeHand(ids, true);
+      recordCostPaid(ctx, 'removeFromHand', { ids, level: readDef.card(ids[0])?.level });
+      return true;
+    }
+    case 'revealFromHand': {
+      const max = typeof cost.n === 'number' ? cost.n : cost.n.max;
+      const ids = selectRangeCostCandidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
+      const min = typeof cost.n === 'number' ? cost.n : cost.n.min;
+      if (ids.length < min || ids.length > max) return false;
+      recordCostPaid(ctx, 'revealFromHand', { ids, count: ids.length, cardName: readDef.card(ids[0])?.names?.[0] });
+      return true;
+    }
+    case 'revealHandToDeckTop': {
+      const ids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
+      if (ids.length !== cost.n) return false;
+      removeHand(ids); state.players[p].deck.unshift(...ids); return true;
+    }
+    case 'removeFromScene': {
+      const uids = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'char' } => c.kind === 'char').map(c => c.uid);
+      if (uids.length !== cost.n || new Set(uids).size !== cost.n) return false;
+      for (const uid of uids) {
+        const found = detachScene(uid); if (!found) return false;
+        if (found.player === p && readDef.isMR(found.char.cardId) && state.turn.player !== p) {
+          state.players[p].partnerAreaMR = { ...found.char, uid: `partnerMR:${p}`, isNamed: false, setCards: [], stackedCards: [] };
+        } else {
+          state.players[found.player].remove.push(found.char.cardId);
+        }
+      }
+      return true;
+    }
+    case 'sceneStackUnderSelf': {
+      const host = findChar(state, ctx.source.uid ?? '');
+      const targets = selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'char' } => c.kind === 'char');
+      if (!host || targets.length !== cost.n || new Set(targets.map(target => target.uid)).size !== cost.n || targets.some(target => target.uid === host.uid)) return false;
+      const stacked = Array.isArray(host.stackedCards) ? host.stackedCards : [];
+      for (const target of targets) {
+        const found = detachScene(target.uid); if (!found) return false;
+        stacked.push({ cardId: found.char.cardId, instanceId: `auth:${found.char.uid}` });
+      }
+      host.stackedCards = stacked; return true;
+    }
+    case 'handStackUnder': {
+      const card = selected(cost.cardTarget, 1).find((c): c is Candidate & { kind: 'card' } => c.kind === 'card');
+      const hostCandidate = selected(cost.hostTarget, 1).find((c): c is Candidate & { kind: 'char' } => c.kind === 'char');
+      const host = hostCandidate && findChar(state, hostCandidate.uid);
+      if (!card || !host) return false;
+      removeHand([card.cardId]);
+      const stacked = Array.isArray(host.stackedCards) ? host.stackedCards : [];
+      stacked.push({ cardId: 'back-card', instanceId: `auth:hand:${card.cardId}` }); host.stackedCards = stacked; return true;
+    }
+    case 'removeDeckTop': {
+      const removed = state.players[cost.player].deck.splice(0, resolveDynNumber(cost.n, state, ctx));
+      state.players[cost.player].remove.push(...removed);
+      const prior = (ctx.costPaid?.['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
+      recordCostPaid(ctx, 'removeDeckTop', { ids: [...prior, ...removed] });
+      if (removed.length > 0) simulateRefreshAfterTake(state, cost.player);
+      return true;
+    }
+    case 'removeDeckAll': {
+      const removed = state.players[cost.player].deck.splice(0);
+      state.players[cost.player].remove.push(...removed);
+      simulateRefreshAfterTake(state, cost.player);
+      return true;
+    }
+    case 'discardEvidence': {
+      for (let i = 0; i < cost.n; i++) {
+        const evidence = state.players[p].evidence.pop(); if (!evidence) return false;
+        state.players[p].remove.push(evidence.cardId);
+      }
+      return true;
+    }
+    case 'selfToDeckBottom': {
+      const found = detachScene(ctx.source.uid!, true); if (!found) return false;
+      if (readDef.isMR(found.char.cardId) && state.turn.player !== found.player) {
+        state.players[found.player].partnerAreaMR = { ...found.char, uid: `partnerMR:${found.player}`, isNamed: false, setCards: [], stackedCards: [] };
+      } else state.players[found.player].deck.push(found.char.cardId);
+      return true;
+    }
+    case 'removeSetCard': {
+      const witness = readRemoveSetCardWitness(ctx);
+      if (witness.kind === 'invalid') return false;
+      const picks: { hostUids: string[]; instanceIds?: string[] } = witness.kind === 'valid'
+        ? witness
+        : { hostUids: [] };
+      const removedIds: string[] = [];
+      const hostOk = (uid: string) => !cost.hostSelf || uid === ctx.source.uid;
+      const removeOne = (host: GameState['players']['self']['scene'][number], instanceId?: string): boolean => {
+        const index = instanceId !== undefined
+          ? host.setCards.findIndex(entry => entry.instanceId === instanceId && (cost.anyFace || !entry.faceUp))
+          : host.setCards.map((entry, i) => ({ entry, i })).reverse().find(x => cost.anyFace || !x.entry.faceUp)?.i ?? -1;
+        if (index < 0) return false;
+        const [removed] = host.setCards.splice(index, 1);
+        if (!removed) return false;
+        state.players[p].remove.push(removed.cardId);
+        removedIds.push(removed.cardId);
+        return true;
+      };
+      if (witness.kind === 'valid') {
+        if (picks.hostUids.length !== cost.n || (picks.instanceIds !== undefined && (picks.instanceIds.length !== cost.n || new Set(picks.instanceIds).size !== cost.n))) return false;
+        for (let i = 0; i < cost.n; i++) {
+          const host = state.players[p].scene.find(char => char.uid === picks.hostUids[i]);
+          if (!host || !hostOk(host.uid) || !removeOne(host, picks.instanceIds?.[i])) return false;
+        }
+        recordCostPaid(ctx, 'removeSetCard', { ids: removedIds, kinds: removedIds.map(id => readDef.card(id)?.kind) });
+        return true;
+      }
+      let remaining = cost.n;
+      for (const host of state.players[p].scene) {
+        if (!hostOk(host.uid)) continue;
+        while (remaining > 0 && removeOne(host)) remaining--;
+        if (remaining === 0) {
+          recordCostPaid(ctx, 'removeSetCard', { ids: removedIds, kinds: removedIds.map(id => readDef.card(id)?.kind) });
+          return true;
+        }
+      }
+      return false;
+    }
+    case 'removeStackedCards': {
+      const host = state.players[p].scene.find(char => char.uid === ctx.source.uid);
+      if (!host) return false;
+      const stacked = Array.isArray(host.stackedCards)
+        ? host.stackedCards
+        : Array.from({ length: host.stackedCards }, (_, index) => ({ cardId: 'back-card', instanceId: `legacy:${host.uid}:${index}` }));
+      if (stacked.length < cost.n) return false;
+      if (!Array.isArray(host.stackedCards)) host.stackedCards = stacked;
+      const explicit = readRemoveStackedCardInstanceIds(ctx);
+      if (hasCostParam(ctx, 'removeStackedCards') && (!explicit || explicit.length !== cost.n || new Set(explicit).size !== explicit.length)) return false;
+      const entries = explicit ? explicit.map(id => stacked.find(entry => entry.instanceId === id)).filter(Boolean) : stacked.slice(0, cost.n);
+      if (entries.length !== cost.n) return false;
+      const removeStart = state.players[p].remove.length;
+      for (const entry of entries) {
+        stacked.splice(stacked.indexOf(entry!), 1);
+        state.players[p].remove.push(entry!.cardId);
+      }
+      recordCostPaid(ctx, 'removeStackedCards', { entries: entries.map((entry, offset) => ({
+        cardId: entry!.cardId, instanceId: entry!.instanceId, removeIndex: removeStart + offset,
+      })) });
+      return true;
+    }
+    case 'flipFaceUpEvidence': {
+      const indices = hasCostParam(ctx, 'flipFaceUpEvidence') ? readFlipIndices(ctx)
+        : state.players[p].evidence.map((entry, index) => ({ entry, index })).filter(x => !x.entry.faceUp).slice(0, cost.n.min).map(x => x.index);
+      if (indices.length < cost.n.min || indices.length > cost.n.max) return false;
+      for (const index of indices) { const entry = state.players[p].evidence[index]; if (!entry || entry.faceUp) return false; entry.faceUp = true; }
+      const ids = indices.map(index => state.players[p].evidence[index]!.cardId);
+      recordCostPaid(ctx, 'flipFaceUpEvidence', { count: indices.length, ids });
+      ctx.bindings['$costFlipped'] = indices.map(index => ({ kind: 'card', cardId: state.players[p].evidence[index]!.cardId, area: 'evidence', player: p, index }));
+      return true;
+    }
+    case 'removeFromHandDownTo': {
+      const ids = state.players[p].hand.splice(0, Math.max(0, state.players[p].hand.length - cost.n));
+      state.players[p].remove.push(...ids);
+      recordCostPaid(ctx, 'removeFromHandDownTo', { ids, levelSum: ids.reduce((sum, id) => sum + (readDef.card(id)?.level ?? 0), 0) });
+      return true;
+    }
+    case 'sceneToDeckBottom': {
+      const explicit = readSceneToDeckUids(ctx);
+      const uids = hasCostParam(ctx, 'sceneToDeckBottom') ? explicit
+        : selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'char' } => c.kind === 'char').map(c => c.uid);
+      const allowed = new Set(candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'char' } => c.kind === 'char').map(c => c.uid));
+      if (uids.length !== cost.n || new Set(uids).size !== uids.length || uids.some(uid => !allowed.has(uid))) return false;
+      const ids: string[] = [];
+      for (const uid of uids) { const found = detachScene(uid); if (!found || found.player !== p) return false; state.players[p].deck.push(found.char.cardId); ids.push(found.char.cardId); }
+      recordCostPaid(ctx, 'sceneToDeckBottom', { ids, level: readDef.card(ids[0])?.level });
+      return true;
+    }
+    case 'removeAreaToDeckBottom': {
+      const explicit = readRemoveAreaToDeckIds(ctx);
+      const ids = hasCostParam(ctx, 'removeAreaToDeckBottom') ? explicit
+        : selected(cost.target, cost.n).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
+      const allowed = candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
+      if (ids.length !== cost.n || !isMultisetSubset(ids, allowed)) return false;
+      for (const id of ids) { const index = state.players[p].remove.indexOf(id); if (index < 0) return false; state.players[p].remove.splice(index, 1); }
+      state.players[p].deck.push(...ids); return true;
+    }
+    case 'partnerAreaRemove': {
+      const explicit = readPartnerAreaRemoveIds(ctx);
+      const ids = hasCostParam(ctx, 'partnerAreaRemove') ? explicit
+        : candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').slice(0, cost.n).map(c => c.cardId);
+      const allowed = candidates(state, cost.target, ctx).filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card').map(c => c.cardId);
+      if (ids.length !== cost.n || !isMultisetSubset(ids, allowed)) return false;
+      const area = state.players[p].partnerAreaCards ?? [];
+      for (const id of ids) { const index = area.indexOf(id); if (index < 0) return false; area.splice(index, 1); state.players[p].remove.push(id); }
+      return true;
+    }
+    case 'fileFrom': {
+      let paid = 0;
+      while (paid < cost.n) { const index = state.players[p].file.findIndex(entry => entry.type !== 'assisted-partner'); if (index < 0) return false; const [entry] = state.players[p].file.splice(index, 1); if (entry?.cardId) state.players[p].remove.push(entry.cardId); paid++; }
+      return true;
+    }
+    case 'selfLpDeltaTurn': {
+      const char = findChar(state, ctx.source.uid ?? ''); if (!char) return false;
+      char.turnEffects['lpMod_turn'] = ((char.turnEffects['lpMod_turn'] as number | undefined) ?? 0) + cost.delta;
+      return true;
+    }
+  }
+  const _exhaustive: never = cost;
+  void _exhaustive;
+  return false;
+}
+
+function cloneForAuthorization<T>(value: T): T {
+  if (Array.isArray(value)) {
+    const clone = new Array(value.length);
+    for (let index = 0; index < value.length; index++) {
+      if (Object.prototype.hasOwnProperty.call(value, index)) clone[index] = cloneForAuthorization(value[index]);
+    }
+    return clone as T;
+  }
+  if (value !== null && typeof value === 'object') {
+    const clone: Record<string, unknown> = {};
+    for (const key of Object.keys(value)) {
+      clone[key] = cloneForAuthorization((value as Record<string, unknown>)[key]);
+    }
+    return clone as T;
+  }
+  return value;
+}
+
+function findChar(state: GameState, uid: string): GameState['players']['self']['scene'][number] | undefined {
+  return state.players.self.scene.find(char => char.uid === uid)
+    ?? state.players.opp.scene.find(char => char.uid === uid);
+}
+
+function recordCostPaid(ctx: EffectCtx, key: string, value: unknown): void {
+  ctx.costPaid ??= {};
+  ctx.costPaid[key] = value;
+}
+
+function simulateRefreshAfterTake(state: GameState, player: 'self' | 'opp'): void {
+  if (state.players[player].deck.length > 0 || state.gameResult !== undefined) return;
+  if (state.players[player].remove.length === 0) {
+    state.gameResult = { winner: player === 'self' ? 'opp' : 'self', reason: 'deck-out' };
+    return;
+  }
+  state.players[player].deck.push(...state.players[player].remove);
+  state.players[player].remove = [];
+  state.refreshCount[player] = (state.refreshCount[player] ?? 0) + 1;
+  const opponent = player === 'self' ? 'opp' : 'self';
+  if (!readChar.restrictsOpponent(state, player, 'refreshEvidence')) {
+    state.players[opponent].evidence.push({
+      cardId: 'penalty-card', faceUp: false,
+      origin: { turn: state.turn.number, via: 'refresh-penalty' },
+    });
+  }
+  state.scratchTrace[opponent] = '発見済';
+}
+
+export function isWellFormedCost(cost: Cost): boolean {
+  const whole = (n: number, min = 0) => Number.isInteger(n) && n >= min;
+  const upper = (n: number) => n === Infinity || whole(n);
+  const selfTarget = (target: TargetingRef, allowedAreas: readonly string[], allowSelf = false, exactN?: number | { min: number; max: number }): boolean => {
+    if (target.kind === 'self') return allowSelf;
+    if (target.kind === 'fromBound') return false;
+    if (target.query.side !== 'self') return false;
+    const areas = target.query.area === undefined ? [] : Array.isArray(target.query.area) ? target.query.area : [target.query.area];
+    if (areas.length === 0 || areas.some(area => !allowedAreas.includes(area))) return false;
+    if (target.kind !== 'pick') return exactN === undefined;
+    if (!(whole(target.n.min) && upper(target.n.max) && target.n.min <= target.n.max)) return false;
+    if (exactN === undefined) return true;
+    const expected = typeof exactN === 'number' ? { min: exactN, max: exactN } : exactN;
+    return target.n.min === expected.min && target.n.max === expected.max;
+  };
+  switch (cost.kind) {
+    case 'custom': return false;
+    case 'pay': return cost.items.every(isWellFormedCost);
+    case 'choice': return cost.items.length > 0 && cost.items.every(isWellFormedCost);
+    case 'sleepChar':
+    case 'stunChar': return selfTarget(cost.target, ['scene'], true)
+      && (cost.target.kind !== 'pick' || cost.target.n.min >= 1);
+    case 'removeFromHand':
+    case 'revealHandToDeckTop': return whole(cost.n) && selfTarget(cost.target, ['hand'], false, cost.n);
+    case 'removeFromScene':
+    case 'sceneStackUnderSelf':
+    case 'sceneToDeckBottom': return whole(cost.n) && selfTarget(cost.target, ['scene'], true, cost.n);
+    case 'removeAreaToDeckBottom': return whole(cost.n) && selfTarget(cost.target, ['remove'], false, cost.n);
+    case 'partnerAreaRemove': return whole(cost.n) && selfTarget(cost.target, ['partner-area'], false, cost.n);
+    case 'revealFromHand': {
+      const range = typeof cost.n === 'number' ? { min: cost.n, max: cost.n } : cost.n;
+      return whole(range.min) && upper(range.max) && range.min <= range.max
+        && selfTarget(cost.target, ['hand'], false, range);
+    }
+    case 'handStackUnder': return selfTarget(cost.cardTarget, ['hand'], false, 1) && selfTarget(cost.hostTarget, ['scene'], false, 1);
+    // BUG-180 verifies the runtime contract for opponent deck payment. Preserve
+    // that contract even though shipped card definitions only declare self here.
+    case 'removeDeckTop': return (cost.player === 'self' || (cost.player as string) === 'opp')
+      && (typeof cost.n !== 'number' || whole(cost.n));
+    case 'removeDeckAll': return cost.player === 'self' || (cost.player as string) === 'opp';
+    case 'discardEvidence':
+    case 'removeSetCard':
+    case 'removeStackedCards':
+    case 'fileFrom': return whole(cost.n, 1);
+    case 'removeFromHandDownTo': return whole(cost.n);
+    case 'flipFaceUpEvidence': return whole(cost.n.min)
+      && upper(cost.n.max)
+      && cost.n.min <= cost.n.max;
+    case 'sleepSelf':
+    case 'selfToDeckBottom': return true;
+    case 'selfLpDeltaTurn': return Number.isFinite(cost.delta);
+  }
+}
+
+function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult, choiceCursor = { value: 0 }): void {
+  if (cost.kind !== 'pay' && cost.kind !== 'choice' && !canPay(state, cost, ctx)) {
+    throw new Error(`cost.pay: ${cost.kind} is not payable`);
+  }
   switch (cost.kind) {
     case 'sleepSelf': {
       const uid = ctx.source.uid;
@@ -53,12 +519,9 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     //   (2) maxN — ctx.picked 配線後はその選択を優先 (Infinity)、未配線時は pick の n.max ぶんだけ sleep。
     //   「どの active を sleep するか」の player-choice は全 target-pick cost 共通の pre-existing 制約 (別 initiative)。
     case 'sleepChar': {
-      const cands = candidates(state, cost.target, ctx);
-      const targets = ctx.picked ?? cands;
-      const maxN = ctx.picked ? Infinity : (cost.target.kind === 'pick' ? cost.target.n.max : Infinity);
+      const targets = selectRangeCostCandidates(state, cost.target, ctx);
       let slept = 0;
       for (const cand of targets) {
-        if (slept >= maxN) break;
         if (cand.kind !== 'char') continue;
         const c = state.players.self.scene.find(x => x.uid === cand.uid)
           ?? state.players.opp.scene.find(x => x.uid === cand.uid);
@@ -67,6 +530,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
         acc.paidItems.push({ kind: 'sleepChar', details: { uid: cand.uid } });
         slept++;
       }
+      const minN = cost.target.kind === 'pick' ? cost.target.n.min : 1;
+      if (slept < minN) throw new Error('cost.pay: sleepChar is not payable');
       return;
     }
     // engine additive wave (2026-06-24): stunChar — sleepChar と対称だが新規ゆえ「N枚」counts を faithful に守る。
@@ -74,12 +539,9 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     //   (2) ctx.picked 未配線 (sleepChar 由来の over-pay = BUG-156) の現状で、pick の n.max ぶんだけ stun し
     //       複数 active 候補の全スタン (「1枚」違反) を防ぐ。ctx.picked 配線後はその選択を優先 (maxN=∞)。
     case 'stunChar': {
-      const cands = candidates(state, cost.target, ctx);
-      const targets = ctx.picked ?? cands;
-      const maxN = ctx.picked ? Infinity : (cost.target.kind === 'pick' ? cost.target.n.max : Infinity);
+      const targets = selectRangeCostCandidates(state, cost.target, ctx);
       let stunned = 0;
       for (const cand of targets) {
-        if (stunned >= maxN) break;
         if (cand.kind !== 'char') continue;
         const c = state.players.self.scene.find(x => x.uid === cand.uid)
           ?? state.players.opp.scene.find(x => x.uid === cand.uid);
@@ -88,6 +550,8 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
         acc.paidItems.push({ kind: 'stunChar', details: { uid: cand.uid } });
         stunned++;
       }
+      const minN = cost.target.kind === 'pick' ? cost.target.n.min : 1;
+      if (stunned < minN) throw new Error('cost.pay: stunChar is not payable');
       return;
     }
     case 'removeFromHand': {
@@ -95,6 +559,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const ids = targets
         .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
         .map(c => c.cardId);
+      if (ids.length !== cost.n) throw new Error('cost.pay: removeFromHand is not payable');
       // W3 (r17): 宣言コスト由来は hand:removed を emit しない (rules/21)
       mutate.hand.discardToRemove(state, ctx.source.player, ids, { viaCost: true });
       acc.paidItems.push({ kind: 'removeFromHand', details: { ids } });
@@ -113,12 +578,11 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       // (公開は多いほど利益 = AI fallback 最大公開)。number は従来 pickCandidates と同一挙動。
       const rfhMin = typeof cost.n === 'number' ? cost.n : cost.n.min;
       const rfhMax = typeof cost.n === 'number' ? cost.n : cost.n.max;
-      const targets = (ctx.picked && ctx.picked.length >= rfhMin
-        ? ctx.picked.slice(0, rfhMax)
-        : candidates(state, cost.target, ctx).slice(0, rfhMax));
+      const targets = selectRangeCostCandidates(state, cost.target, ctx);
       const ids = targets
         .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
         .map(c => c.cardId);
+      if (ids.length < rfhMin || ids.length > rfhMax) throw new Error('cost.pay: revealFromHand is not payable');
       // W3 (r18): コスト経路の公開も hand:reveal を emit (B09004「【宣言】能力のコストによって」)
       mutate.hand.emitReveal(state, ctx.source.player, ids);
       acc.paidItems.push({ kind: 'revealFromHand', details: { ids } });
@@ -141,6 +605,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const ids = targets
         .filter((c): c is Candidate & { kind: 'card' } => c.kind === 'card')
         .map(c => c.cardId);
+      if (ids.length !== cost.n) throw new Error('cost.pay: revealHandToDeckTop is not payable');
       // W3 (r18) 混成 review nit 反映: 「公開して…移す」cost も手札公開 — emit は移動前 (カードが
       // 手札に在る時点、hand:reveal の on-hand scan 契約)。B09004「【宣言】能力のコストによって」を
       // method-agnostic に被覆する (emitReveal 単一ソースの残 site)。
@@ -153,9 +618,15 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     case 'removeFromScene': {
       const targets = pickCandidates(state, cost.target, ctx, cost.n);
       const chars = targets.filter((cand): cand is Candidate & { kind: 'char' } => cand.kind === 'char');
+      if (chars.length !== cost.n || new Set(chars.map(char => char.uid)).size !== cost.n) {
+        throw new Error('cost.pay: removeFromScene is not payable');
+      }
       // One removeFromScene cost pays all selected characters simultaneously.
       // This preserves leave-trigger auras when bearer and recipient leave together.
-      mutate.scene.removeToRemoveBatch(state, chars.map(cand => cand.uid), 'cost');
+      const results = mutate.scene.removeToRemoveBatch(state, chars.map(cand => cand.uid), 'cost');
+      if (results.length !== cost.n || results.some(result => result.deferred || result.prevented || !result.removed.cardId)) {
+        throw new Error('cost.pay: removeFromScene was replaced or deferred');
+      }
       for (const cand of chars) acc.paidItems.push({ kind: 'removeFromScene', details: { uid: cand.uid } });
       return;
     }
@@ -163,11 +634,16 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     // mutate.scene.toStack = 非リムーブ離場 (rules/16 cascade + B09048 Q&A MR 非redirect)。
     case 'sceneStackUnderSelf': {
       const hostUid = ctx.source.uid;
-      if (typeof hostUid !== 'string') return;
+      if (typeof hostUid !== 'string') throw new Error('cost.pay: sceneStackUnderSelf requires ctx.source.uid');
       const targets = pickCandidates(state, cost.target, ctx, cost.n);
-      for (const cand of targets) {
-        if (cand.kind !== 'char') continue;
-        mutate.scene.toStack(state, cand.uid, hostUid);
+      const chars = targets.filter((cand): cand is Candidate & { kind: 'char' } => cand.kind === 'char');
+      if (chars.length !== cost.n || new Set(chars.map(char => char.uid)).size !== cost.n || chars.some(char => char.uid === hostUid)) {
+        throw new Error('cost.pay: sceneStackUnderSelf is not payable');
+      }
+      for (const cand of chars) {
+        if (!mutate.scene.toStack(state, cand.uid, hostUid)) {
+          throw new Error('cost.pay: sceneStackUnderSelf was replaced or deferred');
+        }
         acc.paidItems.push({ kind: 'sceneStackUnderSelf', details: { uid: cand.uid, hostUid } });
       }
       return;
@@ -180,7 +656,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const hostCands = pickCandidates(state, cost.hostTarget, ctx, 1);
       const cardCand = cardCands.find((c): c is Candidate & { kind: 'card' } => c.kind === 'card');
       const hostCand = hostCands.find((c): c is Candidate & { kind: 'char' } => c.kind === 'char');
-      if (!cardCand || !hostCand) return;
+      if (!cardCand || !hostCand) throw new Error('cost.pay: handStackUnder is not payable');
       mutate.hand.emitReveal(state, ctx.source.player, [cardCand.cardId]);
       mutate.hand.remove(state, ctx.source.player, [cardCand.cardId]);
       mutate.char.stackCard(state, hostCand.uid, 1);
@@ -194,21 +670,32 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     case 'sceneToDeckBottom': {
       const explicit = readSceneToDeckUids(ctx);
       const uids: string[] = [];
-      if (explicit.length >= cost.n) {
-        uids.push(...explicit.slice(0, cost.n));
+      if (hasCostParam(ctx, 'sceneToDeckBottom')) {
+        const allowed = new Set(candidates(state, cost.target, ctx)
+          .filter((cand): cand is Candidate & { kind: 'char' } => cand.kind === 'char')
+          .map(cand => cand.uid));
+        if (explicit.length !== cost.n || new Set(explicit).size !== explicit.length || explicit.some(uid => !allowed.has(uid))) {
+          throw new Error('cost.pay: invalid sceneToDeckBottom picks');
+        }
+        uids.push(...explicit);
       } else {
         const targets = pickCandidates(state, cost.target, ctx, cost.n);
         for (const cand of targets) {
           if (cand.kind === 'char') uids.push(cand.uid);
         }
       }
+      if (uids.length !== cost.n || new Set(uids).size !== cost.n) {
+        throw new Error('cost.pay: sceneToDeckBottom is not payable');
+      }
       // attribution mini-wave (2026-07-10): dyn $cost.sceneToDeckBottom.level (B07025「移した
       // キャラとレベルが同じか低い」) が読む。cardId は toDeck (splice) 前に捕捉する。
       const stdbIds: string[] = [];
       for (const uid of uids) {
         const ch = state.players[ctx.source.player].scene.find(c => c.uid === uid);
-        if (ch) stdbIds.push(ch.cardId);
-        mutate.scene.toDeck(state, uid, 'bottom');
+        if (!ch || !mutate.scene.toDeck(state, uid, 'bottom')) {
+          throw new Error('cost.pay: sceneToDeckBottom was replaced or deferred');
+        }
+        stdbIds.push(ch.cardId);
         acc.paidItems.push({ kind: 'sceneToDeckBottom', details: { uid } });
       }
       if (!ctx.costPaid) ctx.costPaid = {};
@@ -229,8 +716,14 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const p = ctx.source.player;
       const explicit = readRemoveAreaToDeckIds(ctx);
       const ids: string[] = [];
-      if (explicit.length >= cost.n) {
-        ids.push(...explicit.slice(0, cost.n));
+      if (hasCostParam(ctx, 'removeAreaToDeckBottom')) {
+        const allowed = candidates(state, cost.target, ctx)
+          .filter((cand): cand is Candidate & { kind: 'card' } => cand.kind === 'card')
+          .map(cand => cand.cardId);
+        if (explicit.length !== cost.n || !isMultisetSubset(explicit, allowed)) {
+          throw new Error('cost.pay: invalid removeAreaToDeckBottom picks');
+        }
+        ids.push(...explicit);
       } else {
         const targets = pickCandidates(state, cost.target, ctx, cost.n);
         for (const cand of targets) {
@@ -252,8 +745,14 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const p = ctx.source.player;
       const explicit = readPartnerAreaRemoveIds(ctx);
       const ids: string[] = [];
-      if (explicit.length >= cost.n) {
-        ids.push(...explicit.slice(0, cost.n));
+      if (hasCostParam(ctx, 'partnerAreaRemove')) {
+        const allowed = candidates(state, cost.target, ctx)
+          .filter((cand): cand is Candidate & { kind: 'card' } => cand.kind === 'card')
+          .map(cand => cand.cardId);
+        if (explicit.length !== cost.n || !isMultisetSubset(explicit, allowed)) {
+          throw new Error('cost.pay: invalid partnerAreaRemove picks');
+        }
+        ids.push(...explicit);
       } else {
         // partner 本体 candidate を除いた上で n 枚 (canPay と対称 — pickCandidates の先頭 slice に
         // {kind:'partner'} が混ざると支払い枚数が n を割るため)。
@@ -281,10 +780,34 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       // hostSelf (attribution mini-wave 2026-07-10, B08041「このキャラに〜」): host を能力使用
       // キャラ自身に限定 (explicit / fallback 両経路。canPay evaluate.ts と対)。
       const hostOk = (uid: string) => !cost.hostSelf || uid === ctx.source.uid;
-      const explicit = readRemoveSetCardUids(ctx).filter(u => selfUids.has(u) && hostOk(u));
+      const witness = readRemoveSetCardWitness(ctx);
+      if (witness.kind === 'invalid') throw new Error('cost.pay: invalid removeSetCard picks');
+      const explicit: { hostUids: string[]; instanceIds?: string[] } = witness.kind === 'valid'
+        ? witness
+        : { hostUids: [] };
       const uids: string[] = [];
-      if (explicit.length >= cost.n) {
-        uids.push(...explicit.slice(0, cost.n));
+      if (witness.kind === 'valid') {
+        const available = new Map<string, number>();
+        for (const c of state.players[p].scene) {
+          if (!hostOk(c.uid)) continue;
+          available.set(c.uid, cost.anyFace ? c.setCards.length : c.setCards.filter(entry => !entry.faceUp).length);
+        }
+        const selected = new Map<string, number>();
+        for (const uid of explicit.hostUids) selected.set(uid, (selected.get(uid) ?? 0) + 1);
+        const validHosts = explicit.hostUids.length === cost.n
+          && explicit.hostUids.every(uid => selfUids.has(uid) && hostOk(uid))
+          && [...selected].every(([uid, n]) => (available.get(uid) ?? 0) >= n);
+        const validInstances = explicit.instanceIds === undefined || (
+          explicit.instanceIds.length === cost.n
+          && new Set(explicit.instanceIds).size === explicit.instanceIds.length
+          && explicit.instanceIds.every((instanceId, index) => {
+            const host = state.players[p].scene.find((char) => char.uid === explicit.hostUids[index]);
+            const entry = host?.setCards.find((candidate) => candidate.instanceId === instanceId);
+            return entry !== undefined && (cost.anyFace || !entry.faceUp);
+          })
+        );
+        if (!validHosts || !validInstances) throw new Error('cost.pay: invalid removeSetCard picks');
+        uids.push(...explicit.hostUids);
       } else {
         let need = cost.n;
         for (const c of state.players[p].scene) {
@@ -298,16 +821,21 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       // attribution mini-wave (2026-07-10): costRemovedMatches{key:'removeSetCard'} (B08041
       // 「リムーブしたカードがキャラ/イベントの場合」) が読む。kinds は各除去カードの印字種別。
       const rscIds: string[] = [];
-      for (const uid of uids) {
+      for (let index = 0; index < uids.length; index++) {
+        const uid = uids[index]!;
+        const exactInstanceId = explicit.instanceIds?.[index];
         const removed = mutate.char.removeOneSetCard(
           state, uid,
-          cost.anyFace ? { cause: 'cost' } : { faceDownOnly: true, cause: 'cost' },
+          cost.anyFace
+            ? { cause: 'cost', ...(exactInstanceId ? { setCardInstanceId: exactInstanceId } : {}) }
+            : { faceDownOnly: true, cause: 'cost', ...(exactInstanceId ? { setCardInstanceId: exactInstanceId } : {}) },
         );
         if (removed) {
           rscIds.push(removed);
           acc.paidItems.push({ kind: 'removeSetCard', details: { hostUid: uid, setCardId: removed } });
         }
       }
+      if (rscIds.length !== cost.n) throw new Error('cost.pay: removeSetCard was replaced or deferred');
       if (!ctx.costPaid) ctx.costPaid = {};
       ctx.costPaid['removeSetCard'] = { ids: rscIds, kinds: rscIds.map(id => readDef.card(id)?.kind) };
       return;
@@ -315,7 +843,17 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     case 'removeStackedCards': {
       const hostUid = ctx.source.uid;
       if (typeof hostUid !== 'string') throw new Error('cost.pay: removeStackedCards requires ctx.source.uid');
-      const entries = mutate.char.removeStackedCards(state, hostUid, cost.n, readRemoveStackedCardInstanceIds(ctx));
+      const selected = readRemoveStackedCardInstanceIds(ctx);
+      if (hasCostParam(ctx, 'removeStackedCards')
+        && (!selected || selected.length !== cost.n || new Set(selected).size !== selected.length)) {
+        throw new Error('cost.pay: removeStackedCards is not payable');
+      }
+      // Cost witnesses are identity-aware. Normalize legacy count-only stacks
+      // before payment so the live mutation has the same identities as dry-run.
+      if (!mutate.char.ensureStackedCardEntries(state, hostUid)) {
+        throw new Error('cost.pay: removeStackedCards is not payable');
+      }
+      const entries = mutate.char.removeStackedCards(state, hostUid, cost.n, selected);
       if (entries.length !== cost.n) throw new Error('cost.pay: removeStackedCards is not payable');
       const removeStart = state.players[ctx.source.player].remove.length;
       const paidEntries = entries.map((entry, offset) => ({
@@ -338,6 +876,10 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       if (!ctx.costPaid) ctx.costPaid = {};
       const prior = (ctx.costPaid['removeDeckTop'] as { ids?: string[] } | undefined)?.ids ?? [];
       ctx.costPaid['removeDeckTop'] = { ids: [...prior, ...removed] };
+      // BUG-180: exact payment has no next deck operation to trigger the old
+      // pre-take guard. The paid cards are already in remove and participate in
+      // this immediate refresh (rules/14, rules/21, rules/26).
+      if (removed.length > 0) mutate.deck.refreshAfterTake(state, cost.player);
       return;
     }
     // engine A3 wave (2026-07-11, B09107): デッキ全部リムーブ。removeFromTop(deck.length) で全除去。
@@ -350,13 +892,7 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
       const p = ctx.source.player;
       const removed = mutate.deck.removeFromTop(state, p, state.players[p].deck.length);
       acc.paidItems.push({ kind: 'removeDeckAll', details: { removed } });
-      if (state.players[p].deck.length === 0) {
-        const r = mutate.deck.refresh(state, p);
-        if (!r.ok && state.gameResult === undefined) {
-          const winner: 'self' | 'opp' = p === 'self' ? 'opp' : 'self';
-          mutate.gameResult.set(state, winner, 'deck-out');
-        }
-      }
+      mutate.deck.refreshAfterTake(state, p);
       return;
     }
     case 'discardEvidence': {
@@ -398,22 +934,24 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     case 'selfToDeckBottom': {
       const uid = ctx.source.uid;
       if (!uid) throw new Error('cost.pay: selfToDeckBottom requires ctx.source.uid');
-      mutate.scene.toDeckBottom(state, uid);
+      if (!mutate.scene.toDeck(state, uid, 'bottom')) {
+        throw new Error('cost.pay: selfToDeckBottom was replaced or deferred');
+      }
       acc.paidItems.push({ kind: 'selfToDeckBottom', details: { uid } });
       return;
     }
     case 'pay': {
       for (const item of cost.items) {
-        payInner(state, item, ctx, acc);
+        payInner(state, item, ctx, acc, choiceCursor);
       }
       return;
     }
     case 'choice': {
       // Use ctx.dyn['costChoice'] (number index) if present, else first payable branch.
-      const chooseIdx = readChosenIndex(ctx);
-      const chosen = chooseIdx !== undefined ? cost.items[chooseIdx] : cost.items.find(i => canPay(state, i, ctx));
-      if (!chosen) throw new Error('cost.pay: choice has no payable branch');
-      payInner(state, chosen, ctx, acc);
+      const chooseIdx = readChosenIndex(ctx, choiceCursor.value++);
+      const chosen = chooseIdx !== undefined ? cost.items[chooseIdx] : cost.items.find(i => canPayAtomicallyAtChoiceCursor(state, i, ctx, choiceCursor.value));
+      if (!chosen || !canPayAtomicallyAtChoiceCursor(state, chosen, ctx, choiceCursor.value)) throw new Error('cost.pay: choice has no payable branch');
+      payInner(state, chosen, ctx, acc, choiceCursor);
       return;
     }
     case 'fileFrom': {
@@ -433,7 +971,13 @@ function payInner(state: GameState, cost: Cost, ctx: EffectCtx, acc: PayResult):
     }
     case 'flipFaceUpEvidence': {
       const p = ctx.source.player;
-      const indices = readFlipIndices(ctx);
+      const indices = hasCostParam(ctx, 'flipFaceUpEvidence')
+        ? readFlipIndices(ctx)
+        : state.players[p].evidence
+          .map((entry, index) => ({ entry, index }))
+          .filter(({ entry }) => !entry.faceUp)
+          .slice(0, cost.n.min)
+          .map(({ index }) => index);
       if (indices.length < cost.n.min || indices.length > cost.n.max) {
         throw new Error(
           `cost.pay: flipFaceUpEvidence picks ${indices.length} out of [${cost.n.min}, ${cost.n.max}]`,
@@ -482,12 +1026,61 @@ function pickCandidates(
   ctx: EffectCtx,
   n: number,
 ): Candidate[] {
-  // Prefer ctx.picked when matched against ref; otherwise take first n from candidates().
-  if (ctx.picked && ctx.picked.length >= n) {
-    return ctx.picked.slice(0, n);
+  return selectCostCandidates(state, ref, ctx, n);
+}
+
+/** Extract only candidates authorized by this cost's own targeting reference. */
+function selectCostCandidates(
+  state: GameState,
+  ref: TargetingRef,
+  ctx: EffectCtx,
+  n: number,
+): Candidate[] {
+  const allowed = candidates(state, ref, ctx);
+  // `ctx.picked` may originate in a prior effect. Never treat it as a cost
+  // witness unless every selected occurrence belongs to this exact ref.
+  if (ctx.picked !== undefined) {
+    if (ctx.picked.length !== n) return [];
+    return candidateMultisetSubset(ctx.picked, allowed) ? ctx.picked : [];
   }
-  const all = candidates(state, ref, ctx);
-  return all.slice(0, n);
+  return allowed.slice(0, n);
+}
+
+/** Canonical ranged target extraction for sleep/stun costs. */
+function selectRangeCostCandidates(state: GameState, ref: TargetingRef, ctx: EffectCtx): Candidate[] {
+  const min = ref.kind === 'pick' ? ref.n.min : 1;
+  const max = ref.kind === 'pick' ? ref.n.max : 1;
+  const allowed = candidates(state, ref, ctx);
+  if (ctx.picked) {
+    if (ctx.picked.length < min || ctx.picked.length > max) return [];
+    return candidateMultisetSubset(ctx.picked, allowed) ? ctx.picked : [];
+  }
+  return allowed.slice(0, max);
+}
+
+function candidateMultisetSubset(selected: readonly Candidate[], allowed: readonly Candidate[]): boolean {
+  const counts = new Map<string, number>();
+  for (const candidate of allowed) {
+    const key = candidateKey(candidate);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  for (const candidate of selected) {
+    const key = candidateKey(candidate);
+    const remaining = counts.get(key) ?? 0;
+    if (remaining < 1) return false;
+    counts.set(key, remaining - 1);
+  }
+  return true;
+}
+
+function candidateKey(candidate: Candidate): string {
+  switch (candidate.kind) {
+    case 'char': return `char:${candidate.player}:${candidate.uid}`;
+    case 'partner': return `partner:${candidate.player}`;
+    case 'card': return `card:${candidate.player}:${candidate.area}:${candidate.index ?? '*'}:${candidate.cardId}`;
+    case 'evidence': return `evidence:${candidate.player}:${candidate.index}`;
+    case 'file': return `file:${candidate.player}:${candidate.index}`;
+  }
 }
 
 // Task D E2 (2026-06-12): UI が選んだ sceneToDeckBottom コスト対象 (readFlipIndices と同型)
@@ -526,16 +1119,6 @@ function readRemoveAreaToDeckIds(ctx: EffectCtx): string[] {
 
 // engine additive wave (2026-06-24): UI が選んだ removeSetCard コスト対象の host uid 列
 //   (readSceneToDeckUids と同型)。1 removal=1 entry、同一 uid の repeat で 2-from-1-char を表す。
-function readRemoveSetCardUids(ctx: EffectCtx): string[] {
-  const dyn = ctx.dyn;
-  const params = dyn && (dyn['costParams'] as Record<string, unknown> | undefined);
-  const r = params && (params['removeSetCard'] as { hostUids?: string[] } | undefined);
-  if (r && Array.isArray(r.hostUids)) {
-    return r.hostUids;
-  }
-  return [];
-}
-
 function readRemoveStackedCardInstanceIds(ctx: EffectCtx): string[] | undefined {
   const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
   const selected = params?.['removeStackedCards'] as { instanceIds?: unknown } | undefined;
@@ -544,12 +1127,47 @@ function readRemoveStackedCardInstanceIds(ctx: EffectCtx): string[] | undefined 
     : undefined;
 }
 
-function readChosenIndex(ctx: EffectCtx): number | undefined {
+function readChosenIndex(ctx: EffectCtx, choiceDepth = 0): number | undefined {
   const dyn = ctx.dyn;
+  if (dyn && Array.isArray(dyn['costChoicePath'])) {
+    const path = dyn['costChoicePath'];
+    if (!path.every(index => typeof index === 'number' && Number.isInteger(index) && index >= 0)) return NaN;
+    return path[choiceDepth] as number | undefined;
+  }
   if (dyn && typeof dyn['costChoice'] === 'number') {
     return dyn['costChoice'] as number;
   }
   return undefined;
+}
+
+/** A supplied nested path must select every and only encountered cost choice. */
+function hasExactCostChoicePath(cost: Cost, ctx: EffectCtx): boolean {
+  const path = ctx.dyn?.['costChoicePath'];
+  if (path === undefined) {
+    // Legacy scalar may encode exactly one encountered choice only.  It must
+    // never select an outer choice and let a nested choice silently default.
+    if (ctx.dyn?.['costChoice'] === undefined) return true;
+    let count = 0;
+    const countChoices = (node: Cost): void => {
+      if (node.kind === 'choice') {
+        count += 1;
+        for (const item of node.items) countChoices(item);
+      } else if (node.kind === 'pay') {
+        for (const item of node.items) countChoices(item);
+      }
+    };
+    countChoices(cost);
+    return count === 1;
+  }
+  if (!Array.isArray(path) || !path.every(index => typeof index === 'number' && Number.isInteger(index) && index >= 0)) return false;
+  let cursor = 0;
+  const visit = (node: Cost): boolean => {
+    if (node.kind === 'pay') return node.items.every(visit);
+    if (node.kind !== 'choice') return true;
+    const selected = path[cursor++];
+    return selected !== undefined && selected < node.items.length && visit(node.items[selected]!);
+  };
+  return visit(cost) && cursor === path.length;
 }
 
 function readFlipIndices(ctx: EffectCtx): number[] {
@@ -560,4 +1178,20 @@ function readFlipIndices(ctx: EffectCtx): number[] {
     return fpu.indices;
   }
   return [];
+}
+
+function hasCostParam(ctx: EffectCtx, key: string): boolean {
+  const params = ctx.dyn?.['costParams'] as Record<string, unknown> | undefined;
+  return params !== undefined && Object.prototype.hasOwnProperty.call(params, key);
+}
+
+function isMultisetSubset(selected: readonly string[], available: readonly string[]): boolean {
+  const counts = new Map<string, number>();
+  for (const id of available) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const id of selected) {
+    const remaining = counts.get(id) ?? 0;
+    if (remaining < 1) return false;
+    counts.set(id, remaining - 1);
+  }
+  return true;
 }

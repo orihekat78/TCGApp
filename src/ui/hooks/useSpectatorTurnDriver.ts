@@ -1,7 +1,7 @@
 // Round 4l (B5 観戦モード): self ターンも AI が自動進行する driver
 //
 // 設計:
-//   - spectatorMode === true && turnPlayer === 'self' のとき HeuristicPolicy で playTurn 実行
+//   - spectatorMode === true && turnPlayer === 'self' のとき HeuristicPolicy で stepTurn を1手ずつ実行
 //   - useOppTurnDriver と対称 (側だけ違う)
 //   - module-level isDriving で二重呼出抑止
 //   - activeActionId 中は委譲 (useContactFlowDriver が opp 経路と同じく処理)
@@ -11,17 +11,23 @@
 import { produce } from 'immer';
 import { useEffect } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
-import { playTurn } from '@/ai/policy.js';
+import { stepTurn } from '@/ai/policy.js';
+import type { Move } from '@/ai/move-enumerator.js';
 import { HeuristicPolicy } from '@/ai/policies/heuristic.js';
 import * as flow from '@/engine/flow/index.js';
 import { mutate as engineMutate } from '@/engine/mutate/index.js';
 import { runAllUntilEmpty } from '@/engine/resolve/index.js';
 import { dispatchEngineAction, surfacePendingSideChannels } from './useEngineDispatch.js';
+import { movePresentationDelay } from './movePresentationDelay.js';
+import { primaryActiveCard } from './useOppTurnDriver.js';
 
 let isDriving = false;
+let previousMoveKind: Move['kind'] | null = null;
 
 export function _resetSpectatorDriving(): void {
   isDriving = false;
+  previousMoveKind = null;
+  _lastConsumedStep = 0;
 }
 
 function driveSelfTurn(): void {
@@ -35,20 +41,34 @@ function driveSelfTurn(): void {
   if (isDriving) return;
   isDriving = true;
   try {
-    const result = playTurn(current, new HeuristicPolicy(), 'self', { pauseOnAction: true });
-    store.setGameState(result.finalState);
+    const result = stepTurn(current, new HeuristicPolicy(), 'self', { pauseOnAction: true });
+    previousMoveKind = result.paused?.move?.kind ?? result.move?.kind ?? null;
+    store.setGameState(result.nextState);
 
     if (result.paused) {
       // BUG-138 (X8): 観戦モードは __humanPlayerSide=null のため humanPick pause は発生しない
       // (move 同梱 pause のみ)。optional chaining は paused 型拡張 (move?: Move) への追従。
       const m = result.paused.move;
       if (m?.kind === 'actionAgainstChar') {
+        store.setActiveCard(m.byUid, 'アクション');
         dispatchEngineAction({ type: 'actionDeclareChar', byUid: m.byUid, targetUid: m.targetUid });
       } else if (m?.kind === 'actionAgainstCase') {
+        store.setActiveCard(m.byUid, 'アクション');
         dispatchEngineAction({ type: 'actionDeclareCase', byUid: m.byUid, targetPlayer: m.targetPlayer });
       }
       return;
     }
+
+    if (!result.done) {
+      const active = primaryActiveCard(result.move, current, result.nextState, 'self');
+      store.setActiveCard(active.uid, active.label);
+      store.bumpOppMoveTick();
+      return;
+    }
+
+    store.setActiveCard(null, null);
+    previousMoveKind = 'endTurn';
+    if (result.nextState.gameResult) return;
 
     store.dispatch((s) =>
       produce(s, (draft) => {
@@ -87,6 +107,7 @@ export function useSpectatorTurnDriver(): void {
   const aiSpeedMs = useGameStateStore((s) => s.aiSpeedMs);
   const isAiPaused = useGameStateStore((s) => s.isAiPaused);
   const aiStepCounter = useGameStateStore((s) => s.aiStepCounter);
+  const aiMoveTick = useGameStateStore((s) => s.oppMoveTick);
   useEffect(() => {
     if (!spectatorMode || turnPlayer !== 'self' || activeActionId !== null) return undefined;
     // Phase 12-B: paused なら step 要求があった時だけ進む
@@ -94,11 +115,8 @@ export function useSpectatorTurnDriver(): void {
       if (aiStepCounter <= _lastConsumedStep) return undefined;
       _lastConsumedStep = aiStepCounter;
     }
-    if (aiSpeedMs > 0) {
-      const id = setTimeout(driveSelfTurn, aiSpeedMs);
-      return () => clearTimeout(id);
-    }
-    Promise.resolve().then(driveSelfTurn);
-    return undefined;
-  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter]);
+    const delay = isAiPaused ? 0 : movePresentationDelay(previousMoveKind, aiSpeedMs);
+    const id = setTimeout(driveSelfTurn, delay);
+    return () => clearTimeout(id);
+  }, [spectatorMode, turnPlayer, activeActionId, aiSpeedMs, isAiPaused, aiStepCounter, aiMoveTick]);
 }

@@ -170,6 +170,18 @@
     inset 0 0 0 1px color-mix(in oklch, var(--color-purple) 30%, transparent),
     0 0 0 1px color-mix(in oklch, var(--color-purple) 50%, transparent);
 }
+.scene-area .card.color-black {
+  border-color: color-mix(in oklch, var(--color-black) 65%, white 30%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-black) 45%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-black) 60%, transparent);
+}
+.scene-area .card.color-white {
+  border-color: color-mix(in oklch, var(--color-white) 80%, #8aa0b8 20%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px color-mix(in oklch, var(--color-white) 35%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-white) 45%, transparent);
+}
 
 /* top color stripe */
 .scene-area .card .color-stripe {
@@ -182,6 +194,8 @@
 .scene-area .card.color-red    .color-stripe { background: var(--color-red); }
 .scene-area .card.color-green  .color-stripe { background: var(--color-green); }
 .scene-area .card.color-purple .color-stripe { background: var(--color-purple); }
+.scene-area .card.color-black  .color-stripe { background: var(--color-black); }
+.scene-area .card.color-white  .color-stripe { background: var(--color-white); }
 
 /* art (silhouette placeholder) */
 .scene-area .card .art {

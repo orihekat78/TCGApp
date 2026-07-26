@@ -62,16 +62,18 @@ function makeStateWithEvidence(cardId: string): GameState {
 }
 
 function emitAndFire(s: GameState, cardId: string): GameState {
-  engine.event.emit(
-    s,
-    'evidence:remove-by-action',
-    { player: 'self', ev: { cardId } },
-    { player: 'opp', uid: 'opp-attacker' },
-  );
+  const emitted = produce(s, (d) => {
+    engine.event.emit(
+      d,
+      'evidence:remove-by-action',
+      { player: 'self', ev: { cardId } },
+      { player: 'opp', uid: 'opp-attacker' },
+    );
+  });
   const pending = _drainPendingHirameki();
   expect(pending).not.toBeNull();
   expect(pending!.cardId).toBe(cardId);
-  useGameStateStore.setState({ gameState: s, pendingHirameki: pending });
+  useGameStateStore.setState({ gameState: emitted, pendingHirameki: pending });
   const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
   expect(r.ok).toBe(true);
   expect(useGameStateStore.getState().pendingHirameki).toBeNull();

@@ -24,7 +24,7 @@ const a1: AbilityDef = {
   // 【絆比護隆佑】(自分の現場に[比護隆佑]のキャラがいる間のみ有効 / rules/17)
   condition: { kind: 'bond', cardName: '比護隆佑' },
   // 〚突撃［キャラ］〛（登場したターンからすぐにキャラを指定してアクションできる）
-  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'] },
+  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'], printedKeywordWhenIconValid: true },
   description: '【絆比護隆佑】〚突撃［キャラ］〛を持つ。',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md', 'rules/24-qa-naming-stun.md'],
 };

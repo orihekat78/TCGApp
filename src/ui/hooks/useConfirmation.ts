@@ -93,6 +93,9 @@ function rejectConfirmation(): void {
   if (resolver) resolver(false);
 }
 
+/** React 外の対戦セッション管理から、保留確認を false で決着する。 */
+export const rejectPendingConfirmation = rejectConfirmation;
+
 /**
  * 利便ラッパ。React 外からも呼べる。component で current 変化に
  * 反応して再描画したい場合は `useConfirmationStore((s) => s.current)` を併用。

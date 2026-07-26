@@ -12,10 +12,13 @@
 //
 // DeckReorderModalHost を土台に 2-bucket 割当を追加 (SouzaReorderModal.css 流用)。
 
-import { useState, type JSX } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
-import { def as readDef } from '@/engine/read/def.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { SelectableCardTile } from './SelectableCardTile.js';
 import './SouzaReorderModal.css';
 
 export function DeckPlaceModalHost(): JSX.Element | null {
@@ -27,16 +30,21 @@ export function DeckPlaceModalHost(): JSX.Element | null {
     : null;
 }
 
-function nameOf(cardId: string): string {
-  return readDef.card(cardId)?.names?.[0] ?? cardId;
-}
+type Row = { cardId: string; occurrenceId: string; bucket: 'top' | 'bottom' };
 
-type Row = { cardId: string; bucket: 'top' | 'bottom' };
+function asRows(cardIds: readonly string[]): Row[] {
+  return cardIds.map((cardId, index) => ({ cardId, occurrenceId: `${cardId}#${index}`, bucket: 'top' }));
+}
 
 function DeckPlaceModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.Element {
   // リスト順 = 各バケツ内の相対順 (top 行同士 / bottom 行同士でリスト上にある方が先)。
-  const [rows, setRows] = useState<Row[]>(() => cardIds.map((cardId) => ({ cardId, bucket: 'top' as const })));
+  const [rows, setRows] = useState<Row[]>(() => asRows(cardIds));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const expandModal = useCardExpandModal();
+  useEffect(() => {
+    setRows(asRows(cardIds));
+    setDragIdx(null);
+  }, [cardIds]);
 
   const move = (from: number, to: number): void => {
     if (to < 0 || to >= rows.length || from === to) return;
@@ -75,7 +83,7 @@ function DeckPlaceModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.E
           <ul className="souza-list">
             {rows.map((row, i) => (
               <li
-                key={`${row.cardId}-${i}`}
+                key={row.occurrenceId}
                 className="souza-row"
                 data-testid={`deck-place-row-${i}`}
                 draggable
@@ -85,47 +93,55 @@ function DeckPlaceModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.E
                 onDragEnd={() => setDragIdx(null)}
               >
                 <span className="souza-index">{i + 1}</span>
-                <span className="souza-name">{nameOf(row.cardId)}</span>
-                <button
-                  type="button"
-                  className="souza-arrow"
-                  aria-pressed={row.bucket === 'top'}
-                  style={row.bucket === 'top' ? { fontWeight: 'bold' } : undefined}
-                  data-testid={`deck-place-top-${i}`}
-                  onClick={() => setBucket(i, 'top')}
-                >
-                  上
-                </button>
-                <button
-                  type="button"
-                  className="souza-arrow"
-                  aria-pressed={row.bucket === 'bottom'}
-                  style={row.bucket === 'bottom' ? { fontWeight: 'bold' } : undefined}
-                  data-testid={`deck-place-bottom-${i}`}
-                  onClick={() => setBucket(i, 'bottom')}
-                >
-                  下
-                </button>
-                <button
-                  type="button"
-                  className="souza-arrow"
-                  disabled={i === 0}
-                  data-testid={`deck-place-up-${i}`}
-                  aria-label="上へ"
-                  onClick={() => move(i, i - 1)}
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  className="souza-arrow"
-                  disabled={i === rows.length - 1}
-                  data-testid={`deck-place-down-${i}`}
-                  aria-label="下へ"
-                  onClick={() => move(i, i + 1)}
-                >
-                  ▼
-                </button>
+                <SelectableCardTile
+                  cardId={row.cardId}
+                  instanceId={row.occurrenceId}
+                  occurrenceLabel={publicCardOccurrenceLabel(rows.map((item) => item.cardId), row.cardId, i)}
+                  onSelect={() => {}}
+                  onExpand={expandModal.open}
+                />
+                <div className="souza-row-controls">
+                  <button
+                    type="button"
+                    className="souza-arrow"
+                    aria-pressed={row.bucket === 'top'}
+                    style={row.bucket === 'top' ? { fontWeight: 'bold' } : undefined}
+                    data-testid={`deck-place-top-${i}`}
+                    onClick={() => setBucket(i, 'top')}
+                  >
+                    上
+                  </button>
+                  <button
+                    type="button"
+                    className="souza-arrow"
+                    aria-pressed={row.bucket === 'bottom'}
+                    style={row.bucket === 'bottom' ? { fontWeight: 'bold' } : undefined}
+                    data-testid={`deck-place-bottom-${i}`}
+                    onClick={() => setBucket(i, 'bottom')}
+                  >
+                    下
+                  </button>
+                  <button
+                    type="button"
+                    className="souza-arrow"
+                    disabled={i === 0}
+                    data-testid={`deck-place-up-${i}`}
+                    aria-label="上へ"
+                    onClick={() => move(i, i - 1)}
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    className="souza-arrow"
+                    disabled={i === rows.length - 1}
+                    data-testid={`deck-place-down-${i}`}
+                    aria-label="下へ"
+                    onClick={() => move(i, i + 1)}
+                  >
+                    ▼
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -141,6 +157,7 @@ function DeckPlaceModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.E
           </button>
         </div>
       </div>
+      <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
     </div>
   );
 }

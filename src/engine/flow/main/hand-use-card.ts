@@ -185,10 +185,29 @@ function handUseGateCommon(state: GameState, p: Player, cardId: string): boolean
   const def = readDef.card(cardId);
   if (def?.kind === 'character' && (state.turnState[p].useEnterBannedCardNames ?? []).some(name => def.names.includes(name))) return false;
   if (def?.kind === 'event' && state.turnState[p].eventUseBanned) return false;
+  // Event use conditions are preconditions, not effects that may silently
+  // fizzle after the card has already left the hand.
+  if (def?.kind === 'event' && !eventUseAllowed(state, p, cardId)) return false;
   // P05 (wave-5): case card 継続の character 手札使用制限 (「特徴[X]以外のキャラを使用できない」)。
   //   非 character / 制限 case 無しは素通り (baseline 不変)。
   if (!handUseCharRestrictAllows(state, p, cardId)) return false;
   return true;
+}
+
+/**
+ * Only CardDef.useCondition carries a printed event-use authorization.  Do not
+ * infer it from AbilityDef.condition: icon and effect conditions are evaluated
+ * after use and may legally resolve as a no-op.
+ */
+export function eventUseAllowed(state: GameState, p: Player, cardId: string): boolean {
+  const d = readDef.card(cardId);
+  if (d?.kind !== 'event') return true;
+  if (!d.useCondition) return true;
+  return evalCond(state, d.useCondition, {
+    source: { player: p, area: 'hand', cardId },
+    bindings: {},
+    triggerPayload: { kind: 'event-use', cardId, player: p },
+  } as EffectCtx);
 }
 
 /**
@@ -262,7 +281,7 @@ export function handUseCard(
     // kind/cardId のみ参照するため無影響。現状の B07016/B08020 a2 は condition turn:self による
     // 間接実装 (イベント使用は使用者ターンに限る) で side を遮蔽している。
     { kind: emitKind, cardId, player: p },
-    { player: p, cardId },
+    { player: p, cardId, ...(d?.kind === 'event' ? { resolutionKind: 'normal-event' as const } : {}) },
   );
   // キャラの場合: 現場へ登場 (rules/05 §01 + rules/06 + rules/12 §3 — アクティブ・名乗り状態で登場)
   // NextHint と同じパターン (flow/main/next-hint.ts L105-119) を踏襲。

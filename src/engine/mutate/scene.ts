@@ -426,7 +426,7 @@ function removeToRemoveBatch(
   cause: RemoveCause,
   byUid?: string,
   opts?: Omit<RemoveOpts, 'triggeredAuraAbilities'>,
-): void {
+): RemoveResult[] {
   const uniqueUids = [...new Set(uids)];
   const auraByUid = new Map<string, AbilityDef[]>();
   for (const uid of uniqueUids) {
@@ -439,12 +439,14 @@ function removeToRemoveBatch(
       char: found.char,
     }));
   }
+  const results: RemoveResult[] = [];
   for (const uid of uniqueUids) {
-    removeToRemove(s, uid, cause, byUid, {
+    results.push(removeToRemove(s, uid, cause, byUid, {
       ...opts,
       triggeredAuraAbilities: auraByUid.get(uid),
-    });
+    }));
   }
+  return results;
 }
 
 /**
@@ -483,12 +485,12 @@ function toDeckBottom(s: GameState, uid: string): void {
  * - 変装専用の toDeckBottom (rules/16 処理なし・set/stacked は新キャラへ引継ぎ) とは別物。
  * - 所有者のデッキ (char の所属プレイヤー) に入る。effect 発動側ではない点に注意。
  */
-function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): void {
+function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): boolean {
   const found = findChar(s, uid);
-  if (!found) return;
+  if (!found) return false;
 
   const { char, player } = found;
-  if (charMutator.deferSetCardReplacementForHostLeave(s, uid, { kind: 'scene-to-deck', pos })) return;
+  if (charMutator.deferSetCardReplacementForHostLeave(s, uid, { kind: 'scene-to-deck', pos })) return false;
   // rules/16 setCards / stackedCards は離場時にリムーブされる
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
   if (char.setCards.length > 0) {
@@ -508,13 +510,14 @@ function toDeck(s: GameState, uid: string, pos: 'bottom' | 'top' = 'bottom'): vo
   // set/stack は冒頭で remove へ push 済 (rules/16) → ここでは placeMrInPA が slot 側を空にするのみ (二重 push しない)。
   if (shouldRedirectMrToPA(s, char, player)) {
     placeMrInPA(s, char, player);
-    return;
+    return true;
   }
   if (pos === 'top') {
     s.players[player].deck.unshift(char.cardId);
   } else {
     s.players[player].deck.push(char.cardId);
   }
+  return true;
 }
 
 /**
@@ -663,14 +666,14 @@ function clearNamed(s: GameState, uid: string): void {
  *   = PA 移動なしでそのまま重なる (toHand/toDeck の redirect parity をあえて外す唯一の離場 verb)。
  * - host 側は stackedCards += 1。host 不在 (解決前に離場) は no-op fizzle (rules/15)。
  */
-function toStack(s: GameState, uid: string, hostUid: string): void {
-  if (uid === hostUid) return; // 自己対象縮退 (防御、B06008 filter cardNameNot が通常排除)
+function toStack(s: GameState, uid: string, hostUid: string): boolean {
+  if (uid === hostUid) return false; // 自己対象縮退 (防御、B06008 filter cardNameNot が通常排除)
   const found = findChar(s, uid);
-  if (!found) return;
+  if (!found) return false;
   const hostFound = findChar(s, hostUid);
-  if (!hostFound) return;
+  if (!hostFound) return false;
   const { char, player } = found;
-  if (charMutator.deferSetCardReplacementForHostLeave(s, uid, { kind: 'scene-to-stack', hostUid })) return;
+  if (charMutator.deferSetCardReplacementForHostLeave(s, uid, { kind: 'scene-to-stack', hostUid })) return false;
   // rules/16 setCards / stackedCards は離場時にリムーブされる
   charMutator.replaceEligibleSetCardsBeforeHostLeaves(s, uid);
   if (char.setCards.length > 0) {
@@ -683,6 +686,7 @@ function toStack(s: GameState, uid: string, hostUid: string): void {
     s.players[player].scene.splice(idx, 1);
   }
   stackCardUnder(hostFound.char, char.cardId, `stack:${char.uid}`);
+  return true;
 }
 
 export const scene = {

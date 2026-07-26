@@ -17,6 +17,10 @@
   padding: 20px 24px;
   min-width: 420px;
   max-width: 560px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 8px 32px rgba(155, 89, 182, 0.4);
 }
 
@@ -34,11 +38,12 @@
 }
 
 .misread-picker-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
   margin: 16px 0;
   padding: 12px;
   background: rgba(155, 89, 182, 0.08);
   border-radius: 6px;
-  max-height: 240px;
   overflow-y: auto;
 }
 
@@ -54,15 +59,45 @@
   padding: 0;
 }
 
+.misread-picker-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 8px;
+  align-items: center;
+}
+
 .misread-picker-row {
   display: grid;
-  grid-template-columns: 24px 1fr auto;
+  grid-template-columns: 24px 32px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   padding: 6px;
+  min-height: 44px;
   cursor: pointer;
   border-radius: 4px;
 }
+
+.misread-card-art {
+  width: 32px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.misread-detail {
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: 8px;
+  border: 1px solid #9b59b6;
+  border-radius: 4px;
+  background: #fff;
+  color: #6c2caa;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.misread-detail:hover,
+.misread-detail:focus-visible { background: #f5e6ff; }
 
 .misread-picker-row:hover { background: rgba(155, 89, 182, 0.12); }
 
@@ -71,12 +106,15 @@
 
 .misread-picker-actions {
   display: flex;
+  flex: 0 0 auto;
   gap: 12px;
   justify-content: flex-end;
   margin-top: 16px;
 }
 
 .misread-btn {
+  min-width: 44px;
+  min-height: 44px;
   padding: 8px 20px;
   border-radius: 6px;
   font-weight: 600;
@@ -90,3 +128,11 @@
 
 .misread-btn-fire { background: #9b59b6; color: #fff; }
 .misread-btn-skip { background: #ddd; color: #555; }
+
+@media (max-height: 480px) {
+  .misread-picker-modal {
+    box-sizing: border-box;
+    width: min(560px, calc(100vw - 24px));
+    min-width: 0;
+  }
+}

@@ -1,9 +1,11 @@
 // cards/ct-p05/B05039 松田左文字 (キャラ) — engine-extension reasoning-hook batch #3 (2026-06-06 タスクC)
-// rules: 11-reasoning.md, 15-abilities-effects.md, 17-icons.md, 19-special-rules.md
+// rules: 09-cutin-disguise.md, 11-reasoning.md, 15-abilities-effects.md, 17-icons.md, 19-special-rules.md,
+//        22-qa-action-contact.md
 //
 // 公式テキスト:
 //   このキャラが推理したとき、レベル5のキャラを2枚までと、レベル7のキャラを1枚まで選び、
 //     ターン終了時までAP＋1000する。
+//   【カットイン】【自分ターン中】AP＋1000、〚特徴［探偵］〛のキャラに【カットイン】した場合、カードを1枚引く。
 //
 // a1: 推理反応 (reasoning:end selfOnly = このキャラが推理したとき、source.uid 一致)。
 //   効果は 2 段の multi-target pick を sequence で連結:
@@ -14,6 +16,7 @@
 //   「〜枚まで」= max 形 (n.min=0、0 枚選択可、rules/15)。【ターンN】記載なし → limit 不要。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
+import { contactTargetMatches } from '../_shared/index.js';
 
 const a1: AbilityDef = {
   id: 'a1',
@@ -43,6 +46,31 @@ const a1: AbilityDef = {
   ruleRefs: ['rules/11-reasoning.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/19-special-rules.md'],
 };
 
+// a2: 相手ターンでも使用可。自分ターン中だけAP+1000、探偵へのカットインならさらに1枚引く。
+const a2: AbilityDef = {
+  id: 'a2',
+  type: 'triggered',
+  scope: 'on-hand',
+  trigger: { hook: 'effect:declared', optional: true, selfOnly: true },
+  effect: {
+    kind: 'conditional',
+    if: { kind: 'turn', player: 'self' },
+    then: {
+      kind: 'sequence',
+      steps: [
+        { kind: 'atom', verb: 'charModifyAP', args: { uid: '$contact.byUid', delta: 1000, scope: 'contact' } },
+        {
+          kind: 'conditional',
+          if: contactTargetMatches({ traits: ['探偵'] }),
+          then: { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+        },
+      ],
+    },
+  },
+  description: '【カットイン】【自分ターン中】AP＋1000、〚特徴［探偵］〛のキャラに【カットイン】した場合、カードを1枚引く。',
+  ruleRefs: ['rules/09-cutin-disguise.md', 'rules/22-qa-action-contact.md'],
+};
+
 export const B05039: CardDef = {
   id: 'B05039',
   no: '0543/B05039',
@@ -56,6 +84,13 @@ export const B05039: CardDef = {
   keywords: [],
   rarity: 'C',
   imageUrl: '1746628061763739.jpg',
-  abilities: [a1],
-  ruleRefs: ['rules/11-reasoning.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/19-special-rules.md'],
+  abilities: [a1, a2],
+  ruleRefs: [
+    'rules/09-cutin-disguise.md',
+    'rules/11-reasoning.md',
+    'rules/15-abilities-effects.md',
+    'rules/17-icons.md',
+    'rules/19-special-rules.md',
+    'rules/22-qa-action-contact.md',
+  ],
 };

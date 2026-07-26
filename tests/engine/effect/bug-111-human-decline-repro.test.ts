@@ -198,21 +198,19 @@ describe('BUG-111 #2 — human-decline 経路の chain-gate / mandatory-tail', (
     setHuman(null);
   });
 
-  it('choice-tail は壊さない (double-run 無し): sequence[0-pick, choice] decline → choice は pending 維持・remainder-run は no-op', () => {
-    // 観測実機 (2026-06-16): 末尾 choice は初期 walk で eager surface する (pendingEffectChoice SET)。
-    // decline 時の my fix の remainder-run は marker への no-op で auto-option0 も二重実行も起こさない。
-    // → choice/optional-tail の 6 出荷カード (B04080/B07079/B07055/B07031) を回帰させない保証。
-    // ※ B09056 を本修正で解禁しないのは別理由: eager-surface は optional wrapper 未達でも surface する
-    //   fragile な挙動 (BUG-145 系) で、B09056 の optional[seq[..,choice]] 構造での正しさが未検証のため。
+  it('choice-tail は壊さない (double-run 無し): sequence[0-pick, choice] decline後に文面順でchoiceをsurface', () => {
+    // 先行 pick の決定前に後続 choice を eager surface しない。decline が sequence continuation を
+    // 再開した時点で choice を1回だけ surfaceし、auto-option0や二重実行を起こさない。
     setHuman('self');
     useGameStateStore.getState().setPendingEffectChoice(null);
     useGameStateStore.getState().setGameState(baseState(SEQ_CHOICE_ID));
     dispatchEngineAction({ type: 'declaredAbility', uid: 'src#0', abilId: 'a1' });
-    expect(useGameStateStore.getState().pendingEffectChoice).not.toBeNull(); // eager surface
+    expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('charRemoveSetCard');
+    expect(useGameStateStore.getState().pendingEffectChoice).toBeNull();
 
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null }); // 0-pick decline
     const afterDecline = useGameStateStore.getState();
-    expect(afterDecline.pendingEffectChoice).not.toBeNull(); // choice は pending 維持
+    expect(afterDecline.pendingEffectChoice).not.toBeNull(); // continuationで初めてsurface
     expect(afterDecline.gameState!.players.self.hand.length).toBe(0); // auto-option0 していない (draw 未発火)
 
     dispatchEngineAction({ type: 'choiceResolve', choiceIndex: 1 }); // option1 = draw 2 を human が選ぶ

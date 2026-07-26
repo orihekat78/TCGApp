@@ -223,7 +223,7 @@ describe('S4 a2 declared full: 探偵を含む5枚 cost 除去 → costRemovedMa
 
 // ───────── S5: a2 conditional off — 探偵が cost に含まれない → sceneRemove 不発 (「〜場合」不成立) ─────────
 describe('S5 a2 conditional off: cost 除去5枚に探偵なし → costRemovedMatches 偽 → リムーブ発生せず', () => {
-  it('自身スリープ + deck-5 は起きるが、opp R8 はリムーブされず残存', () => {
+  it('自身スリープ + 5枚cost後に即refreshするが、opp R8 はリムーブされず残存', () => {
     const s = base('self');
     s.players.self.scene.push(makeChar({ uid: 'anmr', cardId: 'PR096', state: 'active' }));
     s.players.self.deck.push(ND, ND, ND, ND, ND); // 探偵なし
@@ -231,10 +231,12 @@ describe('S5 a2 conditional off: cost 除去5枚に探偵なし → costRemovedM
 
     const after = fireDeclared(s, 'anmr');
 
-    // cost は成立 (スリープ + 5枚除去)
+    // cost は成立 (スリープ + 5枚除去)。exact exhaustion なので5枚は即 refresh。
     expect(after.players.self.scene.find((c) => c.uid === 'anmr')!.state).toBe('sleep');
-    expect(after.players.self.deck.length).toBe(0);
-    expect(after.players.self.remove.length).toBe(5);
+    expect(after.players.self.deck).toEqual([ND, ND, ND, ND, ND]);
+    expect(after.players.self.remove).toHaveLength(0);
+    expect(after.refreshCount.self).toBe(1);
+    expect(after.players.opp.evidence).toHaveLength(1);
     // conditional then 不発 → R8 は残存
     expect(after.players.opp.scene.find((c) => c.uid === 'r8')).toBeTruthy();
     expect(after.players.opp.remove).not.toContain(R8);

@@ -18,7 +18,8 @@ import { handUseCard } from '@/engine/flow/main/hand-use-card';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { registerAll } from '@/cards/index';
-import { applyPickAndContinuation, applyPickSkipAndContinuation, drainAiEffectPicks } from '@/engine/effect/apply-pick';
+import { applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation, drainAiEffectPicks } from '@/engine/effect/apply-pick';
+import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
 import type { PendingDeckRevealSide } from '@/engine/effect/atom-handlers';
 import type { GameState } from '@/engine/types';
@@ -51,6 +52,8 @@ function d01013State(): GameState {
 
 describe('BUG-132 GAP-1 — deckRevealUntil chooseMatch decline channel', () => {
   beforeEach(() => {
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     event._resetRegistry();
     _resetTriggeredRegistered();
     resetCardDefRegistry();
@@ -100,6 +103,9 @@ describe('BUG-132 GAP-1 — deckRevealUntil chooseMatch decline channel', () => 
     s = produce(s, (d) => {
       applyPickAndContinuation(d, discardPick!, d11005.uid);
     });
+    const reorder = _drainPendingDeckReorderSide();
+    expect(reorder, '残り3枚はデッキ下順序の決定待ち').not.toBeNull();
+    s = produce(s, d => applyDeckReorderAndContinuation(d, reorder!, reorder!.cardIds));
     expect(s.players.self.remove, 'D11005 を discard').toContain('D11005');
     // deckToBottomBound: 残り3枚が下、元5枚目が top
     expect(s.players.self.deck.length).toBe(4);
@@ -118,6 +124,9 @@ describe('BUG-132 GAP-1 — deckRevealUntil chooseMatch decline channel', () => 
     s = produce(s, (d) => {
       applyPickSkipAndContinuation(d, pending);
     });
+    const reorder = _drainPendingDeckReorderSide();
+    expect(reorder, 'declineでも公開4枚はデッキ下順序の決定待ち').not.toBeNull();
+    s = produce(s, d => applyDeckReorderAndContinuation(d, reorder!, reorder!.cardIds));
     expect(s.players.self.hand, '加えない選択 — D08013 は手札に入らない').not.toContain('D08013');
     expect(pickQueue().some((p) => p.atomVerb === 'discard'), '「加えた場合」不成立 — discard も出ない').toBe(false);
     expect(s.players.self.hand, 'D11005 は手札に残る').toContain('D11005');
@@ -154,6 +163,8 @@ describe('BUG-132 GAP-1 — deckRevealUntil chooseMatch decline channel', () => 
 
 describe('BUG-132 GAP-2 — effect:declared 自効果先行 + 反応 pick の解決時確定', () => {
   beforeEach(() => {
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     event._resetRegistry();
     _resetTriggeredRegistered();
     resetCardDefRegistry();

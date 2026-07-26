@@ -1,14 +1,19 @@
 // Phase 7 Task 7.5: PartnerArea tests
 
-import { describe, it, expect } from 'vitest';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { registerAll } from '@/cards';
 import type { PartnerOnBoard } from '@/engine/types/game-state.js';
 import { PartnerArea } from '@/ui/components/PartnerArea';
 import type { ResolvedCardMeta } from '@/ui/components/SceneArea';
 
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
 const resolveCard = (cardId: string): ResolvedCardMeta => ({
-  name: cardId === 'P-Conan' ? '江戸川 コナン' : '萩原 千速',
-  color: cardId === 'P-Conan' ? 'blue' : 'yellow',
+  name: cardId === 'B07059' ? '\u8d64\u3044\u6d99' : cardId === 'P-Conan' ? '江戸川 コナン' : '萩原 千速',
+  color: cardId === 'B07059' ? 'red' : cardId === 'P-Conan' ? 'blue' : 'yellow',
   ap: 0,
   lp: 1,
   lv: 0,
@@ -117,5 +122,70 @@ describe('PartnerArea', () => {
     expect(html).toMatch(/class="card color-yellow"/);
     expect(html).toMatch(/萩原 千速/);
     expect(html).toMatch(/黄 \/ LP 1/);
+  });
+});
+
+describe('PartnerArea partner-area cards', () => {
+  let root: Root | null = null;
+  let container: HTMLDivElement | null = null;
+
+  beforeEach(() => {
+    registerAll();
+  });
+
+  afterEach(() => {
+    if (root) act(() => root!.unmount());
+    container?.remove();
+    root = null;
+    container = null;
+  });
+
+  it('renders duplicate B07059 partner-area cards with their real official image source and independent detail controls', () => {
+    const onExpand = vi.fn();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    act(() => root!.render(
+      <PartnerArea
+        partner={null}
+        side="self"
+        resolveCard={resolveCard}
+        paCards={['B07059', 'B07059']}
+        onExpand={onExpand}
+      />,
+    ));
+
+    const primaries = [...container.querySelectorAll<HTMLButtonElement>('[data-testid^="pa-card-self-"]')];
+    const details = [...container.querySelectorAll<HTMLButtonElement>('[data-testid^="pa-card-detail-self-"]')];
+    expect(primaries).toHaveLength(2);
+    expect(details).toHaveLength(2);
+    const primaryLabels = primaries.map((button) => button.getAttribute('aria-label'));
+    const detailLabels = details.map((button) => button.getAttribute('aria-label'));
+    const expectedLabels = [
+      '\u8d64\u3044\u6d99\uff081\u679a\u76ee\uff09\u306e\u8a73\u7d30\u3092\u8868\u793a',
+      '\u8d64\u3044\u6d99\uff082\u679a\u76ee\uff09\u306e\u8a73\u7d30\u3092\u8868\u793a',
+    ];
+    expect(primaryLabels).toEqual(expectedLabels);
+    expect(detailLabels).toEqual(expectedLabels);
+    expect(primaryLabels.every((label) => label?.includes('詳細を表示'))).toBe(true);
+    expect(detailLabels.every((label) => label?.includes('詳細を表示'))).toBe(true);
+    expect(new Set(primaryLabels).size).toBe(2);
+    expect(new Set(detailLabels).size).toBe(2);
+    expect(primaries.every((button) => button instanceof HTMLButtonElement)).toBe(true);
+    expect(details.every((button) => button instanceof HTMLButtonElement)).toBe(true);
+    expect(container.querySelectorAll('.pa-card img.card-art')).toHaveLength(2);
+    const images = [...container.querySelectorAll<HTMLImageElement>('.pa-card img.card-art')];
+    expect(images.every((image) => image.src.endsWith('/1762414010617160.jpg'))).toBe(true);
+    expect(images.every((image) => !image.src.startsWith('data:image/svg+xml'))).toBe(true);
+    expect(container.querySelector('button button')).toBeNull();
+
+    act(() => details[1]!.click());
+    expect(onExpand).toHaveBeenCalledWith('B07059');
+
+    const context = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    act(() => primaries[0]!.dispatchEvent(context));
+    expect(context.defaultPrevented).toBe(true);
+    expect(onExpand).toHaveBeenLastCalledWith('B07059');
+    expect(onExpand).toHaveBeenCalledTimes(2);
   });
 });

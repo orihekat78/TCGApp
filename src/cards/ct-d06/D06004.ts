@@ -12,7 +12,7 @@ const a1: AbilityDef = {
   type: 'continuous',
   scope: 'on-scene',
   condition: { kind: 'caseColor', color: ['緑', '白'], combine: 'and' },
-  continuousModifier: { grantKeywords: () => ['突撃'] },
+  continuousModifier: { grantKeywords: () => ['突撃'], printedKeywordWhenIconValid: true },
   description: '【事件緑＆白】〚突撃〛（登場したターンからすぐにアクションできる）',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
 };

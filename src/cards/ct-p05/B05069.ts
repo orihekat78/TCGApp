@@ -25,15 +25,9 @@ const a1: AbilityDef = {
   cost: { kind: 'sleepSelf' }, // 【スリープ】(もともと sleep / stun なら canPay=false で宣言不可)
   // レベル8以下のキャラを1枚まで選び、リムーブする
   effect: {
-    kind: 'choice',
-    chooser: 'self',
-    options: [
-      {
-        kind: 'atom',
-        verb: 'sceneRemove',
-        args: { uid: '$pick', target: { kind: 'pick', query: { area: 'scene', side: 'either', filter: { levelMax: 8 } }, n: { min: 0, max: 1 }, chooser: 'self' } },
-      },
-    ],
+    kind: 'atom',
+    verb: 'sceneRemove',
+    args: { player: 'self', side: 'either', max: 1, cause: 'effect', filter: { levelMax: 8 } },
   },
   description: '【パートナー赤】【宣言】【スリープ】：レベル8以下のキャラを1枚まで選び、リムーブする。現場に[FBI]が3枚以上いる場合に宣言できる。',
   ruleRefs: ['rules/21-declared-ability-cost.md', 'rules/17-icons.md', 'rules/15-abilities-effects.md'],

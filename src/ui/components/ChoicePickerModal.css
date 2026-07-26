@@ -50,6 +50,7 @@
   font-size: 16px;
   font-weight: 600;
   color: #1d5a86;
+  min-block-size: 44px;
 }
 
 .cp-cand:hover { background: #eaf3fe; }
@@ -57,10 +58,19 @@
 .cp-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 16px;
 }
 
+.cp-actions .cp-list {
+  display: flex;
+  gap: 8px;
+}
+
+.cp-actions .cp-list li { margin: 0; }
+
 .cp-btn {
+  min-block-size: 44px;
   padding: 8px 20px;
   border-radius: 6px;
   font-weight: 600;
@@ -69,3 +79,132 @@
 }
 
 .cp-btn-cancel { background: #ddd; color: #555; }
+
+.cp-choice-row {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cp-choice-row--selected .selectable-card-tile {
+  outline: 3px solid var(--accent, #ffd800);
+  outline-offset: 2px;
+}
+
+.leave-intercept-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.leave-intercept-card {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid #b9d6ec;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.leave-intercept-card-select {
+  min-width: 0;
+  min-height: 44px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  padding: 0 3px;
+  background: transparent;
+  color: #1d5a86;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.leave-intercept-card-select .card-art {
+  width: 34px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.leave-intercept-card-select span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.leave-intercept-card-detail {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #b9d6ec;
+  border-radius: 3px;
+  background: #fff;
+  color: #1d5a86;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.leave-intercept-card-select:hover,
+.leave-intercept-card-select:focus-visible,
+.leave-intercept-card-detail:hover,
+.leave-intercept-card-detail:focus-visible {
+  outline: 2px solid #2980b9;
+  outline-offset: 1px;
+}
+
+@media (max-width: 600px) {
+  .cp-overlay {
+    align-items: end;
+  }
+
+  .cp-modal {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    max-height: min(90dvh, 720px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 16px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .cp-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+  }
+
+  .leave-intercept-cards { grid-template-columns: 1fr; }
+}
+
+/* BUG-241: ChoicePickerModal を使う各 decision host は短辺で shell 内 scroll を共有する。 */
+@media (max-height: 480px) {
+  .cp-overlay {
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .cp-modal {
+    box-sizing: border-box;
+    max-height: calc(100dvh - 24px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .cp-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+  }
+}

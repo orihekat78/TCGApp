@@ -1,6 +1,10 @@
 // Phase 8.6α: GuardPickerModal tests
 
-import { describe, it, expect, vi } from 'vitest';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import {
   GuardPickerModal,
@@ -9,12 +13,31 @@ import {
 } from '@/ui/components/GuardPickerModal';
 import type { SceneCharacter } from '@/engine/types/game-state';
 
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+const SELECTABLE_TILE_CSS = readFileSync(
+  resolve(process.cwd(), 'src/ui/components/SelectableCardTile.css'),
+  'utf8',
+);
+
 const cands: GuardPickerCandidate[] = [
   { uid: 'u1', cardId: 'D08003', name: '毛利蘭', ap: 5000, lp: 2 },
   { uid: 'u2', cardId: 'D08005', name: '工藤新一', ap: 6000, lp: 3 },
 ];
 
 describe('GuardPickerModal', () => {
+  let root: Root | null = null;
+  let container: HTMLDivElement | null = null;
+  let styles: HTMLStyleElement | null = null;
+
+  afterEach(() => {
+    if (root) act(() => root!.unmount());
+    container?.remove();
+    root = null;
+    container = null;
+    styles?.remove();
+    styles = null;
+  });
   it('returns null when open=false', () => {
     const html = renderToString(
       <GuardPickerModal open={false} candidates={cands} onPick={vi.fn()} onSkip={vi.fn()} />,
@@ -55,6 +78,71 @@ describe('GuardPickerModal', () => {
       <GuardPickerModal open candidates={[]} onPick={vi.fn()} onSkip={vi.fn()} />,
     );
     expect(html).toContain('ガードできるキャラがいません');
+  });
+
+  it('selects guards by uid and keeps the pending prompt after card details close', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    styles = document.createElement('style');
+    styles.textContent = SELECTABLE_TILE_CSS;
+    document.head.appendChild(styles);
+    const onPick = vi.fn();
+    act(() => root!.render(<GuardPickerModal open candidates={cands} onPick={onPick} onSkip={vi.fn()} />));
+
+    expect(container.querySelectorAll('[data-instance-id]')).toHaveLength(2);
+    const candidate = container.querySelector<HTMLButtonElement>('[data-testid="guard-cand-u2"]');
+    expect(candidate).toBeInstanceOf(HTMLButtonElement);
+    expect(candidate?.dataset.instanceId).toBe('u2');
+    expect(getComputedStyle(candidate!).minHeight).toBe('44px');
+    expect(container.querySelector('button button')).toBeNull();
+    const details = container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]');
+    expect(details).toHaveLength(2);
+    act(() => details[0]!.click());
+    expect(container.querySelector('.card-expand-close')).not.toBeNull();
+    act(() => (container.querySelector('.card-expand-close') as HTMLButtonElement).click());
+    expect(container.querySelector('[data-testid="guard-picker-modal"]')).not.toBeNull();
+
+    act(() => candidate!.click());
+    expect(onPick).toHaveBeenCalledWith('u2');
+  });
+
+  it('gives duplicate public guards distinct primary and detail names without exposing their uids', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    const duplicates: GuardPickerCandidate[] = [
+      { uid: 'guard-internal:one', cardId: 'DUPLICATE-CARD', name: 'Duplicate', ap: 1000, lp: 1 },
+      { uid: 'guard-internal:two', cardId: 'DUPLICATE-CARD', name: 'Duplicate', ap: 1000, lp: 1 },
+    ];
+    act(() => root!.render(<GuardPickerModal open candidates={duplicates} onPick={vi.fn()} onSkip={vi.fn()} />));
+
+    const primary = [...container.querySelectorAll<HTMLButtonElement>('.selectable-card-tile__select')];
+    const detail = [...container.querySelectorAll<HTMLButtonElement>('[data-testid="selectable-card-tile-detail"]')];
+    expect(primary.map((button) => button.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目を選択', 'DUPLICATE-CARD 2枚目を選択']);
+    expect(detail.map((button) => button.getAttribute('aria-label'))).toEqual(['DUPLICATE-CARD 1枚目の詳細を表示', 'DUPLICATE-CARD 2枚目の詳細を表示']);
+    const labels = [...primary, ...detail].map((button) => button.getAttribute('aria-label')).join(' ');
+    expect(labels).not.toContain('guard-internal:one');
+    expect(labels).not.toContain('guard-internal:two');
+  });
+
+  it('blocks skip when a guard is mandatory', () => {
+    const html = renderToString(
+      <GuardPickerModal open candidates={cands} onPick={vi.fn()} onSkip={vi.fn()} mustGuard />,
+    );
+    expect(html).toContain('data-testid="guard-picker-must"');
+    expect(html).not.toContain('data-testid="guard-picker-skip"');
+  });
+
+  it('calls skip when guarding is optional', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    const onSkip = vi.fn();
+    act(() => root!.render(<GuardPickerModal open candidates={cands} onPick={vi.fn()} onSkip={onSkip} mustGuard={false} />));
+
+    act(() => (container.querySelector('[data-testid="guard-picker-skip"]') as HTMLButtonElement).click());
+    expect(onSkip).toHaveBeenCalledOnce();
   });
 });
 

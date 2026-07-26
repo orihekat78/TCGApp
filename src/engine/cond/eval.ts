@@ -6,12 +6,12 @@
 // Condition unmet → "ability/effect not held at all" (rules/17 Point).
 
 import type { GameState, Condition, EffectCtx, Candidate, SceneCharacter } from '@/engine/types';
-import { candidates, matchOneFilter, effectiveNameComponents, effectiveTraitNames } from '@/engine/target/candidates.js';
+import { candidates, matchOneFilter, effectiveKeywordForCard, effectiveNameComponents, effectiveTraitNames } from '@/engine/target/candidates.js';
 import { resolve as resolveTarget } from '@/engine/target/resolve.js';
 import { lookupCardDef, allCardNameComponentsForDef, cardNameComponents } from '@/engine/target/card-def-registry.js';
 import { char as charRead } from '@/engine/read/char.js';
-import { defHasKeyword } from '@/engine/read/keyword.js'; // wave#2 cluster2: boundMatchesFilter keyword 判定
 import { def as readDef } from '@/engine/read/def.js'; // mega-wave W6 step1: boundIsMr の MR 判定 (循環なし — read/def は types のみ import)
+import { removeExcludedSourceCardId } from '@/engine/read/effect-source.js';
 
 /** Type predicate: narrows a Candidate to the 'char' variant. */
 function isCharCandidate(c: Candidate): c is { kind: 'char'; uid: string; cardId: string; player: 'self' | 'opp' } {
@@ -42,11 +42,11 @@ function partnerColorsOverride(state: GameState, owner: 'self' | 'opp'): string[
 
 function removeIdsForCondition(state: GameState, player: 'self' | 'opp', ctx: EffectCtx): string[] {
   const remove = state.players[player].remove;
-  const sourceCardId = ctx.source.cardId;
-  if (ctx.source.player !== player || typeof sourceCardId !== 'string' || readDef.card(sourceCardId)?.kind !== 'event') {
-    return remove;
-  }
-  const sourceIndex = remove.indexOf(sourceCardId);
+  const sourceCardId = removeExcludedSourceCardId(ctx, player);
+  if (sourceCardId === undefined) return remove;
+  // Normal events/Hirameki are appended after the pre-existing remove pile in
+  // the compatibility lifecycle.  lastIndexOf preserves older same-ID copies.
+  const sourceIndex = remove.lastIndexOf(sourceCardId);
   return sourceIndex === -1 ? remove : remove.filter((_, index) => index !== sourceIndex);
 }
 
@@ -215,6 +215,10 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
     case 'handAtMost': {
       const p = resolvePlayer(cond.player, ctx);
       return state.players[p].hand.length <= cond.n;
+    }
+    case 'deckAtLeast': {
+      const p = resolvePlayer(cond.player, ctx);
+      return state.players[p].deck.length >= cond.n;
     }
     case 'handCountAtLeastOther': {
       const p = resolvePlayer(cond.player, ctx);
@@ -508,9 +512,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       const boundSet = ctx.bindings?.[cond.bindKey];
       if (!Array.isArray(boundSet) || boundSet.length === 0) return false;
       for (const b of boundSet) {
-        const bId = (b as { cardId?: string }).cardId;
+        const { cardId: bId, player: boundPlayer } = b as { cardId?: string; player?: 'self' | 'opp' };
         if (typeof bId !== 'string') continue;
-        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: ctx.source.player };
+        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: boundPlayer ?? ctx.source.player };
         if (matchOneFilter(state, bId, cond.filter, null, cand)) return true;
       }
       return false;
@@ -523,9 +527,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (cond.traitBind !== undefined && typeof declared?.trait !== 'string') return false;
       let count = 0;
       for (const b of boundSet) {
-        const cardId = (b as { cardId?: string }).cardId;
+        const { cardId, player: boundPlayer } = b as { cardId?: string; player?: 'self' | 'opp' };
         if (typeof cardId !== 'string') continue;
-        const cand: Candidate = { kind: 'card', cardId, area: 'remove', player: ctx.source.player };
+        const cand: Candidate = { kind: 'card', cardId, area: 'remove', player: boundPlayer ?? ctx.source.player };
         if (matchOneFilter(state, cardId, filter, null, cand)) count++;
       }
       return count >= cond.n;
@@ -543,9 +547,9 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (!Array.isArray(bdcSet) || bdcSet.length === 0) return false;
       const bdcColorSets: string[][] = [];
       for (const b of bdcSet) {
-        const bId = (b as { cardId?: string }).cardId;
+        const { cardId: bId, player: boundPlayer } = b as { cardId?: string; player?: 'self' | 'opp' };
         if (typeof bId !== 'string') continue;
-        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: ctx.source.player };
+        const cand: Candidate = { kind: 'card', cardId: bId, area: 'remove', player: boundPlayer ?? ctx.source.player };
         if (cond.filter && !matchOneFilter(state, bId, cond.filter, null, cand)) continue;
         bdcColorSets.push(lookupCardDef(bId)?.colors ?? []);
       }
@@ -614,6 +618,7 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       if (!Array.isArray(bound) || bound.length === 0) return false;
       const cardId = (bound[0] as { cardId?: string }).cardId;
       if (typeof cardId !== 'string') return false;
+      const boundPlayer = (bound[0] as { player?: 'self' | 'opp' }).player ?? ctx.source.player;
       const d = lookupCardDef(cardId);
       const f = cond.filter;
       // CardDef-driven filter のみサポート (SceneCharacter state 系は対象外)
@@ -657,7 +662,12 @@ export function evalCond(state: GameState, cond: Condition, ctx: EffectCtx): boo
       // 数値は printed 値判定 (bound カードは scene candidate を持たない — targetFilterToPredicate と同式)。
       if (f.keyword !== undefined) {
         const wants = Array.isArray(f.keyword) ? f.keyword : [f.keyword];
-        if (!wants.some(w => defHasKeyword(d, w))) return false;
+        if (!wants.some(w => effectiveKeywordForCard(
+          state,
+          `bound:${boundPlayer}:${cardId}`,
+          w,
+          { cardId, player: boundPlayer, area: 'bound' },
+        ))) return false;
       }
       if (f.kind !== undefined && d?.kind !== f.kind) return false;
       const bmfAp = d?.ap ?? 0;
@@ -958,7 +968,7 @@ const CONDITION_KIND_MAP = {
   evidenceDiff: true, sceneCountCompare: true, // engine additive wave (2026-06-30, B05103/B05081)
   boundCountCompare: true, // S2 deck cluster (2026-07-10, B08057): bound 要素数比較 (合わせてN枚 gate)
   evidenceTraitAtLeast: true, // engine E3 P53 (2026-07-03, B09107 証拠特徴計数)
-  handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, // Task D E1 (2026-06-12)
+  handAtLeast: true, handAtMost: true, handCountAtLeastOther: true, deckAtLeast: true, // Task D E1 (2026-06-12)
   fileTopType: true,
   fileTopMatches: true, triggerPlayerIs: true, // Task D E3 (2026-06-12)
   scratchTrace: true, flag: true, declaredUseUnder: true, bound: true,

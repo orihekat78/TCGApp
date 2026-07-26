@@ -31,7 +31,7 @@ const a1: AbilityDef = {
     kind: 'sequence',
     steps: [
       // レベル7のカードが出るまで1枚ずつ公開 (until-match, maxN 無し) → $matched に bind
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { levelMin: 7, levelMax: 7 }, bind: '$revealed', bindMatch: '$matched' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', filter: { levelMin: 7, levelMax: 7 }, bind: '$revealed', bindMatch: '$matched' } },
       // それ(レベル7)を必ず手札に加える
       { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } } },
       // 残りの公開したカードをデッキの下に移す

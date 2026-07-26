@@ -22,6 +22,7 @@ import { playTurn, applyMove } from '../policy.js';
 import type { Move } from '../move-enumerator.js';
 import type { GameState } from '@/engine/types';
 import { produce } from '@/engine/produce';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import { runMatch } from '../match.js';
 import { HeuristicPolicy, type HeuristicPolicyOptions } from './heuristic.js';
 import { RandomPolicy } from './random.js';
@@ -102,6 +103,7 @@ export class MCTSPolicy implements AIPolicy {
     try {
       const afterMove = produce(state, (draft) => {
         applyMove(draft, move, byPlayer);
+        runAllUntilEmpty(draft);
       });
       // gameResult が即時に決まった場合 (例: solveCase 勝利)
       if (afterMove.gameResult) {

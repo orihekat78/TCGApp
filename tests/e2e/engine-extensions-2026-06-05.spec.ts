@@ -17,11 +17,20 @@ async function getPendingEffectPick(page: Page): Promise<{
   })) as { player: string; atomVerb: string; candidates: { uid: string; cardId: string; player: string }[] } | null;
 }
 
+async function getPendingDeckReorder(page: Page): Promise<{ cardIds: string[] } | null> {
+  return page.evaluate(() => {
+    const w = window as unknown as { __game: { getState: () => { pendingDeckReorder: { cardIds: string[] } | null } } };
+    return w.__game.getState().pendingDeckReorder;
+  });
+}
+
 async function prime(page: Page): Promise<void> {
   await page.evaluate(() => {
     (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
-    const w = window as unknown as { __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void } } } };
-    w.__game.store.getState().setSpectatorMode(false);
+    const w = window as unknown as { __game: { store: { getState: () => { setSpectatorMode: (v: boolean) => void; setAiPaused: (v: boolean) => void } } } };
+    const store = w.__game.store.getState();
+    store.setSpectatorMode(false);
+    store.setAiPaused(true);
   });
 }
 
@@ -115,7 +124,8 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
       // opp の B01063 で 自分以外 sleep cost + 1pick level≤7 sceneRemove (両方の現場が候補)
       opp.scene = [mkC('B01063', 'jdy#1'), mkC('D08006', 'jdy-aux')];
       self.hand = []; self.deck = ['D08013', 'D08019', 'D08021']; self.evidence = []; self.remove = [];
-      opp.hand = []; opp.deck = ['D08013']; opp.evidence = []; opp.remove = [];
+      // 相手ターンfixtureのNext Hint（2枚）後も山札を残し、離場時効果をdeck-outから分離する。
+      opp.hand = []; opp.deck = ['D08013', 'D08019', 'D08021']; opp.evidence = []; opp.remove = [];
       gs.pendingEffects = [];
       gs.turn = { number: 3, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
     });
@@ -287,6 +297,13 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     expect(d11005Cand, 'D11005 が discard 候補').toBeTruthy();
     await dispatchAction(page, { type: 'effectPickResolve', pickedUid: d11005Cand!.uid });
 
+    // 「残りを好きな順番でデッキの下に移す」を人間が確定してから結果を読む。
+    await expect.poll(async () => (await getPendingDeckReorder(page))?.cardIds.length ?? 0).toBe(3);
+    await dispatchAction(page, {
+      type: 'deckReorderResolve',
+      order: ['D11015', 'D11003', 'D11004'],
+    });
+
     const after = await getGameState(page);
     const deck = (after.players.self as { deck: string[] }).deck;
     const hand = (after.players.self as { hand: string[] }).hand;
@@ -342,7 +359,7 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     // B08054 に裏向きで D08013 がセットされている
     const hir = selfScene.find((c) => c.uid === 'hir#1');
     expect(hir?.setCards.length, 'setCards に 1 枚').toBe(1);
-    expect(hir?.setCards[0], 'D08013 を裏向きで set').toEqual({ cardId: 'D08013', faceUp: false });
+    expect(hir?.setCards[0], 'D08013 を裏向きで set').toMatchObject({ cardId: 'D08013', faceUp: false });
     expect(errors).toEqual([]);
   });
 
@@ -386,7 +403,7 @@ test.describe('engine-extension #1/#2 (2026-06-05) E2E', () => {
     const deck = (after.players.self as { deck: string[] }).deck;
 
     expect(tgt?.setCards.length, 'tgt#1 に 1 枚セット').toBe(1);
-    expect(tgt?.setCards[0], 'D08013 を裏向きで set').toEqual({ cardId: 'D08013', faceUp: false });
+    expect(tgt?.setCards[0], 'D08013 を裏向きで set').toMatchObject({ cardId: 'D08013', faceUp: false });
     expect(deck, 'デッキから D08013 splice').toEqual(['D08019']);
     expect(errors).toEqual([]);
   });

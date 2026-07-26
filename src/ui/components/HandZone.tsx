@@ -14,7 +14,7 @@ import './HandZone.css';
 // ------------------------------------------------------------------
 
 export type CardId = string;
-export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
+export type CardColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple' | 'black' | 'white';
 export type CardType = 'キャラ' | 'イベント';
 
 export type HandCardMeta = {
@@ -73,6 +73,8 @@ export type HandZoneProps = {
    */
   pickBannerText?: string;
   pickableCardIds?: ReadonlySet<string>;
+  /** occurrence 単位の候補。重複 cardId の一部だけが候補のときに使う。 */
+  pickableCardUids?: ReadonlySet<string>;
   pickSkipLabel?: string;
   /**
    * BUG-165 UI 側 (wave-10 2026-07-02): nMax > 1 の discard pick (B04005/B07002「手札を2枚リムーブする」)
@@ -272,6 +274,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     onPickSkip,
     pickBannerText,
     pickableCardIds,
+    pickableCardUids,
     pickSkipLabel,
     onPickCancel,
     pickCancelLabel,
@@ -296,7 +299,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
     });
   };
 
-  if (cards.length === 0) {
+  if (cards.length === 0 && !pickMode) {
     return (
       <div className="hand-zone hand-zone--empty" aria-label="手札 0 枚">
         <div className="hand-empty-message">手札なし</div>
@@ -423,6 +426,7 @@ export function HandZone(props: HandZoneProps): JSX.Element {
         </div>
       )}
       <div className="hand-cards-row" onClick={handleRowBackdropClick}>
+        {cards.length === 0 && <div className="hand-empty-message">手札なし</div>}
         {cards.map((c, index) => {
           // Pick mode (User vision): 全 card cell が pick 対象、click → onPickCard
           // (`<cardId>#<idx>` 形式 uid)。onCardClick は suppress。
@@ -430,8 +434,12 @@ export function HandZone(props: HandZoneProps): JSX.Element {
           if (pickMode && (onPickCard || isMultiPick)) {
             // 2026-05-28: pickableCardIds 指定時は該当カードのみ pickable (黄色枠+click)。
             // 非該当は disabled (dimmed, click 無効)。未指定なら全 pickable (discard 既存挙動)。
-            const canPick = pickableCardIds ? pickableCardIds.has(c.cardId) : true;
             const pickUid = `${c.cardId}#${index}`;
+            const canPick = pickableCardUids
+              ? pickableCardUids.has(pickUid)
+              : pickableCardIds
+                ? pickableCardIds.has(c.cardId)
+                : true;
             // BUG-165 UI 側: multi-select は click = toggle (即 dispatch しない)、完了ボタンで確定。
             const isSelected = isMultiPick && pickSelected.includes(pickUid);
             return (

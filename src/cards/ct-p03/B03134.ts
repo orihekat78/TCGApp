@@ -14,21 +14,7 @@ const a1: AbilityDef = {
     selfOnly: true,
     matcher: (p: unknown) => (p as { kind?: unknown })?.kind === 'event-use'
   },
-  condition: {
-    kind: 'and',
-    cs: [
-      {
-        kind: 'evidenceDiff',
-        player: 'opp',
-        other: 'self',
-        n: 0
-      },
-      {
-        kind: 'partnerColor',
-        color: '黒'
-      }
-    ]
-  },
+  condition: { kind: 'partnerColor', color: '黒' },
   effect: {
     kind: 'atom',
     verb: 'sceneRemove',
@@ -61,6 +47,7 @@ export const B03134: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1729133510452584.jpg',
+  useCondition: { kind: 'evidenceDiff', player: 'opp', other: 'self', n: 0 },
   abilities: [a1],
   ruleRefs: [
     'rules/03-field-areas.md',

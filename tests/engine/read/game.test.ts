@@ -7,15 +7,22 @@ function withState(overrides: Partial<GameState>): GameState {
   return { ...createEmptyGameState(), ...overrides };
 }
 
+function mainState(player: 'self' | 'opp' = 'self'): GameState {
+  const state = createEmptyGameState();
+  state.turn.player = player;
+  state.turn.phase = 'main';
+  return state;
+}
+
 describe('engine.read.game', () => {
   describe('canWin', () => {
     it('事件編では勝利不可', () => {
-      const s = createEmptyGameState();
+      const s = mainState();
       expect(game.canWin(s, 'self')).toBe(false);
     });
 
     it('解決編 + 証拠不足では勝利不可', () => {
-      const s = createEmptyGameState();
+      const s = mainState();
       const s2: GameState = {
         ...s,
         players: {
@@ -32,7 +39,7 @@ describe('engine.read.game', () => {
     });
 
     it('解決編 + 証拠達成 + アクティブパートナー = 勝利可能', () => {
-      const s = createEmptyGameState();
+      const s = mainState();
       const evidence = Array.from({ length: 7 }, (_, i) => ({
         cardId: `E${i}`,
         faceUp: false,
@@ -54,7 +61,7 @@ describe('engine.read.game', () => {
     });
 
     it('パートナーがスリープ状態では勝利不可', () => {
-      const s = createEmptyGameState();
+      const s = mainState();
       const evidence = Array.from({ length: 7 }, (_, i) => ({
         cardId: `E${i}`,
         faceUp: false,
@@ -76,7 +83,7 @@ describe('engine.read.game', () => {
     });
 
     it('パートナーがFILEエリアにある場合 (アシスト済み) は勝利不可 (rules/01)', () => {
-      const s = createEmptyGameState();
+      const s = mainState();
       const evidence = Array.from({ length: 7 }, (_, i) => ({
         cardId: `E${i}`,
         faceUp: false,
@@ -98,7 +105,7 @@ describe('engine.read.game', () => {
     });
 
     it('アシストしたターンは事件解決できない (rules/01)', () => {
-      const s = createEmptyGameState();
+      const s = mainState();
       const evidence = Array.from({ length: 7 }, (_, i) => ({
         cardId: `E${i}`,
         faceUp: false,
@@ -124,8 +131,33 @@ describe('engine.read.game', () => {
     });
 
     it('opp側も判定できる', () => {
-      const s = createEmptyGameState();
+      const s = mainState('opp');
       expect(game.canWin(s, 'opp')).toBe(false);
+    });
+
+    it('terminal state does not change the state-query result', () => {
+      const s = mainState();
+      const evidence = Array.from({ length: 7 }, (_, i) => ({
+        cardId: `E${i}`,
+        faceUp: false,
+        origin: { turn: 1, via: 'reasoning' as const },
+      }));
+      const terminal: GameState = {
+        ...s,
+        gameResult: { winner: 'opp', reason: 'deck-out' },
+        players: {
+          ...s.players,
+          self: {
+            ...s.players.self,
+            case: { ...s.players.self.case, status: '解決編', requiredEvidence: 7 },
+            evidence,
+            partner: { cardId: 'P', state: 'active', location: 'partner-area' },
+          },
+        },
+      };
+
+      expect(game.canWin(terminal, 'self')).toBe(true);
+      expect(game.canPartnerSolveCase(terminal, 'self')).toBe(false);
     });
   });
 

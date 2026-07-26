@@ -1,6 +1,7 @@
 import type { AbilityDef, EffectCtx, GameState } from '../types/index.js';
 import { def as readDef } from '../read/def.js';
 import { matchOneFilter } from '../target/candidates.js';
+import { char as readChar } from '../read/char.js';
 
 type Player = 'self' | 'opp';
 
@@ -9,6 +10,7 @@ export function alternativeCostProviders(state: GameState, ctx: EffectCtx, abili
   if (!ability.cost) return [];
   const player = ctx.source.player as Player;
   return state.players[player].scene.filter((char) => {
+    if (readChar.originalAbilitiesDisabled(state, char.uid)) return false;
     const def = readDef.card(char.cardId);
     return (def?.abilities ?? []).some((provider) => {
       const spec = provider.continuousModifier?.alternativeCostProvider;

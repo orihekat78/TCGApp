@@ -50,6 +50,9 @@ export function createEmptyGameState(): GameState {
       opp: createEmptyPlayerState(6),
     },
     pendingEffects: [],
+    effectTriggerBatchSeq: 0,
+    declaredBatchSeq: 0,
+    reasoningContinuationSeq: 0,
     setCardInstanceSeq: 1,
     reservedEffects: [], // W6 step8 (row75): 離場後予約効果 queue
 

@@ -5,6 +5,10 @@
 
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { MisreadPickerModal } from '@/ui/components/MisreadPickerModal';
 
 describe('MisreadPickerModal', () => {
@@ -12,6 +16,7 @@ describe('MisreadPickerModal', () => {
     const html = renderToString(
       <MisreadPickerModal
         open={false}
+        decisionKey="closed"
         reasoningName="毛利蘭"
         reasoningLp={5000}
         candidates={[]}
@@ -26,6 +31,7 @@ describe('MisreadPickerModal', () => {
     const html = renderToString(
       <MisreadPickerModal
         open={true}
+        decisionKey="decision-1"
         reasoningName="毛利蘭"
         reasoningLp={5000}
         candidates={[
@@ -44,5 +50,77 @@ describe('MisreadPickerModal', () => {
     expect(html).toMatch(/LP -1000/);
     expect(html).toMatch(/data-testid="misread-confirm-btn"/);
     expect(html).toMatch(/data-testid="misread-skip-btn"/);
+  });
+
+  it('閉じて再表示した時と次のpendingに切り替わった時に選択をリセットする', () => {
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    const render = (open: boolean, reasoningName: string): void => {
+      act(() => root.render(
+        <MisreadPickerModal
+          open={open}
+          decisionKey={reasoningName}
+          reasoningName={reasoningName}
+          reasoningLp={3}
+          candidates={[{ uid: 'm1', cardName: 'M1', x: 1 }]}
+          onConfirm={() => {}}
+          onSkip={() => {}}
+        />,
+      ));
+    };
+
+    render(true, 'reasoner-a');
+    const checkbox = (): HTMLInputElement => container.querySelector('[data-testid="misread-cand-m1"]')!;
+    act(() => checkbox().dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(checkbox().checked).toBe(true);
+
+    render(false, 'reasoner-a');
+    render(true, 'reasoner-a');
+    expect(checkbox().checked).toBe(false);
+
+    act(() => checkbox().dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(checkbox().checked).toBe(true);
+    render(true, 'reasoner-b');
+    expect(checkbox().checked).toBe(false);
+
+    act(() => root.unmount());
+  });
+  it('renders public candidate art and a sibling detail control without changing checkbox selection', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => root.render(
+      <MisreadPickerModal
+        open
+        decisionKey="detail"
+        reasoningName="Reasoner"
+        reasoningLp={5000}
+        candidates={[{ uid: 'm1', cardId: 'D08015', cardName: 'Public card', x: 1000 }]}
+        onConfirm={() => {}}
+        onSkip={() => {}}
+      />,
+    ));
+
+    const checkbox = container.querySelector<HTMLInputElement>('[data-testid="misread-cand-m1"]')!;
+    const detail = container.querySelector<HTMLButtonElement>('[data-testid="misread-detail-m1"]')!;
+    expect(container.querySelector('[data-testid="misread-card-m1"] img')).not.toBeNull();
+    expect(detail).toBeInstanceOf(HTMLButtonElement);
+    expect(detail.getAttribute('aria-label')).toBe('Public card（1枚目）の詳細を表示');
+    act(() => detail.click());
+    expect(checkbox.checked).toBe(false);
+    expect(container.querySelector('.card-expand-modal')).not.toBeNull();
+
+    const contextEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    act(() => container.querySelector('[data-testid="misread-card-m1"]')!.dispatchEvent(contextEvent));
+    expect(contextEvent.defaultPrevented).toBe(true);
+    expect(checkbox.checked).toBe(false);
+
+    act(() => root.unmount());
+    container.remove();
+  });
+  it('keeps public details at the mobile touch target minimum', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/ui/components/MisreadPickerModal.css'), 'utf8');
+    expect(css).toMatch(/\.misread-detail\s*\{[\s\S]*min-width:\s*44px;[\s\S]*min-height:\s*44px;/);
   });
 });

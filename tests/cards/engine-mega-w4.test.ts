@@ -524,7 +524,9 @@ describe('W4 step3 r5: charStackCard fromSelf (scene→stack、非リムーブ�
     ky.setCards = [{ cardId: 'SETX', faceUp: true }];
     ky.stackedCards = 2;
     s.players.self.scene = [ky, sceneChar('HOSTX', 'host#1')];
-    s.players.self.deck = ['SB_LV3'];
+    // Leave one card after the chain draw.  This case isolates the leave
+    // cascade; exact deck exhaustion and refresh are covered separately.
+    s.players.self.deck = ['SB_LV3', 'SB_LV3B'];
     runChain(s, kyCtx());
     const r = dispatchEngineAction({ type: 'effectPickResolve', pickedUid: 'host#1' });
     expect(r.ok).toBe(true);

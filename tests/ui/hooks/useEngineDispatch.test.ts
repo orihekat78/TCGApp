@@ -26,6 +26,7 @@ import type {
 } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../../helpers/fixtures';
 import { register as engineRegisterCardDef } from '@/engine/read/def';
+import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 
 // ---- fixtures ----
 
@@ -48,6 +49,7 @@ function makeChar(uid: string, cardId = 'cX'): SceneCharacter {
 describe('dispatchEngineAction (pure function)', () => {
   beforeEach(() => {
     useGameStateStore.setState({ gameState: null });
+    useTargetPickerStore.getState()._reset();
     vi.restoreAllMocks();
   });
 
@@ -201,6 +203,21 @@ describe('dispatchEngineAction (pure function)', () => {
       const result = dispatchEngineAction({ type: 'endTurn', player: 'opp' });
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.reason).toBe('not-allowed');
+    });
+
+    it('direct endTurn dispatch is rejected while an action picker is unresolved', () => {
+      const init = withMainPhase(createEmptyGameState());
+      useGameStateStore.setState({ gameState: init });
+      useTargetPickerStore.getState()._setPhase({
+        phase: 'picking',
+        candidates: ['self-1'],
+        purpose: 'action:source',
+      });
+
+      const result = dispatchEngineAction({ type: 'endTurn', player: 'self' });
+
+      expect(result).toEqual({ ok: false, reason: 'not-allowed' });
+      expect(useGameStateStore.getState().gameState!.turn.player).toBe('self');
     });
 
     it('engine throw: captured as { ok:false, reason:"engine-error", detail }', () => {

@@ -45,6 +45,8 @@ const JP_COLOR_TO_EN: Record<string, CardColor> = {
   '赤': 'red',
   '緑': 'green',
   '紫': 'purple',
+  '黒': 'black',
+  '白': 'white',
 };
 
 function parseIntSafe(value: string | number | null | undefined): number {

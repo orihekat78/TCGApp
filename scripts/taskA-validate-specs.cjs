@@ -60,7 +60,7 @@ const FORBIDDEN_VERBS = new Set(['charSetAP', 'charSetLP', 'startContact', 'endA
 // listeners/triggered.ts TRIGGERED_HOOKS (card-triggerable のみ)
 const HOOKS = new Set([
   'enter', 'enter:group', 'disguise:into', 'leave:to-remove', 'action:declare', 'action:guarded',
-  'action:pre-target', 'contact:start', 'reasoning:end', 'case:to-resolved',
+  'action:pre-target', 'contact:start', 'reasoning:after-sleep', 'reasoning:end', 'case:to-resolved',
   'phase:end:start', 'effect:declared', 'evidence:remove-by-action',
   'phase:main:start', // engine defer-unlock mini-wave (2026-07-09): メインフェイズ開始時 (B05072)
   'file:pop', // Task D E3 (2026-06-12)
@@ -92,7 +92,7 @@ const CONDS = new Set([
   'eventUseSource', // engine mega-wave W6 step3 (2026-07-04, P19): イベント使用の起源判別 (B07026)
   'selfSelectedByOwnMrThisTurn', 'paMrColorCountMin', // engine mega-wave W6 step6 (2026-07-04, r79): MR 選択追跡 / PA-MR 色数 (B08014/B09047)
   // Task D E1 (2026-06-12): hand-count conditions
-  'handAtLeast', 'handAtMost', 'handCountAtLeastOther',
+  'handAtLeast', 'handAtMost', 'handCountAtLeastOther', 'deckAtLeast',
   // Task D E2/E3 (2026-06-12)
   'fileTopMatches', 'triggerPlayerIs', 'triggerViaNextHint', 'triggerCardMatches', 'charTurnEffect',
   'sourceInScene', 'boundCharStateIs', // B04055 / B09024 resolution-time source and remove snapshot

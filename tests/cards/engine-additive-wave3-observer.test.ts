@@ -11,7 +11,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from 'immer';
 import { event } from '@/engine/event/index';
-import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
+import { registerTriggeredListener, _resetTriggeredRegistered, _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { registerMisreadListener, _resetMisreadRegistered, _resetPendingMisread, _drainPendingMisread } from '@/engine/listeners/misread';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { cutIn, canCutIn } from '@/engine/flow/contact';
@@ -19,6 +19,7 @@ import { doReasoning } from '@/engine/flow/main/reasoning';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { makeChar } from '../helpers/fixtures';
@@ -252,6 +253,7 @@ describe('wave3 G04 — misread:performed observer (人間 defender / UI dispatc
   };
   beforeEach(() => {
     event._resetRegistry(); _resetTriggeredRegistered(); _resetMisreadRegistered(); _resetPendingMisread();
+    _setHumanPlayerSide('self');
     _resetUidCounter(); resetDefRegistry();
     // 推理キャラ R(opp) / 相手観測 OBS(opp, side:opp) / misread+自己観測 M(self, selfOnly)
     registerCardDef(defOf({ id: 'R', lp: 1000 }));
@@ -271,6 +273,7 @@ describe('wave3 G04 — misread:performed observer (人間 defender / UI dispatc
 
     // opp 推理 → reasoning:before-add → defender=self(人間) なので side-channel に pendingMisread が乗る
     doReasoning(s, 'r1');
+    runAllUntilEmpty(s);
     const pending = _drainPendingMisread();
     expect(pending, '人間 defender 経路 = side-channel set').not.toBeNull();
 

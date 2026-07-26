@@ -40,6 +40,7 @@ export const PR158: CardDef = {
   traits: ['犯人'],
   keywords: [],
   rarity: 'PR',
+  deckLimit: 'unlimited',
   imageUrl: '1753704129533219.jpg',
   abilities: [a1],
   ruleRefs: [

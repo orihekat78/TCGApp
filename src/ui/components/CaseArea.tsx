@@ -12,7 +12,7 @@ import { CardArt } from './CardArt.js';
 import { useCardOrientation } from '../hooks/useCardOrientation.js';
 import './CaseArea.css';
 
-export type CaseColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple';
+export type CaseColor = 'blue' | 'yellow' | 'red' | 'green' | 'purple' | 'black' | 'white';
 export type CaseStatus = '事件編' | '解決編';
 
 /**

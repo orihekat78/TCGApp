@@ -93,3 +93,42 @@
   font-size: 11px;
   color: #80a0e8;
 }
+
+@media (max-width: 600px) {
+  .replay-panel {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 8px;
+  }
+
+  .replay-panel-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .replay-panel-label {
+    min-width: 42px;
+  }
+
+  .replay-panel-btn,
+  .replay-panel-preset {
+    padding: 4px 8px;
+  }
+
+  .replay-panel-progress,
+  .replay-panel-current {
+    min-width: 48px;
+  }
+
+  .replay-panel-seek {
+    min-width: 80px;
+  }
+
+  .replay-panel-move-info {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

@@ -62,7 +62,8 @@ test.describe('reasoning-hook batch #3 (2026-06-06)', () => {
       ];
       // 相手現場にも Lv7 (l7opp) + Lv6 decoy (l6opp) — rules/15「どちらの現場でも選べる」を検証
       opp.scene = [mkC('D08022', 'l7opp'), mkC('D08011', 'l6opp')];
-      self.deck = ['D08005']; // 推理 LP1 で 1 枚証拠化
+      // 推理対象は先頭 D08005。末尾はexact exhaustionによるdeck-outを避ける予備。
+      self.deck = ['D08005', 'D08013'];
       gs.pendingEffects = [];
       gs.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
     });
@@ -115,7 +116,8 @@ test.describe('reasoning-hook batch #3 (2026-06-06)', () => {
       self.case = { cardId: 'D08026', status: '事件編', requiredEvidence: 7, colors: ['黄'], declaredUseCount: {} };
       self.hand = []; self.evidence = []; self.remove = []; self.file = [];
       self.scene = [mkC('B03096', 'mgr#1')];
-      self.deck = ['D08005', 'D08013']; // LP1 証拠化 → 発見ドローで D08013
+      // 先頭から LP1 証拠化 → 発見ドローで D08013。末尾はdeck-outを避ける予備。
+      self.deck = ['D08005', 'D08013', 'D08009'];
       // opp deck top = Lv8 (D08003 江戸川コナン Lv8) = 発見成立
       opp.deck = ['D08003', 'D08009', 'D08010'];
       gs.pendingEffects = [];

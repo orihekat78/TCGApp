@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { produce } from 'immer';
 import { B09033 } from '@/cards/ct-p09/B09033';
 import { createEmptyGameState } from '@/engine/state-factory';
@@ -25,8 +25,15 @@ const H3 = highSchooler('B09033_H3');
 const H4 = highSchooler('B09033_H4');
 const DUP = highSchooler('B09033_DUP');
 
+beforeEach(() => {
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
+});
+
 function resetB09033(...defs: CardDef[]): void {
   event._resetRegistry(); _resetRegistry(); _resetTriggeredRegistered(); _clearPendingEffectPickQueue(); _clearPendingEffectOptionalSide(); _clearPendingEffectRepeatOptionalSide();
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
   [B09033, ...defs].forEach(register);
   registerTriggeredListener();
 }
@@ -64,7 +71,11 @@ describe('B09033 「ひょっとしたら…」', () => {
 
     expect(state.players.self.scene).toHaveLength(4);
     expect(state.players.self.file).toHaveLength(3);
-    expect(state.players.self.deck).toHaveLength(0);
+    // 4枚目の登場で exact exhaustion。反復コストで remove へ移した FILE 3枚を即 refresh。
+    expect(state.players.self.deck).toEqual([H1.id, H1.id, H1.id]);
+    expect(state.players.self.remove).toHaveLength(0);
+    expect(state.refreshCount.self).toBe(1);
+    expect(state.players.opp.evidence).toHaveLength(1);
   });
 
   it('同一カードIDでも、選択した公開window上の実体だけを登場させ、残った同IDを次の反復で選べる', () => {

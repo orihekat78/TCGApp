@@ -104,6 +104,10 @@ describe('B04075 白鳥 behavioral', () => {
     let atk = '', def = '', mob = '', sw = '';
     const s = produce(createEmptyGameState(), (d) => {
       d.turn.player = 'self';
+      // CUT draws once. Keep both players non-terminal so this suite isolates
+      // the cutin observer and inContact target filter.
+      d.players.self.deck = ['MOB', 'MOB'];
+      d.players.opp.deck = ['MOB', 'MOB'];
       sw = mutate.scene.enter(d, 'self', 'B04075', {}).uid;
       atk = mutate.scene.enter(d, 'self', 'ATK', {}).uid;
       mob = mutate.scene.enter(d, 'self', 'MOB', {}).uid;

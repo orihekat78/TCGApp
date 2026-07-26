@@ -208,3 +208,27 @@
   color: var(--text-muted);
   font-size: 9px;
 }
+
+.log-panel .log-card-link {
+  appearance: none;
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.log-panel .log-card-link:hover {
+  color: var(--neon-blue);
+  text-decoration-style: solid;
+}
+.log-panel .log-card-link:focus-visible {
+  color: var(--neon-blue);
+  outline: 1px solid currentcolor;
+  outline-offset: 1px;
+}

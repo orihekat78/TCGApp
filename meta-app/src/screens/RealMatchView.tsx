@@ -10,17 +10,16 @@
 
 import { useEffect } from 'react';
 import { Playmat } from '@/ui/components/Playmat';
-import { GameSetupModal } from '@/ui/components/GameSetupModal';
 import { MulliganModal } from '@/ui/components/MulliganModal';
 import { OppTurnOverlay } from '@/ui/components/OppTurnOverlay';
 import { SpectatorHUD } from '@/ui/components/SpectatorHUD';
 import { ReplayPanel } from '@/ui/components/ReplayPanel';
 import { useReplayDriver } from '@/ui/hooks/useReplayDriver';
-import type { ReplayLog } from '@/ai/replay';
 import { RecentActionToast } from '@/ui/components/RecentActionToast';
 import { _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import { useEffectPickFlowDriver } from '@/ui/hooks/useEffectPickFlowDriver';
 import { EffectPickerModal } from '@/ui/components/EffectPickerModal';
+import { EffectDecisionModalHosts } from '@/ui/components/EffectDecisionModalHosts';
 import { HiramekiDemoPickerModal } from '@/ui/components/HiramekiDemoPickerModal';
 import { HiramekiDemoBanner } from '@/ui/components/HiramekiDemoBanner';
 import { useHiramekiDemoDriver } from '@/ui/hooks/useHiramekiDemoDriver';
@@ -83,6 +82,19 @@ export function RealMatchView({ onMatchEnd }: Props) {
     return;
   }, [gameState, onMatchEnd]);
 
+  // Meta アプリでは SetupScreen が対戦初期化を所有する。
+  // マリガン待ち中に旧盤面や standalone 用 GameSetupModal を露出しない。
+  if (gameState === null) {
+    return (
+      <>
+        <div role="status" style={{ padding: 24, color: '#9bb7c9' }}>
+          対戦を準備しています…
+        </div>
+        <MulliganModal />
+      </>
+    );
+  }
+
   return (
     <>
       <Playmat
@@ -91,7 +103,6 @@ export function RealMatchView({ onMatchEnd }: Props) {
         resolveCase={resolveCase}
         resolveHandCard={resolveHandCard}
       />
-      <GameSetupModal onLoadReplay={(log) => replayDriver.loadLog(log as ReplayLog)} />
       {hiramekiDemoMode === 'picking' && (
         <HiramekiDemoPickerModal
           onPick={(cardId) => {
@@ -130,6 +141,7 @@ export function RealMatchView({ onMatchEnd }: Props) {
       {/* BUG-088: replay 再生中は CPU 制御 HUD を出さない (ReplayPanel と top で重なり close を遮るため) */}
       {replayDriver.state.log === null && <SpectatorHUD />}
       <EffectPickerModal />
+      <EffectDecisionModalHosts />
       <DeckRevealOverlay />
       <RecentActionToast />
       <ContactFlash />

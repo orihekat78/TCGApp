@@ -64,7 +64,7 @@ describe('runDeclaredAbilityFlow removeStackedCards', () => {
     expect(await runDeclaredAbilityFlow({ player: 'self' })).toMatchObject({ ok: false, reason: 'not-allowed' });
   });
 
-  it('requires a human to choose exact non-first stacked identities and exposes only those to opponent', async () => {
+  it('requires exact non-first stacked identities and lets the AI opponent resolve only those cards', async () => {
     const pending = runDeclaredAbilityFlow({ player: 'self' });
     await pickSource('agasa');
     await accept();
@@ -74,11 +74,9 @@ describe('runDeclaredAbilityFlow removeStackedCards', () => {
     await flush();
     expect((await pending).ok).toBe(true);
     const state = useGameStateStore.getState().gameState!;
-    expect(state.players.self.scene.find((c) => c.uid === 'agasa')?.state).toBe('sleep');
-    expect(state.players.self.scene.find((c) => c.uid === 'agasa')?.stackedCards)
-      .toEqual([{ cardId: 'A', instanceId: 'stack:agasa:a' }]);
-    expect(useGameStateStore.getState().pendingEffectPick?.candidates.map((c) => c.uid))
-      .toEqual(['DUP#0', 'DUP#1', 'D#2']);
+    expect(state.players.self.scene.find((c) => c.uid === 'agasa')).toBeUndefined();
+    expect(state.players.self.scene.map((c) => c.cardId)).toEqual(['DUP']);
+    expect(useGameStateStore.getState().pendingEffectPick).toBeNull();
   });
 
   it('cancel does not sleep or remove any stacked card', async () => {

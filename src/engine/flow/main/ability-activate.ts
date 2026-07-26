@@ -14,10 +14,11 @@
 import type { GameState, AbilityDef, EffectCtx } from '../../types/index.js';
 import { cost as engineCost } from '../../cost/index.js';
 import { def as readDef } from '../../read/def.js';
-import { findCardOnBoard, useDeclaredAbility, findDeclaredAbility } from './declared-ability.js';
+import { canActivateDeclaredAbility, findCardOnBoard, useDeclaredAbility, findDeclaredAbility, resolveDeclaredPaymentPlan } from './declared-ability.js';
 import { usePartnerAbility } from './partner-ability.js';
-import { alternativeCostProviders } from '../../cost/alternative.js';
 import { mutate } from '../../mutate/index.js';
+import { declaredCostParamsToDyn } from './declared-cost-params.js';
+import { _clearPendingSetCardReplacementSide } from '../../effect/pending-state.js';
 
 type Player = 'self' | 'opp';
 
@@ -34,30 +35,23 @@ export interface AbilityCostParams {
   flipFaceUpEvidence?: { indices: number[] };
   sceneToDeckBottom?: { uids: string[] };
   removeAreaToDeckBottom?: { ids: string[] }; // cluster4 (2026-06-14)
-  removeSetCard?: { hostUids: string[] }; // engine additive wave (2026-06-24): 裏向きセットリムーブの host 選択 (B08033 a2)
+  partnerAreaRemove?: { ids: string[] };
+  /**
+   * 裏向きセットの物理 occurrence 選択。`hostUids` のみは既存 AI/保存済み呼出との互換用。
+   * 人間 dispatch は同じ添字の `instanceIds` も必須で、裏面の cardId は運ばない。
+   */
+  removeSetCard?: { hostUids: string[]; instanceIds?: string[] };
   removeStackedCards?: { instanceIds: string[] };
+  /** Public UI payment mode. Explicit printed selection never falls back. */
+  paymentMode?: 'printed' | 'alternative';
   alternativeCostProviderUid?: string;
   costChoice?: number;
+  /** One selected branch index per encountered nested cost choice. */
+  costChoicePath?: number[];
   choiceIndex?: number;
   // mega-wave W6 step1 (2026-07-04): declareName verb への宣言カード名供給 (UI= DeclareCardNameModal /
   // AI= 省略可、未供給は atom 側で空文字 fallback)。ctx.dyn.declaredName として effect 解決へ伝播。
   declaredName?: string;
-}
-
-function costParamsToDyn(costParams?: AbilityCostParams): Record<string, unknown> | undefined {
-  if (!costParams) return undefined;
-  const dyn: Record<string, unknown> = {};
-  const params: Record<string, unknown> = {};
-  if (costParams.flipFaceUpEvidence) params['flipFaceUpEvidence'] = costParams.flipFaceUpEvidence;
-  if (costParams.sceneToDeckBottom) params['sceneToDeckBottom'] = costParams.sceneToDeckBottom;
-  if (costParams.removeAreaToDeckBottom) params['removeAreaToDeckBottom'] = costParams.removeAreaToDeckBottom; // cluster4
-  if (costParams.removeSetCard) params['removeSetCard'] = costParams.removeSetCard; // engine additive wave (2026-06-24)
-  if (costParams.removeStackedCards) params['removeStackedCards'] = costParams.removeStackedCards;
-  if (Object.keys(params).length > 0) dyn['costParams'] = params;
-  if (costParams.costChoice !== undefined) dyn['costChoice'] = costParams.costChoice;
-  if (costParams.choiceIndex !== undefined) dyn['choiceIndex'] = costParams.choiceIndex;
-  if (costParams.declaredName !== undefined) dyn['declaredName'] = costParams.declaredName; // W6 step1
-  return Object.keys(dyn).length > 0 ? dyn : undefined;
 }
 
 function findAbility(cardId: string, abilId: string): AbilityDef | undefined {
@@ -82,10 +76,19 @@ export function activateDeclaredAbility(
   const found = findCardOnBoard(state, uid);
   if (!found) {
     // 旧経路と同一の canonical throw (`useDeclaredAbility: card uid=... not on board`) に委譲
+    _clearPendingSetCardReplacementSide();
     useDeclaredAbility(state, uid, abilId);
     return;
   }
-  const dyn = costParamsToDyn(costParams);
+  // Public UI dispatch authorizes through `isAllowed` first, where a human
+  // removeSetCard cost must carry an exact physical-instance witness.  This
+  // low-level mutator is also the deterministic AI/test resolver entrypoint;
+  // preserve its established implicit fallback after all normal cost checks.
+  // A supplied malformed witness still fails closed in canPayAtomically.
+  if (!canActivateDeclaredAbility(state, uid, abilId, costParams, { allowImplicitRemoveSetCard: true })) {
+    return;
+  }
+  const dyn = declaredCostParamsToDyn(costParams);
   const ctx: EffectCtx = {
     source: {
       cardId: found.cardId,
@@ -100,19 +103,28 @@ export function activateDeclaredAbility(
   // W6 step11 (row999 item4): rider declared (on-set-host) の cost も解決できるよう共有 helper 経由
   const ability = findDeclaredAbility(state, uid, found.cardId, found.area, abilId);
   if (ability?.cost) {
-    const alternatives = alternativeCostProviders(state, ctx, ability);
-    const selected = costParams?.alternativeCostProviderUid;
-    const providerUid = selected !== undefined
-      ? (alternatives.includes(selected) ? selected : undefined)
-      : (!engineCost.canPay(state, ability.cost, ctx) ? alternatives[0] : undefined);
-    if (providerUid) {
-      mutate.scene.removeToRemove(state, providerUid, 'cost');
-      ctx.costPaid = { alternativeCost: { providerUid } };
+    const plan = resolveDeclaredPaymentPlan(state, ability, ctx, costParams, { allowLegacyInvalidAlternativeFallback: true });
+    if (!plan) {
+      _clearPendingSetCardReplacementSide();
+      return;
+    }
+    if (plan.kind === 'alternative') {
+      const removed = mutate.scene.removeToRemove(state, plan.providerUid, 'cost');
+      if (removed.deferred || removed.prevented || removed.removed.uid !== plan.providerUid || !removed.removed.cardId) {
+        _clearPendingSetCardReplacementSide();
+        throw new Error('declared ability: alternative cost provider was replaced or deferred');
+      }
+      ctx.costPaid = { alternativeCost: { providerUid: plan.providerUid } };
     } else {
       engineCost.pay(state, ability.cost, ctx);
     }
   }
-  useDeclaredAbility(state, uid, abilId, ctx);
+  try {
+    useDeclaredAbility(state, uid, abilId, ctx);
+  } catch (error) {
+    _clearPendingSetCardReplacementSide();
+    throw error;
+  }
 }
 
 /**
@@ -130,7 +142,7 @@ export function activatePartnerAbility(
   if (cardId) {
     const ability = findAbility(cardId, abilId);
     if (ability?.cost) {
-      const dyn = costParamsToDyn(costParams);
+      const dyn = declaredCostParamsToDyn(costParams);
       const ctx: EffectCtx = {
         source: {
           cardId,

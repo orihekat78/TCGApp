@@ -9,6 +9,7 @@ import { event } from '@/engine/event/index';
 import { mutate } from '@/engine/mutate/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import type { CardDef, GameState } from '@/engine/types';
 
 function makeCard(id: string, opts: Partial<CardDef> = {}): CardDef {
@@ -89,6 +90,7 @@ describe('engine.flow.main.doReasoning', () => {
     const { s, uid } = makeStateWithChar({ lp: 3 });
     const after = produce(s, draft => {
       doReasoning(draft, uid);
+      runAllUntilEmpty(draft);
     });
     const c = after.players.self.scene.find(c => c.uid === uid)!;
     expect(c.state).toBe('sleep');
@@ -111,6 +113,7 @@ describe('engine.flow.main.doReasoning', () => {
     });
     const after = produce(s, draft => {
       doReasoning(draft, uid);
+      runAllUntilEmpty(draft);
     });
     expect(after.players.self.evidence).toHaveLength(0);
     // スリープ化はする
@@ -131,6 +134,7 @@ describe('engine.flow.main.doReasoning', () => {
     });
     const after = produce(s, draft => {
       doReasoning(draft, uid);
+      runAllUntilEmpty(draft);
     });
     expect(after.players.self.evidence).toHaveLength(0);
   });
@@ -141,6 +145,9 @@ describe('engine.flow.main.doReasoning', () => {
     event.on('reasoning:declare', () => {
       fired.push('declare');
     });
+    event.on('reasoning:after-sleep', () => {
+      fired.push('after-sleep');
+    });
     event.on('reasoning:before-add', () => {
       fired.push('before-add');
     });
@@ -149,8 +156,10 @@ describe('engine.flow.main.doReasoning', () => {
     });
     produce(s, draft => {
       doReasoning(draft, uid);
+      expect(fired).toEqual(['declare', 'after-sleep']);
+      runAllUntilEmpty(draft);
     });
-    expect(fired).toEqual(['declare', 'before-add', 'end']);
+    expect(fired).toEqual(['declare', 'after-sleep', 'before-add', 'end']);
   });
 
   it('reasoning:declare payload: { uid, byPlayer } (spec)', () => {
@@ -159,7 +168,7 @@ describe('engine.flow.main.doReasoning', () => {
     event.on('reasoning:declare', (_state, payload) => {
       declarePayload = payload;
     });
-    produce(s, draft => { doReasoning(draft, uid); });
+    produce(s, draft => { doReasoning(draft, uid); runAllUntilEmpty(draft); });
     expect(declarePayload).toMatchObject({ uid, byPlayer: 'self' });
   });
 
@@ -169,7 +178,7 @@ describe('engine.flow.main.doReasoning', () => {
     event.on('reasoning:before-add', (_state, payload) => {
       beforeAddPayload = payload;
     });
-    produce(s, draft => { doReasoning(draft, uid); });
+    produce(s, draft => { doReasoning(draft, uid); runAllUntilEmpty(draft); });
     expect(beforeAddPayload).toMatchObject({ uid, lpUsed: 3 });
   });
 
@@ -190,7 +199,7 @@ describe('engine.flow.main.doReasoning', () => {
     event.on('reasoning:before-add', (_state, payload) => {
       beforeAddPayload = payload;
     });
-    produce(s2, draft => { doReasoning(draft, uid2); });
+    produce(s2, draft => { doReasoning(draft, uid2); runAllUntilEmpty(draft); });
     expect(beforeAddPayload).toMatchObject({ uid: uid2, lpUsed: -2 });
   });
 
@@ -213,6 +222,7 @@ describe('engine.flow.main.doReasoning', () => {
     expect(canReason(s, 'partner:self')).toBe(true);
     const after = produce(s, draft => {
       doReasoning(draft, 'partner:self');
+      runAllUntilEmpty(draft);
     });
     expect(after.players.self.partner.state).toBe('sleep');
     expect(after.players.self.evidence).toHaveLength(4);

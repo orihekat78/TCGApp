@@ -6,17 +6,22 @@
 //   - GameState.pendingEffects は EffectStackEntry[] として管理する
 //   - 単なる Effect ではなく、発火元・発火タイミング・状態を含むラッパー
 //   - resolveGuard は解決時に再評価される ('〜の場合' / '〜してもよい' の対応)
-//   - ownerChosenOrder は同タイミング・同所有者間の解決順 (UI で選択)
+//   - ownerChosenOrder は同所有者の全未解決効果間の解決順 (UI で選択)
 //
 // triggeredBy.hook は HookName | string union だが、カスタムトリガー (例:
 // resolver 由来のサブ効果) を許容するため string で受ける。
 
 import type { Effect, Condition } from './effect.js';
+import type { EffectResolutionKind } from './effect-ctx.js';
 
 export type EffectStackEntrySource = {
   uid?: string;
   cardId?: string;
+  abilityId?: string;
+  description?: string;
   player: 'self' | 'opp';
+  /** Explicit source-card lifecycle; preserved across the JSON stack boundary. */
+  resolutionKind?: EffectResolutionKind;
 };
 
 export type EffectStackEntryTrigger = {
@@ -32,6 +37,13 @@ export type EffectStackEntryTimestamp = {
 
 export type EffectStackEntryState = 'pending' | 'resolving' | 'resolved' | 'cancelled';
 
+/** @internal Engine-only continuation identity; never a card DSL descriptor. */
+export type ReasoningContinuation = {
+  token: number;
+  uid: string;
+  player: 'self' | 'opp';
+};
+
 export type EffectStackEntry = {
   id: string;
   source: EffectStackEntrySource;
@@ -40,6 +52,22 @@ export type EffectStackEntry = {
   effect: Effect;
   resolveGuard?: Condition;
   ownerChosenOrder?: number;
+  /**
+   * Entries created by one hook emission share this provenance id. Ordering
+   * itself spans every unresolved effect owned by the priority player.
+   */
+  triggerBatch?: number;
+  ownerOrderConfirmed?: boolean;
+  /**
+   * This entry resumes the effect that was already resolving before a human
+   * decision paused it. It must finish before newly triggered unresolved
+   * effects and is not part of the owner's unresolved-effect order choice.
+   */
+  resumesCurrentEffect?: boolean;
+  /** @internal Reasoning continuation gated behind after-sleep reactions. */
+  reasoningContinuation?: ReasoningContinuation;
+  /** Human target pre-walk is deferred until this entry actually resolves. */
+  deferredPicks?: boolean;
   state: EffectStackEntryState;
   /**
    * 2026-05-27 (Option C follow-up): queue 時点の bindings を保持。
@@ -77,7 +105,7 @@ export type EffectStackEntry = {
    * 同一 emit で queue された entry 群 (イベント自効果 + 第三者反応) を結ぶ。
    * rules/15 §未解決 — 反応は「現在の行動 (自効果) 完了後」に解決するための gate キー。
    */
-  declaredBatch?: number;
+  declaredBatch?: number | string;
   /**
    * BUG-132 GAP-2: 第三者反応マーカー (own = trigger.selfOnly===true 以外に付与)。
    * - stack.next(): 同 batch の own entry が pending の間は選択不可 (pairwise gate。

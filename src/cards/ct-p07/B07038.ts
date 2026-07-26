@@ -36,7 +36,7 @@ const a1: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: {
+        args: { visibility: 'public', viewer: 'all',
           player: 'self',
           // 〚カード名［小泉紅子］〛(kind不問) か 〚特徴［赤魔術］〛のイベントが出るまで (deckRevealUntil は function filter 受理)
           filter: (cardId: string): boolean => {

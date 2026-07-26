@@ -1,4 +1,5 @@
 // useActionsPanelFlow/flows.ts — Phase 3d 分割 (run*Flow オーケストレーション, body 無改変移送, 2026-06-22)
+import { useSyncExternalStore } from 'react';
 import * as flow from '@/engine/flow/index.js';
 import { engine } from '@/engine';
 import { useGameStateStore } from '@/ui/state/store.js';
@@ -9,15 +10,17 @@ import { useNextHintPicker, type NextHintCandidate } from '../useNextHintPicker.
 import { useSceneSwitchPickerStore } from '../useSceneSwitchPickerStore.js';
 import { useEvidenceFlipPicker } from '../useEvidenceFlipPicker.js';
 import { useStackedCardCostPicker } from '../useStackedCardCostPicker.js';
+import { useSetCardCostPicker } from '../useSetCardCostPicker.js';
 import { useChoicePicker } from '../useChoicePicker.js';
 import { useDeclareNamePicker } from '../useDeclareNamePicker.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { alternativeCostProviders } from '@/engine/cost/alternative.js';
+import { nextHintEventUseAllowed } from '@/engine/flow/main/next-hint.js';
 import { nextHintColorIgnoreAllowed, effectiveHandLevel } from '@/engine/flow/main/hand-use-card.js'; // W2 P09/r26 色 bypass 鏡像 (NH: B03126 両経路 + B02087 NH 限定 A3) + mini-wave#4 hand level
 import { uidToDisplayName, cardIdToDisplayName } from '@/ui/services/uidNames.js';
 import type { Effect, GameState } from '@/engine/types';
 import type { AbilityCostParams } from '@/engine/flow/index.js';
-import { costToText, findFlipFaceUpCost, findRemoveStackedCardsCost, findChoiceCost, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
+import { costToText, findFlipFaceUpCost, findRemoveStackedCardsCost, findRemoveSetCardCost, findChoiceCostAtPath, completeCostChoicePaths, findDeclareNameAtom, choiceOptionLabel, makeAbilityCtx } from './cost.js';
 import type { Player } from './cost.js';
 import {
   ACTION_CASE_TARGET_OPP,
@@ -30,11 +33,21 @@ import {
   canAssistForUi,
   canSolveCaseForUi,
 } from './enumerators.js';
+import { canEndTurnForUi, subscribeEndTurnContract } from './end-turn-contract.js';
 
 /** runEndTurnFlow / その他フローの返り値 */
 export type FlowResult =
   | DispatchResult
   | { ok: false; reason: 'cancelled' };
+
+/** Playmatもdispatch直前検証も同一のcanEndTurnForUi snapshotを使うreactive reader。 */
+export function useCanEndTurnForUi(player: Player): boolean {
+  return useSyncExternalStore(
+    subscribeEndTurnContract,
+    () => canEndTurnForUi(player),
+    () => canEndTurnForUi(player),
+  );
+}
 
 /**
  * ターン終了フロー: 確認モーダル → accept で endTurn dispatch。
@@ -43,6 +56,7 @@ export type FlowResult =
  * - accept: dispatchEngineAction の結果をそのまま返す
  */
 export async function runEndTurnFlow(opts: { player: Player }): Promise<FlowResult> {
+  if (!canEndTurnForUi(opts.player)) return { ok: false, reason: 'not-allowed' };
   const confirmation = useConfirmation();
   const accepted = await confirmation.ask({
     kind: 'standard',
@@ -54,6 +68,8 @@ export async function runEndTurnFlow(opts: { player: Player }): Promise<FlowResu
   if (!accepted) {
     return { ok: false, reason: 'cancelled' };
   }
+  // 確認表示中に効果/picker が発生し得るため、dispatch 直前の最新stateで再検証。
+  if (!canEndTurnForUi(opts.player)) return { ok: false, reason: 'not-allowed' };
   return dispatchEngineAction({ type: 'endTurn', player: opts.player });
 }
 
@@ -146,6 +162,7 @@ export async function runNextHintFlow(opts: { player: Player }): Promise<FlowRes
     // イベント使用不可 (B09034 §M3): ban 中の event は候補から除外 (engine runNextHint の throw と整合)。
     //   rules/25 公式 Q&A: ネクストヒントの event 使用も不可。キャラは制限外。
     if (d.kind === 'event' && state.turnState[p].eventUseBanned) return null;
+    if (d.kind === 'event' && !nextHintEventUseAllowed(state, p, cardId)) return null;
     // 色制限 (rules/20): カードの全色が事件色に含まれる (色なしは常に OK)。
     // W2 P09/r26: colorIgnore bypass — engine (next-hint colorAllowed) と鏡像 (B03126 両経路 / B02087 NH 限定 A3)。
     if (d.colors.length > 0 && !d.colors.every((c) => caseColors.includes(c))
@@ -399,20 +416,33 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       area: sourceArea,
     });
     const providers = alternativeCostProviders(altState, altCtx, chosenAbil!);
-    if (providers.length > 0 && engine.cost.canPay(altState, cost, altCtx)) {
+    const normalPayable = engine.cost.canPay(altState, cost, altCtx);
+    if (providers.length > 0) {
+      const alternatives = providers.map((uid, index) => ({
+        index: normalPayable ? index + 1 : index,
+        uid,
+        // Public board position disambiguates same-name providers without
+        // exposing hidden information or raw UID values.
+        label: `${uidToDisplayName(altState, uid)}（現場${altState.players[owner].scene.findIndex((char) => char.uid === uid) + 1}）をリムーブ`,
+      }));
       const choice = await useChoicePicker().ask({
         sourceName,
         options: [
-          { index: 0, label: `通常のコスト (${costText})` },
-          ...providers.map((uid, index) => ({ index: index + 1, label: `${uidToDisplayName(altState, uid)}をリムーブ` })),
+          ...(normalPayable ? [{ index: 0, label: `通常のコスト (${costText})` }] : []),
+          ...alternatives.map(({ index, label }) => ({ index, label })),
         ],
       });
       if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
-      if (choice.index > 0) {
-        const providerUid = providers[choice.index - 1];
+      const selectedAlternative = alternatives.find((alternative) => alternative.index === choice.index);
+      if (selectedAlternative) {
+        const providerUid = selectedAlternative.uid;
         if (!providerUid) return { ok: false, reason: 'not-allowed' };
-        costParams = { alternativeCostProviderUid: providerUid };
+        costParams = { paymentMode: 'alternative', alternativeCostProviderUid: providerUid };
         useAlternativeCost = true;
+      } else if (normalPayable && choice.index === 0) {
+        costParams = { paymentMode: 'printed' };
+      } else {
+        return { ok: false, reason: 'not-allowed' };
       }
     }
   }
@@ -486,8 +516,7 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
   //   canPay で絞り、2 択以上のときのみ ChoicePicker を出す (1 択は auto、0 択は防御 return —
   //   can-check 列挙済のため通常到達しない)。選択 index → costParams.costChoice →
   //   dispatcher (ability-activate.ts costParamsToDyn) が ctx.dyn.costChoice へ詰め替え。
-  const choiceCost = findChoiceCost(cost);
-  if (!useAlternativeCost && choiceCost && owner === 'self' && cardId) {
+  if (!useAlternativeCost && cost && findChoiceCostAtPath(cost, []) && owner === 'self' && cardId) {
     const ccState = useGameStateStore.getState().gameState;
     if (ccState === null) return { ok: false, reason: 'no-state' };
     const ccCtx = makeAbilityCtx({
@@ -497,24 +526,85 @@ export async function runDeclaredAbilityFlow(opts: { player: Player }): Promise<
       abilityId: chosenAbilId,
       area: sourceArea,
     });
-    const payable = choiceCost.items
-      .map((item, index) => ({
-        index,
-        label: costToText(item, { state: ccState, ctx: ccCtx }),
-        ok: engine.cost.canPay(ccState, item, ccCtx),
-      }))
-      .filter((o) => o.ok);
-    if (payable.length === 0) return { ok: false, reason: 'not-allowed' };
-    if (payable.length === 1) {
-      costParams = { ...(costParams ?? {}), costChoice: payable[0].index };
-    } else {
-      const choice = await useChoicePicker().ask({
-        sourceName,
-        options: payable.map(({ index, label }) => ({ index, label })),
-      });
-      if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
-      costParams = { ...(costParams ?? {}), costChoice: choice.index };
+    const path: number[] = [];
+    for (;;) {
+      const choiceCost = findChoiceCostAtPath(cost, path);
+      if (!choiceCost) break;
+      const payable = choiceCost.items
+        .map((item, index) => {
+          const candidatePath = [...path, index];
+          return {
+            index,
+            label: costToText(item, { state: ccState, ctx: ccCtx }),
+            // A partial nested path is not a payment witness. Test every complete
+            // continuation, otherwise an inner default branch can hide a payable one.
+            ok: completeCostChoicePaths(cost, candidatePath).some((fullPath) =>
+              engine.cost.canPay(ccState, cost, { ...ccCtx, dyn: { costChoicePath: fullPath } })),
+          };
+        })
+        .filter((o) => o.ok);
+      if (payable.length === 0) return { ok: false, reason: 'not-allowed' };
+      const index = payable.length === 1
+        ? payable[0]!.index
+        : await (async () => {
+          const choice = await useChoicePicker().ask({
+            sourceName,
+            options: payable.map(({ index: optionIndex, label }) => ({ index: optionIndex, label })),
+          });
+          return choice.kind === 'cancel' ? null : choice.index;
+        })();
+      if (index === null) return { ok: false, reason: 'cancelled' };
+      path.push(index);
     }
+    costParams = {
+      ...(costParams ?? {}),
+      ...(path.length === 1 ? { costChoice: path[0] } : {}),
+      ...(path.length > 1 ? { costChoicePath: path } : {}),
+    };
+  }
+
+  // 3.6b) BUG-248: removeSetCard コストは、host だけでなく物理 set-card occurrence を
+  // 人間に明示選択させる。裏向き entry の cardId は request/store/UI に渡さない。
+  // choice cost は 3.6 で branch 確定後なので、選んだ branch だけを対象にする。
+  const removeSetCost = findRemoveSetCardCost(cost, costParams?.costChoicePath ?? costParams?.costChoice);
+  if (!useAlternativeCost && removeSetCost && owner === 'self' && cardId) {
+    const setState = useGameStateStore.getState().gameState;
+    if (setState === null) return { ok: false, reason: 'no-state' };
+    const candidates = setState.players[owner].scene.flatMap((host, sceneIndex) => {
+      if (removeSetCost.hostSelf && host.uid !== sourceUid) return [];
+      return host.setCards.flatMap((entry, index) => {
+        if (!removeSetCost.anyFace && entry.faceUp) return [];
+        if (typeof entry.instanceId !== 'string') return [];
+        const hidden = !entry.faceUp;
+        return [{
+          hostUid: host.uid,
+          // UID is not useful to players; public scene position makes same-name hosts distinguishable.
+          hostLabel: `${uidToDisplayName(setState, host.uid)}（現場${sceneIndex + 1}）`,
+          instanceId: entry.instanceId,
+          ordinal: index + 1,
+          hidden,
+          ...(hidden ? {} : { cardId: entry.cardId }),
+        }];
+      });
+    }).map((candidate, index) => ({ ...candidate, ordinal: index + 1 }));
+    if (candidates.length < removeSetCost.n) return { ok: false, reason: 'not-allowed' };
+    const choice = await useSetCardCostPicker().ask({
+      player: owner,
+      source: { uid: sourceUid, cardId, abilityId: chosenAbilId },
+      candidates,
+      n: removeSetCost.n,
+    });
+    if (choice.kind === 'cancel') return { ok: false, reason: 'cancelled' };
+    if (choice.picks.length !== removeSetCost.n || new Set(choice.picks.map((pick) => pick.instanceId)).size !== choice.picks.length) {
+      return { ok: false, reason: 'not-allowed' };
+    }
+    costParams = {
+      ...(costParams ?? {}),
+      removeSetCard: {
+        hostUids: choice.picks.map((pick) => pick.hostUid),
+        instanceIds: choice.picks.map((pick) => pick.instanceId),
+      },
+    };
   }
 
   // 3.7) BUG-108: 複数 option を持つ top-level choice effect (D11012 a1「LP＋1するか / AP＋2000する」)

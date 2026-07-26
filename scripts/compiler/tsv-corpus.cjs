@@ -5,6 +5,7 @@
 // 使い方: node scripts/compiler/tsv-corpus.cjs  → .tmp/compiler/corpus.json
 const fs = require('fs');
 const path = require('path');
+const { loadQaCorpus: normalizeQaCorpus } = require('../cards/qa-normalize.cjs');
 
 // kind ごとの TSV 列構成 (2026-07-02 実測):
 //   character: cardNum cardId title color level ap lp rarity features imagePath effect cutIn hirameki henso illustrator flavor qAndA
@@ -74,9 +75,16 @@ function dupIds(corpus) {
   return [...dups].sort();
 }
 
+// Kept separate from card rows: CardDef/compiler card semantics must not depend
+// on official Q&A source text.
+function loadQaCorpus(root) {
+  return normalizeQaCorpus(root);
+}
+
 if (require.main === module) {
   const root = path.join(__dirname, '..', '..');
   const corpus = loadCorpus(root);
+  const qa = loadQaCorpus(root);
   const dups = dupIds(corpus);
   const byKind = {};
   let withText = 0;
@@ -87,8 +95,10 @@ if (require.main === module) {
   const outDir = path.join(root, '.tmp', 'compiler');
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'corpus.json'), JSON.stringify({ count: corpus.length, cards: corpus }, null, 1));
+  fs.writeFileSync(path.join(outDir, 'qa.json'), JSON.stringify({ count: qa.items.length, items: qa.items, conflicts: qa.conflicts }, null, 1));
   console.log(`corpus: ${corpus.length} cards (${Object.entries(byKind).map(([k, n]) => `${k}=${n}`).join(' ')})`);
   console.log(`  text-bearing: ${withText} / vanilla: ${corpus.length - withText} / dup ids: ${dups.length}${dups.length ? ' ' + dups.join(',') : ''}`);
+  console.log(`  q&a: ${qa.items.length} items / answer conflicts: ${qa.conflicts.length}`);
 }
 
-module.exports = { loadCorpus, dupIds, TEXT_COLS };
+module.exports = { loadCorpus, loadQaCorpus, dupIds, TEXT_COLS };

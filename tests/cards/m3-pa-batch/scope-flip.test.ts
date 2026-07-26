@@ -152,9 +152,7 @@ describe('M3 scope-flip — B05066 a2 PA 発動 (charModifyLevel -1)', () => {
     const after = produce(s, (d) => {
       activateDeclaredAbility(d, 'partnerMR:opp', 'a2');
       runAllUntilEmpty(d);
-      const pick = _drainPendingEffectPickSide();
-      expect(pick, 'pick surface (opp 所有)').not.toBeNull();
-      applyPickAndContinuation(d, pick!, 'v');
+      expect(_drainPendingEffectPickSide(), 'AI owner resolves without a human surface').toBeNull();
     });
     expect(engine.read.char.level(after, 'v'), '所有者(opp) から見た side:opp = self 現場').toBe(2);
   });

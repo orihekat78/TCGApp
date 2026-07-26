@@ -16,9 +16,88 @@
   border: 1px solid color-mix(in oklch, var(--scene-neon, #6cf) 50%, transparent);
   border-radius: 10px;
   padding: 24px 32px;
-  min-width: 460px;
+  box-sizing: border-box;
+  width: min(620px, calc(100vw - 24px));
+  min-width: 0;
   max-width: 620px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+}
+
+.cid-hand-preview h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #ffd75e;
+}
+
+.cid-hand-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.cid-hand-card {
+  min-width: 0;
+  padding: 5px;
+  border: 2px solid rgba(130, 145, 165, 0.35);
+  border-radius: 7px;
+  background: rgba(5, 10, 18, 0.45);
+}
+
+.cid-hand-card.is-eligible {
+  border-color: #ffd75e;
+  box-shadow: 0 0 10px rgba(255, 215, 94, 0.45);
+}
+
+.cid-hand-expand {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: #e0ecf8;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.cid-hand-art {
+  width: 58px;
+  height: 81px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 4px;
+}
+
+.cid-hand-expand span {
+  display: block;
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cid-hand-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.cid-hand-badges span {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 215, 94, 0.18);
+  color: #ffd75e;
+  font-size: 9px;
+}
+
+.cid-hand-badges .is-disabled {
+  background: rgba(130, 145, 165, 0.14);
+  color: #8994a3;
 }
 
 .cid-header h2 {
@@ -34,12 +113,16 @@
 }
 
 .cid-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  margin-bottom: 14px;
+  overflow-y: auto;
+}
+
+.cid-choice-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 14px;
-  max-height: 280px;
-  overflow-y: auto;
 }
 
 .cid-section h3 {
@@ -66,6 +149,12 @@
   gap: 4px;
 }
 
+.cid-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  gap: 4px;
+}
+
 .cid-cand {
   width: 100%;
   text-align: left;
@@ -75,7 +164,30 @@
   color: #e0ecf8;
   cursor: pointer;
   transition: filter 0.1s, transform 0.1s;
+  min-height: 44px;
 }
+
+.cid-cand-art {
+  width: 28px;
+  height: 40px;
+  margin-right: 7px;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+.cid-cand-detail {
+  min-width: 48px;
+  min-height: 48px;
+  border: 1px solid rgba(140, 180, 220, 0.55);
+  border-radius: 5px;
+  background: rgba(10, 20, 35, 0.8);
+  color: #e0ecf8;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.cid-cand-detail:hover,
+.cid-cand-detail:focus-visible { filter: brightness(1.2); }
 .cid-cand-cutin {
   background: rgba(255, 120, 60, 0.18);
   border: 1px solid color-mix(in oklch, #ff7a3c 50%, transparent);
@@ -91,10 +203,13 @@
 
 .cid-actions {
   display: flex;
+  flex: 0 0 auto;
   justify-content: flex-end;
 }
 
 .cid-pass {
+  min-width: 44px;
+  min-height: 44px;
   padding: 7px 22px;
   background: rgba(80, 80, 90, 0.4);
   border: 1px solid rgba(140, 140, 160, 0.45);
@@ -109,4 +224,10 @@
 @keyframes cid-fade-in {
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1);    }
+}
+
+@media (max-width: 480px) {
+  .cid-modal { padding: 16px 12px; }
+  .cid-choice-grid { grid-template-columns: 1fr; }
+  .cid-hand-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

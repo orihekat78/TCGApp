@@ -21,7 +21,8 @@ export function EffectRepeatOptionalModalHost(): JSX.Element | null {
           <p className="cp-sub">{desc ? `${sourceName}: ${desc}` : `${sourceName}: 効果を続けますか？`}</p>
           <p className="cp-sub">残り {pending.remaining} 回</p>
         </div>
-        <div className="cp-body">
+        <div className="cp-body"><p className="cp-sub">Choose whether to repeat.</p></div>
+        <div className="cp-actions">
           <ul className="cp-list">
             <li><button type="button" className="cp-cand" data-testid="repeat-opt-run-yes" onClick={() => dispatchEngineAction({ type: 'repeatOptionalResolve', run: true })}>する</button></li>
             <li><button type="button" className="cp-cand" data-testid="repeat-opt-run-no" onClick={() => dispatchEngineAction({ type: 'repeatOptionalResolve', run: false })}>しない</button></li>

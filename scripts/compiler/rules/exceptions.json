@@ -2,6 +2,11 @@
  "generatedBy": "scripts/compiler/mine.cjs",
  "cards": [
   {
+   "id": "B01082",
+   "shippedId": "B01082",
+   "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
    "id": "B05024",
    "shippedId": "B05024",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
@@ -65,6 +70,26 @@
    "id": "PR099",
    "shippedId": "PR099",
    "reason": "composition-mismatch (mined): 文法では shipped 実装を再現できない — B3 調査 queue"
+  },
+  {
+   "id": "B05046",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B05046P",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B05046P2",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B07080",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
+  },
+  {
+   "id": "B07080P",
+   "reason": "param-g1: shipped 非再現 (partial/構造逸脱疑い)"
   }
  ]
 }

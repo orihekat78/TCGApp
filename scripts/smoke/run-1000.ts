@@ -24,6 +24,7 @@ import { produce } from '../../src/engine/produce.js';
 import { createRng } from '../../src/engine/rng.js';
 import { HeuristicPolicy } from '../../src/ai/policies/heuristic.js';
 import { runMatch } from '../../src/ai/match.js';
+import { buildDeckPair } from '../../src/ui/services/deckBuilder.js';
 import type { GameState } from '../../src/engine/types/index.js';
 import type { DeckPair } from '../../src/engine/flow/setup.js';
 import { execSync } from 'node:child_process';
@@ -37,15 +38,6 @@ import {
 } from './aggregate.js';
 import { formatMarkdown } from './format-md.js';
 
-const D08_MAIN_IDS = [
-  'D08003', 'D08005', 'D08007', 'D08009', 'D08011', 'D08013', 'D08015',
-  'D08017', 'D08018', 'D08019', 'D08020', 'D08021', 'D08022', 'D08023',
-];
-const D11_MAIN_IDS = [
-  'D11003', 'D11004', 'D11005', 'D11006', 'D11007', 'D11009', 'D11010',
-  'D11011', 'D11013', 'D11014', 'D11015', 'D11016', 'D11017', 'D11018',
-];
-
 const PAIRINGS: Array<{ deckA: DeckId; deckB: DeckId; games: number }> = [
   { deckA: 'CT-D08', deckB: 'CT-D08', games: 333 },
   { deckA: 'CT-D08', deckB: 'CT-D11', games: 334 },
@@ -54,20 +46,6 @@ const PAIRINGS: Array<{ deckA: DeckId; deckB: DeckId; games: number }> = [
 
 const MAX_TURNS = 200;
 const TOTAL_GAMES = PAIRINGS.reduce((s, p) => s + p.games, 0);
-
-function buildDeck40(ids: readonly string[]): string[] {
-  const out: string[] = [];
-  for (const id of ids) out.push(id, id, id);
-  return out.slice(0, 40);
-}
-
-function buildDeckPair(deckA: DeckId, deckB: DeckId): DeckPair {
-  const slot = (d: DeckId) =>
-    d === 'CT-D08'
-      ? { partnerId: 'D08001', caseId: 'D08026', mainCards: buildDeck40(D08_MAIN_IDS) }
-      : { partnerId: 'D11001', caseId: 'D11021', mainCards: buildDeck40(D11_MAIN_IDS) };
-  return { self: slot(deckA), opp: slot(deckB) };
-}
 
 function resetForRun(): void {
   engine.cards._resetRegistry();
@@ -120,7 +98,7 @@ function playOneGame(
 
   const firstSlot: 'self' | 'opp' = rng.next() < 0.5 ? 'self' : 'opp';
   const firstPlayer: 'A' | 'B' = firstSlot === 'self' ? 'A' : 'B';
-  const pair = buildDeckPair(pairing.deckA, pairing.deckB);
+  const pair = buildDeckPair({ selfDeckId: pairing.deckA, oppDeckId: pairing.deckB });
   const state = setupGame(pair, firstSlot);
 
   const t0 = Date.now();

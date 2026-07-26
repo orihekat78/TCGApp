@@ -35,26 +35,8 @@ export { computeOrder };
 
 type Player = 'self' | 'opp';
 type Target = ActionContext['target'];
-/**
- * readEffectiveAp — partner uid を考慮した AP 読み出し
- *
- * read.char.ap は scene[] しかスキャンしないため、partner uid
- * ('partner:self' / 'partner:opp') には対応していない。
- * rules/07: パートナーもアクション可能なので、この関数で分岐する。
- *
- * Phase 4 scope: turnEffects による AP 修正はパートナーには未適用。
- * TODO(phase5): パートナーへの AP 修正効果が実装されたら apOverride/turnEffects を参照する。
- */
-function readEffectiveAp(s: GameState, uid: string): number {
-  if (uid === 'partner:self' || uid === 'partner:opp') {
-    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
-    const partner = s.players[p].partner;
-    if (!partner) return 0;
-    const d = readDef.card(partner.cardId);
-    return d?.ap ?? 0;
-  }
-  return readChar.ap(s, uid);
-}
+/** partner / scene 共通の effective AP reader。 */
+const readEffectiveAp = readChar.ap;
 
 /**
  * User request 2026-05-25: contact 開始時に「レベルX キャラ名(ID):APXXXX VS 〜」を
@@ -99,6 +81,11 @@ export function _resetActionContexts(): void {
 
 export function _getContext(id: string): ActionContext | undefined {
   return _contexts.get(id);
+}
+
+/** A declared ability cannot begin while any ActionContext is still resolving. */
+export function _hasOpenActionContext(): boolean {
+  return [..._contexts.values()].some((context) => context.phase !== 'action-end');
 }
 
 /**
@@ -419,6 +406,7 @@ export function abortIfMissing(state: GameState, ax: ActionContext): void {
       for (const c of state.players[p].scene) {
         mutate.char.clearTurnEffects(state, c.uid, 'action');
       }
+      mutate.char.clearTurnEffects(state, `partner:${p}`, 'action');
     }
     event.emit(
       state,
@@ -542,6 +530,8 @@ export function advance(state: GameState, ax: ActionContext): void {
         mutate.char.clearTurnEffects(state, c.uid, 'action');
         mutate.char.clearTurnEffects(state, c.uid, 'contact');
       }
+      mutate.char.clearTurnEffects(state, `partner:${p}`, 'action');
+      mutate.char.clearTurnEffects(state, `partner:${p}`, 'contact');
     }
     // B06049 cluster8 (2026-06-15): action-scoped ヒラメキ抑止 (turnState、player-level) を
     // アクション終了で清掃。scene loop の外で両プレイヤー分を明示クリア (rules/10 「アクション終了時まで」)。
@@ -583,6 +573,7 @@ export const action = {
   _resetActionContexts,
   _resetTargetExpanders,
   _getContext,
+  _hasOpenActionContext,
   _deleteContext,
 };
 

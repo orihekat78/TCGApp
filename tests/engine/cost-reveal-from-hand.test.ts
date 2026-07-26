@@ -34,7 +34,7 @@ const ctxBare = (): EffectCtx => ({ source: { cardId: 'X', uid: 'u-x', abilityId
 
 const COST = (n: number): Cost => ({
   kind: 'revealFromHand',
-  target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { color: '青' } }, n: { min: 1, max: 1 }, chooser: 'self' },
+  target: { kind: 'pick', query: { area: 'hand', side: 'self', filter: { color: '青' } }, n: { min: n, max: n }, chooser: 'self' },
   n,
 } as unknown as Cost);
 

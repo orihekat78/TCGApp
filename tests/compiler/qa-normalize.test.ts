@@ -1,0 +1,362 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
+const tempDirs: string[] = [];
+
+function tempRoot() {
+  const root = mkdtempSync(path.join(tmpdir(), 'conan-qa-normalize-'));
+  tempDirs.push(root);
+  return root;
+}
+
+function expectQaParseError(run: () => unknown, expected: Record<string, string>) {
+  let error: unknown;
+  try {
+    run();
+  } catch (caught) {
+    error = caught;
+  }
+  expect(error).toMatchObject(expected);
+}
+
+afterEach(() => {
+  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+});
+
+describe('compiler/qa-normalize', () => {
+  it('normalizes 462 legacy JSON cards into 944 stable Q&A items without retaining source text', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const cards = Array.from({ length: 462 }, (_, index) => {
+      const itemCount = index < 20 ? 3 : 2; // 20 * 3 + 442 * 2 = 944
+      const answers = Object.fromEntries(Array.from({ length: itemCount }, (_, question) => [
+        `【Section ${index % 3}】 Q${index}-${question}`,
+        `A${index}-${question}`,
+      ]));
+      return { card_num: `S${String(index).padStart(5, '0')}`, card_id: `C${index}`, q_a: JSON.stringify(answers) };
+    });
+
+    const result = normalizeQaCards(cards);
+
+    expect(result.items).toHaveLength(944);
+    expect(result.conflicts).toEqual([]);
+    expect(result.items[0]).toMatchObject({
+      cardId: 'S00000',
+      cardNums: ['S00000'],
+      section: 'Section 0',
+      questionHash: sha256('Q0-0'),
+      answerHash: sha256('A0-0'),
+      qaId: `card:S00000:${sha256('Section 0\0Q0-0')}`,
+    });
+    expect(Object.keys(result.items[0]).sort()).toEqual([
+      'answerHash', 'cardId', 'cardNums', 'qaId', 'questionHash', 'section',
+    ]);
+  });
+
+  it('coalesces card printings across legacy JSON and Q/A text normalization variants', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      {
+        card_num: 'B02086',
+        card_id: '0086',
+        q_a: JSON.stringify({ '【Rule】 Ｗｈａｔ\r\n is this?': ' Answer\u3000one ' }),
+      },
+      {
+        card_num: 'B02086P',
+        card_id: '0086',
+        q_a: '【Rule】\r\nQ: What is this?\r\nA: Answer one',
+      },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual([{
+      qaId: `card:B02086:${sha256('Rule\0What is this?')}`,
+      cardId: 'B02086',
+      cardNums: ['B02086', 'B02086P'],
+      section: 'Rule',
+      questionHash: sha256('What is this?'),
+      answerHash: sha256('Answer one'),
+    }]);
+  });
+
+  it('uses the printable card-number family and removes incidental Japanese answer whitespace', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B02086', card_id: '0247', q_a: '【Rule】\nQ: 同じ質問\nA: 回答。 【規則】' },
+      { card_num: 'B02086P', card_id: '0247', q_a: '【Rule】\nQ: 同じ質問\nA: 回答。【規則】' },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual([expect.objectContaining({
+      qaId: `card:B02086:${sha256('Rule\0同じ質問')}`,
+      cardId: 'B02086',
+      cardNums: ['B02086', 'B02086P'],
+      answerHash: sha256('回答。【規則】'),
+    })]);
+  });
+
+  it('coalesces P and Sec alternate printings into the same printable card family', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B01001', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+      { card_num: 'B01001P', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+      { card_num: 'B01001Sec1', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+      { card_num: 'B01001Sec2', card_id: '0001', q_a: 'Q: 同じ質問\nA: 同じ回答' },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual([expect.objectContaining({
+      qaId: `card:B01001:${sha256('\0同じ質問')}`,
+      cardId: 'B01001',
+      cardNums: ['B01001', 'B01001P', 'B01001Sec1', 'B01001Sec2'],
+    })]);
+  });
+
+  it('does not merge Q&A from distinct printable card numbers that reuse an internal card id', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B04075', card_id: '0256', q_a: 'Q: 同じ質問\nA: 最初の回答' },
+      { card_num: 'PR029', card_id: '0256', q_a: 'Q: 同じ質問\nA: 別の回答' },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ qaId: `card:B04075:${sha256('\0同じ質問')}`, cardId: 'B04075', cardNums: ['B04075'] }),
+      expect.objectContaining({ qaId: `card:PR029:${sha256('\0同じ質問')}`, cardId: 'PR029', cardNums: ['PR029'] }),
+    ]));
+  });
+
+  it('keeps repeated question text under repeated section records as separate Q&A items', () => {
+    const { normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      {
+        card_num: 'B06098',
+        card_id: '0715',
+        q_a: '【宣言能力】\nQ: 同じ質問\nA: 最初の回答\n【宣言能力】\nQ: 同じ質問\nA: 別の回答',
+      },
+      {
+        card_num: 'B06098P',
+        card_id: '0715',
+        q_a: '【宣言能力】\nQ: 同じ質問\nA: 最初の回答\n【宣言能力】\nQ: 同じ質問\nA: 別の回答',
+      },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+    expect(result.items).toHaveLength(2);
+    expect(result.items.every((item: { cardId: string; cardNums: string[] }) => item.cardId === 'B06098' && item.cardNums.join(',') === 'B06098,B06098P')).toBe(true);
+  });
+
+  it('starts a new Q/A item when repeated section headers occur in Q/A text', () => {
+    const { normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'B02086',
+      card_id: '0086',
+      q_a: '【First】\nQ: One\nA: First answer\n【Second】\nQ: Two\nA: Second answer',
+    }]);
+
+    expect(result.items.map((item: { section: string }) => item.section)).toEqual(['First', 'Second']);
+    expect(result.items).toHaveLength(2);
+  });
+
+  it('collects multiline questions before the answer marker under a Japanese section', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'B02086',
+      card_id: '0086',
+      q_a: '【規則】\r\nQ: What is\r\nthis question?\r\nA: Answer',
+    }]);
+
+    expect(result.items).toEqual([expect.objectContaining({
+      section: '規則',
+      questionHash: sha256('What is this question?'),
+      answerHash: sha256('Answer'),
+    })]);
+  });
+
+  it('parses current official Q&A with an ability preamble before full-width markers', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'D08003',
+      card_id: '0489',
+      q_a: '●Ability preamble\r\n\r\nQ：Does this count?\r\nA：Yes.',
+    }]);
+
+    expect(result).toMatchObject({
+      conflicts: [],
+      items: [expect.objectContaining({
+        cardNums: ['D08003'],
+        section: '●Ability preamble',
+        questionHash: sha256('Does this count?'),
+        answerHash: sha256('Yes.'),
+      })],
+    });
+  });
+
+  it('parses current official Q&A using period markers', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([{
+      card_num: 'B04075',
+      card_id: '0256',
+      q_a: 'Q. Which resolves first?\r\nA. The turn player.',
+    }]);
+
+    expect(result.items).toEqual([expect.objectContaining({
+      cardNums: ['B04075'],
+      questionHash: sha256('Which resolves first?'),
+      answerHash: sha256('The turn player.'),
+    })]);
+  });
+
+  it.each([
+    ['invalid JSON', '{not json', 'unrecognized-text'],
+    ['JSON array', '["not supported"]', 'unsupported-json-array'],
+    ['unlabeled text', 'text without Q and A labels', 'unrecognized-text'],
+    ['missing answer label', 'Q: Missing answer', 'malformed-qa-text'],
+  ])('surfaces %s as a structured parse error instead of silently dropping it', (_label, q_a, reason) => {
+    const { normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+
+    expectQaParseError(() => normalizeQaCards([{ card_num: 'B02086P', card_id: '0086', q_a }]), {
+      name: 'QaParseError',
+      code: 'QA_PARSE_ERROR',
+      cardId: '0086',
+      cardNum: 'B02086P',
+      reason,
+    });
+  });
+
+  it('uses ordinal sorting for stable output regardless of locale', () => {
+    const { compareOrdinal, normalizeQaCards } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      { card_num: 'B2', card_id: 'a', q_a: JSON.stringify({ Question: 'Answer' }) },
+      { card_num: 'B1', card_id: 'A', q_a: JSON.stringify({ Question: 'Answer' }) },
+    ]);
+
+    expect(compareOrdinal('A', 'a')).toBeLessThan(0);
+    expect(result.items.map((item: { cardId: string }) => item.cardId)).toEqual(['B1', 'B2']);
+  });
+
+  it('keeps duplicate questions in separate sections and reports answer conflicts deterministically', () => {
+    const { normalizeQaCards, sha256 } = require('../../scripts/cards/qa-normalize.cjs');
+    const result = normalizeQaCards([
+      {
+        card_num: 'B06098',
+        card_id: '0098',
+        q_a: JSON.stringify({
+          '【First】 Same question': 'Same answer',
+          '【Second】 Same question': 'Same answer',
+        }),
+      },
+      {
+        card_num: 'B06098P',
+        card_id: '0098',
+        q_a: JSON.stringify({ '【First】 Same question': 'Different answer' }),
+      },
+    ]);
+
+    expect(result.items.map((item: { qaId: string }) => item.qaId)).toEqual([
+      `card:B06098:${sha256('First\0Same question')}`,
+      `card:B06098:${sha256('Second\0Same question')}`,
+    ]);
+    expect(result.conflicts).toEqual([{
+      qaId: `card:B06098:${sha256('First\0Same question')}`,
+      cardId: 'B06098',
+      cardNums: ['B06098', 'B06098P'],
+      answerHashes: [sha256('Different answer'), sha256('Same answer')].sort(),
+    }]);
+  });
+
+  it('integrates raw Q&A as a separate compiler artifact without changing TSV card entries', () => {
+    const { loadCorpus, loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
+    const root = tempRoot();
+    const dataDir = path.join(root, '.claude', 'specs', 'cards-data', 'CT-P01');
+    const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
+    mkdirSync(dataDir, { recursive: true });
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(path.join(dataDir, 'character.tsv'), [
+      'cardNum\tcardId\ttitle\tcolor\tlevel\tap\tlp\trarity\tfeatures\timagePath\teffect\tcutIn\thirameki\thenso\tillustrator\tflavor\tqAndA',
+      'B02086\t0086\tSynthetic\tblue\t1\t1000\t1\tC\t\t\t\t\t\t\t\t\tlegacy source stays untouched',
+    ].join('\n'));
+    writeFileSync(path.join(rawDir, 'ct-p01-api.json'), JSON.stringify({ data: [{
+      card_num: 'B02086', card_id: '0086', q_a: JSON.stringify({ '【Rule】 Question': 'Answer' }),
+    }] }));
+
+    const corpus = loadCorpus(root);
+    const qa = loadQaCorpus(root);
+
+    expect(corpus).toHaveLength(1);
+    expect(corpus[0].qa).toBe('legacy source stays untouched');
+    expect(qa).toMatchObject({ items: [{ cardId: 'B02086', cardNums: ['B02086'] }], conflicts: [] });
+  });
+
+  it('ignores non-Q&A manual-reference notes at raw corpus ingress', () => {
+    const { loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
+    const root = tempRoot();
+    const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(path.join(rawDir, 'ct-b08-api.json'), JSON.stringify({ data: [
+      { card_num: 'B08022', card_id: '0822', q_a: 'Q: Included question\nA: Included answer' },
+      { card_num: 'B08023', card_id: '0823', q_a: 'manual-reference note' },
+      { card_num: 'B08023P', card_id: '0823', q_a: 'manual-reference note' },
+    ] }));
+
+    expect(loadQaCorpus(root)).toMatchObject({
+      items: [{ cardId: 'B08022', cardNums: ['B08022'] }],
+      conflicts: [],
+    });
+  });
+
+  it.each([
+    ['legacy JSON object', JSON.stringify({ '【Rule】 Question': 'Answer' })],
+    ['legacy Q/A text', 'Q: Question\nA: Answer'],
+    ['current Q&A with a preamble and full-width markers', '●Ability preamble\n\nQ：Question\nA：Answer'],
+    ['current Q&A using period markers', 'Q. Question\nA. Answer'],
+  ])('recognizes %s as Q&A-shaped before ingress normalization', (_label, q_a) => {
+    const { isQaShaped } = require('../../scripts/cards/qa-normalize.cjs');
+
+    expect(isQaShaped(q_a)).toBe(true);
+  });
+
+  it('surfaces malformed purported raw Q&A through tsv-corpus with card context', () => {
+    const { loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
+    const root = tempRoot();
+    const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(path.join(rawDir, 'ct-p01-api.json'), JSON.stringify({ data: [{
+      card_num: 'B06098', card_id: '0098', q_a: 'Q: Missing answer',
+    }] }));
+
+    expectQaParseError(() => loadQaCorpus(root), {
+      name: 'QaParseError',
+      code: 'QA_PARSE_ERROR',
+      cardId: '0098',
+      cardNum: 'B06098',
+      reason: 'malformed-qa-text',
+    });
+  });
+
+  it.each([
+    ['native array', ['not supported'], 'unsupported-json-array'],
+    ['native boolean', true, 'unsupported-value'],
+    ['native number', 42, 'unsupported-value'],
+    ['JSON array', '["not supported"]', 'unsupported-json-array'],
+    ['JSON boolean', 'true', 'unsupported-json-value'],
+    ['JSON number', '42', 'unsupported-json-value'],
+  ])('fails fast at raw ingress for malformed structured %s values', (_label, q_a, reason) => {
+    const { loadQaCorpus } = require('../../scripts/compiler/tsv-corpus.cjs');
+    const root = tempRoot();
+    const rawDir = path.join(root, '.claude', 'specs', 'cards-data', '_raw');
+    mkdirSync(rawDir, { recursive: true });
+    writeFileSync(path.join(rawDir, 'ct-p01-api.json'), JSON.stringify({ data: [{
+      card_num: 'B06099', card_id: '0099', q_a,
+    }] }));
+
+    expectQaParseError(() => loadQaCorpus(root), {
+      name: 'QaParseError',
+      code: 'QA_PARSE_ERROR',
+      cardId: '0099',
+      cardNum: 'B06099',
+      reason,
+    });
+  });
+});

@@ -22,6 +22,7 @@ describe('GameSetupModal', () => {
     expect(html).toContain('対戦開始');
     expect(html).toContain('data-testid="game-setup-start"');
     expect(html).toContain('role="dialog"');
+    expect(html).toContain('aria-modal="true"');
   });
 
   it('returns null (renders nothing) when gameState is not null', () => {

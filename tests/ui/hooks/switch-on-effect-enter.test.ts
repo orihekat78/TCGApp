@@ -68,7 +68,13 @@ describe('switch-on-effect-enter — 現場満杯の reanimate を switch で登
     expect(gs.players.self.scene.length, 'スイッチなので現場 5 枚維持').toBe(5);
     expect(gs.players.self.scene.some((c) => c.cardId === 'D11011'), '萩原千速 が登場').toBe(true);
     expect(gs.players.self.scene.some((c) => c.uid === 'f1'), '退場キャラ f1 は消える').toBe(false);
-    expect(gs.players.self.deck.length, '萩原千速 登場で step3 が 1 ドロー → デッキ 0').toBe(0);
+    expect(gs.players.self.hand, 'step3 draw は成立').toEqual(['D08014']);
+    expect(gs.players.self.deck, 'exact exhaustion → discard と switch 退場カードを即 refresh')
+      .toEqual(expect.arrayContaining(['D08013', 'D11013']));
+    expect(gs.players.self.deck).toHaveLength(2);
+    expect(gs.players.self.remove).toHaveLength(0);
+    expect(gs.refreshCount.self).toBe(1);
+    expect(gs.players.opp.evidence).toHaveLength(1);
   });
 
   it('満杯時、switch を辞退 (pickedUid:null) すると reanimate されず draw もしない', () => {

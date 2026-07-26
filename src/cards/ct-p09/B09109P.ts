@@ -14,7 +14,7 @@ const a1: AbilityDef = {
     kind: 'chain',
     steps: [
       { kind: 'atom', verb: 'bindPick', args: { player: 'self', max: 1, filter: { levelMax: 8, kind: 'character' }, side: 'self', bind: 'chosenChar' } },
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', filter: { kind: 'character', levelMin: { dyn: '$bound.chosenChar.level' }, levelMax: { dyn: '$bound.chosenChar.level' }, cardName: { dyn: '$bound.chosenChar.cardName' } }, bind: 'restRevealed', bindMatch: 'matchedChar' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', filter: { kind: 'character', levelMin: { dyn: '$bound.chosenChar.level' }, levelMax: { dyn: '$bound.chosenChar.level' }, cardName: { dyn: '$bound.chosenChar.cardName' } }, bind: 'restRevealed', bindMatch: 'matchedChar' } },
       { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matchedChar.cardId', bind: '$entered', viaEffect: true, target: { query: { area: 'deck', side: 'self' } } } },
       { kind: 'atom', verb: 'charSetTurnEffect', args: { uid: '$entered.uid', key: 'toDeckBottomOnTurnEnd', val: true } },
       { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: 'restRevealed' } },

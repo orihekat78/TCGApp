@@ -101,7 +101,7 @@ export function candidates(state: GameState, byUid: string): TargetCandidate[] {
   // D11007 v2 Phase 3: 「action:pre-target」 declarative trigger を直接 lookup
   //
   // Card-side DSL は trigger { hook: 'action:pre-target', selfOnly: true } + effect:
-  // atom expandActionTargets { side, state[], levelMin, levelMax } で表現される。
+  // atom expandActionTargets { side, state[], levelMin, levelMax, hasSetCards } で表現される。
   // queue 経由の事後 resolve では candidates() の即時 enumeration に間に合わないので、
   // ここで直接 scene 上の triggered ability を walk して args を読む (sync inline)。
   applyPreTargetExpansion(state, byUid, actor, opp, seen, extra);
@@ -156,6 +156,7 @@ function applyPreTargetExpansion(
 ): void {
   for (const ownerSide of ['self', 'opp'] as const) {
     for (const sceneCard of state.players[ownerSide].scene) {
+      if (readChar.originalAbilitiesDisabled(state, sceneCard.uid)) continue;
       const cardDef = readDef.card(sceneCard.cardId);
       if (!cardDef?.abilities) continue;
       for (const ab of cardDef.abilities) {
@@ -170,6 +171,7 @@ function applyPreTargetExpansion(
         const stateFilter = args.state as ('active' | 'sleep' | 'stun')[] | undefined;
         const levelMin = args.levelMin as number | undefined;
         const levelMax = args.levelMax as number | undefined;
+        const hasSetCards = args.hasSetCards === true;
         const sides: Player[] = sideArg === 'opp' ? [opp]
           : sideArg === 'self' ? [actor]
           : [actor, opp]; // 'either'
@@ -180,6 +182,7 @@ function applyPreTargetExpansion(
             const lvl = readChar.level(state, c.uid);
             if (levelMin !== undefined && lvl < levelMin) continue;
             if (levelMax !== undefined && lvl > levelMax) continue;
+            if (hasSetCards && c.setCards.length === 0) continue;
             seen.add(c.uid);
             extra.push({ uid: c.uid, cardId: c.cardId, player: sd });
           }
@@ -214,7 +217,8 @@ export function mustTargetCandidates(state: GameState, byUid: string): TargetCan
   return out;
 }
 
-function hasMustTargetSelfOnce(cardId: string): boolean {
+function hasMustTargetSelfOnce(state: GameState, uid: string, cardId: string): boolean {
+  if (readChar.originalAbilitiesDisabled(state, uid)) return false;
   const cardDef = readDef.card(cardId);
   return cardDef?.abilities?.some(ab =>
     ab.type === 'triggered'
@@ -232,7 +236,7 @@ export function mustTargetSelfOnceCandidates(state: GameState, byUid: string): T
   const opp: Player = actor === 'self' ? 'opp' : 'self';
   const legal = candidates(state, byUid);
   return state.players[opp].scene.flatMap((c) =>
-    hasMustTargetSelfOnce(c.cardId)
+    hasMustTargetSelfOnce(state, c.uid, c.cardId)
       && c.turnEffects.mustTargetSelfOnce !== state.turn.number
       && legal.some(x => x.uid === c.uid)
       ? [{ uid: c.uid, cardId: c.cardId, player: opp }]
@@ -245,7 +249,7 @@ export function consumeMustTargetSelfOnce(state: GameState, byUid: string): void
   if (!actor) return;
   const opp: Player = actor === 'self' ? 'opp' : 'self';
   for (const c of state.players[opp].scene) {
-    if (hasMustTargetSelfOnce(c.cardId)) {
+    if (hasMustTargetSelfOnce(state, c.uid, c.cardId)) {
       c.turnEffects.mustTargetSelfOnce = state.turn.number;
     }
   }

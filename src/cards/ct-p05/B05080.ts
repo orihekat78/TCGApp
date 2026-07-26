@@ -7,12 +7,12 @@
 //     そうした場合、ターン終了時までそのキャラをLP－1する。
 //
 // a1: 〚ミスリード1〛 — misreadX(1) 共通クラス (reasoning:before-add 経由、既存)。
-// a2: 推理反応 (reasoning:end, 非 selfOnly)。matcherCondition triggerCharMatches{side:'opp'} で
+// a2: 推理反応 (reasoning:after-sleep, 非 selfOnly)。matcherCondition triggerCharMatches{side:'opp'} で
 //   「相手の現場のキャラが推理したとき」を gate + 【ターン1】= limit turn:1。
 //   効果は chain (「〜してもよい。そうした場合〜」, D11007 同型):
 //     step1) discard{max:1} = 手札を1枚リムーブ (skip 可 → chain break で「しない」を表現)
 //     step2) charModifyLP{uid:'$trigger.uid'} = 「そのキャラ (=推理した相手キャラ)」を ターン終了時まで LP-1。
-//   $trigger.uid は reasoning:end payload の推理キャラ uid を resolveBindRef が解決する (engine 拡張)。
+//   $trigger.uid は reasoning:after-sleep payload の推理キャラ uid を resolveBindRef が解決する (engine 拡張)。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 import { misreadX } from '@/cards/_shared';
@@ -23,7 +23,7 @@ const a2: AbilityDef = {
   scope: 'on-scene',
   limit: { kind: 'turn', n: 1 }, // 【ターン1】
   trigger: {
-    hook: 'reasoning:end',
+    hook: 'reasoning:after-sleep',
     // 相手の現場にいるキャラが推理したとき (side:'opp' = payload.player !== source.player)
     // BUG-179: filter:{} が無いと scene 走査が走らず相手パートナーの推理でも誤発火 (印字は「現場にいるキャラ」)。
     matcherCondition: { kind: 'triggerCharMatches', side: 'opp', filter: {} },

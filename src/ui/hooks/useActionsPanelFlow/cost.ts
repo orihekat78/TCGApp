@@ -105,23 +105,87 @@ export function findRemoveStackedCardsCost(cost: Cost | undefined): RemoveStacke
   return null;
 }
 
+type RemoveSetCardCost = Extract<Cost, { kind: 'removeSetCard' }>;
+type ChoiceCost = Extract<Cost, { kind: 'choice' }>;
+type ChoicePath = readonly number[] | number | undefined;
+
+function normalizedChoicePath(path: ChoicePath): readonly number[] | undefined {
+  return typeof path === 'number' ? [path] : path;
+}
+
+/** Return the next unresolved choice on the exact engine payment path. */
+export function findChoiceCostAtPath(cost: Cost | undefined, path: ChoicePath): ChoiceCost | null {
+  const choices = normalizedChoicePath(path) ?? [];
+  let cursor = 0;
+  const visit = (node: Cost): ChoiceCost | null => {
+    if (node.kind === 'pay') {
+      for (const item of node.items) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (node.kind !== 'choice') return null;
+    const selected = choices[cursor++];
+    if (selected === undefined) return node;
+    return Number.isInteger(selected) && selected >= 0 && selected < node.items.length
+      ? visit(node.items[selected]!)
+      : null;
+  };
+  return cost ? visit(cost) : null;
+}
+
+/** Enumerate complete engine-order choice paths extending a selected prefix. */
+export function completeCostChoicePaths(cost: Cost | undefined, prefix: readonly number[]): number[][] {
+  if (!cost) return [];
+  type State = { path: number[]; cursor: number };
+  const visit = (node: Cost, states: State[]): State[] => {
+    if (node.kind === 'pay') return node.items.reduce((current, item) => visit(item, current), states);
+    if (node.kind !== 'choice') return states;
+    return states.flatMap((state) => {
+      const requested = prefix[state.cursor];
+      const indices = requested === undefined ? node.items.map((_item, index) => index) : [requested];
+      return indices.flatMap((index) => Number.isInteger(index) && index >= 0 && index < node.items.length
+        ? visit(node.items[index]!, [{ path: [...state.path, index], cursor: state.cursor + 1 }])
+        : []);
+    });
+  };
+  return visit(cost, [{ path: [], cursor: 0 }]).map((state) => state.path);
+}
+
+/** choice branch 決定後の実支払経路から removeSetCard を探す。 */
+export function findRemoveSetCardCost(
+  cost: Cost | undefined,
+  choicePath?: ChoicePath,
+): RemoveSetCardCost | null {
+  const choices = normalizedChoicePath(choicePath);
+  let cursor = 0;
+  const visit = (node: Cost): RemoveSetCardCost | null => {
+    if (node.kind === 'removeSetCard') return node;
+    if (node.kind === 'pay') {
+      for (const item of node.items) {
+        const found = visit(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (node.kind !== 'choice') return null;
+    const selected = choices?.[cursor++];
+    return selected !== undefined && Number.isInteger(selected) && selected >= 0 && selected < node.items.length
+      ? visit(node.items[selected]!)
+      : null;
+  };
+  return cost ? visit(cost) : null;
+}
+
 /**
  * 夜間 W0 (2026-07-11, B09027): cost の中から choice (「AかBをリムーブする」択一コスト) を探す。
  * engine cost.pay は ctx.dyn.costChoice (readChosenIndex) 未供給時 first-payable auto-select に
  * 落ちるため、human 経路は dispatch 前に branch index を選んで costParams.costChoice へ積む。
  * pay (複合) ネストにも備え再帰 (findFlipFaceUpCost と同姿勢)。choice の入れ子は現カード非存在。
  */
-type ChoiceCost = Extract<Cost, { kind: 'choice' }>;
 export function findChoiceCost(cost: Cost | undefined): ChoiceCost | null {
-  if (!cost) return null;
-  if (cost.kind === 'choice') return cost;
-  if (cost.kind === 'pay') {
-    for (const item of cost.items) {
-      const found = findChoiceCost(item);
-      if (found) return found;
-    }
-  }
-  return null;
+  return findChoiceCostAtPath(cost, []);
 }
 
 /**

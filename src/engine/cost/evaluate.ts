@@ -7,6 +7,7 @@
 import type { GameState, Cost, EffectCtx, TargetingRef } from '@/engine/types';
 import { candidates } from '@/engine/target/candidates.js';
 import { resolveDynNumber } from '@/engine/dyn/eval.js';
+import { canPayAtomically, isWellFormedCost } from './pay.js';
 
 // refactor 2b (2026-06-12): Cost union の kind 一覧を value として単一ソース化。
 // `satisfies Record<Cost['kind'], true>` で union との両方向同期をコンパイル時に強制。
@@ -33,6 +34,8 @@ export const COST_KINDS: ReadonlySet<string> = new Set(Object.keys(COST_KIND_MAP
  * Check if a Cost is fully payable in the given state.
  */
 export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
+  if (cost.kind === 'custom') return false;
+  if (!isWellFormedCost(cost)) return false;
   switch (cost.kind) {
     case 'sleepSelf': {
       const uid = ctx.source.uid;
@@ -46,24 +49,23 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
     }
     case 'sleepChar': {
       const cands = candidates(state, cost.target, ctx);
-      if (cands.length === 0) return false;
-      // At least one candidate must be in a state we can sleep (active)
-      return cands.some(cand => {
+      const min = cost.target.kind === 'pick' ? cost.target.n.min : 1;
+      return cands.filter(cand => {
         if (cand.kind !== 'char') return false;
         const c = findChar(state, cand.uid);
         return !!c && c.state === 'active';
-      });
+      }).length >= min;
     }
     // engine additive wave (2026-06-24): stunChar — sleepChar と同形。コスト文「アクティブ状態の[X]」より
     // active 候補が最低1枚必要 (sleep/stun は対象不可、rules/03 スタン特殊挙動)。
     case 'stunChar': {
       const cands = candidates(state, cost.target, ctx);
-      if (cands.length === 0) return false;
-      return cands.some(cand => {
+      const min = cost.target.kind === 'pick' ? cost.target.n.min : 1;
+      return cands.filter(cand => {
         if (cand.kind !== 'char') return false;
         const c = findChar(state, cand.uid);
         return !!c && c.state === 'active';
-      });
+      }).length >= min;
     }
     case 'removeFromHand': {
       const cands = candidates(state, cost.target, ctx);
@@ -168,10 +170,10 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       return !!findChar(state, uid);
     }
     case 'pay': {
-      return cost.items.every(item => canPay(state, item, ctx));
+      return canPayAtomically(state, cost, ctx);
     }
     case 'choice': {
-      return cost.items.some(item => canPay(state, item, ctx));
+      return canPayAtomically(state, cost, ctx);
     }
     case 'fileFrom': {
       // BUG-129 水平展開 (Task D E3): popTop はアシストパートナーを skip するため、
@@ -181,11 +183,18 @@ export function canPay(state: GameState, cost: Cost, ctx: EffectCtx): boolean {
       return payable >= cost.n;
     }
     case 'flipFaceUpEvidence': {
+      const selected = (ctx.dyn?.['costParams'] as Record<string, unknown> | undefined)?.['flipFaceUpEvidence'] as { indices?: unknown } | undefined;
+      if (selected !== undefined) {
+        if (!Array.isArray(selected.indices)) return false;
+        const indices = selected.indices;
+        if (indices.length < cost.n.min || indices.length > cost.n.max) return false;
+        if (!indices.every(index => typeof index === 'number' && Number.isInteger(index))) return false;
+        if (new Set(indices).size !== indices.length) return false;
+        return indices.every(index => index >= 0 && index < state.players[ctx.source.player].evidence.length
+          && !state.players[ctx.source.player].evidence[index]!.faceUp);
+      }
       const facedown = state.players[ctx.source.player].evidence.filter(e => !e.faceUp).length;
       return facedown >= cost.n.min;
-    }
-    case 'custom': {
-      return cost.check(state, ctx);
     }
     // refactor 2b: case 追加漏れの compile-time 検出 (noImplicitReturns 無効のため明示 guard)。
     // 到達不能 (union 網羅済)。万一 runtime で未知 kind が来た場合は旧挙動 (undefined=falsy) 同等の false。

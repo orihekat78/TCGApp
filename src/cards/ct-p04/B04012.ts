@@ -28,6 +28,8 @@ const a1: AbilityDef = {
         args: {
           chooseMatch: 'upTo',
           player: 'self',
+          visibility: 'private',
+          viewer: 'self',
           filter: {
             kind: 'character'
           },

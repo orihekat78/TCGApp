@@ -2,15 +2,15 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-structure.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:structure`
-> Source hash: `8d25a6e6f183`
+> Source hash: `2c07a1e54971`
 
-ワーキングディレクトリの全フォルダ・ファイルを一覧する。説明は `structure-dictionary.json` の明示エントリを優先し、未定義の Markdown は先頭 `# heading` を、TypeScript は先頭 JSDoc / 行コメントを自動抽出する。`.gitignore` 相当のパターン (`node_modules` / `.git` / 各種 build 出力 / `*.png` 等) は除外。Source hash は辞書 + 本ジェネレータのみが対象 (出力ファイル自身を含めると無限再生成サイクルになるため)。ファイルツリーの変化は `npm run docs:check` の差分比較が検出する。
+Git index上のtracked/staged path集合から明示除外を引いたフォルダ・ファイルを一覧する。説明もindex blobを正本とし、`structure-dictionary.json` の明示エントリ、Markdownの先頭heading、TypeScript等の先頭JSDoc/行コメントの順で解決する。新規ファイルを反映する場合は先にstageしてから生成する。Source hashはindex上の辞書+本ジェネレータが対象。
 
 ## サマリ
 
-- **対象ルート**: `.` (`C:/Users/arumi/OneDrive/デスクトップ/conan`)
-- **ディレクトリ数**: 265
-- **ファイル数**: 4994
+- **対象ルート**: `.`
+- **ディレクトリ数**: 247
+- **ファイル数**: 5129
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -137,6 +137,7 @@
         - `phase-9-g-replay.md` — 🤖 Spec 参照ハブ: phase-9-g-replay
         - `phase-9-h-performance.md` — 🤖 Spec 参照ハブ: phase-9-h-performance
         - `refactor-plan--phase-3b-design.md` — 🤖 Spec 参照ハブ: phase-3b-design
+        - `shared-classes--INDEX.md` — 🤖 Spec 参照ハブ: INDEX
         - `shared-classes--caseDeclaredEvidenceFlip.md` — 🤖 Spec 参照ハブ: caseDeclaredEvidenceFlip
         - `shared-classes--caseResolvedHandRemove.md` — 🤖 Spec 参照ハブ: caseResolvedHandRemove
         - `shared-classes--caseTraitConditioned.md` — 🤖 Spec 参照ハブ: caseTraitConditioned
@@ -144,7 +145,6 @@
         - `shared-classes--eventRemoveByAP.md` — 🤖 Spec 参照ハブ: eventRemoveByAP
         - `shared-classes--hiramekiCharStun.md` — 🤖 Spec 参照ハブ: hiramekiCharStun
         - `shared-classes--hiramekiDraw.md` — 🤖 Spec 参照ハブ: hiramekiDraw
-        - `shared-classes--INDEX.md` — 🤖 Spec 参照ハブ: INDEX
         - `shared-classes--partnerColorKeyword.md` — 🤖 Spec 参照ハブ: partnerColorKeyword
       - `cards-to-rules-cards.md` — 🤖 カード → ルール マッピング
       - `cards-to-rules-engine-core.md` — 🤖 Engine (types/read/mutate) → ルール マッピング
@@ -160,6 +160,8 @@
     - **`state/`**
       - `game-state.md` — 🤖 GameState shape
     - `README.md` — 自動生成ドキュメント運用ガイド (手書き、唯一の例外)
+    - `qa-manifest.json`
+    - `qa-trace.md` — Official Q&A hash-only trace
     - `structure.md` — プロジェクト構造
   - **`bugs/`** — バグ・リスク管理表 (Obsidian Base 形式、BUG-XXX.md 個別ファイル)
     - `AUDIT-2026-05-22.md` — BUG フォルダ AUDIT (2026-05-22)
@@ -339,11 +341,11 @@
     - `BUG-173.md` — BUG-173: 効果解決後の ActionsPanel 永久ロック
     - `BUG-174.md` — BUG-174: 短縮形 pick side の二重相対化 (owner='opp' で反転)
     - `BUG-175.md` — BUG-175: pick 解決後の再実行 ctx が chooser 座標系 (BUG-174 family 第3経路)
-    - `BUG-176.md` — BUG-176: 使用中イベントの remove 先行移動による計数 off-by-one
+    - `BUG-176.md`
     - `BUG-177.md` — BUG-177: 「〜のキャラに【カットイン】した/する場合」の参照方向が公式Q&Aと逆 (共通クラス水平展開 13 printings)
     - `BUG-178.md` — BUG-178: cardNameComponents が全角＆を分割しない — rules/19 複数名ルール破綻 (57 file)
     - `BUG-179.md` — BUG-179: filter 無し triggerCharMatches — 「現場にいるキャラが〜したとき」がパートナーにも誤発火
-    - `BUG-180.md` — BUG-180: handAddFromDeck / sceneEnter(deck-splice) が take 後 deck0 の即リフレッシュを行わない
+    - `BUG-180.md` — BUG-180: completed deck takeのexact exhaustionで即時リフレッシュされない
     - `BUG-181.md` — BUG-181: resolve-picks pre-walk の owner-relative 化漏れ (PB 短縮形)
     - `BUG-182.md` — BUG-182: chain passthrough + tryRePickFromAtom の side 二重解決
     - `BUG-183.md` — BUG-183: handReveal「してもよい」の n:1 強制発火 family
@@ -352,15 +354,85 @@
     - `BUG-186.md` — BUG-186: sceneEnter 短縮形が side に絶対値を渡し owner='opp' で反転 (候補0)
     - `BUG-187.md` — BUG-187: hand 系 atom 短縮形の side 絶対値渡し (BUG-186 同族、owner='opp' latent)
     - `BUG-188.md` — BUG-188: 同一cardId複数枚でon-hand能力が重複発火
+    - `BUG-189.md`
+    - `BUG-190.md`
+    - `BUG-191.md`
+    - `BUG-192.md`
+    - `BUG-193.md`
+    - `BUG-194.md`
+    - `BUG-195.md`
+    - `BUG-196.md`
+    - `BUG-197.md`
+    - `BUG-198.md`
+    - `BUG-199.md`
+    - `BUG-200.md`
+    - `BUG-201.md`
+    - `BUG-202.md`
+    - `BUG-203.md`
+    - `BUG-204.md`
+    - `BUG-205.md`
+    - `BUG-206.md`
+    - `BUG-207.md`
+    - `BUG-208.md`
+    - `BUG-209.md`
+    - `BUG-210.md`
+    - `BUG-211.md`
+    - `BUG-212.md`
+    - `BUG-213.md`
+    - `BUG-214.md` — BUG-214: 相手の宣言能力コストの所有者が反転する回帰
+    - `BUG-215.md`
+    - `BUG-216.md` — BUG-216: カード表示カタログの欠落
+    - `BUG-217.md`
+    - `BUG-218.md`
+    - `BUG-219.md`
+    - `BUG-220.md`
+    - `BUG-221.md`
+    - `BUG-222.md`
+    - `BUG-223.md`
+    - `BUG-224.md`
+    - `BUG-225.md`
+    - `BUG-226.md`
+    - `BUG-227.md`
+    - `BUG-228.md`
+    - `BUG-229.md`
+    - `BUG-230.md`
+    - `BUG-231.md`
+    - `BUG-232.md`
+    - `BUG-233.md`
+    - `BUG-234.md`
+    - `BUG-235.md`
+    - `BUG-236.md`
+    - `BUG-237.md`
+    - `BUG-238.md`
+    - `BUG-239.md`
+    - `BUG-240.md`
+    - `BUG-241.md`
+    - `BUG-242.md`
+    - `BUG-243.md`
+    - `BUG-244.md`
+    - `BUG-245.md`
+    - `BUG-246.md`
+    - `BUG-248.md`
+    - `BUG-249.md`
+    - `BUG-250.md`
+    - `BUG-251.md`
+    - `BUG-252.md`
+    - `BUG-253.md`
+    - `BUG-254.md`
+    - `BUG-255.md`
+    - `BUG-256.md`
+    - `BUG-257.md`
+    - `BUG-258.md`
+    - `BUG-259.md` — BUG-259: CT-P10 Q&A-bearing cards lack CardDef coverage
+    - `BUG-260.md`
+    - `BUG-261.md`
     - `BUG-template.md`
-    - `index.base` — 全バグ集約 view (Obsidian Base)
     - `LESSONS-LEARNED-2.md` — LESSONS LEARNED 2 — 直近期 (BUG-074〜113)
     - `LESSONS-LEARNED-3.md` — LESSONS LEARNED 3 — BUG-117〜121 期 (2026-06-05/06)
     - `LESSONS-LEARNED.md` — LESSONS LEARNED — コナン TCG プロジェクト
     - `README.md` — バグ管理表の使い方
+    - `index.base` — 全バグ集約 view (Obsidian Base)
   - **`changelog-entries/`** — CHANGELOG.md のソースエントリ (Phase / Round 完了時に追加、`npm run docs:changelog` で集約)
-    - `_footer.md`
-    - `_unreleased.md`
     - `2026-05-11-01-phase-0-6.md`
     - `2026-05-12-01-phase-7-shell.md`
     - `2026-05-13-01-phase-8.md`
@@ -655,12 +727,23 @@
     - `2026-07-11-03-night-wB-param-expansion.md`
     - `2026-07-11-04-night-wC-light.md`
     - `2026-07-11-05-night-wC2-chooser-hirameki-invoke.md`
+    - `2026-07-14-01-user-bug-wave.md`
+    - `2026-07-15-01-deck-limit-catalog-ui.md`
+    - `2026-07-15-02-standard-and-test-decks.md`
+    - `2026-07-15-03-contact-and-meta-effect-modals.md`
+    - `2026-07-16-01-you-vs-cpu-hardening.md`
+    - `2026-07-17-01-you-vs-cpu-hardening-fixed.md`
+    - `2026-07-19-01-phase-3-card-choice-visuals.md`
+    - `2026-07-26-01-phase-3-5-official-qa.md`
+    - `2026-07-26-02-rule-manual-ver2.5.md`
     - `README.md` — Changelog エントリ
+    - `_footer.md`
+    - `_unreleased.md`
   - **`design/`**
     - **`mockups/`**
       - `truth-web-v1.html`
-    - `research-findings.md` — デザイン刷新 — 研究知見 (2026-06-19, 2 workflow統合)
     - `RESUME.md` — デザイン刷新 — 作業再開プロンプト (2026-06-19)
+    - `research-findings.md` — デザイン刷新 — 研究知見 (2026-06-19, 2 workflow統合)
   - **`docs/`** — 公式 Q&A 裁定など、ルール解釈の補助ドキュメント
     - `user-request-clarifications-20260521.md` — user_request 20260521_01 公式裁定 Q&A
     - `user-request-clarifications.md` — user_request triage における公式裁定ノート
@@ -964,27 +1047,9 @@
       - `smoke-2026-06-15-8.md` — Smoke 1000戦レポート — smoke-2026-06-15-090452
       - `smoke-2026-06-15.json`
       - `smoke-2026-06-15.md` — Smoke 1000戦レポート — smoke-2026-06-15-002732
+    - `README.md` — .claude/reports
     - `bug-trend-2026-05-22.md` — BUG Trend Report (2026-05-22)
     - `coverage-baseline.json`
-    - `README.md` — .claude/reports
-    - `smoke-2026-07-13-2.json`
-    - `smoke-2026-07-13-2.md` — Smoke 1000戦レポート — smoke-2026-07-13-112320
-    - `smoke-2026-07-13-3.json`
-    - `smoke-2026-07-13-3.md` — Smoke 1000戦レポート — smoke-2026-07-13-141343
-    - `smoke-2026-07-13-4.json`
-    - `smoke-2026-07-13-4.md` — Smoke 1000戦レポート — smoke-2026-07-13-220756
-    - `smoke-2026-07-13.json`
-    - `smoke-2026-07-13.md` — Smoke 1000戦レポート — smoke-2026-07-13-075513
-    - `smoke-2026-07-14-2.json`
-    - `smoke-2026-07-14-2.md` — Smoke 1000戦レポート — smoke-2026-07-14-035821
-    - `smoke-2026-07-14-3.json`
-    - `smoke-2026-07-14-3.md` — Smoke 1000戦レポート — smoke-2026-07-14-042137
-    - `smoke-2026-07-14-4.json`
-    - `smoke-2026-07-14-4.md` — Smoke 1000戦レポート — smoke-2026-07-14-051757
-    - `smoke-2026-07-14-5.json`
-    - `smoke-2026-07-14-5.md` — Smoke 1000戦レポート — smoke-2026-07-14-055342
-    - `smoke-2026-07-14.json`
-    - `smoke-2026-07-14.md` — Smoke 1000戦レポート — smoke-2026-07-14-014802
     - `smoke-baseline.json`
   - **`research/`** — 設計判断のための調査結果 (法務 / アーキ / UX / カードデータ等)
     - **`arch/`** — アーキテクチャ調査 (state mgmt / effect stack / CPU AI / 再生・可視化 等)
@@ -1081,6 +1146,7 @@
     - `29-floor-rule-timing.md` — 29. フロアルール: 時間制限・決着処理
     - `30-floor-rule-misplay.md` — 30. フロアルール: 不適切なゲーム進行と対応処置
     - `INDEX.md` — 公式ルール集の目次
+    - `qa-sources.json`
     - `sources.md` — 公式 PDF / Wiki / Q&A の出典一覧
   - **`sessions/`** — 過去セッションの作業ログアーカイブ (日付別、80 行超で memory.md からローテート)
     - `2026-05-10.md` — 2026-05-10 — Day 1 セッションログ（アーカイブ）
@@ -1197,6 +1263,11 @@
     - `2026-07-12.md` — 2026-07-12 — B06020/B07003 hand-zone cutin aura
     - `2026-07-13-2.md` — Next Session: Deferred Primitive Portfolio
     - `2026-07-13.md` — memory — 現セッション scratchpad
+    - `2026-07-15-2.md` — 2026-07-13〜15 scratchpad rotation
+    - `2026-07-15-3.md` — 2026-07-15 manual YOU vs AI matrix
+    - `2026-07-17.md` — 2026-07-14〜15 bug wave session
+    - `2026-07-18-task7-qa-offline-lint.md` — Task 7 — Q&A offline lint
+    - `2026-07-19.md` — memory — 現セッション scratchpad
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
     - `README.md` — セッションアーカイブ
   - **`skills/`** — プロジェクト固有のスキル定義
@@ -1258,138 +1329,14 @@
       - `TEMPLATE.md` — カード効果分析テンプレート (TSV参照型)
       - `WORKFLOW-GUIDELINES.md` — カード処理ワークフロー図 作成ガイドライン
     - **`cards-data/`**
-      - **`_raw/`**
-        - `_fetch_all.cjs`
-        - `ct-d01-api.json`
-        - `ct-d02-api.json`
-        - `ct-d03-api.json`
-        - `ct-d04-api.json`
-        - `ct-d05-api.json`
-        - `ct-d06-api.json`
-        - `ct-d07-api.json`
-        - `ct-d08-api.json`
-        - `ct-d09-api.json`
-        - `ct-d10-api.json`
-        - `ct-d11-api.json`
-        - `ct-p01-api.json`
-        - `ct-p02-api.json`
-        - `ct-p03-api.json`
-        - `ct-p04-api.json`
-        - `ct-p05-api.json`
-        - `ct-p06-api.json`
-        - `ct-p07-api.json`
-        - `ct-p08-api.json`
-        - `ct-p09-api.json`
-        - `pr-01-api.json`
-      - **`ct-d01/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d02/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d03/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d04/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d05/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d06/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d07/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d08/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d09/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d10/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-d11/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p01/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p02/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p03/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p04/`**
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p05/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p06/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p07/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p08/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`ct-p09/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - **`pr-01/`**
-        - `case.tsv`
-        - `character.tsv`
-        - `event.tsv`
-        - `partner.tsv`
-      - `_regen_all.cjs`
+      - `INDEX.md` — cards-data — local official-card cache
       - `_regen.js` — TSV regenerator from fresh API JSON in _raw/.
-      - `INDEX.md` — cards-data — カードデータ TSV (権威ソース)
-      - `packages.md` — cards-data パッケージ一覧
+      - `_regen_all.cjs`
+      - `packages.md` — cards-data package IDs
+      - `qa-hash-snapshot.json`
+      - `status.json`
     - **`catalog-survey-2026-06-06/`**
+      - `README.md` — 残カタログ再分類サーベイ (2026-06-06〜07, タスク A) — **完走**
       - `_buckets.json`
       - `batch2-green-shortlist.md` — batch #2 green shortlist — 高信頼 engine変更0 候補 (2026-06-07)
       - `capability-map.txt`
@@ -1397,7 +1344,6 @@
       - `classification-partial.json`
       - `classify-triage.json`
       - `green-candidates-enriched.json`
-      - `README.md` — 残カタログ再分類サーベイ (2026-06-06〜07, タスク A) — **完走**
       - `remaining-to-classify.json`
       - `task-d-priority-map.json`
     - **`grounding/`**
@@ -1407,20 +1353,32 @@
       - `B01070.md` — B01070 アンドレ・キャメル grounding (2026-07-10, sonnet5)
       - `B01092.md` — B01092 松田陣平 grounding (2026-07-10, sonnet5)
       - `B02022.md` — B02022 鬼丸猛 grounding (2026-07-10, sonnet5)
+      - `B02023.md` — B02023 遠山和葉 grounding
       - `B02039.md` — B02039 工藤優作 grounding (2026-07-10, fable)
       - `B02067.md` — B02067 チョーカー型変声機 grounding (2026-07-10, sonnet5)
+      - `B03020.md` — B03020 毛利蘭 grounding
+      - `B03023.md` — B03023 脇田兼則 grounding
       - `B03030.md` — B03030 / B03030P grounding
+      - `B03032.md` — B03032 grounding
       - `B03040.md` — B03040 和田進一 grounding (2026-07-10, sonnet5)
       - `B03042.md` — B03042 grounding
       - `B03111.md` — B03111 バーボン grounding (2026-07-10, sonnet5)
       - `B04003.md` — B04003 工藤新一 grounding (2026-07-10, sonnet5)
+      - `B04018.md` — B04018 / B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
+      - `B04018P.md` — B04018P 遠山和葉 grounding (2026-07-14, gpt-5.6-terra high)
+      - `B04027.md` — B04027 grounding
+      - `B04028.md` — B04028 grounding
+      - `B04030.md` — B04030 grounding
       - `B04048.md` — B04048/B04048P 羽田秀𠮷 grounding (2026-07-10, fable)
       - `B04055.md` — B04055 grounding
+      - `B04059.md` — B04059 水無怜奈 grounding
       - `B04073.md` — B04073 千葉和伸 grounding (2026-07-10, sonnet5)
       - `B05008.md` — B05008 / B05008P grounding
       - `B05009.md` — B05009 毛利蘭 grounding (2026-07-10, sonnet5)
+      - `B05028P.md` — B05028P grounding
       - `B05048.md` — B05048 grounding
       - `B05063.md` — B05063/B05063P 園子のアブない夏物語 (事件) grounding (2026-07-10, fable)
+      - `B05080.md` — B05080 timing grounding
       - `B05086P.md` — grounding dossier: B05086P (自動生成 2026-07-13)
       - `B06003.md` — B06003/B06003P 毛利蘭＆江戸川コナン (MR キャラ) grounding (2026-07-10, fable)
       - `B06005.md` — B06005 阿笠博士 (R/RP) grounding (2026-07-10, sonnet5)
@@ -1438,7 +1396,7 @@
       - `B08017.md` — B08017 / B08017P grounding
       - `B08019.md` — B08019 大岡紅葉＆伊織無我 (MR/MRP) grounding (2026-07-10, sonnet5)
       - `B08047.md` — B08047/B08047P 沖矢昴 grounding (2026-07-10, fable)
-      - `B08074.md` — B08074 降谷零 grounding (2026-07-10, sonnet5)
+      - `B08074.md` — B08074 降谷零 grounding
       - `B08081.md` — B08081 広田雅美 grounding (2026-07-10, sonnet5)
       - `B09019.md` — B09019/B09019P 「くさるなよ！」 (イベント) grounding (2026-07-10, fable)
       - `B09024.md` — grounding dossier: B09024（世良真純）
@@ -1454,14 +1412,15 @@
       - `D06021.md` — D06021 服部平次 grounding (2026-07-10, sonnet5)
       - `D06023.md` — D06023 服部平次 grounding (2026-07-10, sonnet5)
       - `D10022.md` — D10022 毛利蘭 grounding (2026-07-10, sonnet5)
-      - `defer80-classified.json`
-      - `m3-pa-batch.md` — M3 前処理: PA(パートナーエリア) 宣言19+発動5 batch dossier
-      - `m3-triage-registered.md` — M3 PA batch triage — 登録済 18 ID (2026-07-10)
-      - `m3-triage-unregistered.md` — M3 未登録14 ID triage (2026-07-10, sonnet5)
       - `PR234.md` — PR234 毛利蘭 grounding (2026-07-10, fable)
       - `PR240.md` — PR240 毛利蘭 grounding (2026-07-10, fable)
       - `PR265.md` — PR265 風見裕也 grounding (2026-07-10, fable)
       - `README.md` — specs/grounding/ — grounding 判断の永続化 (2026-07-10 token 削減施策 #3)
+      - `deckRevealUntil-visibility.md` — deckRevealUntil visibility classification
+      - `defer80-classified.json`
+      - `m3-pa-batch.md` — M3 前処理: PA(パートナーエリア) 宣言19+発動5 batch dossier
+      - `m3-triage-registered.md` — M3 PA batch triage — 登録済 18 ID (2026-07-10)
+      - `m3-triage-unregistered.md` — M3 未登録14 ID triage (2026-07-10, sonnet5)
     - **`meta-ui/`**
       - `00-overview.md` — 00 — メタ UI 統合設計 概要
       - `01-project-setup.md` — 01 — meta-app プロジェクト構成
@@ -1484,6 +1443,25 @@
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
     - **`plans/`**
       - `2026-06-19-cpu-visualize-and-interrupt-lock-plan.md` — CPU逐次プレイ可視化 + 効果解決中ロック 実装計画
+    - **`qa-adjudication/`**
+      - `0.json`
+      - `1.json`
+      - `2.json`
+      - `3.json`
+      - `4.json`
+      - `5.json`
+      - `6.json`
+      - `7.json`
+      - `8.json`
+      - `9.json`
+      - `WORKFLOW.md` — Q&A Adjudication Queue Workflow
+      - `a.json`
+      - `b.json`
+      - `c.json`
+      - `d.json`
+      - `e.json`
+      - `f.json`
+      - `manifest.json`
     - **`refactor-plan/`**
       - `INDEX.md` — 全体リファクタリング計画 (2026-06-12 起案、ユーザー指示)
       - `phase-3a-design.md` — Phase 3a 設計: atom-handlers.ts 分割 (着手前設計レビュー、2026-06-22)
@@ -1498,13 +1476,13 @@
       - `review-records-1.md` — リファクタ レビュー記録 1 — Phase 1a〜3b (2026-06-12)
       - `review-records.md` — リファクタ各フェーズ レビュー記録 (phases.md から分割、100 行制約)
     - **`shared-classes/`**
+      - `INDEX.md` — cards/_shared/ — 共通クラス INDEX (2026-05-11)
       - `caseDeclaredEvidenceFlip.md` — caseDeclaredEvidenceFlip
       - `caseMonoColor.md` — caseMonoColor
       - `caseResolvedHandRemove.md` — caseResolvedHandRemove
       - `caseTraitConditioned.md` — caseTraitConditioned
       - `contactTargetMatches.md` — contactTargetMatches
       - `eventRemoveByAP.md` — eventRemoveByAP
-      - `INDEX.md` — cards/_shared/ — 共通クラス INDEX (2026-05-11)
       - `partnerColorKeyword.md` — partnerColorKeyword
     - **`task-d/`**
       - `01-hand-count-condition.md` — Task D E1 — hand-count condition (手札枚数条件)
@@ -1530,6 +1508,10 @@
     - `2026-07-11-codex-migration-config-plan.md` — Codex Migration: Configuration Plan
     - `2026-07-11-codex-migration-design.md` — Codex 移行設計（2026-07-11）
     - `2026-07-11-codex-migration-skills-plan.md` — Codex Migration: Skills and Handoff Plan
+    - `DEFERRED-ARCHIVE-2026-05.md` — Deferred アーカイブ (2026-05 時点スナップショット)
+    - `DEFERRED-INDEX.md` — 保留中タスクの一覧
+    - `INDEX.md` — 設計ドキュメントの目次
+    - `NEXT-SESSION-PLAN.md` — 次セッション計画 (post 2026-05-11)
     - `all-cards-completion-plan-2026-07-02.md` — 全カード追加 完了計画 (2026-07-02 / 同日改定: 二 Track 並行)
     - `bug-111-human-decline-fix-design.md` — BUG-111 #2 修正設計 — human-decline 経路の continuation 取り扱い
     - `card-addition-checklist.md` — 新カード追加時のチェックリスト
@@ -1543,8 +1525,6 @@
     - `compiler-track-plan-2026-07-02.md` — Track B: カード追加ツール (text→DSL compiler) 計画 (2026-07-02)
     - `completion-roadmap-2026-07-10.md` — 全カード完了 roadmap — 10-15 session 圧縮プログラム (2026-07-10 起票)
     - `cpu-visibility-options.md` — CPU 行動可視化 — 解決案候補 (BUG-059 / user_request 20260522_01 #15)
-    - `DEFERRED-ARCHIVE-2026-05.md` — Deferred アーカイブ (2026-05 時点スナップショット)
-    - `DEFERRED-INDEX.md` — 保留中タスクの一覧
     - `e3-altwin-decomposition-2026-07-02.md` — E3 (rule-rewrite / alt勝敗) 分解計画 — 2026-07-02
     - `engine-additive-b05062-part-b.md` — engine-additive Part B — B05062 解禁 (removeUnionAtLeast + TargetFilter.anyOf)
     - `engine-additive-casecolornot-design.md` — engine additive: Condition `caseColorNot` (2026-06-27 セッション62)
@@ -1594,43 +1574,46 @@
     - `engine0-wave-clusters-2026-06-29.tsv`
     - `engine0-wave-plan-2026-06-29.md` — ENGINE0 まとめ追加 wave 実行計画 (2026-06-29 prep)
     - `index.base`
-    - `INDEX.md` — 設計ドキュメントの目次
     - `miniwave-attribution-2026-07-10.md` — mini-wave design: attribution 2束 (2026-07-10) — index
     - `miniwave-attribution-byplayer.md` — mini-wave: ① byPlayer emit 束 (leave:to-remove attribution)
     - `miniwave-attribution-costpaid.md` — mini-wave: ② costPaid write 束 (4 cost kind へ導出値記録)
     - `miniwave5-deck-reveal-grounding.md` — mini-wave #5: deck-reveal 拡張 grounding (2026-07-10 sonnet5 high ×3 実測、実装前)
-    - `NEXT-SESSION-PLAN.md` — 次セッション計画 (post 2026-05-11)
     - `night-run-2026-07-11.md` — 夜間自走 driver — 残 171 printings 総攻略 (2026-07-11、/clear 後この順で実行)
     - `phase-5-advance-souza-deferred.md` — Phase 5 advance: Souza Sub-task B / C 確認 + 公式 defer 宣言
     - `phase-9-f-mcts.md` — Phase 9-F: MCTS AI Policy (MVP: Rollout-based)
     - `phase-9-g-replay.md` — Phase 9-G: リプレイ機構
     - `phase-9-h-performance.md` — Phase 9-H: パフォーマンス計測
+    - `qa-coverage-overrides.json`
+    - `qa-trace-baseline.json`
     - `remaining-27-engine-portfolio.md` — Remaining 27 Engine-First Portfolio
     - `risk-and-bug-tracker.md` — バグ RCA + 水平展開計画 hub
     - `round-4i-event-remove-by-ap-design.md` — Round 4i — eventRemoveByAP E2E spec 設計
     - `round-4j-hirameki-draw-design.md` — Round 4j — hiramekiDraw E2E spec 設計
     - `round-4k-hirameki-char-stun-design.md` — Round 4k — hiramekiCharStun E2E spec 設計
     - `round-4l-ui-quad-design.md` — Round 4l — UI 4 課題一括対応 design
+    - `rule-manual-ver2.5.md` — Rule Manual Ver.2.5
     - `side-channel-pattern.md` — Side-Channel Pattern — engine ↔ UI 通信規約
     - `speed-rebalance-2026-07-02.md` — 速度リバランス方針 (2026-07-02 user_request — 「精度過剰で開発速度が遅い」是正)
     - `triage-m1-2026-07-10.md` — M1 mega-sweep re-triage 結果 (2026-07-10、機械 dossier + sonnet5 12-lens)
     - `triage-sweep-2026-06-15.md` — トリアージ・スイープ (2026-06-15) — 全未実装カードの現行engine再分類 + ゴール地点確定
     - `ui-picker-direct-manipulation-2026-06-15.md` — UI picker Direct Manipulation 化 — 設計 (2026-06-15)
+    - `user-reported-bug-wave-2026-07-14.md` — User-reported bug wave 2026-07-14
+    - `you-vs-cpu-hardening-wave-manifest.json`
+    - `you-vs-cpu-test-strengthening.md` — YOU vs CPU テスト強化方針
   - `AGENTS.md` — Documentation And Session Instructions
   - `CLAUDE.md` — プロジェクト規約 (Claude が毎セッション自動読込)
-  - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `NEXT-SESSION-PROMPT-TRACK-A2.md` — 次セッション再開プロンプト — Track A2: engine 拡張 additive lane (2026-07-02 新設)
   - `NEXT-SESSION-PROMPT-TRACK-B.md` — 次セッション再開プロンプト — Track B: カード追加ツール (text→DSL compiler) (2026-07-02 新設)
   - `NEXT-SESSION-PROMPT.md` — 次セッション開始時の引き継ぎプロンプト
+  - `memory.md` — 現セッション作業ログ (80 行超で sessions/ にローテート)
   - `settings.json` — Claude Code 設定 (権限・hooks 等)
 - **`.codex/`**
-  - **`context/`**
-    - `current.md` — Current Codex Context
+  - `MIGRATION.md` — Codex Migration Ledger
   - `config.toml`
   - `hooks.json`
-  - `MIGRATION.md` — Codex Migration Ledger
 - **`.github/`**
   - **`workflows/`**
+    - `cards-sync.yml`
     - `ci.yml`
 - **`.obsidian/`** — Obsidian Vault 設定 (ワークスペース / グラフ / プラグイン)
   - `app.json`
@@ -1643,9 +1626,9 @@
   - `workspace.json`
 - **`.serena/`**
   - **`memories/`**
+    - `memory_maintenance.md` — Memory Maintenance
   - `.gitignore`
   - `project.yml`
-- **`.worktrees/`**
 - **`design-mockups/`** — UI モックアップ HTML / 画像 (ブレスト成果物)
   - **`CaseArea/`**
     - `CaseArea-demo.html`
@@ -1682,8 +1665,8 @@
   - `03-modal-catalog.html`
   - `03-modal-catalog.jsx` — Modal Catalog — 15 modal designs for コナンカードゲーム
   - `04-animation-verification.html`
-  - `design-canvas.jsx` — DesignCanvas.jsx — Figma-ish design canvas wrapper
   - `README.md` — Design Mockups — コナンカードゲーム UI 参考資料
+  - `design-canvas.jsx` — DesignCanvas.jsx — Figma-ish design canvas wrapper
 - **`design-mockups_v2/`**
   - `05-app.jsx` — 05-app.jsx
   - `05-card.jsx` — 05-card.jsx
@@ -1713,18 +1696,18 @@
   - `09-placeholders.jsx` — 09-placeholders.jsx
   - `09-prototype.html`
   - `10-engine-stub.jsx` — 10-engine-stub.jsx
-  - `animations.jsx` — animations.jsx
   - `C-engine-ui-map.md` — C — 画面 ↔ エンジン API 接続マップ
   - `C9-modal-review.md` — C-9 — モーダルカタログ レビュー
-  - `design-canvas.jsx` — DesignCanvas.jsx — Figma-ish design canvas wrapper
   - `E13-design-system.md` — E-13 — デザインシステム
   - `E14-screen-flow-spec.md` — E-14 — 画面遷移仕様書
   - `E15-component-guide.md` — E-15 — コンポーネント実装ガイド
   - `F-rule-audit.md` — F — ルール準拠 + 既存システム整合性 監査
   - `G-integration-plan.md` — G — リポジトリ統合設計
+  - `README.md` — コナン TCG メタゲーム デザインモック
+  - `animations.jsx` — animations.jsx
+  - `design-canvas.jsx` — DesignCanvas.jsx — Figma-ish design canvas wrapper
   - `match-board.html`
   - `memory.md` — memory.md — コナン TCG デザインモック プロジェクト履歴
-  - `README.md` — コナン TCG メタゲーム デザインモック
 - **`dev-knowhow-kit/`**
   - **`knowhow/`**
     - `01-process-discipline.md` — 01. プロセス規律 — 精度 > 速度
@@ -1748,9 +1731,9 @@
       - `gen-structure.ts`
       - `index.ts` — gen-docs dispatcher (portable 版) — conan プロジェクトから抽出
       - `structure-dictionary.json`
+    - `README.md` — scripts-portable — そのまま流用できる実スクリプト
     - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
     - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
-    - `README.md` — scripts-portable — そのまま流用できる実スクリプト
     - `setup-and-run.ps1`
     - `start.bat`
     - `tsconfig.json`
@@ -1761,9 +1744,9 @@
     - `AUDIT-template.md` — BUG フォルダ AUDIT (YYYY-MM-DD)
     - `BUG-template.md`
     - `CLAUDE-template.md` — CLAUDE.md — {{プロジェクト名}} プロジェクト規約（テンプレート）
-    - `index.base`
     - `LESSONS-LEARNED-template.md` — LESSONS-LEARNED — 教訓集（テンプレート）
     - `NEXT-SESSION-PROMPT-template.md` — 次セッション再開プロンプト（YYYY-MM-DD #N 末）— テンプレート
+    - `index.base`
   - `README.md` — dev-knowhow-kit — conan プロジェクト開発ノウハウ持ち出しキット
   - `setup-checklist.md` — 新プロジェクト立ち上げチェックリスト
 - **`docs/`**
@@ -1773,6 +1756,11 @@
       - `2026-06-02-cutin-handzone-pick.md` — カットイン選択 HandZone pick 化 Implementation Plan
       - `2026-06-03-hirameki-inline.md` — ヒラメキ inline 化 + factory 廃止 Implementation Plan
       - `2026-07-13-dual-app-launcher.md` — Dual-app launcher Implementation Plan
+      - `2026-07-16-bug-wave-closeout.md` — Current Bug Wave Baseline Implementation Plan
+      - `2026-07-16-official-qa-compliance.md` — Official QA Compliance Implementation Plan
+      - `2026-07-16-you-vs-cpu-system-validation.md` — YOU vs CPU System Validation Implementation Plan
+      - `2026-07-18-card-choice-visuals.md` — Phase 3: Card-choice visuals and landscape QA
+      - `2026-07-26-rule-manual-ver2-5.md` — Rule Manual Ver.2.5 Implementation Plan
     - **`specs/`**
       - `2026-06-02-card-atom-compaction-and-conventions-design.md` — 設計: カード atom 記述のコンパクト化 + 規約制定 (2026-06-02)
       - `2026-06-02-cutin-handzone-pick-design.md` — 設計: カットイン選択を HandZone pick mode へ (2026-06-02)
@@ -1796,10 +1784,10 @@
     - **`screens/`**
       - **`tutorial/`**
         - `AnnotatedCard.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
-        - `boardHints.ts` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
-        - `illustrations.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
         - `TutorialBoardSnapshot.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
         - `TutorialLessonViewer.tsx` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
+        - `boardHints.ts` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
+        - `illustrations.tsx` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
         - `types.ts` — spec: .claude/specs/meta-ui/15-tutorial-lesson-viewer.md
       - `CardsScreen.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 11-cards-rebuild.md
       - `DeckEditor.tsx` — spec: .claude/specs/meta-ui/07-screens-library.md + 12-screens-rebuild.…
@@ -1820,15 +1808,15 @@
       - `FilterGroup.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
       - `FilterRail.tsx` — spec: .claude/specs/meta-ui/ (Phase 18: Master Duel 風 共有フィルタレール)
       - `HelpOverlay.tsx` — spec: .claude/specs/meta-ui/03-routing.md
-      - `index.ts` — spec: .claude/specs/meta-ui/02-design-system.md
-      - `interactionStyles.ts` — spec: .claude/specs/meta-ui/02-design-system.md
       - `LoadingDots.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `MetaBg.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
       - `MetaCard.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 13-implementations.md
       - `NavHUD.tsx` — spec: .claude/specs/meta-ui/03-routing.md
       - `NetworkStatus.tsx` — spec: .claude/specs/meta-ui/02-design-system.md
-      - `tokens.ts` — spec: .claude/specs/meta-ui/02-design-system.md
       - `WarningBanner.tsx` — spec: .claude/specs/meta-ui/02-design-system.md + 07-screens-library.md
+      - `index.ts` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `interactionStyles.ts` — spec: .claude/specs/meta-ui/02-design-system.md
+      - `tokens.ts` — spec: .claude/specs/meta-ui/02-design-system.md
     - **`state/`**
       - `decksStore.ts` — spec: .claude/specs/meta-ui/04-state-stores.md
       - `filtersStore.ts` — spec: .claude/specs/meta-ui/ (Phase 18: フィルタ sticky 化)
@@ -1844,16 +1832,18 @@
       - `deckCode.ts` — spec: .claude/specs/meta-ui/ (Phase 18: デッキコードのコピペ入出力)
       - `tutorialResolvers.ts` — spec: .claude/specs/meta-ui/16-tutorial-real-board.md
     - `App.tsx` — spec: .claude/specs/meta-ui/03-routing.md
-    - `main.tsx` — Phase 11: src/ のエンジンを 5174 でも利用するためカード登録を起動時に実行
     - `MetaShell.tsx` — spec: .claude/specs/meta-ui/03-routing.md
+    - `main.tsx` — Phase 11: src/ のエンジンを 5174 でも利用するためカード登録を起動時に実行
     - `vite-env.d.ts` — / <reference types="vite/client" />
   - **`tests/`**
     - **`e2e/`**
       - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
       - `deck.spec.ts` — spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)
+      - `effect-decision-hosts.spec.ts`
       - `engine-stub.spec.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 10-integration-with-src.md
       - `filter-decoy.spec.ts` — spec: card-addition-checklist.md §7 「画面処理 = テキスト文言」の deck-builder 適用。
       - `golden-path.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.…
+      - `setup-p2-custom-binding.spec.ts` — Keep the shipped legal D08 recipe shape, but replace one unique print so
       - `smoke.spec.ts` — spec: .claude/specs/meta-ui/09-phasing-and-verification.md
       - `tutorial.spec.ts` — spec: .claude/specs/meta-ui/14-tutorial-complete.md + 15-tutorial-lesson-viewer.…
   - `index.html`
@@ -1881,6 +1871,13 @@
   - **`benchmark/`**
     - `mcts-vs-heuristic.ts` — scripts/benchmark/mcts-vs-heuristic — Phase 9-F: MCTS vs Heuristic 100 戦比較
     - `run.ts` — scripts/benchmark/run — Phase 9-H パフォーマンス計測ランナー
+  - **`cards/`**
+    - `cards-data-status.cjs`
+    - `check-official-sync.cjs`
+    - `fetch-official.cjs`
+    - `official-api.cjs`
+    - `qa-normalize.cjs`
+    - `write-qa-hash-snapshot.cjs`
   - **`compiler/`**
     - **`rules/`**
       - `exceptions.json`
@@ -1910,6 +1907,7 @@
     - `gen-flows.ts` — 状態遷移図生成器 (setup / auto-phase / turn / action FSM)
     - `gen-mapping.ts` — ルール↔カード双方向リンク生成器
     - `gen-progress.ts` — カード実装進捗・テスト数生成器
+    - `gen-qa-trace.ts`
     - `gen-state.ts` — GameState 構造生成器
     - `gen-structure.ts` — プロジェクト構造生成器 (本ファイル群を出力)
     - `index.ts` — 生成器ディスパッチャ (npm run docs:<cmd> エントリ)
@@ -1929,19 +1927,23 @@
   - `check-codex-migration.mjs`
   - `check-coverage.ts` — Phase 8-1: test coverage threshold check
   - `check-smoke-baseline.ts` — Phase 7-E (LESSONS-LEARNED 教訓 enforcement):
+  - `check-wave-scope.ts`
   - `gen-card-probes.cjs`
   - `gen-codex-context.mjs`
   - `gen-p-spread.cjs`
   - `ground-dossier.cjs`
   - `inventory-remaining.cjs`
+  - `lint-bug-closure.ts`
   - `lint-bug-frontmatter.ts` — Phase 4-E (BUG-template + lint): BUG-XXX.md frontmatter lint
   - `lint-card-addition.ts` — Phase 7-C (LESSONS-LEARNED 教訓 3 enforcement):
   - `lint-component-testid.ts` — Phase 8-4: data-testid 必須 lint
   - `lint-icon-abilities.ts` — lint:icon-abilities — TSV の cutIn / hirameki 列が非空なのに、出荷 def に該当アイコン能力が
   - `lint-listener-scope.ts` — Phase 7-D (LESSONS-LEARNED 教訓 2 enforcement):
   - `lint-ok-false-pattern.ts` — Phase 8-5: ok:false caller heuristic check
+  - `lint-qa-trace.ts`
   - `lint-side-channel.ts` — Phase 8-3: side-channel pattern 4 点配線 AST check
   - `lint-test-pair.ts` — Phase 8-2: 新規 .ts file → test pair 必須 lint
+  - `qa-adjudication.ts`
   - `reuse-registry-check.ts` — full-registry duplicate id check
   - `reuse-validate.ts`
   - `setup-and-run.ps1`
@@ -2439,7 +2441,7 @@
       - `B02021.ts` — cards/ct-p02/B02021 沖田総司 (キャラ) — engine-extension #3 batch (multi-target Pattern…
       - `B02022.ts` — cards/ct-p02/B02022 鬼丸猛 (キャラ)
       - `B02022P.ts` — cards/ct-p02/B02022P 鬼丸猛 (P) — B02022 と本文同一。
-      - `B02023.ts` — cards/ct-p02/B02023 遠山和葉 (キャラ) — engine-extension #5b 残課題: PA短縮形 (uid pick + fro…
+      - `B02023.ts` — cards/ct-p02/B02023 遠山和葉 (キャラ)
       - `B02024.ts` — cards/ct-p02/B02024 服部平次 (キャラ) — auto-generated by scripts/gen-cards/…
       - `B02024P.ts` — cards/ct-p02/B02024P 服部平次 (キャラ) — auto-generated; B02024 の絵柄違い (同 cardId)
       - `B02025.ts` — cards/ct-p02/B02025 遠山和葉 (character) — Task A green候補 (engine変更0)
@@ -2597,7 +2599,7 @@
       - `B03030P.ts` — B03030P print variant — same effect as B03030.
       - `B03031.ts` — cards/ct-p03/B03031 大岡紅葉 (character) — Task A green候補 (engine変更0)
       - `B03031P.ts` — cards/ct-p03/B03031P 大岡紅葉 (character) — Task A green候補 (engine変更0)
-      - `B03032.ts` — cards/ct-p03/B03032 服部平次 (キャラ) — engine#5b charSetCard batch #3 (a1+a3 only)
+      - `B03032.ts` — cards/ct-p03/B03032 服部平次 (キャラ) — engine#5b charSetCard batch #3
       - `B03032P.ts` — cards/ct-p03/B03032P 服部平次 (パラレル) — B03032 と同型
       - `B03033.ts` — cards/ct-p03/B03033 遠山和葉 (character) — card-authoring vein 解禁 (engine変更0, apDelt…
       - `B03033P.ts` — cards/ct-p03/B03033P 遠山和葉 (キャラ, パラレル) — engine変更0 (apDeltaAuraOpp consumer)
@@ -2787,8 +2789,9 @@
       - `B04016P.ts` — cards/ct-p04/B04016P 遠山和葉 (パートナー) — auto-generated by scripts/gen-cards/…
       - `B04017.ts` — cards/ct-p04/B04017 服部平次 (character) — Task A green候補 (engine変更0)
       - `B04017P.ts` — cards/ct-p04/B04017P 服部平次 (character) — Task A green候補 (engine変更0)
-      - `B04018.ts` — cards/ct-p04/B04018 遠山和葉 (キャラ) — engine#1 leave:to-remove batch #3 (a2 only)
-      - `B04018P.ts` — cards/ct-p04/B04018P 遠山和葉 (パラレル) — B04018 と同型 (a2 only)
+      - `B04018.shared.ts` — B04018 / B04018P 共通定義。公式テキストが同一のprint variant。
+      - `B04018.ts` — cards/ct-p04/B04018 遠山和葉 (キャラ)
+      - `B04018P.ts` — cards/ct-p04/B04018P 遠山和葉 (パラレル) — B04018 と公式同文
       - `B04019.ts` — cards/ct-p04/B04019 服部平蔵 (character) — Task A green候補 (engine変更0)
       - `B04020.ts` — cards/ct-p04/B04020 綾小路文麿 (キャラ・常時+ヒラメキ) — catalog-reuse batch
       - `B04021.ts` — cards/ct-p04/B04021 大滝悟郎 (キャラ) — auto-generated by scripts/gen-cards/…
@@ -2848,7 +2851,7 @@
       - `B04056P.ts` — cards/ct-p04/B04056P アンドレ・キャメル (キャラ) — catalog-reuse batch; B04056 の絵柄違い (同 card…
       - `B04057.ts` — cards/ct-p04/B04057 ジョディ・スターリング (キャラ) — auto-generated by scripts/gen-cards/…
       - `B04058.ts` — cards/ct-p04/B04058 ジョディ・スターリング (character) — Task A green候補 (engine変更0)
-      - `B04059.ts` — cards/ct-p04/B04059 水無怜奈 (キャラ) — engine-extension #1 leave:to-remove batch #2 (a…
+      - `B04059.ts` — cards/ct-p04/B04059 水無怜奈 (character) — scene-only additional name + leave:to-rem…
       - `B04060.ts` — cards/ct-p04/B04060 メアリー (キャラ) — catalog-reuse batch
       - `B04061.ts` — cards/ct-p04/B04061 「謎めいた乗客」 (イベント) — engine拡張 wave#2 cluster12 (nested-filter-d…
       - `B04062.ts` — cards/ct-p04/B04062 なるほど… (イベント) — engine-extension event→evidence batch (2026-0…
@@ -4113,6 +4116,7 @@
       - `evaluate.ts` — engine.cost.canPay — Cost feasibility check (read-only)
       - `index.ts` — engine.cost — Cost evaluator barrel
       - `pay.ts` — engine.cost.pay — Cost payment (mutates draft)
+      - `remove-set-card-witness.ts`
     - **`dyn/`**
       - `eval.ts` — engine.dyn.eval — Dyn (late-bound) expression evaluator
       - `index.ts` — engine.dyn — Dyn (late-bound) expression evaluator
@@ -4151,6 +4155,7 @@
         - `ability-activate.ts` — engine.flow.main.activateAbility — 宣言/パートナー能力の dispatch 契約 (Phase 2c, BUG-116 構造…
         - `action.ts` — engine.flow.main.canAction* — アクション可否判定 (rules/05 06., rules/07)
         - `declared-ability.ts` — engine.flow.main.useDeclaredAbility — 宣言能力使用 (rules/05 04.)
+        - `declared-cost-params.ts`
         - `hand-use-card.ts` — engine.flow.main.handUseCard — 手札の使用 (rules/05 01.)
         - `index.ts` — engine.flow.main namespace barrel — メインフェイズ 6 行動 (rules/05)
         - `next-hint.ts` — engine.flow.main.runNextHint — ネクストヒント (rules/05 02., rules/12)
@@ -4176,7 +4181,7 @@
       - `stunSemantics.ts` — engine.invariant.stunSemantics — スタン状態のセマンティクス確認
     - **`listeners/`**
       - `hirameki.ts` — Phase 8 完全クローズ Commit 3a: ヒラメキ listener
-      - `misread.ts` — Phase 8 完全クローズ Commit 3b: ミスリード listener
+      - `misread.ts`
       - `reserved-effects.ts` — reserved-effects listener — 離場後予約効果の発火 (mega-wave W6 step8, 2026-07-04, row75)
       - `triggered.ts` — Round 4b: triggered ability の汎用 listener
     - **`mutate/`**
@@ -4199,6 +4204,7 @@
       - `.gitkeep`
       - `char.ts` — engine.read.char — キャラ単位派生情報セレクタ (純粋関数)
       - `def.ts` — engine.read.def — カードDB参照セレクタ (純粋関数)
+      - `effect-source.ts`
       - `game.ts` — engine.read.game — ゲーム全体情報セレクタ (純粋関数)
       - `hand-cutin.ts` — engine.read.hand-cutin — 手札 zone の継続 aura で付与される【カットイン】能力。
       - `index.ts` — engine.read namespace — 全セレクタを束ねる
@@ -4256,10 +4262,10 @@
       - `ConfirmModal.tsx` — Phase 8 Task 8.5: ConfirmModal (controlled component)
       - `ContactFlash.css`
       - `ContactFlash.tsx` — Phase 8.10f: コンタクト判定フラッシュ
-      - `CutinDemoBanner.tsx` — 2026-05-27 カットイン効果検証 demo 完了 banner (HiramekiDemoBanner の cutin 版)
-      - `CutinDemoPickerModal.tsx` — 2026-05-27 カットイン効果検証 demo の card picker modal
       - `CutInDisguisePickerModal.css`
       - `CutInDisguisePickerModal.tsx` — Phase 8.6β: CutInDisguisePickerModal
+      - `CutinDemoBanner.tsx` — 2026-05-27 カットイン効果検証 demo 完了 banner (HiramekiDemoBanner の cutin 版)
+      - `CutinDemoPickerModal.tsx` — 2026-05-27 カットイン効果検証 demo の card picker modal
       - `DeckArea.css`
       - `DeckArea.tsx` — Phase 7 Task 7.7: DeckArea
       - `DeckPlaceModalHost.tsx` — mini-wave #5 P2 (2026-07-10): deckPlaceSplitBound「見た各カードを、好きな順番でデッキの上か下に移す」
@@ -4269,6 +4275,7 @@
       - `DeclareCardNameModal.css`
       - `DeclareCardNameModal.tsx` — mega-wave W6 step1 (2026-07-04): DeclareCardNameModal (scaffold)
       - `EffectChoiceModalHost.tsx` — BUG-121: enter トリガ等の human 複数 option choice を surface する store 駆動 modal。
+      - `EffectDecisionModalHosts.tsx`
       - `EffectOptionalModalHost.tsx` — 2026-06-06 タスクC: optional (「〜してもよい」) を surface する store 駆動 modal。
       - `EffectPickerModal.css`
       - `EffectPickerModal.tsx` — user_request 20260522_01 #2/#6 BUG-054: human player による effect 対象選択 modal
@@ -4315,6 +4322,8 @@
       - `RpsModalHost.tsx`
       - `SceneArea.css`
       - `SceneArea.tsx` — Phase 7 Task 7.4: SceneArea
+      - `SelectableCardTile.css`
+      - `SelectableCardTile.tsx`
       - `SetCardChoiceModalHost.tsx`
       - `SetCardReplacementModalHost.tsx`
       - `SouzaReorderModal.css`
@@ -4336,12 +4345,14 @@
     - **`hooks/`**
       - **`useActionsPanelFlow/`**
         - `cost.ts` — useActionsPanelFlow/cost.ts — Phase 3d 分割 (cost-builder /…
+        - `end-turn-contract.ts`
         - `enumerators.ts` — useActionsPanelFlow/enumerators.ts — Phase 3d 分割 (候補列挙 /…
         - `flows.ts` — useActionsPanelFlow/flows.ts — Phase 3d 分割 (run*Flow オーケストレーション, body 無改変移送, 202…
       - **`useEngineDispatch/`**
         - `can-check.ts` — useEngineDispatch/can-check.ts — Phase 3d 分割 (isAllowed 前段ガード, body 無改変移送, 2026-…
         - `types.ts` — useEngineDispatch/types.ts — Phase 3d 分割 (EngineAction / ContactChoice /…
       - `.gitkeep`
+      - `movePresentationDelay.ts`
       - `useActionsPanelFlow.ts` — useActionsPanelFlow — Phase 3d barrel (cost / enumerators /…
       - `useCardExpandModal.ts` — Round 4l (BUG-001): カード拡大 modal の state 管理 hook
       - `useCardImage.ts` — useCardImage — cardId から公式 CDN 画像 URL を構築する React フック (Phase 9-C)
@@ -4373,6 +4384,7 @@
       - `useReplayDriver.ts` — Phase 9-G.2 (Cleanup 7-A): リプレイ playback driver hook
       - `useSceneCharacters.ts` — Phase 7 Task 7.4: SceneArea selector hook
       - `useSceneSwitchPickerStore.ts` — Phase 5 advance — SceneSwitch UI: picker open 状態 store
+      - `useSetCardCostPicker.ts` — BUG-248: removeSetCard 宣言コストの物理 occurrence picker。
       - `useSpectatorTurnDriver.ts` — Round 4l (B5 観戦モード): self ターンも AI が自動進行する driver
       - `useStackedCardCostPicker.ts`
       - `useStageScale.ts` — Cleanup Phase #6 (user_request 20260521_01 関連): Playmat のレスポンシブ対応
@@ -4385,6 +4397,7 @@
       - `deckBuilder.ts` — Task 8.4b: MVP DeckPair builder
       - `gameStarter.ts` — Task 8.4b: 正規 turn-1 GameState 構築
       - `handUseReason.ts` — Round 2 — 手札カードが「使えない理由」を人間可読文字列で返すヘルパ
+      - `matchSession.ts` — Direct setState also upgrades a long-running Vite/HMR store instance that
       - `scenePick.ts` — scenePick — scene-char effect pick を「現場カード直接クリック」(Direct Manipulation) で
       - `tutorialSteps.ts` — Phase 9a-1 / 9a-2 / 9b / 9c: チュートリアル L0-L13 (MVP 全カバー)
       - `uidNames.ts` — UID → 表示名解決ユーティリティ (Round 2 で新設)
@@ -4415,6 +4428,7 @@
     - **`replay/`**
       - `recorder.test.ts` — ai.replay — Phase 9-G.1 unit tests (recorder + player)
     - `.gitkeep`
+    - `bug-246-on-hand-declared-ability.test.ts`
     - `match.test.ts` — tests/ai/match.test.ts — Phase 6 Group C Task 6.5 tests
     - `move-enumerator.pa-mr.test.ts` — M3 PA batch (2026-07-10): AI 側 declaredAbility 列挙に partnerAreaMR source を追加
     - `move-enumerator.test.ts` — tests/ai/move-enumerator.test.ts — Phase 6 Group A Task 6.1 tests
@@ -4422,6 +4436,8 @@
     - `policy.action-guard.test.ts` — Phase 8.7c: policy.applyMove での actionAgainstChar ガード判定統合テスト。
     - `policy.pause-on-action.test.ts` — Phase 8 完全クローズ Commit 2.5: playTurn pauseOnAction tests
     - `policy.test.ts` — tests/ai/policy.test.ts — Phase 6 Group A Task 6.2 tests
+    - `reasoning-continuation-consumers.test.ts`
+    - `step-turn-human-deck-decision.test.ts` — CPU move effects may open a human-owned deck decision. The same step must pause,
     - `step-turn.test.ts` — tests/ai/step-turn — Task3: stepTurn (playTurn の 1手駆動分解)
   - **`cards/`** — カード単体ユニットテスト
     - **`_shared/`**
@@ -4452,6 +4468,8 @@
       - `D08024.test.ts` — tests/cards/ct-d08/D08024
       - `D08025.test.ts` — tests/cards/ct-d08/D08025
       - `D08026.test.ts` — tests/cards/ct-d08/D08026
+    - **`ct-d09/`**
+      - `D09014.test.ts` — cards-data/ct-d09/character.tsv image mapping regression
     - **`ct-d11/`**
       - `D11001.test.ts` — tests/cards/ct-d11/D11001
       - `D11002.test.ts` — tests/cards/ct-d11/D11002
@@ -4475,6 +4493,7 @@
       - `D11021.test.ts` — tests/cards/ct-d11/D11021
     - **`ct-p02/`**
       - `B02022.test.ts` — tests/cards/ct-p02/B02022 — 鬼丸猛: action 宣言の一回限り強制指定
+      - `B02023.test.ts` — B02023 遠山和葉 — 裏向きセットの宣言コスト。
     - **`ct-p03/`**
       - `B03034.test.ts` — BUG-114: B03034 稲尾一久 カットイン実装 (engine変更0 — $contact.…
       - `B03039.test.ts` — BUG-114: B03039 長島茂雄 カットイン実装 (task-C charRemoveSetCard + side 分離で engine変更0 化)。
@@ -4493,6 +4512,8 @@
       - `B07039.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `miniwave-cards-manual.test.ts` — defer-unlock mini-wave (2026-07-09) — 手書き probe (gen:probes 非対応 shape 分)。
     - **`genprobe-validation/`**
+      - `B04008.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
+      - `B05052.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B07032.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B07036.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B09089.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
@@ -4543,11 +4564,11 @@
       - `B06072.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B06074.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B06084.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
-      - `manual-probes.test.ts` — tests/cards/hybrid-batch4/manual-probes
       - `PR289.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `PR292.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `PR295.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `PR298.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
+      - `manual-probes.test.ts` — tests/cards/hybrid-batch4/manual-probes
     - **`hybrid-batch5/`**
       - `B07015.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `B08064.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
@@ -4555,9 +4576,9 @@
       - `B08073.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `manual-probes.test.ts` — tests/cards/hybrid-batch5/manual-probes
     - **`hybrid-batch6/`**
-      - `manual-probes.test.ts` — tests/cards/hybrid-batch6/manual-probes
       - `PR290.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
       - `PR296.gen.test.ts` — AUTO-GENERATED by scripts/gen-card-probes.…
+      - `manual-probes.test.ts` — tests/cards/hybrid-batch6/manual-probes
     - **`m1-megasweep/`**
       - `B02002.manual.test.ts` — B02002 江戸川コナン (ct-p02) — 手書き probe。全 novel 句を engine 実評価で踏む。
       - `B02013.manual.test.ts` — m1-megasweep probe — B02013 ターボエンジン付きスケートボード (event, engine変更0)
@@ -4663,6 +4684,12 @@
       - `wc2-chooser-opp.test.ts` — WC2a RUNTIME behavior — pick chooser 'opp-of-owner' 実配線 (B05093 榎本梓 exemplar)。
     - **`night-wC2b/`**
       - `invoke-hirameki.test.ts` — tests/cards/night-wC2b/invoke-hirameki
+    - **`official-qa/`**
+      - `B01025-B01026-partner-abilities.test.ts` — Official Q&A: B01025/B01025P/B01026/B01026P
+      - `B03020.test.ts` — Official Q&A B03020: fewer than three cards cannot resolve the effect.
+      - `B03023.test.ts` — Official Q&A: B03023 脇田兼則
+      - `B04030.test.ts` — The opposing contact character has left, but Kaito remains in the scene.
+      - `B04059.test.ts` — B04059 水無怜奈 — official Q&A: scene-only additional card name.
     - **`pr-01/`**
       - `PR158.test.ts` — tests/cards/pr-01/PR158 犯人 (character, cutin remove-name scaling AP)
       - `PR200-PR206.test.ts` — PR200/PR206 大滝悟郎 — scene-wide face-down set-card count unlock
@@ -4729,54 +4756,61 @@
     - **`wave-stale-defer-0628/`**
       - `B03088.test.ts` — gate5 RUNTIME behavior — B03088 松田陣平 (character 黄/警察|警視庁, Lv5 AP5000 LP1)
     - `.gitkeep`
-    - `aggregate-level-pick.test.ts`
-    - `akamajutsu-trait-family.test.ts` — 赤魔術 trait family — 構造 + 実 engine 挙動テスト。
     - `B01082.test.ts`
     - `B02039.test.ts`
     - `B02052.test.ts`
     - `B02086.test.ts`
-    - `b03033-toyama-aura.test.ts` — B03033 遠山和葉 — live consumer E2E: 【自分ターン中】相手のセット済キャラ AP-1000 (apDeltaAuraOpp)。
-    - `b03042-distinct-colors.test.ts`
-    - `b03042-hot-detective.test.ts`
-    - `b03051-kid-deck-bottom.test.ts` — B03051 怪盗キッド — カード配線統合テスト (card-authoring wave15, 2026-07-02)
+    - `B04018-family.test.ts` — BUG-196: B04018/B04018P の公式3能力とprint variant同値性。
     - `B04046.test.ts`
-    - `b04055-amanda-hughes.test.ts` — B04055 — removal observer + removed-trait deck reveal.
     - `B04069.test.ts`
     - `B05033.test.ts`
-    - `b05086p-registry.test.ts`
     - `B05088.test.ts`
     - `B06005.test.ts`
     - `B06025.test.ts`
     - `B06027.test.ts`
     - `B06046.test.ts`
     - `B06047.test.ts`
-    - `b06095-all-area-trait.test.ts`
     - `B06103.test.ts`
     - `B07011.test.ts`
     - `B07013.test.ts`
     - `B07051-momoi-deckreveal.test.ts` — gate5 RUNTIME behavior — B07051 桃井恵子 (character, 白/高校生, L4 AP4000 LP1)
     - `B08003.test.ts`
     - `B08008.test.ts`
-    - `b08017-untargetable-aura.test.ts`
-    - `B08063.test.ts`
+    - `B08063.test.ts` — draw1後も非terminalにし、本テストのdistinct-name→discard契約だけを観測する。
     - `B08074.test.ts`
     - `B08078.test.ts`
-    - `b09024-triggered-aura.test.ts`
-    - `b09033-registry.test.ts`
-    - `b09033-reveal-repeat.test.ts`
     - `B09036.test.ts`
     - `B09047.test.ts`
     - `B09052.test.ts`
+    - `B09056-partner-assist.test.ts` — B09056/P: 【パートナー赤】はパートナーがFILEにアシスト中でも色を参照する。
     - `B09067.test.ts`
-    - `b09096-g15-relative-ap.test.ts` — B09096 キャンティ G15 relative-AP filter — engine0 wave 2026-06-29 (stale-yellow 解禁の回…
     - `B09110.test.ts`
+    - `D06013.test.ts`
+    - `aggregate-level-pick.test.ts`
+    - `akamajutsu-trait-family.test.ts` — 赤魔術 trait family — 構造 + 実 engine 挙動テスト。
+    - `b03033-toyama-aura.test.ts` — B03033 遠山和葉 — live consumer E2E: 【自分ターン中】相手のセット済キャラ AP-1000 (apDeltaAuraOpp)。
+    - `b03042-distinct-colors.test.ts`
+    - `b03042-hot-detective.test.ts`
+    - `b03051-kid-deck-bottom.test.ts` — B03051 怪盗キッド — カード配線統合テスト (card-authoring wave15, 2026-07-02)
+    - `b04055-amanda-hughes.test.ts` — B04055 — removal observer + removed-trait deck reveal.
+    - `b05086p-registry.test.ts`
+    - `b06095-all-area-trait.test.ts`
+    - `b08017-untargetable-aura.test.ts`
+    - `b09024-triggered-aura.test.ts` — DRAW 取得で deck が exact exhaustion → 先に remove 済みの OSAKA は即 refresh。
+    - `b09033-registry.test.ts`
+    - `b09033-reveal-repeat.test.ts` — 4枚目の登場で exact exhaustion。反復コストで remove へ移した FILE 3枚を即 refresh。
+    - `b09096-g15-relative-ap.test.ts` — B09096 キャンティ G15 relative-AP filter — engine0 wave 2026-06-29 (stale-yellow 解禁の回…
     - `bug-114-discard-scale-cutins.test.ts` — BUG-114: B05040 / B08055 カットイン — discard-bind dyn で「リムーブしたカードの level/…
     - `bug-123-character-kind.test.ts` — BUG-123: イベントを含むエリア (remove/hand) からの「キャラ」pick は kind:'character' 必須。
+    - `bug-130-158-live-human-carrier.test.ts`
     - `bug-135-sequence-middle-skip.test.ts` — BUG-135 回帰ガード — sequence 中間の nMin=0 pick を human-decline したとき、後続の必須 remainder が
+    - `bug-140-deferred-real-cards.test.ts` — BUG-140 reopened: deferred real-card abilities B05039 / B06035.
     - `bug-145-self-sleep-gate.test.ts` — BUG-145 self-state micro-cluster (2026-06-15):
     - `bug-163-b08079-henso.test.ts` — BUG-163: B08079/B08079P ピンガ — henso 列 (col13)【変装】【事件黒】【FILE7】の grounding 漏れ追補 pr…
     - `bug-165-pb-multipick-collapse.test.ts` — BUG-165 (2026-07-02, wave-10): PB generic multi-pick collapse — n≥2 の Pattern B…
     - `bug-169-face-down-set-card.test.ts`
+    - `bug-195-event-remove-by-ap.test.ts` — BUG-195: eventRemoveByAP の単一 choice が sceneRemove pick を二重生成する回帰。
+    - `bug-249-b03006-ordering.test.ts`
     - `bug155-pick-filter-kind-2026-06-24.test.ts` — BUG-155 水平展開 sweep (2026-06-24, engine変更0) — pick系 atom/query の filter が公式テキストの
     - `bug159-b02010-colornot-2026-06-27.test.ts` — BUG-159 fix — B02010 灰原哀 a1「【青】以外の色を持つキャラ」を custom closure (none説) から
     - `cardphase3-cutin-observer.test.ts` — tests/cards/cardphase3-cutin-observer
@@ -4801,7 +4835,6 @@
     - `cluster8-hirameki-suppress.test.ts` — cluster8 — ヒラメキ抑止窓 (B06049 a2) を実 engine 経路で駆動する挙動テスト
     - `cluster9-setcard-leave.test.ts` — cluster9 — setcard:leave hook を実 engine 経路で駆動する挙動テスト (engine拡張 wave#2 cluster9,…
     - `continuation-nest-b06033.test.ts` — continuation-nest cluster — B06033/B06033P「わが味方となるべし!!」(緑 L6 event) の挙動テスト。
-    - `D06013.test.ts`
     - `d10026-black-knight.test.ts`
     - `deck-bottom-to-hand.test.ts` — engine additive (2026-06-29) — handAddFromDeckBottom verb (B03051 怪盗キッド)
     - `disguise-hook-batch.test.ts` — engine-extension disguise-hook batch (2026-06-06 タスクC) — 実カード経由 sanity test
@@ -4909,6 +4942,7 @@
     - `wave2-cluster2-batch.test.ts` — engine拡張 wave#2 cluster2 — ability-presence filter 解禁 10枚の実 flow 検証 (decoy 付き)
   - **`compiler/`**
     - `canonical.test.ts` — Track B compiler — canonical 正規化の単体テスト。
+    - `cards-data-consistency.test.ts`
     - `compile.test.ts` — Track B compiler — compile skeleton の単体テスト。
     - `corpus-realdata.test.ts` — Track B compiler — corpus 抽出の実 data 整合テスト (.claude/specs/cards-data 直読、.…
     - `mine.test.ts` — Track B compiler — mine.cjs (採掘器) の単体テスト。
@@ -4917,6 +4951,7 @@
     - `oracle-realdata.test.ts` — Track B compiler — oracle の実 data 受入テスト (B0 完了条件を回帰化)。
     - `oracle.test.ts` — Track B compiler — oracle 3 値判定の単体テスト。
     - `param.test.ts` — Track B compiler — B4 param rule (slot 汎化) 単体テスト。
+    - `qa-normalize.test.ts`
   - **`e2e/`** — Playwright E2E テスト (1 試合通し検証 + 共通パターン spec)
     - **`helpers/`** — E2E 共通ヘルパー (types / setup / state / assertions)
       - `assertions.ts` — E2E test assertion helpers — engine state + DOM の両層を確認
@@ -4943,6 +4978,18 @@
     - `bug-118-120-audit-fixes.spec.ts` — E2E: 2026-06-05 engine 拡張バッチ監査 (workflow audit-engine-extension-batches) で検出した
     - `bug-122-cutin-keyword-filter.spec.ts` — E2E: BUG-122 — matchOneFilter の filter.keyword がアイコン能力 (カットイン) を未検出だったバグの実機検証。
     - `bug-136-deck-reorder.spec.ts` — E2E regression: BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」順序選択 modal
+    - `bug-211-212-product-path.spec.ts` — Active characters are not ordinary action targets. Evidence 0 also makes
+    - `bug-237-recent-action-toast-pointer.spec.ts` — 長い target により toast-target の中心を実際の自己リムーブ領域へ置く。
+    - `bug-239-landscape-deck-modal.spec.ts`
+    - `bug-241-landscape-pickers.spec.ts` — Layout carrier only. Exact opaque-instance resolution remains in the real B02039…
+    - `bug-243-public-duplicate-a11y.spec.ts`
+    - `bug-244-landscape-special-pickers.spec.ts`
+    - `bug-248-remove-set-card-cost.spec.ts`
+    - `bug-249-effect-order.spec.ts` — Keep reserve cards: both real effects consume a card, and normal engine
+    - `bug-252-reveal-visibility-order.spec.ts` — setupGamePage already waited for the Vite dev bridge. Hash-only routing avoids
+    - `bug-260-b04030-switch-overlay.spec.ts`
+    - `card-choice-details-real-flow.spec.ts` — Reveal animation ends after 500ms for the first public card. Use an ordinary
+    - `card-expand-modal-priority.spec.ts`
     - `charge-keyword-badge.spec.ts` — E2E: 突撃バッジ (user 指摘, 2026-06-01)
     - `choice-picker.spec.ts` — BUG-108 E2E: ChoicePickerModal の実ブラウザ render + option click → picker resolve を検証…
     - `choose-intercept.spec.ts`
@@ -4955,9 +5002,10 @@
     - `evidence-suppression-2026-06-06.spec.ts` — E2E: evidence 抑制 (evidenceToDeck + optional $trigger.…
     - `full-match-human-vs-cpu.spec.ts` — 1試合通し Playwright smoke (human vs CPU) — CLAUDE.md 6.3 compliance
     - `full-match.spec.ts` — BUG-045 (user_request 20260521_01 #9): 1 試合通し E2E。
-    - `leave-intercept.spec.ts`
+    - `leave-intercept.spec.ts` — UI が guard 後を action-1 まで進める。以降のコンタクト選択と判定は公開 dispatch を通す。
     - `m3-pa-mr-declared.spec.ts` — E2E: M3 PA batch — パートナーエリア常駐 MR の宣言能力 human 経路 (実機クリック)
     - `miniwave5-deck-place.spec.ts` — E2E: mini-wave #5 P2 — B05047「【登場時】自分のデッキのカードを上から2枚見て、好きな順番で
+    - `mobile-viewport-controls.spec.ts`
     - `multihook-shared-limit-2026-06-06.spec.ts` — E2E: multi-hook 共有【ターン1】(reasoning:end + action:declare) を実機の本物のフローで検証。
     - `night-w0-cost-choice-multipick.spec.ts` — E2E: 夜間 W0 (2026-07-11) — cost kind:'choice' human branch 選択 (B09027 初 consumer)…
     - `opp-turn-contact.spec.ts` — user_request 20260521_01 #3: 相手ターン中の contact 処理
@@ -4976,6 +5024,7 @@
     - `task-d-extensions-2026-06-12.spec.ts` — E2E verification for Task D engine拡張 wave#1 (2026-06-12):
     - `task5-flip-reflow.spec.ts` — E2E (Task5): 現場カードの reflow 移動トゥイーン (FLIP) の実機検証。
     - `triggerchar-target-2026-06-06.spec.ts` — E2E: triggerChar→target ($trigger.uid) の実機 text-faithfulness 検証。
+    - `user-bug-wave-ui.spec.ts`
   - **`engine/`** — Engine ユニットテスト
     - **`cards/`**
       - `registry.test.ts` — engine.cards.* — registry namespace tests
@@ -5007,13 +5056,19 @@
       - `bug-111-pick-continuation-pairing.test.ts` — BUG-111: pick↔continuation の FIFO 対応が multi-step で desync しうる。
       - `bug-114-discard-bind-dyn.test.ts` — BUG-114 primitive: discard で除去した手札カードを bind し、その level/AP を dyn で参照する。
       - `bug-121-sequence-choice.test.ts` — BUG-121 残課題解消: sequence 内の human 複数択 choice が、pre-choice step を二重実行せず
+      - `bug-130-158-pattern-a-repause.test.ts` — The outer draw belongs after the nested decision, not merely after PB.
       - `bug-132-gap-fixes.test.ts` — BUG-132 GAP-1/2 修正の pin test (engine拡張 wave#2, 2026-06-12)
       - `bug-134-cofire-pick-staleness.test.ts` — BUG-134 characterization / guard — 同一 hook (phase:end:start 等) で複数 triggered ent…
       - `bug-136-deck-reorder.test.ts` — BUG-136 — deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択。
       - `bug-138-drain-ownership.test.ts` — BUG-138 (engine拡張 wave#2 cluster2 X8): drainAiEffectPicks の pick 所有権
+      - `bug-167-scene-set-state-chain-gate.test.ts` — BUG-167 — sceneSetState direct-uid must gate a 「そうした場合」 chain on actual state tr…
       - `bug-187-relative-hand-side.test.ts`
+      - `bug-190-191-b04026-flow.test.ts`
+      - `bug-214-opp-owner-production.test.ts`
+      - `bug-249-continuation-priority.test.ts`
       - `charsetcard-fromdecktop-refresh.test.ts` — tests/engine/effect/charsetcard-fromdecktop-refresh — unit B (session64)
-      - `conditional-deferred-pick.test.ts`
+      - `conditional-deferred-pick.test.ts` — The initial walk has no legal candidate. Rebuild the runtime context
+      - `continuation-chain-gate-real-cards.test.ts` — Enter through the runtime atom handler so the first carrier is queued
       - `cost-paid-stacked-pick.test.ts`
       - `discard-random.test.ts` — engine.effect.atom discardRandom — 手札からランダムに n 枚リムーブする verb (B01077「相手は手札を
       - `engine-wave11-hirameki-actor.test.ts` — engine 拡張 wave-11 (2026-07-02) — hirameki actor payload ($trigger.…
@@ -5031,6 +5086,8 @@
       - `pattern-b-cards.test.ts` — BUG-073: pattern B (uid なし + target.kind='pick') を使うカードの水平展開 verify
       - `pick-bind.test.ts` — Task D E0 (2026-06-12): pick-bind writeback — 1 つの pick を後続 atom で共有する機構。
       - `player-resolution-bug.test.ts` — tests/engine/effect/player-resolution-bug
+      - `postfix-reorder-boundaries.test.ts`
+      - `postfix-reorder-zero-scene-enter.test.ts`
       - `resolve-picks.test.ts` — engine.effect.resolveEffectPicks — Phase 7-2 unit tests
       - `resolver.test.ts` — engine.effect.run — Resolver tests
       - `review-hardening.test.ts` — 2026-06-04 adversarial review (BUG-106〜110 セッション) で確定した latent 修正の回帰テスト。
@@ -5046,6 +5103,7 @@
       - `wave2-cluster2-ability-filter.test.ts` — engine拡張 wave#2 cluster2 — ability-presence filter pin tests
       - `wave2-cluster3-action-triggers.test.ts` — engine拡張 wave#2 cluster3 — action-lifecycle trigger 族 pin tests (TDD 先行)
     - **`event/`**
+      - `bug-166-176-provenance-wiring.test.ts`
       - `hirameki-listener.test.ts` — Phase 8 完全クローズ Commit 3a: Hirameki listener tests
       - `misread-listener.test.ts` — Phase 8 完全クローズ Commit 3b: misread listener tests
       - `registry.test.ts` — engine.event.* — Hook Registry tests
@@ -5062,12 +5120,15 @@
         - `next-hint.test.ts` — Phase 4 Task 4.3 — flow.main.runNextHint
         - `nexthint-ban.test.ts` — use-restriction — next-hint ban (setNextHintBan / turnState.…
         - `partner-ability.test.ts` — Phase 4 Task 4.3 — flow.main.usePartnerAbility
+        - `reasoning-continuation.test.ts`
         - `reasoning.misread.test.ts` — Phase 8 完全クローズ Commit 3b: reasoning + misread end-to-end 統合テスト
         - `reasoning.test.ts` — Phase 4 Task 4.3 — flow.main.doReasoning
       - `action-case.test.ts` — Phase 4 Group B Task 4.6 — flow.actionCase
       - `auto-phase.test.ts` — Phase 4 Task 4.2 — engine.flow.runAutoPhase
       - `bug-112-offboard-declared-use.test.ts` — BUG-112: 「自身を場外へ移すコスト」(selfToDeckBottom 等) の宣言能力で incrDeclaredUseCount が
       - `bug-140-cutin-batch.test.ts` — tests/engine/flow/bug-140-cutin-batch — BUG-140 補修 (2026-06-13) の cutin 挙動検証
+      - `bug-194-partner-ap.test.ts` — BUG-194: real partner is a contact actor and must share AP modifier/read/…
+      - `bug-212-production-contact.test.ts`
       - `contact.judge-log.test.ts` — Phase 8.10e: contact.judge log integration tests
       - `contact.test.ts` — Phase 4 Group B Task 4.5 — flow.contact (cutIn/disguise/pass/judge/computeOrder)
       - `guard.test.ts` — Phase 4 Group B Task 4.7 — flow.guard
@@ -5087,7 +5148,9 @@
       - `scratchTraceMonotonic.test.ts` — rules: 13-keywords.md, 26-qa-deck-refresh.md (一度発見済になるとずっと維持)
       - `stunSemantics.test.ts` — rules: 03-field-areas.md (スタン特殊挙動)
     - **`listeners/`**
+      - `bug-197-original-ability-suppression.test.ts` — BUG-197: "original abilities" means every printed ability entry, not only keywor…
       - `cutin-summon-misfire.test.ts` — tests/engine/listeners/cutin-summon-misfire — 【カットイン】が召喚時に誤発火しないこと
+      - `declared-batch-seq.test.ts`
       - `granted-ability.test.ts` — Task D E4 (2026-06-12): charGrantAbility — triggered ability の動的付与
       - `leave-to-remove.test.ts` — Engine 拡張 #1: leave/現場リムーブ時 hook (engine-extension-plan.md step 1)
       - `on-set-self-turn-end.test.ts`
@@ -5125,6 +5188,7 @@
       - `scene.test.ts`
       - `turn.test.ts` — スナップショットは gameState.turn を参照するが変更しない
     - **`resolve/`**
+      - `deck-place-boundary.test.ts` — A human deckPlace decision is a hard effect-stack boundary, just like deck reord…
       - `stack.test.ts` — engine.resolve.* — Effect Stack tests
     - **`target/`**
       - `bug-113-continuous-delta-filter.test.ts` — BUG-113: 数値ターゲットフィルタ (apMin/apMax/lpMin/lpMax) の有効値が
@@ -5135,10 +5199,16 @@
     - **`types/`**
       - `ability-def.test.ts` — AbilityDef 型のコンパイル時テスト
     - `.gitkeep`
+    - `bug-166-176-event-resolution-provenance.test.ts`
+    - `bug-180-completed-deck-take-refresh.test.ts`
+    - `bug-253-254-event-use-and-hirameki-faceup.test.ts` — rules: 06-card-types.md, 10-action-event.md, 15-abilities-effects.md
+    - `bug-256-b03032-active-set-target.test.ts` — BUG-256: B03032 / B03032P active target exception for set-card hosts.
     - `cost-remove-set-card.test.ts` — engine additive wave (2026-06-24) — Cost `removeSetCard`。
     - `cost-reveal-from-hand.test.ts` — engine additive wave — Cost `revealFromHand`。
+    - `declared-cost-params.test.ts`
     - `produce.test.ts`
     - `rng.test.ts`
+    - `rule-manual-ver2.5.test.ts` — rules: 13-keywords.md, 15-abilities-effects.md, 17-icons.md
     - `state-factory.test.ts`
     - `sync-taskA-whitelists.test.ts` — refactor 2b (2026-06-12): 手動同期ペアの機械検証
     - `types.test.ts`
@@ -5160,22 +5230,53 @@
     - `human-vs-cpu-playthrough.test.ts` — Phase 8 完全クローズ Commit 6: human vs CPU 統合 E2E
     - `misread-e2e.test.ts` — tests/integration/misread-e2e.test.ts — Phase 5 advance Misread E2E 結合検証
     - `phase5-smoke.test.ts` — tests/integration/phase5-smoke — Phase 5 Group F: registerAll + 簡単なゲーム進行
+  - **`meta/`**
+    - `RealMatchView.initializing.test.tsx`
+    - `ResultScreen.mvp.test.tsx`
+    - `SetupScreen.lifecycle.test.tsx`
+    - `cardDisplayResolvers.test.ts`
+    - `customGameStart.side-mapping.test.ts`
+    - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
+    - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
   - **`scripts/`**
+    - `check-wave-scope.test.ts`
+    - `gen-card-probes.test.ts`
     - `gen-codex-context.test.ts`
+    - `gen-qa-trace.test.ts`
+    - `header-source-hash.test.ts`
+    - `lint-bug-closure.test.ts`
+    - `lint-qa-trace.test.ts`
+    - `markdown-eol.test.ts`
+    - `official-api.test.ts`
+    - `qa-adjudication.test.ts`
+    - `qa-workflows.test.ts`
+    - `rule-qa-provenance.test.ts`
+    - `structure-root-portability.test.ts`
+    - `structure-tracked-files.test.ts`
+    - `taskA-codegen-use-condition.test.ts`
   - **`smoke/`** — 1000 戦 AI vs AI smoke テスト
     - `aggregate.test.ts` — tests/smoke/aggregate — Phase 9-A pure aggregation tests
     - `format-md.test.ts` — tests/smoke/format-md — Phase 9-A Markdown formatter tests
   - **`ui/`** — UI コンポーネント単体テスト
     - **`components/`**
       - `ActionsPanel.lock.test.tsx` — tests/ui/components/ActionsPanel.lock — 効果解決中ロック (rules/05 割り込み禁止)
-      - `area-animations.test.tsx` — Phase 8.10d: 各エリアの data-card-id 属性確認テスト
       - `CardArt.test.tsx` — tests/ui/components/CardArt — Phase 9-C: カード画像 img wrapper
+      - `CardExpandModal.priority.test.tsx`
+      - `CardListModal.pick-detail.test.tsx`
+      - `CardListModal.zero-pick.test.tsx`
       - `CaseArea.stamp.test.tsx` — Phase 8.10h: CaseArea stamp-flip class application
       - `CaseArea.test.tsx` — Phase 7 Task 7.6: CaseArea tests
       - `ConfirmModal.test.tsx` — Phase 8 Task 8.5: ConfirmModal 描画スナップショット
       - `ContactFlash.test.tsx` — Phase 8.10f: ContactFlash tests
       - `CutInDisguisePickerModal.test.tsx` — Phase 8.6β: CutInDisguisePickerModal tests
+      - `DecisionModalHosts.test.tsx`
       - `DeckArea.test.tsx` — Phase 7 Task 7.7: DeckArea tests
+      - `DeckPlaceModalHost.test.tsx`
+      - `DeckReorderModalHost.reset.test.tsx`
+      - `DeckRevealOverlay.card-detail.test.tsx` — The original 3100ms reveal timeline must not run behind the detail modal.
+      - `DemoPickerModal.card-details.test.tsx`
+      - `EffectChoiceModalHost.test.tsx`
+      - `EffectPickerModal.card-detail.test.tsx`
       - `EffectStackPanel.reorder.test.tsx` — Phase 8 完全クローズ Commit 5: EffectStackPanel reorder UI SSR test
       - `EffectStackPanel.test.tsx` — Phase 7 Task 7.14: EffectStackPanel tests
       - `EvidenceArea.test.tsx` — Phase 7 Task 7.9: EvidenceArea tests
@@ -5184,26 +5285,35 @@
       - `GuardPickerModal.test.tsx` — Phase 8.6α: GuardPickerModal tests
       - `HandZone.test.tsx` — Phase 7 Task 7.11: HandZone tests
       - `HiramekiPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3a: HiramekiPickerModal SSR test
+      - `LeaveInterceptModalHost.card-details.test.tsx`
       - `LogPanel.test.tsx` — Phase 7 Task 7.13: LogPanel tests
       - `MisreadPickerModal.test.tsx` — Phase 8 完全クローズ Commit 3b: MisreadPickerModal SSR test
       - `OppTurnOverlay.test.tsx` — Phase 8.10a: OppTurnOverlay tests
       - `PartnerArea.test.tsx` — Phase 7 Task 7.5: PartnerArea tests
       - `Playmat.test.tsx` — Phase 7 Task 7.3: Playmat layout structure tests
+      - `Playmat.user-bug-wave.test.tsx`
+      - `RecentActionToast.test.tsx`
       - `RefreshOverlay.test.tsx` — Phase 8.10i: RefreshOverlay tests
       - `RemoveArea.test.tsx` — Phase 7 Task 7.10: RemoveArea tests
       - `SceneArea.activepop.test.tsx` — tests/ui/components/SceneArea.activepop — アクティブカード「ぴこんポップ」(Task2)
       - `SceneArea.animation.test.tsx` — Phase 8.10c: SceneArea animation attributes test
       - `SceneArea.fadeout.test.ts` — Phase 8.10g-2: SceneArea ゴーストトラッカー (pickRemovedCharacters helper)
       - `SceneArea.test.tsx` — Phase 7 Task 7.4: SceneArea snapshot/behavior tests
+      - `SelectableCardTile.test.tsx`
       - `SouzaReorderModal.test.tsx` — Phase 8 完全クローズ Commit 4: SouzaReorderModal SSR test
       - `SpectatorHUD.test.tsx` — user_request 20260521_01 #12: SpectatorHUD tests
       - `TopBar.test.tsx` — Phase 7 Task 7.12: TopBar tests
       - `TutorialHighlight.test.tsx` — Round 3c-A: TutorialHighlight tests
       - `TutorialOverlay.test.tsx` — Phase 9a-1: TutorialOverlay tests
       - `VictoryOverlay.test.tsx` — Phase 8.10j: VictoryOverlay tests
+      - `area-animations.test.tsx` — Phase 8.10d: 各エリアの data-card-id 属性確認テスト
     - **`hooks/`**
       - `bug-107-d11014-bind-propagation.test.ts` — BUG-107: D11014 a2 human 経路で sceneEnter の bind:'$entered' が pick-resolve 越しに
       - `bug-108-choice-picker.test.ts` — BUG-108: D11012 a1「LP＋1するか / AP＋2000する」の choice 択一 UI フロー統合テスト。
+      - `bug-245-declared-ability-cost.test.ts` — Structural declaration discovery intentionally stays timing-agnostic.
+      - `bug-250-empty-partner-actions.test.ts` — BUG-250: 未初期化パートナーを共通パートナーactionとして使用できてはならない。
+      - `movePresentationDelay.test.ts`
+      - `pending-provenance.test.ts`
       - `repeat-optional-dispatch.test.ts`
       - `switch-on-effect-enter.test.ts` — switch-on-effect-enter (rules/20 §スイッチ): 現場満杯の効果登場 (D11014 a2 reanimate) で、
       - `useActionsPanelFlow.action.test.ts` — Phase 8.7a: runActionFlow tests
@@ -5216,8 +5326,10 @@
       - `useActionsPanelFlow.pa-mr-declared.test.ts` — M3 PA batch (2026-07-10): パートナーエリア常駐 MR の宣言能力 human 経路
       - `useActionsPanelFlow.partner-ability.test.ts` — Phase 8.8a: runPartnerAbilityFlow tests
       - `useActionsPanelFlow.reasoning.test.ts` — Phase 8 Task 8.6: runReasoningFlow tests
+      - `useActionsPanelFlow.remove-set-cost.test.tsx` — BUG-248: 人間の removeSetCard 宣言コストは、裏面の物理 occurrence を明示選択する。
       - `useActionsPanelFlow.stacked-cost.test.ts`
       - `useActionsPanelFlow.test.ts` — Phase 8 Task 8.5: ActionsPanel フロー (endTurn 最小配線)
+      - `useCanEndTurnForUi.test.tsx`
       - `useConfirmation.test.ts` — Phase 8 Task 8.3: useConfirmation (Q9 厳格モード モーダル)
       - `useContactFlowDriver.test.ts` — Phase 8 完全クローズ Commit 2: ContactFlowDriver smoke tests
       - `useEngineDispatch.action-fsm.test.ts` — Phase 8 完全クローズ Commit 2: per-step action dispatch tests
@@ -5226,14 +5338,18 @@
       - `useEngineDispatch.test.ts` — Phase 8 Task 8.1: useEngineDispatch / dispatchEngineAction
       - `useEvidenceFlipPicker.test.ts` — BUG-085: useEvidenceFlipPicker store + Promise hook の単体テスト
       - `useFlipAnimation.test.ts` — Task5 FLIP 移動アニメ: pure な FLIP 計算 (rectCenter / computeFlipMoves) の単体テスト。
+      - `useMisreadFlowDriver.test.tsx`
       - `useNextHintPicker.test.ts` — 2026-05-28: useNextHintPicker hook tests
       - `useOppTurnDriver.case-resolved-pick.test.ts` — BUG-090: human の auto-phase で 事件編→解決編 になり case card a1 (case:to-resolved →
       - `useOppTurnDriver.contact.test.ts` — Phase 8 完全クローズ Commit 2.5: useOppTurnDriver per-step contact integration
       - `useOppTurnDriver.test.ts` — Phase 8.7b: useOppTurnDriver tests
       - `useSceneSwitchPickerStore.test.ts` — tests/ui/hooks/useSceneSwitchPickerStore.test.…
+      - `useSpectatorTurnDriver.presentation.test.tsx`
       - `useStackedCardCostPicker.test.ts`
       - `useStageScale.test.ts` — Cleanup #6 (user_request 関連): Playmat scale hook tests
       - `useTargetPicker.test.ts` — Phase 8 Task 8.2: useTargetPicker
+    - **`router/`**
+      - `useGlobalShortcuts.test.tsx`
     - **`services/`**
       - `actionLabel.test.ts` — Phase 8.10b: actionLabel pure 関数テスト
       - `cardImage.test.ts` — Phase 7 Task 7.15: cardImage service tests
@@ -5248,7 +5364,9 @@
       - `tutorialStore.test.ts` — Phase 9a-1: tutorialStore behavior tests
     - **`styles/`**
       - `tokens.test.ts` — Phase 7 Task 7.2: tokens.css smoke test
+    - `bugs-207-209-218-adjudication.test.tsx` — BUG-207/209/218 adjudication regressions.
   - `AGENTS.md` — Test Instructions
+  - `playwright-mobile-landscape-config.test.ts`
   - `sanity.test.ts`
 - **`user_request/`** — ユーザーからの要望テキスト (triage 元データ)
   - `20260521_01.txt`
@@ -5256,18 +5374,17 @@
 - `.gitignore` — Git 除外パターン
 - `.mcp.json`
 - `AGENTS.md` — AGENTS.md - Conan TCG Codex Router
-- `analysis.txt`
 - `CHANGELOG.md` — フェーズ/Round 完了履歴 (Keep a Changelog 形式)
+- `HUB.md` — 全ドキュメントへのナビゲーションハブ (Obsidian 推奨)
+- `PROJECT-MAP.canvas` — Obsidian Canvas によるプロジェクト全体図
+- `README.md` — プロジェクト紹介・起動方法・主要リンク集
 - `ct-d08-cards.json` — CT-D08 デッキカードデータ (公式テキスト抽出)
 - `ct-d11-cards.json` — CT-D11 デッキカードデータ (公式テキスト抽出)
 - `eslint.config.js` — ESLint v9+ flat config. Lints TypeScript/TSX sources only (matches the
-- `HUB.md` — 全ドキュメントへのナビゲーションハブ (Obsidian 推奨)
 - `index.html` — Vite エントリ HTML
 - `package-lock.json` — npm 依存ロック
 - `package.json` — Node.js 依存・npm scripts
 - `playwright.config.ts` — Playwright E2E 設定
-- `PROJECT-MAP.canvas` — Obsidian Canvas によるプロジェクト全体図
-- `README.md` — プロジェクト紹介・起動方法・主要リンク集
 - `start-apps.bat`
 - `start.bat`
 - `tsconfig.json` — TypeScript 設定

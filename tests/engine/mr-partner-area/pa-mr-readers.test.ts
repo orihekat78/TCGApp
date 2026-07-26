@@ -9,7 +9,7 @@ import { char as readChar } from '@/engine/read/char';
 import { scene as readScene } from '@/engine/read/scene';
 import { flag } from '@/engine/mutate/flag';
 import { runAutoPhase } from '@/engine/flow/auto-phase';
-import { canDeclaredAbility, findCardOnBoard } from '@/engine/flow/main/declared-ability';
+import { canDeclaredAbility, findCardOnBoard, useDeclaredAbility } from '@/engine/flow/main/declared-ability';
 import { register, _resetRegistry } from '@/engine/read/def';
 import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
@@ -180,6 +180,56 @@ describe('PA-MR reader spine (rules/18)', () => {
         event.emit(d, 'phase:end:start', { player: 'self' }, { player: 'self', cardId: 'TRIG_MR2', uid: 'partnerMR:self' });
       });
       expect(r.pendingEffects.length).toBe(0); // scopeAllowsArea: on-scene は partner-area を弾く
+    });
+    it('suppresses printed PA-MR triggered and declared abilities after original disable', () => {
+      const effect = { kind: 'atom' as const, verb: 'draw', args: { player: 'self', n: 1 } };
+      register(mkDef('SUPPRESSED_MR', { rarity: 'MR', abilities: [
+        { id: 't1', type: 'triggered', scope: 'on-partner-area', trigger: { hook: 'phase:end:start' }, effect, description: '' },
+        { id: 'd1', type: 'declared', scope: 'on-partner-area', effect, description: '' },
+      ] }));
+      event._resetRegistry();
+      _resetTriggeredRegistered();
+      registerTriggeredListener();
+      const s = createEmptyGameState();
+      s.players.self.partnerAreaMR = makeChar({
+        cardId: 'SUPPRESSED_MR', uid: 'partnerMR:self',
+        keywordOverrides: { granted: [], disabledOriginal: true },
+      });
+      const triggered = immerProduce(s, d => {
+        event.emit(d, 'phase:end:start', { player: 'self' }, { player: 'self', cardId: 'SUPPRESSED_MR', uid: 'partnerMR:self' });
+      });
+      expect(triggered.pendingEffects).toHaveLength(0);
+      expect(canDeclaredAbility(s, 'partnerMR:self', 'd1')).toBe(false);
+      const declared = produce(s, d => useDeclaredAbility(d, 'partnerMR:self', 'd1'));
+      expect(declared.players.self.partnerAreaMR?.declaredUseCount['d1']).toBeUndefined();
+      expect(declared.pendingEffects).toHaveLength(0);
+    });
+
+    it('keeps externally granted PA-MR triggered and declared abilities after original disable', () => {
+      const effect = { kind: 'atom' as const, verb: 'draw', args: { player: 'self', n: 1 } };
+      register(mkDef('GRANTED_MR', { rarity: 'MR' }));
+      event._resetRegistry();
+      _resetTriggeredRegistered();
+      registerTriggeredListener();
+      const s = createEmptyGameState();
+      s.players.self.partnerAreaMR = makeChar({
+        cardId: 'GRANTED_MR', uid: 'partnerMR:self',
+        keywordOverrides: { granted: [], disabledOriginal: true },
+        turnEffects: {
+          grantedAbilities: [
+            { id: 'external-t1', type: 'triggered', scope: 'on-partner-area', trigger: { hook: 'phase:end:start' }, effect, description: '' },
+            { id: 'external-d1', type: 'declared', scope: 'on-partner-area', effect, description: '' },
+          ],
+        },
+      });
+      const triggered = immerProduce(s, d => {
+        event.emit(d, 'phase:end:start', { player: 'self' }, { player: 'self', cardId: 'GRANTED_MR', uid: 'partnerMR:self' });
+      });
+      expect(triggered.pendingEffects).toHaveLength(1);
+      expect(canDeclaredAbility(s, 'partnerMR:self', 'external-d1')).toBe(true);
+      const declared = produce(s, d => useDeclaredAbility(d, 'partnerMR:self', 'external-d1'));
+      expect(declared.players.self.partnerAreaMR?.declaredUseCount['external-d1']).toBe(1);
+      expect(declared.pendingEffects).toHaveLength(1);
     });
   });
 });

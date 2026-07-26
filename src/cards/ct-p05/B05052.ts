@@ -38,7 +38,7 @@ const a1: AbilityDef = {
       { kind: 'turn', player: 'self' },
     ],
   },
-  continuousModifier: { apDelta: 3000, grantKeywords: () => ['突撃'] }, // grantKeywords は関数 shape (read/char.ts:441、D08021/B06006 同型)
+  continuousModifier: { apDelta: 3000, grantKeywords: () => ['突撃'], printedKeywordWhenIconValid: true }, // grantKeywords は関数 shape (read/char.ts:441、D08021/B06006 同型)
   description: '【絆工藤有希子】【自分ターン中】AP＋3000、〚突撃〛（登場したターンからすぐにアクションできる）',
   ruleRefs: ['rules/13-keywords.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/22-qa-action-contact.md'],
 };

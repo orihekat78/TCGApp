@@ -35,6 +35,10 @@ function settle(choice: StackedCardCostChoice): void {
   resolver?.(choice);
 }
 
+export function cancelStackedCardCostPicker(): void {
+  settle({ kind: 'cancel' });
+}
+
 function ask(request: StackedCardCostRequest): Promise<StackedCardCostChoice> {
   const store = useStackedCardCostPickerStore.getState();
   store._resolver?.({ kind: 'cancel' });
@@ -54,6 +58,6 @@ export function useStackedCardCostPicker(): {
     current: useStackedCardCostPickerStore.getState().current,
     ask,
     confirm: (instanceIds) => settle({ kind: 'confirm', instanceIds }),
-    cancel: () => settle({ kind: 'cancel' }),
+    cancel: cancelStackedCardCostPicker,
   };
 }

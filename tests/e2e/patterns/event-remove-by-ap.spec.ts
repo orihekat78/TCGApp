@@ -22,7 +22,7 @@ import type { GameStateLike } from '../helpers';
 // 検証層:
 //   1. cardDef.abilities[0] が存在、trigger.hook='effect:declared'、scope='on-hand'
 //   2. matcher({kind:'event-use', cardId}) === true / matcher({kind:'character-use', cardId}) === false
-//   3. effect 構造 (D08025: choice、D11020: sequence 2 段 + conditional)
+//   3. effect 構造 (D08025: direct sceneRemove atom、D11020: sequence 2 段 + conditional)
 //   4. dispatchAction(handUseCard) → pendingEffects に該当 cardId の entry が 1 個以上 queue される
 //
 // engine gap 探査 (Round 4i では BUG-XXX 登録のみ、fix は次 round):
@@ -45,7 +45,7 @@ async function probeAbility(
   matcherCharacterUse: boolean;
   effectKind: string | null;
   conditionShape: string | null;
-  d08025ChoiceApMax: number | null;
+  d08025AtomApMax: number | null;
   d11020Step0LevelMax: number | null;
   d11020Step0HasSleepState: boolean;
   d11020Step1ConditionalKind: string | null;
@@ -70,7 +70,7 @@ async function probeAbility(
               scope?: string;
               trigger?: { hook?: string; matcher?: (p: unknown, s: unknown) => boolean };
               condition?: { kind?: string; color?: string };
-              effect?: { kind?: string; options?: { kind?: string; args?: { target?: { query?: { filter?: { apMax?: number } } } } }[]; steps?: unknown[] };
+              effect?: { kind?: string; verb?: string; args?: { filter?: { apMax?: number } }; steps?: unknown[] };
             }[];
           };
       const nullResult = {
@@ -81,7 +81,7 @@ async function probeAbility(
         matcherCharacterUse: false,
         effectKind: null,
         conditionShape: null,
-        d08025ChoiceApMax: null,
+        d08025AtomApMax: null,
         d11020Step0LevelMax: null,
         d11020Step0HasSleepState: false,
         d11020Step1ConditionalKind: null,
@@ -105,11 +105,10 @@ async function probeAbility(
       const effect = ability.effect;
       const effectKind = effect?.kind ?? null;
 
-      // D08025: choice 1 段。options[0].args.target.query.filter.apMax を読む
-      let d08025ChoiceApMax: number | null = null;
-      if (effectKind === 'choice' && Array.isArray(effect?.options) && effect.options[0]?.args) {
-        const filter = (effect.options[0].args as { target?: { query?: { filter?: { apMax?: number } } } }).target?.query?.filter;
-        d08025ChoiceApMax = filter?.apMax ?? null;
+      // D08025: direct sceneRemove atom。単一 choice を除き、pick 二重生成を防ぐ。
+      let d08025AtomApMax: number | null = null;
+      if (effectKind === 'atom' && effect?.verb === 'sceneRemove') {
+        d08025AtomApMax = effect.args?.filter?.apMax ?? null;
       }
 
       // D11020: sequence 2 段
@@ -142,7 +141,7 @@ async function probeAbility(
         matcherCharacterUse,
         effectKind,
         conditionShape,
-        d08025ChoiceApMax,
+        d08025AtomApMax,
         d11020Step0LevelMax,
         d11020Step0HasSleepState,
         d11020Step1ConditionalKind,
@@ -249,8 +248,8 @@ test.describe('eventRemoveByAP — イベント手札使用で AP X 以下リム
       expect(probe.matcherCharacterUse, "matcher rejects { kind:'character-use' }").toBe(false);
 
       if (cardId === 'D08025') {
-        expect(probe.effectKind, 'effect.kind').toBe('choice');
-        expect(probe.d08025ChoiceApMax, 'choice option apMax').toBe(8000);
+        expect(probe.effectKind, 'effect.kind').toBe('atom');
+        expect(probe.d08025AtomApMax, 'sceneRemove atom filter.apMax').toBe(8000);
         expect(probe.conditionShape, 'condition === partnerColor 青').toBe('partnerColor-青');
       } else if (cardId === 'D11020') {
         expect(probe.effectKind, 'effect.kind').toBe('sequence');

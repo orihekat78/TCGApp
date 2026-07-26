@@ -14,12 +14,6 @@ const a1: AbilityDef = {
     selfOnly: true,
     matcher: (p: unknown) => (p as { kind?: unknown })?.kind === 'event-use'
   },
-  condition: {
-    kind: 'sceneCountCompare',
-    player: 'self',
-    other: 'opp',
-    cmp: 'lt'
-  },
   effect: {
     kind: 'atom',
     verb: 'sceneRemove',
@@ -52,6 +46,7 @@ export const B05081: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1746628078723000.jpg',
+  useCondition: { kind: 'sceneCountCompare', player: 'self', other: 'opp', cmp: 'lt' },
   abilities: [a1],
   ruleRefs: [
     'rules/15-abilities-effects.md',

@@ -296,6 +296,7 @@ describe('engine-additive-0629d #5 costRemovedMatches', () => {
     registerCardDef(ch('AK', { traits: ['赤井家'] }));
     registerCardDef(ch('PLAIN', { traits: [] }));
     const s0 = createEmptyGameState();
+    s0.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     s0.players.self.scene = [sceneChar('DECL', 'd1uid')];
     s0.players.self.deck = ['AK', 'PLAIN', 'AK', 'PLAIN', 'AK', 'PLAIN']; // cost removes AK(赤井家)+PLAIN
     const before = s0.players.self.hand.length;
@@ -307,6 +308,7 @@ describe('engine-additive-0629d #5 costRemovedMatches', () => {
     registerCardDef(declCard());
     registerCardDef(ch('PLAIN', { traits: [] }));
     const s0 = createEmptyGameState();
+    s0.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     s0.players.self.scene = [sceneChar('DECL', 'd1uid')];
     s0.players.self.deck = ['PLAIN', 'PLAIN', 'PLAIN', 'PLAIN'];
     const before = s0.players.self.hand.length;

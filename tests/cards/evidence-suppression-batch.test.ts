@@ -49,13 +49,13 @@ describe('engine-extension evidence 抑制 batch (2026-06-06)', () => {
     setHuman(null);
   });
 
-  it('card def: turn:self + limit turn1 + triggerCharMatches{self,lpMin1} + optional(draw, evidenceToDeck $trigger.gained)', () => {
+  it('card def: turn:self + limit turn1 + triggerCharMatches{self,lpMin1} + optional(draw, suppress current reasoning evidence)', () => {
     expect(B03038.abilities[0].condition).toMatchObject({ kind: 'turn', player: 'self' });
-    expect(B03038.abilities[0].trigger).toMatchObject({ hook: 'reasoning:end', matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: { lpMin: 1 } } });
+    expect(B03038.abilities[0].trigger).toMatchObject({ hook: 'reasoning:after-sleep', matcherCondition: { kind: 'triggerCharMatches', side: 'self', filter: { lpMin: 1 } } });
     const eff = B03038.abilities[0].effect as { kind: string; effect: { steps: { verb?: string; args?: { n?: unknown } }[] } };
     expect(eff.kind).toBe('optional');
-    expect(eff.effect.steps[1]?.verb).toBe('evidenceToDeck');
-    expect(eff.effect.steps[1]?.args?.n).toBe('$trigger.gained');
+    expect(eff.effect.steps[1]?.verb).toBe('charSetTurnEffect');
+    expect(eff.effect.steps[1]?.args).toMatchObject({ key: 'suppressReasoningEvidence', val: true });
   });
 
   it('する: 推理で得た証拠2枚をデッキへ戻す (証拠を得ない) + 1ドロー', () => {
@@ -65,12 +65,12 @@ describe('engine-extension evidence 抑制 batch (2026-06-06)', () => {
       doReasoning(d, 'r#1'); runAllUntilEmpty(d);          // LP2 → evidence=[e1,e2], gained=2
       const pending = _peekPendingEffectOptionalSide();
       expect(pending, 'optional surface').not.toBeNull();
-      applyOptionalAndContinuation(d, pending!, true);       // する → draw1 + evidenceToDeck(2)
+      applyOptionalAndContinuation(d, pending!, true);
+      runAllUntilEmpty(d);
     });
     expect(s.players.self.evidence.length, '証拠を得ない (evidence 0 に戻る)').toBe(0);
-    expect(s.players.self.hand, '1ドローは行う (draw1)').toContain('draw1');
-    expect(s.players.self.deck[0], '戻した証拠がデッキ上に復元 (e1)').toBe('e1');
-    expect(s.players.self.deck[1], '戻した証拠がデッキ上に復元 (e2)').toBe('e2');
+    expect(s.players.self.hand, 'draw occurs before this reasoning gains evidence').toContain('e1');
+    expect(s.players.self.deck[0], 'evidence remains in deck because it was never gained').toBe('e2');
   });
 
   it('しない: 証拠はそのまま (2枚保持) / ドローなし', () => {
@@ -79,7 +79,8 @@ describe('engine-extension evidence 抑制 batch (2026-06-06)', () => {
     s = produce(s, (d) => {
       doReasoning(d, 'r#1'); runAllUntilEmpty(d);
       const pending = _peekPendingEffectOptionalSide();
-      applyOptionalAndContinuation(d, pending!, false);      // しない
+      applyOptionalAndContinuation(d, pending!, false);
+      runAllUntilEmpty(d);
     });
     expect(s.players.self.evidence.length, 'しない → 証拠2枚保持').toBe(2);
     expect(s.players.self.hand, 'しない → ドローなし').not.toContain('draw1');

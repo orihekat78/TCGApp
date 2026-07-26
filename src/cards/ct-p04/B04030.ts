@@ -7,10 +7,33 @@
 //   公開したキャラを手札に加えるか、公開したキャラを登場させてこのキャラをリムーブする。
 //   【相手ターン中】【現場リムーブ時】レベル8以下のキャラを1枚まで選び、スタンさせる。
 //
-// a1: DEFERRED (action 終了時 deck-look-4 + choice + 自己リムーブ — 複雑)
+// a1: action-end deck-look-4 + choice + successful enter-only source removal.
 // a2: leave:to-remove + turn=opp gate で level≤8 をスタン (state filter なし、active/sleep どちらも対象)
 
 import type { AbilityDef, CardDef } from '@/engine/types';
+
+const a1: AbilityDef = {
+  id: 'a1',
+  type: 'triggered',
+  scope: 'on-scene',
+  trigger: { hook: 'action:end', selfOnly: true },
+  effect: {
+    kind: 'sequence',
+    steps: [
+      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, chooseMatch: 'upTo', visibility: 'private', viewer: 'self', filter: { cardName: ['怪盗キッド', '黒羽快斗'], levelMax: 8, kind: 'character' }, bind: '$revealed', bindMatch: '$matched' } },
+      { kind: 'conditional', if: { kind: 'bound', key: '$matched', presence: 'matched' }, then: { kind: 'choice', chooser: 'self', options: [
+        { kind: 'atom', verb: 'handAddFromDeck', args: { player: 'self', cardId: '$matched.cardId' } },
+        { kind: 'sequence', steps: [
+          { kind: 'atom', verb: 'sceneEnter', args: { player: 'self', cardId: '$matched.cardId', viaEffect: true, bind: '$entered', target: { query: { area: 'deck', side: 'self' } } } },
+          { kind: 'conditional', if: { kind: 'bound', key: '$entered', presence: 'matched' }, then: { kind: 'atom', verb: 'sceneRemove', args: { uid: '$self', cause: 'effect' } } },
+        ] },
+      ] } },
+      { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },
+    ],
+  },
+  description: 'このキャラのアクション終了時、自分のデッキのカードを上から4枚見る。その中からレベル8以下の〚カード名［怪盗キッド］〛のキャラを1枚まで公開し、残りを好きな順番でデッキの下に移す。公開したキャラを手札に加えるか、公開したキャラを登場させてこのキャラをリムーブする。',
+  ruleRefs: ['rules/07-action-flow.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/20-color-and-switch.md', 'rules/22-qa-action-contact.md', 'rules/26-qa-deck-refresh.md'],
+};
 
 const a2: AbilityDef = {
   id: 'a2',
@@ -37,6 +60,6 @@ export const B04030: CardDef = {
   traits: ['高校生', 'マジシャン'], keywords: [],
   rarity: 'SR',
   imageUrl: '1735287759446337.jpg',
-  abilities: [a2],
-  ruleRefs: ['rules/15-abilities-effects.md', 'rules/17-icons.md'],
+  abilities: [a1, a2],
+  ruleRefs: ['rules/07-action-flow.md', 'rules/15-abilities-effects.md', 'rules/17-icons.md', 'rules/20-color-and-switch.md', 'rules/22-qa-action-contact.md', 'rules/26-qa-deck-refresh.md'],
 };

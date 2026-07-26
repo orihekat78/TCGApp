@@ -1,0 +1,2003 @@
+{
+  "schemaVersion": 1,
+  "shard": "a",
+  "items": [
+    {
+      "qaId": "card:B01009:9b35da4fb6ed8aa62d54a57747cf2b31522347729a78580f7e98cf5539e5d455",
+      "answerHash": "8e47eeb66aafbb18891c37c4fc6abe75c71633e86c3b97db0e57dafa72820ddc",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/11-reasoning.md:28",
+        "src:src/cards/ct-p01/B01009.ts:63",
+        "src:src/engine/flow/main/reasoning.ts:83"
+      ],
+      "noteCodes": [
+        "MISLEAD-EXPIRY-B01009-INTEGRATION-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B01037:1920ad860ef1135ce4afbc865ec7450ce3d48db16105f096f7d8b22874706464",
+      "answerHash": "4b2910d120ca5114429d96933202c04c46a435338eba0ea4184dd5af53cb2a4f",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01037.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B01045:858dc09931955bdefd677b43229bc27e02ac217b2c459527d0f450a23a404a1b",
+      "answerHash": "09fb3c6add1b315360417caa8e17de8b7952f911c7a1bc6a41c479f8f95a6b1e",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01045.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B01058:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
+      "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01058.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B01095:195760dc4300544466f618b9907f581e378f680cddb224824c7acf98a961de18",
+      "answerHash": "03778183586ef7c658cf7f090546a558780407f26f64cd27bdd9e6aca0d9e5d5",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01095.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B01098:e35b773a1e379ce698d6351adf98cfe1473473701fa9f8ec900b4efaf6280149",
+      "answerHash": "efe42e3314141093704a0d0c05663b29fe7e5ecf53f30efa736750ce45b81674",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p01/B01098.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B02005:a9e2b55ade434427e86e8e7b1f9b5a0166ea3b0f412c460bdb09e162d8bbc736",
+      "answerHash": "0d14d5fb8794f9d6aac1b7f8b0878c8c6fda4cf715079c1cdffe664fd9bb37c3",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:34",
+        "src:src/cards/ct-p02/B02005.ts:29"
+      ],
+      "noteCodes": [
+        "PARTNER-EXCLUSION-UNTESTED"
+      ]
+    },
+    {
+      "qaId": "card:B02019:084bd1c0c7212ceac9dcc2a06f5f4c70f2923a937efed9b231ae8f440d66b062",
+      "answerHash": "25be7cebac15ef87dbe01c1407f27bfc887ea8aed2e0cd38a4a644fae3e2991d",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/26-qa-deck-refresh.md:22",
+        "src:src/cards/ct-p02/B02019.ts:35"
+      ],
+      "noteCodes": [
+        "TEST-GAP"
+      ]
+    },
+    {
+      "qaId": "card:B02019:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/26-qa-deck-refresh.md:65",
+        "src:src/cards/ct-p02/B02019.ts:29"
+      ],
+      "noteCodes": [
+        "TEST-GAP"
+      ]
+    },
+    {
+      "qaId": "card:B02021:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb",
+      "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/19-special-rules.md:41",
+        "src:src/cards/ct-p02/B02021.ts:25"
+      ],
+      "noteCodes": [
+        "TEST-GAP"
+      ]
+    },
+    {
+      "qaId": "card:B02022:de279c8d83422c2da5c35a6285fd06b226b0aab0e5d0bbfe0cc34b6949230e90",
+      "answerHash": "70b005422bcd1419dac41f8bc175fa6a3f7621d6f5c6a64c274ced5dc78681d7",
+      "status": "matched",
+      "result": "aligned",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/24-qa-naming-stun.md:64",
+        "src:src/cards/ct-p02/B02022.ts:11",
+        "tests:tests/cards/ct-p02/B02022.test.ts:72"
+      ],
+      "noteCodes": [
+        "MATCHED"
+      ]
+    },
+    {
+      "qaId": "card:B02023:4b18aa818758ffcd6c8520820ecad1636f2c8078a3b5244ccc53346c884db74c",
+      "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
+      "status": "mismatch",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/21-declared-ability-cost.md:37",
+        "src:src/cards/ct-p02/B02023.ts:32"
+      ],
+      "noteCodes": [
+        "DECLARED-COST-MISSING",
+        "IMPLEMENTATION-MISMATCH"
+      ]
+    },
+    {
+      "qaId": "card:B02026:c8245b76f64a5c18d2ef397788520cdd43f88140f600ec58722c085c2864da15",
+      "answerHash": "a1cfc7e07d43fade7ce71503607679810c1ad2acd5ad8dcae749569d82ab629f",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02026.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B02059:e4a36acb6bbbb1c8b11eac5e65600d839bba033d5a2b7f0e5ecfc84bacd47a4c",
+      "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02059.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B02067:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a",
+      "answerHash": "dd31d3e39e49fa24ff58040bbd1ff101d032e6c4c0045d36c2670aba52bb0ebe",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02067.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B02082:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
+      "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/13-keywords.md:25",
+        "src:src/cards/ct-p02/B02082.ts:12"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B02083:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
+      "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02083.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B02086:768a20fc5e6e165184d999a8032847d4633ef46d0ac9edd814f3c4ebb18e8e72",
+      "answerHash": "471dbd81e897e564c03b9dec6f7c79c7d383055b3da168f9c89e5348f224708a",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p02/B02086.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03003:4f757078c956fc19a19d91abc09b005bfb32d0f3f73768736b1f438173822897",
+      "answerHash": "ce9568d4e93d5db527754f39ef7ec2801e75b17d64da6519c5d660f6f73a2fe3",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/21-declared-ability-cost.md:46",
+        "src:src/cards/ct-p03/B03003.ts:23",
+        "src:src/engine/cost/evaluate.ts:148"
+      ],
+      "noteCodes": [
+        "DECLARED-COST-DECK-THREE-MINIMUM-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B03018:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p03/B03018.ts:31",
+        "src:src/engine/effect/atom-handlers/picks.ts:158"
+      ],
+      "noteCodes": [
+        "OPTIONAL-REVEALED-EVENT-DECLINE-UNTESTED"
+      ]
+    },
+    {
+      "qaId": "card:B03028:83647f799c39e707707e99a54c45e787f38527a585c58b1c9864b6d86c2bcf91",
+      "answerHash": "8fa6df429995a7c8ce3724b8ce6b54ccb2253d6fdd0f1199f90a37ef25879654",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03028.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03040:70f71b0f9f4c0c73f6a86f5c7fc026252fb92e60b00bd8c9ce1bf7b1196d174c",
+      "answerHash": "4e9f6f35e1af75537690538bd8d57fb8f6b64fd4f8f33d91ae4189b232305c8a",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03040.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03054:7d12c26b5b7d34de08871ace2ae1d5c66d5ff2a06642ecfba6fe7d92a6b5ba18",
+      "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03054.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03060:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40",
+      "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03060.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03068:b34f939ceba2f547ad6f01ee968061869d0f8abc4e72fa0d51c20b0c14a53ee1",
+      "answerHash": "780fd1821ec2a864936b07a9878c09f894e359a2c0d14da12b8ac11be8e54efd",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/20-color-and-switch.md:13",
+        "src:src/cards/ct-p03/B03068.ts:97"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B03079:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03079.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03085:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40",
+      "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03085.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03092:aa0d036ceb280b0e5be3f9445e5df0b58ecd48763914b7de9a13ba5d8ded9b40",
+      "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/24-qa-naming-stun.md:55",
+        "src:src/cards/ct-p03/B03092.ts:40"
+      ],
+      "noteCodes": [
+        "CARD-BOUND-ASSERTION-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B03095:e2cb37e2c028ff918b6b633c47ea158ba3011ae3224e50c5e12a27b93a41c1ae",
+      "answerHash": "b14273a5d8ea5c183a6ff81f5840e6645a13e56640d2b4927b9723dbf3c85ab5",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03095.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03102:d9dae1726ce1b1757956c9f650c92cb0f5298878d8abe941b4def9387ecdd306",
+      "answerHash": "3ea606db500aeba76b751dd64cae403b7c9ada7d0f9ab10ec7983a65c67104f6",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03102.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03112:2c83e05699547a122e72d36589adce2d81152f65597bff1f1551047f02568ed9",
+      "answerHash": "8ab5e00b40b22d88c5a9d95173b6764c9536074aa57e5545cf87c2e053baaf12",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03112.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B03127:fde26b8ea125c4e1554955fecf095ce90a82720da365795236b28d2330727deb",
+      "answerHash": "13dee71614f2c905921b2ddfef97bebc1511fd57bc103eea3684b5b242c6180c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p03/B03127.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B04013:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f",
+      "answerHash": "9355fd7dda0c715a134dc72073c663d6d48005b194c7a998332be87adf81e091",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/26-qa-deck-refresh.md:22",
+        "src:src/cards/ct-p04/B04013.ts:31"
+      ],
+      "noteCodes": [
+        "B04013-SHORT-DECK-REFRESH-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B04013:e2f2e95abd482ed3b39e41b21dab18bfdb59f38cdfe18873117af2ef2dc02ced",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:37",
+        "src:src/cards/ct-p04/B04013.ts:31"
+      ],
+      "noteCodes": [
+        "B04013-REVEAL-DECLINE-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B04018:02668aa156711724b034a18fcc24f93a3e9da610f2a705d66b26001c82c235bf",
+      "answerHash": "21bdcc2304f02d68a5ac12dfd8d2f974426e4c22a72883f5d76be1f824c6e9ed",
+      "status": "matched",
+      "result": "aligned",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/20-color-and-switch.md:11",
+        "src:src/cards/ct-p04/B04018.shared.ts:82",
+        "tests:tests/cards/B04018-family.test.ts:117",
+        "tests:tests/cards/B04018-family.test.ts:211",
+        "tests:tests/cards/B04018-family.test.ts:212"
+      ],
+      "noteCodes": [
+        "B04018-SELF-SWITCH-COVERED"
+      ]
+    },
+    {
+      "qaId": "card:B04026:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
+      "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04026.ts:37"
+      ],
+      "noteCodes": [
+        "B04026-HAND-CHARACTER-NOT-REVEAL-SELECTED-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B04028:81627994c8cd71276729bf3830a0af0b74282ef2b10f533d265d9045bdc2131c",
+      "answerHash": "24c759d28a4ec6639a5e29d0bfe9ecf8ae35c9fef100ec84884250ecbdda798e",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/10-action-event.md:36",
+        "src:src/cards/ct-p04/B04028.ts:26",
+        "src:src/engine/listeners/triggered.ts:597",
+        "src:src/engine/listeners/triggered.ts:619"
+      ],
+      "noteCodes": [
+        "B04028-FACEUP-EVIDENCE-ACTION-REMOVE-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B04034:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
+      "answerHash": "fda2286021be4b097fae9dc0b0dd802834a37cf7555c306f1441a64eac98957a",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04034.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B04048:8127180391146f281f02017be0156d8f5b94da8b98a1c5db243abb4c2bbd0054",
+      "answerHash": "0ab2c238d6bf49cc79236b86d899efcb4caa9cdc36ac04fab2a929097d471ec8",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04048.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B04051:774346e7538cb548de193ca2e380c26f13042b038e0f98c364634b3708d3c45f",
+      "answerHash": "8fa6df429995a7c8ce3724b8ce6b54ccb2253d6fdd0f1199f90a37ef25879654",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04051.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B04074:c6e5391785273827b8dabcd809585155ef42406b996be0913d033b9dcb43cbe6",
+      "answerHash": "9e196328f6aeb787c34a18b38d9333dc32a9b9bdfa148eecb3ea5fb5eff839fa",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04074.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B04091:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
+      "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p04/B04091.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05005:9d12855c9753675d25e0cde7fba3c66cfab4bd9ce9c8a87541021dc19b506665",
+      "answerHash": "acf8317ad874c3db5a4906f82ad4587818bc56f6f0f653803a6a7204b86abaf3",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:15",
+        "src:src/cards/ct-p05/B05005.ts:38"
+      ],
+      "noteCodes": [
+        "B05005-FAMILY-TURN-LIMIT-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B05007:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
+      "answerHash": "357125211e3541538b4e36b6cd0f1bf6a4d9587d18d30b40f6e1ded54d49ed62",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:41",
+        "src:src/cards/ct-p05/B05007.ts:57"
+      ],
+      "noteCodes": [
+        "B05007-EFFECT-ENTER-TRIGGER-ORDER-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B05011:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
+      "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/15-abilities-effects.md:16",
+        "src:src/cards/ct-p05/B05011.ts:17",
+        "src:src/engine/event/registry.ts:187",
+        "src:src/engine/resolve/stack.ts:181"
+      ],
+      "noteCodes": [
+        "B05011-SIMULTANEOUS-ORDER-TEST-MISSING"
+      ]
+    },
+    {
+      "qaId": "card:B05021:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
+      "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05021.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05037:8f24799e5eca568ffe84583d70e6b49a3ed1a650be4e5a2c8be86e3038e436ff",
+      "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05037.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05045:a7fa9913527fba6c52ba50e080f131ba501ab2b308a32b44ab20b71086daf0a2",
+      "answerHash": "2c48d0949f5d59e3446ce09f98f14b5a47264f924c9091c5de1a8e7d8bccb616",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05045.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05052:8f6cb738b96fe60fc1506550afb1a81f115b140419db6fdec6c16a09e5419314",
+      "answerHash": "18ed0c93472b7b370de36474781dc98cb78137a0733cf4c3d679e1be519899ee",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05052.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05078:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05078.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05082:d82d0d2102f29b6e0ec961b92961305d036df8c10b3e1ca6a71a4cf9f3468305",
+      "answerHash": "701cb228b8bc49836ae72bf565010d617f162e30b6fc598b6b5c8ab1906aad39",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05082.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05111:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
+      "answerHash": "390e64d5bce9e42b2a0e92ee41e338b8cd96497842ddcef1e23aaa6e94950d88",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05111.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B05120:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
+      "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p05/B05120.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06005:199a933934b344f7715091799edd9442eca983c85cb7953418d8f7e9f0d4f2a6",
+      "answerHash": "a4623f6f8e23abb356ad15bb452281ae2cbf65c784ab11f99158f4cca14b8326",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06005.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06008:94f262abeb10687989849154c850adad60ca367392a6db3eb2e0283ee116af2d",
+      "answerHash": "7f6539000dfa7e9a6c8f1c3ad7874dc1ea209627ac4c6d54aaba8bf96e8d45f7",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06008.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06012:02440e5ca87f24c64c070e4853a3b0b543a764fdc2f252c5aab04d7ab3926b9a",
+      "answerHash": "dd31d3e39e49fa24ff58040bbd1ff101d032e6c4c0045d36c2670aba52bb0ebe",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06012.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06013:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06013.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06013:d14361a0f6cd544938aac3b8343c913c302e2a8c4c3b621d33815d9154832d6a",
+      "answerHash": "dbbcc5c6f78482d0c89f56018ca32bf80a619f259353e590b01cdc6f62f532b8",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06013.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06020:72bba4c546ae209b762ac5769098f2a463716f2bf4067211279062fe1a5bb841",
+      "answerHash": "1d1c972eaeaebf8a1d31e00b751c96d9330f55742731eda48f16214993941505",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06020.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06034:a5f52b076ec741896b015d58bcb3a08173a3d501057513a697d828359fe8f5a6",
+      "answerHash": "2e4c3336e51f032b0f908302246ca8bb81557dfc1455ae764f7274fdefd5a339",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06034.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06038:dbd263c01fd82009a9183c98060a919ce66f7ae8ccb9ffb6afdfd2ff8e8aac89",
+      "answerHash": "b88d04e90f4024b38cb9c676fd83fe35f1c796520fa7aebfdfdfc20ebe86d98d",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06038.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06040:1d2c300c4d7b5c2a398614ff986a22cfac36617bb6269b040d885a8e4602d5e6",
+      "answerHash": "3d82e1ce0d30306f0b2fa9081c9ac0f4ef72077803d652bb33764a04de2a8c51",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06040.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06042:e669c73aabe5bbd89df0a1ad0d76f94ec6cba1d276b1565f5fa9c09b5d3bd949",
+      "answerHash": "f5834e58aee59e1ce9d5ad7ab8ee2402bca1d4a5152a27ee2fba7ef640612302",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06042.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06047:3fc9fa7a38cbc087684db70c4bdd94732788455f030cfc2ce13ed9a6e746d50b",
+      "answerHash": "b5894eaf7ee24880f1886f3adb037769d2df733e2d79bbc27e9cb7f25c306e02",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06047.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06048:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4",
+      "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06048.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06065:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2",
+      "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06065.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06068:2e5a940a45132f39f38d229848ff63c9f93f8e007a2c106e8756aba758e1baf8",
+      "answerHash": "cac86f746d46674ebb8cef77cd72638b08ce94482d8035ab78eb8e6bba29471c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06068.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06074:36dee8b92d2ee48c6f0b5138d685029de6a10a99e0a2dfce833cc9fe7ae0177d",
+      "answerHash": "3f6b4d31c69e579c38d69fe069becf7a36abb3904b762747a48e528955a825a0",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06074.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06074:ae7f52880f245b79ea26502eaca624f082c7777854d029f9cd6ca7c88b4fb8b4",
+      "answerHash": "49023d05d79c4ca827ea679fe17368d1257ce5a19284138691c49f5b1022673d",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06074.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06077:c12c7d56a6ed373d7ca25cf0f48b86d451534da0bf57e6a0d145b514d73e85f4",
+      "answerHash": "39160a60993a754ee0100bb1ca8807575c463ccc16bf489b20334001404328dc",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06077.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06085:8b2afa65e94bc9030fd142d29d8351670cafb8e77bb5f4dbd3ddf286dc486e3b",
+      "answerHash": "1b65695166680e33fa7950a3e116e3e4ca4081c11ab2746896e6169aba0067a3",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06085.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06093:fd663a129833b5aca7792e25753f35394f7af3f2f622b2954c7aaf38224ce727",
+      "answerHash": "cfd1d0e40e58e6fb910da65c3f17028604c8f54aff30fc36e9932d6bc835787a",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06093.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06095:5a744f6194c5537c677e8f6d8610e3d27ca2e4aa92438a5a6c4722ca5b3b3208",
+      "answerHash": "705d8f6a9f4aecf800f3cbb53afecd15b19d19959948d252fdcb73c90a04efec",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06095.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B06098:1814cfc11d8194f79882d2e6f0d327c9e083cc0642159a7d94a07a19ae8f2d8b",
+      "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p06/B06098.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07003:accf47f82e87c381577a50c21051cd8f4c040da9bf67cf224d7ccb3cd83252bd",
+      "answerHash": "abfaf99d0900ad8e2a0b814892e593700ccb9d574d07dbb0d6b0c565f81cfdfe",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07003.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07014:bd67dbe9cade0deddafb4cbadad23f58738d4185aa2f881da6e9284c89d2f555",
+      "answerHash": "cfa3c372e070cc760a9e1622375347c45c1b2f05342c71656e44de9077adf77b",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07014.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07023:872de2079dce9150e76a70314a5d20400e542df72be79f07c2daed17f80158c3",
+      "answerHash": "76b859f15adb439639eb10a33e8176e4149d07f983cb8e53779f6d9cc4d44b3c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07023.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07023:e95274eddf61476e68accaf6348cb07eefb9d8074484ed06055f5022530a1706",
+      "answerHash": "7efec64def765e211d0d7cddba25d5b455bf9dfe8b4dfc89d1acf7677721e475",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07023.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07025:a1ea0a1b03ae906d9062ba5906497c7178e10970f12b5935b23937f559152d86",
+      "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07025.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07041:49f9f1cd1ade4da46a546a2984aa239d8eef7b3362d5bec6997d6d6c7d32e333",
+      "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07041.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07048:b28b7e81f684a02f22f62ec571f745928832a0832a16216b7f2c8646fe2fb9b7",
+      "answerHash": "7064942cd4da4e613de1ebea767ab42d4b1be7fdff30ddd5f4a2f1feea8b3f69",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07048.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07055:dcf72f7ad683c115b3f581b518e42b1c728f361ea984bfb38ac165c79eb83ce4",
+      "answerHash": "d8539f8a4353174dfab714067b969b9c1f5c5ce33ab94b14fc039cad8c93abc5",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07055.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07055:f132117a4178054cd112443bbafd18e4bf92a6781667e308e01f42075be71ee1",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07055.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07058:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
+      "answerHash": "39e7b67e851b57fbcf7d5323aaed28d21788d921007116b97444dc1cce21d746",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07058.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07060:94d4fbcb6d6b527d8e1d1c0eaa9b309fe2198ea03d499bf7e02c1d5a00121143",
+      "answerHash": "188711a1925166b73d3fc85103fbe567257d32c6135ffc69f33c6cba408a46b3",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07060.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07067:af8822a01561a87d2ab1e21dd52ac12867f116177e9257c6a784645d5e09261a",
+      "answerHash": "086cf022f4b14a5865fed7f9be59b575856f23be0b84802a2c470f83f0a9c80b",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07067.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07067:cbb325dcff012450afb4952c83f39a01b09170f5ef8155ed39e023bd6f5a8b20",
+      "answerHash": "c35c48d623b1f8f493b2b6868c6ffb5b3ff583a9d623419aa7caad09ce21c6e1",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07067.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07069:2bcb59c4061b4f418e16db29d59e7a70e64ac2d3f6d1648c367d531fdb1d49f9",
+      "answerHash": "d6d3a18166383d62c254742a29e976737be9fd1141469e915c62c9879bc4ab6c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07069.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07069:cb60b337cf9fa08ed6d72d3d9e3f106430dcff220524204b8eadb5820effdb18",
+      "answerHash": "49023d05d79c4ca827ea679fe17368d1257ce5a19284138691c49f5b1022673d",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07069.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07087:28660457e46b234b8eda0f8ef2c6f3353a37a1739cfebe4112b7bfffed415436",
+      "answerHash": "386628db9577a7ba75a76d8273f8367252ba868d98bd4a95d916b62021e3d11f",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07087.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07091:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
+      "answerHash": "313e1ad30e3a129a24100fc82f4f13cd69451a27f7d48df2f353a4da50d24877",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07091.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B07100:9ea8c56b58d12131b2e713a3516cd705349fbc1b7b067ed5892ef06d44213d92",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p07/B07100.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08003:56b2d90b685607e904d39158be2555fcc2be59c6192e97014396a02ba908324f",
+      "answerHash": "065034b2d7175116e6361afe08fce9c5fb449e32f96b7c0e420182a577116a43",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08003.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08004:d1378f5e4380ce25a38da3d87103745bfed858bfe87a447cadbe0e665e7ca995",
+      "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08004.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08027:ec597b045373ea7dd834d813060880a6d6fbf0d19c03975381d1945a45cea50f",
+      "answerHash": "64d2f079edf059bd312112933842b62e57858137c3c4a4cb215f76ce20f689c6",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08027.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08033:06ce9fd17111893f363795f972f77b8e344d6bdfdd6a919cf1c87d9c0d4fcc08",
+      "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08033.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08034:89932409c31cae7029b65d745da1141f78c52f03be4fde13b851f72b1d276247",
+      "answerHash": "387b73164ae6d56a103e6d6ea950cd0e613ad171a264f3855a095d0f9bb411b0",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08034.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08038:e47123f9e1245d63129ed54c2b95a76198d5f97abc9116047b1b635275aad06a",
+      "answerHash": "bf90be08d7bb64a5e7ed7baef6a21f71de93100992bbbf3e4f6d7cc14b4aac4e",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08038.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08042:bd2d9135e77cd20272d351740bbc65e757a5096d00d80aecf99990dff33779fe",
+      "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08042.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08047:6c1e3617937ea14c15441600fcb9ffb67421393476b22c504842e1cdc8e6029f",
+      "answerHash": "07fa7a9948b7121e7699571f6d9269ab237502926d02596f8c97d93d68e3b14f",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08047.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08049:6da58a7c708a81d4e493e03cd5972d77b0c8624160b1378ad4de6cef3faa2134",
+      "answerHash": "8bd96bd4e878b416675a08a8a9227cda51bbf65b942e0bfd1738b496af908eb1",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08049.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08065:c758369a7dddc50cdfaf7333ed60a91e5c9ad6e42a67f2f798a59018a06e92d6",
+      "answerHash": "c4346ae9d144e8cb7f36ecf8d45fa159a34e4de797f441aac77ea289cc1bafc8",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08065.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08072:fe200fa87639fad66be77335cd98bb1639dfd8cf8e7f1fd958a5c4d6b563bc33",
+      "answerHash": "1c2fdcd2f21243076f1c93958b48ed242f186f2658ec250017ae3485283d6ee0",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08072.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B08093:c54349866d5429d1bb74d16cbd2e788cf968eea7fd9d3188114c3cbfc026e4ec",
+      "answerHash": "a79c547c96610dff1e2eeb399efc1245e14fa923e4bf953df61cdc828c641cc7",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p08/B08093.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09003:9a6866f697bcb0cc655d790177ab8d43f71994ce27d454a5107db932c295f741",
+      "answerHash": "d5bfe6aec9aa427a606d26ccedc68d2293fa218037451e07e64b0f8f1f987576",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09003.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09016:c61cc842e775e8f40c3ccc90d41e595b2e2e02184cc4d243534b3c2fdf721fdb",
+      "answerHash": "dacb7beb8314bc3d6471e892f4b8e9dc3f7e60bc4b0bd0f5fd3f1d1b71da711c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09016.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09019:c9d1abbedddbedbfad74851f5da4e68d45940c5dc7b1a674e2aa635443a4df5e",
+      "answerHash": "5f9c711d4817a564b61432e26407c04ad45f5c8935fd76af75ccca4739b4e2dd",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09019.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09019:d8dc99d62acdd2911780a832435dc2622bed2718b781ae0cf508cc428ca6a5aa",
+      "answerHash": "86d9d6baa1066cd24146659851024cf16cfd9debc5df16520a6d9a08486a0832",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09019.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09019:e8e3445ac6139f21bb8ab2dd70734b6ea03331a372bfd54f70907a129e263392",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09019.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09027:d1378f5e4380ce25a38da3d87103745bfed858bfe87a447cadbe0e665e7ca995",
+      "answerHash": "8e0d706ac67953d21823c296e0443a53b1e87408f357321dccbc01fb210738d4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09027.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09028:193467167611ea2951b7e25ea6207904e6561f0cac010f6fa00ef41636035e51",
+      "answerHash": "73a6f00663f191761324ed9f7ff894295dbebe8b28371c1db514b6e292884657",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09028.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09033:ef2849caee7180cda9c275655743b8c0f8ccc524228510f100ce9dd045396741",
+      "answerHash": "84261845420147c143e8153d6ba0a1ab3ebe5f2fa821ecaf3eced48bdbb98b9c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09033.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09034:a7771f2644d23eaf4da0251ea0685ad85ad2e5fa92629f796c18dd589ee751fd",
+      "answerHash": "9ab25b1877f3530096a7672ae0434a0ce3eeebf5965686e808a6f0c921b28f39",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09034.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09048:94f262abeb10687989849154c850adad60ca367392a6db3eb2e0283ee116af2d",
+      "answerHash": "6600f74d7b70f2a1044d39d7aff9c8f16ea5257fe4739943b8ddb87cf06fa515",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09048.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09054:6dabbc99e980bc6656f0b77a599ac1603b1f22e775843373f89dc2648a1d5669",
+      "answerHash": "b0b5374a8472f559965950684249d1a99f08e7930b3d4179401444863c71d2a4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09054.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09054:cdf603d0e5346b66b6154612d2829738229d179b17b208e5774be84459d9ea27",
+      "answerHash": "22cf72497c12e4979f2dbd0c277552e3e126cdc6f68932e8f3809d54cedd206d",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09054.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09055:5cd641b5128932814c29c2d1177af359548f137dd66f80fb726079fba400a222",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09055.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09059:02302fc0994ea1eebd94ba851a2e38a51fa3e6dc54324f9029105bc44473bef0",
+      "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09059.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09060:4b9ed3ae16be0d13349f1dab20fb4be1753c986295c1ce7c6853f494d840ff44",
+      "answerHash": "d1ff892c1ecdfb8d4c7832ed4fc574b0775d817e5e9aecdb650862eda63ef9b4",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09060.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09061:d9bfaf3a925d8157e5fc6280d206adcd5eebd3dab52f75af4f67a35f6ddd2349",
+      "answerHash": "a56042693ac0fe3170061ccf6b57f122c58bf969dec6b1919100eec25f8d274d",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09061.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09075:7505735302078534653e21e817caddde9141485ccd57604acac1b5b532a6b765",
+      "answerHash": "0e19d91c02200449417a55074745e64a3393a543782d6647d6b042fbd8f0201e",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09075.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09078:e7061b1c3b542622fb32f13182df05bfa258159452eb60cb75a2c492259385d4",
+      "answerHash": "89083b38d6aba9556fbac3cdddc4f03f3ffe48270972799cfc0fa0f523c39934",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09078.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09082:27b7a3bfeba3ba6019e645b05d472917f367ee2e729f3721ee7ce65daf8fa206",
+      "answerHash": "f127accce8bafa449a5f6646ef34d258240ff5313f200c44e25dd8612e8b2593",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09082.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09086:2c83e05699547a122e72d36589adce2d81152f65597bff1f1551047f02568ed9",
+      "answerHash": "8ab5e00b40b22d88c5a9d95173b6764c9536074aa57e5545cf87c2e053baaf12",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09086.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09090:40075bc8c7dd4a0222d44cc6f3e0f01a99372f1d7181512f20dea80622518e93",
+      "answerHash": "313e1ad30e3a129a24100fc82f4f13cd69451a27f7d48df2f353a4da50d24877",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09090.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09108:0ae647669c43a49b9ad408264f0e80c5c5d6f5169c0d2d4aa382d127006777eb",
+      "answerHash": "8ede638b82a1d32b230345130e33bb3ff7679e79d1edddc87c5bbe14f148e0e0",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09108.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09109:14ada03fa9ae7313cb5442dfa2d084a4581c09adcde928c7f50a92dcc281585c",
+      "answerHash": "0ba314994043b98d7fdc2918b4a28603838ab2d800a870f487ea64050d499b3d",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09109.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09109:636d66e72f92b3a3945a9d5e3618003348be0080c29c488fa2626a46dd44a131",
+      "answerHash": "28c6a727e130bf79e242c7bb1fd1ea83dc92f82515b6c5287c77487e509564f2",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09109.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09110:fbaec4fc4e2a8b9171a9493ad7340c1a5f25171b6ffddad545083b0011492980",
+      "answerHash": "d396eb53ebe92ee628a31db2ee79eb20ec20c6a366da76d73cae571acaa255d8",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09110.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09111:3a42de02f914fade49b6745256ad7cb3d1f33bd5e642b1ef32538cd760fb7d06",
+      "answerHash": "261ca687f54e5faeb68208758b9a4a97348a014d57246145da834b58b1d027bb",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09111.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B09112:7fd96e0746c8292ec5c55c1b6aabcff60e70a5f163392c0baf95cd026581e305",
+      "answerHash": "cf9e029f63dc02ea9b94a8e39361c805a3c0332630c8b9f13aed6e80abe4514c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-p09/B09112.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:B10009:62af49d53e7bf1d0384cf2ac1e300d0ea1a74c35b1a90a332e480c83f302dba1",
+      "answerHash": "bb8dcaa2a0e897ce52674fc84ff39b80e820cf4cb6a6d37a3038241690595439",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10021:4b18aa818758ffcd6c8520820ecad1636f2c8078a3b5244ccc53346c884db74c",
+      "answerHash": "5d52a70b3d415c2a3f6ad67c2097152575f7f38144ae025db9180719d7eb6a58",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10023:7124f41d3267d0e2df2692070acfdd9e66fca11edbbbfb6b64ada8bee4c94b79",
+      "answerHash": "de1b43fa70102a43702dfd69a2ccf0aaf3739c8b0c8322977a1e651746a12145",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10027:c93226a2bebd7c4a5a21e373534e75faba33cbe2ec6c147a0d4b0d4a745cec10",
+      "answerHash": "b827971d951f9835d6c0840bd8d55b1b515112a015ed2bc51e5ec3b110f772b1",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10036:e77040d1338d3517ef1c828b1a3afde446d2256eb392160c8938c62295ee5897",
+      "answerHash": "fc9d2445b3834712106ad6326cf203d366ec53fcb7825cccab30b052371ae6a0",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10052:71b7bf7de20f9a8b5029d19adac347fe1fd360e5580ad85de6cad2334ad7fe6e",
+      "answerHash": "12de0a035eada152bac1f3ab530cf13398255386cf74cc4f94515d7034768fd2",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10068:132b6ee607cc3a33eb9e91d1f3bda4dc39dfcf54b0a2f045cc2168294ce8a923",
+      "answerHash": "79271e662e703c9b7f7f6bcb1f1c3d35333b04b5f713142cfbc878bcb3662e02",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10070:c1f437826b40caf252061e243504d31be2f52607eee2bb9ca14dee62f4ee00fb",
+      "answerHash": "88b539d2f128438f8b6437ecf299f862444710db3e1cb7ca3f9da2c2b66a0728",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10071:c1e6a8446d07538ac99159cf1ea9707902d98d62c8203d8ceea61c781966673f",
+      "answerHash": "2bc5674d10eb520e292de776ed2607fe9c2006511d7abe99ea5315c88c50ea88",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10076:f2397b8ee69af3696bad6d8e09ad86ebb5ad51ccc83f56ae1e323123cac20941",
+      "answerHash": "50c869438aaaa3ac411c6fdc95fc4b581c58f7ce37a07a746bb90ac4d5352053",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10082:251efe3bc94fcb1824ebc992ad6eb2711721421520d6b2090a5f786e4d0420b2",
+      "answerHash": "45979cb61275514a31c0e89b0df5a48215e8c3e34e6e49457a0a2c82fd481c80",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:B10082:3cada4780b82701609f8e4c75c86d3f91df8c47707c56f10d15dda452743609d",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "unmapped",
+      "result": "implementation-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "rules:.claude/rules/INDEX.md:1"
+      ],
+      "noteCodes": [
+        "UNIMPLEMENTED-CARD"
+      ]
+    },
+    {
+      "qaId": "card:D01013:d4c026b220211c53a0d4faa965e0250eb4fe8ab5abb2d43355fa2c2d224014b5",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d01/D01013.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D03004:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
+      "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d03/D03004.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D03014:ce592c4136be08596058c1648662c8f0cf7cb6e8cec32f9b4d83ce28f59a22fb",
+      "answerHash": "d8cdbcf96cb81df73a04d13e77d97991d6dcaf5d6b1e012bc710edcd408f0a04",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d03/D03014.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D05001:b507d6a121e9efddd352afbaf6db5dbd16dda6c47434b7d68aff044e8ca153fa",
+      "answerHash": "5883b6d21761d9ad8c88fdadb72d71431e67e38adf4b7a20e2f9fd95c6e3357f",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d05/D05001.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D06012:25661aa5514a785e941eda72ef4593c2dd75b741d82b3f7efd4b4c1c83373dae",
+      "answerHash": "5a5d483a04902b6379b9102179059e899995898e1efd6d91a8673b08aae38121",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d06/D06012.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D06013:782fd0f5160159eba91a381169832f1a1f384ccf91d8654acdd24e0633027f2f",
+      "answerHash": "e899bcefdec8ce55edb111922af131f7746cbbd98dd953ce0c0a679201bc28ad",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d06/D06013.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D06022:e918d066190b75a908b8154f185c9c4291e8387cb2fc4797f5744acc49a362d5",
+      "answerHash": "83d521329e90458d525fb8ebb53e11d58a4adcf35d2cbf475988a0080b4a6e27",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d06/D06022.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D07015:366df996e065e39c71b329905df4d05cf65e19edc03f898264e9bf906822be58",
+      "answerHash": "bd1021263916b76aa59508c6813bbffe73c698f6db8511f6e09c600022e7d446",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d07/D07015.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D07016:c43d44228555c6f52877b10cd4fc1e477898170ca1d8b5e1675225ab8ca0b4f4",
+      "answerHash": "9774db2bba11e1d8d8eb55ecaab030d2da5bec33b33e7ee366cc4ddf59c1cdc0",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d07/D07016.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D08006:58763c5eec112da565cbb2892250eb844e45725c5b8575645188326a1a98dcd7",
+      "answerHash": "c1398b076aee980901b2d47bf7625fc691c347d02c1b37575b02175febe61cb8",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d08/D08006.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D09005:bfc77ce4ed1b5d60b75985971cadda71d303a0463330379383d277d829de3aa4",
+      "answerHash": "fda2286021be4b097fae9dc0b0dd802834a37cf7555c306f1441a64eac98957a",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d09/D09005.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D09009:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3",
+      "answerHash": "acedfab6fec0504c21ea415cc161ca0973c4c698e834e23b371a65feec21383a",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d09/D09009.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10004:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2f",
+      "answerHash": "9cb808758cb631c3316b1bd5bf429077a708f008718517df5a05164414a5c915",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10004.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10005:4689299fe2afbf504961c70924f98834b6cd2f951f983d07c9d233c675052f2f",
+      "answerHash": "07a069044d87d5a50559fb46bd5fd90c7fe0c58ed7f82235ce074d9ade043b60",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10005.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10006:f2e98bbb3d44e213bf33b029253bb3aecf1a2669c18736ed488d4ae55db630f0",
+      "answerHash": "5890c14d0a924a722bea48e7028c5afa9194b12710d014d166d6ebe7b00a4334",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10006.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10006:f9f0f50b4140e8bc28882cc289972e16d0af7e9ea193852b227c8d82a1490827",
+      "answerHash": "1e4357b4eb1cc06064da5a839e8989b7a349ef59cd87256e2d90828b4b5838fc",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10006.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10011:0cee60d0c2d252161d3b02216c1080a419b44849bdebc4d472550a7ba85371cb",
+      "answerHash": "ffd29dd2b3a9717ba7136cea5055ccdda44f40880914e6babc5934d495c6669b",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10011.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10011:fe489ff3199dbdf91d8a4404721956da51ba17ccb819450ceed5b301f31fe7be",
+      "answerHash": "8dd2fb82eaab406c502072539de6dfa336405bacb8534597c6c2073c00439036",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10011.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10023:a5a1c9c943eaa2f03b9e59152158a33e761ccbeb0ed01a9525107e7ea148240a",
+      "answerHash": "9110507decef0677bd92771a8112b70a144424b6714066478df3eb347bbe074f",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10023.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D10024:01e64ea9e0d149ca2362d7754c49a44727c3284f0467137dc414ec81443e2891",
+      "answerHash": "41189d419cd8777552b58a82b95f911f88878aba990bb637a74822e829d1bcaf",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d10/D10024.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D11004:8a2311865e16f466ee83cb439f6283f6196812688ac3da8d1b8d1173290c37dc",
+      "answerHash": "240d9989d84b1446fdf8446d85b4f07e316976c39088c96ba345975e0ba2ccaf",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d11/D11004.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:D11014:fd46e3e8955490f444afdb47fbaa606489da5b870cf6d88ae747987457e8c002",
+      "answerHash": "88b539d2f128438f8b6437ecf299f862444710db3e1cb7ca3f9da2c2b66a0728",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/ct-d11/D11014.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR033:62e723bd73c86e05739414612fd8e70bd9ce774b5335c8bffcd6dd9782e03553",
+      "answerHash": "3a3ea55b9b3de1ec4e90595d821b63d54a58a1ae4811e7d095107c14d3e6e3f1",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR033.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR036:2f09bd3dcb79564e0c7fe40db45fc4291983c9faec1bfd682d5e8d29c923abc9",
+      "answerHash": "acf8317ad874c3db5a4906f82ad4587818bc56f6f0f653803a6a7204b86abaf3",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR036.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR036:f2b57018b3c980aff7e272e3bbf30d5ca6934d3fc8ea0c0a954d366f9ecfc5c9",
+      "answerHash": "c78f838876a8f8d7f02ffa69725a3d5cb7109c181a2af4106d586d9c8fb3862e",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR036.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR064:f0205ebe785380650d240fdf4799be132d63a973ea8eedc201b577d4d66bc433",
+      "answerHash": "bd8ba0906b846951b1a95016cb399d87e80742e52516329bd932fb0f62ee3713",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR064.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR086:b9153b98506fbfc2d01552f16ff007b34909efb3d7a31788d7115bb946fc0fd0",
+      "answerHash": "a2e684f955b6d2042b3af9246a822de8318996b39544dd298d54fb98f7e8db53",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR086.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR092:b9153b98506fbfc2d01552f16ff007b34909efb3d7a31788d7115bb946fc0fd0",
+      "answerHash": "a2e684f955b6d2042b3af9246a822de8318996b39544dd298d54fb98f7e8db53",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR092.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR092:c747799ae0e7820359315afb898a7ec1cb669d879c14eb3618d65663e40b05ca",
+      "answerHash": "f5b793eb355c732add62acb0ad60eb932d557f3765e3055ded94c564ad057ae8",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR092.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR096:0ea383933b8062d0577b83387d2aba3ee94b140600598f51292beb6914c13059",
+      "answerHash": "ef192c5768bd55c52642b86e15fabecd3b18de8bb289943d8d6c19f6331ffb82",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR096.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR106:49d13ab9545b274f17a41a8b79f61e7b434b19adfb8acf70816835b6956fb335",
+      "answerHash": "b6d88c386d2dae4cdeb12379e50ae3b5946cf2ad0b758cb05b99addd80dccf4a",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR106.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR135:2efc090d6f3d4f57311f555770fddfccfc33613f1353bc5e3a6c03fe4a668740",
+      "answerHash": "8fa6df429995a7c8ce3724b8ce6b54ccb2253d6fdd0f1199f90a37ef25879654",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR135.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR142:d9193111b04dd478625dec5ec9b27779fc7769b8830ff83458448c1b4f6de17e",
+      "answerHash": "04e65263ebb2adce9a08bbc627471d2eb48a50d8cc22215217b7c0b32192241c",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR142.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR179:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3",
+      "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR179.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR185:7b6adc85165927a9ffcabeeb29496cd3029d2be83a247dd80556d7f351a8a2d3",
+      "answerHash": "9a850b0aa69167d50fe9b35374145bd3a1f7c6ca2159ee4d9315b205401b53c5",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR185.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR185:dd14da7698872524c315ac085764a06a1da4f85a1ef9058d53315de3c8346c06",
+      "answerHash": "03f747fc0004d0ab02278308d610f766abb0d85b5802adb55124456806679b84",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR185.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR186:dd70a259653892d9d843c9211270cf79c9cb2eda55d5f30527545ebc60abfd6f",
+      "answerHash": "fec16cedeb8683f39fe7ddc9a70fab0a14e5c9217502735c4556a1b181870065",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR186.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR207:22aaf9ba5e384ee444adeadb5ffb7b5c97b7a4e75ccbac8c297b8c86d3e85f3f",
+      "answerHash": "09ac3974741d3f1b11af49f9784152184c91bbaa96972834da09effd62d3f59f",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR207.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR234:dddf69263368e5862ebc38fe23eb8483a4d3b027a25774c236d0972439572db1",
+      "answerHash": "9e9031c562afa1e156b1d5b2ab8ef05c1b96a63e58ecbabf0a28982e3c3a7f6b",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR234.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR264:6663bb8e0307aa3bb0d0d38deadfe7c3f6e1c99dbcf3eceb486bc6786a315758",
+      "answerHash": "74babcbd4288d5feb0bcd5bca74ae0b9addc0388b92c063ea274737d36e92594",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR264.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR291:f9ca6c1f234b459fe5e73452949fcd02e3b7ec4cf30f2df07134d771866a5398",
+      "answerHash": "b79af84d1269cf62ae85ac95d41ce067c3c3dd661890d73e47e4fb451572fe70",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR291.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR292:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f",
+      "answerHash": "caedd0010da4d392046a04456bad3c537f47cf9b0d2b3598bf277055792a4d11",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR292.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR298:84ecdea6c10bc908728749deacc797a85529c42aef7daa60ffe67827bc5ce34f",
+      "answerHash": "caedd0010da4d392046a04456bad3c537f47cf9b0d2b3598bf277055792a4d11",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR298.ts:1"
+      ]
+    },
+    {
+      "qaId": "card:PR304:64b0dfa40059e5ed0dddfd2e25c4185a31f5b45ddba7798437a0e7508255c179",
+      "answerHash": "72f763acbcebae843d584269562044d5aacaf6534790c089bfa9df0b90cb10fb",
+      "status": "test-missing",
+      "result": "test-gap",
+      "method": "manual-semantic",
+      "evidence": [
+        "src:src/cards/pr-01/PR304.ts:1"
+      ]
+    }
+  ]
+}

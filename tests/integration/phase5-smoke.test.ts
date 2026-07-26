@@ -32,30 +32,45 @@ const GEN = [...GENERATED_PARTNERS, ...GENERATED_SIMPLE_CARDS, ...GENERATED_COMP
  * D08 のシンプル系キャラ (cutinFixedAP のみ等) を中心に選択し、
  * 副作用の少ないデッキで wiring 検証に集中させる。
  */
+function expectOfficialIdLimit(deck: readonly string[]): void {
+  const counts = new Map<string, number>();
+  for (const id of deck) {
+    const card = engine.read.def.card(id);
+    const slash = card?.no.indexOf('/') ?? -1;
+    const officialId = card && slash > 0 ? card.no.slice(0, slash) : id;
+    counts.set(officialId, (counts.get(officialId) ?? 0) + 1);
+  }
+  expect(Math.max(...counts.values())).toBeLessThanOrEqual(3);
+}
+
 function buildD08Deck(): string[] {
   const ids = [
     'D08003', 'D08005', 'D08007', 'D08009', 'D08011', 'D08013',
-    'D08015', 'D08017', 'D08018', 'D08019', 'D08020', 'D08021',
-    'D08022', 'D08023',
+    'D08015', 'D08017', 'D08019', 'D08021', 'D08022', 'D08023',
+    'D08024', 'D08025',
   ];
   const deck: string[] = [];
   for (const id of ids) {
     deck.push(id, id, id);
   }
-  return deck.slice(0, 40);
+  const result = deck.slice(0, 40);
+  expectOfficialIdLimit(result);
+  return result;
 }
 
 function buildD11Deck(): string[] {
   const ids = [
-    'D11003', 'D11004', 'D11005', 'D11006', 'D11007', 'D11009',
-    'D11010', 'D11011', 'D11013', 'D11014', 'D11015', 'D11016',
-    'D11017', 'D11018',
+    'D11003', 'D11005', 'D11007', 'D11009', 'D11011', 'D11012',
+    'D11013', 'D11014', 'D11015', 'D11016', 'D11017', 'D11018',
+    'D11019', 'D11020',
   ];
   const deck: string[] = [];
   for (const id of ids) {
     deck.push(id, id, id);
   }
-  return deck.slice(0, 40);
+  const result = deck.slice(0, 40);
+  expectOfficialIdLimit(result);
+  return result;
 }
 
 describe('Phase 5 smoke — registerAll + 簡単なゲーム進行', () => {

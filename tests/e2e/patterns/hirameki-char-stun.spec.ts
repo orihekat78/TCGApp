@@ -134,6 +134,15 @@ async function getPendingHirameki(
   })) as Awaited<ReturnType<typeof getPendingHirameki>>;
 }
 
+async function getPendingEffectPick(
+  page: Page,
+): Promise<{ player: string; atomVerb: string; candidates: { uid: string; player: 'self' | 'opp' }[] } | null> {
+  return page.evaluate(() => {
+    const w = window as unknown as { __game: { getState: () => { pendingEffectPick: unknown } } };
+    return (w.__game.getState().pendingEffectPick ?? null) as never;
+  });
+}
+
 async function getSceneState(page: Page, side: 'self' | 'opp', index: number): Promise<string | null> {
   return (await page.evaluate(
     ({ sd, idx }) => {
@@ -235,6 +244,15 @@ test.describe('hiramekiCharStun — shape + fire/skip path (2 カード集約, B
       expect(selfStateBefore, 'pre-fire self.scene[0] is active').toBe('active');
       expect(oppStateBefore, 'pre-fire opp.scene[0] is active (sampleGameState 既定)').toBe('active');
       await dispatchAction(page, { type: 'hiramekiResolve', choice: 'fire' });
+
+      // 「1枚まで選ぶ」は人間所有なら自動選択しない。相手候補を明示して解決する。
+      await expect.poll(async () => (await getPendingEffectPick(page))?.atomVerb ?? null).toBe('sceneSetState');
+      const effectPick = await getPendingEffectPick(page);
+      expect(effectPick?.player).toBe('self');
+      const opponent = effectPick?.candidates.find((candidate) => candidate.player === 'opp');
+      expect(opponent, '相手キャラがヒラメキ対象候補').toBeTruthy();
+      await dispatchAction(page, { type: 'effectPickResolve', pickedUid: opponent!.uid });
+
       const selfStateAfter = await getSceneState(page, 'self', 0);
       const oppStateAfter = await getSceneState(page, 'opp', 0);
 

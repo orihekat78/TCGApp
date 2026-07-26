@@ -17,6 +17,10 @@
   padding: 20px 24px;
   min-width: 360px;
   max-width: 480px;
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 8px 32px rgba(245, 197, 24, 0.4);
 }
 
@@ -34,10 +38,13 @@
 }
 
 .hirameki-picker-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
   margin: 16px 0;
   padding: 12px;
   background: rgba(245, 197, 24, 0.1);
   border-radius: 6px;
+  overflow-y: auto;
 }
 
 .hirameki-picker-text {
@@ -46,14 +53,79 @@
   color: #333;
 }
 
+.hirameki-source-card-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 3px;
+  border: 1px solid rgba(184, 134, 11, 0.35);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.hirameki-source-card {
+  min-width: 0;
+  min-height: 44px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0 3px;
+  background: transparent;
+  color: #555;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hirameki-source-card .card-art {
+  width: 34px;
+  height: 46px;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.hirameki-source-card span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.hirameki-source-card-detail {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #d3b45f;
+  border-radius: 4px;
+  background: #fff;
+  color: #775b07;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.hirameki-source-card:hover,
+.hirameki-source-card:focus-visible,
+.hirameki-source-card-detail:hover,
+.hirameki-source-card-detail:focus-visible {
+  outline: 2px solid #f5c518;
+  outline-offset: 1px;
+}
+
 .hirameki-picker-actions {
   display: flex;
+  flex: 0 0 auto;
   gap: 12px;
   justify-content: flex-end;
   margin-top: 16px;
 }
 
 .hirameki-btn {
+  min-width: 44px;
+  min-height: 44px;
   padding: 8px 20px;
   border-radius: 6px;
   font-weight: 600;
@@ -72,4 +144,16 @@
 .hirameki-btn-skip {
   background: #ddd;
   color: #555;
+}
+
+@media (max-height: 480px) {
+  .hirameki-picker-modal {
+    box-sizing: border-box;
+    width: min(480px, calc(100vw - 24px));
+    min-width: 0;
+  }
+
+  .hirameki-picker-body {
+    max-height: 116px;
+  }
 }

@@ -17,7 +17,7 @@ const a1: AbilityDef = {
   // 【絆鈴木次郎吉】
   condition: { kind: 'bond', cardName: '鈴木次郎吉' },
   // 〚突撃[キャラ]〛を持つ
-  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'] },
+  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'], printedKeywordWhenIconValid: true },
   description: '【絆鈴木次郎吉】〚突撃［キャラ］〛を持つ。',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
 };

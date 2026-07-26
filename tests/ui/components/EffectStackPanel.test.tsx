@@ -81,7 +81,7 @@ describe('EffectStackPanel', () => {
     expect(html).toMatch(/entry-turn">T3</);
   });
 
-  it('renders 4 state labels: pending/resolving/resolved/cancelled', () => {
+  it('shows only pending decisions and excludes resolved history', () => {
     const entries: EffectStackEntry[] = [
       makeEntry({ id: 'e1', state: 'pending' }),
       makeEntry({ id: 'e2', state: 'resolving' }),
@@ -92,16 +92,13 @@ describe('EffectStackPanel', () => {
       <EffectStackPanel entries={entries} open={true} />,
     ));
     expect(html).toMatch(/state-pending/);
-    expect(html).toMatch(/state-resolving/);
-    expect(html).toMatch(/state-resolved/);
-    expect(html).toMatch(/state-cancelled/);
+    expect(html).not.toMatch(/state-resolving/);
+    expect(html).not.toMatch(/state-resolved/);
+    expect(html).not.toMatch(/state-cancelled/);
     expect(html).toMatch(/待機中/);
-    expect(html).toMatch(/解決中/);
-    expect(html).toMatch(/解決済/);
-    expect(html).toMatch(/無効化/);
   });
 
-  it('sorts entries by ownerChosenOrder then triggeredAt.nano', () => {
+  it('renders entries in the received canonical engine order', () => {
     const entries: EffectStackEntry[] = [
       makeEntry({ id: 'late',  triggeredAt: { turn: 1, phase: 'main', nano: 5 } }),
       makeEntry({ id: 'first', triggeredAt: { turn: 1, phase: 'main', nano: 1 } }),
@@ -110,14 +107,14 @@ describe('EffectStackPanel', () => {
     const html = strip(renderToString(
       <EffectStackPanel entries={entries} open={true} />,
     ));
+    const lateIdx  = html.indexOf('data-effect-id="late"');
     const firstIdx = html.indexOf('data-effect-id="first"');
     const midIdx   = html.indexOf('data-effect-id="mid"');
-    const lateIdx  = html.indexOf('data-effect-id="late"');
+    expect(lateIdx).toBeLessThan(firstIdx);
     expect(firstIdx).toBeLessThan(midIdx);
-    expect(midIdx).toBeLessThan(lateIdx);
   });
 
-  it('ownerChosenOrder takes precedence over nano ordering', () => {
+  it('does not replace canonical owner order with timestamp ordering', () => {
     const entries: EffectStackEntry[] = [
       makeEntry({
         id: 'second', ownerChosenOrder: 1,
@@ -131,9 +128,9 @@ describe('EffectStackPanel', () => {
     const html = strip(renderToString(
       <EffectStackPanel entries={entries} open={true} />,
     ));
-    const firstIdx  = html.indexOf('data-effect-id="first"');
     const secondIdx = html.indexOf('data-effect-id="second"');
-    expect(firstIdx).toBeLessThan(secondIdx);
+    const firstIdx  = html.indexOf('data-effect-id="first"');
+    expect(secondIdx).toBeLessThan(firstIdx);
     expect(html).toMatch(/entry-order">#1</);  // 0-based → display 1
     expect(html).toMatch(/entry-order">#2</);  // 1-based → display 2
   });

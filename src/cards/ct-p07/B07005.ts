@@ -14,7 +14,7 @@ const a1: AbilityDef = {
     cardName: '妃英理'
   },
   continuousModifier: {
-    grantKeywords: () => ['突撃']
+    grantKeywords: () => ['突撃'], printedKeywordWhenIconValid: true,
   },
   description: '【絆妃英理】〚突撃〛（登場したターンからすぐにアクションできる）',
   ruleRefs: [

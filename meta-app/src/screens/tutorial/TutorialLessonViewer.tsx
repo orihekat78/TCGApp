@@ -54,12 +54,16 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
   // キーボード操作
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        onClose();
+      }
       else if (e.key === 'ArrowLeft' && !isFirst) onStepChange(idx - 1);
       else if (e.key === 'ArrowRight' && !isLast) onStepChange(idx + 1);
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
   }, [idx, isFirst, isLast, onStepChange, onClose]);
 
   const handleNext = () => {
@@ -81,6 +85,9 @@ export function TutorialLessonViewer({ chapter, stepIndex, onStepChange, onStepC
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="チュートリアル解説"
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 300,

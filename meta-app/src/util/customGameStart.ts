@@ -32,8 +32,20 @@ export function toEngineDeck(deck: DeckRecord) {
 export async function customGameStart(
   selfDeck: DeckRecord,
   oppDeck: DeckRecord,
-  opts: { spectator?: boolean; firstPlayer?: 'self' | 'opp' } = {},
+  opts: {
+    spectator?: boolean;
+    firstPlayer?: 'self' | 'opp';
+    /** False when the route/session owner has cancelled this start. */
+    isSessionCurrent?: () => boolean;
+  } = {},
 ): Promise<GameState> {
+  const assertSessionCurrent = (): void => {
+    if (opts.isSessionCurrent?.() === false) {
+      throw new Error('customGameStart: match session cancelled');
+    }
+  };
+
+  assertSessionCurrent();
   const decks: DeckPair = {
     self: toEngineDeck(selfDeck),
     opp:  toEngineDeck(oppDeck),
@@ -47,21 +59,27 @@ export async function customGameStart(
     engine.flow.setup.dealOpeningHand(draft, 'self');
     engine.flow.setup.dealOpeningHand(draft, 'opp');
   });
+  assertSessionCurrent();
 
   const first = state.turn.player as 'self' | 'opp';
   const second: 'self' | 'opp' = first === 'self' ? 'opp' : 'self';
 
   // Phase B: mulligan (先攻 → 後攻)。観戦モードでは人間操作が無いので self も自動 skip。
   for (const p of [first, second] as const) {
+    assertSessionCurrent();
     const hand = state.players[p].hand;
     const isHuman = !opts.spectator && p === 'self';
     const returns = isHuman ? await promptMulligan({ player: p, hand }) : [];
+    // endMatchSession settles the prompt. Re-check before mutating the stale
+    // local state, otherwise the cancelled start can still enter Phase C.
+    assertSessionCurrent();
     state = produce(state, (draft) => {
       engine.flow.setup.mulligan(draft, p, [...returns]);
     });
   }
 
   // Phase C: reveal → startGame → startTurn(first)
+  assertSessionCurrent();
   state = produce(state, (draft) => {
     engine.flow.setup.reveal(draft);
     engine.flow.setup.startGame(draft);

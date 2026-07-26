@@ -4,7 +4,7 @@ import type { AbilityDef, CardDef } from '@/engine/types';
 const a1: AbilityDef = {
   id: 'a1', type: 'triggered', scope: 'on-scene', trigger: { hook: 'enter', selfOnly: true },
   effect: { kind: 'sequence', steps: [
-    { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, bind: '$revealed' } },
+    { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', maxN: 4, bind: '$revealed' } },
     { kind: 'conditional', if: { kind: 'and', cs: [
       { kind: 'boundAnyMatchesFilter', bindKey: '$revealed', filter: { color: '\u7dd1' } },
       { kind: 'boundAnyMatchesFilter', bindKey: '$revealed', filter: { color: '\u767d' } },

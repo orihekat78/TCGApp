@@ -89,6 +89,10 @@ function settle(choice: EvidenceFlipChoice): void {
   if (resolver) resolver(choice);
 }
 
+export function cancelEvidenceFlipPicker(): void {
+  settle({ kind: 'cancel' });
+}
+
 /**
  * 利便ラッパ。React 外からも呼べる。component で current 変化に反応して再描画したい
  * 場合は useEvidenceFlipPickerStore((s) => s.current) を併用する。
@@ -98,6 +102,6 @@ export function useEvidenceFlipPicker(): EvidenceFlipPicker {
     current: useEvidenceFlipPickerStore.getState().current,
     ask: askEvidenceFlip,
     confirm: (indices) => settle({ kind: 'confirm', indices }),
-    cancel: () => settle({ kind: 'cancel' }),
+    cancel: cancelEvidenceFlipPicker,
   };
 }

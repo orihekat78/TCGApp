@@ -2,6 +2,7 @@
 // 元 atom-handlers.ts L14-309 を無改変移送 + export 付与 (refactor Phase 3a, 2026-06-22)
 import type { GameState, AtomVerb, EffectCtx } from '../../types/index.js';
 import type { TargetFilter } from '../../types/effect.js';
+import type { ContinuationFrame } from '../pending-state.js';
 import { mutate } from '../../mutate/index.js';
 import { cards as engineCards } from '../../cards/index.js';
 import { tryRePickFromAtom } from '../resolve-picks.js';
@@ -9,15 +10,19 @@ import { buildShortFormPick } from '../atom-pick-spec.js';
 import { evalDyn } from '../../dyn/eval.js';
 import { defHasKeyword } from '../../read/keyword.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
-import { effectiveTraitNames } from '../../target/candidates.js';
+import { effectiveKeywordForCard, effectiveTraitNames } from '../../target/candidates.js';
 
 declare global {
 
-  var __pendingDeckRevealSide: PendingDeckRevealSide | null | undefined;
+  var __pendingDeckRevealSide: PendingDeckRevealSide | PendingDeckRevealSide[] | null | undefined;
 }
 
 export type PendingDeckRevealSide = {
   player: 'self' | 'opp';
+  /** Public reveals are visible to both players; private looks only to viewer. */
+  visibility: 'public' | 'private';
+  /** Absolute viewer identity after resolving source-relative effect args. */
+  viewer: 'self' | 'opp' | 'all';
   /** デッキ上から公開した順番のカード ID (matched 含む末尾) */
   revealed: string[];
   /** filter match した cardId、null なら全公開でも不一致 */
@@ -29,18 +34,52 @@ export type PendingDeckRevealSide = {
    * pick 解決の再入時に確定 matched で再 set される (awaitingPick 無し → 通常演出)。
    */
   awaitingPick?: boolean;
+  /** A plain reveal returns every card to its original deck position. */
+  presentation?: 'reveal-return';
+  /** Stable resolver source identity; prevents an unrelated reveal replacing this one. */
+  source?: { cardId?: string; abilityId?: string; uid?: string };
 };
 
 export function _drainPendingDeckRevealSide(): PendingDeckRevealSide | null {
-  const v = (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide ?? null;
-  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | null }).__pendingDeckRevealSide = null;
-  return v;
+  const channel = (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide;
+  if (!channel) return null;
+  if (!Array.isArray(channel)) {
+    (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide = null;
+    return channel;
+  }
+  const next = channel.shift() ?? null;
+  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide =
+    channel.length === 0 ? null : channel.length === 1 ? channel[0]! : channel;
+  return next;
+}
+
+/** FIFO prevents simultaneous reveal effects from overwriting a different player's private card. */
+export function queuePendingDeckRevealSide(next: PendingDeckRevealSide): void {
+  const root = globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null };
+  const current = root.__pendingDeckRevealSide;
+  const replacesAwaiting = (candidate: PendingDeckRevealSide): boolean =>
+    next.awaitingPick !== true
+    && candidate.awaitingPick === true
+    && candidate.source?.cardId === next.source?.cardId
+    && candidate.source?.abilityId === next.source?.abilityId
+    && candidate.source?.uid === next.source?.uid;
+  if (!current) {
+    root.__pendingDeckRevealSide = next;
+  } else if (Array.isArray(current)) {
+    const awaitingIndex = current.findIndex(replacesAwaiting);
+    if (awaitingIndex >= 0) current[awaitingIndex] = next;
+    else current.push(next);
+  } else if (replacesAwaiting(current)) {
+    root.__pendingDeckRevealSide = next;
+  } else {
+    root.__pendingDeckRevealSide = [current, next];
+  }
 }
 
 // BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択 side-channel
 // (side-channel-pattern.md 準拠)。human 所有 & 2 枚以上を底へ移したときのみ set し、UI の
-// DeckReorderModal が並べ替えを surface する。AI / spectator / smoke (__humanPlayerSide が
-// 当該 player でない) では set しないため従来挙動 byte-equal (公開順固定 = 合法な一choice)。
+// DeckReorderModal が並べ替えをsurfaceする。deckToBottomBoundはconfirmまでdeckを変更せず、
+// resolver continuationも本pendingへ保存する。legacy souza等は移動済みbottom blockを扱う。
 declare global {
 
   var __pendingDeckReorderSide: PendingDeckReorderSide | null | undefined;
@@ -48,9 +87,37 @@ declare global {
 
 export type PendingDeckReorderSide = {
   player: 'self' | 'opp';
-  /** デッキ底へ移した cardId 群 (現在の底ブロック、公開順)。human が任意順に並べ替える対象 */
+  /** 並べ替え対象cardId群。新await経路ではconfirmまでデッキ元位置に残る。 */
   cardIds: string[];
+  /** await開始時の全デッキsnapshot。confirm時のstale state防御。 */
+  deckSnapshot?: string[];
+  /** snapshot上の物理occurrence。重複cardIdを別コピーとして保持。 */
+  occurrences?: Array<{ cardId: string; index: number }>;
+  /** 後続効果と共有する保存ctx。 */
+  ctx?: EffectCtx;
+  /** resolverが同梱するsequence/chain remainder。 */
+  continuation?: ContinuationFrame;
 };
+
+export function _peekPendingDeckReorderSide(): PendingDeckReorderSide | null {
+  return (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide ?? null;
+}
+
+export function _attachPendingDeckReorderContinuation(frame: ContinuationFrame, preserveFrameCtx = false): void {
+  const pending = _peekPendingDeckReorderSide();
+  if (!pending) return;
+  const safeFrame: ContinuationFrame = {
+    ...frame,
+    ctx: preserveFrameCtx ? frame.ctx : (pending.ctx ?? frame.ctx),
+  };
+  if (!pending.continuation) {
+    pending.continuation = safeFrame;
+    return;
+  }
+  let tail = pending.continuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = safeFrame;
+}
 
 export function _drainPendingDeckReorderSide(): PendingDeckReorderSide | null {
   const v = (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide ?? null;
@@ -83,8 +150,12 @@ export type PendingDeckPlaceSide = {
   ownerPlayer: 'self' | 'opp';
 };
 
+export function _peekPendingDeckPlaceSide(): PendingDeckPlaceSide | null {
+  return (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide ?? null;
+}
+
 export function _drainPendingDeckPlaceSide(): PendingDeckPlaceSide | null {
-  const v = (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide ?? null;
+  const v = _peekPendingDeckPlaceSide();
   (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
   return v;
 }
@@ -128,6 +199,14 @@ export function _drainPendingContactStartAxId(): string | null {
  */
 export function targetFilterToPredicate(filter: TargetFilter | undefined): (cardId: string) => boolean {
   return targetFilterToPredicateWithCtx(undefined, filter);
+}
+
+/** 対戦セッションを跨いではならない atom 側の一時通知を一括消去する。 */
+export function resetPendingAtomSession(): void {
+  (globalThis as { __pendingDeckRevealSide?: PendingDeckRevealSide | PendingDeckRevealSide[] | null }).__pendingDeckRevealSide = null;
+  (globalThis as { __pendingDeckReorderSide?: PendingDeckReorderSide | null }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: PendingDeckPlaceSide | null }).__pendingDeckPlaceSide = null;
+  (globalThis as { __pendingContactStartAxId?: string | null }).__pendingContactStartAxId = null;
 }
 
 /**
@@ -204,7 +283,9 @@ export function targetFilterToPredicateWithCtx(state: GameState | undefined, fil
     // 経路 (picks.ts) の filter でこれら board-only 軸を使うカードは想定外 (現状 0)。
     if (filter.keyword !== undefined) {
       const wants = Array.isArray(filter.keyword) ? filter.keyword : [filter.keyword];
-      if (!wants.some(w => defHasKeyword(d, w))) return false;
+      if (!wants.some(w => state && player
+        ? effectiveKeywordForCard(state, `card:${player}:deck:${cardId}`, w, { cardId, player, area: 'deck' })
+        : defHasKeyword(d, w))) return false;
     }
     if (filter.cardName !== undefined) {
       const wants = Array.isArray(filter.cardName) ? filter.cardName : [filter.cardName];

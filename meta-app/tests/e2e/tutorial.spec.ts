@@ -138,6 +138,8 @@ test('TUTORIAL: ch3 「この章を実戦で試す」で実戦起動 + ガイド
   await expect(page.getByText('この章を実戦で試す')).toBeVisible();
   await page.getByText('この章を実戦で試す').click();
   await expect(page).toHaveURL(/#match/);
+  // 実対戦と同じく、人間側の引き直しを確定してから盤面ガイドを確認する。
+  await page.locator('.mulligan-modal button:has-text("引き直しなし")').click();
   // src の TutorialOverlay が該当 step で表示される
   await expect(page.locator('.tutorial-overlay')).toBeVisible({ timeout: 8000 });
 });

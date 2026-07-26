@@ -27,7 +27,7 @@ describe('B09110 赤井秀一&ジン', () => {
     expect(state.log).toEqual(expect.arrayContaining([expect.objectContaining({ action: 'effect:sceneRemove', target: 'victim' })]));
     const reveal = state.log.find(x => x.action === 'effect:deckRevealUntil')!;
     const moved = state.log.find(x => x.action === 'effect:boundToRemove')!;
-    expect(reveal.result).toBe('revealed=2 matched=B09110_MATCH');
+    expect(reveal.result).toBe('revealed=2 matched=B09110_MATCH visibility=public viewer=all');
     expect(moved.result).toBe('2');
     expect(state.players.opp.deck).toEqual([tail.id, tail2.id]);
     expect(state.log.some(x => x.action === 'refresh')).toBe(false);
@@ -39,7 +39,7 @@ describe('B09110 赤井秀一&ジン', () => {
       setup: { caseStatus: '\u4e8b\u4ef6\u7de8', caseColors: B09110.colors, oppDeckSize: 0, selfScene: [{ cardId: 'B09110', uid: 'host' }], oppScene: [{ cardId: victim.id, uid: 'victim' }], oppDeckTop: [decoy.id, match.id] },
       drive: { kind: 'enter', cardId: 'B09110', uid: 'host' }, script: [{ pickUid: 'victim' }], expect: [],
     });
-    expect(state.log.find(x => x.action === 'effect:deckRevealUntil')?.result).toBe('revealed=2 matched=B09110_MATCH');
+    expect(state.log.find(x => x.action === 'effect:deckRevealUntil')?.result).toBe('revealed=2 matched=B09110_MATCH visibility=public viewer=all');
     expect(state.log.some(x => x.action === 'refresh')).toBe(true);
   });
 });

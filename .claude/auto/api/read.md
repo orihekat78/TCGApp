@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `beef54c7476a`
+> Source hash: `811cad3d1237`
 
 純粋セレクタ（GameState を読むのみ、副作用なし）
 
@@ -22,9 +22,9 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `char` | `ap`, `auraUntargetableByAction`, `charProtectedFrom`, `charProtectedFromOppEvent`, `charUntargetableByOppEffect`, `charUntargetableByOppEvent`, `colors`, `declaredUseCount`, `filteredAssaultKeywords`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `noAutoActivateLocked`, `restrictsOpponent`, `selfContinuousFlag`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
+| `char` | `ap`, `auraUntargetableByAction`, `charProtectedFrom`, `charProtectedFromOppEvent`, `charUntargetableByOppEffect`, `charUntargetableByOppEvent`, `colors`, `declaredUseCount`, `filteredAssaultKeywords`, `hasKeyword`, `hasTextAbility`, `isNamed`, `keywords`, `level`, `lp`, `names`, `noAutoActivateLocked`, `originalAbilitiesDisabled`, `originalAbilitiesDisabledOn`, `restrictsOpponent`, `selfContinuousFlag`, `setCards`, `setCardsDetailed`, `stackedCount`, `state`, `traits`, `turnEffect` |
 | `def` | `allTraits`, `byColor`, `byTrait`, `card`, `isMR` |
-| `game` | `canWin`, `cannotSolveCase`, `evidenceShortfall`, `partnerSolveOverride`, `refreshCount`, `result` |
+| `game` | `canPartnerAssist`, `canPartnerSolveCase`, `canWin`, `cannotSolveCase`, `evidenceShortfall`, `partnerSolveOverride`, `refreshCount`, `result` |
 | `log` | `byPlayer`, `byTurn`, `search`, `tail` |
 | `player` | `case`, `deck`, `deckCount`, `evidence`, `evidenceCount`, `file`, `fileCount`, `hand`, `handCount`, `partner`, `remove`, `removeCount`, `requiredEvidence`, `scratchTrace` |
 | `scene` | `activeOnes`, `all`, `byCardId`, `byUid`, `count`, `enterOrderOf`, `named`, `nonNamed`, `sleepOrStun` |

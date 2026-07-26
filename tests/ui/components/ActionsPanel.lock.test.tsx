@@ -9,7 +9,7 @@ function enabledProps(over: Partial<ActionsPanelProps> = {}): ActionsPanelProps 
   return {
     handCount: 3, handUseRemaining: 1, handUseUsed: false,
     nextHintFileCount: 2, nextHintUsed: false, canNextHint: true,
-    partnerActive: true, declaredTargetCount: 2, reasoningTotalLP: 5,
+    partnerActive: true, partnerAbilityCount: 1, declaredTargetCount: 2, reasoningTotalLP: 5,
     canAssist: true, canSolveCase: true,
     actionMode: 'idle', currentPhase: 'main', canEndTurn: true,
     ...over,
@@ -29,5 +29,13 @@ describe('ActionsPanel interactionLocked', () => {
     expect(count(html, 'aria-disabled="true"')).toBe(8);
     expect(count(html, 'action-item disabled')).toBe(8);
     expect(html).toContain('actions-panel locked');
+    expect(html).toMatch(/class="end-turn-btn"[^>]*disabled/);
+  });
+
+  it('有効で支払可能なパートナー能力が0件なら「能力なし」で無効化する', () => {
+    const html = renderToString(<ActionsPanel {...enabledProps({ partnerAbilityCount: 0 })} />);
+    expect(html).toMatch(/data-action-id="partner-ability"[^>]*aria-disabled="true"/);
+    expect(html).toContain('能力なし');
+    expect(html).not.toContain('パートナーの能力</span><span class="action-subtitle">使用可');
   });
 });

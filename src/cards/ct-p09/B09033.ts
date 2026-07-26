@@ -27,7 +27,7 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 4, bind: '$revealed' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', maxN: 4, bind: '$revealed' } },
       windowEnter(),
       repeat,
       { kind: 'atom', verb: 'deckToBottomBound', args: { player: 'self', bindKey: '$revealed' } },

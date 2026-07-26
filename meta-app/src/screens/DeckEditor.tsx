@@ -32,7 +32,7 @@ interface Props {
   onNav: (r: Route) => void;
 }
 
-const MAX_PER_ID = 3;
+const DEFAULT_MAX_PER_ID = 3;
 const POOL_TYPES: CardKind[] = ['character', 'event'];
 
 const SORTS: { k: SortKey; label: string }[] = [
@@ -75,7 +75,7 @@ export function DeckEditor({ onNav }: Props) {
   const [poolSort, setPoolSort] = useState<SortKey>('cost');
   const [poolSortDir, setPoolSortDir] = useState<SortDir>('asc');
   const [filterOpen, setFilterOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
 
   const original = decks.find((d) => d.id === draft.id);
   const dirty = !original || JSON.stringify(original) !== JSON.stringify({ ...draft, modified: original.modified });
@@ -102,7 +102,8 @@ export function DeckEditor({ onNav }: Props) {
     if (!card || !POOL_TYPES.includes(card.type)) return;
     setDraft((d) => {
       const sameId = d.cards.reduce((s, e) => s + (cardIdOf(e.num) === card.id ? e.count : 0), 0);
-      if (sameId >= MAX_PER_ID) return d; // 同 ID 上限 (rules/02)
+      const limit = card.deckLimit ?? DEFAULT_MAX_PER_ID;
+      if (limit !== 'unlimited' && sameId >= limit) return d; // 同 ID 上限 (rules/02)
       const idx = d.cards.findIndex((e) => e.num === num);
       if (idx >= 0) {
         const next = [...d.cards];
@@ -187,7 +188,7 @@ export function DeckEditor({ onNav }: Props) {
             count={selectedCard ? (idCounts.get(selectedCard.id) ?? 0) : 0}
             onAdd={() => { if (selectedCard) addCard(selectedCard.num); }}
             onRemove={() => { if (selectedCard) removeCard(selectedCard.num); }}
-            onExpand={() => setExpanded(true)}
+            onExpand={() => { if (selectedCard) setExpandedCardId(selectedCard.num); }}
           />
         </div>
 
@@ -198,14 +199,15 @@ export function DeckEditor({ onNav }: Props) {
             caseCard={CARD_POOL.find((c) => c.num === draft.case)}
             total={totalCards} distinct={distinctKinds}
             onPickPartner={() => setModal('partner')} onPickCase={() => setModal('case')}
+            onExpand={setExpandedCardId}
           />
           <DeckStats deck={draft} />
           <DeckGrid
             deck={draft} idCounts={idCounts} selectedNum={selectedNum} total={totalCards}
-            onSelect={setSelectedNum} onRemove={removeCard}
+            onSelect={setSelectedNum} onRemove={removeCard} onExpand={setExpandedCardId}
           />
           {validation.ok ? (
-            <WarningBanner tone="info" title="検証 OK" body="40 枚 / 同 ID ≤ 3 / パートナー 1 / 事件 1 を満たしています" />
+            <WarningBanner tone="info" title="検証 OK" body="40 枚 / カード別枚数上限 / パートナー 1 / 事件 1 を満たしています" />
           ) : (
             <WarningBanner tone="error" title="検証エラー" items={validation.errors} />
           )}
@@ -224,6 +226,7 @@ export function DeckEditor({ onNav }: Props) {
             onSort={(k, d) => { setPoolSort(k); setPoolSortDir(d ?? 'asc'); }}
             filterCount={activeFilterCount(filter)}
             onOpenFilter={() => setFilterOpen(true)}
+            onExpand={setExpandedCardId}
           />
         </div>
       </div>
@@ -234,11 +237,11 @@ export function DeckEditor({ onNav }: Props) {
 
       {modal === 'partner' && (
         <SlotPickerModal title="パートナーを選択" cards={PARTNER_CARDS} selected={draft.partner}
-          onPick={setPartner} onClose={() => setModal(null)} />
+          onPick={setPartner} onClose={() => setModal(null)} onExpand={setExpandedCardId} />
       )}
       {modal === 'case' && (
         <SlotPickerModal title="事件を選択" cards={CASE_CARDS} selected={draft.case}
-          onPick={setCase} onClose={() => setModal(null)} />
+          onPick={setCase} onClose={() => setModal(null)} onExpand={setExpandedCardId} />
       )}
       {modal === 'code' && (
         <DeckCodeModal deck={draft} onImport={importDeck} onClose={() => setModal(null)} />
@@ -247,7 +250,7 @@ export function DeckEditor({ onNav }: Props) {
         <TestHandModal deck={draft} onClose={() => setModal(null)} />
       )}
 
-      <CardExpandModal cardId={expanded && selectedCard ? selectedCard.num : null} onClose={() => setExpanded(false)} />
+      <CardExpandModal cardId={expandedCardId} onClose={() => setExpandedCardId(null)} />
     </div>
   );
 }
@@ -354,7 +357,9 @@ function DetailPane({ card, count, onAdd, onRemove, onExpand }: {
     );
   }
   const c = COLOR_TOKEN[card.color] || T.blue;
-  const atMax = count >= MAX_PER_ID;
+  const limit = card.deckLimit ?? DEFAULT_MAX_PER_ID;
+  const limitLabel = limit === 'unlimited' ? '∞' : String(limit);
+  const atMax = limit !== 'unlimited' && count >= limit;
   return (
     <div style={{
       flex: 1, minHeight: 0, padding: '16px', overflow: 'auto',
@@ -417,7 +422,7 @@ function DetailPane({ card, count, onAdd, onRemove, onExpand }: {
         <span style={{
           fontFamily: T.fontMono, fontSize: 14, fontWeight: 800,
           color: atMax ? T.gold : T.textPrimary, minWidth: 44, textAlign: 'center',
-        }}>{count} / {MAX_PER_ID}</span>
+        }}>{count} / {limitLabel}</span>
         <button onClick={onAdd} disabled={atMax} aria-label="1枚追加" style={stepBtn(!atMax)}>＋</button>
         {atMax && <span style={{ fontFamily: T.fontMono, fontSize: 10, color: T.gold, letterSpacing: '0.1em' }}>同 ID 上限</span>}
       </div>
@@ -436,9 +441,10 @@ function stepBtn(enabled: boolean): React.CSSProperties {
 
 // ---- Partner / Case slots ----
 
-function SlotsRow({ partner, caseCard, total, distinct, onPickPartner, onPickCase }: {
+function SlotsRow({ partner, caseCard, total, distinct, onPickPartner, onPickCase, onExpand }: {
   partner: CardDef | undefined; caseCard: CardDef | undefined;
   total: number; distinct: number; onPickPartner: () => void; onPickCase: () => void;
+  onExpand: (num: string) => void;
 }) {
   return (
     <div style={{
@@ -446,8 +452,8 @@ function SlotsRow({ partner, caseCard, total, distinct, onPickPartner, onPickCas
       background: 'linear-gradient(180deg, rgba(13,38,64,0.95), rgba(13,38,64,0.7))',
       border: `1px solid ${T.gold}55`, borderRadius: 4,
     }}>
-      <Slot label="パートナー" card={partner} accent={T.gold} onClick={onPickPartner} />
-      <Slot label="事件" card={caseCard} accent={T.red} onClick={onPickCase} />
+      <Slot label="パートナー" card={partner} accent={T.gold} onClick={onPickPartner} onExpand={onExpand} />
+      <Slot label="事件" card={caseCard} accent={T.red} onClick={onPickCase} onExpand={onExpand} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
         <div style={{ textAlign: 'center' }}>
           <span style={{ fontFamily: T.fontMono, fontSize: 26, fontWeight: 800, color: total === 40 ? T.gold : T.red }}>{total}</span>
@@ -461,9 +467,16 @@ function SlotsRow({ partner, caseCard, total, distinct, onPickPartner, onPickCas
   );
 }
 
-function Slot({ label, card, accent, onClick }: { label: string; card: CardDef | undefined; accent: string; onClick: () => void }) {
+function Slot({ label, card, accent, onClick, onExpand }: {
+  label: string; card: CardDef | undefined; accent: string; onClick: () => void;
+  onExpand: (num: string) => void;
+}) {
   return (
-    <button onClick={onClick} className="meta-card-hover" style={{
+    <button onClick={onClick} onContextMenu={(e) => {
+      if (!card) return;
+      e.preventDefault();
+      onExpand(card.num);
+    }} className="meta-card-hover" style={{
       width: 64, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'center',
     }}>
       <div style={{ fontFamily: T.fontMono, fontSize: 8, color: accent, letterSpacing: '0.1em', marginBottom: 3 }}>{label}</div>
@@ -539,9 +552,9 @@ function TypeRow({ label, value, max, color }: { label: string; value: number; m
 
 // ---- CENTER: deck card grid (自動整列 type→cost→name, ×n バッジ, ホバー－で除外) ----
 
-function DeckGrid({ deck, idCounts, selectedNum, total, onSelect, onRemove }: {
+function DeckGrid({ deck, idCounts, selectedNum, total, onSelect, onRemove, onExpand }: {
   deck: DeckRecord; idCounts: Map<string, number>; selectedNum: string; total: number;
-  onSelect: (n: string) => void; onRemove: (n: string) => void;
+  onSelect: (n: string) => void; onRemove: (n: string) => void; onExpand: (n: string) => void;
 }) {
   // 自動整列のみ: 種別(キャラ→イベント) → コスト → 名前。手動 D&D 並べ替えは廃止 (spec 13)。
   const rows = useMemo(() => {
@@ -575,7 +588,7 @@ function DeckGrid({ deck, idCounts, selectedNum, total, onSelect, onRemove }: {
         {rows.map((e) => (
           <DeckTile key={e.num} entry={e} idTotal={idCounts.get(e.card.id) ?? e.count}
             selected={e.num === selectedNum}
-            onSelect={() => onSelect(e.num)} onRemove={() => onRemove(e.num)} />
+            onSelect={() => onSelect(e.num)} onRemove={() => onRemove(e.num)} onExpand={() => onExpand(e.num)} />
         ))}
         {rows.length === 0 && (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: T.textMuted, fontFamily: T.fontMono, fontSize: 11, padding: 24 }}>
@@ -587,12 +600,13 @@ function DeckGrid({ deck, idCounts, selectedNum, total, onSelect, onRemove }: {
   );
 }
 
-function DeckTile({ entry, idTotal, selected, onSelect, onRemove }: {
+function DeckTile({ entry, idTotal, selected, onSelect, onRemove, onExpand }: {
   entry: { num: string; count: number; card: CardDef };
-  idTotal: number; selected: boolean; onSelect: () => void; onRemove: () => void;
+  idTotal: number; selected: boolean; onSelect: () => void; onRemove: () => void; onExpand: () => void;
 }) {
   const [hover, setHover] = useState(false);
-  const over = idTotal > MAX_PER_ID;
+  const limit = entry.card.deckLimit ?? DEFAULT_MAX_PER_ID;
+  const over = limit !== 'unlimited' && idTotal > limit;
   return (
     <div
       style={{ position: 'relative' }}
@@ -600,8 +614,8 @@ function DeckTile({ entry, idTotal, selected, onSelect, onRemove }: {
       onMouseLeave={() => setHover(false)}
     >
       <MetaCard card={entry.card} w={72} selected={selected}
-        count={entry.count} maxCount={MAX_PER_ID}
-        onClick={onSelect} hoverable />
+        count={entry.count} maxCount={limit}
+        onClick={onSelect} onContextMenu={onExpand} hoverable />
       <button
         onClick={(ev) => { ev.stopPropagation(); onRemove(); }}
         aria-label={`${entry.card.name} を1枚減らす`}
@@ -630,9 +644,9 @@ function DeckTile({ entry, idTotal, selected, onSelect, onRemove }: {
 
 // ---- RIGHT: card pool ----
 
-function PoolPane({ cards, selectedNum, idCounts, onAdd, q, onQ, sortKey, sortDir, onSort, filterCount, onOpenFilter }: {
+function PoolPane({ cards, selectedNum, idCounts, onAdd, q, onQ, sortKey, sortDir, onSort, filterCount, onOpenFilter, onExpand }: {
   cards: CardDef[]; selectedNum: string; idCounts: Map<string, number>;
-  onAdd: (n: string) => void;
+  onAdd: (n: string) => void; onExpand: (n: string) => void;
   q: string; onQ: (q: string) => void;
   sortKey: SortKey; sortDir: SortDir; onSort: (k: SortKey, d?: SortDir) => void;
   filterCount: number; onOpenFilter: () => void;
@@ -679,12 +693,14 @@ function PoolPane({ cards, selectedNum, idCounts, onAdd, q, onQ, sortKey, sortDi
       }}>
         {cards.map((card) => {
           const cnt = idCounts.get(card.id) ?? 0;
-          const atMax = cnt >= MAX_PER_ID;
+          const limit = card.deckLimit ?? DEFAULT_MAX_PER_ID;
+          const atMax = limit !== 'unlimited' && cnt >= limit;
           return (
             <MetaCard key={card.num} card={card} w={70}
               selected={card.num === selectedNum}
-              count={cnt || undefined} maxCount={MAX_PER_ID} showMax atMax={atMax}
+              count={cnt || undefined} maxCount={limit} showMax atMax={atMax}
               onClick={() => onAdd(card.num)}
+              onContextMenu={() => onExpand(card.num)}
               hoverable />
           );
         })}
@@ -779,15 +795,17 @@ function ModalShell({ title, onClose, width, children }: { title: string; onClos
   );
 }
 
-function SlotPickerModal({ title, cards, selected, onPick, onClose }: {
+function SlotPickerModal({ title, cards, selected, onPick, onClose, onExpand }: {
   title: string; cards: readonly CardDef[]; selected: string; onPick: (n: string) => void; onClose: () => void;
+  onExpand: (n: string) => void;
 }) {
   return (
     <ModalShell title={title} onClose={onClose}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 12 }}>
         {cards.map((card) => (
           <div key={card.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <MetaCard card={card} w={108} selected={card.num === selected} onClick={() => onPick(card.num)} hoverable />
+            <MetaCard card={card} w={108} selected={card.num === selected}
+              onClick={() => onPick(card.num)} onContextMenu={() => onExpand(card.num)} hoverable />
             <div style={{ fontSize: 11, color: T.textSecondary, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 108 }}>{card.name}</div>
           </div>
         ))}

@@ -32,8 +32,8 @@ const a1: AbilityDef = {
   type: 'triggered',
   scope: 'on-hand',
   trigger: { hook: 'effect:declared', selfOnly: true, matcher: (p: unknown) => (p as { kind?: unknown })?.kind === 'event-use' },
-  // 使用ゲート: 自分のFILEが5枚以下 (= 6枚以上でない、アシストパートナー込み) + 【パートナー赤】【解決編】
-  condition: { kind: 'and', cs: [{ kind: 'not', c: { kind: 'fileAtLeast', n: 6 } }, { kind: 'partnerColor', color: '赤' }, { kind: 'caseStatus', status: '解決編' }] },
+  // 【パートナー赤】【解決編】は使用後に評価する効果条件。
+  condition: { kind: 'and', cs: [{ kind: 'partnerColor', color: '赤' }, { kind: 'caseStatus', status: '解決編' }] },
   effect: {
     kind: 'sequence',
     steps: [
@@ -58,6 +58,7 @@ export const B04064: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1735287801284711.jpg',
+  useCondition: { kind: 'not', c: { kind: 'fileAtLeast', n: 6 } },
   abilities: [a1],
   ruleRefs: [
     'rules/15-abilities-effects.md',

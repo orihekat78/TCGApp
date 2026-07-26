@@ -170,7 +170,7 @@ export function cutIn(state: GameState, ax: ActionContext, p: Player, cardId: st
     : cutinAbilities[0];
   if (!selected) throw new Error(`flow.contact.cutIn: cutin ability not found cardId=${cardId}`);
   event.emit(state, 'effect:declared', { cardId, abilityId: 'cutin', cutinAbilityId: selected.id }, {
-    player: p, cardId, bindings: contactBindings,
+    player: p, cardId, bindings: contactBindings, resolutionKind: 'cutin' as const,
   });
   // engine additive wave-3 (2026-06-30): カットイン使用を第三者キャラが観測する専用 hook (rules/09)。
   // effect:declared(自効果ゲート) とは別 hook = 自効果と第三者観測を分離。payload.player で側、payload.cardId で

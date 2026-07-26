@@ -14,7 +14,7 @@ import { mutate } from '@/engine/mutate/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { createEmptyGameState } from '@/engine/state-factory';
-import { runAllUntilEmpty } from '@/engine/resolve/index';
+import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index';
 import { candidates as targetCandidates } from '@/engine/flow/action/target-expander';
 import { canAction, canActionAgainstCase } from '@/engine/flow/main/action';
 import { canCutIn } from '@/engine/flow/contact';
@@ -239,6 +239,25 @@ describe('ability:declared 解決順 (W2 review blocker 対応)', () => {
     const obsIdx = hooks.findIndex(h => h === 'ability:declared');
     expect(declIdx).toBeGreaterThanOrEqual(0);
     expect(obsIdx).toBeGreaterThan(declIdx); // observer は必ず後 (公式Q&A / rules/25)
+  });
+
+  it('B03057 observer is not selectable before the declared ability effect resolves', () => {
+    const s = createEmptyGameState();
+    mutate.scene.enter(s, 'self', 'B03057', {});
+    const det = mutate.scene.enter(s, 'self', 'DET_DECL', { active: true });
+    s.players.self.deck = ['d1', 'd2'];
+    s.players.self.hand = ['h1'];
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    try {
+      useDeclaredAbility(s, det.uid, 'd1');
+
+      expect(pendingOwnerOrderGroup(s, 'self')).toEqual([]);
+
+      runAllUntilEmpty(s);
+      expect(s.pendingEffects.every(entry => entry.state === 'resolved')).toBe(true);
+    } finally {
+      (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+    }
   });
 });
 

@@ -149,6 +149,8 @@ function a1Base(remove: string[]): GameState {
 
 describe('B09038 黒羽盗一 — gate5 runtime behavior', () => {
   beforeEach(() => {
+    (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     event._resetRegistry();
     _resetTriggeredRegistered();
     _resetUidCounter();
@@ -202,18 +204,20 @@ describe('B09038 黒羽盗一 — gate5 runtime behavior', () => {
     setHuman(null);
   });
 
-  it('★ a2 (有効候補ゼロ): sceneEnter 候補 0 は pick を surface せず自動 0-pick 解決 → mandatory draw は発火 (sequence tail 維持)', () => {
+  it('★ a2 (有効候補ゼロ): sceneEnter 候補 0 を明示辞退 → mandatory draw は発火 (sequence tail 維持)', () => {
     setHuman('self');
     // 手札に有効候補を入れない (decoy のみ手札に) → sceneEnter 候補 0。
-    // 候補0 の n:0-1 pick は human でも surface せず engine が自動 0-pick 解決する (forced ではない 0-pick)。
+    // 候補0 の n:0-1 pick も human に surface し、明示辞退で解決する。
     // それでも sequence の mandatory tail (draw) は実行される (= BUG-111 #2 の sequence-tail 保持の別経路証明)。
     const s = a2Base([YUSAKU_L7, OTHER_L6], ['SET_TOP', 'd2', 'd3']);
     const deckBefore = s.players.self.deck.length;
-    fireA2(s, true); // opt-in → $self sleep + sceneEnter(候補0) は自動解決 + draw まで一気に走る
+    fireA2(s, true); // opt-in → $self sleep + sceneEnter(候補0) の明示決定で pause
 
-    const st = useGameStateStore.getState();
-    expect(st.pendingEffectPick, '候補0の sceneEnter は human pick を surface しない (自動 0-pick)').toBeNull();
-    const after = st.gameState!;
+    const pending = useGameStateStore.getState().pendingEffectPick;
+    expect(pending?.atomVerb, '候補0でも任意の sceneEnter 決定を surface').toBe('sceneEnter');
+    expect(pending?.candidates, '選択可能候補は0件').toEqual([]);
+    dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    const after = useGameStateStore.getState().gameState!;
     // ★ 候補0 でも mandatory draw が発火 (deck top を手札へ)
     expect(inHand(after, 'SET_TOP'), '★ 候補0 でも mandatory draw 発火 (deck top を手札へ)').toBe(true);
     expect(after.players.self.deck.length, '★ deck -1').toBe(deckBefore - 1);

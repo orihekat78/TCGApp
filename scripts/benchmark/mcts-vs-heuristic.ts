@@ -16,32 +16,9 @@ import { createRng } from '../../src/engine/rng.js';
 import { HeuristicPolicy } from '../../src/ai/policies/heuristic.js';
 import { MCTSPolicy } from '../../src/ai/policies/mcts.js';
 import { runMatch } from '../../src/ai/match.js';
+import { buildDeckPair } from '../../src/ui/services/deckBuilder.js';
 import type { GameState } from '../../src/engine/types/index.js';
 import type { DeckPair } from '../../src/engine/flow/setup.js';
-
-const D08_MAIN_IDS = [
-  'D08002', 'D08003', 'D08004', 'D08005', 'D08006', 'D08007',
-  'D08008', 'D08009', 'D08010', 'D08011', 'D08012', 'D08013',
-  'D08014', 'D08015',
-];
-const D11_MAIN_IDS = [
-  'D11002', 'D11003', 'D11004', 'D11005', 'D11006', 'D11007',
-  'D11008', 'D11009', 'D11010', 'D11011', 'D11012', 'D11013',
-  'D11014', 'D11015',
-];
-
-function buildDeck40(ids: readonly string[]): string[] {
-  const out: string[] = [];
-  for (let i = 0; out.length < 40; i++) out.push(ids[i % ids.length]);
-  return out.slice(0, 40);
-}
-
-function buildDeckPair(): DeckPair {
-  return {
-    self: { partnerId: 'D11001', caseId: 'D11021', mainCards: buildDeck40(D11_MAIN_IDS) },
-    opp: { partnerId: 'D08001', caseId: 'D08026', mainCards: buildDeck40(D08_MAIN_IDS) },
-  };
-}
 
 function resetForRun(): void {
   engine.cards._resetRegistry();
@@ -92,7 +69,7 @@ try {
     resetBetweenGames();
 
     const firstSlot: 'self' | 'opp' = rng.next() < 0.5 ? 'self' : 'opp';
-    const pair = buildDeckPair();
+    const pair = buildDeckPair({ selfDeckId: 'CT-D11', oppDeckId: 'CT-D08' });
     const initial = setupGame(pair, firstSlot);
 
     const result = runMatch({

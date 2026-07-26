@@ -145,6 +145,8 @@ function drainScript(s: GameState, script: ScriptAction[]): { recorded: Recorded
 }
 
 beforeEach(() => {
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
   event._resetRegistry();
   _resetTriggeredRegistered();
   _resetUidCounter();
@@ -191,11 +193,14 @@ describe('B03133「見ィーつけた♪」a1 event-use → handAddFromRemove �
     expect(s.players.self.remove.includes('CI1'), 'CI1 も remove から抜けた').toBe(false);
   });
 
-  it('negative: リムーブが decoy のみ → handAddFromRemove 候補0 → pick 無し・登場なし・付与なし', () => {
+  it('negative: リムーブが decoy のみ → sceneEnter 0件を明示辞退・登場なし・付与なし', () => {
     const s = base(['DEC_L', 'DEC_C', 'DEC_K', 'DEC_N']);
     handUseCard(s, 'self', 'B03133');
     runAllUntilEmpty(s);
-    expect(_drainPendingEffectPickSide(), '候補0 → pick surface しない').toBeNull();
+    const pending = _drainPendingEffectPickSide();
+    expect(pending?.atomVerb, '候補0でも任意のsceneEnter決定を明示する').toBe('sceneEnter');
+    expect(pending?.candidates, '候補は空').toEqual([]);
+    applyPickSkipAndContinuation(s, pending!, false);
     expect(s.players.self.scene.length, '登場キャラなし').toBe(0);
     // decoy はすべて remove に残存 (event 本体 B03133 も使用後 remove へ)
     for (const d of ['DEC_L', 'DEC_C', 'DEC_K', 'DEC_N']) {

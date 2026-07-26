@@ -30,8 +30,28 @@ import { ATOM_PICK_SPEC, buildShortFormPick } from './atom-pick-spec.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
 import { hand } from '../mutate/hand.js';
 import { run as runEffect } from './resolver.js';
+import { eventUseAllowed } from '../flow/main/hand-use-card.js';
 
 type Player = 'self' | 'opp';
+
+function containsSceneEnter(effect: Effect): boolean {
+  if (effect.kind === 'atom') return effect.verb === 'sceneEnter';
+  if (effect.kind === 'sequence' || effect.kind === 'parallel') return effect.steps.some(containsSceneEnter);
+  if (effect.kind === 'conditional') return containsSceneEnter(effect.then) || (effect.else ? containsSceneEnter(effect.else) : false);
+  if (effect.kind === 'optional') return containsSceneEnter(effect.effect);
+  return false;
+}
+
+function pendingSource<T extends { cardId: string; abilityId: string }>(ctx: EffectCtx, source: T) {
+  return {
+    ...source,
+    ...(ctx.source.resolutionKind ? { resolutionKind: ctx.source.resolutionKind } : {}),
+    ...(ctx.source.triggerBatch !== undefined ? { triggerBatch: ctx.source.triggerBatch } : {}),
+    ...(ctx.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: ctx.source.ownerChosenOrder } : {}),
+    ...(ctx.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: ctx.source.ownerOrderConfirmed } : {}),
+    ...(ctx.source.declaredBatch !== undefined ? { declaredBatch: ctx.source.declaredBatch } : {}),
+  };
+}
 
 /**
  * BUG-161 (fixes the BUG-145 §2-documented over-fire): conditional pre-walk gate guard. A condition is "stable" at initial-walk time iff it does
@@ -214,6 +234,50 @@ export type ChooseAtomTargetFn = (
   byPlayer: Player,
 ) => Candidate | null;
 
+// Runtime Pattern-B handlers receive a reconstructed EffectCtx after an effect
+// queue/save boundary. Persist only a string handle in GameState; callbacks stay
+// in a bounded module registry so serialization never stores executable values.
+const RUNTIME_ATOM_TARGET_POLICY_HANDLE = '__runtimeAtomTargetPolicyHandle';
+const RUNTIME_ATOM_TARGET_POLICY_LIMIT = 4096;
+const runtimeAtomTargetPolicies = new Map<string, ChooseAtomTargetFn>();
+let runtimeAtomTargetPolicySequence = 0;
+
+/** Match-session boundary cleanup. Headless callers are additionally bounded. */
+export function resetRuntimeAtomTargetPolicySession(): void {
+  runtimeAtomTargetPolicies.clear();
+  runtimeAtomTargetPolicySequence = 0;
+}
+
+function rememberRuntimeAtomTargetPolicy(ctx: EffectCtx, policy: ChooseAtomTargetFn | undefined): void {
+  const dyn = (ctx.dyn ??= {}) as Record<string, unknown>;
+  if (!policy) {
+    // Continuation re-walks normally omit the callback. Preserve the policy
+    // handle captured at the original AI entry; session reset is the explicit
+    // lifecycle boundary for clearing it.
+    return;
+  }
+  const existing = dyn[RUNTIME_ATOM_TARGET_POLICY_HANDLE];
+  const handle = typeof existing === 'string'
+    ? existing
+    : `runtime-atom-policy:${++runtimeAtomTargetPolicySequence}`;
+  dyn[RUNTIME_ATOM_TARGET_POLICY_HANDLE] = handle;
+  // Refresh insertion order so only inactive/oldest handles are evicted.
+  runtimeAtomTargetPolicies.delete(handle);
+  runtimeAtomTargetPolicies.set(handle, policy);
+  while (runtimeAtomTargetPolicies.size > RUNTIME_ATOM_TARGET_POLICY_LIMIT) {
+    const oldest = runtimeAtomTargetPolicies.keys().next().value as string | undefined;
+    if (oldest === undefined) break;
+    runtimeAtomTargetPolicies.delete(oldest);
+  }
+}
+
+export function rememberedRuntimeAtomTargetPolicy(ctx: EffectCtx): ChooseAtomTargetFn | undefined {
+  const handle = (ctx.dyn as Record<string, unknown> | undefined)?.[RUNTIME_ATOM_TARGET_POLICY_HANDLE];
+  return typeof handle === 'string'
+    ? runtimeAtomTargetPolicies.get(handle)
+    : undefined;
+}
+
 export interface ResolveEffectPicksOpts {
   /** Phase 7-3: heuristic chooser。未指定なら先頭採用 (Phase 7-2 互換)。 */
   chooseAtomTarget?: ChooseAtomTargetFn;
@@ -247,6 +311,8 @@ export interface ResolveEffectPicksOpts {
    * 初期 walk での side-channel set が必須なので、この flag に関わらず set する。
    */
   _fromAtomHandler?: boolean;
+  /** Internal sequence signal: a human runtime pick must pause before later pre-walks. */
+  _runtimePickPause?: { encountered: boolean };
 }
 
 function humanDecisionPlayer(opts: ResolveEffectPicksOpts): Player | null {
@@ -280,11 +346,12 @@ import {
   setPendingChoiceResume, pushPendingEffectChoiceSide, setPendingChoiceBindings,
   pushPendingEffectOptionalSide, setPendingOptionalResume, setPendingOptionalBindings,
   setPendingOptionalCostPaid,
+  type ContinuationFrame,
 } from './pending-state.js';
 // Phase 3b: pending管理は pending-state.ts へ分離。旧 public API は barrel 再export で不変 (importer 改変0)。
 export {
   _pushPendingEffectPickSideForTest, pushPendingPickFromAtom, toPlainDeep,
-  _drainPendingEffectPickSide, _peekPendingEffectPickQueueLength, _clearPendingEffectPickQueue,
+  _drainPendingEffectPickSide, _peekPendingEffectPickQueueLength, _peekPendingEffectPickSide, _clearPendingEffectPickQueue,
   _drainPendingEffectChoiceSide, _clearPendingEffectChoiceSide, _takePendingChoiceBindings,
   _peekPendingEffectChoiceSide, _takePendingChoiceResume, _clearPendingChoiceResume,
   _drainPendingEffectOptionalSide, _clearPendingEffectOptionalSide, _peekPendingEffectOptionalSide,
@@ -294,6 +361,24 @@ export {
 export type {
   ContinuationFrame, PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide,
 } from './pending-state.js';
+
+/**
+ * Initial human Pattern-A picks are created by this pre-walk, before
+ * resolver.run() can observe the pause. Preserve the runtime resolver's nested
+ * order: inner remainder first, followed by outer continuation frames.
+ */
+function attachPrewalkContinuation(
+  pick: { continuation?: ContinuationFrame },
+  frame: ContinuationFrame,
+): void {
+  if (!pick.continuation) {
+    pick.continuation = frame;
+    return;
+  }
+  let tail = pick.continuation;
+  while (tail.outer) tail = tail.outer;
+  tail.outer = frame;
+}
 
 /**
  * BUG-076: atom-handler の awaiting-pick path から呼ばれる「単一 atom の pattern B
@@ -365,9 +450,11 @@ export function tryRePickFromAtom(
   // for both the UI owner and AI/spectator resolution; forcing humanChooser
   // here used to enqueue a modal for an AI continuation and stop its tail.
   const human = runtimeHumanDecisionPlayer(ctx, opts);
+  const chooseAtomTarget = opts.chooseAtomTarget ?? rememberedRuntimeAtomTargetPolicy(ctx);
   const queueBefore = (globalThis as { __pendingEffectPickQueue?: unknown[] }).__pendingEffectPickQueue?.length ?? 0;
   const resolved = substituteAtomPick(state, atom, ctx, {
     ...opts,
+    chooseAtomTarget,
     humanChooser: human !== null && human === opts.byPlayer,
     humanPlayer: human,
     _fromAtomHandler: true,
@@ -406,12 +493,17 @@ function substituteAtomPick(
   // - max: number → { min: 0, max } 任意 (0 枚 skip 可)
   // - filter → query.filter に pass-through (trait / apMax / levelMax / cardName 等)
   let effectiveTarget = args.target as { kind?: string; query?: unknown; n?: { min?: number; max?: number }; chooser?: Player } | undefined;
-  // 短縮形 (PB のみ初期 walk で target 構築。PA は実行時 atom-handler 側で解決): ATOM_PICK_SPEC が権威。
+  // 短縮形 (PB は初期 walk、PA は通常 runtime handler で target 構築): ATOM_PICK_SPEC が権威。
+  // sequence の human 順序検査中だけPAも候補確認用に構築する。atom自体は未変更で返し、
+  // runtime handler が従来どおり正式な pending を生成する。
   const sfSpec = ATOM_PICK_SPEC[verbStr];
-  if (effectiveTarget === undefined && sfSpec?.mode === 'PB'
+  const inspectRuntimeShortForm = opts._runtimePickPause !== undefined && opts._fromAtomHandler !== true;
+  if (effectiveTarget === undefined && sfSpec
+    && (sfSpec.mode === 'PB' || inspectRuntimeShortForm)
     && (typeof args.n === 'number' || typeof args.max === 'number')) {
     const p = (args.player as Player) ?? 'self';
-    effectiveTarget = buildShortFormPick(sfSpec.defaultArea, args, p, p) as {
+    const sideDefault = sfSpec.mode === 'PB' ? p : 'either';
+    effectiveTarget = buildShortFormPick(sfSpec.defaultArea, args, p, sideDefault) as {
       kind?: string; query?: unknown; n?: { min?: number; max?: number }; chooser?: Player;
     };
   }
@@ -453,11 +545,50 @@ function substituteAtomPick(
   // 受ける」/ キャラ能力では選べる / イベントが与えた能力はキャラの能力扱い B02052) と整合。
   const sourceKind = readDef.card(ctx.source.cardId ?? '')?.kind;
   const cands = cands0.filter(c => {
+    // An effect that says "use an event from hand" has the same printed
+    // authorization gate as every other event-use entry point.  Filter here,
+    // before both human pending UI and AI policy selection, so an invalid card
+    // cannot consume the only pick and make a later valid card unreachable.
+    if (verbStr === 'useEventFromHand' && c.kind === 'card' && !eventUseAllowed(state, c.player, c.cardId)) return false;
     if (c.kind !== 'char' || c.player === ctx.source.player) return true;
     if (readChar.charUntargetableByOppEffect(state, c.uid)) return false;
     return sourceKind !== 'event' || !readChar.charUntargetableByOppEvent(state, c.uid);
   });
   if (cands.length === 0) {
+    const zeroChooser: Player = (target as { chooser?: string }).chooser === 'opp-of-owner'
+      ? (ctx.source.player === 'self' ? 'opp' : 'self')
+      : (opts.byPlayer ?? 'self');
+    const zeroN = (target as { n?: { min?: number; max?: number } }).n;
+    const zeroHuman = opts._fromAtomHandler === true
+      && runtimeHumanDecisionPlayer(ctx, opts) === zeroChooser;
+    // Human optional hand-entry is an explicit decision even with no legal cards.
+    // Keep this narrow: other zero-candidate verbs retain their chain/no-op semantics.
+    const zeroArea = (resolvedTarget as { query?: { area?: unknown } }).query?.area;
+    if (verbStr === 'sceneEnter' && zeroArea === 'hand' && zeroN?.min === 0) {
+      if (zeroHuman) {
+        pushPendingEffectPickSide({
+          player: zeroChooser,
+          ownerPlayer: ctx.source.player,
+          candidates: [],
+          atomVerb: verbStr,
+          atomArgs: toPlainDeep({ ...args }),
+          nMin: 0,
+          nMax: zeroN.max ?? 1,
+          source: pendingSource(ctx, opts.source ?? { cardId: '', abilityId: '' }),
+          skipResolvesAtom: true,
+        });
+        return atom as Effect;
+      }
+      const initialHuman = opts._fromAtomHandler !== true
+        && humanDecisionPlayer(opts) === zeroChooser;
+      if (initialHuman && opts._runtimePickPause) {
+        // Runtime deliberately surfaces an explicit "登場しない" decision even
+        // with no legal hand card. Stop the initial walk here so a later PA pick
+        // cannot enter the FIFO first. Other zero-candidate PB atoms stay modal-free.
+        opts._runtimePickPause.encountered = true;
+        return atom as Effect;
+      }
+    }
     // 拡張 5 (chain): no-candidate を chain break 信号として記録 (Phase 3c: ctx.dyn 経由。runtime tryRePickFromAtom
     // 経路では本 ctx = resolver chain ctx と同一参照ゆえ resolver chain case が読む。初期 walk 経路は dead write)
     (ctx.dyn ??= {}).chainStepNoApply = true;
@@ -512,8 +643,7 @@ function substituteAtomPick(
   // pause for a pending choice; only explicit known-nonhuman executes inline.
   const runtimeQueues = opts._fromAtomHandler === true
     && (runtimeDyn?.['runtimePickOwnerKnown'] !== true
-      || runtimeDyn?.['runtimeHumanPlayer'] === 'self'
-      || runtimeDyn?.['runtimeHumanPlayer'] === 'opp');
+      || runtimeHumanDecisionPlayer(ctx, opts) === byPlayer);
   const hasExplicitHumanIdentity = opts.humanChooser === true || opts.humanPlayer !== undefined;
   if (runtimeQueues || (hasExplicitHumanIdentity && humanDecisionPlayer(opts) === byPlayer)) {
     // BUG-078 fix: queue 化したので「既に set 済み」guard は不要。複数の awaiting を
@@ -524,6 +654,7 @@ function substituteAtomPick(
     // 先行 step の target を横取りする問題を回避。Pattern A は runtime に awaiting-pick
     // path が無いため、初期 walk でも push 必要 (flag 無視)。
     if (isPatternB && !opts._fromAtomHandler) {
+      if (opts._runtimePickPause) opts._runtimePickPause.encountered = true;
       return atom as Effect;
     }
     type CardLike = { uid: string; cardId: string; player: Player };
@@ -575,7 +706,7 @@ function substituteAtomPick(
       atomArgs: toPlainDeep(resolveDynArgs(state, { ...args }, ctx)),
       nMin: targetRef.n?.min ?? 1,
       nMax: targetRef.n?.max ?? 1,
-      source: opts.source ?? { cardId: '', abilityId: '' },
+      source: pendingSource(ctx, opts.source ?? { cardId: '', abilityId: '' }),
       // D08021 driver 2026-05-26: target.query.distinctNames を UI に伝える。
       // CardListModal multi-select で同 name component 衝突候補を click 不可化する。
       distinctNames: targetRef.query?.distinctNames === true,
@@ -595,7 +726,7 @@ function substituteAtomPick(
     return atom as Effect; // 未解決のまま返却
   }
 
-  const heuristicPick = opts.chooseAtomTarget?.(
+  const heuristicPick = (opts.chooseAtomTarget ?? rememberedRuntimeAtomTargetPolicy(ctx))?.(
     state,
     verb,
     args as Readonly<Record<string, unknown>>,
@@ -734,10 +865,13 @@ export function resolveEffectPicks(
   ctx: EffectCtx,
   opts: ResolveEffectPicksOpts = {},
 ): Effect {
+  if (opts._fromAtomHandler !== true) {
+    rememberRuntimeAtomTargetPolicy(ctx, opts.chooseAtomTarget);
+  }
   // Continuation atom handlers only receive EffectCtx.  Persist a tri-state
   // owner: known human side, known non-human (`null`), or marker absent for
   // legacy direct handlers (which intentionally queue).
-  if (opts.humanChooser === true || opts.humanPlayer !== undefined) {
+  if (opts.humanChooser !== undefined || opts.humanPlayer !== undefined) {
     const dyn = (ctx.dyn ??= {}) as Record<string, unknown>;
     dyn['runtimePickOwnerKnown'] = true;
     dyn['runtimeHumanPlayer'] = humanDecisionPlayer(opts);
@@ -754,8 +888,24 @@ export function resolveEffectPicks(
       // (内側 sequence が holder を更新済 → 外側はさらに自身の remainder を wrap)。
       const seqOut: Effect[] = [];
       for (let i = 0; i < effect.steps.length; i++) {
+        const runtimePickPause = opts._runtimePickPause ?? { encountered: false };
+        runtimePickPause.encountered = false;
+        const pendingQueue = (globalThis as {
+          __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
+        }).__pendingEffectPickQueue;
+        const pickCountBefore = pendingQueue?.length ?? 0;
         const choiceBefore = _peekPendingEffectChoiceSide() !== null;
-        seqOut.push(resolveEffectPicks(state, effect.steps[i]!, ctx, opts));
+        seqOut.push(resolveEffectPicks(state, effect.steps[i]!, ctx, {
+          ...opts,
+          _runtimePickPause: runtimePickPause,
+        }));
+        if (runtimePickPause.encountered) {
+          // Pattern-B is intentionally queued by its runtime handler. Keep the
+          // untouched tail behind that carrier so resolver.run() attaches it as
+          // the continuation; pre-walking a later Pattern-A would invert the
+          // printed decision order (B01094/B01094P).
+          return { kind: 'sequence', steps: [...seqOut, ...effect.steps.slice(i + 1)] };
+        }
         if (ctx.dyn?.chooseIntercepted === true) {
           delete ctx.dyn.chooseIntercepted;
           return { kind: 'parallel', steps: [] };
@@ -767,6 +917,21 @@ export function resolveEffectPicks(
             const cur = getPendingChoiceResume();
             if (cur) setPendingChoiceResume({ kind: 'sequence', steps: [cur, ...remainder] });
           }
+          return { kind: 'sequence', steps: seqOut };
+        }
+        const queueAfter = (globalThis as {
+          __pendingEffectPickQueue?: { continuation?: ContinuationFrame }[];
+        }).__pendingEffectPickQueue;
+        if ((queueAfter?.length ?? 0) > pickCountBefore) {
+          const remainder = effect.steps.slice(i + 1);
+          if (remainder.length > 0) {
+            const firstNew = queueAfter?.[pickCountBefore];
+            if (firstNew) {
+              attachPrewalkContinuation(firstNew, { remainder, ctx, kind: 'sequence' });
+            }
+          }
+          // The queued Pattern-A carrier remains in seqOut as the established
+          // runtime safety no-op. Defer the tail until the human resolves it.
           return { kind: 'sequence', steps: seqOut };
         }
       }
@@ -786,7 +951,7 @@ export function resolveEffectPicks(
       if (human === ctx.source.player) {
         pushPendingEffectChoiceSide({
           player: human,
-          source: { cardId: opts.source?.cardId ?? '', abilityId: opts.source?.abilityId ?? '', uid: ctx.source.uid ?? '' },
+          source: pendingSource(ctx, { cardId: opts.source?.cardId ?? '', abilityId: opts.source?.abilityId ?? '', uid: ctx.source.uid ?? '' }),
           options: traits.map((label, index) => ({ index, label })),
         });
         setPendingChoiceResume(effect);
@@ -835,15 +1000,16 @@ export function resolveEffectPicks(
         const srcUid = (ctx.source as { uid?: string } | undefined)?.uid ?? '';
         pushPendingEffectChoiceSide({
           player: opts.byPlayer ?? 'self',
-          source: {
+          source: pendingSource(ctx, {
             cardId: opts.source?.cardId ?? '',
             abilityId: opts.source?.abilityId ?? '',
             uid: srcUid,
-          },
+          }),
           options: effect.options.map((o, i) => ({
             index: i,
             verb: o.kind === 'atom' ? (o.verb as string) : undefined,
             args: o.kind === 'atom' ? (o.args as Record<string, unknown>) : undefined,
+            sceneEnter: containsSceneEnter(o),
           })),
         });
         // 再開 holder = この choice 効果そのもの (top-level)。sequence 内なら sequence case が
@@ -882,11 +1048,11 @@ export function resolveEffectPicks(
         pushPendingEffectOptionalSide({
           player: decisionPlayer,
           ownerPlayer,
-          source: {
+          source: pendingSource(ctx, {
             cardId: opts.source?.cardId ?? '',
             abilityId: opts.source?.abilityId ?? '',
             uid: srcUid,
-          },
+          }),
           // 再開 ctx で $trigger.<field> を解決できるよう triggerPayload を保持 (B03038)
           triggerPayload: (ctx as { triggerPayload?: unknown }).triggerPayload,
         });

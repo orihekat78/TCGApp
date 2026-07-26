@@ -38,7 +38,8 @@ import {
   _clearPendingEffectPickQueue,
   _clearPendingEffectOptionalSide,
 } from '@/engine/effect/resolve-picks';
-import { applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
+import { applyDeckReorderAndContinuation, applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
+import { _drainPendingDeckReorderSide } from '@/engine/effect/atom-handlers';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { sceneChar } from '../../helpers/fixtures';
@@ -100,6 +101,8 @@ function base(opts: {
 const uidFor = (side: 'self' | 'opp') => (side === 'self' ? 'case:self' : 'case:opp');
 
 beforeEach(() => {
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
   event._resetRegistry();
   _resetTriggeredRegistered();
   _resetUidCounter();
@@ -195,6 +198,9 @@ describe('B06043 a2 — chooseMatch:upTo human pick (decline / owner=opp take)',
       expect(pending, 'human owner → pick surface').not.toBeNull();
       expect(pending!.nMin, '「1枚まで」→ 0枚可 (decline 可)').toBe(0);
       applyPickSkipAndContinuation(d, pending!); // decline (加えない)
+      const reorder = _drainPendingDeckReorderSide();
+      expect(reorder, 'decline後はデッキ下順序を決める').not.toBeNull();
+      applyDeckReorderAndContinuation(d, reorder!, reorder!.cardIds);
     });
     expect(after.players.self.hand.includes(WAKA), 'decline → 遠山和葉を手札に加えない').toBe(false);
     expect(after.players.self.deck.includes(WAKA), 'WAKA は deck に残る').toBe(true);
@@ -212,6 +218,9 @@ describe('B06043 a2 — chooseMatch:upTo human pick (decline / owner=opp take)',
       const cand = pending!.candidates.find((c) => c.cardId === WAKA);
       expect(cand, '遠山和葉 が候補').toBeTruthy();
       applyPickAndContinuation(d, pending!, cand!.uid); // take
+      const reorder = _drainPendingDeckReorderSide();
+      expect(reorder, 'take後は残りのデッキ下順序を決める').not.toBeNull();
+      applyDeckReorderAndContinuation(d, reorder!, reorder!.cardIds);
     });
     expect(after.players.opp.hand.includes(WAKA), '相手の手札に遠山和葉').toBe(true);
     expect(after.players.opp.deck, '相手 deck: 残り2枚を下へ').toEqual([TAIL, D1, D2]);

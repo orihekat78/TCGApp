@@ -69,6 +69,7 @@ export type EngineAction =
   | { type: 'effectPickResolve'; pickedUid: string; pickedUids: string[]; switchRemoveUids: string[] }
   // BUG-121: human 複数 option choice の選択結果 (enter トリガ等)。pendingEffectChoice を解決する。
   | { type: 'choiceResolve'; choiceIndex: number }
+  | { type: 'choiceResolve'; choiceIndex: number; switchRemoveUid: string }
   // 2026-06-06 タスクC: optional (「〜してもよい」) の決定。pendingEffectOptional を解決する。
   | { type: 'optionalResolve'; run: boolean }
   | { type: 'chooseInterceptResolve'; discardIndex: number | null }
@@ -79,6 +80,8 @@ export type EngineAction =
   | { type: 'deckPlaceResolve'; top: string[]; bottom: string[] }
   // Phase 8 完全クローズ Commit 5: 効果スタック同所有者順序設定 (▲▼ UI)
   | { type: 'setEffectOrder'; entryId: string; order: number; player: Player }
+  /** entryIds is the exact visible group snapshot; stale confirmations are rejected. */
+  | { type: 'resolveEffectOrder'; player: Player; entryIds: string[] }
   | { type: 'endTurn'; player: Player };
 
 export type DispatchResult =

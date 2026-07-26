@@ -11,7 +11,7 @@ const a1: AbilityDef = {
   effect: {
     kind: 'sequence',
     steps: [
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'self', maxN: 3, bind: '$revealed' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { visibility: 'public', viewer: 'all', player: 'self', maxN: 3, bind: '$revealed' } },
       {
         kind: 'atom',
         verb: 'handAddFromDeck',

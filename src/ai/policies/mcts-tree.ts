@@ -27,6 +27,7 @@ import type { Move } from '../move-enumerator.js';
 import { enumerateMoves } from '../move-enumerator.js';
 import type { GameState } from '@/engine/types';
 import { produce } from '@/engine/produce';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import { runMatch } from '../match.js';
 import { HeuristicPolicy, type HeuristicPolicyOptions } from './heuristic.js';
 import { defaultStateEvaluator, type StateEvaluator } from './state-evaluator.js';
@@ -155,6 +156,7 @@ export class MCTSTreePolicy implements AIPolicy {
       try {
         const childState = produce(node.state, (draft) => {
           applyMove(draft, move, node.toMove);
+          runAllUntilEmpty(draft);
         });
         const childToMove: Player = move.kind === 'endTurn'
           ? (node.toMove === 'self' ? 'opp' : 'self')

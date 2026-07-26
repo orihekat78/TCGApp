@@ -148,16 +148,18 @@ function fireHirameki(evidenceOwner: Side, removedCardId: string, setup: (s: Gam
   after: GameState; pending: ReturnType<typeof _drainPendingHirameki>;
 } {
   const attacker: Side = evidenceOwner === 'self' ? 'opp' : 'self';
-  const s = produce(createEmptyGameState(), (d) => {
+  let s = produce(createEmptyGameState(), (d) => {
     d.turn = { number: 4, player: attacker, phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     setup(d);
   });
-  event.emit(
-    s,
-    'evidence:remove-by-action',
-    { player: evidenceOwner, ev: { cardId: removedCardId } },
-    { player: attacker, uid: `${attacker}-attacker` },
-  );
+  s = produce(s, (d) => {
+    event.emit(
+      d,
+      'evidence:remove-by-action',
+      { player: evidenceOwner, ev: { cardId: removedCardId } },
+      { player: attacker, uid: `${attacker}-attacker` },
+    );
+  });
   const pending = _drainPendingHirameki();
   if (!pending) return { after: s, pending };
   // fire: a3 効果 (handAddFromRemove fromSelf) を production resolver で解決

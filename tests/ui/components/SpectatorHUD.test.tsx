@@ -20,7 +20,7 @@ describe('SpectatorHUD', () => {
     // BUG-063: 人間 vs CPU でも HUD 表示、ただし label は CPU 用
     const html = renderToString(<SpectatorHUD />);
     expect(html).toContain('spectator-hud');
-    expect(html).toContain('CPU 速度');
+    expect(html).toContain('CPU 重要手の表示間隔');
   });
 
   it('renders nothing when gameState === null', () => {
@@ -33,7 +33,7 @@ describe('SpectatorHUD', () => {
     useGameStateStore.setState({ spectatorMode: true, aiSpeedMs: 400 });
     const html = renderToString(<SpectatorHUD />);
     expect(html).toContain('spectator-hud');
-    expect(html).toContain('AI 速度');
+    expect(html).toContain('AI 重要手の表示間隔');
     expect(html).toContain('400ms');
   });
 

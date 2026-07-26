@@ -26,6 +26,7 @@
 
 import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
+import { char as readChar } from '../read/char.js';
 import type { GameState, SceneCharacter, AbilityDef } from '../types/index.js';
 
 type Player = 'self' | 'opp';
@@ -87,6 +88,7 @@ export function consultLeaveIntercept(
   // (2) optional 現場 interceptor (B01092 型) — AI-only (human 所有は DEFER 素通し)
   for (const c of state.players[player].scene) {
     if (c.uid === char.uid) continue; // 「このキャラ以外」は構造的除外 (印字の filter 句ではない)
+    if (readChar.originalAbilitiesDisabled(state, c.uid)) continue;
     const def = readDef.card(c.cardId);
     if (!def) continue;
     for (const ability of def.abilities as AbilityDef[]) {

@@ -110,6 +110,8 @@
 .hand-zone--collapsed .color-red::before    { background: var(--color-red,    #d05a5a); }
 .hand-zone--collapsed .color-green::before  { background: var(--color-green,  #43b67a); }
 .hand-zone--collapsed .color-purple::before { background: var(--color-purple, #9a6cc8); }
+.hand-zone--collapsed .color-black::before  { background: var(--color-black,  #3b3f46); }
+.hand-zone--collapsed .color-white::before  { background: var(--color-white,  #e8e8e8); }
 
 /* cost — 左上の小さい円バッジ */
 .hand-zone--collapsed .hand-mini-cost {
@@ -300,6 +302,14 @@
   border-color: color-mix(in oklch, var(--color-purple, #8a4cc0) 35%, #2a4a6e);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
+.hand-zone .hand-card.color-black {
+  border-color: color-mix(in oklch, var(--color-black, #3b3f46) 70%, white 20%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+.hand-zone .hand-card.color-white {
+  border-color: color-mix(in oklch, var(--color-white, #e8e8e8) 55%, #2a4a6e);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
 /* hover/focus 時のみ色を強調して identification しやすくする */
 .hand-zone .hand-card.color-blue:hover,
 .hand-zone .hand-card.color-blue:focus-visible {
@@ -320,6 +330,14 @@
 .hand-zone .hand-card.color-purple:hover,
 .hand-zone .hand-card.color-purple:focus-visible {
   border-color: color-mix(in oklch, var(--color-purple, #8a4cc0) 70%, white 12%);
+}
+.hand-zone .hand-card.color-black:hover,
+.hand-zone .hand-card.color-black:focus-visible {
+  border-color: color-mix(in oklch, var(--color-black, #3b3f46) 65%, white 35%);
+}
+.hand-zone .hand-card.color-white:hover,
+.hand-zone .hand-card.color-white:focus-visible {
+  border-color: var(--color-white, #e8e8e8);
 }
 
 /* featured = hover/focus 相当の強調 */
@@ -360,6 +378,8 @@
 .hand-zone .hand-card.color-red    .color-stripe { background: var(--color-red,    #c84040); }
 .hand-zone .hand-card.color-green  .color-stripe { background: var(--color-green,  #3aa67a); }
 .hand-zone .hand-card.color-purple .color-stripe { background: var(--color-purple, #8a4cc0); }
+.hand-zone .hand-card.color-black  .color-stripe { background: var(--color-black,  #3b3f46); }
+.hand-zone .hand-card.color-white  .color-stripe { background: var(--color-white,  #e8e8e8); }
 
 /* ---- art ---- */
 .hand-zone .hand-card .art {
@@ -463,6 +483,17 @@
   background: radial-gradient(circle at 30% 30%,
     color-mix(in oklch, var(--color-purple, #8a4cc0) 50%, white 30%),
     color-mix(in oklch, var(--color-purple, #8a4cc0) 80%, #000 10%));
+}
+.hand-zone .hand-card.color-black .cost {
+  background: radial-gradient(circle at 30% 30%,
+    color-mix(in oklch, var(--color-black, #3b3f46) 50%, white 30%),
+    color-mix(in oklch, var(--color-black, #3b3f46) 80%, #000 10%));
+}
+.hand-zone .hand-card.color-white .cost {
+  background: radial-gradient(circle at 30% 30%,
+    color-mix(in oklch, var(--color-white, #e8e8e8) 65%, white 20%),
+    color-mix(in oklch, var(--color-white, #e8e8e8) 70%, #000 20%));
+  color: #111;
 }
 
 /* ---- type-badge (右上、cost より下) ---- */

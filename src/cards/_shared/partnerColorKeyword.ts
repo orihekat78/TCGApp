@@ -28,7 +28,7 @@ export function partnerColorKeyword(opts: {
     scope: opts.scope ?? 'on-scene',
     condition,
     continuousModifier: {
-      grantKeywords: () => [opts.kw],
+      grantKeywords: () => [opts.kw], printedKeywordWhenIconValid: true,
     },
     description: `【パートナー${colorLabel}】〚${opts.kw}〛`,
     ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],

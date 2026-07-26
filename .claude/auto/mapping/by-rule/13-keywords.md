@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `28bfbce9bad5`
+> Source hash: `b43c7af643c9`
 
 公式ルール [`13-keywords.md`](../../../rules/13-keywords.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -15,7 +15,6 @@
 - [`engine.cond`](../by-engine/cond.md) — [`api/cond`](../../api/cond.md)
 - [`engine.flow`](../by-engine/flow.md) — [`api/flow`](../../api/flow.md)
 - [`engine.invariant`](../by-engine/invariant.md) — [`api/invariant`](../../api/invariant.md)
-- [`engine.listeners`](../by-engine/listeners.md)
 - [`engine.mutate`](../by-engine/mutate.md) — [`api/mutate`](../../api/mutate.md)
 - [`engine.read`](../by-engine/read.md) — [`api/read`](../../api/read.md)
 - [`engine.types`](../by-engine/types.md)
@@ -29,7 +28,7 @@
 - [`phase-9-h-performance`](../by-spec/phase-9-h-performance.md)
 - [`partnerColorKeyword`](../by-spec/shared-classes--partnerColorKeyword.md)
 
-## 📄 参照ソース (422)
+## 📄 参照ソース (421)
 
 - [`src/ai/move-enumerator.ts`](../../../../src/ai/move-enumerator.ts)
 - [`src/ai/policies/heuristic.ts`](../../../../src/ai/policies/heuristic.ts)
@@ -51,4 +50,4 @@
 - [`src/cards/ct-d04/D04003.ts`](../../../../src/cards/ct-d04/D04003.ts)
 - [`src/cards/ct-d04/D04004.ts`](../../../../src/cards/ct-d04/D04004.ts)
 - [`src/cards/ct-d04/D04005.ts`](../../../../src/cards/ct-d04/D04005.ts)
-- _...ほか 402 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 401 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

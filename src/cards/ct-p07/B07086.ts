@@ -30,7 +30,7 @@ const a2: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: { player: 'self', filter: { cardName: '榎本梓' }, bind: '$revealed', bindMatch: '$matched' },
+        args: { visibility: 'public', viewer: 'all', player: 'self', filter: { cardName: '榎本梓' }, bind: '$revealed', bindMatch: '$matched' },
       },
       {
         kind: 'conditional',

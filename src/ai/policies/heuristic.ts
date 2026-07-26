@@ -53,18 +53,9 @@ function pickContactUidFor(s: GameState, ax: ActionContext, player: 'self' | 'op
 }
 
 /**
- * partner uid を考慮した AP 読み出し (rules/07: パートナーもアクション可能)。
- * read.char.ap は scene[] のみスキャンするため、partner uid は CardDef から直接取得。
- * (state-machine.ts:46 readEffectiveAp と同じロジック)
+ * partner / scene 共通の effective AP reader。
  */
 function readEffectiveAp(s: GameState, uid: string): number {
-  if (uid === 'partner:self' || uid === 'partner:opp') {
-    const p = uid === 'partner:self' ? 'self' : 'opp';
-    const partner = s.players[p].partner;
-    if (!partner.cardId) return 0;
-    const def = engine.cards.get(partner.cardId);
-    return def?.ap ?? 0;
-  }
   return engine.read.char.ap(s, uid);
 }
 
@@ -481,13 +472,6 @@ export class HeuristicPolicy implements AIPolicy {
  *   - scene のキャラは engine.read.char.lp で apOverride / lpOverride 反映済みの値
  */
 function lpOf(state: GameState, uid: string): number {
-  if (uid === 'partner:self' || uid === 'partner:opp') {
-    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
-    const cardId = state.players[p].partner.cardId;
-    if (!cardId) return 0;
-    const def = engine.cards.get(cardId);
-    return def?.lp ?? 0;
-  }
   return engine.read.char.lp(state, uid);
 }
 
@@ -495,13 +479,6 @@ function lpOf(state: GameState, uid: string): number {
  * apOf — uid のエフェクティブ AP を返す (lpOf と同様)
  */
 function apOf(state: GameState, uid: string): number {
-  if (uid === 'partner:self' || uid === 'partner:opp') {
-    const p: Player = uid === 'partner:self' ? 'self' : 'opp';
-    const cardId = state.players[p].partner.cardId;
-    if (!cardId) return 0;
-    const def = engine.cards.get(cardId);
-    return def?.ap ?? 0;
-  }
   return engine.read.char.ap(state, uid);
 }
 

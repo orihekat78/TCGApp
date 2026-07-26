@@ -91,6 +91,8 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
     // 候補が表示されている (s2 が active なので 1 件以上)
     const candCount = await page.locator('[data-testid^="guard-cand-"]').count();
     expect(candCount).toBeGreaterThanOrEqual(1);
+    await page.getByTestId('guard-cand-s2').click();
+    await expect(page.getByTestId('guard-picker-modal')).toBeHidden();
 
     expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
   });
@@ -108,7 +110,8 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
       gs.turn.number = 2;
       gs.players.opp.scene = [mc('o1', 'D11003', 'active')];
       gs.players.self.scene = [mc('s1', 'D08003', 'sleep'), mc('s2', 'D08005', 'active')];
-      // self の hand は createSampleGameState の default — cutin 可能カードが含まれる
+      // 候補0枚でも、人間側は手札確認 + 明示パスを行う。
+      gs.players.self.hand = [];
       w.__game.setGameState(gs);
       w.__game.dispatch({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
     }, MAKE_CHAR_FN);
@@ -116,16 +119,14 @@ test.describe('user_request #3: opp ターン中 contact UI', () => {
     await expect(page.locator('[data-testid="guard-picker-modal"]')).toBeVisible({ timeout: 3000 });
     await page.locator('[data-testid="guard-picker-skip"]').click();
 
-    // self の cutin 判断は HandZone pick mode (黄色枠) で表示される (cid modal は変装専用に)。
-    // cutin 可能カードがあれば pick mode の skip でパス、無ければ auto-pass。どちらも action 完了を待つ。
+    // self の cutin 判断は候補0枚/手札0枚でも HandZone に表示。
     const skipBtn = page.locator('[data-testid="hand-zone-pick-skip"]');
-    const pickVisible = await skipBtn
-      .waitFor({ state: 'visible', timeout: 2000 })
-      .then(() => true)
-      .catch(() => false);
-    if (pickVisible) {
-      await skipBtn.click(); // self パス
-    }
+    await expect(skipBtn).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('.hand-zone-pick-banner')).toContainText('カットイン可能 0枚');
+    await expect(page.locator('.hand-empty-message')).toContainText('手札なし');
+    // 人間 decision 中は相手ターン overlay が手札を遮らない。
+    await expect(page.locator('[data-testid="opp-turn-overlay"]')).toHaveCount(0);
+    await skipBtn.click();
     await page.waitForFunction(
       () => {
         const w = window as unknown as GameWindow;

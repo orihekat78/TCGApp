@@ -73,6 +73,7 @@ describe('B03118 キール behavioral', () => {
     let keUid = '';
     const after = produce(createEmptyGameState(), (d) => {
       d.turn.player = 'self';
+      d.players.self.deck = ['MOB', 'MOB'];
       keUid = mutate.scene.enter(d, 'self', 'B03118', {}).uid;
       d.players.self.hand = ['CUT'];
       const ax = mkAx(keUid); // キール = attacker = 参加者
@@ -88,6 +89,7 @@ describe('B03118 キール behavioral', () => {
     let mobUid = '';
     const after = produce(createEmptyGameState(), (d) => {
       d.turn.player = 'self';
+      d.players.self.deck = ['MOB', 'MOB'];
       keUid = mutate.scene.enter(d, 'self', 'B03118', {}).uid;
       mobUid = mutate.scene.enter(d, 'self', 'MOB', {}).uid;
       d.players.self.hand = ['CUT'];
@@ -103,6 +105,7 @@ describe('B03118 キール behavioral', () => {
     let keUid = '';
     const after = produce(createEmptyGameState(), (d) => {
       d.turn.player = 'self';
+      d.players.opp.deck = ['MOB', 'MOB'];
       keUid = mutate.scene.enter(d, 'self', 'B03118', {}).uid;
       d.players.opp.hand = ['CUT'];
       const ax: ActionContext = { ...mkAx('oatk'), byUid: 'oatk', byPlayer: 'opp', target: { kind: 'char', uid: keUid } };

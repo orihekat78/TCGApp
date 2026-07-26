@@ -6,7 +6,7 @@
  * 生成物は tests/helpers/card-probe-harness.ts の runCardScenario 経由で **production dispatch のみ**を叩く。
  *
  * usage:
- *   node scripts/gen-card-probes.cjs --specs .tmp/_hybrid_specs.json --ids B07032,B07036,B09089 \
+ *   node scripts/gen-card-probes.cjs --ids B07032,B07036,B09089 \
  *        --out tests/cards/genprobe-validation
  *   (--ids 省略時は specs 全件を対象; --report-only で出力せず coverage レポートのみ)
  *
@@ -20,7 +20,7 @@ const path = require('path');
 // args
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
-  const a = { specs: '.tmp/_hybrid_specs.json', ids: null, out: 'tests/cards/genprobe-validation', reportOnly: false };
+  const a = { specs: '.tmp/compiler/shipped-dsl.json', ids: null, out: 'tests/cards/genprobe-validation', reportOnly: false };
   for (let i = 2; i < argv.length; i++) {
     const t = argv[i];
     if (t === '--specs') a.specs = argv[++i];
@@ -169,6 +169,7 @@ function deriveFromFilter(filter) {
   if (typeof filter.apMax === 'number') { inProps.ap = filter.apMax; decoys.push({ suffix: 'apMax', props: { ap: filter.apMax + 1000 } }); }
   if (typeof filter.apMin === 'number') { inProps.ap = filter.apMin; decoys.push({ suffix: 'apMin', props: { ap: filter.apMin - 1000 } }); }
   if (typeof filter.trait === 'string') { inProps.traits = [filter.trait]; decoys.push({ suffix: 'trait', props: { traits: ['__DTRAIT__'] } }); }
+  if (Array.isArray(filter.trait) && filter.trait.length > 0) { inProps.traits = [filter.trait[0]]; decoys.push({ suffix: 'trait', props: { traits: ['__DTRAIT__'] } }); }
   if (typeof filter.color === 'string') { inProps.colors = [filter.color]; decoys.push({ suffix: 'color', props: { colors: [otherColor(filter.color)] } }); }
   if (typeof filter.cardName === 'string') { inProps.names = [filter.cardName]; decoys.push({ suffix: 'cardName', props: { names: ['__DNAME__'] } }); }
   if (filter.kind === 'character') { decoys.push({ suffix: 'kind', props: { kind: 'event' } }); }
@@ -243,8 +244,32 @@ function deriveScenarios(cardId, ability, staticData, mode) {
     pickPlans.push({ slot, verb: p.verb, zone, side, inId, inUid, decoys: decoyIds, args, nMin: p.nMin });
   }
 
+  // Enumerate every executable leaf branch of an arbitrary cost tree.
+  // A path records one index per encountered `choice`, including choices in
+  // sibling `pay` items; the engine consumes the same depth-first path.
+  function combineBranches(left, right) {
+    const out = [];
+    for (const a of left) for (const b of right) {
+      out.push({ items: [...a.items, ...b.items], choicePath: [...a.choicePath, ...b.choicePath] });
+    }
+    return out;
+  }
+  function enumerateCostBranches(node) {
+    if (!node) return [{ items: [], choicePath: [] }];
+    if (node.kind === 'pay' && Array.isArray(node.items)) {
+      return node.items.reduce((acc, item) => combineBranches(acc, enumerateCostBranches(item)), [{ items: [], choicePath: [] }]);
+    }
+    if (node.kind === 'choice' && Array.isArray(node.items)) {
+      return node.items.flatMap((item, choice) => enumerateCostBranches(item)
+        .map((branch) => ({ items: branch.items, choicePath: [choice, ...branch.choicePath] })));
+    }
+    return [{ items: [node], choicePath: [] }];
+  }
+  const costBranches = enumerateCostBranches(ability.cost);
+  const flattenedCosts = costBranches[0] ? costBranches[0].items : [];
+
   // --- base setup shared by driven scenarios ---
-  function cloneSetup(extra) {
+  function cloneSetup(extra, costItems = flattenedCosts) {
     const s = {
       selfScene: baseSetup.selfScene.map((c) => Object.assign({}, c)),
       oppScene: baseSetup.oppScene.map((c) => Object.assign({}, c)),
@@ -257,9 +282,6 @@ function deriveScenarios(cardId, ability, staticData, mode) {
     if (mode === 'declared') {
       s.selfScene.unshift({ cardId, uid: CARRIER_UID, state: 'active' });
       // cost fodder in hand (removeFromHand) — ensure at least 1
-      if (!s.hand.length) s.hand.push('__HAND_FODDER__');
-      else s.hand.unshift('__HAND_FODDER__');
-      addFix('__HAND_FODDER__', {});
     } else if (mode === 'enter') {
       s.selfScene.unshift({ cardId, uid: CARRIER_UID, state: 'active' });
       // discard etc need hand fodder already placed via hand-zone picks
@@ -270,11 +292,125 @@ function deriveScenarios(cardId, ability, staticData, mode) {
     }
     if (condition && condition.kind === 'caseStatus') s.caseStatus = condition.status;
     else if (mode !== 'event-use') s.caseStatus = '解決編'; // default permissive
+    const positiveConditions = condition && condition.kind === 'and'
+      ? (condition.cs ?? condition.all ?? [])
+      : (condition ? [condition] : []);
+    for (const c of positiveConditions) {
+      if (c.kind === 'partnerColor') s.partnerColors = [c.color];
+      if (c.kind === 'bond' && typeof c.cardName === 'string') {
+        const id = '__COND_BOND__';
+        addFix(id, { names: [c.cardName] });
+        s.selfScene.push({ cardId: id, uid: `${id}_u`, state: 'active' });
+      }
+    }
+    // BUG-245: the real activation boundary rejects unpaid declared costs.
+    // Seed representative, in-filter cost targets so happy-path probes reach
+    // the effect instead of relying on the former unpaid-cost fall-through.
+    for (let costIndex = 0; costIndex < costItems.length; costIndex++) {
+      const cost = costItems[costIndex];
+      const filter = cost.target && cost.target.query ? cost.target.query.filter : null;
+      const { inProps } = deriveFromFilter(filter);
+      const n = typeof cost.n === 'number' ? cost.n : 1;
+      if (cost.kind === 'partnerAreaRemove') {
+        for (let i = 0; i < n; i++) {
+          const id = `__COST_PA_${costIndex}_${i}`;
+          addFix(id, { kind: inProps.kind, level: inProps.level, ap: inProps.ap, colors: inProps.colors, traits: inProps.traits, names: inProps.names || [id] });
+          s.partnerAreaCards.push(id);
+        }
+      }
+      if (cost.kind === 'removeAreaToDeckBottom') {
+        for (let i = 0; i < n; i++) {
+          const id = `__COST_REMOVE_${costIndex}_${i}`;
+          addFix(id, { kind: inProps.kind, level: inProps.level, ap: inProps.ap, colors: inProps.colors, traits: inProps.traits, names: inProps.names || [id] });
+          s.remove.push(id);
+        }
+      }
+      if ((cost.kind === 'sleepChar' || cost.kind === 'stunChar' || cost.kind === 'removeFromScene' || cost.kind === 'sceneToDeckBottom') && cost.target && (cost.target.kind === 'pick' || cost.target.kind === 'all')) {
+        for (let i = 0; i < n; i++) {
+          const id = `__COST_SCENE_TARGET_${costIndex}_${i}`;
+          const side = cost.target.query.side === 'opp' ? 'oppScene' : 'selfScene';
+          addFix(id, { kind: inProps.kind, level: inProps.level, ap: inProps.ap, colors: inProps.colors, traits: inProps.traits, names: inProps.names || [id] });
+          s[side].push({ cardId: id, uid: `${id}_u`, state: 'active' });
+        }
+      }
+      if (cost.kind === 'sceneStackUnderSelf') {
+        for (let i = 0; i < n; i++) {
+          const id = `__COST_SCENE_${costIndex}_${i}`;
+          addFix(id, { kind: inProps.kind, level: inProps.level, ap: inProps.ap, colors: inProps.colors, traits: inProps.traits, names: inProps.names || [id] });
+          s.selfScene.push({ cardId: id, uid: `${id}_u`, state: 'active' });
+        }
+      }
+      if (cost.kind === 'removeFromHand' || cost.kind === 'revealFromHand' || cost.kind === 'revealHandToDeckTop') {
+        const count = typeof cost.n === 'number' ? cost.n : cost.n.min;
+        for (let i = 0; i < count; i++) {
+          const id = `__COST_HAND_${costIndex}_${i}`;
+          addFix(id, { kind: inProps.kind, level: inProps.level, ap: inProps.ap, colors: inProps.colors, traits: inProps.traits, names: inProps.names || [id] });
+          s.hand.unshift(id);
+        }
+      }
+      if (cost.kind === 'removeSetCard') {
+        const carrier = s.selfScene.find(entry => entry.uid === CARRIER_UID);
+        carrier.setCards = carrier.setCards || [];
+        for (let i = 0; i < n; i++) {
+          const id = `__COST_SET_${costIndex}_${i}`;
+          addFix(id, {});
+          carrier.setCards.push({ cardId: id, instanceId: `set:${CARRIER_UID}:${costIndex}:${i}`, faceUp: !!cost.anyFace });
+        }
+      }
+      if (cost.kind === 'removeStackedCards') {
+        const carrier = s.selfScene.find(entry => entry.uid === CARRIER_UID);
+        carrier.stackedCards = carrier.stackedCards || [];
+        for (let i = 0; i < n; i++) {
+          const id = `__COST_STACK_${costIndex}_${i}`;
+          addFix(id, {});
+          carrier.stackedCards.push({ cardId: id, instanceId: `stack:${CARRIER_UID}:${costIndex}:${i}` });
+        }
+      }
+      if (cost.kind === 'discardEvidence' || cost.kind === 'flipFaceUpEvidence') {
+        const count = cost.kind === 'discardEvidence' ? cost.n : cost.n.min;
+        s.evidence = s.evidence || [];
+        for (let i = 0; i < count; i++) {
+          const id = `__COST_EVIDENCE_${costIndex}_${i}`;
+          addFix(id, {});
+          s.evidence.push({ cardId: id, faceUp: false });
+        }
+      }
+      if (cost.kind === 'fileFrom') s.fileCount = Math.max(s.fileCount || 0, n);
+      if (cost.kind === 'removeDeckTop' && typeof cost.n === 'number') s.deckSize = Math.max(s.deckSize, cost.n);
+      if (cost.kind === 'removeFromHandDownTo') {
+        for (let i = 0; i < cost.n + 1; i++) {
+          const id = `__COST_HAND_DOWN_${costIndex}_${i}`;
+          addFix(id, {});
+          s.hand.unshift(id);
+        }
+      }
+      if (cost.kind === 'handStackUnder') {
+        const id = `__COST_HAND_STACK_${costIndex}`;
+        addFix(id, {});
+        s.hand.unshift(id);
+        const host = `__COST_STACK_HOST_${costIndex}`;
+        addFix(host, {});
+        s.selfScene.push({ cardId: host, uid: `${host}_u`, state: 'active' });
+      }
+    }
     return Object.assign(s, extra || {});
   }
 
-  function driveObj() {
-    if (mode === 'declared') return { kind: 'declared', uid: CARRIER_UID, abilityId: ability.id };
+  function driveObj(choicePath, costItems = flattenedCosts) {
+    if (mode === 'declared') {
+      const costParams = {};
+      if (choicePath && choicePath.length === 1) costParams.costChoice = choicePath[0];
+      if (choicePath && choicePath.length > 1) costParams.costChoicePath = choicePath;
+      for (let costIndex = 0; costIndex < costItems.length; costIndex++) {
+        const cost = costItems[costIndex];
+        if (cost.kind !== 'removeSetCard') continue;
+        costParams.removeSetCard = {
+          hostUids: Array.from({ length: cost.n }, () => CARRIER_UID),
+          instanceIds: Array.from({ length: cost.n }, (_v, i) => `set:${CARRIER_UID}:${costIndex}:${i}`),
+        };
+      }
+      return { kind: 'declared', uid: CARRIER_UID, abilityId: ability.id, ...(Object.keys(costParams).length ? { costParams } : {}) };
+    }
     if (mode === 'enter') return { kind: 'enter', cardId, uid: CARRIER_UID, side: 'self' };
     return { kind: 'event-use', cardId };
   }
@@ -319,9 +455,47 @@ function deriveScenarios(cardId, ability, staticData, mode) {
     }
     return a;
   }
+  function costConsumptionAsserts(costItems = flattenedCosts) {
+    const a = [];
+    for (let costIndex = 0; costIndex < costItems.length; costIndex++) {
+      const cost = costItems[costIndex];
+      const n = typeof cost.n === 'number' ? cost.n : 1;
+      for (let i = 0; i < n; i++) {
+        if (cost.kind === 'partnerAreaRemove') {
+          const id = `__COST_PA_${costIndex}_${i}`;
+          a.push({ kind: 'zone', cardId: id, zone: 'partner-area', side: 'self', present: false });
+          a.push({ kind: 'zone', cardId: id, zone: 'remove', side: 'self', present: true });
+        }
+        if (cost.kind === 'sceneStackUnderSelf') {
+          const id = `__COST_SCENE_${costIndex}_${i}`;
+          a.push({ kind: 'zone', cardId: id, zone: 'scene', side: 'self', present: false });
+          a.push({ kind: 'stacked', hostUid: CARRIER_UID, cardId: id, present: true });
+        }
+        if (cost.kind === 'removeFromHand' || cost.kind === 'revealHandToDeckTop') {
+          a.push({ kind: 'zone', cardId: `__COST_HAND_${costIndex}_${i}`, zone: 'hand', side: 'self', present: false });
+        }
+        if (cost.kind === 'removeFromHand') {
+          a.push({ kind: 'zone', cardId: `__COST_HAND_${costIndex}_${i}`, zone: 'remove', side: 'self', present: true });
+        }
+        if (cost.kind === 'removeSetCard') {
+          a.push({ kind: 'zone', cardId: `__COST_SET_${costIndex}_${i}`, zone: 'remove', side: 'self', present: true });
+        }
+        if (cost.kind === 'removeStackedCards') {
+          a.push({ kind: 'zone', cardId: `__COST_STACK_${costIndex}_${i}`, zone: 'remove', side: 'self', present: true });
+          a.push({ kind: 'stacked', hostUid: CARRIER_UID, cardId: `__COST_STACK_${costIndex}_${i}`, present: false });
+        }
+        if (cost.kind === 'removeAreaToDeckBottom') {
+          a.push({ kind: 'zone', cardId: `__COST_REMOVE_${costIndex}_${i}`, zone: 'remove', side: 'self', present: false });
+          a.push({ kind: 'zone', cardId: `__COST_REMOVE_${costIndex}_${i}`, zone: 'deck', side: 'self', present: true });
+        }
+      }
+    }
+    return a;
+  }
 
   // === Scenario A: happy path (condition on, optional take, all picks -> in-filter) ===
   {
+    for (const branch of costBranches) {
     const script = [];
     const expect = [];
     let recIdx = 0;
@@ -334,8 +508,11 @@ function deriveScenarios(cardId, ability, staticData, mode) {
       recIdx++;
     }
     expect.push(...autoAsserts());
+    expect.push(...costConsumptionAsserts(branch.items));
     if (mode === 'event-use') expect.push({ kind: 'zone', cardId, zone: 'hand', side: 'self', present: false });
-    scenarios.push({ name: `${cardId} happy-path (all picks -> in-filter; decoys excluded)`, setup: cloneSetup(), drive: driveObj(), script, expect });
+    const branchName = branch.choicePath.length ? ` (cost choice ${branch.choicePath.join('.')})` : '';
+    scenarios.push({ name: `${cardId} happy-path${branchName} (all picks -> in-filter; decoys excluded)`, setup: cloneSetup(undefined, branch.items), drive: driveObj(branch.choicePath, branch.items), script, expect });
+    }
   }
 
   // === Scenario B: condition-off (noPromptSurfaced) ===
@@ -429,44 +606,59 @@ function deriveScenarios(cardId, ability, staticData, mode) {
   // S2 token 施策 #4 (2026-07-10): (a) 非 pay の単独 cost ({kind:'sleepSelf'} 直書き、B02072 型) も
   // items 1 件として正規化 (b) removeDeckTop の deck 不足 gate (公式Q&A「N枚リムーブできなければ
   // 使用不可」、B08057 型) を追加。
-  const costNorm = mode === 'declared' && ability.cost
-    ? (ability.cost.kind === 'pay' && Array.isArray(ability.cost.items) ? ability.cost.items : [ability.cost])
-    : null;
-  if (costNorm) {
-    const costItems = costNorm;
-    const items = costItems.map((it) => it.kind);
-    if (items.includes('sleepSelf')) {
-      scenarios.push({
-        name: `${cardId} cost-gate: sleepSelf unpayable (self sleeping) -> canPay=false`,
-        setup: { selfScene: [{ cardId, uid: CARRIER_UID, state: 'sleep' }], hand: ['__HAND_FODDER__'], caseStatus: condition && condition.kind === 'caseStatus' ? condition.status : '解決編' },
-        drive: { kind: 'cost-gate', uid: CARRIER_UID, abilityId: ability.id, expectCanPay: false },
-        script: [],
-        expect: [],
-      });
-      addFix('__HAND_FODDER__', {});
+  if (mode === 'declared' && ability.cost) {
+    for (const branch of costBranches) {
+      for (let leafIndex = 0; leafIndex < branch.items.length; leafIndex++) {
+        const leaf = branch.items[leafIndex];
+        const setup = cloneSetup(undefined, branch.items);
+        let description = null;
+        if (leaf.kind === 'sleepSelf') {
+          setup.selfScene.find((entry) => entry.uid === CARRIER_UID).state = 'sleep';
+          description = 'sleepSelf unpayable (self sleeping)';
+        } else if (leaf.kind === 'removeFromHand' || leaf.kind === 'revealHandToDeckTop') {
+          setup.hand = [];
+          description = `${leaf.kind} unpayable (empty hand)`;
+        } else if (leaf.kind === 'revealFromHand' && (typeof leaf.n === 'number' ? leaf.n : leaf.n.min) > 0) {
+          setup.hand = [];
+          description = 'revealFromHand unpayable (empty hand)';
+        } else if (leaf.kind === 'removeDeckTop' && typeof leaf.n === 'number' && leaf.n > 0) {
+          setup.deckSize = Math.max(0, leaf.n - 1);
+          description = `removeDeckTop n=${leaf.n} unpayable (deck ${leaf.n - 1})`;
+        } else if (leaf.kind === 'discardEvidence') {
+          setup.evidence = [];
+          description = 'discardEvidence unpayable (no evidence)';
+        } else if (leaf.kind === 'removeSetCard') {
+          const carrier = setup.selfScene.find((entry) => entry.uid === CARRIER_UID);
+          if (carrier) carrier.setCards = [];
+          description = 'removeSetCard unpayable (no eligible set card)';
+        } else if (leaf.kind === 'removeStackedCards') {
+          const carrier = setup.selfScene.find((entry) => entry.uid === CARRIER_UID);
+          if (carrier) carrier.stackedCards = [];
+          description = 'removeStackedCards unpayable (empty stack)';
+        } else if (leaf.kind === 'flipFaceUpEvidence' && leaf.n.min > 0) {
+          setup.evidence = [];
+          description = 'flipFaceUpEvidence unpayable (no face-down evidence)';
+        } else if (leaf.kind === 'fileFrom') {
+          setup.fileCount = 0;
+          description = 'fileFrom unpayable (empty file)';
+        }
+        if (!description) {
+          notes.push(`${cardId}/${ability.id}: cost leaf '${leaf.kind}' has no deterministic negative fixture`);
+          continue;
+        }
+        scenarios.push({
+          name: `${cardId} cost-gate${branch.choicePath.length ? ` (cost choice ${branch.choicePath.join('.')})` : ''}: ${description} -> canPay=false`,
+          setup,
+          drive: {
+            kind: 'cost-gate', uid: CARRIER_UID, abilityId: ability.id, expectCanPay: false,
+            ...(branch.choicePath.length === 1 ? { costParams: { costChoice: branch.choicePath[0] } } : {}),
+            ...(branch.choicePath.length > 1 ? { costParams: { costChoicePath: branch.choicePath } } : {}),
+          },
+          script: [],
+          expect: [],
+        });
+      }
     }
-    if (items.includes('removeFromHand')) {
-      scenarios.push({
-        name: `${cardId} cost-gate: removeFromHand unpayable (empty hand) -> canPay=false`,
-        setup: { selfScene: [{ cardId, uid: CARRIER_UID, state: 'active' }], hand: [], caseStatus: condition && condition.kind === 'caseStatus' ? condition.status : '解決編' },
-        drive: { kind: 'cost-gate', uid: CARRIER_UID, abilityId: ability.id, expectCanPay: false },
-        script: [],
-        expect: [],
-      });
-    }
-    const rdt = costItems.find((it) => it.kind === 'removeDeckTop' && typeof it.n === 'number');
-    if (rdt) {
-      scenarios.push({
-        name: `${cardId} cost-gate: removeDeckTop n=${rdt.n} unpayable (deck ${rdt.n - 1}) -> canPay=false`,
-        setup: { selfScene: [{ cardId, uid: CARRIER_UID, state: 'active' }], hand: ['__HAND_FODDER__'], deckSize: Math.max(0, rdt.n - 1), caseStatus: condition && condition.kind === 'caseStatus' ? condition.status : '解決編' },
-        drive: { kind: 'cost-gate', uid: CARRIER_UID, abilityId: ability.id, expectCanPay: false },
-        script: [],
-        expect: [],
-      });
-      addFix('__HAND_FODDER__', {});
-    }
-    const gatable = items.filter((k) => k === 'sleepSelf' || k === 'removeFromHand' || k === 'removeDeckTop');
-    for (const k of items) if (!gatable.includes(k)) notes.push(`${cardId}/${ability.id}: cost item '${k}' has no gate scenario (not in cost table)`);
   }
 
   return { fixtures, scenarios, notes };
@@ -509,7 +701,9 @@ function main() {
   const repoRoot = process.cwd();
   const args = parseArgs(process.argv);
   const specsPath = path.isAbsolute(args.specs) ? args.specs : path.join(repoRoot, args.specs);
-  const specs = JSON.parse(fs.readFileSync(specsPath, 'utf8'));
+  const parsedSpecs = JSON.parse(fs.readFileSync(specsPath, 'utf8'));
+  const specRows = Array.isArray(parsedSpecs) ? parsedSpecs : parsedSpecs.cards;
+  const specs = specRows.map((spec) => spec.rep ? spec : { ...spec, rep: spec.id });
   const corpus = loadCorpus(repoRoot);
 
   const targetIds = args.ids || specs.map((s) => s.rep);

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "sourceMetadata": [
+    {
+      "id": "official-community-qa",
+      "kind": "official-community",
+      "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
+      "fetchedAt": "2026-07-18",
+      "exhaustive": false,
+      "note": "Static community-box access cannot establish complete coverage or exact post IDs."
+    }
+  ],
+  "deferrals": {
+    "DEFER-QA-POST-ID": {
+      "status": "open",
+      "reason": "Confirm each ruling against an exact official community post before it can be verified."
+    }
+  },
+  "refs": [
+    {
+      "id": "qa-22-community-index",
+      "sourceId": "official-community-qa",
+      "status": "unverified",
+      "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
+      "deferId": "DEFER-QA-POST-ID",
+      "summaryHash": "31af903a6328eb83897ad39e6b508a64a60fce3841d7a07b0f53d3955365d240"
+    },
+    {
+      "id": "qa-23-community-index",
+      "sourceId": "official-community-qa",
+      "status": "unverified",
+      "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
+      "deferId": "DEFER-QA-POST-ID",
+      "summaryHash": "dbabf7346a0a3904d423021536a44b106dfdfd0a244dcc958609d99801afe9e1"
+    },
+    {
+      "id": "qa-24-community-index",
+      "sourceId": "official-community-qa",
+      "status": "unverified",
+      "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
+      "deferId": "DEFER-QA-POST-ID",
+      "summaryHash": "d426d731ead14ae502f498807a3da3318adefe0b0bf51a3a26bcbf3581b13f00"
+    },
+    {
+      "id": "qa-25-community-index",
+      "sourceId": "official-community-qa",
+      "status": "unverified",
+      "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
+      "deferId": "DEFER-QA-POST-ID",
+      "summaryHash": "0d699e05ce1f881036318966213ead68fb09b4d84ae28af6a7daf578eb229b55"
+    },
+    {
+      "id": "qa-26-community-index",
+      "sourceId": "official-community-qa",
+      "status": "unverified",
+      "url": "https://conan-tcg.commmune.com/view/box?boxId=talk002",
+      "deferId": "DEFER-QA-POST-ID",
+      "summaryHash": "2178eeb19b8e6442d21a090a8928285743f85a686752b6cda4fef3dcaf599215"
+    }
+  ]
+}

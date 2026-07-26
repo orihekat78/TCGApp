@@ -25,16 +25,10 @@
 
 import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
-import { resolveEffectPicks } from './resolve-picks.js';
-import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import { event } from '../event/index.js';
 import type { GameState, AbilityDef } from '../types/index.js';
 
 type Player = 'self' | 'opp';
-
-function getHumanPlayerSide(): Player | null {
-  return (globalThis as { __humanPlayerSide?: Player | null }).__humanPlayerSide ?? null;
-}
 
 /**
  * cardId の CardDef が持つ trigger.hook==='leave:to-remove' の triggered ability (selfOnly 相当 =
@@ -63,21 +57,14 @@ export function invokeLeaveToRemoveOfCard(state: GameState, cardId: string, play
     if (ability.condition && !evalCond(state, ability.condition, baseCtx)) continue;
     if (!ability.effect) continue;
 
-    const humanSide = getHumanPlayerSide();
-    const isHumanEffect = humanSide !== null && player === humanSide;
-    const aiPolicy = new HeuristicPolicy();
-    const resolvedEffect = resolveEffectPicks(state, ability.effect, baseCtx, {
-      chooseAtomTarget: isHumanEffect ? undefined : aiPolicy.chooseAtomTarget?.bind(aiPolicy),
-      byPlayer: player,
-      humanChooser: isHumanEffect,
-      source: { cardId, abilityId: ability.id },
-    });
     event.queue(
       state,
-      resolvedEffect,
-      { player, uid: virtualUid, cardId },
+      ability.effect,
+      { player, uid: virtualUid, cardId, abilityId: ability.id, description: ability.description },
       'leave:to-remove',
       payload,
+      undefined,
+      { deferredPicks: true },
     );
   }
 }

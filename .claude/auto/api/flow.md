@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-api.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:api`
-> Source hash: `9824d4feaf4f`
+> Source hash: `f37f93eeb2e8`
 
 フェイズ制御（setup / auto / main / action FSM / contact / actionCase / guard）
 
@@ -24,7 +24,7 @@
 
 | 名前 | メンバー |
 | ---- | -------- |
-| `action` | `_deleteContext`, `_getContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `startFromEffect`, `tryGuard` |
+| `action` | `_deleteContext`, `_getContext`, `_hasOpenActionContext`, `_resetActionContexts`, `_resetTargetExpanders`, `abortIfMissing`, `advance`, `candidates`, `computeOrder`, `declare`, `mustTargetCandidates`, `passGuard`, `registerTargetExpander`, `snapshotAP`, `startFromEffect`, `tryGuard` |
 | `actionCase` | `flashWindow`, `gainSelfEvidence`, `removeOpponentEvidenceTop` |
 | `contact` | `canCutIn`, `canDisguise`, `computeOrder`, `cutIn`, `disguise`, `judge`, `pass` |
 | `guard` | `canGuard`, `candidates`, `mustGuardCandidates` |
@@ -41,13 +41,14 @@
 | `canAction` | `(state: GameState, byUid: string): boolean` | canAction — アクション宣言の汎用可否 (対象種別を問わない) - 主体が active - 名乗りなし、または名乗り例外 (迅速 / 突撃 / 突撃[キャラ] / 突撃[事件] のいずれか) 注意: partner はキャラと違い 名乗り状態の概念がない (rules/06)。 / |
 | `canActionAgainstCase` | `(state: GameState, byUid: string, targetPlayer: Player): boolean` | canActionAgainstCase — 相手事件へのアクション可否。 - 主体が canAction (target='case') - 相手の証拠 ≥ 1 (rules/07: 証拠が1つもない事件は対象不可) / |
 | `canActionAgainstChar` | `(state: GameState, byUid: string, targetUid: string): boolean` | canActionAgainstChar — 相手キャラへのアクション可否。 - 主体が canAction (target='char') - 対象が targetExpander.candidates() に含まれる - 通常 (rules/… |
+| `canActivateDeclaredAbility` | `(state: GameState, uid: string, abilId: string, costParams?: AbilityCostParams, options?: { allowImplicitRemoveSetCard?: boolean }): boolean` | Cost-aware authorization for the public activation/dispatch boundary. `canDeclaredAbility` intentionally remains the structural declaration gate; callers that can spend or replace costs must use this… |
 | `canDeclaredAbility` | `(state: GameState, uid: string, abilId: string): boolean` | canDeclaredAbility — 宣言能力使用可能か判定する。 - 対象キャラが存在する - 名乗り状態でも OK (rules/24) - active でなくても OK (ただし sleep コストは支払不可なため別途 engine.cost.canPay 判定が必要) - 【ターン①/②】 ability.… |
 | `canHandUseCard` | `(state: GameState, p: Player, cardId: string): boolean` | canHandUseCard — 通常の手札使用が可能か (scene 上限 5 未満)。 scene が 5 でキャラ登場するときは canHandUseCardSwitch を使う (rules/20 §スイッチ)。 / |
 | `canHandUseCardSwitch` | `(state: GameState, p: Player, cardId: string): boolean` | canHandUseCardSwitch — 手札使用 + スイッチ (rules/20 §スイッチ) が可能か判定。 条件: 通常ゲート ∧ cardId がキャラ ∧ 現場が満員 (5 枚)。 リムーブ対象 removeUid の検証 (scene に存在するか) は呼出側 / mutate.scene.switchEnter 側。 / |
 | `canPartnerAbility` | `(state: GameState, p: Player, _abilId: string): boolean` | canPartnerAbility — パートナー能力使用可能か判定する。 - パートナーがアクティブ状態 - パートナーが partner-area にいる (file-area / mr-removed は不可) abilId 単位の細かい条件 (【ターン①】等) はカード固有 listener で判定する想定。 / |
 | `canReason` | `(state: GameState, uid: string): boolean` | canReason — 推理可能か判定する。 - 対象キャラ / パートナーが存在 - active 状態 - キャラの場合: 名乗りなし or 迅速持ち (rules/11, 13) - パートナーの場合: 名乗り状態の概念なし (rules/06) → active なら常に可 / |
 | `canStartNextHint` | `(state: GameState, p: Player): boolean` | canStartNextHint — ネクストヒントを開始可能か判定する。 - FILE 最上部 (アシストパートナー以外) が 1 枚以上必要 (= 実質 FILE ≥ 1 + 非アシスト) / |
-| `doReasoning` | `(state: GameState, uid: string): void` | doReasoning — 推理を実行する。 - reasoning:declare → スリープ化 → reasoning:before-add → 証拠追加 → reasoning:end - LP は max(0, lp) で証拠枚数を決定 (rules/… |
+| `doReasoning` | `(state: GameState, uid: string): void` | doReasoning — 推理を実行する。 - reasoning:declare → スリープ化 → reasoning:after-sleep → reasoning:before-add → 証拠追加 → reasoning:end - LP は max(0, lp) で証拠枚数を決定 (rules/… |
 | `endTurn` | `(state: GameState, p: Player): void` | ターン終了処理 (rules/05 エンドフェイズ): 1. phase:main:end (メインフェイズ終了) 2. phase:end:start (エンドフェイズ開始 — ターン終了時能力発火窓) 3. [呼出元の責務] resolve.runAllUntilEmpty でターン終了時 trigger 解決 4.… |
 | `grantedDeclaredAbilitiesOf` | `(char: { turnEffects?: Record<string, unknown> } \| undefined): AbilityDef[]` | grantedDeclaredAbilitiesOf — 指定 scene char に charGrantAbility で付与された declared ability を列挙する共有 helper (gap② 2026-07-11, B06042)。 findDeclaredAbility の granted 走査と 1:1 対称 — UI/… |
 | `handUseCard` | `(state: GameState, p: Player, cardId: string, _ctx?: unknown, switchRemoveUid?: string): void` | handUseCard — 手札の使用を宣言する。 - turnFlags.handUseUsed=true をセット - effect:declared hook を emit (Phase 5 で登録された listener が pendingEffects に積む) - ログ追加 実際のカード効果解決は呼出元が engine.resolve.runAllUntilEmpty を実行する責務。… |

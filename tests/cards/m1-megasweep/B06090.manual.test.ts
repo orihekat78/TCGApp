@@ -129,15 +129,17 @@ function fireA1(s: GameState, optRun: boolean): void {
 // ─── a2 driver: real emit で hirameki trigger 発火 → resolveEffectPicks + AI drain で解決 ───
 function fireHirameki(evidenceOwner: Player, setup: (s: GameState) => void): GameState {
   const attacker: Player = evidenceOwner === 'self' ? 'opp' : 'self';
-  const s = produce(createEmptyGameState(), (d) => {
+  let s = produce(createEmptyGameState(), (d) => {
     d.turn = { number: 3, player: attacker, phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     setup(d);
   });
-  engine.event.emit(
-    s, 'evidence:remove-by-action',
-    { player: evidenceOwner, ev: { cardId: 'B06090' } },
-    { player: attacker, uid: `${attacker}-attacker` },
-  );
+  s = produce(s, (d) => {
+    engine.event.emit(
+      d, 'evidence:remove-by-action',
+      { player: evidenceOwner, ev: { cardId: 'B06090' } },
+      { player: attacker, uid: `${attacker}-attacker` },
+    );
+  });
   const pending = _drainPendingHirameki();
   expect(pending, 'ヒラメキ listener が pending を set').not.toBeNull();
   expect(pending!.cardId).toBe('B06090');

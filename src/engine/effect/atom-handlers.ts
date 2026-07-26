@@ -19,6 +19,7 @@ export {
   _drainPendingDeckReorderSide,
   _drainPendingDeckPlaceSide, // mini-wave #5 P2: deckPlaceSplitBound (top/bottom 振り分け) の drain
   _drainPendingContactStartAxId, // W6 step9 (row65): startContact 生成 ax.id の drain
+  resetPendingAtomSession,
   type PendingDeckRevealSide,
   type PendingDeckReorderSide,
   type PendingDeckPlaceSide,

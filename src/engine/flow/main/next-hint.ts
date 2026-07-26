@@ -17,7 +17,7 @@ import type { GameState } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { def as readDef } from '../../read/def.js';
-import { handUseCharRestrictAllows, nextHintColorIgnoreAllowed, effectiveHandLevel } from './hand-use-card.js';
+import { eventUseAllowed, handUseCharRestrictAllows, nextHintColorIgnoreAllowed, effectiveHandLevel } from './hand-use-card.js';
 
 type Player = 'self' | 'opp';
 
@@ -35,6 +35,35 @@ export function canStartNextHint(state: GameState, p: Player): boolean {
   if (file.length === 0) return false;
   // アシストパートナー以外のカードが 1 枚以上あれば OK
   return file.some(f => f.type !== 'assisted-partner');
+}
+
+/** Build the post-pop state without mutating. Rejected step-2 use must leave
+ * FILE, events, flags, and logs untouched. */
+function projectedNextHintState(state: GameState, p: Player): GameState | null {
+  const file = state.players[p].file;
+  const popIndex = file.map((f, i) => ({ f, i })).reverse().find(({ f }) => f.type !== 'assisted-partner')?.i;
+  if (popIndex === undefined) return null;
+  const popped = file[popIndex];
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [p]: {
+        ...state.players[p],
+        file: file.filter((_, i) => i !== popIndex),
+        // Step 2 sees the card just taken from FILE.  This keeps the pure
+        // preflight identical to the real pop → hand-add sequence.
+        hand: [...state.players[p].hand, popped.cardId],
+      },
+    },
+  } as GameState;
+}
+
+/** UI candidate mirror of the engine's post-pop event-use preflight. */
+export function nextHintEventUseAllowed(state: GameState, p: Player, cardId: string): boolean {
+  const projected = projectedNextHintState(state, p);
+  if (!projected) return false;
+  return eventUseAllowed(projected, p, cardId);
 }
 
 /**
@@ -69,6 +98,38 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
   // Round 3: FileCard.card-back に cardId を保持するよう拡張済 → 実 cardId を手札に push
   //   旧: FILE_CARD_BACK_PLACEHOLDER ('card-back') を push して UI 側で resolve できず "???"
   //   新: popped.cardId を渡し、cardResolvers が正常に名前/画像を解決可
+  // Validate every optional step-2 use against the state after FILE pop,
+  // before mutating or emitting anything. A rejected use must not consume
+  // FILE, set a flag, append a log, or trigger file:pop listeners.
+  let optionalDef: ReturnType<typeof readDef.card>;
+  if (optionalCardId !== undefined) {
+    const projected = projectedNextHintState(state, p);
+    if (!projected || !projected.players[p].hand.includes(optionalCardId)) {
+      throw new Error(`runNextHint: ${optionalCardId} not in ${p} hand`);
+    }
+    if (!colorAllowed(projected, p, optionalCardId)) {
+      throw new Error(`runNextHint: ${optionalCardId} color violates case`);
+    }
+    const d = readDef.card(optionalCardId);
+    optionalDef = d;
+    if (d?.kind === 'character' && (projected.turnState[p].useEnterBannedCardNames ?? []).some(name => d.names.includes(name))) {
+      throw new Error(`runNextHint: ${optionalCardId} use/enter banned this turn`);
+    }
+    const nhLvl = effectiveHandLevel(projected, p, optionalCardId);
+    if (nhLvl !== undefined && nhLvl > projected.players[p].file.length) {
+      throw new Error(`runNextHint: ${optionalCardId} level ${nhLvl} > FILE ${projected.players[p].file.length}`);
+    }
+    if (optionalDef?.kind === 'event' && projected.turnState[p].eventUseBanned) {
+      throw new Error(`runNextHint: ${optionalCardId} event-use banned this turn`);
+    }
+    if (optionalDef?.kind === 'event' && !eventUseAllowed(projected, p, optionalCardId)) {
+      throw new Error(`runNextHint: ${optionalCardId} event-use condition not met`);
+    }
+    if (optionalDef?.kind === 'character' && !handUseCharRestrictAllows(projected, p, optionalCardId)) {
+      throw new Error(`runNextHint: ${optionalCardId} hand-use restricted by case`);
+    }
+  }
+
   const popped = mutate.file.popTop(state, p);
   if (popped && popped.type === 'card-back') {
     mutate.hand.add(state, p, [popped.cardId]);
@@ -82,38 +143,17 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
   // 2. (任意) 1 枚使用
   if (optionalCardId !== undefined) {
     // 手札にあるか確認
-    if (!state.players[p].hand.includes(optionalCardId)) {
-      throw new Error(`runNextHint: ${optionalCardId} not in ${p} hand`);
-    }
     // 色 (rules/20)
-    if (!colorAllowed(state, p, optionalCardId)) {
-      throw new Error(`runNextHint: ${optionalCardId} color violates case`);
-    }
     // レベル ≤ 現在 FILE 枚数 (rules/12 — 1 で取った分は既に減算済)
     // mini-wave #4: 手札内 continuous level modifier (B01009/B09095) を effectiveHandLevel で反映
-    const d = readDef.card(optionalCardId);
-    if (d?.kind === 'character' && (state.turnState[p].useEnterBannedCardNames ?? []).some(name => d.names.includes(name))) {
-      throw new Error(`runNextHint: ${optionalCardId} use/enter banned this turn`);
-    }
-    const nhLvl = effectiveHandLevel(state, p, optionalCardId);
-    if (nhLvl !== undefined) {
-      if (nhLvl > state.players[p].file.length) {
-        throw new Error(`runNextHint: ${optionalCardId} level ${nhLvl} > FILE ${state.players[p].file.length}`);
-      }
-    }
+    const d = optionalDef;
     // イベント使用不可 (B09034 §M3): ネクストヒントの step2 でも event 使用は不可 (rules/25 公式 Q&A:
     //   「ネクストヒントでイベントカードを使用することができ(ない)」)。step1 の FILE→手札は阻害しない
     //   (本ガードは optionalCardId ブロック内 = step2 のみ)。UI 側 toCandidate でも事前除外する。
-    if (d?.kind === 'event' && state.turnState[p].eventUseBanned) {
-      throw new Error(`runNextHint: ${optionalCardId} event-use banned this turn`);
-    }
     // P05 (wave-5): case card 継続の character 手札使用制限 (「特徴[X]以外のキャラを手札から使用できない」)。
     //   公式 Q&A:「ネクストヒントでの使用も『手札から使用』に含まれる」→ 手札の使用 (canHandUseCard) と同じ
     //   gate を character に課す。event/効果登場/カットイン/変装/ヒラメキ は対象外 (handUseCharRestrictAllows
     //   が非 character を素通り)。UI toCandidate 側の事前除外は card-wave で配線 (現状 consumer カード無)。
-    if (d?.kind === 'character' && !handUseCharRestrictAllows(state, p, optionalCardId)) {
-      throw new Error(`runNextHint: ${optionalCardId} hand-use restricted by case`);
-    }
     // 効果発動 hook (Phase 5 で listener が pendingEffects に積む)
     event.emit(
       state,
@@ -124,7 +164,7 @@ export function runNextHint(state: GameState, p: Player, optionalCardId?: string
       // mini-wave #2 (2026-07-10): viaNextHint flag — 「ネクストヒントで手札を使用したとき」(B01005/B03002/
       // B05005) を通常の手札の使用と判別する additive field (既存 matcher は未読で挙動不変)。
       { kind: d?.kind === 'event' ? 'event-use' : 'character-use', cardId: optionalCardId, player: p, viaNextHint: true },
-      { player: p, cardId: optionalCardId },
+      { player: p, cardId: optionalCardId, ...(d?.kind === 'event' ? { resolutionKind: 'normal-event' as const } : {}) },
     );
     // キャラの場合: 現場へ登場 (rules/12 §3 — アクティブ・名乗り状態で登場)。
     // 手札の使用とは異なり、ネクストヒントによる登場は **手動プレイ** = viaEffect:false。

@@ -25,6 +25,7 @@ describe('PR158 犯人 (character, cutin remove-name scaling AP)', () => {
     expect(PR158.ap).toBe(1000);
     expect(PR158.lp).toBe(1);
     expect(PR158.traits).toEqual(['犯人']);
+    expect(PR158.deckLimit).toBe('unlimited');
     // 「デッキに何枚でも入れられる」はデッキ構築ルール → AbilityDef 非表現。カットイン a1 のみ。
     expect(PR158.abilities.length).toBe(1);
   });
@@ -47,6 +48,7 @@ describe('PR158 犯人 (character, cutin remove-name scaling AP)', () => {
   it('PR164 variant: same text, different art (imageUrl), same 0627 name', () => {
     expect(PR164.id).toBe('PR164');
     expect(PR164.names).toEqual(['犯人']);
+    expect(PR164.deckLimit).toBe('unlimited');
     expect(PR164.imageUrl).not.toBe(PR158.imageUrl);
     expect((PR164.abilities[0].effect as { args: { delta: { dyn: string } } }).args.delta.dyn)
       .toBe((PR158.abilities[0].effect as { args: { delta: { dyn: string } } }).args.delta.dyn);

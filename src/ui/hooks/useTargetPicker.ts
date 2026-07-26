@@ -125,6 +125,9 @@ function cancelPick(): void {
   if (resolver) resolver(null);
 }
 
+/** React 外の対戦セッション管理から、保留 Promise を安全に null で決着する。 */
+export const cancelTargetPicker = cancelPick;
+
 function isPickerCandidate(uid: string): boolean {
   const phase = useTargetPickerStore.getState().phase;
   if (phase.phase === 'idle') return false;

@@ -25,6 +25,45 @@ const registry: Map<HookName, Listener[]> = new Map();
 
 // Auto-increment counter for EffectStackEntry IDs. Module-level singleton.
 let entryIdCounter = 0;
+let suppressedEventDepth = 0;
+type JournaledEmit = { state: GameState; name: HookName; payload: unknown; source?: unknown };
+let eventJournal: JournaledEmit[] | null = null;
+
+/** Payment preparation may emit against an isolated state clone. Preserve IDs. */
+export function _snapshotEntryIdCounter(): number {
+  return entryIdCounter;
+}
+
+export function _restoreEntryIdCounter(snapshot: number): void {
+  entryIdCounter = snapshot;
+}
+
+/** Run a preparation pass without invoking listener closures or queueing effects. */
+export function _withEventsSuppressed<T>(fn: () => T): T {
+  suppressedEventDepth += 1;
+  try {
+    return fn();
+  } finally {
+    suppressedEventDepth -= 1;
+  }
+}
+
+/** Delay listener execution until a cost transaction has fully committed. */
+export function _beginEventJournal(): JournaledEmit[] {
+  if (eventJournal !== null) throw new Error('event journal is already active');
+  eventJournal = [];
+  return eventJournal;
+}
+
+export function _abortEventJournal(journal: JournaledEmit[]): void {
+  if (eventJournal === journal) eventJournal = null;
+}
+
+export function _commitEventJournal(journal: JournaledEmit[]): void {
+  if (eventJournal !== journal) return;
+  eventJournal = null;
+  for (const entry of journal) emit(entry.state, entry.name, entry.payload, entry.source);
+}
 
 function nextEntryId(): string {
   entryIdCounter += 1;
@@ -52,6 +91,11 @@ function normalizeSource(raw: unknown): EffectStackEntrySource {
     const src: EffectStackEntrySource = { player };
     if (typeof r.uid === 'string') src.uid = r.uid;
     if (typeof r.cardId === 'string') src.cardId = r.cardId;
+    if (typeof r.abilityId === 'string') src.abilityId = r.abilityId;
+    if (typeof r.description === 'string') src.description = r.description;
+    if (r.resolutionKind === 'normal-event' || r.resolutionKind === 'hirameki' || r.resolutionKind === 'cutin') {
+      src.resolutionKind = r.resolutionKind;
+    }
     return src;
   }
   return { player: 'self' };
@@ -119,21 +163,49 @@ function on(name: HookName, listener: Listener): Unsubscribe {
  * Listener が Effect を返したら state.pendingEffects に積む (queue 経由)。
  */
 function emit(state: GameState, name: HookName, payload: unknown, source?: unknown): void {
+  if (suppressedEventDepth > 0) return;
+  if (eventJournal !== null) {
+    eventJournal.push({ state, name, payload, source });
+    return;
+  }
   const list = registry.get(name);
   if (!list || list.length === 0) return;
   // スナップショット (listener が listener を解除しても列挙が壊れないように)
   const snapshot = list.slice();
-  for (const listener of snapshot) {
-    const result = listener(state, payload, source);
-    if (result) {
+  const priorBatch = state.pendingEffects.reduce(
+    (max, entry) => Math.max(max, entry.triggerBatch ?? 0),
+    state.effectTriggerBatchSeq ?? 0,
+  );
+  const triggerBatch = priorBatch + 1;
+  state.effectTriggerBatchSeq = triggerBatch;
+  const parentBatch = state.effectTriggerBatchContext;
+  const parentConfirmed = state.effectTriggerBatchConfirmedContext;
+  state.effectTriggerBatchContext = triggerBatch;
+  // A new hook emission is a new simultaneous timing. Confirmation belongs
+  // only to the resolving parent batch and must not auto-confirm this batch.
+  delete state.effectTriggerBatchConfirmedContext;
+  try {
+    for (const listener of snapshot) {
+      const result = listener(state, payload, source);
+      // queue() returns its created stack entry for direct callers that need
+      // declaration provenance. An expression-bodied listener may therefore
+      // return that entry incidentally; it is already queued and must never be
+      // treated as a second Effect.
+      if (!result || !('kind' in result)) continue;
       // 発火時の hook 名・payload・source を EffectStackEntry に転記する
       const entry = buildEntry(state, result, {
         hook: name,
         payload,
         source,
       });
+      entry.triggerBatch = triggerBatch;
       state.pendingEffects.push(entry);
     }
+  } finally {
+    if (parentBatch === undefined) delete state.effectTriggerBatchContext;
+    else state.effectTriggerBatchContext = parentBatch;
+    if (parentConfirmed === undefined) delete state.effectTriggerBatchConfirmedContext;
+    else state.effectTriggerBatchConfirmedContext = parentConfirmed;
   }
 }
 
@@ -153,11 +225,30 @@ function queue(
   // triggered.ts handleHook のみが渡す (他 caller は省略で従来挙動)。
   // engine additive wave (2026-06-29d): costPaid も同経路で entry へ載せる (declared-ability.ts が渡す)。
   // BUG-171 (2026-07-04): dyn も同型永続化 (declaredName 供給チャネルの queue-boundary 喪失修正)。
-  entryExtras?: Pick<EffectStackEntry, 'declaredBatch' | 'declaredReaction' | 'costPaid' | 'dyn'>,
-): void {
+  entryExtras?: Pick<EffectStackEntry,
+    | 'declaredBatch'
+    | 'declaredReaction'
+    | 'costPaid'
+    | 'dyn'
+    | 'triggerBatch'
+    | 'ownerChosenOrder'
+    | 'ownerOrderConfirmed'
+    | 'resumesCurrentEffect'
+    | 'deferredPicks'
+    | 'reasoningContinuation'
+  >,
+): EffectStackEntry {
   const entry = buildEntry(state, effect, { hook: hook ?? 'manual', payload, source, bindings });
   if (entryExtras) Object.assign(entry, entryExtras);
+  entry.triggerBatch ??= state.effectTriggerBatchContext;
+  // Confirmation is a decision about the already-resolving effect. Only an
+  // explicit continuation (pick/choice/optional resume) may retain it; a
+  // newly queued child is a fresh unresolved effect and must be orderable.
+  if (entry.resumesCurrentEffect === true) {
+    entry.ownerOrderConfirmed ??= state.effectTriggerBatchConfirmedContext;
+  }
   state.pendingEffects.push(entry);
+  return entry;
 }
 
 /**
@@ -166,6 +257,8 @@ function queue(
 function _resetRegistry(): void {
   registry.clear();
   entryIdCounter = 0;
+  suppressedEventDepth = 0;
+  eventJournal = null;
   resolutionLocked = false;
   resolutionLockReason = null;
 }

@@ -172,6 +172,8 @@ function drainScript(s: GameState, script: ScriptAction[]): { recorded: Recorded
 }
 
 beforeEach(() => {
+  (globalThis as { __pendingDeckReorderSide?: unknown }).__pendingDeckReorderSide = null;
+  (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
   event._resetRegistry();
   _resetTriggeredRegistered();
   _resetUidCounter();

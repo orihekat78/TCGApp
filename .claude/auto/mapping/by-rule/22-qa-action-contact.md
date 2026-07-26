@@ -2,7 +2,7 @@
 
 > ⚠️ このファイルは `scripts/gen-docs/gen-mapping.ts` により自動生成された。手で編集しない。
 > 再生成: `npm run docs:mapping`
-> Source hash: `28bfbce9bad5`
+> Source hash: `b43c7af643c9`
 
 公式ルール [`22-qa-action-contact.md`](../../../rules/22-qa-action-contact.md) を参照しているソース・関連 spec・関連 engine namespace のハブ。
 
@@ -24,7 +24,7 @@
 - [`engine-wave2-action-triggers-design`](../by-spec/engine-wave2-action-triggers-design.md)
 - [`D06003`](../by-spec/grounding--D06003.md)
 
-## 📄 参照ソース (295)
+## 📄 参照ソース (296)
 
 - [`src/cards/_shared/contactTargetMatches.ts`](../../../../src/cards/_shared/contactTargetMatches.ts)
 - [`src/cards/ct-d01/D01009.ts`](../../../../src/cards/ct-d01/D01009.ts)
@@ -46,4 +46,4 @@
 - [`src/cards/ct-d04/D04009.ts`](../../../../src/cards/ct-d04/D04009.ts)
 - [`src/cards/ct-d04/D04012.ts`](../../../../src/cards/ct-d04/D04012.ts)
 - [`src/cards/ct-d05/D05008.ts`](../../../../src/cards/ct-d05/D05008.ts)
-- _...ほか 275 件 (詳細は [mapping](../rules-to-cards.md) 参照)_
+- _...ほか 276 件 (詳細は [mapping](../rules-to-cards.md) 参照)_

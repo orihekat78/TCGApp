@@ -19,40 +19,38 @@ export const AVAILABLE_DECKS: ReadonlyArray<{ id: DeckId; label: string }> = [
   { id: 'CT-D11', label: 'CT-D11 — 千速と重悟の婚活パーティー' },
 ];
 
-// Round 3: event カード組込 (ユーザ要望)
-//   D08: 12 character × 3 + 2 event × 2 = 40 枚 (D08024「あら…頼もしい」 / D08025「蘭の一撃」)
-//   D11: 12 character × 3 + 2 event × 2 = 40 枚 (D11019「15の受難」 / D11020「18の想起」)
-// rules/02: 同 ID 最大 3 枚なので event 2 枚は制約内。
-// character は 14 → 12 unique に絞り、event 2 種で枚数を補う。
-const D08_CHAR_IDS = [
-  'D08003', 'D08005', 'D08007', 'D08009', 'D08011', 'D08013',
-  'D08015', 'D08017', 'D08018', 'D08021', 'D08022', 'D08023',
-] as const;
-const D08_EVENT_IDS = ['D08024', 'D08025'] as const;
+// 公式構築済みデッキの印刷カード別収録枚数を保持する。
+// パラレル印刷は別 num だが、同一公式 ID の合計が最大 3 枚になる。
+type DeckEntry = readonly [id: CardId, count: number];
 
-const D11_CHAR_IDS = [
-  'D11003', 'D11004', 'D11005', 'D11006', 'D11007', 'D11009',
-  'D11010', 'D11011', 'D11013', 'D11014', 'D11015', 'D11016',
-] as const;
-const D11_EVENT_IDS = ['D11019', 'D11020'] as const;
+const D08_MAIN: readonly DeckEntry[] = [
+  ['D08003', 1], ['D08004', 2], ['D08005', 1], ['D08006', 2],
+  ['D08007', 1], ['D08008', 2], ['D08009', 1], ['D08010', 2],
+  ['D08011', 1], ['D08012', 2], ['D08013', 1], ['D08014', 2],
+  ['D08015', 1], ['D08016', 2], ['D08017', 1], ['D08018', 2],
+  ['D08019', 1], ['D08020', 2], ['D08021', 2], ['D08022', 3],
+  ['D08023', 2], ['D08024', 3], ['D08025', 3],
+];
 
-function buildDeck40(
-  charIds: readonly string[],
-  eventIds: readonly string[],
-): CardId[] {
-  const out: CardId[] = [];
-  for (const id of charIds) out.push(id, id, id); // character × 3
-  for (const id of eventIds) out.push(id, id);    // event × 2
-  return out.slice(0, 40);
+const D11_MAIN: readonly DeckEntry[] = [
+  ['D11003', 1], ['D11004', 2], ['D11005', 1], ['D11006', 2],
+  ['D11007', 1], ['D11008', 2], ['D11009', 1], ['D11010', 2],
+  ['D11011', 3], ['D11012', 3], ['D11013', 3], ['D11014', 3],
+  ['D11015', 3], ['D11016', 3], ['D11017', 3], ['D11018', 3],
+  ['D11019', 2], ['D11020', 2],
+];
+
+function expandDeck(entries: readonly DeckEntry[]): CardId[] {
+  return entries.flatMap(([id, count]) => Array.from({ length: count }, () => id));
 }
 
 /** デッキ ID から DeckSpec (partnerId / caseId / mainCards 40 枚) を生成。 */
 function buildDeckSpec(deckId: DeckId): DeckSpec {
   switch (deckId) {
     case 'CT-D08':
-      return { partnerId: 'D08001', caseId: 'D08026', mainCards: buildDeck40(D08_CHAR_IDS, D08_EVENT_IDS) };
+      return { partnerId: 'D08001', caseId: 'D08026', mainCards: expandDeck(D08_MAIN) };
     case 'CT-D11':
-      return { partnerId: 'D11001', caseId: 'D11021', mainCards: buildDeck40(D11_CHAR_IDS, D11_EVENT_IDS) };
+      return { partnerId: 'D11001', caseId: 'D11021', mainCards: expandDeck(D11_MAIN) };
   }
 }
 

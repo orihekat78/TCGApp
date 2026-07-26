@@ -11,10 +11,13 @@
 //
 // 既存 SouzaReorderModal.css のスタイルを流用 (同じ「デッキ下へ送る順」UI)。
 
-import { useState, type JSX } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
-import { def as readDef } from '@/engine/read/def.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { SelectableCardTile } from './SelectableCardTile.js';
 import './SouzaReorderModal.css';
 
 export function DeckReorderModalHost(): JSX.Element | null {
@@ -25,14 +28,21 @@ export function DeckReorderModalHost(): JSX.Element | null {
     : null;
 }
 
-function nameOf(cardId: string): string {
-  return readDef.card(cardId)?.names?.[0] ?? cardId;
+type OrderedCard = { cardId: string; occurrenceId: string };
+
+function asOrderedCards(cardIds: readonly string[]): OrderedCard[] {
+  return cardIds.map((cardId, index) => ({ cardId, occurrenceId: `${cardId}#${index}` }));
 }
 
 function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX.Element {
   // order は cardId の配列 (重複カード対応のため index ベースで扱う)。
-  const [order, setOrder] = useState<string[]>(() => [...cardIds]);
+  const [order, setOrder] = useState<OrderedCard[]>(() => asOrderedCards(cardIds));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const expandModal = useCardExpandModal();
+  useEffect(() => {
+    setOrder(asOrderedCards(cardIds));
+    setDragIdx(null);
+  }, [cardIds]);
 
   const move = (from: number, to: number): void => {
     if (to < 0 || to >= order.length || from === to) return;
@@ -45,7 +55,7 @@ function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX
   };
 
   const confirm = (): void => {
-    dispatchEngineAction({ type: 'deckReorderResolve', order });
+    dispatchEngineAction({ type: 'deckReorderResolve', order: order.map((card) => card.cardId) });
   };
 
   return (
@@ -63,9 +73,9 @@ function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX
         </div>
         <div className="souza-body">
           <ul className="souza-list">
-            {order.map((cardId, i) => (
+            {order.map((card, i) => (
               <li
-                key={`${cardId}-${i}`}
+                key={card.occurrenceId}
                 className="souza-row"
                 data-testid={`deck-reorder-row-${i}`}
                 draggable
@@ -75,27 +85,35 @@ function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX
                 onDragEnd={() => setDragIdx(null)}
               >
                 <span className="souza-index">{i + 1}</span>
-                <span className="souza-name">{nameOf(cardId)}</span>
-                <button
-                  type="button"
-                  className="souza-arrow"
-                  disabled={i === 0}
-                  data-testid={`deck-reorder-up-${i}`}
-                  aria-label="上へ"
-                  onClick={() => move(i, i - 1)}
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  className="souza-arrow"
-                  disabled={i === order.length - 1}
-                  data-testid={`deck-reorder-down-${i}`}
-                  aria-label="下へ"
-                  onClick={() => move(i, i + 1)}
-                >
-                  ▼
-                </button>
+                <SelectableCardTile
+                  cardId={card.cardId}
+                  instanceId={card.occurrenceId}
+                  occurrenceLabel={publicCardOccurrenceLabel(order.map((item) => item.cardId), card.cardId, i)}
+                  onSelect={() => {}}
+                  onExpand={expandModal.open}
+                />
+                <div className="souza-row-controls">
+                  <button
+                    type="button"
+                    className="souza-arrow"
+                    disabled={i === 0}
+                    data-testid={`deck-reorder-up-${i}`}
+                    aria-label="上へ"
+                    onClick={() => move(i, i - 1)}
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    className="souza-arrow"
+                    disabled={i === order.length - 1}
+                    data-testid={`deck-reorder-down-${i}`}
+                    aria-label="下へ"
+                    onClick={() => move(i, i + 1)}
+                  >
+                    ▼
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -111,6 +129,7 @@ function DeckReorderModalInner({ cardIds }: { cardIds: readonly string[] }): JSX
           </button>
         </div>
       </div>
+      <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
     </div>
   );
 }

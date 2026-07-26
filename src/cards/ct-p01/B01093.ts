@@ -35,7 +35,7 @@ const a2: AbilityDef = {
     kind: 'sequence',
     steps: [
       // 相手はデッキのカードを上から1枚公開する
-      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'opp', maxN: 1, bind: '$revealed' } },
+      { kind: 'atom', verb: 'deckRevealUntil', args: { player: 'opp', maxN: 1, visibility: 'public', viewer: 'all', bind: '$revealed' } },
       // そのカードをデッキの上か下に移す（自分 = ability owner が選ぶ）
       { kind: 'atom', verb: 'deckPlaceSplitBound', args: { player: 'opp', bindKey: '$revealed' } },
     ],

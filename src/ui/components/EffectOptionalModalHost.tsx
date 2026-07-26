@@ -43,7 +43,8 @@ export function EffectOptionalModalHost(): JSX.Element | null {
           <h2 id="opt-title">任意効果</h2>
           <p className="cp-sub">{desc ? `${sourceName}: ${desc}` : `${sourceName}: 効果を使いますか?`}</p>
         </div>
-        <div className="cp-body">
+        <div className="cp-body"><p className="cp-sub">Choose whether to continue.</p></div>
+        <div className="cp-actions">
           <ul className="cp-list">
             <li>
               <button type="button" className="cp-cand" onClick={() => resolve(true)} data-testid="opt-run-yes">

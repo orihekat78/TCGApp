@@ -41,9 +41,9 @@ beforeEach(() => {
   setHuman('self');
 });
 
-function base(): GameState {
+function base(turnPlayer: 'self' | 'opp' = 'self'): GameState {
   const s = createEmptyGameState();
-  s.turn = { number: 3, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
+  s.turn = { number: 3, player: turnPlayer, phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
   return s;
 }
 
@@ -109,7 +109,7 @@ describe('B07049 a1 — handAddFromRemove area union (remove ∪ partner-area)',
 
   it('owner=opp (相手が使用) → side:self は opp 相対 zone を対象 (AI 経路)', () => {
     setHuman(null);
-    const s = base();
+    const s = base('opp');
     const me = mutate.scene.enter(s, 'opp', 'B07049', {});
     s.players.opp.remove = ['JEWEL_R', 'DECOY_R'];
     s.players.opp.partnerAreaCards = ['JEWEL_PA'];

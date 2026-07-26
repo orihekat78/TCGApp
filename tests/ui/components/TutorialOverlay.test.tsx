@@ -22,6 +22,8 @@ describe('TutorialOverlay', () => {
     expect(html).toContain(TUTORIAL_STEPS[0].title);
     expect(html).toContain(TUTORIAL_STEPS[0].body);
     expect(html).toContain('data-testid="tutorial-overlay"');
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain('aria-modal="true"');
     expect(html).toContain('data-testid="tutorial-next"');
   });
 });

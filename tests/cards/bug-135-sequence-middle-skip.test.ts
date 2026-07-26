@@ -112,9 +112,8 @@ describe('BUG-135 回帰 — sequence 中間 skippable pick の decline で必�
   });
 
   it('D03002 a1: chain[discard, sequence[sceneSetState, evidenceGain]] — discard 適用 → 内側 sequence の必須 remainder (evidenceGain) が脱落しない', () => {
-    // 注: 内側 sequence の sceneSetState pick は continuation remainder 内にあり、runEffect 経路では
-    //   human surface しない既知 gap (B09056 DEFER 根拠 — bug-111-human-decline-repro 参照)。auto-0-pick で
-    //   誰もスタンしないが、後続の必須 evidenceGain は脱落せず発火する (= BUG-135 が懸念した remainder-drop は起きない)。
+    // 内側 sequence の sceneSetState も human decision として surface する。decline 後も
+    // 後続の必須 evidenceGain は脱落せず発火する (= BUG-135 が懸念した remainder-drop は起きない)。
     setHuman('self');
     const s0 = produce(createEmptyGameState(), (d) => {
       d.turn = { number: 5, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
@@ -131,7 +130,7 @@ describe('BUG-135 回帰 — sequence 中間 skippable pick の decline で必�
     expect(p1?.atomVerb).toBe('discard');
     const hcUid = p1!.candidates.find((c) => c.cardId === HC)!.uid;
 
-    // discard を適用 (HC をリムーブ) → chain proceed → 内側 sequence (sceneSetState auto-0-pick + evidenceGain) 実行
+    // discard を適用 (HC をリムーブ) → chain proceed → 内側 sequence の sceneSetState pick が surface
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: hcUid });
     expect(useGameStateStore.getState().pendingEffectPick?.atomVerb).toBe('sceneSetState');
     dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
@@ -139,7 +138,7 @@ describe('BUG-135 回帰 — sequence 中間 skippable pick の decline で必�
     const after = useGameStateStore.getState().gameState!;
     // 期待: 必須 remainder evidenceGain が発火 (証拠 +1) — chain→内側sequence の nest で remainder 脱落なし
     expect(after.players.self.evidence.length).toBe(1);
-    // 誰もスタンしていない (sceneSetState は auto-0-pick: kid0 active / st0 sleep のまま)
+    // sceneSetState を decline したため、誰もスタンしていない (kid0 active / st0 sleep のまま)
     expect(after.players.self.scene.find((c) => c.uid === 'kid0')!.state).toBe('active');
     expect(after.players.opp.scene.find((c) => c.uid === 'st0')!.state).toBe('sleep');
     // HC は discard 済 (手札 0 / リムーブ +1)

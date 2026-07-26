@@ -1,19 +1,3 @@
-// Phase 8 完全クローズ Commit 3b: ミスリード listener
-//
-// rules: 13-keywords.md §ミスリード
-// spec: 計画 — Commit 3b Misread infrastructure
-//
-// 役割:
-//   - `reasoning:before-add` イベント発火時に、反対側 scene の active キャラから
-//     type:'icon-misread' ability を抽出 → 発動候補リストを構築
-//   - AI defender (= opp 側に misread 持ち && human が推理側) の場合は listener 内
-//     synchronous に HeuristicPolicy.chooseMisreadTriggers を呼んで sleep + LP-X 適用
-//   - Human defender (= self 側に misread 持ち && opp が推理側) の場合は側チャネル set
-//     → UI 経由で resolve (Commit 3b では scaffold のみ、実発動は別 commit で対応)
-//
-// 注: MVP デッキ (CT-D08/CT-D11) には icon-misread を持つカードがないため、
-//     本 listener が実際に発動するのは Phase 5 で実カード追加された後。
-
 import { event } from '../event/registry.js';
 import { def as readDef } from '../read/def.js';
 import { char as readChar } from '../read/char.js';
@@ -24,41 +8,39 @@ import type { GameState } from '../types/index.js';
 export type MisreadCandidate = { uid: string; x: number };
 
 export type PendingMisreadSide = {
+  /** Player who owns the misread decision. */
+  player: 'self' | 'opp';
   reasoningUid: string;
   reasoningPlayer: 'self' | 'opp';
   candidates: MisreadCandidate[];
 };
 
-// Round 4j-fix (BUG-034): vite dev mode の module instance 分離回避のため globalThis 経由で
-// side-channel を保持。hirameki.ts と同パターン (水平展開)。
 declare global {
-
   var __pendingMisread: PendingMisreadSide | null | undefined;
 }
-function _readMisreadSide(): PendingMisreadSide | null {
-  return (globalThis as { __pendingMisread?: PendingMisreadSide | null }).__pendingMisread ?? null;
-}
-function _writeMisreadSide(v: PendingMisreadSide | null): void {
-  (globalThis as { __pendingMisread?: PendingMisreadSide | null }).__pendingMisread = v;
+
+function readPending(): PendingMisreadSide | null {
+  return globalThis.__pendingMisread ?? null;
 }
 
-/** dispatchEngineAction が produce 完了後に呼び、Zustand に転送するための drain API */
+function writePending(value: PendingMisreadSide | null): void {
+  globalThis.__pendingMisread = value;
+}
+
 export function _drainPendingMisread(): PendingMisreadSide | null {
-  const v = _readMisreadSide();
-  _writeMisreadSide(null);
-  return v;
+  const value = readPending();
+  writePending(null);
+  return value;
 }
 
-/** テスト用: 側チャネル直接リセット */
+export function _peekPendingMisread(): PendingMisreadSide | null {
+  return readPending();
+}
+
 export function _resetPendingMisread(): void {
-  _writeMisreadSide(null);
+  writePending(null);
 }
 
-/**
- * テスト用: `_registered` flag をリセットして次回 `registerMisreadListener()` 呼出で
- * listener を再登録可能にする。`event._resetRegistry()` 直後に呼ぶ必要がある
- * (Hirameki と同じ pattern, commit 75fe5f4)。
- */
 export function _resetMisreadRegistered(): void {
   _registered = false;
 }
@@ -66,18 +48,114 @@ export function _resetMisreadRegistered(): void {
 function findOwnerOfUid(state: GameState, uid: string): 'self' | 'opp' | null {
   if (uid === 'partner:self') return 'self';
   if (uid === 'partner:opp') return 'opp';
-  for (const p of ['self', 'opp'] as const) {
-    if (state.players[p].scene.some((c) => c.uid === uid)) return p;
+  for (const player of ['self', 'opp'] as const) {
+    if (state.players[player].scene.some((character) => character.uid === uid)) return player;
   }
   return null;
 }
 
 function extractMisreadX(ability: unknown): number | null {
   if (!ability || typeof ability !== 'object') return null;
-  const a = ability as { type?: string; effect?: { args?: { x?: number } } };
-  if (a.type !== 'icon-misread') return null;
-  const x = a.effect?.args?.x;
+  const candidate = ability as { type?: string; effect?: { args?: { x?: number } } };
+  if (candidate.type !== 'icon-misread') return null;
+  const x = candidate.effect?.args?.x;
   return typeof x === 'number' ? x : null;
+}
+
+function humanPlayerSide(): 'self' | 'opp' | null {
+  return (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide ?? null;
+}
+
+function collectCandidates(state: GameState, player: 'self' | 'opp'): MisreadCandidate[] {
+  const candidates: MisreadCandidate[] = [];
+  for (const character of state.players[player].scene) {
+    if (character.state !== 'active') continue;
+    if (readChar.originalAbilitiesDisabled(state, character.uid)) continue;
+    const card = readDef.card(character.cardId);
+    if (!card) continue;
+    for (const ability of card.abilities) {
+      const x = extractMisreadX(ability);
+      if (x !== null) candidates.push({ uid: character.uid, x });
+    }
+  }
+  return candidates;
+}
+
+function setReasoningLpReduction(state: GameState, uid: string, reduction: number): void {
+  if (uid === 'partner:self' || uid === 'partner:opp') {
+    const player = uid === 'partner:self' ? 'self' : 'opp';
+    const partner = state.players[player].partner;
+    partner.turnEffects ??= {};
+    partner.turnEffects['lpMod_reasoning'] = -reduction;
+    return;
+  }
+  for (const player of ['self', 'opp'] as const) {
+    const character = state.players[player].scene.find((entry) => entry.uid === uid);
+    if (!character) continue;
+    character.turnEffects['lpMod_reasoning'] = -reduction;
+    return;
+  }
+  throw new Error(`misreadResolve: missing reasoning target uid=${uid}`);
+}
+
+function validatePicks(
+  state: GameState,
+  pending: PendingMisreadSide,
+  requestedPicks: ReadonlyArray<MisreadCandidate>,
+): MisreadCandidate[] {
+  if (findOwnerOfUid(state, pending.reasoningUid) !== pending.reasoningPlayer) {
+    throw new Error(`misreadResolve: stale reasoning target uid=${pending.reasoningUid}`);
+  }
+  const defender = pending.reasoningPlayer === 'self' ? 'opp' : 'self';
+  if (pending.player !== defender) throw new Error('misreadResolve: invalid decision owner');
+
+  const snapshot = new Map(pending.candidates.map((candidate) => [candidate.uid, candidate.x]));
+  const live = new Map(collectCandidates(state, pending.player).map((candidate) => [candidate.uid, candidate.x]));
+  const selected = new Set<string>();
+  const picks: MisreadCandidate[] = [];
+  for (const requested of requestedPicks) {
+    if (selected.has(requested.uid)) throw new Error(`misreadResolve: duplicate uid=${requested.uid}`);
+    selected.add(requested.uid);
+    const snapshotX = snapshot.get(requested.uid);
+    if (snapshotX === undefined || snapshotX !== requested.x) {
+      throw new Error(`misreadResolve: forged pick uid=${requested.uid}`);
+    }
+    if (live.get(requested.uid) !== snapshotX) {
+      throw new Error(`misreadResolve: stale pick uid=${requested.uid}`);
+    }
+    picks.push({ uid: requested.uid, x: snapshotX });
+  }
+
+  return picks;
+}
+
+export function _canResolveMisreadPicks(
+  state: GameState,
+  pending: PendingMisreadSide,
+  requestedPicks: ReadonlyArray<MisreadCandidate>,
+): boolean {
+  try {
+    validatePicks(state, pending, requestedPicks);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Validate against the surfaced snapshot and live board before applying a decision. */
+export function _resolveMisreadPicks(
+  state: GameState,
+  pending: PendingMisreadSide,
+  requestedPicks: ReadonlyArray<MisreadCandidate>,
+): void {
+  const picks = validatePicks(state, pending, requestedPicks);
+  let totalReduction = 0;
+  for (const pick of picks) {
+    mutate.scene.setState(state, pick.uid, 'sleep');
+    totalReduction += pick.x;
+    event.emit(state, 'misread:performed', { player: pending.player }, { player: pending.player, uid: pick.uid });
+  }
+  if (totalReduction > 0) setReasoningLpReduction(state, pending.reasoningUid, totalReduction);
 }
 
 let _registered = false;
@@ -86,55 +164,29 @@ export function registerMisreadListener(): void {
   if (_registered) return;
   _registered = true;
   event.on('reasoning:before-add', (state, payload) => {
-    const p = payload as { uid?: string } | undefined;
-    if (!p?.uid) return;
-    const reasoningPlayer = findOwnerOfUid(state, p.uid);
+    const uid = (payload as { uid?: string } | undefined)?.uid;
+    if (!uid) return;
+    const reasoningPlayer = findOwnerOfUid(state, uid);
     if (!reasoningPlayer) return;
-    const defender: 'self' | 'opp' = reasoningPlayer === 'self' ? 'opp' : 'self';
-
-    const candidates: MisreadCandidate[] = [];
-    for (const c of state.players[defender].scene) {
-      if (c.state !== 'active') continue;
-      const def = readDef.card(c.cardId);
-      if (!def) continue;
-      for (const ability of def.abilities) {
-        const x = extractMisreadX(ability);
-        if (x === null) continue;
-        candidates.push({ uid: c.uid, x });
-      }
-    }
+    const defender = reasoningPlayer === 'self' ? 'opp' : 'self';
+    const candidates = collectCandidates(state, defender);
     if (candidates.length === 0) return;
 
-    // AI defender (= opp が defender) は同期的に判定 + 適用
-    if (defender === 'opp') {
-      const ai = new HeuristicPolicy();
-      const picks = ai.chooseMisreadTriggers
-        ? ai.chooseMisreadTriggers(state, p.uid, candidates)
-        : candidates; // fallback: 全発動 (人間有利)
-      let totalReduction = 0;
-      for (const pick of picks) {
-        mutate.scene.setState(state, pick.uid, 'sleep');
-        totalReduction += pick.x;
-        // engine additive wave-3 (2026-06-30): ミスリード実行を card-triggerable 化 (rules/13)。
-        // 公式Q&A = ミスリードしたキャラ1枚ごとに発動 → per-pick emit。payload.player=実行側(defender)、
-        // source.uid=misread キャラ uid (selfOnly「このキャラがミスリードしたとき」B09016 用)。新 hook = 挙動不変。
-        event.emit(state, 'misread:performed', { player: defender }, { player: defender, uid: pick.uid });
-      }
-      // LP-X は推理中だけ参照されるため lpOverride で 1 回適用 (reasoning.ts は emit 後に
-      // 再読みする実装になっている)。partner uid は scene にないため skip。
-      // TODO(Phase 5): reasoning:end で lpOverride を元に戻す cleanup listener を追加。
-      if (totalReduction > 0 && p.uid !== 'partner:self' && p.uid !== 'partner:opp') {
-        const currentLp = readChar.lp(state, p.uid);
-        mutate.char.setOverrideLP(state, p.uid, currentLp - totalReduction);
-      }
+    const pending: PendingMisreadSide = {
+      player: defender,
+      reasoningUid: uid,
+      reasoningPlayer,
+      candidates,
+    };
+    if (defender === humanPlayerSide()) {
+      writePending(pending);
       return;
     }
 
-    // Human defender → 側チャネル (UI 側で resolve、Commit 3b では scaffold のみ)
-    _writeMisreadSide({
-      reasoningUid: p.uid,
-      reasoningPlayer,
-      candidates,
-    });
+    const policy = new HeuristicPolicy();
+    const picks = policy.chooseMisreadTriggers
+      ? policy.chooseMisreadTriggers(state, uid, candidates)
+      : candidates;
+    _resolveMisreadPicks(state, pending, picks);
   });
 }

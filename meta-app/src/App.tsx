@@ -1,7 +1,7 @@
 // spec: .claude/specs/meta-ui/03-routing.md
 // 全画面の配線 + キーボードショートカット + ヘルプオーバーレイ
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHashRoute } from './router/useHashRoute';
 import { useGlobalShortcuts } from './router/useGlobalShortcuts';
 import type { Route } from './router/routes';
@@ -18,13 +18,35 @@ import { HistoryScreen } from './screens/HistoryScreen';
 import { ReplayScreen } from './screens/ReplayScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { endMatchSession } from '@/ui/services/matchSession';
 
 export function App() {
-  const [route, nav] = useHashRoute();
+  const [route, rawNav] = useHashRoute();
   // Phase 11-C: SETUP→MATCH 遷移は SetupScreen 内で performGameStart + setGameState 経由
   // で完結するため、matchId の受け渡しは不要 (ResultScreen は useGameStateStore 直読)
   const [selectedReplayId, setSelectedReplayId] = useState<string | undefined>(undefined);
+  const previousRoute = useRef(route);
+
+  const nav = useCallback((next: Route) => {
+    // Settle mulligan/picker promises before the route owner unmounts. The
+    // passive effect below remains a backstop for browser/hash navigation.
+    if (route === 'match' && next !== 'match') {
+      endMatchSession({ preserveGameState: next === 'result' });
+    }
+    previousRoute.current = next;
+    rawNav(next);
+  }, [rawNav, route]);
   const { helpOpen, setHelpOpen } = useGlobalShortcuts({ route, onNav: nav });
+
+  useEffect(() => {
+    const previous = previousRoute.current;
+    previousRoute.current = route;
+    if (previous === 'match' && route !== 'match') {
+      endMatchSession({ preserveGameState: route === 'result' });
+    }
+  }, [route]);
+
+  useEffect(() => () => endMatchSession(), []);
 
   const onReplay = (matchId: string) => {
     setSelectedReplayId(matchId);
@@ -36,7 +58,7 @@ export function App() {
       <MetaShell route={route}>
         {renderScreen(route, nav, selectedReplayId, onReplay)}
       </MetaShell>
-      <NavHUD route={route} onNav={nav} visible={import.meta.env.DEV} />
+      <NavHUD route={route} onNav={nav} visible={import.meta.env.DEV && route !== 'match'} />
       <HelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
     </>
   );

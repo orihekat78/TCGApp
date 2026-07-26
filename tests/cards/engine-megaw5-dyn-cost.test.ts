@@ -308,14 +308,16 @@ describe('megaw5 step4 — removeDeckTop.n dyn (r37)', () => {
     expect(r.players.self.deck.length).toBe(3);
   });
 
-  it('pay: deck ちょうど n 枚 → 全リムーブで deck 0、refresh/敗北は発生しない (コストは事前 canPay 保証)', async () => {
+  it('pay: deck ちょうど n 枚 → 全リムーブ後ただちにrefresh (rules/14, 21)', async () => {
     const { canPay } = await import('@/engine/cost/evaluate');
     const { pay } = await import('@/engine/cost/pay');
     const s = st(1, 2); // n=2, deck=2
     expect(canPay(s, dynCost, ctx())).toBe(true);
     const r = produce(s, d => { pay(d, dynCost, ctx()); });
-    expect(r.players.self.deck.length).toBe(0);
-    expect(r.gameResult, '敗北判定なし').toBeUndefined();
+    expect([...r.players.self.deck].sort()).toEqual(['SD0', 'SD1']);
+    expect(r.players.self.remove).toEqual([]);
+    expect(r.players.opp.evidence, 'refresh penalty').toHaveLength(1);
+    expect(r.gameResult).toBeUndefined();
   });
 
   it('B04088 descriptor: cost {dyn} + partnerColor黒 + sceneRemove apMax8000 が印字句と 1対1', async () => {
@@ -331,7 +333,7 @@ describe('megaw5 step4 — removeDeckTop.n dyn (r37)', () => {
     expect(B04088P.abilities[0]!).toMatchObject({ type: 'declared' });
   });
 
-  it('B04088 E2E: canPay gate — opp 3体 (n=6) + deck5 → 宣言不可 / deck6 → 可、pay で6枚リムーブ', async () => {
+  it('B04088 E2E: canPay gate — deck6で支払い後、即時refresh', async () => {
     const { registerAll } = await import('@/cards/index');
     const { B04088 } = await import('@/cards/ct-p04/B04088');
     const { canPay } = await import('@/engine/cost/evaluate');
@@ -347,7 +349,9 @@ describe('megaw5 step4 — removeDeckTop.n dyn (r37)', () => {
     expect(canPay(mk(5), cost, c), 'deck5 < n6 → 使用不可 (公式Q&A)').toBe(false);
     expect(canPay(mk(6), cost, c), 'deck6 = n6 → 使用可').toBe(true);
     const r = produce(mk(6), d => { pay(d, cost, c); });
-    expect(r.players.self.deck.length, '6枚リムーブ').toBe(0);
+    expect(r.players.self.deck.length, '6枚リムーブ後にrefreshで戻る').toBe(6);
+    expect(r.players.self.remove).toEqual([]);
+    expect(r.players.opp.evidence, 'refresh penalty').toHaveLength(1);
     expect(r.players.self.scene[0]!.state, 'sleepSelf も支払済').toBe('sleep');
   });
 

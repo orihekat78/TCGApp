@@ -988,8 +988,7 @@ gap-suspect 27 枚 (base 20) の per-card certify (opus workflow + 敵対 verify
 
 | rep | DEFER 理由 (engine gap) | 解禁条件 |
 |-----|----------------------|---------|
-| B03032 a2 (服部平次) | 「相手の現場にいる**カードがセットされている**アクティブ状態のキャラを指定してアクションできる」= rules/07『アクティブは対象不可』を上書きする action-target 拡張。engine の action target 候補 (state-machine declare) に card 固有拡張点が不在 | action-target 拡張 hook (engine、P-新規) |
-| B04018 a1/a3 (遠山和葉) | a1=「このキャラか〚服部平次〛が自分の現場に登場したとき」self-or-cardname enter matcher + 「ターン終了時まで元の能力を無効にする」charDisableOriginal の turn-scope 版 / a3=【宣言】discardSelf cost + remove から cardName filter で sceneEnter。a2 のみ出荷 | enter matcher 拡張 + disableOriginal turn-scope (engine) |
+| B03032 a2 (服部平次) | **implemented — BUG-256**: `action:pre-target` + `expandActionTargets{side:'opp', state:['active'], hasSetCards:true}` がセット済みアクティブを候補化。自己guard不可/別active guard可は回帰テストで確認 | `tests/engine/bug-256-b03032-active-set-target.test.ts` |
 | B09100 line1 (犯人) | 「デッキに何枚でも入れられる」— validateDeck MAX_SAME_ID=3 一律で CardDef に copy-limit field 不在。**[[BUG-164]]** 起票済 (latent、MVP 非影響)。additive 案 = `CardDef.deckLimit` + validateDeck/deck-builder 2 honor site | CardDef.deckLimit (engine、Track A) |
 
 certify 全体裁定: FULL 7 (B03006/B06007/B09092/D08021/PR022/PR192/PR197 = mine alignment 副作用) /

@@ -12,17 +12,23 @@
 //     初めて発動。Commit 3b では scaffold + 単体テストのみ。
 
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { CardArt } from './CardArt.js';
+import { CardExpandModal } from './CardExpandModal.js';
 import './MisreadPickerModal.css';
 
 export type MisreadCandidateView = {
   uid: string;
+  cardId?: string;
   cardName: string;
   x: number;
 };
 
 export type MisreadPickerModalProps = {
   open: boolean;
+  /** Stable identity of the unresolved decision. */
+  decisionKey: string;
   /** 推理側 (= LP-X 対象) の表示名 */
   reasoningName: string;
   /** 推理側の現在 LP (UI でゴール表示用) */
@@ -33,8 +39,12 @@ export type MisreadPickerModalProps = {
 };
 
 export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element | null {
-  const { open, reasoningName, reasoningLp, candidates, onConfirm, onSkip } = props;
+  const { open, decisionKey, reasoningName, reasoningLp, candidates, onConfirm, onSkip } = props;
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const expandModal = useCardExpandModal();
+  useEffect(() => {
+    setSelected(new Set());
+  }, [open, decisionKey]);
   if (!open) return null;
 
   const toggle = (uid: string): void => {
@@ -52,6 +62,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
   const projectedLp = Math.max(0, reasoningLp - totalX);
 
   return (
+    <>
     <div
       className="misread-picker-overlay"
       role="dialog"
@@ -71,18 +82,37 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
             <p className="misread-picker-empty">候補がありません</p>
           ) : (
             <ul className="misread-picker-list">
-              {candidates.map((c) => (
+              {candidates.map((c, index) => (
                 <li key={c.uid}>
-                  <label className="misread-picker-row">
+                  <label
+                    className="misread-picker-row"
+                    data-testid={`misread-card-${c.uid}`}
+                    onContextMenu={c.cardId === undefined ? undefined : (event) => {
+                      event.preventDefault();
+                      expandModal.open(c.cardId!);
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={selected.has(c.uid)}
                       onChange={() => toggle(c.uid)}
                       data-testid={`misread-cand-${c.uid}`}
                     />
+                    {c.cardId !== undefined && <CardArt cardId={c.cardId} alt={c.cardName} className="misread-card-art" />}
                     <span className="misread-name">{c.cardName}</span>
                     <span className="misread-x">{`LP -${c.x}`}</span>
                   </label>
+                  {c.cardId !== undefined && (
+                    <button
+                      type="button"
+                      className="misread-detail"
+                      data-testid={`misread-detail-${c.uid}`}
+                      aria-label={`${c.cardName}（${index + 1}枚目）の詳細を表示`}
+                      onClick={() => expandModal.open(c.cardId!)}
+                    >
+                      Details
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -115,5 +145,7 @@ export function MisreadPickerModal(props: MisreadPickerModalProps): JSX.Element 
         </div>
       </div>
     </div>
+    <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+    </>
   );
 }

@@ -10,7 +10,11 @@
 // 注: MVP デッキ (CT-D08/CT-D11) に 捜査X カードがないため、本モーダルは Phase 5
 //     で実カード追加された時点で発動。Commit 4 は scaffold (UI + SSR test) のみ。
 
-import type { JSX } from 'react';
+import { useEffect, useState, type JSX } from 'react';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
+import { publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { SelectableCardTile } from './SelectableCardTile.js';
 import './SouzaReorderModal.css';
 
 export type SouzaCardView = {
@@ -27,8 +31,32 @@ export type SouzaReorderModalProps = {
   onCancel: () => void;
 };
 
+type OrderedCard = SouzaCardView & { occurrenceId: string };
+
+function asOrderedCards(cards: readonly SouzaCardView[]): OrderedCard[] {
+  return cards.map((card, index) => ({ ...card, occurrenceId: `${card.cardId}#${index}` }));
+}
+
 export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | null {
   const { open, deckTop, onConfirm, onCancel } = props;
+  const [order, setOrder] = useState<OrderedCard[]>(() => asOrderedCards(deckTop));
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const expandModal = useCardExpandModal();
+  useEffect(() => {
+    setOrder(asOrderedCards(deckTop));
+    setDragIdx(null);
+  }, [deckTop]);
+
+  const move = (from: number, to: number): void => {
+    if (to < 0 || to >= order.length || from === to) return;
+    setOrder((current) => {
+      const next = [...current];
+      const [card] = next.splice(from, 1);
+      next.splice(to, 0, card!);
+      return next;
+    });
+  };
+
   if (!open) return null;
   return (
     <div
@@ -41,35 +69,55 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
       <div className="souza-modal">
         <div className="souza-header">
           <h2 id="souza-title">捜査</h2>
-          <p className="souza-sub">{`公開された ${deckTop.length} 枚をデッキの下へ送る順に並べてください`}</p>
+          <p className="souza-sub">{`公開された ${order.length} 枚をデッキの下へ送る順に並べてください`}</p>
         </div>
         <div className="souza-body">
-          {deckTop.length === 0 ? (
+          {order.length === 0 ? (
             <p className="souza-empty">公開カードがありません</p>
           ) : (
             <ul className="souza-list">
-              {deckTop.map((c, i) => (
-                <li key={`${c.cardId}-${i}`} className="souza-row" data-testid={`souza-row-${i}`}>
+              {order.map((card, i) => (
+                <li
+                  key={card.occurrenceId}
+                  className="souza-row"
+                  data-testid={`souza-row-${i}`}
+                  draggable
+                  onDragStart={() => setDragIdx(i)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={() => { if (dragIdx !== null) move(dragIdx, i); setDragIdx(null); }}
+                  onDragEnd={() => setDragIdx(null)}
+                >
                   <span className="souza-index">{i + 1}</span>
-                  <span className="souza-name">{c.name}</span>
-                  <button
-                    type="button"
-                    className="souza-arrow"
-                    disabled={i === 0}
-                    data-testid={`souza-up-${i}`}
-                    aria-label="上へ"
-                  >
-                    ▲
-                  </button>
-                  <button
-                    type="button"
-                    className="souza-arrow"
-                    disabled={i === deckTop.length - 1}
-                    data-testid={`souza-down-${i}`}
-                    aria-label="下へ"
-                  >
-                    ▼
-                  </button>
+                  <SelectableCardTile
+                    cardId={card.cardId}
+                    instanceId={card.occurrenceId}
+                    occurrenceLabel={publicCardOccurrenceLabel(order.map((item) => item.cardId), card.cardId, i)}
+                    onSelect={() => {}}
+                    onExpand={expandModal.open}
+                  />
+                  <span className="souza-name souza-row-label">{card.name}</span>
+                  <div className="souza-row-controls">
+                    <button
+                      type="button"
+                      className="souza-arrow"
+                      disabled={i === 0}
+                      data-testid={`souza-up-${i}`}
+                      aria-label="上へ"
+                      onClick={() => move(i, i - 1)}
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      className="souza-arrow"
+                      disabled={i === order.length - 1}
+                      data-testid={`souza-down-${i}`}
+                      aria-label="下へ"
+                      onClick={() => move(i, i + 1)}
+                    >
+                      ▼
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -79,7 +127,7 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
           <button
             type="button"
             className="souza-btn souza-btn-confirm"
-            onClick={() => onConfirm(deckTop.map((c) => c.cardId))}
+            onClick={() => onConfirm(order.map((card) => card.cardId))}
             data-testid="souza-confirm-btn"
           >
             この順で確定
@@ -94,6 +142,7 @@ export function SouzaReorderModal(props: SouzaReorderModalProps): JSX.Element | 
           </button>
         </div>
       </div>
+      <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
     </div>
   );
 }

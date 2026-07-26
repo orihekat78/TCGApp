@@ -9,13 +9,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { runEndTurnFlow } from '@/ui/hooks/useActionsPanelFlow';
 import { useGameStateStore } from '@/ui/state/store';
+import type { PendingEffectPick } from '@/ui/state/store';
 import { useConfirmationStore } from '@/ui/hooks/useConfirmation';
+import { useTargetPickerStore } from '@/ui/hooks/useTargetPicker';
 import { createEmptyGameState } from '@/engine/state-factory';
 
 describe('runEndTurnFlow', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null });
+    useGameStateStore.setState({ gameState: null, pendingEffectPick: null });
     useConfirmationStore.getState()._reset();
+    useTargetPickerStore.getState()._reset();
   });
 
   it('asks confirmation; on accept, advances turn and returns ok=true', async () => {
@@ -61,5 +64,77 @@ describe('runEndTurnFlow', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('cancelled');
     expect(useGameStateStore.getState().gameState).toBe(before);
+  });
+
+  it('確認後にアクション対象選択が始まったら再検証してターン終了を拒否する', async () => {
+    const init = createEmptyGameState();
+    init.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    useGameStateStore.setState({ gameState: init });
+
+    const promise = runEndTurnFlow({ player: 'self' });
+    useTargetPickerStore.getState()._setPhase({
+      phase: 'picking',
+      candidates: ['self-1'],
+      purpose: 'action:source',
+    });
+
+    const resolver = useConfirmationStore.getState()._resolver!;
+    useConfirmationStore.getState()._setCurrent(null);
+    useConfirmationStore.getState()._setResolver(null);
+    resolver(true);
+
+    const result = await promise;
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('not-allowed');
+    expect(useGameStateStore.getState().gameState!.turn.player).toBe('self');
+  });
+
+  it('必須pendingEffectPickが既にある場合は確認を開かずターン終了を拒否する', async () => {
+    const init = createEmptyGameState();
+    init.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    const pending: PendingEffectPick = {
+      player: 'self',
+      candidates: [{ uid: 'hand:self:X#0', cardId: 'X', player: 'self' }],
+      atomVerb: 'discard',
+      atomArgs: {},
+      nMin: 1,
+      nMax: 1,
+      source: { cardId: 'X', abilityId: 'a1' },
+    };
+    useGameStateStore.setState({ gameState: init, pendingEffectPick: pending });
+
+    const result = await runEndTurnFlow({ player: 'self' });
+
+    expect(result).toEqual({ ok: false, reason: 'not-allowed' });
+    expect(useConfirmationStore.getState().current).toBeNull();
+    expect(useGameStateStore.getState().gameState!.turn.player).toBe('self');
+  });
+
+  it('確認中に必須pendingEffectPickが発生した場合はdispatch直前に拒否する', async () => {
+    const init = createEmptyGameState();
+    init.turn = { number: 1, player: 'self', phase: 'main', isFirstPlayerFirstTurn: false };
+    useGameStateStore.setState({ gameState: init });
+    const promise = runEndTurnFlow({ player: 'self' });
+
+    useGameStateStore.setState({
+      pendingEffectPick: {
+        player: 'self',
+        candidates: [{ uid: 'hand:self:X#0', cardId: 'X', player: 'self' }],
+        atomVerb: 'discard',
+        atomArgs: {},
+        nMin: 1,
+        nMax: 1,
+        source: { cardId: 'X', abilityId: 'a1' },
+      },
+    });
+    const confirm = useConfirmationStore.getState();
+    const resolver = confirm._resolver!;
+    confirm._setCurrent(null);
+    confirm._setResolver(null);
+    resolver(true);
+
+    const result = await promise;
+    expect(result).toEqual({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().gameState!.turn.player).toBe('self');
   });
 });

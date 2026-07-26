@@ -27,13 +27,16 @@ import {
   _resetMisreadRegistered,
 } from '@/engine/listeners/misread';
 import { misreadX } from '@/cards/_shared/misreadX';
-import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
+import { dispatchEngineAction, surfacePendingSideChannels } from '@/ui/hooks/useEngineDispatch';
+import { stepTurn, type AIPolicy } from '@/ai/policy';
+import type { Move } from '@/ai/move-enumerator';
 import { useGameStateStore } from '@/ui/state/store';
 import { createEmptyGameState } from '@/engine/state-factory';
 import { event } from '@/engine/event/index';
 import { _resetActionContexts } from '@/engine/flow/action/state-machine';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { _resetTargetExpanders } from '@/engine/flow/action/target-expander';
+import { runAllUntilEmpty } from '@/engine/resolve';
 import type { CardDef } from '@/engine/types/card-def';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../helpers/fixtures';
@@ -91,6 +94,12 @@ function fullReset(): void {
     pendingHirameki: null,
     pendingMisread: null,
   });
+  (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+}
+
+function doReasoningUntilPending(state: GameState, uid: string): void {
+  engine.flow.doReasoning(state, uid);
+  runAllUntilEmpty(state);
 }
 
 describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => {
@@ -109,7 +118,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
     s.players.opp.deck = ['e1', 'e2', 'e3', 'e4', 'e5'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     const pending = _drainPendingMisread();
     expect(pending).not.toBeNull();
@@ -126,7 +135,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     // self.scene 空
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     expect(_drainPendingMisread()).toBeNull();
   });
@@ -141,7 +150,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     ];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     const pending = _drainPendingMisread();
     expect(pending).not.toBeNull();
@@ -160,7 +169,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     ];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
 
     expect(_drainPendingMisread()).toBeNull();
   });
@@ -175,7 +184,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     ];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
     expect(pending).not.toBeNull();
 
@@ -195,8 +204,9 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     // m1, m2 がスリープ
     expect(after.players.self.scene.find((c) => c.uid === 'm1')?.state).toBe('sleep');
     expect(after.players.self.scene.find((c) => c.uid === 'm2')?.state).toBe('sleep');
-    // r1 の lpOverride = 1000 - (2000+500) = -1500
-    expect(after.players.opp.scene.find((c) => c.uid === 'r1')?.lpOverride).toBe(-1500);
+    // LP-X はこの推理中だけ。印字LP・既存修正は汚染しない。
+    expect(after.players.opp.scene.find((c) => c.uid === 'r1')?.lpOverride).toBeNull();
+    expect(after.players.opp.scene.find((c) => c.uid === 'r1')?.turnEffects['lpMod_reasoning']).toBeUndefined();
     // pending クリア
     expect(useGameStateStore.getState().pendingMisread).toBeNull();
   });
@@ -208,7 +218,7 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
     s.players.opp.deck = ['e1', 'e2', 'e3'];
 
-    engine.flow.doReasoning(s, 'r1');
+    doReasoningUntilPending(s, 'r1');
     const pending = _drainPendingMisread();
     useGameStateStore.setState({ gameState: s, pendingMisread: pending });
 
@@ -220,5 +230,119 @@ describe('Misread E2E 結合検証 — Human defender (Phase 5 advance)', () => 
     expect(after.players.opp.scene.find((c) => c.uid === 'r1')?.lpOverride).toBeNull();
     // pending クリア
     expect(useGameStateStore.getState().pendingMisread).toBeNull();
+  });
+
+  it('Test 7: human misread 決定まで証拠取得と reasoning:end を保留する', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('r1', 'TEST_R')];
+    s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
+    s.players.opp.deck = ['e1', 'e2', 'e3'];
+    let reasoningEndCount = 0;
+    event.on('reasoning:end', () => { reasoningEndCount += 1; });
+
+    doReasoningUntilPending(s, 'r1');
+    const pending = _drainPendingMisread();
+
+    expect(pending).not.toBeNull();
+    expect(s.players.opp.evidence).toEqual([]);
+    expect(reasoningEndCount).toBe(0);
+
+    useGameStateStore.setState({ gameState: s, pendingMisread: pending });
+    expect(dispatchEngineAction({ type: 'misreadResolve', picks: [] })).toMatchObject({ ok: true });
+
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.opp.evidence.map((card) => card.cardId)).toEqual(['e1', 'e2', 'e3']);
+    expect(reasoningEndCount).toBe(1);
+    expect(useGameStateStore.getState().pendingMisread).toBeNull();
+  });
+
+  it('Test 8: CPU reasoning step は human misread を同じstepでsurfaceし停止する', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('r1', 'TEST_R')];
+    s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
+    s.players.opp.deck = ['e1', 'e2', 'e3'];
+    const policy: AIPolicy = {
+      name: 'reasoning-only',
+      choose: (_state: GameState, moves: Move[]) => moves.find(
+        (move) => move.kind === 'reasoning' && move.uid === 'r1',
+      ) ?? null,
+    };
+
+    const step = stepTurn(s, policy, 'opp');
+
+    expect(step.move?.kind).toBe('reasoning');
+    expect(step.paused).toEqual({ humanPick: true });
+    expect(step.nextState.players.opp.evidence).toEqual([]);
+
+    useGameStateStore.getState().setGameState(step.nextState);
+    surfacePendingSideChannels();
+    expect(useGameStateStore.getState().pendingMisread).toMatchObject({
+      player: 'self',
+      reasoningUid: 'r1',
+      reasoningPlayer: 'opp',
+    });
+  });
+
+  it.each([
+    ['forged uid', [{ uid: 'forged', x: 2000 }]],
+    ['forged x', [{ uid: 'm1', x: 9999 }]],
+    ['duplicate uid', [{ uid: 'm1', x: 2000 }, { uid: 'm1', x: 2000 }]],
+  ] as const)('Test 9: %s のミスリードpickを拒否する', (_label, picks) => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('r1', 'TEST_R')];
+    s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
+    s.players.opp.deck = ['e1', 'e2', 'e3'];
+    doReasoningUntilPending(s, 'r1');
+    const pending = _drainPendingMisread();
+    useGameStateStore.setState({ gameState: s, pendingMisread: pending });
+
+    const result = dispatchEngineAction({ type: 'misreadResolve', picks });
+
+    expect(result).toMatchObject({ ok: false, reason: 'not-allowed' });
+    const after = useGameStateStore.getState();
+    expect(after.pendingMisread).not.toBeNull();
+    expect(after.gameState?.players.self.scene.find((c) => c.uid === 'm1')?.state).toBe('active');
+    expect(after.gameState?.players.opp.evidence).toEqual([]);
+  });
+
+  it('Test 10: pending後に無効になった stale candidate を拒否する', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('r1', 'TEST_R')];
+    s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
+    s.players.opp.deck = ['e1', 'e2', 'e3'];
+    doReasoningUntilPending(s, 'r1');
+    const pending = _drainPendingMisread();
+    s.players.self.scene[0].state = 'sleep';
+    useGameStateStore.setState({ gameState: s, pendingMisread: pending });
+
+    const result = dispatchEngineAction({
+      type: 'misreadResolve', picks: [{ uid: 'm1', x: 2000 }],
+    });
+
+    expect(result).toMatchObject({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().pendingMisread).not.toBeNull();
+    expect(useGameStateStore.getState().gameState?.players.opp.evidence).toEqual([]);
+  });
+
+  it('Test 11: pending後に推理対象が離場した stale decision を拒否する', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('r1', 'TEST_R')];
+    s.players.self.scene = [makeChar('m1', 'TEST_M2K')];
+    s.players.opp.deck = ['e1', 'e2', 'e3'];
+    doReasoningUntilPending(s, 'r1');
+    const pending = _drainPendingMisread();
+    s.players.opp.scene = [];
+    useGameStateStore.setState({ gameState: s, pendingMisread: pending });
+
+    const result = dispatchEngineAction({ type: 'misreadResolve', picks: [] });
+
+    expect(result).toMatchObject({ ok: false, reason: 'not-allowed' });
+    expect(useGameStateStore.getState().pendingMisread).not.toBeNull();
+    expect(useGameStateStore.getState().gameState?.players.opp.evidence).toEqual([]);
   });
 });

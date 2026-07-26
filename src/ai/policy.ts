@@ -357,8 +357,8 @@ export function playTurn(
     // (結果は従来 playTurn と byte 等価 / tests/ai/step-turn.test.ts)。
     const step = stepTurn(s, policy, byPlayer, opts);
     s = step.nextState;
-    if (step.paused) return { moves, finalState: s, paused: step.paused };
     if (step.move) moves.push(step.move);
+    if (step.paused) return { moves, finalState: s, paused: step.paused };
     if (step.done) return { moves, finalState: s };
   }
 
@@ -386,7 +386,7 @@ export type StepTurnResult = {
 
 /**
  * stepTurn — playTurn ループの 1 反復 (Task3)。1 手だけ enumerate→choose→applyMove→runAllUntilEmpty する。
- * UI (useOppTurnDriver) が 1 手ごとに間 (aiSpeedMs) を挟んで CPU を可視化するための entry point。
+ * UI (useOppTurnDriver) が重要手だけ aiSpeedMs を挟み、routine 手は 0ms yield する entry point。
  * 戻り値 nextState を次回 stepTurn に渡して反復し、done / paused で停止する。
  */
 export function stepTurn(
@@ -397,7 +397,7 @@ export function stepTurn(
 ): StepTurnResult {
   // BUG-138 (X8): human 所有の未解決 pick が残っている間は次の move に移れない (rules/05)。
   // __humanPlayerSide 未設定 (smoke / spectator) では常に false → 従来挙動不変。
-  if (hasPendingHumanPick()) {
+  if (hasPendingHumanPick(state)) {
     return { move: null, nextState: state, done: false, paused: { humanPick: true } };
   }
   const candidates = enumerateMoves(state, byPlayer);
@@ -427,5 +427,11 @@ export function stepTurn(
     // (chooseAtomTarget は walk と同じ HeuristicPolicy を使用。continuation も BUG-107 機構で進む)。
     drainAiEffectPicks(draft, new HeuristicPolicy());
   });
-  return { move: chosen, nextState: s, done: Boolean(s.gameResult) };
+  const pausedForHuman = hasPendingHumanPick(s);
+  return {
+    move: chosen,
+    nextState: s,
+    done: Boolean(s.gameResult),
+    ...(pausedForHuman ? { paused: { humanPick: true as const } } : {}),
+  };
 }

@@ -56,7 +56,7 @@ export const D09014: CardDef = {
   level: 5, ap: 5000, lp: 1,
   traits: ['警察', '長野県警'], keywords: [],
   rarity: 'D',
-  imageUrl: '1714013206006770.jpg',
+  imageUrl: '1743742875201036.jpg',
   abilities: [a1, a2],
   ruleRefs: [
     'rules/03-field-areas.md',

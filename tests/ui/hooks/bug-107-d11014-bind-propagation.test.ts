@@ -71,8 +71,11 @@ describe('D11014 a2 — human 経路の $entered bind 伝播 (BUG-107)', () => {
 
     const gs = useGameStateStore.getState().gameState!;
     expect(gs.players.self.scene.map((c) => c.cardId), '萩原千速 が登場').toContain('D11011');
-    expect(gs.players.self.deck.length, '萩原千速 登場で 1 ドロー → デッキ -1').toBe(0);
-    expect(gs.players.self.hand.length, 'discard 1 + draw 1 → 手札 1 枚').toBe(1);
+    expect(gs.players.self.hand, 'discard 1 + draw 1 → ドローしたカードが手札').toEqual(['D08014']);
+    expect(gs.players.self.deck, 'draw の exact exhaustion → discard カードを即 refresh').toEqual(['D08013']);
+    expect(gs.players.self.remove).toHaveLength(0);
+    expect(gs.refreshCount.self).toBe(1);
+    expect(gs.players.opp.evidence).toHaveLength(1);
   });
 
   it('萩原千速 以外(D11012, 警察 Lv4) を登場させた場合は 1 ドローしない (boundMatchesFilter 否定の確認)', () => {

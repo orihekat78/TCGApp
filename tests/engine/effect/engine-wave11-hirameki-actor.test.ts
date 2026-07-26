@@ -153,7 +153,7 @@ describe('engine wave-11 — hirameki actor payload ($trigger.byUid「アクシ�
         { player: 'self', uid: 'scene:self:0' },
       );
     });
-    expect(_drainPendingHirameki()).toBeNull();
+    expect(_drainPendingHirameki()).toMatchObject({ effectValid: false });
   });
 
   // (c) end-to-end: 実カード effect で actor が stun 化する

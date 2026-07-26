@@ -20,7 +20,8 @@ import * as engine from '@/engine/index.js';
 
 describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: createSampleGameState() });
+    engine.flow.action._resetActionContexts();
+    useGameStateStore.setState({ gameState: createSampleGameState(), activeActionId: null });
   });
 
   it('BUG-009: assist + FILE 7+ で 事件編 → 解決編 自動遷移する (mutate.partner.assist 内 check)', () => {
@@ -158,6 +159,7 @@ describe('integration: dispatch → state (end-to-end 配線テスト)', () => {
     useGameStateStore.setState({ gameState: state });
 
     dispatchEngineAction({ type: 'reasoning', uid: 'self-2' });
+    engine.resolve.runAllUntilEmpty(useGameStateStore.getState().gameState!);
 
     const stateAfter = useGameStateStore.getState().gameState!;
     const actorAfter = stateAfter.players.self.scene.find((s) => s.uid === 'self-2');

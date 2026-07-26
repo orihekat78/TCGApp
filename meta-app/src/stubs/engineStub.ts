@@ -4,6 +4,7 @@
 
 import type { CardDef, DeckRecord, MatchRecord, ValidationResult } from '../data/types';
 import { CARD_POOL } from '../data/cardPool';
+import { ALL_CARDS } from '@/cards/index';
 import { useDecksStore } from '../state/decksStore';
 import { useHistoryStore } from '../state/historyStore';
 import { useMetaStore, type Settings } from '../state/metaStore';
@@ -41,7 +42,13 @@ const cards = {
     // 同一 cardId (パラレル) を合算して 3 枚上限を判定する。
     // rules/02-deck-construction.md「絵柄が違っても ID が同じであれば同じカード」。
     // cardNum 単位で数えると D08003×3 + D08004×3 (= 同 cardId 0489 を 6 枚) が通ってしまう。
-    const idAgg = new Map<string, { total: number; name: string; nums: Set<string> }>();
+    const deckLimitByNum = new Map(ALL_CARDS.map((card) => [card.id, card.deckLimit ?? 3]));
+    const idAgg = new Map<string, {
+      total: number;
+      name: string;
+      nums: Set<string>;
+      limits: Set<number | 'unlimited'>;
+    }>();
     for (const entry of deck.cards) {
       if (entry.count < 1) {
         errors.push(`枚数 0 のエントリ: ${entry.num}`);
@@ -60,15 +67,23 @@ const cards = {
         errors.push(`デッキに事件は入れられません: ${card.name}`);
       }
       const id = card.id;
-      const agg = idAgg.get(id) ?? { total: 0, name: card.name, nums: new Set<string>() };
+      const agg = idAgg.get(id) ?? {
+        total: 0,
+        name: card.name,
+        nums: new Set<string>(),
+        limits: new Set<number | 'unlimited'>(),
+      };
       agg.total += entry.count;
       agg.nums.add(entry.num);
+      agg.limits.add(deckLimitByNum.get(entry.num) ?? 3);
       idAgg.set(id, agg);
     }
     for (const agg of idAgg.values()) {
-      if (agg.total > 3) {
+      const numericLimits = [...agg.limits].filter((limit): limit is number => limit !== 'unlimited');
+      const limit = numericLimits.length === 0 ? 'unlimited' : Math.min(...numericLimits);
+      if (limit !== 'unlimited' && agg.total > limit) {
         const variants = agg.nums.size > 1 ? ` (${[...agg.nums].join('+')})` : '';
-        errors.push(`同 ID 上限超過: ${agg.name}${variants} ×${agg.total} (上限 3)`);
+        errors.push(`同 ID 上限超過: ${agg.name}${variants} ×${agg.total} (上限 ${limit})`);
       }
     }
 

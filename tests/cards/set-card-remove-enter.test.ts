@@ -9,7 +9,7 @@ import { register as registerCardDef, _resetRegistry as resetDefRegistry } from 
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { runAllUntilEmpty } from '@/engine/resolve';
 import { applyOptionalAndContinuation, drainAiEffectPicks, _drainAllEffectPicksForTest } from '@/engine/effect/apply-pick';
-import { _peekPendingEffectOptionalSide, _clearPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
+import { _drainPendingEffectOptionalSide, _clearPendingEffectOptionalSide } from '@/engine/effect/resolve-picks';
 import { HeuristicPolicy } from '@/ai/policies/heuristic';
 import type { CardDef } from '@/engine/types';
 
@@ -51,8 +51,15 @@ describe('B06012 self set-card removal', () => {
       host.setCards.push({ cardId: 'B06012', faceUp: true }, { cardId: 'B06012', faceUp: true });
       draft.players.self.remove = ['阿笠博士'];
       event.emit(draft, 'phase:end:start', { player: 'self' }, { player: 'self' });
+      // Both occurrences trigger simultaneously. Confirm their owner-selected
+      // order before resolving the first optional effect.
+      expect(draft.pendingEffects).toHaveLength(2);
+      draft.pendingEffects.forEach((entry, order) => {
+        entry.ownerChosenOrder = order;
+        entry.ownerOrderConfirmed = true;
+      });
       runAllUntilEmpty(draft);
-      const optional = _peekPendingEffectOptionalSide();
+      const optional = _drainPendingEffectOptionalSide();
       expect(optional).not.toBeNull();
       applyOptionalAndContinuation(draft, optional!, true);
       drainAiEffectPicks(draft, new HeuristicPolicy());
@@ -81,7 +88,7 @@ describe('B06012 self set-card removal', () => {
       draft.players.self.remove = ['阿笠博士'];
       event.emit(draft, 'phase:end:start', { player: 'self' }, { player: 'self' });
       runAllUntilEmpty(draft);
-      const optional = _peekPendingEffectOptionalSide();
+      const optional = _drainPendingEffectOptionalSide();
       expect(optional).not.toBeNull();
       mutate.char.removeOneSetCard(draft, host.uid, { setCardInstanceId: host.setCards[0]!.instanceId });
       applyOptionalAndContinuation(draft, optional!, true);

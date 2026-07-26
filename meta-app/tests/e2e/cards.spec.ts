@@ -29,6 +29,7 @@ test('CARDS: 34 種類 (cardId 単位) + CATALOG + 詳細パネル + フィル�
   // CARDS リスト見出し
   await expect(page.locator('text=/CARDS · \\d+ 件 一致/')).toBeVisible();
   // 詳細パネルの EFFECT / USAGE
+  await page.getByRole('button', { name: '灰原哀' }).first().click();
   await expect(page.getByText('EFFECT · 効果')).toBeVisible();
   await expect(page.getByText('USAGE · このカードでの戦績')).toBeVisible();
 
@@ -65,4 +66,14 @@ test('CARDS: 「+ デッキへ追加」で #deck へ遷移', async ({ page }) =>
   await expect(page.locator('text=/USAGE/')).toBeVisible({ timeout: 6000 });
   await page.locator('button', { hasText: '+ デッキへ追加' }).click();
   await page.waitForURL(/#deck/);
+});
+
+test('CARDS: D09014 は正しい公式画像を表示する', async ({ page }) => {
+  await page.goto('/#cards');
+  const search = page.getByPlaceholder('名前 / 効果 / 番号 / 特徴 で検索');
+  await search.fill('D09014');
+
+  const image = page.getByRole('button', { name: '大和敢助' }).locator('img');
+  await expect(image).toHaveAttribute('src', /1743742875201036\.jpg$/);
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 });

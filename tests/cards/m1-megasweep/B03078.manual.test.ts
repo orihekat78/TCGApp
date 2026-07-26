@@ -81,17 +81,19 @@ beforeEach(() => {
 // ── a2 production 経路 helper: 実 emit で trigger 発火 → pending 確認 → AI drain loop で効果解決 ──
 function fireHirameki(evidenceOwner: Player, setup: (s: GameState) => void): GameState {
   const attacker: Player = evidenceOwner === 'self' ? 'opp' : 'self';
-  const s = produce(createEmptyGameState(), (d) => {
+  let s = produce(createEmptyGameState(), (d) => {
     d.turn = { number: 3, player: attacker, phase: 'main', isFirstPlayerFirstTurn: false } as GameState['turn'];
     setup(d);
   });
   // 実 emit 経路: evidence:remove-by-action → triggered listener が pendingHirameki を set
-  engine.event.emit(
-    s,
-    'evidence:remove-by-action',
-    { player: evidenceOwner, ev: { cardId: 'B03078' } },
-    { player: attacker, uid: `${attacker}-attacker` },
-  );
+  s = produce(s, (d) => {
+    engine.event.emit(
+      d,
+      'evidence:remove-by-action',
+      { player: evidenceOwner, ev: { cardId: 'B03078' } },
+      { player: attacker, uid: `${attacker}-attacker` },
+    );
+  });
   const pending = _drainPendingHirameki();
   expect(pending, 'ヒラメキ listener が pending を set').not.toBeNull();
   expect(pending!.cardId).toBe('B03078');

@@ -20,8 +20,6 @@ const a1: AbilityDef = {
     selfOnly: true,
     matcher: (p: unknown, _s: GameState) => (p as { kind?: unknown })?.kind === 'event-use',
   },
-  // このイベントは自分の現場にスリープ状態の[小泉紅子]がいる場合に使用できる
-  condition: { kind: 'sceneHas', query: { area: 'scene', side: 'self', filter: { cardName: '小泉紅子' }, state: ['sleep'] }, nMin: 1 },
   // 自分の現場のレベル8以下の[黒羽快斗]か[中森青子]を1枚まで選び、アクティブにする
   effect: { kind: 'atom', verb: 'sceneSetState', args: { player: 'self', max: 1, side: 'self', state: 'active', filter: { cardName: ['黒羽快斗', '中森青子'], levelMax: 8 } } },
   description:
@@ -39,6 +37,7 @@ export const B07056: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1762414010605363.jpg',
+  useCondition: { kind: 'sceneHas', query: { area: 'scene', side: 'self', filter: { cardName: '小泉紅子' }, state: ['sleep'] }, nMin: 1 },
   abilities: [a1],
   ruleRefs: [
     'rules/03-field-areas.md',

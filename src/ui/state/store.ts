@@ -8,7 +8,11 @@
 //  - gameState=null はゲーム未ロードを表す。dispatch は null のとき no-op
 
 import { create } from 'zustand';
+import { produce } from '@/engine/produce';
+import { mutate } from '@/engine/mutate';
 import type { GameState } from '@/engine/types/game-state';
+import type { EffectCtx } from '@/engine/types';
+import type { ContinuationFrame, PendingEffectSource } from '@/engine/effect/pending-state';
 
 export type GameStateMutator = (state: GameState) => GameState;
 
@@ -16,7 +20,9 @@ export type GameStateStore = {
   /** 現在のゲーム状態。未ロード時は null。 */
   gameState: GameState | null;
   /** state を全置換する（ゲーム開始 / リセット / リプレイ読み込み用） */
-  setGameState: (state: GameState) => void;
+  setGameState: (state: GameState | null) => void;
+  /** 新規対戦開始前に GameState と UI 上の対戦一時状態を一括破棄する。 */
+  resetMatchSessionState: () => void;
   /**
    * 現在の gameState に mutator を適用し、その戻り値で置き換える。
    * gameState が null の場合は何もしない（mutator も呼ばれない）。
@@ -60,7 +66,7 @@ export type GameStateStore = {
   setActiveCard: (uid: string | null, label: string | null) => void;
   /**
    * Task4: CPU 1手駆動の再 fire トリガ。useOppTurnDriver が 1 手 (stepTurn) 適用するたび ++ し、
-   * useEffect の deps に含めることで「1手→aiSpeedMs 待ち→次の1手」のループを成立させる
+   * useEffect の deps に含めることで「1手→重要手だけ aiSpeedMs 表示→次の1手」を成立させる
    * (turn.player は 'opp' のまま変わらないため、これが無いと 1 手で stall する)。
    */
   oppMoveTick: number;
@@ -74,7 +80,7 @@ export type GameStateStore = {
   setSpectatorMode: (v: boolean) => void;
   /**
    * user_request 20260521_01 #12: AI ターン進行の遅延 (ms)。
-   * - useOppTurnDriver / useSpectatorTurnDriver が setTimeout(driver, aiSpeedMs) で参照
+   * - useOppTurnDriver / useSpectatorTurnDriver が重要手の表示間隔として参照
    * - SpectatorHUD の slider で変更可能
    * - default 400ms (既存 oppTurnDelayMs / spectatorDelayMs と一致)
    * - preset: 200 (高速) / 400 (標準) / 800 (普通) / 1500 (ゆっくり) / 3000 (最遅)
@@ -142,8 +148,8 @@ export type GameStateStore = {
   setPendingDeckReveal: (p: PendingDeckReveal | null) => void;
   /**
    * BUG-136: deckToBottomBound「残りを好きな順番でデッキの下に移す」の順序選択待ち。
-   * engine 側 PendingDeckReorderSide と同 shape。human 所有 & 2 枚以上を底へ移したときだけ set され
-   * DeckReorderModal で並べ替える。deckReorderResolve dispatch で底ブロックを再配置して null へ。
+   * engine 側 PendingDeckReorderSide と同 shape。human 所有 & 2 枚以上なら移動前にsetされ、
+   * DeckReorderModal確定時に指定順で底へ移して後続効果を再開する。
    */
   pendingDeckReorder: PendingDeckReorder | null;
   setPendingDeckReorder: (p: PendingDeckReorder | null) => void;
@@ -180,16 +186,25 @@ export type GameStateStore = {
 
 export type PendingDeckReveal = {
   player: 'self' | 'opp';
+  visibility: 'public' | 'private';
+  viewer: 'self' | 'opp' | 'all';
   revealed: string[];
   matched: string | null;
   /** BUG-132 GAP-1: chooseMatch pick 未解決中は overlay を hold (engine 側 PendingDeckRevealSide と同 shape) */
   awaitingPick?: boolean;
+  /** Pure reveal which returns every card to its original deck position. */
+  presentation?: 'reveal-return';
+  source?: { cardId?: string; abilityId?: string; uid?: string };
 };
 
 export type PendingDeckReorder = {
   player: 'self' | 'opp';
-  /** デッキ底へ移したカード群 (公開順)。並べ替え対象 */
+  /** 並べ替え対象カード群。 */
   cardIds: string[];
+  deckSnapshot?: string[];
+  occurrences?: Array<{ cardId: string; index: number }>;
+  ctx?: EffectCtx;
+  continuation?: ContinuationFrame;
 };
 
 export type PendingDeckPlace = {
@@ -207,7 +222,7 @@ export type PendingEffectPick = {
   atomArgs: Record<string, unknown>;
   nMin: number;
   nMax: number;
-  source: { cardId: string; abilityId: string };
+  source: PendingEffectSource;
   /**
    * D08021 driver 2026-05-26: target.query.distinctNames を UI multi-select に伝達。
    * CardListModal で同 name component (rules/19) の重複選択を click 不可化する。
@@ -242,14 +257,14 @@ export type PendingEffectPick = {
 /** BUG-121: human 複数 option choice 保留 (PendingEffectChoiceSide と同 shape)。 */
 export type PendingEffectChoice = {
   player: 'self' | 'opp';
-  source: { cardId: string; abilityId: string; uid: string };
-  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string }[];
+  source: PendingEffectSource & { uid: string };
+  options: { index: number; verb?: string; args?: Record<string, unknown>; label?: string; sceneEnter?: boolean }[];
 };
 
 /** 2026-06-06 タスクC: optional 決定 (「〜してもよい」) 保留 (PendingEffectOptionalSide と同 shape)。 */
 export type PendingEffectOptional = {
   player: 'self' | 'opp';
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   /** optional 内が $trigger.<field> を参照する場合の再開 ctx 復元用 (B03038、JSON-safe) */
   triggerPayload?: unknown;
 };
@@ -258,20 +273,33 @@ export type PendingRps = {
   player: 'self' | 'opp';
   ownerPlayer: 'self' | 'opp';
   aiHand: 'rock' | 'paper' | 'scissors';
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
 };
 
 /** An opaque set-card entry: no card identity crosses the UI boundary. */
 export type PendingSetCardChoice = {
   player: 'self' | 'opp';
   hostUid: string;
-  entries: { instanceId: string; ordinal: number }[];
-  source: { cardId: string; abilityId: string; uid: string };
+  /** effect=従来の単一選択、cost=宣言コストの複数物理 occurrence 選択。 */
+  purpose?: 'effect' | 'cost';
+  entries: {
+    instanceId: string;
+    ordinal: number;
+    /** cost picker の公開 host 情報。裏向き cardId は格納しない。 */
+    hostUid?: string;
+    hostLabel?: string;
+    hidden?: boolean;
+    cardId?: string;
+  }[];
+  nMin?: number;
+  nMax?: number;
+  selectedInstanceIds?: string[];
+  source: PendingEffectSource & { uid: string };
 };
 export type PendingSetCardReplacement = {
   player: 'self' | 'opp'; fromUid: string; setCardInstanceId: string;
   candidates: { uid: string; cardId: string }[];
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
 };
 
 /** Opponent may discard one hand occurrence to cancel the already-selected effect. */
@@ -291,7 +319,7 @@ export type PendingLeaveIntercept = {
 
 export type PendingEffectRepeatOptional = {
   player: 'self' | 'opp';
-  source: { cardId: string; abilityId: string; uid: string };
+  source: PendingEffectSource & { uid: string };
   remaining: number;
 };
 
@@ -303,6 +331,8 @@ export type PendingHirameki = {
   cardId: string;
   /** 発動対象 ability id */
   abilityId: string;
+  /** Ver.2.5 p.21: false means activation is legal but resolves no text. */
+  effectValid?: boolean;
   /** wave-11: アクション[事件] actor uid snapshot ('$trigger.byUid' =「アクション中のキャラ」解決用) */
   actorUid?: string;
   /** Exact remove-area occurrence created by the action evidence removal. */
@@ -311,6 +341,8 @@ export type PendingHirameki = {
 
 /** ミスリード保留 (Commit 3b) */
 export type PendingMisread = {
+  /** Player who chooses which misread abilities to activate. */
+  player: 'self' | 'opp';
   /** 推理側 (LP-X 対象) の uid */
   reasoningUid: string;
   /** 推理側プレイヤー */
@@ -319,9 +351,40 @@ export type PendingMisread = {
   candidates: { uid: string; x: number }[];
 };
 
+export const MATCH_SESSION_RESET_STATE = {
+  gameState: null,
+  activeActionId: null,
+  pendingHirameki: null,
+  pendingMisread: null,
+  activeCardUid: null,
+  activeCardLabel: null,
+  oppMoveTick: 0,
+  isAiPaused: false,
+  aiStepCounter: 0,
+  pendingEffectPick: null,
+  pendingEffectChoice: null,
+  pendingEffectOptional: null,
+  pendingChooseIntercept: null,
+  pendingLeaveIntercept: null,
+  pendingRps: null,
+  pendingSetCardChoice: null,
+  pendingSetCardReplacement: null,
+  pendingEffectRepeatOptional: null,
+  pendingDeckReveal: null,
+  pendingDeckReorder: null,
+  pendingDeckPlace: null,
+  hiramekiDemoMode: 'idle',
+  hiramekiDemoSelectedCardId: null,
+  cutinDemoMode: 'idle',
+  cutinDemoSelectedCardId: null,
+} as const;
+
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
   gameState: null,
-  setGameState: (state) => set({ gameState: state }),
+  setGameState: (state) => set({
+    gameState: state === null ? null : produce(state, (draft) => mutate.char.ensureSetCardInstanceIds(draft)),
+  }),
+  resetMatchSessionState: () => set(MATCH_SESSION_RESET_STATE),
   dispatch: (mutator) => {
     const current = get().gameState;
     if (current === null) return;

@@ -28,7 +28,7 @@ import { mutate } from '@/engine/mutate/index';
 import { runAllUntilEmpty } from '@/engine/resolve/index';
 import { _resetUidCounter } from '@/engine/mutate/scene';
 import { canPay } from '@/engine/cost/evaluate';
-import { pay } from '@/engine/cost/pay';
+import { canPayAtomically, pay } from '@/engine/cost/pay';
 import { createEmptyGameState } from '@/engine/state-factory';
 import type { CardDef, GameState, EffectCtx, Cost } from '@/engine/types';
 
@@ -57,6 +57,19 @@ const ctxWithParams = (hostUids: string[]): EffectCtx => ({
   source: { cardId: HOST, uid: 'u-x', abilityId: 'a1', player: 'self', area: 'scene' },
   bindings: {},
   dyn: { costParams: { removeSetCard: { hostUids } } },
+} as unknown as EffectCtx);
+const ctxWithExactParams = (picks: Array<{ hostUid: string; instanceId: string }>): EffectCtx => ({
+  source: { cardId: HOST, uid: 'u-x', abilityId: 'a1', player: 'self', area: 'scene' },
+  bindings: {},
+  dyn: { costParams: { removeSetCard: {
+    hostUids: picks.map((pick) => pick.hostUid),
+    instanceIds: picks.map((pick) => pick.instanceId),
+  } } },
+} as unknown as EffectCtx);
+const ctxWithRawWitness = (removeSetCard: unknown): EffectCtx => ({
+  source: { cardId: HOST, uid: 'u-x', abilityId: 'a1', player: 'self', area: 'scene' },
+  bindings: {},
+  dyn: { costParams: { removeSetCard } },
 } as unknown as EffectCtx);
 
 beforeEach(() => {
@@ -205,7 +218,7 @@ describe('removeSetCard §11-13 — review-concern 予防', () => {
     expect(after.players.self.remove.length).toBe(0); // self は無関係
   });
 
-  it('§13 self-only guard: explicit に opp uid が混入しても相手 set card は外さない (rules/21)', () => {
+  it('§13 self-only guard: explicit に opp uid が混入した witness は atomic に拒否する (rules/21, BUG-245)', () => {
     let oppUid = '';
     const selfUids: string[] = [];
     const state = produce(createEmptyGameState(), (d) => {
@@ -219,10 +232,96 @@ describe('removeSetCard §11-13 — review-concern 予防', () => {
       oppUid = o.uid;
       mutate.char.setCard(d, o.uid, 'SET-OPP', false);
     });
-    // explicit に opp uid を混ぜる → guard で drop → self fallback で自陣2枚をリムーブ
-    const after = produce(state, (d) => { pay(d, COST2, ctxWithParams([selfUids[0], oppUid])); });
-    expect(after.players.opp.scene.find((c) => c.uid === oppUid)!.setCards.length).toBe(1); // opp は触れず
-    expect(after.players.opp.remove.length).toBe(0);
-    expect(after.players.self.remove.filter((id) => id.startsWith('SET-S')).length).toBe(2); // 自陣2枚
+    // BUG-245 atomic fail-closed: 不正 witness を捨てて fallback すると、ユーザーが選んでいない
+    // 自陣カードを不可逆に支払う。rules/21 の「コストをすべて行う」前に宣言全体を拒否する。
+    expect(() => produce(state, (d) => { pay(d, COST2, ctxWithParams([selfUids[0], oppUid])); }))
+      .toThrow('invalid removeSetCard picks');
+    expect(state.players.opp.scene.find((c) => c.uid === oppUid)!.setCards.length).toBe(1);
+    expect(state.players.opp.remove.length).toBe(0);
+    expect(state.players.self.remove.length).toBe(0);
+  });
+});
+
+describe('removeSetCard §14-18 — exact physical occurrence witness (BUG-248)', () => {
+  it('§14 同一hostの複数裏向きから指定instanceだけを除去する', () => {
+    const { state, uids } = sceneWithSets([[true, true]]);
+    const host = state.players.self.scene.find((char) => char.uid === uids[0])!;
+    const [first, second] = host.setCards;
+    const ctx = ctxWithExactParams([{ hostUid: host.uid, instanceId: first!.instanceId! }]);
+    const after = produce(state, (draft) => { pay(draft, COST1, ctx); });
+    expect(after.players.self.scene[0]!.setCards.map((entry) => entry.instanceId)).toEqual([second!.instanceId]);
+    expect(after.players.self.remove).toContain(first!.cardId);
+  });
+
+  it.each([
+    ['duplicate', (state: GameState) => {
+      const host = state.players.self.scene[0]!;
+      const id = host.setCards[0]!.instanceId!;
+      return { cost: COST2, ctx: ctxWithExactParams([{ hostUid: host.uid, instanceId: id }, { hostUid: host.uid, instanceId: id }]) };
+    }],
+    ['host-instance mismatch', (state: GameState) => {
+      const [a, b] = state.players.self.scene;
+      return { cost: COST1, ctx: ctxWithExactParams([{ hostUid: b!.uid, instanceId: a!.setCards[0]!.instanceId! }]) };
+    }],
+    ['face-up decoy', (state: GameState) => {
+      const host = state.players.self.scene[2]!;
+      return { cost: COST1, ctx: ctxWithExactParams([{ hostUid: host.uid, instanceId: host.setCards[0]!.instanceId! }]) };
+    }],
+  ])('§15-17 rejects %s before mutation', (_name, make) => {
+    const { state } = sceneWithSets([[true, true], [true], [false]]);
+    const before = JSON.stringify(state);
+    const { cost, ctx } = make(state);
+    expect(canPayAtomically(state, cost, ctx)).toBe(false);
+    expect(() => produce(state, (draft) => pay(draft, cost, ctx))).toThrow('invalid removeSetCard picks');
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
+  it('§18 exact witness cannot cross to opponent host', () => {
+    const { state } = sceneWithSets([[true]]);
+    let oppUid = '';
+    const withOpp = produce(state, (draft) => {
+      const opp = mutate.scene.enter(draft, 'opp', HOST, {});
+      oppUid = opp.uid;
+      mutate.char.setCard(draft, opp.uid, 'OPP-SET', false);
+    });
+    const oppEntry = withOpp.players.opp.scene[0]!.setCards[0]!;
+    const ctx = ctxWithExactParams([{ hostUid: oppUid, instanceId: oppEntry.instanceId! }]);
+    expect(canPayAtomically(withOpp, COST1, ctx)).toBe(false);
+  });
+
+  it.each([
+    ['explicit undefined witness', undefined],
+    ['missing host array', { instanceIds: ['set:1'] }],
+    ['non-string host', { hostUids: [null], instanceIds: ['set:1'] }],
+    ['missing instance array', { hostUids: ['host'], instanceIds: null }],
+    ['short instance array', { hostUids: ['host'], instanceIds: [] }],
+    ['long instance array', { hostUids: ['host'], instanceIds: ['set:1', 'set:2'] }],
+    ['mixed instance array', { hostUids: ['host'], instanceIds: ['set:1', null] }],
+    ['non-string instance', { hostUids: ['host'], instanceIds: [42] }],
+    ['null witness', null],
+  ])('§19 rejects malformed public witness: %s', (_name, raw) => {
+    const { state } = sceneWithSets([[true]]);
+    const before = JSON.stringify(state);
+    const ctx = ctxWithRawWitness(raw);
+    expect(canPayAtomically(state, COST1, ctx)).toBe(false);
+    expect(() => produce(state, (draft) => pay(draft, COST1, ctx))).toThrow('invalid removeSetCard picks');
+    expect(JSON.stringify(state)).toBe(before);
+  });
+
+  it('§20 rejects sparse arrays instead of collapsing holes into fallback', () => {
+    const { state, uids } = sceneWithSets([[true]]);
+    const sparseHosts = Array(2) as unknown[];
+    sparseHosts[0] = uids[0];
+    const ctx = ctxWithRawWitness({ hostUids: sparseHosts, instanceIds: [state.players.self.scene[0]!.setCards[0]!.instanceId, 'set:extra'] });
+    expect(canPayAtomically(state, COST1, ctx)).toBe(false);
+    expect(() => produce(state, (draft) => pay(draft, COST1, ctx))).toThrow('invalid removeSetCard picks');
+  });
+
+  it('§21 rejects a sparse instanceIds array', () => {
+    const { state, uids } = sceneWithSets([[true]]);
+    const sparseInstances = Array(1) as unknown[];
+    const ctx = ctxWithRawWitness({ hostUids: [uids[0]], instanceIds: sparseInstances });
+    expect(canPayAtomically(state, COST1, ctx)).toBe(false);
+    expect(() => produce(state, (draft) => pay(draft, COST1, ctx))).toThrow('invalid removeSetCard picks');
   });
 });

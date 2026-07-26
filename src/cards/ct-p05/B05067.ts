@@ -53,15 +53,9 @@ const a2: AbilityDef = {
   limit: { kind: 'turn', n: 1 }, // 【ターン1】
   // キャラを1枚まで選び、リムーブする
   effect: {
-    kind: 'choice',
-    chooser: 'self',
-    options: [
-      {
-        kind: 'atom',
-        verb: 'sceneRemove',
-        args: { uid: '$pick', target: { kind: 'pick', query: { area: 'scene', side: 'either' }, n: { min: 0, max: 1 }, chooser: 'self' } },
-      },
-    ],
+    kind: 'atom',
+    verb: 'sceneRemove',
+    args: { player: 'self', side: 'either', max: 1, cause: 'effect' },
   },
   description: '【パートナー赤】【宣言】【ターン1】キャラを1枚まで選び、リムーブする。FILEが5枚以下の場合に宣言できる。',
   ruleRefs: ['rules/21-declared-ability-cost.md', 'rules/17-icons.md', 'rules/15-abilities-effects.md'],

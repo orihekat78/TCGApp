@@ -1,6 +1,23 @@
 import { defineConfig, devices } from '@playwright/test';
 
-export default defineConfig({
+export function resolveE2EPort(value = process.env.PLAYWRIGHT_PORT): number {
+  if (value === undefined) return 5173;
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new Error('PLAYWRIGHT_PORT must be a decimal integer from 1 to 65535');
+  }
+
+  const port = Number(value);
+  if (!Number.isSafeInteger(port) || port > 65535) {
+    throw new Error('PLAYWRIGHT_PORT must be a decimal integer from 1 to 65535');
+  }
+
+  return port;
+}
+
+export function createPlaywrightConfig(e2ePort = resolveE2EPort()) {
+  const e2eBaseUrl = `http://localhost:${e2ePort}`;
+
+  return defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -8,14 +25,14 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: e2eBaseUrl,
     headless: !!process.env.CI,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    command: `npm run dev -- --port ${e2ePort} --strictPort`,
+    url: e2eBaseUrl,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },
@@ -26,7 +43,14 @@ export default defineConfig({
     },
     {
       name: 'mobile-chromium',
-      use: { ...devices['Pixel 5'] },
+      use: {
+        ...devices['Pixel 5'],
+        viewport: { width: 851, height: 393 },
+        screen: { width: 851, height: 393 },
+      },
     },
   ],
-});
+  });
+}
+
+export default createPlaywrightConfig();

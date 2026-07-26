@@ -6,15 +6,28 @@
 //     phase ごとの dispatch 選択ロジック (auto-advance / AI auto / modal open) の
 //     一段 step を確認できれば十分。フル FSM 走破は FSM dispatch tests でカバー済。
 
+import { act, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { _runDriverStep } from '@/ui/hooks/useContactFlowDriver';
+import { _runDriverStep, useContactFlowDriver } from '@/ui/hooks/useContactFlowDriver';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { useContactModalStore } from '@/ui/hooks/useContactModalStore';
 import { createEmptyGameState } from '@/engine/state-factory';
 import * as flow from '@/engine/flow/index.js';
+import { char as readChar } from '@/engine/read/char';
+import { register as registerCardDef } from '@/engine/read/def';
+import { D08017 } from '@/cards/ct-d08/D08017';
+import { B05047 } from '@/cards/ct-p05/B05047';
 import type { GameState, SceneCharacter } from '@/engine/types/game-state';
 import { makeChar as baseChar } from '../../helpers/fixtures';
+
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+function ContactDriverProbe(): null {
+  useContactFlowDriver();
+  return null;
+}
 
 function makeChar(uid: string, state: 'active' | 'sleep' | 'stun' = 'active'): SceneCharacter {
   return baseChar({ cardId: 'cX', uid, state, enterOrder: 0 });
@@ -35,9 +48,35 @@ function makeBattle(): GameState {
 
 describe('useContactFlowDriver — _runDriverStep', () => {
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null, activeActionId: null });
+    useGameStateStore.getState().resetMatchSessionState();
+    useGameStateStore.setState({
+      gameState: null,
+      activeActionId: null,
+      pendingDeckReorder: null,
+      pendingDeckPlace: null,
+    });
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+    (globalThis as { __pendingDeckPlaceSide?: unknown }).__pendingDeckPlaceSide = null;
     useContactModalStore.getState()._reset();
     flow.action._resetActionContexts();
+  });
+
+  it('shows effective AP for a modified guard candidate', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('o1', 'active')];
+    s.players.self.scene = [makeChar('s1', 'sleep'), makeChar('s2', 'active')];
+    s.players.self.scene[1]!.turnEffects.apMod_contact = 2000;
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = flow.action._getContext(axId)!;
+
+    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+
+    const guard = useContactModalStore.getState().guardPicker?.candidates
+      .find((candidate) => candidate.uid === 's2');
+    expect(guard?.ap).toBe(readChar.ap(s, 's2'));
   });
 
   it('guard-window phase with opp defender → AI auto-dispatches actionGuard', () => {
@@ -95,8 +134,81 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     expect(flow.action._getContext(axId)?.phase).toBe('contact-pending');
   });
 
+  it('pauses contact phase while a human deck reorder decision is pending', () => {
+    useGameStateStore.setState({ gameState: makeBattle() });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    dispatchEngineAction({ type: 'actionGuard', actionId: axId, guarderUid: null });
+    expect(flow.action._getContext(axId)?.phase).toBe('leave-resolution');
+
+    useGameStateStore.setState({
+      pendingDeckReorder: { player: 'self', cardIds: ['B04028', 'D08003'] },
+    });
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    act(() => root.render(createElement(ContactDriverProbe)));
+
+    expect(flow.action._getContext(axId)?.phase).toBe('leave-resolution');
+    act(() => root.unmount());
+  });
+
+  it('pauses B05047 disguise contact while human deck placement is pending', () => {
+    registerCardDef(B05047);
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('o1', 'active')];
+    s.players.self.scene = [makeChar('s1', 'sleep')];
+    s.players.self.case = {
+      cardId: 'WHITE-CASE',
+      status: '事件編',
+      requiredEvidence: 7,
+      colors: [B05047.colors[0]!],
+      declaredUseCount: {},
+    };
+    s.players.self.file = Array.from({ length: 6 }, () => ({
+      type: 'card-back' as const,
+      cardId: 'D08003',
+    }));
+    s.players.self.hand = ['B05047'];
+    s.players.self.deck = ['D08003', 'D08007', 'D08013'];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = flow.action._getContext(axId)!;
+    ax.phase = 'action-1';
+    ax.firstUid = 's1';
+    ax.secondUid = 'o1';
+
+    expect(dispatchEngineAction({
+      type: 'actionContact',
+      actionId: axId,
+      player: 'self',
+      choice: { kind: 'disguise', cardId: 'B05047' },
+    }).ok).toBe(true);
+    expect(useGameStateStore.getState().pendingDeckPlace).toMatchObject({
+      player: 'self',
+      ownerPlayer: 'self',
+      cardIds: ['D08003', 'D08007'],
+    });
+    dispatchEngineAction({ type: 'actionAdvance', actionId: axId });
+    expect(flow.action._getContext(axId)?.phase).toBe('action-2');
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    act(() => root.render(createElement(ContactDriverProbe)));
+
+    expect(flow.action._getContext(axId)?.phase).toBe('action-2');
+    act(() => root.unmount());
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+  });
+
   it('action-end phase → clears activeActionId', () => {
     useGameStateStore.setState({ gameState: makeBattle(), activeActionId: 'ax_999' });
+    expect(dispatchEngineAction({ type: 'actionDeclareChar', byUid: 's1', targetUid: 't1' }))
+      .toEqual({ ok: false, reason: 'not-allowed' });
+    useGameStateStore.setState({ activeActionId: null });
     // 手動で fake ax を 'action-end' にしておく
     flow.action._resetActionContexts();
     // 実際の ax を生成
@@ -110,5 +222,79 @@ describe('useContactFlowDriver — _runDriverStep', () => {
     _runDriverStep(state, ax);
 
     expect(useGameStateStore.getState().activeActionId).toBeNull();
+  });
+
+  it('opens a human contact decision even when no cut-in or disguise candidate exists', () => {
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('o1', 'active')];
+    s.players.self.scene = [makeChar('s1', 'sleep')];
+    s.players.self.hand = [];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = flow.action._getContext(axId)!;
+    ax.phase = 'action-1';
+    ax.firstUid = 's1';
+
+    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+
+    expect(useContactModalStore.getState().cutInDisguise).toMatchObject({
+      actionId: axId,
+      player: 'self',
+      candidates: [],
+    });
+    expect(flow.action._getContext(axId)?.phase).toBe('action-1');
+  });
+
+  it('keeps duplicate hand occurrences distinct in a contact decision', () => {
+    registerCardDef(D08017);
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('o1', 'active')];
+    s.players.self.scene = [makeChar('s1', 'sleep')];
+    s.players.self.hand = ['D08017', 'D08017'];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = flow.action._getContext(axId)!;
+    ax.phase = 'action-1';
+    ax.firstUid = 's1';
+
+    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+
+    const cutins = useContactModalStore.getState().cutInDisguise?.candidates
+      .filter((candidate) => candidate.kind === 'cutin')
+      .map((candidate) => candidate.uid);
+    expect(cutins).toEqual(['D08017#0', 'D08017#1']);
+  });
+
+  it('opens the real action-1-redo decision for the first human actor', () => {
+    registerCardDef(D08017);
+    const s = createEmptyGameState();
+    s.turn = { number: 2, player: 'opp', phase: 'main', isFirstPlayerFirstTurn: false };
+    s.players.opp.scene = [makeChar('o1', 'active')];
+    s.players.self.scene = [makeChar('s1', 'sleep')];
+    s.players.self.hand = ['D08017'];
+    useGameStateStore.setState({ gameState: s });
+    dispatchEngineAction({ type: 'actionDeclareChar', byUid: 'o1', targetUid: 's1' });
+    const axId = useGameStateStore.getState().activeActionId!;
+    const ax = flow.action._getContext(axId)!;
+    ax.firstUid = 's1';
+    ax.secondUid = 'o1';
+    ax.firstActed = false;
+    ax.secondActed = true;
+    ax.phase = 'action-2';
+
+    dispatchEngineAction({ type: 'actionAdvance', actionId: axId });
+    expect(flow.action._getContext(axId)?.phase).toBe('action-1-redo');
+    _runDriverStep(useGameStateStore.getState().gameState!, ax);
+
+    expect(useContactModalStore.getState().cutInDisguise).toMatchObject({
+      actionId: axId,
+      player: 'self',
+      actorLabel: '1番目 (再行動)',
+      candidates: [{ uid: 'D08017#0', cardId: 'D08017', kind: 'cutin' }],
+    });
   });
 });

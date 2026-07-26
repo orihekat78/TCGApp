@@ -114,6 +114,7 @@ export function endTurn(state: GameState, p: Player): void {
     for (const c of state.players[player].scene) {
       charMutator.clearTurnEffects(state, c.uid, 'turn');
     }
+    charMutator.clearTurnEffects(state, `partner:${player}`, 'turn');
     // engine additive wave-8 (2026-07-02, P15): 「このターン中に【疾風】発動」記録をターン境界で解除。
     // primary 清掃 (両プレイヤー分)。resetTurnFlags は driver 層で backstop。turnState 直リセットは
     // hiramekiSuppressed が state-machine action-end で直接クリアするのと同じ posture (driver 非依存)。

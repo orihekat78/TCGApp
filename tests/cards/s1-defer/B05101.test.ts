@@ -60,6 +60,7 @@ describe('① 相手ターン中に効果リムーブ → 承諾 → 復活 + dr
     const me = mutate.scene.enter(s, 'self', 'B05101', {});
     s.players.self.deck = ['D1', 'D2', 'D3'];
     mutate.scene.removeToRemove(s, me.uid, 'effect');
+    runAllUntilEmpty(s);
     // optional が human に surface
     const pO = _drainPendingEffectOptionalSide();
     expect(pO, '「登場させて引いてもよい」が surface').not.toBeNull();
@@ -85,6 +86,7 @@ describe('② flip は permanent (ターン終了時に切れない)', () => {
     const me = mutate.scene.enter(s, 'self', 'B05101', {});
     s.players.self.deck = ['D1', 'D2'];
     mutate.scene.removeToRemove(s, me.uid, 'effect');
+    runAllUntilEmpty(s);
     applyOptionalAndContinuation(s, _drainPendingEffectOptionalSide()!, true);
     runAllUntilEmpty(s);
     const revived = s.players.self.scene.find((c) => c.cardId === 'B05101')!;
@@ -129,6 +131,7 @@ describe('⑤ decline → 何も起こらない', () => {
     const me = mutate.scene.enter(s, 'self', 'B05101', {});
     s.players.self.deck = ['D1', 'D2', 'D3'];
     mutate.scene.removeToRemove(s, me.uid, 'effect');
+    runAllUntilEmpty(s);
     const pO = _drainPendingEffectOptionalSide();
     expect(pO).not.toBeNull();
     applyOptionalAndContinuation(s, pO!, false);
@@ -146,6 +149,7 @@ describe('⑥ owner=opp — 相対解決 (effect player:self → opp 側)', () =
     const me = mutate.scene.enter(s, 'opp', 'B05101', {});
     s.players.opp.deck = ['D1', 'D2', 'D3'];
     mutate.scene.removeToRemove(s, me.uid, 'effect');
+    runAllUntilEmpty(s);
     const pO = _drainPendingEffectOptionalSide();
     expect(pO, 'opp-owner でも optional surface').not.toBeNull();
     applyOptionalAndContinuation(s, pO!, true);

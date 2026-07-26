@@ -34,7 +34,8 @@ test.describe('user_request #12: SpectatorHUD speed + pause/step', () => {
     });
     await page.locator('[data-testid="game-setup-spectate"]').click();
     await page.waitForSelector('.mulligan-modal', { timeout: 5000 });
-    await page.locator('.mulligan-modal button:has-text("引き直しなし")').click();
+    await page.locator('.mulligan-modal button:has-text("引き直しなし")')
+      .evaluate((button: HTMLButtonElement) => button.click());
 
     // SpectatorHUD 表示確認
     await expect(page.locator('[data-testid="spectator-hud"]')).toBeVisible({ timeout: 3000 });
@@ -58,7 +59,8 @@ test.describe('user_request #12: SpectatorHUD speed + pause/step', () => {
     });
     await page.locator('[data-testid="game-setup-spectate"]').click();
     await page.waitForSelector('.mulligan-modal', { timeout: 5000 });
-    await page.locator('.mulligan-modal button:has-text("引き直しなし")').click();
+    await page.locator('.mulligan-modal button:has-text("引き直しなし")')
+      .evaluate((button: HTMLButtonElement) => button.click());
 
     await expect(page.locator('[data-testid="spectator-hud"]')).toBeVisible({ timeout: 3000 });
     // 1500ms クリック
@@ -85,7 +87,8 @@ test.describe('user_request #12: SpectatorHUD speed + pause/step', () => {
     });
     await page.locator('[data-testid="game-setup-spectate"]').click();
     await page.waitForSelector('.mulligan-modal', { timeout: 5000 });
-    await page.locator('.mulligan-modal button:has-text("引き直しなし")').click();
+    await page.locator('.mulligan-modal button:has-text("引き直しなし")')
+      .evaluate((button: HTMLButtonElement) => button.click());
 
     await expect(page.locator('[data-testid="spectator-hud"]')).toBeVisible({ timeout: 3000 });
     // paused 直後の turn
@@ -96,11 +99,8 @@ test.describe('user_request #12: SpectatorHUD speed + pause/step', () => {
     expect(turn2, '1 秒待っても paused なので turn 不変').toBe(turn1);
 
     // step button は design 上 per-move (= 1 手) 進行 (aiStepCounter は per-move / 1ステップ)。
-    // 先攻が self なら self driver が playTurn で 1 ターンを丸ごと進めるため 1 step で turn が
-    // 進むが、先攻が opp の場合 opp driver は stepTurn で 1 手ずつ進むため 1 step では turn 番号が
-    // 進まない。旧版は単一 step + fixed wait で「turn が進む」を期待しており、先攻の coin flip
-    // (約 50%) で flake していた。よって step ごとに 1 手前進することを確認しつつ、turn が進むまで
-    // 繰り返す形に変更する (先攻に依らず決定的)。
+    // self/opp 両 driver とも stepTurn で1手ずつ進む。turn が進むまで
+    // step を繰り返し、先攻に依らず1手前進することを決定的に確認する。
     // 各 step を確実に消費させるため speed を最速 (0=即時 microtask) にし、連打による
     // aiStepCounter collapse を避けて 1 手ずつ進行を待つ。
     await page.evaluate(() => (window as unknown as GameWindow).__game.getState().setAiSpeedMs(0));

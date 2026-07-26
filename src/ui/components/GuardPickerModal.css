@@ -58,31 +58,21 @@
   gap: 6px;
 }
 
-.guard-picker-cand {
+.guard-picker-choice {
   width: 100%;
+  box-sizing: border-box;
+  min-block-size: 44px;
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 4px;
+  padding: 8px;
   background: rgba(50, 80, 120, 0.4);
   border: 1px solid color-mix(in oklch, var(--scene-neon, #6cf) 35%, transparent);
   border-radius: 6px;
   color: #e0ecf8;
   font-size: 13px;
-  cursor: pointer;
-  transition: filter 0.1s, transform 0.1s;
 }
-.guard-picker-cand:hover {
-  filter: brightness(1.2);
-  transform: translateY(-1px);
-  border-color: #ffe66e;
-}
-.guard-picker-cand .cand-name {
-  text-align: left;
-  font-weight: 600;
-}
-.guard-picker-cand .cand-ap,
-.guard-picker-cand .cand-lp {
+
+.guard-picker-stats {
   font-family: var(--font-mono, monospace);
   font-size: 11px;
   color: #b8d4f0;
@@ -94,6 +84,7 @@
 }
 
 .guard-picker-skip {
+  min-block-size: 48px;
   padding: 8px 24px;
   background: rgba(80, 80, 90, 0.4);
   border: 1px solid rgba(140, 140, 160, 0.45);
@@ -102,6 +93,52 @@
   font-size: 13px;
   cursor: pointer;
   transition: filter 0.1s;
+}
+
+@media (max-width: 600px) {
+  .guard-picker-overlay {
+    align-items: end;
+  }
+
+  .guard-picker-modal {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-height: 90dvh;
+    padding: 16px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .guard-picker-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    max-height: none;
+  }
+}
+
+/* BUG-241: landscape の短辺では width が広くても dialog 内で scroll できる。 */
+@media (max-height: 480px) {
+  .guard-picker-overlay {
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .guard-picker-modal {
+    box-sizing: border-box;
+    max-height: calc(100dvh - 24px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .guard-picker-body {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    max-height: none;
+  }
 }
 .guard-picker-skip:hover {
   filter: brightness(1.2);

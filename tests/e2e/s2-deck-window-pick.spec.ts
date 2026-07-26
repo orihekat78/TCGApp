@@ -51,7 +51,9 @@ test('S2: B01022 — 公開6枚 window から filter 一致 2 枚を multi-pick 
   await dispatchAction(page, { type: 'handUseCard', player: 'self', cardId: 'B01022' });
 
   // DeckRevealOverlay (公開演出) が hold — CardListModal 'deck' が自動 open
-  await expect(page.getByTestId('deck-reveal-overlay')).toBeVisible({ timeout: 6000 });
+  // Deck window decision is owned by CardListModal; the reveal overlay must not cover it.
+  await expect(page.getByTestId('deck-reveal-overlay')).toHaveCount(0);
+  await expect(page.locator('.card-list-modal')).toBeVisible({ timeout: 6000 });
 
   // 候補: B04009 (deck idx0) と B09017 (deck idx4) のみ click 可能
   const pickA = page.getByTestId('card-list-pick-B04009#0');

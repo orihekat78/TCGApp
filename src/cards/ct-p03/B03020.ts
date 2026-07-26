@@ -16,7 +16,8 @@
 //   - 「上から3枚リムーブ」を全枚 mill するため boundToRemove を $revealed と $matched の両方に適用 (FIX: matched は
 //     handAdd しないので $revealed から除外される → 第2 boundToRemove で matched も remove、計3枚 mill。
 //     B05016 は handAdd 経路ゆえ単一 boundToRemove だった)。空 bind の boundToRemove は no-op (safe)。
-//   - ★公式Q&A: デッキが2枚以下で「3枚リムーブ」が実行不能な場合は以降不解決 = 全 deckRevealUntil twin 共通の極端 edge (engine変更0 範囲外)。
+//   - ★公式Q&A: デッキが2枚以下で「3枚リムーブ」が実行不能な場合は以降不解決。共有 deckRevealUntil は
+//     不足枚数を公開するカードにも使われるため、このカードだけを exact-three conditional で gate する。
 
 import type { AbilityDef, CardDef } from '@/engine/types';
 
@@ -27,9 +28,20 @@ const a1: AbilityDef = {
   trigger: { hook: 'action:declare', selfOnly: true },
   effect: {
     kind: 'optional',
+    // 公式Q&A: 上から3枚を公開できない場合、以降の効果は解決しない。
+    // deckRevealUntil は「上からN枚見る」共通 primitive のため不足時は min(deck,N) を公開する。
+    // このカード固有の exact-3 gate は JSON-safe deckAtLeast で包み、共有 primitive の
+    // 不足枚数を公開するカード（D07023 等）へ影響させない。
     effect: {
-      kind: 'sequence',
-      steps: [
+      kind: 'conditional',
+      if: {
+        kind: 'deckAtLeast',
+        player: 'self',
+        n: 3,
+      },
+      then: {
+        kind: 'sequence',
+        steps: [
         {
           kind: 'atom',
           verb: 'deckRevealUntil',
@@ -49,7 +61,8 @@ const a1: AbilityDef = {
         },
         { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$revealed' } },
         { kind: 'atom', verb: 'boundToRemove', args: { player: 'self', bindKey: '$matched' } },
-      ],
+        ],
+      },
     },
   },
   description: 'このキャラがアクションしたとき、自分のデッキのカードを上から3枚リムーブしてもよい。この効果によって〚カード名［妃英理］〛か〚カード名［工藤新一］〛か〚特徴［毛利探偵事務所］〛のキャラがリムーブされた場合、アクション終了時までこのキャラをAP＋1000する。',

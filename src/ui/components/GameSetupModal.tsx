@@ -101,7 +101,7 @@ export function GameSetupModal(props: GameSetupModalProps = {}): JSX.Element | n
   };
 
   return (
-    <div className="game-setup-modal-overlay" role="dialog" aria-labelledby="setup-title">
+    <div className="game-setup-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="setup-title">
       <div className="game-setup-modal">
         <h1 id="setup-title">名探偵コナンTCG</h1>
         <p className="game-setup-subtitle">MVP 開発版</p>

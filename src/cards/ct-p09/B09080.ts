@@ -21,7 +21,7 @@ const a1: AbilityDef = {
   type: 'continuous',
   scope: 'on-scene',
   condition: { kind: 'bond', cardName: '佐藤美和子' },
-  continuousModifier: { grantKeywords: () => ['突撃'] },
+  continuousModifier: { grantKeywords: () => ['突撃'], printedKeywordWhenIconValid: true },
   description: '【絆佐藤美和子】〚突撃〛（名乗り状態でもアクションできる）',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md', 'rules/24-qa-naming-stun.md'],
 };

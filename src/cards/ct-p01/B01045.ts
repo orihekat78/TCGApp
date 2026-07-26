@@ -28,7 +28,7 @@ const a2: AbilityDef = {
   type: 'triggered',
   scope: 'on-scene',
   trigger: {
-    hook: 'reasoning:end',
+    hook: 'reasoning:after-sleep',
     hooks: [
       'action:declare'
     ],

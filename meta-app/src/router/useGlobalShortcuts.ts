@@ -42,9 +42,18 @@ export function useGlobalShortcuts({ route, onNav }: Options): {
       }
       if (e.altKey || e.ctrlKey || e.metaKey) return;
 
+      // 真のmodal表示中は、modal内のキー操作のみを優先する。
+      // Escape/Backspaceだけでなく全route hotkeyとHOMEのEnterも背後画面へ通さない。
+      const modalOpen = document.querySelector('[role="dialog"][aria-modal="true"]') !== null;
+      const routeHotkey = KEY_MAP[e.key.toLowerCase()];
+      const isNavigationKey =
+        e.key === 'Escape' ||
+        e.key === 'Backspace' ||
+        e.key === 'Enter' ||
+        routeHotkey !== undefined;
+      if (modalOpen && isNavigationKey) return;
+
       if (e.key === 'Escape' || e.key === 'Backspace') {
-        // カード拡大モーダル表示中は、その close (Esc) を優先しグローバル「戻る」を抑止する。
-        if (document.querySelector('.card-expand-modal-backdrop')) return;
         if (helpOpen) {
           setHelpOpen(false);
         } else if (route !== 'home') {
@@ -63,7 +72,7 @@ export function useGlobalShortcuts({ route, onNav }: Options): {
         onNav('setup');
         return;
       }
-      const target = KEY_MAP[e.key.toLowerCase()];
+      const target = routeHotkey;
       if (target) {
         e.preventDefault();
         onNav(target);

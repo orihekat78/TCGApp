@@ -181,6 +181,7 @@ describe('LogPanel', () => {
     ));
     expect(html).toMatch(/role="dialog"/);
     expect(html).toMatch(/aria-label="ゲームログ"/);
+    expect(html).toMatch(/aria-modal="true"/);
   });
 });
 
@@ -188,6 +189,10 @@ describe('LogPanel', () => {
 describe('LogPanel — interaction (Round 3b)', () => {
   let container: HTMLDivElement;
   let root: Root;
+
+  beforeAll(() => {
+    registerAll();
+  });
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -198,6 +203,128 @@ describe('LogPanel — interaction (Round 3b)', () => {
   afterEach(() => {
     act(() => { root.unmount(); });
     container.remove();
+  });
+
+  it('known target card ID click invokes onCardExpand with D08015', () => {
+    const onCardExpand = vi.fn();
+    const entries: LogEntry[] = [
+      { ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D08015' },
+    ];
+    act(() => {
+      root.render(<LogPanel entries={entries} open={true} onCardExpand={onCardExpand} />);
+    });
+
+    const button = container.querySelector('button[aria-label*="D08015"]') as HTMLButtonElement | null;
+    expect(button).not.toBeNull();
+    act(() => {
+      button!.click();
+    });
+    expect(onCardExpand).toHaveBeenCalledWith('D08015');
+  });
+
+  it('target card uses native keyboard-accessible button semantics', () => {
+    const entries: LogEntry[] = [
+      { ts: 1, player: 'self', turn: 1, action: 'handUseCard', target: 'D08015' },
+    ];
+    act(() => {
+      root.render(<LogPanel entries={entries} open={true} onCardExpand={vi.fn()} />);
+    });
+
+    const button = container.querySelector('button[aria-label*="D08015"]') as HTMLButtonElement | null;
+    expect(button?.tagName).toBe('BUTTON');
+    expect(button?.type).toBe('button');
+    expect(button?.getAttribute('aria-label')).toMatch(/D08015.*拡大/);
+  });
+
+  it('known card ID embedded in result is clickable', () => {
+    const onCardExpand = vi.fn();
+    const entries: LogEntry[] = [
+      {
+        ts: 1,
+        player: 'self',
+        turn: 1,
+        action: 'effect:deckRevealUntil',
+        result: 'revealed=3 matched=B04018P',
+      },
+    ];
+    act(() => {
+      root.render(<LogPanel entries={entries} open={true} onCardExpand={onCardExpand} />);
+    });
+
+    const button = container.querySelector('button[aria-label*="B04018P"]') as HTMLButtonElement | null;
+    expect(button).not.toBeNull();
+    act(() => {
+      button!.click();
+    });
+    expect(onCardExpand).toHaveBeenCalledWith('B04018P');
+    expect(container.querySelector('.log-result')?.textContent).toContain('revealed=3 matched=B04018P');
+  });
+
+  it('multiple known card IDs in one result are individually clickable', () => {
+    const onCardExpand = vi.fn();
+    const entries: LogEntry[] = [
+      {
+        ts: 1,
+        player: 'self',
+        turn: 1,
+        action: 'customAction',
+        result: 'cards=B04018P,D08015,PR220',
+      },
+    ];
+    act(() => {
+      root.render(<LogPanel entries={entries} open={true} onCardExpand={onCardExpand} />);
+    });
+
+    const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('.log-result button'));
+    expect(buttons).toHaveLength(3);
+    buttons.forEach((button) => {
+      act(() => {
+        button.click();
+      });
+    });
+    expect(onCardExpand.mock.calls.map(([cardId]) => cardId)).toEqual(['B04018P', 'D08015', 'PR220']);
+  });
+
+  it('unknown IDs, scene UIDs, and partner:self remain non-clickable text', () => {
+    const onCardExpand = vi.fn();
+    const entries: LogEntry[] = [
+      {
+        ts: 1,
+        player: 'self',
+        turn: 1,
+        action: 'customAction',
+        target: 'partner:self',
+        result: 'unknown=B99999P02 scene=self-123 partner=partner:self',
+      },
+    ];
+    act(() => {
+      root.render(<LogPanel entries={entries} open={true} onCardExpand={onCardExpand} />);
+    });
+
+    expect(container.querySelectorAll('.log-entry button')).toHaveLength(0);
+    expect(container.querySelector('.log-entry')?.textContent).toContain('B99999P02');
+    expect(container.querySelector('.log-entry')?.textContent).toContain('self-123');
+    expect(container.querySelector('.log-entry')?.textContent).toContain('partner:self');
+  });
+
+  it('renders known card IDs without interactive controls when callback is omitted', () => {
+    const entries: LogEntry[] = [
+      {
+        ts: 1,
+        player: 'self',
+        turn: 1,
+        action: 'handUseCard',
+        target: 'D08015',
+        result: 'matched=B04018P',
+      },
+    ];
+    act(() => {
+      root.render(<LogPanel entries={entries} open={true} />);
+    });
+
+    expect(container.querySelectorAll('.log-entry button')).toHaveLength(0);
+    expect(container.querySelector('.log-target')?.textContent).toContain('D08015');
+    expect(container.querySelector('.log-result')?.textContent).toContain('B04018P');
   });
 
   it('close × button click invokes onClose', () => {
@@ -264,5 +391,16 @@ describe('LogPanel — interaction (Round 3b)', () => {
       entry!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('Escape closes the log modal itself', () => {
+    const onClose = vi.fn();
+    act(() => {
+      root.render(<LogPanel entries={[]} open={true} onClose={onClose} />);
+    });
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

@@ -12,7 +12,9 @@ import { useGameStateStore } from '@/ui/state/store.js';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch.js';
 import { def as readDef } from '@/engine/read/def.js';
 import { isSceneDirectPick } from '@/ui/services/scenePick.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { CardArt } from './CardArt.js';
+import { CardExpandModal } from './CardExpandModal.js';
 import './EffectPickerModal.css';
 
 /**
@@ -24,7 +26,7 @@ import './EffectPickerModal.css';
  */
 // D11014 driver 2026-05-26: charModifyAP は scene pick (D08003 sceneRemove と同 UI 流用)、
 // sceneEnter は CardListModal pick (D08013 evidenceToHand と同 UI 流用、area: remove)
-const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'discard', 'sceneRemove', 'charModifyAP', 'sceneEnter', 'charStackCard']);
+const AREA_PICK_VERBS = new Set(['evidenceToHand', 'handAddFromRemove', 'deckRevealUntil', 'discard', 'sceneRemove', 'charModifyAP', 'sceneEnter', 'charStackCard']);
 
 export function EffectPickerModal(): JSX.Element | null {
   const pending = useGameStateStore((s) => s.pendingEffectPick);
@@ -32,6 +34,7 @@ export function EffectPickerModal(): JSX.Element | null {
   // 夜間 W0 (2026-07-11, B08019 a2): multi-select mode (nMax>1) の選択集合。
   // pending が入れ替わったら選択をリセット (hook は early-return より前に置く — rules of hooks)。
   const [multiSelected, setMultiSelected] = useState<string[]>([]);
+  const expandModal = useCardExpandModal();
   useEffect(() => {
     setMultiSelected([]);
   }, [pending]);
@@ -116,6 +119,7 @@ export function EffectPickerModal(): JSX.Element | null {
   };
 
   return (
+    <>
     <div
       className="effect-picker-overlay"
       role="dialog"
@@ -133,7 +137,7 @@ export function EffectPickerModal(): JSX.Element | null {
           </p>
         </div>
         <ul className="effect-picker-list">
-          {pending.candidates.map((c) => {
+          {pending.candidates.map((c, index) => {
             const name = candDisplayName(c);
             // 同名カード識別のためカード画像を表示 (Recognition over Recall)。
             // 裏向き証拠 ('(非公開)') は実画像を出さず placeholder にフォールバックさせる。
@@ -145,12 +149,17 @@ export function EffectPickerModal(): JSX.Element | null {
             const selected = isMulti && multiSelected.includes(c.uid);
             return (
               <li key={c.uid}>
+                <div className="effect-picker-cand-row">
                 <button
                   type="button"
                   className={`effect-picker-cand${forcedBlocked ? ' effect-picker-cand--blocked' : ''}${selected ? ' effect-picker-cand--selected' : ''}`}
                   disabled={forcedBlocked || quotaBlocked}
                   title={forcedBlocked ? '必ず選ぶキャラが優先されます' : quotaBlocked ? '選択上限に達しています (各陣営の枚数制限)' : undefined}
                   onClick={() => (isMulti ? toggleMulti(c.uid) : handlePick(c.uid))}
+                  onContextMenu={hidden ? undefined : (event) => {
+                    event.preventDefault();
+                    expandModal.open(c.cardId);
+                  }}
                   data-testid={`effect-pick-cand-${c.uid}`}
                   aria-pressed={isMulti ? selected : undefined}
                 >
@@ -159,6 +168,18 @@ export function EffectPickerModal(): JSX.Element | null {
                   <span className="cand-side">{c.player === 'self' ? '自' : '相'}</span>
                   {selected && <span className="cand-selected-mark">✓</span>}
                 </button>
+                {!hidden && (
+                  <button
+                    type="button"
+                    className="effect-picker-detail"
+                    data-testid={`effect-pick-detail-${c.uid}`}
+                    aria-label={`${name}（${index + 1}枚目）の詳細を表示`}
+                    onClick={() => expandModal.open(c.cardId)}
+                  >
+                    Details
+                  </button>
+                )}
+                </div>
               </li>
             );
           })}
@@ -190,5 +211,7 @@ export function EffectPickerModal(): JSX.Element | null {
         )}
       </div>
     </div>
+    <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
+    </>
   );
 }

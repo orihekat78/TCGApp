@@ -240,9 +240,12 @@ describe('B07100 a1 — production 経路 (enter 実 hook emit → 実 listener 
     // human (self) が CUT3 を選択 → opp 手札からリムーブ → 手札3 ≤4 → opp が1枚引く
     applyPickAndContinuation(s, pending!, pending!.candidates[0]!.uid);
     expect(s.players.opp.hand).not.toContain('CUT3');
-    expect(s.players.opp.remove).toContain('CUT3');
     expect(s.players.opp.hand).toContain('DKD');   // 後段 draw 発火 (handAtMost はリムーブ後判定 rules/25)
-    expect(s.players.opp.deck).toEqual([]);
+    // DKD 取得で exact exhaustion → discard 済み CUT3 を即 refresh (rules/14, 26)。
+    expect(s.players.opp.remove).toHaveLength(0);
+    expect(s.players.opp.deck).toEqual(['CUT3']);
+    expect(s.refreshCount.opp).toBe(1);
+    expect(s.players.self.evidence).toHaveLength(1);
   });
 
   it('リムーブ後も手札5 (>4) → draw 不発火 (handAtMost 前段適用後判定)', () => {

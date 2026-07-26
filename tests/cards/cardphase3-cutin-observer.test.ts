@@ -90,6 +90,9 @@ describe('B09086 諸伏高明 behavioral', () => {
     let shUid = '';
     const after = produce(createEmptyGameState(), (d) => {
       d.turn.player = 'self';
+      // Synthetic cutins draw once; leave one card after that draw so the
+      // observer resolves before any deck-out terminal.
+      d.players.self.deck = ['MOB', 'MOB'];
       shUid = mutate.scene.enter(d, 'self', 'B09086', {}).uid;
       let attackerUid = shUid;
       if (attackerIsDecoy) attackerUid = mutate.scene.enter(d, 'self', 'MOB', {}).uid;

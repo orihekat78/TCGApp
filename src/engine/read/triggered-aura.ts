@@ -2,6 +2,7 @@ import type { AbilityDef, EffectCtx, GameState, SceneCharacter } from '@/engine/
 import { evalCond } from '@/engine/cond/eval';
 import { matchOneFilter } from '@/engine/target/candidates';
 import { def as readDef } from './def';
+import { char as readChar } from './char';
 
 type Player = 'self' | 'opp';
 
@@ -16,6 +17,7 @@ export type TriggeredAuraRecipient = {
 export function effectiveTriggeredAuraAbilities(state: GameState, target: TriggeredAuraRecipient): AbilityDef[] {
   const out: AbilityDef[] = [];
   for (const bearer of state.players[target.player].scene) {
+    if (readChar.originalAbilitiesDisabled(state, bearer.uid)) continue;
     const bearerDef = readDef.card(bearer.cardId);
     if (!bearerDef) continue;
     for (const sourceAbility of bearerDef.abilities as AbilityDef[]) {

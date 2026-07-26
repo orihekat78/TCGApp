@@ -12,17 +12,17 @@
 //   - スリープ / スタンは推理不可
 //
 // Phase 4 境界:
-//   - reasoning:declare → reasoning:before-add → reasoning:end Hook を emit
+//   - reasoning:declare → reasoning:after-sleep → reasoning:before-add → reasoning:end Hook を emit
 //   - LP は read.char.lp で取得 (override 反映済み)
 //   - 証拠加算は mutate.evidence.addFromDeck で行う
 //   - mislead 等は Phase 5 で reasoning:before-add listener として実装される
 //     → Phase 4 は emit のみ、解決待機状態を作らない (呼出元が runAllUntilEmpty を回す)
 
-import type { GameState, SceneCharacter, PartnerOnBoard } from '../../types/index.js';
+import type { GameState, SceneCharacter, PartnerOnBoard, ReasoningContinuation } from '../../types/index.js';
 import { mutate } from '../../mutate/index.js';
 import { event } from '../../event/index.js';
 import { char as readChar } from '../../read/char.js';
-import { def as readDef } from '../../read/def.js';
+import { _peekPendingMisread } from '../../listeners/misread.js';
 
 /**
  * uid から対象を探す。パートナーは "partner:self" / "partner:opp" の形式で扱う。
@@ -76,20 +76,24 @@ export function canReason(state: GameState, uid: string): boolean {
  * パートナーの LP を CardDef から取得する (Phase 4 簡易版)
  *   - Phase 5 で read.partner.lp 等の整備時に置き換え予定
  */
-function partnerLP(state: GameState, p: 'self' | 'opp'): number {
-  const cardId = state.players[p].partner.cardId;
-  if (!cardId) return 0;
-  return readDef.card(cardId)?.lp ?? 0;
+function clearReasoningLpModifier(
+  target: { kind: 'char'; char: SceneCharacter } | { kind: 'partner'; partner: PartnerOnBoard },
+): void {
+  if (target.kind === 'char') {
+    delete target.char.turnEffects['lpMod_reasoning'];
+    return;
+  }
+  if (target.partner.turnEffects) delete target.partner.turnEffects['lpMod_reasoning'];
 }
 
 /**
  * doReasoning — 推理を実行する。
  *
- * - reasoning:declare → スリープ化 → reasoning:before-add → 証拠追加 → reasoning:end
+ * - reasoning:declare → スリープ化 → reasoning:after-sleep → reasoning:before-add → 証拠追加 → reasoning:end
  * - LP は max(0, lp) で証拠枚数を決定 (rules/11)
  *
  * Phase 4 注意:
- *   - reasoning:before-add で mislead 等が listener として LP を下げる Effect を
+ *   - reasoning:after-sleep の任意効果後、reasoning:before-add で mislead 等が listener として LP を下げる Effect を
  *     queue する想定。Phase 4 は Hook 発火のみ — 解決は呼出元が runAllUntilEmpty を実行。
  *   - LP 取得は emit 後の現時点の状態を参照する (発火→pendingに積まれる)。
  *     Phase 5 で listener を 即時解決 (replace/直接 LP 修正) に切替できるよう設計。
@@ -111,31 +115,115 @@ export function doReasoning(state: GameState, uid: string): void {
     mutate.partner.setState(state, player, 'sleep');
   }
 
+  // This window is before both mislead and evidence. Its continuation waits
+  // for every card reaction (including a human optional discard) to finish.
+  event.emit(state, 'reasoning:after-sleep', { uid, player }, { player, uid });
+  const token = (state.reasoningContinuationSeq ?? 0) + 1;
+  state.reasoningContinuationSeq = token;
+  const continuation: ReasoningContinuation = { token, uid, player };
+  state.pendingReasoningContinuation = continuation;
+  event.queue(
+    state,
+    { kind: 'atom', verb: 'noop', args: {} },
+    { player, uid },
+    'reasoning:after-sleep:continue',
+    { uid, player },
+    undefined,
+    { reasoningContinuation: continuation },
+  );
+}
+
+/** @internal Resolver-only continuation. The GameState token is single-use. */
+export function _resolveReasoningContinuation(
+  state: GameState,
+  continuation: ReasoningContinuation,
+): void {
+  const pending = state.pendingReasoningContinuation;
+  if (
+    pending?.token !== continuation.token
+    || pending.uid !== continuation.uid
+    || pending.player !== continuation.player
+  ) {
+    throw new Error('reasoning continuation: invalid or consumed token');
+  }
+  const target = findTarget(state, continuation.uid);
+  if (!target || target.player !== continuation.player || (target.kind === 'char' ? target.char.state : target.partner.state) !== 'sleep') {
+    throw new Error('reasoning continuation: target is not the sleeping reasoner');
+  }
+  delete state.pendingReasoningContinuation;
+  _continueReasoningAfterSleep(state, continuation.uid, continuation.player);
+}
+
+/** Runs only after all reasoning:after-sleep reactions have settled. */
+export function _continueReasoningAfterSleep(
+  state: GameState,
+  uid: string,
+  player: 'self' | 'opp',
+): void {
   // reasoning:before-add — spec: { uid, lpUsed } (lpUsed は pre-clamp 生値 — mislead listener が参照)
-  const lpRaw = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
+  const lpRaw = readChar.lp(state, uid);
   event.emit(state, 'reasoning:before-add', { uid, lpUsed: lpRaw }, { player, uid });
+
+  // Human defender がミスリードを決めるまで、証拠取得と
+  // reasoning:end は保留する。先に発火すると他の human decision と二重になる。
+  const pendingMisread = _peekPendingMisread();
+  if (
+    pendingMisread?.reasoningUid === uid &&
+    pendingMisread.reasoningPlayer === player
+  ) {
+    return;
+  }
+
+  completeReasoning(state, uid, player);
+}
+
+/** Human のミスリード決定後に、保留した推理後半を実行する。 */
+export function _resumeDeferredReasoning(
+  state: GameState,
+  uid: string,
+  player: 'self' | 'opp',
+): void {
+  completeReasoning(state, uid, player);
+}
+
+function completeReasoning(
+  state: GameState,
+  uid: string,
+  player: 'self' | 'opp',
+): void {
+  const t = findTarget(state, uid);
+  if (!t || t.player !== player) {
+    throw new Error(`completeReasoning: missing target uid=${uid} player=${player}`);
+  }
 
   // Phase 8 完全クローズ Commit 3b: emit 後の LP を再読み (mislead listener が
   // turnEffects.lpMod_turn 等で LP を下げた可能性がある)。
-  const lpFinal = t.kind === 'char' ? readChar.lp(state, uid) : partnerLP(state, player);
-  // LP クランプ → max(0, lpFinal) 枚を証拠に追加 (rules/11)
-  const lpToUse = Math.max(0, lpFinal);
-  if (lpToUse > 0) {
-    mutate.evidence.addFromDeck(state, player, lpToUse, false, {
-      turn: state.turn.number,
-      via: 'reasoning',
-      sourceCardId: t.kind === 'char' ? t.char.cardId : t.partner.cardId,
-    });
-  }
+  try {
+    const lpFinal = readChar.lp(state, uid);
+    const evidenceSuppressed = t.kind === 'char'
+      && t.char.turnEffects['suppressReasoningEvidence'] === true;
+    // LP クランプ → max(0, lpFinal) 枚を証拠に追加 (rules/11)
+    const lpToUse = evidenceSuppressed ? 0 : Math.max(0, lpFinal);
+    if (lpToUse > 0) {
+      mutate.evidence.addFromDeck(state, player, lpToUse, false, {
+        turn: state.turn.number,
+        via: 'reasoning',
+        sourceCardId: t.kind === 'char' ? t.char.cardId : t.partner.cardId,
+      });
+    }
 
-  // ログ + reasoning:end
-  mutate.log.append(state, {
-    ts: Date.now(),
-    player,
-    turn: state.turn.number,
-    action: 'reasoning',
-    target: uid,
-    result: `evidence+${lpToUse}`,
-  });
-  event.emit(state, 'reasoning:end', { uid, player, gained: lpToUse }, { player, uid });
+    // ログ + reasoning:end
+    mutate.log.append(state, {
+      ts: Date.now(),
+      player,
+      turn: state.turn.number,
+      action: 'reasoning',
+      target: uid,
+      result: `evidence+${lpToUse}`,
+    });
+    event.emit(state, 'reasoning:end', { uid, player, gained: lpToUse }, { player, uid });
+  } finally {
+    if (t.kind === 'char') delete t.char.turnEffects['suppressReasoningEvidence'];
+    clearReasoningLpModifier(t);
+  }
 }

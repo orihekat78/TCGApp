@@ -72,7 +72,8 @@ describe('B08063 黒田兵衛', () => {
     const s = createEmptyGameState();
     s.turn = { number: 2, player: 'self', phase: 'end', isFirstPlayerFirstTurn: false };
     s.players.self.scene = [sceneChar('B08063', 'host'), sceneChar('N1', 'n1')];
-    s.players.self.hand = ['OTHER']; s.players.self.deck = ['N3'];
+    // draw1後も非terminalにし、本テストのdistinct-name→discard契約だけを観測する。
+    s.players.self.hand = ['OTHER']; s.players.self.deck = ['N3', 'OTHER'];
     event.emit(s, 'phase:end:start', { player: 'self' }, undefined); runAllUntilEmpty(s);
     expect(_drainPendingEffectPickSide()).toBeNull();
 

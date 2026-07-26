@@ -40,7 +40,7 @@ function build(gs: AnyState): void {
 }
 
 test.describe('evidence 抑制 B03038 (2026-06-06)', () => {
-  test('する: 推理→optional→1ドロー + 得た証拠をデッキへ戻す (証拠を得ない)', async ({ page }) => {
+  test('する: sleep直後のoptional→1ドロー後に証拠を得ない', async ({ page }) => {
     const { errors } = await setupGamePage(page);
     await setHumanSelf(page);
     await buildGameState(page, build);
@@ -56,8 +56,8 @@ test.describe('evidence 抑制 B03038 (2026-06-06)', () => {
     const after = await getGameState(page);
     const self = after.players.self as { evidence: unknown[]; hand: string[]; deck: string[] };
     expect(self.evidence.length, 'この推理によって証拠を得ない (evidence 0)').toBe(0);
-    expect(self.hand, '1ドローは行う (draw1)').toContain('draw1');
-    expect(self.deck[0], '得た証拠 e1 がデッキ上へ復元').toBe('e1');
+    expect(self.hand, 'draw occurs before evidence is gained').toContain('e1');
+    expect(self.deck[0], 'the remaining deck was never converted to evidence').toBe('draw1');
     expect(errors).toEqual([]);
   });
 

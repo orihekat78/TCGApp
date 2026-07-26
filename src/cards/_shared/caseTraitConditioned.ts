@@ -23,6 +23,9 @@ export function caseTraitConditioned(opts: {
   return {
     ...opts.inner,
     condition,
+    continuousModifier: opts.inner.continuousModifier?.grantKeywords
+      ? { ...opts.inner.continuousModifier, printedKeywordWhenIconValid: true }
+      : opts.inner.continuousModifier,
     description: `【事件${opts.trait}】${opts.inner.description ?? ''}`,
     ruleRefs,
   };

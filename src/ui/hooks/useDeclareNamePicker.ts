@@ -81,12 +81,16 @@ function settle(result: DeclareNameResult): void {
   if (resolver) resolver(result);
 }
 
+export function cancelDeclareNamePicker(): void {
+  settle({ kind: 'cancel' });
+}
+
 export function useDeclareNamePicker(): DeclareNamePicker {
   return {
     current: useDeclareNamePickerStore.getState().current,
     ask: askDeclareName,
     declare: (name) => settle({ kind: 'declare', name }),
     skip: () => settle({ kind: 'skip' }),
-    cancel: () => settle({ kind: 'cancel' }),
+    cancel: cancelDeclareNamePicker,
   };
 }

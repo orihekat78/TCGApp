@@ -18,12 +18,20 @@ export interface DiffResult {
   missing: boolean;
 }
 
+function normalizeEol(content: string): string {
+  return content.replace(/\r\n?/g, '\n');
+}
+
 export function diffMarkdown(path: string, expected: string): DiffResult {
   if (!existsSync(path)) {
     return { path, changed: true, missing: true };
   }
   const actual = readFileSync(path, 'utf-8');
-  return { path, changed: actual !== expected, missing: false };
+  return {
+    path,
+    changed: normalizeEol(actual) !== normalizeEol(expected),
+    missing: false,
+  };
 }
 
 export function escapeMd(s: string): string {

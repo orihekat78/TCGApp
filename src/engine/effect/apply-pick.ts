@@ -12,14 +12,57 @@
 
 import type { GameState, Effect, EffectCtx, Candidate, Condition } from '../types/index.js';
 import type { PendingEffectPickSide, PendingEffectChoiceSide, PendingEffectOptionalSide, ContinuationFrame } from './resolve-picks.js';
-import { resolveEffectPicks, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
+import { resolveEffectPicks, rememberedRuntimeAtomTargetPolicy, _takePendingChoiceResume, _takePendingChoiceBindings, _takePendingOptionalResume, _takePendingOptionalBindings, _takePendingOptionalCostPaid } from './resolve-picks.js';
 import { findChooseIntercept } from './consult-choose-intercept.js';
 
 type Player = 'self' | 'opp';
+
+function withChoiceSwitch(effect: Effect, switchRemoveUid: string | undefined): Effect {
+  if (!switchRemoveUid) return effect;
+  if (effect.kind === 'atom') {
+    return effect.verb === 'sceneEnter'
+      ? { ...effect, args: { ...(effect.args as Record<string, unknown>), switchRemoveUid } }
+      : effect;
+  }
+  if (effect.kind === 'sequence' || effect.kind === 'parallel') {
+    return { ...effect, steps: effect.steps.map(step => withChoiceSwitch(step, switchRemoveUid)) };
+  }
+  if (effect.kind === 'conditional') {
+    return { ...effect, then: withChoiceSwitch(effect.then, switchRemoveUid), ...(effect.else ? { else: withChoiceSwitch(effect.else, switchRemoveUid) } : {}) };
+  }
+  if (effect.kind === 'optional') return { ...effect, effect: withChoiceSwitch(effect.effect, switchRemoveUid) };
+  return effect;
+}
+
+function resumedEntryExtras(source: {
+  triggerBatch?: number;
+  ownerChosenOrder?: number;
+  ownerOrderConfirmed?: boolean;
+  declaredBatch?: number | string;
+}) {
+  return {
+    resumesCurrentEffect: true as const,
+    ...(source.triggerBatch !== undefined ? { triggerBatch: source.triggerBatch } : {}),
+    ...(source.ownerChosenOrder !== undefined ? { ownerChosenOrder: source.ownerChosenOrder } : {}),
+    ...(source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: source.ownerOrderConfirmed } : {}),
+    ...(source.declaredBatch !== undefined ? { declaredBatch: source.declaredBatch } : {}),
+  };
+}
+
 import { run as runEffect } from './resolver.js';
 import {
   _takePendingChooseInterceptResume,
   _takePendingEffectRepeatOptionalResume,
+  _drainPendingEffectChoiceSide,
+  _drainPendingEffectPickSide,
+  _drainPendingEffectOptionalSide,
+  _drainPendingEffectRepeatOptionalSide,
+  _peekPendingEffectChoiceSide,
+  _peekPendingEffectPickSide,
+  _peekPendingEffectOptionalSide,
+  _peekPendingEffectRepeatOptionalSide,
+  _takePendingChoiceContinuation,
+  _takePendingOptionalContinuation,
   pushPendingChooseInterceptSide,
   type PendingChooseInterceptSide,
   type PendingEffectRepeatOptionalSide,
@@ -28,29 +71,58 @@ import {
   _takePendingRpsResume,
   pushPendingRpsSide,
   setPendingRpsResume,
+  setPendingChoiceContinuation,
+  setPendingOptionalContinuation,
+  setPendingEffectRepeatOptionalContinuation,
   _takePendingSetCardChoiceResume,
   type PendingSetCardChoiceSide,
   type PendingSetCardReplacementSide,
 } from './pending-state.js';
+
+function consumeQueuedPick(pending: PendingEffectPickSide): void {
+  if (_peekPendingEffectPickSide() === pending) _drainPendingEffectPickSide();
+}
+
+function consumeQueuedChoice(pending: PendingEffectChoiceSide): void {
+  if (_peekPendingEffectChoiceSide() === pending) _drainPendingEffectChoiceSide();
+}
+
+function consumeQueuedOptional(pending: PendingEffectOptionalSide): void {
+  if (_peekPendingEffectOptionalSide() === pending) _drainPendingEffectOptionalSide();
+}
+
+function consumeQueuedRepeatOptional(pending: PendingEffectRepeatOptionalSide): void {
+  if (_peekPendingEffectRepeatOptionalSide() === pending) _drainPendingEffectRepeatOptionalSide();
+}
 import { hand } from '../mutate/hand.js';
 import { char as charMutator } from '../mutate/char.js';
 import { scene as sceneMutator } from '../mutate/scene.js';
-import { resolveBindRef } from './atom-handlers/_shared.js';
+import { deck as deckMutator } from '../mutate/deck.js';
+import { _attachPendingDeckReorderContinuation, _peekPendingDeckReorderSide, resolveBindRef, type PendingDeckReorderSide } from './atom-handlers/_shared.js';
 
-export function applyRepeatOptionalAndContinuation(state: GameState, _pending: PendingEffectRepeatOptionalSide, run: boolean): void {
+export function applyRepeatOptionalAndContinuation(state: GameState, pending: PendingEffectRepeatOptionalSide, run: boolean): void {
   const resume = _takePendingEffectRepeatOptionalResume();
   if (!resume) return;
+  consumeQueuedRepeatOptional(pending);
   const next: Effect[] = run
     ? [resume.body, ...(resume.remaining > 1 ? [{ kind: 'repeatOptional', max: resume.remaining - 1, body: resume.body } as Effect] : []), ...resume.remainder]
     : resume.remainder;
   const effect: Effect = { kind: 'sequence', steps: next };
   const resolved = resolveEffectPicks(state, effect, resume.ctx, { humanChooser: true, byPlayer: resume.ctx.source.player, source: { cardId: resume.ctx.source.cardId ?? '', abilityId: resume.ctx.source.abilityId ?? '' } });
-  runEffect(state, resolved, resume.ctx);
+  if (resume.continuation) {
+    runContinuationChain(state, {
+      remainder: [resolved], ctx: resume.ctx, kind: 'sequence', outer: resume.continuation,
+    });
+  } else {
+    runEffect(state, resolved, resume.ctx);
+  }
 }
-import { runAllUntilEmpty } from '../resolve/index.js';
+import { pendingOwnerOrderGroup, runAllUntilEmpty } from '../resolve/index.js';
 import { event } from '../event/index.js';
 import { def } from '../read/def.js';
+import { eventUseAllowed } from '../flow/main/hand-use-card.js';
 import { allCardNameComponentsForDef } from '../target/card-def-registry.js';
+import { evalCond } from '../cond/eval.js';
 
 /** Resolve the human half of a dedicated rock-paper-scissors decision. */
 export function applyRpsAndContinuation(state: GameState, pending: PendingRpsSide, handChoice: RpsHand): void {
@@ -68,7 +140,7 @@ export function applyRpsAndContinuation(state: GameState, pending: PendingRpsSid
     return;
   }
   const ctx: EffectCtx = {
-    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: 'scene' },
+    source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.ownerPlayer, area: 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
     bindings: resume.bindings as EffectCtx['bindings'],
   };
   const branch = wins(ownerHand, otherHand) ? resume.effect.win : resume.effect.lose;
@@ -91,7 +163,7 @@ export function applySetCardChoiceAndContinuation(state: GameState, pending: Pen
   state.players[moved.player].evidence.push({ cardId: moved.cardId, faceUp: true, origin: { turn: state.turn.number, via: 'effect', sourceCardId: pending.source.cardId } });
   if (resume.remainder.length > 0) {
     const ctx: EffectCtx = {
-      source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.player, area: 'scene' },
+      source: { cardId: pending.source.cardId, uid: pending.source.uid, abilityId: pending.source.abilityId, player: pending.player, area: 'scene', ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}), ...(pending.source.triggerBatch !== undefined ? { triggerBatch: pending.source.triggerBatch } : {}), ...(pending.source.ownerChosenOrder !== undefined ? { ownerChosenOrder: pending.source.ownerChosenOrder } : {}), ...(pending.source.ownerOrderConfirmed !== undefined ? { ownerOrderConfirmed: pending.source.ownerOrderConfirmed } : {}), ...(pending.source.declaredBatch !== undefined ? { declaredBatch: pending.source.declaredBatch } : {}) },
       bindings: resume.bindings as EffectCtx['bindings'],
     };
     const continuation: Effect = { kind: resume.remainderKind, steps: resume.remainder };
@@ -159,6 +231,38 @@ export function resolveCardIdFromPickUid(
 }
 
 /**
+ * A human may leave an effect-use picker open while its authorization changes
+ * (for example, a FILE/evidence state update or an event-use prohibition).
+ * Such a pick must close without running either the selected atom or its
+ * continuation.  An explicit zero pick is deliberately excluded: that is the
+ * printed "up to" choice and `useEventFromHand` owns its chain-gate behavior.
+ */
+function isStaleEffectEventUsePick(
+  state: GameState,
+  pending: PendingEffectPickSide,
+  pickedUid: string,
+  pickedUids?: string[],
+): boolean {
+  if (pending.atomVerb !== 'useEventFromHand') return false;
+  const uids = pickedUids ?? [pickedUid];
+  if (uids.length === 0) return false;
+  if (state.turnState[pending.player].eventUseBanned) return true;
+
+  const wanted = new Map<string, number>();
+  for (const uid of uids) {
+    const cardId = resolveCardIdFromPickUid(uid, state, pending);
+    if (!cardId || def.card(cardId)?.kind !== 'event') return true;
+    wanted.set(cardId, (wanted.get(cardId) ?? 0) + 1);
+  }
+  const inHand = new Map<string, number>();
+  for (const cardId of state.players[pending.player].hand) {
+    inHand.set(cardId, (inHand.get(cardId) ?? 0) + 1);
+  }
+  return [...wanted].some(([cardId, count]) =>
+    (inHand.get(cardId) ?? 0) < count || !eventUseAllowed(state, pending.player, cardId));
+}
+
+/**
  * BUG-111 family (continuation-nest, 2026-06-22): continuation frame 連鎖 (head → outer) を順に実行する。
  * 各 frame の remainder を保存 ctx で runEffect → runAllUntilEmpty。
  * ある frame の remainder 実行中に **再 pause** (新 pick enqueue) したら、残りの outer frames を
@@ -215,19 +319,155 @@ function hasBindingDependentConditional(effect: Effect): boolean {
   }
 }
 
+/**
+ * A Pattern-A atom kept in a continuation is still unresolved.  Calling the
+ * runtime atom directly cannot replace `$pick`; it must cross the pick walker
+ * again so the next human decision is surfaced.
+ */
+function hasUnresolvedPatternAPick(effect: Effect): boolean {
+  switch (effect.kind) {
+    case 'atom': {
+      const args = effect.args as { uid?: unknown; target?: { kind?: unknown } };
+      return args.uid === '$pick' && args.target?.kind === 'pick';
+    }
+    case 'sequence':
+    case 'parallel':
+    case 'chain':
+      return effect.steps.some(hasUnresolvedPatternAPick);
+    case 'choice':
+      return effect.options.some(hasUnresolvedPatternAPick);
+    case 'optional':
+      return hasUnresolvedPatternAPick(effect.effect)
+        || (effect.else !== undefined && hasUnresolvedPatternAPick(effect.else));
+    case 'conditional':
+      return hasUnresolvedPatternAPick(effect.then)
+        || (effect.else !== undefined && hasUnresolvedPatternAPick(effect.else));
+    case 'forEach':
+      return hasUnresolvedPatternAPick(effect.do);
+    case 'repeatOptional':
+      return hasUnresolvedPatternAPick(effect.body);
+    case 'replace':
+      return hasUnresolvedPatternAPick(effect.with);
+    default:
+      return false;
+  }
+}
+
+/**
+ * A choice/optional behind a runtime pick was deliberately left raw to keep
+ * printed decision order. It must cross the pre-walk when its continuation
+ * starts; resolver.run() would otherwise take its legacy default branch.
+ */
+function hasDeferredPrewalkDecision(effect: Effect): boolean {
+  switch (effect.kind) {
+    case 'choice':
+    case 'optional':
+    case 'traitChoice':
+    case 'repeatOptional':
+      return true;
+    case 'sequence':
+    case 'parallel':
+    case 'chain':
+      return effect.steps.some(hasDeferredPrewalkDecision);
+    case 'conditional':
+      return hasDeferredPrewalkDecision(effect.then)
+        || (effect.else !== undefined && hasDeferredPrewalkDecision(effect.else));
+    case 'forEach':
+      return hasDeferredPrewalkDecision(effect.do);
+    case 'replace':
+      return hasDeferredPrewalkDecision(effect.with);
+    default:
+      return false;
+  }
+}
+
+function peelDeferredDecision(
+  state: GameState,
+  effect: Effect,
+  ctx: EffectCtx,
+  outer: ContinuationFrame | undefined,
+  resumedChain = false,
+): { effect: Effect; next: ContinuationFrame | undefined } {
+  if (effect.kind === 'conditional') {
+    const branch = evalCond(state, effect.if, ctx) ? effect.then : effect.else;
+    if (branch && hasDeferredPrewalkDecision(branch)) {
+      // The condition is evaluated at the continuation boundary, after the
+      // preceding pick has populated its live bindings. Descend only into the
+      // branch resolver.run would take; the other branch must never surface UI.
+      return peelDeferredDecision(state, branch, ctx, outer, false);
+    }
+    return { effect, next: outer };
+  }
+  if ((effect.kind === 'sequence' || effect.kind === 'parallel' || effect.kind === 'chain')
+    && effect.steps.length > 0
+    && hasDeferredPrewalkDecision(effect)) {
+    if (effect.kind === 'chain' && !resumedChain) {
+      // Entering a new chain resets the previous sequence step's no-apply
+      // signal, matching resolver.run(chain). A resumed chain tail preserves it.
+      (ctx.dyn ??= {}).chainStepNoApply = false;
+    }
+    const rest = effect.steps.slice(1);
+    const kind = effect.kind === 'chain' ? 'chain' : 'sequence';
+    const next: ContinuationFrame | undefined = rest.length > 0
+      ? { remainder: rest, ctx, kind, outer }
+      : outer;
+    return peelDeferredDecision(state, effect.steps[0]!, ctx, next, false);
+  }
+  return { effect, next: outer };
+}
+
+function appendDecisionContinuation(
+  kind: 'choice' | 'optional' | 'repeatOptional',
+  continuation: ContinuationFrame | undefined,
+): void {
+  if (!continuation) return;
+  if (kind === 'choice') {
+    setPendingChoiceContinuation(continuation);
+    return;
+  }
+  if (kind === 'optional') {
+    setPendingOptionalContinuation(continuation);
+    return;
+  }
+  setPendingEffectRepeatOptionalContinuation(continuation);
+}
+
 function runContinuationChain(state: GameState, head: ContinuationFrame | undefined): void {
   const g = globalThis as { __pendingEffectPickQueue?: PendingEffectPickSide[] };
   let f: ContinuationFrame | undefined = head;
   while (f) {
+    // A human-resolved atom is executed outside resolver's `chain` loop.  If
+    // it was a no-op, preserve the chain gate before running the saved tail.
+    // Outer sequence frames still continue; an outer chain sees the same gate
+    // and stops as it would during uninterrupted resolution.
+    if (f.kind === 'chain' && f.ctx.dyn?.chainStepNoApply === true) {
+      f = f.outer;
+      continue;
+    }
     const qBefore = g.__pendingEffectPickQueue?.length ?? 0;
-    const remainderEffect: Effect = f.remainder.length === 1
+    const reorderBefore = _peekPendingDeckReorderSide();
+    const choiceBefore = _peekPendingEffectChoiceSide();
+    const optionalBefore = _peekPendingEffectOptionalSide();
+    const repeatBefore = _peekPendingEffectRepeatOptionalSide();
+    let nextFrame = f.outer;
+    let remainderEffect: Effect = f.remainder.length === 1
       ? f.remainder[0]!
       : { kind: f.kind, steps: f.remainder };
+    // resolveEffectPicks intentionally treats chain as opaque. Peel any nested
+    // sequence/chain wrapper one step at a time until its decision can surface,
+    // retaining every remainder as an actual frame with its original gate/ctx.
+    if (hasDeferredPrewalkDecision(remainderEffect)) {
+      const peeled = peelDeferredDecision(state, remainderEffect, f.ctx, f.outer, f.kind === 'chain');
+      remainderEffect = peeled.effect;
+      nextFrame = peeled.next;
+    }
     // A preceding picked atom can create a binding which selects a later
     // conditional branch. Re-walk only this deferred shape: a blanket
     // re-walk changes already-resolved Pattern-B target queries (B06025).
     let resolvedRemainder = remainderEffect;
-    if (hasBindingDependentConditional(remainderEffect)) {
+    if (hasBindingDependentConditional(remainderEffect)
+      || hasUnresolvedPatternAPick(remainderEffect)
+      || hasDeferredPrewalkDecision(remainderEffect)) {
       const byPlayer = f.ctx.source.player;
       const runtimeDyn = f.ctx.dyn as Record<string, unknown> | undefined;
       const knownOwner = runtimeDyn?.['runtimePickOwnerKnown'] === true;
@@ -237,6 +477,7 @@ function runContinuationChain(state: GameState, head: ContinuationFrame | undefi
         : null;
       resolvedRemainder = resolveEffectPicks(state, remainderEffect, f.ctx, {
         byPlayer,
+        chooseAtomTarget: rememberedRuntimeAtomTargetPolicy(f.ctx),
         humanChooser: knownOwner ? humanSide === byPlayer : true,
         ...(knownOwner ? { humanPlayer: humanSide } : {}),
         source: { cardId: f.ctx.source.cardId ?? '', abilityId: f.ctx.source.abilityId ?? '' },
@@ -244,20 +485,42 @@ function runContinuationChain(state: GameState, head: ContinuationFrame | undefi
     }
     runEffect(state, resolvedRemainder as never, f.ctx);
     const qAfter = g.__pendingEffectPickQueue?.length ?? 0;
-    if (qAfter > qBefore && f.outer) {
+    const reorderAfter = _peekPendingDeckReorderSide();
+    const choiceAfter = _peekPendingEffectChoiceSide();
+    const optionalAfter = _peekPendingEffectOptionalSide();
+    const repeatAfter = _peekPendingEffectRepeatOptionalSide();
+    if (reorderAfter && reorderAfter !== reorderBefore) {
+      if (nextFrame) _attachPendingDeckReorderContinuation(nextFrame);
+      return;
+    }
+    if (qAfter > qBefore) {
       // remainder 自身が再 pause → 残り outer frames を新 pick (queue[qBefore]) の continuation 末尾に append。
       // (resolver が intra-frame remainder を既に同梱していれば、その outer 末尾に連結される。)
       const firstNew = g.__pendingEffectPickQueue?.[qBefore];
       if (firstNew) {
-        if (!firstNew.continuation) firstNew.continuation = f.outer;
-        else { let t = firstNew.continuation; while (t.outer) t = t.outer; t.outer = f.outer; }
+        const tail = nextFrame ?? { remainder: [], ctx: f.ctx, kind: 'sequence' as const };
+        if (!firstNew.continuation) firstNew.continuation = tail;
+        else { let t = firstNew.continuation; while (t.outer) t = t.outer; t.outer = tail; }
       }
-      runAllUntilEmpty(state);
       return;
     }
-    runAllUntilEmpty(state);
-    f = f.outer;
+    if (choiceAfter && choiceAfter !== choiceBefore) {
+      appendDecisionContinuation('choice', nextFrame);
+      return;
+    }
+    if (optionalAfter && optionalAfter !== optionalBefore) {
+      appendDecisionContinuation('optional', nextFrame);
+      return;
+    }
+    if (repeatAfter && repeatAfter !== repeatBefore) {
+      appendDecisionContinuation('repeatOptional', nextFrame);
+      return;
+    }
+    f = nextFrame;
   }
+  // Observer effects queued by a carrier or remainder resolve only after the
+  // original effect has completed every continuation frame.
+  runAllUntilEmpty(state);
 }
 
 /** Human dispatch is untrusted. Enforce the same multi-pick constraints as UI and AI. */
@@ -323,6 +586,69 @@ function validatePendingPick(
   }
 }
 
+function tallyCardIds(ids: readonly string[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const id of ids) out.set(id, (out.get(id) ?? 0) + 1);
+  return out;
+}
+
+function assertSameCardMultiset(expected: readonly string[], actual: readonly string[]): void {
+  if (actual.length !== expected.length) throw new Error('deckReorderResolve: wrong card count');
+  const e = tallyCardIds(expected);
+  const a = tallyCardIds(actual);
+  if (e.size !== a.size) throw new Error('deckReorderResolve: card multiset mismatch');
+  for (const [id, count] of e) {
+    if (a.get(id) !== count) throw new Error('deckReorderResolve: card multiset mismatch');
+  }
+}
+
+/** Confirm a human deck-bottom order, then resume the saved effect continuation. */
+export function applyDeckReorderAndContinuation(
+  state: GameState,
+  pending: PendingDeckReorderSide,
+  order: readonly string[],
+): void {
+  assertSameCardMultiset(pending.cardIds, order);
+  const deck = state.players[pending.player].deck;
+
+  // Legacy souza/deckBottomReorderBound pending already moved a bottom block.
+  if (!pending.deckSnapshot || !pending.occurrences) {
+    const n = pending.cardIds.length;
+    if (n < 2 || deck.length < n) throw new Error('deckReorderResolve: stale bottom block');
+    const bottom = deck.slice(deck.length - n);
+    assertSameCardMultiset(pending.cardIds, bottom);
+    for (let i = 0; i < n; i++) deck[deck.length - n + i] = order[i]!;
+    if (pending.continuation) runContinuationChain(state, pending.continuation);
+    else runAllUntilEmpty(state);
+    return;
+  }
+
+  if (deck.length !== pending.deckSnapshot.length
+    || deck.some((cardId, index) => cardId !== pending.deckSnapshot![index])) {
+    throw new Error('deckReorderResolve: stale deck snapshot');
+  }
+  if (pending.occurrences.length !== pending.cardIds.length) {
+    throw new Error('deckReorderResolve: stale occurrence count');
+  }
+  const indexes = new Set<number>();
+  for (const occurrence of pending.occurrences) {
+    if (!Number.isInteger(occurrence.index)
+      || occurrence.index < 0
+      || occurrence.index >= deck.length
+      || indexes.has(occurrence.index)
+      || deck[occurrence.index] !== occurrence.cardId) {
+      throw new Error('deckReorderResolve: stale or duplicate occurrence');
+    }
+    indexes.add(occurrence.index);
+  }
+  for (const occurrence of [...pending.occurrences].sort((a, b) => b.index - a.index)) {
+    deck.splice(occurrence.index, 1);
+  }
+  deckMutator.toBottom(state, pending.player, [...order]);
+  if (pending.continuation) runContinuationChain(state, pending.continuation);
+  else runAllUntilEmpty(state);
+}
+
 /**
  * pending pick を pickedUid(s) で解決し、保存された sequence/chain continuation があれば
  * **同一 ctx** で remainder を実行する (BUG-107: bind を step 間で共有)。
@@ -338,6 +664,13 @@ export function applyPickAndContinuation(
   skipChooseIntercept = false,
 ): void {
   validatePendingPick(pending, pickedUid, pickedUids);
+  if (isStaleEffectEventUsePick(state, pending, pickedUid, pickedUids)) {
+    // Consume only the stale UI decision.  In particular, do not create
+    // bindings, logs, hooks, queued atoms, or continuation-side effects.
+    consumeQueuedPick(pending);
+    return;
+  }
+  consumeQueuedPick(pending);
   const interceptCtx = pending.continuation?.ctx ?? {
     source: {
       cardId: pending.source.cardId,
@@ -345,6 +678,7 @@ export function applyPickAndContinuation(
       abilityId: pending.source.abilityId,
       player: pending.player,
       area: 'scene' as const,
+      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},
   };
@@ -457,7 +791,6 @@ export function applyPickAndContinuation(
     // BUG-107: resolved atom と remainder を同一保存 ctx で runEffect → plain bindings を共有
     // (event.queue 経由は entry.bindings が Immer draft に取り込まれ bind が消えるため不可)。
     runEffect(state, resolvedAtom as never, chainCont.ctx);
-    runAllUntilEmpty(state);
     // BUG-111 #2: multi-step remainder の wrap は origin kind で行う (sequence は chain-gate を持たない)。
     // BUG-111 family (nest): head → outer の順に frame 連鎖を実行 (再 pause は新 pick へ引継ぎ)。
     runContinuationChain(state, chainCont);
@@ -468,9 +801,15 @@ export function applyPickAndContinuation(
       // BUG-175: source.player は能力所有者 (chooser を渡すと相対 arg が二重反転 — B04058
       // 「相手は手札を1枚リムーブする」で self 手札を discard する誤り)。ownerPlayer 不在の
       // 旧 pending は player と同値 (chooser==owner) のため fallback で byte 等価。
-      { player: pending.ownerPlayer ?? pending.player, cardId: pending.source.cardId },
+      {
+        player: pending.ownerPlayer ?? pending.player,
+        cardId: pending.source.cardId,
+        ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
+      },
       'effect:pick-resolved',
       { picked: pickedUid, source: pending.source },
+      undefined,
+      resumedEntryExtras(pending.source),
     );
     runAllUntilEmpty(state);
   }
@@ -507,6 +846,7 @@ export function applyPickSkipAndContinuation(
   if (pending.atomVerb === 'stackedCardPick' && pending.nMin > 0) {
     throw new Error('stackedCardPick: below-minimum selection');
   }
+  consumeQueuedPick(pending);
   const head = pending.continuation;
   // BUG-111 #2 (2026-06-16): runDeclinedAtom で declined head atom を再実行するか分岐する。
   //   - true (deckRevealUntil skipResolvesAtom): atom を __declined で再実行 (公開カードのデッキ下移動等、
@@ -529,9 +869,15 @@ export function applyPickSkipAndContinuation(
         state,
         resolvedAtom as never,
         // BUG-175: decline 経路も同一座標系 (所有者) で再実行する
-        { player: pending.ownerPlayer ?? pending.player, cardId: pending.source.cardId },
+        {
+          player: pending.ownerPlayer ?? pending.player,
+          cardId: pending.source.cardId,
+          ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
+        },
         'effect:pick-resolved',
         { picked: null, source: pending.source },
+        undefined,
+        resumedEntryExtras(pending.source),
       );
       runAllUntilEmpty(state);
       return;
@@ -567,38 +913,58 @@ export function applyChoiceAndContinuation(
   state: GameState,
   pending: PendingEffectChoiceSide,
   choiceIndex: number,
+  switchRemoveUid?: string,
 ): void {
   const resumeEffect = _takePendingChoiceResume();
   if (!resumeEffect) return;
+  consumeQueuedChoice(pending);
+  const continuation = _takePendingChoiceContinuation();
   // BUG-114: choice surface 時の bindings (cutin の $contact.* 等) を resume ctx へ復元。
   const resumeBindings = _takePendingChoiceBindings() ?? {};
   // 再 walk 用 ctx (triggered.ts の resolveCtx と同 shape の plain object、Immer draft 非由来)。
   // source.uid は option1 (charGrantKeyword uid:'$self') の $self 解決 + event.queue source に使用。
-  const ctx: EffectCtx = {
+  const ctx: EffectCtx = continuation?.ctx ?? {
     source: {
       cardId: pending.source.cardId,
       uid: pending.source.uid,
       abilityId: pending.source.abilityId,
       player: pending.player,
       area: 'scene',
+      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: resumeBindings as EffectCtx['bindings'],
     dyn: { choiceIndex },
   };
-  const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
+  if (continuation) {
+    Object.assign(ctx.bindings as Record<string, unknown>, resumeBindings);
+    (ctx.dyn ??= {}).choiceIndex = choiceIndex;
+  }
+  const resolved = withChoiceSwitch(resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.player,
     humanChooser: true,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
-  });
+  }), switchRemoveUid);
+  if (continuation) {
+    runContinuationChain(state, {
+      remainder: [resolved], ctx, kind: 'sequence', outer: continuation,
+    });
+    return;
+  }
   event.queue(
     state,
     resolved as never,
-    { player: pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
+    {
+      player: pending.player,
+      uid: pending.source.uid,
+      cardId: pending.source.cardId,
+      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
+    },
     'effect:choice-resolved',
     { choiceIndex, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
     // BUG-114: 復元した contact bindings を queue の bindings 引数 (6th) に渡し、entry → runtime ctx.bindings
     // へ伝達する (選択 option の $contact.byUid 等が runAllUntilEmpty 実行時に解決される)。
     resumeBindings as Record<string, unknown[]>,
+    resumedEntryExtras(pending.source),
   );
   runAllUntilEmpty(state);
 }
@@ -619,6 +985,8 @@ export function applyOptionalAndContinuation(
 ): void {
   const resumeEffect = _takePendingOptionalResume();
   if (!resumeEffect) return;
+  consumeQueuedOptional(pending);
+  const continuation = _takePendingOptionalContinuation();
   // engine wave-18: surface 時の contact bindings を復元。ctx.bindings 自体は fresh {} のままにする —
   // resume walk は contact を必要とせず (optional 内 inContact pick / $contact.* は queue → runtime entryToCtx で
   // 解決)、resumeBindings を ctx.bindings に alias すると inner の bind 書込 ($entered 等) が下の queue 6th arg
@@ -627,13 +995,14 @@ export function applyOptionalAndContinuation(
   const hasResumeBindings = resumeBindings != null && Object.keys(resumeBindings).length > 0;
   // WC2b: surface 時に保持した costPaid を復元 (optional 内 $cost.* 参照用、B06023)。null は従来挙動。
   const resumeCostPaid = _takePendingOptionalCostPaid();
-  const ctx: EffectCtx = {
+  const ctx: EffectCtx = continuation?.ctx ?? {
     source: {
       cardId: pending.source.cardId,
       uid: pending.source.uid,
       abilityId: pending.source.abilityId,
       player: pending.ownerPlayer ?? pending.player,
       area: 'scene',
+      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
     },
     bindings: {},
     dyn: { optionalRun: run },
@@ -643,12 +1012,22 @@ export function applyOptionalAndContinuation(
     // へも渡す。resume walk 自体の pre-walk でも参照できるよう ctx にも載せる。
     ...(resumeCostPaid ? { costPaid: resumeCostPaid } : {}),
   };
+  if (continuation) {
+    (ctx.dyn ??= {}).optionalRun = run;
+    if (resumeCostPaid) ctx.costPaid = resumeCostPaid;
+  }
   const resolved = resolveEffectPicks(state, resumeEffect, ctx, {
     byPlayer: pending.ownerPlayer ?? pending.player,
     humanChooser: true,
     humanPlayer: pending.player,
     source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId },
   });
+  if (continuation) {
+    runContinuationChain(state, {
+      remainder: [resolved], ctx, kind: 'sequence', outer: continuation,
+    });
+    return;
+  }
   // 2026-06-06 タスクC: payload に元 triggerPayload を載せて queue する (あれば)。これで runtime ctx
   // (entryToCtx) が triggerPayload を持ち、resumed effect 内の $trigger.<field> (B03038 evidenceToDeck の
   // $trigger.gained 等) が実行時に解決される。triggerPayload 無し (通常 optional) は従来の {run, source} marker。
@@ -656,7 +1035,12 @@ export function applyOptionalAndContinuation(
   event.queue(
     state,
     resolved as never,
-    { player: pending.ownerPlayer ?? pending.player, uid: pending.source.uid, cardId: pending.source.cardId },
+    {
+      player: pending.ownerPlayer ?? pending.player,
+      uid: pending.source.uid,
+      cardId: pending.source.cardId,
+      ...(pending.source.resolutionKind ? { resolutionKind: pending.source.resolutionKind } : {}),
+    },
     'effect:optional-resolved',
     optTriggerPayload ?? { run, source: { cardId: pending.source.cardId, abilityId: pending.source.abilityId } },
     // engine wave-18: 復元した contact bindings を queue 6th arg で entry → runtime ctx.contact へ伝達
@@ -664,7 +1048,10 @@ export function applyOptionalAndContinuation(
     // 非空 (contact 有) のときのみ渡す — 空 optional (B09038 等) は従来通り bindings 省略 = 挙動不変。
     hasResumeBindings ? (resumeBindings as Record<string, unknown[]>) : undefined,
     // WC2b: costPaid を entry へ永続化 → runtime entryToCtx が復元し optional 内 $cost.* を解決 (B06023)。
-    resumeCostPaid ? { costPaid: resumeCostPaid } : undefined,
+    {
+      ...resumedEntryExtras(pending.source),
+      ...(resumeCostPaid ? { costPaid: resumeCostPaid } : {}),
+    },
   );
   runAllUntilEmpty(state);
 }
@@ -829,25 +1216,45 @@ export function _drainAllEffectPicksForTest(
 }
 
 /**
- * BUG-138 (X8): human 所有の未解決 decision (pick queue / optional / choice 各 side-channel) が
+ * BUG-138/249: human 所有の未解決 decision (owner order / pick / optional / choice) が
  * engine 側に残っているか。playTurn が move 選択前に確認し、残っていれば
  * paused:{humanPick:true} で停止する (rules/05 効果解決中は次の行動に移れない /
  * rules/15 未解決効果は所有者が解決)。__humanPlayerSide 未設定 (null) なら常に false
  * — smoke / spectator は従来挙動 byte-equal。
  */
-export function hasPendingHumanPick(): boolean {
+export function hasPendingHumanPick(state?: GameState): boolean {
   const g = globalThis as {
     __pendingEffectPickQueue?: PendingEffectPickSide[];
     __pendingEffectOptionalSide?: { player: 'self' | 'opp' } | null;
     __pendingEffectRepeatOptionalSide?: { player: 'self' | 'opp' } | null;
     __pendingEffectChoiceSide?: { player: 'self' | 'opp' } | null;
+    __pendingDeckReorderSide?: { player: 'self' | 'opp' } | null;
+    __pendingDeckPlaceSide?: {
+      player: 'self' | 'opp';
+      ownerPlayer: 'self' | 'opp';
+    } | null;
+    __pendingMisread?: {
+      player: 'self' | 'opp';
+    } | null;
+    __pendingChooseInterceptSide?: { player: 'self' | 'opp' } | null;
+    __pendingRpsSide?: { player: 'self' | 'opp' } | null;
+    __pendingSetCardChoiceSide?: { player: 'self' | 'opp' } | null;
+    __pendingSetCardReplacementSide?: { player: 'self' | 'opp' } | null;
     __humanPlayerSide?: 'self' | 'opp' | null;
   };
   const humanSide = g.__humanPlayerSide ?? null;
   if (humanSide === null) return false;
+  if (state && pendingOwnerOrderGroup(state, humanSide).length >= 2) return true;
   if ((g.__pendingEffectPickQueue ?? []).some(p => p.player === humanSide)) return true;
   if (g.__pendingEffectOptionalSide?.player === humanSide) return true;
   if (g.__pendingEffectRepeatOptionalSide?.player === humanSide) return true;
   if (g.__pendingEffectChoiceSide?.player === humanSide) return true;
+  if (g.__pendingDeckReorderSide?.player === humanSide) return true;
+  if (g.__pendingDeckPlaceSide?.ownerPlayer === humanSide) return true;
+  if (g.__pendingMisread?.player === humanSide) return true;
+  if (g.__pendingChooseInterceptSide?.player === humanSide) return true;
+  if (g.__pendingRpsSide?.player === humanSide) return true;
+  if (g.__pendingSetCardChoiceSide?.player === humanSide) return true;
+  if (g.__pendingSetCardReplacementSide?.player === humanSide) return true;
   return false;
 }

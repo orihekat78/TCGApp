@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://www.takaratomy.co.jp/products/conan-cardgame/cardlist/cards",
+    "fetchedAt": "2026-07-18T05:51:08.0459736Z"
+  },
+  "packages": {
+    "count": 22,
+    "printings": {
+      "ct-d01": 16,
+      "ct-d02": 16,
+      "ct-d03": 16,
+      "ct-d04": 16,
+      "ct-d05": 16,
+      "ct-d06": 24,
+      "ct-d07": 24,
+      "ct-d08": 26,
+      "ct-d09": 27,
+      "ct-d10": 26,
+      "ct-d11": 21,
+      "ct-p01": 160,
+      "ct-p02": 149,
+      "ct-p03": 205,
+      "ct-p04": 148,
+      "ct-p05": 188,
+      "ct-p06": 184,
+      "ct-p07": 175,
+      "ct-p08": 145,
+      "ct-p09": 188,
+      "ct-p10": 166,
+      "pr-01": 304
+    }
+  },
+  "kinds": {
+    "case": 134,
+    "character": 1576,
+    "event": 230,
+    "partner": 300
+  },
+  "printings": {
+    "raw": 2240,
+    "tsv": 2240
+  },
+  "duplicates": {
+    "raw": [],
+    "tsv": []
+  },
+  "hashes": {
+    "rawCardNums": "0b802a33dc1d5df3a1c7f8d41a6e6aa23a4ea61ea9877443e7a7ca102cf66245",
+    "tsvCardNums": "0b802a33dc1d5df3a1c7f8d41a6e6aa23a4ea61ea9877443e7a7ca102cf66245",
+    "normalizedFaq": "0457f3e5bd9ce56243f038ca4beb81d0a01c984b4b164000aa265fc2d0d3b3a3"
+  }
+}

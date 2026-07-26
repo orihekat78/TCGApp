@@ -35,7 +35,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { produce } from 'immer';
 import { event } from '@/engine/event/index';
-import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
+import { registerTriggeredListener, _resetTriggeredRegistered, _setHumanPlayerSide } from '@/engine/listeners/triggered';
 import {
   registerMisreadListener,
   _resetMisreadRegistered,
@@ -78,6 +78,7 @@ beforeEach(() => {
   _resetTriggeredRegistered();
   _resetMisreadRegistered();
   _resetPendingMisread();
+  _setHumanPlayerSide(null);
   resetCardDefRegistry();
   _resetUidCounter();
   for (const d of ALL) registerCardDef(d);
@@ -116,15 +117,15 @@ describe('B09016 a2 — このキャラがミスリードしたとき自己ア�
   it('happy: 相手ターン(self推理)+ 同伴に非円谷/Lv4/少年探偵団 → B09016 sleep化後 active に戻る', () => {
     const after = fireMisread(board('COMP_OK'));
     expect(stateOf(after, 'mitsu'), 'ミスリード後 a2 で再アクティブ').toBe('active');
-    // 副作用 (production flow proof): 推理キャラに LP-1 が適用され (base LP1 → 0)、証拠 0 枚。
-    expect(readChar.lp(after, 'r1'), 'ミスリードで推理キャラ LP-1 (1→0)').toBe(0);
+    // 推理中はLP0なので証拠0枚。推理終了後は期限どおり印字LP1へ戻る。
+    expect(readChar.lp(after, 'r1'), 'ミスリードLP-1は推理終了時に消える').toBe(1);
     expect(after.players.self.evidence.length, 'LP0 → 得る証拠 0 枚 (rules/11)').toBe(0);
   });
 
   it('fail: 同伴が別の円谷光彦 (cardNameNot 円谷光彦 で除外) → sleep のまま', () => {
     const after = fireMisread(board('COMP_MITSU'));
     expect(stateOf(after, 'mitsu'), 'sceneHas 不成立 → 再アクティブしない').toBe('sleep');
-    expect(readChar.lp(after, 'r1'), 'ミスリード自体は発火 (LP-1)').toBe(0);
+    expect(readChar.lp(after, 'r1'), 'ミスリードLP-1は推理終了時に消える').toBe(1);
   });
 
   it('fail: 同伴が level5 (levelMin/Max 4 の完全一致外) → sleep のまま', () => {
@@ -163,6 +164,6 @@ describe('B09016 a2 — このキャラがミスリードしたとき自己ア�
     // ゲート単体を pin する (sceneHas は成立させ、差分が turn 条件のみになるよう COMP_OK を置く)。
     const after = fireMisread(board('COMP_OK', 'opp'));
     expect(stateOf(after, 'mitsu'), 'turn{opp} 不成立 → 再アクティブしない').toBe('sleep');
-    expect(readChar.lp(after, 'r1'), 'ミスリード自体は turn 非依存で発火 (LP-1)').toBe(0);
+    expect(readChar.lp(after, 'r1'), 'ミスリードLP-1は推理終了時に消える').toBe(1);
   });
 });

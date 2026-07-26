@@ -206,6 +206,10 @@ function genFile(spec, cat) {
   }
   def.rarity = r.rarity || 'C';
   if (spec.isMR) def.isMR = true;
+  // Printed event-use authorization is card-level data.  Keep it when a
+  // certified spec is regenerated; putting it only in a handwritten card
+  // silently removes the normal/effect/Next Hint shared gate on re-codegen.
+  if (spec.useCondition !== undefined) def.useCondition = spec.useCondition;
   def.imageUrl = r.imagePath || '';
   if (r.kind === 'character' && spec.keywords && spec.keywords.length) def.keywords = spec.keywords;
 

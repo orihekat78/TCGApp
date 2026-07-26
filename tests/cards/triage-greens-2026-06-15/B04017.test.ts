@@ -26,7 +26,7 @@ import { event } from '@/engine/event/index';
 import { registerTriggeredListener, _resetTriggeredRegistered } from '@/engine/listeners/triggered';
 import { register as registerCardDef, _resetRegistry as resetDefRegistry } from '@/engine/read/def';
 import { handUseCard } from '@/engine/flow/main/hand-use-card';
-import { runAllUntilEmpty } from '@/engine/resolve/index';
+import { pendingOwnerOrderGroup, runAllUntilEmpty } from '@/engine/resolve/index';
 import { drainAiEffectPicks, applyPickAndContinuation, applyPickSkipAndContinuation } from '@/engine/effect/apply-pick';
 import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
 import type { PendingEffectPickSide } from '@/engine/effect/resolve-picks';
@@ -47,6 +47,14 @@ type G = {
 const g = globalThis as G;
 const pickQueue = (): PendingEffectPickSide[] => g.__pendingEffectPickQueue ?? [];
 const setHuman = (s: 'self' | 'opp' | null) => { g.__humanPlayerSide = s; };
+function confirmOwnerOrder(s: GameState): GameState {
+  return produce(s, (d) => {
+    const group = pendingOwnerOrderGroup(d, 'self');
+    expect(group, 'same-timing owner effects pause before the pick').toHaveLength(2);
+    group.forEach((entry, order) => { entry.ownerChosenOrder = order; entry.ownerOrderConfirmed = true; });
+    runAllUntilEmpty(d);
+  });
+}
 
 // ---- synthetic decoy defs (prefix DEC_B04017_ で id 衝突回避) ----
 function ch(id: string, ap: number, over: Partial<CardDef> = {}): CardDef {
@@ -119,6 +127,7 @@ describe('B04017 服部平次 — gate5 runtime behavior', () => {
     // 遠山和葉が self 現場に登場したこと (trigger 前提)
     expect(s.players.self.scene.some((c) => c.cardId === 'D06006'), '遠山和葉が登場').toBe(true);
 
+    s = confirmOwnerOrder(s);
     const pending = pickQueue()[0];
     expect(pending?.atomVerb, 'sceneRemove pick が surface (a1 発火の証明)').toBe('sceneRemove');
     expect(pending?.player, '操作者は self (bearer 所有)').toBe('self');
@@ -155,6 +164,7 @@ describe('B04017 服部平次 — gate5 runtime behavior', () => {
       handUseCard(d, 'self', 'D06006');
       runAllUntilEmpty(d);
     });
+    s = confirmOwnerOrder(s);
     const pending = pickQueue()[0];
     expect(pending?.atomVerb, 'sceneRemove pick surface').toBe('sceneRemove');
     expect(pending?.nMin, '0枚可 (decline channel)').toBe(0);
@@ -238,6 +248,7 @@ describe('B04017 服部平次 — gate5 runtime behavior', () => {
       handUseCard(d, 'self', 'D06006');
       runAllUntilEmpty(d);
     });
+    s = confirmOwnerOrder(s);
     const pending = pickQueue()[0];
     expect(pending?.atomVerb, '1体目: a1 発火 (pick surface)').toBe('sceneRemove');
     g.__pendingEffectPickQueue = [];

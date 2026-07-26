@@ -13,6 +13,8 @@ import { useEffect, type JSX } from 'react';
 import type { CardDef } from '@/engine/types';
 import { ALL_CARDS } from '@/cards';
 import { CardArt } from './CardArt.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 // hirameki picker と同じ class 名で見た目を流用 (色は青系統に override 可能だが
 // まずは demo パターンの統一感を優先)
@@ -39,6 +41,7 @@ const ICON_CUTIN_CARDS = getIconCutinCards();
 
 export function CutinDemoPickerModal(props: CutinDemoPickerModalProps): JSX.Element {
   const { onPick, onClose } = props;
+  const expandModal = useCardExpandModal();
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') onClose();
@@ -92,30 +95,45 @@ export function CutinDemoPickerModal(props: CutinDemoPickerModalProps): JSX.Elem
                   && ab.trigger?.hook === 'effect:declared' && ab.trigger?.optional === true;
               }) as { description?: string } | undefined;
               return (
-                <button
-                  type="button"
-                  key={d.id}
-                  className="hirameki-demo-picker-card"
-                  data-testid={`cutin-demo-pick-${d.id}`}
-                  onClick={() => onPick(d.id)}
-                >
-                  <CardArt cardId={d.id} alt={cardIdToDisplayName(d.id)} className="hirameki-demo-picker-card-art" />
-                  <div className="hirameki-demo-picker-card-name">
-                    {cardIdToDisplayName(d.id)}
-                  </div>
-                  <div className="hirameki-demo-picker-card-id">
-                    No.{cardIdToPrintedNumber(d.id)}
-                  </div>
-                  {cutin?.description && (
-                    <div className="hirameki-demo-picker-card-desc">
-                      {cutin.description}
+                <div className="hirameki-demo-picker-card-row" key={d.id}>
+                  <button
+                    type="button"
+                    className="hirameki-demo-picker-card"
+                    data-testid={`cutin-demo-pick-${d.id}`}
+                    onClick={() => onPick(d.id)}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      expandModal.open(d.id);
+                    }}
+                  >
+                    <CardArt cardId={d.id} alt={cardIdToDisplayName(d.id)} className="hirameki-demo-picker-card-art" />
+                    <div className="hirameki-demo-picker-card-name">
+                      {cardIdToDisplayName(d.id)}
                     </div>
-                  )}
-                </button>
+                    <div className="hirameki-demo-picker-card-id">
+                      No.{cardIdToPrintedNumber(d.id)}
+                    </div>
+                    {cutin?.description && (
+                      <div className="hirameki-demo-picker-card-desc">
+                        {cutin.description}
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="hirameki-demo-picker-card-detail"
+                    data-testid={`cutin-demo-detail-${d.id}`}
+                    aria-label={`${cardIdToDisplayName(d.id)}の詳細を表示`}
+                    onClick={() => expandModal.open(d.id)}
+                  >
+                    詳細
+                  </button>
+                </div>
               );
             })
           )}
         </div>
+        <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
       </div>
     </div>
   );

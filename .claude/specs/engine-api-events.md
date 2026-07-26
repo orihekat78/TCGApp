@@ -35,6 +35,7 @@ type Listener = (state, payload, source) => Effect | void;
 | Hook | タイミング | payload |
 |------|-----------|---------|
 | `reasoning:declare` | 推理宣言時 | { uid, byPlayer } |
+| `reasoning:after-sleep` | 推理者をスリープ後、ミスリード・証拠化前 | { uid, player } |
 | `reasoning:before-add` | 証拠追加直前 (LP参照) | { uid, lpUsed } |
 | `reasoning:end` | 終了 (ミスリード効果切れ) | { uid } |
 | `action:declare` | アクション宣言時 | { byUid, target } |
@@ -97,7 +98,7 @@ type HookName =
   | 'phase:auto:start'|'phase:auto:before-draw'|'phase:auto:after-draw'|'phase:auto:after-file'
   | 'phase:main:start'|'phase:main:end'|'phase:end:start'|'phase:end:cleanup'
   | 'turn:start'|'turn:end'
-  | 'reasoning:declare'|'reasoning:before-add'|'reasoning:end'
+  | 'reasoning:declare'|'reasoning:after-sleep'|'reasoning:before-add'|'reasoning:end'
   | 'action:declare'|'action:guard-window'|'action:guarded'|'action:unguarded'|'action:end'
   | 'contact:start'|'contact:order-set'|'contact:before-judge'|'contact:judge'|'contact:end'
   | 'enter'|'disguise:into'|'leave:to-remove'|'leave:to-deck'|'leave:to-partner-area'|'mr:overwrite'

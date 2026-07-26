@@ -37,28 +37,25 @@ describe('eventRemoveByAP', () => {
     });
     expect(d.id).toBe('a_x');
     expect(d.condition).toBe(extra);
-    const choice = d.effect as { options: { args: { target: { query: { side: string; state: unknown } } } }[] };
-    const target = choice.options[0].args.target;
-    expect(target.query.side).toBe('opp');
-    expect(target.query.state).toEqual(['sleep']);
+    const atom = d.effect as { args: { side: string; state: unknown } };
+    expect(atom.args.side).toBe('opp');
+    expect(atom.args.state).toEqual(['sleep']);
   });
 
-  it('effect is choice of sceneRemove with cause:effect and apMax filter', () => {
+  it('effect is direct sceneRemove with cause:effect and apMax filter', () => {
     const d = eventRemoveByAP({ apMax: 8000 });
-    const choice = d.effect as {
+    const atom = d.effect as {
       kind: string;
-      chooser: string;
-      options: { kind: string; verb: string; args: { uid: string; cause: string; target: { query: { filter: { apMax: number }; area: string } } } }[];
+      verb: string;
+      args: { player: string; side: string; max: number; cause: string; filter: { apMax: number } };
     };
-    expect(choice.kind).toBe('choice');
-    expect(choice.chooser).toBe('self');
-    const atom = choice.options[0];
     expect(atom.kind).toBe('atom');
     expect(atom.verb).toBe('sceneRemove');
-    expect(atom.args.uid).toBe('$pick');
+    expect(atom.args.player).toBe('self');
+    expect(atom.args.side).toBe('either');
+    expect(atom.args.max).toBe(1);
     expect(atom.args.cause).toBe('effect');
-    expect(atom.args.target.query.area).toBe('scene');
-    expect(atom.args.target.query.filter).toEqual({ apMax: 8000 });
+    expect(atom.args.filter).toEqual({ apMax: 8000 });
   });
 
   it('effect passes engine.effect.validate', () => {

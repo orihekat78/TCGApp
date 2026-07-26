@@ -16,13 +16,15 @@
   font-family: system-ui, sans-serif;
   font-size: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
+  /* The HUD can sit above browsing modals; only its real controls may own input. */
+  pointer-events: none;
 }
 
 .spectator-hud-section {
   display: flex;
   align-items: center;
   gap: 8px;
+  pointer-events: none;
 }
 
 .spectator-hud-label {
@@ -44,6 +46,7 @@
   cursor: pointer;
   border-radius: 3px;
   transition: background 0.1s, border-color 0.1s;
+  pointer-events: auto;
 }
 
 .spectator-hud-preset:hover {
@@ -75,6 +78,7 @@
   cursor: pointer;
   border-radius: 3px;
   transition: background 0.1s, border-color 0.1s;
+  pointer-events: auto;
 }
 
 .spectator-hud-control:hover:not(:disabled) {
@@ -92,4 +96,57 @@
   border-color: #e0a060;
   color: #ffffff;
   font-weight: 600;
+}
+
+/* Mobile keeps the controls in a shallow top rail.  Only the actual controls
+ * accept pointer input, so the rail's reserved/empty area cannot cover the
+ * ActionsPanel below it. */
+@media (max-width: 640px) {
+  .spectator-hud {
+    top: 4px;
+    right: 4px;
+    left: 4px;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    max-width: calc(100vw - 8px);
+    padding: 4px 6px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .spectator-hud-section {
+    min-width: 0;
+    gap: 3px;
+    pointer-events: none;
+  }
+
+  .spectator-hud-section:first-child {
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .spectator-hud-section:last-child {
+    flex: 0 0 auto;
+  }
+
+  .spectator-hud-label,
+  .spectator-hud-current {
+    display: none;
+  }
+
+  .spectator-hud-buttons {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .spectator-hud-preset,
+  .spectator-hud-control {
+    flex: 0 0 auto;
+    padding: 3px 5px;
+    font-size: 10px;
+    white-space: nowrap;
+    pointer-events: auto;
+  }
 }

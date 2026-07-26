@@ -128,6 +128,12 @@ export type ContinuousModifier = {
   // self-only (aura 版 lvlDeltaAura は未導入 = YAGNI、対象カードは全て self-buff)。
   lvlDelta?: ContinuousDelta;
   grantKeywords?: (s: GameState, ctx: { uid: string }) => string[];
+  /**
+   * Keyword printed behind a condition icon on this card itself. Ver.2.5 p.25
+   * keeps it available off-scene while the icon condition is met. Never use
+   * this for an external grant or ordinary ability text.
+   */
+  printedKeywordWhenIconValid?: true;
   // engine mega-wave W4 (2026-07-03, r62 G32): filter 付き突撃の継続付与 —「〚突撃［レベル4以下の
   // キャラ］〛」(B07096 ウォッカ)。plain grantKeywords と違い対象 filter を伴うため、read.char.
   // filteredAssaultKeywords が走査し flow/main/action.ts namedExceptionAllowed が per-target で
@@ -367,6 +373,13 @@ export type CardDef = {
   flavor?: string;
   imageUrl: string;                        // ローカル運用 (rules: 法務スタンス)
   abilities: AbilityDef[];                 // 能力定義 (Phase 5 で TSV+merge)
+  /**
+   * Printed "this event may be used if ..." authorization only.  This is
+   * deliberately separate from AbilityDef.condition: icon and effect
+   * conditions may make a used event resolve with no effect, but never by
+   * themselves prohibit using it.
+   */
+  useCondition?: Condition;
   ruleRefs: string[];                      // 例: ["rules/11-reasoning.md §LP≤0"]
 
   // kind-specific optional fields

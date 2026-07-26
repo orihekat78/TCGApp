@@ -2,7 +2,6 @@
 import * as flow from '@/engine/flow/index.js';
 import { engine } from '@/engine';
 import { makeAbilityCtx } from './cost.js';
-import { alternativeCostProviders } from '@/engine/cost/alternative.js';
 import type { Player } from './cost.js';
 
 /**
@@ -77,18 +76,7 @@ export function enumDeclaredAbilitySources(
     const abilities = [...def.abilities, ...riderDeclaredAbilities(state, c), ...flow.grantedDeclaredAbilitiesOf(c)];
     const hasUsable = abilities.some((a) => {
       if (a.type !== 'declared') return false;
-      if (!flow.canDeclaredAbility(state, c.uid, a.id)) return false;
-      // Phase 8.8c: cost 支払不能なら使用不可
-      if (a.cost) {
-        const ctx = makeAbilityCtx({
-          player,
-          uid: c.uid,
-          cardId: c.cardId,
-          abilityId: a.id,
-          area: 'scene',
-        });
-        if (!engine.cost.canPay(state, a.cost, ctx) && alternativeCostProviders(state, ctx, a).length === 0) return false;
-      }
+      if (!flow.canActivateDeclaredAbility(state, c.uid, a.id, undefined, { allowImplicitRemoveSetCard: true })) return false;
       return true;
     });
     if (hasUsable) sources.push(c.uid);
@@ -101,17 +89,7 @@ export function enumDeclaredAbilitySources(
       const caseUid = `case:${player}`;
       const hasUsable = def.abilities.some((a) => {
         if (a.type !== 'declared') return false;
-        if (!flow.canDeclaredAbility(state, caseUid, a.id)) return false;
-        if (a.cost) {
-          const ctx = makeAbilityCtx({
-            player,
-            uid: caseUid,
-            cardId: caseCardId,
-            abilityId: a.id,
-            area: 'case',
-          });
-          if (!engine.cost.canPay(state, a.cost, ctx)) return false;
-        }
+        if (!flow.canActivateDeclaredAbility(state, caseUid, a.id, undefined, { allowImplicitRemoveSetCard: true })) return false;
         return true;
       });
       if (hasUsable) sources.push(caseUid);
@@ -125,12 +103,7 @@ export function enumDeclaredAbilitySources(
     const uid = `hand:${player}:${cardId}`;
     const hasUsable = def.abilities.some((a) => {
       if (a.type !== 'declared') return false;
-      if (!flow.canDeclaredAbility(state, uid, a.id)) return false; // scope gate は engine 側
-      if (a.cost) {
-        const ctx = makeAbilityCtx({ player, uid, cardId, abilityId: a.id, area: 'hand' });
-        if (!engine.cost.canPay(state, a.cost, ctx)) return false;
-      }
-      return true;
+      return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true });
     });
     if (hasUsable) sources.push(uid);
   }
@@ -145,18 +118,7 @@ export function enumDeclaredAbilitySources(
         const uid = `partnerMR:${player}`;
         const hasUsable = def.abilities.some((a) => {
           if (a.type !== 'declared') return false;
-          if (!flow.canDeclaredAbility(state, uid, a.id)) return false; // scope gate は engine 側
-          if (a.cost) {
-            const ctx = makeAbilityCtx({
-              player,
-              uid,
-              cardId: mr.cardId,
-              abilityId: a.id,
-              area: 'partner-area',
-            });
-            if (!engine.cost.canPay(state, a.cost, ctx)) return false;
-          }
-          return true;
+          return flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true });
         });
         if (hasUsable) sources.push(uid);
       }
@@ -233,22 +195,12 @@ export function enumDeclaredAbilityIdsFor(
     }
   }
   if (!cardId || !owner) return [];
+  void area;
   const def = engine.cards.get(cardId);
   if (!def) return [];
   return [...def.abilities, ...riderAbilities]
     .filter((a) => a.type === 'declared')
-    .filter((a) => flow.canDeclaredAbility(state, uid, a.id))
-    .filter((a) => {
-      if (!a.cost) return true;
-      const ctx = makeAbilityCtx({
-        player: owner!,
-        uid,
-        cardId: cardId!,
-        abilityId: a.id,
-        area,
-      });
-      return engine.cost.canPay(state, a.cost, ctx) || alternativeCostProviders(state, ctx, a).length > 0;
-    })
+    .filter((a) => flow.canActivateDeclaredAbility(state, uid, a.id, undefined, { allowImplicitRemoveSetCard: true }))
     .map((a) => a.id);
 }
 
@@ -308,11 +260,7 @@ export function canAssistForUi(
   state: import('@/engine/types/game-state.js').GameState,
   player: Player,
 ): boolean {
-  const ps = state.players[player];
-  if (ps.partner.state !== 'active') return false;
-  if (ps.partner.location !== 'partner-area') return false;
-  if (state.turnState[player].assistedThisTurn) return false;
-  return true;
+  return engine.read.game.canPartnerAssist(state, player);
 }
 
 /**
@@ -322,13 +270,6 @@ export function canSolveCaseForUi(
   state: import('@/engine/types/game-state.js').GameState,
   player: Player,
 ): boolean {
-  const ps = state.players[player];
-  if (ps.case.status !== '解決編') return false;
-  if (ps.evidence.length < ps.case.requiredEvidence) return false;
-  if (ps.partner.state !== 'active') return false;
-  if (state.turnState[player].assistedThisTurn) return false;
-  // E3 P53: 「自分は【事件解決】できない」case (B09107) は事件解決不可 (canWin / AI canSolveCase と同 gate)
-  if (engine.read.game.cannotSolveCase(state, player)) return false;
-  return true;
+  return engine.read.game.canPartnerSolveCase(state, player);
 }
 

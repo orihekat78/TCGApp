@@ -54,8 +54,11 @@ describe('D11014 a2 — AI 経路の単一 PB pick (sceneEnter) 解決 (BUG-106)
     const sceneIds = s.players.self.scene.map((c) => c.cardId);
     expect(sceneIds, 'リムーブの 萩原千速 が現場に登場').toContain('D11011');
     expect(s.players.self.remove, '登場した 萩原千速 はリムーブから除去').not.toContain('D11011');
-    expect(s.players.self.deck.length, '萩原千速 登場で 1 ドロー → デッキ -1').toBe(0);
-    expect(s.players.self.hand.length, 'discard 1 + draw 1 → 手札 1 枚 (ドローしたカード)').toBe(1);
+    expect(s.players.self.hand, 'discard 1 + draw 1 → ドローしたカードが手札').toEqual(['D08014']);
+    expect(s.players.self.deck, 'draw の exact exhaustion → discard カードを即 refresh').toEqual(['D08013']);
+    expect(s.players.self.remove).toHaveLength(0);
+    expect(s.refreshCount.self).toBe(1);
+    expect(s.players.opp.evidence).toHaveLength(1);
   });
 
   it('萩原千速 以外の 警察 Lv5以下(D11012, 警察 Lv4) を登場させた場合は 1 ドローしない', () => {

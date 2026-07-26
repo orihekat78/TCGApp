@@ -78,6 +78,22 @@ beforeEach(() => {
 });
 
 describe('HeuristicPolicy.chooseCutIn', () => {
+  it('uses the partner effective AP including turn modifiers', () => {
+    registerCardDef(makeCard('P-SELF', { kind: 'partner', ap: 3000, lp: 2 }));
+    registerCardDef(makeCard('Def', { ap: 1000, lp: 1 }));
+    const s = produce(makeBaseState(), (draft) => {
+      draft.players.self.partner.turnEffects = { apMod_turn: -2500 };
+      mutate.scene.enter(draft, 'opp', 'Def', { active: false });
+    });
+    const defUid = s.players.opp.scene[0].uid;
+    const ax = makeAxForContact('partner:self', 'self', 'partner:self', defUid);
+    const policy = new HeuristicPolicy({ seed: 'c' });
+
+    const result = policy.chooseCutIn!(s, ax, 'self', ['CutA']);
+
+    expect(result).toBe('CutA');
+  });
+
   it('returns null when there are no candidates', () => {
     const policy = new HeuristicPolicy({ seed: 'c' });
     registerCardDef(makeCard('Atk', { ap: 1000, lp: 1 }));

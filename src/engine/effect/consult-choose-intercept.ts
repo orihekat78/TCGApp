@@ -1,5 +1,6 @@
 import { def as readDef } from '../read/def.js';
 import { evalCond } from '../cond/eval.js';
+import { char as readChar } from '../read/char.js';
 import type { AbilityDef, EffectCtx, GameState } from '../types/index.js';
 
 type Player = 'self' | 'opp';
@@ -45,6 +46,7 @@ export function findChooseIntercept(state: GameState, targetUid: string, ctx: Ef
   }
 
   for (const protector of state.players[target.player].scene) {
+    if (readChar.originalAbilitiesDisabled(state, protector.uid)) continue;
     const card = readDef.card(protector.cardId);
     for (const ability of (card?.abilities ?? []) as AbilityDef[]) {
       const trigger = ability.trigger as (AbilityDef['trigger'] & { interceptTarget?: InterceptTarget }) | undefined;

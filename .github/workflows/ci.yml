@@ -11,6 +11,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   gates:
     runs-on: ubuntu-latest
@@ -42,6 +45,7 @@ jobs:
           npm run lint:ok-false-pattern
           npm run lint:test-pair
           npm run lint:icon-abilities
+          npm run lint:qa
 
       - name: Smoke 1000 games
         run: npm run smoke:1000

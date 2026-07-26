@@ -3,7 +3,7 @@
 // rules: 10-action-event.md §ヒラメキ
 // spec: 計画 — Commit 3a
 
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { dispatchEngineAction } from '@/ui/hooks/useEngineDispatch';
 import { useGameStateStore } from '@/ui/state/store';
 import { engine } from '@/engine';
@@ -13,17 +13,91 @@ import {
   registerHiramekiListener,
 } from '@/engine/listeners/hirameki';
 import { createEmptyGameState } from '@/engine/state-factory';
+import { register as registerCardDef } from '@/engine/read/def';
+import { mutate } from '@/engine/mutate';
+import { _clearPendingEffectPickQueue } from '@/engine/effect/resolve-picks';
+import type { CardDef } from '@/engine/types';
 import type { GameState } from '@/engine/types/game-state';
+
+const PAUSED_HIRAMEKI_ID = 'TEST_PAUSED_HIRAMEKI';
+const PAUSED_HIRAMEKI_TARGET_ID = 'TEST_PAUSED_HIRAMEKI_TARGET';
+const pausedHirameki: CardDef = {
+  id: PAUSED_HIRAMEKI_ID,
+  no: 'TEST/PAUSED-HIRAMEKI',
+  kind: 'character',
+  names: ['テスト用ヒラメキ'],
+  colors: ['青'],
+  level: 1,
+  ap: 1000,
+  lp: 1,
+  traits: [],
+  keywords: [],
+  rarity: 'C',
+  imageUrl: '',
+  abilities: [{
+    id: 'a1',
+    type: 'triggered',
+    scope: 'on-evidence',
+    trigger: { hook: 'evidence:remove-by-action', optional: true },
+    effect: {
+      kind: 'sequence',
+      steps: [
+        {
+          kind: 'atom',
+          verb: 'sceneSetState',
+          args: {
+            uid: '$pick',
+            state: 'sleep',
+            target: {
+              kind: 'pick',
+              query: { area: 'scene', side: 'either' },
+              n: { min: 1, max: 1 },
+              chooser: 'self',
+            },
+          },
+        },
+        { kind: 'atom', verb: 'draw', args: { player: 'self', n: 1 } },
+      ],
+    },
+    description: '【ヒラメキ】キャラを1枚選びスリープさせ、カードを1枚引く。',
+    ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+  }],
+  ruleRefs: ['rules/10-action-event.md', 'rules/14-refresh.md'],
+};
+const pausedHiramekiTarget: CardDef = {
+  id: PAUSED_HIRAMEKI_TARGET_ID,
+  no: 'TEST/PAUSED-HIRAMEKI-TARGET',
+  kind: 'character',
+  names: ['対象'],
+  colors: ['赤'],
+  level: 1,
+  ap: 1000,
+  lp: 1,
+  traits: [],
+  keywords: [],
+  rarity: 'C',
+  imageUrl: '',
+  abilities: [],
+  ruleRefs: [],
+};
 
 describe('hiramekiResolve dispatch (Commit 3a)', () => {
   beforeAll(() => {
     registerAll();
     registerHiramekiListener();
+    registerCardDef(pausedHirameki);
+    registerCardDef(pausedHiramekiTarget);
   });
 
   beforeEach(() => {
-    useGameStateStore.setState({ gameState: null, pendingHirameki: null });
+    useGameStateStore.setState({ gameState: null, pendingHirameki: null, pendingEffectPick: null });
     _resetPendingHirameki();
+    _clearPendingEffectPickQueue();
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
+  });
+
+  afterEach(() => {
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = null;
   });
 
   function makeStateWithDeckAndPending(): GameState {
@@ -78,6 +152,50 @@ describe('hiramekiResolve dispatch (Commit 3a)', () => {
     const after = useGameStateStore.getState().gameState!;
     expect(after.players.self.hand.length).toBe(1);
     expect(after.players.self.deck.length).toBe(2);
+  });
+
+  it('hiramekiResolve は解決中の証拠カードを refresh 対象から除外する', () => {
+    const s = makeStateWithDeckAndPending();
+    s.players.self.deck = [];
+    // 実運用では evidence 離脱処理が効果解決前に remove へ置く。
+    s.players.self.remove = ['D08013'];
+    useGameStateStore.setState({
+      gameState: s,
+      pendingHirameki: { player: 'self', cardId: 'D08013', abilityId: 'a2' },
+    });
+
+    const r = dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' });
+    expect(r.ok).toBe(true);
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.self.hand).toEqual([]);
+    expect(after.players.self.remove).toEqual(['D08013']);
+    expect(after.gameResult).toMatchObject({ winner: 'opp', reason: 'deck-out' });
+  });
+
+  it('human ヒラメキが pick で pause/resume しても解決中カードを exact refresh から除外する', () => {
+    const s = createEmptyGameState();
+    const target = mutate.scene.enter(s, 'opp', PAUSED_HIRAMEKI_TARGET_ID, {});
+    s.players.self.deck = ['DRAW'];
+    // 実運用の evidence 離脱後。解決中 source と通常の refresh 対象を同居させる。
+    s.players.self.remove = [PAUSED_HIRAMEKI_ID, 'REFRESHABLE'];
+    (globalThis as { __humanPlayerSide?: 'self' | 'opp' | null }).__humanPlayerSide = 'self';
+    useGameStateStore.setState({
+      gameState: s,
+      pendingHirameki: { player: 'self', cardId: PAUSED_HIRAMEKI_ID, abilityId: 'a1' },
+    });
+
+    expect(dispatchEngineAction({ type: 'hiramekiResolve', choice: 'fire' }).ok).toBe(true);
+    const pick = useGameStateStore.getState().pendingEffectPick;
+    expect(pick?.atomVerb).toBe('sceneSetState');
+    expect(dispatchEngineAction({ type: 'effectPickResolve', pickedUid: target.uid }).ok).toBe(true);
+
+    const after = useGameStateStore.getState().gameState!;
+    expect(after.players.opp.scene.find((c) => c.uid === target.uid)?.state, 'pause 前の選択効果').toBe('sleep');
+    expect(after.players.self.hand, 'resume 後の draw').toEqual(['DRAW']);
+    expect(after.players.self.remove, '解決中ヒラメキは refresh 対象外').toEqual([PAUSED_HIRAMEKI_ID]);
+    expect(after.players.self.deck, '通常 remove カードだけ refresh').toEqual(['REFRESHABLE']);
+    expect(after.refreshCount.self).toBe(1);
+    expect(after.players.opp.evidence).toHaveLength(1);
   });
 
   it('hiramekiResolve skip → 効果適用なし、pendingHirameki クリアのみ', () => {

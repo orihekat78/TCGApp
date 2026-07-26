@@ -8,7 +8,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1600; /* CardListModal (1500) より前面 */
+  /* Optional decision/detail band: above HUD (9100) and ordinary pickers,
+   * but below mandatory progression (Mulligan starts at 10001).  The portal
+   * makes this a root-layer value instead of a trapped descendant value. */
+  z-index: 10000;
   backdrop-filter: blur(6px);
   cursor: zoom-out;
 }

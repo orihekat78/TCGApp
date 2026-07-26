@@ -14,7 +14,7 @@
 import { useEffect, useState, type JSX } from 'react';
 import type { CardId } from '@/engine/types';
 import { CardArt } from './CardArt.js';
-import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
+import { cardIdToDisplayName, cardIdToPrintedNumber, publicCardOccurrenceLabel } from '@/ui/services/uidNames.js';
 import './CardListModal.css';
 
 export type CardListKind = 'file' | 'evidence' | 'remove' | 'partner-area' | 'deck';
@@ -81,6 +81,8 @@ export type CardListModalProps = {
    *   - face-up (remove): cards[idx] の cardId と一致する uid → 該当 cell が click 対応
    */
   pickCands?: ReadonlyArray<{ uid: string; cardId: CardId; player: 'self' | 'opp' }>;
+  /** Stable identity of the pending decision. A new identity resets local multi-pick state. */
+  pickSessionKey?: unknown;
   /**
    * Pick mode banner 文言 override (default は kind 別 PICK_BANNER_TEXT)。
    * D11014 a2 sceneEnter のように「手札に加える」ではなく「現場に登場」させる
@@ -134,10 +136,12 @@ export type CardListModalProps = {
 };
 
 export function CardListModal(props: CardListModalProps): JSX.Element | null {
-  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
+  const { kind, side, cards, faceDownCount = 0, faceUpEvidence, onClose, onExpand, pickCands, pickSessionKey, pickBannerText, onPick, pickCanSkip, onPickSkip, pickNMin, pickNMax, onPickMulti, pickDistinctNames, pickComponents, pickDistinctLevel, pickLevels, pickDistinctColors, pickColors, pickForcedUids } = props;
   // BUG-085: 表向き証拠 index → cardId の lookup (裏向き cell ループ内で公開描画に切替)
   const faceUpByIndex = new Map<number, CardId>((faceUpEvidence ?? []).map((e) => [e.index, e.cardId]));
-  const inPickMode = pickCands !== undefined && pickCands.length > 0 && onPick !== undefined;
+  const inPickMode = pickCands !== undefined
+    && onPick !== undefined
+    && (pickCands.length > 0 || (pickCanSkip === true && (pickNMin ?? 0) === 0));
   // D08021 driver: multi-pick mode (nMax > 1) で local selection state を保持
   const isMultiPick = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
@@ -146,10 +150,14 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
   const forcedInCands = (pickForcedUids ?? []).filter((u) => (pickCands ?? []).some((c) => c.uid === u));
   const forcedLockable = forcedInCands.length > 0 && forcedInCands.length <= (pickNMax ?? 1);
   const forcedRequired = Math.min(forcedInCands.length, pickNMax ?? Number.POSITIVE_INFINITY);
+  // Parent detail state may recreate arrays without changing the pending decision.
+  // Reset only when its candidate/forced identities actually change.
+  const pickCandidateKey = (pickCands ?? []).map((candidate) => candidate.uid).join('\u0000');
+  const forcedKey = (pickForcedUids ?? []).join('\u0000');
   // pending pick が切り替わった (kind change) で local selection reset (forced は auto-select)
   const isMultiPickInit = inPickMode && typeof pickNMax === 'number' && pickNMax > 1 && onPickMulti !== undefined;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- forcedInCands は render 毎に再生成の派生値のため prop (pickForcedUids/pickNMax) を dep にする
-  useEffect(() => { setSelectedUids(isMultiPickInit && forcedLockable ? forcedInCands : []); }, [kind, pickCands, pickForcedUids, pickNMax]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- derived values are covered by stable keys; explicit session identity wins when supplied.
+  useEffect(() => { setSelectedUids(isMultiPickInit && forcedLockable ? forcedInCands : []); }, [kind, pickSessionKey ?? pickCandidateKey, forcedKey, pickNMax]);
   // D08021 driver 2026-05-26: 選択済 uid → 集計済 name component Set (rules/19)
   const selectedComponents = new Set<string>();
   if (pickDistinctNames && pickComponents) {
@@ -249,6 +257,8 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
 
   const sideLabel = side === 'self' ? '自分の' : '相手の';
   const total = cards.length + faceDownCount;
+  const faceUpEvidenceEntries = [...(faceUpEvidence ?? [])].sort((a, b) => a.index - b.index);
+  const faceUpEvidenceCards = faceUpEvidenceEntries.map((e) => e.cardId);
 
   return (
     <div
@@ -324,6 +334,8 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
               {/* user_request 20260522_01 #11 BUG-057: onExpand 指定時はクリック
                   可能 (button 化) で個別カード拡大表示。未指定なら従来通り div */}
               {cards.map((cardId, idx) => {
+                const occurrenceLabel = publicCardOccurrenceLabel(cards, cardId, idx);
+                const accessibleName = occurrenceLabel ? `${cardIdToDisplayName(cardId)} ${occurrenceLabel}` : cardIdToDisplayName(cardId);
                 const itemContent = (
                   <>
                     <CardArt
@@ -347,19 +359,36 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   const isBlocked = (isMultiPick && (isDistinctNamesBlocked(pickUid) || isDistinctLevelBlocked(pickUid) || isDistinctColorsBlocked(pickUid))) || isForcedBlocked(pickUid);
                   const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                   return (
+                    <div key={`face-pick-${cardId}-${idx}`} className="card-list-pick-shell">
                     <button
                       type="button"
                       key={`face-${cardId}-${idx}`}
                       className={cls}
                       disabled={isBlocked}
                       onClick={() => isMultiPick ? toggleSelect(pickUid) : onPick!(pickUid)}
+                      onContextMenu={onExpand ? (event) => {
+                        event.preventDefault();
+                        onExpand(cardId);
+                      } : undefined}
                       data-testid={`card-list-pick-${pickUid}`}
-                      aria-label={`${cardIdToDisplayName(cardId)} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
+                      aria-label={`${accessibleName} を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       aria-pressed={isMultiPick ? isSelected : undefined}
                       title={isForcedLocked ? '必ず選ぶ (相手はイベントの効果によってこのキャラを選べる場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(pickUid) ? '同じカード名は1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(pickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(pickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラが優先されます' : undefined}
                     >
                       {itemContent}
                     </button>
+                    {onExpand && (
+                      <button
+                        type="button"
+                        className="card-list-pick-detail"
+                        data-testid={`card-list-pick-detail-${pickUid}`}
+                        aria-label={`${accessibleName} の詳細を表示`}
+                        onClick={() => onExpand(cardId)}
+                      >
+                        詳細
+                      </button>
+                    )}
+                    </div>
                   );
                 }
                 return onExpand ? (
@@ -369,7 +398,7 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                     className="card-list-item card-list-item--clickable"
                     onClick={() => onExpand(cardId)}
                     data-testid={`card-list-item-${cardId}-${idx}`}
-                    aria-label={`${cardIdToDisplayName(cardId)} を拡大表示`}
+                    aria-label={`${accessibleName} を拡大表示`}
                   >
                     {itemContent}
                   </button>
@@ -384,6 +413,9 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                 // BUG-085: この index の証拠が表向きなら公開カードとして描画する。
                 const faceUpCardId = faceUpByIndex.get(idx);
                 if (faceUpCardId !== undefined) {
+                  const evidenceIndex = faceUpEvidenceEntries.findIndex((e) => e.index === idx);
+                  const occurrenceLabel = publicCardOccurrenceLabel(faceUpEvidenceCards, faceUpCardId, evidenceIndex);
+                  const accessibleName = occurrenceLabel ? `${cardIdToDisplayName(faceUpCardId)} ${occurrenceLabel}` : cardIdToDisplayName(faceUpCardId);
                   const revealedContent = (
                     <>
                       <CardArt
@@ -403,19 +435,42 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                   const faceUpPickUid = findFaceDownPickUid(idx);
                   if (faceUpPickUid !== undefined) {
                     const isSelected = isMultiPick && selectedUids.includes(faceUpPickUid);
-                    const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}`;
+                    const isForcedLocked = forcedLockable && forcedInCands.includes(faceUpPickUid);
+                    const isBlocked = (isMultiPick && (isDistinctNamesBlocked(faceUpPickUid) || isDistinctLevelBlocked(faceUpPickUid) || isDistinctColorsBlocked(faceUpPickUid))) || isForcedBlocked(faceUpPickUid);
+                    const pickStateLabel = isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (強制対象)' : isSelected ? '選択済み' : '選択';
+                    const cls = `card-list-item card-list-item--clickable card-list-item--pickable${isSelected ? ' card-list-item--selected' : ''}${isBlocked ? ' card-list-item--blocked' : ''}${isForcedLocked ? ' card-list-item--forced' : ''}`;
                     return (
+                      <div key={`faceup-pick-${idx}`} className="card-list-pick-shell">
                       <button
                         type="button"
                         key={`faceup-${idx}`}
                         className={cls}
+                        disabled={isBlocked}
                         onClick={() => (isMultiPick ? toggleSelect(faceUpPickUid) : onPick!(faceUpPickUid))}
+                        onContextMenu={onExpand ? (event) => {
+                          event.preventDefault();
+                          onExpand(faceUpCardId);
+                        } : undefined}
                         data-testid={`card-list-pick-${faceUpPickUid}`}
                         aria-pressed={isMultiPick ? isSelected : undefined}
-                        aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を${isSelected ? '選択解除' : '選択'}`}
+                        aria-description={pickStateLabel}
+                        title={isForcedLocked ? '必ず選ぶ (相手のイベントの効果によってこのキャラクターを選ぶ場合、必ず選ぶ)' : isBlocked && isMultiPick && isDistinctNamesBlocked(faceUpPickUid) ? '同じカード名のカードは1枚まで (rules/19)' : isBlocked && isMultiPick && isDistinctLevelBlocked(faceUpPickUid) ? '同じレベルは選べません' : isBlocked && isMultiPick && isDistinctColorsBlocked(faceUpPickUid) ? '同じ色を持つカードは選べません' : isBlocked ? '必ず選ぶキャラクターが指定されています' : undefined}
+                        aria-label={`${idx + 1} 番目の証拠 ${accessibleName} (表向き) を${isBlocked ? '選択不可' : isForcedLocked ? '必ず選択 (解除不可)' : isSelected ? '選択解除' : '選択'}`}
                       >
                         {revealedContent}
                       </button>
+                      {onExpand && (
+                        <button
+                          type="button"
+                          className="card-list-pick-detail"
+                          data-testid={`card-list-pick-detail-${faceUpPickUid}`}
+                          aria-label={`${accessibleName} の詳細を表示`}
+                          onClick={() => onExpand(faceUpCardId)}
+                        >
+                          詳細
+                        </button>
+                      )}
+                      </div>
                     );
                   }
                   return onExpand ? (
@@ -424,8 +479,12 @@ export function CardListModal(props: CardListModalProps): JSX.Element | null {
                       key={`faceup-${idx}`}
                       className="card-list-item card-list-item--clickable"
                       onClick={() => onExpand(faceUpCardId)}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        onExpand(faceUpCardId);
+                      }}
                       data-testid={`card-list-evidence-faceup-${idx}`}
-                      aria-label={`${idx + 1} 番目の証拠 ${cardIdToDisplayName(faceUpCardId)} (表向き) を拡大表示`}
+                      aria-label={`${idx + 1} 番目の証拠 ${accessibleName} (表向き) を拡大表示`}
                     >
                       {revealedContent}
                     </button>

@@ -19,7 +19,7 @@ const a1: AbilityDef = {
   // 【事件赤＆黒】
   condition: { kind: 'caseColor', color: ['赤', '黒'], combine: 'and' },
   // 〚突撃［キャラ］〛
-  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'] },
+  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'], printedKeywordWhenIconValid: true },
   description: '【事件赤＆黒】〚突撃［キャラ］〛',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],
 };

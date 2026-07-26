@@ -44,6 +44,12 @@
   gap: 6px;
 }
 
+.effect-picker-cand-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 6px;
+}
+
 .effect-picker-cand {
   width: 100%;
   padding: 10px 14px;
@@ -57,6 +63,24 @@
   justify-content: space-between;
   align-items: center;
   transition: background 0.1s, border-color 0.1s;
+  min-height: 44px;
+}
+
+.effect-picker-detail {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #4a5070;
+  border-radius: 4px;
+  background: #2a3050;
+  color: #d8d8e8;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.effect-picker-detail:hover,
+.effect-picker-detail:focus-visible {
+  border-color: #6080a0;
+  background: #3a4070;
 }
 
 .effect-picker-cand:hover {
@@ -94,6 +118,7 @@
 }
 
 .effect-picker-skip {
+  min-block-size: 48px;
   padding: 6px 14px;
   border: 1px solid #4a5070;
   background: #2a3050;
@@ -126,6 +151,7 @@
 }
 
 .effect-picker-confirm {
+  min-block-size: 48px;
   padding: 6px 18px;
   border: 1px solid #4a7050;
   background: #2a5030;
@@ -142,4 +168,72 @@
 .effect-picker-confirm:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* A narrow viewport must keep both the public candidate and its detail action
+   inside the dialog. Desktop retains the denser 420px minimum above. */
+@media (max-width: 480px) {
+  .effect-picker-overlay {
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .effect-picker-modal {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 16px 12px;
+  }
+
+  .effect-picker-list {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+  }
+
+  .effect-picker-cand-row {
+    grid-template-columns: minmax(0, 1fr) 48px;
+  }
+
+  .effect-picker-cand {
+    padding: 8px 10px;
+  }
+
+  .effect-picker-detail {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .cand-art {
+    width: 30px;
+    height: 42px;
+    margin-right: 6px;
+  }
+}
+
+/* BUG-241: wide landscape viewport でも短辺に dialog を収めて scroll を許可する。 */
+@media (max-height: 480px) {
+  .effect-picker-overlay {
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .effect-picker-modal {
+    box-sizing: border-box;
+    max-height: calc(100dvh - 24px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .effect-picker-list {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+  }
 }

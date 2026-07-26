@@ -6,6 +6,7 @@ import { buildShortFormPick } from '../atom-pick-spec.js';
 import { sceneCap } from '../../read/scene-cap.js'; // engine E3 P11 (2026-07-02): 現場登場上限 (既定5、case override 可)
 import { char as readChar } from '../../read/char.js'; // engine mega-wave W4 (2026-07-03, r1): 保護 rider gate
 import { def as readDef } from '../../read/def.js'; // S2 wave (2026-07-11, PR279): event-source 限定保護の kind 判定
+import { removeExcludedSourceCardId } from '../../read/effect-source.js';
 import { requireField, resolvePlayer, resolveBindRef, hasNorMax, paShortFormAwait } from './_shared.js';
 import { allCardNameComponentsForDef } from '../../target/card-def-registry.js';
 import type { Player } from './_shared.js';
@@ -43,6 +44,10 @@ function rebaseBoundCardIndexes(
 }
 
 export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: EffectCtx, verb: AtomVerb): void {
+      if (a.__declined === true) {
+        mutate.log.append(s, { ts: Date.now(), player: resolvePlayer(a.player, ctx), turn: s.turn.number, action: 'effect:sceneEnter:declined' });
+        return;
+      }
       // cluster14 (2026-06-15) multi-card sceneEnter: 「…キャラを2枚まで選び、登場させる」(B09010/PR042 等)。
       //   handAddFromRemove/charStackCard と同型の cardIds:'$pick.cardIds' 契約を sceneEnter に拡張する。
       //   単一 cardId path は cardIds 不在時に従来通り (additive・非干渉。骨格凍結例外: rules/20 スイッチ + defer カード)。
@@ -84,6 +89,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
           const selectedDeckIndexes = Array.isArray((a as { selectedDeckIndexes?: unknown }).selectedDeckIndexes)
             ? (a as { selectedDeckIndexes: unknown[] }).selectedDeckIndexes
             : [];
+          let tookFromDeck = false;
           for (const [cardPosition, cid] of cardIds.entries()) {
             // 単一 path と同じ inline splice (remove/hand/deck のみ)。これがないと remove に残り複製登場 (D11014 a2 class bug)。
             const fp = srcSide === 'opp' ? 'opp' : enterP;
@@ -109,6 +115,7 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
                 // deck source の cardIds-multi 経路のみ (shipped 単一 path は bindMatch 除外で stale が
                 // 生じない構成のため触らない)。array は差替え (凍結 bindings shallow-copy と非干渉)。
                 if (srcArea === 'deck') {
+                  tookFromDeck = true;
                   for (const bk of Object.keys(ctx.bindings)) {
                     const bArr = ctx.bindings[bk];
                     if (!Array.isArray(bArr)) continue;
@@ -153,6 +160,13 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
               enterOrderThisTurn: nc.enterOrderThisTurn, sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
             }, { player: enterP, uid: nc.uid, cardId: cid });
             enteredGroup.push({ kind: 'char', uid: nc.uid, cardId: cid, player: enterP });
+          }
+          // The reveal window remains deck until selected cards actually move.
+          // Refresh only after the whole multi-transfer has completed so later
+          // selected snapshot indexes are not invalidated by an early shuffle.
+          if (srcArea === 'deck' && tookFromDeck) {
+            const fromPlayer = srcSide === 'opp' ? 'opp' : enterP;
+            if (!mutate.deck.refreshAfterTake(s, fromPlayer, removeExcludedSourceCardId(ctx, fromPlayer))) return;
           }
           // M2後半 (2026-07-10, B09019): 実登場キャラ群を bind (「この効果によってキャラが5枚登場した場合」
           // = boundCountCompare が読む)。scene-full-skip 分は enteredGroup に積まれない → 実登場のみ計数。
@@ -248,12 +262,23 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
       // そこから cardId 1 枚を取り除いてから scene へ。これがないと「リムーブから
       // 登場」が「リムーブに残ったまま scene にコピー登場」になる duplication bug。
       // handAddFromRemove と同 pattern (line 360-367)。
-      const sourceArea = ((a.target && typeof a.target === 'object')
+      const targetSourceArea = ((a.target && typeof a.target === 'object')
         ? ((a.target as { query?: { area?: string; side?: string } }).query?.area)
         : undefined) as 'remove' | 'evidence' | 'file' | 'deck' | 'hand' | undefined;
+      // A direct hand declaration can enter its own source without a target
+      // picker (B06103/B06103P). Consume that exact source card once; do not
+      // turn an on-hand effect into a duplicate scene character.
+      const declaredHandSource = targetSourceArea === undefined
+        && a.from === 'hand'
+        && typeof ctx.source.uid === 'string'
+        && ctx.source.uid.startsWith('hand:')
+        && ctx.source.cardId === cardId;
+      const sourceArea = targetSourceArea ?? (declaredHandSource ? 'hand' : undefined);
       const sourceSide = ((a.target && typeof a.target === 'object')
         ? ((a.target as { query?: { side?: string } }).query?.side)
         : undefined) as 'self' | 'opp' | undefined;
+      let deckTakeFromPlayer: Player | undefined;
+      let deckTakeOccurred = false;
       // Cluster WB1 (2026-07-11, B09055「世良真純」): source area が union 配列 or 'partner-area' の場合 —
       //   「自分のパートナーエリアかリムーブエリアにある〚X〛を1枚まで登場」。handAddFromRemove の union
       //   splice と同流儀 (pick 済 cardId は一意 zone 由来)。候補列挙は area 配列 union が既対応
@@ -301,34 +326,25 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         if (idx !== -1) { arr.splice(idx, 1); mutate.remove.emitExit(s, fromPlayer, cardId); } // wave-4: remove→登場 離脱 (原因非依存 remove:exit、B05087 1st 能力が観測しうる)
         if (idx !== -1) rebaseBoundCardIndexes(ctx, fromPlayer, 'remove', idx, cardId);
       } else if (sourceArea === 'hand') {
-        const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
+        const fromPlayer = declaredHandSource
+          ? ctx.source.player
+          : (sourceSide === 'opp' ? 'opp' : enterPlayer);
         const arr = s.players[fromPlayer].hand;
         const idx = arr.indexOf(cardId);
         if (idx !== -1) arr.splice(idx, 1);
       } else if (sourceArea === 'deck') {
         const fromPlayer = sourceSide === 'opp' ? 'opp' : enterPlayer;
-        if (s.players[fromPlayer].deck.length === 0) {
-          const preserving = ctx.source.player === fromPlayer && readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
-            ? ctx.source.cardId
-            : undefined;
-          const refreshed = mutate.deck.refresh(s, fromPlayer, preserving);
-          if (!refreshed.ok) {
-            if (s.gameResult === undefined) mutate.gameResult.set(s, fromPlayer === 'self' ? 'opp' : 'self', 'deck-out');
-            return;
-          }
-        }
+        const preserving = removeExcludedSourceCardId(ctx, fromPlayer);
+        if (!mutate.deck.refreshAfterTake(s, fromPlayer, preserving)) return;
         const arr = s.players[fromPlayer].deck;
         // mini-wave #5 review B1 (2026-07-10): fromBottom 公開カードの登場は deckPos:'bottom' を渡す。
         // indexOf (先頭出現) だと同名コピーがデッキ上方にあるとき「見せていない top 側」が抜かれ、
         // 公開した底カードが残る (隠れ順序破壊、rules/02 同名3枚合法なので頻出)。lastIndexOf = 底出現。
         const idx = a.deckPos === 'bottom' ? arr.lastIndexOf(cardId) : arr.indexOf(cardId);
-        if (idx !== -1) arr.splice(idx, 1);
-        if (idx !== -1 && arr.length === 0 && s.gameResult === undefined) {
-          const preserving = ctx.source.player === fromPlayer && readDef.card(ctx.source.cardId ?? '')?.kind === 'event'
-            ? ctx.source.cardId
-            : undefined;
-          const refreshed = mutate.deck.refresh(s, fromPlayer, preserving);
-          if (!refreshed.ok) mutate.gameResult.set(s, fromPlayer === 'self' ? 'opp' : 'self', 'deck-out');
+        if (idx !== -1) {
+          arr.splice(idx, 1);
+          deckTakeFromPlayer = fromPlayer;
+          deckTakeOccurred = true;
         }
       }
       const enterOpts = {
@@ -378,6 +394,16 @@ export function atomSceneEnter(s: GameState, a: Record<string, unknown>, ctx: Ef
         enterOrderThisTurn: newChar.enterOrderThisTurn,
         sourceCardId: (ctx.source as { cardId?: string }).cardId, sourcePlayer: ctx.source.player, /* WB2 B05009: enterSource side gate */
       }, { player: enterPlayer, uid: newChar.uid, cardId });
+      // sceneEnter is the final move of the revealed/selected card. Run refresh
+      // only after the character and its enter event exist, matching the multi
+      // path and preventing refresh observers from seeing a half-moved state.
+      if (deckTakeOccurred && deckTakeFromPlayer !== undefined) {
+        if (!mutate.deck.refreshAfterTake(
+          s,
+          deckTakeFromPlayer,
+          removeExcludedSourceCardId(ctx, deckTakeFromPlayer),
+        )) return;
+      }
       // engine mega-wave W4 (2026-07-03, r83): 単一登場も group-of-1 として emit (B01012 は 1枚登場でも発動)
       if (viaEffect) {
         event.emit(s, 'enter:group', {
@@ -630,26 +656,52 @@ export function atomSceneSetState(s: GameState, a: Record<string, unknown>, ctx:
       if (typeof ssUid !== 'string' || ssUid.startsWith('$')) {
         if (a.uid === '$pick' && a.target && typeof a.target === 'object') {
           const ssPlayer = ctx.source.player;
-          tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
-            byPlayer: ssPlayer,
-            source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
-          });
+          // Pattern-A pre-walk keeps the unresolved carrier as a runtime no-op after
+          // it has already queued the human decision. Re-queue only for the deferred
+          // conditional path where no equivalent pre-walk pending exists.
+          const queuedEquivalent = ((globalThis as {
+            __pendingEffectPickQueue?: Array<{
+              atomVerb: string;
+              atomArgs: Record<string, unknown>;
+              source: { cardId: string; abilityId: string };
+            }>;
+          }).__pendingEffectPickQueue ?? []).some(pending =>
+            pending.atomVerb === verb
+            && pending.source.cardId === (ctx.source.cardId ?? '')
+            && pending.source.abilityId === (ctx.source.abilityId ?? '')
+            && JSON.stringify(pending.atomArgs) === JSON.stringify(a));
+          if (!queuedEquivalent) {
+            tryRePickFromAtom(s, { kind: 'atom', verb, args: a }, ctx, {
+              byPlayer: ssPlayer,
+              source: { cardId: ctx.source.cardId ?? '', abilityId: ctx.source.abilityId ?? '' },
+            });
+          }
           mutate.log.append(s, { ts: Date.now(), player: ssPlayer, turn: s.turn.number, action: 'effect:sceneSetState:awaiting-pick' });
         }
         return;
       }
       const ssState = a.state as 'active' | 'sleep' | 'stun';
+      const ssBefore = [...s.players.self.scene, ...s.players.opp.scene]
+        .find(c => c.uid === ssUid)?.state;
       // engine mega-wave W4 (2026-07-03, r1 P01): 保護 rider gate —「相手の能力や効果によって
       // スリープされず、スタンされない」(B05041)。相手発の sleep/stun のみ block ('active' 化は
       // 不利益でないため対象外)。既存カードは未宣言 → false 短絡。
       if (ssState === 'sleep' || ssState === 'stun') {
         const ssOwner: Player = s.players.self.scene.some(c => c.uid === ssUid) ? 'self' : 'opp';
         if (ctx.source.player !== ssOwner && readChar.charProtectedFrom(s, ssUid, ssState)) {
+          (ctx.dyn ??= {}).chainStepNoApply = true;
           mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneSetState', target: ssUid, result: 'blocked-protected' });
           return;
         }
       }
       mutate.scene.setState(s, ssUid, ssState);
+      const ssAfter = [...s.players.self.scene, ...s.players.opp.scene]
+        .find(c => c.uid === ssUid)?.state;
+      // BUG-167: `chain` means 「そうした場合」.  A resolved uid is not proof that the
+      // requested state effect applied: rules/03 keeps stun unchanged for sleep/stun,
+      // and setting an already-equal state is also a no-op.  Gate the tail from the
+      // actual board transition, shared by direct, $self, and bound-uid paths.
+      if (ssBefore === ssAfter) (ctx.dyn ??= {}).chainStepNoApply = true;
       // BUG-073: effect log
       mutate.log.append(s, { ts: Date.now(), player: ctx.source.player, turn: s.turn.number, action: 'effect:sceneSetState', target: ssUid, result: ssState });
       return;

@@ -18,13 +18,6 @@ const a1: AbilityDef = {
     kind: 'and',
     cs: [
       {
-        kind: 'not',
-        c: {
-          kind: 'fileAtLeast',
-          n: 6
-        }
-      },
-      {
         kind: 'partnerColor',
         color: '緑'
       },
@@ -87,6 +80,7 @@ export const B04027: CardDef = {
   traits: [],
   rarity: 'C',
   imageUrl: '1735287737427806.jpg',
+  useCondition: { kind: 'not', c: { kind: 'fileAtLeast', n: 6 } },
   abilities: [a1],
   ruleRefs: [
     'rules/15-abilities-effects.md',

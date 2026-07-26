@@ -13,6 +13,8 @@ import { useEffect, type JSX } from 'react';
 import type { CardDef } from '@/engine/types';
 import { ALL_CARDS } from '@/cards';
 import { CardArt } from './CardArt.js';
+import { CardExpandModal } from './CardExpandModal.js';
+import { useCardExpandModal } from '@/ui/hooks/useCardExpandModal.js';
 import { cardIdToDisplayName, cardIdToPrintedNumber } from '@/ui/services/uidNames.js';
 import './HiramekiDemoPickerModal.css';
 
@@ -38,6 +40,7 @@ const ICON_FLASH_CARDS = getIconFlashCards();
 
 export function HiramekiDemoPickerModal(props: HiramekiDemoPickerModalProps): JSX.Element {
   const { onPick, onClose } = props;
+  const expandModal = useCardExpandModal();
   // Esc で閉じる
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
@@ -90,30 +93,45 @@ export function HiramekiDemoPickerModal(props: HiramekiDemoPickerModalProps): JS
                 return ab.type === 'triggered' && ab.trigger?.hook === 'evidence:remove-by-action' && ab.trigger?.optional === true;
               }) as { description?: string } | undefined;
               return (
-                <button
-                  type="button"
-                  key={d.id}
-                  className="hirameki-demo-picker-card"
-                  data-testid={`hirameki-demo-pick-${d.id}`}
-                  onClick={() => onPick(d.id)}
-                >
-                  <CardArt cardId={d.id} alt={cardIdToDisplayName(d.id)} className="hirameki-demo-picker-card-art" />
-                  <div className="hirameki-demo-picker-card-name">
-                    {cardIdToDisplayName(d.id)}
-                  </div>
-                  <div className="hirameki-demo-picker-card-id">
-                    No.{cardIdToPrintedNumber(d.id)}
-                  </div>
-                  {flash?.description && (
-                    <div className="hirameki-demo-picker-card-desc">
-                      {flash.description}
+                <div className="hirameki-demo-picker-card-row" key={d.id}>
+                  <button
+                    type="button"
+                    className="hirameki-demo-picker-card"
+                    data-testid={`hirameki-demo-pick-${d.id}`}
+                    onClick={() => onPick(d.id)}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      expandModal.open(d.id);
+                    }}
+                  >
+                    <CardArt cardId={d.id} alt={cardIdToDisplayName(d.id)} className="hirameki-demo-picker-card-art" />
+                    <div className="hirameki-demo-picker-card-name">
+                      {cardIdToDisplayName(d.id)}
                     </div>
-                  )}
-                </button>
+                    <div className="hirameki-demo-picker-card-id">
+                      No.{cardIdToPrintedNumber(d.id)}
+                    </div>
+                    {flash?.description && (
+                      <div className="hirameki-demo-picker-card-desc">
+                        {flash.description}
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="hirameki-demo-picker-card-detail"
+                    data-testid={`hirameki-demo-detail-${d.id}`}
+                    aria-label={`${cardIdToDisplayName(d.id)}の詳細を表示`}
+                    onClick={() => expandModal.open(d.id)}
+                  >
+                    詳細
+                  </button>
+                </div>
               );
             })
           )}
         </div>
+        <CardExpandModal cardId={expandModal.expandedCard} onClose={expandModal.close} />
       </div>
     </div>
   );

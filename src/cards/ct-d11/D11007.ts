@@ -40,7 +40,7 @@ const a2: AbilityDef = {
   condition: { kind: 'partnerColor', color: '黄' },
   continuousModifier: {
     // 〚突撃〛
-    grantKeywords: () => ['突撃'],
+    grantKeywords: () => ['突撃'], printedKeywordWhenIconValid: true,
   },
   description: '【パートナー黄】〚突撃〛',
   ruleRefs: ['rules/13-keywords.md', 'rules/17-icons.md'],

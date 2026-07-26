@@ -166,7 +166,15 @@ function ResultVerdict({ won, reason }: { won: boolean; reason: string }) {
 // ---- MVP Showcase ----
 
 function MVPShowcase({ mvp, stats }: { mvp: CardDef | undefined; stats: ResultStats }) {
-  if (!mvp) return null;
+  if (!mvp) {
+    return (
+      <div style={{ position: 'absolute', left: 80, top: 380, width: 520, zIndex: 5, textAlign: 'center' }}>
+        <div style={{ fontFamily: T.fontMono, fontSize: 12, color: T.textMuted, letterSpacing: '0.28em' }}>
+          MVPなし
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ position: 'absolute', left: 80, top: 380, width: 520, zIndex: 5 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -400,16 +408,39 @@ function computeStats(gs: import('@/engine/types/game-state').GameState): Result
 }
 
 function pickMvpCard(gs: import('@/engine/types/game-state').GameState): CardDef | undefined {
-  // 自陣 scene のキャラから AP 最高を MVP に
-  const scene = gs.players.self.scene ?? [];
+  const result = engine.read.game.result(gs);
+  if (!result) return undefined;
+  const winner = result.winner;
+  const player = gs.players[winner];
+  const ownedCardIds = new Set<string>([
+    player.partner.cardId,
+    player.partnerAreaMR?.cardId ?? '',
+    ...(player.partnerAreaCards ?? []),
+    player.case.cardId,
+    ...player.scene.map((entry) => entry.cardId),
+    ...player.scene.flatMap((entry) => entry.setCards.map((setCard) => setCard.cardId)),
+    ...player.hand,
+    ...player.deck,
+    ...player.evidence.map((entry) => entry.cardId),
+    ...player.remove,
+    ...player.file.map((entry) => entry.cardId),
+  ]);
+  const candidateIds: string[] = player.scene.map((entry) => entry.cardId);
+  const participationActions = new Set(['handUseCard', 'effect:sceneEnter', 'contact-cutin']);
+  for (const entry of gs.log) {
+    if (entry.player !== winner || !participationActions.has(entry.action) || !entry.target) continue;
+    if (ownedCardIds.has(entry.target)) candidateIds.push(entry.target);
+  }
+
+  // 勝者の最終盤面、または勝者側の構造化ログに実参加が残るキャラから選ぶ。
+  // 他sideだけに属するカード、単なる全カードカタログの先頭へは fallback しない。
   let best: CardDef | undefined;
-  for (const entry of scene) {
-    const card = CARD_POOL.find((c) => c.num === (entry as { cardId?: string }).cardId);
+  for (const cardId of candidateIds) {
+    const card = CARD_POOL.find((candidate) => candidate.num === cardId && candidate.type === 'character');
     if (!card) continue;
     if (!best || (card.ap ?? 0) > (best.ap ?? 0)) best = card;
   }
-  // fallback: 先頭の character
-  return best ?? CARD_POOL.find((c) => c.type === 'character');
+  return best;
 }
 
 function computeDeckStats(history: MatchRecord[], gs: import('@/engine/types/game-state').GameState): { before: string; after: string } {

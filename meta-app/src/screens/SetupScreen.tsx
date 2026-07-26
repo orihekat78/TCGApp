@@ -17,6 +17,7 @@ import { useGameStateStore } from '@/ui/state/store';
 import { isPlayable } from '../util/deckBridge';
 import { customGameStart } from '../util/customGameStart';
 import { useTutorialStore } from '@/ui/state/tutorialStore';
+import { beginMatchSession, commitMatchSession, isCurrentMatchSession } from '@/ui/services/matchSession';
 
 interface Props {
   onNav: (r: Route) => void;
@@ -44,6 +45,7 @@ export function SetupScreen({ onNav }: Props) {
       return;
     }
     setError(null);
+    const session = beginMatchSession(mode === 'observe' ? null : 'self');
     useGameStateStore.getState().setSpectatorMode(mode === 'observe');
     // Phase 18: 対戦種別・デッキ名を ResultScreen の履歴記録用に控える
     useMetaStore.getState().setMatchMeta({ mode, selfDeckName: selfDeck.name, oppDeckName: oppDeck.name });
@@ -52,9 +54,14 @@ export function SetupScreen({ onNav }: Props) {
     // Phase 14-A: customGameStart で任意 DeckRecord ペアから実機対戦を開始
     // 観戦モード (両者 AI) では人間マリガンを出さない。先攻は先攻トグルに従う。
     const firstPlayer = firstChoice === 'p1' ? 'self' : firstChoice === 'p2' ? 'opp' : undefined;
-    customGameStart(selfDeck, oppDeck, { spectator: mode === 'observe', firstPlayer })
-      .then((gs) => useGameStateStore.getState().setGameState(gs))
+    customGameStart(selfDeck, oppDeck, {
+      spectator: mode === 'observe',
+      firstPlayer,
+      isSessionCurrent: () => isCurrentMatchSession(session),
+    })
+      .then((gs) => { commitMatchSession(session, gs); })
       .catch((err: unknown) => {
+        if (!isCurrentMatchSession(session)) return;
         console.error('[Phase 14] customGameStart failed:', err);
         setError(String(err));
         onNav('setup');

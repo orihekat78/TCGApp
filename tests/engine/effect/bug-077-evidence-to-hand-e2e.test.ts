@@ -147,7 +147,9 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     const { run: runEffect } = await import('@/engine/effect/resolver');
 
     const s = createEmptyGameState();
-    s.players.self.deck.push('DECK1');
+    // Keep one card after evidenceGain; exact exhaustion refresh is covered
+    // separately and would erase this pick-flow fixture's post-step board.
+    s.players.self.deck.push('DECK1', 'DECK2');
     s.players.self.hand.push('H1', 'H2', 'H3', 'H4', 'H5');
 
     const sequence = {
@@ -252,7 +254,8 @@ describe('BUG-077: D08013 a1 step 2 evidenceToHand e2e flow', () => {
     const { run: runEffect } = await import('@/engine/effect/resolver');
 
     const s = createEmptyGameState();
-    s.players.self.deck.push('DECK1'); // step 1 evidenceGain で取り込まれる
+    // Keep one card after step 1 so this test isolates continuation ordering.
+    s.players.self.deck.push('DECK1', 'DECK2'); // DECK1 is gained as evidence
     s.players.self.hand.push('H1', 'H2', 'H3', 'H4', 'H5');
 
     // D08013 a1 と同型の sequence (短縮形)

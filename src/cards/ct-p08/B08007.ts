@@ -38,7 +38,7 @@ const a3: AbilityDef = {
   // 【自分ターン中】【1枚以上】
   condition: { kind: 'and', cs: [{ kind: 'turn', player: 'self' }, { kind: 'stackedCountAtLeast', ref: { kind: 'self' }, n: 1 }] },
   // 〚突撃[キャラ]〛
-  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'] },
+  continuousModifier: { grantKeywords: () => ['突撃[キャラ]'], printedKeywordWhenIconValid: true },
   description: '【自分ターン中】【1枚以上】〚突撃[キャラ]〛',
   ruleRefs: ['rules/13-keywords.md', 'rules/16-card-set.md'],
 };

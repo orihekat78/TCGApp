@@ -90,6 +90,10 @@ function settle(choice: NextHintChoice): void {
   if (resolver) resolver(choice);
 }
 
+export function cancelNextHintPicker(): void {
+  settle({ kind: 'cancel' });
+}
+
 /**
  * 利便ラッパ。React 外からも呼べる。component で current 変化に
  * 反応して再描画したい場合は useNextHintPickerStore((s) => s.current) を併用。
@@ -100,6 +104,6 @@ export function useNextHintPicker(): NextHintPicker {
     ask: askNextHint,
     acceptUse: (cardId) => settle({ kind: 'use', cardId }),
     acceptSkip: () => settle({ kind: 'skip' }),
-    acceptCancel: () => settle({ kind: 'cancel' }),
+    acceptCancel: cancelNextHintPicker,
   };
 }

@@ -30,7 +30,7 @@ const a1: AbilityDef = {
       {
         kind: 'atom',
         verb: 'deckRevealUntil',
-        args: {
+        args: { visibility: 'public', viewer: 'all',
           player: 'self',
           filter: {
             levelMin: 7,
