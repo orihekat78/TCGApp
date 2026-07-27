@@ -8,6 +8,16 @@
 - The execution table is 55 unordered YOU/CPU pairs, mirrors included exactly once (upper triangle), not `N²` / 169 ordered pairs.
 - `.claude/sessions/2026-07-27-you-vs-cpu-human-validation-worklist.csv` is the authoritative 55-row list.
 
+## Expert-method dependency (2026-07-27)
+
+- This plan remains a 55-row upper-triangle coverage plan. It is not an `N²`
+  ordered-pair plan and does not claim role-symmetry or causal win-rate proof.
+- Before any queued row resumes, use the separate generic knowledge plan and
+  Conan runtime-resume plan. Their gates add decision quality; they do not
+  change the roster, order, or acceptance status of the 55-row worklist.
+- A row record must state the actual visible role appearance. It must not claim
+  both roles were tested unless both were actually executed and documented.
+
 Meta UI (`http://localhost:5174`) で、YOUが公開情報だけを見て実UIを操作し、
 CPUと対戦する。完走数ではなく、判断・ルール・UI理解・状態解決を証明する。
 

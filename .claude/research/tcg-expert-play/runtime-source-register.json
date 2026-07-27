@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "sourceId": "CONAN-INDEX",
+      "path": ".claude/rules/INDEX.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-VICTORY",
+      "path": ".claude/rules/01-victory-conditions.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-TURNS",
+      "path": ".claude/rules/05-turn-phases.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-ACTION",
+      "path": ".claude/rules/07-action-flow.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-CONTACT",
+      "path": ".claude/rules/08-contact.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-CUTIN",
+      "path": ".claude/rules/09-cutin-disguise.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-EVENT-ACTION",
+      "path": ".claude/rules/10-action-event.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-REASONING",
+      "path": ".claude/rules/11-reasoning.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-NEXT-HINT",
+      "path": ".claude/rules/12-next-hint.md",
+      "classification": "validated-rule",
+      "status": "validated",
+      "sourceVersion": "Ver.2.4"
+    },
+    {
+      "sourceId": "CONAN-KEYWORDS",
+      "path": ".claude/rules/13-keywords.md",
+      "classification": "validated-rule",
+      "status": "blocked-version-conflict",
+      "sourceVersion": "Ver.2.5"
+    },
+    {
+      "sourceId": "CARD-B01033-IMPLEMENTATION",
+      "path": "src/cards/ct-p01/B01033.ts",
+      "classification": "reviewed-card-implementation",
+      "status": "reviewed",
+      "sourceVersion": "implementation-review-2026-07-27"
+    },
+    {
+      "sourceId": "CARD-B09030-IMPLEMENTATION",
+      "path": "src/cards/ct-p09/B09030.ts",
+      "classification": "reviewed-card-implementation",
+      "status": "reviewed",
+      "sourceVersion": "implementation-review-2026-07-27"
+    },
+    {
+      "sourceId": "POLICY-KERNEL",
+      "path": ".claude/specs/tcg-expert-play/universal-decision-kernel.md",
+      "classification": "reviewed-policy",
+      "status": "reviewed",
+      "sourceVersion": "workspace-review-2"
+    },
+    {
+      "sourceId": "POLICY-CONAN",
+      "path": ".claude/specs/tcg-expert-play/conan-adapter.md",
+      "classification": "reviewed-policy",
+      "status": "reviewed",
+      "sourceVersion": "workspace-review-2"
+    },
+    {
+      "sourceId": "POLICY-UI",
+      "path": ".claude/specs/tcg-expert-play/public-ui-map.md",
+      "classification": "reviewed-policy",
+      "status": "reviewed",
+      "sourceVersion": "workspace-review-2"
+    },
+    {
+      "sourceId": "POLICY-LOG",
+      "path": ".claude/specs/tcg-expert-play/decision-log-schema.md",
+      "classification": "reviewed-policy",
+      "status": "reviewed",
+      "sourceVersion": "workspace-review-2"
+    },
+    {
+      "sourceId": "POLICY-AI",
+      "path": ".claude/specs/tcg-expert-play/ai-decision-policy.md",
+      "classification": "reviewed-policy",
+      "status": "reviewed",
+      "sourceVersion": "workspace-review-2"
+    },
+    {
+      "sourceId": "POLICY-CHECKLIST",
+      "path": ".claude/specs/tcg-expert-play/human-turn-checklist.md",
+      "classification": "reviewed-policy",
+      "status": "reviewed",
+      "sourceVersion": "workspace-review-2"
+    }
+  ]
+}

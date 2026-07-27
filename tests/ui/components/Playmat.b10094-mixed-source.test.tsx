@@ -155,4 +155,28 @@ describe('B10094 mixed declared-ability source picker', () => {
     act(() => paMr!.click());
     expect(useTargetPickerStore.getState().phase).toEqual({ phase: 'idle' });
   });
+
+  it('declines an optional direct scene effect pick with Escape', () => {
+    const state = createEmptyGameState();
+    state.players.opp.scene = [{
+      uid: 'opp-scene', cardId: 'B01040', state: 'active', isNamed: false, enterOrder: 1,
+      setCards: [], stackedCards: 0, keywordOverrides: { granted: [], disabledOriginal: false },
+      apOverride: null, lpOverride: null, turnEffects: { contactImmune: false, removeOnTurnEnd: false }, declaredUseCount: {},
+    }];
+    act(() => {
+      useGameStateStore.setState({
+        pendingEffectPick: {
+          player: 'self',
+          candidates: [{ uid: 'opp-scene', cardId: 'B01040', player: 'opp', kind: 'char' }],
+          atomVerb: 'sceneSetState', atomArgs: {}, nMin: 0, nMax: 1,
+          source: {} as never,
+        },
+      });
+      root.render(<Playmat gameState={state} resolveCard={resolveCard} />);
+    });
+
+    expect(container.querySelector('[data-testid="scene-pick-skip"]')).not.toBeNull();
+    act(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
+    expect(dispatchEngineActionMock).toHaveBeenCalledWith({ type: 'effectPickResolve', pickedUid: null });
+  });
 });

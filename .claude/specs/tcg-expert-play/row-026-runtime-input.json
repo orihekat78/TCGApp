@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "row": "026",
+  "ruleBaseline": "Ver.2.4",
+  "informationMode": "public-ui-only",
+  "allowedOperations": [
+    "visible-click",
+    "visible-keyboard",
+    "visible-read",
+    "visible-screenshot",
+    "visible-scroll",
+    "public-navigation"
+  ],
+  "sources": [
+    { "sourceId": "CONAN-INDEX", "lineStart": 1, "lineEnd": 77 },
+    { "sourceId": "CONAN-VICTORY", "lineStart": 1, "lineEnd": 42 },
+    { "sourceId": "CONAN-TURNS", "lineStart": 1, "lineEnd": 51 },
+    { "sourceId": "CONAN-ACTION", "lineStart": 1, "lineEnd": 41 },
+    { "sourceId": "CONAN-CONTACT", "lineStart": 1, "lineEnd": 58 },
+    { "sourceId": "CONAN-CUTIN", "lineStart": 1, "lineEnd": 57 },
+    { "sourceId": "CONAN-EVENT-ACTION", "lineStart": 1, "lineEnd": 47 },
+    { "sourceId": "CONAN-REASONING", "lineStart": 1, "lineEnd": 49 },
+    { "sourceId": "CONAN-NEXT-HINT", "lineStart": 1, "lineEnd": 46 },
+    { "sourceId": "CONAN-KEYWORDS", "lineStart": 1, "lineEnd": 91 },
+    { "sourceId": "CARD-B01033-IMPLEMENTATION", "lineStart": 1, "lineEnd": 34 },
+    { "sourceId": "CARD-B09030-IMPLEMENTATION", "lineStart": 1, "lineEnd": 35 },
+    { "sourceId": "POLICY-KERNEL", "lineStart": 1, "lineEnd": 42 },
+    { "sourceId": "POLICY-CONAN", "lineStart": 1, "lineEnd": 58 },
+    { "sourceId": "POLICY-UI", "lineStart": 1, "lineEnd": 26 },
+    { "sourceId": "POLICY-LOG", "lineStart": 1, "lineEnd": 21 },
+    { "sourceId": "POLICY-AI", "lineStart": 1, "lineEnd": 26 },
+    { "sourceId": "POLICY-CHECKLIST", "lineStart": 1, "lineEnd": 25 }
+  ],
+  "unresolved": [
+    "CONAN-INDEX Ver.2.4 and CONAN-KEYWORDS Ver.2.5 conflict",
+    "validation-protocol ex-ante scene set is incomplete",
+    "official card-text validation for the selected decks is incomplete",
+    "BUG-274 Escape cancellation has no exact live-browser regression"
+  ]
+}

@@ -57,6 +57,7 @@
     "check:codex-quality": "node scripts/check-codex-quality.mjs",
     "check:wave-scope": "tsx scripts/check-wave-scope.ts",
     "check:you-vs-cpu-loop": "tsx scripts/you-vs-cpu-validation-loop.ts",
+    "tcg:packet:build": "node scripts/build-tcg-runtime-packet.mjs --manifest .claude/specs/tcg-expert-play/row-026-runtime-input.json --registry .claude/research/tcg-expert-play/runtime-source-register.json --output .claude/sessions/row-026-runtime-packet.json",
     "lint:bug-closure": "tsx scripts/lint-bug-closure.ts",
     "lint:qa": "tsx scripts/lint-qa-trace.ts",
     "qa:adjudication:bootstrap": "tsx scripts/qa-adjudication.ts --bootstrap",

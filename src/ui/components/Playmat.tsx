@@ -549,6 +549,18 @@ export function Playmat({ gameState, resolveCard, resolveCase, resolveHandCard }
   const scenePickForced = (pendingPickForArea?.forcedUids ?? []).filter(
     (u) => pendingPickForArea?.candidates.some((c) => c.uid === u),
   );
+  // 直接クリックの任意 effect pick は TargetPicker を経由しないため、Escape も画面上の
+  // 「選ばない」と同じ effectPickResolve(null) に接続する。必須選択と forced 選択は取消不可。
+  useEffect(() => {
+    if (!isScenePick || !pendingPickForArea || pendingPickForArea.nMin !== 0 || scenePickForced.length > 0) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      dispatchEngineAction({ type: 'effectPickResolve', pickedUid: null });
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isScenePick, pendingPickForArea, scenePickForced.length]);
   const scenePickUidsSelf = new Set<string>();
   const scenePickUidsOpp = new Set<string>();
   if (isScenePick && pendingPickForArea) {

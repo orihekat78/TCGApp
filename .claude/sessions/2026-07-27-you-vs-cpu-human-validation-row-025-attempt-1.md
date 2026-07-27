@@ -21,8 +21,9 @@
   リムーブしてください”. The visible 7000 怪盗キッド was chosen. A following
   optional selection had no candidates, so visible `選ばない` completed it.
 - CPU plays/effects were re-read after every transition. Next Hint was not used:
-  the hand and immediate evidence plan were already sufficient, so a blind
-  rearrangement would not improve the decision.
+  it would move the top FILE card (face-down in this position) into our hand and permit an optional
+  legal hand use, while consuming FILE and disabling the normal hand-use action
+  for that turn. The visible hand already supplied the chosen board action.
 
 ## Outcome
 

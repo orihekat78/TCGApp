@@ -34,7 +34,19 @@ choices with visible information rather than private state or injected actions.
 
 ## Resume condition
 
-Resume row 026 only after the next task records an evidence-based expert-play
-method and a concrete decision-log format. Keep campaign execution public-UI
-only; begin at `#setup`; reopen a browser only after two consecutive runtime
-connection failures.
+Resume row 026 only after the baseline passes its ex-ante validation protocol,
+the Conan rule-version conflict is resolved, and a clean committed runtime
+packet is frozen. Keep campaign execution public-UI only; begin at `#setup`;
+reopen a browser only after two consecutive runtime connection failures.
+
+## Superseding resume gate
+
+The evidence-based method now means both
+`2026-07-27-tcg-expert-knowledge-plan.md` and
+`2026-07-27-conan-expert-runtime-resume-plan.md`, including their packet gate.
+The method draft is input, not proof of expert play and not authorization to
+play row 026.
+
+The exact live-browser Escape cancellation for BUG-274 remains mandatory.
+It cannot be waived by focused Vitest or typecheck. Before row 026, freeze a
+validated-source packet, run `conan-verify`, then obtain explicit user approval.

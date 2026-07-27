@@ -1,47 +1,23 @@
-# Paste into a new task
+# 次タスク用: Conan熟練判断の実行
 
-Conan TCGの熟練プレイヤーとしてのプレイノウハウと、Webアプリ初見時にも再現可能な判断メソッドを作ってください。
+`conan-router`から開始し、次を読む。
 
-## 背景と目的
+- `.claude/specs/plans/2026-07-27-tcg-expert-knowledge-plan.md`
+- `.claude/specs/plans/2026-07-27-conan-expert-runtime-resume-plan.md`
+- `.claude/specs/tcg-expert-play/`
+- `.claude/sessions/2026-07-27-tcg-expert-method-retrospective.md`
+- pause handoff、55組worklist、BUG-272--274。
 
-YOU vs CPUの55組検証は行001--025まで完了し、026の前で意図的に中断しています。検証で分かったのは、公開UI上で「合法な操作を選ぶ」だけでは熟練者のプレイにならないことです。カード使用、推理、アクション、相手事件への攻撃、事件解決、対象、任意効果、カットイン、Next Hintを、勝敗・テンポ・証拠・手札・次ターンの危険から判断できる方法が必要です。
+## 実行順
 
-今回の主目的は55組を回すことではありません。公式ルールとカード根拠に基づく、説明可能で再利用できる熟練プレイヤーのメソッドを作ることです。その後に、YOU vs CPUを026から再開するかを判断します。
+1. 汎用TCG source registerを一次資料で更新。参考/仮説を混ぜない。
+2. INDEX Ver.2.4 / keywords Ver.2.5不一致を公式原典で解消する。
+3. `validation-protocol.md`のex ante 8局面を満たす。過去結果で理由を書き換えない。
+4. Conanの対象デッキ・カード本文を公式原典で確認し、未知は明記する。
+5. 公開UIだけでUI mapを補足し、rule/UI差は`blocked-ui-rule-mismatch`にする。
+6. clean commit後、committed registryからruntime packetを凍結する。
+7. Gateを記録して停止する。
 
-## 立場と制約
-
-- 立場: コナンカードゲームの熟練者。ただし今回のWebアプリは初見。
-- 最初に `conan-router`。ルールは `.claude/rules/INDEX.md` から必要な原典へ進み、根拠のない推測をしない。
-- Webアプリ検証は公開UI・公開情報・実操作だけ。dispatch、state注入、pending参照、非公開情報、裏向きカード識別は禁止。
-- アプリの候補表示はルール理解の代替ではない。各行動の前後で盤面とログを読み、カード本文とルールに照合する。
-- カードを一律に最強AP順、Next Hintを一律に即使用／使い切り、終了連打、といった単調な方針にしない。
-- 新規ブラウザは接続停止が2回連続した時だけ。再開は `#setup` から。
-
-## 最初に読む記録
-
-- `.claude/specs/plans/2026-07-27-you-vs-cpu-human-validation-plan.md`
-- `.claude/sessions/2026-07-27-you-vs-cpu-human-validation-worklist.csv`
-- `.claude/sessions/2026-07-27-you-vs-cpu-human-validation-pause-and-play-method-handoff.md`
-- `.claude/sessions/2026-07-27-you-vs-cpu-human-validation-row-025-attempt-1.md`
-- `.claude/bugs/BUG-272.md`, `BUG-273.md`, `BUG-274.md`
-
-## 作るもの
-
-1. 公式ルール・カード本文に根拠を付けた短い判断フレーム。
-   - 勝ち／負けが近い次ターンの検知
-   - 証拠レース、事件解決条件、パートナーのアクティブ／名乗り、突進などの行動可能性
-   - 手札使用回数と手札価値、推理、Next Hintの使い所
-   - 自分／相手の事件カードへのアクション、キャラ対象、証拠を減らす防御
-   - カード使用、対象、任意効果、カットインを選ぶ比較手順
-2. 実戦用のターンチェックリストと、各選択で残す短い理由の型。
-3. Webアプリ初見者向けのUI対応表: 画面上の候補・状態・ログを、ルール上の意味へ対応付ける。UIが不明瞭な時は不明と記録する。
-4. このメソッドを既存の公開ログや少数の公開UI局面に適用し、少なくとも複数の代替手と採否理由を示す。非公開情報は使わない。
-5. 行026を再開してよい条件を明文化する。再開そのものは、私の承認まで行わない。
-
-## 現在のキャンペーン状態
-
-- 行001--025完了。026が次のqueued行。全体ゲート、`conan-verify`、55組完走は未実施。
-- BUG-272--274は入力停止対策済み。focused Vitest 6 files / 42、`npm run typecheck` は成功。
-- Escape取消の正確な実ブラウザ回帰だけは、制御可能タブがなかったため未確認。完了扱いにしない。
-
-開始時に、成果物の置き場所と調査順を短く提示してから進めてください。
+row 026、ブラウザ実対局、55組継続はユーザーが改めて明示承認するまで実施しない。
+実施承認後も `#setup` から、公開UI/公開ログ/実クリックのみ。dispatch、state注入、
+pending、非公開情報、裏向き識別は禁止。接続停止が2回連続したときだけ新規ブラウザ。
