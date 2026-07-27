@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 261
-- **ファイル数**: 5519
+- **ファイル数**: 5522
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1311,6 +1311,9 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-14-result.md` — 熟練判断baseline 判断14結果
     - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-14.md` — 熟練判断baseline 判断14
     - `2026-07-27-tcg-expert-baseline-public-ui-probe.md` — 熟練判断baseline: 公開UIプローブ
+    - `2026-07-27-tcg-expert-baseline-public-ui-round-2.md` — 熟練判断baseline round 2: ex ante記録
+    - `2026-07-27-tcg-expert-baseline-public-ui-round-3.md` — 熟練判断baseline round 3: cut-in/keyword
+    - `2026-07-27-tcg-expert-baseline-public-ui-round-4.md` — TCG熟練プレイ baseline 公開UI Round 4
     - `2026-07-27-tcg-expert-baseline-public-ui-win-clock.md` — 公開UI baseline: 自分の証拠時計
     - `2026-07-27-tcg-expert-method-retrospective.md` — 熟練判断baseline: 公開ログ監査
     - `2026-07-27-you-vs-cpu-human-validation-loop-recovery.md` — YOU vs CPU validation loop recovery
