@@ -1,27 +1,26 @@
-# 行026 開始準備状態
+# 行026 開始可能性
 
-確認日時: 2026-07-27 JST
+記録日: 2026-07-27 JST
 
 ## 対象
 
-- 行026: YOU `deck-1784115364915`（緑アグロ） vs CPU `deck-1785077234307`（黒カットイン）、desktop P1。
-- worklist行001--025、55組上三角、既存Gate定義は未変更。
+- 行026: YOU `deck-1784115364915` vs CPU `deck-1785077234307`、Desktop P1。
+- worklist行001--025、55組上三角、既存resume Gate定義は変更しない。
 
-## 完了済み
+## 確認済み
 
-- `HEAD` は `829219d9`。公開 `#deck` と `#setup` で両デッキを確認。
-- BUG-274: 公開fixtureで実クリックの Escape 回帰を確認済み。
-- 公開UI baseline: mulligan、推理、Next Hint、手札使用、強制リムーブ、action source/target、確認、CPU guard、AP判定を記録済み。追加局でCPUの必要証拠達成による実敗北も公開結果画面まで確認。
-- 公式カード検索（タカラトミー）を公開UIで開き、カード番号・本文・AP/LP・カットイン欄が提供されることを確認。
+- `main` は `829219d9` のまま。準備作業は `codex/row026-gate-prep` に隔離。
+- BUG-274の公開fixture Escape回帰はfocused Playwrightでpass。
+- 公開UI baselineでmulligan、手札使用、Next Hint、任意使用、相手へのアクション判断、証拠進行、CPU応答を確認。
+- 表向きカードは都度、公開UI本文・公式カード本文・該当規則を照合する運用にした。
 
-## 未解決Gate
+## Gate
 
-1. 作業ツリーが dirty。既存変更を保全するため、本タスクでは clean 化しない。
-2. validation protocol の ex-ante scene set が未完了。特に自分の即勝利時計2件は未達（追加局は4/7で敗北）。
-3. fresh packet は「選定2デッキの公式カード本文照合が未完了」も出す。ただし既存の再開Gate原文は全カードの事前照合を要求しない。行026で表向きとなり判断対象になったカードを、その場で公式本文・ルールと照合して記録する。
+1. `blocked-ui-rule-mismatch`: 公開UIで「自分7/7」「事件状態: 解決編」なのに「事件解決 ★勝利 / まだ」。事件解決をクリックせず停止。
+2. mismatch解消後にfresh packetを生成する。
 
-`npm run tcg:packet:build` は上記3条件を再確認して失敗。よって行026 match はまだ開始しない。
+`npm run tcg:packet:build` は未解消項目がある間は失敗する。解消前に行026 matchを開始しない。
 
-## 次の操作
+## 次の判断
 
-公開UI baseline の残り必須sceneを完了する。カード本文は行026の公開プレイ中に判断対象ごと照合する。最後にユーザーが既存dirty変更の扱いを決めた後、packetを再実行する。
+規則/UI整合を確認・解消してからfresh packetを生成する。行026のworklist状態は `queued`。

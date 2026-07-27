@@ -31,8 +31,12 @@
     { "sourceId": "POLICY-AI", "lineStart": 1, "lineEnd": 26 },
     { "sourceId": "POLICY-CHECKLIST", "lineStart": 1, "lineEnd": 25 }
   ],
+  "cardTextVerification": {
+    "mode": "on-public-reveal",
+    "requirement": "Before each decision that uses a face-up card or ability, compare its public UI text with the official card text and the applicable rule source; record the result.",
+    "forbidden": ["pre-identifying face-down cards", "using private state"]
+  },
   "unresolved": [
-    "validation-protocol ex-ante scene set is incomplete",
-    "official card-text validation for the selected decks is incomplete"
+    "blocked-ui-rule-mismatch: public UI displayed YOU evidence 7/7 and event state 解決編, but the public 事件解決 ★勝利 action remained まだ"
   ]
 }

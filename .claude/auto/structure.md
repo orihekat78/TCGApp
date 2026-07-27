@@ -10,7 +10,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 
 - **対象ルート**: `.`
 - **ディレクトリ数**: 261
-- **ファイル数**: 5518
+- **ファイル数**: 5519
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1311,6 +1311,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-14-result.md` — 熟練判断baseline 判断14結果
     - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-14.md` — 熟練判断baseline 判断14
     - `2026-07-27-tcg-expert-baseline-public-ui-probe.md` — 熟練判断baseline: 公開UIプローブ
+    - `2026-07-27-tcg-expert-baseline-public-ui-win-clock.md` — 公開UI baseline: 自分の証拠時計
     - `2026-07-27-tcg-expert-method-retrospective.md` — 熟練判断baseline: 公開ログ監査
     - `2026-07-27-you-vs-cpu-human-validation-loop-recovery.md` — YOU vs CPU validation loop recovery
     - `2026-07-27-you-vs-cpu-human-validation-loop-state.json`
@@ -1345,7 +1346,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-27-you-vs-cpu-human-validation-row-024-attempt-4.md` — Row 024 — expert-method UI microtest (attempt 4)
     - `2026-07-27-you-vs-cpu-human-validation-row-025-attempt-1.md` — Row 025 attempt 1 — public UI completion
     - `2026-07-27-you-vs-cpu-human-validation-row-026-preflight-blocked.md` — Row 026 preflight — blocked
-    - `2026-07-27-you-vs-cpu-human-validation-row-026-start-readiness.md` — 行026 開始準備状態
+    - `2026-07-27-you-vs-cpu-human-validation-row-026-start-readiness.md` — 行026 開始可能性
     - `2026-07-27-you-vs-cpu-human-validation-worklist.csv`
     - `2026-07-27-you-vs-cpu-human-validation.md` — YOU vs CPU human validation
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
