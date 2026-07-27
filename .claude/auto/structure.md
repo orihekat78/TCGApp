@@ -9,8 +9,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 ## サマリ
 
 - **対象ルート**: `.`
-- **ディレクトリ数**: 259
-- **ファイル数**: 5485
+- **ディレクトリ数**: 261
+- **ファイル数**: 5518
 - **辞書エントリ**: dirs 45 / files 40
 
 ## ツリー
@@ -1118,6 +1118,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
         - `phase-9-polish.md` — Phase 9: 統合・自動プレイテスト1000戦・チュートリアル
     - **`rules/`** — 公式ルール抽出・Wiki マップ
       - `commmune-wiki-map.md` — commmune ナレッジベース構造マップ
+    - **`tcg-expert-play/`**
+      - `cross-game-findings.md` — TCG熟練判断: cross-game findings
+      - `runtime-source-register.json`
+      - `source-register.md` — TCG熟練判断: source register
     - **`tutorial/`** — チュートリアル設計
       - `01-curriculum-design.md` — 01. チュートリアル カリキュラム設計（公式の概念導入順から逆算）
       - `02-step-by-step-flow.md` — 02. 公式の説明順（レッスン内部ステップ）
@@ -1296,7 +1300,18 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-17.md` — 2026-07-14〜15 bug wave session
     - `2026-07-18-task7-qa-offline-lint.md` — Task 7 — Q&A offline lint
     - `2026-07-19.md` — memory — 現セッション scratchpad
-    - `2026-07-27-conan-tcg-play-method-next-task-prompt.md` — Paste into a new task
+    - `2026-07-27-conan-tcg-play-method-next-task-prompt.md` — 次タスク用: Conan熟練判断の実行
+    - `2026-07-27-row-026-resume-gate-status.md` — Row 026 再開Gate: 現在値
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-blocked-ui-rule-mismatch-correction.md` — blocked-ui-rule-mismatch 訂正
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-blocked-ui-rule-mismatch.md` — 熟練判断baseline blocked-ui-rule-mismatch
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-clock.md` — 熟練判断baseline 時計局面プローブ
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-continuation.md` — 熟練判断baseline 継続
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-12.md` — 熟練判断baseline 判断12
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-13.md` — 熟練判断baseline 判断13
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-14-result.md` — 熟練判断baseline 判断14結果
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe-decision-14.md` — 熟練判断baseline 判断14
+    - `2026-07-27-tcg-expert-baseline-public-ui-probe.md` — 熟練判断baseline: 公開UIプローブ
+    - `2026-07-27-tcg-expert-method-retrospective.md` — 熟練判断baseline: 公開ログ監査
     - `2026-07-27-you-vs-cpu-human-validation-loop-recovery.md` — YOU vs CPU validation loop recovery
     - `2026-07-27-you-vs-cpu-human-validation-loop-state.json`
     - `2026-07-27-you-vs-cpu-human-validation-pause-and-play-method-handoff.md` — YOU vs CPU pause and play-method handoff
@@ -1327,7 +1342,10 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `2026-07-27-you-vs-cpu-human-validation-row-022-attempt-2.md` — Row 022 attempt 2
     - `2026-07-27-you-vs-cpu-human-validation-row-023-attempt-2.md` — Row 023 attempt 2
     - `2026-07-27-you-vs-cpu-human-validation-row-024-attempt-3.md` — Row 024 attempt 3 — browser recovery evidence
+    - `2026-07-27-you-vs-cpu-human-validation-row-024-attempt-4.md` — Row 024 — expert-method UI microtest (attempt 4)
     - `2026-07-27-you-vs-cpu-human-validation-row-025-attempt-1.md` — Row 025 attempt 1 — public UI completion
+    - `2026-07-27-you-vs-cpu-human-validation-row-026-preflight-blocked.md` — Row 026 preflight — blocked
+    - `2026-07-27-you-vs-cpu-human-validation-row-026-start-readiness.md` — 行026 開始準備状態
     - `2026-07-27-you-vs-cpu-human-validation-worklist.csv`
     - `2026-07-27-you-vs-cpu-human-validation.md` — YOU vs CPU human validation
     - `NEXT-SESSION-PROMPT.md` — 次セッション キックオフプロンプト — 2026-05-23 末
@@ -1585,6 +1603,8 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `INDEX.md` — メタゲーム UI 統合設計書 (Phase 10) — INDEX
     - **`plans/`**
       - `2026-06-19-cpu-visualize-and-interrupt-lock-plan.md` — CPU逐次プレイ可視化 + 効果解決中ロック 実装計画
+      - `2026-07-27-conan-expert-runtime-resume-plan.md` — Conan熟練メソッド: row 026再開計画
+      - `2026-07-27-tcg-expert-knowledge-plan.md` — 汎用TCG熟練判断: 実装計画
       - `2026-07-27-you-vs-cpu-human-validation-plan.md` — YOU vs CPU 人間プレイヤー再現・品質検証計画
     - **`qa-adjudication/`**
       - `0.json`
@@ -1633,6 +1653,16 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `03-file-zone.md` — Task D E3 — FILE-zone verb 群 + 既存バグ2修正
       - `04-textual-grant.md` — Task D E4 — textual ability grant (非キーワードテキスト能力の付与)
       - `INDEX.md` — Task D — engine 拡張 (高リスク) 設計 INDEX (2026-06-12)
+    - **`tcg-expert-play/`**
+      - `ai-decision-policy.md` — AI用判断policy
+      - `conan-adapter.md` — Conan熟練判断アダプタ
+      - `decision-log-schema.md` — 公開対局: 一手理由ログ
+      - `human-turn-checklist.md` — 人間用ターンchecklist
+      - `obsidian-claudian-contract.md` — Obsidian/Claudian契約
+      - `public-ui-map.md` — YOU vs CPU 公開UI対応表
+      - `row-026-runtime-input.json`
+      - `universal-decision-kernel.md` — 汎用TCG判断kernel
+      - `validation-protocol.md` — 熟練判断baseline: validation protocol
     - `2026-05-11-ui-action-flows.md` — 主要アクションフロー (2026-05-11)
     - `2026-05-11-ui-animation-specs.md` — アニメーション仕様 (2026-05-11)
     - `2026-05-11-ui-edge-cases.md` — エッジケース集 (2026-05-11)
@@ -1931,6 +1961,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
 - **`meta-app/`**
   - **`src/`**
     - **`data/`**
+      - `bug274ValidationDeck.ts` — Public, deterministic regression fixture for BUG-274.
       - `cardFilter.ts` — spec: .claude/specs/meta-ui/ (Phase 18: Master Duel 風カード絞り込みの共有モジュール)
       - `cardPool.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md + 11-cards-rebuild.md
       - `sampleDeck.ts` — spec: .claude/specs/meta-ui/05-engine-stub.md
@@ -1995,6 +2026,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `vite-env.d.ts` — / <reference types="vite/client" />
   - **`tests/`**
     - **`e2e/`**
+      - `bug274-public-fixture.spec.ts`
       - `cards.spec.ts` — spec: .claude/specs/meta-ui/11-cards-rebuild.md
       - `deck.spec.ts` — spec: .claude/specs/meta-ui/ (Phase 18: DeckEditor リデザイン + 同 ID 3 枚上限の UI 可視化)
       - `effect-decision-hosts.spec.ts`
@@ -2079,6 +2111,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `run-1000.ts` — scripts/smoke/run-1000 — Phase 9-A 1000-game AI vs AI smoke runner
   - `bug-trend.ts` — Phase 7-A (LESSONS-LEARNED 教訓 / AUDIT-2026-05-22 派生):
   - `build-exemplar-set.cjs`
+  - `build-tcg-runtime-packet.mjs`
   - `card-classify.cjs`
   - `card-fingerprint.cjs`
   - `card-text-crosscheck.cjs`
@@ -4611,6 +4644,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
       - `VictoryOverlay.css`
       - `VictoryOverlay.tsx` — Phase 8.10j: 勝利演出
     - **`fixtures/`**
+      - `bug274PartnerFixture.ts` — BUG-274 public UI regression fixture.
       - `cutinDemoState.ts` — 2026-05-27 カットイン効果検証 demo 用 GameState fixture
       - `hiramekiDemoState.ts` — 2026-05-26 ヒラメキ効果検証 demo 用 GameState fixture
       - `sampleGameState.ts` — Phase 7 demo wiring: ブラウザ表示用サンプル GameState fixture
@@ -5600,6 +5634,7 @@ Git index上のtracked/staged path集合から明示除外を引いたフォル�
     - `engineStub.deck-limit.test.ts` — rules: 02-deck-construction.md
     - `matchSession.race.test.ts` — Leaving match for the result route must clear transient ownership while
   - **`scripts/`**
+    - `build-tcg-runtime-packet.test.ts`
     - `check-codex-quality.test.ts`
     - `check-wave-scope.test.ts`
     - `gen-card-probes.test.ts`

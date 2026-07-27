@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "row": "026",
-  "ruleBaseline": "Ver.2.4",
+  "ruleBaseline": "Ver.2.5",
   "informationMode": "public-ui-only",
   "allowedOperations": [
     "visible-click",
@@ -32,9 +32,7 @@
     { "sourceId": "POLICY-CHECKLIST", "lineStart": 1, "lineEnd": 25 }
   ],
   "unresolved": [
-    "CONAN-INDEX Ver.2.4 and CONAN-KEYWORDS Ver.2.5 conflict",
     "validation-protocol ex-ante scene set is incomplete",
-    "official card-text validation for the selected decks is incomplete",
-    "BUG-274 Escape cancellation has no exact live-browser regression"
+    "official card-text validation for the selected decks is incomplete"
   ]
 }

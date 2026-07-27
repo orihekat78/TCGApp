@@ -6,69 +6,69 @@
       "path": ".claude/rules/INDEX.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-VICTORY",
       "path": ".claude/rules/01-victory-conditions.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-TURNS",
       "path": ".claude/rules/05-turn-phases.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-ACTION",
       "path": ".claude/rules/07-action-flow.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-CONTACT",
       "path": ".claude/rules/08-contact.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-CUTIN",
       "path": ".claude/rules/09-cutin-disguise.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-EVENT-ACTION",
       "path": ".claude/rules/10-action-event.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-REASONING",
       "path": ".claude/rules/11-reasoning.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-NEXT-HINT",
       "path": ".claude/rules/12-next-hint.md",
       "classification": "validated-rule",
       "status": "validated",
-      "sourceVersion": "Ver.2.4"
+      "sourceVersion": "Ver.2.5"
     },
     {
       "sourceId": "CONAN-KEYWORDS",
       "path": ".claude/rules/13-keywords.md",
       "classification": "validated-rule",
-      "status": "blocked-version-conflict",
+      "status": "validated",
       "sourceVersion": "Ver.2.5"
     },
     {

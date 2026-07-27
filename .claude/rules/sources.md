@@ -7,7 +7,7 @@
 
 | 名称 | バージョン | URL | ローカル抽出 |
 |------|------------|-----|-------------|
-| オフィシャルルールマニュアル | Ver 2.4 (27p) | https://www.takaratomy.co.jp/products/conan-cardgame/pdf/rule/rule_manual.pdf | `.tmp/floor_rule/rule_manual.{pdf,txt}` / `.tmp/floor_rule/manual_pages/page_NN.txt` |
+| オフィシャルルールマニュアル | Ver 2.5 (27p) | https://www.takaratomy.co.jp/products/conan-cardgame/pdf/rule/rule_manual.pdf | `.tmp/floor_rule/rule_manual.{pdf,txt}` / `.tmp/floor_rule/manual_pages/page_NN.txt` |
 | フロアルール | Ver 1.36 (21p / 2026-04-25) | https://www.takaratomy.co.jp/products/conan-cardgame/pdf/rule/floor_rule.pdf | `.tmp/floor_rule/floor_rule.{pdf,txt}` |
 | プレイシート | (画像主体) | (DCinsert_playsheet.pdf) | `.tmp/floor_rule/playsheet.{pdf,txt}` / `.tmp/playsheet_png/` |
 | カード制限リスト | 適用日付随時 | https://www.takaratomy.co.jp/products/conan-cardgame/news/detail/60 | rules/[27-card-restrictions.md](27-card-restrictions.md) |
@@ -46,6 +46,7 @@ PDFが読めない環境ではこちらを参照可能。
 
 ## 取得・更新履歴
 
+- 2026-07-27: 公式PDF Ver 2.5を確認（Last-Modified: 2026-07-24、SHA-256: `2A3CAF3372E66656CD9AC0C5BA9DC8FC4177C176317F4F97086975C1C9E65D41`）
 - 2026-05-10: 初回フェッチ
   - PDF Ver 2.4 全27ページ抽出
   - Wiki構造把握、用語索引取得

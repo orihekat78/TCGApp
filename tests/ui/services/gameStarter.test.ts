@@ -52,4 +52,13 @@ describe('performGameStart', () => {
     expect(s.players.self.mulliganUsed).toBe(true);
     expect(s.players.opp.mulliganUsed).toBe(true);
   });
+
+  it('starts the public BUG-274 validation deck with its multiple-ability partner', async () => {
+    const s = await performGameStart(skipMulligan, {
+      selfDeckId: 'TEST-BUG-274',
+      oppDeckId: 'CT-D11',
+    });
+
+    expect(s.players.self.partner.cardId).toBe('TEST-BUG-274-PARTNER');
+  });
 });

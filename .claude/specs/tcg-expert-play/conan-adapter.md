@@ -1,7 +1,7 @@
 # Conan熟練判断アダプタ
 
-基盤: `CONAN-INDEX`。現在、INDEXはVer.2.4、`13-keywords.md`はVer.2.5。
-版不一致が解消するまでキーワード依存のruntime packetは `blocked`。推測で統合しない。
+基盤: `CONAN-INDEX`。INDEXと`13-keywords.md`はVer.2.5。
+キーワード依存の判断はカード本文とVer.2.5の原典を照合する。推測で統合しない。
 
 ## 勝敗時計
 

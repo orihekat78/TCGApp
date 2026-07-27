@@ -5,8 +5,8 @@
 
 | ID | 区分 | 版/状態 | claim scope | 出典 |
 |---|---|---|---|---|
-| CONAN-INDEX | validated-rule | Ver.2.4 / local snapshot | Conanの基準版と原典導線 | [INDEX](../../rules/INDEX.md) |
-| CONAN-KEYWORDS | blocked | Ver.2.5 / version conflict | 迅速・突撃・キーワード | [keywords](../../rules/13-keywords.md) |
+| CONAN-INDEX | validated-rule | Ver.2.5 / local snapshot | Conanの基準版と原典導線 | [INDEX](../../rules/INDEX.md) |
+| CONAN-KEYWORDS | validated-rule | Ver.2.5 / local snapshot | 迅速・突撃・キーワード | [keywords](../../rules/13-keywords.md) |
 | PTCG-RULES | validated-rule | current at access | Prize・盤面・手順の比較 | [official rulebook](https://www.pokemon.com/static-assets/content-assets/cms2/pdf/trading-card-game/rulebook/par_rulebook_en.pdf) |
 | PTCG-POLICY | validated-rule | current at access | 競技形式・デッキ合法性 | [Play! Pokémon rules](https://play.pokemon.com/en-us/resources/rules/?category=tcg) |
 | PTCG-ACADEMY | expert-source | official/pro presenter | デッキ計画・弱点・対戦例 | [Top Deck Academy](https://www.pokemon.com/us/news/combat-deck-weakness-with-top-deck-academy) |

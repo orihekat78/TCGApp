@@ -13,6 +13,11 @@ import { useMetaStore } from '../state/metaStore';
 import { CARD_POOL, cardIdOf } from '../data/cardPool';
 import type { Route } from '../router/routes';
 import type { DeckRecord } from '../data/types';
+import {
+  BUG_274_PARTNER_CARD,
+  BUG_274_PUBLIC_DECK,
+  BUG_274_PUBLIC_DECK_ID,
+} from '../data/bug274ValidationDeck';
 import { useGameStateStore } from '@/ui/state/store';
 import { isPlayable } from '../util/deckBridge';
 import { customGameStart } from '../util/customGameStart';
@@ -33,9 +38,12 @@ export function SetupScreen({ onNav }: Props) {
   const [selfDeckId, setSelfDeckId] = useState<string>(decks[0]?.id ?? '');
   const [oppDeckId, setOppDeckId] = useState<string>(decks[1]?.id ?? decks[0]?.id ?? '');
   const [error, setError] = useState<string | null>(null);
+  const selectableDecks = decks.some((deck) => deck.id === BUG_274_PUBLIC_DECK_ID)
+    ? decks
+    : [...decks, BUG_274_PUBLIC_DECK];
 
-  const selfDeck = decks.find((d) => d.id === selfDeckId);
-  const oppDeck = decks.find((d) => d.id === oppDeckId);
+  const selfDeck = selectableDecks.find((d) => d.id === selfDeckId);
+  const oppDeck = selectableDecks.find((d) => d.id === oppDeckId);
   const ready = isPlayable(selfDeck) && isPlayable(oppDeck);
 
   const handleReady = () => {
@@ -111,10 +119,13 @@ export function SetupScreen({ onNav }: Props) {
         display: 'flex', gap: 18, justifyContent: 'center', alignItems: 'flex-start',
       }}>
         <PlayerConfigPanel slot="P1" label="プレイヤー 1" mode={mode === 'observe' ? 'cpu' : 'human'}
-          deck={selfDeck} decks={decks} onSelectDeck={setSelfDeckId} />
+        deck={selfDeck} decks={selectableDecks} onSelectDeck={(id) => {
+          setSelfDeckId(id);
+          if (id === BUG_274_PUBLIC_DECK_ID) setFirstChoice('p1');
+        }} />
         <SwapButton onClick={handleSwap} />
         <PlayerConfigPanel slot="P2" label="プレイヤー 2" mode="cpu"
-          deck={oppDeck} decks={decks} onSelectDeck={setOppDeckId} />
+        deck={oppDeck} decks={selectableDecks} onSelectDeck={setOppDeckId} />
       </div>
 
       <SetupMatchOptions firstChoice={firstChoice} onFirstChoice={setFirstChoice} />
@@ -221,7 +232,9 @@ function PlayerConfigPanel({ slot, label, mode, deck, decks, onSelectDeck }: {
   slot: string; label: string; mode: 'human' | 'cpu';
   deck: DeckRecord | undefined; decks: DeckRecord[]; onSelectDeck: (id: string) => void;
 }) {
-  const partner = deck ? CARD_POOL.find((c) => c.num === deck.partner) : undefined;
+  const partner = deck?.id === BUG_274_PUBLIC_DECK_ID
+    ? BUG_274_PARTNER_CARD
+    : deck ? CARD_POOL.find((c) => c.num === deck.partner) : undefined;
   const isHuman = mode === 'human';
   const accent = isHuman ? T.green : T.purple;
   return (

@@ -12,11 +12,12 @@ type CardId = string;
 type DeckSpec = DeckPair['self'];  // engine.flow.setup の Deck 型を借用
 
 /** ゲーム開始時に選択可能なデッキ ID。Phase 9+ で追加可。 */
-export type DeckId = 'CT-D08' | 'CT-D11';
+export type DeckId = 'CT-D08' | 'CT-D11' | 'TEST-BUG-274';
 
 export const AVAILABLE_DECKS: ReadonlyArray<{ id: DeckId; label: string }> = [
   { id: 'CT-D08', label: 'CT-D08 — 青の古城探索事件' },
   { id: 'CT-D11', label: 'CT-D11 — 千速と重悟の婚活パーティー' },
+  { id: 'TEST-BUG-274', label: 'TEST — BUG-274 Escape（複数能力・先攻固定）' },
 ];
 
 // 公式構築済みデッキの印刷カード別収録枚数を保持する。
@@ -51,6 +52,12 @@ function buildDeckSpec(deckId: DeckId): DeckSpec {
       return { partnerId: 'D08001', caseId: 'D08026', mainCards: expandDeck(D08_MAIN) };
     case 'CT-D11':
       return { partnerId: 'D11001', caseId: 'D11021', mainCards: expandDeck(D11_MAIN) };
+    case 'TEST-BUG-274':
+      return {
+        partnerId: 'TEST-BUG-274-PARTNER',
+        caseId: 'D08026',
+        mainCards: expandDeck(D08_MAIN),
+      };
   }
 }
 

@@ -11,6 +11,8 @@ import type { GameState } from '@/engine/types/game-state';
 import type { DeckPair } from '@/engine/flow/setup';
 import type { DeckRecord } from '../data/types';
 import { defaultCaseForPartner } from '../data/cardPool';
+import { BUG_274_PARTNER } from '@/ui/fixtures/bug274PartnerFixture.js';
+import { BUG_274_PARTNER_ID } from '../data/bug274ValidationDeck';
 
 /** meta DeckRecord → engine Deck 変換 (mainCards を count 分展開) */
 export function toEngineDeck(deck: DeckRecord) {
@@ -50,6 +52,9 @@ export async function customGameStart(
     self: toEngineDeck(selfDeck),
     opp:  toEngineDeck(oppDeck),
   };
+  if (selfDeck.partner === BUG_274_PARTNER_ID || oppDeck.partner === BUG_274_PARTNER_ID) {
+    engine.cards.register(BUG_274_PARTNER);
+  }
 
   // Phase A: init / decideFirstPlayer / dealOpeningHand × 2
   let state = produce(createEmptyGameState(), (draft) => {

@@ -5,6 +5,7 @@
 import type { DeckId } from '@/ui/services/deckBuilder';
 import { AVAILABLE_DECKS } from '@/ui/services/deckBuilder';
 import type { DeckRecord } from '../data/types';
+import { BUG_274_PUBLIC_DECK_ID } from '../data/bug274ValidationDeck';
 import { engineStub } from '../stubs/engineStub';
 
 /** DeckRecord.id → engine DeckId (sample-d08 / sample-d11 専用)。
@@ -20,6 +21,9 @@ export function toDeckId(deck: DeckRecord | undefined): DeckId | null {
 /** デッキが対戦可能か (Phase 14-A: validateDeck OK なら可、deckId 経路にこだわらない) */
 export function isPlayable(deck: DeckRecord | undefined): boolean {
   if (!deck) return false;
+  // The deterministic public regression fixture has a synthetic partner that
+  // is registered only when the real match-start path is entered.
+  if (deck.id === BUG_274_PUBLIC_DECK_ID) return true;
   return engineStub.cards.validateDeck(deck).ok;
 }
 
